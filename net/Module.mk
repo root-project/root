@@ -21,7 +21,7 @@ NETH         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 NETS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 NETO         := $(NETS:.cxx=.o)
 
-NETDEP       := $(NETO:.o=.d)
+NETDEP       := $(NETO:.o=.d) $(NETDO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETH))

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -43,7 +43,7 @@ TMarker::TMarker(): TObject(), TAttMarker()
    fY = 0;
 }
 //______________________________________________________________________________
-TMarker::TMarker(Coord_t x, Coord_t y, Int_t marker)
+TMarker::TMarker(Double_t x, Double_t y, Int_t marker)
       :TObject(), TAttMarker()
 {
 //*-*-*-*-*-*-*-*-*-*-*Marker normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -91,8 +91,8 @@ void TMarker::DisplayMarkerTypes()
   text->SetTextAlign(22);
   text->SetTextSize(0.1);
   char atext[] = "       ";
-  Float_t x = 0;
-  Float_t dx = 1/12.0;
+  Double_t x = 0;
+  Double_t dx = 1/12.0;
   for (Int_t i=1;i<12;i++) {
      x += dx;
      sprintf(atext,"%d",i);
@@ -137,7 +137,7 @@ void TMarker::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TMarker::DrawMarker(Coord_t x, Coord_t y)
+void TMarker::DrawMarker(Double_t x, Double_t y)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this marker with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================================
@@ -212,7 +212,7 @@ void TMarker::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TMarker::PaintMarker(Coord_t x, Coord_t y)
+void TMarker::PaintMarker(Double_t x, Double_t y)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this marker with new coordinates*-*-*-*-*-*-*-*-*-*
 //*-*                  =====================================
@@ -222,7 +222,7 @@ void TMarker::PaintMarker(Coord_t x, Coord_t y)
 }
 
 //______________________________________________________________________________
-void TMarker::PaintMarkerNDC(Coord_t, Coord_t)
+void TMarker::PaintMarkerNDC(Double_t, Double_t)
 {
 //*-*-*-*-*-*-*-*Draw this marker with new coordinates in NDC*-*-*-*-*-*-*-*-*-*
 //*-*            ============================================
@@ -257,4 +257,30 @@ void TMarker::SavePrimitive(ofstream &out, Option_t *)
    SaveMarkerAttributes(out,"marker",1,1,1);
 
    out<<"   marker->Draw();"<<endl;
+}
+
+//______________________________________________________________________________
+void TMarker::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TMarker.
+
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion();
+      TObject::Streamer(R__b);
+      TAttMarker::Streamer(R__b);
+      if (R__v < 2) {
+         Float_t x,y;
+         R__b >> x;  fX = x;
+         R__b >> y;  fY = y;
+      } else {
+         R__b >> fX;
+         R__b >> fY;
+      }
+   } else {
+      R__b.WriteVersion(TMarker::IsA());
+      TObject::Streamer(R__b);
+      TAttMarker::Streamer(R__b);
+      R__b << fX;
+      R__b << fY;
+   }
 }

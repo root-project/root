@@ -12,11 +12,16 @@ CLIBDIRS     := $(CLIBDIR)/src
 CLIBDIRI     := $(CLIBDIR)/inc
 
 ##### libClib (part of libCore) #####
-CLIBH        := $(wildcard $(MODDIRI)/*.h)
+CLIBL        := $(MODDIRI)/LinkDef.h
+CLIBDS       := $(MODDIRS)/G__Clib.cxx
+CLIBDO       := $(CLIBDS:.cxx=.o)
+CLIBDH       := $(CLIBDS:.cxx=.h)
+
+CLIBH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 CLIBS        := $(wildcard $(MODDIRS)/*.c)
 CLIBO        := $(CLIBS:.c=.o)
 
-CLIBDEP      := $(CLIBO:.o=.d)
+CLIBDEP      := $(CLIBO:.o=.d) $(CLIBDO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(CLIBH))
@@ -28,14 +33,21 @@ INCLUDEFILES += $(CLIBDEP)
 include/%.h:    $(CLIBDIRI)/%.h
 		cp $< $@
 
-all-clib:       $(CLIBO)
+$(CLIBDS):      $(CLIBDIRI)/Getline.h $(CLIBL) $(ROOTCINTTMP)
+		@echo "Generating dictionary $@..."
+		@$(ROOTCINTTMP) -f $@ -c $(CLIBDIRI)/Getline.h $(CLIBL)
+
+$(CLIBDO):      $(CLIBDS)
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+
+all-clib:       $(CLIBO) $(CLIBDO)
 
 clean-clib:
-		@rm -f $(CLIBO)
+		@rm -f $(CLIBO) $(CLIBDO)
 
 clean::         clean-clib
 
 distclean-clib: clean-clib
-		@rm -f $(CLIBDEP)
+		@rm -f $(CLIBDEP) $(CLIBDS) $(CLIBDH)
 
 distclean::     distclean-clib

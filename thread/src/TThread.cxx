@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name$:$Id$
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.2 2000/06/16 12:24:47 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -49,6 +49,22 @@ void TThread::Debu(const char *txt)
    fprintf(stderr,"TThread::Debu %s %d \n",txt,fgMain->fId);
 }
 
+//______________________________________________________________________________
+Int_t TThread::Exists() 
+{ 
+   // Check existing threads
+   // return number of running Threads
+   
+  TThread *l;
+
+  if (! fgMain) { //no threads
+    return 0;}
+
+  Int_t num=0;
+  for(l=fgMain; l ; l = l->fNext) {num++;} //count threads
+  return num;
+} 
+    
 //______________________________________________________________________________
 void TThread::SetPriority(EPriority pri)
 {
@@ -289,8 +305,8 @@ if (arg) fThreadArg = arg;
   PutComm("Run: MainMutex locking");
   Lock();
   PutComm("Run: MainMutex locked");
-  if (fFcnVoid) fname=G__p2f2funcname(fFcnVoid);
-  if (fFcnRetn) fname=G__p2f2funcname(fFcnRetn);
+  if (fFcnVoid) fname=G__p2f2funcname((void*)fFcnVoid);
+  if (fFcnRetn) fname=G__p2f2funcname((void*)fFcnRetn);
   if(!fNamed)
     if (fname) SetName(fname);
 
@@ -370,13 +386,20 @@ void TThread::AfterCancel(TThread *th)
 }
 
 
- Int_t TThread::Exit(void *ret){return fgThreadImp->Exit(ret);};
+Int_t TThread::Exit(void *ret) 
+{
+   return fgThreadImp->Exit(ret);
+}
 
- Int_t TThread::Sleep(ULong_t secs, ULong_t nanos )
-{ return fgThreadImp->Sleep(        secs,         nanos);}
+Int_t TThread::Sleep(ULong_t secs, ULong_t nanos )
+{ 
+  return fgThreadImp->Sleep(        secs,         nanos);
+}
 
- Int_t TThread::GetTime(ULong_t *absSec, ULong_t *absNanoSec)
-{ return fgThreadImp->GetTime(         absSec,          absNanoSec);}
+Int_t TThread::GetTime(ULong_t *absSec, ULong_t *absNanoSec)
+{ 
+  return fgThreadImp->GetTime(         absSec,          absNanoSec);
+}
 
 Int_t TThread::Lock()   {return fgMainMutex->Lock();  }    // lock main mutex
 Int_t TThread::TryLock(){return fgMainMutex->TryLock();}   // lock main mutex

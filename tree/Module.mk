@@ -21,7 +21,7 @@ TREEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TREES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TREEO        := $(TREES:.cxx=.o)
 
-TREEDEP      := $(TREEO:.o=.d)
+TREEDEP      := $(TREEO:.o=.d) $(TREEDO:.o=.d)
 
 TREELIB      := $(LPATH)/libTree.$(SOEXT)
 

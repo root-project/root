@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.4 2000/06/30 07:24:54 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -105,14 +105,17 @@ Double_t TMath::Log2(Double_t x)
 //______________________________________________________________________________
 Long_t TMath::NextPrime(Long_t x)
 {
-   // Return next prime number after x.
+   // Return next prime number after x, unless x is a prime in which case
+   // x is returned.
 
-   if (x <= 3)
-      return 3;
-
+   if (x < 2)
+      return 2;
+   if (x == 3)
+      return 3; 
+    
    if (x % 2 == 0)
       x++;
-
+    
    Long_t sqr = (Long_t) sqrt((Double_t)x) + 1;
 
    for (;;) {
@@ -563,6 +566,72 @@ Double_t TMath::Prob(Double_t chi2,Int_t ndf)
 
    // Evaluate the incomplete gamma function
    return (1-Gamma(0.5*ndf,0.5*chi2));
+}
+
+//______________________________________________________________________________
+Double_t TMath::KolmogorovProb(Double_t z)
+{
+   // Calculates the Kolmogorov distribution function,
+   //Begin_Html
+   /*
+   <img src="gif/kolmogorov.gif">
+   */
+   //End_Html
+   // which gives the probability that Kolmogorov's test statistic will exceed
+   // the value z assuming the null hypothesis. This gives a very powerful
+   // test for comparing two one-dimensional distributions.
+   // see, for example, Eadie et al, "statistocal Methods in Experimental
+   // Physics', pp 269-270).
+   //
+   // This function returns the confidence level for the null hypothesis, where:
+   //   z = dn*sqrt(n), and
+   //   dn  is the maximum deviation between a hypothetical distribution
+   //       function and an experimental distribution with
+   //   n    events
+   //
+   // NOTE: To compare two experimental distributions with m and n events,
+   //       use z = sqrt(m*n/(m+n))*dn
+   //
+   // Accuracy: The function is far too accurate for any imaginable application. 
+   //           Probabilities less than 10^-15 are returned as zero.
+   //           However, remember that the formula is only valid for "large" n.
+   // Theta function inversion formula is used for z <= 1
+   //
+   // This function was translated by Rene Brun from PROBKL in CERNLIB
+   
+   // cons[j] = -0.5*(PI*2*j-1)/2(**2
+   const Double_t cons[3] = { -1.233700550136 , -11.10330496 , -30.84251376};
+   // jf2[j] = -2* j**2
+   const Double_t fj2[5]  = {-2. , -8. , -18. , -32. , -50.};
+   const Double_t sqr2pi = 2.50662827463;
+ 
+   Double_t p = 0;
+   Int_t j;
+   if (z < 0.2) return 1;
+   if (z > 1) {  // use series in exp(z**2)
+      Double_t c;
+      Double_t sig2 = -2;
+      Double_t z2 = z*z;
+      for (j=0;j<5;j++) {
+         sig2 = -sig2;
+         c = fj2[j] *z2;
+         if (c < -100) return p;
+         p += sig2*TMath::Exp(c);
+      }
+      return p;
+   }
+   // z< 1  use series in exp(1/z**2)
+   Double_t zinv = 1/z;
+   Double_t a = sqr2pi*zinv;
+   Double_t zinv2 = zinv*zinv;
+   Double_t arg;
+   for (j=0;j<3;j++) {
+      arg = cons[j]*zinv2;
+      if (arg < -30) continue;
+      p += TMath::Exp(arg);
+   }
+   p = 1 - a*p;
+   return p;
 }
 
 //______________________________________________________________________________

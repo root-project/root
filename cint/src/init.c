@@ -1960,7 +1960,7 @@ void G__platformMacro()
 #ifdef __BCPLUSPLUS__
   sprintf(temp,"G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__getexpr(temp);
 #endif
-#ifdef __alpha
+#if defined(__alpha) && !defined(__linux)
   sprintf(temp,"G__ALPHA=%ld",(long)__alpha); G__getexpr(temp);
 #endif
 #ifdef __VMS

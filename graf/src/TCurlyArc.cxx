@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TCurlyArc.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -34,9 +34,9 @@
 ClassImp(TCurlyArc)
 
 //_____________________________________________________________________________________
-TCurlyArc::TCurlyArc(Float_t x1, Float_t y1,
-                   Float_t rad, Float_t phimin, Float_t phimax,
-                   Float_t tl, Float_t trad)
+TCurlyArc::TCurlyArc(Double_t x1, Double_t y1,
+                   Double_t rad, Double_t phimin, Double_t phimax,
+                   Double_t tl, Double_t trad)
          : fR1(rad), fPhimin(phimin),fPhimax(phimax)
 {
  // create a new TCurlyarc with center (x1, y1) and radius rad.
@@ -57,20 +57,20 @@ void TCurlyArc::Build()
 {
 //*-*-*-*-*-*-*-*-*-*-*Create a curly (Gluon) or wavy (Gamma) arc*-*-*-*-*-*
 //*-*                  ===========================================
-   Float_t dang = fPhimax - fPhimin;
+   Double_t dang = fPhimax - fPhimin;
    if(dang < 0) dang += 360;
-   Float_t length = TMath::Pi() * fR1 * dang/180;
-   Float_t x1sav = fX1;
-   Float_t y1sav = fY1;
+   Double_t length = TMath::Pi() * fR1 * dang/180;
+   Double_t x1sav = fX1;
+   Double_t y1sav = fY1;
    fX1 = fY1 = 0;
    fX2 = length;
    fY2 = 0;
    TCurlyLine::Build();
    fX1 = x1sav;
    fY1 = y1sav;
-   Float_t *xv= GetX();
-   Float_t *yv= GetY();
-   Float_t xx, yy, angle;
+   Double_t *xv= GetX();
+   Double_t *yv= GetY();
+   Double_t xx, yy, angle;
    for(Int_t i = 0; i < fNsteps; i++){
       angle = xv[i] / (fR1) + fPhimin * TMath::Pi()/180;
       xx    = (yv[i] + fR1) * cos(angle);
@@ -93,10 +93,10 @@ Int_t TCurlyArc::DistancetoPrimitive(Int_t px, Int_t py)
 //*-*- Compute distance of point to center of arc
    Int_t pxc    = gPad->XtoAbsPixel(fX1);
    Int_t pyc    = gPad->YtoAbsPixel(fY1);
-   Float_t dist = TMath::Sqrt(Float_t((pxc-px)*(pxc-px)+(pyc-py)*(pyc-py)));
-   Float_t cosa = (px - pxc)/dist;
-   Float_t sina = (pyc - py)/dist;
-   Float_t phi  = TMath::ATan2(sina,cosa);
+   Double_t dist = TMath::Sqrt(Double_t((pxc-px)*(pxc-px)+(pyc-py)*(pyc-py)));
+   Double_t cosa = (px - pxc)/dist;
+   Double_t sina = (pyc - py)/dist;
+   Double_t phi  = TMath::ATan2(sina,cosa);
    if(phi < 0) phi += 2 * TMath::Pi();
    phi = phi * 180 / TMath::Pi();
    if(fPhimax > fPhimin){
@@ -105,7 +105,7 @@ Int_t TCurlyArc::DistancetoPrimitive(Int_t px, Int_t py)
       if(phi > fPhimin && phi < fPhimax) return 9999;
    }
    Int_t pxr = gPad->XtoAbsPixel(fR1 + gPad->GetUxmin());
-   Float_t distr = TMath::Abs(dist-pxr);
+   Double_t distr = TMath::Abs(dist-pxr);
    return Int_t(distr);
 }
 
@@ -125,13 +125,13 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    Int_t kMaxDiff = 10;
    const Int_t np = 10;
-   const Float_t PI = 3.141592;
+   const Double_t PI = 3.141592;
    static Int_t x[np+3], y[np+3];
    static Int_t px1,py1,npe,R1;
    static Int_t pxold, pyold;
    Int_t i, dpx, dpy;
-   Float_t angle,dx,dy,dphi,rTy,rBy,rLx,rRx;
-   Float_t  phi0;
+   Double_t angle,dx,dy,dphi,rTy,rBy,rLx,rRx;
+   Double_t  phi0;
    static Bool_t T, L, R, B, INSIDE;
    static Int_t Tx,Ty,Lx,Ly,Rx,Ry,Bx,By;
 
@@ -145,7 +145,7 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       dphi /= np;
       phi0 = fPhimin * PI / 180;
        for (i=0;i<=np;i++) {
-         angle = Float_t(i)*dphi + phi0;
+         angle = Double_t(i)*dphi + phi0;
          dx    = fR1*TMath::Cos(angle);
          dy    = fR1*TMath::Sin(angle);
          x[i]  = gPad->XtoAbsPixel(fX1 + dx);
@@ -264,11 +264,11 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if(dphi<0) dphi += 2 * PI;
          dphi /= np;
          phi0 = fPhimin * PI / 180;
-         Float_t uR1 = gPad->PixeltoX(R1) - gPad->GetUxmin();
+         Double_t uR1 = gPad->PixeltoX(R1) - gPad->GetUxmin();
          Int_t pX1   = gPad->XtoAbsPixel(fX1);
          Int_t pY1   = gPad->YtoAbsPixel(fY1);
          for (i=0;i<=np;i++) {
-            angle = Float_t(i)*dphi + phi0;
+            angle = Double_t(i)*dphi + phi0;
             dx    = uR1 * TMath::Cos(angle);
             dy    = uR1 * TMath::Sin(angle);
             x[i]  = gPad->XtoAbsPixel(fX1 + dx);
@@ -357,23 +357,23 @@ void TCurlyArc::SavePrimitive(ofstream &out, Option_t *){
 
 
 //_____________________________________________________________________________________
-void TCurlyArc::SetCenter(Float_t x, Float_t y)
+void TCurlyArc::SetCenter(Double_t x, Double_t y)
 {
    fX1 = x;
    fY1 = y;
    Build();
 }
-void TCurlyArc::SetRadius(Float_t x)
+void TCurlyArc::SetRadius(Double_t x)
 {
    fR1 = x;
    Build();
 }
-void TCurlyArc::SetPhimin(Float_t x)
+void TCurlyArc::SetPhimin(Double_t x)
 {
    fPhimin = x;
    Build();
 }
-void TCurlyArc::SetPhimax(Float_t x)
+void TCurlyArc::SetPhimax(Double_t x)
 {
    fPhimax = x;
    Build();

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TAttCanvas.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -32,32 +32,32 @@
 
 class TAttCanvas {
 private:
-        Coord_t    fXBetween;        //X distance between pads
-        Coord_t    fYBetween;        //Y distance between pads
-        Coord_t    fTitleFromTop;    //Y distance of Global Title from top
-        Coord_t    fXdate;           //X position where to draw the date
-        Coord_t    fYdate;           //X position where to draw the date
-        Coord_t    fAdate;           //Alignment for the date
+        Float_t    fXBetween;        //X distance between pads
+        Float_t    fYBetween;        //Y distance between pads
+        Float_t    fTitleFromTop;    //Y distance of Global Title from top
+        Float_t    fXdate;           //X position where to draw the date
+        Float_t    fYdate;           //X position where to draw the date
+        Float_t    fAdate;           //Alignment for the date
 
 public:
         TAttCanvas();
         virtual ~TAttCanvas();
         virtual void     Copy(TAttCanvas &attcanvas);
-        Coord_t          GetAdate() { return fAdate;}
-        Coord_t          GetTitleFromTop() { return fTitleFromTop;}
-        Coord_t          GetXBetween() { return fXBetween;}
-        Coord_t          GetXdate() { return fXdate;}
-        Coord_t          GetYBetween() { return fYBetween;}
-        Coord_t          GetYdate() { return fYdate;}
+        Float_t          GetAdate() { return fAdate;}
+        Float_t          GetTitleFromTop() { return fTitleFromTop;}
+        Float_t          GetXBetween() { return fXBetween;}
+        Float_t          GetXdate() { return fXdate;}
+        Float_t          GetYBetween() { return fYBetween;}
+        Float_t          GetYdate() { return fYdate;}
         virtual void     Print(Option_t *option="");
         virtual void     ResetAttCanvas(Option_t *option="");
-        virtual void     SetAdate(Coord_t adate) { fAdate=adate;}
-        virtual void     SetTitleFromTop(Coord_t titlefromtop)
+        virtual void     SetAdate(Float_t adate) { fAdate=adate;}
+        virtual void     SetTitleFromTop(Float_t titlefromtop)
                                         { fTitleFromTop=titlefromtop;}
-        virtual void     SetXBetween(Coord_t xbetween) { fXBetween=xbetween;}
-        virtual void     SetXdate(Coord_t xdate) { fXdate=xdate;}
-        virtual void     SetYBetween(Coord_t ybetween) { fYBetween=ybetween;}
-        virtual void     SetYdate(Coord_t ydate) { fYdate=ydate;}
+        virtual void     SetXBetween(Float_t xbetween) { fXBetween=xbetween;}
+        virtual void     SetXdate(Float_t xdate) { fXdate=xdate;}
+        virtual void     SetYBetween(Float_t ybetween) { fYBetween=ybetween;}
+        virtual void     SetYdate(Float_t ydate) { fYdate=ydate;}
 
         ClassDef(TAttCanvas,1)  //Canvas attributes
 };

@@ -21,7 +21,7 @@ PHYSICSH     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 PHYSICSS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 PHYSICSO     := $(PHYSICSS:.cxx=.o)
 
-PHYSICSDEP   := $(PHYSICSO:.o=.d)
+PHYSICSDEP   := $(PHYSICSO:.o=.d) $(PHYSICSDO:.o=.d)
 
 PHYSICSLIB   := $(LPATH)/libPhysics.$(SOEXT)
 

@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name$:$Id$
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Fons Rademakers   21/11/98
 
 /*************************************************************************
@@ -256,15 +256,19 @@ void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
 {
    // Draw text using TrueType fonts.
 
+
+
 #ifndef R__TTFROT
    if (!fHasTTFonts || angle != 0.) {
 #else
    if (!fHasTTFonts) {
 #endif
+
       TGX11::DrawText(x, y, angle, mgn, text, mode);
       return;
    }
 
+   
    if (!text || !*text) return;
 
    // angles are between 0<=angle<360 degrees

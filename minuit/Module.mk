@@ -21,7 +21,7 @@ MINUITH      := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MINUITS      := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MINUITO      := $(MINUITS:.cxx=.o)
 
-MINUITDEP    := $(MINUITO:.o=.d)
+MINUITDEP    := $(MINUITO:.o=.d) $(MINUITDO:.o=.d)
 
 MINUITLIB    := $(LPATH)/libMinuit.$(SOEXT)
 

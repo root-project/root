@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.7 2000/07/12 17:13:01 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -53,7 +53,6 @@ TChain::TChain(): TTree()
    fTreeOffset     = 0;
    fTree           = 0;
    fFile           = 0;
-   fNbranches      = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
    fStatus         = new TList();
    fNotify         = 0;
@@ -89,7 +88,6 @@ TChain::TChain(const char *name, const char *title)
    fTreeNumber     = -1;
    fTreeOffset     = new Int_t[fTreeOffsetLen];
    fTree           = 0;
-   fNbranches      = 0;
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
    fStatus         = new TList();
@@ -100,7 +98,6 @@ TChain::TChain(const char *name, const char *title)
    gROOT->GetListOfSpecials()->Add(this);
    fDirectory = 0;
    fNotify    = 0;
-//   gROOT->cd();
 }
 
 //______________________________________________________________________________
@@ -233,7 +230,7 @@ void TChain::CreatePackets()
 }
 
 //______________________________________________________________________________
-void TChain::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
+Int_t TChain::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
    // Draw expression varexp for selected entries.
    //
@@ -242,17 +239,17 @@ void TChain::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries,
    //    ntuple.Draw("x",cut1+cut2+cut3);
    //
 
-   TChain::Draw(varexp.GetTitle(), selection.GetTitle(), option, nentries, firstentry);
+   return TChain::Draw(varexp.GetTitle(), selection.GetTitle(), option, nentries, firstentry);
 }
 
 //______________________________________________________________________________
-void TChain::Draw(const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
+Int_t TChain::Draw(const char *varexp, const char *selection, Option_t *option,Int_t nentries, Int_t firstentry)
 {
    // Process all entries in this chain and draw histogram
    // corresponding to expression varexp.
 
-   if (LoadTree(firstentry) < 0) return;
-   TTree::Draw(varexp,selection,option,nentries,firstentry);
+   if (LoadTree(firstentry) < 0) return 0;
+   return TTree::Draw(varexp,selection,option,nentries,firstentry);
 }
 
 
@@ -266,6 +263,15 @@ TBranch *TChain::GetBranch(const char *name)
    LoadTree(0);
    if (fTree) return fTree->GetBranch(name);
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TChain::GetChainEntryNumber(Int_t entry)
+{
+// return absolute entry number in the chain
+// the input parameter entry is the entry number in the current Tree of this chain
+
+  return entry + fTreeOffset[fTreeNumber];
 }
 
 //______________________________________________________________________________
@@ -320,16 +326,16 @@ TObjArray *TChain::GetListOfLeaves()
 }
 
 //______________________________________________________________________________
-Float_t TChain::GetMaximum(const char *columname)
+Double_t TChain::GetMaximum(const char *columname)
 {
 //*-*-*-*-*-*-*-*-*Return maximum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
 
-   Float_t theMax = -FLT_MAX;  //in float.h
+   Double_t theMax = -FLT_MAX;  //in float.h
    for (Int_t file=0;file<fNtrees;file++) {
       Int_t first = fTreeOffset[file];
       LoadTree(first);
-      Float_t curmax = fTree->GetMaximum(columname);;
+      Double_t curmax = fTree->GetMaximum(columname);;
       if (curmax > theMax) theMax = curmax;
    }
    return theMax;
@@ -337,16 +343,16 @@ Float_t TChain::GetMaximum(const char *columname)
 
 
 //______________________________________________________________________________
-Float_t TChain::GetMinimum(const char *columname)
+Double_t TChain::GetMinimum(const char *columname)
 {
 //*-*-*-*-*-*-*-*-*Return minimum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
 
-   Float_t theMin = FLT_MAX; //in float.h
+   Double_t theMin = FLT_MAX; //in float.h
    for (Int_t file=0;file<fNtrees;file++) {
       Int_t first = fTreeOffset[file];
       LoadTree(first);
-      Float_t curmin = fTree->GetMinimum(columname);;
+      Double_t curmin = fTree->GetMinimum(columname);;
       if (curmin < theMin) theMin = curmin;
    }
    return theMin;
@@ -388,12 +394,12 @@ Int_t TChain::LoadTree(Int_t entry)
 
    //Delete current tree and connect new tree
    TDirectory *cursav = gDirectory;
-   delete fFile;
+   delete fFile; fFile = 0;
    TChainElement *element = (TChainElement*)fFiles->At(t);
    if (!element) return -4;
    fFile = TFile::Open(element->GetTitle());
    if (fFile->IsZombie()) {
-      delete fFile;
+      delete fFile; fFile = 0;
       return -3;
    }
    fTree = (TTree*)fFile->Get(element->GetName());
@@ -588,6 +594,25 @@ void TChain::Print(Option_t *option)
    fFiles->ls(option);
 }
 
+//______________________________________________________________________________
+Int_t TChain::Process(const char *filename,Option_t *option,  Int_t nentries, Int_t firstentry)
+{
+   // Process all entries in this chain, calling functions in filename
+   // see TTree::Process
+
+   if (LoadTree(firstentry) < 0) return 0;
+   return TTree::Process(filename,option,nentries,firstentry);
+}
+
+//______________________________________________________________________________
+Int_t TChain::Process(TSelector *selector,Option_t *option,  Int_t nentries, Int_t firstentry)
+{
+//*-*-*-*-*-*-*-*-*Process this chain executing the code in selector*-*-*-*-*
+//*-*              ================================================
+
+   return TTree::Process(selector,option,nentries,firstentry);
+}
+
 //_______________________________________________________________________
 void TChain::SetBranchAddress(const char *bname, void *add)
 {
@@ -654,18 +679,28 @@ void TChain::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
+
+   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      b.ReadVersion();  //Version_t v = b.ReadVersion();
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
       TTree::Streamer(b);
       b >> fTreeOffsetLen;
       b >> fNtrees;
       fFiles->Streamer(b);
-      if (fTreeOffsetLen <= 0) return;
+      if (R__v > 1) {
+         fStatus->Streamer(b);
+         fTreeOffset = new Int_t[fTreeOffsetLen];
+         b.ReadFastArray(fTreeOffset,fTreeOffsetLen);
+      }
+      b.CheckByteCount(R__s, R__c, TChain::IsA());
    } else {
-      b.WriteVersion(TChain::IsA());
+      R__c = b.WriteVersion(TChain::IsA(), kTRUE);
       TTree::Streamer(b);
       b << fTreeOffsetLen;
       b << fNtrees;
       fFiles->Streamer(b);
+      fStatus->Streamer(b);
+      b.WriteFastArray(fTreeOffset,fTreeOffsetLen);
+      b.SetByteCount(R__c, kTRUE);
    }
 }

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name$:$Id$
+// @(#)root/eg:$Name:  $:$Id: TDatabasePDG.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDatabasePDG.h"
@@ -50,6 +50,7 @@ TDatabasePDG::~TDatabasePDG()
    if (fParticleList == 0) return;
    fParticleList->Delete();
    delete fParticleList;
+   fgInstance = 0;
 }
 
 //______________________________________________________________________________

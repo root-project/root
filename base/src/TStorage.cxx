@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -49,7 +49,11 @@
 #endif
 
 #ifdef MEM_DEBUG
-#   define storage_size(p) ((size_t)(((int*)p)[-2]))
+#   ifdef R__B64
+#      define storage_size(p) ((size_t)(((size_t*)p)[-1]))
+#   else
+#      define storage_size(p) ((size_t)(((int*)p)[-2]))
+#   endif
 #else
 #   define storage_size(p) ((size_t)0)
 #endif

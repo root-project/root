@@ -773,11 +773,27 @@ int G__filescopeaccess(filenum,statictype)
 int filenum;
 int statictype;
 {
+#ifndef G__OLDIMPLEMENTATION1323
+  int store_filenum = filenum;
+  int store_statictype = statictype;
+#endif
   if(filenum==statictype) return(1);
   while(statictype>=0) {
     statictype = G__srcfile[statictype].included_from;
     if(filenum==statictype) return(1);
   }
+#ifndef G__OLDIMPLEMENTATION1323
+  statictype = store_statictype;
+  while(statictype>=0) {
+    filenum = store_filenum;
+    if(filenum==statictype) return(1);
+    statictype = G__srcfile[statictype].included_from;
+    while(filenum>=0) {
+      if(filenum==statictype) return(1);
+      filenum = G__srcfile[filenum].included_from;
+    }
+  }
+#endif
   return(0);
 }
 #endif
@@ -2379,7 +2395,11 @@ struct G__var_array *varglobal,*varlocal;
      * bytecode generation for G__letvariable()
      *******************************************************/
     G__ASSERT(0==G__decl || 1==G__decl);
-    if(G__asm_noverflow) {
+    if(G__asm_noverflow
+#ifndef G__OLDIMPLEMENTATION1349
+       && 0==G__decl_obj
+#endif
+       ) {
 #ifndef G__OLDIMPLEMENTATION1073
       if( (0==G__decl || !G__asm_wholefunction) ) { /* ??? */
 #endif
@@ -3719,6 +3739,27 @@ struct G__var_array *varglobal,*varlocal;
 	return(result);
       }
 #endif
+
+#ifndef G__OLDIMPLEMENTATION1329
+      /* This is quite a tricky and unsophisticated way of dealing with
+       * typedef char charary[100]; access. NEED IMPROVEMENT sometime */
+      if(-1!=var->p_typetable[ig15] && 
+	 G__newtype.nindex[var->p_typetable[ig15]] && 
+	 'c'==tolower(var->type[ig15])) {
+	int typenumx = var->p_typetable[ig15];
+	char store_var_type = G__var_type;
+	int sizex = G__Lsizeof(G__newtype.name[typenumx]);
+	G__var_type = store_var_type;
+	if(p_inc>1) --p_inc; /* questionable */
+	switch(var->type[ig15]) {
+	case 'c': /* char */
+	  G__GET_VAR(sizex, char ,G__letint,'c','C')
+	case 'C': /* char */
+	  --paran;
+	  G__GET_VAR(sizex, char ,G__letint,'c','C')
+	}
+      }
+#endif
       
       switch(var->type[ig15]) {
 	
@@ -4810,9 +4851,16 @@ long G__struct_offset; /* used to be int */
   long addr;
 
   if(G__asm_exec) {
+#ifndef G__OLDIMPLEMENTATION1340
+    void *p1 = (void*)(G__struct_offset+var->p[ig15]+p_inc*G__struct.size[var->p_tagtable[ig15]]);
+    void *p2 = (void*)result->obj.i ;
+    size_t size = (size_t)G__struct.size[var->p_tagtable[ig15]];
+    memcpy(p1,p2,size);
+#else
     memcpy((void *)(G__struct_offset+var->p[ig15]+p_inc*G__struct.size[var->p_tagtable[ig15]])
 	   ,(void *)(G__int(*result))
 	   ,(size_t)G__struct.size[var->p_tagtable[ig15]]);
+#endif
     return;
   }
   
@@ -5789,7 +5837,7 @@ int parameter00;
     var->varlabel[var->allvar][ig25+1]=G__typedefindex[ig25];
   }
   for(i=0;i<paran;i++) {
-	 var->varlabel[var->allvar][++ig25]=G__int(para[i]);
+    var->varlabel[var->allvar][++ig25]=G__int(para[i]);
   }
   paran=ig25;
   
@@ -6382,7 +6430,7 @@ int parameter00;
     G__genericerror("Error: void type variable can not be declared");
     var->hash[ig15] = 0;
     break;
-    
+
   case 'm': /* macro file position */
     var->p[ig15] = G__malloc(1,sizeof(fpos_t),item);
     *(fpos_t *)var->p[ig15] = *(fpos_t *)result.obj.i;
@@ -6404,7 +6452,11 @@ int parameter00;
     }
     break;
     
-
+#ifndef G__OLDIMPLEMENTATION1347
+  case 'q': /* function, ???Questionable??? */
+    var->p[ig15] = G__malloc(p_inc,sizeof(long),item);
+    break;
+#endif
     
     /****************************************************
      * Automatic variable and macro

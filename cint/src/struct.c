@@ -664,6 +664,9 @@ int type;
     
     G__struct.globalcomp[i] = G__globalcomp;
     G__struct.iscpplink[i] = 0;
+#ifndef G__OLDIMPLEMENTATION1334
+    G__struct.protectedaccess[i] = 0;
+#endif
 
     G__struct.line_number[i] = -1;
     G__struct.filenum[i] = -1;
@@ -1179,6 +1182,30 @@ char type;
       }
 #endif
     }
+
+#ifndef G__PHILIPPE8
+    if ( strlen(basename)!=0 && isspace(c) ) {
+      /* maybe basename is namespace that got cut because
+       * G__fgetname_template stop at spaces and the user add:
+       * class MyClass : public MyNamespace ::MyTopClass !
+       * or 
+       * class MyClass : public MyNamespace:: MyTopClass !
+      */
+      int namespace_tagnum;
+      char temp[G__LONGLINE];
+  
+      namespace_tagnum = G__defined_tagname(basename,2);
+      while ( ( ( (namespace_tagnum!=-1)
+		  && (G__struct.type[namespace_tagnum]=='n') )
+		|| (strcmp("std",basename)==0)
+		|| (basename[strlen(basename)-1]==':') )
+	      && isspace(c) ) {
+	c = G__fgetname_template(temp,"{,");
+	strcat(basename,temp);
+	namespace_tagnum = G__defined_tagname(basename,2);
+      }
+    }
+#endif
 
     if(newdecl) {
 #ifndef G__OLDIMPLEMENTATION693

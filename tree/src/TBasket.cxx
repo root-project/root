@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -239,16 +239,15 @@ void TBasket::Streamer(TBuffer &b)
          delete [] fEntryOffset;
          fEntryOffset = new Int_t[fNevBufSize];
          if (fNevBuf) b.ReadArray(fEntryOffset);
-	 if (flag>20) {
-	   fDisplacement = new char[fNevBufSize];
-	   Int_t i,tmp;
-	   for(i=0; i<fNevBuf; i++) {
-	     tmp = fEntryOffset[i];
-	     fEntryOffset[i] &= ~kDisplacementMask;
-	     fDisplacement[i] = (((UInt_t)tmp) & kDisplacementMask)
-	       >> (8*(sizeof(Int_t)-sizeof(char)));
-	   }
-	 }	
+         if (20<flag && flag<40) {
+           for(int i=0; i<fNevBuf; i++){ 
+              fEntryOffset[i] &= ~kDisplacementMask;
+           }
+         }
+         if (flag>40) {
+           fDisplacement = new Int_t[fNevBufSize];
+           b.ReadArray(fDisplacement);
+         }
       }
       if (flag == 1 || flag > 10) {
          fBufferRef = new TBuffer(TBuffer::kRead,fBufferSize);
@@ -270,24 +269,13 @@ void TBasket::Streamer(TBuffer &b)
       flag = 1;
       if (!fEntryOffset)  flag  = 2;
       if (fBufferRef)     flag += 10;
-      if (fDisplacement)  flag += 20;
+      if (fDisplacement)  flag += 40;
       if (fHeaderOnly)    flag  = 0;
       b << flag;
       if (fHeaderOnly) return;
       if (fEntryOffset && fNevBuf) {
-         if (fDisplacement) {
-	   char move = (8*(sizeof(Int_t)-sizeof(char)));
-	   for(Int_t i=0; i<fNevBuf; i++) {
-	     fEntryOffset[i] = fEntryOffset[i]&~kDisplacementMask +
-	       fDisplacement[i] << move;
-	   }
-	 }
-	 b.WriteArray(fEntryOffset, fNevBuf);
-         if (fDisplacement) {
-	   for(Int_t i=0; i<fNevBuf; i++) {
-	     fEntryOffset[i] = fEntryOffset[i]&~kDisplacementMask;
-	   }
-	 }	
+         b.WriteArray(fEntryOffset, fNevBuf);
+         if (fDisplacement) b.WriteArray(fDisplacement, fNevBuf);
       }
       if (fBufferRef) {
          char *buf  = fBufferRef->Buffer();
@@ -297,7 +285,7 @@ void TBasket::Streamer(TBuffer &b)
 }
 
 //_______________________________________________________________________
-void TBasket::Update(Int_t offset, Int_t disp)
+void TBasket::Update(Int_t offset, Int_t skipped)
 {
 //    Update basket header and EntryOffset table
 
@@ -306,11 +294,11 @@ void TBasket::Update(Int_t offset, Int_t disp)
          Int_t newsize = TMath::Max(10,2*fNevBufSize);
          Int_t *newoff = (Int_t*)TStorage::ReAlloc(fEntryOffset,
                                newsize*sizeof(Int_t),fNevBufSize*sizeof(Int_t));
-	 if (fDisplacement) {
-	    char *newdisp = (char*)TStorage::ReAlloc(fDisplacement,
-                               newsize*sizeof(char),fNevBufSize*sizeof(char));
-	    fDisplacement = newdisp;
-	 }
+         if (fDisplacement) {
+            Int_t *newdisp = (Int_t*)TStorage::ReAlloc(fDisplacement,
+                               newsize*sizeof(Int_t),fNevBufSize*sizeof(Int_t));
+            fDisplacement = newdisp;
+         }
          fEntryOffset  = newoff;
          fNevBufSize   = newsize;
          //Update branch only for the first 10 baskets
@@ -319,13 +307,13 @@ void TBasket::Update(Int_t offset, Int_t disp)
       }
       fEntryOffset[fNevBuf] = offset;
 
-      if (disp>=0) {
-	if (!fDisplacement) {
-	  fDisplacement = new char[fNevBufSize];
-	  for (Int_t i = 0; i<fNevBufSize; i++) fDisplacement[i] = -1;
-	}
-	fDisplacement[fNevBuf] = disp;
-	fBufferRef->SetBufferDisplacement(disp);
+      if (skipped!=offset && !fDisplacement){
+         fDisplacement = new Int_t[fNevBufSize];
+         for (Int_t i = 0; i<fNevBufSize; i++) fDisplacement[i] = fEntryOffset[i];
+      }
+      if (fDisplacement) {
+         fDisplacement[fNevBuf] = skipped;
+         fBufferRef->SetBufferDisplacement(skipped);
       }
    }
 
@@ -351,8 +339,8 @@ Int_t TBasket::WriteBuffer()
       fBufferRef->WriteArray(fEntryOffset,fNevBuf+1);
       delete [] fEntryOffset; fEntryOffset = 0;
       if (fDisplacement) {
-	fBufferRef->WriteArray(fDisplacement,fNevBuf+1);
-	delete [] fDisplacement; fDisplacement = 0;
+        fBufferRef->WriteArray(fDisplacement,fNevBuf+1);
+        delete [] fDisplacement; fDisplacement = 0;
       }
    }
 

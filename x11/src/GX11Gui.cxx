@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name$:$Id$
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.3 2000/07/04 11:32:32 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1288,6 +1288,13 @@ void TGX11::MapEvent(Event_t &ev, XEvent &xev, Bool_t tox)
          MapModifierState(ev.fState, xev.xkey.state, kTRUE); // key mask
          xev.xkey.keycode = ev.fCode;    // key code
       }
+      if (ev.fType == kSelectionNotify) {
+         xev.xselection.time      = (Time) ev.fTime;
+         xev.xselection.requestor = (Window) ev.fUser[0];
+         xev.xselection.selection = (Atom) ev.fUser[1];
+         xev.xselection.target    = (Atom) ev.fUser[2];
+         xev.xselection.property  = (Atom) ev.fUser[3];
+      }
       if (ev.fType == kClientMessage) {
          xev.xclient.message_type = ev.fHandle;
          xev.xclient.format       = ev.fFormat;
@@ -1408,15 +1415,18 @@ void TGX11::MapEvent(Event_t &ev, XEvent &xev, Bool_t tox)
          ev.fUser[0] = xev.xselectionclear.selection;
       }
       if (ev.fType == kSelectionRequest) {
-         ev.fUser[0] = xev.xselectionrequest.selection;
-         ev.fUser[1] = xev.xselectionrequest.target;
-         ev.fUser[2] = xev.xselectionrequest.property;
+         ev.fTime    = (Time_t) xev.xselectionrequest.time;
+         ev.fUser[0] = xev.xselectionrequest.requestor;
+         ev.fUser[1] = xev.xselectionrequest.selection;
+         ev.fUser[2] = xev.xselectionrequest.target;
+         ev.fUser[3] = xev.xselectionrequest.property;
       }
       if (ev.fType == kSelectionNotify) {
-         ev.fUser[0] = xev.xselection.requestor;   // used
+         ev.fTime    = (Time_t) xev.xselection.time;
+         ev.fUser[0] = xev.xselection.requestor;
          ev.fUser[1] = xev.xselection.selection;
          ev.fUser[2] = xev.xselection.target;
-         ev.fUser[3] = xev.xselection.property;    // used
+         ev.fUser[3] = xev.xselection.property;
       }
    }
 }
@@ -1457,6 +1467,18 @@ void TGX11::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *attr)
 
    if (attr && (attr->fMask & kWABorderWidth))
       XSetWindowBorderWidth(fDisplay, (Window) id, attr->fBorderWidth);
+}
+
+//______________________________________________________________________________
+void TGX11::ChangeProperty(Window_t id, Atom_t property, Atom_t type,
+                           UChar_t *data, Int_t len)
+{
+   // This function alters the property for the specified window and
+   // causes the X server to generate a PropertyNotify event on that
+   // window.
+
+   XChangeProperty(fDisplay, (Window) id, (Atom) property, (Atom) type,
+                   8, PropModeReplace, data, len);
 }
 
 //______________________________________________________________________________
@@ -1884,7 +1906,16 @@ Window_t TGX11::GetPrimarySelectionOwner()
 }
 
 //______________________________________________________________________________
-void TGX11::ConvertPrimarySelection(Window_t id, Time_t when)
+void TGX11::SetPrimarySelectionOwner(Window_t id)
+{
+   // Makes the window id the current owner of the primary selection.
+   // That is the window in which, for example some text is selected.
+
+   XSetSelectionOwner(fDisplay, XA_PRIMARY, id, CurrentTime);
+}
+
+//______________________________________________________________________________
+void TGX11::ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when)
 {
    // XConvertSelection() causes a SelectionRequest event to be sent to the
    // current primary selection owner. This event specifies the selection
@@ -1896,8 +1927,7 @@ void TGX11::ConvertPrimarySelection(Window_t id, Time_t when)
    // The selection owner responds by sending a SelectionNotify event, which
    // confirms the selected atom and type.
 
-   Atom sel_property = XInternAtom(fDisplay, (char *)"VT_SELECTION", False);
-   XConvertSelection(fDisplay, XA_PRIMARY, XA_STRING, sel_property,
+   XConvertSelection(fDisplay, XA_PRIMARY, XA_STRING, (Atom) clipboard,
                      (Window) id, (Time) when);
 }
 

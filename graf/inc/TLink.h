@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TLink.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -33,7 +33,7 @@ protected:
 
 public:
         TLink();
-        TLink(Coord_t x, Coord_t y, void *pointer);
+        TLink(Double_t x, Double_t y, void *pointer);
         virtual ~TLink();
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
 

@@ -13,14 +13,16 @@ endif
 # Compiler:
 CXX           = g++
 CC            = egcs
-CXXFLAGS      = -Wall -fsigned-char -fPIC -DR__GLIBC \
+CXXFLAGS      = -pipe -Wall -fsigned-char -fPIC -DR__GLIBC \
                 -I/usr/X11/include $(EXTRA_CXXFLAGS)
-CFLAGS        = -Wall -fPIC -fsigned-char -DR__GLIBC \
+CFLAGS        = -pipe -Wall -fPIC -fsigned-char -DR__GLIBC \
                 -I/usr/X11/include $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -Wall -fPIC -fsigned-char -DG__REGEXP $(EXTRA_CXXFLAGS) \
-                -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
-CINTCFLAGS    = -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -pipe -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX \
+                -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -pipe -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX \
+                -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                $(EXTRA_CFLAGS)
 
 # Linker:
 LD            = g++
@@ -36,3 +38,6 @@ CRYPTLIBS     = -lcrypt
 
 # Fortran:
 
+
+# Extras
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu

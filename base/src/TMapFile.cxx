@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TMapFile.cxx,v 1.2 2000/06/16 15:23:00 rdm Exp $
 // Author: Fons Rademakers   08/07/97
 
 /*************************************************************************
@@ -9,30 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #ifdef WIN32
-#if defined(__hpux) && !defined(__GNUG__)
-#pragma OPTIMIZE OFF
-#endif
-
-#if defined(_AIX) && !defined(__GNUG__)
-#endif
-
-#if defined(__alpha) && !defined(__GNUG__)
-#endif
-
-#if defined(__sun) && !defined(__GNUG__)
-#endif
-
-#if defined(__sgi) && !defined(__GNUG__)
-#endif
-
-#if defined(_linux)
-#endif
-
-#ifdef WIN32
 #pragma optimize("",off)
 #endif
 
-#endif
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TMapFile                                                             //
@@ -267,10 +246,10 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
    }
    if (update) {
       if (gSystem->AccessPathName(fname, kFileExists)) {
-         Error("TMapFile", "file %s does not exist", fname);
-         goto zombie;
+         update = kFALSE;
+         create = kTRUE;
       }
-      if (gSystem->AccessPathName(fname, kWritePermission)) {
+      if (update && gSystem->AccessPathName(fname, kWritePermission)) {
          Error("TMapFile", "no write permission, could not open file %s", fname);
          goto zombie;
       }

@@ -21,7 +21,7 @@ TREEVIEWERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TREEVIEWERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TREEVIEWERO  := $(TREEVIEWERS:.cxx=.o)
 
-TREEVIEWERDEP := $(TREEVIEWERO:.o=.d)
+TREEVIEWERDEP := $(TREEVIEWERO:.o=.d) $(TREEVIEWERDO:.o=.d)
 
 TREEVIEWERLIB := $(LPATH)/libTreeViewer.$(SOEXT)
 
@@ -36,8 +36,8 @@ INCLUDEFILES += $(TREEVIEWERDEP)
 include/%.h:    $(TREEVIEWERDIRI)/%.h
 		cp $< $@
 
-$(TREEVIEWERLIB): $(TREEVIEWERO) $(TREEVIEWERDO) $(MAINLIBS) $(TREELIB) \
-                  $(GRAFLIB) $(HISTLIB) $(GPADLIB)
+$(TREEVIEWERLIB): $(TREEVIEWERO) $(TREEVIEWERDO) $(MAINLIBS) \
+                  $(TREEVIEWERLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libTreeViewer.$(SOEXT) $@ \
 		   "$(TREEVIEWERO) $(TREEVIEWERDO)" \

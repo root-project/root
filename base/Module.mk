@@ -27,7 +27,7 @@ BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 BASES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 BASEO        := $(BASES:.cxx=.o)
 
-BASEDEP      := $(BASEO:.o=.d)
+BASEDEP      := $(BASEO:.o=.d) $(BASEDO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(BASEH))

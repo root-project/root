@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name$:$Id$
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: O.Couet   16/07/99
 
 /*************************************************************************
@@ -86,16 +86,19 @@ public:
         TPostScript(const char *filename, Int_t type=-111);
         virtual     ~TPostScript();
                 void  Close(Option_t *opt="");
-                Int_t CMtoPS(Float_t u) {return Int_t(0.5 + 72*u/2.54);}
+                Int_t CMtoPS(Double_t u) {return Int_t(0.5 + 72*u/2.54);}
                 void  DefineMarkers();
-                void  DrawBox(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2);
-                void  DrawFrame(Coord_t xl, Coord_t yl, Coord_t xt, Coord_t  yt,
+                void  DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
+                void  DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
                                 Int_t mode, Int_t border, Int_t dark, Int_t light);
                 void  DrawHatch(Float_t dy, Float_t angle, Int_t n, Float_t *x, Float_t *y);
+                void  DrawHatch(Float_t dy, Float_t angle, Int_t n, Double_t *x, Double_t *y);
                 void  DrawPolyLine(Int_t n, TPoints *xy);
                 void  DrawPolyLineNDC(Int_t n, TPoints *uv);
                 void  DrawPolyMarker(Int_t n, Float_t *x, Float_t *y);
+                void  DrawPolyMarker(Int_t n, Double_t *x, Double_t *y);
                 void  DrawPS(Int_t n, Float_t *xw, Float_t *yw);
+                void  DrawPS(Int_t n, Double_t *xw, Double_t *yw);
                 void  FontEncode();
                 void  Initialize();
                 void  NewPage();
@@ -117,14 +120,14 @@ public:
                 void  PrintFast(Int_t nch, const char *string="");
                 void  Range(Float_t xrange, Float_t yrange);
                 void  SetColor(Int_t color = 1);
-                void  Text(Float_t x, Float_t y, const char *string);
-                void  TextNDC(Float_t u, Float_t v, const char *string);
-                Int_t UtoPS(Float_t u);
-                Int_t VtoPS(Float_t v);
+                void  Text(Double_t x, Double_t y, const char *string);
+                void  TextNDC(Double_t u, Double_t v, const char *string);
+                Int_t UtoPS(Double_t u);
+                Int_t VtoPS(Double_t v);
                 void  WriteInteger(Int_t i);
                 void  WriteReal(Float_t r);
-                Int_t XtoPS(Float_t x);
-                Int_t YtoPS(Float_t y);
+                Int_t XtoPS(Double_t x);
+                Int_t YtoPS(Double_t y);
                 void  Zone();
 
         ClassDef(TPostScript,0)  //PostScript driver

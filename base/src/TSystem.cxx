@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1097,7 +1097,7 @@ int TSystem::AcceptConnection(int)
 }
 
 //______________________________________________________________________________
-void TSystem::CloseConnection(int)
+void TSystem::CloseConnection(int, Bool_t)
 {
    // Close socket connection.
 

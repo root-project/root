@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TFrame.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   31/10/96
 
 /*************************************************************************
@@ -31,7 +31,7 @@ TFrame::TFrame(): TWbox()
 }
 
 //______________________________________________________________________________
-TFrame::TFrame(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2)
+TFrame::TFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
        :TWbox(x1,y1,x2,y2)
 {
 //*-*-*-*-*-*-*-*-*-*-*frame normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -85,18 +85,18 @@ void TFrame::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    if (event != kButton1Up) return;
 // update pad margins
-   Float_t xmin = gPad->GetUxmin();
-   Float_t xmax = gPad->GetUxmax();
-   Float_t ymin = gPad->GetUymin();
-   Float_t ymax = gPad->GetUymax();
-   Float_t dx   = xmax-xmin;
-   Float_t dy   = ymax-ymin;
+   Double_t xmin = gPad->GetUxmin();
+   Double_t xmax = gPad->GetUxmax();
+   Double_t ymin = gPad->GetUymin();
+   Double_t ymax = gPad->GetUymax();
+   Double_t dx   = xmax-xmin;
+   Double_t dy   = ymax-ymin;
    gPad->SetLeftMargin((fX1-gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
    gPad->SetRightMargin((gPad->GetX2()-fX2)/(gPad->GetX2()-gPad->GetX1()));
    gPad->SetBottomMargin((fY1-gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
    gPad->SetTopMargin((gPad->GetY2()-fY2)/(gPad->GetY2()-gPad->GetY1()));
-   Float_t dxr  = dx/(1 - gPad->GetLeftMargin() - gPad->GetRightMargin());
-   Float_t dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
+   Double_t dxr  = dx/(1 - gPad->GetLeftMargin() - gPad->GetRightMargin());
+   Double_t dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
 
    // Range() could change the size of the pad pixmap and therefore should
    // be called before the other paint routines

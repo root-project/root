@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TGaxis.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -38,9 +38,9 @@ class TF1;
 class TGaxis : public TLine, public TAttText {
 
 protected:
+    Double_t   fWmin;                //Lowest value on the axis
+    Double_t   fWmax;                //Highest value on the axis
     Int_t      fNdiv;                //Number of divisions
-    Float_t    fWmin;                //Lowest value on the axis
-    Float_t    fWmax;                //Highest value on the axis
     Float_t    fGridLength;          //Length of the grid in NDC
     Float_t    fTickSize;            //Size of primary tick mark in NDC
     Float_t    fLabelOffset;         //Offset of label wrt axis
@@ -58,22 +58,22 @@ protected:
 
 public:
         // TGaxis status bits
-        enum { kCenterTitle = BIT(12) };
+        enum { kCenterTitle = BIT(12), kRotateTitle = BIT(13) };
 
         TGaxis();
-        TGaxis(Float_t xmin,Float_t ymin,Float_t xmax,Float_t ymax,
-               Float_t wmin,Float_t wmax,Int_t ndiv=510, Option_t *chopt="",
-               Float_t gridlength = 0);
-        TGaxis(Float_t xmin,Float_t ymin,Float_t xmax,Float_t ymax,
+        TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
+               Double_t wmin,Double_t wmax,Int_t ndiv=510, Option_t *chopt="",
+               Double_t gridlength = 0);
+        TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                const char *funcname, Int_t ndiv=510, Option_t *chopt="",
-               Float_t gridlength = 0);
+               Double_t gridlength = 0);
         virtual ~TGaxis();
-        virtual void    AdjustBinSize(Float_t A1,  Float_t A2,  Int_t nold
-                       ,Float_t &BinLow, Float_t &BinHigh, Int_t &nbins, Float_t &BinWidth);
+        virtual void    AdjustBinSize(Double_t A1,  Double_t A2,  Int_t nold
+                       ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BinWidth);
         virtual void    CenterTitle(Bool_t center=kTRUE);
-        virtual void    DrawAxis(Float_t xmin,Float_t ymin,Float_t xmax,Float_t ymax,
-                                 Float_t wmin,Float_t wmax,Int_t ndiv=510, Option_t *chopt="",
-                                 Float_t gridlength = 0);
+        virtual void    DrawAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
+                                 Double_t wmin,Double_t wmax,Int_t ndiv=510, Option_t *chopt="",
+                                 Double_t gridlength = 0);
              Float_t    GetGridLength()   {return fGridLength;}
              TF1       *GetFunction()     {return fFunction;}
                Int_t    GetLabelColor()   {return fLabelColor;}
@@ -86,18 +86,18 @@ virtual const char     *GetName() const  {return fName.Data();}
 virtual const char     *GetOption() const {return fChopt.Data();}
 virtual const char     *GetTitle() const {return fTitle.Data();}
                Int_t    GetNdiv()         {return fNdiv;}
-             Float_t    GetWmin()         {return fWmin;}
-             Float_t    GetWmax()         {return fWmax;}
+             Double_t   GetWmin()         {return fWmin;}
+             Double_t   GetWmax()         {return fWmax;}
              Float_t    GetTickSize()     {return fTickSize;}
                 void    LabelsLimits(char *label, Int_t &first, Int_t &last);
-        virtual void    Optimize(Float_t A1,  Float_t A2,  Int_t nold
-                       ,Float_t &BinLow, Float_t &BinHigh, Int_t &nbins, Float_t &BWID);
+        virtual void    Optimize(Double_t A1,  Double_t A2,  Int_t nold
+                       ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BWID);
         virtual void    Paint(Option_t *chopt="");
-        virtual void    PaintAxis(Float_t xmin,Float_t ymin,Float_t xmax,Float_t ymax,
-                                  Float_t &wmin,Float_t &wmax,Int_t &ndiv, Option_t *chopt="",
-                                  Float_t gridlength = 0);
-        virtual void    Rotate(Float_t X,  Float_t Y,  Float_t CFI, Float_t SFI
-                              ,Float_t XT, Float_t YT, Float_t &U,   Float_t &V);
+        virtual void    PaintAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
+                                  Double_t &wmin,Double_t &wmax,Int_t &ndiv, Option_t *chopt="",
+                                  Double_t gridlength = 0);
+        virtual void    Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
+                              ,Double_t XT, Double_t YT, Double_t &U,   Double_t &V);
         virtual void    SavePrimitive(ofstream &out, Option_t *option);
                 void    SetFunction(const char *funcname="");
                 void    SetOption(Option_t *option="");
@@ -112,8 +112,8 @@ virtual const char     *GetTitle() const {return fTitle.Data();}
         virtual void    SetTitle(const char *title=""); // *MENU*
                 void    SetTitleOffset(Float_t titleoffset=1) {fTitleOffset = titleoffset;} // *MENU*
                 void    SetTitleSize(Float_t titlesize) {fTitleSize = titlesize;} // *MENU*
-                void    SetWmin(Float_t wmin) {fWmin = wmin;}
-                void    SetWmax(Float_t wmax) {fWmax = wmax;}
+                void    SetWmin(Double_t wmin) {fWmin = wmin;}
+                void    SetWmax(Double_t wmax) {fWmax = wmax;}
 
                 ClassDef(TGaxis,3)  //Graphics axis
 };

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name$:$Id$
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.4 2000/06/28 15:30:44 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -57,8 +57,10 @@
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
-#if defined(R__LINUX) && !defined(R__MKLINUX)
-#   define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
+#if defined(R__LINUX) && !defined(R__MKLINUX) && !defined(__alpha)
+#   ifndef SIGSYS
+#      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
+#   endif
 #   include <dlfcn.h>
 #endif
 #include <syslog.h>
@@ -423,9 +425,15 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       // check for file descriptors ready for reading/writing
       if (fNfd > 0 && fFileHandler->GetSize() > 0) {
          TFileHandler *fh;
+#if defined(R__LINUX) && defined(__alpha__)
+         // TOrdCollectionIter it(...) causes segv ?!?!? Also TIter fails.
+         int cursor = 0;
+         while (cursor < fFileHandler->GetSize()) {
+            fh = (TFileHandler*) fFileHandler->At(cursor++);
+#else
          TOrdCollectionIter it((TOrdCollection*)fFileHandler);
-
          while ((fh = (TFileHandler*) it.Next())) {
+#endif
             int fd = fh->GetFd();
             if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
                fReadready.Clr(fd);
@@ -1508,14 +1516,15 @@ int TUnixSystem::AcceptConnection(int sock)
 }
 
 //______________________________________________________________________________
-void TUnixSystem::CloseConnection(int sock)
+void TUnixSystem::CloseConnection(int sock, Bool_t force)
 {
    // Close socket.
 
    if (sock < 0) return;
 
 #if !defined(R__AIX) || defined(_AIX41) || defined(_AIX43)
-   //::shutdown(sock, 2);   // will also close connection of parent
+   if (force)
+      ::shutdown(sock, 2);   // will also close connection of parent
 #endif
 
    while (::close(sock) == -1 && GetErrno() == EINTR)

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name$:$Id$
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.2 2000/06/11 12:25:48 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -138,7 +138,6 @@ TProofServ::TProofServ(int *argc, char **argv)
    // Create an application environment. The TProofServ environment provides
    // an eventloop via inheritance of TApplication.
 
-
    // Make sure all registered dictionaries have been initialized
    gInterpreter->InitializeDictionaries();
 
@@ -211,7 +210,7 @@ TObject *TProofServ::Get(const char *namecycle)
 }
 
 //______________________________________________________________________________
-void TProofServ::GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Float_t *vmin, Float_t *vmax)
+void TProofServ::GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Double_t *vmin, Double_t *vmax)
 {
    // Get limits of histogram from master. This method is called by
    // TTree::TakeEstimate().

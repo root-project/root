@@ -21,7 +21,7 @@ TREEPLAYERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 TREEPLAYERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TREEPLAYERO  := $(TREEPLAYERS:.cxx=.o)
 
-TREEPLAYERDEP := $(TREEPLAYERO:.o=.d)
+TREEPLAYERDEP := $(TREEPLAYERO:.o=.d) $(TREEPLAYERDO:.o=.d)
 
 TREEPLAYERLIB := $(LPATH)/libTreePlayer.$(SOEXT)
 
@@ -36,8 +36,8 @@ INCLUDEFILES += $(TREEPLAYERDEP)
 include/%.h:    $(TREEPLAYERDIRI)/%.h
 		cp $< $@
 
-$(TREEPLAYERLIB): $(TREEPLAYERO) $(TREEPLAYERDO) $(MAINLIBS) $(TREELIB) \
-                  $(PROOFLIB) $(GRAFLIB) $(G3DLIB) $(HISTLIB)
+$(TREEPLAYERLIB): $(TREEPLAYERO) $(TREEPLAYERDO) $(MAINLIBS) \
+                  $(TREEPLAYERLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libTreePlayer.$(SOEXT) $@ \
 		   "$(TREEPLAYERO) $(TREEPLAYERDO)" \

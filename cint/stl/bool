@@ -1,0 +1,4 @@
+namespace std {
+#include <bool.h>
+}
+

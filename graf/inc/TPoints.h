@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TPoints.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   23/02/95
 
 /*************************************************************************
@@ -29,18 +29,18 @@
 class TPoints {
 
 private:
-   Coord_t    fX;           //X world coordinate
-   Coord_t    fY;           //Y world coordinate
+   Double_t    fX;           //X world coordinate
+   Double_t    fY;           //Y world coordinate
 
 public:
    TPoints() : fX(0), fY(0) { }
-   TPoints(Coord_t xy) : fX(xy), fY(xy) { }
-   TPoints(Coord_t x, Coord_t y) : fX(x), fY(y) { }
+   TPoints(Double_t xy) : fX(xy), fY(xy) { }
+   TPoints(Double_t x, Double_t y) : fX(x), fY(y) { }
    virtual ~TPoints() { }
-   Coord_t    GetX() const { return fX; }
-   Coord_t    GetY() const { return fY; }
-   void       SetX(Coord_t x) { fX = x; }
-   void       SetY(Coord_t y) { fY = y; }
+   Double_t   GetX() const { return fX; }
+   Double_t   GetY() const { return fY; }
+   void       SetX(Double_t x) { fX = x; }
+   void       SetY(Double_t y) { fY = y; }
 
    ClassDef(TPoints,0)  //2-D graphics point
 };

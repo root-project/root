@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.2 2000/06/13 11:12:13 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -35,10 +35,10 @@ protected:
 
 public:
         TPaveStats();
-        TPaveStats(Coord_t x1, Coord_t y1,Coord_t x2 ,Coord_t y2, Option_t *option="br");
+        TPaveStats(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Option_t *option="br");
         virtual ~TPaveStats();
-        virtual TBox    *AddBox(Float_t , Float_t , Float_t , Float_t) {return 0;}
-        virtual TLine   *AddLine(Float_t , Float_t , Float_t, Float_t) {return 0;}
+        virtual TBox    *AddBox(Double_t , Double_t , Double_t , Double_t) {return 0;}
+        virtual TLine   *AddLine(Double_t , Double_t , Double_t, Double_t) {return 0;}
         virtual void     DeleteText() {;}
         virtual void     EditText() {;}
         virtual const char  *GetFitFormat()  const {return fFitFormat.Data();}
@@ -48,7 +48,7 @@ public:
         virtual void     InsertText(const char *) {;}
         virtual void     ReadFile(const char *, Option_t *, Int_t, Int_t) {;}
         virtual void     SaveStyle(); // *MENU*
-        virtual void     SetAllWith(const char *, Option_t *, Float_t) {;}
+        virtual void     SetAllWith(const char *, Option_t *, Double_t) {;}
         virtual void     SetMargin(Float_t) {;}
         virtual void     SetFitFormat(const char *format="5.4g");    // *MENU*
         virtual void     SetStatFormat(const char *format="6.4g");   // *MENU*

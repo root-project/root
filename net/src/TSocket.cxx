@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -175,12 +175,17 @@ TSocket::TSocket(const TSocket &s)
 }
 
 //______________________________________________________________________________
-void TSocket::Close(Option_t *)
+void TSocket::Close(Option_t *option)
 {
-   // Close the socket. Also called via the dtor.
+   // Close the socket. If option is "force", calls shutdown(id,2) to
+   // shut down the connection. This will close the connection also
+   // for the parent of this process. Also called via the dtor (without
+   // option "force", call explicitely Close("force") if this is desired).
+   
+   Bool_t force = option ? (!strcmp(option, "force") ? kTRUE : kFALSE) : kFALSE;
 
    if (fSocket != -1) {
-      gSystem->CloseConnection(fSocket);
+      gSystem->CloseConnection(fSocket, force);
       gROOT->GetListOfSockets()->Remove(this);
    }
    fSocket = -1;

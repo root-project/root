@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TLeafF.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -59,7 +59,6 @@ void TLeafF::Export(TClonesArray *list, Int_t n)
 //*-*-*-*-*-*Export element from local leaf buffer to ClonesArray*-*-*-*-*
 //*-*        ====================================================
 
-printf("LeafF:%s, n=%d, fLen=%d\n",GetName(),n,fLen);
    Float_t *value = fValue;
    for (Int_t i=0;i<n;i++) {
       char *first = (char*)list->UncheckedAt(i);

@@ -1,0 +1,6 @@
+namespace std {
+#include <iostream.h>
+#pragma if !defined(G__IOSTREAM_H)
+#include <streambuf.h>
+#pragma endif
+}

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.6 2000/07/12 17:13:01 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -34,7 +34,6 @@ protected:
     Int_t       fTreeOffsetLen;     //Current size of fTreeOffset array
     Int_t       fNtrees;            //Number of Trees
     Int_t       fTreeNumber;        //Current Tree number in fTreeOffset table
-    Int_t       fNbranches;         //Number of branches in associated Tree
     Int_t       *fTreeOffset;       //Array of variables
     TTree       *fTree;             //Pointer to current tree
     TFile       *fFile;             //Pointer to current file
@@ -51,39 +50,42 @@ public:
     virtual void      Browse(TBrowser *b);
     virtual void      CreatePackets();
     virtual void      Draw(Option_t *opt);
-    virtual void      Draw(TCut varexp, TCut selection, Option_t *option=""
+    virtual Int_t     Draw(TCut varexp, TCut selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual void      Draw(const char *varexp, const char *selection, Option_t *option=""
+    virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                      ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual TBranch  *GetBranch(const char *name);
-    virtual Int_t     GetNtrees() {return fNtrees;}
+    virtual Int_t     GetChainEntryNumber(Int_t entry);
+            Int_t     GetNtrees() {return fNtrees;}
     virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);
     TFile            *GetFile() {return fFile;}
     TLeaf            *GetLeaf(const char *name);
     TObjArray        *GetListOfBranches();
     TObjArray        *GetListOfFiles() {return fFiles;}
     TObjArray        *GetListOfLeaves();
-    virtual Float_t   GetMaximum(const char *columname);
-    virtual Float_t   GetMinimum(const char *columname);
+    virtual Double_t  GetMaximum(const char *columname);
+    virtual Double_t  GetMinimum(const char *columname);
     virtual Int_t     GetNbranches();
     TObject          *GetNotify() {return fNotify;}
     TList            *GetStatus() {return fStatus;}
     TTree            *GetTree() {return fTree;}
             Int_t     GetTreeNumber() {return fTreeNumber;}
             Int_t    *GetTreeOffset() {return fTreeOffset;}
-    virtual Int_t     GetTreeOffsetLen() {return fTreeOffsetLen;}
+            Int_t     GetTreeOffsetLen() {return fTreeOffsetLen;}
             Int_t     LoadTree(Int_t entry);
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual void      ls(Option_t *option="");
     virtual void      Merge(const char *name);
     virtual void      Merge(TFile *file, Int_t basketsize, Option_t *option="");
     virtual void      Print(Option_t *option="");
+    virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+    virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
     virtual void      SetPacketSize(Int_t size = 100);
     virtual void      SetNotify(TObject *obj) {fNotify = obj;}
 
-    ClassDef(TChain,1)  //A chain of TTrees
+    ClassDef(TChain,2)  //A chain of TTrees
 };
 
 inline void TChain::Draw(Option_t *opt)

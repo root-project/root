@@ -20,7 +20,7 @@ PROOFDEXE    := bin/proofd
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFDEXEH))
-ALLEXECS     += $(PROOFD)
+ALLEXECS     += $(PROOFDEXE)
 
 # include all dependency files
 INCLUDEFILES += $(PROOFDDEP)

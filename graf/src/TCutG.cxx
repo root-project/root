@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TCutG.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   16/05/97
 
 /*************************************************************************
@@ -74,7 +74,71 @@ TCutG::TCutG() : TGraph()
 }
 
 //______________________________________________________________________________
+TCutG::TCutG(const char *name, Int_t n)
+      :TGraph(n)
+{
+   fObjectX  = 0;
+   fObjectY  = 0;
+   SetName(name);
+   delete gROOT->GetListOfSpecials()->FindObject(name);
+   gROOT->GetListOfSpecials()->Add(this);
+
+// Take name of cut variables from pad title if title contains ":"
+   if (gPad) {
+      TPaveText *ptitle = (TPaveText*)gPad->GetPrimitive("title");
+      if (!ptitle) return;
+      TText *ttitle = ptitle->GetLineWith(":");
+      if (!ttitle) return;
+      const char *title = ttitle->GetTitle();
+      Int_t nch = strlen(title);
+      char *vars = new char[nch+1];
+      strcpy(vars,title);
+      char *col = strstr(vars,":");
+      if (!col) return;
+      *col = 0;
+      col++;
+      char *brak = strstr(col," {");
+      if (brak) *brak = 0;
+      fVarY = vars;
+      fVarX = col;
+      delete [] vars;
+   }
+}
+
+//______________________________________________________________________________
 TCutG::TCutG(const char *name, Int_t n, Float_t *x, Float_t *y)
+      :TGraph(n,x,y)
+{
+   fObjectX  = 0;
+   fObjectY  = 0;
+   SetName(name);
+   delete gROOT->GetListOfSpecials()->FindObject(name);
+   gROOT->GetListOfSpecials()->Add(this);
+
+// Take name of cut variables from pad title if title contains ":"
+   if (gPad) {
+      TPaveText *ptitle = (TPaveText*)gPad->GetPrimitive("title");
+      if (!ptitle) return;
+      TText *ttitle = ptitle->GetLineWith(":");
+      if (!ttitle) return;
+      const char *title = ttitle->GetTitle();
+      Int_t nch = strlen(title);
+      char *vars = new char[nch+1];
+      strcpy(vars,title);
+      char *col = strstr(vars,":");
+      if (!col) return;
+      *col = 0;
+      col++;
+      char *brak = strstr(col," {");
+      if (brak) *brak = 0;
+      fVarY = vars;
+      fVarX = col;
+      delete [] vars;
+   }
+}
+
+//______________________________________________________________________________
+TCutG::TCutG(const char *name, Int_t n, Double_t *x, Double_t *y)
       :TGraph(n,x,y)
 {
    fObjectX  = 0;
@@ -115,7 +179,7 @@ TCutG::~TCutG()
 }
 
 //______________________________________________________________________________
-Int_t TCutG::IsInside(Float_t x, Float_t y)
+Int_t TCutG::IsInside(Double_t x, Double_t y)
 {
 //*.         Function which returns 1 if point x,y lies inside the
 //*.              polygon defined by the graph points
@@ -135,7 +199,7 @@ Int_t TCutG::IsInside(Float_t x, Float_t y)
 //*.         developed by R.Nierhaus.
 //*.
 
-   Float_t xint;
+   Double_t xint;
    Int_t i;
    Int_t inter = 0;
    for (i=0;i<fNpoints-1;i++) {

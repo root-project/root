@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name$:$Id$
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -272,7 +272,9 @@ some variables.
 
 TMinuit *gMinuit;
 
+
 const Int_t kMAXDIM = 200;
+const Int_t kMAXP   = kMAXDIM;
 const char charal[29] = " .ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 ClassImp(TMinuit)
@@ -374,7 +376,7 @@ void TMinuit::BuildArrays(Int_t maxpar)
    fPstst  = new Double_t[mni];
    fPbar   = new Double_t[mni];
    fPrho   = new Double_t[mni];
-   fWord7  = new Double_t[30];
+   fWord7  = new Double_t[kMAXP];
    fXpt    = new Double_t[maxcpt];
    fYpt    = new Double_t[maxcpt];
    fChpt   = new char[maxcpt+1];
@@ -1022,7 +1024,7 @@ void TMinuit::mncomd(const char *crdbin, Int_t &icondn)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    static Double_t plist[30];
+    static Double_t plist[kMAXP];
     static Int_t ierr, ipos, i, llist, lenbuf, lnc;
     static Bool_t leader;
     static TString comand, crdbuf, ctemp;
@@ -1076,7 +1078,7 @@ void TMinuit::mncomd(const char *crdbin, Int_t &icondn)
     }
 //*-*-              crack the command . . . . . . . . . . . . . . . .
     ctemp = crdbuf(ipos-1,lenbuf-ipos+1);
-    mncrck(ctemp, 20, comand, lnc, 30, plist, llist, ierr, fIsyswr);
+    mncrck(ctemp, 20, comand, lnc, kMAXP, plist, llist, ierr, fIsyswr);
     if (ierr > 0) {
 	Printf(" COMMAND CANNOT BE INTERPRETED");
 	icondn = 2;
@@ -2448,7 +2450,7 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
     }
 //*-*-          Copy the first MAXP arguments into WORD7, making
 //*-*-          sure that WORD7(1)=0 if LLIST=0
-    for (iw = 1; iw <= 30; ++iw) {
+    for (iw = 1; iw <= kMAXP; ++iw) {
 	fWord7[iw-1] = 0;
 	if (iw <= llist) fWord7[iw-1] = plist[iw-1];
     }
@@ -2467,9 +2469,9 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
 	    inonde = 0;
 	    if (llist > lnow) {
 		kll = llist;
-		if (llist > 30) {
+		if (llist > kMAXP) {
 		    inonde = 1;
-		    kll = 30;
+		    kll = kMAXP;
 		}
                 Printf(" ***********");
 		for (i = lnow + 1; i <= kll; ++i) {
@@ -2478,7 +2480,7 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
 	    }
 	    Printf(" **********");
 	    if (inonde > 0) {
-		Printf("  ERROR: ABOVE CALL TO MNEXCM TRIED TO PASS MORE THAN 30 PARAMETERS.");
+		Printf("  ERROR: ABOVE CALL TO MNEXCM TRIED TO PASS MORE THAN %d PARAMETERS.", kMAXP);
 	    }
 	}
     }
@@ -5615,7 +5617,7 @@ void TMinuit::mnpars(TString &crdbuf, Int_t &icondn)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    static Double_t a, b, plist[30], fk, uk, wk, xk;
+    static Double_t a, b, plist[kMAXP], fk, uk, wk, xk;
     static Int_t ierr, kapo1, kapo2;
     static Int_t k, llist, ibegin, lenbuf, istart, lnc, icy;
     static TString cnamk, comand, celmnt, ctemp;
@@ -5659,7 +5661,7 @@ L139:
 L140:
     ibegin = icy;
     ctemp = crdbuf(ibegin-1,lenbuf-ibegin);
-    mncrck(ctemp, 20, comand, lnc, 30, plist, llist, ierr, fIsyswr);
+    mncrck(ctemp, 20, comand, lnc, kMAXP, plist, llist, ierr, fIsyswr);
     if (ierr > 0) goto L180;
     uk = plist[0];
     wk = 0;

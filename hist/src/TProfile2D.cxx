@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -116,7 +116,7 @@ TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Axis_t xlow,A
 
 
 //______________________________________________________________________________
-void TProfile2D::BuildOptions(Float_t zmin, Float_t zmax, Option_t *option)
+void TProfile2D::BuildOptions(Double_t zmin, Double_t zmax, Option_t *option)
 {
 //*-*-*-*-*-*-*Set Profile2D histogram structure and options*-*-*-*-*-*-*-*-*
 //*-*          =============================================
@@ -180,7 +180,7 @@ TProfile2D::TProfile2D(const TProfile2D &profile)
 
 
 //______________________________________________________________________________
-void TProfile2D::Add(TH1 *h1, Float_t c1)
+void TProfile2D::Add(TH1 *h1, Double_t c1)
 {
    // Performs the operation: this = this + c1*h1
 
@@ -207,7 +207,7 @@ void TProfile2D::Add(TH1 *h1, Float_t c1)
    }
 
 //*-*- Add statistics
-   Float_t ac1 = TMath::Abs(c1);
+   Double_t ac1 = TMath::Abs(c1);
    fEntries += ac1*p1->GetEntries();
    fTsumw   += ac1*p1->fTsumw;
    fTsumw2  += ac1*p1->fTsumw2;
@@ -230,7 +230,7 @@ void TProfile2D::Add(TH1 *h1, Float_t c1)
 }
 
 //______________________________________________________________________________
-void TProfile2D::Add(TH1 *h1, TH1 *h2, Float_t c1, Float_t c2)
+void TProfile2D::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
 {
 //*-*-*-*-*Replace contents of this profile2D by the addition of h1 and h2*-*-*
 //*-*      ===============================================================
@@ -266,8 +266,8 @@ void TProfile2D::Add(TH1 *h1, TH1 *h2, Float_t c1, Float_t c2)
    }
 
 //*-*- Add statistics
-   Float_t ac1 = TMath::Abs(c1);
-   Float_t ac2 = TMath::Abs(c2);
+   Double_t ac1 = TMath::Abs(c1);
+   Double_t ac2 = TMath::Abs(c2);
    fEntries = ac1*p1->GetEntries() + ac2*p2->GetEntries();
    fTsumw   = ac1*p1->fTsumw       + ac2*p2->fTsumw;
    fTsumw2  = ac1*p1->fTsumw2      + ac2*p2->fTsumw2;
@@ -373,7 +373,7 @@ void TProfile2D::Divide(TH1 *h1)
 
 
 //______________________________________________________________________________
-void TProfile2D::Divide(TH1 *h1, TH1 *h2, Float_t c1, Float_t c2, Option_t *option)
+void TProfile2D::Divide(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
 //*-*-*-*-*Replace contents of this profile2D by the division of h1 by h2*-*-*
 //*-*      ==============================================================
@@ -614,7 +614,7 @@ void TProfile2D::Multiply(TH1 *)
 
 
 //______________________________________________________________________________
-void TProfile2D::Multiply(TH1 *, TH1 *, Float_t, Float_t, Option_t *)
+void TProfile2D::Multiply(TH1 *, TH1 *, Double_t, Double_t, Option_t *)
 {
 //*-*-*-*-*Replace contents of this profile2D by multiplication of h1 by h2*-*
 //*-*      ================================================================
@@ -680,7 +680,7 @@ void TProfile2D::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TProfile2D::Scale(Float_t c1)
+void TProfile2D::Scale(Double_t c1)
 {
 //*-*-*-*-*Multiply this profile2D by a constant c1*-*-*-*-*-*-*-*-*
 //*-*      ========================================
@@ -706,7 +706,7 @@ void TProfile2D::SetBinEntries(Int_t bin, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TProfile2D::SetBins(Int_t nx, Float_t xmin, Float_t xmax, Int_t ny, Float_t ymin, Float_t ymax)
+void TProfile2D::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax)
 {
 //*-*-*-*-*-*-*-*-*Redefine  x axis parameters*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ===========================
@@ -743,4 +743,35 @@ void TProfile2D::SetErrorOption(Option_t *option)
    if (opt.Contains("s")) fErrorMode = kERRORSPREAD;
    if (opt.Contains("i")) fErrorMode = kERRORSPREADI;
    if (opt.Contains("g")) fErrorMode = kERRORSPREADG;
+}
+
+//______________________________________________________________________________
+void TProfile2D::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TProfile2D.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      TH2D::Streamer(R__b);
+      fBinEntries.Streamer(R__b);
+      R__b >> (Int_t&)fErrorMode;
+      if (R__v < 2) {
+         Float_t zmin,zmax;
+         R__b >> zmin; fZmin = zmin;
+         R__b >> zmax; fZmax = zmax;
+      } else {
+         R__b >> fZmin;
+         R__b >> fZmax;
+      }
+      R__b.CheckByteCount(R__s, R__c, TProfile2D::IsA());
+   } else {
+      R__c = R__b.WriteVersion(TProfile2D::IsA(), kTRUE);
+      TH2D::Streamer(R__b);
+      fBinEntries.Streamer(R__b);
+      R__b << (Int_t)fErrorMode;
+      R__b << fZmin;
+      R__b << fZmax;
+      R__b.SetByteCount(R__c, kTRUE);
+   }
 }

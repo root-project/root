@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name$:$Id$
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -498,7 +498,7 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
    // In case of error, or if the size is not specified, GrabIndex returns 0.
 
    int error;
-   char *where;
+   char *where = 0;
 
    const char *index = member.ValidArrayIndex(&error, &where);
    if (index==0 && printError) {
@@ -520,8 +520,13 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
             errorstring = "UNKNOWN ERROR!!!!";
       }
 
-      fprintf(stderr,"*** Datamember %s::%s: size of array (%s) %s!\n",
-              member.MemberOf()->Name(), member.Name(), where, errorstring);
+      if (where==0) {
+         fprintf(stderr,"*** Datamember %s::%s: no size indication!\n",
+                 member.MemberOf()->Name(), member.Name());
+      } else {
+         fprintf(stderr,"*** Datamember %s::%s: size of array (%s) %s!\n",
+                   member.MemberOf()->Name(), member.Name(), where, errorstring);
+      }
    }
    return index;
 }

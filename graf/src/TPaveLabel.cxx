@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.2 2000/05/29 06:19:20 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -36,7 +36,7 @@ TPaveLabel::TPaveLabel(): TPave(), TAttText()
 }
 
 //______________________________________________________________________________
-TPaveLabel::TPaveLabel(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2, const char *label, Option_t *option)
+TPaveLabel::TPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const char *label, Option_t *option)
            :TPave(x1,y1,x2,y2,3,option), TAttText(22,0,1,62,0.99)
 {
 //*-*-*-*-*-*-*-*-*-*-*pavelabel normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -45,6 +45,11 @@ TPaveLabel::TPaveLabel(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2, const cha
 // The Pave is by default defined bith bordersize=5 and option ="br".
 // The text size is automatically computed as a function of the pave size.
 //
+//  IMPORTANT NOTE:
+//  Because TPave objects (and objects deriving from TPave) have their
+//  master coordinate system in NDC, one cannot use the TBox functions
+//  SetX1,SetY1,SetX2,SetY2 to change the corner coordinates. One should use
+//  instead SetX1NDC, SetY1NDC, SetX2NDC, SetY2NDC.
 
    fLabel  = label;
 }
@@ -88,9 +93,9 @@ void TPaveLabel::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPaveLabel::DrawPaveLabel(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2, const char *label, Option_t *)
+void TPaveLabel::DrawPaveLabel(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char *label, Option_t *)
 {
-//*-*-*-*-*-*-*-*-*-*-*Draw this pavelabel with new coordinates*-*-*-*-*-*-*-*
+//*-*-*-*-*-*-*-*-*-*-*Draw this pavelabel with new Doubleinates*-*-*-*-*-*-*-*
 //*-*                  ========================================
    TPaveLabel *newpavelabel = new TPaveLabel(x1,y1,x2,y2,label);
    newpavelabel->SetBit(kCanDelete);
@@ -112,7 +117,7 @@ void TPaveLabel::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TPaveLabel::PaintPaveLabel(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
+void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                       const char *label ,Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this pavelabel with new coordinates*-*-*-*-*-*-*-*
@@ -138,14 +143,14 @@ void TPaveLabel::PaintPaveLabel(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
    if (nch <= 0) return;
 
 //*-*- Draw label
-   Float_t wh   = (Float_t)gPad->XtoPixel(gPad->GetX2());
-   Float_t hh   = (Float_t)gPad->YtoPixel(gPad->GetY1());
-   Float_t textsize  = GetTextSize();
+   Double_t wh   = (Double_t)gPad->XtoPixel(gPad->GetX2());
+   Double_t hh   = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t textsize  = GetTextSize();
    Int_t automat = 0;
    if (TMath::Abs(textsize -0.99) < 0.001) automat = 1;
    if (textsize == 0)   { textsize = 0.99; automat = 1;}
    Int_t ypixel      = gPad->YtoPixel(y1) - gPad->YtoPixel(y2);
-   Float_t labelsize = textsize*ypixel/hh;
+   Double_t labelsize = textsize*ypixel/hh;
    if (wh < hh) labelsize *= hh/wh;
    TLatex latex;
    latex.SetTextAngle(GetTextAngle());
@@ -157,19 +162,19 @@ void TPaveLabel::PaintPaveLabel(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2,
       UInt_t w,h;
       latex.GetTextExtent(w,h,GetTitle());
       labelsize = h/hh;
-      Float_t wxlabel   = gPad->XtoPixel(x2) - gPad->XtoPixel(x1);
+      Double_t wxlabel   = gPad->XtoPixel(x2) - gPad->XtoPixel(x1);
       if (w > 0.99*wxlabel) {labelsize *= 0.99*wxlabel/w; h = UInt_t(h*0.99*wxlabel/w);}
       if (h < 1) h = 1;
-      labelsize   = Float_t(h)/hh;
+      labelsize   = Double_t(h)/hh;
       if (wh < hh) labelsize *= hh/wh;
       latex.SetTextSize(labelsize);
    }
    Int_t halign = GetTextAlign()/10;
    Int_t valign = GetTextAlign()%10;
-   Float_t x = 0.5*(x1+x2);
+   Double_t x = 0.5*(x1+x2);
    if (halign == 1) x = x1 + 0.02*(x2-x1);
    if (halign == 3) x = x2 - 0.02*(x2-x1);
-   Float_t y = 0.5*(y1+y2);
+   Double_t y = 0.5*(y1+y2);
    if (valign == 1) y = y1 + 0.02*(y2-y1);
    if (valign == 3) y = y2 - 0.02*(y2-y1);
    latex.PaintLatex(x, y, GetTextAngle(),labelsize,GetLabel());

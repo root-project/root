@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.2 2000/06/13 10:37:30 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -114,7 +114,7 @@ TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
 
 
 //______________________________________________________________________________
-TF1::TF1(const char *name,const char *formula, Float_t xmin, Float_t xmax)
+TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
       :TFormula(name,formula), TAttLine(), TAttFill(), TAttMarker()
 {
 //*-*-*-*-*-*-*F1 constructor using a formula definition*-*-*-*-*-*-*-*-*-*-*
@@ -170,7 +170,7 @@ TF1::TF1(const char *name,const char *formula, Float_t xmin, Float_t xmax)
 
 
 //______________________________________________________________________________
-TF1::TF1(const char *name, Float_t xmin, Float_t xmax, Int_t npar)
+TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
 //*-*-*-*-*-*-*F1 constructor using name an interpreted function*-*-*-*
@@ -246,7 +246,7 @@ TF1::TF1(const char *name, Float_t xmin, Float_t xmax, Int_t npar)
 }
 
 //______________________________________________________________________________
-TF1::TF1(const char *name,void *fcn, Float_t xmin, Float_t xmax, Int_t npar)
+TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
 //*-*-*-*-*-*-*F1 constructor using pointer to an interpreted function*-*-*-*
@@ -329,7 +329,7 @@ TF1::TF1(const char *name,void *fcn, Float_t xmin, Float_t xmax, Int_t npar)
 }
 
 //______________________________________________________________________________
-TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Float_t xmin, Float_t xmax, Int_t npar)
+TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar)
       :TFormula(), TAttLine(), TAttFill(), TAttMarker()
 {
 //*-*-*-*-*-*-*F1 constructor using a pointer to real function*-*-*-*-*-*-*-*
@@ -478,7 +478,7 @@ void TF1::Copy(TObject &obj)
 }
 
 //______________________________________________________________________________
-Double_t TF1::Derivative(Double_t x, Double_t *params, Float_t epsilon)
+Double_t TF1::Derivative(Double_t x, Double_t *params, Double_t epsilon)
 {
 //*-*-*-*-*-*-*-*-*Return derivative of function at point x*-*-*-*-*-*-*-*
 //
@@ -521,10 +521,10 @@ Int_t TF1::DistancetoPrimitive(Int_t px, Int_t py)
    if (distance <= 0) return distance;
 
    Double_t xx[1];
-   Float_t x     = gPad->AbsPixeltoX(px);
+   Double_t x    = gPad->AbsPixeltoX(px);
    xx[0]         = gPad->PadtoX(x);
    Double_t fval = Eval(xx[0]);
-   Float_t y     = gPad->YtoPad(fval);
+   Double_t y    = gPad->YtoPad(fval);
    Int_t pybin   = gPad->YtoAbsPixel(y);
    return TMath::Abs(py - pybin);
 }
@@ -580,7 +580,7 @@ void TF1::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TF1::DrawF1(const char *formula, Float_t xmin, Float_t xmax, Option_t *option)
+void TF1::DrawF1(const char *formula, Double_t xmin, Double_t xmax, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*Draw formula between xmin and xmax*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                ==================================
@@ -715,7 +715,7 @@ char *TF1::GetObjectInfo(Int_t px, Int_t /* py */)
 //   corresponding to cursor position px,py
 //
    static char info[64];
-   Float_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
    sprintf(info,"(x=%g, f=%g)",x,Eval(x));
    return info;
 }
@@ -757,7 +757,7 @@ Double_t TF1::GetRandom()
    Int_t i,bin;
    Double_t xx,rr;
    if (fIntegral == 0) {
-      Float_t dx = (fXmax-fXmin)/fNpx;
+      Double_t dx = (fXmax-fXmin)/fNpx;
       fIntegral = new Double_t[fNpx+1];
       fAlpha    = new Double_t[fNpx];
       fBeta     = new Double_t[fNpx];
@@ -798,7 +798,7 @@ Double_t TF1::GetRandom()
 
 
 // return random number
-   Float_t r  = gRandom->Rndm();
+   Double_t r  = gRandom->Rndm();
    bin  = TMath::BinarySearch(fNpx,fIntegral,r);
    rr = r - fIntegral[bin];
 
@@ -806,12 +806,12 @@ Double_t TF1::GetRandom()
       xx = (-fBeta[bin] + TMath::Sqrt(fBeta[bin]*fBeta[bin]+2*fGamma[bin]*rr))/fGamma[bin];
    else
       xx = rr/fBeta[bin];
-   Float_t x = fAlpha[bin] + xx;
+   Double_t x = fAlpha[bin] + xx;
    return x;
 }
 
 //______________________________________________________________________________
-void TF1::GetRange(Float_t &xmin, Float_t &xmax)
+void TF1::GetRange(Double_t &xmin, Double_t &xmax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Return range of a 1-D function*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==============================
@@ -821,7 +821,7 @@ void TF1::GetRange(Float_t &xmin, Float_t &xmax)
 }
 
 //______________________________________________________________________________
-void TF1::GetRange(Float_t &xmin, Float_t &ymin,  Float_t &xmax, Float_t &ymax)
+void TF1::GetRange(Double_t &xmin, Double_t &ymin,  Double_t &xmax, Double_t &ymax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Return range of a 2-D function*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==============================
@@ -833,7 +833,7 @@ void TF1::GetRange(Float_t &xmin, Float_t &ymin,  Float_t &xmax, Float_t &ymax)
 }
 
 //______________________________________________________________________________
-void TF1::GetRange(Float_t &xmin, Float_t &ymin, Float_t &zmin, Float_t &xmax, Float_t &ymax, Float_t &zmax)
+void TF1::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Return range of function*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
@@ -854,16 +854,16 @@ Double_t TF1::GetSave(Double_t *xx)
 
    if (fNsave <= 0) return 0;
    if (fSave == 0) return 0;
-   Float_t xmin = Float_t(fSave[fNsave+2]);
-   Float_t xmax = Float_t(fSave[fNsave+3]);
-   Float_t x    = Float_t(xx[0]);
-   Float_t dx   = (xmax-xmin)/fNsave;
+   Double_t xmin = Double_t(fSave[fNsave+2]);
+   Double_t xmax = Double_t(fSave[fNsave+3]);
+   Double_t x    = Double_t(xx[0]);
+   Double_t dx   = (xmax-xmin)/fNsave;
    if (x < xmin || x > xmax) return 0;
    if (dx <= 0) return 0;
 
    Int_t bin     = Int_t((x-xmin)/dx);
-   Float_t xlow  = xmin + bin*dx;
-   Float_t xup   = xlow + dx;
+   Double_t xlow = xmin + bin*dx;
+   Double_t xup  = xlow + dx;
    Double_t ylow = fSave[bin];
    Double_t yup  = fSave[bin+1];
    Double_t y    = ((xup*ylow-xlow*yup) + x*(yup-ylow))/dx;
@@ -1341,7 +1341,7 @@ void TF1::Paint(Option_t *option)
 
    TString opt = option;
    opt.ToLower();
-   Float_t xmin, xmax, pmin, pmax;
+   Double_t xmin, xmax, pmin, pmax;
    pmin = gPad->PadtoX(gPad->GetUxmin());
    pmax = gPad->PadtoX(gPad->GetUxmax());
    xmin = fXmin;
@@ -1368,10 +1368,10 @@ void TF1::Paint(Option_t *option)
 //      if logx, we must bin in logx and not in x !!!
 //      otherwise if several decades, one gets crazy results
       if (xmin > 0 && gPad->GetLogx()) {
-         Float_t *xbins  = new Float_t[fNpx+1];
-         Float_t xlogmin = TMath::Log10(xmin);
-         Float_t xlogmax = TMath::Log10(xmax);
-         Float_t dlogx   = (xlogmax-xlogmin)/((Float_t)fNpx);
+         Axis_t *xbins    = new Axis_t[fNpx+1];
+         Double_t xlogmin = TMath::Log10(xmin);
+         Double_t xlogmax = TMath::Log10(xmax);
+         Double_t dlogx   = (xlogmax-xlogmin)/((Double_t)fNpx);
          for (i=0;i<=fNpx;i++) {
             xbins[i] = gPad->PadtoX(xlogmin+ i*dlogx);
          }
@@ -1420,7 +1420,7 @@ void TF1::Print(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TF1::Save(Float_t xmin, Float_t xmax)
+void TF1::Save(Double_t xmin, Double_t xmax)
 {
     // Save values of function in array fSave
 
@@ -1429,7 +1429,7 @@ void TF1::Save(Float_t xmin, Float_t xmax)
    if (fNsave <= 0) return;
    fSave  = new Double_t[fNsave+10];
    Int_t i;
-   Float_t dx = (xmax-xmin)/fNsave;
+   Double_t dx = (xmax-xmin)/fNsave;
    if (dx <= 0) {
       dx = (fXmax-fXmin)/fNsave;
       fNsave--;
@@ -1532,7 +1532,7 @@ void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)
 }
 
 //______________________________________________________________________________
-void TF1::SetRange(Float_t xmin, Float_t xmax)
+void TF1::SetRange(Double_t xmin, Double_t xmax)
 {
 //*-*-*-*-*-*Initialize the upper and lower bounds to draw the function*-*-*-*
 //*-*        ==========================================================
@@ -1556,8 +1556,14 @@ void TF1::Streamer(TBuffer &b)
       TAttLine::Streamer(b);
       TAttFill::Streamer(b);
       TAttMarker::Streamer(b);
-      b >> fXmin;
-      b >> fXmax;
+      if (v < 4) {
+         Float_t xmin,xmax;
+         b >> xmin; fXmin = xmin;
+         b >> xmax; fXmax = xmax;
+      } else {
+         b >> fXmin;
+         b >> fXmax;
+      }
       b >> fNpx;
       b >> fType;
       b >> fChisquare;
@@ -1575,8 +1581,14 @@ void TF1::Streamer(TBuffer &b)
          delete fHistogram; fHistogram = 0;
       }
       if (v > 1) {
-         b >> fMinimum;
-         b >> fMaximum;
+         if (v < 4) {
+            Float_t minimum,maximum;
+            b >> minimum; fMinimum =minimum;
+            b >> maximum; fMaximum =maximum;
+         } else {
+            b >> fMinimum;
+            b >> fMaximum;
+         }
       }
       if (v > 2) {
          b >> fNsave;
@@ -1620,5 +1632,10 @@ void TF1::Update()
 
    delete fHistogram;
    fHistogram = 0;
-   if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
+   if (fIntegral) {
+      delete [] fIntegral; fIntegral = 0;
+      delete [] fAlpha;    fAlpha    = 0;
+      delete [] fBeta;     fBeta     = 0;
+      delete [] fGamma;    fGamma    = 0;
+   }
 }

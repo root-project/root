@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -28,14 +28,14 @@ class ofstream;
 class TCurlyLine : public TPolyLine {
 
 protected:
-   Float_t fX1;              // start x, center for arc
-   Float_t fY1;              // start y, center for arc
-   Float_t fX2;              // end x
-   Float_t fY2;              // end y
-   Float_t fWaveLength;      // wavelength of sinusoid in percent of pad height
-   Float_t fAmplitude;       // amplitude of sinusoid in percent of pad height
-   Int_t   fNsteps;          // used internally (controls precision)
-   Bool_t  fIsCurly;         // true: Gluon, false: Gamma
+   Double_t fX1;             // start x, center for arc
+   Double_t fY1;             // start y, center for arc
+   Double_t fX2;             // end x
+   Double_t fY2;             // end y
+   Double_t fWaveLength;     // wavelength of sinusoid in percent of pad height
+   Double_t fAmplitude;      // amplitude of sinusoid in percent of pad height
+   Int_t    fNsteps;         // used internally (controls precision)
+   Bool_t   fIsCurly;        // true: Gluon, false: Gamma
 
 public:
    // TCurlyLine status bits
@@ -43,28 +43,28 @@ public:
       kTooShort = BIT(11)
    };
    TCurlyLine(){;}
-   TCurlyLine(Float_t x1, Float_t y1, Float_t x2, Float_t y2,
-             Float_t tl = .05, Float_t rad = .02);
+   TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
+              Double_t tl = .05, Double_t rad = .02);
    virtual ~TCurlyLine(){;}
    virtual void Build();
    Int_t        DistancetoPrimitive(Int_t px, Int_t py);
    void         ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void SetCurly();                             // *MENU*
    virtual void SetWavy();                              // *MENU*
-   virtual void SetWaveLength(Float_t WaveLength);      // *MENU* *ARGS={WaveLength=>fWaveLength}
-   virtual void SetAmplitude(Float_t x);                // *MENU* *ARGS={x=>fAmplitude}
-   virtual void SetStartPoint(Float_t x1, Float_t y1);
-   virtual void SetEndPoint  (Float_t x2, Float_t y2);
-   Bool_t       GetCurly()     {return fIsCurly;}
-   Float_t      GetWaveLength(){return fWaveLength;}
-   Float_t      GetAmplitude() {return fAmplitude;}
-   Float_t      GetStartX()    {return fX1;}
-   Float_t      GetEndX()      {return fX2;}
-   Float_t      GetStartY()    {return fY1;}
-   Float_t      GetEndY()      {return fY2;}
+   virtual void SetWaveLength(Double_t WaveLength);     // *MENU* *ARGS={WaveLength=>fWaveLength}
+   virtual void SetAmplitude(Double_t x);               // *MENU* *ARGS={x=>fAmplitude}
+   virtual void SetStartPoint(Double_t x1, Double_t y1);
+   virtual void SetEndPoint  (Double_t x2, Double_t y2);
+   Bool_t       GetCurly()      {return fIsCurly;}
+   Double_t      GetWaveLength(){return fWaveLength;}
+   Double_t      GetAmplitude() {return fAmplitude;}
+   Double_t      GetStartX()    {return fX1;}
+   Double_t      GetEndX()      {return fX2;}
+   Double_t      GetStartY()    {return fY1;}
+   Double_t      GetEndY()      {return fY2;}
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
-   ClassDef(TCurlyLine,1) // A curly polyline
+   ClassDef(TCurlyLine,2) // A curly polyline
 };
 
 #endif

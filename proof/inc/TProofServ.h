@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name$:$Id$
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -94,7 +94,7 @@ public:
 
    TObject    *Get(const char *namecycle);
    Stat_t      GetEntriesProcessed() const { return fEntriesProcessed; }
-   void        GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Float_t *vmin, Float_t *vmax);
+   void        GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Double_t *vmin, Double_t *vmax);
    Bool_t      GetNextPacket(Int_t &nentries, Stat_t &firstentry);
    void        Reset(const char *dir);
    void        SendLogFile();

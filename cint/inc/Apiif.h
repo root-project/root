@@ -35,6 +35,7 @@ extern G__linked_taginfo G__G__APILN_G__ClassInfo;
 extern G__linked_taginfo G__G__APILN_G__BaseClassInfo;
 extern G__linked_taginfo G__G__APILN_G__TypeInfo;
 extern G__linked_taginfo G__G__APILN_G__MethodArgInfo;
+extern G__linked_taginfo G__G__APILN_G__DataMemberInfocLcLerror_code;
 extern G__linked_taginfo G__G__APILN_G__CallFunc;
 extern G__linked_taginfo G__G__APILN_G__TypedefInfo;
 extern G__linked_taginfo G__G__APILN_G__TokenInfo;
@@ -42,3 +43,5 @@ extern G__linked_taginfo G__G__APILN_G__TokenInfocLcLG__TokenType;
 extern G__linked_taginfo G__G__APILN_G__TokenInfocLcLG__TokenProperty;
 extern G__linked_taginfo G__G__APILN_G__SourceFileInfo;
 extern G__linked_taginfo G__G__APILN_G__IncludePathInfo;
+
+/* STUB derived class for protected member access */

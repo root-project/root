@@ -787,7 +787,14 @@ char *filename;
       flag=1;
 #endif
       j=i;
-      while(-1!=G__srcfile[j].included_from) j=G__srcfile[j].included_from;
+      while(-1!=G__srcfile[j].included_from
+#ifndef G__PHILIPPE18
+            /* do not take the tempfile in consideration! */
+            && ((G__MAXFILE-1)!=G__srcfile[j].included_from)
+#endif
+	    ) {
+	j=G__srcfile[j].included_from;
+      }
       break;
     }
   }
@@ -842,10 +849,13 @@ char *keyword;
 int base;
 {
   char classname[G__ONELINE];
+#ifdef G__OLDIMPLEMENTATION1320
   char *p=classname;
+#endif
 
   G__more_pause((FILE*)NULL,0);
   strcpy(classname,classnamein);
+#ifdef G__OLDIMPLEMENTATION1320
   while(*p && isspace(*p)) ++p;
 #ifndef G__OLDIMPLEMENTATION1048
   while(*p && (!isspace(*p)||('>'==*(p-1)&&'>'==*(p+1)))) ++p;
@@ -853,6 +863,7 @@ int base;
   while(*p && !isspace(*p)) ++p;
 #endif
   if(*p) *p=0;
+#endif
   if(keyword&&keyword[0]) {
 #ifndef G__TMPFILE
     char tname[L_tmpnam+10];
@@ -881,9 +892,10 @@ int base;
 /******************************************************************
 * G__security_recover()
 ******************************************************************/
-void G__security_recover(fout)
+int G__security_recover(fout)
 FILE *fout;
 {
+  int ignore = G__security_error * G__PAUSE_ERROR_OFFSET;
 #ifndef G__OLDIMPLEMENTATION1067
   if(G__security_error) {
 #else
@@ -919,6 +931,8 @@ FILE *fout;
 #ifndef G__OLDIMPLEMENTATION1031
   errordictpos.var = (struct G__var_array*)NULL;
 #endif
+
+  return(ignore);
 }
 #endif
 
@@ -1132,7 +1146,8 @@ int G__pause()
 
     G__pause_return=0;
 
-    if ((ignore = G__process_cmd(command, prompt, &more))) break;
+    ignore = G__process_cmd(command, prompt, &more);
+    if (ignore/G__PAUSE_ERROR_OFFSET) break;
     if(G__pause_return) break;
   }
 
@@ -1670,12 +1685,22 @@ int  *more;
 #ifndef G__OLDIMPLEMENTATION967
     if(strncmp("class",com,3)==0) {
       char *p = strchr(string,'/');
-      if(p) ++p;
+      if(p) {
+#ifndef G__OLDIMPLEMENTATION1320
+	*p = 0;
+#endif
+	++p;
+      }
       G__display_classkeyword(G__sout,string,p,0);
     }
     else if(strncmp("Class",com,3)==0) {
       char *p = strchr(string,'/');
-      if(p) ++p;
+      if(p) {
+#ifndef G__OLDIMPLEMENTATION1320
+	*p = 0;
+#endif
+	++p;
+      }
       G__display_classkeyword(G__sout,string,p,1);
     }
 #else
@@ -2018,13 +2043,14 @@ int  *more;
 	G__pause_return=1;
 	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
 		      ,keyword,pipefile);
+	ignore = G__PAUSE_NORMAL;
 #ifdef G__SECURITY
-	G__security_recover(G__sout);
+	ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	G__UnlockCriticalSection();
 #endif
-	return(ignore=G__PAUSE_NORMAL);
+	return(ignore);
       }
       else {
 	fprintf(G__serr,"!!! Use 'return' command at your own risk !!!\n");
@@ -2032,13 +2058,14 @@ int  *more;
 	G__return=G__RETURN_IMMEDIATE;
 	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
 		      ,keyword,pipefile);
+	ignore = 2;
 #ifdef G__SECURITY
-	G__security_recover(G__sout);
+	ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	G__UnlockCriticalSection();
 #endif
-	return(ignore=2);
+	return(ignore);
       }
     }
 
@@ -2142,7 +2169,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-	G__security_recover(G__sout);
+	ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	G__UnlockCriticalSection();
@@ -2185,7 +2212,7 @@ int  *more;
 	    if(G__security_error) G__cancel_undo_position();
 #endif
 #ifdef G__SECURITY
-	    G__security_recover(G__sout);
+	    ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	    G__UnlockCriticalSection();
@@ -2264,7 +2291,7 @@ int  *more;
          fprintf(G__sout,"%s\n",syscom);
 #endif
 #ifdef G__SECURITY
-	 G__security_recover(G__sout);
+	 ignore |= G__security_recover(G__sout);
 #endif
 #else
          G__calc_internal(syscom);
@@ -2289,7 +2316,7 @@ int  *more;
       G__reloadfile(string+temp);
       G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
 			  ,keyword,pipefile);
-      G__security_recover(G__sout);
+      ignore |= G__security_recover(G__sout);
       return(ignore);
     }
 #endif
@@ -2309,7 +2336,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-         G__security_recover(G__sout);
+         ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	 G__UnlockCriticalSection();
@@ -2338,7 +2365,7 @@ int  *more;
 	    if(G__security_error) G__cancel_undo_position();
 #endif
 #ifdef G__SECURITY
-	    G__security_recover(G__sout);
+	    ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	    G__UnlockCriticalSection();
@@ -2356,7 +2383,7 @@ int  *more;
 #endif
       G__prerun = temp2;
 #ifdef G__SECURITY
-      G__security_recover(G__sout);
+      ignore |= G__security_recover(G__sout);
 #endif
     }
 
@@ -2373,7 +2400,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-         G__security_recover(G__sout);
+         ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	 G__UnlockCriticalSection();
@@ -2387,7 +2414,7 @@ int  *more;
       G__unloadfile(string+temp);
 #endif
 #ifdef G__SECURITY
-      G__security_recover(G__sout);
+      ignore |= G__security_recover(G__sout);
 #endif
     }
 #endif
@@ -2786,7 +2813,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-	G__security_recover(G__sout);
+	ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	G__UnlockCriticalSection();
@@ -2801,7 +2828,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-	G__security_recover(G__sout);
+	ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	G__UnlockCriticalSection();
@@ -2918,7 +2945,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-      G__security_recover(G__sout);
+      ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
       G__UnlockCriticalSection();
@@ -2941,7 +2968,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-      G__security_recover(G__sout);
+      ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
       G__UnlockCriticalSection();
@@ -2964,7 +2991,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-      G__security_recover(G__sout);
+      ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
       G__UnlockCriticalSection();
@@ -2987,7 +3014,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-      G__security_recover(G__sout);
+      ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
       G__UnlockCriticalSection();
@@ -3016,7 +3043,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-	G__security_recover(G__sout);
+	ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	G__UnlockCriticalSection();
@@ -3041,13 +3068,14 @@ int  *more;
       G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
 			  ,keyword,pipefile);
 #endif
+      ignore = 2;
 #ifdef G__SECURITY
-      G__security_recover(G__sout);
+      ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
       G__UnlockCriticalSection();
 #endif
-      return(ignore=2);
+      return(ignore);
     }
 #endif
     
@@ -3061,12 +3089,12 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-	G__security_recover(G__sout);
+	ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	G__UnlockCriticalSection();
 #endif
-	return(0);
+	return(ignore);
       }
 
       G__stepover=0;
@@ -3102,13 +3130,14 @@ int  *more;
 	G__unredirectoutput(&store_stdout,&store_stderr,&store_stdin
 		      ,keyword,pipefile);
 #endif
+	ignore = 2;
 #ifdef G__SECURITY
-	G__security_recover(G__sout);
+	ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	G__UnlockCriticalSection();
 #endif
-	return(ignore=2);
+	return(ignore);
       }
       else {
         /*******************************************************
@@ -3161,7 +3190,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-          G__security_recover(G__sout);
+          ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	  G__UnlockCriticalSection();
@@ -3221,7 +3250,7 @@ int  *more;
       if(G__security_error) G__cancel_undo_position();
 #endif
 #ifdef G__SECURITY
-      G__security_recover(G__sout);
+      ignore |= G__security_recover(G__sout);
 #endif
 
       if(G__return!=G__RETURN_NON) {
@@ -3231,7 +3260,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-        G__security_recover(G__sout);
+        ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	G__UnlockCriticalSection();
@@ -3289,7 +3318,7 @@ int  *more;
 	  G__pause_return=1;
 #endif
 #ifdef G__SECURITY
-          G__security_recover(G__sout);
+          ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	  G__UnlockCriticalSection();
@@ -3352,7 +3381,7 @@ int  *more;
 	if(G__security_error) G__cancel_undo_position();
 #endif
 #ifdef G__SECURITY
-	G__security_recover(G__sout);
+	ignore |= G__security_recover(G__sout);
 #endif
 
 	if(G__return!=G__RETURN_NON) {
@@ -3362,7 +3391,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-          G__security_recover(G__sout);
+          ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	  G__UnlockCriticalSection();
@@ -3550,7 +3579,7 @@ int  *more;
 	}
 #endif
 #ifdef G__SECURITY
-	G__security_recover(G__sout);
+	ignore |= G__security_recover(G__sout);
 #endif
 	
 	if(G__return!=G__RETURN_NON) {
@@ -3563,7 +3592,7 @@ int  *more;
 	  G__RESTORE_EVALENV;
 #endif
 #ifdef G__SECURITY
-          G__security_recover(G__sout);
+          ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	  G__UnlockCriticalSection();
@@ -3582,7 +3611,7 @@ int  *more;
 	G__RESTORE_EVALENV;
 #endif
 #ifdef G__SECURITY
-        G__security_recover(G__sout);
+        ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
 	G__UnlockCriticalSection();
@@ -3602,7 +3631,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-      G__security_recover(G__sout);
+      ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
       G__UnlockCriticalSection();
@@ -3618,7 +3647,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-      G__security_recover(G__sout);
+      ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
       G__UnlockCriticalSection();
@@ -3635,7 +3664,7 @@ int  *more;
 		      ,keyword,pipefile);
 #endif
 #ifdef G__SECURITY
-    G__security_recover(G__sout);
+    ignore |= G__security_recover(G__sout);
 #endif
 #ifndef G__OLDIMPLEMENTATION1035
     G__UnlockCriticalSection();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.2 2000/06/12 15:44:09 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -339,7 +339,7 @@ TROOT::~TROOT()
 #endif
       fFiles->Delete();       SafeDelete(fFiles);       // and files
       fSockets->Delete();     SafeDelete(fSockets);     // and sockets
-      fMappedFiles->Delete();                           // and mapped files
+      fMappedFiles->Delete("slow");                     // and mapped files
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
 
 //      fProcesses->Delete();  SafeDelete(fProcesses);   // then terminate processes
@@ -920,7 +920,7 @@ Int_t TROOT::LoadClass(const char *classname, const char *libname)
       // special case for ROOT classes Txxx
       char *lib, *path;
 #ifdef WIN32
-      lib = Form("lib%s", libname);
+      lib = Form("lib%s", libname);       // used to be Root_%s
 #else
       lib = Form("lib%s", libname);
 #endif

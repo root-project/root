@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name$:$Id$
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 /*************************************************************************
@@ -728,6 +728,11 @@ TString TTabCom::DetermineClass( const char varName[] )
      // this is what we want
      type.ReadToDelim( file1, ')' );
      IfDebug(cerr << type << endl);
+
+     // new version of CINT returns: "class TClassName*const)0x12345"
+     // so we have to strip off "const"
+     if (type.EndsWith("const"))
+        type.Remove(type.Length()-5);
 
 cleanup:
      // done reading from file

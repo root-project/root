@@ -97,3 +97,6 @@ N: Otto Schaile
 E: Otto.Schaile@Physik.Uni-Muenchen.DE
 D: various contributions to GUI classes
 
+N: Alexandre V. Vaniachine
+E: AVVaniachine@lbl.gov
+D: byteswapping assembler code for the i486 and up

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name$:$Id$
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -41,8 +41,8 @@ protected:
     TAxis      *fZaxis;           //pointer to Z axis
     TList      *fFunctions;       //pointer to histogram list of functions
     TLego      *fLego;            //pointer to a TLego object
-    Float_t    *fXbuf;            //X buffer coodinates
-    Float_t    *fYbuf;            //Y buffer coodinates
+    Double_t   *fXbuf;            //X buffer coodinates
+    Double_t   *fYbuf;            //Y buffer coodinates
     Int_t       fNIDS;            //Number of stacked histograms
 
 public:
@@ -60,9 +60,9 @@ public:
     virtual void    PaintBoxes();
     virtual void    PaintColorLevels();
     virtual void    PaintContour();
-    virtual Int_t   PaintContourLine(Float_t elev1, Int_t icont1, Float_t x1, Float_t y1,
-                           Float_t elev2, Int_t icont2, Float_t x2, Float_t y2,
-                           Float_t *xarr, Float_t *yarr, Int_t *itarr);
+    virtual Int_t   PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
+                           Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
+                           Double_t *xarr, Double_t *yarr, Int_t *itarr);
     virtual void    PaintErrors();
     virtual void    PaintFrame();
     virtual void    PaintFunction();
@@ -70,7 +70,7 @@ public:
     virtual void    PaintH3(Option_t *option="");
     virtual Int_t   PaintInit();
     virtual void    PaintLego();
-    virtual void    PaintLegoAxis(TGaxis *axis, Float_t ang);
+    virtual void    PaintLegoAxis(TGaxis *axis, Double_t ang);
     virtual void    PaintPalette();
     virtual void    PaintScatterPlot();
     virtual void    PaintStat(Int_t dostat, TF1 *fit);

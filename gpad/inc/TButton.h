@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TButton.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -43,7 +43,7 @@ protected:
 
 public:
    TButton();
-   TButton(const char *title, const char *method, Coord_t x1, Coord_t y1, Coord_t x2, Coord_t y2);
+   TButton(const char *title, const char *method, Double_t x1, Double_t y1, Double_t x2, Double_t y2);
    virtual ~TButton();
    virtual void  Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0);
    virtual void  Draw(Option_t *option="");
@@ -51,7 +51,7 @@ public:
    virtual const char *GetMethod() const { return fMethod.Data(); }
    virtual void  Paint(Option_t *option="");
    virtual void  PaintModified();
-   virtual void  Range(Float_t x1, Float_t y1, Float_t x2, Float_t y2);
+   virtual void  Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
    virtual void  SavePrimitive(ofstream &out, Option_t *option);
    virtual void  SetBorderMode(Short_t bordermode) { fBorderMode = bordermode; }
    virtual void  SetFraming(Bool_t f=1);

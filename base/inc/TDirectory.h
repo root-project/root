@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -97,14 +97,14 @@ public:
    virtual void        Purge(Short_t nkeep=1);
    virtual void        pwd() const;
    virtual void        ReadAll(Option_t *option="");
-   virtual void        ReadKeys();
+   virtual Int_t       ReadKeys();
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        Save();
    virtual void        SaveSelf(Bool_t force = kFALSE);
    void                SetModified() {fModified = kTRUE;}
    void                SetMother(TObject *mother) {fMother = mother;}
    virtual Int_t       Sizeof() const;
-   virtual void        Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
+   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
    virtual void        WriteDirHeader();
    virtual void        WriteKeys();
 

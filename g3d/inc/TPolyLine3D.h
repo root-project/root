@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -54,14 +54,16 @@ public:
         TPolyLine3D();
         TPolyLine3D(Int_t n, Option_t *option="");
         TPolyLine3D(Int_t n, Float_t *p, Option_t *option="");
+        TPolyLine3D(Int_t n, Double_t *p, Option_t *option="");
         TPolyLine3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *option="");
+        TPolyLine3D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_t *option="");
         TPolyLine3D(const TPolyLine3D &polylin);
         virtual ~TPolyLine3D();
 
         virtual void      Copy(TObject &polyline);
         virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
         virtual void      Draw(Option_t *option="");
-        static  void      DrawOutlineCube(TList *outline, Float_t *rmin, Float_t *rmax);
+        static  void      DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax);
         virtual void      DrawPolyLine(Int_t n, Float_t *p, Option_t *option="");
         virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
         Int_t             GetLastPoint() {return fLastPoint;}
@@ -71,12 +73,15 @@ public:
         virtual void      ls(Option_t *option="");
         virtual void      Paint(Option_t *option="");
         virtual void      PaintPolyLine(Int_t n, Float_t *p, Option_t *option="");
+        virtual void      PaintPolyLine(Int_t n, Double_t *p, Option_t *option="");
         virtual void      Print(Option_t *option="");
         virtual void      SavePrimitive(ofstream &out, Option_t *option);
-        virtual Int_t     SetNextPoint(Float_t x, Float_t y, Float_t z); // *MENU*
+        virtual Int_t     SetNextPoint(Double_t x, Double_t y, Double_t z); // *MENU*
         virtual void      SetOption(Option_t *option="") {fOption = option;}
-        virtual void      SetPoint(Int_t point, Float_t x, Float_t y, Float_t z); // *MENU*
-        virtual void      SetPolyLine(Int_t n, Float_t *p=0, Option_t *option="");
+        virtual void      SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*
+        virtual void      SetPolyLine(Int_t n, Option_t *option="");
+        virtual void      SetPolyLine(Int_t n, Float_t *p, Option_t *option="");
+        virtual void      SetPolyLine(Int_t n, Double_t *p, Option_t *option="");
         virtual void      Sizeof3D() const;
         virtual Int_t     Size() const { return fLastPoint+1;}
 

@@ -1,6 +1,5 @@
-//*CMZ :  2.22/07 02/07/99  08.26.49  by  Rene Brun
-//*CMZ :  2.22/06 23/06/99  08.27.28  by  Rene Brun
-//*-- Author :    Peter Malzacher   19/06/99
+// @(#)root/test:$Name$:$Id$
+// Author: Peter Malzacher   19/06/99
 
 #ifndef __CINT__
 #include <iostream.h>

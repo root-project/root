@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TVolume.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine   10/12/98
 //
 /*************************************************************************
@@ -521,7 +521,7 @@ Text_t *TVolume::GetObjectInfo(Int_t px, Int_t py)
    if (!gPad) return "";
    static char info[512];
    sprintf(info,"%s/%s",GetName(),GetTitle());
-   Axis_t x[3];
+   Double_t x[3];
    ((TPad *)gPad)->AbsPixeltoXY(px,py,x[0],x[1]);
    TView *view =gPad->GetView();
    if (view) view->NDCtoWC(x, x);

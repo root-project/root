@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TAttLine.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -38,7 +38,7 @@ public:
         TAttLine(Color_t lcolor,Style_t lstyle, Width_t lwidth);
         virtual ~TAttLine();
                 void     Copy(TAttLine &attline);
-        Int_t            DistancetoLine(Int_t px, Int_t py, Float_t xp1, Float_t yp1, Float_t xp2, Float_t yp2 );
+        Int_t            DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, Double_t xp2, Double_t yp2 );
         Color_t          GetLineColor() {return fLineColor;}
         Style_t          GetLineStyle() {return fLineStyle;}
         Width_t          GetLineWidth() {return fLineWidth;}

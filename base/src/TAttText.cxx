@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -18,6 +18,9 @@
 #include "TStyle.h"
 #include "TVirtualX.h"
 #include "TError.h"
+
+static Float_t x11factor[13] ={1.000,1.000,1.010,0.910,0.920,0.920,0.925,1.204,
+                               1.204,1.168,1.166,1.007,1.026};
 
 ClassImp(TAttText)
 
@@ -162,6 +165,7 @@ again:
          Int_t   fpx11 = fTextFont; if (fpx11 < 0) fpx11 = -fpx11;
          Int_t  ifpx11 = fpx11/10;
          Int_t      ih = Int_t(tsize); // to be set to IH = INT(WKSC(IWKNB)*YRATIO*RCHH*1.5)
+   Float_t rsize = Float_t(ih);
          if (ih > 37) ih = 37;
          if (ih <= 0) ih = 1;
          if (ifpx11 <= 0 || ifpx11 > 13) ifpx11 = 6;
@@ -225,6 +229,10 @@ again:
          }
 
 //*-*-           ready to draw text
+         Float_t mgn = x11factor[ifpx11-1]*rsize/Float_t(ihh);
+         if (mgn <0)    mgn = 1;
+         if (mgn > 100) mgn = 100;
+         gVirtualX->SetTextMagnitude(mgn);
          gVirtualX->DrawText(0,0,0,-1.,0,TVirtualX::kClear);
          gVirtualX->SetTextFont(fTextFont);
          gVirtualX->SetTextSize(tsize);

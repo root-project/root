@@ -532,12 +532,18 @@ G__value *defined;
       if(!G__no_exec_compile&&expressionin.ref) {
 	*defined = expressionin;
 	G__doubleassignbyref(&expressionin,fexpression+1);
+#ifndef G__OLDIMPLEMENTATION1342
+	defined->ref = 0;
+#endif
       }
       break;
     case G__OPR_POSTFIXDEC:
       if(!G__no_exec_compile&&expressionin.ref) {
 	*defined = expressionin;
 	G__doubleassignbyref(&expressionin,fexpression-1);
+#ifndef G__OLDIMPLEMENTATION1342
+	defined->ref = 0;
+#endif
       }
       break;
     case G__OPR_PREFIXINC:
@@ -617,6 +623,16 @@ G__value *defined;
 	  G__letint(defined,'i',defined->obj.i<=expressionin.obj.i);
 	  defined->ref=0;
 	  break;
+#ifndef G__OLDIMPLEMENTATION1340
+	case '>': /* > */
+	  G__letint(defined,'i',defined->obj.i>expressionin.obj.i);
+	  defined->ref=0;
+	  break;
+	case '<': /* < */
+	  G__letint(defined,'i',defined->obj.i<expressionin.obj.i);
+	  defined->ref=0;
+	  break;
+#endif
 	case 'A': /* logical and */
 	  G__letint(defined,'i',defined->obj.i&&expressionin.obj.i);
 	  defined->ref=0;
@@ -681,6 +697,16 @@ G__value *defined;
 	  G__letint(defined,'i',defined->obj.i<=expressionin.obj.i);
 	  defined->ref=0;
 	  break;
+#ifndef G__OLDIMPLEMENTATION1340
+	case '>': /* > */
+	  G__letint(defined,'i',defined->obj.i>expressionin.obj.i);
+	  defined->ref=0;
+	  break;
+	case '<': /* < */
+	  G__letint(defined,'i',defined->obj.i<expressionin.obj.i);
+	  defined->ref=0;
+	  break;
+#endif
 	case 'A': /* logical and */
 	  G__letint(defined,'i',defined->obj.i&&expressionin.obj.i);
 	  defined->ref=0;
@@ -750,6 +776,16 @@ G__value *defined;
 	G__letint(defined,'i',!expressionin.obj.i);
 	defined->ref=0;
 	break;
+#ifndef G__OLDIMPLEMENTATION1339
+      case 'E': /* == */
+	G__letint(defined,'i',defined->obj.i==expressionin.obj.i);
+	defined->ref=0;
+	break;
+      case 'N': /* != */
+	G__letint(defined,'i',defined->obj.i!=expressionin.obj.i);
+	defined->ref=0;
+	break;
+#endif
       case 'A': /* logical and */
 	G__letint(defined,'i',defined->obj.i&&expressionin.obj.i);
 	defined->ref=0;
@@ -776,6 +812,9 @@ G__value *defined;
 	  *defined = expressionin;
 	  G__intassignbyref(&expressionin
 			    ,expressionin.obj.i+G__sizeof(&expressionin));
+#ifndef G__OLDIMPLEMENTATION1342
+	  defined->ref = 0;
+#endif
 	}
 	break;
       case G__OPR_POSTFIXDEC:
@@ -783,6 +822,9 @@ G__value *defined;
 	  *defined = expressionin;
 	  G__intassignbyref(&expressionin
 			    ,expressionin.obj.i-G__sizeof(&expressionin));
+#ifndef G__OLDIMPLEMENTATION1342
+	  defined->ref = 0;
+#endif
 	}
 	break;
       case G__OPR_PREFIXINC:
@@ -1036,12 +1078,18 @@ G__value *defined;
       if(!G__no_exec_compile&&expressionin.ref) {
 	*defined = expressionin;
 	G__intassignbyref(&expressionin,lexpression+1);
+#ifndef G__OLDIMPLEMENTATION1342
+	defined->ref = 0;
+#endif
       }
       break;
     case G__OPR_POSTFIXDEC:
       if(!G__no_exec_compile&&expressionin.ref) {
 	*defined = expressionin;
 	G__intassignbyref(&expressionin,lexpression-1);
+#ifndef G__OLDIMPLEMENTATION1342
+	defined->ref = 0;
+#endif
       }
       break;
     case G__OPR_PREFIXINC:
@@ -1987,6 +2035,60 @@ G__value *defined;
 	buffer = G__getfunction(expr,&ig2,G__TRYNORMAL);
       }
 #endif
+
+#ifndef G__OLDIMPLEMENTATION1340
+      if(0==ig2 && ('A'==operator||'O'==operator)) {
+	int lval,rval;
+	if('u'==defined->type) {
+	  if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	    if(G__asm_dbg) fprintf(G__serr,"%3x: SWAP\n",G__asm_cp);
+#endif
+	    G__asm_inst[G__asm_cp] = G__SWAP;
+	    G__inc_cp_asm(1,0);
+	  }
+	  lval = G__iosrdstate(defined);
+	  if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	    if(G__asm_dbg) fprintf(G__serr,"%3x: SWAP\n",G__asm_cp);
+#endif
+	    G__asm_inst[G__asm_cp] = G__SWAP;
+	    G__inc_cp_asm(1,0);
+	  }
+	}
+	else                   lval = G__int(*defined);
+	if('u'==expressionin.type) rval = G__iosrdstate(&expressionin);
+	else                       rval = G__int(expressionin);
+	buffer.ref=0;
+	buffer.tagnum  = -1;
+	buffer.typenum = -1;
+	switch(operator) {
+	case 'A':
+	  G__letint(&buffer,'i', lval&&rval);
+	  break;
+	case 'O':
+	  G__letint(&buffer,'i', lval||rval);
+	  break;
+	}
+	if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	  if(G__asm_dbg) {
+	    if(isprint(operator)) 
+	      fprintf(G__serr,"%3x: OP2  '%c' %d\n"
+		      ,G__asm_cp,operator,operator);
+	    else
+	      fprintf(G__serr,"%3x: OP2  %d\n"
+		      ,G__asm_cp,operator);
+	  }
+#endif
+	  G__asm_inst[G__asm_cp]=G__OP2;
+	  G__asm_inst[G__asm_cp+1]=operator;
+	  G__inc_cp_asm(2,0);
+	}
+	ig2=1;
+      }
+#endif
+
 #ifndef G__OLDIMPLEMENTATION865
       if(0==ig2) {
 #ifndef G__OLDIMPLEMENTATION1252

@@ -617,6 +617,10 @@ char *filename;
   /* int from = -1 ,to = -1, next; */
   int flag;
 
+#ifndef G__OLDIMPLEMENTATION1345
+  G__LockCriticalSection();
+#endif
+
   /******************************************************************
   * check if file is already loaded.
   * if not so, return
@@ -640,6 +644,9 @@ char *filename;
   if(flag==0) {
     fprintf(G__serr,"Error: G__unloadfile() File \"%s\" not loaded ",filename);
     G__genericerror((char*)NULL);
+#ifndef G__OLDIMPLEMENTATION1345
+    G__UnlockCriticalSection();
+#endif
     return(G__UNLOADFILE_FAILURE);
   }
 
@@ -656,6 +663,9 @@ char *filename;
     fprintf(G__serr
   ,"Error: G__unloadfile() Can not unload \"%s\", file busy " ,filename);
     G__genericerror((char*)NULL);
+#ifndef G__OLDIMPLEMENTATION1345
+    G__UnlockCriticalSection();
+#endif
     return(G__UNLOADFILE_FAILURE);
   }
 
@@ -674,6 +684,9 @@ char *filename;
     fprintf(G__serr,"File=%s unloaded\n",filename);
   }
 
+#ifndef G__OLDIMPLEMENTATION1345
+  G__UnlockCriticalSection();
+#endif
   return(G__UNLOADFILE_SUCCESS);
 
 }
@@ -698,10 +711,20 @@ char *filename;
   int alphaflag=0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1344
+  G__lang = G__UNKNOWNCODING;
+#endif
+
   /* Read 10 byte from beginning of the file.
    * Set badflag if unprintable char is found. */
   for(i=0;i<10;i++) {
     c=fgetc(G__ifile.fp);
+#ifndef G__OLDIMPLEMENTATION1344
+    if(G__IsDBCSLeadByte(c)) {
+      c=fgetc(G__ifile.fp);
+      if(c!=EOF) G__CheckDBCS2ndByte(c);
+    } else
+#endif
     if(!isprint(c) && '\t'!=c && '\n'!=c && '\r'!=c && EOF!=c && 0==comflag) {
       ++badflag;
     }
@@ -889,6 +912,7 @@ char *filenamein;
   char filename[G__ONELINE];
   strcpy(filename,filenamein);
 
+
 #ifndef G__OLDIMPLEMENTATION464
   /*************************************************
   * delete space chars at the end of filename
@@ -928,6 +952,10 @@ char *filenamein;
   }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1345
+  G__LockCriticalSection();
+#endif
+
   /*************************************************
   * store current input file information
   *************************************************/
@@ -950,6 +978,9 @@ char *filenamein;
     G__eof = 0;
     G__step=store_step;
     G__setdebugcond();
+#ifndef G__OLDIMPLEMENTATION1345
+    G__UnlockCriticalSection();
+#endif
     return(G__LOADFILE_FATAL);
   }
 
@@ -989,6 +1020,9 @@ char *filenamein;
       G__eof = 0;
       G__step=store_step;
       G__setdebugcond();
+#ifndef G__OLDIMPLEMENTATION1345
+      G__UnlockCriticalSection();
+#endif
       return(G__LOADFILE_DUPLICATE);
     }
     else {
@@ -1417,6 +1451,9 @@ char *filenamein;
     G__genericerror((char*)NULL);
 #endif
     G__iscpp=store_iscpp;
+#ifndef G__OLDIMPLEMENTATION1345
+    G__UnlockCriticalSection();
+#endif
     return(G__LOADFILE_FAILURE);
   }
   else {
@@ -1439,6 +1476,9 @@ char *filenamein;
       G__setdebugcond();
       G__globalcomp=G__store_globalcomp;
       G__iscpp=store_iscpp;
+#endif
+#ifndef G__OLDIMPLEMENTATION1345
+      G__UnlockCriticalSection();
 #endif
       return(G__LOADFILE_SUCCESS);
     }
@@ -1580,6 +1620,9 @@ char *filenamein;
 #ifdef G__SECURITY
 	G__security = store_security;
 #endif
+#ifndef G__OLDIMPLEMENTATION1345
+	G__UnlockCriticalSection();
+#endif
 	return(G__LOADFILE_FAILURE);
       }
 #ifndef G__OLDIMPLEMENTATION970
@@ -1601,6 +1644,9 @@ char *filenamein;
       G__iscpp=store_iscpp;
 #ifdef G__SECURITY
       G__security = store_security;
+#endif
+#ifndef G__OLDIMPLEMENTATION1345
+      G__UnlockCriticalSection();
 #endif
       return(G__LOADFILE_FAILURE);
     }
@@ -1668,7 +1714,12 @@ char *filenamein;
 #ifdef G__SECURITY
   G__security = store_security;
 #endif
-  if(G__return>G__RETURN_NORMAL) return(G__LOADFILE_FAILURE);
+  if(G__return>G__RETURN_NORMAL) {
+#ifndef G__OLDIMPLEMENTATION1345
+    G__UnlockCriticalSection();
+#endif
+    return(G__LOADFILE_FAILURE);
+  }
 
 #ifndef G__OLDIMPLEMENTATION487
 #ifdef G__AUTOCOMPILE
@@ -1688,6 +1739,9 @@ char *filenamein;
   G__checkIfOnlyFunction(fentry);
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1345
+  G__UnlockCriticalSection();
+#endif
   return(G__LOADFILE_SUCCESS);
 }
 

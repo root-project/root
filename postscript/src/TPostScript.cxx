@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name$:$Id$
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.4 2000/06/16 15:23:01 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -9,29 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 #ifdef WIN32
-#if defined(__hpux) && !defined(__GNUG__)
-#pragma OPTIMIZE OFF
-#endif
-
-#if defined(_AIX) && !defined(__GNUG__)
-#endif
-
-#if defined(__alpha) && !defined(__GNUG__)
-#endif
-
-#if defined(__sun) && !defined(__GNUG__)
-#endif
-
-#if defined(__sgi) && !defined(__GNUG__)
-#endif
-
-#if defined(_linux)
-#endif
-
-#ifdef WIN32
 #pragma optimize("",off)
-#endif
-
 #endif
 
 
@@ -51,6 +29,7 @@
 char backslash = '\\';
 
 const Int_t  kMaxBuffer = 250;
+const Int_t  kLatex = BIT(10);
 
 ClassImp(TPostScript)
 
@@ -146,13 +125,13 @@ void TPostScript::Open(const char *fname, Int_t wtype)
   fMode        = fType%10;
   Float_t xrange, yrange;
   if (gPad) {
-     Float_t ww    = gPad->GetWw();
-     Float_t wh    = gPad->GetWh();
+     Double_t ww    = gPad->GetWw();
+     Double_t wh    = gPad->GetWh();
      if (fType == 113) {
         ww *= gPad->GetWNDC();
         wh *= gPad->GetHNDC();
      }
-     Float_t ratio = wh/ww;
+     Double_t ratio = wh/ww;
      if (fType == 112) {
         xrange = fYsize;
         yrange = xrange*ratio;
@@ -293,12 +272,12 @@ void TPostScript::DefineMarkers()
 }
 
 //______________________________________________________________________________
-void TPostScript::DrawBox(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t  y2)
+void TPostScript::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Draw a Box*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ==========
 //*-*
-   static Float_t x[4], y[4];
+   static Double_t x[4], y[4];
    Int_t ix1 = XtoPS(x1);
    Int_t ix2 = XtoPS(x2);
    Int_t iy1 = YtoPS(y1);
@@ -349,7 +328,7 @@ void TPostScript::DrawBox(Coord_t x1, Coord_t y1, Coord_t x2, Coord_t  y2)
 }
 
 //______________________________________________________________________________
-void TPostScript::DrawFrame(Coord_t xl, Coord_t yl, Coord_t xt, Coord_t  yt,
+void TPostScript::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
                             Int_t mode, Int_t border, Int_t dark, Int_t light)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw a Frame around a box*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -690,8 +669,177 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
 }
 
 
+
+//______________________________________________________________________________
+void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
+{
+//*-*-*-*-*-*-*-*-*-*-*Draw markers at the n WC points x, y*-*-*-*-*-*-*-*-*
+//*-*                  ====================================
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*
+  Int_t i, np, markerstyle;
+  Float_t markersize;
+  static char chtemp[10];
+  Style_t linestylesav = fLineStyle;
+  Width_t linewidthsav = fLineWidth;
+  SetLineStyle(1);
+  SetLineWidth(1);
+  SetColor(Int_t(fMarkerColor));
+  markerstyle = abs(fMarkerStyle);
+  if (markerstyle <= 0) strcpy(chtemp, " m20");
+  if (markerstyle == 1) strcpy(chtemp, " m20");
+  if (markerstyle == 2) strcpy(chtemp, " m2");
+  if (markerstyle == 3) strcpy(chtemp, " m31");
+  if (markerstyle == 4) strcpy(chtemp, " m24");
+  if (markerstyle == 5) strcpy(chtemp, " m5");
+  if (markerstyle >= 6 && markerstyle <= 19) strcpy(chtemp, " m20");
+  if (markerstyle >= 20 && markerstyle <= 31 ) sprintf(chtemp, " m%d", markerstyle);
+  if (markerstyle >= 32) strcpy(chtemp, " m20");
+
+//*-*-              Set the PostScript marker size
+
+//  Float_t msize = fMarkerSize*gPad->GetAbsHNDC();
+  markersize    = CMtoPS(fMarkerSize);
+  if (markerstyle == 1) markersize *= 0.1;
+  if (markerstyle == 6) markersize *= 0.2;
+  if (markerstyle == 7) markersize *= 0.3;
+  if (fMarkerSizeCur != markersize) {
+     fMarkerSizeCur = markersize;
+     PrintFast(3," /w");
+     WriteInteger(Int_t(markersize));
+     PrintFast(40," def /w2 {w 2 div} def /w3 {w 3 div} def");
+  }
+
+  WriteInteger(XtoPS(x[0]));
+  WriteInteger(YtoPS(y[0]));
+  if (n == 1) {
+     PrintStr(chtemp);
+     SetLineStyle(linestylesav);
+     SetLineWidth(linewidthsav);
+     return;
+  }
+  np = 1;
+  for (i=1;i<n;i++) {
+     WriteInteger(XtoPS(x[i]));
+     WriteInteger(YtoPS(y[i]));
+     np++;
+     if (np == 100 || i == n-1) {
+        WriteInteger(np);
+        PrintFast(2," {");
+        PrintStr(chtemp);
+        PrintFast(3,"} R");
+        np = 0;
+     }
+  }
+}
+
+
 //______________________________________________________________________________
 void TPostScript::DrawPS(Int_t nn, Float_t *xw, Float_t *yw)
+{
+//*-*-*-*-*-*-*-*-*-*-*Draw a PolyLine*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                  ================
+//*-*
+//*-*  Draw a polyline through  the points  XW,YW.
+//*-*  If NN=1 moves only to point XW,YW.
+//*-*  If NN=0 the XW(1) and YW(1) are  written  in the PostScript file
+//*-*     according to the current NT.
+//*-*  If NN>0 the line is clipped as a line.
+//*-*  If NN<0 the line is clipped as a fill area.
+//*-*
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*
+   static Float_t dyhatch[24] = {.0075,.0075,.0075,.0075,.0075,.0075,.0075,.0075,
+                                 .01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,.01  ,
+                                 .015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015 ,.015};
+   static Float_t anglehatch[24] = {180, 90,135, 45,150, 30,120, 60,
+                                    180, 90,135, 45,150, 30,120, 60,
+                                    180, 90,135, 45,150, 30,120, 60};
+  Int_t  n, ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy, fais, fasi;
+  fais = fasi = 0;
+
+  if (nn > 0) {
+     n = nn;
+     SetLineStyle(fLineStyle);
+     SetLineWidth(fLineWidth);
+     SetColor(Int_t(fLineColor));
+  } else {
+     n = -nn;
+     SetLineStyle(1);
+     SetLineWidth(1);
+     SetColor(Int_t(fFillColor));
+     fais = fFillStyle/1000;
+     fasi = fFillStyle%1000;
+     if (fais == 3 || fais == 2) {
+        if (fasi > 100 && fasi <125) {
+           DrawHatch(dyhatch[fasi-101],anglehatch[fasi-101], n, xw, yw);
+           return;
+        }
+        if (fasi > 0 && fasi < 26) {
+           SetFillPatterns(fasi, Int_t(fFillColor));
+        }
+     }
+  }
+
+  Int_t jxd0 = XtoPS(xw[0]);
+  Int_t jyd0 = YtoPS(yw[0]);
+  ixd0 = jxd0;
+  iyd0 = jyd0;
+  WriteInteger(ixd0);
+  WriteInteger(iyd0);
+  if( n <= 1) {
+     if( n == 0) return;
+     PrintFast(2," m");
+     return;
+  }
+
+  PrintFast(2," m");
+  idx = idy = 0;
+  for (Int_t i=1;i<n;i++) {
+     ixdi = XtoPS(xw[i]);
+     iydi = YtoPS(yw[i]);
+     ix   = ixdi - ixd0;
+     iy   = iydi - iyd0;
+     ixd0 = ixdi;
+     iyd0 = iydi;
+     if( ix && iy) {
+        if( idx ) { MovePS(idx,0); idx = 0; }
+        if( idy ) { MovePS(0,idy); idy = 0; }
+        MovePS(ix,iy);
+     } else if ( ix ) {
+        if( idy )  { MovePS(0,idy); idy = 0;}
+        if( !idx ) { idx = ix;}
+        else if( TMath::Sign(ix,idx) == ix )       idx += ix;
+        else { MovePS(idx,0);  idx  = ix;}
+     } else if( iy ) {
+        if( idx ) { MovePS(idx,0); idx = 0;}
+        if( !idy) { idy = iy;}
+        else if( TMath::Sign(iy,idy) == iy)         idy += iy;
+        else { MovePS(0,idy);    idy  = iy;}
+     }
+  }
+  if (idx) MovePS(idx,0);
+  if (idy) MovePS(0,idy);
+
+  if (nn > 0 ) {
+     if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(3," cl");
+     PrintFast(2," s");
+  } else {
+     if (fais == 0) {PrintFast(5," cl s"); return;}
+     if (fais == 3 || fais == 2) {
+        if (fasi > 0 && fasi < 26) {
+           PrintFast(3," FA");
+        }
+        return;
+     }
+     PrintFast(2," f");
+  }
+
+}
+
+
+//______________________________________________________________________________
+void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw a PolyLine*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ================
@@ -803,13 +951,22 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Float_t *, Float_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name$:$Id$
+void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
+{
+//*-*-*-*-*-*-*-*-*-*-*-*Draw Fill area with hacth styles*-*-*-*-*-*-*-*-*-*-*
+//*-*                    ================================
+
+   Warning("DrawHatch", "hatch fill style not yet implemented");
+}
+
+//______________________________________________________________________________
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.4 2000/06/16 15:23:01 rdm Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name$:$Id$
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.4 2000/06/16 15:23:01 rdm Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -969,7 +1126,7 @@ void TPostScript::Initialize()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*
 
-   Float_t rpxmin, rpymin, width, heigth;
+   Double_t rpxmin, rpymin, width, heigth;
    rpxmin = rpymin = width = heigth = 0;
    Int_t format;
    fNpages=1;
@@ -1152,7 +1309,7 @@ void TPostScript::Initialize()
       };
    }
 
-   Float_t value = 0;
+   Double_t value = 0;
    if       (format <  100) value = 21*TMath::Power(TMath::Sqrt(2.), 4-format);
    else  if (format == 100) value = 8.5*2.54;
    else  if (format == 200) value = 8.5*2.54;
@@ -1161,8 +1318,8 @@ void TPostScript::Initialize()
 //*-*
 //*-*- Compute size (in points) of the window for each picture = f(fNXzone,fNYzone)
 //*-*
-   Float_t sizex = width/Float_t(fNXzone)*TMath::Power(TMath::Sqrt(2.), 4-format);
-   Float_t sizey = heigth/Float_t(fNYzone)*TMath::Power(TMath::Sqrt(2.), 4-format);
+   Double_t sizex = width/Double_t(fNXzone)*TMath::Power(TMath::Sqrt(2.), 4-format);
+   Double_t sizey = heigth/Double_t(fNYzone)*TMath::Power(TMath::Sqrt(2.), 4-format);
    Int_t npx      = 4*CMtoPS(sizex);
    Int_t npy      = 4*CMtoPS(sizey);
    if (sizex > sizey) fMaxsize = CMtoPS(sizex);
@@ -1326,8 +1483,8 @@ void TPostScript::NewPage()
 //*-*   Compute pad conversion coefficients
   if (gPad) {
 //     if (!gPad->GetPadPaint()) gPad->Update();
-     Float_t ww   = gPad->GetWw();
-     Float_t wh   = gPad->GetWh();
+     Double_t ww   = gPad->GetWw();
+     Double_t wh   = gPad->GetWh();
      fYsize       = fXsize*wh/ww;
   } else fYsize = 27;
 
@@ -1336,8 +1493,8 @@ void TPostScript::NewPage()
      PrintStr("@%%BoundingBox: ");
      WriteInteger(CMtoPS(0));
      WriteInteger(CMtoPS(0));
-     WriteInteger(CMtoPS(fXsize));
-     WriteInteger(CMtoPS(fYsize));
+     WriteInteger(CMtoPS(fXsize*gPad->GetAbsWNDC()));
+     WriteInteger(CMtoPS(fYsize*gPad->GetAbsHNDC()));
      PrintStr("@");
      Initialize();
      fBoundingBox  = kTRUE;
@@ -1506,7 +1663,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name$:$Id$
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.4 2000/06/16 15:23:01 rdm Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from
@@ -1911,7 +2068,7 @@ void TPostScript::SetTextColor( Color_t cindex )
 }
 
 //______________________________________________________________________________
-void TPostScript::Text(Float_t xx, Float_t yy, const char *chars)
+void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
 {
 //*-*-*-*-*-*-*-*-*-*-*Write a string of characters*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =============================
@@ -1983,8 +2140,8 @@ void TPostScript::Text(Float_t xx, Float_t yy, const char *chars)
 
 
    const Double_t kDEGRAD = TMath::Pi()/180.;
-   Float_t x = xx;
-   Float_t y = yy;
+   Double_t x = xx;
+   Double_t y = yy;
    lunps   = &klunps[0];
    Int_t nold = strlen(chars);
    if (nold == 0) return;
@@ -1992,8 +2149,8 @@ void TPostScript::Text(Float_t xx, Float_t yy, const char *chars)
 //*-*
 //*-*- Compute the fonts size. Exit if it is 0
 //*-*
-   Float_t     wh = (Float_t)gPad->XtoPixel(gPad->GetX2());
-   Float_t     hh = (Float_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
+   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Float_t tsize;
    if (wh < hh)  tsize = fTextSize*wh;
    else          tsize = fTextSize*hh;
@@ -2259,7 +2416,8 @@ while (ich < nchp ) {
 //*-*
 //*-*  read character number I and check if it is a escape character
 //*-*
-   scape  = (char*)strchr(cflip, char2[ich-1]);
+   if (TestBit(kLatex)) scape = 0;
+   else                 scape  = (char*)strchr(cflip, char2[ich-1]);
    if( scape )  {
       if ( *scape == cflip[0] ) {
              greek = kTRUE;       //*-*- find ` : go to greek
@@ -2318,6 +2476,7 @@ while (ich < nchp ) {
 //*-*- START of a new text: on the first character, or on the
 //*-*-    first non escape char. which follows an escape char.
       if( ich != 1) scape = (char*)strchr(cflip, char2[ich-2]);
+      if (TestBit(kLatex)) scape = 0;
       if( scape || ich == 1)  {
          ideb = ich;
          if( roman)       ifnb[nt]   = font;  //*-*- set font # (IFNB)
@@ -2338,6 +2497,7 @@ while (ich < nchp ) {
 //*-*-      the last non escape which preceeds an escape (but
 //*-*-      the terminating escape character itself is not known)
       if( ich != nchp) scape = (char*)strchr(cflip, char2[ich]);
+      if (TestBit(kLatex)) scape = 0;
       if( scape || ich == nchp)  {
          Int_t ifin = ich;              //*-* compute text length and make one piece
          Int_t ilen = ifin - ideb + 1;  //*-* if length <74 and not 80, because of
@@ -2714,34 +2874,34 @@ L340:              //*-*-  end of loop on pieces
 
 
 //______________________________________________________________________________
-void TPostScript::TextNDC(Float_t u, Float_t v, const char *chars)
+void TPostScript::TextNDC(Double_t u, Double_t v, const char *chars)
 {
 //*-*-*-*-*-*-*-*-*-*-*Write a string of characters in NDC*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===================================
 
-   Float_t x = gPad->GetX1() + u*(gPad->GetX2() - gPad->GetX1());
-   Float_t y = gPad->GetY1() + v*(gPad->GetY2() - gPad->GetY1());
+   Double_t x = gPad->GetX1() + u*(gPad->GetX2() - gPad->GetX1());
+   Double_t y = gPad->GetY1() + v*(gPad->GetY2() - gPad->GetY1());
    Text(x, y, chars);
 }
 
 //______________________________________________________________________________
-Int_t TPostScript::UtoPS(Float_t u)
+Int_t TPostScript::UtoPS(Double_t u)
 {
 //*-*-*-*-*-*-*-*Convert U from NDC coordinate to PostScript*-*-*-*-*-*-*-*-*
 //*-*            ===========================================
 
-   Float_t cm = fXsize*(gPad->GetAbsXlowNDC() + u*gPad->GetAbsWNDC());
+   Double_t cm = fXsize*(gPad->GetAbsXlowNDC() + u*gPad->GetAbsWNDC());
    return Int_t(0.5 + 288*cm/2.54);
 }
 
 
 //______________________________________________________________________________
-Int_t TPostScript::VtoPS(Float_t v)
+Int_t TPostScript::VtoPS(Double_t v)
 {
 //*-*-*-*-*-*-*-*Convert V from NDC coordinate to PostScript*-*-*-*-*-*-*-*-*
 //*-*            ===========================================
 
-   Float_t cm = fYsize*(gPad->GetAbsYlowNDC() + v*gPad->GetAbsHNDC());
+   Double_t cm = fYsize*(gPad->GetAbsYlowNDC() + v*gPad->GetAbsHNDC());
    return Int_t(0.5 + 288*cm/2.54);
 }
 
@@ -2768,22 +2928,22 @@ void TPostScript::WriteReal(Float_t z)
 }
 
 //______________________________________________________________________________
-Int_t TPostScript::XtoPS(Float_t x)
+Int_t TPostScript::XtoPS(Double_t x)
 {
 //*-*-*-*-*-*-*-*Convert X from world coordinate to PostScript*-*-*-*-*-*-*-*-*
 //*-*            =============================================
 
-   Float_t u = (x - gPad->GetX1())/(gPad->GetX2() - gPad->GetX1());
+   Double_t u = (x - gPad->GetX1())/(gPad->GetX2() - gPad->GetX1());
    return  UtoPS(u);
 }
 
 //______________________________________________________________________________
-Int_t TPostScript::YtoPS(Float_t y)
+Int_t TPostScript::YtoPS(Double_t y)
 {
 //*-*-*-*-*-*-*-*Convert Y from world coordinate to PostScript*-*-*-*-*-*-*-*-*
 //*-*            =============================================
 
-   Float_t v = (y - gPad->GetY1())/(gPad->GetY2() - gPad->GetY1());
+   Double_t v = (y - gPad->GetY1())/(gPad->GetY2() - gPad->GetY1());
    return  VtoPS(v);
 }
 

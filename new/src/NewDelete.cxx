@@ -1,4 +1,4 @@
-// @(#)root/new:$Name$:$Id$
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -92,21 +92,30 @@ static ReAllocInit realloc_init;
 
 #ifdef MEM_DEBUG
 #   define MEM_MAGIC ((unsigned char)0xAB)
+#ifdef R__B64
+#   define storage_size(p) ((size_t)(((size_t*)p)[-1]))
+#   define RealStart(p) ((char*)(p) - sizeof(size_t))
+#   define StoreSize(p, sz) (*((size_t*)(p)) = (sz))
+#   define ExtStart(p) ((char*)(p) + sizeof(size_t))
+#   define RealSize(sz) ((sz) + sizeof(size_t) + sizeof(char))
+#   define StoreMagic(p, sz) *((unsigned char*)(p)+sz+sizeof(size_t)) = MEM_MAGIC
+#else
 #   define storage_size(p) ((size_t)(((int*)p)[-2]))
 #   define RealStart(p) ((char*)(p) - 2*sizeof(int))
 #   define StoreSize(p, sz) (*((int*)(p)) = (sz))
 #   define ExtStart(p) ((char*)(p) + 2*sizeof(int))
-#   define MemClear(p, start, len) \
-      if ((len) > 0) memset(&((char*)(p))[(start)], 0, (len))
 #   define RealSize(sz) ((sz) + 2*sizeof(int) + sizeof(char))
 #   define StoreMagic(p, sz) *((unsigned char*)(p)+sz+2*sizeof(int)) = MEM_MAGIC
+#endif
+#   define MemClear(p, start, len) \
+      if ((len) > 0) memset(&((char*)(p))[(start)], 0, (len))
 #   define TestMagic(p, sz) (*((unsigned char*)(p)+sz) != MEM_MAGIC)
 #   define CheckMagic(p, s, where) \
       if (TestMagic(p, s))    \
          Fatal(where, "storage area overwritten");
 #   define CheckFreeSize(p, where) \
       if (storage_size((p)) > TStorage::GetMaxBlockSize()) \
-         Fatal(where, "unreasonable size (%d)", storage_size(p));
+         Fatal(where, "unreasonable size (%ld)", storage_size(p));
 #   define RemoveStatMagic(p, where) \
       CheckFreeSize(p, where); \
       RemoveStat(p); \

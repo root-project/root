@@ -14,12 +14,12 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -fPIC -mcpu=ev5 -D__osf__ -D__alpha $(EXTRA_CXXFLAGS)
-CFLAGS        = -fPIC -mcpu=ev5 $(EXTRA_CFLAGS)
+CFLAGS        = -fPIC -mcpu=ev5 -D__osf__ -D__alpha $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -fPIC -mcpu=ev5 \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__64BIT \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CXXFLAGS)
 CINTCFLAGS    = -fPIC -mcpu=ev5 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__64BIT $(EXTRA_CFLAGS)
 
 # Linker:
 LD            = g++
@@ -29,9 +29,13 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ltermcap
-XLIBS         = -L$(LPATH) -lXpm -lX11
+XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap
 
 # Fortran:
-F77LIBS       = /usr/shlib/libFutil.so /usr/shlib/libfor.so /usr/shlib/libots.so
+F77LIBS       = /usr/shlib/libfor.so -lg2c
+F77           = g77
+F77LD         = g77
 
+# Extras
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -lX11 -lXext -lXmu -lXi -lm

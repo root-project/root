@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -33,7 +33,7 @@ TArc::TArc(): TEllipse()
 
 }
 //______________________________________________________________________________
-TArc::TArc(Float_t x1, Float_t y1,Float_t r1,Float_t phimin,Float_t phimax)
+TArc::TArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t phimax)
       :TEllipse(x1,y1,r1,r1,phimin,phimax,0)
 {
 //*-*-*-*-*-*-*-*-*-*-*Arc  normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -68,7 +68,7 @@ void TArc::Copy(TObject &arc)
 }
 
 //______________________________________________________________________________
-void TArc::DrawArc(Float_t x1, Float_t y1,Float_t r1,Float_t phimin,Float_t phimax)
+void TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t phimax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this arc with new coordinates*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================================

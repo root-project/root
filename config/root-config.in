@@ -64,15 +64,27 @@ solaris)
    auxglibs=${auxlibs}
    ;;
 solarisegcs)
-   # Solaris g++
+   # Solaris egcs
    auxcflags=
-   auxlibs="-L/usr/ccs/lib -lg++ -lm -lsocket -lgen -ldl"
+   auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl"
+   auxglibs=${auxlibs}
+   ;;
+solarisgcc)
+   # Solaris g++ 2.8.x
+   auxcflags=
+   auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl"
    auxglibs=${auxlibs}
    ;;
 solarisCC5)
    # Solaris CC 5.0
    auxcflags="-D__SunOS_5_6 -library=iostream,no%Cstd"
    auxlibs="-library=iostream,no%Cstd -lm -ldl -lnsl -lsocket"
+   auxglibs=${auxlibs}
+   ;;
+solariskcc)
+   # Solaris KCC
+   auxcflags=
+   auxlibs="-L/usr/ccs/lib -lgen -lm -ldl -lsocket -lnsl"
    auxglibs=${auxlibs}
    ;;
 solarisx86)
@@ -90,19 +102,13 @@ sgicc)
 sgiegcs)
    # SGI 6.x with EGCS
    auxcflags="-fsigned-char"
-   auxlibs="-lstdc++ -lm -ldl"
+   auxlibs="-lgen -lstdc++ -lm -ldl"
    auxglibs=${auxlibs}
    ;;
 sgin32egcs)
    # SGI 6.x with EGCS with n32 ABI
    auxcflags="-fsigned-char"
    auxlibs="-lm -ldl"
-   auxglibs=${auxlibs}
-   ;;
-sgigcc)
-   # SGI with GCC
-   auxcflags="-fsigned-char"
-   auxlibs="-lg++ -lm -ldl"
    auxglibs=${auxlibs}
    ;;
 sgikcc)
@@ -150,7 +156,7 @@ linux|linuxrh42)
    ;;
 linuxegcs)
    # Linux with egcs
-   auxcflags=
+   auxcflags="-D_REENTRANT"
    auxlibs="-lm -ldl -lpthread -rdynamic"
    auxglibs=${auxlibs}
    ;;
@@ -173,8 +179,20 @@ linuxkcc)
    auxglibs=${auxlibs}
    ;;
 linuxppcegcs)
-   # MkLinux with egcs/glibc
+   # Linux/ppc with gcc/glibc
    auxcflags="-fsigned-char -I/usr/X11/include"
+   auxlibs="-lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
+linuxia64gcc)
+   # Itanium Linux with gcc 2.9x
+   auxcflags=
+   auxlibs="-lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
+linuxalphaegcs)
+   # Alpha Linux with egcs
+   auxcflags=
    auxlibs="-lm -ldl -rdynamic"
    auxglibs=${auxlibs}
    ;;
@@ -182,6 +200,18 @@ mklinux)
    # MkLinux with libc5
    auxcflags="-fsigned-char -I/usr/X11/include -I/usr/include/g++"
    auxlibs="-lg++ -lm -ldl -rdynamic"
+   auxglibs=${auxlibs}
+   ;;
+freebsd)
+   # FreeBSD with libc5
+   auxcflags=
+   auxlibs="-lm -lg++"
+   auxglibs=${auxlibs}
+   ;;
+freebsd4)
+   # FreeBSD with glibc
+   auxcflags=
+   auxlibs="-lm -lstdc++"
    auxglibs=${auxlibs}
    ;;
 hiux)

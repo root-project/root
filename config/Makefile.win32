@@ -11,7 +11,7 @@ else
 OPT           = -O2
 LDOPT         = -pdb:none
 #LDOPT         = -opt:ref -pdb:none
-F77OPT        = -optimize:0 -nopdbfile
+F77OPT        = -optimize:0 -nopdbfile -recursive
 NOOPT         =
 endif
 
@@ -52,27 +52,40 @@ THREAD        =
 
 # Fortran:
 F77           = build/win/f77.sh
-F77FLAGS      = -nologo -4Nportlib -G5 -MD
+F77FLAGS      = -nologo -4Nportlib -G5 -MD -recursive
 F77LD         = $(F77)
 F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)
 F77LIBS       =
 
 # Extras
 EXPLICITLINK        = YES
+GRAFLIBDEP          = $(HISTLIB)
 GRAFLIBEXTRA        = lib/libHist.lib
+GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)
 GPADLIBEXTRA        = lib/libGraf.lib lib/libHist.lib
+G3DLIBDEP           = $(GRAFLIB) $(HISTLIB)
 G3DLIBEXTRA         = lib/libGraf.lib lib/libHist.lib
-WIN32LIBEXTRA       = lib/libGraf.lib lib/libGpad.lib
-GUILIBEXTRA         = lib/libGraf.lib lib/libGpad.lib
+WIN32LIBDEP         = $(GPADLIB) $(GRAFLIB)
+WIN32LIBEXTRA       = lib/libGpad.lib lib/libGraf.lib
+GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
+GUILIBEXTRA         = lib/libGpad.lib lib/libGraf.lib
+HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB)
 HISTPAINTERLIBEXTRA = lib/libGraf.lib lib/libHist.lib
+PROOFLIBDEP         = $(TREELIB) $(HISTLIB)
 PROOFLIBEXTRA       = lib/libTree.lib lib/libHist.lib
-TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libProof.lib lib/libGraf.lib \
-                      lib/libGraf3d.lib lib/libHist.lib
-TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGraf.lib lib/libHist.lib \
-                      lib/libGpad.lib
-EGLIBEXTRA          = lib/libGraf.lib lib/libGraf3d.lib
-PYTHIALIBEXTRA      = lib/libEG.lib
-PYTHIA6LIBEXTRA     = lib/libEG.lib
+TREEPLAYERLIBDEP    = $(TREELIB) $(PROOFLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libProof.lib lib/libGraf3d.lib \
+                      lib/libGraf.lib lib/libHist.lib
+TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB)
+TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
+                      lib/libHist.lib
+EGLIBDEP            = $(G3DLIB) $(GRAFLIB)
+EGLIBEXTRA          = lib/libGraf3d.lib lib/libGraf.lib
+PYTHIALIBDEP        = $(EGLIB) $(GRAFLIB)
+PYTHIALIBEXTRA      = lib/libEG.lib lib/libGraf.lib $(PYTHIA)
+PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB)
+PYTHIA6LIBEXTRA     = lib/libEG.lib lib/libGraf.lib $(PYTHIA6)
+VENUSLIBDEP         = $(EGLIB)
 VENUSLIBEXTRA       = lib/libEG.lib
+GLLIBDEP            = $(G3DLIB) $(WIN32LIB)
 GLLIBEXTRA          = lib/libGraf3d.lib lib/libWin32.lib Glu32.lib Opengl32.lib
-

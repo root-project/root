@@ -1,0 +1,15 @@
+
+#ifndef G__QUEUE_DLL
+namespace std {
+#pragma include_noerr <queue.dll>
+}
+#endif
+
+#ifdef __MAKECINT__
+#include <prec_stl/queue>
+#else
+namespace std {
+//#include <queue>
+}
+#endif
+

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name$:$Id$
+// @(#)root/histpainter:$Name:  $:$Id: TLego.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -37,7 +37,7 @@
 #include "TMath.h"
 #include "TStyle.h"
 
-const Double_t kRad = TMath::ATan(1)*Float_t(4)/Float_t(180);
+const Double_t kRad = TMath::ATan(1)*Double_t(4)/Double_t(180);
 
   R__EXTERN TH1  *gCurrentHist;
   R__EXTERN Hoption_t Hoption;
@@ -64,7 +64,7 @@ TLego::TLego(): TObject(), TAttLine(1,1,1), TAttFill(1,0)
 }
 
 //______________________________________________________________________________
-TLego::TLego(Float_t *rmin, Float_t *rmax, Int_t system)
+TLego::TLego(Double_t *rmin, Double_t *rmax, Int_t system)
       : TObject(), TAttLine(1,1,1), TAttFill(1,0)
 {
 //*-*-*-*-*-*-*-*-*-*-*Normal default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -73,7 +73,7 @@ TLego::TLego(Float_t *rmin, Float_t *rmax, Int_t system)
 //*-*  the selected coordinate system
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Int_t i;
-   Float_t psi;
+   Double_t psi;
 
    fIfrast       = 0;
    fMesh         = 1;
@@ -104,7 +104,7 @@ TLego::~TLego()
    fRaster = 0;
 }
 //______________________________________________________________________________
-void TLego::BackBox(Float_t ang)
+void TLego::BackBox(Double_t ang)
 {
 //*-*-*-*-*-*-*-*-*-*Draw back surfaces of surrounding box*-*-*-*-*-*-*-*-*
 //*-*                =====================================                *
@@ -137,9 +137,9 @@ void TLego::BackBox(Float_t ang)
     /* Local variables */
     Double_t cosa, sina;
     Int_t i;
-    Float_t r[24]	/* was [3][8] */, av[24]	/* was [3][8] */;
+    Double_t r[24]	/* was [3][8] */, av[24]	/* was [3][8] */;
     Int_t icodes[3];
-    Float_t tt[4];
+    Double_t tt[4];
     Int_t ix1, ix2, iy1, iy2, iz1, iz2;
 
     cosa = TMath::Cos(kRad*ang);
@@ -180,7 +180,7 @@ void TLego::ClearRaster()
 }
 
 //______________________________________________________________________________
-void TLego::ColorFunction(Int_t nl, Float_t *fl, Int_t *icl, Int_t &irep)
+void TLego::ColorFunction(Int_t nl, Double_t *fl, Int_t *icl, Int_t &irep)
 {
 //*-*-*-*-*-*Set correspondance between function and color levels-*-*-*-*-*
 //*-*        ====================================================         *
@@ -236,7 +236,7 @@ void TLego::ColorFunction(Int_t nl, Float_t *fl, Int_t *icl, Int_t &irep)
 
 
 //______________________________________________________________________________
-void TLego::DrawFaceMode1(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, Float_t *t)
+void TLego::DrawFaceMode1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Draw face - 1st variant*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =======================                          *
@@ -259,9 +259,9 @@ void TLego::DrawFaceMode1(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, F
 
     /* Local variables */
     Int_t i, k,ifneg,i1, i2;
-    Float_t x[13], y[13];
-    Float_t z;
-    Float_t p3[24]	/* was [2][12] */;
+    Double_t x[13], y[13];
+    Double_t z;
+    Double_t p3[24]	/* was [2][12] */;
 
 
 	TView *view = gPad->GetView();   //Get current view
@@ -324,7 +324,7 @@ void TLego::DrawFaceMode1(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, F
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceMode2(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, Float_t *t)
+void TLego::DrawFaceMode2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
 {
 //*-*-*-*-*-*-*-*-*-*-*-Draw face - 2nd option*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                   ======================                            *
@@ -346,8 +346,8 @@ void TLego::DrawFaceMode2(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, F
 
     /* Local variables */
     Int_t i, k;
-    Float_t x[12], y[12];
-    Float_t p3[36]	/* was [3][12] */;
+    Double_t x[12], y[12];
+    Double_t p3[36]	/* was [3][12] */;
 
 
 	TView *view = gPad->GetView();   //Get current view
@@ -381,7 +381,7 @@ void TLego::DrawFaceMode2(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, F
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceMode3(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, Float_t *t)
+void TLego::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *t)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Draw face - 3rd option-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ======================                           *
@@ -407,7 +407,7 @@ void TLego::DrawFaceMode3(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, F
 
     Int_t i, k;
     Int_t icol = 0;
-    Float_t x[4], y[4], p3[12]	/* was [3][4] */;
+    Double_t x[4], y[4], p3[12]	/* was [3][4] */;
 
 
 	TView *view = gPad->GetView();   //Get current view
@@ -447,7 +447,7 @@ void TLego::DrawFaceMode3(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, F
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceMove1(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, Float_t *tt)
+void TLego::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
 {
 //*-*-*-*-*-*Draw face - 1st variant for "MOVING SCREEN" algorithm -*-*-*-*
 //*-*        =====================================================        *
@@ -469,10 +469,10 @@ void TLego::DrawFaceMove1(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, F
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Float_t xdel, ydel;
+    Double_t xdel, ydel;
     Int_t i, k, i1, i2, il, it;
-    Float_t x[2], y[2];
-    Float_t p1[3], p2[3], p3[36]	/* was [3][12] */;
+    Double_t x[2], y[2];
+    Double_t p1[3], p2[3], p3[36]	/* was [3][12] */;
 
 
 	TView *view = gPad->GetView();   //Get current view
@@ -550,7 +550,7 @@ void TLego::DrawFaceMove1(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, F
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceMove2(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, Float_t *tt)
+void TLego::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
 {
 //*-*-*-*-*-*Draw face - 2nd variant for "MOVING SCREEN" algorithm*-*-*-*-*
 //*-*        =====================================================        *
@@ -573,10 +573,10 @@ void TLego::DrawFaceMove2(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, F
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Float_t xdel, ydel;
+    Double_t xdel, ydel;
     Int_t i, k, icol, i1, i2, it;
-    Float_t x[2], y[2];
-    Float_t p1[3], p2[3], p3[36]	/* was [3][12] */;
+    Double_t x[2], y[2];
+    Double_t p1[3], p2[3], p3[36]	/* was [3][12] */;
 
 
 	TView *view = gPad->GetView();   //Get current view
@@ -633,7 +633,7 @@ void TLego::DrawFaceMove2(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, F
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceRaster1(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, Float_t *tt)
+void TLego::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
 {
 //*-*-*-*-*-*-*Draw face - 1st variant for "RASTER SCREEN" algorithm*-*-*-*
 //*-*          =====================================================      *
@@ -655,11 +655,11 @@ void TLego::DrawFaceRaster1(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface,
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Float_t xdel, ydel;
+    Double_t xdel, ydel;
     Int_t i, k, i1, i2, il, it;
-    Float_t x[2], y[2];
-    Float_t p1[3], p2[3], p3[36]	/* was [3][12] */;
-    Float_t pp[24]	/* was [2][12] */;
+    Double_t x[2], y[2];
+    Double_t p1[3], p2[3], p3[36]	/* was [3][12] */;
+    Double_t pp[24]	/* was [2][12] */;
 
 
 	TView *view = gPad->GetView();   //Get current view
@@ -734,7 +734,7 @@ void TLego::DrawFaceRaster1(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface,
 }
 
 //______________________________________________________________________________
-void TLego::DrawFaceRaster2(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface, Float_t *tt)
+void TLego::DrawFaceRaster2(Int_t *icodes, Double_t *xyz, Int_t np, Int_t *iface, Double_t *tt)
 {
 //*-*-*-*-*-*Draw face - 2nd variant for "RASTER SCREEN" algorithm*-*-*-*-*
 //*-*        =====================================================        *
@@ -756,10 +756,10 @@ void TLego::DrawFaceRaster2(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface,
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Float_t xdel, ydel;
+    Double_t xdel, ydel;
     Int_t i, k, icol, i1, i2, it;
-    Float_t p[3], x[2], y[2];
-    Float_t pp[24]	/* was [2][12] */;
+    Double_t p[3], x[2], y[2];
+    Double_t pp[24]	/* was [2][12] */;
 
 
 	TView *view = gPad->GetView();   //Get current view
@@ -812,7 +812,7 @@ void TLego::DrawFaceRaster2(Int_t *icodes, Float_t *xyz, Int_t np, Int_t *iface,
 
 
 //______________________________________________________________________________
-void TLego::FillPolygon(Int_t n, Float_t *p, Float_t *f)
+void TLego::FillPolygon(Int_t n, Double_t *p, Double_t *f)
 {
 //*-*-*-*-*-*-*-*Fill polygon with function values at vertexes*-*-*-*-*-*-*
 //*-*            =============================================            *
@@ -827,10 +827,10 @@ void TLego::FillPolygon(Int_t n, Float_t *p, Float_t *f)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     Int_t ilev, i, k, icol, i1, i2, nl, np;
-    Float_t fmin, fmax;
-    Float_t x[12], y[12], f1, f2;
-    Float_t p3[36]	/* was [3][12] */;
-    Float_t funmin, funmax;
+    Double_t fmin, fmax;
+    Double_t x[12], y[12], f1, f2;
+    Double_t p3[36]	/* was [3][12] */;
+    Double_t funmin, funmax;
 
 
     /* Parameter adjustments */
@@ -892,7 +892,7 @@ void TLego::FillPolygon(Int_t n, Float_t *p, Float_t *f)
 }
 
 //______________________________________________________________________________
-void TLego::FillPolygonBorder(Int_t nn, Float_t *xy)
+void TLego::FillPolygonBorder(Int_t nn, Double_t *xy)
 {
 //*-*-*-*-*-*-*Fill a polygon including border ("RASTER SCREEN")*-*-*-*-*-*
 //*-*          =================================================          *
@@ -1130,7 +1130,7 @@ L500:
 }
 
 //______________________________________________________________________________
-void TLego::FindLevelLines(Int_t np, Float_t *f, Float_t *t)
+void TLego::FindLevelLines(Int_t np, Double_t *f, Double_t *t)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*Find level lines for face*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    =========================                        *
@@ -1144,7 +1144,7 @@ void TLego::FindLevelLines(Int_t np, Float_t *f, Float_t *t)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     Int_t i, k, i1, i2, il, nl;
-    Float_t tmin, tmax, d1, d2;
+    Double_t tmin, tmax, d1, d2;
 
     /* Parameter adjustments */
     --t;
@@ -1211,7 +1211,7 @@ L340:
 
 
 //______________________________________________________________________________
-void TLego::FindPartEdge(Float_t *p1, Float_t *p2, Float_t f1, Float_t f2, Float_t fmin, Float_t fmax, Int_t &kpp, Float_t *pp)
+void TLego::FindPartEdge(Double_t *p1, Double_t *p2, Double_t f1, Double_t f2, Double_t fmin, Double_t fmax, Int_t &kpp, Double_t *pp)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-* Find part of edge *-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                       =================                             *
@@ -1231,7 +1231,7 @@ void TLego::FindPartEdge(Float_t *p1, Float_t *p2, Float_t f1, Float_t f2, Float
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Float_t d1, d2;
+    Double_t d1, d2;
     Int_t k1, k2, kk;
 
     /* Parameter adjustments */
@@ -1378,7 +1378,7 @@ L700:
 
 
 //______________________________________________________________________________
-void TLego::FindVisibleDraw(Float_t *r1, Float_t *r2)
+void TLego::FindVisibleDraw(Double_t *r1, Double_t *r2)
 {
 //*-*-*-*-*-*-*-*-*Find visible parts of line (draw line)-*-*-*-*-*-*-*-*-*
 //*-*              ======================================                 *
@@ -1388,13 +1388,13 @@ void TLego::FindVisibleDraw(Float_t *r1, Float_t *r2)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Float_t yy1u, yy2u;
+    Double_t yy1u, yy2u;
     Int_t i, icase, i1, i2, icase1, icase2, iv, ifback;
-    Float_t x1, x2, y1, y2, z1, z2, dd, di;
-    Float_t dt, dy;
-    Float_t tt, uu, ww, yy, yy1, yy2, yy1d, yy2d;
-    Float_t *tn = 0;
-    const Float_t kEpsil = 1.e-6;
+    Double_t x1, x2, y1, y2, z1, z2, dd, di;
+    Double_t dt, dy;
+    Double_t tt, uu, ww, yy, yy1, yy2, yy1d, yy2d;
+    Double_t *tn = 0;
+    const Double_t kEpsil = 1.e-6;
     /* Parameter adjustments */
     --r2;
     --r1;
@@ -1435,7 +1435,7 @@ void TLego::FindVisibleDraw(Float_t *r1, Float_t *r2)
 
 //*-*-          F I N D   V I S I B L E   P A R T S   O F   T H E   L I N E
 
-    di = (Float_t) (i2 - i1);
+    di = (Double_t) (i2 - i1);
     dy = (y2 - y1) / di;
     dt = 1 / di;
     iv = -1;
@@ -1543,7 +1543,7 @@ void TLego::FindVisibleDraw(Float_t *r1, Float_t *r2)
 
 
 //______________________________________________________________________________
-void TLego::FindVisibleLine(Float_t *p1, Float_t *p2, Int_t ntmax, Int_t &nt, Float_t *t)
+void TLego::FindVisibleLine(Double_t *p1, Double_t *p2, Int_t ntmax, Int_t &nt, Double_t *t)
 {
 //*-*-*-*-*-*-*-*Find visible part of a line ("RASTER SCREEN")*-*-*-*-*-*-*
 //*-*            =============================================            *
@@ -1557,12 +1557,12 @@ void TLego::FindVisibleLine(Float_t *p1, Float_t *p2, Int_t ntmax, Int_t &nt, Fl
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Float_t ddtt;
-    Float_t tcur;
+    Double_t ddtt;
+    Double_t tcur;
     Int_t i, incrx, ivis, x1, y1, x2, y2, ib, kb, dx, dy, iw, ix, iy, ifinve, dx2, dy2;
-    Float_t t1, t2;
-    Float_t dt;
-    Float_t tt;
+    Double_t t1, t2;
+    Double_t dt;
+    Double_t tt;
     /* Parameter adjustments */
     t -= 3;
     --p2;
@@ -1613,7 +1613,7 @@ void TLego::FindVisibleLine(Float_t *p1, Float_t *p2, Int_t ntmax, Int_t &nt, Fl
     dt = 1 / (dx + 1);
     ddtt = dt*(float).5;
     tcur = -(Double_t)dt;
-    tt = (Float_t) (-(dx + dy2));
+    tt = (Double_t) (-(dx + dy2));
     iy = y1;
     kb = iy*fNxrast + x1 - incrx;
     for (ix = x1; incrx < 0 ? ix >= x2 : ix <= x2; ix += incrx) {
@@ -1652,7 +1652,7 @@ L200:
     dt = 1 / (dy + 1);
     ddtt = dt*(float).5;
     tcur = -(Double_t)dt;
-    tt = (Float_t) (-(dy + dx2));
+    tt = (Double_t) (-(dy + dx2));
     ix = x1;
     if (y2 >= fNyrast) y2 = fNyrast - 1;
     kb = (y1 - 1)*fNxrast + ix;
@@ -1701,7 +1701,7 @@ L300:
 }
 
 //______________________________________________________________________________
-void TLego::FrontBox(Float_t ang)
+void TLego::FrontBox(Double_t ang)
 {
 //*-*-*-*-*-*-*-*Draw forward faces of surrounding box & axes-*-*-*-*-*-*-*
 //*-*            ============================================             *
@@ -1726,9 +1726,9 @@ void TLego::FrontBox(Float_t ang)
     static Int_t iface2[4] = { 2,3,7,6 };
 
     Double_t cosa, sina;
-    Float_t r[24]	/* was [3][8] */, av[24]	/* was [3][8] */;
+    Double_t r[24]	/* was [3][8] */, av[24]	/* was [3][8] */;
     Int_t icodes[3];
-    Float_t fdummy[1];
+    Double_t fdummy[1];
     Int_t i, ix1, ix2, iy1, iy2, iz1, iz2;
     TView *view = 0;
 
@@ -1760,7 +1760,7 @@ void TLego::FrontBox(Float_t ang)
 }
 
 //______________________________________________________________________________
-void TLego::GouraudFunction(Int_t ia, Int_t ib, Float_t *face, Float_t *t)
+void TLego::GouraudFunction(Int_t ia, Int_t ib, Double_t *face, Double_t *t)
 {
 //*-*-*-*-*-* Find part of surface with luminosity in the corners*-*-*-*-*-*
 //*-*         ===================================================
@@ -1770,18 +1770,18 @@ void TLego::GouraudFunction(Int_t ia, Int_t ib, Float_t *face, Float_t *t)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t iphi;
-   static Float_t f[108];	/* was [3][4][3][3] */
+   static Double_t f[108];	/* was [3][4][3][3] */
    Int_t i, j, k;
-   Float_t r, s, x[36];	/* was [4][3][3] */
-   Float_t y[36];	/* was [4][3][3] */
-   Float_t z[36];	/* was [4][3][3] */
+   Double_t r, s, x[36];	/* was [4][3][3] */
+   Double_t y[36];	/* was [4][3][3] */
+   Double_t z[36];	/* was [4][3][3] */
    Int_t incrx[3], incry[3];
 
-   Float_t x1, x2, y1, y2, z1, z2, th, an[27];	/* was [3][3][3] */
-   Float_t bn[12];    /* was [3][2][2] */
+   Double_t x1, x2, y1, y2, z1, z2, th, an[27];	/* was [3][3][3] */
+   Double_t bn[12];    /* was [3][2][2] */
 
    Double_t rad;
-   Float_t phi;
+   Double_t phi;
    Int_t ixt, iyt;
 
     /* Parameter adjustments */
@@ -1906,7 +1906,7 @@ void TLego::GouraudFunction(Int_t ia, Int_t ib, Float_t *face, Float_t *t)
 
 
 //______________________________________________________________________________
-void TLego::InitMoveScreen(Float_t xmin, Float_t xmax)
+void TLego::InitMoveScreen(Double_t xmin, Double_t xmax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Initialize "MOVING SCREEN" method*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================                  *
@@ -1926,7 +1926,7 @@ void TLego::InitMoveScreen(Float_t xmin, Float_t xmax)
     }
 }
 //______________________________________________________________________________
-void TLego::InitRaster(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax, Int_t nx, Int_t ny  )
+void TLego::InitRaster(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, Int_t nx, Int_t ny  )
 {
 //*-*-*Initialize hidden lines removal algorithm (RASTER SCREEN)*-*-*-*-*-*
 //*-*  =========================================================          *
@@ -1981,7 +1981,7 @@ void TLego::InitRaster(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax, I
 
 
 //______________________________________________________________________________
-void TLego::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Float_t *ab, Float_t *vv, Float_t *t)
+void TLego::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t *ab, Double_t *vv, Double_t *t)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Service function for Legos-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ==========================
@@ -1989,9 +1989,9 @@ void TLego::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Float_t *ab, Float_t *vv
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     Int_t i, j, ixt, iyt;
-    Float_t xval1l, xval2l, yval1l,  yval2l;
-    Float_t rinrad = gStyle->GetLegoInnerR();
-    Float_t dangle = 10; //Delta angle for Rapidity option
+    Double_t xval1l, xval2l, yval1l,  yval2l;
+    Double_t rinrad = gStyle->GetLegoInnerR();
+    Double_t dangle = 10; //Delta angle for Rapidity option
 
     /* Parameter adjustments */
     t -= 5;
@@ -2004,8 +2004,8 @@ void TLego::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Float_t *ab, Float_t *vv
 //*-*-             Compute the cell position in cartesian coordinates
 //*-*-             and compute the LOG if necessary
 
-    Float_t xwid = gCurrentHist->GetXaxis()->GetBinWidth(ixt);
-    Float_t ywid = gCurrentHist->GetYaxis()->GetBinWidth(iyt);
+    Double_t xwid = gCurrentHist->GetXaxis()->GetBinWidth(ixt);
+    Double_t ywid = gCurrentHist->GetYaxis()->GetBinWidth(iyt);
     ab[3] = gCurrentHist->GetXaxis()->GetBinLowEdge(ixt) + xwid*Hparam.baroffset;
     ab[4] = gCurrentHist->GetYaxis()->GetBinLowEdge(iyt) + ywid*Hparam.baroffset;
     ab[5] = ab[3] + xwid*Hparam.barwidth;
@@ -2079,7 +2079,7 @@ void TLego::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Float_t *ab, Float_t *vv
     for (i = 2; i <= nv; ++i) {
 	if (Hoption.Logz) {
             if (vv[i] > 0)
-               vv[i] = TMath::Max(Hparam.zmin, (Float_t)TMath::Log10(vv[i]));
+               vv[i] = TMath::Max(Hparam.zmin, (Double_t)TMath::Log10(vv[i]));
             else
                vv[i] = Hparam.zmin;
             vv[i] = TMath::Min(vv[i], Hparam.zmax);
@@ -2118,7 +2118,7 @@ void TLego::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Float_t *ab, Float_t *vv
 }
 
 //______________________________________________________________________________
-void TLego::LegoCartesian(Float_t ang, Int_t nx, Int_t ny, const char *chopt)
+void TLego::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
 {
 //*-*-*-*-*-*-*Draw stack of lego-plots in cartesian coordinates*-*-*-*-*-*
 //*-*          =================================================          *
@@ -2158,15 +2158,15 @@ void TLego::LegoCartesian(Float_t ang, Int_t nx, Int_t ny, const char *chopt)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Float_t cosa, sina;
+    Double_t cosa, sina;
     Int_t ivis[4], iface[4];
-    Float_t tface[4], v[20];
+    Double_t tface[4], v[20];
     Int_t incrx, incry, i1, k1, k2, ix1, iy1, ix2, iy2, i, iv, ix, iy, nv;
-    Float_t tt[80]	/* was [4][20] */;
+    Double_t tt[80]	/* was [4][20] */;
     Int_t icodes[4];
-    Float_t zn, xy[8]	/* was [2][4] */;
-    Float_t xyz[24]	/* was [3][8] */;
-    Float_t *tn = 0;
+    Double_t zn, xy[8]	/* was [2][4] */;
+    Double_t xyz[24]	/* was [3][8] */;
+    Double_t *tn = 0;
     TView *view = 0;
 	
     sina = TMath::Sin(ang*kRad);
@@ -2325,12 +2325,12 @@ void TLego::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
-    Float_t tface[4], v[20];
+    Double_t tface[4], v[20];
     Int_t incrr, k1, k2, ia, ib, ir1, ir2;
-    Float_t ab[8]	/* was [2][4] */;
+    Double_t ab[8]	/* was [2][4] */;
     Int_t ir, jr, iv, nr, nv, icodes[4];
-    Float_t tt[80]	/* was [4][20] */;
-    Float_t xyz[24]	/* was [3][8] */;
+    Double_t tt[80]	/* was [4][20] */;
+    Double_t xyz[24]	/* was [3][8] */;
     TView *view = 0;
     ia = ib = 0;	
 	if(gPad) {
@@ -2521,14 +2521,14 @@ void TLego::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
-    Float_t tface[4], v[20], z;
-    Float_t ab[8]	/* was [2][4] */;
+    Double_t tface[4], v[20], z;
+    Double_t ab[8]	/* was [2][4] */;
     Int_t ia, ib, idummy, iz1, iz2, nz, incrz, k1, k2, nv;
     Int_t iv, iz, jz, icodes[4];
-    Float_t tt[80]	/* was [4][20] */;
-    Float_t cosphi[4];
-    Float_t sinphi[4];
-    Float_t xyz[24]	/* was [3][8] */;
+    Double_t tt[80]	/* was [4][20] */;
+    Double_t cosphi[4];
+    Double_t sinphi[4];
+    Double_t xyz[24]	/* was [3][8] */;
     TView *view = 0;
     ia = ib = 0;	
 	
@@ -2723,15 +2723,15 @@ void TLego::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int_t nb, const ch
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     Int_t iphi, jphi, kphi, incr, nphi, ivis[6], iopt, iphi1, iphi2, iface[4], i, j;
-    Float_t tface[4], v[20], costh[4];
-    Float_t sinth[4];
+    Double_t tface[4], v[20], costh[4];
+    Double_t sinth[4];
     Int_t k1, k2, ia, ib, incrth, ith, jth, kth, nth, mth, ith1, ith2, nv;
-    Float_t ab[8]	/* was [2][4] */;
-    Float_t th;
+    Double_t ab[8]	/* was [2][4] */;
+    Double_t th;
     Int_t iv, icodes[4];
-    Float_t tt[80]	/* was [4][20] */, zn, cosphi[4];
-    Float_t sinphi[4], th1, th2, phi;
-    Float_t xyz[24]	/* was [3][8] */, phi1, phi2;
+    Double_t tt[80]	/* was [4][20] */, zn, cosphi[4];
+    Double_t sinphi[4], th1, th2, phi;
+    Double_t xyz[24]	/* was [3][8] */, phi1, phi2;
     TView *view = 0;
     ia = ib = 0;	
 	
@@ -2958,7 +2958,7 @@ L500:
 }
 
 //______________________________________________________________________________
-void TLego::LightSource(Int_t nl, Float_t yl, Float_t xscr, Float_t yscr, Float_t zscr, Int_t &irep)
+void TLego::LightSource(Int_t nl, Double_t yl, Double_t xscr, Double_t yscr, Double_t zscr, Int_t &irep)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Set light source-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ================                               *
@@ -2980,7 +2980,7 @@ void TLego::LightSource(Int_t nl, Float_t yl, Float_t xscr, Float_t yscr, Float_
 
     /* Local variables */
     Int_t i;
-    Float_t s;
+    Double_t s;
 
     irep = 0;
     if (nl < 0)       goto L100;
@@ -3032,7 +3032,7 @@ L400:
 }
 
 //______________________________________________________________________________
-void TLego::Luminosity(Float_t *anorm, Float_t &flum)
+void TLego::Luminosity(Double_t *anorm, Double_t &flum)
 {
 //*-*-*-*-*-*-*-*-*-*Find surface luminosity at given point *-*-*-*-*-*-*-*
 //*-*                ======================================               *
@@ -3063,9 +3063,9 @@ void TLego::Luminosity(Float_t *anorm, Float_t &flum)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Float_t cosn, cosr;
+    Double_t cosn, cosr;
     Int_t i;
-    Float_t s, vl[3], vn[3];
+    Double_t s, vl[3], vn[3];
 
 
 	TView *view = gPad->GetView();   //Get current view
@@ -3105,7 +3105,7 @@ void TLego::Luminosity(Float_t *anorm, Float_t &flum)
 }
 
 //______________________________________________________________________________
-void TLego::ModifyScreen(Float_t *r1, Float_t *r2)
+void TLego::ModifyScreen(Double_t *r1, Double_t *r2)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*Modify SCREEN*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                        =============                                *
@@ -3117,7 +3117,7 @@ void TLego::ModifyScreen(Float_t *r1, Float_t *r2)
 
     /* Local variables */
     Int_t i, i1, i2;
-    Float_t x1, x2, y1, y2, dy, ww, yy1, yy2, *tn;
+    Double_t x1, x2, y1, y2, dy, ww, yy1, yy2, *tn;
 
     /* Parameter adjustments */
     --r2;
@@ -3225,7 +3225,7 @@ void TLego::SetColorMain(Color_t color, Int_t n)
 
 
 //______________________________________________________________________________
-void TLego::SideVisibilityDecode(Float_t val, Int_t &iv1, Int_t &iv2, Int_t &iv3, Int_t &iv4, Int_t &iv5, Int_t &iv6, Int_t &ir)
+void TLego::SideVisibilityDecode(Double_t val, Int_t &iv1, Int_t &iv2, Int_t &iv3, Int_t &iv4, Int_t &iv5, Int_t &iv6, Int_t &ir)
 {
 //*-*-*-*-*-*-*Decode side visibilities and order along R for sector*-*-*-*
 //*-*          =====================================================      *
@@ -3260,7 +3260,7 @@ void TLego::SideVisibilityDecode(Float_t val, Int_t &iv1, Int_t &iv2, Int_t &iv3
 
 
 //______________________________________________________________________________
-void TLego::SideVisibilityEncode(Int_t iopt, Float_t phi1, Float_t phi2, Float_t &val)
+void TLego::SideVisibilityEncode(Int_t iopt, Double_t phi1, Double_t phi2, Double_t &val)
 {
 //*-*-*-*-*-*-*Encode side visibilities and order along R for sector*-*-*-*
 //*-*          =====================================================      *
@@ -3275,7 +3275,7 @@ void TLego::SideVisibilityEncode(Int_t iopt, Float_t phi1, Float_t phi2, Float_t
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Float_t zn, phi;
+    Double_t zn, phi;
     Int_t k = 0;
     TView *view = 0;
 
@@ -3299,12 +3299,12 @@ void TLego::SideVisibilityEncode(Int_t iopt, Float_t phi1, Float_t phi2, Float_t
     if (zn > 0) k += 8;
     if (zn < 0) k += 2;
     if (zn <= 0 && iopt == 1 || zn > 0 && iopt == 2) ++k;
-    val = Float_t(k);
+    val = Double_t(k);
 }
 
 
 //______________________________________________________________________________
-void TLego::Spectrum(Int_t nl, Float_t fmin, Float_t fmax, Int_t ic, Int_t idc, Int_t &irep)
+void TLego::Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_t ic, Int_t idc, Int_t &irep)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Set Spectrum-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =============                                  *
@@ -3327,7 +3327,7 @@ void TLego::Spectrum(Int_t nl, Float_t fmin, Float_t fmax, Int_t ic, Int_t idc, 
     static const char *where = "Spectrum";
 
     /* Local variables */
-    Float_t delf;
+    Double_t delf;
     Int_t i;
 
     irep = 0;
@@ -3370,7 +3370,7 @@ void TLego::Spectrum(Int_t nl, Float_t fmin, Float_t fmax, Int_t ic, Int_t idc, 
 }
 
 //______________________________________________________________________________
-void TLego::SurfaceCartesian(Float_t ang, Int_t nx, Int_t ny, const char *chopt)
+void TLego::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, const char *chopt)
 {
 //*-*-*-*-*-*-*-*-*Draw surface in cartesian coordinate system*-*-*-*-*-*-*
 //*-*              ===========================================            *
@@ -3403,12 +3403,12 @@ void TLego::SurfaceCartesian(Float_t ang, Int_t nx, Int_t ny, const char *chopt)
     Int_t iface[4] = { 1,2,3,4 };
 
     /* Local variables */
-    Float_t cosa, sina, f[12]	/* was [3][4] */;
+    Double_t cosa, sina, f[12]	/* was [3][4] */;
     Int_t i, incrx, incry, i1, ix, iy;
-    Float_t tt[4];
+    Double_t tt[4];
     Int_t icodes[2], ix1, iy1, ix2, iy2;
-    Float_t xyz[12]	/* was [3][4] */;
-    Float_t *tn;
+    Double_t xyz[12]	/* was [3][4] */;
+    Double_t *tn;
 
     sina = TMath::Sin(ang*kRad);
     cosa = TMath::Cos(ang*kRad);
@@ -3457,7 +3457,7 @@ void TLego::SurfaceCartesian(Float_t ang, Int_t nx, Int_t ny, const char *chopt)
 }
 
 //______________________________________________________________________________
-void TLego::SurfaceFunction(Int_t ia, Int_t ib, Float_t *f, Float_t *t)
+void TLego::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Double_t *t)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Service function for Surfaces*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =============================
@@ -3468,10 +3468,10 @@ void TLego::SurfaceFunction(Int_t ia, Int_t ib, Float_t *f, Float_t *t)
     static Int_t ixadd[4] = { 0,1,1,0 };
     static Int_t iyadd[4] = { 0,0,1,1 };
 
-    const Float_t kHMAX = 1.05;
-    Float_t rinrad = gStyle->GetLegoInnerR();
-    Float_t dangle = 10; //Delta angle for Rapidity option
-    Float_t xval1l, xval2l, yval1l, yval2l;
+    const Double_t kHMAX = 1.05;
+    Double_t rinrad = gStyle->GetLegoInnerR();
+    Double_t dangle = 10; //Delta angle for Rapidity option
+    Double_t xval1l, xval2l, yval1l, yval2l;
     Int_t i, ixa, iya, icx, ixt, iyt;
 
     /* Parameter adjustments */
@@ -3499,8 +3499,8 @@ void TLego::SurfaceFunction(Int_t ia, Int_t ib, Float_t *f, Float_t *t)
     for (i = 1; i <= 4; ++i) {
 	ixa = ixadd[i - 1];
 	iya = iyadd[i - 1];
-        Float_t xwid = gCurrentHist->GetXaxis()->GetBinWidth(ixt+ixa);
-        Float_t ywid = gCurrentHist->GetYaxis()->GetBinWidth(iyt+iya);
+        Double_t xwid = gCurrentHist->GetXaxis()->GetBinWidth(ixt+ixa);
+        Double_t ywid = gCurrentHist->GetYaxis()->GetBinWidth(iyt+iya);
 
 //*-*-          Compute the cell position in cartesian coordinates
 //*-*-          and compute the LOG if necessary
@@ -3618,12 +3618,12 @@ void TLego::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const char *chopt)
 
 
     Int_t iphi, jphi, kphi, incr, nphi, iopt, iphi1, iphi2;
-    Float_t f[12]	/* was [3][4] */;
+    Double_t f[12]	/* was [3][4] */;
     Int_t i, j, incrr, ir1, ir2;
-    Float_t z;
+    Double_t z;
     Int_t ia, ib, ir, jr, nr, icodes[2];
-    Float_t tt[4];
-    Float_t phi, ttt[4], xyz[12]	/* was [3][4] */;
+    Double_t tt[4];
+    Double_t phi, ttt[4], xyz[12]	/* was [3][4] */;
     ia = ib = 0;	
 
     if (iordr == 0) {
@@ -3761,10 +3761,10 @@ void TLego::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, const char *chop
     Int_t iphi, jphi, kphi, incr, nphi, iopt, iphi1, iphi2;
     Int_t i, j, incrz, nz, iz1, iz2;
     Int_t ia, ib, iz, jz, icodes[2];
-    Float_t f[12]	/* was [3][4] */;
-    Float_t z;
-    Float_t tt[4];
-    Float_t ttt[4], xyz[12]	/* was [3][4] */;
+    Double_t f[12]	/* was [3][4] */;
+    Double_t z;
+    Double_t tt[4];
+    Double_t ttt[4], xyz[12]	/* was [3][4] */;
     TView *view = 0;
     ia = ib = 0;	
 
@@ -3901,10 +3901,10 @@ void TLego::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int_t nb, const
     Int_t iphi, jphi, kphi, incr, nphi, iopt, iphi1, iphi2;
     Int_t i, j, incrth, ith, jth, kth, nth, mth, ith1, ith2;
     Int_t ia, ib, icodes[2];
-    Float_t f[12]	/* was [3][4] */;
-    Float_t tt[4];
-    Float_t phi;
-    Float_t ttt[4], xyz[12]	/* was [3][4] */;
+    Double_t f[12]	/* was [3][4] */;
+    Double_t tt[4];
+    Double_t phi;
+    Double_t ttt[4], xyz[12]	/* was [3][4] */;
     TView *view = 0;
     ia = ib = 0;	
 
@@ -4050,7 +4050,7 @@ L500:
 }
 
 //______________________________________________________________________________
-void TLego::SurfaceProperty(Float_t qqa, Float_t qqd, Float_t qqs, Int_t nnqs, Int_t &irep)
+void TLego::SurfaceProperty(Double_t qqa, Double_t qqd, Double_t qqs, Int_t nnqs, Int_t &irep)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set surface property coefficients*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================                  *

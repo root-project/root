@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name$:$Id$ */
+/* @(#)root/base:$Name:  $:$Id: Htypes.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -25,7 +25,7 @@
 #include "Rtypes.h"
 #endif
 
-typedef float          Axis_t;      //Axis values type
+typedef double         Axis_t;      //Axis values type
 typedef double         Stat_t;      //Statistics type
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.4 2000/07/11 10:36:07 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -102,7 +102,20 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Axis_t xlow,Ax
 }
 
 //______________________________________________________________________________
-TProfile::TProfile(const char *name,const char *title,Int_t nbins,Axis_t *xbins,Option_t *option)
+TProfile::TProfile(const char *name,const char *title,Int_t nbins,Float_t *xbins,Option_t *option)
+    : TH1D(name,title,nbins,xbins)
+{
+//*-*-*-*-*-*Constructor for Profile histograms with variable bin size*-*-*-*-*
+//*-*        =========================================================
+//
+//        See TProfile::BuildOptions for more explanations on errors
+//
+
+   BuildOptions(0,0,option);
+}
+
+//______________________________________________________________________________
+TProfile::TProfile(const char *name,const char *title,Int_t nbins,Double_t *xbins,Option_t *option)
     : TH1D(name,title,nbins,xbins)
 {
 //*-*-*-*-*-*Constructor for Profile histograms with variable bin size*-*-*-*-*
@@ -133,7 +146,7 @@ TProfile::TProfile(const char *name,const char *title,Int_t nbins,Axis_t xlow,Ax
 
 
 //______________________________________________________________________________
-void TProfile::BuildOptions(Float_t ymin, Float_t ymax, Option_t *option)
+void TProfile::BuildOptions(Double_t ymin, Double_t ymax, Option_t *option)
 {
 //*-*-*-*-*-*-*Set Profile histogram structure and options*-*-*-*-*-*-*-*-*
 //*-*          ===========================================
@@ -197,7 +210,7 @@ TProfile::TProfile(const TProfile &profile)
 
 
 //______________________________________________________________________________
-void TProfile::Add(TH1 *h1, Float_t c1)
+void TProfile::Add(TH1 *h1, Double_t c1)
 {
    // Performs the operation: this = this + c1*h1
 
@@ -219,7 +232,7 @@ void TProfile::Add(TH1 *h1, Float_t c1)
    }
 
 //*-*- Add statistics
-   Float_t ac1 = TMath::Abs(c1);
+   Double_t ac1 = TMath::Abs(c1);
    fEntries += ac1*p1->GetEntries();
    fTsumw   += ac1*p1->fTsumw;
    fTsumw2  += ac1*p1->fTsumw2;
@@ -239,7 +252,7 @@ void TProfile::Add(TH1 *h1, Float_t c1)
 }
 
 //______________________________________________________________________________
-void TProfile::Add(TH1 *h1, TH1 *h2, Float_t c1, Float_t c2)
+void TProfile::Add(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2)
 {
 //*-*-*-*-*Replace contents of this profile by the addition of h1 and h2*-*-*
 //*-*      =============================================================
@@ -270,8 +283,8 @@ void TProfile::Add(TH1 *h1, TH1 *h2, Float_t c1, Float_t c2)
    }
 
 //*-*- Add statistics
-   Float_t ac1 = TMath::Abs(c1);
-   Float_t ac2 = TMath::Abs(c2);
+   Double_t ac1 = TMath::Abs(c1);
+   Double_t ac2 = TMath::Abs(c2);
    fEntries = ac1*p1->GetEntries() + ac2*p2->GetEntries();
    fTsumw   = ac1*p1->fTsumw       + ac2*p2->fTsumw;
    fTsumw2  = ac1*p1->fTsumw2      + ac2*p2->fTsumw2;
@@ -366,7 +379,7 @@ void TProfile::Divide(TH1 *h1)
 
 
 //______________________________________________________________________________
-void TProfile::Divide(TH1 *h1, TH1 *h2, Float_t c1, Float_t c2, Option_t *option)
+void TProfile::Divide(TH1 *h1, TH1 *h2, Double_t c1, Double_t c2, Option_t *option)
 {
 //*-*-*-*-*Replace contents of this profile by the division of h1 by h2*-*-*
 //*-*      ============================================================
@@ -613,7 +626,7 @@ void TProfile::Multiply(TH1 *)
 
 
 //______________________________________________________________________________
-void TProfile::Multiply(TH1 *, TH1 *, Float_t, Float_t, Option_t *)
+void TProfile::Multiply(TH1 *, TH1 *, Double_t, Double_t, Option_t *)
 {
 //*-*-*-*-*Replace contents of this profile by multiplication of h1 by h2*-*
 //*-*      ================================================================
@@ -665,6 +678,95 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option)
 }
 
 //______________________________________________________________________________
+TH1 *TProfile::Rebin(Int_t ngroup, const char*newname)
+{
+//*-*-*-*-*Rebin this profile grouping ngroup bins together*-*-*-*-*-*-*-*-*
+//*-*      ================================================
+//   if newname is not blank a new temporary profile hnew is created.
+//   else the current profile is modified (default)
+//   The parameter ngroup indicates how many bins of this have to me merged
+//   into one bin of hnew
+//   If the original profile has errors stored (via Sumw2), the resulting
+//   profile has new errors correctly calculated.
+//
+//   examples: if hp is an existing TProfile histogram with 100 bins
+//     hp->Rebin();  //merges two bins in one in hp: previous contents of hp are lost
+//     hp->Rebin(5); //merges five bins in one in hp
+//     TProfile *hnew = hp->Rebin(5,"hnew"); // creates a new profile hnew
+//                                       //merging 5 bins of hp in one bin
+//
+//   NOTE1: If ngroup is not an exact divider of the number of bins,
+//          the top limit of the rebinned profile is changed
+//          to the upper edge of the bin=newbins*ngroup and the corresponding
+//          bins are added to the overflow bin.
+//          Statistics will be recomputed from the new bin contents.
+
+   Int_t nbins  = fXaxis.GetNbins();
+   Axis_t xmin  = fXaxis.GetXmin();
+   Axis_t xmax  = fXaxis.GetXmax();
+   if ((ngroup <= 0) || (ngroup > nbins)) {
+      Error("Rebin", "Illegal value of ngroup=%d",ngroup);
+      return 0;
+   }
+   Int_t newbins = nbins/ngroup;
+
+   // Save old bin contents into a new array
+   Double_t *oldBins   = new Double_t[nbins];
+   Double_t *oldCount  = new Double_t[nbins];
+   Double_t *oldErrors = new Double_t[nbins];
+   Int_t bin, i;
+   Double_t *cu1 = GetW();
+   Double_t *er1 = GetW2();
+   Double_t *en1 = GetB();
+   for (bin=0;bin<nbins;bin++) {
+      oldBins[bin]   = cu1[bin+1];
+      oldCount[bin]  = en1[bin+1];
+      oldErrors[bin] = er1[bin+1];
+   }
+
+   // create a clone of the old histogram if newname is specified
+   TProfile *hnew = this;
+   if (strlen(newname) > 0) {
+      hnew = (TProfile*)Clone();
+      hnew->SetName(newname);
+   }
+
+   // change axis specs and rebuild bin contents array
+   if(newbins*ngroup != nbins) {
+      xmax = fXaxis.GetBinUpEdge(newbins*ngroup);
+      hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
+   }
+   hnew->SetBins(newbins,xmin,xmax); //this also changes errors array (if any)
+
+   // copy merged bin contents (ignore under/overflows)
+   Double_t *cu2 = hnew->GetW();
+   Double_t *er2 = hnew->GetW2();
+   Double_t *en2 = hnew->GetB();
+   Int_t oldbin = 0;
+   Double_t binContent, binCount, binError;
+   for (bin = 0;bin<=newbins;bin++) {
+      binContent = 0;
+      binCount   = 0;
+      binError   = 0;
+      for (i=0;i<ngroup;i++) {
+         if (oldbin+i >= nbins) break;
+         binContent += oldBins[oldbin+i];
+         binCount   += oldCount[oldbin+i];
+         binError   += oldErrors[oldbin+i];
+      }
+      cu2[bin+1] = binContent;
+      er2[bin+1] = binError;
+      en2[bin+1] = binCount;
+      oldbin += ngroup;
+   }
+
+   delete [] oldBins;
+   delete [] oldCount;
+   delete [] oldErrors;
+   return hnew;
+}
+
+//______________________________________________________________________________
 void TProfile::Reset(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*Reset contents of a Profile histogram*-*-*-*-*-*-*-*-*
@@ -674,7 +776,7 @@ void TProfile::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TProfile::Scale(Float_t c1)
+void TProfile::Scale(Double_t c1)
 {
 //*-*-*-*-*Multiply this profile by a constant c1*-*-*-*-*-*-*-*-*
 //*-*      ======================================
@@ -700,13 +802,14 @@ void TProfile::SetBinEntries(Int_t bin, Stat_t w)
 }
 
 //______________________________________________________________________________
-void TProfile::SetBins(Int_t nx, Float_t xmin, Float_t xmax)
+void TProfile::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
 {
 //*-*-*-*-*-*-*-*-*Redefine  x axis parameters*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ===========================
 
    fXaxis.Set(nx,xmin,xmax);
    fNcells = nx+2;
+   SetBinsLength(fNcells);
    fBinEntries.Set(fNcells);
    fSumw2.Set(fNcells);
 }
@@ -736,4 +839,35 @@ void TProfile::SetErrorOption(Option_t *option)
    if (opt.Contains("s")) fErrorMode = kERRORSPREAD;
    if (opt.Contains("i")) fErrorMode = kERRORSPREADI;
    if (opt.Contains("g")) fErrorMode = kERRORSPREADG;
+}
+
+//______________________________________________________________________________
+void TProfile::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TProfile.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      TH1D::Streamer(R__b);
+      fBinEntries.Streamer(R__b);
+      R__b >> (Int_t&)fErrorMode;
+      if (R__v < 2) {
+         Float_t ymin,ymax;
+         R__b >> ymin; fYmin = ymin;
+         R__b >> ymax; fYmax = ymax;
+      } else {
+         R__b >> fYmin;
+         R__b >> fYmax;
+      }
+      R__b.CheckByteCount(R__s, R__c, TProfile::IsA());
+   } else {
+      R__c = R__b.WriteVersion(TProfile::IsA(), kTRUE);
+      TH1D::Streamer(R__b);
+      fBinEntries.Streamer(R__b);
+      R__b << (Int_t)fErrorMode;
+      R__b << fYmin;
+      R__b << fYmax;
+      R__b.SetByteCount(R__c, kTRUE);
+   }
 }
