@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.10 2000/06/30 16:00:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.11 2000/07/04 09:13:11 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2630,16 +2630,34 @@ void TH1::Print(Option_t *option)
 //*-*-*-*-*-*-*Print some global quantities for this histogram*-*-*-*-*-*-*-*
 //*-*          ===============================================
 //
-//  If option "all" is given, bin contents and errors are also printed.
+//  If option "range" is given, bin contents and errors are also printed
+//                     for all bins in the current range (default 1-->nbins)
+//  If option "all" is given, bin contents and errors are also printed
+//                     for all bins including under and overflows.
 //
    printf( "TH1.Print Name= %s, Entries= %d, Total sum= %g\n",GetName(),Int_t(fEntries),GetSumOfWeights());
-   if (strcasecmp(option,"all")) return;
+   TString opt = option;
+   opt.ToLower();
+   Int_t all;
+   if      (opt.Contains("all"))   all = 0;
+   else if (opt.Contains("range")) all = 1;
+   else                            return;
 
    Int_t bin, binx, biny, binz;
+   Int_t firstx=0,lastx=0,firsty=0,lasty=0,firstz=0,lastz=0;
+   if (all == 0) {
+      lastx  = fXaxis.GetNbins()+1;
+      if (fDimension > 1) lasty = fYaxis.GetNbins()+1;
+      if (fDimension > 2) lastz = fZaxis.GetNbins()+1;
+   } else {
+      firstx = fXaxis.GetFirst(); lastx  = fXaxis.GetLast();
+      if (fDimension > 1) {firsty = fYaxis.GetFirst(); lasty = fYaxis.GetLast();}
+      if (fDimension > 2) {firstz = fZaxis.GetFirst(); lastz = fZaxis.GetLast();}
+   }
    Stat_t w,e;
    Axis_t x,y,z;
    if (fDimension == 1) {
-      for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+      for (binx=firstx;binx<=lastx;binx++) {
          x = fXaxis.GetBinCenter(binx);
          w = GetBinContent(binx);
          e = GetBinError(binx);
@@ -2648,9 +2666,9 @@ void TH1::Print(Option_t *option)
       }
    }
    if (fDimension == 2) {
-      for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
+      for (biny=firsty;biny<=lasty;biny++) {
          y = fYaxis.GetBinCenter(biny);
-         for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+         for (binx=firstx;binx<=lastx;binx++) {
             bin = GetBin(binx,biny);
             x = fXaxis.GetBinCenter(binx);
             w = GetBinContent(bin);
@@ -2661,11 +2679,11 @@ void TH1::Print(Option_t *option)
       }
    }
    if (fDimension == 3) {
-      for (binz=fZaxis.GetFirst();binz<=fZaxis.GetLast();binz++) {
+      for (binz=firstz;binz<=lastz;binz++) {
          z = fZaxis.GetBinCenter(binz);
-         for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
+         for (biny=firsty;biny<=lasty;biny++) {
             y = fYaxis.GetBinCenter(biny);
-            for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
+            for (binx=firstx;binx<=lastx;binx++) {
                bin = GetBin(binx,biny,binz);
                x = fXaxis.GetBinCenter(binx);
                w = GetBinContent(bin);
