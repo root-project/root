@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.129 2003/01/31 08:10:18 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.130 2003/02/05 15:08:33 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1994,7 +1994,14 @@ void WriteStreamer(G__ClassInfo &cl)
       int basestreamer = 0;
       while (b.Next())
          if (b.HasMethod("Streamer")) {
-            fprintf(fp, "   %s::Streamer(R__b);\n", b.Fullname());
+            if (strstr(b.Fullname(),"::")) {
+               // there is a namespace involved, trigger MS VC bug workaround
+               fprintf(fp, "   //This works around a msvc bug and should be harmless on other platforms\n");
+               fprintf(fp, "   typedef %s baseClass%d;\n",b.Fullname(),basestreamer);
+               fprintf(fp, "   baseClass%d::Streamer(R__b);\n",basestreamer);
+            }
+            else
+               fprintf(fp, "   %s::Streamer(R__b);\n", b.Fullname());
             basestreamer++;
          }
       if (!basestreamer) {
@@ -2014,7 +2021,7 @@ void WriteStreamer(G__ClassInfo &cl)
    string classname = cl.Fullname();
    if (strstr(cl.Fullname(),"::")) {
       // there is a namespace involved, trigger MS VC bug workaround
-      fprintf(fp,"   //This works around a msvc bug and should be harmless on other plaforms\n");
+      fprintf(fp,"   //This works around a msvc bug and should be harmless on other platforms\n");
       fprintf(fp,"   typedef %s thisClass;\n",cl.Fullname());
       classname = "thisClass";
    }
@@ -2041,9 +2048,18 @@ void WriteStreamer(G__ClassInfo &cl)
       // Stream base class(es) when they have the Streamer() method
       G__BaseClassInfo b(cl);
 
+      int base=0;
       while (b.Next()) {
-         if (b.HasMethod("Streamer"))
-            fprintf(fp, "      %s::Streamer(R__b);\n", b.Fullname());
+         if (b.HasMethod("Streamer")) {
+            if (strstr(b.Fullname(),"::")) {
+               // there is a namespace involved, trigger MS VC bug workaround
+               fprintf(fp, "      //This works around a msvc bug and should be harmless on other platforms\n");
+               fprintf(fp, "      typedef %s baseClass%d;\n",b.Fullname(),base);
+               fprintf(fp, "      baseClass%d::Streamer(R__b);\n",base++);
+            }
+            else
+               fprintf(fp, "      %s::Streamer(R__b);\n", b.Fullname());
+         }
       }
       // Stream data members
       G__DataMemberInfo m(cl);
@@ -2636,15 +2652,13 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
          if (outside) {
             fprintf(fp, "      sobj->%s::ShowMembers(R__insp, R__parent);\n", b.Fullname());
          } else {
-            string baseclass = b.Fullname();
             if (strstr(b.Fullname(),"::")) {
                // there is a namespace involved, trigger MS VC bug workaround
-               fprintf(fp,"   //This works around a msvc bug and should be harmless on other plaforms\n");
-               fprintf(fp,"   typedef %s baseClass%d;\n",b.Fullname(),base);
-               baseclass = "baseClass";
-               fprintf(fp, "      %s%d::ShowMembers(R__insp, R__parent);\n", baseclass.c_str(), base);
+               fprintf(fp, "      //This works around a msvc bug and should be harmless on other platforms\n");
+               fprintf(fp, "      typedef %s baseClass%d;\n",b.Fullname(),base);
+               fprintf(fp, "      baseClass%d::ShowMembers(R__insp, R__parent);\n", base);
             } else {
-               fprintf(fp, "      %s::ShowMembers(R__insp, R__parent);\n", baseclass.c_str());
+               fprintf(fp, "      %s::ShowMembers(R__insp, R__parent);\n", b.Fullname());
             }
          }
       } else {
