@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.11 2001/02/13 11:57:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.12 2001/02/28 07:53:09 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -60,7 +60,7 @@ public:
    virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Option_t *option="") {return 0;}
    virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="");
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
-          TH1D    *ProjectionZ(const char *name="_pz", Int_t firstxbin=0, Int_t lastxbin=9999, Int_t firstybin=0,
+          TH1D    *ProjectionZ(const char *name="_pz", Int_t firstxbin=-1, Int_t lastxbin=9999, Int_t firstybin=0,
                                  Int_t lastybin=9999, Option_t *option=""); // *MENU*
           TH1     *Project3D(Option_t *option="x"); // *MENU*
    virtual void    PutStats(Stat_t *stats);

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.11 2001/02/13 11:57:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.12 2001/02/28 07:53:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -69,10 +69,10 @@ public:
    virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option="");
    virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t *option="") {return 0;}
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
-      TProfile    *ProfileX(const char *name="_pfx", Int_t firstybin=0, Int_t lastybin=9999, Option_t *option="");   // *MENU*
-      TProfile    *ProfileY(const char *name="_pfy", Int_t firstxbin=0, Int_t lastxbin=9999, Option_t *option="");   // *MENU*
-          TH1D    *ProjectionX(const char *name="_px", Int_t firstybin=0, Int_t lastybin=9999, Option_t *option=""); // *MENU*
-          TH1D    *ProjectionY(const char *name="_py", Int_t firstxbin=0, Int_t lastxbin=9999, Option_t *option=""); // *MENU*
+      TProfile    *ProfileX(const char *name="_pfx", Int_t firstybin=-1, Int_t lastybin=9999, Option_t *option="");   // *MENU*
+      TProfile    *ProfileY(const char *name="_pfy", Int_t firstxbin=-1, Int_t lastxbin=9999, Option_t *option="");   // *MENU*
+          TH1D    *ProjectionX(const char *name="_px", Int_t firstybin=-1, Int_t lastybin=9999, Option_t *option=""); // *MENU*
+          TH1D    *ProjectionY(const char *name="_py", Int_t firstxbin=-1, Int_t lastxbin=9999, Option_t *option=""); // *MENU*
    virtual void    PutStats(Stat_t *stats);
    virtual void    Reset(Option_t *option="");
 
