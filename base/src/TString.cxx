@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.2 2000/08/21 16:44:36 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.3 2000/10/01 15:20:20 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -767,6 +767,24 @@ void TString::Streamer(TBuffer &b)
       }
       for (int i = 0; i < nbig; i++) b << fData[i];
    }
+}
+
+//_______________________________________________________________________
+TBuffer &operator>>(TBuffer &buf, TString &s)
+{
+   // Read string from TBuffer.
+
+   s.Streamer(buf);
+   return buf;
+}
+
+//_______________________________________________________________________
+TBuffer &operator<<(TBuffer &buf, const TString &s)
+{
+   // Write string to TBuffer.
+
+   s.Streamer(buf);
+   return buf;
 }
 
 // ------------------- Related global functions --------------------

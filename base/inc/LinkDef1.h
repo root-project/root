@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.4 2000/10/21 09:17:13 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.5 2000/11/21 15:59:30 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -62,6 +62,8 @@
 #pragma link C++ function operator!=(const char*,const TString&);
 #pragma link C++ function operator>>(istream&,TString&);
 #pragma link C++ function operator<<(ostream&,const TString&);
+#pragma link C++ function operator>>(TBuffer&,TString&);
+#pragma link C++ function operator<<(TBuffer&,const TString&);
 //#pragma link C++ function operator>>(TBuffer&,const TObject*&);
 //#pragma link C++ function operator<<(TBuffer&,const TObject*);
 

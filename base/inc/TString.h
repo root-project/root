@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.2 2000/10/01 15:20:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.3 2000/11/21 12:21:55 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -326,6 +326,8 @@ public:
 // Related global functions
 istream&  operator>>(istream& str,       TString& s);
 ostream&  operator<<(ostream& str, const TString& s);
+TBuffer&  operator>>(TBuffer& buf,       TString& s);
+TBuffer&  operator<<(TBuffer& buf, const TString& s);
 
 TString ToLower(const TString&);    // Return lower-case version of argument
 TString ToUpper(const TString&);    // Return upper-case version of argument
