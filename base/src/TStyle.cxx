@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.37 2004/11/22 15:55:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.38 2005/01/04 10:25:26 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -393,6 +393,7 @@ void TStyle::Reset(Option_t *)
    fGridColor      = 0;
    fGridStyle      = 3;
    fGridWidth      = 1;
+   fHatchesSpacing = 1;
    fHistLineColor  = 1;
    fHistFillColor  = 0;
    fHistFillStyle  = 1001;

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.160 2005/01/18 15:17:25 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.161 2005/02/11 10:38:23 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3116,7 +3116,9 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
   //            FillStyle = 3ijk
   //
   //    i (1-9) : specify the space between each hatch
-  //              1 = 1/2mm  9 = 6mm
+  //              1 = minimum  9 = maximum
+  //              the final spaing is i*GetHatchesSpacing() the hatches spacing
+  //              is set by SetHatchesSpacing()
   //
   //    j (0-9) : specify angle between 0 and 90 degrees
   //
@@ -3150,7 +3152,7 @@ void TPad::PaintFillAreaHatches(Int_t nn, Double_t *xx, Double_t *yy, Int_t Fill
    Int_t IDSPA = (Int_t)(fasi/100);
    Int_t IAng2 = (Int_t)((fasi-100*IDSPA)/10);
    Int_t IAng1 = fasi%10;
-   Double_t dy = 0.003*(Double_t)(IDSPA);
+   Double_t dy = 0.003*(Double_t)(IDSPA)*gStyle->GetHatchesSpacing();
    gVirtualX->SetLineStyle(1);
    gVirtualX->SetLineWidth(1);
    if (Ang1[IAng1] != 5.) PaintHatches(dy, Ang1[IAng1], nn, xx, yy);
