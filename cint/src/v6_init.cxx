@@ -1908,10 +1908,14 @@ int G__init_globals()
   G__global.prev_local = (struct G__var_array *)NULL;
   G__global.prev_filenum = -1;
   G__global.tagnum = -1;
+  G__global.allvar = 0;
 #ifndef G__OLDIMPLEMENTATION1543
   {
     int ix;
-    for(ix=0;ix<G__MEMDEPTH;ix++) G__global.varnamebuf[ix] = (char*)NULL;
+    for(ix=0;ix<G__MEMDEPTH;ix++) {
+      G__global.varnamebuf[ix] = (char*)NULL;
+      G__global.hash[ix] = 0;
+    }
   }
 #endif
   G__cpp_aryconstruct=0;
