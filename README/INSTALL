@@ -516,6 +516,16 @@ or you can download the full source from
 
   http://wwwinfo.cern.ch/pdp/serv/shift.html
 
+Please note the the source code isn't GNU library compliant, so you
+may need the following patch to compile on a GNU based system
+(e.g. Linux).
+
+    http://cholm.home.cern.ch/cholm
+
+Apply it with
+
+    prompt% patch -p 1 -d shift < shift_1.10-1.10_cholm.patch
+
 
 ZEBRA file conversion tools
 ---------------------------
