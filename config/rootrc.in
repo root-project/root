@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.95 2005/02/10 12:48:54 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.96 2005/02/12 09:52:25 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -17,7 +17,7 @@ Unix.*.Root.UseTTFonts:     true
 *.*.Root.TTFontPath:        @ttffontdir@
 
 # Use Net* API functions.
-WinNT.UseNetAPI:         false
+WinNT.UseNetAPI:         true
 
 # Use thread library (if exists).
 Unix.*.Root.UseThreads:     false
