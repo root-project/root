@@ -7,7 +7,7 @@
  * Description:
  *  Struct, class, enum, union handling
  ************************************************************************
- * Copyright(c) 1995~2004  Masaharu Goto 
+ * Copyright(c) 1995~2005  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -1073,10 +1073,12 @@ int type;
     G__struct.memfunc[i]->pentry[0]->bytecode=(struct G__bytecodefunc*)NULL;
     G__struct.memfunc[i]->friendtag[0]=(struct G__friendtag*)NULL;
 #ifndef G__OLDIMPLEMENTATION2039
-    G__struct.memfunc[i]->pentry[0]->size = 0;
-    G__struct.memfunc[i]->pentry[0]->filenum = 0;
-    G__struct.memfunc[i]->pentry[0]->line_number = 0;
+    G__struct.memfunc[i]->pentry[0]->size = 0; 
+    G__struct.memfunc[i]->pentry[0]->filenum = 0; 
+    G__struct.memfunc[i]->pentry[0]->line_number = 0; 
+#ifndef G__OLDIMPLEMENTATION2200
     G__struct.memfunc[i]->pentry[0]->bytecodestatus = G__BYTECODE_NOTYET;
+#endif
     G__struct.memfunc[i]->ispurevirtual[0] = 0;
     G__struct.memfunc[i]->access[0] = G__PUBLIC;
     G__struct.memfunc[i]->ansi[0] = 1; 
@@ -1090,9 +1092,13 @@ int type;
     G__struct.memfunc[i]->busy[0] = 0; 
 #endif
 #endif
+
+#ifndef G__OLDIMPLEMENTATION2200
 #ifdef G__FONS_COMMENT
     G__struct.memfunc[i]->comment[0].filenum = -1;
 #endif
+#endif
+
     G__struct.memfunc[i]->allifunc = 1;
 #endif
 

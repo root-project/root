@@ -22,7 +22,7 @@
 #if defined(G__ANSIISOLIB) || (G__GNUC>=3)
 template<class T,class Allocator=std::allocator<T> >
 #elif defined(G__GNUC) && !defined(G__KCC)
-#if (G__GNUC_MINOR>=95)
+#if (G__GNUC_VER>=2095)
 template<class T,class Allocator=allocator<T> >
 #else
 template<class T,class Allocator=alloc>
@@ -59,7 +59,7 @@ class deque {
         : public _Ranit<T, difference_type, const_pointer, const_reference>
 #elif defined(G__VISUAL) && (G__MSC_VER>=1310)
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
-#elif ((G__GNUC>=3 && G__GNUC_MINOR>=1) || G__GNUC>=4)
+#elif (G__GNUC_VER>=3001)
 #elif defined(G__INTEL_COMPILER)
 #elif defined(G__KCC)
 #elif defined(G__AIX)
@@ -83,12 +83,12 @@ class deque {
     iterator operator++(int a);
     iterator& operator--();
     iterator operator--(int a);
-#if ((G__GNUC>=3 && G__GNUC_MINOR>1) || G__GNUC>=4)
+#if (G__GNUC_VER>3001)
 #else
     bool operator==(const iterator& x) ;
 #endif
 #if defined(G__HPUX)
-#elif ((G__GNUC>=3 && G__GNUC_MINOR>1) || G__GNUC>=4)
+#elif (G__GNUC_VER>3001)
 #else
     bool operator!=(const iterator& x) ;
 #endif
@@ -101,7 +101,7 @@ class deque {
 #if defined(G__HPUX)
   friend bool operator!=(const deque::iterator& x
                         ,const deque::iterator& y) const;
-#elif ((G__GNUC>=3 && G__GNUC_MINOR>1) || G__GNUC>=4) && !defined(G__INTEL_COMPILER)
+#elif (G__GNUC_VER>3001) && !defined(G__INTEL_COMPILER)
   friend bool operator==(const deque::iterator& x
                         ,const deque::iterator& y) const;
   friend bool operator!=(const deque::iterator& x
@@ -115,7 +115,7 @@ class deque {
         : public _Ranit<T, difference_type, const_pointer, const_reference>
 #elif defined(G__VISUAL) && (G__MSC_VER>=1310)
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
-#elif ((G__GNUC>=3 && G__GNUC_MINOR>=1) || G__GNUC>=4)
+#elif (G__GNUC_VER>=3001)
 #elif defined(G__INTEL_COMPILER)
 #elif defined(G__KCC)
 #elif defined(G__AIX)

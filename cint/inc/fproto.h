@@ -744,6 +744,9 @@ extern void G__UnlockCriticalSection G__P((void));
 extern void G__asm_tovalue_p2p G__P((G__value *result));
 extern void G__asm_tovalue_p2p2p G__P((G__value *result));
 extern void G__asm_tovalue_p2p2p2 G__P((G__value *result));
+extern void G__asm_tovalue_LL G__P((G__value *result));
+extern void G__asm_tovalue_ULL G__P((G__value *result));
+extern void G__asm_tovalue_LD G__P((G__value *result));
 extern void G__asm_tovalue_B G__P((G__value *result));
 extern void G__asm_tovalue_C G__P((G__value *result));
 extern void G__asm_tovalue_R G__P((G__value *result));
@@ -954,6 +957,20 @@ void G__argtype2param G__P((char *argtype,struct G__param *libp));
 
 void G__letbool G__P((G__value *buf,int type,long value));
 long G__bool G__P((G__value buf));
+
+
+#ifndef G__OLDIMPLEMENTATION2189
+void G__letLonglong G__P((G__value* buf,int type,G__int64 value));
+void G__letULonglong G__P((G__value* buf,int type,G__uint64 value));
+void G__letLongdouble G__P((G__value* buf,int type,long double value));
+G__int64 G__Longlong G__P((G__value buf)); /* used to be int */
+G__uint64 G__ULonglong G__P((G__value buf)); /* used to be int */
+long double G__Longdouble G__P((G__value buf)); /* used to be int */
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2221
+void G__display_purevirtualfunc G__P((int tagnum));
+#endif
 
 #ifdef __cplusplus
 }

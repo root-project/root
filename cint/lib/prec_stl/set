@@ -25,7 +25,7 @@
 template<class Key,class Compare=std::less<Key>
         ,class Allocator=std::allocator<Key> >
 #elif defined(G__GNUC) && !defined(G__KCC)
-#if (G__GNUC_MINOR>=95)
+#if (G__GNUC_VER>=2095)
 template<class Key,class Compare=std::less<Key>
         ,class Allocator=allocator<Key> >
 #else
@@ -69,7 +69,7 @@ class set {
 #elif defined(G__VISUAL)
 	: public _Bidit<Key,difference_type>
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
-#elif ((G__GNUC>=3 && G__GNUC_MINOR>=1) || G__GNUC>=4)
+#elif (G__GNUC_VER>=3001)
 #elif defined(G__INTEL_COMPILER)
 #elif defined(G__KCC)
 #elif defined(G__AIX)
@@ -96,7 +96,7 @@ class set {
     iterator operator++(int a);
     iterator& operator--();
     iterator operator--(int a);
-#if defined (G__VISUAL) || (defined(G__GNUC) && (G__GNUC>=3  && G__GNUC_MINOR>=4) || G__GNUC>=4)
+#if defined (G__VISUAL) || (defined(G__GNUC) && G__GNUC_VER>=3004)
     bool operator==(const iterator& x) ;
     bool operator!=(const iterator& x) ;
 #endif
@@ -104,7 +104,7 @@ class set {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if defined(G__GNUC) && !defined(G__KCC) && !defined(G__INTEL_COMPILER) && !((G__GNUC>=3  && G__GNUC_MINOR>=4) || G__GNUC>=4)
+#if defined(G__GNUC) && !defined(G__KCC) && !defined(G__INTEL_COMPILER) && !(G__GNUC_VER>=3004)
   friend bool operator==(const set::iterator& x ,const set::iterator& y) const;
   friend bool operator!=(const set::iterator& x ,const set::iterator& y) const;
 #endif
@@ -118,7 +118,7 @@ class set {
 #elif defined(G__VISUAL)
 	: public _Bidit<Key,difference_type>
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
-#elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#elif (G__GNUC_VER>=3001)
 #elif defined(G__INTEL_COMPILER)
 #elif defined(G__KCC)
 #elif defined(G__AIX)

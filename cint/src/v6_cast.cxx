@@ -7,7 +7,7 @@
  * Description:
  *  Type casting
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2005  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -113,6 +113,59 @@ int reftype;
   result3->typenum = -1;
   *ptype='u'+castflag;
   result3->obj.i += offset;
+}
+
+/****************************************************************
+* long G__int_cast(G__value buf)
+* 
+****************************************************************/
+long G__int_cast(buf) /* used to be int */
+G__value buf;
+{
+  switch(buf.type) {
+  case 'd':
+  case 'f':
+    return((long)buf.obj.d);
+#ifndef G__OLDIMPLEMENTATION2202
+  case 'n':
+    return((long)buf.obj.ll);
+  case 'm':
+    return((long)buf.obj.ull);
+  case 'q':
+    return((long)buf.obj.ld);
+#endif
+  default:
+    return(buf.obj.i);
+  }
+}
+
+/****************************************************************
+* long G__uint_cast(G__value buf)
+* 
+****************************************************************/
+unsigned long G__uint_cast(buf) /* used to be int */
+G__value buf;
+{
+  switch(buf.type) {
+  case 'd':
+  case 'f':
+    return((unsigned long)buf.obj.d);
+  case 'b':
+  case 'r':
+  case 'h':
+  case 'k':
+    return(buf.obj.ulo);
+#ifndef G__OLDIMPLEMENTATION2202
+  case 'n':
+    return((unsigned long)buf.obj.ll);
+  case 'm':
+    return((unsigned long)buf.obj.ull);
+  case 'q':
+    return((unsigned long)buf.obj.ld);
+#endif
+  default:
+    return((unsigned long)buf.obj.i);
+  }
 }
 
 /******************************************************************
@@ -381,7 +434,14 @@ G__value result3;
       result3.typenum = -1;
       break;
     }
-#ifndef G__OLDIMPLEMENTATION1739
+#if !defined(G__OLDIMPLEMENTATION2189)
+    if(strcmp(casttype,"longlong")==0) {
+      type='n'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+#elif !defined(G__OLDIMPLEMENTATION1739)
     if(strcmp(casttype,"longlong")==0) {
       char conv[50];
       int match=0;
@@ -430,7 +490,25 @@ G__value result3;
     }
 #endif
     break;
+#if !defined(G__OLDIMPLEMENTATION2189)
+  case 9:
+    if(strcmp(casttype,"long long")==0) {
+      type='n'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+    break;
+#endif
   case 10:
+#if !defined(G__OLDIMPLEMENTATION2189)
+    if(strcmp(casttype,"longdouble")==0) {
+      type='q'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+#else
     if(strcmp(casttype,"longdouble")==0) {
 #ifndef G__OLDIMPLEMENTATION1836
       char conv[50];
@@ -461,6 +539,7 @@ G__value result3;
 #endif /* 1836 */
       break;
     }
+#endif
     break;
   case 11:
     if(strcmp(casttype,"unsignedint")==0) {
@@ -469,7 +548,14 @@ G__value result3;
       result3.typenum = -1;
       break;
     }
-#ifdef G__OLDIMPLEMENTATION1836
+#if !defined(G__OLDIMPLEMENTATION2189)
+    if(strcmp(casttype,"long double")==0) {
+      type='q'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+#elif defined(G__OLDIMPLEMENTATION1836)
     if(strcmp(casttype,"long double")==0) {
       type='d'+castflag;
       result3.tagnum = -1;
@@ -526,6 +612,22 @@ G__value result3;
       break;
     }
     break;
+#ifndef G__OLDIMPLEMENTATION2189
+  case 16:
+    if(strcmp(casttype,"unsignedlonglong")==0) {
+      type='m'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+  case 18:
+    if(strcmp(casttype,"unsigned long long")==0) {
+      type='m'+castflag;
+      result3.tagnum = -1;
+      result3.typenum = -1;
+      break;
+    }
+#endif
   }
 
 #ifndef G__OLDIMPLEMENTATION702
@@ -600,7 +702,11 @@ G__value result3;
 
     if(type=='\0' && strstr(casttype,"(*)")) {
       /* pointer to function casted to void* */
+#ifndef G__OLDIMPLEMENTATION2191
+      type='1';
+#else
       type='Q';
+#endif
       result3.tagnum = -1;
       result3.typenum = -1;
     }
@@ -717,35 +823,46 @@ G__value result3;
     G__letdouble(&result3,type ,(float)G__double(result3));
     break;
   case 'b':
-    G__letint(&result3,type ,(unsigned char)G__int(result3));
+    G__letint(&result3,type ,(unsigned char)G__int_cast(result3));
     break;
   case 'c':
-    G__letint(&result3,type ,(char)G__int(result3));
+    G__letint(&result3,type ,(char)G__int_cast(result3));
     break;
   case 'r':
-    G__letint(&result3,type ,(unsigned short)G__int(result3));
+    G__letint(&result3,type ,(unsigned short)G__int_cast(result3));
     break;
   case 's':
-    G__letint(&result3,type ,(short)G__int(result3));
+    G__letint(&result3,type ,(short)G__int_cast(result3));
     break;
   case 'h':
-    G__letint(&result3,type ,(unsigned int)G__int(result3));
+    G__letint(&result3,type ,(unsigned int)G__int_cast(result3));
     break;
   case 'i':
-    G__letint(&result3,type ,(int)G__int(result3));
+    G__letint(&result3,type ,(int)G__int_cast(result3));
     break;
   case 'k':
-    G__letint(&result3,type ,(unsigned long)G__int(result3));
+    G__letint(&result3,type ,(unsigned long)G__int_cast(result3));
     break;
   case 'l':
-    G__letint(&result3,type ,(long)G__int(result3));
+    G__letint(&result3,type ,(long)G__int_cast(result3));
     break;
+#ifndef G__OLDIMPLEMENTATION2189
+  case 'm':
+    G__letULonglong(&result3,type ,G__ULonglong(result3));
+    break;
+  case 'n':
+    G__letLonglong(&result3,type ,G__Longlong(result3));
+    break;
+  case 'q':
+    G__letLongdouble(&result3,type ,G__Longdouble(result3));
+    break;
+#endif
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g':
 #ifdef G__BOOL4BYTE
-    G__letint(&result3,type ,(int)(G__int(result3)?1:0));
+    G__letint(&result3,type ,(int)(G__int_cast(result3)?1:0));
 #else
-    G__letint(&result3,type ,(unsigned char)(G__int(result3)?1:0));
+    G__letint(&result3,type ,(unsigned char)(G__int_cast(result3)?1:0));
 #endif
     break;
 #endif

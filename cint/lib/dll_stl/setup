@@ -22,6 +22,7 @@ rm ../../stl/valarray.dll
 rm ../../stl/exception.dll 
 rm ../../stl/stdexcept.dll 
 rm ../../stl/climits.dll 
+rm ../../stl/complex.dll 
 rm G__*
 
 
@@ -102,6 +103,10 @@ mv stdexcept.dll ../../stl/stdexcept.dll
 makecint -mk Makeclimits -dl climits.dll -H clim.h -cint -Z1
 make -f Makeclimits
 mv climits.dll ../../stl/climits.dll
+
+makecint -mk Makecomplex -dl complex.dll -H cmplx.h -cint -Z1
+make -f Makecomplex
+mv complex.dll ../../stl/complex.dll
 
 rm G__*
 rm Make*

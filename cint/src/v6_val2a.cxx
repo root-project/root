@@ -7,7 +7,7 @@
  * Description:
  *  G__value to ASCII expression
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2005  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -129,6 +129,20 @@ char *temp;
 	  else
 	    G__setiparseobject(&buf,temp);
 	} else
+#endif
+#ifndef G__OLDIMPLEMENTATION2192
+	  if (buf.type=='n' && buf.obj.ll<0) 
+	    sprintf(temp,"(%s)(%lld)" 
+		    ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+				    ,0,0)
+		    ,buf.obj.ll);
+	  else if (buf.type=='m' || buf.type=='n') 
+	    sprintf(temp,"(%s)%llu" 
+		    ,G__type2string(buf.type ,buf.tagnum ,buf.typenum
+				    ,0,0)
+		    ,buf.obj.ull);
+	
+	  else 
 #endif
 #ifndef G__OLDIMPLEMENTATION719
 	if(buf.obj.i<0)
@@ -315,6 +329,30 @@ char *temp;
       sprintf(temp,"(int*)0x%lx",buf.obj.i);
     }
     break;
+#ifndef G__OLDIMPLEMENTATION2189
+  case 'n':
+    if(buf.obj.ll<0)
+      sprintf(temp,"(long long)(%lld)",buf.obj.ll);
+    else 
+      sprintf(temp,"(long long)%lld",buf.obj.ll);
+    break;
+  case 'm':
+    sprintf(temp,"(unsigned long long)%llu",buf.obj.ull);
+    break;
+  case 'q':
+#ifndef G__OLDIMPLEMENTATION2192
+    if(buf.obj.ld<0)
+      sprintf(temp,"(long double)(%Lg)",buf.obj.ld);
+    else 
+      sprintf(temp,"(long double)%Lg",buf.obj.ld);
+#else
+    if(buf.obj.ld<0)
+      sprintf(temp,"(long double)(%g)",buf.obj.ld);
+    else 
+      sprintf(temp,"(long double)%g",buf.obj.ld);
+#endif
+    break;
+#endif
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g':
 #ifdef G__BOOL4BYTE
@@ -351,7 +389,11 @@ char *temp;
     else
       sprintf(temp,"(void)%ld",buf.obj.i);
     break;
+#ifndef G__OLDIMPLEMENTATION2191
+  case '1':
+#else
   case 'Q':
+#endif
   case 'Y':
     sprintf(temp,"(void*)0x%lx",buf.obj.i);
     break;
@@ -729,7 +771,16 @@ int type,tagnum,typenum,reftype,isconst;
 	
 	break;
       default:
-#ifndef G__OLDIMPLEMENTATION729
+#if !defined(G__OLDIMPLEMENTATION2191)
+	if('1'==type) {
+	  switch(reftype) {
+	  case G__PARAREFERENCE:
+	  case G__PARANORMAL: type=tolower(type); break;
+	  case G__PARAP2P:    reftype=G__PARANORMAL; break;
+	  default: --reftype; break;
+	  }
+	} else 
+#elif !defined(G__OLDIMPLEMENTATION729)
 	if('Q'==type) {
 	  if(isupper(type)) {
 	    switch(reftype) {
@@ -824,9 +875,18 @@ int type,tagnum,typenum,reftype,isconst;
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g': strcpy(string,"bool"); break;
 #endif
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'n': strcpy(string,"long long"); break;
+    case 'm': strcpy(string,"unsigned long long"); break;
+    case 'q': strcpy(string,"long double"); break; 
+#endif
     case 'f': strcpy(string,"float"); break;
     case 'd': strcpy(string,"double"); break;
+#ifndef G__OLDIMPLEMENTATION2191
+    case '1': 
+#else
     case 'q': 
+#endif
     case 'y': strcpy(string,"void"); break;
     case 'e': strcpy(string,"FILE"); break;
     case 'u': strcpy(string,"enum");
@@ -839,7 +899,11 @@ int type,tagnum,typenum,reftype,isconst;
 #ifndef G__OLDIMPLEMENTATION904
     case 't':
 #endif
+#ifndef G__OLDIMPLEMENTATION2191
+    case 'j':
+#else
     case 'm':
+#endif
     case 'p': sprintf(string,"#define"); return(string);
     case 'o': string[0]='\0'; /* sprintf(string,""); */ return(string);
     case 'a': 
@@ -921,14 +985,16 @@ int type,tagnum,typenum,reftype,isconst;
     strcat(stringbuf,"&");
   }
 #endif
-  
-  if (strlen(stringbuf)>=sizeof(stringbuf)) {
-      G__fprinterr(G__serr,
-         "Error in G__type2sting: string length (%d) greater than buffer length (%d)!",
-         strlen(stringbuf),
-         sizeof(stringbuf));
-      G__genericerror((char*)NULL);  
+
+#ifndef G__OLDIMPLEMENTATION2222
+  if(strlen(stringbuf)>=sizeof(stringbuf)) {
+    G__fprinterr(G__serr,
+ "Error in G__type2sting: string length (%d) greater than buffer length (%d)!",
+		 strlen(stringbuf),
+		 sizeof(stringbuf));
+    G__genericerror((char*)NULL);  
   }
+#endif
   return(stringbuf);
 }
 
@@ -1815,13 +1881,35 @@ int noerror;
       result.type='h';
       break;
     }
+#ifndef G__OLDIMPLEMENTATION2189
+    if(strcmp(typenam,"longlong")==0) {
+      result.type='n';
+      break;
+    }
+#endif
     break;
+#ifndef G__OLDIMPLEMENTATION2189
+  case 9:
+    if(strcmp(typenam,"long long")==0) {
+      result.type='n';
+      break;
+    }
+    break;
+#endif
   case 10:
+#ifndef G__OLDIMPLEMENTATION2189
+    if(strcmp(typenam,"longdouble")==0) {
+      result.type='q';
+      break;
+    }
+    break;
+#else
     if(strcmp(typenam,"longdouble")==0) {
       result.type='d';
       break;
     }
     break;
+#endif
   case 11:
     if(strcmp(typenam,"unsignedint")==0) {
       result.type='h';
@@ -1872,6 +1960,20 @@ int noerror;
   case 14:
     if(strcmp(typenam,"unsigned short")==0) {
       result.type='r';
+      break;
+    }
+    break;
+#endif
+#ifndef G__OLDIMPLEMENTATION2189
+  case 16:
+    if(strcmp(typenam,"unsignedlonglong")==0) {
+      result.type='m';
+      break;
+    }
+    break;
+  case 18:
+    if(strcmp(typenam,"unsigned long long")==0) {
+      result.type='m';
       break;
     }
     break;

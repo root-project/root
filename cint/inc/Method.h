@@ -7,7 +7,7 @@
  * Description:
  *  Extended Run Time Type Identification API
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto 
+ * Copyright(c) 1995~2005  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -23,6 +23,7 @@
 #define G__METHODINFO_H
 
 #include "Api.h"
+
 
 /*********************************************************************
 * class G__MethodInfo
@@ -108,7 +109,9 @@ G__MethodInfo {
  protected:
   long handle;
   long index;
+#ifndef G__OLDIMPLEMENTATION2194
   long usingIndex;
+#endif
   G__ClassInfo* belongingclass;
   G__TypeInfo type;
 };

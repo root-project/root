@@ -213,7 +213,7 @@ inline istream& operator>>(istream& ist,G__longdouble& a) {
 
 #ifndef G__OLDIMPLEMENTATION1913
 void G__printformatld(char* out,const char* fmt,void *p) {
-  //long double*pll = (long double*)p;
+  //long double*pld = (long double*)p;
   G__double92 *pld = (G__double92*)p;
   sprintf(out,fmt,*pld);
 }

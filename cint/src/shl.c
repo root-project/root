@@ -1553,7 +1553,11 @@ G__value *buf;
 	   -1 == ifunc->pentry[i]->filenum
 #endif
 	   ) { /* precompiled function */
+#ifndef G__OLDIMPLEMENTATION2191
+	  G__letint(buf,'1',(long)ifunc->pentry[i]->tp2f);
+#else
 	  G__letint(buf,'Q',(long)ifunc->pentry[i]->tp2f);
+#endif
 	  buf->typenum = G__getp2ftype(ifunc,i);
 	}
 #ifdef G__ASM_WHOLEFUNC
@@ -1593,7 +1597,11 @@ G__value *buf;
 #endif
        strcmp(G__completionlist[i].name,funcname)==0) {
       if((long)G__completionlist[i].pfunc!=0) {
+#ifndef G__OLDIMPLEMENTATION2191
+	G__letint(buf,'1',(long)G__completionlist[i].pfunc);
+#else
 	G__letint(buf,'Q',(long)G__completionlist[i].pfunc);
+#endif
       }
       else {
 	G__letint(buf,'C',(long)G__completionlist[i].name);

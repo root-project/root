@@ -57,6 +57,12 @@ int G__asm_step=0;
 **************************************************************************
 *************************************************************************/
 
+#ifndef G__OLDIMPLEMENTATION2189
+#define G__longlongM(buf)                                               \
+  (('f'==buf->type||'d'==buf->type) ? (long)buf->obj.d : buf->obj.i )
+
+#endif 
+
 /****************************************************************
 * G__intM()
 ****************************************************************/
@@ -205,6 +211,39 @@ G__value *result;
   --result->obj.reftype.reftype;
 }
 
+#ifndef G__OLDIMPLEMENTATION2189
+/******************************************************************
+* void G__asm_tovalue_LL(G__value* p)
+******************************************************************/
+void G__asm_tovalue_LL(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.ll = (*(G__int64*)(result->obj.i));
+  result->type = tolower(result->type);
+}
+/******************************************************************
+* void G__asm_tovalue_ULL(G__value* p)
+******************************************************************/
+void G__asm_tovalue_ULL(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.ull = (*(G__uint64*)(result->obj.i));
+  result->type = tolower(result->type);
+}
+/******************************************************************
+* void G__asm_tovalue_LD(G__value* p)
+******************************************************************/
+void G__asm_tovalue_LD(result)
+G__value *result;
+{
+  result->ref = result->obj.i;
+  result->obj.ld = (*(long double*)(result->obj.i));
+  result->type = tolower(result->type);
+}
+#endif
+
 /******************************************************************
 * void G__asm_tovalue_B(G__value* p)
 ******************************************************************/
@@ -351,6 +390,60 @@ G__value *result;
   buf->typenum = var->p_typetable[ig15];  \
   buf->ref = var->p[ig15]+offset;         \
   buf->obj.i = *(casttype*)buf->ref
+
+#ifndef G__OLDIMPLEMENTATION2189
+/****************************************************************
+* G__LD_p0_longlong()
+****************************************************************/
+void G__LD_p0_longlong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp)++];
+  buf->tagnum = -1;              
+  buf->type = 'n';             
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset;       
+  buf->obj.ll = *(G__int64*)buf->ref;
+}
+/****************************************************************
+* G__LD_p0_ulonglong()
+****************************************************************/
+void G__LD_p0_ulonglong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp)++];
+  buf->tagnum = -1;              
+  buf->type = 'm';             
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset;       
+  buf->obj.ull = *(G__uint64*)buf->ref;
+}
+/****************************************************************
+* G__LD_p0_longdouble()
+****************************************************************/
+void G__LD_p0_longdouble(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp)++];
+  buf->tagnum = -1;              
+  buf->type = 'q';             
+  buf->typenum = var->p_typetable[ig15];
+  buf->ref = var->p[ig15]+offset;       
+  buf->obj.ld = *(long double*)buf->ref;
+}
+#endif /* 2189 */
 
 /****************************************************************
 * G__LD_p0_bool()
@@ -581,6 +674,72 @@ int ig15;
   buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(casttype); \
   buf->obj.i = *(casttype*)buf->ref
 #endif
+
+#ifndef G__OLDIMPLEMENTATION2189
+/****************************************************************
+* G__LD_p1_longlong()
+****************************************************************/
+void G__LD_p1_longlong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[*psp-1];
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/ 
+  buf->tagnum = -1;                                    
+  buf->type = 'n';                                   
+  buf->typenum = var->p_typetable[ig15];               
+  buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(G__int64); 
+  if(buf->obj.i-1>var->varlabel[ig15][1])              
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);  
+  else                                                 
+    buf->obj.ll = *(G__int64*)buf->ref;
+}
+/****************************************************************
+* G__LD_p1_ulonglong()
+****************************************************************/
+void G__LD_p1_ulonglong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[*psp-1];
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/ 
+  buf->tagnum = -1;                                    
+  buf->type = 'm';                                   
+  buf->typenum = var->p_typetable[ig15];               
+  buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(G__uint64); 
+  if(buf->obj.i-1>var->varlabel[ig15][1])              
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);  
+  else                                                 
+    buf->obj.ull = *(G__uint64*)buf->ref;
+}
+/****************************************************************
+* G__LD_p1_longdouble()
+****************************************************************/
+void G__LD_p1_longdouble(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[*psp-1];
+  if('d'==buf->type||'f'==buf->type) G__nonintarrayindex(var,ig15); /*1969*/ 
+  buf->tagnum = -1;                                    
+  buf->type = 'q';                                   
+  buf->typenum = var->p_typetable[ig15];               
+  buf->ref = var->p[ig15]+offset+buf->obj.i*sizeof(long double); 
+  if(buf->obj.i-1>var->varlabel[ig15][1])              
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],buf->obj.i);  
+  else                                                 
+    buf->obj.ld = *(long double*)buf->ref;
+}
+#endif /* 2189 */
 
 /****************************************************************
 * G__LD_p1_bool()
@@ -846,6 +1005,97 @@ long ig15;
   buf->obj.i = *(casttype*)buf->ref
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2189
+/****************************************************************
+* G__LD_pn_longlong()
+****************************************************************/
+void G__LD_pn_longlong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0];                    
+  int paran = var->paran[ig15];                        
+  int p_inc=0;                                         
+  int ig25;                                            
+  ++(*psp);                                            
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);                    
+    ary /= var->varlabel[ig15][ig25+2];                
+  }                                                    
+  buf->tagnum = -1;                                    
+  buf->type = 'n';                                   
+  buf->typenum = var->p_typetable[ig15];               
+  buf->ref = var->p[ig15]+offset+p_inc*sizeof(G__int64); 
+  if(p_inc-1>var->varlabel[ig15][1])                   
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);  
+  else                                                 
+    buf->obj.ll = *(G__int64*)buf->ref;
+}
+
+/****************************************************************
+* G__LD_pn_ulonglong()
+****************************************************************/
+void G__LD_pn_ulonglong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0];                    
+  int paran = var->paran[ig15];                        
+  int p_inc=0;                                         
+  int ig25;                                            
+  ++(*psp);                                            
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);                    
+    ary /= var->varlabel[ig15][ig25+2];                
+  }                                                    
+  buf->tagnum = -1;                                    
+  buf->type = 'm';                                   
+  buf->typenum = var->p_typetable[ig15];               
+  buf->ref = var->p[ig15]+offset+p_inc*sizeof(G__uint64); 
+  if(p_inc-1>var->varlabel[ig15][1])                   
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);  
+  else                                                 
+    buf->obj.ull = *(G__uint64*)buf->ref;
+}
+/****************************************************************
+* G__LD_pn_longdouble()
+****************************************************************/
+void G__LD_pn_longdouble(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];
+  int ary = var->varlabel[ig15][0];                    
+  int paran = var->paran[ig15];                        
+  int p_inc=0;                                         
+  int ig25;                                            
+  ++(*psp);                                            
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {
+    p_inc += ary*G__int(buf[ig25]);                    
+    ary /= var->varlabel[ig15][ig25+2];                
+  }                                                    
+  buf->tagnum = -1;                                    
+  buf->type = 'q';                                   
+  buf->typenum = var->p_typetable[ig15];               
+  buf->ref = var->p[ig15]+offset+p_inc*sizeof(long double); 
+  if(p_inc-1>var->varlabel[ig15][1])                   
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);  
+  else                                                 
+    buf->obj.ld = *(long double*)buf->ref;
+}
+#endif /* 2189 */
+
 /****************************************************************
 * G__LD_pn_bool()
 ****************************************************************/
@@ -1108,6 +1358,60 @@ long ig15;
   buf->ref = *(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(casttype); \
   buf->obj.i = *(casttype*)buf->ref
 
+#ifndef G__OLDIMPLEMENTATION2189
+/****************************************************************
+* G__LD_P10_longlong()
+****************************************************************/
+void G__LD_P10_longlong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[*psp-1];  
+  buf->tagnum = -1;              
+  buf->type = 'n';               
+  buf->typenum = var->p_typetable[ig15];  
+  buf->ref = *(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(G__int64); 
+  buf->obj.i = *(G__int64*)buf->ref;
+}
+/****************************************************************
+* G__LD_P10_ulonglong()
+****************************************************************/
+void G__LD_P10_ulonglong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[*psp-1];  
+  buf->tagnum = -1;              
+  buf->type = 'm';               
+  buf->typenum = var->p_typetable[ig15];  
+  buf->ref=*(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(G__uint64);
+  buf->obj.i = *(G__uint64*)buf->ref;
+}
+/****************************************************************
+* G__LD_P10_longdouble()
+****************************************************************/
+void G__LD_P10_longdouble(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[*psp-1];  
+  buf->tagnum = -1;              
+  buf->type = 'q';               
+  buf->typenum = var->p_typetable[ig15];  
+  buf->ref = *(long*)(var->p[ig15]+offset)+buf->obj.i*sizeof(long double); 
+  buf->obj.i = *(long double*)buf->ref;
+}
+#endif /* 2189 */
+
 /****************************************************************
 * G__LD_P10_bool()
 ****************************************************************/
@@ -1301,8 +1605,6 @@ long ig15;
 }
 
 
-
-
 /*************************************************************************
 * G__ST_p0_xxx
 *************************************************************************/
@@ -1313,6 +1615,110 @@ long ig15;
 #define G__ASM_ASSIGN_INT(casttype)                         \
   G__value *val = &pbuf[*psp-1];                            \
   *(casttype*)(var->p[ig15]+offset)=(casttype)G__intM(val)
+
+#ifndef G__OLDIMPLEMENTATION2189
+/****************************************************************
+* G__ST_p0_longlong()
+****************************************************************/
+void G__ST_p0_longlong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *val = &pbuf[*psp-1];
+  G__int64 llval;
+  switch(val->type) {
+  case 'd':
+  case 'f':
+    llval = (G__int64)val->obj.d;
+    break;
+  case 'n':
+    llval = (G__int64)val->obj.ll;
+    break;
+  case 'm':
+    llval = (G__int64)val->obj.ull;
+    break;
+  case 'q':
+    llval = (G__int64)val->obj.ld;
+    break;
+  default:
+    llval = (G__int64)val->obj.i;
+    break;
+  }  
+  *(G__int64*)(var->p[ig15]+offset)=llval;
+}
+
+/****************************************************************
+* G__ST_p0_ulonglong()
+****************************************************************/
+void G__ST_p0_ulonglong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *val = &pbuf[*psp-1];
+  G__uint64 ullval;
+  switch(val->type) {
+  case 'd':
+  case 'f':
+    ullval = (G__uint64)val->obj.d;
+    break;
+  case 'n':
+    ullval = (G__uint64)val->obj.ll;
+    break;
+  case 'm':
+    ullval = (G__uint64)val->obj.ull;
+    break;
+  case 'q':
+    ullval = (G__uint64)val->obj.ld;
+    break;
+  default:
+    ullval = (G__uint64)val->obj.i;
+    break;
+  }  
+  *(G__uint64*)(var->p[ig15]+offset)=ullval;
+}
+/****************************************************************
+* G__ST_p0_longdouble()
+****************************************************************/
+void G__ST_p0_longdouble(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *val = &pbuf[*psp-1];
+  long double ldval;
+  switch(val->type) {
+  case 'd':
+  case 'f':
+    ldval = (long double)val->obj.d;
+    break;
+  case 'n':
+    ldval = (long double)val->obj.ll;
+    break;
+  case 'm':
+#ifdef G__WIN32
+    ldval = (long double)val->obj.ll;
+#else
+    ldval = (long double)val->obj.ull;
+#endif
+    break;
+  case 'q':
+    ldval = (long double)val->obj.ld;
+    break;
+  default:
+    ldval = (long double)val->obj.i;
+    break;
+  }  
+  *(long double*)(var->p[ig15]+offset)=ldval;
+}
+#endif /* 2189 */
 
 #ifndef G__OLDIMPLEMENTATION1604
 /****************************************************************
@@ -1525,6 +1931,66 @@ long ig15;
             = (casttype)G__int(pbuf[*psp-2]);                    \
   --(*psp)
 #endif
+
+#ifndef G__OLDIMPLEMENTATION2189
+/****************************************************************
+* G__ST_p1_longlong()
+****************************************************************/
+void G__ST_p1_longlong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *val = &pbuf[*psp-1];                                 
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/ 
+  if(val->obj.i>var->varlabel[ig15][1])                          
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);  
+  else                                                           
+    *(G__int64*)(var->p[ig15]+offset+val->obj.i*sizeof(G__int64)) 
+            = (G__int64)G__Longlong(pbuf[*psp-2]);                    
+  --(*psp);
+}
+/****************************************************************
+* G__ST_p1_ulonglong()
+****************************************************************/
+void G__ST_p1_ulonglong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *val = &pbuf[*psp-1];                                 
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/ 
+  if(val->obj.i>var->varlabel[ig15][1])                          
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);  
+  else                                                           
+    *(G__uint64*)(var->p[ig15]+offset+val->obj.i*sizeof(G__uint64)) 
+            = (G__uint64)G__ULonglong(pbuf[*psp-2]); 
+  --(*psp);
+}
+/****************************************************************
+* G__ST_p1_longdouble()
+****************************************************************/
+void G__ST_p1_longdouble(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *val = &pbuf[*psp-1];                                 
+  if('d'==val->type||'f'==val->type) G__nonintarrayindex(var,ig15); /*1969*/ 
+  if(val->obj.i>var->varlabel[ig15][1])                          
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],val->obj.i);  
+  else                                                           
+    *(long double*)(var->p[ig15]+offset+val->obj.i*sizeof(long double)) 
+            = (long double)G__Longdouble(pbuf[*psp-2]); 
+  --(*psp);
+}
+#endif /* 2189 */
 
 /****************************************************************
 * G__ST_p1_bool()
@@ -1793,8 +2259,88 @@ long ig15;
             = (casttype)G__int(pbuf[*psp-1])
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2189
 /****************************************************************
-* G__ST_p0_bool()
+* G__ST_pn_longlong()
+****************************************************************/
+void G__ST_pn_longlong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          
+  int ary = var->varlabel[ig15][0];                              
+  int paran = var->paran[ig15];                                  
+  int p_inc=0;                                                   
+  int ig25;                                                      
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {         
+    p_inc += ary*G__int(buf[ig25]);                              
+    ary /= var->varlabel[ig15][ig25+2];                          
+  }                                                              
+  if(p_inc>var->varlabel[ig15][1])                               
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);    
+  else                                                           
+    *(G__int64*)(var->p[ig15]+offset+p_inc*sizeof(G__int64))   
+      = (G__int64)G__Longlong(pbuf[*psp-1]);
+}
+
+/****************************************************************
+* G__ST_pn_ulonglong()
+****************************************************************/
+void G__ST_pn_ulonglong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          
+  int ary = var->varlabel[ig15][0];                              
+  int paran = var->paran[ig15];                                  
+  int p_inc=0;                                                   
+  int ig25;                                                      
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {         
+    p_inc += ary*G__int(buf[ig25]);                              
+    ary /= var->varlabel[ig15][ig25+2];                          
+  }                                                              
+  if(p_inc>var->varlabel[ig15][1])                               
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);    
+  else                                                           
+    *(G__uint64*)(var->p[ig15]+offset+p_inc*sizeof(G__uint64))   
+      = (G__uint64)G__ULonglong(pbuf[*psp-1]);
+}
+
+/****************************************************************
+* G__ST_pn_longdouble()
+****************************************************************/
+void G__ST_pn_longdouble(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp = *psp-var->paran[ig15])];          
+  int ary = var->varlabel[ig15][0];                              
+  int paran = var->paran[ig15];                                  
+  int p_inc=0;                                                   
+  int ig25;                                                      
+  for(ig25=0;ig25<paran&&ig25<var->paran[ig15];ig25++) {         
+    p_inc += ary*G__int(buf[ig25]);                              
+    ary /= var->varlabel[ig15][ig25+2];                          
+  }                                                              
+  if(p_inc>var->varlabel[ig15][1])                               
+    G__arrayindexerror(ig15,var,var->varnamebuf[ig15],p_inc);    
+  else                                                           
+    *(long double*)(var->p[ig15]+offset+p_inc*sizeof(long double))   
+      = (long double)G__Longdouble(pbuf[*psp-1]);
+}
+#endif /* 2189 */
+
+/****************************************************************
+* G__ST_pn_bool()
 ****************************************************************/
 void G__ST_pn_bool(pbuf,psp,offset,var,ig15)
 G__value *pbuf;
@@ -2041,6 +2587,54 @@ long ig15;
             = (casttype)G__int(pbuf[*psp-2]);                             \
   --(*psp)
 
+#ifndef G__OLDIMPLEMENTATION2189
+/****************************************************************
+* G__ST_p10_longlong()
+****************************************************************/
+void G__ST_P10_longlong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *val = &pbuf[*psp-1];                                          
+  *(G__int64*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(G__int64)) 
+            = (G__int64)G__Longlong(pbuf[*psp-2]);
+  --(*psp);
+}
+/****************************************************************
+* G__ST_p10_ulonglong()
+****************************************************************/
+void G__ST_P10_ulonglong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *val = &pbuf[*psp-1];                                          
+  *(G__uint64*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(G__uint64)) 
+            = (G__uint64)G__ULonglong(pbuf[*psp-2]);
+  --(*psp);
+}
+/****************************************************************
+* G__ST_p10_longdouble()
+****************************************************************/
+void G__ST_P10_longdouble(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *val = &pbuf[*psp-1];                                          
+  *(long double*)(*(long*)(var->p[ig15]+offset)+val->obj.i*sizeof(long double)) 
+            = (long double)G__Longdouble(pbuf[*psp-2]);
+  --(*psp);
+}
+#endif /* 2189 */
+
 /****************************************************************
 * G__ST_p0_bool()
 ****************************************************************/
@@ -2244,6 +2838,61 @@ long ig15;
   buf->ref = *(long*)(var->p[ig15]+offset);  \
   buf->obj.i = *(casttype*)buf->ref
 
+#ifndef G__OLDIMPLEMENTATION2189
+/****************************************************************
+* G__LD_Rp0_longlong()
+****************************************************************/
+void G__LD_Rp0_longlong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp)++];         
+  buf->tagnum = -1;                       
+  buf->type = 'n';                      
+  buf->typenum = var->p_typetable[ig15];  
+  buf->ref = *(long*)(var->p[ig15]+offset);  
+  buf->obj.i = *(G__int64*)buf->ref;
+}
+/****************************************************************
+* G__LD_Rp0_ulonglong()
+****************************************************************/
+void G__LD_Rp0_ulonglong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp)++];         
+  buf->tagnum = -1;                       
+  buf->type = 'm';                      
+  buf->typenum = var->p_typetable[ig15];  
+  buf->ref = *(long*)(var->p[ig15]+offset);  
+  buf->obj.i = *(G__uint64*)buf->ref;
+}
+/****************************************************************
+* G__LD_Rp0_longdouble()
+****************************************************************/
+void G__LD_Rp0_longdouble(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp)++];         
+  buf->tagnum = -1;                       
+  buf->type = 'q';                      
+  buf->typenum = var->p_typetable[ig15];  
+  buf->ref = *(long*)(var->p[ig15]+offset);  
+  buf->obj.i = *(long double*)buf->ref;
+}
+
+#endif /* 2189 */
+
 /****************************************************************
 * G__LD_Rp0_bool()
 ****************************************************************/
@@ -2443,6 +3092,114 @@ long ig15;
   long adr = *(long*)(var->p[ig15]+offset);                 \
   *(casttype*)adr=(casttype)G__intM(val)
 
+
+#ifndef G__OLDIMPLEMENTATION2189 
+/****************************************************************
+* G__ST_Rp0_longlong()
+****************************************************************/
+void G__ST_Rp0_longlong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *val = &pbuf[*psp-1];                    
+  long adr = *(long*)(var->p[ig15]+offset);         
+  G__int64 llval;
+  switch(val->type) {
+  case 'd':
+  case 'f':
+    llval = (G__int64)val->obj.d;
+    break;
+  case 'n':
+    llval = (G__int64)val->obj.ll;
+    break;
+  case 'm':
+    llval = (G__int64)val->obj.ull;
+    break;
+  case 'q':
+    llval = (G__int64)val->obj.ld;
+    break;
+  default:
+    llval = (G__int64)val->obj.i;
+    break;
+  }  
+  *(G__int64*)adr=llval;
+}
+
+/****************************************************************
+* G__ST_Rp0_ulonglong()
+****************************************************************/
+void G__ST_Rp0_ulonglong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *val = &pbuf[*psp-1];                    
+  long adr = *(long*)(var->p[ig15]+offset);         
+  G__uint64 ullval;
+  switch(val->type) {
+  case 'd':
+  case 'f':
+    ullval = (G__uint64)val->obj.d;
+    break;
+  case 'n':
+    ullval = (G__uint64)val->obj.ll;
+    break;
+  case 'm':
+    ullval = (G__uint64)val->obj.ull;
+    break;
+  case 'q':
+    ullval = (G__uint64)val->obj.ld;
+    break;
+  default:
+    ullval = (G__uint64)val->obj.i;
+    break;
+  }  
+  *(G__uint64*)adr=ullval;
+}
+/****************************************************************
+* G__ST_Rp0_longdouble()
+****************************************************************/
+void G__ST_Rp0_longdouble(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *val = &pbuf[*psp-1];                    
+  long adr = *(long*)(var->p[ig15]+offset);         
+  long double ldval;
+  switch(val->type) {
+  case 'd':
+  case 'f':
+    ldval = (long double)val->obj.d;
+    break;
+  case 'n':
+    ldval = (long double)val->obj.ll;
+    break;
+  case 'm':
+#ifdef G__WIN32
+    ldval = (long double)val->obj.ll;
+#else
+    ldval = (long double)val->obj.ull;
+#endif
+    break;
+  case 'q':
+    ldval = (long double)val->obj.ld;
+    break;
+  default:
+    ldval = (long double)val->obj.i;
+    break;
+  }  
+  *(long double*)adr=ldval;
+}
+#endif /* 2189 */
+
 /****************************************************************
 * G__ST_Rp0_bool()
 ****************************************************************/
@@ -2627,6 +3384,60 @@ long ig15;
   buf->typenum = var->p_typetable[ig15];  \
   buf->ref = var->p[ig15]+offset;         \
   buf->obj.i = *(long*)buf->ref
+
+#ifndef G__OLDIMPLEMENTATION2189
+/****************************************************************
+* G__LD_RP0_longlong()
+****************************************************************/
+void G__LD_RP0_longlong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp)++];         
+  buf->tagnum = -1;                       
+  buf->type = 'n';                      
+  buf->typenum = var->p_typetable[ig15];  
+  buf->ref = var->p[ig15]+offset;         
+  buf->obj.ll = *(long*)buf->ref;
+}
+/****************************************************************
+* G__LD_RP0_ulonglong()
+****************************************************************/
+void G__LD_RP0_ulonglong(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp)++];         
+  buf->tagnum = -1;                       
+  buf->type = 'm';                      
+  buf->typenum = var->p_typetable[ig15];  
+  buf->ref = var->p[ig15]+offset;         
+  buf->obj.ull = *(long*)buf->ref;
+}
+/****************************************************************
+* G__LD_RP0_longdouble()
+****************************************************************/
+void G__LD_RP0_longdouble(pbuf,psp,offset,var,ig15)
+G__value *pbuf;
+int *psp;
+long offset;
+struct G__var_array *var;
+long ig15;
+{
+  G__value *buf= &pbuf[(*psp)++];         
+  buf->tagnum = -1;                       
+  buf->type = 'q';                      
+  buf->typenum = var->p_typetable[ig15];  
+  buf->ref = var->p[ig15]+offset;         
+  buf->obj.ld = *(long*)buf->ref;
+}
+#endif /* 2189 */
 
 /****************************************************************
 * G__LD_RP0_bool()
@@ -3194,6 +4005,21 @@ void G__OP2_plus(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
+#ifndef G__OLDIMPLEMENTATION2189
+  if('q'==bufm2->type || 'q'==bufm1->type) {
+    bufm2->obj.ld=G__Longdouble(*bufm2)+G__Longdouble(*bufm1);
+    bufm2->type='q';
+  }
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)+G__Longlong(*bufm1);
+    bufm2->type='n';
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)+G__ULonglong(*bufm1);
+    bufm2->type='m';
+  }
+  else 
+#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d + bufm1->obj.d;
@@ -3259,6 +4085,21 @@ void G__OP2_minus(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
+#ifndef G__OLDIMPLEMENTATION2189
+  if('q'==bufm2->type || 'q'==bufm1->type) {
+    bufm2->obj.ld=G__Longdouble(*bufm2)-G__Longdouble(*bufm1);
+    bufm2->type='q';
+  }
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)-G__Longlong(*bufm1);
+    bufm2->type='n';
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)-G__ULonglong(*bufm1);
+    bufm2->type='m';
+  }
+  else 
+#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d - bufm1->obj.d;
@@ -3330,6 +4171,21 @@ void G__OP2_multiply(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
+#ifndef G__OLDIMPLEMENTATION2189
+  if('q'==bufm2->type || 'q'==bufm1->type) {
+    bufm2->obj.ld=G__Longdouble(*bufm2)*G__Longdouble(*bufm1);
+    bufm2->type='q';
+  }
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)*G__Longlong(*bufm1);
+    bufm2->type='n';
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)*G__ULonglong(*bufm1);
+    bufm2->type='m';
+  }
+  else 
+#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d * bufm1->obj.d;
@@ -3380,6 +4236,17 @@ void G__OP2_modulus(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
+#ifndef G__OLDIMPLEMENTATION2189
+  if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)%G__Longlong(*bufm1);
+    bufm2->type='n';
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)%G__ULonglong(*bufm1);
+    bufm2->type='m';
+  }
+  else 
+#endif
 #ifdef G__TUNEUP_W_SECURITY
   if(0==bufm1->obj.i) {
     G__genericerror("Error: operator '%%' divided by zero");
@@ -3421,6 +4288,21 @@ void G__OP2_divide(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
+#ifndef G__OLDIMPLEMENTATION2189
+  if('q'==bufm2->type || 'q'==bufm1->type) {
+    bufm2->obj.ld=G__Longdouble(*bufm2)/G__Longdouble(*bufm1);
+    bufm2->type='q';
+  }
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)/G__Longlong(*bufm1);
+    bufm2->type='n';
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)/G__ULonglong(*bufm1);
+    bufm2->type='m';
+  }
+  else 
+#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
@@ -3503,8 +4385,21 @@ void G__OP2_logicaland(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-  bufm2->obj.i = bufm2->obj.i && bufm1->obj.i;
-  bufm2->type = 'i';
+#ifndef G__OLDIMPLEMENTATION2189
+  if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.i=G__Longlong(*bufm2)&&G__Longlong(*bufm1);
+    bufm2->type='i';
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.i=G__ULonglong(*bufm2)&&G__ULonglong(*bufm1);
+    bufm2->type='i';
+  }
+  else
+#endif
+  {
+    bufm2->obj.i = bufm2->obj.i && bufm1->obj.i;
+    bufm2->type = 'i';
+  }
   bufm2->tagnum = bufm2->typenum = -1;
   bufm2->ref = 0;
 }
@@ -3516,8 +4411,21 @@ void G__OP2_logicalor(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
-  bufm2->obj.i = bufm2->obj.i || bufm1->obj.i;
-  bufm2->type = 'i';
+#ifndef G__OLDIMPLEMENTATION2189
+  if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.i=G__Longlong(*bufm2)||G__Longlong(*bufm1);
+    bufm2->type='i';
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.i=G__ULonglong(*bufm2)||G__ULonglong(*bufm1);
+    bufm2->type='i';
+  }
+  else
+#endif
+  {
+    bufm2->obj.i = bufm2->obj.i || bufm1->obj.i;
+    bufm2->type = 'i';
+  }
   bufm2->tagnum = bufm2->typenum = -1;
   bufm2->ref = 0;
 }
@@ -3672,6 +4580,24 @@ void G__OP2_addassign(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
+#ifndef G__OLDIMPLEMENTATION2189
+  if('q'==bufm2->type || 'q'==bufm1->type) {
+    bufm2->obj.ld=G__Longdouble(*bufm2)+G__Longdouble(*bufm1);
+    bufm2->type='q';
+    *(long double*)bufm2->ref = bufm2->obj.ld;
+  }
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)+G__Longlong(*bufm1);
+    bufm2->type='n';
+    *(G__int64*)bufm2->ref = bufm2->obj.ll;
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)+G__ULonglong(*bufm1);
+    bufm2->type='m';
+    *(G__uint64*)bufm2->ref = bufm2->obj.ull;
+  }
+  else 
+#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d += bufm1->obj.d;
@@ -3706,6 +4632,24 @@ void G__OP2_subassign(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
+#ifndef G__OLDIMPLEMENTATION2189
+  if('q'==bufm2->type || 'q'==bufm1->type) {
+    bufm2->obj.ld=G__Longdouble(*bufm2)-G__Longdouble(*bufm1);
+    bufm2->type='q';
+    *(long double*)bufm2->ref = bufm2->obj.ld;
+  }
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)-G__Longlong(*bufm1);
+    bufm2->type='n';
+    *(G__int64*)bufm2->ref = bufm2->obj.ll;
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)-G__ULonglong(*bufm1);
+    bufm2->type='m';
+    *(G__uint64*)bufm2->ref = bufm2->obj.ull;
+  }
+  else 
+#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d -= bufm1->obj.d;
@@ -3745,6 +4689,24 @@ void G__OP2_mulassign(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
+#ifndef G__OLDIMPLEMENTATION2189
+  if('q'==bufm2->type || 'q'==bufm1->type) {
+    bufm2->obj.ld=G__Longdouble(*bufm2)*G__Longdouble(*bufm1);
+    bufm2->type='q';
+    *(long double*)bufm2->ref = bufm2->obj.ld;
+  }
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)*G__Longlong(*bufm1);
+    bufm2->type='n';
+    *(G__int64*)bufm2->ref = bufm2->obj.ll;
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)*G__ULonglong(*bufm1);
+    bufm2->type='m';
+    *(G__uint64*)bufm2->ref = bufm2->obj.ull;
+  }
+  else 
+#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d *= bufm1->obj.d;
@@ -3772,6 +4734,19 @@ void G__OP2_modassign(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
+#ifndef G__OLDIMPLEMENTATION2189
+  if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)%G__Longlong(*bufm1);
+    bufm2->type='n';
+    *(G__int64*)bufm2->ref = bufm2->obj.ll;
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)%G__ULonglong(*bufm1);
+    bufm2->type='m';
+    *(G__uint64*)bufm2->ref = bufm2->obj.ull;
+  }
+  else 
+#endif
 #ifdef G__TUNEUP_W_SECURITY
   if(0==bufm1->obj.i) {
     G__genericerror("Error: operator '%%' divided by zero");
@@ -3808,6 +4783,24 @@ void G__OP2_divassign(bufm1,bufm2)
 G__value *bufm1;
 G__value *bufm2;
 {
+#ifndef G__OLDIMPLEMENTATION2189
+  if('q'==bufm2->type || 'q'==bufm1->type) {
+    bufm2->obj.ld=G__Longdouble(*bufm2)/G__Longdouble(*bufm1);
+    bufm2->type='q';
+    *(long double*)bufm2->ref = bufm2->obj.ld;
+  }
+  else if('n'==bufm2->type || 'n'==bufm1->type) {
+    bufm2->obj.ll=G__Longlong(*bufm2)/G__Longlong(*bufm1);
+    bufm2->type='n';
+    *(G__int64*)bufm2->ref = bufm2->obj.ll;
+  }
+  else if('m'==bufm2->type || 'm'==bufm1->type) {
+    bufm2->obj.ull=G__ULonglong(*bufm2)/G__ULonglong(*bufm1);
+    bufm2->type='m';
+    *(G__uint64*)bufm2->ref = bufm2->obj.ull;
+  }
+  else 
+#endif
   if(G__isdoubleM(bufm2)) {
     if(G__isdoubleM(bufm1)) {
 #ifdef G__TUNEUP_W_SECURITY
@@ -5214,6 +6207,11 @@ long *pinst;
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__LD_p0_bool; break;
 #endif
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'n': *pinst = (long)G__LD_p0_longlong; break;
+    case 'm': *pinst = (long)G__LD_p0_ulonglong; break;
+    case 'q': *pinst = (long)G__LD_p0_longdouble; break;
+#endif
     default: done=0; break;
     }
   }
@@ -5247,6 +6245,11 @@ long *pinst;
     case 'd': *pinst = (long)G__LD_p1_double; break;
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__LD_p1_bool; break;
+#endif
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'n': *pinst = (long)G__LD_p1_longlong; break;
+    case 'm': *pinst = (long)G__LD_p1_ulonglong; break;
+    case 'q': *pinst = (long)G__LD_p1_longdouble; break;
 #endif
     default: done=0; break;
     }
@@ -5283,6 +6286,11 @@ long *pinst;
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__LD_pn_bool; break;
 #endif
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'n': *pinst = (long)G__LD_pn_longlong; break;
+    case 'm': *pinst = (long)G__LD_pn_ulonglong; break;
+    case 'q': *pinst = (long)G__LD_pn_longdouble; break;
+#endif
     default: done=0; break;
     }
   }
@@ -5317,7 +6325,12 @@ int reftype;
     case 'F': *pinst = (long)G__LD_P10_float; break;
     case 'D': *pinst = (long)G__LD_P10_double; break;
 #ifndef G__OLDIMPLEMENTATION2188
-    case 'G': *pinst = (long)G__LD_P10_double; break;
+    case 'G': *pinst = (long)G__LD_P10_bool; break;
+#endif
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'N': *pinst = (long)G__LD_P10_longlong; break;
+    case 'M': *pinst = (long)G__LD_P10_ulonglong; break;
+    case 'Q': *pinst = (long)G__LD_P10_longdouble; break;
 #endif
     default: done=0; break;
     }
@@ -5356,6 +6369,11 @@ long *pinst;
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__ST_p0_bool; break;
 #endif
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'n': *pinst = (long)G__ST_p0_longlong; break;
+    case 'm': *pinst = (long)G__ST_p0_ulonglong; break;
+    case 'q': *pinst = (long)G__ST_p0_longdouble; break;
+#endif
     default: done=0; break;
     }
   }
@@ -5389,6 +6407,11 @@ long *pinst;
     case 'd': *pinst = (long)G__ST_p1_double; break;
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__ST_p1_bool; break; /* to be fixed */
+#endif
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'n': *pinst = (long)G__ST_p1_longlong; break;
+    case 'm': *pinst = (long)G__ST_p1_ulonglong; break;
+    case 'q': *pinst = (long)G__ST_p1_longdouble; break;
 #endif
     default: done=0; break;
     }
@@ -5425,6 +6448,11 @@ long *pinst;
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__ST_pn_bool; break; /* to be fixed */
 #endif
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'n': *pinst = (long)G__ST_pn_longlong; break;
+    case 'm': *pinst = (long)G__ST_pn_ulonglong; break;
+    case 'q': *pinst = (long)G__ST_pn_longdouble; break;
+#endif
     default: done=0; break;
     }
   }
@@ -5460,6 +6488,11 @@ int reftype;
     case 'D': *pinst = (long)G__ST_P10_double; break;
 #ifndef G__OLDIMPLEMENTATION2188
     case 'G': *pinst = (long)G__ST_P10_bool; break;
+#endif
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'N': *pinst = (long)G__ST_P10_longlong; break;
+    case 'M': *pinst = (long)G__ST_P10_ulonglong; break;
+    case 'Q': *pinst = (long)G__ST_P10_longdouble; break;
 #endif
     default: done=0; break;
     }
@@ -5498,6 +6531,11 @@ long *pinst;
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__LD_Rp0_bool; break; /* to be fixed */
 #endif
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'n': *pinst = (long)G__LD_Rp0_longlong; break;
+    case 'm': *pinst = (long)G__LD_Rp0_ulonglong; break;
+    case 'q': *pinst = (long)G__LD_Rp0_longdouble; break;
+#endif
     default: done=0; break;
     }
   }
@@ -5531,6 +6569,11 @@ long *pinst;
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__ST_Rp0_bool; break; /* to be fixed */
 #endif
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'n': *pinst = (long)G__ST_Rp0_longlong; break;
+    case 'm': *pinst = (long)G__ST_Rp0_ulonglong; break;
+    case 'q': *pinst = (long)G__ST_Rp0_longdouble; break;
+#endif
     default: done=0; break;
     }
   }
@@ -5563,6 +6606,11 @@ long *pinst;
     case 'd': *pinst = (long)G__LD_RP0_double; break;
 #ifndef G__OLDIMPLEMENTATION1604
     case 'g': *pinst = (long)G__LD_RP0_bool; break; /* to be fixed */
+#endif
+#ifndef G__OLDIMPLEMENTATION2189
+    case 'n': *pinst = (long)G__LD_RP0_longlong; break;
+    case 'm': *pinst = (long)G__LD_RP0_ulonglong; break;
+    case 'q': *pinst = (long)G__LD_RP0_longdouble; break;
 #endif
     default: done=0; break;
     }

@@ -7,7 +7,7 @@
  * Description:
  *  Parse C/C++ expression
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -827,6 +827,7 @@ int lenbuf;
     else if(lenbuf) {                                                 \
       char *pebuf;                                                    \
       if('e'==tolower(expression[ig1-1])&&                            \
+         'x'!=tolower(expression[1]) &&   /* 2201 */                  \
          (isdigit(ebuf[0])||'.'==ebuf[0]||                            \
          ('('==ebuf[0]&&(pebuf=strchr(ebuf,')'))&&                    \
           (isdigit(*++pebuf)||'.'==(*pebuf))))) {                     \
@@ -2184,6 +2185,38 @@ char *item;
       /* G__letdouble(&result3,c,G__atodouble(item)); */
     }
     else {
+#ifndef G__OLDIMPLEMENTATION2189
+      unsigned long xxx;
+       if('u'==c) { /* long long */
+          c='n';
+#ifndef G__OLDIMPLEMENTATION2192
+          G__letLonglong(&result3,c,G__expr_strtoll(item,NULL,10));
+#else
+          G__letLonglong(&result3,c,strtoll(item,NULL,10));
+#endif
+       } else if('t'==c) {
+          c='m';
+#ifndef G__OLDIMPLEMENTATION2192
+          G__letULonglong(&result3,c,G__expr_strtoull(item,NULL,10));
+#else
+          G__letULonglong(&result3,c,strtoull(item,NULL,10));
+#endif
+       } else {
+ 	 xxx=strtoul(item,NULL,10);
+ 	 if(xxx>LONG_MAX && ('i'==c||'l'==c) ) --c;
+ 	 if(xxx==ULONG_MAX) {
+ 	   char ulongmax[100];
+ 	   int ulonglen = strlen(item);
+ 	   sprintf(ulongmax,"%lu",ULONG_MAX);
+ 	   while('u'==tolower(item[ulonglen-1])||'l'==tolower(item[ulonglen-1]))
+ 	     item[--ulonglen]=0;
+ 	   if(strcmp(ulongmax,item)!=0) 
+ 	     G__genericerror("Error: integer literal too large, add LL or ULL for long long integer");
+ 	 } 
+          G__letint(&result3,c,xxx);
+          result3.obj.i=xxx;
+       }
+#else /* 2189 */
 #ifndef G__OLDIMPLEMENTATION918
 #ifndef G__OLDIMPLEMENTATION1874
       unsigned long xxx=0;
@@ -2239,8 +2272,9 @@ char *item;
 #else
       G__letint(&result3,c,atol(item));
 #endif
+#endif /* 2189 */
     }
-#ifndef G__OLDIMPLEMENTATION1874
+#if !defined(G__OLDIMPLEMENTATION1874) || defined(G__OLDIMPLEMENTATION2189)
     if('u'!=c) {
       result3.tagnum = -1;
       result3.typenum = -1;

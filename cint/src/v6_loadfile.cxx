@@ -7,7 +7,7 @@
  * Description:
  *  Loading source file
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2005  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
@@ -2295,11 +2295,13 @@ char *filenamein;
     /* Caution, G__ifile.fp is left openned.
      * This may cause trouble in future */
     fclose(G__srcfile[fentry].fp);
+#ifndef G__OLDIMPLEMENTATION2224
     if (G__ifile.fp == G__srcfile[fentry].fp) {
-       /* Since the file is closed, the FILE* pointer is now invalid and thus
-          we have to remove it from G__ifile! */
-       G__ifile.fp=(FILE*)NULL;
+      /* Since the file is closed, the FILE* pointer is now invalid and thus
+	 we have to remove it from G__ifile! */
+      G__ifile.fp=(FILE*)NULL;
     }
+#endif
     G__srcfile[fentry].fp=(FILE*)NULL;
 #ifndef G__OLDIMPLEMENTATION1908
     G__srcfile[fentry].slindex = G__shl_load(G__ifile.name);

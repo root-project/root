@@ -654,6 +654,7 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
   case ExactMatch:              convmode=0; break;
   case ConversionMatch:         convmode=1; break;
   case ConversionMatchBytecode: convmode=2; break;
+  default:                      convmode=0; break;
   }
 #else
   int convmode = (mode==ConversionMatch)?1:0;

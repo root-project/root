@@ -304,6 +304,11 @@ char *expression;
 #ifndef G__OLDIMPLEMENTATION1604
       else if(strcmp(type,"bool")==0) var_type='g';
 #endif
+#ifndef G__OLDIMPLEMENTATION2189
+      else if(strcmp(type,"longlong")==0) var_type='n';
+      else if(strcmp(type,"unsignedlonglong")==0) var_type='m';
+      else if(strcmp(type,"longdouble")==0) var_type='q';
+#endif
     }
   }
 #ifndef G__OLDIMPLEMENTATION683
@@ -405,6 +410,15 @@ char *expression;
    * call constructor if struct, class
    ******************************************************/
   if(var_type=='u') {
+#ifndef G__OLDIMPLEMENTATION2219
+    if(G__struct.isabstract[G__tagnum]) {
+      G__fprinterr(G__serr,"Error: abstract class object '%s' is created",G__struct.name[G__tagnum]);
+      G__genericerror((char*)NULL);
+#ifndef G__OLDIMPLEMENTATION2221
+      G__display_purevirtualfunc(G__tagnum);
+#endif
+    }
+#endif
     if(G__dispsource) {
       G__fprinterr(G__serr,"\n!!!Calling constructor 0x%lx.%s for new %s"
 	      ,G__store_struct_offset,type,type);

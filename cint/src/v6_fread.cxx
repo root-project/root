@@ -20,6 +20,19 @@
 
 #include "common.h"
 
+#ifndef G__OLDIMPLEMENTATION2206
+
+#define G__storeOrigPos                                          \
+   int store_linenum = G__ifile.line_number
+
+#define G__eofOrigError                                          \
+
+#else
+
+#define G__storeOrigPos                                        
+#define G__eofOrigError
+
+#endif
 
 
 #ifdef G__MULTIBYTE
@@ -201,7 +214,12 @@ char *string,*endmark;
 
     case '<':
       if((single_quote==0)&&(double_quote==0)&&
-	 strncmp(string,"operator",8)!=0) {
+#ifndef G__OLDIMPLEMENTATION2210
+	 strncmp(pp,"operator",8)!=0
+#else
+	 strncmp(string,"operator",8)!=0
+#endif
+	 ) {
 #ifndef G__OLDIMPLEMENTATION811
 	int lnest=0;
 #endif
@@ -1738,6 +1756,9 @@ char *string,*endmark;
 #ifndef G__OLDIMPLEMENTATION1572
   char *pbegin = string;
 #endif
+#ifndef G__OLDIMPLEMENTATION2216
+  int tmpltnest=0;
+#endif
   
   do {
     ignoreflag=0;
@@ -1771,10 +1792,28 @@ char *string,*endmark;
 	else {
 	  i = G__getfullpath(string,pbegin,i);
 	}
+#ifndef G__OLDIMPLEMENTATION2216
+	if(tmpltnest==0) pbegin = string+i+1-ignoreflag;
+#else
 	pbegin = string+i+1-ignoreflag;
+#endif
 #endif
       }
       break;
+
+#ifndef G__OLDIMPLEMENTATION2216
+    case '<':
+      if((single_quote==0)&&(double_quote==0)) {
+	string[i]=0;
+        if(G__defined_templateclass(pbegin)) ++tmpltnest;
+      }
+      break;
+    case '>':
+      if((single_quote==0)&&(double_quote==0)) {
+	if(tmpltnest) --tmpltnest;
+      }
+      break;
+#endif
 	 
     case '{':
     case '(':

@@ -50,7 +50,7 @@ class string {
 #elif defined(G__INTEL_COMPILER)
   typedef char* iterator;
   typedef const char* const_iterator;
-#elif ((G__GNUC>=3 && G__GNUC_MINOR>=1) || G__GNUC>=4)
+#elif (G__GNUC_VER>=3001) 
   class iterator {
    public:
       iterator();
@@ -77,7 +77,7 @@ class string {
       const pointer& base() const ;
   };
   typedef const iterator const_iterator;
-#elif (G__GNUC>=3 && G__GNUC_MINOR==0)
+#elif (G__GNUC_VER>=3000)
   typedef char* iterator;
   typedef const char* const_iterator;
 #elif (defined(G__VISUAL) && (G__MSC_VER==1300))
@@ -202,7 +202,8 @@ class string {
   string& replace(size_t pos,size_t n,char c,size_t rep);
   //char get_at(size_t pos) const;
   //void put_at(size_t pos,char c);
-  char operator[](size_t pos) const;
+  const char& operator[](size_t pos) const;
+  char& operator[](size_t pos);
   const char* c_str(void) const;
   const char* data(void) const;
   size_t length(void) const;

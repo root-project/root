@@ -515,7 +515,7 @@ char* source;
   struct G__Templatearg *targ=NULL;
   struct G__Templatearg *p=NULL;
   char type[G__MAXNAME];
-  int c;
+  /* int c; */
 #ifndef G__OLDIMPLEMENTATION2149
   int i,j,nest;
 #endif
@@ -4258,7 +4258,7 @@ fpos_t *ppos;
 #ifndef G__OLDIMPLEMENTATION1462
             || strcmp(paraname,"typename")==0
 #endif
-	      );
+	    );
 
 #ifndef G__OLDIMPLEMENTATION1464
     /* Don't barf on an empty arg list. */

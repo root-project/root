@@ -644,7 +644,7 @@ template<class _Category,
 
 #if (G__GNUC>=3) && !defined(G__KCC) && !defined(G__INTEL_COMPILER)
 
-#if (G__GNUC_MINOR<1) && (G__GNUC==3)
+#if (G__GNUC_VER<3001) 
 // for g++ 3.00
 ////////////////////////////////////////////////////////////////////////
 // __normal_iterator
@@ -775,8 +775,8 @@ operator+(__normal_iterator<_Iterator, _Container>::difference_type __n,
           const __normal_iterator<_Iterator, _Container>& __i)
 { return __normal_iterator<_Iterator, _Container>(__i.base() + __n); }
 
-//#else // (G__GNUC_MINOR>=1) 
-#elif (G__GNUC_MINOR==1) && (G__GNUC==3) 
+//#else // (G__GNUC_VER>=3001) 
+#elif (G__GNUC_VER==3001) 
 // for g++ 3.1
 ////////////////////////////////////////////////////////////////////////
 // __normal_iterator
@@ -908,9 +908,9 @@ namespace __gnu_cxx
 
 }
 
-#else // (G__GNUC_MINOR>1) 
+#else // (G__GNUC_VER>3001) 
 
-#if defined(G__OLDIMPLEMENTATION1703)
+#if defined(G__OLDIMPLEMENTATION1703) || (G__GNUC_VER>=3001) 
 // for g++ 3.1,3.2
 namespace __gnu_cxx
 {  
@@ -1095,7 +1095,7 @@ namespace __gnu_cxx
 } // namespace __gnu_cxx
 #endif
 
-#endif // G__GNUC_MINOR
+#endif // G__GNUC_VER
 
 
 #endif // G__GNUC>=3

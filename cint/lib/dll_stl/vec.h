@@ -25,6 +25,12 @@ using namespace std;
 #pragma link C++ class vector<short>;
 #pragma link C++ class vector<int>;
 #pragma link C++ class vector<long>;
+
+#pragma link C++ class vector<unsigned char>;
+#pragma link C++ class vector<unsigned short>;
+#pragma link C++ class vector<unsigned int>;
+#pragma link C++ class vector<unsigned long>;
+
 #pragma link C++ class vector<float>;
 #pragma link C++ class vector<double>;
 //#if (G__GNUC<3 || G__GNUC_MINOR<1) && !defined(G__KCC)
@@ -34,11 +40,12 @@ using namespace std;
 #pragma link C++ class vector<void*>;
 #endif
 #pragma link C++ class vector<char*>;
+#pragma link C++ class vector<const char*>;
 #if defined(G__STRING_DLL) || defined(G__ROOT)
 #pragma link C++ class vector<string>;
 #endif
 
-#if ((G__GNUC>=3 && G__GNUC_MINOR>=1) || G__GNUC>=4)
+#if (G__GNUC>=3 && G__GNUC_MINOR>=1)
 #ifdef G__OLDIMPLEMENTATION1703
 #pragma link C++ namespace __gnu_cxx;
 #endif

@@ -67,10 +67,10 @@ long localmem;
   int store_cpp_aryindexp=0;
 #endif
 #ifndef G__OLDIMPLEMENTATION2133
-  int store_step;
+  int store_step=0;
 #endif
 #ifndef G__OLDIMPLEMENTATION2172
-  long dtorfreeoffset;
+  long dtorfreeoffset=0;
 #endif
 
 
@@ -2797,6 +2797,7 @@ long localmem;
         case 0: plong=0; break;
         case 1: plong=G__store_struct_offset; break;
         case 2: plong=localmem; break;
+        default: plong=0; break;
 	}
         for(i=0;i<n;++i) {
 #ifdef G__ASM_DBG

@@ -31,8 +31,8 @@ CCDLLOPT    = -fno-common
 LDDLLOPT    = -bundle -flat_namespace -undefined suppress
 OPTIMIZE    = -O
 LDOPT       = -lm -ldl -lcurses 
-SYSMACRO    = -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK -DG__MACOSX__ -DG__SIGNEDCHAR -DG__LONGBUF -DG__NEWSTDHEADER -DG__CINT_VER6 
-OTHMACRO   = -DG__APPLE -DG__NOPOWEROPR -DG__EXCEPTIONWRAPPER -DG__STD_EXCEPTION 
+SYSMACRO    = -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK -DG__MACOSX__ -DG__SIGNEDCHAR -DG__LONGBUF -DG__NEWSTDHEADER -DG__CINT_VER6 -DG__NATIVELONGLONG
+OTHMACRO   = -DG__APPLE -DG__P2FCAST -DG__NOPOWEROPR -DG__EXCEPTIONWRAPPER -DG__STD_EXCEPTION 
 SYSIPATH    =
 
 # libraries
@@ -43,7 +43,7 @@ APIO	    = Api.o Class.o BaseCls.o Type.o DataMbr.o Method.o MethodAr.o CallFunc
 RANLIB	    = /usr/bin/ranlib
 STDLIBS     = gcc3strm.o stdstrct.o
 PLATFORM    =  
-CINT_V6     = bc_autoobj.o bc_cfunc.o bc_inst.o bc_parse.o bc_reader.o bc_type.o bc_exec.o bc_vtbl.o bc_eh.o bc_debug.o
+CINT_V6     = bc_autoobj.o bc_cfunc.o bc_inst.o bc_parse.o bc_reader.o bc_type.o bc_exec.o bc_vtbl.o bc_eh.o bc_debug.o bc_assign.o
 
 # source code postfix
 CSRCPOST    = .c

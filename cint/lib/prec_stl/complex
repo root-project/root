@@ -1,0 +1,112 @@
+// lib/prec_stl/complex
+
+#pragma ifndef PREC_STL_COMPLEX
+#pragma define PREC_STL_COMPLEX
+#pragma link off global PREC_STL_COMPLEX;
+#pragma link C++ nestedtypedef;
+#pragma link C++ nestedclass;
+#if defined(G__HP_aCC) || defined(G__SUNPRO_C)
+#pragma mask_newdelete 0x1c;
+#else
+#pragma mask_newdelete 0x10;
+#endif
+
+
+template<class T> class complex {
+ public:
+  typedef T value_type;
+  
+  complex(const T& re = T(), const T& im = T());
+  complex(const complex&);
+#ifdef __CINT__
+  complex(const complex&);
+#else
+  template<class X> complex(const complex<X>&);
+#endif
+  
+  T real() const;
+  T imag() const;
+  
+  complex<T>& operator= (const T&);
+  complex<T>& operator+=(const T&);
+  complex<T>& operator-=(const T&);
+  complex<T>& operator*=(const T&);
+  complex<T>& operator/=(const T&);
+  
+  complex& operator=(const complex&);
+#ifdef __CINT__
+  complex<T>& operator= (const complex&);
+  complex<T>& operator+=(const complex&);
+  complex<T>& operator-=(const complex&);
+  complex<T>& operator*=(const complex&);
+  complex<T>& operator/=(const complex&);
+#else
+  template<class X> complex<T>& operator= (const complex<X>&);
+  template<class X> complex<T>& operator+=(const complex<X>&);
+  template<class X> complex<T>& operator-=(const complex<X>&);
+  template<class X> complex<T>& operator*=(const complex<X>&);
+  template<class X> complex<T>& operator/=(const complex<X>&);
+#endif
+#ifdef __CINT__
+  friend complex<T> operator+(const complex&, const complex&);
+  friend complex<T> operator+(const complex&, const T&);
+  friend complex<T> operator+(const T&, const complex&);
+  friend complex<T> operator-(const complex&, const complex&);
+  friend complex<T> operator-(const complex&, const T&);
+  friend complex<T> operator-(const T&, const complex&);
+  
+  friend complex<T> operator*(const complex&, const complex&);
+  friend complex<T> operator*(const complex&, const T&);
+  friend complex<T> operator*(const T&, const complex&);
+  
+  friend complex<T> operator/(const complex&, const complex&);
+  friend complex<T> operator/(const complex&, const T&);
+  friend complex<T> operator/(const T&, const complex&);
+  
+  friend complex<T> operator+(const complex&);
+  friend complex<T> operator-(const complex&);
+  
+  friend bool operator==(const complex&, const complex&);
+  friend bool operator==(const complex&, const T&);
+  friend bool operator==(const T&, const complex&);
+  
+  friend bool operator!=(const complex&, const complex&);
+  friend bool operator!=(const complex&, const T&);
+  friend bool operator!=(const T&, const complex&);
+#endif
+};
+
+template<class T> complex<T> operator+(const complex<T>&, const complex<T>&);
+template<class T> complex<T> operator+(const complex<T>&, const T&);
+template<class T> complex<T> operator+(const T&, const complex<T>&);
+
+template<class T> complex<T> operator-(const complex<T>&, const complex<T>&);
+template<class T> complex<T> operator-(const complex<T>&, const T&);
+template<class T> complex<T> operator-(const T&, const complex<T>&);
+
+template<class T> complex<T> operator*(const complex<T>&, const complex<T>&);
+template<class T> complex<T> operator*(const complex<T>&, const T&);
+template<class T> complex<T> operator*(const T&, const complex<T>&);
+
+template<class T> complex<T> operator/(const complex<T>&, const complex<T>&);
+template<class T> complex<T> operator/(const complex<T>&, const T&);
+template<class T> complex<T> operator/(const T&, const complex<T>&);
+
+template<class T> complex<T> operator+(const complex<T>&);
+template<class T> complex<T> operator-(const complex<T>&);
+
+template<class T> bool operator==(const complex<T>&, const complex<T>&);
+template<class T> bool operator==(const complex<T>&, const T&);
+template<class T> bool operator==(const T&, const complex<T>&);
+
+template<class T> bool operator!=(const complex<T>&, const complex<T>&);
+template<class T> bool operator!=(const complex<T>&, const T&);
+template<class T> bool operator!=(const T&, const complex<T>&);
+
+template<class T, class charT, class traits>
+basic_istream<charT, traits>&
+operator>>(basic_istream<charT, traits>&, complex<T>&);
+
+template<class T, class charT, class traits>
+basic_ostream<charT, traits>&
+operator<<(basic_ostream<charT, traits>&, const complex<T>&);

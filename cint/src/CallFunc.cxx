@@ -229,6 +229,41 @@ void G__CallFunc::SetArg(double d)
   para.para[para.paran].typenum = -1;
   ++para.paran; // Increment number of argument
 }
+#ifdef G__NATIVELONGLONG
+///////////////////////////////////////////////////////////////////////////
+void G__CallFunc::SetArg(long long ll)
+{
+  para.para[para.paran].obj.ll = ll;  
+  para.para[para.paran].ref = 0;
+  // Following data shouldn't matter, but set just in case
+  para.para[para.paran].type = 'n';
+  para.para[para.paran].tagnum = -1;
+  para.para[para.paran].typenum = -1;
+  ++para.paran; // Increment number of argument
+}
+///////////////////////////////////////////////////////////////////////////
+void G__CallFunc::SetArg(unsigned long long ull)
+{
+  para.para[para.paran].obj.ull = ull;  
+  para.para[para.paran].ref = 0;
+  // Following data shouldn't matter, but set just in case
+  para.para[para.paran].type = 'm';
+  para.para[para.paran].tagnum = -1;
+  para.para[para.paran].typenum = -1;
+  ++para.paran; // Increment number of argument
+}
+///////////////////////////////////////////////////////////////////////////
+void G__CallFunc::SetArg(long double ld)
+{
+  para.para[para.paran].obj.ld = ld;
+  // Following data shouldn't matter, but set just in case
+  para.para[para.paran].ref = 0 ;
+  para.para[para.paran].type = 'q';
+  para.para[para.paran].tagnum = -1;
+  para.para[para.paran].typenum = -1;
+  ++para.paran; // Increment number of argument
+}
+#endif
 #ifndef G__FONS51
 ///////////////////////////////////////////////////////////////////////////
 void G__CallFunc::SetArgs(const char* args)
@@ -385,7 +420,16 @@ void G__CallFunc::Exec(void *pobject)
   G__CurrentCall(G__SETMEMFUNCENV, method.ifunc(), method.Index());
 #endif
 #ifdef G__ASM_WHOLEFUNC
-  if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
+  if(pfunc) {
+#ifndef G__OLDIMPLEMENTATION2205
+    if(pfunc == G__DLL_direct_globalfunc) 
+      ret = (*pfunc)(&result,(char*)method.ifunc(),&para,method.Index());
+    else 
+      ret = (*pfunc)(&result,(char*)bytecode,&para,0);
+#else
+    ret = (*pfunc)(&result,(char*)bytecode,&para,0);
+#endif
+  }
 #else
   if(pfunc) ret = (*pfunc)(&result,(char*)NULL,&para,0);
 #endif
@@ -420,7 +464,16 @@ long G__CallFunc::ExecInt(void *pobject)
   G__CurrentCall(G__SETMEMFUNCENV, method.ifunc(), method.Index());
 #endif
 #ifdef G__ASM_WHOLEFUNC
-  if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
+  if(pfunc) {
+#ifndef G__OLDIMPLEMENTATION2205
+    if(pfunc == G__DLL_direct_globalfunc) 
+      ret = (*pfunc)(&result,(char*)method.ifunc(),&para,method.Index());
+    else 
+      ret = (*pfunc)(&result,(char*)bytecode,&para,0);
+#else
+    ret = (*pfunc)(&result,(char*)bytecode,&para,0);
+#endif
+  }
 #else
   if(pfunc) ret = (*pfunc)(&result,(char*)NULL,&para,0);
 #endif
@@ -453,7 +506,16 @@ double G__CallFunc::ExecDouble(void *pobject)
   G__CurrentCall(G__SETMEMFUNCENV, method.ifunc(), method.Index());
 #endif
 #ifdef G__ASM_WHOLEFUNC
-  if(pfunc) ret = (*pfunc)(&result,(char*)bytecode,&para,0);
+  if(pfunc) {
+#ifndef G__OLDIMPLEMENTATION2205
+    if(pfunc == G__DLL_direct_globalfunc) 
+      ret = (*pfunc)(&result,(char*)method.ifunc(),&para,method.Index());
+    else 
+      ret = (*pfunc)(&result,(char*)bytecode,&para,0);
+#else
+    ret = (*pfunc)(&result,(char*)bytecode,&para,0);
+#endif
+  }
 #else
   if(pfunc) ret = (*pfunc)(&result,(char*)NULL,&para,0);
 #endif

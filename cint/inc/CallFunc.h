@@ -65,6 +65,11 @@ G__CallFunc {
   void ResetArg() { para.paran=0; }
   void SetArg(long l) ;
   void SetArg(double d) ;
+#ifdef G__NATIVELONGLONG
+  void SetArg(long long ll);
+  void SetArg(unsigned long long ull);
+  void SetArg(long double ld);
+#endif
   // end old interface
 
   void Exec(void *pobject) ;

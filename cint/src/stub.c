@@ -571,6 +571,24 @@ struct G__dictposition *dictpos;
 #endif
   }
 
+#ifndef G__OLDIMPLEMENTATION2220
+  if(dictpos->ifunc) {
+    struct G__ifunc_table *ifunc = dictpos->ifunc;
+    while(ifunc) {
+      if(ifunc==dictpos->ifunc) ifn = dictpos->ifn;
+      else ifn = 0;
+      while(ifn<ifunc->allifunc) {
+	switch(ifunc->globalcomp[ifn]) {
+	case G__CPPLINK: ifunc->globalcomp[ifn]=G__CPPSTUB; break;
+	case G__CLINK:   ifunc->globalcomp[ifn]=G__CSTUB; break;
+	default: break;
+	}
+	++ifn;
+      }
+      ifunc = ifunc->next;
+    }
+  }
+#else
   while(dictpos->ifunc) {
     for(ifn=dictpos->ifn;ifn<dictpos->ifunc->allifunc;ifn++) {
       switch(dictpos->ifunc->globalcomp[ifn]) {
@@ -581,6 +599,7 @@ struct G__dictposition *dictpos;
     }
     dictpos->ifunc=dictpos->ifunc->next;
   }
+#endif
 }
 
 

@@ -88,6 +88,7 @@ G__TypeInfo : public G__ClassInfo  {
     buf.isconst=isconst;
     buf.obj.reftype.reftype = reftype;
     buf.obj.i = 1;
+    buf.ref = 0;
     return(buf);
   }
  protected:

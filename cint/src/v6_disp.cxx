@@ -23,6 +23,178 @@
 
 int G__browsing=1; /* used in disp.c and intrpt.c */
 
+ 
+#ifndef G__OLDIMPLEMENTATION2192
+#ifndef G__OLDIMPLEMENTATION1878
+#ifndef __CINT__
+/**************************************************************************
+* G__strtoll, G__strtoull
+**************************************************************************/
+#include <ctype.h>
+#include <errno.h>
+
+#ifndef ULONG_LONG_MAX
+/*#define       ULONG_LONG_MAX  ((G__uint64)(~0LL))*/
+#define       ULONG_LONG_MAX  (~((G__uint64)0))
+#endif
+
+#ifndef LONG_LONG_MAX
+#define       LONG_LONG_MAX   ((G__int64)(ULONG_LONG_MAX >> 1))
+#endif
+
+#ifndef LONG_LONG_MIN
+#define       LONG_LONG_MIN   ((G__int64)(~LONG_LONG_MAX))
+#endif
+
+
+/*
+ * Convert a string to a long long integer.
+ *
+ * Ignores `locale' stuff.  Assumes that the upper and lower case
+ * alphabets and digits are each contiguous.
+ */
+G__int64 G__expr_strtoll(const char *nptr,char **endptr, register int base) {
+   register const char *s = nptr;
+   register G__uint64 acc;
+   register int c;
+   register G__uint64 cutoff;
+   register int neg = 0, any, cutlim;
+
+   /*
+    * Skip white space and pick up leading +/- sign if any.
+    * If base is 0, allow 0x for hex and 0 for octal, else
+    * assume decimal; if base is already 16, allow 0x.
+    */
+   do {
+      c = *s++;
+   }
+   while (isspace(c));
+   if (c == '-') {
+      neg = 1;
+      c = *s++;
+   } else if (c == '+')
+      c = *s++;
+   if ((base == 0 || base == 16) && c == '0' && (*s == 'x' || *s == 'X')) {
+      c = s[1];
+      s += 2;
+      base = 16;
+   }
+   if (base == 0)
+      base = c == '0' ? 8 : 10;
+
+   /*
+    * Compute the cutoff value between legal numbers and illegal
+    * numbers.  That is the largest legal value, divided by the
+    * base.  An input number that is greater than this value, if
+    * followed by a legal input character, is too big.  One that
+    * is equal to this value may be valid or not; the limit
+    * between valid and invalid numbers is then based on the last
+    * digit.  For instance, if the range for long longs is
+    * [-2147483648..2147483647] and the input base is 10,
+    * cutoff will be set to 214748364 and cutlim to either
+    * 7 (neg==0) or 8 (neg==1), meaning that if we have accumulated
+    * a value > 214748364, or equal but the next digit is > 7 (or 8),
+    * the number is too big, and we will return a range error.
+    *
+    * Set any if any `digits' consumed; make it negative to indicate
+    * overflow.
+    */
+   cutoff = neg ? -(G__uint64) LONG_LONG_MIN : LONG_LONG_MAX;
+   cutlim = cutoff % (G__uint64) base;
+   cutoff /= (G__uint64) base;
+   for (acc = 0, any = 0;; c = *s++) {
+      if (isdigit(c))
+         c -= '0';
+      else if (isalpha(c))
+         c -= isupper(c) ? 'A' - 10 : 'a' - 10;
+      else
+         break;
+      if (c >= base)
+         break;
+      if (any<0 || acc>cutoff || (acc==cutoff && c>cutlim) )
+         any = -1;
+      else {
+         any = 1;
+         acc *= base;
+         acc += c;
+      }
+   }
+   if (any < 0) {
+      acc = neg ? LONG_LONG_MIN : LONG_LONG_MAX;
+      errno = ERANGE;
+   } else if (neg)
+      acc = -acc;
+   if (endptr != 0)
+      *endptr = (char *) (any ? s - 1 : nptr);
+   return (acc);
+}
+
+/*
+ * Convert a string to an unsigned long integer.
+ *
+ * Ignores `locale' stuff.  Assumes that the upper and lower case
+ * alphabets and digits are each contiguous.
+ */
+G__uint64 G__expr_strtoull(const char *nptr, char **endptr, register int base) {
+   register const char *s = nptr;
+   register G__uint64 acc;
+   register int c;
+   register G__uint64 cutoff;
+   register int neg = 0, any, cutlim;
+
+   /*
+    * See strtoll for comments as to the logic used.
+    */
+   do {
+      c = *s++;
+   }
+   while (isspace(c));
+   if (c == '-') {
+      neg = 1;
+      c = *s++;
+   } else if (c == '+')
+      c = *s++;
+   if ((base == 0 || base == 16) && c == '0' && (*s == 'x' || *s == 'X')) {
+      c = s[1];
+      s += 2;
+      base = 16;
+   }
+   if (base == 0)
+      base = c == '0' ? 8 : 10;
+   cutoff =
+       (G__uint64) ULONG_LONG_MAX / (G__uint64) base;
+   cutlim =
+       (G__uint64) ULONG_LONG_MAX % (G__uint64) base;
+   for (acc = 0, any = 0;; c = *s++) {
+      if (isdigit(c))
+         c -= '0';
+      else if (isalpha(c))
+         c -= isupper(c) ? 'A' - 10 : 'a' - 10;
+      else
+         break;
+      if (c >= base)
+         break;
+      if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
+         any = -1;
+      else {
+         any = 1;
+         acc *= base;
+         acc += c;
+      }
+   }
+   if (any < 0) {
+      acc = ULONG_LONG_MAX;
+      errno = ERANGE;
+   } else if (neg)
+      acc = -acc;
+   if (endptr != 0)
+      *endptr = (char *) (any ? s - 1 : nptr);
+   return (acc);
+}
+#endif /* __CINT__ */
+#endif /* 1878 */
+#endif /* 2192 */
+
 #ifndef G__OLDIMPLEMENTATION713
 /***********************************************************************
 * G__redirected_on()
@@ -160,6 +332,17 @@ char* msg;
   }
 }
 #endif /* ON640 */
+
+#ifndef G__OLDIMPLEMENTATION2221
+/***********************************************************************
+* void G__disp_purevirtualfunc
+***********************************************************************/
+void G__display_purevirtualfunc(tagnum)
+int tagnum;
+{
+  /* to be implemented */
+}
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1711
 /***********************************************************************
@@ -1034,7 +1217,13 @@ int startin;
       sprintf(msg,"%-15s     " ,"(compiled)");
     if(G__more(fout,msg)) return(1);
 #endif
-    if('Q'==G__newtype.type[i]) {
+    if(
+#ifndef G__OLDIMPLEMENTATION2191
+       '1'==G__newtype.type[i]
+#else
+       'Q'==G__newtype.type[i]
+#endif
+       ) {
       /* pointer to statuc function */
       sprintf(msg,"typedef void* %s",G__newtype.name[i]); 
       if(G__more(fout,msg)) return(1);
@@ -1930,6 +2119,12 @@ long offset;
           sprintf(msg,"[%d]",var->varlabel[imon1][ixxx+1]);
 	  if(G__more(fout,msg)) return(1);
         }
+#ifndef G__OLDIMPLEMENTATION2217
+	else if(var->varlabel[imon1][1]==INT_MAX) {
+          strcpy(msg,"[]");
+	  if(G__more(fout,msg)) return(1);
+	}
+#endif
         else {
           sprintf(msg,"[%d]"
                   ,(var->varlabel[imon1][1]+1)/var->varlabel[imon1][0]);
@@ -1959,7 +2154,11 @@ long offset;
 	  if(G__more(fout,msg)) return(1);
 	  break;
 #endif
+#ifndef G__OLDIMPLEMENTATION2191
+	case 'j': break;
+#else
 	case 'm': break;
+#endif
 	case 'p':
 	case 'o': 
 	  sprintf(msg,"=%d",*(int*)addr); 
@@ -2042,6 +2241,20 @@ long offset;
 #else
 	  sprintf(msg,"=%d",(*(unsigned char*)addr)?1:0); 
 #endif
+	  if(G__more(fout,msg)) return(1);
+	  break;
+#endif
+#ifndef G__OLDIMPLEMENTATION2189
+	case 'n': /* long long */
+	  sprintf(msg,"=%lld",(*(G__int64*)addr)); 
+	  if(G__more(fout,msg)) return(1);
+	  break;
+	case 'm': /* unsigned long long */
+	  sprintf(msg,"=%llu",(*(G__uint64*)addr)); 
+	  if(G__more(fout,msg)) return(1);
+	  break;
+	case 'q': /* long double */
+	  sprintf(msg,"=%Lg",(*(long double*)addr)); 
 	  if(G__more(fout,msg)) return(1);
 	  break;
 #endif
@@ -2174,7 +2387,7 @@ char *msg;
 **************************************************************************/
 void* G__get_errmsgcallback()
 {
-  return(G__ErrMsgCallback);
+  return((void*)G__ErrMsgCallback);
 }
 #endif
 

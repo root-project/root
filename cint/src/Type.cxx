@@ -8,7 +8,7 @@
  *  Extended Run Time Type Identification API
  ************************************************************************
  * Author                  Masaharu Goto 
- * Copyright(c) 1995~1999  Masaharu Goto 
+ * Copyright(c) 1995~2005  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -23,11 +23,11 @@
 #include "common.h"
 
 #ifndef G__OLDIMPLEMENTATION1586
-/* This length should match or exceed the length in G__type2string */
+// This length should match or exceed the length in G__type2string
 #ifndef G__OLDIMPLEMENTATION711
-  static char G__buf[G__LONGLINE];
+static char G__buf[G__LONGLINE];
 #else
-  static char G__buf[G__MAXNAME*2];
+static char G__buf[G__MAXNAME*2];
 #endif
 #endif
 

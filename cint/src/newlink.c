@@ -18,7 +18,7 @@
  * purpose.  It is provided "as is" without express or implied warranty.
  ************************************************************************/
 
-/*#define G__OLDIMPLEMENTATION2047*/
+#define G__OLDIMPLEMENTATION2047
 #define G__OLDIMPLEMENTATION2044 /* Problem with t980.cxx */
 
 
@@ -355,7 +355,11 @@ static void G__fileerror(fname)
 char* fname;
 {
   char *buf = malloc(strlen(fname)+80);
+#ifndef G__OLDIMPLEMENTATION2218
+  sprintf(buf,"Error opening %s",fname);
+#else
   sprintf(buf,"Error opening %s\n",fname);
+#endif
   perror(buf);
   exit(2);
 }
@@ -438,6 +442,34 @@ int ifn;
     /****************************************
      * LD_FUNC (C++ compiled)
      ****************************************/
+#ifndef G__OLDIMPLEMENTATION2203
+    if(cppfunc==G__DLL_direct_globalfunc) {
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,
+				  "%3x: LD_FUNC direct global function %s paran=%d\n"
+				  ,G__asm_cp,ifunc->funcname[ifn],libp->paran);
+#endif
+      G__asm_inst[G__asm_cp]=G__LD_FUNC;
+      G__asm_inst[G__asm_cp+1] = ifunc;
+      G__asm_inst[G__asm_cp+2]= ifn;
+      G__asm_inst[G__asm_cp+3]=libp->paran;
+      G__asm_inst[G__asm_cp+4]=(long)cppfunc;
+      G__inc_cp_asm(5,0);
+    }
+    else {
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,
+				  "%3x: LD_FUNC C++ compiled %s paran=%d\n"
+				  ,G__asm_cp,ifunc->funcname[ifn],libp->paran);
+#endif
+      G__asm_inst[G__asm_cp]=G__LD_FUNC;
+      G__asm_inst[G__asm_cp+1] = ifunc->p_tagtable[ifn];
+      G__asm_inst[G__asm_cp+2]= - ifunc->type[ifn];
+      G__asm_inst[G__asm_cp+3]=libp->paran;
+      G__asm_inst[G__asm_cp+4]=(long)cppfunc;
+      G__inc_cp_asm(5,0);
+    }
+#else /* 2203 */
 #ifdef G__ASM_DBG
     if(G__asm_dbg) G__fprinterr(G__serr,
 			   "%3x: LD_FUNC C++ compiled %s paran=%d\n"
@@ -449,6 +481,7 @@ int ifn;
     G__asm_inst[G__asm_cp+3]=libp->paran;
     G__asm_inst[G__asm_cp+4]=(long)cppfunc;
     G__inc_cp_asm(5,0);
+#endif /* 2203 */
   }
 #endif /* of G__ASM */
 
@@ -1767,10 +1800,14 @@ FILE *hfp;
   
   for(i=0;i<G__struct.alltag;i++) {
     if((G__NOLINK > G__struct.globalcomp[i] 
+#ifndef G__OLDIMPLEMENTATION2197
 #ifndef G__OLDIMPLEMENTATION1730
-	|| G__ONLYMETHODLINK==G__struct.globalcomp[i]
+       || G__ONLYMETHODLINK==G__struct.globalcomp[i]
 #endif
-   ) && 
+	) && 
+#else
+       ) &&
+#endif
        (
 #ifndef G__OLDIMPLEMENTATION1677
 	(G__struct.hash[i] || 0==G__struct.name[i][0])
@@ -3159,7 +3196,13 @@ struct G__ifunc_table *ifunc;
   if(G__CPPLINK!=G__globalcomp) return;
   for(k=0;k<ifunc->para_nu[ifn];k++) {
     /*DEBUG*/ printf("%s %d\n",ifunc->funcname[ifn],k);
-    if('Q'==ifunc->para_type[ifn][k]) {
+    if(
+#ifndef G__OLDIMPLEMENTATION2191
+       '1'==ifunc->para_type[ifn][k]
+#else
+       'Q'==ifunc->para_type[ifn][k]
+#endif
+       ) {
       strcpy(buf,G__type2string(ifunc->para_type[ifn][k],
 				ifunc->para_p_tagtable[ifn][k],
 				ifunc->para_p_typetable[ifn][k],0,
@@ -4904,6 +4947,28 @@ char *endoffunc;
     fprintf(fp,"      G__letint(result7,%d,(long)",type);
     sprintf(endoffunc,");");
     return(0);
+#ifndef G__OLDIMPLEMENTATION2189
+  case 'n':
+#ifndef G__OLDIMPLEMENTATION2215
+    fprintf(fp,"      G__letLonglong(result7,%d,(G__int64)",type);
+#else
+    fprintf(fp,"      G__letLonglong(result7,%d,(long long)",type);
+#endif
+    sprintf(endoffunc,");");
+    return(0);
+  case 'm':
+#ifndef G__OLDIMPLEMENTATION2215
+    fprintf(fp,"      G__letULonglong(result7,%d,(G__uint64)",type);
+#else
+    fprintf(fp,"      G__letULonglong(result7,%d,(unsigned long long)",type);
+#endif
+    sprintf(endoffunc,");");
+    return(0);
+  case 'q':
+    fprintf(fp,"      G__letLongdouble(result7,%d,(long double)",type);
+    sprintf(endoffunc,");");
+    return(0);
+#endif
   case 'f':
   case 'd':
     fprintf(fp,"      G__letdouble(result7,%d,(double)",type);
@@ -5092,7 +5157,13 @@ int k;
   }
 #endif
 
-  if('Q'!=type && 'a'!=type) {
+  if(
+#ifndef G__OLDIMPLEMENTATION2191
+     '1'!=type && 'a'!=type
+#else
+     'Q'!=type && 'a'!=type
+#endif
+     ) {
     switch(reftype) {
 #ifndef G__OLDIMPLEMENTATION1112
     case G__PARANORMAL:
@@ -5150,6 +5221,20 @@ int k;
 	  fprintf(fp,"*(%s*)G__ULongref(&libp->para[%d])"
 		  ,G__type2string(type,tagnum,typenum,0,0),k);
 	  break;
+#ifndef G__OLDIMPLEMENTATION2189
+        case 'n':
+	  fprintf(fp,"*(%s*)G__Longlongref(&libp->para[%d])"
+		  ,G__type2string(type,tagnum,typenum,0,0),k);
+	  break;
+        case 'm':
+	  fprintf(fp,"*(%s*)G__ULonglongref(&libp->para[%d])"
+		  ,G__type2string(type,tagnum,typenum,0,0),k);
+	  break;
+        case 'q':
+	  fprintf(fp,"*(%s*)G__Longdoubleref(&libp->para[%d])"
+		  ,G__type2string(type,tagnum,typenum,0,0),k);
+	  break;
+#endif
 #if !defined(G__OLDIMPLEMENTATION2047)
         case 'g':
 	  fprintf(fp,"*(%s*)G__Boolref(&libp->para[%d])"
@@ -5206,6 +5291,20 @@ int k;
 	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mulong(libp->para[%d])"
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
 	  break;
+#ifndef G__OLDIMPLEMENTATION2189
+        case 'n':
+	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mlonglong(libp->para[%d])"
+		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
+	  break;
+        case 'm':
+	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mulonglong(libp->para[%d])"
+		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
+	  break;
+        case 'q':
+	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:G__Mlongdouble(libp->para[%d])"
+		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k ,k);
+	  break;
+#endif
 #ifndef G__OLDIMPLEMENTATION1604
         case 'g':
 #ifdef G__BOOL4BYTE
@@ -5350,7 +5449,11 @@ int k;
   }
 
   switch(type) {
+#ifndef G__OLDIMPLEMENTATION2191
+  case '1': /* Pointer to function */
+#else
   case 'Q': /* Pointer to function */
+#endif
 #ifndef G__OLDIMPLEMENTATION1235
 #ifdef G__CPPIF_EXTERNC
     fprintf(fp,"(%s)G__int(libp->para[%d])"
@@ -5381,6 +5484,20 @@ int k;
     fprintf(fp,"*(%s *)G__int(libp->para[%d])"
 	      ,G__type2string(type,tagnum,typenum,0,isconst),k);
     break;
+#ifndef G__OLDIMPLEMENTATION2189
+  case 'n':
+    fprintf(fp,"(%s)G__Longlong(libp->para[%d])"
+	      ,G__type2string(type,tagnum,typenum,reftype,isconst),k);
+    break;
+  case 'm':
+    fprintf(fp,"(%s)G__ULonglong(libp->para[%d])"
+	      ,G__type2string(type,tagnum,typenum,reftype,isconst),k);
+    break;
+  case 'q':
+    fprintf(fp,"(%s)G__Longdouble(libp->para[%d])"
+	      ,G__type2string(type,tagnum,typenum,reftype,isconst),k);
+    break;
+#endif
   case 'f':
   case 'd':
     fprintf(fp,"(%s)G__double(libp->para[%d])"
@@ -6249,6 +6366,11 @@ FILE *fp;
 	    fprintf(fp,"%d,",var->access[j]);
 	    fprintf(fp,"\"%s"
 		    ,var->varnamebuf[j]);
+#ifndef G__OLDIMPLEMENTATION2217
+	    if(INT_MAX==var->varlabel[j][1] /* && 1== var->varlabel[j][0] */){
+	      fprintf(fp,"[]");
+	    } else
+#endif
 	    if(var->varlabel[j][1])
 	      fprintf(fp,"[%d]",
 		      (var->varlabel[j][1]+1)/var->varlabel[j][0]);
@@ -7040,7 +7162,11 @@ FILE *fp;
 	  (0==var->p[j] && G__COMPILEDGLOBAL==var->statictype[j] &&
 	   INT_MAX == var->varlabel[j][1])) && /* extern type v[]; */
 	 G__NOLINK>var->globalcomp[j] &&   /* with -c-1 or -c-2 option */
+#ifndef G__OLDIMPLEMENTATION2191
+	 'j'!=tolower(var->type[j]) /* questionable */
+#else
 	 'm'!=tolower(var->type[j])
+#endif
 	 && var->varnamebuf[j][0]
 	 ) {
 
@@ -7088,8 +7214,13 @@ FILE *fp;
 	fprintf(fp,"%d,",var->access[j]);
 	fprintf(fp,"\"%s"
 		,var->varnamebuf[j]);
-	if(INT_MAX == var->varlabel[j][1] && 1== var->varlabel[j][0])
-	  fprintf(fp,"[%d]",INT_MAX);
+#ifndef G__OLDIMPLEMENTATION2217
+	if(INT_MAX==var->varlabel[j][1] /* && 1== var->varlabel[j][0] */ ) 
+	  fprintf(fp,"[]");
+#else
+	if(INT_MAX == var->varlabel[j][1] && 1== var->varlabel[j][0]) 
+	  fprintf(fp,"[%ld]",INT_MAX);
+#endif
 	else if(var->varlabel[j][1])
 	  fprintf(fp,"[%d]",
 		  (var->varlabel[j][1]+1)/var->varlabel[j][0]);
@@ -10580,7 +10711,6 @@ G__value *buf;
   return(&buf->obj.uch);
 }
 
-#ifndef G__OLDIMPLEMENTATION2047
 /**************************************************************************
 * G__Boolref()
 **************************************************************************/
@@ -10594,7 +10724,7 @@ G__value *buf;
     buf->obj.i = (int)buf->obj.d;
   else 
     buf->obj.i = (int)buf->obj.i; 
-  return(&buf->obj.i);
+  return((unsigned char*)&buf->obj.i);
 #else
   if('g'==buf->type && buf->ref) 
     return((unsigned char*)buf->ref);
@@ -10605,7 +10735,6 @@ G__value *buf;
   return(&buf->obj.uch);
 #endif
 }
-#endif
 
 /**************************************************************************
 * G__UShortref()
@@ -10683,6 +10812,73 @@ G__value *buf;
   return(&buf->obj.d);
 }
 /* #endif   ON1167 */
+
+#ifndef G__OLDIMPLEMENTATION2189
+/**************************************************************************
+* G__Longlongref()
+**************************************************************************/
+G__int64* G__Longlongref(buf)
+G__value *buf;
+{
+  if('n'==buf->type && buf->ref) 
+    return((G__int64*)buf->ref);
+  else if('m'==buf->type && buf->ref) 
+    buf->obj.ll = (G__int64)buf->obj.ull;
+  else if('d'==buf->type || 'f'==buf->type) 
+    buf->obj.ll = (G__int64)buf->obj.d;
+  else if('n'==buf->type) 
+    buf->obj.ll = (G__int64)buf->obj.ll;
+  else if('m'==buf->type) 
+    buf->obj.ll = (G__int64)buf->obj.ull;
+  else
+    buf->obj.ll = (G__int64)buf->obj.i;
+  return(&buf->obj.ll);
+}
+/**************************************************************************
+* G__ULonglongref()
+**************************************************************************/
+G__uint64* G__ULonglongref(buf)
+G__value *buf;
+{
+  if('m'==buf->type && buf->ref) 
+    return((G__uint64*)buf->ref);
+  else if('n'==buf->type && buf->ref) 
+    buf->obj.ull = (G__uint64)buf->obj.ll;
+  else if('d'==buf->type || 'f'==buf->type) 
+    buf->obj.ull = (G__uint64)buf->obj.d;
+  else if('n'==buf->type) 
+    buf->obj.ull = (G__int64)buf->obj.ll;
+  else if('m'==buf->type) 
+    buf->obj.ull = (G__int64)buf->obj.ull;
+  else 
+    buf->obj.ull = (G__uint64)buf->obj.i;
+  return(&buf->obj.ull);
+}
+/**************************************************************************
+* G__Longdoubleref()
+**************************************************************************/
+long double* G__Longdoubleref(buf)
+G__value *buf;
+{
+  if('q'==buf->type && buf->ref) 
+    return((long double*)buf->ref);
+  else if('n'==buf->type)
+    buf->obj.ld = (long double)buf->obj.ll;
+  else if('m'==buf->type) {
+#ifdef G__WIN32
+    buf->obj.ld = (long double)buf->obj.ll;
+#else
+    buf->obj.ld = (long double)buf->obj.ull;
+#endif
+  }
+  else if('d'==buf->type || 'f'==buf->type) 
+    buf->obj.ld = (long double)buf->obj.d;
+  else 
+    buf->obj.ld = (long double)buf->obj.i;
+  return(&buf->obj.ld);
+}
+
+#endif
 
 
 #ifndef G__PHILIPPE30

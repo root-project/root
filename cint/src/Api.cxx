@@ -402,6 +402,7 @@ static int G__DemangleClassname(char *buf,const char *orig)
 #ifdef G__STD_EXCEPTION
 #include <exception>
 #include <typeinfo>
+#include <string>
 #if !defined(__hpux) || __HP_aCC >= 53000
 using namespace std;
 #endif
@@ -511,6 +512,14 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
     G__no_exec = 1;
 #endif
   }
+#ifndef G__OLDIMPLEMENTATION2192
+  catch(string x) {
+    G__fprinterr(G__serr,"Exception: %s\n",x.c_str());
+    G__genericerror((char*)NULL);
+    //G__return = G__RETURN_TRY;
+    //G__no_exec = 1;
+  }
+#endif
 #endif /* 1791 */
   catch(...) {
 #ifndef G__OLDIMPLEMENTATION1947
