@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.rdl,v 1.21 2003/04/09 01:33:57 wverkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.22 2004/04/05 22:43:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -86,6 +86,7 @@ public:
 protected:
 
   // Constant term optimizer interface
+  friend class RooAbsReal ;
   friend class RooAbsOptGoodnessOfFit ;
 
   virtual RooAbsData* cacheClone(const RooArgSet* newCacheVars, const char* newName=0) = 0 ;

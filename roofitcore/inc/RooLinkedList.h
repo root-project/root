@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooLinkedList.rdl,v 1.11 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id: RooLinkedList.rdl,v 1.12 2004/06/22 05:09:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,8 +19,8 @@
 #include "TObject.h"
 #include "RooFitCore/RooLinkedListElem.hh"
 #include "RooFitCore/RooHashTable.hh"
-class TIterator ;
 class RooLinkedListIter ;
+class TIterator ;
 
 class RooLinkedList : public TObject {
 public:
@@ -49,6 +49,7 @@ public:
   TObject* At(Int_t index) const ;
   Bool_t Replace(const TObject* oldArg, const TObject* newArg) ;
   TIterator* MakeIterator(Bool_t dir=kTRUE) const ;
+  RooLinkedListIter iterator(Bool_t dir=kTRUE) const ;
   void Clear(Option_t *o=0) ;
   void Delete(Option_t *o=0) ;
   TObject* find(const char* name) const ;
@@ -70,22 +71,14 @@ protected:
 
   void swapWithNext(RooLinkedListElem* elem) ;
 
-  RooLinkedListElem* findLink(const TObject* arg) const {    
-    RooLinkedListElem* ptr = _first;
-    while(ptr) {
-      if (ptr->_arg == arg) {
-	return ptr ;
-      }
-      ptr = ptr->_next ;
-    }
-    return 0 ;
-  }
+  RooLinkedListElem* findLink(const TObject* arg) const ;
     
+  Int_t _hashThresh ;          //  Size threshold for hashing
   Int_t _size ;                //  Current size of list
   RooLinkedListElem*  _first ; //! Link to first element of list
   RooLinkedListElem*  _last ;  //! Link to last element of list
   RooHashTable*       _htableName ; //! Hash table by name 
-  RooHashTable*       _htablePtr ; //! Hash table pointer
+  RooHashTable*       _htableLink ; //! Hash table by link pointer
 
   ClassDef(RooLinkedList,1) // TList with extra support for Option_t associations
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.61 2004/04/02 15:47:23 wverkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.62 2004/04/05 22:43:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -203,6 +203,23 @@ protected:
   static RooIntegratorConfig* _defaultIntegratorConfig ;
 
   static Bool_t _cacheCheck ;
+
+  friend class RooDataProjBinding ;
+  friend class RooAbsOptGoodnessOfFit ;
+
+  // Dirty-state and constant term optimization used 
+  // in RooAbsOptGoodnessOfFit and RooDataProjBinding
+  void optimizeDirty(RooAbsData& dataset, const RooArgSet* normSet) ;
+  void doConstOpt(RooAbsData& dataset, const RooArgSet* normSet) ;
+  void undoConstOpt(RooAbsData& dataset, const RooArgSet* normSet) ;  
+
+  Bool_t findCacheableBranches(RooAbsArg* arg, RooAbsData* dset, RooArgSet& cacheList, const RooArgSet* normSet) ;
+  void findUnusedDataVariables(RooAbsData* dset,RooArgSet& pruneList) ;
+  void findRedundantCacheServers(RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList) ;
+  Bool_t allClientsCached(RooAbsArg* var, RooArgSet& cacheList) ;
+  
+
+
 
 private:
 

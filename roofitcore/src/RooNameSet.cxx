@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNameSet.cc,v 1.12 2002/09/05 04:33:44 verkerke Exp $
+ *    File: $Id: RooNameSet.cc,v 1.13 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,6 +19,7 @@
 #include "TObjString.h"
 #include "RooFitCore/RooNameSet.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooArgList.hh"
 
 ClassImp(RooNameSet)
 ;
@@ -64,7 +65,9 @@ void RooNameSet::extendBuffer(Int_t inc)
 
 void RooNameSet::refill(const RooArgSet& argSet) 
 {
-  TIterator* iter = argSet.createIterator() ;
+  RooArgList tmp(argSet) ;
+  tmp.sort() ;
+  TIterator* iter = tmp.createIterator() ;
   RooAbsArg* arg ;
   char *ptr=_nameList ;
   char *end=_nameList+_len-2 ;
@@ -136,6 +139,5 @@ RooNameSet& RooNameSet::operator=(const RooNameSet& other)
 
 
 void RooNameSet::printToStream(ostream &os, PrintOption opt, TString indent) const{
-  os << strlen(_nameList) << endl ;
   os << indent << _nameList << endl ;
 }

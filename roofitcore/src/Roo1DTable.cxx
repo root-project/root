@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: Roo1DTable.cc,v 1.16 2004/02/22 23:45:42 croat Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.17 2004/04/05 22:43:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -88,6 +88,8 @@ void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight)
   // category state. If the current category state
   // matches no table slot name, the table overflow
   // counter is incremented.
+
+  if (weight==0) return ;
 
   _total += weight ;
 

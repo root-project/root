@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistError.cc,v 1.12 2003/10/16 23:26:32 wverkerke Exp $
+ *    File: $Id: RooHistError.cc,v 1.13 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -92,8 +92,8 @@ Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,
     return kTRUE;
   }
 
-  // handle cases when n,m>150 (factorials in BinomialSum will overflow around 170)
-  if (n>150&&m>150) {
+  // handle cases when n,m>100 (factorials in BinomialSum will overflow around 170)
+  if ((n>100&&m>100)) {
     Double_t asym = 1.0*(n-m)/(n+m) ;
     Double_t approxErr = sqrt(4.0*n/(n+m)*(1-n/(n+m))/(n+m)) ;
     asym1 = asym-nSigma*approxErr ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.rdl,v 1.32 2004/03/19 06:09:47 wverkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.33 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,6 +16,7 @@
 #ifndef ROO_PROD_PDF
 #define ROO_PROD_PDF
 
+#include <iostream.h>
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooListProxy.hh"
 #include "RooFitCore/RooLinkedList.hh"
@@ -82,7 +83,8 @@ protected:
   RooAbsReal* processProductTerm(const RooArgSet* nset, const RooArgSet* iset, 
                                  const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet, 
                                  Bool_t& isOwned, Bool_t forceWrap=kFALSE) const ;
-  
+
+  void clearCache() ;  
   mutable RooNormListManager _partListMgr ; // Partial integral list manager
   mutable RooNormListManager _partOwnedListMgr ; // Partial integral list manager for owned components
   mutable RooLinkedList _partNormListCache[10] ; // Cache of normalization listss
@@ -91,7 +93,7 @@ protected:
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 
 
-  virtual void printCompactTreeHook(const char* indent="") ;
+  virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
 
   friend class RooProdGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 

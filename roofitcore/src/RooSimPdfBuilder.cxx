@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimPdfBuilder.cc,v 1.24 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.25 2004/04/05 22:44:13 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -472,13 +472,13 @@ RooArgSet* RooSimPdfBuilder::createProtoBuildConfig()
 {
   // Make RooArgSet of configuration objects
   RooArgSet* buildConfig = new RooArgSet ;
-  buildConfig->addOwned(* new RooStringVar("physModels","List and mapping of physics models to include in build","",1024)) ;
+  buildConfig->addOwned(* new RooStringVar("physModels","List and mapping of physics models to include in build","",4096)) ;
   buildConfig->addOwned(* new RooStringVar("splitCats","List of categories used for splitting","",1024)) ;
 
   TIterator* iter = _protoPdfSet.createIterator() ;
   RooAbsPdf* proto ;
   while (proto=(RooAbsPdf*)iter->Next()) {
-    buildConfig->addOwned(* new RooStringVar(proto->GetName(),proto->GetName(),"",2048)) ;
+    buildConfig->addOwned(* new RooStringVar(proto->GetName(),proto->GetName(),"",4096)) ;
   }
   delete iter ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCIntegrator.cc,v 1.11 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.12 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,7 @@
 #include "RooFitCore/RooMCIntegrator.hh"
 #include "RooFitCore/RooNumber.hh"
 #include "RooFitCore/RooIntegratorConfig.hh"
+#include "RooFitCore/RooAbsArg.hh"
 
 #include <math.h>
 #include <assert.h>
@@ -73,7 +74,8 @@ Double_t RooMCIntegrator::integral(const Double_t* yvec) {
   // high statistics integration.
   _timer.Start(kTRUE);
   vegas(AllStages,_nRefinePerDim*_grid.getDimension(),_nRefineIter);
-  return vegas(ReuseGrid,_nIntegratePerDim*_grid.getDimension(),1);
+  Double_t ret = vegas(ReuseGrid,_nIntegratePerDim*_grid.getDimension(),1);
+  ret ;
 }
 
 Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError) {

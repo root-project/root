@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRefCountList.cc,v 1.2 2002/09/17 06:39:34 verkerke Exp $
+ *    File: $Id: RooRefCountList.cc,v 1.3 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -29,15 +29,22 @@ ClassImp(RooRefCountList)
   ;
 
 
+RooRefCountList::RooRefCountList()
+  : RooLinkedList(17) 
+{ 
+}
+
+
 void RooRefCountList::Add(TObject* obj, Int_t count) 
 {
   // Check if we already have it
-  RooLinkedListElem* link = findLink(obj) ;
-  if (!link) {
+  TObject* listObj = FindObject(obj) ;
+  if (!listObj) {
     // Add to list with reference count 
     RooLinkedList::Add(obj, count) ;
     //cout << "RooRefCountList::AddLast(" << obj << ") adding object" << endl ;
   } else {
+    RooLinkedListElem* link = findLink(obj) ;
     while(count--) link->incRefCount() ;    
     //cout << "RooRefCountList::AddLast(" << obj << ") incremented reference count to " << link->refCount() << endl ;
   }

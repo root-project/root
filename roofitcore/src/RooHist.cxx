@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.cc,v 1.21 2003/04/09 01:33:59 wverkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.22 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -221,9 +221,10 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t bin
   // calculate Binomial errors for this bin
   Double_t ym,yp,dx(0.5*binWidth);
   if(!RooHistError::instance().getBinomialInterval(n1,n2,ym,yp,_nSigma)) {
-    cout << "RooHist::addBin: unable to add bin with " << n1 << "," << n2 << " events" << endl;
+    cout << "RooHist::addAsymmetryBin: unable to calculate binomial error for bin with " << n1 << "," << n2 << " events" << endl;
     return;
   }
+
   Double_t a= (Double_t)(n1-n2)/(n1+n2);
   SetPoint(index,binCenter,a);
   SetPointError(index,dx,dx,(a-ym),(yp-a));

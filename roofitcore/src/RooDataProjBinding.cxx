@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataProjBinding.cc,v 1.9 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooDataProjBinding.cc,v 1.10 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -119,9 +119,7 @@ Double_t RooDataProjBinding::operator()(const Double_t xvector[]) const
 
       Double_t wgt = _data->weight() ;
       if (wgt) {
-	if (i==0) RooAbsPdf::verboseEval(-1) ;
 	result += wgt * _real->getVal(_nset) ;
-	if (i==0) RooAbsPdf::verboseEval(0) ;
 	wgtSum += wgt ;
       }      
     }

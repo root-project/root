@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHashTable.rdl,v 1.7 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooHashTable.rdl,v 1.8 2004/06/22 05:09:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,30 +21,42 @@
 
 class RooAbsArg ;
 class RooLinkedList ;
+class RooLinkedListElem ;
+class RooSetPair ;
+class RooArgSet ;
 
 class RooHashTable : public TObject {
 public:
+
+  enum HashMethod { Pointer=0, Name=1, Intrinsic=2 } ;
+
   // Constructor
-  RooHashTable(Int_t initSize = 17, Bool_t hashByPtr=kFALSE) ;
+  RooHashTable(Int_t initSize = 17, HashMethod hashMethod=Name) ;
   RooHashTable(const RooHashTable& other) ;
 
   // Destructor
   virtual ~RooHashTable() ;
 
-  void add(TObject* arg) ;
-  Bool_t remove(TObject* arg) ;
+  void add(TObject* arg, TObject* hashArg=0) ;
+  Bool_t remove(TObject* arg, TObject* hashArg=0) ;
   TObject* find(const char* name) const ;
   TObject* find(const TObject* arg) const ;
-  Bool_t replace(const TObject* oldArg, const TObject* newArg) ;
+  RooLinkedListElem* findLinkTo(const TObject* arg) const ;
+  RooSetPair* findSetPair(const RooArgSet* set1, const RooArgSet* set2) const ;  
+  Bool_t replace(const TObject* oldArg, const TObject* newArg, const TObject* oldHashArg=0) ;
   Int_t size() const { return _size ; }
   Double_t avgCollisions() const ;
 
 protected:  
   inline ULong_t hash(const TObject* arg) const {
-    return _hashByPtr ? TMath::Hash((void*)(&arg),sizeof(void*)) : arg->Hash() ;
+    switch(_hashMethod) {
+      case Pointer:   return TMath::Hash((void*)(&arg),sizeof(void*)) ;
+      case Name:      return TMath::Hash(arg->GetName()) ;
+      case Intrinsic: return arg->Hash() ;
+    }
   }
 
-  Bool_t _hashByPtr ;
+  HashMethod _hashMethod ;
   Int_t _usedSlots ;
   Int_t _entries ;
   Int_t _size ;

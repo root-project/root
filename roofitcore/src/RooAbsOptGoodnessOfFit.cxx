@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.12 2004/03/31 01:37:39 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.13 2004/04/05 22:43:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -136,7 +136,7 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
     delete projDataDeps ;
   }
 
-  optimizeDirty() ;
+  _pdfClone->optimizeDirty(*_dataClone,_normSet) ;
 }
 
 
@@ -212,13 +212,13 @@ Bool_t RooAbsOptGoodnessOfFit::redirectServersHook(const RooAbsCollection& newSe
 }
 
 
-void RooAbsOptGoodnessOfFit::printCompactTreeHook(const char* indent) 
+void RooAbsOptGoodnessOfFit::printCompactTreeHook(ostream& os, const char* indent) 
 {
-  RooAbsGoodnessOfFit::printCompactTreeHook(indent) ;
+  RooAbsGoodnessOfFit::printCompactTreeHook(os,indent) ;
   if (operMode()!=Slave) return ;
   TString indent2(indent) ;
   indent2 += ">>" ;
-  _pdfClone->printCompactTree(indent2) ;
+  _pdfClone->printCompactTree(os,indent2) ;
 }
 
 
@@ -234,194 +234,26 @@ void RooAbsOptGoodnessOfFit::constOptimize(ConstOpCode opcode)
   switch(opcode) {
   case Activate: 
     cout << "Activate" << endl ;
-    doConstOpt() ;
+    _pdfClone->doConstOpt(*_dataClone,_normSet) ;
     break ;
   case DeActivate:  
     cout << "DeActivate" << endl ;
-    undoConstOpt() ;
+    _pdfClone->undoConstOpt(*_dataClone,_normSet) ;
     break ;
   case ConfigChange: 
     cout << "ConfigChange" << endl ;
-    undoConstOpt() ;
-    doConstOpt() ;
+    _pdfClone->undoConstOpt(*_dataClone,_normSet) ;
+    _pdfClone->doConstOpt(*_dataClone,_normSet) ;
     break ;
   case ValueChange: 
     cout << "ValueChange" << endl ;
-    undoConstOpt() ;
-    doConstOpt() ;
+    _pdfClone->undoConstOpt(*_dataClone,_normSet) ;
+    _pdfClone->doConstOpt(*_dataClone,_normSet) ;
     break ;
   }
 }
 
 
-
-void RooAbsOptGoodnessOfFit::optimizeDirty()
-{
-  _pdfClone->getVal(_normSet) ;
-
-  RooArgSet branchList("branchList") ;
-  _pdfClone->setOperMode(RooAbsArg::ADirty) ;
-  _pdfClone->branchNodeServerList(&branchList) ;
-  TIterator* bIter = branchList.createIterator() ;
-  RooAbsArg* branch ;
-  while(branch=(RooAbsArg*)bIter->Next()) {
-    if (branch->dependsOn(*_dataClone->get())) {
-
-      RooArgSet* bdep = branch->getDependents(_dataClone->get()) ;
-      if (bdep->getSize()>0) {
-	branch->setOperMode(RooAbsArg::ADirty) ;
-      } else {
-	//cout << "using lazy evaluation for node " << branch->GetName() << endl ;
-      }
-      delete bdep ;
-    }
-  }
-  delete bIter ;
-
-//   cout << "   disabling data dirty state prop" << endl ;
-  _dataClone->setDirtyProp(kFALSE) ;
-}
-
-
-
-void RooAbsOptGoodnessOfFit::doConstOpt()
-{
-  // optimizeDirty must have been run first!
-
-  // Find cachable branches and cache them with the data set
-  RooArgSet cacheList ;
-  findCacheableBranches(_pdfClone,_dataClone,cacheList) ;
-  _dataClone->cacheArgs(cacheList,_normSet) ;  
-
-  // Find unused data variables after caching and disable them
-  RooArgSet pruneList("pruneList") ;
-  findUnusedDataVariables(_pdfClone,_dataClone,pruneList) ;
-  findRedundantCacheServers(_pdfClone,_dataClone,cacheList,pruneList) ;
-
-  if (pruneList.getSize()!=0) {
-    // Deactivate tree branches here
-    cout << "RooAbsOptGoodnessOfFit::optimize: The following unused tree branches are deactivated: " ; 
-    pruneList.Print("1") ;
-    _dataClone->setArgStatus(pruneList,kFALSE) ;
-  }
-
-  TIterator* cIter = cacheList.createIterator() ;
-  RooAbsArg *cacheArg ;
-  while(cacheArg=(RooAbsArg*)cIter->Next()){
-    cacheArg->setOperMode(RooAbsArg::AClean) ;
-    //cout << "setting cached branch " << cacheArg->GetName() << " to AClean" << endl ;
-  }
-  delete cIter ;
-}
-
-
-void RooAbsOptGoodnessOfFit::undoConstOpt()
-{
-  // Delete the cache
-  _dataClone->resetCache() ;
-
-  // Reactivate all tree branches
-  _dataClone->setArgStatus(*_dataClone->get(),kTRUE) ;
-  
-  // Reset all nodes to ADirty 
-  optimizeDirty() ;
-}
-
-
-
-
-
-Bool_t RooAbsOptGoodnessOfFit::findCacheableBranches(RooAbsArg* arg, RooAbsData* dset, 
-					    RooArgSet& cacheList) 
-{
-  // Find branch PDFs with all-constant parameters, and add them
-  // to the dataset cache list
-
-  // Evaluate function with current normalization in case servers
-  // are created on the fly
-  RooAbsReal* realArg = dynamic_cast<RooAbsReal*>(arg) ;
-  if (realArg) {
-    realArg->getVal(_normSet) ;
-  }
-
-  TIterator* sIter = arg->serverIterator() ;
-  RooAbsArg* server ;
-
-  while(server=(RooAbsArg*)sIter->Next()) {
-    if (server->isDerived()) {
-      // Check if this branch node is eligible for precalculation
-      Bool_t canOpt(kTRUE) ;
-
-      RooArgSet* branchParamList = server->getParameters(dset) ;
-      TIterator* pIter = branchParamList->createIterator() ;
-      RooAbsArg* param ;
-      while(param = (RooAbsArg*)pIter->Next()) {
-	if (!param->isConstant()) canOpt=kFALSE ;
-      }
-      delete pIter ;
-      delete branchParamList ;
-
-      if (canOpt) {
-	cout << "RooAbsOptGoodnessOfFit::optimize: component " 
-	     << server->GetName() << " will be cached" << endl ;
-
-	// Add to cache list
-	cacheList.add(*server) ;
-
-      } else {
-	// Recurse if we cannot optimize at this level
-	findCacheableBranches(server,dset,cacheList) ;
-      }
-    }
-  }
-  delete sIter ;
-  return kFALSE ;
-}
-
-
-
-void RooAbsOptGoodnessOfFit::findUnusedDataVariables(RooAbsPdf* pdf,RooAbsData* dset,RooArgSet& pruneList) 
-{
-  TIterator* vIter = dset->get()->createIterator() ;
-  RooAbsArg* arg ;
-  while (arg=(RooAbsArg*) vIter->Next()) {
-    if (!pdf->dependsOn(*arg)) pruneList.add(*arg) ;
-  }
-  delete vIter ;
-}
-
-
-void RooAbsOptGoodnessOfFit::findRedundantCacheServers(RooAbsPdf* pdf,RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList) 
-{
-  TIterator* vIter = dset->get()->createIterator() ;
-  RooAbsArg *var ;
-  while (var=(RooAbsArg*) vIter->Next()) {
-    if (allClientsCached(var,cacheList)) {
-      pruneList.add(*var) ;
-    }
-  }
-  delete vIter ;
-}
-
-
-
-Bool_t RooAbsOptGoodnessOfFit::allClientsCached(RooAbsArg* var, RooArgSet& cacheList)
-{
-  Bool_t ret(kTRUE), anyClient(kFALSE) ;
-
-  TIterator* cIter = var->valueClientIterator() ;    
-  RooAbsArg* client ;
-  while (client=(RooAbsArg*) cIter->Next()) {
-    anyClient = kTRUE ;
-    if (!cacheList.find(client->GetName())) {
-      // If client is not cached recurse
-      ret &= allClientsCached(client,cacheList) ;
-    }
-  }
-  delete cIter ;
-
-  return anyClient?ret:kFALSE ;
-}
 
 
 

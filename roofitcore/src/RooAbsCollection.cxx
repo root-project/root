@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.cc,v 1.25 2004/04/05 22:43:55 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.26 2004/06/03 23:17:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -31,19 +31,20 @@
 #include "RooFitCore/RooStringVar.hh"
 #include "RooFitCore/RooTrace.hh"
 #include "RooFitCore/RooArgList.hh"
+#include "RooFitCore/RooLinkedListIter.hh"
 
 ClassImp(RooAbsCollection)
   ;
 
 RooAbsCollection::RooAbsCollection() :
-  _ownCont(kFALSE), _name()
+  _ownCont(kFALSE), _name(), _list(43)
 {
   // Default constructor
   RooTrace::create(this) ;
 }
 
 RooAbsCollection::RooAbsCollection(const char *name) :
-  _ownCont(kFALSE), _name(name)
+  _ownCont(kFALSE), _name(name), _list(43)
 {
   // Empty collection constructor
   RooTrace::create(this) ;
@@ -132,8 +133,8 @@ void RooAbsCollection::safeDeleteList()
 
 
 
-// Double_t cpu4(0) ;
-// Int_t nclone(0) ;
+//  Double_t cpu4(0) ;
+//  Int_t nclone(0) ;
 
 RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
 {
@@ -157,9 +158,8 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
   RooAbsCollection* snapshot = (RooAbsCollection*) create(snapName.Data()) ;
   snapshot->setHashTableSize(1000) ;
 
-//   cout << "snapshot: copying original contents" << endl ;
-//   TStopwatch timer ;
-//   timer.Start() ;
+//    TStopwatch timer ;
+//    timer.Start() ;
   // Copy contents
   TIterator *iterator= createIterator();
   RooAbsArg *orig = 0;
@@ -172,11 +172,11 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
   TIterator* vIter = snapshot->createIterator() ;
   RooAbsArg* var ;
 
-//   cpu4=0 ;
-//   nclone=0 ;
-//   Double_t cpu1 = timer.CpuTime() ;
-//   timer.Reset() ; timer.Start() ;
-//   cout << "snapshot: recursive server addition" << endl ;
+//    cpu4=0 ;
+//    nclone=0 ;
+//    Double_t cpu1 = timer.CpuTime() ;
+//    timer.Reset() ; timer.Start() ;
+//    cout << "snapshot: recursive server addition" << endl ;
 
   // Add external dependents
   Bool_t error(kFALSE) ;
@@ -195,21 +195,23 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
     return 0 ;
   }
 
-//   Double_t cpu2 = timer.CpuTime() ;
-//   timer.Reset() ; timer.Start() ;
-//   cout << "internal server redirection" << endl ;
-  // Redirect all server connections to internal list members
+//    Double_t cpu2 = timer.CpuTime() ;
+//    timer.Reset() ; timer.Start() ;
+//    cout << "internal server redirection" << endl ;
+   // Redirect all server connections to internal list members
   vIter->Reset() ;
   while (var=(RooAbsArg*)vIter->Next()) {
+//     cout << "." ;
     var->redirectServers(*snapshot,deepCopy) ;
   }
+//   cout << endl ;
   delete vIter ;
 
-//   Double_t cpu3 = timer.CpuTime() ;
-//   cout << "initial copy time        = " << cpu1 << endl ;
-//   cout << "recursive addserver time = " << cpu2-cpu4 << endl ;
-//   cout << "cloning time             = " << cpu4 << " for " << nclone << " clones" << endl ;
-//   cout << "reconnect time           = " << cpu3 << endl ;
+//    Double_t cpu3 = timer.CpuTime() ;
+//    cout << "initial copy time        = " << cpu1 << endl ;
+//    cout << "recursive addserver time = " << cpu2-cpu4 << endl ;
+//    cout << "cloning time             = " << cpu4 << " for " << nclone << " clones" << endl ;
+//    cout << "reconnect time           = " << cpu3 << endl ;
 
   // Transfer ownership of contents to list
   snapshot->_ownCont = kTRUE ;
@@ -228,10 +230,10 @@ Bool_t RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
   while (server=(RooAbsArg*)sIter->Next()) {
     RooAbsArg* tmp = find(server->GetName()) ;
     if (!tmp) {
-//       TStopwatch t ; t.Start() ;
+//         TStopwatch t ; t.Start() ;
       RooAbsArg* serverClone = (RooAbsArg*)server->Clone() ;      
-//       cpu4 += t.CpuTime() ;
-//       nclone++ ;
+//        cpu4 += t.CpuTime() ;
+//        nclone++ ;
       serverClone->setAttribute("SnapShot_ExtRefClone") ;
       _list.Add(serverClone) ;      
       ret |= addServerClonesToList(*server) ;
@@ -255,6 +257,7 @@ RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other) {
   if (&other==this) return *this ;
 
   RooAbsArg *elem, *theirs ;
+  RooLinkedListIter iter = _list.iterator() ;
   Int_t index(getSize());
   while(--index >= 0) {
     elem= (RooAbsArg*)_list.At(index);

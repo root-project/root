@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.rdl,v 1.36 2004/03/31 01:37:39 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.37 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -73,6 +73,7 @@ protected:
   mutable RooSetProxy _anaList ;
   mutable RooSetProxy _jacList ;
   mutable RooSetProxy _facList ;
+  mutable RooArgSet   _facListOwned ;
   TIterator*          _facListIter ; //! do not persist
   TIterator*          _jacListIter ; //! do not persist
   RooRealProxy       _function ; // must after set proxies

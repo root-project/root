@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.73 2004/03/31 02:54:58 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.74 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -129,8 +129,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       _valid= kFALSE;
     }
     if (!function.dependsOn(*arg)) {
-      _facList.add(*arg) ;
-      addServer(*arg,kFALSE,kTRUE) ;
+      RooAbsArg* argClone = (RooAbsArg*) arg->Clone() ;
+      _facListOwned.addOwned(*argClone) ;
+      _facList.add(*argClone) ;
+      addServer(*argClone,kFALSE,kTRUE) ;
     }
   }
 
@@ -554,7 +556,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _intList("intList",this,other._intList), 
   _anaList("anaList",this,other._anaList),
   _jacList("jacList",this,other._jacList),
-  _facList("facList",this,other._facList),
+  _facList("facList","Variables independent of function",this,kFALSE,kTRUE),
   _facListIter(_facList.createIterator()),
   _jacListIter(_jacList.createIterator()),
   _function("function",this,other._function), 
@@ -567,6 +569,15 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
 {
   // Copy constructor
  _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : 0 ;
+
+ other._facListIter->Reset() ;
+ RooAbsArg* arg ;
+ while(arg=(RooAbsArg*)other._facListIter->Next()) {
+   RooAbsArg* argClone = (RooAbsArg*) arg->Clone() ;
+   _facListOwned.addOwned(*argClone) ;
+   _facList.add(*argClone) ;
+   addServer(*argClone,kFALSE,kTRUE) ;
+ }
 }
 
 

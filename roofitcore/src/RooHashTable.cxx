@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHashTable.cc,v 1.8 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooHashTable.cc,v 1.9 2004/06/22 05:09:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,12 +19,13 @@
 #include "RooFitCore/RooHashTable.hh"
 #include "RooFitCore/RooLinkedList.hh"
 #include "RooFitCore/RooAbsArg.hh"
+#include "RooFitCore/RooSetPair.hh"
 
 ClassImp(RooHashTable)
 ;
 
-RooHashTable::RooHashTable(Int_t capacity, Bool_t hashByPtr) :
-  _hashByPtr(hashByPtr)
+RooHashTable::RooHashTable(Int_t capacity, HashMethod hashMethod) :
+  _hashMethod(hashMethod)
 {
   if (capacity <= 0) {
     capacity = TCollection::kInitHashTableCapacity;
@@ -40,7 +41,7 @@ RooHashTable::RooHashTable(Int_t capacity, Bool_t hashByPtr) :
 
 RooHashTable::RooHashTable(const RooHashTable& other) :
   _usedSlots(other._usedSlots), _entries(other._entries), _size(other._size),
-  _hashByPtr(other._hashByPtr)
+  _hashMethod(other._hashMethod)
 {
   _arr  = new RooLinkedList* [_size] ;
   memset(_arr, 0, _size*sizeof(RooLinkedList*));  
@@ -53,11 +54,11 @@ RooHashTable::RooHashTable(const RooHashTable& other) :
 }
 
 
-void RooHashTable::add(TObject* arg) 
+void RooHashTable::add(TObject* arg, TObject* hashArg) 
 {
-  Int_t slot = hash(arg) % _size ;
+  Int_t slot = hash(hashArg?hashArg:arg) % _size ;
   if (!_arr[slot]) {
-    _arr[slot] = new RooLinkedList(kFALSE) ;
+    _arr[slot] = new RooLinkedList(0) ;
     _usedSlots++ ;
    }
    _arr[slot]->Add(arg);
@@ -66,9 +67,9 @@ void RooHashTable::add(TObject* arg)
 
 
 
-Bool_t RooHashTable::remove(TObject* arg)
+Bool_t RooHashTable::remove(TObject* arg, TObject* hashArg)
 {
-  Int_t slot = hash(arg) % _size ;
+  Int_t slot = hash(hashArg?hashArg:arg) % _size ;
   if (_arr[slot]) {
     if (_arr[slot]->Remove(arg)) {
       _entries-- ;
@@ -110,9 +111,9 @@ Double_t RooHashTable::avgCollisions() const
 }
 
 
-Bool_t RooHashTable::replace(const TObject* oldArg, const TObject* newArg) 
+Bool_t RooHashTable::replace(const TObject* oldArg, const TObject* newArg, const TObject* oldHashArg) 
 {
-  Int_t slot = hash(oldArg) % _size ;
+  Int_t slot = hash(oldHashArg?oldHashArg:oldArg) % _size ;
   if (_arr[slot]) {
     return _arr[slot]->Replace(oldArg,newArg) ;
   }
@@ -122,23 +123,60 @@ Bool_t RooHashTable::replace(const TObject* oldArg, const TObject* newArg)
 
 TObject* RooHashTable::find(const char* name) const 
 {
-  if (_hashByPtr) return 0 ;
+  if (_hashMethod != Name) assert(0) ;
 
-  Int_t slot = TString(name).Hash() % _size ;
+  Int_t slot = TMath::Hash(name) % _size ;
   if (_arr[slot]) return _arr[slot]->find(name) ;
   return 0;  
 }
 
 
-TObject* RooHashTable::find(const TObject* arg) const 
+TObject* RooHashTable::find(const TObject* hashArg) const 
 {
-  if (!_hashByPtr) return 0 ;
+  if (_hashMethod != Pointer) assert(0) ;
 
-  Int_t slot = hash(arg) % _size ;
-  //cout << "RooHashTable::find(" << arg << ") hash = " << hash(arg) << " slot = " << slot << endl ;
-  if (_arr[slot]) return _arr[slot]->FindObject(arg) ;
+  Int_t slot = hash(hashArg) % _size ;
+  if (_arr[slot]) return _arr[slot]->FindObject(hashArg) ;
   return 0;  
 }
+
+
+RooLinkedListElem* RooHashTable::findLinkTo(const TObject* hashArg) const 
+{
+  if (_hashMethod != Pointer) assert(0) ;
+
+  Int_t slot = hash(hashArg) % _size ;
+  if (_arr[slot]) {
+    Int_t i ; 
+    for (i=0 ; i<_arr[slot]->GetSize() ; i++) {
+      RooLinkedListElem* elem = (RooLinkedListElem*)_arr[slot]->At(i) ;
+      if (elem->_arg == hashArg) return elem ;
+    }
+  }
+  return 0;  
+}
+
+
+
+RooSetPair* RooHashTable::findSetPair(const RooArgSet* set1, const RooArgSet* set2) const 
+{  
+  if (_hashMethod != Intrinsic) assert(0) ;
+
+  Int_t slot = RooSetPair(set1,set2).Hash() % _size ;
+  if (_arr[slot]) {
+    Int_t i ; 
+    for (i=0 ; i<_arr[slot]->GetSize() ; i++) {
+      RooSetPair* pair = (RooSetPair*)_arr[slot]->At(i) ;
+      if (pair->_set1==set1 && pair->_set2==set2) {
+	return pair ;
+      }
+    }
+  }
+
+  return 0 ;
+}
+
+
 
 
 RooHashTable::~RooHashTable() 

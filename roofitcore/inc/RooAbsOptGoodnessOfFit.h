@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.rdl,v 1.6 2004/03/31 01:37:39 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.rdl,v 1.7 2004/04/05 22:43:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,6 +16,7 @@
 #ifndef ROO_ABS_OPT_GOODNESS_OF_FIT
 #define ROO_ABS_OPT_GOODNESS_OF_FIT
 
+#include <iostream.h>
 #include "RooFitCore/RooAbsGoodnessOfFit.hh"
 #include "RooFitCore/RooSetProxy.hh"
 
@@ -39,18 +40,8 @@ protected:
 
   void constOptimize(ConstOpCode opcode) ;
 
-  void optimizeDirty() ;
-  void doConstOpt() ;
-  void undoConstOpt() ;  
-
-  // Prefit optimizer
-  Bool_t findCacheableBranches(RooAbsArg* arg, RooAbsData* dset, RooArgSet& cacheList) ;
-  void findUnusedDataVariables(RooAbsPdf* pdf,RooAbsData* dset,RooArgSet& pruneList) ;
-  void findRedundantCacheServers(RooAbsPdf* pdf,RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList) ;
-  Bool_t allClientsCached(RooAbsArg* var, RooArgSet& cacheList) ;
-
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-  virtual void printCompactTreeHook(const char* indent="") ;
+  virtual void printCompactTreeHook(ostream& os, const char* indent="") ;
 
   RooArgSet*  _normSet ;
   RooArgSet*  _pdfCloneSet ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.78 2004/03/31 02:54:57 wverkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.79 2004/04/05 22:43:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -144,15 +144,15 @@ public:
   virtual void constOptimize(ConstOpCode opcode) ;
 
 
-  void printCompactTree(const char* indent="") ;
-  virtual void printCompactTreeHook(const char* indent="") {} ;
+  void printCompactTree(const char* indent="",const char* fileName=0) ;
+  void printCompactTree(ostream& os, const char* indent="") ;
+  virtual void printCompactTreeHook(ostream& os, const char* indent="") {} ;
 
   inline void setDeleteWatch(Bool_t flag=kTRUE) { _deleteWatch = flag ; } ;
   Bool_t deleteWatch() const { return _deleteWatch ; }
 
 
 protected:
-
 
   friend class RooExtendPdf ;
   friend class RooRealIntegral ;

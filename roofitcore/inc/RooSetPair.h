@@ -13,58 +13,41 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_LINKED_LIST_ELEM
-#define ROO_LINKED_LIST_ELEM
+#ifndef ROO_SET_PAIR
+#define ROO_SET_PAIR
 
-#include "Rtypes.h"
-#include "RooFitCore/RooLinkedListElem.hh"
+#include "TObject.h"
+#include "RooFitCore/RooArgSet.hh"
 
-class TObject ;
 class RooLinkedListElem ;
 class TBuffer ;
 
-class RooLinkedListElem {
+class RooSetPair : public TObject {
 public:
+
   // Initial element ctor
-  RooLinkedListElem(TObject* arg) : 
-    _prev(0), _next(0), _arg(arg), _refCount(1) {
-  }
-
-  // Link element ctor
-  RooLinkedListElem(TObject* arg, RooLinkedListElem* after) : 
-    _prev(after), _next(after->_next), _arg(arg), _refCount(1) {
-
-    // Insert self in link
-    after->_next = this ;
-    if (_next) _next->_prev = this ;
+  RooSetPair(const RooArgSet* set1=0, const RooArgSet* set2=0) : 
+    _set1((RooArgSet*)set1), _set2((RooArgSet*)set2) {
   }
 
   // Destructor
-  virtual ~RooLinkedListElem() {    
-    // Remove self from link
-    if (_prev) _prev->_next = _next ;
-    if (_next) _next->_prev = _prev ;
+  virtual ~RooSetPair() {    
   }
 
-  Int_t refCount() const { return _refCount ; }
-  Int_t incRefCount() { return ++_refCount ; }
-  Int_t decRefCount() { return --_refCount ; }
+  RooArgSet* _set1 ;
+  RooArgSet* _set2 ;
+
+  virtual ULong_t Hash() const {
+    return TMath::Hash((void*)&_set1,2*sizeof(void*)) ;  
+  }
 
 protected:
-  friend class RooHashTable ;
-  friend class RooLinkedList ;
-  friend class RooLinkedListIter ;
-  RooLinkedListElem* _prev ; // Link to previous element in list
-  RooLinkedListElem* _next ; // Link to next element in list
-  TObject*   _arg ;          // Link to contents
-  Int_t      _refCount ;     //! Reference count
-
-protected:
+  
 
   // Forbidden
-  RooLinkedListElem(const RooLinkedListElem&) ;
+  RooSetPair(const RooSetPair&) ;
 
-  ClassDef(RooLinkedListElem,0) // Element of RooLinkedList container class
+  ClassDef(RooSetPair,0) // Element of RooLinkedList container class
 } ;
 
 

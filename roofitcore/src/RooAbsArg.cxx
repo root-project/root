@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.82 2004/04/05 22:43:54 wverkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.83 2004/06/17 22:45:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,6 +44,7 @@
 
 #include <string.h>
 #include <iomanip.h>
+#include <fstream.h>
 
 ClassImp(RooAbsArg)
 ;
@@ -148,6 +149,7 @@ RooAbsArg::~RooAbsArg()
     attr.Append(Form("(%x)",this)) ;
     client->setAttribute(attr.Data());
     client->removeServer(*this,kTRUE);
+
     if (_verboseDirty || deleteWatch()) {
 
       if (deleteWatch() && first) {
@@ -1231,28 +1233,41 @@ void RooAbsArg::setOperMode(OperMode mode, Bool_t recurseADirty)
 }
 
 
-void RooAbsArg::printCompactTree(const char* indent)
+void RooAbsArg::printCompactTree(const char* indent, const char* filename)
 {
-  cout << indent << this << " " << IsA()->GetName() << "::" << GetName() << " (" << GetTitle() << ") " ;
+  if (filename) {
+    ofstream ofs(filename) ;
+    printCompactTree(ofs,indent) ;
+  } else {
+    printCompactTree(cout,indent) ;
+  }
+}
+
+
+void RooAbsArg::printCompactTree(ostream& os, const char* indent)
+{
+  os << indent << this << " " << IsA()->GetName() << "::" << GetName() << " (" << GetTitle() << ") " ;
 
   if (_serverList.GetSize()>0) {
     switch(operMode()) {
-    case Auto:   cout << " [Auto]" << endl ; break ;
-    case AClean: cout << " [ACLEAN]" << endl ; break ;
-    case ADirty: cout << " [ADIRTY]" << endl ; break ;
+    case Auto:   os << " [Auto]" << endl ; break ;
+    case AClean: os << " [ACLEAN]" << endl ; break ;
+    case ADirty: os << " [ADIRTY]" << endl ; break ;
     }
   } else {
-    cout << endl ;
+    os << endl ;
   }
 
-  printCompactTreeHook(indent) ;
+  printCompactTreeHook(os,indent) ;
 
   TString indent2(indent) ;
   indent2 += "  " ;
   TIterator * iter = serverIterator() ;
   RooAbsArg* arg ;
   while(arg=(RooAbsArg*)iter->Next()) {
-    arg->printCompactTree(indent2) ;
+    arg->printCompactTree(os,indent2) ;
   }
   delete iter ;
 }
+
+

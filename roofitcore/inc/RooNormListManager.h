@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormListManager.rdl,v 1.3 2002/09/05 04:33:45 verkerke Exp $
+ *    File: $Id: RooNormListManager.rdl,v 1.4 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,16 +30,20 @@ class RooNormListManager {
 
 public:
   RooNormListManager(Int_t maxSize=10) ;
-  RooNormListManager(const RooNormListManager& other) ;
+  RooNormListManager(const RooNormListManager& other, Bool_t sterileCopy=kFALSE) ;
   virtual ~RooNormListManager() ;
   
-  RooArgList* getNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset=0) ;
+  RooArgList* getNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset=0, Int_t* sterileIndex=0) ;
   Int_t setNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, RooArgList* normColl) ;  
   void reset() ;
+  void sterilize() ;
 
   Int_t lastIndex() const { return _lastIndex ; }
-  RooArgList* getNormListByIndex(Int_t index) const ;
   Int_t cacheSize() const { return _size ; }
+
+  RooArgList* getNormListByIndex(Int_t index) const ;
+  const RooNameSet* nameSet1ByIndex(Int_t index) const ;
+  const RooNameSet* nameSet2ByIndex(Int_t index) const ;
 
   void setVerbose(Bool_t flag=kTRUE) const { _verbose = flag ; }
  

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRefCountList.rdl,v 1.4 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id: RooLinkedListElem.cc,v 1.5 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,24 +13,15 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_REF_COUNT_LIST
-#define ROO_REF_COUNT_LIST
 
-#include "RooFitCore/RooLinkedList.hh"
+// -- CLASS DESCRIPTION [AUX] ---
+// RooSetPair
 
-class RooRefCountList : public RooLinkedList {
-public:
-  RooRefCountList() ; 
-  virtual ~RooRefCountList() {} ;
+#include "RooFitCore/RooSetPair.hh"
 
-  virtual void Add(TObject* arg) { Add(arg,1) ; }
-  virtual void Add(TObject* obj, Int_t count) ;
-  virtual Bool_t Remove(TObject* obj) ;
-  virtual Bool_t RemoveAll(TObject* obj) ;
-  Int_t refCount(TObject* obj) ;
-  
-protected:  
-  ClassDef(RooRefCountList,1) // RooLinkedList with reference counting
-};
 
-#endif
+ClassImp(RooSetPair) 
+;
+
+
+

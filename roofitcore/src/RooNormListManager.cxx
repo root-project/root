@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormListManager.cc,v 1.5 2004/03/19 06:09:46 wverkerke Exp $
+ *    File: $Id: RooNormListManager.cc,v 1.6 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -51,7 +51,7 @@ RooNormListManager::RooNormListManager(Int_t maxSize)
 }
 
 
-RooNormListManager::RooNormListManager(const RooNormListManager& other) 
+RooNormListManager::RooNormListManager(const RooNormListManager& other, Bool_t sterileCopy) 
 {
   _maxSize = other._maxSize ;
   _size = other._size ;
@@ -65,22 +65,23 @@ RooNormListManager::RooNormListManager(const RooNormListManager& other)
   Int_t i ;
   for (i=0 ; i<other._size ; i++) {    
     _nsetCache[i].initialize(other._nsetCache[i]) ;
-    if (other._normList[i]->isOwning()) {
-//       cout << "list [" << i << "] is owning" << endl ;
 
-      _normList[i] = new RooArgList ;
-      TIterator* iter = other._normList[i]->createIterator() ;
-      RooAbsArg* arg ;
-      while(arg=(RooAbsArg*)iter->Next()) {
-	RooAbsArg* argclone = (RooAbsArg*)arg->Clone() ;
-	_normList[i]->addOwned(*argclone) ;
-// 	cout << "   cloning elem " << arg << " into " << argclone << endl ;
+    if (!sterileCopy) {
+      if (other._normList[i]->isOwning()) {
+	_normList[i] = new RooArgList ;
+	TIterator* iter = other._normList[i]->createIterator() ;
+	RooAbsArg* arg ;
+	while(arg=(RooAbsArg*)iter->Next()) {
+	  RooAbsArg* argclone = (RooAbsArg*)arg->Clone() ;
+	  _normList[i]->addOwned(*argclone) ;
+	}
+	delete iter ;
+	
+      } else {
+	_normList[i] = (RooArgList*) other._normList[i]->Clone() ;
       }
-      delete iter ;
-
     } else {
-//       cout << "list [" << i << "] is not owning" << endl ;
-      _normList[i] = (RooArgList*) other._normList[i]->Clone() ;
+      _normList[i] = 0 ;
     }
   }
 
@@ -110,6 +111,18 @@ void RooNormListManager::reset()
     _nsetCache[i].clear() ;
   }  
   _lastIndex = -1 ;
+  _size = 0 ;
+}
+  
+
+
+void RooNormListManager::sterilize() 
+{
+  Int_t i ;
+  for (i=0 ; i<_maxSize ; i++) {
+    delete _normList[i] ;
+    _normList[i]=0 ;
+  }  
 }
   
 
@@ -117,19 +130,27 @@ void RooNormListManager::reset()
 Int_t RooNormListManager::setNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, RooArgList* normList) 
 {
   // Check if normalization is already registered
-  if (getNormList(self,nset,iset)) {
-    cout << "RooNormListManager::setNormList(" << self->GetName() << "): normalization list already registered" << endl ;
+  Int_t sterileIdx(-1) ;
+  if (getNormList(self,nset,iset,&sterileIdx)) {
+    //cout << "RooNormListManager::setNormList(" << self->GetName() << "): normalization list already registered" << endl ;
+    return lastIndex() ;
+  } 
+
+  if (sterileIdx>=0) {
+    // Found sterile slot that can should be recycled
+    //cout << "RooNormListManager::setNormList(" << self->GetName() << "): recycling sterile slot " << lastIndex() << endl ;
+    _normList[sterileIdx] = normList ;
     return lastIndex() ;
   }
 
   if (_size==_maxSize) {
-    cout << "RooNormListManager::setNormList(" << self->GetName() << "): cache is full" << endl ;
+    //cout << "RooNormListManager::setNormList(" << self->GetName() << "): cache is full" << endl ;
     return -1 ;
   }
 
   _nsetCache[_size].autoCache(self,nset,iset,kTRUE) ;
   if (_normList[_size]) {
-    cout << "RooNormListManager::setNormList(" << self->GetName() << "): deleting previous normalization list of slot " << _size << endl ;
+    //cout << "RooNormListManager::setNormList(" << self->GetName() << "): deleting previous normalization list of slot " << _size << endl ;
     delete _normList[_size] ;
   }
   if (_verbose) {
@@ -145,13 +166,14 @@ Int_t RooNormListManager::setNormList(const RooAbsArg* self, const RooArgSet* ns
 }
 
 
-RooArgList* RooNormListManager::getNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset) 
+RooArgList* RooNormListManager::getNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIdx) 
 {
   Int_t i ;
 
   for (i=0 ; i<_size ; i++) {
-    if (_nsetCache[i].contains(nset,iset)==kTRUE) {
+    if (_nsetCache[i].contains(nset,iset)==kTRUE) {      
       _lastIndex = i ;
+      if(_normList[i]==0 && sterileIdx) *sterileIdx=i ;
       return _normList[i] ;
     }
   }
@@ -159,6 +181,7 @@ RooArgList* RooNormListManager::getNormList(const RooAbsArg* self, const RooArgS
   for (i=0 ; i<_size ; i++) {
     if (_nsetCache[i].autoCache(self,nset,iset,kFALSE)==kFALSE) {
       _lastIndex = i ;
+      if(_normList[i]==0 && sterileIdx) *sterileIdx=i ;
       return _normList[i] ;
     }
   }
@@ -175,4 +198,24 @@ RooArgList* RooNormListManager::getNormListByIndex(Int_t index) const
     return 0 ;
   }
   return _normList[index] ;
+}
+
+const RooNameSet* RooNormListManager::nameSet1ByIndex(Int_t index) const
+{
+  if (index<0||index>=_size) {
+    cout << "RooNormListManager::getNormListByIndex: ERROR index (" 
+	 << index << ") out of range [0," << _size-1 << "]" << endl ;
+    return 0 ;
+  }
+  return &_nsetCache[index].nameSet1() ;
+}
+
+const RooNameSet* RooNormListManager::nameSet2ByIndex(Int_t index) const 
+{
+  if (index<0||index>=_size) {
+    cout << "RooNormListManager::getNormListByIndex: ERROR index (" 
+	 << index << ") out of range [0," << _size-1 << "]" << endl ;
+    return 0 ;
+  }
+  return &_nsetCache[index].nameSet2() ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.99 2004/04/01 22:00:57 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.100 2004/04/05 22:43:55 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -420,6 +420,10 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   leafNodeServerList(&leafNodes,this);
   treeNodeServerList(&treeNodes,this) ;
 
+//   cout << "RooAbsReal::createProjection(" << GetName() << ")" << endl 
+//        << "   depVars " ; dependentVars.Print("1") ;
+//   cout << "   projVars " ; if (projectedVars) projectedVars->Print("1") ; else cout << "<none>" << endl ;
+
 //   cout << "initial leafNodes: " ; leafNodes.Print("1") ;
 
   // Check that the dependents are all fundamental. Filter out any that we
@@ -481,10 +485,13 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
 
 //   cout << "createProjection: final leafNodes: " ; leafNodes.Print("1") ;
 //   cout << "@@@@@@@@@ Before any manipulation" << endl ;
-//   printCompactTree() ;
+//   printCompactTree("","cp_orig_before.tree") ;
 
   // Make a deep-clone of ourself so later operations do not disturb our original state
+  //cout << "RooAbsReal::createProjection(" << GetName() << ") making snapshot" << endl ;
   cloneSet= (RooArgSet*)RooArgSet(*this).snapshot(kTRUE);
+  //cout << "RooAbsReal::createProjection(" << GetName() << ") finished snapshot" << endl ;
+
   if (!cloneSet) {
     cout << "RooAbsPdf::createProjection(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
     return 0 ;
@@ -498,17 +505,19 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   //cout << "redirection leafNodes : " ; leafNodes.Print("1") ;
 
 //   cout << "@@@@@@@@@@ Original After deep-copy" << endl ;
-//   printCompactTree() ;
+//    printCompactTree("","cp_orig_afterDC.tree") ;
 //   cout << "@@@@@@@@@@ Clone After deep-copy" << endl ;
-//   clone->printCompactTree() ;
+//    clone->printCompactTree("","cp_clone.tree") ;
 
 
+  //cout << "RooAbsReal::createProjection(" << GetName() << ") making rRS on leaf nodes" << endl ;
   clone->recursiveRedirectServers(leafNodes);
+  //cout << "RooAbsReal::createProjection(" << GetName() << ") finished rRS" << endl ;
 
 //   cout << "@@@@@@@@@@ Original after leaf node redirect" << endl ;
-//   printCompactTree() ;
+//   printCompactTree("","cp_orig_afterLNR.tree") ;
 //   cout << "@@@@@@@@@@ Clone after leaf node redirect" << endl ;
-//   clone->printCompactTree() ;
+//    clone->printCompactTree("","cp_clone_afterLNR.tree") ;
 
 
   // Create the set of normalization variables to use in the projection integrand
@@ -926,8 +935,10 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     if (projDataNeededVars) delete projDataNeededVars ;
     return frame ;
   }
- 
+
+  //cout << "RooAbsReal::plotOn(" << GetName() << ") begin createProjection" << endl ;
   RooAbsReal *projection = (RooAbsReal*) createProjection(*deps, &projectedVars, projectionCompList) ;
+  //cout << "RooAbsReal::plotOn(" << GetName() << ") end createProjection" << endl ;
 
   if (projDataNeededVars && projDataNeededVars->getSize()>0) {
     // Optionally fix RooAddPdf normalizations
@@ -946,7 +957,6 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     delete iter ;
     delete compSet ;
   }
-  delete deps ;
 
 
   // Apply data projection, if requested
@@ -1013,9 +1023,17 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 
     // Attach dataset
     projection->getVal(projDataSel->get()) ;
+    
+    //cout << "RooAbsReal::plotOn(" << GetName() << ") start attachDataSet" << endl ;
     projection->attachDataSet(*projDataSel) ;
+    //cout << "RooAbsReal::plotOn(" << GetName() << ") end attachDataSet" << endl ;
 
     RooDataProjBinding projBind(*projection,*projDataSel,*plotVar) ;
+
+//     // WVE -- Experimental, deactictivate for now
+//     projection->optimizeDirty(*projDataSel,deps) ;
+//     projection->doConstOpt(*projDataSel,deps);
+
     RooScaledFunc scaleBind(projBind,scaleFactor);
 
     // Set default range, if not specified
@@ -1050,6 +1068,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     frame->addPlotable(curve, drawOptions);
   }
 
+  delete deps ;
   delete projectionCompList ;
   delete plotCloneSet ;
   return frame;
@@ -1144,18 +1163,28 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
     // Print list of non-projected variables
     if (frame->getNormVars()) {
-      sliceSet.add(*getDependents(*frame->getNormVars())) ;
-      sliceSet.remove(projectedVars,kTRUE) ;
-      sliceSet.remove(*sliceSet.find(frame->getPlotVar()->GetName())) ;
-      if (sliceSet.getSize()) {
+      RooArgSet *sliceSetTmp = getDependents(*frame->getNormVars()) ;
+      sliceSetTmp->remove(projectedVars,kTRUE,kTRUE) ;
+      sliceSetTmp->remove(*frame->getPlotVar(),kTRUE,kTRUE) ;
+
+      if (projData) {
+	RooArgSet* tmp = (RooArgSet*) projDataVars.selectCommon(*projSet) ;
+	sliceSetTmp->remove(*tmp,kTRUE,kTRUE) ;
+	delete tmp ;
+      }
+
+      if (sliceSetTmp->getSize()) {
 	cout << "RooAbsReal::plotAsymOn(" << GetName() << ") plot on " 
 	     << frame->getPlotVar()->GetName() << " represents a slice in " ;
-	sliceSet.Print("1") ;
+	sliceSetTmp->Print("1") ;
       }
+      sliceSet.add(*sliceSetTmp) ;
+      delete sliceSetTmp ;
     }
   } else {
     makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
+
 
   // Take out data-projected dependens from projectedVars
   RooArgSet* projDataNeededVars = 0 ;
@@ -1178,6 +1207,11 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     cout << "RooAbsReal::plotAsymOn(" << GetName() << ") plot on " << plotVar->GetName() 
 	 << " projects variables " ; projectedVars.Print("1") ;
   }  
+  if (projDataNeededVars && projDataNeededVars->getSize()>0) {
+    cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
+	 << " averages using data variables " ; projDataNeededVars->Print("1") ;
+  }
+
 
   // Customize two copies of projection with fixed negative and positive asymmetry
   RooAbsCategoryLValue* asymPos = (RooAbsCategoryLValue*) asymCat.Clone("asym_pos") ;
@@ -1193,8 +1227,16 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
   // Create projection integral 
   RooArgSet *posProjCompList, *negProjCompList ;
-  const RooAbsReal *posProj = funcPos->createProjection(RooArgSet(*plotVar,*asymPos), &projectedVars, posProjCompList) ;
-  const RooAbsReal *negProj = funcNeg->createProjection(RooArgSet(*plotVar,*asymNeg), &projectedVars, negProjCompList) ;
+
+  // Add projDataVars to normalized dependents of projection
+  // This is needed only for asymmetries (why?)
+  RooArgSet depPos(*plotVar,*asymPos) ;
+  RooArgSet depNeg(*plotVar,*asymNeg) ;
+  depPos.add(projDataVars) ;
+  depNeg.add(projDataVars) ;
+
+  const RooAbsReal *posProj = funcPos->createProjection(depPos, &projectedVars, posProjCompList) ;
+  const RooAbsReal *negProj = funcNeg->createProjection(depNeg, &projectedVars, negProjCompList) ;
   if (!posProj || !negProj) {
     cout << "RooAbsReal::plotAsymOn(" << GetName() << ") Unable to create projections, abort" << endl ;
     return frame ; 
@@ -1252,8 +1294,8 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
       cout << "RooAbsReal::plotAsymOn(" << GetName() 
 	   << ") only the following components of the projection data will be used: " ; 
       projDataNeededVars->Print("1") ;
-    }
-    
+    }    
+
     RooDataProjBinding projBind(*funcAsym,*projDataSel,*plotVar) ;
     ((RooAbsReal*)posProj)->attachDataSet(*projDataSel) ;
     ((RooAbsReal*)negProj)->attachDataSet(*projDataSel) ;
@@ -1771,6 +1813,172 @@ void RooAbsReal::setIntegratorConfig()
   _specIntegratorConfig = 0 ;
 }
 
+
+
+void RooAbsReal::optimizeDirty(RooAbsData& dataset, const RooArgSet* normSet) 
+{
+  getVal(normSet) ;
+
+  RooArgSet branchList("branchList") ;
+  setOperMode(RooAbsArg::ADirty) ;
+  branchNodeServerList(&branchList) ;
+
+  TIterator* bIter = branchList.createIterator() ;
+  RooAbsArg* branch ;
+  while(branch=(RooAbsArg*)bIter->Next()) {
+    if (branch->dependsOn(*dataset.get())) {
+
+      RooArgSet* bdep = branch->getDependents(dataset.get()) ;
+      if (bdep->getSize()>0) {
+	branch->setOperMode(RooAbsArg::ADirty) ;
+      } else {
+	//cout << "using lazy evaluation for node " << branch->GetName() << endl ;
+      }
+      delete bdep ;
+    }
+  }
+  delete bIter ;
+  
+  dataset.setDirtyProp(kFALSE) ;
+}
+
+
+void RooAbsReal::doConstOpt(RooAbsData& dataset, const RooArgSet* normSet) 
+{
+  // optimizeDirty must have been run first!
+
+  // Find cachable branches and cache them with the data set
+  RooArgSet cacheList ;
+  findCacheableBranches(this,&dataset,cacheList,normSet) ;
+  dataset.cacheArgs(cacheList,normSet) ;  
+
+  // Find unused data variables after caching and disable them
+  RooArgSet pruneList("pruneList") ;
+  findUnusedDataVariables(&dataset,pruneList) ;
+  findRedundantCacheServers(&dataset,cacheList,pruneList) ;
+
+  if (pruneList.getSize()!=0) {
+    // Deactivate tree branches here
+    cout << "RooAbsReal::optimizeConst: The following unused tree branches are deactivated: " ; 
+    pruneList.Print("1") ;
+    dataset.setArgStatus(pruneList,kFALSE) ;
+  }
+
+  TIterator* cIter = cacheList.createIterator() ;
+  RooAbsArg *cacheArg ;
+  while(cacheArg=(RooAbsArg*)cIter->Next()){
+    cacheArg->setOperMode(RooAbsArg::AClean) ;
+  }
+  delete cIter ;
+}
+
+
+void RooAbsReal::undoConstOpt(RooAbsData& dataset, const RooArgSet* normSet) 
+{
+  // Delete the cache
+  dataset.resetCache() ;
+
+  // Reactivate all tree branches
+  dataset.setArgStatus(*dataset.get(),kTRUE) ;
+  
+  // Reset all nodes to ADirty 
+  optimizeDirty(dataset,normSet) ;
+}
+
+
+Bool_t RooAbsReal::findCacheableBranches(RooAbsArg* arg, RooAbsData* dset, 
+					    RooArgSet& cacheList, const RooArgSet* normSet) 
+{
+  // Find branch PDFs with all-constant parameters, and add them
+  // to the dataset cache list
+
+  // Evaluate function with current normalization in case servers
+  // are created on the fly
+  RooAbsReal* realArg = dynamic_cast<RooAbsReal*>(arg) ;
+  if (realArg) {
+    realArg->getVal(normSet) ;
+  }
+
+  TIterator* sIter = arg->serverIterator() ;
+  RooAbsArg* server ;
+
+  while(server=(RooAbsArg*)sIter->Next()) {
+    if (server->isDerived()) {
+      // Check if this branch node is eligible for precalculation
+      Bool_t canOpt(kTRUE) ;
+
+      RooArgSet* branchParamList = server->getParameters(dset) ;
+      TIterator* pIter = branchParamList->createIterator() ;
+      RooAbsArg* param ;
+      while(param = (RooAbsArg*)pIter->Next()) {
+	if (!param->isConstant()) canOpt=kFALSE ;
+      }
+      delete pIter ;
+      delete branchParamList ;
+
+      if (canOpt) {
+	if (!cacheList.find(server->GetName())) {
+
+	  cout << "RooAbsReal::optimize: component " 
+	       << server->GetName() << " will be cached" << endl ;
+	  
+	  // Add to cache list
+	  cacheList.add(*server) ;
+	} 
+      } else {
+	// Recurse if we cannot optimize at this level
+	findCacheableBranches(server,dset,cacheList,normSet) ;
+      }
+    }
+  }
+  delete sIter ;
+  return kFALSE ;
+}
+
+
+
+void RooAbsReal::findUnusedDataVariables(RooAbsData* dset,RooArgSet& pruneList) 
+{
+  TIterator* vIter = dset->get()->createIterator() ;
+  RooAbsArg* arg ;
+  while (arg=(RooAbsArg*) vIter->Next()) {
+    if (dependsOn(*arg)) pruneList.add(*arg) ;
+  }
+  delete vIter ;
+}
+
+
+void RooAbsReal::findRedundantCacheServers(RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList) 
+{
+  TIterator* vIter = dset->get()->createIterator() ;
+  RooAbsArg *var ;
+  while (var=(RooAbsArg*) vIter->Next()) {
+    if (allClientsCached(var,cacheList)) {
+      pruneList.add(*var) ;
+    }
+  }
+  delete vIter ;
+}
+
+
+
+Bool_t RooAbsReal::allClientsCached(RooAbsArg* var, RooArgSet& cacheList)
+{
+  Bool_t ret(kTRUE), anyClient(kFALSE) ;
+
+  TIterator* cIter = var->valueClientIterator() ;    
+  RooAbsArg* client ;
+  while (client=(RooAbsArg*) cIter->Next()) {
+    anyClient = kTRUE ;
+    if (!cacheList.find(client->GetName())) {
+      // If client is not cached recurse
+      ret &= allClientsCached(client,cacheList) ;
+    }
+  }
+  delete cIter ;
+
+  return anyClient?ret:kFALSE ;
+}
 
 
 

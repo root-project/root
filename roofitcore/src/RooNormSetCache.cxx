@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormSetCache.cc,v 1.6 2003/05/14 02:58:40 wverkerke Exp $
+ *    File: $Id: RooNormSetCache.cc,v 1.7 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,29 +22,36 @@ ClassImp(RooNormSetCache)
 ;
 
 RooNormSetCache::RooNormSetCache(Int_t regSize) :
-  _regSize(regSize), _nreg(0), _asArr1(0), _asArr2(0)
+  _regSize(regSize), _nreg(0), _asArr(0), _htable(0)
 {
+  _htable = regSize>16 ? new RooHashTable(regSize,RooHashTable::Intrinsic) : 0 ;
 }
 
 
+
 RooNormSetCache::RooNormSetCache(const RooNormSetCache& other) :
-   _regSize(other._regSize), _nreg(0), _asArr1(0), _asArr2(0)
+  _regSize(other._regSize), _nreg(0), _asArr(0), _htable(0)
 {
+  _htable = _regSize>16 ? new RooHashTable(_regSize,RooHashTable::Intrinsic) : 0 ;
 }
 
 
 
 RooNormSetCache::~RooNormSetCache() 
 {
-  delete[] _asArr1 ;
-  delete[] _asArr2 ;
+  delete[] _asArr ;
+  if (_htable) delete _htable ;
 }
 
 
 
 void RooNormSetCache::clear()
 {
-  _nreg = 0 ;
+  _nreg = 0 ;  
+  if (_htable) {
+    delete _htable ;
+    _htable = 0 ;
+  }
 }
 
 
@@ -54,7 +61,7 @@ void RooNormSetCache::initialize(const RooNormSetCache& other)
 
   Int_t i ;
   for (i=0 ; i<other._nreg ; i++) {
-    add(other._asArr1[i],other._asArr2[i]) ;
+    add(other._asArr[i]._set1,other._asArr[i]._set2) ;
   }
 
   _name1 = other._name1 ;
@@ -66,18 +73,53 @@ void RooNormSetCache::initialize(const RooNormSetCache& other)
 void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 {
   // If code list array has never been used, allocate and initialize here
-  if (!_asArr1) {
-    _asArr1 = new pRooArgSet[_regSize] ;
-    _asArr2 = new pRooArgSet[_regSize] ;
+  if (!_asArr) {
+    _asArr = new RooSetPair[_regSize] ;
   }
 
-  if (!contains(set1,set2) && _nreg<_regSize) {
+  if (!contains(set1,set2)) {
     // Add to cache
-    _asArr1[_nreg] = (RooArgSet*) set1 ;
-    _asArr2[_nreg] = (RooArgSet*) set2 ;
+    _asArr[_nreg]._set1 = (RooArgSet*)set1 ;
+    _asArr[_nreg]._set2 = (RooArgSet*)set2 ;
+    if (_htable) _htable->add((TObject*)&_asArr[_nreg]) ;
     _nreg++ ;
   }
 
+  // Expand cache if full 
+  if (_nreg==_regSize) expand() ;
+
+}
+
+void RooNormSetCache::expand()
+{
+  Int_t newSize = _regSize*2 ;
+
+  if (_htable) {
+    delete _htable ;
+    _htable = 0 ;
+  }
+
+  // Allocate increased buffer 
+  RooSetPair* asArr_new = new RooSetPair[newSize] ;
+  if (newSize>16) {
+    //cout << "RooNormSetCache::add() instantiating hash table with size " << newSize << endl ;
+    _htable = new RooHashTable(newSize,RooHashTable::Intrinsic) ;
+  }
+
+  // Copy old buffer 
+  Int_t i ;
+  for (i=0 ; i<_nreg ; i++) {
+    asArr_new[i]._set1 = _asArr[i]._set1 ;
+    asArr_new[i]._set2 = _asArr[i]._set2 ;
+    if (_htable) _htable->add((TObject*)&asArr_new[i]) ;
+  }
+  
+  // Delete old buffers 
+  delete[] _asArr ;
+
+  // Install new buffers
+  _asArr = asArr_new ;
+  _regSize = newSize ;
 }
 
 
