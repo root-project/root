@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.72 2003/12/05 01:43:24 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.73 2003/12/10 15:52:20 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -1176,14 +1176,17 @@ void RootdOpen(const char *msg)
    if (forceOpen)
       RootdCloseTab(1);
 
+   int trunc = 0;
    if (recreate) {
       if (!RootdCheckTab(-1))
          Error(ErrFatal, kErrFileWriteOpen, "RootdOpen: file %s already opened in read or write mode", gFile);
       if (!access(gFile, F_OK))
-         unlink(gFile);
-      recreate = 0;
-      create   = 1;
-      strcpy(gOption, "create");
+         trunc = O_TRUNC;
+      else {
+         recreate = 0;
+         create   = 1;
+         strcpy(gOption, "create");
+      }
    }
 
    if (create && !access(gFile, F_OK))
@@ -1193,6 +1196,7 @@ void RootdOpen(const char *msg)
       if (access(gFile, F_OK)) {
          update = 0;
          create = 1;
+         strcpy(gOption, "create");
       }
       if (update && access(gFile, W_OK))
          Error(ErrFatal, kErrNoAccess, "RootdOpen: no write permission for file %s", gFile);
@@ -1205,13 +1209,13 @@ void RootdOpen(const char *msg)
          Error(ErrFatal, kErrNoAccess, "RootdOpen: no read permission for file %s (errno: 0x%x)", gFile, errno);
    }
 
-   if (create || update) {
-      if (create) {
+   if (create || recreate || update) {
+      if (create || recreate) {
          // make sure file exists so RootdCheckTab works correctly
 #ifndef WIN32
-         gFd = open(gFile, O_RDWR | O_CREAT, 0644);
+         gFd = open(gFile, O_RDWR | O_CREAT | trunc, 0644);
 #else
-         gFd = open(gFile, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
+         gFd = open(gFile, O_RDWR | O_CREAT | O_BINARY | trunc, S_IREAD | S_IWRITE);
 #endif
          close(gFd);
          gFd = -1;
