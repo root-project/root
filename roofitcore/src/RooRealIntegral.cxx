@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.32 2001/08/24 23:55:15 david Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.33 2001/09/08 01:49:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -258,8 +258,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
 
   // if we already have an engine, check if it still works for the present limits.
   if(0 != _numIntEngine) {
-    //cout << "checking the existing engine..." << endl;
-    if(_numIntEngine->checkLimits() && _numIntEngine->isValid()) return kTRUE;
+    if(_numIntEngine->isValid() && _numIntEngine->checkLimits()) return kTRUE;
     // otherwise, cleanup the old engine
     delete _numIntEngine ;
     _numIntEngine= 0;
@@ -271,8 +270,6 @@ Bool_t RooRealIntegral::initNumIntegrator() const
 
   // All done if there are no arguments to integrate numerically
   if(0 == _intList.getSize()) return kTRUE;
-
-  cout << "creating a new engine..." << endl;
 
   // Bind the appropriate analytic integral (specified by _mode) of our RooRealVar object to
   // those of its arguments that will be integrated out numerically.
@@ -348,8 +345,12 @@ Double_t RooRealIntegral::evaluate() const
       // and switch them temporarily to ADirty
       prepareACleanFunc() ;
 
-      // create a new numerical integration engine
-      _valid= initNumIntegrator() ;
+      // try to initialize our numerical integration engine
+      if(!(_valid= initNumIntegrator())) {
+	cout << ClassName() << "::" << GetName()
+	     << ":evaluate: cannot initialize numerical integrator" << endl;
+	return 0;
+      }
 
       // Save current integral dependent values 
       RooArgSet *saveInt = _intList.snapshot() ;

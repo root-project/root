@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGrid.cc,v 1.1 2001/08/17 15:51:58 david Exp $
+ *    File: $Id: RooGrid.cc,v 1.2 2001/08/22 00:50:25 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -68,6 +68,7 @@ RooGrid::~RooGrid() {
 Bool_t RooGrid::initialize(const RooAbsFunc &function) {
   // Calculate and store the grid dimensions and volume using the
   // specified function, and initialize the grid using a single bin.
+  // Return kTRUE, or else kFALSE if the range is not valid.
 
   _vol= 1;
   _bins= 1;

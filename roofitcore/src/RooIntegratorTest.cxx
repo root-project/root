@@ -120,7 +120,7 @@ void run1DTests() {
 
   // create a formula object to integrate numerically
   RooRealVar x("x","A variable",-1,+1,"ps");
-  RooFormulaVar f1D("f1D","An integrand","exp(-abs(x))*cos(2*x)",x);
+  RooGenericPdf f1D("f1D","exp(-abs(x))*cos(2*x)",x);
 
   // create an object that represents its integral over x
   RooRealIntegral If1D("If1D","Integral of f1D dx",f1D,x);

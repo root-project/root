@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.rdl,v 1.7 2001/08/08 23:11:24 david Exp $
+ *    File: $Id: RooIntegrator1D.rdl,v 1.8 2001/08/24 23:55:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,9 +30,13 @@ public:
   virtual Bool_t checkLimits() const;
   virtual Double_t integral() ;
 
+  Bool_t setLimits(Double_t xmin, Double_t xmax);
+
 protected:
 
-  Bool_t initialize(Double_t xmin, Double_t xmax);
+  Bool_t initialize();
+
+  Bool_t _useIntegrandLimits;
 
   // Integrator configuration
   SummationRule _rule;
@@ -46,9 +50,9 @@ protected:
   void extrapolate(Int_t n) ;
   
   // Numerical integrator workspace
-  Double_t _xmin;                      //! do not persist
-  Double_t _xmax;                      //! do not persist
-  Double_t _range;                     //! do not persist
+  mutable Double_t _xmin;              //! do not persist
+  mutable Double_t _xmax;              //! do not persist
+  mutable Double_t _range;             //! do not persist
   Double_t _extrapValue;               //! do not persist
   Double_t _extrapError;               //! do not persist
   Double_t *_h ;                       //! do not persist

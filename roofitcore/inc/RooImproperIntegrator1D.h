@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooImproperIntegrator1D.rdl,v 1.1 2001/08/08 23:11:24 david Exp $
+ *    File: $Id: RooImproperIntegrator1D.rdl,v 1.2 2001/08/24 23:55:15 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,9 +29,15 @@ public:
 
 protected:
 
-  RooInvTransform *_function;
-  RooIntegrator1D *_integrator1,*_integrator2,*_integrator3;
+  enum LimitsCase { Invalid, ClosedBothEnds, OpenBothEnds, OpenBelowSpansZero, OpenBelow,
+		    OpenAboveSpansZero, OpenAbove };
+  LimitsCase limitsCase() const;
+  LimitsCase _case;
+  mutable Double_t _xmin, _xmax;
 
+  RooInvTransform *_function;
+  mutable RooIntegrator1D *_integrator1,*_integrator2,*_integrator3;
+  
   ClassDef(RooImproperIntegrator1D,0) // 1-dimensional improper integration engine
 };
 

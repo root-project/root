@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.cc,v 1.9 2001/08/24 23:55:15 david Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.10 2001/09/08 01:49:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,7 +32,8 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, SummationRule rule,
 {
   // Use this form of the constructor to integrate over the function's default range.
 
-  _valid= initialize(function.getMinLimit(0),function.getMaxLimit(0));
+  _useIntegrandLimits= kTRUE;
+  _valid= initialize();
 } 
 
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
@@ -41,10 +42,13 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
 {
   // Use this form of the constructor to override the function's default range.
 
-  _valid= initialize(xmin,xmax);
+  _useIntegrandLimits= kFALSE;
+  _xmin= xmin;
+  _xmax= xmax;
+  _valid= initialize();
 } 
 
-Bool_t RooIntegrator1D::initialize(Double_t xmin, Double_t xmax)
+Bool_t RooIntegrator1D::initialize()
 {
   // apply defaults if necessary
   if(_maxSteps <= 0) {
@@ -69,15 +73,6 @@ Bool_t RooIntegrator1D::initialize(Double_t xmin, Double_t xmax)
   _c= new Double_t[_nPoints + 1];
   _d= new Double_t[_nPoints + 1];
 
-  // remember our integration range
-  if(xmin >= xmax) {
-    cout << "RooIntegrator1D::initialize: bad range with min >= max" << endl;
-    return kFALSE;
-  }
-  _xmin= xmin;
-  _xmax= xmax;
-  _range= _xmax - _xmin;
-
   return checkLimits();
 }
 
@@ -90,9 +85,34 @@ RooIntegrator1D::~RooIntegrator1D()
   if(_d) delete[] _d;
 }
 
+Bool_t RooIntegrator1D::setLimits(Double_t xmin, Double_t xmax) {
+  // Change our integration limits. Return kTRUE if the new limits are
+  // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+  // if this object was constructed to always use our integrand's limits.
+
+  if(_useIntegrandLimits) {
+    cout << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    return kFALSE;
+  }
+  _xmin= xmin;
+  _xmax= xmax;
+  return checkLimits();
+}
+
 Bool_t RooIntegrator1D::checkLimits() const {
   // Check that our integration range is finite and otherwise return kFALSE.
+  // Update the limits from the integrand if requested.
 
+  if(_useIntegrandLimits) {
+    assert(0 != integrand() && integrand()->isValid());
+    _xmin= integrand()->getMinLimit(0);
+    _xmax= integrand()->getMaxLimit(0);
+  }
+  _range= _xmax - _xmin;
+  if(_range <= 0) {
+    cout << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
+    return kFALSE;
+  }
   return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
 }
 
@@ -212,6 +232,3 @@ void RooIntegrator1D::extrapolate(Int_t n)
     _extrapValue += (_extrapError=(2*ns < (_nPoints-m) ? _c[ns+1] : _d[ns--]));
   }
 }
-
-
-
