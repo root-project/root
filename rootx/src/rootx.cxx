@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.7 2001/06/26 16:32:36 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.8 2001/11/06 13:38:27 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -41,8 +41,10 @@
 #endif
 
 #ifdef __sun
-#   if __SUNPRO_CC > 0x420
-#      define GLOBAL_ERRNO
+#   ifndef _REENTRANT
+#      if __SUNPRO_CC > 0x420
+#         define GLOBAL_ERRNO
+#      endif
 #   endif
 #endif
 

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: error.cxx,v 1.4 2002/01/20 14:23:53 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: error.cxx,v 1.5 2002/01/22 10:53:29 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -31,9 +31,12 @@ extern "C" {
 }
 #endif
 
+
 #ifdef __sun
-#   if __SUNPRO_CC > 0x420
-#      define GLOBAL_ERRNO
+#   ifndef _REENTRANT
+#      if __SUNPRO_CC > 0x420
+#         define GLOBAL_ERRNO
+#      endif
 #   endif
 #endif
 

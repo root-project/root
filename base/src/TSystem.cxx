@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.34 2002/02/26 17:57:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.35 2002/03/26 16:06:04 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -194,10 +194,14 @@ Int_t TSystem::GetErrno()
 {
    // Static function returning system error number.
 
+#ifdef _REENTRANT
+    return errno; // errno can be a macro if_REENTRANT is set
+#else
 #ifdef R__SOLARIS_CC50
    return ::errno;
 #else
    return errno;
+#endif
 #endif
 }
 
@@ -206,10 +210,14 @@ void TSystem::ResetErrno()
 {
    // Static function resetting system error number.
 
+#ifdef _REENTRANT
+    errno = 0; // errno can be a macro if_REENTRANT is set
+#else
 #ifdef R__SOLARIS_CC50
    ::errno = 0;
 #else
    errno = 0;
+#endif
 #endif
 }
 
