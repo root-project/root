@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.3 2000/12/04 17:50:53 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.4 2000/12/05 10:49:01 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -2482,7 +2482,7 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
     static Double_t step, xptu[101], yptu[101], f, rno;
     static Int_t icol, kcol, ierr, iint, iext, lnow, nptu, i, iflag, ierrf;
     static Int_t ilist, nparx, izero, nf, lk, it, iw, inonde, nsuper;
-    static Int_t it2, ke1, ke2, nowprt, kll, let, krl;
+    static Int_t it2, ke1, ke2, nowprt, kll, krl;
     static TString chwhy, c26, cvblnk, cneway, comd;
     static TString ctemp;
     static Bool_t lfreed, ltofix, lfixed;
@@ -2494,14 +2494,7 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
     lk = comand.Length();
     if (lk > 20) lk = 20;
     fCword =  comand;
-//*-*-             get upper case
-    for (icol = 1; icol <= lk; ++icol) {
-	for (let = 1; let <= 26; ++let) {
-	    if (fCword(icol-1,1) == clower[let-1]) {
-		fCword(icol-1,1)  = cupper[let-1];
-	    }
-	}
-    }
+    fCword.ToUpper();
 //*-*-          Copy the first MAXP arguments into WORD7, making
 //*-*-          sure that WORD7(1)=0 if LLIST=0
     for (iw = 1; iw <= fMaxpar; ++iw) {
