@@ -195,12 +195,12 @@ PROOFLIBS    := $(LPATH)/libProof.lib $(LPATH)/libTreePlayer.lib
 endif
 ifeq ($(PLATFORM),macosx)
 # Force loading of not referenced libraries
-ROOTULIBS    := -u _G__cpp_setup_setupG__Hist    \
-                -u _G__cpp_setup_setupG__Graf1   \
-                -u _G__cpp_setup_setupG__G3D     \
-                -u _G__cpp_setup_setupG__GPad    \
-                -u _G__cpp_setup_setupG__Tree    \
-                -u _G__cpp_setup_setupG__Matrix
+ROOTULIBS    := -u _G__cpp_setupG__Hist    \
+                -u _G__cpp_setupG__Graf1   \
+                -u _G__cpp_setupG__G3D     \
+                -u _G__cpp_setupG__GPad    \
+                -u _G__cpp_setupG__Tree    \
+                -u _G__cpp_setupG__Matrix
 endif
 ifeq ($(PLATFORM),win32)
 # Force loading of not referenced libraries
