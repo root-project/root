@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.52 2003/01/13 15:05:29 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.53 2003/01/27 18:13:55 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1117,6 +1117,7 @@ char *TUnixSystem::Which(const char *search, const char *wfil, EAccessMode mode)
    char name[kMAXPATHLEN], file[kMAXPATHLEN];
    const char *ptr;
    char *next, *exname;
+   struct stat finfo;
 
    exname = gSystem->ExpandPathName(wfil);
    if (exname)
@@ -1127,7 +1128,8 @@ char *TUnixSystem::Which(const char *search, const char *wfil, EAccessMode mode)
 
    if (file[0] == '/') {
       exname = StrDup(file);
-      if (exname && access(exname, mode) == 0) {
+      if (exname && access(exname, mode) == 0 &&
+          stat(exname, &finfo) == 0 && S_ISREG(finfo.st_mode)) {
          if (gEnv->GetValue("Root.ShowPath", 0))
             Printf("Which: %s = %s", wfil, exname);
          return exname;
@@ -1159,7 +1161,8 @@ char *TUnixSystem::Which(const char *search, const char *wfil, EAccessMode mode)
       strcat(name, file);
 
       exname = gSystem->ExpandPathName(name);
-      if (exname && access(exname, mode) == 0) {
+      if (exname && access(exname, mode) == 0 &&
+          stat(exname, &finfo) == 0 && S_ISREG(finfo.st_mode)) {
          if (gEnv->GetValue("Root.ShowPath", 0))
             Printf("Which: %s = %s", wfil, exname);
          return exname;

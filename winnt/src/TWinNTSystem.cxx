@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.40 2003/01/22 11:23:04 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.41 2003/01/27 18:24:41 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1397,32 +1397,31 @@ char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mo
    char *lpFilePart = 0;
    char *found = 0;
 
-//* Expand parameters
+   // Expand parameters
 
    char *exinfile = gSystem->ExpandPathName(infile);
-//  Check whether this infile has the absolute path first
+   // Check whether this infile has the absolute path first
    if (IsAbsoluteFileName(exinfile) ) {
-     found = exinfile;
+      found = exinfile;
+   } else {
+      char *exsearch = gSystem->ExpandPathName(search);
+
+      // Check access
+      struct stat finfo;
+      if (SearchPath(exsearch,exinfile,NULL,kMAXPATHLEN,name,&lpFilePart) &&
+          access(name, mode) == 0 && stat(name, &finfo) == 0 &&
+          finfo.st_mode & S_IFREG) {
+         if (gEnv->GetValue("Root.ShowPath", 0))
+            Printf("Which: %s = %s", infile, name);
+         found = StrDup(name);
+      }
+      delete [] exsearch;
+      delete [] exinfile;
    }
-   else {
-     char *exsearch = gSystem->ExpandPathName(search);
 
- //*-*  Check access
-
-    if (SearchPath( exsearch,exinfile,NULL,kMAXPATHLEN,name,&lpFilePart)
-                    && access(name, mode) == 0) {
-        if (gEnv->GetValue("Root.ShowPath", 0))
-           Printf("Which: %s = %s", infile, name);
-        found =  StrDup(name);
-    }
-    delete [] exsearch;
-    delete [] exinfile;
-   }
-
-   if (found  && AccessPathName(found, mode))
-   {
-     delete [] found;
-     found = 0;
+   if (found  && AccessPathName(found, mode)) {
+      delete [] found;
+      found = 0;
    }
    return found;
 }
