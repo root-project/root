@@ -99,31 +99,37 @@ void MyDetector::Init()
     
     fVolume[1] = gGeoManager->MakeBox("BOX0",fScintillator[0], 20.0,2.00,20.0);
     fVolume[1]->SetLineColor(7);
+    fVolume[1]->SetTransparency(50);
     fVolume[1]->SetLineWidth(1);
     fVolume[0]->AddNode(fVolume[1],0,fTrans[0]);
 
     fVolume[2] = gGeoManager->MakeBox("BOX1",fDiscriminator, 20.0,1.00,20.0);
     fVolume[2]->SetLineColor(15);
+    fVolume[2]->SetTransparency(50);
     fVolume[2]->SetLineWidth(1);
     fVolume[0]->AddNode(fVolume[2],1,fTrans[1]);
 
     fVolume[3] = gGeoManager->MakeBox("BOX2",fScintillator[1], 20.0,2.00,20.0);
     fVolume[3]->SetLineColor(7);
+    fVolume[3]->SetTransparency(50);
     fVolume[3]->SetLineWidth(1);
     fVolume[0]->AddNode(fVolume[3],2,fTrans[2]);
 
     fVolume[4] = gGeoManager->MakeBox("BOX3",fScintillator[2], 20.0,2.00,20.0);
     fVolume[4]->SetLineColor(7);
+    fVolume[4]->SetTransparency(50);
     fVolume[4]->SetLineWidth(1);
     fVolume[0]->AddNode(fVolume[4],3,fTrans[3]);
 
     fVolume[5] = gGeoManager->MakeBox("BOX4",fCalorimeter, 20.0,12.00,20.0);
     fVolume[5]->SetLineColor(38);
+    fVolume[5]->SetTransparency(50);
     fVolume[5]->SetLineWidth(1);
     fVolume[0]->AddNode(fVolume[5],4,fTrans[4]);
 
     fVolume[6] = gGeoManager->MakeBox("BOX5",fScintillator[3], 20.0,2.00,20.0);
     fVolume[6]->SetLineColor(7);
+    fVolume[6]->SetTransparency(50);
     fVolume[6]->SetLineWidth(1);
     fVolume[0]->AddNode(fVolume[6],5,fTrans[5]);
 

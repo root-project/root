@@ -45,7 +45,6 @@
 #include "MyEvent.h"
 
 #include <TGeoManager.h>
-#include <TGeoTrack.h>
 #include <TView.h>
 #include <TGToolBar.h>
 #include <TGSplitter.h>
@@ -132,7 +131,6 @@ TGListTree      *gEventListTree; // event selection TGListTree
 TGListTreeItem  *gBaseLTI;
 TGListTreeItem  *gTmpLTI;
 TGListTreeItem  *gLTI[MAX_PARTICLE];
-TGeoTrack       *gTrack;
 
 const TGPicture *bpic, *bspic;
 const TGPicture *lpic, *lspic;
@@ -991,9 +989,6 @@ void RootShower::OnShowerProduce()
     produce();
     Interrupt(kFALSE);
     gifindex = 0;
-    if(!fShowProcess) {
-        gGeoManager->DrawTracks();
-    }
     for(i=0;i<=fEvent->GetTotal();i++) {
         gSystem->ProcessEvents();  // handle GUI events
         if(IsInterrupted()) break;
@@ -1019,11 +1014,10 @@ void RootShower::OnShowerProduce()
            (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
             // Fill histogram for particle's energy loss
             fHisto_dEdX->Fill(fEvent->GetParticle(i)->GetELoss());
+            fEvent->GetTrack(i)->Draw();
             // show track by track if "show process" has been choosen
             // into the menu
             if(fShowProcess) {
-                gTrack = (TGeoTrack *)gGeoManager->GetTrackOfId(i);
-                gTrack->Draw();
                 cA->Modified();
                 cA->Update();
                 // create one gif image by step if "Animated GIF"
@@ -1110,8 +1104,7 @@ void RootShower::OnShowSelected(TGListTreeItem *item)
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_E) &&
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_MUON) &&
        (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
-        gTrack = (TGeoTrack *)gGeoManager->GetTrackOfId(retval);
-        gTrack->Draw();
+        fEvent->GetTrack(retval)->Draw();
     }
     cB->GetView()->SetPerspective();
     cB->cd();
@@ -1148,7 +1141,6 @@ void RootShower::OnOpenFile(const Char_t *filename)
     gGeoManager->Import(geofilename, "detector");
     Initialize(1);
 
-    gGeoManager->DrawTracks();
     for(i=0;i<=fEvent->GetTotal();i++) {
         gTmpLTI = fEventListTree->AddItem(gBaseLTI, fEvent->GetParticle(i)->GetName());
         sprintf(strtmp,"%1.2f GeV",fEvent->GetParticle(i)->Energy());
@@ -1175,6 +1167,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
            (fEvent->GetParticle(i)->GetPdgCode() != ANTINEUTRINO_TAU) ) {
             // Fill histogram for particle's energy loss
             fHisto_dEdX->Fill(fEvent->GetParticle(i)->GetELoss());
+            fEvent->GetTrack(i)->Draw();
         }
     }
     // Reparent each list tree item regarding the
@@ -1367,8 +1360,7 @@ Int_t RootShower::DistancetoPrimitive(Int_t px, Int_t py)
     if(fEvent->GetTotal() <= 0) return 0;
     // Browse every track and get related particle infos.
     for(i=0;i<fEvent->GetTotal();i++) {
-        gTrack = (TGeoTrack *)gGeoManager->GetTrackOfId(i);
-        if(gTrack) dist = gTrack->DistancetoPrimitive(px, py);
+        dist = fEvent->GetTrack(i)->DistancetoPrimitive(px, py);
         if (dist < 2) {
             gPad->SetSelected((TObject*)fEvent->GetParticle(i));
             fStatusBar->SetText(fEvent->GetParticle(i)->GetObjectInfo(px, py),1);
