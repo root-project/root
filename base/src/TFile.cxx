@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.36 2001/04/04 13:56:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.37 2001/05/31 08:48:43 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -496,6 +496,7 @@ void TFile::Close(Option_t *)
       gFile      = 0;
       gDirectory = gROOT;
    }
+   TStreamerInfo::SetCurrentFile(gFile);
 
    gROOT->GetListOfFiles()->Remove(this);
 

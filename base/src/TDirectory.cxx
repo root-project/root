@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.11 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.12 2001/05/31 08:47:43 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -539,12 +539,12 @@ void TDirectory::Close(Option_t *)
       cursav->cd();
    else {
       gFile = 0;
-      TStreamerInfo::SetCurrentFile(gFile);
       if (this == gROOT)
          gDirectory = 0;
       else
          gDirectory = gROOT;
    }
+   TStreamerInfo::SetCurrentFile(gFile);
 
    TCollection::EmptyGarbageCollection();
 }
