@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.166 2003/04/11 11:48:11 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.167 2003/04/14 14:13:19 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2901,7 +2901,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kBase:    {
             TClass *clbase = aElement->GetClassPointer();
             Int_t clversion = ((TStreamerBase*)aElement)->GetBaseVersion();
-            clbase->GetStreamerInfo(clversion)->ReadBufferClones(b,clones,nc,-1,0);
+            clbase->GetStreamerInfo(clversion)->ReadBufferClones(b,clones,nc,-1,fOffset[i]);
             //for (Int_t k=0;k<nc;k++) {
             //   pointer = (char*)clones->UncheckedAt(k)+baseOffset;
             //   aElement->ReadBuffer(b,pointer);
@@ -4081,7 +4081,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 
          // Base Class
          case kBase: { TClass *clbase = aElement->GetClassPointer();
-                       clbase->GetStreamerInfo()->WriteBufferClones(b,clones,nc,-1,0);
+                       clbase->GetStreamerInfo()->WriteBufferClones(b,clones,nc,-1,fOffset[i]);
                        break;
                      }
 
