@@ -162,6 +162,7 @@ D: monitoring facility for PROOF
 N: Andrew Haas
 E: haas@yahoo.com
 D: add support for asymmetric errors in the GraphFitChisquare functions
+D: implement TGraphAsymmErrors::BayesDivide and corresponding functions
 
 N: Robert Hatcher
 E: rhatcher@fnal.gov
@@ -281,6 +282,10 @@ D: author of Carrot (http://carrot.cern.ch)
 N: Suzanne Panacek
 E: spanacek@fnal.gov
 D: editor of the User's Guide
+
+N: Marc Paterno
+E: paterno@fnal.gov
+D: implement utility functions used by TGraphAsymmErrors::BayesDivide
 
 N: Victor Perevoztchikov
 E: perev@bnl.gov
