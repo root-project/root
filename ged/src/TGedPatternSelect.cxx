@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.6 2004/03/03 13:17:47 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.7 2004/04/06 21:06:13 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -666,6 +666,7 @@ TGedPatternSelect::TGedPatternSelect(const TGWindow *p, Style_t pattern, Int_t i
    fPattern = pattern;
    SetPopup(new TGedPatternPopup(gClient->GetDefaultRoot(), this, fPattern));
    SetPattern(fPattern);
+   PatternSelected(fPattern);
 }
 
 //______________________________________________________________________________
@@ -676,7 +677,7 @@ Bool_t TGedPatternSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       SetPattern(parm2);
       SendMessage(fMsgWindow, MK_MSG(kC_PATTERNSEL, kPAT_SELCHANGED),
                  parm1, parm2);
-      PatternSelected();
+      PatternSelected(fPattern);
    }
    return kTRUE;
 }
@@ -728,6 +729,7 @@ void TGedPatternSelect::SetPattern(Style_t pattern)
 
    fPattern = pattern;
    gClient->NeedRedraw(this);
+   PatternSelected(fPattern);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.4 2004/02/22 11:50:29 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.5 2004/04/06 21:06:13 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -25,7 +25,7 @@
 // kC_MARKERSEL, kMAR_SELCHANGED, widget id, style.                     //
 //                                                                      //
 // and the signal:                                                      //
-// MarkerSelected(Style_t pattern)                                      //
+// MarkerSelected(Style_t marker)                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -132,6 +132,8 @@ TGedMarkerSelect::TGedMarkerSelect(const TGWindow *p, Style_t markerStyle, Int_t
    fPicture = 0;
    SetPopup(new TGedMarkerPopup(gClient->GetDefaultRoot(), this, markerStyle));
    SetMarkerStyle(markerStyle);
+   MarkerSelected(fMarkerStyle);
+
 }
 
 //_____________________________________________________________________________
@@ -141,7 +143,7 @@ Bool_t TGedMarkerSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       SetMarkerStyle(parm2);
       SendMessage(fMsgWindow, MK_MSG(kC_MARKERSEL, kMAR_SELCHANGED),
                   fWidgetId, parm2);
-      MarkerSelected();
+      MarkerSelected(fMarkerStyle);
    }
 
    if (parm1)     // no warning
@@ -186,6 +188,8 @@ void TGedMarkerSelect::SetMarkerStyle(Style_t markerStyle)
 
    fMarkerStyle = markerStyle;
    gClient->NeedRedraw(this);
+
+   MarkerSelected(fMarkerStyle);
 
    if (fPicture) {
       gClient->FreePicture(fPicture);
