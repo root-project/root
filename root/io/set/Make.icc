@@ -1,0 +1,4 @@
+rootcint -f dict.cxx -c set_problem.h LinkDef.h
+icc -g  -c -I${ROOTSYS}/include set_problem.cxx -o set_problem.o
+icc -g  -c -I${ROOTSYS}/include dict.cxx -o dict.o
+icc -g  `root-config --libs` set_problem.o dict.o -o set_problem 
