@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.59 2004/10/29 16:07:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.60 2004/11/05 22:57:46 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -99,7 +99,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t *classname)
    if (gFile == 0) return;
    if (!gFile->IsWritable()) return; //*-* in case of a directory in memory
    if (gDirectory->GetKey(name)) {
-      Error("TDirectory","Directory %s exists already",name);
+      Error("TDirectory","An object with name %s exists already",name);
       return;
    }
    TClass *cl = IsA();
@@ -1072,7 +1072,7 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
       return 0;
    }
    if (GetKey(name)) {
-      Error("mkdir","Directory %s exists already",name);
+      Error("mkdir","An object with name %s exists already",name);
       return 0;
    }
 
