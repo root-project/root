@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.rdl,v 1.4 2001/09/18 02:03:44 verkerke Exp $
+ *    File: $Id: RooAcceptReject.rdl,v 1.5 2001/09/24 16:23:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -29,7 +29,7 @@ public:
   inline void setVerbose(Bool_t verbose= kTRUE) { _verbose= verbose; }
   inline Bool_t isVerbose() const { return _verbose; }
 
-  void generateEvents(Int_t nEvents, RooDataSet &container);
+  const RooArgSet *generateEvent(UInt_t remaining);
 
   // ascii printing interface
   virtual void printToStream(ostream &os, PrintOption opt= Standard, TString indent= "") const ;
@@ -38,9 +38,8 @@ public:
   }
 
 protected:
-  void addEvent(RooDataSet &cache, TIterator *nextCatVar, TIterator *nextRealVar, RooRealVar *funcVal);
-  Bool_t acceptEvent(const RooDataSet &cache, RooRealVar *funcVal, RooDataSet &container);
-  inline Double_t eff() const { return _funcSum/(_totalEvents*_maxFuncVal); }
+  void addEventToCache();
+  const RooArgSet *nextAcceptedEvent();
 
   RooArgSet *_cloneSet;
   RooAbsReal *_funcClone;
@@ -48,7 +47,10 @@ protected:
   Bool_t _verbose, _isValid;
   Double_t _maxFuncVal, _funcSum;
   UInt_t _realSampleDim,_catSampleMult,_minTrials,_totalEvents,_eventsUsed;
-  RooRealVar *_funcVal;
+  RooRealVar *_funcValStore,*_funcValPtr;
+  RooDataSet *_cache;
+  TIterator *_nextCatVar;
+  TIterator *_nextRealVar;
 
   static const int _maxSampleDim, _minTrialsArray[];
 

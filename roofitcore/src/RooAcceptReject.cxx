@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.13 2001/10/10 00:22:23 david Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.14 2001/10/11 01:28:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,15 +31,15 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.13 2001/10/10 00:22:23 david Exp $";
+"$Id: RooAcceptReject.cc,v 1.14 2001/10/11 01:28:49 verkerke Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
 {
   // Initialize an accept-reject generator for the specified distribution function,
   // which must be non-negative but does not need to be normalized over the
-  // variables to be generated, genVars. The function and its dependents are not
-  // cloned and so will generally be disturbed during the generation process.
+  // variables to be generated, genVars. The function and its dependents are
+  // cloned and so will not be disturbed during the generation process.
 
   // Clone the function and all nodes that it depends on so that this generator
   // is independent of any existing objects.
@@ -118,14 +118,13 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
     _minTrials= _minTrialsArray[_realSampleDim]*_catSampleMult;
   }
 
-
   // print a verbose summary of our configuration, if requested
   if(_verbose) {
     cout << fName << "::" << ClassName() << ":" << endl
 	 << "  Initializing accept-reject generator for" << endl << "    ";
     _funcClone->Print();
     cout << "  Real sampling dimension is " << _realSampleDim << endl;
-    cout << "  Number of sampled category states is " << _catSampleMult << endl ;
+    cout << "  Category sampling multiplier is " << _catSampleMult << endl ;
     cout << "  Min sampling trials is " << _minTrials << endl;
     cout << "  Will generate category vars ";
     TString indent("  ");
@@ -135,18 +134,46 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
   }
 
   // create a fundamental type for storing function values
-  _funcVal= dynamic_cast<RooRealVar*>(_funcClone->createFundamental());
-  assert(0 != _funcVal);
+  _funcValStore= dynamic_cast<RooRealVar*>(_funcClone->createFundamental());
+  assert(0 != _funcValStore);
+
+  // create a new dataset to cache trial events and function values
+  RooArgSet cacheArgs(_catVars);
+  cacheArgs.add(_realVars);
+  cacheArgs.add(*_funcValStore);
+  _cache= new RooDataSet("cache","Accept-Reject Event Cache",cacheArgs);
+  assert(0 != _cache);
+
+  // attach our function clone to the cache dataset
+  const RooArgSet *cacheVars= _cache->get();
+  assert(0 != cacheVars);
+  _funcClone->recursiveRedirectServers(*cacheVars,kFALSE);
+
+  // update ours sets of category and real args to refer to the cache dataset
+  const RooArgSet *dataVars= _cache->get();
+  _catVars.replace(*dataVars);
+  _realVars.replace(*dataVars);
+
+  // find the function value in the dataset
+  _funcValPtr= (RooRealVar*)dataVars->find(_funcValStore->GetName());
+
+  // create iterators for the new sets
+  _nextCatVar= _catVars.createIterator();
+  _nextRealVar= _realVars.createIterator();
+  assert(0 != _nextCatVar && 0 != _nextRealVar);
 
   // initialize our statistics
   _maxFuncVal= 0;
   _funcSum= 0;
   _totalEvents= 0;
+  _eventsUsed= 0;
 }
 
 RooAcceptReject::~RooAcceptReject() {
+  delete _nextCatVar;
+  delete _nextRealVar;
   delete _cloneSet;
-  delete _funcVal;
+  delete _funcValStore;
 }
 
 void RooAcceptReject::printToStream(ostream &os, PrintOption opt, TString indent) const
@@ -154,108 +181,88 @@ void RooAcceptReject::printToStream(ostream &os, PrintOption opt, TString indent
   oneLinePrint(os,*this);
 }
 
-void RooAcceptReject::generateEvents(Int_t nEvents, RooDataSet &container) {
-  // Fill the dataset provided with nEvents generated entries.
+const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) {
+  // Return a pointer to a generated event. The caller does not own the event and it
+  // will be overwritten by a subsequent call. The input parameter 'remaining' should
+  // contain your best guess at the total number of subsequent events you will request.
 
-  // create a new dataset to cache trial events and function values
-  RooArgSet cacheArgs(_catVars);
-  cacheArgs.add(_realVars);
-  cacheArgs.add(*_funcVal);
-  RooDataSet cache("cache","Accept-Reject Event Cache",cacheArgs);
-  _eventsUsed= 0;
-
-  // attach our function clone to this dataset
-  _funcClone->recursiveRedirectServers(*cache.get(),kFALSE);
-
-  // create new sets of category and real args that refer to the new dataset
-  const RooArgSet *dataVars= cache.get();
-  RooArgSet catVars(_catVars),realVars(_realVars);
-  catVars.replace(*dataVars);
-  realVars.replace(*dataVars);
-
-  // find the function value in the dataset
-  RooRealVar *funcVal= (RooRealVar*)dataVars->find(_funcVal->GetName());
-
-  // create iterators for the new sets
-  TIterator *nextCatVar= catVars.createIterator();
-  TIterator *nextRealVar= realVars.createIterator();
+  // are we actually generating anything? (the cache always contains at least our function value)
+  const RooArgSet *event= _cache->get();
+  if(event->getSize() == 1) return event;
 
   // first generate enough events to get reasonable estimates for the integral and
   // maximum function value
-  while(_totalEvents < _minTrials) addEvent(cache,nextCatVar,nextRealVar,funcVal);
+  while(_totalEvents < _minTrials) addEventToCache();
 
-  Int_t generatedEvts(0);
-  while(generatedEvts < nEvents) {
-    // Use any cached events first.
-    if(acceptEvent(cache,funcVal,container)) {
-      generatedEvts++;
+  event= 0;
+  while(0 == event) {
+    // Use any cached events first
+    event= nextAcceptedEvent();
+    if(event) break;
+    // When we have used up the cache, start a new cache and add
+    // some more events to it.      
+    _cache->reset();
+    _eventsUsed= 0;
+    // Calculate how many more events to generate using our best estimate of our efficiency.
+    // Always generate at least one more event so we don't get stuck.
+    if(_totalEvents*_maxFuncVal <= 0) {
+      cout << "RooAcceptReject::generateEvent: cannot estimate efficiency...giving up" << endl;
+      return 0;
     }
-    else {
-      // When we have used up the cache, start a new cache and add
-      // some more events to it.      
-      cache.reset();
-      _eventsUsed= 0;
-      // Calculate how many more events to generate using our best estimate of our efficiency.
-      // Always generate at least one more event so we don't get stuck.
-      Int_t extra= 1 + (Int_t)(1.05*(nEvents - generatedEvts)/eff());
-      if(_verbose) cout << "generating " << extra << " events into reset cache" << endl;
-      Double_t oldMax(_maxFuncVal);
-      while(extra--) addEvent(cache,nextCatVar,nextRealVar,funcVal);
-      if(_verbose && (_maxFuncVal > oldMax)) {
-	cout << "RooAcceptReject::generateEvents: estimated function maximum increased from "
-	     << oldMax << " to " << _maxFuncVal << endl;
-      }
+    Double_t eff= _funcSum/(_totalEvents*_maxFuncVal);
+    Int_t extra= 1 + (Int_t)(1.05*remaining/eff);
+    if(_verbose) {
+      cout << "RooAcceptReject::generateEvent: adding " << extra << " events to the cache" << endl;
+    }
+    Double_t oldMax(_maxFuncVal);
+    while(extra--) addEventToCache();
+    if(_verbose && (_maxFuncVal > oldMax)) {
+      cout << "RooAcceptReject::generateEvent: estimated function maximum increased from "
+	   << oldMax << " to " << _maxFuncVal << endl;
     }
   }
-
-  // reattach our function clone to the cloned args
-  _funcClone->recursiveRedirectServers(*_cloneSet,kTRUE);
-
-  // cleanup
-  delete nextRealVar;
-  delete nextCatVar;
+  return event;
 }
 
-Bool_t RooAcceptReject::acceptEvent(const RooDataSet &cache, RooRealVar *funcVal, RooDataSet &container) {
+const RooArgSet *RooAcceptReject::nextAcceptedEvent() {
   // Scan through events in the cache which have not been used yet,
   // looking for the first accepted one which is added to the specified
-  // container. Return kTRUE if an accepted event is found, or otherwise
-  // kFALSE. Update _eventsUsed.
+  // container. Return a pointer to the accepted event, or else zero
+  // if we use up the cache before we accept an event. The caller does
+  // not own the event and it will be overwritten by a subsequent call.
 
   const RooArgSet *event(0);
-  while(event= cache.get(++_eventsUsed)) {    
+  while(event= _cache->get(++_eventsUsed)) {    
     // accept this cached event?
     Double_t r= RooRandom::uniform();
-    if(r*_maxFuncVal > funcVal->getVal()) continue;
+    if(r*_maxFuncVal > _funcValPtr->getVal()) continue;
     // copy this event into the output container
     if(_verbose && (_eventsUsed%1000==0)) {
       cout << "RooAcceptReject: accepted event (used " << _eventsUsed << " of "
-	   << cache.numEntries() << " so far)" << endl;
+	   << _cache->numEntries() << " so far)" << endl;
     }
-    container.add(*event);
-    return kTRUE;
+    break;
   }
-  return kFALSE;
+  return event;
 }
 
-void RooAcceptReject::addEvent(RooDataSet &cache, TIterator *nextCatVar, TIterator *nextRealVar,
-			       RooRealVar *funcVal) {
-  // Add a trial event to the specified dataset and update our estimates
+void RooAcceptReject::addEventToCache() {
+  // Add a trial event to our cache and update our estimates
   // of the function maximum value and integral.
 
   // randomize each discrete argument
-  nextCatVar->Reset();
+  _nextCatVar->Reset();
   RooCategory *cat(0);
-  while(cat= (RooCategory*)(*nextCatVar)()) cat->randomize();
+  while(cat= (RooCategory*)_nextCatVar->Next()) cat->randomize();
 
   // randomize each real argument
-  nextRealVar->Reset();
+  _nextRealVar->Reset();
   RooRealVar *real(0);
-  while(real= (RooRealVar*)(*nextRealVar)()) real->randomize();
+  while(real= (RooRealVar*)_nextRealVar->Next()) real->randomize();
 
   // calculate and store our function value at this new point
   Double_t val= _funcClone->getVal();
-  funcVal->setVal(val);
+  _funcValPtr->setVal(val);
 
   // Update the estimated integral and maximum value. Increase our
   // maximum estimate slightly to give a safety margin with a
@@ -264,15 +271,12 @@ void RooAcceptReject::addEvent(RooDataSet &cache, TIterator *nextCatVar, TIterat
   _funcSum+= val;
 
   // fill a new entry in our cache dataset for this point
-  cache.fill();
+  _cache->fill();
   _totalEvents++;
 
   if (_verbose &&_totalEvents%10000==0) {
     cout << "RooAccepReject: generated " << _totalEvents << " events so far." << endl ;
   }
-
-//   if(_verbose) cout << "=== [" << _totalEvents << "] " << val << " (I = "
-// 		    << _funcSum/_totalEvents << ")" << endl;
 }
 
 const int RooAcceptReject::_maxSampleDim= 3,

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.18 2001/10/10 00:22:23 david Exp $
+ *    File: $Id: RooGenContext.cc,v 1.19 2001/10/12 01:48:45 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,11 +28,11 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.18 2001/10/10 00:22:23 david Exp $";
+"$Id: RooGenContext.cc,v 1.19 2001/10/12 01:48:45 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose) :  
-  RooAbsGenContext(model,verbose), _origVars(&vars), _prototype(prototype), 
+  RooAbsGenContext(model,vars,prototype,verbose),
   _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0)
 {
   // Initialize a new context for generating events with the specified
@@ -48,7 +48,6 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
   // Find the clone in the snapshot list
   _pdfClone = (RooAbsPdf*)_cloneSet->find(model.GetName());
-
 
   // Analyze the list of variables to generate...
   _isValid= kTRUE;
@@ -99,42 +98,25 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   }
   delete servers;
   delete iterator;
-  if(!_isValid) {
+  if(!isValid()) {
     cout << ClassName() << "::" << GetName() << ": constructor failed with errors" << endl;
     return;
-  }
-
-  // Analyze the prototype dataset, if one is specified
-  _lastProtoIndex= 0;
-  if(_prototype) {
-    TIterator *protoIterator= _prototype->get()->createIterator();
-    const RooAbsArg *proto(0);
-    while(proto= (const RooAbsArg*)protoIterator->Next()) {
-      // is this variable being generated or taken from the prototype?
-      if(!_directVars.contains(*proto) && !_otherVars.contains(*proto) && !_uniformVars.contains(*proto)) {
-	_protoVars.add(*proto);
-      }
-    }
-    delete protoIterator;
   }
 
   // Can the model generate any of the direct variables itself?
   RooArgSet generatedVars;
   _code= _pdfClone->getGenerator(_directVars,generatedVars);
+
   // Move variables which cannot be generated into the list to be generated with accept/reject
   _directVars.remove(generatedVars);
   _otherVars.add(_directVars);
+
+  // Update _directVars to only include variables that will actually be directly generated
   _directVars.removeAll();
   _directVars.add(generatedVars);
 
-  // create a list of all variables that will appear in generated datasets
-  _datasetVars.add(_directVars);
-  _datasetVars.add(_otherVars);
-  _datasetVars.add(_uniformVars);
-  _datasetVars.add(_protoVars);
-
   // initialize the accept-reject generator
-  RooArgSet *depList= _pdfClone->getDependents(&_datasetVars);
+  RooArgSet *depList= _pdfClone->getDependents(&_theEvent);
   depList->remove(_otherVars);
   TString nname(_pdfClone->GetName()) ;
   nname.Append("Reduced") ;
@@ -156,116 +138,49 @@ RooGenContext::~RooGenContext() {
   delete _acceptRejectFunc;
 }
 
-RooDataSet *RooGenContext::generate(Int_t nEvents) const {
-  // Generate the specified number of events with nEvents>0 and
-  // and return a dataset containing the generated events. With nEvents<=0,
-  // generate the number of events in the prototype dataset, if available,
-  // or else the expected number of events, if non-zero. The returned
-  // dataset belongs to the caller. Return zero in case of an error.
-  
-  if(!isValid()) {
-    cout << ClassName() << "::" << GetName() << ": context is not valid" << endl;
-    return 0;
-  }
+void RooGenContext::initGenerator(const RooArgSet &theEvent) {
 
-  // Calculate the expected number of events if necessary
-  if(nEvents <= 0) {
-    if(_prototype) {
-      nEvents= (Int_t)_prototype->numEntries();
-    }
-    else {
-      nEvents= (Int_t)(_pdfClone->expectedEvents() + 0.5);
-    }
-    if(nEvents <= 0) {
-      cout << ClassName() << "::" << GetName()
-	   << ":generate: cannot calculate expected number of events" << endl;
-      return 0;
-    }
-    else if(_verbose) {
-      cout << ClassName() << "::" << GetName() << ":generate: will generate "
-	   << nEvents << " events" << endl;
-    }
-  }
+  // Attach the cloned model to the event buffer we will be filling.
+  _pdfClone->recursiveRedirectServers(theEvent,kFALSE);
 
-  // check that the dataset still defines the variables we need
-  // (this is necessary since we never make a private clone for efficiency)
-  if(_prototype) {
-    const RooArgSet *vars= _prototype->get();
-    TIterator *iterator= _protoVars.createIterator();
-    const RooAbsArg *arg(0);
-    Bool_t ok(kTRUE);
-    while(arg= (const RooAbsArg*)iterator->Next()) {
-      if(vars->contains(*arg)) continue;
-      cout << ClassName() << "::" << GetName() << ":generate: prototype dataset is missing \""
-	   << arg->GetName() << "\"" << endl;
-      ok= kFALSE;
-    }
-    delete iterator;
-    if(!ok) return 0;
-  }
-
-  // create a new dataset
-  TString name(_pdfClone->GetName()),title(_pdfClone->GetTitle());
-  name.Append("Data");
-  title.Prepend("Generated From ");
-  RooDataSet *data= new RooDataSet(name.Data(), title.Data(), _datasetVars);
-
-  // preload the dataset with values from our accept-reject generator
-  _generator->generateEvents(nEvents,*data);
-
-  // are we done?
-  if(_protoVars.getSize() == 0 && _directVars.getSize() == 0) return data;
-
-  // Attach the model to the new data set
-  _pdfClone->attachDataSet(*data);
-
-  // Reset the PDF's error counters
+  // Reset the cloned model's error counters.
   _pdfClone->resetErrorCounters();
+}
 
-   // Loop over the events to generate
-  for(Int_t evt= 0; evt < nEvents; evt++) {
-    // load values from the prototype dataset if requested
-    if(0 != _prototype) {
-      if(++_lastProtoIndex > _prototype->numEntries()) _lastProtoIndex= 1;
-      const RooArgSet *protoEvt= _prototype->get(_lastProtoIndex);
-      if(0 != protoEvt) {
-	//_protoVars= *protoEvt;
-	cout << ">>> copied from prototype event " << _lastProtoIndex << ":" << endl;
-	protoEvt->Print();
-      }
-      else {
-	cout << ClassName() << "::" << GetName() << ":generate: cannot load event "
-	     << _lastProtoIndex << " from prototype dataset" << endl;
-	return 0;
-      }
+void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining) {
+  // Generate variables for a new event.
+
+  if(_otherVars.getSize() > 0) {
+    // call the accept-reject generator to generate its variables
+    const RooArgSet *subEvent= _generator->generateEvent(remaining);
+    if(0 == subEvent) {
+      cout << ClassName() << "::" << GetName() << ":generate: accept/reject generator failed." << endl;
+      return;
     }
-    // use the model's generator
-    //_pdfClone->generateEvent(_code);
-    // add this event to the dataset
-    //data->fill();
+    theEvent= *subEvent;
   }
 
-  return data;
+  // Use the model's optimized generator, if one is available.
+  // The generator writes directly into our local 'event' since we attached it above.
+  if(_directVars.getSize() > 0) {
+    _pdfClone->generateEvent(_code);
+  }
 }
 
 void RooGenContext::printToStream(ostream &os, PrintOption opt, TString indent) const
 {
-  oneLinePrint(os,*this);
+  RooAbsGenContext::printToStream(os,opt,indent);
   if(opt >= Standard) {
     PrintOption less= lessVerbose(opt);
-    os << "Generator of ";
-    _datasetVars.printToStream(os,less,indent);
+    TString deeper(indent);
+    indent.Append("  ");
     os << indent << "Using PDF ";
-    _pdfClone->printToStream(os,less,indent);
+    _pdfClone->printToStream(os,less,deeper);
     if(opt >= Verbose) {
-      os << indent << "PDF depends on ";
-      _cloneSet->printToStream(os,less,indent);
       os << indent << "Use PDF generator for ";
-      _directVars.printToStream(os,less,indent);
+      _directVars.printToStream(os,less,deeper);
       os << indent << "Use accept/reject for ";
-      _otherVars.printToStream(os,less,indent);
-      os << indent << "Use prototype data for ";
-      _protoVars.printToStream(os,less,indent);
+      _otherVars.printToStream(os,less,deeper);
     }
   }
 }

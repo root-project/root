@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAddGenContext.cc,v 1.1 2001/10/12 01:48:44 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -27,7 +27,7 @@ ClassImp(RooAddGenContext)
   
 RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars, 
 				   const RooDataSet *prototype, Bool_t verbose) :
-  RooAbsGenContext(model,verbose), _pdf(&model)
+  RooAbsGenContext(model,vars,prototype,verbose), _pdf(&model)
 {
   // Constructor. Build an array of generator contexts for each product component PDF
   model._pdfIter->Reset() ;
@@ -47,8 +47,15 @@ RooAddGenContext::~RooAddGenContext()
 }
 
 
+void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
+{
+}
 
-RooDataSet* RooAddGenContext::generate(Int_t nEvents) const
+void RooAddGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
+{
+}
+
+RooDataSet* RooAddGenContext::__generate(Int_t nEvents) const
 {
   // Generate dependents of each PDF product component independently
   // and merge results into a single data set

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.52 2001/10/09 18:16:28 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.53 2001/10/11 01:28:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -171,6 +171,7 @@ protected:
 
   // Server redirection interface
   friend class RooAcceptReject;
+  friend class RooGenContext;
   friend class RooResolutionModel ;
   friend class RooSimultaneous ;
   Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE) ;
