@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.106 2004/06/30 11:54:04 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.107 2004/07/02 18:36:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2259,10 +2259,21 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
 #endif
       type = AF_INET;
       if ((host_ptr = gethostbyaddr((const char *)&addr,
-                                    sizeof(addr), AF_INET)))
+                                    sizeof(addr), AF_INET))) {
          host = host_ptr->h_name;
-      else
+         TInetAddress a(host, ntohl(addr), type);
+         UInt_t addr2;
+         Int_t  i;
+         for (i = 1; host_ptr->h_addr_list[i]; i++) {
+            memcpy(&addr2, host_ptr->h_addr_list[i], host_ptr->h_length);
+            a.AddAddress(ntohl(addr2));
+         }
+         for (i = 0; host_ptr->h_aliases[i]; i++)
+            a.AddAlias(host_ptr->h_aliases[i]);
+         return a;
+      } else {
          host = "UnNamedHost";
+      }
    } else if ((host_ptr = gethostbyname(hostname))) {
       // Check the address type for an internet host
       if (host_ptr->h_addrtype != AF_INET) {
@@ -2272,6 +2283,16 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
       memcpy(&addr, host_ptr->h_addr, host_ptr->h_length);
       host = host_ptr->h_name;
       type = host_ptr->h_addrtype;
+      TInetAddress a(host, ntohl(addr), type);
+      UInt_t addr2;
+      Int_t  i;
+      for (i = 1; host_ptr->h_addr_list[i]; i++) {
+         memcpy(&addr2, host_ptr->h_addr_list[i], host_ptr->h_length);
+         a.AddAddress(ntohl(addr2));
+      }
+      for (i = 0; host_ptr->h_aliases[i]; i++)
+         a.AddAlias(host_ptr->h_aliases[i]);
+      return a;
    } else {
       if (gDebug > 0) Error("GetHostByName", "unknown host %s", hostname);
       return TInetAddress(hostname, 0, -1);

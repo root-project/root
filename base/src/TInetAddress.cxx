@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.2 2000/12/13 15:13:53 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TInetAddress.cxx,v 1.3 2002/05/18 08:43:30 brun Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -26,10 +26,10 @@ TInetAddress::TInetAddress()
 {
    // Default ctor. Used in case of unknown host. Not a valid address.
 
-   fHostname = "UnknownHost";
-   fAddress  = 0;
-   fFamily   = -1;
-   fPort     = -1;
+   fHostname  = "UnknownHost";
+   fAddress   = 0;
+   fFamily    = -1;
+   fPort      = -1;
 }
 
 //______________________________________________________________________________
@@ -44,8 +44,8 @@ TInetAddress::TInetAddress(const char *host, UInt_t addr, Int_t family, Int_t po
       fHostname = GetHostAddress();
    else
       fHostname = host;
-   fFamily = family;
-   fPort   = port;
+   fFamily    = family;
+   fPort      = port;
 }
 
 //______________________________________________________________________________
@@ -53,10 +53,12 @@ TInetAddress::TInetAddress(const TInetAddress &adr) : TObject(adr)
 {
    // TInetAddress copy ctor.
 
-   fHostname = adr.fHostname;
-   fAddress  = adr.fAddress;
-   fFamily   = adr.fFamily;
-   fPort     = adr.fPort;
+   fHostname  = adr.fHostname;
+   fAddress   = adr.fAddress;
+   fFamily    = adr.fFamily;
+   fPort      = adr.fPort;
+   fAddresses = adr.fAddresses;
+   fAliases   = adr.fAliases;
 }
 
 //______________________________________________________________________________
@@ -66,10 +68,12 @@ TInetAddress& TInetAddress::operator=(const TInetAddress &rhs)
 
    if (this != &rhs) {
       TObject::operator=(rhs);
-      fHostname = rhs.fHostname;
-      fAddress  = rhs.fAddress;
-      fFamily   = rhs.fFamily;
-      fPort     = rhs.fPort;
+      fHostname  = rhs.fHostname;
+      fAddress   = rhs.fAddress;
+      fFamily    = rhs.fFamily;
+      fPort      = rhs.fPort;
+      fAddresses = rhs.fAddresses;
+      fAliases   = rhs.fAliases;
    }
    return *this;
 }
@@ -92,15 +96,25 @@ UChar_t *TInetAddress::GetAddressBytes() const
 }
 
 //______________________________________________________________________________
+const char *TInetAddress::GetHostAddress(UInt_t addr)
+{
+   // Returns the IP address string "%d.%d.%d.%d", use it to convert
+   // alternative addresses obtained via GetAddresses().
+   // Copy string immediately, it will be reused. Static function.
+
+   return Form("%d.%d.%d.%d", (addr >> 24) & 0xFF,
+                              (addr >> 16) & 0xFF,
+                              (addr >>  8) & 0xFF,
+                               addr & 0xFF);
+}
+
+//______________________________________________________________________________
 const char *TInetAddress::GetHostAddress() const
 {
    // Returns the IP address string "%d.%d.%d.%d".
    // Copy string immediately, it will be reused.
 
-   return Form("%d.%d.%d.%d", (fAddress >> 24) & 0xFF,
-                              (fAddress >> 16) & 0xFF,
-                              (fAddress >>  8) & 0xFF,
-                               fAddress & 0xFF);
+   return GetHostAddress(fAddress);
 }
 
 //______________________________________________________________________________
@@ -112,4 +126,38 @@ void TInetAddress::Print(Option_t *) const
       Printf("%s/%s (not connected)", GetHostName(), GetHostAddress());
    else
       Printf("%s/%s (port %d)", GetHostName(), GetHostAddress(), fPort);
+
+   int i = 0;
+   AddressList_t::const_iterator ai;
+   for (ai = fAddresses.begin(); ai != fAddresses.end(); ai++) {
+      if (!i) printf("Alternative addresses:");
+      printf(" %s", GetHostAddress(*ai));
+      i++;
+   }
+   if (i) printf("\n");
+
+   i = 0;
+   AliasList_t::const_iterator ali;
+   for (ali = fAliases.begin(); ali != fAliases.end(); ali++) {
+      if (!i) printf("Aliases:");
+      printf(" %s", ali->Data());
+      i++;
+   }
+   if (i) printf("\n");
+}
+
+//______________________________________________________________________________
+void TInetAddress::AddAddress(UInt_t addr)
+{
+   // Add alternative address to list of addresses.
+
+   fAddresses.push_back(addr);
+}
+
+//______________________________________________________________________________
+void TInetAddress::AddAlias(const char *alias)
+{
+   // Add alias to list of aliases.
+
+   fAliases.push_back(TString(alias));
 }
