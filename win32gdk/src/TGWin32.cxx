@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:$:$Id:$
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.1 2001/11/28 15:43:09 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -680,7 +680,7 @@ void TGWin32::DrawText(int x, int y, float angle, float mgn,
    // angle      : text angle
    // mgn        : magnification factor
    // text       : text string
-    float   old_mag, old_angle;
+    float   old_mag, old_angle, sangle;
     UInt_t  old_align;
 	int     y2, n1, n2;
 	int     size, length, offset;
@@ -716,8 +716,11 @@ void TGWin32::DrawText(int x, int y, float angle, float mgn,
 	size = atoi(pixel_size);
 	if(fTextSize > 0)
         size = fTextSize;
-    sprintf(avg_width,"%d",(int)(angle * 10));
-    sprintf(set_width,"%d",(int)(angle * 10));
+    sangle = angle;
+    if(sangle < 0)
+        sangle += 360.0;
+    sprintf(avg_width,"%d",(int)(sangle * 10));
+    sprintf(set_width,"%d",(int)(sangle * 10));
     sprintf(font_name, "-%s-%s-%s-%s-%s-%s-%d-%s-%s-%s-%s-%s-%s-%s",
      foundry, 
      family,
