@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.7 2001/03/29 11:25:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.8 2001/03/30 10:13:44 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -329,7 +329,7 @@ void TObjArray::Streamer(TBuffer &b)
       R__c = b.WriteVersion(TObjArray::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
-      nobjects = GetSize();
+      nobjects = GetLast()+1;
       b << nobjects;
       b << fLowerBound;
 
