@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.190 2004/07/03 13:47:38 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.191 2004/07/08 14:45:11 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4151,7 +4151,7 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             for  (jj = 0; jj < 3; jj++)   {
                hh[jj] = YY[ii + jj - 1];
             }
-            ZZ[ii] = TMath::MedianSorted(3 + 2*ik, hh);
+            ZZ[ii] = TMath::Median(3 + 2*ik, hh);
          }
 
          if  (kk == 1)  {   // first median 3
@@ -4159,12 +4159,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             hh[0] = 3*YY[1] - 2*YY[2];
             hh[1] = YY[0];
             hh[2] = YY[2];
-            ZZ[0] = TMath::MedianSorted(3, hh);
+            ZZ[0] = TMath::Median(3, hh);
 // last point
             hh[0] = YY[NN - 2];
             hh[1] = YY[NN - 1];
             hh[2] = 3*YY[NN - 2] - 2*YY[NN - 3];
-            ZZ[NN - 1] = TMath::MedianSorted(3, hh);
+            ZZ[NN - 1] = TMath::Median(3, hh);
          }
          if  (kk == 2)  {   //  median 5
   //  first point remains the same
@@ -4172,12 +4172,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             for  (ii = 0; ii < 3; ii++) {
                hh[ii] = YY[ii];
             }
-            ZZ[1] = TMath::MedianSorted(3, hh);
+            ZZ[1] = TMath::Median(3, hh);
 // last two points
             for  (ii = 0; ii < 3; ii++) {
                hh[ii] = YY[NN +nn2 -1 + ii];
             }
-            ZZ[NN - 2] = TMath::MedianSorted(3, hh);
+            ZZ[NN - 2] = TMath::Median(3, hh);
             ZZ[NN - 1] = YY[NN - 1];
          }
       }
@@ -4221,7 +4221,7 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             for  (jj = 0; jj < 3; jj++) {
                hh[jj] = YY[ii + jj - 1];
             }
-            ZZ[ii] = TMath::MedianSorted(3 + 2*ik, hh);
+            ZZ[ii] = TMath::Median(3 + 2*ik, hh);
          }
 
          if  (kk == 1)  {   // first median 3
@@ -4229,12 +4229,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             hh[0] = 3*YY[1] - 2*YY[2];
             hh[1] = YY[0];
             hh[2] = YY[2];
-            ZZ[0] = TMath::MedianSorted(3, hh);
+            ZZ[0] = TMath::Median(3, hh);
 // last point
             hh[0] = YY[NN - 2];
             hh[1] = YY[NN - 1];
             hh[2] = 3*YY[NN - 2] - 2*YY[NN - 3];
-            ZZ[NN - 1] = TMath::MedianSorted(3, hh);
+            ZZ[NN - 1] = TMath::Median(3, hh);
          }
          if  (kk == 2)  {   //  median 5
 //  first point remains the same
@@ -4242,12 +4242,12 @@ void  TH1::SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes)
             for  (ii = 0; ii < 3; ii++) {
                hh[ii] = YY[ii];
             }
-            ZZ[1] = TMath::MedianSorted(3, hh);
+            ZZ[1] = TMath::Median(3, hh);
 // last two points
             for  (ii = 0; ii < 3; ii++) {
                hh[ii] = YY[NN - 3 + ii];
             }
-            ZZ[NN - 2] = TMath::MedianSorted(3, hh);
+            ZZ[NN - 2] = TMath::Median(3, hh);
             ZZ[NN - 1] = YY[NN - 1];
          }
       }
