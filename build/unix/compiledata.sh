@@ -57,9 +57,7 @@ elif [ "x`echo $SOFLAGS | grep -- '-soname,$'`" != "x" ]; then
     # Alternatively we could remove the soname flag.
     #    SOFLAGS=`echo $SOFLAGS | sed  -e 's/-soname,/ /' -e 's/ -Wl, / /' `
 fi
-if [ "$ARCH" = "win32gcc" ]; then
-  EXPLLINKLIBS="\$LinkedLibs"
-fi
+EXPLLINKLIBS="\$LinkedLibs"
 
 rm -f __compiledata
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.96 2004/07/16 23:23:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.97 2004/07/19 14:21:08 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1859,17 +1859,6 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
    }
 
-   // Calculate the libraries for linking:
-   TString linkLibraries;
-   /*
-     this is intentionally disabled until it can become usefull
-     if (gEnv) {
-     linkLibraries =  gEnv->GetValue("ACLiC.Libraries","");
-     linkLibraries.Prepend(" ");
-     }
-   */
-   linkLibraries.Prepend(GetLibraries("","SDL"));
-
    TString emergency_loc = TempDirectory();
 
    Bool_t canWrite = !gSystem->AccessPathName(build_loc,kWritePermission);
@@ -2146,9 +2135,51 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    linkdefFile << "#endif" << endl;
    linkdefFile.close();
 
-   // ======= Generate the three command lines
+   // ======= Generate the list of rootmap files to be looked at
 
-   TString rcint = "rootcint -f ";
+   TString mapfile;
+   AssignAndDelete( mapfile, ConcatFileName( build_loc, BaseName( tmpnam(0) ) ) );
+   mapfile += "map";
+   TString mapfilein = mapfile + ".in";
+   TString mapfileout = mapfile + ".out";
+
+   ofstream mapfileStream( mapfilein, ios::out );
+   {
+      TString name = ".rootmap";
+      TString sname = "system.rootmap";
+      TString file;
+#ifdef ROOTETCDIR
+      AssignAndDelete(file, ConcatFileName(ROOTETCDIR, sname) );
+#else
+      TString etc = gRootDir;
+#ifdef WIN32
+      etc += "\\etc";
+#else
+      etc += "/etc";
+#endif
+      AssignAndDelete(file, ConcatFileName(etc, sname));
+      if (gSystem->AccessPathName(file)) {
+         // for backward compatibility check also $ROOTSYS/system<name> if
+         // $ROOTSYS/etc/system<name> does not exist
+         AssignAndDelete(file, ConcatFileName(gRootDir, sname));
+         if (gSystem->AccessPathName(file)) {
+            // for backward compatibility check also $ROOTSYS/<name> if
+            // $ROOTSYS/system<name> does not exist
+            AssignAndDelete(file, ConcatFileName(gRootDir, name));
+         }
+      }
+#endif
+      mapfileStream << file << endl;
+      AssignAndDelete(file, ConcatFileName(gSystem->HomeDirectory(), name) );
+      mapfileStream << file << endl;
+      mapfileStream << name << endl;
+   }
+   mapfileStream.close();
+
+   // ======= Generate the rootcint command line
+   TString rcint = "rootcint --mapfile=";
+   rcint += mapfile;
+   rcint += " -f ";
    rcint.Append(dict).Append(" -c -p ").Append(GetIncludePath()).Append(" ");
    if (gEnv) {
       TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
@@ -2156,6 +2187,40 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    }
    rcint.Append(filename_fullpath).Append(" ").Append(linkdef);
 
+   // ======= Run rootcint
+   if (gDebug>3) {
+      ::Info("ACLiC","creating the dictionary files");
+      if (gDebug>4)  ::Info("ACLiC",rcint.Data());
+   }
+
+   Int_t dictResult = gSystem->Exec(rcint);
+   if (dictResult)
+      if (dictResult==139) ::Error("ACLiC","Dictionary generation failed with a core dump!");
+      else ::Error("ACLiC","Dictionary generation failed!");
+
+   Bool_t result = !dictResult;
+
+   // ======= Load the library the script might depend on
+   if (result) {
+      ifstream liblist(mapfileout);
+      string libtoload;
+      while ( liblist >> libtoload ) {
+         gROOT->LoadClass("",libtoload.c_str());
+      }
+   }
+
+   // ======= Calculate the libraries for linking:
+   TString linkLibraries;
+   /*
+     this is intentionally disabled until it can become usefull
+     if (gEnv) {
+        linkLibraries =  gEnv->GetValue("ACLiC.Libraries","");
+        linkLibraries.Prepend(" ");
+     }
+   */
+   linkLibraries.Prepend(GetLibraries("","SDL"));
+
+   // ======= Generate the build command lines
    TString cmd = fMakeSharedLib;
    // we do not add filename because it is already included via the dictionary(in dicth) !
    // dict.Append(" ").Append(filename);
@@ -2196,20 +2261,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    testcmd.ReplaceAll("$BuildDir",build_loc);
    if (mode==kDebug) testcmd.ReplaceAll("$Opt",fFlagsDebug);
    else testcmd.ReplaceAll("$Opt",fFlagsOpt);
-   // ======= Run the build
 
-   if (gDebug>3) {
-      ::Info("ACLiC","creating the dictionary files");
-      if (gDebug>4)  ::Info("ACLiC",rcint.Data());
-   }
-
-   Int_t dictResult = gSystem->Exec(rcint);
-   if (dictResult)
-      if (dictResult==139) ::Error("ACLiC","Dictionary generation failed with a core dump!");
-      else ::Error("ACLiC","Dictionary generation failed!");
-
-   Bool_t result = !dictResult;
-
+   // ======= Build the library
    if (result) {
       if (gDebug>3) {
          ::Info("ACLiC","compiling the dictionary and script files");
@@ -2308,6 +2361,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       gSystem->Unlink( dicth );
       gSystem->Unlink( dictObj );
       gSystem->Unlink( linkdef );
+      gSystem->Unlink( mapfilein );
+      gSystem->Unlink( mapfileout );
       gSystem->Unlink( fakeMain );
       gSystem->Unlink( exec );
    }

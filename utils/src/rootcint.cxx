@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.175 2004/07/17 23:16:17 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.176 2004/07/20 23:12:50 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -47,6 +47,13 @@
 // compiled with the -I- option that inhibits the use of the directory  //
 // of the source file as the first search directory for                 //
 // "#include "file"".                                                   //
+// The flag --lib-list-prefix=xxx can be used to produce a list of      //
+// libraries needed by the header file being parsed.  rootcint will     //
+// read the content of xxx.in for a list of rootmap files (see rlibmap).//
+// rootcint will read those files and use them to deduce a list of      //
+// libraries that would be need to properly link and load this          //
+// the dictionary produced. This list of libraries is saved in the file //
+// xxx.out.                                                             //
 // The verbose flags have the following meaning:                        //
 //      -v   Display all messages                                       //
 //      -v0  Display no messages at all.                                //
@@ -172,13 +179,19 @@ const char *help =
 "By default the output file will not be overwritten if it exists.\n"
 "Use the -f (force) option to overwite the output file. The output\n"
 "file must have one of the following extensions: .cxx, .C, .cpp,\n"
-".cc, .cp.\n"
 ".cc, .cp.  Use the -l (long) option to prepend the pathname of the\n"
 "dictionary source file to the include of the dictionary header.\n"
 "This might be needed in case the dictionary file needs to be\n"
 "compiled with the -I- option that inhibits the use of the directory\n"
 "of the source file as the first search directory for\n"
 "\"#include \"file\"\".\n"
+"The flag --lib-list-prefix=xxx can be used to produce a list of\n"
+"libraries needed by the header file being parsed.  rootcint will\n"
+"read the content of xxx.in for a list of rootmap files (see rlibmap).\n"
+"rootcint will read those files and use them to deduce a list of"
+"libraries that would be need to properly link and load this\n"
+"the dictionary produced. This list of libraries is saved in the file\n"
+"xxx.out.\n"
 "The verbose flags have the following meaning:\n"
 "      -v   Display all messages\n"
 "      -v0  Display no messages at all.\n"
@@ -257,6 +270,8 @@ const char *help =
 #include <time.h>
 #include <string>
 #include <vector>
+#include <map>
+#include <fstream> 
 
 namespace std {}
 using namespace std;
@@ -461,6 +476,75 @@ string R__tmpnam()
 
    return result;
 #endif
+}
+
+//______________________________________________________________________________
+typedef map<string,string> recmap_t;
+recmap_t gAutoloads;
+string gLiblistPrefix;
+string gLibsNeeded;
+
+int AutoLoadCallbackImpl(char *c, char *) {
+   string need( gAutoloads[c] );
+   if (need.length() && gLibsNeeded.find(need)==string::npos) {
+      gLibsNeeded += " " + need;
+   }
+   return 1;
+}
+
+extern "C" int AutoLoadCallback(char *c, char *l) {
+   return AutoLoadCallbackImpl(c,l);
+}
+
+void LoadLibraryMap() {
+   
+   string filelistname = gLiblistPrefix + ".in";
+   ifstream filelist(filelistname.c_str());
+
+   string filename;
+   
+   while ( filelist >> filename ) {
+      ifstream file(filename.c_str());
+      
+      string line;
+      string classname;
+      
+      while ( file >> line ) {
+         
+         if (line.substr(0,8)=="Library.") {
+            
+            int pos = line.find(":",8);
+            classname = line.substr(8,pos-8);
+            
+            pos = 0;
+            while ( (pos=classname.find("@@",pos)) >= 0 ) {
+               classname.replace(pos,2,"::");
+            }
+            
+            getline(file,line,'\n');
+            
+            while( line[0]==' ' ) line.replace(0,1,"");
+            
+            // Note: we could add some code to pre-declare potential
+            // namespaces
+
+            gAutoloads[classname] = line;
+            G__set_class_autoloading_table((char*)classname.c_str(),
+                                           (char*)line.c_str());
+         } 
+      }
+   }
+}
+
+extern "C" {
+   typedef void G__parse_hook_t ();
+   G__parse_hook_t* G__set_beforeparse_hook (G__parse_hook_t* hook);
+}
+
+void EnableAutoLoading() {
+   G__set_class_autoloading_callback(&AutoLoadCallback);
+   G__set_class_autoloading_table("ROOT","libCore.so");
+   LoadLibraryMap();
 }
 
 //______________________________________________________________________________
@@ -3732,6 +3816,7 @@ int main(int argc, char **argv)
    int use_preprocessor = 0;
    int longheadername = 0;
    string dictpathname;
+   string libfilename;
 
    sprintf(autold, autoldtmpl, getpid());
 
@@ -3756,10 +3841,31 @@ int main(int argc, char **argv)
       ic++;
    }
 
-   if (!strcmp(argv[ic], "-l")) {
-      longheadername = 1;
-      ic++;
+   const char* libprefix = "--lib-list-prefix=";
+
+   while (strncmp(argv[ic], "-",1)==0
+          && strcmp(argv[ic], "-f")!=0 ) {
+      if (!strcmp(argv[ic], "-l")) {
+
+         longheadername = 1;
+         ic++;
+      } else if (!strncmp(argv[ic],libprefix,strlen(libprefix))) {
+
+         gLiblistPrefix = argv[ic]+strlen(libprefix);
+
+         string filein = gLiblistPrefix + ".in";
+         if ((fp = fopen(filein.c_str(), "r")) == 0) {
+            Error(0, "%s: The input list file %s does not exist\n", argv[0], filein.c_str());
+            return 1;
+         }
+         fclose(fp);
+            
+         ic++;
+      } else {
+         break;
+      }
    }
+                         
 
    if (!strcmp(argv[ic], "-f")) {
       force = 1;
@@ -4039,8 +4145,8 @@ int main(int argc, char **argv)
       GenerateLinkdef(&argc, argv, iv);
       argvv[argcc++] = autold;
    }
-
    G__setothermain(2);
+   if (gLiblistPrefix.length()) G__set_beforeparse_hook (EnableAutoLoading);
    if (G__main(argcc, argvv) < 0) {
       Error(0, "%s: error loading headers...\n", argv[0]);
       return 1;
@@ -4410,6 +4516,16 @@ int main(int argc, char **argv)
       if (fp)  fclose(fp);
       if (fpd) fclose(fpd);
       remove(tname.c_str());
+   }
+   
+   if (gLiblistPrefix.length()) {
+      string liblist_filename = gLiblistPrefix + ".out";
+
+      ofstream outputfile( liblist_filename.c_str(), ios::out );
+      if (!outputfile) {
+        Error(0,"%s: Unable to open output lib file %s\n", 
+              argv[0], liblist_filename.c_str());
+      } else outputfile << gLibsNeeded << endl;      
    }
 
    G__setglobalcomp(-1);  // G__CPPLINK
