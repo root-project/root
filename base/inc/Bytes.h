@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.14 2003/05/03 06:21:24 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.15 2004/01/10 10:52:29 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -63,6 +63,7 @@ inline void tobuf(char *&buf, UShort_t x)
 # if defined(__linux) && defined(__i386__)
    *((UShort_t *)buf) = Rbswap_16(x);
 # else
+   // To work around a stupid optimization bug in MSVC++ 6.0
    const UShort_t *intermediary = &x;
    char *sw = (char *) intermediary;
    buf[0] = sw[1];
@@ -214,7 +215,7 @@ inline void tobuf(char *&buf, ULong64_t x)
 inline void tobuf(char *&buf, Float_t x)
 {
 #ifdef R__BYTESWAP
-# if defined(__linux) && defined(__i386__)  && \
+# if defined(__linux) && defined(__i386__) && \
      defined(__GNUC__) && __GNUC__ >= 2
    *((UInt_t *)buf) = Rbswap_32(*((UInt_t *)&x));
 # elif defined(R__KCC)
@@ -222,8 +223,8 @@ inline void tobuf(char *&buf, Float_t x)
    // related to aliasing float.
    // + Use a volatile here to work around error in KCC optimizer
    union {
-     volatile char  c[4];
-     volatile float f;
+     volatile char    c[4];
+     volatile Float_t f;
    } u;
    u.f = x;
    buf[0] = u.c[3];
@@ -254,8 +255,8 @@ inline void tobuf(char *&buf, Double_t x)
    // related to aliasing double.
    // + Use a volatile here to work around error in KCC optimizer
    union {
-     volatile char   c[8];
-     volatile double d;
+     volatile char     c[8];
+     volatile Double_t d;
    } u;
    u.d = x;
    buf[0] = u.c[7];
@@ -386,14 +387,20 @@ inline void frombuf(char *&buf, Float_t *x)
 #ifdef R__BYTESWAP
 # if defined(__linux) && defined(__i386__) && \
      defined(__GNUC__) && __GNUC__ >= 2
-   *((UInt_t *)x) = Rbswap_32(*((UInt_t *)buf));
+   // Use a union to allow strict-aliasing
+   union {
+      volatile UInt_t  i;
+      volatile Float_t f;
+   } u;
+   u.i = Rbswap_32(*((UInt_t *)buf));
+   *x = u.f;
 # elif defined(R__KCC)
    // Use an union to prevent over-zealous optimization by KCC
-   // related to aliasing double.
+   // related to aliasing float.
    // + Use a volatile here to work around error in KCC optimizer
    union {
-     volatile char  c[4];
-     volatile float f;
+      volatile char    c[4];
+      volatile Float_t f;
    } u;
    u.c[0] = buf[3];
    u.c[1] = buf[2];
@@ -418,14 +425,20 @@ inline void frombuf(char *&buf, Double_t *x)
 #ifdef R__BYTESWAP
 # if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
      defined(__GNUC__) && __GNUC__ >= 2
-   *((ULong64_t *)x) = Rbswap_64(*((ULong64_t *)buf));
+   // Use a union to allow strict-aliasing
+   union {
+      volatile ULong64_t l;
+      volatile Double_t  d;
+   } u;
+   u.l = Rbswap_64(*((ULong64_t *)buf));
+   *x = u.d;
 # elif defined(R__KCC)
    // Use an union to prevent over-zealous optimization by KCC
    // related to aliasing double.
    // + Use a volatile here to work around error in KCC optimizer
    union {
-     volatile char   c[8];
-     volatile double d;
+      volatile char     c[8];
+      volatile Double_t d;
    } u;
    u.c[0] = buf[7];
    u.c[1] = buf[6];
@@ -538,8 +551,13 @@ inline Float_t host2net(Float_t xx)
 {
 #if defined(__linux) && defined(__i386__) && \
     defined(__GNUC__) && __GNUC__ >= 2
-   UInt_t t = Rbswap_32(*((UInt_t *)&xx));
-   return *(Float_t *)&t;
+   // Use a union to allow strict-aliasing
+   union {
+      volatile UInt_t  i;
+      volatile Float_t f;
+   } u;
+   u.i = Rbswap_32(*((UInt_t *)&xx));
+   return u.f;
 #else
    UInt_t *x = (UInt_t *)&xx;
    *x = (((*x & 0x000000ffU) << 24) | ((*x & 0x0000ff00U) <<  8) |
@@ -552,8 +570,13 @@ inline Double_t host2net(Double_t x)
 {
 #if defined(__EXTENSIONS__) && defined(__linux) && defined(__i386__) && \
     defined(__GNUC__) && __GNUC__ >= 2
-   ULong64_t t = Rbswap_64(*((ULong64_t *)&x));
-   return *(Double_t *)&t;
+   // Use a union to allow strict-aliasing
+   union {
+      volatile ULong64_t l;
+      volatile Double_t  d;
+   } u;
+   u.l = Rbswap_64(*((ULong64_t *)&x));
+   return u.d;
 # else
    char sw[sizeof(Double_t)];
    *(Double_t *)sw = x;
