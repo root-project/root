@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.70 2003/07/04 13:27:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.71 2003/07/06 19:41:49 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -988,7 +988,6 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
    firstname[0] = 0;
    strcpy(firstname,gFile->GetName());
 
-   Int_t treeNumber = -1;
    Int_t nentries = Int_t(GetEntriesFast());
    for (Int_t i=0;i<nentries;i++) {
       if (GetEntry(i) <= 0) break;
