@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.32 2002/09/10 21:21:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.33 2002/09/17 08:31:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1292,12 +1292,13 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
   if (pname != name)  delete [] pname;
 
 // Fill the projected histogram
-  Double_t cont,err2;
+  Double_t cont,err,err2;
   for (Int_t binx =0;binx<=nx+1;binx++) {
      err2 = 0;
      for (Int_t biny=firstybin;biny<=lastybin;biny++) {
         cont  = GetCellContent(binx,biny);
-        err2 += cont*cont;
+        err   = GetCellError(binx,biny);
+        err2 += err*err;
         if (cont) {
            h1->Fill(fXaxis.GetBinCenter(binx), cont);
         }
@@ -1365,12 +1366,13 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
   if (pname != name)  delete [] pname;
 
 // Fill the projected histogram
-  Double_t cont,err2;
+  Double_t cont,err,err2;
   for (Int_t biny =0;biny<=ny+1;biny++) {
      err2 = 0;
      for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
         cont  = GetCellContent(binx,biny);
-        err2 += cont*cont;
+        err   = GetCellError(binx,biny);
+        err2 += err*err;
         if (cont) {
            h1->Fill(fYaxis.GetBinCenter(biny), cont);
         }
