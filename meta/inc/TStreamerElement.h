@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.14 2001/02/06 10:50:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.15 2001/02/08 11:48:23 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -84,6 +84,7 @@ public:
 class TStreamerBase : public TStreamerElement {
 
 protected:
+   Int_t            fBaseVersion;         //version number of the base class
    TClass          *fBaseClass;           //!pointer to base class
 
 public:
@@ -91,6 +92,7 @@ public:
    TStreamerBase();
    TStreamerBase(const char *name, const char *title, Int_t offset);
    virtual         ~TStreamerBase();
+   Int_t            GetBaseVersion() {return fBaseVersion;}
    virtual TClass  *GetClassPointer() const;
    const char      *GetInclude() const;
    ULong_t          GetMethod() const {return ULong_t(fMethod);}
@@ -98,7 +100,7 @@ public:
    Int_t            ReadBuffer (TBuffer &b, char *pointer);
    Int_t            WriteBuffer(TBuffer &b, char *pointer);
    
-   ClassDef(TStreamerBase,2)  //Streamer element of type base class
+   ClassDef(TStreamerBase,3)  //Streamer element of type base class
 };
 
 //________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.19 2001/02/08 11:48:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.20 2001/02/15 09:53:53 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -222,6 +222,7 @@ TStreamerBase::TStreamerBase()
    // Default ctor.
    
    fBaseClass = 0;
+   fBaseVersion = 0;
 }
 
 //______________________________________________________________________________
@@ -253,6 +254,7 @@ TClass *TStreamerBase::GetClassPointer() const
 void TStreamerBase::Init(TObject *)
 {
    fBaseClass = gROOT->GetClass(GetName());
+   fBaseVersion = fBaseClass->GetClassVersion();
    if (fType == TStreamerInfo::kTObject || fType == TStreamerInfo::kTNamed) return;
    fMethod = new TMethodCall();
    fMethod->InitWithPrototype(fBaseClass,"StreamerNVirtual","TBuffer &");
