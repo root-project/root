@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGFrame.cxx,v 1.78 2004/09/13 09:10:08 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.1 2004/09/13 12:47:35 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -101,6 +101,12 @@ TGuiBuilder::TGuiBuilder(const TGWindow *p) : TVirtualGuiBld(),
    act->fAct = "new TGVerticalFrame()";
    act->fPic = "bld_vbox.xpm";
    AddAction(act, "Containers");
+
+   act = new TGuiBldAction("TGGroupFrame", "Group Frame", kGuiBldCtor);
+   act->fAct = "new TGGroupFrame()";
+   act->fPic = "bld_groupframe.xpm";
+   AddAction(act, "Containers");
+
 
    MapSubwindows();
    Resize(80, 300);
