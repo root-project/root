@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.29 2001/04/09 07:56:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.30 2001/04/09 15:33:51 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -677,10 +677,10 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
    if (!strcmp(name, "string")) return 0;
-   if (strstr(name, "vector<") || strstr(name, "list<") ||
-       strstr(name, "set<")    || strstr(name, "map<")  ||
-       strstr(name, "deque<")  || strstr(name, "multimap<") ||
-       strstr(name, "multiset<"))
+   if (strstr(name, "vector<")   || strstr(name, "list<") ||
+       strstr(name, "set<")      || strstr(name, "map<")  ||
+       strstr(name, "deque<")    || strstr(name, "multimap<") ||
+       strstr(name, "multiset<") || strstr(name, "::" ))
       return 0;   //reject STL containers
       
    if (gInterpreter->CheckClassInfo(name))
