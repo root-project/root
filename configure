@@ -471,7 +471,7 @@ else
       else
          platform=$arch
       fi
-      if test "x$arch" = "xlinuxx8664gcc" ; then
+      if test "x$arch" = "xlinuxx8664gcc" || test "x$arch" = "xsgicc64" ; then
          checklib64="yes"
       fi
       ;;
