@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.6 2000/08/14 11:29:29 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.7 2000/09/13 07:03:01 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -132,11 +132,17 @@ extern "C" {
 #endif
 
 #if defined(R__SGI) || defined(R__SOLARIS)
-#define HAVE_UTMPX_H
-#define UTMP_NO_ADDR
+#   define HAVE_UTMPX_H
+#   define UTMP_NO_ADDR
 #endif
 #if defined(R__ALPHA) || defined(R__AIX) || defined(R__FBSD) || defined(R__LYNXOS)
-#define UTMP_NO_ADDR
+#   define UTMP_NO_ADDR
+#endif
+
+#if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA))
+#   define USE_SIZE_T
+#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA))
+#   define USE_SOCKLEN_T
 #endif
 
 #if defined(R__LYNXOS)
@@ -1348,9 +1354,9 @@ TInetAddress TUnixSystem::GetSockName(int sock)
    // Get Internet Protocol (IP) address of host and port #.
 
    struct sockaddr_in addr;
-#if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA))
+#if defined(USE_SIZE_T)
    size_t len = sizeof(addr);
-#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA))
+#elif defined(USE_SOCKLEN_T)
    socklen_t len = sizeof(addr);
 #else
    int len = sizeof(addr);
@@ -1386,9 +1392,9 @@ TInetAddress TUnixSystem::GetPeerName(int sock)
    // Get Internet Protocol (IP) address of remote host and port #.
 
    struct sockaddr_in addr;
-#if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA))
+#if defined(USE_SIZE_T)
    size_t len = sizeof(addr);
-#elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA))
+#elif defined(USE_SOCKLEN_T)
    socklen_t len = sizeof(addr);
 #else
    int len = sizeof(addr);
@@ -1714,9 +1720,9 @@ int TUnixSystem::GetSockOpt(int sock, int opt, int *val)
 
    if (sock < 0) return -1;
 
-#if defined(R__GLIBC) || defined(_AIX43) || (defined(R__FBSD) && defined(R__ALPHA))
+#if defined(USE_SOCKLEN_T) || defined(_AIX43)
    socklen_t optlen = sizeof(*val);
-#elif defined(R__FBSD) && !defined(R__ALPHA)
+#elif defined(USE_SIZE_T)
    size_t optlen = sizeof(*val);
 #else
    int optlen = sizeof(*val);

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.2 2000/08/14 11:31:31 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.3 2000/09/13 07:03:01 brun Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -30,6 +30,11 @@
 #include <errno.h>
 
 #include "rootdp.h"
+
+#if defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
+#   define USE_SOCKLEN_T
+#endif
+
 
 double  gBytesSent = 0;
 double  gBytesRecv = 0;
@@ -170,7 +175,7 @@ int NetOpen(int inetdflag)
       if (gDebug > 0) {
 #ifdef _AIX
          size_t clilen = sizeof(tcp_cli_addr);
-#elif defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
+#elif defined(USE_SOCKLEN_T)
          socklen_t clilen = sizeof(tcp_cli_addr);
 #else
          int clilen = sizeof(tcp_cli_addr);
@@ -204,7 +209,7 @@ int NetOpen(int inetdflag)
 again:
 #ifdef _AIX
    size_t clilen = sizeof(tcp_cli_addr);
-#elif defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
+#elif defined(USE_SOCKLEN_T)
    socklen_t clilen = sizeof(tcp_cli_addr);
 #else
    int clilen = sizeof(tcp_cli_addr);
