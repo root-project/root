@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.13 2000/11/22 15:47:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.14 2000/11/22 20:57:27 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1256,14 +1256,10 @@ void TClass::SetStreamer(const char *name, char *p)
 // store pointer to function to Stream non basic member name
    
    if (!fRealData) return;
-   Int_t nch = strlen(name);
    TIter next(fRealData);
    TRealData *rd;
    while ((rd = (TRealData*)next())) {
       if (strcmp(rd->GetName(),name) == 0) { rd->SetStreamer(p); break;}
-      //if (name[nch-1] == '.') {
-      //   if (strncmp(rd->GetName(),name,nch) == 0) rd->SetStreamer(p);
-      //}
    }
 }
    

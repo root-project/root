@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -80,7 +80,7 @@ const char *TBaseClass::GetName() const
 {
    // Get base class name.
 
-   return fInfo->Name();
+   return fInfo->Fullname();
 }
 
 //______________________________________________________________________________
