@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.12 2004/01/16 00:07:25 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.13 2004/06/14 15:52:58 brun Exp $
 // Author: Bertrand Bellenot   30/07/02
 
 /*************************************************************************
@@ -628,6 +628,9 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
    LOGFONT lf;
    static HFONT hFont;
    const char bmpDir[] = "\\icons\\Splash.gif";
+   HWND hwndFound;         // this is what is returned to the caller
+   char pszNewWindowTitle[1024]; // contains fabricated WindowTitle
+   char pszOldWindowTitle[1024]; // contains original WindowTitle
    char FullBmpDir[256];
    char *RootSysDir;
    int xScreen;
@@ -684,6 +687,20 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
          DrawVersion(hDC);
          EndPaint(hWnd, &ps);
          gShow = TRUE;
+         // fetch current window title
+         GetConsoleTitle(pszOldWindowTitle, 1024);
+         // format a "unique" NewWindowTitle
+         wsprintf(pszNewWindowTitle,"%d/%d", GetTickCount(), GetCurrentProcessId());
+         // change current window title
+         SetConsoleTitle(pszNewWindowTitle);
+         // ensure window title has been updated
+         Sleep(40);
+         // look for NewWindowTitle
+         hwndFound=FindWindow(NULL, pszNewWindowTitle);
+         // restore original window title
+         ShowWindow(hwndFound, SW_RESTORE);
+         SetForegroundWindow(hwndFound);
+         SetConsoleTitle("ROOT session");
          break;
 
       default:
