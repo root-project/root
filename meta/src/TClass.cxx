@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.107 2003/02/21 10:26:58 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.108 2003/02/22 13:13:42 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1393,6 +1393,13 @@ TStreamerInfo *TClass::GetStreamerInfo(Int_t version)
 
    if (version == 0) version = fClassVersion;
    if (!fStreamerInfo) fStreamerInfo = new TObjArray(version+10);
+   else {
+      Int_t ninfos = fStreamerInfo->GetSize();
+      if (version < 0 || version >= ninfos) {
+         Error("GetStreamerInfo","class: %s, attempting to access a wrong version: %d",GetName(),version);
+         version = 0;
+      }
+   }
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
    if (!sinfo) {
       sinfo = new TStreamerInfo(this,"");
@@ -1980,6 +1987,12 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start,
    //   count    is the number of bytes for this object in the buffer
 
    //the StreamerInfo should exist at this point
+   Int_t ninfos = fStreamerInfo->GetSize();
+   if (version < 0 || version >= ninfos) {
+      Error("ReadBuffer1","class: %s, attempting to access a wrong version: %d",GetName(),version);
+      b.CheckByteCount(start,count,this);
+      return 0;
+   }
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
    if (sinfo == 0) {
       BuildRealData(pointer);
@@ -2014,6 +2027,12 @@ Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
    if (file && file->GetVersion() < 30000) version = -1; //This is old file
 
    //the StreamerInfo should exist at this point
+   Int_t ninfos = fStreamerInfo->GetSize();
+   if (version < -1 || version >= ninfos) {
+      Error("ReadBuffer2","class: %s, attempting to access a wrong version: %d, object skipped",GetName(),version);
+      b.CheckByteCount(R__s, R__c,this);
+      return 0;
+   }
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
    if (sinfo == 0) {
       BuildRealData(pointer);
