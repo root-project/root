@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.11 2001/02/07 16:08:57 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.12 2001/02/08 16:10:34 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -83,19 +83,20 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const Text_t *ftitle,
       fOption = "READ";
    }
 
+   TString stmp;
    char *fname;
    if ((fname = gSystem->ExpandPathName(fUrl.GetFile()))) {
       if (!strstr(fname, ":/")) {
          char *host;
          char *name;
          if (::rfio_parse(fname, &host, &name))
-            SetName(Form("%s:%s", host, name));
+            stmp = Form("%s:%s", host, name);
          else
-            SetName(fname);
+            stmp = fname;
       } else
-         SetName(fname);
+         stmp = fname;
       delete [] fname;
-      fname = (char *)GetName();
+      fname = (char *)stmp.Data();
    } else {
       Error("TRFIOFile", "error expanding path %s", fUrl.GetFile());
       goto zombie;
