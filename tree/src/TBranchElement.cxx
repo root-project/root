@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.90 2002/07/19 22:52:49 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.91 2002/10/02 22:13:03 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1417,16 +1417,14 @@ void TBranchElement::SetAddress(void *add)
       TBranchElement *branch = (TBranchElement*)abranch;
       Int_t nb2 = branch->GetListOfBranches()->GetEntries();
       Int_t id = branch->GetID();
+      Int_t btype = branch->GetType();
       Int_t mOffset = 0;
-      Int_t baseOffset = 0;
       Int_t memberOffset = 0;
       TClass *clparent = gROOT->GetClass(branch->GetParentName());
       if (!clparent) clparent = cl;
       TClass *clm = gROOT->GetClass(branch->GetClassName());
-      TStreamerInfo *binfo = clparent->GetStreamerInfo();
-      //if sub-branch is a class deriving from the class of this branch
-      //or a member of the class, one must add the base class offset
-//printf("i=%d, clm=%s,clparent=%s, branch=%s, fType=%d, nb2=%d, binfo=%s, uuoff=%d\n",i,clm->GetName(),clparent->GetName(),branch->GetName(),fType,nb2,binfo->GetName(),binfo->GetOffsets()[id]);
+      TStreamerInfo *info = branch->GetInfo();
+//printf("i=%d, clm=%s,clparent=%s, branch=%s, btype=%d, nb2=%d, info=%s, uuoff=%d\n",i,clm->GetName(),clparent->GetName(),branch->GetName(),btype,nb2,info->GetName(),cinfo->GetOffsets()[id]);
 
       if (clparent != clm) {
          char pname[kMaxLen];
@@ -1435,25 +1433,15 @@ void TBranchElement::SetAddress(void *add)
          if (clast) {
             TRealData *rd = (TRealData*)clparent->GetListOfRealData()->FindObject(clast+1);
             if (rd) mOffset = rd->GetThisOffset();
-            if (fType == 2 && !clparent->GetBaseClass(clm)) memberOffset = mOffset - binfo->GetOffsets()[id];
-            if (fType == 1) {
-               binfo->GetStreamerElement(pname,memberOffset);
-            }
-            if (!branch->GetType() && !mOffset) {
-               if (clparent->GetBaseClass(clm)) {
-                  baseOffset = clparent->GetBaseClassOffset(clm);
-                  if (baseOffset < 0) baseOffset = 0;
-               }
-            }
+            if (btype == 0 && !clparent->GetBaseClass(clm)) memberOffset = mOffset - info->GetOffsets()[id];;
          }
       }
 
       if (nb2 > 0) {
-         TStreamerInfo *info = branch->GetInfo();
          if (info) {
             Int_t *leafOffsets = info->GetOffsets();
             if (leafOffsets) {
-               branch->SetAddress(fObject + leafOffsets[id] + baseOffset);
+               branch->SetAddress(fObject + leafOffsets[id]);
             } else {
                Error("SetAddress","info=%s, leafOffsets=0",info->GetName());
             }
@@ -1461,7 +1449,7 @@ void TBranchElement::SetAddress(void *add)
             Error("SetAddress","branch=%s, info=0",branch->GetName());
          }
       } else {
-         branch->SetAddress(fObject + baseOffset +memberOffset);
+         branch->SetAddress(fObject + memberOffset);
       }
    }
 }
