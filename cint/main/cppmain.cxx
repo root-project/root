@@ -29,3 +29,4 @@ int main(int argc,char **argv)
   G__setothermain(0);
   return(G__main(argc,argv));
 }
+

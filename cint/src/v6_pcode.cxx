@@ -27,6 +27,17 @@ extern void G__delete_interpreted_object G__P((void* p));
 #endif
 #endif
 
+#ifdef G__BORLANDCC5
+double G__doubleM(G__value *buf);
+static void G__asm_toXvalue(G__value* result);
+void G__get__tm__(char *buf);
+char* G__get__date__(void);
+char* G__get__time__(void);
+int G__isInt(int type);
+int G__get_LD_Rp0_p2f(int type,long *pinst);
+int G__get_ST_Rp0_p2f(int type,long *pinst);
+#endif
+
 #ifndef __CINT__
 int G__asm_optimize3 G__P((int *start));
 #endif

@@ -7,3 +7,4 @@ make.exe -f Makefile clean
 del Makefile
 del G__*
 del *.obj
+del *.tds

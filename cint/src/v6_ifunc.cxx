@@ -1353,9 +1353,13 @@ char *funcheader;   /* funcheader = 'funcname(' */
       ||((strncmp(paraname,"throw",5)==0
 	 ||strncmp(paraname,"const throw",11)==0)&&0==strchr(paraname,'='))
 #endif
+#ifndef G__OLDIMPLEMENTATION1691
       ) &&((cin==',')||(cin==';'))
      && strncmp(funcheader,"ClassDef",8)!=0
      ) {
+#else
+      ) &&((cin==',')||(cin==';'))) {
+#endif
     /* this is ANSI style func proto without param name */
     if(isparam) {
       fsetpos(G__ifile.fp,&temppos);
@@ -1378,11 +1382,21 @@ char *funcheader;   /* funcheader = 'funcname(' */
      * because ClassDef is removed by a preprocessor */
 #ifndef G__OLDIMPLEMENTATION1360
     if(G__fons_comment && G__def_struct_member &&
+#ifndef G__OLDIMPLEMENTATION1691
        (strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine",12)==0 
 	|| strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine(",13)==0
+#else
+       (strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine",12)==0 
+	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine(",13)==0
+#endif
 #ifndef G__OLDIMPLEMENTATION1298
+#ifndef G__OLDIMPLEMENTATION1691
 	|| strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine",12)==0 
 	|| strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine(",13)==0
+#else
+	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine",12)==0 
+	|| strncmp(G__p_ifunc->funcname[func_now],"ImplFileLine(",13)==0
+#endif
 #endif
        )) {
       G__fsetcomment(&G__struct.comment[G__tagdefining]);
@@ -1496,8 +1510,12 @@ char *funcheader;   /* funcheader = 'funcname(' */
 			&& ':'!=paraname[0]
 #endif
 			)
+#ifndef G__OLDIMPLEMENTATION1691
 	   || (';'==cin && strncmp(funcheader,"ClassDef",8)==0)
            )) {
+#else
+	   )) {
+#endif
     /* Function macro as member declaration */
     /* restore file position
      *   func(   int   a   ,  double   b )
@@ -1852,22 +1870,26 @@ char *funcheader;   /* funcheader = 'funcname(' */
 
 #ifdef G__FONS_COMMENT
   if(G__fons_comment && G__def_struct_member) {
-
+#ifndef G__OLDIMPLEMENTATION1691
     if((ifunc && (strncmp(ifunc->funcname[iexist],"ClassDef",8)==0 ||
                   strncmp(ifunc->funcname[iexist],"ClassDef(",9)==0 ||
                   strncmp(ifunc->funcname[iexist],"ClassDefT(",10)==0||
                   strncmp(ifunc->funcname[iexist],"DeclFileLine",12)==0 ||
                   strncmp(ifunc->funcname[iexist],"DeclFileLine(",13)==0) ) ||
-      (!ifunc && (strncmp(G__p_ifunc->funcname[func_now],"ClassDef",8)==0 ||
-                  strncmp(G__p_ifunc->funcname[func_now],"ClassDef(",9)==0 ||
-                  strncmp(G__p_ifunc->funcname[func_now],"ClassDefT(",10)==0||
-                  strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine",12)==0 ||
-                  strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine(",13)==0) ) ) {
+       (!ifunc && (strncmp(G__p_ifunc->funcname[func_now],"ClassDef",8)==0 ||
+		   strncmp(G__p_ifunc->funcname[func_now],"ClassDef(",9)==0 ||
+		   strncmp(G__p_ifunc->funcname[func_now],"ClassDefT(",10)==0||
+		   strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine",12)==0 ||
+		   strncmp(G__p_ifunc->funcname[func_now],"DeclFileLine(",13)==0) ) ) {
       G__fsetcomment(&G__struct.comment[G__tagdefining]);
     } else {
       if(ifunc) G__fsetcomment(&ifunc->comment[iexist]);
       else      G__fsetcomment(&G__p_ifunc->comment[func_now]);
     }
+#else
+    if(ifunc) G__fsetcomment(&ifunc->comment[iexist]);
+    else      G__fsetcomment(&G__p_ifunc->comment[func_now]);
+#endif
   }
 #endif
 
@@ -2094,7 +2116,11 @@ int func_now;
     else if(strcmp(paraname,"short")==0) type='s'+isunsigned ;
     else if(strcmp(paraname,"long")==0) {
 #ifndef G__OLDIMPLEMENTATION1668
-      if(','!=c && ')'!=c) {
+      if(','!=c && ')'!=c
+#ifndef G__OLDIMPLEMENTATION1668
+	 && '('!=c
+#endif
+	 ) {
 	fpos_t pos;
 	int store_line = G__ifile.line_number;
 	int store_c = c;
@@ -2110,7 +2136,14 @@ int func_now;
 	  if(strcmp(paraname,"long")==0) {
 	    type='u';
 	    tagnum=G__defined_tagname("G__longlong",2);
+#ifndef G__OLDIMPLEMENTATION1688
+	    if(isunsigned) 
+	      typenum=G__search_typename("unsigned long long",'u',tagnum,G__PARANORMAL);
+	    else
+	      typenum=G__search_typename("long long",'u',tagnum,G__PARANORMAL);
+#else
 	    typenum=G__search_typename("long long",'u',tagnum,G__PARANORMAL);
+#endif
 	  }
 	  else if(strcmp(paraname,"double")==0) {
 	    type='u';

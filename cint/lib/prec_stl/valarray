@@ -99,7 +99,7 @@ template<class T> class valarray {
   // _lib.valarray.members_ member functions:
   size_t size() const; 
   T    sum() const;
-#if defined(G__BORLAND) || defined(G__KCC)
+#if !defined(G__BORLANDCC5) && defined(G__BORLAND) || defined(G__KCC)
   friend T min(const valarray<T>&) const;
   friend T max(const valarray<T>&) const;
 #else
@@ -156,7 +156,7 @@ template<class T> class valarray {
   friend valarray<T> operator>>(const T&, const valarray<T>&);
 #endif
   friend valarray<bool> operator&& (const valarray<T>&, const valarray<T>&);
-#if defined(G__BORLAND) || defined(G__KCC)
+#if !defined(G__BORLANDCC5) && defined(G__BORLAND) || defined(G__KCC)
   friend valarray<T> operator&&(const valarray<T>&, const T&);
   friend valarray<T> operator&&(const T&, const valarray<T>&);
 #else
@@ -164,7 +164,7 @@ template<class T> class valarray {
   friend valarray<bool> operator&&(const T&, const valarray<T>&);
 #endif
   friend valarray<bool> operator|| (const valarray<T>&, const valarray<T>&);
-#if defined(G__BORLAND) || defined(G__KCC)
+#if !defined(G__BORLANDCC5) && defined(G__BORLAND) || defined(G__KCC)
   friend valarray<T> operator||(const valarray<T>&, const T&);
   friend valarray<T> operator||(const T&, const valarray<T>&);
 #else

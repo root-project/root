@@ -11,3 +11,5 @@ nmake -f Makestdcxxfunc CFG="stdcxxfunc - Win32 Release"
 move Release\stdcxxfunc.dll ..\..\include\stdcxxfunc.dll
 del G__*
 del Makestdcxxfunc
+del *.def
+del make.bat

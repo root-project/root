@@ -64,7 +64,11 @@ class vector {
   typedef typename Allocator::difference_type difference_type;
 #endif
 
-#if defined(G__KCC)
+
+#if defined(G__BORLANDCC5)
+  typedef reverse_iterator<iterator> reverse_iterator;
+#else // G__BORLANDCC5
+#if defined(G__KCC) 
   // typedef reverse_iterator<iterator> reverse_iterator;
 #else
   class reverse_iterator 
@@ -97,6 +101,7 @@ class vector {
    private:
   };
 #endif
+#endif // G__BORLANDCC5
   friend bool operator==(const vector::reverse_iterator& x
                         ,const vector::reverse_iterator& y) const;
   friend bool operator!=(const vector::reverse_iterator& x

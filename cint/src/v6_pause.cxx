@@ -58,6 +58,25 @@ struct G__view {
   int exec_memberfunc;
 };
 
+#ifdef G__BORLANDCC5
+void G__decrement_undo_index(int *pi);
+void G__increment_undo_index(int *pi);
+int G__is_valid_dictpos(struct G__dictposition *dict);
+void G__show_undo_position(int index);
+void G__init_undo(void);
+int G__clearfilebusy(int ifn);
+void G__storerewindposition(void);
+static void G__display_keyword(FILE *fout,char *keyword,char *fname);
+void G__rewinddictionary(void);
+void G__UnlockCriticalSection(void);
+void G__LockCriticalSection(void); 
+int G__IsBadCommand(char *com);
+static void G__unredirectoutput(FILE **sout,FILE **serr,FILE **sin,char *keyword,char *pipefile);
+static void G__redirectoutput(char *com,FILE **psout,FILE **pserr,FILE **psin,int asemicolumn,char *keyword,char *pipefile);
+void G__cancel_undo_position(void);
+static int G__atevaluate(G__value buf);
+#endif
+
 /**************************************************************************
 * G__SET_TEMPENV
 *

@@ -1,3 +1,6 @@
+def make.bat
+del cintsock.def
+
 bcc32 -emksockh.exe mksockh.c 
 mksockh.exe
 del mksockh.exe
@@ -18,3 +21,4 @@ make.exe -f Makefile clean
 del Makefile
 del G__*
 del *.obj
+del *.tds

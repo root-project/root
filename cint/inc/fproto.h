@@ -765,6 +765,12 @@ void* G__shmcalloc G__P((int atomsize,int num));
 void G__initshm G__P((void));
 #endif
 
+#ifdef G__BORLAND
+int G__gettempfilenum G__P((void));
+void G__redirect_on G__P((void));
+void G__redirect_off G__P((void));
+#endif
+
 #ifdef __cplusplus
 }
 #endif

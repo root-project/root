@@ -155,7 +155,14 @@ char *new_name;
       if(-1==G__tagnum) {
 	G__genericerror("Error: 'long long' not ready. Go to $CINTSYSDIR/lib/longlong and run setup");
       }
+#ifndef G__OLDIMPLEMENTATION1688
+      if(-1==G__unsigned) 
+	G__typenum=G__search_typename("unsigned long long",'u',G__tagnum,G__PARANORMAL);
+      else
+	G__typenum=G__search_typename("long long",'u',G__tagnum,G__PARANORMAL);
+#else
       G__typenum=G__search_typename("long long",'u',G__tagnum,G__PARANORMAL);
+#endif
       if(strcmp(new_name,"long")==0) {
 	fpos_t pos;
 	int xlinenum = G__ifile.line_number;
@@ -860,7 +867,9 @@ int tagnum,typenum;      /* overrides global variables */
 
   store_decl=G__decl;
   G__decl=1;
+#ifdef G__OLDIMPLEMENTATION1688
   G__unsigned=0; /* this is now reset in the G__exec_statement() */
+#endif
 
 
   /*
@@ -872,6 +881,9 @@ int tagnum,typenum;      /* overrides global variables */
    * read variable name or 'int' identifier
    */
   cin=G__get_newname(new_name);
+#ifndef G__OLDIMPLEMENTATION1688
+  G__unsigned=0; /* this is now reset in the G__exec_statement() */
+#endif
 #ifndef G__OLDIMPLEMENTATION883
   if(0==cin) {
     G__decl=store_decl;

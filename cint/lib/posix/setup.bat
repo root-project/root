@@ -13,3 +13,5 @@ rem del Release
 rem rmdir Release
 del Makefile
 del G__*
+del *.def
+del make.bat

@@ -1981,6 +1981,10 @@ int G__init_globals()
   return(0);
 }
 
+#ifndef G__OLDIMPLEMENTATION1689
+void G__initcxx(); 
+#endif
+
 #ifndef G__OLDIMPLEMENTATION893
 /******************************************************************
 * G__platformMacro
@@ -2070,11 +2074,17 @@ void G__platformMacro()
 #ifdef __BCPLUSPLUS__  /* Borland C++ compiler */
   sprintf(temp,"G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__add_macro(temp);
 #endif
+#ifdef G__BORLANDCC5 /* Borland C/C++ compiler 5.5 */
+  sprintf(temp,"G__BORLANDCC5=%ld",(long)505); G__add_macro(temp);
+#endif
 #ifdef __KCC        /* KCC  C++ compiler */
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
 #ifdef __INTEL_COMPILER /* icc and ecc C++ compilers */
   sprintf(temp,"G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
+#endif
+#ifndef G__OLDIMPLEMENTATION1689
+  G__initcxx(); 
 #endif
   /***********************************************************************
    * micro processor

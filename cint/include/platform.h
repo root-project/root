@@ -41,6 +41,65 @@ typedef double LONGLONG;
 typedef void VOID;
 typedef int INT;
 
+/* Borland C++ compiler 5.5 */
+typedef char CHAR;
+typedef short WCHAR;
+typedef long DWORD;
+typedef double DWORD64;
+typedef unsigned int UINT;
+typedef unsigned long* ULONG_PTR;
+typedef double* PULONG_PTR;
+typedef long LONG;
+typedef struct tagPOINT {
+    LONG x;
+    LONG y;
+} POINT;
+typedef struct tagPOINT *LPPOINT;
+typedef void* HWND;
+typedef struct tagMOUSEHOOKSTRUCT {
+    POINT   pt;
+    HWND    hwnd;
+    UINT    wHitTestCode;
+    ULONG_PTR dwExtraInfo;
+} MOUSEHOOKSTRUCT, *LPMOUSEHOOKSTRUCT, *PMOUSEHOOKSTRUCT;
+typedef struct tagMOUSEHOOKSTRUCTEX
+{
+    MOUSEHOOKSTRUCT dmy;
+    DWORD   mouseData;
+} MOUSEHOOKSTRUCTEX, *LPMOUSEHOOKSTRUCTEX, *PMOUSEHOOKSTRUCTEX;
+typedef struct tagRECT
+    {
+    LONG left;
+    LONG top;
+    LONG right;
+    LONG bottom;
+    }	RECT;
+typedef struct tagRECT *LPRECT;
+typedef struct tagMONITORINFO
+{
+    DWORD   cbSize;
+    RECT    rcMonitor;
+    RECT    rcWork;
+    DWORD   dwFlags;
+} MONITORINFO, *LPMONITORINFO;
+#define CCHDEVICENAME 32
+typedef struct tagMONITORINFOEXA
+{
+    MONITORINFO dmy;
+    CHAR        szDevice[CCHDEVICENAME];
+} MONITORINFOEXA, *LPMONITORINFOEXA;
+typedef struct tagMONITORINFOEXW
+{
+    MONITORINFO dmy;
+    WCHAR       szDevice[CCHDEVICENAME];
+} MONITORINFOEXW, *LPMONITORINFOEXW;
+typedef struct { } CHOOSECOLOR, *LPCHOOSECOLOR;
+typedef struct { } CHOOSEFONT, *LPCHOOSEFONT;
+typedef struct { } OPENFILENAME, *LPOPENFILENAME;
+typedef struct { } PAGESETUPDLG, *LPPAGESETUPDLG;
+typedef struct { } FINDREPLACE, *LPFINDREPLACE;
+typedef struct { } PRINTDLG, *LPPRINTDLG;
+
 /* STL */
 #define _THROW_NONE
 

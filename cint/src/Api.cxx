@@ -416,3 +416,30 @@ extern "C" const char* G__saveconststring(const char* s)
 #endif
 
 #endif /* 1423 */
+
+#ifndef G__OLDIMPLEMENTATION1689
+extern "C" void G__initcxx() 
+{
+  char temp[G__ONELINE];
+#ifdef __HP_aCC     /* HP aCC C++ compiler */
+  sprintf(temp,"G__HP_aCC=%ld",(long)__HP_aCC); G__add_macro(temp);
+#endif
+#ifdef __SUNPRO_CC  /* Sun C++ compiler */
+  sprintf(temp,"G__SUNPRO_CC=%ld",(long)__SUNPRO_CC); G__add_macro(temp);
+#endif
+#ifdef __BCPLUSPLUS__  /* Borland C++ compiler */
+  sprintf(temp,"G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__add_macro(temp);
+#endif
+#ifdef __KCC        /* KCC  C++ compiler */
+  sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
+#endif
+#ifdef __INTEL_COMPILER /* icc and ecc C++ compilers */
+  sprintf(temp,"G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
+#endif
+  /*
+#ifdef __cplusplus 
+  sprintf(temp,"G__CPLUSPLUS=%ld",(long)__cplusplus); G__add_macro(temp);
+#endif
+  */
+}
+#endif

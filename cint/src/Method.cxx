@@ -241,6 +241,18 @@ int G__MethodInfo::NDefaultArg()
   return(-1); // dummy 
 }
 ///////////////////////////////////////////////////////////////////////////
+int G__MethodInfo::HasVarArgs()
+{
+  if(IsValid()) {
+    struct G__ifunc_table *ifunc;
+    ifunc = (struct G__ifunc_table*)handle;
+    return(2==ifunc->ansi[index]?1:0);
+  }
+  else {
+    return(-1);
+  }
+}
+///////////////////////////////////////////////////////////////////////////
 G__InterfaceMethod G__MethodInfo::InterfaceMethod()
 {
 #ifndef G__OLDIMPLEMENTATION1035

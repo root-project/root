@@ -35,9 +35,6 @@
 
 /* POSIX.1 */
 #include <fcntl.h>
-#ifndef G__WIN32
-#include <unistd.h>
-#endif
 
 /* POSIX.2 */
 
@@ -49,6 +46,10 @@ int getopt();
 /* #include "G__ci.h" */
 /* #include "G__header.h" */
 /* extern int G__no_exec_compile; */
+
+#ifndef G__WIN32
+#include <unistd.h>
+#endif
 
 
 #if defined(G__ANSI) || defined(G__ANSIHEADER)

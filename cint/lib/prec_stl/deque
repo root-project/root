@@ -51,7 +51,7 @@ class deque {
   class iterator 
 #if defined(G__VISUAL)
 	: public _Ranit<T,difference_type>
-#elif !defined(G__SUNPRO_C)
+#elif !defined(G__SUNPRO_C) && !defined(G__BORLANDCC5)
   	: public random_access_iterator<T,difference_type>
 #endif
 	{
@@ -84,7 +84,7 @@ class deque {
   class reverse_iterator 
 #if defined(G__VISUAL)
 	: public _Ranit<T,difference_type>
-#elif !defined(G__SUNPRO_C)
+#elif !defined(G__SUNPRO_C) && !defined(G__BORLANDCC5)
 	: public random_access_iterator<T,difference_type>
 #endif
 	{

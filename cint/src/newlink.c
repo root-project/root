@@ -196,6 +196,45 @@ static char *G__INITFUNC;
 static char G__NEWID[G__MAXDLLNAMEBUF];
 #endif
 
+#ifdef G__BORLANDCC5
+int G__debug_compiledfunc_arg(FILE *fout,struct G__ifunc_table *ifunc,int ifn,struct G__param *libp);
+static void G__ctordtor_initialize(void);
+static void G__fileerror(char* fname);
+static void G__ctordtor_destruct(void);
+void G__gen_newdelete(FILE *fp);
+void G__cpplink_protected_stub(FILE *fp,FILE *hfp);
+void G__gen_cppheader(char *headerfilein);
+static void G__gen_headermessage(FILE *fp,char *fname);
+void G__add_macro(char *macroin);
+int G__isnonpublicnew(int tagnum);
+void  G__if_ary_union_reset(int ifn,struct G__ifunc_table *ifunc);
+static int G__isprotecteddestructoronelevel(int tagnum);
+void  G__if_ary_union(FILE *fp,int ifn,struct G__ifunc_table *ifunc);
+char *G__mark_linked_tagnum(int tagnum);
+static int G__isprivateconstructorifunc(int tagnum,int iscopy);
+static int G__isprivateconstructorvar(int tagnum,int iscopy);
+static int G__isprivatedestructorifunc(int tagnum);
+static int G__isprivatedestructorvar(int tagnum);
+static int G__isprivateassignoprifunc(int tagnum);
+static int G__isprivateassignoprvar(int tagnum);
+void G__cppif_gendefault(FILE *fp,FILE *hfp,int tagnum,int ifn,struct G__ifunc_table *ifunc,int isconstructor,int iscopyconstructor,int isdestructor,int isassignmentoperator,int isnonpublicnew);
+static char* G__vbo_funcname(int tagnum,int basetagnum,int basen);
+static int G__hascompiledoriginalbase(int tagnum);
+static void G__declaretruep2f(FILE *fp,struct G__ifunc_table *ifunc,int j);
+static void G__printtruep2f(FILE *fp,struct G__ifunc_table *ifunc,int j);
+int G__tagtable_setup(int tagnum,int size,int cpplink,int isabstract,char *comment,G__incsetup setup_memvar,G__incsetup setup_memfunc);
+int G__tag_memfunc_setup(int tagnum);
+int G__memfunc_setup(char *funcname,int hash,int (*funcp)(),int type,int tagnum,int typenum,int reftype,int para_nu,int ansi,int accessin,int isconst,char *paras,char *comment
+#ifdef G__TRUEP2F
+                     ,void* truep2f, int isvirtual
+#endif
+);
+int G__memfunc_next(void);
+static void G__pragmalinkenum(int tagnum,int globalcomp);
+void G__incsetup_memvar(int tagnum);
+void G__incsetup_memfunc(int tagnum);
+#endif
+
 #ifndef G__FONS60
 /**************************************************************************
 * G__check_setup_version()
@@ -696,7 +735,7 @@ void G__gen_cpplink()
 #ifndef G__OLDIMPLEMENTATION1589
   {
     int algoflag=0;
-    int filen=0;
+    int filen;
     char *fname;
     for(filen=0;filen<G__nfile;filen++) {
       fname = G__srcfile[filen].filename;
@@ -718,8 +757,10 @@ void G__gen_cpplink()
     if(algoflag&1) {
       fprintf(hfp,"#include <algorithm>\n");
       if(G__ignore_stdnamespace) {
+	/* fprintf(hfp,"#ifndef __hpux\n"); */
 	fprintf(hfp,"namespace std { }\n");
 	fprintf(hfp,"using namespace std;\n");
+	/* fprintf(hfp,"#endif\n"); */
       }
     }
     else if(algoflag&2) fprintf(hfp,"#include <algorithm.h>\n");
@@ -3980,9 +4021,12 @@ struct G__ifunc_table *ifunc;
 	    sprintf(castname,"%s_PR",G__get_link_tagname(tagnum));
 	  else 
 	    strcpy(castname,G__fulltagname(tagnum,1));
-	  if(ifunc->staticalloc[ifn]) {
-	    fprintf(fp,"%s::",castname);
-	  } else if(ifunc->isconst[ifn]&G__CONSTFUNC) 
+#ifndef G__OLDIMPLEMENTATION1690
+          if(ifunc->staticalloc[ifn]) {
+             fprintf(fp,"%s::",castname);
+	  } else 
+#endif
+	  if(ifunc->isconst[ifn]&G__CONSTFUNC) 
 	    fprintf(fp,"((const %s*)(G__getstructoffset()))->",castname);
 	  else 
 	    fprintf(fp,"((%s*)(G__getstructoffset()))->",castname);
@@ -4049,9 +4093,12 @@ struct G__ifunc_table *ifunc;
 	  sprintf(castname,"%s_PR",G__get_link_tagname(tagnum));
 	else 
 	  strcpy(castname,G__fulltagname(tagnum,1));
-	if(ifunc->staticalloc[ifn]) { 
-	  fprintf(fp,"%s::",castname);
-	} else if(ifunc->isconst[ifn]&G__CONSTFUNC) 
+#ifndef G__OLDIMPLEMENTATION1690
+        if(ifunc->staticalloc[ifn]) { 
+           fprintf(fp,"%s::",castname);
+	} else 
+#endif
+	if(ifunc->isconst[ifn]&G__CONSTFUNC) 
 	  fprintf(fp,"((const %s*)(G__getstructoffset()))->",castname);
 	else 
 	  fprintf(fp,"((%s*)(G__getstructoffset()))->",castname);
@@ -6045,7 +6092,11 @@ FILE *fp;
   fprintf(fp,"*********************************************************/\n");
 
 #ifndef G__OLDIMPLEMENTATION1590
+#ifdef G__BORLANDCC5
+  fprintf(fp,"static void G__cpp_setup_global%d(void) {\n",divn++);
+#else
   fprintf(fp,"static void G__cpp_setup_global%d() {\n",divn++);
+#endif
 #else
   if(G__CPPLINK == G__globalcomp) {
     fprintf(fp,"extern \"C\" void G__cpp_setup_global%s() {\n",G__DLLID);
@@ -6065,7 +6116,11 @@ FILE *fp;
       if(fnc++>maxfnc) {
 	fnc=0;
 	fprintf(fp,"}\n\n");
+#ifdef G__BORLANDCC5
+	fprintf(fp,"static void G__cpp_setup_global%d(void) {\n",divn++);
+#else
 	fprintf(fp,"static void G__cpp_setup_global%d() {\n",divn++);
+#endif
       }
 #endif
       if((G__AUTO==var->statictype[j] /* not static */ ||
@@ -6332,7 +6387,11 @@ FILE *fp;
   fprintf(fp,"*********************************************************/\n");
 
 #ifndef G__OLDIMPLEMENTATION1590
+#ifdef G__BORLANDCC5
+  fprintf(fp,"static void G__cpp_setup_func%d(void) {\n",divn++);
+#else
   fprintf(fp,"static void G__cpp_setup_func%d() {\n",divn++);
+#endif
 #else
   if(G__CPPLINK == G__globalcomp) {
     fprintf(fp,"extern \"C\" void G__cpp_setup_func%s() {\n",G__DLLID);
@@ -6352,7 +6411,11 @@ FILE *fp;
       if(fnc++>maxfnc) {
 	fnc=0;
 	fprintf(fp,"}\n\n");
+#ifdef G__BORLANDCC5
+	fprintf(fp,"static void G__cpp_setup_func%d(void) {\n",divn++);
+#else
 	fprintf(fp,"static void G__cpp_setup_func%d() {\n",divn++);
+#endif
       }
 #endif
       if(G__NOLINK>ifunc->globalcomp[j] &&  /* with -c-1 option */

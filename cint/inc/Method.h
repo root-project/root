@@ -57,6 +57,7 @@ G__MethodInfo {
   long Property();
   int NArg();
   int NDefaultArg();
+  int HasVarArgs();
   G__InterfaceMethod InterfaceMethod();
 #ifdef G__ASM_WHOLEFUNC
   struct G__bytecodefunc *GetBytecode();

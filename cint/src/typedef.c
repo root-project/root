@@ -203,15 +203,17 @@ void G__define_type()
     /* skip a :: without a namespace in front of it (i.e. global namespace!) */
     c = G__fgetspace(); /* skip the next ':' */
     c=G__fgetname_template(type1,"{");
-  }
+  }   
+#ifndef G__OLDIMPLEMENTATION1693
   if (strncmp(type1,"::",2)==0) {
-     /* A leading '::' causes other typename matching function to fails so 
-        we remove it. This is not the ideal solution (neither was the one 
-        above since it does not allow for distinction between global 
-        namespace and local namespace) ... but at least it is an improvement
-        over the current behavior */
-     strcpy(type1,type1+2);
+    /* A leading '::' causes other typename matching function to fails so 
+       we remove it. This is not the ideal solution (neither was the one 
+       above since it does not allow for distinction between global 
+       namespace and local namespace) ... but at least it is an improvement
+       over the current behavior */
+    strcpy(type1,type1+2);
   }
+#endif
   while( isspace(c) ) {
     len=strlen(type1);
     c = G__fgetspace();

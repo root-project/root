@@ -2806,7 +2806,11 @@ struct G__comment_info *pcomment;
 
   fgetpos(G__ifile.fp,&pos);
 
+#ifndef G__OLDIMPLEMENTATION1691
   while((isspace(c=fgetc(G__ifile.fp)) || ';'==c) && '\n'!=c && '\r'!=c) ;
+#else
+  while(isspace(c=fgetc(G__ifile.fp)) && '\n'!=c && '\r'!=c) ;
+#endif
   if('/'==c) {
     c=fgetc(G__ifile.fp);
 #ifndef G__OLDIMPLEMENTATION849
