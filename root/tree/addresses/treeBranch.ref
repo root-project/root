@@ -16,8 +16,6 @@ Processing runtreeBranch.C...
 *Entries :        0 : Total  Size=        598 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
-Warning in <ACLiC>: script has already been loaded in interpreted mode
-Warning in <ACLiC>: unloading c:\Devel\root_working\roottest\root\tree\addresses\treeBranch.C and compiling it
 Warning in <TTree::Branch>: The actual TClass corresponding to the object provided for the definition of the branch "missing" is missing.
 	The object will be truncated down to its TopLevel part
 ******************************************************************************
