@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.104 2003/10/23 15:31:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.103 2003/09/10 15:14:57 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -252,9 +252,9 @@ namespace ROOT {
 TROOT      *gROOT;         // The ROOT of EVERYTHING
 TRandom    *gRandom;       // Global pointer to random generator
 
-// Global debug flag (set to > 0 to get debug output).
+// Global debug flag (set to != 0 to get debug output).
 // Can be set either via interpreter (gDebug is exported to CINT),
-// via the environment variable ROOTDEBUG, or via the debugger.
+// or via debugger. If set to > 4 X11 graphics will be in synchronous mode.
 Int_t       gDebug;
 
 
@@ -1227,13 +1227,6 @@ void TROOT::InitSystem()
 
       gDebug = gEnv->GetValue("Root.Debug", 0);
 
-      const char *sdeb;
-      if ((sdeb = gSystem->Getenv("ROOTDEBUG")))
-         gDebug = atoi(sdeb);
-
-      if (gDebug > 0 && isatty(2))
-         fprintf(stderr, "Info in <TROOT::InitSystem>: running with gDebug = %d\n", gDebug);
-
       if (gEnv->GetValue("Root.MemStat", 0))
          TStorage::EnableStatistics();
       int msize = gEnv->GetValue("Root.MemStat.size", -1);
@@ -1510,7 +1503,7 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 }
 
 //______________________________________________________________________________
-void TROOT::Proof(const char *cluster)
+TVirtualProof *TROOT::Proof(const char *cluster, const char *configfile)
 {
    // Start PROOF session on a specific cluster (default is
    // "proof://localhost"). The TProof object can be accessed via
@@ -1519,13 +1512,13 @@ void TROOT::Proof(const char *cluster)
 
    // make sure libProof is loaded and TProof can be created
    TPluginHandler *h;
-   //if ((h = GetPluginManager()->FindHandler("TVirtualTreePlayer")))
-   //   h->LoadPlugin();
 
    if ((h = GetPluginManager()->FindHandler("TVirtualProof"))) {
       if (h->LoadPlugin() == -1)
-         return;
-      h->ExecPlugin(1, cluster);
+         return 0;
+      if (!configfile)
+         return h->ExecPlugin(1, cluster);
+      return h->ExecPlugin(2, cluster, configfile);
    }
 }
 

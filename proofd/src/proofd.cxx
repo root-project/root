@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.52 2003/10/28 16:32:43 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.53 2003/11/07 03:29:42 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -1000,13 +1000,31 @@ void ProofdExec()
    putenv(rootsys);
 #endif
 #ifndef ROOTLIBDIR
-   char *ldpath = new char[21+strlen(gConfDir)];
+   char *ldpath;
 #   if defined(__hpux) || defined(_HIUX_SOURCE)
-   sprintf(ldpath, "SHLIB_PATH=%s/lib", gConfDir);
+   if (getenv("SHLIB_PATH")) {
+      ldpath = new char[32+strlen(gConfDir)+strlen(getenv("SHLIB_PATH"))];
+      sprintf(ldpath, "SHLIB_PATH=%s/lib:%s", gConfDir, getenv("SHLIB_PATH"));
+   } else {
+      ldpath = new char[32+strlen(gConfDir)];
+      sprintf(ldpath, "SHLIB_PATH=%s/lib", gConfDir);
+   }
 #   elif defined(_AIX)
-   sprintf(ldpath, "LIBPATH=%s/lib", gConfDir);
+   if (getenv("LIBPATH")) {
+      ldpath = new char[32+strlen(gConfDir)+strlen(getenv("LIBPATH"))];
+      sprintf(ldpath, "LIBPATH=%s/lib:%s", gConfDir, getenv("LIBPATH"));
+   } else {
+      ldpath = new char[32+strlen(gConfDir)];
+      sprintf(ldpath, "LIBPATH=%s/lib", gConfDir);
+   }
 #   else
-   sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib", gConfDir);
+   if (getenv("LD_LIBRARY_PATH")) {
+      ldpath = new char[32+strlen(gConfDir)+strlen(getenv("LD_LIBRARY_PATH"))];
+      sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib:%s", gConfDir, getenv("LD_LIBRARY_PATH"));
+   } else {
+      ldpath = new char[32+strlen(gConfDir)];
+      sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib", gConfDir);
+   }
 #   endif
    putenv(ldpath);
 #endif
@@ -1084,7 +1102,17 @@ int main(int argc, char **argv)
                      fprintf(stderr, "-p requires a port number as argument\n");
                   Error(ErrFatal, -1, "-p requires a port number as argument");
                }
-               gPort = atoi(*++argv);
+               char *p;
+               gPortA = strtol(*++argv, &p, 10);
+               if (*p == '-')
+                  gPortB = strtol(++p, &p, 10);
+               else if (*p == '\0')
+                  gPortB = gPortA;
+               if (*p != '\0' || gPortB < gPortA || gPortB < 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr, "invalid port number or range: %s\n", *argv);
+                  Error(ErrFatal, kErrFatal, "invalid port number or range: %s", *argv);
+               }
                break;
 
             case 'd':
@@ -1247,7 +1275,7 @@ int main(int argc, char **argv)
 
       if (!gForegroundFlag) DaemonStart(1, 0, kPROOFD);
 
-      NetInit(gService, gPort, tcpwindowsize);
+      NetInit(gService, gPortA, gPortB, tcpwindowsize);
    }
 
    if (gDebug > 0)

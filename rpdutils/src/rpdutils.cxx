@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.23 2003/11/07 03:29:42 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.24 2003/11/10 14:05:01 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -227,6 +227,8 @@ int gNumAllow = -1;
 int gNumLeft = -1;
 int gOffSet = -1;
 int gPort = 0;
+int gPortA = 0;
+int gPortB = 0;
 int gRemPid = -1;
 int gReUseAllow = 0x1F;  // define methods for which previous auth can be reused
 int gRootLog = 0;

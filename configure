@@ -479,7 +479,7 @@ the ROOTSYS environment variable.
 
 enable/disable options, prefix with either --enable- or --disable-
    afs             AFS support, requires AFS libs and objects
-   alien           AliEn support, requires libAliEn from ALICE
+   alien           AliEn support, requires libAliEnAPI++ from ALICE
    asimage         Image processing support, requires libAfterImage
    cern            CERNLIB usage, build h2root and g2root
    chirp           Chirp support (Condor remote I/O), requires libchirp_client
@@ -509,8 +509,8 @@ enable/disable options, prefix with either --enable- or --disable-
 with options, prefix with --with-, enables corresponding support
 
    afs             AFS support, location of AFS distribution
-   alien-incdir    AliEn support, location of AliEn.h
-   alien-libdir    AliEn support, location of libAliEn
+   alien-incdir    AliEn support, location of AliEnAPI++.h
+   alien-libdir    AliEn support, location of libAliEnAPI++
    cern-libdir     HBOOK converter, location of CERNLIB libraries
    chirp-incdir    Chirp support, location of chirp_client.h
    chirp-libdir    Chirp support, location of libchirp_client
@@ -1301,17 +1301,17 @@ fi
 #
 # (See http://alien.cern.ch)
 #
-# Check for libAliEn
+# Check for libAliEnAPI++
 #
 if test ! "x$enable_alien" = "xno" ; then
-    check_header "AliEn.h" "$alienincdir" $ALIEN $ALIEN/include \
+    check_header "AliEnAPI++.h" "$alienincdir" $ALIEN $ALIEN/include \
 	/opt/alien/include /usr/local/alien/include /usr/include \
 	/usr/local/include
     alienincdir=$found_dir
 
-    check_library "libAliEn" "$enable_shared" "$alienlibdir" \
-	$ALIEN $ALIEN/lib /opt/alien/lib /usr/local/alien/lib \
-	/usr/lib /usr/local/lib
+    check_library "libAliEnAPI++" "$enable_shared" "$alienlibdir" \
+	$ALIEN $ALIEN/lib $ALIEN/lib/api /opt/alien/lib \
+        /usr/local/alien/lib /usr/lib /usr/local/lib
     alienlib=$found_lib
     alienlibdir=$found_dir
 
@@ -1482,25 +1482,6 @@ if test ! "x$enable_globus" = "xno"; then
         fi
     done
 
-    # With more recent versions we need an additional header
-    check_header globus_gsi_credential.h "" "$searchincdir/$flavour"
-    gsiversion="no"
-    if test ! "x$found_hdr" = "x" ; then
-       gsiversion="yes"
-       globusinc="$globusinc $found_hdr"
-       if test "x$globusincdir" = "x" ; then
-           globusincdir=$found_dir
-       else
-           for k in $globusincdir ; do
-               if test "x$k" != "x$found_dir" ; then
-                   if test "x$k" != "x-I$found_dir" ; then
-                       globusincdir="$found_dir -I$globusincdir"
-                   fi
-                fi
-           done
-       fi
-    fi
-
     globuslib=""
     if test ! "x$globusdir" = "x" ; then
         searchlibdir=$globusdir/lib
@@ -1528,24 +1509,6 @@ if test ! "x$enable_globus" = "xno"; then
           fi
     done
 
-    # In more recent versions some functions are found in a separated library
-    # so, if it exists, add it to the list
-    check_library libglobus_gsi_credential_$flavour "$enable_shared" "$searchlibdir" \
-           /usr/lib /usr/local/lib
-    if test ! "x$found_lib" = "x" ; then
-       globuslib="$globuslib $found_lib"
-       if test "x$globuslibdir" = "x" ; then
-          globuslibdir=$found_dir
-       else
-          for k in $globuslibdir ; do
-              if test "x$k" != "x$found_dir" ; then
-                 globuslibdir="$found_dir $globuslibdir"
-              fi
-          done
-       fi
-    fi
-
-    # Need to source this before init proxies
     sourcepath=""
     if test -s $globusdir/etc/globus-user-env.sh ; then
         sourcepath="$globusdir/etc"
@@ -1556,7 +1519,6 @@ if test ! "x$enable_globus" = "xno"; then
         echo "Checking for globus-user-env.sh ... $sourcepath"
     fi
 
-    # Need this to init proxies
     initpath=""
     if test -s $globusdir/bin/grid-proxy-init ; then
         initpath="$globusdir/bin"
@@ -1634,7 +1596,7 @@ if test ! "x$enable_globus" = "xno"; then
                   for i in globus_gsi_system_config.h globus_gsi_cert_utils.h ; do
                      dirtmp=`find $globusincdir -name $i -exec dirname {} \;`
                      if test "x$dirtmp" = "x" ; then
-                        dirtmp=`find $globuspatchdir -name $i -exec dirname {} \;` 
+                        dirtmp=`find $globuspatchdir -name $i -exec dirname {} \;`
                      fi
                      if test ! "x$dirtmp" = "x" ; then
                         echo "Checking for $i ... $dirtmp"

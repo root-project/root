@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.33 2003/06/25 18:06:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.34 2003/08/29 10:41:27 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -38,6 +38,7 @@ class TDataType;
 class TFile;
 class TStyle;
 class TVirtualPad;
+class TVirtualProof;
 class TApplication;
 class TInterpreter;
 class TBrowser;
@@ -207,7 +208,7 @@ public:
    void              ProcessLine(const char *line, Int_t *error = 0);
    void              ProcessLineSync(const char *line, Int_t *error = 0);
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
-   void              Proof(const char *cluster = "proof://localhost");
+   TVirtualProof    *Proof(const char *cluster = "proof://localhost", const char *configfile = 0);
    Bool_t            ReadingObject() const { return fReadingObject; }
    void              RefreshBrowsers();
    void              RemoveClass(TClass *);

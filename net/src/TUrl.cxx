@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.11 2003/07/04 13:26:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.12 2003/09/21 21:38:31 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -173,6 +173,8 @@ again:
    // Find host
    u = s;
    if ((s = strchr(u, ':')) || (s = strchr(u, '/'))) {
+      if ((strchr (u, ':') > strchr(u, '/')) && (strchr (u, '/')))
+	s = strchr(u, '/');
       sav = *s;
       *s = 0;
       fHost = u;

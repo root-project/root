@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.7 2003/10/22 18:48:36 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.8 2003/11/07 03:29:42 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -63,6 +63,8 @@ extern int  gNumLeft;
 extern int  gOffSet;
 extern int  gParallel;
 extern int  gPort;
+extern int  gPortA;
+extern int  gPortB;
 extern int  gRemPid;
 extern int  gReUseAllow;
 extern int  gReUseRequired;

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TGridResult.h,v 1.1 2002/05/13 10:35:19 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -28,25 +28,30 @@
 #include "TObject.h"
 #endif
 
+#ifndef ROOT_TGrid
+#include "TGrid.h"
+#endif
 
 
 class TGridResult : public TObject {
 
 protected:
-   Int_t    fResults;   // number of result items
-   Int_t    fCurrent;   // current result item, used by Next()
+   Int_t fResults;      // number of result items
+   Int_t fCurrent;      // current result item, used by Next()
 
-   TGridResult() { fResults = fCurrent = 0; }
+   TGridResult() : fResults(0), fCurrent(0) { }
 
 public:
+   TGridResult(Grid_ResultHandle_t /*handle*/) { }
    virtual ~TGridResult() { }
 
-   virtual void        Close(Option_t *option="") = 0;
-   Int_t               GetCurrent() const { return fCurrent; }
-   Int_t               GetResultCount() const { return fResults; }
-   virtual const char *GetValue() = 0;
-   virtual const char *Next() = 0;
-   virtual void        Reset() = 0;
+   virtual void           Close() { fResults = 0; fCurrent = 0; }
+   Int_t                  GetCurrent() const { return fCurrent; }
+   Int_t                  GetResultCount() const { return fResults; }
+   virtual const char    *GetValue() { return 0; }
+   virtual Grid_Result_t *Next() { return 0; }
+   virtual void           List(int indentation = 0) { }
+   virtual void           Reset() { }
 
    ClassDef(TGridResult,0)  // ABC defining interface to GRID query result
 };
