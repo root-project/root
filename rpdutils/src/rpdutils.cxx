@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.19 2003/10/27 09:48:35 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.20 2003/10/27 10:36:33 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -248,8 +248,10 @@ const int kAUTH_GLB_MSK = 0x8;
 const int kAUTH_SSH_MSK = 0x10;
 
 
-#ifdef R__KRB5
 namespace ROOT {
+
+#ifdef R__KRB5
+//______________________________________________________________________________
 void PrintPrincipal(krb5_principal principal)
 {
    ErrorInfo("PrintPrincipal: realm == '%s'",
@@ -262,7 +264,6 @@ void PrintPrincipal(krb5_principal principal)
    }
 }
 #endif
-
 
 //______________________________________________________________________________
 void RpdSetDebugFlag(int Debug)
