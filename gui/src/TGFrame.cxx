@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.30 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.31 2003/11/07 01:43:02 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1809,51 +1809,9 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    out << "void " << sname << "()" << endl;
    delete [] sname;
 
-   // write TGMainFrame ctor + window's parameters
    out <<"{"<< endl;
-   out << endl << "   // main frame" << endl;
-   out << "   TGMainFrame *";
-   out << GetName() << " = new TGMainFrame(gClient->GetRoot(),10,10,"   // layout alg.
-       << GetOptionString() << ");" <<endl;
 
-   if (!fList) return;
-
-   TGFrameElement *el;
-   TIter next(fList);
-
-   while ((el = (TGFrameElement *) next())) {
-      el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
-      el->fLayout->SavePrimitive(out, option);
-      out << ");" << endl;
-   }
-   out << endl;
-
-   // setting layout manager if it differs from the main frame type
-
-   TGLayoutManager * lm = GetLayoutManager();
-
-   if (GetOptions() & kHorizontalFrame) {
-      if (lm->InheritsFrom(TGHorizontalLayout::Class())) { }
-   } else if (GetOptions() & kVerticalFrame) {
-      if (lm->InheritsFrom(TGVerticalLayout::Class())) { }
-   } else {
-      out << "   " << GetName() <<"->SetLayoutManager(";
-      GetLayoutManager()->SavePrimitive(out, option);
-      out << ");"<< endl;
-   }
-
-   if (strlen(fWindowName)) {
-      out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
-          << quote << ");" << endl;
-   }
-   if (strlen(fIconName)) {
-      out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<endl;
-   }
-   if (strlen(fIconPixmap)) {
-      out << "   " << GetName() << "->SetIconPixmap(" << quote << GetIconPixmap()
-          << quote << ");" << endl;
-   }
+   TGMainFrame::SavePrimitive(out, option);
 
    GetClassHints((const char *&)fClassName, (const char *&)fResourceName);
    if (strlen(fClassName) || strlen(fResourceName)) {
@@ -1902,6 +1860,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    // needed in case the frame was resized
    // otherwhice the frame became bigger showing all hidden widgets (layout algorithm)
    out << "   " <<GetName()<< "->Resize("<< GetWidth()<<","<<GetHeight()<<");"<<endl;
+
    out << "}  " << endl;
 
    out.close();
@@ -1914,6 +1873,58 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
       c1->ResetBit(TClass::kClassSaved);
    }
    if (!lenfile) delete [] fname;
+}
+
+//______________________________________________________________________________
+void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a main frame widget as a C++ statement(s) on output stream out.
+
+   char quote = '"';
+   
+   out << endl << "   // main frame" << endl;
+   out << "   TGMainFrame *";
+   out << GetName() << " = new TGMainFrame(gClient->GetRoot(),10,10,"   // layout alg.
+       << GetOptionString() << ");" <<endl;
+
+   if (!fList) return;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      el->fFrame->SavePrimitive(out, option);
+      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
+      el->fLayout->SavePrimitive(out, option);
+      out << ");" << endl;
+   }
+   out << endl;
+
+   // setting layout manager if it differs from the main frame type
+
+   TGLayoutManager * lm = GetLayoutManager();
+
+   if (GetOptions() & kHorizontalFrame) {
+      if (lm->InheritsFrom(TGHorizontalLayout::Class())) { }
+   } else if (GetOptions() & kVerticalFrame) {
+      if (lm->InheritsFrom(TGVerticalLayout::Class())) { }
+   } else {
+      out << "   " << GetName() <<"->SetLayoutManager(";
+      GetLayoutManager()->SavePrimitive(out, option);
+      out << ");"<< endl;
+   }
+
+   if (strlen(fWindowName)) {
+      out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
+          << quote << ");" << endl;
+   }
+   if (strlen(fIconName)) {
+      out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<endl;
+   }
+   if (strlen(fIconPixmap)) {
+      out << "   " << GetName() << "->SetIconPixmap(" << quote << GetIconPixmap()
+          << quote << ");" << endl;
+   }
 }
 
 //______________________________________________________________________________
@@ -2095,6 +2106,7 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
    out << "   " << GetName() <<"->Resize();" << endl;
 }
 
+
 //______________________________________________________________________________
 void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 {
@@ -2233,57 +2245,8 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    //  Save GUI widgets as a C++ macro in a file
    out <<"{"<< endl;
-   out << endl << "   // transient frame" << endl;
-   out << "   TGTransientFrame *";
-   out << GetName()<<" = new TGTransientFrame(gClient->GetRoot(),0"
-       << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() <<");" << endl;
+   TGTransientFrame::SavePrimitive(out, option);
 
-   if (!fList) return;
-
-   TGFrameElement *el;
-   TIter next(fList);
-
-   while ((el = (TGFrameElement *) next())) {
-      el->fFrame->SavePrimitive(out, option);
-      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
-      el->fLayout->SavePrimitive(out, option);
-      out << ");" << endl;
-   }
-   out << endl;
-
-   // setting layout manager if different from frame type
-   TGLayoutManager * lm = GetLayoutManager();
-   switch (GetOptions()){
-      case kHorizontalFrame:
-         if (!lm->InheritsFrom(TGHorizontalLayout::Class())) {
-            out << "   " << GetName() << "->SetLayoutManager(";
-            GetLayoutManager()->SavePrimitive(out, option);
-            out << ");" << endl;
-         }
-         break;
-      case kVerticalFrame:
-         if (!lm->InheritsFrom(TGVerticalLayout::Class())) {
-            out << "   " << GetName() << "->SetLayoutManager(";
-            GetLayoutManager()->SavePrimitive(out, option);
-            out << ");"<< endl;
-         }
-         break;
-      default:
-         out << "   " << GetName() << "->SetLayoutManager(";
-         GetLayoutManager()->SavePrimitive(out, option);
-         out << ");"<< endl;
-         break;
-   }
-
-   if (strlen(fWindowName)) {
-      out<<"   "<<GetName()<< "->SetWindowName("<<quote<<GetWindowName()<<quote<<");"<<endl;
-   }
-   if (strlen(fIconName)) {
-      out<<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<endl;
-   }
-   if (strlen(fIconPixmap)) {
-      out<<"   "<<GetName()<< "->SetIconPixmap("<<quote<<GetIconPixmap()<<quote<<");"<<endl;
-   }
 
    GetClassHints((const char *&)fClassName, (const char *&)fResourceName);
    if (strlen(fClassName) || strlen(fResourceName)) {
@@ -2322,11 +2285,15 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
           <<");"<<endl;
    }
 
+   GetWMPosition(fWMX, fWMY);
+   if ((fWMX != -1) || (fWMY != -1)) {
+      out <<"   "<<GetName()<<"->Move("<<fWMX<<","<<fWMY<<");"<<endl;
+   }
+   
    out << "   " <<GetName()<< "->MapSubwindows();" << endl;
    out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
    out << "   " <<GetName()<< "->MapWindow();" <<endl;
    out << "   " <<GetName()<< "->Resize();" << endl;
-
    out << "}  " << endl;
 
    out.close();
@@ -2339,4 +2306,56 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
       c1->ResetBit(TClass::kClassSaved);
    }
    if (!lenfile) delete [] fname;
+}
+
+//______________________________________________________________________________
+void TGTransientFrame::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save a transient frame widget as a C++ statement(s) on output stream out.
+
+   char quote = '"';
+   
+   out << endl << "   // transient frame" << endl;
+   out << "   TGTransientFrame *";
+   out << GetName()<<" = new TGTransientFrame(gClient->GetRoot(),0"
+       << "," << GetWidth() << "," << GetHeight() << "," << GetOptionString() <<");" << endl;
+
+   if (!fList) return;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      el->fFrame->SavePrimitive(out, option);
+      out << "   " << GetName() << "->AddFrame(" << el->fFrame->GetName();
+      el->fLayout->SavePrimitive(out, option);
+      out << ");" << endl;
+   }
+   out << endl;
+
+   // setting layout manager if it differs from the main frame type
+
+   TGLayoutManager * lm = GetLayoutManager();
+
+   if (GetOptions() & kHorizontalFrame) {
+      if (lm->InheritsFrom(TGHorizontalLayout::Class())) { }
+   } else if (GetOptions() & kVerticalFrame) {
+      if (lm->InheritsFrom(TGVerticalLayout::Class())) { }
+   } else {
+      out << "   " << GetName() <<"->SetLayoutManager(";
+      GetLayoutManager()->SavePrimitive(out, option);
+      out << ");"<< endl;
+   }
+
+   if (strlen(fWindowName)) {
+      out << "   " << GetName() << "->SetWindowName(" << quote << GetWindowName()
+          << quote << ");" << endl;
+   }
+   if (strlen(fIconName)) {
+      out <<"   "<<GetName()<< "->SetIconName("<<quote<<GetIconName()<<quote<<");"<<endl;
+   }
+   if (strlen(fIconPixmap)) {
+      out << "   " << GetName() << "->SetIconPixmap(" << quote << GetIconPixmap()
+          << quote << ");" << endl;
+   }
 }

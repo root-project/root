@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.28 2003/11/06 10:44:00 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.29 2003/11/07 01:43:02 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -431,6 +431,7 @@ public:
    EInitialState GetWMState() const { return fWMInitState; }
 
    virtual const TGWindow *GetMainFrame() const { return this; }
+   virtual void SavePrimitive(ofstream &out, Option_t *option);
    virtual void SaveSource(const char *filename, Option_t *option); // *MENU*
 
    ClassDef(TGMainFrame,0)  // Top level window frame
@@ -456,8 +457,9 @@ public:
                     UInt_t options = kVerticalFrame);
 
    const TGWindow *GetMain() const { return fMain; }
+   virtual void    SavePrimitive(ofstream &out, Option_t *option);
    virtual void    SaveSource(const char *filename, Option_t *option); // *MENU*
-
+   
    ClassDef(TGTransientFrame,0)  // Frame for dialog (transient) windows
 };
 
