@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.7 2000/06/29 08:36:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.8 2000/06/29 10:07:02 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -362,6 +362,8 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
 //          and only for bins in Y for which the corresponding projection
 //          along X has more than cut bins filled.
 //
+//  NOTE: To access the generated histograms in the current directory, do eg:
+//     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
 
    Int_t nbins  = fYaxis.GetNbins();
    if (binmin < 1) binmin = 1;
@@ -451,6 +453,9 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
 //          same as above, but only for bins 15 to 22 along X
 //          and only for bins in X for which the corresponding projection
 //          along Y has more than cut bins filled.
+//
+//  NOTE: To access the generated histograms in the current directory, do eg:
+//     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
 //
 // A complete example of this function is given in begin_html <a href="examples/fitslicesy.C.html">tutorial:fitslicesy.C</a> end_html
 // with the following output:

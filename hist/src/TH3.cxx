@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.4 2000/06/28 14:35:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.5 2000/06/29 10:07:02 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -275,6 +275,9 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
 //     "N" means do not show the result of the fit
 //     "R" means fit the function in the specified function range
 //
+// Note that the generated histograms are added to the list of objects
+// in the current directory. It is the user's responsability to delete
+// these histograms.
 //
 //  Example: Assume a 3-d histogram h3
 //   Root > h3->FitSlicesZ(); produces 4 TH2D histograms
@@ -288,6 +291,9 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
 //          same as above, but only for bins 15 to 22 along X
 //          and only for cells in X,Y for which the corresponding projection
 //          along Z has more than cut bins filled.
+//
+//  NOTE: To access the generated histograms in the current directory, do eg:
+//     TH2D *h3_1 = (TH2D*)gDirectory->Get("h3_1");
 
    Int_t nbinsx  = fXaxis.GetNbins();
    Int_t nbinsy  = fYaxis.GetNbins();
