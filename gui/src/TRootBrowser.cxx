@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.9 2000/10/30 11:00:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.10 2001/03/08 20:16:28 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -750,12 +750,14 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      break;
                   case kFileOpen:
                      {
+                        static TString dir(".");
                         TGFileInfo fi;
-                        fi.fFileTypes = (char **) gOpenTypes;
+                        fi.fFileTypes = gOpenTypes;
+                        fi.fIniDir    = StrDup(dir);
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen,&fi);
                         if (!fi.fFilename) return kTRUE;
+                        dir = fi.fIniDir;
                         new TFile(fi.fFilename, "update");
-                        delete [] fi.fFilename;
                      }
                      break;
                   case kFileSave:

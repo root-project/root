@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.10 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.11 2000/12/13 15:13:50 brun Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -41,10 +41,10 @@
 #include "KeySymbols.h"
 
 
-const char *gFiletypes[] = { "All files",     "*",
-                             "Text files",    "*.txt",
-                             "ROOT macros",   "*.C",
-                             0,               0 };
+static const char *gFiletypes[] = { "All files",     "*",
+                                    "Text files",    "*.txt",
+                                    "ROOT macros",   "*.C",
+                                    0,               0 };
 static char *gPrinter      = 0;
 static char *gPrintCommand = 0;
 
@@ -213,11 +213,15 @@ Bool_t TGTextEdit::SaveFile(const char *filename, Bool_t saveas)
    if (!filename) {
       Bool_t untitled = !strlen(fText->GetFileName()) ? kTRUE : kFALSE;
       if (untitled || saveas) {
+         static TString dir(".");
          TGFileInfo fi;
-         fi.fFileTypes = (char **)gFiletypes;
+         fi.fFileTypes = gFiletypes;
+         fi.fIniDir    = StrDup(dir);
          new TGFileDialog(fClient->GetRoot(), this, kFDSave, &fi);
-         if (fi.fFilename && strlen(fi.fFilename))
+         if (fi.fFilename && strlen(fi.fFilename)) {
+            dir = fi.fIniDir;
             return fText->Save(fi.fFilename);
+         }
          return kFALSE;
       }
       return fText->Save(fText->GetFileName());
@@ -1049,7 +1053,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      }
                      if (parm1 == kM_FILE_OPEN) {
                         TGFileInfo fi;
-                        fi.fFileTypes = (char **)gFiletypes;
+                        fi.fFileTypes = gFiletypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
                         if (fi.fFilename && strlen(fi.fFilename)) {
                            LoadFile(fi.fFilename);

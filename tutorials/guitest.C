@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.6 2001/06/12 23:40:41 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.7 2001/06/27 16:13:22 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -651,9 +651,14 @@ void TestMainFrame::HandleMenu(Int_t id)
 
       case M_FILE_OPEN:
          {
+            static TString dir(".");
             TGFileInfo fi;
             fi.fFileTypes = filetypes;
+            fi.fIniDir    = StrDup(dir.Data());
+            printf("fIniDir = %s\n", fi.fIniDir);
             new TGFileDialog(gClient->GetRoot(), fMain, kFDOpen, &fi);
+            printf("Open file: %s (dir: %s)\n", fi.fFilename, fi.fIniDir);
+            dir = fi.fIniDir;
          }
          break;
 

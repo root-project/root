@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.7 2001/04/04 13:36:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.8 2001/05/10 14:31:48 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -457,20 +457,25 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
                   case kFileOpen:
                      {
+                        static TString dir(".");
                         TGFileInfo fi;
-                        fi.fFileTypes = (char **) gOpenTypes;
+                        fi.fFileTypes = gOpenTypes;
+                        fi.fIniDir    = StrDup(dir);
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen,&fi);
                         if (!fi.fFilename) return kTRUE;
+                        dir = fi.fIniDir;
                         new TFile(fi.fFilename, "update");
-                        delete [] fi.fFilename;
                      }
                      break;
                   case kFileSaveAs:
                      {
+                        static TString dir(".");
                         TGFileInfo fi;
-                        fi.fFileTypes = (char **) gSaveAsTypes;
+                        fi.fFileTypes = gSaveAsTypes;
+                        fi.fIniDir    = StrDup(dir);
                         new TGFileDialog(fClient->GetRoot(), this, kFDSave,&fi);
                         if (!fi.fFilename) return kTRUE;
+                        dir = fi.fIniDir;
                         if (strstr(fi.fFilename, ".root") ||
                             strstr(fi.fFilename, ".ps")   ||
                             strstr(fi.fFilename, ".eps")  ||
@@ -480,7 +485,6 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            fCanvas->SaveSource(fi.fFilename);
                         else
                            Warning("ProcessMessage", "file cannot be save with this extension (%s)", fi.fFilename);
-                        delete [] fi.fFilename;
                      }
                      break;
                   case kFileSaveAsRoot:

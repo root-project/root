@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.15 2001/04/20 17:56:50 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.16 2001/06/27 16:13:22 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -592,9 +592,14 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case M_FILE_OPEN:
                      {
+                        static TString dir(".");
                         TGFileInfo fi;
                         fi.fFileTypes = filetypes;
+                        fi.fIniDir    = StrDup(dir);
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
+                        printf("Open file: %s (dir: %s)\n", fi.fFilename,
+                               fi.fIniDir);
+                        dir = fi.fIniDir;
                      }
                      break;
 
