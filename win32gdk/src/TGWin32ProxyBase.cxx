@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.7 2003/11/24 10:51:55 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.8 2003/12/12 11:25:55 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -66,8 +66,13 @@
 //
 //       For example:
 //          VOID_METHOD_ARG0(Interpreter,ClearFileBusy,1)
+//             void TGWin32InterpreterProxy::ClearFileBusy()
+//  
 //          RETURN_METHOD_ARG0_CONST(VirtualX,Visual_t,GetVisual)
+//             Visual_t TGWin32VirtualXProxy::GetVisual() const
+//
 //          RETURN_METHOD_ARG2(VirtualX,Int_t,OpenPixmap,UInt_t,w,UInt_t,h)
+//             Int_t TGWin32VirtualXProxy::OpenPixmap,UInt_t w,UInt_t h)
 //
 //     - few methods has _LOCK part in the name
 //          VOID_METHOD_ARG1_LOCK(Interpreter,CreateListOfMethods,TClass*,cl)
@@ -97,8 +102,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 class TGWin32ProxyBasePrivate {
 public:
-
-   HANDLE               fEvent;   // event used for syncronization
+   HANDLE   fEvent;   // event used for syncronization
    TGWin32ProxyBasePrivate();
    ~TGWin32ProxyBasePrivate();
 };

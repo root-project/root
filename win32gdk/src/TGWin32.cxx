@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.31 2003/11/24 10:51:55 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.34 2003/12/12 11:25:55 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -741,7 +741,6 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
    Int_t erret;
    Bool_t endLoop = kFALSE;
    Int_t last_message = 0;
-   HCURSOR cur = 0;
 
    // force to create message queue
    ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
@@ -751,8 +750,8 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
       if (erret <= 0) endLoop = kTRUE;
 
       if ( (last_message==TGWin32ProxyBase::fgPostMessageId) &&
-           (msg.message>=WM_NCMOUSEMOVE) && 
-           (msg.message<WM_NCMBUTTONDBLCLK) ) {
+           (msg.message>WM_NCMOUSEMOVE) && 
+           (msg.message<=WM_NCMBUTTONDBLCLK) ) {
          TGWin32ProxyBase::GlobalLock();
       }
 
@@ -902,7 +901,7 @@ TGWin32::~TGWin32()
 //______________________________________________________________________________
 void TGWin32::CloseDisplay()
 {
-   //
+   // close display (terminate server/gMainThread )
 
    if (gSplash) {
       delete gSplash;
