@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.29 2004/11/29 22:13:17 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.30 2004/12/07 15:44:10 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -191,6 +191,7 @@ TGeoMatrix::TGeoMatrix(const TGeoMatrix &other)
            :TNamed(other)
 {
 // copy constructor
+   ResetBit(kGeoRegistered);
 }
 
 //_____________________________________________________________________________
@@ -218,6 +219,7 @@ TGeoMatrix& TGeoMatrix::operator = (const TGeoMatrix &matrix)
 // Assignment operator
    if (&matrix == this) return *this;
    TNamed::operator=(matrix);
+   ResetBit(kGeoRegistered);
    return *this;
 }   
 
