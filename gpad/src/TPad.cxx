@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.79 2002/07/17 11:07:37 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.80 2002/09/03 18:39:44 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3686,6 +3686,7 @@ void TPad::Print(const char *filename, Option_t *option)
       gVirtualPS->SetName(psname);
       gVirtualPS->Open(psname,pstype);
       gVirtualPS->SetBit(kPrintingPS);
+      gVirtualPS->NewPage();
       Paint();
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
       Info("Print", "PostScript file %s has been created", psname);
@@ -3694,7 +3695,6 @@ void TPad::Print(const char *filename, Option_t *option)
          delete gVirtualPS;
          gVirtualPS = psave;
       } else {
-         gVirtualPS->PrintStr("@showpage gr"); //only at the end of the first picture
          gROOT->GetListOfSpecials()->Add(gVirtualPS);
          gVirtualPS = 0;
       }
