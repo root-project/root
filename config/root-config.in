@@ -162,8 +162,8 @@ linuxrh42 | linuxrh51)
    ;;
 linux)
    # Linux with egcs, gcc 2.9x, gcc 3.x
-   auxcflags="-D_REENTRANT"
-   auxlibs="-lm -ldl -lpthread -rdynamic"
+   auxcflags=
+   auxlibs="-lm -ldl -rdynamic"
    auxglibs=${auxlibs}
    ;;
 linuxdeb | linuxsuse6)
@@ -291,6 +291,15 @@ case $arch in
       auxcflags="--exceptions $auxcflags"
       auxldflags="--exceptions $auxldflags"
    fi
+   ;;
+linux*)
+   for f in $features ; do
+      if test "x$f" = "xthread" ; then
+	 auxcflags="-D_REENTRANT $auxcflags"
+	 auxlibs="-lpthread $auxlibs"
+      fi
+   done
+   ;;
 esac
 
 ### end of machine and compiler dependent settings ###
