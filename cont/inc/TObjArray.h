@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.1.1.3 2001/03/29 12:36:02 fisyak Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.7 2001/05/08 09:17:03 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -132,7 +132,7 @@ inline TObject *&TObjArray::operator[](Int_t at)
    int j = at-fLowerBound;
    if (j>=0 && j<fSize) return fCont[j];
    BoundsOk("operator[]", at);
-   //fLast = -2; // invalidate fLast since the result may be used as an lvalue
+   fLast = -2; // invalidate fLast since the result may be used as an lvalue
    return fCont[0];
 }
 inline TObject *TObjArray::At(Int_t i) const
