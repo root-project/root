@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.2 2001/02/08 17:04:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.3 2001/02/09 16:47:51 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -152,7 +152,7 @@ void TBits::SetBitNumber(UInt_t bitnumber, Bool_t value)
 {
    // Set bit number 'bitnumber' to be value
 
-   if (bitnumber+1>fNbits) {
+   if (bitnumber >= fNbits) {
       UInt_t new_size = (bitnumber/8) + 1;
       if (new_size > fNbytes) {
          UChar_t *old_location = fAllBits;
@@ -176,7 +176,7 @@ Bool_t TBits::TestBitNumber(UInt_t bitnumber) const
 {
    // Return the current value of the bit
 
-   if (bitnumber>fNbits) return kFALSE;
+   if (bitnumber >= fNbits) return kFALSE;
    UInt_t  loc = bitnumber/8;
    UChar_t value = fAllBits[loc];
    UChar_t bit = bitnumber%8;
