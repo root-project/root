@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.49 2001/03/09 17:47:05 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.50 2001/04/09 08:04:55 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -920,9 +920,10 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j) const
 }
 
 //______________________________________________________________________________
-Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j) const
+Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, int k) const
 {
-//  return value of element i in object number j in a TClonesArray.
+//  return value of element i in object number j in a TClonesArray and eventually
+// element k in a sub-array.
 
    Int_t nc = clones->GetEntriesFast();
    if (j >= nc) return 0;
@@ -948,28 +949,28 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j) c
       case kULong:             {ULong_t *val  = (ULong_t*)ladd;  return Double_t(*val);}
 
          // array of basic types  array[8]
-      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   return Double_t(val[j]);}
-      case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  return Double_t(val[j]);}
-      case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    return Double_t(val[j]);}
-      case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   return Double_t(val[j]);}
-      case kOffsetL + kFloat:  {Float_t *val  = (Float_t*)ladd;  return Double_t(val[j]);}
-      case kOffsetL + kDouble: {Double_t *val = (Double_t*)ladd; return Double_t(val[j]);}
-      case kOffsetL + kUChar:  {UChar_t *val  = (UChar_t*)ladd;  return Double_t(val[j]);}
-      case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; return Double_t(val[j]);}
-      case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   return Double_t(val[j]);}
-      case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  return Double_t(val[j]);}
+      case kOffsetL + kChar:   {Char_t *val   = (Char_t*)ladd;   return Double_t(val[k]);}
+      case kOffsetL + kShort:  {Short_t *val  = (Short_t*)ladd;  return Double_t(val[k]);}
+      case kOffsetL + kInt:    {Int_t *val    = (Int_t*)ladd;    return Double_t(val[k]);}
+      case kOffsetL + kLong:   {Long_t *val   = (Long_t*)ladd;   return Double_t(val[k]);}
+      case kOffsetL + kFloat:  {Float_t *val  = (Float_t*)ladd;  return Double_t(val[k]);}
+      case kOffsetL + kDouble: {Double_t *val = (Double_t*)ladd; return Double_t(val[k]);}
+      case kOffsetL + kUChar:  {UChar_t *val  = (UChar_t*)ladd;  return Double_t(val[k]);}
+      case kOffsetL + kUShort: {UShort_t *val = (UShort_t*)ladd; return Double_t(val[k]);}
+      case kOffsetL + kUInt:   {UInt_t *val   = (UInt_t*)ladd;   return Double_t(val[k]);}
+      case kOffsetL + kULong:  {ULong_t *val  = (ULong_t*)ladd;  return Double_t(val[k]);}
 
          // pointer to an array of basic types  array[n]
-      case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   return Double_t((*val)[j]);}
-      case kOffsetP + kShort:  {Short_t **val  = (Short_t**)ladd;  return Double_t((*val)[j]);}
-      case kOffsetP + kInt:    {Int_t **val    = (Int_t**)ladd;    return Double_t((*val)[j]);}
-      case kOffsetP + kLong:   {Long_t **val   = (Long_t**)ladd;   return Double_t((*val)[j]);}
-      case kOffsetP + kFloat:  {Float_t **val  = (Float_t**)ladd;  return Double_t((*val)[j]);}
-      case kOffsetP + kDouble: {Double_t **val = (Double_t**)ladd; return Double_t((*val)[j]);}
-      case kOffsetP + kUChar:  {UChar_t **val  = (UChar_t**)ladd;  return Double_t((*val)[j]);}
-      case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; return Double_t((*val)[j]);}
-      case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[j]);}
-      case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  return Double_t((*val)[j]);}
+      case kOffsetP + kChar:   {Char_t **val   = (Char_t**)ladd;   return Double_t((*val)[k]);}
+      case kOffsetP + kShort:  {Short_t **val  = (Short_t**)ladd;  return Double_t((*val)[k]);}
+      case kOffsetP + kInt:    {Int_t **val    = (Int_t**)ladd;    return Double_t((*val)[k]);}
+      case kOffsetP + kLong:   {Long_t **val   = (Long_t**)ladd;   return Double_t((*val)[k]);}
+      case kOffsetP + kFloat:  {Float_t **val  = (Float_t**)ladd;  return Double_t((*val)[k]);}
+      case kOffsetP + kDouble: {Double_t **val = (Double_t**)ladd; return Double_t((*val)[k]);}
+      case kOffsetP + kUChar:  {UChar_t **val  = (UChar_t**)ladd;  return Double_t((*val)[k]);}
+      case kOffsetP + kUShort: {UShort_t **val = (UShort_t**)ladd; return Double_t((*val)[k]);}
+      case kOffsetP + kUInt:   {UInt_t **val   = (UInt_t**)ladd;   return Double_t((*val)[k]);}
+      case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  return Double_t((*val)[k]);}
          // array counter //[n]
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
    }

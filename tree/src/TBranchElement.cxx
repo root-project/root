@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.13 2001/04/12 13:27:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.14 2001/04/12 15:06:19 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -526,9 +526,11 @@ TBranchElement *TBranchElement::GetSubBranch(const TBranchElement *br) const
 
 
 //______________________________________________________________________________
-Double_t TBranchElement::GetValue(Int_t j) const
+Double_t TBranchElement::GetValue(Int_t j, Int_t len) const
 {
 // Returns branch value. If the leaf is an array, j is the index in the array
+// If leaf is an array inside a TClonesArray, len should be the length of the
+// array.
 
    if (j == 0 && fBranchCount) {
       Int_t entry = fTree->GetReadEntry();
@@ -537,7 +539,7 @@ Double_t TBranchElement::GetValue(Int_t j) const
    if (fType == 31) {
       char **ppointer = (char**)GetAddress();
       TClonesArray *clones = (TClonesArray*)(*ppointer);
-      return fInfo->GetValueClones(clones,fID,j);
+      return fInfo->GetValueClones(clones,fID, j/len, j%len);
    } else {
       return fInfo->GetValue(GetAddress(),fID,j);
    }

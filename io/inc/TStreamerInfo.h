@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.17 2001/02/21 08:54:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.18 2001/04/09 08:04:55 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -96,7 +96,7 @@ public:
    Int_t               GetSize()    const;
    Int_t              *GetTypes()   const {return fType;}
    Double_t            GetValue(char *pointer, Int_t i, Int_t j) const;
-   Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j) const;
+   Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k) const;
    Bool_t              IsOptimized() const {return fOptimized;}
    void                ls(Option_t *option="") const;
    Int_t               New(const char *p);

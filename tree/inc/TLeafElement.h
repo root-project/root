@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.5 2001/02/06 10:58:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.6 2001/04/09 08:11:43 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -43,10 +43,10 @@ public:
     TLeafElement(const char *name, Int_t id, Int_t type);
     virtual ~TLeafElement();
 
-    virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata();}
+    virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
     TMethodCall     *GetMethodCall(const char *name);
-    virtual Int_t    GetNdata() const {return ((TBranchElement*)fBranch)->GetNdata();}
-    virtual Double_t GetValue(Int_t i=0) const {return ((TBranchElement*)fBranch)->GetValue(i);}
+    virtual Int_t    GetNdata() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
+    virtual Double_t GetValue(Int_t i=0) const {return ((TBranchElement*)fBranch)->GetValue(i, fLen);}
     virtual void    *GetValuePointer() const { return fAbsAddress; }
     virtual Bool_t   IsOnTerminalBranch() const;
     virtual void     PrintValue(Int_t i=0) const {((TBranchElement*)fBranch)->PrintValue(i);}
