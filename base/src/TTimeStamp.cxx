@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.5 2002/03/25 16:24:02 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTimeStamp.cxx,v 1.6 2002/03/25 18:10:33 rdm Exp $
 // Author: R. Hatcher   30/9/2001
 
 /*************************************************************************
@@ -318,14 +318,15 @@ void TTimeStamp::Set()
    GetSystemTimeAsFileTime((FILETIME *)&time);
    // NT keeps time in FILETIME format which is 100ns ticks since
    // Jan 1, 1601. TTimeStamps use time in 100ns ticks since Jan 1, 1970.
-   // The difference is 134764 days.
+   // The difference is 134774 days.
+   fNanoSec = Int_t((time.QuadPart * (unsigned __int64) 100) %
+                    (unsigned __int64) 1000000000);
    time.QuadPart -=
             (unsigned __int64) (1000*1000*10)       // seconds
           * (unsigned __int64) (60 * 60 * 24)       // days
-          * (unsigned __int64) (134764);            // # of days
+          * (unsigned __int64) (134774);            // # of days
 
-   fSec     = Int_t(time.QuadPart/(1000*1000*10));
-   fNanoSec = Int_t(time.QuadPart - fSec) * 100;
+   fSec     = Int_t(time.QuadPart/(unsigned __int64) (1000*1000*10));
 #else
    struct timeval tp;
    gettimeofday(&tp, 0);
