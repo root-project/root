@@ -1,0 +1,33 @@
+#!/bin/bash
+
+
+if ! tar xfz qm-2.2.tar.gz
+	then
+	echo "Error unzipping QMTest 2.2"
+	exit 1
+fi
+if ! tar xfz cppunit-1.9.14.tar.gz
+	then
+	echo "Error unzipping CPPUnit 1.9.14"
+	exit 1
+fi
+cd qm-2.2
+./configure --prefix=${PWD}/../qmt/
+
+gmake
+echo "gmake returned: $?" 
+gmake check
+echo "gmake check returned: $?"
+gmake install
+echo "gmake install returned: $?"
+cd ../cppunit-1.9.14
+./configure --prefix=${PWD}/../cppunit/
+gmake 
+echo "gmake returned: $?"
+gmake check
+echo "gmake check returned: $?"
+gmake install
+echo "gmake install returned: $?"
+
+
+
