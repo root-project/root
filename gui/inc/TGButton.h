@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.21 2004/01/05 17:44:09 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.22 2004/05/03 12:56:16 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -109,8 +109,7 @@ public:
    TGButtonGroup       *GetGroup() const { return fGroup; }
 
    virtual Bool_t       IsDown() const { return !(fOptions & kRaisedFrame); }
-   virtual void         SetDown(Bool_t on = kTRUE)
-                           { on ? SetState(kButtonDown) : SetState(kButtonUp); }
+   virtual void         SetDown(Bool_t on = kTRUE);
    virtual Bool_t       IsOn() const { return IsDown(); }
    virtual void         SetOn(Bool_t on = kTRUE) { SetDown(on); }
    virtual Bool_t       IsToggleButton() const { return kFALSE; }
