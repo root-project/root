@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.29 2001/05/23 09:48:26 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.30 2001/05/24 16:34:51 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -313,9 +313,12 @@ Int_t TStreamerBase::GetSize() const
 void TStreamerBase::Init(TObject *)
 {
    if (fType == TStreamerInfo::kTObject || fType == TStreamerInfo::kTNamed) return;
+   fBaseClass = gROOT->GetClass(GetName());
+   if (!fBaseClass) return;
+   if (!fBaseClass->GetMethodAny("StreamerNVirtual")) return;
    fMethod = new TMethodCall();
    fMethod->InitWithPrototype(fBaseClass,"StreamerNVirtual","TBuffer &");
-   fBaseClass = gROOT->GetClass(GetName());
+   //fBaseClass = gROOT->GetClass(GetName());
 }
 
 //______________________________________________________________________________
@@ -329,10 +332,15 @@ const char *TStreamerBase::GetInclude() const
 //______________________________________________________________________________
 Int_t TStreamerBase::ReadBuffer (TBuffer &b, char *pointer)
 {
-   ULong_t args[1];
-   args[0] = (ULong_t)&b;
-   fMethod->SetParamPtrs(args);
-   fMethod->Execute((void*)(pointer+fOffset));
+   if (fMethod) {
+      ULong_t args[1];
+      args[0] = (ULong_t)&b;
+      fMethod->SetParamPtrs(args);
+      fMethod->Execute((void*)(pointer+fOffset));
+   } else {
+      //printf("Reading baseclass:%s via ReadBuffer\n",fBaseClass->GetName());
+      fBaseClass->ReadBuffer(b,pointer);
+   }
    return 0;
 }
 
