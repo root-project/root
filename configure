@@ -1526,16 +1526,16 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$aclocaldir" = "x";   then aclocaldir=$prefix/share/aclocal; fi
     if test "x$elispdir" = "x";     then elispdir=$prefix/share/emacs/site-lisp; fi
 
-    sed -e "s|@useconfig@|TRUE|"                       \
-        -e "s|@cflags@|-DHAVE_CONFIG|"                 \
-                < Makefile.tmp > Makefile.tmpp
-    mv Makefile.tmpp Makefile.tmp
-
     if test "x$enable_rpath" = "xyes" ; then
         sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
                 < Makefile.tmp > Makefile.tmpp
         mv Makefile.tmpp Makefile.tmp
     fi
+
+    sed -e "s|@useconfig@|TRUE|"                       \
+        -e "s|@cflags@|-DHAVE_CONFIG|"                 \
+            < Makefile.tmp > Makefile.tmpp
+    mv Makefile.tmpp Makefile.tmp
 else
     ##################################################################
     #
@@ -1559,10 +1559,17 @@ else
     aclocaldir=\$\(ROOTSYS\)/build/misc
     elispdir=\$\(ROOTSYS\)/build/misc
 
+    # when using rpath in this case build product is not relocatable
+    if test "x$enable_rpath" = "xyes" ; then
+        sed -e "s|@ldflags@|-Wl,-rpath,$libdir @ldflags@|" \
+                < Makefile.tmp > Makefile.tmpp
+        mv Makefile.tmpp Makefile.tmp
+    fi
+
     sed -e "s|@useconfig@|FALSE|" \
         -e "s|@cflags@||"         \
         -e "s|@ldflags@||"        \
-        < Makefile.tmp > Makefile.tmpp
+            < Makefile.tmp > Makefile.tmpp
     mv Makefile.tmpp Makefile.tmp
 fi
 
