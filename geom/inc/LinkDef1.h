@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: LinkDef.h,v 1.9 2003/05/07 13:32:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: LinkDef.h,v 1.10 2003/07/31 20:19:31 brun Exp $
 // Author : Andrei Gheata 10/06/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -35,20 +35,6 @@
 #pragma link C++ class TGeoIdentity+;
 #pragma link C++ class TGeoVoxelFinder+;
 #pragma link C++ class TGeoCylVoxels+;
-#pragma link C++ class TGeoPatternFinder+;
-#pragma link C++ class TGeoPatternX+;
-#pragma link C++ class TGeoPatternY+;
-#pragma link C++ class TGeoPatternZ+;
-#pragma link C++ class TGeoPatternParaX+;
-#pragma link C++ class TGeoPatternParaY+;
-#pragma link C++ class TGeoPatternParaZ+;
-#pragma link C++ class TGeoPatternTrapZ+;
-#pragma link C++ class TGeoPatternCylR+;
-#pragma link C++ class TGeoPatternCylPhi+;
-#pragma link C++ class TGeoPatternSphR+;
-#pragma link C++ class TGeoPatternSphTheta+;
-#pragma link C++ class TGeoPatternSphPhi+;
-#pragma link C++ class TGeoPatternHoneycomb+;
 #pragma link C++ class TGeoShape+;
 #pragma link C++ class TGeoBBox+;
 #pragma link C++ class TGeoPara+;
@@ -74,29 +60,6 @@
 #pragma link C++ class TGeoNodeMatrix+;
 #pragma link C++ class TGeoNodeOffset+;
 #pragma link C++ class TGeoManager-;
-#pragma link C++ class TGeoNodeArray+;
-#pragma link C++ class TGeoNodeObjArray+;
-#pragma link C++ class TGeoNodeCache+;
-#pragma link C++ class TGeoCacheDummy+;
-#pragma link C++ class TGeoMatrixCache+;
-#pragma link C++ class TGeoNodePos+;
-#pragma link C++ class TGeoCacheState+;
-#pragma link C++ class TGeoCacheStateDummy+;
-#pragma link C++ class TGeoMatHandler+;
-#pragma link C++ class TGeoMatHandlerId+;
-#pragma link C++ class TGeoMatHandlerX+;
-#pragma link C++ class TGeoMatHandlerY+;
-#pragma link C++ class TGeoMatHandlerZ+;
-#pragma link C++ class TGeoMatHandlerXY+;
-#pragma link C++ class TGeoMatHandlerXZ+;
-#pragma link C++ class TGeoMatHandlerYZ+;
-#pragma link C++ class TGeoMatHandlerXYZ+;
-#pragma link C++ class TGeoMatHandlerRot+;
-#pragma link C++ class TGeoMatHandlerRotTr+;
-#pragma link C++ class TGeoMatHandlerScl+;
-#pragma link C++ class TGeoMatHandlerTrScl+;
-#pragma link C++ class TGeoMatHandlerRotScl+;
-#pragma link C++ class TGeoMatHandlerRotTrScl+;
 #pragma link C++ class TVirtualGeoPainter+;
 #pragma link C++ class TVirtualGeoTrack+;
 
