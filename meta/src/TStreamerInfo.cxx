@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.21 2000/12/21 16:52:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.22 2000/12/22 10:44:44 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -48,6 +48,7 @@ TStreamerInfo::TStreamerInfo()
    fElem     = 0;
    fMethod   = 0;
    fCheckSum = 0;
+   fNdata    = 0;
    fClassVersion = 0;
 }
 
@@ -68,6 +69,7 @@ TStreamerInfo::TStreamerInfo(TClass *cl, const char *info)
    fElem     = 0;
    fMethod   = 0;
    fCheckSum = 0;
+   fNdata    = 0;
    fClassVersion = fClass->GetClassVersion();
 
    if (info) BuildUserInfo(info);
