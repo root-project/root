@@ -189,14 +189,16 @@ endef
 
 define BuildFromObj
 $(CMDECHO) touch dummy.C
-$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"dummy.C\"\,\"\",\"$<\",\) > $@.build.log 2>&1
+$(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy.C\",\"\",\"$<\")" > $@.build.log 2>&1
 $(CMDECHO) mv dummy_C.$(DllSuf) $@ 
+$(CMDECHO) rm dummy.C
 endef
 
 define BuildFromObjs
 $(CMDECHO) touch dummy.C
 $(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy.C\",\"\",\"$^\")" > $@.build.log 2>&1
 $(CMDECHO) mv dummy_C.$(DllSuf) $@ 
+$(CMDECHO) rm dummy.C
 endef
 
 RemoveLeadingDirs := sed -e 's?^[A-z/\].*[/\]??' -e 's/.dll/.so/'
