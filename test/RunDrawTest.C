@@ -4,6 +4,7 @@
 #include "TH1.h"
 #include "TKey.h"
 #include "TChain.h"
+#include "TSystem.h"
 
 #include "iostream.h"
 
@@ -112,14 +113,14 @@ void RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
   //    0: As silent as possible, only report errors and overall speed results.
   //    1: Output 0 + label for the start of each phase
   //    2: Output 1 + more details on the different phase being done
-  //    3: Output 2 + stop at the first first and draw a canvas showing the differences
+  //    3: Output 2 + stop at the first and draw a canvas showing the differences
 
    SetVerboseLevel(verboseLevel);
 
    if (mode == 1) {
       if (!TClassTable::GetDict("Event")) {
-         gROOT->ProcessLine(".L libEvent.so");
-      }     
+         gSystem->Load("libEvent");
+     }     
       gHasLibrary = kTRUE;
    }
 
@@ -132,7 +133,7 @@ void RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
 
    if (mode >= 2 && mode <= 4) {
       if (!TClassTable::GetDict("Event")) {
-         gROOT->ProcessLine(".L libEvent.so");
+         gSystem->Load("libEvent");
       } else {
          cerr << "Since libEvent.so has already been loaded, mode 2 can not be tested!";
          cerr << endl;
