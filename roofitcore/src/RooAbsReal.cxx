@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.68 2001/11/30 19:29:35 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.69 2001/12/04 22:40:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -1222,6 +1222,13 @@ Bool_t RooAbsReal::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedA
       isMatched= kFALSE;
     }
   }
+
+  // nameList may not contain multiple entries with the same name
+  // that are both matched
+  if (isMatched && (matched.getSize()!=nameList.GetSize())) {
+    isMatched = kFALSE ;
+  }
+
   delete iterator;
   if(isMatched) matchedArgs.add(matched);
   return isMatched;
