@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.9 2002/07/29 09:22:29 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.10 2002/11/15 13:26:29 rdm Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -338,7 +338,7 @@ TObject *TOrdCollection::RemoveAt(Int_t idx)
    Int_t physIdx;
 
    if (idx == fGapStart - 1 || idx == fGapStart) {
-      if ( idx == fGapStart )
+      if (idx == fGapStart)
          physIdx = fGapStart + fGapSize;        // at right boundary
       else
          physIdx = --fGapStart;                 // at left boundary
