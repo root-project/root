@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.8 2000/12/11 18:55:40 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.9 2001/08/30 16:37:03 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -39,35 +39,35 @@ class TMemberInspector;
 
 //---- types -------------------------------------------------------------------
 
-typedef char           Char_t;      //Signed Character 1 byte
-typedef unsigned char  UChar_t;     //Unsigned Character 1 byte
-typedef short          Short_t;     //Signed Short integer 2 bytes
-typedef unsigned short UShort_t;    //Unsigned Short integer 2 bytes
+typedef char           Char_t;      //Signed Character 1 byte (char)
+typedef unsigned char  UChar_t;     //Unsigned Character 1 byte (unsigned char)
+typedef short          Short_t;     //Signed Short integer 2 bytes (short)
+typedef unsigned short UShort_t;    //Unsigned Short integer 2 bytes (unsigned short)
 #ifdef R__INT16
 typedef long           Int_t;       //Signed integer 4 bytes
 typedef unsigned long  UInt_t;      //Unsigned integer 4 bytes
 #else
-typedef int            Int_t;       //Signed integer 4 bytes
-typedef unsigned int   UInt_t;      //Unsigned integer 4 bytes
+typedef int            Int_t;       //Signed integer 4 bytes (int)
+typedef unsigned int   UInt_t;      //Unsigned integer 4 bytes (unsigned int)
 #endif
 #ifdef R__B64    // Note: Long_t and ULong_t are currently not portable types
-typedef int            Seek_t;      //File pointer
-typedef long           Long_t;      //Signed long integer 8 bytes
-typedef unsigned long  ULong_t;     //Unsigned long integer 8 bytes
+typedef int            Seek_t;      //File pointer (int)
+typedef long           Long_t;      //Signed long integer 8 bytes (long)
+typedef unsigned long  ULong_t;     //Unsigned long integer 8 bytes (unsigned long)
 #else
-typedef int            Seek_t;      //File pointer
-typedef long           Long_t;      //Signed long integer 4 bytes
-typedef unsigned long  ULong_t;     //Unsigned long integer 4 bytes
+typedef int            Seek_t;      //File pointer (int)
+typedef long           Long_t;      //Signed long integer 4 bytes (long)
+typedef unsigned long  ULong_t;     //Unsigned long integer 4 bytes (unsigned long)
 #endif
-typedef float          Float_t;     //Float 4 bytes
-typedef double         Double_t;    //Float 8 bytes
-typedef char           Text_t;      //General string
-typedef unsigned char  Bool_t;      //Boolean (0=false, 1=true)
-typedef unsigned char  Byte_t;      //Byte (8 bits)
-typedef short          Version_t;   //Class version identifier
-typedef const char     Option_t;    //Option string
-typedef int            Ssiz_t;      //String size
-typedef float          Real_t;      //TVector and TMatrix element type
+typedef float          Float_t;     //Float 4 bytes (float)
+typedef double         Double_t;    //Float 8 bytes (double)
+typedef char           Text_t;      //General string (char)
+typedef unsigned char  Bool_t;      //Boolean (0=false, 1=true) (unsigned char)
+typedef unsigned char  Byte_t;      //Byte (8 bits) (unsigned char)
+typedef short          Version_t;   //Class version identifier (short)
+typedef const char     Option_t;    //Option string (const char)
+typedef int            Ssiz_t;      //String size (int)
+typedef float          Real_t;      //TVector and TMatrix element type (float)
 
 typedef void         (*Streamer_t)(TBuffer&, void*, Int_t);
 typedef void         (*VoidFuncPtr_t)();  //pointer to void function
