@@ -125,7 +125,7 @@ public:
    void          SetTemperature(Float_t t) { fTemperature = t; }
    void          SetType(char *type) {strcpy(fType,type);}
    void          SetHeader(Int_t i, Int_t run, Int_t date, Float_t random);
-   Track        *AddTrack(Float_t random, Float_t ptmin);
+   Track        *AddTrack(Float_t random, Float_t ptmin=1);
    void          SetMeasure(UChar_t which, Int_t what);
    void          SetMatrix(UChar_t x, UChar_t y, Float_t what) { if (x<3&&y<3) fMatrix[x][y]=what;}
    void          SetRandomVertex();
