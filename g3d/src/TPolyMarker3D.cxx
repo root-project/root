@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.4 2000/09/05 09:21:22 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.5 2000/12/13 15:13:48 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -218,7 +218,8 @@ Int_t TPolyMarker3D::DistancetoPrimitive(Int_t px, Int_t py)
       view->WCtoNDC(&fP[3*i], xndc);
       x1     = gPad->XtoAbsPixel(xndc[0]);
       y1     = gPad->YtoAbsPixel(xndc[1]);
-      dpoint = Int_t(TMath::Sqrt((Long_t)((px-x1)*(px-x1) + (py-y1)*(py-y1))));
+      dpoint = Int_t(TMath::Sqrt((((Double_t)px-x1)*((Double_t)px-x1) 
+                                + ((Double_t)py-y1)*((Double_t)py-y1))));
       if (dpoint < dist) dist = dpoint;
    }
    return dist;
