@@ -5,16 +5,16 @@
 PLATFORM      = win32
 
 DEBUGFLAGS    = -Z7
-OPTFLAGS      = -O2
+OPTFLAGS      = -O2 -Z7
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
-LDOPT         = -debug -pdb:none
+LDOPT         = -debug
 F77OPT        = -debug -nopdbfile
 NOOPT         =
 else
 OPT           = $(OPTFLAGS)
-LDOPT         = -pdb:none
-#LDOPT         = -opt:ref -pdb:none
+LDOPT         =
+#LDOPT         = -opt:ref
 F77OPT        = -optimize:0 -nopdbfile -recursive
 NOOPT         =
 endif

@@ -583,7 +583,6 @@ main(int argc, char **argv)
             goto Usage;
         }
         fprintf(fout, "LIBRARY    %s\n", dllname);
-        fprintf(fout, "EXETYPE WINDOWS\n");
 #ifndef _X86_
         fprintf(fout, "CODE PRELOAD MOVEABLE DISCARDABLE\n");
         fprintf(fout, "DATA PRELOAD MOVEABLE MULTIPLE\n\n");
