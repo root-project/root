@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.197 2005/01/07 00:15:28 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.198 2005/01/19 18:28:40 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3870,6 +3870,10 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
                if (!s) continue;
                s++;
                char *s1 = strrchr(s, '"');
+               if (((strstr(s,"LinkDef") || strstr(s,"Linkdef") ||
+                     strstr(s,"linkdef")) && strstr(s,".h"))) {
+                  s1 = 0;
+               }
                if (s1) {
                   *s1 = 0;
                   fprintf(tmpdict, "  G__add_compiledheader(\"%s\");\n", s);
@@ -3934,7 +3938,9 @@ void ReplaceBundleInDict(const char *dictname, const string &bundlename)
                return;
             }
             while (fgets(line, BUFSIZ, fb))
-               fprintf(tmpdict, "%s", line);
+               if (!((strstr(line,"LinkDef") || strstr(line,"Linkdef") || strstr(line,"linkdef")) && 
+                     strstr(line,".h")))
+                  fprintf(tmpdict, "%s", line);
             fclose(fb);
          } else
             fprintf(tmpdict, "%s", line);
