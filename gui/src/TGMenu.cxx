@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.38 2004/06/18 10:20:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.39 2004/07/06 10:57:20 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -384,7 +384,6 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
    // only allow button1 events
 
    if (event->fType == kButtonPress) {
-      fKeyNavigate = kFALSE;
 
       gVirtualX->TranslateCoordinates(fId, fId, event->fX, event->fY,
                                       dummy, dummy, wtarget);
@@ -408,6 +407,7 @@ Bool_t TGMenuBar::HandleButton(Event_t *event)
                                    kPointerMotionMask, kNone, fDefaultCursor);
          }
       }
+      fKeyNavigate = kFALSE;
    }
 
    if (event->fType == kButtonRelease) {
@@ -531,14 +531,14 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                   Event_t ev;
                   ev.fType = kButtonRelease;
                   ev.fWindow = menu->GetId();
-                  menu->HandleButton(&ev);
-                  break;
+                  fCurrent = 0;
+                  return menu->HandleButton(&ev);
                case kKey_Escape:
                   gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
                   fCurrent->SetState(kFALSE);
                   fStick = kFALSE;
-                  menu->EndMenu(dummy);
-                  return kTRUE;
+                  fCurrent = 0;
+                  return menu->EndMenu(dummy);
                default:
                   break;
             }
@@ -1096,7 +1096,7 @@ Bool_t TGPopupMenu::HandleTimer(TTimer *)
    // If TPopupDelayTimer times out popup cascading popup menu (if it is
    // still the current entry).
 
-   if (fCurrent != 0)
+   if (fCurrent != 0) {
       if (fCurrent->fType == kMenuPopup) {
          Int_t    ax, ay;
          Window_t wdummy;
@@ -1107,9 +1107,8 @@ Bool_t TGPopupMenu::HandleTimer(TTimer *)
                                        ax, ay, wdummy);
 
          fCurrent->fPopup->PlaceMenu(ax-5, ay-1, kFALSE, kFALSE);
-         fCurrent->fPopup->SetMenuBar(fMenuBar);
       }
-
+   }
    fDelay->Remove();
 
    return kTRUE;
