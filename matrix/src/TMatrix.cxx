@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.32 2002/10/25 13:35:21 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.33 2002/10/25 15:29:50 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -1245,9 +1245,11 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
    // revert our scaling
    if (symmetric) {
       this->NormByDiag(diag);
-      Int_t irow;
-      for (irow = 0; irow < fNrows; irow++)
-         determinant *= TMath::Abs(diag(irow));
+      if (determ_ptr) {
+        Int_t irow;
+        for (irow = 0; irow < fNrows; irow++)
+           determinant *= TMath::Abs(diag(irow));
+      }
    }
 
    if (determ_ptr)
