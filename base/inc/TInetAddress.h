@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.2 2000/12/13 15:13:52 brun Exp $
 // Author: Fons Rademakers   16/12/96
 
 /*************************************************************************
@@ -43,7 +43,7 @@ friend class TSocket;
 friend class TServerSocket;
 
 private:
-   TString fHostname;    // full qualified hostname
+   TString fHostname;    // fully qualified hostname
    UInt_t  fAddress;     // IP address in host byte order
    Int_t   fFamily;      // address family
    Int_t   fPort;        // port through which we are connected
