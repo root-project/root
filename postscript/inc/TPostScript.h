@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.h,v 1.2 2000/06/13 09:48:05 brun Exp $
 // Author: O.Couet   16/07/99
 
 /*************************************************************************
@@ -120,6 +120,7 @@ public:
                 void  PrintFast(Int_t nch, const char *string="");
                 void  Range(Float_t xrange, Float_t yrange);
                 void  SetColor(Int_t color = 1);
+                void  SetColor(Float_t r, Float_t g, Float_t b);
                 void  Text(Double_t x, Double_t y, const char *string);
                 void  TextNDC(Double_t u, Double_t v, const char *string);
                 Int_t UtoPS(Double_t u);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.h,v 1.2 2000/06/13 12:29:30 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -55,6 +55,7 @@ public:
    virtual void  Open(const char *filename, Int_t type=-111) = 0;
    virtual void  PrintFast(Int_t nch, const char *string="") = 0;
    virtual void  Text(Double_t x, Double_t y, const char *string) = 0;
+   virtual void  SetColor(Float_t r, Float_t g, Float_t b) = 0;
 
    ClassDef(TVirtualPS,0)  //Abstract interface to a PostScript driver
 };

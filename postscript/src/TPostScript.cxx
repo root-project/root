@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.14 2001/07/20 21:05:30 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.15 2001/10/04 08:50:11 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -26,8 +26,7 @@
 #include "TStyle.h"
 #include "TMath.h"
 
-char backslash = '\\';
-
+const char   kBackslash = '\\';
 const Int_t  kMaxBuffer = 250;
 const Int_t  kLatex = BIT(10);
 
@@ -201,7 +200,7 @@ Note that <b>c1-&gt;Update</b> must be called at the end of the first picture
 
 <b>// invoke Postscript viewer</b>
    gSystem-&gt;Exec("gs file.ps");
-}   
+}
 </pre>
 */
 //END_HTML
@@ -1092,13 +1091,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.14 2001/07/20 21:05:30 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.15 2001/10/04 08:50:11 brun Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.14 2001/07/20 21:05:30 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.15 2001/10/04 08:50:11 brun Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1295,7 +1294,7 @@ void TPostScript::Initialize()
    if( format == 0 )  format = 4;
    if( format == 99 ) format = 0;
 //*-*
-   PrintStr("%%Title: ");
+   PrintStr("%%Title:");
    PrintStr(GetName());
    if( fMode != 3) {;
       if ( fMode == 1 || fMode == 4) PrintFast(10," (Portrait");
@@ -1317,10 +1316,10 @@ void TPostScript::Initialize()
       PrintStr("@");
    }
 
-   PrintFast(23,"%%Creator: ROOT Version");
+   PrintFast(24,"%%Creator: ROOT Version ");
    PrintStr(gROOT->GetVersion());
    PrintStr("@");
-   PrintFast(15,"%%CreationDate:");
+   PrintFast(16,"%%CreationDate: ");
    TDatime t;
    PrintStr(t.AsString());
    PrintStr("@");
@@ -1803,7 +1802,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.14 2001/07/20 21:05:30 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.15 2001/10/04 08:50:11 brun Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from
@@ -2163,36 +2162,37 @@ void TPostScript::SetMarkerColor( Color_t cindex )
 //______________________________________________________________________________
 void TPostScript::SetColor(Int_t color)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set the current color*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================
-//*-*
+    // Set the current color.
 
-//  if (fCurrentColor == color) return;
-  if( color < 0) color = 0;
-  fCurrentColor = color;
-  TColor *col = gROOT->GetColor(color);
-  Bool_t white = kTRUE;
-  if (col) {
-     if( col->GetRed() == fRed && col->GetGreen() == fGreen && col->GetBlue() == fBlue) return;
-     fRed   = col->GetRed();
-     fGreen = col->GetGreen();
-     fBlue  = col->GetBlue();
-     white = kFALSE;
-  }
-  if (white) {fRed = fGreen = fBlue = 1;}
-  if( fRed <= 0 && fGreen <= 0 && fBlue <= 0 ) {
-     PrintFast(6," black");
-  }
-  else {
-     WriteReal(fRed);
-     WriteReal(fGreen);
-     WriteReal(fBlue);
-     PrintFast(2," c");
-  }
-
+   if (color < 0) color = 0;
+   fCurrentColor = color;
+   TColor *col = gROOT->GetColor(color);
+   if (col)
+      SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
+   else
+      SetColor(1., 1., 1.);
 }
 
+//______________________________________________________________________________
+void TPostScript::SetColor(Float_t r, Float_t g, Float_t b)
+{
+   // Set directly current color (don't go via TColor).
 
+   if (r == fRed && g == fGreen && b == fBlue) return;
+
+   fRed   = r;
+   fGreen = g;
+   fBlue  = b;
+
+   if (fRed <= 0 && fGreen <= 0 && fBlue <= 0 ) {
+      PrintFast(6," black");
+   } else {
+      WriteReal(fRed);
+      WriteReal(fGreen);
+      WriteReal(fBlue);
+      PrintFast(2," c");
+   }
+}
 
 //______________________________________________________________________________
 void TPostScript::SetTextColor( Color_t cindex )
@@ -2350,7 +2350,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
       if( chars[i] == '@') {
          for (flip=0; flip<9;flip++) {
             if (chars[i+1] == cflip[flip]) {
-               newtext[j] = backslash;
+               newtext[j] = kBackslash;
                j++;
                strcpy(&newtext[j], cflipc[flip]);
                j = strlen(&newtext[0]);
@@ -2366,7 +2366,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
          if (chars[i] == cflip[6]) flip = 6;
          if (chars[i] == cflip[8]) flip = 8;
          if (flip) {
-            newtext[j] = backslash;
+            newtext[j] = kBackslash;
             j++;
             strcpy(&newtext[j], cflipc[flip]);
             j = strlen(&newtext[0]);
@@ -2395,15 +2395,15 @@ while (iold <= nchp ) {  //*-* loop on nchp old characters and look for backslas
 //*-* study the character following this backslash
 //*-*
    char2[inew] = 0;
-   if (newtext[iold-1] == backslash)  {
+   if (newtext[iold-1] == kBackslash)  {
       if ( iold == nchp) goto L60;
 //*-*
 //*-*-  1.1  the character following this backslash is also a backslash
 //*-*
-      if (newtext[iold] == backslash)  {
-         char2[inew] = backslash;  //*-*  copy both backslashes
+      if (newtext[iold] == kBackslash)  {
+         char2[inew] = kBackslash;  //*-*  copy both backslashes
          inew++;
-         char2[inew] = backslash;
+         char2[inew] = kBackslash;
          inew++;
          iold++;                 //*-* and go to the next character
          goto LOOPEND;
@@ -2412,7 +2412,7 @@ while (iold <= nchp ) {  //*-* loop on nchp old characters and look for backslas
 //*-*-  1.2  the character following this backslash is a parenthesis: ( or )
 //*-*
       if ( newtext[iold] == '('  || newtext[iold] == ')')  {
-         char2[inew] = backslash;        //*-* copy the backslash and the parenthesis
+         char2[inew] = kBackslash;        //*-* copy the backslash and the parenthesis
          inew++;
          char2[inew] = newtext[iold];
          inew++;
@@ -2459,7 +2459,7 @@ while (iold <= nchp ) {  //*-* loop on nchp old characters and look for backslas
             if( newtext[iold] != '0' || strncmp(&pstemp[0], &newtext[iold+1], 2)) continue;
             iadd = 1;
          }
-         char2[inew]   = backslash; //*-* OK:copy the backslash and the 2 following digits and add a 0
+         char2[inew]   = kBackslash; //*-* OK:copy the backslash and the 2 following digits and add a 0
          char2[inew+1] = '0';
          strncpy(&char2[inew+2], &newtext[iold+iadd], 2);
          inew += 4;
@@ -2484,9 +2484,9 @@ L60:
 //*-*-  1.6 this backslash is followed by nothing understandable in PostScript,
 //*-*-   it is an "isolated backslash" which will appear as \\.  Copy two backslashes
 //*-*
-      char2[inew] = backslash;
+      char2[inew] = kBackslash;
       inew++;
-      char2[inew] = backslash;
+      char2[inew] = kBackslash;
       inew++;
       goto LOOPEND;
    }
@@ -2494,8 +2494,8 @@ L60:
 //*-*- 2. find ( or ) not preceeded by a backslash : include one backslash
 //*-*
    else if( newtext[iold-1] == '(' ||  newtext[iold-1] == ')')  {
-      if( i == 1 || newtext[iold-2] != backslash)  {
-         char2[inew] = backslash;
+      if( i == 1 || newtext[iold-2] != kBackslash)  {
+         char2[inew] = kBackslash;
          inew++;
          char2[inew] = newtext[iold-1];
          inew++;
@@ -2648,7 +2648,7 @@ while (ich < nchp ) {
             strncpy(pc, &char2[ideb-1], ilen);
             pc[ilen] = 0;
             if( char2[ifin-1] == ' ') {  //*-* if the last character is ' '
-               pc[ilen-1] = backslash;   //*-* it is replaced with \040
+               pc[ilen-1] = kBackslash;  //*-* it is replaced with \040
                strcpy(pc+ilen, "040");
             }
          }
@@ -2658,16 +2658,16 @@ while (ich < nchp ) {
             Int_t nts = nt;
 L120:        //*-* check if CHAR2 will not be cut in the middle of an octal code
             Int_t ib = 0;
-            if (char2[i2-3] == backslash ) ib = 1;
-            if (char2[i2-2] == backslash ) ib = 2;
-            if (char2[i2-1] == backslash ) ib = 3;
+            if (char2[i2-3] == kBackslash ) ib = 1;
+            if (char2[i2-2] == kBackslash ) ib = 2;
+            if (char2[i2-1] == kBackslash ) ib = 3;
             if (ib && i2-i1 == 73 && i2 != nchp) i2 += ib - 4;
             pc = piece[nt-1];                 //*-* copy CHAR2 in the piece number NT
             strncpy(pc, &char2[i1-1], i2-i1+1); //*-* with I2 readjusted
             pc[i2-i1+1] = 0;
             if( char2[i2-1] == ' ') {
                Int_t ilp  = strlen(pc);
-               pc[ilp]    = backslash;        //*-* if the last character is ' '
+               pc[ilp]    = kBackslash;       //*-* if the last character is ' '
                strcpy(pc+ilp+1, "040");       //*-* it is replaced with \040
             }
             if (i2 != ilen) {
