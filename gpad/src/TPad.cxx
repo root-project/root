@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.154 2004/11/15 14:44:12 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.155 2004/11/26 16:53:05 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1246,7 +1246,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 //  Note2:  after a statement like c1.cd(6), the global variable gPad
 //          points to the current pad. One can use gPad to set attributes
 //          of the current pad.
-//  Note3:  in case xmargin <=0 and ymargin <= 0, there is no space 
+//  Note3:  in case xmargin <=0 and ymargin <= 0, there is no space
 //          between pads. The current pad margins are recomputed to
 //          optimize the layout.
 
@@ -1310,7 +1310,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
       dy = (1-yb-yt)/ny;
       Int_t number = 0;
       for (Int_t i=0;i<nx;i++) {
-         x1 = i*dx+xl; 
+         x1 = i*dx+xl;
          x2 = x1 + dx;
          if (i == 0) x1 = 0;
          if (i == nx-1) x2 = 1-xr;
@@ -3932,7 +3932,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          gtype = TImage::kTiff;
       } else if (strstr(opt,"xpm")) {
          gtype = TImage::kXpm;
-      } 
+      }
 
       if (gtype != TImage::kUnknown) {
       if (GetCanvas()->IsBatch()) {
@@ -4557,7 +4557,7 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
       if (GetFillColor() > 228) {
          TColor::SaveColor(out, GetFillColor());
          out<<"   "<<cname<<"->SetFillColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<cname<<"->SetFillColor("<<GetFillColor()<<");"<<endl;
    }
    if (GetFillStyle() != 1001) {
@@ -4613,7 +4613,7 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
       if (GetFrameFillColor() > 228) {
          TColor::SaveColor(out, GetFrameFillColor());
          out<<"   "<<cname<<"->SetFrameFillColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<cname<<"->SetFrameFillColor("<<GetFrameFillColor()<<");"<<endl;
    }
    if (GetFrameFillStyle() != 1001) {
@@ -4626,7 +4626,7 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
       if (GetFrameLineColor() > 228) {
          TColor::SaveColor(out, GetFrameLineColor());
          out<<"   "<<cname<<"->SetFrameLineColor(ci);" << endl;
-      } else 
+      } else
          out<<"   "<<cname<<"->SetFrameLineColor("<<GetFrameLineColor()<<");"<<endl;
    }
    if (GetFrameLineWidth() != 1) {
@@ -4646,7 +4646,7 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
          if (frame->GetFillColor() > 228) {
             TColor::SaveColor(out, frame->GetFillColor());
             out<<"   "<<cname<<"->SetFrameFillColor(ci);" << endl;
-         } else 
+         } else
             out<<"   "<<cname<<"->SetFrameFillColor("<<frame->GetFillColor()<<");"<<endl;
       }
       if (frame->GetFillStyle() != 1001) {
@@ -4659,7 +4659,7 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
          if (frame->GetLineColor() > 228) {
             TColor::SaveColor(out, frame->GetLineColor());
             out<<"   "<<cname<<"->SetFrameLineColor(ci);" << endl;
-         } else 
+         } else
             out<<"   "<<cname<<"->SetFrameLineColor("<<frame->GetLineColor()<<");"<<endl;
       }
       if (frame->GetLineWidth() != 1) {
@@ -5367,6 +5367,12 @@ void TPad::CloseToolTip(TObject *tip)
 void TPad::x3d(Option_t *option)
 {
    // Invokes a 3D viewer.
+
+   TView *view = GetView();
+   if (!view) {
+      Error("x3d", "3D view is not set");
+      return;
+   }
 
    if (!option || !option[0])
       option = "x3d";
