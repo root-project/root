@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.40 2004/01/10 10:52:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.42 2004/09/03 07:52:19 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -540,16 +540,17 @@ void TClonesArray::Streamer(TBuffer &b)
       // make sure there are enough slots in the fKeep array
       if (fKeep->GetSize() < nobjects)
          Expand(nobjects);
+      
+      //reset fLast. nobjects may be 0
+      fLast = nobjects-1;
 
       TStreamerInfo *sinfo = fClass->GetStreamerInfo(clv);
-      //must test on sinfo and not on fClass (OK when writing)
       if (CanBypassStreamer()) {
          for (Int_t i = 0; i < nobjects; i++) {
             if (!fKeep->fCont[i])
                fKeep->fCont[i] = (TObject*)fClass->New();
 
             fCont[i] = fKeep->fCont[i];
-            fLast = i;
          }
          sinfo->ReadBufferClones(b,this,nobjects,-1,0);
 
@@ -564,7 +565,6 @@ void TClonesArray::Streamer(TBuffer &b)
 
                fCont[i] = fKeep->fCont[i];
                fKeep->fCont[i]->Streamer(b);
-               fLast = i;
             }
          }
       }
