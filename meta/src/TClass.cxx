@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.130 2004/01/15 15:49:31 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.131 2004/01/16 16:27:36 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -305,6 +305,7 @@ TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
    fStreamerInfo   = 0;
    fShowMembers    = 0;
    fIsA            = 0;
+   fGlobalIsA      = 0;
    fTypeInfo       = 0;
    fInterStreamer  = 0;
 
@@ -348,6 +349,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
    fCollectionProxy= 0;
    fTypeInfo       = 0;
    fIsA            = 0;
+   fGlobalIsA      = 0;
    fShowMembers    = 0;
    fStreamerInfo   = 0;
    fStreamer       = 0;
@@ -434,6 +436,7 @@ void TClass::Init(const char *name, Version_t cversion,
    fCollectionProxy= 0;
    fTypeInfo       = typeinfo;
    fIsA            = isa;
+   fGlobalIsA      = 0;
    fShowMembers    = showmembers;
    fStreamer       = 0;
    fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
@@ -976,6 +979,8 @@ TClass *TClass::GetActualClass(const void *object) const
 
    if (fIsA) {
       return fIsA(object); // ROOT::IsA((ThisClass*)object);
+   } else if (fGlobalIsA) {
+      return fGlobalIsA(this,object);
    } else {
       //Always call IsA via the interpreter. A direct call like
       //      object->IsA(brd, parent);
@@ -2102,6 +2107,34 @@ Long_t TClass::Property() const
    }
 
    return fProperty;
+}
+
+
+//______________________________________________________________________________
+void TClass::SetGlobalIsA(IsAGlobalFunc_t func) 
+{
+   // This function installs a global IsA function for this class.
+   // The global IsA function will be used if there is no local IsA function (fIsA)
+   //
+   // A global IsA function has the signature:
+   //
+   //    TClass *func( TClass *cl, const void *obj);
+   //
+   // 'cl' is a pointer to the  TClass object that corresponds to the 
+   // 'pointer type' used to retrieve the value 'obj'
+   // 
+   //  For example with:
+   //    TNamed * m = new TNamed("example","test");
+   //    TObject* o = m
+   // and 
+   //    the global IsA function would be called with TObject::Class() as
+   //    the first parameter and the exact numerical value in the pointer
+   //    'o'.
+   //
+   //  In other word, inside the global IsA function. it is safe to C-style
+   //  cast the value of 'obj' into a pointer to the class described by 'cl'.
+
+   fGlobalIsA = func;
 }
 
 //______________________________________________________________________________

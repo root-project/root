@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.33 2003/06/25 15:35:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.34 2004/01/10 10:52:29 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -84,6 +84,7 @@ private:
    ShowMembersFunc_t  fShowMembers;     //pointer to the class's ShowMembers function
    TClassStreamer    *fStreamer;        //pointer to streamer function
    IsAFunc_t          fIsA;             //pointer to the class's IsA function.
+   IsAGlobalFunc_t    fGlobalIsA;       //pointer to a global IsA function.
    ROOT::NewFunc_t    fNew;             //pointer to a function newing one object.
    ROOT::NewArrFunc_t fNewArray;        //pointer to a function newing an array of objects.
    ROOT::DelFunc_t    fDelete;          //pointer to a function deleting one object.
@@ -204,6 +205,7 @@ public:
    void               ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
    void               ResetMenuList();
    Int_t              Size() const;
+   void               SetGlobalIsA(IsAGlobalFunc_t);
    void               SetDelete(ROOT::DelFunc_t deleteFunc);
    void               SetDeleteArray(ROOT::DelArrFunc_t deleteArrayFunc);
    void               SetDestructor(ROOT::DesFunc_t destructorFunc);

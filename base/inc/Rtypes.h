@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.42 2003/12/26 18:38:21 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.43 2004/01/10 10:52:29 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -130,6 +130,7 @@ R__EXTERN Int_t gDebug;
 
 typedef void (*ShowMembersFunc_t)(void *obj, TMemberInspector &R__insp, char *R__parent);
 typedef TClass *(*IsAFunc_t)(const void *obj);
+typedef TClass *(*IsAGlobalFunc_t)(const TClass*, const void *obj);
 
 // TBuffer.h declares and implements the following 2 operators
 template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
