@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayL.cxx,v 1.8 2002/05/09 20:22:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayL.cxx,v 1.9 2002/05/18 08:43:30 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -130,13 +130,13 @@ void TArrayL::Set(Int_t n, const Long_t *array)
 {
    // Set size of this array to n longs and set the contents.
 
-   if (n < 0 || array == 0) return;
    if (fArray && fN != n) {
       delete [] fArray;
       fArray = 0;
    }
    fN = n;
    if (fN == 0) return;
+   if (array == 0) return;
    if (!fArray) fArray = new Long_t[fN];
    memcpy(fArray,array, n*sizeof(Long_t));
 }

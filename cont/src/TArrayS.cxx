@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayS.cxx,v 1.8 2002/05/09 20:22:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayS.cxx,v 1.9 2002/05/18 08:43:30 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -130,13 +130,13 @@ void TArrayS::Set(Int_t n, const Short_t *array)
 {
    // Set size of this array to n shorts and set the contents.
 
-   if (n < 0 || array == 0) return;
    if (fArray && fN != n) {
       delete [] fArray;
       fArray = 0;
    }
    fN = n;
    if (fN == 0) return;
+   if (array == 0) return;
    if (!fArray) fArray = new Short_t[fN];
    memcpy(fArray,array, n*sizeof(Short_t));
 }
