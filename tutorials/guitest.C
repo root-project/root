@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.38 2004/07/08 14:40:29 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.39 2004/07/09 00:36:42 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -2554,7 +2554,7 @@ void Editor::DoClose()
 
 void guitest()
 {
-   new TestMainFrame(gClient->GetRoot(), 400, 220);
+   new TestMainFrame(0, 400, 220);
 }
 
 //---- Main program ------------------------------------------------------------
