@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.2 2000/06/13 09:27:08 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -34,7 +34,6 @@ protected:
     Int_t       fTreeOffsetLen;     //Current size of fTreeOffset array
     Int_t       fNtrees;            //Number of Trees
     Int_t       fTreeNumber;        //Current Tree number in fTreeOffset table
-    Int_t       fNbranches;         //Number of branches in associated Tree
     Int_t       *fTreeOffset;       //Array of variables
     TTree       *fTree;             //Pointer to current tree
     TFile       *fFile;             //Pointer to current file
@@ -56,7 +55,7 @@ public:
     virtual void      Draw(const char *varexp, const char *selection, Option_t *option=""
                      ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual TBranch  *GetBranch(const char *name);
-    virtual Int_t     GetNtrees() {return fNtrees;}
+            Int_t     GetNtrees() {return fNtrees;}
     virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);
     TFile            *GetFile() {return fFile;}
     TLeaf            *GetLeaf(const char *name);
@@ -71,7 +70,7 @@ public:
     TTree            *GetTree() {return fTree;}
             Int_t     GetTreeNumber() {return fTreeNumber;}
             Int_t    *GetTreeOffset() {return fTreeOffset;}
-    virtual Int_t     GetTreeOffsetLen() {return fTreeOffsetLen;}
+            Int_t     GetTreeOffsetLen() {return fTreeOffsetLen;}
             Int_t     LoadTree(Int_t entry);
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual void      ls(Option_t *option="");
@@ -83,7 +82,7 @@ public:
     virtual void      SetPacketSize(Int_t size = 100);
     virtual void      SetNotify(TObject *obj) {fNotify = obj;}
 
-    ClassDef(TChain,1)  //A chain of TTrees
+    ClassDef(TChain,2)  //A chain of TTrees
 };
 
 inline void TChain::Draw(Option_t *opt)

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.2 2000/06/08 08:02:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.3 2000/06/13 09:27:08 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -53,7 +53,6 @@ TChain::TChain(): TTree()
    fTreeOffset     = 0;
    fTree           = 0;
    fFile           = 0;
-   fNbranches      = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
    fStatus         = new TList();
    fNotify         = 0;
@@ -89,7 +88,6 @@ TChain::TChain(const char *name, const char *title)
    fTreeNumber     = -1;
    fTreeOffset     = new Int_t[fTreeOffsetLen];
    fTree           = 0;
-   fNbranches      = 0;
    fFile           = 0;
    fFiles          = new TObjArray(fTreeOffsetLen );
    fStatus         = new TList();
@@ -100,7 +98,6 @@ TChain::TChain(const char *name, const char *title)
    gROOT->GetListOfSpecials()->Add(this);
    fDirectory = 0;
    fNotify    = 0;
-//   gROOT->cd();
 }
 
 //______________________________________________________________________________
@@ -654,18 +651,28 @@ void TChain::Streamer(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              =========================================
+
+   UInt_t R__s, R__c;
    if (b.IsReading()) {
-      b.ReadVersion();  //Version_t v = b.ReadVersion();
+      Version_t R__v = b.ReadVersion(&R__s, &R__c);
       TTree::Streamer(b);
       b >> fTreeOffsetLen;
       b >> fNtrees;
       fFiles->Streamer(b);
-      if (fTreeOffsetLen <= 0) return;
+      if (R__v > 1) {
+         fStatus->Streamer(b);
+         fTreeOffset = new Int_t[fTreeOffsetLen];
+         b.ReadFastArray(fTreeOffset,fTreeOffsetLen);
+      }
+      b.CheckByteCount(R__s, R__c, TChain::IsA());
    } else {
-      b.WriteVersion(TChain::IsA());
+      R__c = b.WriteVersion(TChain::IsA(), kTRUE);
       TTree::Streamer(b);
       b << fTreeOffsetLen;
       b << fNtrees;
       fFiles->Streamer(b);
+      fStatus->Streamer(b);
+      b.WriteFastArray(fTreeOffset,fTreeOffsetLen);
+      b.SetByteCount(R__c, kTRUE);
    }
 }
