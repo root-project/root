@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.10 2003/02/12 17:44:02 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.11 2003/10/07 21:12:11 rdm Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************
@@ -180,6 +180,18 @@ public:
   inline Double_t Pt(const TVector3 & v) const;
   inline Double_t Perp(const TVector3 & v) const;
   // Transverse component of the spatial vector w.r.t. given axis.
+
+  inline Double_t Et2() const;
+  // Transverse energy squared.
+
+  inline Double_t Et() const;
+  // Transverse energy.
+
+  inline Double_t Et2(const TVector3 &) const;
+  // Transverse energy w.r.t. given axis squared.
+
+  inline Double_t Et(const TVector3 &) const;
+  // Transverse energy w.r.t. given axis.
 
   inline Double_t DeltaPhi(const TLorentzVector &) const;
   inline Double_t DeltaR(const TLorentzVector &) const;
@@ -433,6 +445,27 @@ inline Double_t TLorentzVector::Perp(const TVector3 &v) const {
 
 inline Double_t TLorentzVector::Pt(const TVector3 &v) const {
   return Perp(v);
+}
+
+inline Double_t TLorentzVector::Et2() const {
+  Double_t pt2 = fP.Perp2();
+  return pt2 == 0 ? 0 : E()*E() * pt2/(pt2+Z()*Z());
+}
+
+inline Double_t TLorentzVector::Et() const {
+  Double_t etet = Et2();
+  return E() < 0.0 ? -sqrt(etet) : sqrt(etet);
+}
+
+inline Double_t TLorentzVector::Et2(const TVector3 & v) const {
+  Double_t pt2 = fP.Perp2(v);
+  Double_t pv = fP.Dot(v.Unit());
+  return pt2 == 0 ? 0 : E()*E() * pt2/(pt2+pv*pv);
+}
+
+inline Double_t TLorentzVector::Et(const TVector3 & v) const {
+  Double_t etet = Et2(v);
+  return E() < 0.0 ? -sqrt(etet) : sqrt(etet);
 }
 
 inline Double_t TLorentzVector::DeltaPhi(const TLorentzVector & v) const {
