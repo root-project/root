@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.9 2000/12/26 14:25:06 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.10 2001/01/30 11:31:07 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -761,8 +761,11 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
 //*-*-              Draw axis title if it exists
    if (strlen(GetTitle())) {
+      textaxis->SetTextSize (GetTitleSize());
       charheight = GetTitleSize();
-      textaxis->SetTextSize (charheight);
+      if ((GetTextFont() % 10) > 2) {
+         charheight = charheight/gPad->GetWh();
+      }
       Double_t toffset = GetTitleOffset();
       if (toffset < 0.1) toffset = 1;
       if (X1 == X0) Ylabel = XLside*1.6*charheight*toffset;
@@ -784,7 +787,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
                               gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
                               phil=(kPI+phil)*180/kPI,
-                              charheight,
+                              GetTitleSize(),
                               GetTitle());
       } else {
          if (X1 >= X0) {
@@ -799,7 +802,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
                               gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
                               phil*180/kPI,
-                              charheight,
+                              GetTitleSize(),
                               GetTitle());
       }
    }

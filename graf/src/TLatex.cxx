@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.11 2000/11/21 12:30:39 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.12 2000/12/13 15:13:50 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1434,11 +1434,17 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
       TAttText::Modify();  //Change text attributes only if necessary
 
        // do not use Latex if font is low precision
-      if (fTextFont%10 != 2) {
+      if (fTextFont%10 < 2) {
          gPad->PaintText(x,y,text1);
          return;
       }
 
+      Double_t saveSize = size;
+      Int_t saveFont = fTextFont;
+      if (fTextFont%10 > 2) {
+         size = size/gPad->GetWh();
+         SetTextFont(10*(saveFont/10) +2);
+      }
       if (gVirtualPS) gVirtualPS->SetBit(kLatex);
 
       TString newText = text1;
@@ -1498,9 +1504,9 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          Analyse(x,y,NewSpec,text,length);
       }
 
-      SetTextSize(size);
+      SetTextSize(saveSize);
       SetTextAngle(angle);
-      SetTextFont(spec.font);
+      SetTextFont(saveFont);
       SetTextColor(spec.color);
       SetTextAlign(valign+10*halign);
       SetLineWidth(lineW);
