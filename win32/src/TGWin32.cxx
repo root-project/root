@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.8 2002/01/09 20:22:28 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.9 2002/02/21 11:30:17 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -662,10 +662,11 @@ Int_t TGWin32::GetDepth() const
 
    HDC hDCGlobal= CreateCompatibleDC(NULL);
 
+   int nPlanes;
    if (GetDeviceCaps(hDCGlobal,RASTERCAPS) & RC_PALETTE != 0)
       nplanes = GetDeviceCaps(hDCGlobal,COLORRES);
    else {
-      int nPlanes=GetDeviceCaps(hDCGlobal,PLANES);
+      nPlanes=GetDeviceCaps(hDCGlobal,PLANES);
       int nBitsPixel=GetDeviceCaps(hDCGlobal,BITSPIXEL);
       nplanes = nPlanes*nBitsPixel;
    }
