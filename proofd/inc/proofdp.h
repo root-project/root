@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:$:$Id:$
+// @(#)root/proofd:$Name:  $:$Id: proofdp.h,v 1.1 2000/12/15 19:38:35 rdm Exp $
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************
@@ -43,7 +43,13 @@ void ResetErrno();
 void NetInit(const char *service, int port);
 int  NetOpen(int inetdflag);
 void NetClose();
-void NetSend(const char *msg);
+int  NetSendRaw(const void *buf, int len);
+int  NetSend(const void *buf, int len, EMessageTypes kind);
+int  NetSend(int code, EMessageTypes kind);
+int  NetSend(const char *msg, EMessageTypes kind = kMESS_STRING);
+int  NetRecvRaw(void *buf, int len);
+int  NetRecv(void *&buf, int &len, EMessageTypes &kind);
+int  NetRecv(char *msg, int len, EMessageTypes &kind);
 int  NetRecv(char *msg, int len);
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)rootproofd:$Name:$:$Id:$
+// @(#)rootproofd:$Name:  $:$Id: net.cxx,v 1.1 2000/12/15 19:38:35 rdm Exp $
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************
@@ -59,21 +59,161 @@ static struct sockaddr_in tcp_cli_addr;
 
 
 //______________________________________________________________________________
-void NetSend(const char *msg)
+static int Sendn(int sock, const void *buffer, int length)
 {
-   // Simulate TSocket::Send(const char *str).
+   // Send exactly length bytes from buffer.
 
-   if (gSockFd == -1) return;
+   if (sock < 0) return -1;
+
+   int n, nsent = 0;
+   const char *buf = (const char *)buffer;
+
+   for (n = 0; n < length; n += nsent) {
+      if ((nsent = send(sock, buf+n, length-n, 0)) <= 0)
+         return nsent;
+   }
+
+   return n;
+}
+
+//______________________________________________________________________________
+static int Recvn(int sock, void *buffer, int length)
+{
+   // Receive exactly length bytes into buffer. Returns number of bytes
+   // received. Returns -1 in case of error.
+
+   if (sock < 0) return -1;
+
+   int n, nrecv = 0;
+   char *buf = (char *)buffer;
+
+   for (n = 0; n < length; n += nrecv) {
+      while ((nrecv = recv(sock, buf+n, length-n, 0)) == -1 && GetErrno() == EINTR)
+         ResetErrno();     // probably a SIGCLD that was caught
+      if (nrecv < 0)
+         return nrecv;
+      else if (nrecv == 0)
+         break;         // EOF
+   }
+
+   return n;
+}
+
+//______________________________________________________________________________
+int NetSendRaw(const void *buf, int len)
+{
+   // Send buffer of len bytes.
+
+   if (gSockFd == -1) return -1;
+
+   if (Sendn(gSockFd, buf, len) != len) {
+      ErrorInfo("NetSendRaw: Sendn error");
+      exit(1);
+   }
+   return len;
+}
+
+//______________________________________________________________________________
+int NetSend(const void *buf, int len, EMessageTypes kind)
+{
+   // Send buffer of len bytes. Message will be of type "kind".
 
    int hdr[2];
-   int hlen = sizeof(kMESS_STRING) + strlen(msg)+1;  // including \0
+   int hlen = sizeof(int) + len;
    hdr[0] = htonl(hlen);
-   hdr[1] = htonl(kMESS_STRING);
-   if (send(gSockFd, (const char *)hdr, sizeof(hdr), 0) != sizeof(hdr))
+   hdr[1] = htonl(kind);
+   if (NetSendRaw(hdr, sizeof(hdr)) < 0)
+      return -1;
+
+   return NetSendRaw(buf, len);
+}
+
+//______________________________________________________________________________
+int NetSend(const char *msg, EMessageTypes kind)
+{
+   // Send a string. Message will be of type "kind".
+
+   int len = 0;
+
+   if (msg)
+      len = strlen(msg)+1;
+
+   return NetSend(msg, len, kind);
+}
+
+//______________________________________________________________________________
+int NetSend(int code, EMessageTypes kind)
+{
+   // Send integer. Message will be of type "kind".
+
+   int hdr[3];
+   int hlen = sizeof(int) + sizeof(int);
+   hdr[0] = htonl(hlen);
+   hdr[1] = htonl(kind);
+   hdr[2] = htonl(code);
+   return NetSendRaw(hdr, sizeof(hdr));
+}
+
+//______________________________________________________________________________
+int NetRecvRaw(void *buf, int len)
+{
+   // Receive a buffer of maximum len bytes.
+
+   if (gSockFd == -1) return -1;
+
+   if (Recvn(gSockFd, buf, len) < 0) {
+      ErrorInfo("NetRecvRaw: Recvn error");
       exit(1);
-   hlen -= sizeof(kMESS_STRING);
-   if (send(gSockFd, msg, hlen, 0) != hlen)
-      exit(1);
+   }
+   return len;
+}
+
+//______________________________________________________________________________
+int NetRecv(void *&buf, int &len, EMessageTypes &kind)
+{
+   // Receive a buffer. Returns the newly allocated buffer, the length
+   // of the buffer and message type in kind.
+
+   int hdr[2];
+
+   if (NetRecvRaw(hdr, sizeof(hdr)) < 0)
+      return -1;
+
+   len = ntohl(hdr[0]) - sizeof(int);
+   kind = (EMessageTypes) ntohl(hdr[1]);
+   if (len) {
+      buf = new char* [len];
+      return NetRecvRaw(buf, len);
+   }
+   buf = 0;
+   return 0;
+}
+
+//______________________________________________________________________________
+int NetRecv(char *msg, int len, EMessageTypes &kind)
+{
+   // Receive a string of maximum len length. Returns message type in kind.
+   // Return value is msg length (without terminating 0).
+
+   int   mlen;
+   char *buf;
+
+   if (NetRecv((void *&)buf, mlen, kind) < 0)
+      return -1;
+
+   if (mlen == 0) {
+      msg[0] = 0;
+      return 0;
+   } else if (mlen > len) {
+      strncpy(msg, buf, len-1);
+      msg[len-1] = 0;
+      mlen = len;
+   } else
+      strcpy(msg, buf);
+
+   delete [] buf;
+
+   return mlen - 1;
 }
 
 //______________________________________________________________________________
@@ -81,19 +221,9 @@ int NetRecv(char *msg, int max)
 {
    // Simulate TSocket::Recv(char *str, int max).
 
-   if (gSockFd == -1) return -1;
+   EMessageTypes kind;
 
-   int n, hdr[2];
-
-   if ((n = recv(gSockFd, (char *)hdr, sizeof(hdr), 0)) < 0)
-      return -1;
-
-   int hlen = ntohl(hdr[0]) - sizeof(kMESS_STRING);
-   if (hlen > max) hlen = max;
-   if ((n = recv(gSockFd, msg, hlen, 0)) < 0)
-      return -1;
-
-   return hlen;
+   return NetRecv(msg, max, kind);
 }
 
 //______________________________________________________________________________
@@ -134,6 +264,11 @@ void NetInit(const char *service, int port)
 
    if ((tcp_srv_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
       ErrorSys("NetInit: can't create socket");
+
+   int val = 1;
+   if (setsockopt(tcp_srv_sock, SOL_SOCKET, SO_REUSEADDR, (char*) &val,
+                  sizeof(val)) == -1)
+      ErrorSys("NetInit: can't set SO_REUSEADDR socket option");
 
    if (bind(tcp_srv_sock, (struct sockaddr *) &tcp_srv_addr,
             sizeof(tcp_srv_addr)) < 0)
