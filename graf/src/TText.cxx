@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.14 2002/10/31 07:27:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.15 2003/01/22 11:23:03 rdm Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -511,7 +511,7 @@ void TText::SavePrimitive(ofstream &out, Option_t *)
    out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
    if (TestBit(kTextNDC)) out<<"   text->SetNDC();"<<endl;
 
-   SaveTextAttributes(out,"text",11,0,1,62,1);
+   SaveTextAttributes(out,"text",11,0,1,62,0.05);
 
    out<<"   text->Draw();"<<endl;
 }
