@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.6 2000/08/14 16:52:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.7 2000/10/10 11:11:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -81,11 +81,11 @@ protected:
     TArrayD       fContour;         //Array to display contour levels
     TArrayD       fSumw2;           //Array of sum of squares of weights
     TString       fOption;          //histogram options
-    TList        *fFunctions;       //Pointer to list of functions (fits and user)
-    TDirectory   *fDirectory;       //Pointer to directory holding this histogram
+    TList        *fFunctions;       //->Pointer to list of functions (fits and user)
+    TDirectory   *fDirectory;       //!Pointer to directory holding this histogram
     Int_t         fDimension;       //Histogram dimension (1, 2 or 3 dim)
-    Double_t     *fIntegral;        //Integral of bins used by GetRandom
-    TVirtualHistPainter *fPainter;  //pointer to histogram painter
+    Double_t     *fIntegral;        //!Integral of bins used by GetRandom
+    TVirtualHistPainter *fPainter;  //!pointer to histogram painter
     static Bool_t fgAddDirectory;   //!flag to add histograms to the directory
 private:
     Int_t   AxisChoice(Option_t *axis);
