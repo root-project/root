@@ -1,0 +1,82 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitModels
+ *    File: $Id: $
+ * Authors:
+ *   WW, Wolfgang Walkowiak, UC Santa Cruz, walkowia@slac.stanford.edu
+ * History:
+ *   05-Mar-2002 WW Created initial version
+ *
+ * Copyright (C) 2001 University of California
+ *****************************************************************************/
+#ifndef ROO_BCP_SIN2BG_DECAY
+#define ROO_BCP_SIN2BG_DECAY
+
+#include "RooFitCore/RooConvolutedPdf.hh"
+#include "RooFitCore/RooRealProxy.hh"
+#include "RooFitCore/RooCategoryProxy.hh"
+
+class RooBCPSin2bgDecay : public RooConvolutedPdf {
+public:
+    
+    enum DecayType { SingleSided, DoubleSided, Flipped };
+    
+    // Constructors, assignment etc
+    inline RooBCPSin2bgDecay() { }
+    RooBCPSin2bgDecay(const char *name, const char *title, 
+		       RooRealVar& t, RooAbsCategory& tag,
+		       RooAbsCategory& mixState,
+		       RooAbsReal& tau, RooAbsReal& dm,
+		       RooAbsReal& avgMistag, RooAbsReal& CPeigenval,
+		       RooAbsReal& a, RooAbsReal& bPlus,
+		       RooAbsReal& bMinus, RooAbsReal& delMistag,
+		       const RooResolutionModel& model, 
+		       DecayType type=DoubleSided) ;
+    
+    RooBCPSin2bgDecay(const RooBCPSin2bgDecay& other, const char* name=0);
+    virtual TObject* clone(const char* newname) const 
+	{ return new RooBCPSin2bgDecay(*this,newname) ; }
+    virtual ~RooBCPSin2bgDecay();
+    
+    virtual Double_t coefficient(Int_t basisIndex) const ;
+    
+    virtual Int_t getCoefAnalyticalIntegral(RooArgSet& allVars, 
+					    RooArgSet& analVars) const ;
+    virtual Double_t coefAnalyticalIntegral(Int_t coef, Int_t code) const ;
+    
+    Int_t getGenerator(const RooArgSet& directVars, 
+		     RooArgSet &generateVars) const;
+    void initGenerator(Int_t code) ;
+    void generateEvent(Int_t code) ;
+    
+protected:
+    
+    RooRealProxy _absLambda ;
+    RooRealProxy _argLambdaPlus ;
+    RooRealProxy _argLambdaMinus ;
+    RooRealProxy _CPeigenval ;
+    RooRealProxy _avgMistag ;
+    RooRealProxy _delMistag ;
+    RooRealProxy _t ;
+    RooRealProxy _tau ;
+    RooRealProxy _dm ;
+    RooCategoryProxy _tag ;
+    RooCategoryProxy _mixState ;
+    Double_t _genFlavFrac ;
+    Double_t _genMixFrac ;
+    Double_t _genFlavFracMix ;
+    Double_t _genFlavFracUnmix ;
+    
+    DecayType _type ;
+    Int_t _basisExp ;
+    Int_t _basisSin ;
+    Int_t _basisCos ;
+    
+    ClassDef(RooBCPSin2bgDecay,1) // B Mixing decay PDF with sin(2b+g) 
+};
+
+#endif
+
+
+
+
