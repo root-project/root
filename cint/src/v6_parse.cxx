@@ -3116,7 +3116,7 @@ G__value G__exec_statement()
       }
       else {
 #ifndef G__PHILIPPE33
-        discard_space = 1;
+        if (!fake_space) discard_space = 1;
 #endif
 	if(spaceflag==1) {
 	  statement[iout] = '\0' ;
@@ -4412,7 +4412,9 @@ G__value G__exec_statement()
 	statement[iout++] = c ;
 	spaceflag |= 1;
 #ifndef G__PHILIPPE12
-	if(!double_quote && !single_quote) add_fake_space = 1;
+	/* this will force the testing of the current content
+	   of statement */
+   	if(!double_quote && !single_quote) add_fake_space = 1;
 #endif
       }
       break;
