@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.33 2001/04/21 02:57:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.34 2001/04/21 17:20:23 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -676,14 +676,16 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    }
    if (cl) return cl;
 
-   //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   if (!strcmp(name, "string")) return 0;
+   // Reject STL containers and string.
+   static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
+   if (!strcmp(name, "string")||!strcmp(name,full_string_name)) return 0;
    if (strstr(name, "vector<")   || strstr(name, "list<") ||
        strstr(name, "set<")      || strstr(name, "map<")  ||
        strstr(name, "deque<")    || strstr(name, "multimap<") ||
        strstr(name, "multiset<") || strstr(name, "::" ))
       return 0;   //reject STL containers
 
+   //last attempt. Look in CINT list of all (compiled+interpreted) classes
    if (gInterpreter->CheckClassInfo(name))
       return new TClass(name, 1, 0, 0, -1, -1);
    return 0;

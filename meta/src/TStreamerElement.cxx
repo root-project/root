@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.25 2001/04/09 07:58:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.26 2001/04/24 14:27:50 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -946,11 +946,24 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, co
    char *s = new char[nch+1];
    strcpy(s,typeName);
    char *sopen  = strchr(s,'<'); *sopen  = 0; sopen++;
-   char *sclose = strchr(sopen+1,'>'); *sclose = 0;
+   // We are looking for the first arguments of the STL container, because
+   // this arguments can be a templates we need to count the < and >
+   char* current=sopen;
+   for(int count = 0; *current!='\0'; current++) {
+      if (*current=='<') count++;
+      if (*current=='>') {
+         if (count==0) break;
+         count--;
+      }
+      if (*current==',' && count==0) break;
+   }
+   char *sclose = current; *sclose = 0;
    char *sconst = strstr(sopen,"const");
    if (sconst) sopen = sconst + 5;
    fSTLtype = 0;
    fCtype   = 0;
+   // Any class name that 'contains' the word will be counted
+   // as a STL container. Is that really what we want.
    if      (strstr(s,"vector"))   fSTLtype = kSTLvector;
    else if (strstr(s,"list"))     fSTLtype = kSTLlist;
    else if (strstr(s,"deque"))    fSTLtype = kSTLdeque;
@@ -962,9 +975,13 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset, co
    if (dmPointer) fSTLtype += TStreamerInfo::kOffsetP;
    
    // find STL contained type
-    while (*sopen==' ') sopen++;
+   while (*sopen==' ') sopen++;
    Bool_t isPointer = kFALSE;
-   char *star = strchr(sopen,'*');
+   // Find stars outside of any template definitions in the
+   // first template argument.
+   char *star = strrchr(sopen,'>');
+   if (star) star = strchr(star,'*');
+   else star = strchr(sopen,'*');
    if (star) {
       isPointer = kTRUE;
       *star = 0;

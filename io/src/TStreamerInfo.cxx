@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.64 2001/04/24 14:28:46 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.65 2001/04/27 10:18:56 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -235,7 +235,9 @@ void TStreamerInfo::Build()
          clm = gROOT->GetClass(dm->GetTypeName());
          if (!clm) {
             // try STL container or string
-            if (strcmp(dm->GetTypeName(),"string") == 0) {
+            static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
+            if (strcmp(dm->GetTypeName(),"string") == 0
+                ||strcmp(dm->GetTypeName(),full_string_name)==0 ) {
                TStreamerSTLstring *stls = new TStreamerSTLstring(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName());
                fElements->Add(stls);
                for (i=0;i<ndim;i++) stls->SetMaxIndex(i,dm->GetMaxIndex(i));
@@ -243,7 +245,7 @@ void TStreamerInfo::Build()
                stls->SetStreamer(streamer);
                continue;
             }
-            if (strchr(dm->GetTypeName(),'<') && strchr(dm->GetTypeName(),'>')) {
+            if (dm->IsSTLContainer()) {
                TStreamerSTL *stl = new TStreamerSTL(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName(),dm->IsaPointer());
                if (stl->GetSTLtype()) {
                   fElements->Add(stl);

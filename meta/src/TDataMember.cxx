@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.3 2000/11/21 20:43:33 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.4 2000/12/13 15:13:52 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -529,6 +529,27 @@ Bool_t TDataMember::IsaPointer() const
    // Return true if data member is a pointer.
 
    return (fInfo->Property() & kIsPointer) ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
+int TDataMember::IsSTLContainer()
+{
+   // Return which type (if any) of STL container the data member is.
+
+   if (!fInfo) return kNone;
+   const char *s = fInfo->Type()->TmpltName();
+   if (!s) return kNone;
+   char type[4096];
+   strcpy(type, s);
+
+   if (!strcmp(type, "vector"))   return kVector;
+   if (!strcmp(type, "list"))     return kList;
+   if (!strcmp(type, "deque"))    return kDeque;
+   if (!strcmp(type, "map"))      return kMap;
+   if (!strcmp(type, "multimap")) return kMultimap;
+   if (!strcmp(type, "set"))      return kSet;
+   if (!strcmp(type, "multiset")) return kMultiset;
+   return kNone;
 }
 
 //______________________________________________________________________________
