@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.14 2002/11/26 10:24:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.15 2002/11/26 17:26:30 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -681,6 +681,6 @@ TOptionListItem::TOptionListItem(TDataMember *d, Long_t val, Long_t valmask,
 //______________________________________________________________________________
 TOptionListItem::~TOptionListItem()
 {
-   if (fOptName)  delete fOptName;
-   if (fOptLabel) delete fOptLabel;
+   if (fOptName)  delete [] fOptName;
+   if (fOptLabel) delete [] fOptLabel;
 }
