@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.144 2004/05/07 09:13:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.145 2004/05/11 15:32:36 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1114,7 +1114,7 @@ char *TClass::EscapeChars(char *text) const
    Int_t icur = -1;
    for (Int_t i=0;i<nch;i++) {
       icur++;
-      if ( text[i] == '\"' || text[i] == '['
+      if ( text[i] == '\"' || text[i] == '[' || text[i] == '~'
            || text[i] == ']'  || text[i] == '&'
            || text[i] == '#'  || text[i] == '!'
            || text[i] == '^'  || text[i] == '<'
