@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.6 2001/04/27 06:35:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.7 2001/05/13 10:49:21 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -266,7 +266,8 @@ void TBasket::Streamer(TBuffer &b)
    } else {
       TKey::Streamer(b);   //this must be first
       b.WriteVersion(TBasket::IsA());
-      if (fBufferRef && !fHeaderOnly && !fSeekKey) fLast = fBufferRef->Length();
+      Int_t curLast = fBufferRef->Length();
+      if (fBufferRef && !fHeaderOnly && !fSeekKey && curLast > fLast) fLast = curLast;
       if (fLast > fBufferSize) fBufferSize = fLast;
       
       b << fBufferSize;
