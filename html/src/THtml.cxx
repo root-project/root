@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.26 2002/08/03 20:05:46 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.27 2002/09/15 19:43:23 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -893,12 +893,13 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
    } else {
       tmp1 = GetSourceFileName(classPtr->GetDeclFileName());
    }
-   char *realFilename = StrDup(tmp1, 16);
-   if (!realFilename)
-      Error("Make", "Can't find file '%s' !", tmp1);
-
-   if (tmp1)
+   char *realFilename = 0;
+   if (tmp1) { 
+      realFilename = StrDup(tmp1, 16);
+      if (!realFilename)
+         Error("Make", "Can't find file '%s' !", tmp1);
       delete[]tmp1;
+   }
    tmp1 = 0;
 
    Bool_t classDescription = kTRUE;
@@ -921,18 +922,16 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
    Bool_t writeBracket = kFALSE;
    streampos postponedpos = 0;
 
-
    // Class Description Title
    out << "<hr>" << endl;
    out << "<!--DESCRIPTION-->";
    out << "<h2><a name=\"" << classPtr->GetName();
    out << ":description\">Class Description</a></h2>" << endl;
 
-
    // open source file
    ifstream sourceFile;
-   sourceFile.open(realFilename, ios::in);
-
+   if (realFilename) 
+      sourceFile.open(realFilename, ios::in);
 
    if (sourceFile.good()) {
       // open a .cxx.html file
@@ -1452,7 +1451,8 @@ void THtml::ClassDescription(ofstream & out, TClass * classPtr,
       sourceFile.close();
 
    } else
-      Error("Make", "Can't open file '%s' !", realFilename);
+      if (realFilename) 
+         Error("Make", "Can't open file '%s' !", realFilename);
 
 
    // write classFile footer
@@ -1510,7 +1510,8 @@ void THtml::ClassTree(TVirtualPad * psCanvas, TClass * classPtr,
       tmp1 = 0;
 
       if (IsModified(classPtr, kTree) || force) {
-         Printf(formatStr, "", "", filename);
+	 // TCanvas already prints ps being saved
+         // Printf(formatStr, "", "", filename);
          classPtr->Draw("same");
          psCanvas->SaveAs(filename);
       } else
@@ -3036,18 +3037,25 @@ void THtml::MakeIndex(const char *filter)
 
       // get class & filename
       TClass *classPtr = GetClass((const char *) classNames[nOK]);
-      const char *impname;
-      if (classPtr->GetImplFileName()) 
+      const char *impname=0;
+      if (classPtr->GetImplFileName() && strlen(classPtr->GetImplFileName())) 
          impname = classPtr->GetImplFileName();
       else 
-         impname = classPtr->GetDeclFileName();
+	 impname = classPtr->GetDeclFileName();
 
-      if (impname) {
+      if (impname && strlen(impname)) {
          fileNames[numberOfImpFiles] = StrDup(impname, 64);
 
          // for new ROOT install the impl file name has the form: base/src/TROOT.cxx
-         char *srcdir = strstr(fileNames[numberOfImpFiles], "/src/");
-         if (srcdir && !strchr(srcdir + 5, '/') && srcdir[5] == 'T') {
+         char *srcdir = strstr(fileNames[numberOfImpFiles], "/src/T");
+
+	 // if impl is unset, check for decl and see if it matches 
+	 // format "base/inc/TROOT.h" - in which case it's not a USER
+	 // class, but a BASE class.
+         if (!srcdir) 
+	    srcdir=strstr(fileNames[numberOfImpFiles],"/inc/T");
+
+         if (srcdir && (!strchr(srcdir + 5, '/'))) {
             strcpy(srcdir, "_");
             for (char *t = fileNames[numberOfImpFiles];
                  (t[0] = toupper(t[0])); t++);
