@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.2 2000/10/11 07:13:11 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.3 2000/11/21 20:44:06 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -45,10 +45,13 @@ public:
   inline Double_t & operator [] (int);
   // Set components by index.
 
-  inline Double_t X() const;
-  inline Double_t Y() const;
-  inline Double_t Z() const;
-  // The components in cartesian coordinate system.
+  inline Double_t X()  const;
+  inline Double_t Y()  const;
+  inline Double_t Z()  const;
+  inline Double_t Px() const;
+  inline Double_t Py() const;
+  inline Double_t Pz() const;
+ // The components in cartesian coordinate system.
 
   inline void SetX(Double_t);
   inline void SetY(Double_t);
@@ -198,9 +201,12 @@ TVector3 operator * (const TMatrix &, const TVector3 &);
 Double_t & TVector3::operator[] (int i)       { return operator()(i); }
 Double_t   TVector3::operator[] (int i) const { return operator()(i); }
 
-inline Double_t TVector3::X() const { return fX; }
-inline Double_t TVector3::Y() const { return fY; }
-inline Double_t TVector3::Z() const { return fZ; }
+inline Double_t TVector3::X()  const { return fX; }
+inline Double_t TVector3::Y()  const { return fY; }
+inline Double_t TVector3::Z()  const { return fZ; }
+inline Double_t TVector3::Px() const { return fX; }
+inline Double_t TVector3::Py() const { return fY; }
+inline Double_t TVector3::Pz() const { return fZ; }
 
 inline void TVector3::SetX(Double_t x) { fX = x; }
 inline void TVector3::SetY(Double_t y) { fY = y; }
