@@ -535,32 +535,25 @@ TFriendElement *TTree::AddFriend(const char *treename, TFile *file)
 }
 
 //______________________________________________________________________________
-TFriendElement *TTree::AddFriend(TTree *tree, const char* alias)
+TFriendElement *TTree::AddFriend(TTree *tree, const char* alias, Bool_t warn)
 {
 // Add a TFriendElement to the list of friends. The TTree is managed by
 // the user (e.g. the user must delete the file).
 // For complete description see AddFriend(const char *, const char *).
 
+   if (!tree) return 0;
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,tree, alias);
    if (fe) {
       fFriends->Add(fe);
       TTree *t = fe->GetTree();
-      if (t) {
-         if (t->GetEntries() < fEntries) {
-            Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent tree: %g",
-               tree->GetName(),fe->GetFile()?fe->GetFile()->GetName():"(memory resident)",t->GetEntries(),fEntries);
-         }
-      } else {
-         Warning("AddFriend","unknown tree %s in file %s",
-                 tree->GetName(),fe->GetFile()?fe->GetFile()->GetName():"(memory resident)");
-      }
-   } else {
-      Warning("AddFriend","cannot add FriendElement %s in file %s",tree->GetName(),
-              fe->GetFile()?fe->GetFile()->GetName():"(memory resident)");
+      if (warn && t->GetEntries() < fEntries) {
+         Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent tree: %g",
+                 tree->GetName(),fe->GetFile()?fe->GetFile()->GetName():"(memory resident)",
+                 t->GetEntries(),fEntries);
+      } 
    }
    return fe;
-
 }
 
 //______________________________________________________________________________
@@ -2375,6 +2368,21 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 }
 
 //______________________________________________________________________________
+const char *TTree::GetFriendAlias(TTree *tree) const
+{
+// If the the 'tree' is a friend, this method returns its alias name
+
+   if (!fFriends) return 0;
+   TIter nextf(fFriends);
+   TFriendElement *fe;
+   while ((fe = (TFriendElement*)nextf())) {
+      TTree *t = fe->GetTree();
+      if (t==tree) return fe->GetName();
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 TIterator* TTree::GetIteratorOnAllLeaves(Bool_t dir)
 {
 // Creates a new iterator that will go through all the leaves on the tree
@@ -2416,12 +2424,13 @@ TLeaf *TTree::GetLeaf(const char *aname)
    TFriendElement *fe;
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
-      leaf = t->GetLeaf(name);
+      leaf = t->GetLeaf(aname);
       if (leaf) return leaf;
    }
 
    //second pass in the list of friends when the leaf name
    //is prefixed by the tree name
+   char strippedArg[2*kMaxLen];
    next.Reset();
    while ((fe = (TFriendElement*)next())) {
       TTree *t = fe->GetTree();
@@ -2431,7 +2440,14 @@ TLeaf *TTree::GetLeaf(const char *aname)
       subname += l;
       if (*subname != '.') continue;
       subname++;
-      leaf = t->GetLeaf(subname);
+      if (slash) {
+         strncpy(strippedArg,aname,nbch+1);
+         strippedArg[nbch+1] = 0;
+      } else {
+         strippedArg[0] = 0;
+      }
+      strcat(strippedArg,subname);
+      leaf = t->GetLeaf(strippedArg);
       if (leaf) return leaf;
    }
    return 0;
@@ -2521,6 +2537,16 @@ Int_t TTree::LoadTree(Int_t entry)
       if (fReadEntry < 0) fNotify->Notify();
    }
    fReadEntry = entry;
+
+   if (fFriends) {
+      TIter nextf(fFriends);
+      TFriendElement *fe;
+      while ((fe = (TFriendElement*)nextf())) {
+         TTree *t = fe->GetTree();
+         t->LoadTree(entry);
+      }
+   }
+
    return fReadEntry;
 
 }
@@ -2927,6 +2953,25 @@ TSQLResult *TTree::Query(const char *varexp, const char *selection, Option_t *op
    return 0;
 }
 
+//______________________________________________________________________________
+void TTree::RemoveFriend(TTree *oldFriend)
+{
+//*-*-*-*-*-*-*-*Remove a friend from the list of friend *-*-*
+//*-*            =============================================
+
+   if (!fFriends) return;
+   TIter nextf(fFriends);
+   TFriendElement *fe;
+   while ((fe = (TFriendElement*)nextf())) {
+      TTree *friend_t = fe->GetTree();
+      
+      if (friend_t == oldFriend) {
+         fFriends->Remove(fe);
+         delete fe;
+      }
+   }
+}
+   
 //______________________________________________________________________________
 void TTree::Reset(Option_t *option)
 {

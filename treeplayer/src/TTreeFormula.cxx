@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.93 2002/05/01 17:09:41 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.94 2002/06/16 10:06:35 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1298,7 +1298,7 @@ void TTreeFormula::DefineDimensions(Int_t code, TFormLeafInfo *leafinfo) {
       // size = -1;
       // until then we more or so die:
       ndim = 1;
-      size = 0;
+      size = 1; //NOTE: changed from 0
 
    } else return;
 
@@ -1791,9 +1791,15 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       // We need to record the location in the list of leaves because
       // the tree might actually be a chain and in that case the leaf will
       // change from tree to tree!.
+
+      // Let's reconstruct the name of the leaf, including the possible friend alias
+      const char* alias = fTree->GetTree()->GetFriendAlias(leaf->GetBranch()->GetTree());
+      if (alias) sprintf(scratch,"%s.%s",alias,leaf->GetName());
+      else strcpy(scratch,leaf->GetName());
+
       TTree *tleaf = leaf->GetBranch()->GetTree();
       fCodes[code] = tleaf->GetListOfLeaves()->IndexOf(leaf);
-      TNamed *named = new TNamed(leaf->GetName(),leaf->GetBranch()->GetName());
+      TNamed *named = new TNamed(scratch,leaf->GetBranch()->GetName());
       fLeafNames.AddAtAndExpand(named,code);
       fLeaves.AddAtAndExpand(leaf,code);
 
@@ -2004,8 +2010,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                         break;
                   case TMethodCall::kString:
                         leafinfo = new TFormLeafInfoMethod(cl,method);
-                        // 0 will be replaced by -1 when we know how to use strlen
-                        DefineDimensions(code,0);
+                        // 1 will be replaced by -1 when we know how to use strlen
+                        DefineDimensions(code,1); //NOTE: changed from 0
                         cl = 0;
                         break;
                   case TMethodCall::kOther:
@@ -2734,7 +2740,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
 
       real_instance = GetRealInstance(instance,0);
 
-      if (!instance) leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
+      if (!instance) leaf->GetBranch()->GetEntry(leaf->GetBranch()->GetTree()->GetReadEntry());
       else if (real_instance>fNdata[0]) return 0;
       if (fAxis) {
          char * label;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.5 2001/09/22 10:06:55 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.cxx,v 1.6 2002/06/25 05:47:51 brun Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -193,7 +193,11 @@ TTree *TFriendElement::GetTree()
       fTree = (TTree*)gROOT->FindObject(GetTreeName());
       if (! fTree->InheritsFrom(TTree::Class()) ) {
          fTree = 0;
-      }
+      } else {
+         // Since we did NOT create it ourself, let's not 
+	 // take ownership of it.
+         fOwnTree = kFALSE;
+      } 
       return fTree;
    }
    fTree = (TTree*)fFile->Get(GetTreeName());

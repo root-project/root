@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.39 2002/06/25 05:47:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.40 2002/07/02 07:10:34 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -135,7 +135,7 @@ public:
 
     virtual TFriendElement *AddFriend(const char *treename, const char *filename="");
     virtual TFriendElement *AddFriend(const char *treename, TFile *file);
-    virtual TFriendElement *AddFriend(TTree *tree, const char* alias="");
+    virtual TFriendElement *AddFriend(TTree *tree, const char* alias="", Bool_t warn = kFALSE);
     virtual void      AddTotBytes(Int_t tot) {fTotBytes += tot;}
     virtual void      AddZipBytes(Int_t zip) {fZipBytes += zip;}
     virtual void      AutoSave();
@@ -189,6 +189,7 @@ public:
     virtual Int_t     GetEntryNumberWithIndex(Int_t major, Int_t minor) const;
     TEventList       *GetEventList() const {return fEventList;}
     virtual Int_t     GetEntryNumber(Int_t entry) const;
+    virtual const char *GetFriendAlias(TTree *) const;
     TH1              *GetHistogram() {return GetPlayer()->GetHistogram();}
     virtual Int_t    *GetIndex() {return &fIndex.fArray[0];}
     virtual Double_t *GetIndexValues() {return &fIndexValues.fArray[0];}
@@ -244,6 +245,7 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual TSQLResult  *Query(const char *varexp="", const char *selection="", Option_t *option=""
                           ,Int_t nentries=1000000000, Int_t firstentry=0);
+    virtual void      RemoveFriend(TTree*);
     virtual void      Reset(Option_t *option="");
     virtual Int_t     Scan(const char *varexp="", const char *selection="", Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*

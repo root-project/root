@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.51 2002/06/14 13:47:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.52 2002/06/25 05:47:51 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -432,7 +432,7 @@ TFriendElement *TChain::AddFriend(const char *chain, TFile *dummy)
 }
 
 //______________________________________________________________________________
-TFriendElement *TChain::AddFriend(TTree *chain, const char* alias)
+TFriendElement *TChain::AddFriend(TTree *chain, const char* alias, Bool_t warn)
 {
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,alias);
@@ -675,6 +675,45 @@ Int_t TChain::LoadTree(Int_t entry)
    fReadEntry = entry - fTreeOffset[t];
    // If entry belongs to the current tree return entry
    if (t == fTreeNumber) {
+      // This need to be done first because it will set the friend tree's
+      // fReadEntry to the current one (which is possibly wrong).  The 
+      // call to t->LoadTree inside the chain would fix that.
+      fTree->LoadTree(fReadEntry);
+      if (fFriends) {
+         // The current tree as not change but some of its friend might.
+
+         //An Alternative would move this code to each of the function calling LoadTree 
+         //(and to overload a few more).
+         TIter next(fFriends);
+         TFriendElement *fe;
+         Bool_t needUpdate = kFALSE;
+         while ((fe = (TFriendElement*)next())) {
+            TTree *t = fe->GetTree();
+            if (t->InheritsFrom(TChain::Class())) {
+               Int_t oldNumber = ((TChain*)t)->GetTreeNumber();
+               TTree* old = t->GetTree();
+
+               t->LoadTree(entry);
+               
+               Int_t newNumber = ((TChain*)t)->GetTreeNumber();
+               if (oldNumber!=newNumber) {
+                  // We can not compare the tree pointers because they could be reused.
+                  // so we compare the number number instead.
+                  needUpdate = kTRUE;
+                  fTree->RemoveFriend(old);
+                  fTree->AddFriend(t->GetTree(),fe->GetName());
+               }
+            } // else we assume it is a simple tree so we have nothing to do.
+         }
+
+         if (needUpdate) {
+            //update list of leaves in all TTreeFormula of the TTreePlayer (if any)
+            if (fPlayer) fPlayer->UpdateFormulaLeaves();
+            //Notify user if requested
+            if (fNotify) fNotify->Notify();
+         }
+
+      }
       return fReadEntry;
    }
 
@@ -735,16 +774,9 @@ Int_t TChain::LoadTree(Int_t entry)
 
    if (cursav) cursav->cd();
 
-   //update list of leaves in all TTreeFormula of the TTreePlayer (if any)
-   if (fPlayer) fPlayer->UpdateFormulaLeaves();
-
-   //Notify user if requested
-   if (fNotify) fNotify->Notify();
-
    if (fFriends) {
-      //NOTE: maybe we should move this code to each of the function calling LoadTree
-      //so that we enable the ability to make firend with chains of same total length but different 
-      //intermediary length
+      //An Alternative would move this code to each of the function calling LoadTree 
+      //(and to overload a few more).
       TIter next(fFriends);
       TFriendElement *fe;
       while ((fe = (TFriendElement*)next())) {
@@ -755,6 +787,13 @@ Int_t TChain::LoadTree(Int_t entry)
       }
    }
 
+   //update list of leaves in all TTreeFormula of the TTreePlayer (if any)
+   if (fPlayer) fPlayer->UpdateFormulaLeaves();
+
+   //Notify user if requested
+   if (fNotify) fNotify->Notify();
+
+   fTree->LoadTree(fReadEntry);
    return fReadEntry;
 }
 
