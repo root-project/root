@@ -20,6 +20,12 @@
 #include <_memory>
 #include <_utility>
 
+#if defined(G__AIX)
+template<class _Ty, class _D, class _Pt, class _Rt,
+        class _Pt2, class _Rt2>
+        class _Ptrit;
+#endif
+
 #if defined(G__ANSIISOLIB) || (G__GNUC>=3)
 template<class T,class Allocator=std::allocator<T> >
 #elif defined(G__GNUC) && !defined(G__KCC)
@@ -63,10 +69,12 @@ class vector {
 #elif defined(G__AIX)
 
    typedef Allocator allocator_type;
-   typedef _Ptrit<value_type, difference_type, _Tptr,
+   typedef _Ptrit<value_type, difference_type, pointer,
                   reference, pointer, reference> iterator;
-   typedef _Ptrit<value_type, difference_type, _Ctptr,
+   typedef _Ptrit<value_type, difference_type, const_pointer,
                   const_reference, pointer, reference> const_iterator;
+   //class iterator;
+   //class const_iterator;
    typedef typename std::reverse_iterator<iterator>       reverse_iterator;
    typedef typename std::reverse_iterator<const_iterator> const_reverse_iterator;
 
@@ -126,7 +134,7 @@ class vector {
 
 #if defined(G__BORLANDCC5)
   typedef reverse_iterator<iterator> reverse_iterator;
-#elif (G__GNUC>=3 && G__GNUC_MINOR>=1) 
+#elif (G__GNUC>=3 && G__GNUC_MINOR>=1) || defined(G__AIX)
   typedef reverse_iterator<const_iterator> const_reverse_iterator;
   typedef reverse_iterator<iterator> reverse_iterator;
 #else // G__BORLANDCC5
