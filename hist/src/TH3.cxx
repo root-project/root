@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.45 2004/02/27 20:08:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.46 2004/03/18 13:12:29 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -44,6 +44,7 @@ TH3::TH3()
    fDimension   = 3;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
    fTsumwz      = fTsumwz2 = fTsumwxz = fTsumwyz = 0;
+   SetBinsLength(27);
 }
 
 //______________________________________________________________________________

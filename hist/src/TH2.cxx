@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.48 2004/01/25 20:33:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.49 2004/02/27 20:06:45 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -38,6 +38,7 @@ TH2::TH2()
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
+   SetBinsLength(9);
 }
 
 //______________________________________________________________________________

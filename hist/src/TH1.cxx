@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.180 2004/05/13 09:10:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.181 2004/05/21 16:03:39 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5614,7 +5614,7 @@ ClassImp(TH1C)
 TH1C::TH1C(): TH1(), TArrayC()
 {
    fDimension = 1;
-   SetBinsLength(1);
+   SetBinsLength(3);
 }
 
 //______________________________________________________________________________
@@ -5823,7 +5823,7 @@ ClassImp(TH1S)
 TH1S::TH1S(): TH1(), TArrayS()
 {
    fDimension = 1;
-   SetBinsLength(1);
+   SetBinsLength(3);
 }
 
 //______________________________________________________________________________
@@ -6030,7 +6030,7 @@ ClassImp(TH1I)
 TH1I::TH1I(): TH1(), TArrayI()
 {
    fDimension = 1;
-   SetBinsLength(1);
+   SetBinsLength(3);
 }
 
 //______________________________________________________________________________
@@ -6237,7 +6237,7 @@ ClassImp(TH1F)
 TH1F::TH1F(): TH1(), TArrayF()
 {
    fDimension = 1;
-   SetBinsLength(1);
+   SetBinsLength(3);
 }
 
 //______________________________________________________________________________
@@ -6439,7 +6439,7 @@ ClassImp(TH1D)
 TH1D::TH1D(): TH1(), TArrayD()
 {
    fDimension = 1;
-   SetBinsLength(1);
+   SetBinsLength(3);
 }
 
 //______________________________________________________________________________
