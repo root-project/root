@@ -32,6 +32,8 @@ shift
 ROOTBUILD=$9
 shift
 
+MACOSXTARGET=""
+
 if [ "$INCDIR" = "$ROOTSYS/include" ]; then
    INCDIR=\$ROOTSYS/include
 fi
@@ -44,6 +46,7 @@ if [ "$ARCH" = "macosx" ]; then
    SOEXT="so"
    if [ $macosx_minor -ge 3 ]; then
       SOFLAGS="-bundle $OPT -flat_namespace -undefined dynamic_lookup"
+      MACOSXTARGET="MACOSX_DEPLOYMENT_TARGET=10.3"
    else
       SOFLAGS="-bundle $OPT -flat_namespace -undefined suppress"
    fi
@@ -66,7 +69,7 @@ echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then
-      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS $EXPLLINKLIBS -o \$SharedLib\"" >> __compiledata
+      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c \$Opt $CXXFLAGS \$IncludePath \$SourceFiles ; $MACOSXTARGET $CXX \$ObjectFiles $SOFLAGS $LDFLAGS $EXPLLINKLIBS -o \$SharedLib\"" >> __compiledata
 else
    echo "#define MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi
