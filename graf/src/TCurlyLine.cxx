@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.4 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TCurlyLine.cxx,v 1.5 2004/12/06 09:55:38 brun Exp $
 // Author: Otto Schaile   20/11/99
 
 /*************************************************************************
@@ -91,17 +91,21 @@ void TCurlyLine::Build()
       py2           = fY2;
       lengthPix = TMath::Sqrt((px2-px1)*(px2-px1) + (py1-py2)*(py1-py2));
    }
-// construct the curly / wavy line in pixel coordinates at angle 0
-   Double_t anglestep = 20;
-   Double_t phimaxle  = TMath::Pi() * 2. / anglestep ;
-   Double_t dx        = wavelengthPix / 25;
-   Double_t len2pi    = dx * anglestep;
-   if(lengthPix <= 4 * amplitudePix){
-      cout << "CurlyLine:: too short " << lengthPix << endl;
+   if(lengthPix <= wavelengthPix){
+      Warning("Build","CurlyLine is too short, length %g is < wavelength: %g ",lengthPix,wavelengthPix);
       SetBit(kTooShort);
       return;
    }
+// construct the curly / wavy line in pixel coordinates at angle 0
+   Double_t anglestep = 40;
+   Double_t phimaxle  = TMath::Pi() * 2. / anglestep ;
+   Double_t dx        = wavelengthPix / 40;
+   Double_t len2pi    = dx * anglestep;
+
+//  make sure there is a piece of straight line a both ends
+
    Double_t  lengthcycle = 0.5 * len2pi + 2 * amplitudePix;
+//   if (fIsCurly) lengthcycle +=  amplitudePix;
    Int_t nperiods = (Int_t)((lengthPix - lengthcycle) / len2pi);
    Double_t restlength = 0.5 * (lengthPix - nperiods * len2pi - lengthcycle);
    fNsteps = (Int_t)(anglestep * nperiods + anglestep / 2 + 4);
