@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.14 2000/09/08 16:05:21 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.15 2000/09/11 09:06:05 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1657,7 +1657,7 @@ void TGraph::PaintGrapHist(Int_t npoints, Double_t *x, Double_t *y, Option_t *ch
    static char choptaxis[10] = " ";
 //*-* ______________________________________
 
-  if (npoints <= 0) {
+     if (npoints <= 0) {
      Error(where, "illegal number of points (%d)", npoints);
      return;
   }
@@ -2472,7 +2472,7 @@ void TGraph::Set(Int_t n)
       yy = new Double_t[n];
    }
    Int_t i;
-   for (i=0; i<fNpoints;i++) {
+   for (i=0; i<fNpoints && i<n;i++) {
       if (fX) xx[i] = fX[i];
       if (fY) yy[i] = fY[i];
    }
