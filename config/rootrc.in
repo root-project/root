@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.76 2004/07/07 23:25:33 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.77 2004/08/03 16:01:17 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -219,7 +219,7 @@ Globus.ProxyKeyBits:     1024
 # must be parsed; any substring found under the Env SSH.ErrorRetry
 # triggers a retry condition; strings can be added here
 # in the form (including double quotes):
-#              +SSH.ErrorRetry:     "<error_string>" 
+#              +SSH.ErrorRetry:     "<error_string>"
 # This is what one usually gets if the server has reached the maximum
 # number of sshd daemons (defined by MaxStartups in sshd_config);
 # this is a typical case in which one should retry.
@@ -241,6 +241,75 @@ RSA.KeyType:  1
 # castor:/path/file.root. Extend in private .rootrc with a +Url.Special line.
 Url.Special:         file: rfio: hpss: castor: dcache: dcap:
 
+# The following env vars are handled by TXNetFile and related classes
+# (module netx, libNetx.so)
+#
+# XNet.ConnectTimeout   - maximum time to wait before server's
+#                         response on a connect [10 s]
+# XNet.RequestTimeout   - maximum time to wait before considering
+#                         a read/write failure [60 s]
+# XNet.ConnectDomainAllowRE
+#                       - sequence of TRegexp regular expressions
+#                         separated by a |.
+#                         A domain is granted access to for the
+#                         first connection if it matches one of these
+#                         regexps. Example:
+#                         slac.stanford.edu|pd.infn.it|fe.infn.it
+# XNet.ConnectDomainDenyRE
+#                       - sequence of TRegexp regular expressions
+#                         separated by a |.
+#                         A domain is denied access to for the
+#                         first connection if it matches one of these
+#                         regexps. Example:
+#                         slac.stanford.edu|pd.infn.it|fe.infn.it
+# XNet.RedirDomainAllowRE
+#                       - sequence of TRegexp regular expressions
+#                         separated by a |.
+#                         A domain is granted access to for a
+#                         redirection if it matches one of these
+#                         regexps. Example:
+#                         slac.stanford.edu|pd.infn.it|fe.infn.it
+# XNet.RedirDomainDenyRE
+#                       - sequence of TRegexp regular expressions
+#                         separated by a |.
+#                         A domain is denied access to for a
+#                         redirection if it matches one of these
+#                         regexps. Example:
+#                         slac.stanford.edu|pd.infn.it|fe.infn.it
+# XNet.MaxRedirectCount - maximum number of redirections from
+#                         server [255]
+# XNet.Debug            - log verbosity level
+#                         (0=nothing,
+#                          1=messages of interest to the user,
+#                          2=messages of interest to the developers
+#                            (includes also user messages),
+#                          3=dump of all sent/received data buffers
+#                            (includes also user and developers
+#                             messages). [0]
+# XNet.ReconnectTimeout - sleep-time before going back to the
+#                         load balancer (or rebouncing to the same
+#                         failing host) after a read/write error
+#                         [10 s]
+# XNet.StartGarbageCollectorThread -
+#                         for test/development purposes. Normally
+#                         nonzero (True), but as workaround for
+#                         external causes someone could be
+#                         interested in not having the garbage
+#                         collector thread around.
+#                         [experimental!]
+# XNet.GoAsynchronous   - Default is 0. When activated, XTNetFile
+#                         works in async mode, allowing input
+#                         buffering and unsolicited responses
+#                         [experimental!]
+# XNet.TryConnect       - Number of tries connect to a single
+#                         server before giving up
+# XNet.TryConnectServersList
+#                       - Number of connect retries to the whole
+#                         server list given [240]
+# XNet.PrintTAG         - Print a particular string the developers
+#                         can choose to quickly recognize the
+#                         version at run time [0]
+
 # Plugin library handlers
 Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^castor:  TCastorFile   RFIO    "TCastorFile(const char*,Option_t*,const char*,Int_t,Int_t)"
@@ -249,6 +318,7 @@ Plugin.TFile:        ^rfio:    TRFIOFile     RFIO    "TRFIOFile(const char*,Opti
 +Plugin.TFile:       ^chirp:   TChirpFile    Chirp   "TChirpFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       ^alien:   TAlienFile    RAliEn  "TAlienFile(const char*,Option_t*,const char*,Int_t)"
 +Plugin.TFile:       .+[.]xml$ TXMLFile      RXML    "TXMLFile(const char*,Option_t*,const char*,Int_t)"
+@hasnetx@+Plugin.TFile:       ^root:    TXNetFile     Netx    "TXNetFile(const char*,Option_t*,const char*,Int_t,Int_t)"
 Plugin.TSystem:      ^rfio:    TRFIOSystem   RFIO    "TRFIOSystem()"
 +Plugin.TSystem:     ^dcache:  TDCacheSystem DCache  "TDCacheSystem()"
 +Plugin.TSystem:     ^dcap:    TDCacheSystem DCache  "TDCacheSystem()"

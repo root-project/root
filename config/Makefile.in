@@ -121,6 +121,8 @@ XMLLIBDIR      := @xmllibdir@
 XMLCLILIB      := @xmllib@
 XMLINCDIR      := @xmlincdir@
 
+BUILDXRD       := @buildxrd@
+
 SRPLIBDIR      := @srplibdir@
 SRPLIB         := @srplib@
 SRPINCDIR      := @srpincdir@

@@ -147,5 +147,7 @@ QUADPLIBDEP         = $(MATRIXLIB)
 QUADPLIBEXTRA       = -Llib -lMatrix
 RUBYLIBDEP          = $(HISTLIB)
 RUBYLIBEXTRA        = -Llib -lHist
+NETXLIBDEP          = $(THREADLIB)
+NETXLIBEXTRA        = -Llib -lThread
 
 endif

@@ -169,6 +169,9 @@ endif
 ifneq ($(CERNLIBS),)
 MODULES      += hbook
 endif
+ifeq ($(BUILDXRD),yes)
+MODULES      += xrootd netx
+endif
 
 -include MyModules.mk   # allow local modules
 
@@ -176,7 +179,8 @@ ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread \
                 pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
                 rootx rootd proofd dcache chirp hbook alien asimage ldap \
-                mlp krb5auth rpdutils globusauth pyroot xml ruby qt qtroot
+                mlp krb5auth rpdutils globusauth pyroot xml ruby qt qtroot \
+                xrootd netx
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
@@ -495,9 +499,9 @@ clean::
 endif
 
 distclean:: clean
-	-@mv -f include/config.h include/config.hh
+	-@mv -f include/config.h include/config.h1
 	@rm -f include/*.h $(MAKEINFO) $(ROOTMAP) $(CORELIB)
-	-@mv -f include/config.hh include/config.h
+	-@mv -f include/config.h1 include/config.h
 	@rm -f bin/*.dll bin/*.exp bin/*.lib bin/*.pdb \
                lib/*.def lib/*.exp lib/*.lib lib/*.dll.a \
                *.def .def

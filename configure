@@ -54,6 +54,7 @@ options="                 \
    enable_thread          \
    enable_venus           \
    enable_xml             \
+   enable_xrootd          \
 "
 
 #
@@ -584,6 +585,7 @@ enable/disable options, prefix with either --enable- or --disable-
    thread          Thread support (currently only POSIX threads)
    venus           Venus EG support, requires libVenus
    xml             XML I/O interface
+   xrootd          Build xrootd file server and its client (if supported)
 
 with options, prefix with --with-, enables corresponding support
 
@@ -1655,6 +1657,27 @@ fi
 
 ######################################################################
 #
+### echo %%% Check for xrootd support
+#
+buildxrd="no"
+hasnetx="#"
+if test "x$enable_xrootd" = "xyes"; then
+    # The server builds on Linux, Solaris and MacOS X only
+    # (for the time being)
+    message "Checking for xrootd platform support"
+    case $arch in
+    # linux* | solaris* | macos*)
+    linux | solarisCC5)
+        buildxrd="yes"
+        hasnetx=""
+        echo "yes" ;;
+    *)
+        echo "no"  ;;
+    esac
+fi
+
+######################################################################
+#
 ### echo %%% Globus Support - Third party libraries
 #
 # (See www.globus.org)
@@ -2627,6 +2650,7 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@asgifincdir@|$asgifincdir|"          \
     -e "s|@bindir@|$bindir|"                    \
     -e "s|@buildasimage@|$enable_asimage|"      \
+    -e "s|@buildxrd@|$buildxrd|"                \
     -e "s|@cernlibdir@|$cernlibdir|"            \
     -e "s|@cernlibs@|$cernlib|"                 \
     -e "s|@chirpincdir@|$chirpincdir|"          \
@@ -2813,6 +2837,7 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@etcdir@|$etcdir|"               \
     -e "s|@ttffontdir@|$fontdir|"          \
     -e "s|@iconpath@|$iconpath|"           \
+    -e "s|@hasnetx@|$hasnetx|"             \
    < rootrc.tmp > $ROOTRCOUT
 rm -f rootrc.tmp
 echo "done"
