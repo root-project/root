@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.88 2004/10/21 14:44:02 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.89 2004/10/29 16:07:32 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -3724,6 +3724,43 @@ Double_t TMath::BetaCf(Double_t x, Double_t a, Double_t b)
            a,b,x,h,itmax);
    }
    return h;
+}
+
+//______________________________________________________________________________
+Double_t TMath::BetaDist(Double_t x, Double_t p, Double_t q)
+{
+  // Computes the probability density function of the Beta distribution.
+  //   (the distribution function is computed in BetaDistI)
+  // The first argument is the point, where the function will be
+  // computed, second and third are the function parameters
+  // Since the Beta distribution is bounded on both sides, it's often
+  // used to represent processes with natural lower and upper limits.
+
+  if ((x<0) || (x>1) || (p<=0) || (q<=0)){
+     Error("BetaDist", "parameter value outside allowed range");
+     return 0;
+  }
+  Double_t beta = TMath::Beta(p, q);
+  Double_t r = TMath::Power(x, p-1)*TMath::Power(1-x, q-1)/beta;
+  return r;
+}
+
+//______________________________________________________________________________
+Double_t TMath::BetaDistI(Double_t x, Double_t p, Double_t q)
+{
+  // Computes the distribution function of the Beta distribution.
+  // The first argument is the point, where the function will be
+  // computed, second and third are the function parameters
+  // Since the Beta distribution is bounded on both sides, it's often
+  // used to represent processes with natural lower and upper limits
+
+
+  if ((x<0) || (x>1) || (p<=0) || (q<=0)){
+     Error("BetaDistI", "parameter value outside allowed range");
+     return 0;
+  }
+  Double_t betai = TMath::BetaIncomplete(x, p, q);
+  return betai;
 }
 
 //______________________________________________________________________________

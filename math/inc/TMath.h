@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.55 2004/09/24 18:18:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.56 2004/11/10 20:26:24 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -314,53 +314,55 @@ namespace TMath {
           Double_t *Normal2Plane(Double_t v1[3],Double_t v2[3],Double_t v3[3], Double_t normal[3]); // Calculate a normal vector of a plane
           void      RootsCubic(Double_t coef[4],Double_t &a, Double_t &b, Double_t &c);
 
-          Double_t  Erf(Double_t x);
-          Double_t  Erfc(Double_t x);
-          Double_t  ErfInverse(Double_t x);
-   inline Double_t  ErfcInverse(Double_t x) {return TMath::ErfInverse(1-x);}
-          Double_t  Freq(Double_t x);
-          Double_t  Gamma(Double_t z);
-          Double_t  Gamma(Double_t a,Double_t x);
           Double_t  BreitWigner(Double_t x, Double_t mean=0, Double_t gamma=1);
           Double_t  Gaus(Double_t x, Double_t mean=0, Double_t sigma=1, Bool_t norm=kFALSE);
           Double_t  Landau(Double_t x, Double_t mpv=0, Double_t sigma=1, Bool_t norm=kFALSE);
-          Double_t  LnGamma(Double_t z);
-          Double_t  Poisson(Double_t x, Double_t par);
-          Double_t  PoissonI(Double_t x, Double_t par);
-          Double_t  Prob(Double_t chi2,Int_t ndf);
-          Double_t  KolmogorovProb(Double_t z);
           Double_t  Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R = 4);
 
    // Bessel functions
-   Double_t BesselI(Int_t n,Double_t x);      // integer order modified Bessel function I_n(x)
-   Double_t BesselK(Int_t n,Double_t x);      // integer order modified Bessel function K_n(x)
-   Double_t BesselI0(Double_t x);             // modified Bessel function I_0(x)
-   Double_t BesselK0(Double_t x);             // modified Bessel function K_0(x)
-   Double_t BesselI1(Double_t x);             // modified Bessel function I_1(x)
-   Double_t BesselK1(Double_t x);             // modified Bessel function K_1(x)
-   Double_t BesselJ0(Double_t x);             // Bessel function J0(x) for any real x
-   Double_t BesselJ1(Double_t x);             // Bessel function J1(x) for any real x
-   Double_t BesselY0(Double_t x);             // Bessel function Y0(x) for positive x
-   Double_t BesselY1(Double_t x);             // Bessel function Y1(x) for positive x
-   Double_t StruveH0(Double_t x);             // Struve functions of order 0
-   Double_t StruveH1(Double_t x);             // Struve functions of order 1
-   Double_t StruveL0(Double_t x);             // Modified Struve functions of order 0
-   Double_t StruveL1(Double_t x);             // Modified Struve functions of order 1
+          Double_t BesselI(Int_t n,Double_t x);  // integer order modified Bessel function I_n(x)
+          Double_t BesselK(Int_t n,Double_t x);  // integer order modified Bessel function K_n(x)
+          Double_t BesselI0(Double_t x);         // modified Bessel function I_0(x)
+          Double_t BesselK0(Double_t x);         // modified Bessel function K_0(x)
+          Double_t BesselI1(Double_t x);         // modified Bessel function I_1(x)
+          Double_t BesselK1(Double_t x);         // modified Bessel function K_1(x)
+          Double_t BesselJ0(Double_t x);         // Bessel function J0(x) for any real x
+          Double_t BesselJ1(Double_t x);         // Bessel function J1(x) for any real x
+          Double_t BesselY0(Double_t x);         // Bessel function Y0(x) for positive x
+          Double_t BesselY1(Double_t x);         // Bessel function Y1(x) for positive x
+          Double_t StruveH0(Double_t x);         // Struve functions of order 0
+          Double_t StruveH1(Double_t x);         // Struve functions of order 1
+          Double_t StruveL0(Double_t x);         // Modified Struve functions of order 0
+          Double_t StruveL1(Double_t x);         // Modified Struve functions of order 1
 
    // Statistics
-   Double_t Beta(Double_t p, Double_t q);
-   Double_t BetaCf(Double_t x, Double_t a, Double_t b);
-   Double_t BetaIncomplete(Double_t x, Double_t a, Double_t b);
-   Double_t Binomial(Int_t n,Int_t k);  // Calculate the binomial coefficient n over k
-   Double_t BinomialI(Double_t p, Int_t n, Int_t k);
-   Double_t CauchyDist(Double_t x, Double_t t=0, Double_t s=1);
-   Double_t FDist(Double_t F, Double_t N, Double_t M);
-   Double_t FDistI(Double_t F, Double_t N, Double_t M);
-   Double_t GammaDist(Double_t x, Double_t gamma, Double_t mu=0, Double_t beta=1);
-   Double_t LogNormal(Double_t x, Double_t sigma, Double_t theta=0, Double_t m=1);
-   Bool_t   Permute(Int_t n, Int_t *a); // Find permutations
-   Double_t Student(Double_t T, Double_t ndf);
-   Double_t StudentI(Double_t T, Double_t ndf);
+          Double_t Beta(Double_t p, Double_t q);
+          Double_t BetaCf(Double_t x, Double_t a, Double_t b);
+          Double_t BetaDist(Double_t x, Double_t p, Double_t q);
+          Double_t BetaDistI(Double_t x, Double_t p, Double_t q);
+          Double_t BetaIncomplete(Double_t x, Double_t a, Double_t b);
+          Double_t Binomial(Int_t n,Int_t k);  // Calculate the binomial coefficient n over k
+          Double_t BinomialI(Double_t p, Int_t n, Int_t k);
+          Double_t CauchyDist(Double_t x, Double_t t=0, Double_t s=1);
+          Double_t Erf(Double_t x);
+          Double_t ErfInverse(Double_t x);
+          Double_t Erfc(Double_t x);
+   inline Double_t ErfcInverse(Double_t x) {return TMath::ErfInverse(1-x);}
+          Double_t FDist(Double_t F, Double_t N, Double_t M);
+          Double_t FDistI(Double_t F, Double_t N, Double_t M);
+          Double_t Freq(Double_t x);
+          Double_t Gamma(Double_t z);
+          Double_t Gamma(Double_t a,Double_t x);
+          Double_t GammaDist(Double_t x, Double_t gamma, Double_t mu=0, Double_t beta=1);
+          Double_t KolmogorovProb(Double_t z);
+          Double_t LnGamma(Double_t z);
+          Double_t LogNormal(Double_t x, Double_t sigma, Double_t theta=0, Double_t m=1);
+          Bool_t   Permute(Int_t n, Int_t *a); // Find permutations
+          Double_t Poisson(Double_t x, Double_t par);
+          Double_t PoissonI(Double_t x, Double_t par);
+          Double_t Prob(Double_t chi2,Int_t ndf);
+          Double_t Student(Double_t T, Double_t ndf);
+          Double_t StudentI(Double_t T, Double_t ndf);
 
 }
 
