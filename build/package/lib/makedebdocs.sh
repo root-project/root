@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makedebdocs.sh,v 1.1 2001/04/23 14:11:47 rdm Exp $
+# $Id: makedebdocs.sh,v 1.2 2002/01/20 14:23:52 rdm Exp $
 #
 # Writes a documentation file entry to debian/root-<pkg>.docs
 #
@@ -44,8 +44,5 @@ fi
 #  fi 
 
 #
-# $Log: makedebdocs.sh,v $
-# Revision 1.1  2001/04/23 14:11:47  rdm
-# part of the debian and redhat build system.
-#
+# EOF
 #

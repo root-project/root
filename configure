@@ -55,6 +55,15 @@ options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
 #
 ### echo %%% Some common functions
 #
+message() {
+    # Write a simple message to std out
+    if test $# -lt 1 ; then
+	echo "message: Too few arguments"
+	return 1
+    fi
+    echo $ac_n "$* ... $ac_c"
+}
+
 checking_msg() {
     # Write a simple "checking" message to std out.
     if test $# -lt 1 ; then
@@ -71,6 +80,7 @@ checking_msg() {
     done
     echo $ac_n " $1 ... $ac_c"
 }
+
 check_library() {
     # This function will try to locate a library [$1] in the specific
     # directory [$3] or in a default path [$*].  If the second argument
@@ -165,6 +175,7 @@ check_library() {
     unset flib
     unset libdirl
 }
+
 check_header()  {
     # This function will try to locate a header [$1] in the specific
     # directory [$2] or in a default path [$*].
@@ -267,83 +278,86 @@ fi
 ### echo %%% Help function
 #
 confhelp() {
-    echo "Usage:     $0 <architecture> [flag=value] "
-    echo ""
-    echo "   FLAG            DESCRIPTION               DEFAULT"
-    echo "   --no-create     Do not create output files, dry run"
-    echo "   --prefix        Installation prefix       (/usr/local)"
-    echo "   --bindir        Binary installation dir   (<prefix>/bin)"
-    echo "   --libdir        Library installation dir  (<prefix>/lib/root)"
-    echo "   --incdir        Header installation dir   (<prefix>/include/root)"
-    echo "   --mandir        Manpages installation dir (<prefix>/share/man/man1)"
-    echo "   --etcdir        Config installation dir   (/etc/root)"
-    echo "   --datadir       Data installation dir     (<prefix>/share/root)"
-    echo "   --proofdir      PROOF utils dir           (<datadir>/proof)"
-    echo "   --macrodir      Macro installation dir    (<datadir>/macros)"
-    echo "   --cintincdir    CINT interpeted headers   (<datadir>/cint)"
-    echo "   --iconpath      Icon installation dir     (<datadir>/icons)"
-    echo "   --srcdir        Sources installation dir  (<datadir>/src)"
-    echo "   --docdir        Documentation             (<prefix>/share/doc/root)"
-    echo "   --testdir       Tests                     (<docdir>/test)"
-    echo "   --tutdir        Tutorials                 (<docdir>/tutorial)"
-    echo "   --aclocaldir    Autoconf macro install dir(<prefix>/share/aclocal)"
-    echo "   --build         Build configuration [debug, exceptions, ...],"
-    echo "                   overrides the ROOTBUILD shell variable"
-    echo "enable/disable options, prefix with either --enable- or --disable-"
-    echo "   shared          Use shared 3rd party libraries if possible"
-    echo "   rpath           Set library path on executables"
-    echo "   thread          Thread support"
-    echo "   table           Build libTable contrib library"
-    echo "   ttf             True Type Font support, requires libtff"
-    echo "   opengl          OpenGL support, requires libGL and libGLU"
-    echo "   openiv          OpenInventor support, requires libInventor and libInventorXt"
-    echo "   cern            CERNLIB usage, build h2root and g2root"
-    echo "   mysql           MySQL support, requires libmysqlclient"
-    echo "   pgsql           PostgreSQL support, requires libpq"
-    echo "   sapdb           SapDB support, requires libsqlod and libsqlrte"
-    echo "   rfio            SHIFT support, requires libshift from CERN"
-    echo "   dcache          dCache support, requires libdcap from DESY"
-    echo "   alien           AliEn support, requires libAliEn from ALICE"
-    echo "   srp             SRP support, requires SRP source tree"
-    echo "   afs             AFS support, requires AFS libs and objects"
-    echo "   krb5            Kerberos5 support, requires Kerberos libs"
-    echo "   shadowpw        Shadow password support"
-    echo "   pythia          Pythia5 EG support, requires libPythia"
-    echo "   pythia6         Pythia6 EG support, requires libPythia6"
-    echo "   venus           Venus EG support, requires libVenus"
-    echo "   soversion       Set version number in sonames"
-    echo "with options, prefix with --with-, enables corresponding support"
-    echo "   xpm-libdir      XPM support, path to libXpm"
-    echo "   thread-libdir   Thread support, path to libpthread"
-    echo "   ttf-incdir      TTF support, location of freetype.h"
-    echo "   ttf-libdir      TTF support, location of libttf"
-    echo "   ttf-fontdir     TTF support, location of TTF fonts"
-    echo "   opengl-incdir   OpenGL support, location of GL/gl.h"
-    echo "   opengl-libdir   OpenGL support, location of libGL"
-    echo "   openiv-incdir   OpenInventor support, location of Inventor/SoType.h"
-    echo "   openiv-libdir   OpenInventor support, location of libInventor"
-    echo "   mysql-incdir    MySQL support, location of mysql.h"
-    echo "   mysql-libdir    MySQL support, location of libmysqlclient"
-    echo "   pgsql-incdir    PostgreSQL support, location of libpq-fe.h"
-    echo "   pgsql-libdir    PostgreSQL support, location of libpq"
-    echo "   sapdb-incdir    SapDB support, location of sql.h"
-    echo "   sapdb-libdir    SapDB support, location of libsqlod"
-    echo "   pythia-libdir   PYHTIA support, location of libPythia"
-    echo "   pythia6-libdir  PYHTIA6 support, location of libPythia6"
-    echo "   venus-libdir    VENUS support, location of libVenus"
-    echo "   cern-libdir     HBOOK converter, location of CERNLIB libraries"
-    echo "   shift-libdir    RFIO support, location of libshift"
-    echo "   dcap-incdir     dCache support, location of dcap.h"
-    echo "   dcap-libdir     dCache support, location of libdcap"
-    echo "   alien-incdir    AliEn support, location of AliEn.h"
-    echo "   alien-libdir    AliEn support, location of libAliEn"
-    echo "   srp             Secure Remote Passwd support, location of SRP distribution"
-    echo "   srp-incdir      SRP support, location header of t_server.h"
-    echo "   srp-libdir      SRP support, location header of libsrp.a"
-    echo "   afs             AFS support, location of AFS distribution"
-    echo "   krb5            Kerberos5 support, location of Kerberos distribution"
-    echo "   sys-iconpath    Extra icon path"
-    echo ""
+cat <<EOF
+Usage:     $0 <architecture> [flag=value]
+
+   FLAG            DESCRIPTION               DEFAULT
+   --aclocaldir    Autoconf macro install dir(<prefix>/share/aclocal)
+   --bindir        Binary installation dir   (<prefix>/bin)
+   --build         Build configuration [debug, exceptions, ...],
+                   overrides the ROOTBUILD shell variable
+   --cintincdir    CINT interpeted headers   (<datadir>/cint)
+   --datadir       Data installation dir     (<prefix>/share/root)
+   --docdir        Documentation             (<prefix>/share/doc/root)
+   --etcdir        Config installation dir   (/etc/root)
+   --elispdir      Where to put Emacs Lisp   (<prefix>/share/emacs/site-lisp)
+   --iconpath      Icon installation dir     (<datadir>/icons)
+   --incdir        Header installation dir   (<prefix>/include/root)
+   --libdir        Library installation dir  (<prefix>/lib/root)
+   --macrodir      Macro installation dir    (<datadir>/macros)
+   --mandir        Manpages installation dir (<prefix>/share/man/man1)
+   --no-create     Do not create output files, dry run
+   --prefix        Installation prefix       (/usr/local)
+   --proofdir      PROOF utils dir           (<datadir>/proof)
+   --srcdir        Sources installation dir  (<datadir>/src)
+   --testdir       Tests                     (<docdir>/test)
+   --tutdir        Tutorials                 (<docdir>/tutorial)
+enable/disable options, prefix with either --enable- or --disable-
+   afs             AFS support, requires AFS libs and objects
+   alien           AliEn support, requires libAliEn from ALICE
+   cern            CERNLIB usage, build h2root and g2root
+   dcache          dCache support, requires libdcap from DESY
+   krb5            Kerberos5 support, requires Kerberos libs
+   mysql           MySQL support, requires libmysqlclient
+   opengl          OpenGL support, requires libGL and libGLU
+   openiv          OpenInventor support, requires libInventor and libInventorXt
+   pgsql           PostgreSQL support, requires libpq
+   pythia          Pythia5 EG support, requires libPythia
+   pythia6         Pythia6 EG support, requires libPythia6
+   rfio            SHIFT support, requires libshift from CERN
+   rpath           Set library path on executables
+   sapdb           SapDB support, requires libsqlod and libsqlrte
+   shadowpw        Shadow password support
+   shared          Use shared 3rd party libraries if possible
+   soversion       Set version number in sonames
+   srp             SRP support, requires SRP source tree
+   table           Build libTable contrib library
+   thread          Thread support
+   ttf             True Type Font support, requires libtff
+   venus           Venus EG support, requires libVenus
+with options, prefix with --with-, enables corresponding support
+   afs             AFS support, location of AFS distribution
+   alien-incdir    AliEn support, location of AliEn.h
+   alien-libdir    AliEn support, location of libAliEn
+   cern-libdir     HBOOK converter, location of CERNLIB libraries
+   dcap-incdir     dCache support, location of dcap.h
+   dcap-libdir     dCache support, location of libdcap
+   krb5            Kerberos5 support, location of Kerberos distribution
+   mysql-incdir    MySQL support, location of mysql.h
+   mysql-libdir    MySQL support, location of libmysqlclient
+   opengl-incdir   OpenGL support, location of GL/gl.h
+   opengl-libdir   OpenGL support, location of libGL
+   openiv-incdir   OpenInventor support, location of Inventor/SoType.h
+   openiv-libdir   OpenInventor support, location of libInventor
+   pgsql-incdir    PostgreSQL support, location of libpq-fe.h
+   pgsql-libdir    PostgreSQL support, location of libpq
+   pythia-libdir   PYHTIA support, location of libPythia
+   pythia6-libdir  PYHTIA6 support, location of libPythia6
+   sapdb-incdir    SapDB support, location of sql.h
+   sapdb-libdir    SapDB support, location of libsqlod
+   shift-libdir    RFIO support, location of libshift
+   srp             Secure Remote Passwd support, location of SRP distribution
+   srp-incdir      SRP support, location header of t_server.h
+   srp-libdir      SRP support, location header of libsrp.a
+   sys-iconpath    Extra icon path
+   thread-libdir   Thread support, path to libpthread
+   ttf-fontdir     TTF support, location of TTF fonts
+   ttf-incdir      TTF support, location of freetype.h
+   ttf-libdir      TTF support, location of libttf
+   venus-libdir    VENUS support, location of libVenus
+   xpm-libdir      XPM support, path to libXpm
+
+EOF
     cat config/ARCHS
 }
 
@@ -403,36 +417,36 @@ if test $# -gt 0 ; then
       # With options to specifiy third part software
       #
       --no-create)             noact="yes"           ;;
-      --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
-      --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
-      --with-ttf-incdir=*)     ttfincdir=$optarg     ; enable_ttf="yes"     ;;
-      --with-ttf-libdir=*)     ttflibdir=$optarg     ; enable_ttf="yes"     ;;
-      --with-ttf-fontdir=*)    ttffontdir=$optarg    ; enable_ttf="yes"     ;;
+      --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
+      --with-alien-incdir=*)   alienincdir=$optarg   ; enable_alien="yes"   ;;
+      --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
+      --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
+      --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
+      --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
+      --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
+      --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
+      --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-opengl-incdir=*)  openglincdir=$optarg  ; enable_opengl="yes"  ;;
       --with-opengl-libdir=*)  opengllibdir=$optarg  ; enable_opengl="yes"  ;;
       --with-openiv-incdir=*)  openivincdir=$optarg  ; enable_openiv="yes"  ;;
       --with-openiv-libdir=*)  openivlibdir=$optarg  ; enable_openiv="yes"  ;;
-      --with-mysql-incdir=*)   mysqlincdir=$optarg   ; enable_mysql="yes"   ;;
-      --with-mysql-libdir=*)   mysqllibdir=$optarg   ; enable_mysql="yes"   ;;
       --with-pgsql-incdir=*)   pgsqlincdir=$optarg   ; enable_pgsql="yes"   ;;
       --with-pgsql-libdir=*)   pgsqllibdir=$optarg   ; enable_pgsql="yes"   ;;
-      --with-sapdb-incdir=*)   sapdbincdir=$optarg   ; enable_sapdb="yes"   ;;
-      --with-sapdb-libdir=*)   sapdblibdir=$optarg   ; enable_sapdb="yes"   ;;
       --with-pythia-libdir=*)  pythialibdir=$optarg  ; enable_pythia="yes"  ;;
       --with-pythia6-libdir=*) pythia6libdir=$optarg ; enable_pythia6="yes" ;;
-      --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
-      --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
+      --with-sapdb-incdir=*)   sapdbincdir=$optarg   ; enable_sapdb="yes"   ;;
+      --with-sapdb-libdir=*)   sapdblibdir=$optarg   ; enable_sapdb="yes"   ;;
       --with-shift-libdir=*)   shiftlibdir=$optarg   ; enable_rfio="yes"    ;;
-      --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
-      --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
-      --with-alien-incdir=*)   alienincdir=$optarg   ; enable_alien="yes"   ;;
-      --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
-      --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-srp-incdir=*)     srpincdir=$optarg     ; enable_srp="yes"     ;;
       --with-srp-libdir=*)     srplibdir=$optarg     ; enable_srp="yes"     ;;
-      --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
-      --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
+      --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-sys-iconpath=*)   extraiconpath=$optarg ;;
+      --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
+      --with-ttf-fontdir=*)    ttffontdir=$optarg    ; enable_ttf="yes"     ;;
+      --with-ttf-incdir=*)     ttfincdir=$optarg     ; enable_ttf="yes"     ;;
+      --with-ttf-libdir=*)     ttflibdir=$optarg     ; enable_ttf="yes"     ;;
+      --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
+      --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
       ################################################################
       #
       # Enable/disable to turn on/off third party software linkage and
@@ -471,22 +485,23 @@ if test $# -gt 0 ; then
       #
       # Install path options
       #
-      --prefix*)      haveconfig=-DHAVE_CONFIG ; prefix=$optarg      ;;
+      --aclocaldir=*) haveconfig=-DHAVE_CONFIG ; aclocaldir=$optarg  ;;
       --bindir=*)     haveconfig=-DHAVE_CONFIG ; bindir=$optarg      ;;
-      --libdir=*)     haveconfig=-DHAVE_CONFIG ; libdir=$optarg      ;;
-      --incdir=*)     haveconfig=-DHAVE_CONFIG ; incdir=$optarg      ;;
-      --etcdir=*)     haveconfig=-DHAVE_CONFIG ; etcdir=$optarg      ;;
-      --mandir=*)     haveconfig=-DHAVE_CONFIG ; mandir=$optarg      ;;
-      --datadir=*)    haveconfig=-DHAVE_CONFIG ; datadir=$optarg     ;;
-      --macrodir=*)   haveconfig=-DHAVE_CONFIG ; macrodir=$optarg    ;;
       --cintincdir=*) haveconfig=-DHAVE_CONFIG ; cintincdir=$optarg  ;;
-      --iconpath=*)   haveconfig=-DHAVE_CONFIG ; iconpath=$optarg    ;;
-      --srcdir=*)     haveconfig=-DHAVE_CONFIG ; srcdir=$optarg      ;;
+      --datadir=*)    haveconfig=-DHAVE_CONFIG ; datadir=$optarg     ;;
       --docdir=*)     haveconfig=-DHAVE_CONFIG ; docdir=$optarg      ;;
+      --elispdir=*)   haveconfig=-DHAVE_CONFIG ; elispdir=$optarg    ;;
+      --etcdir=*)     haveconfig=-DHAVE_CONFIG ; etcdir=$optarg      ;;
+      --iconpath=*)   haveconfig=-DHAVE_CONFIG ; iconpath=$optarg    ;;
+      --incdir=*)     haveconfig=-DHAVE_CONFIG ; incdir=$optarg      ;;
+      --libdir=*)     haveconfig=-DHAVE_CONFIG ; libdir=$optarg      ;;
+      --macrodir=*)   haveconfig=-DHAVE_CONFIG ; macrodir=$optarg    ;;
+      --mandir=*)     haveconfig=-DHAVE_CONFIG ; mandir=$optarg      ;;
+      --pkglist*)     show_pkglist="yes" ; noact="yes";;
+      --prefix*)      haveconfig=-DHAVE_CONFIG ; prefix=$optarg      ;;
+      --srcdir=*)     haveconfig=-DHAVE_CONFIG ; srcdir=$optarg      ;;
       --testdir=*)    haveconfig=-DHAVE_CONFIG ; testdir=$optarg     ;;
       --tutdir=*)     haveconfig=-DHAVE_CONFIG ; tutdir=$optarg      ;;
-      --aclocaldir=*) haveconfig=-DHAVE_CONFIG ; aclocaldir=$optarg  ;;
-      --pkglist*)     show_pkglist="yes" ; noact="yes";;
       *)  echo "Invalid option '$1'. Try $0 --help" ; exit 1 ;;
       esac
       shift
@@ -587,7 +602,6 @@ if test "x$enable_thread" = "xyes" && test ! "$platform" = "win32" ; then
         enable_thread="no"
     fi
 fi
-
 
 ######################################################################
 #
@@ -1209,7 +1223,7 @@ fi
 ### echo %%% Shadow password support
 #
 
-echo $ac_n "Checking for shadow passwords ... $ac_c"
+checking_msg "shadow passwords"
 
 if test "x$enable_shadowpw" = "x"; then
    if test -f "/etc/shadow"; then
@@ -1229,11 +1243,13 @@ echo $enable_shadowpw
 #
 ### echo %%% Table Library - Contributed library
 #
+message "Checking whether to build libTable"
 if test "x$enable_table" = "xyes" || test ! "x$TABLE" = "x"; then
     enable_table="1"
-    echo "Building libTable ... yes"
+    echo "yes"
 else
     enable_table=""
+    echo "no"
 fi
 
 
@@ -1246,15 +1262,18 @@ fi
 # system.
 #
 if test "x$show_pkglist" = "xyes" ; then
-    pkglist="task-root root-daemon"
+    pkglist="root-daemon"
     test "x$enable_ttf" = "xyes" && pkglist="$pkglist root-ttf"
     test "x$enable_cern" = "xyes" && pkglist="$pkglist root-zebra"
-    test "x$enable_opengl" = "xyes" && pkglist="$pkglist root-gl"
+    if test "x$enable_openiv" = "xyes" ; then
+	pkglist="$pkglist root-gliv"
+    elif test "x$enable_opengl" = "xyes" ; then
+	pkglist="$pkglist root-gl"
+    fi
     test "x$enable_mysql" = "xyes" && pkglist="$pkglist root-mysql"
     test "x$enable_pgsql" = "xyes" && pkglist="$pkglist root-pgsql"
     test "x$enable_sapdb" = "xyes" && pkglist="$pkglist root-sapdb"
     test "x$enable_pythia" = "xyes" && test "x$enable_pythia6" = "xyes" && pkglist="$pkglist root-pythia"
-    test "x$enable_table" = "x1" && pkglist="$pkglist root-table"
     test "x$enable_rfio" = "xyes" && pkglist="$pkglist root-shift"
     test "x$enable_srputil" = "xyes" && pkglist="$pkglist root-srp"
 
@@ -1278,19 +1297,19 @@ fi
 ### echo %%% Create needed directories
 #
 if test ! -d include ; then
-   echo $ac_n "Creating include ... $ac_c"
+   message "Creating include"
    mkdir include
    echo "done"
 fi
 if test ! -d bin ; then
-    echo $ac_n "Creating bin ... $ac_c"
-    mkdir bin
-    echo "done"
+   message "Creating bin"
+   mkdir bin
+   echo "done"
 fi
 if test ! -d lib ; then
-    echo $ac_n "Creating lib ... $ac_c"
-    mkdir lib
-    echo "done"
+   message "Creating lib"
+   mkdir lib
+   echo "done"
 fi
 
 ######################################################################
@@ -1348,6 +1367,7 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$testdir" = "x";      then testdir=$docdir/test; fi
     if test "x$tutdir" = "x";       then tutdir=$docdir/tutorials; fi
     if test "x$aclocaldir" = "x";   then aclocaldir=$prefix/share/aclocal; fi
+    if test "x$elispdir" = "x";     then elispdir=$prefix/share/emacs/site-lisp; fi
 
     sed -e "s|@useconfig@|TRUE|"                       \
         -e "s|@cflags@|-DHAVE_CONFIG|"                 \
@@ -1380,6 +1400,7 @@ else
     testdir=\$\(ROOTSYS\)/test
     tutdir=\$\(ROOTSYS\)/tutorials
     aclocaldir=\$\(ROOTSYS\)/build/misc
+    elispdir=\$\(ROOTSYS\)/build/misc
 
     sed -e "s|@useconfig@|FALSE|" \
         -e "s|@cflags@||"         \
@@ -1395,81 +1416,83 @@ fi
 #---------------------------------------------------------------------
 # config/Makefile.config
 #
-echo $ac_n "Writing $MAKEOUT ... $ac_c"
-sed -e "s|@architecture@|$arch|"            \
-    -e "s|@rootbuild@|$rootbuild|"          \
-    -e "s|@mkliboption@|$mkliboption|"      \
-    -e "s|@ldflags@||"                      \
-    -e "s|@bindir@|$bindir|"                \
-    -e "s|@libdir@|$libdir|"                \
-    -e "s|@incdir@|$incdir|"                \
-    -e "s|@etcdir@|$etcdir|"                \
-    -e "s|@mandir@|$mandir|"                \
-    -e "s|@datadir@|$datadir|"              \
-    -e "s|@proofdir@|$proofdir|"            \
-    -e "s|@macrodir@|$macrodir|"            \
-    -e "s|@cintincdir@|$cintincdir|"        \
-    -e "s|@iconpath@|$iconpath|"            \
-    -e "s|@docdir@|$docdir|"                \
-    -e "s|@testdir@|$testdir|"              \
-    -e "s|@tutdir@|$tutdir|"                \
+message "Writing $MAKEOUT"
+sed \
     -e "s|@aclocaldir@|$aclocaldir|"        \
-    -e "s|@srcdir@|$srcdir|"                \
-    -e "s|@xpmlibdir@|$xpmlibdir|"          \
-    -e "s|@xpmlib@|$xpmlib|"                \
-    -e "s|@enable_table@|$enable_table|"    \
-    -e "s|@enable_thread@|$enable_thread|"  \
-    -e "s|@threadlibdir@|$threadlibdir|"    \
-    -e "s|@threadlib@|$threadlib|"          \
-    -e "s|@ttfincdir@|$ttfincdir|"          \
-    -e "s|@ttflibdir@|$ttflibdir|"          \
-    -e "s|@ttflib@|$ttflib|"                \
-    -e "s|@ttffontdir@|$ttffontdir|"        \
-    -e "s|@openglincdir@|$openglincdir|"    \
-    -e "s|@opengllibdir@|$opengllibdir|"    \
-    -e "s|@openglulib@|$openglulib|"        \
-    -e "s|@opengllib@|$opengllib|"          \
-    -e "s|@openivincdir@|$openivincdir|"    \
-    -e "s|@openivlibdir@|$openivlibdir|"    \
-    -e "s|@openivlib@|$openivlib|"          \
-    -e "s|@mysqlincdir@|$mysqlincdir|"      \
-    -e "s|@mysqllibdir@|$mysqllibdir|"      \
-    -e "s|@mysqllib@|$mysqllib|"            \
-    -e "s|@pgsqlincdir@|$pgsqlincdir|"      \
-    -e "s|@pgsqllibdir@|$pgsqllibdir|"      \
-    -e "s|@pgsqllib@|$pgsqllib|"            \
-    -e "s|@sapdbincdir@|$sapdbincdir|"      \
-    -e "s|@sapdblibdir@|$sapdblibdir|"      \
-    -e "s|@sapdblib@|$sapdblib|"            \
+    -e "s|@afslib@|$afslib|"                \
+    -e "s|@afslibdir@|$afslibdir|"          \
+    -e "s|@alienincdir@|$alienincdir|"      \
+    -e "s|@alienlib@|$alienlib|"            \
+    -e "s|@alienlibdir@|$alienlibdir|"      \
+    -e "s|@architecture@|$arch|"            \
+    -e "s|@bindir@|$bindir|"                \
     -e "s|@cernlibdir@|$cernlibdir|"        \
     -e "s|@cernlibs@|$cernlib|"             \
-    -e "s|@shiftlibdir@|$shiftlibdir|"      \
-    -e "s|@shiftlib@|$shiftlib|"            \
+    -e "s|@cintincdir@|$cintincdir|"        \
+    -e "s|@datadir@|$datadir|"              \
     -e "s|@dcapincdir@|$dcapincdir|"        \
-    -e "s|@dcaplibdir@|$dcaplibdir|"        \
     -e "s|@dcaplib@|$dcaplib|"              \
-    -e "s|@alienincdir@|$alienincdir|"      \
-    -e "s|@alienlibdir@|$alienlibdir|"      \
-    -e "s|@alienlib@|$alienlib|"            \
-    -e "s|@srplib@|$srplib|"                \
+    -e "s|@dcaplibdir@|$dcaplibdir|"        \
+    -e "s|@docdir@|$docdir|"                \
+    -e "s|@elispdir@|$elispdir|"            \
+    -e "s|@enable_table@|$enable_table|"    \
+    -e "s|@enable_thread@|$enable_thread|"  \
+    -e "s|@etcdir@|$etcdir|"                \
+    -e "s|@exceptions@|$enable_exceptions|" \
+    -e "s|@iconpath@|$iconpath|"            \
+    -e "s|@incdir@|$incdir|"                \
+    -e "s|@krb5incdir@|$krb5incdir|"        \
+    -e "s|@krb5lib@|$krb5lib|"              \
+    -e "s|@krb5libdir@|$krb5libdir|"        \
+    -e "s|@ldflags@||"                      \
+    -e "s|@libdir@|$libdir|"                \
+    -e "s|@macrodir@|$macrodir|"            \
+    -e "s|@mandir@|$mandir|"                \
+    -e "s|@mkliboption@|$mkliboption|"      \
+    -e "s|@mysqlincdir@|$mysqlincdir|"      \
+    -e "s|@mysqllib@|$mysqllib|"            \
+    -e "s|@mysqllibdir@|$mysqllibdir|"      \
+    -e "s|@openglincdir@|$openglincdir|"    \
+    -e "s|@opengllib@|$opengllib|"          \
+    -e "s|@opengllibdir@|$opengllibdir|"    \
+    -e "s|@openglulib@|$openglulib|"        \
+    -e "s|@openivincdir@|$openivincdir|"    \
+    -e "s|@openivlib@|$openivlib|"          \
+    -e "s|@openivlibdir@|$openivlibdir|"    \
+    -e "s|@pgsqlincdir@|$pgsqlincdir|"      \
+    -e "s|@pgsqllib@|$pgsqllib|"            \
+    -e "s|@pgsqllibdir@|$pgsqllibdir|"      \
+    -e "s|@proofdir@|$proofdir|"            \
+    -e "s|@pythia6lib@|$pythia6lib|"        \
+    -e "s|@pythia6libdir@|$pythia6libdir|"  \
+    -e "s|@pythialib@|$pythialib|"          \
+    -e "s|@pythialibdir@|$pythialibdir|"    \
+    -e "s|@rootbuild@|$rootbuild|"          \
+    -e "s|@sapdbincdir@|$sapdbincdir|"      \
+    -e "s|@sapdblib@|$sapdblib|"            \
+    -e "s|@sapdblibdir@|$sapdblibdir|"      \
+    -e "s|@shadowpw@|$shadowpw|"            \
+    -e "s|@shiftlib@|$shiftlib|"            \
+    -e "s|@shiftlibdir@|$shiftlibdir|"      \
+    -e "s|@srcdir@|$srcdir|"                \
     -e "s|@srpincdir@|$srpincdir|"          \
+    -e "s|@srplib@|$srplib|"                \
     -e "s|@srplibdir@|$srplibdir|"          \
+    -e "s|@srputilincdir@|$srputilincdir|"  \
     -e "s|@srputillib@|$srputillib|"        \
     -e "s|@srputillibdir@|$srputillibdir|"  \
-    -e "s|@srputilincdir@|$srputilincdir|"  \
-    -e "s|@afslibdir@|$afslibdir|"          \
-    -e "s|@afslib@|$afslib|"                \
-    -e "s|@krb5incdir@|$krb5incdir|"        \
-    -e "s|@krb5libdir@|$krb5libdir|"        \
-    -e "s|@krb5lib@|$krb5lib|"              \
-    -e "s|@shadowpw@|$shadowpw|"            \
-    -e "s|@pythialibdir@|$pythialibdir|"    \
-    -e "s|@pythialib@|$pythialib|"          \
-    -e "s|@pythia6libdir@|$pythia6libdir|"  \
-    -e "s|@pythia6lib@|$pythia6lib|"        \
-    -e "s|@venuslibdir@|$venuslibdir|"      \
+    -e "s|@testdir@|$testdir|"              \
+    -e "s|@threadlib@|$threadlib|"          \
+    -e "s|@threadlibdir@|$threadlibdir|"    \
+    -e "s|@ttffontdir@|$ttffontdir|"        \
+    -e "s|@ttfincdir@|$ttfincdir|"          \
+    -e "s|@ttflib@|$ttflib|"                \
+    -e "s|@ttflibdir@|$ttflibdir|"          \
+    -e "s|@tutdir@|$tutdir|"                \
     -e "s|@venuslib@|$venuslib|"            \
-    -e "s|@exceptions@|$enable_exceptions|" \
+    -e "s|@venuslibdir@|$venuslibdir|"      \
+    -e "s|@xpmlib@|$xpmlib|"                \
+    -e "s|@xpmlibdir@|$xpmlibdir|"          \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 echo "done"
@@ -1477,8 +1500,8 @@ echo "done"
 #---------------------------------------------------------------------
 # test/Makefile
 #
-echo $ac_n "Writing $TMAKEOUT ... $ac_c"
-sed -e "s|@architecture@|$arch|"         \
+message "Writing $TMAKEOUT"
+sed -e "s|@architecture@|$arch|"           \
     < TMakefile.tmp > $TMAKEOUT
 rm -f TMakefile.tmp
 echo "done"
@@ -1486,20 +1509,21 @@ echo "done"
 #---------------------------------------------------------------------
 # include/config.h
 #
-echo $ac_n "Writing $CONFOUT ... $ac_c"
-sed -e "s|@architecture@|$arch|"           \
-    -e "s|@prefix@|$prefix|"               \
+message "Writing $CONFOUT"
+sed \
+    -e "s|@architecture@|$arch|"           \
     -e "s|@bindir@|$bindir|"               \
-    -e "s|@libdir@|$libdir|"               \
-    -e "s|@incdir@|$incdir|"               \
-    -e "s|@etcdir@|$etcdir|"               \
-    -e "s|@datadir@|$datadir|"             \
-    -e "s|@macrodir@|$macrodir|"           \
     -e "s|@cintincdir@|$cintincdir|"       \
+    -e "s|@datadir@|$datadir|"             \
+    -e "s|@etcdir@|$etcdir|"               \
+    -e "s|@extraiconpath@|$extraiconpath|" \
     -e "s|@iconpath@|$iconpath|"           \
+    -e "s|@incdir@|$incdir|"               \
+    -e "s|@libdir@|$libdir|"               \
+    -e "s|@macrodir@|$macrodir|"           \
+    -e "s|@prefix@|$prefix|"               \
     -e "s|@srcdir@|$srcdir|"               \
     -e "s|@ttffontdir@|$ttffontdir|"       \
-    -e "s|@extraiconpath@|$extraiconpath|" \
     < config.tmp > $CONFOUT
 rm -f config.tmp
 echo "done"
@@ -1507,7 +1531,7 @@ echo "done"
 #---------------------------------------------------------------------
 # bin/root-config
 #
-echo $ac_n "Writing $RCONFOUT ... $ac_c"
+message "Writing $RCONFOUT"
 prefix2=$prefix
 incdir2=$incdir
 libdir2=$libdir
@@ -1537,7 +1561,7 @@ echo "done"
 #---------------------------------------------------------------------
 # etc/system.rootrc
 #
-echo $ac_n "Writing $ROOTRCOUT ... $ac_c"
+message "Writing $ROOTRCOUT"
 if test "$ttffontdir" = "$HOME/ttf" ; then
    ttffontdir=\$\(HOME\)/ttf
 fi
@@ -1557,7 +1581,7 @@ echo "done"
 #---------------------------------------------------------------------
 # etc/root.mimes
 #
-echo $ac_n "Writing $MIMEOUT ... $ac_c"
+message "Writing $MIMEOUT"
 if test "$platform" = "win32" ; then
    cp -f $MIMEWIN32IN $MIMEOUT
 else
@@ -1568,7 +1592,7 @@ echo "done"
 #---------------------------------------------------------------------
 # bin/memprobe
 #
-echo $ac_n "Writing $MEMPROBEOUT ... $ac_c"
+message "Writing $MEMPROBEOUT"
 if test -x /usr/bin/env ; then
    perlexe="/usr/bin/env perl"
 else
@@ -1580,6 +1604,16 @@ rm -f memprobe.tmp
 chmod 755 $MEMPROBEOUT
 echo "done"
 
+#---------------------------------------------------------------------
+# build/misc/root-help.el
+#
+message "Writing build/misc/root-help.el"
+sed -e "s|@bindir@|$bindir|"           \
+    -e "s|@incdir@|$incdir|"           \
+    < config/root-help.el.in > build/misc/root-help.el
+echo "done"
+
+
 ######################################################################
 #
 # FAT conversion in test/tutorials
@@ -1589,7 +1623,7 @@ echo "done"
 # have made the conversion).
 #
 if test "x$platform" = "xwin32"  && test ! -d CVS ; then
-   echo $ac_n "Converting files in tutorials and test to DOS format ... $ac_c"
+   message "Converting files in tutorials and test to DOS format"
    for i in tutorials/*.C tutorials/*.sql test/*.cxx test/*.h \
             test/Makefile* test/README etc/system.rootrc
    do

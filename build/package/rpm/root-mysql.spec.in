@@ -12,3 +12,7 @@ Summary: @short@
 # Files that go into this package 
 %files -n root-mysql -f @files@
 
+#---------------
+%post -n root-mysql
+    # Update /etc/ld.so.cache
+    ldconfig 

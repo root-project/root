@@ -1,5 +1,5 @@
 #! /bin/sh
-# postinst script for root-lib
+# postinst script for root-cint
 #
 # see: dh_installdeb(1)
 
@@ -7,11 +7,16 @@ set -e
 
 case "$1" in
     configure)
-@postinst@
+	# Add @prefix@/lib/root to the directories searched by ldd, if not
+	# so already 
+	if ! grep -qs ^@prefix@/lib/root\$ /etc/ld.so.conf ; then
+                echo @prefix@/lib/root >> /etc/ld.so.conf
+	fi
 	;;
     abort-upgrade|abort-remove|abort-deconfigure)
 	# Nothing to be done here
 	;;
+
     *)
         echo "postinst called with unknown argument \`$1'" >&2
         exit 0

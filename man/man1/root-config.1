@@ -1,5 +1,5 @@
 .\"
-.\" $Id: root-config.1,v 1.1 2001/08/15 13:30:48 rdm Exp $
+.\" $Id: root-config.1,v 1.2 2002/01/20 14:23:52 rdm Exp $
 .\"
 .TH ROOT-CONFIG 1 "Version 3" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
@@ -13,41 +13,42 @@ root-config \- ROOT utility for your Makefiles
 Put lines like 
 .RS 
 .nf 
+
 CFLAGS = $(shell root-config --cflags)
 LIBS   = $(shell root-config --libs)
 GLIBS  = $(shell root-config --glibs)
 
-%Cint.cxx:%Inc.h %LinkDef.h
+%Cint.cxx:Include.h LinkDef.h
         rootcint -f $@ -c $^ 
+
 .fi
 .RE
 in you Makefile.
 .PP
 You may also find the \fIautomake\fR(1), \fIautoconf\fR(1), and
 \fIlibtool\fR(1) macro file \fI/usr/share/aclocal/root.m4\fR
-useful. In the directories you use \fBROOT\fR libraries, have in your 
-\fIMakefile.am\fR file:
+useful.  If that macro file isn't installed where \dIaclocal\fR will
+find it, copy the contents to your local \fIacinclude.m4\fR file.  In
+the directories you use \fBROOT\fR libraries, have in your
+\fIMakefile.am\fR file: 
 .RS 
 .nf 
-ROOTCINT                = @ROOTCINT@
-ROOTLDFLAGS             = -L@ROOTLIBDIR@
-ROOTCPPFLAGS            = -I@ROOTINCDIR@
-ROOTLIBS                = @ROOTLIBS@
-ROOTCFLAGS              = @ROOTCFLAGS@
 
 lib_LTLIBRARIES         = libFoo.la
-libFoo_la_SOURCES       = Foo.cxx       Foo.h \\
-                          FooCint.cxx   FooCint.h
-libFoo_la_LDFLAGS       = -version-info 1:0
+pkginclude_HEADERS      = Foo.h
+noinst_HEADERS          = FooCint.h
+libFoo_la_SOURCES       = Foo.cxx FooCint.cxx   
+libFoo_la_LDFLAGS       = -version-info 1:0 -R @ROOTLIBDIR@
+libFoo_la_LDADD         = -lCore -lCint @ROOTAUXLIBS@
 
 BUILT_SOURCES           = FooCint.cxx FooCint.h 
 
-AM_CPPFLAGS             = $(ROOTCPPFLAGS)
-AM_LDFLAGS              = $(ROOTLDFLAGS)
+AM_CPPFLAGS             = -I@ROOTINCDIR@
+AM_LDFLAGS              = -L@ROOTLIBDIR@
 CLEANFILES              = *Cint.cxx *Cint.h *~ core 
 
-%Cint.cxx %Cint.h:%Inc.h %LinkDef.h
-        $(ROOTCINT) -f $*Cint.cxx -c $(INCLUDES) $(AM_CPPFLAGS) $^  
+%Cint.cxx %Cint.h:Include.h LinkDef.h
+        @ROOTCINT@ -f $*Cint.cxx -c $(INCLUDES) $(AM_CPPFLAGS) $^  
 
 .fi
 .RE
@@ -56,14 +57,92 @@ appropiate source files in the \fB_SOURCES\fR variable. In you
 \ficonfigure.in\fR file, put:
 .RS
 .nf
+
 AC_PROG_CC
 AC_PROG_CXX
 ROOT_PATH
 AM_PROG_LIBTOOL
+
 .fi
 .RE
 along with any other macros you may need. 
+.PP
+Note that the \fBROOT_PATH\fR macro takes three optional arguments:
+the minimal \fBROOT\fR version to use, action if \fBROOT\fR is found,
+and action if \fBROOT\fR isn't found.  Some examples are 
+.RS
+.nf
 
+ROOT_PATH(3.03/05, , AC_MSG_ERROR(Your ROOT version is too old))
+ROOT_PATH(, AC_DEFUN(HAVE_ROOT))
+
+.fi
+.RE
+For example, if you want to compile some part of your source tree
+conditionally on wether \fBROOT\fR is present or not, you can put in
+your \fIconfigure.in\fR file 
+.RS
+.nf
+
+ROOT_PATH(,
+[
+  AC_DEFUN(HAVE_ROOT)
+  have_root=yes  
+])
+AM_CONDITIONAL(GOT_ROOT, test "x$have_root" = "xyes")
+
+.fi
+.RE
+And then in some \fIMakefile.am\fR
+.RS
+.nf
+
+EXTRA_SOURCES		= root_depenent_source.cc
+if GOT_ROOT
+LIBFOOXTRA              = root_depenent_source.cc
+else
+LIBFOOXTRA              =
+endif
+
+lib_LTLIBRARIES         = libFoo.la
+libFoo_la_SOURCES	= Foo.cc  $(LIBFOOXTRA)
+
+.fi
+.RE
+The full list of substitution variables are:
+.TP
+.B ROOTCONF
+full path to \fIroot-config\fR
+.TP
+.B ROOTEXEC
+full path to \fIroot\fR
+.TP
+.B ROOTCINT
+full path to \fIrootcint\fR
+.TP
+.B ROOTLIBDIR
+Where the \fBROOT\fR libraries are 
+.TP
+.B ROOTINCDIR
+Where the \fBROOT\fR headers are 
+.TP
+.B ROOTCFLAGS
+Extra compiler flags
+.TP
+.B ROOTLIBS
+\fBROOT\fR basic libraries 
+.TP
+.B ROOTGLIBS
+\fBROOT\fR basic + GUI libraries
+.TP
+.B ROOTAUXLIBS
+Auxilary libraries and linker flags for \fBROOT\fR
+.TP
+.B ROOTAUXCFLAGS
+Auxilary compiler flags 
+.TP
+.B ROOTRPATH
+Same as \fBROOTLIBDIR\fR
 .SH OPTIONS 
 .TP 
 .B --help
@@ -169,15 +248,5 @@ This manual page was written by Christian Holm Christensen
 <cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
 others). 
 .\"
-.\" $Log: root-config.1,v $
-.\" Revision 1.1  2001/08/15 13:30:48  rdm
-.\" move man files to new subdir man1. This makes it possible to add
-.\" $ROOTSYS/man to MANPATH and have "man root" work.
-.\"
-.\" Revision 1.2  2001/04/23 09:10:12  rdm
-.\" updates by Christian Holm for making debian and RedHat packages.
-.\"
-.\" Revision 1.1  2000/12/08 17:41:01  rdm
-.\" man pages of all ROOT executables provided by Christian Holm.
-.\"
+.\" EOF
 .\"

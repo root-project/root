@@ -12,3 +12,12 @@ Summary: @short@
 # Files that go into this package 
 %files -n libroot -f @files@
 
+#-----------------
+%post -n libroot
+    # Add @prefix@/lib/root to the directories searched by ldd, if not
+    # so already 
+    if ! grep -qs ^@prefix@/lib/root\$ /etc/ld.so.conf ; then
+        echo @prefix@/lib/root >> /etc/ld.so.conf
+    fi
+    # update /etc/ld.so.cache 
+    ldconfig 

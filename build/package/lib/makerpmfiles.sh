@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmfiles.sh,v 1.2 2002/01/20 14:23:52 rdm Exp $
+# $Id: makerpmfiles.sh,v 1.3 2002/05/14 15:45:28 rdm Exp $
 #
 # Make filelists files for all packages. 
 #  
@@ -37,11 +37,6 @@ types="files conffiles docs examples shlibs"
 
 ### echo %%% loop over the defined packages in specific order
 for p in $pkgs ; do 
-    ### echo %%% skip the task package
-    if test "x$p" = "xtask-root" ; then 
-	continue
-    fi 
-
     ### echo %%% make sure we have a fresh file 
     rm -f ${cmndir}/tmp 
 
@@ -96,11 +91,6 @@ done
 
 ### echo %%% Loop over the packages, and make the filelists
 for p in $pkgs ; do 
-    ### echo %%% skip the task package
-    if test "x$p" = "xtask-root" ; then 
-	continue
-    fi 
-    
     ### echo %%% if tar archive does not exit, continue to next 
     if test ! -f ${blddir}/${p}.tar ; then
 	echo "No such file: ${blddir}/${p}.tar - strange"
@@ -140,6 +130,9 @@ done
 
 #
 # $Log: makerpmfiles.sh,v $
+# Revision 1.3  2002/05/14 15:45:28  rdm
+# several Debian related packaging and build changes. By Christian Holm.
+#
 # Revision 1.2  2002/01/20 14:23:52  rdm
 # Mega patch by Christian Holm concerning the configure, build and
 # Debian and RedHat packaging scripts. The configure script has been

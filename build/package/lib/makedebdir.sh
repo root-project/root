@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: makedebdir.sh,v 1.4 2002/05/14 15:45:28 rdm Exp $
+# $Id: makedebdir.sh,v 1.5 2002/05/27 16:27:56 rdm Exp $
 #
 # Make the debian packaging directory 
 #
@@ -18,10 +18,11 @@ etcdir=etc/root
 docdir=${prefix}/share/doc/root-doc 
 
 ### echo %%% Packages ordered by preference
-pkgs="task-root root-daemon root-ttf root-zebra root-gl root-mysql root-pgsql root-table root-shift root-cint root-bin libroot-dev libroot"
+pkgs="root-daemon root-ttf root-zebra root-gl root-mysql root-pgsql root-table root-shift root-cint root-bin libroot-dev libroot"
 pkgs=`./configure linuxdeb --pkglist --enable-soversion --enable-table --enable-thread --enable-shared | sed -n 's,packages: ,,p'`
 ### echo %%% Package list is: $pkgs
 lvls="preinst postinst prerm postrm"
+
 
 ### echo %%% ROOT version 
 major=`sed 's|\(.*\)\..*/.*|\1|' < ${vrsfil}`
@@ -35,15 +36,12 @@ mkdir -p ${tgtdir}
 ### echo %%% Copy the README file to the directory 
 sed -e "s,@prefix@,/${prefix},g" \
     -e "s,@etcdir@,/${etcdir},g" \
-    < ${cmndir}/README > ${tgtdir}/README.Debian 
-
-### echo %%% Copy task-root readme 
-cp ${debdir}/task-root.README.Debian ${tgtdir}
+    < ${cmndir}/README > ${tgtdir}/root-doc.README.Debian 
 
 ### echo %%% Copy root-bin menu file
 sed -e "s,@prefix@,/${prefix},g" \
     -e "s,@etcdir@,/${etcdir},g" \
-    < ${debdir}/root-bin.menu > ${tgtdir}/root-bin.menu
+    < ${debdir}/root-bin.menu.in > ${tgtdir}/root-bin.menu
 
 ### echo %%% Copy watch file 
 cp ${debdir}/watch ${tgtdir}
@@ -72,8 +70,9 @@ for i in $pkgs; do
     # That is, we don't have to worry if the entry is the first in the
     # list, because it never is. Thank god for that. 
     root-gl)     bd="${bd}, libgl-dev" ;; 
-    root-mysql)  bd="${bd}, libmysqlclient6-dev (>= 3.22.30)" ;;
-    root-pgsql)  bd="${bd}, libpostgresql-dev (>= 6.5.3-23) | postgresql-dev" ;;
+    root-gliv)   bd="${bd}, inventor-dev, libgl-dev, lesstif-dev" ;;
+    root-mysql)  bd="${bd}, libmysqlclient-dev" ;;
+    root-pgsql)  bd="${bd}, postgresql-dev" ;;
     root-pythia) bd="${bd}, libpythia-dev" ;; 
     root-ttf)    bd="${bd}, freetype2-dev" ;; 
     *) ;;
@@ -105,8 +104,8 @@ for i in ${pkgs} ; do
 
     ### echo %%% make the kinds of scripts 
     for j in $lvls ; do 
-	${libdir}/makedebscr.sh $tgtdir $debdir $cmndir \
-	    $prefix $etcdir $docdir $i $j 
+        ${libdir}/makedebscr.sh $tgtdir $debdir $cmndir \
+            $prefix $etcdir $docdir $i $j 
     done 
 
     ### echo %%% Update the rules file 
@@ -131,6 +130,9 @@ chmod 755 ${tgtdir}/rules
 
 #
 # $Log: makedebdir.sh,v $
+# Revision 1.5  2002/05/27 16:27:56  rdm
+# rename libStar to libTable.
+#
 # Revision 1.4  2002/05/14 15:45:28  rdm
 # several Debian related packaging and build changes. By Christian Holm.
 #

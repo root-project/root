@@ -2,5 +2,7 @@ Package: libroot-dev
 Section: devel
 Architecture: all
 Depends: libroot (= ${Source-Version}), libc6-dev, libstdc++-dev
+Suggests: root-bin (= ${Source-Version})
+Conflicts: root-star
 Description: @short@
 @long@

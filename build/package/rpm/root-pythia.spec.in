@@ -12,3 +12,7 @@ Summary: @short@
 # Files that go into this package 
 %files -n root-pythia -f @files@
 
+#---------------
+%post -n root-pythia
+    # Update /etc/ld.so.cache
+    ldconfig 

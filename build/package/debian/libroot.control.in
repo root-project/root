@@ -3,5 +3,6 @@ Section: libs
 Architecture: any
 Depends: root-cint (= ${Source-Version}), ${shlibs:Depends}
 Recommends: root-bin (= ${Source-Version}), libroot-dev (= ${Source-Version})
+Conflicts: root-star
 Description: @short@
 @long@

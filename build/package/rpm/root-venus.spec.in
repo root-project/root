@@ -12,3 +12,7 @@ Summary: @short@
 # Files that go into this package 
 %files -n root-venus -f @files@
 
+#---------------
+%post -n root-venus
+    # Update /etc/ld.so.cache
+    ldconfig 

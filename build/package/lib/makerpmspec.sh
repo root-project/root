@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspec.sh,v 1.3 2002/01/22 10:53:28 rdm Exp $
+# $Id: makerpmspec.sh,v 1.4 2002/05/27 16:27:56 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
@@ -15,9 +15,8 @@ tgtdir=rpm
 curdir=`pwd`
 
 ### echo %%% Packages ordered by preference
-pkgs="task-root root-daemon root-ttf root-zebra root-gl root-mysql root-pgsql root-table root-shift root-cint root-bin libroot-dev libroot"
+pkgs="root-daemon root-ttf root-zebra root-gl root-mysql root-pgsql root-table root-shift root-cint root-bin libroot-dev libroot"
 pkgs=`./configure linux --pkglist --enable-soversion --enable-table --enable-thread --enable-shared | sed -n 's,packages: ,,p'`
-lvls="preinst postinst prerm postrm"
 
 # ROOT version 
 major=`sed 's|\(.*\)\..*/.*|\1|' < ${vrsfil}`
@@ -49,7 +48,7 @@ for i in ${pkgs} ; do
     echo "Processing for package $i ... "
 
     ### echo %%% first insert the missing peices
-    ${libdir}/makerpmspecs.sh $tgtdir $cmndir $rpmdir "$lvls" $i >> root.spec
+    ${libdir}/makerpmspecs.sh $tgtdir $cmndir $rpmdir $i >> root.spec
 done 
 
 ### echo %%% finally cat the footer to the spec file 
@@ -71,6 +70,9 @@ sed -e "s|@libdir@|${libdir}|" \
 
 #
 # $Log: makerpmspec.sh,v $
+# Revision 1.4  2002/05/27 16:27:56  rdm
+# rename libStar to libTable.
+#
 # Revision 1.3  2002/01/22 10:53:28  rdm
 # port to Debian distribution of GNU/Hurd by Christian Holm.
 #

@@ -1,19 +1,17 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspecs.sh,v 1.1 2001/04/23 14:11:47 rdm Exp $
+# $Id: makerpmspecs.sh,v 1.2 2002/01/20 14:23:52 rdm Exp $
 #
 # Writes an entry in ../root.spec 
 #
 tgtdir=$1 ; shift
 cmndir=$1 ; shift
 rpmdir=$1 ; shift 
-lvls=$1   ; shift
 pkg=$1
 
 ### echo %%% "tgtdir:	$tgtdir"
 ### echo %%% "cmndir:	$cmndir"
 ### echo %%% "rpmdir:	$rpmdir"
-### echo %%% "lvls:	$lvls"
 ### echo %%% "pkg:	$pkg"
 
 ### echo %%% Check if skeleton and description file exist 
@@ -80,35 +78,10 @@ sed -e "/^@long@.*$/d" \
     < ${cmndir}/tmp > ${cmndir}/spec.tmp
 rm -f ${cmndir}/tmp
 
-### echo %%%  then insert the script bodies 
-for j in ${lvls} ; do 
-    if [ ! -f ${cmndir}/${pkg}.${j} ] ; then 
-	### echo %%% if body ${cmndir}/${pkg}.${j} does not exist, remove entry
-	continue
-    fi 
-
-    case $j in 
-    "preinst")  lvl="%pre" ;; 
-    "postinst") lvl="%post" ;; 
-    "prerm")    lvl="%preun" ;; 
-    "postrm")   lvl="%postun" ;; 
-    *)          echo "Unknown level $j - givin up" 1>&2 ; exit 2;;
-    esac
-
-    echo "#-----------------" >> ${cmndir}/spec.tmp 
-    echo "${lvl} -n ${pkg}"   >> ${cmndir}/spec.tmp 
-    sed 's,@prefix@,%_prefix,g' < ${cmndir}/${pkg}.${j} \
-			      >> ${cmndir}/spec.tmp 
-    echo ""                   >> ${cmndir}/spec.tmp 
-done 
-
 cat ${cmndir}/spec.tmp 
 echo "" 
 rm ${cmndir}/spec.tmp 
 
 #
-# $Log: makerpmspecs.sh,v $
-# Revision 1.1  2001/04/23 14:11:47  rdm
-# part of the debian and redhat build system.
-#
+# EOF
 #

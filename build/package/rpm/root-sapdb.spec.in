@@ -12,3 +12,7 @@ Summary: @short@
 # Files that go into this package 
 %files -n root-sapdb -f @files@
 
+#---------------
+%post -n root-sapdb
+    # Update /etc/ld.so.cache
+    ldconfig 

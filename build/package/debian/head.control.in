@@ -1,6 +1,6 @@
 Source: root
-Section: math
+Section: science
 Priority: optional
-Build-Depends: libxpm4-dev@build-depends@ 
 Maintainer: Christian Holm <cholm@nbi.dk>
-Standards-Version: 3.0.1
+Build-Depends: debhelper (>> 3.0.0), libxpm4-dev@build-depends@ 
+Standards-Version: 3.5.2

@@ -32,7 +32,7 @@
 	--prefix=%_prefix 				\
 	--etcdir=%_sysconfdir/root  			\
 	--docdir=%_defaultdocdir/root-doc-%ver          \
-        --enable-star 					\
+        --enable-table  				\
         --enable-thread 				\
         --enable-shared 				\
         --enable-soversion 				\

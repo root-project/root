@@ -12,3 +12,7 @@ Summary: @short@
 # Files that go into this package 
 %files -n root-srp -f @files@
 
+#---------------
+%post -n root-srp
+    # Update /etc/ld.so.cache
+    ldconfig 

@@ -12,3 +12,7 @@ Summary: @short@
 # Files that go into this package 
 %files -n root-pgsql -f @files@
 
+#---------------
+%post -n root-pgsql
+    # Update /etc/ld.so.cache
+    ldconfig 

@@ -1,6 +1,8 @@
 @prefix@/lib/root/libCore.so*
 @prefix@/lib/root/libEG.so*
 @prefix@/lib/root/libGX11.so*
+@prefix@/lib/root/libGeom.so*
+@prefix@/lib/root/libGeomPainter.so*
 @prefix@/lib/root/libGpad.so*
 @prefix@/lib/root/libGraf.so*
 @prefix@/lib/root/libGraf3d.so*
@@ -16,6 +18,7 @@
 @prefix@/lib/root/libPostscript.so*
 @prefix@/lib/root/libProof.so*
 @prefix@/lib/root/libRint.so*
+@prefix@/lib/root/libTable.so*
 @prefix@/lib/root/libThread.so*
 @prefix@/lib/root/libTree.so*
 @prefix@/lib/root/libTreePlayer.so*

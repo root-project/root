@@ -387,6 +387,7 @@ distclean:: clean
 	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog
+	@rm -f build/misc/root-help.el
 	-@cd test && $(MAKE) distclean
 
 maintainer-clean:: distclean
@@ -499,6 +500,9 @@ install:
 	   echo "Installing Autoconf macro in $(DESTDIR)$(ACLOCALDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ACLOCALDIR); \
 	   $(INSTALLDATA) build/misc/root.m4    $(DESTDIR)$(ACLOCALDIR); \
+	   echo "Installing Emacs Lisp library in $(DESTDIR)$(ELISPDIR)"; \
+	   $(INSTALLDIR)                          $(DESTDIR)$(ELISPDIR); \
+	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
 	   rm -rf $(DESTDIR)$(DATADIR)/CVS; \
 	fi
 

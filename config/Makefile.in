@@ -17,6 +17,7 @@ INCDIR         := @incdir@
 ETCDIR         := @etcdir@
 MANDIR         := @mandir@
 DATADIR        := @datadir@
+ELISPDIR       := @elispdir@
 PROOFDATADIR   := @proofdir@
 MACRODIR       := @macrodir@
 SRCDIR         := @srcdir@
