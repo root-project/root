@@ -98,7 +98,7 @@ elif [ $PLATFORM = "macosx" ]; then
    BUNDLE=`echo $LIB | sed s/.dylib/.so/`
    echo $LD $SOFLAGS $SONAME -o $LIB -ldl $OBJS $EXTRA
    $LD $SOFLAGS $SONAME -o $LIB -ldl $OBJS $EXTRA
-   echo $LD -bundle -flat_namespace -undefined suppress -nstall_name $BUNDLE -o $BUNDLE -ldl $OBJS $EXTRA
+   echo $LD -bundle -flat_namespace -undefined suppress -install_name $BUNDLE -o $BUNDLE -ldl $OBJS $EXTRA
    $LD -bundle -flat_namespace -undefined suppress -install_name $BUNDLE -o $BUNDLE -ldl $OBJS $EXTRA
 elif [ $LD = "KCC" ]; then
    echo $LD $LDFLAGS -o $LIB $OBJS $EXTRA
