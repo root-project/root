@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLColorEditor.cxx,v 1.5 2004/09/29 06:55:13 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.6 2004/10/04 07:38:37 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -72,7 +72,7 @@ enum EGLEditorIdent{
    kNEzc,
    kNExs,
    kNEys,
-   kNEzs,
+   kNEzs
 };
 
 //______________________________________________________________________________
