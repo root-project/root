@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.17 2001/05/10 07:42:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.18 2001/05/13 06:54:17 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -872,14 +872,18 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 //
 //   The projection is made from the channels along the Y axis
 //   ranging from firstybin to lastybin included.
+//   By default, bins 1 to ny are included
+//   When all bins are included, the number of entries in the projection
+//   is set to the number of entries of the 2-D histogram, otherwise
+//   the number of entries is incremented by 1 for all non empty cells.
 //
 
   TString opt = option;
   opt.ToLower();
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
-  if (firstybin < 0) firstybin = 0;
-  if (lastybin > ny) lastybin = ny+1;
+  if (firstybin < 0) firstybin = 1;
+  if (lastybin > ny) lastybin = ny;
 
 // Create the profile histogram
   char *pname = (char*)name;
@@ -907,6 +911,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
         }
      }
   }
+  if (firstybin <=1 && lastybin >= ny) h1->SetEntries(fEntries);
   return h1;
 }
 
@@ -918,14 +923,18 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
 //
 //   The projection is made from the channels along the X axis
 //   ranging from firstxbin to lastxbin included.
+//   By default, bins 1 to nx are included
+//   When all bins are included, the number of entries in the projection
+//   is set to the number of entries of the 2-D histogram, otherwise
+//   the number of entries is incremented by 1 for all non empty cells.
 //
 
   TString opt = option;
   opt.ToLower();
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
-  if (firstxbin < 0) firstxbin = 0;
-  if (lastxbin > nx) lastxbin = nx+1;
+  if (firstxbin < 0) firstxbin = 1;
+  if (lastxbin > nx) lastxbin = nx;
 
 // Create the projection histogram
   char *pname = (char*)name;
@@ -953,6 +962,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
         }
      }
   }
+  if (firstxbin <=1 && lastxbin >= nx) h1->SetEntries(fEntries);
   return h1;
 }
 
@@ -965,6 +975,10 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 //   The projection is always of the type TH1D.
 //   The projection is made from the channels along the Y axis
 //   ranging from firstybin to lastybin included.
+//   By default, bins 1 to ny are included
+//   When all bins are included, the number of entries in the projection
+//   is set to the number of entries of the 2-D histogram, otherwise
+//   the number of entries is incremented by 1 for all non empty cells.
 //
 //   if option "E" is specified, the errors are computed.
 //
@@ -973,8 +987,8 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
   opt.ToLower();
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
-  if (firstybin < 0) firstybin = 0;
-  if (lastybin > ny) lastybin = ny+1;
+  if (firstybin < 0) firstybin = 1;
+  if (lastybin > ny) lastybin = ny;
 
 // Create the projection histogram
   char *pname = (char*)name;
@@ -1008,6 +1022,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      }
      if (computeErrors) h1->SetBinError(binx,TMath::Sqrt(err2));
   }
+  if (firstybin <=1 && lastybin >= ny) h1->SetEntries(fEntries);
   return h1;
 }
 
@@ -1020,6 +1035,10 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
 //   The projection is always of the type TH1D.
 //   The projection is made from the channels along the X axis
 //   ranging from firstxbin to lastxbin included.
+//   By default, bins 1 to nx are included
+//   When all bins are included, the number of entries in the projection
+//   is set to the number of entries of the 2-D histogram, otherwise
+//   the number of entries is incremented by 1 for all non empty cells.
 //
 //   if option "E" is specified, the errors are computed.
 //
@@ -1028,8 +1047,8 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
   opt.ToLower();
   Int_t nx = fXaxis.GetNbins();
   Int_t ny = fYaxis.GetNbins();
-  if (firstxbin < 0) firstxbin = 0;
-  if (lastxbin > nx) lastxbin = nx+1;
+  if (firstxbin < 0) firstxbin = 1;
+  if (lastxbin > nx) lastxbin = nx;
 
 // Create the projection histogram
   char *pname = (char*)name;
@@ -1063,6 +1082,7 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      }
      if (computeErrors) h1->SetBinError(biny,TMath::Sqrt(err2));
   }
+  if (firstxbin <=1 && lastxbin >= nx) h1->SetEntries(fEntries);
   return h1;
 }
 
