@@ -35,7 +35,7 @@ GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 $(X11LIBDIR) -lX11 -lXext -lXmu -lXi -lm
 endif
 ifeq ($(ARCH),win32)
-GLLIBS       += opengl32.lib glu32.lib
+GLLIBS       := opengl32.lib glu32.lib
 endif
 
 GLS          := $(patsubst %,$(MODDIRS)/%,$(GLS))
@@ -60,7 +60,7 @@ include/%.h:    $(GLDIRI)/%.h
 $(GLLIB):       $(GLO) $(GLO1) $(GLDO) $(MAINLIBS) $(GLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
-		   "$(GLLIBEXTRA) $(GLLIBS) $(IVLIBS)"
+		   "$(GLLIBEXTRA) $(GLLIBS)"
 
 $(GLDS):	$(GLH1) $(GLL) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
