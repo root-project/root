@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.7 2001/06/18 02:12:38 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.8 2001/10/10 06:25:56 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -947,7 +947,8 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
    }
 
    // condition the matrix
-   for (Int_t irow = 0; irow < fNrows; irow++)
+   Int_t irow;
+   for (irow = 0; irow < fNrows; irow++)
    {
      for (Int_t icol = 0; icol < fNcols; icol++)
      {
@@ -1035,7 +1036,7 @@ TMatrix &TMatrix::Invert(Double_t *determ_ptr)
       *determ_ptr = (no_swaps & 1 ? -determinant : determinant);
 
    // revert our scaling
-   for (Int_t irow = 0; irow < fNrows; irow++)
+   for (irow = 0; irow < fNrows; irow++)
    {
      for (Int_t icol = 0; icol < fNcols; icol++)
      {
@@ -1093,12 +1094,13 @@ TMatrix &TMatrix::InvertPosDef()
    }
 
    Int_t off_n = (n-1)*n;
-   for (Int_t i = 0; i < n; i++)
+   Int_t i,l;
+   for (i = 0; i < n; i++)
    {
      Int_t off_i = i*n;
 
    // step 2: Forward substitution
-     for (Int_t l = i; l < n; l++)
+     for (l = i; l < n; l++)
      {
        if (l == i)
          pa[off_n+l] = 1./pu[l*n+l];
@@ -1112,7 +1114,7 @@ TMatrix &TMatrix::InvertPosDef()
      }
 
    // step 3: Back substitution
-     for (Int_t l = n-1; l >= i; l--)
+     for (l = n-1; l >= i; l--)
      {
        Int_t off_l = l*n;
        if (l == n-1)
