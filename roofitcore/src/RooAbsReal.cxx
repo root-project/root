@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.97 2003/11/12 23:20:40 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.98 2004/03/19 06:09:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -57,6 +57,7 @@ ClassImp(RooAbsReal)
 ;
 
 RooIntegratorConfig* RooAbsReal::_defaultIntegratorConfig(0) ;
+Bool_t RooAbsReal::_cacheCheck(kFALSE) ;
 
 RooAbsReal::RooAbsReal() : _specIntegratorConfig(0)
 {
@@ -139,6 +140,20 @@ Double_t RooAbsReal::getVal(const RooArgSet* set) const
     _value = traceEval(set) ;
     clearValueDirty() ; 
     clearShapeDirty() ; 
+  } else if (_cacheCheck) {
+    
+    // Check if cache contains value that evaluate() gives now
+    Double_t checkValue = traceEval(set);
+
+    if (checkValue != _value) {
+      // If not, print warning
+      cout << "RooAbsReal::getVal(" << GetName() << ") WARNING: cache contains " << _value 
+	   << " but evaluate() returns " << checkValue << endl ;
+
+      // And update cache (so that we see the difference)
+      _value = checkValue ;
+    }                                                                                                
+    
   }
   
   return _value ;
@@ -1417,6 +1432,8 @@ void RooAbsReal::copyCache(const RooAbsArg* source)
     _value = *reinterpret_cast<Int_t*>(&other->_value) ;
   } else if (source->getAttribute("BYTE_TREE_BRANCH")) {
     _value = *reinterpret_cast<UChar_t*>(&other->_value) ;
+  } else if (source->getAttribute("UNSIGNED_INTEGER_TREE_BRANCH")) {
+    _value = *reinterpret_cast<UInt_t*>(&other->_value) ;
   } else {
     _value = other->_value ;
   }
@@ -1447,8 +1464,12 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
       cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree UChar_t branch " << GetName() 
 	   << " will be converted to double precision" << endl ;
       setAttribute("BYTE_TREE_BRANCH",kTRUE) ;
-    } 
-
+    }  else if (!typeName.CompareTo("UInt_t")) { 
+      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree UInt_t branch " << GetName() 
+	   << " will be converted to double precision" << endl ;
+      setAttribute("UNSIGNED_INTEGER_TREE_BRANCH",kTRUE) ;
+    }    
+    
     t.SetBranchAddress(cleanName,&_value) ;
     if (branch->GetCompressionLevel()<0) {
       cout << "RooAbsReal::attachToTree(" << GetName() << ") Fixing compression level of branch " << cleanName << endl ;

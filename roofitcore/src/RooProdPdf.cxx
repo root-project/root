@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.42 2004/03/12 21:14:37 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.43 2004/03/19 06:09:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -379,8 +379,8 @@ Double_t RooProdPdf::calculate(const RooArgList* partIntList, const RooLinkedLis
   Int_t i ;
   for (i=0 ; i<n ; i++) {
     partInt = ((RooAbsReal*)partIntList->at(i)) ;
-    normSet = ((RooArgSet*)normSetList->At(i)) ;
-    Double_t piVal = partInt->getVal(normSet) ;
+    normSet = ((RooArgSet*)normSetList->At(i)) ;    
+    Double_t piVal = partInt->getVal(normSet->getSize()>0 ? normSet : 0) ;
     value *= piVal ;
 //     if (_verboseEval<0) {
 //       cout << "RPP:calc(" << GetName() << "): value *= " << piVal << " (" << partInt->GetName() << ") nset = " ; normSet->Print("1") ;
