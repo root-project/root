@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.h,v 1.32 2002/04/26 10:18:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.h,v 1.1 2002/05/20 15:10:08 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
    
 #ifndef ROOT_TFractionFitter
@@ -48,6 +48,14 @@ public:
   // This global function needs access to computeFCN()
   friend void TFractionFitFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int_t flag);
 
+  // Goodness of fit
+  Double_t GetChisquare() const;
+  Int_t GetNDF() const;
+  Double_t GetProb() const;
+
+  // MC predictions (smeared templates)
+  TH1* GetMCPrediction(Int_t parm) const;
+
 private:
   void CheckParNo(Int_t parm) const;
   void CheckConsistency();
@@ -55,6 +63,7 @@ private:
   void ComputeFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int_t flag);
   void GetRanges(Int_t& minX, Int_t& maxX, Int_t& minY, Int_t& maxY,
 		 Int_t& minZ, Int_t& maxZ) const;
+  void ComputeChisquareLambda();
 
 protected:
   Bool_t   fFitDone;             // flags whether a valid fit has been performed
@@ -64,6 +73,12 @@ protected:
   Int_t    fHighLimitY;          // last  bin in Y dimension
   Int_t    fLowLimitZ;           // first bin in Z dimension
   Int_t    fHighLimitZ;          // last  bin in Z dimension
+
+  Int_t    fNpfits;              // Number of points used in the fit
+  Int_t    fNDF;                 // Number of degrees of freedom in the fit
+  Double_t fChisquare;           // Template fit chisquare
+
+  TObjArray fAji;                // array of pointers to predictions of real template distributions
 
   // Histograms
   TH1*      fData;               // pointer to the "data" histogram to be fitted to
