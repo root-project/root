@@ -16,7 +16,6 @@ while [ "$1" != "" ]; do
        else
 	   args="$args $1" 
        fi ;;
-   -pthread) ;;
    *) args="$args $1" ;;
    esac
    shift
