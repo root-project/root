@@ -6,6 +6,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class TFileInfo;
+#pragma link C++ class FileInfo;
 
 #endif
 //end LinkDef.h

@@ -8,8 +8,8 @@ FileInfoTest: dict.o dictold.o
 dict.cxx: TFileInfo.h LinkDef.h $(ROOTSYS)/bin/rootcint
 	rootcint -f dict.cxx -c TFileInfo.h LinkDef.h
 
-dictold.cxx: TFileInfo.h oldLinkDef.h $(ROOTSYS)/bin/rootcint
-	rootcint -f dictold.cxx -c TFileInfo.h oldLinkDef.h
+dictold.cxx: old.h TFileInfo.h oldLinkDef.h $(ROOTSYS)/bin/rootcint
+	rootcint -f dictold.cxx -c old.h TFileInfo.h oldLinkDef.h
 
 
 
