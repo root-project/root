@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.41 2004/04/29 08:23:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.42 2004/04/29 08:27:15 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -209,6 +209,27 @@ public:
    static Int_t  LocMax(Int_t n, const Long_t *a);
    static Int_t  LocMax(Int_t n, const Long64_t *a);
 
+   //Mean, Median, RMS
+   static Double_t  Mean(Int_t n, const Short_t *a);
+   static Double_t  Mean(Int_t n, const Int_t *a);
+   static Double_t  Mean(Int_t n, const Float_t *a);
+   static Double_t  Mean(Int_t n, const Double_t *a);
+   static Double_t  Mean(Int_t n, const Long_t *a);
+   static Double_t  Mean(Int_t n, const Long64_t *a);
+   static Short_t   Median(Int_t n, const Short_t *a);
+   static Int_t     Median(Int_t n, const Int_t *a);
+   static Float_t   Median(Int_t n, const Float_t *a);
+   static Double_t  Median(Int_t n, const Double_t *a);
+   static Long_t    Median(Int_t n, const Long_t *a);
+   static Long64_t  Median(Int_t n, const Long64_t *a);
+   static Double_t  MedianSorted(Int_t n, Double_t *a);
+   static Double_t  RMS(Int_t n, const Short_t *a);
+   static Double_t  RMS(Int_t n, const Int_t *a);
+   static Double_t  RMS(Int_t n, const Float_t *a);
+   static Double_t  RMS(Int_t n, const Double_t *a);
+   static Double_t  RMS(Int_t n, const Long_t *a);
+   static Double_t  RMS(Int_t n, const Long64_t *a);
+   
    // Range
    static Short_t  Range(Short_t lb, Short_t ub, Short_t x);
    static Int_t    Range(Int_t lb, Int_t ub, Int_t x);
@@ -292,9 +313,17 @@ public:
    static Double_t StruveL1(Double_t x);             // Modified Struve functions of order 1
 
    // Statistics
+   static Double_t Beta(Double_t p, Double_t q);
+   static Double_t BetaCf(Double_t x, Double_t a, Double_t b);
+   static Double_t BetaIncomplete(Double_t x, Double_t a, Double_t b);
    static Double_t Binomial(Int_t n,Int_t k);  // Calculate the binomial coefficient n over k
+   static Double_t BinomialI(Double_t p, Int_t n, Int_t k);
+   static Double_t FDist(Double_t F, Double_t N, Double_t M);
+   static Double_t FDistI(Double_t F, Double_t N, Double_t M);
    static Bool_t   Permute(Int_t n, Int_t *a); // Find permutations
-
+   static Double_t Student(Double_t T, Double_t ndf);
+   static Double_t StudentI(Double_t T, Double_t ndf);
+   
    ClassDef(TMath,0)  //Interface to math routines
 };
 

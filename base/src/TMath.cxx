@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.59 2004/04/29 07:52:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.60 2004/06/18 21:13:05 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1311,6 +1311,345 @@ Int_t TMath::LocMax(Int_t n, const Long64_t *a)
      }
   }
   return loc;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::Mean(Int_t n, const Short_t *a)
+{
+// return the mean of a vector a with length n
+
+  if (n <= 0) return 0;
+  
+  Double_t tot = 0;
+  for (Int_t i=0;i<n;i++) tot += a[i];
+  Double_t mean = tot/n;
+  return mean;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::Mean(Int_t n, const Int_t *a)
+{
+// return the mean of a vector a with length n
+
+  if (n <= 0) return 0;
+  
+  Double_t tot = 0;
+  for (Int_t i=0;i<n;i++) tot += a[i];
+  Double_t mean = tot/n;
+  return mean;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::Mean(Int_t n, const Float_t *a)
+{
+// return the mean of a vector a with length n
+
+  if (n <= 0) return 0;
+  
+  Double_t tot = 0;
+  for (Int_t i=0;i<n;i++) tot += a[i];
+  Double_t mean = tot/n;
+  return mean;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::Mean(Int_t n, const Double_t *a)
+{
+// return the mean of a vector a with length n
+
+  if (n <= 0) return 0;
+  
+  Double_t tot = 0;
+  for (Int_t i=0;i<n;i++) tot += a[i];
+  Double_t mean = tot/n;
+  return mean;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::Mean(Int_t n, const Long_t *a)
+{
+// return the mean of a vector a with length n
+
+  if (n <= 0) return 0;
+  
+  Double_t tot = 0;
+  for (Int_t i=0;i<n;i++) tot += a[i];
+  Double_t mean = tot/n;
+  return mean;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::Mean(Int_t n, const Long64_t *a)
+{
+// return the mean of a vector a with length n
+
+  if (n <= 0) return 0;
+  
+  Double_t tot = 0;
+  for (Int_t i=0;i<n;i++) tot += a[i];
+  Double_t mean = tot/n;
+  return mean;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::MedianSorted(Int_t n, Double_t *a)
+{
+// return the median of a vector a in monotonic order with length n
+// where median is a number which divides sequence of n numbers
+// into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+// when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+// WARNING; Input array a is modified by this function.
+   
+  Int_t in, imin, imax;
+  Double_t  xm;
+
+  if  (n%2 == 0)  in = n / 2;
+  else            in = n / 2 + 1;
+
+  // find array element with maximum content
+  imax = TMath::LocMax(n,a);
+  xm = a[imax];
+
+  while (in < n) {
+     imin = TMath::LocMin(n,a);  // find array element with minimum content
+     a[imin] = xm;
+     in++;
+  }
+  imin = TMath::LocMin(n,a);
+  return a[imin];
+}
+
+
+//______________________________________________________________________________
+Short_t TMath::Median(Int_t n, const Short_t *a)
+{
+// return the median of a vector a with length n
+// where median is a number which divides sequence of n numbers
+// into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+// when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+
+  if (n <= 0) return 0;
+  
+  // create a temporary clone array of a and sort it
+  Double_t *temp = new Double_t[n];
+  Int_t *ind = new Int_t[n];
+  TMath::Sort(n,a,ind,kFALSE);
+  for (Int_t i=0;i<n;i++) temp[i] = (Double_t)a[ind[i]];
+  Short_t median = (Short_t)TMath::MedianSorted(n,temp);
+  delete [] ind;
+  delete [] temp;
+  return median;
+}
+
+
+//______________________________________________________________________________
+Int_t TMath::Median(Int_t n, const Int_t *a)
+{
+// return the median of a vector a with length n
+// where median is a number which divides sequence of n numbers
+// into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+// when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+
+  if (n <= 0) return 0;
+  
+  // create a temporary clone array of a and sort it
+  Double_t *temp = new Double_t[n];
+  Int_t *ind = new Int_t[n];
+  TMath::Sort(n,a,ind,kFALSE);
+  for (Int_t i=0;i<n;i++) temp[i] = (Double_t)a[ind[i]];
+  Int_t median = (Int_t)TMath::MedianSorted(n,temp);
+  delete [] ind;
+  delete [] temp;
+  return median;
+}
+
+
+//______________________________________________________________________________
+Float_t TMath::Median(Int_t n, const Float_t *a)
+{
+// return the median of a vector a with length n
+// where median is a number which divides sequence of n numbers
+// into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+// when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+
+  if (n <= 0) return 0;
+  
+  // create a temporary clone array of a and sort it
+  Double_t *temp = new Double_t[n];
+  Int_t *ind = new Int_t[n];
+  TMath::Sort(n,a,ind,kFALSE);
+  for (Int_t i=0;i<n;i++) temp[i] = (Double_t)a[ind[i]];
+  Float_t median = (Float_t)TMath::MedianSorted(n,temp);
+  delete [] ind;
+  delete [] temp;
+  return median;
+}
+
+//______________________________________________________________________________
+Double_t TMath::Median(Int_t n, const Double_t *a)
+{
+// return the median of a vector a with length n
+// where median is a number which divides sequence of n numbers
+// into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+// when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+
+  if (n <= 0) return 0;
+  
+  // create a temporary clone array of a and sort it
+  Double_t *temp = new Double_t[n];
+  Int_t *ind = new Int_t[n];
+  TMath::Sort(n,a,ind,kFALSE);
+  for (Int_t i=0;i<n;i++) temp[i] = (Double_t)a[ind[i]];
+  Double_t median = (Double_t)TMath::MedianSorted(n,temp);
+  delete [] ind;
+  delete [] temp;
+  return median;
+}
+
+//______________________________________________________________________________
+Long_t TMath::Median(Int_t n, const Long_t *a)
+{
+// return the median of a vector a with length n
+// where median is a number which divides sequence of n numbers
+// into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+// when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+
+  if (n <= 0) return 0;
+  
+  // create a temporary clone array of a and sort it
+  Double_t *temp = new Double_t[n];
+  Int_t *ind = new Int_t[n];
+  TMath::Sort(n,a,ind,kFALSE);
+  for (Int_t i=0;i<n;i++) temp[i] = (Double_t)a[ind[i]];
+  Long_t median = (Long_t)TMath::MedianSorted(n,temp);
+  delete [] ind;
+  delete [] temp;
+  return median;
+}
+
+
+//______________________________________________________________________________
+Long64_t TMath::Median(Int_t n, const Long64_t *a)
+{
+// return the median of a vector a with length n
+// where median is a number which divides sequence of n numbers
+// into 2 halves. When n is odd, the median is kth element k = (n + 1) / 2.
+// when n is even the median is a mean of the elements k = n/2 and k = n/2 + 1.
+
+  if (n <= 0) return 0;
+  
+  // create a temporary clone array of a and sort it
+  Double_t *temp = new Double_t[n];
+  Int_t *ind = new Int_t[n];
+  TMath::Sort(n,a,ind,kFALSE);
+  for (Int_t i=0;i<n;i++) temp[i] = (Double_t)a[ind[i]];
+  Long64_t median = (Long64_t)TMath::MedianSorted(n,temp);
+  delete [] ind;
+  delete [] temp;
+  return median;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::RMS(Int_t n, const Short_t *a)
+{
+// return the RMS of a vector a with length n
+
+  if (n <= 0) return 0;
+  
+  Double_t tot = 0, tot2 =0;
+  for (Int_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+  Double_t n1 = 1./n;
+  Double_t mean = tot*n1;
+  Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
+  return rms;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::RMS(Int_t n, const Int_t *a)
+{
+// return the RMS of a vector a with length n
+
+  if (n <= 0) return 0;
+  
+  Double_t tot = 0, tot2 =0;
+  for (Int_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+  Double_t n1 = 1./n;
+  Double_t mean = tot*n1;
+  Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
+  return rms;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::RMS(Int_t n, const Float_t *a)
+{
+// return the RMS of a vector a with length n
+
+  if (n <= 0) return 0;
+  
+  Double_t tot = 0, tot2 =0;
+  for (Int_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+  Double_t n1 = 1./n;
+  Double_t mean = tot*n1;
+  Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
+  return rms;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::RMS(Int_t n, const Double_t *a)
+{
+// return the RMS of a vector a with length n
+
+  if (n <= 0) return 0;
+  
+  Double_t tot = 0, tot2 =0;
+  for (Int_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+  Double_t n1 = 1./n;
+  Double_t mean = tot*n1;
+  Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
+  return rms;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::RMS(Int_t n, const Long_t *a)
+{
+// return the RMS of a vector a with length n
+
+  if (n <= 0) return 0;
+  
+  Double_t tot = 0, tot2 =0;
+  for (Int_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+  Double_t n1 = 1./n;
+  Double_t mean = tot*n1;
+  Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
+  return rms;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::RMS(Int_t n, const Long64_t *a)
+{
+// return the RMS of a vector a with length n
+
+  if (n <= 0) return 0;
+  
+  Double_t tot = 0, tot2 =0;
+  for (Int_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+  Double_t n1 = 1./n;
+  Double_t mean = tot*n1;
+  Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
+  return rms;
 }
 
 //______________________________________________________________________________
@@ -2851,6 +3190,80 @@ Double_t TMath::StruveL1(Double_t x)
    }
    return sl1;
 }
+   
+//______________________________________________________________________________
+Double_t TMath::Beta(Double_t p, Double_t q){
+  // Calculates Beta-function Gamma(p)*Gamma(q)/Gamma(p+q) 
+
+ return TMath::Exp(TMath::LnGamma(p)+TMath::LnGamma(q)-TMath::LnGamma(p+q));
+}
+
+//______________________________________________________________________________
+Double_t TMath::BetaCf(Double_t x, Double_t a, Double_t b){
+  // Continued fraction evaluation by modified Lentz's method
+  // used in calculation of incomplete Beta function
+  Int_t itmax = 100;
+  Double_t eps = 3.e-7;
+  Double_t fpmin = 1.e-30;
+
+  Int_t m, m2;
+  Double_t aa, c, d, del, qab, qam, qap;
+  Double_t h;
+  qab = a+b;
+  qap = a+1.0;
+  qam = a-1.0;
+  c = 1.0;
+  d = 1.0 - qab*x/qap;
+  if (TMath::Abs(d)<fpmin) d=fpmin;
+  d=1.0/d;
+  h=d;
+  for (m=1; m<=itmax; m++) {
+    m2=m*2;
+    aa = m*(b-m)*x/((qam+ m2)*(a+m2));
+    d = 1.0 +aa*d;
+    if(TMath::Abs(d)<fpmin) d = fpmin;
+    c = 1 +aa/c;
+    if (TMath::Abs(c)<fpmin) c = fpmin;
+    d=1.0/d;
+    h*=d*c;
+    aa = -(a+m)*(qab +m)*x/((a+m2)*(qap+m2));
+    d=1.0+aa*d;
+    if(TMath::Abs(d)<fpmin) d = fpmin;
+    c = 1.0 +aa/c;
+    if (TMath::Abs(c)<fpmin) c = fpmin;
+    d=1.0/d;
+    del = d*c;
+    h*=del;
+    if (TMath::Abs(del-1)<=eps) break;
+  }
+  if (m>itmax) {
+      printf("Betacf: a or b too big, or itmax too small, a=%g, b=%g, itmax=%d",a,b,itmax);
+   }
+   return h;
+}
+
+//______________________________________________________________________________
+Double_t TMath::BetaIncomplete(Double_t x, Double_t a, Double_t b){
+  // Calculates the incomplete Beta-function
+  //     --implementation by Anna Kreshuk
+
+  Double_t bt;
+  if ((x<0.0)||(x>1.0)) {
+     printf("X must between 0 and 1!!!!\n");
+     return 0.0;
+  }
+  if ((x==0.0)||(x==1.0)) {
+     bt=0.0;
+  } else {
+     bt = TMath::Power(x, a)*TMath::Power(1-x, b)/Beta(a, b);  
+  }
+  if (x<(a+1)/(a+b+2)) {
+     return bt*BetaCf(x, a, b)/a;
+  }
+  else {
+     return (1 - bt*BetaCf(1-x, b, a)/b);
+  }
+}
 
 //______________________________________________________________________________
 Double_t TMath::Binomial(Int_t n,Int_t k) 
@@ -2869,6 +3282,73 @@ Double_t TMath::Binomial(Int_t n,Int_t k)
     fact*=static_cast<Double_t>(k2+i)/i;
   return fact;
 }
+
+//______________________________________________________________________________
+Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k){
+  // Suppose an event occurs with probability _p_ per trial
+  // Then the probability P of its occuring _k_ or more times
+  // in _n_ trials is termed a cumulative binomial probability
+  // the formula is P = sum_from_j=k_to_n(TMath::Binomial(n, j)*
+  // *TMath::Power(p, j)*TMath::Power(1-p, n-j) 
+  // For _n_ larger than 12 BetaIncomplete is a much better way
+  // to evaluate the sum than would be the straightforward sum calculation
+  // for _n_ smaller than 12 either method is acceptable
+  // ("Numerical Recipes")  
+  //     --implementation by Anna Kreshuk
+
+
+  Double_t P = BetaIncomplete(p, Double_t(k), Double_t(n-k+1));
+  return P;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
+{
+  // Computes the density function of F-distribution
+  // (probability function, integral of density, is computed in FDistI)
+  //
+  // parameters N and M stand for degrees of freedom of chi-squares
+  // mentioned above
+  // parameter F is the actual variable x of the density function p(x)
+  // and the point at which the density function is calculated.
+  //
+  //  about F distribution:
+  // F-distribution arises in testing whether two random samples
+  // have the same variance. It is the ratio of two chi-square 
+  // distributions, with N and M degrees of freedom respectively,
+  // where each chi-square is first divided by it's number of degrees
+  // of freedom.
+  //     --implementation by Anna Kreshuk
+   
+  if ((F<0)||(N<1)||(M<1)){
+     return 0;
+  } else {
+     Double_t Denom = TMath::Gamma(N/2)*TMath::Gamma(M/2)*TMath::Power(M+N*F, (N+M)/2);
+     Double_t Div = TMath::Gamma((N+M)/2)*TMath::Power(N, N/2)*TMath::Power(M, M/2)*TMath::Power(F, 0.5*N-1);
+     return Div/Denom;
+  }
+
+}
+
+//______________________________________________________________________________
+Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M){
+  // Calculates the cumulative distribution function of F-distribution
+  // this function occurs in the statistical test of whether two observed 
+  // samples have the same variance. For this test a certain statistic F, the ratio of
+  // observed dispersion fo the first sample to that of the second sample,
+  // is calculated. N and M stand for numbers of degrees of freedom in the samples
+  // 1-FDistI() is the significance level at which the hypothesis "1 has smaller
+  // variance than 2" can be rejected. A small numerical value of 1 - FDistI() implies
+  // a very significant rejection, in turn implying high confidence in the hypothesis
+  // "1 has variance greater than 2".
+  //     --implementation by Anna Kreshuk
+
+
+  Double_t FI = 1 - BetaIncomplete((M/(M+N*F)), M*0.5, N*0.5);
+  return FI;
+}
+
 
 //______________________________________________________________________________
 Bool_t TMath::Permute(Int_t n, Int_t *a)
@@ -2914,4 +3394,60 @@ Bool_t TMath::Permute(Int_t n, Int_t *a)
      }
   }
   return kTRUE;
+}
+
+//______________________________________________________________________________
+Double_t TMath::Student(Double_t T, Double_t ndf)
+{
+  // Computes density function for Student's t- distribution
+  // (the probability function (integral of density) is computed in StudentI)
+  //
+  // First parameter stands for x - the actual variable of the 
+  // density function p(x) and the point at which the density is calculated.
+  // Second parameter stands for number of degrees of freedom
+  //
+  //   about Student distribution;:
+  // Student's t-distribution is used for many significance tests, for example,
+  // for the Student's t-tests for the statistical significance of difference
+  // between two sample means and for confidence intervals for the difference 
+  // between two population means.
+  //
+  // Example: suppose we have a random sample of size n drawn from normal 
+  // distribution with mean Mu and st.deviation Sigma. Then the variable
+  //
+  //   t = (sample_mean - Mu)/(sample_deviation / sqrt(n))
+  //
+  // has Student's t-distribution with n-1 degrees of freedom
+  //
+  // NOTE that this function's second argument is number of degrees of freedom,
+  // not the sample size.
+  //
+  // As the number of degrees of freedom grows, t-distribution approaches
+  // Normal(0,1) distribution.
+  //     --implementation by Anna Kreshuk
+  
+  if (ndf < 1) {
+     return 0;
+  }
+
+  Double_t r   = ndf;
+  Double_t rh  = 0.5*r;
+  Double_t rh1 = rh + 0.5;
+  Double_t Denom = TMath::Sqrt(r*TMath::Pi())*TMath::Gamma(rh)*TMath::Power(1+T*T/r, rh1);
+  return TMath::Gamma(rh1)/Denom;
+}
+
+//______________________________________________________________________________
+Double_t TMath::StudentI(Double_t T, Double_t ndf){
+  // Calculates the cumulative distribution function of Student's t-distribution
+  // second parameter stands for number of degrees of freedom, not for the number
+  // of samples
+  // if x has Student's t-distribution, the function returns the probability of
+  // x being less than T  
+  //     --implementation by Anna Kreshuk
+   
+  Double_t r = ndf;
+ 
+  Double_t SI = (T>0) ? (1 - 0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5)) : 0.5*BetaIncomplete((r/(r + T*T)), r*0.5, 0.5);
+  return SI;
 }
