@@ -1,5 +1,5 @@
 #!/bin/sh
-# -*- sh-indentation: 2 -*- 
+# -*- sh-indentation: 2 -*-
 # This script returns the machine dependent compile options needed
 # to compile and link applications using the ROOT libraries.
 #
@@ -34,7 +34,7 @@ hpux)
    ;;
 hpuxacc | hpuxia64acc)
    # HP-UX 10.x with aCC
-   auxcflags="+W823"
+   auxcflags="+W823 -DR__ACC"
    auxlibs="-lm -ldld"
    auxglibs=${auxlibs}
    ;;
@@ -296,7 +296,7 @@ while test $# -gt 0; do
 
   case $1 in
     --prefix=*)
-      ### Set the prefix 
+      ### Set the prefix
       if test "$arch" = "win32"; then
          optarg=`cygpath -u $optarg`
       fi
@@ -313,11 +313,11 @@ while test $# -gt 0; do
       fi
       ;;
     --prefix)
-      ### Output the prefix 
+      ### Output the prefix
       out="$out $prefix"
       ;;
     --exec-prefix=*)
-      ### Set the exec-prefix 
+      ### Set the exec-prefix
       if test "$arch" = "win32"; then
          optarg=`cygpath -u $optarg`
       fi
@@ -330,7 +330,7 @@ while test $# -gt 0; do
       fi
       ;;
     --exec-prefix)
-      ### Output the exec-prefix 
+      ### Output the exec-prefix
       out="$out $prefix"
       ;;
     --nonew)
@@ -351,53 +351,53 @@ while test $# -gt 0; do
       noldflags="yes"
       ;;
     --version)
-      ### Output the version number.  If RVersion.h can not be found, give up. 
+      ### Output the version number.  If RVersion.h can not be found, give up.
       if test -r ${incdir}/RVersion.h; then
-         out="$out `sed -n 's,.*ROOT_RELEASE *\"\(.*\)\".*,\1,p' < include/RVersion.h`" 
+         out="$out `sed -n 's,.*ROOT_RELEASE *\"\(.*\)\".*,\1,p' < include/RVersion.h`"
       else
          echo "cannot read ${incdir}/RVersion.h"
          exit 1
       fi
       ;;
     --cflags)
-      ### Output the compiler flags 
+      ### Output the compiler flags
       if test ${incdir} != /usr/include; then
-         ### In case we're on a Win32 system, we need to expand the 
-         ### path to a backslash seperated path 
+         ### In case we're on a Win32 system, we need to expand the
+         ### path to a backslash seperated path
          if test "$arch" = "win32"; then
             includes=-I\'`cygpath -w ${incdir}`\'
          else
             includes=-I${incdir}
          fi
       fi
-      if test "x$noauxcflags" = "xyes" ; then 
+      if test "x$noauxcflags" = "xyes" ; then
          out="$out $includes"
       else
          out="$out ${auxcflags} $includes"
       fi
       ;;
-   --auxcflags) 
-      ### output auxiliary compiler flags 
+   --auxcflags)
+      ### output auxiliary compiler flags
       out="$out $auxcflags"
       ;;
     --libs)
-      ### Output regular ROOT libraries.  If the user said --glibs --libs, 
+      ### Output regular ROOT libraries.  If the user said --glibs --libs,
       ### We've already output the libraries, so we skip this section
-      if test "x$libsout" = "xyes" ; then 
+      if test "x$libsout" = "xyes" ; then
 	 shift
 	 continue
       fi
-      ### Set the flag 
+      ### Set the flag
       libsout="yes"
-      ### See if we need the new library 
+      ### See if we need the new library
       if test "x$new_set" = "xyes"; then
          libs="${newlib} ${rootlibs}"
       else
          libs=${rootlibs}
       fi
-      ### If we're on a win32 system, we need to change the -l prefix 
-      ### into a .lib suffix, and expend the paths to a backslash 
-      ### separated path. 
+      ### If we're on a win32 system, we need to change the -l prefix
+      ### into a .lib suffix, and expend the paths to a backslash
+      ### separated path.
       if test "$arch" = "win32"; then
          nlibs=`echo $libs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
          libs=
@@ -405,22 +405,22 @@ while test $# -gt 0; do
             libs="$libs '`cygpath -w $i`'"
          done
       else
-         if test "x$noldflags" = "xno" ; then 
+         if test "x$noldflags" = "xno" ; then
 	    out="$out -L${libdir}"
 	 fi
       fi
-      if test "x$noauxlibs" = "xyes" ; then 
+      if test "x$noauxlibs" = "xyes" ; then
 	 out="$out $libs"
-      else 
+      else
 	 out="$out $libs ${auxlibs}"
       fi
       ;;
     --glibs)
-      ### Output graphics an normal libraries 
-      ### If the user said --libs --glibs, we don't need to add the 
-      ### regular ROOT libraries.  
-      if test "x$libsout" = "xno" ; then 
-         ### Set the flag 
+      ### Output graphics an normal libraries
+      ### If the user said --libs --glibs, we don't need to add the
+      ### regular ROOT libraries.
+      if test "x$libsout" = "xno" ; then
+         ### Set the flag
          libsout="yes"
          if test "x$new_set" = "xyes" ; then
          glibs="${newlib} ${rootlibs} ${rootglibs}"
@@ -428,9 +428,9 @@ while test $# -gt 0; do
          glibs="${rootlibs} ${rootglibs}"
       fi
       fi
-      ### If we're on a win32 system, we need to change the -l prefix 
-      ### into a .lib suffix, and expend the paths to a backslash 
-      ### separated path. 
+      ### If we're on a win32 system, we need to change the -l prefix
+      ### into a .lib suffix, and expend the paths to a backslash
+      ### separated path.
       if test "$arch" = "win32"; then
          nlibs=`echo $glibs | sed "s@-l\([a-zA-Z0-9]*\)@${libdir}/lib\1.lib@g"`
          glibs=
@@ -438,13 +438,13 @@ while test $# -gt 0; do
             glibs="$glibs '`cygpath -w $i`'"
          done
       else
-        if test "x$noldflags" = "xno" ; then 
+        if test "x$noldflags" = "xno" ; then
            out="$out -L${libdir}"
         fi
       fi
-      if test "x$noauxlibs" = "xyes" ; then 
+      if test "x$noauxlibs" = "xyes" ; then
          out="$out $glibs"
-      else 
+      else
          out="$out $glibs ${auxlibs}"
       fi
       ;;
@@ -452,36 +452,36 @@ while test $# -gt 0; do
       ### output the auxiliary libraries
       out="$out $auxlibs"
       ;;
-    --libdir) 
-      ### output the library directory 
-      out="$out $libdir" 
+    --libdir)
+      ### output the library directory
+      out="$out $libdir"
       ;;
-    --incdir) 
-      ### output the header directory 
-      out="$out $incdir" 
+    --incdir)
+      ### output the header directory
+      out="$out $incdir"
       ;;
-    --help) 
-      ### Print a help message 
-      echo "Usage: `basename $0` [options]" 
+    --help)
+      ### Print a help message
+      echo "Usage: `basename $0` [options]"
       echo ""
       echo "  --prefix[=dir]        Print or set prefix"
       echo "  --exec-prefix[=dir]   Print or set execution prefix"
       echo "  --libs                Print regular ROOT libraries"
       echo "  --glibs               Print regular + GUI ROOT libraries"
       echo "  --cflags              Print compiler flags and header path"
-      echo "  --libdir              Print the library directory" 
-      echo "  --incdir              Print the header directory" 
-      echo "  --auxlibs             Print auxiliary libraries" 
+      echo "  --libdir              Print the library directory"
+      echo "  --incdir              Print the header directory"
+      echo "  --auxlibs             Print auxiliary libraries"
       echo "  --auxcflags           Print auxiliary compiler flags"
       echo "  --[no]new             Turn on[off] use of libNew.so"
       echo "  --noauxlibs           Do not print auxiliary/system libraries"
       echo "  --noauxcflags         Do not print auxiliary compiler flags"
       echo "  --noldflags           Do not print linker flags"
-      echo "  --version             Print the ROOT version" 
+      echo "  --version             Print the ROOT version"
       exit 0
       ;;
     *)
-      ### Give an error 
+      ### Give an error
       echo "${usage}" 1>&2
       exit 1
       ;;
@@ -489,5 +489,5 @@ while test $# -gt 0; do
   shift
 done
 
-### Output the stuff 
+### Output the stuff
 echo $out
