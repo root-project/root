@@ -142,9 +142,9 @@ endif
 
 ifeq ($(ARCH),sgikcc)
 # SGI with KCC
-CXX           = KCC -32
+CXX           = KCC -n32 --no_exceptions
 CXXFLAGS      = -O
-LD            = KCC -32
+LD            = KCC -n32
 LDFLAGS       = -O
 SOFLAGS       =
 endif
