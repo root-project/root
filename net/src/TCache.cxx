@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.2 2001/01/15 23:49:11 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCache.cxx,v 1.3 2001/01/16 17:23:26 rdm Exp $
 // Author: Fons Rademakers   13/01/2001
 
 /*************************************************************************
@@ -60,7 +60,7 @@ TCache::TCache(Int_t maxCacheSize, TFile *file, Int_t pageSize)
    }
 
    fFile      = file;
-   fEOF       = fFile->GetEND();
+   fEOF       = fFile->GetSize();              // get initial file size
    fHighWater = maxCacheSize * 1024 * 1024;
    fLowWater  = fHighWater * kDfltLowLevel / 100;
    fLowLevel  = kDfltLowLevel;
