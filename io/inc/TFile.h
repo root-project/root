@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.18 2002/03/31 08:18:25 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.19 2002/04/01 17:12:17 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -60,8 +60,7 @@ protected:
    static Double_t fgBytesWrite;    //Number of bytes written by all TFile objects
    static Double_t fgBytesRead;     //Number of bytes read by all TFile objects
 
-   static const Int_t  kBegin;
-   static const Char_t kUnits;
+   enum { kBegin = 64, kUnits = 4 };
 
    void Init(Bool_t create);
 
@@ -81,7 +80,8 @@ private:
 public:
    // TFile status bits
    enum {
-      kHasReferences   = BIT(11)
+      kHasReferences   = BIT(11),
+      kDevNull         = BIT(12)
    };
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
 
