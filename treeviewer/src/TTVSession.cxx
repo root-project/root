@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.cxx,v 1.3 2002/01/23 17:52:52 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTVSession.cxx,v 1.1 2001/02/22 14:45:18 brun Exp $
 //Author : Andrei Gheata   21/02/01
 
 /*************************************************************************
@@ -10,7 +10,8 @@
  *************************************************************************/
 
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TTVSession.h"
 #include "TTreeViewer.h"
 #include "TTVLVContainer.h"
@@ -51,8 +52,8 @@ void TTVRecord::FormFrom(TTreeViewer *tv)
    fYAlias   = tv->ExpressionItem(1)->GetAlias();
    fZ        = tv->ExpressionItem(2)->GetTrueName();
    fZAlias   = tv->ExpressionItem(2)->GetAlias();
-   fCut      = tv->ExpressionItem(3)->GetTrueName();
-   fCutAlias = tv->ExpressionItem(3)->GetAlias();
+   fCut      = tv->ExpressionItem(3)->GetTrueName();   
+   fCutAlias = tv->ExpressionItem(3)->GetAlias();   
    fOption   = tv->GetGrOpt();
    fScanRedirected = tv->IsScanRedirected();
    fCutEnabled = tv->IsCutEnabled();
@@ -126,7 +127,7 @@ TTVSession::TTVSession(TTreeViewer *tv)
 TTVSession::~TTVSession()
 {
    fList->Delete();
-   delete fList;
+   delete fList;  
 }
 //______________________________________________________________________________
 TTVRecord *TTVSession::AddRecord(Bool_t fromFile)

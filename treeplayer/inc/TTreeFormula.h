@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.20 2002/01/02 21:47:39 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.18 2001/11/29 09:56:18 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -47,7 +47,6 @@ class TStreamerElement;
 class TFormLeafInfoMultiVarDim;
 class TFormLeafInfo;
 class TBranchElement;
-class TAxis;
 
 class TTreeFormula : public TFormula {
 
@@ -99,7 +98,7 @@ protected:
                                UInt_t readentry) const;
 
    TList      *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
-   TAxis      *fAxis;           //! pointer to histogram axis if this is a string
+
 
 public:
              TTreeFormula();
@@ -122,7 +121,6 @@ public:
    virtual Bool_t     IsInteger(Int_t code = 0) const;
    virtual Bool_t     IsString(Int_t code = 0) const;
    virtual char      *PrintValue(Int_t mode=0) const;
-   virtual void       SetAxis(TAxis *axis=0);
    virtual void       SetTree(TTree *tree) {fTree = tree;}
    virtual void       UpdateFormulaLeaves();
 

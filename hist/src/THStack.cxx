@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.8 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:$:$Id:$
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -13,7 +13,9 @@
 #include "THStack.h"
 #include "TVirtualPad.h"
 #include "TH2.h"
-#include "Riostream.h"
+
+#include <fstream.h>
+#include <iostream.h>
 
 ClassImp(THStack)
 
@@ -323,13 +325,8 @@ void THStack::Paint(Option_t *option)
    // drawn in stack mode!
    //if (nostack && fStack) {fStack->Delete(); delete fStack; fStack = 0;}
 
-   if (!opt.Contains("nostack")) BuildStack();
-
-   Double_t themax,themin;
-   if (fMaximum == -1111) themax = GetMaximum(option);
-   else                   themax = fMaximum;
-   if (fMinimum == -1111) {themin = GetMinimum(option); if (themin > 0) themin = 0;}
-   else                   themin = fMinimum;
+   Double_t themax = GetMaximum(option);
+   Double_t themin = GetMinimum(option);
    if (!fHistogram) {
       Bool_t add = TH1::AddDirectoryStatus();
       TH1::AddDirectory(kFALSE);

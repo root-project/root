@@ -508,8 +508,7 @@ int noerror;
     }
   }
 
-#ifndef G__OLDIMPLEMENTATION884 
-  /* THIS PART(884) MAY NOT BE NEEDED ANY MORE BY FIX 1604 */
+#ifndef G__OLDIMPLEMENTATION884
   if(strcmp(tagname,"bool")==0) {
     if(
 #ifndef G__OLDIMPLEMENTATION1593

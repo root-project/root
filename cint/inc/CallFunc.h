@@ -61,7 +61,6 @@ class G__CallFunc {
 #ifndef G__FONS50
   G__InterfaceMethod InterfaceMethod() { return pfunc; }
   void SetArgs(const char* args);
-  G__MethodInfo GetMethodInfo() { return method; }
 #endif
 
  private:

@@ -15,16 +15,6 @@ pattern = *.pdf
 icon = pdf.xpm
 action = !acroread %s
 
-[application/x-deb]
-pattern = *.deb
-icon = deb_s.xpm deb_t.xpm
-action = !xterm -e dpkg -I %s
-
-[application/x-rpm]
-pattern = *.rpm
-icon = rpm_s.xpm rpm_t.xpm
-action = !xterm -e rpm -qip %s
-
 [audio/x-wav]
 pattern = *.wave?
 icon = audio_s.xpm

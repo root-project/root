@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.cxx,v 1.2 2000/11/17 10:26:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSysEvtHandler.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   16/09/95
 
 /*************************************************************************
@@ -28,10 +28,7 @@ ClassImp(TFileHandler)
 //______________________________________________________________________________
 TFileHandler::TFileHandler(int fd, int mask)
 {
-   // Create a file descriptor event handler. If mask=kRead then we
-   // want to monitor the file for read readiness, if mask=kWrite
-   // then we monitor the file for write readiness, if mask=kRead|kWrite
-   // then we monitor both read and write readiness.
+   // Create a file descriptor event handler.
 
    fFileNum = fd;
    if (!mask)

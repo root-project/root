@@ -76,9 +76,6 @@ endif
 ifneq ($(SHIFTLIB),)
 MODULES      += rfio
 endif
-ifneq ($(DCAPLIB),)
-MODULES      += dcache
-endif
 ifneq ($(OSTHREADLIB),)
 MODULES      += thread
 endif
@@ -94,7 +91,7 @@ endif
 ifneq ($(STAR),)
 MODULES      += star
 endif
-ifneq ($(SRPUTILLIB),)
+ifneq ($(SRPDIR),)
 MODULES      += srputils
 endif
 
@@ -156,7 +153,6 @@ MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
 MAKECINTDLLS  = build/unix/makecintdlls.sh
-MAKESTATIC    = build/unix/makestatic.sh
 ifeq ($(PLATFORM),win32)
 MAKELIB       = build/win/makelib.sh
 MAKEDIST      = build/win/makedist.sh
@@ -223,7 +219,7 @@ endif
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata importcint \
                 version html changelog install uninstall showbuild cintdlls \
-                static debian redhat \
+                debian redhat \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
@@ -323,7 +319,7 @@ redhat:
 	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` ; \
 	  echo "called root-v$$vers.source.tar.gz and put it in you RPM "
 	@echo "source directory (default /usr/src/rpm/SOURCES) and the "
-	@echo "spec-file root.spec in your RPM spec directory"
+	@echo "spec-file ../root.spec in your RPM spec directory"
 	@echo "(default /usr/src/RPM/SPECS). If you want to build outside"
 	@echo "the regular tree, please refer to the RPM documentation."
 	@echo "After that, do"
@@ -352,7 +348,6 @@ distclean:: clean
 	@rm -f build/dummy.d bin/*.dll lib/*.def lib/*.exp lib/*.lib .def
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
 	@rm -f tutorials/pca.C tutorials/*.so
-	@rm -f bin/roota lib/libRoot.a
 	@rm -f $(CINTDIR)/include/*.dll $(CINTDIR)/include/sys/*.dll
 	@rm -f $(CINTDIR)/stl/*.dll README/ChangeLog
 	@rm -rf htmldoc
@@ -371,10 +366,6 @@ cintdlls: $(CINTTMP)
 	@$(MAKECINTDLLS) $(PLATFORM) $(CINTTMP) $(MAKELIB) $(CXX) \
 	   $(CC) $(LD) "$(OPT)" "$(CINTCXXFLAGS)" "$(CINTCFLAGS)" \
 	   "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)"
-
-static: rootlibs
-	@$(MAKESTATIC) $(PLATFORM) $(CXX) $(CC) $(LD) "$(LDFLAGS)" \
-	   "$(XLIBS)" "$(SYSLIBS)"
 
 importcint: distclean-cint
 	@$(IMPORTCINT)
@@ -465,9 +456,9 @@ install:
 	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
 	   $(INSTALLDATA) etc/*                 $(DESTDIR)$(ETCDIR); \
 	   rm -rf $(DESTDIR)$(ETCDIR)/CVS; \
-	   echo "Installing Autoconf macro in $(DESTDIR)$(ACLOCALDIR)"; \
-	   $(INSTALLDIR)                        $(DESTDIR)$(ACLOCALDIR); \
-	   $(INSTALLDATA) build/misc/root.m4    $(DESTDIR)$(ACLOCALDIR); \
+	   echo "Installing utils in $(DESTDIR)$(DATADIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(DATADIR); \
+	   $(INSTALLDATA) build/misc/*          $(DESTDIR)$(DATADIR); \
 	   rm -rf $(DESTDIR)$(DATADIR)/CVS; \
 	fi
 
@@ -593,13 +584,10 @@ showbuild:
 	@echo "CERNLIBDIR         = $(CERNLIBDIR)"
 	@echo "OSTHREADLIB        = $(OSTHREADLIB)"
 	@echo "SHIFTLIB           = $(SHIFTLIB)"
-	@echo "DCAPLIB            = $(DCAPLIB)"
 	@echo "MYSQLINCDIR        = $(MYSQLINCDIR)"
 	@echo "PGSQLINCDIR        = $(PGSQLINCDIR)"
 	@echo "SAPDBINCDIR        = $(SAPDBINCDIR)"
-	@echo "SRPLIBDIR          = $(SRPLIBDIR)"
-	@echo "SRPINCDIR          = $(SRPINCDIR)"
-	@echo "SRPUTILLIB         = $(SRPUTILLIB)"
+	@echo "SRPDIR             = $(SRPDIR)"
 	@echo "AFSDIR             = $(AFSDIR)"
 	@echo ""
 	@echo "INSTALL            = $(INSTALL)"

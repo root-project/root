@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.7 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.5 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -10,8 +10,9 @@
  *************************************************************************/
 
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TLine.h"
 #include "TVirtualPad.h"

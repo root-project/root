@@ -47,15 +47,17 @@ include/%.h:    $(SRPUTILSDIRI)/%.h
 $(SRPUTILSLIB): $(SRPUTILSO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libSRPAuth.$(SOEXT) $@ "$(SRPUTILSO)" \
-		   "$(SRPUTILSLIBEXTRA) $(SRPLIBDIR) $(SRPLIB)"
+		   "$(SRPUTILSLIBEXTRA) -L$(SRPDIR)/lib -lsrp -lgmp"
 
 $(RPASSWD):     $(RPASSWDO)
 		$(LD) $(LDFLAGS) -o $@ $(RPASSWDO) \
-		   $(SRPUTILLIBDIR) $(SRPLIBDIR) $(SRPUTILLIB) $(SRPLIB) -lcrack
+		   $(SRPDIR)/base/libmisc/libmisc.a \
+		   $(SRPDIR)/base/lib/libshadow.a \
+		   -L$(SRPDIR)/lib -lsrp -lgmp -lcrack
 
 $(RTCONF):      $(RTCONFO)
 		$(LD) $(LDFLAGS) -o $@ $(RTCONFO) \
-		   $(SRPLIBDIR) $(SRPLIB)
+		   -L$(SRPDIR)/lib -lsrp -lgmp
 
 all-srputils:   $(SRPUTILSLIB) $(RPASSWD) $(RTCONF)
 
@@ -72,12 +74,12 @@ distclean::     distclean-srputils
 
 ##### extra rules ######
 $(SRPUTILSO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(SRPINCDIR) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) -I$(SRPDIR)/include -o $@ -c $<
 
 $(RPASSWDO): $(RPASSWDS)
-	$(CC) $(OPT) $(CFLAGS) -I$(SRPUTILINCDIR) -I$(SRPINCDIR) \
+	$(CC) $(OPT) $(CFLAGS) -I$(SRPDIR)/base/lib -I$(SRPDIR)/include \
 	   -o $@ -c $<
 
 $(RTCONFO): $(RTCONFS)
-	$(CC) $(OPT) $(CFLAGS) -I$(SRPUTILINCDIR) -I$(SRPINCDIR) \
+	$(CC) $(OPT) $(CFLAGS) -I$(SRPDIR)/base/lib -I$(SRPDIR)/include \
 	   -o $@ -c $<

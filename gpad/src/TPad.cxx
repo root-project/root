@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.66 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.59 2001/12/04 17:58:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -11,8 +11,9 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "TSystem.h"
@@ -54,6 +55,8 @@
 #include "TDatime.h"
 #include "TColor.h"
 
+const Int_t kDistanceMaximum = 5;
+
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
 const Int_t kButton    = 101;
@@ -63,8 +66,6 @@ const Int_t kCurlyArc  = 201;
 
 static TPoint gPXY[kPXY];
 static Int_t readLevel = 0;
-
-Int_t TPad::fgMaxPickDistance = 5;
 
 ClassImpQ(TPad)
 
@@ -1532,7 +1533,7 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    hframe->SetMaximum(ymax);
    hframe->GetYaxis()->SetLimits(ymin,ymax);
    hframe->SetDirectory(0);
-   hframe->Draw("a");
+   hframe->Draw();
    Update();
    return hframe;
 }
@@ -2237,13 +2238,6 @@ TVirtualPad *TPad::GetVirtCanvas() const
 Color_t TPad::GetHighLightColor() const
 {
    return fCanvas->GetHighLightColor();
-}
-
-//______________________________________________________________________________
-Int_t TPad::GetMaxPickDistance()
-{
-   //static function (see also TPad::SetMaxPickDistance)
-   return fgMaxPickDistance;
 }
 
 //______________________________________________________________________________
@@ -3441,7 +3435,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
    TPad *pick   = 0;
    TPad *picked = this;
    pickobj      = 0;
-   if (DistancetoPrimitive(px,py) < fgMaxPickDistance) {
+   if (DistancetoPrimitive(px,py) < kDistanceMaximum) {
       dummyLink.SetObject(this);
       pickobj = &dummyLink;
    }
@@ -3466,7 +3460,7 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
          if (!gotPrim) {
             if (!obj->TestBit(kCannotPick)) {
                dist = obj->DistancetoPrimitive(px, py);
-               if (dist < fgMaxPickDistance) {
+               if (dist < kDistanceMaximum) {
                   pickobj = lnk;
                   gotPrim = kTRUE;
                   if (dist == 0) break;
@@ -3585,9 +3579,8 @@ void TPad::Print(const char *filename, Option_t *option)
       Update();
       Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
       gVirtualX->SelectWindow(wid);
-      if (gVirtualX->WriteGIF(psname)) {
-         Info("TPad::Print", "GIF file %s has been created", psname);
-      }
+      gVirtualX->WriteGIF(psname);
+      Info("TPad::Print", "GIF file %s has been created", psname);
       return;
    }
 
@@ -3977,7 +3970,7 @@ void TPad::SavePrimitive(ofstream &out, Option_t *)
       }
       cname = lcname;
    }
-
+   
 //   Write pad parameters
    if (this != gPad->GetCanvas()) {
       out <<"  "<<endl;
@@ -4142,9 +4135,8 @@ void TPad::SetFixedAspectRatio(Bool_t fixed)
 void TPad::SetEditable(Bool_t mode)
 {
    // Set pad editable yes/no
-   // If a pad is not editable:
-   // - one cannot modify the pad and its objects via the mouse.
-   // - one cannot add new objects to the pad
+   // If a pad is not editable, one cannot modify the pad and its objects
+   // via the mouse.
 
    fEditable = mode;
 
@@ -4333,18 +4325,6 @@ void TPad::SetCrosshair(Int_t crhair)
 }
 
 //______________________________________________________________________________
-void TPad::SetMaxPickDistance(Int_t maxPick)
-{
-   // static function to set the maximum Pick Distance fgMaxPickDistance
-   // This parameter is used in TPad::Pick to select an object if
-   // its DistancetoPrimitive returns a value < fgMaxPickDistance
-   // The default value is 5 pixels. Setting a smaller value will make
-   // picking more precise but also more difficult
-
-   fgMaxPickDistance = maxPick;
-}
-
-//______________________________________________________________________________
 void TPad::SetToolTipText(const char *text, Long_t delayms)
 {
    // Set tool tip text associated with this pad. The delay is in
@@ -4358,14 +4338,6 @@ void TPad::SetToolTipText(const char *text, Long_t delayms)
 
    if (text && strlen(text))
       fTip = CreateToolTip((TBox*)0, text, delayms);
-}
-
-//______________________________________________________________________________
-void TPad::SetVertical(Bool_t vert)
-{
-   // Set pad vertical (default) or horizontal
-   if (vert) ResetBit(kHori);
-   else      SetBit(kHori);
 }
 
 //_______________________________________________________________________

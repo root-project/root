@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32BrowserImp.h,v 1.2 2001/05/23 16:41:24 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32BrowserImp.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   21/10/96
 
 /*************************************************************************
@@ -185,7 +185,6 @@ public:
    HICON                   GetNormalIcon(Int_t IconIdx){return fhNormalIconList ? ImageList_GetIcon(fhNormalIconList,IconIdx,ILD_NORMAL):0; }
    HIMAGELIST              GetNormalIconList(){ return fhNormalIconList; }
 
-   void                    BrowseObj(TObject *);
    void                    RecursiveRemove(TObject *obj);
    void                    SetListBlocked(Bool_t block=kTRUE){fListBlocked = block;}          // Change the lock state of the list view;
    void                    SetViewFlag(ETypeOfView flag){fTreeListFlag = (ETypeOfView) (fTreeListFlag | flag);}

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.9 2002/02/02 13:42:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.5 2001/03/21 09:28:01 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -31,27 +31,31 @@
 class TClass;
 class TExMap;
 
+
 class TBuffer : public TObject {
 
 protected:
-   Bool_t    fMode;          //Read or write mode
-   Int_t     fVersion;       //Buffer format version
-   Int_t     fBufSize;       //Size of buffer
-   char     *fBuffer;        //Buffer used to store objects
-   char     *fBufCur;        //Current position in buffer
-   char     *fBufMax;        //End of buffer
-   Int_t     fMapCount;      //Number of objects or classes in map
-   Int_t     fMapSize;       //Default size of map
-   Int_t     fDisplacement;  //Value to be added to the map offsets   
-   TExMap   *fMap;           //Map containing object,id pairs for reading/ writing
-   TObject  *fParent;        //Pointer to the buffer parent (file) where buffer is read/written
+   Bool_t  fMode;          //Read or write mode
+   Int_t   fVersion;       //Buffer format version
+   Int_t   fBufSize;       //Size of buffer
+   char   *fBuffer;        //Buffer used to store objects
+   char   *fBufCur;        //Current position in buffer
+   char   *fBufMax;        //End of buffer
+   Int_t   fMapCount;      //Number of objects or classes in map
+   Int_t   fMapSize;       //Default size of map
+   Int_t   fDisplacement;  //Value to be added to the map offsets
+
+   union {
+      TExMap *fReadMap;    //Map containing id,object references during reading
+      TExMap *fWriteMap;   //Map containing object,id pairs during writing
+   };
 
    enum { kIsOwner = BIT(14) };  //If set TBuffer owns fBuffer
 
    static Int_t fgMapSize; //Default map size for all TBuffer objects
 
    // Default ctor
-   TBuffer() : fMode(0), fBuffer(0) { fMap = 0; fParent = 0;}
+   TBuffer() : fMode(0), fBuffer(0) { fReadMap = 0; }
 
    // TBuffer objects cannot be copied or assigned
    TBuffer(const TBuffer &);           // not implemented
@@ -64,16 +68,15 @@ protected:
 
    Int_t Read(const char *name) { return TObject::Read(name); }
    Int_t Write(const char *name, Int_t opt, Int_t bufs)
-                                { return TObject::Write(name, opt, bufs); }
+                                 { return TObject::Write(name, opt, bufs); }
 
 public:
    enum EMode { kRead = 0, kWrite = 1 };
    enum { kInitialSize = 1024, kMinimalSize = 128 };
    enum { kMapSize = 503 };
 
-   TBuffer(EMode mode);
-   TBuffer(EMode mode, Int_t bufsiz);
-   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE);
+   TBuffer(EMode mode, Int_t bufsiz = kInitialSize, void *buf = 0,
+           Bool_t adopt = kTRUE);
    virtual ~TBuffer();
 
    void     MapObject(const TObject *obj, UInt_t offset = 1);
@@ -86,8 +89,7 @@ public:
    void     SetWriteParam(Int_t mapsize);
    void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
-   void     SetParent(TObject *parent);
-   TObject *GetParent() const;
+
    char    *Buffer() const { return fBuffer; }
    Int_t    BufferSize() const { return fBufSize; }
    void     DetachBuffer() { fBuffer = 0; }
@@ -199,7 +201,7 @@ public:
    TBuffer  &operator<<(const Char_t  *c);
 
    //friend TBuffer  &operator>>(TBuffer &b, TObject *&obj);
-   //friend TBuffer  &operator>>(TBuffer &b, const TObject *&obj);
+   friend TBuffer  &operator>>(TBuffer &b, const TObject *&obj);
    friend TBuffer  &operator<<(TBuffer &b, const TObject *obj);
 
    static void  SetGlobalReadParam(Int_t mapsize);
@@ -355,8 +357,8 @@ inline TBuffer &operator<<(TBuffer &buf, const TObject *obj)
 //inline TBuffer &operator>>(TBuffer &buf, TObject *&obj)
 //   { obj = buf.ReadObject(0); return buf; }
 //______________________________________________________________________________
-//inline TBuffer &operator>>(TBuffer &buf, const TObject *&obj)
-//   { obj = buf.ReadObject(0); return buf; }
+inline TBuffer &operator>>(TBuffer &buf, const TObject *&obj)
+   { obj = buf.ReadObject(0); return buf; }
 
 //______________________________________________________________________________
 inline Int_t TBuffer::ReadArray(UChar_t *&c)

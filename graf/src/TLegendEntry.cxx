@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.6 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegendEntry.cxx,v 1.4 2001/02/16 17:35:04 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdio.h>
-
 #include "TLegendEntry.h"
 #include "TVirtualPad.h"
 #include "TROOT.h"
-#include "Riostream.h"
 
+#include <fstream.h>
+#include <stdio.h>
+#include <iostream.h>
 
 ClassImp(TLegendEntry)
 

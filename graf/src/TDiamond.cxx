@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.3 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -10,8 +10,8 @@
  *************************************************************************/
 
 #include <stdlib.h>
+#include <fstream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TDiamond.h"
 #include "TVirtualPad.h"

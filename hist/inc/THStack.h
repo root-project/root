@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.2 2001/12/10 15:03:18 rdm Exp $
+// @(#)root/hist:$Name:$:$Id:$
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -63,8 +63,8 @@ public:
         virtual void     Paint(Option_t *chopt="");
         virtual void     Print(Option_t *chopt="") const;
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
-        virtual void     SetMaximum(Double_t maximum=-1111); // *MENU*
-        virtual void     SetMinimum(Double_t minimum=-1111); // *MENU*
+        virtual void     SetMaximum(Double_t maximum=-1111);
+        virtual void     SetMinimum(Double_t minimum=-1111);
 
     ClassDef(THStack,1)  //A collection of histograms
 };

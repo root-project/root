@@ -1,34 +1,31 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspecs.sh,v 1.1 2001/04/23 14:11:47 rdm Exp $
+# $Id$
 #
 # Writes an entry in ../root.spec 
 #
-tgtdir=$1 ; shift
-cmndir=$1 ; shift
-rpmdir=$1 ; shift 
-lvls=$1   ; shift
-pkg=$1
+. build/package/lib/common.sh rpm 
 
-### echo %%% "tgtdir:	$tgtdir"
-### echo %%% "cmndir:	$cmndir"
-### echo %%% "rpmdir:	$rpmdir"
-### echo %%% "lvls:	$lvls"
-### echo %%% "pkg:	$pkg"
+if [ $# -lt 1 ] ; then 
+    echo "$0: I need a package name - giving up"
+    exit 2
+fi
+
+pkg=$1
 
 ### echo %%% Check if skeleton and description file exist 
 if [ ! -f $cmndir/$pkg.dscr ] || [ ! -f $rpmdir/$pkg.spec.in ] ; then 
-    echo "$0: couldn't find one and/or both of" 1>&2
-    echo "   $cmndir/$pkg.dscr"                 1>&2
-    echo "   $rpmdir/$pkg.spec.in"              1>&2
-    echo "giving up"                            1>&2 
+    echo "$0: couldn't find one and/or both of" 
+    echo "   $cmndir/$pkg.dscr"
+    echo "   $rpmdir/$pkg.spec.in"
+    echo "giving up" 
     exit 4
 fi 
 
 ### echo %%% Find the short description 
 short=`sed -n 's/^short: \(.*\)$/\1/p' < ${cmndir}/${pkg}.dscr` 
 if [ "x$short" = "x" ] ; then 
-    echo "$0: short description empty - giving up" 1>&2
+    echo "$0: short description empty - giving up" 
     exit 4
 fi
 
@@ -92,23 +89,17 @@ for j in ${lvls} ; do
     "postinst") lvl="%post" ;; 
     "prerm")    lvl="%preun" ;; 
     "postrm")   lvl="%postun" ;; 
-    *)          echo "Unknown level $j - givin up" 1>&2 ; exit 2;;
+    *)          echo "Unknown level $j - givin up"; exit 2;;
     esac
 
     echo "#-----------------" >> ${cmndir}/spec.tmp 
     echo "${lvl} -n ${pkg}"   >> ${cmndir}/spec.tmp 
-    sed 's,@prefix@,%_prefix,g' < ${cmndir}/${pkg}.${j} \
-			      >> ${cmndir}/spec.tmp 
+    cat	${cmndir}/${pkg}.${j} >> ${cmndir}/spec.tmp 
     echo ""                   >> ${cmndir}/spec.tmp 
 done 
 
-cat ${cmndir}/spec.tmp 
-echo "" 
-rm ${cmndir}/spec.tmp 
-
+cat ${cmndir}/spec.tmp >> ${updir}/${base}.spec
+echo "" >> ${updir}/${base}.spec
 #
-# $Log: makerpmspecs.sh,v $
-# Revision 1.1  2001/04/23 14:11:47  rdm
-# part of the debian and redhat build system.
-#
+# $Log$
 #

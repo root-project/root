@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.79 2002/01/23 08:38:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.71 2001/12/03 13:32:53 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -52,7 +52,6 @@ TBranchElement::TBranchElement(): TBranch()
    fObject = 0;
    fMaximum = 0;
    fBranchPointer = 0;
-   fNdata = 1;
 }
 
 
@@ -85,7 +84,6 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fBranchCount2 = 0;
    fObject       = 0;
    fBranchPointer= 0;
-   fNdata        = 1;
    fClassVersion = cl->GetClassVersion();
    fTree         = gTree;
    fMaximum      = 0;
@@ -139,7 +137,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    if (btype || fStreamerType <= 0 
              || fStreamerType == 7 
              || fStreamerType > 15) fEntryOffsetLen = 1000; 
-   if (basketsize < 100+fEntryOffsetLen) basketsize = 100+fEntryOffsetLen;
+   if (basketsize < 100) basketsize = 100;
    fBasketSize     = basketsize;
    fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
@@ -188,8 +186,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          } else {
             clones = (TClonesArray*)pointer;
          }
-         basket->DeleteEntryOffset(); //entryoffset not require for the clonesarray counterif (!clones) return; // TClonesArray must exist
-         fEntryOffsetLen = 0;
+         if (!clones) return; // TClonesArray must exist
          clm = clones->GetClass();
          if (!clm) return;
          // ===> Create a leafcount
@@ -199,8 +196,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          fLeaves.Add(leaf);
          fTree->GetListOfLeaves()->Add(leaf);
          // Create a basket for the leafcount
-         TBasket *basket2 = new TBasket(name,fTree->GetName(),this);
-         fBaskets.Add(basket2);
+         TBasket *basket = new TBasket(name,fTree->GetName(),this);
+         fBaskets.Add(basket);
          // ===> create sub branches for each data member of a TClonesArray
          fType = 3;
          //check that the contained objects class name is part of the element title
@@ -290,7 +287,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fID           = 0;
    fStreamerType = -1;
    fType         = 0;
-   fClassVersion = TClonesArray::Class()->GetClassVersion();
+   fClassVersion = 1;
    fBranchCount  = 0;
    fBranchCount2 = 0;
    fObject       = 0;
@@ -398,27 +395,6 @@ void TBranchElement::Browse(TBrowser *b)
       TString name = GetName();
       Int_t pos = name.First('[');
       if (pos!=kNPOS) name.Remove(pos);
-
-      TString mothername;
-      if (GetMother()) {
-         mothername = GetMother()->GetName();
-         pos = mothername.First('[');
-         if (pos!=kNPOS) mothername.Remove(pos);
-
-         Int_t len = mothername.Length();
-         if (len) {
-            if (mothername(len-1)!='.') {
-               mothername.Append(".");
-               name.Prepend(mothername);
-            } else {
-               // If the mother's name end with a dot then 
-               // the daughter probabley already contains the mother's name
-               if (name.Index(mothername)==kNPOS) {
-                  name.Prepend(mothername);
-               }
-            }
-         }
-      }
 
       GetTree()->Draw(name);
       if (gPad) gPad->Update();
@@ -623,7 +599,6 @@ TStreamerInfo *TBranchElement::GetInfo()
    TClass *cl = gROOT->GetClass(fClassName.Data());
    if (cl) {
       TStreamerInfo::Optimize(kFALSE);
-      if (cl == TClonesArray::Class()) fClassVersion = TClonesArray::Class()->GetClassVersion();
       fInfo = cl->GetStreamerInfo(fClassVersion);
       if (fInfo && !fInfo->GetOffsets()) {
          fInfo->Compile();
@@ -727,51 +702,6 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len, Bool_t subarr) const
       else return fInfo->GetValueClones(clones,fID, j/len, j%len,fOffset);
    } else {
       return fInfo->GetValue(fObject,fID,j,-1);
-   }
-}
-
-//______________________________________________________________________________
-void *TBranchElement::GetValuePointer() const
-{
-// Returns pointer to first data element of this branch
-// Currently used only for members of type character
-
-   if (fBranchCount) {
-      Int_t entry = fTree->GetReadEntry();
-      fBranchCount->TBranch::GetEntry(entry);
-      if (fBranchCount2) fBranchCount2->TBranch::GetEntry(entry);
-   }
-   if (fTree->GetMakeClass()) {
-     if (!fAddress) return 0;
-     if (fType == 3) {    //top level branch of a TClonesArray
-       //return &fNdata;
-       return 0;
-     } else if (fType == 31) {    // sub branch of a TClonesArray
-       //Int_t atype = fStreamerType;
-       //if (atype < 20) atype += 20;
-       //return fInfo->GetValue(fAddress,atype,j,1);
-       return 0;
-     } else if (fType <= 2) {     // branch in split mode
-       if (fStreamerType > 40 && fStreamerType < 55) {
-          //Int_t atype = fStreamerType - 20;
-          //return fInfo->GetValue(fAddress,atype,j,1);
-          return 0;
-       } else {
-          //return fInfo->GetValue(fObject,fID,j,-1);
-          return 0;
-       }
-     }
-   }
-
-   if (fType == 31) {
-      //TClonesArray *clones = (TClonesArray*)fObject;
-      //if (subarr) return fInfo->GetValueClones(clones,fID, j, len,fOffset);
-      //else return fInfo->GetValueClones(clones,fID, j/len, j%len,fOffset);
-      return 0;
-   } else {
-      //return fInfo->GetValue(fObject,fID,j,-1);
-      char **val = (char**)(fObject+fInfo->GetOffsets()[fID]);
-      return *val;
    }
 }
 
@@ -994,7 +924,7 @@ void TBranchElement::SetAddress(void *add)
 
    //build the StreamerInfo if first time for the class
    TClass *cl = gROOT->GetClass(fClassName.Data());
-   if (!fInfo ) GetInfo(); 
+   if (!fInfo ) GetInfo();
    Int_t nbranches = fBranches.GetEntriesFast();
    if (gDebug > 0) {
       printf("SetAddress, branch:%s, classname=%s, parent=%s, fID=%d, fType=%d, nbranches=%d, add=%lx, fInfo=%s, version=%d\n",GetName(),fClassName.Data(),fParentName.Data(),fID,fType,nbranches,(Long_t)add,fInfo->GetName(),fClassVersion);
@@ -1176,12 +1106,11 @@ void TBranchElement::SetBasketSize(Int_t buffsize)
 {
 // Reset basket size for all subbranches of this branchelement
 
-   TBranch::SetBasketSize(buffsize);
-
+   fBasketSize = buffsize;
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i=0;i<nbranches;i++)  {
       TBranch *branch = (TBranch*)fBranches[i];
-      branch->SetBasketSize(fBasketSize);
+      branch->SetBasketSize(buffsize);
    }
 }
 

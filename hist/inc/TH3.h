@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.15 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.12 2001/02/28 07:53:09 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -32,12 +32,6 @@
 
 class TH3 : public TH1, public TAtt3D {
 
-protected:
-   
-   virtual Int_t    BufferFill(Axis_t x, Stat_t w) {return -2;} //may not use
-   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Stat_t w) {return -2;} //may not use
-   virtual Int_t    BufferFill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
-   
 public:
    TH3();
    TH3(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
@@ -50,24 +44,11 @@ public:
                                          ,Int_t nbinsy,const Double_t *ybins
                                          ,Int_t nbinsz,const Double_t *zbins);
    virtual ~TH3();
-   virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
    virtual void    Copy(TObject &hnew);
            Int_t   Fill(Axis_t) {return -1;}        //MayNotUse
            Int_t   Fill(Axis_t,Stat_t) {return -1;} //MayNotUse
-           Int_t   Fill(const char*, Stat_t) {return -1;} //MayNotUse
-           Int_t   Fill(Axis_t,const char*,Stat_t) {return -1;} //MayNotUse
-           Int_t   Fill(const char*,Axis_t,Stat_t) {return -1;} //MayNotUse
-           Int_t   Fill(const char*,const char*,Stat_t) {return -1;} //MayNotUse
    virtual Int_t   Fill(Axis_t x, Axis_t y, Axis_t z);
    virtual Int_t   Fill(Axis_t x, Axis_t y, Axis_t z, Stat_t w);
-   
-   virtual Int_t   Fill(const char *namex, const char *namey, const char *namez, Stat_t w);
-   virtual Int_t   Fill(const char *namex, Axis_t y, const char *namez, Stat_t w);
-   virtual Int_t   Fill(const char *namex, const char *namey, Axis_t z, Stat_t w);
-   virtual Int_t   Fill(Axis_t x, const char *namey, const char *namez, Stat_t w);
-   virtual Int_t   Fill(Axis_t x, const char *namey, Axis_t z, Stat_t w);
-   virtual Int_t   Fill(Axis_t x, Axis_t y, const char *namez, Stat_t w);
-   
    virtual void    FillRandom(const char *fname, Int_t ntimes=5000);
    virtual void    FillRandom(TH1 *h, Int_t ntimes=5000);
    virtual void    FitSlicesZ(TF1 *f1=0,Int_t binminx=1, Int_t binmaxx=0,Int_t binminy=1, Int_t binmaxy=0,
@@ -79,7 +60,6 @@ public:
    virtual Stat_t  Integral(Int_t, Int_t, Int_t, Int_t, Option_t *option="") {return 0;}
    virtual Stat_t  Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="");
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
-   virtual Int_t   Merge(TCollection *list);
           TH1D    *ProjectionZ(const char *name="_pz", Int_t firstxbin=-1, Int_t lastxbin=9999, Int_t firstybin=0,
                                  Int_t lastybin=9999, Option_t *option=""); // *MENU*
           TH1     *Project3D(Option_t *option="x"); // *MENU*
@@ -118,7 +98,7 @@ public:
                                  {fArray[bin] = Char_t (content);}
    virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t binz, Stat_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
-   virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayC::Set(nx);}
+   virtual void    SetBinsLength(Int_t nx) {TArrayC::Set(nx);}
            TH3C&   operator=(const TH3C &h1);
    friend  TH3C    operator*(Float_t c1, TH3C &h1);
    friend  TH3C    operator*(TH3C &h1, Float_t c1) {return operator*(c1,h1);}
@@ -158,7 +138,7 @@ public:
                                  {fArray[bin] = Short_t (content);}
    virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t binz, Stat_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
-   virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayS::Set(nx);}
+   virtual void    SetBinsLength(Int_t nx) {TArrayS::Set(nx);}
            TH3S&   operator=(const TH3S &h1);
    friend  TH3S    operator*(Float_t c1, TH3S &h1);
    friend  TH3S    operator*(TH3S &h1, Float_t c1) {return operator*(c1,h1);}
@@ -200,7 +180,7 @@ public:
                                  {fArray[bin] = Float_t (content);}
    virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t binz, Stat_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
-   virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayF::Set(nx);}
+   virtual void    SetBinsLength(Int_t nx) {TArrayF::Set(nx);}
            TH3F&   operator=(const TH3F &h1);
    friend  TH3F    operator*(Float_t c1, TH3F &h1);
    friend  TH3F    operator*(TH3F &h1, Float_t c1) {return operator*(c1,h1);}
@@ -241,7 +221,7 @@ public:
                                  {fArray[bin] = Double_t (content);}
    virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
    virtual void    SetBinContent(Int_t binx, Int_t biny, Int_t binz, Stat_t content) {SetBinContent(GetBin(binx,biny,binz),content);}
-   virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayD::Set(nx);}
+   virtual void    SetBinsLength(Int_t nx) {TArrayD::Set(nx);}
            TH3D&   operator=(const TH3D &h1);
    friend  TH3D    operator*(Float_t c1, TH3D &h1);
    friend  TH3D    operator*(TH3D &h1, Float_t c1) {return operator*(c1,h1);}

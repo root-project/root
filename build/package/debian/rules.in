@@ -2,7 +2,7 @@
 # 
 # GNU copyright 1997 by Joey Hess.
 #
-# $Id: rules.in,v 1.1 2001/04/23 14:09:55 rdm Exp $
+# $Id$
 #
 # Rules file for ROOT packages for Debian GNU/Linux 
 #
@@ -24,7 +24,23 @@ export DH_OPTIONS
 # Order of the packages are important for when we move files around
 #
 BUILDPREFIX = $(shell pwd)/debian/tmp
-
+METAPKGS    = task-root
+FEATUREPKGS = root-daemon \
+	      root-ttf    \
+	      root-zebra  \
+	      root-opengl \
+	      root-mysql  \
+	      root-pythia \
+	      root-star   \
+	      root-shift
+CINTPKGS    = root-cint   
+BASEPKGS    = root-bin    \
+	      root-dev    \
+	      root-lib    
+#ALLPKGS     = $(METAPKGS) $(FEATUREPKGS) $(CINTPKGS) $(BASEPKGS)
+ALLPKGS	    = \
+@pkg@
+	task-root
 #
 # Some notes about this target:
 #
@@ -40,19 +56,7 @@ build: build-stamp
 build-stamp:
 	dh_testdir
 
-	./configure linuxdeb 					\
-		--prefix=@prefix@				\
-		--etcdir=@etcdir@ 				\
-		--docdir=@docdir@				\
-		--enable-star 					\
-		--enable-thread 				\
-		--enable-shared 				\
-		--enable-soversion 				\
-		--disable-rpath                                 \
-		--disable-afs 					\
-		--disable-srp 					\
-		--with-sys-iconpath=/usr/share/pixmaps		\
-		--with-ttf-fontdir=/usr/share/fonts/truetype
+@configure@
 
 	$(MAKE) -j3
 	#
@@ -115,43 +119,27 @@ install: build
 	$(MAKE) install DESTDIR=$(BUILDPREFIX)
 
 	@if [ -f README/Changelog ] ; then \
-	   cp README/Changelog $(BUILDPREFIX)@docdir@/ ; \
+	   cp README/Changelog $(BUILDPREFIX)/usr/share/doc/root/ ; \
 	fi
 
-	# Copy the installation instructions too, since it has some 
-	# valuable information
-	cp README/INSTALL $(BUILDPREFIX)@docdir@/
+	cp README/INSTALL $(BUILDPREFIX)/usr/share/doc/root/
 
-	# Remove since lintian comlpains about dual license files
-	rm $(BUILDPREFIX)@docdir@/LICENSE
-
-	# Move the PROOF README file to a proper directory 
-	mv $(BUILDPREFIX)@docdir@/README.PROOF \
-		debian/root-daemon.README.Debian
-
-	# Remove the CVS directories if present 
 	find debian/tmp -name "CVS" | xargs rm -fr 
 
-	# Remove a bad magic line in CINT code. 
 	sed 's|^#!.*||' \
-	  < $(BUILDPREFIX)@prefix@/share/root/cint/lib/snstream/length.cxx > foo
-	mv foo $(BUILDPREFIX)@prefix@/share/root/cint/lib/snstream/length.cxx
+	  < $(BUILDPREFIX)/usr/share/root/cint/lib/snstream/length.cxx > foo
+	mv foo $(BUILDPREFIX)/usr/share/root/cint/lib/snstream/length.cxx
 
-	# for i in $(ALLPKGS) ;    do dh_movefiles -p $$i ; done
-	# First move for the arch-dependent packages, then for the 
-	# arch-independet packages
-	dh_movefiles -a -i 
+	for i in $(ALLPKGS) ;    do dh_movefiles -p $$i ; done
 
-	# This is for alternatives registration, if one want's to install 
-	# Richard Kreckels cint package next to ROOT
-	mv debian/root-cint@prefix@/bin/cint \
-		debian/root-cint@prefix@/bin/cint.root
-	mv debian/root-cint@prefix@/bin/makecint \
-		debian/root-cint@prefix@/bin/makecint.root
-	mv debian/root-cint@prefix@/share/man/man1/cint.1 \
-		debian/root-cint@prefix@/share/man/man1/cint.root.1
-	mv debian/root-cint@prefix@/share/man/man1/makecint.1 \
-		debian/root-cint@prefix@/share/man/man1/makecint.root.1
+	mv debian/root-cint/usr/bin/cint \
+		debian/root-cint/usr/bin/cint.root
+	mv debian/root-cint/usr/bin/makecint \
+		debian/root-cint/usr/bin/makecint.root
+	mv debian/root-cint/usr/share/man/man1/cint.1 \
+		debian/root-cint/usr/share/man/man1/cint.root.1
+	mv debian/root-cint/usr/share/man/man1/makecint.1 \
+		debian/root-cint/usr/share/man/man1/makecint.root.1
 
 #	for i in $(METAPKGS) ;    do dh_movefiles -p $$i ; done
 #	for i in $(FEATUREPKGS) ; do dh_movefiles -p $$i ; done
@@ -243,8 +231,5 @@ binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install
 
 #
-# $Log: rules.in,v $
-# Revision 1.1  2001/04/23 14:09:55  rdm
-# part of the debian ad redhat package system.
-#
+# $Log$
 #

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.7 2001/12/19 15:40:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.5 2001/12/06 15:27:34 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -95,9 +95,9 @@ void TBits::Compact()
 }
 
 //______________________________________________________________________________
-UInt_t TBits::CountBits(UInt_t startBit) const
+UInt_t TBits::CountBits() const
 {
-   // Return number of bits set to 1 starting at bit startBit
+   // Return number of bits set to 1
       
    const Int_t nbits[256] = {
              0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,
@@ -117,30 +117,15 @@ UInt_t TBits::CountBits(UInt_t startBit) const
              3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
              4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8};
 
-   UInt_t i,count = 0;
-   if (startBit == 0) {
-      for(i=0; i<fNbytes; i++) {
-         count += nbits[fAllBits[i]];
-      }
-      return count;
-   }
-   if (startBit >= fNbits) return count;
-   UInt_t startByte = startBit/8;
-   UInt_t ibit = startBit%8;
-   if (ibit) {
-      for (i=ibit;i<8;i++) {
-         if (fAllBits[startByte] & (1<<ibit)) count++;
-      }
-      startByte++;
-   }
-   for(i=startByte; i<fNbytes; i++) {
-      count += nbits[fAllBits[i]];
+   UInt_t count = 0;
+   for(UInt_t i=0; i<fNbytes; i++) {
+       count += nbits[fAllBits[i]];
    }
    return count;
 }
 
 //______________________________________________________________________________
-UInt_t TBits::FirstNullBit(UInt_t startBit) const
+UInt_t TBits::FirstNullBit() const
 {
    // Return position of first null bit
    
@@ -162,30 +147,14 @@ UInt_t TBits::FirstNullBit(UInt_t startBit) const
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,4,
              0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,8};
       
-   UInt_t i;
-   if (startBit == 0) {
-      for(UInt_t i=0; i<fNbytes; i++) {
-         if (fAllBits[i] != 255) return 8*i + fbits[fAllBits[i]];      
-      }
-      return fNbits;
-   }
-   if (startBit >= fNbits) return fNbits; 
-   UInt_t startByte = startBit/8;
-   UInt_t ibit = startBit%8;
-   if (ibit) {
-      for (i=ibit;i<8;i++) {
-         if ((fAllBits[startByte] & (1<<i)) == 0) return 8*startByte+i;
-      }
-      startByte++;
-   }
-   for(i=startByte; i<fNbytes; i++) {
+   for(UInt_t i=0; i<fNbytes; i++) {
       if (fAllBits[i] != 255) return 8*i + fbits[fAllBits[i]];      
    }
-   return fNbits;
+   return fNbits+1;
 }
 
 //______________________________________________________________________________
-UInt_t TBits::FirstSetBit(UInt_t startBit) const
+UInt_t TBits::FirstSetBit() const
 {
    // Return position of first non null bit
    
@@ -207,26 +176,10 @@ UInt_t TBits::FirstSetBit(UInt_t startBit) const
              5,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0,
              4,0,1,0,2,0,1,0,3,0,1,0,2,0,1,0};
       
-   UInt_t i;
-   if (startBit == 0) {
-      for(UInt_t i=0; i<fNbytes; i++) {
-         if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];      
-      }
-      return fNbits;
-   }
-   if (startBit >= fNbits) return fNbits;
-   UInt_t startByte = startBit/8;
-   UInt_t ibit = startBit%8;
-   if (ibit) {
-      for (i=ibit;i<8;i++) {
-         if ((fAllBits[startByte] & (1<<i)) != 0) return 8*startByte+i;
-      }
-      startByte++;
-   }
-   for(i=startByte; i<fNbytes; i++) {
+   for(UInt_t i=0; i<fNbytes; i++) {
       if (fAllBits[i] != 0) return 8*i + fbits[fAllBits[i]];      
    }
-   return fNbits;
+   return fNbits+1;
 }
 
 //______________________________________________________________________________
@@ -272,7 +225,6 @@ void TBits::SetBitNumber(UInt_t bitnumber, Bool_t value)
          UChar_t *old_location = fAllBits;
          fAllBits = new UChar_t[new_size];
          memcpy(fAllBits,old_location,fNbytes);
-         memset(fAllBits+fNbytes ,0, new_size-fNbytes);
          fNbytes = new_size;
          delete old_location;
       } 

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.1 2001/11/28 15:41:13 rdm Exp $
+// @(#)root/win32gdk:$Name:$:$Id:$
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -192,7 +192,7 @@ public:
    void      Sync(Int_t mode);
    void      UpdateWindow(Int_t mode);
    void      Warp(Int_t ix, Int_t iy);
-   Int_t     WriteGIF(char *name);
+   void      WriteGIF(char *name);
    void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 
    //---- Methods used for GUI -----

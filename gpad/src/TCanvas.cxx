@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.38 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.35 2001/11/28 16:05:41 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -11,8 +11,9 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TCanvas.h"
 #include "TClass.h"
@@ -25,6 +26,7 @@
 #include "TGuiFactory.h"
 #include "TEnv.h"
 #include "TError.h"
+//#include "TExec.h"
 #include "TContextMenu.h"
 #include "TControlBar.h"
 #include "TInterpreter.h"
@@ -41,6 +43,9 @@ public:
 };
 
 static TInitMakeDefCanvas makedefcanvas_init;
+
+
+
 
 //*-*x16 macros/layout_canvas
 

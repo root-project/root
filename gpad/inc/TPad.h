@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.14 2001/12/17 08:06:17 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.12 2001/10/30 17:22:32 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -109,8 +109,7 @@ protected:
    TView        *fView;            //! Pointer to 3-D view (if one exists)
    TObject      *fPadPointer;      //! free pointer
    TPadView3D   *fPadView3D;       //! 3D View of this TPad
-   static Int_t  fgMaxPickDistance;//  Maximum Pick Distance
-   
+
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void  HideToolTip(Int_t event);
@@ -130,7 +129,6 @@ public:
    // TPad status bits
    enum {
       kFraming      = BIT(6),
-      kHori         = BIT(9),
       kPrintingPS   = BIT(11),
       kClearAfterCR = BIT(12)
    };
@@ -213,7 +211,6 @@ public:
    Double_t          GetX2() const { return fX2; }
    Double_t          GetY1() const { return fY1; }
    Double_t          GetY2() const { return fY2; }
-   static Int_t      GetMaxPickDistance();
    TList            *GetListOfPrimitives() const {return fPrimitives;}
    TList            *GetListOfExecs() const {return fExecs;}
    virtual TObject  *GetPrimitive(const char *name) const;  //obsolete, use FindObject instead
@@ -241,7 +238,6 @@ public:
    Bool_t            IsFolder() const {return kTRUE;}
    Bool_t            IsModified() const {return fModified;}
    virtual Bool_t    IsRetained() const;
-   virtual Bool_t    IsVertical() const {return !TestBit(kHori);}
    virtual void      ls(Option_t *option="") const;
    void              Modified(Bool_t flag=1) { fModified = flag; }
    virtual Bool_t    OpaqueMoving() const;
@@ -274,9 +270,9 @@ public:
    virtual void      Print(const char *filename="") const;
    virtual void      Print(const char *filename, Option_t *option);
    virtual void      Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2); // *MENU* *ARGS={x1=>fX1,y1=>fY1,x2=>fX2,y2=>fY2}
-   virtual void      RangeChanged() { Emit("RangeChanged()"); } // *SIGNAL*
+   virtual void      RangeChanged() { Emit("RangeChanged()"); } //*SIGNAL*
    virtual void      RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);
-   virtual void      RangeAxisChanged() { Emit("RangeAxisChanged()"); } // *SIGNAL*
+   virtual void      RangeAxisChanged() { Emit("RangeAxisChanged()"); } //*SIGNAL*
    virtual void      RecursiveRemove(TObject *obj);
    virtual void      RedrawAxis(Option_t *option="");
    virtual void      ResetView3D(TPadView3D *view=0){fPadView3D=view;}
@@ -309,7 +305,6 @@ public:
    virtual void      SetAttLinePS(Color_t color, Style_t style, Width_t lwidth);
    virtual void      SetAttMarkerPS(Color_t color, Style_t style, Size_t msize);
    virtual void      SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize);
-   static  void      SetMaxPickDistance(Int_t maxPick=5);
    virtual void      SetName(const char *name) {fName = name;} // *MENU*
    virtual void      SetSelected(TObject *obj);
    virtual void      SetTicks(Int_t valuex = 1, Int_t valuey = 1) {fTickx = valuex; fTicky = valuey;}
@@ -319,7 +314,6 @@ public:
    virtual void      SetTheta(Double_t theta=30) {fTheta = theta;}
    virtual void      SetPhi(Double_t phi=30) {fPhi = phi;}
    virtual void      SetToolTipText(const char *text, Long_t delayms = 1000);
-   virtual void      SetVertical(Bool_t vert=kTRUE);
    virtual void      SetView(TView *view) {fView = view;}
    virtual void      Update();
    Int_t             UtoAbsPixel(Double_t u) const {return Int_t(fUtoAbsPixelk + u*fUtoPixel);}

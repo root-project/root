@@ -246,11 +246,6 @@ char *oldtype,*newtype;
   else if(strcmp(oldtype,"float")==0) {
     type='f'+ispointer;
   }
-#ifndef G__OLDIMPLEMENTATION1604
-  else if(strcmp(oldtype,"bool")==0) {
-    type='g'+ispointer;
-  }
-#endif
   else if(strncmp(oldtype,"struct",6)==0) {
     ptype=oldtype+6;
     type='u'+ispointer;
@@ -1062,16 +1057,7 @@ struct G__Charlist *callpara,*defpara;
 {
   while(defpara->next) {
     if(strcmp(defpara->string,symbol)==0) {
-#ifndef G__OLDIMPLEMENTATION1629
-      if(callpara->string) strcpy(symbol,callpara->string);
-      else {
-	/* Line number is not quite correct in following error messaging */
-	G__genericerror("Error: insufficient number of macro arguments");
-	symbol[0] = 0;
-      }
-#else
       strcpy(symbol,callpara->string);
-#endif
       break;
     }
     defpara = defpara->next;

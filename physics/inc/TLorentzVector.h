@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.7 2002/01/19 13:18:38 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.5 2001/03/03 08:34:12 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************
@@ -259,7 +259,7 @@ private:
   TVector3 fP;  // 3 vector component
   Double_t fE;  // time or energy of (x,y,z,t) or (px,py,pz,e)
 
-  ClassDef(TLorentzVector,4) // A four vector with (-,-,-,+) metric
+  ClassDef(TLorentzVector,2) // A four vector with (-,-,-,+) metric
 
 };
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.7 2001/10/25 07:50:32 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.6 2001/10/25 07:44:33 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -333,15 +333,6 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
          Error("ReturnType","Unknown method");
          return kOther;
       }
-
-      // count the number of stars in the name.
-      Int_t nstar = 0;
-      const char* returntype = func->GetReturnTypeName();
-      while (*returntype) {
-         if (*returntype == '*') nstar++;
-         returntype++;
-      }
-
       G__TypedefInfo type(func->GetReturnTypeName());
       const char *name = type.TrueName();
 
@@ -350,30 +341,21 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
          name = type.TrueName();
       }
 
-      if ( (nstar==1) && 
-           (!strcmp("unsigned char", name)        || !strcmp("char", name)         ||
-            !strcmp("UChar_t", name)              || !strcmp("Char_t", name)       ||
-            !strcmp("const unsigned char", name)  || !strcmp("const char", name)   ||
-            !strcmp("const UChar_t", name)        || !strcmp("const Char_t", name) ||
-            !strcmp("unsigned char*", name)        || !strcmp("char*", name)         ||
-            !strcmp("UChar_t*", name)              || !strcmp("Char_t*", name)       ||
-            !strcmp("const unsigned char*", name)  || !strcmp("const char*", name)   ||
-            !strcmp("const UChar_t*", name)        || !strcmp("const Char_t*", name))) 
-         fRetType = kString;
-      else if (!strcmp("unsigned int", name)   || !strcmp("int", name)     ||
-               !strcmp("unsigned long", name)  || !strcmp("long", name)    ||
-               !strcmp("unsigned short", name) || !strcmp("short", name)   ||
-               !strcmp("unsigned char", name)  || !strcmp("char", name)    ||
-               !strcmp("UInt_t", name)         || !strcmp("Int_t", name)   ||
-               !strcmp("ULong_t", name)        || !strcmp("Long_t", name)  ||
-               !strcmp("UShort_t", name)       || !strcmp("Short_t", name) ||
-               !strcmp("UChar_t", name)        || !strcmp("Char_t", name)  ||
-               strstr(name, "enum"))
+      if (!strcmp("unsigned int", name)   || !strcmp("int", name)     ||
+          !strcmp("unsigned long", name)  || !strcmp("long", name)    ||
+          !strcmp("unsigned short", name) || !strcmp("short", name)   ||
+          !strcmp("unsigned char", name)  || !strcmp("char", name)    ||
+          !strcmp("UInt_t", name)         || !strcmp("Int_t", name)   ||
+          !strcmp("ULong_t", name)        || !strcmp("Long_t", name)  ||
+          !strcmp("UShort_t", name)       || !strcmp("Short_t", name) ||
+          !strcmp("UChar_t", name)        || !strcmp("Char_t", name)  ||
+          strstr(name, "enum"))
          fRetType = kLong;
       else if (!strcmp("float", name)   || !strcmp("double", name)    ||
                !strcmp("Float_t", name) || !strcmp("Double_t", name))
          fRetType = kDouble;
-      else fRetType = kOther;
+      else
+         fRetType = kOther;
    }
    return fRetType;
 }

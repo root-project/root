@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.24 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.20 2001/11/06 11:43:03 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -25,7 +25,8 @@
 #include "config.h"
 #endif
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TApplication.h"
 #include "TGuiFactory.h"
 #include "TVirtualX.h"
@@ -297,10 +298,7 @@ void TApplication::GetOptions(int *argc, char **argv)
          argv[i] = 0;
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
          Long_t id, size, flags, modtime;
-         char *arg = strchr(argv[i], '(');
-         if (arg) *arg = '\0';
          char *dir = gSystem->ExpandPathName(argv[i]);
-         if (arg) *arg = '(';
          if (!gSystem->GetPathInfo(dir, &id, &size, &flags, &modtime)) {
             if ((flags & 2)) {
                // if directory make it working directory
@@ -521,7 +519,7 @@ void TApplication::LoadGraphicsLibs()
 }
 
 //______________________________________________________________________________
-void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
+void TApplication::ProcessLine(const char *line, Bool_t sync)
 {
    // Process a single command line, either a C++ statement or an interpreter
    // command starting with a ".".
@@ -559,16 +557,16 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
 
    if (!strncmp(line, ".which", 6)) {
       char *fn  = Strip(line+7);
-      char *s   = strtok(fn, "+(");
-      char *mac = gSystem->Which(TROOT::GetMacroPath(), s, kReadPermission);
+      char *mac = gSystem->Which(TROOT::GetMacroPath(), fn, kReadPermission);
       if (!mac)
-         Printf("No macro %s in path %s", s, TROOT::GetMacroPath());
+         Printf("No macro %s in path %s", fn, TROOT::GetMacroPath());
       else
          Printf("%s", mac);
       delete [] fn;
       delete [] mac;
       return;
    }
+
 
    if (!strncmp(line, ".L", 2)) {
       char *fn  = Strip(line+3);
@@ -592,11 +590,9 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
                TROOT::GetMacroPath());
       else {
          if (sync)
-           gInterpreter->ProcessLineSynch(Form(".L %s%s", mac,postfix),
-                                          (TInterpreter::EErrorCode*)error);
+           gInterpreter->ProcessLineSynch(Form(".L %s%s", mac,postfix));
          else
-           gInterpreter->ProcessLine(Form(".L %s%s", mac, postfix),
-                                     (TInterpreter::EErrorCode*)error);
+           gInterpreter->ProcessLine(Form(".L %s%s", mac, postfix));
       }
 
       delete [] fn;
@@ -605,7 +601,7 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
    }
 
    if (!strncmp(line, ".X", 2) || !strncmp(line, ".x", 2)) {
-      ProcessFile(line+3,error);
+      ProcessFile(line+3);
       return;
    }
 
@@ -623,13 +619,13 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
    }
 
    if (sync)
-      gInterpreter->ProcessLineSynch(line, (TInterpreter::EErrorCode*)error);
+      gInterpreter->ProcessLineSynch(line);
    else
-      gInterpreter->ProcessLine(line, (TInterpreter::EErrorCode*)error);
+      gInterpreter->ProcessLine(line);
 }
 
 //______________________________________________________________________________
-void TApplication::ProcessFile(const char *name, int *error)
+void TApplication::ProcessFile(const char *name)
 {
    // Process a file containing a C++ macro.
 
@@ -770,11 +766,9 @@ void TApplication::ProcessFile(const char *name, int *error)
       }
 
       if (tempfile) {
-         gInterpreter->ProcessLineSynch(Form(".x %s", exname),
-                                        (TInterpreter::EErrorCode*)error);
+         gInterpreter->ProcessLineSynch(Form(".x %s", exname));
       } else
-         gInterpreter->ProcessLineSynch(Form(".X %s", exname),
-                                        (TInterpreter::EErrorCode*)error);
+         gInterpreter->ProcessLineSynch(Form(".X %s", exname));
 
       delete [] exname;
    }

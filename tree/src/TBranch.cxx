@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.34 2002/02/02 11:54:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.31 2001/11/16 02:44:33 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -576,7 +576,6 @@ TBasket *TBranch::GetBasket(Int_t basketnumber)
    TDirectory *cursav = gDirectory;
    TFile *file = GetFile(0);
    basket = new TBasket();
-   basket->SetBranch(this);
    if (fBasketBytes[basketnumber] == 0) {
       fBasketBytes[basketnumber] = basket->ReadBasketBytes(fBasketSeek[basketnumber],file);
    }
@@ -978,16 +977,6 @@ void TBranch::SetAutoDelete(Bool_t autodel)
 }
 
 //______________________________________________________________________________
-void TBranch::SetBasketSize(Int_t buffsize)
-{
-// Set the basket size
-// The function makes sure that the basket size is greater than fEntryOffsetlen
-   
-   if (buffsize < 100+fEntryOffsetLen) buffsize = 100+fEntryOffsetLen;
-   fBasketSize = buffsize;
-}
-
-//______________________________________________________________________________
 void TBranch::SetBufferAddress(TBuffer *buf)
 {
    // Set address of this branch directly from a TBuffer to avoid streaming.
@@ -1043,13 +1032,6 @@ void TBranch::SetFile(TFile *file)
    if (file == fTree->GetCurrentFile()) fFileName = "";
    else                                 fFileName = file->GetName();
 
-   //apply to all existing baskets
-   TIter nextb(GetListOfBaskets());
-   TBasket *basket;
-   while ((basket = (TBasket*)nextb())) {
-      basket->SetParent(file);
-   }
-   
    //apply to sub-branches as well
    TIter next(GetListOfBranches());
    TBranch *branch;
@@ -1102,22 +1084,22 @@ void TBranch::Streamer(TBuffer &b)
       gROOT->SetReadingObject(kTRUE);
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 5) {
-
          TBranch::Class()->ReadBuffer(b, this, v, R__s, R__c);
 
-         fDirectory = gDirectory;
-         if (fFileName.Length() != 0) fDirectory = 0;
          TIter next(GetListOfLeaves());
          TLeaf *leaf;
          while ((leaf=(TLeaf*)next())) {
             leaf->SetBranch(this);
          }
+         fDirectory = gDirectory;
+         if (fFileName.Length() != 0) fDirectory = 0;
          fNleaves = fLeaves.GetEntriesFast();
          if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
          gROOT->SetReadingObject(kFALSE);
          return;
       }
       //====process old versions before automatic schema evolution
+      gBranch = this;
       TNamed::Streamer(b);
       b >> fCompress;
       b >> fBasketSize;

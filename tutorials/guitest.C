@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.13 2001/12/05 10:59:57 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.12 2001/12/04 18:55:35 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -207,7 +207,7 @@ class TileFrame;
 
 class TestMainFrame {
 
-RQ_OBJECT("TestMainFrame")
+RQ_OBJECT()
 
 private:
    TGMainFrame        *fMain;
@@ -231,14 +231,11 @@ public:
    void CloseWindow();
    void DoButton();
    void HandleMenu(Int_t id);
-
-   void Created() { Emit("Created()"); } //*SIGNAL*
-   void Welcome() { printf("TestMainFrame has been created. Welcome!\n"); }
 };
 
 class TestDialog {
 
-RQ_OBJECT("TestDialog")
+RQ_OBJECT()
 
 private:
    TGTransientFrame    *fMain;
@@ -280,7 +277,7 @@ public:
 
 class TestMsgBox {
 
-RQ_OBJECT("TestMsgBox")
+RQ_OBJECT()
 
 private:
    TGTransientFrame     *fMain;
@@ -311,7 +308,7 @@ public:
 
 class TestSliders {
 
-RQ_OBJECT("TestSliders")
+RQ_OBJECT()
 
 private:
    TGTransientFrame  *fMain;
@@ -336,7 +333,7 @@ public:
 
 class TestShutter {
 
-RQ_OBJECT("TestShutter")
+RQ_OBJECT()
 
 private:
    TGTransientFrame *fMain;
@@ -447,7 +444,7 @@ public:
 
 class TileFrame {
 
-RQ_OBJECT("TileFrame")
+RQ_OBJECT()
 
 private:
    TGCompositeFrame *fFrame;
@@ -654,9 +651,6 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    //Resize(400, 200);
 
    fMain->MapWindow();
-
-   Connect("Created()", "TestMainFrame", this, "Welcome()");
-   Created();
 }
 
 TestMainFrame::~TestMainFrame()

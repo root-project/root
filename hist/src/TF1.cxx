@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.32 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.28 2001/12/02 16:22:58 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TROOT.h"
 #include "TMath.h"
 #include "TF1.h"
@@ -388,7 +389,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
       fType       = 1;
       fMethodCall = 0;
       fFunction   = fcn;
-   }
+   }   
    if (npar > 0 ) fNpar = npar;
    if (fNpar) {
       fNames      = new TString[fNpar];
@@ -521,7 +522,7 @@ void TF1::Copy(TObject &obj)
       ((TF1&)obj).fParErrors = new Double_t[fNpar];
       ((TF1&)obj).fParMin    = new Double_t[fNpar];
       ((TF1&)obj).fParMax    = new Double_t[fNpar];
-      Int_t i;
+      Int_t i; 
       for (i=0;i<fNpar;i++)   ((TF1&)obj).fParErrors[i] = fParErrors[i];
       for (i=0;i<fNpar;i++)   ((TF1&)obj).fParMin[i]    = fParMin[i];
       for (i=0;i<fNpar;i++)   ((TF1&)obj).fParMax[i]    = fParMax[i];
@@ -574,7 +575,7 @@ Int_t TF1::DistancetoPrimitive(Int_t px, Int_t py)
 
    if (!fHistogram) return 9999;
    Int_t distance = fHistogram->DistancetoPrimitive(px,py);
-   if (distance <= 1) return distance;
+   if (distance <= 0) return distance;
 
    Double_t xx[1];
    Double_t x    = gPad->AbsPixeltoX(px);
@@ -789,10 +790,10 @@ Int_t TF1::GetNDF() const
 
    if (fNDF == 0) return fNpfits-fNpar;
    return fNDF;
-}
+}   
 
 //______________________________________________________________________________
-char *TF1::GetObjectInfo(Int_t px, Int_t /* py */) const
+char *TF1::GetObjectInfo(Int_t px, Int_t /* py */) const 
 {
 //   Redefines TObject::GetObjectInfo.
 //   Displays the function info (x, function value
@@ -802,15 +803,6 @@ char *TF1::GetObjectInfo(Int_t px, Int_t /* py */) const
    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
    sprintf(info,"(x=%g, f=%g)",x,((TF1*)this)->Eval(x));
    return info;
-}
-
-//______________________________________________________________________________
-Double_t TF1::GetParError(Int_t ipar) const
-{
-   //return value of parameter number ipar
-
-   if (ipar < 0 || ipar > fNpar-1) return 0;
-   return fParErrors[ipar];
 }
 
 //______________________________________________________________________________
@@ -827,9 +819,9 @@ void TF1::GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax)
 }
 
 //______________________________________________________________________________
-Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
+Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum) 
 {
-//  Compute Quantiles for density distribution of this function
+//  Compute Quantiles for density distribution of this function 
 //     Quantile x_q of a probability distribution Function F is defined as
 //
 //        F(x_q) = Integral_{xmin}^(x_q) f dx = q with 0 <= q <= 1.
@@ -913,7 +905,7 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
         if (integral[bin+2] == r) bin++;
         else break;
      }
-
+    
     const Double_t rr = r-integral[bin];
     if (rr != 0.0) {
        Double_t xx;
@@ -1533,7 +1525,7 @@ L160:
 Bool_t TF1::IsInside(const Double_t *x) const
 {
 // Return kTRUE is the point is inside the function range
-
+   
    if (x[0] < fXmin || x[0] > fXmax) return kFALSE;
    return kTRUE;
 }
@@ -1762,15 +1754,6 @@ void TF1::SetNpx(Int_t npx)
 }
 
 //______________________________________________________________________________
-void TF1::SetParError(Int_t ipar, Double_t error)
-{
-// set error for parameter number ipar
-
-   if (ipar < 0 || ipar > fNpar-1) return;
-   fParErrors[ipar] = error;
-}
-
-//______________________________________________________________________________
 void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)
 {
 //*-*-*-*-*-*Set limits for parameter ipar*-*-*-*
@@ -1778,7 +1761,7 @@ void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)
 //     The specified limits will be used in a fit operation
 //     when the option "B" is specified (Bounds).
 //  To fix a parameter, use TF1::FixParameter
-
+   
    if (ipar < 0 || ipar > fNpar-1) return;
    Int_t i;
    if (!fParMin) {fParMin = new Double_t[fNpar]; for (i=0;i<fNpar;i++) fParMin[i]=0;}
@@ -1885,13 +1868,13 @@ void TF1::Streamer(TBuffer &b)
       }
       b.CheckByteCount(R__s, R__c, TF1::IsA());
       //====end of old versions
-
+      
    } else {
       Int_t saved = 0;
       if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,0,0,0,0);}
-
+      
       TF1::Class()->WriteBuffer(b,this);
-
+      
       if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
    }
 }
@@ -1920,7 +1903,7 @@ void TF1::RejectPoint(Bool_t reject)
 // if TRUE the point is not included in the fit.
 // This flag can be set by a user in a fitting function.
 // The fgRejectPoint flag is reset by the TH1 and TGraph fitting functions.
-
+   
    fgRejectPoint = reject;
 }
 

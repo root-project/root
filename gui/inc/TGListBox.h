@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.10 2001/12/10 01:07:57 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.9 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -40,9 +40,6 @@
 #endif
 #ifndef ROOT_TGScrollBar
 #include "TGScrollBar.h"
-#endif
-#ifndef ROOT_TList
-#include "TList.h"
 #endif
 
 class TGListBox;

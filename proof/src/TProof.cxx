@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.13 2002/01/15 00:45:20 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.11 2000/12/22 12:36:00 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -42,10 +42,8 @@
 #include "TUrl.h"
 #include "TROOT.h"
 #include "TFile.h"
+#include "TTree.h"
 #include "TH1.h"
-#include "TProofPlayer.h"
-
-class TDSet;
 
 
 TProof *gProof = 0;
@@ -174,7 +172,7 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fIntHandler    = 0;
    fStatus        = 0;
    fParallel      = 0;
-   fPlayer        = 0;
+   fTree          = 0;
 
    delete u;
 
@@ -802,7 +800,7 @@ Int_t TProof::Collect(TMonitor *mon)
             break;
 
          case kPROOF_LIMITS:
-            if (fPlayer) Limits(s, *mess);
+            if (fTree) Limits(s, *mess);
             break;
 
          case kPROOF_FATAL:
@@ -820,17 +818,15 @@ Int_t TProof::Collect(TMonitor *mon)
             break;
 
          case kPROOF_GETPACKET:
-/*
-            if (fPlayer) {
+            if (fTree) {
                Int_t  nentries;
                Stat_t firstentry, processed;
                sl = FindSlave(s);
-               fPlayer->GetNextPacket(sl, nentries, firstentry, processed);
+               fTree->GetPlayer()->GetNextPacket(sl, nentries, firstentry, processed);
                TMessage answ(kPROOF_GETPACKET);
                answ << nentries << firstentry << processed;
                s->Send(answ);
             }
-*/
             break;
 
          case kPROOF_LOGFILE:
@@ -943,7 +939,6 @@ void TProof::Limits(TSocket *s, TMessage &mess)
    // This function is called via Collect() in response to a kPROOF_LIMITS
    // message send from a PROOF slave in TTree::TakeEstimate().
 
-/*
    static TObjArray arr;
    static Int_t     mxnbin[4], totevt;
    static Float_t   mxvmin[4], mxvmax[4];
@@ -992,10 +987,8 @@ void TProof::Limits(TSocket *s, TMessage &mess)
       } else
          s->Send(msg);
    }
-*/
 }
 
-/**************
 //______________________________________________________________________________
 void TProof::Loop(TTree *tree)
 {
@@ -1009,7 +1002,6 @@ void TProof::Loop(TTree *tree)
 
    fTree = 0;
 }
-*************/
 
 //______________________________________________________________________________
 void TProof::MarkBad(TSlave *sl)
@@ -1092,62 +1084,6 @@ void TProof::Print(Option_t *option) const
          fSlaves->ForEach(TSlave,Print)(option);
       }
    }
-}
-
-//______________________________________________________________________________
-Int_t TProof::Process(TDSet *set, const char *selector, Int_t nentries,
-                      Int_t first, TEventList *evl)
-{
-   // Process a data set (TDSet) using the specified selector (.C) file.
-
-   if (!fPlayer)
-      fPlayer = new TProofPlayerRemote(this);
-
-   fPlayer->GetOutputList()->Delete();
-
-   return fPlayer->Process(set, selector, nentries, first, evl);
-}
-
-//______________________________________________________________________________
-void TProof::AddInput(TObject *obj)
-{
-   // Add objects that might be needed during the processing of
-   // the selector (see Process()).
-
-   if (!fPlayer)
-      fPlayer = new TProofPlayerRemote(this);
-
-   fPlayer->AddInput(obj);
-}
-
-//______________________________________________________________________________
-void TProof::ClearInput()
-{
-   // Clear input object list.
-
-   if (fPlayer)
-      fPlayer->ClearInput();
-}
-
-//______________________________________________________________________________
-TObject *TProof::GetOutput(const char *name)
-{
-   // Get specified object that has been produced during the processing
-   // (see Process()).
-
-   if (fPlayer)
-      return fPlayer->GetOutput(name);
-   return 0;
-}
-
-//______________________________________________________________________________
-TList *TProof::GetOutputList()
-{
-   // Get list with all object created during processing (see Process()).
-
-   if (fPlayer)
-      return fPlayer->GetOutputList();
-   return 0;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.9 2001/12/07 21:58:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.8 2001/06/30 13:09:14 rdm Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -76,7 +76,6 @@ Bool_t    AreCompatible(const TVectorD &v1, const TVectorD &v2);
 
 class TVectorD : public TObject {
 
-friend class TMatrixD;
 friend class TMatrixDRow;
 friend class TMatrixDColumn;
 friend class TMatrixDDiag;

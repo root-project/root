@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.6 2002/02/02 11:57:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.4 2001/11/28 14:51:43 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -52,7 +52,7 @@ TRefArray::TRefArray(Int_t s, Int_t lowerBound)
       s = TCollection::kInitCapacity;
    } else if (s == 0)
       s = TCollection::kInitCapacity;
-   fPID  = TProcessID::GetSessionProcessID();
+   fPID  = TProcessID::GetProcessID(0);
    fUIDs = 0;
    Init(s, lowerBound);
 }
@@ -62,7 +62,7 @@ TRefArray::TRefArray(const TRefArray &a)
 {
    // Create a copy of TRefArray a. Note, does not copy the kIsOwner flag.
 
-   fPID  = TProcessID::GetSessionProcessID();
+   fPID  = TProcessID::GetProcessID(0);
    fUIDs = 0;
    Init(a.fSize, a.fLowerBound);
 
@@ -308,7 +308,6 @@ void TRefArray::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    Int_t nobjects;
    UShort_t pidf;
-   TFile *file = (TFile*)R__b.GetParent();
    if (R__b.IsReading()) {
       R__b.ReadVersion(&R__s, &R__c);
       TObject::Streamer(R__b);
@@ -318,7 +317,7 @@ void TRefArray::Streamer(TBuffer &R__b)
       if (nobjects >= fSize) Expand(nobjects);
       fLast = -1;
       R__b >> pidf;
-      fPID = TProcessID::ReadProcessID(pidf,file);
+      fPID = TProcessID::ReadProcessID(pidf,gFile);
       for (Int_t i = 0; i < nobjects; i++) {
           R__b >> fUIDs[i];
           if (fUIDs[i] != 0) fLast = i;
@@ -332,7 +331,7 @@ void TRefArray::Streamer(TBuffer &R__b)
       nobjects = GetLast()+1;
       R__b << nobjects;
       R__b << fLowerBound;
-      pidf = TProcessID::WriteProcessID(fPID,file);
+      pidf = TProcessID::WriteProcessID(fPID,gFile);
       R__b << pidf;
       for (Int_t i = 0; i < nobjects; i++) {
           R__b << fUIDs[i];

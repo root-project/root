@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Linux with glibc and KCC compiler
 
 # When changing OPT to -O you can also change +K0 to +K1
@@ -35,11 +33,11 @@ CXX           = KCC
 CC            = gcc
 CXXFLAGS      = $(EXCEPTION) --signed_chars -D_EXTERN_INLINE=inline \
                 --display_error_number --diag_suppress 191 --diag_suppress 830 \
-                --one_instantiation_per_object -fPIC $(CXXOPT) $(EXTRA_CXXFLAGS)
+                -fPIC $(CXXOPT) $(EXTRA_CXXFLAGS)
 CFLAGS        = $(COPT) -fPIC $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = $(EXCEPTION) --signed_chars -D_EXTERN_INLINE=inline \
                 --display_error_number --diag_suppress 191 --diag_suppress 830 \
-                --one_instantiation_per_object -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
+                -fPIC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
                 $(CXXOPT) $(EXTRA_CXXFLAGS)
 CINTCFLAGS    = $(COPT) -fPIC -D__KCC -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \

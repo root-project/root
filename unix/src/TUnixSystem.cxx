@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.34 2002/01/27 15:55:56 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.30 2001/11/21 07:38:19 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 #if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX) || \
     defined(R__AIX) || defined(R__LINUX) || defined(R__SOLARIS) || \
     defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__MACOSX) || defined(R__HURD)
+    defined(R__MACOSX)
 #   include <dirent.h>
 #else
 #   include <sys/dir.h>
@@ -53,13 +53,13 @@
 #endif
 #if defined(R__AIX) || defined(R__LINUX) || defined(R__ALPHA) || \
     defined(R__SGI) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__LYNXOS) || defined(R__MACOSX) || defined(R__HURD)
+    defined(R__LYNXOS) || defined(R__MACOSX)
 #   include <sys/ioctl.h>
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
-#if (defined(R__LINUX) && !defined(R__MKLINUX)) || defined(R__HURD)
+#if defined(R__LINUX) && !defined(R__MKLINUX)
 #   ifndef SIGSYS
 #      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
 #   endif
@@ -73,7 +73,7 @@
 #elif defined(R__MACOSX)
 #   include <sys/mount.h>
     extern "C" int statfs(const char *file, struct statfs *buffer);
-#elif defined(R__LINUX) || defined(R__HPUX) || defined(R__HURD)
+#elif defined(R__LINUX) || defined(R__HPUX)
 #   include <sys/vfs.h>
 #elif defined(R__FBSD)
 #   include <sys/param.h>
@@ -321,7 +321,7 @@ const char *TUnixSystem::GetError()
 
    Int_t err = GetErrno();
 #if defined(R__SOLARIS) || defined (R__LINUX) || defined(R__AIX) || \
-    defined(R__FBSD) || defined(R__HURD)
+    defined(R__FBSD)
    return strerror(err);
 #else
    if (err < 0 || err >= sys_nerr)
@@ -768,7 +768,6 @@ Bool_t TUnixSystem::AccessPathName(const char *path, EAccessMode mode)
 {
    // Returns FALSE if one can access a file using the specified access mode.
    // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
 
    if (::access(path, mode) == 0)
       return kFALSE;
@@ -1030,7 +1029,7 @@ char *TUnixSystem::Which(const char *search, const char *wfil, EAccessMode mode)
 {
    // Find location of file "wfil" in a search path.
    // The search path is specified as a : separated list of directories.
-   // User must delete returned string. Returns 0 in case file is not found.
+   // User must delete returned string.
 
    char name[kMAXPATHLEN], file[kMAXPATHLEN];
    const char *ptr;
@@ -1931,6 +1930,9 @@ static struct signal_map {
    { SIGUSR2,  0, 0, "user-defined signal 2" }
 };
 
+extern "C" {
+   static void sighandler(int sig);
+}
 
 //______________________________________________________________________________
 static void sighandler(int sig)
@@ -2216,7 +2218,7 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
 #if defined(R__SUN) || defined(R__SGI) || defined(R__AIX) || \
     defined(R__HPUX) || defined(R__LINUX) || defined(R__SOLARIS) || \
     defined(R__ALPHA) || defined(R__HIUX) || defined(R__FBSD) || \
-    defined(R__MACOSX) || defined(R__HURD)
+    defined(R__MACOSX)
    struct dirent *dp;
 #else
    struct direct *dp;
