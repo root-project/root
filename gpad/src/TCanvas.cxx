@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.2 2000/06/13 12:16:22 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -600,6 +600,8 @@ void TCanvas::Draw(Option_t *)
       Paint();
       return;
    }
+   if (fWindowWidth  == 0) fWindowWidth  = 800;
+   if (fWindowHeight == 0) fWindowHeight = 600;
    fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
                                              fWindowWidth, fWindowHeight);
    fCanvasImp->ShowMenuBar(fMenuBar);
@@ -1486,6 +1488,8 @@ void TCanvas::Streamer(TBuffer &b)
       UInt_t h = fWindowHeight;
       b << GetWindowTopX();
       b << GetWindowTopY();
+      fWindowWidth  = w;
+      fWindowHeight = h;
       b << w;
       b << h;
       b << fCw;
