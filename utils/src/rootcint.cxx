@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.74 2002/06/06 15:18:05 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.75 2002/06/07 07:12:21 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2071,14 +2071,12 @@ const char *GetFullTemplateName(G__ClassInfo &cl)
   // needed by the Shadow
 
    static string shadowName;
-   char arg[2048], *current, *next;
+   char arg[2048];
    shadowName = "::";
    strcpy(arg, cl.Fullname());
    // arg is now a comma separated list of type names
    int len = strlen(arg);
    int need = 0;
-   current = 0;
-   next = &(arg[0]);
    for (int c = 0; c<len; c++) {
       switch (arg[c]) {
       case '<':case '>':case ',':   
