@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.9 2004/10/18 09:10:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.10 2004/10/19 13:04:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -13,15 +13,14 @@
 #endif
 
 #include <algorithm>
-#include <sstream>
 #include <utility>
 #include <vector>
 
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#include "Rstrstream.h"
 #include "TError.h"
-
 #include "TGLSceneObject.h"
 #include "TGLRender.h"
 #include "TGLCamera.h"
@@ -69,7 +68,7 @@ TGLRender::TGLRender()
 //______________________________________________________________________________
 TGLRender::~TGLRender()
 {
-   if (fDList) 
+   if (fDList)
       glDeleteLists(fDList, 1);
 }
 
@@ -199,7 +198,7 @@ void TGLRender::SetPlane(const Double_t *n)
    fPlaneEqn[0] = n[0];
    fPlaneEqn[1] = n[1];
    fPlaneEqn[2] = n[2];
-   fPlaneEqn[3] = n[3];   
+   fPlaneEqn[3] = n[3];
 }
 
 //______________________________________________________________________________
@@ -225,7 +224,7 @@ void TGLRender::BuildGLList(Bool_t exec)
    if (fSelectedObj && !(isTr = fSelectedObj->IsTransparent())) {
       fSelectedObj->GLDraw();
    }
-   
+
    for (Int_t i = 0, e = fGLObjects.GetEntriesFast(); i < e; ++i) {
       TGLSceneObject *currObj = (TGLSceneObject *)fGLObjects.At(i);
       if (currObj->IsTransparent() && currObj != fSelectedObj) {
@@ -277,7 +276,11 @@ void TGLRender::SetAxes(const PDD_t &x, const PDD_t &y, const PDD_t &z)
 //______________________________________________________________________________
 void PrintNumber(Double_t x, Double_t y, Double_t z, Double_t num, Double_t ys)
 {
+#ifdef R__SSTREAM
    std::ostringstream ss;
+#else
+   ostrtream ss;
+#endif
    ss<<num;
    std::string str(ss.str());
    glRasterPos3d(x, y, z);
@@ -305,7 +308,7 @@ void TGLRender::DrawAxes()
    glPushAttrib(GL_DEPTH_BUFFER_BIT);
    glDisable(GL_DEPTH_TEST);
 
-   const Double_t axeColors[][3] = {{1., 0., 0.}, 
+   const Double_t axeColors[][3] = {{1., 0., 0.},
                                     {0., 1., 0.},
                                     {0., 0., 1.}};
    //white axes
@@ -332,13 +335,13 @@ void TGLRender::DrawAxes()
 
    glColor3dv(axeColors[1]);
    glRasterPos3d(fAxeD[0].first, fAxeD[1].second + 12, fAxeD[2].first);
-   glBitmap(8, 8, 0, 0, 12., 0, gXyz[1]);   
+   glBitmap(8, 8, 0, 0, 12., 0, gXyz[1]);
    PrintNumber(fAxeD[0].first, fAxeD[1].second, fAxeD[2].first, fAxeD[1].second, 9.);
    PrintNumber(fAxeD[0].first, fAxeD[1].first, fAxeD[2].first, fAxeD[1].first, 9.);
 
    glColor3dv(axeColors[2]);
    glRasterPos3d(fAxeD[0].first, fAxeD[1].first, fAxeD[2].second);
-   glBitmap(8, 8, 0, 0, 0., 0, gXyz[2]);   
+   glBitmap(8, 8, 0, 0, 0., 0, gXyz[2]);
    PrintNumber(fAxeD[0].first, fAxeD[1].first, fAxeD[2].second, fAxeD[2].second, 9.);
    PrintNumber(fAxeD[0].first, fAxeD[1].first, fAxeD[2].first, fAxeD[2].first, -9.);
 
