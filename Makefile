@@ -143,6 +143,15 @@ PROOFLIBS    := $(LPATH)/libGpad.lib $(LPATH)/libProof.lib \
                 $(LPATH)/libTreePlayer.lib
 endif
 
+##### gcc version #####
+
+ifneq ($(findstring g++,$(CXX)),)
+GCC_MAJOR    := $(shell $(CXX) -v 2>&1 | \
+                        grep version | cut -d' ' -f3  | cut -d'.' -f1)
+GCC_MINOR    := $(shell $(CXX) -v 2>&1 | \
+                        grep version | cut -d' ' -f3  | cut -d'.' -f2)
+endif
+
 ##### f77 options #####
 
 ifeq ($(F77LD),)
@@ -153,6 +162,12 @@ F77OPT       := $(OPT)
 endif
 ifeq ($(F77LDFLAGS),)
 F77LDFLAGS   := $(LDFLAGS)
+endif
+
+ifeq ($(GCC_MAJOR),3)
+ifeq ($(GCC_MINOR),1)
+F77LDFLAGS   += -lfrtbegin
+endif
 endif
 
 ##### utilities #####

@@ -14,12 +14,6 @@ CINTDIRM     := $(CINTDIR)/main
 CINTDIRT     := $(CINTDIR)/tool
 CINTDIRL     := $(CINTDIR)/lib
 
-##### check for g++ v3 #####
-ifneq ($(findstring g++,$(CXX)),)
-GCCVERS      := $(shell $(CXX) -v 2>&1 | \
-                        awk '{ if ($$2 == "version") printf("%d\n",$$3) }')
-endif
-
 ##### libCint #####
 CINTH        := $(wildcard $(MODDIRI)/*.h)
 CINTS1       := $(wildcard $(MODDIRS)/*.c)
@@ -127,7 +121,7 @@ ifeq ($(CXX),ecc)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/iccstrm.cxx
 endif
-ifeq ($(GCCVERS),3)
+ifeq ($(GCC_MAJOR),3)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       += $(MODDIRS)/gcc3strm.cxx
 endif
