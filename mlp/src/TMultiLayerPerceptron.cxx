@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.12 2003/10/27 16:51:54 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.13 2003/12/16 14:09:38 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -387,16 +387,16 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, TTree * data,
    fData = data;
    fCurrentTree = -1;
    fCurrentTreeWeight = 1;
-   fTraining = new TEventList("fTrainingList");
+   fTraining = new TEventList(Form("fTrainingList_%i",this));
    fTrainingOwner = true;
-   fTest = new TEventList("fTestList");
+   fTest = new TEventList(Form("fTestList_%i",this));
    fTestOwner = true;
    fWeight = "1";
    TString testcut = test;
    if(testcut=="") testcut = Form("!(%s)",training);
    if (data) {
-      data->Draw(">>fTrainingList",training,"goff");
-      data->Draw(">>fTestList",(const char *)testcut,"goff");
+      data->Draw(Form(">>fTrainingList_%i",this),training,"goff");
+      data->Draw(Form(">>fTestList_%i",this),(const char *)testcut,"goff");
       BuildNetwork();
    }
    else {
@@ -439,16 +439,16 @@ TMultiLayerPerceptron::TMultiLayerPerceptron(const char * layout, const char * w
    fStructure = layout;
    fData = data;
    fCurrentTree = -1;
-   fTraining = new TEventList("fTrainingList");
+   fTraining = new TEventList(Form("fTrainingList_%i",this));
    fTrainingOwner = true;
-   fTest = new TEventList("fTestList");
+   fTest = new TEventList(Form("fTestList_%i",this));
    fTestOwner = true;
    fWeight = weight;
    TString testcut = test;
    if(testcut=="") testcut = Form("!(%s)",training);
    if (data) {
-      data->Draw(">>fTrainingList",training,"goff");
-      data->Draw(">>fTestList",(const char *)testcut,"goff");
+      data->Draw(Form(">>fTrainingList_%i",this),training,"goff");
+      data->Draw(Form(">>fTestList_%i",this),(const char *)testcut,"goff");
       BuildNetwork();
    }
    else {
@@ -524,10 +524,10 @@ void TMultiLayerPerceptron::SetTrainingDataSet(const char * train)
    // Those events will be used for the minimization.
    // Note that the tree must be already defined.
    if(fTraining && fTrainingOwner) delete fTraining;
-   fTraining = new TEventList("fTrainingList");
+   fTraining = new TEventList(Form("fTrainingList_%i",this));
    fTrainingOwner = true;
    if (fData) {
-      fData->Draw(">>fTrainingList",train,"goff");
+      fData->Draw(Form(">>fTrainingList_%i",this),train,"goff");
    }
    else {
       Warning("TMultiLayerPerceptron::TMultiLayerPerceptron","Data not set. Cannot define datasets");
@@ -541,11 +541,11 @@ void TMultiLayerPerceptron::SetTestDataSet(const char * test)
    // Those events will not be used for the minimization but for control. 
    // Note that the tree must be already defined.
    if(fTest && fTestOwner) delete fTest;
-   if(fTest) if(strncmp(fTest->GetName(),"fTestList",10)) delete fTest;
-   fTest = new TEventList("fTestList");
+   if(fTest) if(strncmp(fTest->GetName(),Form("fTestList_%i",this),10)) delete fTest;
+   fTest = new TEventList(Form("fTestList_%i",this));
    fTestOwner = true;
    if (fData) {
-      fData->Draw(">>fTestList",test,"goff");
+      fData->Draw(Form(">>fTestList_%i",this),test,"goff");
    }
    else {
       Warning("TMultiLayerPerceptron::TMultiLayerPerceptron","Data not set. Cannot define datasets");
@@ -1342,7 +1342,7 @@ Double_t TMultiLayerPerceptron::Evaluate(Int_t index, Double_t *params) const
 void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) const
 {
    // Exports the NN as a function for any non-ROOT-dependant code
-   // Supported languages are: only C++ (yet)
+   // Supported languages are: only C++ and Python (yet)
    // This feature is also usefull if you want to plot the NN as 
    // a function (TF1 or TF2).
    
@@ -1435,6 +1435,63 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language) con
       headerfile.close();
       sourcefile.close();
       cout << header << " and " << source << " created." << endl;
+   }
+   else if(lg == "Python") {
+      TString classname = filename;
+      TString pyfile = filename;
+      pyfile += ".py";
+      ofstream pythonfile(pyfile);
+      pythonfile << "from cmath import exp" << endl << endl;
+      pythonfile << "class " << classname << ":" << endl;
+      pythonfile << "\tdef value(self,index";
+      for (i = 0; i < fFirstLayer.GetEntriesFast(); i++) {
+         pythonfile << ",in" << i;
+      }
+      pythonfile << "):" << endl;
+      for (i = 0; i < fFirstLayer.GetEntriesFast(); i++)
+         pythonfile << "\t\tself.input" << i << " = (in" << i << " - "
+             << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[1] << ")/"
+             << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[0] << endl;
+      TNeuron *neuron;
+      TObjArrayIter *it = (TObjArrayIter *) fLastLayer.MakeIterator();
+      Int_t idx = 0;
+      while ((neuron = (TNeuron *) it->Next()))
+         pythonfile << "\t\tif index==" << idx++ 
+             << ": return self.neuron" << neuron << "()" << endl;
+      pythonfile << "\t\treturn 0." << endl;
+      it = (TObjArrayIter *) fNetwork.MakeIterator();
+      idx = 0;
+      while ((neuron = (TNeuron *) it->Next())) {
+         pythonfile << "\tdef neuron" << neuron << "(self):" << endl;
+         if (!neuron->GetPre(0))
+            pythonfile << "\t\treturn self.input" << idx++ << endl;
+         else {
+            pythonfile << "\t\tinput = " << neuron->GetWeight() << endl;
+            TSynapse *syn;
+            Int_t n = 0;
+            while ((syn = neuron->GetPre(n++)))
+               pythonfile << "\t\tinput = input + self.synapse" 
+                          << syn << "()" << endl;
+            if (!neuron->GetPost(0))
+               pythonfile << "\t\treturn input" << endl;
+            else {
+               pythonfile << "\t\treturn ((1/(1+exp(-input)))*";
+               pythonfile << neuron->GetNormalisation()[0] << ")+" ;
+               pythonfile << neuron->GetNormalisation()[1] << endl;
+            }
+         }
+      }
+      delete it;
+      TSynapse *synapse = NULL;
+      it = (TObjArrayIter *) fSynapses.MakeIterator();
+      while ((synapse = (TSynapse *) it->Next())) {
+         pythonfile << "\tdef synapse" << synapse << "(self):" << endl;
+         pythonfile << "\t\treturn (self.neuron" << synapse->GetPre() 
+                    << "()*" << synapse->GetWeight() << ")" << endl;
+      }
+      delete it;
+      pythonfile.close();
+      cout << pyfile << " created." << endl;
    }
 }
 
@@ -1688,12 +1745,14 @@ void TMultiLayerPerceptron::ConjugateGradientsDir(Double_t * dir, Double_t beta)
    nentries = fNetwork.GetEntriesFast();
    for (j=0;j<nentries;j++) {
       neuron = (TNeuron *) fNetwork.UncheckedAt(j);
-      dir[idx] = -neuron->GetDEDw() + beta * dir[idx++];
+      dir[idx] = -neuron->GetDEDw() + beta * dir[idx];
+      idx++;
    }
    nentries = fSynapses.GetEntriesFast();
    for (j=0;j<nentries;j++) {
       synapse = (TSynapse *) fSynapses.UncheckedAt(j);
-      dir[idx] = -synapse->GetDEDw() + beta * dir[idx++];
+      dir[idx] = -synapse->GetDEDw() + beta * dir[idx];
+      idx++;
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.1 2002/09/06 19:57:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.h,v 1.2 2003/03/21 14:53:49 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 #ifndef ROOT_TLimit
@@ -35,10 +35,11 @@ class TLimit {
    virtual ~TLimit() {}
    static TConfidenceLevel *ComputeLimit(TLimitDataSource * data,
                                          Int_t nmc =50000, 
+                                         bool stat = false,
 					 TRandom * generator = NULL,
                                          Double_t(*statistic) (Double_t, Double_t,Double_t) =&(TLimit::LogLikelihood));
  protected:
-   static TLimitDataSource *Fluctuate(TLimitDataSource * input, bool init,TRandom *);
+   static TLimitDataSource *Fluctuate(TLimitDataSource * input, bool init,TRandom *, bool stat=false);
    inline static Double_t LogLikelihood(Double_t s, Double_t b, Double_t d) { return d * TMath::Log(1 + (s / b)); }
  private:
    static TArrayD *fgTable;              // a log table... just to speed up calculation
