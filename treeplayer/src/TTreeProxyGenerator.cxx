@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.5 2004/07/20 09:40:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.6 2004/07/27 12:21:31 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -508,7 +508,7 @@ namespace ROOT {
                      cname = branch->GetClonesName();
                      if (cname.Length()==0) {
                         // We may have any unsplit clones array
-                        Int_t i = branch->GetTree()->GetReadEntry();
+                        Long64_t i = branch->GetTree()->GetReadEntry();
                         if (i<0) i = 0;
                         branch->GetEntry(i);
                         char *obj = branch->GetObject();
@@ -1337,7 +1337,7 @@ namespace ROOT {
                if (cl==TClonesArray::Class()) {
                   isclones = true;
 
-                  Int_t i = branch->GetTree()->GetReadEntry();
+                  Long64_t i = branch->GetTree()->GetReadEntry();
                   if (i<0) i = 0;
                   branch->GetEntry(i);
 
@@ -1696,7 +1696,7 @@ namespace ROOT {
       fprintf(hf,"   void    SlaveBegin(::TTree *tree);\n");
       fprintf(hf,"   void    Init(::TTree *tree);\n");
       fprintf(hf,"   Bool_t  Notify();\n");
-      fprintf(hf,"   Bool_t  Process(Int_t entry);\n");
+      fprintf(hf,"   Bool_t  Process(Long64_t entry);\n");
       fprintf(hf,"   void    SetOption(const char *option) { fOption = option; }\n");
       fprintf(hf,"   void    SetObject(TObject *obj) { fObject = obj; }\n");
       fprintf(hf,"   void    SetInputList(TList *input) {fInput = input;}\n");
@@ -1805,7 +1805,7 @@ namespace ROOT {
       fprintf(hf,"\n");
 
       // generate code for class member function Process
-      fprintf(hf,"Bool_t %s::Process(Int_t entry)\n",classname.Data());
+      fprintf(hf,"Bool_t %s::Process(Long64_t entry)\n",classname.Data());
       fprintf(hf,"{\n");
 
       fprintf(hf,"   // The Process() function is called for each entry in the tree (or possibly\n"
