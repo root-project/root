@@ -1,4 +1,4 @@
-/* @(#)root/pythia6:$Name$:$Id$ */
+/* @(#)root/pythia6:$Name:  $:$Id: TPythia6Calls.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -191,34 +191,5 @@ struct Pybins_t {
   int    INDX[1000];
   double BIN[20000];
 };
-				// ****** Pythia6 routines
-extern "C" {
 
-  int    pycomp_(int*    kf);
-  void   pyedit_(int*    medit);
-  void   pyevnt_();
-  void   pyexec_();
-					// mconv = 1: PYJETS -> HEPEVT
-					//       = 2: HEPEVT -> PYJETS
-  void   pyhepc_(int*    mconv);
-
-  void   pyinit_(char*   frame,
-		 char*   beam,
-		 char*   target,
-		 double* win,
-		 int, int, int);
-
-  void   pylist_(int*    flag);
-
-  void   pyname_(int*    kf,
-		 char*   name,
-		 int);
-
-  double pyr_   (int*    idummy);
-  void   pyrget_(int*    lun,   int*    move);
-  void   pyrset_(int*    lun,   int*    move);
-  void   pystat_(int*    flag);
-  void   pytest_(int*    flag);
-  void   pyupda_(int*    mupda, int*    lun);
-}
 #endif

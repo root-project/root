@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.5 2001/04/06 17:16:00 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.6 2002/10/21 16:35:22 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,13 +63,80 @@
 
 TPythia6*  TPythia6::fgInstance = 0;
 
-ClassImp(TPythia6)
+#ifndef WIN32
+# define pyevnt pyevnt_
+# define pyinit pyinit_
+# define pycomp pycomp_
+# define pyedit pyedit_
+# define pyexec pyexec_
+# define pyhepc pyhepc_
+# define pylist pylist_
+# define pyname pyname_
+# define pyr    pyr_
+# define pyrget pyrget_
+# define pyrset pyrset_
+# define pystat pystat_
+# define pytest pytest_
+# define pyupda pyupda_
+# define pythia6_common_block_address pythia6_common_block_address_
+# define tpythia6_open_fortran_file tpythia6_open_fortran_file_
+# define tpythia6_close_fortran_file tpythia6_close_fortran_file_
+# define type_of_call
+#else
+# define pyevnt PYEVNT
+# define pyinit PYINIT
+# define pycomp PYCOMP
+# define pyedit PYEDIT
+# define pyexec PYEXEC
+# define pyhepc PYHEPC
+# define pylist PYLIST
+# define pyname PYNAME
+# define pyr    PYR
+# define pyrget PYRGET
+# define pyrset PYRSET
+# define pystat PYSTAT
+# define pytest PYTEST
+# define pyupda PYUPDA
+# define pythia6_common_block_address PYTHIA6_COMMON_BLOCK_ADDRESS
+# define tpythia6_open_fortran_file TPYTHIA6_OPEN_FORTRAN_FILE
+# define tpythia6_close_fortran_file TPYTHIA6_CLOSE_FORTRAN_FILE
+# define type_of_call _stdcall
+#endif
+
+extern "C" void type_of_call pyevnt();
+extern "C" void type_of_call pystat(int *key);
+extern "C" void type_of_call pylist(int *key);
+extern "C" void type_of_call pyedit(int *medit);
+extern "C" void type_of_call pyexec();
+extern "C" void type_of_call pyhepc(int *mconv);
+extern "C" void type_of_call pylist(int *flag);
+extern "C" int  type_of_call pycomp(int *kf);
+extern "C" void type_of_call pyname(int *kf, char *name, Long_t l_name);
+extern "C" int  type_of_call pyr(int *dummy);
+extern "C" int  type_of_call pyrget(int *lun, int *move);
+extern "C" int  type_of_call pyrset(int *lun, int *move);
+extern "C" int  type_of_call pytest(int *flag);
+extern "C" int  type_of_call pyupda(int *mupda, int *lun);
+
+#ifndef WIN32
+extern "C" void type_of_call pyinit(char *frame, char *beam, char *target,
+                                     double *win, Long_t l_frame, Long_t l_beam,
+                                     Long_t l_target);
+#else
+extern "C" void type_of_call pyinit(char *frame,  Long_t l_frame,
+                                    char *beam,   Long_t l_beam,
+                                    char *target, Long_t l_target,
+                                    double *win
+                                    );
+#endif
 
 extern "C" {
-  void*  pythia6_common_block_address_(char*, int len);
-  void   tpythia6_open_fortran_file_ (int* lun, char* name, int);
-  void   tpythia6_close_fortran_file_(int* lun);
+  void*  type_of_call pythia6_common_block_address(char*, int len);
+  void   type_of_call tpythia6_open_fortran_file(int* lun, char* name, int);
+  void   type_of_call tpythia6_close_fortran_file(int* lun);
 }
+
+ClassImp(TPythia6)
 
 //------------------------------------------------------------------------------
 TPythia6::Cleaner::Cleaner() {
@@ -99,28 +166,28 @@ TPythia6::TPythia6() : TGenerator("TPythia6","TPythia6") {
 
   // initialize common-blocks
 
-  fPyjets = (Pyjets_t*) pythia6_common_block_address_((char*)"PYJETS",6);
-  fPydat1 = (Pydat1_t*) pythia6_common_block_address_((char*)"PYDAT1",6);
-  fPydat2 = (Pydat2_t*) pythia6_common_block_address_((char*)"PYDAT2",6);
-  fPydat3 = (Pydat3_t*) pythia6_common_block_address_((char*)"PYDAT3",6);
-  fPydat4 = (Pydat4_t*) pythia6_common_block_address_((char*)"PYDAT4",6);
-  fPydatr = (Pydatr_t*) pythia6_common_block_address_((char*)"PYDATR",6);
-  fPysubs = (Pysubs_t*) pythia6_common_block_address_((char*)"PYSUBS",6);
-  fPypars = (Pypars_t*) pythia6_common_block_address_((char*)"PYPARS",6);
-  fPyint1 = (Pyint1_t*) pythia6_common_block_address_((char*)"PYINT1",6);
-  fPyint2 = (Pyint2_t*) pythia6_common_block_address_((char*)"PYINT2",6);
-  fPyint3 = (Pyint3_t*) pythia6_common_block_address_((char*)"PYINT3",6);
-  fPyint4 = (Pyint4_t*) pythia6_common_block_address_((char*)"PYINT4",6);
-  fPyint5 = (Pyint5_t*) pythia6_common_block_address_((char*)"PYINT5",6);
-  fPyint6 = (Pyint6_t*) pythia6_common_block_address_((char*)"PYINT6",6);
-  fPyint7 = (Pyint7_t*) pythia6_common_block_address_((char*)"PYINT7",6);
-  fPyint8 = (Pyint8_t*) pythia6_common_block_address_((char*)"PYINT8",6);
-  fPyint9 = (Pyint9_t*) pythia6_common_block_address_((char*)"PYINT9",6);
-  fPyuppr = (Pyuppr_t*) pythia6_common_block_address_((char*)"PYUPPR",6);
-  fPymssm = (Pymssm_t*) pythia6_common_block_address_((char*)"PYMSSM",6);
-  fPyssmt = (Pyssmt_t*) pythia6_common_block_address_((char*)"PYSSMT",6);
-  fPyints = (Pyints_t*) pythia6_common_block_address_((char*)"PYINTS",6);
-  fPybins = (Pybins_t*) pythia6_common_block_address_((char*)"PYBINS",6);
+  fPyjets = (Pyjets_t*) pythia6_common_block_address((char*)"PYJETS",6);
+  fPydat1 = (Pydat1_t*) pythia6_common_block_address((char*)"PYDAT1",6);
+  fPydat2 = (Pydat2_t*) pythia6_common_block_address((char*)"PYDAT2",6);
+  fPydat3 = (Pydat3_t*) pythia6_common_block_address((char*)"PYDAT3",6);
+  fPydat4 = (Pydat4_t*) pythia6_common_block_address((char*)"PYDAT4",6);
+  fPydatr = (Pydatr_t*) pythia6_common_block_address((char*)"PYDATR",6);
+  fPysubs = (Pysubs_t*) pythia6_common_block_address((char*)"PYSUBS",6);
+  fPypars = (Pypars_t*) pythia6_common_block_address((char*)"PYPARS",6);
+  fPyint1 = (Pyint1_t*) pythia6_common_block_address((char*)"PYINT1",6);
+  fPyint2 = (Pyint2_t*) pythia6_common_block_address((char*)"PYINT2",6);
+  fPyint3 = (Pyint3_t*) pythia6_common_block_address((char*)"PYINT3",6);
+  fPyint4 = (Pyint4_t*) pythia6_common_block_address((char*)"PYINT4",6);
+  fPyint5 = (Pyint5_t*) pythia6_common_block_address((char*)"PYINT5",6);
+  fPyint6 = (Pyint6_t*) pythia6_common_block_address((char*)"PYINT6",6);
+  fPyint7 = (Pyint7_t*) pythia6_common_block_address((char*)"PYINT7",6);
+  fPyint8 = (Pyint8_t*) pythia6_common_block_address((char*)"PYINT8",6);
+  fPyint9 = (Pyint9_t*) pythia6_common_block_address((char*)"PYINT9",6);
+  fPyuppr = (Pyuppr_t*) pythia6_common_block_address((char*)"PYUPPR",6);
+  fPymssm = (Pymssm_t*) pythia6_common_block_address((char*)"PYMSSM",6);
+  fPyssmt = (Pyssmt_t*) pythia6_common_block_address((char*)"PYSSMT",6);
+  fPyints = (Pyints_t*) pythia6_common_block_address((char*)"PYINTS",6);
+  fPybins = (Pybins_t*) pythia6_common_block_address((char*)"PYBINS",6);
 }
 
 //------------------------------------------------------------------------------
@@ -154,18 +221,18 @@ void TPythia6::GenerateEvent() {
 
   //  generate event and copy the information from /HEPEVT/ to fPrimaries
 
-  pyevnt_();
+  pyevnt();
   ImportParticles();
 }
 
 //______________________________________________________________________________
 void TPythia6::OpenFortranFile(int lun, char* name) {
-  tpythia6_open_fortran_file_(&lun, name, strlen(name));
+  tpythia6_open_fortran_file(&lun, name, strlen(name));
 }
 
 //______________________________________________________________________________
 void TPythia6::CloseFortranFile(int lun) {
-  tpythia6_close_fortran_file_(&lun);
+  tpythia6_close_fortran_file(&lun);
 }
 
 
@@ -392,36 +459,44 @@ void TPythia6::Pyinit(char* frame, char* beam, char* target, double win) {
 //              for frame=="USER" - dummy - see documentation.
 //------------------------------------------------------------------------------
 
-  pyinit_(frame,beam,target,&win,strlen(frame),strlen(beam),strlen(target));
+   Double_t lwin = win;
+   Long_t  s1    = strlen(frame);
+   Long_t  s2    = strlen(beam);
+   Long_t  s3    = strlen(target);
+#ifndef WIN32
+   pyinit(frame,beam,target,&lwin,s1,s2,s3);
+#else
+   pyinit(frame, s1, beam , s2, target, s3, &lwin);
+#endif
 }
 
 
 int TPythia6::Pycomp(int kf) {
-  return pycomp_(&kf);
+  return pycomp(&kf);
 }
 
 void TPythia6::Pyedit(int medit) {
-  pyedit_(&medit);
+  pyedit(&medit);
 }
 
 void TPythia6::Pyevnt() {
-  pyevnt_();
+  pyevnt();
 }
 
 void TPythia6::Pyexec() {
-  pyexec_();
+  pyexec();
 }
 
 void TPythia6::Pyhepc(int mconv) {
-  pyhepc_(&mconv);
+  pyhepc(&mconv);
 }
 
 void TPythia6::Pylist(int flag) {
-  pylist_(&flag);
+  pylist(&flag);
 }
 
 void TPythia6::Pyname(int kf, char* name) {
-  pyname_(&kf,name,15);
+  pyname(&kf,name,15);
 				// cut trailing blanks to get C string
 
   for (int i=15; (i>=0) && (name[i] != ' '); i--) {
@@ -430,27 +505,27 @@ void TPythia6::Pyname(int kf, char* name) {
 }
 
 double TPythia6::Pyr(int idummy) {
-  return pyr_(&idummy);
+  return pyr(&idummy);
 }
 
 void TPythia6::Pyrget(int lun, int move) {
-  pyrget_(&lun,&move);
+  pyrget(&lun,&move);
 }
 
 void TPythia6::Pyrset(int lun, int move) {
-  pyrset_(&lun,&move);
+  pyrset(&lun,&move);
 }
 
 void TPythia6::Pystat(int flag) {
-  pystat_(&flag);
+  pystat(&flag);
 }
 
 void TPythia6::Pytest(int flag) {
-  pytest_(&flag);
+  pytest(&flag);
 }
 
 void TPythia6::Pyupda(int mupda, int lun) {
-  pyupda_(&mupda,&lun);
+  pyupda(&mupda,&lun);
 }
 
 //______________________________________________________________________________
