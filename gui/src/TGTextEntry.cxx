@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.22 2004/06/14 10:28:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.23 2004/06/22 15:36:42 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1020,7 +1020,7 @@ void TGTextEntry::DoRedraw()
 {
    // Draw the text entry widget.
 
-   Int_t x, y, max_ascent, max_descent;
+   Int_t x, y, max_ascent, max_descent, h;
    Int_t offset = IsFrameDrawn() ? 4 : 0;
    TString dt  = GetDisplayText();               // text to be displayed
    Int_t len   = dt.Length();                    // length of displayed text
@@ -1033,7 +1033,8 @@ void TGTextEntry::DoRedraw()
 
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
-   y = (GetHeight() - (max_ascent + max_descent)) >> 1 ;     // center y
+   h = max_ascent + max_descent;
+   y = (fHeight - h) >> 1 ;
    x = fOffset + offset;
 
    if (fEchoMode == kNoEcho) {
@@ -1044,43 +1045,42 @@ void TGTextEntry::DoRedraw()
    if ((GetInsertMode() == kInsert) || (fEchoMode == kNoEcho)) {
       // line cursor
       if (fCursorOn) {
-         gVirtualX->DrawLine(fId, GetBlackGC()(), fCursorX, 3,
-                     fCursorX, max_ascent + max_descent + 3);
+         gVirtualX->DrawLine(fId, GetBlackGC()(), fCursorX, y - 1,
+                     fCursorX, h + 2);
       }
-      gVirtualX->DrawString(fId, fNormGC(), x , y + max_ascent, dt.Data(), len);
+      gVirtualX->DrawString(fId, fNormGC(), x, y + max_ascent, dt.Data(), len);
 
    } else {
       // filled rectangle (block) cursor
-      gVirtualX->DrawString(fId, fNormGC(), x , y + max_ascent, dt.Data(), len);
+      gVirtualX->DrawString(fId, fNormGC(), x, y + max_ascent, dt.Data(), len);
 
       if (fCursorOn) {
-         Int_t ind       = fCursorIX < len-1 ? fCursorIX : len-1;
-         Int_t charWidth = ind < 0 ||  fCursorIX > len -1 ? 4 :
+         Int_t ind       = fCursorIX < len-1 ? fCursorIX : len - 1;
+         Int_t charWidth = ind < 0 ||  fCursorIX > len - 1 ? 4 :
                            gVirtualX->TextWidth(fFontStruct, &dt[ind],1);
 
          Int_t before = gVirtualX->TextWidth(fFontStruct, dt, fCursorIX) + x;
 
-         gVirtualX->FillRectangle(fId, fSelbackGC , before, 3 ,
-                                  charWidth , max_ascent + max_descent + 1);
+         gVirtualX->FillRectangle(fId, fSelbackGC , before, y ,
+                                  charWidth , h + 1);
 
          if (fCursorIX < len)
-            gVirtualX->DrawString(fId, fSelGC(), before , y + max_ascent, &dt[ind], 1);
+            gVirtualX->DrawString(fId, fSelGC(), before, y + max_ascent, &dt[ind], 1);
       }
    }
 
   if (fSelectionOn) {
-    int xs, ws, ixs, iws;
+      int xs, ws, ixs, iws;
 
       xs  = TMath::Min(fStartX, fEndX);
       ws  = TMath::Abs(fEndX - fStartX);
       ixs = TMath::Min(fStartIX, fEndIX);
       iws = TMath::Abs(fEndIX - fStartIX);
 
-      gVirtualX->FillRectangle(fId, fSelbackGC, xs , 3, ws,
-                               max_ascent + max_descent + 1);
+      gVirtualX->FillRectangle(fId, fSelbackGC, xs, y, ws, h + 1);
 
       gVirtualX->DrawString(fId, fSelGC(), xs, y + max_ascent,
-                            dt.Data()+ixs, iws);
+                            dt.Data() + ixs, iws);
    }
    if (IsFrameDrawn()) DrawBorder();
 }
