@@ -11,8 +11,8 @@
 #define 	SCHAR_MIN (-128)
 #define 	SHRT_MAX (32767)
 #define 	SHRT_MIN (-32768)
-#define 	UCHAR_MAX (255)
-const unsigned int  	UINT_MAX =(4294967295);
-const unsigned long 	ULONG_MAX =(4294967295);
-#define 	USHRT_MAX (65535)
+#define 	UCHAR_MAX (255U)
+const unsigned int  	UINT_MAX =(4294967295U);
+const unsigned long 	ULONG_MAX =(4294967295U);
+#define 	USHRT_MAX (65535U)
 #endif

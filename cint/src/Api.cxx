@@ -448,6 +448,9 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
     G__exceptionbuffer = G__getexpr(buf);
     G__exceptionbuffer.ref = G__exceptionbuffer.obj.i;
     G__return = G__RETURN_TRY;
+#ifndef G__OLDIMPLEMENTATION1844
+    G__no_exec = 1;
+#endif
   }
 #endif 
 #ifndef G__OLDIMPLEMENTATION1791
@@ -455,26 +458,41 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
     G__letint(&G__exceptionbuffer,'i',(long)x);
     G__exceptionbuffer.ref = (long)(&x);
     G__return = G__RETURN_TRY;
+#ifndef G__OLDIMPLEMENTATION1844
+    G__no_exec = 1;
+#endif
   }
   catch(long x) {
     G__letint(&G__exceptionbuffer,'l',(long)x);
     G__exceptionbuffer.ref = (long)(&x);
     G__return = G__RETURN_TRY;
+#ifndef G__OLDIMPLEMENTATION1844
+    G__no_exec = 1;
+#endif
   }
   catch(void *x) {
     G__letint(&G__exceptionbuffer,'Y',(long)x);
     G__exceptionbuffer.ref = (long)(&x);
     G__return = G__RETURN_TRY;
+#ifndef G__OLDIMPLEMENTATION1844
+    G__no_exec = 1;
+#endif
   }
   catch(float x) {
     G__letdouble(&G__exceptionbuffer,'f',(double)x);
     G__exceptionbuffer.ref = (long)(&x);
     G__return = G__RETURN_TRY;
+#ifndef G__OLDIMPLEMENTATION1844
+    G__no_exec = 1;
+#endif
   }
   catch(double x) {
     G__letdouble(&G__exceptionbuffer,'d',x);
     G__exceptionbuffer.ref = (long)(&x);
     G__return = G__RETURN_TRY;
+#ifndef G__OLDIMPLEMENTATION1844
+    G__no_exec = 1;
+#endif
   }
 #endif /* 1791 */
   catch(...) {

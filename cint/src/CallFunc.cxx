@@ -7,7 +7,7 @@
  * Description:
  *  Extended Run Time Type Identification API
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -110,7 +110,11 @@ void G__CallFunc::SetBytecode(struct G__bytecodefunc* bc)
   else {
     pfunc = (G__InterfaceMethod)NULL;
 #ifndef G__ROOT
-    G__fprinterr(G__serr,"Warning: Bytecode compilation of %s failed. G__CallFunc::Exec may be slow\n",method.Name());
+    if(G__asm_dbg) {
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: Bytecode compilation of %s failed. G__CallFunc::Exec may be slow\n",method.Name());
+      }
+    }
 #endif
   }
   para.paran=0;
@@ -398,6 +402,16 @@ int G__CallFunc::ExecInterpretedFunc(G__value* presult)
 {
   int ret=0;
   if(method.IsValid()) {
+#ifndef G__OLDIMPLEMENTATION1840
+    G__ClassInfo *pcls=method.MemberOf();
+    if(pcls && strcmp(pcls->Name(),method.Name())==0) {
+#ifdef G__ROOT
+      G__store_struct_offset = (long)(new char[pcls->Size()]);
+#else
+      G__store_struct_offset = (long)malloc(pcls->Size());
+#endif
+    }
+#endif
     int store_asm_exec=G__asm_exec;
     int store_asm_index=G__asm_index;
     int store_asm_noverflow = G__asm_noverflow;

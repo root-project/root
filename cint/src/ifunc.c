@@ -199,7 +199,7 @@ int instsize;
   memcpy(bytecode->asm_name,G__asm_name,G__asm_name_p+2);
 #endif
 
-#ifdef G__OLDIMPLEMENtATION1578
+#ifdef G__OLDIMPLEMENtATION1578 /* Problem  t1048.cxx */
   /* store pointer to function */
   ifunc->pentry[ifn]->tp2f = (void*)bytecode;
 #endif
@@ -999,6 +999,41 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	      ,funcheader,G__LONGLINE-1);
       G__genericerror((char*)NULL);
       funcheader[G__MAXNAME-1]=0;
+    }
+#endif
+#ifndef G__OLDIMPLEMENTATION1834
+    if(strncmp(funcheader,"operator ",9)==0) {
+      char *oprtype= funcheader+9;
+      if(strcmp(oprtype,"char")==0 ||
+	 strcmp(oprtype,"short")==0 ||
+	 strcmp(oprtype,"int")==0 ||
+	 strcmp(oprtype,"long")==0 ||
+	 strcmp(oprtype,"unsigned char")==0 ||
+	 strcmp(oprtype,"unsigned short")==0 ||
+	 strcmp(oprtype,"unsigned int")==0 ||
+	 strcmp(oprtype,"unsigned long")==0 ||
+	 strcmp(oprtype,"float")==0 ||
+	 strcmp(oprtype,"double")==0) {
+      }
+      else {
+	int oprtypenum ;
+	oprtype[strlen(oprtype)-1]=0;
+	oprtypenum = G__defined_typename(oprtype);
+	if(-1!=oprtypenum && -1==G__newtype.tagnum[oprtypenum] &&
+	   -1!=G__newtype.parent_tagnum[oprtypenum]) {
+#ifndef G__NEVER
+	  strcpy(oprtype,G__type2string(G__newtype.type[oprtypenum] ,-1,-1
+					,G__newtype.reftype[oprtypenum]
+					,G__newtype.isconst[oprtypenum]));
+#else
+	  strcpy(oprtype
+		 ,G__fulltagname(G__newtype.parent_tagnum[oprtypenum],1));
+	  strcat(oprtype,"::");
+	  strcat(oprtype,G__newtype.name[oprtypenum]);
+#endif
+	}
+	strcat(oprtype,"(");
+      }
     }
 #endif
 #ifndef G__OLDIMPLEMENTATION1543
@@ -2373,6 +2408,20 @@ int func_now;
 	fgetpos(G__ifile.fp,&pos);
 	c=G__fgetname(paraname,",)&*[(=");
 	if(strcmp(paraname,"long")==0 || strcmp(paraname,"double")==0) {
+#ifndef G__OLDIMPLEMENTATION1836
+	  type='u';
+	  if(strcmp(paraname,"long")==0) {
+	    if(isunsigned) {
+	      G__loadlonglong(&tagnum,&typenum,G__ULONGLONG);
+	    }
+	    else {
+	      G__loadlonglong(&tagnum,&typenum,G__LONGLONG);
+	    }
+	  }
+	  else if(strcmp(paraname,"double")==0) {
+	    G__loadlonglong(&tagnum,&typenum,G__LONGDOUBLE);
+	  }
+#else /* 1836 */
 	  if(0==G__defined_macro("G__LONGLONG_H")) {
 	    int store_def_struct_member = G__def_struct_member;
 	    G__def_struct_member = 0;
@@ -2396,6 +2445,7 @@ int func_now;
 	    tagnum=G__defined_tagname("G__longdouble",2);
 	    typenum=G__search_typename("long double",'u',tagnum,G__PARANORMAL);
 	  }
+#endif /* 1836 */
 	}
 	else if(strcmp(paraname,"int")==0) {
 	  type='l'+isunsigned;
@@ -4847,7 +4897,18 @@ struct G__funclist *pmatch;
           param->type = formal_type;
           param->ref = 0;
 	}
+#ifndef G__OLDIMPLEMENTATION1604
+      case 'l':
+      case 'i':
+      case 's':
+      case 'c':
+      case 'h':
+      case 'k':
+      case 'r':
+      case 'b':
+#else
       default:
+#endif
 	if(G__PARAREFERENCE==formal_reftype) {
           param->obj.i = (long)param->obj.i?1:0;
           param->type = formal_type;
@@ -7666,7 +7727,23 @@ asm_ifunc_start:   /* loop compilation execution label */
     result7->tagnum  = p_ifunc->p_tagtable[ifn];
     result7->typenum = p_ifunc->p_typetable[ifn];
   }
+
   
+#ifndef G__OLDIMPLEMENTATION1844
+  if(G__RETURN_TRY!=G__return) {
+    /**************************************************************
+     * reset no exec flag
+     **************************************************************/
+    G__no_exec=0;
+    /**************************************************************
+     * reset return flag
+     * G__return is set to 1 if interpreted function returns by
+     * return(); statement.  Until G__return is reset to 0, 
+     * execution flow exits from G__exec_statment().
+     **************************************************************/
+    if(G__RETURN_IMMEDIATE>=G__return) G__return=G__RETURN_NON;
+  }
+#else
   /**************************************************************
    * reset no exec flag
    **************************************************************/
@@ -7679,6 +7756,7 @@ asm_ifunc_start:   /* loop compilation execution label */
    * execution flow exits from G__exec_statment().
    **************************************************************/
   if(G__RETURN_IMMEDIATE>=G__return) G__return=G__RETURN_NON;
+#endif
   
 #ifndef G__NEWINHERIT
   /* recover prev local variable */

@@ -2211,6 +2211,20 @@ char *tagnamein;
      while(*patom) *p++ = *patom++;
      *p = 0;
      G__hash(atom_name,hash,temp)
+#define G__OLDIMPLEMENTATION1830 /* side effect t1011.h */
+#ifndef G__OLDIMPLEMENTATION1830
+     {
+       char *p2;
+       strcpy(p,"<");
+       p2 = strstr(tagname,atom_name);
+       if(p2 && *(p2-1)==':') {
+	 char *p3=tagname;
+	 while(*p2) *(p3++) = *(p2++);
+	 *p3 = 0;
+       }
+       *p = 0;
+     }
+#endif
    }
  }
 #else
@@ -2666,9 +2680,17 @@ int parent_tagnum;
 	if(isspace(c)) {
 	  c2=c;
 	  SET_READINGFILE; /* ON777 */
+#ifndef G__OLDIMPLEMENTATION1822
           while(isspace(c=G__fgetc())){
-             if (c=='\n') c2='\n';
-          };
+	    if (c=='\n') {
+	      /* strcat(symbol,"\n");   BAD  */
+	      /* if (c=='\n') c2='\n'; Fix by Philippe */
+	      break;  /* Fix by Masa Goto */
+	    }
+          }
+#else
+	  while(isspace(c=G__fgetc())) ;
+#endif
 	  if('<'!=c) {
 	    fseek(G__ifile.fp,-1,SEEK_CUR);
 	    c=c2;
@@ -2696,20 +2718,20 @@ int parent_tagnum;
       }
 #ifndef G__OLDIMPLEMENTATION1317
       if(const_c && '*'==symbol[strlen(symbol)-1]) {
-      fsetpos(G__mfp,&const_pos);
-      fprintf(G__mfp,"%s",symbol);
-      fprintf(G__mfp," const%c",const_c); /* printing %c is not perfect */
-      const_c = 0;
+	fsetpos(G__mfp,&const_pos);
+	fprintf(G__mfp,"%s",symbol);
+	fprintf(G__mfp," const%c",const_c); /* printing %c is not perfect */
+	const_c = 0;
       }
       else {
-      if(';'!=c && strcmp("const",symbol)==0) {
-        const_c = c;
-        fgetpos(G__mfp,&const_pos);
-      }
-      else {
-        const_c = 0;
-      }
-      fprintf(G__mfp,"%s",symbol);
+	if(';'!=c && strcmp("const",symbol)==0) {
+	  const_c = c;
+	  fgetpos(G__mfp,&const_pos);
+	}
+	else {
+	  const_c = 0;
+	}
+	fprintf(G__mfp,"%s",symbol);
       }
 #else
       fprintf(G__mfp,"%s",symbol);
@@ -2795,7 +2817,11 @@ int parent_tagnum;
     fprintf(G__mfp,";");
     if(G__dispsource) G__fprinterr(G__serr,";");
   }
-  else if(1==isclasstemplate) {
+  else if(1==isclasstemplate
+#ifndef G__OLDIMPLEMENTATION1839
+	  && ';'!=c
+#endif
+	  ) {
 #else
   if(isclasstemplate) {
 #endif

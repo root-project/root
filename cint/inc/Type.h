@@ -7,7 +7,7 @@
  * Description:
  *  Extended Run Time Type Identification API
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -19,8 +19,8 @@
  ************************************************************************/
 
 
-#ifndef G__TYPEINFO_H
-#define G__TYPEINFO_H 
+#ifndef G__TYPEINFOX_H
+#define G__TYPEINFOX_H 
 
 
 #include "Api.h"

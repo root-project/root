@@ -272,10 +272,10 @@ int gen_limits()
   fprintf(fp,"#define \tSCHAR_MIN (%d)\n",SCHAR_MIN);
   fprintf(fp,"#define \tSHRT_MAX (%d)\n",SHRT_MAX);
   fprintf(fp,"#define \tSHRT_MIN (%d)\n",SHRT_MIN);
-  fprintf(fp,"#define \tUCHAR_MAX (%d)\n",UCHAR_MAX);
-  fprintf(fp,"const unsigned int  \tUINT_MAX =(%u);\n",UINT_MAX);
-  fprintf(fp,"const unsigned long \tULONG_MAX =(%lu);\n",ULONG_MAX);
-  fprintf(fp,"#define \tUSHRT_MAX (%u)\n",USHRT_MAX);
+  fprintf(fp,"#define \tUCHAR_MAX (%dU)\n",UCHAR_MAX);
+  fprintf(fp,"const unsigned int  \tUINT_MAX =(%uU);\n",UINT_MAX);
+  fprintf(fp,"const unsigned long \tULONG_MAX =(%luU);\n",ULONG_MAX);
+  fprintf(fp,"#define \tUSHRT_MAX (%uU)\n",USHRT_MAX);
 
   fprintf(fp,"#endif\n");
   fclose(fp);

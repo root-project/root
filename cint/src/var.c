@@ -1213,7 +1213,15 @@ long pdest;
 int tagnum;
 G__value result;
 {
+#ifndef G__OLDIMPLEMENTATION1823
+  char buf[G__BUFLEN*2];
+  char buf2[G__BUFLEN*2];
+  char *ttt=buf;
+  char *result7=buf2;
+  int lenttt;
+#else
   char ttt[G__ONELINE],result7[G__ONELINE];
+#endif
   long store_struct_offset;
   int store_tagnum;
   int ig2;
@@ -1229,10 +1237,27 @@ G__value result;
   }
 
   if(result.type=='u') {
+#ifndef G__OLDIMPLEMENTATION1823
+    char *xp = G__fulltagname(result.tagnum,1);
+    lenttt = strlen(xp);
+    if(lenttt>G__BUFLEN*2-10) {
+      ttt=(char*)malloc(lenttt+20);
+      result7=(char*)malloc(lenttt+30);
+    }
+#ifndef G__OLDIMPLEMENTATION1825
+    G__setiparseobject(&result,ttt);
+#else
+    if(result.obj.i<0) 
+      sprintf(ttt,"(%s)(%ld)" ,xp ,result.obj.i);
+    else
+      sprintf(ttt,"(%s)%ld" ,xp,result.obj.i);
+#endif
+#else
     if(result.obj.i<0) 
       sprintf(ttt,"(%s)(%ld)" ,G__struct.name[result.tagnum] ,result.obj.i);
     else
       sprintf(ttt,"(%s)%ld" ,G__struct.name[result.tagnum] ,result.obj.i);
+#endif
   }
   else {
     G__valuemonitor(result,ttt);
@@ -1301,7 +1326,24 @@ G__value result;
      * copy constructor
      **************************************/
     long store_globalvarpointer;
+#ifndef G__OLDIMPLEMENTATION1823
+    char *xp2= G__fulltagname(tagnum,1);
+    int len2;
+    lenttt = strlen(ttt);
+    len2=strlen(xp2)+lenttt+10;
+    if(buf2==result7) {
+      if(len2>G__BUFLEN*2) result7=(char*)malloc(len2);
+    }
+    else {
+      if(len2>lenttt+30) {
+	free((void*)result7);
+	result7=(char*)malloc(len2);
+      }
+    }
+    sprintf(result7,"%s(%s)",xp2,ttt);
+#else
     sprintf(result7,"%s(%s)",G__struct.name[tagnum],ttt);
+#endif
     if(G__CPPLINK==G__struct.iscpplink[tagnum]) {
       G__abortbytecode();
       store_globalvarpointer = G__globalvarpointer;
@@ -1364,6 +1406,10 @@ G__value result;
 #endif
   
   if(ig2) { /* in case overloaded = or constructor is found */
+#ifndef G__OLDIMPLEMENTATION1823
+    if(buf!=ttt) free((void*)ttt);
+    if(buf2!=result7) free((void*)result7);
+#endif
     return(para);
   }
 
@@ -1398,13 +1444,23 @@ G__value result;
   /* try conversion operator for class object */
   if('u'==result.type && -1!=result.tagnum) {
     if(G__class_conversion_operator(tagnum,&result,ttt)) {
+#ifndef G__OLDIMPLEMENTATION1823
+      if(buf!=ttt) free((void*)ttt);
+      if(buf2!=result7) free((void*)result7);
+#endif
       return(G__classassign(pdest,tagnum,result));
     }
   }
 #endif /* ON674 */
 
   /* return from this function if this is pure bytecode compilation */
-  if(G__no_exec_compile) return(result);
+  if(G__no_exec_compile) {
+#ifndef G__OLDIMPLEMENTATION1823
+    if(buf!=ttt) free((void*)ttt);
+    if(buf2!=result7) free((void*)result7);
+#endif
+    return(result);
+  }
 
 #endif /* of G__ASM */
   if(result.tagnum==tagnum) {
@@ -1426,6 +1482,10 @@ G__value result;
 	    "Error: Assignment type incompatible FILE:%s LINE:%d\n"
 	    ,G__ifile.name,G__ifile.line_number);
   }
+#ifndef G__OLDIMPLEMENTATION1823
+  if(buf!=ttt) free((void*)ttt);
+  if(buf2!=result7) free((void*)result7);
+#endif
   return(result);
 }
 
@@ -3967,7 +4027,11 @@ struct G__var_array *varglobal,*varlocal;
 	else {
 #ifdef G__ASM_DBG
 	  if(G__asm_dbg) {
-	    if(G__asm_wholefunction && G__ASM_VARLOCAL==store_struct_offset) 
+	    if(G__asm_wholefunction && G__ASM_VARLOCAL==store_struct_offset
+#ifndef G__OLDIMPLEMENTATION776
+	       && G__LOCALSTATIC!=var->statictype[ig15]
+#endif
+	       ) 
 	      G__fprinterr(G__serr,
 		      "%3x: LD_LVAR  %s index=%d paran=%d\n"
 		      ,G__asm_cp,item,ig15,paran);
@@ -6171,7 +6235,7 @@ int parameter00;
 #endif
 	if(G__dispmsg>=G__DISPWARN) {
 	  G__fprinterr(G__serr,
-	  "Warning: Automatic variable %s allocated in global scope",item);
+	  "Warning: Automatic variable %s is allocated",item);
 	  G__printlinenum();
 	}
 #ifndef G__PHILIPPE21
@@ -6216,8 +6280,10 @@ int parameter00;
     G__typenum = -1;
     if(isupper(result.type)) {
       /* a = new T(init);  a is a pointer */
-#ifdef G__DEBUG
-      G__fprinterr(G__serr,"Warning: Automatic variable %s* %s allocated in global scope FILE:%s LINE:%d\n",G__struct.name[result.tagnum],item,G__ifile.name,G__ifile.line_number);
+#ifndef G__ROOT
+      G__fprinterr(G__serr,"Warning: Automatic variable %s* %s is allocated"
+		   ,G__fulltagname(result.tagnum,1),item);
+      G__printlinenum();
 #endif
       G__reftype = G__PARANORMAL;
     }
@@ -6226,8 +6292,10 @@ int parameter00;
 	 G__templevel==G__p_tempbuf->level) {
 	/* a = T(init); a is an object */
 	G__globalvarpointer = result.obj.i;
-#ifdef G__DEBUG
-	G__fprinterr(G__serr,"Warning: Automatic variable %s %s allocated in global scope FILE:%s LINE:%d\n",G__struct.name[result.tagnum],item,G__ifile.name,G__ifile.line_number);
+#ifndef G__ROOT
+	G__fprinterr(G__serr,"Warning: Automatic variable %s %s is allocated"
+		     ,G__fulltagname(result.tagnum,1),item);
+	G__printlinenum();
 #endif
 	G__reftype = G__PARANORMAL;
 	G__p_tempbuf->obj.obj.i=0;
@@ -6361,7 +6429,11 @@ int parameter00;
 #endif
      ) {
 #ifndef G__OLDIMPLEMENTATION1284
-      if(G__PVOID!=G__globalvarpointer) 
+      if(G__PVOID!=G__globalvarpointer
+#ifndef G__OLDIMPLEMENTATION1845
+	 && !G__cppconstruct
+#endif
+	 ) 
 	var->statictype[var->allvar] = G__COMPILEDGLOBAL;
       else 
 	var->statictype[var->allvar] = G__LOCALSTATIC;
@@ -7630,7 +7702,11 @@ int mparen;
   int store_tagdefining,store_access;
   fpos_t pos;
   int line_number;
+#ifndef G__OLDIMPLEMENTATION1826
+  char classname[G__LONGLINE];
+#else
   char classname[G__ONELINE];
+#endif
   int c;
 #ifndef G__OLDIMPLEMENTATION458
   int def_tagnum,tagdefining;

@@ -99,7 +99,7 @@ class G__longdouble {
   G__longdouble operator--(int dmy) { G__longdouble c(dat--); return(c); }
 
   // assignment operators
-  G__longdouble& operator=(const double x) {dat=(G__double92)x;return(*this);}
+  G__longdouble& operator=(double x) {dat=(G__double92)x;return(*this);}
   G__longdouble& operator=(const G__longdouble& x) {dat=x.dat;return(*this); }
   G__longdouble& operator+=(const G__longdouble& x) {dat+=x.dat; return(*this); }
   G__longdouble& operator-=(const G__longdouble& x) {dat-=x.dat; return(*this); }

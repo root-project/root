@@ -38,6 +38,49 @@ extern int G__initval_eval;
 extern int G__dynconst;
 #endif
 
+
+#ifndef G__OLDIMPLEMENTATION1825
+/******************************************************************
+* G__setiparseobject()
+******************************************************************/
+char* G__setiparseobject(result,str)
+G__value* result;
+char *str;
+{
+  sprintf(str,"_$%c%d%c_%d_%c%ld"
+	  ,result->type
+	  ,0
+	  ,(0==result->isconst)?'0':'1'
+	  ,result->tagnum
+	  ,(result->obj.i<0)?'M':'P'
+	  ,result->obj.i);
+  return(str);
+}
+
+/******************************************************************
+* G__getiparseobject()
+******************************************************************/
+static void G__getiparseobject(result,item)
+G__value* result;
+char *item;
+{
+  /* '_$trc_[tagnum]_[addr]' */
+  char *xtmp = item+6;
+  char *xx=strchr(xtmp,'_');
+  result->type = item[2];
+  result->obj.reftype.reftype = (int)(item[3]-'0');
+  result->isconst = (int)(item[4]-'0');
+  result->typenum = -1;
+  *xx=0;
+  result->tagnum = atoi(xtmp);
+  *xx='_';
+  result->obj.i = atoi(xx+2);
+  if('M'==xx[1]) result->obj.i = -result->obj.i;
+  result->ref = result->obj.i;
+}
+#endif
+
+
 /******************************************************************
 * G__get_last_error
 ******************************************************************/
@@ -604,7 +647,9 @@ int lenbuf;
 ******************************************************************/
 #define G__wrap_plusminus(oprin,assignopr,preincopr,postincopr)       \
   if((nest==0)&&(single_quote==0)&&(double_quote==0)) {               \
-    if(oprin==expression[ig1+1]) {                                    \
+    if(oprin==expression[ig1+1]                                       \
+       && (!lenbuf||(!isdigit(ebuf[0])&&'.'!=ebuf[0]))  /* 1831 */    \
+       ) {                                                            \
       if(lenbuf) {                                                    \
         if('='==expression[ig1+2] && 'v'==G__var_type) {              \
           /* *a++=expr */                                             \
@@ -1996,6 +2041,14 @@ char *item;
     result3 = G__null;
     G__bstore('-',reg,&result3);
     return(result3);
+
+#ifndef G__OLDIMPLEMENTATION1825
+  case '_':
+    if('$'==item[1]) {
+      G__getiparseobject(&result3,item);
+      return(result3);
+    }
+#endif
     
   default:
     store_var_typeB = G__var_type;

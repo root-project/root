@@ -261,7 +261,22 @@ char *typename;
     return(sizeof(double));
 #ifndef G__OLDIMPLEMENTATION1533
   if(strcmp(typename,"longdouble")==0) {
-    int tagnum = G__defined_tagname("G__longdouble",2);
+    int tagnum,typenum;
+    G__loadlonglong(&tagnum,&typenum,G__LONGDOUBLE);
+    return(G__struct.size[tagnum]);
+  }
+#endif
+#ifndef G__OLDIMPLEMENTATION1827
+  if(strcmp(typename,"longlong")==0) {
+    int tagnum,typenum;
+    G__loadlonglong(&tagnum,&typenum,G__LONGLONG);
+    return(G__struct.size[tagnum]);
+  }
+#endif
+#ifndef G__OLDIMPLEMENTATION1838
+  if(strcmp(typename,"unsignedlonglong")==0) {
+    int tagnum,typenum;
+    G__loadlonglong(&tagnum,&typenum,G__ULONGLONG);
     return(G__struct.size[tagnum]);
   }
 #endif
@@ -416,6 +431,17 @@ char *typenamein;
   /**********************************************************************
   * Search for typedef names
   **********************************************************************/
+#ifndef G__OLDIMPLEMENTATION1838
+  if(strcmp(typename,"longlong")==0) {
+    strcpy(typename,"G__longlong");
+  }
+  else if(strcmp(typename,"unsignedlonglong")==0) {
+    strcpy(typename,"G__ulonglong");
+  }
+  else if(strcmp(typename,"longdouble")==0) {
+    strcpy(typename,"G__longdouble");
+  }
+#endif
   typenum = G__defined_typename(typename);
   if(-1 != typenum) {
     type    = G__newtype.type[typenum];
@@ -550,8 +576,11 @@ char *typenamein;
 	type = 's'; 
 	size = G__FLOATALLOC;
       }
-      if((strcmp(typename,"double")==0)||
-	 (strcmp(typename,"longdouble")==0)) {
+      if((strcmp(typename,"double")==0)
+#ifdef G__OLDIMPLEMENTATION1838
+	 ||(strcmp(typename,"longdouble")==0)
+#endif
+	 ) {
 	type = 'd';
 	size = G__DOUBLEALLOC;
       }

@@ -7,7 +7,7 @@
  * Description:
  *  Entry functions
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -685,6 +685,8 @@ char *argv[] ;
     xtypenum=G__search_typename("long long",'u',xtagnum,G__PARANORMAL);
     xtagnum=G__defined_tagname("G__ulonglong",2);
     xtypenum=G__search_typename("unsigned long long",'u',xtagnum,G__PARANORMAL);
+    xtagnum=G__defined_tagname("G__longdouble",2);
+    xtypenum=G__search_typename("long double",'u',xtagnum,G__PARANORMAL);
   }
 #endif
 #endif

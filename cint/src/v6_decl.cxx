@@ -30,6 +30,82 @@ int G__initval_eval=0;
 int G__dynconst=0;
 #endif
 
+
+#ifndef G__OLDIMPLEMENTATION1836
+/**************************************************************************
+* G__loadlonglong()
+**************************************************************************/
+void G__loadlonglong(ptag,ptype,which)
+int* ptag;
+int* ptype;
+int which;
+{
+  int lltag,lltype;
+  int ulltag,ulltype;
+  int ldtag,ldtype;
+  int store_decl = G__decl;
+  int store_def_struct_member = G__def_struct_member;
+  int flag=0;
+  int store_tagdefining=G__tagdefining;
+  int store_def_tagnum=G__def_tagnum;
+
+  G__tagdefining = -1;
+  G__def_tagnum = -1;
+  G__def_struct_member = 0;
+  G__decl = 0;
+  if(0==G__defined_macro("G__LONGLONG_H")) {
+    G__loadfile("long.dll"); /* used to switch case between .dl and .dll */
+    flag=1;
+  }
+
+  G__decl = 1;
+  G__def_struct_member = store_def_struct_member;
+
+  if(which==G__LONGLONG || flag) {
+    lltag=G__defined_tagname("G__longlong",2);
+    lltype=G__search_typename("long long",'u',G__tagnum,G__PARANORMAL);
+    G__struct.defaulttypenum[lltag] = lltype;
+    G__newtype.tagnum[lltype] = lltag;
+  }
+
+  if(which==G__ULONGLONG || flag) {
+    ulltag=G__defined_tagname("G__ulonglong",2);
+    ulltype
+      = G__search_typename("unsigned long long",'u',G__tagnum,G__PARANORMAL);
+    G__struct.defaulttypenum[ulltag] = ulltype;
+    G__newtype.tagnum[ulltype] = ulltag;
+  }
+
+  if(which==G__LONGDOUBLE || flag) {
+    ldtag=G__defined_tagname("G__longdouble",2);
+    ldtype=G__search_typename("long double",'u',G__tagnum,G__PARANORMAL);
+    G__struct.defaulttypenum[ldtag] = ldtype;
+    G__newtype.tagnum[ldtype] = ldtag;
+  }
+
+  switch(which) {
+  case G__LONGLONG:
+    *ptag = lltag;
+    *ptype = lltype;
+    break;
+  case G__ULONGLONG:
+    *ptag = ulltag;
+    *ptype = ulltype;
+    break;
+  case G__LONGDOUBLE:
+    *ptag = ldtag;
+    *ptype = ldtype;
+    break;
+  }
+
+  G__def_tagnum = store_def_tagnum;
+  G__tagdefining = store_tagdefining;
+  G__decl = store_decl;
+  return ;
+}
+#endif
+
+
 /***********************************************************************
 * G__get_newname()
 *
@@ -131,6 +207,14 @@ char *new_name;
       int store_tagnum = G__tagnum;
       int store_typenum = G__typenum;
       int store_decl = G__decl;
+#ifndef G__OLDIMPLEMENTATION1836
+      if(-1==G__unsigned) {
+	G__loadlonglong(&G__tagnum,&G__typenum,G__ULONGLONG);
+      }
+      else {
+	G__loadlonglong(&G__tagnum,&G__typenum,G__LONGLONG);
+      }
+#else /* 1836 */
       if(0==G__defined_macro("G__LONGLONG_H")) {
 #ifndef G__OLDIMPLEMENTATION1153
 	int store_def_struct_member = G__def_struct_member;
@@ -163,6 +247,7 @@ char *new_name;
 #else
       G__typenum=G__search_typename("long long",'u',G__tagnum,G__PARANORMAL);
 #endif
+#endif /* 1836 */
       if(strcmp(new_name,"long")==0) {
 	fpos_t pos;
 	int xlinenum = G__ifile.line_number;
@@ -205,6 +290,9 @@ char *new_name;
       int store_tagnum = G__tagnum;
       int store_typenum = G__typenum;
       int store_decl = G__decl;
+#ifndef G__OLDIMPLEMENTATION1836
+      G__loadlonglong(&G__tagnum,&G__typenum,G__LONGDOUBLE);
+#else /* 1836 */
       if(0==G__defined_macro("G__LONGLONG_H")) {
 #ifndef G__OLDIMPLEMENTATION1153
 	int store_def_struct_member = G__def_struct_member;
@@ -228,6 +316,7 @@ char *new_name;
 	G__genericerror("Error: 'long double' not ready. Go to $CINTSYSDIR/lib/longlong and run setup");
       }
       G__typenum=G__search_typename("long double",'u',G__tagnum,G__PARANORMAL);
+#endif /* 1836 */
       if(strcmp(new_name,"double")==0) {
 	G__var_type='u';
 	G__reftype = G__PARANORMAL;
@@ -317,6 +406,12 @@ char *new_name;
         }
 	if(strcmp(new_name,"*")==0) {
 	  cin=G__fgetvarname(new_name+1,",;=():");
+#ifndef G__OLDIMPLEMENTATION1846
+	  if(strcmp(new_name,"*const")==0) {
+	    G__constvar |= G__PCONSTVAR;
+	    cin=G__fgetvarname(new_name+1,",;=():");
+	  }
+#endif
 	}
 #endif
 #ifndef G__OLDIMPLEMENTATION1134

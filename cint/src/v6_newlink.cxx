@@ -1375,7 +1375,9 @@ char *in;
     case ' ': strcpy(out+j,"sP"); j+=2; break;
     case ':': strcpy(out+j,"cL"); j+=2; break;
     case '"': strcpy(out+j,"dQ"); j+=2; break;
+#ifndef G__OLDIMPLEMENTATION1828
     case '@': strcpy(out+j,"aT"); j+=2; break;
+#endif
     case '\'': strcpy(out+j,"sQ"); j+=2; break;
 #ifndef G__PHILIPPE28
     case '\\': strcpy(out+j,"fI"); j+=2; break;
@@ -1401,6 +1403,23 @@ int tagnum;
 char *funcname;
 int ifn,page;
 {
+#ifndef G__OLDIMPLEMENTATION1829
+  static char mapped_name[G__MAXNAME];
+  char *dllid;
+
+  if(G__DLLID[0]) dllid=G__DLLID;
+  else if(G__PROJNAME[0]) dllid=G__PROJNAME;
+  else dllid="";
+
+  if(-1==tagnum) {
+    sprintf(mapped_name,"G__%s__%d_%d",G__map_cpp_name(dllid),ifn,page);
+  }
+  else {
+    sprintf(mapped_name,"G__%s_%d_%d_%d",G__map_cpp_name(dllid),tagnum,ifn,page);
+  }
+  return(mapped_name);
+
+#else /* 1829 */
   static char mapped_name[G__MAXNAME*12];
   char mapped_tagname[G__MAXNAME*6];
   char mapped_funcname[G__MAXNAME*6];
@@ -1422,6 +1441,8 @@ int ifn,page;
 	  ,mapped_tagname,mapped_funcname,ifn,page,G__PROJNAME);
 #endif
   return(mapped_name);
+
+#endif /* 1829 */
 }
 
 #ifndef G__OLDIMPLEMENTATION1809
@@ -4165,13 +4186,33 @@ struct G__ifunc_table *ifunc;
 {
 #ifndef G__SMALLOBJECT
   int k,m;
-#ifndef G__OLDIMPLEMENTATION1233
+#if !defined(G__OLDIMPLEMENTATION1823)
+  char buf2[G__LONGLINE];
+  char *endoffunc=buf2;
+#elif !defined(G__OLDIMPLEMENTATION1233)
   char endoffunc[G__LONGLINE];
 #else
   char endoffunc[G__ONELINE];
 #endif
 #ifndef G__OLDIMPLEMENTATION1334
+#ifndef G__OLDIMPLEMENTATION1823
+  char buf[G__BUFLEN*4];
+  char *castname=buf;
+#else
   char castname[G__ONELINE];
+#endif
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1823
+  if(-1!=tagnum) {
+    int len=strlen(G__fulltagname(tagnum,1));
+    if(len>G__BUFLEN*4-30) {
+      castname=(char*)malloc(len+30);
+    }
+    if(len>G__LONGLINE-256) {
+      endoffunc=(char*)malloc(len+256);
+    }
+  }
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1235
@@ -4424,6 +4465,11 @@ struct G__ifunc_table *ifunc;
 #endif
   G__cppif_dummyfuncname(fp);
   fprintf(fp,"}\n\n");
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1823
+  if(castname!=buf) free((void*)castname);
+  if(endoffunc!=buf2) free((void*)endoffunc);
 #endif
 }
 
@@ -5539,7 +5585,13 @@ FILE *hfp;
 #ifndef G__OLDIMPLEMENTATION776
       if(!(G__newtype.parent_tagnum[i] == -1 ||
 	   (G__nestedtypedef &&
-	    G__struct.globalcomp[G__newtype.parent_tagnum[i]]<G__NOLINK)))
+	    (G__struct.globalcomp[G__newtype.parent_tagnum[i]]<G__NOLINK
+#define G__OLDIMPLEMENTATION1830
+#ifndef G__OLDIMPLEMENTATION1830
+	     || strcmp(G__struct.name[G__newtype.parent_tagnum[i]],"std")==0
+#endif
+	     )
+	    )))
 	continue;
 #else /* ON776 */
       if(-1!=G__newtype.parent_tagnum[i]) continue; /* questionable */
@@ -6960,7 +7012,12 @@ G__incsetup setup_memvar;
 G__incsetup setup_memfunc;
 {
   char *p;
+#ifndef G__OLDIMPLEMENTATION1823
+  char xbuf[G__BUFLEN];
+  char *buf=xbuf;
+#else
   char buf[G__ONELINE];
+#endif
   if(0==size && 0!=G__struct.size[tagnum]
 #ifndef G__OLDIMPLEMENTATION1362
      && 'n'!=G__struct.type[tagnum]
@@ -7049,6 +7106,11 @@ G__incsetup setup_memfunc;
 #endif
 
   /* add template names */
+#ifndef G__OLDIMPLEMENTATION1823
+  if(strlen(G__struct.name[tagnum])>G__BUFLEN-10) {
+    buf = (char*)malloc(strlen(G__struct.name[tagnum])+10);
+  }
+#endif
   strcpy(buf,G__struct.name[tagnum]);
   if((p=strchr(buf,'<'))) {
     *p='\0';
@@ -7075,6 +7137,9 @@ G__incsetup setup_memfunc;
 #endif
     }
   }
+#ifndef G__OLDIMPLEMENTATION1823
+  if(buf!=xbuf) free((void*)buf);
+#endif
   return(0);
 }
 

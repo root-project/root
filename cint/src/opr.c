@@ -2130,7 +2130,10 @@ G__value *defined;
       switch(operator) {
       case G__OPR_POSTFIXINC:
       case G__OPR_POSTFIXDEC:
-#ifndef G__OLDIMPLEMENTATION719
+#if !defined(G__OLDIMPLEMENTATION1825)
+	sprintf(expr,"%s(%s,1)",opr 
+		,G__setiparseobject(&expressionin,arg1));
+#elif !defined(G__OLDIMPLEMENTATION719)
 	if(expressionin.obj.i<0)
 	  sprintf(expr,"%s((%s)(%ld),1)",opr 
 		  ,G__fulltagname(expressionin.tagnum,1),expressionin.obj.i);
@@ -2159,7 +2162,10 @@ G__value *defined;
 #endif
 	break;
       default:
-#ifndef G__OLDIMPLEMENTATION719
+#if !defined(G__OLDIMPLEMENTATION1825)
+	sprintf(expr,"%s(%s)",opr 
+		,G__setiparseobject(&expressionin,arg1));
+#elif !defined(G__OLDIMPLEMENTATION719)
 	if(expressionin.obj.i<0)
 	  sprintf(expr,"%s((%s)(%ld))",opr
 		  ,G__fulltagname(expressionin.tagnum,1),expressionin.obj.i);
@@ -2225,7 +2231,9 @@ G__value *defined;
     ig2=0;
     
     if(expressionin.type=='u') {
-#ifndef G__OLDIMPLEMENTATION719
+#if !defined(G__OLDIMPLEMENTATION1825)
+      G__setiparseobject(&expressionin,arg2);
+#elif !defined(G__OLDIMPLEMENTATION719)
       if(expressionin.obj.i<0)
 	sprintf(arg2,"(%s)(%ld)" ,G__fulltagname(expressionin.tagnum,1)
 		,expressionin.obj.i);
@@ -2296,7 +2304,9 @@ G__value *defined;
 #endif /* of G__ASM */
 
       if(defined->type=='u') {
-#ifndef G__OLDIMPLEMENTATION719
+#if !defined(G__OLDIMPLEMENTATION1825)
+	G__setiparseobject(defined,arg1);
+#elif !defined(G__OLDIMPLEMENTATION719)
 	if(defined->obj.i<0)
 	  sprintf(arg1,"(%s)(%ld)"
 		  ,G__fulltagname(defined->tagnum,1),defined->obj.i);
@@ -2651,7 +2661,9 @@ int paran,ig25;
 #endif
       
       if(para[ig25].type=='u') {
-#ifndef G__OLDIMPLEMENTATION409
+#if !defined(G__OLDIMPLEMENTATION1825)
+	G__setiparseobject(&para[ig25],arg2);
+#elif !defined(G__OLDIMPLEMENTATION409)
 	if(para[ig25].obj.i<0)
 	  sprintf(arg2,"(%s)(%ld)",G__struct.name[para[ig25].tagnum]
 		  ,para[ig25].obj.i);

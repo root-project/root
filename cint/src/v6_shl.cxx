@@ -1189,6 +1189,13 @@ int* pindex;
 	*pindex = ig15;
 	return(ifunc);
       }
+#ifndef G__OLDIMPLEMENTATION1846
+      if(ifunc->pentry[ig15] && 
+	 ifunc->pentry[ig15]->bytecode==p2f) {
+	*pindex = ig15;
+	return(ifunc);
+      }
+#endif
     }
   } while((ifunc=ifunc->next)) ;
   *pindex = -1;

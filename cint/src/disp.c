@@ -2080,7 +2080,7 @@ void *p;
 #if defined(G__ANSI) || defined(G__WIN32) || defined(G__FIX1)
 int G__fprinterr(FILE* fp,char* fmt,...)
 #elif defined(__GNUC__)
-int G__fprinterr(pf,fmt)
+int G__fprinterr(fp,fmt)
 FILE* fp;
 char* fmt;
 ...

@@ -485,7 +485,12 @@ int *done;
   struct G__Deffuncmacro *deffuncmacro;
   struct G__Callfuncmacro *callfuncmacro;
   char *p;
+#ifndef G__OLDIMPLEMENTATION1823
+  char buf[G__ONELINE];
+  char *funcmacro=buf;
+#else
   char funcmacro[G__ONELINE];
+#endif
   int hash,i;
   int found;
   
@@ -494,7 +499,13 @@ int *done;
 
   
   /* separate macro func name */
+#ifndef G__OLDIMPLEMENTATION1823
+  if(strlen(item)>G__ONELINE-10) {
+    funcmacro = (char*)malloc(strlen(item)+10);
+  }
+#else
   G__ASSERT(strlen(item)<G__ONELINE);
+#endif
   strcpy(funcmacro,item);
   p = strchr(funcmacro,'(');
   *p='\0';
@@ -514,6 +525,9 @@ int *done;
   
   if(0==found) {
     *done = 0;
+#ifndef G__OLDIMPLEMENTATION1823
+    if(funcmacro!=buf) free((void*)funcmacro);
+#endif
     return (G__null);
   }
 
@@ -585,6 +599,9 @@ int *done;
   fsetpos(G__ifile.fp,&call_pos);
   
   *done = 1;
+#ifndef G__OLDIMPLEMENTATION1823
+  if(funcmacro!=buf) free((void*)funcmacro);
+#endif
   return(result);
 }
 /**************************************************************************
@@ -846,7 +863,12 @@ int G__execfuncmacro_noexec (char* macroname)
   struct G__Deffuncmacro *deffuncmacro;
   struct G__Callfuncmacro *callfuncmacro;
   char *p;
+#ifndef G__OLDIMPLEMENTATION1823
+  char buf[G__ONELINE];
+  char *funcmacro=buf;
+#else
   char funcmacro[G__ONELINE];
+#endif
   int hash,i,c;
   int found;
   
@@ -856,7 +878,13 @@ int G__execfuncmacro_noexec (char* macroname)
 
   
   /* separate macro func name */
+#ifndef G__OLDIMPLEMENTATION1823
+  if(strlen(macroname)>G__ONELINE-10) {
+    funcmacro = (char*)malloc(strlen(macroname)+10);
+  }
+#else
   G__ASSERT(strlen(macroname)<G__ONELINE);
+#endif
   strcpy(funcmacro,macroname);
   p = strchr(funcmacro,'(');
 #ifndef G__OLDIMPLEMENTATION1152
@@ -885,6 +913,9 @@ int G__execfuncmacro_noexec (char* macroname)
   }
   
   if(0==found) {
+#ifndef G__OLDIMPLEMENTATION1823
+    if(funcmacro!=buf) free((void*)funcmacro);
+#endif
     return 0;
   }
 
@@ -899,7 +930,9 @@ int G__execfuncmacro_noexec (char* macroname)
   i = strlen (funcmacro);
   funcmacro[i++] = c;
   funcmacro[i] = '\0';
+#ifdef G__OLDIMPLEMENTATION1823
   G__ASSERT(strlen(funcmacro)<G__ONELINE);
+#endif
   
   /* store calling file pointer and position */
   fgetpos(G__ifile.fp,&call_pos);
@@ -972,6 +1005,9 @@ int G__execfuncmacro_noexec (char* macroname)
        #define END_NS(N)   }
   */
   
+#ifndef G__OLDIMPLEMENTATION1823
+    if(funcmacro!=buf) free((void*)funcmacro);
+#endif
   return 1;
 }
 
@@ -990,10 +1026,20 @@ int G__execvarmacro_noexec (char* macroname)
   struct G__var_array *var;
   int ig15, hash;
   long struct_offset, store_struct_offset;
+#ifndef G__OLDIMPLEMENTATION1823
+  char buf[G__BUFLEN];
+  char *name=buf;
+#else
   char name[G__ONELINE];
+#endif
 
   /* G__searchvariable can modify its argument.
      Insulate ourselves from that perversion. */
+#ifndef G__OLDIMPLEMENTATION1823
+  if(strlen(macroname)>G__BUFLEN-5) {
+    name = (char*)malloc(strlen(macroname)+10);
+  }
+#endif
   strcpy (name, macroname);
 
   G__hash (name, hash, ig15);
@@ -1022,8 +1068,14 @@ int G__execvarmacro_noexec (char* macroname)
     fsetpos(G__ifile.fp,(fpos_t *)var->p[ig15]);
     strcpy(G__ifile.name,G__macro);
 
+#ifndef G__OLDIMPLEMENTATION1823
+    if(funcmacro!=buf) free((void*)funcmacro);
+#endif
     return 1;
   }
+#ifndef G__OLDIMPLEMENTATION1823
+  if(funcmacro!=buf) free((void*)funcmacro);
+#endif
   return 0;
 }
 #endif

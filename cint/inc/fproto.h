@@ -775,6 +775,10 @@ void G__DeleteConstStringList G__P((struct G__ConstStringList* current));
 int G__ReadInputMode G__P((void));
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1825
+char* G__setiparseobject G__P((G__value* result,char *str));
+#endif
+
 #ifdef G__SHMGLOBAL
 void* G__shmmalloc G__P((int size));
 void* G__shmcalloc G__P((int atomsize,int num));
@@ -785,6 +789,10 @@ void G__initshm G__P((void));
 int G__gettempfilenum G__P((void));
 void G__redirect_on G__P((void));
 void G__redirect_off G__P((void));
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1836
+void G__loadlonglong G__P((int* ptag,int* ptype,int which));
 #endif
 
 #ifdef __cplusplus

@@ -932,9 +932,20 @@ char *classnamein;
 char *keyword;
 int base;
 {
+#ifndef G__OLDIMPLEMENTATION1823
+  char buf[G__BUFLEN];
+  char *classname=buf;
+#else
   char classname[G__ONELINE];
+#endif
 #ifdef G__OLDIMPLEMENTATION1320
   char *p=classname;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1823
+  if(strlen(classnamein)>G__BUFLEN-5) {
+    classname = (char*)malloc(strlen(classnamein)+5);
+  }
 #endif
 
   G__more_pause((FILE*)NULL,0);
@@ -969,6 +980,9 @@ int base;
   else {
     G__display_class(fout,classname,base,0);
   }
+#ifndef G__OLDIMPLEMENTATION1823
+  if(buf!=classname) free((void*)classname);
+#endif
 }
 #endif
 

@@ -1296,6 +1296,10 @@ int memfunc_flag;
 	strcpy(fpara.parameter[fpara.paran],result7);
       }
       else {
+#ifndef G__OLDIMPLEMENTATION1824
+	strcpy(fpara.parameter[fpara.paran],"@");
+	fpara.para[fpara.paran] = G__getexpr(result7);
+#endif
       }
       fpara.parameter[++fpara.paran][0]='\0';
 #else
@@ -1411,12 +1415,26 @@ int memfunc_flag;
      ***************************************************************/
     else {
       if(fpara.paran>2) {
+#ifndef G__OLDIMPLEMENTATION1824
+	if('@'==fpara.parameter[fpara.paran-1][0])
+	  fpara.para[1] = fpara.para[fpara.paran-1];
+	else
+	  fpara.para[1] = G__getexpr(fpara.parameter[fpara.paran-1]);
+#else
 	fpara.para[1] = G__getexpr(fpara.parameter[fpara.paran-1]);
+#endif
 	result3=G__castvalue(G__catparam(&fpara,fpara.paran-1,",")
 			     ,fpara.para[1]);
       }
       else {
+#ifndef G__OLDIMPLEMENTATION1824
+	if('@'==fpara.parameter[1][0])
+	  fpara.para[1] = fpara.para[1];
+	else
+	  fpara.para[1] = G__getexpr(fpara.parameter[1]);
+#else
 	fpara.para[1] = G__getexpr(fpara.parameter[1]);
+#endif
 	result3=G__castvalue(fpara.parameter[0],fpara.para[1]);
       }
       *known3 = 1;
@@ -1552,12 +1570,22 @@ int memfunc_flag;
 	}
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1824
+      if('@'!=fpara.parameter[ig15][0]) 
+	fpara.para[ig15]=G__getexpr(fpara.parameter[ig15]);
+#else
       fpara.para[ig15]=G__getexpr(fpara.parameter[ig15]);
+#endif
     }
   }
 #else
   for(ig15=0;ig15< fpara.paran;ig15++) {
+#ifndef G__OLDIMPLEMENTATION1824
+    if('@'!=fpara.parameter[ig15][0]) 
+      fpara.para[ig15]=G__getexpr(fpara.parameter[ig15]);
+#else
     fpara.para[ig15]=G__getexpr(fpara.parameter[ig15]);
+#endif
   }
 #endif
   /* recover function call environment */

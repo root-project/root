@@ -7,7 +7,7 @@
  * Description:
  *  Extended Run Time Type Identification API
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -53,7 +53,7 @@ G__CallFunc {
   void SetBytecode(struct G__bytecodefunc* bc);
 #endif
 #ifndef G__OLDIMPLEMENTATION533
-  int IsValid() { return(pfunc?1:0); }
+  int IsValid() { /* return(pfunc?1:0l; */ return(method.IsValid());}
   void SetArgArray(long *p);
 #endif
   void ResetArg() { para.paran=0; }
@@ -78,13 +78,13 @@ G__CallFunc {
 #ifndef __MAKECINT__
   G__InterfaceMethod pfunc;
   G__value result;
-  struct G__param para;
 #ifdef G__ASM_WHOLEFUNC
   struct G__bytecodefunc *bytecode;
 #endif
 #ifndef G__OLDIMPLEMENTATION533
   G__MethodInfo method;
 #endif
+  struct G__param para;
   int ExecInterpretedFunc(G__value* presult);
 #endif /* __MAKECINT__ */
 };

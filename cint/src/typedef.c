@@ -560,6 +560,17 @@ void G__define_type()
 
 #ifndef G__OLDIMPLEMENTATION1141
   if(strcmp(typename,"long")==0) {
+#ifndef G__OLDIMPLEMENTATION1836
+    int tmptypenum;
+    if('l'==type) {
+      G__loadlonglong(&itemp,&tmptypenum,G__LONGLONG);
+      type = 'u';
+    }
+    else if('k'==type) {
+      G__loadlonglong(&itemp,&tmptypenum,G__ULONGLONG);
+      type = 'u';
+    }
+#else /* 1836 */
     if('l'==type || 'k'==type) {
       if(0==G__defined_macro("G__LONGLONG_H")) {
 #ifndef G__OLDIMPLEMENTATION1153
@@ -589,12 +600,18 @@ void G__define_type()
       G__search_typename("long long",'u',itemp,G__PARANORMAL);
       type='u';
     }
+#endif /* 1836 */
     c=G__fgetname(typename,";,[");
   }
 #endif
 #ifndef G__OLDIMPLEMENTATION1533
   if(strcmp(typename,"double")==0) {
     if('l'==type) {
+#ifndef G__OLDIMPLEMENTATION1836
+      int tmptypenum;
+      G__loadlonglong(&itemp,&tmptypenum,G__LONGDOUBLE);
+      type = 'u';
+#else /* 1836 */
       if(0==G__defined_macro("G__LONGLONG_H")) {
 #ifndef G__OLDIMPLEMENTATION1153
 	int store_def_struct_member = G__def_struct_member;
@@ -622,6 +639,7 @@ void G__define_type()
       }
       G__search_typename("long double",'u',itemp,G__PARANORMAL);
       type='u';
+#endif /* 1836 */
     }
     c=G__fgetname(typename,";,[");
   }
@@ -1181,9 +1199,16 @@ char *typename;
   int i;
   int len;
   char ispointer=0;
+#ifndef G__OLDIMPLEMENTATION1823
+  char buf[G__BUFLEN];
+  char buf2[G__BUFLEN];
+  char *temp=buf;
+  char *temp2=buf2;
+#else
   char temp[G__LONGLINE];
-  char *p;
   char temp2[G__LONGLINE];
+#endif
+  char *p;
   int env_tagnum;
   int typenum = -1;
   unsigned long matchflag=0;
@@ -1192,10 +1217,17 @@ char *typename;
   char *par;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1823
+  if(strlen(typename)>G__BUFLEN-10) {
+    temp2=(char*)malloc(strlen(typename)+10);
+    temp=(char*)malloc(strlen(typename)+10);
+  }
+#endif
   strcpy(temp2,typename);
 
   /* find 'xxx::yyy' */
   p = G__find_last_scope_operator (temp2);
+
 
 #ifndef G__OLDIMPLEMENTATION745
   /* abandon scope operator if 'zzz (xxx::yyy)www' */
@@ -1275,7 +1307,12 @@ char *typename;
       }
     }
   }
+#ifndef G__OLDIMPLEMENTATION1823
+  if(temp!=buf) free((void*)temp);
+  if(temp2!=buf2) free((void*)temp2);
+#endif
   return(typenum);
+
 #else
   for(i=0;i<G__newtype.alltype;i++) {
     if(len==G__newtype.hash[i] && strcmp(G__newtype.name[i],temp)==0 &&
@@ -1297,6 +1334,10 @@ char *typename;
     }
   }
 
+#ifndef G__OLDIMPLEMENTATION1823
+  if(temp!=buf) free((void*)temp);
+  if(temp2!=buf2) free((void*)temp2);
+#endif
   if(flag==0) return(-1);
   return(i);
 #endif

@@ -701,8 +701,15 @@ int type;
 {
   int i ,len;
   char *p;
+#ifndef G__OLDIMPLEMENTATION1823
+  char buf[G__BUFLEN*2];
+  char buf2[G__BUFLEN*2];
+  char *temp=buf;
+  char *atom_tagname=buf2;
+#else
   char temp[G__LONGLINE];
   char atom_tagname[G__LONGLINE];
+#endif
   /* int parent_tagnum; */
 #ifndef G__OLDIMPLEMENTATION1789
   int envtagnum= -1;
@@ -714,6 +721,14 @@ int type;
 
   /* Search for old tagname */
   i = G__defined_tagname(tagname,2);
+
+#ifndef G__OLDIMPLEMENTATION1823
+  if(strlen(tagname)>G__BUFLEN*2-10) {
+    temp = (char*)malloc(strlen(tagname)+10);
+    atom_tagname = (char*)malloc(strlen(tagname)+10);
+  }
+#endif
+
 
 #ifndef G__OLDIMPLEMENTATION1789
   p = G__strrstr(tagname,"::");
@@ -754,6 +769,10 @@ int type;
 	      ,G__nam);
       
       G__eof=1;
+#ifndef G__OLDIMPLEMENTATION1823
+      if(buf!=temp) free((void*)temp);
+      if(buf2!=atom_tagname) free((void*)atom_tagname);
+#endif
       return(-1);
     }
 
@@ -940,6 +959,10 @@ int type;
   }
 
   /* return tag table number */
+#ifndef G__OLDIMPLEMENTATION1823
+  if(buf!=temp) free((void*)temp);
+  if(buf2!=atom_tagname) free((void*)atom_tagname);
+#endif
   return(i);
 }
 

@@ -140,6 +140,29 @@ long G__DataMemberInfo::Property()
     if(-1!=var->p_typetable[index]) property|=G__BIT_ISTYPEDEF;
     if(-1==var->p_tagtable[index]) property|=G__BIT_ISFUNDAMENTAL;
     else {
+#ifndef G__OLDIMPLEMENTATION1833
+      if(strcmp(G__struct.name[var->p_tagtable[index]],"G__longlong")==0 ||
+	 strcmp(G__struct.name[var->p_tagtable[index]],"G__ulonglong")==0 ||
+	 strcmp(G__struct.name[var->p_tagtable[index]],"G__longdouble")==0) {
+	property |= G__BIT_ISFUNDAMENTAL;
+	if(-1!=var->p_typetable[index] && 
+	   (strcmp(G__newtype.name[var->p_typetable[index]],"long long")==0 ||
+	    strcmp(G__newtype.name[var->p_typetable[index]],"unsigned long long")==0 ||
+	    strcmp(G__newtype.name[var->p_typetable[index]],"long double")==0)) {
+	  property &= (~G__BIT_ISTYPEDEF);
+	}
+      }
+      else {
+	switch(G__struct.type[var->p_tagtable[index]]) {
+	case 'c': property|=G__BIT_ISCLASS; break;
+	case 's': property|=G__BIT_ISSTRUCT; break;
+	case 'u': property|=G__BIT_ISUNION; break;
+	case 'e': property|=G__BIT_ISENUM; break;
+	case 'n': property|=G__BIT_ISNAMESPACE; break;
+	default:  break;
+	}
+      }
+#else
       switch(G__struct.type[var->p_tagtable[index]]) {
       case 'c': property|=G__BIT_ISCLASS; break;
       case 's': property|=G__BIT_ISSTRUCT; break;
@@ -148,6 +171,7 @@ long G__DataMemberInfo::Property()
       case 'n': property|=G__BIT_ISNAMESPACE; break;
       default:  break;
       }
+#endif
     }
 #endif
     return(property);

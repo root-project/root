@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015078
-#define G__CINTVERSIONSTR  "5.15.78, Mar 3 2003"
+#define G__CINTVERSION      5015080
+#define G__CINTVERSIONSTR  "5.15.80, Mar 17 2003"
 
 
 /**********************************************************************
@@ -31,7 +31,6 @@
 #ifndef G__ROOT
 #define G__ROOT
 #endif
-#define G__OLDIMPLEMENTATION1809
 
 
 /* 1770 changes implementation of skipping function implementation during
@@ -673,7 +672,7 @@ typedef int (*G__IgnoreInclude)();
 #define G__MAXNAME     4096  /* Variable name */
 #else
 #define G__LONGLINE    1024  /* Length of expression */
-#ifdef G__ROOT
+#if defined(G__ROOT) && !defined(G__MYLOCALROOTBUILD)
 #define G__ONELINE      512  /* Length of subexpression,parameter,argument */
 #define G__MAXNAME      256  /* Variable name */
 #else
@@ -1404,7 +1403,11 @@ struct G__tagtable {
   short filenum[G__MAXSTRUCT];
 
   short parent_tagnum[G__MAXSTRUCT];
+#ifndef G__OLDIMPLEMENTATION1830
+  unsigned char funcs[G__MAXSTRUCT];
+#else
   char funcs[G__MAXSTRUCT];
+#endif
   char istypedefed[G__MAXSTRUCT];
   char istrace[G__MAXSTRUCT];
   char isbreak[G__MAXSTRUCT];

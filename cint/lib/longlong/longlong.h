@@ -128,7 +128,7 @@ class G__longlong {
 
   // assignment operators
 #ifndef G__OLDIMPLEMENTATION1144
-  G__longlong& operator=(const long x) { dat=(G__int64)x; return(*this); }
+  G__longlong& operator=(long x) { dat=(G__int64)x; return(*this); }
 #endif
   G__longlong& operator=(const G__longlong& x) { dat=x.dat; return(*this); }
   G__longlong& operator+=(const G__longlong& x) { dat+=x.dat; return(*this); }
@@ -468,6 +468,18 @@ inline int G__ateval(const G__ulonglong& a) {
   fprintf(stdout,"(unsigned long long)%llu\n",a.dat);
   return(1);
 }
+int G__ateval(const char* x) {return(0);}
+int G__ateval(const void* x) {return(0);}
+int G__ateval(const double x) {return(0);}
+int G__ateval(const float x) {return(0);}
+int G__ateval(const char x) {return(0);}
+int G__ateval(const short x) {return(0);}
+int G__ateval(const int x) {return(0);}
+int G__ateval(const long x) {return(0);}
+int G__ateval(const unsigned char x) {return(0);}
+int G__ateval(const unsigned short x) {return(0);}
+int G__ateval(const unsigned int x) {return(0);}
+int G__ateval(const unsigned long x) {return(0);}
 
 
 #ifdef __MAKECINT__
@@ -482,6 +494,9 @@ inline int G__ateval(const G__ulonglong& a) {
 #pragma link off global G__SHAREDLIB;
 #pragma link off global G__OSFDLL;
 */
+#define G__LONGLONGTMP
+#pragma link off global G__LONGLONGTMP;
+#pragma link C++ function G__ateval;
 #endif
 
 

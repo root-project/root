@@ -7,7 +7,7 @@
  * Description:
  *  G__value to ASCII expression
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -469,7 +469,9 @@ char *G__fulltagname(tagnum,mask_dollar)
 int tagnum;
 int mask_dollar;
 {
-#ifndef G__OLDIMPLEMENTATION711
+#if !defined(G__OLDIMPLEMENTATION1823)
+  static char string[G__LONGLINE];
+#elif !defined(G__OLDIMPLEMENTATION711)
   static char string[G__ONELINE];
 #else
   static char string[G__MAXNAME*2];
@@ -539,6 +541,23 @@ int type,tagnum,typenum,reftype,isconst;
     strcpy(string,"const ");
     string+=6;
   }
+#ifndef G__OLDIMPLEMENTATION1836
+  if(-1==typenum && tagnum>=0) { 
+    char *ss = G__struct.name[tagnum];
+    if(strcmp(ss,"G__longlong")==0 && !G__defined_macro("G__LONGLONGTMP")) {
+      strcpy(stringbuf,"long long");
+      return(stringbuf);
+    }
+    if(strcmp(ss,"G__ulonglong")==0 && !G__defined_macro("G__LONGLONGTMP")) {
+      strcpy(stringbuf,"unsigned long long");
+      return(stringbuf);
+    }
+    if(strcmp(ss,"G__longdouble")==0 && !G__defined_macro("G__LONGLONGTMP")) {
+      strcpy(stringbuf,"long double");
+      return(stringbuf);
+    }
+  }
+#endif
 #ifndef G__OLDIMPLEMENTATION1503
   if(-1==typenum && tagnum>=0 && -1!=G__struct.defaulttypenum[tagnum] &&
      'u'==G__newtype.type[G__struct.defaulttypenum[tagnum]]) {
@@ -1674,11 +1693,13 @@ int noerror;
       result.type='h';
       break;
     }
+#ifdef G__OLDIMPLEMENTATION1836
 #ifndef G__OLDIMPLEMENTATION707
     if(strcmp(typenam,"long double")==0) {
       result.type='d';
       break;
     }
+#endif
 #endif
     break;
   case 12:

@@ -923,7 +923,11 @@ struct G__AppPragma {
 #define G__RETURN_NON       0
 #define G__RETURN_NORMAL    1 
 #define G__RETURN_IMMEDIATE 2
+#ifndef G__OLDIMPLEMENTATION1844
+#define G__RETURN_TRY      -1 
+#else
 #define G__RETURN_TRY       3 
+#endif
 #define G__RETURN_EXIT1     4
 #define G__RETURN_EXIT2     5
 #else
@@ -975,6 +979,15 @@ struct G__funclist {
 * variable length string buffer
 *********************************************************************/
 #define G__BUFLEN 32
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1836
+/*********************************************************************
+* variable length string buffer
+*********************************************************************/
+#define G__LONGLONG    1
+#define G__ULONGLONG   2
+#define G__LONGDOUBLE  3
 #endif
 
 /*********************************************************************

@@ -332,6 +332,10 @@ G__value result3;
       char conv[50];
       int match=0;
       int store_tagnum = G__tagnum;
+#ifndef G__OLDIMPLEMENTATION1836
+      G__loadlonglong(&result3.tagnum,&result3.typenum,G__LONGLONG);
+      type='u';
+#else /* 1836 */
       if(0==G__defined_macro("G__LONGLONG_H")) {
 	int store_def_struct_member = G__def_struct_member;
 	G__def_struct_member = 0;
@@ -347,6 +351,7 @@ G__value result3;
       type='u';
       result3.tagnum = G__defined_tagname("G__longlong",2);
       result3.typenum = G__search_typename("long long",'u',result3.tagnum,G__PARANORMAL);
+#endif /* 1836 */
       /* G__castclass(&result3,result3.tagnum,castflag,&type,reftype); */
       if('h'==type||'k'==type) 
 	sprintf(conv,"G__longlong(%lu)",G__int(result3));
@@ -373,9 +378,33 @@ G__value result3;
     break;
   case 10:
     if(strcmp(casttype,"longdouble")==0) {
+#ifndef G__OLDIMPLEMENTATION1836
+      char conv[50];
+      int match=0;
+      int store_tagnum = G__tagnum;
+      G__loadlonglong(&result3.tagnum,&result3.typenum,G__LONGDOUBLE);
+      type='u';
+      G__tagnum = result3.tagnum;
+      sprintf(conv,"G__longdouble(%g)",G__double(result3));
+      result3=G__getfunction(conv,&match,G__TRYCONSTRUCTOR);
+      G__tagnum = store_tagnum;
+      if(match) {
+	G__store_tempobject(result3);
+#ifdef G__ASM
+	if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: STORETEMP\n",G__asm_cp);
+#endif
+	  G__asm_inst[G__asm_cp]=G__STORETEMP;
+	  G__inc_cp_asm(1,0);
+	}
+#endif
+      }
+#else /* 1836 */
       type='d'+castflag;
       result3.tagnum = -1;
       result3.typenum = -1;
+#endif /* 1836 */
       break;
     }
     break;
@@ -386,12 +415,14 @@ G__value result3;
       result3.typenum = -1;
       break;
     }
+#ifdef G__OLDIMPLEMENTATION1836
     if(strcmp(casttype,"long double")==0) {
       type='d'+castflag;
       result3.tagnum = -1;
       result3.typenum = -1;
       break;
     }
+#endif
     break;
   case 12:
     if(strcmp(casttype,"unsignedchar")==0) {

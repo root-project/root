@@ -98,14 +98,12 @@ int G__TypeInfo::operator!=(const G__TypeInfo& a)
 ///////////////////////////////////////////////////////////////////////////
 const char* G__TypeInfo::TrueName()
 {
-#ifndef G__OLDIMPLEMENTATION401
-#ifndef G__OLDIMPLEMENTATION1586
+#if !defined(G__OLDIMPLEMENTATION1586)
   strcpy(G__buf,
 	 G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst));
   return(G__buf);
-#else
+#elif !defind(G__OLDIMPLEMENTATION401)
   return(G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst));
-#endif
 #else
   return(G__type2string((int)type,(int)tagnum,-1,(int)reftype));
 #endif
@@ -113,15 +111,13 @@ const char* G__TypeInfo::TrueName()
 ///////////////////////////////////////////////////////////////////////////
 const char* G__TypeInfo::Name()
 {
-#ifndef G__OLDIMPLEMENTATION401
-#ifndef G__OLDIMPLEMENTATION1586
+#if !defined(G__OLDIMPLEMENTATION1586)
   strcpy(G__buf,G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
 			       ,(int)isconst));
   return(G__buf);
-#else
+#elif !defind(G__OLDIMPLEMENTATION401)
   return(G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
 	,(int)isconst));
-#endif
 #else
   return(G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype));
 #endif
@@ -142,7 +138,26 @@ long G__TypeInfo::Property()
   long property = 0;
   if(-1!=typenum) property|=G__BIT_ISTYPEDEF;
   if(-1==tagnum) property|=G__BIT_ISFUNDAMENTAL;
+#ifndef G__OLDIMPLEMENTATION1833
+  else {
+    if(strcmp(G__struct.name[tagnum],"G__longlong")==0 ||
+       strcmp(G__struct.name[tagnum],"G__ulonglong")==0 ||
+       strcmp(G__struct.name[tagnum],"G__longdouble")==0) {
+      property|=G__BIT_ISFUNDAMENTAL;
+      if(-1!=typenum && 
+	 (strcmp(G__newtype.name[typenum],"long long")==0 ||
+	  strcmp(G__newtype.name[typenum],"unsigned long long")==0 ||
+	  strcmp(G__newtype.name[typenum],"long double")==0)) {
+	property &= (~G__BIT_ISTYPEDEF);
+      }
+    }
+    else {
+      if(G__ClassInfo::IsValid()) property|=G__ClassInfo::Property();
+    }
+  }
+#else
   if(G__ClassInfo::IsValid()) property|=G__ClassInfo::Property();
+#endif
   if(isupper((int)type)) property|=G__BIT_ISPOINTER;
 #ifndef G__OLDIMPLEMENTATION1453
   if (reftype) property |= G__BIT_ISREFERENCE;

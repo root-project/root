@@ -290,7 +290,11 @@ struct G__bytecodefunc *G__MethodInfo::GetBytecode()
     ifunc = (struct G__ifunc_table*)handle;
     if(!ifunc->pentry[index]->bytecode &&
        -1!=ifunc->pentry[index]->filenum && 
-       G__BYTECODE_NOTYET==ifunc->pentry[index]->bytecodestatus) {
+       G__BYTECODE_NOTYET==ifunc->pentry[index]->bytecodestatus
+#ifndef G__OLDIMPLEMENTATION1842
+       && G__asm_loopcompile>=4
+#endif
+       ) {
       G__compile_bytecode(ifunc,(int)index);
     }
     return(ifunc->pentry[index]->bytecode);
@@ -343,9 +347,18 @@ void* G__MethodInfo::PointerToFunc()
     struct G__ifunc_table *ifunc;
     ifunc = (struct G__ifunc_table*)handle;
     if(-1!=ifunc->pentry[index]->filenum && 
-       G__BYTECODE_NOTYET==ifunc->pentry[index]->bytecodestatus) {
+       G__BYTECODE_NOTYET==ifunc->pentry[index]->bytecodestatus
+#ifndef G__OLDIMPLEMENTATION1842
+       && G__asm_loopcompile>=4
+#endif
+       ) {
       G__compile_bytecode(ifunc,(int)index);
     }
+#ifndef G__OLDIMPLEMENTATION1846
+    if(G__BYTECODE_SUCCESS==ifunc->pentry[index]->bytecodestatus) 
+      return((void*)ifunc->pentry[index]->bytecode);
+      
+#endif
     return(ifunc->pentry[index]->tp2f);
   }
   else {
@@ -735,7 +748,17 @@ extern "C" int G__ForceBytecodecompilation(char *funcname,char *param)
   if(method.IsValid()) {
     struct G__ifunc_table *ifunc = method.ifunc();
     int ifn = method.Index();
+#ifndef G__OLDIMPLEMENTATION1842
+    int stat;
+    int store_asm_loopcompile = G__asm_loopcompile;
+    int store_asm_loopcompile_mode = G__asm_loopcompile_mode;
+    G__asm_loopcompile_mode=G__asm_loopcompile=4;
+    stat = G__compile_bytecode(ifunc,ifn);
+    G__asm_loopcompile=store_asm_loopcompile;
+    G__asm_loopcompile_mode=store_asm_loopcompile_mode;
+#else
     int stat = G__compile_bytecode(ifunc,ifn);
+#endif
     if(stat) return 0;
     else return 1;
   }

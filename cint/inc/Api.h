@@ -29,6 +29,11 @@
 *********************************************************************/
 
 #define G__API
+#ifndef G__OLDIMPLEMENTATION1840
+#ifndef G__DICTIONARY
+#define G__DICTIONARY
+#endif
+#endif
 #define G__CINTBODY /* may not be needed */
 #include "G__ci.h"
 #ifndef G__OLDIMPLEMENTATION1218
@@ -50,7 +55,8 @@ typedef int (*G__InterfaceMethod)();
 #endif
 
 #define G__INFO_BUFLEN 50
-#define G__INFO_TITLELEN 512
+/* #define G__INFO_TITLELEN 256 */
+#define G__INFO_TITLELEN G__ONELINE
 
 #include "Property.h"
 #include "Class.h"
