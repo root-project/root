@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.2 2000/06/13 09:52:03 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.3 2000/12/13 15:13:51 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -62,7 +62,7 @@ public:
     virtual void    PaintContour();
     virtual Int_t   PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
                            Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
-                           Double_t *xarr, Double_t *yarr, Int_t *itarr);
+                           Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels);
     virtual void    PaintErrors();
     virtual void    PaintFrame();
     virtual void    PaintFunction();

@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.32 2001/02/23 10:31:28 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.33 2001/02/23 11:47:21 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1619,10 +1619,10 @@ void THistPainter::PaintContour()
       //if (y[0] < gPad->GetUymin() || y[0] > gPad->GetUymax()) continue;
       //if (y[2] < gPad->GetUymin() || y[2] > gPad->GetUymax()) continue;
       for (i=Hparam.xfirst; i<Hparam.xlast; i++) {
-         zc[0] = fH->GetCellContent(i, j);
-         zc[1] = fH->GetCellContent(i+1, j);
-         zc[2] = fH->GetCellContent(i+1, j+1);
-         zc[3] = fH->GetCellContent(i, j+1);
+         zc[0] = fH->GetBinContent(i,   j);
+         zc[1] = fH->GetBinContent(i+1, j);
+         zc[2] = fH->GetBinContent(i+1, j+1);
+         zc[3] = fH->GetBinContent(i,   j+1);
          for (k=0;k<4;k++) {
             ir[k] = TMath::BinarySearch(ncontour,levels,zc[k]);
             if (zc[k] > levels[ncontour-1]) ir[k] = ncontour-1;
@@ -1642,10 +1642,11 @@ void THistPainter::PaintContour()
             for (ix=1;ix<=4;ix++) {
                m = n%4 + 1;
                ljfill = PaintContourLine(zc[n-1],ir[n-1],x[n-1],y[n-1],zc[m-1],
-                     ir[m-1],x[m-1],y[m-1],&xarr[lj-1],&yarr[lj-1],&itarr[lj-1]);
+                     ir[m-1],x[m-1],y[m-1],&xarr[lj-1],&yarr[lj-1],&itarr[lj-1], levels);
                lj += 2*ljfill;
                n = m;
             }
+
             if (zc[0] <= zc[1]) n = 0; else n = 1;
             if (zc[2] <= zc[3]) m = 2; else m = 3;
             if (zc[n] > zc[m]) n = m;
@@ -1655,10 +1656,11 @@ void THistPainter::PaintContour()
                if (n == 1) m = 4;
                else        m = n-1;
                ljfill = PaintContourLine(zc[n-1],ir[n-1],x[n-1],y[n-1],zc[m-1],
-                     ir[m-1],x[m-1],y[m-1],&xarr[lj-1],&yarr[lj-1],&itarr[lj-1]);
+                     ir[m-1],x[m-1],y[m-1],&xarr[lj-1],&yarr[lj-1],&itarr[lj-1], levels);
                lj += 2*ljfill;
                n = m;
             }
+
 //*-*- Re-order endpoints
 
             count = 0;
@@ -1727,6 +1729,8 @@ void THistPainter::PaintContour()
    Int_t nadd,iminus,iplus;
    Double_t *xx, *yy;
    Int_t istart;
+   Int_t first = 0;
+   Int_t *polysort = 0;
    if (Hoption.Contour != 1) goto theEND;
    
    //The 2 points line generated above are now sorted/merged to generate
@@ -1737,7 +1741,18 @@ void THistPainter::PaintContour()
    ymin = gPad->GetUymin();
    xp = new Double_t[2*npmax];
    yp = new Double_t[2*npmax];
+   polysort = new Int_t[ncontour];
+   //find first positive contour
    for (ipoly=0;ipoly<ncontour;ipoly++) {
+      if (levels[ipoly] >= 0) {first = ipoly; break;}
+   }
+   //store negative contours from 0 to minimum, then all positive contours
+   k = 0;
+   for (ipoly=first;ipoly>=0;ipoly--) {polysort[k] = ipoly; k++;}
+   for (ipoly=first+1;ipoly<ncontour;ipoly++) {polysort[k] = ipoly; k++;}
+   // we can now draw sorted contours
+   for (k=0;k<ncontour;k++) {
+      ipoly = polysort[k];
       if (np[ipoly] == 0) continue;
       if (Hoption.List) list = (TList*)contours->At(ipoly);
       poly = polys[ipoly];
@@ -1799,6 +1814,7 @@ void THistPainter::PaintContour()
    delete [] polys;
    delete [] xp;
    delete [] yp;
+   delete [] polysort;
 
 theEND:
    fH->SetLineStyle(linesav);
@@ -1813,7 +1829,7 @@ theEND:
 //______________________________________________________________________________
 Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
                             Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
-                            Double_t *xarr, Double_t *yarr, Int_t *itarr)
+                            Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels)
 {
 //*-*-*-*-*-*-*-*Fill the matrix XARR YARR for Contour Plot*-*-*-*-*-*-*-*
 //*-*            ==========================================
@@ -1836,7 +1852,8 @@ Int_t THistPainter::PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, 
    i = 0;
    icount = 0;
    while (n <= icont2 && i <= kMAXCONTOUR/2 -3) {
-      elev = fH->GetContourLevel(n);
+      //elev = fH->GetContourLevel(n);
+      elev = levels[n];
       diff = elev - elev1;
       pdif = diff/tdif;
       xlen = tlen*pdif;
