@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.42 2002/12/04 14:35:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.43 2002/12/13 18:17:01 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1455,11 +1455,11 @@ void TBuffer::WriteFastArray(const Double_t *d, Int_t n)
 TObject *TBuffer::ReadObject(const TClass * /*clReq*/)
 {
    // Read object from I/O buffer. clReq is NOT used.
-   // The value returned is the address actual start in memory of the object.
-   // Note that if the actual class of the object does not inherit first
-   // from TObject, the type of the pointer is NOT 'TObject*'.
+   // The value returned is the address of the actual start in memory of
+   // the object. Note that if the actual class of the object does not
+   // inherit first from TObject, the type of the pointer is NOT 'TObject*'.
    // [More accurately, the class needs to start with the TObject part, for
-   // the pointer to a real TOject*].
+   // the pointer to be a real TOject*].
    // We recommend using ReadObjectAny instead of ReadObject
 
    return (TObject*) ReadObjectAny(0);
