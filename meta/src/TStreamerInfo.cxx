@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.116 2002/01/25 09:25:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.117 2002/01/26 22:12:04 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -152,7 +152,7 @@ void TStreamerInfo::Build()
             else delete stl;
             continue;
          }
-         Error("Build","%s, unknow type: %s %s\n",GetName(),base->GetName(),base->GetTitle());
+         Error("Build","%s, unknown type: %s %s\n",GetName(),base->GetName(),base->GetTitle());
          continue;
       }
       clm->GetStreamerInfo();
