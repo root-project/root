@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.73 2004/01/29 11:59:11 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.75 2004/02/09 14:03:34 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -417,6 +417,7 @@
 #include "TGeoMedium.h"
 #include "TGeoMatrix.h"
 #include "TGeoNode.h"
+#include "TGeoPhysicalNode.h"
 #include "TGeoManager.h"
 #include "TGeoPara.h"
 #include "TGeoTube.h"
@@ -481,6 +482,7 @@ void TGeoManager::Init()
    fPhiCut = kFALSE;
    fPhimin = 0;
    fPhimax = 360;
+   fDrawExtra = kFALSE;
    fStreamVoxels = kFALSE;
    fIsGeomReading = kFALSE;
    fSearchOverlaps = kFALSE;
@@ -503,6 +505,7 @@ void TGeoManager::Init()
    memset(fNormal, 0, kN3);
    fCldir = new Double_t[3];
    fVolumes = new TObjArray(256);
+   fPhysicalNodes = new TObjArray(256);
    fShapes = new TObjArray(256);
    fGVolumes = new TObjArray(256);
    fGShapes = new TObjArray(256);
@@ -575,6 +578,7 @@ TGeoManager::~TGeoManager()
    if (fShapes) {fShapes->Delete(); delete fShapes;}
    if (fVolumes) {fVolumes->Delete(); delete fVolumes;}   
    fVolumes = 0;
+   if (fPhysicalNodes) {fPhysicalNodes->Delete(); delete fPhysicalNodes;}
    if (fMatrices) {fMatrices->Delete(); delete fMatrices;}
    if (fTracks) {fTracks->Delete(); delete fTracks;}   
    if (fUniqueVolumes) delete fUniqueVolumes;
@@ -3491,6 +3495,22 @@ TGeoVolume *TGeoManager::MakeXtru(const char *name, const TGeoMedium *medium, In
    TGeoVolume *vol = new TGeoVolume(name, xtru, medium);
    return vol;
 }   
+
+//_____________________________________________________________________________
+TGeoPhysicalNode *TGeoManager::MakePhysicalNode(const char *path)
+{
+// Makes a physical node corresponding to a path. If PATH is not specified,
+// makes physical node matching current modeller state.
+   TGeoPhysicalNode *node;
+   if (path) {
+      node = new TGeoPhysicalNode(path);
+   } else {
+      node = new TGeoPhysicalNode();
+      node->SetBranchAsState();
+   }   
+   fPhysicalNodes->Add(node);
+   return node;
+}         
 
 //_____________________________________________________________________________
 TGeoVolumeAssembly *TGeoManager::MakeVolumeAssembly(const char *name)

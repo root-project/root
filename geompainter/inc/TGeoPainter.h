@@ -1,14 +1,12 @@
-// @(#)root/geompainter:$Name:$:$Id:$
 // Author: Andrei Gheata   05/03/02
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-
 #ifndef ROOT_TGeoPainter
 #define ROOT_TGeoPainter
 
@@ -34,10 +32,11 @@
 typedef struct _x3d_points_ {
    Int_t     numPoints;
    Double_t *points;    // x0, y0, z0, x1, y1, z1, ...
-} X3DPoints;
+} X3DPoints;   
 
 class TGeoHMatrix;
 class TVirtualGeoTrack;
+class TGeoPhysicalNode;
 class TGeoChecker;
 class TGeoOverlap;
 class TH2F;
@@ -66,7 +65,7 @@ private:
    TGeoChecker       *fChecker;          // geometry checker
    TGeoShape         *fClippingShape;    // clipping shape
    TObjArray         *fVisVolumes;       // list of visible volumes
-
+   
    void               DefineColors() const;
    void               LocalToMasterVect(const Double_t *local, Double_t *master) const;
 
@@ -95,7 +94,7 @@ public:
    virtual void       EstimateCameraMove(Double_t tmin, Double_t tmax, Double_t *start, Double_t *end);
    virtual void       ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, Int_t py);
    virtual char      *GetVolumeInfo(const TGeoVolume *volume, Int_t px, Int_t py) const;
-   virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const
+   virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const 
                                     {bombx=fBombX; bomby=fBombY; bombz=fBombZ; bombr=fBombR;}
    virtual Int_t      GetBombMode() const      {return fExplodedView;}
    virtual TGeoNode  *GetCheckedNode() {return fCheckedNode;}
@@ -134,6 +133,7 @@ public:
    void               PaintPcon(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);
    virtual void       PaintOverlap(void *ovlp, Option_t *option="");
    virtual void       PrintOverlaps() const;
+   void               PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option="");
    virtual void       RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option="");
    virtual void       RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
    virtual void       Raytrace(Option_t *option="");
@@ -148,7 +148,7 @@ public:
    virtual void       SetVisLevel(Int_t level=3);
    virtual void       SetVisOption(Int_t option=0);
    virtual void       Sizeof3D(const TGeoVolume *vol) const;
-   virtual Int_t      ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const;
+   virtual Int_t      ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoints, Int_t px, Int_t py) const;   
    virtual void       Test(Int_t npoints, Option_t *option);
    virtual void       TestOverlaps(const char *path);
    virtual Bool_t     TestVoxels(TGeoVolume *vol);

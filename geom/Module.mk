@@ -31,7 +31,7 @@ GEOMH1       := TGeoAtt.h TGeoBoolNode.h \
                 TGeoPgon.h TGeoArb8.h TGeoTrd1.h TGeoTrd2.h \
                 TGeoManager.h TGeoCompositeShape.h \
                 TVirtualGeoPainter.h TVirtualGeoTrack.h \
-		TGeoPolygon.h TGeoXtru.h
+		TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h
 GEOMH2       := TGeoPatternFinder.h TGeoCache.h
 GEOMH1       := $(patsubst %,$(MODDIRI)/%,$(GEOMH1))
 GEOMH2       := $(patsubst %,$(MODDIRI)/%,$(GEOMH2))

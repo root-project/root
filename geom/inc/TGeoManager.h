@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.43 2004/01/20 15:44:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.45 2004/02/09 14:03:34 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -22,7 +22,7 @@
 // forward declarations
 class TVirtualGeoTrack;
 class TGeoNode;
-class TGeoNode;
+class TGeoPhysicalNode;
 class TGeoVolume;
 class TGeoVolumeMulti;
 class TGeoMatrix;
@@ -81,12 +81,14 @@ private :
    Bool_t                fIsGeomReading;    //! flag set when reading geometry
    Bool_t                fPhiCut;           // flag for phi cuts
    Bool_t                fTimeCut;          // time cut for tracks
+   Bool_t                fDrawExtra;        //! flag that the list of physical nodes has to be drawn
    TGeoNodeCache        *fCache;            //! cache for physical nodes
    TVirtualGeoPainter   *fPainter;          //! current painter
 
    TObjArray            *fMatrices;         //-> list of local transformations
    TObjArray            *fShapes;           //-> list of shapes
    TObjArray            *fVolumes;          //-> list of volumes
+   TObjArray            *fPhysicalNodes;    //-> list of physical nodes
    TObjArray            *fGShapes;          //! list of runtime shapes
    TObjArray            *fGVolumes;         //! list of runtime volumes
    TObjArray            *fTracks;           //-> list of tracks attached to geometry
@@ -174,6 +176,7 @@ public:
    Int_t                  GetVisLevel() const;
    Int_t                  GetVisOption() const;
    Bool_t                 IsInPhiRange() const;
+   Bool_t                 IsDrawingExtra() const {return fDrawExtra;}
    void                   ModifiedPad() const;
    void                   OptimizeVoxels(const char *filename="tgeovox.C"); // *MENU*
    void                   SetClipping(Bool_t flag=kTRUE) {SetClippingShape(((flag)?fClippingShape:0));} // *MENU*
@@ -184,6 +187,7 @@ public:
    void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,                                         Double_t bombr=1.3); // *MENU* 
    void                   SetTopVisible(Bool_t vis=kTRUE);
    void                   SetTminTmax(Double_t tmin=0, Double_t tmax=999);
+   void                   SetDrawExtraPaths(Bool_t flag=kTRUE) {fDrawExtra=flag;}
    void                   SetVisLevel(Int_t level=3);   // *MENU*
    void                   SetVisOption(Int_t option=0); // *MENU*
    void                   SaveAttributes(const char *filename="tgeoatt.C"); // *MENU*
@@ -287,6 +291,8 @@ public:
                                       Double_t phi1, Double_t phi2);
    TGeoVolume            *MakeXtru(const char *name, const TGeoMedium *medium,
                                    Int_t nz);
+
+   TGeoPhysicalNode      *MakePhysicalNode(const char *path=0);
    TGeoVolumeAssembly    *MakeVolumeAssembly(const char *name);
    TGeoVolumeMulti       *MakeVolumeMulti(const char *name, const TGeoMedium *medium);
    void                   SetTopVolume(TGeoVolume *vol);
@@ -360,6 +366,7 @@ public:
    
    //--- list getters
    TObjArray             *GetListOfNodes()              {return fNodes;}
+   TObjArray             *GetListOfPhysicalNodes()      {return fPhysicalNodes;}
    TObjArray             *GetListOfOverlaps()           {return fOverlaps;}
    TObjArray             *GetListOfMatrices() const     {return fMatrices;}
    TList                 *GetListOfMaterials() const    {return fMaterials;}
@@ -392,6 +399,7 @@ public:
    TGeoVolume            *GetMasterVolume() const  {return fMasterVolume;}
    TGeoVolume            *GetTopVolume() const     {return fTopVolume;}
    TGeoNode              *GetTopNode() const       {return fTopNode;}
+   TGeoPhysicalNode      *GetPhysicalNode(Int_t i) const {return (TGeoPhysicalNode*)fPhysicalNodes->UncheckedAt(i);}
    void                   SetCurrentPoint(Double_t *point) {memcpy(fPoint,point,3*sizeof(Double_t));}
    void                   SetCurrentPoint(Double_t x, Double_t y, Double_t z) { 
                                     fPoint[0]=x; fPoint[1]=y; fPoint[2]=z;}
@@ -450,7 +458,7 @@ public:
                                      fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
-  ClassDef(TGeoManager, 5)          // geometry manager
+  ClassDef(TGeoManager, 6)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;

@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.34 2003/12/11 10:34:55 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.35 2004/02/09 14:03:34 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,6 +32,7 @@
 #include "TGeoTrack.h"
 #include "TGeoOverlap.h"
 #include "TGeoChecker.h"
+#include "TGeoPhysicalNode.h"
 #include "TGeoPainter.h"
 
 ClassImp(TGeoPainter)
@@ -2310,7 +2311,71 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
       default:
          return;
    }
+   if (node==gGeoManager->GetTopNode()) {
+      if (!gGeoManager->IsDrawingExtra()) return;
+      // loop the list of physical volumes
+      TObjArray *nodeList = gGeoManager->GetListOfPhysicalNodes();
+      Int_t nnodes = nodeList->GetEntriesFast();
+      Int_t inode;
+      TGeoVolume *vcrt = gGeoManager->GetCurrentVolume();
+      // save volume line settings
+      Int_t col = vcrt->GetLineColor();
+      Int_t wid = vcrt->GetLineWidth();
+      Int_t sty = vcrt->GetLineStyle();
+      TGeoPhysicalNode *node;
+      for (inode=0; inode<nnodes; inode++) {
+         node = (TGeoPhysicalNode*)nodeList->UncheckedAt(inode);
+         PaintPhysicalNode(node, option);
+      }
+      // restore volume line settings
+      vcrt->SetLineColor(col);
+      vcrt->SetLineWidth(wid);
+      vcrt->SetLineStyle(sty);
+   }      
 } 
+
+//______________________________________________________________________________
+void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
+{
+// Paints a physical node associated with a path.
+   if (!node->IsVisible()) return;
+   Int_t level = node->GetLevel();
+   Int_t i;
+   TGeoShape *shape;
+   TGeoHMatrix *matrix;
+   TGeoVolume *vol = gGeoManager->GetCurrentVolume();
+   TGeoVolume *vcrt;
+   if (!node->IsVolAttributes()) {
+      vol->SetLineColor(node->GetLineColor());
+      vol->SetLineWidth(node->GetLineWidth());
+      vol->SetLineStyle(node->GetLineStyle());
+   }   
+   if (!node->IsVisibleFull()) {
+      // Paint only last node in the branch
+      vcrt  = node->GetVolume();
+      if (node->IsVolAttributes()) {
+         vol->SetLineColor(vcrt->GetLineColor());
+         vol->SetLineWidth(vcrt->GetLineWidth());
+         vol->SetLineStyle(vcrt->GetLineStyle());
+      }     
+      shape = vcrt->GetShape();
+      matrix = node->GetMatrix();
+      shape->PaintNext(matrix, option);
+   } else {
+      // Paint full branch, except top node
+      for (i=1;i<=level; i++) {
+         vcrt  = node->GetVolume(i);
+         if (node->IsVolAttributes()) {
+            vol->SetLineColor(vcrt->GetLineColor());
+            vol->SetLineWidth(vcrt->GetLineWidth());
+            vol->SetLineStyle(vcrt->GetLineStyle());
+         }     
+         shape = vcrt->GetShape();
+         matrix = node->GetMatrix(i);
+         shape->PaintNext(matrix, option);
+      }
+   }      
+}   
 
 //______________________________________________________________________________
 void TGeoPainter::PrintOverlaps() const
@@ -2602,8 +2667,25 @@ void TGeoPainter::SetBombFactors(Double_t bombx, Double_t bomby, Double_t bombz,
 //______________________________________________________________________________
 void TGeoPainter::Sizeof3D(const TGeoVolume *vol) const
 {
-//   Compute size of the 3d object "vol".
-   if (fGeom->GetTopVolume() == vol) fGeom->CdTop();
+//   Compute size of the 3d object "vol".   
+   if (fGeom->GetTopVolume() == vol) {
+      fGeom->CdTop();
+      // size of additional physical nodes
+      if (gGeoManager->IsDrawingExtra()) {;
+         // loop the list of physical volumes
+         TObjArray *nodeList = gGeoManager->GetListOfPhysicalNodes();
+         Int_t nnodes = nodeList->GetEntriesFast();
+         Int_t inode,i,level;
+         TGeoPhysicalNode *pnode;
+         for (inode=0; inode<nnodes; inode++) {
+            pnode = (TGeoPhysicalNode*)nodeList->UncheckedAt(inode);
+            level = pnode->GetLevel();
+            if (!pnode->IsVisibleFull()) {
+               pnode->GetShape()->Sizeof3D();
+            } else for (i=1;i<=level; i++)  pnode->GetShape(i)->Sizeof3D();
+         }      
+      }
+   }      
    TGeoNode *node = 0;
    Int_t nd = vol->GetNdaughters();
    TGeoShape *shape = vol->GetShape();
@@ -2652,7 +2734,7 @@ void TGeoPainter::Sizeof3D(const TGeoVolume *vol) const
          break;
       default:
          return;
-   }          
+   } 
 }
 //______________________________________________________________________________
 void TGeoPainter::SetExplodedView(Int_t ibomb)    
