@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.2 2000/11/21 20:10:42 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.3 2000/12/13 15:13:46 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -224,10 +224,10 @@ void TParticle::Print(Option_t *) const
 //
 //  Print the internals of the primary vertex particle
 //
-   TParticlePDG* pdg = ((TParticle*)this)->GetPDG();
+   //TParticlePDG* pdg = ((TParticle*)this)->GetPDG();
    Printf("TParticle: %-13s  p: %8f %8f %8f Vertex: %8e %8e %8e %5d %5d %s",
           GetName(),Px(),Py(),Pz(),Vx(),Vy(),Vz(),
-          fMother[0],fMother[1],pdg->Type());
+          fMother[0],fMother[1]);
 }
 
 //______________________________________________________________________________

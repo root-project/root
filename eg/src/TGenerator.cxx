@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.3 2000/11/21 20:10:18 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.4 2000/12/13 15:13:46 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -51,8 +51,9 @@ TGenerator::TGenerator(const char *name,const char *title): TNamed(name,title)
 
 
   //  Initialize particles table
-   TDatabasePDG *pdg = TDatabasePDG::Instance();
-   if (!pdg->ParticleList()) pdg->Init();
+   TDatabasePDG::Instance();
+   //TDatabasePDG *pdg = TDatabasePDG::Instance();
+   //if (!pdg->ParticleList()) pdg->Init();
 
    fPtCut        = 0;
    fShowNeutrons = kTRUE;

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TG3ParticlePDG.hh,v 1.4 2001/02/22 14:16:14 murat Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -8,8 +8,8 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-#ifndef ROOT_TParticlePDG
-#define ROOT_TParticlePDG
+#ifndef TParticlePDG_hh
+#define TParticlePDG_hh
 
 #ifndef ROOT_TNamed
 #include "TNamed.h"
@@ -18,12 +18,14 @@
 #include "TObjArray.h"
 #endif
 
+class TDecayChannel;
+
 class TParticlePDG : public TNamed {
+public:
 //------------------------------------------------------------------------------
 //     data members
 //------------------------------------------------------------------------------
 protected:
-
   Int_t            fPdgCode;		        // PDG code of the particle
   Double_t         fMass;                       // particle mass in GeV
   Double_t         fCharge;                     // charge in units of |e|
@@ -44,42 +46,71 @@ protected:
 					
   TObjArray*       fDecayList;                  // array of decay channels
 				
-  TString          fType;                       // particle type  - what is it?
+  TString          fParticleClass;              // lepton, meson etc
 
+  Int_t            fTrackingCode;		// G3 tracking code of the particle
+  TParticlePDG*    fAntiParticle;		// pointer to antiparticle
+//------------------------------------------------------------------------------
+// functions
+//------------------------------------------------------------------------------
 public:
-				// ****** constructors  and destructor
+					// ****** constructors  and destructor
   TParticlePDG();
   TParticlePDG(int pdg_code);
-  TParticlePDG(const char* name, const char* title, Double_t mass,
-	       Bool_t stable, Double_t decay_width, Double_t charge,
-	       const char* type, Int_t MCnumber);
+  TParticlePDG(const char* Name, const char* Title, Double_t Mass,
+	       Bool_t Stable, Double_t Width, Double_t Charge,
+	       const char* ParticleClass, Int_t PdgCode, Int_t Anti, 
+	       Int_t TrackingCode);
 
   virtual ~TParticlePDG();
 				// ****** access methods
+  
+  Int_t           PdgCode      () const { return fPdgCode; }
+  Double_t        Mass         () const { return fMass; }
+  Double_t        Charge       () const { return fCharge; }
+  Double_t        Lifetime     () const { return fLifetime; }
+  Double_t        Width        () const { return fWidth; }
+  Int_t           Parity       () const { return fParity; }
+  Double_t        Spin         () const { return fSpin; }
+  Double_t        Isospin      () const { return fIsospin; }
+  Double_t        I3           () const { return fI3; }
+  Int_t           Strangeness  () const { return fStrangeness; }
+  Int_t           Charm        () const { return fCharm; }
+  Int_t           Beauty       () const { return fBeauty; }
+  Int_t           Top          () const { return fTop; }
+  Int_t           X            () const { return fX; }
+  Int_t           Y            () const { return fY; }
+  Int_t           Stable       () const { return fStable; }
+  const char*     ParticleClass() const { return fParticleClass.Data(); }
 
-  Int_t           PdgCode    () const { return fPdgCode; }
-  Double_t        Mass       () const { return fMass; }
-  Double_t        Charge     () const { return fCharge; }
-  Double_t        Lifetime   () const { return fLifetime; }
-  Double_t        Width      () const { return fWidth; }
-  Int_t           Parity     () const { return fParity; }
-  Double_t        Spin       () const { return fSpin; }
-  Double_t        Isospin    () const { return fIsospin; }
-  Double_t        I3         () const { return fI3; }
-  Int_t           Strangeness() const { return fStrangeness; }
-  Int_t           Charm      () const { return fCharm; }
-  Int_t           Beauty     () const { return fBeauty; }
-  Int_t           Top        () const { return fTop; }
-  Int_t           X          () const { return fX; }
-  Int_t           Y          () const { return fY; }
-  Int_t           Stable     () const { return fStable; }
-  const char     *Type       () const { return fType.Data(); }
+  TObjArray*      DecayList    () { return fDecayList; }
 
-  TObjArray*      DecayList  () { return fDecayList; }
+  Int_t   NDecayChannels () { 
+    return (fDecayList) ? fDecayList->GetEntriesFast() : 0;
+  }
 
-  virtual void    Print(Option_t* opt) const;
+  Int_t   TrackingCode() { return fTrackingCode; }
 
-  ClassDef(TParticlePDG,1)  //PDG static particle definition
+  TDecayChannel* DecayChannel(Int_t i) { 
+    return (TDecayChannel*) fDecayList->At(i); 
+  }
+
+  TParticlePDG* AntiParticle() { return fAntiParticle; }
+
+				// ****** modifiers
+
+  void   SetAntiParticle(TParticlePDG* ap) { fAntiParticle = ap; }
+
+  Int_t  AddDecayChannel(Int_t        Type, 
+			 Double_t     BranchingRatio, 
+			 Int_t        NDaughters, 
+			 Int_t*       DaughterPdgCode);
+
+  virtual void  PrintDecayChannel(TDecayChannel* dc, Option_t* opt = "") const; 
+
+  virtual void  Print(Option_t* opt = "") const; // *MENU*
+
+  ClassDef(TParticlePDG,2)		// PDG static particle definition
 };
 
 #endif
