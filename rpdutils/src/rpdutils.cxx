@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.43 2004/05/18 11:56:38 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.44 2004/05/18 22:21:48 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -66,6 +66,7 @@
 #include <sys/mount.h>
 #ifndef R__TRUE64
 extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
+extern "C" int ruserok(const char *, int, const char *, const char *);
 #endif
 #elif defined(__APPLE__)
 #include <sys/mount.h>
