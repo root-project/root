@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.1 2001/02/10 02:01:09 perev Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1K.cxx,v 1.1 2001/02/21 15:23:16 brun Exp $
 // Author: Victor Perevoztchikov <perev@bnl.gov>  21/02/2001
 
 /*************************************************************************
@@ -10,14 +10,7 @@
  *************************************************************************/
 
 #include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <fstream.h>
-#include <iostream.h>
-#include <float.h>
-#include <assert.h>
-
+   
 #include "TROOT.h"
 #include "TH1K.h"
 #include "TMath.h"
@@ -130,8 +123,8 @@ Stat_t TH1K::GetBinContent(Int_t bin) const
    if (!nkmax) {nkmax = 3; ffmin = GetBinWidth(bin);}
    if (nkmax >= fNIn) nkmax = fNIn-1;
    for (nk = 1; nk <= nkmax || ff <= ffmin; nk++) {
-     fl = (jl>=0  ) ? fabs(fArray[jl]-x) : 1.e+20;
-     fr = (jr<fNIn) ? fabs(fArray[jr]-x) : 1.e+20;
+     fl = (jl>=0  ) ? TMath::Abs(fArray[jl]-x) : 1.e+20;
+     fr = (jr<fNIn) ? TMath::Abs(fArray[jr]-x) : 1.e+20;
      if (jl<0 && jr>=fNIn) break;
      if (fl < fr) { ff = fl; jl--;}
      else         { ff = fr; jr++;}
