@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.8 2004/05/27 06:44:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.9 2004/06/12 05:35:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -230,7 +230,8 @@ namespace {
       ncp_t( "void*",              &voidarray_convert                 ),
 
    // python C-API objects
-      ncp_t( "PyObject*",          &pyobject_convert                  )
+      ncp_t( "PyObject*",          &pyobject_convert                  ),
+      ncp_t( "_object*",           &pyobject_convert                  )
    };
 
    const int nHandlers_ = sizeof( handlers_ ) / sizeof( handlers_[ 0 ] );
@@ -477,7 +478,10 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
 
 // start actual method invocation
    void* obj = Utility::getObjectFromHolderFromArgs( aTuple );
-   assert( obj != 0 );
+   if ( ! obj ) {
+      PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
+      return 0;
+   }
 
 // execute the method and translate return type
    switch ( m_returnType ) {

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.2 2004/04/27 14:44:02 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.cxx,v 1.3 2004/06/12 05:35:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -17,6 +17,40 @@
 #include <stdio.h>
 #include <Riostream.h>
 
+//______________________________________________________________________________
+//                          Python interpreter access
+//                          =========================
+//
+// The TPython class allows for access to python objects from CINT. The current
+// functionality is only basic: ROOT objects and builtin types can cross the
+// boundary between the two interpreters. All other cross-coding is based on
+// strings that are run on the python interpreter.
+//
+// Example: Accessing the python interpreter from ROOT
+//
+// root [0] gSystem->Load( "libPyROOT" );
+// (int)0
+// root [1] TPython::Exec( "print 1 + 1" );  // write '2' to stdout
+// 2
+//
+// // create a TBrowser on the python side, and transfer it back and forth
+// root [2] TBrowser* b = (TBrowser*) Python::Eval( "ROOT.TBrowser()" );
+// root [3] TPython::Bind( b, "b" );
+// root [4] b == (TBrowser*) TPython::Eval( "b" )
+// (int)1
+//
+// // builtin variables can cross-over
+// root [5] int i = TPython::Eval( "1 + 1" );
+// root [6] i
+// (int)2
+//
+// It is possible to switch between interpreters by calling "TPython::Prompt()"
+// on the CINT side, while returning with ^D (EOF). State is preserved between
+// successive switches.
+
+
+//- data ---------------------------------------------------------------------
+ClassImp(TPython)
 
 namespace {
 
@@ -29,8 +63,10 @@ namespace {
 } // unnamed namespace
 
 
+//- static public members ----------------------------------------------------
 bool TPython::Initialize()  {
-// Private initialization method.
+// Private initialization method: setup the python interpreter and load the
+// ROOT module.
 
    if ( ! Py_IsInitialized() ) {
    // this happens if CINT comes in first
@@ -89,7 +125,11 @@ void TPython::Exec( const char* cmd ) {
 
 
 const TPyReturn& TPython::Eval( const char* expr ) {
-// Evaluate a python expression (e.g. "ROOT.TBrowser()"). TODO: fix memory management
+// Evaluate a python expression (e.g. "ROOT.TBrowser()").
+//
+// Caution: do not hold on to the return value: either store it in a builtin
+// type (implicit casting will work), or in a pointer to a ROOT object (explicit
+// casting is required).
 
 // setup
    if ( ! Initialize() )
@@ -181,7 +221,8 @@ bool TPython::Bind( TObject* obj, const char* label ) {
 
 
 void TPython::Prompt() {
-// Enter an interactive python session (exit with ^D).
+// Enter an interactive python session (exit with ^D). State is preserved
+// between successive calls.
 
 // setup
    if ( ! Initialize() ) {

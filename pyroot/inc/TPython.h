@@ -1,8 +1,17 @@
-// @(#)root/pyroot:$Name:  $:$Id: TPython.h,v 1.3 2004/04/27 14:44:02 rdm Exp $
+// @(#)root/pyroot:$Name:  $:$Id: TPython.h,v 1.4 2004/06/12 05:35:10 brun Exp $
 // Author: Wim Lavrijsen   April 2004
 
 #ifndef ROOT_TPython
 #define ROOT_TPython
+
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+// TPython                                                                  //
+//                                                                          //
+// Access to the python interpreter.                                        //
+//                                                                          //
+//////////////////////////////////////////////////////////////////////////////
+
 
 // Bindings
 #include "TPyReturn.h"

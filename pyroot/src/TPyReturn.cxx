@@ -15,8 +15,24 @@
 #include <stdexcept>
 
 
+//______________________________________________________________________________
+//                        Python expression eval result
+//                        =============================
+//
+// Transport class for bringing objects from python (dynamically typed) to CINT
+// (statically typed). Upon cast to another value, either implicitly (builtin
+// types) or explicitly (pointers to ROOT objects), the TPyReturn object goes
+// out of existence. For this reason, it can not be copied and it should not
+// be held by reference.
+
+
+//- data ---------------------------------------------------------------------
+ClassImp(TPyReturn)
+
+
 //- private helpers ----------------------------------------------------------
 void TPyReturn::autoDestruct() const {
+// Private harakiri method.
    if ( gInterpreter != 0 )
       gInterpreter->DeleteGlobal( (void*) this );
    delete this;
@@ -25,29 +41,38 @@ void TPyReturn::autoDestruct() const {
 
 //- constructors/destructor --------------------------------------------------
 TPyReturn::TPyReturn() : m_class( 0 ) {
+// Construct a TPyReturn object from Py_None.
    Py_INCREF( Py_None );
    m_object = Py_None;
 }
 
 TPyReturn::TPyReturn( PyObject* obj, TClass* cls ) :
-   m_object( obj ), m_class( cls ) {}
+   m_object( obj ), m_class( cls ) {
+// Construct a TPyReturn from a python object. If the python object holds on to
+// a ROOT object, the TClass should be given. Reference counting for the python
+// object is in effect.
+}
 
 TPyReturn::TPyReturn( const TPyReturn& s ) : TObject( s ) {
+// Private copy constructor; throws if called.
    throw std::runtime_error( "TPyReturn objects may not be copied!" );
 }
 
 TPyReturn& TPyReturn::operator=( const TPyReturn& ) {
+// Private assignment operator; throws if called.
    throw std::runtime_error( "TPyReturn objects may not be assigned to!" );
    return *this;
 }
 
 TPyReturn::~TPyReturn() {
+// Destructor. Reference counting for the held python object is in effect.
    Py_XDECREF( m_object );
 }
 
 
 //- public members -----------------------------------------------------------
 TClass* TPyReturn::IsA() const {
+// Return the held object TClass (not the TPyReturn TClass).
    return m_class;
 }
 

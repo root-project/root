@@ -3,6 +3,15 @@
 #ifndef ROOT_TPyReturn
 #define ROOT_TPyReturn
 
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+// TPyReturn                                                                //
+//                                                                          //
+// Morphing return type from evaluating python expressions.                 //
+//                                                                          //
+//////////////////////////////////////////////////////////////////////////////
+
+
 // ROOT
 #ifndef ROOT_TObject
 #include "TObject.h"
@@ -38,10 +47,8 @@ private:
    void autoDestruct() const;
 
 private:
-   PyObject* m_object;
-   TClass* m_class;
-   bool m_isPython;
-
+   PyObject* m_object;             // python side object
+   TClass* m_class;                // TClass of held object if ROOT object
 };
 
 #endif
