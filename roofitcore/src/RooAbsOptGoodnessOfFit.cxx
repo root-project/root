@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.8 2002/10/25 23:49:14 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.9 2003/01/14 00:07:43 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -192,7 +192,9 @@ Double_t RooAbsOptGoodnessOfFit::combinedValue(RooAbsReal** array, Int_t n) cons
   Double_t sum(0) ;
   Int_t i ;
   for (i=0 ; i<n ; i++) {
-    sum += array[i]->getVal() ;
+    Double_t tmp = array[i]->getVal() ;
+    if (tmp==0) return 0 ;
+    sum += tmp ;
   }
   return sum ;
 }
