@@ -34,6 +34,7 @@ TVirtualViewer3D::TVirtualViewer3D(TVirtualPad *pad)
    // TVirtualViewer3D constructor.
 
    fPad = pad;
+   if (pad) pad->SetViewer3D(this);
 }
 
 //______________________________________________________________________________
