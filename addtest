@@ -4,31 +4,66 @@
 # Args: $1 -> test Name
 #	$2 -> test directory
 
-printUSAGE() { echo "Give the Directory  $@."  ;exit 1; }
+printUSAGE() { echo "Give the Directory $@."  ;exit 1; }
+printERROR() { echo "ERROR: $@." >&2 ; }
 
 # check whether sufficient args are given
 
-if [ $# -lt 2 ] ; then printUSAGE "for the test" ; fi
+if [ $# -lt 2 ] ; then 
+	printUSAGE "for the test" ; 
+fi
+
+if [ ! -d "$2" ] ; then
+	printERROR "The source $2 is not a directory, or does not exist"
+	echo "use 'mktest $2' to add test directory"
+	
+	#mktest $2
+	selection=
+	until [ "$selection" = "0" ]; do
+	    echo "1 - Create $2"
+	    echo "0 - exit"
+	    echo ""
+	    echo -n "Enter selection: "
+	    read selection
+	    echo ""
+	    case $selection in
+	        1 )  mktest $2 ; addtest $1 $2; exit 1;;
+	        0 ) exit ;;
+	        * ) echo "Please enter 1 or 0"
+	    esac
+	done
+fi
+
 
 cd $2
 
 sed -e "s/TEST_TARGETS += /TEST_TARGETS += $1 /g" Makefile > Makefile1
 rm Makefile
-mv Makefile1 Makefile
+
+#mv Makefile1 Makefile
+
+sed -e "s/mytest/$1/g" Makefile1 > Makefile
+rm Makefile1
 
 #sed -e "s/mytest/$1/g" Makefile1 > Makefile
 #rm Makefile1
 #mv Makefile1 Makefile
 
+
 #sed -e "s/testWithDiff/$1/g" Makefile1 > Makefile
 #rm Makefile1
 
-echo >> Makefile
+#echo >> Makefile
 echo "$1 : $1.log" >> Makefile
 echo "	\$(TestDiff)" >> Makefile
 
 touch $1.ref
 
-echo "{"  > run$1.C
-echo "// Fill out the code of the actual test" >> run$1.C 
-echo "}" >> run$1.C 
+if [ ! -s $run$1.C ]; then
+	touch run$1.C
+fi
+
+
+#echo "{"  > run$1.C
+#echo "// Fill out the code of the actual test" >> run$1.C 
+#echo "}" >> run$1.C 
