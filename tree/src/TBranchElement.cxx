@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.20 2001/04/19 16:46:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.21 2001/04/20 09:15:13 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -360,7 +360,13 @@ void TBranchElement::Browse(TBrowser *b)
    if (nbranches > 0) {
       fBranches.Browse(b);
    } else {
-      GetTree()->Draw(GetName());
+      // Get the name and strip any extra brackets
+      // in order to get the full arrays. 
+      TString name = GetName();
+      Int_t pos = name.First('[');
+      if (pos!=kNPOS) name.Remove(pos);
+      
+      GetTree()->Draw(name);
       if (gPad) gPad->Update();
    }
 }

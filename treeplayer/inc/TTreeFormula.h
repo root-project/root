@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.9 2001/04/09 08:33:50 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.10 2001/04/18 06:11:06 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -47,6 +47,7 @@ class TTreeFormula : public TFormula {
 
 protected:
    enum { kIsCharacter = BIT(12) };
+   enum { kDirect, kDataMember, kMethod };
 
    TTree       *fTree;            //! pointer to Tree
    Short_t     fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
@@ -54,7 +55,7 @@ protected:
    Int_t       fMultiplicity;     //  Number of array elements in leaves in case of a TClonesArray
    Int_t       fInstance;         //  Instance number for GetValue
    Int_t       fNindex;           //  Size of fIndex
-   Int_t      *fIndex;            //[fNindex]array of instances numbers
+   Int_t      *fLookupType;       //[fNindex] array indicating how each leaf should be looked-up
    TObjArray   fLeaves;           //!  List of leaf used in this formula.
    TObjArray   fDataMembers;      //!  List of leaf data members
    TObjArray   fMethods;          //!  List of leaf method calls
@@ -77,7 +78,7 @@ public:
    virtual   ~TTreeFormula();
    virtual Int_t      DefinedVariable(TString &variable);
    virtual Double_t   EvalInstance(Int_t i=0) const;
-   TDataMember       *GetDataMember(Int_t code) const;
+   TObject           *GetLeafInfo(Int_t code) const;
    TMethodCall       *GetMethodCall(Int_t code) const;
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
    virtual TLeaf     *GetLeaf(Int_t n) const;
@@ -88,12 +89,13 @@ public:
    //mutable.  We will be able to do that only when all the compilers supported for ROOT actually implemented
    //the mutable keyword. 
    //NOTE: Also modify the code in PrintValue which current goes around this limitation :(
-   virtual Double_t   GetValueLeafObject(Int_t i, TLeafObject *leaf) const;
+   virtual Double_t   GetValueFromMember(Int_t i, TLeaf *leaf) const;
+   virtual Double_t   GetValueFromMethod(Int_t i, TLeaf *leaf) const;
    virtual char      *PrintValue(Int_t mode=0) const;
    virtual void       SetTree(TTree *tree) {fTree = tree;}
    virtual void       UpdateFormulaLeaves();
 
-   ClassDef(TTreeFormula,3)  //The Tree formula
+   ClassDef(TTreeFormula,4)  //The Tree formula
 };
 
 #endif

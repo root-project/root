@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.8 2001/04/16 19:16:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.9 2001/04/18 06:29:15 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -59,6 +59,7 @@ public:
             Int_t    GetEntry(Int_t entry=0, Int_t getall = 0);
             Int_t    GetID() const {return fID;}
     TStreamerInfo   *GetInfo();
+    char    *GetObject() const { return fObject; };
     virtual const char  *GetParentName() const {return fParentName.Data();}
     TBranchElement  *GetMother() const;
             Int_t    GetNdata() const {return fNdata;}

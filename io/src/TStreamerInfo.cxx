@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.60 2001/04/20 09:13:27 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.61 2001/04/20 09:47:05 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -877,21 +877,37 @@ Int_t TStreamerInfo::GetSize() const
 }
 
 //______________________________________________________________________________
-TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember) const
+TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_t &offset) const
 {
-//  return the streamer element for "datamember"
+//  Return the StreamerElement of "datamember" inside this class of any of its 
+//  base class.  The offset information contained in the StreamerElement is related
+//  to its immediate containing class, so we return in 'offset' the offset inside
+//  the class of this streamerInfo.
 
    if (!fElements) return 0;
    TStreamerElement *element = (TStreamerElement*)fElements->FindObject(datamember);
-   if (element) return element;
+   if (element) {
+      offset = element->GetOffset();
+      return element;
+   }
 
+   TStreamerElement *base_element;
    TBaseClass *base;
+   TClass *base_cl;
+   Int_t base_offset = 0;
+   Int_t local_offset = 0;
    TIter nextb(fClass->GetListOfBases());
    //iterate on list of base classes
    while((base = (TBaseClass*)nextb())) {
-      TClass* cl = gROOT->GetClass(base->GetName());
-      element = cl->GetStreamerInfo()->GetStreamerElement(datamember);
-      if (element) return element;
+      base_cl = gROOT->GetClass(base->GetName());
+      base_element = (TStreamerElement*)fElements->FindObject(base->GetName());
+      base_offset = base_element->GetOffset();
+      
+      element = base_cl->GetStreamerInfo()->GetStreamerElement(datamember,local_offset);
+      if (element) {
+        offset = base_offset + local_offset;
+        return element;
+      }
    }
    return 0;
 }
@@ -1595,7 +1611,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                             TStreamerObjectPointer *el = (TStreamerObjectPointer*)fElem[i];
                             *obj = (TObject*)el->GetClass()->New();
                          }
+                         Bool_t old = gROOT->ReadingObject();
+                         gROOT->SetReadingObject(kTRUE);
                          (*obj)->Streamer(b);
+                         gROOT->SetReadingObject(old);
                          if ((*obj)->IsZombie()) {
                             delete (*obj);
                             *obj = 0;
