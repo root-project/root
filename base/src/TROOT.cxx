@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.25 2001/03/14 07:51:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.26 2001/03/14 18:34:23 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -672,7 +672,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       (dict)();
       return GetClass(name);
    }
-   return 0;
+   return cl;
 }
 
 //______________________________________________________________________________
@@ -1339,11 +1339,11 @@ const char *TROOT::GetMacroPath()
 {
    // Get macro search path. Static utility function.
 
-   static const char *macropath = 0;
+   static TString macropath;
 
-   if (macropath == 0) {
+   if (macropath.Length()==0) {
       macropath = gEnv->GetValue("Root.MacroPath", (char*)0);
-      if (macropath == 0)
+      if (macropath.Length()== 0)
 #if !defined (__VMS ) && !defined(WIN32)
    #ifdef ROOTMACRODIR
          macropath = ".:" ROOTMACRODIR;
