@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.35 2002/09/19 13:54:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.37 2002/10/18 17:14:21 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -603,8 +603,8 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
       int len = strlen(fn);
       char *mode = 0;
       if (len>1) {
-         if (strcmp(fn+len-1,"d")==0) mode = "d";
-         else if (strcmp(fn+len-1,"o")==0) mode = "o";
+         if (strcmp(fn+len-1,"g")==0) mode = "g";
+         else if (strcmp(fn+len-1,"O")==0) mode = "O";
          if (mode) len--;
       }
       Bool_t compile = !strncmp(fn+len-1,"+",1);

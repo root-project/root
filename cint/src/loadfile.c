@@ -1,4 +1,4 @@
-/* /% C %/ */
+//* /% C %/ */
 /***********************************************************************
  * cint (C/C++ interpreter)
  ************************************************************************
@@ -1011,14 +1011,14 @@ char *filenamein;
   * ++, like script.cxx++ or script.C++
   * ending with only one + means to keep the shared
   * library after the end of this process.
-  * The + or ++ can also be followed by either a 'd'
-  * or an 'o' which means respectively to compile
+  * The + or ++ can also be followed by either a 'g'
+  * or an 'O' which means respectively to compile
   * in debug or optimized mode.
   *************************************************/
   compiler_option = 0;
   if ( len>2 && (strncmp(filename+len-2,"+",1)==0 )
-       && (strcmp(filename+len-1,"o")==0
-           || strcmp(filename+len-1,"d")==0 )
+       && (strcmp(filename+len-1,"O")==0
+           || strcmp(filename+len-1,"g")==0 )
      ) {
      compiler_option = filename+len-1;
      len -= 1;
@@ -1028,8 +1028,8 @@ char *filenamein;
 #ifndef G__OLDIMPLEMENTATION1303
       if (compiler_option) {
          switch(compiler_option[0]) {
-            case 'o': compiler_option = "kfo"; break;
-            case 'd': compiler_option = "kfd"; break;
+            case 'O': compiler_option = "kfO"; break;
+            case 'g': compiler_option = "kfg"; break;
             default: G__genericerror("Should not have been reached!");
          }
       } else {
@@ -1040,8 +1040,8 @@ char *filenamein;
     } else {
       if (compiler_option) {
          switch(compiler_option[0]) {
-            case 'o': compiler_option = "ko"; break;
-            case 'd': compiler_option = "kd"; break;
+            case 'O': compiler_option = "kO"; break;
+            case 'g': compiler_option = "kg"; break;
             default: G__genericerror("Should not have been reached!");
          }
       } else {

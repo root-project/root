@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.39 2002/10/17 06:54:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.40 2002/10/18 14:58:55 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1234,8 +1234,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   // The possible options are:
   //     k : keep the shared library after the session end.
   //     f : force recompilation.
-  //     d : compile with debug symbol
-  //     o : optimized the code (ignore if 'd' is specified)
+  //     g : compile with debug symbol
+  //     O : optimized the code (ignore if 'd' is specified)
   //
   // If library_specified is specified, CompileMacro generates the file
   // "library_specified".soext where soext is the shared library extension for
@@ -1334,10 +1334,10 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   if (opt) {
      keep = (strchr(opt,'k')!=0);
      recompile = (strchr(opt,'f')!=0);
-     if (strchr(opt,'o')!=0) {
+     if (strchr(opt,'O')!=0) {
        mode = kOpt;
      }
-     if (strchr(opt,'d')!=0) {
+     if (strchr(opt,'g')!=0) {
        mode = kDebug;
      }
   }
