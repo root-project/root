@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.188 2004/07/01 15:10:47 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.189 2004/07/02 13:25:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -771,10 +771,9 @@ void TH1::Add(const TH1 *h1, Double_t c1)
    for (i=0;i<10;i++) {s1[i] = s2[i] = 0;}
    GetStats(s1);
    h1->GetStats(s2);
-   Double_t ac1 = TMath::Abs(c1);
    for (i=0;i<10;i++) {
-      if (i == 1) s1[i] += ac1*ac1*s2[i];
-      else        s1[i] += ac1*s2[i];
+      if (i == 1) s1[i] += c1*c1*s2[i];
+      else        s1[i] += c1*s2[i];
    }
    PutStats(s1);
 
@@ -861,11 +860,9 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    for (i=0;i<10;i++) {s1[i] = s2[i] = s3[i] = 0;}
    h1->GetStats(s1);
    h2->GetStats(s2);
-   Double_t ac1 = TMath::Abs(c1);
-   Double_t ac2 = TMath::Abs(c2);
    for (i=0;i<10;i++) {
-      if (i == 1) s3[i] = ac1*ac1*s1[i] + ac2*ac2*s2[i];
-      else        s3[i] = ac1*s1[i]     + ac2*s2[i];
+      if (i == 1) s3[i] = c1*c1*s1[i] + c2*c2*s2[i];
+      else        s3[i] = c1*s1[i]    + c2*s2[i];
    }
    PutStats(s3);
 
