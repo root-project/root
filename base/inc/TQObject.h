@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.4 2000/10/27 16:28:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.5 2000/11/10 02:26:01 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -115,8 +115,8 @@ public:
                               const char *slot_name = 0);
 
    virtual Bool_t HasConnection(const char *signal_name);
-   virtual void   Connected(const char *signal_name) { }
-   virtual void   Disconnected(const char *signal_name) { }
+   virtual void   Connected(const char * /*signal_name*/) { }
+   virtual void   Disconnected(const char * /*signal_name*/) { }
 
    virtual void   Destroyed()
                   { Emit("Destroyed()"); }                 //*SIGNAL*
