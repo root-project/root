@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.17 2004/07/29 10:54:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.1 2004/08/20 14:54:53 brun Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************
@@ -44,7 +44,7 @@ TBranchRef::TBranchRef(TTree *tree)
    if (!file) return;
    SetName("TRefTable");
    SetTitle("List of branch numbers with referenced objects");
-   fRefTable = new TRefTable();
+   fRefTable = new TRefTable(100);
    file->SetRefTable(fRefTable);
    
    fCompress       = 1;
@@ -74,6 +74,7 @@ TBranchRef::TBranchRef(TTree *tree)
 TBranchRef::~TBranchRef()
 {
    delete fRefTable;
+   GetFile()->SetRefTable(0);
 }
 
 //______________________________________________________________________________
