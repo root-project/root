@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TMCVerbose.h,v 1.1 2003/02/26 13:31:32 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TMCVerbose.h,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Author: Ivana Hrivnacova; 24/02/2003
 
 #ifndef ROOT_TMCVerbose
@@ -54,7 +54,7 @@ class TMCVerbose : public TObject
     Int_t  fLevel;      // verbose level
     Int_t  fStepNumber; // current step number
 
-  ClassDef(TMCVerbose,1)  //Verbose class for MCapplication
+  ClassDef(TMCVerbose,1)  //Verbose class for MC application
 };
 
 // inline functions

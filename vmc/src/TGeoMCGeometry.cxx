@@ -1,6 +1,13 @@
-// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.2 2003/08/05 22:08:24 brun Exp $
 // Authors: ... 25/06/2002
 
+//______________________________________________________________________________
+//
+// Implementation of the TVirtualMCGeometry interface
+// for building TGeo geometry.
+//______________________________________________________________________________
+
+   
 #include "TGeoMCGeometry.h"
 #include "TGeoManager.h" 
 #include "TGeoVolume.h" 

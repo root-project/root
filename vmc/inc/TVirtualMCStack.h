@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCStack.h,v 1.5 2003/06/03 21:28:41 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCStack.h,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Authors: Ivana Hrivnacova 13/04/2002
 
 #ifndef ROOT_TVirtualMCStack
@@ -6,7 +6,7 @@
 
 // Class TVirtualMCStack
 // ---------------------
-// Interface to a particles stack.
+// Interface to a user defined particles stack.
 //
 
 #include "TObject.h"
@@ -82,7 +82,7 @@ public:
     // Number of the parent of the current track  
     virtual Int_t      GetCurrentParentTrackNumber() const = 0;
     
-  ClassDef(TVirtualMCStack,1) //Particles stack
+  ClassDef(TVirtualMCStack,1) //Interface to a particles stack
 };
 
 #endif //ROOT_TVirtualMCStack

@@ -1,8 +1,13 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.cxx,v 1.3 2002/04/26 08:46:10 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCApplication.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
 
 #include "TVirtualMCApplication.h"
 #include "TError.h"
+
+//______________________________________________________________________________
+//
+// Interface to a user Monte Carlo application.
+//______________________________________________________________________________
 
 ClassImp(TVirtualMCApplication)
 

@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.2 2003/08/05 22:08:24 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TGeoMCGeometry
@@ -7,7 +7,7 @@
 /* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. *
  * See cxx source for full Copyright notice                               */
 
-/* $Id: TGeoMCGeometry.h,v 1.1 2003/07/15 09:56:58 brun Exp $ */
+/* $Id: TGeoMCGeometry.h,v 1.2 2003/08/05 22:08:24 brun Exp $ */
 
 //
 // Class TGeoMCGeometry
@@ -99,7 +99,7 @@ class TGeoMCGeometry : public TVirtualMCGeometry {
 
     static TGeoMCGeometry*  fgInstance; // singleton instance
 
-  ClassDef(TGeoMCGeometry,1)  //Virtual MonteCarlo Interface
+  ClassDef(TGeoMCGeometry,1)  // VMC TGeo Geometry builder
 };
 
 #endif //ROOT_TGeoMCGeometry

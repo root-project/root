@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.2 2003/08/05 22:08:24 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TVirtualMCGeometry
@@ -7,7 +7,7 @@
 //
 // Class TVirtualMCGeometry
 // -------------------------
-// Interface for buiding geometry for Virtual Monte Carlo
+// Interface to Monte Carlo geometry construction
 // (separated from VirtualMC)
 
 #include "TNamed.h"
@@ -92,7 +92,7 @@ class TVirtualMCGeometry : public TNamed {
 
     static TVirtualMCGeometry*  fgInstance; // singleton instance
 
-  ClassDef(TVirtualMCGeometry,1)  //Virtual MonteCarlo Interface
+  ClassDef(TVirtualMCGeometry,1)  //Interface to Monte Carlo geometry construction
 };
 
 #endif //ROOT_TVirtualMCGeometry

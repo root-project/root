@@ -1,10 +1,5 @@
-// @(#)root/vmc:$Name:  $:$Id: TMCVerbose.cxx,v 1.3 2003/03/01 22:36:38 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TMCVerbose.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
-
-//
-// Class TMCVerbose
-// ----------------
-// Class for printing detailed info from MC application.
 
 #include "Riostream.h"
 #include "TVirtualMC.h"
@@ -14,6 +9,17 @@
 #include "TArrayI.h"
 
 #include "TMCVerbose.h"
+
+//______________________________________________________________________________
+//
+// Class for printing detailed info from MC application.
+// Defined levels:
+//  0  no output
+//  1  info up to event level 
+//  2  info up to tracking level
+//  3  detailed info for each step
+//______________________________________________________________________________
+
 
 ClassImp(TMCVerbose)
 

@@ -1,7 +1,12 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCStack.cxx,v 1.3 2002/04/26 08:46:10 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCStack.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
 // Author: Ivana Hrivnacova, 27/03/2002
 
 #include "TVirtualMCStack.h"
+
+//______________________________________________________________________________
+//
+// Interface to a user defined particles stack.
+//______________________________________________________________________________
 
 ClassImp(TVirtualMCStack)
 
