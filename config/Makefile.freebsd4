@@ -37,4 +37,14 @@ F77           = f77
 F77FLAGS      = $(OPT)
 F77LIBS       = -lg2c
 
+# Extras
+TREEPLAYERLIBDEP    = $(PROOFLIB)
+TREEPLAYERLIBEXTRA  = -Llib -lProof
+X11TTFLIBDEP        = $(X11LIB)
+X11TTFLIBEXTRA      = -Llib -lGX11
+GLLIBEXTRA          = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                      -L/usr/X11R6/lib -lXmu
 
+# Override default in Makefile.config
+INSTALL        := cp -pR
+INSTALLDATA    := cp -pR
