@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.4 2000/06/15 06:46:22 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.5 2000/08/11 20:10:12 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -47,14 +47,14 @@ class TTreeFormula : public TFormula {
 protected:
    enum { kIsCharacter = BIT(12) };
 
-   TTree       *fTree;            //pointer to Tree
-   Short_t     fCodes[kMAXCODES]; //List of leaf numbers referenced in formula
-   Int_t       fNcodes;           //Number of leaves referenced in formula
-   Int_t       fMultiplicity;     //Number of array elements in leaves in case of a TClonesArray
-   Int_t       fInstance;         //Instance number for GetValue
-   Int_t       fNindex;           //Size of fIndex
-   Int_t       *fIndex;           //array of instances numbers
-   TObjArray   fMethods;          //List of leaf method calls
+   TTree       *fTree;            //! pointer to Tree
+   Short_t     fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
+   Int_t       fNcodes;           //  Number of leaves referenced in formula
+   Int_t       fMultiplicity;     //  Number of array elements in leaves in case of a TClonesArray
+   Int_t       fInstance;         //  Instance number for GetValue
+   Int_t       fNindex;           //  Size of fIndex
+   Int_t       *fIndex;           //[fNindex]array of instances numbers
+   TObjArray   fMethods;          //  List of leaf method calls
    
    Int_t       fNdimensions[kMAXCODES];            //Number of array dimensions in each leaf
    Int_t       fCumulSize[kMAXCODES][kMAXFORMDIM]; //Accumulated size of lower dimensions for each leaf
