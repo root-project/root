@@ -261,7 +261,7 @@ class vector {
   friend bool operator!=(const vector::reverse_iterator& x
                         ,const vector::reverse_iterator& y) const;
 
-#if !(G__GNUC>=3 && G__GNUC_MINOR>=1) 
+#if !(G__GNUC>=3 && G__GNUC_MINOR>=1) || defined(G__INTEL_COMPILER)
   typedef const reverse_iterator const_reverse_iterator;
 #endif
    
