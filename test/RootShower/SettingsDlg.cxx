@@ -451,4 +451,3 @@ Bool_t SettingsDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    }
    return kTRUE;
 }
-
