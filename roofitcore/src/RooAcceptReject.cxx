@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.17 2001/11/02 03:05:10 verkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.18 2001/11/05 18:50:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.17 2001/11/02 03:05:10 verkerke Exp $";
+"$Id: RooAcceptReject.cc,v 1.18 2001/11/05 18:50:48 verkerke Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooAbsReal* maxFuncVal, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose), _funcMaxVal(maxFuncVal)
@@ -245,6 +245,13 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) {
 	     << oldMax << " to " << _maxFuncVal << endl;
       }
     }
+
+    // Limit cache size to 1M events
+    if (_eventsUsed>1000000) {
+      _cache->reset() ;
+      _eventsUsed = 0 ;
+    }
+
   } else {
     // Generation with a priori maximum knowledge
     _maxFuncVal = _funcMaxVal->getVal() ;
