@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.4 2000/09/12 06:42:06 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.5 2000/09/12 15:18:55 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -78,7 +78,7 @@ public:
    virtual void  Browse(TBrowser *b);
    void          BuildRealData();
    void          Draw(Option_t *option="");
-   void         *DynamicCast(const TClass *base, void *obj);
+   void         *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
    char         *EscapeChars(char * text);
    void          FillStreamerInfoList(TList *list);
    void          PrintStreamerInfoList(TList *list);

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.8 2000/09/13 10:37:02 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.9 2000/10/17 12:27:15 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -770,17 +770,24 @@ Bool_t TClass::InheritsFrom(const TClass *cl) const
 }
 
 //______________________________________________________________________________
-void *TClass::DynamicCast(const TClass *cl, void *obj)
+void *TClass::DynamicCast(const TClass *cl, void *obj, Bool_t up)
 {
-   // Cast obj of type "this" to baseclass cl. If this is not a
-   // baseclass of cl return 0, else the pointer to the cl part of this.
+   // Cast obj of this class type up to baseclass cl if up is true.
+   // Cast obj of this class type down from baseclass cl if up is false.
+   // If this class is not a baseclass of cl return 0, else the pointer
+   // to the cl part of this (up) or to this (down).
 
    if (cl == this) return obj;
 
    if (!fClassInfo) return 0;
 
    Int_t off;
-   if ((off = GetBaseClassOffset(cl)) != -1) return (void*)((Long_t)obj+off);
+   if ((off = GetBaseClassOffset(cl)) != -1) {
+      if (up)
+         return (void*)((Long_t)obj+off);
+      else
+         return (void*)((Long_t)obj-off);
+   }
    return 0;
 }
 
