@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.33 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.34 2002/02/13 09:18:37 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -133,6 +133,7 @@ TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
    fMinimum   = -1111;
    fMaximum   = -1111;
    fMethodCall = 0;
+   SetFillStyle(0);
 }
 
 
@@ -190,6 +191,7 @@ TF1::TF1(const char *name,const char *formula, Double_t xmin, Double_t xmax)
    SetLineColor(gStyle->GetFuncColor());
    SetLineWidth(gStyle->GetFuncWidth());
    SetLineStyle(gStyle->GetFuncStyle());
+   SetFillStyle(0);
 }
 
 
@@ -259,6 +261,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar)
       SetLineWidth(gStyle->GetFuncWidth());
       SetLineStyle(gStyle->GetFuncStyle());
    }
+   SetFillStyle(0);
 
    SetTitle(name);
    if (name) {
@@ -342,6 +345,7 @@ TF1::TF1(const char *name,void *fcn, Double_t xmin, Double_t xmax, Int_t npar)
       SetLineWidth(gStyle->GetFuncWidth());
       SetLineStyle(gStyle->GetFuncStyle());
    }
+   SetFillStyle(0);
 
    if (!fcn) return;
    char *funcname = G__p2f2funcname(fcn);
@@ -431,6 +435,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
    SetLineColor(gStyle->GetFuncColor());
    SetLineWidth(gStyle->GetFuncWidth());
    SetLineStyle(gStyle->GetFuncStyle());
+   SetFillStyle(0);
 
 }
 
