@@ -92,15 +92,15 @@ AFS              \
 TABLE            \
 "
 configenvvars=
-for c in $envvars ; do
-   if test ! "x${!c}" = "x" ; then
-      if test ! "x$configenvvars" = "x" ; then
-         configenvvars="$configenvvars $c=${!c}"
-      else
-         configenvvars=$c=${!c}
-      fi
-   fi
-done
+#for c in $envvars ; do
+#   if test ! "x${!c}" = "x" ; then
+#      if test ! "x$configenvvars" = "x" ; then
+#         configenvvars="$configenvvars $c=${!c}"
+#      else
+#         configenvvars=$c=${!c}
+#      fi
+#   fi
+#done
 
 configargs="$*"
 
