@@ -7,7 +7,7 @@
  * Description:
  *  Interactive interface frontend
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -41,7 +41,7 @@ char *string;
   char G__oneline[G__LONGLINE*2];
   char G__argbuf[G__LONGLINE*2];
   /* int  G__null_fgets=1; */
-  char *arg[G__ONELINE];
+  char *arg[G__LONGLINE];
   int argn;
 #ifdef G__TMPFILE
   char tname[G__MAXFILENAME];
@@ -49,7 +49,7 @@ char *string;
   char tname[L_tmpnam+10];
 #endif
   
-  static char prevstring[G__ONELINE];
+  static char prevstring[G__LONGLINE];
   static char histfile[G__ONELINE];
   char *homehist=".cint_hist";
   int line=0;
@@ -135,7 +135,7 @@ char *string;
 char *G__input(prompt)
 char *prompt;
 {
-  static char line[G__ONELINE];
+  static char line[G__LONGLINE];
   char *pchar;
 #ifdef G__GNUREADLINE
   static int state=0;
@@ -159,7 +159,8 @@ char *prompt;
     }
     pchar=readline(prompt);
     while(pchar&&strlen(pchar)>G__ONELINE-5) {
-      G__fprinterr(G__serr,"!!! User command too long !!!\n");
+      G__fprinterr(G__serr,"!!! User command too long !!! (%d>%d)\n"
+		   ,strlen(pchar),G__ONELINE-5);
       pchar=readline(prompt);
     }
     if(pchar) strcpy(line,pchar);
@@ -183,7 +184,7 @@ char *prompt;
     else {
       fprintf(G__stdout,"%s",prompt);
       /* scanf("%s",line); */
-      fgets(line,G__ONELINE-5,G__stdin);
+      fgets(line,G__LONGLINE-5,G__stdin);
     }
     
 #endif /* of G__GNUREADLINE */

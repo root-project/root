@@ -192,7 +192,11 @@ struct G__Definedtemplatememfunc *deftmpmemfunc;
     }
     call_para.string=(char*)NULL;
     call_para.next = (struct G__Charlist*)NULL;
-    G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara);
+    G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara
+#ifndef G__OLDIMPLEMENTATION1780
+			  ,-1
+#endif
+			  );
     if(-1!=G__struct.parent_tagnum[ilist->i]) {
       G__def_tagnum=G__struct.parent_tagnum[ilist->i];
       G__tagdefining=G__struct.parent_tagnum[ilist->i];
@@ -1913,11 +1917,18 @@ struct G__Templatearg *def_para;
 * separate and evaluate template argument list
 **************************************************************************/
 #ifndef G__OLDIMPLEMENTATION664
-int G__gettemplatearglist(paralist,charlist_in,def_para_in ,pnpara)
+int G__gettemplatearglist(paralist,charlist_in,def_para_in ,pnpara
+#ifndef G__OLDIMPLEMENTATION1780
+			  ,parent_tagnum
+#endif
+			  )
 char *paralist;
 struct G__Charlist *charlist_in;
 struct G__Templatearg *def_para_in;
 int *pnpara;
+#ifndef G__OLDIMPLEMENTATION1780
+int parent_tagnum;
+#endif
 #else /* ON664 */
 int G__gettemplatearglist(paralist,charlist,def_para ,pnpara)
 char *paralist;
@@ -1936,6 +1947,9 @@ int *pnpara;
   int c;
   G__value buf;
   int searchflag=0;
+#ifndef G__OLDIMPLEMENTATION1780
+  int store_tagdefining,store_def_tagnum;
+#endif
 
   /**************************************************************
   * explicitly given template argument
@@ -2019,6 +2033,14 @@ int *pnpara;
   /**************************************************************
   * default template argument
   **************************************************************/
+#ifndef G__OLDIMPLEMENTATION1780
+  store_tagdefining = G__tagdefining;
+  store_def_tagnum = G__def_tagnum;
+  if(-1!=parent_tagnum) {
+    G__tagdefining = parent_tagnum;
+    G__def_tagnum = parent_tagnum;
+  }
+#endif
   if(def_para) {
     while(def_para) {
       if(def_para->default_parameter) {
@@ -2063,6 +2085,10 @@ int *pnpara;
       def_para=def_para->next;
     }
   }
+#ifndef G__OLDIMPLEMENTATION1780
+  G__tagdefining = store_tagdefining;
+  G__def_tagnum = store_def_tagnum;
+#endif
 
   return(searchflag);
 }
@@ -2260,9 +2286,17 @@ char *tagnamein;
 #endif
 #ifndef G__OLDIMPLEMENTATION1503
   if((defarg=
-      G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara))) {
+      G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara
+#ifndef G__OLDIMPLEMENTATION1780
+			  ,deftmpclass->parent_tagnum
+#endif
+			    ))) {
 #else
-  if(G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara)) {
+  if(G__gettemplatearglist(arg,&call_para,deftmpclass->def_para,&npara
+#ifndef G__OLDIMPLEMENTATION1780
+			  ,-1
+#endif
+			   )) {
 #endif
     /* If evaluated template argument is not identical as string to
      * the original argument, recursively call G__defined_tagname()
@@ -3616,7 +3650,11 @@ int funcmatch;
       if(pexplicitarg) {
 	int npara=0;
 	G__gettemplatearglist(pexplicitarg,&call_para
-			      ,deftmpfunc->def_para,&npara);
+			      ,deftmpfunc->def_para,&npara
+#ifndef G__OLDIMPLEMENTATION1780
+			      ,-1
+#endif
+			      );
       }
 #endif
 

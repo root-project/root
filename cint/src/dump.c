@@ -81,11 +81,11 @@ char *line;
 char *G__xdumpinput(prompt)
 char *prompt;
 {
-  static char line[G__ONELINE];
+  static char line[G__LONGLINE];
   char *null_fgets;
   int i;
   if(G__dumpreadline[0]!=NULL) {
-    null_fgets=fgets(line,G__ONELINE-1,G__dumpreadline[0]);
+    null_fgets=fgets(line,G__LONGLINE-1,G__dumpreadline[0]);
     if(null_fgets==NULL) {
       fclose(G__dumpreadline[0]);
       fprintf(G__sout,"End of readline dumpfile. ");
@@ -93,7 +93,7 @@ char *prompt;
       sprintf(line,"P"); 
       return(line);
     }
-    for(i=0;i<G__ONELINE-1;i++) {
+    for(i=0;i<G__LONGLINE-1;i++) {
       if(line[i]=='\n'||line[i]=='\r') line[i]='\0';
     }
     fprintf(G__sout,"%s%s\n",prompt,line);

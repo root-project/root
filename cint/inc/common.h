@@ -950,6 +950,14 @@ struct G__AppPragma {
 #define G__NAMEDMACROEXT  "NM"
 #define G__NAMEDMACROEXT2 "_cintNM"
 
+
+/*********************************************************************
+* G__rootmode and G__ReadInputMode() in pause.c
+*********************************************************************/
+#define G__INPUTCXXMODE  3
+#define G__INPUTROOTMODE 1
+#define G__INPUTCINTMODE 0
+
 /***********************************************************************
 * for function overloading
 **********************************************************************/

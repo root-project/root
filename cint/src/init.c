@@ -1527,10 +1527,25 @@ char *argv[] ;
     if(0==G__quiet) { /* ON1078 */
       G__cintrevision(G__sout);
       fprintf(G__sout,"No main() function found in given source file. Interactive interface started.\n");
+#ifndef G__OLDIMPLEMENTATION1795
+      switch(G__ReadInputMode()) {
+      case G__INPUTROOTMODE:
+	fprintf(G__sout,"'?':help, '.q':quit, 'statement','{statements;}' or '.p [expr]' to evaluate\n");
+	break;
+      case G__INPUTCXXMODE:
+	fprintf(G__sout,"'?':help, '.q':quit, 'statement;','{statements;}' or '.p [expr]' to evaluate\n");
+	break;
+      case G__INPUTCINTMODE:
+      default:
+	fprintf(G__sout,"'h':help, 'q':quit, '{statements;}' or 'p [expr]' to evaluate\n");
+	break;
+      }
+#else
 #ifdef G__ROOT
       fprintf(G__sout,"'?' for help, '.q' to quit, '{ statements }' or '.p [expression]' to evaluate\n");
 #else
       fprintf(G__sout,"'h' for help, 'q' to quit, '{ statements }' or 'p [expression]' to evaluate\n");
+#endif
 #endif
     } /* ON1078 */
 

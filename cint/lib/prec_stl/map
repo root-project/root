@@ -22,29 +22,23 @@
 #include <_functional>
 
 //////////////////////////////////////////////////////////////////////////
-#if defined(G__ANSIISOLIB) || (G__GNUC>=3)
+#if defined(G__ANSIISOLIB) 
+// This does not work yet. Don't know why.
 template<class Key,class T,class Compare=std::less<Key>
-        ,class Allocator=std::allocator<pair<const Key, T> > >
+        ,class Allocator=std::allocator<pair<const Key,T> > >
+#elif (G__GNUC>=3)
+template<class Key,class T,class Compare=std::less<Key>
+        ,class Allocator=std::allocator<T> >
 #elif defined(G__GNUC) && !defined(G__KCC)
-
-#if (G__GNUC_MINOR>=95)
-
-template<class Key,class T,class Compare=std::less<Key>
-        ,class Allocator=allocator<T> >
-#else
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=alloc>
-#endif
-
 #elif defined(G__HPUX)
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=allocator>
-#elif defined(G__BORLANDCC5)
-template<class Key,class T,class Compare=std::less<Key>
-        ,class Allocator=std::allocator<T> >
 #else
 template<class Key,class T,class Compare=std::less<Key>
-        ,class Allocator=std::allocator<pair<const Key, T> > >
+        ,class Allocator=std::allocator<T> >
+        //,class Allocator=std::allocator<pair<const Key,T> > >
 #endif
 class map {
  public:

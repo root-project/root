@@ -709,6 +709,13 @@ void G__define_type()
 #endif
       c=G__fgetstream(typename,";,[");
     }
+#ifndef G__OLDIMPLEMENTATION1799
+    else if(strcmp(typename,"const*")==0) {
+      isconst |= G__PCONSTVAR;
+      typename[0] = '*';
+      c=G__fgetstream(typename+1,";,[");
+    }
+#endif
     else {
 #ifndef G__OLDIMPLEMENTATION1347
       char ltemp1[G__LONGLINE];

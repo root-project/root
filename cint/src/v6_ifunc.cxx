@@ -5267,7 +5267,11 @@ int isrecursive;
       if(pexplicitarg) {
 	int npara=0;
 	G__gettemplatearglist(pexplicitarg,&call_para
-			      ,deftmpfunc->def_para,&npara);
+			      ,deftmpfunc->def_para,&npara
+#ifndef G__OLDIMPLEMENTATION1780
+			      ,-1
+#endif
+			      );
       }
 #endif
 

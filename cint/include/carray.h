@@ -615,9 +615,9 @@ int G__ateval(const carray& x) {
 #ifdef G__DISPALL
   for(int i=0;i<n-1;i++) cout << x[i] << ",";
 #else
-  for(int i=0;i<5;i++) cout << x[i] << ",";
+  for(int i=0;i<10;i++) cout << x[i] << ",";
   cout << ",,,";
-  for(int i=n-5;i<n-1;i++) cout << x[i] << ",";
+  for(int i=n-10;i<n-1;i++) cout << x[i] << ",";
 #endif
   cout << x[n-1] << endl;
   return(1); 

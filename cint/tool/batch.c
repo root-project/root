@@ -33,15 +33,21 @@
 #endif
 
 /****************************************************************
+*
+****************************************************************/
+#define G__MAXFILENAME  1024
+#define G__LONGLINE     1024
+#define G__MAXLINE      1024
+#define G__MAXARG       256
+#define G__MAXNAME      1024
+
+/****************************************************************
 * G__split(original,stringbuf,argc,argv)
 * split arguments separated by space char.
 * CAUTION: input string will be modified. If you want to keep
 *         the original string, you should copy it to another string.
 ****************************************************************/
-int G__split(line,string,argc,argv)
-char *string,*line;
-char *argv[];
-int *argc;
+int G__split(char* line,char* string,int *argc,char* argv[])
 {
   int lenstring;
   int i=0;
@@ -107,11 +113,7 @@ int *argc;
 /****************************************************************
 * G__readline(fp,line,argbuf,argn,arg)
 ****************************************************************/
-int G__readline(fp,line,argbuf,argn,arg)
-FILE *fp;
-int *argn;
-char *line,*argbuf;
-char *arg[];
+int G__readline(FILE* fp,char* line,char* argbuf,int* argn,char* arg[])
 {
   /* int i; */
   char *null_fgets;
@@ -130,14 +132,6 @@ char *arg[];
   else                 return(1);
 }
 
-
-/****************************************************************
-****************************************************************/
-#define G__MAXFILENAME  512
-#define G__LONGLINE     512
-#define G__MAXLINE      512
-#define G__MAXARG       100
-#define G__MAXNAME      100
 
 /****************************************************************
 * G__batch()

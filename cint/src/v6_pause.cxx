@@ -7,7 +7,7 @@
  * Description:
  *  Interactive interface
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2003  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -153,10 +153,6 @@ static int G__pause_return=0;
 static FILE *fout=(FILE*)NULL;
 #endif
 
-
-#define G__INPUTCXXMODE  3
-#define G__INPUTROOTMODE 1
-#define G__INPUTCINTMODE 0
 
 #ifdef G__ROOT
 static int G__rootmode=G__INPUTROOTMODE;
@@ -1686,9 +1682,34 @@ char *com;
   }
   /* #define G__OLDIMPLEMENTATION1774 */
 #ifndef G__OLDIMPLEMENTATION1774
+#ifndef G__OLDIMPLEMENTATION1781
+  if(nest>0 && '{'!=com[0]) {
+    if(0==strncmp(com,"for(",4) || 0==strncmp(com,"for ",4) 
+      || 0==strncmp(com,"while(",6) || 0==strncmp(com,"while ",6) 
+      || 0==strncmp(com,"do ",3) || 0==strncmp(com,"do{",3) 
+      || 0==strncmp(com,"namespace ",10) || 0==strncmp(com,"namespace{",10)) {
+      strcpy(com+i,G__input("end with '}', '@':abort > "));
+    }
+    else {
+      strcpy(com+i,G__input("end with ';', '@':abort > "));
+    }
+    if('@'==com[i]) {
+      com[0]=0;
+      return(0);
+    }
+    goto readagain;
+  }
+#endif
   if(0<nest) return(1);
   if(G__INPUTCXXMODE==G__rootmode && 0==nest && 0==semicolumnattheend
-     && '#'!=com[0]) {
+     && '#'!=com[0]
+#ifndef G__OLDIMPLEMENTATION1781
+     && 0!=strncmp(com,"for(",4) && 0!=strncmp(com,"for ",4) 
+     && 0!=strncmp(com,"while(",6) && 0!=strncmp(com,"while ",6) 
+     && 0!=strncmp(com,"do ",3) && 0!=strncmp(com,"do{",3) 
+     && 0!=strncmp(com,"namespace ",10) && 0!=strncmp(com,"namespace{",10)
+#endif
+     ) {
     strcpy(com+i,G__input("end with ';', '@':abort > "));
     if('@'==com[i]) {
       com[0]=0;
@@ -1702,6 +1723,37 @@ char *com;
   if(0!=nest || single_quote || double_quote) return(1);
   else return(0);
 #endif
+}
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1795
+/******************************************************************
+* G__ReadInputMode
+******************************************************************/
+int G__ReadInputMode()
+{
+  static int inputmodeflag=0;
+  if(inputmodeflag==0) {
+    char *inputmodebuf;
+    inputmodeflag=1;
+    inputmodebuf=G__getmakeinfo1("INPUTMODE");
+    if(inputmodebuf && inputmodebuf[0]) {
+      if(strstr(inputmodebuf,"c++")||strstr(inputmodebuf,"C++")) 
+	G__rootmode=G__INPUTCXXMODE;
+      else if(strstr(inputmodebuf,"root")||strstr(inputmodebuf,"ROOT")) 
+	G__rootmode=G__INPUTROOTMODE;
+      else if(strstr(inputmodebuf,"cint")||strstr(inputmodebuf,"CINT"))
+	G__rootmode=G__INPUTCINTMODE;
+    }
+    inputmodebuf=G__getmakeinfo1("INPUTMODELOCK");
+    if(inputmodebuf && inputmodebuf[0]) {
+      if(strstr(inputmodebuf,"on")||strstr(inputmodebuf,"ON")) 
+	G__lockinputmode=1;
+      else if(strstr(inputmodebuf,"off")||strstr(inputmodebuf,"OFF")) 
+	G__lockinputmode=0;
+    }
+  }
+  return(G__rootmode);
 }
 #endif
 
@@ -1772,29 +1824,7 @@ G__value *rslt;
   if(!err) err = &dmy;
 
 #ifndef G__OLDIMPLEMENTATION1795
- {
-   static int inputmodeflag=0;
-   if(inputmodeflag==0) {
-     char *inputmodebuf;
-     inputmodeflag=1;
-     inputmodebuf=G__getmakeinfo1("INPUTMODE");
-     if(inputmodebuf && inputmodebuf[0]) {
-       if(strstr(inputmodebuf,"c++")||strstr(inputmodebuf,"C++")) 
-	 G__rootmode=G__INPUTCXXMODE;
-       else if(strstr(inputmodebuf,"root")||strstr(inputmodebuf,"ROOT")) 
-	 G__rootmode=G__INPUTROOTMODE;
-       else if(strstr(inputmodebuf,"cint")||strstr(inputmodebuf,"CINT"))
-	 G__rootmode=G__INPUTCINTMODE;
-     }
-     inputmodebuf=G__getmakeinfo1("INPUTMODELOCK");
-     if(inputmodebuf && inputmodebuf[0]) {
-       if(strstr(inputmodebuf,"on")||strstr(inputmodebuf,"ON")) 
-	 G__lockinputmode=1;
-       else if(strstr(inputmodebuf,"off")||strstr(inputmodebuf,"OFF")) 
-	 G__lockinputmode=0;
-     }
-   }
- }
+ G__ReadInputMode();
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1035
@@ -1812,7 +1842,8 @@ G__value *rslt;
 
 #ifndef G__OLDIMPLEMENTATION685
   if(strlen(line)>G__ONELINE-5) {
-    G__fprinterr(G__serr,"!!! User command too long !!!\n");
+    G__fprinterr(G__serr,"!!! User command too long (%d>%d)!!!\n"
+		 ,strlen(line),G__ONELINE-5);
 #ifndef G__OLDIMPLEMENTATION1035
     G__UnlockCriticalSection();
 #endif
