@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.1 2001/09/25 16:07:59 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.2 2001/09/25 17:37:24 rdm Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -475,11 +475,11 @@ void TMemHashTable::Dump()
 //______________________________________________________________________________
 static void *get_stack_pointer(int level)
 {
-   // These special __builtin calls are supported by gcc "only"
+   // These special __builtin calls are supported by gcc "only".
    // For other compiler one will need to implement this again !
 
    void *p = 0;
-#ifdef R__GNU
+#if defined(R__GNU) && defined(R__LINUX)
    switch (level) {
    case 0:
       if (__builtin_frame_address(1))
