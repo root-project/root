@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.77 2001/06/04 06:40:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.78 2001/06/05 13:11:01 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1515,7 +1515,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
    Int_t *l = (Int_t*)(pointer+fMethod[i]); \
    name **f = (name**)(pointer+fOffset[i]); \
    delete [] *f; \
-   *f = 0; if (*l ==0) break; \
+   *f = 0; if (*l <=0) break; \
    *f = new name[*l]; \
    b.ReadFastArray(*f,*l); break; \
 }
@@ -1979,7 +1979,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
       Int_t *l = (Int_t*)(pointer+fMethod[i]); \
       name **f = (name**)(pointer+fOffset[i]); \
       delete [] *f; \
-      *f = 0; if (*l ==0) continue; \
+      *f = 0; if (*l <=0) continue; \
       *f = new name[*l]; \
       b.ReadFastArray(*f,*l); \
    } break; \
