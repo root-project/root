@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.4 2000/12/12 18:22:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.5 2001/03/21 09:28:01 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -50,6 +50,8 @@ protected:
       TExMap *fWriteMap;   //Map containing object,id pairs during writing
    };
 
+   enum { kIsOwner = BIT(14) };  //If set TBuffer owns fBuffer
+
    static Int_t fgMapSize; //Default map size for all TBuffer objects
 
    // Default ctor
@@ -73,7 +75,8 @@ public:
    enum { kInitialSize = 1024, kMinimalSize = 128 };
    enum { kMapSize = 503 };
 
-   TBuffer(EMode mode, Int_t bufsiz = kInitialSize, void *buf = 0);
+   TBuffer(EMode mode, Int_t bufsiz = kInitialSize, void *buf = 0,
+           Bool_t adopt = kTRUE);
    virtual ~TBuffer();
 
    void     MapObject(const TObject *obj, UInt_t offset = 1);
@@ -84,7 +87,7 @@ public:
    void     SetReadParam(Int_t mapsize);
    void     SetWriteMode();
    void     SetWriteParam(Int_t mapsize);
-   void     SetBuffer(void *buf, UInt_t bufsiz = 0);
+   void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
 
    char    *Buffer() const { return fBuffer; }
@@ -115,9 +118,8 @@ public:
 
    void     SetBufferDisplacement(Int_t skipped)
             { fDisplacement =  (Int_t)(Length() - skipped); }
-   void     SetBufferDisplacement()
-            { fDisplacement = 0; }
-   Int_t    GetBufferDisplacement() { return fDisplacement; }
+   void     SetBufferDisplacement() { fDisplacement = 0; }
+   Int_t    GetBufferDisplacement() const { return fDisplacement; }
 
    Int_t    ReadArray(Char_t   *&c);
    Int_t    ReadArray(UChar_t  *&c);

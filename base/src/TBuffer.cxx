@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.17 2001/06/18 02:16:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.18 2001/11/16 02:44:33 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -51,12 +51,15 @@ Int_t TBuffer::fgMapSize   = kMapSize;
 
 
 ClassImp(TBuffer)
+
 //______________________________________________________________________________
-TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf)
+TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
    // TBuffer::kWrite. By default the I/O buffer has a size of
-   // TBuffer::kInitialSize (1024) bytes.
+   // TBuffer::kInitialSize (1024) bytes. An external buffer can be passed
+   // to TBuffer via the buf argument. By default this buffer will be adopted
+   // unless adopt is false.
 
    // Before using the buffer make sure some assumptions are true
    Assert(sizeof(Short_t) == 2);
@@ -79,9 +82,12 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf)
    fReadMap  = 0;
    fDisplacement = 0;
 
-   if (buf)
+   SetBit(kIsOwner);
+
+   if (buf) {
       fBuffer = (char *)buf;
-   else
+      if (!adopt) ResetBit(kIsOwner);
+   } else
       fBuffer = new char[fBufSize+kExtraSpace];
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
@@ -92,7 +98,8 @@ TBuffer::~TBuffer()
 {
    // Delete an I/O buffer object.
 
-   delete [] fBuffer;
+   if (TestBit(kIsOwner))
+      delete [] fBuffer;
    fBuffer = 0;
 
    if (IsReading())
@@ -147,13 +154,22 @@ TBuffer &TBuffer::operator>>(Long_t &l)
 }
 
 //______________________________________________________________________________
-void TBuffer::SetBuffer(void *buf, UInt_t newsiz)
+void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt = kTRUE)
 {
-   // Adopt new buffer. First deletes existing buffer. Expects buf to
-   // have been allocated with new char [].
+   // Sets a new buffer in an existing TBuffer object. If newsiz=0 then the
+   // new buffer is expected to have the same size as the previous buffer.
+   // The current buffer position is reset to the start of the buffer.
+   // If the TBuffer owned the previous buffer, it will be deleted prior
+   // to accepting the new buffer. By default the new buffer will be
+   // adopted unless adopt is false.
 
-   if (fBuffer)
+   if (fBuffer && TestBit(kIsOwner))
       delete [] fBuffer;
+
+   if (adopt)
+      SetBit(kIsOwner);
+   else
+      ResetBit(kIsOwner);
 
    fBuffer = (char *)buf;
    fBufCur = fBuffer;
