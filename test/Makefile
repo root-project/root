@@ -102,11 +102,11 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
-                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) $(STRESSGEOM)
-ifneq ($(ARCH),win32)
+                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
+                $(STRESSGEOM)
+
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
-endif
 
 #------------------------------------------------------------------------------
 
@@ -197,7 +197,8 @@ $(STRESS):      $(STRESSO) $(EVENT)
 
 $(STRESSGEOM):  $(STRESSGEOMO)
 ifeq ($(ARCH),win32)
-		$(LD) $(LDFLAGS) $(STRESSGEOMO) $(LIBS) ../lib/libGeom.lib $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $(STRESSGEOMO) $(LIBS) ../lib/libGeom.lib \
+		   $(OutPutOpt)$@
 else
 		$(LD) $(LDFLAGS) $(STRESSGEOMO) $(LIBS) -lGeom $(OutPutOpt)$@
 endif
