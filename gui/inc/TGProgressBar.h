@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.1 2000/10/09 19:13:29 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.2 2000/10/10 10:20:10 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -35,8 +35,10 @@ class TGProgressBar : public TGFrame {
 friend class TGClient;
 
 public:
+   enum EBarType { kStandard, kFancy };
    enum EFillType { kSolidFill, kBlockFill };
-   enum { kProgressBarWidth = 24 };
+   enum { kProgressBarStandardWidth = 16, kProgressBarTextWidth = 24,
+          kBlockSize = 8, kBlockSpace = 2 };
 
 protected:
    Float_t       fMin;          // logical minimum value (default 0)
@@ -97,13 +99,15 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGHProgressBar(const TGWindow *p, UInt_t w = 4, UInt_t h = kProgressBarWidth,
+   TGHProgressBar(const TGWindow *p,
+                  UInt_t w = 4, UInt_t h = kProgressBarTextWidth,
                   ULong_t back = fgWhitePixel,
                   ULong_t barcolor = fgDefaultSelectedBackground,
                   GContext_t norm = fgDefaultGC(),
                   FontStruct_t font = fgDefaultFontStruct,
                   UInt_t options = kDoubleBorder | kSunkenFrame) :
       TGProgressBar(p, w, h, back, barcolor, norm, font, options) { fBarWidth = h; }
+   TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w);
    virtual ~TGHProgressBar() { }
 
    virtual TGDimension GetDefaultSize() const
@@ -122,13 +126,15 @@ protected:
    virtual void DoRedraw();
 
 public:
-   TGVProgressBar(const TGWindow *p, UInt_t w = kProgressBarWidth, UInt_t h = 4,
+   TGVProgressBar(const TGWindow *p,
+                  UInt_t w = kProgressBarTextWidth, UInt_t h = 4,
                   ULong_t back = fgWhitePixel,
                   ULong_t barcolor = fgDefaultSelectedBackground,
                   GContext_t norm = fgDefaultGC(),
                   FontStruct_t font = fgDefaultFontStruct,
                   UInt_t options = kDoubleBorder | kSunkenFrame) :
       TGProgressBar(p, w, h, back, barcolor, norm, font, options) { fBarWidth = w; }
+   TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h);
    virtual ~TGVProgressBar() { }
 
    virtual TGDimension GetDefaultSize() const

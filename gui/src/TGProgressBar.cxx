@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.1 2000/10/09 19:13:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.2 2000/10/10 10:20:10 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -147,6 +147,21 @@ const TGGC &TGProgressBar::GetDefaultGC()
 
 
 //______________________________________________________________________________
+TGHProgressBar::TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w)
+   : TGProgressBar(p, w, type == kStandard ? kProgressBarStandardWidth :
+                   kProgressBarTextWidth, type == kStandard ? fgDefaultFrameBackground :
+                   fgWhitePixel, fgDefaultSelectedBackground, fgDefaultGC(), fgDefaultFontStruct,
+                   type == kStandard ? kSunkenFrame : kDoubleBorder | kSunkenFrame)
+{
+   // Simple constructor allow you to create either a standard progress
+   // bar, or a more fancy progress bar (fancy means: double sized border,
+   // white background and a bit wider to allow for text to be printed
+   // in the bar.
+
+   fBarWidth = (type == kStandard) ? kProgressBarStandardWidth : kProgressBarTextWidth;
+}
+
+//______________________________________________________________________________
 void TGHProgressBar::ShowPosition(Bool_t set, Bool_t percent, const char *format)
 {
    // Show postion text, either in percent or formatted according format.
@@ -172,17 +187,19 @@ void TGHProgressBar::DoRedraw()
              (fPos - fMin) / (fMax - fMin) +
              fBorderWidth);
 
+   Int_t pospix = fPosPix;
+
    if (fType == kSolidFill)
       gVirtualX->FillRectangle(fId, fBarColorGC(), fBorderWidth,
                                fBorderWidth, fPosPix - fBorderWidth, fBarWidth -
                                (fBorderWidth << 1));
    else {
-      Int_t blocksize = 15;
-      Int_t delta     = 2;
+      Int_t blocksize = kBlockSize;
+      Int_t delta     = kBlockSpace;
       Int_t pos       = fBorderWidth;
       while (pos < fPosPix) {
-         if (pos + blocksize > fPosPix)
-            blocksize = fPosPix-pos;
+         if (pos + blocksize > Int_t(fWidth)-fBorderWidth)
+            blocksize = fWidth-fBorderWidth-pos;
          gVirtualX->FillRectangle(fId, fBarColorGC(), pos,
                                   fBorderWidth, blocksize, fBarWidth -
                                   (fBorderWidth << 1));
@@ -192,6 +209,7 @@ void TGHProgressBar::DoRedraw()
 
          pos += blocksize + delta;
       }
+      pospix = pos - delta;
    }
 
    if (fShowPos) {
@@ -209,9 +227,9 @@ void TGHProgressBar::DoRedraw()
       x = (fWidth - twidth) >> 1;
       y = (fHeight - theight) >> 1;
 
-      if (fDrawBar && Int_t(x+twidth) > fPosPix)
-         gVirtualX->ClearArea(fId, fPosPix, fBorderWidth,
-                              fWidth - fPosPix- fBorderWidth,
+      if (fDrawBar && fPosPix < Int_t(x+twidth))
+         gVirtualX->ClearArea(fId, pospix, fBorderWidth,
+                              fWidth - pospix - fBorderWidth,
                               fBarWidth - (fBorderWidth << 1));
 
       gVirtualX->DrawString(fId, fNormGC, x, y + max_ascent, buf, strlen(buf));
@@ -220,6 +238,21 @@ void TGHProgressBar::DoRedraw()
    fDrawBar = kFALSE;
 }
 
+
+//______________________________________________________________________________
+TGVProgressBar::TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h)
+   : TGProgressBar(p, type == kStandard ? kProgressBarStandardWidth :
+                   kProgressBarTextWidth, h, type == kStandard ? fgDefaultFrameBackground :
+                   fgWhitePixel, fgDefaultSelectedBackground, fgDefaultGC(), fgDefaultFontStruct,
+                   type == kStandard ? kSunkenFrame : kDoubleBorder | kSunkenFrame)
+{
+   // Simple constructor allow you to create either a standard progress
+   // bar, or a more fancy progress bar (fancy means: double sized border,
+   // white background and a bit wider to allow for text to be printed
+   // in the bar.
+
+   fBarWidth = (type == kStandard) ? kProgressBarStandardWidth : kProgressBarTextWidth;
+}
 
 //______________________________________________________________________________
 void TGVProgressBar::DoRedraw()
@@ -240,12 +273,12 @@ void TGVProgressBar::DoRedraw()
                                fHeight - fPosPix, fBarWidth - (fBorderWidth << 1),
                                fPosPix - fBorderWidth);
    else {
-      Int_t blocksize = 15;
-      Int_t delta     = 2;
+      Int_t blocksize = kBlockSize;
+      Int_t delta     = kBlockSpace;
       Int_t pos       = fBorderWidth;
       while (pos < fPosPix) {
-         if (pos + blocksize > fPosPix)
-            blocksize = fPosPix-pos;
+         if (pos + blocksize > Int_t(fHeight)-fBorderWidth)
+            blocksize = fHeight-fBorderWidth-pos;
          gVirtualX->FillRectangle(fId, fBarColorGC(), fBorderWidth,
                                   fHeight - pos - blocksize, fBarWidth - (fBorderWidth << 1),
                                   blocksize);

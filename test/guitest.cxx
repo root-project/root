@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.6 2000/10/09 19:16:42 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.7 2000/10/10 10:20:49 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -302,7 +302,7 @@ private:
    TGHorizontalFrame *fHframe1;
    TGVerticalFrame   *fVframe1;
    TGLayoutHints     *fHint1, *fHint2, *fHint3, *fHint4, *fHint5;
-   TGHProgressBar    *fHProg1, *fHProg2;
+   TGHProgressBar    *fHProg1, *fHProg2, *fHProg3;
    TGVProgressBar    *fVProg1, *fVProg2;
    TGTextButton      *fGO;
 
@@ -1442,9 +1442,9 @@ TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
 
    fHframe1 = new TGHorizontalFrame(this, 0, 0, 0);
 
-   fVProg1 = new TGVProgressBar(fHframe1, TGProgressBar::kProgressBarWidth, 300);
+   fVProg1 = new TGVProgressBar(fHframe1, TGProgressBar::kFancy, 300);
    fVProg1->SetBarColor("purple");
-   fVProg2 = new TGVProgressBar(fHframe1, TGProgressBar::kProgressBarWidth, 300);
+   fVProg2 = new TGVProgressBar(fHframe1, TGProgressBar::kFancy, 300);
    fVProg2->SetFillType(TGProgressBar::kBlockFill);
    fVProg2->SetBarColor("green");
 
@@ -1454,9 +1454,11 @@ TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
 
    fHProg1 = new TGHProgressBar(fVframe1, 300);
    fHProg1->ShowPosition();
-   fHProg2 = new TGHProgressBar(fVframe1, 300);
-   fHProg2->SetFillType(TGProgressBar::kBlockFill);
+   fHProg2 = new TGHProgressBar(fVframe1, TGProgressBar::kFancy, 300);
+   fHProg2->SetBarColor("lightblue");
    fHProg2->ShowPosition(kTRUE, kFALSE, "%.0f events");
+   fHProg3 = new TGHProgressBar(fVframe1, TGProgressBar::kStandard, 300);
+   fHProg3->SetFillType(TGProgressBar::kBlockFill);
 
    fGO = new TGTextButton(fVframe1, "Go", 10);
    fGO->Associate(this);
@@ -1474,6 +1476,7 @@ TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
 
    fVframe1->AddFrame(fHProg1, fHint2);
    fVframe1->AddFrame(fHProg2, fHint2);
+   fVframe1->AddFrame(fHProg3, fHint2);
    fVframe1->AddFrame(fGO,     fHint3);
 
    AddFrame(fHframe1, fHint4);
@@ -1505,7 +1508,7 @@ TestProgress::~TestProgress()
    delete fHframe1;
    delete fVframe1;
    delete fVProg1; delete fVProg2;
-   delete fHProg1; delete fHProg2;
+   delete fHProg1; delete fHProg2; delete fHProg3;
    delete fHint1; delete fHint2; delete fHint3; delete fHint4; delete fHint5;
    delete fGO; fGO = 0; // to get cleanly out of the loop in ProcessMessage
 }
@@ -1529,7 +1532,7 @@ Bool_t TestProgress::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case 10:
                      {
                         fVProg1->Reset(); fVProg2->Reset();
-                        fHProg1->Reset(); fHProg2->Reset();
+                        fHProg1->Reset(); fHProg2->Reset(); fHProg3->Reset();
                         fVProg2->SetBarColor("green");
                         int cnt1 = 0, cnt2 = 0, cnt3 = 0, cnt4 = 0;
                         int inc1 = 4, inc2 = 3, inc3 = 2, inc4 = 1;
@@ -1551,6 +1554,7 @@ Bool_t TestProgress::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                            if (cnt4 < 100) {
                               cnt4 += inc4;
                               fHProg2->Increment(inc4);
+                              fHProg3->Increment(inc4);
                            }
                            gSystem->Sleep(100);
                            gSystem->ProcessEvents();
