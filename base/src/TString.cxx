@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.30 2004/06/16 10:23:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.31 2004/06/18 11:05:47 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -149,7 +149,7 @@ unsigned Hash(const char *str)
 {
    // Return a case-sensitive hash value.
 
-   unsigned len = strlen(str);
+   unsigned len = str ? strlen(str) : 0;
    unsigned hv  = len; // Mix in the string length.
    unsigned i   = hv*sizeof(char)/sizeof(unsigned);
 
@@ -275,7 +275,7 @@ TString::TString(const char *cs)
    // Create TString and initialize it with string cs.
 
    if (cs) {
-      Ssiz_t n = strlen(cs);
+      Ssiz_t n = cs ? strlen(cs) : 0;
       fData = TStringRef::GetRep(n, n)->Data();
       memcpy(fData, cs, n);
    } else
@@ -356,7 +356,7 @@ TString& TString::operator=(const char *cs)
 {
    // Assign string cs to TString.
 
-   if (!cs || (cs && !*cs)) {
+   if (!cs || !*cs) {
       Pref()->UnLink();
       gNullStringRef->AddReference();
       fData = gNullStringRef->Data();
@@ -1061,7 +1061,7 @@ TString operator+(const TString &s, const char *cs)
 {
    // Use the special concatenation constructor.
 
-   return TString(s.Data(), s.Length(), cs, strlen(cs));
+   return TString(s.Data(), s.Length(), cs, cs ? strlen(cs) : 0);
 }
 
 //______________________________________________________________________________
@@ -1069,7 +1069,7 @@ TString operator+(const char *cs, const TString &s)
 {
    // Use the special concatenation constructor.
 
-   return TString(cs, strlen(cs), s.Data(), s.Length());
+   return TString(cs, cs ? strlen(cs) : 0, s.Data(), s.Length());
 }
 
 //______________________________________________________________________________
@@ -1218,7 +1218,7 @@ TSubString TString::SubString(const char *pattern, Ssiz_t startIndex,
    // overloaded version of operator(), but this would result in a type
    // conversion ambiguity with operator(Ssiz_t, Ssiz_t).
 
-   Ssiz_t len = strlen(pattern);
+   Ssiz_t len = pattern ? strlen(pattern) : 0;
    Ssiz_t i = Index(pattern, len, startIndex, cmp);
    return TSubString(*this, i, i == kNPOS ? 0 : len);
 }
@@ -1264,7 +1264,7 @@ TSubString TString::SubString(const char *pattern, Ssiz_t startIndex,
    // Return sub-string matching pattern, starting at index. Cmp selects
    // the type of case conversion.
 
-   Ssiz_t len = strlen(pattern);
+   Ssiz_t len = pattern ? strlen(pattern) : 0;
    Ssiz_t i = Index(pattern, len, startIndex, cmp);
    return TSubString(*this, i, i == kNPOS ? 0 : len);
 }
@@ -1286,7 +1286,7 @@ TSubString& TSubString::operator=(const char *cs)
    // Assign char* to sub-string.
 
    if (!IsNull())
-      fStr->Replace(fBegin, fExtent, cs, strlen(cs));
+      fStr->Replace(fBegin, fExtent, cs, cs ? strlen(cs) : 0);
 
    return *this;
 }
@@ -1376,6 +1376,55 @@ Bool_t TString::IsAscii() const
    const char *cp = Data();
    for (Ssiz_t i = 0; i < Length(); ++i)
       if (cp[i] & ~0x7F)
+         return kFALSE;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TString::IsAlpha() const
+{
+   // Return true if all characters in string are alphabetic.
+
+   const char *cp = Data();
+   for (Ssiz_t i = 0; i < Length(); ++i)
+      if (!isalpha(cp[i]))
+         return kFALSE;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TString::IsAlnum() const
+{
+   // Return true if all characters in string are alphanumeric.
+
+   const char *cp = Data();
+   for (Ssiz_t i = 0; i < Length(); ++i)
+      if (!isalnum(cp[i]))
+         return kFALSE;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TString::IsDigit() const
+{
+   // Return true if all characters in string are digits (0-9).
+
+   const char *cp = Data();
+   for (Ssiz_t i = 0; i < Length(); ++i)
+      if (!isdigit(cp[i]))
+         return kFALSE;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TString::IsHex() const
+{
+   // Return true if all characters in string are hexidecimal digits
+   // (0-9,a-f,A-F).
+
+   const char *cp = Data();
+   for (Ssiz_t i = 0; i < Length(); ++i)
+      if (!isxdigit(cp[i]))
          return kFALSE;
    return kTRUE;
 }
@@ -1569,6 +1618,8 @@ char *Strip(const char *s, char c)
    // Strip leading and trailing c (blanks by default) from a string.
    // The returned string has to be deleted by the user.
 
+   if (!s) return 0;
+
    int l = strlen(s);
    char *buf = new char[l+1];
 
@@ -1684,7 +1735,7 @@ int strcasecmp(const char *str1, const char *str2)
 {
    // Case insensitive string compare.
 
-   return strncasecmp(str1, str2, strlen(str2) + 1);
+   return strncasecmp(str1, str2, str2 ? strlen(str2)+1 : 0);
 }
 
 //______________________________________________________________________________
