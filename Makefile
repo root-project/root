@@ -94,7 +94,8 @@ else
 CINTLIBS     := $(LPATH)/libCint.lib
 ROOTLIBS     := $(LPATH)/libNew.lib $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
-                $(LPATH)/libGraf3d.lib $(LPATH)/libTree.lib
+                $(LPATH)/libGraf3d.lib $(LPATH)/libTree.lib \
+                $(LPATH)/libMatrix.lib
 RINTLIBS     := $(LPATH)/libRint.lib
 PROOFLIBS    := $(LPATH)/libGpad.lib $(LPATH)/libProof.lib \
                 $(LPATH)/libTreePlayer.lib
