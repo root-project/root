@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.29 2003/06/21 06:07:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.30 2003/07/04 13:27:35 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -36,7 +36,8 @@ protected:
     TString             fClassName;     //Class name of referenced object
     TString             fParentName;    //Name of parent class
     TString             fClonesName;    //Name of class in TClonesArray (if any)
-    Int_t               fClassVersion;  //Version number of class
+    UInt_t              fCheckSum;      //CheckSum of class
+	Int_t               fClassVersion;  //Version number of class
     Int_t               fID;            //element serial number in fInfo
     Int_t               fType;          //branch type
     Int_t               fStreamerType;  //branch streamer type
@@ -65,7 +66,8 @@ public:
             void     FillLeaves(TBuffer &b);
     TBranchElement  *GetBranchCount() const {return fBranchCount;}
     TBranchElement  *GetBranchCount2() const {return fBranchCount2;}
-    virtual const char  *GetClassName() const {return fClassName.Data();}
+    UInt_t           GetCheckSum() {return fCheckSum;}
+	virtual const char  *GetClassName() const {return fClassName.Data();}
     virtual const char  *GetClonesName() const {return fClonesName.Data();}
             Int_t    GetEntry(Int_t entry=0, Int_t getall = 0);
             const char  *GetIconName() const;
@@ -99,7 +101,7 @@ public:
     virtual void     SetType(Int_t btype) {fType=btype;}
     virtual Int_t    Unroll(const char *name, TClass *cltop, TClass *cl,Int_t basketsize, Int_t splitlevel, Int_t btype);
 
-    ClassDef(TBranchElement,7)  //Branch in case of an object
+    ClassDef(TBranchElement,8)  //Branch in case of an object
 };
 
 #endif

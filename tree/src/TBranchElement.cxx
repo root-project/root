@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.122 2003/11/20 17:25:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.123 2003/12/08 15:55:24 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -56,6 +56,7 @@ TBranchElement::TBranchElement(): TBranch()
    fMaximum = 0;
    fBranchPointer = 0;
    fNdata = 1;
+   fCheckSum = 0;
 }
 
 
@@ -81,6 +82,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
 
    TClass *cl    = sinfo->GetClass();
    fInfo         = sinfo;
+   fCheckSum     = sinfo->GetCheckSum();
    fID           = id;
    fStreamerType = -1;
    fType         = 0;
@@ -298,6 +300,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fStreamerType = -1;
    fType         = 0;
    fClassVersion = TClonesArray::Class()->GetClassVersion();
+   fCheckSum     = fInfo->GetCheckSum();
    fBranchCount  = 0;
    fBranchCount2 = 0;
    fObject       = 0;
@@ -1003,6 +1006,18 @@ TStreamerInfo *TBranchElement::GetInfo()
       TStreamerInfo::Optimize(kFALSE);
       if (cl == TClonesArray::Class()) fClassVersion = TClonesArray::Class()->GetClassVersion();
       fInfo = cl->GetStreamerInfo(fClassVersion);
+	  if (fCheckSum != 0 && cl->IsForeign()) {
+		  Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast();
+		  for (Int_t i=1;i<ninfos;i++) {
+			  TStreamerInfo *info = (TStreamerInfo*)cl->GetStreamerInfos()->At(i);
+			  if (!info) continue;
+			  if (info->GetCheckSum() == fCheckSum) {
+				  fClassVersion = i;
+				  fInfo = cl->GetStreamerInfo(fClassVersion);
+				  break;
+              }
+          }
+      }
       if (fInfo && !fInfo->GetOffsets()) {
          fInfo->Compile();
       }
