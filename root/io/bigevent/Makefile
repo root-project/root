@@ -1,26 +1,33 @@
+CLEAN_TARGETS += local_clean
+TEST_TARGESTS += bigeventTest
+
+include ../../Rules.mk
+
 .SUFFIXES: .cxx .o .so
 
-all: test
 
-test: ./Event ./libEvent.so
+all: bigeventTest
+
+bigeventTest: ./Event ./libEvent.$(DllSuf)
 	./Event 10 1 1 1
 	./Event 10 1 1 20
 
 Event : MainEvent.o Event.o EventDict.o
-	g++ -o Event MainEvent.o Event.o EventDict.o -L$(ROOTSYS)/lib \
+	$(CXX) $(OutPutOpt)Event MainEvent.o Event.o EventDict.o -L$(ROOTSYS)/lib \
     -lCore -lCint -lTree -lHist -lMatrix -lPhysics -lGraf -lm -ldl 
 
-libEvent.so :  Event.o EventDict.o
-	g++ -shared -O Event.o EventDict.o -o  libEvent.so
+libEvent.$(DllSuf) :  Event.o EventDict.o
+	$(CXX) $(SOFLAGS) Event.o EventDict.o $(OutPutOpt)libEvent.$(DllSuf)
 
-EventDict.cxx: Event.h EventLinkDef.h $(ROOTSYS)/bin/rootcint $(ROOTSYS)/lib/libCint.so
+EventDict.cxx: Event.h EventLinkDef.h $(ROOTSYS)/bin/rootcint $(ROOTSYS)/lib/libCint.$(DllSuf)
 	rootcint -f EventDict.cxx -c Event.h EventLinkDef.h
 
 Event.o: Event.cxx Event.h
 
 .cxx.o:
-	g++ -g -Wall -fPIC -I$(ROOTSYS)/include -c $<
+	$(CXX) $(CXXFLAGS) -I$(ROOTSYS)/include -c $<
 
-clean:
-	rm -f Event libEvent.so *.o EventDict.cxx EventDict.h *~
+local_clean:
+	rm -f Event libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~
+
 

@@ -15,7 +15,7 @@
 
 //#pragma link C++ class vector<int>;
 
-#pragma link C++ class NotAClass!;
+//#pragma link C++ class NotAClass!;
 
 #pragma link C++ namespace ROOT;
 //#pragma link C++ function ROOT::ShowMembers(RootPCellID*, TMemberInspector&, char*);
