@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemFile.cxx,v 1.2 2001/03/08 20:16:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemFile.cxx,v 1.3 2001/11/28 15:58:13 rdm Exp $
 // Author: Rene Brun   26/06/96
 
 /*************************************************************************
@@ -47,6 +47,20 @@ TSystemFile::~TSystemFile()
 {
    // Delete TSystemFile object.
 
+}
+
+//______________________________________________________________________________
+Bool_t TSystemFile::IsDirectory() const
+{
+   // Check if object is a directory.
+
+   Long_t id, size, flags, modtime;
+
+   flags = id = size = modtime = 0;
+   gSystem->GetPathInfo(fName, &id, &size, &flags, &modtime);
+   Int_t isdir = (Int_t)flags & 2;
+
+   return isdir ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.2 2002/05/13 10:40:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.3 2002/07/31 21:59:16 rdm Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -114,9 +114,7 @@ Bool_t TSystemDirectory::IsDirectory(const char *name) const
    gSystem->GetPathInfo(name, &id, &size, &flags, &modtime);
    Int_t isdir = (Int_t)flags & 2;
 
-   // this is a directory
-   if (isdir) return kTRUE;
-   return kFALSE;
+   return isdir ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________

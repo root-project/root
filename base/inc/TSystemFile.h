@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TSystemFile.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   26/06/96
 
 /*************************************************************************
@@ -31,13 +31,14 @@ class TBrowser;
 class TSystemFile : public TNamed {
 
 public:
-        TSystemFile();
-        TSystemFile(const char *filename, const char *dirname);
-        virtual ~TSystemFile();
-        virtual void     Browse(TBrowser *b);
-        virtual void     Edit(); // *MENU*
+   TSystemFile();
+   TSystemFile(const char *filename, const char *dirname);
+   virtual ~TSystemFile();
+   virtual void     Browse(TBrowser *b);
+   virtual void     Edit(); // *MENU*
+   virtual Bool_t   IsDirectory() const;
 
-        ClassDef(TSystemFile,0)  //A system file
+   ClassDef(TSystemFile,0)  //A system file
 };
 
 #endif
