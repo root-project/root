@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.93 2004/06/22 06:42:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.94 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -142,7 +142,11 @@ Int_t TChain::Add(TChain *chain)
    Int_t nf = 0;
    while ((element = (TChainElement*)next())) {
       Long64_t nentries = element->GetEntries();
-      fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
+      if (fTreeOffset[fNtrees]==kBigNumber) {
+         fTreeOffset[fNtrees+1] = kBigNumber;
+      } else {
+         fTreeOffset[fNtrees+1] = fTreeOffset[fNtrees] + nentries;
+      }
       fNtrees++;
       fEntries += nentries;
       newelement = new TChainElement(element->GetName(),element->GetTitle());
