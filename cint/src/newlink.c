@@ -7305,6 +7305,7 @@ char *comment;
   int store_asm_noverflow;
   int store_prerun;
   int store_asm_wholefunction;
+  int store_constvar = G__constvar;
 #ifndef G__OLDIMPLEMENTATION1284
   int store_def_struct_member = G__def_struct_member;
   int store_tagdefining = G__tagdefining;
@@ -7327,6 +7328,7 @@ char *comment;
   else                      G__static_alloc=1;
   /* G__access = constvar;*/  /* dummy statement to avoid lint error */
 #ifndef G__OLDIMPLEMENTATION645
+
   G__constvar = constvar; /* Not sure why I didn't do this for a long time */
 #endif
   G__access = accessin;
@@ -7353,6 +7355,7 @@ char *comment;
 #ifndef G__OLDIMPLEMENTATION801
   G__reftype=G__PARANORMAL;
 #endif
+  G__constvar = store_constvar;
   return(0);
 }
 
