@@ -14,6 +14,10 @@ N: Maarten Ballintijn
 E: maartenb@xs4all.nl
 D: initial linux port
 
+N: Nicolas Brun
+E: nicolas@pcbrun.cern.ch
+D: classes TFormula, TText, TLatex
+
 N: Nenad Buncic
 E: Nenad.Buncic@epfl.ch
 D: HTML documentation generator, 3D shapes and geometry classes,
@@ -46,6 +50,10 @@ D: Win95/NT port, OpenGL interface
 N: Masaharu Goto
 E: MXJ02154@niftyserve.or.jp
 D: CINT C/C++ interpreter
+
+N: Robert Hatcher
+E: rhatcher@fnal.gov
+D: Class TXTRU and tutorials xtruDraw.C and xtruSamples.C
 
 N: Marc Hemberger
 E: hemberg@clri6a.gsi.de
