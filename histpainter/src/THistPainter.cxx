@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.112 2003/01/09 17:13:59 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.113 2003/01/13 13:53:55 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3853,13 +3853,13 @@ void THistPainter::PaintPalette()
    
    if (!palette) {
       Double_t xup  = gPad->GetUxmax();
-      Double_t x2   = gPad->GetX2();
-      Double_t ymin = gPad->GetUymin();
-      Double_t ymax = gPad->GetUymax();
-      Double_t xr   = 0.05*(x2 - gPad->GetX1());
-      Double_t xmin = xup +0.1*xr;
-      Double_t xmax = xmin + xr;
-      if (xmax > x2) xmax = x2-0.01*xr;
+      Double_t x2   = gPad->PadtoX(gPad->GetX2());
+      Double_t ymin = gPad->PadtoY(gPad->GetUymin());
+      Double_t ymax = gPad->PadtoY(gPad->GetUymax());
+      Double_t xr   = 0.05*(gPad->GetX2() - gPad->GetX1());
+      Double_t xmin = gPad->PadtoX(xup +0.1*xr);
+      Double_t xmax = gPad->PadtoX(xup + xr);
+      if (xmax > x2) xmax = gPad->PadtoX(gPad->GetX2()-0.01*xr);
       palette = new TPaletteAxis(xmin,ymin,xmax,ymax,fH);
       fFunctions->Add(palette);
       palette->Paint();
