@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.41 2001/02/15 09:53:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.42 2001/02/16 08:48:32 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1288,7 +1288,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
    for (Int_t k=0;k<nc;k++) { \
       b >> isArray; \
       if (isArray == 0) continue; \
-      pointer = (char*)clones->UncheckedAt(k); \
+      pointer = (char*)clones->UncheckedAt(k)+baseOffset; \
       Int_t *l = (Int_t*)(pointer+fMethod[i]); \
       name **f = (name**)(pointer+fOffset[i]); \
       delete [] *f; \
@@ -1326,6 +1326,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
       fClass->BuildRealData();
       BuildOld();
    }
+   //find offset of this class with respect to class in clones
+   Int_t baseOffset = clones->GetClass()->GetBaseClassOffset(fClass);
 
    //loop on all active members
    Int_t last;
@@ -1337,7 +1339,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          printf("StreamerInfo, class:%s, name=%s, fType[%d]=%d, %s, bufpos=%d\n",fClass->GetName(),element->GetName(),i,fType[i],element->ClassName(),b.Length());
       }
       leng   = fLength[i];
-      offset = fOffset[i];
+      offset = baseOffset + fOffset[i];
       switch (fType[i]) {
          // write basic types
          case kChar:              ReadCBasicType(Char_t)
@@ -1456,13 +1458,10 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 
          // Base Class
          case kBase:    {
-            ULong_t args[1];
-            args[0] = (ULong_t)&b;
-            TMethodCall *method = (TMethodCall*)fMethod[i];
-            method->SetParamPtrs(args);
+            TStreamerBase *element = (TStreamerBase*)fElem[i];
             for (Int_t k=0;k<nc;k++) {
-               pointer = (char*)clones->UncheckedAt(k);
-               method->Execute((void*)(pointer+offset));
+               pointer = (char*)clones->UncheckedAt(k)+baseOffset;
+               element->ReadBuffer(b,pointer);
             }
             break;}
 
@@ -1495,7 +1494,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                          UInt_t start,count;
                          b.ReadVersion(&start,&count);
                          for (Int_t k=0;k<nc;k++) {
-                            pointer = (char*)clones->UncheckedAt(k);
+                            pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                             Int_t *counter = (Int_t*)(pointer+fMethod[i]);
                             (*pstreamer)(b,pointer+offset,*counter);
                          }
@@ -1855,7 +1854,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 #define WriteCBasicType(name) \
 { \
    for (Int_t k=0;k<nc;k++) { \
-      pointer = (char*)clones->UncheckedAt(k); \
+      pointer = (char*)clones->UncheckedAt(k)+baseOffset; \
       name x = (name)*(pointer+fOffset[i]); \
       b << x; \
    } \
@@ -1865,7 +1864,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 #define WriteCBasicArray(name) \
 { \
    for (Int_t k=0;k<nc;k++) { \
-      pointer = (char*)clones->UncheckedAt(k); \
+      pointer = (char*)clones->UncheckedAt(k)+baseOffset; \
       name *x = (name*)(pointer+fOffset[i]); \
       b.WriteFastArray(x,fLength[i]); \
    } \
@@ -1875,7 +1874,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 #define WriteCBasicPointer(name) \
 { \
    for (Int_t k=0;k<nc;k++) { \
-      pointer = (char*)clones->UncheckedAt(k); \
+      pointer = (char*)clones->UncheckedAt(k)+baseOffset; \
       Int_t *l = (Int_t*)(pointer+fMethod[i]); \
       name **f = (name**)(pointer+fOffset[i]); \
       name *af = *f; \
@@ -1887,6 +1886,8 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 }
 //==========
 
+   //find offset of this class with respect to class in clones
+   Int_t baseOffset = clones->GetClass()->GetBaseClassOffset(fClass);
    //loop on all active members
    Int_t last;
    if (first < 0) {first = 0; last = fNdata;}
@@ -1936,7 +1937,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          // Class *  Class derived from TObject and with comment field //->
          case kObjectp: {
             for (Int_t k=0;k<nc;k++) {
-               pointer = (char*)clones->UncheckedAt(k);
+               pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                TObject **obj = (TObject**)(pointer+fOffset[i]);
                if (*obj) (*obj)->Streamer(b);
                else {
@@ -1950,7 +1951,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          // Class*   Class derived from TObject
          case kObjectP: {
             for (Int_t k=0;k<nc;k++) {
-               pointer = (char*)clones->UncheckedAt(k);
+               pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                TObject **obj = (TObject**)(pointer+fOffset[i]);
                b << *obj;
             }
@@ -1959,7 +1960,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          // array counter [n]
          case kCounter: {
             for (Int_t k=0;k<nc;k++) {
-               pointer = (char*)clones->UncheckedAt(k);
+               pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                Int_t *x=(Int_t*)(pointer+fOffset[i]);
                b << x[0];
                //*counter = x[0];
@@ -1969,7 +1970,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          // Class  derived from TObject
          case kObject:  {
             for (Int_t k=0;k<nc;k++) {
-               pointer = (char*)clones->UncheckedAt(k);
+               pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                ((TObject*)(pointer+fOffset[i]))->Streamer(b);
             }
             break;}
@@ -1977,19 +1978,19 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          // Special case for TString, TObject, TNamed
          case kTString: {
             for (Int_t k=0;k<nc;k++) {
-               pointer = (char*)clones->UncheckedAt(k);
+               pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                ((TString*)(pointer+fOffset[i]))->Streamer(b);
             }
             break;}
          case kTObject: {
             for (Int_t k=0;k<nc;k++) {
-               pointer = (char*)clones->UncheckedAt(k);
+               pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                ((TObject*)(pointer+fOffset[i]))->TObject::Streamer(b);
             }
             break;}
          case kTNamed:  {
             for (Int_t k=0;k<nc;k++) {
-               pointer = (char*)clones->UncheckedAt(k);
+               pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                ((TNamed*) (pointer+fOffset[i]))->TNamed::Streamer(b);
             }
             break;}
@@ -2006,7 +2007,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                         break;
                      }
                      for (Int_t k=0;k<nc;k++) {
-                        pointer = (char*)clones->UncheckedAt(k);
+                        pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                         (*pstreamer)(b,pointer+fOffset[i],0);
                      }
                      break;
@@ -2014,15 +2015,12 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
 
          // Base Class
          case kBase: {
-                       ULong_t args[1];
-                       args[0] = (ULong_t)&b;
-                       TMethodCall *method = (TMethodCall*)fMethod[i];
-                       method->SetParamPtrs(args);
+                       TStreamerBase *element = (TStreamerBase*)fElem[i];
                        for (Int_t k=0;k<nc;k++) {
-                          pointer = (char*)clones->UncheckedAt(k);
-                          method->Execute((void*)(pointer+fOffset[i]));
+                          pointer = (char*)clones->UncheckedAt(k)+baseOffset;
+                          element->WriteBuffer(b,pointer);
                        }
-                       break;
+                       break; 
                      }
 
          case kStreamer: {
@@ -2035,7 +2033,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                          }
                          UInt_t pos = b.WriteVersion(IsA(),kTRUE);
                          for (Int_t k=0;k<nc;k++) {
-                            pointer = (char*)clones->UncheckedAt(k);
+                            pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                             (*pstreamer)(b,pointer+fOffset[i],0);
                          }
                          b.SetByteCount(pos,kTRUE);
@@ -2052,7 +2050,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                          }
                          UInt_t pos = b.WriteVersion(IsA(),kTRUE);
                          for (Int_t k=0;k<nc;k++) {
-                            pointer = (char*)clones->UncheckedAt(k);
+                            pointer = (char*)clones->UncheckedAt(k)+baseOffset;
                             Int_t *counter = (Int_t*)(pointer+fMethod[i]);
                             (*pstreamer)(b,pointer+fOffset[i],*counter);
                          }
