@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:$:$Id:$
+// @(#)root/alien:$Name:  $:$Id: TAlien.cxx,v 1.1 2002/05/13 10:38:10 rdm Exp $
 // Author: Fons Rademakers   13/5/2002
 
 /*************************************************************************
@@ -107,11 +107,13 @@ void TAlien::Close(Option_t *)
 TGridResult *TAlien::Query(const char *wildcard)
 {
    // Query the AliEn file catalog to find the set of logical file name
-   // matching the specified wildcard. For AliEn the wildcard must have
-   // the form:
-   // "lfn://alien.cern.ch/alice/bin/date"
-   // "lfn:///alice/simulation/2001-04/V0.6*.root"
-   // "lfn:///alice/simulation/2001-04*?tagIndex=5&value=\"s*\""
+   // matching the specified wildcard pattern. For AliEn the wildcard pattern
+   // must have the form:
+   //  "lfn://<host>/<path>?<tagname>:<tagcondition>
+   // Examples:
+   //  "lfn://alien.cern.ch/alice/bin/date"
+   //  "lfn:///alice/simulation/2001-04/V0.6*.root"
+   //  "lfn:///alice/simulation/2001-04*?MonteCarloRuns:HolesPHOSRICH=1"
    // Returns 0 in case of error. Returned result must be deleted by user.
 
    AlienResult_t *ar = AlienGetFile(wildcard);
@@ -122,15 +124,18 @@ TGridResult *TAlien::Query(const char *wildcard)
 }
 
 //______________________________________________________________________________
-Int_t TAlien::AddFile(const char *lfn, const char *pfn)
+Int_t TAlien::AddFile(const char *lfn, const char *pfn, Int_t size)
 {
    // Add physical filename to AliEn catalog with associated logical file name.
    // Returns -1 on error (e.g. when lfn or pfn already exists), 0 otherwise.
+   // Size is a hint to the file catalog. If size is -1 the system will try
+   // to guess size from pfn.
    // Example lfn: "lfn://[alien.cern.ch]/alice/cern.ch/user/r/rdm/aap.root"
    // Example pfn: "rfio:/castor/cern.ch/user/r/rdm/noot.root"
 
-   if (AlienAddFile(lfn, pfn) == -1) {
-      Error("AddFile", "error adding pfn %s with lfn %s", pfn, lfn);
+   if (AlienAddFile(lfn, pfn, size) == -1) {
+      Error("AddFile", "error adding pfn %s with lfn %s (size %d)",
+            pfn, lfn, size);
       return -1;
    }
    return 0;
@@ -150,13 +155,53 @@ Int_t TAlien::DeleteFile(const char *lfn)
 }
 
 //______________________________________________________________________________
+Int_t TAlien::Mkdir(const char *dir, const char *options)
+{
+   // Create directory in AliEn. Returns -1 on error, 0 otherwise.
+   // Example dir: "lfn://[alien.cern.ch]/alice/cern.ch/user/p/psaiz/directory"
+   // Supported options:
+   //  "p": make all directories
+   //  "s": silent mode
+
+   const char *opt = "";
+   if (options)
+      opt = options;
+
+   if (AlienMkdir(dir, opt) == -1) {
+      Error("Mkdir", "error creating directory %s", dir);
+      return -1;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TAlien::Rmdir(const char *dir, const char *options)
+{
+   // Remove directory from AliEn. Returns -1 on error, 0 otherwise.
+   // Example dir: "lfn://[alien.cern.ch]/alice/cern.ch/user/p/psaiz/directory"
+   // Supported options:
+   //  "s": silent mode
+
+   const char *opt = "";
+   if (options)
+      opt = options;
+
+   if (AlienRmdir(dir, opt) == -1) {
+      Error("Rmdir", "error deleting directory %s", dir);
+      return -1;
+   }
+
+   return 0;
+}
+
+//______________________________________________________________________________
 char *TAlien::GetPhysicalFileName(const char *lfn)
 {
    // Returns physical file name associated with logical file name.
    // Returns 0 in case of error. Returned value must be deleted
    // using delete[].
 
-   char *pfn = (char *) AlienGetPhysicalFileName(lfn);
+   char *pfn = AlienGetPhysicalFileName(lfn);
 
    if (!pfn) return 0;
 
@@ -251,12 +296,24 @@ Int_t TAlien::Cd(const char *dir)
 }
 
 //______________________________________________________________________________
-TGridResult *TAlien::Ls(const char *dir)
+TGridResult *TAlien::Ls(const char *dir, const char *options)
 {
    // Returns contents of a directory in the AliEn file catalog.
    // Returns 0 in case of error. Returned result must be deleted by user.
+   // Example dir: "lfn://[alien.cern.ch]/alice/cern.ch/user/p/psaiz"
+   // will return only "psaiz"
+   //              "lfn://[alien.cern.ch]/alice/cern.ch/user/p/psaiz/"
+   // will return all the files in the directory.
+   // Supported options:
+   //  "l": long listing format
+   //  "a": list all entries
+   //  "d": list only directories
 
-   AlienResult_t *ar = AlienLs(dir);
+   const char *opt = "";
+   if (options)
+      opt = options;
+
+   AlienResult_t *ar = AlienLs(dir, opt);
 
    if (!ar) return 0;
 

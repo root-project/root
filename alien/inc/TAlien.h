@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:$:$Id:$
+// @(#)root/alien:$Name:  $:$Id: TAlien.h,v 1.1 2002/05/13 10:38:10 rdm Exp $
 // Author: Fons Rademakers   13/5/2002
 
 /*************************************************************************
@@ -51,8 +51,10 @@ public:
    TGridResult *Query(const char *wildcard);
 
    //--- file catalog management
-   Int_t        AddFile(const char *lfn, const char *pfn);
+   Int_t        AddFile(const char *lfn, const char *pfn, Int_t size);
    Int_t        DeleteFile(const char *lfn);
+   Int_t        Mkdir(const char *dir, const char *options = 0) = 0;
+   Int_t        Rmdir(const char *dir, const char *options = 0) = 0;
    char        *GetPhysicalFileName(const char *lfn);
    TGridResult *GetPhysicalFileNames(const char *lfn);
 
@@ -65,7 +67,7 @@ public:
    //--- catalog navigation & browsing
    const char  *Pwd();
    Int_t        Cd(const char *dir);
-   TGridResult *Ls(const char *dir);
+   TGridResult *Ls(const char *dir, const char *options = 0);
    void         Browse(TBrowser *b);
 
    //--- status and info

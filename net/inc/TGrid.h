@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:$:$Id:$
+// @(#)root/net:$Name:  $:$Id: TGrid.h,v 1.1 2002/05/13 10:35:19 rdm Exp $
 // Author: Fons Rademakers   3/1/2002
 
 /*************************************************************************
@@ -58,8 +58,10 @@ public:
    virtual TGridResult *Query(const char *wildcard) = 0;
 
    //--- file catalog management
-   virtual Int_t        AddFile(const char *lfn, const char *pfn) = 0;
+   virtual Int_t        AddFile(const char *lfn, const char *pfn, Int_t size) = 0;
    virtual Int_t        DeleteFile(const char *lfn) = 0;
+   virtual Int_t        Mkdir(const char *dir, const char *options = 0) = 0;
+   virtual Int_t        Rmdir(const char *dir, const char *options = 0) = 0;
    virtual char        *GetPhysicalFileName(const char *lfn) = 0;
    virtual TGridResult *GetPhysicalFileNames(const char *lfn) = 0;
 
@@ -72,7 +74,7 @@ public:
    //--- catalog navigation & browsing
    virtual const char  *Pwd() = 0;
    virtual Int_t        Cd(const char *dir) = 0;
-   virtual TGridResult *Ls(const char *dir) = 0;
+   virtual TGridResult *Ls(const char *dir, const char *options = 0) = 0;
    virtual void         Browse(TBrowser *b) = 0;
 
    //--- status and info
