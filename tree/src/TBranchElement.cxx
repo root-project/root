@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.8 2001/02/07 08:31:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.9 2001/02/08 11:51:10 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -274,6 +274,10 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
 //*-*      ====================================================================
 //   If entry = 0 take current entry number + 1
 //   If entry < 0 reset entry number to 0
+//
+//  The function returns the number of bytes read from the input buffer.
+//  If entry does not exist or an I/O error occurs, the function returns 0.
+//  if entry is the same as the previous call, the function returns 1.
 
    if (TestBit(kDoNotProcess) && !getall) return 0;
    Int_t nbranches = fBranches.GetEntriesFast();
