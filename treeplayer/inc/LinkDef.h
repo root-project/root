@@ -1,4 +1,4 @@
-/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.6 2002/03/26 07:05:57 brun Exp $ */
+/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.7 2002/09/21 21:58:07 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -16,6 +16,7 @@
 
 #pragma link C++ class TTreePlayer+;
 #pragma link C++ class TTreeFormula-;
+#pragma link C++ class TSelectorDraw;
 #pragma link C++ class TTreeFormulaManager;
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.20 2002/03/26 07:05:57 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.21 2002/09/21 21:58:07 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -30,91 +30,69 @@
 #ifndef ROOT_TTree
 #include "TTree.h"
 #endif
+#ifndef ROOT_TSelectorDraw
+#include "TSelectorDraw.h"
+#endif
+//#ifndef ROOT_TTreeFormula
+//#include "TTreeFormula.h"
+//#endif
 #ifndef ROOT_TVirtualTreePlayer
 #include "TVirtualTreePlayer.h"
 #endif
 
-class TTreeFormula;
-class TTreeFormulaManager;
-class TH1;
-class TSQLResult;
-class TSelector;
-class TPrincipal;
-
 class TTreePlayer : public TVirtualTreePlayer {
 
 protected:
-    TTree         *fTree;           //  Pointer to current Tree
-    TTreeFormula  *fVar1;           //  Pointer to first variable formula
-    TTreeFormula  *fVar2;           //  Pointer to second variable formula
-    TTreeFormula  *fVar3;           //  Pointer to third variable formula
-    TTreeFormula  *fVar4;           //  Pointer to fourth variable formula
-    TTreeFormula  *fSelect;         //  Pointer to selection formula
-    TTreeFormulaManager *fManager;  //  Pointer to the formula manager
+    TTree         *fTree;           //!  Pointer to current Tree
     Bool_t         fScanRedirect;   //  Switch to redirect TTree::Scan output to a file
     const char    *fScanFileName;   //  Name of the file where Scan is redirected
-    Int_t          fDraw;           //! Last entry loop number when object was drawn
-    Int_t          fNfill;          //! Local for EntryLoop
-    Int_t          fMultiplicity;   //  Indicator of the variability of the size of entries
     Int_t          fDimension;      //  Dimension of the current expression
     Int_t          fSelectedRows;   //  Number of selected entries
-    Int_t          fNbins[4];       //  Number of bins per dimension
-    Double_t       fVmin[4];        //  Minima of varexp columns
-    Double_t       fVmax[4];        //  Maxima of varexp columns
-    Double_t      *fV1;             //[fSelectedRows]Local buffer for variable 1
-    Double_t      *fV2;             //[fSelectedRows]Local buffer for variable 2
-    Double_t      *fV3;             //[fSelectedRows]Local buffer for variable 3
-    Double_t      *fW;              //[fSelectedRows]Local buffer for weights
     TH1           *fHistogram;      //! Pointer to histogram used for the projection
-
+    TSelectorDraw *fSelector;       //! Pointer to current selector
+    TList         *fInput;          //! input list to the selector
+    
 protected:
     const   char  *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);
-    virtual void    MakeIndex(TString &varexp, Int_t *index);
-    void            TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject *obj, Option_t *option);
-    void            TakeEstimate(Int_t nfill, Int_t &npoints, Int_t action, TObject *obj, Option_t *option);
+    void           TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject *obj, Option_t *option);
+    void           TakeEstimate(Int_t nfill, Int_t &npoints, Int_t action, TObject *obj, Option_t *option);
 
 public:
     TTreePlayer();
     virtual ~TTreePlayer();
 
-    virtual void      ClearFormula();
-    virtual void      CompileVariables(const char *varexp="", const char *selection="");
-    virtual TTree    *CopyTree(const char *selection, Option_t *option=""
-                       ,Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual void      CreatePacketGenerator(Int_t nentries, Stat_t firstEntry);
-    virtual Int_t     DrawSelect(const char *varexp, const char *selection, Option_t *option=""
-                       ,Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual void      EntryLoop(Int_t &action, TObject *obj, Int_t nentries=1000000000, Int_t firstentry=0, Option_t *option="");
-
-    virtual Int_t     Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
+    virtual TTree    *CopyTree(const char *selection, Option_t *option
                        ,Int_t nentries, Int_t firstentry);
+    virtual Int_t     DrawSelect(const char *varexp, const char *selection, Option_t *option
+                       ,Int_t nentries, Int_t firstentry);
+    virtual Int_t     Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,
+                        Option_t *goption ,Int_t nentries, Int_t firstentry);
     virtual Int_t     GetDimension() const {return fDimension;}
     TH1              *GetHistogram() const {return fHistogram;}
-    Int_t             GetMultiplicity() const   {return fMultiplicity;}
-    virtual Int_t     GetNfill() const {return fNfill;}
+    virtual Int_t     GetNfill() const {return fSelector->GetNfill();}
     const char       *GetScanFileName() const {return fScanFileName;}
-    TTreeFormula     *GetSelect() const    {return fSelect;}
+    TTreeFormula     *GetSelect() const    {return fSelector->GetSelect();}
     virtual Int_t     GetSelectedRows() const {return fSelectedRows;}
-    TTreeFormula     *GetVar1() const {return fVar1;}
-    TTreeFormula     *GetVar2() const {return fVar2;}
-    TTreeFormula     *GetVar3() const {return fVar3;}
-    TTreeFormula     *GetVar4() const {return fVar4;}
-    virtual Double_t *GetV1() const   {return fV1;}
-    virtual Double_t *GetV2() const   {return fV2;}
-    virtual Double_t *GetV3() const   {return fV3;}
-    virtual Double_t *GetW() const    {return fW;}
-    virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual Int_t     MakeClass(const char *classname=0, Option_t *option="");
-    virtual Int_t     MakeCode(const char *filename=0);
-    TPrincipal       *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
-                       ,Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual Int_t     Scan(const char *varexp="", const char *selection="", Option_t *option=""
-                       ,Int_t nentries=1000000000, Int_t firstentry=0);
+    TSelector        *GetSelector() const {return fSelector;}
+    TTreeFormula     *GetVar1() const {return fSelector->GetVar1();}
+    TTreeFormula     *GetVar2() const {return fSelector->GetVar2();}
+    TTreeFormula     *GetVar3() const {return fSelector->GetVar3();}
+    TTreeFormula     *GetVar4() const {return fSelector->GetVar4();}
+    virtual Double_t *GetV1() const   {return fSelector->GetV1();}
+    virtual Double_t *GetV2() const   {return fSelector->GetV2();}
+    virtual Double_t *GetV3() const   {return fSelector->GetV3();}
+    virtual Double_t *GetW() const    {return fSelector->GetW();}
+    virtual Int_t     MakeClass(const char *classname, Option_t *option);
+    virtual Int_t     MakeCode(const char *filename);
+    TPrincipal       *Principal(const char *varexp, const char *selection, Option_t *option
+                       ,Int_t nentries, Int_t firstentry);
+    virtual Int_t     Process(const char *filename,Option_t *option, Int_t nentries, Int_t firstentry);
+    virtual Int_t     Process(TSelector *selector,Option_t *option,  Int_t nentries, Int_t firstentry);
+    virtual Int_t     Scan(const char *varexp, const char *selection, Option_t *option
+                       ,Int_t nentries, Int_t firstentry);
     Bool_t            ScanRedirected() {return fScanRedirect;}
-    virtual TSQLResult *Query(const char *varexp="", const char *selection="", Option_t *option=""
-                         ,Int_t nentries=1000000000, Int_t firstentry=0);
+    virtual TSQLResult *Query(const char *varexp, const char *selection, Option_t *option
+                         ,Int_t nentries, Int_t firstentry);
     virtual void      SetEstimate(Int_t n);
     void              SetScanRedirect(Bool_t on=kFALSE) {fScanRedirect = on;}
     void              SetScanFileName(const char *name) {fScanFileName=name;}
