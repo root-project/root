@@ -19,18 +19,18 @@ CLEAN_TARGETS +=
 
 ALL_LIBRARIES += *.d *.o *.so *.def *.exp *.dll *.lib 
 
-CURDIR=$(shell basename $(PWD))
+export CURDIR=$(shell basename $(PWD))
 ifeq ($(CALLDIR),)
-	CALLDIR:=$(CURDIR)
+	export CALLDIR:=.
 else
-	CALLDIR:=$(CALLDIR)/$(CURDIR)
+	export CALLDIR:=$(CALLDIR)/$(CURDIR)
 endif
 
 tests: $(TEST_TARGETS)
-	@echo "All test succeeded in ./$(CURDIR)"
+	@echo "All test succeeded in $(CALLDIR)"
 
 $(TEST_TARGETS_DIR): %.test:
-	@(echo Running test in ./$*)
+	@(echo Running test in $(CALLDIR)/$*)
 	@(cd $*; gmake --no-print-directory test)
 
 $(CLEAN_TARGETS_DIR): %.clean:
@@ -90,7 +90,11 @@ else
 CXXFLAGS      += -O -Wall -fPIC
 endif
 LD            = g++
+ifeq ($(ROOTBUILD),debug)
+LDFLAGS       = -g 
+else
 LDFLAGS       = -O
+endif
 SOFLAGS       = -shared
 ObjSuf        = o
 SrcSuf        = cxx
