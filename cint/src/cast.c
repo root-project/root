@@ -145,11 +145,28 @@ G__value result3;
   if(strstr(casttype," const")) {
     char *px = strstr(casttype," const");
     isconst=1;
+#ifndef G__OLDIMPLEMENTATION1869
+    if(strncmp(px," const *",8)==0 || strncmp(px," const &",8)==0) {
+      while(*(px+7)) {
+	*px = *(px+7);
+	++px;
+      }
+      *px = 0;
+    }
+    else {
+      while(*(px+6)) {
+	*px = *(px+6);
+	++px;
+      }
+      *px = 0;
+    }
+#else
     while(*(px+6)) {
       *px = *(px+6);
       ++px;
     }
     *px = 0;
+#endif
   }
 #endif
 #ifndef G__PHILIPPE31
@@ -255,6 +272,9 @@ G__value result3;
     else reftype = G__PARAP2P2P;
 #endif
     casttype[--lenitem]='\0';
+#ifndef G__OLDIMPLEMENTATION1869
+    while(lenitem>1&&isspace(casttype[lenitem-1])) casttype[--lenitem]=0;
+#endif
   }
 
 #ifndef G__OLDIMPLEMENTATION520

@@ -29,6 +29,18 @@ static int G__static_parent_tagnum = -1;
 static int G__static_isconst = 0;
 #endif
 
+/******************************************************************
+* G__shiftstring
+******************************************************************/
+void G__shiftstring(s,n)
+char* s;
+int n;
+{
+  int i=0, j=n;
+  while(s[j]) s[i++]=s[j++];
+  s[i]=0;
+}
+
 #ifndef G__OLDIMPLEMENTATION559
 /******************************************************************
 * G__defined_typename_exact(typename)
@@ -762,6 +774,24 @@ void G__define_type()
       isconst |= G__PCONSTVAR;
 #endif
       c=G__fgetstream(typename,";,[");
+#ifndef G__OLDIMPLEMENTATION1868
+      if(strncmp(typename,"*const*",7)==0) {
+	isconst |= G__CONSTVAR;
+	isorgtypepointer=1;
+	type=toupper(type);
+	G__shiftstring(typename,6);
+      }
+      else if(strncmp(typename,"*const&",7)==0) {
+	isconst |= G__CONSTVAR;
+	reftype = G__PARAREFERENCE;
+	type=toupper(type);
+	G__shiftstring(typename,7);
+      }
+      else if(strncmp(typename,"const*",6)==0) {
+      }
+      else if(strncmp(typename,"const&",6)==0) {
+      }
+#endif
     }
 #ifndef G__OLDIMPLEMENTATION1799
     else if(strcmp(typename,"const*")==0) {

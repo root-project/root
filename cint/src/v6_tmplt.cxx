@@ -228,6 +228,65 @@ struct G__Definedtemplatememfunc *deftmpmemfunc;
 }
 #endif /* ON691 */
 
+#ifndef G__OLDIMPLEMENTATION1867
+/***********************************************************************
+* G__settemplatealias()
+*
+***********************************************************************/
+int G__settemplatealias(tagnamein,tagname,tagnum,charlist,defpara,encscope)
+char *tagnamein;
+char *tagname;
+int tagnum;
+struct G__Charlist *charlist;
+struct G__Templatearg *defpara;
+int encscope;
+{
+  char *p;
+  p=strchr(tagname,'<');
+  if(p) ++p;
+  else {
+    p = tagname + strlen(tagname);
+    *p++ = '<';
+  }
+  /* B<int,5*2>
+   *   ^ => p */
+  while(charlist->next) {
+    if(defpara->default_parameter) {
+      *(p-1)='>'; *p=0;
+      if(0!=strcmp(tagnamein,tagname) && -1==G__defined_typename(tagname)) {
+	int typenum=G__newtype.alltype++;
+	G__newtype.type[typenum]='u';
+	G__newtype.tagnum[typenum] = tagnum;
+	G__newtype.name[typenum]=(char*)malloc(strlen(tagname)+1);
+	strcpy(G__newtype.name[typenum],tagname);
+	G__newtype.hash[typenum] = strlen(tagname);
+	G__newtype.globalcomp[typenum] = G__globalcomp;
+	G__newtype.reftype[typenum] = G__PARANORMAL;
+	G__newtype.nindex[typenum] = 0;
+	G__newtype.index[typenum] = (int*)NULL;
+	G__newtype.iscpplink[typenum] = G__NOLINK;
+	if(encscope) {
+	  G__newtype.parent_tagnum[typenum] = G__get_envtagnum();
+	}
+	else {
+	  G__newtype.parent_tagnum[typenum] = G__struct.parent_tagnum[tagnum];
+	}
+      }
+    }
+    strcpy(p,charlist->string);
+    p+=strlen(charlist->string);
+    charlist=charlist->next;
+    defpara=defpara->next;
+    if(charlist->next) {
+      *p=','; ++p;
+    }
+  }
+  *p='>'; ++p;
+  *p='\0'; ++p;
+  return 0;
+}
+#endif
+
 
 #ifdef G__TEMPLATECLASS
 /***********************************************************************
@@ -2339,6 +2398,10 @@ char *tagnamein;
 #endif
     G__cattemplatearg(tagname,&call_para);
     tagnum = G__defined_tagname(tagname,1);
+#ifndef G__OLDIMPLEMENTATION1867
+    G__settemplatealias(tagnamein,tagname,tagnum,&call_para
+			,deftmpclass->def_para,templatearg_enclosedscope);
+#endif
 #ifndef G__OLDIMPLEMENTATION1044
     if(-1!=typenum) {
       G__newtype.tagnum[typenum] = tagnum;
