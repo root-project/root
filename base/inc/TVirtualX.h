@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.20 2003/07/08 15:42:25 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.21 2003/08/06 20:25:04 brun Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -77,39 +77,41 @@ public:
    virtual ~TVirtualX() { }
 
    virtual Bool_t    Init(void *display=0);
-   virtual void      ClearWindow() { }
-   virtual void      ClosePixmap() { }
-   virtual void      CloseWindow() { }
+   virtual void      ClearWindow();
+   virtual void      ClosePixmap();
+   virtual void      CloseWindow();
    virtual void      CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos);
    virtual void      CreateOpenGLContext(Int_t wid=0);
    virtual void      DeleteOpenGLContext(Int_t wid=0);
    virtual void      DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode);
-   virtual void      DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2, Int_t nx, Int_t ny, Int_t *ic);
+   virtual void      DrawCellArray(Int_t x1, Int_t y1, Int_t x2, Int_t y2, 
+                                   Int_t nx, Int_t ny, Int_t *ic);
    virtual void      DrawFillArea(Int_t n, TPoint *xy);
    virtual void      DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2);
    virtual void      DrawPolyLine(Int_t n, TPoint *xy);
    virtual void      DrawPolyMarker(Int_t n, TPoint *xy);
-   virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode);
+   virtual void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, 
+                              ETextMode mode);
    virtual UInt_t    ExecCommand(TGWin32Command *code);
-   virtual void      GetCharacterUp(Float_t &chupx, Float_t &chupy) { chupx = chupy = 0; }
+   virtual void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
    EDrawMode         GetDrawMode() { return fDrawMode; }
    virtual Int_t     GetDoubleBuffer(Int_t wid);
    virtual void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
-   virtual const char *DisplayName(const char * = 0) { return "batch"; }
-   virtual Handle_t  GetNativeEvent() const { return 0; }
+   virtual const char *DisplayName(const char * = 0);
+   virtual Handle_t  GetNativeEvent() const;
    virtual ULong_t   GetPixel(Color_t cindex);
-   virtual void      GetPlanes(Int_t &nplanes) { nplanes = 0; }
+   virtual void      GetPlanes(Int_t &nplanes);
    virtual void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
    virtual void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
-   virtual Float_t   GetTextMagnitude() { return 0; }
+   virtual Float_t   GetTextMagnitude();
    virtual Window_t  GetWindowID(Int_t wid);
-   virtual Bool_t    HasTTFonts() const { return kFALSE; }
+   virtual Bool_t    HasTTFonts() const;
    virtual Int_t     InitWindow(ULong_t window);
    virtual Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
    virtual void      RemoveWindow(ULong_t qwid);
    virtual void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    virtual Int_t     OpenPixmap(UInt_t w, UInt_t h);
-   virtual void      QueryPointer(Int_t &ix, Int_t &iy) { ix = iy = 0; }
+   virtual void      QueryPointer(Int_t &ix, Int_t &iy);
    virtual void      ReadGIF(Int_t x0, Int_t y0, const char *file);
    virtual Int_t     RequestLocator(Int_t mode, Int_t ctyp, Int_t &x, Int_t &y);
    virtual Int_t     RequestString(Int_t x, Int_t y, char *text);
@@ -123,8 +125,8 @@ public:
    virtual void      SetClipRegion(Int_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void      SetCursor(Int_t win, ECursor cursor);
    virtual void      SetDoubleBuffer(Int_t wid, Int_t mode);
-   virtual void      SetDoubleBufferOFF() { }
-   virtual void      SetDoubleBufferON() { }
+   virtual void      SetDoubleBufferOFF();
+   virtual void      SetDoubleBufferON();
    virtual void      SetDrawMode(EDrawMode mode);
    virtual void      SetFillColor(Color_t cindex);
    virtual void      SetFillStyle(Style_t style);
@@ -169,14 +171,14 @@ public:
                                      void *visual, SetWindowAttributes_t *attr,
                                      UInt_t wtype);
    virtual Int_t        OpenDisplay(const char *dpyName);
-   virtual void         CloseDisplay() { }
-   virtual Display_t    GetDisplay() const { return 0; }
-   virtual Visual_t     GetVisual() const { return 0; }
-   virtual Int_t        GetScreen() const { return 0; }
-   virtual Int_t        GetDepth() const { return 0; }
-   virtual Colormap_t   GetColormap() const { return 0; }
+   virtual void         CloseDisplay();
+   virtual Display_t    GetDisplay() const;
+   virtual Visual_t     GetVisual() const;
+   virtual Int_t        GetScreen() const;
+   virtual Int_t        GetDepth() const;
+   virtual Colormap_t   GetColormap() const;
    virtual Atom_t       InternAtom(const char *atom_name, Bool_t only_if_exist);
-   virtual Window_t     GetDefaultRootWindow() const { return 0; }
+   virtual Window_t     GetDefaultRootWindow() const;
    virtual Window_t     GetParent(Window_t id) const;
    virtual FontStruct_t LoadQueryFont(const char *font_name);
    virtual FontH_t      GetFontHandle(FontStruct_t fs);
@@ -256,16 +258,16 @@ public:
                                       UInt_t w, UInt_t h);
    virtual void         DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nseg);
    virtual void         SelectInput(Window_t id, UInt_t evmask);
-   virtual Window_t     GetInputFocus() { return kNone; }
+   virtual Window_t     GetInputFocus();
    virtual void         SetInputFocus(Window_t id);
-   virtual Window_t     GetPrimarySelectionOwner() { return kNone; }
+   virtual Window_t     GetPrimarySelectionOwner();
    virtual void         SetPrimarySelectionOwner(Window_t id);
    virtual void         ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when);
    virtual void         LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym);
    virtual void         GetPasteBuffer(Window_t id, Atom_t atom, TString &text, Int_t &nchar,
                                        Bool_t del);
-   virtual void         TranslateCoordinates(Window_t src, Window_t dest, Int_t src_x,
-                         Int_t src_y, Int_t &dest_x, Int_t &dest_y, Window_t &child);
+   virtual void         TranslateCoordinates(Window_t src, Window_t dest, Int_t src_x,Int_t src_y,
+                                             Int_t &dest_x, Int_t &dest_y, Window_t &child);
    virtual void         GetWindowSize(Drawable_t id, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    virtual void         FillPolygon(Window_t id, GContext_t gc, Point_t *points, Int_t npnt);
    virtual void         QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
@@ -351,248 +353,9 @@ public:
 
    ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
 };
-
 #ifndef __CINT__
 #define gVirtualX (TVirtualX::Instance())
 R__EXTERN TVirtualX* (*gPtr2VirtualX)();
 #endif
 R__EXTERN TVirtualX  *gGXBatch;
-
-//--- inlines ------------------------------------------------------------------
-inline Bool_t    TVirtualX::Init(void *) { return kFALSE; }
-inline void      TVirtualX::CopyPixmap(Int_t, Int_t, Int_t) { }
-inline void      TVirtualX::CreateOpenGLContext(Int_t) { }
-inline void      TVirtualX::DeleteOpenGLContext(Int_t) { }
-inline void      TVirtualX::DrawBox(Int_t, Int_t, Int_t, Int_t, EBoxMode) { }
-inline void      TVirtualX::DrawCellArray(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t *) { }
-inline void      TVirtualX::DrawFillArea(Int_t, TPoint *) { }
-inline void      TVirtualX::DrawLine(Int_t, Int_t, Int_t, Int_t) { }
-inline void      TVirtualX::DrawPolyLine(Int_t, TPoint *) { }
-inline void      TVirtualX::DrawPolyMarker(Int_t, TPoint *) { }
-inline void      TVirtualX::DrawText(Int_t, Int_t, Float_t, Float_t, const char *, ETextMode) { }
-inline UInt_t    TVirtualX::ExecCommand(TGWin32Command *) { return 0; }
-inline Int_t     TVirtualX::GetDoubleBuffer(Int_t) { return 0; }
-inline void      TVirtualX::GetGeometry(Int_t, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h) { x = y = 0; w = h = 0; }
-inline ULong_t   TVirtualX::GetPixel(Color_t) { return 0; }
-inline void      TVirtualX::GetRGB(Int_t, Float_t &r, Float_t &g, Float_t &b) { r = g = b = 0; }
-inline void      TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char *) { w = h = 0; }
-inline Window_t  TVirtualX::GetWindowID(Int_t) { return 0; }
-inline Int_t     TVirtualX::InitWindow(ULong_t) { return 0; }
-inline Int_t     TVirtualX::AddWindow(ULong_t, UInt_t, UInt_t) { return 0; }
-inline void      TVirtualX::RemoveWindow(ULong_t) { }
-inline void      TVirtualX::MoveWindow(Int_t, Int_t, Int_t) { }
-inline Int_t     TVirtualX::OpenPixmap(UInt_t, UInt_t) { return 0; }
-inline void      TVirtualX::ReadGIF(Int_t, Int_t, const char *) { }
-inline Int_t     TVirtualX::RequestLocator(Int_t, Int_t, Int_t &x, Int_t &y) { x = y = 0; return 0; }
-inline Int_t     TVirtualX::RequestString(Int_t, Int_t, char *text) { if (text) *text = 0; return 0; }
-inline void      TVirtualX::RescaleWindow(Int_t, UInt_t, UInt_t) { }
-inline Int_t     TVirtualX::ResizePixmap(Int_t, UInt_t, UInt_t) { return 0; }
-inline void      TVirtualX::ResizeWindow(Int_t) { }
-inline void      TVirtualX::SelectWindow(Int_t) { }
-inline void      TVirtualX::SelectPixmap(Int_t) { }
-inline void      TVirtualX::SetCharacterUp(Float_t, Float_t) { }
-inline void      TVirtualX::SetClipOFF(Int_t) { }
-inline void      TVirtualX::SetClipRegion(Int_t, Int_t, Int_t, UInt_t, UInt_t) { }
-inline void      TVirtualX::SetCursor(Int_t, ECursor) { }
-inline void      TVirtualX::SetDoubleBuffer(Int_t, Int_t) { }
-inline void      TVirtualX::SetDrawMode(EDrawMode) { }
-inline void      TVirtualX::SetFillColor(Color_t) { }
-inline void      TVirtualX::SetFillStyle(Style_t) { }
-inline void      TVirtualX::SetLineColor(Color_t) { }
-inline void      TVirtualX::SetLineType(Int_t, Int_t *) { }
-inline void      TVirtualX::SetLineStyle(Style_t) { }
-inline void      TVirtualX::SetLineWidth(Width_t) { }
-inline void      TVirtualX::SetMarkerColor(Color_t) { }
-inline void      TVirtualX::SetMarkerSize(Float_t) { }
-inline void      TVirtualX::SetMarkerStyle(Style_t) { }
-inline void      TVirtualX::SetOpacity(Int_t) { }
-inline void      TVirtualX::SetRGB(Int_t, Float_t, Float_t, Float_t) { }
-inline void      TVirtualX::SetTextAlign(Short_t) { }
-inline void      TVirtualX::SetTextColor(Color_t) { }
-inline Int_t     TVirtualX::SetTextFont(char *, ETextSetMode) { return 0; }
-inline void      TVirtualX::SetTextFont(Font_t) { }
-inline void      TVirtualX::SetTextMagnitude(Float_t) { }
-inline void      TVirtualX::SetTextSize(Float_t) { }
-inline void      TVirtualX::UpdateWindow(Int_t) { }
-inline void      TVirtualX::Warp(Int_t, Int_t) { }
-inline Int_t     TVirtualX::WriteGIF(char *) {return 0;}
-inline void      TVirtualX::WritePixmap(Int_t, UInt_t, UInt_t, char *) { }
-
-//---- Methods used for GUI -----
-inline void         TVirtualX::MapWindow(Window_t) { }
-inline void         TVirtualX::MapSubwindows(Window_t) { }
-inline void         TVirtualX::MapRaised(Window_t) { }
-inline void         TVirtualX::UnmapWindow(Window_t) { }
-inline void         TVirtualX::DestroyWindow(Window_t) { }
-inline void         TVirtualX::RaiseWindow(Window_t) { }
-inline void         TVirtualX::LowerWindow(Window_t) { }
-inline void         TVirtualX::MoveWindow(Window_t, Int_t, Int_t) { }
-inline void         TVirtualX::MoveResizeWindow(Window_t, Int_t, Int_t, UInt_t, UInt_t) { }
-inline void         TVirtualX::ResizeWindow(Window_t, UInt_t, UInt_t) { }
-inline void         TVirtualX::IconifyWindow(Window_t) { }
-inline void         TVirtualX::SetWindowBackground(Window_t, ULong_t) { }
-inline void         TVirtualX::SetWindowBackgroundPixmap(Window_t, Pixmap_t) { }
-inline Window_t     TVirtualX::CreateWindow(Window_t, Int_t, Int_t, UInt_t,
-                                            UInt_t, UInt_t, Int_t, UInt_t,
-                                            void *, SetWindowAttributes_t *,
-                                            UInt_t) { return 0; }
-inline Int_t        TVirtualX::OpenDisplay(const char *) { return 0; }
-inline Atom_t       TVirtualX::InternAtom(const char *, Bool_t) { return 0; }
-inline Window_t     TVirtualX::GetParent(Window_t) const { return 0; }
-inline FontStruct_t TVirtualX::LoadQueryFont(const char *) { return 0; }
-inline FontH_t      TVirtualX::GetFontHandle(FontStruct_t) { return 0; }
-inline void         TVirtualX::DeleteFont(FontStruct_t) { }
-inline GContext_t   TVirtualX::CreateGC(Drawable_t, GCValues_t *) { return 0; }
-inline void         TVirtualX::ChangeGC(GContext_t, GCValues_t *) { }
-inline void         TVirtualX::CopyGC(GContext_t, GContext_t, Mask_t) { }
-inline void         TVirtualX::DeleteGC(GContext_t) { }
-inline Cursor_t     TVirtualX::CreateCursor(ECursor) { return 0; }
-inline void         TVirtualX::SetCursor(Window_t, Cursor_t) { }
-inline Pixmap_t     TVirtualX::CreatePixmap(Drawable_t, UInt_t, UInt_t) { return kNone; }
-inline Pixmap_t     TVirtualX::CreatePixmap(Drawable_t, const char *, UInt_t, UInt_t,
-                                       ULong_t, ULong_t, Int_t) { return 0; }
-inline Pixmap_t     TVirtualX::CreateBitmap(Drawable_t, const char *,
-                                       UInt_t, UInt_t) { return 0; }
-inline void         TVirtualX::DeletePixmap(Pixmap_t) { }
-inline Bool_t       TVirtualX::CreatePictureFromFile(Drawable_t, const char *,
-                           Pixmap_t &, Pixmap_t &, PictureAttributes_t &) { return kFALSE; }
-inline Bool_t       TVirtualX::CreatePictureFromData(Drawable_t, char **, Pixmap_t &,
-                           Pixmap_t &, PictureAttributes_t &) { return kFALSE; }
-inline Bool_t       TVirtualX::ReadPictureDataFromFile(const char *, char ***) { return kFALSE; }
-inline void         TVirtualX::DeletePictureData(void *) { }
-inline void         TVirtualX::SetDashes(GContext_t, Int_t, const char *, Int_t) { }
-inline void         TVirtualX::FreeColor(Colormap_t, ULong_t) { }
-inline Int_t        TVirtualX::EventsPending() { return 0; }
-inline void         TVirtualX::Bell(Int_t) { }
-inline void         TVirtualX::CopyArea(Drawable_t, Drawable_t, GContext_t,
-                                 Int_t, Int_t, UInt_t, UInt_t, Int_t, Int_t) { }
-inline void         TVirtualX::ChangeWindowAttributes(Window_t, SetWindowAttributes_t *) { }
-inline void         TVirtualX::ChangeProperty(Window_t, Atom_t, Atom_t,
-                                              UChar_t *, Int_t) { }
-inline void         TVirtualX::DrawLine(Drawable_t, GContext_t, Int_t, Int_t, Int_t, Int_t) { }
-inline void         TVirtualX::ClearArea(Window_t, Int_t, Int_t, UInt_t, UInt_t) { }
-inline Bool_t       TVirtualX::CheckEvent(Window_t, EGEventType, Event_t &) { return kFALSE; }
-inline void         TVirtualX::SendEvent(Window_t, Event_t *) { }
-inline void         TVirtualX::WMDeleteNotify(Window_t) { }
-inline void         TVirtualX::SetKeyAutoRepeat(Bool_t) { }
-inline void         TVirtualX::GrabKey(Window_t, Int_t, UInt_t, Bool_t) { }
-inline void         TVirtualX::GrabButton(Window_t, EMouseButton, UInt_t,
-                                     UInt_t, Window_t, Cursor_t, Bool_t) { }
-inline void         TVirtualX::GrabPointer(Window_t, UInt_t, Window_t,
-                                      Cursor_t, Bool_t, Bool_t) { }
-inline void         TVirtualX::SetWindowName(Window_t, char *) { }
-inline void         TVirtualX::SetIconName(Window_t, char *) { }
-inline void         TVirtualX::SetIconPixmap(Window_t, Pixmap_t) { }
-inline void         TVirtualX::SetClassHints(Window_t, char *, char *) { }
-inline void         TVirtualX::SetMWMHints(Window_t, UInt_t, UInt_t, UInt_t) { }
-inline void         TVirtualX::SetWMPosition(Window_t, Int_t, Int_t) { }
-inline void         TVirtualX::SetWMSize(Window_t, UInt_t, UInt_t) { }
-inline void         TVirtualX::SetWMSizeHints(Window_t, UInt_t, UInt_t,
-                                         UInt_t, UInt_t, UInt_t, UInt_t) { }
-inline void         TVirtualX::SetWMState(Window_t, EInitialState) { }
-inline void         TVirtualX::SetWMTransientHint(Window_t, Window_t) { }
-inline void         TVirtualX::DrawString(Drawable_t, GContext_t, Int_t, Int_t,
-                                     const char *, Int_t) { }
-inline Int_t        TVirtualX::TextWidth(FontStruct_t, const char *, Int_t) { return 5; }
-inline void         TVirtualX::GetFontProperties(FontStruct_t, Int_t &max_ascent, Int_t &max_descent)
-                             { max_ascent = 5; max_descent = 5; }
-inline void         TVirtualX::GetGCValues(GContext_t, GCValues_t &gval) { gval.fMask = 0; }
-inline FontStruct_t TVirtualX::GetFontStruct(FontH_t) { return 0; }
-inline void         TVirtualX::FreeFontStruct(FontStruct_t) { }
-inline void         TVirtualX::ClearWindow(Window_t) { }
-inline Int_t        TVirtualX::KeysymToKeycode(UInt_t) { return 0; }
-inline void         TVirtualX::FillRectangle(Drawable_t, GContext_t, Int_t, Int_t,
-                                        UInt_t, UInt_t) { }
-inline void         TVirtualX::DrawRectangle(Drawable_t, GContext_t, Int_t, Int_t,
-                                        UInt_t, UInt_t) { }
-inline void         TVirtualX::DrawSegments(Drawable_t, GContext_t, Segment_t *, Int_t) { }
-inline void         TVirtualX::SelectInput(Window_t, UInt_t) { }
-inline void         TVirtualX::SetInputFocus(Window_t) { }
-inline void         TVirtualX::SetPrimarySelectionOwner(Window_t) { }
-inline void         TVirtualX::ConvertPrimarySelection(Window_t, Atom_t, Time_t) { }
-inline void         TVirtualX::LookupString(Event_t *, char *, Int_t, UInt_t &keysym) { keysym = 0; }
-inline void         TVirtualX::TranslateCoordinates(Window_t, Window_t, Int_t, Int_t,
-                          Int_t &dest_x, Int_t &dest_y, Window_t &child)
-                          { dest_x = dest_y = 0; child = 0; }
-inline void         TVirtualX::GetWindowSize(Drawable_t, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
-                          { x = y = 0; w = h = 1; }
-inline void         TVirtualX::FillPolygon(Window_t, GContext_t, Point_t *, Int_t) { }
-inline void         TVirtualX::QueryPointer(Window_t, Window_t &rootw, Window_t &childw,
-                                     Int_t &root_x, Int_t &root_y, Int_t &win_x,
-                                     Int_t &win_y, UInt_t &mask)
-                          { rootw = childw = kNone;
-                            root_x = root_y = win_x = win_y = 0; mask = 0; }
-inline void         TVirtualX::SetForeground(GContext_t, ULong_t) { }
-inline void         TVirtualX::SetClipRectangles(GContext_t, Int_t, Int_t, Rectangle_t *, Int_t) { }
-inline void         TVirtualX::Update(Int_t) { }
-inline Region_t     TVirtualX::CreateRegion() { return 0; }
-inline void         TVirtualX::DestroyRegion(Region_t) { }
-inline void         TVirtualX::UnionRectWithRegion(Rectangle_t *, Region_t, Region_t) { }
-inline Region_t     TVirtualX::PolygonRegion(Point_t *, Int_t, Bool_t) { return 0; }
-inline void         TVirtualX::UnionRegion(Region_t, Region_t, Region_t) { }
-inline void         TVirtualX::IntersectRegion(Region_t, Region_t, Region_t) { }
-inline void         TVirtualX::SubtractRegion(Region_t, Region_t, Region_t) { }
-inline void         TVirtualX::XorRegion(Region_t, Region_t, Region_t) { }
-inline Bool_t       TVirtualX::EmptyRegion(Region_t) { return kFALSE; }
-inline Bool_t       TVirtualX::PointInRegion(Int_t, Int_t, Region_t) { return kFALSE; }
-inline Bool_t       TVirtualX::EqualRegion(Region_t, Region_t) { return kFALSE; }
-inline void         TVirtualX::GetRegionBox(Region_t, Rectangle_t *) { }
-inline char       **TVirtualX::ListFonts(char *, Int_t, Int_t &) { return 0; }
-inline void         TVirtualX::FreeFontNames(char **) { }
-inline Drawable_t   TVirtualX::CreateImage(UInt_t, UInt_t) { return 0; }
-inline void         TVirtualX::GetImageSize(Drawable_t, UInt_t &, UInt_t &) { }
-inline void         TVirtualX::PutPixel(Drawable_t, Int_t, Int_t, ULong_t) { }
-inline void         TVirtualX::PutImage(Drawable_t, GContext_t, Drawable_t,
-                                        Int_t, Int_t, Int_t, Int_t, UInt_t, UInt_t) { }
-inline void         TVirtualX::DeleteImage(Drawable_t) { }
-
-//---- Methods used for OpenGL -----
-inline Window_t     TVirtualX::CreateGLWindow(Window_t, Visual_t, Int_t) { return 0; }
-inline ULong_t      TVirtualX::GetWinDC(Window_t) { return 0; }
-inline ULong_t      TVirtualX::wglCreateContext(Window_t) { return 0; }
-inline void         TVirtualX::wglDeleteContext(ULong_t) { }
-inline void         TVirtualX::wglMakeCurrent(Window_t, ULong_t) { }
-inline void         TVirtualX::wglSwapLayerBuffers(Window_t, UInt_t) { }
-inline void         TVirtualX::glViewport(Int_t, Int_t, Int_t, Int_t) { }
-inline void         TVirtualX::glClearIndex(Float_t) { }
-inline void         TVirtualX::glClearColor(Float_t, Float_t, Float_t, Float_t) { }
-inline void         TVirtualX::glDrawBuffer(UInt_t) { }
-inline void         TVirtualX::glClear(UInt_t) { }
-inline void         TVirtualX::glDisable(UInt_t) { }
-inline void         TVirtualX::glEnable(UInt_t) { }
-inline void         TVirtualX::glFlush() { }
-inline void         TVirtualX::glFrontFace(UInt_t) { }
-inline void         TVirtualX::glNewList(UInt_t, UInt_t) { }
-inline void         TVirtualX::glGetBooleanv(UInt_t, UChar_t *) { }
-inline void         TVirtualX::glGetDoublev(UInt_t, Double_t *) { }
-inline void         TVirtualX::glGetFloatv(UInt_t, Float_t *) { }
-inline void         TVirtualX::glGetIntegerv(UInt_t, Int_t *) { }
-inline Int_t        TVirtualX::glGetError() { return 0; }
-inline void         TVirtualX::glEndList() { }
-inline void         TVirtualX::glBegin(UInt_t ) { }
-inline void         TVirtualX::glEnd() { }
-inline void         TVirtualX::glPushMatrix() { }
-inline void         TVirtualX::glPopMatrix() { }
-inline void         TVirtualX::glRotated(Double_t, Double_t, Double_t, Double_t) { }
-inline void         TVirtualX::glTranslated(Double_t, Double_t, Double_t) { }
-inline void         TVirtualX::glMultMatrixd(const Double_t *) { }
-inline void         TVirtualX::glColor3fv(const Float_t *) { }
-inline void         TVirtualX::glVertex3f(Float_t, Float_t, Float_t) { }
-inline void         TVirtualX::glVertex3fv(const Float_t *) { }
-inline void         TVirtualX::glIndexi(Int_t) { }
-inline void         TVirtualX::glPointSize(Float_t) { }
-inline void         TVirtualX::glLineWidth(Float_t) { }
-inline void         TVirtualX::glDeleteLists(UInt_t, Int_t) { }
-inline UInt_t       TVirtualX::glGenLists(UInt_t) { return 0; }
-inline void         TVirtualX::glCallList(UInt_t) { }
-inline void         TVirtualX::glMatrixMode(UInt_t) { }
-inline void         TVirtualX::glLoadIdentity() { }
-inline void         TVirtualX::glFrustum(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t) { }
-inline void         TVirtualX::glOrtho(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t) { }
-inline void         TVirtualX::glCullFace(UInt_t) { }
-inline void         TVirtualX::glPolygonMode(UInt_t, UInt_t) { }
-inline void         TVirtualX::glLoadMatrixd(const Double_t *) { }
-inline void         TVirtualX::glShadeModel(UInt_t) { }
-inline void         TVirtualX::glNormal3fv(const Float_t *) { }
-
 #endif
