@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.6 2004/02/18 16:17:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.7 2004/04/20 06:49:37 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -137,7 +137,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       return 0;
    }
 
-#ifdef GDK_WIN32
+#if defined(GDK_WIN32) || defined(R__QT)
    Bool_t retc = gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(),
                                                   picnam, pic->fPic, pic->fMask,
                                                   pic->fAttributes);
