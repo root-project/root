@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.75 2003/07/18 16:26:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.76 2003/07/22 16:12:32 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -194,41 +194,38 @@ Int_t TChain::Add(const char *name, Int_t nentries)
 
    // wildcarding used in name
    Int_t nf = 0;
-   char aname[2048]; //files may have very long names, eg AFS
-   strcpy(aname,name);
-   char *dot = (char*)strstr(aname,".root");
+   TString basename(name);
 
-   const char *behind_dot_root = 0;
-
-   if (dot) {
-      if (dot[5] == '/') behind_dot_root = dot + 6;
-      *dot = 0;
+   Int_t dotslashpos = basename.Index(".root/");
+   TString behind_dot_root;
+   if (dotslashpos>=0) {
+      behind_dot_root = basename(dotslashpos+6); // Copy the tree name specification
+      basename.Remove(dotslashpos+5);  // and remove it from basename
    }
 
-   char *slash = strrchr(aname,'/');
-   if (slash) {
-      *slash = 0;
-      slash++;
-      strcat(slash,".root");
+   Int_t slashpos = basename.Last('/');
+   TString directory;
+   if (slashpos>=0) {
+      directory = basename(0,slashpos); // Copy the directory name
+      basename.Remove(0,slashpos+1);      // and remove it from basename
    } else {
-      strcpy(aname,gSystem->WorkingDirectory());
-      slash = (char*)name;
+      directory = gSystem->WorkingDirectory();
    }
 
    const char *file;
-   void *dir = gSystem->OpenDirectory(gSystem->ExpandPathName(aname));
+   void *dir = gSystem->OpenDirectory(gSystem->ExpandPathName(directory.Data()));
 
    if (dir) {
-      TRegexp re(slash,kTRUE);
+      TRegexp re(basename,kTRUE);
       while ((file = gSystem->GetDirEntry(dir))) {
          if (!strcmp(file,".") || !strcmp(file,"..")) continue;
          //if (IsDirectory(file)) continue;
          TString s = file;
-         if (strcmp(slash,file) && s.Index(re) == kNPOS) continue;
-         if (behind_dot_root != 0 && *behind_dot_root != 0)
-            nf += AddFile(Form("%s/%s/%s",aname,file,behind_dot_root),kBigNumber);
+         if ( (basename!=file) && s.Index(re) == kNPOS) continue;
+         if (behind_dot_root.Length() != 0) 
+            nf += AddFile(Form("%s/%s/%s",directory.Data(),file,behind_dot_root.Data()),kBigNumber);
          else
-            nf += AddFile(Form("%s/%s",aname,file),kBigNumber);
+            nf += AddFile(Form("%s/%s",directory.Data(),file),kBigNumber);
       }
       gSystem->FreeDirectory(dir);
    }
