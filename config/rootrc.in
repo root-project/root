@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.51 2003/07/08 15:42:25 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.52 2003/07/14 07:59:58 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -175,7 +175,7 @@ Plugin.TVirtualFitter:  Minuit TFitter       Minuit       "TFitter(Int_t)"
 Plugin.TVirtualPS:      ps     TPostScript   Postscript   "TPostScript()"
 +Plugin.TVirtualPS:     svg    TSVG          Postscript   "TSVG()"
 Plugin.TViewerX3D:      x11    TViewerX3D    X3d          "TViewerX3D(TVirtualPad*,Option_t*,const char*,UInt_t,UInt_t)"
-+Plugin.TViewerX3D:     qt     TQtViewerX3D  X3dQt        "TQtViewerX3D(TVirtualPad*,Option_t*,const char*,UInt_t,UInt_t)"
++Plugin.TViewerX3D:     qt     TQtViewerX3D  QtX3d        "TQtViewerX3D(TVirtualPad*,Option_t*,const char*,UInt_t,UInt_t)"
 Plugin.TMinuitGraph:        *  TGraph        Graf         "TGraph(Int_t,const Double_t*,const Double_t*)"
 Plugin.TPaletteEditor:      *  TASPaletteEditor  ASImage  "TASPaletteEditor(TAttImage*,UInt_t,UInt_t)"
 Plugin.TImage:              *  TASImage          ASImage  "TASImage()"
@@ -185,9 +185,10 @@ Plugin.TVirtualX:    x11       TGX11         GX11         "TGX11(const char*,con
 +Plugin.TVirtualX:   win32     TGWin32       Win32        "TGWin32(const char*,const char*)"
 +Plugin.TVirtualX:   win32gdk  TGWin32       Win32gdk     "TGWin32(const char*,const char*)"
 +Plugin.TVirtualX:   qt        TGQt          GQt          "TGQt(const char*,const char*)"
++Plugin.TVirtualX:   qtwin32   TQtThread     GQt          "TQtThread(const char*,const char*)"
 Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
 +Plugin.TGuiFactory: win32     TWin32GuiFactory Win32     "TWin32GuiFactory()"
-+Plugin.TGuiFactory: qt        TQtGuiFactory GuiQt        "TQtGuiFactory()"
++Plugin.TGuiFactory: qt        TQtRootGuiFactory QtRoot   "TQtRootGuiFactory()"
 Plugin.TVirtualProof:        * TProof        Proof        "TProof(const char*,const char*,const char*,Int_t)"
 Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
 
