@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
    virtual void   Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0);
    TObject        *GetRefObject() { return fRefObject; }
    TPad           *GetRefPad() { return fRefPad; }
-   virtual void   Range(Float_t x1, Float_t y1, Float_t x2, Float_t y2);
+   virtual void   Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
    virtual void   RecursiveRemove(TObject *obj);
    virtual void   SetBorderMode(Short_t bordermode){ fBorderMode = bordermode; }
    virtual void   SetGrid(Int_t valuex = 1, Int_t valuey = 1);

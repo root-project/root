@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1195,30 +1195,30 @@ void TCanvas::Resize(Option_t *)
    if (fXsizeUser && fYsizeUser) {
       UInt_t nwh = fCh;
       UInt_t nww = fCw;
-      Float_t rxy = fXsizeUser/fYsizeUser;
+      Double_t rxy = fXsizeUser/fYsizeUser;
       if (rxy < 1) {
-         UInt_t twh = UInt_t(Float_t(fCw)/rxy);
+         UInt_t twh = UInt_t(Double_t(fCw)/rxy);
          if (twh > fCh)
-            nww = UInt_t(Float_t(fCh)*rxy);
+            nww = UInt_t(Double_t(fCh)*rxy);
          else
             nwh = twh;
          if (nww > fCw) {
             nww = fCw; nwh = twh;
          }
          if (nwh > fCh) {
-            nwh = fCh; nww = UInt_t(Float_t(fCh)/rxy);
+            nwh = fCh; nww = UInt_t(Double_t(fCh)/rxy);
          }
       } else {
-         UInt_t twh = UInt_t(Float_t(fCw)*rxy);
+         UInt_t twh = UInt_t(Double_t(fCw)*rxy);
          if (twh > fCh)
-            nwh = UInt_t(Float_t(fCw)/rxy);
+            nwh = UInt_t(Double_t(fCw)/rxy);
          else
             nww = twh;
          if (nww > fCw) {
             nww = fCw; nwh = twh;
          }
          if (nwh > fCh) {
-            nwh = fCh; nww = UInt_t(Float_t(fCh)*rxy);
+            nwh = fCh; nww = UInt_t(Double_t(fCh)*rxy);
          }
       }
       fCw = nww;
@@ -1227,11 +1227,11 @@ void TCanvas::Resize(Option_t *)
 
    if (fCw < fCh) {
       fYsizeReal = kDefaultCanvasSize;
-      fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
+      fXsizeReal = fYsizeReal*Double_t(fCw)/Double_t(fCh);
    }
    else {
       fXsizeReal = kDefaultCanvasSize;
-      fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
+      fYsizeReal = fXsizeReal*Double_t(fCh)/Double_t(fCw);
    }
 
 //*-*- Loop on all pads to recompute conversion coefficients
