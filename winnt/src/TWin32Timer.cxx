@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWin32Timer.cxx,v 1.3 2001/10/01 16:01:22 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWin32Timer.cxx,v 1.4 2002/06/20 21:02:52 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   29/09/98
 
 #include <process.h>
@@ -41,23 +41,23 @@ const Char_t *TIMERCLASS = "Timer";
 //*-*
 #define CallWindowMethod1(_function,_p1)             \
   if ( IsTimeThread())                               \
-  {TWin32Timer::_function(_p1);}                       \
+  {TWin32Timer::_function##CB(_p1);}                       \
     CallMethodThread(_function,_p1,0,0)
 //*-*
 #define CallWindowMethod(_function)                  \
   if ( IsTimeThread())                               \
-  {TWin32Timer::_function();}                          \
+  {TWin32Timer::_function##CB();}                          \
     CallMethodThread(_function,0,0,0)
 
 //*-*
 #define ReturnWindowMethod1(_type,_function,_p1)     \
   if ( IsTimeThread())                               \
-  {return TWin32Timer::_function(_p1);}                \
+  {return TWin32Timer::_function##CB(_p1);}                \
     ReturnMethodThread(_type,_function,_p1,0)
 //*-*
 #define ReturnWindowMethod(_type,_function)          \
   if ( IsTimeThread())                               \
-  {return TWin32Timer::_function();}                   \
+  {return TWin32Timer::_function##CB();}                   \
     ReturnMethodThread(_type,_function,0,0)
 
 //______________________________________________________________________________
