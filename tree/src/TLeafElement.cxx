@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.2 2001/01/16 16:24:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.3 2001/01/18 09:44:12 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -107,7 +107,6 @@ void TLeafElement::PrintValue(Int_t) const
       case TStreamerInfo::kUShort: {UShort_t *val = (UShort_t*)fAbsAddress; printf("%d",*val); break;}
       case TStreamerInfo::kUInt:   {UInt_t *val = (UInt_t*)fAbsAddress; printf("%d",*val); break;}
       case TStreamerInfo::kULong:  {ULong_t *val = (ULong_t*)fAbsAddress; printf("%ld",*val); break;}
-                      {printf("should print leaf element:%s",GetName()); break;}
    }
 }
 

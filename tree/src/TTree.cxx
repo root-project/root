@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.44 2001/01/17 08:28:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.45 2001/01/18 09:46:44 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2189,10 +2189,10 @@ TBranch *TTree::Trunk(const char *name, const char *classname, void *add, Int_t 
    }
 
    Bool_t delobj = kFALSE;
-   void **ppointer = (void**)add;
-   void *objadd = *ppointer;
+   TObject **ppointer = (TObject**)add;
+   TObject *objadd = *ppointer;
    if (!objadd && cl) {
-      objadd = cl->New();
+      objadd = (TObject*)cl->New();
       *ppointer = objadd;
       delobj = kTRUE;
    }
