@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.6 2000/10/22 19:28:57 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.7 2001/04/28 16:30:14 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -19,6 +19,7 @@
 #pragma link C++ enum EFrameType;
 #pragma link C++ enum EMWMHints;
 #pragma link C++ enum ELayoutHints;
+#pragma link C++ enum ETableLayoutHints;
 #pragma link C++ enum EMenuEntryState;
 #pragma link C++ enum EMenuEntryType;
 #pragma link C++ enum EMsgBoxIcon;
@@ -52,12 +53,14 @@
 #pragma link C++ class TGGroupFrame;
 #pragma link C++ class TGFrameElement;
 #pragma link C++ class TGLayoutHints;
+#pragma link C++ class TGTableLayoutHints;
 #pragma link C++ class TGLayoutManager;
 #pragma link C++ class TGVerticalLayout;
 #pragma link C++ class TGHorizontalLayout;
 #pragma link C++ class TGRowLayout;
 #pragma link C++ class TGColumnLayout;
 #pragma link C++ class TGMatrixLayout;
+#pragma link C++ class TGTableLayout;
 #pragma link C++ class TGTileLayout;
 #pragma link C++ class TGListLayout;
 #pragma link C++ class TGListDetailsLayout;

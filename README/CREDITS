@@ -84,6 +84,7 @@ N: Christian Holm Christensen
 E: cholm@nbi.dk
 D: contributions to the build system (configure, Makefile.in, config.in)
 D: implementation of the principal component analysis class TPrincipal
+D: debian and redhat packaging scripts
 
 N: Stephan Kluth
 E: skluth@mh1.lbl.gov
@@ -134,3 +135,7 @@ D: various contributions to GUI classes
 N: Alexandre V. Vaniachine
 E: AVVaniachine@lbl.gov
 D: byteswapping assembler code for the i486 and up
+
+N: Brett Viren
+E: bv@bnl.gov
+D: contributed the GUI TGTableLayout manager and the Viewer example program

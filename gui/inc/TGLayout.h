@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.2 2000/10/20 12:22:08 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -41,6 +41,7 @@ enum ELayoutHints {
    kLHintsExpandX = BIT(6),
    kLHintsExpandY = BIT(7),
    kLHintsNormal  = (kLHintsLeft | kLHintsTop)
+   // bits 8-11 used by ETableLayoutHints
 };
 
 class TGFrame;
@@ -84,6 +85,7 @@ public:
        { fPadleft = padleft; fPadright = padright;
          fPadtop  = padtop;  fPadbottom = padbottom;
          fLayoutHints = hints; }
+   virtual ~TGLayoutHints() { }
 
    ULong_t GetLayoutHints() const { return fLayoutHints; }
    UInt_t  GetPadTop() const { return fPadtop; }
