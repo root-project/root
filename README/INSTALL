@@ -76,15 +76,15 @@ and that it is setup correctly, see:
 
 Before proceeding read the complete document.  Note: With the advent
 of Cygwin 1.0 your system is mostly setup correctly by the setup.exe
-program. 
+program.
 
 
 Choosing the installation method
 --------------------------------
 
 There are two main methods of installing ROOT from source.  As an
-alternative, you can build either a set of Debian GNU/Linux or Redhat 
-Linux packages. 
+alternative, you can build either a set of Debian GNU/Linux or Redhat
+Linux packages.
 
 1) You want to install in a generic directory, depending on
    environment variables ROOTSYS, LD_LIBRARY_PATH, and PATH.
@@ -124,7 +124,7 @@ Linux packages.
    This scheme also makes it easier to make ROOT
    distributions/installations that fit with an existing system. E.g.,
    it is trivial to install ROOT via a RedHat (.rpm) or Debian
-   GNU/Linux (.deb) package (see also below). 
+   GNU/Linux (.deb) package (see also below).
 
    It's _strongly_ recommended to enable version numbers in sonames
    (if possible) using this method (see --enable-soversion
@@ -151,40 +151,41 @@ Linux packages.
 Redhat packages:
 ----------------
 Get the sources for a specific release from CVS or from a tar-ball, as
-outlined above and cd into the source directory. Then just do 
+outlined above and cd into the source directory. Then just do
 
-	make redhat 
+        make redhat
 
 This will create a RPM spec file in the source tree. To build the
-packages do:  
+packages do:
 
-1) Make a tar-ball of the source tree. 
+1) Make a tar-ball of the source tree.
 
-        cd ../ 
-	tar -czvf root_v<version>.source.tar.gz root 
-	
+        cd ../
+        mv root root-<version>
+        tar -czvf root_v<version>.source.tar.gz root-<version>
+
   where <version>=<major>.<minor>.<revision> is the version number of
-  ROOT (see the file build/version_number). 
+  ROOT (see the file build/version_number).
 
-2) 
-  A) If you have system privileges, you can now do 
+2)
+  A) If you have system privileges, you can now do
 
-	cp root_v<version>.source.tar.gz /usr/src/redhat/SOURCES/
+        cp root_v<version>.source.tar.gz /usr/src/redhat/SOURCES/
 
-     or where ever RPM looks for source archives. 
+     or where ever RPM looks for source archives.
 
-  B) However, if you don't have system privileges, you should set up a 
-     build area by having the file ~/.rpmrc with a contents like 
+  B) However, if you don't have system privileges, you should set up a
+     build area by having the file ~/.rpmrc with a contents like
 
-        %macrofiles: /usr/lib/rpm/macros:<your home dir>/.rpmmac 
+        %macrofiles: /usr/lib/rpm/macros:<your home dir>/.rpmmac
 
-     and a file <your home dir>/.rpmmac with a contents like 
+     and a file <your home dir>/.rpmmac with a contents like
 
-        %_topdir <some where you can write>/redhat 
+        %_topdir <some where you can write>/redhat
 
-     Then you should make the appropiate directories: 
+     Then you should make the appropiate directories:
 
-        mkdir <some where you can write>/redhat 
+        mkdir <some where you can write>/redhat
         mkdir <some where you can write>/redhat/SOURCES
         mkdir <some where you can write>/redhat/BUILD
         mkdir <some where you can write>/redhat/RPMS
@@ -193,40 +194,40 @@ packages do:
 
      and finally copy the source tar-ball
 
-       cp root_v<version>.source.tar.gz \
-	  <some where you can write>/redhat/SOURCES
+        cp root_v<version>.source.tar.gz \
+           <some where you can write>/redhat/SOURCES
 
-3) Wether you have system privileges or not, you can now build the RPM 
+3) Wether you have system privileges or not, you can now build the RPM
    packages by issuing
 
-       rpm -ba root.spec 
+       rpm -ba root.spec
 
   If you left the spec file in the source tree, you can build directly
   from the tar-ball.  You still need to have a proper build area
-  setup, as outlined above.  All you need to do is 
+  setup, as outlined above.  All you need to do is
 
-       rpm -ta root_v<version>.source.tar.gz 
+       rpm -ta root_v<version>.source.tar.gz
 
 Per default the binaries will be build in /tmp/rootrpm, but one may
-change that at build time by passing the option --buildroot too rpm. 
+change that at build time by passing the option --buildroot too rpm.
 
 Please refer to man-page rpm(1) and http://www.rpm.org for more
-information on RPM. 
+information on RPM.
 
 Please note, that all possible packages may not be specified in the
-spec file.  See also build/package/common/README. 
+spec file.  See also build/package/common/README.
 
 Debian GNU/Linux packages:
 --------------------------
 Get the sources for a specific release from CVS or from a tar-ball, as
-outlined above and cd into the source directory. Then just do 
+outlined above and cd into the source directory. Then just do
 
-	make debian
+        make debian
 
-The packages will be build in "../". 
+The packages will be build in "../".
 
 Please note, that all possible packages may not be specified in the
-debian directory file.  See also build/package/common/README. 
+debian directory file.  See also build/package/common/README.
 
 Installation Location
 =====================
@@ -425,7 +426,7 @@ The flags consist of two classes:
      Default is true.
    * psql
      Build a thin PostGreSQL client for ROOT. This requires the
-     third-party library libpsql and header files.  
+     third-party library libpsql and header files.
      Default is true.
    * sapdb
      Build a thin SapDB client for ROOT. This requires the
@@ -519,7 +520,7 @@ The flags consist of two classes:
    * srp-libdir
      Path to regular SRP library (not utilities). This is needed for
      building the daemons rootd and proofd with SRP support
-     (authentication). 
+     (authentication).
    * srp
      Top directory of the SRP (Secure Remote Passwd). This directory
      must contain:
@@ -532,7 +533,7 @@ The flags consist of two classes:
           lib/libgmp.a
           lib/libcrack.a
      This is needed to build the utility programs for managing ROOT
-     related SRP access. 
+     related SRP access.
    * afs
      Top directory of the AFS distribution. This directory must
      contain:
@@ -642,7 +643,7 @@ To build the MySQL interface library you need to install MySQL first. See:
 PostGreSQL Client
 -----------------
 To build the PostGreSQL interface you need to install PostGreSQL
-first. See 
+first. See
 
    http://www.postgresql.org
 
@@ -684,7 +685,7 @@ system. See:
 
 Please note, that the library "libsrp-dev" as distributed by Standford
 is not enough to build the two utility program in the srputil
-directory of the ROOT source tree. 
+directory of the ROOT source tree.
 
 
 AFS Authentication
