@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.11 2004/04/23 12:36:44 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.12 2004/04/26 13:45:33 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -796,9 +796,9 @@ void TGedAttAxisFrame::SetModel(TPad* pad, TObject* obj, Int_t)
    fDiv2->SetNumber((div/100) % 100);
    fDiv3->SetNumber((div/10000) % 100);
    
-   if ((!strcmp(fModel->GetName(),"xaxis") && gPad->GetLogx()) ||
-       (!strcmp(fModel->GetName(),"yaxis") && gPad->GetLogy()) ||
-       (!strcmp(fModel->GetName(),"zaxis") && gPad->GetLogz())) 
+   if ((!strcmp(fModel->GetName(),"xaxis") && fPad->GetLogx()) ||
+       (!strcmp(fModel->GetName(),"yaxis") && fPad->GetLogy()) ||
+       (!strcmp(fModel->GetName(),"zaxis") && fPad->GetLogz())) 
 
       fLogAxis->SetState(kButtonDown);
    else fLogAxis->SetState(kButtonUp);
@@ -896,26 +896,27 @@ void TGedAttAxisFrame::DoLogAxis()
 {
    // Slot for Log scale setting.
 
-   if (fLogAxis->GetState()) {
+   gPad = fPad;
+      
+   if (fLogAxis->GetState() == kButtonDown) {
 
       if (!strcmp(fModel->GetName(),"xaxis")) gPad->SetLogx(1);
       if (!strcmp(fModel->GetName(),"yaxis")) gPad->SetLogy(1);
       if (!strcmp(fModel->GetName(),"zaxis")) gPad->SetLogz(1);
 
       Int_t morelog = ExecuteInt(fModel, "GetMoreLogLabels", "");
-      if (!morelog) fMoreLog->SetState(kButtonDown);
+      if (morelog)  fMoreLog->SetState(kButtonDown);
       else          fMoreLog->SetState(kButtonUp);
-
       fOptimize->SetState(kButtonDisabled);
 
-   } else {
+   } else if (fLogAxis->GetState() == kButtonUp){
       if (!strcmp(fModel->GetName(),"xaxis")) gPad->SetLogx(0);
       if (!strcmp(fModel->GetName(),"yaxis")) gPad->SetLogy(0);
       if (!strcmp(fModel->GetName(),"zaxis")) gPad->SetLogz(0);
-      
       fMoreLog->SetState(kButtonDisabled);
       fOptimize->SetState(kButtonDown);
    }
+   Update();
    gPad->Modified();
    gPad->Update();
 }
@@ -926,7 +927,11 @@ void TGedAttAxisFrame::DoMoreLog()
    // Slot connected to more Log labels flag
 
    char a[100];
-   snprintf(a, 100, "%d", fMoreLog->GetState());
+   Int_t flag = 0;
+   
+   if (fMoreLog->GetState() == kButtonDown)    flag = 1;
+   else if (fMoreLog->GetState() == kButtonUp) flag = 0;
+   snprintf(a, 100, "%d", flag);
    fModel->Execute("SetMoreLogLabels", a, 0);
    Update();
 }
