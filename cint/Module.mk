@@ -40,6 +40,7 @@ CINTS2       := $(filter-out $(MODDIRS)/kccstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sunstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sun5strm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/gcc3strm.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/iccstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/fakestrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/vcstrm.%,$(CINTS2))
@@ -120,11 +121,11 @@ CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
 ifeq ($(CXX),icc)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
-CINTS2       += $(MODDIRS)/fakestrm.cxx
+CINTS2       += $(MODDIRS)/iccstrm.cxx
 endif
 ifeq ($(CXX),ecc)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
-CINTS2       += $(MODDIRS)/fakestrm.cxx
+CINTS2       += $(MODDIRS)/iccstrm.cxx
 endif
 ifeq ($(GCCVERS),3)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
@@ -224,6 +225,9 @@ $(CINTDIRS)/sun5strm.o: $(CINTDIRS)/sun5strm.cxx
 $(CINTDIRS)/gcc3strm.o: $(CINTDIRS)/gcc3strm.cxx
 	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/gcc3strm -o $@ -c $<
 
+$(CINTDIRS)/iccstrm.o: $(CINTDIRS)/iccstrm.cxx
+	$(CXX) $(OPT) $(CINTCXXFLAGS) -I$(CINTDIRL)/iccstrm -o $@ -c $<
+
 $(CINTDIRS)/stdstrct.o: $(CINTDIRS)/stdstrct.c
 	$(CC) $(OPT) $(CINTCFLAGS) -I$(CINTDIRL)/stdstrct -o $@ -c $<
 
@@ -240,3 +244,8 @@ $(CINTDIRS)/loadfile_tmp.d: $(CINTDIRS)/loadfile.c $(RMKDEP)
 	@cp $(CINTDIRS)/loadfile.c $(CINTDIRS)/loadfile_tmp.c
 	$(MAKEDEP) $@ "$(CFLAGS)" $(CINTDIRS)/loadfile_tmp.c > $@
 	@rm -f $(CINTDIRS)/loadfile_tmp.c
+
+ifeq ($(CC),icc)
+$(CINTDIRS)/struct.o: $(CINTDIRS)/struct.c
+	$(CC) $(NOOPT) $(CINTCFLAGS) -o $@ -c $<
+endif
