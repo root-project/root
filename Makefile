@@ -339,11 +339,14 @@ endif
 
 
 ##### TARGETS #####
+ifeq ($(ARCH),win32gcc)
+POSTBIN=rebase
+endif
 
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata importcint \
                 version html changelog install uninstall showbuild cintdlls \
-                static map debian redhat skip \
+                static map debian redhat skip $(POSTBIN) \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,map-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
@@ -353,7 +356,7 @@ ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
 endif
 
-all:            rootexecs
+all:            rootexecs $(POSTBIN)
 
 fast:           rootexecs
 
@@ -449,6 +452,11 @@ dist:
 
 distsrc:
 	@$(MAKEDISTSRC)
+
+rebase: $(ALLLIBS) $(ALLEXECS)
+	@echo -n "Rebasing binaries... "
+	@rebase -b 0x60600000 bin/*.exe bin/*.dll
+	@echo done. 
 
 debian:
 	@if [ ! -x `which debuild` ] || [ ! -x `which dh_testdir` ]; then \
