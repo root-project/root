@@ -282,7 +282,7 @@ TGeoMedium *med16 = new TGeoMedium("RHONEYCM",16,16,0,0,0,20,0.1000000E+11,0.212
    TOP->AddNode(TRAP, 15, new TGeoTranslation(-100, -100, -100));
    TOP->AddNode(GTRA, 16, new TGeoTranslation(100, 100, 0));
    //---> close geometry
-   geom->CloseGeometry();
+   geom->CloseGeometry("d");
    geom->DefaultColors();
    
    TIter next(gGeoManager->GetListOfVolumes());
