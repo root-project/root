@@ -2908,6 +2908,10 @@ void astress_pseudo()
   TMatrixD Ainv(nrows,nrows); Ainv.UnitMatrix();
   svd.MultiSolve(Ainv);
   Ainv.ResizeTo(ncols,nrows);
+  TMatrixD Ainv2(nrows,nrows);
+  svd.Invert(Ainv2);
+  Ainv2.ResizeTo(ncols,nrows);
+  ok &= VerifyMatrixIdentity(Ainv,Ainv2,gVerbose,EPSILON);
 
   if (gVerbose) {
     cout << "\nChecking the Moore-Penrose conditions for the Ainv" << endl;
