@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -918,6 +918,7 @@ void TClass::SetStreamerInfo(const char *info)
 
    TDataMember *dm;
    Int_t nch = strlen(info);
+   Bool_t update = kTRUE;
    if (nch != 0) {
       //decode strings like "TObject;TAttLine;fA;fB;Int_t i,j,k;"
       char *save, *temp, *blank, *colon, *comma;
@@ -958,7 +959,7 @@ void TClass::SetStreamerInfo(const char *info)
             }
 
          } else {
-            if (gROOT->GetClass(token)) {
+            if (gROOT->GetClass(token,update)) {
                //a class name
                strcat(final,token); strcat(final,";");
             } else {
@@ -973,6 +974,7 @@ void TClass::SetStreamerInfo(const char *info)
                   return;
                }
             }
+            update = kFALSE;
          }
          temp = colon+1;
          if (*temp == 0) break;
@@ -1005,7 +1007,8 @@ void TClass::SetStreamerInfo(const char *info)
       if (!dm->IsPersistent()) continue;
       Long_t property = dm->Property();
       if (property&isStatic) continue;
-      TClass *acl = gROOT->GetClass(dm->GetTypeName());
+      TClass *acl = gROOT->GetClass(dm->GetTypeName(),update);
+      update = kFALSE;
       if (acl) {
          if (acl->GetClassVersion() == 0) continue;
       }
@@ -1052,6 +1055,7 @@ void TClass::FillStreamerInfoList(TList *list)
    Int_t nch;
    char *star;
    while(1) {
+      Bool_t update = kTRUE;
       char *colon = (char*)strchr(info,';');
       if (colon == 0) break;
       nch = (Int_t)(colon-info);
@@ -1065,7 +1069,8 @@ void TClass::FillStreamerInfoList(TList *list)
       //check if type is already in the list
       if (!list->FindObject(token)) {
          //Is it a class name?
-         TClass *cl = gROOT->GetClass(token);
+         TClass *cl = gROOT->GetClass(token,update);
+         update = kFALSE;
          if (cl) {
             cl->FillStreamerInfoList(list);
          } else {
