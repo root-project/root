@@ -522,6 +522,12 @@ The flags consist of two classes:
      needed by feature cern, for the ZEBRA file converters.
    * shift-libdir
      Directory containing libshift.a, needed for feature shift.
+   * krb5
+     Kerberos5 ditribution location
+   * krb5-incdir
+     Kerberos5 support, location of krb5.h
+   * krb5-libdir
+     Kerberos5 support, location of libkrb5
    * srp-incdir
      Path to header files for regular SRP library (not utilities)
      This is needed for building the daemons rootd and proofd with
@@ -561,7 +567,7 @@ The flags consist of two classes:
           lib/afs/util.a
      This is needed for building the daemons rootd and proofd with
      AFS support (authentication).
-   * globus-dir
+   * globus
      Path to Globus Tool Kit installation, usually pointed to by the
      variable GLOBUS_LOCATION; the specification of this path supersedes
      the one defined by such variable.
@@ -578,11 +584,10 @@ The flags consist of two classes:
           bin/grid-proxy-init
      and issue a warning if they are missing, since in such a case
      automatic credential initialization will not be available.
-   * globus-patch-dir
+   * globus-patch
      Path to Globus Tool Kit sources; need for applying the experimental
      patch (see README.GLOBUS)
-   * ssh-dir
-     Specifies the path containing the 'ssh' executable
+
 
 Information on third party software
 ===================================
@@ -653,6 +658,7 @@ To build the MySQL interface library you need to install MySQL first. See:
 
    http://www.mysql.com/
 
+
 PostGreSQL Client
 -----------------
 To build the PostGreSQL interface you need to install PostGreSQL
@@ -660,12 +666,14 @@ first. See
 
    http://www.postgresql.org
 
+
 SapDB Client
 ------------
 To build the SapDB interface you need to install the SapDB calling
 interface first, which can be found in the rpm sapdb-callif-xxxx. See
 
    http://www.sapdb.org
+
 
 Pythia Event Generators
 -----------------------
@@ -717,8 +725,9 @@ distributions avaliable.
 
     http://www.transarc.ibm.com/Support/afs
 
+
 Kerberos Authentication
--------------------------------------------
+-----------------------
 To build the Kerberos authentication module used by rootd and proofd,
 you first have to install Kerberos V on your machine. See:
 
@@ -727,7 +736,10 @@ you first have to install Kerberos V on your machine. See:
 for details and downloads.
 If the installation directory is different from the standard ones
 (typically /usr/kerberos) the --with-krb5=<krb5_dir> flag must be
- used to tell configure where to look for Kerberos.
+used to tell configure where to look for Kerberos. Alternatrively
+the --with-krb5-incdir and --with-krb5-libdir can be specified
+individually.
+
 
 Globus Authentication
 -------------------------------------------
@@ -748,14 +760,10 @@ bug preventing full fonctionallity of the root implementation; this
 is activated by setting --with-globus-patch-dir=<globus_src_dir>
 where <globus_src_dir> is the globus tool kit source,
 
+
 SSH Authentication
 -------------------------------------------
-There is no need to build special modules for SSH authentication;
-you need, however, to specify the dir path of the 'ssh' executable
-if not standard ( /usr/bin/ssh or /usr/local/bin ) with
---with-ssh-dir=<ssh_path_dir>. On the server side, 'rootd' and 'proofd'
-will test the presence of the 'sshd' daemon on port 22 (or on the
-one specified by option -s; see 'rootd.cxx'/'proofd.cxx' headers).
+There is no need to build special modules for SSH authentication.
 
 
 
