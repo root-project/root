@@ -98,7 +98,7 @@ void TBuffer3D::Paint(Option_t *option)
          view = gPad->GetView();
          if (view->GetAutoRange()) view->SetRange(x0,y0,z0,x1,y1,z1,2);
          break;
-   
+
       // Update viewer
       case kSIZE:
       case kX3D:
@@ -110,9 +110,7 @@ void TBuffer3D::Paint(Option_t *option)
       // Paint this in gPad
       case kPAD:
       default:
-         if (option && strlen(option) > 0) {
-            if (strcmp(option,"SAME") && strcmp(option,"same")) return;
-         }   
+         if (option && !strcmp(option, "ogl")) return; // In case of OpenGL, the pad is not redrawn
          if (fTransparency > 50) return;  //do not show semi transparent objects
          if ( fType==kMARKER ) {
             view = gPad->GetView();
