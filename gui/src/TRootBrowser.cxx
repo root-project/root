@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.34 2002/11/22 13:13:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.35 2002/12/02 18:50:03 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -744,10 +744,13 @@ void TRootBrowser::CreateBrowser(const char *name)
    fViewMenu->CheckEntry(kViewToolBar);
    fViewMenu->CheckEntry(kViewStatusBar);
 
-   if (fBrowser->TestBit(TBrowser::kNoHidden))
-      fViewMenu->UnCheckEntry(kViewHidden);
-   else
+   if (gEnv->GetValue("Browser.ShowHidden", 0)) {
       fViewMenu->CheckEntry(kViewHidden);
+      fBrowser->SetBit(TBrowser::kNoHidden, kFALSE);
+   } else {
+      fViewMenu->UnCheckEntry(kViewHidden);
+      fBrowser->SetBit(TBrowser::kNoHidden, kTRUE);
+   }
 
    fOptionMenu = new TGPopupMenu(fClient->GetRoot());
    fOptionMenu->AddEntry("&Show Cycles",        kOptionShowCycles);
@@ -1139,6 +1142,7 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         fViewMenu->UnCheckEntry(kViewHidden);
                         fBrowser->SetBit(TBrowser::kNoHidden, kTRUE);
                      }
+                     Refresh(kTRUE);
                      break;
                   case kViewArrangeByName:
                   case kViewArrangeByType:
