@@ -29,7 +29,7 @@ templateConstructorTest: templateConstructorTest.log
 	$(CMDECHO) diff -wb templateConstructorTest.log templateConstructorTest.ref
 
 opdict.cxx: operator.C linkdef.h
-	$(CMDECHO) rootcint -f $@ -c $^ >& opdict.build.log
+	$(CMDECHO) rootcint -f $@ -c $^ > opdict.build.log 2>&1
 
 operatorTest: opdict.$(ObjSuf)
 
@@ -56,3 +56,6 @@ endif
 
 templateMembers.ref:  runtemplateMembers.C  templateMembers_C.$(DllSuf)  templateMembersCode_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -l -q "runtemplateMembers.C(1)" | grep -v Processing > templateMembers.ref 2>> templateMembers.build.log
+
+templateMembersCode_C.$(DllSuf): templateMembersCode.C templateMembers_C.$(DllSuf)
+	$(buildWithLib)
