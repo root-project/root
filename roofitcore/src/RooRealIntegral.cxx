@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.52 2001/11/28 19:49:00 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.53 2002/02/06 01:31:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -538,7 +538,7 @@ Double_t RooRealIntegral::evaluate() const
     }
   case Analytic:
     {
-      retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet) ;
+      retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet) / jacobianProduct() ;
       if (RooAbsPdf::_verboseEval>0)
 	cout << "RooRealIntegral::evaluate_analytic(" << GetName() 
 	     << ")func = " << _function.arg().IsA()->GetName() << "::" << _function.arg().GetName()
@@ -654,7 +654,7 @@ Double_t RooRealIntegral::sum() const
   } else {
 
     // Simply return integral 
-    Double_t ret = integrate() ;
+    Double_t ret = integrate() / jacobianProduct() ;
     return ret ;
   }
 }

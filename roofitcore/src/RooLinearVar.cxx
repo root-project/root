@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.cc,v 1.14 2001/11/07 02:54:41 verkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.15 2001/11/19 07:23:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -46,7 +46,7 @@
 
 ClassImp(RooLinearVar)
 
-RooLinearVar::RooLinearVar(const char *name, const char *title, RooRealVar& variable, 
+RooLinearVar::RooLinearVar(const char *name, const char *title, RooAbsRealLValue& variable, 
 			   const RooAbsReal& slope, const RooAbsReal& offset, const char *unit) :
   RooAbsRealLValue(name, title, unit), 
   _var("var","variable",this,variable,kTRUE,kTRUE),
@@ -155,6 +155,11 @@ Int_t RooLinearVar::getFitBins() const
 
 Bool_t RooLinearVar::isJacobianOK(const RooArgSet& depList) const
 {
+  // Check if Jacobian of input LValue is OK
+  if (!((RooAbsRealLValue&)_var.arg()).isJacobianOK(depList)) {
+    return kFALSE ;
+  }
+
   // Check if jacobian has no real-valued dependents
   RooAbsArg* arg ;
   TIterator* dIter = depList.createIterator() ;
@@ -171,7 +176,7 @@ Bool_t RooLinearVar::isJacobianOK(const RooArgSet& depList) const
 
 Double_t RooLinearVar::jacobian() const 
 {
-  return _slope ;
+  return _slope*((RooAbsRealLValue&)_var.arg()).jacobian() ;
 }
 
 
