@@ -1,12 +1,8 @@
 # Author: Bertrand Bellenot  11/02/03
 # RootShower specific settings
-RootShower.fFirstParticle:      -521
-RootShower.fE0:                 25.000000
-RootShower.fB:                  40.000000
-RootShower.fMaterial:           6
-RootShower.fDimX:               15.000000
-RootShower.fDimY:               30.000000
-RootShower.fDimZ:               15.000000
+RootShower.fFirstParticle:      511
+RootShower.fE0:                 50.000000
+RootShower.fB:                  50.000000
 RootShower.fPicNumber:          24
 RootShower.fPicDelay:           100
 RootShower.fPicReset:           1
