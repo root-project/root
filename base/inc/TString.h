@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.18 2002/05/09 20:21:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.19 2002/06/09 23:38:30 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -303,6 +303,7 @@ public:
    Bool_t       IsNull() const              { return Pref()->fNchars == 0; }
    Ssiz_t       Last(char c) const          { return Pref()->Last(c); }
    Ssiz_t       Length() const              { return Pref()->fNchars; }
+   Bool_t       MaybeRegexp();
    TString&     Prepend(const char *cs);     // Prepend a character string
    TString&     Prepend(const char *cs, Ssiz_t n);
    TString&     Prepend(const TString& s);
