@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.39 2002/04/01 17:19:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.40 2002/04/08 15:06:08 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -649,7 +649,7 @@ void TObject::ls(Option_t *) const
 
    TROOT::IndentLevel();
    cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
-        << Int_t(TestBit(kCanDelete)) << endl;
+        << Int_t(TestBit(kCanDelete))  <<" at: "<<this<< endl;
 }
 
 //______________________________________________________________________________
