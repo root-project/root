@@ -2622,6 +2622,19 @@ struct G__var_array *varglobal,*varlocal;
 	  case 'p':
 	    if(var->paran[ig15]<=paran) result.type=var->type[ig15];
 	    else result.type=toupper(var->type[ig15]);
+#ifndef G__OLDIMPLEMENTATION1498
+	    if('u'==result.type && -1!=result.tagnum &&
+	       'e'!=G__struct.type[result.tagnum]) {
+	      result.ref = 1;
+	      G__tryindexopr(&result,para,paran,ig25);
+	      para[0]=result;
+	      para[0]=G__letVvalue(&para[0],expression);
+	      if('u'==result.type && -1!=result.tagnum &&
+		 'e'!=G__struct.type[result.tagnum]) {
+		G__classassign(0,result.tagnum,expression);
+	      }
+	    }
+#endif
 	    break;
 	  case 'P':
 	    result.type=toupper(var->type[ig15]);
@@ -6286,7 +6299,11 @@ int parameter00;
 	G__abortbytecode();
 	G__asm_wholefunc_default_cp=0;
 	G__no_exec=1;
+#ifndef G__OLDIMPLEMENTATION1497
+	G__return=G__RETURN_IMMEDIATE;
+#else
 	G__return=G__RETURN_NORMAL;
+#endif
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) {
 	  G__fprinterr(G__serr,"bytecode compile aborted by automatic class object. Use pointer to class obj + new");

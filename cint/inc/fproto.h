@@ -749,6 +749,12 @@ int G__fputerr G__P((int c));
 #define G__fprinterr  fprintf
 #endif
 
+#ifdef G__SHMGLOBAL
+void* G__shmmalloc G__P((int size));
+void* G__shmcalloc G__P((int atomsize,int num));
+void G__initshm G__P((void));
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -1979,6 +1979,10 @@ int func_now;
 	  type='i';
 	}
 	else {
+#ifndef G__OLDIMPLEMENTATION1499
+	  /* re-evaluate typedef name in case of template class */
+	  if(strchr(paraname,'<')) typenum=G__defined_typename(paraname);
+#endif
 	  type = 'u';
 	}
       }

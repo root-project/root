@@ -7,7 +7,7 @@
  * Description:
  *  Cleanup function
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -301,7 +301,11 @@ struct G__ifunc_table *ifunc;
     fprintf(G__memhist,"func %s\n",ifunc->funcname[i]);
 #endif
 #ifdef G__ASM_WHOLEFUNC
-    if(ifunc->pentry[i]->bytecode) {
+    if(
+#ifndef G__OLDIMPLEMENTATION1501
+       ifunc->pentry[i] && 
+#endif
+       ifunc->pentry[i]->bytecode) {
       G__free_bytecode(ifunc->pentry[i]->bytecode);
       ifunc->pentry[i]->bytecode = (struct G__bytecodefunc*)NULL;
     }

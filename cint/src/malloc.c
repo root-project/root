@@ -20,11 +20,135 @@
 
 #include "common.h"
 
+#ifdef G__SHMGLOBAL
+/******************************************************************
+* 
+******************************************************************/
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/shm.h>
+
+int G__myshmid;
+void* G__shmbuffer;
+int* G__pthreadnum;
+int G__shmsize = 0x10000;
+
+/******************************************************************
+* G__createthread()
+******************************************************************/
+int G__CreateThread() {
+  return((int)fork());
+}
+
+/******************************************************************
+* G__shmcalloc()
+******************************************************************/
+void* G__shmmalloc(size)
+int size;
+{
+  int* poffset = (int*)G__shmbuffer;
+  void* result;
+  int alignsize;
+
+  if(size<=sizeof(double)) alignsize = size;
+  else                     alignsize = sizeof(double);
+  if((*poffset)%alignsize) *poffset += sizeof(alignsize)-(*poffset)%alignsize;
+
+  result = (void*)((long)G__shmbuffer + (*poffset));
+
+  (*poffset) += size;
+  if((*poffset) >= G__shmsize) return((void*)0);
+
+  return(result);
+}
+
+/******************************************************************
+* G__shmcalloc()
+******************************************************************/
+void* G__shmcalloc(atomsize,num)
+int atomsize;
+int num;
+{
+  int i;
+  int size = atomsize * num;
+  void* result = G__shmmalloc(size);
+  if(!result) return(result);
+  for(i=0;i<size;i++) *((char*)result+i) = (char)0;
+  return(result);
+}
+
+/******************************************************************/
+/* #define calloc G__shmcalloc */
+
+/******************************************************************
+* G__shmfinish()
+******************************************************************/
+void G__shmfinish() {
+  /* free shared memory */
+  switch(*G__pthreadnum) {
+  case 0:
+    break;
+  case 1:
+    (*G__pthreadnum)--;
+    shmdt(G__shmbuffer);
+    shmctl(G__myshmid,IPC_RMID,0);
+    break;
+  default:
+    (*G__pthreadnum)--;
+    shmdt(G__shmbuffer);
+    break;
+  }
+}
+
+/******************************************************************
+* G__shminit()
+******************************************************************/
+void G__shminit() {
+  /* Prepare keys */
+  key_t mykey;
+  const char projid = 'Q';
+  char keyfile[256];
+  int* poffset;
+
+  G__getcintsysdir();
+  sprintf(keyfile,"%s/cint",G__cintsysdir);
+  mykey=ftok(keyfile,projid);
+  /* printf("mykey=%x\n",mykey); */
+
+  /* Shared Memory */
+  G__myshmid = shmget(mykey,G__shmsize,SHM_R|SHM_W|IPC_CREAT);
+  /* printf("myshmid=%x\n",G__myshmid); */
+  if(-1 == G__myshmid) {
+    fprintf(stderr,"shmget failed\n");
+    exit(1);
+  }
+
+  G__shmbuffer = shmat(G__myshmid,0,0);
+  /* printf("shmbuffer=%p\n",G__shmbuffer); */
+  if((void*)(~0)==G__shmbuffer) {
+    fprintf(stderr,"shmat failed\n");
+    exit(1);
+  }
+
+  /* set offset address */
+  poffset = (int*)G__shmcalloc(sizeof(int),1);
+  *poffset = 0;
+
+  /* set thread num count */
+  G__pthreadnum = (int*)G__shmcalloc(sizeof(int),1);
+  *G__pthreadnum = 1;
+
+  /* set finish function */
+  atexit(G__shmfinish);
+}
+
+/******************************************************************/
+#endif /* G__SHMGLOBAL */
+
 #ifndef G__PHILIPPE21
 extern int G__const_noerror;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION514
 /******************************************************************
 * static long G__getstaticobject()
 *
@@ -62,7 +186,6 @@ static long G__getstaticobject()
   G__genericerror((char*)NULL);
   return(0);
 }
-#endif
 
 /******************************************************************
 * int G__malloc(n,size,item)
@@ -76,11 +199,6 @@ char *item;
 {
   long allocmem; /* used to be int */
   int size;
-#ifdef G__OLDIMPLEMENTATION514
-  char temp[G__ONELINE];
-  int hash,i;
-  struct G__var_array *var;
-#endif
 
 #ifdef G__MEMTEST
   fprintf(G__memhist,"G__malloc(%d,%d,%s)\n",n,bsize,item);
@@ -119,30 +237,7 @@ char *item;
 	 && 0<=G__func_now
 #endif
 	 ) {
-#ifndef G__OLDIMPLEMENTATION514
 	return(G__getstaticobject());
-#else
-	if(-1!=G__memberfunc_tagnum) /* questionable */
-	  sprintf(temp,"%s\\%x\\%x\\%x",G__varname_now,G__func_page,G__func_now
-		  ,G__memberfunc_tagnum);
-	else
-	  sprintf(temp,"%s\\%x\\%x" ,G__varname_now,G__func_page,G__func_now);
-	G__hash(temp,hash,i)
-	var = &G__global;
-	
-	do {
-	  i=0;
-	  while(i<var->allvar) {
-	    if((var->hash[i]==hash)&&(strcmp(var->varnamebuf[i],temp)==0)) {
-	      return(var->p[i]);
-	    }
-	    i++;
-	  }
-	  var = var->next;
-	} while(var);
-	G__fprinterr(G__serr,"Error: No memory for static %s ",temp);
-	G__genericerror((char*)NULL);
-#endif
       }
       /*************************************
        * Allocate memory area. Normal case
@@ -171,7 +266,6 @@ char *item;
 	 * allocate static data member
 	 ***********************************/
 	if(G__static_alloc) {
-#ifndef G__OLDIMPLEMENTATION514
 	  if(G__ASM_FUNC_COMPILE==G__asm_wholefunction) {
 	    return(G__getstaticobject());
 	  }
@@ -179,10 +273,6 @@ char *item;
 	    allocmem=(long)calloc((size_t)n ,(size_t)bsize);
 	    if(allocmem==(long)NULL) G__malloc_error(item);
 	  }
-#else
-	  allocmem=(long)calloc((size_t)n ,(size_t)bsize);
-	  if(allocmem==(long)NULL) G__malloc_error(item);
-#endif
 	  return(allocmem);
 	}
 	/***********************************

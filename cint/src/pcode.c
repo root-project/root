@@ -55,13 +55,27 @@ int G__asm_step=0;
 /****************************************************************
 * G__doubleM()
 ****************************************************************/
+#ifndef G__OLDIMPLEMENTATION1494
+#define G__doubleM(buf)                                                \
+  (('f'==buf->type||'d'==buf->type) ? buf->obj.d :                     \
+   ('k'==buf->type||'h'==buf->type) ? (double)(buf->obj.ulo) :         \
+                                      (double)(buf->obj.i) )
+#else
 #define G__doubleM(buf)                                                \
   (('f'==buf->type||'d'==buf->type) ? buf->obj.d : (double)(buf->obj.i) )
+#endif
 
 /****************************************************************
 * G__isdoubleM()
 ****************************************************************/
 #define G__isdoubleM(buf) ('f'==buf->type||'d'==buf->type)
+
+#ifndef G__OLDIMPLEMENTATION1494
+/****************************************************************
+* G__isunsignedM()
+****************************************************************/
+#define G__isunsignedM(buf) ('h'==buf->type||'k'==buf->type)
+#endif
 
 
 /*************************************************************************
@@ -2010,11 +2024,21 @@ long localmem;
 			     ,pc,sp ,store_p_tempbuf);
 #endif
 #endif
+#ifndef G__OLDIMPLEMENTATION1500
+      if(-1!=G__asm_inst[pc+1]) {
+	G__asm_stack[sp-1].tagnum = G__asm_inst[pc+1];
+	G__asm_stack[sp-1].typenum = -1;
+	G__asm_stack[sp-1].type = 'u';
+	G__asm_stack[sp-1].obj.i = G__store_struct_offset;
+	G__asm_stack[sp-1].ref = G__store_struct_offset;
+      }
+#else
       G__asm_stack[sp-1].tagnum = G__asm_inst[pc+1];
       G__asm_stack[sp-1].typenum = -1;
       G__asm_stack[sp-1].type = 'u';
       G__asm_stack[sp-1].obj.i = G__store_struct_offset;
       G__asm_stack[sp-1].ref = G__store_struct_offset;
+#endif
       G__store_struct_offset = store_struct_offset;
       G__tagnum = store_tagnum;
       G__return=store_return;
@@ -5209,6 +5233,11 @@ G__value *bufm2;
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d + bufm1->obj.d;
     }
+#ifndef G__OLDIMPLEMENTATION1494
+    else if(G__isunsignedM(bufm1)) {
+      bufm2->obj.d = bufm2->obj.d + (double)bufm1->obj.ulo;
+    }
+#endif
     else {
       bufm2->obj.d = bufm2->obj.d + (double)bufm1->obj.i;
     }
@@ -5216,7 +5245,14 @@ G__value *bufm2;
     bufm2->tagnum = bufm2->typenum = -1;
   }
   else if(G__isdoubleM(bufm1)) {
+#ifndef G__OLDIMPLEMENTATION1494
+    if(G__isunsignedM(bufm2)) 
+      bufm2->obj.d = (double)bufm2->obj.ulo + bufm1->obj.d;
+    else
+      bufm2->obj.d = (double)bufm2->obj.i + bufm1->obj.d;
+#else
     bufm2->obj.d = (double)bufm2->obj.i + bufm1->obj.d;
+#endif
     bufm2->type = 'd';
     bufm2->tagnum = bufm2->typenum = -1;
   }
@@ -5233,6 +5269,16 @@ G__value *bufm2;
     bufm2->tagnum = bufm1->tagnum;
     bufm2->typenum = bufm1->typenum;
   }
+#ifndef G__OLDIMPLEMENTATION1494
+  else if(G__isunsignedM(bufm1)) {
+    if(G__isunsignedM(bufm2)) 
+      bufm2->obj.ulo = bufm2->obj.ulo + bufm1->obj.ulo;
+    else
+      bufm2->obj.ulo = bufm2->obj.i + bufm1->obj.ulo;
+    bufm2->type = 'h';
+    bufm2->tagnum = bufm2->typenum = -1;
+  }
+#endif
   else {
     bufm2->obj.i = bufm2->obj.i + bufm1->obj.i;
     bufm2->type = 'i';
@@ -5252,6 +5298,11 @@ G__value *bufm2;
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d - bufm1->obj.d;
     }
+#ifndef G__OLDIMPLEMENTATION1494
+    else if(G__isunsignedM(bufm1)) {
+      bufm2->obj.d = bufm2->obj.d - (double)bufm1->obj.ulo;
+    }
+#endif
     else {
       bufm2->obj.d = bufm2->obj.d - (double)bufm1->obj.i;
     }
@@ -5259,7 +5310,14 @@ G__value *bufm2;
     bufm2->tagnum = bufm2->typenum = -1;
   }
   else if(G__isdoubleM(bufm1)) {
+#ifndef G__OLDIMPLEMENTATION1494
+    if(G__isunsignedM(bufm2)) 
+      bufm2->obj.d = (double)bufm2->obj.ulo - bufm1->obj.d;
+    else
+      bufm2->obj.d = (double)bufm2->obj.i - bufm1->obj.d;
+#else
     bufm2->obj.d = (double)bufm2->obj.i - bufm1->obj.d;
+#endif
     bufm2->type = 'd';
     bufm2->tagnum = bufm2->typenum = -1;
   }
@@ -5282,6 +5340,16 @@ G__value *bufm2;
     bufm2->tagnum = bufm1->tagnum;
     bufm2->typenum = bufm1->typenum;
   }
+#ifndef G__OLDIMPLEMENTATION1494
+  else if(G__isunsignedM(bufm1)) {
+    if(G__isunsignedM(bufm2)) 
+      bufm2->obj.ulo = bufm2->obj.ulo - bufm1->obj.ulo;
+    else
+      bufm2->obj.ulo = bufm2->obj.i - bufm1->obj.ulo;
+    bufm2->type = 'h';
+    bufm2->tagnum = bufm2->typenum = -1;
+  }
+#endif
   else {
     bufm2->obj.i = bufm2->obj.i - bufm1->obj.i;
     bufm2->type = 'i';
@@ -5301,15 +5369,37 @@ G__value *bufm2;
     if(G__isdoubleM(bufm1)) {
       bufm2->obj.d = bufm2->obj.d * bufm1->obj.d;
     }
+#ifndef G__OLDIMPLEMENTATION1494
+    else if(G__isunsignedM(bufm1)) {
+      bufm2->obj.d = bufm2->obj.d * (double)bufm1->obj.ulo;
+    }
+#endif
     else {
       bufm2->obj.d = bufm2->obj.d * (double)bufm1->obj.i;
     }
     bufm2->type = 'd';
   }
   else if(G__isdoubleM(bufm1)) {
+#ifndef G__OLDIMPLEMENTATION1494
+    if(G__isunsignedM(bufm2)) 
+      bufm2->obj.d = (double)bufm2->obj.ulo * bufm1->obj.d;
+    else
+      bufm2->obj.d = (double)bufm2->obj.i * bufm1->obj.d;
+#else
     bufm2->obj.d = (double)bufm2->obj.i * bufm1->obj.d;
+#endif
     bufm2->type = 'd';
   }
+#ifndef G__OLDIMPLEMENTATION1494
+  else if(G__isunsignedM(bufm1)) {
+    if(G__isunsignedM(bufm2)) 
+      bufm2->obj.ulo = bufm2->obj.ulo * bufm1->obj.ulo;
+    else
+      bufm2->obj.ulo = bufm2->obj.i * bufm1->obj.ulo;
+    bufm2->type = 'h';
+    bufm2->tagnum = bufm2->typenum = -1;
+  }
+#endif
   else {
     bufm2->obj.i = bufm2->obj.i * bufm1->obj.i;
     bufm2->type = 'i';
@@ -5331,10 +5421,32 @@ G__value *bufm2;
     return;
   }
 #endif
+#ifndef G__OLDIMPLEMENTATION1494
+  if(G__isunsignedM(bufm1)) {
+    if(G__isunsignedM(bufm2)) 
+      bufm2->obj.ulo = bufm2->obj.ulo % bufm1->obj.ulo;
+    else
+      bufm2->obj.ulo = bufm2->obj.i % bufm1->obj.ulo;
+    bufm2->type = 'h';
+    bufm2->tagnum = bufm2->typenum = -1;
+  }
+  else if(G__isunsignedM(bufm2)) {
+    bufm2->obj.ulo = bufm2->obj.ulo % bufm1->obj.i;
+    bufm2->type = 'h';
+    bufm2->tagnum = bufm2->typenum = -1;
+  }
+  else {
+    bufm2->obj.i = bufm2->obj.i % bufm1->obj.i;
+    bufm2->type = 'i';
+  }
+  bufm2->tagnum = bufm2->typenum = -1;
+  bufm2->ref = 0;
+#else
   bufm2->obj.i = bufm2->obj.i % bufm1->obj.i;
   bufm2->type = 'i';
   bufm2->tagnum = bufm2->typenum = -1;
   bufm2->ref = 0;
+#endif
 }
 
 /*************************************************************************
@@ -5361,7 +5473,14 @@ G__value *bufm2;
 	return;
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1494
+      if(G__isunsignedM(bufm1)) 
+	bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.ulo;
+      else
+	bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.i;
+#else
       bufm2->obj.d = bufm2->obj.d / (double)bufm1->obj.i;
+#endif
     }
     bufm2->type = 'd';
   }
@@ -5372,9 +5491,32 @@ G__value *bufm2;
       return;
     }
 #endif
+#ifndef G__OLDIMPLEMENTATION1494
+    if(G__isunsignedM(bufm2)) 
+      bufm2->obj.d = (double)bufm2->obj.ulo / bufm1->obj.d;
+    else
+      bufm2->obj.d = (double)bufm2->obj.i / bufm1->obj.d;
+#else
     bufm2->obj.d = (double)bufm2->obj.i / bufm1->obj.d;
+#endif
     bufm2->type = 'd';
   }
+#ifndef G__OLDIMPLEMENTATION1494
+  else if(G__isunsignedM(bufm1)) {
+#ifdef G__TUNEUP_W_SECURITY
+    if(0==bufm1->obj.i) {
+      G__genericerror("Error: operator '/' divided by zero");
+      return;
+    }
+#endif
+    if(G__isunsignedM(bufm2)) 
+      bufm2->obj.ulo = bufm2->obj.ulo / bufm1->obj.ulo;
+    else
+      bufm2->obj.ulo = bufm2->obj.i / bufm1->obj.ulo;
+    bufm2->type = 'h';
+    bufm2->tagnum = bufm2->typenum = -1;
+  }
+#endif
   else {
 #ifdef G__TUNEUP_W_SECURITY
     if(0==bufm1->obj.i) {
@@ -6111,7 +6253,7 @@ void G__suspendbytecode()
   G__asm_noverflow=0;
 }
 /******************************************************************
-* G__abortbytecode()
+* G__resetbytecode()
 ******************************************************************/
 void G__resetbytecode() 
 {

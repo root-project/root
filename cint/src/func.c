@@ -1918,6 +1918,19 @@ int memfunc_flag;
 	G__memberfunc_struct_offset=store_memberfunc_struct_offset;
 	
 	G__store_struct_offset=store_struct_offset;
+#ifndef G__OLDIMPLEMENTATION1500
+#ifdef G__ASM
+	  if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPTEMP\n",G__asm_cp);
+#endif
+	    G__asm_inst[G__asm_cp]=G__POPTEMP;
+	    G__asm_inst[G__asm_cp+1] = -1;
+	    G__inc_cp_asm(2,0);
+	  }
+#endif
+#endif
+
 	if(0 == *known3) {
 #ifndef G__OLDIMPLEMENTATION1341
 	  if(-1 != i && fpara.paran==1 && -1 != fpara.para[0].tagnum) {
@@ -1926,7 +1939,11 @@ int memfunc_flag;
 	    int store_memberfunc_tagnum = G__memberfunc_tagnum;
 	    int store_exec_memberfunc = G__exec_memberfunc;
 	    store_tagnum = G__tagnum;
-	    G__inc_cp_asm(-3,0);
+#ifndef G__OLDIMPLEMENTATION1500
+	    G__inc_cp_asm(-5,0); /* cancel ALLOCTEMP, SETTEMP, POPTEMP */
+#else
+	    G__inc_cp_asm(-3,0); /* cancel ALLOCTEMP, SETTEMP */
+#endif
 	    G__pop_tempobject();
 	    G__tagnum = fpara.para[0].tagnum;
 	    G__store_struct_offset = fpara.para[0].obj.i;
@@ -3287,6 +3304,27 @@ int hash;
     if(G__no_exec_compile) return(1);
     G__set_errmsgcallback((void*)G__int(libp->para[0]));
     *result7 = G__null;
+    return(1);
+  }
+#endif
+
+#ifdef G__SHMGLOBAL
+  if(strcmp(funcname,"G__shminit")==0) {
+    if(G__no_exec_compile) return(1);
+    G__shminit();
+    *result7 = G__null;
+    return(1);
+  }
+  if(strcmp(funcname,"G__shmmalloc")==0) {
+    if(G__no_exec_compile) return(1);
+    *result7 = G__null;
+    G__letint(result7,'E',(long)G__shmmalloc((int)G__int(libp->para[0])));
+    return(1);
+  }
+  if(strcmp(funcname,"G__shmcalloc")==0) {
+    if(G__no_exec_compile) return(1);
+    *result7 = G__null;
+    G__letint(result7,'E',(long)G__shmcalloc((int)G__int(libp->para[0]),(int)G__int(libp->para[1])));
     return(1);
   }
 #endif

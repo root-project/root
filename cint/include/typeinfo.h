@@ -99,7 +99,7 @@ bool type_info::before(const type_info& a) const
 const char* type_info::name() const
 {
   static char namestring[100];
-  printf("%d %d %d %d\n",type,tagnum,typenum,reftype);
+  //printf("%d %d %d %d\n",type,tagnum,typenum,reftype);
   strcpy(namestring,G__type2string(type,tagnum,typenum,reftype));
   return(namestring);
 }

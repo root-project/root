@@ -92,7 +92,11 @@ G__value buf;
 	case 'h': /* unsigned int */
 	case 'r': /* unsigned short */
 	case 'b': /* unsigned char */
+#ifndef G__OLDIMPLEMENTATION1495
+		result = (float)(buf.obj.ulo);
+#else
 		result = (float)((unsigned long)buf.obj.i);
+#endif
 		return(result);
 	default:
 		result = (float)buf.obj.i;
@@ -118,7 +122,11 @@ G__value buf;
 	case 'h': /* unsigned int */
 	case 'r': /* unsigned short */
 	case 'b': /* unsigned char */
+#ifndef G__OLDIMPLEMENTATION1495
+		return((double)(buf.obj.ulo));
+#else
 		return((double)((unsigned long)buf.obj.i));
+#endif
 #endif
 	default:
 		return((double)buf.obj.i);

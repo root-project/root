@@ -662,8 +662,13 @@ char *compiler;
     if(p->string && p->object) {
       fprintf(fp,"%s : %s %s\n",p->object,p->string,headers);
 #ifndef G__OLDIMPLEMENTATION783
+#ifdef CINTSYSDIR
+      fprintf(fp,"\t%s $(IPATH) $(CINTIPATH) $(MACRO) $(OPTIMIZE) $(OPTION) $(CCOPT) -o %s -c %s\n"
+	      ,compiler,p->object,p->string);
+#else
       fprintf(fp,"\t%s $(IPATH) $(MACRO) $(OPTIMIZE) $(OPTION) $(CCOPT) -o %s -c %s\n"
 	      ,compiler,p->object,p->string);
+#endif
 #else
       fprintf(fp,"\t%s $(IPATH) $(MACRO) $(OPTIMIZE) $(OPTION) -o %s -c %s\n"
 	      ,compiler,p->object,p->string);

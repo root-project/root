@@ -3805,6 +3805,9 @@ char *endoffunc;
     switch(G__struct.type[tagnum]) {
     case 'c':
     case 's':
+#ifndef G__OLDIMPLEMENTATION1496
+    case 'u':
+#endif
       if(reftype) {
 	fprintf(fp,"      {\n");
 #ifndef G__OLDIMPLEMENTATION1209

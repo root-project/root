@@ -111,6 +111,10 @@
 #pragma link C typedef PVOID;
 #pragma link C typedef WCHAR;
 #pragma link C typedef DWORDLONG;
+typedef LONG LRESULT;
+#pragma link C typedef LRESULT;
+#pragma link C typedef WPARAM;
+#pragma link C typedef LPARAM;
 
 
 /***********************************************************************
