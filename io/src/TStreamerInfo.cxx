@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.163 2003/03/11 01:18:47 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.164 2003/04/03 14:38:42 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -40,6 +40,7 @@ Bool_t  TStreamerInfo::fgOptimize  = kTRUE;
 TStreamerElement *TStreamerInfo::fgElement = 0;
 
 const Int_t kRegrouped = TStreamerInfo::kOffsetL;
+const Int_t kMaxLen = 1024;
 
 ClassImp(TStreamerInfo)
 
@@ -873,7 +874,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    Int_t ldata = 10;
    Int_t i,lt,ld;
 
-   char *line = new char[512];
+   char *line = new char[kMaxLen];
    char name[128];
    char cdim[8];
    char *inclist = new char[5000];
@@ -929,7 +930,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    fprintf(fp,"\npublic:\n");
    next.Reset();
    while ((element = (TStreamerElement*)next())) {
-      for (i=0;i<512;i++) line[i] = ' ';
+      for (i=0;i<kMaxLen;i++) line[i] = ' ';
       if (element->IsA() == TStreamerBase::Class()) continue;
       sprintf(name,element->GetName());
       for (Int_t i=0;i<element->GetArrayDim();i++) {

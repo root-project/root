@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.53 2002/11/26 10:24:25 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.54 2003/02/22 13:24:22 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 #include "TFolder.h"
 #include "TRef.h"
 
-const Int_t kMaxLen = 512;
+const Int_t kMaxLen = 1024;
 static char gIncludeName[kMaxLen];
 
 ClassImp(TStreamerElement)
