@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.102 2003/07/07 20:14:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.103 2003/07/12 12:54:32 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3067,18 +3067,20 @@ void TGraph::ComputeLogs(Int_t npoints, Int_t opt)
 //  npoints : Number of points in gxwork and in gywork.
 //
 
-  for (Int_t i=0;i<npoints;i++) {
-     gxworkl[i] = gxwork[i];
-     gyworkl[i] = gywork[i];
-     if (gPad->GetLogx()) {
+  Int_t i;
+  memcpy(gxworkl,gxwork,npoints*8);
+  memcpy(gyworkl,gywork,npoints*8);
+  if (gPad->GetLogx()) {
+     for (i=0;i<npoints;i++) {
         if (gxworkl[i] > 0) gxworkl[i] = TMath::Log10(gxworkl[i]);
-        else               gxworkl[i] = gPad->GetX1();
+        else                gxworkl[i] = gPad->GetX1();
      }
-     if (!opt && gPad->GetLogy()) {
+  }
+  if (!opt && gPad->GetLogy()) {
+     for (i=0;i<npoints;i++) {
         if (gyworkl[i] > 0) gyworkl[i] = TMath::Log10(gyworkl[i]);
-        else               gyworkl[i] = gPad->GetY1();
+        else                gyworkl[i] = gPad->GetY1();
      }
-//     if (gyworkl[i] > gPad->GetUymax()) gyworkl[i] = gPad->GetUymax();
   }
 }
 
