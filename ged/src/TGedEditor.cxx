@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.7 2004/06/18 22:26:53 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedEditor.cxx,v 1.8 2004/06/25 17:13:23 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva 02/08/2003
 
 /*************************************************************************
@@ -42,13 +42,17 @@ TGedEditor::TGedEditor(TCanvas* canvas) :
    fTabContainer = fTab->AddTab("Style");
    fStyle = new TGCompositeFrame(fTabContainer, 110, 30, kVerticalFrame);
    fStyle->AddFrame(new TGedNameFrame(fStyle, 1),\
-                    new TGLayoutHints(kLHintsTop | kLHintsExpandX,0, 0, 2, 2)); 
+                    new TGLayoutHints(kLHintsTop | kLHintsExpandX,0, 0, 2, 2));
    fTabContainer->AddFrame(fStyle, new TGLayoutHints(kLHintsTop | kLHintsExpandX,\
                                                      0, 0, 2, 2));
    fWid = 1;
-   
+
    if (canvas) {
-      fModel  = (TObject *)canvas->GetSelected();
+      if (!canvas->GetSelected())
+         canvas->SetSelected(canvas);
+      if (!canvas->GetSelectedPad())
+         canvas->SetSelectedPad(canvas);
+      fModel  = canvas->GetSelected();
       fPad    = canvas->GetSelectedPad();
       fCanvas = canvas;
       fClass  = fModel->IsA();
@@ -88,7 +92,7 @@ void TGedEditor::GetEditors()
    TGedElement *ge;
    TList *list = fModel->IsA()->GetEditorList();
    if (list->First() != 0) {
-      
+
       TIter next1(list);
       while ((ge = (TGedElement *) next1())) {
          // check if the editor ge->fGedframe is already in the list of fStyle
@@ -104,7 +108,7 @@ void TGedEditor::GetEditors()
          }
          if (found == kFALSE)
             fStyle->AddFrame(ge->fGedFrame, new TGLayoutHints(kLHintsTop | kLHintsExpandX,\
-                                               0, 0, 2, 2));  
+                                               0, 0, 2, 2));
       }
    } else {
 
@@ -114,7 +118,7 @@ void TGedEditor::GetEditors()
       //now scan all base classes
       list = fModel->IsA()->GetListOfBases();
       if (list->First() != 0) GetBaseClassEditor(fModel->IsA());
-   } 
+   }
 
    fStyle->SetEditable(0);
    fStyle->Layout();
@@ -124,14 +128,14 @@ void TGedEditor::GetEditors()
 //______________________________________________________________________________
 void TGedEditor::GetBaseClassEditor(TClass *cl)
 {
-   // Scan the base classes of cl and add attribute editors to the list. 
-   
+   // Scan the base classes of cl and add attribute editors to the list.
+
    TList *list = cl->GetListOfBases();
    if (list->First() == 0) return;
-   
+
    TBaseClass *base;
    TIter next(list);
-   
+
    while ((base = (TBaseClass *)next())) {
 
       TClass *c1;
@@ -139,7 +143,7 @@ void TGedEditor::GetBaseClassEditor(TClass *cl)
 
       if (c1->GetListOfBases()->First() == 0) continue;
       else GetBaseClassEditor(c1);
-   }   
+   }
 }
 
 //______________________________________________________________________________
@@ -189,8 +193,8 @@ void TGedEditor::ConnectToCanvas(TCanvas *c)
 //______________________________________________________________________________
 void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
 {
-   fModel = obj; 
-   fPad   = pad; 
+   fModel = obj;
+   fPad   = pad;
 
    if ((obj->IsA() != fClass) && !obj->IsA()->InheritsFrom(fClass)) {
       fClass = obj->IsA();
@@ -217,7 +221,7 @@ void TGedEditor::Show()
 void TGedEditor::DeleteEditors()
 {
    // Delete GUI editors connected to the canvas fCanvas.
-   
+
    TClass * cl;
    TIter next(gROOT->GetListOfClasses());
    while((cl = (TClass *)next())) {
@@ -245,7 +249,7 @@ void TGedEditor::Hide()
 TGedEditor::~TGedEditor()
 {
   // Editor destructor.
-  
+
   fStyle->Cleanup();
   Cleanup();
 }
