@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.7 2004/10/19 13:04:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.8 2004/11/22 23:38:31 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -27,6 +27,7 @@ private:
    TObjArray      fGLObjects;
    TObjArray      fGLCameras;
 
+   Bool_t         fGLInit;
    Bool_t         fAllActive;
    Bool_t         fIsPicking;
    Bool_t         fBoxInList;
@@ -82,6 +83,9 @@ private:
    void BuildGLList(Bool_t execute = kFALSE);
    void RunGLList();
    void DrawAxes();
+
+   void Init();
+
 
    TGLRender(const TGLRender &);
    TGLRender & operator = (const TGLRender &);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.34 2004/11/18 14:37:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.35 2004/11/22 23:49:13 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -15,7 +15,6 @@
 #include "TVirtualPad.h"
 #include "TVirtualGL.h"
 #include "KeySymbols.h"
-#include "TGSplitter.h"
 #include "TGShutter.h"
 #include "TVirtualX.h"
 #include "TBuffer3D.h"
@@ -102,12 +101,16 @@ const char gHelpViewerOpenGL[] = "\
      specifying the plane's equation A*x+B*y+C*z+D=0.";
 
 
-const Double_t gRotMatrixXOY[] = {1., 0., 0., 0., 0., 0., -1., 0.,
-                                  0., 1., 0., 0., 0., 0., 0., 1.};
-const Double_t gRotMatrixYOZ[] = {0., 0., -1., 0., 0., 1., 0., 0.,
-                                  1., 0., 0., 0., 0., 0., 0., 1.};
-const Double_t gIdentity[] = {1., 0., 0., 0., 0., 1., 0., 0.,
-                              0., 0., 1., 0., 0., 0., 0., 1.};
+const Double_t gRotMatrixXOY[] = {1., 0., 0., 0., 0., 0., 1., 0.,
+                                  0., -1., 0., 0., 0., 0., 0., 1.};
+
+const Double_t gRotMatrixYOZ[] = {0., 0., -1., 0., 1., 0., 0., 0.,
+                                  0., -1., 0., 0., 0., 0., 0., 1.};
+                                
+const Double_t gRotMatrixXOZ[] = {0., 1., 0., 0., 1., 0., 0., 0.,
+                                  0., 0., -1., 0., 0., 0., 0., 1.};
+
+
 
 
 enum EGLViewerCommands {
@@ -141,7 +144,6 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    fMainFrame = 0;
    fV2 = 0;
    fV1 = 0;
-   fSplitter = 0;
    fColorEditor = 0;
    fGeomEditor = 0;
    fSceneEditor = 0;
@@ -285,7 +287,6 @@ TViewerOpenGL::~TViewerOpenGL()
    delete fV1;
    delete fV2;
    delete fMainFrame;
-   delete fSplitter;
    delete fL1;
    delete fL2;
    delete fL3;
@@ -489,16 +490,6 @@ void TViewerOpenGL::CreateScene(Option_t *)
 {
    TBuffer3D * buff = fPad->GetBuffer3D();
    TObjLink * lnk = fPad->GetListOfPrimitives()->FirstLink();
-   //Two light sources as scene objects
-   Float_t col1[] = {0.4f, 0.f, 0.f};
-   Float_t col2[] = {0.f, 0.4f, 0.f};
-   const Double_t pos[3] = {0., 0., 0.};
-   TGLSimpleLight *light1 = new TGLSimpleLight(++fNbShapes, 2, col1, pos);
-   TGLSelection *box1 = light1->GetBox();
-   TGLSimpleLight *light2 = new TGLSimpleLight(++fNbShapes, 3, col2, pos);
-   TGLSelection *box2 = light2->GetBox();
-   fRender->AddNewObject(light1);
-   fRender->AddNewObject(light2);
 
    buff->fOption = TBuffer3D::kOGL;
    while (lnk) {
@@ -514,41 +505,18 @@ void TViewerOpenGL::CreateScene(Option_t *)
    Double_t xdiff = fRangeX.second - fRangeX.first;
    Double_t ydiff = fRangeY.second - fRangeY.first;
    Double_t zdiff = fRangeZ.second - fRangeZ.first;
-   Double_t min = xdiff > ydiff ? ydiff > zdiff ? zdiff : ydiff : xdiff > zdiff ? zdiff : xdiff;
-   Double_t newRad = min / 20.;
-
 
    fXc = fRangeX.first + xdiff / 2;
    fYc = fRangeY.first + ydiff / 2;
    fZc = fRangeZ.first + zdiff / 2;
-
-   light1->Shift(fRangeX.first, fRangeY.first, fRangeZ.first);
-   light1->SetBulbRad(newRad);
-   box1->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad),
-                std::make_pair(-newRad, newRad));
-   box1->Shift(fRangeX.first, fRangeY.first, fRangeZ.first);
-   light2->Shift(fRangeX.second, fRangeY.first, fRangeZ.first);
-   light2->SetBulbRad(newRad);
-   box2->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad),
-                std::make_pair(-newRad, newRad));
-   box2->Shift(fRangeX.second, fRangeY.first, fRangeZ.first);
-
    fRender->SetAxes(fRangeX, fRangeY, fRangeZ);
 
    MakeCurrent();
-   Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};
-   gVirtualGL->LightModel(kLIGHT_MODEL_AMBIENT, lmodelAmb);
-   gVirtualGL->EnableGL(kLIGHTING);
    gVirtualGL->EnableGL(kLIGHT0);
    gVirtualGL->EnableGL(kLIGHT1);
    gVirtualGL->EnableGL(kLIGHT2);
    gVirtualGL->EnableGL(kLIGHT3);
-   gVirtualGL->EnableGL(kDEPTH_TEST);
-   gVirtualGL->EnableGL(kCULL_FACE);
-   gVirtualGL->CullFaceGL(kBACK);
-   gVirtualGL->PolygonGLMode(kFRONT, kFILL);
-   gVirtualGL->ClearGLColor(0.f, 0.f, 0.f, 1.f);
-   gVirtualGL->ClearGLDepth(1.f);
+   gVirtualGL->EnableGL(kLIGHT4);
 
    MoveResize(fgInitX, fgInitY, fgInitW, fgInitH);
    SetWMPosition(fgInitX, fgInitY);
@@ -619,15 +587,32 @@ void TViewerOpenGL::DrawObjects()const
    MakeCurrent();
    gVirtualGL->NewMVGL();
    Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
-   Float_t lig_prop1[] = {.5f, .5f, .5f, 1.f};
+   Float_t ligProp1[] = {.5f, .5f, .5f, 1.f};
+   Float_t ligProp2[] = {1.f, 1.f, 1.f, 1.f};
 
-   gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos);
    gVirtualGL->PushGLMatrix();
-   gVirtualGL->TranslateGL(0., fRad + fYc, -fRad - fZc);
+   gVirtualGL->TranslateGL(0., fRad + fYc, -fRad - fZc);   
+   gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos);
+   gVirtualGL->GLLight(kLIGHT0, kDIFFUSE, ligProp1);
+
+   gVirtualGL->TranslateGL(0., -2. * (fRad + fYc), 0);   
    gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos);
-   gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, lig_prop1);
+   gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, ligProp1);
+
+   gVirtualGL->TranslateGL(fRad + fXc, fRad + fYc, 0);   
+   gVirtualGL->GLLight(kLIGHT2, kPOSITION, pos);
+   gVirtualGL->GLLight(kLIGHT2, kDIFFUSE, ligProp1);
+
+   gVirtualGL->TranslateGL(-2 * (fRad + fXc), 0., 0.);   
+   gVirtualGL->GLLight(kLIGHT3, kPOSITION, pos);
+   gVirtualGL->GLLight(kLIGHT3, kDIFFUSE, ligProp1);
+
+   gVirtualGL->TranslateGL(fRad + fXc, 0., 3 * fRad);   
+   gVirtualGL->GLLight(kLIGHT4, kPOSITION, pos);
+   gVirtualGL->GLLight(kLIGHT4, kDIFFUSE, ligProp2);
+
    gVirtualGL->PopGLMatrix();
-   gVirtualGL->TraverseGraph(const_cast<TGLRender *>(fRender));
+   gVirtualGL->TraverseGraph((TGLRender *)fRender);
    SwapBuffers();
 }
 
@@ -782,7 +767,7 @@ void TViewerOpenGL::CreateCameras()
       return;
 
    TGLSimpleTransform trXOY(gRotMatrixXOY, fRad, &fXc, &fYc, &fZc);
-   TGLSimpleTransform trXOZ(gIdentity, fRad, &fXc, &fYc, &fZc);
+   TGLSimpleTransform trXOZ(gRotMatrixXOZ, fRad, &fXc, &fYc, &fZc);
    TGLSimpleTransform trYOZ(gRotMatrixYOZ, fRad, &fXc, &fYc, &fZc);
    TGLSimpleTransform trPersp(fArcBall->GetRotMatrix(), fRad, &fXc, &fYc, &fZc);
 

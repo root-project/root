@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.19 2004/11/15 14:59:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.20 2004/11/22 23:49:13 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -51,7 +51,6 @@ private:
    TGCompositeFrame  *fMainFrame;
    TGVerticalFrame   *fV1;
    TGVerticalFrame   *fV2;
-   TGVSplitter       *fSplitter;
    TGLColorEditor    *fColorEditor;
    TGLGeometryEditor *fGeomEditor;
    TGLSceneEditor    *fSceneEditor;

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.13 2004/10/21 16:58:39 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.14 2004/11/22 23:38:31 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -50,6 +50,7 @@ TGLRender::TGLRender()
    fGLObjects.SetOwner(kTRUE);
    fGLCameras.SetOwner(kTRUE);
 
+   fGLInit = kFALSE;
    fAllActive = kTRUE;
    fIsPicking = kFALSE;
    fBoxInList = kFALSE;
@@ -77,6 +78,10 @@ TGLRender::~TGLRender()
 //______________________________________________________________________________
 void TGLRender::Traverse()
 {
+   if (!fGLInit) {
+      fGLInit = kTRUE;
+      Init();
+   }
    if (!fDList) {
       if (!(fDList = glGenLists(1))) {
          Error("TGLRender::Traverse", "could not create gl list");
@@ -361,4 +366,17 @@ void TGLRender::SetFamilyColor(const Float_t *newColor)
             ((TGLSceneObject *)fGLObjects[i])->SetColor(newColor);
       }
    } else fSelectedObj->SetColor(newColor);
+}
+
+void TGLRender::Init()
+{
+   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+   Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};
+   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, lmodelAmb);
+   glEnable(GL_LIGHTING);
+   glEnable(GL_DEPTH_TEST);
+   glEnable(GL_CULL_FACE);
+   glCullFace(GL_BACK);
+   glClearColor(0., 0., 0., 0.);
+   glClearDepth(1.);
 }
