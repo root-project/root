@@ -47,6 +47,7 @@
 //        Float_t      fZfirst;       //Z coordinate of the first point
 //        Float_t      fZlast;        //Z coordinate of the last point
 //        Float_t      fCharge;       //Charge of this track
+//        Float_t      fVertex[3];    //Track vertex position
 //        Int_t        fNpoint;       //Number of points for this track
 //        Short_t      fValid;        //Validity criterion
 //
@@ -200,6 +201,9 @@ Track::Track(Float_t random) : TObject()
    fZfirst = 50 + 5*a;
    fZlast  = 200 + 10*b;
    fCharge = Float_t(Int_t(3*gRandom->Rndm(1)) - 1);
+   fVertex[0] = gRandom->Gaus(0,0.1);
+   fVertex[1] = gRandom->Gaus(0,0.2);
+   fVertex[2] = gRandom->Gaus(0,10);
    fNpoint = Int_t(60+10*gRandom->Rndm(1));
    fValid  = Int_t(0.6+gRandom->Rndm(1));
 }

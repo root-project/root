@@ -102,6 +102,7 @@ private:
    Float_t      fZfirst;       //Z coordinate of the first point
    Float_t      fZlast;        //Z coordinate of the last point
    Float_t      fCharge;       //Charge of this track
+   Float_t      fVertex[3];    //Track vertex position
    Int_t        fNpoint;       //Number of points for this track
    Short_t      fValid;        //Validity criterion
 
@@ -125,6 +126,7 @@ public:
    Float_t       GetZfirst() const { return fZfirst; }
    Float_t       GetZlast()  const { return fZlast; }
    Float_t       GetCharge() const { return fCharge; }
+   Float_t       GetVertex(Int_t i=0) {return fVertex[i];}
    Int_t         GetNpoint() const { return fNpoint; }
    Short_t       GetValid()  const { return fValid; }
    virtual void  SetValid(Int_t valid=1) { fValid = valid; }
