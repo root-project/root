@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.16 2001/04/11 07:21:33 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.17 2001/05/04 13:19:57 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -110,19 +110,22 @@ TF1::TF1(): TFormula(), TAttLine(), TAttFill(), TAttMarker()
 //*-*-*-*-*-*-*-*-*-*-*F1 default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ======================
 
+   fXmin      = 0;
+   fXmax      = 0;
+   fNpx       = 100;
    fType      = 0;
+   fNpfits    = 0;
+   fNsave     = 0;
+   fChisquare = 0;
+   fIntegral  = 0;
    fFunction  = 0;
    fParErrors = 0;
    fParMin    = 0;
    fParMax    = 0;
-   fChisquare = 0;
-   fIntegral  = 0;
    fAlpha     = 0;
    fBeta      = 0;
    fGamma     = 0;
    fParent    = 0;
-   fNpfits    = 0;
-   fNsave     = 0;
    fSave      = 0;
    fHistogram = 0;
    fMinimum   = -1111;
@@ -489,18 +492,32 @@ void TF1::Copy(TObject &obj)
    ((TF1&)obj).fNpfits = fNpfits;
    ((TF1&)obj).fMinimum = fMinimum;
    ((TF1&)obj).fMaximum = fMaximum;
-   if ( ((TF1&)obj).fParErrors ) delete [] ((TF1&)obj).fParErrors;
-   if ( ((TF1&)obj).fParMin    ) delete [] ((TF1&)obj).fParMin;
-   if ( ((TF1&)obj).fParMax    ) delete [] ((TF1&)obj).fParMax;
+
+   ((TF1&)obj).fParErrors = 0;
+   ((TF1&)obj).fParMin    = 0;
+   ((TF1&)obj).fParMax    = 0;
+   ((TF1&)obj).fIntegral  = 0;
+   ((TF1&)obj).fAlpha     = 0;
+   ((TF1&)obj).fBeta      = 0;
+   ((TF1&)obj).fGamma     = 0;
+   ((TF1&)obj).fParent    = fParent;
+   ((TF1&)obj).fNsave     = fNsave;
+   ((TF1&)obj).fSave      = 0;
+   ((TF1&)obj).fHistogram = 0;
+   ((TF1&)obj).fMethodCall = 0;
+   if (fNsave) {
+      ((TF1&)obj).fSave = new Double_t[fNsave];
+      for (Int_t j=0;j<fNsave;j++) ((TF1&)obj).fSave[j] = fSave[j];
+   }
    if (fNpar) {
       ((TF1&)obj).fParErrors = new Double_t[fNpar];
       ((TF1&)obj).fParMin    = new Double_t[fNpar];
       ((TF1&)obj).fParMax    = new Double_t[fNpar];
+      Int_t i; 
+      for (i=0;i<fNpar;i++)   ((TF1&)obj).fParErrors[i] = fParErrors[i];
+      for (i=0;i<fNpar;i++)   ((TF1&)obj).fParMin[i]    = fParMin[i];
+      for (i=0;i<fNpar;i++)   ((TF1&)obj).fParMax[i]    = fParMax[i];
    }
-   Int_t i;
-   for (i=0;i<fNpar;i++)   ((TF1&)obj).fParErrors[i] = fParErrors[i];
-   for (i=0;i<fNpar;i++)   ((TF1&)obj).fParMin[i]    = fParMin[i];
-   for (i=0;i<fNpar;i++)   ((TF1&)obj).fParMax[i]    = fParMax[i];
    if (fMethodCall) {
       TMethodCall *m = new TMethodCall();
       m->InitWithPrototype(fMethodCall->GetMethodName(),fMethodCall->GetProto());
