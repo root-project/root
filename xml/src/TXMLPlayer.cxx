@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.5 2004/12/20 17:15:48 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.6 2005/01/19 18:30:58 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -40,7 +40,9 @@
 //    }
 // 
 //  3. Copy "streamers.h", "streamers.cxx", "TXmlFile.h", "TXmlFile.cxx" files
-//     to user project and compile them. 
+//     to user project and compile them. TXmlFile class implementation can be taken 
+//     from http://www-linux.gsi.de/~linev/xmlfile.tar.gz
+//
 // TXMLPlayer class generates one function per class, which called class streamer.
 // Name of such function for class TExample will be TExample_streamer.
 //
@@ -58,41 +60,44 @@
 //  - allowed arguments for stl containers are: simple data types, string, object, pointer on object
 //  Any other data member can not be (yet) read from xml file and write to xml file.
 //
-//  If data member of class is private or protected, it can not be accessed via 
-//  member name. Two alternative way is supported. First, if for class member fValue 
-//  exists function GetValue(), it will be used to get value from the class, and if 
-//  exists SetValue(), it will be used to set apropriate data member. Names of setter
-//  and getter methods can be specified in comments filed like:
+// If data member of class is private or protected, it can not be accessed via 
+// member name. Two alternative way is supported. First, if for class member fValue 
+// exists function GetValue(), it will be used to get value from the class, and if 
+// exists SetValue(), it will be used to set apropriate data member. Names of setter
+// and getter methods can be specified in comments filed like:
 //
-//     Int  fValue;   // *OPTION={GetMethod="GetV";SetMethod="SetV"}
+//     int  fValue;   // *OPTION={GetMethod="GetV";SetMethod="SetV"}
 // 
-//  If getter or setter methods does not available, address to data member will be 
-//  calculated as predefined offeset to object start address. In that case generated code 
-//  should be used only on the same platform (OS + compiler), where it was generated.
+// If getter or setter methods does not available, address to data member will be 
+// calculated as predefined offeset to object start address. In that case generated code 
+// should be used only on the same platform (OS + compiler), where it was generated.
 //
-//  Generated streamers resolve inheritance tree for given class. This allows to have
-//  array (or vector) of object pointers on some basic class, while objects of derived 
-//  class(es) are used.
+// Generated streamers resolve inheritance tree for given class. This allows to have
+// array (or vector) of object pointers on some basic class, while objects of derived 
+// class(es) are used.
 //
-//  To access data from xml files, user should use TXmlFile class, which is different from
-//  ROOT TXMLFile, but provides very similar functionality. For example, to read 
-//  object from xml file:
+// To access data from xml files, user should use TXmlFile class, which is different from
+// ROOT TXMLFile, but provides very similar functionality. For example, to read 
+// object from xml file:
 //
 //        TXmlFile file("test.xml");             // open xml file 
 //        file.ls();                             // show list of keys in file
 //        TExample* ex1 = (TExample*) file.Get("ex1", TExample_streamer); // get object 
 //        file.Close(); 
 //
-//  To write object to file: 
+// To write object to file: 
 // 
 //        TXmlFile outfile("test2.xml", "recreate");    // create xml file
 //        TExample* ex1 = new TExample;
 //        outfile.Write(ex1, "ex1", TExample_streamer);   // write object to file
 //        outfile.Close();
 //  
-//  Any bug reports and requests for additional functionality of generated code 
-//  or TXmlFile class are welcome. 
-//  Please contact Sergey Linev, S.Linev@gsi.de
+// Complete example for generating and using of external xml streamers can be taken from
+// http://www-linux.gsi.de/~linev/xmlreader.tar.gz
+//
+// Any bug reports and requests for additional functionality are welcome. 
+//  
+// Sergey Linev, S.Linev@gsi.de
 //
 //________________________________________________________________________
 
@@ -1006,6 +1011,8 @@ bool TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, B
      
      if (stltyp<0) return false;
    }
+   
+   bool akaarrayaccess = (narg==1) && (argtype[0]<20);
 
    char tabs[30], tabs2[30];
    
@@ -1050,10 +1057,21 @@ bool TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, B
                  
      if (isstr) {
         fs << tabs2 << "buf.WriteSTLstringData(" << accname << "c_str());" << endl;
-     } else {            
+     } else {   
+        if (akaarrayaccess) {
+           fs << tabs2 << argtname[0] << "* arr = new " << argtname[0] 
+                                      << "[" << accname << "size()];" << endl; 
+           fs << tabs2 << "int k = 0;" << endl;                           
+        }
+              
         fs << tabs2 << contcl->GetName() << "::const_iterator iter;" << endl;
         fs << tabs2 << "for (iter = " << accname << "begin(); iter != " 
                     << accname << "end(); iter++)";
+        if (akaarrayaccess) {
+           fs << endl << tabs2 << tab1 << "arr[k++] = *iter;" << endl;
+           fs << tabs2 << "buf.WriteArray(arr, " << accname << "size(), 0, false);" << endl;
+           fs << tabs2 << "delete[] arr;" << endl;
+        } else            
         if (narg==1) {
            fs << endl << tabs2 << tab1;
            WriteSTLarg(fs, "*iter", argtype[0], isargptr[0], argcl[0]);
@@ -1066,6 +1084,7 @@ bool TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, B
            WriteSTLarg(fs, "iter->second", argtype[1], isargptr[1], argcl[1]);
            fs << tabs2 << "}" << endl;   
         }
+     
      } // if (isstr)
     
      if (isptr) fs << tabs << "}" << endl;
@@ -1125,23 +1144,36 @@ bool TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, B
      if (isstr) {
         fs << tabs << "if (size>0) " << accname << "assign(buf.ReadSTLstringData(size));" << endl;  
      } else {
-        fs << tabs << "for(int k=0;k<size;k++) {" << endl;
+        if (akaarrayaccess) {
+           fs << tabs << argtname[0] << "* arr = new " << argtname[0] << "[size];" << endl;
+           fs << tabs << "buf.ReadArray(arr, size, 0, false);" << endl;
+        }
+     
+        fs << tabs << "for(int k=0;k<size;k++)";
+        
+        if (akaarrayaccess) {
+          fs << endl << tabs << tab1 << accname; 
+          if ((stltyp==TClassEdit::kSet) || (stltyp==TClassEdit::kMultiSet))
+            fs << "insert"; else fs << "push_back";  
+          fs << "(arr[k]);" << endl;
+          fs << tabs << "delete[] arr;" << endl;
+        } else
         if (narg==1) {
-          TString arg1("arg"), ifcond;  
-          fs << tabs << tab1;
+          TString arg1("arg"), ifcond;
+          fs << " {" << endl << tabs << tab1;
           ReadSTLarg(fs, arg1, argtype[0], isargptr[0], argcl[0], argtname[0], ifcond);  
           fs << tabs << tab1;
           if (ifcond.Length()>0) fs << "if (" << ifcond << ") ";
           fs << accname;
-          if ((stltyp==TClassEdit::kSet) ||
-              (stltyp==TClassEdit::kMultiSet))
+          if ((stltyp==TClassEdit::kSet) || (stltyp==TClassEdit::kMultiSet))
             fs << "insert"; else fs << "push_back";  
           fs << "(" << arg1 << ");" << endl;
+          fs << tabs << "}" << endl;
         }
         else 
         if (narg==2) {
            TString arg1("arg1"), arg2("arg2"), ifcond;  
-           fs << tabs << tab1;
+           fs << " {" << endl << tabs << tab1;
            ReadSTLarg(fs, arg1, argtype[0], isargptr[0], argcl[0], argtname[0], ifcond);  
            fs << tabs << tab1;
            ReadSTLarg(fs, arg2, argtype[1], isargptr[1], argcl[1], argtname[1], ifcond);
@@ -1149,8 +1181,8 @@ bool TXMLPlayer::ProduceSTLstreamer(ostream& fs, TClass* cl, TStreamerSTL* el, B
            if (ifcond.Length()>0) fs << "if (" << ifcond << ") ";
            fs << accname << "insert(make_pair(" 
               << arg1 << ", " << arg2 << "));" << endl;
+           fs << tabs << "}" << endl;   
         }
-        fs << tabs << "}" << endl;
      }
      
      if (isarr && el->GetArrayLength()) {

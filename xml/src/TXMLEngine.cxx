@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name$:$Id$
+// @(#)root/xml:$Name:  $:$Id: TXMLEngine.cxx,v 1.11 2004/12/22 16:50:08 rdm Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -8,6 +8,14 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+//________________________________________________________________________
+//
+//  This class is used to write and read xml files.
+//  It makes simplified parsing of xml files, but does not required 
+//  any external libraries like libxml2 or other
+//
+//________________________________________________________________________
 
 #include "TXMLEngine.h"
 
@@ -784,6 +792,9 @@ void TXMLEngine::UnpackSpecialCharacters(char* target, const char* source, int s
         if ((*(source+1)=='a') && (*(source+2)=='m') && (*(source+3)=='p') && (*(source+4)==';')) {
            *target++ = '&'; source+=5; srclen-=5;
         } else
+        if ((*(source+1)=='q') && (*(source+2)=='u') && (*(source+3)=='o') && (*(source+4)=='t') && (*(source+5)==';')) {
+           *target++ = '\"'; source+=6; srclen-=6;
+        } else
          { *target++ = *source++; srclen--; }
       } else { 
         *target++ = *source++; 
@@ -797,28 +808,19 @@ void TXMLEngine::UnpackSpecialCharacters(char* target, const char* source, int s
 void TXMLEngine::OutputValue(char* value, TXMLOutputStream* out)
 {
    if (value==0) return; 
-   char* find = value;
-   while (*find!=0) {
-   if ((*find=='<') || 
-       (*find=='>') || 
-       (*find=='&')) break;
-     find++;
-   }
-   if (*find==0) {
-     out->Write(value);  
-     return;
-   }
    
    char* last = value;
-   find = 0;
-   while ((find=strpbrk(last,"<&>")) !=0 ) {
+   char* find = 0;
+   while ((find=strpbrk(last,"<&>\"")) !=0 ) {
       char symb = *find;
       *find = 0;
       out->Write(last);
       *find = symb;
       last = find+1;
       if (symb=='<') out->Write("&lt;"); else
-      if (symb=='>') out->Write("&gt;"); else out->Write("&amp;");
+      if (symb=='>') out->Write("&gt;"); else 
+      if (symb=='&') out->Write("&amp;"); else 
+                     out->Write("&quot;");  
    }
    if (*last!=0)
      out->Write(last);

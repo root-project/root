@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.10 2004/12/09 07:22:40 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.11 2004/12/09 09:40:05 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -1956,7 +1956,7 @@ void TXMLBuffer::WriteFastArray(const Char_t    *c, Int_t n)
    const Char_t* buf = c;
    if (!usedefault)
      for (int i=0;i<n;i++) {
-        if ((*buf<26)/* || (*buf=='<') || (*buf=='>') */ || (*buf=='\"'))
+        if ((*buf < 27) /* || (*buf=='<') || (*buf=='>')  || (*buf=='\"')*/)
          { usedefault = kTRUE; break; }
         buf++;
      }
