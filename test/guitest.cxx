@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.20 2001/11/18 17:28:19 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.21 2001/12/04 18:55:35 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -2001,7 +2001,7 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h) :
                         (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
                         ax, ay, wdum);
    Move((((TGFrame *) main)->GetWidth() >> 1) + ax, ay);
-   SetWMPosition(ax, ay);
+   SetWMPosition((((TGFrame *) main)->GetWidth() >> 1) + ax, ay);
 }
 
 Editor::~Editor()
