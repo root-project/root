@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.8 2001/04/23 13:55:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.h,v 1.9 2001/05/31 08:56:32 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -50,7 +50,7 @@ public:
     virtual const char *GetTypeName() const {return ((TBranchElement*)fBranch)->GetTypeName();}
     virtual Double_t GetValue(Int_t i=0) const {return ((TBranchElement*)fBranch)->GetValue(i, fLen, kFALSE);}
     virtual Double_t GetValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetValue(i, j, kTRUE);}
-    virtual void    *GetValuePointer() const { return fAbsAddress; }
+    virtual void    *GetValuePointer() const { return ((TBranchElement*)fBranch)->GetValuePointer(); }
     virtual Bool_t   IsOnTerminalBranch() const;
     virtual void     PrintValue(Int_t i=0) const {((TBranchElement*)fBranch)->PrintValue(i);}
     virtual void     SetLeafCount(TLeaf *leaf) {fLeafCount = leaf;}
