@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.12 2001/02/08 16:10:34 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.13 2001/02/09 18:19:18 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -32,16 +32,17 @@
 #include <unistd.h>
 
 extern "C" {
-   int  rfio_open(char *filepath, int flags, int mode);
-   int  rfio_close(int s);
-   int  rfio_read(int s, char *ptr, int size);
-   int  rfio_write(int s, char *ptr, int size);
-   int  rfio_lseek(int s, int offset, int how);
-   int  rfio_access(char *filepath, int mode);
-   int  rfio_unlink(char *filepath);
-   int  rfio_parse(char *name, char **host, char **path);
-   int  rfio_fstat(int s, struct stat *statbuf);
-   void rfio_perror(const char *msg);
+   int   rfio_open(char *filepath, int flags, int mode);
+   int   rfio_close(int s);
+   int   rfio_read(int s, char *ptr, int size);
+   int   rfio_write(int s, char *ptr, int size);
+   int   rfio_lseek(int s, int offset, int how);
+   int   rfio_access(char *filepath, int mode);
+   int   rfio_unlink(char *filepath);
+   int   rfio_parse(char *name, char **host, char **path);
+   int   rfio_fstat(int s, struct stat *statbuf);
+   void  rfio_perror(const char *msg);
+   char *rfio_serror();
 };
 
 extern int rfio_errno;
@@ -141,8 +142,7 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const Text_t *ftitle,
       fD = SysOpen(fname, O_RDWR | O_CREAT | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
-         Error("TRFIOFile", "file %s can not be opened", fname);
-         ::rfio_perror("SysError in <TRFIOFile::TRFIOFile>");
+         SysError("TRFIOFile", "file %s can not be opened", fname);
          goto zombie;
       }
       fWritable = kTRUE;
@@ -153,8 +153,7 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const Text_t *ftitle,
       fD = SysOpen(fname, O_RDONLY | O_BINARY, S_IREAD | S_IWRITE);
 #endif
       if (fD == -1) {
-         Error("TRFIOFile", "file %s can not be opened for reading", fname);
-         ::rfio_perror("SysError in <TRFIOFile::TRFIOFile>");
+         SysError("TRFIOFile", "file %s can not be opened for reading", fname);
          goto zombie;
       }
       fWritable = kFALSE;
@@ -183,7 +182,10 @@ Int_t TRFIOFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
    // Interface to system open. All arguments like in "man 2 open".
 
-   return ::rfio_open((char *)pathname, flags, (Int_t) mode);
+   Int_t ret = ::rfio_open((char *)pathname, flags, (Int_t) mode);
+   if (ret < 0)
+      gSystem->SetErrorStr(::rfio_serror());
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -191,7 +193,10 @@ Int_t TRFIOFile::SysClose(Int_t fd)
 {
    // Interface to system close. All arguments like in "man 2 close".
 
-   return ::rfio_close(fd);
+   Int_t ret = ::rfio_close(fd);
+   if (ret < 0)
+      gSystem->SetErrorStr(::rfio_serror());
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -200,7 +205,10 @@ Int_t TRFIOFile::SysRead(Int_t fd, void *buf, Int_t len)
    // Interface to system read. All arguments like in "man 2 read".
 
    fOffset += len;
-   return ::rfio_read(fd, (char *)buf, len);
+   Int_t ret = ::rfio_read(fd, (char *)buf, len);
+   if (ret < 0)
+      gSystem->SetErrorStr(::rfio_serror());
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -209,7 +217,10 @@ Int_t TRFIOFile::SysWrite(Int_t fd, const void *buf, Int_t len)
    // Interface to system write. All arguments like in "man 2 write".
 
    fOffset += len;
-   return ::rfio_write(fd, (char *)buf, len);
+   Int_t ret = ::rfio_write(fd, (char *)buf, len);
+   if (ret < 0)
+      gSystem->SetErrorStr(::rfio_serror());
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -234,7 +245,10 @@ Seek_t TRFIOFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
       break;
    }
 
-   return ::rfio_lseek(fd, offset, whence);
+   Seek_t ret = ::rfio_lseek(fd, offset, whence);
+   if (ret < 0)
+      gSystem->SetErrorStr(::rfio_serror());
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -269,6 +283,8 @@ Int_t TRFIOFile::SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags,
       }
       return 0;
    }
+
+   gSystem->SetErrorStr(::rfio_serror());
    return 1;
 }
 
