@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TG3ParticlePDG.cc,v 1.2 2001/02/23 04:42:40 murat Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.3 2001/03/05 09:09:42 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDecayChannel.h"
@@ -118,8 +118,9 @@ void TParticlePDG::Print(Option_t *) const
    }
    if (fDecayList) {
      int banner_printed = 0;
-     TIter it(fDecayList);
-     while (TDecayChannel* dc = (TDecayChannel*) it.Next()) {
+     TIter next(fDecayList);
+     TDecayChannel* dc;
+     while ((dc = (TDecayChannel*)next())) {
        if (! banner_printed) {
 	 PrintDecayChannel(dc,"banner");
 	 banner_printed = 1;

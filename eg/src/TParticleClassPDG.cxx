@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.cc,v 1.1 2001/02/22 14:17:20 murat Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticleClassPDG.cxx,v 1.1 2001/03/05 09:09:42 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDecayChannel.h"
@@ -32,8 +32,9 @@ void TParticleClassPDG::Print(Option_t *) const
   printf("Particle class: %-20s",GetName());
   if (fListOfParticles) {
     int banner_printed = 0;
-    TIter it(fListOfParticles);
-    while (TParticlePDG* p = (TParticlePDG*) it.Next()) {
+    TIter next(fListOfParticles);
+    TParticlePDG *p;
+    while ((p = (TParticlePDG*)next())) {
       if (! banner_printed) {
 	p->Print("banner");
 	banner_printed = 1;
