@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.108 2004/07/08 17:55:41 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.109 2004/07/26 22:57:21 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1520,7 +1520,7 @@ UserGroup_t *TUnixSystem::GetUserInfo(Int_t uid)
       ug->fRealName = pwd->pw_gecos;
       ug->fShell    = pwd->pw_shell;
       UserGroup_t *gr = GetGroupInfo(pwd->pw_gid);
-      ug->fGroup    = gr->fGroup;
+      if (gr) ug->fGroup = gr->fGroup;
       delete gr;
       return ug;
    }
