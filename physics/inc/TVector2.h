@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.5 2001/12/02 09:59:15 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.6 2002/02/23 15:45:56 rdm Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -179,7 +179,7 @@ inline Double_t   operator ^ (const TVector2& v1, const TVector2& v2) {
 
 inline  Double_t TVector2::DeltaPhi(const TVector2& v) const { return Phi_mpi_pi(Phi()-v.Phi()); }
 
-inline  TVector2 TVector2::Unit() const {return (Mod2()) ? *this/Mod() : TVector2(0); }
+inline  TVector2 TVector2::Unit() const {return (Mod2()) ? *this/Mod() : TVector2(); }
 
 inline  TVector2 TVector2::Ort () const { return Unit(); }
 
