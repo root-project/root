@@ -32,6 +32,7 @@ else
 CRYPTLIBS     = $(SSLLIBDIR) $(SSLLIB)
 endif
 endif
+EXTRANETFLAGS = $(SSLFLAGS) $(EXTRA_AUTHFLAGS)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETH))
@@ -48,12 +49,10 @@ $(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMP)
 		$(ROOTCINTTMP) -f $@ -c $(NETH) $(NETL)
 
 $(NETO):        %.o: %.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) $(SSLFLAGS) $(EXTRA_AUTHFLAGS) -I. \
-		   -o $@ -c $<
+		$(CXX) $(OPT) $(CXXFLAGS) $(EXTRANETFLAGS) -I. -o $@ -c $<
 
 $(NETDO):       $(NETDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) $(SSLFLAGS) $(EXTRA_AUTHFLAGS) -I. \
-		   -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(EXTRANETFLAGS) -I. -o $@ -c $<
 
 all-net:        $(NETO) $(NETDO)
 
