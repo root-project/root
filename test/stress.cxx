@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.47 2003/08/22 10:40:16 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.48 2004/01/05 13:45:12 rdm Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -315,16 +315,16 @@ void stress2()
    //check length and compression factor in stress.root
    Bprint(2,"Check size & compression factor of a Root file");
    TFile f("stress.root");
-   Int_t last = f.GetEND();
+   Long64_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
 
    Bool_t OK = kTRUE;
-   Int_t lastgood = 9344;
+   Long64_t lastgood = 9344;
    if (last <lastgood-200 || last > lastgood+200 || comp <1.9 || comp > 2.5) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
-      printf("%-8s last =%d, comp=%f\n"," ",last,comp);
+      printf("%-8s last =%lld, comp=%f\n"," ",last,comp);
    }
 }
 
@@ -346,15 +346,15 @@ void stress3()
    //check length and compression level in stress.root
    ntotin  += f.GetBytesRead();
    ntotout += f.GetBytesWritten();
-   Int_t last = f.GetEND();
+   Long64_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-   Int_t lastgood = 49203;
+   Long64_t lastgood = 49203;
    if (last <lastgood-900 || last > lastgood+900 || comp <1.8 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
-      printf("%-8s last =%d, comp=%f\n"," ",last,comp);
+      printf("%-8s last =%lld, comp=%f\n"," ",last,comp);
    }
 }
 
