@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.5 2000/12/13 15:13:48 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.6 2001/03/23 13:25:04 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -674,12 +674,11 @@ void TPolyMarker3D::Streamer(TBuffer &b)
       TObject::Streamer(b);
       TAttMarker::Streamer(b);
       b >> fN;
-      fLastPoint = 0;
       if (fN) {
          fP = new Float_t[kDimension*fN];
          b.ReadFastArray(fP,kDimension*fN);
-         fLastPoint = fN-1;
       }
+      fLastPoint = fN-1;
       fOption.Streamer(b);
       b.CheckByteCount(R__s, R__c, TPolyMarker3D::IsA());
    } else {
