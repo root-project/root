@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.61 2004/06/04 16:28:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.62 2004/07/30 01:12:27 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -53,6 +53,7 @@
 #include "TProcessID.h"
 #include "TMath.h"
 #include "TSystem.h"
+#include "TRefTable.h"
 
 class TDumpMembers : public TMemberInspector {
    // Implemented in TClass.cxx
@@ -794,6 +795,9 @@ void TObject::Streamer(TBuffer &R__b)
       } else {
          //if the object is referenced, we must save its address/file_pid
          UInt_t uid = fUniqueID & 0xffffff;
+         //add uid to the TRefTable if there is one
+         TRefTable *table = file->GetRefTable();
+         if(table) table->Add(uid);
          R__b << uid;
          R__b << fBits;
          TProcessID *pid = TProcessID::GetProcessWithUID(fUniqueID);
