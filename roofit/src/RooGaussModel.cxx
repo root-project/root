@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.3 2001/06/23 01:22:01 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.4 2001/06/30 01:34:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -22,10 +22,13 @@ ClassImp(RooGaussModel)
 
 
 RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& x, 
-			     RooAbsReal& _mean, RooAbsReal& _sigma) : 
+			     RooAbsReal& _mean, RooAbsReal& _sigma, 
+			     RooAbsReal& _meanSF, RooAbsReal& _sigmaSF) : 
   RooResolutionModel(name,title,x), 
   mean("mean","Mean",this,_mean),
-  sigma("sigma","Width",this,_sigma)
+  sigma("sigma","Width",this,_sigma),
+  msf("msf","Mean Scale Factor",this,_meanSF),
+  ssf("ssf","Sigma Scale Factor",this,_sigmaSF)
 {  
 }
 
@@ -33,7 +36,9 @@ RooGaussModel::RooGaussModel(const char *name, const char *title, RooRealVar& x,
 RooGaussModel::RooGaussModel(const RooGaussModel& other, const char* name) : 
   RooResolutionModel(other,name),
   mean("mean",this,other.mean),
-  sigma("sigma",this,other.sigma)
+  sigma("sigma",this,other.sigma),
+  msf("msf",this,other.msf),
+  ssf("ssf",this,other.ssf)
 {
 }
 
@@ -60,46 +65,52 @@ Int_t RooGaussModel::basisCode(const char* name) const
 
 Double_t RooGaussModel::evaluate(const RooDataSet* dset) const 
 {  
+  // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
   static Double_t root2(sqrt(2)) ;
-  // Special case: no convolution
-  if (_basisCode==noBasis) {
-    Double_t xprime = (x-mean)/sigma ;
-    return exp(-0.5*xprime*xprime) ;
-  }
+  static Double_t root2pi(sqrt(2*atan2(0,-1))) ;
 
-  // Precalculate intermediate quantities  
-  Double_t sign = (_basisCode==expBasisPlus||_basisCode==sinBasisPlus||_basisCode==cosBasisPlus)?-1:1 ;
   Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
-  Double_t xprime = sign*(x-mean)/tau ;
-  Double_t c = sigma/(root2*tau) ; 
+
+  if (_basisCode==noBasis || 
+      ((_basisCode==expBasisPlus||_basisCode==expBasisMinus||
+	_basisCode==cosBasisPlus||_basisCode==cosBasisMinus)&&tau==0.)) {
+    Double_t xprime = (x-(mean*msf))/(sigma*ssf) ;
+    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 1st form" << endl ;
+    return exp(-0.5*xprime*xprime)/(sigma*ssf*root2pi) ;
+  }
+
+  // *** 2nd form: 0, used for sinBasis and cosBasis with tau=0 ***
+  if (tau==0) {
+    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 2nd form" << endl ;
+    return 0. ;
+  }
+
+  // *** 3nd form: Convolution with exp(-t/tau), used for expBasis and cosBasis(omega=0) ***
+  Double_t sign = (_basisCode==expBasisPlus||_basisCode==sinBasisPlus||_basisCode==cosBasisPlus)?-1:1 ;
+  Double_t omega = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+  Double_t xprime = sign*(x-(mean*msf))/tau ;
+  Double_t c = (sigma*ssf)/(root2*tau) ; 
   Double_t u = xprime/(2*c) ;
-
-  Double_t result ;
-  if (_basisCode==expBasisPlus||_basisCode==expBasisMinus) {
-    cout << "RooGaussModel::evaluate(" << GetName() << "): expBasis" << endl ;
-    result = 0.25/tau * exp(xprime+c*c) * erfc(u+c) ;
-    return result ;
+    
+  if ( _basisCode==expBasisPlus || _basisCode==expBasisMinus || 
+    ((_basisCode==cosBasisPlus||_basisCode==cosBasisMinus)&&omega==0.)) {      
+    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 3d form tau=" << tau << endl ;
+    return exp(xprime+c*c) * erfc(u+c) ;
   }
-//       RFT Implementation
-//       s= -sign*(tval - bias)/tau;
-//       c= sigma/(_root2*tau);
-//       result+= frac*exp(s + c*c)*erfc(0.5*s/c + c);
-
-
-  Double_t swt = ((RooAbsReal*)basis().getParameter(2))->getVal() * tau * sign ;
-  RooComplex evalTerm = evalCerf(swt,u,c) ;    
-
+  
+  // *** 4th form: Convolution with exp(-t/tau)*sin(omega*t), used for sinBasis(omega<>0,tau<>0) ***
+  Double_t swt = sign * omega *tau ;
   if (_basisCode==sinBasisPlus||_basisCode==sinBasisMinus) {
-    result = 0.25/tau * evalTerm.im() ;
-    return result ;
+    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 4th form" << endl ;
+    return (swt==0.) ? 0. : evalCerfIm(swt,u,c) ;    
   }
 
+  // *** 5th form: Convolution with exp(-t/tau)*cos(omega*t), used for cosBasis(omega<>0) ***
   if (_basisCode==cosBasisPlus||_basisCode==cosBasisMinus) {
-    result = 0.25/tau * evalTerm.re() ;
-    return result ;
+    if (_verboseEval>2) cout << "RooGaussModel::evaluate(" << GetName() 
+			     << ") 5th form omega = " << omega << ", tau = " << tau << endl ;
+    return evalCerfRe(swt,u,c) ;          
   }
-
-  return result ;
 }
 
 
@@ -140,53 +151,47 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
   // Code must be 0 or 1
   assert(code==1) ;
   
-  // Unconvoluted function integral
-  if (_basisCode==noBasis) {
-    Double_t xscale = root2*sigma;
-    return rootPiBy2*sigma*(erf((x.max()-mean)/xscale)-erf((x.min()-mean)/xscale));
+  // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
+  Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+  if (_basisCode==noBasis || 
+      ((_basisCode==expBasisPlus||_basisCode==expBasisMinus||
+	_basisCode==cosBasisPlus||_basisCode==cosBasisMinus)&&tau==0.)) {
+    Double_t xscale = root2*(sigma*ssf);
+    return 0.5*(erf((x.max()-(mean*msf))/xscale)-erf((x.min()-(mean*msf))/xscale));
   }
 
-  // Calculate intermediate variables
+  Double_t omega = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
+
+  // *** 2nd form: unity, used for sinBasis and cosBasis with tau=0 (PDF is zero) ***
+  if (tau==0&&omega!=0) return 1. ;
+
+  // *** 3rd form: Convolution with exp(-t/tau), used for expBasis and cosBasis(omega=0) ***
   Double_t sign = (_basisCode==expBasisPlus)?-1:1 ;
-  Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
-  Double_t c = sigma/(root2*tau) ; 
-  Double_t xpmin = sign*(x.min()-mean)/tau ;
-  Double_t xpmax = sign*(x.max()-mean)/tau ;
+  Double_t c = (sigma*ssf)/(root2*tau) ; 
+  Double_t xpmin = sign*(x.min()-(mean*msf))/tau ;
+  Double_t xpmax = sign*(x.max()-(mean*msf))/tau ;
   Double_t umin = xpmin/(2*c) ;
   Double_t umax = xpmax/(2*c) ;
-
-  // EXP basis function integrals
-  if (_basisCode==expBasisPlus||_basisCode==expBasisMinus) {   
-    cout << "RooGaussModel::evaluate(" << GetName() << "): expBasis integral" << endl ;
-    Double_t result = sign * 0.25 * ( erf(umax) - erf(umin) + 
+  if (_basisCode==expBasisPlus||_basisCode==expBasisMinus || 
+    ((_basisCode==cosBasisPlus||_basisCode==cosBasisPlus)&&omega==0.)) {
+    Double_t result = sign * tau * ( erf(umax) - erf(umin) + 
                                       exp(c*c) * ( exp(xpmax)*erfc(umax+c)
 						 - exp(xpmin)*erfc(umin+c) )) ;     
     return result ;
   }
 
-//       RFT Implementation
-//       c= sigma/(_root2*tau);
-//       y1= -sign*(t1 - bias)/tau;
-//       y2= -sign*(t2 - bias)/tau;
-//       u1= y1/(2*c);
-//       u2= y2/(2*c);
-//       result+= frac*(exp(c*c)*(exp(y1)*erfc(u1+c)-exp(y2)*erfc(u2+c))+erf(u1)-erf(u2));
-//       ...
-//       result*= tau*sign ;
-
-  // Calculate additional intermediate results for oscillating terms
-  Double_t swt = ((RooAbsReal*)basis().getParameter(2))->getVal() * tau * sign ;
+  // *** 4th form: Convolution with exp(-t/tau)*sin(omega*t), used for sinBasis(omega<>0,tau<>0) ***
+  Double_t swt = omega * tau * sign ;
   RooComplex evalDif(evalCerf(swt,umax,c) - evalCerf(swt,umin,c)) ;
-
-  // SIN basis function integrals
   if (_basisCode==sinBasisPlus||_basisCode==sinBasisMinus) {    
-    Double_t result = 0.25*sign/(1+swt*swt) * ( evalDif.im() - swt*evalDif.re() + erf(umax) - erf(umin) ) ;
+    Double_t result = (swt==0)? 1.0 
+                    : (tau*sign/(1+swt*swt) * ( evalDif.im() - swt*evalDif.re() + erf(umax) - erf(umin) )) ;
     return result ;
   }
 
-  // COS basis function integrals
+  // *** 5th form: Convolution with exp(-t/tau)*cos(omega*t), used for cosBasis(omega<>0) ***
   if (_basisCode==cosBasisPlus||_basisCode==cosBasisMinus) {
-    Double_t result = 0.25*sign/(1+swt*swt) * ( evalDif.re() + swt*evalDif.im() + erf(umax) - erf(umin) ) ;
+    Double_t result = tau*sign/(1+swt*swt) * ( evalDif.re() + swt*evalDif.im() + erf(umax) - erf(umin) ) ;
     return result ;
   }
 
@@ -194,31 +199,19 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
 
 
 
-
-
-RooComplex RooGaussModel::evalCerf(Double_t swt, Double_t u, Double_t c) const
-//                                 sign*omg_tau, xprime/(2*c), c
+RooComplex RooGaussModel::evalCerfApprox(Double_t swt, Double_t u, Double_t c) const
 {
-// Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of
-// numerical instabilities
+  // use the approximation: erf(z) = exp(-z*z)/(sqrt(pi)*z)
+  // to explicitly cancel the divergent exp(y*y) behaviour of
+  // CWERF for z = x + i y with large negative y
 
   static Double_t rootpi= sqrt(atan2(0,-1));
-  RooComplex z(swt*c,u+c);
+  RooComplex z(swt*c,u+c);  
+  RooComplex zc(u+c,-swt*c);
+  RooComplex zsq= z*z;
+  RooComplex v= -zsq - u*u;
 
-  if(z.im() > -4) {
-    // ComplexErrFunc actually evaluates the CERNLIB CWERF which
-    // is exp(-z*z)*erfc(-i z)
-    return RooMath::ComplexErrFunc(z)*exp(-u*u);
-  }
-  else {
-    // use the approximation: erf(z) = exp(-z*z)/(sqrt(pi)*z)
-    // to explicitly cancel the divergent exp(y*y) behaviour of
-    // CWERF for z = x + i y with large negative y
-    RooComplex zc(u+c,-swt*c);
-    RooComplex zsq= z*z;
-    RooComplex v= -zsq - u*u;
-    return v.exp()*(-zsq.exp()/(zc*rootpi) + 1)*2;
-  }
+  return v.exp()*(-zsq.exp()/(zc*rootpi) + 1)*2 ;
 }
 
 

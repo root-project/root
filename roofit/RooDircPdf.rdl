@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDircPdf.rdl,v 1.2 2001/05/17 00:48:06 verkerke Exp $
+ *    File: $Id: RooDircPdf.rdl,v 1.4 2001/06/19 18:36:49 jback Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -28,7 +28,7 @@ public:
              Double_t minMtmVal = 0.0, Double_t minThetaCVal = 0.0,
 	     Bool_t milliRadians = kFALSE) ;
   RooDircPdf(const RooDircPdf& other, const char* name=0) ;
-  virtual TObject* clone() const { return new RooDircPdf(*this); }
+  virtual TObject* clone(const char* newname) const { return new RooDircPdf(*this,newname); }
   inline virtual ~RooDircPdf() { }
 
   // WVE - This is cheating, this PDF is not normalized.

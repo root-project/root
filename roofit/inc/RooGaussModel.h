@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.rdl,v 1.1 2001/06/09 05:14:11 verkerke Exp $
+ *    File: $Id: RooGaussModel.rdl,v 1.2 2001/06/19 02:17:19 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -15,6 +15,7 @@
 #include "RooFitCore/RooResolutionModel.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooComplex.hh"
+#include "RooFitCore/RooMath.hh"
 
 class RooGaussModel : public RooResolutionModel {
 public:
@@ -26,9 +27,8 @@ public:
   // Constructors, assignment etc
   inline RooGaussModel() { }
   RooGaussModel(const char *name, const char *title, RooRealVar& x, 
-		RooAbsReal& mean, RooAbsReal& sigma) ; 
+		RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& meanSF, RooAbsReal& sigmaSF) ; 
   RooGaussModel(const RooGaussModel& other, const char* name=0);
-  virtual TObject* clone() const { return new RooGaussModel(*this) ; }
   virtual TObject* clone(const char* newname) const { return new RooGaussModel(*this,newname) ; }
   virtual ~RooGaussModel();
   
@@ -37,12 +37,33 @@ public:
   virtual Double_t analyticalIntegral(Int_t code) const ;
 
 protected:
-  virtual Double_t evaluate(const RooDataSet* dset) const ;
 
-  RooComplex evalCerf(Double_t swt, Double_t u, Double_t c) const ;
+  virtual Double_t evaluate(const RooDataSet* dset) const ;
+  RooComplex evalCerfApprox(Double_t swt, Double_t u, Double_t c) const ;
+
+  // Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
+  inline RooComplex evalCerf(Double_t swt, Double_t u, Double_t c) const {
+    RooComplex z(swt*c,u+c);
+    return (z.im()>-4.0) ? RooMath::FastComplexErrFunc(z)*exp(-u*u) : evalCerfApprox(swt,u,c) ;
+  }
+    
+  // Calculate Re(exp(-u^2) cwerf(swt*c + i(u+c))), taking care of numerical instabilities
+  inline Double_t evalCerfRe(Double_t swt, Double_t u, Double_t c) const {
+    RooComplex z(swt*c,u+c);
+    return (z.im()>-4.0) ? RooMath::FastComplexErrFuncRe(z)*exp(-u*u) : evalCerfApprox(swt,u,c).re() ;
+  }
+  
+  // Calculate Im(exp(-u^2) cwerf(swt*c + i(u+c))), taking care of numerical instabilities
+  inline Double_t evalCerfIm(Double_t swt, Double_t u, Double_t c) const {
+    RooComplex z(swt*c,u+c);
+    return (z.im()>-4.0) ? RooMath::FastComplexErrFuncIm(z)*exp(-u*u) : evalCerfApprox(swt,u,c).im() ;
+  }
+  
 
   RooRealProxy mean ;
   RooRealProxy sigma ;
+  RooRealProxy msf ;
+  RooRealProxy ssf ;
 
   ClassDef(RooGaussModel,1) // Gaussian Resolution Model
 };

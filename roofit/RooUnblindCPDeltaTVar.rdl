@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.4 2001/06/08 05:52:39 verkerke Exp $
+ *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.5 2001/06/30 01:34:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -26,7 +26,7 @@ public:
 			RooAbsRealLValue& deltat, RooAbsCategory& tag, 
 			RooAbsCategory& blindState);
   RooUnblindCPDeltaTVar(const RooUnblindCPDeltaTVar& other, const char* name=0) ;
-  virtual TObject* clone() const { return new RooUnblindCPDeltaTVar(*this); }  
+  virtual TObject* clone(const char* newname) const { return new RooUnblindCPDeltaTVar(*this,newname); }  
   virtual ~RooUnblindCPDeltaTVar();
 
   // I/O streaming interface (machine readable)

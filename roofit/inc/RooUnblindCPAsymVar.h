@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.4 2001/06/08 05:52:38 verkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.5 2001/06/30 01:34:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -24,7 +24,7 @@ public:
   RooUnblindCPAsymVar(const char *name, const char *title, 
 			const char *blindString, RooAbsReal& cpasym);
   RooUnblindCPAsymVar(const RooUnblindCPAsymVar& other, const char* name=0);
-  virtual TObject* clone() const { return new RooUnblindCPAsymVar(*this); }  
+  virtual TObject* clone(const char* newname) const { return new RooUnblindCPAsymVar(*this,newname); }  
   virtual ~RooUnblindCPAsymVar();
 
   // I/O streaming interface (machine readable)

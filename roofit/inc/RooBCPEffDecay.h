@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooBCPEffDecay.rdl,v 1.1 2001/06/26 18:13:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -32,7 +32,7 @@ public:
 		 const RooResolutionModel& model, DecayType type=DoubleSided) ;
 
   RooBCPEffDecay(const RooBCPEffDecay& other, const char* name=0);
-  virtual TObject* clone() const { return new RooBCPEffDecay(*this) ; }
+  virtual TObject* clone(const char* newname) const { return new RooBCPEffDecay(*this,newname) ; }
   virtual ~RooBCPEffDecay();
 
   virtual Double_t coefficient(Int_t basisIndex) const ;

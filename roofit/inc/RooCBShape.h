@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCBShape.rdl,v 1.3 2000/11/13 19:06:21 david Exp $
+ *    File: $Id: RooCBShape.rdl,v 1.1 2001/06/19 18:36:49 jback Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -25,7 +25,7 @@ public:
 	     RooAbsReal& _alpha, RooAbsReal& _n);
 
   RooCBShape(const RooCBShape& other, const char* name = 0);
-  virtual TObject* clone() const { return new RooCBShape(*this); }
+  virtual TObject* clone(const char* newname) const { return new RooCBShape(*this,newname); }
 
   inline virtual ~RooCBShape() { }
 
