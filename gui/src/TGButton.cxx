@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.40 2004/09/12 10:55:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.41 2004/09/13 12:48:17 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -612,8 +612,9 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
    if (!pic) {
       Error("TGPictureButton", "pixmap not found for button %d", id);
       fPic = fClient->GetPicture("mb_question_s.xpm");
-   } else
+   } else {
       fPic = pic;
+   }
 
    if (fPic) {
       fTWidth  = fPic->GetWidth();
@@ -622,6 +623,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
       Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
+   fPicD = 0;
    SetWindowName();
 }
 
@@ -652,6 +654,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
       Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
+   fPicD = 0;
    SetWindowName();
 }
 
@@ -675,6 +678,7 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
       Resize(fTWidth  + (fBorderWidth << 1) + fBorderWidth + 1,
              fTHeight + (fBorderWidth << 1) + fBorderWidth); // *3
    }
+   fPicD = 0;
    SetWindowName();
 }
 
@@ -718,7 +722,9 @@ void TGPictureButton::DoRedraw()
       gVirtualX->FillRectangle(fId, GetHibckgndGC()(), 2, 2, fWidth-4, fHeight-4);
       gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 2, fWidth-3, 2);
    }
-   fPic->Draw(fId, fNormGC, x, y);
+   const TGPicture *pic = (fState == kButtonDisabled) && fPicD ? fPicD : fPic;
+
+   pic->Draw(fId, fNormGC, x, y);
 }
 
 

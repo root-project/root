@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.9 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.h,v 1.10 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 
 class TGButton;
 class TList;
-
+class TMap;
 
 struct ToolBarData_t {
    const char *fPixmap;
@@ -45,6 +45,7 @@ class TGToolBar : public TGCompositeFrame {
 private:
    TList   *fPictures;    // list of pictures that should be freed
    TList   *fTrash;       // list of buttons and layout hints to be deleted
+   TMap   *fMapOfButtons;    // map of button/id pairs in this group
 
 public:
    TGToolBar(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
@@ -52,10 +53,20 @@ public:
              Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGToolBar();
 
-   void AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacing = 0);
-   void ChangeIcon(ToolBarData_t *button, const char *new_icon);
-   void Cleanup();
-   virtual void SavePrimitive(ofstream &out, Option_t *option);
+   virtual TGButton *AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacing = 0);
+
+   virtual void ChangeIcon(ToolBarData_t *button, const char *new_icon);
+   virtual void Cleanup();
+
+   virtual void ButtonPressed();
+   virtual void ButtonReleased();
+   virtual void ButtonClicked();
+
+   virtual void Pressed(Int_t id)  { Emit("Pressed(Int_t)",id); }   //*SIGNAL*
+   virtual void Released(Int_t id) { Emit("Released(Int_t)",id);}   //*SIGNAL*
+   virtual void Clicked(Int_t id)  { Emit("Clicked(Int_t)",id); }   //*SIGNAL*
+
+   virtual void   SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGToolBar,0)  //A bar containing picture buttons
 };

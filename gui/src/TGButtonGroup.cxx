@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.16 2003/12/15 18:04:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.17 2004/09/08 08:13:11 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -88,12 +88,12 @@
 #include "Riostream.h"
 
 
-ClassImpQ(TGButtonGroup)
-ClassImpQ(TGHButtonGroup)
-ClassImpQ(TGVButtonGroup)
+ClassImp(TGButtonGroup)
+ClassImp(TGHButtonGroup)
+ClassImp(TGVButtonGroup)
 
 //______________________________________________________________________________
-TGButtonGroup::TGButtonGroup(TGWindow *parent,
+TGButtonGroup::TGButtonGroup(const TGWindow *parent,
                              const TString &title,
                              UInt_t options,
                              GContext_t norm,
@@ -114,7 +114,7 @@ TGButtonGroup::TGButtonGroup(TGWindow *parent,
 }
 
 //______________________________________________________________________________
-TGButtonGroup::TGButtonGroup(TGWindow *parent,
+TGButtonGroup::TGButtonGroup(const TGWindow *parent,
                              UInt_t r, UInt_t c,
                              Int_t s, Int_t h,
                              const TString &title,

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.9 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.10 2004/09/08 08:13:11 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -45,14 +45,14 @@ protected:
    void Init();
 
 public:
-   TGButtonGroup(TGWindow *parent = 0,
+   TGButtonGroup(const TGWindow *parent = 0,
                  const TString &title = "",
                  UInt_t options = kChildFrame | kVerticalFrame,
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  Pixel_t back = GetDefaultFrameBackground());
 
-   TGButtonGroup(TGWindow *parent,
+   TGButtonGroup(const TGWindow *parent,
                  UInt_t r, UInt_t c, Int_t s = 0, Int_t h = 0 ,
                  const TString &title = "",
                  GContext_t norm = GetDefaultGC()(),
@@ -65,32 +65,32 @@ public:
    virtual void Released(Int_t id) { Emit("Released(Int_t)",id);}   //*SIGNAL*
    virtual void Clicked(Int_t id)  { Emit("Clicked(Int_t)",id); }   //*SIGNAL*
 
-   void ButtonPressed();
-   void ButtonReleased();
-   void ButtonClicked();
-   void ReleaseButtons();
+   virtual void ButtonPressed();
+   virtual void ButtonReleased();
+   virtual void ButtonClicked();
+   virtual void ReleaseButtons();
 
    Bool_t IsExclusive() const { return fExclGroup; }
    Bool_t IsRadioButtonExclusive() const  { return fRadioExcl; }
    Bool_t IsBorderDrawn() const { return fDrawBorder; }
+   Int_t  GetCount() const { return fMapOfButtons->GetSize(); }
+   Int_t  GetId(TGButton *button) const;
 
-   void SetExclusive(Bool_t flag = kTRUE);
-   void SetRadioButtonExclusive(Bool_t flag = kTRUE);
-   void SetBorderDrawn(Bool_t enable = kTRUE);
-   void SetButton(Int_t id, Bool_t down = kTRUE);
-   void SetTitle(TGString *title);
-   void SetTitle(const char *title);
+   virtual void SetExclusive(Bool_t flag = kTRUE);
+   virtual void SetRadioButtonExclusive(Bool_t flag = kTRUE);
+   virtual void SetBorderDrawn(Bool_t enable = kTRUE);
+   virtual void SetButton(Int_t id, Bool_t down = kTRUE);
+   virtual void SetTitle(TGString *title);
+   virtual void SetTitle(const char *title);
 
-   Int_t     Insert(TGButton *button, int id = -1);
-   void      Remove(TGButton *button);
-   TGButton *Find(Int_t id) const;
-   TGButton *GetButton(Int_t id) const { return Find(id); }
-   Int_t     GetCount() const { return fMapOfButtons->GetSize(); }
-   Int_t     GetId(TGButton *button) const;
-   void      Show();
-   void      Hide();
-   void      DrawBorder() { if (fDrawBorder) TGGroupFrame::DrawBorder(); }
-   void      SetLayoutHints(TGLayoutHints *l, TGButton *button = 0);
+   virtual Int_t     Insert(TGButton *button, int id = -1);
+   virtual void      Remove(TGButton *button);
+   virtual TGButton *Find(Int_t id) const;
+   virtual TGButton *GetButton(Int_t id) const { return Find(id); }
+   virtual void      Show();
+   virtual void      Hide();
+   virtual void      DrawBorder() { if (fDrawBorder) TGGroupFrame::DrawBorder(); }
+   virtual void      SetLayoutHints(TGLayoutHints *l, TGButton *button = 0);
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGButtonGroup,0)  // Organizes TGButtons in a group
@@ -100,7 +100,7 @@ public:
 class TGVButtonGroup : public TGButtonGroup {
 
 public:
-   TGVButtonGroup(TGWindow *parent,
+   TGVButtonGroup(const TGWindow *parent,
                   const TString &title = "",
                   GContext_t norm = GetDefaultGC()(),
                   FontStruct_t font = GetDefaultFontStruct(),
@@ -118,7 +118,7 @@ public:
 class TGHButtonGroup : public TGButtonGroup {
 
 public:
-   TGHButtonGroup(TGWindow *parent,
+   TGHButtonGroup(const TGWindow *parent,
                   const TString &title = "",
                   GContext_t norm = GetDefaultGC()(),
                   FontStruct_t font = GetDefaultFontStruct(),

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.10 2003/12/12 18:21:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.11 2004/04/22 23:49:42 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -33,23 +33,28 @@
 #include "TList.h"
 #include "TGButton.h"
 #include "TGPicture.h"
-#include "TGPicture.h"
 #include "TGToolTip.h"
 #include "TSystem.h"
 #include "TROOT.h"
 #include "Riostream.h"
+#include "TMap.h"
+
 
 ClassImp(TGToolBar)
 
 //______________________________________________________________________________
 TGToolBar::TGToolBar(const TGWindow *p, UInt_t w, UInt_t h,
                      UInt_t options, ULong_t back) :
-   TGCompositeFrame(p, w, h, options, back)
+                     TGCompositeFrame(p, w, h, options, back)
+
 {
    // Create toolbar widget.
 
    fPictures = new TList;
    fTrash    = new TList;
+   fMapOfButtons = new TMap();  // map of button/id pairs
+
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -70,20 +75,21 @@ TGToolBar::~TGToolBar()
    fPictures->Clear("nodelete");
 
    delete fPictures;
+   delete fMapOfButtons;
 }
 
 //______________________________________________________________________________
-void TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacing)
+TGButton *TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacing)
 {
    // Add button to toolbar. All buttons added via this method will be
    // deleted by the toolbar. On return the TGButton field of the
-   // ToolBarData_t struct is filled in (iff fPixmap was valid).
+   // ToolBarData_t struct is filled in (if fPixmap was valid).
    // Window w is the window to which the button messages will be send.
 
    const TGPicture *pic = fClient->GetPicture(button->fPixmap);
    if (!pic) {
       Error("AddButton", "pixmap not found: %s", button->fPixmap);
-      return;
+      return 0;
    }
    fPictures->Add((TObject*)pic);
 
@@ -101,6 +107,14 @@ void TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacin
 
    fTrash->Add(pbut);
    fTrash->Add(layout);
+
+   fMapOfButtons->Add(pbut, (TObject*)button->fId);
+
+   Connect(pbut, "Pressed()" , "TGToolBar", this, "ButtonPressed()");
+   Connect(pbut, "Released()", "TGToolBar", this, "ButtonReleased()");
+   Connect(pbut, "Clicked()" , "TGToolBar", this, "ButtonClicked()");
+
+   return pbut;
 }
 
 //______________________________________________________________________________
@@ -131,6 +145,51 @@ void TGToolBar::Cleanup()
    fTrash = 0;
 
    TGCompositeFrame::Cleanup();
+}
+
+//______________________________________________________________________________
+void TGToolBar::ButtonPressed()
+{
+   // This slot is activated when one of the buttons in the group emits the
+   // Pressed() signal.
+
+   TGButton *btn = (TGButton*)gTQSender;
+
+   TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
+   if (a) {
+      Int_t id = (Int_t)Long_t(a->Value());
+      Pressed(id);
+   }
+}
+
+//______________________________________________________________________________
+void TGToolBar::ButtonReleased()
+{
+   // This slot is activated when one of the buttons in the group emits the
+   // Released() signal.
+
+   TGButton *btn = (TGButton*)gTQSender;
+
+   TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
+   if (a) {
+      Int_t id = (Int_t)Long_t(a->Value());
+      Released(id);
+   }
+}
+
+//______________________________________________________________________________
+void TGToolBar::ButtonClicked()
+{
+   // This slot is activated when one of the buttons in the group emits the
+   // Clicked() signal.
+
+   TGButton *btn = (TGButton*)gTQSender;
+
+   TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
+   if (a) {
+      Int_t id = (Int_t)Long_t(a->Value());
+      Clicked(id);
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.27 2004/09/11 16:27:08 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.28 2004/09/12 10:43:49 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -82,7 +82,6 @@ protected:
    TGToolTip     *fTip;         // tool tip associated with button
    TGButtonGroup *fGroup;       // button group this button belongs to
 
-   virtual void   SetGroup(TGButtonGroup *group);
    virtual void   SetToggleButton(Bool_t) { }
    virtual void   EmitSignals(Bool_t wasUp);
 
@@ -108,6 +107,7 @@ public:
    virtual void         SetState(EButtonState state, Bool_t emit = kFALSE);
    virtual EButtonState GetState() const { return fState; }
    virtual void         AllowStayDown(Bool_t a) { fStayDown = a; }
+   virtual void         SetGroup(TGButtonGroup *gr);
    TGButtonGroup       *GetGroup() const { return fGroup; }
 
    virtual Bool_t       IsDown() const { return !(fOptions & kRaisedFrame); }
@@ -186,9 +186,10 @@ public:
 class TGPictureButton : public TGButton {
 
 protected:
-   const TGPicture   *fPic;   // picture to be put in button
+   const TGPicture   *fPic;         // picture to be put in button
+   const TGPicture   *fPicD;        // picture shown when button disabled
 
-   virtual void DoRedraw();
+   virtual void DoRedraw(); 
 
 public:
    TGPictureButton(const TGWindow *p, const TGPicture *pic, Int_t id = -1,
@@ -201,7 +202,8 @@ public:
                    GContext_t norm = GetDefaultGC()(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
 
-   void SetPicture(const TGPicture *new_pic);
+   virtual void SetPicture(const TGPicture *new_pic);
+   virtual void SetDisabledPicture(const TGPicture *pic) { fPicD = pic; }
    const TGPicture *GetPicture() const { return fPic; };
    virtual void     SavePrimitive(ofstream &out, Option_t *option);
 
