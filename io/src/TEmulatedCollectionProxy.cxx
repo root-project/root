@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.4 2004/11/02 21:51:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.5 2004/11/03 16:13:38 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -72,6 +72,9 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() {
       switch ( fSTL_type )  {
         case TClassEdit::kMap:
         case TClassEdit::kMultiMap:
+          nam = "pair<"+inside[1]+","+inside[2];
+          nam += (nam[nam.length()-1]=='>') ? " >" : ">";
+          fValue = new Value(nam);
           fKey   = new Value(inside[1]);
           fVal   = new Value(inside[2]);
           fPointers |= 0 != (fKey->fCase&G__BIT_ISPOINTER);
@@ -87,7 +90,8 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx() {
           }
           break;
         default:
-          fVal   = new Value(inside[1]);
+          fValue = new Value(inside[1]);
+          fVal   = new Value(*fValue);
           if ( 0 == fValDiff )  {
             fValDiff  = fVal->fSize;
             fValDiff += (slong - fValDiff%slong)%slong;

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.8 2004/11/03 16:13:38 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionProxy.cxx,v 1.9 2004/11/04 10:51:07 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -63,6 +63,7 @@ public:
         case 0:
           return fEnv->start = fFirst.invoke(fEnv);
         default:
+          if (! fEnv->start ) fEnv->start = fFirst.invoke(fEnv);
           return ((char*)fEnv->start) + fValDiff*idx;
       }
     }
@@ -113,6 +114,7 @@ public:
           return fEnv->start = fFirst.invoke(fEnv);
         default:  {
           fEnv->idx = idx - fEnv->idx;
+          if (! fEnv->start ) fEnv->start = fFirst.invoke(fEnv);
           void* result = fNext.invoke(fEnv);
           fEnv->idx = idx;
           return result;
@@ -155,6 +157,7 @@ public:
           return fEnv->start = fFirst.invoke(fEnv);
         default:  {
           fEnv->idx = idx - fEnv->idx;
+          if (! fEnv->start ) fEnv->start = fFirst.invoke(fEnv);
           void* result = fNext.invoke(fEnv);
           fEnv->idx = idx;
           return result;
@@ -489,32 +492,32 @@ TClass *TGenCollectionProxy::GetCollectionClass()  {
 
 //______________________________________________________________________________
 UInt_t TGenCollectionProxy::Sizeof() const  {
-  // Return the sizeof the collection object. 
-  return fClass->Size();
+   // Return the sizeof the collection object. 
+   return fClass->Size();
 }
 
 //______________________________________________________________________________
 Bool_t TGenCollectionProxy::HasPointers() const   {
-  // Return true if the content is of type 'pointer to'
-  return fPointers;
+   // Return true if the content is of type 'pointer to'
+   return fPointers;
 }
 
 //______________________________________________________________________________
 TClass *TGenCollectionProxy::GetValueClass()  {
-  // Return a pointer to the TClass representing the content.
-  return fValue->fType;
+   // Return a pointer to the TClass representing the content.
+   return fValue ? fValue->fType : 0;
 }
 
 //______________________________________________________________________________
 void TGenCollectionProxy::SetValueClass(TClass *new_Value_type)  {
-  // Set pointer to the TClass representing the content.
-  fValue->fType = new_Value_type;
+   // Set pointer to the TClass representing the content.
+   fValue->fType = new_Value_type;
 }
 
 //______________________________________________________________________________
 EDataType TGenCollectionProxy::GetType()   {
-  // If the content is a simple numerical value, return its type (see TDataType)
-  return fValue->fKind;
+   // If the content is a simple numerical value, return its type (see TDataType)
+   return fValue->fKind;
 }
 
 //______________________________________________________________________________
@@ -528,6 +531,7 @@ void* TGenCollectionProxy::At(UInt_t idx)   {
           case 0:
             return fEnv->start = fFirst.invoke(fEnv);
           default:
+            if (! fEnv->start ) fEnv->start = fFirst.invoke(fEnv);
             return ((char*)fEnv->start) + fValDiff*idx;
         }
       case TClassEdit::kSet:
@@ -544,6 +548,7 @@ void* TGenCollectionProxy::At(UInt_t idx)   {
             return fEnv->start = fFirst.invoke(fEnv);
           default:  {
             fEnv->idx = idx - fEnv->idx;
+            if (! fEnv->start ) fEnv->start = fFirst.invoke(fEnv);
             void* result = fNext.invoke(fEnv);
             fEnv->idx = idx;
             return result;
