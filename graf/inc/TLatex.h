@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -91,6 +91,7 @@ protected:
       FormSize Anal1(TextSpec_t spec, const Char_t* t,Int_t length);
 
       void DrawLine(Float_t x1, Float_t y1, Float_t x2, Float_t y2, TextSpec_t spec);
+      void DrawCircle(Float_t x1, Float_t y1, Float_t r, TextSpec_t spec);
       void DrawParenthesis(Float_t x1, Float_t y1, Float_t r1, Float_t r2, Float_t phimin, Float_t phimax, TextSpec_t spec);
 
       FormSize FirstParse(Float_t angle, Float_t size, const Char_t *text);

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2812,14 +2812,12 @@ void TPad::PaintText(Float_t x, Float_t y, const char *text)
 //*-*-*-*-*-*-*-*-*Paint text in CurrentPad World coordinates*-*-*-*-*-*-*-*
 //*-*              ==========================================
 
-
    Modified();
 
    if (!gPad->IsBatch()) {
       Int_t px = XtoPixel(x);
       Int_t py = YtoPixel(y);
       Float_t angle = gVirtualX->GetTextAngle();
-
       gVirtualX->DrawText(px, py, angle, gVirtualX->GetTextMagnitude(), text, TVirtualX::kClear);
    }
 

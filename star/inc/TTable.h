@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// $Id: TTable.h,v 1.46 2000/02/29 22:15:45 fine Exp $
+// $Id: TTable.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 #ifndef ROOT_TTable
 #define ROOT_TTable
 
@@ -94,6 +94,7 @@ public:
    virtual    ~TTable();
 
    virtual     void       Adopt(Int_t n, void *array);
+   virtual     Int_t      AddAt(const void *c);
    virtual     void       AddAt(const void *c, Int_t i);
    virtual     void       AsString(void *buf, const char *name, Int_t width=0) const;
               const void *At(Int_t i) const;
@@ -149,6 +150,7 @@ public:
 
  //  ----   Table descriptor service   ------
 
+   virtual   Int_t        GetColumnIndex(const Char_t *columnName) const;
    virtual  const Char_t *GetColumnName(Int_t columnIndex)      const;
    virtual   UInt_t      *GetIndexArray(Int_t columnIndex)      const;
    virtual   UInt_t       GetNumberOfColumns()                  const;
