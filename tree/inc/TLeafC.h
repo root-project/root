@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafC.h,v 1.3 2000/09/29 07:51:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafC.h,v 1.4 2000/12/13 15:13:54 brun Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -47,6 +47,7 @@ public:
     virtual void   *GetValuePointer() const {return fValue;}
     char           *GetValueString()  const {return fValue;}
     virtual void    Import(TClonesArray *list, Int_t n);
+    virtual void    PrintValue(Int_t i=0) const;
     virtual void    ReadBasket(TBuffer &b);
     virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
     virtual void    SetAddress(void *add=0);

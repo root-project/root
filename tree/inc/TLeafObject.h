@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.3 2000/11/21 20:48:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.h,v 1.4 2000/12/13 15:13:55 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -47,6 +47,7 @@ public:
     TObject        *GetObject() const {return (TObject*)(*fObjAddress);}
     const char     *GetTypeName() const ;
     Bool_t          IsVirtual() const {return fVirtual;}
+    virtual void    PrintValue(Int_t i=0) const;
     virtual void    ReadBasket(TBuffer &b);
     virtual void    SetAddress(void *add=0);
     virtual void    SetVirtual(Bool_t virt=kTRUE) {fVirtual=virt;}

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.3 2000/09/29 07:51:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafI.cxx,v 1.4 2000/12/13 15:13:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -128,6 +128,15 @@ void TLeafI::Import(TClonesArray *list, Int_t n)
       else       memcpy(&fValue[j],&kIntUndefined,  4*fLen);
       j += fLen;
    }
+}
+
+//______________________________________________________________________________
+void TLeafI::PrintValue(Int_t l) const
+{
+// Prints leaf value
+
+   Int_t *value = (Int_t*)GetValuePointer();
+   printf("%d",value[l]);
 }
 
 //______________________________________________________________________________

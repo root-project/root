@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.4 2000/12/06 07:31:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.5 2001/01/12 14:30:36 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -117,6 +117,14 @@ const char *TLeafObject::GetTypeName() const
 //*-*            =========================
 
    return fTitle.Data();
+}
+
+//______________________________________________________________________________
+void TLeafObject::PrintValue(Int_t) const
+{
+// Prints leaf value
+
+   printf("%lx\n",(Long_t)GetValuePointer());
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafB.cxx,v 1.2 2000/09/29 07:51:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafB.cxx,v 1.3 2000/12/13 15:13:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -106,6 +106,15 @@ void TLeafB::Import(TClonesArray *list, Int_t n)
       memcpy(&fValue[j],(char*)list->UncheckedAt(i) + fOffset, fLen);
       j += fLen;
    }
+}
+
+//______________________________________________________________________________
+void TLeafB::PrintValue(Int_t l) const
+{
+// Prints leaf value
+
+   char *value = (char*)GetValuePointer();
+   printf("%d",(Int_t)value[l]);
 }
 
 
