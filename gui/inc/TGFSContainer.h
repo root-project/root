@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.2 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -137,18 +137,18 @@ public:
 
    virtual Bool_t HandleTimer(TTimer *t);
 
-   TGFileItem *AddFile(const char *name);
-   void AddFrame(TGFrame *f, TGLayoutHints *l = 0);
-   void Sort(EFSSortMode sortType);
-   void SetFilter(const char *filter);
-   void ChangeDirectory(const char *path);
-   void DisplayDirectory();
+   virtual TGFileItem *AddFile(const char *name);
+   virtual void AddFrame(TGFrame *f, TGLayoutHints *l = 0);
+   virtual void Sort(EFSSortMode sortType);
+   virtual void SetFilter(const char *filter);
+   virtual void ChangeDirectory(const char *path);
+   virtual void DisplayDirectory();
 
    const char *GetDirectory() const { return fDirectory.Data(); }
 
-   void GetFilePictures(const TGPicture **pic, const TGPicture **lpic,
-                        Int_t file_type, Bool_t is_link, const char *ext,
-                        Bool_t small);
+   virtual void GetFilePictures(const TGPicture **pic, const TGPicture **lpic,
+                                Int_t file_type, Bool_t is_link, const char *ext,
+                                Bool_t small);
 
    ClassDef(TGFileContainer,0)  // Container containing file system objects
 };
