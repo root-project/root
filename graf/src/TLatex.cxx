@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.18 2001/06/05 11:27:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.19 2001/06/25 12:54:33 rdm Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -91,7 +91,7 @@ ClassImp(TLatex)
 //   The command to produce a lowercase Greek letter is obtained by adding a # to
 //   the name of the letter. For an uppercase Greek letter, just capitalize the first
 //   letter of the command name.
-//   #alpha #beta #gamma #delta #epsilon #zeta #eta #theta #iota #kappa #lambda #mu
+//   #alpha #beta #gamma #delta #varepsilon #epsilon #zeta #eta #theta #iota #kappa #lambda #mu
 //   #nu #xi #omicron #pi #varpi #rho #sigma #tau #upsilon #phi #varphi #chi #psi #omega
 //   #Gamma #Delta #Theta #Lambda #Xi #Pi #Sigma #Upsilon #Phi #Psi #Omega
 //
@@ -324,9 +324,9 @@ FormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* 
 // t : chain to be analyzed
 // length : number of chars in t.
 //
-const char *tab[] = { "alpha","beta","chi","delta","epsilon","phi","gamma","eta","iota","varphi","kappa","lambda",
+const char *tab[] = { "alpha","beta","chi","delta","varepsilon","phi","gamma","eta","iota","varphi","kappa","lambda",
                 "mu","nu","omicron","pi","theta","rho","sigma","tau","upsilon","varpi","omega","xi","psi","zeta",
-                "varpi","varpi","varpi","Delta","varpi","Phi","Gamma","varpi","varpi","varpi",
+                "epsilon","varpi","varpi","Delta","varpi","Phi","Gamma","varpi","varpi","varpi",
                 "varpi","Lambda","varpi","varpi","varpi","Pi","Theta","varpi","Sigma","varpi",
                 "Upsilon","varpi","Omega","Xi","Psi" };
 
@@ -905,6 +905,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
  //        Double_t yoffset = GetHeight()*spec.size/20.; // Greek letter too low
          Double_t yoffset = 0.; // Greek letter too low
          if (OpGreek>25) letter -= 58;
+         if (OpGreek == 26) letter = 206; //epsilon
          if (!fShow) {
             fs1 = Anal1(NewSpec,&letter,1);
             fs2 = Anal1(spec,text+strlen(tab[OpGreek])+1,length-strlen(tab[OpGreek])-1);
