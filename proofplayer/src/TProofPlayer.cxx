@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.48 2005/03/08 09:19:18 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.49 2005/03/10 17:57:04 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -182,7 +182,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    if ( !fSelector ) {
       fSelectorClass = 0;
-      Error("Process", "Cannot load: %s", selector_file );
+      Error("Process", "cannot load: %s", selector_file );
       return -1;
    }
 
@@ -1024,7 +1024,7 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
       if (!dset->ElementsValid()) {
          proof->ValidateDSet(dset);
          if (!dset->ElementsValid()) {
-            Error("Process", "Could not validate DSet");
+            Error("Process", "could not validate TDSet");
             return -1;
          }
       }
