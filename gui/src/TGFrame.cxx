@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.67 2004/09/06 14:16:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.68 2004/09/08 09:33:13 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -905,8 +905,10 @@ void TGCompositeFrame::MapSubwindows()
    TGFrameElement *el;
    TIter next(fList);
 
-   while ((el = (TGFrameElement *) next()))
+   while ((el = (TGFrameElement *) next())) {
       el->fFrame->MapSubwindows();
+      if (el->fFrame->fFE) el->fFrame->fFE->fState |= kIsVisible;
+   }
 }
 
 //______________________________________________________________________________
