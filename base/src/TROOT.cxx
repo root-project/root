@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.17 2000/10/17 12:23:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.18 2000/11/21 12:23:40 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -257,6 +257,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fSpecials    = new TList;
    fBrowsables  = new TList;
    fCleanups    = new TList;
+   fStreamerInfo    = new TObjArray(100);
    fMessageHandlers = new TList;
 
    fRootFolder = new TFolder();
@@ -275,6 +276,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fRootFolder->AddFolder("Specials",  "List of Special objects",fSpecials);
    fRootFolder->AddFolder("Handlers",  "List of Message Handlers",fMessageHandlers);
    fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove collections",fCleanups);
+   fRootFolder->AddFolder("StreamerInfo","List of active StreamerInfo classes",fStreamerInfo);
    fRootFolder->AddFolder("ROOT Files","List of connected root files",fFiles);
 
    // by default, add the list of tasks, canvases and browsers in the Cleanups list
