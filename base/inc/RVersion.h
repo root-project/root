@@ -1,12 +1,3 @@
-/* @(#)root/base:$Name$:$Id$ */
-
-/*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
 #ifndef ROOT_RVersion
 #define ROOT_RVersion
 
@@ -23,8 +14,8 @@
  *
 */
 
-#define ROOT_RELEASE "2.24/05"
-#define ROOT_VERSION_CODE 137221
+#define ROOT_RELEASE "2.25/03"
+#define ROOT_VERSION_CODE 137475
 #define ROOT_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 #endif

@@ -13,8 +13,8 @@ CXXOPT        = +K0
 OPT           = -g -O0
 NOOPT         =
 else
-CXXOPT        = +K3 -O2 -OPT:Olimit=0
-OPT           = -O2 -OPT:Olimit=0
+CXXOPT        = +K3
+OPT           = -O2
 NOOPT         =
 endif
 
@@ -43,14 +43,14 @@ CXXFLAGS      = $(ABI) $(EXCEPTION) --signed_chars --display_error_number \
                 --diag_suppress 68 --diag_suppress 191 --diag_suppress 830 \
                 --diag_suppress 837 $(CXXOPT) -DSGI_REL=$(SGI_REL) \
                 $(EXTRA_CXXFLAGS) \
-		
+
 CFLAGS        = $(ABI) -signed $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = $(ABI) $(EXCEPTION) --signed_chars --display_error_number \
                 --diag_suppress 68 --diag_suppress 191 --diag_suppress 830 \
                 --diag_suppress 837 -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO $(CXXOPT) \
                 --diag_suppress 426 $(EXTRA_CXXFLAGS)
-		
+
 CINTCFLAGS    = $(ABI) -signed -w -DG__REGEXP1 -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT -DG__REDIRECTIO \
                 -D__KCC $(EXTRA_CFLAGS)
@@ -69,9 +69,11 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ldl
-XLIBS         = -lXpm -lX11
+XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap -lbsd -ldl -lgen
 CRYPTLIBS     = -lcrypt
+
+# Fortran:
 F77           = f77
 F77FLAGS      = $(ABI)
 ifeq (n32,$(findstring n32,$(ROOTBUILD)))
@@ -79,3 +81,7 @@ F77LIBS       = -lftn
 else
 F77LIBS       = -lI77 -lU77 -lF77 -lisam
 endif
+
+# Extras
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB)
+

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.9 2000/09/05 09:15:53 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -66,8 +66,8 @@ extern "C" void TCint_UpdateClassInfo(char* c ,Long_t l) {
   TCint::UpdateClassInfo(c,l);
 }
 
-extern "C" void* TCint_FindObject(char * c, G__ClassInfo *ci, void ** p1, void ** p2) {
-  return TCint::FindObject(c,ci,p1,p2);
+extern "C" void* TCint_FindSpecialObject(char * c, G__ClassInfo *ci, void ** p1, void ** p2) {
+  return TCint::FindSpecialObject(c,ci,p1,p2);
 }
 // It is a "fantom" method to synchronize user keyboard input
 // and ROOT prompt line (for WIN32)
@@ -87,7 +87,7 @@ TCint::TCint(const char *name, const char *title) : TInterpreter(name, title)
    G__RegisterScriptCompiler(&ScriptCompiler);
    G__set_ignoreinclude(&IgnoreInclude);
    G__InitUpdateClassInfo(&TCint_UpdateClassInfo);
-   G__InitGetSpecialObject(&TCint_FindObject);
+   G__InitGetSpecialObject(&TCint_FindSpecialObject);
 
    ResetAll();
 #ifndef WIN32
@@ -100,8 +100,11 @@ TCint::~TCint()
 {
    // Destroy the CINT interpreter interface.
 
-   if (fMore != -1)
-      G__scratch_all();
+   if (fMore != -1) {
+     // only close the opened files do not free memory:
+     // G__scratch_all();
+     G__close_inputfiles();
+   }
 }
 
 //______________________________________________________________________________
@@ -216,7 +219,7 @@ Int_t TCint::ProcessLine(const char *line)
       if (strstr(line,fantomline))
           TCint::UpdateAllCanvases();
       else
-          ret = G__process_cmd((char *)line, fPrompt, &fMore);
+          ret = G__process_cmd((char *)line, fPrompt, &fMore, 0, 0);
       gROOT->SetLineHasBeenProcessed();
    } else
       ret = ProcessLineAsynch(line);
@@ -367,34 +370,19 @@ void TCint::UpdateListOfGlobals()
    // Update the list of pointers to global variables. This function
    // is called by TROOT::GetListOfGlobals().
 
-   G__DataMemberInfo *a;
-   int last  = 0;
-   int nglob = 0;
-
-   // find the number of global objects
-   G__DataMemberInfo t;
-   while (t.Next()) nglob++;
-
-   for (int i = 0; i < nglob; i++) {
-      a = new G__DataMemberInfo();
-      a->Next();   // initial positioning
-
-      for (int j = 0; j < last; j++)
-         a->Next();
-
+   G__DataMemberInfo t, *a;
+   while (t.Next()) {
       // if name cannot be obtained no use to put in list
-      if (a->IsValid() && a->Name()) {
+      if (t.IsValid() && t.Name()) {
          // first remove if already in list
-         TGlobal *g = (TGlobal *)gROOT->fGlobals->FindObject(a->Name());
+         TGlobal *g = (TGlobal *)gROOT->fGlobals->FindObject(t.Name());
          if (g) {
             gROOT->fGlobals->Remove(g);
             delete g;
          }
+         a = new G__DataMemberInfo(t);
          gROOT->fGlobals->Add(new TGlobal(a));
-      } else
-         delete a;
-
-      last++;
+      }
    }
 }
 
@@ -404,71 +392,39 @@ void TCint::UpdateListOfGlobalFunctions()
    // Update the list of pointers to global functions. This function
    // is called by TROOT::GetListOfGlobalFunctions().
 
-   G__MethodInfo *a;
-   int last  = 0;
-   int nglob = 0;
-
-   // find the number of global functions
-   G__MethodInfo t;
-   while (t.Next()) nglob++;
-
-   for (int i = 0; i < nglob; i++) {
-      a = new G__MethodInfo();
-      a->Next();   // initial positioning
-
-      for (int j = 0; j < last; j++)
-         a->Next();
-
+   G__MethodInfo t, *a;
+   while (t.Next()) {
       // if name cannot be obtained no use to put in list
-      if (a->IsValid() && a->Name()) {
-         // first remove if already in list
-         TFunction *f = (TFunction *)gROOT->fGlobalFunctions->FindObject(a->Name());
+      if (t.IsValid() && t.Name()) {
+        // first remove if already in list
+         TFunction *f = (TFunction *)gROOT->fGlobalFunctions->FindObject(t.Name());
          if (f) {
             gROOT->fGlobalFunctions->Remove(f);
             delete f;
          }
+         a = new G__MethodInfo(t);
          gROOT->fGlobalFunctions->Add(new TFunction(a));
-      } else
-         delete a;
-
-      last++;
+      }
    }
 }
 
 //______________________________________________________________________________
 void TCint::UpdateListOfTypes()
 {
-   // Update the list of pointers to datatype (typedef) definitions. This
+   // Update the list of pointers to Datatype (typedef) definitions. This
    // function is called by TROOT::GetListOfTypes().
 
-   G__TypedefInfo *a;
-   int last  = 0;
-   int ntype = 0;
-
-   // find the number of typedefs
-   G__TypedefInfo t;
-   while (t.Next()) ntype++;
-
-   for (int i = 0; i < ntype; i++) {
-      a = new G__TypedefInfo();
-      a->Next();   // initial positioning
-
-      for (int j = 0; j < last; j++)
-         a->Next();
-
-      // if name cannot be obtained no use to put in list
-      if (a->IsValid() && a->Name()) {
-         TDataType *d = (TDataType *)gROOT->fTypes->FindObject(a->Name());
+   G__TypedefInfo t, *a;
+   while (t.Next()) {
+      if (t.IsValid() && t.Name()) {
+         TDataType *d = (TDataType *)gROOT->fTypes->FindObject(t.Name());
          // only add new types, don't delete old ones with the same name
          // (as is done in UpdateListOfGlobals())
-         if (!d)
+         if (!d) {
+            a = new G__TypedefInfo(t);
             gROOT->fTypes->Add(new TDataType(a));
-         else
-            delete a;
-      } else
-         delete a;
-
-      last++;
+         }
+      }
    }
 }
 
@@ -495,29 +451,15 @@ void TCint::CreateListOfBaseClasses(TClass *cl)
 
    if (!cl->fBase) {
 
-      cl->fBase = new TList(cl);
+      cl->fBase = new TList;
 
-      G__BaseClassInfo *a;
-      int last  = 0;
-      int nbase = 0;
-
-      G__BaseClassInfo t(*cl->GetClassInfo());
-      while (t.Next()) nbase++;
-
-      for (int i = 0; i < nbase; i++) {
-         a = new G__BaseClassInfo(*cl->GetClassInfo());
-         a->Next();   // initial positioning
-
-         for (int j = 0; j < last; j++)
-            a->Next();
-
+      G__BaseClassInfo t(*cl->GetClassInfo()), *a;
+      while (t.Next()) {
          // if name cannot be obtained no use to put in list
-         if (a->IsValid() && a->Name())
+         if (t.IsValid() && t.Name()) {
+            a = new G__BaseClassInfo(t);
             cl->fBase->Add(new TBaseClass(a, cl));
-         else
-            delete a;
-
-         last++;
+         }
       }
    }
 }
@@ -529,26 +471,15 @@ void TCint::CreateListOfDataMembers(TClass *cl)
 
    if (!cl->fData) {
 
-      cl->fData = new TList(cl);
+      cl->fData = new TList;
 
-      G__DataMemberInfo *a;
-      int last = 0;
-      int nmem = cl->GetClassInfo()->NDataMembers();
-
-      for (int i = 0; i < nmem; i++) {
-         a = new G__DataMemberInfo(*cl->GetClassInfo());
-         a->Next();   // initial positioning
-
-         for (int j = 0; j < last; j++)
-            a->Next();
-
+      G__DataMemberInfo t(*cl->GetClassInfo()), *a;
+      while (t.Next()) {
          // if name cannot be obtained no use to put in list
-         if (a->IsValid() && a->Name() && strcmp(a->Name(), "G__virtualinfo"))
+         if (t.IsValid() && t.Name() && strcmp(t.Name(), "G__virtualinfo")) {
+            a = new G__DataMemberInfo(t);
             cl->fData->Add(new TDataMember(a, cl));
-         else
-            delete a;
-
-         last++;
+         }
       }
    }
 }
@@ -560,26 +491,15 @@ void TCint::CreateListOfMethods(TClass *cl)
 
    if (!cl->fMethod) {
 
-      cl->fMethod = new TList(cl);
+      cl->fMethod = new TList;
 
-      G__MethodInfo *a;
-      int last = 0;
-      int nmet = cl->GetClassInfo()->NMethods();
-
-      for (int i = 0; i < nmet; i++) {
-         a = new G__MethodInfo(*cl->GetClassInfo());
-         a->Next();   // initial positioning
-
-         for (int j = 0; j < last; j++)
-            a->Next();
-
+      G__MethodInfo t(*cl->GetClassInfo()), *a;
+      while (t.Next()) {
          // if name cannot be obtained no use to put in list
-         if (a->IsValid() && a->Name())
+         if (t.IsValid() && t.Name()) {
+            a = new G__MethodInfo(t);
             cl->fMethod->Add(new TMethod(a, cl));
-         else
-            delete a;
-
-         last++;
+         }
       }
    }
 }
@@ -591,26 +511,15 @@ void TCint::CreateListOfMethodArgs(TFunction *m)
 
    if (!m->fMethodArgs) {
 
-      m->fMethodArgs = new TList(m);
+      m->fMethodArgs = new TList;
 
-      G__MethodArgInfo *a;
-      int last = 0;
-      int narg = m->GetNargs();
-
-      for (int i = 0; i < narg; i++) {
-         a = new G__MethodArgInfo(*m->fInfo);
-         a->Next();   // initial positioning
-
-         for (int j = 0; j < last; j++)
-            a->Next();
-
+      G__MethodArgInfo t(*m->fInfo), *a;
+      while (t.Next()) {
          // if type cannot be obtained no use to put in list
-         if (a->IsValid() && a->Type())
+         if (t.IsValid() && t.Type()) {
+            a = new G__MethodArgInfo(t);
             m->fMethodArgs->Add(new TMethodArg(a, m));
-         else
-            delete a;
-
-         last++;
+         }
       }
    }
 }
@@ -761,12 +670,20 @@ const char *TCint::TypeName(const char *typeDesc)
    // E.g.: typeDesc = "class TNamed**", returns "TNamed".
    // You need to use the result immediately before it is being overwritten.
 
-   static char t[64];
-   char *s;
-   if (!strstr(typeDesc, "(*)(") && (s = (char*)strchr(typeDesc, ' ')))
-      strcpy(t, s+1);
-   else
-      strcpy(t, typeDesc);
+   static char t[1024];
+   char *s, *template_start;
+   if (!strstr(typeDesc, "(*)(")) {
+      s = (char*)strchr(typeDesc, ' ');
+      template_start = (char*)strchr(typeDesc, '<');
+      // s is the position of the second 'word' (if any)
+      // except in the case of templates where there will be a space
+      // just before any closing '>': eg.
+      //    TObj<std::vector<UShort_t,__malloc_alloc_template<0> > >*
+      if (s && (template_start==0 || (s < template_start)) )
+         strcpy(t, s+1);
+      else
+         strcpy(t, typeDesc);
+   }
 
    int l = strlen(t);
    while (l > 0 && t[l-1] == '*') t[--l] = 0;
@@ -775,15 +692,16 @@ const char *TCint::TypeName(const char *typeDesc)
 }
 
 //______________________________________________________________________________
-void *TCint::FindObject(char *item, G__ClassInfo *type, void **prevObj,
+void *TCint::FindSpecialObject(char *item, G__ClassInfo *type, void **prevObj,
                         void **assocPtr)
 {
    // Static function called by CINT when it finds an un-indentified object.
    // This function tries to find the UO in the ROOT files, directories, etc.
    // This functions has been registered by the TCint ctor.
 
-   if (!*prevObj || *assocPtr != gDirectory)
-      *prevObj = gROOT->FindObject(item, *assocPtr);
+   if (!*prevObj || *assocPtr != gDirectory) {
+      *prevObj  = gROOT->FindSpecialObject(item,*assocPtr);
+   }
 
    if (*prevObj) type->Init(((TObject *)*prevObj)->ClassName());
    return *prevObj;
@@ -838,7 +756,8 @@ const char* TCint::GetSharedLibs()
            strstr(filename,".dl")  != 0 ||
            strstr(filename,".so")  != 0 ||
            strstr(filename,".dll") != 0 ||
-           strstr(filename,".DLL") != 0)) {
+           strstr(filename,".DLL") != 0 ||
+           strstr(filename,".a")   != 0)) {
          if (!fSharedLibs.IsNull())
             fSharedLibs.Append(" ");
          fSharedLibs.Append(filename);

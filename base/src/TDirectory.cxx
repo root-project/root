@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.6 2000/09/06 14:14:31 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -156,7 +156,7 @@ void TDirectory::Append(TObject *obj)
 {
    // Append object to current directory.
 
-   if (obj == 0) return;
+   if (obj == 0 || fList == 0) return;
    fList->Add(obj);
    if (!fMother) return;
    if (fMother->IsA() == TMapFile::Class()) {
@@ -675,6 +675,23 @@ void TDirectory::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
+TObject *TDirectory::FindObject(TObject *) const
+{
+// find object in the list of memory objects
+   
+   Error("FindObject","Not yet implemented");
+   return 0;
+}
+
+//______________________________________________________________________________
+TObject *TDirectory::FindObject(const char *name) const
+{
+// find object by name in the list of memory objects
+   
+   return fList->FindObject(name);
+}
+
+//______________________________________________________________________________
 TObject *TDirectory::Get(const char *namecycle)
 {
 //*-*-*-*-*-*-*-* return pointer to object identified by namecycle*-*-*-*-*-*
@@ -813,7 +830,13 @@ TDirectory *TDirectory::mkdir(const char *name, const char *title)
       return 0;
    }
 
-   return new TDirectory(name, title);
+   TDirectory *cursav = gDirectory;
+   cd();
+
+   TDirectory *newdir = new TDirectory(name, title);
+
+   cursav->cd();
+   return newdir;
 }
 
 //______________________________________________________________________________
@@ -831,9 +854,9 @@ void TDirectory::ls(Option_t *option)
 //  The <regexp> will be used to match the name of the objects.
 //  By default memory and disk objects are listed.
 //
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
-   TObject::IncreaseDirLevel();
+   TROOT::IncreaseDirLevel();
 
    TString opta = option;
    TString opt  = opta.Strip(TString::kBoth);
@@ -872,7 +895,7 @@ void TDirectory::ls(Option_t *option)
          key->ls();                 //*-* Loop on all the keys
       }
    }
-   TObject::DecreaseDirLevel();
+   TROOT::DecreaseDirLevel();
 }
 
 //______________________________________________________________________________
@@ -956,7 +979,7 @@ void TDirectory::ReadAll(Option_t *)
 }
 
 //______________________________________________________________________________
-void TDirectory::ReadKeys()
+Int_t TDirectory::ReadKeys()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Read the KEYS linked list*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =========================
@@ -1019,6 +1042,7 @@ void TDirectory::ReadKeys()
    delete headerkey;
 
    cursav->cd();
+   return nkeys;
 }
 
 //______________________________________________________________________________
@@ -1128,7 +1152,7 @@ void TDirectory::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
+Int_t TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
 {
    // Write all objects in memory to disk.
    // Loop on all objects in memory (including subdirectories).
@@ -1136,16 +1160,21 @@ void TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
    // For allowed options see TObject::Write().
    // The directory header info is rewritten on the directory header record
 
-   if (!IsWritable()) return;
+   if (!IsWritable()) return 0;
    TDirectory *cursav = gDirectory;
    cd();
 
    // Loop on all objects (including subdirs)
-   fList->ForEach(TObject,Write)(0,opt,bufsiz);
-
+   TIter next(fList);
+   TObject *obj;
+   Int_t nbytes = 0;
+   while ((obj=next())) {
+      nbytes += obj->Write(0,opt,bufsiz);
+   }
    SaveSelf(kTRUE);   // force save itself
 
    cursav->cd();
+   return nbytes;
 }
 
 //______________________________________________________________________________

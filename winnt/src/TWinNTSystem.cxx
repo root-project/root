@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name$:$Id$
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.4 2000/08/18 06:27:32 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1457,6 +1457,61 @@ void TWinNTSystem::ListLibraries(const char *regexp)
    TSystem::ListLibraries(regexp);
 }
 
+//______________________________________________________________________________
+const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
+{
+   // Return a space separated list of loaded shared libraries.
+   // This list is of a format suitable for a linker, i.e it may contain
+   // -Lpathname and/or -lNameOfLib.
+   // Option can be any of:
+   //   S: shared libraries loaded at the start of the executable, because
+   //      they were specified on the link line.
+   //   D: shared libraries dynamically loaded after the start of the program.
+   //   L: list the .LIB rather than the .DLL (this is intended for linking)
+   //      [This options is not the default] 
+   
+   TString libs( TSystem::GetLibraries( regexp, options ) );
+   TString ntlibs;
+   TString opt = options;
+
+   if ( (opt.First('L')!=kNPOS) ) {
+      TRegexp separator("[^ \\t\\s]+");
+      TRegexp user_dll("*.dll", kTRUE);
+      TRegexp user_lib("*.lib", kTRUE);
+      TString s;
+      Ssiz_t start, index, end;
+      start = index = end = 0;
+ 
+      while ((start < libs.Length()) && (index != kNPOS)) {
+	index = libs.Index(separator,&end,start);
+	if (index >= 0) {
+	  s = libs(index,end);
+	  if (s.Index(user_dll) != kNPOS) {
+	    s.ReplaceAll(".dll",".lib");
+	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+	      s.Replace( 0, s.Last('/')+1, 0, 0);
+	      s.Replace( 0, s.Last('\\')+1, 0, 0);
+	    }
+	  } else if (s.Index(user_lib) != kNPOS) {
+	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+	      s.Replace( 0, s.Last('/')+1, 0, 0);
+	      s.Replace( 0, s.Last('\\')+1, 0, 0);
+	    }	    
+	  }
+	  if (!fListLibs.IsNull())
+	    ntlibs.Append(" ");
+	  ntlibs.Append(s);
+	}
+	start += end+1;
+      }
+   } else 
+     ntlibs = libs;
+   
+   fListLibs = ntlibs;
+   return fListLibs;
+}
+
+
 //---- Time & Date -------------------------------------------------------------
 
 //______________________________________________________________________________
@@ -1674,14 +1729,12 @@ TInetAddress TWinNTSystem::GetHostByName(const char *hostname)
    UInt_t          addr;    // good for 4 byte addresses
 
    if ((addr = inet_addr(hostname)) != INADDR_NONE) {
+      type = AF_INET;
       if ((host_ptr = gethostbyaddr((const char *)&addr,
-                                    sizeof(addr), AF_INET))) {
+                                    sizeof(addr), AF_INET)))
          host = host_ptr->h_name;
-         type = AF_INET;
-      } else {
-         if (gDebug > 0) Error("GetHostByName", "unknown host %s", hostname);
-         return TInetAddress("UnknownHost", ntohl(addr), -1);
-      }
+      else
+         host = "UnNamedHost";
    } else if ((host_ptr = gethostbyname(hostname))) {
       // Check the address type for an internet host
       if (host_ptr->h_addrtype != AF_INET) {
@@ -1778,16 +1831,15 @@ int          TWinNTSystem::AnnounceUnixService(int port, int backlog)
    return WinNTWinNTService(port, backlog);
  }
 //______________________________________________________________________________
-void      TWinNTSystem::CloseConnection(int socket)
+void      TWinNTSystem::CloseConnection(int socket, Bool_t force)
 {
    // Close socket.
 
    if (socket == -1) return;
    SOCKET sock = socket;
 
-#if !defined(R__AIX) || defined(_AIX41)
-   ::shutdown(sock, 2);
-#endif
+   if (force)
+      ::shutdown(sock, 2);
 
    while (::closesocket(sock) == SOCKET_ERROR && WSAGetLastError() == WSAEINTR)
    ResetErrno();

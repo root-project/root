@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.2 2000/07/03 18:48:58 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -28,6 +28,14 @@
 // either placed horizontal or vertical. A scrollbar contains three     //
 // TGScrollBarElements: The "head", "tail" and "slider". The head and   //
 // tail are fixed at either end and have the typical arrows in them.    //
+//                                                                      //
+// The TGHScrollBar will generate the following event messages:         //
+// kC_HSCROLL, kSB_SLIDERPOS, position, 0                               //
+// kC_HSCROLL, kSB_SLIDERTRACK, position, 0                             //
+//                                                                      //
+// The TGVScrollBar will generate the following event messages:         //
+// kC_VSCROLL, kSB_SLIDERPOS, position, 0                               //
+// kC_VSCROLL, kSB_SLIDERTRACK, position, 0                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -260,6 +268,11 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
          SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERTRACK), fPos, 0);
 
       }
+
+      // last argument kFALSE forces all specified events to this window
+      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                             kPointerMotionMask, kNone, kNone,
+                             kTRUE, kFALSE);
    } else {
       fHead->SetState(kButtonUp);
       fTail->SetState(kButtonUp);
@@ -275,6 +288,8 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
       fPos = TMath::Min(fPos, fRange-fPsize);
 
       SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERPOS), fPos, 0);
+
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
 }
@@ -442,6 +457,11 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
          SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERTRACK), fPos, 0);
 
       }
+
+      // last argument kFALSE forces all specified events to this window
+      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                             kPointerMotionMask, kNone, kNone,
+                             kTRUE, kFALSE);
    } else {
       fHead->SetState(kButtonUp);
       fTail->SetState(kButtonUp);
@@ -457,6 +477,8 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
       fPos = TMath::Min(fPos, fRange-fPsize);
 
       SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
+
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
 }

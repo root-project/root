@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGDimension.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -33,3 +33,4 @@
 
 ClassImp(TGDimension)
 ClassImp(TGPosition)
+ClassImp(TGLongPosition)

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TLeafI.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -43,7 +43,7 @@ public:
     const char     *GetTypeName() const;
     virtual Int_t   GetMaximum() {return fMaximum;}
     virtual Int_t   GetMinimum() {return fMinimum;}
-    Float_t         GetValue(Int_t i=0);
+    Double_t        GetValue(Int_t i=0);
     virtual void   *GetValuePointer() {return fValue;}
     virtual void    Import(TClonesArray *list, Int_t n);
     virtual void    Print(Option_t *option="");

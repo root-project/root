@@ -21,7 +21,7 @@ METAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 METAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 METAO        := $(METAS:.cxx=.o)
 
-METADEP      := $(METAO:.o=.d)
+METADEP      := $(METAO:.o=.d) $(METADO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(METAH))

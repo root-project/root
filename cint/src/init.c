@@ -1921,6 +1921,9 @@ void G__platformMacro()
 #ifdef __GNUC_MINOR__
   sprintf(temp,"G__GNUC_MINOR=%ld",(long)__GNUC_MINOR__); G__getexpr(temp);
 #endif
+#ifdef __GLIBC__
+  sprintf(temp,"G__GLIBC=%ld",(long)__GLIBC__); G__getexpr(temp);
+#endif
 #ifdef __hpux
   sprintf(temp,"G__HPUX=%ld",(long)__hpux); G__getexpr(temp);
 #endif
@@ -1960,7 +1963,7 @@ void G__platformMacro()
 #ifdef __BCPLUSPLUS__
   sprintf(temp,"G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__getexpr(temp);
 #endif
-#ifdef __alpha
+#if defined(__alpha) && !defined(__linux)
   sprintf(temp,"G__ALPHA=%ld",(long)__alpha); G__getexpr(temp);
 #endif
 #ifdef __VMS
@@ -1971,6 +1974,9 @@ void G__platformMacro()
 #endif
 #ifdef __KCC 
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__getexpr(temp);
+#endif
+#ifdef G__ROOT
+  sprintf(temp,"G__ROOT=%ld",(long)G__ROOT); G__getexpr(temp);
 #endif
 #ifdef G__CONSTNESSFLAG
 /*

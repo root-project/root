@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name$:$Id$
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.15 2000/08/11 20:10:12 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -17,11 +17,12 @@
 #include "TLeafObject.h"
 #include "TMethodCall.h"
 #include "TCutG.h"
+#include "TRandom.h"
 
 #include <stdio.h>
 #include <math.h>
 
-const Int_t kMETHOD = 1000;
+const Int_t kMETHOD   = 1000;
 
 ClassImp(TTreeFormula)
 
@@ -58,22 +59,73 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
 //
 
    fTree         = tree;
-   fNindex       = 100;
+   fNindex       = kMAXFOUND;
    fIndex        = new Int_t[fNindex];
    fNcodes       = 0;
    fMultiplicity = 0;
+   Int_t i,j,k;
+      
+   for (j=0; j<kMAXCODES; j++) {
+      fNdimensions[j] = 0;
+      for (k = 0; k<kMAXFORMDIM; k++) {
+         fIndexes[j][k] = -1;
+         fCumulSize[j][k] = 1;
+      }
+   }
+   for (k = 0; k<kMAXFORMDIM+1; k++) {
+      fCumulUsedSize[k] = 1;
+   }
 
    if (Compile(expression)) {fTree = 0; return; }
+   if (fNcodes >= kMAXFOUND) {
+      Warning("TTreeFormula","Too many items in expression:%s",expression);
+      fNcodes = kMAXFOUND;
+   }
    SetName(name);
-   for (Int_t i=0;i<fNcodes;i++) {
+   for (i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) continue;
       TLeaf *leaf = GetLeaf(i);
-      if (leaf->InheritsFrom("TLeafC")) SetBit(kIsCharacter);
-      if (leaf->InheritsFrom("TLeafB")) SetBit(kIsCharacter);
-      if(leaf->GetLeafCount() && fIndex[i] < 0) fMultiplicity = 1;
-      if(leaf->GetLeafCount() && fMultiplicity == 0) fMultiplicity = -1;
+      if (leaf->InheritsFrom("TLeafC") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
+      if (leaf->InheritsFrom("TLeafB") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
+
+      // Reminder of the meaning of fMultiplicity:
+      //  -1: Only one or 0 element per entry, contains variable length array!
+      //   0: Only one element per entry, no variable length array
+      //   1: loop over the elements of a variable length array
+      //   2: loop over elements of fixed length array (nData is the same for all entry)
+
+      if (leaf->GetLeafCount()) {
+         // We assume only one possible variable length dimension (the left most)
+         fMultiplicity = 1;
+      } else {
+         if (leaf->GetLenStatic()>1 && fMultiplicity!=1) fMultiplicity = 2;
+      }
+
       if (fIndex[i] == -1 ) fIndex[i] = 0;
+
+      // Because we did not record the number of virtual dimensions associated 
+      // with this leaf, we can not use the next loop which has to count down.
+      Int_t virt_dim = 0;
+      for (k = 0; k < fNdimensions[i]; k++) {
+         if ( (fCumulSize[i][k]>=0) && (fIndexes[i][k] >= fCumulSize[i][k]) ) {
+            // unreacheable element requested:
+            fCumulUsedSize[virt_dim] = 0;
+         }
+         if ( fIndexes[i][k] < 0 ) virt_dim++;
+      }
+      // Add up the cumulative size
+      for (k = fNdimensions[i]; (k > 0) && (fCumulSize[i][k-1]>=0); k--) {
+         fCumulSize[i][k-1] *= fCumulSize[i][k];
+      }
+      
    }
+   for (k = kMAXFORMDIM; (k > 0) && (fCumulUsedSize[k-1]>=0); k--) {
+      fCumulUsedSize[k-1] *= fCumulUsedSize[k];
+   }
+   // Now that we know the virtual dimension we know if a loop over EvalInstance
+   // is needed or not.
+   if (fCumulUsedSize[0]==1 && fMultiplicity!=0) fMultiplicity -= 2;
+   
 }
 
 //______________________________________________________________________________
@@ -83,6 +135,53 @@ TTreeFormula::~TTreeFormula()
 //*-*                  =================================
 
    if (fIndex) delete [] fIndex;
+}
+
+//______________________________________________________________________________
+void TTreeFormula::DefineDimensions(const char *info, Int_t code, Int_t& virt_dim) {
+   // We assume that there are NO white spaces in the info string
+   const char * current;
+   Int_t size, scanindex;
+   Bool_t neg;
+
+   current = info;
+   // the next value could be before the string but
+   // that's okay because the next operation is ++
+   // (this is to avoid (?) a if statement at the end of the
+   // loop 
+   if (current[0] != '[') current--; 
+   while (current) {
+      current++;
+      scanindex = sscanf(current,"%d",&size);
+      // if scanindex is 0 then we have a name index thus a variable
+      // array (or TClonesArray!).
+      if (scanindex==0) {
+         fCumulSize[code][fNdimensions[code]] = -1;
+         if ( fIndexes[code][fNdimensions[code]] < 0 ) {
+            fCumulUsedSize[virt_dim] = -1 * TMath::Abs(fCumulUsedSize[virt_dim]);
+            virt_dim++;
+         } 
+      } else {
+         fCumulSize[code][fNdimensions[code]] = size;
+         if ( fIndexes[code][fNdimensions[code]] < 0 ) {
+            if ( TMath::Abs(fCumulUsedSize[virt_dim])==1 
+                 || (size < TMath::Abs(fCumulUsedSize[virt_dim]) ) ) {
+               neg = fCumulUsedSize[virt_dim] < 0;
+               fCumulUsedSize[virt_dim] = size;
+               if (neg) fCumulUsedSize[virt_dim] *= -1;
+            }
+            virt_dim++;
+         }
+      }
+      fNdimensions[code] ++;
+      if (fNdimensions[code] >= kMAXFORMDIM) {
+         // NOTE: test that fNdimensions[code] this is NOT too big!!
+          
+         break; 
+      }
+      current = (char*)strstr( current, "[" );
+   }
+
 }
 
 //______________________________________________________________________________
@@ -102,6 +201,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 //      - Leaf_Name (simple variable or data member of a ClonesArray)
 //      - Branch_Name.Leaf_Name
 //      - Branch_Name.Method_Name
+//      - Leaf_Name[index]
+//      - Branch_Name.Leaf_Name[index]
+// I want to support, with Leaf_Name a 1D array data member.
+//      - Branch_Name.Leaf_Name[index1]
+//      - Branch_Name.Leaf_Name[][index2]
+//      - Branch_Name.Leaf_Name[index1][index2]
 //
 
    if (!fTree) return -1;
@@ -109,8 +214,9 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
    Int_t nchname = name.Length();
    if (nchname > 60) return -1;
    char branchname[128];
+   char leafname[128];
    static char anumber[10];
-   static char lname[64];
+   static char lname[128];
    static char lmethod[128];
    Int_t i;
    strcpy(lname,name.Data());
@@ -127,13 +233,30 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          }
       }
       if (name[i] == '[' && name[nchname-1] == ']') {
-         strncpy(anumber,&name[i+1],nchname-i-2);
-         anumber[nchname-i-2] = 0;
-         scanindex = sscanf(anumber,"%d",&index);
+         char * current = &( name[i] );
+         Int_t dim = 0;
+         while (current) {
+            current++;
+            if (current[0] == ']') {
+               fIndexes[fNcodes][dim] = -1; // Loop over all elements;
+            } else {
+               scanindex = sscanf(current,"%d",&index);
+               if (scanindex) {
+                  fIndexes[fNcodes][dim] = index;
+               } else {
+                  if (ref == 0) ref= anumber;
+                  index = 0;
+               }
+            }
+            dim ++;
+            if (dim >= kMAXFORMDIM) {
+               // NOTE: test that dim this is NOT too big!!
+               break; 
+            }
+            current = (char*)strstr( current, "[" );
+         }
          lname[i] = 0;
-         if (scanindex) {lname[i] = 0; break;}
-         if (ref == 0) ref= anumber;
-         index = 0;
+         break;
       }
    }
    TObjArray *lleaves = fTree->GetListOfLeaves();
@@ -144,7 +267,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 //          Look for a data member
       for (i=0;i<nleaves;i++) {
          TLeaf *leaf = (TLeaf*)lleaves->UncheckedAt(i);
-         if (!strcmp(lname,leaf->GetBranch()->GetName() ) ) {
+         strcpy(branchname,leaf->GetBranch()->GetName());
+         // do not look at the indexes if any
+         char *branch_dim = (char*)strstr(branchname,"[");
+         if (branch_dim) { branch_dim[0] = '\0'; branch_dim++; }
+         if (!strcmp(lname, branchname) ) {
             TMethodCall *method = 0;
             fMethods.Add(method);
             Int_t code = fNcodes;
@@ -152,7 +279,28 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             fNcodes++;
             if (scanindex) fIndex[code] = index;
             else           fIndex[code] = -1;
-            if (leaf->InheritsFrom("TLeafC")) return 5000+code;
+
+            // Let see if we can understand the structure of this branch.
+            // Usually we have: leafname[fixed_array] leaftitle[var_array]\type
+            // (with fixed_array that can be a multi-dimension array.
+            // NOTE I removed this? if ( !strcmp(lname,leaf->GetName() ) ) {
+            const char *tname = leaf->GetTitle();
+            char *dim = (char*)strstr( tname, "[" );
+            Int_t virt_dim = 0;
+            if (dim) {
+               dim++;
+               if (!branch_dim || strncmp(branch_dim,dim,strlen(branch_dim))) {
+                  // then both are NOT the same so do the title first:
+                  DefineDimensions( dim, code, virt_dim);
+               }
+            }
+            if (branch_dim) {
+               // then both are NOT same so do the title:
+               DefineDimensions( branch_dim, code, virt_dim);
+            }
+            // should we also check the leaf name?
+
+            if (leaf->InheritsFrom("TLeafC") && !leaf->IsUnsigned()) return 5000+code;
             return code;
          }
       }
@@ -160,6 +308,9 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       for (i=0;i<nleaves;i++) {
          TLeaf *leaf = (TLeaf*)lleaves->UncheckedAt(i);
          sprintf(branchname,"%s.%s",leaf->GetBranch()->GetName(),leaf->GetName());
+         // do not look at the indexes if any
+         char *branch_dim = (char*)strstr(branchname,"[");
+         if (branch_dim) { branch_dim[0] = '\0'; branch_dim++; }
          if (!strcmp(lname,branchname)) {
             TMethodCall *method = 0;
             fMethods.Add(method);
@@ -168,6 +319,27 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             fNcodes++;
             if (scanindex) fIndex[code] = index;
             else           fIndex[code] = -1;
+
+            // Let see if we can understand the structure of this branch.
+            // Usually we have: leafname[fixed_array] leaftitle[var_array]\type
+            // (with fixed_array that can be a multi-dimension array.
+            // NOTE I removed this? if ( !strcmp(lname,leaf->GetName() ) ) {
+            const char *tname = leaf->GetTitle();
+            char *dim = (char*)strstr( tname, "[" );
+            Int_t virt_dim = 0;
+            if (dim) {
+               dim++;
+               if (!branch_dim || strncmp(branch_dim,dim,strlen(branch_dim))) {
+                  // then both are NOT the same so do the title first:
+                  DefineDimensions( dim, code, virt_dim);
+               }
+            }
+            if (branch_dim) {
+               // then both are NOT same so do the title:
+               DefineDimensions( branch_dim, code, virt_dim);
+            }
+            // should we also check the leaf name?
+
             if (leaf->InheritsFrom("TLeafC")) return 5000+code;
             return code;
          }
@@ -176,7 +348,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       for (i=0;i<nleaves;i++) {
          lname[dot] = 0;
          TLeaf *leaf = (TLeaf*)lleaves->UncheckedAt(i);
-         if (!strcmp(lname,leaf->GetBranch()->GetName())) {
+         strcpy(branchname,leaf->GetBranch()->GetName());
+         // do not look at the indexes if any
+         char *branch_dim = (char*)strstr(branchname,"[");
+         if (branch_dim) { branch_dim[0] = '\0'; branch_dim++; }
+         if (!strcmp(lname,branchname)) {
             if (leaf->IsA() != TLeafObject::Class()) return -1;
             TLeafObject *lobj = (TLeafObject*)leaf;
             TMethodCall *method = lobj->GetMethodCall(lmethod);
@@ -186,6 +362,27 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             fCodes[code] = i;
             fNcodes++;
             fIndex[code] = code-kMETHOD;
+
+            // Let see if we can understand the structure of this branch.
+            // Usually we have: leafname[fixed_array] leaftitle[var_array]\type
+            // (with fixed_array that can be a multi-dimension array.
+            // NOTE I removed this? if ( !strcmp(lname,leaf->GetName() ) ) {
+            const char *tname = leaf->GetTitle();
+            char *dim = (char*)strstr( tname, "[" );
+            Int_t virt_dim = 0;
+            if (dim) {
+               dim++;
+               if (!branch_dim || strncmp(branch_dim,dim,strlen(branch_dim))) {
+                  // then both are NOT the same so do the title first:
+                  DefineDimensions( dim, code, virt_dim);
+               }
+            }
+            if (branch_dim) {
+               // then both are NOT same so do the title:
+               DefineDimensions( branch_dim, code, virt_dim);
+            }
+            // should we also check the leaf name?
+
             return code;
          }
       }
@@ -194,6 +391,13 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
    } else {
       for (i=0;i<nleaves;i++) {
          TLeaf *leaf = (TLeaf*)lleaves->UncheckedAt(i);
+         strcpy(branchname,leaf->GetBranch()->GetName());
+         strcpy(leafname,leaf->GetName());
+         // do not look at the indexes if any
+         char *branch_dim = (char*)strstr(branchname,"[");
+         if (branch_dim) { branch_dim[0] = '\0'; branch_dim++; }
+         char *leaf_dim = (char*)strstr(leafname,"[");
+         if (leaf_dim) { leaf_dim[0] = '\0'; leaf_dim++; }
          if (!strcmp(lname,leaf->GetBranch()->GetName()) ||
              !strcmp(lname,leaf->GetName())) {
             TMethodCall *method = 0;
@@ -203,8 +407,30 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             fNcodes++;
             if (scanindex) fIndex[code] = index;
             else           fIndex[code] = -1;
+            
+            // Let see if we can understand the structure of this branch.
+            // Usually we have: leafname[fixed_array] leaftitle[var_array]\type
+            // (with fixed_array that can be a multi-dimension array.
+            // NOTE I removed this? if ( !strcmp(lname,leaf->GetName() ) ) {
+            const char *tname = leaf->GetTitle();
+            char *dim = (char*)strstr( tname, "[" );
+            Int_t virt_dim = 0;
+            if (dim) {
+               dim++;
+               if (!branch_dim || strncmp(branch_dim,dim,strlen(branch_dim))) {
+                  // then both are NOT the same so do the title first:
+                  DefineDimensions( dim, code, virt_dim);
+               }
+            }
+            if (branch_dim) {
+               // then both are NOT same so do the title:
+               DefineDimensions( branch_dim, code, virt_dim);
+            }
+            // should we also check the leaf name?
+
             if (ref) printf("Cannot process reference to array index=%s[%s]\n",lname,ref);
-            if (leaf->InheritsFrom("TLeafC")) return 5000+code;
+            if (leaf->InheritsFrom("TLeafC") && !leaf->IsUnsigned()) return 5000+code;
+            if (leaf->InheritsFrom("TLeafB") && !leaf->IsUnsigned()) return 5000+code;
             return code;
          }
       }
@@ -243,29 +469,65 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
 //*-*                  =========================
 //
 
-  Int_t i,pos,pos2,int1,int2;
+  const Int_t kMAXSTRINGFOUND = 10;
+  Int_t i,pos,pos2,int1,int2,real_instance,virt_dim;
   Float_t aresult;
-  Double_t tab[255];
-  Float_t param[50];
+  Double_t tab[kMAXFOUND];
+  Double_t param[kMAXFOUND];
   Double_t dexp;
-  char *tab2[20];
+  char *tab2[kMAXSTRINGFOUND];
 
   if (fNoper == 1 && fNcodes > 0) {
      if (fCodes[0] < 0) {
         TCutG *gcut = (TCutG*)fMethods.At(0);
         TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
         TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-        Float_t xcut = fx->EvalInstance(instance);
-        Float_t ycut = fy->EvalInstance(instance);
+        Double_t xcut = fx->EvalInstance(instance);
+        Double_t ycut = fy->EvalInstance(instance);
         return gcut->IsInside(xcut,ycut);
      }
      TLeaf *leaf = GetLeaf(0);
+
+     // Now let calculate what physical instance we really need.
+     // Some redundant code is used to speed up the cases where
+     // they are no dimensions.
+     real_instance = 0;
+     Int_t max_dim = fNdimensions[0];
+     if ( max_dim ) {
+        virt_dim = 0;
+        max_dim--;
+        for (Int_t dim = 0; dim < max_dim; dim++) {
+           if (fIndexes[0][dim]>=0) { 
+              real_instance += fIndexes[0][dim] * fCumulSize[0][dim+1];
+           } else {
+              if (fCumulUsedSize[virt_dim]>1) {
+                 real_instance += ( ( instance % fCumulUsedSize[virt_dim] ) 
+                                    / fCumulUsedSize[virt_dim+1]) 
+                                  * fCumulSize[0][dim+1];
+              } else {
+                 real_instance += ( instance / fCumulUsedSize[virt_dim+1]) 
+                                  * fCumulSize[0][dim+1];
+              }              
+              virt_dim ++;
+           }
+        }
+        if (fIndexes[0][max_dim]>=0) { 
+           real_instance += fIndexes[0][max_dim];
+        } else {
+           if (fCumulUsedSize[virt_dim]>1) {
+              real_instance += instance % fCumulUsedSize[virt_dim];
+           } else {
+              real_instance += instance;
+           }
+        }
+     }  
+     
      if (instance) {
-        if (instance < leaf->GetNdata()) return leaf->GetValue(instance);
-        else                             return leaf->GetValue(0);
+        if (real_instance < leaf->GetNdata()) return leaf->GetValue(real_instance);
+        else                                  return leaf->GetValue(0);
      } else {
         leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
-        if (!(leaf->IsA() == TLeafObject::Class())) return leaf->GetValue(fIndex[0]);
+        if (!(leaf->IsA() == TLeafObject::Class())) return leaf->GetValue(real_instance);
         return GetValueLeafObject(fIndex[0],(TLeafObject *)leaf);
      }
   }
@@ -274,17 +536,51 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
         TCutG *gcut = (TCutG*)fMethods.At(i);
         TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
         TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-        Float_t xcut = fx->EvalInstance(instance);
-        Float_t ycut = fy->EvalInstance(instance);
+        Double_t xcut = fx->EvalInstance(instance);
+        Double_t ycut = fy->EvalInstance(instance);
         param[i] = gcut->IsInside(xcut,ycut);
      } else {
         TLeaf *leaf = GetLeaf(i);
+
+        // Now let calculate what physical instance we really need.
+        // Some redundant code is used to speed up the cases where
+        // they are no dimensions.
+        real_instance = 0;
+        Int_t max_dim = fNdimensions[i];
+        if ( max_dim ) {
+           virt_dim = 0;
+           max_dim--;
+           for (Int_t dim = 0; dim < max_dim; dim++) {
+              if (fIndexes[i][dim]>=0) { 
+                 real_instance += fIndexes[i][dim] * fCumulSize[i][dim+1];
+              } else {
+                 if (fCumulUsedSize[virt_dim]>1) {
+                    real_instance += ( ( instance % fCumulUsedSize[virt_dim] ) 
+                                       / fCumulUsedSize[virt_dim+1]) 
+                                     * fCumulSize[i][dim+1];
+                 } else {
+                    real_instance += ( instance / fCumulUsedSize[virt_dim+1]) 
+                                     * fCumulSize[i][dim+1];
+                 }   
+                 virt_dim ++;
+              }
+           }
+           if (fIndexes[i][max_dim]>=0) { 
+              real_instance += fIndexes[i][max_dim];
+           } else {
+              if (fCumulUsedSize[virt_dim]>1) {
+                 real_instance += instance % fCumulUsedSize[virt_dim];
+              } else {
+                 real_instance += instance;
+              }
+           }
+        }
         if (instance) {
-           if (instance < leaf->GetNdata()) param[i] = leaf->GetValue(instance);
-           else                             param[i] = leaf->GetValue(0);
+           if (real_instance < leaf->GetNdata()) param[i] = leaf->GetValue(real_instance);
+           else                                  param[i] = leaf->GetValue(0);
         } else {
            leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
-           if (!(leaf->IsA() == TLeafObject::Class())) param[i] = leaf->GetValue(fIndex[i]);
+           if (!(leaf->IsA() == TLeafObject::Class())) param[i] = leaf->GetValue(real_instance);
            else param[i] = GetValueLeafObject(fIndex[i],(TLeafObject *)leaf);
         }
      }
@@ -295,14 +591,9 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
     Int_t action = fOper[i];
 //*-*- a tree string
     if (action >= 105000) {
-//       if (!precalculated_str) {
-//          precalculated_str=1;
-//          for (i=0;i<fNstring;i++) string_calc[i]=DefinedString(i);
-//       }
-       TLeafC *leafc = (TLeafC*)GetLeaf(action-105000);
+       TLeaf *leafc = GetLeaf(action-105000);
        leafc->GetBranch()->GetEntry(fTree->GetReadEntry());
-       pos2++; tab2[pos2-1] = leafc->GetValueString();
-//       pos2++; tab2[pos2-1] = string_calc[action-105000];
+       pos2++; tab2[pos2-1] = (char*)leafc->GetValuePointer();
        continue;
     }
 //*-*- a tree variable
@@ -378,8 +669,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
           case  41 : tab[pos-1] = TMath::Abs(tab[pos-1]); break;
           case  42 : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; break;
           case  43 : tab[pos-1] = Double_t(Int_t(tab[pos-1])); break;
-      //  case  50 : tab[pos-1] = gRandom->Rndm(1); break;
-          case  50 : tab[pos-1] = 0.5; break;
+          case  50 : pos++; tab[pos-1] = gRandom->Rndm(1); break;
           case  60 : pos--; if (tab[pos-1]!=0 && tab[pos]!=0) tab[pos-1]=1;
                             else tab[pos-1]=0; break;
           case  61 : pos--; if (tab[pos-1]!=0 || tab[pos]!=0) tab[pos-1]=1;
@@ -437,29 +727,55 @@ TMethodCall *TTreeFormula::GetMethodCall(Int_t code)
 Int_t TTreeFormula::GetNdata()
 {
 //*-*-*-*-*-*-*-*Return number of data words in the leaf*-*-*-*-*-*-*-*
+//*-*-*-*-*-*-*-*Changed to Return number of available instances in the formula*-*-*-*-*-*-*-*
 //*-*            =======================================
 //
 
+   // new version of GetNData:
+   // Possible problem: we only allow one variable dimension so far.
+   if (fMultiplicity==0) return 1;
+
+   if (fMultiplicity==2) return fCumulUsedSize[0];
+   
+   // We have at least one leaf with a variable size:
+   Int_t  overall, current;
+
+   overall = 1;
    for (Int_t i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) continue;
       TLeaf *leaf = GetLeaf(i);
       if (leaf->GetLeafCount()) {
          TBranch *branch = leaf->GetLeafCount()->GetBranch();
          branch->GetEntry(fTree->GetReadEntry());
-         return leaf->GetLen();
-      }
+         current = leaf->GetLen() / leaf->GetLenStatic();
+         if (fIndexes[i][0] < 0 ) {
+            if (overall==1 || (current!=1 && current<overall) ) overall = current;
+         } else if (fIndexes[i][0] >= current) {
+            // unreacheable element requested:
+            overall = 0;
+         }
+      } 
    }
-   return 0;
+   if (overall==0) return 0;
+   if (fCumulUsedSize[0] >= 0 ) return fCumulUsedSize[0];
+   else {
+      Int_t tmp = -1*fCumulUsedSize[0];
+      if (tmp!=1 && (tmp<overall) ) return tmp*fCumulUsedSize[1];
+      return overall*fCumulUsedSize[1];
+   }
+
 }
 
 //______________________________________________________________________________
-Float_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf)
+Double_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf)
 {
 //*-*-*-*-*-*-*-*Return result of a leafobject method*-*-*-*-*-*-*-*
 //*-*            ====================================
 //
+
+   if (i>=0) return 0; // case where we do NOT have a method defined   
    TMethodCall *m = GetMethodCall(i);
-   if (!m) return 0;
+   if (!m)   return 0;
 
    void *thisobj = leaf->GetObject();
 
@@ -468,12 +784,12 @@ Float_t TTreeFormula::GetValueLeafObject(Int_t i, TLeafObject *leaf)
    if (r == kLong) {
       Long_t l;
       m->Execute(thisobj, l);
-      return (Float_t) l;
+      return (Double_t) l;
    }
    if (r == kDouble) {
       Double_t d;
       m->Execute(thisobj, d);
-      return (Float_t) d;
+      return (Double_t) d;
    }
    m->Execute(thisobj);
    return 0;
@@ -509,7 +825,7 @@ char *TTreeFormula::PrintValue(Int_t mode)
    } else {
       if (mode == 0) {
          GetNdata();
-         sprintf(value,"%9.5g",EvalInstance(0));
+         sprintf(value,"%9.9g",EvalInstance(0));
       }
    }
    return &value[0];

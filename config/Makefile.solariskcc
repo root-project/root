@@ -40,8 +40,9 @@ AR            = KCC
 ARFLAGS       = $(OPT) $(CXXOPT) $(EXCEPTION)
 SOFLAGS       = -G
 SOEXT         = so
+
+# System libraries:
 SYSLIBS       = -lm -ldl -lsocket -lnsl
-SYSXLIBS      = -L/usr/openwin/lib -lX11 -lm -lgen -ldl
 XLIBS         = $(XPMLIB) -L/usr/openwin/lib -lX11
 CILIBS        = -lm -ltermcap -ldl -L/usr/ccs/lib -lgen
 CRYPTLIBS     =

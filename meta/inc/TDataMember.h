@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -34,6 +34,8 @@ class TMethodCall;
 class TDataMember : public TDictionary {
 
 private:
+   enum { kObjIsPersistent = BIT(2) };
+
    G__DataMemberInfo  *fInfo;        //pointer to CINT data member info
    TClass             *fClass;       //pointer to the class
    TDataType          *fDataType;    //pointer to data basic type descriptor

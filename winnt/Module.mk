@@ -22,7 +22,7 @@ WINNTH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 WINNTS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 WINNTO       := $(WINNTS:.cxx=.o)
 
-WINNTDEP     := $(WINNTO:.o=.d)
+WINNTDEP     := $(WINNTO:.o=.d) $(WINNTDO:.o=.d)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(WINNTH))

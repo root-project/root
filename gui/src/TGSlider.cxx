@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.2 2000/09/07 00:44:42 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -57,8 +57,9 @@ TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
    fWidgetFlags = kWidgetWantFocus;
    fMsgWindow   = p;
 
-   fType  = type;
-   fScale = 10;
+   fType     = type;
+   fScale    = 10;
+   fDragging = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -157,9 +158,15 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
                               fWidgetId, fPos);
       }
       fClient->NeedRedraw(this);
+
+      // last argument kFALSE forces all specified events to this window
+      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                             kPointerMotionMask, kNone, kNone,
+                             kTRUE, kFALSE);
    } else {
       // ButtonRelease
       fDragging = kFALSE;
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
 }
@@ -282,9 +289,15 @@ Bool_t TGHSlider::HandleButton(Event_t *event)
                               fWidgetId, fPos);
       }
       fClient->NeedRedraw(this);
+
+      // last argument kFALSE forces all specified events to this window
+      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                             kPointerMotionMask, kNone, kNone,
+                             kTRUE, kFALSE);
    } else {
       // ButtonRelease
       fDragging = kFALSE;
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
 }

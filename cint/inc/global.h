@@ -23,8 +23,10 @@
 
 #ifndef __MAKECINT__
 
+#ifndef __CINT__
 #ifdef __cplusplus
 extern "C" {
+#endif
 #endif
 
 /***********************************************************************
@@ -654,8 +656,14 @@ extern int G__autoload_stdheader;
 extern int G__ignore_stdnamespace;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1349
+extern int G__decl_obj;
+#endif
+
+#ifndef __CINT__
 #ifdef __cplusplus
 }
+#endif
 #endif
 
 #endif /* __MAKECINT__ */

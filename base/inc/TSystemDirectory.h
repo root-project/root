@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -46,7 +46,7 @@ public:
 
    virtual ~TSystemDirectory();
 
-   virtual Bool_t IsFolder() { return kTRUE; }
+   virtual Bool_t IsFolder() const { return kTRUE; }
 
    virtual void   Browse(TBrowser *b);
    virtual void   Edit() { }

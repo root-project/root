@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TMarker.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -34,33 +34,33 @@
 class TMarker : public TObject, public TAttMarker {
 
 protected:
-        Coord_t     fX;           //X position of marker (left,center,etc..)
-        Coord_t     fY;           //Y position of marker (left,center,etc..)
+        Double_t     fX;           //X position of marker (left,center,etc..)
+        Double_t     fY;           //Y position of marker (left,center,etc..)
 
 public:
         TMarker();
-        TMarker(Coord_t x, Coord_t y, Int_t marker);
+        TMarker(Double_t x, Double_t y, Int_t marker);
         TMarker(const TMarker &marker);
         virtual ~TMarker();
                 void     Copy(TObject &marker);
         virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
         virtual void     Draw(Option_t *option="");
-        virtual void     DrawMarker(Coord_t x, Coord_t y);
+        virtual void     DrawMarker(Double_t x, Double_t y);
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
-        Coord_t          GetX()  {return fX;}
-        Coord_t          GetY()  {return fY;}
+        Double_t         GetX()  {return fX;}
+        Double_t         GetY()  {return fY;}
         virtual void     ls(Option_t *option="");
         virtual void     Paint(Option_t *option="");
-        virtual void     PaintMarker(Coord_t x, Coord_t y);
-        virtual void     PaintMarkerNDC(Coord_t u, Coord_t v);
+        virtual void     PaintMarker(Double_t x, Double_t y);
+        virtual void     PaintMarkerNDC(Double_t u, Double_t v);
         virtual void     Print(Option_t *option="");
         virtual void     SavePrimitive(ofstream &out, Option_t *option);
-        virtual void     SetX(Coord_t x) { fX = x;} // *MENU*
-        virtual void     SetY(Coord_t y) { fY = y;} // *MENU*
+        virtual void     SetX(Double_t x) { fX = x;} // *MENU*
+        virtual void     SetY(Double_t y) { fY = y;} // *MENU*
 
         static  void     DisplayMarkerTypes();
 
-        ClassDef(TMarker,1)  //Marker
+        ClassDef(TMarker,2)  //Marker
 };
 
 #endif

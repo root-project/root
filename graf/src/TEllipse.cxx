@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.2 2000/06/13 10:54:58 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -45,7 +45,7 @@ TEllipse::TEllipse(): TObject(), TAttLine(), TAttFill()
 
 }
 //______________________________________________________________________________
-TEllipse::TEllipse(Float_t x1, Float_t y1,Float_t r1,Float_t r2,Float_t phimin,Float_t phimax,Float_t theta)
+TEllipse::TEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phimin,Double_t phimax,Double_t theta)
       :TObject(), TAttLine(), TAttFill(0,1001)
 {
 //*-*-*-*-*-*-*-*-*-*-*Ellipse normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -100,24 +100,24 @@ Int_t TEllipse::DistancetoPrimitive(Int_t px, Int_t py)
 //  The distance is computed in pixels units.
 //
 
-   const Float_t PI = 3.141592;
-   Float_t ct   = TMath::Cos(PI*fTheta/180);
-   Float_t st   = TMath::Sin(PI*fTheta/180);
+   const Double_t PI = 3.141592;
+   Double_t ct   = TMath::Cos(PI*fTheta/180);
+   Double_t st   = TMath::Sin(PI*fTheta/180);
 
 //*-*- Compute distance of point to center of ellipse
    Int_t pxc    = gPad->XtoAbsPixel(fX1);
    Int_t pyc    = gPad->YtoAbsPixel(fY1);
-   Float_t dist = TMath::Sqrt(Float_t((pxc-px)*(pxc-px)+(pyc-py)*(pyc-py)));
-   Float_t cosa = TMath::Abs(px - pxc)/dist;
-   Float_t sina = TMath::Abs(py - pyc)/dist;
+   Double_t dist = TMath::Sqrt(Double_t((pxc-px)*(pxc-px)+(pyc-py)*(pyc-py)));
+   Double_t cosa = TMath::Abs(px - pxc)/dist;
+   Double_t sina = TMath::Abs(py - pyc)/dist;
 //*-*- Using the angle of clicked point, compute ellipse radius
-   Float_t dx    = fR1*cosa;
-   Float_t dy    = fR2*sina;
-   Float_t xrad  = fX1 + dx*ct - dy*st;
-   Float_t yrad  = fY1 + dx*st + dy*ct;
+   Double_t dx    = fR1*cosa;
+   Double_t dy    = fR2*sina;
+   Double_t xrad  = fX1 + dx*ct - dy*st;
+   Double_t yrad  = fY1 + dx*st + dy*ct;
    Int_t pxr = gPad->XtoAbsPixel(xrad);
    Int_t pyr = gPad->YtoAbsPixel(yrad);
-   Float_t distr = TMath::Sqrt(Float_t((pxr-pxc)*(pxr-pxc)+(pyr-pyc)*(pyr-pyc)));
+   Double_t distr = TMath::Sqrt(Double_t((pxr-pxc)*(pxr-pxc)+(pyr-pyc)*(pyr-pyc)));
 
    if (distr < dist ) return 9999;
 
@@ -137,7 +137,7 @@ void TEllipse::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TEllipse::DrawEllipse(Float_t x1, Float_t y1,Float_t r1,Float_t r2,Float_t phimin,Float_t phimax,Float_t theta)
+void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phimin,Double_t phimax,Double_t theta)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this ellipse with new coordinates*-*-*-*-*-*-*-*-*
 //*-*                  ======================================
@@ -166,13 +166,13 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Int_t kMaxDiff = 10;
    const Int_t kMinSize = 25;
    const Int_t np = 40;
-   const Float_t PI = 3.141592;
+   const Double_t PI = 3.141592;
    static Int_t x[np+2], y[np+2];
    static Int_t px1,py1,npe,R1,R2,sav1,sav2;
    static Int_t pxold, pyold;
    static Int_t sig,impair;
    Int_t i, dpx, dpy;
-   Float_t angle,dx,dy,dphi,ct,st,fTy,fBy,fLx,fRx;
+   Double_t angle,dx,dy,dphi,ct,st,fTy,fBy,fLx,fRx;
    static Bool_t T, L, R, B, INSIDE;
    static Int_t Tx,Ty,Lx,Ly,Rx,Ry,Bx,By;
 
@@ -187,7 +187,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       ct   = TMath::Cos(PI*fTheta/180);
       st   = TMath::Sin(PI*fTheta/180);
       for (i=0;i<np;i++) {
-         angle = fPhimin*PI/180 + Float_t(i)*dphi;
+         angle = fPhimin*PI/180 + Double_t(i)*dphi;
          dx    = fR1*TMath::Cos(angle);
          dy    = fR2*TMath::Sin(angle);
          x[i]  = gPad->XtoAbsPixel(fX1 + dx*ct - dy*st);
@@ -340,7 +340,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          ct   = TMath::Cos(PI*fTheta/180);
          st   = TMath::Sin(PI*fTheta/180);
          for (i=0;i<np;i++) {
-            angle = fPhimin*PI/180 + Float_t(i)*dphi;
+            angle = fPhimin*PI/180 + Double_t(i)*dphi;
             dx    = R1*TMath::Cos(angle);
             dy    = R2*TMath::Sin(angle);
             x[i]  = px1 + Int_t(dx*ct - dy*st);
@@ -410,7 +410,7 @@ void TEllipse::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*List this ellipse with its attributes*-*-*-*-*-*-*-*
 //*-*                    =====================================
-   IndentLevel();
+   TROOT::IndentLevel();
    printf("%s:  X1= %f Y1=%f R1=%f R2=%f\n",GetName(),fX1,fY1,fR1,fR2);
 }
 
@@ -423,23 +423,23 @@ void TEllipse::Paint(Option_t *)
 }
 
 //______________________________________________________________________________
-void TEllipse::PaintEllipse(Float_t, Float_t, Float_t, Float_t, Float_t phimin,Float_t phimax, Float_t theta)
+void TEllipse::PaintEllipse(Double_t, Double_t, Double_t, Double_t, Double_t phimin,Double_t phimax, Double_t theta)
 {
 //*-*-*-*-*-*-*-*-*-*-*Draw this ellipse with new coordinates*-*-*-*-*-*-*-*-*
 //*-*                  ======================================
 
    const Int_t np = 40;
-   const Float_t PI = 3.141592;
-   static Float_t x[np+3], y[np+3];
+   const Double_t PI = 3.141592;
+   static Double_t x[np+3], y[np+3];
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill attributes only if necessary
 
-   Float_t angle,dx,dy;
-   Float_t dphi = (phimax-phimin)*PI/(180*np);
-   Float_t ct   = TMath::Cos(PI*theta/180);
-   Float_t st   = TMath::Sin(PI*theta/180);
+   Double_t angle,dx,dy;
+   Double_t dphi = (phimax-phimin)*PI/(180*np);
+   Double_t ct   = TMath::Cos(PI*theta/180);
+   Double_t st   = TMath::Sin(PI*theta/180);
    for (Int_t i=0;i<=np;i++) {
-      angle = phimin*PI/180 + Float_t(i)*dphi;
+      angle = phimin*PI/180 + Double_t(i)*dphi;
       dx    = fR1*TMath::Cos(angle);
       dy    = fR2*TMath::Sin(angle);
       x[i]  = fX1 + dx*ct - dy*st;
@@ -489,4 +489,50 @@ void TEllipse::SavePrimitive(ofstream &out, Option_t *)
    SaveLineAttributes(out,"ellipse",1,1,1);
 
    out<<"   ellipse->Draw();"<<endl;
+}
+
+//______________________________________________________________________________
+void TEllipse::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TEllipse.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      TAttFill::Streamer(R__b);
+      if (R__v < 2) {
+         Float_t x1,y1,r1,r2,phimin,phimax,theta;
+         R__b >> x1;     fX1 = x1;
+         R__b >> y1;     fY1 = y1;
+         R__b >> r1;     fR1 = r1;
+         R__b >> r2;     fR2 = r2;
+         R__b >> phimin; fPhimin = phimin;
+         R__b >> phimax; fPhimax = phimax;
+         R__b >> theta;  fTheta  = theta;
+      } else {
+         R__b >> fX1;
+         R__b >> fY1;
+         R__b >> fR1;
+         R__b >> fR2;
+         R__b >> fPhimin;
+         R__b >> fPhimax;
+         R__b >> fTheta;
+      }
+      R__b.CheckByteCount(R__s, R__c, TEllipse::IsA());
+   } else {
+      R__c = R__b.WriteVersion(TEllipse::IsA(), kTRUE);
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      TAttFill::Streamer(R__b);
+      R__b << fX1;
+      R__b << fY1;
+      R__b << fR1;
+      R__b << fR2;
+      R__b << fPhimin;
+      R__b << fPhimax;
+      R__b << fTheta;
+      R__b.SetByteCount(R__c, kTRUE);
+   }
 }

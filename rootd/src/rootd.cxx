@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name$:$Id$
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.6 2000/09/13 07:03:01 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -18,11 +18,11 @@
 // a connection to a rootd server or by hand (i.e. from the command     //
 // line). The rootd server works with the ROOT TNetFile class. It       //
 // allows remote access to ROOT database files in either read or        //
-// write mode. By default TNetFile assumes port 432 (which requires     //
-// rootd to be started as root). To run rootd via inetd add the         //
+// write mode. By default TNetFile uses port 1094 (allocated by IANA,   //
+// www.iana.org, to rootd). To run rootd via inetd add the              //
 // following line to /etc/services:                                     //
 //                                                                      //
-// rootd     432/tcp                                                    //
+// rootd     1094/tcp                                                   //
 //                                                                      //
 // and to /etc/inetd.conf:                                              //
 //                                                                      //
@@ -143,8 +143,8 @@
 extern "C" char *crypt(const char *, const char *);
 #endif
 
-#ifdef __alpha
-extern "C" int initgroups(char *name, int basegid);
+#if defined(__alpha) && !defined(__linux) && !defined(__FreeBSD__)
+extern "C" int initgroups(const char *name, int basegid);
 #endif
 
 #if defined(__sgi) && !defined(__GNUG__) && (SGI_REL<62)
@@ -156,16 +156,10 @@ extern "C" {
 
 #if defined(_AIX)
 extern "C" {
-   int initgroups(char *name, int basegid);
+   int initgroups(const char *name, int basegid);
    int seteuid(uid_t euid);
    int setegid(gid_t egid);
 }
-#endif
-
-#if (defined(__linux__) && defined(__powerpc__) && __GNUG__>=2)
-#  if (__GNUG__==2 && __GNUC_MINOR__ >=95)
-extern "C" int initgroups(char *name, int basegid);
-#  endif
 #endif
 
 #if defined(__sun)
@@ -1045,17 +1039,19 @@ void RootdOpen(const char *msg)
       ErrorFatal(kErrFileExists, "RootdOpen: file %s already exists", gFile);
 
    if (update) {
-      if (access(gFile, F_OK))
-         ErrorFatal(kErrNoFile, "RootdOpen: file %s does not exist", gFile);
-      if (access(gFile, W_OK))
-         ErrorFatal(kErrNoAccess, "RootdOpen: no write access for file %s", gFile);
+      if (access(gFile, F_OK)) {
+         update = 0;
+         create = 1;
+      }
+      if (update && access(gFile, W_OK))
+         ErrorFatal(kErrNoAccess, "RootdOpen: no write permission for file %s", gFile);
    }
 
    if (read) {
       if (access(gFile, F_OK))
          ErrorFatal(kErrNoFile, "RootdOpen: file %s does not exist", gFile);
       if (access(gFile, R_OK))
-         ErrorFatal(kErrNoAccess, "RootdOpen: no read access for file %s", gFile);
+         ErrorFatal(kErrNoAccess, "RootdOpen: no read permission for file %s", gFile);
    }
 
    if (create || update) {

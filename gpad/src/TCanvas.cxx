@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.13 2000/09/13 07:32:46 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -119,7 +119,19 @@ TCanvas::TCanvas() : TPad()
 {
    // Canvas default constructor.
 
-   Constructor();
+   if (TClass::IsCallingNew()) {
+      Constructor();
+   } else {
+      const char *defcanvas = gROOT->GetDefCanvasName();
+      char *cdef;
+
+      TList *lc = (TList*)gROOT->GetListOfCanvases();
+      if (lc->FindObject(defcanvas))
+         cdef = StrDup(Form("%s_n%d",defcanvas,lc->GetSize()+1));
+      else
+         cdef = StrDup(Form("%s",defcanvas));
+      Constructor(cdef, cdef, 1);
+   }
 }
 
 //______________________________________________________________________________
@@ -449,7 +461,7 @@ void TCanvas::Build()
    fCanvas         = this;
    fMother         = (TPad*)gPad;
    if (!fPrimitives) {
-      fPrimitives     = new TList(this);
+      fPrimitives     = new TList;
       SetFillColor(gStyle->GetCanvasColor());
       SetFillStyle(1001);
       SetGrid(gStyle->GetPadGridX(),gStyle->GetPadGridY());
@@ -468,7 +480,7 @@ void TCanvas::Build()
       Range(0, 0, 1, 1);   //Pad range is set by default to [0,1] in x and y
       PaintBorder(GetFillColor(), kTRUE);    //Paint background
    }
-   SetBit(kObjInCanvas);
+   SetBit(kMustCleanup);
 #ifdef WIN32
    gVirtualX->UpdateWindow(1);
 #endif
@@ -481,6 +493,15 @@ TCanvas::~TCanvas()
 
    Destructor();
 }
+
+//______________________________________________________________________________
+void TCanvas::Browse(TBrowser *b)
+{
+    Draw();
+    cd();
+    fPrimitives->Browse(b);
+}
+
 
 //______________________________________________________________________________
 void TCanvas::Destructor()
@@ -522,14 +543,28 @@ void TCanvas::cd(Int_t subpadnumber)
 //______________________________________________________________________________
 void TCanvas::Clear(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Clear canvas*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ============
-//  Remove all primitives in default pad
-//  Remove all pads (except default pad)
-//
+   // Remove all primitives from the canvas.
+   // If option "D" is specified, direct subpads are cleared but not deleted.
+   // This option is not recursive, i.e. pads in direct subpads are deleted.
 
    if (fCanvasID == -1) return;
-   TPad::Clear(option);   //Remove primitives from pad
+   TString opt = option;
+   opt.ToLower();
+   if (opt.Contains("d")) {
+      // clear subpads, but do not delete pads in case the canvas
+      // has been divided (note: option "D" is propagated so could cause
+      // conflicts for primitives using option "D" for something else)
+      if (fPrimitives) {
+         TIter next(fPrimitives);
+         TObject *obj;
+         while ((obj=next())) {
+            obj->Clear(option);
+         }
+      }
+   } else {
+      //default, clear everything in the canvas. Subpads are deleted
+      TPad::Clear(option);   //Remove primitives from pad
+   }
 
    fSelected    = 0;
    fSelectedPad = 0;
@@ -596,10 +631,13 @@ void TCanvas::Draw(Option_t *)
 
 
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(GetName());
-   if (old) {
+   if (old == this) {
       Paint();
       return;
    }
+   if (old) gROOT->GetListOfCanvases()->Remove(old);
+   if (fWindowWidth  == 0) fWindowWidth  = 800;
+   if (fWindowHeight == 0) fWindowHeight = 600;
    fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
                                              fWindowWidth, fWindowHeight);
    fCanvasImp->ShowMenuBar(fMenuBar);
@@ -614,6 +652,7 @@ void TCanvas::Draw(Option_t *)
 void TCanvas::DrawClone(Option_t *option)
 {
    // Draw a clone of this canvas
+   // A new canvas is created that is a clone of this canvas
 
    const char *defcanvas = gROOT->GetDefCanvasName();
    char *cdef;
@@ -628,6 +667,53 @@ void TCanvas::DrawClone(Option_t *option)
    newCanvas->SetName(cdef);
 
    newCanvas->Draw(option);
+   newCanvas->Update();
+}
+
+
+//______________________________________________________________________________
+void TCanvas::DrawClonePad()
+{
+   // Draw a clone of this canvas into the current pad
+   // In an interactive session, select the destination/current pad
+   // with the middle mouse button, then point to the canvas area to select
+   // the canvas context menu item DrawClonePad.
+   // Note that the original canvas may have subpads.
+
+
+  TPad *padsav = (TPad*)gPad;
+  TPad *pad = (TPad*)gROOT->GetSelectedPad();
+  if (fCanvasID < 0 || padsav == 0 || pad == this) {
+     DrawClone();
+     return;
+  }
+  this->cd();
+  TObject *obj, *clone;
+  //copy pad attributes
+  pad->Range(fX1,fY1,fX2,fY2);
+  pad->SetTickx(GetTickx());
+  pad->SetTicky(GetTicky());
+  pad->SetGridx(GetGridx());
+  pad->SetGridy(GetGridy());
+  pad->SetLogx(GetLogx());
+  pad->SetLogy(GetLogy());
+  pad->SetLogz(GetLogz());
+  pad->SetBorderSize(GetBorderSize());
+  pad->SetBorderMode(GetBorderMode());
+  TAttLine::Copy((TAttLine&)*pad);
+  TAttFill::Copy((TAttFill&)*pad);
+  TAttPad::Copy((TAttPad&)*pad);
+
+  //copy primitives
+  TIter next(GetListOfPrimitives());
+  while ((obj=next())) {
+     gROOT->SetSelectedPad(pad);
+     clone = obj->Clone();
+     pad->GetListOfPrimitives()->Add(clone,obj->GetDrawOption());
+  }
+  pad->Modified();
+  pad->Update();
+  padsav->cd();
 }
 
 
@@ -809,8 +895,8 @@ Int_t TCanvas::GetWindowTopX()
 {
    // Returns current top x position of window on screen.
 
-   fCanvasImp->GetWindowGeometry(fWindowTopX, fWindowTopY,
-                                 fWindowWidth, fWindowHeight);
+   if (fCanvasImp) fCanvasImp->GetWindowGeometry(fWindowTopX, fWindowTopY,
+                                                 fWindowWidth,fWindowHeight);
 
    return fWindowTopX;
 }
@@ -820,8 +906,8 @@ Int_t TCanvas::GetWindowTopY()
 {
    // Returns current top y position of window on screen.
 
-   fCanvasImp->GetWindowGeometry(fWindowTopX, fWindowTopY,
-                                 fWindowWidth, fWindowHeight);
+   if (fCanvasImp) fCanvasImp->GetWindowGeometry(fWindowTopX, fWindowTopY,
+                                                 fWindowWidth,fWindowHeight);
 
    return fWindowTopY;
 }
@@ -1111,11 +1197,11 @@ void TCanvas::ls(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*List all pads*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          =============
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<"Canvas Name=" <<GetName()<<" Title="<<GetTitle()<<" Option="<<option<<endl;
-   TObject::IncreaseDirLevel();
+   TROOT::IncreaseDirLevel();
    TPad::ls(option);
-   TObject::DecreaseDirLevel();
+   TROOT::DecreaseDirLevel();
 }
 
 
@@ -1195,30 +1281,30 @@ void TCanvas::Resize(Option_t *)
    if (fXsizeUser && fYsizeUser) {
       UInt_t nwh = fCh;
       UInt_t nww = fCw;
-      Float_t rxy = fXsizeUser/fYsizeUser;
+      Double_t rxy = fXsizeUser/fYsizeUser;
       if (rxy < 1) {
-         UInt_t twh = UInt_t(Float_t(fCw)/rxy);
+         UInt_t twh = UInt_t(Double_t(fCw)/rxy);
          if (twh > fCh)
-            nww = UInt_t(Float_t(fCh)*rxy);
+            nww = UInt_t(Double_t(fCh)*rxy);
          else
             nwh = twh;
          if (nww > fCw) {
             nww = fCw; nwh = twh;
          }
          if (nwh > fCh) {
-            nwh = fCh; nww = UInt_t(Float_t(fCh)/rxy);
+            nwh = fCh; nww = UInt_t(Double_t(fCh)/rxy);
          }
       } else {
-         UInt_t twh = UInt_t(Float_t(fCw)*rxy);
+         UInt_t twh = UInt_t(Double_t(fCw)*rxy);
          if (twh > fCh)
-            nwh = UInt_t(Float_t(fCw)/rxy);
+            nwh = UInt_t(Double_t(fCw)/rxy);
          else
             nww = twh;
          if (nww > fCw) {
             nww = fCw; nwh = twh;
          }
          if (nwh > fCh) {
-            nwh = fCh; nww = UInt_t(Float_t(fCh)*rxy);
+            nwh = fCh; nww = UInt_t(Double_t(fCh)*rxy);
          }
       }
       fCw = nww;
@@ -1227,11 +1313,11 @@ void TCanvas::Resize(Option_t *)
 
    if (fCw < fCh) {
       fYsizeReal = kDefaultCanvasSize;
-      fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
+      fXsizeReal = fYsizeReal*Double_t(fCw)/Double_t(fCh);
    }
    else {
       fXsizeReal = kDefaultCanvasSize;
-      fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
+      fYsizeReal = fXsizeReal*Double_t(fCh)/Double_t(fCw);
    }
 
 //*-*- Loop on all pads to recompute conversion coefficients
@@ -1359,7 +1445,7 @@ void TCanvas::SetCanvasSize(UInt_t ww, UInt_t wh)
    // Use this function to zoom in a canvas and naviguate via
    // the scroll bars.
 
-   fCanvasImp->SetCanvasSize(ww, wh);
+   if (fCanvasImp) fCanvasImp->SetCanvasSize(ww, wh);
 }
 
 //______________________________________________________________________________
@@ -1398,7 +1484,7 @@ void TCanvas::SetTitle(const char *title)
 //*-*                  ===============
 
    fTitle = title;
-   fCanvasImp->SetWindowTitle(title);
+   if (fCanvasImp) fCanvasImp->SetWindowTitle(title);
 }
 
 //______________________________________________________________________________
@@ -1486,6 +1572,8 @@ void TCanvas::Streamer(TBuffer &b)
       UInt_t h = fWindowHeight;
       b << GetWindowTopX();
       b << GetWindowTopY();
+      fWindowWidth  = w;
+      fWindowHeight = h;
       b << w;
       b << h;
       b << fCw;

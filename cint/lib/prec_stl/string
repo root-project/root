@@ -1,0 +1,123 @@
+// lib/prec_stl/string
+
+#pragma ifndef PREC_STL_STRING
+#pragma define PREC_STL_STRING
+#pragma link off global PREC_STL_STRING;
+#pragma link C++ nestedtypedef;
+#pragma link C++ nestedclass;
+
+// string class wrapper , by Masaharu Goto
+// Template is on purposely avoided.
+
+#include <stddef.h>
+
+//////////////////////////////////////////////////////////////////////////
+class string {
+ public:
+  typedef char value_type;
+  typedef char* iterator;
+  typedef const char* const_iterator;
+  typedef char* pointer;
+  typedef const char* const_pointer;
+  typedef char& reference;
+  typedef const char& const_reference;
+  typedef ptrdiff_t difference_type;
+  typedef size_t size_type;
+  typedef int traits_type;
+
+  typedef char* iterator;
+  typedef const char* const_iterator;
+
+  enum { npos=-1 };
+  string() ;
+  //string(size_t size,capacity cap) ;
+  string(const string& str) ;
+  string(const string& str,size_t pos,size_t n) ;
+  string(const char* s,size_t n) ;
+  string(const char* s) ;
+  string(char c,size_t rep);
+  //string(const vector<char>& vec);
+  ~string() ;
+  string& operator=(const string& str);
+  string& operator=(const char* s);
+  string& operator=(char c);
+  string& operator+=(const string& rhs);
+  string& operator+=(const char* s);
+  string& operator+=(char c);
+  //vector<char> operator vector<char>(void) const;
+  string& append(const string& str);
+  string& append(const string& str,size_t pos,size_t n);
+  string& append(const char* s,size_t n);
+  string& append(const char* s);
+  string& append(char c,size_t rep);
+  string& assign(const string& str);
+  string& assign(const string& str,size_t pos,size_t n);
+  string& assign(const char* s,size_t n);
+  string& assign(const char* s);
+  string& assign(char c,size_t rep);
+  string& insert(size_t pos1,const string& str);
+  string& insert(size_t pos1,const string& str,size_t pos2,size_t n);
+  string& insert(size_t pos,const char* s,size_t n);
+  string& insert(size_t pos,const char* s);
+  string& insert(size_t pos,char c,size_t rep);
+  //string& remove(size_t pos=0,size_t n=npos);
+  string& replace(size_t pos1,size_t n1,const string& str);
+  string& replace(size_t pos1,size_t n1,const string& str,size_t pos2,size_t n2);
+  string& replace(size_t pos,size_t n1,const char* s,size_t n2);
+  string& replace(size_t pos,size_t n1,const char* s);
+  string& replace(size_t pos,size_t n,char c,size_t rep);
+  //char get_at(size_t pos) const;
+  //void put_at(size_t pos,char c);
+  char operator[](size_t pos) const;
+  const char* c_str(void) const;
+  const char* data(void) const;
+  size_t length(void) const;
+  void resize(size_t n,char c);
+  void resize(size_t n);
+  //size_t reserve(void) const;
+  void reserve(size_t res_arg);
+  size_t copy(char* s,size_t n,size_t pos=0) /* const */;
+  size_t find(const string& str,size_t pos=0) const;
+  size_t find(const char* s,size_t pos,size_t n) const;
+  size_t find(const char* s,size_t pos=0) const;
+  size_t find(char c,size_t pos=0) const;
+  size_t rfind(const string& str,size_t pos=npos) const;
+  size_t rfind(const char* s,size_t pos,size_t n) const;
+  size_t rfind(const char* s,size_t pos=npos) const;
+  size_t rfind(char c,size_t pos=npos) const;
+  size_t find_first_of(const string& str,size_t pos=0) const;
+  size_t find_first_of(const char* s,size_t pos,size_t n) const;
+  size_t find_first_of(const char* s,size_t pos=0) const;
+  size_t find_first_of(char c,size_t pos=0) const;
+  size_t find_last_of(const string& str,size_t pos=npos) const;
+  size_t find_last_of(const char* s,size_t pos,size_t n) const;
+  size_t find_last_of(const char* s,size_t pos=npos) const;
+  size_t find_last_of(char c,size_t pos=npos) const;
+  size_t find_first_not_of(const string& str,size_t pos=0) const;
+  size_t find_first_not_of(const char* s,size_t pos,size_t n) const;
+  size_t find_first_not_of(const char* s,size_t pos=0) const;
+  size_t find_first_not_of(char c,size_t pos=0) const;
+  size_t find_last_not_of(const string& str,size_t pos=npos) const;
+  size_t find_last_not_of(const char* s,size_t pos,size_t n) const;
+  size_t find_last_not_of(const char* s,size_t pos=npos) const;
+  size_t find_last_not_of(char c,size_t pos=npos) const;
+  string substr(size_t pos=0,size_t n=npos) const;
+  int compare(const string& str) const;
+  //int compare(size_type pos1,size_type n1,const string& str,size_type n2) const;
+  int compare(const char* s) const ;
+  //int compare(size_type pos1,size_type n1,const char* s,size_type n2=npos)const;
+  //operator char*() ;
+};
+
+bool operator==(const string& a,const string& b) ;
+bool operator!=(const string& a,const string& b) ;
+bool operator<(const string& a,const string& b) ;
+bool operator>(const string& a,const string& b) ;
+bool operator<=(const string& a,const string& b) ;
+bool operator>=(const string& a,const string& b) ;
+string operator+(const string& a,const string& b) ;
+
+typedef string cstring;
+
+#pragma endif 
+

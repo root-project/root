@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name$:$Id$
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.6 2000/09/13 07:03:01 brun Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -52,8 +52,8 @@
 extern "C" char *crypt(const char *, const char *);
 #endif
 
-#ifdef __alpha
-extern "C" int initgroups(char *name, int basegid);
+#if defined(__alpha) && !defined(__linux) && !defined(__FreeBSD__)
+extern "C" int initgroups(const char *name, int basegid);
 #endif
 
 #if defined(__sgi) && !defined(__GNUG__) && (!defined(SGI_REL) || (SGI_REL<62))
@@ -65,16 +65,10 @@ extern "C" {
 
 #if defined(_AIX)
 extern "C" {
-   int initgroups(char *name, int basegid);
+   int initgroups(const char *name, int basegid);
    int seteuid(uid_t euid);
    int setegid(gid_t egid);
 }
-#endif
-
-#if (defined(__linux__) && defined(__powerpc__) && __GNUG__>=2)
-#  if (__GNUG__==2 && __GNUC_MINOR__ >=95)
-extern "C" int initgroups(char *name, int basegid);
-#  endif
 #endif
 
 #if defined(sun)
@@ -310,15 +304,16 @@ char *reroute_user(char *confdir, char *user_name)
 
 int main(int /* argc */, char **argv)
 {
-   // Arguments for master:  "proofserv" confdir
-   // Arguments for slave :  "proofslave" confdir
+   // Arguments:  <confdir>
+   // Confdir is the location where the PROOF config files and binaries live.
+
    char *argvv[4];
    char  arg0[256];
    char *user_name;
    char *node_name;
    char  vtag[80];
    char  msg[80];
-
+   int   master;
 
    //
    // Make this process the process group leader and disassociate from
@@ -329,12 +324,16 @@ int main(int /* argc */, char **argv)
    if (fork() != 0) exit(0);   // parent exits
    setsid();
 
+   // find out if we are supposed to be a master or a slave server
+   if (Recv(msg, sizeof(msg)) < 0)
+      fatal_error("Cannot receive master/slave status");
+   master = !strcmp("master", msg) ? 1 : 0;
+
    // user authentication
    user_name = check_pass();
 
    // only reroute in case of master server
-   if (!strcmp("proofserv", argv[0]) &&
-       (node_name = reroute_user(argv[1], user_name)) != 0) {
+   if (master && (node_name = reroute_user(argv[0], user_name)) != 0) {
       // send a reroute request to the client passing the IP address
 
       char host_name[32];
@@ -375,13 +374,13 @@ int main(int /* argc */, char **argv)
       fatal_error("Error receiving version tag");
 
    // start server version
-   sprintf(arg0, "%s/bin/proofserv.%s", argv[1], vtag);
+   sprintf(arg0, "%s/bin/proofserv.%s", argv[0], vtag);
    argvv[0] = arg0;
-   argvv[1] = argv[0];
-   argvv[2] = argv[1];
+   argvv[1] = (char *)(master ? "proofserv" : "proofslave");
+   argvv[2] = argv[0];
    argvv[3] = 0;
 #if defined(__linux)
-   sprintf(msg, "LD_LIBRARY_PATH=%s/lib", argv[1]);
+   sprintf(msg, "LD_LIBRARY_PATH=%s/lib", argv[0]);
    putenv(msg);
 #endif
    execv(arg0, argvv);

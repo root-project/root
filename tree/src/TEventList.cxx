@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TEventList.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -164,7 +164,10 @@ void TEventList::Enter(Int_t entry)
       fN = 1;
       return;
    }
-   if (fN >= fSize) Resize();
+   if (fN >= fSize) {
+      Int_t newsize = TMath::Max(2*fSize,fN+fDelta);
+      Resize(newsize-fSize);
+   }
    fList[fN] = entry;
    fN++;
 }

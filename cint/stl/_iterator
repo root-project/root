@@ -1,0 +1,10 @@
+
+#ifndef G__ITERATOR_DLL
+#pragma include_noerr <iterator.dll>
+#endif
+
+#ifdef __MAKECINT__
+#include <prec_stl/iterator>
+#else
+#include <_iterator.h>
+#endif

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.8 2000/09/08 07:33:29 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -55,7 +55,6 @@
 
 
 Long_t TObject::fgDtorOnly = 0;
-Int_t  TObject::fgDirLevel = 0;
 Bool_t TObject::fgObjectStat = kTRUE;
 
 
@@ -226,9 +225,8 @@ TObject::~TObject()
    if (gROOT) {
       if (gROOT->MustClean()) {
          if (gROOT == this) return;
-         if (TestBit(kObjInCanvas)) {
-            if (gROOT->GetListOfCanvases()) gROOT->GetListOfCanvases()->RecursiveRemove(this);
-            if (gROOT->GetListOfBrowsers()) gROOT->GetListOfBrowsers()->RecursiveRemove(this);
+         if (TestBit(kMustCleanup)) {
+            gROOT->GetListOfCleanups()->RecursiveRemove(this);
          }
       }
    }
@@ -248,7 +246,7 @@ void TObject::AppendPad(Option_t *option)
       if (!gROOT->GetMakeDefCanvas()) return;
       (gROOT->GetMakeDefCanvas())();
    }
-   SetBit(kObjInCanvas);
+   SetBit(kMustCleanup);
    gPad->GetListOfPrimitives()->Add(this,option);
    gPad->Modified(kTRUE);
 }
@@ -290,15 +288,6 @@ TObject *TObject::Clone()
 
    delete buffer;
    return newobj;
-}
-
-//______________________________________________________________________________
-void TObject::Close(Option_t *)
-{
-   // Close abstract method. Must be overridden in case an object needs to
-   // to something in case it is being removed from collections.
-
-   AbstractMethod("Close");
 }
 
 //______________________________________________________________________________
@@ -374,6 +363,7 @@ void TObject::DrawClone(Option_t *option)
       if (strlen(option)) pad->GetListOfPrimitives()->Add(newobj,option);
       else                pad->GetListOfPrimitives()->Add(newobj,GetDrawOption());
       pad->Modified(kTRUE);
+      pad->Update();
       return;
    }
    if (strlen(option))  newobj->Draw(option);
@@ -420,7 +410,7 @@ void TObject::Execute(const char *method, const char *params)
 
    gInterpreter->Execute(this, IsA(), method, params);
 
-   if (gPad && TestBit(kObjInCanvas)) gPad->Modified();
+   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 //______________________________________________________________________________
@@ -435,7 +425,7 @@ void TObject::Execute(TMethod *method, TObjArray *params)
 
    gInterpreter->Execute(this, IsA(), method, params);
 
-   if (gPad && TestBit(kObjInCanvas)) gPad->Modified();
+   if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 
@@ -446,6 +436,26 @@ void TObject::ExecuteEvent(Int_t, Int_t, Int_t)
    // must be overridden if an object can react to graphics events.
 
    // AbstractMethod("ExecuteEvent");
+}
+
+//______________________________________________________________________________
+TObject *TObject::FindObject(const char *) const
+{
+// must be redefined in derived classes
+// this function is typycally used with TCollections, but can also be used
+// to find an object by name inside this object
+
+   return 0;
+}
+
+//______________________________________________________________________________
+TObject *TObject::FindObject(TObject *) const
+{
+// must be redefined in derived classes
+// this function is typycally used with TCollections, but can also be used
+// to find an object inside this object
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -537,7 +547,7 @@ ULong_t TObject::Hash()
 }
 
 //______________________________________________________________________________
-Bool_t TObject::InheritsFrom(const char *classname)
+Bool_t TObject::InheritsFrom(const char *classname) const
 {
    // Returns kTRUE if object inherits from class "classname".
 
@@ -545,7 +555,7 @@ Bool_t TObject::InheritsFrom(const char *classname)
 }
 
 //______________________________________________________________________________
-Bool_t TObject::InheritsFrom(const TClass *cl)
+Bool_t TObject::InheritsFrom(const TClass *cl) const
 {
    // Returns kTRUE if object inherits from TClass cl.
 
@@ -574,7 +584,7 @@ void TObject::Inspect()
 }
 
 //______________________________________________________________________________
-Bool_t TObject::IsFolder()
+Bool_t TObject::IsFolder() const
 {
    // Returns kTRUE in case object contains browsable objects (like containers
    // or lists of other objects).
@@ -598,7 +608,7 @@ void TObject::ls(Option_t *)
    // The ls function lists the contents of a class on stdout. Ls output
    // is typically much less verbose then Dump().
 
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : "
         << Int_t(TestBit(kCanDelete)) << endl;
 }
@@ -656,7 +666,7 @@ void TObject::Print(Option_t *)
 }
 
 //______________________________________________________________________________
-void TObject::Read(const char *name)
+Int_t TObject::Read(const char *name)
 {
    // Read contents of object with specified name from the current directory.
    // First the key with the given name is searched in the current directory,
@@ -664,10 +674,10 @@ void TObject::Read(const char *name)
    // The object must have been created before via the default constructor.
    // See TObject::Write().
 
-   if (!gFile) { Error("Read","No file open"); return; }
+   if (!gFile) { Error("Read","No file open"); return 0; }
    TKey *key = (TKey*)gDirectory->GetListOfKeys()->FindObject(name);
-   if (!key)   { Error("Read","Key not found"); return; }
-   key->Read(this);
+   if (!key)   { Error("Read","Key not found"); return 0; }
+   return key->Read(this);
 }
 
 //______________________________________________________________________________
@@ -697,7 +707,7 @@ void TObject::SetDrawOption(Option_t *option)
    if (!gPad || !option) return;
 
    TListIter next(gPad->GetListOfPrimitives());
-   delete gPad->GetPrimitive("Tframe");
+   delete gPad->FindObject("Tframe");
    TObject *obj;
    while ((obj = next()))
       if (obj == this) {
@@ -747,7 +757,7 @@ void TObject::UseCurrentStyle()
 }
 
 //______________________________________________________________________________
-void TObject::Write(const char *name, Int_t option, Int_t bufsize)
+Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
 {
    // Write this object to the current directory
    // The data structure corresponding to this object is serialized.
@@ -790,19 +800,13 @@ void TObject::Write(const char *name, Int_t option, Int_t bufsize)
 
    if (!gFile) {
       Error("Write","No file open");
-      return;
+      return 0;
    }
    if (!gFile->IsWritable()) {
       Error("Write","File %s is not writable", gFile->GetName());
-      return;
+      return 0;
    }
 
-   // Special case for directories. Directory key already written
-   if (IsA() == TDirectory::Class()) {
-      TDirectory *dir = (TDirectory*)this;
-      dir->Write();
-      return;
-   }
    TKey *key;
    Int_t bsize = bufsize;
    if (!bsize) bsize = gFile->GetBestBuffer();
@@ -834,10 +838,10 @@ void TObject::Write(const char *name, Int_t option, Int_t bufsize)
    if (!key->GetSeekKey()) {
       gDirectory->GetListOfKeys()->Remove(key);
       delete key;
-      return;
+      return 0;
    }
    gFile->SumBuffer(key->GetObjlen());
-   key->WriteFile(0);
+   return key->WriteFile(0);
 }
 
 //______________________________________________________________________________
@@ -943,38 +947,6 @@ void TObject::SetObjectStat(Bool_t stat)
 }
 
 //______________________________________________________________________________
-void TObject::IndentLevel()
-{
-   // Functions used by ls() to indent an object hierarchy.
-
-   for (int i = 0; i < fgDirLevel; i++) cout.put(' ');
-}
-
-//______________________________________________________________________________
-Int_t TObject::GetDirLevel()
-{
-   return fgDirLevel;
-}
-
-//______________________________________________________________________________
-Int_t TObject::DecreaseDirLevel()
-{
-   return --fgDirLevel;
-}
-
-//______________________________________________________________________________
-Int_t TObject::IncreaseDirLevel()
-{
-   return ++fgDirLevel;
-}
-
-//______________________________________________________________________________
-void TObject::SetDirLevel(Int_t level)
-{
-   fgDirLevel = level;
-}
-
-//______________________________________________________________________________
 Long_t TObject::GetDtorOnly()
 {
    return fgDtorOnly;
@@ -990,7 +962,7 @@ void TObject::SetDtorOnly(void *obj)
 void TObject::operator delete(void *ptr)
 {
    if ((Long_t) ptr != fgDtorOnly)
-      ::operator delete(ptr);
+      TStorage::ObjectDealloc(ptr);
    else
       fgDtorOnly = 0;
 }
@@ -1001,6 +973,6 @@ void TObject::operator delete(void *ptr, void *vp)
 {
    // Only called by placement new when throwing an exception.
 
-   if (ptr && vp) { }
+   TStorage::ObjectDealloc(ptr, vp);
 }
 #endif

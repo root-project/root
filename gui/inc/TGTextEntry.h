@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.2 2000/07/06 16:50:55 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -21,6 +21,8 @@
 //                                                                      //
 // Changing text in the text entry widget will generate the event:      //
 // kC_TEXTENTRY, kTE_TEXTCHANGED, widget id, 0.                         //
+// Hitting the enter key will generate:                                 //
+// kC_TEXTENTRY, kTE_ENTER, widget id, 0.                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -59,6 +61,7 @@ protected:
    FontStruct_t      fFontStruct;        // text font
    GContext_t        fNormGC;            // normal drawing context
    GContext_t        fSelGC, fSelbackGC; // selection mode drawing contexts
+   Atom_t            fClipboard;         // clipboard property
    TBlinkTimer      *fCurBlink;          // cursor blink timer
    Int_t             fMaxLen;            // maximum length of text
    Bool_t            fDeleteGC;          // if kTRUE delete the fNormGC and fSelGC
@@ -74,6 +77,7 @@ protected:
    static GContext_t    fgDefaultSelectedGC;
    static GContext_t    fgDefaultSelectedBackgroundGC;
    static FontStruct_t  fgDefaultFontStruct;
+   static Atom_t        fgClipboard;
 
             Int_t       GetCharacterIndex(Int_t xcoord);
    virtual  void        DoRedraw();

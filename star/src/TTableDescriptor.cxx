@@ -1,6 +1,6 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: STAR_TTableDescriptor.cxx,v 1.9 2000/04/28 14:10:59 fine Exp $
+// $Id: TTableDescriptor.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 #include <stdlib.h>
 
 #include "TTableDescriptor.h"
@@ -86,14 +86,14 @@ TString TTableDescriptor::CreateLeafList() const
   TString string;
   for (Int_t i=0;i<maxRows;i++){
     if (i) string += ":";
-    Int_t nDim = Dimensions(i);
+    UInt_t nDim = Dimensions(i);
 
-    UInt_t *indx = 0;
-    Int_t totalSize = 1;
-    Int_t k = 0;
+    UInt_t totalSize = 1;
+    UInt_t k = 0;
 
     if (nDim) {
-      if ( !(indx = IndexArray(i))){
+      const UInt_t *indx = IndexArray(i);
+      if (!indx){
         string = "";
         Error("CreateLeafList()","Can not create leaflist for arrays");
         return string;

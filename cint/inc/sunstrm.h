@@ -62,6 +62,8 @@ extern G__linked_taginfo G__G__streamLN_basic_istringstreamlEcharcOchar_traitslE
 extern G__linked_taginfo G__G__streamLN_basic_ostringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_basic_stringstreamlEcharcOchar_traitslEchargRcOallocatorlEchargRsPgR;
 extern G__linked_taginfo G__G__streamLN_basic_iostreamlEcharcOchar_traitslEchargRsPgR;
+
+/* STUB derived class for protected member access */
 typedef char_traits<char> G__char_traitslEchargR;
 typedef basic_istream<char,char_traits<char> > G__basic_istreamlEcharcOchar_traitslEchargRsPgR;
 typedef basic_ios<char,char_traits<char> > G__basic_ioslEcharcOchar_traitslEchargRsPgR;

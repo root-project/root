@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TLink.h,v 1.2 2000/06/13 11:05:33 brun Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -29,15 +29,17 @@
 class TLink : public TText {
 
 protected:
-        void   *fLink;           //pointer to object
+   enum { kObjIsParent = BIT(1) };
+
+   void   *fLink;           //pointer to object
 
 public:
-        TLink();
-        TLink(Coord_t x, Coord_t y, void *pointer);
-        virtual ~TLink();
-        virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   TLink();
+   TLink(Double_t x, Double_t y, void *pointer);
+   virtual ~TLink();
+   virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
 
-        ClassDef(TLink,0)  //Link: hypertext link to an object
+   ClassDef(TLink,0)  //Link: hypertext link to an object
 };
 
 #endif

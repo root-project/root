@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.2 2000/09/08 16:11:03 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -52,20 +52,9 @@ THashList::THashList(Int_t capacity, Int_t rehash)
 }
 
 //______________________________________________________________________________
-THashList::THashList(TObject *parent, Int_t capacity, Int_t rehash)
-           : TList(parent)
+THashList::THashList(TObject *, Int_t capacity, Int_t rehash)
 {
-   // Create a THashList object. Capacity is the initial hashtable capacity
-   // (i.e. number of slots), by default kInitHashTableCapacity = 17, and
-   // rehash is the value at which a rehash will be triggered. I.e. when the
-   // average size of the linked lists at a slot becomes longer than rehash
-   // then the hashtable will be resized and refilled to reduce the collision
-   // rate to about 1. The higher the collision rate, i.e. the longer the
-   // linked lists, the longer lookup will take. If rehash=0 the table will
-   // NOT automatically be rehashed. Use Rehash() for manual rehashing.
-   // WARNING !!!
-   // If the name of an object in the HashList is modified, The hashlist
-   // must be Rehashed
+   // For backward compatibility only. Use other ctor.
 
    fTable = new THashTable(capacity, rehash);
 }
@@ -73,8 +62,8 @@ THashList::THashList(TObject *parent, Int_t capacity, Int_t rehash)
 //______________________________________________________________________________
 THashList::~THashList()
 {
-   // Delete a hashlist. All objects will be removed from the list before the
-   // list will be deleted.
+   // Delete a hashlist. Objects are not deleted unless the THashList is the
+   // owner (set via SetOwner()).
 
    Clear();
    SafeDelete(fTable);
@@ -182,9 +171,13 @@ Float_t THashList::AverageCollisions() const
 //______________________________________________________________________________
 void THashList::Clear(Option_t *option)
 {
-   // Remove all objects from the list. Does not delete the objects.
+   // Remove all objects from the list. Does not delete the objects unless
+   // the THashList is the owner (set via SetOwner()).
 
-   TList::Clear(option);
+   if (IsOwner())
+      TList::Delete();
+   else
+      TList::Clear(option);
    fTable->Clear("nodelete");  // any kCanDelete objects have already been deleted
 }
 

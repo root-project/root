@@ -8,7 +8,7 @@
    bar = new TControlBar("vertical", "Demos");
 
    bar->AddButton("Help on Demos",".x demoshelp.C", "Click Here For Help on Running the Demos");
-   bar->AddButton("browser",     "{b = new TBrowser(\"Browser\");}", "Start the ROOT Browser");
+   bar->AddButton("browser",     "new TBrowser;",  "Start the ROOT Browser");
    bar->AddButton("framework",   ".x framework.C", "An Example of Object Oriented User Interface");
    bar->AddButton("first",       ".x first.C",     "An Example of Slide with Root");
    bar->AddButton("hsimple",     ".x hsimple.C",   "An Example Creating Histograms/Ntuples on File");

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -70,8 +70,8 @@
 
 Time_t   TGFrame::fgLastClick = 0;
 UInt_t   TGFrame::fgLastButton = 0;
-UInt_t   TGFrame::fgDbx = 0;
-UInt_t   TGFrame::fgDby = 0;
+Int_t    TGFrame::fgDbx = 0;
+Int_t    TGFrame::fgDby = 0;
 Window_t TGFrame::fgDbw = 0;
 
 TGLayoutHints *TGCompositeFrame::fgDefaultHints = new TGLayoutHints;
@@ -261,8 +261,8 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
 
             if ((event->fTime - fgLastClick < 350) &&
                 (event->fCode == fgLastButton) &&
-                (event->fXRoot - fgDbx < 3) &&
-                (event->fYRoot - fgDby < 3) &&
+                (TMath::Abs(event->fXRoot - fgDbx) < 6) &&
+                (TMath::Abs(event->fYRoot - fgDby) < 6) &&
                 (event->fWindow == fgDbw)) dbl_clk = kTRUE;
 
              fgLastClick = event->fTime;

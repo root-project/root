@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TAttPad.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -32,16 +32,16 @@
 
 class TAttPad {
 protected:
-        Coord_t     fLeftMargin;      //LeftMargin
-        Coord_t     fRightMargin;     //RightMargin
-        Coord_t     fBottomMargin;    //BottomMargin
-        Coord_t     fTopMargin;       //TopMargin
-        Coord_t     fXfile;           //X position where to draw the file name
-        Coord_t     fYfile;           //X position where to draw the file name
-        Coord_t     fAfile;           //Alignment for the file name
-        Coord_t     fXstat;           //X position where to draw the statistics
-        Coord_t     fYstat;           //X position where to draw the statistics
-        Coord_t     fAstat;           //Alignment for the statistics
+        Float_t     fLeftMargin;      //LeftMargin
+        Float_t     fRightMargin;     //RightMargin
+        Float_t     fBottomMargin;    //BottomMargin
+        Float_t     fTopMargin;       //TopMargin
+        Float_t     fXfile;           //X position where to draw the file name
+        Float_t     fYfile;           //X position where to draw the file name
+        Float_t     fAfile;           //Alignment for the file name
+        Float_t     fXstat;           //X position where to draw the statistics
+        Float_t     fYstat;           //X position where to draw the statistics
+        Float_t     fAstat;           //Alignment for the statistics
         Color_t     fFrameFillColor;  //pad frame fill color
         Color_t     fFrameLineColor;  //pad frame line color
         Style_t     fFrameFillStyle;  //pad frame fill style
@@ -54,16 +54,16 @@ public:
         TAttPad();
         virtual ~TAttPad();
         virtual void     Copy(TAttPad &attpad);
-        Coord_t          GetBottomMargin() { return fBottomMargin;}
-        Coord_t          GetLeftMargin() { return fLeftMargin;}
-        Coord_t          GetRightMargin() { return fRightMargin;}
-        Coord_t          GetTopMargin() { return fTopMargin;}
-        Coord_t          GetAfile() { return fAfile;}
-        Coord_t          GetXfile() { return fXfile;}
-        Coord_t          GetYfile() { return fYfile;}
-        Coord_t          GetAstat() { return fAstat;}
-        Coord_t          GetXstat() { return fXstat;}
-        Coord_t          GetYstat() { return fYstat;}
+        Float_t          GetBottomMargin() { return fBottomMargin;}
+        Float_t          GetLeftMargin() { return fLeftMargin;}
+        Float_t          GetRightMargin() { return fRightMargin;}
+        Float_t          GetTopMargin() { return fTopMargin;}
+        Float_t          GetAfile() { return fAfile;}
+        Float_t          GetXfile() { return fXfile;}
+        Float_t          GetYfile() { return fYfile;}
+        Float_t          GetAstat() { return fAstat;}
+        Float_t          GetXstat() { return fXstat;}
+        Float_t          GetYstat() { return fYstat;}
         Color_t          GetFrameFillColor() {return fFrameFillColor;}
         Color_t          GetFrameLineColor() {return fFrameLineColor;}
         Style_t          GetFrameFillStyle() {return fFrameFillStyle;}
@@ -73,16 +73,16 @@ public:
         Int_t            GetFrameBorderMode() {return fFrameBorderMode;}
         virtual void     Print(Option_t *option="");
         virtual void     ResetAttPad(Option_t *option="");
-        virtual void     SetBottomMargin(Coord_t bottommargin);
-        virtual void     SetLeftMargin(Coord_t leftmargin);
-        virtual void     SetRightMargin(Coord_t rightmargin);
-        virtual void     SetTopMargin(Coord_t topmargin);
-        virtual void     SetAfile(Coord_t afile) { fAfile=afile;}
-        virtual void     SetXfile(Coord_t xfile) { fXfile=xfile;}
-        virtual void     SetYfile(Coord_t yfile) { fYfile=yfile;}
-        virtual void     SetAstat(Coord_t astat) { fAstat=astat;}
-        virtual void     SetXstat(Coord_t xstat) { fXstat=xstat;}
-        virtual void     SetYstat(Coord_t ystat) { fYstat=ystat;}
+        virtual void     SetBottomMargin(Float_t bottommargin);
+        virtual void     SetLeftMargin(Float_t leftmargin);
+        virtual void     SetRightMargin(Float_t rightmargin);
+        virtual void     SetTopMargin(Float_t topmargin);
+        virtual void     SetAfile(Float_t afile) { fAfile=afile;}
+        virtual void     SetXfile(Float_t xfile) { fXfile=xfile;}
+        virtual void     SetYfile(Float_t yfile) { fYfile=yfile;}
+        virtual void     SetAstat(Float_t astat) { fAstat=astat;}
+        virtual void     SetXstat(Float_t xstat) { fXstat=xstat;}
+        virtual void     SetYstat(Float_t ystat) { fYstat=ystat;}
         void             SetFrameFillColor(Color_t color=1) {fFrameFillColor = color;}
         void             SetFrameLineColor(Color_t color=1) {fFrameLineColor = color;}
         void             SetFrameFillStyle(Style_t styl=0)  {fFrameFillStyle = styl;}

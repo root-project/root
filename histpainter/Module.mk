@@ -22,7 +22,7 @@ HISTPAINTERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 HISTPAINTERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTPAINTERO  := $(HISTPAINTERS:.cxx=.o)
 
-HISTPAINTERDEP := $(HISTPAINTERO:.o=.d)
+HISTPAINTERDEP := $(HISTPAINTERO:.o=.d) $(HISTPAINTERDO:.o=.d)
 
 HISTPAINTERLIB := $(LPATH)/libHistPainter.$(SOEXT)
 
@@ -37,8 +37,8 @@ INCLUDEFILES += $(HISTPAINTERDEP)
 include/%.h:    $(HISTPAINTERDIRI)/%.h
 		cp $< $@
 
-$(HISTPAINTERLIB): $(HISTPAINTERO) $(HISTPAINTERDO) $(MAINLIBS) $(GRAFLIB) \
-                   $(HISTLIB)
+$(HISTPAINTERLIB): $(HISTPAINTERO) $(HISTPAINTERDO) $(MAINLIBS) \
+                   $(HISTPAINTERLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libHistPainter.$(SOEXT) $@ \
 		   "$(HISTPAINTERO) $(HISTPAINTERDO)" \

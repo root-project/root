@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.6 2000/09/06 07:17:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -129,7 +129,7 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
 
    Int_t i;
    fCompress = compress;
-   if (compress == -1) {
+   if (compress == -1 && gTree->GetDirectory()) {
       TFile *bfile = gTree->GetDirectory()->GetFile();
       if (bfile) fCompress = bfile->GetCompressionLevel();
    }
@@ -315,6 +315,7 @@ void TBranch::DropBaskets()
       GetListOfBaskets()->RemoveAt(j);
       delete basket;
       fNBasketRAM--;
+      fBasketRAM[fNBasketRAM] = -1;
       if (!fTree->MemoryFull(0)) break;
    }
 }
@@ -364,7 +365,7 @@ Int_t TBranch::Fill()
      objectStart = fEntryBuffer->Length();
      fEntryBuffer->SetBufferOffset(startpos);
 
-     basket->Update(lold, objectStart);
+     basket->Update(lold, objectStart - fEntryBuffer->GetBufferDisplacement());
    } else  basket->Update(lold);
    fEntries++;
    fEntryNumber++;
@@ -541,7 +542,7 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
    if (entryOffset) bufbegin = entryOffset[entry-first];
    else             bufbegin = basket->GetKeylen() + (entry-first)*basket->GetNevBufSize();
    buf->SetBufferOffset(bufbegin);
-   char *displacement = basket->GetDisplacement();
+   Int_t *displacement = basket->GetDisplacement();
    if (displacement) buf->SetBufferDisplacement(displacement[entry-first]);
    else buf->SetBufferDisplacement();
 
@@ -592,7 +593,7 @@ Int_t TBranch::GetEntryExport(Int_t entry, Int_t getall, TClonesArray *list, Int
    if (entryOffset) bufbegin = entryOffset[entry-first];
    else             bufbegin = basket->GetKeylen() + (entry-first)*basket->GetNevBufSize();
    buf->SetBufferOffset(bufbegin);
-   char *displacement = basket->GetDisplacement();
+   Int_t *displacement = basket->GetDisplacement();
    if (displacement) buf->SetBufferDisplacement(displacement[entry-first]);
    else buf->SetBufferDisplacement();
 
@@ -664,7 +665,7 @@ Bool_t TBranch::IsAutoDelete()
 
 
 //______________________________________________________________________________
-Bool_t TBranch::IsFolder()
+Bool_t TBranch::IsFolder() const
 {
 //*-*-*-*-*Return TRUE if more than one leaf, FALSE otherwise*-*
 //*-*      ==================================================
@@ -726,9 +727,12 @@ void TBranch::Print(Option_t *)
      delete[] tmp;
   }
   Printf(bline);
-//  Printf("*Branch  :%-9s : %-60s *",GetName(),GetTitle());
-  Printf("*Entries : %8d : Total  Size = %9d bytes  File Size  = %10d *",Int_t(fEntries),Int_t(fTotBytes),Int_t(fZipBytes));
-  Printf("*Baskets : %8d : Basket Size = %9d bytes  Compression= %6.2f     *",fWriteBasket,fBasketSize,cx);
+  if (fTotBytes > 2e9) {
+     Printf("*Entries :%9d : Total  Size=%11g bytes  File Size  = %10d *",Int_t(fEntries),fTotBytes,Int_t(fZipBytes));
+  } else {
+     Printf("*Entries :%9d : Total  Size=%11d bytes  File Size  = %10d *",Int_t(fEntries),Int_t(fTotBytes),Int_t(fZipBytes));
+  }
+  Printf("*Baskets :%9d : Basket Size=%11d bytes  Compression= %6.2f     *",fWriteBasket,fBasketSize,cx);
   Printf("*............................................................................*");
   delete [] bline;
 }
@@ -883,7 +887,7 @@ void TBranch::Streamer(TBuffer &b)
    if (b.IsReading()) {
       gBranch = this;
       fTree = gTree;
-      gROOT->SetReadingBasket(kTRUE);
+      gROOT->SetReadingObject(kTRUE);
       Version_t v = b.ReadVersion(&R__s, &R__c);
       TNamed::Streamer(b);
       b >> fCompress;
@@ -925,7 +929,7 @@ void TBranch::Streamer(TBuffer &b)
          if (fFileName.Length() != 0) fDirectory = 0;
       }
       if (v < 4) SetAutoDelete(kTRUE);
-      gROOT->SetReadingBasket(kFALSE);
+      gROOT->SetReadingObject(kFALSE);
       b.CheckByteCount(R__s, R__c, TBranch::IsA());
    } else {
       R__c = b.WriteVersion(TBranch::IsA(), kTRUE);

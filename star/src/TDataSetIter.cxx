@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 
@@ -232,13 +232,13 @@ Int_t TDataSetIter::Du() const {
 
 //______________________________________________________________________________
 TDataSet  *TDataSetIter::FindByName(const Char_t *name,const Char_t *path,Option_t *opt)
-{ return FindObject(name,path,opt);}
+{ return FindDataSet(name,path,opt);}
 
 //______________________________________________________________________________
-TDataSet *TDataSetIter::FindObject(const Char_t *name,const Char_t *path,Option_t *opt)
+TDataSet *TDataSetIter::FindDataSet(const Char_t *name,const Char_t *path,Option_t *opt)
 {
   //
-  // FindObject looks for the object with the name supplied across dataset.
+  // FindDataSet looks for the object with the name supplied across dataset.
   //
   // name        - the "base" name (with no path) of the TDataSet
   // path        - path to start the search from (the current dataset "by default")
@@ -250,7 +250,7 @@ TDataSet *TDataSetIter::FindObject(const Char_t *name,const Char_t *path,Option_
 
   if (!name || strlen(name) == 0) return 0;
   if (strchr(name,'/')) {
-    Error("FindObject","The name of the object <%s> can not contain any \"/\"",name);
+    Error("FindDataSet","The name of the object <%s> can not contain any \"/\"",name);
     return 0;
   }
 
@@ -275,7 +275,7 @@ TDataSet *TDataSetIter::FindObject(const Char_t *name,const Char_t *path,Option_
 }
 
 //______________________________________________________________________________
-TDataSet *TDataSetIter::FindObject(TDataSet *set,const Char_t *path,Option_t *opt)
+TDataSet *TDataSetIter::FindDataSet(TDataSet *set,const Char_t *path,Option_t *opt)
 {
   //
   // Check whether the object does belong the TDataSet defined with "path"

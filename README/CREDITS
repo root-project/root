@@ -14,6 +14,10 @@ N: Maarten Ballintijn
 E: maartenb@xs4all.nl
 D: initial linux port
 
+N: Nicolas Brun
+E: nicolas@pcbrun.cern.ch
+D: classes TFormula, TText, TLatex
+
 N: Nenad Buncic
 E: Nenad.Buncic@epfl.ch
 D: HTML documentation generator, 3D shapes and geometry classes,
@@ -21,7 +25,7 @@ D: interface to X3D
 
 N: Damir Buskulic
 E: buskulic@lapp.in2p3.fr
-D: LinuxPPC support
+D: LinuxPPC support, large part of the User's Guide
 
 N: Philippe Canal
 E: pcanal@fndaub.fnal.gov
@@ -47,6 +51,10 @@ N: Masaharu Goto
 E: MXJ02154@niftyserve.or.jp
 D: CINT C/C++ interpreter
 
+N: Robert Hatcher
+E: rhatcher@slac.stanford.edu
+D: Class TXTRU and tutorials xtruDraw.C and xtruSamples.C
+
 N: Marc Hemberger
 E: hemberg@clri6a.gsi.de
 D: contributions to the thread classes
@@ -56,10 +64,10 @@ E: holeczek@us.edu.pl
 D: dynamic linker interface for IBM/AIX, contributions to MakeTree code
 D: generator
 
-N: Christian Holm
+N: Christian Holm Cristensen
 E: cholm@nbi.dk
-D: important contributions to the build system (configure, Makefile.in,
-D: config.in)
+D: contributions to the build system (configure, Makefile.in, config.in) 
+D: implementation of the principal component analysis class TPrincipal
 
 N: Stephan Kluth
 E: skluth@mh1.lbl.gov
@@ -67,7 +75,7 @@ D: changes in rootcint to handle templates
 
 N: Christian Lacunza
 E: lacunza@cdfsg5.lbl.gov
-D: TTabCom [TAB] command line extension class, #1 bug reporter
+D: TTabCom [TAB] command line expansion class, #1 bug reporter
 
 N: Dave Morrison
 E: dave@bnl.gov
@@ -80,6 +88,10 @@ D: Lorentz vector classes, PDG interface
 N: Valeriy Onuchin
 E: onuchin@sirius.ihep.su
 D: various contributions to GUI classes (scrolled text in TGTextEntry)
+
+N: Suzanne Panacek
+E: spanacek@fnal.gov
+D: editor of the User's Guide
 
 N: Victor Perevoztchikov
 E: perev@bnl.gov
@@ -97,3 +109,6 @@ N: Otto Schaile
 E: Otto.Schaile@Physik.Uni-Muenchen.DE
 D: various contributions to GUI classes
 
+N: Alexandre V. Vaniachine
+E: AVVaniachine@lbl.gov
+D: byteswapping assembler code for the i486 and up

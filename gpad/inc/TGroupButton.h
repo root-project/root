@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TGroupButton.h,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -39,9 +39,9 @@ private:
 
 public:
    TGroupButton();
-   TGroupButton(const char *groupname, const char *title, const char *method, Coord_t x1, Coord_t y1,Coord_t x2 ,Coord_t y2);
+   TGroupButton(const char *groupname, const char *title, const char *method, Double_t x1, Double_t y1,Double_t x2 ,Double_t y2);
    virtual ~TGroupButton();
-   virtual void  DisplayColorTable(const char *action, Float_t x0, Float_t y0, Float_t wc, Float_t hc);
+   virtual void  DisplayColorTable(const char *action, Double_t x0, Double_t y0, Double_t wc, Double_t hc);
    virtual void  ExecuteAction();
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void  SavePrimitive(ofstream &out, Option_t *option);

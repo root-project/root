@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -47,7 +47,7 @@ TF2::TF2(): TF1()
 
 
 //______________________________________________________________________________
-TF2::TF2(const char *name,const char *formula, Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax)
+TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax)
       :TF1(name,formula,xmin,xmax)
 {
 //*-*-*-*-*-*-*F2 constructor using a formula definition*-*-*-*-*-*-*-*-*-*-*
@@ -66,7 +66,7 @@ TF2::TF2(const char *name,const char *formula, Float_t xmin, Float_t xmax, Float
 }
 
 //______________________________________________________________________________
-TF2::TF2(const char *name, void *fcn, Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax, Int_t npar)
+TF2::TF2(const char *name, void *fcn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar)
       : TF1(name, fcn, xmin, xmax, npar)
 {
 //*-*-*-*-*-*-*F2 constructor using a pointer to an interpreted function*-*-*
@@ -93,7 +93,7 @@ TF2::TF2(const char *name, void *fcn, Float_t xmin, Float_t xmax, Float_t ymin, 
 }
 
 //______________________________________________________________________________
-TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax, Int_t npar)
+TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar)
       : TF1(name, fcn, xmin, xmax, npar)
 {
 //*-*-*-*-*-*-*F2 constructor using a pointer to a compiled function*-*-*-*-*
@@ -201,7 +201,7 @@ TF1 *TF2::DrawCopy(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TF2::DrawF2(const char *formula, Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax, Option_t *option)
+void TF2::DrawF2(const char *formula, Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*Draw formula between xmin,ymin and xmax,ymax*-*-*-*-*-*-*-*
 //*-*                ============================================
@@ -228,7 +228,7 @@ void TF2::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-Int_t TF2::GetContour(Float_t *levels)
+Int_t TF2::GetContour(Double_t *levels)
 {
 //*-*-*-*-*-*-*-*Return contour values into array levels*-*-*-*-*-*-*-*-*-*
 //*-*            =======================================
@@ -244,7 +244,7 @@ Int_t TF2::GetContour(Float_t *levels)
 }
 
 //______________________________________________________________________________
-Float_t TF2::GetContourLevel(Int_t level)
+Double_t TF2::GetContourLevel(Int_t level)
 {
 //*-*-*-*-*-*-*-*Return the number of contour levels*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*            ===================================
@@ -264,11 +264,11 @@ char *TF2::GetObjectInfo(Int_t px, Int_t py)
    const char *snull = "";
    if (!gPad) return (char*)snull;
    static char info[64];
-   Float_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
-   Float_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
    const char *drawOption = GetDrawOption();
-   Float_t uxmin,uxmax;
-   Float_t uymin,uymax;
+   Double_t uxmin,uxmax;
+   Double_t uymin,uymax;
    if (gPad->GetView() || strncmp(drawOption,"cont",4) == 0
                        || strncmp(drawOption,"CONT",4) == 0) {
       uxmin=gPad->GetUxmin();
@@ -293,7 +293,7 @@ Double_t TF2::GetRandom()
 }
 
 //______________________________________________________________________________
-void TF2::GetRandom2(Float_t &xrandom, Float_t &yrandom)
+void TF2::GetRandom2(Double_t &xrandom, Double_t &yrandom)
 {
 //*-*-*-*-*-*Return 2 random numbers following this function shape*-*-*-*-*-*
 //*-*        =====================================================
@@ -309,8 +309,8 @@ void TF2::GetRandom2(Float_t &xrandom, Float_t &yrandom)
 
    //  Check if integral array must be build
    Int_t i,j,cell;
-   Float_t dx   = (fXmax-fXmin)/fNpx;
-   Float_t dy   = (fYmax-fYmin)/fNpy;
+   Double_t dx   = (fXmax-fXmin)/fNpx;
+   Double_t dy   = (fYmax-fYmin)/fNpy;
    Int_t ncells = fNpx*fNpy;
    if (fIntegral == 0) {
       fIntegral = new Double_t[ncells+1];
@@ -339,7 +339,7 @@ void TF2::GetRandom2(Float_t &xrandom, Float_t &yrandom)
    }
 
 // return random numbers
-   Float_t r,ddx,ddy,dxint;
+   Double_t r,ddx,ddy,dxint;
    r     = gRandom->Rndm();
    cell  = TMath::BinarySearch(ncells,fIntegral,r);
    dxint = fIntegral[cell+1] - fIntegral[cell];
@@ -353,7 +353,7 @@ void TF2::GetRandom2(Float_t &xrandom, Float_t &yrandom)
 }
 
 //______________________________________________________________________________
-void TF2::GetRange(Float_t &xmin, Float_t &ymin,  Float_t &xmax, Float_t &ymax)
+void TF2::GetRange(Double_t &xmin, Double_t &ymin,  Double_t &xmax, Double_t &ymax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Return range of a 2-D function*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==============================
@@ -365,7 +365,7 @@ void TF2::GetRange(Float_t &xmin, Float_t &ymin,  Float_t &xmax, Float_t &ymax)
 }
 
 //______________________________________________________________________________
-void TF2::GetRange(Float_t &xmin, Float_t &ymin, Float_t &zmin, Float_t &xmax, Float_t &ymax, Float_t &zmax)
+void TF2::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Return range of function*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
@@ -400,7 +400,7 @@ void TF2::Paint(Option_t *option)
 //*-*              ===================================================
 
    Int_t i,j,bin;
-   Float_t dx, dy;
+   Double_t dx, dy;
    Double_t xv[2];
 
    TString opt = option;
@@ -414,12 +414,12 @@ void TF2::Paint(Option_t *option)
       fHistogram->SetDirectory(0);
    }
    InitArgs(xv,fParams);
-   dx = (fXmax - fXmin)/Float_t(fNpx);
-   dy = (fYmax - fYmin)/Float_t(fNpy);
+   dx = (fXmax - fXmin)/Double_t(fNpx);
+   dy = (fYmax - fYmin)/Double_t(fNpy);
    for (i=1;i<=fNpx;i++) {
-      xv[0] = fXmin + (Float_t(i) - 0.5)*dx;
+      xv[0] = fXmin + (Double_t(i) - 0.5)*dx;
       for (j=1;j<=fNpy;j++) {
-         xv[1] = fYmin + (Float_t(j) - 0.5)*dy;
+         xv[1] = fYmin + (Double_t(j) - 0.5)*dy;
          bin   = j*(fNpx + 2) + i;
          fHistogram->SetBinContent(bin,EvalPar(xv,fParams));
       }
@@ -427,7 +427,7 @@ void TF2::Paint(Option_t *option)
    ((TH2F*)fHistogram)->Fill(fXmin-1,fYmin-1,0);  //This call to force fNentries non zero
 
 //*-*- Copy Function attributes to histogram attributes
-   Float_t *levels = fContour.GetArray();
+   Double_t *levels = fContour.GetArray();
    if (levels && levels[0] == -9999) levels = 0;
    fHistogram->SetMinimum(fMinimum);
    fHistogram->SetMaximum(fMaximum);
@@ -453,7 +453,7 @@ void TF2::Paint(Option_t *option)
 
 
 //______________________________________________________________________________
-void TF2::SetContour(Int_t  nlevels, Float_t *levels)
+void TF2::SetContour(Int_t  nlevels, Double_t *levels)
 {
 //*-*-*-*-*-*-*-*Set the number and values of contour levels*-*-*-*-*-*-*-*-*
 //*-*            ===========================================
@@ -480,7 +480,7 @@ void TF2::SetContour(Int_t  nlevels, Float_t *levels)
 
 
 //______________________________________________________________________________
-void TF2::SetContourLevel(Int_t level, Float_t value)
+void TF2::SetContourLevel(Int_t level, Double_t value)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set value for one contour level*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===============================
@@ -499,7 +499,7 @@ void TF2::SetNpy(Int_t npy)
 }
 
 //______________________________________________________________________________
-void TF2::SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax)
+void TF2::SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 {
 //*-*-*-*-*-*Initialize the upper and lower bounds to draw the function*-*-*-*
 //*-*        ==========================================================
@@ -521,11 +521,23 @@ void TF2::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       TF1::Streamer(R__b);
-      R__b >> fYmin;
-      R__b >> fYmax;
+      if (R__v < 3) {
+         Float_t ymin,ymax;
+         R__b >> ymin; fYmin = ymin;
+         R__b >> ymax; fYmax = ymax;
+      } else {
+         R__b >> fYmin;
+         R__b >> fYmax;
+      }
       R__b >> fNpy;
       R__b >> nlevels;
-      if (R__v > 1) {
+      if (R__v < 3) {
+         Float_t *contour = 0;
+         Int_t n = R__b.ReadArray(contour);
+         fContour.Set(n);
+         for (Int_t i=0;i<n;i++) fContour.fArray[i] = contour[i];
+         delete [] contour;
+      } else {
          fContour.Streamer(R__b);
       }
       R__b.CheckByteCount(R__s, R__c, TF2::IsA());

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TMessage.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************
@@ -35,7 +35,7 @@ TMessage::TMessage(UInt_t what) : TBuffer(kWrite)
    // will wait for an acknowledgement from the remote side. This makes
    // the sending process synchronous.
 
-   // space at the beginning of the message to contain the message length
+   // space at the beginning of the message reserved for the message length
    UInt_t   reserved = 0;
    *this << reserved;
 
@@ -50,9 +50,8 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBuffer(kRead, bufsize, buf)
    // Create a TMessage object for reading objects. The objects will be
    // read from buf. Use the What() method to get the message type.
 
-   // pretend there is space at the beginning for the message length
-   // this word will never be accessed, only used for offset calculation
-   fBuffer -= sizeof(UInt_t);
+   // skip space at the beginning of the message reserved for the message length
+   fBufCur += sizeof(UInt_t);
 
    *this >> fWhat;
 
@@ -65,12 +64,15 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBuffer(kRead, bufsize, buf)
 }
 
 //______________________________________________________________________________
-TMessage::~TMessage()
+void TMessage::Forward()
 {
-   // TMessage dtor. In case we were reading reset fBuffer.
+   // Change a buffer that was received into one that can be send, i.e.
+   // forward a just received message.
 
-   if (IsReading())
-      fBuffer += sizeof(UInt_t);
+   if (IsReading()) {
+      SetWriteMode();
+      SetBufferOffset(fBufSize);
+   }
 }
 
 //______________________________________________________________________________
@@ -100,8 +102,7 @@ void TMessage::SetWhat(UInt_t what)
    // Using this method one can change the message type a posteriory.
 
    char *buf = Buffer();
-   if (IsWriting())
-      buf += sizeof(UInt_t);   // skip reserved space
+   buf += sizeof(UInt_t);   // skip reserved length space
    tobuf(buf, what);
    fWhat = what;
 }

@@ -21,7 +21,7 @@ MYSQLH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MYSQLS       := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 MYSQLO       := $(MYSQLS:.cxx=.o)
 
-MYSQLDEP     := $(MYSQLO:.o=.d)
+MYSQLDEP     := $(MYSQLO:.o=.d) $(MYSQLDO:.o=.d)
 
 MYSQLLIB     := $(LPATH)/libMySQL.$(SOEXT)
 

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -49,6 +49,7 @@ public:
                           TPolyMarker3D();
                           TPolyMarker3D(Int_t n, Marker_t marker=1, Option_t *option="");
                           TPolyMarker3D(Int_t n, Float_t *p, Marker_t marker=1, Option_t *option="");
+                          TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker=1, Option_t *option="");
                           TPolyMarker3D(const TPolyMarker3D &polymarker);
         virtual          ~TPolyMarker3D();
 
@@ -66,9 +67,10 @@ public:
         virtual void      PaintPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");
         virtual void      Print(Option_t *option="");
         virtual void      SavePrimitive(ofstream &out, Option_t *option);
-        void              SetPoint(Int_t n, Float_t x, Float_t y, Float_t z); // *MENU*
+        void              SetPoint(Int_t n, Double_t x, Double_t y, Double_t z); // *MENU*
         virtual void      SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");
-        virtual Int_t     SetNextPoint(Float_t x, Float_t y, Float_t z); // *MENU*
+        virtual void      SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_t *option="");
+        virtual Int_t     SetNextPoint(Double_t x, Double_t y, Double_t z); // *MENU*
         virtual void      Sizeof3D() const;
         static  void      SizeofH3(TH1 *h);
         virtual Int_t     Size() const {return fLastPoint+1;}

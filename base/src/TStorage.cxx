@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.2 2000/06/09 14:56:44 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 //                                                                      //
 // Storage manager. The storage manager works best in conjunction with  //
 // the custom ROOT new and delete operators defined in the file         //
-// NEW_NewDelete.cxx (libNew.so). Only when using the custom allocation //
+// NewDelete.cxx (libNew.so). Only when using the custom allocation     //
 // operators will memory usage statistics be gathered using the         //
 // TStorage EnterStat(), RemoveStat(), etc. functions.                  //
 // Memory checking is by default enabled (when using libNew.so) and     //
@@ -49,7 +49,11 @@
 #endif
 
 #ifdef MEM_DEBUG
-#   define storage_size(p) ((size_t)(((int*)p)[-2]))
+#   ifdef R__B64
+#      define storage_size(p) ((size_t)(((size_t*)p)[-1]))
+#   else
+#      define storage_size(p) ((size_t)(((int*)p)[-2]))
+#   endif
 #else
 #   define storage_size(p) ((size_t)0)
 #endif
@@ -144,19 +148,19 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
 
    static const char *where = "TStorage::ReAlloc";
 
-   char *vp;
+   void *vp;
    if (ovp == 0) {
-      vp = new char [size];
+      vp = ::operator new(size);
       if (vp == 0)
          Fatal(where, spaceErr);
       return vp;
    }
 
-   vp = new char [size];
+   vp = ::operator new(size);
    if (vp == 0)
       Fatal(where, spaceErr);
    memmove(vp, ovp, size);
-   delete [] (char *) ovp;
+   ::operator delete(ovp);
    return vp;
 }
 
@@ -171,9 +175,9 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
 
    static const char *where = "TStorage::ReAlloc";
 
-   char *vp;
+   void *vp;
    if (ovp == 0) {
-     vp = new char [size];
+     vp = ::operator new(size);
      if (vp == 0)
         Fatal(where, spaceErr);
      return vp;
@@ -181,26 +185,27 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    if (oldsize == size)
       return ovp;
 
-   vp = new char [size];
+   vp = ::operator new(size);
    if (vp == 0)
       Fatal(where, spaceErr);
    if (size > oldsize) {
       memcpy(vp, ovp, oldsize);
-      memset(vp+oldsize, 0, size-oldsize);
+      memset((char*)vp+oldsize, 0, size-oldsize);
    } else
       memcpy(vp, ovp, size);
-   delete [] (char *) ovp;
+   ::operator delete(ovp);
    return vp;
 }
 
 //______________________________________________________________________________
 void *TStorage::ObjectAlloc(size_t sz)
 {
-   // Used to allocate a TObject on the heap (via TObject::new()). Directly
-   // after this routine one can call (in the TObject ctor) TStorage::IsOnHeap()
-   // to find out if the just created object is on the heap.
+   // Used to allocate a TObject on the heap (via TObject::operator new()).
+   // Directly after this routine one can call (in the TObject ctor)
+   // TStorage::IsOnHeap() to find out if the just created object is on
+   // the heap.
 
-   ULong_t space = (ULong_t) new char[sz];
+   ULong_t space = (ULong_t) ::operator new(sz);
    AddToHeap(space, space+sz);
    return (void*) space;
 }
@@ -208,11 +213,27 @@ void *TStorage::ObjectAlloc(size_t sz)
 //______________________________________________________________________________
 void *TStorage::ObjectAlloc(size_t , void *vp)
 {
-   // Used to allocate a TObject on the heap (via TObject::new(size_t,void*))
+   // Used to allocate a TObject on the heap (via TObject::operator new(size_t,void*))
    // in position vp. vp is already allocated (maybe on heap, maybe on
    // stack) so just return.
 
    return vp;
+}
+
+//______________________________________________________________________________
+void TStorage::ObjectDealloc(void *vp)
+{
+   // Used to deallocate a TObject on the heap (via TObject::operator delete()).
+
+   ::operator delete(vp);
+}
+
+//______________________________________________________________________________
+void TStorage::ObjectDealloc(void *vp, void *ptr)
+{
+   // Used to deallocate a TObject on the heap (via TObject::operator delete(void*,void*)).
+
+   if (vp && ptr) { }
 }
 
 //______________________________________________________________________________

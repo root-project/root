@@ -21,6 +21,9 @@ CINTCXXFLAGS  = -qchars=signed -qnoro -qnoroconst -DG__REGEXP \
 CINTCFLAGS    = -qchars=signed -qnoro -qnoroconst -DG__REGEXP -D_POSIX2_SOURCE \
                 -DG__P2FCAST -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT \
                 -DG__REDIRECTIO $(EXTRA_CFLAGS)
+MAKESHAREDLIB = $(CXX) -c $(OPT) $(CXXFLAGS) \$$IncludePath \$$SourceFiles ; \
+                /usr/ibmcxx/bin/makeC++SharedLib -o \$$SharedLib \$$LinkedLibs \
+                -p 0 \$$ObjectFiles
 
 # Linker:
 LD            = xlC
@@ -30,7 +33,7 @@ SOEXT         = a
 
 # System libraries:
 SYSLIBS       = -lm -lld
-XLIBS         = -L/usr/local/lib -lXpm -lX11
+XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -lld
 
 # Fortran:
@@ -40,16 +43,36 @@ F77LIBS       = -lxlf -lxlf90
 
 # Extras
 EXPLICITLINK        = YES
+HISTLIBDEP          = $(MATRIXLIB)
+HISTLIBEXTRA        = -lMatrix
+GRAFLIBDEP          = $(HISTLIB)
 GRAFLIBEXTRA        = -lHist
+GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)
 GPADLIBEXTRA        = -lGraf -lHist
+G3DLIBDEP           = $(GRAFLIB) $(HISTLIB)
 G3DLIBEXTRA         = -lGraf -lHist
+GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
 GUILIBEXTRA         = -lGpad -lGraf
+HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB)
 HISTPAINTERLIBEXTRA = -lGraf -lHist
+PROOFLIBDEP         = $(TREELIB) $(HISTLIB)
 PROOFLIBEXTRA       = -lTree -lHist
-TREEPLAYERLIBEXTRA  = -lTree -lProof -lGraf -lGraf3d -lHist
-TREEVIEWERLIBEXTRA  = -lTree -lGraf -lHist -lGpad
+TREEPLAYERLIBDEP    = $(TREELIB) $(PROOFLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+TREEPLAYERLIBEXTRA  = -lTree -lProof -lGraf3d -lGraf -lHist
+TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB)
+TREEVIEWERLIBEXTRA  = -lTree -lGpad -lGraf -lHist
+X3DLIBDEP           = $(G3DLIB)
 X3DLIBEXTRA         = -lGraf3d -lX11
-EGLIBEXTRA          = -lGraf -lGraf3d
-PYTHIALIBEXTRA      = -lEG
-PYTHIA6LIBEXTRA     = -lEG
-X11TTFLIBEXTRA      = -lGX11 -lttf -lX11
+EGLIBDEP            = $(G3DLIB) $(GRAFLIB)
+EGLIBEXTRA          = -lGraf3d -lGraf
+PYTHIALIBDEP        = $(EGLIB) $(GRAFLIB)
+PYTHIALIBEXTRA      = -lEG  -lGraf $(PYTHIA)
+PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB)
+PYTHIA6LIBEXTRA     = -lEG -lGraf $(PYTHIA6)
+VENUSLIBDEP         = $(EGLIB)
+VENUSLIBEXTRA       = -lEG
+X11TTFLIBDEP        = $(X11LIB)
+X11TTFLIBEXTRA      = -lGX11 -L$(TTFLIBDIR) -lttf -lX11
+GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB)
+GLLIBEXTRA          = -lGpad -lGraf3d -lGui $(OPENGLULIB) \
+                      $(OPENGLLIB) -lX11 -lXext -lXmu -lXi

@@ -488,19 +488,21 @@ int noerror;
 #ifndef G__OLDIMPLEMENTATION884
   if(strcmp(tagname,"bool")==0) {
     if(0==boolflag) {
-#ifndef G__OLDIMPLEMENTATINO913
+#ifndef G__OLDIMPLEMENTATION913
       long store_globalvarpointer=G__globalvarpointer;
       int store_tagdefining=G__tagdefining;
       int store_def_struct_member=G__def_struct_member;
       int store_def_tagnum=G__def_tagnum;
       int store_tagnum=G__tagnum;
       int store_cpp=G__cpp;
+      struct G__ifunc_table *store_ifunc = G__p_ifunc;
       G__cpp=0;
       G__globalvarpointer=G__PVOID;
       G__tagdefining = -1;
       G__def_struct_member=0;
       G__def_tagnum = -1;
       G__tagnum = -1;
+      G__p_ifunc = &G__ifunc;
 #endif
       boolflag=1;
       G__loadfile("bool.h");
@@ -512,6 +514,7 @@ int noerror;
       G__def_struct_member=store_def_struct_member;
       G__def_tagnum = store_def_tagnum;
       G__tagnum = store_tagnum;
+      G__p_ifunc = store_ifunc;
 #endif
       return(i);
     }
@@ -664,6 +667,9 @@ int type;
     
     G__struct.globalcomp[i] = G__globalcomp;
     G__struct.iscpplink[i] = 0;
+#ifndef G__OLDIMPLEMENTATION1334
+    G__struct.protectedaccess[i] = 0;
+#endif
 
     G__struct.line_number[i] = -1;
     G__struct.filenum[i] = -1;
@@ -1179,6 +1185,30 @@ char type;
       }
 #endif
     }
+
+#ifndef G__PHILIPPE8
+    if ( strlen(basename)!=0 && isspace(c) ) {
+      /* maybe basename is namespace that got cut because
+       * G__fgetname_template stop at spaces and the user add:
+       * class MyClass : public MyNamespace ::MyTopClass !
+       * or 
+       * class MyClass : public MyNamespace:: MyTopClass !
+      */
+      int namespace_tagnum;
+      char temp[G__LONGLINE];
+  
+      namespace_tagnum = G__defined_tagname(basename,2);
+      while ( ( ( (namespace_tagnum!=-1)
+		  && (G__struct.type[namespace_tagnum]=='n') )
+		|| (strcmp("std",basename)==0)
+		|| (basename[strlen(basename)-1]==':') )
+	      && isspace(c) ) {
+	c = G__fgetname_template(temp,"{,");
+	strcat(basename,temp);
+	namespace_tagnum = G__defined_tagname(basename,2);
+      }
+    }
+#endif
 
     if(newdecl) {
 #ifndef G__OLDIMPLEMENTATION693

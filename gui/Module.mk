@@ -32,7 +32,8 @@ GUIH1        := TGObject.h TGClient.h TGWindow.h TGPicture.h TGDimension.h \
 GUIH2        := TGObject.h TGScrollBar.h TGCanvas.h TGListBox.h TGComboBox.h \
                 TGTab.h TGSlider.h TGPicture.h TGListView.h TGMimeTypes.h \
                 TGFSContainer.h TGFileDialog.h TGStatusBar.h TGToolTip.h \
-                TGTextView.h TGToolBar.h TGListTree.h TGText.h TGDoubleSlider.h
+                TGToolBar.h TGListTree.h TGText.h TGView.h TGTextView.h \
+                TGTextEdit.h TGTextEditDialogs.h TGDoubleSlider.h TGSplitter.h
 GUIH3        := TRootGuiFactory.h TRootApplication.h TRootCanvas.h \
                 TRootBrowser.h TRootContextMenu.h TRootDialog.h \
                 TRootControlBar.h TRootHelpDialog.h TRootEmbeddedCanvas.h
@@ -45,7 +46,7 @@ GUIH         := $(GUIH1) $(GUIH2) $(GUIH3) $(GUIH4)
 GUIS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GUIO         := $(GUIS:.cxx=.o)
 
-GUIDEP       := $(GUIO:.o=.d)
+GUIDEP       := $(GUIO:.o=.d) $(GUIDO:.o=.d)
 
 GUILIB       := $(LPATH)/libGui.$(SOEXT)
 
@@ -60,7 +61,7 @@ INCLUDEFILES += $(GUIDEP)
 include/%.h:    $(GUIDIRI)/%.h
 		cp $< $@
 
-$(GUILIB):      $(GUIO) $(GUIDO) $(MAINLIBS) $(GRAFLIB) $(GPADLIB)
+$(GUILIB):      $(GUIO) $(GUIDO) $(MAINLIBS) $(GUILIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libGui.$(SOEXT) $@ "$(GUIO) $(GUIDO)" \
 		   "$(GUILIBEXTRA)"

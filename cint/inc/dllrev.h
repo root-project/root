@@ -27,14 +27,26 @@
 
 #ifndef G__OLDIMPLEMENTATION1169
 
-#ifdef G__CONSTNESSFLAG
-#define G__CREATEDLLREV  51428
-#define G__ACCEPTDLLREV_FROM  51111  /* should be 51428 */
-#define G__ACCEPTDLLREV_UPTO  51428
+#ifdef G__VARIABLEFPOS
+#define G__VF 10000000
 #else
-#define G__CREATEDLLREV  51111
-#define G__ACCEPTDLLREV_FROM  51111
-#define G__ACCEPTDLLREV_UPTO  51415
+#define G__VF 0
+#endif
+
+#ifdef G__TYPEDEFFPOS
+#define G__TF 20000000
+#else
+#define G__TF 0
+#endif
+
+#ifdef G__CONSTNESSFLAG
+#define G__CREATEDLLREV       (51428+G__VF+G__TF)
+#define G__ACCEPTDLLREV_FROM  (51111+G__VF+G__TF)
+#define G__ACCEPTDLLREV_UPTO  (51428+G__VF+G__TF)
+#else
+#define G__CREATEDLLREV       (51111+G__VF+G__TF)
+#define G__ACCEPTDLLREV_FROM  (51111+G__VF+G__TF)
+#define G__ACCEPTDLLREV_UPTO  (51415+G__VF+G__TF)
 #endif
 
 #else

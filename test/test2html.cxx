@@ -1,5 +1,6 @@
-//*CMZ :  1.03/09 09/12/97  21.37.21  by  Fons Rademakers
-//*-- Author :    Rene Brun   23/08/96
+// @(#)root/test:$Name$:$Id$
+// Author: Rene Brun   23/08/96
+
 {
    // this macro can be called from an interactive ROOT session via the command:
    //      Root > .x test2html.cxx

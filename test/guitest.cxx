@@ -1,10 +1,5 @@
-//*CMZ :  2.24/03 28/04/2000  16.55.47  by  Fons Rademakers
-//*CMZ :  2.23/04 02/10/99  17.05.38  by  Fons Rademakers
-//*CMZ :  2.23/03 23/09/99  17.43.59  by  Fons Rademakers
-//*CMZ :  2.23/02 02/09/99  15.54.29  by  Rene Brun
-//*CMZ :  2.22/05 08/06/99  17.55.36  by  Fons Rademakers
-//*CMZ :  2.22/04 03/06/99  18.58.14  by  Rene Brun
-//*-- Author :    Fons Rademakers   07/03/98
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.3 2000/07/12 17:56:30 rdm Exp $
+// Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
 
@@ -29,6 +24,7 @@
 #include <TGSlider.h>
 #include <TGDoubleSlider.h>
 #include <TGFileDialog.h>
+#include <TGTextEdit.h>
 #include <TRootEmbeddedCanvas.h>
 #include <TCanvas.h>
 #include <TH1.h>
@@ -80,6 +76,75 @@ const char *filetypes[] = { "All files",     "*",
                             "ROOT macros",   "*.C",
                             0,               0 };
 
+const char *editortxt =
+"This is the ROOT text edit widget TGTextEdit. It is not intended as\n"
+"a full developers editor, but it is relatively complete and can ideally\n"
+"be used to edit scripts or to present users editable config files, etc.\n\n"
+"The text edit widget supports standard emacs style ctrl-key navigation\n"
+"in addition to the arrow keys. By default the widget has under the right\n"
+"mouse button a popup menu giving access to several built-in functions.\n\n"
+"Cut, copy and paste between different editor windows and any other\n"
+"standard X11 text handling application is supported.\n\n"
+"Text can be selected with the mouse while holding the left button\n"
+"or with the arrow keys while holding the shift key pressed. Use the\n"
+"middle mouse button to paste text at the current mouse location.\n"
+"Mice with scroll-ball are properly supported.\n\n"
+"This are the currently defined key bindings:\n"
+"Left Arrow\n"
+"    Move the cursor one character leftwards.\n"
+"    Scroll when cursor is out of frame.\n"
+"Right Arrow\n"
+"    Move the cursor one character rightwards.\n"
+"    Scroll when cursor is out of frame.\n"
+"Backspace\n"
+"    Deletes the character on the left side of the text cursor and moves the\n"
+"    cursor one position to the left. If a text has been marked by the user\n"
+"    (e.g. by clicking and dragging) the cursor will be put at the beginning\n"
+"    of the marked text and the marked text will be removed.\n"
+"Home\n"
+"    Moves the text cursor to the left end of the line. If mark is TRUE text\n"
+"    will be marked towards the first position, if not any marked text will\n"
+"    be unmarked if the cursor is moved.\n"
+"End\n"
+"    Moves the text cursor to the right end of the line. If mark is TRUE text\n"
+"    will be marked towards the last position, if not any marked text will\n"
+"    be unmarked if the cursor is moved.\n"
+"Delete\n"
+"    Deletes the character on the right side of the text cursor. If a text\n"
+"    has been marked by the user (e.g. by clicking and dragging) the cursor\n"
+"    will be put at the beginning of the marked text and the marked text will\n"
+"    be removed.\n"
+"Shift - Left Arrow\n"
+"    Mark text one character leftwards.\n"
+"Shift - Right Arrow\n"
+"    Mark text one character rightwards.\n"
+"Control-A\n"
+"    Move the cursor to the beginning of the line.\n"
+"Control-B\n"
+"    Move the cursor one character leftwards.\n"
+"Control-C\n"
+"    Copy the marked text to the clipboard.\n"
+"Control-D\n"
+"    Delete the character to the right of the cursor.\n"
+"Control-E\n"
+"    Move the cursor to the end of the line.\n"
+"Control-F\n"
+"    Move the cursor one character rightwards.\n"
+"Control-H\n"
+"    Delete the character to the left of the cursor.\n"
+"Control-K\n"
+"    Delete marked text if any or delete all\n"
+"    characters to the right of the cursor.\n"
+"Control-U\n"
+"    Delete all characters on the line.\n"
+"Control-V\n"
+"    Paste the clipboard text into line edit.\n"
+"Control-X\n"
+"    Cut the marked text, copy to clipboard.\n"
+"Control-Y\n"
+"    Paste the clipboard text into line edit.\n"
+"\n"
+"All other keys with valid ASCII codes insert themselves into the line.";
 
 
 class TestMainFrame : public TGMainFrame {
@@ -185,6 +250,31 @@ public:
 };
 
 
+class Editor : public TGTransientFrame {
+
+private:
+   TGTextEdit       *fEdit;   // text edit widget
+   TGTextButton     *fOK;     // OK button
+   TGLayoutHints    *fL1;     // layout of TGTextEdit
+   TGLayoutHints    *fL2;     // layout of OK button
+
+public:
+   Editor(const TGWindow *main, UInt_t w, UInt_t h);
+   virtual ~Editor();
+
+   void   LoadBuffer(const char *buffer);
+   void   LoadFile(const char *file);
+
+   TGTextEdit *GetEditor() const { return fEdit; }
+
+   void   SetTitle();
+   void   Popup();
+   void   CloseWindow();
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+};
+
+
+
 TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
       : TGMainFrame(p, w, h)
 {
@@ -285,9 +375,9 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fStatusFrame = new TGCompositeFrame(this, 60, 20, kHorizontalFrame |
                                                      kSunkenFrame);
 
-   fTestButton = new TGTextButton(fStatusFrame, "&Click here...", 150);
+   fTestButton = new TGTextButton(fStatusFrame, "&Open editor...", 150);
    fTestButton->Associate(this);
-   fTestButton->SetToolTipText("Pops up dialog tester");
+   fTestButton->SetToolTipText("Pops up editor");
    fStatusFrame->AddFrame(fTestButton, new TGLayoutHints(kLHintsTop |
                           kLHintsLeft, 2, 0, 2, 2));
    fTestText = new TGTextEntry(fStatusFrame, new TGTextBuffer(100));
@@ -354,9 +444,12 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
             case kCM_BUTTON:
                //printf("Button was pressed, id = %ld\n", parm1);
-               if (parm1 == 150)
-                  new TestMsgBox(fClient->GetRoot(), this, 400, 200);
-               break;
+               if (parm1 == 150) {
+                  Editor *ed = new Editor(this, 600, 400);
+                  ed->LoadBuffer(editortxt);
+                  ed->Popup();
+               }
+              break;
 
             case kCM_MENUSELECT:
                //printf("Pointer over menu entry, id=%ld\n", parm1);
@@ -1203,6 +1296,127 @@ Bool_t TestSliders::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return kTRUE;
 }
 
+Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h) :
+    TGTransientFrame(gClient->GetRoot(), main, w, h)
+{
+   // Create an editor in a dialog.
+
+   fEdit = new TGTextEdit(this, w, h, kSunkenFrame | kDoubleBorder);
+   fL1 = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 3, 3, 3, 3);
+   AddFrame(fEdit, fL1);
+
+   fOK = new TGTextButton(this, "  &OK  ");
+   fL2 = new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 0, 0, 5, 5);
+   AddFrame(fOK, fL2);
+
+   SetTitle();
+
+   MapSubwindows();
+
+   Resize(GetDefaultSize());
+
+   // position relative to the parent's window
+   Window_t wdum;
+   int ax, ay;
+   gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
+                          ((TGFrame *) main)->GetWidth() - (fWidth >> 1),
+                          (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
+                          ax, ay, wdum);
+   Move(ax, ay);
+   SetWMPosition(ax, ay);
+}
+
+Editor::~Editor()
+{
+   // Delete editor dialog.
+
+   delete fEdit;
+   delete fOK;
+   delete fL1;
+   delete fL2;
+}
+
+void Editor::SetTitle()
+{
+   // Set title in editor window.
+
+   TGText *txt = GetEditor()->GetText();
+   Bool_t untitled = !strlen(txt->GetFileName()) ? kTRUE : kFALSE;
+
+   char title[256];
+   if (untitled)
+      sprintf(title, "ROOT Editor - Untitled");
+   else
+      sprintf(title, "ROOT Editor - %s", txt->GetFileName());
+
+   SetWindowName(title);
+   SetIconName(title);
+}
+
+void Editor::Popup()
+{
+   // Show editor.
+
+   MapWindow();
+}
+
+void Editor::LoadBuffer(const char *buffer)
+{
+   // Load a text buffer in the editor.
+
+   fEdit->LoadBuffer(buffer);
+}
+
+void Editor::LoadFile(const char *file)
+{
+   // Load a file in the editor.
+
+   fEdit->LoadFile(file);
+}
+
+void Editor::CloseWindow()
+{
+   // Called when closed via window manager action.
+
+   delete this;
+}
+
+Bool_t Editor::ProcessMessage(Long_t msg, Long_t, Long_t)
+{
+   // Process OK button.
+
+   switch (GET_MSG(msg)) {
+      case kC_COMMAND:
+         switch (GET_SUBMSG(msg)) {
+            case kCM_BUTTON:
+               // Only one button and one action...
+               delete this;
+               break;
+            default:
+               break;
+         }
+         break;
+      case kC_TEXTVIEW:
+         switch (GET_SUBMSG(msg)) {
+            case kTXT_CLOSE:
+               // close window
+               delete this;
+               break;
+            case kTXT_OPEN:
+               SetTitle();
+               break;
+            case kTXT_SAVE:
+               SetTitle();
+               break;
+            default:
+               break;
+         }
+      default:
+         break;
+   }
+
+   return kTRUE;
+}
 
 
 //---- Main program ------------------------------------------------------------

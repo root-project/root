@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -99,6 +99,7 @@ public:
    void SetColumns(Int_t *cpos, Int_t *jmode) { fCpos = cpos; fJmode = jmode; }
 
    virtual TGDimension GetDefaultSize() const;
+   virtual Int_t       GetSubnameWidth(Int_t idx) const { return fCtw[idx]; }
 
   ClassDef(TGLVEntry,0)  // Item that goes into a TGListView container
 };
@@ -154,6 +155,7 @@ public:
    virtual Int_t NumSelected() const { return fSelected; }
 
    virtual TGDimension GetMaxItemSize() const;
+   virtual Int_t       GetMaxSubnameWidth(Int_t idx) const;
 
    ClassDef(TGLVContainer,0)  // Listview container
 };
@@ -165,11 +167,12 @@ class TGListView : public TGCanvas {
 friend class TGClient;
 
 protected:
-   Int_t           fColumns[7];   // column width
-   Int_t           fJmode[7];     // column text alignment
+   Int_t           fNColumns;     // number of columns
+   Int_t          *fColumns;      // column width
+   Int_t          *fJmode;        // column text alignment
    EListViewMode   fViewMode;     // view mode if list view widget
    TGDimension     fMaxSize;      // maximum item size
-   TGTextButton   *fColHeader[7]; // column headers for in detailed mode
+   TGTextButton  **fColHeader;    // column headers for in detailed mode
 
    static GContext_t    fgDefaultGC;
    static FontStruct_t  fgDefaultFontStruct;
@@ -183,8 +186,11 @@ public:
    virtual void   Layout();
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
    virtual void   SetContainer(TGFrame *f);
-   virtual void   SetHeader(const char *s, Int_t mode, Int_t idx);
+   virtual void   SetHeaders(Int_t ncolumns);
+   virtual void   SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx);
+   virtual void   SetDefaultHeaders();
    virtual void   SetViewMode(EListViewMode ViewMode);
+   virtual const char *GetHeader(Int_t idx) const;
 
    ClassDef(TGListView,0)  // List view widget (iconbox, small icons or tabular view)
 };

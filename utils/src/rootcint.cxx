@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name$:$Id$
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.5 2000/09/01 06:23:14 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -338,11 +338,11 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
             if (m.Property() & G__BIT_ISPOINTER)
                fprintf(fp, "         %s = new %s;\n", m.Name(), m.Type()->Name());
             fprintf(fp, "         int R__i, R__n;\n");
-            const char *s = TemplateArg(m).Name();
-            if (!strncmp(s, "const ", 6)) s += 6;
-            fprintf(fp, "         %s R__t;\n", s);
             fprintf(fp, "         R__b >> R__n;\n");
             fprintf(fp, "         for (R__i = 0; R__i < R__n; R__i++) {\n");
+            const char *s = TemplateArg(m).Name();
+            if (!strncmp(s, "const ", 6)) s += 6;
+            fprintf(fp, "            %s R__t;\n", s);
             if ((TemplateArg(m).Property() & G__BIT_ISPOINTER) ||
                 (TemplateArg(m).Property() & G__BIT_ISFUNDAMENTAL) ||
                 (TemplateArg(m).Property() & G__BIT_ISENUM)) {
@@ -498,7 +498,7 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
    // In case of error, or if the size is not specified, GrabIndex returns 0.
 
    int error;
-   char *where;
+   char *where = 0;
 
    const char *index = member.ValidArrayIndex(&error, &where);
    if (index==0 && printError) {
@@ -520,8 +520,13 @@ const char *GrabIndex(G__DataMemberInfo &member, int printError)
             errorstring = "UNKNOWN ERROR!!!!";
       }
 
-      fprintf(stderr,"*** Datamember %s::%s: size of array (%s) %s!\n",
-              member.MemberOf()->Name(), member.Name(), where, errorstring);
+      if (where==0) {
+         fprintf(stderr,"*** Datamember %s::%s: no size indication!\n",
+                 member.MemberOf()->Name(), member.Name());
+      } else {
+         fprintf(stderr,"*** Datamember %s::%s: size of array (%s) %s!\n",
+                   member.MemberOf()->Name(), member.Name(), where, errorstring);
+      }
    }
    return index;
 }
@@ -998,6 +1003,7 @@ int main(int argc, char **argv)
    char dictname[256];
    int i, ic, ifl, force;
    int icc = 0;
+   int use_preprocessor = 0;
 
    if (!strcmp(argv[1], "-f")) {
       force = 1;
@@ -1113,6 +1119,25 @@ int main(int argc, char **argv)
 
    iv = 0;
    il = 0;
+   // If the user request use of a preprocessor we are going to bundle
+   // all the files into one so that cint consider then one compilation
+   // unit and so that each file that contains code guard is really
+   // included only once.
+   for (i = 1; i < argc; i++)
+      if (strcmp(argv[i], "-p") == 0) use_preprocessor = 1;
+
+   char bundlename[L_tmpnam];
+   FILE *bundle = 0;
+   if (use_preprocessor) {
+      tmpnam(bundlename);
+      if (strlen(bundlename) < (L_tmpnam-3)) strcat(bundlename,".C");
+      bundle = fopen(bundlename, "w");
+      if (bundle==0) {
+         fprintf(stderr,"%s: failed to open %s, usage of external preprocessor by CINT is not optimal\n",
+                 argv[0], bundlename);
+         use_preprocessor = 0;
+      }
+   }
    for (i = ic; i < argc; i++) {
       if (!iv && *argv[i] != '-' && *argv[i] != '+') {
          if (!icc) {
@@ -1126,15 +1151,25 @@ int main(int argc, char **argv)
            strstr(argv[i],"linkdef")) && strstr(argv[i],".h")) {
          il = i;
          if (i != argc-1) {
-            fprintf(stderr, "%s; %s must be last file on command line\n", argv[0], argv[i]);
+            fprintf(stderr, "%s: %s must be last file on command line\n", argv[0], argv[i]);
             return 1;
          }
+         if (use_preprocessor) argvv[argcc++] = bundlename;
       }
       if (!strcmp(argv[i], "-c")) {
-         fprintf(stderr, "%s; option -c must come directly after the output file\n", argv[0]);
+         fprintf(stderr, "%s: option -c must come directly after the output file\n", argv[0]);
          return 1;
       }
-      argvv[argcc++] = argv[i];
+      if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+' && (il==0))
+         fprintf(bundle,"#include \"%s\"\n", argv[i]);
+      else
+         argvv[argcc++] = argv[i];
+   }
+   if (use_preprocessor) {
+      // Since we have not seen a linkdef file, we have not yet added the
+      // bundle file to the command line!
+      if (!il) argvv[argcc++] = bundlename;
+      fclose(bundle);
    }
 
    if (!il)

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name$:$Id$
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.8 2000/07/18 16:35:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -34,13 +34,13 @@
 #include "TVirtualTreePlayer.h"
 #endif
 
-class TSelector;
 class TTreeFormula;
 class TH1;
 class TSlave;
 class TPacketGenerator;
 class TSQLResult;
-
+class TSelector;
+class TPrincipal;
 
 class TTreePlayer : public TVirtualTreePlayer {
 
@@ -57,13 +57,12 @@ protected:
     Int_t         fSelectedRows;    //Number of selected entries
     Int_t         fPacketSize;      //Number of entries in one packet for parallel root
     Int_t         fNbins[4];        //Number of bins per dimension
-    Float_t       fVmin[4];         //Minima of varexp columns
-    Float_t       fVmax[4];         //Maxima of varexp columns
-    Float_t       *fV1;             //Local buffer for variable 1
-    Float_t       *fV2;             //Local buffer for variable 2
-    Float_t       *fV3;             //Local buffer for variable 3
+    Double_t       fVmin[4];        //Minima of varexp columns
+    Double_t       fVmax[4];        //Maxima of varexp columns
+    Double_t      *fV1;             //Local buffer for variable 1
+    Double_t      *fV2;             //Local buffer for variable 2
+    Double_t      *fV3;             //Local buffer for variable 3
     Double_t      *fW;              //Local buffer for weights
-    TSelector     *fSelector;       //Pointer to current selector
     TPacketGenerator *fPacketGen;   //Packet generator
     Int_t          fNfill;          //Local for EntryLoop
     TH1           *fHistogram;      //Pointer to histogram used for the projection
@@ -83,14 +82,15 @@ public:
     virtual TTree    *CopyTree(const char *selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      CreatePacketGenerator(Int_t nentries, Stat_t firstEntry);
-    virtual void      DrawSelect(const char *varexp, const char *selection, Option_t *option=""
+    virtual Int_t     DrawSelect(const char *varexp, const char *selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      EstimateLimits(Int_t estimate, Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      EntryLoop(Int_t &action, TObject *obj, Int_t nentries=1000000000, Int_t firstentry=0, Option_t *option="");
 
-            void      FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &xmax);
-    virtual void      Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
+            void      FindGoodLimits(Int_t nbins, Int_t &newbins, Double_t &xmin, Double_t &xmax);
+    virtual Int_t     Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
                        ,Int_t nentries, Int_t firstentry);
+    virtual Int_t     GetDimension() {return fDimension;}
     TH1              *GetHistogram() {return fHistogram;}
     TTreeFormula     *GetMultiplicity()   {return fMultiplicity;}
     virtual void      GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed);
@@ -98,26 +98,27 @@ public:
     virtual Int_t     GetPacketSize() const {return fPacketSize;}
     TTreeFormula     *GetSelect()    {return fSelect;}
     virtual Int_t     GetSelectedRows() {return fSelectedRows;}
-    TSelector        *GetSelector();
     TTreeFormula     *GetVar1() {return fVar1;}
     TTreeFormula     *GetVar2() {return fVar2;}
     TTreeFormula     *GetVar3() {return fVar3;}
     TTreeFormula     *GetVar4() {return fVar4;}
-    virtual Float_t  *GetV1()   {return fV1;}
-    virtual Float_t  *GetV2()   {return fV2;}
-    virtual Float_t  *GetV3()   {return fV3;}
+    virtual Double_t *GetV1()   {return fV1;}
+    virtual Double_t *GetV2()   {return fV2;}
+    virtual Double_t *GetV3()   {return fV3;}
     virtual Double_t *GetW()    {return fW;}
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual Int_t     MakeClass(const char *classname=0);
+    virtual Int_t     MakeClass(const char *classname=0, Option_t *option="");
     virtual Int_t     MakeCode(const char *filename=0);
-    virtual void      Scan(const char *varexp="", const char *selection="", Option_t *option=""
+    TPrincipal       *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
+                       ,Int_t nentries=1000000000, Int_t firstentry=0);
+    virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0);
+    virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0);
+    virtual Int_t     Scan(const char *varexp="", const char *selection="", Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual TSQLResult *Query(const char *varexp="", const char *selection="", Option_t *option=""
                          ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      SetEstimate(Int_t n);
     virtual void      SetPacketSize(Int_t size = 100);
-    virtual void      SetSelector(TSelector *selector=0);
-    virtual void      SetSelector(const char *macroname);
     virtual void      SetTree(TTree *t) {fTree = t;}
     virtual void      StartViewer(Int_t ww, Int_t wh);
 

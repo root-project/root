@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -79,8 +79,8 @@ void TGCanvas::MapSubwindows()
 void TGCanvas::AddFrame(TGFrame *f, TGLayoutHints *l)
 {
    // Adding a frame to a canvas is actually adding the frame to the
-   // viewport container. The viewport container is at least a
-   // TGCompositeFrame.
+   // viewport container. The viewport container must be at least a
+   // TGCompositeFrame for this method to succeed.
 
    TGCompositeFrame *container = (TGCompositeFrame *) fVport->GetContainer();
    if (!container) {
@@ -88,9 +88,9 @@ void TGCanvas::AddFrame(TGFrame *f, TGLayoutHints *l)
       return;
    }
    if (container->InheritsFrom(TGCompositeFrame::Class()))
-       container->AddFrame(f, l);
+      container->AddFrame(f, l);
    else
-       Error("AddFrame", "canvas container must inherit from TGCompositeFrame");
+      Error("AddFrame", "canvas container must inherit from TGCompositeFrame");
 }
 
 //______________________________________________________________________________
@@ -245,6 +245,29 @@ Bool_t TGCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    }
    return kTRUE;
 }
+
+//______________________________________________________________________________
+void TGCanvas::SetHsbPosition(Int_t newPos)
+{
+   // Set position of horizontal scrollbar.
+
+   if (fHScrollbar && fHScrollbar->IsMapped())
+     fHScrollbar->SetPosition(newPos);
+   else
+     fVport->SetHPos(0);
+}
+
+//______________________________________________________________________________
+void TGCanvas::SetVsbPosition(Int_t newPos)
+{
+   // Set position of vertical scrollbar.
+
+   if (fVScrollbar && fVScrollbar->IsMapped())
+      fVScrollbar->SetPosition(newPos);
+   else
+      fVport->SetVPos(0);
+}
+
 
 
 //______________________________________________________________________________

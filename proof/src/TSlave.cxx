@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name$:$Id$
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -40,13 +40,19 @@ TSlave::TSlave(const char *host, Int_t ord, Int_t perf, TProof *proof)
    fSocket  = 0;
 
    // Open connection to remote PROOF slave server.
-   fSocket = new TSocket(host, fProof->GetService());
+   fSocket = new TSocket(host, fProof->GetPort());
    if (fSocket->IsValid()) {
       // Remove socket from global TROOT socket list. Only the TProof object,
       // representing all slave sockets, will be added to this list. This will
       // ensure the correct termination of all proof servers in case the
       // root session terminates.
       gROOT->GetListOfSockets()->Remove(fSocket);
+
+      // Tell remote server to act as master or slave server
+      if (proof->IsMaster())
+         fSocket->Send("slave");
+      else
+         fSocket->Send("master");
 
       // Send user name and passwd to remote host (use trivial
       // inverted byte encoding)

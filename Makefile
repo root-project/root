@@ -4,15 +4,15 @@
 # Author: Fons Rademakers, 29/2/2000
 
 
-##### include path/location macros (result of ./configure) ####
+##### include path/location macros (result of ./configure) #####
 
 include config/Makefile.config
 
-##### include machine dependent macros ####
+##### include machine dependent macros #####
 
 include config/Makefile.$(ARCH)
 
-##### allow local macros ####
+##### allow local macros #####
 
 -include MyConfig.mk
 
@@ -27,15 +27,26 @@ MODULES      += unix x11 x3d rootx rootd proofd
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 else
-MODULES      += winnt win32
+MODULES      += winnt win32 gl
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 endif
 ifneq ($(TTFINCDIR),)
+ifneq ($(TTFLIBDIR),)
 MODULES      += x11ttf
 endif
+endif
 ifneq ($(OPENGLINCDIR),)
+ifneq ($(OPENGLULIB),)
+ifneq ($(OPENGLLIB),)
 MODULES      += gl
+endif
+endif
+endif
+ifneq ($(MYSQLINCDIR),)
+ifneq ($(MYSQLLIBDIR),)
+MODULES      += mysql
+endif
 endif
 ifneq ($(RFIO),)
 MODULES      += rfio
@@ -55,14 +66,11 @@ endif
 ifneq ($(STAR),)
 MODULES      += star
 endif
-ifneq ($(MYSQLINCDIR),)
-MODULES      += mysql
-endif
 ifneq ($(SRPDIR),)
 MODULES      += srputils
 endif
 
-ifneq ($(findstring $(MAKECMDGOALS),distclean distsrc),)
+ifneq ($(findstring $(MAKECMDGOALS),distclean),)
 MODULES      += unix winnt x11 x11ttf win32 gl rfio thread pythia pythia6 \
                 venus star mysql srputils x3d rootx rootd proofd
 MODULES      := $(sort $(MODULES))  # removes duplicates
@@ -77,7 +85,7 @@ LPATH         = lib
 ifneq ($(ARCH),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
-ROOTLIBS     := -lNew -lCore -lCint -lHist -lGraf -lGraf3d -lTree
+ROOTLIBS     := -lNew -lCore -lCint -lHist -lGraf -lGraf3d -lTree -lMatrix
 RINTLIBS     := -lRint
 PROOFLIBS    := -lGpad -lProof -lTreePlayer
 CERNPATH     := -L$(CERNLIBDIR)
@@ -86,7 +94,8 @@ else
 CINTLIBS     := $(LPATH)/libCint.lib
 ROOTLIBS     := $(LPATH)/libNew.lib $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
-                $(LPATH)/libGraf3d.lib $(LPATH)/libTree.lib
+                $(LPATH)/libGraf3d.lib $(LPATH)/libTree.lib \
+                $(LPATH)/libMatrix.lib
 RINTLIBS     := $(LPATH)/libRint.lib
 PROOFLIBS    := $(LPATH)/libGpad.lib $(LPATH)/libProof.lib \
                 $(LPATH)/libTreePlayer.lib
@@ -116,10 +125,14 @@ MAKEVERSION   = build/unix/makeversion.sh
 IMPORTCINT    = build/unix/importcint.sh
 MAKECOMPDATA  = build/unix/compiledata.sh
 MAKEMAKEINFO  = build/unix/makeinfo.sh
+MAKECHANGELOG = build/unix/makechangelog.sh
 MAKEHTML      = build/unix/makehtml.sh
 MAKELOGHTML   = build/unix/makeloghtml.sh
+MAKECINTDLLS  = build/unix/makecintdlls.sh
 ifeq ($(ARCH),win32)
 MAKELIB       = build/win/makelib.sh
+MAKEDIST      = build/win/makedist.sh
+MAKECOMPDATA  = build/win/compiledata.sh
 MAKEMAKEINFO  = build/win/makeinfo.sh
 endif
 
@@ -131,7 +144,7 @@ MAKEINFO      = cint/MAKEINFO
 ##### libCore #####
 
 COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO)
-COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO)
+COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 
@@ -181,6 +194,7 @@ endif
 
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean compiledata importcint version html \
+                changelog install showbuild cintdlls \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
@@ -194,7 +208,7 @@ include $(patsubst %,%/Module.mk,$(MODULES))
 -include MyRules.mk            # allow local rules
 
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean dist distsrc version \
-      importcint install showbuild),)
+      importcint install showbuild changelog html),)
 ifeq ($(findstring $(MAKECMDGOALS),fast),)
 include $(INCLUDEFILES)
 endif
@@ -202,7 +216,7 @@ include build/dummy.d          # must be last include
 endif
 
 
-rootcint:       all-cint $(ROOTCINTTMP) $(ROOTCINT) $(CINTTMP) $(CINT)
+rootcint:       all-cint $(ROOTCINTTMP) $(ROOTCINT)
 
 rootlibs:       rootcint compiledata $(ALLLIBS)
 
@@ -219,10 +233,11 @@ config config/Makefile.:
 $(COMPILEDATA): config/Makefile.$(ARCH)
 	@$(MAKECOMPDATA) $(COMPILEDATA) $(CXX) "$(OPT)" "$(CXXFLAGS)" \
 	   "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" "$(LIBDIR)" \
-	   "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)"
+	   "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" "$(MAKESHAREDLIB)" \
+	   "$(MAKEEXE)"
 
 $(MAKEINFO): config/Makefile.$(ARCH)
-	@$(MAKEMAKEINFO) $(MAKEINFO) $(CXX) $(CC)
+	@$(MAKEMAKEINFO) $(MAKEINFO) $(CXX) $(CC) "$(CPPPREP)"
 
 build/dummy.d: config $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	@(if [ ! -f $@ ] ; then \
@@ -235,7 +250,7 @@ build/dummy.d: config $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 %.d: %.cxx $(RMKDEP)
 	$(MAKEDEP) $@ "$(CXXFLAGS)" $*.cxx > $@
 
-$(CORELIB): $(COREO) $(COREDO) $(CINTLIB)
+$(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(CORELIBDEP)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
 	   "$(CORELIBEXTRA)"
@@ -243,7 +258,7 @@ $(CORELIB): $(COREO) $(COREDO) $(CINTLIB)
 dist:
 	@$(MAKEDIST)
 
-distsrc: distclean
+distsrc:
 	@$(MAKEDISTSRC)
 
 clean::
@@ -251,7 +266,7 @@ clean::
 
 ifeq ($(CXX),KCC)
 clean::
-	@find . -name "ti_files" -exec rm -rf {} \;
+	@find . -name "ti_files" -exec rm -rf {} \; >/dev/null 2>&1
 endif
 
 distclean:: clean
@@ -259,40 +274,81 @@ distclean:: clean
 	@rm -f include/*.h $(MAKEINFO) $(CORELIB)
 	@mv -f include/config.hh include/config.h
 	@rm -f build/dummy.d bin/*.dll lib/*.def lib/*.exp lib/*.lib .def
-	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif
+	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
+	@rm -f tutorials/pca.C
+	@rm -f $(CINTDIR)/include/*.dl* $(CINTDIR)/stl/*.dll README/ChangeLog
 	@rm -rf htmldoc
 	@cd test && $(MAKE) distclean
 
 version: $(CINTTMP)
 	@$(MAKEVERSION)
 
+cintdlls: $(CINTTMP)
+	@$(MAKECINTDLLS) $(PLATFORM) $(CINTTMP) $(MAKELIB) $(CXX) \
+	   $(CC) $(LD) "$(OPT)" "$(CINTCXXFLAGS)" "$(CINTCFLAGS)" \
+	   "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)"
+
 importcint: distclean-cint
 	@$(IMPORTCINT)
 
-html:    $(ROOTEXE)
+changelog:
+	@$(MAKECHANGELOG)
+
+html: $(ROOTEXE) changelog
 	@$(MAKELOGHTML)
 	@$(MAKEHTML)
 
 install:
-	@(inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
-	inode2=`ls -id $$(pwd)/bin | awk '{ print $$1 }'`;\
+	@(if [ -d $(BINDIR) ]; then \
+	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
+	fi; \
+	inode2=`ls -id $$(pwd)/bin | awk '{ print $$1 }'`; \
 	if [ -d $(BINDIR) ] && [ $$inode1 -eq $$inode2 ]; then \
 		echo "Everything already installed..."; \
 	else \
 		echo "Installing binaries in $(BINDIR)"; \
-		$(INSTALL) $(ALLEXECS) $(CINT) $(ROOTCINT) $(BINDIR); \
+		$(INSTALLDIR) $(BINDIR); \
+		$(INSTALL) $(CINT) $(MAKECINT) $(ROOTCINT) $(BINDIR); \
+		$(INSTALL) $(RMKDEP) $(BINDEXP) bin/root-config $(BINDIR); \
+		$(INSTALL) $(ALLEXECS) $(BINDIR); \
 		echo "Installing libraries in $(LIBDIR)"; \
+		$(INSTALLDIR) $(LIBDIR); \
 		chmod u+w $(LIBDIR)/*; \
+		echo "[possible error from chmod is ok]"; \
 		$(INSTALL) $(ALLLIBS) $(LIBDIR); \
 		$(INSTALL) $(CINTLIB) $(LIBDIR); \
 		echo "Installing headers in $(INCDIR)"; \
+		$(INSTALLDIR) $(INCDIR); \
 		$(INSTALLDATA) include/*.h $(INCDIR); \
 		echo "Installing main/src/rmain.cxx in $(INCDIR)"; \
 		$(INSTALLDATA) main/src/rmain.cxx $(INCDIR); \
 		echo "Installing $(MAKEINFO) in $(CINTINCDIR)"; \
+		$(INSTALLDIR) $(CINTINCDIR); \
 		$(INSTALLDATA) $(MAKEINFO) $(CINTINCDIR); \
-		echo "Installing cint/include lib and stl in $(CINTINCDIR)"; \
+		echo "Installing cint/include cint/lib and cint/stl in $(CINTINCDIR)"; \
 		$(INSTALLDATA) cint/include cint/lib cint/stl $(CINTINCDIR); \
+		echo "Installing icons in $(ICONPATH)"; \
+		$(INSTALLDIR) $(ICONPATH); \
+		$(INSTALLDATA) icons/*.xpm $(ICONPATH); \
+		echo "Installing tutorials in $(TUTDIR)"; \
+		$(INSTALLDIR) $(TUTDIR); \
+		$(INSTALLDATA) tutorials/* $(TUTDIR); \
+		echo "Installing tests in $(TESTDIR)"; \
+		$(INSTALLDIR) $(TESTDIR); \
+		$(INSTALLDATA) test/* $(TESTDIR); \
+		echo "Installing macros in $(MACRODIR)"; \
+		$(INSTALLDIR) $(MACRODIR); \
+		$(INSTALLDATA) macros/* $(MACRODIR); \
+		echo "Installing system.rootrc in $(ETCDIR)"; \
+		$(INSTALLDIR) $(ETCDIR); \
+		$(INSTALLDATA) system.rootrc $(ETCDIR); \
+		if [ "$(USECONFIG)" = "TRUE" ]; then \
+		   echo "Installing root.mimes in $(ETCDIR)"; \
+		   $(INSTALLDATA) icons/root.mimes $(ETCDIR); \
+		else \
+		   echo "Installing root.mimes in $(ICONPATH)"; \
+		   $(INSTALLDATA) icons/root.mimes $(ICONPATH); \
+		fi \
 	fi)
 
 showbuild:
@@ -323,7 +379,7 @@ showbuild:
 	@echo "XLIBS              = $(XLIBS)"
 	@echo "CILIBS             = $(CILIBS)"
 	@echo "F77LIBS            = $(F77LIBS)"
-	@echi ""
+	@echo ""
 	@echo "PYTHIA             = $(PYTHIA)"
 	@echo "PYTHIA6            = $(PYTHIA6)"
 	@echo "VENUS              = $(VENUS)"
@@ -332,7 +388,8 @@ showbuild:
 	@echo "TTFLIBDIR          = $(TTFLIBDIR)"
 	@echo "TTFINCDIR          = $(TTFINCDIR)"
 	@echo "TTFFONTDIR         = $(TTFFONTDIR)"
-	@echo "OPENGLLIBDIR       = $(OPENGLLIBDIR)"
+	@echo "OPENGLULIB         = $(OPENGLULIB)"
+	@echo "OPENGLLIB          = $(OPENGLLIB)"
 	@echo "OPENGLINCDIR       = $(OPENGLINCDIR)"
 	@echo "CERNLIBDIR         = $(CERNLIBDIR)"
 	@echo "THREAD             = $(THREAD)"
@@ -345,6 +402,6 @@ showbuild:
 	@echo "MAKEDEP            = $(MAKEDEP)"
 	@echo "MAKELIB            = $(MAKELIB)"
 	@echo "MAKEDIST           = $(MAKEDIST)"
-	@echo" MAKEDISTSRC        = $(MAKEDISTSRC)"
+	@echo "MAKEDISTSRC        = $(MAKEDISTSRC)"
 	@echo "MAKEVERSION        = $(MAKEVERSION)"
 	@echo "IMPORTCINT         = $(IMPORTCINT)"

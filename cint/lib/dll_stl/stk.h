@@ -1,0 +1,34 @@
+// lib/dll_stl/stk.h
+
+#include <deque>
+#include <stack>
+#include <algorithm>
+#include <string>
+
+#ifndef __hpux
+using namespace std;
+#endif
+
+#if (__SUNPRO_CC>=1280)
+#include "suncc5_deque.h"
+#endif
+
+#ifdef __MAKECINT__
+#ifndef G__STACK_DLL
+#define G__STACK_DLL
+#endif
+#pragma link C++ global G__STACK_DLL;
+#pragma link C++ nestedtypedef;
+#pragma link C++ nestedclass;
+
+#pragma link C++ class stack<int>;
+#pragma link C++ class stack<long>;
+#pragma link C++ class stack<double>;
+#pragma link C++ class stack<void*>;
+#pragma link C++ class stack<char*>;
+#ifdef G__STRING_DLL
+#pragma link C++ class stack<string>;
+#endif
+
+#endif
+

@@ -48,3 +48,5 @@ extern G__linked_taginfo G__G__streamLN_strstreambuf;
 extern G__linked_taginfo G__G__streamLN_istrstream;
 extern G__linked_taginfo G__G__streamLN_ostrstream;
 extern G__linked_taginfo G__G__streamLN_strstream;
+
+/* STUB derived class for protected member access */

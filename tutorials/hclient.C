@@ -45,7 +45,7 @@
       if (idx == 0)
          hpx->Fill(px);
       else
-         hpx->Fill(px,py,1);
+         hpx->Fill(px,py);
       if (i && (i%kUPDATE) == 0) {
          mess.Reset();              // re-use TMessage object
          mess.WriteObject(hpx);     // write object in message buffer

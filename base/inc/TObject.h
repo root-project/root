@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.5 2000/09/08 07:33:29 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -59,14 +59,15 @@ class TObjArray;
 class TMethod;
 class TTimer;
 
-//----- client flags
+
+//----- Global bits (can be set for any object and should not be reused).
+//----- Bits 0 - 13 are reserved as global bits. Bits 14 - 23 can be used
+//----- in different class hierarchies (make sure there is no overlap in
+//----- any given hierarchy).
 enum EObjBits {
    kCanDelete        = BIT(0),   // if object in a list can be deleted
-   kObjIsParent      = BIT(1),   // if hyperlink is parent of linked list (TLink)
-   kObjIsPersistent  = BIT(2),   // if datamember is persistent (TDataMember)
-   kObjInCanvas      = BIT(3),   // if object has been inserted in a pad/canvas
-   kModified         = BIT(4),   // if object has been modified
-   kDoneByView       = BIT(5),   // if object was created by the TObjectView
+   kMustCleanup      = BIT(3),   // if object destructor must call RecursiveRemove()
+   kObjInCanvas      = BIT(3),   // for backward compatibility only, use kMustCleanup
    kCannotPick       = BIT(6),   // if object in a pad cannot be picked
    kInvalidObject    = BIT(13)   // if object ctor succeeded but object should not be used
 };
@@ -79,7 +80,6 @@ private:
    UInt_t         fBits;       //bit field status word
 
    static Long_t  fgDtorOnly;    //object for which to call dtor only (i.e. no delete)
-   static Int_t   fgDirLevel;    //indentation level for ls()
    static Bool_t  fgObjectStat;  //if true keep track of objects in TObjectTable
 
 protected:
@@ -89,7 +89,7 @@ protected:
 #endif
 
 public:
-   //----- private flags, clients can only test but not change them
+   //----- Private bits, clients can only test but not change them
    enum {
       kIsOnHeap      = 0x01000000,    // object is on heap
       kNotDeleted    = 0x02000000,    // object has not been deleted
@@ -113,7 +113,6 @@ public:
    virtual const char *ClassName() const;
    virtual void        Clear(Option_t * /*option*/ ="") { }
    virtual TObject    *Clone();
-   virtual void        Close(Option_t *option="");
    virtual Int_t       Compare(TObject *obj);
    virtual void        Copy(TObject &object);
    virtual void        Delete(Option_t *option=""); // *MENU*
@@ -125,6 +124,8 @@ public:
    virtual void        Execute(const char *method,  const char *params);
    virtual void        Execute(TMethod *method, TObjArray *params);
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   virtual TObject    *FindObject(const char *name) const;
+   virtual TObject    *FindObject(TObject *obj) const;
    virtual Option_t   *GetDrawOption() const;
    virtual UInt_t      GetUniqueID() const;
    virtual const char *GetName() const;
@@ -134,29 +135,27 @@ public:
    virtual const char *GetTitle() const;
    virtual Bool_t      HandleTimer(TTimer *timer);
    virtual ULong_t     Hash();
-   virtual Bool_t      InheritsFrom(const char *classname);
-   virtual Bool_t      InheritsFrom(const TClass *cl);
+   virtual Bool_t      InheritsFrom(const char *classname) const;
+   virtual Bool_t      InheritsFrom(const TClass *cl) const;
    virtual void        Inspect(); // *MENU*
-   virtual Bool_t      IsFolder();
+   virtual Bool_t      IsFolder() const;
    virtual Bool_t      IsEqual(TObject *obj);
    virtual Bool_t      IsSortable() const { return kFALSE; }
-   virtual Bool_t      IsModified() { return TestBit(kModified); }
            Bool_t      IsOnHeap() const { return TestBit(kIsOnHeap); }
            Bool_t      IsZombie() const { return TestBit(kZombie); }
    virtual Bool_t      Notify();
    virtual void        ls(Option_t *option="");
-   virtual void        Modified(Bool_t flag=kTRUE) {SetBit(kModified,flag); }
    virtual void        Paint(Option_t *option="");
    virtual void        Pop();
    virtual void        Print(Option_t *option="");
-   virtual void        Read(const char *name);
+   virtual Int_t       Read(const char *name);
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        SavePrimitive(ofstream &out, Option_t *option);
    virtual void        SetDrawOption(Option_t *option="");  // *MENU*
    virtual void        SetUniqueID(UInt_t uid);
    virtual const char *StreamerInfo() const;
    virtual void        UseCurrentStyle();
-   virtual void        Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
+   virtual Int_t       Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
 
    //----- operators
    void    *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
@@ -185,15 +184,10 @@ public:
    void     MayNotUse(const char *method) const;
 
    //---- static functions
-   static Int_t     DecreaseDirLevel();
    static Long_t    GetDtorOnly();
    static void      SetDtorOnly(void *obj);
-   static Int_t     GetDirLevel();
-   static void      SetDirLevel(Int_t level=0);
    static Bool_t    GetObjectStat();
    static void      SetObjectStat(Bool_t stat);
-   static Int_t     IncreaseDirLevel();
-   static void      IndentLevel();
 
    ClassDef(TObject,1)  //Basic ROOT object
 };

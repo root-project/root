@@ -1,4 +1,4 @@
-# Makefile of ROOT for MkLinux with glibc
+# Makefile of ROOT for linuxppc with glibc and gcc2.95
 
 PLATFORM      = linux
 
@@ -12,15 +12,17 @@ endif
 
 # Compiler:
 CXX           = g++
-CC            = egcs
-CXXFLAGS      = -Wall -fsigned-char -fPIC -DR__GLIBC \
+CC            = gcc
+CXXFLAGS      = -pipe -Wall -fsigned-char -fPIC -DR__GLIBC \
                 -I/usr/X11/include $(EXTRA_CXXFLAGS)
-CFLAGS        = -Wall -fPIC -fsigned-char -DR__GLIBC \
+CFLAGS        = -pipe -Wall -fPIC -fsigned-char -DR__GLIBC \
                 -I/usr/X11/include $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -Wall -fPIC -fsigned-char -DG__REGEXP $(EXTRA_CXXFLAGS) \
-                -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
-CINTCFLAGS    = -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -pipe -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX \
+                -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -pipe -Wall -fPIC -fsigned-char -DG__REGEXP -DG__UNIX \
+                -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
+                $(EXTRA_CFLAGS)
 
 # Linker:
 LD            = g++
@@ -35,4 +37,9 @@ CILIBS        = -lm -ltermcap -lbsd -ldl
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
+F77           = g77
+F77FLAGS      = -fPIC
+F77LIBS       = -lg2c
 
+# Extras
+GLLIBEXTRA    = $(OPENGLULIB) $(OPENGLLIB) -L/usr/X11R6/lib -lXmu

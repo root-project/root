@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TDataSetIter.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// $Id: TDataSetIter.h,v 1.20 1999/12/29 02:37:00 fine Exp $
+// $Id: TDataSetIter.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 //
 // TDataSetIter                                                         //
 //                                                                      //
@@ -70,9 +70,9 @@ public:
 
   virtual TDataSet    *Find(const Char_t *path, TDataSet *rootset=0,Bool_t mkdir=kFALSE);
   virtual TDataSet    *FindByPath(const Char_t *path, TDataSet *rootset=0,Bool_t mkdir=kFALSE);
-  virtual TDataSet    *FindObject(const Char_t *name,const Char_t *path="",Option_t *opt="");
+  virtual TDataSet    *FindDataSet(const Char_t *name,const Char_t *path="",Option_t *opt="");
   virtual TDataSet    *FindByName(const Char_t *name,const Char_t *path="",Option_t *opt="");
-  virtual TDataSet    *FindObject(TDataSet *set,const Char_t *path,Option_t *opt="");
+  virtual TDataSet    *FindDataSet(TDataSet *set,const Char_t *path,Option_t *opt="");
   virtual Int_t          Flag(UInt_t flag=kMark,EBitOpt reset=kSet){return Flag((TDataSet *)0,flag,reset);}
   virtual Int_t          Flag(const Char_t *path,UInt_t flag=kMark,EBitOpt reset=kSet);
   virtual Int_t          Flag(TDataSet *dataset,UInt_t flag=kMark,EBitOpt reset=kSet);

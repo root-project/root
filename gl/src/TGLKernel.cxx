@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.4 2000/09/14 06:28:00 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -91,10 +91,18 @@ void TGLKernel::ClearGLColor(Float_t *colors)
     glClearColor(red, green, blue, alpha);
 
 }
-
+  
 //______________________________________________________________________________
-void TGLKernel::ClearGL(UInt_t) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+void TGLKernel::ClearGL(UInt_t stereo) {
+#ifdef STEREO_GL
+   if (stereo) {
+      if (Int_t(stereo) < 0)
+         glDrawBuffer(GL_BACK_LEFT);
+      else
+         glDrawBuffer(GL_BACK_RIGHT);
+   }
+#endif
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 //______________________________________________________________________________
@@ -309,12 +317,15 @@ void TGLKernel::SetRootLight(Bool_t flag)
             glEnable(GL_LIGHT0);
             glEnable(GL_LIGHTING);
             glEnable(GL_COLOR_MATERIAL);
+#ifdef STEREO_GL
+            glEnable(GL_STEREO);
+#endif
 //            glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER,0);
 //          glLightModeli(GL_LIGHT_MODEL_TWO_SIDE,GL_TRUE);
 
-//            glColorMaterial(GL_FRONT,GL_AMBIENT_AND_DIFFUSE);
-        }
-    }
+//          glColorMaterial(GL_FRONT,GL_AMBIENT_AND_DIFFUSE);
+      }
+   }
 }
 //______________________________________________________________________________
 void TGLKernel::DeleteGLLists(Int_t ilist, Int_t range){glDeleteLists(ilist,range);}
@@ -474,7 +485,7 @@ void TGLKernel::PaintGLPointsObject(const TPoints3DABC *points, Option_t *option
     Int_t pass = 0;
     if (option && strchr(option,'P')) { pass++;}
     if (option && strchr(option,'L')) { mode = GL_LINE_STRIP; pass++;}
-    do {
+    while (pass >= 0) {
       pass--;
       glBegin(mode);
          for (int i=0; i < n; i++)
@@ -482,7 +493,8 @@ void TGLKernel::PaintGLPointsObject(const TPoints3DABC *points, Option_t *option
                        ,GLfloat(points->GetY(i))
                        ,GLfloat(points->GetZ(i)));
       glEnd();
-    } while ((mode=GL_POINTS) && pass);
+      mode=GL_POINTS;
+    }
 }
 
 //______________________________________________________________________________
@@ -575,6 +587,89 @@ void TGLKernel::PaintBrik(Float_t vertex[24])
            LightIndex(0);  //reset the original color
     }
 #undef vert
+}
+
+//______________________________________________________________________________
+void TGLKernel::PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz)
+{
+// Paint Xtru shape via OpenGL
+  
+   Float_t frontnorm[3] = {0,0,1};  // top (normally max z)
+   Float_t backnorm[3]  = {0,0,-1}; // bottom (normally min z)
+   Float_t normal[3]    = {0,0,0};
+ 
+// OpenGL doesn't handle concave polygons correctly
+// it isn't required to do anything more than the convex hull of all vertices
+   Float_t *p = vertex;
+   Float_t *start = vertex;
+   Int_t ixy = 0;
+ 
+// the front face should go around counter clockwise
+// while the back go around clockwise
+ 
+   // Front or top face
+   if (fRootLight) LightIndex(0);
+   else            glNormal3fv(frontnorm);
+ 
+   glBegin(GL_POLYGON);
+     p     = vertex+3*(nz-1)*nxy;
+     start = p;
+     for (ixy=0; ixy<nxy; glVertex3fv(p), ixy++,p+=3);
+     glVertex3fv(start);
+   glEnd();
+ 
+   // Back face
+   // go around in given order to keep outward normal
+   if (fRootLight) LightIndex(0);
+   else            glNormal3fv(backnorm);
+ 
+   glBegin(GL_POLYGON);
+     p     = vertex+3*(nxy-1);
+     start = p;
+     for (ixy=0; ixy<nxy; glVertex3fv(p), ixy++,  p-=3);
+     glVertex3fv(start);
+   glEnd();
+ 
+ 
+   // The sides are given as a QUAD_STRIP list but care must be taken
+   // to ensure that the normals are "outward" going.  Which way to
+   // specify the points isn't quite clear.  This sequence has been
+   // empirically determined to give the right direction.  Be wary
+   // of changing it or risk turning the volume inside out when drawing
+   // it in sold form.   The filling of the points buffer has taken
+   // care of ordering the points in counterclockwise, increasing z order.
+ 
+   Int_t cindex[] = { -1, 1, 2, -1};
+   Int_t ncol = ((nxy&1) == 1) ? 3 : 2;
+ 
+   Float_t *key = vertex;
+   for (Int_t iz=0; iz<nz-1; iz++) {
+      glBegin(GL_QUAD_STRIP);
+        for (Int_t ixy=nxy; ixy > -1; ixy--) {
+ 
+           Float_t *p1 = key + 3*(ixy%nxy); // reconnect back to first
+           Float_t *p2 = p1  + 3*nxy;
+ 
+           // one more point is needed to calculate the normal
+           // take next point along in CCW order so that normal is _out_
+           Float_t *px = key + 3*((ixy+1)%nxy);
+ 
+           if (fRootLight) {
+              // pick light indices such that adjacent quads don't
+              // have the same color (nor do they match the ends)
+              LightIndex(cindex[ixy%ncol+iz%2]);
+           }
+           else
+              glNormal3fv(TMath::Normal2Plane(p1,px,p2,normal));
+ 
+           glVertex3fv(p1);
+           glVertex3fv(p2);
+        }
+        key += 3*nxy;
+      glEnd();
+   }
+ 
+   if (fRootLight)  LightIndex(0);  //reset the original color
 }
 
 //______________________________________________________________________________

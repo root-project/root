@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.7 2000/07/18 16:35:00 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -30,6 +30,8 @@ class TH1;
 class TTreeFormula;
 class TSlave;
 class TSQLResult;
+class TSelector;
+class TPrincipal;
 
 class TVirtualTreePlayer : public TObject {
 
@@ -42,10 +44,11 @@ public:
     virtual ~TVirtualTreePlayer() { }
     virtual TTree         *CopyTree(const char *selection, Option_t *option=""
                             ,Int_t nentries=1000000000, Int_t firstentry=0) = 0;
-    virtual void           DrawSelect(const char *varexp, const char *selection, Option_t *option
+    virtual Int_t          DrawSelect(const char *varexp, const char *selection, Option_t *option
                             ,Int_t nentries, Int_t firstentry) = 0;
-    virtual void           Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
+    virtual Int_t          Fit(const char *formula ,const char *varexp, const char *selection,Option_t *option ,Option_t *goption
                             ,Int_t nentries, Int_t firstentry) = 0;
+    virtual Int_t          GetDimension() = 0;
     virtual TH1           *GetHistogram() = 0;
     virtual void           GetNextPacket(TSlave *sl, Int_t &nentries, Stat_t &firstentry, Stat_t &processed) = 0;
     virtual Int_t          GetSelectedRows() = 0;
@@ -54,14 +57,18 @@ public:
     virtual TTreeFormula  *GetVar2() = 0;
     virtual TTreeFormula  *GetVar3() = 0;
     virtual TTreeFormula  *GetVar4() = 0;
-    virtual Float_t       *GetV1() = 0;
-    virtual Float_t       *GetV2() = 0;
-    virtual Float_t       *GetV3() = 0;
+    virtual Double_t      *GetV1() = 0;
+    virtual Double_t      *GetV2() = 0;
+    virtual Double_t      *GetV3() = 0;
     virtual Double_t      *GetW() = 0;
     virtual void           Loop(Option_t *option,Int_t nentries, Int_t firstentry) = 0;
-    virtual Int_t          MakeClass(const char *classname) = 0;
+    virtual Int_t          MakeClass(const char *classname, const char *option) = 0;
     virtual Int_t          MakeCode(const char *filename) = 0;
-    virtual void           Scan(const char *varexp, const char *selection, Option_t *option
+    virtual TPrincipal    *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
+                           ,Int_t nentries=1000000000, Int_t firstentry=0) = 0;
+    virtual Int_t          Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0) = 0;
+    virtual Int_t          Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0) = 0;
+    virtual Int_t          Scan(const char *varexp, const char *selection, Option_t *option
                             ,Int_t nentries, Int_t firstentry) = 0;
     virtual TSQLResult    *Query(const char *varexp, const char *selection, Option_t *option
                             ,Int_t nentries, Int_t firstentry) = 0;

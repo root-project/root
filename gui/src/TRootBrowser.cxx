@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.5 2000/09/07 11:19:52 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TGListView.h"
 #include "TGListTree.h"
 #include "TGToolBar.h"
+#include "TGSplitter.h"
 #include "TGFSContainer.h"
 #include "TGMimeTypes.h"
 #include "TRootHelpDialog.h"
@@ -131,28 +132,69 @@ static const char *gOpenTypes[] = { "ROOT files",   "*.root",
                                     0,              0 };
 
 
+//----- Special ROOT object item (this are items in the icon box, see
+//----- TRootIconBox)
+
+class TRootObjItem : public TGFileItem {
+public:
+   TRootObjItem(const TGWindow *p, const TGPicture *bpic,
+                const TGPicture *spic, TGString *name,
+                TObject *obj, TClass *cl, EListViewMode viewMode);
+};
+
+//______________________________________________________________________________
+TRootObjItem::TRootObjItem(const TGWindow *p, const TGPicture *bpic,
+                           const TGPicture *spic, TGString *name,
+                           TObject *obj, TClass *, EListViewMode viewMode) :
+   TGFileItem(p, bpic, 0, spic, 0, name, 0, 0, 0, 0, viewMode)
+{
+   // Create an icon box item.
+
+   delete [] fSubnames;
+   fSubnames = new TGString* [2];
+
+   fSubnames[0] = new TGString(obj->GetTitle());
+
+   fSubnames[1] = 0;
+
+   int i;
+   for (i = 0; fSubnames[i] != 0; ++i)
+      ;
+   fCtw = new int[i];
+   for (i = 0; fSubnames[i] != 0; ++i)
+      fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
+                                     fSubnames[i]->GetLength());
+}
+
 //----- Special ROOT object container (this is the icon box on the
 //----- right side of the browser)
 
 class TRootIconBox : public TGFileContainer {
-
+private:
+   TGListView *fLV;             // list view containing TRootIconBox
+   Bool_t      fCheckHeaders;   // if true check headers
 public:
-   TRootIconBox(const TGWindow *p, UInt_t w, UInt_t h,
+   TRootIconBox(const TGWindow *p, TGListView *lv, UInt_t w, UInt_t h,
                 UInt_t options = kSunkenFrame,
                 ULong_t back = fgDefaultFrameBackground);
 
    void   AddObjItem(const char *name, TObject *obj, TClass *cl);
    void   GetObjPictures(const TGPicture **pic, const TGPicture **spic,
                          TObject *obj, const char *name);
+   void   SetObjHeaders();
    void   Refresh();
+   void   RemoveAll();
 };
 
 //______________________________________________________________________________
-TRootIconBox::TRootIconBox(const TGWindow *p, UInt_t w, UInt_t h,
-                           UInt_t options, ULong_t back) :
+TRootIconBox::TRootIconBox(const TGWindow *p, TGListView *lv, UInt_t w,
+                           UInt_t h, UInt_t options, ULong_t back) :
    TGFileContainer(p, w, h, options, back)
 {
    // Create iconbox containing ROOT objects in browser.
+
+   fLV = lv;
+   fCheckHeaders = kTRUE;
 
    // Don't use timer HERE (timer is set in TBrowser).
    delete fRefresh;
@@ -194,6 +236,11 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
 
    if (obj->IsA() == TSystemFile::Class() ||
        obj->IsA() == TSystemDirectory::Class()) {
+      if (fCheckHeaders) {
+         if (strcmp(fLV->GetHeader(1), "Attributes"))
+            fLV->SetDefaultHeaders();
+         fCheckHeaders = kFALSE;
+      }
       fi = AddFile(name);
       if (fi) fi->SetUserData(obj);
       return;
@@ -204,13 +251,28 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    GetObjPictures(&pic, &spic, obj, obj->GetIconName() ?
                   obj->GetIconName() : cl->GetName());
 
-   fi = new TGFileItem(this, pic, 0, spic, 0, new TGString(name),
-                       0, cl->Size(), 0, 0, fViewMode);
+   if (fCheckHeaders) {
+      if (strcmp(fLV->GetHeader(1), "Title"))
+         SetObjHeaders();
+      fCheckHeaders = kFALSE;
+   }
+   fi = new TRootObjItem(this, pic, spic, new TGString(name), obj, cl, fViewMode);
    if (fi) fi->SetUserData(obj);
 
    AddItem(fi);
 
    fTotal++;
+}
+
+//______________________________________________________________________________
+void TRootIconBox::SetObjHeaders()
+{
+   // Set list box headers used to display detailed object iformation.
+   // Currently this is only "Name" and "Title".
+
+   fLV->SetHeaders(2);
+   fLV->SetHeader("Name",  kTextLeft, kTextLeft, 0);
+   fLV->SetHeader("Title", kTextLeft, kTextLeft, 1);
 }
 
 //______________________________________________________________________________
@@ -227,6 +289,15 @@ void TRootIconBox::Refresh()
                fTotal, fSelected);
 
    MapSubwindows();
+}
+
+//______________________________________________________________________________
+void TRootIconBox::RemoveAll()
+{
+   // Reset the fCheckHeaders flag.
+
+   fCheckHeaders = kTRUE;
+   TGFileContainer::RemoveAll();
 }
 
 
@@ -415,8 +486,8 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    fHf = new TGHorizontalFrame(this, 10, 10);
 
-   fV2 = new TGVerticalFrame(fHf, 10, 10);
    fV1 = new TGVerticalFrame(fHf, 10, 10, kFixedWidth);
+   fV2 = new TGVerticalFrame(fHf, 10, 10);
    fTreeHdr = new TGCompositeFrame(fV1, 10, 10, kSunkenFrame);
    fListHdr = new TGCompositeFrame(fV2, 10, 10, kSunkenFrame);
 
@@ -437,9 +508,16 @@ void TRootBrowser::CreateBrowser(const char *name)
 
    fV1->Resize(fTreeHdr->GetDefaultWidth()+100, fV1->GetDefaultHeight());
 
-   lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 0, 2, 0, 0);
+   lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY);
    fWidgets->Add(lo);
    fHf->AddFrame(fV1, lo);
+
+   TGVSplitter *splitter = new TGVSplitter(fHf);
+   splitter->SetFrame(fV1, kTRUE);
+   lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY);
+   fWidgets->Add(splitter);
+   fWidgets->Add(lo);
+   fHf->AddFrame(splitter, lo);
 
    lo = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY);
    fWidgets->Add(lo);
@@ -451,6 +529,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fLt = new TGListTree(fTreeView->GetViewPort(), 10, 10, kHorizontalFrame,
                         fgWhitePixel);
    fLt->Associate(this);
+   fLt->SetAutoTips();
    fTreeView->SetContainer(fLt);
 
    lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
@@ -460,7 +539,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    // Create list view (icon box)
 
    fListView = new TGListView(fV2, 520, 250);
-   fIconBox = new TRootIconBox(fListView->GetViewPort(), 520, 250,
+   fIconBox = new TRootIconBox(fListView->GetViewPort(), fListView, 520, 250,
                                kHorizontalFrame, fgWhitePixel);
    fIconBox->Associate(this);
 
@@ -729,6 +808,9 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kOneLevelUp:
                      if (fListLevel)
                         fListLevel = fListLevel->GetParent();
+                     fLt->ClearHighlighted();
+                     fLt->HighlightItem(fListLevel);
+                     fClient->NeedRedraw(fLt);
                      DisplayDirectory();
                      Refresh(kTRUE);
                      break;
@@ -780,6 +862,9 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   TGTreeLBEntry *e = (TGTreeLBEntry *) fFSComboBox->GetSelectedEntry();
                   if (e) {
                      fListLevel = fLt->FindItemByPathname(e->GetPath()->GetString());
+                     fLt->ClearHighlighted();
+                     fLt->HighlightItem(fListLevel);
+                     fClient->NeedRedraw(fLt);
                      DisplayDirectory();
                      Refresh(kTRUE);
                   }
@@ -964,6 +1049,8 @@ void TRootBrowser::IconBoxAction(TObject *obj)
    // Default action when double clicking on icon.
 
    if (obj) {
+      Bool_t useLock = kTRUE;
+
       gVirtualX->SetCursor(fId, fWaitCursor);
       gVirtualX->Update();
 
@@ -971,9 +1058,10 @@ void TRootBrowser::IconBoxAction(TObject *obj)
          fIconBox->RemoveAll();
          TGListTreeItem *itm = 0;
 
-         if (fListLevel)
+         if (fListLevel) {
+            fLt->OpenItem(fListLevel);
             itm = fListLevel->GetFirstChild();
-         else
+         } else
             itm = fLt->GetFirstItem();
 
          while (itm && (itm->GetUserData() != obj))
@@ -998,6 +1086,8 @@ void TRootBrowser::IconBoxAction(TObject *obj)
                   fLt->DeleteItem(fListLevel);
                   TGListTreeItem *kitem = fLt->AddItem(parent, kobj->GetName());
                   if (kitem) {
+                     obj = kobj;
+                     useLock = kFALSE;
                      kitem->SetUserData(kobj);
                      fListLevel = kitem;
                   } else
@@ -1010,9 +1100,9 @@ void TRootBrowser::IconBoxAction(TObject *obj)
          }
       }
 
-      fTreeLock = kTRUE;
+      if (useLock) fTreeLock = kTRUE;
       obj->Browse(fBrowser);
-      fTreeLock = kFALSE;
+      if (useLock) fTreeLock = kFALSE;
 
       Chdir(fListLevel);
 

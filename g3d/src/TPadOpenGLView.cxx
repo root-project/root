@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -63,9 +63,10 @@ TPadOpenGLView::TPadOpenGLView(TVirtualPad *pad) : TPadView3D(pad)
 //    fExtraAngles[1] = -90;
     fScale = 1.0;
 
-    fSpeedMove = 0.02;
-    fResetView = kTRUE;
+    fSpeedMove   = 0.02;
+    fResetView   = kTRUE;
     fPerspective = kFALSE;
+    fStereoFlag  = kFALSE;
 
     SetPad(pad);
 
@@ -85,11 +86,20 @@ TPadOpenGLView::~TPadOpenGLView()
 {
     if (!fParent) return;
 //*-*  Delete OpenGL lists;
-   if (fGLViewerImp)
-   {
-       if (fGLList) { gVirtualGL->DeleteGLLists(fGLList,kGLListSize);fGLList =0; }
-       delete fGLViewerImp;
-       fGLViewerImp = 0;
+   if (fGLViewerImp) {
+#ifdef STEREO_GL
+      if (fStereoFlag) {
+         const char *turnStereo = gSystem->Getenv("OffRootStereo");
+         if (turnStereo) gSystem->Exec(turnStereo);
+         fStereoFlag = kFALSE;
+      }
+#endif
+      if (fGLList) {
+         gVirtualGL->DeleteGLLists(fGLList,kGLListSize);
+         fGLList =0;
+      }
+      delete fGLViewerImp;
+      fGLViewerImp = 0;
    }
 }
 
@@ -384,6 +394,9 @@ void TPadOpenGLView::MoveModelView(const Char_t option, Int_t count)
 //*-*          'x' //*-*
 //*-*          'y' //*-*  rotate object along x,y,z axis
 //*-*          'z' //*-*
+//*-*
+//*-*          'v' //*-*  toggle the stereo mode
+//*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
     if (count <= 0) count = 1;
 
@@ -483,6 +496,20 @@ void TPadOpenGLView::MoveModelView(const Char_t option, Int_t count)
         case 'M':    //*-*      turn "FLAT" color shade off
             gVirtualGL->ShadeGLModel(kFLAT);
             done = 1;
+            break;
+        case 'v':    //*-*      toggle the stereo mode
+        case 'V':    //*-*      toggle the stereo mode
+#ifdef STEREO_GL
+            fStereoFlag = !fStereoFlag;
+            if (fStereoFlag) {
+               const char *turnStereo = gSystem->Getenv("TurnRootStereo");
+               if (turnStereo) gSystem->Exec(turnStereo);
+            } else {
+               const char *turnStereo = gSystem->Getenv("OffRootStereo");
+               if (turnStereo) gSystem->Exec(turnStereo);
+            }
+            done = 1;
+#endif
             break;
         case 't':    //*-*      toggle the light model
         case 'T':    //*-*      toggle the light model
@@ -588,9 +615,30 @@ void TPadOpenGLView::Paint(Option_t *)
         gVirtualGL->ClearColor(color);
     }
 //          gVirtualGL->ClearGL(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    gVirtualGL->ClearGL(0);
+    Int_t stereo = 0;
+#ifdef STEREO_GL
+    if (fStereoFlag)   stereo = +1;
+#endif
+    gVirtualGL->ClearGL(UInt_t(stereo));
+    if (fGLList) {
+       gVirtualGL->RunGLList(fGLList+kScene);
+#ifdef STEREO_GL
+       if (stereo) {
+          stereo = -stereo;
 
-    if (fGLList) gVirtualGL->RunGLList(fGLList+kScene);
+          Double_t angles[3] = {0,2,0};
+          gVirtualGL->AddRotation(fExtraRotMatrix,angles);
+          UpdateModelView();
+
+          gVirtualGL->ClearGL(UInt_t(stereo));
+          gVirtualGL->RunGLList(fGLList+kScene);
+          // Restore angle
+          angles[1] = -5;
+          gVirtualGL->AddRotation(fExtraRotMatrix,angles);
+          UpdateModelView();
+       }
+#endif
+    }
 }
 
 //______________________________________________________________________________

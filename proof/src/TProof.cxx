@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name$:$Id$
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -41,7 +41,7 @@ ClassImp(TProof)
 
 //______________________________________________________________________________
 TProof::TProof(const char *cluster, const char *master, const char *version,
-               const char *service, Int_t loglevel, const char *confdir)
+               Int_t port, Int_t loglevel, const char *confdir)
 {
    // Create a PROOF environment. Starting PROOF involves reading a config
    // file describing the cluster and firing slave servers on all of the
@@ -51,7 +51,7 @@ TProof::TProof(const char *cluster, const char *master, const char *version,
    if (gProof)
       gProof->Close();
 
-   if (Init(cluster, service, master, version, loglevel, confdir) == 0) {
+   if (Init(cluster, port, master, version, loglevel, confdir) == 0) {
       // on Init failure make sure IsValid() returns kFALSE
       SafeDelete(fActiveSlaves);
    }
@@ -76,23 +76,23 @@ TProof::~TProof()
 }
 
 //______________________________________________________________________________
-Int_t TProof::Init(const char *cluster, const char *service, const char *master,
+Int_t TProof::Init(const char *cluster, Int_t port, const char *master,
                    const char *vers, Int_t loglevel, const char *confdir)
 {
    // Start the PROOF environment. Starting PROOF involves reading a config
-   // file describing the cluster and firing slave servers on all of the
+   // file describing the cluster and starting slave servers on all of the
    // available nodes.
 
    Assert(gSystem);
 
    fCluster    = cluster;
-   fService    = service;
+   fPort       = port;
    fMaster     = master;
    fVersion    = vers;
    fConfDir    = confdir;
    fLogLevel   = loglevel;
    fProtocol   = kPROOF_Protocol;
-   fMasterServ = strcmp(service, "proofslave") ? kFALSE : kTRUE;
+   fMasterServ = fMaster == "" ? kTRUE : kFALSE;
    fTree       = 0;
 
    // sort slaves by descending performance index
@@ -719,7 +719,7 @@ void TProof::Print(Option_t *option)
       Printf("This is a:                master server");
       GetStatus();
    }
-   Printf("Name of service:          %s", GetService());
+   Printf("Port number:              %d", GetPort());
    Printf("Server version:           %s", GetVersion());
    Printf("Protocol version:         %d", GetProtocol());
    Printf("Config file:              %s", GetConfFile());

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TMap.h,v 1.2 2000/09/05 09:21:22 brun Exp $
 // Author: Fons Rademakers   12/11/95
 
 /*************************************************************************
@@ -61,7 +61,7 @@ public:
    void              Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
    TObject          *Remove(TObject *key);
 
-   ClassDef(TMap,2)  //A map
+   ClassDef(TMap,3)  //A map
 };
 
 
@@ -83,7 +83,7 @@ public:
    TAssoc(TObject *key, TObject *value) : fKey(key), fValue(value) { }
    TAssoc(const TAssoc &a) : fKey(a.fKey), fValue(a.fValue) { }
    virtual               ~TAssoc() { }
-   Bool_t                IsFolder() { return kTRUE;}
+   Bool_t                IsFolder() const { return kTRUE;}
    virtual void          Browse(TBrowser *b);
    const char           *GetName() const { return fKey->GetName(); }
    ULong_t               Hash() { return fKey->Hash(); }

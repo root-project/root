@@ -21,7 +21,7 @@ HTMLH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 HTMLS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HTMLO        := $(HTMLS:.cxx=.o)
 
-HTMLDEP      := $(HTMLO:.o=.d)
+HTMLDEP      := $(HTMLO:.o=.d) $(HTMLDO:.o=.d)
 
 HTMLLIB      := $(LPATH)/libHtml.$(SOEXT)
 

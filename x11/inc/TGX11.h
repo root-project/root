@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name$:$Id$
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.3 2000/07/06 16:49:39 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -261,6 +261,8 @@ public:
                          Int_t src_x, Int_t src_y, UInt_t width, UInt_t height,
                          Int_t dest_x, Int_t dest_y);
    void         ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *attr);
+   void         ChangeProperty(Window_t id, Atom_t property, Atom_t type,
+                               UChar_t *data, Int_t len);
    void         DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
    void         ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
    Bool_t       CheckEvent(Window_t id, EGEventType type, Event_t &ev);
@@ -272,7 +274,8 @@ public:
                            UInt_t evmask, Window_t confine, Cursor_t cursor,
                            Bool_t grab = kTRUE);
    void         GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
-                            Cursor_t cursor, Bool_t grab = kTRUE);
+                            Cursor_t cursor, Bool_t grab = kTRUE,
+                            Bool_t owner_events = kTRUE);
    void         SetWindowName(Window_t id, char *name);
    void         SetIconName(Window_t id, char *name);
    void         SetIconPixmap(Window_t id, Pixmap_t pic);
@@ -301,7 +304,8 @@ public:
    void         SelectInput(Window_t id, UInt_t evmask);
    void         SetInputFocus(Window_t id);
    Window_t     GetPrimarySelectionOwner();
-   void         ConvertPrimarySelection(Window_t id, Time_t when);
+   void         SetPrimarySelectionOwner(Window_t id);
+   void         ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when);
    void         LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym);
    void         GetPasteBuffer(Window_t id, Atom_t atom, TString &text,
                                Int_t &nchar, Bool_t del);

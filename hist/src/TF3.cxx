@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -33,7 +33,7 @@ TF3::TF3(): TF2()
 
 
 //______________________________________________________________________________
-TF3::TF3(const char *name,const char *formula, Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax, Float_t zmin, Float_t zmax)
+TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
       :TF2(name,formula,xmin,xmax,ymin,ymax)
 {
 //*-*-*-*-*-*-*F3 constructor using a formula definition*-*-*-*-*-*-*-*-*-*-*
@@ -51,7 +51,7 @@ TF3::TF3(const char *name,const char *formula, Float_t xmin, Float_t xmax, Float
 
 
 //______________________________________________________________________________
-TF3::TF3(const char *name,void *fcn, Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax, Float_t zmin, Float_t zmax, Int_t npar)
+TF3::TF3(const char *name,void *fcn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar)
       :TF2(name,fcn,xmin,xmax,ymin,ymax,npar)
 {
 //*-*-*-*-*-*-*F3 constructor using a pointer to an interpreted function*-*-*
@@ -75,7 +75,7 @@ TF3::TF3(const char *name,void *fcn, Float_t xmin, Float_t xmax, Float_t ymin, F
 }
 
 //______________________________________________________________________________
-TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax, Float_t zmin, Float_t zmax, Int_t npar)
+TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar)
       :TF2(name,fcn,xmin,xmax,ymin,ymax,npar)
 {
 //*-*-*-*-*-*-*F3 constructor using a pointer to real function*-*-*-*-*-*-*-*
@@ -166,7 +166,7 @@ void TF3::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 //______________________________________________________________________________
-void TF3::GetRandom3(Float_t &xrandom, Float_t &yrandom, Float_t &zrandom)
+void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom)
 {
 //*-*-*-*-*-*Return 3 random numbers following this function shape*-*-*-*-*-*
 //*-*        =====================================================
@@ -182,9 +182,9 @@ void TF3::GetRandom3(Float_t &xrandom, Float_t &yrandom, Float_t &zrandom)
 
    //  Check if integral array must be build
    Int_t i,j,k,cell;
-   Float_t dx   = (fXmax-fXmin)/fNpx;
-   Float_t dy   = (fYmax-fYmin)/fNpy;
-   Float_t dz   = (fZmax-fZmin)/fNpz;
+   Double_t dx   = (fXmax-fXmin)/fNpx;
+   Double_t dy   = (fYmax-fYmin)/fNpy;
+   Double_t dz   = (fZmax-fZmin)/fNpz;
    Int_t ncells = fNpx*fNpy*fNpz;
    Double_t xx[3];
    InitArgs(xx,fParams);
@@ -220,7 +220,7 @@ void TF3::GetRandom3(Float_t &xrandom, Float_t &yrandom, Float_t &zrandom)
    }
 
 // return random numbers
-   Float_t r;
+   Double_t r;
    r    = gRandom->Rndm();
    cell = TMath::BinarySearch(ncells,fIntegral,r);
    k    = cell/(fNpx*fNpy);
@@ -232,7 +232,7 @@ void TF3::GetRandom3(Float_t &xrandom, Float_t &yrandom, Float_t &zrandom)
 }
 
 //______________________________________________________________________________
-void TF3::GetRange(Float_t &xmin, Float_t &ymin, Float_t &zmin, Float_t &xmax, Float_t &ymax, Float_t &zmax)
+void TF3::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax)
 {
 //*-*-*-*-*-*-*-*-*-*-*Return range of function*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ========================
@@ -281,7 +281,7 @@ void TF3::SetNpz(Int_t npz)
 }
 
 //______________________________________________________________________________
-void TF3::SetRange(Float_t xmin, Float_t ymin, Float_t zmin, Float_t xmax, Float_t ymax, Float_t zmax)
+void TF3::SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax)
 {
 //*-*-*-*-*-*Initialize the upper and lower bounds to draw the function*-*-*-*
 //*-*        ==========================================================

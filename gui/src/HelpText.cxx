@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   28/07/97
 
 #include "HelpText.h"
@@ -188,7 +188,7 @@ You can create the following graphics objects:\n\
   delimiting the selected area. Close the cut by clicking twice at the\n\
   same position. A TCutG object is created. It can be used\n\
   as a selection for TTree::Draw. You can get a pointer to this object with\n\
-  TCutG *cut = (TCutG*)gPad->GetPrimitive(\"CUTG\").\n\n\
+  TCutG *cut = (TCutG*)gPad->FindObject(\"CUTG\").\n\n\
   ";
 
 

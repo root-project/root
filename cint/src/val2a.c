@@ -525,6 +525,35 @@ int type,tagnum,typenum,reftype,isconst;
 	      ,G__newtype.name[typenum]);
     else
       sprintf(string,"%s",G__newtype.name[typenum]);
+#ifndef G__OLDIMPLEMENTATION1329
+    if(G__newtype.nindex[typenum]) {
+      int pointlevel = 0;
+      if(isupper(type)) pointlevel = 1;
+      switch(reftype) {
+      case G__PARANORMAL:
+      case G__PARAREFERENCE:
+	break;
+      default:
+	pointlevel = reftype;
+	break;
+      }
+      pointlevel -= G__newtype.nindex[typenum];
+      switch(pointlevel) {
+      case 0:
+	type = tolower(type);
+	if(G__PARAREFERENCE!=reftype) reftype = G__PARANORMAL;
+	break;
+      case 1:
+	type = toupper(type);
+	if(G__PARAREFERENCE!=reftype) reftype = G__PARANORMAL;
+	break;
+      default:
+	type = toupper(type);
+	reftype = pointlevel;
+	break;
+      }
+    }
+#endif
 #ifndef G__OLDIMPLEMENTATION720
     if(isupper(G__newtype.type[typenum])) {
       switch(G__newtype.reftype[typenum]) {
@@ -648,7 +677,7 @@ int type,tagnum,typenum,reftype,isconst;
     case 'p': sprintf(string,"#define"); return(string);
     case 'o': string[0]='\0'; /* sprintf(string,""); */ return(string);
     case 'a': 
-      G__ASSERT(isupper(type));
+      /* G__ASSERT(isupper(type)); */
       strcpy(string,"G__p2memfunc");
       type=tolower(type);
       break;

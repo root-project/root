@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -81,7 +81,7 @@ public:
    virtual void     Sort(Int_t upto = kMaxInt);
    virtual Int_t    BinarySearch(TObject *obj, Int_t upto = kMaxInt); // the TObjArray has to be sorted, -1 == not found !!
 
-   ClassDef(TObjArray,2)  //An array of objects
+   ClassDef(TObjArray,3)  //An array of objects
 };
 
 

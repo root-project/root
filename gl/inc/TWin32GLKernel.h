@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name$:$Id$
+// @(#)root/gl:$Name:  $:$Id: TWin32GLKernel.h,v 1.2 2000/09/14 06:28:00 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -40,7 +40,7 @@ typedef enum EGLCallbackCmd {
                              ,kClearColor    , kNewModelView     ,kPolygonGLMode  ,kGetGL
                              ,kShadeGLModel  , kSetRootLight     ,kSetLineAttr    ,kUpdateMatrix
                              ,kAddRotation   , kSetStack         ,kPaintGLPointsObject
-                            } ;
+                             ,kPaintXtru} ;
 
 class TWin32GLKernel : protected TWin32HookViaThread, public TGLKernel {
 
@@ -98,6 +98,7 @@ public:
    virtual void PaintCone(Float_t *vertex,Int_t ndiv,Int_t nstacks);
    virtual void PaintPolyLine(Int_t n, Float_t *p, Option_t *option);
    virtual void PaintBrik(Float_t vertex[24]);
+   virtual void PaintXtru(Float_t *vertex, Int_t nxy, Int_t nz);
    virtual void SetLineAttr(Color_t color, Int_t width);
    virtual void UpdateMatrix(Double_t *translate=0, Double_t *rotate=0, Bool_t isreflection=kFALSE);
 

@@ -10,6 +10,8 @@ linuxsuse6           for Linux (SuSE v6.0) egcs and glibc
 linuxpgcc            for Linux pgcc and glibc
 linuxppcegcs         for PPC Linux egcs and glibc
 linuxdeb2ppc         for PPC Linux based on Debian v2.0
+linuxia64gcc         for Itanium Linux gcc 2.9x and glibc
+linuxalphaegcs       for Alpha Linux egcs and glibc
 mklinux              for MkLinux gcc and glibc
 freebsd              for FreeBSD
 freebsd4             for FreeBSD 4.x
@@ -19,7 +21,6 @@ hpuxegcs             for HP-UX 10.20 egcs 1.1.x
 alphacxx6            for DEC Unix cxx6
 alphaegcs            for DEC Unix egcs 1.1.x
 alphakcc             for DEC Unix KCC
-osfkcc               for DEC Unix KCC same as alphakcc
 solaris              for Solaris CC
 solarisCC5           for Solaris CC 5.0
 solarisegcs          for Solaris egcs 1.1.x

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.4 2000/09/11 09:59:26 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -344,7 +344,7 @@ void TKey::FillBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-Bool_t TKey::IsFolder()
+Bool_t TKey::IsFolder() const
 {
     Bool_t ret = kFALSE;
 
@@ -375,7 +375,7 @@ void TKey::ls(Option_t *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*List Key contents-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                      =================
-   IndentLevel();
+   TROOT::IndentLevel();
    cout <<"KEY: "<<fClassName<<"\t"<<GetName()<<";"<<GetCycle()<<"\t"<<GetTitle()<<endl;
 }
 
@@ -430,7 +430,9 @@ TObject *TKey::ReadObj()
        return 0;
    }
    // Create an instance of this class
+
    obj = (TObject*)cl->New();
+
    if (!obj) {
       Error("ReadObj", "Cannot create new object of class %s", fClassName.Data());
       return 0;
@@ -476,7 +478,7 @@ TObject *TKey::ReadObj()
 }
 
 //______________________________________________________________________________
-void TKey::Read(TObject *obj)
+Int_t TKey::Read(TObject *obj)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*To read an object from the file*-*-*-*-*-*-*-*-*
 //*-*                      ===============================
@@ -485,7 +487,7 @@ void TKey::Read(TObject *obj)
 //  default constructor.
 //
 
-   if (!obj) return;
+   if (!obj) return 0;
 
    fBufferRef = new TBuffer(TBuffer::kRead, fObjlen+fKeylen);
 
@@ -518,6 +520,7 @@ void TKey::Read(TObject *obj)
    fBufferRef = 0;
    fBuffer    = 0;
    gDirectory = cursav;
+   return fNbytes;
 }
 
 //______________________________________________________________________________
@@ -538,7 +541,7 @@ void TKey::ReadBuffer(char *&buffer)
    fClassName.ReadBuffer(buffer);
    fName.ReadBuffer(buffer);
    fTitle.ReadBuffer(buffer);
-   if (!gROOT->ReadingBasket()) {
+   if (!gROOT->ReadingObject()) {
       if (fSeekPdir != gDirectory->GetSeekDir()) gDirectory->AppendKey(this);
    }
 }
@@ -615,7 +618,7 @@ void TKey::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-void TKey::WriteFile(Int_t cycle)
+Int_t TKey::WriteFile(Int_t cycle)
 {
 //*-*-*-*-*-*-*-*-*-*-*Write the encoded object supported by this key*-*-*-*
 //*-*                  ==============================================
@@ -644,4 +647,5 @@ void TKey::WriteFile(Int_t cycle)
   }
 
   DeleteBuffer();
+  return nsize;
 }

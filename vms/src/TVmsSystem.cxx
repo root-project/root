@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name$:$Id$
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1198,15 +1198,14 @@ int TVmsSystem::AcceptConnection(int sock)
 }
 
 //______________________________________________________________________________
-void TVmsSystem::CloseConnection(int sock)
+void TVmsSystem::CloseConnection(int sock, Bool_t force)
 {
    // Close socket.
 
    if (sock < 0) return;
 
-#if !defined(R__AIX) || defined(_AIX41)
-   ::shutdown(sock, 2);
-#endif
+   if (force)
+      ::shutdown(sock, 2);
 
    while (::close(sock) == -1 && GetErrno() == EINTR)
       ResetErrno();

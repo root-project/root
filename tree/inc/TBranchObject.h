@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -41,7 +41,7 @@ public:
     virtual void    Browse(TBrowser *b);
     virtual Int_t   Fill();
     virtual Int_t   GetEntry(Int_t entry=0, Int_t getall = 0);
-    Bool_t          IsFolder();
+    Bool_t          IsFolder() const;
     virtual void    Print(Option_t *option="");
     virtual void    Reset(Option_t *option="");
     virtual void    SetAddress(void *addobj);

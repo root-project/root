@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name$:$Id$
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.5 2000/06/29 10:07:02 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -61,9 +61,28 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
 }
 
 //______________________________________________________________________________
-TH3::TH3(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins
-                                     ,Int_t nbinsz,Axis_t *zbins)
+TH3::TH3(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                           ,Int_t nbinsy,Float_t *ybins
+                                           ,Int_t nbinsz,Float_t *zbins)
+     :TH1(name,title,nbinsx,xbins),
+      TAtt3D()
+{
+//*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
+//*-*            =======================================================
+   fDimension   = 3;
+   if (nbinsy <= 0) nbinsy = 1;
+   if (nbinsz <= 0) nbinsz = 1;
+   if (ybins) fYaxis.Set(nbinsy,ybins);
+   else       fYaxis.Set(nbinsy,0,1);
+   if (zbins) fZaxis.Set(nbinsz,zbins);
+   else       fZaxis.Set(nbinsz,0,1);
+   fNcells      = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
+}
+
+//______________________________________________________________________________
+TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                           ,Int_t nbinsy,Double_t *ybins
+                                           ,Int_t nbinsz,Double_t *zbins)
      :TH1(name,title,nbinsx,xbins),
       TAtt3D()
 {
@@ -256,6 +275,9 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
 //     "N" means do not show the result of the fit
 //     "R" means fit the function in the specified function range
 //
+// Note that the generated histograms are added to the list of objects
+// in the current directory. It is the user's responsability to delete
+// these histograms.
 //
 //  Example: Assume a 3-d histogram h3
 //   Root > h3->FitSlicesZ(); produces 4 TH2D histograms
@@ -269,6 +291,9 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
 //          same as above, but only for bins 15 to 22 along X
 //          and only for cells in X,Y for which the corresponding projection
 //          along Z has more than cut bins filled.
+//
+//  NOTE: To access the generated histograms in the current directory, do eg:
+//     TH2D *h3_1 = (TH2D*)gDirectory->Get("h3_1");
 
    Int_t nbinsx  = fXaxis.GetNbins();
    Int_t nbinsy  = fYaxis.GetNbins();
@@ -448,6 +473,215 @@ Stat_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t b
    }
    return integral;
 }
+        
+//______________________________________________________________________________
+Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option)
+{
+//  Statistical test of compatibility in shape between
+//  THIS histogram and h2, using Kolmogorov test.
+//     Default: Ignore under- and overflow bins in comparison
+//
+//     option is a character string to specify options
+//         "U" include Underflows in test
+//         "O" include Overflows 
+//         "N" include comparison of normalizations
+//         "D" Put out a line of "Debug" printout
+//
+//   The returned function value is the probability of test
+//       (much less than one means NOT compatible)
+//
+//        WARNING !!!! THIS FUNCTION NOT YET TESTED
+//  I started from TH2::KolmogorovTest, but changes are probably required
+//  when invoking KolmogorovProb to take into account the 3rd dimension
+//  It would be nice if a mathematician could look into this.
+//
+//  Code adapted by Rene Brun from original HBOOK routine HDIFF
+
+   TString opt = option;
+   opt.ToUpper();
+   
+   Double_t prb = 0;
+   TH1 *h1 = this;
+   if (h2 == 0) return 0;
+   TAxis *xaxis1 = h1->GetXaxis();
+   TAxis *xaxis2 = h2->GetXaxis();
+   TAxis *yaxis1 = h1->GetYaxis();
+   TAxis *yaxis2 = h2->GetYaxis();
+   TAxis *zaxis1 = h1->GetZaxis();
+   TAxis *zaxis2 = h2->GetZaxis();
+   Int_t ncx1   = xaxis1->GetNbins();
+   Int_t ncx2   = xaxis2->GetNbins();
+   Int_t ncy1   = yaxis1->GetNbins();
+   Int_t ncy2   = yaxis2->GetNbins();
+   Int_t ncz1   = zaxis1->GetNbins();
+   Int_t ncz2   = zaxis2->GetNbins();
+
+     // Check consistency of dimensions
+   if (h1->GetDimension() != 3 || h2->GetDimension() != 3) {
+      Error("KolmogorovTest","Histograms must be 3-D\n");
+      return 0;
+   }
+
+     // Check consistency in number of channels
+   if (ncx1 != ncx2) {
+      Error("KolmogorovTest","Number of channels in X is different, %d and %d\n",ncx1,ncx2);
+      return 0;
+   }
+   if (ncy1 != ncy2) {
+      Error("KolmogorovTest","Number of channels in Y is different, %d and %d\n",ncy1,ncy2);
+      return 0;
+   }
+   if (ncz1 != ncz2) {
+      Error("KolmogorovTest","Number of channels in Z is different, %d and %d\n",ncz1,ncz2);
+      return 0;
+   }
+    
+     // Check consistency in channel edges
+   Bool_t afunc1 = kFALSE;
+   Bool_t afunc2 = kFALSE;
+   Double_t difprec = 1e-5;
+   Double_t diff1 = TMath::Abs(xaxis1->GetXmin() - xaxis2->GetXmin());
+   Double_t diff2 = TMath::Abs(xaxis1->GetXmax() - xaxis2->GetXmax());
+   if (diff1 > difprec || diff2 > difprec) {
+      Error("KolmogorovTest","histograms with different binning along X");
+      return 0;
+   }
+   diff1 = TMath::Abs(yaxis1->GetXmin() - yaxis2->GetXmin());
+   diff2 = TMath::Abs(yaxis1->GetXmax() - yaxis2->GetXmax());
+   if (diff1 > difprec || diff2 > difprec) {
+      Error("KolmogorovTest","histograms with different binning along Y");
+      return 0;
+   }
+   diff1 = TMath::Abs(zaxis1->GetXmin() - zaxis2->GetXmin());
+   diff2 = TMath::Abs(zaxis1->GetXmax() - zaxis2->GetXmax());
+   if (diff1 > difprec || diff2 > difprec) {
+      Error("KolmogorovTest","histograms with different binning along Z");
+      return 0;
+   }
+
+   //   Should we include Uflows, Oflows?
+   Int_t ibeg = 1, jbeg = 1, kbeg = 1;
+   Int_t iend = ncx1, jend = ncy1, kend = ncz1;
+   if (opt.Contains("U")) {ibeg = 0; jbeg = 0; kbeg = 0;}
+   if (opt.Contains("O")) {iend = ncx1+1; jend = ncy1+1; kend = ncz1+1;}
+   
+   Int_t i,j,k,bin;
+   Double_t hsav;
+   Double_t sum1  = 0;
+   Double_t tsum1 = 0;
+   for (i=0;i<=ncx1+1;i++) {
+      for (j=0;j<=ncy1+1;j++) {
+         for (k=0;k<=ncz1+1;k++) {
+            bin = h1->GetBin(i,j,k);
+            hsav = h1->GetBinContent(bin);
+            tsum1 += hsav;
+            if (i >= ibeg && i <= iend && j >= jbeg && j <= jend && k >= kbeg && k <= kend) sum1 += hsav;
+         }
+      }
+   }
+   Double_t sum2  = 0;
+   Double_t tsum2 = 0;
+   for (i=0;i<=ncx1+1;i++) {
+      for (j=0;j<=ncy1+1;j++) {
+         for (k=0;k<=ncz1+1;k++) {
+            bin = h1->GetBin(i,j,k);
+            hsav = h1->GetBinContent(bin);
+            tsum2 += hsav;
+            if (i >= ibeg && i <= iend && j >= jbeg && j <= jend&& k >= kbeg && k <= kend) sum2 += hsav;
+         }
+      }
+   }
+
+   //    Check that both scatterplots contain events
+   if (sum1 == 0) {
+      Error("KolmogorovTest","Integral is zero for h1=%s\n",h1->GetName());
+      return 0;
+   }
+   if (sum2 == 0) {
+      Error("KolmogorovTest","Integral is zero for h2=%s\n",h2->GetName());
+      return 0;
+   }
+
+   //    Check that scatterplots are not weighted or saturated
+   Double_t num1 = h1->GetEntries();
+   Double_t num2 = h2->GetEntries();
+   if (num1 != tsum1) {
+      Warning("KolmogorovTest","Saturation or weighted events for h1=%s, num1=%g, tsum1=%g\n",h1->GetName(),num1,tsum1);
+   }
+   if (num2 != tsum2) {
+      Warning("KolmogorovTest","Saturation or weighted events for h2=%s, num2=%g, tsum2=%g\n",h2->GetName(),num2,tsum2);
+   }
+
+   //   Find first Kolmogorov distance
+   Double_t s1 = 1/sum1;
+   Double_t s2 = 1/sum2;
+   Double_t dfmax = 0;
+   Double_t rsum1=0, rsum2=0;
+   for (i=ibeg;i<=iend;i++) {
+      for (j=jbeg;j<=jend;j++) {
+         for (k=kbeg;k<=kend;k++) {
+            bin = h1->GetBin(i,j,k);
+            rsum1 += s1*h1->GetBinContent(bin);
+            rsum2 += s2*h2->GetBinContent(bin);
+            dfmax  = TMath::Max(dfmax, TMath::Abs(rsum1-rsum2));
+         }
+      }
+   }
+
+   //   Find second Kolmogorov distance
+   Double_t dfmax2 = dfmax = 0;
+   rsum1=0, rsum2=0;
+   for (k=kbeg;k<=kend;k++) {
+      for (j=jbeg;j<=jend;j++) {
+         for (i=ibeg;i<=iend;i++) {
+            bin = h1->GetBin(i,j,k);
+            rsum1 += s1*h1->GetBinContent(bin);
+            rsum2 += s2*h2->GetBinContent(bin);
+            dfmax  = TMath::Max(dfmax, TMath::Abs(rsum1-rsum2));
+         }
+      }
+   }
+
+   //  Probably one should compute a third distance <======
+   
+   //    Get Kolmogorov probability
+   Double_t factnm;
+   if (afunc1)      factnm = dfmax*TMath::Sqrt(sum2);
+   else if (afunc2) factnm = dfmax*TMath::Sqrt(sum1);
+   else             factnm = TMath::Sqrt(sum1*sum2/(sum1+sum2));
+   Double_t z  = dfmax*factnm;
+   Double_t z2 = dfmax2*factnm;
+   
+   prb = TMath::KolmogorovProb(0.5*(z+z2)); //<==this should probably be updated
+
+   Double_t prb1=0, prb2=0;
+   Double_t resum1, resum2, chi2, d12;
+   if (opt.Contains("N")) { //Combine probabilities for shape and normalization,
+      prb1   = prb;
+      resum1 = sum1; if (afunc1) resum1 = 0;
+      resum2 = sum2; if (afunc2) resum2 = 0;
+      d12    = sum1-sum2;
+      chi2   = d12*d12/(resum1+resum2);
+      prb2   = TMath::Prob(chi2,1);
+      //     see Eadie et al., section 11.6.2
+      if (prb > 0 && prb2 > 0) prb = prb*prb2*(1-TMath::Log(prb*prb2));
+      else                     prb = 0;
+   }
+
+   //    debug printout
+   if (opt.Contains("D")) {
+      printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
+      printf(" Kolmo Prob  h2 = %s, sum2=%g\n",h2->GetName(),sum2);
+      printf(" Kolmo Probabil = %f, Max Dist = %g\n",prb,dfmax);
+      if (opt.Contains("N")) 
+      printf(" Kolmo Probabil = %f for shape alone, =%f for normalisation alone\n",prb1,prb2);
+   }
+      // This numerical error condition should never occur:
+   if (TMath::Abs(rsum1-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h1=%s\n",h1->GetName());
+   if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
+
+   return prb;
+}   
 
 //______________________________________________________________________________
 TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, Int_t iymax, Option_t *option)
@@ -480,7 +714,13 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax, Int_t iymin, 
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TH1D *h1 = new TH1D(pname,GetTitle(),nz,fZaxis.GetXmin(),fZaxis.GetXmax());
+  TH1D *h1;
+  TArrayD *bins = fZaxis.GetXbins();
+  if (bins->fN == 0) {
+     h1 = new TH1D(pname,GetTitle(),nz,fZaxis.GetXmin(),fZaxis.GetXmax());
+  } else {
+     h1 = new TH1D(pname,GetTitle(),nz,bins->fArray);
+  }
   Bool_t computeErrors = kFALSE;
   if (opt.Contains("e")) {h1->Sumw2(); computeErrors = kTRUE;}
   if (pname != name)  delete [] pname;
@@ -563,19 +803,35 @@ TH1 *TH3::Project3D(Option_t *option)
   nch = strlen(GetTitle()) +opt.Length() +2;
   char *title = new char[nch];
   sprintf(title,"%s_%s",GetTitle(),option);
+  TArrayD *bins;
   switch (pcase) {
      case 1:
-        h1 = new TH1D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
+        bins = fXaxis.GetXbins();
+        if (bins->fN == 0) {
+           h1 = new TH1D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
+        } else {
+           h1 = new TH1D(name,title,nx,&bins->fArray[ixmin-1]);
+        }
         break;
 
      case 2:
-        h1 = new TH1D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
+        bins = fYaxis.GetXbins();
+        if (bins->fN == 0) {
+           h1 = new TH1D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
+        } else {
+           h1 = new TH1D(name,title,ny,&bins->fArray[iymin-1]);
+        }
         break;
 
      case 3:
-        h1 = new TH1D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
+        bins = fZaxis.GetXbins();
+        if (bins->fN == 0) {
+           h1 = new TH1D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
+        } else {
+           h1 = new TH1D(name,title,nz,&bins->fArray[izmin-1]);
+        }
         break;
-
+          //variable bin size axis not supported yet for 2-d projections
      case 4:
         h2 = new TH2D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax)
                                 ,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
@@ -810,9 +1066,20 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins
-                                     ,Int_t nbinsz,Axis_t *zbins)
+TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins
+                                             ,Int_t nbinsz,Float_t *zbins)
+     :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
+{
+//*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
+//*-*            =======================================================
+   TArrayC::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins
+                                             ,Int_t nbinsz,Double_t *zbins)
      :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
 {
 //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
@@ -995,9 +1262,20 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins
-                                     ,Int_t nbinsz,Axis_t *zbins)
+TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins
+                                             ,Int_t nbinsz,Float_t *zbins)
+     :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
+{
+//*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
+//*-*            =======================================================
+   TArrayS::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins
+                                             ,Int_t nbinsz,Double_t *zbins)
      :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
 {
 //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
@@ -1180,9 +1458,20 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins
-                                     ,Int_t nbinsz,Axis_t *zbins)
+TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins
+                                             ,Int_t nbinsz,Float_t *zbins)
+     :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
+{
+//*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
+//*-*            =======================================================
+   TArrayF::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins
+                                             ,Int_t nbinsz,Double_t *zbins)
      :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
 {
 //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
@@ -1344,9 +1633,20 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xu
 }
 
 //______________________________________________________________________________
-TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Axis_t *xbins
-                                     ,Int_t nbinsy,Axis_t *ybins
-                                     ,Int_t nbinsz,Axis_t *zbins)
+TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
+                                             ,Int_t nbinsy,Float_t *ybins
+                                             ,Int_t nbinsz,Float_t *zbins)
+     :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
+{
+//*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
+//*-*            =======================================================
+   TArrayD::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,Double_t *xbins
+                                             ,Int_t nbinsy,Double_t *ybins
+                                             ,Int_t nbinsz,Double_t *zbins)
      :TH3(name,title,nbinsx,xbins,nbinsy,ybins,nbinsz,zbins)
 {
 //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
