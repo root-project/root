@@ -1,6 +1,7 @@
 
 Processing runreadGeo.C...
 Warning in <TGeoManager::dtor>: deleting geometry: aleph/aleph.C
+Warning in <TGeoManager::dtor>: deleting geometry: ams/ams.C
 Warning in <TGeoManager::dtor>: deleting geometry: Geometry/default geometry
 Warning in <TGeoManager::dtor>: deleting geometry: atlas/atlas.C
 Warning in <TGeoManager::dtor>: deleting geometry: brahms/brahms.C
@@ -15,12 +16,17 @@ Warning in <TGeoManager::dtor>: deleting geometry: VGM Root geometry/VGM Root ge
 Warning in <TGeoManager::dtor>: deleting geometry: phenix/phenix.C
 Warning in <TGeoManager::dtor>: deleting geometry: phobos/phobos.C
 Warning in <TGeoManager::dtor>: deleting geometry: tesla/tesla.C
-G__catchexception=0
 ### Geometry loaded from file...
 Top volume is ALEF. Master volume is ALEF
 ### Voxelization retrieved from file
 --- node ID tracking disabled
 ### 8177 nodes/ 227 volume UID's in aleph.C
+----------------modeler ready----------------
+### Geometry loaded from file...
+Top volume is AMSG. Master volume is AMSG
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 112777 nodes/ 1003 volume UID's in ams.C
 ----------------modeler ready----------------
 ### Geometry loaded from file...
 Top volume is ALIC. Master volume is ALIC

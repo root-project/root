@@ -1,6 +1,6 @@
 {
-   gROOT->ProcessLine(".exception");
   TGeoManager::Import("aleph.root");
+  TGeoManager::Import("ams.root");
   TGeoManager::Import("alice.root");
   TGeoManager::Import("atlas.root");
   TGeoManager::Import("brahms.root"); 
