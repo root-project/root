@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.7 2004/04/26 13:45:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.8 2004/04/26 14:22:36 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -957,7 +957,7 @@ TSpline5::TSpline5(const char *title,
   // Create the plynomial terms and fill
   // them with node information
   fPoly = new TSplinePoly5[fNp];
-  for (Int_t i=0; i<fNp-end; ++i) {
+  for (Int_t i=0; i<n; ++i) {
     fPoly[i+beg].X() = x[i];
     fPoly[i+beg].Y() = y[i];
   }
@@ -992,7 +992,7 @@ TSpline5::TSpline5(const char *title,
   // Create the plynomial terms and fill
   // them with node information
   fPoly = new TSplinePoly5[fNp];
-  for (Int_t i=0; i<fNp-end; ++i) {
+  for (Int_t i=0; i<n; ++i) {
     fPoly[i+beg].X() = fXmin+i*fDelta;
     fPoly[i+beg].Y() = y[i];
   }
@@ -1026,7 +1026,7 @@ TSpline5::TSpline5(const char *title,
   // Create the plynomial terms and fill
   // them with node information
   fPoly = new TSplinePoly5[fNp];
-  for (Int_t i=0; i<fNp-end; ++i) {
+  for (Int_t i=0; i<n; i++) {
     fPoly[i+beg].X() = x[i];
     fPoly[i+beg].Y() = ((TF1*)func)->Eval(x[i]);
   }
@@ -1061,7 +1061,7 @@ TSpline5::TSpline5(const char *title,
   // Create the plynomial terms and fill
   // them with node information
   fPoly = new TSplinePoly5[fNp];
-  for (Int_t i=0; i<fNp-end; ++i) {
+  for (Int_t i=0; i<n; ++i) {
     Double_t x=fXmin+i*fDelta;
     fPoly[i+beg].X() = x;
     fPoly[i+beg].Y() = ((TF1*)func)->Eval(x);
@@ -1096,7 +1096,7 @@ TSpline5::TSpline5(const char *title,
   // Create the plynomial terms and fill
   // them with node information
   fPoly = new TSplinePoly5[fNp];
-  for (Int_t i=0; i<fNp-end; ++i) {
+  for (Int_t i=0; i<fNp-beg; ++i) {
     Double_t xx, yy;
     g->GetPoint(i,xx,yy);
     fPoly[i+beg].X()=xx;
