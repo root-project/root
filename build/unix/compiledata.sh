@@ -39,12 +39,12 @@ echo "Running $COMPILEDATA"
 echo "/* This is file is automatically generated */" > __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
-if [ "$CUSTOMSHARED" == "" ]; then 
+if [ "$CUSTOMSHARED" = "" ]; then 
    echo "#define MAKESHAREDLIB  \"$CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS -o \$SharedLib\"" >> __compiledata
 else
    echo "#defined MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi
-if [ "$CUSTOMEXE" == "" ]; then 
+if [ "$CUSTOMEXE" = "" ]; then 
    echo "#define MAKEEXE \"$CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles; $CXX \$ObjectFiles $LDFLAGS -o \$ExeName \$LinkedLibs $SYSLIBS\""  >> __compiledata
 else 
    echo "#define MAKEEXE \"$CUSTOMEXE\"" >> __compiledata
