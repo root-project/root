@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.27 2004/04/26 16:45:38 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.28 2004/10/15 16:55:06 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -75,7 +75,7 @@
 #pragma link C++ struct FileStat_t;
 #pragma link C++ struct UserGroup_t;
 
-#pragma link C++ class TMath;
+#pragma link C++ namespace TMath;
 #pragma link C++ class TComplex+;
 #pragma link C++ class TExec+;
 #pragma link C++ class TFolder+;
