@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.2 2000/07/11 18:03:23 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.3 2000/07/12 17:56:30 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -377,7 +377,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
 
    fTestButton = new TGTextButton(fStatusFrame, "&Open editor...", 150);
    fTestButton->Associate(this);
-   fTestButton->SetToolTipText("Pops up dialog tester");
+   fTestButton->SetToolTipText("Pops up editor");
    fStatusFrame->AddFrame(fTestButton, new TGLayoutHints(kLHintsTop |
                           kLHintsLeft, 2, 0, 2, 2));
    fTestText = new TGTextEntry(fStatusFrame, new TGTextBuffer(100));
