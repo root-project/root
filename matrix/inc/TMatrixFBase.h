@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.15 2004/06/22 19:57:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.16 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -39,10 +39,8 @@
 #ifndef ROOT_TMath
 #include "TMath.h"
 #endif
-#ifndef ROOT_TMatrixDBase
-#include "TMatrixDBase.h"
-#endif
 
+class TMatrixDBase;
 class TVectorF;
 class TElementActionF;
 class TElementPosActionF;

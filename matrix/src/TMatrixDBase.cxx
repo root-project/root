@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.14 2004/06/22 19:57:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.cxx,v 1.15 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -199,6 +199,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrixDBase.h"
+#include "TMatrixFBase.h"
 #include "TVectorD.h"
 
 ClassImp(TMatrixDBase)
