@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.5 2000/11/22 15:47:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.6 2000/11/22 20:57:27 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -608,7 +608,8 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
       if (strstr(include,"include/")) fprintf(fp,"#include \"%s\n",include+9);
       else                            fprintf(fp,"#include %s\n",include);
    }
-   ldata++; // totake into account the semi colon
+   ltype += 2;
+   ldata++; // to take into account the semi colon
    if (ninc == 0) fprintf(fp,"#include \"TNamed.h\"\n");
       
    // generate class statement with base classes
