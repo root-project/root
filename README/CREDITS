@@ -122,7 +122,7 @@ N: Kirill Filimonov
 E: KVFilimonov@lbl.gov
 D: modified Struve functions in TMath
 
-N
+N: Frank Filthaut
 E: filthaut@hef.kun.nl
 D: contribution of TFractionFitter class
 
@@ -154,6 +154,10 @@ D: CINT C/C++ interpreter
 N: Oleksandr Grebenyuk
 E: Oleksandr.Grebenyuk@gsi.de
 D: OpenLDAP interface
+
+N: Kristjan Gulbrandsen 
+E: gulbrand@mit.edu
+D: monitoring facility for PROOF
 
 N: Andrew Haas
 E: haas@yahoo.com
