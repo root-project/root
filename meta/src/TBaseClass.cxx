@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.5 2000/12/18 20:09:00 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.6 2001/12/18 08:47:23 brun Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -39,7 +39,7 @@ TBaseClass::TBaseClass(G__BaseClassInfo *info, TClass *cl) : TDictionary()
    fInfo     = info;
    fClass    = cl;
    fClassPtr = 0;
-   fName = fInfo->Fullname();
+   if (fInfo) fName = fInfo->Fullname();
 }
 
 //______________________________________________________________________________
