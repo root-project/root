@@ -1,7 +1,7 @@
 {
   TFile f("Event.root");
-  gROOT->ProcessLine(".L ./libEvent.so");
-
+  gSystem->Load("./libEvent"); 
+  
   T.Show(5); //ok
   T.Scan("fTemperature"); //ok
 }

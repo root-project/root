@@ -1,5 +1,5 @@
 {
-  gROOT->ProcessLine(".L ./libEvent.so");
+  gSystem->Load("./libEvent"); 
   TFile f("Event.root");
 
   T.Show(5); //ok

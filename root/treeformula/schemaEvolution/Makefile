@@ -35,8 +35,10 @@ EVENT2SO      = libEvent_2.$(DllSuf)
 EVENT         = Event$(ExeSuf)
 ifeq ($(ARCH),win32)
 EVENTLIB      = libEvent.lib
+EVENT2LIB     = libEvent_2.lib
 else
 EVENTLIB      = $(EVENTSO)
+EVENT2LIB     = $(EVENT2SO)
 endif
 
 schemaRun.ref: schemaRun1.C Event.root 
@@ -126,7 +128,7 @@ else
 ifeq ($(ARCH),win32)
 		$(CMDECHO)bindexplib $* $^ > $*.def
 		$(CMDECHO)lib -nologo -MACHINE:IX86 $^ -def:$*.def \
-		   $(OutPutOpt)$(EVENTLIB)
+		   $(OutPutOpt)$(EVENT2LIB)
 		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
 		   $(OutPutOpt)$@
 else

@@ -1,5 +1,5 @@
 {
-  gROOT->ProcessLine(".L ./libEvent_2.so");
+  gSystem->Load("./libEvent_2"); 
   TFile f("Event.root");
   Event * e =0;
   T->SetBranchAddress("event",&e);
