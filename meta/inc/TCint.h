@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.19 2004/05/17 12:15:17 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.20 2004/05/28 18:13:12 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -70,6 +70,7 @@ public:
    virtual ~TCint();
 
    void    AddIncludePath(const char *path);
+   Int_t   AutoLoad(const char *classname);
    void    ClearFileBusy();
    void    ClearStack(); // Delete existing temporary values
    void    EnableAutoLoading();

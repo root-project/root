@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.126 2004/06/22 18:47:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.127 2004/07/14 11:45:20 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1383,6 +1383,10 @@ TClass *TROOT::LoadClass(const char *classname) const
       TString clname(classname);
       (dict)();
       return GetClass(clname.Data());
+   }
+
+   if (gInterpreter->AutoLoad(classname)) {
+      return GetClass(classname);
    }
 
    TIter next(fClassGenerators);

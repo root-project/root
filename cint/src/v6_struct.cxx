@@ -388,6 +388,17 @@ static int G__enable_autoloading=1;
 int (*G__p_class_autoloading) G__P((char*,char*));
 
 /************************************************************************
+* G__set_class_autloading
+************************************************************************/
+int G__set_class_autoloading(newvalue)
+int newvalue;
+{  
+   int oldvalue =  G__enable_autoloading;
+   G__enable_autoloading = newvalue;
+   return oldvalue;
+}
+
+/************************************************************************
 * G__set_class_autoloading_callback
 ************************************************************************/
 void G__set_class_autoloading_callback(p2f)

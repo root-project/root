@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.88 2004/05/17 12:15:17 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.89 2004/05/28 18:13:12 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -993,12 +993,55 @@ Int_t TCint::LoadLibraryMap()
 }
 
 //______________________________________________________________________________
-int TCint::AutoLoadCallback(const char *cls, const char *lib)
+Int_t TCint::AutoLoad(const char *cls)
 {
    // Load library containing specified class. Returns 0 in case of error
    // and 1 in case if success.
 
-   if (!gROOT || !gInterpreter) return 0;
+   Int_t status = 0;
+
+   if (!gROOT || !gInterpreter) return status;
+
+   // Prevent the recursion when the library dictionary are loaded.
+   Int_t oldvalue = G__set_class_autoloading(0);
+
+   // lookup class to find list of dependent libraries
+   TString deplibs = gInterpreter->GetClassSharedLibs(cls);
+   if (!deplibs.IsNull()) {
+      TString delim(" ");
+      TObjArray *tokens = deplibs.Tokenize(delim);
+      for (Int_t i = tokens->GetEntries()-1; i > 0; i--) {
+         const char *deplib = ((TObjString*)tokens->At(i))->GetName();
+         gROOT->LoadClass(cls, deplib);
+         if (gDebug > 0)
+            ::Info("TCint::AutoLoad", "loaded dependent library %s for class %s",
+                   deplib, cls);
+      }
+      const char *lib = ((TObjString*)tokens->At(0))->GetName();
+
+      if (gROOT->LoadClass(cls, lib) == 0) {
+         if (gDebug > 0)
+            ::Info("TCint::AutoLoad", "loaded library %s for class %s",
+                   lib, cls);
+         status = 1;
+      } else
+         ::Error("TCint::AutoLoad", "failure loading library %s for class %s",
+                 lib, cls);
+
+      delete tokens;
+   }
+
+   G__set_class_autoloading(oldvalue);
+   return status;
+}
+
+//______________________________________________________________________________
+Int_t TCint::AutoLoadCallback(const char *cls, const char *lib)
+{
+   // Load library containing specified class. Returns 0 in case of error
+   // and 1 in case if success.
+
+   if (!gROOT || !gInterpreter || !cls || !lib) return 0;
 
    // calls to load libCore might come in the very beginning when libCore
    // dictionary is not fully loaded yet, ignore it since libCore is always

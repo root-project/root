@@ -1852,6 +1852,7 @@ extern G__EXPORT void G__set_autoloading G__P((int (*p2f) G__P((char*))));
 #ifndef G__OLDIMPLEMENTATION2014
 extern G__EXPORT void G__set_class_autoloading_callback G__P((int (*p2f) G__P((char*,char*))));
 extern G__EXPORT void G__set_class_autoloading_table G__P((char* classname,char* libname));
+extern G__EXPORT int G__set_class_autoloading G__P((int newvalue));
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1210

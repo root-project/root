@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.18 2004/05/17 12:15:17 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.19 2004/05/28 18:13:12 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -61,6 +61,7 @@ public:
    virtual ~TInterpreter() { }
 
    virtual void     AddIncludePath(const char *path) = 0;
+   virtual Int_t    AutoLoad(const char *classname) = 0;
    virtual void     ClearFileBusy() = 0;
    virtual void     ClearStack() = 0; // Delete existing temporary values
    virtual void     EnableAutoLoading() = 0;
