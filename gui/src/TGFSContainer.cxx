@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.23 2004/10/15 17:44:20 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.24 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -421,7 +421,11 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
 {
    // Determine the file picture for the given file type.
 
-   *pic = fClient->GetMimeTypeList()->GetIcon(name, small);
+   if (R_ISREG(file_type))
+      *pic = fClient->GetMimeTypeList()->GetIcon(name, small);
+   else 
+      *pic = 0;
+
    if (*pic == 0) {
       *pic = small ? fDoc_t : fDoc_s;
       if (R_ISREG(file_type) && (file_type) & kS_IXUSR)
