@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.78 2005/02/23 15:09:01 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.79 2005/02/25 14:22:51 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -133,7 +133,7 @@ public:
   Double_t getLogVal(const RooArgSet* set=0) const ;
 
   Double_t getNorm(const RooArgSet& nset) const { return getNorm(&nset) ; }
-  Double_t getNorm(const RooArgSet* set=0) const ;
+  virtual Double_t getNorm(const RooArgSet* set=0) const ;
 
   virtual void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value, Bool_t allNodes=kFALSE) ;
