@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.37 2003/01/27 13:16:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.38 2003/01/27 18:04:47 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -484,7 +484,7 @@ void TGeoManager::Init()
    fStep = 0;
    fBits = new UChar_t[50000]; // max 25000 nodes per volume
    fMaterials = new THashList(200,3);
-   fMatrices = new THashList(200,3);
+   fMatrices = new TList();
    fNodes = new TObjArray(30);
    fNNodes = 0;
    fLevel = 0;

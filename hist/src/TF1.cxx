@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.53 2003/01/15 21:45:39 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.54 2003/01/16 11:23:03 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -850,6 +850,31 @@ TH1 *TF1::GetHistogram() const
    gPad->Update();
    return fHistogram;
 }
+
+//______________________________________________________________________________
+Double_t TF1::GetMaximumX(Double_t xmin, Double_t xmax) const
+{
+// return the X value corresponding to the maximum value of the function
+// Method:
+//   the function is computed at fNpx points between xmin and xmax
+//   xxmax is the X value corresponding to the maximum function value
+//   An iterative procedure computes the minimum around xxmax
+//   until dx is less than 1e-9 *(fXmax-fXmin)
+      
+   Double_t x,y;
+   if (xmin >= xmax) {xmin = fXmin; xmax = fXmax;}
+   Double_t dx = (xmax-xmin)/fNpx;
+   Double_t xxmax = xmin;
+   Double_t yymax = ((TF1*)this)->Eval(xmin+dx);
+   for (Int_t i=0;i<fNpx;i++) {
+      x = xmin + (i+0.5)*dx;
+      y = ((TF1*)this)->Eval(x);
+      if (y > yymax) {xxmax = x; yymax = y;}
+   }
+   if (dx < 1.e-9*(fXmax-fXmin)) return TMath::Min(xmax,xxmax);
+   else return GetMaximumX(TMath::Max(xmin,xxmax-dx), TMath::Min(xmax,xxmax+dx));
+}
+
 //______________________________________________________________________________
 Int_t TF1::GetNDF() const
 {
