@@ -32,27 +32,33 @@ void MergeRootfile( TDirectory *target, TList *sourcelist );
 int main( int argc, char **argv ) {
 
   if ( argc < 4 || "-h" == string(argv[1]) || "--help" == string(argv[1]) ) {
-    cout << "Usage: " << argv[0] << " targetfile source1 source2 [source3 ...]" << endl;
+    cout << "Usage: " << argv[0] << " [-f] [-T] targetfile source1 source2 [source3 ...]" << endl;
     cout << "This program will add histograms from a list of root files and write them" << endl;
-    cout << "to a target root file. The target file is newly created and must not be" << endl;
-    cout << "identical to one of the source files." << endl;
+    cout << "to a target root file. The target file is newly created and must not " << endl;
+    cout << "exist, or if -f (\"force\") is given, must not be one of the source files." << endl;
     cout << "Supply at least two source files for this to make sense... ;-)" << endl;
     cout << "If the first argument is -T, Trees are not merged" <<endl;
     return 1;
   }
-   FileList = new TList();
+  FileList = new TList();
 
-  noTrees = kFALSE;
+  Bool_t force = (!strcmp(argv[1],"-f") || !strcmp(argv[2],"-f"));
+  noTrees = (!strcmp(argv[1],"-T") || !strcmp(argv[2],"-T"));
+
   int ffirst = 2;
-  if ("-T" == string(argv[1])) {
-     noTrees = kTRUE;
-     ffirst = 3;
-  }
+  if (force) ffirst++;
+  if (noTrees) ffirst++;
+
   cout << "Target file: " << argv[ffirst-1] << endl;
-  Target = TFile::Open( argv[ffirst-1], "RECREATE" );
+  Target = TFile::Open( argv[ffirst-1], (force?"RECREATE":"CREATE") );
+  if (!Target || Target->IsZombie()) {
+     cerr << "Error opening target file (does " << argv[ffirst-1] << " exist?)." << endl;
+     cerr << "Pass \"-f\" argument to force re-creation of output file." << endl;
+     exit(1);
+  }
 
   for ( int i = ffirst; i < argc; i++ ) {
-    cout << "Source file " << i-1 << ": " << argv[i] << endl;
+    cout << "Source file " << i-ffirst+1 << ": " << argv[i] << endl;
     Source = TFile::Open( argv[i] );
     FileList->Add(Source);
   }
@@ -88,11 +94,12 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
     first_source->cd( path );
     TObject *obj = key->ReadObj();
 
-    if ( obj->IsA()->InheritsFrom( "TH1" ) ) {
+    if ( obj->IsA()->InheritsFrom( TH1::Class() ) ) {
       // descendant of TH1 -> merge it
 
       //      cout << "Merging histogram " << obj->GetName() << endl;
       TH1 *h1 = (TH1*)obj;
+      TList listH;
 
       // loop over all source files and add the content of the
       // correspondant histogram to the one pointed to by "h1"
@@ -103,9 +110,9 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
         nextsource->cd( path );
         TKey *key2 = (TKey*)gDirectory->GetListOfKeys()->FindObject(h1->GetName());
         if (key2) {
-           TH1 *h2 = (TH1*)key2->ReadObj();
-           h1->Add( h2 );
-           delete h2;
+           listH.Add( key2->ReadObj() );
+           h1->Merge(&listH);
+           listH.Clear();
         }
 
         nextsource = (TFile*)sourcelist->After( nextsource );
