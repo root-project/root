@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.1 2001/05/07 06:14:54 verkerke Exp $
+ *    File: $Id: RooUnblindCPAsymVar.rdl,v 1.2 2001/05/14 05:25:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -50,7 +50,7 @@ protected:
   RooRealProxy _asym ;
   RooBlindTools _blindEngine ;
 
-  ClassDef(RooUnblindCPAsymVar,1) // a real-valued variable and its value
+  ClassDef(RooUnblindCPAsymVar,1) // CP-Asymmetry unblinding transformation
 };
 
 #endif

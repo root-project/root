@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.1 2001/05/07 06:14:54 verkerke Exp $
+ *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.2 2001/05/14 05:25:05 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -60,7 +60,7 @@ protected:
   RooCategoryProxy _state ;
   RooBlindTools _blindEngine ;
 
-  ClassDef(RooUnblindCPDeltaTVar,1) // a real-valued variable and its value
+  ClassDef(RooUnblindCPDeltaTVar,1) // CP-Deltat unblinding transformation
 };
 
 #endif

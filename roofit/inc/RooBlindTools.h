@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooBlindTools.rdl,v 1.1 2001/03/29 01:06:43 verkerke Exp $
+ *    File: $Id: RooBlindTools.rdl,v 1.1 2001/05/07 06:14:53 verkerke Exp $
  * Authors:
  *   AR, Aaron Roodman, Stanford University, roodman@slac.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -117,7 +117,7 @@ private:
 protected:
 
     // Helper functions
-  ClassDef(RooBlindTools,1)
+  ClassDef(RooBlindTools,1) // Root implementation of BlindTools
 };
 
 #endif 
