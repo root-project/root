@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.97 2004/12/11 08:26:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.98 2005/01/12 07:50:03 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -857,27 +857,31 @@ Long64_t TChain::LoadTree(Long64_t entry)
       if (!element) return -4;
    }
    fFile = TFile::Open(element->GetTitle());
+   // ----- Begin of modifications by MvL
+   Int_t returnCode=0;
+
    if (!fFile || fFile->IsZombie()) {
       delete fFile; fFile = 0;
-      return -3;
-   }
+      fTree=0;
+      returnCode=-3;
+   } else {
+      if (fMaxCacheSize > 0)
+         fFile->UseCache(fMaxCacheSize, fPageSize);
 
-   if (fMaxCacheSize > 0)
-      fFile->UseCache(fMaxCacheSize, fPageSize);
+      fTree = (TTree*)fFile->Get(element->GetName());
 
-   fTree = (TTree*)fFile->Get(element->GetName());
-
-   if (fTree==0) {
-      // Now that we do not check during the addition, we need to check here!
-      Error("LoadTree","cannot find tree with name %s in file %s",
+      if (fTree==0) {
+         // Now that we do not check during the addition, we need to check here!
+         Error("LoadTree","cannot find tree with name %s in file %s",
             element->GetName(),element->GetTitle());
 
-      delete fFile; fFile = 0;
+         delete fFile; fFile = 0;
 
-      // We do not return yet so that 'fEntries' can be updated with the
-      // sum of the entries of all the other trees.
+         // We do not return yet so that 'fEntries' can be updated with the
+         // sum of the entries of all the other trees.
+         returnCode=-4;
+      }
    }
-
    fTreeNumber = t;
    fDirectory = fFile;
 
@@ -899,8 +903,9 @@ Long64_t TChain::LoadTree(Long64_t entry)
       // we need to make sure that we do not use fTree
 
       fTreeNumber = -1;       // Force a reload of the tree next time.
-      return -4;
+      return returnCode;
    }
+   // ----- End of modifications by MvL
 
    // Since some of the friend of this chain might a simple tree (i.e. not a chain),
    // we need to execute this before the calling LoadTree(entry) on the friend (so
@@ -1207,7 +1212,7 @@ void TChain::SetBranchAddress(const char *bname, void *add)
 // IMPORTANT REMARK:
 // In case TChain::SetBranchStatus is called, it must be called
 // BEFORE calling this function.
-   
+
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its address
    TChainElement *element = (TChainElement*)fStatus->FindObject(bname);
@@ -1244,7 +1249,7 @@ void TChain::SetBranchAddress(const char *bname, void *add)
 }
 
 //_______________________________________________________________________
-void TChain::SetBranchAddress(const char *bname,void *add, 
+void TChain::SetBranchAddress(const char *bname,void *add,
                               TClass *realClass, EDataType datatype,
                               Bool_t ptr)
 {
