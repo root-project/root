@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.81 2005/02/08 22:45:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.82 2005/02/18 14:27:33 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1492,6 +1492,12 @@ void TProofServ::RedirectOutput()
 
    if ((fLogFile = fopen(logfile, "r")) == 0)
       SysError("RedirectOutput", "could not open logfile");
+
+   // from this point on stdout and stderr are properly redirected
+   if (fProtocol < 4 && fWorkDir != kPROOF_WorkDir) {
+      Warning("RedirectOutput", "no way to tell master (or client) where"
+              " to upload packages");
+   }
 }
 
 //______________________________________________________________________________
@@ -2020,11 +2026,6 @@ void TProofServ::Setup()
       } else {
          gSystem->Setenv("PROOF_SANDBOX", fSessionDir);
       }
-   }
-
-   if (fProtocol < 4 && fWorkDir != kPROOF_WorkDir) {
-      Warning("Setup", "no way to tell master (or client) where"
-              " to upload packages");
    }
 
    // Incoming OOB should generate a SIGURG
