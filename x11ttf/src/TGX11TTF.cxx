@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.2 2000/06/05 07:31:22 brun Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.3 2000/12/13 16:28:49 brun Exp $
 // Author: Fons Rademakers   21/11/98
 
 /*************************************************************************
@@ -16,8 +16,8 @@
 // Interface to low level X11 (Xlib). This class gives access to basic  //
 // X11 graphics via the parent class TGX11. However, all text and font  //
 // handling is done via the Freetype TrueType library. When the         //
-// shared library containing this class is loaded the global gVirtualX is    //
-// redirected to point to this class.                                   //
+// shared library containing this class is loaded the global gVirtualX  //
+// is redirected to point to this class.                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -45,9 +45,9 @@ const Float_t kScale = 0.7;
 //                                                                      //
 // TTFInit                                                              //
 //                                                                      //
-// Small utility class that takes care of switching the current gVirtualX    //
-// to the new TGX11TTF class as soon as the shared library containing   //
-// this class is loaded.                                                //
+// Small utility class that takes care of switching the current         //
+// gVirtualX to the new TGX11TTF class as soon as the shared library    //
+// containing this class is loaded.                                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -268,7 +268,7 @@ void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
       return;
    }
 
-   
+
    if (!text || !*text) return;
 
    // angles are between 0<=angle<360 degrees
