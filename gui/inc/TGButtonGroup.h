@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.2 2000/10/20 12:18:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.3 2000/10/22 19:28:58 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -78,7 +78,8 @@ public:
    void SetRadioButtonExclusive(Bool_t flag = kTRUE);
    void SetBorderDrawn(Bool_t enable = kTRUE);
    void SetButton(Int_t id, Bool_t down = kTRUE);
-   void SetTitle(const char *title = "");
+   void SetTitle(TGString *title);
+   void SetTitle(const char *title);
 
    Int_t     Insert(TGButton *button, int id = -1);
    void      Remove(TGButton *button);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.3 2000/10/20 12:18:06 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.4 2000/10/22 19:28:58 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -404,17 +404,36 @@ void TGButtonGroup::Hide()
 }
 
 //______________________________________________________________________________
-void TGButtonGroup::SetTitle(const char* title)
+void TGButtonGroup::SetTitle(TGString *title)
 {
    // Set or change title.
 
-   if (strcmp(fText->GetString(),title)) {
-      SetBorderDrawn(title && strlen(title));
+   if (!title) {
+      Error("SetTitle", "title cannot be 0, try \"\"");
+      return;
+   }
 
-      delete fText;
-      fText = new TGString(title);
+   if (strcmp(fText->GetString(), title->GetString())) {
+      SetBorderDrawn(title->GetLength() ? kTRUE : kFALSE);
+      TGGroupFrame::SetTitle(title);
       ChangedBy("SetTitle");
-      fClient->NeedRedraw(this);
+   }
+}
+
+//______________________________________________________________________________
+void TGButtonGroup::SetTitle(const char *title)
+{
+   // Set or change title.
+
+   if (!title) {
+      Error("SetTitle", "title cannot be 0, try \"\"");
+      return;
+   }
+
+   if (strcmp(fText->GetString(), title)) {
+      SetBorderDrawn(title && strlen(title));
+      TGGroupFrame::SetTitle(title);
+      ChangedBy("SetTitle");
    }
 }
 
