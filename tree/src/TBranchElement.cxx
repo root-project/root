@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.89 2002/07/11 19:46:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.90 2002/07/19 22:52:49 rdm Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1426,17 +1426,16 @@ void TBranchElement::SetAddress(void *add)
       TStreamerInfo *binfo = clparent->GetStreamerInfo();
       //if sub-branch is a class deriving from the class of this branch
       //or a member of the class, one must add the base class offset
-//printf("i=%d, clm=%s,clparent=%s, branch=%s, fType=%d, binfo=%s\n",i,clm->GetName(),clparent->GetName(),branch->GetName(),fType,binfo->GetName());
+//printf("i=%d, clm=%s,clparent=%s, branch=%s, fType=%d, nb2=%d, binfo=%s, uuoff=%d\n",i,clm->GetName(),clparent->GetName(),branch->GetName(),fType,nb2,binfo->GetName(),binfo->GetOffsets()[id]);
 
-         if (clparent != clm) {
+      if (clparent != clm) {
          char pname[kMaxLen];
          strcpy(pname,branch->GetName());
-         char *clast = (char*)strrchr(pname,'.');
+         const char *clast = strchr(pname,'.');
          if (clast) {
-            *clast = 0;
-            char *clast2 = (char*)strrchr(pname,'.');
-            if (clast2) binfo->GetStreamerElement(clast2+1,mOffset);
-            if (fType == 2 && !clparent->GetBaseClass(clm)) memberOffset = mOffset;
+            TRealData *rd = (TRealData*)clparent->GetListOfRealData()->FindObject(clast+1);
+            if (rd) mOffset = rd->GetThisOffset();
+            if (fType == 2 && !clparent->GetBaseClass(clm)) memberOffset = mOffset - binfo->GetOffsets()[id];
             if (fType == 1) {
                binfo->GetStreamerElement(pname,memberOffset);
             }
@@ -1448,6 +1447,7 @@ void TBranchElement::SetAddress(void *add)
             }
          }
       }
+
       if (nb2 > 0) {
          TStreamerInfo *info = branch->GetInfo();
          if (info) {
