@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.50 2001/07/03 15:38:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.51 2001/07/04 10:40:53 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -55,7 +55,7 @@ TBranchElement::TBranchElement(): TBranch()
 
 
 //______________________________________________________________________________
-TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id, char *pointer, Int_t basketsize, Int_t splitlevel, Int_t compress)
+TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id, char *pointer, Int_t basketsize, Int_t splitlevel, Int_t btype)
     :TBranch()
 {
 // Create a BranchElement
@@ -63,6 +63,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
 // If splitlevel > 0 this branch in turn is split into sub branches
 
 //printf("BranchElement, bname=%s, sinfo=%s, id=%d, splitlevel=%d\n",bname,sinfo->GetName(),id,splitlevel);
+   
    char name[kMaxLen];
    strcpy(name,bname);
 
@@ -119,12 +120,15 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fDirectory  = fTree->GetDirectory();
    fFileName   = "";
    fClassName = sinfo->GetName();
-//printf("Building Branch=%s, class=%s, info=%s, version=%d, id=%d\n",bname,cl->GetName(),sinfo->GetName(),fClassVersion,id);
-   fCompress = compress;
-   if (compress == -1 && gTree->GetDirectory()) {
+//printf("Building Branch=%s, class=%s, info=%s, version=%d, id=%d, fStreamerType=%d, btype=%d\n",bname,cl->GetName(),sinfo->GetName(),fClassVersion,id,fStreamerType,btype);
+   fCompress = -1;
+   if (gTree->GetDirectory()) {
       TFile *bfile = gTree->GetDirectory()->GetFile();
       if (bfile) fCompress = bfile->GetCompressionLevel();
    }
+   //change defaults set in TBranch constructor
+   fEntryOffsetLen = 0;
+   if (btype || fStreamerType > 15) fEntryOffsetLen = 1000; 
    if (basketsize < 100) basketsize = 100;
    fBasketSize     = basketsize;
    fBasketEntry    = new Int_t[fMaxBaskets];
@@ -247,7 +251,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    fNleaves = 1;
    fLeaves.Add(leaf);
    gTree->GetListOfLeaves()->Add(leaf);
-   if (brcount) SetBranchCount(brcount);
+   if (brcount) SetBranchCount(brcount); 
 }
 
 //______________________________________________________________________________
@@ -282,6 +286,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
       TFile *bfile = fTree->GetDirectory()->GetFile();
       if (bfile) fCompress = bfile->GetCompressionLevel();
    }
+
    if (basketsize < 100) basketsize = 100;
    fBasketSize     = basketsize;
    fBasketEntry    = new Int_t[fMaxBaskets];
@@ -1098,7 +1103,7 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
 //printf("Unrolling base class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
          unroll = Unroll(name,cltop,clbase,basketsize,splitlevel-1,btype);
          if (unroll < 0) {
-            branch = new TBranchElement(branchname,info,jd,0,basketsize,0);
+            branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
             branch->SetParentName(cltop->GetName());
             fBranches.Add(branch);
          }
@@ -1115,13 +1120,13 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
 //printf("Unrolling object class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
             unroll = Unroll(branchname,cltop,clbase,basketsize,splitlevel-1,btype);
             if (unroll < 0) {
-               branch = new TBranchElement(branchname,info,jd,0,basketsize,0);
+               branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
                branch->SetParentName(cltop->GetName());
                fBranches.Add(branch);
             }
          } else {
 //printf("Making branch: %s, jd=%d, info=%s\n",branchname,jd,info->GetName());
-            branch = new TBranchElement(branchname,info,jd,0,basketsize,0);
+            branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
             branch->SetParentName(cltop->GetName());
             branch->SetType(btype);
             fBranches.Add(branch);

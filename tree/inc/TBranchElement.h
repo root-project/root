@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.18 2001/05/25 09:44:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.19 2001/05/31 08:56:32 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -49,7 +49,7 @@ protected:
     
 public:
     TBranchElement();
-    TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id, char *pointer, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
+    TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id, char *pointer, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t btype=0);
     TBranchElement(const char *name, TClonesArray *clones, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
     virtual ~TBranchElement();
 
