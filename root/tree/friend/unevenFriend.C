@@ -1,10 +1,10 @@
 {
 
 TChain *chain = new TChain ("Global");
-chain->Add("d0_analyze1.root");    
-chain->Add("d0_analyze.root");        
+chain->Add("short0.root");
+chain->Add("short1.root");
 TChain *friend = new TChain ("Global");
-friend->Add("wtaunu.root");                             
+friend->Add("long.root");                             
 
 //chain->Draw("TrigL1CJT[0]","",""); // that works
 //chain->Draw("TrigL1CJT[0]","TrigL1CJT[0]==1",""); //doen't work
