@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name$:$Id$
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -33,6 +33,9 @@ public:
 
   TVector3(const TVector3 &);
   // The copy constructor.
+
+  virtual ~TVector3();
+  // Destructor
 
   Double_t operator () (int) const;
   inline Double_t operator [] (int) const;

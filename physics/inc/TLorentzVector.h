@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name$:$Id$
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************
@@ -67,6 +67,9 @@ public:
 
   TLorentzVector(const TLorentzVector & lorentzvector);
   // Copy constructor.
+
+  virtual ~TLorentzVector();
+  // Destructor
 
   // inline operator TVector3 () const;
   // inline operator TVector3 & ();
