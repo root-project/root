@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.27 2002/06/30 13:43:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.28 2002/07/09 21:08:30 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1264,7 +1264,9 @@ void TDirectory::Streamer(TBuffer &b)
       b >> fSeekDir;
       b >> fSeekParent;
       b >> fSeekKeys;
-      if (v > 1) {
+      if (v == 2) {
+         fUUID.StreamerV1(b);
+      } else if (v > 2) {
          fUUID.Streamer(b);
       }
       gROOT->GetUUIDs()->AddUUID(fUUID,this);

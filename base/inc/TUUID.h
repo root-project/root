@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.5 2002/07/09 21:10:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.6 2002/07/11 21:46:22 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -39,9 +39,12 @@
 
 // forward declaration
 class TBuffer;
+class TDirectory;
 
 
 class TUUID {
+
+friend class TDirectory;
 
 protected:
    UInt_t    fUUIDIndex;             //!index in the list of UUIDs in TProcessUUID
@@ -64,6 +67,8 @@ protected:
    void  GetSystemTime(uuid_time_t *timestamp);
    void  GetRandomInfo(UChar_t seed[16]);
    void  SetFromString(const char *uuid_str);
+
+   void  StreamerV1(TBuffer &b);
 
 public:
    TUUID();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.10 2002/01/23 15:48:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.11 2002/07/09 21:05:09 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -55,7 +55,7 @@ protected:
    TList      *fList;            //Pointer to objects list in memory
    TList      *fKeys;            //Pointer to keys list in memory
    TUUID       fUUID;            //Unique identifier
-   
+
           Bool_t cd1(const char *path);
    static Bool_t Cd1(const char *path);
 
@@ -127,7 +127,7 @@ public:
    static void         DecodeNameCycle(const char *namecycle, char *name, Short_t &cycle);
    static void         EncodeNameCycle(char *buffer, const char *name, Short_t cycle);
 
-   ClassDef(TDirectory,2)  //Describe directory structure in memory
+   ClassDef(TDirectory,3)  //Describe directory structure in memory
 };
 
 R__EXTERN TDirectory   *gDirectory;

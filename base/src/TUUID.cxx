@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.10 2002/07/11 21:46:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.11 2002/07/13 16:30:49 brun Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -266,6 +266,8 @@ void TUUID::FillBuffer(char *&buffer)
 {
    // Stream UUID into output buffer.
 
+   Version_t version = TUUID::Class_Version();
+   tobuf(buffer, version);
    tobuf(buffer, fTimeLow);
    tobuf(buffer, fTimeMid);
    tobuf(buffer, fTimeHiAndVersion);
@@ -280,6 +282,8 @@ void TUUID::ReadBuffer(char *&buffer)
 {
    // Stream UUID from input buffer.
 
+   Version_t version;
+   frombuf(buffer, &version);
    frombuf(buffer, &fTimeLow);
    frombuf(buffer, &fTimeMid);
    frombuf(buffer, &fTimeHiAndVersion);
@@ -287,6 +291,23 @@ void TUUID::ReadBuffer(char *&buffer)
    frombuf(buffer, &fClockSeqLow);
    for (Int_t i = 0; i < 6; i++)
       frombuf(buffer, &fNode[i]);
+}
+
+//______________________________________________________________________________
+void TUUID::StreamerV1(TBuffer &b)
+{
+   // Stream UUID from input buffer.
+   // This function is for the exclusive use of TDirectory::Streamer() to
+   // read a non-versioned version of TUUID.
+
+   b >> fTimeLow;
+   b >> fTimeMid;
+   b >> fTimeHiAndVersion;
+   b >> fClockSeqHiAndReserved;
+   b >> fClockSeqLow;
+   for (UInt_t i = 0; i < 6; i++) {
+      b >> fNode[i];
+   }
 }
 
 //______________________________________________________________________________
