@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.55 2004/05/28 16:39:37 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.56 2004/06/04 15:57:28 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1148,12 +1148,12 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
 
    TIter next(fBindList);
    TGMapKey *m;
-   TGFrame  *w;
+   TGFrame  *w = 0;
 
    while ((m = (TGMapKey *) next())) {
       if (m->fKeyCode == event->fCode) {
          w = (TGFrame *) m->fWindow;
-         return w->HandleKey(event);
+         if (w->HandleKey(event)) return kTRUE;
       }
    }
    return kFALSE;

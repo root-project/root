@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.36 2004/06/16 09:18:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.37 2004/06/16 10:07:26 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -441,6 +441,8 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                }
             }
 
+            if (!menu || !menu->fPoppedUp) return kFALSE;
+
             TGMenuEntry *ce = menu->GetCurrent();
             TGPopupMenu *submenu = 0;
 
@@ -504,6 +506,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
                   fCurrent->SetState(kFALSE);
                   fStick = kFALSE;
                   menu->EndMenu(dummy);
+                  return kTRUE;
                default:
                   break;
             }
@@ -511,6 +514,8 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
 
             el = el ? el : cur;
             if (el) target = (TGMenuTitle*)el->fFrame;
+         } else {
+            return kFALSE;
          }
       }
 
@@ -529,7 +534,10 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
 
             gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
                                    kPointerMotionMask, kNone, fDefaultCursor);
+            return kTRUE;
          }
+      } else {
+         return kFALSE;
       }
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.26 2004/04/30 07:03:17 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.27 2004/05/10 07:33:52 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -452,6 +452,7 @@ Double_t THStack::GetMinimum(Option_t *option)
       for (Int_t i=0;i<nhists;i++) {
          h = (TH1*)fHists->At(i);
          them = h->GetMinimum();
+         if (them <= 0 && gPad && gPad->GetLogy()) them = h->GetMinimum(0);
          if (them < themin) themin = them;
       }
    }
@@ -638,10 +639,17 @@ void THStack::Paint(Option_t *option)
 
    if (!fHistogram->TestBit(TH1::kIsZoomed)) {
       if (nostack && fMaximum != -1111) fHistogram->SetMaximum(fMaximum);
-      else                              fHistogram->SetMaximum(themax +0.05*(themax-themin));
+      else {
+         if (gPad->GetLogy())           fHistogram->SetMaximum(themax*(1+0.2*TMath::Log10(themax/themin)));
+         else                           fHistogram->SetMaximum(1.1*themax);
+      }
       if (nostack && fMinimum != -1111) fHistogram->SetMinimum(fMinimum);
-      else                              fHistogram->SetMinimum(themin);
+      else {
+         if (gPad->GetLogy())           fHistogram->SetMinimum(themin/(1+0.5*TMath::Log10(themax/themin)));
+         else                           fHistogram->SetMinimum(themin);
+      }
    }
+printf("themin=%g, themax=%g, hmin=%g, hmax=%g\n",themin,themax,fHistogram->GetMinimum(),fHistogram->GetMaximum());
    fHistogram->Paint(loption);
 
    char *lsame = strstr(loption,"same");
