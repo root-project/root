@@ -25,6 +25,6 @@ endif
 # from runsometest.C
 
 testWithDiff: testWithDiff.log
-   $(TestDiff)
+	$(TestDiff)
 
 
