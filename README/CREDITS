@@ -207,11 +207,23 @@ N: Christian Lacunza
 E: lacunza@cdfsg5.lbl.gov
 D: TTabCom [TAB] command line expansion class, #1 bug reporter
 
+N: Wim Lavrijsen
+E: WLavrijsen@lbl.gov
+D: PyRoot package
+
+N: Sergey Linev
+E: S.Linev@gsi.de
+D: XML interface package
+
 N: Jiri Masik
 E: Jiri.Masik@fzu.cz
 D: Numerous contributions to the system
 D: has submitted many suggestions and ideas. Found and fixed many bugs
 D: pioneer on many fronts, installation, support
+
+N: Pere Mato
+E: Pere.Mato@cern.ch
+D: PyRoot package
 
 N: Grzegorz Mazur
 E: mazur@mail.desy.de
