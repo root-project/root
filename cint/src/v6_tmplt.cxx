@@ -598,7 +598,11 @@ char *name;
   struct G__inheritance *baseclass;
 
   /* return if no name */
-  if('\0'==name[0]||strchr(name,'.')||strchr(name,'-'))
+  if('\0'==name[0]||strchr(name,'.')||strchr(name,'-')
+#ifndef G__OLDIMPLEMENTATION1484
+     || strchr(name,'(')
+#endif
+     )
      return((struct G__Definedtemplateclass *)NULL);
 
   /* get a handle for using declaration info */

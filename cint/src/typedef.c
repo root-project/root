@@ -499,11 +499,7 @@ void G__define_type()
 	int store_def_struct_member = G__def_struct_member;
 	G__def_struct_member = 0;
 #endif
-#ifdef G__WIN32
-	G__loadfile("long.dll");
-#else
-	G__loadfile("long.dl");
-#endif
+	G__loadfile("long.dll"); /* used to switch case between .dl and .dll */
 #ifndef G__OLDIMPLEMENTATION1153
 	G__def_struct_member = store_def_struct_member;
 #endif

@@ -133,11 +133,7 @@ char *new_name;
 	G__def_struct_member = 0;
 #endif
 	G__decl=0;
-#ifdef G__WIN32
-	G__loadfile("long.dll");
-#else
-	G__loadfile("long.dl");
-#endif
+	G__loadfile("long.dll"); /* used to switch case between .dl and .dll */
 	G__decl=1;
 #ifndef G__OLDIMPLEMENTATION1153
 	G__def_struct_member = store_def_struct_member;
@@ -2442,6 +2438,17 @@ int tagnum,typenum;      /* overrides global variables */
 	}
 	G__prerun = store_prerun;
 	G__store_struct_offset = store_struct_offset;
+#ifndef G__OLDIMPLEMENTATION1482
+#ifdef G__ASM
+	if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	  if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROSx\n",G__asm_cp);
+#endif
+	  G__asm_inst[G__asm_cp] = G__POPSTROS;
+	  G__inc_cp_asm(1,0);
+	}
+#endif
+#endif
       } /* of if(var_type=='u'&&G__def_struct_member.... */
 
       /**************************************************************

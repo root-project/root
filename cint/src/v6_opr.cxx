@@ -1467,13 +1467,13 @@ char *buf;
 G__value *preg;
 {
   int nest=0;
-  int c;
+  int c=0;
   int i1=1,i2=0;
   G__value reg;
   char prodpower=0;
   
   *preg=G__null;
-  while(1) {
+  for(;;) {
     c=expression[i1];
     switch(c) {
     case '-':

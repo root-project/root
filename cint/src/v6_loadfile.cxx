@@ -367,6 +367,9 @@ int G__getcintsysdir()
     if(!env) env="C:\\WILDC";
 #else
     env=getenv("CINTSYSDIR");
+# ifdef CINTSYSDIR
+    if(!env || !env[0]) env = CINTSYSDIR;
+# endif
 #endif
     if(env) {
 #ifdef G__ROOT
@@ -743,9 +746,16 @@ char *filename;
   int unnamedmacro = 0;
   int alphaflag=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1480
+  int store_lang = G__lang;
+#endif
 
+#ifndef G__OLDIMPLEMENTATION1480
+  if(G__ONEBYTE!=G__lang) G__lang = G__UNKNOWNCODING;
+#else
 #ifndef G__OLDIMPLEMENTATION1344
   G__lang = G__UNKNOWNCODING;
+#endif
 #endif
 
   /* Read 10 byte from beginning of the file.
@@ -784,6 +794,9 @@ char *filename;
     fprintf(G__serr,"Error: Bad source file(binary) %s",filename);
     G__genericerror((char*)NULL);
     G__return=G__RETURN_EXIT1;
+#ifndef G__OLDIMPLEMENTATION1480
+    G__lang = store_lang;
+#endif
     return(1);
   }
 #ifndef G__OLDIMPLEMENTATION1217
@@ -792,6 +805,9 @@ char *filename;
     G__genericerror((char*)NULL);
     fprintf(G__serr,"  unnamed macro has to be executed by 'x' command\n");
     G__return=G__RETURN_EXIT1;
+#ifndef G__OLDIMPLEMENTATION1480
+    G__lang = store_lang;
+#endif
     return(1);
   }
 #endif
@@ -817,6 +833,9 @@ Copyright (C) Microsoft Corp 1984-1997. All rights reserved.
     fseek(G__ifile.fp,SEEK_SET,0);
 #endif
   }
+#ifndef G__OLDIMPLEMENTATION1480
+  G__lang = store_lang;
+#endif
   return(0);
 }
 

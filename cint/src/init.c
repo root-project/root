@@ -7,7 +7,7 @@
  * Description:
  *  Entry functions
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -720,19 +720,21 @@ char *argv[] ;
    * Get command options
    *************************************************************/
   while((c=getopt(argc,argv
-  ,"a:b:c:d:ef:gikl:n:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
+  ,"a:b:c:d:ef:gikl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
 	!=EOF) {
     switch(c) {
+
+#ifndef G__OLDIMPLEMENTATION1480
+    case 'm':
+      G__lang = G__ONEBYTE;
+      break;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1078
     case 'Q':
       G__quiet=1;
       break;
 #endif
-
-    case 'o':
-      G__lang=G__ONEBYTE;
-      break;
 
 #ifndef G__OLDIMPLEMENTATION453
     case 'B':
@@ -1073,12 +1075,14 @@ char *argv[] ;
 #ifdef G__SHAREDLIB
       G__more(G__sout,"  -l [dynamiclinklib] : link dynamic link library\n");
 #endif
+      G__more(G__sout,"  -m : Support 8bit char comment (Disable multi-byte char)\n");
       G__more(G__sout,"* -M [newdelmask] : operator new/delete mask for precompiled interface method\n");
       G__more(G__sout,"* -n [linkname] : Specify precompiled interface method filename\n");
       G__more(G__sout,"* -N [DLL_name] : Specify DLL interface method name\n");
       G__more(G__sout,"  -O [0~4] : Loop compiler on(1~5) off(0). Default on(4)\n");
       G__more(G__sout,"  -p : use preprocessor prior to interpretation\n");
       G__more(G__sout,"  -q [security] : Set security level(default 0)\n");
+      G__more(G__sout,"  -Q : Quiet mode (no prompt)\n");
       G__more(G__sout,"  -r : revision and linked function/global info\n");
       G__more(G__sout,"  -R : display input file at break point\n");
       G__more(G__sout,"  -s : step execution mode\n");

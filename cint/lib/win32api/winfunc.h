@@ -7,7 +7,7 @@
  * Description:
  *  Create WIN32 API function interface
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -95,13 +95,22 @@
 #pragma link C typedef LPOVERLAPPED_COMPLETION_ROUTINE;
 
 #pragma link C typedef BOOL;
+#pragma link C typedef BOOLEAN;
+#pragma link C typedef BYTE;
 #pragma link C typedef DWORD;
 #pragma link C typedef WORD;
 #pragma link C typedef HANDLE;
 #pragma link C typedef HINSTANCE;
 #pragma link C typedef LPCVOID;
+#pragma link C typedef UCHAR;
+#pragma link C typedef USHORT;
 #pragma link C typedef UINT;
+#pragma link C typedef ULONG;
 #pragma link C typedef HMODULE;
+#pragma link C typedef LARGE_INTEGER;
+#pragma link C typedef PVOID;
+#pragma link C typedef WCHAR;
+#pragma link C typedef DWORDLONG;
 
 
 /***********************************************************************
@@ -661,6 +670,14 @@ BOOL SetTimeZoneInformation(
 DWORD GetCurrentProcessId(void);
 #pragma link C func GetCurrentProcessId;
 
+/***********************************************************************
+* IOCTL 
+***********************************************************************/
+BOOL DeviceIoControl(HANDLE hDevice,DWORD dwIoControlCode,LPVOID lpInBuffer,
+		     DWORD nInBufferSize,LPVOID lpOutBuffer,
+		     DWORD nOutBufferSize,LPDWORD lpBytesReturned,
+		     LPOVERLAPPED lpOverlapped);
+#pragma link C func DeviceIoControl;
 
 /***********************************************************************
 * COMM port

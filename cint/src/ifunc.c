@@ -4810,6 +4810,9 @@ int recursive;
 #ifndef G__OLDIMPLEMENTATION1376
      && G__NOLINK==G__globalcomp
 #endif
+#ifndef G__OLDIMPLEMENTATION1481
+     && G__TRYCONSTRUCTOR !=  memfunc_flag
+#endif
      ) {
     /* no access right */
     fprintf(G__serr,"Error: can not call private or protected function");

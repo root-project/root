@@ -35,6 +35,12 @@
 void G__cppstub_genfunc(FILE *fp,int tagnum,int ifn,struct G__ifunc_table *ifunc,int flag);
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1483
+#define G__PROTECTEDACCESS   1
+#define G__PRIVATEACCESS     2
+static int G__privateaccess = 0;
+#endif
+
 /**************************************************************************
 * CAUTION:
 *  Following macro G__BUILTIN must not be defined at normal cint
@@ -1126,7 +1132,45 @@ FILE *hfp;
       /* member function */
       while(memfunc) {
 	for(ifn=0;ifn<memfunc->allifunc;ifn++) {
-	  if(G__PROTECTED==memfunc->access[ifn] &&
+#ifndef G__OLDIMPLEMENTATION1481
+	  if((G__PROTECTED==memfunc->access[ifn]
+#ifndef G__OLDIMPLEMENTATION1483
+	      || ((G__PRIVATEACCESS&G__struct.protectedaccess[i]) &&
+		  G__PRIVATE==memfunc->access[ifn])
+#endif
+	      ) &&
+	     strcmp(memfunc->funcname[ifn],G__struct.name[i])==0) {
+	    fprintf(hfp,"  %s_PR(",G__get_link_tagname(i));
+	    if(0==memfunc->para_nu[ifn]) {
+	      fprintf(hfp,"void");
+	    }
+	    else {
+	      for(n=0;n<memfunc->para_nu[ifn];n++) {
+		if(n!=0) fprintf(hfp,",");
+		fprintf(hfp,"%s G__%d"
+			,G__type2string(memfunc->para_type[ifn][n]
+					,memfunc->para_p_tagtable[ifn][n]
+					,memfunc->para_p_typetable[ifn][n]
+					,memfunc->para_reftype[ifn][n]
+					,memfunc->para_isconst[ifn][n]),n);
+	      }
+	    }
+	    fprintf(hfp,") : %s(",G__fulltagname(i,1));
+	    if(0<memfunc->para_nu[ifn]) {
+	      for(n=0;n<memfunc->para_nu[ifn];n++) {
+		if(n!=0) fprintf(hfp,",");
+		fprintf(hfp,"G__%d",n);
+	      }
+	    }
+	    fprintf(hfp,") { }\n");
+	  }
+#endif
+	  if((G__PROTECTED==memfunc->access[ifn]
+#ifndef G__OLDIMPLEMENTATION1483
+	      || ((G__PRIVATEACCESS&G__struct.protectedaccess[i]) &&
+		  G__PRIVATE==memfunc->access[ifn])
+#endif
+	      ) &&
 	     strcmp(memfunc->funcname[ifn],G__struct.name[i])!=0 &&
 	     '~'!=memfunc->funcname[ifn][0]) {
 #ifndef G__OLDIMPLEMENTATION1335
@@ -1212,6 +1256,27 @@ FILE *fp;
 FILE *hfp;
 {
   int i;
+#ifndef G__OLDIMPLEMENTATION1483
+  char buf[G__MAXFILENAME];
+  FILE* pfp;
+  if(G__privateaccess) {
+    char *xp;
+    strcpy(buf,G__CPPLINK_H);
+    xp = strstr(buf,".h");
+    if(xp) strcpy(xp,"P.h");
+    pfp = fopen(buf,"r");
+    if(pfp) {
+      fclose(pfp);
+      remove(buf);
+    }
+    pfp = fopen(buf,"w");
+    fprintf(pfp,"#ifdef PrivateAccess\n");
+    fprintf(pfp,"#undef PrivateAccess\n");
+    fprintf(pfp,"#endif\n");
+    fprintf(pfp,"#define PrivateAccess(name) PrivateAccess_##name\n");
+    fclose(pfp);
+  }
+#endif
   fprintf(fp,"/* Setup class/struct taginfo */\n");
   for(i=0;i<G__struct.alltag;i++) {
     if(G__NOLINK > G__struct.globalcomp[i] &&
@@ -1219,6 +1284,19 @@ FILE *hfp;
       fprintf(fp,"G__linked_taginfo %s = { \"%s\" , %d , -1 };\n"
 	      ,G__get_link_tagname(i),G__fulltagname(i,0),G__struct.type[i]);
       fprintf(hfp,"extern G__linked_taginfo %s;\n",G__get_link_tagname(i));
+#ifndef G__OLDIMPLEMENTATION1483
+      if(G__privateaccess) {
+	pfp = fopen(buf,"a");
+	if(pfp) {
+	  if(G__PRIVATEACCESS&G__struct.protectedaccess[i]) 
+	    fprintf(pfp,"#define PrivateAccess_%s  friend class %s_PR;\n"
+		    ,G__fulltagname(i,1),G__get_link_tagname(i));
+	  else
+	    fprintf(pfp,"#define PrivateAccess_%s \n",G__fulltagname(i,1));
+	  fclose(pfp);
+	}
+      }
+#endif
     }
   }
   fprintf(fp,"\n");
@@ -1576,6 +1654,7 @@ char *dllid;
     fprintf(fp,"\n");
     fprintf(fp,"#ifdef G__MEMTEST\n");
     fprintf(fp,"#undef malloc\n");
+    fprintf(fp,"#undef free\n");
     fprintf(fp,"#endif\n");
     fprintf(fp,"\n");
 
@@ -2120,15 +2199,23 @@ FILE *hfp;
 	for(j=0;j<ifunc->allifunc;j++) {
 	  if(G__PUBLIC==ifunc->access[j]
 #ifndef G__OLDIMPLEMENTATION1334
+#ifndef G__OLDIMPLEMENTATION1483
+	     || (G__PROTECTED==ifunc->access[j] && 
+		 (G__PROTECTEDACCESS&G__struct.protectedaccess[i]))
+	     || (G__PRIVATEACCESS&G__struct.protectedaccess[i])
+#else
 	     || (G__PROTECTED==ifunc->access[j] && 
 		 G__struct.protectedaccess[i])
+#endif
 #endif
 	     ) {
 	    if(strcmp(ifunc->funcname[j],G__struct.name[i])==0) {
 	      /* constructor need special handling */
 	      if(0==G__struct.isabstract[i]&&0==isnonpublicnew
+#ifdef G__OLDIMPLEMENTATION1481
 #ifndef G__OLDIMPLEMENTATION1334
 		 && G__PUBLIC==ifunc->access[j]
+#endif
 #endif
 		 )
 		G__cppif_genconstructor(fp,hfp,i,j,ifunc);
@@ -2421,8 +2508,23 @@ struct G__ifunc_table *ifunc;
 #ifndef G__OLDIMPLEMENTATION1377
   int isprotecteddtor = G__isprotecteddestructoronelevel(tagnum);
 #endif
+  char buf[G__MAXNAME]; /* 1481 */
 
   G__ASSERT( tagnum != -1 );
+
+#ifndef G__OLDIMPLEMENTATION1481
+  if(G__PROTECTED==ifunc->access[ifn]
+#ifndef G__OLDIMPLEMENTATION1483
+     || G__PRIVATE==ifunc->access[ifn]
+#endif
+     ) 
+    sprintf(buf,"%s_PR",G__get_link_tagname(tagnum));
+  else
+    strcpy(buf,G__fulltagname(tagnum,1));
+#else
+  strcpy(buf,G__fulltagname(tagnum,1));
+#endif
+
 
 #ifndef G__OLDIMPLEMENTATION1235
 #ifdef G__CPPIF_EXTERNC
@@ -2485,10 +2587,10 @@ struct G__ifunc_table *ifunc;
 	    fprintf(fp,"       {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
 	  }
 	  else {
-	    fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+	    fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,buf);
 	  }
 #else
-	  fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+	  fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,buf);
 #endif
 	  fprintf(fp,"     else {\n");
 	  fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
@@ -2499,12 +2601,12 @@ struct G__ifunc_table *ifunc;
 #endif
 	     ) 
 	    fprintf(fp,"         p=new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) "
-		    ,G__NEWID,G__fulltagname(tagnum,1));
+		    ,G__NEWID,buf);
 	  else
 #endif
-	    fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
-	  fprintf(fp,"%s;\n",G__fulltagname(tagnum,1));
-	  fprintf(fp,"       p=(%s*)G__getgvp();\n",G__fulltagname(tagnum,1));
+	    fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,buf);
+	  fprintf(fp,"%s;\n",buf);
+	  fprintf(fp,"       p=(%s*)G__getgvp();\n",buf);
 	  fprintf(fp,"     }\n");
 #ifndef G__OLDIMPLEMENTATION1423
 	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
@@ -2513,10 +2615,10 @@ struct G__ifunc_table *ifunc;
 #endif
 	     )
 	    fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
-		    ,G__NEWID,G__fulltagname(tagnum,1));
+		    ,G__NEWID,buf);
 	  else
 #endif
-	    fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
+	    fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,buf);
 	}
 	else {
 #ifndef G__OLDIMPLEMENTATION1377
@@ -2524,10 +2626,10 @@ struct G__ifunc_table *ifunc;
 	    fprintf(fp,"   if(G__getaryconstruct()) {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
 	  }
 	  else {
-	    fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+	    fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,buf);
 	  }
 #else
-	  fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+	  fprintf(fp,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,buf);
 #endif
 #ifndef G__OLDIMPLEMENTATION1423
 	  if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
@@ -2536,10 +2638,10 @@ struct G__ifunc_table *ifunc;
 #endif
 	     )
 	    fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
-		    ,G__NEWID,G__fulltagname(tagnum,1));
+		    ,G__NEWID,buf);
 	  else
 #endif
-	    fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));
+	    fprintf(fp,"   else                    p=new %s;\n" ,buf);
 	}
       }
       else {
@@ -2555,10 +2657,10 @@ struct G__ifunc_table *ifunc;
 #endif
 	     )
 	    fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
-		    ,G__NEWID,G__fulltagname(tagnum,1));
+		    ,G__NEWID,buf);
 	  else
 #endif
-	    fprintf(fp,"      p = new((void*)G__getgvp()) %s(",G__fulltagname(tagnum,1));
+	    fprintf(fp,"      p = new((void*)G__getgvp()) %s(",buf);
 	}
 	else {
 #ifndef G__OLDIMPLEMENTATION1423
@@ -2568,10 +2670,10 @@ struct G__ifunc_table *ifunc;
 #endif
 	     )
 	    fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
-		    ,G__NEWID,G__fulltagname(tagnum,1));
+		    ,G__NEWID,buf);
 	  else
 #endif
-	    fprintf(fp,"      p = new %s(",G__fulltagname(tagnum,1));
+	    fprintf(fp,"      p = new %s(",buf);
 	}
 	if(m>2) fprintf(fp,"\n");
 	for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
@@ -2606,10 +2708,10 @@ struct G__ifunc_table *ifunc;
 	  fprintf(fp,"       {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
 	}
 	else {
-	  fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+	  fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,buf);
 	}
 #else
-	fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+	fprintf(fp,"       p=new %s[G__getaryconstruct()];\n" ,buf);
 #endif
 	fprintf(fp,"     else {\n");
 	fprintf(fp,"       for(int i=0;i<G__getaryconstruct();i++)\n");
@@ -2620,12 +2722,12 @@ struct G__ifunc_table *ifunc;
 #endif
 	   )
 	  fprintf(fp,"         p=new((G__%s_tag*)(G__getgvp()+sizeof(%s)*i)) " 
-		  ,G__NEWID,G__fulltagname(tagnum,1));
+		  ,G__NEWID,buf);
 	else
 #endif
-	  fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,G__fulltagname(tagnum,1));
-	fprintf(fp,"%s;\n",G__fulltagname(tagnum,1));
-	fprintf(fp,"       p=(%s*)G__getgvp();\n",G__fulltagname(tagnum,1));
+	  fprintf(fp,"         p=new((void*)(G__getgvp()+sizeof(%s)*i)) " ,buf);
+	fprintf(fp,"%s;\n",buf);
+	fprintf(fp,"       p=(%s*)G__getgvp();\n",buf);
 	fprintf(fp,"     }\n");
 #ifndef G__OLDIMPLEMENTATION1423
 	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
@@ -2634,10 +2736,10 @@ struct G__ifunc_table *ifunc;
 #endif
 	   )
 	  fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
-		  ,G__NEWID,G__fulltagname(tagnum,1));
+		  ,G__NEWID,buf);
 	else
 #endif
-	  fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,G__fulltagname(tagnum,1));
+	  fprintf(fp,"   else p=new((void*)G__getgvp()) %s;\n" ,buf);
       }
       else {
 #ifndef G__OLDIMPLEMENTATION1377
@@ -2645,10 +2747,10 @@ struct G__ifunc_table *ifunc;
 	  fprintf(fp,"   if(G__getaryconstruct()) {p=0;G__genericerror(\"Error: Array construction with private/protected destructor is illegal\");}\n");
 	}
 	else {
-	  fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+	  fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,buf);
 	}
 #else
-	fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,G__fulltagname(tagnum,1));
+	fprintf(fp ,"   if(G__getaryconstruct()) p=new %s[G__getaryconstruct()];\n" ,buf);
 #endif
 #ifndef G__OLDIMPLEMENTATION1423
 	if(G__is_operator_newdelete&G__DUMMYARG_NEWDELETE 
@@ -2657,10 +2759,10 @@ struct G__ifunc_table *ifunc;
 #endif
 	   )
 	  fprintf(fp,"   else p=new((G__%s_tag*)G__getgvp()) %s;\n" 
-		  ,G__NEWID,G__fulltagname(tagnum,1));
+		  ,G__NEWID,buf);
 	else
 #endif
-	  fprintf(fp,"   else                    p=new %s;\n" ,G__fulltagname(tagnum,1));}
+	  fprintf(fp,"   else                    p=new %s;\n" ,buf);}
     }
     else {
 #ifndef G__OLDIMPLEMENTATION680
@@ -2675,10 +2777,10 @@ struct G__ifunc_table *ifunc;
 #endif
 	   )
 	  fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
-		  ,G__NEWID,G__fulltagname(tagnum,1));
+		  ,G__NEWID,buf);
 	else
 #endif
-	  fprintf(fp,"      p = new((void*)G__getgvp()) %s(",G__fulltagname(tagnum,1));
+	  fprintf(fp,"      p = new((void*)G__getgvp()) %s(",buf);
       }
       else {
 #ifndef G__OLDIMPLEMENTATION1423
@@ -2688,10 +2790,10 @@ struct G__ifunc_table *ifunc;
 #endif
 	   )
 	  fprintf(fp,"      p = new((G__%s_tag*)G__getgvp()) %s("
-		  ,G__NEWID,G__fulltagname(tagnum,1));
+		  ,G__NEWID,buf);
 	else
 #endif
-	  fprintf(fp,"      p = new %s(",G__fulltagname(tagnum,1));
+	  fprintf(fp,"      p = new %s(",buf);
       }
       if(m>2) fprintf(fp,"\n");
       for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
@@ -3474,7 +3576,12 @@ struct G__ifunc_table *ifunc;
 		  ,G__fulltagname(tagnum,1));
 	else {
 #ifndef G__OLDIMPLEMENTATION1334
-	  if(G__PROTECTED==ifunc->access[ifn]) 
+	  if(G__PROTECTED==ifunc->access[ifn]
+#ifndef G__OLDIMPLEMENTATION1483
+	     || (G__PRIVATE==ifunc->access[ifn] &&
+		 (G__PRIVATEACCESS&G__struct.protectedaccess[tagnum]))
+#endif
+	     ) 
 	    sprintf(castname,"%s_PR",G__get_link_tagname(tagnum));
 	  else 
 	    strcpy(castname,G__fulltagname(tagnum,1));
@@ -3495,7 +3602,12 @@ struct G__ifunc_table *ifunc;
 	}
       }
 #ifndef G__OLDIMPLEMENTATION1335
-      if(G__PROTECTED==ifunc->access[ifn]) 
+      if(G__PROTECTED==ifunc->access[ifn]
+#ifndef G__OLDIMPLEMENTATION1483
+	 || (G__PRIVATE==ifunc->access[ifn] &&
+	     (G__PRIVATEACCESS&G__struct.protectedaccess[tagnum]))
+#endif
+	 ) 
 	fprintf(fp,"G__PT_%s(",ifunc->funcname[ifn]);
       else
 	fprintf(fp,"%s(",ifunc->funcname[ifn]);
@@ -3531,7 +3643,12 @@ struct G__ifunc_table *ifunc;
 	fprintf(fp,"%s::",G__fulltagname(tagnum,1));
       else {
 #ifndef G__OLDIMPLEMENTATION1334
-	if(G__PROTECTED==ifunc->access[ifn]) 
+	if(G__PROTECTED==ifunc->access[ifn] 
+#ifndef G__OLDIMPLEMENTATION1483
+	   || (G__PRIVATE==ifunc->access[ifn] &&
+	       (G__PRIVATEACCESS&G__struct.protectedaccess[tagnum]))
+#endif
+	   )
 	  sprintf(castname,"%s_PR",G__get_link_tagname(tagnum));
 	else 
 	  strcpy(castname,G__fulltagname(tagnum,1));
@@ -3552,7 +3669,12 @@ struct G__ifunc_table *ifunc;
       }
     }
 #ifndef G__OLDIMPLEMENTATION1335
-    if(G__PROTECTED==ifunc->access[ifn]) 
+    if(G__PROTECTED==ifunc->access[ifn] 
+#ifndef G__OLDIMPLEMENTATION1483
+	 || (G__PRIVATE==ifunc->access[ifn] &&
+	     (G__PRIVATEACCESS&G__struct.protectedaccess[tagnum]))
+#endif
+       )
       fprintf(fp,"G__PT_%s(",ifunc->funcname[ifn]);
     else
       fprintf(fp,"%s(",ifunc->funcname[ifn]);
@@ -4718,7 +4840,13 @@ FILE *fp;
 	  }
 	  if(((G__PUBLIC==var->access[j]
 #ifndef G__OLDIMPLEMENTATION1334
+#ifndef G__OLDIMPLEMENTATION1483
+	       ||(G__PROTECTED==var->access[j] && 
+		  (G__PROTECTEDACCESS&G__struct.protectedaccess[i]))
+	       || (G__PRIVATEACCESS&G__struct.protectedaccess[i])
+#else
 	       ||(G__PROTECTED==var->access[j] && G__struct.protectedaccess[i])
+#endif
 #endif
 	       ) && 0==var->bitfield[j])||
 	     G__precomp_private) {
@@ -4741,12 +4869,22 @@ FILE *fp;
 	      }
 	    }
 #ifndef G__OLDIMPLEMENTATION1334
+#ifdef G__OLDIMPLEMENTATION1483
+	    else if((G__PROTECTED==var->access[j] && 
+		     (G__PROTECTEDACCESS&G__struct.protectedaccess[i]))
+		    || (G__PRIVATEACCESS&G__struct.protectedaccess[i])) {
+	      fprintf(fp,"(void*)((%s_PR*)p)->G__OS_%s(),"
+		      ,G__get_link_tagname(i)
+		      ,var->varnamebuf[j]);
+	    }
+#else
 	    else if(G__PROTECTED==var->access[j] && 
 		    G__struct.protectedaccess[i]) {
 	      fprintf(fp,"(void*)((%s_PR*)p)->G__OS_%s(),"
 		      ,G__get_link_tagname(i)
 		      ,var->varnamebuf[j]);
 	    }
+#endif
 #endif
 	    else { /* Private or protected member */
 	      fprintf(fp,"(void*)NULL,");
@@ -4917,7 +5055,13 @@ FILE *fp;
 	for(j=0;j<ifunc->allifunc;j++) {
 	  if((G__PUBLIC==ifunc->access[j]) || G__precomp_private
 #ifndef G__OLDIMPLEMENTATION1334
+#ifndef G__OLDIMPLEMENTATION1483
+	     || (G__PROTECTED==ifunc->access[j]&&
+		 (G__PROTECTEDACCESS&G__struct.protectedaccess[i]))
+	     || (G__PRIVATEACCESS&G__struct.protectedaccess[i])
+#else
 	     || (G__PROTECTED==ifunc->access[j]&&G__struct.protectedaccess[i])
+#endif
 #endif
 	     ) {
 	    /* check if constructor */
@@ -4932,6 +5076,7 @@ FILE *fp;
 		 (1==ifunc->para_nu[j]||ifunc->para_default[j][1])) {
 		++iscopyconstructor;
 	      }
+#ifdef G__OLDIMPLEMENTATION1481
 #ifndef G__OLDIMPLEMENTATION1334
 	      if(G__PROTECTED==ifunc->access[j]&&G__struct.protectedaccess[i]
 		 && !G__precomp_private){
@@ -4941,6 +5086,7 @@ FILE *fp;
 		continue;
 	      }
 	      
+#endif
 #endif
 	    }
 	    else if('~'==ifunc->funcname[j][0]) {
@@ -4971,9 +5117,17 @@ FILE *fp;
 	    fprintf(fp,"\"%s\",%d,",ifunc->funcname[j],ifunc->hash[j]);
 	    if(G__PUBLIC==ifunc->access[j]
 #ifndef G__OLDIMPLEMENTATION1334
+#ifndef G__OLDIMPLEMENTATION1483
+	       || (((G__PROTECTED==ifunc->access[j] &&
+		    (G__PROTECTEDACCESS&G__struct.protectedaccess[i])) ||
+		    (G__PRIVATEACCESS&G__struct.protectedaccess[i])) &&
+#else
 	       || (G__PROTECTED==ifunc->access[j] &&
 		   G__struct.protectedaccess[i] &&
+#endif
+#ifdef G__OLDIMPLEMENTATION1481
 		   strcmp(G__struct.name[i],ifunc->funcname[j])!=0 &&
+#endif
 		   '~'!=ifunc->funcname[j][0])
 #endif
 	       ) {
@@ -6569,7 +6723,16 @@ int link_stub;
     int iirf;
 #ifndef G__OLDIKMPLEMENTATION1334
     char protectedaccess=0;
+#ifndef G__OLDIKMPLEMENTATION1483
+    if(strncmp(buf,"class+protected",10)==0) 
+      protectedaccess=G__PROTECTEDACCESS;
+    else if(strncmp(buf,"class+private",10)==0) {
+      protectedaccess=G__PRIVATEACCESS;
+      G__privateaccess = 1;
+    }
+#else
     if(strncmp(buf,"class+protected",6)==0) protectedaccess = 1;
+#endif
 #endif
 #endif /* 1257 */
 #ifndef G__OLDIMPLEMENTATION1417

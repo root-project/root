@@ -7,7 +7,7 @@
  * Description:
  *  C/C++ interpreter parser header file
  ************************************************************************
- * Copyright(c) 1995~2000  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014072
-#define G__CINTVERSIONSTR  "5.14.72, Jan 20 2001"
+#define G__CINTVERSION      5014074
+#define G__CINTVERSIONSTR  "5.14.74, Feb 4 2001"
 
 
 /**********************************************************************
@@ -226,7 +226,7 @@ typedef long fpos_tt; /* pos_t is defined to be a struct{32,32} in VMS.
 #define G__DLLIMPORT
 #endif
 
-#if defined(G__BORLAND) && defined(G__CINTBODY)
+#if (defined(G__BORLAND)||defined(G__CYGWIN)) && defined(G__CINTBODY)
 #define G__EXPORT __declspec(dllexport)
 #else
 #define G__EXPORT

@@ -1786,6 +1786,19 @@ G__value *rslt;
       }
     }
 
+#ifndef G__OLDIMPLEMENTATION1480
+    else if(strncmp("language",com,4)==0) {
+      int ix=0;
+      while(stringb[ix]) { stringb[ix] = toupper(stringb[ix]); ++ix; }
+      if(strncmp(stringb,"EUC",3)==0) G__lang = G__EUC;
+      else if(strncmp(stringb,"SJIS",3)==0) G__lang = G__SJIS;
+      else if(strncmp(stringb,"JIS",3)==0) G__lang = G__JIS;
+      else if(strncmp(stringb,"EUROPEAN",3)==0) G__lang = G__ONEBYTE;
+      else if(strncmp(stringb,"UNKNOWN",3)==0) G__lang = G__UNKNOWNCODING;
+      else G__lang = G__int(G__calc(stringb));
+    }
+#endif
+
     else if(strncmp("file",com,4)==0) {
       G__more_pause((FILE*)NULL,1);
       G__display_files(G__sout);
@@ -2552,7 +2565,7 @@ G__value *rslt;
 #endif
       G__more(G__sout,"Help:        ?         : help\n");
       G__more(G__sout,"             help      : help\n");
-      G__more(G__sout,"             /[keyword] : help information for keyword\n");
+      G__more(G__sout,"             /[keyword] : search keyword in help information\n");
 #if (!defined(G__ROOT)) && (!defined(G__WIN32))
       G__more(G__sout,"Completion:  [nam][Tab] : complete symbol name start with [nam]\n");
       G__more(G__sout,"             [nam][Tab][Tab] : list up all symbol name start with [nam]]\n");
@@ -2600,6 +2613,7 @@ G__value *rslt;
 #ifndef G__OLDIMPLEMENTATION1094
       G__more(G__sout,"             undo      : undo previous declarations\n");
 #endif
+      G__more(G__sout,"             lang      : local language (EUC,SJIS,EUROPEAN,UNKNOWN)\n");
       G__more(G__sout,"Monitor:     g <[var]> : list global variable\n");
       G__more(G__sout,"             l <[var]> : list local variable\n");
 #ifndef G__OLDIMPLEMENTATION553
