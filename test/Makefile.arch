@@ -439,15 +439,16 @@ PLATFORM      = macosx
 MACOSX_MINOR := $(shell sw_vers -productVersion | cut -d'.' -f2)
 CXX           = c++
 CXXFLAGS      = -O -pipe -Wall -W -Woverloaded-virtual
-LD            = c++
 LDFLAGS       = -O -Xlinker -bind_at_load -flat_namespace
 # The SOFLAGS will be used to create the .dylib; the .so will
 # be created separately
 DllSuf        = dylib
 ifeq ($(MACOSX_MINOR),3)
 UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.3 c++
 else
 UNDEFOPT      = suppress
+LD            = c++
 endif
 SOFLAGS       = -dynamiclib -flat_namespace -undefined $(UNDEFOPT)
 endif
@@ -458,15 +459,16 @@ PLATFORM      = macosx
 MACOSX_MINOR := $(shell sw_vers -productVersion | cut -d'.' -f2)
 CXX           = xlC
 CXXFLAGS      = 
-LD            = g++
 LDFLAGS       = -O -Xlinker -bind_at_load -flat_namespace
 # The SOFLAGS will be used to create the .dylib; the .so will
 # be created separately
 DllSuf        = dylib
 ifeq ($(MACOSX_MINOR),3)
 UNDEFOPT      = dynamic_lookup
+LD            = MACOSX_DEPLOYMENT_TARGET=10.3 g++
 else
 UNDEFOPT      = suppress
+LD            = g++
 endif
 SOFLAGS       = -dynamiclib -flat_namespace -undefined $(UNDEFOPT)
 endif
