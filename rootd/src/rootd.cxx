@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.50 2003/02/05 15:11:11 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.51 2003/07/27 10:45:58 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -347,6 +347,7 @@ int     gProtocol                = 7;       // increase when protocol changes
 int     gClientProtocol          = 0;
 int     gUploaded                = 0;
 int     gDownloaded              = 0;
+int     gReadOnly                = 0;
 int     gFtp                     = 0;
 double  gBytesRead               = 0;
 double  gBytesWritten            = 0;
@@ -1336,7 +1337,8 @@ void RootdOpen(const char *msg)
       read = 1;
       strcpy(gOption, "read");
    }
-
+   if ((read==0) && (gReadOnly==1))
+       ErrorFatal(kErrNoAccess,"RootdOpen: file %s can not be opened in \"Read Only\" mode", gFile);
    if (!gAnon) {
       char *fname;
       if ((fname = RootdExpandPathName(gFile))) {
@@ -2245,7 +2247,10 @@ int main(int argc, char **argv)
             case 'i':
                gInetdFlag = 1;
                break;
-
+ 
+            case 'r':
+               gReadOnly = 1;
+               break;
             case 'p':
                if (--argc <= 0) {
                   if (!gInetdFlag)
