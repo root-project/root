@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.4 2002/07/08 14:40:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.5 2002/11/18 23:02:19 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -100,9 +100,7 @@ void DefaultErrorHandler(int level, Bool_t abort, const char *location, const ch
 //______________________________________________________________________________
 void ErrorHandler(int level, const char *location, const char *fmt, va_list ap)
 {
-   // General error handler function. It calls the user set error handler
-   // unless the error is of type kFatal, in which case the
-   // DefaultErrorHandler() is called which will abort the application.
+   // General error handler function. It calls the user set error handler.
 
    static Int_t buf_size = 2048;
    static char *buf = 0;
