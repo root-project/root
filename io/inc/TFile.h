@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.30 2003/12/30 13:16:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.31 2004/05/11 15:31:14 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -30,36 +30,40 @@
 
 class TFree;
 class TArrayC;
+class TArchiveFile;
 
 
 class TFile : public TDirectory {
 
 protected:
-   Double_t    fSumBuffer;        //Sum of buffer sizes of objects written so far
-   Double_t    fSum2Buffer;       //Sum of squares of buffer sizes of objects written so far
-   Double_t    fBytesWrite;       //Number of bytes written to this file
-   Double_t    fBytesRead;        //Number of bytes read from this file
-   Long64_t    fBEGIN;            //First used byte in file
-   Long64_t    fEND;              //Last used byte in file
-   Long64_t    fSeekFree;         //Location on disk of free segments structure
-   Long64_t    fSeekInfo;         //Location on disk of StreamerInfo record
-   Int_t       fD;                //File descriptor
-   Int_t       fVersion;          //File format version
-   Int_t       fCompress;         //Compression level from 0(not compressed) to 9 (max compression)
-   Int_t       fNbytesFree;       //Number of bytes for free segments structure
-   Int_t       fNbytesInfo;       //Number of bytes for StreamerInfo record
-   Int_t       fWritten;          //Number of objects written so far
-   Int_t       fNProcessIDs;      //Number of TProcessID written to this file
-   TString     fRealName;         //Effective real file name (not original url)
-   TString     fOption;           //File options
-   Char_t      fUnits;            //Number of bytes for file pointers
-   TList      *fFree;             //Free segments linked list table
-   TArrayC    *fClassIndex;       //!Index of TStreamerInfo classes written to this file
-   TCache     *fCache;            //!Page cache used to reduce number of small I/O's
-   TObjArray  *fProcessIDs;       //!Array of pointers to TProcessIDs
+   Double_t      fSumBuffer;      //Sum of buffer sizes of objects written so far
+   Double_t      fSum2Buffer;     //Sum of squares of buffer sizes of objects written so far
+   Double_t      fBytesWrite;     //Number of bytes written to this file
+   Double_t      fBytesRead;      //Number of bytes read from this file
+   Long64_t      fBEGIN;          //First used byte in file
+   Long64_t      fEND;            //Last used byte in file
+   Long64_t      fSeekFree;       //Location on disk of free segments structure
+   Long64_t      fSeekInfo;       //Location on disk of StreamerInfo record
+   Int_t         fD;              //File descriptor
+   Int_t         fVersion;        //File format version
+   Int_t         fCompress;       //Compression level from 0(not compressed) to 9 (max compression)
+   Int_t         fNbytesFree;     //Number of bytes for free segments structure
+   Int_t         fNbytesInfo;     //Number of bytes for StreamerInfo record
+   Int_t         fWritten;        //Number of objects written so far
+   Int_t         fNProcessIDs;    //Number of TProcessID written to this file
+   TString       fRealName;       //Effective real file name (not original url)
+   TString       fOption;         //File options
+   Char_t        fUnits;          //Number of bytes for file pointers
+   TList        *fFree;           //Free segments linked list table
+   TArrayC      *fClassIndex;     //!Index of TStreamerInfo classes written to this file
+   TCache       *fCache;          //!Page cache used to reduce number of small I/O's
+   TObjArray    *fProcessIDs;     //!Array of pointers to TProcessIDs
+   TArchiveFile *fArchive;        //!Archive file from which we read this file
+   Long64_t      fArchiveOffset;  //!Offset at which file starts in archive
+   Bool_t        fIsArchive;      //!True if this is a pure archive file
 
-   static Double_t fgBytesWrite;    //Number of bytes written by all TFile objects
-   static Double_t fgBytesRead;     //Number of bytes read by all TFile objects
+   static Double_t fgBytesWrite;  //Number of bytes written by all TFile objects
+   static Double_t fgBytesRead;   //Number of bytes read by all TFile objects
 
    void Init(Bool_t create);
 
@@ -97,6 +101,7 @@ public:
    virtual void      DrawMap(const char *keys="*",Option_t *option=""); // *MENU*
    virtual void      FillBuffer(char *&buffer);
    virtual void      Flush();
+   TArchiveFile     *GetArchive() const { return fArchive; }
    Int_t             GetBestBuffer() const;
    TArrayC          *GetClassIndex() const { return fClassIndex; }
    Int_t             GetCompressionLevel() const { return fCompress; }
@@ -121,6 +126,7 @@ public:
    virtual Long64_t  GetSize() const;
    virtual TList    *GetStreamerInfoList();
    virtual void      IncrementProcessIDs() {fNProcessIDs++;}
+   virtual Bool_t    IsArchive() const { return fIsArchive; }
    virtual Bool_t    IsOpen() const;
    virtual void      ls(Option_t *option="") const;
    virtual void      MakeFree(Long64_t first, Long64_t last);

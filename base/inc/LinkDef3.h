@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.15 2004/06/13 16:26:36 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.16 2004/06/25 17:27:09 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -154,6 +154,10 @@
 #pragma link C++ function operator> (const TTimeStamp&, const TTimeStamp&);
 #pragma link C++ function operator>=(const TTimeStamp&, const TTimeStamp&);
 
+#pragma link C++ class TArchiveFile+;
+#pragma link C++ class TArchiveMember+;
+#pragma link C++ class TZIPFile+;
+#pragma link C++ class TZIPMember+;
 #pragma link C++ class TTimeStamp+;
 #pragma link C++ class TVirtualMutex;
 #pragma link C++ class TLockGuard;

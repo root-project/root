@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.50 2004/07/02 18:36:57 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.51 2004/07/04 17:48:43 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -418,14 +418,17 @@ void TNetFile::Seek(Long64_t offset, ERelativeTo pos)
    // Set position from where to start reading.
 
    switch (pos) {
-   case kBeg:
-      fOffset = offset;
-      break;
-   case kCur:
-      fOffset += offset;
-      break;
-   case kEnd:
-      fOffset = fEND + offset;  // is fEND really EOF or logical EOF?
+      case kBeg:
+         fOffset = offset + fArchiveOffset;
+         break;
+      case kCur:
+         fOffset += offset;
+         break;
+      case kEnd:
+         // this option is not used currently in the ROOT code
+         if (fArchiveOffset)
+            Error("Seek", "seeking from end in archive is not (yet) supported");
+         fOffset = fEND + offset;  // is fEND really EOF or logical EOF?
       break;
    }
 }

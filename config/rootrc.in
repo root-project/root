@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.74 2004/06/21 09:49:28 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.75 2004/06/25 16:49:09 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -253,6 +253,7 @@ Plugin.TSystem:      ^rfio:    TRFIOSystem   RFIO    "TRFIOSystem()"
 +Plugin.TSystem:     ^dcache:  TDCacheSystem DCache  "TDCacheSystem()"
 +Plugin.TSystem:     ^dcap:    TDCacheSystem DCache  "TDCacheSystem()"
 +Plugin.TSystem:     ^alien:   TAlienSystem  RAliEn  "TAlienSystem()"
+Plugin.TArchiveFile: .+[.]zip$ TZIPFile      Core    "TZIPFile(const char*,const char*,TFile*)"
 Plugin.TSQLServer:   ^mysql:   TMySQLServer  MySQL   "TMySQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL   "TPgSQLServer(const char*,const char*,const char*)"
 +Plugin.TSQLServer:  ^sapdb:   TSapDBServer  SapDB   "TSapDBServer(const char*,const char*,const char*)"
