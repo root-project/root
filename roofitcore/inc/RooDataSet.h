@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.37 2001/10/23 00:45:26 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.38 2001/10/27 22:28:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,6 +18,7 @@
 #define ROO_DATA_SET
 
 class TDirectory ;
+class RooAbsRealLValue ;
 #include "RooFitCore/RooTreeData.hh"
 
 
@@ -57,9 +58,9 @@ public:
 	       RooDataSet* data4=0, RooDataSet* data5=0, RooDataSet* data6=0) ;
 
   // Plot the distribution of a real valued arg
-  TH2F* createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, const char* cuts="", 
+  TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, const char* cuts="", 
 			const char *name= "hist") const;	 
-  TH2F* createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, Int_t nx, Int_t ny,
+  TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, Int_t nx, Int_t ny,
                         const char* cuts="", const char *name="hist") const;
 
 protected:

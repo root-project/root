@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.58 2001/11/16 01:48:23 david Exp $
+ *    File: $Id: RooDataSet.cc,v 1.59 2001/11/19 07:23:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,6 +31,7 @@
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooFormulaVar.hh"
 #include "RooFitCore/RooArgList.hh"
+#include "RooFitCore/RooAbsRealLValue.hh"
 #include "TROOT.h"
 
 ClassImp(RooDataSet)
@@ -308,7 +309,7 @@ void RooDataSet::append(RooDataSet& data) {
 
 
 
-TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, const char* cuts, const char *name) const
+TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, const char* cuts, const char *name) const
 {
   // Create a TH2F histogram of the distribution of the specified variable
   // using this dataset. Apply any cuts to select which events are used.
@@ -316,12 +317,12 @@ TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2
   // dataset, or else be a function of the variables in this dataset.
   // The histogram will be created using RooAbsReal::createHistogram() with
   // the name provided (with our dataset name prepended).
-  return createHistogram(var1, var2, var1.getPlotBins(), var2.getPlotBins(), cuts, name);
+  return createHistogram(var1, var2, var1.getFitBins(), var2.getFitBins(), cuts, name);
 }
 
 
 
-TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2, Int_t nx, Int_t ny, const char* cuts, const char *name) const
+TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, Int_t nx, Int_t ny, const char* cuts, const char *name) const
 {
   // Create a TH2F histogram of the distribution of the specified variable
   // using this dataset. Apply any cuts to select which events are used.

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.62 2001/11/19 07:23:53 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.63 2001/11/19 18:03:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -647,7 +647,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     RooDataProjBinding projBind(*projection,*projDataSel,*plotVar) ;
     RooScaledFunc scaleBind(projBind,scaleFactor);
     RooCurve *curve = new RooCurve(projection->GetName(),projection->GetTitle(),scaleBind,
-				   plotVar->getPlotMin(),plotVar->getPlotMax(),plotVar->getPlotBins()) ;
+				   frame->GetXaxis()->GetXmin(),frame->GetXaxis()->GetXmax(),
+				   frame->GetNbinsX()) ;
     cout << endl ;
 
     // add this new curve to the specified plot frame
