@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.29 2004/02/22 11:31:17 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.30 2004/03/19 12:35:24 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -410,8 +410,9 @@ void TGraphAsymmErrors::Paint(Option_t *option)
 //*-*-      define the offset of the error bars due to the symbol size
    s2x  = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
    s2y  =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
-   tx   = 0.50*s2x;
-   ty   = 0.50*s2y;
+   Int_t dxend = Int_t(gStyle->GetEndErrorSize());
+   tx    = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   ty    =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6*symbolsize*BASEMARKER/gPad->GetWh();
 
    gPad->SetBit(kClipFrame, TestBit(kClipFrame));
