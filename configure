@@ -1199,7 +1199,7 @@ if test ! "x$enable_asimage" = "xno" ; then
         if test "x$k" = "xlibpng" && test "x$found_libz" = "x" ; then
             break;
         fi
-        if ! test "x$found_lib" = "x" ; then
+        if test ! "x$found_lib" = "x" ; then
             asextralib="$asextralib $found_lib"
             asextralibdir="$asextralibdir $found_dir"
         fi
@@ -1274,7 +1274,7 @@ fi
 if test ! "x$enable_srp" = "xno" ; then
     if test "x$srpincdir" = "x" && test ! "x$srpdir" = "x" ; then
 	srpincdir=$srpdir/include
-        if ! test -d $srpincdir ; then
+        if test ! -d $srpincdir ; then
             srpincdir=$srpdir/libsrp
         fi
     fi
@@ -1289,7 +1289,7 @@ if test ! "x$enable_srp" = "xno" ; then
 
     if test "x$srplibdir" = "x" && test ! "x$srpdir" = "x" ; then
 	srplibdir=$srpdir/lib
-        if ! test -d $srplibdir ; then
+        if test ! -d $srplibdir ; then
             srplibdir=$srpdir/libsrp
         fi
     fi
