@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.73 2002/07/09 21:14:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.74 2002/07/13 16:19:26 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -654,48 +654,48 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
       }
    }
    if (!temp) {
-      temp   = fFiles->FindObject(name);
+      temp  = fFiles->FindObject(name);
       where = fFiles;
    }
    if (!temp) {
-      temp   = fMappedFiles->FindObject(name);
+      temp  = fMappedFiles->FindObject(name);
       where = fMappedFiles;
    }
    if (!temp) {
-      temp   = fFunctions->FindObject(name);
+      temp  = fFunctions->FindObject(name);
       where = fFunctions;
    }
    if (!temp) {
-//      temp   = fGeometries->FindObject(name);
+//      temp  = fGeometries->FindObject(name);
 //      where = fGeometries;
    }
    if (!temp) {
-      temp   = fCanvases->FindObject(name);
+      temp  = fCanvases->FindObject(name);
       where = fCanvases;
    }
    if (!temp) {
-      temp   = fStyles->FindObject(name);
+      temp  = fStyles->FindObject(name);
       where = fStyles;
    }
    if (!temp) {
-      temp   = fSpecials->FindObject(name);
+      temp  = fSpecials->FindObject(name);
       where = fSpecials;
    }
    if (!temp && TClassTable::GetDict("TGeometry")) {
       TObjArray *loc = (TObjArray*)ProcessLineFast(Form("TGeometry::Get(\"%s\")",name));
       if (loc) {
-         temp   = loc->At(0);
+         temp  = loc->At(0);
          where = loc->At(1);
       }
    }
    if (!temp && gDirectory) {
-      temp   = gDirectory->Get(name);
+      temp  = gDirectory->Get(name);
       where = gDirectory;
    }
    if (!temp && gPad) {
       TVirtualPad *canvas = gPad->GetVirtCanvas();
       if (fCanvases->FindObject(canvas)) {  //this check in case call from TCanvas ctor
-         temp   = canvas->FindObject(name);
+         temp  = canvas->FindObject(name);
          where = canvas;
          if (!temp && canvas != gPad) {
             temp  = gPad->FindObject(name);
@@ -806,10 +806,6 @@ TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
 
    if (!GetListOfClasses())    return 0;
 
-#ifdef DEBUG_ID
-   cerr << "While TROOT searches for " << typeinfo.name() << " at " << &typeinfo << endl;
-   fIdMap->printall();
-#endif
    TClass* cl = fIdMap->Find(typeinfo.name());
 
    if (cl) {
