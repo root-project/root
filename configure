@@ -1667,7 +1667,7 @@ if test "x$enable_xrootd" = "xyes"; then
     message "Checking for xrootd platform support"
     case $arch in
     # linux* | solaris* | macos*)
-    linux | solarisCC5)
+    linux)
         buildxrd="yes"
         hasnetx=""
         echo "yes" ;;
