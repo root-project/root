@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.17 2002/11/18 21:52:01 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.18 2003/07/14 16:11:01 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -266,7 +266,7 @@ int main(int argc, char **argv)
   if (argc > 2) {
      file_out=argv[2];
   } else {
-     file_out= new char[128];
+     file_out= new char[2048];
      strcpy(file_out,file_in);
      char *dot = strrchr(file_out,'.');
      if (dot) strcpy(dot+1,"root");
