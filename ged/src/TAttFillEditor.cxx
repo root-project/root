@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.5 2004/12/15 17:07:32 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.cxx,v 1.6 2004/12/15 20:18:25 brun Exp $
 // Author: Ilka Antcheva   10/05/04
 
 /*************************************************************************
@@ -51,7 +51,7 @@ TAttFillEditor::TAttFillEditor(const TGWindow *p, Int_t id, Int_t width,
    
    MakeTitle("Fill");
 
-   f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fColorSelect = new TGColorSelect(f2, 0, kCOLOR);
    f2->AddFrame(fColorSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fColorSelect->Associate(this);
@@ -101,16 +101,13 @@ void TAttFillEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fModel = 0;
    fPad = 0;
 
-   if (obj == 0 || !obj->InheritsFrom("TAttFill")) {
+   if (obj == 0 || !obj->InheritsFrom("TAttFill") || obj->InheritsFrom("TCurlyLine")) {
       SetActive(kFALSE);
       return;
    }
 
    fModel = obj;
    fPad = pad;
-   if (obj->InheritsFrom("TCurlyLine")) {
-      HideFrame(f2);
-   }
 
    fAttFill = dynamic_cast<TAttFill *>(fModel);
 

@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.h,v 1.3 2004/12/15 17:07:32 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TAttFillEditor.h,v 1.4 2004/12/15 20:18:25 brun Exp $
 // Author: Ilka  Antcheva 10/05/04
 
 /*************************************************************************
@@ -38,7 +38,7 @@ protected:
    TAttFill            *fAttFill;          // fill attribute object
    TGColorSelect       *fColorSelect;      // fill color widget
    TGedPatternSelect   *fPatternSelect;    // fill pattern widget
-   TGCompositeFrame    *f2;                // 
+
    virtual void ConnectSignals2Slots();
  
 public:
