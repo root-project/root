@@ -1,4 +1,4 @@
-// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.5 2001/06/22 16:10:17 rdm Exp $
+// @@(#)root/g3d:$Name:  $:$Id: TXTRU.cxx,v 1.6 2001/10/04 16:52:47 rdm Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 #include "TXTRU.h"
@@ -618,16 +618,13 @@ void TXTRU::Print(Option_t *option) const
    printf("  XY shape '%s', '%s'\n",shape,zorder);
 
    Int_t       nxy, nz;
-   const char *status;
    const char *used  = " ";
    const char *alloc = "  allocated";
 
    if (opt.Contains("alloc")) {
-      status = used;
       nxy    = fNxy;
       nz     = fNz;
    } else {
-      status = alloc;
       nxy    = fNxyAlloc;
       nz    = fNzAlloc;
    }

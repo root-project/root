@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.25 2001/12/21 08:46:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.26 2001/12/21 12:22:10 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -952,9 +952,8 @@ void TSystem::Unload(const char *module)
    AbstractMethod("UnLoad");
 #else
    char *path;
-   int i = -1;
    if ((path = DynamicPathName(module))) {
-     i = G__unloadfile(path);
+     G__unloadfile(path);
      delete [] path;
    }
 #endif
