@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.19 2001/12/10 21:10:04 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.20 2002/01/19 08:25:12 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -96,14 +96,14 @@ public:
    virtual void     FixParameter(Int_t ipar, Double_t value);
        Double_t     GetChisquare() const {return fChisquare;}
            TH1     *GetHistogram() const;
-          Int_t     GetNDF() const;
-          Int_t     GetNpx() const {return fNpx;}
+   virtual Int_t    GetNDF() const;
+   virtual Int_t    GetNpx() const {return fNpx;}
     TMethodCall    *GetMethodCall() const {return fMethodCall;}
-          Int_t     GetNumberFitPoints() const {return fNpfits;}
+   virtual Int_t    GetNumberFitPoints() const {return fNpfits;}
    virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
         TObject    *GetParent() const {return fParent;}
-       Double_t     GetParError(Int_t ipar) const;
-       Double_t    *GetParErrors() const {return fParErrors;}
+   virtual Double_t GetParError(Int_t ipar) const;
+   virtual Double_t *GetParErrors() const {return fParErrors;}
    virtual void     GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax);
    virtual Double_t GetProb() const {return TMath::Prob(fChisquare,fNpfits-fNpar);}
    virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum); 
@@ -112,8 +112,8 @@ public:
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax);
    virtual Double_t GetSave(const Double_t *x);
-        Double_t    GetXmin() const {return fXmin;}
-        Double_t    GetXmax() const {return fXmax;}
+   virtual Double_t GetXmin() const {return fXmin;}
+   virtual Double_t GetXmax() const {return fXmax;}
    virtual void     InitArgs(const Double_t *x, const Double_t *params);
    static  void     InitStandardFunctions();
    virtual Double_t Integral(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001);
