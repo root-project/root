@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.102 2002/09/23 18:24:27 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.103 2002/10/21 16:15:06 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -21,11 +21,11 @@
 //                                                                      //
 // Rootcint can be used like:                                           //
 //                                                                      //
-//  rootcint TAttAxis.h[+][-][!] ... [LinkDef.h] > AxisDict.cxx         //
+//  rootcint TAttAxis.h[{+,-}][!] ... [LinkDef.h] > AxisDict.cxx        //
 //                                                                      //
 // or                                                                   //
 //                                                                      //
-//  rootcint [-v][-v0-4] [-f] dict.C [-c] TAxis.h[+][-][!]..[LinkDef.h] //
+//  rootcint [-v[0-4]] [-f] dict.C [-c] TAxis.h[{+,-}][!]..[LinkDef.h]  //
 //                                                                      //
 // The difference between the two is that in the first case only the    //
 // Streamer() and ShowMembers() methods are generated while in the      //
@@ -150,7 +150,7 @@ const char *help =
 "\n"
 "or\n"
 "\n"
-"  rootcint [-v][-v0-4] [-f] dict.C [-c] TAxis.h[+][-][!]..[LinkDef.h] \n"
+"  rootcint [-v[0-4]] [-f] dict.C [-c] TAxis.h[{+,-}][!] ... [LinkDef.h] \n"
 "\n"
 "The difference between the two is that in the first case only the\n"
 "Streamer() and ShowMembers() methods are generated while in the\n"
@@ -434,7 +434,9 @@ int GetClassVersion(G__ClassInfo &cl)
    return version;
 }
 
-string GetNonConstTypeName(G__DataMemberInfo &m) {
+//______________________________________________________________________________
+string GetNonConstTypeName(G__DataMemberInfo &m)
+{
    if (m.Property() & (G__BIT_ISCONSTANT|G__BIT_ISPCONSTANT)) {
       G__TypeInfo* type = m.Type();
       const char *typeName = type->TrueName();
@@ -457,14 +459,14 @@ string GetNonConstTypeName(G__DataMemberInfo &m) {
    } else {
       return m.Type()->TrueName();
    }
-      
 }
 
 //______________________________________________________________________________
-string GetNonConstMemberName(G__DataMemberInfo &m) {
-   // Return the name of the data member so that it can be used 
-   // by non-const operation (so it includes a const_cast if necessary
-   
+string GetNonConstMemberName(G__DataMemberInfo &m)
+{
+   // Return the name of the data member so that it can be used
+   // by non-const operation (so it includes a const_cast if necessary.
+
    if (m.Property() & (G__BIT_ISCONSTANT|G__BIT_ISPCONSTANT)) {
       string ret = "const_cast< ";
       ret += GetNonConstTypeName(m);
@@ -475,7 +477,6 @@ string GetNonConstMemberName(G__DataMemberInfo &m) {
    } else {
       return m.Name();
    }
-
 }
 
 //______________________________________________________________________________
@@ -1510,7 +1511,7 @@ const char *ShortTypeName(const char *typeDesc)
      if (*s=='<') lev++;
      if (*s=='>') lev--;
      if (lev==0 && *s=='*') continue;
-     if (lev==0 && (strncmp(constwd,s,strlen(constwd))==0 
+     if (lev==0 && (strncmp(constwd,s,strlen(constwd))==0
                     ||strcmp(constwdend,s)==0 ) ) {
         s+=strlen(constwd)-1;
         continue;
