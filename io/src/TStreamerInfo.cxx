@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.207 2004/11/17 06:02:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.208 2004/11/17 06:35:21 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -38,7 +38,6 @@
 #include "TVirtualCollectionProxy.h"
 #include "TStreamer.h"
 #include "TInterpreter.h"
-#include "TContainerConverters.h"
 
 Int_t   TStreamerInfo::fgCount = 0;
 Bool_t  TStreamerInfo::fgCanDelete        = kTRUE;
@@ -303,7 +302,7 @@ void TStreamerInfo::Build()
                      continue;
                   } else {
                      element = new TStreamerObjectAnyPointer(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName());
-                     if (!streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
+                     if (!streamer && !clm->IsLoaded()) {
                         Error("Build:","%s: %s has no streamer or dictionary, data member %s will not be saved",
                               GetName(), dm->GetFullTypeName(),dm->GetName());
                      }
@@ -320,7 +319,7 @@ void TStreamerInfo::Build()
                continue;
             } else {
                element = new TStreamerObjectAny(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName());
-               if (!streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
+               if (!streamer && !clm->IsLoaded()) {
                   Warning("Build:","%s: %s has no streamer or dictionary, data member \"%s\" will not be saved",
                           GetName(), dm->GetFullTypeName(),dm->GetName());
                }
@@ -369,26 +368,7 @@ void TStreamerInfo::BuildCheck()
       TStreamerInfo *info = 0;
 
       // if a foreign class, search info with same checksum
-      Bool_t isForeign = kFALSE;
       if (fClass->IsForeign()) {
-         isForeign = kTRUE;
-      } else if( !fClass->IsLoaded() ) {
-         // Whent the class is not loaded 
-         // the result of IsForeign is not what we are looking 
-         // for (Technically IsForeign means IsLoaded and do not 
-         // have a Streamer method).
-         
-         // A foreign class would have the ClassVersion equal to 1
-         // Also we only care if a StreamerInfo has already been loaded
-         if ( fClassVersion==1 && array->At(1) != 0 ) {
-            if (fCheckSum != ((TStreamerInfo*)array->At(1))->GetCheckSum()) {
-               isForeign = kTRUE;
-               fClassVersion = array->GetLast()+1;
-            }
-         }
-      }
-
-      if (isForeign) {
          Int_t ninfos = array->GetEntriesFast();
          for (Int_t i=1;i<ninfos;i++) {
             info = (TStreamerInfo*)array->At(i);
@@ -530,106 +510,6 @@ void TStreamerInfo::BuildEmulated(TFile *file)
 }
 
 //______________________________________________________________________________
-// Helper function for BuildOld
-namespace {
-   Bool_t ClassWasMovedToNamespace(TClass *oldClass, TClass *newClass) 
-   {
-      // Returns true if oldClass is the same as newClass but newClass is in a 
-      // namespace (and oldClass was not in a namespace).
-
-      if (oldClass == 0 || newClass == 0) return kFALSE;
-
-      if ( ! (strlen(newClass->GetName()) > strlen(oldClass->GetName()) ) ) return kFALSE;
-      UInt_t newlen = strlen(newClass->GetName());
-      UInt_t oldlen = strlen(oldClass->GetName());
-
-      Bool_t done = kFALSE;
-      for(UInt_t i = 0, done = false; (i<oldlen) && !done ; ++i) {
-         switch ( oldClass->GetName()[i] ) {
-            case ':' : return kFALSE; /* old class is in some scope */
-            case '<' : done = kTRUE; break; /* we got to a template parameter, so the old class was not in any scope */
-         }
-      }
-
-      const char* newEnd = & ( newClass->GetName()[ newlen - oldlen ] );
-
-      if (0 != strcmp( newEnd, oldClass->GetName() ) ) return kFALSE;
- 
-      Int_t oldv = oldClass->GetStreamerInfo()->GetClassVersion();
-
-      if (   oldv < newClass->GetStreamerInfos()->GetSize() 
-          && newClass->GetStreamerInfos()->At(oldv)
-          && strcmp( newClass->GetStreamerInfos()->UncheckedAt(oldv)->GetName(),
-                     oldClass->GetName() ) != 0 ) {
-         // The new class has already a TStreamerInfo for the the same version as
-         // the old class and this was not the result of an import.  So we do not 
-         // have a match
-         return kFALSE;
-      }
-      return kTRUE;
-   }
-
-   Int_t ImportStreamerInfo(TClass *oldClass, TClass *newClass) {
-      // Import the streamerInfo from oldClass to newClass
-      // In case of conflict, returns the version number of the StreamerInfo
-      // with the conflict.
-      // Return 0 in case of success
-
-      TIter next(oldClass->GetStreamerInfos());
-      TStreamerInfo *info;
-      while ((info = (TStreamerInfo*)next())) {
-         info = (TStreamerInfo*)info->Clone();
-         info->SetClass(newClass);
-         Int_t oldv = info->GetClassVersion();
-         if (   oldv > newClass->GetStreamerInfos()->GetSize() 
-             || newClass->GetStreamerInfos()->UncheckedAt(oldv)==0 ) {
-            // All is good.
-            newClass->GetStreamerInfos()->AddAtAndExpand(info,oldv);
-         } else {
-            // We verify that we are consitent and that 
-            //   newcl->GetStreamerInfos()->UncheckedAt(info->GetClassVersion)
-            // is already the same as info.
-            if ( strcmp( newClass->GetStreamerInfos()->UncheckedAt(oldv)->GetName(),
-                         oldClass->GetName() ) != 0 ) {
-               // The existing StreamerInfo does not already come from OldClass.
-               // This is a real problem!
-               return oldv;
-            }
-         }
-      }
-      return 0;
-   }
-   
-   Bool_t ContainerMatchTClonesArray(TClass *newClass) 
-   {
-      // Return true if newClass is a likely valid conversion from
-      // a TClonesArray
-
-      return newClass->GetCollectionProxy()
-             && newClass->GetCollectionProxy()->GetValueClass() 
-             && !newClass->GetCollectionProxy()->HasPointers();
-   }
-
-   Bool_t CollectionMatch(const TClass *oldClass, const TClass* newClass)
-   {
-      // Return true if oldClass and newClass points to 2 compatible collection.
-      // i.e. they contains the exact same type.
-
-      TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
-      TVirtualCollectionProxy *newProxy = newClass->GetCollectionProxy();
-
-      if (oldProxy->GetValueClass() == newProxy->GetValueClass()) {
-         if (  (oldProxy->GetValueClass() ==0 && oldProxy->GetType() == newProxy->GetType()) 
-             ||(oldProxy->GetValueClass() && oldProxy->HasPointers() == newProxy->HasPointers()) ) {
-            // We have compatibles collections (they have the same content!
-            return kTRUE;
-         }
-      }
-      return kFALSE;
-   }
-}
-
-//______________________________________________________________________________
 void TStreamerInfo::BuildOld()
 {
    // rebuild the TStreamerInfo structure
@@ -692,6 +572,7 @@ void TStreamerInfo::BuildOld()
             Int_t version = base->GetBaseVersion();
             TStreamerInfo *infobase = baseclass->GetStreamerInfo(version);
             if (infobase->GetTypes() == 0) infobase->BuildOld();
+            //VP         element->Init();
             Int_t baseOffset = fClass->GetBaseClassOffset(baseclass);
             if (baseOffset < 0) baseOffset = 0;
             element->SetOffset(baseOffset);
@@ -736,183 +617,156 @@ void TStreamerInfo::BuildOld()
 
       }
 
-      TDataMember *dm = 0;
-
-      // First set the offset and sizes.
-      if (fClass->GetDeclFileLine() < 0) {
-
-         // Note the initilization in this case are 
-         // delayed until __after__ the schema evolution
-         // section, just in case the info has changed.
-
-         // We are in the emulated case
+      TDataMember *dm = (TDataMember*)fClass->GetListOfDataMembers()->FindObject(element->GetName());
+      // may be an emulated class
+      if (!dm && fClass->GetDeclFileLine() < 0) {
          streamer = 0;
          element->Init(fClass);
-
-      } else {
-         // The class is loaded.
-
-         // First look for the data member in the current class
-         dm = (TDataMember*)fClass->GetListOfDataMembers()->FindObject(element->GetName());
-         if (dm && dm->IsPersistent()) {
-            fClass->BuildRealData();
-            streamer = 0;
-            offset = GetDataMemberOffset(dm,streamer);
-            element->SetOffset(offset);
-            element->Init(fClass);
-            element->SetStreamer(streamer);
-            int narr = element->GetArrayLength(); if (!narr) narr=1;
-            int dsize = dm->GetUnitSize();
-            element->SetSize(dsize*narr);
-
-         } else {
-            // We did not find it, let's look for it in the base classes via TRealData
-            TRealData *rd = fClass->GetRealData(element->GetName());
-            if (rd && rd->GetDataMember() ) {
-               element->SetOffset(rd->GetThisOffset());
-               element->Init(fClass);
-               dm = rd->GetDataMember();
-               int narr = element->GetArrayLength(); if (!narr) narr=1;
-               int dsize = dm->GetUnitSize();
-               element->SetSize(dsize*narr);
-            }
-         }
-      }
-
-      // Now let's deal with Schema evolution
-      Int_t newType = kNoType_t;
-      TClass *newClass = 0;
-      if (dm) {
-         if (dm->GetDataType()) {
-            newType = dm->GetDataType()->GetType();
-            Bool_t isPointer = dm->IsaPointer();
-            if (newType == kChar && isPointer && !(element->GetArrayLength() > 1) ) {
-              newType=kCharStar;
-            } else if (isPointer) {
-               newType += kOffsetP;
-            } else if (element->GetArrayLength() > 1) {
-               newType += kOffsetL;
-            }
-         }
-         if (newType==0) newClass = gROOT->GetClass( dm->GetTypeName() );
-      } else {
-         // Either the class is not loaded or the data member is gone
-         if (! fClass->IsLoaded() ) {
-            TStreamerInfo *newInfo = (TStreamerInfo*)fClass->GetStreamerInfos()->At(fClass->GetClassVersion());
-            if (newInfo && newInfo != this) {
-               TStreamerElement *newElems = (TStreamerElement*)
-                  newInfo->GetElements()->FindObject(element->GetName());
-               newClass = newElems->GetClassPointer();
-               if (newClass==0) {
-                  newType = newElems->GetType();
-                  if (! (newType<kObject) ) newType = kNoType_t; // sanity check. 
-               }
-            } else {
-               newClass = element->GetClassPointer();
-               if (newClass==0) {
-                  newType = element->GetType();
-                  if (! (newType<kObject) ) newType = kNoType_t; // sanity check. 
-               }
-            }
-         }
-      }
-
-      if (newType) {
-         // Case of a numerical type
-         if (element->GetType() != newType ) {
-            element->SetNewType(newType);
-            if (gDebug > 0) Warning("BuildOld","element: %s::%s %s has new type: %s/%d",
-                                    GetName(),element->GetTypeName(),element->GetName(),
-                                    dm->GetFullTypeName(),newType);
-         }
-      } else if (newClass) {
-         // Sometime BuildOld is called again.
-         // In that case we migth already have fix up the streamer element.
-         // So we need to go back to the original information!
-         TClass *oldClass = gROOT->GetClass(
-            TClassEdit::ShortType(element->GetTypeName(),TClassEdit::kDropTrailStar).c_str());
-
-         if (oldClass == newClass) {
-            // Nothing to do :)
-
-         } else if ( ClassWasMovedToNamespace(oldClass,newClass) ) {
-            Int_t oldv;
-            if (0 != (oldv=ImportStreamerInfo(oldClass,newClass))) {
-                Warning("BuildOld","Can not properly load the TStreamerInfo from %s into %s due to a conflict for the class version %d",
-                        oldClass->GetName(), newClass->GetName(), oldv);
-            } else {
-               element->SetTypeName(dm->GetFullTypeName());
-
-               if (gDebug>0) Warning("BuildOld","element: %s::%s %s has new type %s",
-                                     GetName(),element->GetTypeName(), element->GetName(),
-                                     newClass->GetName());
-            }
-
-         } else if ( oldClass == TClonesArray::Class() ) {
-
-            if ( ContainerMatchTClonesArray( newClass ) ) {
-
-               Int_t elemType = element->GetType();
-               Bool_t isPrealloc = elemType==kObjectp || elemType==kAnyp
-                  || elemType==kObjectp+kOffsetL || elemType==kAnyp+kOffsetL;
-
-               element->Update( oldClass, newClass );
-               element->SetStreamer( 
-                  new TConvertClonesArrayToProxy(newClass->GetCollectionProxy(),
-                                                 element->IsaPointer(),
-                                                 isPrealloc) );
-               // When the type is kObject, the TObject::Streamer is used instead
-               // of the TStreamerElement's streamer.  So let force the usage
-               // of our streamer
-               if (element->GetType()==kObject) {
-                  element->SetNewType(kAny);
-                  element->SetType(kAny);
-               }
-               if (gDebug>0) Warning("BuildOld","element: %s::%s %s has new type %s",
-                                     GetName(),element->GetTypeName(), element->GetName(),
-                                     newClass->GetName());
-            } else {
-               element->SetNewType(-2);
-            }
-
-         } else if ( oldClass->GetCollectionProxy() &&
-                     newClass->GetCollectionProxy() ) {
-            if ( CollectionMatch ( oldClass, newClass ) ) {
-
-               element->Update( oldClass, newClass );
-               // Is this needed ? : element->SetSTLtype(newelement->GetSTLtype()); 
-
-               if (gDebug>0) Warning("BuildOld","element: %s::%s %s has new type %s",
-                                     GetName(),element->GetTypeName(), element->GetName(),
-                                     newClass->GetName());
-            } else {
-                element->SetNewType(-2);
-            }
-         } else {
-            element->SetNewType(-2);
-         }
-      } else {
-         element->SetNewType(-1);
-         element->SetOffset(kMissing);
-      }
-      if (element->GetNewType()==-2) {
-         Warning("BuildOld","Cannot convert %s::%s from type:%s to type:%s, skip element",
-                 GetName(),element->GetName(),element->GetTypeName(),newClass->GetName());
-      }
-
-      if (fClass->GetDeclFileLine() < 0) {
-
-         // Note the initilization in this case are 
-         // delayed until __after__ the schema evolution
-         // section, just in case the info has changed.
-
+         Int_t alength = element->GetArrayLength();
+         if (alength == 0) alength = 1;
          Int_t asize = element->GetSize();
          //align the non-basic data types (required on alpha and IRIX!!)
          if (offset%sp != 0) offset = offset - offset%sp + sp;
          element->SetOffset(offset);
          offset += asize;
-      }
+      } else if (dm && dm->IsPersistent()) {
+         TDataType *dt = dm->GetDataType();
+         fClass->BuildRealData();
+         streamer = 0;
+         offset = GetDataMemberOffset(dm,streamer);
+         element->SetOffset(offset);
+         element->Init(fClass);
+         element->SetStreamer(streamer);
+         int narr = element->GetArrayLength(); if (!narr) narr=1;
+         int dsize = dm->GetUnitSize();
+         element->SetSize(dsize*narr);
 
+         // in case, element is an array check array dimension(s)
+         // check if data type has been changed
+         TString ts(TClassEdit::ResolveTypedef(TClassEdit::ShortType(dm->GetFullTypeName(),TClassEdit::kDropAlloc).c_str(),
+					       kTRUE).c_str());
+         
+         Bool_t need_conversion = false;
+         if (strcmp(element->GetTypeName(),ts.Data())) need_conversion = true;
+
+         if (need_conversion && TClassEdit::IsSTLCont(ts.Data())) {
+            // Check if the names are the same, just with different allocators
+            // or different comparator.
+            TString shortElement (TClassEdit::ResolveTypedef(TClassEdit::ShortType(element->GetTypeName(),
+                                                                                   TClassEdit::kDropAlloc | TClassEdit::kDropComparator).c_str(),
+                                                             kTRUE) );
+            TString shortDataMember ( TClassEdit::ShortType(ts.Data(),
+                                                            TClassEdit::kDropComparator).c_str() );
+
+            if (shortElement == shortDataMember) need_conversion = false;
+         } 
+
+         if (need_conversion) {
+            //if (element->IsOldFormat(dm->GetFullTypeName())) continue;
+            if (dt) {
+               if (element->GetType() != dt->GetType()) {
+                  Int_t newtype = dt->GetType();
+                  if (dm->IsaPointer()) newtype += kOffsetP;
+                  else if (element->GetArrayLength() > 1) newtype += kOffsetL;
+                  element->SetNewType(newtype);
+                  if (gDebug > 0) Warning("BuildOld","element: %s::%s %s has new type: %s/%d",GetName(),element->GetTypeName(),element->GetName(),dm->GetFullTypeName(),newtype);
+               }
+            } else {
+               TClass *oldcl = gROOT->GetClass(element->GetTypeName());
+               TClass *newcl = gROOT->GetClass(dm->GetFullTypeName());
+
+               // Let see if newcl is just oldcl in a namespace.
+               bool possibleMatch = (oldcl && !oldcl->IsLoaded());
+
+
+               // First test that oldcl is not a scope of any sort
+               if (possibleMatch) { 
+                  for(int i = 0, done = false; i<strlen(oldcl->GetName()) && !done ; ++i) {
+                     switch ( oldcl->GetName()[i] ) {
+                        case ':' : possibleMatch = kFALSE; done = kTRUE; break; /* old class is in some scope */
+                        case '<' : done = kTRUE; break; /* we got to a template parameter, so the old class was not in any scope */
+                     }
+                  }
+               }
+                  
+               // And now let's test that the new name ends with the old name
+                  
+               if (possibleMatch && strlen(newcl->GetName()) > strlen(oldcl->GetName()) ) {
+                  UInt_t newlen = strlen(newcl->GetName());
+                  UInt_t oldlen = strlen(oldcl->GetName());
+                  const char* newEnd = & ( newcl->GetName()[ newlen - oldlen ] );
+                  possibleMatch = (0 == strcmp( newEnd, oldcl->GetName() ) );
+               } else {
+                  possibleMatch = kFALSE;
+               }
+               if (possibleMatch) {
+                  Int_t oldv = oldcl->GetStreamerInfo()->GetClassVersion();
+
+                  if (   oldv < newcl->GetStreamerInfos()->GetSize() 
+                      && newcl->GetStreamerInfos()->At(oldv)
+                      && strcmp( newcl->GetStreamerInfos()->UncheckedAt(oldv)->GetName(),
+                                 oldcl->GetName() ) != 0 ) {
+                     // The new class has already a TStreamerInfo for the the same version as
+                     // the old class and this was not the result of an import.  So we do not 
+                     // have a match
+                     possibleMatch = kFALSE;
+                  }
+               }
+               if (possibleMatch) {
+                  // Now we know that the new class of the data member has the same name as the old class
+                  // except that the new class is in a namespace!
+                  // To allow the automatic schema evolution, all we need to do, is to add the TStreamerInfo from
+                  // the old class to the new class and make sure to connect the TStreamerElement appropriately!
+                  TIter next(oldcl->GetStreamerInfos());
+                  TStreamerInfo *info;
+                  while ((info = (TStreamerInfo*)next())) {
+                     info = (TStreamerInfo*)info->Clone();
+                     info->SetClass(newcl);
+                     UInt_t oldv = info->GetClassVersion();
+                     if (  oldv > newcl->GetStreamerInfos()->GetSize() 
+                        || newcl->GetStreamerInfos()->UncheckedAt(oldv)==0 ) {
+
+                        newcl->GetStreamerInfos()->AddAtAndExpand(info,oldv);
+                     } else {
+                        // We verify that we are consitent and that 
+                        //   newcl->GetStreamerInfos()->UncheckedAt(info->GetClassVersion)
+                        // is already the same as info.
+                        if ( strcmp( newcl->GetStreamerInfos()->UncheckedAt(oldv)->GetName(),
+                           oldcl->GetName() ) != 0 ) {
+                           Warning("BuildOld","Can not properly load the TStreamerInfo from %s into %s due to a conflict for the class version %d",
+                                  oldcl->GetName(), newcl->GetName(), oldv);
+                           possibleMatch = kFALSE;
+                           break;
+                        }
+                     }
+                  }
+               }
+               if (possibleMatch) element->SetTypeName(dm->GetFullTypeName());
+               else {
+                  element->SetNewType(-2);
+                  Warning("BuildOld","Cannot convert %s::%s from type:%s to type:%s, skip element",
+                          GetName(),element->GetName(),element->GetTypeName(),dm->GetFullTypeName());
+               }
+            }
+         }
+      } else {
+         //last attempt via TRealData in case the member has been moved to a base class
+         TRealData *rd = fClass->GetRealData(element->GetName());
+         if (rd && rd->GetDataMember() ) {
+            element->SetOffset(rd->GetThisOffset());
+            dm = rd->GetDataMember();
+            TDataType *dt = dm->GetDataType();
+            if (dt) {
+               if (element->GetType() != dt->GetType()) {
+                  element->SetNewType(dt->GetType());
+                  if (gDebug > 0) Warning("BuildOld","element: %s::%s %s has new type: %s",GetName(),element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
+               }
+            }
+         } else {
+            element->SetNewType(-1);
+            element->SetOffset(kMissing);
+         }
+      }
    }
 
    // change order , move "bazes" to the end. Workaround old bug
