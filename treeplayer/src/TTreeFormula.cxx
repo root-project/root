@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.50 2001/06/02 20:52:47 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.51 2001/06/06 07:21:15 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1535,8 +1535,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       Int_t muly = ((TTreeFormula*)gcut->GetObjectY())->GetMultiplicity();
       if(mulx || muly) fMultiplicity = -1;
 
-      fMethods.AddAtAndExpand(gcut,0);
       Int_t code = fNcodes;
+      fMethods.AddAtAndExpand(gcut,code);
       fCodes[code] = -1;
       fNcodes++;
       fLookupType[code] = -1;
