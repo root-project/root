@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.12 2003/08/06 23:39:32 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef3.h,v 1.13 2004/03/11 06:17:43 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -162,7 +162,7 @@
 // inside the cintdlls.
 #pragma extra_include "string";
 // insure using namespace std and declaration of std::pair
-#pragma extra_include "Riostream.h"; 
+#pragma extra_include "Rpair.h"; 
 #include <utility>
 
 #pragma link C++ class std::pair<char*,int>+;
