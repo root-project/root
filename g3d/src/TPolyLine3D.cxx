@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.13 2002/10/31 07:27:34 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.14 2003/02/21 21:21:55 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -220,6 +220,7 @@ TPolyLine3D::TPolyLine3D(const TPolyLine3D &polyline) : TObject(polyline), TAttL
 {
    // 3-D polyline copy ctor.
 
+   fP = 0;
    ((TPolyLine3D&)polyline).Copy(*this);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.14 2002/05/18 08:21:59 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.15 2002/10/31 07:27:34 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -151,6 +151,7 @@ TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &polymarker) : TObject(polymark
 {
    // 3-D polymarker copy ctor.
 
+   fP = 0;
    ((TPolyMarker3D&)polymarker).Copy(*this);
 }
 
