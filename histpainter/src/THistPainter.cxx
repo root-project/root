@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.70 2002/02/24 18:05:34 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.71 2002/02/25 09:57:20 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2259,6 +2259,13 @@ void THistPainter::PaintErrors()
 //
 //     Note that for all options, the line and fill attributes of the
 //     histogram are used for the errors or errors contours.
+//
+//     Use gStyle->SetErrorX(dx) to control the size of the error along x.
+//     set dx = 0 to suppress the error along x.
+//
+//     Use gStyle->SetEndErrorSize(np) to control the size of the lines
+//     at the end of the error bars (when option 1 is used).
+//     By default np=1. (np reprersents the number of pixels).
 //Begin_Html
 /*
 <img src="gif/PaintErrors.gif">
@@ -2299,13 +2306,13 @@ void THistPainter::PaintErrors()
    symbolsize  = fH->GetMarkerSize();
    if (errormarker == 1) symbolsize = 0.01;
    sbase       = symbolsize*BASEMARKER;
-//          set the graphics attributes
+   // set the graphics attributes
 
    fH->TAttLine::Modify();
    fH->TAttFill::Modify();
    fH->TAttMarker::Modify();
 
-//          initiate the first and last bin
+   // set the first and last bin
 
    Double_t factor = Hparam.factor;
    first      = Hparam.xfirst;
@@ -2315,9 +2322,7 @@ void THistPainter::PaintErrors()
    xmax       = gPad->GetUxmax();
    ymin       = gPad->GetUymin();
    ymax       = gPad->GetUymax();
-   bxsize     = 0.01*symbolsize*(xmax-xmin);
 
-//          initialize the filled area drawing
 
    if (option3) {
       xline = new Double_t[2*npoints];
@@ -2330,14 +2335,15 @@ void THistPainter::PaintErrors()
       if2 = 2*npoints;
    }
 
-//          define the offset of the error bars due to the symbol size
-
+   //  compute the offset of the error bars due to the symbol size
    s2x    = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
    s2y    =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
-   bxsize = 2*xerror*s2x;
-   bysize = 2*xerror*s2y;
+   
+   // compute size of the lines at the end of the error bars
+   Int_t dxend = Int_t(1+gStyle->GetEndErrorSize());
+   bxsize    = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   bysize    =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
 
-//          initialize the first point
 
    if (fixbin) {
       if (Hoption.Logx) xp = TMath::Power(10,Hparam.xmin) + 0.5*Hparam.xbinsize;
@@ -2348,8 +2354,7 @@ void THistPainter::PaintErrors()
       xp    = fH->GetBinLowEdge(first) + 0.5*delta;
    }
 
-//*      if errormarker = 0 or symbolsize = 0. no symbol is drawn
-
+   // if errormarker = 0 or symbolsize = 0. no symbol is drawn
    if (Hoption.Logx) logxmin = TMath::Power(10,Hparam.xmin);
    if (Hoption.Logy) logymin = TMath::Power(10,Hparam.ymin);
 
@@ -2357,15 +2362,14 @@ void THistPainter::PaintErrors()
 
    for (k=first; k<=last; k++) {
 
-//          get the data
-
-//     xp      = X position of the current point
-//     yp      = Y position of the current point
-//     ex1   = Low X error
-//     ex2   = Up X error
-//     ey1   = Low Y error
-//     ey2   = Up Y error
-//     (xi,yi) = Error bars corrdinates
+      //          get the data
+      //     xp      = X position of the current point
+      //     yp      = Y position of the current point
+      //     ex1   = Low X error
+      //     ex2   = Up X error
+      //     ey1   = Low Y error
+      //     ey2   = Up Y error
+      //     (xi,yi) = Error bars corrdinates
 
       if (Hoption.Logx) {
          if (xp <= 0) goto L30;
@@ -2395,8 +2399,7 @@ void THistPainter::PaintErrors()
       yi3 = yp - ey1;
       yi4 = yp + ey2;
 
-//          take the LOG if necessary
-
+     //          take the LOG if necessary
       if (Hoption.Logx) {
          xi1 = TMath::Log10(TMath::Max(xi1,logxmin));
          xi2 = TMath::Log10(TMath::Max(xi2,logxmin));
@@ -2410,35 +2413,28 @@ void THistPainter::PaintErrors()
          yi4 = TMath::Log10(TMath::Max(yi4,logymin));
       }
 
-//          test if error bars are not outside the limits
-//          otherwise they are truncated
+      // test if error bars are not outside the limits
+      //  otherwise they are truncated
 
       xi1 = TMath::Max(xi1,xmin);
       xi2 = TMath::Min(xi2,xmax);
       yi3 = TMath::Max(yi3,ymin);
       yi4 = TMath::Min(yi4,ymax);
 
-//          test if the marker is on the frame limits. If "Yes", the
-//          marker will be not drawn and the error bars will be readjusted.
+     //  test if the marker is on the frame limits. If "Yes", the
+     //  marker will be not drawn and the error bars will be readjusted.
 
       drawmarker = kTRUE;
       if (!option0) {   // <=====Please check
          if (yi1 < ymin || yi1 > ymax) goto L30;
-//         if (((yi1-s2y) < ymin && (yi1+s2y) > ymin)
-//          || ((yi1-s2y) < ymax && (yi1+s2y) > ymax)
-//          || ((xi3-s2x) < xmin && (xi3+s2x) > xmin)
-//          || ((xi3-s2x) < xmax && (xi3+s2x) > xmax))
-//         drawmarker = kFALSE;
           if (Hoption.Error != 0 && ey1 <= 0) drawmarker = kFALSE;
       }
       if (!symbolsize || !errormarker) drawmarker = kFALSE;
 
-//          draw the error rectangles
-
+      //  draw the error rectangles
       if (option2) gPad->PaintBox(xi1,yi3,xi2,yi4);
 
-//          keep points for fill area drawing
-
+      //  keep points for fill area drawing
       if (option3) {
          xline[if1-1] = xi3;
          xline[if2-1] = xi3;
