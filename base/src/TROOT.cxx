@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.136 2004/10/07 17:07:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.137 2004/10/08 07:27:23 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -350,7 +350,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    fTimer       = 0;
    fApplication = 0;
-   fColors      = new TObjArray(1000);
+   fColors      = new TObjArray(1000); fColors->SetName("ListOfColors");
    fTypes       = 0;
    fGlobals     = 0;
    fGlobalFunctions = 0;

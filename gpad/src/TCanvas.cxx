@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.78 2004/09/13 16:39:12 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.79 2004/10/11 16:27:13 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1692,6 +1692,29 @@ void TCanvas::Streamer(TBuffer &b)
       fCanvas = this;
       TPad::Streamer(b);
       gPad    = this;
+      //restore the colors
+      TObjArray *colors = (TObjArray*)fPrimitives->FindObject("ListOfColors");
+      if (colors) {
+         Int_t ncolors = colors->GetEntries();
+         for (Int_t i=0;i<ncolors;i++) {
+            TColor *colold = (TColor*)colors->At(i);
+            TColor *colcur = gROOT->GetColor(i);
+            if (colold) {
+               if (colcur) {
+                  colcur->SetRGB(colold->GetRed(),colold->GetGreen(),colold->GetBlue());
+               } else {
+                  colcur = new TColor(i,colold->GetRed(),
+                                        colold->GetGreen(),
+                                        colold->GetBlue(),
+                                        colold->GetName());
+               }
+            }
+         }
+         fPrimitives->Remove(colors);
+         colors->Delete();
+         delete colors;
+      }
+      
       fDISPLAY.Streamer(b);
       b >> fDoubleBuffer;
       b >> fRetained;
@@ -1725,6 +1748,9 @@ void TCanvas::Streamer(TBuffer &b)
       b >> fMenuBar;
       b.CheckByteCount(R__s, R__c, TCanvas::IsA());
    } else {
+      //save list of colors
+      fPrimitives->Add(gROOT->GetListOfColors());
+      
       R__c = b.WriteVersion(TCanvas::IsA(), kTRUE);
       TPad::Streamer(b);
       fDISPLAY.Streamer(b);
