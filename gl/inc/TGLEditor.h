@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.2 2004/09/14 15:32:47 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLColorEditor.h,v 1.3 2004/09/29 06:55:13 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -24,17 +24,22 @@
 
 
 class TGLayoutHints;
+class TGNumberEntry;
 class TGLMatView;
 class TGHSlider;
 class TGButton;
 class TGCanvas;
 class TGLabel;
 
-class TGLEditor : public TGCompositeFrame {
+enum EApplyButtonIds {
+   kTBa,
+   kTBa1
+};
+
+class TGLColorEditor : public TGCompositeFrame {
    friend class TGLMatView;
 private:
    TGLMatView    *fMatView;
-   TGGroupFrame  *fPartFrame;
    TGLayoutHints *fFrameLayout;
 
    enum ELightMode{kDiffuse, kAmbient, kSpecular, kEmission, kTot};
@@ -57,8 +62,8 @@ private:
 
    TList fTrash;
 public:
-   TGLEditor(const TGWindow *parent, TGWindow *main);
-   ~TGLEditor();
+   TGLColorEditor(const TGWindow *parent, TGWindow *main);
+   ~TGLColorEditor();
    void SetRGBA(const Float_t *rgba);
    const Float_t *GetRGBA()const
    {
@@ -67,7 +72,7 @@ public:
    //slots
    void DoSlider(Int_t val);
    void DoButton();
-   void Stop();
+   void Disable();
 
 private:
    void CreateRadioButtons();
@@ -79,10 +84,48 @@ private:
    void SwapBuffers()const;
    void MakeCurrent()const;
    //Non-copyable class
-   TGLEditor(const TGLEditor &);
-   TGLEditor & operator = (const TGLEditor &);
+   TGLColorEditor(const TGLColorEditor &);
+   TGLColorEditor & operator = (const TGLColorEditor &);
 
-   ClassDef(TGLEditor, 0)
+   ClassDef(TGLColorEditor, 0)
+};
+
+class TGLGeometryEditor : public TGCompositeFrame {
+private:
+   enum {
+      kCenterX, 
+      kCenterY, 
+      kCenterZ, 
+      kScaleX, 
+      kScaleY, 
+      kScaleZ, 
+      kTot
+   };
+
+   TList         fTrash;
+   TGLayoutHints *fFrameLayout;
+   TGNumberEntry *fGeomData[kTot];
+   TGButton      *fApplyButton;
+
+   Bool_t fIsActive;
+
+public:
+   TGLGeometryEditor(const TGWindow *parent, TGWindow *main);
+
+   void SetCenter(const Double_t *center);
+   void Disable();
+   void DoButton();
+   void GetNewData(Double_t *center, Double_t *scale);
+   void ValueSet(Long_t val);
+
+private:
+   void CreateCenterFrame();
+   void CreateScaleFrame();
+
+   TGLGeometryEditor(const TGLGeometryEditor &);
+   TGLGeometryEditor &operator = (const TGLGeometryEditor &);
+
+   ClassDef(TGLGeometryEditor, 0)
 };
 
 #endif

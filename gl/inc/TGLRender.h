@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.10 2004/09/13 09:56:33 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.3 2004/09/14 15:37:34 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -22,21 +22,20 @@ class TGLCamera;
 
 class TGLRender {
 private:
-   TObjArray fGLObjects;
-   TObjArray fGLCameras;
-   TObjArray fGLBoxes;
+   TObjArray      fGLObjects;
+   TObjArray      fGLCameras;
 
-   Bool_t fAllActive;
-   Bool_t fIsPicking;
-   Bool_t fBoxInList;
-   Int_t fActiveCam;
-   Int_t fDList;
-   Int_t fPlane;
-   UInt_t fSelected;
+   Bool_t         fAllActive;
+   Bool_t         fIsPicking;
+   Bool_t         fBoxInList;
+   Int_t          fActiveCam;
+   Int_t          fDList;
+   Int_t          fPlane;
+   UInt_t         fSelected;
 
    TGLSceneObject *fFirstT;
    TGLSceneObject *fSelectedObj;
-   TGLSceneObject *fSelectionBox;
+   TGLSelection   *fSelectionBox;
 
 public:
    TGLRender();
@@ -47,8 +46,8 @@ public:
       fAllActive = kTRUE;
    }
    void SetActive(UInt_t cam);
-   void AddNewObject(TGLSceneObject *newobject, TGLSelection *box);
-   void AddNewCamera(TGLCamera *newcamera);
+   void AddNewObject(TGLSceneObject *newObject);
+   void AddNewCamera(TGLCamera *newCamera);
    TGLSceneObject *SelectObject(Int_t x, Int_t y, Int_t);
    void MoveSelected(Double_t x, Double_t y, Double_t z);
    void SetPlain(Int_t p)

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.23 2004/09/17 19:33:31 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.24 2004/09/29 06:55:13 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -8,6 +8,8 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+#include <iostream>
+
 #include "TRootHelpDialog.h"
 #include "TContextMenu.h"
 #include "TVirtualPad.h"
@@ -42,21 +44,63 @@
 const char gHelpViewerOpenGL[] = "\
      PRESS \n\
      \tw\t--- wireframe mode\n\
-     \tr\t--- hidden surface mode\n\
+     \tr\t--- filled polygons mode\n\
      \tj\t--- zoom in\n\
-     \tk\t--- zoom out\n\
+     \tk\t--- zoom out\n\n\
+     MODE\n\n\
      You can select \"Navigation\" or \"Picking\" mode\n\
      using \"Mode\" menu.\n\
      In NAVIGATION mode you can ROTATE\n\
      scene by holding left mouse button and moving mouse or\n\
-     SELECT an object with right mouse button click. After\n\
-     you select any object, you can modify it's color and\n\
-     transparency with \"Material editor\" at the right side\n\
-     of viewer's window. \n\
+     SELECT an object with right mouse button click.\n\
      In PICKING mode you can select an object by left\n\
-     mouse click and move it with button pressed.\n\
+     mouse click and move it with button pressed \n\
+     (light source are pickable too).\n\n\
+     VIEW\n\n\
      You can select projection on different places\n\
-     in \"View\" menu.";
+     in \"View\" menu.\n\n\
+     COLOR\n\n\
+     After you selected an object or a light source,\n\
+     you can modify object's material and light\n\
+     source color.\n\n\
+     \tLIGHT SOURCES.\n\n\
+     \tThere are two pickable light sources in\n\
+     \tthe current implementation. They are shown as\n\
+     \tspheres. Each light source has three light\n\
+     \tcomponents : DIFFUSE, AMBIENT, SPECULAR.\n\
+     \tEach of this components is defined by the\n\
+     \tamounts of red, green and blue light it emits.\n\
+     \tYou can EDIT this parameters:\n\
+     \t1. Select light source sphere.\n" //hehe, too long string literal :)))
+"    \t2. Select light component you want to modify\n\
+     \t   by pressing one of radio buttons.\n\
+     \t3. Change RGB by moving sliders\n\n\
+     \tMATERIAL\n\n\
+     \tObject's material is specified by the percentage\n\
+     \tof red, green, blue light it reflects. A surface can\n\
+     \treflect diffuse, ambient and specular light. \n\
+     \tA surface has two additional parameters: EMISSION\n\
+     \t- you can make surface self-luminous; SHININESS -\n\
+     \tmodifying this parameter you can change surface\n\
+     \thighlights.\n\
+     \tSometimes changes are not visible, or light\n\
+     \tsources seem not to work - you should understand\n\
+     \tthe meaning of diffuse, ambient etc. light and material\n\
+     \tcomponents. For example, if you define material, wich has\n\
+     \tdiffuse component (1., 0., 0.) and you have a light source\n\
+     \twith diffuse component (0., 1., 0.) - you surface does not\n\
+     \treflect diffuse light from this source. For another example\n\
+     \t- the color of highlight on the surface is specified by:\n\
+     \tlight's specular component, material specular component.\n\
+     \tAt the top of the color editor there is a small window\n\
+     \twith sphere. When you are editing surface material,\n\
+     \tyou can see this material applyed to sphere.\n\
+     \tWhen edit light source, you see this light reflected\n\
+     \tby sphere whith DIFFUSE and SPECULAR components\n\
+     \t(1., 1., 1.).\n\n\
+     GEOMETRY PROPERTIES\n\n\
+     You can edit object's location and stretch it by entering\n\
+     desired values in respective number entry controls.";
 
 const Double_t gRotMatrixXOY[] = {1., 0., 0., 0., 0., 0., -1., 0.,
                                   0., 1., 0., 0., 0., 0., 0., 1.};
@@ -93,7 +137,8 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    fV2 = 0;
    fV1 = 0;
    fSplitter = 0;
-   fEditor = 0;
+   fColorEditor = 0;
+   fGeomEditor = 0;
    fCanvasWindow = 0;
    fCanvasContainer = 0;
    fL1 = fL2 = fL3 = fL4 = 0;
@@ -177,12 +222,17 @@ void TViewerOpenGL::CreateViewer()
    fShutter->AddItem(fShutItem3);
 
    TGCompositeFrame *shutCont = (TGCompositeFrame *)fShutItem1->GetContainer();
-   fEditor = new TGLEditor(shutCont, this);
+   fColorEditor = new TGLColorEditor(shutCont, this);
    fL4 = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX | kLHintsExpandY, 2, 5, 1, 2);
-   shutCont->AddFrame(fEditor, fL4);
+   shutCont->AddFrame(fColorEditor, fL4);
    fV1->AddFrame(fShutter, fL4);
    fL1 = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2, 0, 2, 2);
    fMainFrame->AddFrame(fV1, fL1);
+
+   TGCompositeFrame *shutCont1 = (TGCompositeFrame *)fShutItem2->GetContainer();
+   fGeomEditor = new TGLGeometryEditor(shutCont1, this);
+   shutCont1->AddFrame(fGeomEditor, fL4);
+   
 
    fV2 = new TGVerticalFrame(fMainFrame, 10, 10, kSunkenFrame);
    fL3 = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2);
@@ -279,23 +329,27 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
          fPressed = kTRUE;
       } else {
          if ((fSelectedObj = TestSelection(event))) {
-            fEditor->SetRGBA(fSelectedObj->GetColor());
+            fColorEditor->SetRGBA(fSelectedObj->GetColor());
+            fGeomEditor->SetCenter(fSelectedObj->GetObjectCenter());
             fPressed = kTRUE;
             fLastPos.fX = event->fX;
             fLastPos.fY = event->fY;
          } else {
-            fEditor->Stop();
+            fColorEditor->Disable();
+            fGeomEditor->Disable();
          }
       }
    } else if (event->fType == kButtonPress && event->fCode == kButton3 && fMode == kNav) {
       if ((fSelectedObj = TestSelection(event))) {
-         fEditor->SetRGBA(fSelectedObj->GetColor());
+         fColorEditor->SetRGBA(fSelectedObj->GetColor());
+         fGeomEditor->SetCenter(fSelectedObj->GetObjectCenter());
          if (TObject *ro = fSelectedObj->GetRealObject()) {
             if (!fContextMenu) fContextMenu = new TContextMenu("glcm", "glcm");
             fContextMenu->Popup(event->fXRoot, event->fYRoot, ro);
          }
       } else {
-         fEditor->Stop();
+         fColorEditor->Disable();
+         fGeomEditor->Disable();
       }
    } else if (event->fType == kButtonRelease) {
       if (event->fCode == kButton1) {
@@ -304,6 +358,8 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
             MakeCurrent();
             gVirtualGL->EndMovement(&fRender);
             DrawObjects();
+            if (fSelectedObj)
+               fGeomEditor->SetCenter(fSelectedObj->GetObjectCenter());
          }
       }
    }
@@ -429,12 +485,13 @@ void TViewerOpenGL::CreateScene(Option_t *)
   
    Float_t col1[] = {0.9f, 0.7f, 0.f};
    Float_t col2[] = {0.f, 0.9f, 0.f};
-   TGLSimpleLight *newLight1 = new TGLSimpleLight(++fNbShapes, 2, col1);
-   TGLSimpleLight *newLight2 = new TGLSimpleLight(++fNbShapes, 3, col2);
-   TGLSelection *lightBox1 = new TGLSelection;
-   TGLSelection *lightBox2 = new TGLSelection;
-   fRender.AddNewObject(newLight1, lightBox1);
-   fRender.AddNewObject(newLight2, lightBox2);
+   const Double_t pos[3] = {0.};
+   TGLSimpleLight *light1 = new TGLSimpleLight(++fNbShapes, 2, col1, pos);
+   TGLSelection *box1 = light1->GetBox();
+   TGLSimpleLight *light2 = new TGLSimpleLight(++fNbShapes, 3, col2, pos);
+   TGLSelection *box2 = light2->GetBox();
+   fRender.AddNewObject(light1);
+   fRender.AddNewObject(light2);
 
    buff->fOption = TBuffer3D::kOGL;
    while (lnk) {
@@ -452,16 +509,16 @@ void TViewerOpenGL::CreateScene(Option_t *)
    Double_t min = xdiff > ydiff ? ydiff > zdiff ? zdiff : ydiff : xdiff > zdiff ? zdiff : xdiff;
    Double_t newRad = min / 20.;
    
-   newLight1->Shift(fRangeX.first, fRangeY.first, fRangeZ.first);
-   newLight1->SetBulbRad(newRad);
-   lightBox1->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad), 
-                     std::make_pair(-newRad, newRad));
-   lightBox1->Shift(fRangeX.first, fRangeY.first, fRangeZ.first);
-   newLight2->Shift(fRangeX.second, fRangeY.first, fRangeZ.first);
-   newLight2->SetBulbRad(newRad);   
-   lightBox2->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad), 
-                     std::make_pair(-newRad, newRad));
-   lightBox2->Shift(fRangeX.second, fRangeY.first, fRangeZ.first);
+   light1->Shift(fRangeX.first, fRangeY.first, fRangeZ.first);
+   light1->SetBulbRad(newRad);
+   box1->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad), 
+                std::make_pair(-newRad, newRad));
+   box1->Shift(fRangeX.first, fRangeY.first, fRangeZ.first);
+   light2->Shift(fRangeX.second, fRangeY.first, fRangeZ.first);
+   light2->SetBulbRad(newRad);   
+   box2->SetBox(std::make_pair(-newRad, newRad), std::make_pair(-newRad, newRad), 
+                std::make_pair(-newRad, newRad));
+   box2->Shift(fRangeX.second, fRangeY.first, fRangeZ.first);
 
    MakeCurrent();
    Float_t lmodelAmb[] = {0.5f, 0.5f, 1.f, 1.f};
@@ -514,8 +571,8 @@ void TViewerOpenGL::UpdateScene(Option_t *)
          break;
       }
 
-      TGLSelection *box = UpdateRange(buff);
-      fRender.AddNewObject(addObj, box);
+      UpdateRange(addObj->GetBox());
+      fRender.AddNewObject(addObj);
    }
 }
 
@@ -538,9 +595,7 @@ void TViewerOpenGL::CloseWindow()
 void TViewerOpenGL::DrawObjects()const
 {
    MakeCurrent();
-   gVirtualGL->TraverseGraph(const_cast<TGLRender *>(&fRender));
    gVirtualGL->NewMVGL();
-
    Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
    Float_t lig_prop1[] = {.4f, .4f, .4f, 1.f};
 
@@ -550,58 +605,36 @@ void TViewerOpenGL::DrawObjects()const
    gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos);
    gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, lig_prop1);
    gVirtualGL->PopGLMatrix();
-/*
-   gVirtualGL->PushGLMatrix();
-   gVirtualGL->TranslateGL(fRad + fXc, 0., -fRad - fZc);
-   gVirtualGL->GLLight(kLIGHT2, kPOSITION, pos);
-   gVirtualGL->GLLight(kLIGHT2, kDIFFUSE, lig_prop1);
-   gVirtualGL->PopGLMatrix();
-
-   gVirtualGL->TranslateGL(-fRad - fXc, 0., -fRad - fZc);
-   gVirtualGL->GLLight(kLIGHT3, kPOSITION, pos);
-   gVirtualGL->GLLight(kLIGHT3, kDIFFUSE, lig_prop1);
-*/
+   gVirtualGL->TraverseGraph(const_cast<TGLRender *>(&fRender));
    SwapBuffers();
 }
 
 //______________________________________________________________________________
-TGLSelection * TViewerOpenGL::UpdateRange(const TBuffer3D *buffer)
+void TViewerOpenGL::UpdateRange(const TGLSelection *box)
 {
-   Double_t xmin = buffer->fPnts[0], xmax = xmin, ymin = buffer->fPnts[1], ymax = ymin, zmin = buffer->fPnts[2], zmax = zmin;
-   //calculate range
-   for (Int_t i = 3, e = buffer->fNbPnts * 3; i < e; i += 3) {
-      xmin = TMath::Min(xmin, buffer->fPnts[i]), xmax = TMath::Max(xmax, buffer->fPnts[i]);
-      ymin = TMath::Min(ymin, buffer->fPnts[i + 1]), ymax = TMath::Max(ymax, buffer->fPnts[i + 1]);
-      zmin = TMath::Min(zmin, buffer->fPnts[i + 2]), zmax = TMath::Max(zmax, buffer->fPnts[i + 2]);
-   }
-
-
-   TGLSelection *retVal = new TGLSelection(std::make_pair(xmin, xmax),
-                                           std::make_pair(ymin, ymax),
-                                           std::make_pair(zmin, zmax));
+   const PDD_t &X = box->GetRangeX();
+   const PDD_t &Y = box->GetRangeY();
+   const PDD_t &Z = box->GetRangeZ();
 
    if (!fRender.GetSize()) {
-      fRangeX.first = xmin, fRangeX.second = xmax;
-      fRangeY.first = ymin, fRangeY.second = ymax;
-      fRangeZ.first = zmin, fRangeZ.second = zmax;
-
-      return retVal;
+      fRangeX.first = X.first, fRangeX.second = X.second;
+      fRangeY.first = Y.first, fRangeY.second = Y.second;
+      fRangeZ.first = Z.first, fRangeZ.second = Z.second;
+      return;
    }
 
-   if (fRangeX.first > xmin)
-      fRangeX.first = xmin;
-   if (fRangeX.second < xmax)
-      fRangeX.second = xmax;
-   if (fRangeY.first > ymin)
-      fRangeY.first = ymin;
-   if (fRangeY.second < ymax)
-      fRangeY.second = ymax;
-   if (fRangeZ.first > zmin)
-      fRangeZ.first = zmin;
-   if (fRangeZ.second < zmax)
-      fRangeZ.second = zmax;
-
-   return retVal;
+   if (fRangeX.first > X.first)
+      fRangeX.first = X.first;
+   if (fRangeX.second < X.second)
+      fRangeX.second = X.second;
+   if (fRangeY.first > Y.first)
+      fRangeY.first = Y.first;
+   if (fRangeY.second < Y.second)
+      fRangeY.second = Y.second;
+   if (fRangeZ.first > Z.first)
+      fRangeZ.first = Z.first;
+   if (fRangeZ.second < Z.second)
+      fRangeZ.second = Z.second;
 }
 
 //______________________________________________________________________________
@@ -757,15 +790,25 @@ void TViewerOpenGL::CreateCameras()
 
 void TViewerOpenGL::ModifySelected()
 {
-//   fEditor->GetButton()->SetState(kButtonDisabled);
-   fSelectedObj->SetColor(fEditor->GetRGBA());
-/*   if (TGeoVolume *holderV = dynamic_cast<TGeoVolume *>(fSelectedObj->GetRealObject())) {
-      Float_t newColor[] = {fRGBA[0] / 100.f, fRGBA[1] / 100.f, fRGBA[2] / 100.f};
-      Int_t newInd = TColor::GetColor(newColor[0], newColor[1], newColor[2]);
-      holderV->SetLineColor(newInd);
+   TGButton *btn = (TGButton *)gTQSender;
+   Int_t id = btn->WidgetId();
+
+   switch (id) {
+   case kTBa:
+      fSelectedObj->SetColor(fColorEditor->GetRGBA());
+      MakeCurrent();
+      break;
+   case kTBa1:
+      {
+         Double_t c[3] = {0.};
+         Double_t s[] = {1., 1., 1.};
+         fGeomEditor->GetNewData(c, s);
+         fSelectedObj->Stretch(s[0], s[1], s[2]);
+         fSelectedObj->GetBox()->Shift(c[0], c[1], c[2]);
+         fSelectedObj->Shift(c[0], c[1], c[2]);
+      }
    }
-  */
-   MakeCurrent();
+   
    gVirtualGL->Invalidate(&fRender);
    DrawObjects();
 }

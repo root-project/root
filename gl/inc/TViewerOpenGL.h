@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.13 2004/09/17 19:33:31 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.14 2004/09/29 06:55:13 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -30,7 +30,7 @@
 #include "TGLRender.h"
 #endif
 
-class TGTransientFrame;
+class TGLGeometryEditor;
 class TGShutterItem;
 class TGShutter;
 class TGLRenderArea;
@@ -38,7 +38,7 @@ class TContextMenu;
 class TGLSelection;
 class TGVSplitter;
 class TGPopupMenu;
-class TGLEditor;
+class TGLColorEditor;
 class TGLCamera;
 class TBuffer3D;
 class TGMenuBar;
@@ -48,11 +48,11 @@ class TArcBall;
 class TViewerOpenGL : public TVirtualViewer3D, public TGMainFrame {
 private:
    TGCompositeFrame  *fMainFrame;
-   //TGTransientFrame  *fV1;
    TGVerticalFrame   *fV1;
    TGVerticalFrame   *fV2;
    TGVSplitter       *fSplitter;
-   TGLEditor         *fEditor;
+   TGLColorEditor    *fColorEditor;
+   TGLGeometryEditor *fGeomEditor;
    TGCanvas          *fCanvasWindow;
    TGLRenderArea     *fCanvasContainer;
    TGShutter         *fShutter;
@@ -114,7 +114,7 @@ private:
    void MakeCurrent()const;
    void SwapBuffers()const;
    void Show();
-   TGLSelection *UpdateRange(const TBuffer3D *buff);
+   void UpdateRange(const TGLSelection *box);
    TGLSceneObject *TestSelection(Event_t *);
    void CalculateViewports();
    void CalculateViewvolumes();

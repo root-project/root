@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.5 2004/09/15 14:26:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.6 2004/09/29 06:55:13 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -30,7 +30,6 @@ TGLRender::TGLRender()
 {
    fGLObjects.SetOwner(kTRUE);
    fGLCameras.SetOwner(kTRUE);
-   fGLBoxes.SetOwner(kTRUE);
 
    fAllActive = kTRUE;
    fIsPicking = kFALSE;
@@ -47,7 +46,7 @@ TGLRender::TGLRender()
 
 TGLRender::~TGLRender()
 {
-   if(fDList)
+   if (fDList) 
       glDeleteLists(fDList, 1);
 }
 
@@ -75,7 +74,7 @@ void TGLRender::Traverse()
       currCam->TurnOn();
 
       if (fSelectionBox) {
-         fSelectionBox->GLDraw();
+         fSelectionBox->DrawBox();
       }
 
       RunGLList();
@@ -88,10 +87,9 @@ void TGLRender::SetActive(UInt_t ncam)
    fAllActive = kFALSE;
 }
 
-void TGLRender::AddNewObject(TGLSceneObject *newobject, TGLSelection *box)
+void TGLRender::AddNewObject(TGLSceneObject *newobject)
 {
    fGLObjects.AddLast(newobject);
-   fGLBoxes.AddLast(box);
 }
 
 void TGLRender::AddNewCamera(TGLCamera *newcamera)
@@ -141,7 +139,7 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
       if (fSelected != chosen) {
          fSelected = chosen;
          fSelectedObj = hitObject;
-         fSelectionBox = (TGLSelection *)fGLBoxes.At(fSelected - 1);
+         fSelectionBox = fSelectedObj->GetBox();
          Traverse();
       }
    } else if (fSelected) {

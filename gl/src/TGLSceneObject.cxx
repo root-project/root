@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.5 2004/09/15 14:26:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.6 2004/09/29 06:55:13 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -79,10 +79,80 @@ static GLUquadric *GetQuadric()
 
 static GLenum gLightNames[] = {GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_LIGHT3,
                                GL_LIGHT4, GL_LIGHT5, GL_LIGHT6, GL_LIGHT7};
+//______________________________________________________________________________
+TGLSelection::TGLSelection()
+{
+}
 
 //______________________________________________________________________________
-TGLSceneObject::TGLSceneObject(const Float_t *color, UInt_t glName, TObject *obj)
-                   :fColor(), fGLName(glName), fNextT(0), fRealObject(obj)
+TGLSelection::TGLSelection(const PDD_t &x, const PDD_t &y, const PDD_t &z)
+                 :fRangeX(x), fRangeY(y), fRangeZ(z)
+{
+}
+
+//______________________________________________________________________________
+void TGLSelection::DrawBox()const
+{
+   Double_t xmin = fRangeX.first, xmax = fRangeX.second;
+   Double_t ymin = fRangeY.first, ymax = fRangeY.second;
+   Double_t zmin = fRangeZ.first, zmax = fRangeZ.second;
+   Float_t whiteColor[] = {1.f, 1.f, 1.f, 1.f};
+
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, whiteColor);
+   glMaterialfv(GL_FRONT, GL_EMISSION, whiteColor);
+   glBegin(GL_LINE_LOOP);
+   glVertex3d(xmin, ymin, zmin);
+   glVertex3d(xmin, ymax, zmin);
+   glVertex3d(xmax, ymax, zmin);
+   glVertex3d(xmax, ymin, zmin);
+   glEnd();
+   glBegin(GL_LINE_LOOP);
+   glVertex3d(xmin, ymin, zmax);
+   glVertex3d(xmin, ymax, zmax);
+   glVertex3d(xmax, ymax, zmax);
+   glVertex3d(xmax, ymin, zmax);
+   glEnd();
+   glBegin(GL_LINES);
+   glVertex3d(xmin, ymin, zmin);
+   glVertex3d(xmin, ymin, zmax);
+   glVertex3d(xmin, ymax, zmin);
+   glVertex3d(xmin, ymax, zmax);
+   glVertex3d(xmax, ymax, zmin);
+   glVertex3d(xmax, ymax, zmax);
+   glVertex3d(xmax, ymin, zmin);
+   glVertex3d(xmax, ymin, zmax);
+   glEnd();
+}
+
+//______________________________________________________________________________
+void TGLSelection::SetBox(const PDD_t &x, const PDD_t &y, const PDD_t &z)
+{
+   fRangeX.first = x.first, fRangeX.second = x.second;
+   fRangeY.first = y.first, fRangeY.second = y.second;
+   fRangeZ.first = z.first, fRangeZ.second = z.second;
+}
+
+//______________________________________________________________________________
+void TGLSelection::Shift(Double_t x, Double_t y, Double_t z)
+{
+   fRangeX.first += x, fRangeX.second += x;
+   fRangeY.first += y, fRangeY.second += y;
+   fRangeZ.first += z, fRangeZ.second += z;
+}
+
+//______________________________________________________________________________
+void TGLSelection::Stretch(Double_t xs, Double_t ys, Double_t zs)
+{
+   fRangeX.first *= xs, fRangeX.second *= xs;
+   fRangeY.first *= ys, fRangeY.second *= ys;
+   fRangeZ.first *= zs, fRangeZ.second *= zs;
+}
+
+//______________________________________________________________________________
+TGLSceneObject::TGLSceneObject(const Double_t *start, const Double_t *end,
+                               const Float_t *color, UInt_t glName, TObject *obj)
+                   :fVertices(start, end), fColor(), 
+                    fGLName(glName), fNextT(0), fRealObject(obj)
 {
    if (color) {
       //diffuse and specular
@@ -105,6 +175,7 @@ TGLSceneObject::TGLSceneObject(const Float_t *color, UInt_t glName, TObject *obj
    fColor[3] = fColor[7] = fColor[11] = fColor[15] = 1.f;
    //shininess
    fColor[16] = 10.f;
+   SetBox();
 }
 
 //______________________________________________________________________________
@@ -124,85 +195,92 @@ void TGLSceneObject::Shift(Double_t, Double_t, Double_t)
 }
 
 //______________________________________________________________________________
+void TGLSceneObject::Stretch(Double_t, Double_t, Double_t)
+{
+}
+
+//______________________________________________________________________________
 void TGLSceneObject::SetColor(const Float_t *newColor)
 {
-   for (Int_t i = 0; i < 17; ++i)
-      fColor[i] = newColor[i];
+   for (Int_t i = 0; i < 17; ++i) fColor[i] = newColor[i];
+}
+
+//______________________________________________________________________________
+void TGLSceneObject::SetBox()
+{
+   typedef std::pair<Double_t, Double_t>PDD_t;
+   PDD_t xb(fVertices[0], fVertices[0]);
+   PDD_t yb(fVertices[1], fVertices[1]);
+   PDD_t zb(fVertices[2], fVertices[2]);
+   for (Int_t nv = 3, e = fVertices.size(); nv < e; nv += 3) {
+      xb.first = TMath::Min(xb.first, fVertices[nv]); 
+      xb.second = TMath::Max(xb.second, fVertices[nv]);
+      yb.first = TMath::Min(yb.first, fVertices[nv + 1]);
+      yb.second = TMath::Max(yb.second, fVertices[nv + 1]);
+      zb.first = TMath::Min(zb.first, fVertices[nv + 2]); 
+      zb.second = TMath::Max(zb.second, fVertices[nv + 2]);
+   }
+   fSelectionBox.SetBox(xb, yb, zb);
+   fCenter[0] = xb.first + (xb.second - xb.first) / 2;
+   fCenter[1] = yb.first + (yb.second - yb.first) / 2;
+   fCenter[2] = zb.first + (zb.second - zb.first) / 2;
 }
 
 //______________________________________________________________________________
 TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color,
                        UInt_t glname, TObject *realobj)
-               :TGLSceneObject(color, glname, realobj),
-                fVertices(buff.fPnts, buff.fPnts + 3 * buff.fNbPnts),
+               :TGLSceneObject(buff.fPnts, buff.fPnts + 3 * buff.fNbPnts, color, glname, realobj),
                 fNormals(3 * buff.fNbPols)
 {
    fColor[3] = 1.f - buff.fTransparency / 100.f;
    fNbPols = buff.fNbPols;
 
-   Int_t * segs = buff.fSegs;
-   Int_t * pols = buff.fPols;
-   Double_t * pnts = buff.fPnts;
-   Bool_t revOrder = buff.TestBit(TBuffer3D::kIsReflection) ? kFALSE : kTRUE;
-   Int_t shiftInd = revOrder ? -1 : 1;
+   Int_t *segs = buff.fSegs;
+   Int_t *pols = buff.fPols;
+   Int_t shiftInd = buff.TestBit(TBuffer3D::kIsReflection) ? 1 : -1;
 
-   for (Int_t numPol = 0, e = buff.fNbPols, j = 0; numPol < e; ++numPol) {
-      ++j;
-      Int_t segmentInd = revOrder ? pols[j] + j : j + 1;
+   for (Int_t numPol = 0, j = 1; numPol < buff.fNbPols; ++numPol) {
+      Int_t segmentInd = shiftInd < 0 ? pols[j] + j : j + 1;
       Int_t segmentCol = pols[j];
-      Int_t seg1 = pols[segmentInd];
+      Int_t s1 = pols[segmentInd]; 
       segmentInd += shiftInd;
-      Int_t seg2 = pols[segmentInd];
+      Int_t s2 = pols[segmentInd]; 
       segmentInd += shiftInd;
-      Int_t np[] = {segs[seg1 * 3 + 1], segs[seg1 * 3 + 2], segs[seg2 * 3 + 1], segs[seg2 * 3 + 2]};
-      Int_t n[] = {-1, -1, -1};
-      Int_t normp[] = {0, 0, 0};
+      Int_t segEnds[] = {segs[s1 * 3 + 1], segs[s1 * 3 + 2], 
+                         segs[s2 * 3 + 1], segs[s2 * 3 + 2]};
+      Int_t numPnts[3] = {0};
 
-      np[0] != np[2] ?
-               (np[0] != np[3] ?
-                  (*n = *np, n[1] = np[1] == np[2] ?
-                     n[2] = np[3], np[2] :
-                        (n[2] = np[2], np[3])) :
-                           (*n = np[1], n[1] = *np, n[2] = np[2] )) :
-                              (*n = np[1], n[1] = *np, n[2] = np[3]);
+      if (segEnds[0] == segEnds[2]) {
+         numPnts[0] = segEnds[1], numPnts[1] = segEnds[0], numPnts[2] = segEnds[3];
+      } else if (segEnds[0] == segEnds[3]) {
+         numPnts[0] = segEnds[1], numPnts[1] = segEnds[0], numPnts[2] = segEnds[2];
+      } else if (segEnds[1] == segEnds[2]) {
+         numPnts[0] = segEnds[0], numPnts[1] = segEnds[1], numPnts[2] = segEnds[3];
+      } else {
+         numPnts[0] = segEnds[0], numPnts[1] = segEnds[1], numPnts[2] = segEnds[2];
+      }
+
       fPolyDesc.push_back(3);
       Int_t sizeInd = fPolyDesc.size() - 1;
-      fPolyDesc.insert(fPolyDesc.end(), n, n + 3);
-      Int_t check = CheckPoints(n, normp), ngood = check;
-      Int_t lastAdded = n[2];
+      fPolyDesc.insert(fPolyDesc.end(), numPnts, numPnts + 3);
+      Int_t lastAdded = numPnts[2];
 
-      if (check == 3)
-         TMath::Normal2Plane(pnts + n[0] * 3, pnts + n[1] * 3, pnts + n[2] * 3, &fNormals[numPol * 3]);
-
-      Int_t end = revOrder ? j + 1 : j + segmentCol + 1;
-
+      Int_t end = shiftInd < 0 ? j + 1 : j + segmentCol + 1;
       for (; segmentInd != end; segmentInd += shiftInd) {
-         seg2 = pols[segmentInd];
-         np[0] = segs[seg2 * 3 + 1];
-         np[1] = segs[seg2 * 3 + 2];
-         if (np[0] == lastAdded) {
-            fPolyDesc.push_back(np[1]);
-            if (check != 3)
-               normp[ngood ++] = np[1];
-            lastAdded = np[1];
+         segEnds[0] = segs[pols[segmentInd] * 3 + 1];
+         segEnds[1] = segs[pols[segmentInd] * 3 + 2];
+         if (segEnds[0] == lastAdded) {
+            fPolyDesc.push_back(segEnds[1]);
+            lastAdded = segEnds[1];
          } else {
-             fPolyDesc.push_back(np[0]);
-             if (check != 3)
-                normp[ngood ++] = np[0];
-            lastAdded = np[0];
-         }
-
-         if (check != 3 && ngood == 3) {
-            check = CheckPoints(normp, normp);
-            if (check == 3)
-               TMath::Normal2Plane(pnts + normp[0] * 3, pnts + normp[1] * 3,
-                                   pnts + normp[2] * 3, &fNormals[numPol * 3]);
-            ngood = check;
+            fPolyDesc.push_back(segEnds[0]);
+            lastAdded = segEnds[0];
          }
          ++fPolyDesc[sizeInd];
       }
-      j += segmentCol + 1;
+      j += segmentCol + 2;
    }
+   CalculateNormals();
 }
 
 //______________________________________________________________________________
@@ -220,7 +298,6 @@ void TGLFaceSet::ResetTransparency(char newval)
 //______________________________________________________________________________
 void TGLFaceSet::GLDraw()const
 {
-   
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
    glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
@@ -247,20 +324,20 @@ void TGLFaceSet::GLDraw()const
          gluNextContour(tessObj, (GLenum)GLU_UNKNOWN);
          glNormal3dv(normals + i * 3);
 
-         for (Int_t k = 0; k < npoints; ++k, ++j)
+         for (Int_t k = 0; k < npoints; ++k, ++j) {
             gluTessVertex(tessObj, (Double_t *)pnts + pols[j] * 3, (Double_t *)pnts + pols[j] * 3);
-
+         }
          gluEndPolygon(tessObj);
       } else {
          glBegin(GL_POLYGON);
          glNormal3dv(normals + i * 3);
 
-         for (Int_t k = 0; k < npoints; ++k, ++j)
+         for (Int_t k = 0; k < npoints; ++k, ++j) {
             glVertex3dv(pnts + pols[j] * 3);
+         }
          glEnd();
       }
    }
-
    if (IsTransparent()) {
       glDepthMask(GL_TRUE);
       glDisable(GL_BLEND);
@@ -270,11 +347,29 @@ void TGLFaceSet::GLDraw()const
 //______________________________________________________________________________
 void TGLFaceSet::Shift(Double_t x, Double_t y, Double_t z)
 {
-   for (UInt_t i = 0, e = fVertices.size(); i < e; i +=3) {
+   for (UInt_t i = 0, e = fVertices.size(); i < e; i += 3) {
       fVertices[i] += x;
       fVertices[i + 1] += y;
       fVertices[i + 2] += z;
    }
+   SetBox();
+}
+
+//______________________________________________________________________________
+void TGLFaceSet::Stretch(Double_t xs, Double_t ys, Double_t zs)
+{
+   fSelectionBox.Shift(-fCenter[0], -fCenter[1], -fCenter[2]);
+   fSelectionBox.Stretch(xs, ys, zs);
+   fSelectionBox.Shift(fCenter[0], fCenter[1], fCenter[2]);
+   Shift(-fCenter[0], -fCenter[1], -fCenter[2]);
+   for (UInt_t i = 0, e = fVertices.size(); i < e; i += 3) {
+      fVertices[i] *= xs;
+      fVertices[i + 1] *= ys;
+      fVertices[i + 2] *= zs;
+   }
+   Shift(fCenter[0], fCenter[1], fCenter[2]);
+   CalculateNormals();
+   SetBox();
 }
 
 //______________________________________________________________________________
@@ -285,27 +380,75 @@ Int_t TGLFaceSet::CheckPoints(const Int_t * source, Int_t *dest) const
    const Double_t * p3 = &fVertices[source[2] * 3];
    Int_t retVal = 1;
 
-   !Eq(p1, p2) ?
-      !Eq(p1, p3) ?
-         !Eq(p2, p3) ?
-            retVal = 3 :
-               (retVal = 2, *dest = *source, dest[1] = source[1]) :
-                  (retVal = 2, *dest = *source, dest[1] = source[1]) :
-                     !Eq(p2, p3) ?
-                        retVal = 2, *dest = *source, dest[1] = source[2] :
-                           *dest = *source;
+   if (Eq(p1, p2)) {
+      dest[0] = source[0];
+      if (!Eq(p1, p3) ) {
+         dest[1] = source[2];
+         retVal = 2;
+      }
+   } else if (Eq(p1, p3)) {
+      dest[0] = source[0];
+      dest[1] = source[1];
+      retVal = 2;
+   } else {
+      dest[0] = source[0];
+      dest[1] = source[1];
+      retVal = 2;
+      if (!Eq(p2, p3)) {
+         dest[2] = source[2];
+         retVal = 3;
+      }
+   }
 
    return retVal;
 }
 
 //______________________________________________________________________________
-TGLPolyMarker::TGLPolyMarker(const TBuffer3D &buff, const Float_t *color, UInt_t glname, TObject *realobj)
-                  :TGLSceneObject(color, glname, realobj),
-                   fVertices(buff.fPnts, buff.fPnts + 3 * buff.fNbPnts),
+Bool_t TGLFaceSet::Eq(const Double_t *p1, const Double_t *p2)
+{
+   Double_t dx = TMath::Abs(p1[0] - p2[0]);
+   Double_t dy = TMath::Abs(p1[1] - p2[1]);
+   Double_t dz = TMath::Abs(p1[2] - p2[2]);
+   return dx < 1e-10 && dy < 1e-10 && dz < 1e-10;
+}
+
+//______________________________________________________________________________
+void TGLFaceSet::CalculateNormals()
+{
+   Double_t *pnts = &fVertices[0];
+   for (UInt_t i = 0, j = 0; i < fNbPols; ++i) {
+      Int_t polEnd = fPolyDesc[j] + j + 1;
+      Int_t norm[] = {fPolyDesc[j + 1], fPolyDesc[j + 2], fPolyDesc[j + 3]};
+      j += 4;
+      Int_t check = CheckPoints(norm, norm), ngood = check;
+      if (check == 3) {
+         TMath::Normal2Plane(pnts + norm[0] * 3, pnts + norm[1] * 3, 
+                             pnts + norm[2] * 3, &fNormals[i * 3]);
+         j = polEnd;
+         continue;
+      }
+      while (j < polEnd) {
+         norm[ngood++] = fPolyDesc[j++];
+         if (ngood == 3) {
+            ngood = CheckPoints(norm, norm);
+            if (ngood == 3) {
+               TMath::Normal2Plane(pnts + norm[0] * 3, pnts + norm[1] * 3, 
+                                   pnts + norm[2] * 3, &fNormals[i * 3]);
+               j = polEnd;
+               break;
+            }
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+TGLPolyMarker::TGLPolyMarker(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
+                  :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, c, n, r),
                    fStyle(7)
 {
    //TAttMarker is not TObject descendant, so I need dynamic_cast
-   if (TAttMarker *realObj = dynamic_cast<TAttMarker *>(buff.fId))
+   if (TAttMarker *realObj = dynamic_cast<TAttMarker *>(b.fId))
       fStyle = realObj->GetMarkerStyle();
 }
 
@@ -326,7 +469,7 @@ void TGLPolyMarker::GLDraw()const
    case 27:
       stacks = 2, slices = 4;
    case 4:case 8:case 20:case 24:
-      if (quadObj) { //VC6.0 broken for scope
+      if (quadObj) {
          for (UInt_t i = 0; i < size; i += 3) {
             glPushMatrix();
             glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
@@ -338,7 +481,7 @@ void TGLPolyMarker::GLDraw()const
    case 22:case 26:
       top_radius = 0.;
    case 21:case 25:
-      if (quadObj) { //VC6.0 broken for scope
+      if (quadObj) {
          for (UInt_t i = 0; i < size; i += 3) {
             glPushMatrix();
             glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
@@ -348,7 +491,7 @@ void TGLPolyMarker::GLDraw()const
       }
       break;
    case 23:
-      if (quadObj) {//VC6.0 broken for scope
+      if (quadObj) {
          for (UInt_t i = 0; i < size; i += 3) {
             glPushMatrix();
             glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
@@ -411,9 +554,8 @@ void TGLPolyMarker::DrawStars()const
 }
 
 //______________________________________________________________________________
-TGLPolyLine::TGLPolyLine(const TBuffer3D &buff, const Float_t *color, UInt_t glname, TObject *realobj)
-                :TGLSceneObject(color, glname, realobj),
-                 fVertices(buff.fPnts, buff.fPnts + 3 * buff.fNbPnts)
+TGLPolyLine::TGLPolyLine(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
+                :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, c, n, r)
 {
 }
 
@@ -431,23 +573,14 @@ void TGLPolyLine::GLDraw()const
 }
 
 //______________________________________________________________________________
-TGLSimpleLight::TGLSimpleLight(UInt_t glName, UInt_t lightName, const Float_t *initColor, const Float_t *pos)
-                   :TGLSceneObject(0, glName, 0), fLightName(lightName)
+TGLSimpleLight::TGLSimpleLight(UInt_t n, UInt_t l, const Float_t *c, const Double_t *pos)
+                   :TGLSceneObject(pos, pos + 3, c, n, 0), 
+                    fLightName(l)
 {
    fColor[16] = -10.f; 
-   fColor[0] = initColor[0];
-   fColor[1] = initColor[1];
-   fColor[2] = initColor[2];
-   if (pos) {
-      fPosition[0] = pos[0];
-      fPosition[1] = pos[1];
-      fPosition[2] = pos[2];
-   } else {
-      fPosition[0] = 
-      fPosition[1] = 
-      fPosition[2] = 0.f;
-   }
-   fPosition[3] = 1.f;
+   fColor[0] = c[0];
+   fColor[1] = c[1];
+   fColor[2] = c[2];
    fBulbRad = 10.f;
 }
 
@@ -455,6 +588,8 @@ TGLSimpleLight::TGLSimpleLight(UInt_t glName, UInt_t lightName, const Float_t *i
 void TGLSimpleLight::GLDraw()const
 {
    const Float_t nullColor[] = {0.f, 0.f, 0.f, 1.f};
+   const Float_t lightPos[] = {Float_t(fVertices[0]), Float_t(fVertices[1]), 
+                               Float_t(fVertices[2]), 1.f};
    glMaterialfv(GL_FRONT, GL_EMISSION, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, nullColor);
    glMaterialfv(GL_FRONT, GL_DIFFUSE, nullColor);
@@ -463,11 +598,11 @@ void TGLSimpleLight::GLDraw()const
    glLightfv(gLightNames[fLightName], GL_AMBIENT, fColor + 4);
    glLightfv(gLightNames[fLightName], GL_SPECULAR, fColor + 8);
    glLightfv(gLightNames[fLightName], GL_EMISSION, fColor);
-   glLightfv(gLightNames[fLightName], GL_POSITION, fPosition);
+   glLightfv(gLightNames[fLightName], GL_POSITION, lightPos);
    //Draw light source as sphere
    glLoadName(GetGLName());
    glPushMatrix();
-   glTranslatef(fPosition[0], fPosition[1], fPosition[2]);
+   glTranslatef(lightPos[0], lightPos[1], lightPos[2]);
    GLUquadric *quadObj = GetQuadric();
    gluSphere(quadObj, fBulbRad, 10, 10);
    glPopMatrix();
@@ -476,75 +611,13 @@ void TGLSimpleLight::GLDraw()const
 //______________________________________________________________________________
 void TGLSimpleLight::Shift(Double_t x, Double_t y, Double_t z)
 {
-   fPosition[0] += x;
-   fPosition[1] += y;
-   fPosition[2] += z;
+   fVertices[0] += x;
+   fVertices[1] += y;
+   fVertices[2] += z;
 }
 
 //______________________________________________________________________________
 void TGLSimpleLight::SetBulbRad(Float_t newRad)
 {
    fBulbRad = newRad;
-}
-
-//______________________________________________________________________________
-TGLSelection::TGLSelection()
-{
-}
-
-//______________________________________________________________________________
-TGLSelection::TGLSelection(const PDD_t &x, const PDD_t &y, const PDD_t &z)
-                 :fXRange(x), fYRange(y), fZRange(z)
-{
-}
-
-//______________________________________________________________________________
-void TGLSelection::GLDraw()const
-{
-   Double_t xmin = fXRange.first, xmax = fXRange.second;
-   Double_t ymin = fYRange.first, ymax = fYRange.second;
-   Double_t zmin = fZRange.first, zmax = fZRange.second;
-
-   glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
-   glMaterialfv(GL_FRONT, GL_EMISSION, fColor);
-   glBegin(GL_LINE_LOOP);
-   glVertex3d(xmin, ymin, zmin);
-   glVertex3d(xmin, ymax, zmin);
-   glVertex3d(xmax, ymax, zmin);
-   glVertex3d(xmax, ymin, zmin);
-   glEnd();
-   glBegin(GL_LINE_LOOP);
-   glVertex3d(xmin, ymin, zmax);
-   glVertex3d(xmin, ymax, zmax);
-   glVertex3d(xmax, ymax, zmax);
-   glVertex3d(xmax, ymin, zmax);
-   glEnd();
-   glBegin(GL_LINES);
-   glVertex3d(xmin, ymin, zmin);
-   glVertex3d(xmin, ymin, zmax);
-   glVertex3d(xmin, ymax, zmin);
-   glVertex3d(xmin, ymax, zmax);
-   glVertex3d(xmax, ymax, zmin);
-   glVertex3d(xmax, ymax, zmax);
-   glVertex3d(xmax, ymin, zmin);
-   glVertex3d(xmax, ymin, zmax);
-   glEnd();
-   Float_t nullEmission[] = {0.f, 0.f, 0.f, 0.f};
-   glMaterialfv(GL_FRONT, GL_EMISSION, nullEmission);
-}
-
-//______________________________________________________________________________
-void TGLSelection::SetBox(const PDD_t &x, const PDD_t &y, const PDD_t &z)
-{
-   fXRange.first = x.first, fXRange.second = x.second;
-   fYRange.first = y.first, fYRange.second = y.second;
-   fZRange.first = z.first, fZRange.second = z.second;
-}
-
-//______________________________________________________________________________
-void TGLSelection::Shift(Double_t x, Double_t y, Double_t z)
-{
-   fXRange.first += x, fXRange.second += x;
-   fYRange.first += y, fYRange.second += y;
-   fZRange.first += z, fZRange.second += z;
 }
