@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.3 2002/09/18 13:12:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.4 2003/07/18 23:51:49 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -166,5 +166,27 @@ void TRootControlBar::SetFont(const char *fontName)
 
       ((TGTextButton *)obj)->SetFont(fontName);
    }
-   Resize(GetDefaultSize());
+   Resize();
+}
+
+//______________________________________________________________________________
+void TRootControlBar::SetTextColor(const char *colorName)
+{
+   // sets text color for control bar buttons, e.g.:
+   // root > .x tutorials/demos.C
+   // root > bar->SetTextColor("red")
+
+   Pixel_t color;
+   gClient->GetColorByName(colorName, color);
+
+   TIter next(fWidgets);
+
+   TObject *obj;
+   
+   while ((obj=next())) {
+      if (!obj->InheritsFrom(TGTextButton::Class())) continue;
+
+      ((TGTextButton *)obj)->SetTextColor(color);
+   }
+   Resize();
 }

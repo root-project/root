@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TControlBarImp.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TControlBarImp.h,v 1.2 2003/07/18 23:51:49 rdm Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -47,6 +47,7 @@ public:
    virtual void Hide() { }
    virtual void Show() { }
    virtual void SetFont(const char *fontName) { }
+   virtual void SetTextColor(const char *colorName) { }
 
    ClassDef(TControlBarImp,0)  //GUI independent controlbar abc
 };

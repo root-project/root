@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.2 2002/03/21 08:50:30 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TControlBar.cxx,v 1.3 2003/07/18 23:51:49 rdm Exp $
 // Author: Nenad Buncic   20/02/96
 
 /*************************************************************************
@@ -220,6 +220,16 @@ void TControlBar::SetFont(const char *fontName)
 }
 
 //_______________________________________________________________________
+void TControlBar::SetTextColor(const char *colorName)
+{
+   // Sets text color for control bar buttons, e.g.:
+   // root > .x tutorials/demos.C
+   // root > bar->SetTextColor("red")
+
+   fControlBarImp->SetTextColor(colorName);
+}
+
+//_______________________________________________________________________
 void TControlBar::SetOrientation(const char *o)
 {
     fOrientation = kVertical;
@@ -234,7 +244,6 @@ void TControlBar::SetOrientation(const char *o)
                     o, "vertical", "horizontal" );
     }
 }
-
 
 //_______________________________________________________________________
 void TControlBar::SetOrientation(Int_t o)
