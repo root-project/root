@@ -1,4 +1,4 @@
-/* @(#)root/eg:$Name:  $:$Id: LinkDef.h,v 1.2 2000/09/06 15:15:18 brun Exp $ */
+/* @(#)root/eg:$Name:  $:$Id: LinkDef.h,v 1.3 2000/09/08 16:42:12 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -15,9 +15,9 @@
 #pragma link off all functions;
 
 #pragma link C++ class TParticle-;
-#pragma link C++ class TAttParticle;
-#pragma link C++ class TPrimary;
-#pragma link C++ class TGenerator-;
+#pragma link C++ class TAttParticle+;
+#pragma link C++ class TPrimary+;
+#pragma link C++ class TGenerator+;
 #pragma link C++ class TDatabasePDG+;
 #pragma link C++ class TParticlePDG+;
 
