@@ -1091,6 +1091,58 @@ char *funcheader;   /* funcheader = 'funcname(' */
 #else
     strcpy(G__p_ifunc->funcname[func_now],funcheader);
 #endif
+
+#ifndef G__OLDIMPLEMENTATION_CONTRIB_1
+    if(  (strstr(funcheader,">>")!=NULL && strchr(funcheader,'<')!=NULL)
+       ||(strstr(funcheader,"<<")!=NULL && strchr(funcheader,'>')!=NULL) ) {
+
+       int maxpt2 = strlen(G__p_ifunc->funcname[func_now])+20; /* allow 20 extra spaces */
+       char *pt2 = (char*)malloc(maxpt2);
+       strcpy(pt2,G__p_ifunc->funcname[func_now]);
+       free((void*)(G__p_ifunc->funcname[func_now]));
+       G__p_ifunc->funcname[func_now] = pt2;
+
+       if ((char*)NULL!=strstr(funcheader,"operator<<") &&
+           (char*)NULL!=strchr(funcheader,'>') ) { 
+          /* we might have operator< <> or operator< <double> 
+             or operator<< <> or operator<< <double>
+             with the space missing */
+          pt2 = pt2 + strlen( "operator<" );
+          pt1 = funcheader + strlen( "operator<" );
+          /*char *pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );*/
+          if ( *(pt2+1)=='<' ) {
+             /* we have operator<< <...> */
+             ++pt2;
+             ++pt1;
+          }
+          *pt2 = ' ';
+          ++pt2;
+          strcpy(pt2,pt1);
+       } 
+       else if ((char*)NULL!=strstr(pt2,"operator>>") &&
+                (char*)NULL!=strchr(pt2,'<') ) {
+          /* we might have operator>><>  */
+          /* we have nothing to do ... yet (we may have to do something 
+             for nested templates */
+          pt2 = pt2 + strlen("operator>>");
+          pt1 = funcheader + strlen( "operator>>" );
+       } else {
+          pt1 = funcheader;
+       }
+       while ((char*)NULL!=(pt1=strstr(pt1,">>"))) {
+          /* && (char*)NULL!=strchr(funcheader,'<') */
+          char *pt3;
+          pt3 = strstr(pt2,">>");
+          ++pt3;
+          *pt3 = ' ';
+          ++pt3;
+          ++pt1;
+          pt2 = pt3;
+          strcpy(pt3,pt1);
+       }
+    }
+  }
+#else  /* G__OLDIMPLEMENTATION_CONTRIB_1 */
     if((char*)NULL!=(pt1=strstr(funcheader,">>")) && 
        (char*)NULL!=strchr(funcheader,'<')) {
       char *pt2;
@@ -1100,12 +1152,31 @@ char *funcheader;   /* funcheader = 'funcname(' */
       ++pt2;
       strcpy(pt2,pt1+1);
     }
+#ifndef G__OLDIMPLEMENTATION2085
+    else if ((char*)NULL!=strstr(funcheader,"operator<<<") &&
+               (char*)NULL!=strchr(funcheader,'>') ) { 
+       /* we might have operator<< <> or operator<< <double> 
+          with the space missing */
+       char *pt2;
+       pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<<" );
+       pt1 = funcheader + strlen( "operator<<" );
+       /*char *pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );*/
+       if ( *(pt2+2)=='<' ) {
+          /* we have operator<< <...> */
+          ++pt2;
+       }
+       *pt2 = ' ';
+       ++pt2;
+       strcpy(pt2,pt1);        
+    }
+#endif
 #ifndef G__OLDIMPLEMENTATION2055
-    if ((char*)NULL!=strstr(funcheader,"operator<<") &&
+    else if ((char*)NULL!=strstr(funcheader,"operator<<") &&
                (char*)NULL!=strchr(funcheader,'>') ) { 
        /* we might have operator< <> or operator< <double> 
-          or operator<< <> or operator<< <double>
+          or operator<< 
           with the space missing */
+#ifndef G__OLDIMPLEMENTATION2085
        char *pt2 = (char*)malloc(strlen(G__p_ifunc->funcname[func_now])+2);
        strcpy(pt2,G__p_ifunc->funcname[func_now]);
        free((void*)(G__p_ifunc->funcname[func_now]));
@@ -1118,12 +1189,24 @@ char *funcheader;   /* funcheader = 'funcname(' */
           ++pt2;
           ++pt1;
        }
+#else
+       char *pt2;
+       pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );
+       pt1 = funcheader + strlen( "operator<" );
+       /*char *pt2 = G__p_ifunc->funcname[func_now] + strlen( "operator<" );*/
+       if ( *(pt2+2)=='<' ) {
+          /* XXX we have operator<< <...> */
+          /* we have operator< <...> */
+          ++pt2;
+       }
+#endif  
        *pt2 = ' ';
        ++pt2;
-       strcpy(pt2,pt1);
+       strcpy(pt2,pt1);        
      }
 #endif
   }
+#endif /*  G__OLDIMPLEMENTATION_CONTRIB_1 */
   G__p_ifunc->funcname[func_now][strlen(G__p_ifunc->funcname[func_now])-1]
     ='\0';
 

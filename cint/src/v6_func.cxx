@@ -942,42 +942,51 @@ int isrealloc;
     }
   }
   if(ptmplt) {
-    char funcname2[G__LONGLINE];
-    char buf[G__ONELINE];
-    char buf2[20];
-    int typenum,tagnum,len;
-    int ip=1;
-    int c;
-    strcpy(funcname2,funcname);
-    strcat(funcname2,"<");
-    do {
-      c = G__getstream_template(ptmplt,&ip,buf,",>");
-      len = strlen(buf)-1;
-      while('*'==buf[len]||'&'==buf[len]) --len;
-      ++len;
-      if(buf[len]) {
-	strcpy(buf2,buf+len);
-	buf[len] = 0;
-      }
-      else buf2[0] = 0;
-      typenum = G__defined_typename(buf);
-      if(-1!=typenum) {
-	strcpy(buf,G__fulltypename(typenum));
-      }
-      else {
-	tagnum = G__defined_tagname(buf,1);
-	if(-1!=tagnum) strcpy(buf,G__fulltagname(tagnum,1));
-      }
-      strcat(buf,buf2);
-      strcat(funcname2,buf);
-      buf2[0] = c; buf2[1] = 0;
-      strcat(funcname2,buf2);
-    } while(c!='>');
-    if(isrealloc) {
-      free((void*)funcname);
-      funcname = (char*)malloc(strlen(funcname2)+1);
-    }
-    strcpy(funcname,funcname2);
+     char funcname2[G__LONGLINE];
+     char buf[G__ONELINE];
+     char buf2[20];
+     int typenum,tagnum,len;
+     int ip=1;
+     int c;
+     strcpy(funcname2,funcname);
+     strcat(funcname2,"<");
+     do {
+        c = G__getstream_template(ptmplt,&ip,buf,",>");
+        len = strlen(buf)-1;
+        while('*'==buf[len]||'&'==buf[len]) --len;
+        ++len;
+        if(buf[len]) {
+           strcpy(buf2,buf+len);
+           buf[len] = 0;
+        }
+        else buf2[0] = 0;
+        typenum = G__defined_typename(buf);
+        if(-1!=typenum) {
+           strcpy(buf,G__fulltypename(typenum));
+        }
+        else {
+           tagnum = G__defined_tagname(buf,1);
+           if(-1!=tagnum) strcpy(buf,G__fulltagname(tagnum,1));
+        }
+        strcat(buf,buf2);
+        strcat(funcname2,buf);
+#ifndef G__OLDIMPLEMENTATION_CONTRIB_1
+        if (funcname2[strlen(funcname2)-1]=='>' && c=='>') {
+           buf2[0] = ' '; buf2[1] = c; buf2[2] = 0;  
+        } else {
+           buf2[0] = c; buf2[1] = 0;
+        }
+#else
+        buf2[0] = c; buf2[1] = 0;
+#endif
+
+        strcat(funcname2,buf2);
+     } while(c!='>');
+     if(isrealloc) {
+        free((void*)funcname);
+        funcname = (char*)malloc(strlen(funcname2)+1);
+     }
+     strcpy(funcname,funcname2);
   }
   return(funcname);
 }
