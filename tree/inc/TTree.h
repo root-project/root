@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.41 2002/07/06 06:54:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.42 2002/08/17 21:38:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -235,7 +235,6 @@ public:
     virtual void      IncrementTotalBuffers(Int_t nbytes) {fTotalBuffers += nbytes;}
     Bool_t            IsFolder() const {return kTRUE;}
     virtual Int_t     LoadTree(Int_t entry);
-    virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual Int_t     MakeClass(const char *classname=0,Option_t *option="");
     virtual Int_t     MakeCode(const char *filename=0);
     virtual Int_t     MakeSelector(const char *selector=0);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.140 2002/12/02 22:07:07 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.141 2002/12/06 06:35:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2732,17 +2732,6 @@ Int_t TTree::LoadTree(Int_t entry)
 
    return fReadEntry;
 
-}
-
-//______________________________________________________________________________
-void TTree::Loop(Option_t *option, Int_t nentries, Int_t firstentry)
-{
-//*-*-*-*-*-*-*-*-*Loop on nentries of this tree starting at firstentry
-//*-*              ===================================================
-
-   GetPlayer();
-   if (!fPlayer) return;
-   fPlayer->Loop(option,nentries,firstentry);
 }
 
 //______________________________________________________________________________
