@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.8 2000/11/21 20:24:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.9 2000/12/26 14:25:06 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -516,9 +516,10 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    if (OptionGrid) {
       if (gridlength == 0) gridlength = 0.8;
       linegrid = new TLine();
-      linegrid->SetLineColor(GetLineColor());
-      linegrid->SetLineStyle(3);
-      linegrid->SetLineWidth(1);
+      linegrid->SetLineColor(gStyle->GetGridColor());
+      if (linegrid->GetLineColor() == 0) linegrid->SetLineColor(GetLineColor());
+      linegrid->SetLineStyle(gStyle->GetGridStyle());
+      linegrid->SetLineWidth(gStyle->GetGridWidth());
    }
 
 //*-*-              Determine time format
