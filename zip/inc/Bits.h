@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.3 2004/03/17 17:34:01 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Bits.h,v 1.4 2004/07/19 12:56:43 rdm Exp $ */
 /* Author: */
 /*
 
@@ -9,10 +9,7 @@
  that it is not sold for profit, and that this copyright notice is retained.
 
 */
-
-#ifdef R__ZLIB
 #include "zlib.h"
-#endif
 
 /*
  *  bits.c by Jean-loup Gailly and Kai Uwe Rommel.
@@ -142,10 +139,25 @@ ulg R__bits_sent;   /* bit length of the compressed data */
 
 
 /* ===========================================================================
+   By default R__ZipMode = 0 (old zip compression algorithm.
+   If R__ZipMode is set to 1 (via R__SetZipMode) the new zlib is used
+ */
+int R__ZipMode = 0;
+
+/* ===========================================================================
  *  Prototypes for local functions
  */
 local int  R__mem_read     OF((char *b,    unsigned bsize));
 local void R__flush_outbuf OF((unsigned w, unsigned bytes));
+
+/* ===========================================================================
+   Function to set the ZipMode
+ */
+void R__SetZipMode(int mode)
+{
+   R__ZipMode = mode;
+   printf("R__SetZipMode = %d\n",R__ZipMode);
+}
 
 /* ===========================================================================
  * Initialize the bit string routines.
@@ -394,108 +406,108 @@ void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *
      /* char *tgt, *src;                  source and target buffers */
 
 {
-#ifdef R__ZLIB
-  z_stream stream;
-  int err;
+  if (R__ZipMode != 0) {
+    z_stream stream;
+    int err;
 
-  *irep = 0;
+    *irep = 0;
 
-  error_flag   = 0;
-  if (*tgtsize <= HDRSIZE) R__error("target buffer too small");
-  if (error_flag != 0) return;
-  if (*srcsize > 0xffffff) R__error("source buffer too big");
-  if (error_flag != 0) return;
+    error_flag   = 0;
+    if (*tgtsize <= HDRSIZE) R__error("target buffer too small");
+    if (error_flag != 0) return;
+    if (*srcsize > 0xffffff) R__error("source buffer too big");
+    if (error_flag != 0) return;
 
-  int method   = DEFLATE;
+    int method   = DEFLATE;
 
-  stream.next_in   = (Bytef*)src;
-  stream.avail_in  = (uInt)(*srcsize);
+    stream.next_in   = (Bytef*)src;
+    stream.avail_in  = (uInt)(*srcsize);
 
-  stream.next_out  = (Bytef*)(&tgt[HDRSIZE]);
-  stream.avail_out = (uInt)(*tgtsize);
+    stream.next_out  = (Bytef*)(&tgt[HDRSIZE]);
+    stream.avail_out = (uInt)(*tgtsize);
 
-  stream.zalloc    = (alloc_func)0;
-  stream.zfree     = (free_func)0;
-  stream.opaque    = (voidpf)0;
+    stream.zalloc    = (alloc_func)0;
+    stream.zfree     = (free_func)0;
+    stream.opaque    = (voidpf)0;
 
-  err = deflateInit(&stream, cxlevel);
-  if (err != Z_OK) {
-     printf("error in deflateInit (zlib)\n");
-     return;
+    err = deflateInit(&stream, cxlevel);
+    if (err != Z_OK) {
+       printf("error in deflateInit (zlib)\n");
+       return;
+    }
+
+    err = deflate(&stream, Z_FINISH);
+    if (err != Z_STREAM_END) {
+       deflateEnd(&stream);
+       printf("error in deflate (zlib)\n");
+       return;
+    }
+
+    err = deflateEnd(&stream);
+
+    tgt[0] = 'Z';               /* Signature ZLib */
+    tgt[1] = 'L';
+    tgt[2] = (char) method;
+
+    in_size   = (unsigned) (*srcsize);
+    out_size  = stream.total_out;             /* compressed size */
+    tgt[3] = (char)(out_size & 0xff);
+    tgt[4] = (char)((out_size >> 8) & 0xff);
+    tgt[5] = (char)((out_size >> 16) & 0xff);
+
+    tgt[6] = (char)(in_size & 0xff);         /* decompressed size */
+    tgt[7] = (char)((in_size >> 8) & 0xff);
+    tgt[8] = (char)((in_size >> 16) & 0xff);
+
+    *irep = stream.total_out + HDRSIZE;
+  } else {
+    ush att      = (ush)UNKNOWN;
+    ush flags    = 0;
+    int method   = DEFLATE;
+    level        = cxlevel;
+
+    *irep        = 0;
+    error_flag   = 0;
+    if (*tgtsize <= HDRSIZE) R__error("target buffer too small");
+    if (error_flag != 0) return;
+    if (*srcsize > 0xffffff) R__error("source buffer too big");
+    if (error_flag != 0) return;
+
+    R__read_buf  = R__mem_read;
+    in_buf    = src;
+    in_size   = (unsigned) (*srcsize);
+    in_offset = 0;
+
+    out_buf     = tgt;
+    out_size    = (unsigned) (*tgtsize);
+    out_offset  = HDRSIZE;
+    R__window_size = 0L;
+
+    R__bi_init((FILE *)NULL);      /* initialize bit routines */
+    if (error_flag != 0) return;
+    R__ct_init(&att, &method);     /* initialize tree routines */
+    if (error_flag != 0) return;
+    R__lm_init(level, &flags);     /* initialize compression */
+    if (error_flag != 0) return;
+    R__Deflate();                  /* compress data */
+    if (error_flag != 0) return;
+
+    tgt[0] = 'C';               /* Signature 'C'-Chernyaev, 'S'-Smirnov */
+    tgt[1] = 'S';
+    tgt[2] = (char) method;
+
+    out_size  = out_offset - HDRSIZE;         /* compressed size */
+    tgt[3] = (char)(out_size & 0xff);
+    tgt[4] = (char)((out_size >> 8) & 0xff);
+    tgt[5] = (char)((out_size >> 16) & 0xff);
+
+    tgt[6] = (char)(in_size & 0xff);         /* decompressed size */
+    tgt[7] = (char)((in_size >> 8) & 0xff);
+    tgt[8] = (char)((in_size >> 16) & 0xff);
+
+    *irep     = out_offset;
+    return;
   }
-
-  err = deflate(&stream, Z_FINISH);
-  if (err != Z_STREAM_END) {
-     deflateEnd(&stream);
-     printf("error in deflate (zlib)\n");
-     return;
-  }
-
-  err = deflateEnd(&stream);
-
-  tgt[0] = 'Z';               /* Signature ZLib */
-  tgt[1] = 'L';
-  tgt[2] = (char) method;
-
-  in_size   = (unsigned) (*srcsize);
-  out_size  = stream.total_out;             /* compressed size */
-  tgt[3] = (char)(out_size & 0xff);
-  tgt[4] = (char)((out_size >> 8) & 0xff);
-  tgt[5] = (char)((out_size >> 16) & 0xff);
-
-  tgt[6] = (char)(in_size & 0xff);         /* decompressed size */
-  tgt[7] = (char)((in_size >> 8) & 0xff);
-  tgt[8] = (char)((in_size >> 16) & 0xff);
-
-  *irep = stream.total_out + HDRSIZE;
-#else
-  ush att      = (ush)UNKNOWN;
-  ush flags    = 0;
-  int method   = DEFLATE;
-  level        = cxlevel;
-
-  *irep        = 0;
-  error_flag   = 0;
-  if (*tgtsize <= HDRSIZE) R__error("target buffer too small");
-  if (error_flag != 0) return;
-  if (*srcsize > 0xffffff) R__error("source buffer too big");
-  if (error_flag != 0) return;
-
-  R__read_buf  = R__mem_read;
-  in_buf    = src;
-  in_size   = (unsigned) (*srcsize);
-  in_offset = 0;
-
-  out_buf     = tgt;
-  out_size    = (unsigned) (*tgtsize);
-  out_offset  = HDRSIZE;
-  R__window_size = 0L;
-
-  R__bi_init((FILE *)NULL);      /* initialize bit routines */
-  if (error_flag != 0) return;
-  R__ct_init(&att, &method);     /* initialize tree routines */
-  if (error_flag != 0) return;
-  R__lm_init(level, &flags);     /* initialize compression */
-  if (error_flag != 0) return;
-  R__Deflate();                  /* compress data */
-  if (error_flag != 0) return;
-
-  tgt[0] = 'C';               /* Signature 'C'-Chernyaev, 'S'-Smirnov */
-  tgt[1] = 'S';
-  tgt[2] = (char) method;
-
-  out_size  = out_offset - HDRSIZE;         /* compressed size */
-  tgt[3] = (char)(out_size & 0xff);
-  tgt[4] = (char)((out_size >> 8) & 0xff);
-  tgt[5] = (char)((out_size >> 16) & 0xff);
-
-  tgt[6] = (char)(in_size & 0xff);         /* decompressed size */
-  tgt[7] = (char)((in_size >> 8) & 0xff);
-  tgt[8] = (char)((in_size >> 16) & 0xff);
-
-  *irep     = out_offset;
-  return;
-#endif
 }
 
 void R__error(char *msg)

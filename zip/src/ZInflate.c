@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: ZInflate.c,v 1.2 2004/04/15 11:53:54 brun Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: ZInflate.c,v 1.3 2004/05/05 14:27:28 rdm Exp $ */
 /* Author: */
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,9 +18,7 @@
 #define DEFLATE 8
 static int qflag = 0;
 
-#ifdef R__ZLIB
 #include "zlib.h"
-#endif
 
 /* inflate.c -- put in the public domain by Mark Adler
    version c14o, 23 August 1994 */
@@ -1144,13 +1142,9 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
     return;
   }
 
-#ifdef R__ZLIB
   if ((src[0] != 'C' && src[0] != 'Z') ||
       (src[1] != 'S' && src[1] != 'L') ||
       src[2] != DEFLATE) {
-#else
-  if (src[0] != 'C' || src[1] != 'S' || src[2] != DEFLATE) {
-#endif
     fprintf(stderr,"R__unzip: error in header\n");
     return;
   }
@@ -1173,7 +1167,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 
   /*   D E C O M P R E S S   D A T A  */
 
-#ifdef R__ZLIB
+  /* New zlib format */
   if (src[0] == 'Z' && src[1] == 'L') {
     z_stream stream; // decompression stream
     int err = 0;
@@ -1204,8 +1198,8 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
     *irep = stream.total_out;
     return;
   }
-#endif
 
+  /* Old zlib format */
   if (R__Inflate()) {
     fprintf(stderr,"R__unzip: error during decompression\n");
     return;

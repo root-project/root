@@ -18,13 +18,23 @@ The zlib version number can be found in zip/inc/zlib.h
 zlib is now used in TPDF to compress the "stream" part of PDF files.
 
 The ROOT compress functions R__zip and R__unzip have also been modified
-in order to use zlib. Some performance tests (on a P4 2.4GHz) showed that 
-the zlib version is as fast as the current ROOT zip functions.
-To activate the new zlib it is enough to define R__ZLIB in the files 
-zip/src/ZInflate.c and zip/inc/Bits.h.
-However some work is still required in ROOT Trees before activating
-the new zlib option R__ZLIB. When this option is activated, the new version
-of ROOT can read old files, but we still have problems with some Tree
-configurations when reading files written with R__ZLIB with old versions
-of ROOT.
+in order to use zlib. Some performance tests (on a P4 2.4GHz) show that 
+the new zlib version is as fast as the current ROOT zip functions when
+writing and up to 10 per cent faster when reading.
+                          oldzlib            newzlib
+Event 1000 1 0   1         11.59s             11.46s
+Event 1000 1 0  20          3.83s              3.31s
+Event 1000 1 99  1         10.44s             10.98s
+Event 1000 1 99 20          3.57s              3.17s
+stress -b 30               13.01s             12.35s
+stress -b 1000             61.67s             58.38s
+bench                     151.99s            151.56s
+stressLinear               35.87s             35.77s
+
+To activate the new zlib it is enough to set Root.ZipMode = 1
+in the system.rootrc file.
+When setting Root.ZipMode to 1 (or 0) it is possible to read files
+written with the old zip function.
+Files written with Root.ZipMode=1 can only be read by versions
+of Root >= 4.02/00
 
