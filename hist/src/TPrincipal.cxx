@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.8 2000/08/15 09:49:21 brun Exp $
-// $Date: 2000/08/15 09:49:21 $
+// $Id: TPrincipal.cxx,v 1.9 2000/08/15 12:49:34 brun Exp $
+// $Date: 2000/08/15 12:49:34 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -700,11 +700,24 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
   // Options are:
   //   N       Normalize the covariance matrix (default)
   //   <empty> Do not Normalize the covariance matrix
-  if (nVariables <= 1) {
+  //
+  // The created object is  named "principal" and a reference to it
+  // is added to the list of specials Root objects.
+  // you can retrieve a pointer to the created object via:
+  //  TPrincipal *principal = 
+  //      (TPrincipal*)gROOT->GetListOfSpecials()->FindObject("principal");
+  //
+   if (nVariables <= 1) {
     Error("TPrincipal", "You can't be serious - nVariables == 1!!!");
     return;
   }
 
+  //remove any previous object named "principal" in the list of special objects
+  TObject *obj = gROOT->GetListOfSpecials()->FindObject("principal");
+  if (obj) delete obj;
+  SetName("principal");
+  gROOT->GetListOfSpecials()->Add(this);
+  
   fHistograms = 0;
   fIsNormalised       = kFALSE;
   fNumberOfDataPoints = 0;
@@ -715,8 +728,6 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
       fIsNormalised = kTRUE;
       break;
     default:
-      Warning("TPrincipal", "Option '%s' for unknown - ignored",
-	      *opt);
       break;
     }
   }
@@ -740,8 +751,10 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
 //____________________________________________________________________
 TPrincipal::~TPrincipal() 
 {
-  // Empty DTOR
+  // destructor
 
+   gROOT->GetListOfSpecials()->Remove(this);
+   
    if (fHistograms) {
       fHistograms->Delete();
       delete fHistograms;

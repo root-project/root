@@ -1,14 +1,14 @@
 // -*- mode: c++ -*-
 //
-// $Id: TPrincipal.h,v 1.1 2000/08/15 07:48:50 brun Exp $
+// $Id: TPrincipal.h,v 1.2 2000/08/15 09:49:21 brun Exp $
 // $Author: brun $
-// $Date: 2000/08/15 07:48:50 $
+// $Date: 2000/08/15 09:49:21 $
 //
 #ifndef ROOT_TPrincipal
 #define ROOT_TPrincipal
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
 #ifndef ROOT_TVectorD
 #include "TVectorD.h"
@@ -20,7 +20,7 @@
 #include "TList.h"
 #endif
 
-class TPrincipal : public TObject {
+class TPrincipal : public TNamed {
 
 protected:
   Int_t      fNumberOfDataPoints;   // Number of data points
@@ -62,7 +62,6 @@ public:
   const TMatrixD *GetEigenVectors() const     {return &fEigenVectors;}
   TList          *GetHistograms() {return fHistograms;}
   const TVectorD *GetMeanValues() const       {return &fMeanValues;}
-  virtual const char *GetName() const { return "PCA"; }
   const Double_t *GetRow(Int_t row);
   const TVectorD *GetSigmas() const           {return &fSigmas;}
   const TVectorD *GetUserData() const         {return &fUserData;}
