@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.77 2003/11/27 11:45:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.78 2003/12/11 13:27:27 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -839,7 +839,7 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t)
 
   InitArgs(xx,fParams);
 
-  return TF1::EvalPar(xx,fParams);
+  return EvalPar(xx,fParams);
 }
 
 //______________________________________________________________________________
