@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.95 2002/11/24 14:02:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.96 2002/11/25 20:15:55 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -630,6 +630,7 @@ void TBranchElement::Browse(TBrowser *b)
    } else {
       // Get the name and strip any extra brackets
       // in order to get the full arrays.
+      TString slash("/"), escapedSlash("\\/");
       TString name = GetName();
       Int_t pos = name.First('[');
       if (pos!=kNPOS) name.Remove(pos);
@@ -674,7 +675,7 @@ void TBranchElement::Browse(TBrowser *b)
             }
          }
       }
-
+      name.ReplaceAll(slash, escapedSlash);
       GetTree()->Draw(name);
       if (gPad) gPad->Update();
    }
@@ -1558,10 +1559,10 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
             }
          } else {
             if (elem->GetClassPointer() == TClonesArray::Class()) {
-               //process case of a TClonesArray in a derived class (do not split)
+               //process case of a TClonesArray in a derived class
                char *pointer = fBranchPointer + elem->GetOffset();
-               //branch = new TBranchElement(branchname,info,jd,pointer,basketsize,splitlevel-1,btype);
-               branch = new TBranchElement(branchname,info,jd,pointer,basketsize,0,btype);
+               branch = new TBranchElement(branchname,info,jd,pointer,basketsize,splitlevel-1,btype);
+               //branch = new TBranchElement(branchname,info,jd,pointer,basketsize,0,btype);
             } else {
                branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
                branch->SetType(btype);
