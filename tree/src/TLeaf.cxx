@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.9 2002/05/31 16:59:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.10 2002/06/19 20:15:17 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -52,13 +52,19 @@ TLeaf::TLeaf(const char *name, const char *)
 //     See the TTree and TBranch constructors for explanation of parameters.
 
    fBranch     = 0;
-   fLeafCount  = GetLeafCounter(fLen);
-   if (fLen == -1) {MakeZombie(); return;}
    fIsRange    = 0;
    fIsUnsigned = 0;
    fLenType    = 4;
    fNdata      = 0;
    fOffset     = 0;
+
+   fLeafCount  = GetLeafCounter(fLen);
+
+   if (fLen == -1) {
+      MakeZombie(); 
+      return;
+   }
+
    if (fLeafCount || strchr(name,'[')) {
       char newname[64];
       strcpy(newname,name);
@@ -229,6 +235,20 @@ Int_t TLeaf::ResetAddress(void *add, Bool_t destructor)
    ResetBit(kNewValue);
    if (!add) SetBit(kNewValue);
    return todelete;
+}
+
+
+//_______________________________________________________________________
+void TLeaf::SetLeafCount(TLeaf *leaf)
+{ 
+   if (IsZombie() && fLen==-1 && leaf) {
+      // The constructor noted that it could not find the 
+      // leafcount. Now that we did find it, let's remove
+      // the side-effects
+      ResetBit(kZombie);
+      fLen = 1;
+   }
+   fLeafCount=leaf; 
 }
 
 //_______________________________________________________________________
