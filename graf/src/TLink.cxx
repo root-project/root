@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLink.cxx,v 1.4 2000/09/13 12:04:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLink.cxx,v 1.5 2000/09/13 12:32:48 brun Exp $
 // Author: Rene Brun   05/03/95
 
 /*************************************************************************
@@ -78,6 +78,7 @@ void TLink::ExecuteEvent(Int_t event, Int_t, Int_t)
 
   if (event != kButton1Up) return;
 
+  if (TestBit(kIsStarStar)) return;
   TObject *idcur = (TObject*)fLink;
   if (!idcur) return;
   TClass *cl = gROOT->GetClass(GetName());
