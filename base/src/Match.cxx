@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Match.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Match.cxx,v 1.2 2002/09/30 17:31:46 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -386,8 +386,10 @@ static int omatch(const char**      strp,
       break;
    }
 
-   ++*strp;
-   --*slenp;
+   if (*slenp) {
+      ++*strp;
+      --*slenp;
+   }
    return 2;
 }
 

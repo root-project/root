@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.66 2003/09/30 13:41:22 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.77 2004/01/30 08:12:56 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #include "TGlobal.h"
 #include "TDataType.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TMethod.h"
@@ -42,6 +43,10 @@
 #    undef GetClassInfo
 #  endif
 #endif
+
+#include <vector>
+#include <string>
+using namespace std;
 
 R__EXTERN int optind;
 
@@ -247,14 +252,20 @@ void TCint::LoadMacro(const char *filename, EErrorCode *error)
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
+Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
 {
    // Let CINT process a command line.
+   // If the command is executed and the result of G__process_cmd is 0,
+   // the return value is the int value corresponding to the result of the command
+   // (float and double return values will be truncated).
 
    Int_t ret = 0;
    if (gApplication) {
       if (gApplication->IsCmdThread()) {
          gROOT->SetLineIsProcessing();
+
+         G__value local_res;
+         G__setnull(&local_res);
 
          // It checks whether the input line contains the "fantom" method
          // to synchronize user keyboard input and ROOT prompt line
@@ -263,7 +274,8 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
             TCint::UpdateAllCanvases();
          } else {
             int local_error = 0;
-            ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, 0);
+            
+            ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, &local_res);
             if (local_error == 0 && G__get_return(&fExitCode) == G__RETURN_EXIT2) {
                ResetGlobals();
                gApplication->Terminate(fExitCode);
@@ -271,6 +283,8 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
             if (error)
                *error = (EErrorCode)local_error;
          }
+         
+         if (ret==0) ret = G__int(local_res);
 
          gROOT->SetLineHasBeenProcessed();
       } else
@@ -280,7 +294,7 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLineAsynch(const char *line, EErrorCode *error)
+Long_t TCint::ProcessLineAsynch(const char *line, EErrorCode *error)
 {
    // Let CINT process a command line asynch.
 
@@ -301,7 +315,7 @@ Int_t TCint::ProcessLineAsynch(const char *line, EErrorCode *error)
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLineSynch(const char *line, EErrorCode *error)
+Long_t TCint::ProcessLineSynch(const char *line, EErrorCode *error)
 {
    // Let CINT process a command line synchronously, i.e we are waiting
    // it will be finished.
@@ -502,70 +516,31 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
 
    R__LOCKGUARD(gCINTMutex);
    if (!cl->fClassInfo || reload) {
-      // In the case where the class is not loaded and belongs to a namespace
-      // or is nested, looking for the full class name is outputing a lots of
-      // (expected) error messages.  Currently the only way to avoid this is to
-      // specifically check that each level of nesting is already loaded.
-      // In case of templates the idea is that everything between the outer
-      // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
 
-      char *classname = StrDup(cl->GetName());
-      char *current = classname;
-      while (*current) {
+      delete cl->fClassInfo; cl->fClassInfo = 0;
+      if (CheckClassInfo(cl->GetName())) {
 
-         while (*current && *current != ':' && *current != '<')
-            current++;
+         cl->fClassInfo = new G__ClassInfo(cl->GetName());
 
-         if (!*current) break;
-
-         if (*current == '<') {
-            int level = 1;
-            current++;
-            while (*current && level > 0) {
-               if (*current == '<') level++;
-               if (*current == '>') level--;
-               current++;
-            }
-            continue;
+         // In case a class contains an external enum, the enum will be seen as a
+         // class. We must detect this special case and make the class a Zombie.
+         // Here we assume that a class has at least one method.
+         // We can NOT call TClass::Property from here, because this method
+         // assumes that the TClass is well formed to do a lot of information
+         // caching. The method SetClassInfo (i.e. here) is usually called during
+         // the building phase of the TClass, hence it is NOT well formed yet.
+         if (cl->fClassInfo->IsValid() &&
+             !(cl->fClassInfo->Property() & (kIsClass|kIsStruct))) {
+            cl->MakeZombie();
+         }
+         
+         if (!cl->fClassInfo->IsLoaded()) {
+            // this happens when no CINT dictionary is available
+            delete cl->fClassInfo;
+            cl->fClassInfo = 0;
          }
 
-         // *current == ':', must be a "::"
-         if (*(current+1) != ':') {
-            Error("SetClassInfo", "unexpected token : in %s", classname);
-            delete [] classname;
-            return;
-         }
-
-         *current = '\0';
-         G__ClassInfo info(classname);
-         if (!info.IsLoaded()) {
-            delete [] classname;
-            return;
-         }
-         *current = ':';
-         current += 2;
-      }
-      delete [] classname;
-
-      cl->fClassInfo = new G__ClassInfo(cl->GetName());
-
-      // In case a class contains an external enum, the enum will be seen as a
-      // class. We must detect this special case and make the class a Zombie.
-      // Here we assume that a class has at least one method.
-      // We can NOT call TClass::Property from here, because this method
-      // assumes that the TClass is well formed to do a lot of information
-      // caching. The method SetClassInfo (i.e. here) is usually called during
-      // the building phase of the TClass, hence it is NOT well formed yet.
-      if (cl->fClassInfo->IsValid() &&
-          !(cl->fClassInfo->Property() & (kIsClass|kIsStruct))) {
-         cl->MakeZombie();
-      }
-
-      if (!cl->fClassInfo->IsLoaded()) {
-         // this happens when no CINT dictionary is available
-         delete cl->fClassInfo;
-         cl->fClassInfo = 0;
-      }
+      } 
    }
 }
 
@@ -575,8 +550,55 @@ Bool_t TCint::CheckClassInfo(const char *name)
    // Checks if a class with the specified name is defined in CINT.
    // Returns kFALSE is class is not defined.
 
+   // In the case where the class is not loaded and belongs to a namespace
+   // or is nested, looking for the full class name is outputing a lots of
+   // (expected) error messages.  Currently the only way to avoid this is to
+   // specifically check that each level of nesting is already loaded.
+   // In case of templates the idea is that everything between the outer
+   // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
+
+   char *classname = StrDup(name);
+   char *current = classname;
+   while (*current) {
+
+      while (*current && *current != ':' && *current != '<')
+         current++;
+      
+      if (!*current) break;
+      
+      if (*current == '<') {
+         int level = 1;
+         current++;
+         while (*current && level > 0) {
+            if (*current == '<') level++;
+            if (*current == '>') level--;
+            current++;
+         }
+         continue;
+      }
+
+      // *current == ':', must be a "::"
+      if (*(current+1) != ':') {
+         Error("CheckClassInfo", "unexpected token : in %s", classname);
+         delete [] classname;
+         return kFALSE;
+      }
+
+      *current = '\0';
+      G__ClassInfo info(classname);
+      if (!info.IsLoaded()) {
+         delete [] classname;
+         return kFALSE;
+      }
+      *current = ':';
+      current += 2;
+   }
+   delete [] classname;
+
    Int_t tagnum = G__defined_tagname(name, 2);
    if (tagnum >= 0) return kTRUE;
+   G__TypedefInfo t(name);
+   if (t.IsValid() && !(t.Property()&G__BIT_ISFUNDAMENTAL)) return kTRUE;
    return kFALSE;
 }
 
@@ -747,6 +769,21 @@ void *TCint::GetInterfaceMethodWithPrototype(TClass *cl, const char *method,
 }
 
 //______________________________________________________________________________
+const char *TCint::GetInterpreterTypeName(const char *name) 
+{
+   // The 'name' is known to the interpreter, this function returns
+   // the internal version of this name (usually just resolving typedefs)
+   // This is used in particular to synchronize between the name used
+   // by rootcint and by the run-time enviroment (TClass)
+   // Return 0 if the name is not known.
+   
+   if (!gInterpreter->CheckClassInfo(name)) return 0;
+   G__ClassInfo cl(name);
+   if (cl.IsValid()) return cl.Name();
+   else return 0;
+}
+
+//______________________________________________________________________________
 void TCint::Execute(const char *function, const char *params, int *error)
 {
    // Execute a global function with arguments params.
@@ -775,11 +812,17 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method,
    long        offset;
    G__CallFunc func;
 
+   // If the actuall class of this object inherit 2nd (or more) from TObject,
+   // 'obj' is unlikely to be the start of the object (as described by IsA()),
+   // hence gInterpreter->Execute will improperly correct the offset.
+
+   void *addr = cl->DynamicCast( TObject::Class(), obj, kFALSE);
+
    // set pointer to interface method and arguments
    func.SetFunc(cl->GetClassInfo(), method, params, &offset);
 
    // call function
-   address = (void*)((Long_t)obj + offset);
+   address = (void*)((Long_t)addr + offset);
    func.Exec(address);
    if (error) *error = G__lasterror();
 }
@@ -845,12 +888,12 @@ void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params
 }
 
 //______________________________________________________________________________
-Int_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
+Long_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
 {
    // Execute a CINT macro.
 
    if (gApplication)
-      gApplication->ProcessFile(filename, (int*)error);
+      return gApplication->ProcessFile(filename, (int*)error);
    else
       /*G__value result =*/ G__exec_tempfile((char*)filename);
    return 0;  // could get return value from result, but what about return type?
@@ -911,7 +954,32 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
    // the TClass for class "item".
 
    if (gROOT && gROOT->GetListOfClasses()) {
-      TClass *cl = gROOT->GetClass(item, kFALSE);
+
+      Bool_t load = kFALSE;
+
+      if (strchr(item,'<')) {
+         // We have a template which may have duplicates.
+
+         TIter next( gROOT->GetListOfClasses() );
+         TClass *cl;
+         
+         TString resolvedItem(
+            TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,TClassEdit::kDropStlDefault).c_str()
+                                       ,kTRUE) );
+         TString resolved;
+         while ( (cl = (TClass*)next()) ) {
+            resolved = TClassEdit::ResolveTypedef(TClassEdit::ShortType(cl->GetName(),
+                                                                        TClassEdit::kDropStlDefault).c_str()
+                                                  ,kTRUE);
+            if (resolved==resolvedItem) {
+               // we found at least one equivalent.
+               // let's force a reload
+               load = kTRUE;
+            }
+         }
+      }
+      
+      TClass *cl = gROOT->GetClass(item, load);
       if (cl) {
          G__ClassInfo *info = cl->GetClassInfo();
          if (info && info->Tagnum() != tagnum) {

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.150 2003/12/16 22:42:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.153 2003/12/19 09:31:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -610,6 +610,27 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //  Iteration$: return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
 //
+//  Alt$(primary,alternate) : return the value of "primary" if it is available
+//                 for the current iteration otherwise return the value of "alternate".
+//                 For example, with arr1[3] and arr2[2]
+//    tree->Draw("arr1-Alt$(arr2,0)");
+//                 will draw arr[0]+arr2[0] ; arr[1]+arr2[1] and arr[1]+0
+//                 Or with a variable size array arr3
+//    tree->Draw("Alt$(arr3[0],0)+Alt$(arr3[1],0)+Alt$(arr3[2],0)");
+//                 will draw the sum arr3 for the index 0 to min(2,actual_size_of_arr3-1)
+//                 As a comparison
+//    tree->Draw("arr3[0]+arr3[1]+arr3[2]");
+//                 will draw the sum arr3 for the index 0 to 2 only if the 
+//                 actual_size_of_arr3 is greater or equal to 3.
+//                 Note that the array in 'primary' is flatened/linearilized thus using
+//                 Alt$ with multi-dimensional arrays of different dimensions in unlikely
+//                 to yield the expected results.  To visualize a bit more what elements
+//                 would be matched by TTree::Draw, TTree::Scan can be used:
+//    tree->Scan("arr1:Alt$(arr2,0)");
+//                 will print on one line the value of arr1 and (arr2,0) that will be 
+//                 matched by
+//    tree->Draw("arr1-Alt$(arr2,0)");
+//
 //     Making a Profile histogram
 //     ==========================
 //  In case of a 2-Dim expression, one can generate a TProfile histogram
@@ -1091,8 +1112,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       if (branch->IsA() == TBranchElement::Class()) {
          bre = (TBranchElement*)branch;
-         if (bre->GetType() != 3 && bre->GetStreamerType() <= 0 && bre->GetListOfBranches()->GetEntriesFast()) leafStatus[l] = 0;
-         if (bre->GetType() == 3) {
+         if (bre->GetType() != 3 && bre->GetType() != 4 
+             && bre->GetStreamerType() <= 0 && bre->GetListOfBranches()->GetEntriesFast()) {
+            leafStatus[l] = 0;
+         }
+         if (bre->GetType() == 3 || bre->GetType() == 4) {
             fprintf(fp,"   %-15s %s_;\n","Int_t", branchname);
             continue;
          }
@@ -1423,6 +1447,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       if (branch->IsA() == TBranchElement::Class()) {
          if (((TBranchElement*)branch)->GetType() == 3) len =1;
+         if (((TBranchElement*)branch)->GetType() == 4) len =1;
       }
       if (leafcount) len = leafcount->GetMaximum()+1;
       if (len > 1) fprintf(fp,"   fChain->SetBranchAddress(\"%s\",%s);\n",branch->GetName(),branchname);
@@ -1614,7 +1639,12 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"   // to process an event. It is the user's responsability to read\n");
       fprintf(fpc,"   // the corresponding entry in memory (may be just a partial read).\n");
       fprintf(fpc,"   // Once the entry is in memory one can apply a selection and if the\n");
-      fprintf(fpc,"   // event is selected histograms can be filled.\n");
+      fprintf(fpc,"   // event is selected histograms can be filled.\n\n");
+      fprintf(fpc,"   // WARNING when a selector is used with a TChain, you must use\n");
+      fprintf(fpc,"   //  the pointer to the current Tree to call GetEntry(entry).\n");
+      fprintf(fpc,"   //  entry is always the local entry number in the current tree.\n");
+      fprintf(fpc,"   //  Assuming that fChain is the pointer to the TChain being processed,\n");
+      fprintf(fpc,"   //  use fChain->GetTree()->GetEntry(entry);\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   return kTRUE;\n");
@@ -2411,7 +2441,8 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
             onerow += Form("* %8d ",inst);
          }
          for (i=0;i<ncols;i++) {
-            onerow += Form("* %9.9s ",var[i]->PrintValue(0,inst));
+            if (var[i]->GetNdim()) onerow += Form("* %9.9s ",var[i]->PrintValue(0,inst));
+            else onerow += "*           ";
          }
          fSelectedRows++;
          if (fScanRedirect)

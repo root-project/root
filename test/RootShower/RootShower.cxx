@@ -204,13 +204,14 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     int spacing = 8;
     fToolBar = new TGToolBar(this, 60, 20, kHorizontalFrame | kRaisedFrame);
     for (int i = 0; xpm_names[i]; i++) {
-        char *iconname = new char[100];
+        TString iconname(gProgPath);
 #ifdef R__WIN32
-        sprintf(iconname,"%s\\icons\\%s",gProgPath,xpm_names[i]);
+        iconname += "\\icons\\";
 #else
-        sprintf(iconname,"%s/icons/%s",gProgPath,xpm_names[i]);
+        iconname += "/icons/";
 #endif
-        tb_data[i].fPixmap = iconname;
+        iconname += xpm_names[i];
+        tb_data[i].fPixmap = iconname.Data();
         if (strlen(xpm_names[i]) == 0) {
             spacing = 8;
             continue;

@@ -1994,14 +1994,18 @@ int state;
 }
 
 #ifndef G__OLDIMPLEMENTATION1908
+#ifdef G__SHAREDLIB
 G__SHLHANDLE G__ShlHandle=(G__SHLHANDLE)0;
+#endif
 
 /**************************************************************************
  * G__REsetShlHandle()
  **************************************************************************/
 void G__ResetShlHandle()
 {
+#ifdef G__SHAREDLIB
   G__ShlHandle = (G__SHLHANDLE)0;
+#endif
 }
 
 /**************************************************************************
@@ -2009,7 +2013,11 @@ void G__ResetShlHandle()
  **************************************************************************/
 void* G__GetShlHandle()
 {
+#ifdef G__SHAREDLIB
+  return((void*)0);
+#else
   return((void*)G__ShlHandle);
+#endif
 }
 
 /**************************************************************************
@@ -2018,6 +2026,7 @@ void* G__GetShlHandle()
 void* G__SetShlHandle(filename)
 char *filename;
 {
+#ifdef G__SHAREDLIB
   int i,isl;
   for(i=0;i<G__nfile;i++) {
     if(0==strcmp(G__srcfile[i].filename,filename)) {
@@ -2031,6 +2040,7 @@ char *filename;
       }
     }
   }
+#endif
   return 0;
 }
 
@@ -2182,6 +2192,7 @@ void* G__FindSymbol(ifunc,ifn)
 struct G__ifunc_table *ifunc;
 int ifn;
 {
+#ifdef G__SHAREDLIB
   char *funcname=ifunc->funcname[ifn];
   void *p2f=0;
   if(G__ShlHandle) {
@@ -2212,6 +2223,9 @@ int ifn;
     }
   }
   return(p2f);
+#else
+  return((void*)0);
+#endif
 }
 
 /**************************************************************************
@@ -2221,7 +2235,8 @@ void* G__FindSym(filename,funcname)
 char *filename;
 char *funcname;
 {
-  void *p2f;
+#ifdef G__SHAREDLIB
+  void *p2f=0;
   G__SHLHANDLE store_ShlHandle = G__ShlHandle;
   if(!G__SetShlHandle(filename)) return 0;
 
@@ -2229,6 +2244,9 @@ char *funcname;
 
   G__ShlHandle = store_ShlHandle;
   return(p2f);
+#else
+  return((void*)0);
+#endif
 }
 #endif
 

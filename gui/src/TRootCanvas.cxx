@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.19 2003/11/24 10:51:55 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.26 2004/01/30 08:12:56 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -29,6 +29,7 @@
 #include "TGStatusBar.h"
 
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TCanvas.h"
 #include "TBrowser.h"
 #include "TClassTree.h"
@@ -39,6 +40,10 @@
 #include "TFile.h"
 #include "TInterpreter.h"
 #include "Riostream.h"
+
+#ifdef WIN32
+#include "TWin32SplashThread.h"
+#endif
 
 #include "HelpText.h"
 
@@ -450,15 +455,9 @@ void TRootCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
    gVirtualX->GetWindowSize(fId, x, y, w, h);
 
-   // Get position of window on the screen. For this we need to get the parent
-   // of the ROOT canvas, i.e. the window managed by the window manager and get
-   // its position
-   UInt_t wdum, hdum;
-   Window_t id = fId;
-   do {
-      gVirtualX->GetWindowSize(id, x, y, wdum, hdum);
-      id = gVirtualX->GetParent(id);
-   } while (id != gClient->GetRoot()->GetId());
+   Window_t childdum;
+   gVirtualX->TranslateCoordinates(fId, gClient->GetRoot()->GetId(),
+                                   0, 0, x, y, childdum);
 }
 
 //______________________________________________________________________________
@@ -740,11 +739,28 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   // Handle Help menu items...
                   case kHelpAbout:
                      {
+#ifdef R__UNIX
+                        TString rootx;
+# ifdef ROOTBINDIR
+                        rootx = ROOTBINDIR;
+# else
+                        rootx = gSystem->Getenv("ROOTSYS");
+                        if (!rootx.IsNull()) rootx += "/bin";
+# endif
+                        rootx += "/root -a &";
+                        gSystem->Exec(rootx);
+#else
+#ifdef WIN32
+                        new TWin32SplashThread(kTRUE);
+#else
+
                         char str[32];
                         sprintf(str, "About ROOT %s...", gROOT->GetVersion());
                         hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
+#endif
+#endif
                      }
                      break;
                   case kHelpOnCanvas:
@@ -863,7 +879,7 @@ void TRootCanvas::FitCanvas()
 //______________________________________________________________________________
 void TRootCanvas::Lock()
 {
-   // lock updating canvas
+   // Lock updating canvas.
 
    if (IsLocked()) return;
 #ifdef WIN32
@@ -874,7 +890,7 @@ void TRootCanvas::Lock()
 //______________________________________________________________________________
 void TRootCanvas::Unlock()
 {
-   //  unlock updating canvas
+   //  Unlock updating canvas.
 
    if (!IsLocked()) return;
 #ifdef WIN32

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.31 2003/09/23 22:06:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.35 2004/01/25 17:59:53 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -44,6 +44,7 @@
 #endif
 
 class TSeqCollection;
+class TFdSet;
 
 
 enum EAccessMode {
@@ -134,44 +135,17 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFdSet                                                               //
-//                                                                      //
-// Wrapper class around the fd_set bit mask macros used by select().    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef HOWMANY
-#   define HOWMANY(x, y)   (((x)+((y)-1))/(y))
-#endif
-
-const Int_t kNFDBITS = (sizeof(Int_t) * 8);      // 8 bits per byte
-
-class TFdSet {
-private:
-   Int_t fds_bits[HOWMANY(256, kNFDBITS)];     // upto 255 file descriptors
-public:
-   TFdSet() { memset(fds_bits, 0, sizeof(fds_bits)); }
-   void  Zero() { memset(fds_bits, 0, sizeof(fds_bits)); }
-   void  Set(Int_t n) { fds_bits[n/kNFDBITS] |= (1 << (n % kNFDBITS)); }
-   void  Clr(Int_t n) { fds_bits[n/kNFDBITS] &= ~(1 << (n % kNFDBITS)); }
-   Int_t IsSet(Int_t n) { return fds_bits[n/kNFDBITS] & (1 << (n % kNFDBITS)); }
-   Int_t *GetBits() { return (Int_t *)fds_bits; }
-};
-
-
 class TSystem : public TNamed {
 
 public:
    enum EAclicMode { kDefault, kDebug, kOpt };
 
 protected:
-   TFdSet           fReadmask;         //!Files that should be checked for read events
-   TFdSet           fWritemask;        //!Files that should be checked for write events
-   TFdSet           fReadready;        //!Files with reads waiting
-   TFdSet           fWriteready;       //!Files with writes waiting
-   TFdSet           fSignals;          //!Signals that were trapped
+   TFdSet          *fReadmask;         //!Files that should be checked for read events
+   TFdSet          *fWritemask;        //!Files that should be checked for write events
+   TFdSet          *fReadready;        //!Files with reads waiting
+   TFdSet          *fWriteready;       //!Files with writes waiting
+   TFdSet          *fSignals;          //!Signals that were trapped
    Int_t            fNfd;              //Number of fd's in masks
    Int_t            fMaxrfd;           //Largest fd in read mask
    Int_t            fMaxwfd;           //Largest fd in write mask
@@ -295,7 +269,8 @@ public:
    virtual int             Link(const char *from, const char *to);
    virtual int             Symlink(const char *from, const char *to);
    virtual int             Unlink(const char *name);
-   virtual int             GetPathInfo(const char *path, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
+   int                     GetPathInfo(const char *path, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
+   virtual int             GetPathInfo(const char *path, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
    virtual int             GetFsInfo(const char *path, Long_t *id, Long_t *bsize, Long_t *blocks, Long_t *bfree);
    virtual int             Umask(Int_t mask);
    virtual int             Utime(const char *file, Long_t modtime, Long_t actime);

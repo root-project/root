@@ -575,6 +575,41 @@ char *new_name;
       
     } /* of isspace(cin) */
   } /* of isspace(cin) */
+#ifndef G__OLDIMPLEMENTATION1957
+  else if('('==cin && 0==new_name[0]) {
+    /* check which case
+     *  1. f(type (*p)(int))  -> do nothing here 
+     *  2. f(type (*p)[4][4]) -> convert to f(type p[][4][4])  */
+    fpos_t tmppos;
+    int tmpline = G__ifile.line_number;;
+    fgetpos(G__ifile.fp,&tmppos);
+    if(G__dispsource) G__disp_mask=1;
+
+    cin=G__fgetvarname(new_name,")");
+    if('*'!=new_name[0] || 0==new_name[1]) goto escapehere;
+    strcpy(temp,new_name+1);
+
+    cin=G__fgetvarname(new_name,",;=():}");
+    if('['!=new_name[0]) goto escapehere;
+    if(G__dispsource) {
+      G__disp_mask=0;
+      G__fprinterr(G__serr,"*%s)%s",temp,new_name);
+    }
+
+    strcat(temp,"[]");
+    strcat(temp,new_name);
+    strcpy(new_name,temp);
+
+    return(cin);
+    
+  escapehere:
+    if(G__dispsource) G__disp_mask=0;
+    fsetpos(G__ifile.fp,&tmppos);
+    G__ifile.line_number = tmpline;
+    new_name[0] = 0;
+    cin = '(';
+  }
+#endif
 
   if(strncmp(new_name,"operator",8)==0 && 
      (G__isoperator(new_name[8]) || '\0'==new_name[8])) {
@@ -3340,7 +3375,16 @@ char *new_name;
     switch(c) {
     case '{':
       ++mparen;
+#ifndef G__OLDIMPLEMENTATION1958
+      if(stringflag && var->paran[ig15]>2) {
+	inc *= var->varlabel[ig15][--pi]; /* not 100% sure,but.. */
+      }
+      else {
+	inc *= var->varlabel[ig15][pi--];
+      }
+#else
       inc *= var->varlabel[ig15][pi--];
+#endif
       break;
     case '}':
       ++pi;

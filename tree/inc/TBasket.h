@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.7 2002/02/03 16:15:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.h,v 1.9 2003/12/30 13:16:51 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -39,7 +39,7 @@ class TBasket : public TKey {
 
 protected:
     Int_t       fBufferSize;      //fBuffer length in bytes
-    Int_t       fNevBufSize;      //Length in Int_t of fEntryOffset
+    Int_t       fNevBufSize;      //Length in Int_t of fEntryOffset OR fixed length of each entry if fEntryOffset is null!
     Int_t       fNevBuf;          //Number of entries in basket
     Int_t       fLast;            //Pointer to last used byte in basket
     Bool_t      fHeaderOnly;      //True when only the basket header must be read/written
@@ -65,8 +65,8 @@ public:
             Int_t   GetNevBuf() const {return fNevBuf;}
             Int_t   GetNevBufSize() const {return fNevBufSize;}
             Int_t   GetLast() const {return fLast;}
-            Int_t   ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file);
-            Int_t   ReadBasketBytes(Seek_t pos, TFile *file);
+            Int_t   ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file);
+            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
 
             void    SetBranch(TBranch *branch) {fBranch = branch;}
             void    SetNevBufSize(Int_t n) {fNevBufSize=n;}

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.5 2002/12/10 02:19:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.cxx,v 1.7 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -130,7 +130,7 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
 
    // Give full URL so Apache's virtual hosts solution works.
    // Use protocol 0.9 for efficiency, we are not interested in the 1.0 headers.
-   sprintf(msg, "GET %s://%s:%d%s?%d:%d\r\n", fUrl.GetProtocol(),
+   sprintf(msg, "GET %s://%s:%d%s?%lld:%d\r\n", fUrl.GetProtocol(),
            fUrl.GetHost(), fUrl.GetPort(), fUrl.GetFile(), fOffset, len);
    s.SendRaw(msg, strlen(msg));
    s.RecvRaw(buf, len);
@@ -148,7 +148,7 @@ Bool_t TWebFile::ReadBuffer(char *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-void TWebFile::Seek(Seek_t offset, ERelativeTo pos)
+void TWebFile::Seek(Long64_t offset, ERelativeTo pos)
 {
    // Set position from where to start reading.
 
@@ -166,7 +166,7 @@ void TWebFile::Seek(Seek_t offset, ERelativeTo pos)
 }
 
 //______________________________________________________________________________
-Seek_t TWebFile::GetSize() const
+Long64_t TWebFile::GetSize() const
 {
    // Return maximum file size to by-pass truncation checking.
 

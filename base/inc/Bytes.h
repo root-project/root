@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.13 2003/04/11 11:48:10 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Bytes.h,v 1.14 2003/05/03 06:21:24 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -63,7 +63,8 @@ inline void tobuf(char *&buf, UShort_t x)
 # if defined(__linux) && defined(__i386__)
    *((UShort_t *)buf) = Rbswap_16(x);
 # else
-   char *sw = (char *)&x;
+   const UShort_t *intermediary = &x;
+   char *sw = (char *) intermediary;
    buf[0] = sw[1];
    buf[1] = sw[0];
 # endif
@@ -79,7 +80,9 @@ inline void tobuf(char *&buf, UInt_t x)
 # if defined(__linux) && defined(__i386__)
    *((UInt_t *)buf) = Rbswap_32(x);
 # else
-   char *sw = (char *)&x;
+   // To work around a stupid optimization bug in MSVC++ 6.0
+   const UInt_t *intermediary = &x;
+   char *sw = (char *)intermediary;
    buf[0] = sw[3];
    buf[1] = sw[2];
    buf[2] = sw[1];
@@ -94,7 +97,9 @@ inline void tobuf(char *&buf, UInt_t x)
 inline void tobuf(char *&buf, ULong_t x)
 {
 #ifdef R__BYTESWAP
-   char *sw = (char *)&x;
+   // To work around a stupid optimization bug in MSVC++ 6.0
+   const ULong_t *intermediary = &x;
+   char *sw = (char *)intermediary;
    if (sizeof(ULong_t) == 8) {
       buf[0] = sw[7];
       buf[1] = sw[6];
@@ -131,7 +136,9 @@ inline void tobuf(char *&buf, ULong_t x)
 inline void tobuf(char *&buf, Long_t x)
 {
 #ifdef R__BYTESWAP
-   char *sw = (char *)&x;
+   // To work around a stupid optimization bug in MSVC++ 6.0
+   const Long_t *intermediary = &x;
+   char *sw = (char *)intermediary;
    if (sizeof(Long_t) == 8) {
       buf[0] = sw[7];
       buf[1] = sw[6];
@@ -186,7 +193,9 @@ inline void tobuf(char *&buf, ULong64_t x)
      defined(__GNUC__) && __GNUC__ >= 2
    *((ULong64_t *)buf) = Rbswap_64(x);
 # else
-   char *sw = (char *)&x;
+   // To work around a stupid optimization bug in MSVC++ 6.0
+   const ULong64_t *intermediary = &x;
+   char *sw = (char *)intermediary;
    buf[0] = sw[7];
    buf[1] = sw[6];
    buf[2] = sw[5];

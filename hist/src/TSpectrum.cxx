@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.17 2003/09/03 06:08:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TSpectrum.cxx,v 1.20 2004/01/27 13:28:23 brun Exp $
 // Author: Miroslav Morhac   27/05/99
 
 /////////////////////////////////////////////////////////////////////////////
@@ -75,8 +75,7 @@ TSpectrum::TSpectrum() :TNamed("Spectrum", "Miroslav Morhac peak finder")
 
 //______________________________________________________________________________
 TSpectrum::TSpectrum(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum", "Miroslav Morhac peak finder") 
-{
-   
+{   
 //  maxpositions:  maximum number of peaks
 //  resolution:    determines resolution of the neighboring peaks
 //                 default value is 1 correspond to 3 sigma distance
@@ -107,8 +106,7 @@ TSpectrum::TSpectrum(Int_t maxpositions, Float_t resolution) :TNamed("Spectrum",
 //______________________________________________________________________________
 const char *TSpectrum::Background(TH1 * h, int number_of_iterations,
                                   Option_t * option) 
-{
-   
+{   
 /////////////////////////////////////////////////////////////////////////////
 //   ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION                        //
 //   This function calculates background spectrum from source in h.        //
@@ -129,8 +127,7 @@ const char *TSpectrum::Background(TH1 * h, int number_of_iterations,
 
 //______________________________________________________________________________
 Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t threshold) 
-{
-   
+{   
 /////////////////////////////////////////////////////////////////////////////
 //   ONE-DIMENSIONAL PEAK SEARCH FUNCTION                                  //
 //   This function searches for peaks in source spectrum in hin            //
@@ -177,8 +174,6 @@ Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t t
       //TH1 * hnew = (TH1 *) hin->Clone("markov");
       //for (i = 0; i < size; i++)
       //   hnew->SetBinContent(i + 1, source[i]);
-      if (strstr(option, "goff"))
-         return npeaks;
       for (i = 0; i < npeaks; i++) {
          bin = 1 + Int_t(fPositionX[i] + 0.5);
          fPositionX[i] = hin->GetBinCenter(bin);
@@ -208,8 +203,7 @@ Int_t TSpectrum::Search(TH1 * hin, Double_t sigma, Option_t * option, Double_t t
 
 //______________________________________________________________________________
 void TSpectrum::SetResolution(Float_t resolution) 
-{
-   
+{  
 //  resolution: determines resolution of the neighboring peaks
 //              default value is 1 correspond to 3 sigma distance
 //              between peaks. Higher values allow higher resolution
@@ -229,8 +223,7 @@ void TSpectrum::SetResolution(Float_t resolution)
 /////////////////////NEW FUNCTIONS  APRIL 2003
 const char *TSpectrum::Background1(float *spectrum, int size,
                                      int number_of_iterations) 
-{
-   
+{   
 /////////////////////////////////////////////////////////////////////////////
 /*	ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - INCREASING        */ 
 /*                                CLIPPING WINDOW			   */ 
@@ -1223,8 +1216,7 @@ const char *TSpectrum::Background1General(float *spectrum, int size,
                                           int number_of_iterations,
                                           int direction, int filter_order,
                                           bool compton) 
-{
-   
+{   
 /////////////////////////////////////////////////////////////////////////////
 /*	ONE-DIMENSIONAL BACKGROUND ESTIMATION FUNCTION - GENERAL FUNCTION  */ 
 /*                                                                         */ 
@@ -1647,8 +1639,7 @@ const char* TSpectrum::Smooth1Markov(float *source, int size, int aver_window)
 //_______________________________________________________________________________
 const char *TSpectrum::Deconvolution1(float *source, const float *resp,
                                       int size, int number_of_iterations) 
-{
-   
+{   
 /////////////////////////////////////////////////////////////////////////////
 //   ONE-DIMENSIONAL DECONVOLUTION FUNCTION                                //
 //   This function calculates deconvolution from source spectrum           //
@@ -1836,8 +1827,7 @@ const char *TSpectrum::Deconvolution1(float *source, const float *resp,
 
 //_______________________________________________________________________________
 double TSpectrum::Lls(double a) 
-{
-   
+{   
 /////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                     //
 //                                                                         //
@@ -2146,8 +2136,7 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
                                                const float **resp,
                                                int sizex, int sizey,
                                                int number_of_iterations) 
-{
-   
+{   
 /////////////////////////////////////////////////////////////////////////////
 /*	ONE-DIMENSIONAL UNFOLDING FUNCTION				   */ 
 /*	This function unfolds source spectrum				   */ 
@@ -2650,8 +2639,7 @@ const char *TSpectrum::Deconvolution1Unfolding(float *source,
 //_____________________________________________________________________________
 /////////////////BEGINNING OF AUXILIARY FUNCTIONS USED BY FITTING FUNCION Fit1//////////////////////////
 double TSpectrum::Erfc(double x) 
-{
-   
+{   
 //////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                      //
 //                                                                          //
@@ -4166,8 +4154,7 @@ const char *TSpectrum::Fit1Awmi(float *source, TSpectrumOneDimFit * p,
     
 /////////////////FITTING FUNCTION WITH MATRIX INVERSION///////////////////////////////////////
 void TSpectrum::StiefelInversion(double **a, int size)
-{
-   
+{   
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
@@ -5019,8 +5006,7 @@ const char *TSpectrum::Fit1Stiefel(float *source, TSpectrumOneDimFit * p,
     
 //////////AUXILIARY FUNCTIONS FOR TRANSFORM BASED FUNCTIONS////////////////////////
 void TSpectrum::Haar(float *working_space, int num, int direction) 
-{
-   
+{   
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
@@ -5157,8 +5143,7 @@ void TSpectrum::Walsh(float *working_space, int num)
    return;
 }
 void TSpectrum::BitReverse(float *working_space, int num) 
-{
-   
+{   
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
@@ -5197,8 +5182,7 @@ void TSpectrum::BitReverse(float *working_space, int num)
 }
 void TSpectrum::Fourier(float *working_space, int num, int hartley,
                           int direction, int zt_clear) 
-{
-   
+{   
 //////////////////////////////////////////////////////////////////////////////////
 //   AUXILIARY FUNCION                                                          //
 //                                                                              //
@@ -6128,8 +6112,7 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
                                     int size, int type, int degree,
                                     int xmin, int xmax,
                                     float filter_coeff) 
-{
-   
+{   
 /////////////////////////////////////////////////////////////////////////////
 /*	ONE-DIMENSIONAL FILTER ZONAL FUNCTION   			   */ 
 /*	This function transforms the source spectrum. The calling program  */ 
@@ -6631,8 +6614,7 @@ const char *TSpectrum::Filter1Zonal(const float *source, float *dest,
 const char *TSpectrum::Enhance1(const float *source, float *dest, int size,
                                 int type, int degree, int xmin, int xmax,
                                 float enhance_coeff) 
-{
-   
+{   
 /////////////////////////////////////////////////////////////////////////////
 /*	ONE-DIMENSIONAL ENHANCE ZONAL FUNCTION		        	   */ 
 /*	This function transforms the source spectrum. The calling program  */ 

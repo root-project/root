@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.35 2003/12/10 20:36:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.37 2003/12/30 13:16:50 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -12,7 +12,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  The TKey class includes functions to book space on a file,          //
-//   to create I/O buffers, to fill these buffers                       //
+//   to create I/O buffers, to fill these buffers,                      //
 //   to compress/uncompress data buffers.                               //
 //                                                                      //
 //  Before saving (making persistent) an object on a file, a key must   //
@@ -35,10 +35,10 @@
 //    - to write an object in the Current Directory                     //
 //    - to write a new ntuple buffer                                    //
 //                                                                      //
-//  The structure of a file is shown in TFile::TFile                    //
-//  The structure of a directory is shown in TDirectory::TDirectory     //
-//  The TKey class is used by the TBasket class                         //
-//     See also TTree                                                   //
+//  The structure of a file is shown in TFile::TFile.                   //
+//  The structure of a directory is shown in TDirectory::TDirectory.    //
+//  The TKey class is used by the TBasket class.                        //
+//  See also TTree.                                                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -83,7 +83,7 @@ TKey::TKey() : TNamed(), fDatime((UInt_t)0)
 }
 
 //______________________________________________________________________________
-TKey::TKey(Seek_t pointer, Int_t nbytes) : TNamed()
+TKey::TKey(Long64_t pointer, Int_t nbytes) : TNamed()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Create a TKey object to read keys*-*-*-*-*-*-*-*
 //*-*                      =================================
@@ -155,12 +155,12 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
    fBuffer    = 0;
    fBufferRef = new TBuffer(TBuffer::kWrite, bufsize);
    fBufferRef->SetParent(gFile);
-   fCycle = gDirectory->AppendKey(this);
-   fObjlen    = 0 ; // RDK: Must initialize before calling Streamer()
-   fKeylen    = 0 ; // RDK: Must initialize before calling Streamer()
-   fSeekKey   = 0 ; // RDK: Must initialize before calling Streamer()
-   fSeekPdir  = 0 ; // RDK: Must initialize before calling Streamer()
-   
+   fCycle     = gDirectory->AppendKey(this);
+   fObjlen    = 0;
+   fKeylen    = 0;
+   fSeekKey   = 0;
+   fSeekPdir  = 0;
+
    fVersion = TKey::Class_Version();
    if (gFile && gFile->GetEND() > TFile::kStartBigFile) fVersion += 1000;
 
@@ -314,9 +314,9 @@ void TKey::Delete(Option_t *option)
 // This is different from the behaviour of TObject::Delete()!
 
 
-   if (option && option[0] == 'v') printf("Deleting key: %s at address %d, nbytes = %d\n",GetName(),fSeekKey,fNbytes);
-   Seek_t first = fSeekKey;
-   Seek_t last  = fSeekKey + fNbytes -1;
+   if (option && option[0] == 'v') printf("Deleting key: %s at address %lld, nbytes = %d\n",GetName(),fSeekKey,fNbytes);
+   Long64_t first = fSeekKey;
+   Long64_t last  = fSeekKey + fNbytes -1;
    gFile->MakeFree(first, last);  // release space used by this key
    gDirectory->GetListOfKeys()->Remove(this);
 }
@@ -365,8 +365,8 @@ void TKey::FillBuffer(char *&buffer)
   tobuf(buffer, fKeylen);
   tobuf(buffer, fCycle);
   if (fVersion > 1000) {
-     tobuf(buffer, (Long_t)fSeekKey);
-     tobuf(buffer, (Long_t)fSeekPdir);
+     tobuf(buffer, fSeekKey);
+     tobuf(buffer, fSeekPdir);
   } else {
      tobuf(buffer, (Int_t)fSeekKey);
      tobuf(buffer, (Int_t)fSeekPdir);
@@ -621,13 +621,12 @@ void TKey::ReadBuffer(char *&buffer)
    frombuf(buffer, &fKeylen);
    frombuf(buffer, &fCycle);
    if (fVersion > 1000) {
-      Long_t seekkey,seekdir;
-      frombuf(buffer, &seekkey); fSeekKey = (Seek_t)seekkey;
-      frombuf(buffer, &seekdir); fSeekPdir= (Seek_t)seekdir;
+      frombuf(buffer, &fSeekKey);
+      frombuf(buffer, &fSeekPdir);
    } else {
       Int_t seekkey,seekdir;
-      frombuf(buffer, &seekkey); fSeekKey = (Seek_t)seekkey;
-      frombuf(buffer, &seekdir); fSeekPdir= (Seek_t)seekdir;
+      frombuf(buffer, &seekkey); fSeekKey = (Long64_t)seekkey;
+      frombuf(buffer, &seekdir); fSeekPdir= (Long64_t)seekdir;
    }
    fClassName.ReadBuffer(buffer);
    fName.ReadBuffer(buffer);
@@ -702,13 +701,12 @@ void TKey::Streamer(TBuffer &b)
       b >> fKeylen;
       b >> fCycle;
       if (fVersion > 1000) {
-         Long_t seekkey, seekdir;
-         b >> seekkey; fSeekKey = (Seek_t)seekkey;
-         b >> seekdir; fSeekPdir= (Seek_t)seekdir;
+         b >> fSeekKey;
+         b >> fSeekPdir;
       } else {
          Int_t seekkey, seekdir;
-         b >> seekkey; fSeekKey = (Seek_t)seekkey;
-         b >> seekdir; fSeekPdir= (Seek_t)seekdir;
+         b >> seekkey; fSeekKey = (Long64_t)seekkey;
+         b >> seekdir; fSeekPdir= (Long64_t)seekdir;
       }
       fClassName.Streamer(b);
       fName.Streamer(b);
@@ -723,8 +721,8 @@ void TKey::Streamer(TBuffer &b)
       b << fKeylen;
       b << fCycle;
       if (fVersion > 1000) {
-         b << (Long_t)fSeekKey;
-         b << (Long_t)fSeekPdir;
+         b << fSeekKey;
+         b << fSeekPdir;
       } else {
          b << (Int_t)fSeekKey;
          b << (Int_t)fSeekPdir;

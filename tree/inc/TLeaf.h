@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.7 2001/04/09 08:13:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.8 2002/12/02 18:50:06 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -80,7 +80,7 @@ public:
             Int_t    ResetAddress(void *add, Bool_t destructor = kFALSE);
     virtual void     SetAddress(void *add=0);
     virtual void     SetBranch(TBranch *branch) { fBranch = branch; }
-    virtual void     SetLeafCount(TLeaf *leaf) { fLeafCount=leaf; }
+    virtual void     SetLeafCount(TLeaf *leaf);
     virtual void     SetLen(Int_t len=1) { fLen=len; }
     virtual void     SetOffset(Int_t offset=0) { fOffset = offset; }
     virtual void     SetRange(Bool_t range=kTRUE) { fIsRange = range; }

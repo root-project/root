@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.57 2003/08/14 15:54:49 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.66 2004/01/31 08:59:09 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -49,7 +49,10 @@
 #   define R__AIX
 #   define R__UNIX
 #   define ANSICPP
+#   define R__SEEK64
+#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   define NEED_STRCASECMP
+#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #endif
 
 #ifdef __linux
@@ -66,7 +69,6 @@
 #      define R__WINGCC
 #   endif
 #endif
-
 
 #if defined(__alpha) && !defined(linux)
 #   include <standards.h>
@@ -106,6 +108,7 @@
 #if defined(__sun) && !defined(linux)
 #   ifdef __SVR4
 #      define R__SOLARIS
+#      define R__SEEK64
 #      define ANSICPP
 #      ifdef __i386
 #         define R__I386
@@ -121,6 +124,7 @@
 #   if __SUNPRO_CC > 0x420
 #      define R__SOLARIS_CC50
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
+#      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
 #   if __SUNPRO_CC >= 0x420
 #      define R__SUNCCBUG        /* to work around a compiler bug */
@@ -136,15 +140,27 @@
 #   define ANSICPP
 #   define NEED_STRING
 #   define NEED_SIGJMP
+#   define R__SEEK64
+#   if !defined(__KCC)
+#      define R__THROWNEWDELETE  /* new/delete throw exceptions */
+#   endif
+#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   ifdef IRIX64
 #      define R__SGI64
 #   endif
 #   if defined(__mips64) || defined(_ABI64)
 #      define R__B64
+#      undef R__SEEK64
+#   endif
+#   if !defined(__GNUC__) && !defined(__KCC)
+#      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
 #endif
 
 #if defined(linux)
+#   ifndef _LARGEFILE64_SOURCE
+#      define _LARGEFILE64_SOURCE
+#   endif
 #   include <features.h>
 #   if __GNU_LIBRARY__ == 6
 #      ifndef R__GLIBC
@@ -154,6 +170,7 @@
 #   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 2
 #      define R__NONSCALARFPOS2
 #      define R__USESTHROW
+#      define R__SEEK64
 #   endif
 #endif
 
@@ -273,6 +290,9 @@
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   endif
+#   if __GNUC__ >= 3 
+#         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
+#   endif
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
@@ -300,16 +320,17 @@
 #   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
+#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   define ANSICPP
 #endif
 
 #ifdef __HP_aCC
 #   define R__ACC
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
+#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
+#   define R__THROWNEWDELETE  /* new/delete throw exceptions */
 #   if __HP_aCC >= 53000
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
-#      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#      define R__THROWNEWDELETE  /* new/delete throw exceptions */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #      define R__TMPLTSTREAM     /* iostream implemented with templates */
 #   else
@@ -365,9 +386,13 @@
 #   define ANSICPP
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
+#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   if _MSC_VER >= 1200
 #     define R__ANSISTREAM    /* ANSI C++ Standard Library conformant */
 #   endif
+#   if _MSC_VER < 1310
+#      define R__NO_CLASS_TEMPLATE_SPECIALIZATION
+#    endif
 #endif
 
 #ifdef __MWERKS__

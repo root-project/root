@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.26 2003/11/05 14:05:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.27 2003/11/07 08:59:12 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -26,8 +26,8 @@
 #endif
 
 class TProfile;
-class TMatrix;
-class TMatrixD;
+class TMatrixFBase;
+class TMatrixDBase;
 
 class TH2 : public TH1 {
    
@@ -232,7 +232,7 @@ public:
                                           ,Int_t nbinsy,const Double_t *ybins);
    TH2F(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins
                                           ,Int_t nbinsy,const Float_t  *ybins);
-   TH2F(const TMatrix &m);
+   TH2F(const TMatrixFBase &m);
    TH2F(const TH2F &h2f);
    virtual ~TH2F();
    virtual void    AddBinContent(Int_t bin) {++fArray[bin];}
@@ -276,7 +276,7 @@ public:
                                           ,Int_t nbinsy,const Double_t *ybins);
    TH2D(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins
                                           ,Int_t nbinsy,const Float_t  *ybins);
-   TH2D(const TMatrixD &m);
+   TH2D(const TMatrixDBase &m);
    TH2D(const TH2D &h2d);
    virtual ~TH2D();
    virtual void    AddBinContent(Int_t bin) {++fArray[bin];}

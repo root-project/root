@@ -17,6 +17,16 @@
 #include <stddef.h>
 #include <iostream>
 
+#if (defined (G__VISUAL) && (G__MSC_VER>=1310))
+#include <iterator>
+#endif
+
+#if (defined(G__VISUAL) && (G__MSC_VER==1300)) || defined (G__AIX)
+template<class _Ty, class _D, class _Pt, class _Rt,
+        class _Pt2, class _Rt2>
+        class _Ptrit;
+#endif
+
 //////////////////////////////////////////////////////////////////////////
 class string {
  public:
@@ -32,11 +42,14 @@ class string {
 #if defined(G__KCC) 
   typedef typename Allocator::pointer		   iterator;
   typedef const iterator const_iterator;
-#elif defined(G__AIXOLD)
+#elif (defined(G__AIX) && (G__AIX<0))
   typedef _Ptrit<value_type, difference_type, pointer,
                   reference, pointer, reference> iterator;
   typedef _Ptrit<value_type, difference_type, const_pointer,
                   const_reference, pointer, reference> const_iterator;
+#elif defined(G__INTEL_COMPILER)
+  typedef char* iterator;
+  typedef const char* const_iterator;
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1) 
   class iterator {
    public:
@@ -67,6 +80,82 @@ class string {
 #elif (G__GNUC>=3 && G__GNUC_MINOR==0)
   typedef char* iterator;
   typedef const char* const_iterator;
+#elif (defined(G__VISUAL) && (G__MSC_VER==1300))
+  typedef _Ptrit<value_type, difference_type, pointer,
+                  reference, pointer, reference> iterator;
+  typedef _Ptrit<value_type, difference_type, const_pointer,
+                  const_reference, pointer, reference> const_iterator;
+#elif (defined(G__VISUAL) && G__MSC_VER>=1310)
+	// CLASS const_iterator
+	class const_iterator
+		: public _Ranit<value_type, difference_type, 
+                                const_pointer, const_reference>
+	{	// iterator for nonmutable string
+	public:
+		typedef random_access_iterator_tag iterator_category;
+		typedef string::value_type value_type;
+		typedef string::difference_type difference_type;
+		typedef string::pointer pointer;
+		typedef string::const_reference reference;
+
+		const_iterator();
+		const_iterator(const_pointer _Ptr);
+
+		const_reference operator*() const; 
+		const_pointer operator->() const;
+		const_iterator& operator++();
+		const_iterator operator++(int);
+		const_iterator& operator--();
+		const_iterator operator--(int);
+		const_iterator& operator+=(difference_type _Off);
+		const_iterator operator+(difference_type _Off) const;
+		const_iterator& operator-=(difference_type _Off);
+		const_iterator operator-(difference_type _Off) const;
+		difference_type operator-(const const_iterator& _Right) const;
+		const_reference operator[](difference_type _Off) const;
+		bool operator==(const const_iterator& _Right) const;
+		bool operator!=(const const_iterator& _Right) const;
+		bool operator<(const const_iterator& _Right) const;
+		bool operator>(const const_iterator& _Right) const;
+		bool operator<=(const const_iterator& _Right) const;
+		bool operator>=(const const_iterator& _Right) const;
+		friend const_iterator operator+(difference_type _Off,
+			const const_iterator& _Right);
+		const_pointer _Myptr;	// offset of element in string
+	};
+
+        // CLASS iterator
+	class iterator
+		: public const_iterator
+	{	// iterator for mutable string
+	public:
+		typedef random_access_iterator_tag iterator_category;
+		typedef string::value_type value_type;
+		typedef string::difference_type difference_type;
+		typedef string::pointer pointer;
+		typedef string::reference reference;
+
+		iterator();
+		iterator(pointer _ptr);
+		reference operator*() const;
+		pointer operator->() const;
+		iterator& operator++();
+		iterator operator++(int);
+		iterator& operator--();
+		iterator operator--(int);
+		iterator& operator+=(difference_type _Off);
+		iterator operator+(difference_type _Off) const;
+		iterator& operator-=(difference_type _Off);
+		iterator operator-(difference_type _Off) const;
+		difference_type operator-(const const_iterator& _Right) const;
+		reference operator[](difference_type _Off) const;
+		friend iterator operator+(difference_type _Off,
+			const iterator& _Right);
+	};
+
+	typedef std::reverse_iterator<iterator> reverse_iterator;
+	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+
 #else
   typedef char* iterator;
   typedef const char* const_iterator;
@@ -153,13 +242,15 @@ class string {
   //int compare(size_type pos1,size_type n1,const char* s,size_type n2=npos)const;
   //operator char*() ;
 
-#ifdef G__TMPLTIOS
+#if defined(G__TMPLTIOS) && !(defined(G__VISUAL) && (G__MSC_VER==1300))
   iterator begin();
   const_iterator begin() const;
   iterator end();
   const_iterator end() const;
   size_type capacity() const;
+#ifndef G__VISUAL
   void clear();
+#endif
   bool empty() const;
   size_t max_size() const;
 #endif

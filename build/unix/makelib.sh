@@ -108,8 +108,8 @@ elif [ $LD = "build/unix/wingcc_ld.sh" ]; then
          EXPLLNKCORE="-Llib -lCint"
       fi
    fi
-   line="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB -Wl,--whole-archive $OBJS \
-         -Wl,--no-whole-archive $EXTRA $EXPLLNKCORE"
+   line="$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS \
+         $EXTRA $EXPLLNKCORE"
    echo $line
    $line
 else

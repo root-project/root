@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.13 2003/01/27 13:16:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.14 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -104,6 +104,7 @@ public:
    Bool_t            IsVisDaughters() const {return (TGeoAtt::IsVisDaughters() && fVolume->IsVisDaughters());}
 
    virtual TGeoNode *MakeCopyNode() const {return 0;}
+   Double_t          Safety(Double_t *point, Bool_t in=kTRUE) const;
    void              SaveAttributes(ofstream &out);
    void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}// *MENU*
    void              SetVolume(const TGeoVolume *volume) {fVolume = (TGeoVolume*)volume;}

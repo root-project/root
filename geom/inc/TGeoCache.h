@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.17 2003/10/01 17:53:11 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.h,v 1.18 2003/11/11 15:44:28 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -43,6 +43,7 @@ class TGeoCacheState : public TObject
 {
 protected:
    Int_t                fLevel;     // level in the current branch
+   Int_t                fStart;     // start level
    Int_t                fIdBranch[30]; // ID branch
    Double_t            *fPoint;     // last point in master frame
    Bool_t               fOverlapping; // overlap flag
@@ -55,7 +56,7 @@ public:
    TGeoCacheState(Int_t capacity);
    virtual ~TGeoCacheState();
 
-   virtual void         SetState(Int_t level, Bool_t ovlp, Double_t *point=0);
+   virtual void         SetState(Int_t level, Int_t startlevel, Bool_t ovlp, Double_t *point=0);
    virtual Bool_t       GetState(Int_t &level, Double_t *point) const;
 
   ClassDef(TGeoCacheState, 1)       // class storing the cache state
@@ -78,7 +79,7 @@ public:
    TGeoCacheStateDummy(Int_t capacity);
    virtual ~TGeoCacheStateDummy();
 
-   virtual void         SetState(Int_t level, Bool_t ovlp, Double_t *point=0);
+   virtual void         SetState(Int_t level, Int_t startlevel, Bool_t ovlp, Double_t *point=0);
    virtual Bool_t       GetState(Int_t &level, Double_t *point) const;
 
   ClassDef(TGeoCacheStateDummy, 1)       // class storing the cache state
@@ -129,7 +130,8 @@ protected:
 
 public:
    TGeoNodeCache();
-   TGeoNodeCache(Int_t size);
+   TGeoNodeCache(Bool_t nodeid);
+   TGeoNodeCache(Int_t size, Bool_t nodeid=kFALSE);
    virtual ~TGeoNodeCache();
 
    Int_t                AddNode(TGeoNode *node);
@@ -146,7 +148,7 @@ public:
    virtual void         ClearDaughter(Int_t index);
    virtual void         ClearNode(Int_t nindex);
    virtual void         Compact();
-   void                 FillIdBranch(const Int_t *br) {memcpy(fIdBranch,br,(fLevel+1)*sizeof(Int_t)); fIndex=fIdBranch[fLevel];}
+   void                 FillIdBranch(const Int_t *br, Int_t startlevel=0) {memcpy(fIdBranch+startlevel,br,(fLevel+1-startlevel)*sizeof(Int_t)); fIndex=fIdBranch[fLevel];}
    const Int_t         *GetIdBranch() const {return fIdBranch;}
    virtual void         DeleteCaches();
    virtual Bool_t       DumpNodes();
@@ -157,7 +159,7 @@ public:
    virtual void        *GetMatrices() const {return fMatrices;}
    virtual TGeoHMatrix *GetCurrentMatrix() const;
    Int_t                GetCurrentNode() const {return fCurrentNode;}
-   Int_t                GetCurrentNodeId() const {return (fNodeIdArray)?fNodeIdArray[fIndex]:-1;}
+   Int_t                GetCurrentNodeId() const;
    virtual TGeoNode    *GetMother(Int_t up=1) const;
    virtual TGeoNode    *GetNode() const;
    Int_t                GetStackLevel() const  {return fStackLevel;}
@@ -183,7 +185,7 @@ public:
    virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const;
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const;
    virtual void         PrintNode() const;
-   virtual Int_t        PushState(Bool_t ovlp, Double_t *point=0);
+   virtual Int_t        PushState(Bool_t ovlp, Int_t startlevel=0, Double_t *point=0);
    virtual Bool_t       PopState(Double_t *point=0);
    virtual Bool_t       PopState(Int_t level, Double_t *point=0);
    virtual void         PopDummy(Int_t ipop=9999) {fStackLevel=(ipop>fStackLevel)?(fStackLevel-1):(ipop-1);}
@@ -209,10 +211,11 @@ private:
    TGeoNode            *fNode;          // current node
    TGeoHMatrix         *fMatrix;        // current matrix
    TGeoHMatrix        **fMatrixBranch;  // current branch of global matrices
+   TGeoHMatrix        **fMPB;           // pre-built matrices
    TGeoNode           **fNodeBranch;    // current branch of nodes
 public:
    TGeoCacheDummy();
-   TGeoCacheDummy(TGeoNode *top);
+   TGeoCacheDummy(TGeoNode *top, Bool_t nodeid=kFALSE);
    virtual ~TGeoCacheDummy();
 
    virtual Bool_t       CdDown(Int_t index, Bool_t make=kTRUE);

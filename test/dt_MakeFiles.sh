@@ -5,6 +5,12 @@ tracks=600
 comp=0
 action=1
 
+if test $# -gt 0 ; then
+    echo ajusting size to $1
+    size=$1
+fi
+
+
 ./Event $size $comp 0 $action $tracks
 mv Event.root Event.new.split0.root
 

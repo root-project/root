@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.6 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.7 2003/11/25 15:57:34 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -45,14 +45,18 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
    // Create a new window. Parent p must exist. No specified arguments
    // result in values from parent to be taken (or defaults).
 
+   UInt_t type = wtype;
+
    if (!p && gClient) p = gClient->GetRoot();
    if (p) {
       fClient = p->fClient;
+      if (fClient->IsEditable()) type = wtype & ~1;
+ 
       fParent = p;
       fId = gVirtualX->CreateWindow(fParent->fId, x, y,
                                     TMath::Max(w, (UInt_t) 1),
                                     TMath::Max(h, (UInt_t) 1), border,
-    			            depth, clss, visual, attr, wtype);
+    			            depth, clss, visual, attr, type);
       fClient->RegisterWindow(this);
       fNeedRedraw = kFALSE;
 

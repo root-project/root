@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.29 2003/06/21 06:07:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.31 2003/12/25 17:55:20 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 
 class TFolder;
 class TStreamerInfo;
+class TVirtualCollectionProxy;
 
 class TBranchElement : public TBranch {
 
@@ -36,6 +37,8 @@ protected:
     TString             fClassName;     //Class name of referenced object
     TString             fParentName;    //Name of parent class
     TString             fClonesName;    //Name of class in TClonesArray (if any)
+TVirtualCollectionProxy*fCollProxy;     //! collection interface (if any)
+    UInt_t              fCheckSum;      //CheckSum of class
     Int_t               fClassVersion;  //Version number of class
     Int_t               fID;            //element serial number in fInfo
     Int_t               fType;          //branch type
@@ -47,6 +50,8 @@ protected:
     TStreamerInfo      *fInfo;          //!Pointer to StreamerInfo
     char               *fObject;        //!Pointer to object at *fAddress
     char               *fBranchPointer; //!Pointer to object for a master branch
+private:
+    TVirtualCollectionProxy *GetCollectionProxy();
 
             Int_t    GetDataMemberOffset(const TClass *cl, const char *name);
 
@@ -54,6 +59,7 @@ public:
     TBranchElement();
     TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id, char *pointer, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t btype=0);
     TBranchElement(const char *name, TClonesArray *clones, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
+    TBranchElement(const char *name, TVirtualCollectionProxy *cont, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress=-1);
     virtual ~TBranchElement();
 
     virtual Int_t    Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);
@@ -65,7 +71,8 @@ public:
             void     FillLeaves(TBuffer &b);
     TBranchElement  *GetBranchCount() const {return fBranchCount;}
     TBranchElement  *GetBranchCount2() const {return fBranchCount2;}
-    virtual const char  *GetClassName() const {return fClassName.Data();}
+    UInt_t           GetCheckSum() {return fCheckSum;}
+	virtual const char  *GetClassName() const {return fClassName.Data();}
     virtual const char  *GetClonesName() const {return fClonesName.Data();}
             Int_t    GetEntry(Int_t entry=0, Int_t getall = 0);
             const char  *GetIconName() const;
@@ -99,7 +106,7 @@ public:
     virtual void     SetType(Int_t btype) {fType=btype;}
     virtual Int_t    Unroll(const char *name, TClass *cltop, TClass *cl,Int_t basketsize, Int_t splitlevel, Int_t btype);
 
-    ClassDef(TBranchElement,7)  //Branch in case of an object
+    ClassDef(TBranchElement,8)  //Branch in case of an object
 };
 
 #endif

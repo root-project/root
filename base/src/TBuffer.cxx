@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.56 2003/07/14 17:14:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.60 2004/01/10 10:52:29 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -27,6 +27,9 @@
 #include "TStorage.h"
 #include "TMath.h"
 #include "TError.h"
+#include "TObjArray.h"
+#include "TStreamer.h"
+#include "TStreamerInfo.h"
 
 #if defined(__linux) && defined(__i386__)
 //#define USE_BSWAPCPY
@@ -515,7 +518,7 @@ void TBuffer::SetByteCount(UInt_t cntpos, Bool_t packInVersion)
 }
 
 //______________________________________________________________________________
-Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
+Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, const char *classname)
 {
    // Check byte count with current buffer position. They should
    // match. If not print warning and position buffer in correct
@@ -532,27 +535,63 @@ Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
 
    if (Long_t(fBufCur) != endpos) {
       offset = Int_t(Long_t(fBufCur) - endpos);
-      if (clss) {
-         if (offset < 0)
+
+      const char *name = clss ? clss->GetName() : classname ? classname : 0;
+
+      if (name) {
+         if (offset < 0) {
             Error("CheckByteCount", "object of class %s read too few bytes: %d instead of %d",
-                  clss->GetName(),bcnt+offset,bcnt);
-         if (offset > 0)
+                  name,bcnt+offset,bcnt);
+         }
+         if (offset > 0) {
             Error("CheckByteCount", "object of class %s read too many bytes: %d instead of %d",
-                  clss->GetName(),bcnt+offset,bcnt);
+                  name,bcnt+offset,bcnt);
             Warning("CheckByteCount","%s::Streamer() not in sync with data on file, fix Streamer()",
-                    clss->GetName());
+                    name);
+         }
       }
-      if ((char *)endpos > fBufMax) {
-         offset = fBufMax - fBufCur;
-         Error("CheckByteCount",
-               "byte count probably corrupted around buffer position %d:\n\t%d for a possible maximum of %d",
+      if ( ((char *)endpos) > fBufMax ) {
+         offset = fBufMax-fBufCur;
+         Error("CheckByteCount", 
+               "Byte count probably corrupted around buffer position %d:\n\t%d for a possible maximum of %d",
                startpos, bcnt, offset);
          fBufCur = fBufMax;
+
       } else {
+
          fBufCur = (char *) endpos;
+         
       }
    }
    return offset;
+}
+
+//______________________________________________________________________________
+Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
+{
+   // Check byte count with current buffer position. They should
+   // match. If not print warning and position buffer in correct
+   // place determined by the byte count. Startpos is position of
+   // first byte where the byte count is written in buffer.
+   // Returns 0 if everything is ok, otherwise the bytecount offset
+   // (< 0 when read too little, >0 when read too much).
+
+   if (!bcnt) return 0;
+   return CheckByteCount( startpos, bcnt, clss, 0);
+}
+
+//______________________________________________________________________________
+Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname)
+{
+   // Check byte count with current buffer position. They should
+   // match. If not print warning and position buffer in correct
+   // place determined by the byte count. Startpos is position of
+   // first byte where the byte count is written in buffer.
+   // Returns 0 if everything is ok, otherwise the bytecount offset
+   // (< 0 when read too little, >0 when read too much).
+
+   if (!bcnt) return 0;
+   return CheckByteCount( startpos, bcnt, 0, classname);
 }
 
 //______________________________________________________________________________
@@ -858,6 +897,31 @@ Int_t TBuffer::ReadArray(Double_t *&d)
 }
 
 //______________________________________________________________________________
+Int_t TBuffer::ReadArrayDouble32(Double_t *&d)
+{
+   // Read array of doubles (written as float) from the I/O buffer. 
+   // Returns the number of doubles read. 
+   // If argument is a 0 pointer then space will be allocated for the array.
+
+   Assert(IsReading());
+
+   Int_t n;
+   *this >> n;
+
+   if (n <= 0 || n > fBufSize) return 0;
+
+   if (!d) d = new Double_t[n];
+
+   Float_t afloat;
+   for (int i = 0; i < n; i++) {
+      frombuf(fBufCur, &afloat);
+	  d[i] = Double_t(afloat);
+   }
+
+   return n;
+}
+
+//______________________________________________________________________________
 Int_t TBuffer::ReadStaticArray(Bool_t *b)
 {
    // Read array of bools from the I/O buffer. Returns the number of bools
@@ -1081,6 +1145,30 @@ Int_t TBuffer::ReadStaticArray(Double_t *d)
 }
 
 //______________________________________________________________________________
+Int_t TBuffer::ReadStaticArrayDouble32(Double_t *d)
+{
+   // Read array of doubles (written as float) from the I/O buffer.
+   // Returns the number of doubles read.
+
+   Assert(IsReading());
+
+   Int_t n;
+   *this >> n;
+
+   if (n <= 0 || n > fBufSize) return 0;
+
+   if (!d) return 0;
+
+   Float_t afloat;
+   for (int i = 0; i < n; i++) {
+      frombuf(fBufCur, &afloat);
+	  d[i] = afloat;
+   }
+
+   return n;
+}
+
+//______________________________________________________________________________
 void TBuffer::ReadFastArray(Bool_t *b, Int_t n)
 {
    // Read array of n bools from the I/O buffer.
@@ -1222,6 +1310,80 @@ void TBuffer::ReadFastArray(Double_t *d, Int_t n)
    memcpy(d, fBufCur, l);
    fBufCur += l;
 #endif
+}
+
+//______________________________________________________________________________
+void TBuffer::ReadFastArrayDouble32(Double_t *d, Int_t n)
+{
+   // Read array of n doubles (written as float) from the I/O buffer.
+
+   if (n <= 0 || n > fBufSize) return;
+
+   Float_t afloat;
+   for (int i = 0; i < n; i++) {
+      frombuf(fBufCur, &afloat);
+	  d[i]=afloat;
+   }
+}
+
+//______________________________________________________________________________
+void TBuffer::ReadFastArray(void  *start, TClass *cl, Int_t n,
+                            TMemberStreamer *streamer)
+{
+   // Read an array of 'n' objects from the I/O buffer.
+   // Stores the objects read starting at the address 'start'.
+   // The objects in the array are assume to be of class 'cl'.
+
+   if (streamer) {
+      (*streamer)(*this,start,0);
+      return;
+   }
+   
+   int objectSize = cl->Size();
+   char *obj = (char*)start; 
+   char *end = obj + n*objectSize;
+
+   for(; obj<end; obj+=objectSize) cl->Streamer(obj,*this);
+}
+
+//______________________________________________________________________________
+void TBuffer::ReadFastArray(void **start, TClass *cl, Int_t n, 
+                            Bool_t isPreAlloc, TMemberStreamer *streamer)
+{
+   // Read an array of 'n' objects from the I/O buffer.
+   // The objects read are stores starting at the address '*start'
+   // The objects in the array are assume to be of class 'cl' or a derived class.
+   // 'mode' indicates whether the data member is marked with '->'
+
+   // if isPreAlloc is true (data member has a ->) we can assume that the pointer (*start)
+   // is never 0.
+
+   if (streamer) {
+      if (isPreAlloc) {
+         for (Int_t j=0;j<n;j++) {
+            if (!start[j]) start[j] = cl->New();
+         }
+      }
+      (*streamer)(*this,(void*)start,0);
+      return;
+   }
+   
+   if (!isPreAlloc) {
+
+      for (Int_t j=0; j<n; j++){
+         //delete the object or collection
+         if (start[j] && TStreamerInfo::CanDelete()) cl->Destructor(start[j],kFALSE); // call delete and desctructor
+         start[j] = ReadObjectAny(cl);
+      }     
+
+   } else {	//case //-> in comment
+
+      for (Int_t j=0; j<n; j++){
+         if (!start[j]) start[j] = cl->New();
+         cl->Streamer(start[j],*this);
+      }
+
+   }
 }
 
 //______________________________________________________________________________
@@ -1448,6 +1610,26 @@ void TBuffer::WriteArray(const Double_t *d, Int_t n)
 }
 
 //______________________________________________________________________________
+void TBuffer::WriteArrayDouble32(const Double_t *d, Int_t n)
+{
+   // Write array of n doubles (as float) into the I/O buffer.
+
+   Assert(IsWriting());
+
+   *this << n;
+
+   if (n <= 0) return;
+
+   Assert(d);
+
+   Int_t l = sizeof(Float_t)*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+
+   for (int i = 0; i < n; i++)
+      tobuf(fBufCur, Float_t(d[i]));
+}
+
+//______________________________________________________________________________
 void TBuffer::WriteFastArray(const Bool_t *b, Int_t n)
 {
    // Write array of n bools into the I/O buffer.
@@ -1619,6 +1801,84 @@ void TBuffer::WriteFastArray(const Double_t *d, Int_t n)
 }
 
 //______________________________________________________________________________
+void TBuffer::WriteFastArrayDouble32(const Double_t *d, Int_t n)
+{
+   // Write array of n doubles (as float) into the I/O buffer.
+
+   if (n <= 0) return;
+
+   Int_t l = sizeof(Float_t)*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+
+   for (int i = 0; i < n; i++)
+      tobuf(fBufCur, Float_t(d[i]));
+}
+
+//______________________________________________________________________________
+void TBuffer::WriteFastArray(void  *start, TClass *cl, Int_t n, 
+                             TMemberStreamer *streamer)
+{
+   // Write an array of object starting at the address 'start' and of length 'n'
+   // the objects in the array are assumed to be of class 'cl'
+
+   if (streamer) {
+      (*streamer)(*this, start, 0);
+      return;
+   }
+   
+   char *obj = (char*)start; 
+   if (!n) n=1;
+   int size = cl->Size();
+   
+   for(Int_t j=0; j<n; j++,obj+=size) {
+      cl->Streamer(obj,*this);
+   }
+}
+
+//______________________________________________________________________________
+Int_t TBuffer::WriteFastArray(void **start, TClass *cl, Int_t n, 
+                             Bool_t isPreAlloc, TMemberStreamer *streamer)
+{
+   // Write an array of object starting at the address '*start' and of length 'n'
+   // the objects in the array are of class 'cl'
+   // 'isPreAlloc' indicates whether the data member is marked with '->'
+   // Return:
+   //  0: success
+   //  2: truncated success (i.e actual class is missing. Only ptrClass saved.)
+
+   // if isPreAlloc is true (data member has a ->) we can assume that the pointer 
+   // is never 0.
+
+   if (streamer) {
+      (*streamer)(*this,(void*)start,0);
+      return 0;
+   }
+   
+   int strInfo = 0;
+     
+   Int_t res = 0;
+
+   if (!isPreAlloc) {
+
+      for (Int_t j=0;j<n;j++) {
+         //must write StreamerInfo if pointer is null
+         if (!strInfo && !start[j] ) cl->GetStreamerInfo()->ForceWriteInfo((TFile *)GetParent()); 
+         strInfo = 2003;
+         res |= WriteObjectAny(start[j],cl);
+      }         
+
+   } else {	//case //-> in comment
+
+      for (Int_t j=0;j<n;j++) {
+         if (!start[j]) start[j] = cl->New();
+         cl->Streamer(start[j],*this);
+      }
+
+   }
+   return res;
+}
+
+//______________________________________________________________________________
 TObject *TBuffer::ReadObject(const TClass * /*clReq*/)
 {
    // Read object from I/O buffer. clReq is NOT used.
@@ -1663,14 +1923,14 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
          Error("ReadObject", "got object of wrong class! requested %s but got %s",
                clCast->GetName(), clRef->GetName());
 
-         CheckByteCount(startpos, tag, 0); // avoid mis-leading byte count error message
+         CheckByteCount(startpos, tag, (TClass*)0); // avoid mis-leading byte count error message
          return 0; // We better return at this point
       }
       if (clCast->GetClassInfo() && !clRef->GetClassInfo()) {
-         //we cannot mix a compiled class with a fake class in the inheritance
+         //we cannot mix a compiled class with an emulated class in the inheritance
          Error("ReadObject", "trying to read an emulated class (%s) to store in a compiled pointer (%s)",
                clRef->GetName(),clCast->GetName());
-         CheckByteCount(startpos, tag, 0); // avoid mis-leading byte count error message
+         CheckByteCount(startpos, tag, (TClass*)0); // avoid mis-leading byte count error message
          return 0;
       }
    }
@@ -1682,7 +1942,7 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
       obj = (char *) fMap->GetValue(startpos+kMapOffset);
       if (obj == (void*) -1) obj = 0;
       if (obj) {
-         CheckByteCount(startpos, tag, 0);
+         CheckByteCount(startpos, tag, (TClass*)0);
          return (obj+baseOffset);
       }
    }
@@ -1694,7 +1954,7 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
          MapObject((TObject*) -1, startpos+kMapOffset);
       else
          MapObject((void*)0, 0, fMapCount);
-      CheckByteCount(startpos, tag, 0);
+      CheckByteCount(startpos, tag, (TClass*)0);
       return 0;
    }
 
@@ -1834,7 +2094,7 @@ Int_t TBuffer::WriteObjectAny(const void *obj, TClass *ptrClass)
    // Return:
    //  0: failure (not used yet)
    //  1: success
-   //  2: truncated success (i.e actual class is missing. Only ptrClass saved.
+   //  2: truncated success (i.e actual class is missing. Only ptrClass saved.)
 
    if (!obj) {
       WriteObject(0, 0);
@@ -1975,7 +2235,7 @@ void TBuffer::WriteClass(const TClass *cl)
 }
 
 //______________________________________________________________________________
-Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt)
+Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt, TClass *cl)
 {
    // Read class version from I/O buffer.
 
@@ -2020,6 +2280,23 @@ Version_t TBuffer::ReadVersion(UInt_t *startpos, UInt_t *bcnt)
          *this >> version;
       }
    }
+   if (version <= 0 && cl) {
+      UInt_t checksum = 0;
+      *this >> checksum;
+      //find the version number in the StreamerInfos corresponding to checksum
+      Int_t ninfos = cl->GetStreamerInfos()->GetEntriesFast();
+      for (Int_t i=1;i<ninfos;i++) {
+         // TClass::fStreamerInfos has a lower bound not equal to 0,
+         // so we should use At and not use UncheckedAt
+         TStreamerInfo *info = (TStreamerInfo*)cl->GetStreamerInfos()->At(i);
+         if (!info) continue;
+         if (info->GetCheckSum() == checksum) {
+            version = i;
+            //printf("ReadVersion, setting version=%d\n",version);
+            break;
+         }
+      }
+   }
 
    return version;
 }
@@ -2043,7 +2320,12 @@ UInt_t TBuffer::WriteVersion(const TClass *cl, Bool_t useBcnt)
       version = kMaxVersion;
    }
 
-   *this << version;
+   if (cl->IsForeign() && version<=1) {
+      *this << Version_t(0);
+      *this << cl->GetCheckSum();
+   } else {
+      *this <<version;
+   }
 
    // return position where to store possible byte count
    return cntpos;

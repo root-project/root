@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.19 2003/06/04 20:17:13 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.20 2003/08/06 20:25:04 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -107,6 +107,7 @@
 #pragma link C++ typedef ROOT::DelFunc_t;
 #pragma link C++ typedef ROOT::DelArrFunc_t;
 #pragma link C++ typedef ROOT::DesFunc_t;
+#pragma link C++ typedef Double32_t;
 
 #pragma link C++ class TApplication;
 #pragma link C++ class TApplicationImp;

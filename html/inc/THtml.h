@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.9 2003/01/31 17:00:11 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.11 2004/01/21 07:11:29 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -407,7 +407,7 @@ public:
       THashList fTypedefs; // hashed list of known typedefs
 
       ClassDef(TParseStack, 0);
-   };
+   }; 
 
 protected:
     TString      fXwho;            // by default http://xwho.cern.ch/WHO/people?
@@ -420,20 +420,29 @@ protected:
         Bool_t   fEscFlag;         // Flag to mark the symbol must be written "as is"
         char     fEsc;             // The special symbol ("backslash" by default) to mark "the next symbol should not be converted
         TMap    *fMapDocElements;  // map of <TDictionary*, TDocElement*> for all objects for which doc was parsed
-        static THashList fgLocalTypes;    // list of types that are not in TROOT::GetClass
-        TList fFilesParsed; // list of files on which ExtractDocumentatoin was run
+        static   THashList fgLocalTypes; // list of types that are not in TROOT::GetClass
+        TList    fFilesParsed;     // list of files on which ExtractDocumentatoin was run
+        Int_t    fHierarchyLines; // counter for no. lines in hierarchy
+    
+        enum ETraverse {
+          kUp, kDown, kBoth        // direction to traverse class tree in ClassHtmlTree()
+        };
 
         void    Class2Html(TClass *classPtr, Bool_t force=kFALSE);
         void    ClassDescription(ofstream &out, TClass *classPtr, Bool_t &flag);
+        void    ClassHtmlTree(ofstream &out, TClass *classPtr, ETraverse dir=kBoth, int depth=1);
         void    ClassTree(TVirtualPad *canvas, TClass *classPtr, Bool_t force=kFALSE);
         Bool_t  CopyHtmlFile(const char *sourceName, const char *destName="");
         void    CreateIndex(const char **classNames, Int_t numberOfClasses);
         void    CreateIndexByTopic(char **filenames, Int_t numberOfNames, Int_t maxLen);
+        void    CreateHierarchy(const char **classNames, Int_t numberOfClasses);
         void    CreateListOfTypes();
-        void    DerivedClasses(ofstream &out, TClass *classPtr);
+        void    DescendHierarchy(ofstream &out, TClass* basePtr, 
+                  const char **classNames, Int_t numberOfClasses, 
+                  Int_t maxLines=0, Int_t depth=1);
         void    ExpandKeywords(ofstream &out, char *text, TClass *ptr2class, Bool_t &flag, const char *dir="");
         void    ExpandPpLine(ofstream &out, char *line);
-   TClass      *GetClass(const char *name, Bool_t load=kTRUE);
+      TClass   *GetClass(const char *name, Bool_t load=kTRUE);
   const char   *GetFileName(const char *filename);
         char   *GetSourceFileName(const char *filename);
         char   *GetHtmlFileName(TClass *classPtr);
@@ -475,7 +484,7 @@ public:
           void   SetSourceDir(const char *dir) { fSourceDir = dir; }
           void   SetOutputDir(const char *dir) { fOutputDir = dir; }
           void   SetXwho(const char *xwho) { fXwho = xwho; }
-   virtual void  WriteHtmlHeader(ofstream &out, const char *title);
+   virtual void  WriteHtmlHeader(ofstream & out, const char *title, TClass *cls=0);
    virtual void  WriteHtmlFooter(ofstream &out, const char *dir="", const char *lastUpdate="",
                                  const char *author="", const char *copyright="");
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.4 2002/11/07 18:17:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TWebFile.h,v 1.5 2002/12/10 02:19:46 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -35,7 +35,7 @@ class TWebFile : public TFile {
 
 private:
    TUrl     fUrl;        // URL of file
-   Seek_t   fOffset;     // seek offset
+   Long64_t fOffset;     // seek offset
 
    TWebFile() : fUrl("dummy") { }
    void Init(Bool_t);
@@ -45,11 +45,11 @@ public:
    TWebFile(TUrl url);
    virtual ~TWebFile() { }
 
-   Seek_t  GetSize() const;
-   Bool_t  IsOpen() const;
-   Int_t   ReOpen(Option_t *mode);
-   Bool_t  ReadBuffer(char *buf, Int_t len);
-   void    Seek(Seek_t offset, ERelativeTo pos = kBeg);
+   Long64_t GetSize() const;
+   Bool_t   IsOpen() const;
+   Int_t    ReOpen(Option_t *mode);
+   Bool_t   ReadBuffer(char *buf, Int_t len);
+   void     Seek(Long64_t offset, ERelativeTo pos = kBeg);
 
    ClassDef(TWebFile,1)  //A ROOT file that reads via a http server
 };

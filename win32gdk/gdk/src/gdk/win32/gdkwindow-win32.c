@@ -1392,52 +1392,62 @@ gdk_window_set_back_pixmap(GdkWindow * window,
    }
 }
 
-void gdk_window_set_cursor(GdkWindow * window, GdkCursor * cursor)
+void
+gdk_window_set_cursor (GdkWindow *window,
+               GdkCursor *cursor)
 {
    GdkCursorPrivate *cursor_private;
    HCURSOR xcursor;
-   POINT pt;
+   HCURSOR prev_xcursor;
+  
+   g_return_if_fail (window != NULL);
+   g_return_if_fail (GDK_IS_WINDOW (window));
+  
+   cursor_private = (GdkCursorPrivate*) cursor;
 
-   g_return_if_fail(window != NULL);
-   g_return_if_fail(GDK_IS_WINDOW(window));
+   if (GDK_DRAWABLE_DESTROYED (window))
+      return;
 
-   cursor_private = (GdkCursorPrivate *) cursor;
-
-   if (!GDK_DRAWABLE_DESTROYED(window)) {
-      if (!cursor)
-         xcursor = NULL;
-      else
-         xcursor = cursor_private->xcursor;
-
-      GDK_NOTE(MISC, g_print("gdk_window_set_cursor: %#x %#x\n",
-                             GDK_DRAWABLE_XID(window), xcursor));
-
-      if (GDK_WINDOW_WIN32DATA(window)->xcursor != NULL) {
-         GDK_NOTE(MISC, g_print("...DestroyCursor (%#x)\n",
-                                GDK_WINDOW_WIN32DATA(window)->xcursor));
-
-         if (!DestroyCursor(GDK_WINDOW_WIN32DATA(window)->xcursor))
-//                                                                                                                                                                                                                                                                 WIN32_API_FAILED ("DestroyCursor");
-//                                                                                                                                                                                                                                                               GDK_WINDOW_WIN32DATA (window)->xcursor = NULL;
-            ;
+   if (!cursor)
+      xcursor = NULL;
+   else
+      xcursor = cursor_private->xcursor;
+    
+   GDK_NOTE (MISC, g_print ("gdk_window_set_cursor: %#x %#x\n",
+               (guint) GDK_DRAWABLE_XID (window), (guint) xcursor));
+               
+   /* First get the old cursor, if any (we wait to free the old one */
+   /* since it may be the current cursor set in the win32 api right now) */
+   prev_xcursor = GDK_WINDOW_WIN32DATA (window)->xcursor;
+  
+   /* New cursor is NULL */
+   if (xcursor == NULL)
+      GDK_WINDOW_WIN32DATA (window)->xcursor = NULL;
+    
+   /* New cursor is non-NULL.  We must copy the cursor as it is OK to */
+   /* destroy the GdkCursor while still in use for some window. See for */
+   /* instance gimp_change_win_cursor() which calls gdk_window_set_cursor */
+   /* (win, cursor), and immediately afterwards gdk_cursor_destroy (cursor). */
+   else {
+      GDK_WINDOW_WIN32DATA (window)->xcursor = CopyCursor (xcursor);
+      if (GDK_WINDOW_WIN32DATA (window)->xcursor == NULL) {
+         WIN32_API_FAILED ("CopyCursor");
       }
-      if (xcursor != NULL) {
-         /* We must copy the cursor as it is OK to destroy the GdkCursor
-          * while still in use for some window. See for instance
-          * gimp_change_win_cursor() which calls
-          * gdk_window_set_cursor (win, cursor), and immediately
-          * afterwards gdk_cursor_destroy (cursor).
-          */
-         GDK_WINDOW_WIN32DATA(window)->xcursor = CopyCursor(xcursor);
-         GDK_NOTE(MISC, g_print("...CopyCursor (%#x) = %#x\n",
-                                xcursor,
-                                GDK_WINDOW_WIN32DATA(window)->xcursor));
-
-         GetCursorPos(&pt);
-         if (ChildWindowFromPoint(GDK_DRAWABLE_XID(window), pt) ==
-             GDK_DRAWABLE_XID(window))
-            SetCursor(GDK_WINDOW_WIN32DATA(window)->xcursor);
-      }
+      GDK_NOTE (MISC, g_print ("...CopyCursor (%#x) = %#x\n",
+                   (guint) xcursor,
+                   (guint) GDK_WINDOW_WIN32DATA (window)->xcursor));
+   }
+    
+   /* Set new cursor in all cases if we're over our window */
+   if (gdk_window_get_pointer(window, NULL, NULL, NULL) == window)
+      SetCursor (GDK_WINDOW_WIN32DATA (window)->xcursor);
+    
+   /* Destroy the previous cursor:  Need to make sure it's no longer */
+   /* in use before we destroy it, in case we're not over our window */
+   /* but the cursor is still set to our old one. */
+   if (prev_xcursor != NULL) {
+      GDK_NOTE (MISC, g_print ("...DestroyCursor (%#x)\n",(guint) prev_xcursor));
+      DestroyCursor (prev_xcursor);
    }
 }
 
@@ -1542,45 +1552,53 @@ void gdk_window_get_root_origin(GdkWindow * window, gint * x, gint * y)
                     pt.x, pt.y));
 }
 
-GdkWindow *gdk_window_get_pointer(GdkWindow * window,
-                                  gint * x,
-                                  gint * y, GdkModifierType * mask)
+GdkWindow*
+gdk_window_get_pointer (GdkWindow *window, gint *x, gint *y, GdkModifierType *mask)
 {
    GdkWindow *return_val;
-   POINT pointc, point;
+   POINT screen_point, point;
    HWND hwnd, hwndc;
 
-   g_return_val_if_fail(window == NULL || GDK_IS_WINDOW(window), NULL);
-
+   g_return_val_if_fail (window == NULL || GDK_IS_WINDOW (window), NULL);
+  
    if (!window)
       window = gdk_parent_root;
 
    return_val = NULL;
-   GetCursorPos(&pointc);
-   point = pointc;
-   ScreenToClient(GDK_DRAWABLE_XID(window), &point);
+   GetCursorPos (&screen_point);
+   point = screen_point;
+   ScreenToClient (GDK_DRAWABLE_XID (window), &point);
 
    if (x)
       *x = point.x;
    if (y)
       *y = point.y;
 
-   hwnd = WindowFromPoint(point);
-   point = pointc;
-   ScreenToClient(hwnd, &point);
+   hwnd = WindowFromPoint (screen_point);
+   if (hwnd != NULL) {
+      BOOL done = FALSE;
 
-   do {
-      hwndc = ChildWindowFromPoint(hwnd, point);
-      ClientToScreen(hwnd, &point);
-      ScreenToClient(hwndc, &point);
-   } while (hwndc != hwnd && (hwnd = hwndc, 1));	/* Ouch! */
-
-   return_val = gdk_window_lookup(hwnd);
+      while (!done) {
+         point = screen_point;
+         ScreenToClient (hwnd, &point);
+         hwndc = ChildWindowFromPoint (hwnd, point);
+         if (hwndc == NULL)
+            done = TRUE;
+         else if (hwndc == hwnd)
+            done = TRUE;
+         else
+            hwnd = hwndc;
+      }
+      return_val = gdk_window_lookup (hwnd);
+   }
+   else {
+      return_val = NULL;
+   }
 
    if (mask) {
       BYTE kbd[256];
 
-      GetKeyboardState(kbd);
+      GetKeyboardState (kbd);
       *mask = 0;
       if (kbd[VK_SHIFT] & 0x80)
          *mask |= GDK_SHIFT_MASK;
@@ -1597,7 +1615,7 @@ GdkWindow *gdk_window_get_pointer(GdkWindow * window,
       if (kbd[VK_RBUTTON] & 0x80)
          *mask |= GDK_BUTTON3_MASK;
    }
-
+  
    return return_val;
 }
 
@@ -1970,6 +1988,7 @@ static void gdk_propagate_shapes(HANDLE win, gboolean merge)
          }
       }
       SetWindowRgn(win, region, TRUE);
+      g_free (list);
    } else
       DeleteObject(region);
 }

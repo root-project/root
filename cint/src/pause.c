@@ -1476,8 +1476,11 @@ char *pipefile;
 	  *psout = G__sout;
 #ifndef G__WIN32
 	  if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
+     G__sout = freopen(filename,openmode,G__sout);
+#else
+     G__sout = fopen(filename,openmode);
 #endif
-	  G__sout = freopen(filename,openmode,G__sout);
+
 #ifndef G__OLDIMPLEMENTATION1723
 	  G__redirectcout(filename);
 #endif
@@ -1489,8 +1492,10 @@ char *pipefile;
 	  *pserr = G__serr;
 #ifndef G__WIN32
 	  if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
+     G__serr = freopen(filename,openmode,G__serr);
+#else
+	  G__serr = fopen(filename,openmode);
 #endif
-	  G__serr = freopen(filename,openmode,G__serr);
 	  /*DEBUG G__dumpfile = G__serr; */
 #ifndef G__OLDIMPLEMENTATION1723
 	  G__redirectcerr(filename);
@@ -1503,9 +1508,13 @@ char *pipefile;
 #ifndef G__WIN32
 	  if (!strlen(stdoutsav)) strcpy(stdoutsav,ttyname(STDOUT_FILENO));
 	  if (!strlen(stderrsav)) strcpy(stderrsav,ttyname(STDERR_FILENO));
-#endif
 	  G__sout = freopen(filename,openmode,G__sout);
-	  G__serr = freopen(filename,"a",G__serr);
+     G__serr = freopen(filename,"a",G__serr);
+#else
+     G__sout = fopen(filename,openmode);
+     G__serr = fopen(filename,"a");
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1723
 	  G__redirectcout(filename);
 	  G__redirectcerr(filename);

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.33 2003/11/26 10:33:08 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.35 2004/01/20 18:00:40 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1636,7 +1636,6 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
 
    int Nuser = 0, CheckUser = 0;
    int nmeth = 0, found = 0;
-   Bool_t retval = kFALSE;
    char *net, *UserRq = 0;
 
    if (gSystem->Getenv("ROOTAUTHRC") != 0) {
@@ -2035,7 +2034,6 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
       }
       // Found new entry matching: superseed previous result
       found = 1;
-      retval = kTRUE;
    }
 
    if (CheckUser == 1 && nu == 1) {
@@ -2168,11 +2166,15 @@ Int_t TAuthenticate::RfioAuth(TString &User)
       fDetails = TString("pt:0 ru:0 us:") + User;
 
       // Check that we are not root ...
-      if (strcmp(pw->fUser, "root")) {
+      if (pw->fUid != 0) {
 
-         // Get group ID associated with the current process ...
+         UserGroup_t *grp = gSystem->GetGroupInfo(gSystem->GetEffectiveGid());
+
+         // Get effective user & group ID associated with the current process...
          Int_t uid = pw->fUid;
-         Int_t gid = pw->fGid;
+         Int_t gid = grp ? grp->fGid : pw->fGid;
+
+         delete grp;
 
          // Send request ....
          char *sstr = new char[40];

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualUtilHist.h,v 1.1 2002/09/15 10:16:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualUtilHist.h,v 1.2 2002/09/15 19:48:47 brun Exp $
 // Author: Rene Brun   14/09/2002
 
 /*************************************************************************
@@ -36,9 +36,9 @@
 #include "TNamed.h"
 #endif
 
-class TMatrix;
-class TMatrixD;
-class TVector;
+class TMatrixFBase;
+class TMatrixDBase;
+class TVectorF;
 class TVectorD;
 
 class TVirtualUtilHist : public TNamed {
@@ -48,10 +48,10 @@ public:
    TVirtualUtilHist();
    virtual     ~TVirtualUtilHist();
    virtual void  InitStandardFunctions() = 0;
-   virtual void  PaintMatrix(TMatrix &m, Option_t *option) = 0;
-   virtual void  PaintMatrix(TMatrixD &m, Option_t *option) = 0;
-   virtual void  PaintVector(TVector &v, Option_t *option) = 0;
-   virtual void  PaintVector(TVectorD &v, Option_t *option) = 0;
+   virtual void  PaintMatrix(const TMatrixFBase &m, Option_t *option) = 0;
+   virtual void  PaintMatrix(const TMatrixDBase &m, Option_t *option) = 0;
+   virtual void  PaintVector(const TVectorF     &v, Option_t *option) = 0;
+   virtual void  PaintVector(const TVectorD     &v, Option_t *option) = 0;
 
    ClassDef(TVirtualUtilHist,0)  //Abstract interface to the histogram  utilities 
 };

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.26 2003/11/18 23:09:13 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.28 2003/12/30 21:42:27 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -194,7 +194,6 @@ namespace ROOT {
 
 //--- Globals ------------------------------------------------------------------
 const char *kAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5", "Globus", "SSH", "UidGid" };
-const char kMethods[]      = "usrpwd srp    krb5   globus ssh    uidgid";
 const char kRootdPass[]    = ".rootdpass";
 const char kSRootdPass[]   = ".srootdpass";
 const char kDaemonRc[]     = ".rootdaemonrc"; // file containing daemon access rules
@@ -262,6 +261,8 @@ krb5_context gKcontext;
 int gShmIdCred = -1;            // global, to pass the shm ID to proofserv
 gss_ctx_id_t GlbContextHandle = GSS_C_NO_CONTEXT;
 #endif
+
+static int gRandInit = 0;
 
 } //namespace ROOT
 
@@ -1833,8 +1834,7 @@ void RpdKrb5Auth(const char *sstr)
          data = new char[size+1];
 
          // Receive and decode encoded public key
-         int Nrec = -1;
-         Nrec = NetRecvRaw(data, size);
+         int Nrec = NetRecvRaw(data, size);
 
          if (gDebug > 3)
             ErrorInfo("RpdKrb5Auth: received %d ", Nrec);
@@ -3374,14 +3374,11 @@ char *RpdGetRandString(int Opt, int Len)
    // Allocate buffer
    char *Buf = new char[Len + 1];
 
-   // Get current time as seed for rand().
-   time_t curtime;
-   time(&curtime);
-   int seed = (int) curtime;
-
-   // feed seed
-   if (seed)
-      srand(seed);
+   // Init Random machinery ...
+   if (!gRandInit) {
+      RpdInitRand();
+      gRandInit = 1;
+   }
 
    // randomize
    int k = 0;
@@ -3610,6 +3607,12 @@ int RpdGenRSAKeys()
    if (gDebug > 2)
       ErrorInfo("RpdGenRSAKeys: enter");
 
+   // Init Random machinery ...
+   if (!gRandInit) {
+      RpdInitRand();
+      gRandInit = 1;
+   }
+
    // Sometimes some bunch is not decrypted correctly
    // That's why we make retries to make sure that encryption/decryption works as expected
    bool NotOk = 1;
@@ -3800,8 +3803,7 @@ int RpdRecvClientRSAKey()
       ErrorInfo("RpdRecvClientRSAKey: got len '%s' %d ", BufLen, Len);
 
    // Receive and decode encoded public key
-   int Nrec = -1;
-   Nrec = NetRecvRaw(gPubKey, Len);
+   NetRecvRaw(gPubKey, Len);
    rsa_decode(gPubKey, Len, gRSAPriKey.n, gRSAPriKey.e);
    if (gDebug > 2)
       ErrorInfo("RpdRecvClientRSAKey: Local: decoded string is %d bytes long ",
@@ -3821,24 +3823,23 @@ int RpdRecvClientRSAKey()
 //______________________________________________________________________________
 void RpdInitRand()
 {
-   // Init random machine
+   // Init random machine.
 
-   int seed = 1;
-   if (!access("/dev/random", R_OK)) {
+   const char *randdev = "/dev/urandom";
+
+   int fd;
+   unsigned int seed;
+   if ((fd = open(randdev, O_RDONLY)) != -1) {
       if (gDebug > 2)
-         ErrorInfo("RpdInitRand: taking seed from /dev/random");
-      char brnd[4];
-      FILE *frnd = fopen("/dev/random","r");
-      fread(brnd,1,4,frnd);
-      seed = *((int *)brnd);
-      fclose(frnd);
+         ErrorInfo("RpdInitRand: taking seed from %s", randdev);
+      read(fd, &seed, sizeof(seed));
+      close(fd);
    } else {
       if (gDebug > 2)
-         ErrorInfo("RpdInitRand: /dev/random not available: using time()");
-      seed = time(0);
+         ErrorInfo("RpdInitRand: %s not available: using time()", randdev);
+      seed = time(0);   //better use times() + win32 equivalent
    }
    srand(seed);
-
 }
 
 } // namespace ROOT

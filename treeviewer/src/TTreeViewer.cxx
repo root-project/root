@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.37 2003/11/12 10:55:48 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.40 2004/01/09 11:44:02 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -164,6 +164,7 @@
 
 #include "Riostream.h"
 #include "TTreeViewer.h"
+#include "HelpText.h"
 #include "HelpTextTV.h"
 #include "TTVLVContainer.h"
 #include "TTVSession.h"
@@ -207,6 +208,10 @@
 #include "TGFileDialog.h"
 #include "TGProgressBar.h"
 #include "TClonesArray.h"
+
+#ifdef WIN32
+#include "TWin32SplashThread.h"
+#endif
 
 // drawing options
 static const char* optgen[16] =
@@ -255,6 +260,7 @@ enum ERootTreeViewerCommands {
    kOptions2D = 70,
 
    kHelpAbout = 100,
+   kHelpAboutTV,
    kHelpStart,
    kHelpLayout,
    kHelpOpenSave,
@@ -330,7 +336,7 @@ TTreeViewer::TTreeViewer(const TTree *tree)
    TDirectory *dirsav = gDirectory;
    TDirectory *cdir = tree->GetDirectory();
    if (cdir) cdir->cd();
-      
+
    SetTreeName(tree->GetName());
    // If the tree is a chain, the tree directory will be changed by SwitchTree
    // (called by SetTreeName)
@@ -655,7 +661,8 @@ void TTreeViewer::BuildInterface()
    fOptionsMenu->AddEntry("&Reset options",      kOptionsReset);
    //--- Help menu
    fHelpMenu = new TGPopupMenu(gClient->GetRoot());
-   fHelpMenu->AddEntry("&About...",              kHelpAbout);
+   fHelpMenu->AddEntry("&About ROOT...",         kHelpAbout);
+   fHelpMenu->AddEntry("&About TreeViewer...",   kHelpAboutTV);
    fHelpMenu->AddSeparator();
    fHelpMenu->AddEntry("&Starting...",           kHelpStart);
    fHelpMenu->AddEntry("&Layout...",             kHelpLayout);
@@ -775,29 +782,29 @@ void TTreeViewer::BuildInterface()
    //--- fV1 -----------------------------------------------------------------------
    fV1 = new TGVerticalFrame(fHf, 10, 10, kFixedWidth);
    fTreeHdr = new TGCompositeFrame(fV1, 10, 10, kSunkenFrame | kVerticalFrame);
-   
+
    fLbl1 = new TGLabel(fTreeHdr, "Current Folder");
-   lo = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY, 3, 0, 0, 0); 
+   lo = new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY, 3, 0, 0, 0);
    fWidgets->Add(lo);
    fTreeHdr->AddFrame(fLbl1, lo);
 
-   lo = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 1, 0); 
+   lo = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 1, 0);
    fWidgets->Add(lo);
    fV1->AddFrame(fTreeHdr, lo);
 
-   //--- tree view canvas on the left 
-   fTreeView = new TGCanvas(fV1, fV1->GetWidth(), 10, kSunkenFrame | kDoubleBorder); 
+   //--- tree view canvas on the left
+   fTreeView = new TGCanvas(fV1, fV1->GetWidth(), 10, kSunkenFrame | kDoubleBorder);
    //--- container frame
    fLt = new TGListTree(fTreeView->GetViewPort(), 10, 10, kHorizontalFrame,
                         GetWhitePixel());
    fLt->Associate(this);
    fTreeView->SetContainer(fLt);
 
-   lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 2,0,0,0); 
+   lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 2,0,0,0);
    fWidgets->Add(lo);
-   fV1->AddFrame(fTreeView, lo); 
+   fV1->AddFrame(fTreeView, lo);
 
-   //--- button horizontal frame 
+   //--- button horizontal frame
    fHpb = new TGHorizontalFrame(fV1, fTreeHdr->GetWidth(), 10, kSunkenFrame);
 
    //--- DRAW button
@@ -822,35 +829,35 @@ void TTreeViewer::BuildInterface()
    fHpb->AddFrame(fSTOP, lo);
 
    //--- REFR button (breaks current operation)
-   fPicRefr = gClient->GetPicture("refresh2.xpm");             
-   fREFR  = new TGPictureButton(fHpb,fPicRefr,kDRAW);          
+   fPicRefr = gClient->GetPicture("refresh2.xpm");
+   fREFR  = new TGPictureButton(fHpb,fPicRefr,kDRAW);
    fREFR->SetToolTipText("Update the tree viewer");
-   lo = new TGLayoutHints(kLHintsTop | kLHintsLeft, 2,2,4,2);  
-   fWidgets->Add(lo);                                          
-   fHpb->AddFrame(fREFR, lo);                                  
+   lo = new TGLayoutHints(kLHintsTop | kLHintsLeft, 2,2,4,2);
+   fWidgets->Add(lo);
+   fHpb->AddFrame(fREFR, lo);
    //---connect REFR button to DoRefresh() method
    fREFR->Connect("Clicked()", "TTreeViewer", this, "DoRefresh()");
 
-   lo = new TGLayoutHints(kLHintsTop | kLHintsLeft, 2,2,2,2);  
-   fWidgets->Add(lo);                                          
+   lo = new TGLayoutHints(kLHintsTop | kLHintsLeft, 2,2,2,2);
+   fWidgets->Add(lo);
    fV1->AddFrame(fHpb, lo);
-   
+
    //--- fV2
    fV2 = new TGVerticalFrame(fHf, 10, 10);
    fListHdr = new TGCompositeFrame(fV2, 10, 10, kSunkenFrame | kFitHeight);
    fLbl2 = new TGLabel(fListHdr, "Current Tree:                 ");
-   lo = new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 0, 0, 0); 
+   lo = new TGLayoutHints(kLHintsTop | kLHintsLeft, 3, 0, 0, 0);
    fWidgets->Add(lo);
    fListHdr->AddFrame(fLbl2, lo);
 
-   //--- progress bar 
+   //--- progress bar
    fProgressBar = new TGHProgressBar(fListHdr);
    fProgressBar->SetBarColor("red");
    fProgressBar->SetFillType(TGProgressBar::kBlockFill);
-   lo = new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 2,2,4,2); 
+   lo = new TGLayoutHints(kLHintsBottom | kLHintsExpandX, 2,2,4,2);
    fWidgets->Add(lo);
    fListHdr->AddFrame(fProgressBar, lo);
-   lo = new TGLayoutHints(kLHintsTop | kLHintsExpandX | kLHintsExpandY, 2,0,1,2); 
+   lo = new TGLayoutHints(kLHintsTop | kLHintsExpandX | kLHintsExpandY, 2,0,1,2);
    fWidgets->Add(lo);
    fV2->AddFrame(fListHdr, lo);
 
@@ -861,7 +868,7 @@ void TTreeViewer::BuildInterface()
    lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY);
    fWidgets->Add(lo);
    fHf->AddFrame(fV1, lo);
-   
+
    //--- vertical splitter
    TGVSplitter *splitter = new TGVSplitter(fHf);
    splitter->SetFrame(fV1,kTRUE);
@@ -887,21 +894,21 @@ void TTreeViewer::BuildInterface()
    fWidgets->Add(lo);
 
    fListHdr->AddFrame(fListView,lo);
-   
+
    lo = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY);
    fWidgets->Add(lo);
    fHf->AddFrame(fV2,lo);
-   
+
    AddFrame(fHf, lo);
    //--- 3rd horizontal tool bar separator ----------------------------------------
-   toolBarSep = new TGHorizontal3DLine(this);   
-   fWidgets->Add(toolBarSep);                   
-   AddFrame(toolBarSep, fBarLayout);            
+   toolBarSep = new TGHorizontal3DLine(this);
+   fWidgets->Add(toolBarSep);
+   AddFrame(toolBarSep, fBarLayout);
 
    //--- label for IList text entry
    fBFrame = new TGHorizontalFrame(this,10,10);
    fBLbl4 = new TGLabel(fBFrame,"IList");
-   lo = new TGLayoutHints(kLHintsLeft | kLHintsBottom, 2,2,2,2); 
+   lo = new TGLayoutHints(kLHintsLeft | kLHintsBottom, 2,2,2,2);
    fWidgets->Add(lo);
    fBFrame->AddFrame(fBLbl4, lo);
    //--- IList text entry
@@ -975,7 +982,7 @@ void TTreeViewer::BuildInterface()
    MapSubwindows();
    Resize(GetDefaultSize());
    MapWindow();
-   
+
    // put default items in the listview on the right
    const TGPicture *pic, *spic;
 
@@ -1028,7 +1035,7 @@ void TTreeViewer::BuildInterface()
    fLVContainer->AddThisItem(entry);
    entry->MapWindow();
    entry->SetTrueName("");
-   
+
    //--- 10 expression items
    fNexpressions = 10;
    for (Int_t i=0; i<fNexpressions; i++) {
@@ -1846,7 +1853,32 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kRunMacro:
                      break;
                   case kHelpAbout:
-                     hd = new TRootHelpDialog(this, "About TTreeViewer...", 600, 400);
+                     {
+#ifdef R__UNIX
+                        TString rootx;
+# ifdef ROOTBINDIR
+                        rootx = ROOTBINDIR;
+# else
+                        rootx = gSystem->Getenv("ROOTSYS");
+                        if (!rootx.IsNull()) rootx += "/bin";
+# endif
+                        rootx += "/root -a &";
+                        gSystem->Exec(rootx);
+#else
+#ifdef WIN32
+                        new TWin32SplashThread(kTRUE);
+#else
+                        char str[32];
+                        sprintf(str, "About ROOT %s...", gROOT->GetVersion());
+                        hd = new TRootHelpDialog(this, str, 600, 400);
+                        hd->SetText(gHelpAbout);
+                        hd->Popup();
+#endif
+#endif
+                     }
+                     break;
+                  case kHelpAboutTV:
+                     hd = new TRootHelpDialog(this, "About TreeViewer...", 600, 400);
                      hd->SetText(gTVHelpAbout);
                      hd->Resize(hd->GetDefaultSize());
                      hd->Popup();

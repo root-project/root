@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.21 2003/05/16 15:00:49 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TPluginManager.cxx,v 1.22 2003/11/10 17:56:31 rdm Exp $
 // Author: Fons Rademakers   26/1/2002
 
 /*************************************************************************
@@ -119,7 +119,7 @@ Bool_t TPluginHandler::CanHandle(const char *base, const char *uri)
    if (fBase != base)
       return kFALSE;
 
-   if (!uri)
+   if (!uri || fRegexp == "*")
       return kTRUE;
 
    Bool_t wildcard = kFALSE;

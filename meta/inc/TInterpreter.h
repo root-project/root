@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.13 2003/06/13 06:17:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.16 2004/01/21 23:15:52 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -73,8 +73,8 @@ public:
    virtual Bool_t   IsLoaded(const char *filename) const = 0;
    virtual Int_t    Load(const char *filenam, Bool_t system = kFALSE) = 0;
    virtual void     LoadMacro(const char *filename, EErrorCode *error = 0) = 0;
-   virtual Int_t    ProcessLine(const char *line, EErrorCode *error = 0) = 0;
-   virtual Int_t    ProcessLineSynch(const char *line, EErrorCode *error = 0) = 0;
+   virtual Long_t   ProcessLine(const char *line, EErrorCode *error = 0) = 0;
+   virtual Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0) = 0;
    virtual void     PrintIntro() = 0;
    virtual void     Reset() = 0;
    virtual void     ResetAll() = 0;
@@ -95,12 +95,13 @@ public:
    virtual void     CreateListOfMethodArgs(TFunction *m) = 0;
    virtual TString  GetMangledName(TClass *cl, const char *method, const char *params) = 0;
    virtual TString  GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto) = 0;
+   virtual const char *GetInterpreterTypeName(const char*) = 0;
    virtual void    *GetInterfaceMethod(TClass *cl, const char *method, const char *params) = 0;
    virtual void    *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto) = 0;
    virtual void     Execute(const char *function, const char *params, int *error = 0) = 0;
    virtual void     Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0) = 0;
    virtual void     Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0) = 0;
-   virtual Int_t    ExecuteMacro(const char *filename, EErrorCode *error = 0) = 0;
+   virtual Long_t   ExecuteMacro(const char *filename, EErrorCode *error = 0) = 0;
    virtual Bool_t   IsErrorMessagesEnabled() = 0;
    virtual Bool_t   SetErrorMessages(Bool_t enable = kTRUE) = 0;
    virtual const char *TypeName(const char *s) = 0;

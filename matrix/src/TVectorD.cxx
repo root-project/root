@@ -1,5 +1,5 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.28 2003/12/04 00:16:23 brun Exp $
-// Author: Fons Rademakers   03/11/97
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.35 2004/01/27 08:12:26 brun Exp $
+// Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -11,645 +11,376 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// Linear Algebra Package                                               //
+// TVectorD                                                             //
 //                                                                      //
-// The present package implements all the basic algorithms dealing      //
-// with vectors, matrices, matrix columns, rows, diagonals, etc.        //
+// Implementation of Vectors in the linear algebra package              //
 //                                                                      //
-// Matrix elements are arranged in memory in a COLUMN-wise              //
-// fashion (in FORTRAN's spirit). In fact, it makes it very easy to     //
-// feed the matrices to FORTRAN procedures, which implement more        //
-// elaborate algorithms.                                                //
+// Unless otherwise specified, vector indices always start with 0,      //
+// spanning up to the specified limit-1.                                //
 //                                                                      //
-// Unless otherwise specified, matrix and vector indices always start   //
-// with 0, spanning up to the specified limit-1.                        //
+// For (n) vectors where n < kSizeMax (5 currently) storage space is    //
+// available on the stack, thus avoiding expensive allocation/          //
+// deallocation of heap space . However, this introduces of course      //
+// kSizeMax overhead for each vector object . If this is an issue       //
+// recompile with a new appropriate value (>=0) for kSizeMax            //
 //                                                                      //
-// The present package provides all facilities to completely AVOID      //
-// returning matrices. Use "TMatrixD A(TMatrixD::kTransposed,B);" and   //
-// other fancy constructors as much as possible. If one really needs    //
-// to return a matrix, return a TLazyMatrixD object instead. The        //
-// conversion is completely transparent to the end user, e.g.           //
-// "TMatrixD m = THaarMatrixD(5);" and _is_ efficient.                  //
+// Another way to assign and store vector data is through Adoption      //
+// see for instance stress_linalg.cxx file .                            //
 //                                                                      //
-// For usage examples see $ROOTSYS/test/vmatrix.cxx and vvector.cxx     //
-// and also:                                                            //
-// http://root.cern.ch/root/html/TMatrixD.html#TMatrixD:description     //
+// Note that Constructors/assignments exists for all different matrix   //
+// views                                                                //
 //                                                                      //
-// The implementation is based on original code by                      //
-// Oleg E. Kiselyov (oleg@pobox.com).                                   //
+// For usage examples see $ROOTSYS/test/stress_linalg.cxx               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TMatrixD.h"
-#include "TROOT.h"
-#include "TClass.h"
-#include "TPluginManager.h"
-#include "TVirtualUtilHist.h"
-
+#include "TVectorD.h"
 
 ClassImp(TVectorD)
 
 //______________________________________________________________________________
-void TVectorD::Allocate(Int_t nrows, Int_t row_lwb)
+void TVectorD::Delete_m(Int_t size,Double_t* m)
 {
-   // Allocate new vector. Arguments are number of rows and row
-   // lowerbound (0 default).
-
-   Invalidate();
-
-   if (nrows <= 0) {
-      Error("Allocate", "no of rows has to be positive");
-      return;
-   }
-
-   fNrows  = nrows;
-   fNmem   = nrows;
-   fRowLwb = row_lwb;
-
-   //fElements = new Double_t[fNrows];  because of use of ReAlloc()
-   fElements = (Double_t*) TStorage::Alloc(fNrows*sizeof(Double_t));
-   if (fElements)
-      memset(fElements, 0, fNrows*sizeof(Double_t));
+  if (m) {
+    if (size > kSizeMax)
+    {
+      delete [] m;
+      m = 0;
+    }
+  }
 }
 
 //______________________________________________________________________________
-TVectorD::TVectorD(Int_t lwb, Int_t upb, Double_t va_(iv1), ...)
+Double_t* TVectorD::New_m(Int_t size)
 {
-   // Make a vector and assign initial values. Argument list should contain
-   // Double_t values to assign to vector elements. The list must be
-   // terminated by the string "END". Example:
-   // TVectorD foo(1,3,0.0,1.0,1.5,"END");
-   //
-   // WARNING! This method cannot be called from CINT.
-   // Use method instead:
-   //    TVectorD::TVectorD(Int_t lwb, Int_t upb, const Double_t *elements)
-
-   va_list args;
-   va_start(args,va_(iv1));             // Init 'args' to the beginning of
-                                        // the variable length list of args
-
-   Allocate(upb-lwb+1, lwb);
-
-   Int_t i;
-   (*this)(lwb) = iv1;
-   for (i = lwb+1; i <= upb; i++)
-      (*this)(i) = (Double_t)va_arg(args,Double_t);
-
-   if (strcmp((char *)va_arg(args,char *),"END"))
-      Error("TVectorD(Int_t, Int_t, ...)", "argument list must be terminated by \"END\"");
-
-   va_end(args);
+  if (size == 0) return 0;
+  else {
+    if ( size <= kSizeMax )
+      return fDataStack;
+    else {
+      Double_t *heap = new Double_t[size];
+      return heap;
+    }
+  }
 }
 
 //______________________________________________________________________________
-TVectorD::TVectorD(const TMatrixDRow &mr) : TObject(mr)
+Int_t TVectorD::Memcpy_m(Double_t *newp,const Double_t *oldp,Int_t copySize,
+                         Int_t newSize,Int_t oldSize)
 {
-   if (mr.fMatrix->IsValid()) {
-      Allocate(mr.fMatrix->GetColUpb()-mr.fMatrix->GetColLwb()+1, mr.fMatrix->GetColLwb());
-      *this = mr;
-   } else
-      Error("TVectorD(const TMatrixDRow&)", "matrix is not initialized");
-}
-
-//______________________________________________________________________________
-TVectorD::TVectorD(const TMatrixDColumn &mc) : TObject(mc)
-{
-   if (mc.fMatrix->IsValid()) {
-      Allocate(mc.fMatrix->GetRowUpb()-mc.fMatrix->GetRowLwb()+1, mc.fMatrix->GetRowLwb());
-      *this = mc;
-   } else
-      Error("TVectorD(const TMatrixDColumn&)", "matrix is not initialized");
-}
-
-//______________________________________________________________________________
-TVectorD::TVectorD(const TMatrixDDiag &md) : TObject(md)
-{
-   if (md.fMatrix->IsValid()) {
-     Allocate(TMath::Min(md.fMatrix->GetNrows(),md.fMatrix->GetNcols()));
-     *this = md;
-   } else
-      Error("TVectorD(const TMatrixDDiag&)", "matrix is not initialized");
-}
-
-//______________________________________________________________________________
-TVectorD::~TVectorD()
-{
-   // TVectorD destructor.
-
-   Clear();
-
-   Invalidate();
-}
-
-//______________________________________________________________________________
-void TVectorD::Clear(Option_t *)
-{
-   // delete dynamic structures
-
-   if (IsValid()) {
-      TStorage::Dealloc(fElements);
-      fElements = 0;
-   }
-}
-
-//______________________________________________________________________________
-void TVectorD::Draw(Option_t *option)
-{
-   // Draw this vector using an intermediate histogram
-   // The histogram is named "TVectorD" by default and no title
-
-   //create the hist utility manager (a plugin)
-   TVirtualUtilHist *util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
-   if (!util) {
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilHist"))) {
-          if (h->LoadPlugin() == -1)
-            return;
-          h->ExecPlugin(0);
-          util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
+  if (copySize == 0 || oldp == newp) return 0;
+  else {
+    if ( newSize <= kSizeMax && oldSize <= kSizeMax ) {
+      // both pointers are inside fDataStack, be careful with copy direction !
+      if (newp > oldp) {
+        for (Int_t i = copySize-1; i >= 0; i--)
+          newp[i] = oldp[i];
+      } else {
+        for (Int_t i = 0; i < copySize; i++)
+          newp[i] = oldp[i];
       }
-   }
-   util->PaintVector(*this,option);
+    }
+    else {
+      memcpy(newp,oldp,copySize*sizeof(Double_t));
+    }
+  }
+  return 0;
 }
 
 //______________________________________________________________________________
-void TVectorD::ResizeTo(Int_t lwb, Int_t upb)
+void TVectorD::Allocate(Int_t nrows,Int_t row_lwb,Int_t init)
 {
-   // Resize the vector for a specified number of elements, trying to keep
-   // intact as many elements of the old vector as possible. If the vector is
-   // expanded, the new elements will be zeroes.
+  // Allocate new vector. Arguments are number of rows and row
+  // lowerbound (0 default).
 
-   if (upb-lwb+1 <= 0) {
-      Error("ResizeTo", "can't resize vector to a non-positive number of elems");
+  Invalidate();
+  Assert(nrows > 0);
+
+  fNrows   = nrows;
+  fRowLwb  = row_lwb;
+  fIsOwner = kTRUE;
+
+  fElements = New_m(fNrows);
+  if (init)
+    memset(fElements,0,fNrows*sizeof(Double_t));
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(Int_t n)
+{
+  Allocate(n,0,1);
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(Int_t lwb,Int_t upb)
+{
+  Allocate(upb-lwb+1,lwb,1);
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(Int_t n,const Double_t *elements)
+{
+  Allocate(n,0);
+  SetElements(elements);
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(Int_t lwb,Int_t upb,const Double_t *elements)
+{
+  Allocate(upb-lwb+1,lwb);
+  SetElements(elements);
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(const TVectorD &another) : TObject(another)
+{
+  Assert(another.IsValid());
+  Allocate(another.GetUpb()-another.GetLwb()+1,another.GetLwb());
+  *this = another;
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(const TMatrixDRow_const &mr) : TObject(mr)
+{
+  const TMatrixDBase *mt = mr.GetMatrix();
+  Assert(mt->IsValid());
+  Allocate(mt->GetColUpb()-mt->GetColLwb()+1,mt->GetColLwb());
+  *this = mr;
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(const TMatrixDColumn_const &mc) : TObject(mc)
+{
+  const TMatrixDBase *mt = mc.GetMatrix();
+  Assert(mt->IsValid());
+  Allocate(mt->GetRowUpb()-mt->GetRowLwb()+1,mt->GetRowLwb());
+  *this = mc;
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(const TMatrixDDiag_const &md) : TObject(md)
+{
+  const TMatrixDBase *mt = md.GetMatrix();
+  Assert(mt->IsValid());
+  Allocate(TMath::Min(mt->GetNrows(),mt->GetNcols()));
+  *this = md;
+}
+
+//______________________________________________________________________________
+TVectorD::TVectorD(Int_t lwb,Int_t upb,Double_t va_(iv1), ...)
+{
+  // Make a vector and assign initial values. Argument list should contain
+  // Double_t values to assign to vector elements. The list must be
+  // terminated by the string "END". Example:
+  // TVectorD foo(1,3,0.0,1.0,1.5,"END");
+
+  const Int_t no_rows = upb-lwb+1;
+  Assert(no_rows);
+  Allocate(no_rows,lwb);
+
+  va_list args;
+  va_start(args,va_(iv1));             // Init 'args' to the beginning of
+                                       // the variable length list of args
+
+  (*this)(lwb) = iv1;
+  for (Int_t i = lwb+1; i <= upb; i++)
+    (*this)(i) = (Double_t)va_arg(args,Double_t);
+
+  if (strcmp((char *)va_arg(args,char *),"END"))
+    Error("TVectorD(Int_t, Int_t, ...)", "argument list must be terminated by \"END\"");
+
+  va_end(args);
+}
+
+//______________________________________________________________________________
+void TVectorD::ResizeTo(Int_t lwb,Int_t upb)
+{
+  // Resize the vector to [lwb:upb] .
+  // New dynamic elemenst are created, the overlapping part of the old ones are
+  // copied to the new structures, then the old elements are deleleted.
+
+  if (!fIsOwner) {
+    Error("ResizeTo(lwb,upb)","Not owner of data array,cannot resize");
+    return;
+  }
+
+  const Int_t new_nrows = upb-lwb+1;
+
+  if (IsValid()) {
+
+    if (fNrows == new_nrows && fRowLwb == lwb)
       return;
-   }
 
-   if (!IsValid()) {
-      Allocate(upb-lwb+1, lwb);
-      return;
-   }
+    Double_t    *elements_old = GetMatrixArray();
+    const Int_t  nrows_old    = fNrows;
+    const Int_t  rowLwb_old   = fRowLwb;
 
-   const Int_t old_nrows = fNrows;
-   fNrows  = upb-lwb+1;
-   fRowLwb = lwb;
+    Allocate(new_nrows,lwb);
+    if (fNrows > kSizeMax || nrows_old > kSizeMax)
+      memset(GetMatrixArray(),0,fNrows*sizeof(Double_t));
+    else if (fNrows > nrows_old)
+      memset(GetMatrixArray()+nrows_old,0,(fNrows-nrows_old)*sizeof(Double_t));
 
-   if (old_nrows == fNrows)
-      return;                       // The same number of elems
+    Assert(IsValid());
 
-   // If the vector is to grow, reallocate and clear the newly added elements
-   if (fNrows > old_nrows) {
-      fElements = (Double_t *)TStorage::ReAlloc(fElements, fNrows*sizeof(Double_t),
-                                                fNmem*sizeof(Double_t));
-      fNmem = fNrows;
-   } else if (old_nrows - fNrows > (old_nrows>>2)) {
-      // Vector is to shrink a lot (more than 1/4 of the original size), reallocate
-      fElements = (Double_t *)TStorage::ReAlloc(fElements, fNrows*sizeof(Double_t));
-      fNmem = fNrows;
-   }
+    // Copy overlap
+    const Int_t rowLwb_copy = TMath::Max(fRowLwb,rowLwb_old);
+    const Int_t rowUpb_copy = TMath::Min(fRowLwb+fNrows-1,rowLwb_old+nrows_old-1);
+    const Int_t nrows_copy  = rowUpb_copy-rowLwb_copy+1;
 
-   // If the vector shrinks only a little, don't bother to reallocate
+    const Int_t nelems_new = fNrows;
+    Double_t *elements_new = GetMatrixArray();
+    if (nrows_copy > 0) {
+      const Int_t rowOldOff = rowLwb_copy-rowLwb_old;
+      const Int_t rowNewOff = rowLwb_copy-fRowLwb;
+      Memcpy_m(elements_new+rowNewOff,elements_old+rowOldOff,nrows_copy,nelems_new,nrows_old);
+    }
 
-   Assert(fElements != 0);
+    Delete_m(nrows_old,elements_old);
+  } else {
+    Allocate(upb-lwb+1,lwb,1);
+  }
 }
 
 //______________________________________________________________________________
-Double_t TVectorD::Norm1() const
+void TVectorD::Adopt(Int_t n,Double_t *data)
 {
-   // Compute the 1-norm of the vector SUM{ |v[i]| }.
+  Assert(n > 0);
 
-   if (!IsValid()) {
-      Error("Norm1", "vector is not initialized");
-      return 0.0;
-   }
-
-   Double_t norm = 0;
-   Double_t *vp;
-
-   for (vp = fElements; vp < fElements + fNrows; )
-      norm += TMath::Abs(*vp++);
-
-   return norm;
+  Clear();
+  fNrows    = n;
+  fRowLwb   = 0;
+  fElements = data;
+  fIsOwner  = kFALSE;
 }
 
 //______________________________________________________________________________
-Double_t TVectorD::Norm2Sqr() const
+void TVectorD::Adopt(Int_t lwb,Int_t upb,Double_t *data)
 {
-   // Compute the square of the 2-norm SUM{ v[i]^2 }.
+  Assert(upb >= lwb);
 
-   if (!IsValid()) {
-      Error("Norm2Sqr", "vector is not initialized");
-      return 0.0;
-   }
-
-   Double_t norm = 0;
-   Double_t *vp;
-
-   for (vp = fElements; vp < fElements + fNrows; vp++)
-      norm += (*vp) * (*vp);
-
-   return norm;
+  Clear();
+  fNrows    = upb-lwb+1;
+  fRowLwb   = lwb;
+  fElements = data;
+  fIsOwner  = kFALSE;
 }
 
 //______________________________________________________________________________
-Double_t TVectorD::NormInf() const
+TVectorD TVectorD::GetSub(Int_t row_lwb,Int_t row_upb,Option_t *option) const
 {
-   // Compute the infinity-norm of the vector MAX{ |v[i]| }.
+  // Get subvector [row_lwb..row_upb]; The indexing range of the
+  // returned vector depends on the argument option:
+  //
+  // option == "S" : return [0..row_upb-row_lwb+1] (default)
+  // else          : return [row_lwb..row_upb]
 
-   if (!IsValid()) {
-      Error("NormInf", "vector is not initialized");
-      return 0.0;
-   }
+  Assert(IsValid());
+  if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
+    Error("GetSub","row_lwb out of bounds");
+    return TVectorD();
+  }
+  if (row_upb < fRowLwb || row_upb > fRowLwb+fNrows-1) {
+    Error("GetSub","row_upb out of bounds");
+    return TVectorD();
+  }
+  if (row_upb < row_lwb) {
+    Error("GetSub","row_upb < row_lwb");
+    return TVectorD();
+  }
 
-   Double_t norm = 0;
-   Double_t *vp;
+  TString opt(option);
+  opt.ToUpper();
+  const Int_t shift = (opt.Contains("S")) ? 1 : 0;
 
-   for (vp = fElements; vp < fElements + fNrows; )
-      norm = TMath::Max(norm, (Double_t)TMath::Abs(*vp++));
+  Int_t row_lwb_sub;
+  Int_t row_upb_sub;
+  if (shift) {
+    row_lwb_sub = 0;
+    row_upb_sub = row_upb-row_lwb;
+  } else {
+    row_lwb_sub = row_lwb;
+    row_upb_sub = row_upb;
+  }
 
-   return norm;
+  TVectorD sub(row_lwb_sub,row_upb_sub);
+  const Int_t nrows_sub = row_upb_sub-row_lwb_sub+1;
+
+  const Double_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb);
+        Double_t *bp = sub.GetMatrixArray();
+
+  for (Int_t irow = 0; irow < nrows_sub; irow++)
+      *bp++ = *ap++;
+
+  return sub;
 }
 
 //______________________________________________________________________________
-const Double_t &TVectorD::operator()(Int_t ind) const
+void TVectorD::SetSub(Int_t row_lwb,const TVectorD &source)
 {
-   // Access a vector element.
+  // Insert vector source starting at [row_lwb], thereby overwriting the part
+  // [row_lwb..row_lwb+nrows_source];
 
-   static Double_t err;
-   err = 0.0;
+  Assert(IsValid());
+  Assert(source.IsValid());
 
-   if (!IsValid()) {
-      Error("operator()", "vector is not initialized");
-      return err;
-   }
+  if (row_lwb < fRowLwb && row_lwb > fRowLwb+fNrows-1) {
+    Error("SetSub","row_lwb outof bounds");
+    return;
+  }
+  const Int_t nRows_source = source.GetNrows();
+  if (row_lwb+nRows_source > fRowLwb+fNrows) {
+    Error("SetSub","source vector too large");
+    return;
+  }
 
-   Int_t aind = ind - fRowLwb;
-   if (aind >= fNrows || aind < 0) {
-      Error("operator()", "requested element %d is out of vector boundaries [%d,%d]",
-            ind, fRowLwb, fNrows+fRowLwb-1);
-      return err;
-   }
+  const Double_t *bp = source.GetMatrixArray();
+        Double_t *ap = this->GetMatrixArray()+(row_lwb-fRowLwb);
 
-   return fElements[aind];
+  for (Int_t irow = 0; irow < nRows_source; irow++)
+    *ap++ = *bp++;
 }
 
 //______________________________________________________________________________
-Double_t operator*(const TVectorD &v1, const TVectorD &v2)
+TVectorD &TVectorD::Zero()
 {
-   // Compute the scalar product.
-
-   if (!AreCompatible(v1,v2))
-      return 0.0;
-
-   Double_t *v1p = v1.fElements;
-   Double_t *v2p = v2.fElements;
-   Double_t sum = 0.0;
-
-   while (v1p < v1.fElements + v1.fNrows)
-      sum += *v1p++ * *v2p++;
-
-   return sum;
-}
-
-//______________________________________________________________________________
-TVectorD &TVectorD::operator*=(Double_t val)
-{
-   // Multiply every element of the vector with val.
-
-   if (!IsValid()) {
-      Error("operator*=", "vector not initialized");
-      return *this;
-   }
-
-   Double_t *ep = fElements;
-   while (ep < fElements+fNrows)
-      *ep++ *= val;
-
-   return *this;
-}
-
-//______________________________________________________________________________
-TVectorD &TVectorD::operator*=(const TMatrixD &a)
-{
-   // "Inplace" multiplication target = A*target. A needn't be a square one
-   // (the target will be resized to fit).
-
-   if (!a.IsValid()) {
-      Error("operator*=(const TMatrixD&)", "matrix a is not initialized");
-      return *this;
-   }
-   if (!IsValid()) {
-      Error("operator*=(const TMatrixD&)", "vector is not initialized");
-      return *this;
-   }
-
-   if (a.fNcols != fNrows || a.fColLwb != fRowLwb) {
-      Error("operator*=(const TMatrixD&)", "matrix and vector cannot be multiplied");
-      return *this;
-   }
-
-   const Int_t old_nrows = fNrows;
-   Double_t *old_vector = fElements;        // Save the old vector elements
-   fRowLwb = a.fRowLwb;
-   Assert((fNrows = a.fNrows) > 0);
-
-   //Assert((fElements = new Double_t[fNrows]) != 0);
-   Assert((fElements = (Double_t*) TStorage::Alloc(fNrows*sizeof(Double_t))) != 0);
-   fNmem = fNrows;
-
-   Double_t *tp = fElements;                     // Target vector ptr
-   Double_t *mp = a.fElements;                   // Matrix row ptr
-   while (tp < fElements + fNrows) {
-      Double_t sum = 0;
-      for (const Double_t *sp = old_vector; sp < old_vector + old_nrows; )
-         sum += *sp++ * *mp, mp += a.fNrows;
-      *tp++ = sum;
-      mp -= a.fNelems - 1;       // mp points to the beginning of the next row
-   }
-   Assert(mp == a.fElements + a.fNrows);
-
-   ::operator delete(old_vector);
-   return *this;
-}
-
-//______________________________________________________________________________
-TVectorD &TVectorD::operator=(Double_t val)
-{
-   // Assign val to every element of the vector.
-
-   if (!IsValid()) {
-      Error("operator=", "vector not initialized");
-      return *this;
-   }
-
-   Double_t *ep = fElements;
-   while (ep < fElements+fNrows)
-      *ep++ = val;
-
-   return *this;
-}
-
-//______________________________________________________________________________
-TVectorD &TVectorD::operator=(const TMatrixDRow &mr)
-{
-   // Assign a matrix row to a vector. The matrix row is implicitly transposed
-   // to allow the assignment in the strict sense.
-
-   if (!IsValid()) {
-      Error("operator=(const TMatrixDRow&)", "vector is not initialized");
-      return *this;
-   }
-   if (!mr.fMatrix->IsValid()) {
-      Error("operator=(const TMatrixDRow&)", "matrix is not initialized");
-      return *this;
-   }
-
-   if (mr.fMatrix->fColLwb != fRowLwb || mr.fMatrix->fNcols != fNrows) {
-      Error("operator=(const TMatrixDRow&)", "can't assign the transposed row of the matrix to the vector");
-      return *this;
-   }
-
-   Double_t *rp = mr.fPtr;                       // Row ptr
-   Double_t *vp = fElements;                     // Vector ptr
-   for ( ; vp < fElements + fNrows; rp += mr.fInc)
-      *vp++ = *rp;
-
-   Assert(rp == mr.fPtr + mr.fMatrix->fNelems);
-
-   return *this;
-}
-
-//______________________________________________________________________________
-TVectorD &TVectorD::operator=(const TMatrixDColumn &mc)
-{
-   // Assign a matrix column to a vector.
-
-   if (!IsValid()) {
-      Error("operator=(const TMatrixDColumn&)", "vector is not initialized");
-      return *this;
-   }
-   if (!mc.fMatrix->IsValid()) {
-      Error("operator=(const TMatrixDColumn&)", "matrix is not initialized");
-      return *this;
-   }
-
-   if (mc.fMatrix->fRowLwb != fRowLwb || mc.fMatrix->fNrows != fNrows) {
-      Error("operator=(const TMatrixDColumn&)", "can't assign a column of the matrix to the vector");
-      return *this;
-   }
-
-   Double_t *cp = mc.fPtr;                   // Column ptr
-   Double_t *vp = fElements;                 // Vector ptr
-   while (vp < fElements + fNrows)
-      *vp++ = *cp++;
-
-   Assert(cp == mc.fPtr + mc.fMatrix->fNrows);
-
-   return *this;
-}
-
-//______________________________________________________________________________
-TVectorD &TVectorD::operator=(const TMatrixDDiag &md)
-{
-   // Assign the matrix diagonal to a vector.
-
-   if (!IsValid()) {
-      Error("operator=(const TMatrixDDiag&)", "vector is not initialized");
-      return *this;
-   }
-   if (!md.fMatrix->IsValid()) {
-      Error("operator=(const TMatrixDDiag&)", "matrix is not initialized");
-      return *this;
-   }
-
-   if (md.fNdiag != fNrows) {
-      Error("operator=(const TMatrixDDiag&)", "can't assign the diagonal of the matrix to the vector");
-      return *this;
-   }
-
-   Double_t *dp = md.fPtr;                  // Diag ptr
-   Double_t *vp = fElements;                // Vector ptr
-   for ( ; vp < fElements + fNrows; dp += md.fInc)
-      *vp++ = *dp;
-
-   Assert(dp < md.fPtr + md.fMatrix->fNelems + md.fInc);
-
-   return *this;
-}
-
-//______________________________________________________________________________
-TVectorD &TVectorD::operator+=(Double_t val)
-{
-   // Add val to every element of the vector.
-
-   if (!IsValid()) {
-      Error("operator+=", "vector not initialized");
-      return *this;
-   }
-
-   Double_t *ep = fElements;
-   while (ep < fElements+fNrows)
-      *ep++ += val;
-
-   return *this;
-}
-
-//______________________________________________________________________________
-TVectorD &TVectorD::operator-=(Double_t val)
-{
-   // Subtract val from every element of the vector.
-
-   if (!IsValid()) {
-      Error("operator-=", "vector not initialized");
-      return *this;
-   }
-
-   Double_t *ep = fElements;
-   while (ep < fElements+fNrows)
-      *ep++ -= val;
-
-   return *this;
-}
-
-//______________________________________________________________________________
-Bool_t TVectorD::operator==(Double_t val) const
-{
-   // Are all vector elements equal to val?
-
-   if (!IsValid()) {
-      Error("operator==", "vector not initialized");
-      return kFALSE;
-   }
-
-   Double_t *ep = fElements;
-   while (ep < fElements+fNrows)
-      if (!(*ep++ == val))
-         return kFALSE;
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TVectorD::operator!=(Double_t val) const
-{
-   // Are all vector elements not equal to val?
-
-   if (!IsValid()) {
-      Error("operator!=", "vector not initialized");
-      return kFALSE;
-   }
-
-   Double_t *ep = fElements;
-   while (ep < fElements+fNrows)
-      if (!(*ep++ != val))
-         return kFALSE;
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TVectorD::operator<(Double_t val) const
-{
-   // Are all vector elements < val?
-
-   if (!IsValid()) {
-      Error("operator<", "vector not initialized");
-      return kFALSE;
-   }
-
-   Double_t *ep = fElements;
-   while (ep < fElements+fNrows)
-      if (!(*ep++ < val))
-         return kFALSE;
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TVectorD::operator<=(Double_t val) const
-{
-   // Are all vector elements <= val?
-
-   if (!IsValid()) {
-      Error("operator<=", "vector not initialized");
-      return kFALSE;
-   }
-
-   Double_t *ep = fElements;
-   while (ep < fElements+fNrows)
-      if (!(*ep++ <= val))
-         return kFALSE;
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TVectorD::operator>(Double_t val) const
-{
-   // Are all vector elements > val?
-
-   if (!IsValid()) {
-      Error("operator>", "vector not initialized");
-      return kFALSE;
-   }
-
-   Double_t *ep = fElements;
-   while (ep < fElements+fNrows)
-      if (!(*ep++ > val))
-         return kFALSE;
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TVectorD::operator>=(Double_t val) const
-{
-   // Are all vector elements >= val?
-
-   if (!IsValid()) {
-      Error("operator>=", "vector not initialized");
-      return kFALSE;
-   }
-
-   Double_t *ep = fElements;
-   while (ep < fElements+fNrows)
-      if (!(*ep++ >= val))
-         return kFALSE;
-
-   return kTRUE;
+  Assert(IsValid());
+  memset(this->GetMatrixArray(),0,fNrows*sizeof(Double_t));
+  return *this;
 }
 
 //______________________________________________________________________________
 TVectorD &TVectorD::Abs()
 {
-   // Take an absolute value of a vector, i.e. apply Abs() to each element.
+  // Take an absolute value of a vector, i.e. apply Abs() to each element.
 
-   if (!IsValid()) {
-      Error("Abs", "vector not initialized");
-      return *this;
-   }
+  Assert(IsValid());
 
-   Double_t *ep;
-   for (ep = fElements; ep < fElements+fNrows; ep++)
-      *ep = TMath::Abs(*ep);
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp) {
+    *ep = TMath::Abs(*ep);
+    ep++;
+  }
 
-   return *this;
+  return *this;
 }
 
 //______________________________________________________________________________
 TVectorD &TVectorD::Sqr()
 {
-   // Square each element of the vector.
+  // Square each element of the vector.
 
-   if (!IsValid()) {
-      Error("Sqr", "vector not initialized");
-      return *this;
-   }
+  Assert(IsValid());
 
-   Double_t *ep;
-   for (ep = fElements; ep < fElements+fNrows; ep++)
-      *ep = (*ep) * (*ep);
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp) {
+    *ep = (*ep) * (*ep);
+    ep++;
+  }
 
-   return *this;
+  return *this;
 }
 
 //______________________________________________________________________________
@@ -657,328 +388,829 @@ TVectorD &TVectorD::Sqrt()
 {
    // Take square root of all elements.
 
-   if (!IsValid()) {
-      Error("Sqrt", "vector not initialized");
-      return *this;
-   }
+  Assert(IsValid());
 
-   Double_t *ep;
-   for (ep = fElements; ep < fElements+fNrows; ep++)
-      if (*ep >= 0)
-         *ep = TMath::Sqrt(*ep);
-      else
-         Error("Sqrt", "(%d)-th element, %g, is negative, can't take the square root",
-               (ep-fElements) + fRowLwb, *ep);
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp) {
+    Assert(*ep >= 0);
+    *ep = TMath::Sqrt(*ep);
+    ep++;
+  }
 
-   return *this;
+  return *this;
+}
+
+//______________________________________________________________________________
+Double_t TVectorD::Norm1() const
+{
+  // Compute the 1-norm of the vector SUM{ |v[i]| }.
+
+  Assert(IsValid());
+
+  Double_t norm = 0;
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    norm += TMath::Abs(*ep++);
+
+  return norm;
+}
+
+//______________________________________________________________________________
+Double_t TVectorD::Norm2Sqr() const
+{
+  // Compute the square of the 2-norm SUM{ v[i]^2 }.
+
+  Assert(IsValid());
+
+  Double_t norm = 0;
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp) {
+    norm += (*ep) * (*ep);
+    ep++;
+  }
+
+  return norm;
+}
+
+//______________________________________________________________________________
+Double_t TVectorD::NormInf() const
+{
+  // Compute the infinity-norm of the vector MAX{ |v[i]| }.
+
+  Assert(IsValid());
+
+  Double_t norm = 0;
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    norm = TMath::Max(norm,TMath::Abs(*ep++));
+
+  return norm;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator=(const TVectorD &source)
+{
+  // Notice that this assinment does NOT change the ownership :
+  // if the storage space was adopted, source is copied to
+  // this space .
+
+  if (this != &source && AreCompatible(*this,source)) {
+    TObject::operator=(source);
+    memcpy(fElements,source.GetMatrixArray(),fNrows*sizeof(Double_t));
+  }
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator=(const TMatrixDRow_const &mr)
+{
+  // Assign a matrix row to a vector. The matrix row is implicitly transposed
+  // to allow the assignment in the strict sense.
+
+  Assert(IsValid());
+  const TMatrixDBase *mt = mr.GetMatrix();
+  Assert(mt->IsValid());
+
+  if (mt->GetColLwb() != fRowLwb || mt->GetNcols() != fNrows) {
+    Error("operator=(const TMatrixDRow_const &)","vector and row not compatible");
+    Invalidate();
+    return *this;
+  }
+
+  const Int_t inc    = mr.GetInc();
+  const Double_t *rp = mr.GetPtr();              // Row ptr
+        Double_t *ep = this->GetMatrixArray();      // Vector ptr
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp) {
+    *ep++ = *rp;
+     rp += inc;
+  }
+
+  Assert(rp == mr.GetPtr()+mt->GetNcols());
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator=(const TMatrixDColumn_const &mc)
+{
+   // Assign a matrix column to a vector.
+
+  Assert(IsValid());
+  const TMatrixDBase *mt = mc.GetMatrix();
+  Assert(mt->IsValid());
+
+  if (mt->GetRowLwb() != fRowLwb || mt->GetNrows() != fNrows) {
+    Error("operator=(const TMatrixDColumn_const &)","vector and column not compatible");
+    Invalidate();
+    return *this;
+  }
+
+  const Int_t inc    = mc.GetInc();
+  const Double_t *cp = mc.GetPtr();              // Column ptr
+        Double_t *ep = this->GetMatrixArray();      // Vector ptr
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp) {
+    *ep++ = *cp;
+     cp += inc;
+  }
+
+  Assert(cp == mc.GetPtr()+mt->GetNoElements());
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator=(const TMatrixDDiag_const &md)
+{
+  // Assign the matrix diagonal to a vector.
+
+  Assert(IsValid());
+  const TMatrixDBase *mt = md.GetMatrix();
+  Assert(mt->IsValid());
+
+  if (md.GetNdiags() != fNrows) {
+    Error("operator=(const TMatrixDDiag_const &)","vector and matrix-diagonal not compatible");
+    Invalidate();
+    return *this;
+  }
+
+  const Int_t    inc = md.GetInc();
+  const Double_t *dp = md.GetPtr();              // Diag ptr
+        Double_t *ep = this->GetMatrixArray();      // Vector ptr
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp) {
+    *ep++ = *dp;
+     dp += inc;
+  }
+
+  Assert(dp < md.GetPtr()+mt->GetNoElements()+inc);
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator=(Double_t val)
+{
+  // Assign val to every element of the vector.
+
+  Assert(IsValid());
+
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    *ep++ = val;
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator+=(Double_t val)
+{
+  // Add val to every element of the vector.
+
+  Assert(IsValid());
+
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    *ep++ += val;
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator-=(Double_t val)
+{
+  // Subtract val from every element of the vector.
+
+  Assert(IsValid());
+
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    *ep++ -= val;
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator*=(Double_t val)
+{
+  // Multiply every element of the vector with val.
+
+  Assert(IsValid());
+
+        Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    *ep++ *= val;
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator+=(const TVectorD &source)
+{
+  // Multiply every element of the vector with val.
+
+  if (!AreCompatible(*this,source)) {
+    Error("operator+=(const TVectorD &)","vector's not compatible");
+    Invalidate();
+    return *this;
+  }
+
+  const Double_t *sp = source.GetMatrixArray();
+        Double_t *tp = this->GetMatrixArray();
+  const Double_t * const tp_last = tp+fNrows;
+  while (tp < tp_last)
+    *tp++ += *sp++;
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator-=(const TVectorD &source)
+{
+  // Multiply every element of the vector with val.
+
+  if (!AreCompatible(*this,source)) {
+    Error("operator-=(const TVectorD &)","vector's not compatible");
+    Invalidate();
+    return *this;
+  }
+
+  const Double_t *sp = source.GetMatrixArray();
+        Double_t *tp = this->GetMatrixArray();
+  const Double_t * const tp_last = tp+fNrows;
+  while (tp < tp_last)
+    *tp++ -= *sp++;
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator*=(const TMatrixD &a)
+{
+  // "Inplace" multiplication target = A*target. A needn't be a square one
+  // If target has to be resized, it should own the storage: fIsOwner = kTRUE
+
+  Assert(IsValid());
+  Assert(a.IsValid());
+
+  if (a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
+    Error("operator*=(const TMatrixD &)","vector and matrix incompatible");
+    Invalidate();
+    return *this;
+  }
+
+  if ((fNrows != a.GetNrows() || fRowLwb != a.GetRowLwb()) && !fIsOwner) {
+    Error("operator*=(const TMatrixD &)","vector has to be resized but not owner");
+    Invalidate();
+    return *this;
+  }
+
+  const Int_t nrows_old = fNrows;
+  Double_t *elements_old;
+  if (nrows_old <= kSizeMax) {
+    elements_old = new Double_t[nrows_old];
+    memcpy(elements_old,fElements,nrows_old*sizeof(Double_t));
+  }
+  else
+    elements_old = fElements;
+
+  fRowLwb = a.GetRowLwb();
+  Assert((fNrows = a.GetNrows()) > 0);
+
+  Allocate(fNrows,fRowLwb);
+
+  const Double_t *mp = a.GetMatrixArray();     // Matrix row ptr
+        Double_t *tp = this->GetMatrixArray(); // Target vector ptr
+#ifdef CBLAS
+  cblas_dgemv(CblasRowMajor,CblasNoTrans,a.GetNrows(),a.GetNcols(),1.0,mp,
+              a.GetNcols(),elements_old,1,0.0,tp,1);
+#else
+  const Double_t * const tp_last = tp+fNrows;
+  while (tp < tp_last) {
+    Double_t sum = 0;
+    for (const Double_t *sp = elements_old; sp < elements_old+nrows_old; )
+      sum += *sp++ * *mp++;
+    *tp++ = sum;
+  }
+  Assert(mp == a.GetMatrixArray()+a.GetNoElements());
+#endif
+
+  if (nrows_old <= kSizeMax)
+    delete [] elements_old;
+  else
+    Delete_m(nrows_old,elements_old);
+
+  return *this;
+}
+
+//______________________________________________________________________________
+TVectorD &TVectorD::operator*=(const TMatrixDSym &a)
+{
+  // "Inplace" multiplication target = A*target. A is symmetric .
+  // vector size will not change
+
+  Assert(IsValid());
+  Assert(a.IsValid());
+
+  if (a.GetNcols() != fNrows || a.GetColLwb() != fRowLwb) {
+    Error("operator*=(const TMatrixDSym &)","vector and matrix incompatible");
+    Invalidate();
+    return *this;
+  }
+
+  const Int_t nrows_old = fNrows;
+  Double_t * const elements_old = new Double_t[nrows_old];
+  memcpy(elements_old,fElements,nrows_old*sizeof(Double_t));
+
+  const Double_t *mp1 = a.GetMatrixArray(); // Matrix row ptr
+        Double_t *tp1 = fElements;       // Target vector ptr
+#ifdef CBLAS
+  cblas_dsymv(CblasRowMajor,CblasUpper,fNrows,1.0,mp1,
+              fNrows,elements_old,1,0.0,tp1,1);
+#else
+  const Double_t *mp2;
+  const Double_t *sp1 = elements_old;
+  const Double_t *sp2 = sp1;
+        Double_t *tp2 = tp1;       // Target vector ptr
+
+  for (Int_t i = 0; i < fNrows; i++) {
+    Double_t vec_i = *sp1++;
+    *tp1 += *mp1 * vec_i;
+    Double_t tmp = 0.0;
+    mp2 = mp1+1;
+    sp2 = sp1;
+    tp2 = tp1+1;
+    for (Int_t j = i+1; j < fNrows; j++) {
+      const Double_t a_ij = *mp2++;
+      *tp2++ += a_ij * vec_i;
+      tmp += a_ij * *sp2++;
+    }
+    *tp1++ += tmp;
+    mp1 += fNrows+1;
+  }
+
+  Assert(tp1 == fElements+fNrows);
+#endif
+
+  delete [] elements_old;
+
+  return *this;
+}
+
+//______________________________________________________________________________
+Bool_t TVectorD::operator==(Double_t val) const
+{
+  // Are all vector elements equal to val?
+
+  Assert(IsValid());
+
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    if (!(*ep++ == val))
+      return kFALSE;
+
+  return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TVectorD::operator!=(Double_t val) const
+{
+  // Are all vector elements not equal to val?
+
+  Assert(IsValid());
+
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    if (!(*ep++ != val))
+      return kFALSE;
+
+  return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TVectorD::operator<(Double_t val) const
+{
+  // Are all vector elements < val?
+
+  Assert(IsValid());
+
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    if (!(*ep++ < val))
+      return kFALSE;
+
+  return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TVectorD::operator<=(Double_t val) const
+{
+  // Are all vector elements <= val?
+
+  Assert(IsValid());
+
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    if (!(*ep++ <= val))
+      return kFALSE;
+
+  return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TVectorD::operator>(Double_t val) const
+{
+  // Are all vector elements > val?
+
+  Assert(IsValid());
+
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    if (!(*ep++ > val))
+      return kFALSE;
+
+  return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TVectorD::operator>=(Double_t val) const
+{
+  // Are all vector elements >= val?
+
+  Assert(IsValid());
+
+  const Double_t *ep = this->GetMatrixArray();
+  const Double_t * const fp = ep+fNrows;
+  while (ep < fp)
+    if (!(*ep++ >= val))
+      return kFALSE;
+
+  return kTRUE;
 }
 
 //______________________________________________________________________________
 TVectorD &TVectorD::Apply(const TElementActionD &action)
 {
-   // Apply action to each element of the vector.
+  // Apply action to each element of the vector.
 
-   if (!IsValid())
-      Error("Apply(TElementActionD&)", "vector not initialized");
-   else
-      for (Double_t *ep = fElements; ep < fElements+fNrows; ep++)
-         action.Operation(*ep);
-   return *this;
+  Assert(IsValid());
+  for (Double_t *ep = fElements; ep < fElements+fNrows; ep++)
+    action.Operation(*ep);
+  return *this;
 }
 
 //______________________________________________________________________________
 TVectorD &TVectorD::Apply(const TElementPosActionD &action)
 {
-   // Apply action to each element of the vector. In action the location
-   // of the current element is known.
+  // Apply action to each element of the vector. In action the location
+  // of the current element is known.
 
-   if (!IsValid()) {
-      Error("Apply(TElementPosActionD&)", "vector not initialized");
-      return *this;
-   }
+  Assert(IsValid());
 
-   Double_t *ep = fElements;
-   for (action.fI = fRowLwb; action.fI < fRowLwb+fNrows; action.fI++)
-      action.Operation(*ep++);
+  Double_t *ep = fElements;
+  for (action.fI = fRowLwb; action.fI < fRowLwb+fNrows; action.fI++)
+    action.Operation(*ep++);
 
-   Assert(ep == fElements+fNrows);
+  Assert(ep == fElements+fNrows);
 
-   return *this;
+  return *this;
 }
 
 //______________________________________________________________________________
-Bool_t operator==(const TVectorD &v1, const TVectorD &v2)
+void TVectorD::Draw(Option_t *option)
 {
-   // Check to see if two vectors are identical.
+  // Draw this vector using an intermediate histogram
+  // The histogram is named "TVectorD" by default and no title
 
-   if (!AreCompatible(v1, v2)) return kFALSE;
-   Double_t *ep1 = v1.fElements;
-   Double_t *ep2 = v2.fElements;
-   while (ep1 < v1.fElements+v1.fNrows)
-      if (!(*ep1++ == *ep2++))
-         return kFALSE;
-
-   return kTRUE;
-}
-
-//______________________________________________________________________________
-TVectorD &operator+=(TVectorD &target, const TVectorD &source)
-{
-   // Add the source vector to the target vector.
-
-   if (!AreCompatible(target, source)) {
-      Error("operator+=", "vectors are not compatible");
-      return target;
-   }
-
-   Double_t *sp = source.fElements;
-   Double_t *tp = target.fElements;
-   for ( ; tp < target.fElements+target.fNrows; )
-      *tp++ += *sp++;
-
-   return target;
-}
-
-//______________________________________________________________________________
-TVectorD &operator-=(TVectorD &target, const TVectorD &source)
-{
-   // Subtract the source vector from the target vector.
-
-   if (!AreCompatible(target, source)) {
-      Error("operator-=", "vectors are not compatible");
-      return target;
-   }
-
-   Double_t *sp = source.fElements;
-   Double_t *tp = target.fElements;
-   for ( ; tp < target.fElements+target.fNrows; )
-      *tp++ -= *sp++;
-
-   return target;
-}
-
-//______________________________________________________________________________
-TVectorD operator+(const TVectorD &source1, const TVectorD &source2)
-{
-   TVectorD target = source1;
-   target += source2;
-   return target;
-}
-
-//______________________________________________________________________________
-TVectorD operator-(const TVectorD &source1, const TVectorD &source2)
-{
-   TVectorD target = source1;
-   target -= source2;
-   return target;
-}
-
-//______________________________________________________________________________
-TVectorD &Add(TVectorD &target, Double_t scalar, const TVectorD &source)
-{
-   // Modify addition: target += scalar * source.
-
-   if (!AreCompatible(target, source)) {
-      Error("Add", "vectors are not compatible");
-      return target;
-   }
-
-   Double_t *sp = source.fElements;
-   Double_t *tp = target.fElements;
-   for ( ; tp < target.fElements+target.fNrows; )
-      *tp++ += scalar * (*sp++);
-
-   return target;
-}
-
-//______________________________________________________________________________
-TVectorD &ElementMult(TVectorD &target, const TVectorD &source)
-{
-   // Multiply target by the source, element-by-element.
-
-   if (!AreCompatible(target, source)) {
-      Error("ElementMult", "vectors are not compatible");
-      return target;
-   }
-
-   Double_t *sp = source.fElements;
-   Double_t *tp = target.fElements;
-   for ( ; tp < target.fElements+target.fNrows; )
-      *tp++ *= *sp++;
-
-   return target;
-}
-
-//______________________________________________________________________________
-TVectorD &ElementDiv(TVectorD &target, const TVectorD &source)
-{
-   // Divide target by the source, element-by-element.
-
-   if (!AreCompatible(target, source)) {
-      Error("ElementDiv", "vectors are not compatible");
-      return target;
-   }
-
-   Double_t *sp = source.fElements;
-   Double_t *tp = target.fElements;
-   for ( ; tp < target.fElements+target.fNrows; )
-      *tp++ /= *sp++;
-
-   return target;
+  //create the hist utility manager (a plugin)
+  TVirtualUtilHist *util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
+  if (!util) {
+    TPluginHandler *h;
+    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualUtilHist"))) {
+      if (h->LoadPlugin() == -1)
+        return;
+      h->ExecPlugin(0);
+      util = (TVirtualUtilHist*)gROOT->GetListOfSpecials()->FindObject("R__TVirtualUtilHist");
+    }
+  }
+  util->PaintVector(*this,option);
 }
 
 //______________________________________________________________________________
 void TVectorD::Print(Option_t *) const
 {
-   // Print the vector as a list of elements.
+  // Print the vector as a list of elements.
 
-   if (!IsValid()) {
-      Error("Print", "vector not initialized");
-      return;
-   }
+  Assert(IsValid());
 
-   printf("\nVector %d is as follows", fNrows);
+  printf("\nVector %d is as follows",fNrows);
 
-   printf("\n\n     |   %6d  |", 1);
-   printf("\n%s\n", "------------------");
-   for (Int_t i = 0; i < fNrows; i++) {
-      printf("%4d |", i+fRowLwb);
-      printf("%11.4g \n", (*this)(i+fRowLwb));
-   }
-   printf("\n");
+  printf("\n\n     |   %6d  |", 1);
+  printf("\n%s\n", "------------------");
+  for (Int_t i = 0; i < fNrows; i++) {
+    printf("%4d |",i+fRowLwb);
+    //printf("%11.4g \n",(*this)(i+fRowLwb));
+    printf("%g \n",(*this)(i+fRowLwb));
+  }
+  printf("\n");
+}
+
+//______________________________________________________________________________
+Bool_t operator==(const TVectorD &v1,const TVectorD &v2)
+{
+  // Check to see if two vectors are identical.
+
+  if (!AreCompatible(v1,v2)) return kFALSE;
+  return (memcmp(v1.GetMatrixArray(),v2.GetMatrixArray(),v1.GetNrows()*sizeof(Double_t)) == 0);
+}
+
+//______________________________________________________________________________
+Double_t operator*(const TVectorD &v1,const TVectorD &v2)
+{
+  // Compute the scalar product.
+
+  if (!AreCompatible(v1,v2)) {
+    Error("operator*(const TVectorD &,const TVectorD &)","vector's are incompatible");
+    return 0.0;
+  }
+
+  const Double_t *v1p = v1.GetMatrixArray();
+  const Double_t *v2p = v2.GetMatrixArray();
+
+  Double_t sum = 0.0;
+  const Double_t * const fv1p = v1p+v1.GetNrows();
+  while (v1p < fv1p)
+    sum += *v1p++ * *v2p++;
+
+  return sum;
+}
+
+//______________________________________________________________________________
+TVectorD operator+(const TVectorD &source1,const TVectorD &source2)
+{
+  TVectorD target = source1;
+  target += source2;
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD operator-(const TVectorD &source1,const TVectorD &source2)
+{
+  TVectorD target = source1;
+  target -= source2;
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD operator*(const TMatrixD &a,const TVectorD &source)
+{
+  TVectorD target = source;
+  target *= a;
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD operator*(const TMatrixDSym &a,const TVectorD &source)
+{
+  TVectorD target = source;
+  target *= a;
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD &Add(TVectorD &target,Double_t scalar,const TVectorD &source)
+{
+  // Modify addition: target += scalar * source.
+
+  if (!AreCompatible(target,source)) {
+    Error("Add(TVectorD &,Double_t,const TVectorD &)","vector's are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Double_t *       sp  = source.GetMatrixArray();
+        Double_t *       tp  = target.GetMatrixArray();
+  const Double_t * const ftp = tp+target.GetNrows();
+  while ( tp < ftp )
+    *tp++ += scalar * (*sp++);
+
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD &ElementMult(TVectorD &target,const TVectorD &source)
+{
+  // Multiply target by the source, element-by-element.
+
+  if (!AreCompatible(target,source)) {
+    Error("Add(TVectorD &,const TVectorD &)","vector's are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Double_t *       sp  = source.GetMatrixArray();
+        Double_t *       tp  = target.GetMatrixArray();
+  const Double_t * const ftp = tp+target.GetNrows();
+  while ( tp < ftp )
+    *tp++ *= *sp++;
+
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD &ElementDiv(TVectorD &target,const TVectorD &source)
+{
+  // Divide target by the source, element-by-element.
+
+  if (!AreCompatible(target,source)) {
+    Error("Add(TVectorD &,const TVectorD &)","vector's are incompatible");
+    target.Invalidate();
+    return target;
+  }
+
+  const Double_t *       sp  = source.GetMatrixArray();
+        Double_t *       tp  = target.GetMatrixArray();
+  const Double_t * const ftp = tp+target.GetNrows();
+  while ( tp < ftp )
+    *tp++ /= *sp++;
+
+  return target;
+}
+
+//______________________________________________________________________________
+Bool_t AreCompatible(const TVectorD &v1,const TVectorD &v2,Int_t verbose)
+{
+  if (!v1.IsValid()) {
+    if (verbose)
+      ::Error("AreCompatible", "vector 1 not initialized");
+    return kFALSE;
+  }
+  if (!v2.IsValid()) {
+    if (verbose)
+      ::Error("AreCompatible", "vector 2 not initialized");
+    return kFALSE;
+  }
+
+  if (v1.GetNrows() != v2.GetNrows() || v1.GetLwb() != v2.GetLwb()) {
+    if (verbose)
+      ::Error("AreCompatible", "vectors 1 and 2 not compatible");
+    return kFALSE;
+  }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+void Compare(const TVectorD &v1,const TVectorD &v2)
+{
+   // Compare two vectors and print out the result of the comparison.
+
+  if (!AreCompatible(v1,v2)) {
+    Error("Compare(const TVectorD &,const TVectorD &)","vectors are incompatible");
+    return;
+  }
+
+  printf("\n\nComparison of two TVectorDs:\n");
+
+  Double_t norm1  = 0;       // Norm of the Matrices
+  Double_t norm2  = 0;       // Norm of the Matrices
+  Double_t ndiff  = 0;       // Norm of the difference
+  Int_t    imax   = 0;       // For the elements that differ most
+  Double_t difmax = -1;
+  const Double_t *mp1 = v1.GetMatrixArray();    // Vector element pointers
+  const Double_t *mp2 = v2.GetMatrixArray();
+
+  for (Int_t i = 0; i < v1.GetNrows(); i++) {
+    const Double_t mv1  = *mp1++;
+    const Double_t mv2  = *mp2++;
+    const Double_t diff = TMath::Abs(mv1-mv2);
+
+    if (diff > difmax) {
+      difmax = diff;
+      imax = i;
+    }
+    norm1 += TMath::Abs(mv1);
+    norm2 += TMath::Abs(mv2);
+    ndiff += TMath::Abs(diff);
+  }
+
+  imax += v1.GetLwb();
+  printf("\nMaximal discrepancy    \t\t%g",difmax);
+  printf("\n   occured at the point\t\t(%d)",imax);
+  const Double_t mv1 = v1(imax);
+  const Double_t mv2 = v2(imax);
+  printf("\n Vector 1 element is    \t\t%g",mv1);
+  printf("\n Vector 2 element is    \t\t%g",mv2);
+  printf("\n Absolute error v2[i]-v1[i]\t\t%g",mv2-mv1);
+  printf("\n Relative error\t\t\t\t%g\n",
+         (mv2-mv1)/TMath::Max(TMath::Abs(mv2+mv1)/2,(Double_t)1e-7));
+
+  printf("\n||Vector 1||   \t\t\t%g",norm1);
+  printf("\n||Vector 2||   \t\t\t%g",norm2);
+  printf("\n||Vector1-Vector2||\t\t\t\t%g",ndiff);
+  printf("\n||Vector1-Vector2||/sqrt(||Vector1|| ||Vector2||)\t%g\n\n",
+         ndiff/TMath::Max(TMath::Sqrt(norm1*norm2),1e-7));
+}
+
+//______________________________________________________________________________
+Bool_t VerifyVectorValue(const TVectorD &v,Double_t val,
+                         Int_t verbose,Double_t maxDevAllow)
+{
+  // Validate that all elements of vector have value val within maxDevAllow .
+
+  Int_t    imax      = 0;
+  Double_t maxDevObs = 0;
+
+  for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++) {
+    const Double_t dev = TMath::Abs(v(i)-val);
+    if (dev > maxDevObs) {
+      imax      = i;
+      maxDevObs = dev;
+    }
+  }
+
+  if (maxDevObs == 0)
+    return kTRUE;
+
+  if (verbose) {
+    printf("Largest dev for (%d); dev = |%g - %g| = %g\n",imax,v(imax),val,maxDevObs);
+    if(maxDevObs > maxDevAllow)
+      Error("VerifyVectorValue","Deviation > %g\n",maxDevAllow);
+  }
+
+  if(maxDevObs > maxDevAllow)
+    return kFALSE;
+  return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t VerifyVectorIdentity(const TVectorD &v1,const TVectorD &v2,
+                            Int_t verbose, Double_t maxDevAllow)
+{
+  // Verify that elements of the two vectors are equal within maxDevAllow .
+
+  Int_t    imax      = 0;
+  Double_t maxDevObs = 0;
+
+  if (!AreCompatible(v1,v2))
+    return kFALSE;
+
+  for (Int_t i = v1.GetLwb(); i <= v1.GetUpb(); i++) {
+    const Double_t dev = TMath::Abs(v1(i)-v2(i));
+    if (dev > maxDevObs) {
+      imax      = i;
+      maxDevObs = dev;
+    }
+  }
+
+  if (maxDevObs == 0)
+    return kTRUE;
+
+  if (verbose) {
+    printf("Largest dev for (%d); dev = |%g - %g| = %g\n",imax,v1(imax),v2(imax),maxDevObs);
+    if(maxDevObs > maxDevAllow)
+      Error("VerifyVectorIdentity","Deviation > %g\n",maxDevAllow);
+  }
+
+  if(maxDevObs > maxDevAllow) {
+    return kFALSE;
+  }
+  return kTRUE;
 }
 
 //______________________________________________________________________________
 void TVectorD::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TVectorD.
+  // Stream an object of class TVectorD.
 
-   if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TVectorD::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         fNmem = fNrows;
-         return;
-      }
-      //====process old versions before automatic schema evolution
-      TObject::Streamer(R__b);
-      R__b >> fRowLwb;
-      fNrows = R__b.ReadArray(fElements);
-      R__b.CheckByteCount(R__s, R__c, TVectorD::IsA());
-   } else {
-      TVectorD::Class()->WriteBuffer(R__b,this);
-   }
-}
-
-//______________________________________________________________________________
-void Compare(const TVectorD &v1, const TVectorD &v2)
-{
-   // Compare two vectors and print out the result of the comparison.
-
-   Int_t i;
-
-   if (!AreCompatible(v1, v2)) {
-      Error("Compare", "vectors are not compatible");
+  if (R__b.IsReading()) {
+    UInt_t R__s, R__c;
+    Version_t R__v = R__b.ReadVersion(&R__s,&R__c);
+    if (R__v > 1) {
+      Clear();
+      TVectorD::Class()->ReadBuffer(R__b,this,R__v,R__s,R__c);
       return;
-   }
-
-   printf("\n\nComparison of two TVectorDs:\n");
-
-   Double_t norm1 = 0, norm2 = 0;       // Norm of the Matrices
-   Double_t ndiff = 0;                  // Norm of the difference
-   Int_t    imax = 0;                   // For the elements that differ most
-   Double_t   difmax = -1;
-   Double_t  *mp1 = v1.fElements;         // Vector element pointers
-   Double_t  *mp2 = v2.fElements;
-
-   for (i = 0; i < v1.fNrows; i++) {
-      Double_t mv1 = *mp1++;
-      Double_t mv2 = *mp2++;
-      Double_t diff = TMath::Abs(mv1-mv2);
-
-      if (diff > difmax) {
-         difmax = diff;
-         imax = i;
-      }
-      norm1 += TMath::Abs(mv1);
-      norm2 += TMath::Abs(mv2);
-      ndiff += TMath::Abs(diff);
-   }
-
-   imax += v1.fRowLwb;
-   printf("\nMaximal discrepancy    \t\t%g", difmax);
-   printf("\n   occured at the point\t\t(%d)", imax);
-   const Double_t mv1 = v1(imax);
-   const Double_t mv2 = v2(imax);
-   printf("\n Vector 1 element is    \t\t%g", mv1);
-   printf("\n Vector 2 element is    \t\t%g", mv2);
-   printf("\n Absolute error v2[i]-v1[i]\t\t%g", mv2-mv1);
-   printf("\n Relative error\t\t\t\t%g\n",
-          (mv2-mv1)/TMath::Max(TMath::Abs(mv2+mv1)/2,(Double_t)1e-7));
-
-   printf("\n||Vector 1||   \t\t\t%g", norm1);
-   printf("\n||Vector 2||   \t\t\t%g", norm2);
-   printf("\n||Vector1-Vector2||\t\t\t\t%g", ndiff);
-   printf("\n||Vector1-Vector2||/sqrt(||Vector1|| ||Vector2||)\t%g\n\n",
-          ndiff/TMath::Max(TMath::Sqrt(norm1*norm2), 1e-7));
-}
-
-//______________________________________________________________________________
-void VerifyElementValue(const TVectorD &v, Double_t val)
-{
-   // Validate that all elements of vector have value val (within 1.e-5).
-
-   Int_t    imax = 0;
-   Double_t max_dev = 0;
-   Int_t    i;
-
-   for (i = v.GetLwb(); i <= v.GetUpb(); i++) {
-      Double_t dev = TMath::Abs(v(i)-val);
-      if (dev > max_dev)
-         imax = i, max_dev = dev;
-   }
-
-   if (max_dev == 0)
-      return;
-   else if(max_dev < 1e-5)
-      printf("Element (%d) with value %g differs the most from what\n"
-             "was expected, %g, though the deviation %g is small\n",
-             imax, v(imax), val, max_dev);
-   else
-      Error("VerifyElementValue", "a significant difference from the expected value %g\n"
-            "encountered for element (%d) with value %g",
-            val, imax, v(imax));
-}
-
-//______________________________________________________________________________
-void VerifyVectorIdentity(const TVectorD &v1, const TVectorD &v2)
-{
-   // Verify that elements of the two vectors are equal (within 1.e-5).
-
-   Int_t    imax = 0;
-   Double_t max_dev = 0;
-   Int_t    i;
-
-   if (!AreCompatible(v1, v2)) {
-      Error("VerifyVectorIdentity", "vectors are not compatible");
-      return;
-   }
-
-   for (i = v1.GetLwb(); i <= v1.GetUpb(); i++) {
-      Double_t dev = TMath::Abs(v1(i)-v2(i));
-      if (dev > max_dev)
-         imax = i, max_dev = dev;
-   }
-
-   if (max_dev == 0)
-      return;
-   if (max_dev < 1e-5)
-      printf("Two (%d) elements of vectors with values %g and %g\n"
-             "differ the most, though the deviation %g is small\n",
-             imax, v1(imax), v2(imax), max_dev);
-   else
-      Error("VerifyVectorIdentity", "a significant difference between the vectors encountered\n"
-            "at (%d) element, with values %g and %g",
-            imax, v1(imax), v2(imax));
+    }
+    //====process old versions before automatic schema evolution
+    TObject::Streamer(R__b);
+    R__b >> fRowLwb;
+    fNrows = R__b.ReadArray(fElements);
+    R__b.CheckByteCount(R__s, R__c, TVectorD::IsA());
+  } else {
+    TVectorD::Class()->WriteBuffer(R__b,this);
+  }
 }

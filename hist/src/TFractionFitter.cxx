@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.4 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.6 2004/01/27 13:28:23 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
 // with additions by Bran Wijngaarden <dwijngaa@hef.kun.nl>
 
@@ -730,7 +730,7 @@ void TFractionFitter::FindPrediction(int bin, Double_t *fractions, Double_t &Ti,
   // Case of nonzero histogram contents: solve for Ti using Newton's method
   Ti = 0;
   for (Double_t step = 0.2;;) {
-     if (Ti > 1 || Ti < Tmin) {
+     if (Ti-1. >= -1e-12 || Ti < Tmin) {
         step /= 10;
         Ti = 0;
      }

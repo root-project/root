@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.3 2002/11/11 11:27:47 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.4 2002/11/11 16:23:16 brun Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -11,7 +11,8 @@
 
 #include "TROOT.h"
 #include "TClass.h"
-
+#include "TStreamer.h"
+#include "TVirtualCollectionProxy.h"
 
 namespace ROOT {
 
@@ -30,12 +31,13 @@ namespace ROOT {
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
                                         void *showmembers, VoidFuncPtr_t dictionary,
-                                        IsAFunc_t isa, Int_t pragmabits)
-      : fAction(action), fClassName(fullClassname),
+                                        IsAFunc_t isa, Int_t pragmabits, Int_t sizof)
+      : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(showmembers),
-        fVersion(1),
-        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0)
+        fVersion(1), 
+        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0),
+        fCollectionProxy(0), fSizeof(sizof)
    {
       Init(pragmabits);
    }
@@ -44,12 +46,13 @@ namespace ROOT {
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
                                         void* showmembers,  VoidFuncPtr_t dictionary,
-                                        IsAFunc_t isa, Int_t pragmabits)
-      : fAction(action), fClassName(fullClassname),
+                                        IsAFunc_t isa, Int_t pragmabits, Int_t sizof)
+      : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(showmembers),
         fVersion(version),
-        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0)
+        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0), 
+        fCollectionProxy(0), fSizeof(sizof)
    {
       Init(pragmabits);
    }
@@ -58,12 +61,13 @@ namespace ROOT {
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
                                         VoidFuncPtr_t dictionary,
-                                        IsAFunc_t isa, Int_t pragmabits)
-      : fAction(action), fClassName(fullClassname),
+                                        IsAFunc_t isa, Int_t pragmabits, Int_t sizof)
+      : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info), fIsA(isa), fShowMembers(0),
         fVersion(version),
-        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0)
+        fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fStreamer(0), 
+        fCollectionProxy(0), fSizeof(sizof)
    {
       Init(pragmabits);
    }
@@ -105,6 +109,9 @@ namespace ROOT {
          fClass->SetNewArray(fNewArray);
          fClass->SetDelete(fDelete);
          fClass->SetDeleteArray(fDeleteArray);
+         fClass->AdoptStreamer(fStreamer); fStreamer = 0;
+         if (fCollectionProxy) fClass->CopyCollectionProxy(*fCollectionProxy);
+         fClass->SetClassSize(fSizeof);
       }
       return fClass;
    }
@@ -143,6 +150,33 @@ namespace ROOT {
       ROOT::ResetClassVersion(fClass, GetClassName(),version);
       fVersion = version;
       return version;
+   }
+
+   Short_t TGenericClassInfo::AdoptStreamer(TClassStreamer *streamer) {
+      delete fStreamer; fStreamer = 0;
+      if (fClass) {
+         fClass->AdoptStreamer(streamer);
+      } else {
+         fStreamer = streamer;
+      }
+      return 0;
+   }
+
+   Short_t TGenericClassInfo::AdoptCollectionProxy(TVirtualCollectionProxy *collProxy) {
+      delete fCollectionProxy; fCollectionProxy = 0;
+      fCollectionProxy = collProxy;
+      if (fClass && fCollectionProxy) fClass->CopyCollectionProxy(*fCollectionProxy);
+      return 0;
+   }
+
+   Short_t TGenericClassInfo::SetStreamer(ClassStreamerFunc_t streamer) {
+      delete fStreamer; fStreamer = 0;
+      if (fClass) {
+         fClass->AdoptStreamer(new TClassStreamer(streamer));
+      } else {
+         fStreamer = new TClassStreamer(streamer);
+      }
+      return 0;
    }
 
    const char *TGenericClassInfo::GetDeclFileName() const
@@ -236,7 +270,6 @@ namespace ROOT {
    {
       return fDestructor;
    }
-
    
  
 

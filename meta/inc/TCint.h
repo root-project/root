@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.11 2003/04/04 00:39:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.14 2004/01/21 23:15:52 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -79,9 +79,9 @@ public:
    Bool_t  IsLoaded(const char *filename) const;
    Int_t   Load(const char *filenam, Bool_t system = kFALSE);
    void    LoadMacro(const char *filename, EErrorCode *error = 0);
-   Int_t   ProcessLine(const char *line, EErrorCode *error = 0);
-   Int_t   ProcessLineAsynch(const char *line, EErrorCode *error = 0);
-   Int_t   ProcessLineSynch(const char *line, EErrorCode *error = 0);
+   Long_t  ProcessLine(const char *line, EErrorCode *error = 0);
+   Long_t  ProcessLineAsynch(const char *line, EErrorCode *error = 0);
+   Long_t  ProcessLineSynch(const char *line, EErrorCode *error = 0);
    void    PrintIntro();
    void    Reset();
    void    ResetAll();
@@ -104,10 +104,11 @@ public:
    TString GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto);
    void   *GetInterfaceMethod(TClass *cl, const char *method, const char *params);
    void   *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto);
+   const char *GetInterpreterTypeName(const char*);
    void    Execute(const char *function, const char *params, int *error = 0);
    void    Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0);
    void    Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0);
-   Int_t   ExecuteMacro(const char *filename, EErrorCode *error = 0);
+   Long_t  ExecuteMacro(const char *filename, EErrorCode *error = 0);
    Bool_t  IsErrorMessagesEnabled();
    Bool_t  SetErrorMessages(Bool_t enable = kTRUE);
    const char *TypeName(const char *typeDesc);

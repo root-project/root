@@ -53,7 +53,7 @@ char *str;
 	  ,(0==result->isconst)?'0':'1'
 	  ,result->tagnum
 	  ,(result->obj.i<0)?'M':'P'
-	  ,result->obj.i);
+	  ,abs(result->obj.i));
   return(str);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.61 2003/11/26 10:33:08 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.65 2004/01/10 10:52:30 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -252,13 +252,16 @@ TProofServ::TProofServ(int *argc, char **argv)
    fOrdinal         = -1;
    fGroupId         = -1;
    fGroupSize       = 0;
-   fLogLevel        = 0;
+   fLogLevel        = gEnv->GetValue("Proof.DebugLevel",0);
    fRealTime        = 0.0;
    fCpuTime         = 0.0;
    fProof           = 0;
    fSocket          = new TSocket(0);
    fEnabledPackages = new TList;
    fEnabledPackages->SetOwner();
+
+   gProofDebugLevel = gEnv->GetValue("Proof.DebugLevel",0);
+   gProofDebugMask = (TProofDebug::EProofDebugMask) gEnv->GetValue("Proof.DebugMask",~0);
 
    GetOptions(argc, argv);
 
@@ -292,6 +295,7 @@ TProofServ::TProofServ(int *argc, char **argv)
 
    // Everybody expects iostream to be available, so load it...
    ProcessLine("#include <iostream>", kTRUE);
+   ProcessLine("#include <_string>",kTRUE); // for std::string iostream.
 
    // Allow the usage of ClassDef and ClassImp in interpreted macros
    ProcessLine("#include <RtypesCint.h>", kTRUE);
@@ -387,7 +391,8 @@ Int_t TProofServ::CatMotd()
    // get last modification time of the file ~/proof/.prooflast
    lastname = TString(kPROOF_WorkDir) + "/.prooflast";
    char *last = gSystem->ExpandPathName(lastname.Data());
-   Long_t id, size, flags, modtime, lasttime;
+   Long64_t size;
+   Long_t id, flags, modtime, lasttime;
    if (gSystem->GetPathInfo(last, &id, &size, &flags, &lasttime) == 1)
       lasttime = 0;
 
@@ -449,11 +454,16 @@ TDSetElement *TProofServ::GetNextPacket()
    req << fLatency.RealTime() << fCompute.RealTime() << fCompute.CpuTime();
 
    fLatency.Start();
-   fSocket->Send(req);
+   Int_t rc = fSocket->Send(req);
+   if (rc <= 0) {
+      Error("GetNextPacket","Send() failed, returned %d", rc);
+      return 0;
+   }
 
    TMessage *mess;
-   if (fSocket->Recv(mess) < 0) {
+   if ((rc = fSocket->Recv(mess)) <= 0) {
       fLatency.Stop();
+      Error("GetNextPacket","Recv) failed, returned %d", rc);
       return 0;
    }
 
@@ -940,6 +950,10 @@ void TProofServ::HandleSocketInput()
                   // add package to list of include directories to be searched
                   // by ACliC
                   gSystem->AddIncludePath(TString("-I") + package);
+
+                  // add package to list of include directories to be searched
+                  // by CINT
+                  gROOT->ProcessLine(TString(".include ") + package);
 
                   // if successful add to list and propagate to slaves
                   if (!status) {

@@ -64,7 +64,9 @@ class set {
 #endif
 
   class iterator
-#if defined(G__VISUAL)
+#if defined(G__VISUAL) && (G__MSC_VER>=1300)
+	: public _Bidit<Key, difference_type, const_pointer, const_reference>
+#elif defined(G__VISUAL)
 	: public _Bidit<Key,difference_type>
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
@@ -99,7 +101,7 @@ class set {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if defined(G__GNUC) && !defined(G__KCC)
+#if defined(G__GNUC) && !defined(G__KCC) && !defined(G__INTEL_COMPILER)
   friend bool operator==(const set::iterator& x ,const set::iterator& y) const;
   friend bool operator!=(const set::iterator& x ,const set::iterator& y) const;
 #endif
@@ -108,7 +110,9 @@ class set {
 #endif
 
   class reverse_iterator
-#if defined(G__VISUAL)
+#if defined(G__VISUAL) && (G__MSC_VER>=1300)
+	: public _Bidit<Key, difference_type, const_pointer, const_reference>
+#elif defined(G__VISUAL)
 	: public _Bidit<Key,difference_type>
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)

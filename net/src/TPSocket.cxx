@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.5 2001/02/08 16:09:49 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.6 2001/02/12 14:31:17 rdm Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -157,8 +157,10 @@ void TPSocket::Close(Option_t *option)
    // for the parent of this process. Also called via the dtor (without
    // option "force", call explicitely Close("force") if this is desired).
 
+   if (!fSockets) return;
+
    for (int i = 0; i < fSize; i++) {
-      fSockets[i]->Close(option);
+      if (fSockets[i]) fSockets[i]->Close(option);
       delete fSockets[i];
    }
    delete [] fSockets;

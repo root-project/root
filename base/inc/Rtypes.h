@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.40 2003/08/21 17:07:04 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.43 2004/01/10 10:52:29 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -65,7 +65,8 @@ typedef long           Long_t;      //Signed long integer 4 bytes (long)
 typedef unsigned long  ULong_t;     //Unsigned long integer 4 bytes (unsigned long)
 #endif
 typedef float          Float_t;     //Float 4 bytes (float)
-typedef double         Double_t;    //Float 8 bytes (double)
+typedef double         Double_t;    //Double 8 bytes
+typedef double         Double32_t;  //Double 8 bytes in memory, written as a Float 4 bytes 
 typedef char           Text_t;      //General string (char)
 typedef bool           Bool_t;      //Boolean (0=false, 1=true) (bool)
 typedef unsigned char  Byte_t;      //Byte (8 bits) (unsigned char)
@@ -81,7 +82,15 @@ typedef long long          Long64_t;  //Portable signed long integer 8 bytes
 typedef unsigned long long ULong64_t; //Portable unsigned long integer 8 bytes
 #endif
 
-typedef void         (*Streamer_t)(TBuffer&, void*, Int_t);
+// There is several streamer concepts.  
+class TClassStreamer;   // Streamer functor for a class
+class TMemberStreamer;  // Streamer functor for a data member
+typedef void         (*ClassStreamerFunc_t)(TBuffer&, void*);  // Streamer function for a class
+typedef void         (*MemberStreamerFunc_t)(TBuffer&, void*, Int_t); // Streamer function for a data member
+
+// This class is used to implement proxy around collection classes.
+class TVirtualCollectionProxy;
+
 typedef void         (*VoidFuncPtr_t)();  //pointer to void function
 
 
@@ -121,6 +130,7 @@ R__EXTERN Int_t gDebug;
 
 typedef void (*ShowMembersFunc_t)(void *obj, TMemberInspector &R__insp, char *R__parent);
 typedef TClass *(*IsAFunc_t)(const void *obj);
+typedef TClass *(*IsAGlobalFunc_t)(const TClass*, const void *obj);
 
 // TBuffer.h declares and implements the following 2 operators
 template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
@@ -345,5 +355,17 @@ namespace ROOT { \
            GenerateInitInstance((name*)0x0)->SetVersion(VersionNumber); \
    R__UseDummy(_R__UNIQUE_(R__dummyVersionNumber)); \
 }
+
+#if defined(__CINT__)
+#define RootStreamer(name,STREAMER) 
+#else
+#define RootStreamer(name,STREAMER)                                  \
+namespace ROOT {                                                     \
+   TGenericClassInfo *GenerateInitInstance(const name*);             \
+   static Short_t _R__UNIQUE_(R__dummyStreamer) =                    \
+           GenerateInitInstance((name*)0x0)->SetStreamer(STREAMER);  \
+   R__UseDummy(_R__UNIQUE_(R__dummyStreamer));                       \
+}
+#endif
 
 #endif

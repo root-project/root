@@ -147,7 +147,7 @@ void gdk_visual_init(void)
 #endif
 #endif
    } else if (bitspixel == 24 || bitspixel == 32) {
-      bitspixel = 24;
+//      bitspixel = 24;
       system_visual->visual.type = GDK_VISUAL_TRUE_COLOR;
       system_visual->visual.red_mask = 0x00FF0000;
       system_visual->visual.green_mask = 0x0000FF00;

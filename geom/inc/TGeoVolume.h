@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.29 2003/08/08 09:22:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.30 2003/10/20 08:46:33 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -136,7 +136,7 @@ public:
    TGeoVoxelFinder   *GetVoxels() const              {return fVoxels;}
    Int_t           GetIndex(const TGeoNode *node) const;
    TGeoNode       *GetNode(const char *name) const;
-   TGeoNode       *GetNode(Int_t i) const {return (TGeoNode*)fNodes->At(i);}
+   TGeoNode       *GetNode(Int_t i) const {return (TGeoNode*)fNodes->UncheckedAt(i);}
    Int_t           GetNodeIndex(const TGeoNode *node, Int_t *check_list, Int_t ncheck) const;
    Int_t           GetNumber() {return fNumber;}
    virtual char   *GetObjectInfo(Int_t px, Int_t py) const;

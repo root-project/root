@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.19 2003/07/04 13:27:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.20 2003/11/12 07:23:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -84,7 +84,7 @@ protected:
     Int_t      *fBasketRAM;       //! [fNBasketRAM] table of basket numbers in memory
     Int_t      *fBasketBytes;     //[fMaxBaskets] Lenght of baskets on file
     Int_t      *fBasketEntry;     //[fMaxBaskets] Table of first entry in eack basket
-    Seek_t     *fBasketSeek;      //[fMaxBaskets] Addresses of baskets on file
+    Long64_t   *fBasketSeek;      //[fMaxBaskets] Addresses of baskets on file
     TTree      *fTree;            //! Pointer to Tree header
     char       *fAddress;         //! Address of 1st leaf (variable or object)
     TDirectory *fDirectory;       //! Pointer to directory where this branch buffers are stored
@@ -119,7 +119,7 @@ public:
             TBasket *GetBasket(Int_t basket);
             Int_t   *GetBasketBytes() const {return fBasketBytes;}
             Int_t   *GetBasketEntry() const {return fBasketEntry;}
-    virtual Seek_t   GetBasketSeek(Int_t basket) const;
+    virtual Long64_t GetBasketSeek(Int_t basket) const;
     TDirectory      *GetDirectory() const {return fDirectory;}
     virtual TFile   *GetFile(Int_t mode=0);
     const char      *GetFileName() const {return fFileName.Data();}
@@ -165,7 +165,7 @@ public:
     
     static  void     ResetCount() {fgCount = 0;}
 
-    ClassDef(TBranch,8)  //Branch descriptor
+    ClassDef(TBranch,9)  //Branch descriptor
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.12 2003/01/31 17:19:53 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.13 2003/03/18 14:29:59 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -84,16 +84,25 @@ TSelector *TSelector::GetSelector(const char *filename)
 //          when this function returns kFALSE. This function combines the
 //          next two functions in one, avoiding to have to maintain state
 //          in the class to communicate between these two funtions.
+//          See WARNING below about entry.
 //          This method is used by PROOF.
 //     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
 //          before processing entry. It is the user's responsability to read
 //          the corresponding entry in memory (may be just a partial read).
 //          The function returns kTRUE if the entry must be processed,
-//          kFALSE otherwise.
+//          kFALSE otherwise. See WARNING below about entry.
 //     void TSelector::ProcessFill(Int_t entry). This function is called for
 //          all selected events. User fills histograms in this function.
+//           See WARNING below about entry.
 //     void TSelector::Terminate(). This function is called at the end of
 //          the loop on all events.
+//
+//   WARNING when a selector is used with a TChain: 
+//    in the Process, ProcessCut, ProcessFill function, you must use
+//    the pointer to the current Tree to call GetEntry(entry).
+//    entry is always the local entry number in the current tree.
+//    Assuming that fChain is the pointer to the TChain being processed,
+//    use fChain->GetTree()->GetEntry(entry);
 //
 //   If filename is of the form file.C, the file will be interpreted.
 //   If filename is of the form file.C++, the file file.C will be compiled

@@ -14,7 +14,7 @@ void edit(char *file)
       else
          sprintf(s, "xterm -e vi %s &", file);
    }
-   gSystem.Exec(s);
+   gSystem->Exec(s);
 }
 
 //______________________________________________________________________________
@@ -22,7 +22,7 @@ void ls(char *path=0)
 {
    char s[256] = (!strcmp(gSystem->GetName(), "WinNT")) ? "dir /w " : "ls ";
    if (path) strcat(s,path);
-   gSystem.Exec(s);
+   gSystem->Exec(s);
 }
 
 //______________________________________________________________________________
@@ -30,20 +30,20 @@ void dir(char *path=0)
 {
    char s[256] = (!strcmp(gSystem->GetName(), "WinNT")) ? "dir " : "ls -l ";
    if (path) strcat(s,path);
-   gSystem.Exec(s);
+   gSystem->Exec(s);
 }
 
 //______________________________________________________________________________
 char *pwd()
 {
-    return gSystem.WorkingDirectory();
+    return gSystem->WorkingDirectory();
 }
 
 //______________________________________________________________________________
 char *cd(char *path=0)
 {
  if (path)
-   gSystem.ChangeDirectory(path);
+   gSystem->ChangeDirectory(path);
  return pwd();
 }
 

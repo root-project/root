@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.9 2003/10/22 17:20:50 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.10 2003/11/18 16:59:58 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -71,8 +71,8 @@ public:
    virtual void    HandleIdleTimer();
    virtual Bool_t  HandleTermInput() { return kFALSE; }
    virtual void    Init() { fAppImp->Init(); }
-   virtual void    ProcessLine(const char *line, Bool_t sync = kFALSE, int* error = 0);
-   virtual void    ProcessFile(const char *line, int* error = 0);
+   virtual Long_t  ProcessLine(const char *line, Bool_t sync = kFALSE, int* error = 0);
+   virtual Long_t  ProcessFile(const char *line, int* error = 0);
    virtual void    Run(Bool_t retrn = kFALSE);
    virtual void    SetIdleTimer(UInt_t idleTimeInSec, const char *command);
    virtual void    RemoveIdleTimer();

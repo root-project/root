@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.2 2003/01/03 15:03:13 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TFileSet.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-// $Id: TFileSet.cxx,v 1.2 2003/01/03 15:03:13 fisyak Exp $
+// $Id: TFileSet.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
 
 #include "TFileSet.h"
 #include "TBrowser.h"
@@ -59,7 +59,8 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
 
   if (!maxDepth) return;
 
-  Long_t id, size, flags, modtime;
+  Long64_t size;
+  Long_t id, flags, modtime;
   TString dirbuf = dirname;
 
   if (expand) gSystem->ExpandPathName(dirbuf);

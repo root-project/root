@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.4 2002/08/18 19:48:04 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.6 2004/01/05 12:31:48 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
@@ -36,6 +36,7 @@
 #include "TSystem.h"
 #include "TVirtualX.h"
 #include "TCanvas.h"
+#include "TFrame.h"
 #include "TArrayD.h"
 #include "TVectorD.h"
 #include "TVirtualPS.h"
@@ -51,7 +52,7 @@ extern "C" {
     extern Display *dpy;    // defined in afterbase.c
 }
 
-const Int_t kFRS = 5;  // size of frame of image on pad in pixels
+
 
 ASVisual *TASImage::fgVisual;
 Bool_t TASImage::fgInit = kFALSE;
@@ -561,7 +562,7 @@ void TASImage::SetImage(const TVectorD &imageData, UInt_t width, TImagePalette *
    // If palette is not defined (palette = 0) a default palette is used.
    // Any previously defined zooming is reset.
 
-   SetImage(imageData.GetElements(), width,
+   SetImage(imageData.GetMatrixArray(), width,
             imageData.GetNoElements() / width, palette);
 }
 
@@ -628,7 +629,24 @@ void TASImage::Draw(Option_t *option)
          calcBorder = kFALSE;
       }
    }
+
+   Double_t left =    gPad->GetLeftMargin();
+   Double_t right =   gPad->GetRightMargin();
+   Double_t top =     gPad->GetTopMargin();
+   Double_t bottom =  gPad->GetBottomMargin();
+   gPad->Range(-left / (1.0 - left - right), 
+               -bottom / (1.0 - top - bottom), 
+               1 + right / (1.0 - left - right),
+               1 + top / ( 1.0 - top - bottom));
+   gPad->RangeAxis(0,0,1,1);
+
+   TFrame * frame = gPad->GetFrame();
+   frame->SetBorderMode(0);
+   frame->SetFillColor(gPad->GetFillColor());
+   frame->Draw();
+
    TObject::Draw(option);
+
 }
 
 //______________________________________________________________________________
@@ -665,20 +683,20 @@ void TASImage::Paint(Option_t *option)
    // Get geometry of pad
    Int_t to_w = gPad->UtoPixel(1.);
    Int_t to_h = gPad->VtoPixel(0.);
-   Double_t pad_w = to_w;
-   Double_t pad_h = to_h;
 
-   // keep a frame of 5 pixels
-   to_w -= 2 * kFRS;
-   to_h -= 2 * kFRS;
-   Int_t pal_w = 0;
+   // remove the size by the margin of the pad
+   to_h  = (Int_t)(to_h * (1.0 - gPad->GetBottomMargin() - gPad->GetTopMargin() ) + 0.5);
+   to_w  = (Int_t)(to_w * (1.0 - gPad->GetLeftMargin() - gPad->GetRightMargin() ) + 0.5);
 
-   if (fImage->alt.vector) {
-      pal_w = Int_t(to_w * 0.2);
-      to_w -= pal_w;
-   }
+   // upper left corner and size of the palette in pixels
+   Int_t pal_Ax = gPad->XtoAbsPixel(1.0) + 5;
+   Int_t pal_Ay = gPad->YtoAbsPixel(1.0) + 20;
+   Int_t pal_x = gPad->XtoPixel(1.0) + 5;
+   Int_t pal_y = gPad->YtoPixel(1.0) + 20;
+   Int_t pal_w = gPad->UtoPixel(gPad->GetRightMargin()) / 3;
+   Int_t pal_h = to_h - 20;
 
-   if (to_w < 2 * kFRS + 1 || to_h < 2 * kFRS + 1) {
+   if (to_w < 25 || to_h < 25) {
       Error("Paint", "pad too small to display an image");
       return;
    }
@@ -711,8 +729,8 @@ void TASImage::Paint(Option_t *option)
                           (((ARGB32)(pal.fColorAlpha[oldPt] & 0xff00)) << 16);
       }
 
-      grad_im = make_gradient(fgVisual, &grad , UInt_t(0.3 * pal_w),
-                              to_h - 20, SCL_DO_COLOR,
+      grad_im = make_gradient(fgVisual, &grad , UInt_t(pal_w),
+                              pal_h, SCL_DO_COLOR,
                               ASA_ASImage, 0, GetImageQuality());
       delete [] grad.color;
       delete [] grad.offset;
@@ -775,20 +793,21 @@ void TASImage::Paint(Option_t *option)
                                  image, 0, kTRUE);
    Int_t wid = gVirtualX->AddWindow(pxmap, to_w, to_h);
    gPad->cd();
-   gVirtualX->CopyPixmap(wid, kFRS, kFRS);
+   gVirtualX->CopyPixmap(wid,  (int)(gPad->UtoPixel(1.) * gPad->GetLeftMargin() + 0.5),  
+                               (int)(gPad->VtoPixel(0.) * gPad->GetTopMargin() + 0.5));
    gVirtualX->RemoveWindow(wid);
    gVirtualX->DeletePixmap(pxmap);
 
    gPad->cd();
 
-   if (grad_im && !gVirtualPS) {
+   if (grad_im) {
       // draw color bar
       pxmap = asimage2pixmap(fgVisual, gVirtualX->GetDefaultRootWindow(),
                              grad_im, 0, kTRUE);
-      wid = gVirtualX->AddWindow(pxmap, UInt_t(0.3 * pal_w), to_h - 20);
+      wid = gVirtualX->AddWindow(pxmap, UInt_t(pal_w), pal_h);
 
       gPad->cd();
-      gVirtualX->CopyPixmap(wid, Int_t(to_w + 0.2 * pal_w), kFRS + 20);
+      gVirtualX->CopyPixmap(wid, pal_x, pal_y);
       gVirtualX->RemoveWindow(wid);
       gVirtualX->DeletePixmap(pxmap);
 
@@ -800,14 +819,15 @@ void TASImage::Paint(Option_t *option)
       double min = fMinValue;
       double max = fMaxValue;
       axis.SetLineColor(0);       // draw white ticks
-      axis.PaintAxis((to_w + 0.5 * pal_w) / pad_w, (pad_h - to_h - kFRS - 1) / pad_h,
-                     (to_w + 0.5 * pal_w) / pad_w, (pad_h - kFRS - 21) / pad_h,
+      Double_t pal_Xpos = gPad->AbsPixeltoX(pal_Ax + pal_w);
+      axis.PaintAxis(pal_Xpos, gPad->PixeltoY(pal_Ay + pal_h - 1),
+                     pal_Xpos, gPad->PixeltoY(pal_Ay),
                      min, max, ndiv, "+LU");
       min = fMinValue;
       max = fMaxValue;
       axis.SetLineColor(1);       // draw black ticks
-      axis.PaintAxis((to_w + 0.5 * pal_w) / pad_w, (pad_h - to_h - kFRS) / pad_h,
-                     (to_w + 0.5 * pal_w) / pad_w, (pad_h - kFRS - 20) / pad_h,
+      axis.PaintAxis(pal_Xpos, gPad->AbsPixeltoY(pal_Ay + pal_h),
+                     pal_Xpos, gPad->AbsPixeltoY(pal_Ay + 1),
                      min, max, ndiv, "+L");
 
    }
@@ -825,12 +845,12 @@ void TASImage::Paint(Option_t *option)
       gVirtualPS->SetFillColor(color->GetNumber());
       gVirtualPS->SetFillStyle(1001);
 
-      Double_t xconv = gPad->PixeltoX(to_w) / image->width;
-      Double_t yconv = TMath::Abs(gPad->PixeltoY(to_h)) / image->height;
-      Double_t x1 = kFRS * xconv;
-      Double_t x2 = (kFRS + 1) * xconv;
-      Double_t y2 = 1 - kFRS * yconv;
-      Double_t y1 = 1 - (kFRS + 1) * yconv;
+      Double_t xconv = (gPad->AbsPixeltoX(to_w) - gPad->AbsPixeltoX(0)) / image->width;
+      Double_t yconv = (gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(to_h)) / image->height;
+      Double_t x1 = 0;
+      Double_t x2 = 1 * xconv;
+      Double_t y2 = 1;
+      Double_t y1 = 1 - yconv;
       gVirtualPS->CellArrayBegin(image->width, image->height, x1, x2, y1, y2);
 
       ASImageDecoder *imdec = start_image_decoding(fgVisual, image, SCL_DO_ALL,
@@ -847,12 +867,12 @@ void TASImage::Paint(Option_t *option)
 
       // print the color bar
       if (grad_im) {
-         xconv = gPad->PixeltoX(Int_t(0.3 * pal_w)) / grad_im->width;
-         yconv = TMath::Abs(gPad->PixeltoY(to_h - 20)) / grad_im->height;
-         x1 = (to_w + 0.2 * pal_w) * xconv;
-         x2 = ((to_w + 0.2 * pal_w) + 1) * xconv;
-         y2 = 1 - (kFRS + 20) * yconv;
-         y1 = 1 - (kFRS + 21) * yconv;
+         xconv = (gPad->AbsPixeltoX(pal_Ax + pal_w) - gPad->AbsPixeltoX(pal_Ax)) / grad_im->width;
+         yconv = (gPad->AbsPixeltoY(pal_Ay - pal_h) - gPad->AbsPixeltoY(pal_Ay)) / grad_im->height;
+         x1 = gPad->AbsPixeltoX(pal_Ax);
+         x2 = x1 + xconv;
+         y2 = gPad->AbsPixeltoY(pal_Ay);
+         y1 = y2 - yconv;
          gVirtualPS->CellArrayBegin(grad_im->width, grad_im->height,
                                     x1, x2, y1, y2);
 
@@ -874,9 +894,11 @@ void TASImage::Paint(Option_t *option)
          double min = fMinValue;
          double max = fMaxValue;
          axis.SetLineColor(1);       // draw black ticks
-         axis.PaintAxis((to_w + 0.5 * pal_w) / pad_w, (pad_h - to_h - kFRS) / pad_h,
-                        (to_w + 0.5 * pal_w) / pad_w, (pad_h - kFRS - 20) / pad_h,
+         Double_t pal_Xpos = gPad->AbsPixeltoX(pal_Ax + pal_w);
+         axis.PaintAxis(pal_Xpos, gPad->AbsPixeltoY(pal_Ay + pal_h),
+                        pal_Xpos, gPad->AbsPixeltoY(pal_Ay + 1),
                         min, max, ndiv, "+L");
+
       }
    }
 
@@ -888,20 +910,21 @@ void TASImage::Paint(Option_t *option)
 Int_t TASImage::DistancetoPrimitive(Int_t px, Int_t py)
 {
    // Is the mouse in the image?
-
+                       
    Int_t pxl, pyl, pxt, pyt;
-   Int_t px1 = gPad->XtoAbsPixel(gPad->GetX1());
-   Int_t py1 = gPad->YtoAbsPixel(gPad->GetY1());
-   Int_t px2 = gPad->XtoAbsPixel(gPad->GetX2());
-   Int_t py2 = gPad->YtoAbsPixel(gPad->GetY2());
+
+   Int_t px1 = gPad->XtoAbsPixel(0);
+   Int_t py1 = gPad->YtoAbsPixel(0);
+   Int_t px2 = gPad->XtoAbsPixel(1);
+   Int_t py2 = gPad->YtoAbsPixel(1);
    if (px1 < px2) {pxl = px1; pxt = px2;}
    else           {pxl = px2; pxt = px1;}
    if (py1 < py2) {pyl = py1; pyt = py2;}
    else           {pyl = py2; pyt = py1;}
 
-   // Are we inside the image leave 5 (kFRS) pixels on all sides to
-   // be able to grab the pad
-   if ((px > pxl+kFRS && px < pxt-kFRS) && (py > pyl+kFRS && py < pyt-kFRS))
+   // Are we inside the image leave 2 pixels on all sides to
+   // be able to grab the frame
+   if ((px > pxl + 2 && px < pxt - 2) && (py > pyl + 2 && py < pyt - 2))
       return 0;
 
    return 999999;
@@ -923,8 +946,8 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
        event == kButton1Up) {
 
       // convert to image pixel on screen
-      Int_t imgX = (Int_t)(gPad->AbsPixeltoX(px) * gPad->XtoPixel(1) + 0.5) - kFRS;
-      Int_t imgY = (Int_t)((1 - gPad->AbsPixeltoY(py)) * gPad->YtoPixel(0) + 0.5) - kFRS;
+      Int_t imgX = px - gPad->XtoAbsPixel(0);
+      Int_t imgY = py - gPad->YtoAbsPixel(1);
 
       if (imgX < 0)  px = px - imgX;
       if (imgY < 0)  py = py - imgY;
@@ -959,10 +982,11 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             Double_t xfact = (fScaledImage) ? (Double_t)fScaledImage->width  / fZoomWidth  : 1;
             Double_t yfact = (fScaledImage) ? (Double_t)fScaledImage->height / fZoomHeight : 1;
 
-            Int_t imgX1 = (Int_t)(gPad->AbsPixeltoX(stx) * gPad->XtoPixel(1) + 0.5) - kFRS;
-            Int_t imgY1 = (Int_t)((1 - gPad->AbsPixeltoY(sty)) * gPad->YtoPixel(0) + 0.5) - kFRS;
-            Int_t imgX2 = (Int_t)(gPad->AbsPixeltoX(px)  * gPad->XtoPixel(1) + 0.5) - kFRS;
-            Int_t imgY2 = (Int_t)((1 - gPad->AbsPixeltoY(py))  * gPad->YtoPixel(0) + 0.5) - kFRS;
+            Int_t imgX1 = stx - gPad->XtoAbsPixel(0);
+            Int_t imgY1 = sty - gPad->YtoAbsPixel(1);
+            Int_t imgX2 = px  - gPad->XtoAbsPixel(0);
+            Int_t imgY2 = py  - gPad->YtoAbsPixel(1);
+
             imgY1 = image->height - 1 - imgY1;
             imgY2 = image->height - 1 - imgY2;
             imgX1 = (Int_t)(imgX1 / xfact) + fZoomOffX;
@@ -992,8 +1016,8 @@ char *TASImage::GetObjectInfo(Int_t px, Int_t py) const
    if (!IsValid()) return info;
 
    // convert to image pixel on screen
-   px = (Int_t)(gPad->AbsPixeltoX(px) * gPad->XtoPixel(1) + 0.5) - kFRS;
-   py = (Int_t)((1 - gPad->AbsPixeltoY(py)) * gPad->YtoPixel(0) + 0.5) - kFRS;
+   px -= gPad->XtoAbsPixel(0);
+   py -= gPad->YtoAbsPixel(1);
 
    // no info if mouse is outside of image
    if (px < 0 || py < 0)  return info;
@@ -1242,6 +1266,7 @@ void TASImage::Mirror(Bool_t vert)
 UInt_t TASImage::GetWidth() const
 {
    // Return width of original image not of the displayed image.
+   // (Number of image pixels)
 
    if (fImage)
       return fImage->width;
@@ -1252,10 +1277,33 @@ UInt_t TASImage::GetWidth() const
 UInt_t TASImage::GetHeight() const
 {
    // Return height of original image not of the displayed image.
+   // (Number of image pixels)
 
    if (fImage)
       return fImage->height;
    return 0;
+}
+
+//______________________________________________________________________________
+UInt_t TASImage::GetScaledWidth() const
+{
+   // Return width of the displayed image not of the original image.
+   // (Number of screen pixels)
+
+   if (fScaledImage)
+      return fScaledImage->width;
+   return GetWidth();
+}
+
+//______________________________________________________________________________
+UInt_t TASImage::GetScaledHeight() const
+{
+   // Return height of the displayed image not of the original image.
+   // (Number of screen pixels)
+
+   if (fScaledImage)
+      return fScaledImage->height;
+   return GetHeight();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemFile.cxx,v 1.3 2001/11/28 15:58:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemFile.cxx,v 1.4 2003/07/01 11:39:45 rdm Exp $
 // Author: Rene Brun   26/06/96
 
 /*************************************************************************
@@ -54,7 +54,8 @@ Bool_t TSystemFile::IsDirectory() const
 {
    // Check if object is a directory.
 
-   Long_t id, size, flags, modtime;
+   Long64_t size;
+   Long_t id, flags, modtime;
 
    flags = id = size = modtime = 0;
    gSystem->GetPathInfo(fName, &id, &size, &flags, &modtime);

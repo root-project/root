@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.19 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.20 2003/12/15 08:54:29 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -133,7 +133,7 @@ protected:
    Int_t          fTMode;         // text drawing mode (ETextJustification)
    Int_t          fHKeycode;      // hotkey
    FontStruct_t   fFontStruct;    // font to draw text
-   Bool_t         fIsOwnFont;     // kTRUE - font defined locally,  kFALSE - globally
+   Bool_t         fHasOwnFont;    // kTRUE - font defined locally,  kFALSE - globally
 
    static const TGFont *fgDefaultFont;
 
@@ -166,10 +166,10 @@ public:
    void               SetTextJustify(Int_t tmode) { fTMode = tmode; }
    virtual void       SetText(TGHotString *new_label);
    virtual void       SetText(const TString &new_label);
-   virtual void       SetFont(FontStruct_t font, Option_t *opt = 0);
-   virtual void       SetFont(const char *fontName, Option_t *opt = 0);
-   virtual void       SetTextColor(Pixel_t color, Option_t *opt = 0);
-   Bool_t             IsOwnTextFont() const;
+   virtual void       SetFont(FontStruct_t font, Bool_t global = kFALSE);
+   virtual void       SetFont(const char *fontName, Bool_t global = kFALSE);
+   virtual void       SetTextColor(Pixel_t color, Bool_t global = kFALSE);
+   Bool_t             HasOwnFont() const;
 
    virtual void       SavePrimitive(ofstream &out, Option_t *option);
 

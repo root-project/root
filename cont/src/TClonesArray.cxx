@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.38 2003/04/17 08:38:04 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.39 2003/06/17 07:03:38 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -526,7 +526,7 @@ void TClonesArray::Streamer(TBuffer &b)
       }
       if (cl != fClass) {
          fClass = cl;
-         //this case may happen when switching from a fake class to the real class
+         //this case may happen when switching from an emulated class to the real class
          //may not be an error. fClass may point to a deleted object
          //Error("Streamer", "expecting objects of type %s, finding objects"
          //   " of type %s", fClass->GetName(), cl->GetName());

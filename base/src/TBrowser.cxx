@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.9 2002/01/30 11:02:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.10 2003/01/20 15:33:35 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -49,14 +49,39 @@ public:
    Bool_t Notify();
 };
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TBrowserObject                                                       //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TBrowserObject : public TNamed 
+{
+   // This class is designed to wrap a Foreign object in order to 
+   // inject it into the Browse sub-system.
+
+public: 
+
+   TBrowserObject(void *obj, TClass *cl, const char *brname);
+  ~TBrowserObject(){;}
+
+   void    Browse(TBrowser* b);
+   Bool_t  IsFolder() const;
+   TClass *IsA() const { return fClass; }
+
+private:
+   void     *fObj;   //! pointer to the foreign object
+   TClass   *fClass; //! pointer to class of the foreign object
+
+};  
 
 
 ClassImp(TBrowser)
 
 //______________________________________________________________________________
 TBrowser::TBrowser(const char *name, const char *title)
-      : TNamed(name, title), fLastSelectedObject(0), fTimer(0),
-        fContextMenu(0), fNeedRefresh(kFALSE)
+   : TNamed(name, title), fLastSelectedObject(0), fTimer(0),
+     fContextMenu(0), fNeedRefresh(kFALSE)
 {
    // Create a new browser with a name, title. Width and height are by
    // default set to 640x400 and (optionally) adjusted by the screen factor
@@ -76,7 +101,8 @@ TBrowser::TBrowser(const char *name, const char *title)
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, const char *title, UInt_t width, UInt_t height)
+TBrowser::TBrowser(const char *name, const char *title, 
+                   UInt_t width, UInt_t height)
    : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
 {
@@ -87,7 +113,9 @@ TBrowser::TBrowser(const char *name, const char *title, UInt_t width, UInt_t hei
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height)
+TBrowser::TBrowser(const char *name, const char *title, 
+                   Int_t x, Int_t y, 
+                   UInt_t width, UInt_t height)
    : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
 {
@@ -113,7 +141,8 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title)
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, TObject *obj, const char *title, UInt_t width, UInt_t height)
+TBrowser::TBrowser(const char *name, TObject *obj, const char *title, 
+                   UInt_t width, UInt_t height)
    : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
 {
@@ -124,7 +153,9 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title, UInt_t wid
 }
 
 //______________________________________________________________________________
-TBrowser::TBrowser(const char *name, TObject *obj, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height)
+TBrowser::TBrowser(const char *name, TObject *obj, const char *title, 
+                   Int_t x, Int_t y, 
+                   UInt_t width, UInt_t height)
    : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
      fNeedRefresh(kFALSE)
 {
@@ -132,6 +163,50 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title, Int_t x, I
 
    fImp = gGuiFactory->CreateBrowserImp(this, title, x, y, width, height);
    Create(obj);
+}
+
+//______________________________________________________________________________
+TBrowser::TBrowser(const char *name, void *obj, TClass *cl, 
+                   const char *objname, const char *title)
+   : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
+     fNeedRefresh(kFALSE)
+{
+   // Create a new browser with a name, title, width and height for TObject *obj.
+
+   Float_t cx = gStyle->GetScreenFactor();
+   UInt_t w = UInt_t(cx*640);
+   UInt_t h = UInt_t(cx*400);
+
+   fImp = gGuiFactory->CreateBrowserImp(this, title, w, h);
+
+   Create(new TBrowserObject(obj,cl,objname));
+}
+
+//______________________________________________________________________________
+TBrowser::TBrowser(const char *name, void *obj, TClass *cl, 
+                   const char *objname, const char *title, 
+                   UInt_t width, UInt_t height)
+   : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
+     fNeedRefresh(kFALSE)
+{
+   // Create a new browser with a name, title, width and height for TObject *obj.
+
+   fImp = gGuiFactory->CreateBrowserImp(this, title, width, height);
+   Create(new TBrowserObject(obj,cl,objname));
+}
+
+//______________________________________________________________________________
+TBrowser::TBrowser(const char *name,void *obj,  TClass *cl, 
+                   const char *objname, const char *title, 
+                   Int_t x, Int_t y, 
+                   UInt_t width, UInt_t height)
+   : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
+     fNeedRefresh(kFALSE)
+{
+   // Create a new browser with a name, title, width and height for TObject *obj.
+
+   fImp = gGuiFactory->CreateBrowserImp(this, title, x, y, width, height);
+   Create(new TBrowserObject(obj,cl,objname));
 }
 
 //______________________________________________________________________________
@@ -158,6 +233,24 @@ void TBrowser::Add(TObject *obj, const char *name)
 }
 
 //______________________________________________________________________________
+void TBrowser::Add(void *obj, TClass *cl, const char *name)
+{
+   // Add foreign object with name to browser. 
+   // 'cl' is the type use to store the value of obj.
+   // So literally the following pseudo code should be correct:
+   //    `cl->GetName()` * ptr = (`cl->GetName()`*) obj;
+   // and the value of obj is not necessarily the start of the object.
+
+   if (!obj || !cl) return;
+   TObject *to; 
+   if (cl->IsTObject()) to = (TObject*)cl->DynamicCast(TObject::Class(),obj,kTRUE); 
+   else                 to = new TBrowserObject(obj,cl,name);
+
+   if (!to) return;
+   Add(to,name);
+}
+
+//______________________________________________________________________________
 void TBrowser::Create(TObject *obj)
 {
    // Create the browser, called by the ctors.
@@ -179,9 +272,10 @@ void TBrowser::Create(TObject *obj)
    if (obj) {
       Add(obj);
       if (fImp) fImp->BrowseObj(obj);
-   } else if (fImp)
+   } else if (fImp) {
       // Fill the first list with all browsable classes from TROOT
       fImp->BrowseObj(gROOT);
+   }
 
    // The first list will be filled by TWin32BrowserImp ctor
    // with all browsable classes from TROOT
@@ -250,3 +344,33 @@ Bool_t TBrowserTimer::Notify()
 
    return kFALSE;
 }
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+//  TBrowserObject                                                      //
+//                                                                      //
+//  This is a wrapper class to emulate the TObject interface            //
+//  around an object of a non-TObject class                             //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+//______________________________________________________________________________
+TBrowserObject::TBrowserObject(void *obj, TClass *cl, const char *brname)
+   : TNamed(brname,cl->GetName()), fObj(obj), fClass(cl)
+{
+   if (cl==0) Fatal("Constructor","Class parameter should not be null");
+   SetBit(kCanDelete);
+}
+
+//______________________________________________________________________________
+Bool_t TBrowserObject::IsFolder() const
+{ 
+   return fClass->IsFolder(fObj);
+}
+
+//______________________________________________________________________________
+void TBrowserObject::Browse(TBrowser* b)
+{
+   fClass->Browse(fObj, b);
+}
+

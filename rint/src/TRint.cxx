@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.21 2003/10/28 14:09:48 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.24 2004/01/21 22:22:36 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -125,6 +125,7 @@ TRint::TRint(const char *appClassName, int *argc, char **argv, void *options,
 
    // Everybody expects iostream to be available, so load it...
    ProcessLine("#include <iostream>", kTRUE);
+   ProcessLine("#include <_string>",kTRUE); // for std::string iostream.
 
    // Allow the usage of ClassDef and ClassImp in interpreted macros
    ProcessLine("#include <RtypesCint.h>", kTRUE);
@@ -197,8 +198,15 @@ void TRint::Run(Bool_t retrn)
    // line and then go into the main application event loop, unless the -q
    // command line option was specfied in which case the program terminates.
    // When retrun is true this method returns even when -q was specified.
+   //
+   // When QuitOpt is true and retrn is false, terminate the application with
+   // an error code equal to either the ProcessLine error (if any) or the
+   // return value of the command casted to a long.
 
    Getlinem(kInit, GetPrompt());
+
+   Long_t retval = 0;
+   Int_t  error = 0;
 
    // Process shell command line input files
    if (InputFiles()) {
@@ -221,13 +229,14 @@ void TRint::Run(Bool_t retrn)
             Getlinem(kCleanUp, 0);
             Gl_histadd(cmd);
             fNcmd++;
-            ProcessLine(cmd);
+            retval = ProcessLine(cmd,kFALSE,&error);
+            if (error!=0) break;
          }
       } ENDTRY;
 
       if (QuitOpt()) {
          if (retrn) return;
-         Terminate(0);
+         Terminate(error==0 ? retval : error);
       }
 
       ClearInputFiles();
@@ -348,6 +357,8 @@ Bool_t TRint::HandleTermInput()
    if ((line = Getlinem(kOneChar, 0))) {
       if (line[0] == 0 && Gl_eof())
          Terminate(0);
+
+      gVirtualX->SetKeyAutoRepeat(kTRUE);
 
       Gl_histadd(line);
 

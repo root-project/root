@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.6 2003/04/11 11:48:11 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.9 2004/01/29 11:20:12 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -90,7 +90,7 @@ const char *TDataType::AsString(void *buf) const
    // Return string containing value in buffer formatted according to
    // the basic data type. The result needs to be used or copied immediately.
 
-   static char line[80];
+   static char line[81];
    const char *name;
 
    if (fInfo)
@@ -116,11 +116,11 @@ const char *TDataType::AsString(void *buf) const
    else if (!strcmp("short", name))
       sprintf(line, "%hd", *(short *)buf);
    else if (!strcmp("unsigned char", name))
-      sprintf(line, "%u", *(unsigned char *)buf);
+      strncpy(line, (char *)buf,80);
    else if (!strcmp("bool", name))
-      sprintf(line, "%u", *(unsigned char *)buf);
+      strncpy(line, (char *)buf,80);
    else if (!strcmp("char", name))
-      sprintf(line, "%d", *(char *)buf);
+      strncpy(line, (char *)buf,80);
    else if (!strcmp("float", name))
       sprintf(line, "%g", *(float *)buf);
    else if (!strcmp("double", name))
@@ -187,6 +187,10 @@ void TDataType::SetType(const char *name)
    } else if (!strcmp("double", name)) {
       fType = kDouble_t;
       fSize = sizeof(Double_t);
+   } 
+   
+   if (!strcmp("Double32_t", fName.Data())) {
+      fType = kDouble32_t;
    }
 }
 

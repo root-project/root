@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.9 2002/11/26 10:24:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.h,v 1.10 2002/11/26 17:26:30 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -24,6 +24,7 @@
 #ifndef ROOT_TDictionary
 #include "TDictionary.h"
 #endif
+#include "TString.h"
 
 class TList;
 class TClass;
@@ -40,15 +41,20 @@ private:
    TClass             *fClass;        //pointer to the class
    TDataType          *fDataType;     //pointer to data basic type descriptor
 
+   Int_t               fOffset;       //offset 
+   Int_t               fSTLCont;      //STL type 
+   Long_t              fProperty;     //Property
+
+   TString             fTypeName;     //data member type, e,g.: "class TDirectory*" -> "TDirectory".
+   TString             fFullTypeName; //full type description of data member, e,g.: "class TDirectory*".
+   TString             fTrueTypeName; //full type description with no typedef
+
    // The following fields allows to access all (even private) datamembers and
    // provide a possibility of having options with names and strings.
    // These options are defined in a comment to a field!
    TMethodCall        *fValueGetter;  //method that returns a value;
    TMethodCall        *fValueSetter;  //method which sets value;
    TList              *fOptions;      //list of possible values 0=no restrictions
-   TString             fTypeName;     //data member type, e,g.: "class TDirectory*" -> "TDirectory".
-   TString             fFullTypeName; //full type description of data member, e,g.: "class TDirectory*".
-   TString             fTrueTypeName; //full type description with no typedef
 
 public:
 
@@ -64,7 +70,7 @@ public:
    const char    *GetFullTypeName() const;
    const char    *GetTrueTypeName() const;
    const char    *GetArrayIndex() const;
-
+   Int_t          GetUnitSize() const;
    TList         *GetOptions() const;
    TMethodCall   *SetterMethod(TClass *cl);
    TMethodCall   *GetterMethod(TClass *cl = 0);
@@ -75,7 +81,6 @@ public:
    Bool_t         IsPersistent() const { return TestBit(kObjIsPersistent); }
    Int_t          IsSTLContainer();
    Long_t         Property() const;
-
    ClassDef(TDataMember,0)  //Dictionary for a class data member
 };
 

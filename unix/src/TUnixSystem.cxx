@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.80 2003/12/11 16:35:19 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.88 2004/01/24 23:07:47 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "RConfig.h"
 #include "TUnixSystem.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -271,6 +272,27 @@ static STRUCT_UTMP *gUtmpContents;
 const char *kServerPath     = "/tmp";
 const char *kProtocolName   = "tcp";
 
+//------------------- Unix TFdSet ----------------------------------------------
+#ifndef HOWMANY
+#   define HOWMANY(x, y)   (((x)+((y)-1))/(y))
+#endif
+
+const Int_t kNFDBITS = (sizeof(Int_t) * 8);      // 8 bits per byte
+
+class TFdSet {
+private:
+   Int_t fds_bits[HOWMANY(256, kNFDBITS)];     // upto 255 file descriptors
+public:
+   TFdSet() { memset(fds_bits, 0, sizeof(fds_bits)); }
+   TFdSet(const TFdSet &org) { memcpy(fds_bits, org.fds_bits, sizeof(org.fds_bits)); }
+   TFdSet &operator=(const TFdSet &rhs) { if (this != &rhs) { memcpy(fds_bits, rhs.fds_bits, sizeof(rhs.fds_bits));} return *this; }
+   void   Zero() { memset(fds_bits, 0, sizeof(fds_bits)); }
+   void   Set(Int_t n) { fds_bits[n/kNFDBITS] |= (1 << (n % kNFDBITS)); }
+   void   Clr(Int_t n) { fds_bits[n/kNFDBITS] &= ~(1 << (n % kNFDBITS)); }
+   Int_t  IsSet(Int_t n) { return fds_bits[n/kNFDBITS] & (1 << (n % kNFDBITS)); }
+   Int_t *GetBits() { return (Int_t *)fds_bits; }
+};
+
 
 //______________________________________________________________________________
 static void SigHandler(ESignals sig)
@@ -294,6 +316,12 @@ TUnixSystem::~TUnixSystem()
    // Reset to original state.
 
    UnixResetSignals();
+
+   delete fReadmask;
+   delete fWritemask;
+   delete fReadready;
+   delete fWriteready;
+   delete fSignals;
 }
 
 //______________________________________________________________________________
@@ -303,6 +331,12 @@ Bool_t TUnixSystem::Init()
 
    if (TSystem::Init())
       return kTRUE;
+
+   fReadmask   = new TFdSet;
+   fWritemask  = new TFdSet;
+   fReadready  = new TFdSet;
+   fWriteready = new TFdSet;
+   fSignals    = new TFdSet;
 
    //--- install default handlers
    UnixSignal(kSigChild,                 SigHandler);
@@ -430,11 +464,11 @@ void TUnixSystem::AddFileHandler(TFileHandler *h)
    if (h) {
       int fd = h->GetFd();
       if (h->HasReadInterest()) {
-         fReadmask.Set(fd);
+         fReadmask->Set(fd);
          fMaxrfd = TMath::Max(fMaxrfd, fd);
       }
       if (h->HasWriteInterest()) {
-         fWritemask.Set(fd);
+         fWritemask->Set(fd);
          fMaxwfd = TMath::Max(fMaxwfd, fd);
       }
    }
@@ -451,16 +485,16 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
       TIter next(fFileHandler);
       fMaxrfd = 0;
       fMaxwfd = 0;
-      fReadmask.Zero();
-      fWritemask.Zero();
+      fReadmask->Zero();
+      fWritemask->Zero();
       while ((th = (TFileHandler *) next())) {
          int fd = th->GetFd();
          if (th->HasReadInterest()) {
-            fReadmask.Set(fd);
+            fReadmask->Set(fd);
             fMaxrfd = TMath::Max(fMaxrfd, fd);
          }
          if (th->HasWriteInterest()) {
-            fWritemask.Set(fd);
+            fWritemask->Set(fd);
             fMaxwfd = TMath::Max(fMaxwfd, fd);
          }
       }
@@ -601,8 +635,8 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
    while (1) {
       // first handle any X11 events
       if (gXDisplay && gXDisplay->Notify()) {
-         if (fReadready.IsSet(gXDisplay->GetFd())) {
-            fReadready.Clr(gXDisplay->GetFd());
+         if (fReadready->IsSet(gXDisplay->GetFd())) {
+            fReadready->Clr(gXDisplay->GetFd());
             fNfd--;
          }
          if (!pendingOnly) return;
@@ -613,15 +647,15 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
          if (CheckDescriptors())
             if (!pendingOnly) return;
       fNfd = 0;
-      fReadready.Zero();
-      fWriteready.Zero();
+      fReadready->Zero();
+      fWriteready->Zero();
 
       // check synchronous signals
       if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
          if (CheckSignals(kTRUE))
             if (!pendingOnly) return;
       fSigcnt = 0;
-      fSignals.Zero();
+      fSignals->Zero();
 
       // check synchronous timers
       if (fTimers && fTimers->GetSize() > 0)
@@ -635,27 +669,28 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       if (pendingOnly) return;
 
       // nothing ready, so setup select call
-      fReadready  = fReadmask;
-      fWriteready = fWritemask;
+      *fReadready  = *fReadmask;
+      *fWriteready = *fWritemask;
+
       int mxfd = TMath::Max(fMaxrfd, fMaxwfd) + 1;
-      fNfd = UnixSelect(mxfd, &fReadready, &fWriteready, NextTimeOut(kTRUE));
+      fNfd = UnixSelect(mxfd, fReadready, fWriteready, NextTimeOut(kTRUE));
       if (fNfd < 0 && fNfd != -2) {
          int fd, rc;
          TFdSet t;
          for (fd = 0; fd < mxfd; fd++) {
             t.Set(fd);
-            if (fReadmask.IsSet(fd)) {
+            if (fReadmask->IsSet(fd)) {
                rc = UnixSelect(fd+1, &t, 0, 0);
                if (rc < 0 && rc != -2) {
                   SysError("DispatchOneEvent", "select: read error on %d\n", fd);
-                  fReadmask.Clr(fd);
+                  fReadmask->Clr(fd);
                }
             }
-            if (fWritemask.IsSet(fd)) {
+            if (fWritemask->IsSet(fd)) {
                rc = UnixSelect(fd+1, 0, &t, 0);
                if (rc < 0 && rc != -2) {
                   SysError("DispatchOneEvent", "select: write error on %d\n", fd);
-                  fWritemask.Clr(fd);
+                  fWritemask->Clr(fd);
                }
             }
             t.Clr(fd);
@@ -718,7 +753,7 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       Gl_windowchanged();
       break;
    default:
-      fSignals.Set(sig);
+      fSignals->Set(sig);
       fSigcnt++;
       break;
    }
@@ -741,9 +776,9 @@ Bool_t TUnixSystem::CheckSignals(Bool_t sync)
       while ((sh = (TSignalHandler*)it.Next())) {
          if (sync == sh->IsSync()) {
             ESignals sig = sh->GetSignal();
-            if ((fSignals.IsSet(sig) && sigdone == -1) || sigdone == sig) {
+            if ((fSignals->IsSet(sig) && sigdone == -1) || sigdone == sig) {
                if (sigdone == -1) {
-                  fSignals.Clr(sig);
+                  fSignals->Clr(sig);
                   sigdone = sig;
                   fSigcnt--;
                }
@@ -796,20 +831,20 @@ Bool_t TUnixSystem::CheckDescriptors()
    while ((fh = (TFileHandler*) it.Next())) {
 #endif
       Int_t fd = fh->GetFd();
-      if ((fd <= fMaxrfd && fReadready.IsSet(fd) && fddone == -1) ||
+      if ((fd <= fMaxrfd && fReadready->IsSet(fd) && fddone == -1) ||
           (fddone == fd && read)) {
          if (fddone == -1) {
-            fReadready.Clr(fd);
+            fReadready->Clr(fd);
             fddone = fd;
             read = kTRUE;
             fNfd--;
          }
          fh->ReadNotify();
       }
-      if ((fd <= fMaxwfd && fWriteready.IsSet(fd) && fddone == -1) ||
+      if ((fd <= fMaxwfd && fWriteready->IsSet(fd) && fddone == -1) ||
           (fddone == fd && !read)) {
          if (fddone == -1) {
-            fWriteready.Clr(fd);
+            fWriteready->Clr(fd);
             fddone = fd;
             read = kFALSE;
             fNfd--;
@@ -1032,7 +1067,7 @@ int TUnixSystem::Rename(const char *f, const char *t)
 }
 
 //______________________________________________________________________________
-int TUnixSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
+int TUnixSystem::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
                              Long_t *flags, Long_t *modtime)
 {
    // Get info about a file: id, size, flags, modification time.
@@ -1096,7 +1131,6 @@ int TUnixSystem::Unlink(const char *name)
    // -1 in case of failure.
 
    struct stat finfo;
-
    if (stat(name, &finfo) < 0)
       return -1;
 
@@ -2931,7 +2965,7 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
 //---- files -------------------------------------------------------------------
 
 //______________________________________________________________________________
-int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long_t *size,
+int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long64_t *size,
                               Long_t *flags, Long_t *modtime)
 {
    // Get info about a file: id, size, flags, modification time.
@@ -2944,9 +2978,13 @@ int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long_t *size,
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
+#if defined(R__SEEK64)
+   struct stat64 statbuf;
+   if (path != 0 && stat64(path, &statbuf) >= 0) {
+#else
    struct stat statbuf;
-
    if (path != 0 && stat(path, &statbuf) >= 0) {
+#endif
       if (id)
 #if defined(R__KCC) && defined(R__LINUX)
          *id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;

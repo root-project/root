@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.0 2003/11/11 10:00:00 peters Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.cxx,v 1.2 2003/12/30 13:16:50 brun Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -379,7 +379,7 @@ Int_t TAlienFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-Seek_t TAlienFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
+Long64_t TAlienFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
    // Interface to system lseek. All arguments like in "man 2 lseek"
    // except that the offset and return value are Long_t to be able to
@@ -405,8 +405,8 @@ Seek_t TAlienFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 }
 
 //______________________________________________________________________________
-Int_t TAlienFile::SysStat(Int_t fd, Long_t * id, Long_t * size,
-                          Long_t * flags, Long_t * modtime)
+Int_t TAlienFile::SysStat(Int_t fd, Long_t *id, Long64_t *size,
+                          Long_t *flags, Long_t *modtime)
 {
    // Interface to TSystem:GetPathInfo(). Generally implemented via
    // stat() or fstat().
@@ -652,9 +652,9 @@ const char *TAlienSystem::GetDirEntry(void *dirp)
 }
 
 //______________________________________________________________________________
-Int_t TAlienSystem::GetPathInfo(const char *path, Long_t * id,
-                                Long_t * size, Long_t * flags,
-                                Long_t * modtime)
+Int_t TAlienSystem::GetPathInfo(const char *path, Long_t *id,
+                                Long64_t *size, Long_t *flags,
+                                Long_t *modtime)
 {
    // Get info about a file: id, size, flags, modification time.
    // Id      is 0 for RFIO file

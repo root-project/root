@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.18 2003/09/01 07:09:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.19 2003/12/12 17:35:59 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -162,6 +162,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDataMember.h"
+#include "TDataType.h"
 #include "TROOT.h"
 #include "TGlobal.h"
 #include "TInterpreter.h"
@@ -169,6 +170,7 @@
 #include "Api.h"
 #include "TMethodCall.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TMethod.h"
 #include "TIterator.h"
 #include "TList.h"
@@ -191,7 +193,9 @@ TDataMember::TDataMember(G__DataMemberInfo *info, TClass *cl) : TDictionary()
    fOptions     = 0;
    fValueSetter = 0;
    fValueGetter = 0;
-
+   fOffset      = -1;
+   fProperty    = -1;
+   fSTLCont     = -1;
    if (!fInfo && !fClass) return; // default ctor is called
 
    if (fInfo) {
@@ -464,6 +468,7 @@ const char *TDataMember::GetTypeName() const
 {
    // Get type of data member, e,g.: "class TDirectory*" -> "TDirectory".
 
+   if (fProperty==(-1)) Property();
    return fTypeName.Data();
 }
 
@@ -471,6 +476,7 @@ const char *TDataMember::GetTypeName() const
 const char *TDataMember::GetFullTypeName() const
 {
    // Get full type description of data member, e,g.: "class TDirectory*".
+   if (fProperty==(-1)) Property();
 
    return fFullTypeName.Data();
 }
@@ -488,18 +494,23 @@ Int_t TDataMember::GetOffset() const
 {
    // Get offset from "this".
 
-   //case of an interpreted or fake class
-   if (fClass->GetDeclFileLine() < 0) return fInfo->Offset();
+   if (fOffset>=0) return fOffset;
 
+   //case of an interpreted or emulated class
+   if (fClass->GetDeclFileLine() < 0) {
+     ((TDataMember*)this)->fOffset = fInfo->Offset();
+     return fOffset;
+   }
    //case of a compiled class
    //Note that the offset cannot be computed in case of an abstract class
    //for which the list of real data has not yet been computed via
    //a real daughter class.
    char dmbracket[256];
-   sprintf(dmbracket,"%s[",this->GetName());
+   sprintf(dmbracket,"%s[",GetName());
    fClass->BuildRealData();
    TIter next(fClass->GetListOfRealData());
    TRealData *rdm;
+   Int_t offset = 0;
    while ((rdm = (TRealData*)next())) {
       char *rdmc = (char*)rdm->GetName();
       //next statement required in case a class and one of its parent class
@@ -507,19 +518,23 @@ Int_t TDataMember::GetOffset() const
       if (this->IsaPointer() && rdmc[0] == '*') rdmc++;
 
       if (rdm->GetDataMember() != this) continue;
-      if (strcmp(rdmc,this->GetName()) == 0) {
-         return rdm->GetThisOffset();
+      if (strcmp(rdmc,GetName()) == 0) {
+         offset = rdm->GetThisOffset();
+         break;
       }
-      if (strcmp(rdm->GetName(),this->GetName()) == 0) {
+      if (strcmp(rdm->GetName(),GetName()) == 0) {
          if (rdm->IsObject()) {
-            return rdm->GetThisOffset();
+            offset = rdm->GetThisOffset();
+            break;
          }
       }
       if (strstr(rdm->GetName(),dmbracket)) {
-         return rdm->GetThisOffset();
+         offset = rdm->GetThisOffset();
+         break;
       }
    }
-   return 0;
+   ((TDataMember*)this)->fOffset = offset;
+   return fOffset;
 }
 
 //______________________________________________________________________________
@@ -531,11 +546,27 @@ Int_t TDataMember::GetOffsetCint() const
 }
 
 //______________________________________________________________________________
+Int_t TDataMember::GetUnitSize() const
+{
+   if (IsaPointer()) return sizeof(void*);
+   if (IsEnum()    ) return sizeof(Int_t);
+   if (IsBasic()   ) return GetDataType()->Size();
+
+   TClass *cl = gROOT->GetClass(GetTypeName());
+   if (!cl) cl = gROOT->GetClass(GetTrueTypeName());
+   if ( cl) return cl->Size();
+
+   Warning("GetUnitSize","Can not determine sizeof(%s)",GetTypeName());
+   return 0;
+}
+
+//______________________________________________________________________________
 Bool_t TDataMember::IsBasic() const
 {
    // Return true if data member is a basic type, e.g. char, int, long...
 
-   return (fInfo->Type()->Property() & kIsFundamental) ? kTRUE : kFALSE;
+   if (fProperty == -1) Property();
+   return (fProperty & kIsFundamental) ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________
@@ -543,7 +574,8 @@ Bool_t TDataMember::IsEnum() const
 {
    // Return true if data member is an enum.
 
-   return (fInfo->Type()->Property() & kIsEnum) ? kTRUE : kFALSE;
+   if (fProperty == -1) Property();
+   return (fProperty & kIsEnum) ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________
@@ -551,28 +583,18 @@ Bool_t TDataMember::IsaPointer() const
 {
    // Return true if data member is a pointer.
 
-   return (fInfo->Property() & kIsPointer) ? kTRUE : kFALSE;
+   if (fProperty == -1) Property();
+   return (fProperty & kIsPointer) ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________
 int TDataMember::IsSTLContainer()
 {
-   // Return which type (if any) of STL container the data member is.
+   // The return type is defined in TDictionary (kVector, kList, etc.)
 
-   if (!fInfo) return kNone;
-   const char *s = fInfo->Type()->TmpltName();
-   if (!s) return kNone;
-   char type[4096];
-   strcpy(type, s);
-
-   if (!strcmp(type, "vector"))   return kVector;
-   if (!strcmp(type, "list"))     return kList;
-   if (!strcmp(type, "deque"))    return kDeque;
-   if (!strcmp(type, "map"))      return kMap;
-   if (!strcmp(type, "multimap")) return kMultimap;
-   if (!strcmp(type, "set"))      return kSet;
-   if (!strcmp(type, "multiset")) return kMultiset;
-   return kNone;
+   if (fSTLCont != -1) return fSTLCont;
+   fSTLCont = abs(TClassEdit::IsSTLCont(GetTrueTypeName()));
+   return fSTLCont;
 }
 
 //______________________________________________________________________________
@@ -580,7 +602,17 @@ Long_t TDataMember::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
 
-   return fInfo->Property();
+   if (fProperty!=(-1)) return fProperty;
+
+   TDataMember *t = (TDataMember*)this;
+   if (!fInfo) return 0;
+   t->fProperty = fInfo->Property()|fInfo->Type()->Property();
+   t->fTypeName = gInterpreter->TypeName(fInfo->Type()->Name());
+   t->fFullTypeName = fInfo->Type()->Name(); 
+   t->fName = fInfo->Name();
+   t->fTitle = fInfo->Title();
+
+   return fProperty;
 }
 
 //______________________________________________________________________________

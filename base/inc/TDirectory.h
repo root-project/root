@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.14 2003/01/02 22:36:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.15 2003/01/17 13:58:37 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -47,9 +47,9 @@ protected:
    TDatime     fDatimeM;         //Date and time of last modification
    Int_t       fNbytesKeys;      //Number of bytes for the keys
    Int_t       fNbytesName;      //Number of bytes in TNamed at creation time
-   Seek_t      fSeekDir;         //Location of directory on file
-   Seek_t      fSeekParent;      //Location of parent directory on file
-   Seek_t      fSeekKeys;        //Location of Keys record on file
+   Long64_t    fSeekDir;         //Location of directory on file
+   Long64_t    fSeekParent;      //Location of parent directory on file
+   Long64_t    fSeekKeys;        //Location of Keys record on file
    TFile      *fFile;            //pointer to current file in memory
    TObject    *fMother;          //pointer to mother of the directory
    TList      *fList;            //Pointer to objects list in memory
@@ -98,9 +98,9 @@ public:
    TObject            *GetMother() const { return fMother; }
    virtual Int_t       GetNbytesKeys() const {return fNbytesKeys;}
    virtual Int_t       GetNkeys() const {return fKeys->GetSize();}
-   virtual Seek_t      GetSeekDir() const { return fSeekDir; }
-   virtual Seek_t      GetSeekParent() const { return fSeekParent; }
-   virtual Seek_t      GetSeekKeys() const { return fSeekKeys; }
+   virtual Long64_t    GetSeekDir() const { return fSeekDir; }
+   virtual Long64_t    GetSeekParent() const { return fSeekParent; }
+   virtual Long64_t    GetSeekKeys() const { return fSeekKeys; }
    virtual const char *GetPath() const;
    TUUID               GetUUID() const {return fUUID;}
    Bool_t              IsFolder() const { return kTRUE; }
@@ -129,7 +129,7 @@ public:
    static void         DecodeNameCycle(const char *namecycle, char *name, Short_t &cycle);
    static void         EncodeNameCycle(char *buffer, const char *name, Short_t cycle);
 
-   ClassDef(TDirectory,3)  //Describe directory structure in memory
+   ClassDef(TDirectory,4)  //Describe directory structure in memory
 };
 
 R__EXTERN TDirectory   *gDirectory;

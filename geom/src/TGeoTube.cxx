@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.29 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.30 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -303,7 +303,7 @@ Double_t TGeoTube::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    Double_t b,d;
    Double_t sr;
    // inner cylinder
-   if (fRmin>1E-10) {
+  if (fRmin>1E-10 && rdotn<0) {
       DistToTube(rsq,nsq,rdotn,fRmin,b,d);
       if (d>0) {
          sr=-b-d;

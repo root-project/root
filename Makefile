@@ -39,10 +39,10 @@ endif
 
 ##### Modules to build #####
 
-MODULES       = build cint utils base cont meta net zip clib matrix newdelete \
-                hist tree freetype graf g3d gpad gui minuit histpainter proof \
-                treeplayer treeviewer physics postscript rint html eg geom \
-                geompainter vmc fumili mlp
+MODULES       = build cint metautils utils base cont meta net zip clib matrix \
+                newdelete hist tree freetype graf g3d gpad gui minuit \
+                histpainter proof treeplayer treeviewer physics postscript \
+                rint html eg geom geompainter vmc fumili mlp
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32 gl
@@ -232,8 +232,10 @@ ROOTRC        = etc/system.rootrc
 
 ##### libCore #####
 
-COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO)
-COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO)
+COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
+                $(METAUTILSO)
+COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO) \
+                $(METAUTILSDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 
@@ -343,10 +345,14 @@ build/dummy.d: config $(ROOTRC) $(RMKDEP) $(BINDEXP) $(ALLHDRS)
 	fi)
 
 %.d: %.c $(RMKDEP)
-	$(MAKEDEP) $@ "$(CFLAGS)" $*.c > $@
+	$(MAKEDEP) $@ "$(CFLAGS)" $< > $@
+
+G__%.d: G__%.cxx $(RMKDEP)
+	$(MAKEDEP) $@ "$(CXXFLAGS) -I$(CINTDIR)/lib/prec_stl -I$(CINTDIR)/stl" \
+	   $< > $@
 
 %.d: %.cxx $(RMKDEP)
-	$(MAKEDEP) $@ "$(CXXFLAGS)" $*.cxx > $@
+	$(MAKEDEP) $@ "$(CXXFLAGS)" $< > $@
 
 $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(CORELIBDEP)
 ifneq ($(ARCH),alphacxx6)
@@ -687,6 +693,8 @@ showbuild:
 	@echo "OPENGLULIB         = $(OPENGLULIB)"
 	@echo "OPENGLLIB          = $(OPENGLLIB)"
 	@echo "OPENGLINCDIR       = $(OPENGLINCDIR)"
+	@echo "OPENIVLIB          = $(OPENIVLIB)"
+	@echo "OPENIVINCDIR       = $(OPENIVINCDIR)"
 	@echo "CERNLIBDIR         = $(CERNLIBDIR)"
 	@echo "CERNLIBS           = $(CERNLIBS)"
 	@echo "OSTHREADLIB        = $(OSTHREADLIB)"

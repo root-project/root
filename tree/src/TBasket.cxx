@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.23 2003/11/22 14:51:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBasket.cxx,v 1.25 2003/12/30 13:16:51 brun Exp $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -152,7 +152,7 @@ Int_t TBasket::GetEntryPointer(Int_t entry)
 }
 
 //_______________________________________________________________________
-Int_t TBasket::ReadBasketBuffers(Seek_t pos, Int_t len, TFile *file)
+Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
 {
 //*-*-*-*-*-*-*-*-*Read basket buffers in memory and cleanup*-*-*-*-*-*-*
 //*-*              =========================================
@@ -255,7 +255,7 @@ AfterBuffer:
 }
 
 //_______________________________________________________________________
-Int_t TBasket::ReadBasketBytes(Seek_t pos, TFile *file)
+Int_t TBasket::ReadBasketBytes(Long64_t pos, TFile *file)
 {
 //*-*-*-*-*-*-*-*-*Read basket buffers in memory and cleanup*-*-*-*-*-*-*
 //*-*              =========================================
@@ -337,6 +337,37 @@ void TBasket::Streamer(TBuffer &b)
       if (fBufferRef && !fHeaderOnly && !fSeekKey && curLast > fLast) fLast = curLast;
       if (fLast > fBufferSize) fBufferSize = fLast;
 
+//   static TStopwatch timer;
+//   timer.Start(kFALSE);
+
+//       //  Check may be fEntryOffset is equidistant
+//       //  This attempts by Victor fails :(
+//       int equidist = 0;
+//       if (1 && fEntryOffset && fNevBuf>=3) {
+//          equidist = 1;
+//          int dist = fEntryOffset[1]-fEntryOffset[0];
+//          int curr = fEntryOffset[1];
+//          for (int i=1;i<fNevBuf;i++,curr+=dist) {
+//             if (fEntryOffset[i]==curr) continue;
+//             equidist = 0;
+//             break;
+//          }
+//          if (equidist) {
+//             fNevBufSize=dist;
+//             delete [] fEntryOffset; fEntryOffset = 0;
+//          }
+//           if (equidist) {
+//              fprintf(stderr,"detected an equidistant case fNbytes==%d fLast==%d\n",fNbytes,fLast);
+//           }
+//       }
+//  also he add (a little further
+//       if (!fEntryOffset || equidist)  flag  = 2;
+    
+//   timer.Stop();
+//   Double_t rt1 = timer.RealTime();
+//   Double_t cp1 = timer.CpuTime();
+//   fprintf(stderr,"equidist cost :  RT=%6.2f s  Cpu=%6.2f s\n",rt1,cp1);
+
       b << fBufferSize;
       b << fNevBufSize;
       b << fNevBuf;
@@ -378,7 +409,7 @@ void TBasket::Update(Int_t offset, Int_t skipped)
          fNevBufSize   = newsize;
          //Update branch only for the first 10 baskets
          if (fBranch->GetWriteBasket() < 10) fBranch->SetEntryOffsetLen(newsize);
-
+//          fprintf(stderr,"fNevBuf+1==%d fNevBufSize==%d\n",fNevBuf+1,fNevBufSize);
       }
       fEntryOffset[fNevBuf] = offset;
 

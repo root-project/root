@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.40 2003/11/11 15:44:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.42 2004/01/19 13:40:50 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -108,13 +108,16 @@ private :
    TGeoShape            *fClippingShape;    //! clipping shape for raytracing
 
    Int_t                *fNodeIdArray;      //! array of node id's
-   Int_t                 fIntSize;         //! int buffer size
+   Int_t                 fIntSize;          //! int buffer size
    Int_t                 fDblSize;          //! dbl buffer size
+   Int_t                 fOverlapSize;      //! current size of fOverlapClusters
+   Int_t                 fOverlapMark;      //! current recursive position in fOverlapClusters
    Int_t                *fIntBuffer;        //! transient int buffer
+   Int_t                *fOverlapClusters;  //! internal array for overlaps
    Double_t             *fDblBuffer;        //! transient dbl buffer
 
 //--- private methods
-   void                   BuildCache(Bool_t dummy=kFALSE);
+   void                   BuildCache(Bool_t dummy=kFALSE, Bool_t nodeid=kFALSE);
    void                   BuildIdArray();
    TGeoNode              *FindInCluster(Int_t *cluster, Int_t nc);
    Int_t                  GetTouchedCluster(Int_t start, Double_t *point, Int_t *check_list,
@@ -202,7 +205,7 @@ public:
                                        const char *g3path="");
    void                   Test(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void                   TestOverlaps(const char* path=""); // *MENU*
-   Double_t               Weight(Double_t precision=0.01, Option_t *option="v"); //*MENU*
+   Double_t               Weight(Double_t precision=0.01, Option_t *option="v"); // *MENU*
 
    //--- GEANT3-like geometry creation
    TGeoVolume            *Division(const char *name, const char *mother, Int_t iaxis, Int_t ndiv, 
@@ -307,6 +310,7 @@ public:
    TVirtualGeoTrack      *GetParentTrackOfId(Int_t id) const;
    Int_t                  GetVirtualLevel();
    Bool_t                 GotoSafeLevel();
+   Int_t                  GetSafeLevel() const;
    Double_t               GetSafeDistance() const      {return fSafety;}
    Double_t               GetStep() const              {return fStep;}
    Bool_t                 IsAnimatingTracks() const    {return fIsGeomReading;}
@@ -427,12 +431,12 @@ public:
    void                   SelectTrackingMedia();
 
    //--- stack manipulation
-   Int_t                  PushPath() {return fCache->PushState(fCurrentOverlapping);}
+   Int_t                  PushPath(Int_t startlevel=0) {return fCache->PushState(fCurrentOverlapping, startlevel);}
    Bool_t                 PopPath() {fCurrentOverlapping=fCache->PopState(); fCurrentNode=fCache->GetNode();
                                      fLevel=fCache->GetLevel();return fCurrentOverlapping;}
    Bool_t                 PopPath(Int_t index) {fCurrentOverlapping=fCache->PopState(index);
                                      fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel();return fCurrentOverlapping;}
-   Int_t                  PushPoint() {return fCache->PushState(fCurrentOverlapping, fPoint);}
+   Int_t                  PushPoint(Int_t startlevel=0) {return fCache->PushState(fCurrentOverlapping, startlevel,fPoint);}
    Bool_t                 PopPoint() {fCurrentOverlapping=fCache->PopState(fPoint); fCurrentNode=fCache->GetNode();
                                      fLevel=fCache->GetLevel(); return fCurrentOverlapping;}
    Bool_t                 PopPoint(Int_t index) {fCurrentOverlapping=fCache->PopState(index, fPoint); fCurrentNode=fCache->GetNode();

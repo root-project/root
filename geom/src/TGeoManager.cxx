@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.67 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.72 2004/01/23 16:34:13 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -538,6 +538,9 @@ void TGeoManager::Init()
    fIntSize = fDblSize = 1000;
    fIntBuffer = new Int_t[1000];
    fDblBuffer = new Double_t[1000];
+   fOverlapMark = 0;
+   fOverlapSize = 1000;
+   fOverlapClusters = new Int_t[fOverlapSize];
    printf("===> %s, %s created\n", GetName(), GetTitle());
 }
 
@@ -583,6 +586,7 @@ TGeoManager::~TGeoManager()
    delete fGShapes;
    delete [] fDblBuffer;
    delete [] fIntBuffer;
+   delete [] fOverlapClusters;
    gGeoIdentity = 0;
    gGeoManager = 0;
 }
@@ -710,16 +714,16 @@ void TGeoManager::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
 }
 
 //_____________________________________________________________________________
-void TGeoManager::BuildCache(Bool_t dummy)
+void TGeoManager::BuildCache(Bool_t dummy, Bool_t nodeid)
 {
 // Builds the cache for physical nodes and global matrices.
    if (!fCache) {
       if (fNNodes>5000000 || dummy)  // temporary - works without
          // build dummy cache
-         fCache = new TGeoCacheDummy(fTopNode);
+         fCache = new TGeoCacheDummy(fTopNode, nodeid);
       else
          // build real cache
-         fCache = new TGeoNodeCache(0);
+         fCache = new TGeoNodeCache(0,nodeid);
    }
 }
 
@@ -1318,6 +1322,10 @@ void TGeoManager::CloseGeometry(Option_t *option)
       Warning("CloseGeometry", "geometry already closed");
       return;
    }   
+   if (!fMasterVolume) {
+      Error("CloseGeometry","you MUST call SetTopVolume() first !");
+      return;
+   }      
    gROOT->GetListOfBrowsables()->Add(this);
    TSeqCollection *brlist = gROOT->GetListOfBrowsers();
    TIter next(brlist);
@@ -1329,6 +1337,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
    TString opt(option);
    opt.ToLower();
    Bool_t dummy = opt.Contains("d");
+   Bool_t nodeid = opt.Contains("i");
    if (fIsGeomReading) {
       printf("### Geometry loaded from file...\n");
       gGeoIdentity=(TGeoIdentity *)fMatrices->At(0);
@@ -1340,11 +1349,11 @@ void TGeoManager::CloseGeometry(Option_t *option)
          SetTopVolume(fMasterVolume);
          if (fStreamVoxels) printf("### Voxelization retrieved from file\n");
          Voxelize("ALL");
-         if (!fCache) BuildCache(dummy);
+         if (!fCache) BuildCache(dummy,nodeid);
       } else {
          Warning("CloseGeometry", "top node was streamed!");
          Voxelize("ALL");
-         if (!fCache) BuildCache(dummy);
+         if (!fCache) BuildCache(dummy,nodeid);
       }
 //      BuildIdArray();
       printf("### %i nodes/ %i volume UID's in %s\n", fNNodes, fUniqueVolumes->GetEntriesFast(), GetTitle());
@@ -1360,7 +1369,7 @@ void TGeoManager::CloseGeometry(Option_t *option)
 //   BuildIdArray();
    Voxelize("ALL");
    printf("Building caches for nodes and matrices...\n");
-   BuildCache(dummy);
+   BuildCache(dummy,nodeid);
    printf("### %i nodes/ %i volume UID's in %s\n", fNNodes, fUniqueVolumes->GetEntriesFast(), GetTitle());
    printf("----------------modeler ready----------------\n");
 }
@@ -1724,7 +1733,7 @@ TVirtualGeoTrack *TGeoManager::GetTrackOfId(Int_t id) const
 // Get track with a given ID.
    TVirtualGeoTrack *track;
    for (Int_t i=0; i<fNtracks; i++) {
-      if ((track = (TVirtualGeoTrack *)fTracks->At(i))) {
+      if ((track = (TVirtualGeoTrack *)fTracks->UncheckedAt(i))) {
          if (track->GetId() == id) return track;
       }
    }
@@ -1748,7 +1757,7 @@ Int_t TGeoManager::GetTrackIndex(Int_t id) const
 // Get index for track id, -1 if not found.
    TVirtualGeoTrack *track;
    for (Int_t i=0; i<fNtracks; i++) {
-      if ((track = (TVirtualGeoTrack *)fTracks->At(i))) {
+      if ((track = (TVirtualGeoTrack *)fTracks->UncheckedAt(i))) {
          if (track->GetId() == id) return i;
       }
    }
@@ -1762,6 +1771,23 @@ Bool_t TGeoManager::GotoSafeLevel()
    while (fCurrentOverlapping && fLevel) CdUp();
    return kTRUE;
 }
+
+//_____________________________________________________________________________
+Int_t TGeoManager::GetSafeLevel() const
+{
+// Go upwards the tree until a non-overlaping node
+   Bool_t overlapping = fCurrentOverlapping;
+   if (!overlapping) return fLevel;
+   Int_t level = fLevel;
+   TGeoNode *node;
+   while (overlapping && level) {
+      level--;
+      node = GetMother(fLevel-level);
+      if (!node->IsOffset()) overlapping = node->IsOverlapping();
+   }   
+   return level;
+}
+
 //_____________________________________________________________________________
 TGeoNode *TGeoManager::FindInCluster(Int_t *cluster, Int_t nc)
 {
@@ -1903,7 +1929,6 @@ Double_t TGeoManager::Safety(Bool_t inside)
       return fSafety;
    }   
    Double_t point[3];
-   Double_t local[3];
    if (!inside) fSafety = TGeoShape::Big();
    if (fIsOutside) {
       fSafety = fTopVolume->GetShape()->Safety(fPoint,kFALSE);
@@ -1927,6 +1952,7 @@ Double_t TGeoManager::Safety(Bool_t inside)
    //---> now check the safety to the last node
 
    //---> if we were just exiting, return this safety
+   TObjArray *nodes = vol->GetNodes();
    Int_t nd = fCurrentNode->GetNdaughters();
    if (!nd && !fCurrentOverlapping) return fSafety;
    TGeoNode *node;
@@ -1938,10 +1964,9 @@ Double_t TGeoManager::Safety(Bool_t inside)
    TGeoPatternFinder *finder = vol->GetFinder();
    if (finder) {
       Int_t ifirst = finder->GetDivIndex();
-      node = vol->GetNode(ifirst);
+      node = (TGeoNode*)nodes->UncheckedAt(ifirst);
       node->cd();
-      node->MasterToLocal(point, local);
-      safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
+      safe = node->Safety(point, kFALSE);
       if (safe<0) {
          fSafety=0;
          return fSafety;
@@ -1949,16 +1974,14 @@ Double_t TGeoManager::Safety(Bool_t inside)
       if (safe<fSafety) fSafety=safe;
       Int_t ilast = ifirst+finder->GetNdiv()-1;
       if (ilast==ifirst) return fSafety;
-      node = vol->GetNode(ilast);
+      node = (TGeoNode*)nodes->UncheckedAt(ilast);
       node->cd();
-      node->MasterToLocal(point, local);
-      safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
+      safe = node->Safety(point, kFALSE);
       if (safe<0) {
          fSafety=0;
          return fSafety;
       }   
       if (safe<fSafety) fSafety=safe;
-//      if (fSafety<1E-3) return fSafety;
       if (fCurrentOverlapping  && !inside) SafetyOverlaps();
       return fSafety;
    }
@@ -1967,9 +1990,8 @@ Double_t TGeoManager::Safety(Bool_t inside)
    TGeoVoxelFinder *voxels = vol->GetVoxels();
    if (!voxels) {
       for (id=0; id<nd; id++) {
-         node = vol->GetNode(id);
-         node->MasterToLocal(point, local);
-         safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
+         node = (TGeoNode*)nodes->UncheckedAt(id);
+         safe = node->Safety(point, kFALSE);
 //         if (safe<0) {printf("%s (%s) (%f, %f, %f) kFALSE loop in %s safe=%g\n", node->GetVolume()->GetShape()->ClassName(),node->GetVolume()->GetName(), local[0],local[1],local[2],vol->GetName(),safe); exit(1);}
          if (safe<0) {
             fSafety=0;
@@ -1983,11 +2005,18 @@ Double_t TGeoManager::Safety(Bool_t inside)
    }
          
    //---> check fast unsafe voxels
+   Double_t *boxes = voxels->GetBoxes();
    for (id=0; id<nd; id++) {
-      if (voxels->IsSafeVoxel(point, id, fSafety)) continue;
-      node = vol->GetNode(id);
-      node->MasterToLocal(point, local);
-      safe = node->GetVolume()->GetShape()->Safety(local, kFALSE);
+      Int_t ist = 6*id;
+      Double_t dxyz0 = TMath::Abs(point[0]-boxes[ist+3])-boxes[ist];
+      if (dxyz0 > fSafety) continue;
+      Double_t dxyz1 = TMath::Abs(point[1]-boxes[ist+4])-boxes[ist+1];
+      if (dxyz1 > fSafety) continue;
+      Double_t dxyz2 = TMath::Abs(point[2]-boxes[ist+5])-boxes[ist+2];
+      if (dxyz2 > fSafety) continue;
+      if (dxyz0*dxyz0+dxyz1*dxyz1+dxyz2*dxyz2 >= fSafety*fSafety) continue;
+      node = (TGeoNode*)nodes->UncheckedAt(id);
+      safe = node->Safety(point, kFALSE);
 //      if (safe<0) {printf("%s (%s) (%f, %f, %f) kFALSE vox of %s safe=%g\n", node->GetVolume()->GetName(),node->GetVolume()->GetShape()->ClassName(), local[0],local[1],local[2],vol->GetName(),safe); exit(1);}
       if (safe<0) {
          fSafety=0;
@@ -2011,7 +2040,8 @@ void TGeoManager::SafetyOverlaps()
    TGeoVolume *vol;
    Int_t novlp, io;
    Int_t *ovlp;
-   PushPath();
+   Int_t safelevel = GetSafeLevel();
+   PushPath(safelevel+1);
    while (fCurrentOverlapping) {
       ovlp = fCurrentNode->GetOverlaps(novlp);
       CdUp();
@@ -2431,11 +2461,17 @@ TGeoNode *TGeoManager::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
          if (node==skipnode) continue;
          if ((id<(ncheck-1)) && node->IsOverlapping()) {
          // make the cluster of overlaps
-            Int_t *cluster = new Int_t[ncheck-id];
+            if (ncheck+fOverlapMark > fOverlapSize) {
+               fOverlapSize = 2*(ncheck+fOverlapMark);
+               delete [] fOverlapClusters;
+               fOverlapClusters = new Int_t[fOverlapSize];
+            }
+            Int_t *cluster = fOverlapClusters + fOverlapMark;
             Int_t nc = GetTouchedCluster(id, &point[0], check_list, ncheck, cluster);
             if (nc>1) {
+               fOverlapMark += nc;
                node = FindInCluster(cluster, nc);
-               delete [] cluster;
+               fOverlapMark -= nc;
                return node;
             }
          }
@@ -2487,9 +2523,13 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
    // convert current point and direction to local reference
    Int_t iact = 3;
    fStep = TGeoShape::Big();
-   *fCurrentMatrix = GetCurrentMatrix();
    fNextNode = 0;
+   Bool_t computeGlobal = kFALSE;
    if (stepmax<1E20) {
+      if (stepmax <= 0) {
+         stepmax = - stepmax;
+         computeGlobal = kTRUE;
+      }
       fSafety = Safety();
       fStep = stepmax;
       if (stepmax<fSafety) {
@@ -2497,6 +2537,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          return fCurrentNode;
       }
    }   
+   if (computeGlobal) *fCurrentMatrix = GetCurrentMatrix();
    Double_t snext  = TGeoShape::Big();
    Double_t safe;
    Double_t point[3];
@@ -2507,7 +2548,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          PopPath();
          return 0;
       }
-      *fCurrentMatrix = GetCurrentMatrix();
+      if (computeGlobal) *fCurrentMatrix = GetCurrentMatrix();
       fNextNode = fCurrentNode;
       TGeoVolume *tvol=fCurrentNode->GetVolume();
       fCache->MasterToLocal(fPoint, &point[0]);
@@ -2553,9 +2594,10 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       Double_t mothpt[3];
       Double_t vecpt[3];
       Double_t dpt[3], dvec[3];
-      PushPath();
       Int_t novlps;
-      while (fCurrentOverlapping) {
+      Int_t safelevel = GetSafeLevel();
+      PushPath(safelevel+1);
+       while (fCurrentOverlapping) {
          Int_t *ovlps = fCurrentNode->GetOverlaps(novlps);
          CdUp();
          mother = fCurrentNode->GetVolume();
@@ -2566,7 +2608,7 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          if (snext<fStep) {
             fIsStepEntering = kFALSE;
             fStep = snext;
-            *fCurrentMatrix = GetCurrentMatrix();
+            if (computeGlobal) *fCurrentMatrix = GetCurrentMatrix();
             fNextNode = fCurrentNode;
          }
          // check overlapping nodes
@@ -2578,8 +2620,10 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
                current->MasterToLocalVect(&vecpt[0], &dvec[0]);
                snext = current->GetVolume()->GetShape()->DistToIn(&dpt[0], &dvec[0], iact, fStep, &safe);
                if (snext<fStep) {
-                  *fCurrentMatrix = GetCurrentMatrix();
-                  fCurrentMatrix->Multiply(current->GetMatrix());
+                  if (computeGlobal) {
+                     *fCurrentMatrix = GetCurrentMatrix();
+                     fCurrentMatrix->Multiply(current->GetMatrix());
+                  }
                   fIsStepEntering = kFALSE;
                   fStep = snext;
                   fNextNode = current;
@@ -2606,8 +2650,10 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       current->MasterToLocalVect(&dir[0], &ldir[0]);
       snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], iact, fStep, &safe);
       if (snext<fStep) {
-         *fCurrentMatrix = GetCurrentMatrix();
-         fCurrentMatrix->Multiply(current->GetMatrix());
+         if (computeGlobal) {
+            *fCurrentMatrix = GetCurrentMatrix();
+             fCurrentMatrix->Multiply(current->GetMatrix());
+          }
          fIsStepEntering = kTRUE;
          fStep=snext;
          fNextNode = current;
@@ -2620,9 +2666,11 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
       current->MasterToLocalVect(&dir[0], &ldir[0]);
       snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], iact, fStep, &safe);
       if (snext<fStep) {
-         *fCurrentMatrix = GetCurrentMatrix();
-         fCurrentMatrix->Multiply(current->GetMatrix());
-         fIsStepEntering = kTRUE;
+         if (computeGlobal) {
+            *fCurrentMatrix = GetCurrentMatrix();
+             fCurrentMatrix->Multiply(current->GetMatrix());
+          }
+          fIsStepEntering = kTRUE;
          fStep=snext;
          fNextNode = current;
       }
@@ -2648,9 +2696,11 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
          }   
             
          if (snext<fStep) {
-            *fCurrentMatrix = GetCurrentMatrix();
-            fCurrentMatrix->Multiply(current->GetMatrix());
-            fIsStepEntering = kTRUE;
+            if (computeGlobal) {
+               *fCurrentMatrix = GetCurrentMatrix();
+                fCurrentMatrix->Multiply(current->GetMatrix());
+             }
+             fIsStepEntering = kTRUE;
             fStep=snext;
             fNextNode = current;
          }
@@ -2670,8 +2720,10 @@ TGeoNode *TGeoManager::FindNextBoundary(Double_t stepmax, const char *path)
             current->MasterToLocalVect(&dir[0], &ldir[0]);
             snext = current->GetVolume()->GetShape()->DistToIn(&lpoint[0], &ldir[0], iact, fStep, &safe);
             if (snext<fStep) {
-               *fCurrentMatrix = GetCurrentMatrix();
-               fCurrentMatrix->Multiply(current->GetMatrix());
+               if (computeGlobal) {
+                  *fCurrentMatrix = GetCurrentMatrix();
+                   fCurrentMatrix->Multiply(current->GetMatrix());
+                }
                fIsStepEntering = kTRUE;
                fStep=snext;
                fNextNode = current;
@@ -2857,13 +2909,11 @@ Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t ch
 // Checks if point (x,y,z) is still in the current node.
    // check if this is an overlapping node
    if (fCurrentOverlapping) {
-      TGeoNode *current = fCurrentNode;
+//      TGeoNode *current = fCurrentNode;
       Int_t cid = GetCurrentNodeId();
       if (!change) PushPoint();
       gGeoManager->FindNode(x,y,z);
-      Bool_t same = (cid>=0)?kTRUE:kFALSE;
-      if (same) same = (cid==GetCurrentNodeId())?kTRUE:kFALSE;
-      else      same = (current==fCurrentNode)?kTRUE:kFALSE;
+      Bool_t same = (cid==GetCurrentNodeId())?kTRUE:kFALSE;
       if (!change) PopPoint();
       return same;
    }         
@@ -3533,9 +3583,10 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
    fLevel = 0;
    if (fCache) {
       Bool_t dummy=fCache->IsDummy();
+      Bool_t nodeid = fCache->HasIdArray();
       delete fCache;
       fCache = 0;
-      BuildCache(dummy);
+      BuildCache(dummy,nodeid);
    }
    printf("Top volume is %s. Master volume is %s\n", fTopVolume->GetName(),
            fMasterVolume->GetName());

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.5 2002/01/20 10:22:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TEventList.h,v 1.6 2002/01/23 15:48:05 rdm Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -46,6 +46,7 @@ public:
         TEventList(const TEventList &list);
         virtual          ~TEventList();
         virtual void     Add(const TEventList *list);
+        virtual void     Clear(Option_t *option="") {Reset(option);}
         virtual Bool_t   Contains(Int_t entry);
         virtual void     Enter(Int_t entry);
         TDirectory      *GetDirectory() const {return fDirectory;}

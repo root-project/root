@@ -167,11 +167,14 @@ check_library() {
             for j in ${libs} ; do
 	        # if we found the file (it's readable by user), we set the
 	        # logical variables and are on our way, otherwise we continue
-                if test  -r $l/$j ; then
-                    found_dir=$l
-                    found_lib=$j
-                    break 3
-                fi
+                liblist=`echo $l/$j`    # expands wildcard in $l/$j
+                for n in ${liblist} ; do
+                    if test -r $n ; then
+                        found_dir=$l
+                        found_lib=$j
+                        break 4
+                    fi
+                done
             done
         done
     done
@@ -905,7 +908,7 @@ fi
 if test "x$enable_opengl" = "xno" ; then
     enable_openiv="no"
 fi
-if test ! "x$enable_openiv" = "xno" && test ! "$platform" = "win32" ; then
+if test ! "x$enable_openiv" = "xno" ; then
     # Check for OpenInventor compatible include and library
     check_header "Inventor/SoType.h" "$openivincdir" $IVROOT $IVROOT/include \
 	$IVROOT/usr/include /usr/include /usr/include/X11 /usr/X11/include \
@@ -927,12 +930,12 @@ if test ! "x$enable_openiv" = "xno" && test ! "$platform" = "win32" ; then
 	/opt/inventor /opt/inventor/lib /opt/inventor/usr/lib"
 
     keep=$openivlibdir
-    check_library "libInventor" "$enable_shared" \
+    check_library "libInventor libCoin coin*" "$enable_shared" \
 	"$openivlibdir" $openivlibdirs
     openivlib=$found_lib
     openivlibdir=$found_dir
 
-    check_library "libInventorXt" "$enable_shared" \
+    check_library "libInventorXt libSoXt libSoQt soqt*" "$enable_shared" \
 	"$keep" $openivlibdirs
     openivlib="$openivlib $found_lib"
     openivlibdir="$openivlibdir $found_dir"
@@ -1039,7 +1042,7 @@ if test ! "x$enable_qt" = "xno"; then
     qtinc=$found_hdr
     qtincdir=$found_dir
 
-    check_library "libqt-mt libqt qt-mt320 qt-mt qt" "$enable_shared" \
+    check_library "libqt-mt libqt qt-mt* qt" "$enable_shared" \
         "$qtlibdir" $QTDIR $QTDIR/lib /usr/local/lib /usr/local/qt/lib \
         /usr/lib /usr/qt/lib
     qtlib=$found_lib
@@ -2361,6 +2364,7 @@ sed \
     -e "s|@bindir@|$bindir|"               \
     -e "s|@cintincdir@|$cintincdir|"       \
     -e "s|@datadir@|$datadir|"             \
+    -e "s|@docdir@|$docdir|"               \
     -e "s|@etcdir@|$etcdir|"               \
     -e "s|@extraiconpath@|$extraiconpath|" \
     -e "s|@iconpath@|$iconpath|"           \

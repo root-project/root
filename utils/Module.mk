@@ -12,7 +12,7 @@ UTILSDIRS    := $(UTILSDIR)/src
 UTILSDIRI    := $(UTILSDIR)/inc
 
 ##### rootcint #####
-ROOTCINTS    := $(MODDIRS)/rootcint.cxx
+ROOTCINTS    := $(MODDIRS)/rootcint.cxx $(wildcard $(MODDIRS)/R*.cxx)
 ROOTCINTO    := $(ROOTCINTS:.cxx=.o)
 ROOTCINTDEP  := $(ROOTCINTO:.o=.d)
 ROOTCINTTMPO := $(ROOTCINTS:.cxx=_tmp.o)
@@ -29,15 +29,13 @@ RLIBMAP      := bin/rlibmap$(EXEEXT)
 INCLUDEFILES += $(ROOTCINTDEP) $(RLIBMAPDEP)
 
 ##### local rules #####
-$(ROOTCINT):    $(CINTLIB) $(ROOTCINTO) $(MAKEINFO) $(IOSENUM)
-		$(LD) $(LDFLAGS) -o $@ $(ROOTCINTO) \
+$(ROOTCINT):    $(CINTLIB) $(ROOTCINTO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM)
+		$(LD) $(LDFLAGS) -o $@ $(ROOTCINTO) $(METAUTILSO) \
 		   $(RPATH) $(CINTLIBS) $(CILIBS)
 
-$(ROOTCINTTMP): $(CINTTMPO) $(ROOTCINTS) $(MAKEINFO) $(IOSENUM)
-		$(CXX) $(OPT) $(CXXFLAGS) -UHAVE_CONFIG -DROOTBUILD \
-			-c $(ROOTCINTS) -o $(ROOTCINTTMPO)
+$(ROOTCINTTMP): $(CINTTMPO) $(ROOTCINTTMPO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM)
 		$(LD) $(LDFLAGS) -o $@ \
-			$(ROOTCINTTMPO) $(CINTTMPO) $(CILIBS)
+		   $(ROOTCINTTMPO) $(METAUTILSO) $(CINTTMPO) $(CILIBS)
 
 $(RLIBMAP):     $(RLIBMAPO)
 		$(LD) $(LDFLAGS) -o $@ $<
@@ -55,3 +53,7 @@ distclean-utils: clean-utils
 		   $(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib
 
 distclean::     distclean-utils
+
+##### extra rules ######
+$(UTILSDIRS)%_tmp.o: $(UTILSDIRS)%.cxx
+	$(CXX) $(OPT) $(CXXFLAGS) -UHAVE_CONFIG -DROOTBUILD -c $< -o $@

@@ -5336,7 +5336,9 @@ int hash;
 
 #ifndef G__OLDIMPLEMENTATION1932
   if(strcmp(funcname,"G__chdir")==0) {
+#if defined(G__WIN32) || defined(G__POSIX)
     char *stringb=(char*)G__int(libp->para[0]);
+#endif
     if(G__no_exec_compile) return(1);
     G__CHECKNONULL(0,'C');
 #if defined(G__WIN32)

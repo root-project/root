@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.7 2002/10/25 00:44:53 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.h,v 1.8 2003/01/13 15:05:29 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -37,18 +37,18 @@ class TRFIOFile : public TFile {
 
 private:
    TUrl      fUrl;        //URL of file
-   Seek_t    fOffset;     //seek offet
+   Long64_t  fOffset;     //seek offet
 
    TRFIOFile() : fUrl("dummy") { }
 
    // Interface to basic system I/O routines
-   Int_t  SysOpen(const char *pathname, Int_t flags, UInt_t mode);
-   Int_t  SysClose(Int_t fd);
-   Int_t  SysRead(Int_t fd, void *buf, Int_t len);
-   Int_t  SysWrite(Int_t fd, const void *buf, Int_t len);
-   Seek_t SysSeek(Int_t fd, Seek_t offset, Int_t whence);
-   Int_t  SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
-   Int_t  SysSync(Int_t) { /* no fsync for RFIO */ return 0; }
+   Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
+   Int_t    SysClose(Int_t fd);
+   Int_t    SysRead(Int_t fd, void *buf, Int_t len);
+   Int_t    SysWrite(Int_t fd, const void *buf, Int_t len);
+   Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence);
+   Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
+   Int_t    SysSync(Int_t) { /* no fsync for RFIO */ return 0; }
 
 public:
    TRFIOFile(const char *url, Option_t *option="",
@@ -80,7 +80,7 @@ public:
    void       *OpenDirectory(const char *name);
    void        FreeDirectory(void *dirp);
    const char *GetDirEntry(void *dirp);
-   Int_t       GetPathInfo(const char *path, Long_t *id, Long_t *size,
+   Int_t       GetPathInfo(const char *path, Long_t *id, Long64_t *size,
                            Long_t *flags, Long_t *modtime);
    Bool_t      AccessPathName(const char *path, EAccessMode mode);
 

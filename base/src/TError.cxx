@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.4 2002/07/08 14:40:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TError.cxx,v 1.7 2004/01/27 17:37:22 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -21,6 +21,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 #include <stdio.h>
 #include "snprintf.h"
 
@@ -35,6 +39,40 @@ const char *kAssertMsg = "%s violated at line %d of `%s'";
 const char *kCheckMsg  = "%s not true at line %d of `%s'";
 
 static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
+
+
+//______________________________________________________________________________
+static void debugPrint(const char *fmt, ...) 
+{
+   // print debugging message to stderr and to the system debugger under Windows
+
+   static Int_t buf_size = 2048;
+   static char *buf = 0;
+
+   va_list arg_ptr; 
+   va_start(arg_ptr, fmt);
+
+again:
+   if (!buf)
+      buf = new char[buf_size];
+
+   int n = vsnprintf(buf, buf_size, fmt, arg_ptr);
+
+   if (n == -1 || n >= buf_size) {
+      buf_size *= 2;
+      delete [] buf;
+      buf = 0;
+      goto again;
+   }
+   va_end(arg_ptr);
+
+   fprintf(stderr, "%s", buf);
+
+#ifdef WIN32
+   ::OutputDebugString(buf);
+#endif
+}
+
 
 //______________________________________________________________________________
 ErrorHandlerFunc_t SetErrorHandler(ErrorHandlerFunc_t newhandler)
@@ -79,15 +117,15 @@ void DefaultErrorHandler(int level, Bool_t abort, const char *location, const ch
       type = "Fatal";
 
    if (level >= kBreak && level < kSysError)
-      fprintf(stderr, "%s %s\n", type, msg);
+      debugPrint("%s %s\n", type, msg);
    else if (!location || strlen(location) == 0)
-      fprintf(stderr, "%s: %s\n", type, msg);
-   else
-      fprintf(stderr, "%s in <%s>: %s\n", type, location, msg);
+      debugPrint("%s: %s\n", type, msg);
+   else 
+      debugPrint("%s in <%s>: %s\n", type, location, msg);
 
    fflush(stderr);
    if (abort) {
-      fprintf(stderr, "aborting\n");
+      debugPrint("aborting\n");
       fflush(stderr);
       if (gSystem) {
          gSystem->StackTrace();
@@ -100,9 +138,7 @@ void DefaultErrorHandler(int level, Bool_t abort, const char *location, const ch
 //______________________________________________________________________________
 void ErrorHandler(int level, const char *location, const char *fmt, va_list ap)
 {
-   // General error handler function. It calls the user set error handler
-   // unless the error is of type kFatal, in which case the
-   // DefaultErrorHandler() is called which will abort the application.
+   // General error handler function. It calls the user set error handler.
 
    static Int_t buf_size = 2048;
    static char *buf = 0;

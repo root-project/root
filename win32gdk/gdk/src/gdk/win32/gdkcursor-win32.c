@@ -279,9 +279,9 @@ void _gdk_cursor_destroy(GdkCursor * cursor)
                           (cursor->type ==
                            GDK_CURSOR_IS_PIXMAP) ? private->xcursor : 0));
 
-   if (cursor->type == GDK_CURSOR_IS_PIXMAP)
+   if (cursor->type == GDK_CURSOR_IS_PIXMAP) {
       if (!DestroyCursor(private->xcursor))
          WIN32_API_FAILED("DestroyCursor");
-
+   }
    g_free(private);
 }

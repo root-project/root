@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.46 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.49 2004/01/10 10:52:29 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -52,6 +52,9 @@
 
 #include "HelpText.h"
 #include "TGFrame.h"
+#ifdef WIN32
+#include "TWin32SplashThread.h"
+#endif
 
 // Browser menu command ids
 enum ERootBrowserCommands {
@@ -1228,11 +1231,27 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kHelpAbout:
                      // coming soon
                      {
+#ifdef R__UNIX
+                        TString rootx;
+# ifdef ROOTBINDIR
+                        rootx = ROOTBINDIR;
+# else
+                        rootx = gSystem->Getenv("ROOTSYS");
+                        if (!rootx.IsNull()) rootx += "/bin";
+# endif
+                        rootx += "/root -a &";
+                        gSystem->Exec(rootx);
+#else
+#ifdef WIN32
+                        new TWin32SplashThread(kTRUE);
+#else
                         char str[32];
                         sprintf(str, "About ROOT %s...", gROOT->GetVersion());
                         hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
+#endif
+#endif
                      }
                      break;
                   case kHelpOnCanvas:
@@ -1373,8 +1392,17 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
                         TObject *obj = (TObject *)item->GetUserData();
                         if (obj) {
-                           if (obj->IsA() == TKey::Class())
-                              obj = gROOT->FindObject((char *) obj->GetName());
+                           if (obj->IsA() == TKey::Class()) {
+                              TKey *key = (TKey*)obj;
+                              TClass *cl = gROOT->GetClass(key->GetClassName());
+                              void *add = gROOT->FindObject((char *) key->GetName());
+                              if (cl->IsTObject()) {
+                                 obj = (TObject*)add; // cl->DynamicCast(TObject::Class(),startadd);
+                              } else {
+                                 Fatal("ProcessMessage","do not support non TObject (like %s) yet",
+                                       cl->GetName());
+                              }
+                           }
                            fBrowser->GetContextMenu()->Popup(x, y, obj);
                         }
                      }

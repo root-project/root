@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.32 2003/12/13 09:25:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.35 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -56,8 +56,10 @@ protected:
    enum { kIsCharacter = BIT(12) };
    enum { kDirect, kDataMember, kMethod, 
           kIndexOfEntry, kEntries, kLength, kIteration };
-   enum { kAlias = TFormula::kVariable+10000+1,
-          kAliasString = kAlias+1
+   enum { kAlias           = 200,
+          kAliasString     = 201,
+          kAlternate       = 202,
+          kAlternateString = 203
    };
 
    TTree       *fTree;            //! pointer to Tree
@@ -113,6 +115,9 @@ protected:
 
    virtual Bool_t     IsString(Int_t oper) const;
    virtual Bool_t     IsLeafString(Int_t code) const;
+
+   void  Convert(UInt_t fromVersion);
+
 private:
    // Not implemented yet
    TTreeFormula(const TTreeFormula&);
@@ -122,7 +127,7 @@ public:
              TTreeFormula();
              TTreeFormula(const char *name,const char *formula, TTree *tree);
    virtual   ~TTreeFormula();
-   virtual Int_t       DefinedVariable(TString &variable);
+   virtual Int_t       DefinedVariable(TString &variable, Int_t &action);
    virtual TClass*     EvalClass() const;
    virtual Double_t    EvalInstance(Int_t i=0, const char *stringStack[]=0);
    virtual const char *EvalStringInstance(Int_t i=0);
@@ -149,7 +154,7 @@ public:
    virtual void        SetTree(TTree *tree) {fTree = tree;}
    virtual void        UpdateFormulaLeaves();
 
-   ClassDef(TTreeFormula,8)  //The Tree formula
+   ClassDef(TTreeFormula,9)  //The Tree formula
 };
 
 #endif

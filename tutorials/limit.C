@@ -20,7 +20,9 @@ void limit() {
   signal->SetFillColor(41);
   data->SetMarkerStyle(21);
   data->SetMarkerColor(kBlue);
-
+  background->Sumw2(); // needed for stat uncertainty
+  signal->Sumw2(); // needed for stat uncertainty
+  
 // Fill histograms randomly
   TRandom r;
   Float_t bg,sig,dt;
@@ -37,7 +39,7 @@ void limit() {
   THStack *hs = new THStack("hs","Signal and background compared to data...");
   hs->Add(background);
   hs->Add(signal);
-  hs->Draw();
+  hs->Draw("hist");
   data->Draw("PE1,Same");
   c1->Modified();
   c1->Update();
@@ -59,6 +61,16 @@ void limit() {
   cout << "< CLsb > : " << myconfidence->GetExpectedCLsb_b() << endl;
   cout << "< CLb >  : " << myconfidence->GetExpectedCLb_b()  << endl;
 
+// Add stat uncertainty
+  cout << endl << "Computing limits with stat systematics... " << endl;
+  TConfidenceLevel *mystatconfidence = TLimit::ComputeLimit(mydatasource,50000,true);
+  cout << "CLs    : "   << mystatconfidence->CLs()  << endl;
+  cout << "CLsb   : "   << mystatconfidence->CLsb() << endl;
+  cout << "CLb    : "   << mystatconfidence->CLb()  << endl;
+  cout << "< CLs >  : " << mystatconfidence->GetExpectedCLs_b()  << endl;
+  cout << "< CLsb > : " << mystatconfidence->GetExpectedCLsb_b() << endl;
+  cout << "< CLb >  : " << mystatconfidence->GetExpectedCLb_b()  << endl;
+
 // Add some systematics
   cout << endl << "Computing limits with systematics... " << endl;
   TH1D* errorb = new TH1D("errorb","errors on background",1,0,1);
@@ -74,7 +86,7 @@ void limit() {
   errors->SetBinContent(1,0.01); // error source 2: 1%
   TLimitDataSource* mynewdatasource  = new TLimitDataSource();
   mynewdatasource->AddChannel(signal,background,data,errors,errorb,names);
-  TConfidenceLevel *mynewconfidence = TLimit::ComputeLimit(mynewdatasource,50000);
+  TConfidenceLevel *mynewconfidence = TLimit::ComputeLimit(mynewdatasource,50000,true);
   cout << "CLs    : " << mynewconfidence->CLs()  << endl;
   cout << "CLsb   : " << mynewconfidence->CLsb() << endl;
   cout << "CLb    : " << mynewconfidence->CLb()  << endl;
@@ -91,6 +103,7 @@ void limit() {
 // clean up (except histograms and canvas)
   delete myconfidence;
   delete mydatasource;
+  delete mystatconfidence;
   delete mynewconfidence;
   delete mynewdatasource;
 }

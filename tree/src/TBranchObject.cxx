@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.25 2003/04/04 16:35:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.26 2003/12/08 15:55:24 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -82,7 +82,7 @@ TBranchObject::TBranchObject(const char *name, const char *classname, void *addo
    fClassName      = classname;
    fBasketEntry    = new Int_t[fMaxBaskets];
    fBasketBytes    = new Int_t[fMaxBaskets];
-   fBasketSeek     = new Seek_t[fMaxBaskets];
+   fBasketSeek     = new Long64_t[fMaxBaskets];
    fOldObject      = 0;
 
    for (Int_t i=0;i<fMaxBaskets;i++) {

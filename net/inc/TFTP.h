@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.6 2001/03/01 07:21:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.7 2002/11/07 18:17:46 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -48,7 +48,7 @@ private:
    Int_t      fLastBlock;   // last block successfully transfered
    Int_t      fBlockSize;   // size of data buffer used to transfer
    Int_t      fMode;        // binary or ascii file transfer mode
-   Seek_t     fRestartAt;   // restart transmission at specified offset
+   Long64_t   fRestartAt;   // restart transmission at specified offset
    TString    fCurrentFile; // file currently being get or put
    TSocket   *fSocket;      //! connection to rootd
    Double_t   fBytesWrite;  // number of bytes sent
@@ -76,28 +76,28 @@ public:
    TFTP(const char *url, Int_t parallel = 1, Int_t wsize = kDfltWindowSize);
    virtual ~TFTP();
 
-   void   SetBlockSize(Int_t blockSize);
-   Int_t  GetBlockSize() const { return fBlockSize; }
-   void   SetRestartAt(Seek_t at) { fRestartAt = at; }
-   Seek_t GetRestartAt() const { return fRestartAt; }
-   Int_t  GetMode() const { return fMode; }
+   void     SetBlockSize(Int_t blockSize);
+   Int_t    GetBlockSize() const { return fBlockSize; }
+   void     SetRestartAt(Long64_t at) { fRestartAt = at; }
+   Long64_t GetRestartAt() const { return fRestartAt; }
+   Int_t    GetMode() const { return fMode; }
 
-   Bool_t IsOpen() const { return fSocket ? kTRUE : kFALSE; }
-   void   Print(Option_t *opt = "") const;
+   Bool_t   IsOpen() const { return fSocket ? kTRUE : kFALSE; }
+   void     Print(Option_t *opt = "") const;
 
-   Seek_t PutFile(const char *file, const char *remoteName = 0);
-   Seek_t GetFile(const char *file, const char *localName = 0);
-   Int_t  ChangeDirectory(const char *dir) const;
-   Int_t  MakeDirectory(const char *dir) const;
-   Int_t  DeleteDirectory(const char *dir) const;
-   Int_t  ListDirectory(Option_t *cmd = "") const;
-   Int_t  PrintDirectory() const;
-   Int_t  RenameFile(const char *file1, const char *file2) const;
-   Int_t  DeleteFile(const char *file) const;
-   Int_t  ChangePermission(const char *file, Int_t mode) const;
-   Int_t  Close();
-   void   Binary() { SetMode(kBinary); }
-   void   Ascii() { SetMode(kAscii); }
+   Long64_t PutFile(const char *file, const char *remoteName = 0);
+   Long64_t GetFile(const char *file, const char *localName = 0);
+   Int_t    ChangeDirectory(const char *dir) const;
+   Int_t    MakeDirectory(const char *dir) const;
+   Int_t    DeleteDirectory(const char *dir) const;
+   Int_t    ListDirectory(Option_t *cmd = "") const;
+   Int_t    PrintDirectory() const;
+   Int_t    RenameFile(const char *file1, const char *file2) const;
+   Int_t    DeleteFile(const char *file) const;
+   Int_t    ChangePermission(const char *file, Int_t mode) const;
+   Int_t    Close();
+   void     Binary() { SetMode(kBinary); }
+   void     Ascii() { SetMode(kAscii); }
 
    // standard ftp equivalents...
    void put(const char *file, const char *remoteName = 0) { PutFile(file, remoteName); }

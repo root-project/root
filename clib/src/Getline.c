@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.13 2002/12/02 18:50:01 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.19 2004/01/31 16:06:35 brun Exp $ */
 /* Author: */
 
 /*
@@ -773,7 +773,7 @@ char *
 Getlinem(int mode, const char *prompt)
 {
     int             c, loc, tmp;
-    int             sig;   
+    int             sig;
 
     if (mode == 2) {
        gl_cleanup();
@@ -806,7 +806,7 @@ Getlinem(int mode, const char *prompt)
                gl_addchar(c);
         } else {
             if (gl_search_mode) {
-                if (c == '\033' || c == '\016' || c == '\020') {
+                if (c == '\016' || c == '\020') {
                     search_term();
                     c = 0;              /* ignore the character */
                 } else if (c == '\010' || c == '\177') {
@@ -853,7 +853,8 @@ Getlinem(int mode, const char *prompt)
                  break;
             case '\001': gl_fixup(gl_prompt, -1, 0);          /* ^A */
                  break;
-            case '\002': gl_fixup(gl_prompt, -1, gl_pos-1);   /* ^B */
+            case '\002':                                      /* ^B */ 
+                 gl_fixup(gl_prompt, -1, gl_pos-1);
                  break;
             case '\004':                                      /* ^D */
                  if (gl_cnt == 0) {
@@ -867,7 +868,8 @@ Getlinem(int mode, const char *prompt)
                  break;
             case '\005': gl_fixup(gl_prompt, -1, gl_cnt);     /* ^E */
                  break;
-            case '\006': gl_fixup(gl_prompt, -1, gl_pos+1);   /* ^F */
+            case '\006':                                      /* ^F */
+                 gl_fixup(gl_prompt, -1, gl_pos+1);
                  break;
             case '\010': case '\177': gl_del(-1);     /* ^H and DEL */
                  break;
@@ -927,7 +929,6 @@ Getlinem(int mode, const char *prompt)
                       switch(c = gl_getc())
                       {
                       case 'A':                           /* up */
- 
                            strcpy(gl_buf, hist_prev());
                            if (Gl_in_hook)
                                 Gl_in_hook(gl_buf);
@@ -942,6 +943,14 @@ Getlinem(int mode, const char *prompt)
                       case 'C': gl_fixup(gl_prompt, -1, gl_pos+1);  /* right */
                            break;
                       case 'D': gl_fixup(gl_prompt, -1, gl_pos-1);  /* left */
+                           break;
+                      case 'H': gl_fixup(gl_prompt, -1, 0);         /* home */
+                           break;
+                      case 'F': gl_fixup(gl_prompt, -1, gl_cnt);    /* end */
+                           break;
+                      case '3':  /* delete */
+                           gl_del(0);
+                           c = gl_getc(); /* ignore ~ */
                            break;
                       default:                                 /* who knows */
                            gl_putc('\007');
@@ -1186,6 +1195,10 @@ gl_fixup(const char *prompt, int change, int cursor)
     int          new_right = -1; /* alternate right bound, using gl_extent */
     int          l1, l2;
 
+#ifdef WIN32 // bb & vo
+    CONSOLE_SCREEN_BUFFER_INFO ci; 
+    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &ci);
+#endif
     if (change == -2) {   /* reset */
         gl_pos = gl_cnt = gl_shift = off_right = off_left = 0;
         gl_passwd = 0;
@@ -1284,13 +1297,19 @@ gl_fixup(const char *prompt, int change, int cursor)
     }
     i = gl_pos - cursor;                /* move to final cursor location */
     if (i > 0) {
-        while (i--)
+        while (i--) {
            gl_putc('\b');
+        }
     } else {
-        for (i=gl_pos; i < cursor; i++)
+        for (i=gl_pos; i < cursor; i++) {
             gl_putc(gl_buf[i]);
+        }
     }
     gl_pos = cursor;
+#ifdef WIN32 // bb & vo
+    ci.dwCursorPosition.X = gl_pos + strlen(prompt) - gl_shift;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), ci.dwCursorPosition );
+#endif
 }
 
 static int

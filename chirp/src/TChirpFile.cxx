@@ -127,7 +127,7 @@ Bool_t TChirpFile::ReadBuffer(char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
-      Seek_t off = fOffset;
+      Long64_t off = fOffset;
       if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
          Error("ReadBuffer", "error reading from cache");
          return kTRUE;
@@ -152,7 +152,7 @@ Bool_t TChirpFile::WriteBuffer(const char *buf, Int_t len)
 
    if (fCache) {
       Int_t st;
-      Seek_t off = fOffset;
+      Long64_t off = fOffset;
       if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
          Error("WriteBuffer", "error writing to cache");
          return kTRUE;
@@ -265,11 +265,11 @@ Int_t TChirpFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 }
 
 //______________________________________________________________________________
-Seek_t TChirpFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
+Long64_t TChirpFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
    if (whence == SEEK_SET && offset == fOffset) return offset;
 
-   Seek_t rc = chirp_client_lseek(chirp_client, fd, offset, whence);
+   Long64_t rc = chirp_client_lseek(chirp_client, fd, offset, whence);
 
    if (rc < 0) {
       gSystem->SetErrorStr(strerror(errno));
@@ -293,14 +293,14 @@ Int_t TChirpFile::SysSync(Int_t fd)
 }
 
 //______________________________________________________________________________
-Int_t TChirpFile::SysStat(Int_t fd, Long_t *id, Long_t *size,
+Int_t TChirpFile::SysStat(Int_t fd, Long_t *id, Long64_t *size,
                            Long_t *flags, Long_t *modtime)
 {
    // FIXME: chirp library doesn't (yet) provide any stat() capabilities.
 
    *id = ::Hash(fRealName);
 
-   Seek_t offset = fOffset;
+   Long64_t offset = fOffset;
    *size = SysSeek(fd, 0, SEEK_END);
    SysSeek(fd, offset, SEEK_SET);
 

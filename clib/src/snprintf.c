@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.1 2000/12/10 10:54:53 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: snprintf.c,v 1.2 2002/12/02 18:50:01 rdm Exp $ */
 /* Author: Tomi Salo & Fons Rademakers */
 
 /*
@@ -9,7 +9,8 @@
       vsnprintf(holder, sizeof_holder, format, args)
 
    Return values:
-      number of characters written or -1 if truncated
+      number of characters written or -1 if truncated or -2 if there is an
+      error in format specification
 
    Author:
       Tomi Salo
@@ -19,6 +20,9 @@
       Fons Rademakers
          Return -1 in case of truncation
          Added test program.
+      M.Asokan
+         Return -2 in case of error in format specification
+         Distinguish between missing precision and a specified precision of 0
 
    To test snprintf and vsnprintf compile this file with:
       cc -g -DSNTEST `root-config --cflags` snprintf.c -o snprintf
@@ -66,7 +70,7 @@ static int snprintf_get_directive(const char *str, int *flags, int *width,
 
    *flags = 0;
    *width = 0;
-   *precision = 0;
+   *precision = -1; /* Assume unspecified */
    *format_char = (char) 0;
 
    if (*str == '%') {
@@ -324,9 +328,10 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
    unsigned long int ulong_val;
    char *str_val;
    double dbl_val;
+   int precision_specified = 0;
 
-  if (!size || !str)
-    return 0;
+  if (size <= 0 || str == NULL || format == NULL)
+    return -1;
 
    flags = 0;
    while (format_ptr < format + strlen(format)) {
@@ -345,8 +350,13 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                                                &ap);
                if (status == 0) {
                   *str = '\0';
-                  return 0;
+                  return -2;
                } else {
+                  if (precision >= 0) {
+                     precision_specified = 1;
+                  } else {
+                     precision = 0;
+                  }
                   format_ptr += status;
                   /* Print a formatted argument */
                   switch (format_char) {
@@ -452,7 +462,7 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap)
                      if (str_val == NULL)
                         str_val = "(null)";
 
-                     if (precision == 0)
+                     if (!precision_specified)
                         precision = strlen(str_val);
                      else {
                         if (memchr(str_val, 0, precision) != NULL)
@@ -696,3 +706,4 @@ int main()
    return 0;
 }
 #endif
+

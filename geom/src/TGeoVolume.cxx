@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.39 2003/10/20 08:46:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.40 2003/11/11 15:44:28 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1346,15 +1346,20 @@ void TGeoVolume::Voxelize(Option_t *option)
       }
    }      
    // find optimal voxelization
-   Bool_t cyltype = GetOptimalVoxels();
-   if (cyltype) {
-//      fVoxels = new TGeoCylVoxels(this);
+//   Bool_t cyltype = GetOptimalVoxels();
+//   if (nd < 8) {
+//      fVoxels = new TGeoFullVoxels(this);
+//      if (fVoxels) printf("full voxels for %s\n", GetName());
+//   } else 
       fVoxels = new TGeoVoxelFinder(this);
-//      printf("%s cyl. voxels\n", GetName());
-   } else {
-      fVoxels = new TGeoVoxelFinder(this);
-   }   
+
    fVoxels->Voxelize(option);
+   if (fVoxels) {
+      if (fVoxels->IsInvalid()) {
+         delete fVoxels;
+         fVoxels = 0;
+      }
+   }      
 //   if (fVoxels) fVoxels->Print();
 }
 

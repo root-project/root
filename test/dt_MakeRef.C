@@ -112,6 +112,8 @@ void MakeHisto(TTree *tree, TDirectory* To) {
 
    TH1F *refBreit = RefClone(where,"hBreit");
 
+   TH1F *refAlt = RefClone(where,"hAlt");
+
    // Loop with user code on all events and fill the ref histograms
    // The code below should produce identical results to the tree->Draw above
 
@@ -158,9 +160,14 @@ void MakeHisto(TTree *tree, TDirectory* To) {
       for(i0=0;i0<4;i0++) {
          for(i1=0;i1<4;i1++) {
             refFullMatrix->Fill(event->GetMatrix(i0,i1));
+
+            int i2 = i0*4+i1;
+            refAlt->Fill( event->GetMatrix(i0,i1) - ( (i2<Nvertex) ? event->GetClosestDistance(i2) : 0 ) );
+
          }
          refColMatrix->Fill(event->GetMatrix(i0,0));
          refRowMatrix->Fill(event->GetMatrix(1,i0)); // done here because the matrix is square!
+         
       }
       refCellMatrix->Fill(event->GetMatrix(2,2));
 

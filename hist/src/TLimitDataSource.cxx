@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.cxx,v 1.2 2002/09/13 15:23:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimitDataSource.cxx,v 1.3 2003/03/21 14:53:49 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -43,12 +43,12 @@ void TLimitDataSource::AddChannel(TH1D * s, TH1D * b, TH1D * d)
    fCandidates.AddLast(d);
    char rndname[20];
    sprintf(rndname, "rndname%f", generator.Rndm());
-   empty = new TH1D(rndname, "", s->GetSize(), 0, 1);
+   empty = new TH1D(rndname, "", 1, 0, 1);
    empty->SetDirectory(0);
    fErrorOnSignal.AddLast(empty);
    fDummyTH1D.AddLast(empty);
    sprintf(rndname, "rndname%f", generator.Rndm());
-   empty = new TH1D(rndname, "", s->GetSize(), 0, 1);
+   empty = new TH1D(rndname, "", 1, 0, 1);
    empty->SetDirectory(0);
    fErrorOnBackground.AddLast(empty);
    fDummyTH1D.AddLast(empty);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.12 2003/11/07 22:47:53 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.14 2003/12/18 13:17:15 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -436,15 +436,13 @@ void TGLBContainer::SetMultipleSelections(Bool_t multi)
    TGFrameElement *el;
 
    fMultiSelect = multi;
-   if (fMultiSelect)
-      fLastActive = 0;
-   else
-      {
+   if (!fMultiSelect) {
       // deselect all entries
       TIter next(fList);
       while ((el = (TGFrameElement *) next()))
          ((TGLBEntry *)(el->fFrame))->Activate(kFALSE);
-      }
+   }
+   fLastActive = 0;
 }
 
 //______________________________________________________________________________
@@ -475,6 +473,7 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
          while ((el = (TGFrameElement *) next())) {
             f = (TGLBEntry *) el->fFrame;
             if (f->GetId() == (Window_t)event->fUser[0]) {    // fUser[0] == child window
+               fLastActive = f;
                f->Toggle();
                fChangeStatus = f->IsActive() ? 1 : 0;
                SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),

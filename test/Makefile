@@ -55,6 +55,10 @@ VMATRIXO      = vmatrix.$(ObjSuf)
 VMATRIXS      = vmatrix.$(SrcSuf)
 VMATRIX       = vmatrix$(ExeSuf)
 
+STRESSLO      = stressLinear.$(ObjSuf)
+STRESSLS      = stressLinear.$(SrcSuf)
+STRESSL       = stressLinear$(ExeSuf)
+
 VLAZYO        = vlazy.$(ObjSuf)
 VLAZYS        = vlazy.$(SrcSuf)
 VLAZY         = vlazy$(ExeSuf)
@@ -95,15 +99,20 @@ BENCHO        = bench.$(ObjSuf)
 BENCHS        = bench.$(SrcSuf)
 BENCH         = bench$(ExeSuf)
 
+TESTBITSO     = testbits.$(ObjSuf)
+TESTBITSS     = testbits.$(SrcSuf)
+TESTBITS      = testbits$(ExeSuf)
+
+
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
-                $(TCOLLBMO) $(STRESSGEOMO)
+                $(TCOLLBMO) $(STRESSGEOMO) $(TESTBITSO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) \
-                $(STRESSGEOM)
+                $(STRESSGEOM) $(STRESSL) $(TESTBITS)
 
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
@@ -180,6 +189,14 @@ $(VMATRIX):     $(VMATRIXO)
 		@echo "$@ done"
 
 $(VLAZY):       $(VLAZYO)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(STRESSL):     $(STRESSLO)
+		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(TESTBITS):    $(TESTBITSO)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 

@@ -60,7 +60,7 @@ TABLELIBEXTRA       = lib/libTree.lib lib/libGpad.lib \
 MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB)
 MLPLIBEXTRA         = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
-                      lib/libGpad.lib lib/libGraf.lib lib/libTreePlayer.lib
+                      lib/libGraf.lib lib/libGpad.lib lib/libTreePlayer.lib
 ifeq ($(ARCH),win32gdk)
 GLLIBDEP            = $(G3DLIB) $(GUILIB)
 GLLIBEXTRA          = lib/libGraf3d.lib lib/libGui.lib
@@ -76,6 +76,11 @@ GEOMPAINTERLIBDEP   = $(GEOMLIB) $(TREELIB) $(G3DLIB) $(HISTLIB)
 GEOMPAINTERLIBEXTRA = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
                       lib/libHist.lib
 RFIOLIBEXTRA        = WSock32.lib Ws2_32.lib
+QTROOTLIBDEP        = $(GQTLIB) $(GUILIB)
+QTROOTLIBEXTRA      = lib/libGQt.lib lib/libGui.lib $(QTLIB)
+QTGUILIBDEP         = $(GRAFLIB) $(GPADLIB) $(GQTLIB) $(GUILIB)
+QTGUILIBEXTRA       = lib/libGraf.lib lib/libGpad.lib lib/libGQt.lib \
+                      lib/libGui.lib $(QTLIB)
 
 else
 
@@ -137,5 +142,9 @@ THREADLIBEXTRA      = -Llib -lGpad
 MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(GPADLIB) $(TREEPLAYERLIB)
 MLPLIBEXTRA         = -Llib -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer
+QTROOTLIBDEP        = $(GQTLIB) $(GUILIB)
+QTROOTLIBEXTRA      = -Llib -lGQt -lGui $(QTLIB)
+QTGUILIBDEP         = $(GRAFLIB) $(GPADLIB) $(GQTLIB) $(GUILIB)
+QTGUILIBEXTRA       = -Llib -lGraf -lGpad -lGQt -lGui $(QTLIB)
 
 endif

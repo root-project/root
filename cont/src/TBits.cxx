@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.10 2003/02/08 21:31:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.15 2004/01/25 11:56:06 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -59,8 +59,12 @@ TBits& TBits::operator=(const TBits& rhs)
       fNbits   = rhs.fNbits;
       fNbytes  = rhs.fNbytes;
       delete [] fAllBits;
-      fAllBits = new UChar_t[fNbytes];
-      memcpy(fAllBits,rhs.fAllBits,fNbytes);
+      if (fNbytes != 0) {
+         fAllBits = new UChar_t[fNbytes];
+         memcpy(fAllBits,rhs.fAllBits,fNbytes);
+      } else {
+         fAllBits = 0;
+      }
    }
    return *this;
 }
@@ -74,10 +78,20 @@ TBits::~TBits()
 }
 
 //______________________________________________________________________________
+void TBits::Clear(Option_t * /*option*/)
+{
+   delete [] fAllBits;
+   fAllBits = 0;
+   fNbits   = 0;
+   fNbytes  = 0;
+}
+
+//______________________________________________________________________________
 void TBits::Compact()
 {
    // Reduce the storage used by the object to a minimun
 
+   if (!fNbits || !fAllBits) return;
    UInt_t needed;
    for(needed=fNbytes-1;
        needed > 0 && fAllBits[needed]==0; ) { needed--; };
@@ -259,45 +273,204 @@ void TBits::ResetAllBits(Bool_t)
 {
    // Reset all bits to 0 (false).
 
-   memset(fAllBits,0,fNbytes);
+   if (fAllBits) memset(fAllBits,0,fNbytes);
 }
 
-//______________________________________________________________________________
-void TBits::SetBitNumber(UInt_t bitnumber, Bool_t value)
-{
-   // Set bit number 'bitnumber' to be value
+ //______________________________________________________________________________
+ void TBits::ReserveBytes(UInt_t nbytes)
+ {
+     if (nbytes > fNbytes) {
+         // do it in this order to remain exception-safe.
+         UChar_t *newBits=new UChar_t[nbytes];
+         delete[] fAllBits;
+         fNbytes=nbytes;
+         fAllBits=newBits;
+     }
+ }
 
-   if (bitnumber >= fNbits) {
-      UInt_t new_size = (bitnumber/8) + 1;
-      if (new_size > fNbytes) {
-         UChar_t *old_location = fAllBits;
-         fAllBits = new UChar_t[new_size];
-         memcpy(fAllBits,old_location,fNbytes);
-         memset(fAllBits+fNbytes ,0, new_size-fNbytes);
-         fNbytes = new_size;
-         delete [] old_location;
-      }
-      fNbits = bitnumber+1;
-   }
-   UInt_t  loc = bitnumber/8;
-   UChar_t bit = bitnumber%8;
-   if (value)
-      fAllBits[loc] |= (1<<bit);
-   else
-      fAllBits[loc] &= (0xFF ^ (1<<bit));
-}
+ //______________________________________________________________________________
+ void TBits::Set(UInt_t nbits, const Char_t *array)
+ {
+     UInt_t nbytes=(nbits+7)>>3;
 
-//______________________________________________________________________________
-Bool_t TBits::TestBitNumber(UInt_t bitnumber) const
-{
-   // Return the current value of the bit
+     ReserveBytes(nbytes);
 
-   if (bitnumber >= fNbits) return kFALSE;
-   UInt_t  loc = bitnumber/8;
-   UChar_t value = fAllBits[loc];
-   UChar_t bit = bitnumber%8;
-   Bool_t  result = (value & (1<<bit)) != 0;
-   return result;
-   // short: return 0 != (fAllBits[bitnumber/8] & (1<< (bitnumber%8)));
-}
+     fNbits=nbits;
+     memcpy(fAllBits, array, nbytes);
+ }
+
+ //______________________________________________________________________________
+ void TBits::Get(Char_t *array) const
+ {
+     memcpy(array, fAllBits, (fNbits+7)>>3);
+ }
+
+ #ifdef R__BYTESWAP  /* means we are on little endian */
+
+ /*
+ If we are on a little endian machine, a bitvector represented using
+ any integer type is identical to a bitvector represented using bytes.
+ -- FP.
+ */
+
+ void TBits::Set(UInt_t nbits, const Short_t *array)
+  {
+     Set(nbits, (const Char_t*)array);
+ }
+
+ void TBits::Set(UInt_t nbits, const Int_t *array)
+ {
+     Set(nbits, (const Char_t*)array);
+ }
+
+ void TBits::Set(UInt_t nbits, const Long64_t *array)
+ {
+     Set(nbits, (const Char_t*)array);
+ }
+
+ void TBits::Get(Short_t *array) const
+ {
+     Get((Char_t*)array);
+ }
+
+ void TBits::Get(Int_t *array) const
+ {
+     Get((Char_t*)array);
+ }
+
+ void TBits::Get(Long64_t *array) const
+ {
+     Get((Char_t*)array);
+ }
+
+ #else
+
+ /*
+ If we are on a big endian machine, some swapping around is required.
+ */
+
+ void TBits::Set(UInt_t nbits, const Short_t *array)
+ {
+     // make nbytes even so that the loop below is neat.
+     UInt_t nbytes = ((nbits+15)>>3)&~1;
+
+     ReserveBytes(nbytes);
+
+     fNbits=nbits;
+
+     const UChar_t *cArray = (const UChar_t*)array;
+     for (UInt_t i=0; i<nbytes; i+=2) {
+         fAllBits[i] = cArray[i+1];
+         fAllBits[i+1] = cArray[i];
+     }
+ }
+
+ void TBits::Set(UInt_t nbits, const Int_t *array)
+ {
+     // make nbytes a multiple of 4 so that the loop below is neat.
+     UInt_t nbytes = ((nbits+31)>>3)&~3;
+
+     ReserveBytes(nbytes);
+
+     fNbits=nbits;
+
+     const UChar_t *cArray = (const UChar_t*)array;
+     for (UInt_t i=0; i<nbytes; i+=4) {
+         fAllBits[i] = cArray[i+3];
+         fAllBits[i+1] = cArray[i+2];
+         fAllBits[i+2] = cArray[i+1];
+         fAllBits[i+3] = cArray[i];
+     }
+ }
+
+ void TBits::Set(UInt_t nbits, const Long64_t *array)
+ {
+    // make nbytes a multiple of 8 so that the loop below is neat.
+    UInt_t nbytes = ((nbits+63)>>3)&~7;
+
+    ReserveBytes(nbytes);
+
+    fNbits=nbits;
+
+    const UChar_t *cArray = (const UChar_t*)array;
+    for (UInt_t i=0; i<nbytes; i+=8) {
+        fAllBits[i] = cArray[i+7];
+        fAllBits[i+1] = cArray[i+6];
+        fAllBits[i+2] = cArray[i+5];
+        fAllBits[i+3] = cArray[i+4];
+        fAllBits[i+4] = cArray[i+3];
+        fAllBits[i+5] = cArray[i+2];
+        fAllBits[i+6] = cArray[i+1];
+        fAllBits[i+7] = cArray[i];
+    }
+ }
+
+ void TBits::Get(Short_t *array) const
+ {
+     UInt_t nBytes = (fNbits+7)>>3;
+     UInt_t nSafeBytes = nBytes&~1;
+
+     UChar_t *cArray=(UChar_t*)array;
+     for (UInt_t i=0; i<nSafeBytes; i+=2) {
+         cArray[i] = fAllBits[i+1];
+         cArray[i+1] = fAllBits[i];
+     }
+
+     if (nBytes>nSafeBytes) {
+         cArray[nSafeBytes+1] = fAllBits[nSafeBytes];
+     }
+ }
+
+ void TBits::Get(Int_t *array) const
+ {
+     UInt_t nBytes = (fNbits+7)>>3;
+     UInt_t nSafeBytes = nBytes&~3;
+
+     UChar_t *cArray=(UChar_t*)array;
+     UInt_t i;
+     for (i=0; i<nSafeBytes; i+=4) {
+         cArray[i] = fAllBits[i+3];
+         cArray[i+1] = fAllBits[i+2];
+         cArray[i+2] = fAllBits[i+1];
+         cArray[i+3] = fAllBits[i];
+     }
+
+     for (i=0; i<nBytes-nSafeBytes; ++i) {
+         cArray[nSafeBytes + (3 - i)] = fAllBits[nSafeBytes + i];
+     }
+ }
+
+ void TBits::Get(Long64_t *array) const
+ {
+    UInt_t nBytes = (fNbits+7)>>3;
+    UInt_t nSafeBytes = nBytes&~7;
+
+    UChar_t *cArray=(UChar_t*)array;
+    UInt_t i;
+    for (i=0; i<nSafeBytes; i+=8) {
+        cArray[i] = fAllBits[i+7];
+        cArray[i+1] = fAllBits[i+6];
+        cArray[i+2] = fAllBits[i+5];
+        cArray[i+3] = fAllBits[i+4];
+        cArray[i+4] = fAllBits[i+3];
+        cArray[i+5] = fAllBits[i+2];
+        cArray[i+6] = fAllBits[i+1];
+        cArray[i+7] = fAllBits[i];
+    }
+
+    for (i=0; i<nBytes-nSafeBytes; ++i) {
+        cArray[nSafeBytes + (7 - i)] = fAllBits[nSafeBytes + i];
+    }
+ }
+
+ #endif
+
+ Bool_t TBits::operator==(const TBits &other) const
+ {
+     if (fNbits != other.fNbits) {
+         return kFALSE;
+     }
+
+     return !memcmp(fAllBits, other.fAllBits, (fNbits+7)>>3);
+ }
 

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.10 2003/12/15 08:54:29 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.11 2003/12/15 16:37:49 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -289,7 +289,6 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
 
    if (res==WAIT_TIMEOUT) { // server thread is blocked
       GlobalLock();
-      fListOfCallBacks->Add(new TGWin32CallBackObject(fCallBack, fParam));
       return kTRUE;    
    }
 

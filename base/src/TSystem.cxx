@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.75 2003/11/18 19:04:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.80 2004/01/25 17:59:54 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -52,6 +52,7 @@ const char *gProgPath;
 
 TSystem      *gSystem   = 0;
 TFileHandler *gXDisplay = 0;  // Display server event handler, set in TGClient
+
 
 ClassImp(TProcessEventTimer)
 
@@ -151,8 +152,6 @@ Bool_t TSystem::Init()
    fNfd    = 0;
    fMaxrfd = 0;
    fMaxwfd = 0;
-   fReadmask.Zero();
-   fWritemask.Zero();
 
    fSigcnt = 0;
    fLevel  = 0;
@@ -918,7 +917,25 @@ int TSystem::Unlink(const char *)
 }
 
 //______________________________________________________________________________
-int TSystem::GetPathInfo(const char*, Long_t*, Long_t*, Long_t*, Long_t*)
+int TSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
+                         Long_t *flags, Long_t *modtime)
+{
+   // Get info about a file: id, size, flags, modification time.
+
+   Long64_t lsize;
+
+   int res = GetPathInfo(path, id, &lsize, flags, modtime);
+
+   if (size && sizeof(Long_t) == 4 && lsize > kMaxInt) {
+      Error("GetPathInfo", "file %s > 2 GB, use GetPathInfo() with Long64_t size", path);
+      *size = kMaxInt;
+   }
+
+   return res;
+}
+
+//______________________________________________________________________________
+int TSystem::GetPathInfo(const char *, Long_t *, Long64_t *, Long_t *, Long_t *)
 {
    // Get info about a file: id, size, flags, modification time.
 
@@ -927,7 +944,7 @@ int TSystem::GetPathInfo(const char*, Long_t*, Long_t*, Long_t*, Long_t*)
 }
 
 //______________________________________________________________________________
-int TSystem::GetFsInfo(const char*, Long_t*, Long_t*, Long_t*, Long_t*)
+int TSystem::GetFsInfo(const char *, Long_t *, Long_t *, Long_t *, Long_t *)
 {
    // Get info about a file system: fs type, block size, number of blocks,
    // number of free blocks.
@@ -1444,6 +1461,11 @@ int TSystem::GetSockOpt(int, int, int*)
 
 //---- Script Compiler ---------------------------------------------------------
 
+void AssignAndDelete(TString& target, char *tobedeleted) {
+   target = tobedeleted;
+   delete [] tobedeleted;
+}
+
 //______________________________________________________________________________
 int TSystem::CompileMacro(const char *filename, Option_t * opt,
                           const char *library_specified,
@@ -1583,14 +1605,14 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    TString build_loc = GetBuildDir();
    if (build_dir && strlen(build_dir)) build_loc = build_dir;
    if (build_loc.Length() && (!IsAbsoluteFileName(build_loc)) ) {
-      build_loc = ConcatFileName( WorkingDirectory(), build_loc );
+      AssignAndDelete( build_loc , ConcatFileName( WorkingDirectory(), build_loc ) );
    }
 
    // ======= Get the right file names for the dictionnary and the shared library
    TString library = filename;
    ExpandPathName( library );
    if (! IsAbsoluteFileName(library) ) {
-      library = ConcatFileName( WorkingDirectory(), library );
+      AssignAndDelete( library , ConcatFileName( WorkingDirectory(), library ) );
    }
    TString filename_fullpath = library;
 
@@ -1623,7 +1645,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       library = library_specified;
       ExpandPathName( library );
       if (! IsAbsoluteFileName(library) ) {
-         library = ConcatFileName( WorkingDirectory(), library );
+         AssignAndDelete( library , ConcatFileName( WorkingDirectory(), library ) );
       }
       library = TString(library) + "." + fSoExt;
    }
@@ -1649,8 +1671,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       pos = lib_location.Index( disk_finder );
       if (pos==0) lib_location.Remove(pos,3);
 
-      library = ConcatFileName( build_loc, library);
-      build_loc = ConcatFileName( build_loc, lib_location);
+      AssignAndDelete( library, ConcatFileName( build_loc, library) );
+      AssignAndDelete( build_loc, ConcatFileName( build_loc, lib_location) );
 
       if (gSystem->AccessPathName(build_loc,kWritePermission)) {
          mkdir(build_loc, true);
@@ -1667,7 +1689,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
       if ( G__unloadfile( (char*) filename ) != 0 ) {
          // We can not unload it.
-         return(G__LOADFILE_FAILURE);
+         return kFALSE;
       }
    }
 
@@ -1681,7 +1703,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       while( len != 0 ) {
          TString sub = includes(pos,len);
          sub.Remove(0,2); // Remove -I
-         sub = ConcatFileName( WorkingDirectory(), sub );
+         AssignAndDelete( sub, ConcatFileName( WorkingDirectory(), sub ) );
          sub.Prepend(" -I");
          includes.Replace(pos,len,sub);
          pos = rel_inc.Index(includes,&len);
@@ -1730,7 +1752,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       // Generate the dependency filename
       TString depdir = build_loc;
       if (!canWrite) depdir = emergency_loc;
-      TString depfilename = ConcatFileName(depdir, BaseName(libname_noext));
+      TString depfilename;
+      AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
       depfilename += "_" + extension + ".d";
       TString bakdepfilename = depfilename + ".bak";
 
@@ -1739,12 +1762,13 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 #ifndef WIN32
       const char * stderrfile = "/dev/null";
 #else
-      TString stderrfile = ConcatFileName(build_loc,"stderr.tmp");
+      TString stderrfile;
+      AssignAndDelete( stderrfile, ConcatFileName(build_loc,"stderr.tmp") );
 #endif
 
-      if ( (gSystem->GetPathInfo( library, 0, 0, 0, &lib_time ) != 0)
+      if ( (gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) != 0)
            ||
-           (gSystem->GetPathInfo( filename, 0, 0, 0, &file_time ) == 0
+           (gSystem->GetPathInfo( filename, 0, (Long_t*)0, 0, &file_time ) == 0
             && ( lib_time < file_time ) )
            ) {
          // the library does not exist and is older than the script.
@@ -1756,7 +1780,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
          // does  not exist we regenerate it
 
          Bool_t needDependencies;
-         if ( gSystem->GetPathInfo( depfilename, 0, 0, 0, &file_time ) == 0 ) {
+         if ( gSystem->GetPathInfo( depfilename, 0,(Long_t*) 0, 0, &file_time ) == 0 ) {
             needDependencies = ( file_time < lib_time );
          } else {
             needDependencies = true;
@@ -1833,7 +1857,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
                         line[current] = 0;
 
                         Long_t filetime;
-                        if ( gSystem->GetPathInfo( line, 0, 0, 0, &filetime ) == 0 ) {
+                        if ( gSystem->GetPathInfo( line, 0, (Long_t*)0, 0, &filetime ) == 0 ) {
                            modified |= ( lib_time <= filetime );
                         }
                      }
@@ -1903,7 +1927,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
                 build_loc.Data());
       if (emergency_loc == build_dir ) {
          ::Error("ACLiC","%s is the last resort location (i.e. temp location)",build_loc.Data());
-         return(G__LOADFILE_FAILURE);
+         return kFALSE;
       }
       ::Warning("ACLiC","Output will be written to %s",
                 emergency_loc.Data());
@@ -1927,7 +1951,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       dict.ReplaceAll( forbidden_chars[ic],"_" );
    }
    if ( dict.Last('.')!=dict.Length()-1 ) dict.Append(".");
-   dict = ConcatFileName( build_loc, dict );
+   AssignAndDelete( dict, ConcatFileName( build_loc, dict ) );
    TString dicth = dict;
    TString dictObj = dict;
    dict += "cxx"; //no need to keep the extention of the original file, any extension will do
@@ -1936,7 +1960,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
 
    // ======= Generate a linkdef file
 
-   TString linkdef = ConcatFileName( build_loc, BaseName( tmpnam(0) ) );
+   TString linkdef;
+   AssignAndDelete( linkdef, ConcatFileName( build_loc, BaseName( tmpnam(0) ) ) );
    linkdef += "linkdef.h";
    ofstream linkdefFile( linkdef, ios::out );
    linkdefFile << "// File Automatically generated by the ROOT Script Compiler "
@@ -2018,7 +2043,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    else cmd.ReplaceAll("$Opt",fFlagsOpt);
 
    TString testcmd = fMakeExe;
-   TString fakeMain =  ConcatFileName( build_loc, BaseName( tmpnam(0) ) );
+   TString fakeMain;
+   AssignAndDelete( fakeMain, ConcatFileName( build_loc, BaseName( tmpnam(0) ) ) );
    fakeMain += extension;
    ofstream fakeMainFile( fakeMain, ios::out );
    fakeMainFile << "// File Automatically generated by the ROOT Script Compiler "
@@ -2033,7 +2059,8 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
    // however compilation would fail if a main is already there
    // (like stress.cxx)
    // dict.Append(" ").Append(fakeMain);
-   TString exec =  ConcatFileName( build_loc, BaseName( tmpnam(0) ) );
+   TString exec;
+   AssignAndDelete( exec, ConcatFileName( build_loc, BaseName( tmpnam(0) ) ) );
    testcmd.ReplaceAll("$SourceFiles",dict);
    testcmd.ReplaceAll("$ObjectFiles",dictObj);
    testcmd.ReplaceAll("$IncludePath",includes);

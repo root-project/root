@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.116 2003/11/22 21:48:18 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.118 2004/01/06 17:39:06 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TEnv.h"
 #include "TGraph.h"
 #include "TGaxis.h"
 #include "TH1.h"
@@ -441,7 +442,15 @@ TGraph::~TGraph()
    delete [] fY;
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
-      fFunctions->Delete();
+      //special logic to support the case where the same object is 
+      //added multiple times in fFunctions.
+      //This case happens when the same object is added with different
+      //drawing modes
+      TObject *obj;
+      while ((obj  = fFunctions->First())) {
+         while(fFunctions->Remove(obj));
+         delete obj;
+      }
       delete fFunctions;
    }
    fFunctions = 0;
@@ -466,7 +475,7 @@ void TGraph::Apply(TF1 *f)
 //______________________________________________________________________________
 void TGraph::Browse(TBrowser *)
 {
-    Draw("alp");
+    Draw(gEnv->GetValue("TGraph.BrowseOption","alp"));
     gPad->Update();
 }
 

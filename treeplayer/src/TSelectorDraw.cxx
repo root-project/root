@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.21 2003/12/11 17:14:17 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.22 2003/12/13 09:25:56 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1020,10 +1020,10 @@ void TSelectorDraw::ProcessFillObject(Int_t /*entry*/)
 
          }
       }
-   }
-   if (fNfill >= fTree->GetEstimate()) {
-      TakeAction();
-      fNfill = 0;
+      if (fNfill >= fTree->GetEstimate()) {
+         TakeAction();
+         fNfill = 0;
+      }
    }
 
 }

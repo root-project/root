@@ -115,16 +115,16 @@ CINTS2       += $(MODDIRS)/fakestrm.cxx
 endif
 ifeq ($(PLATFORM),win32)
 CINTS1       += $(MODDIRS)/winnt.c
+CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
+CINTS2       += $(MODDIRS)/longif3.cxx
 ifeq ($(VC_MAJOR),13)
 ifeq ($(VC_MINOR),10)
 CINTS2       += $(MODDIRS)/vc7strm.cxx
-CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
-CINTS2       += $(MODDIRS)/longif3.cxx
 else
-CINTS2       += $(MODDIRS)/vcstrm.cxx
+CINTS2       += $(MODDIRS)/iccstrm.cxx
 endif
 else
-CINTS2       += $(MODDIRS)/vcstrm.cxx
+CINTS2       += $(MODDIRS)/iccstrm.cxx
 endif
 endif
 ifeq ($(PLATFORM),vms)
@@ -160,7 +160,7 @@ endif
 CINTS        := $(CINTS1) $(CINTS2)
 CINTO        := $(CINTS1:.c=.o) $(CINTS2:.cxx=.o)
 CINTTMPO     := $(subst loadfile.o,loadfile_tmp.o,$(CINTO))
-CINTTMPINC   := -Icint/include -Icint/stl -Icint/lib
+CINTTMPINC   := -I$(MODDIR)/include -I$(MODDIR)/stl -I$(MODDIR)/lib
 CINTDEP      := $(CINTO:.o=.d)
 CINTDEP      += $(MODDIRS)/loadfile_tmp.d
 CINTALLDEP   += $(MODDIRS)/loadfile_tmp.d

@@ -32,12 +32,10 @@ COMPILER      = gnu
 
 # Linker:
 LD            = build/unix/wingcc_ld.sh
-# -Wl,--dll-search-prefix=cyg -Wl,--force-exe-suffix
-LDFLAGS       = $(OPT) \
-                -Wl,--export-all-symbols -Wl,--export-dynamic \
-                -Wl,--enable-auto-import -Wl,-Bdynamic -L/usr/X11R6/lib \
+LDFLAGS       = $(OPT) --Wl,--enable-auto-image-base -Wl,--export-all-symbols \
+                -L/usr/X11R6/lib \
                 $(EXTRA_LDFLAGS)
-SOFLAGS       = -shared --enable-auto-image-base -Wl,-soname,
+SOFLAGS       = -shared -Wl,-soname,
 # that's what cygwin ld looks for when searching for shared libs
 SOEXT         = dll
 EXEEXT        = .exe

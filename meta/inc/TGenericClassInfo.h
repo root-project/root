@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.3 2002/11/11 11:27:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGenericClassInfo.h,v 1.4 2002/11/11 16:23:16 brun Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -19,42 +19,45 @@ namespace ROOT {
       // section (the dictionaries) and inline would lead to too much
       // repetition of the code (once per class!).
 
-      const TInitBehavior  *fAction;
-      TClass              *fClass;
-      const char          *fClassName;
-      const char          *fDeclFileName;
-      Int_t                fDeclFileLine;
-      VoidFuncPtr_t        fDictionary;
-      const type_info     &fInfo;
-      const char          *fImplFileName;
-      Int_t                fImplFileLine;
-      IsAFunc_t            fIsA;
-      void                *fShowMembers;
-      Int_t                fVersion;
-      NewFunc_t            fNew;
-      NewArrFunc_t         fNewArray;
-      DelFunc_t            fDelete;
-      DelArrFunc_t         fDeleteArray;
-      DesFunc_t            fDestructor;
+      const TInitBehavior     *fAction;
+      TClass                  *fClass;
+      const char              *fClassName;
+      const char              *fDeclFileName;
+      Int_t                    fDeclFileLine;
+      VoidFuncPtr_t            fDictionary;
+      const type_info         &fInfo;
+      const char              *fImplFileName;
+      Int_t                    fImplFileLine;
+      IsAFunc_t                fIsA;
+      void                    *fShowMembers;
+      Int_t                    fVersion;
+      NewFunc_t                fNew;
+      NewArrFunc_t             fNewArray;
+      DelFunc_t                fDelete;
+      DelArrFunc_t             fDeleteArray;
+      DesFunc_t                fDestructor;
+      TClassStreamer          *fStreamer;
+      TVirtualCollectionProxy *fCollectionProxy;
+      Int_t                    fSizeof;
       
    public:
       TGenericClassInfo(const char *fullClassname,
                        const char *declFileName, Int_t declFileLine,
                        const type_info &info, const TInitBehavior *action,
                        void *showmembers, VoidFuncPtr_t dictionary,
-                       IsAFunc_t isa, Int_t pragmabits);
+                       IsAFunc_t isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                        const char *declFileName, Int_t declFileLine,
                        const type_info &info, const TInitBehavior *action,
                        void *showmembers,  VoidFuncPtr_t dictionary,
-                       IsAFunc_t isa, Int_t pragmabits);
+                       IsAFunc_t isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
                        const char *declFileName, Int_t declFileLine,
                        const type_info &info, const TInitBehavior *action,
                        VoidFuncPtr_t dictionary, 
-                       IsAFunc_t isa, Int_t pragmabits);
+                       IsAFunc_t isa, Int_t pragmabits, Int_t sizof);
 
       void Init(Int_t pragmabits);
       ~TGenericClassInfo();
@@ -78,6 +81,8 @@ namespace ROOT {
 
       TClass              *IsA(const void *obj);
 
+      Short_t              AdoptStreamer(TClassStreamer*);
+      Short_t              AdoptCollectionProxy(TVirtualCollectionProxy*);
       void                 SetDelete(DelFunc_t deleteFunc);
       void                 SetDeleteArray(DelArrFunc_t deleteArrayFunc);
       void                 SetDestructor(DesFunc_t destructorFunc);
@@ -85,7 +90,11 @@ namespace ROOT {
       Int_t                SetImplFile(const char *file, Int_t line);
       void                 SetNew(NewFunc_t newFunc);
       void                 SetNewArray(NewArrFunc_t newArrayFunc);
+      Short_t              SetStreamer(ClassStreamerFunc_t);
       Short_t              SetVersion(Short_t version);
+
+   private:
+      TGenericClassInfo(); 
       
    };
 

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.4 2002/09/10 14:59:15 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.5 2003/03/21 14:53:49 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -35,7 +35,8 @@ TArrayD *TLimit::fgTable = new TArrayD(0);
 TOrdCollection *TLimit::fgSystNames = new TOrdCollection();
 
 TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
-                                       Int_t nmc, TRandom * generator,
+                                       Int_t nmc, bool stat,
+				       TRandom * generator,
                                        Double_t(*statistic) (Double_t,
                                                              Double_t,
                                                              Double_t))
@@ -164,7 +165,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
       lrs[i] = 0;
       lrb[i] = 0;
       // fluctuate signal and background
-      TLimitDataSource *fluctuated = Fluctuate(data, !i, myrandom);
+      TLimitDataSource *fluctuated = Fluctuate(data, !i, myrandom, stat);
       for (Int_t channel = 0;
            channel <= fluctuated->GetSignal()->GetLast(); channel++) {
          for (Int_t bin = 0;
@@ -215,7 +216,7 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
 }
 
 TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
-                                    TRandom * generator)
+                                    TRandom * generator, bool stat)
 {
    // initialisation: create a sorted list of all the names of systematics
    if (init) {
@@ -232,8 +233,30 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
       fgSystNames->Sort();
    }
    // if there are no systematics, just returns the input as "fluctuated" output
-   if (fgSystNames->GetSize() <= 0)
+   if ((fgSystNames->GetSize() <= 0)&&(!stat))
       return input;
+   // if there are only stat, just fluctuate stats.
+   if (fgSystNames->GetSize() <= 0) {
+     TLimitDataSource *result = new TLimitDataSource();
+     result->SetOwner();
+     for (Int_t channel = 0; channel <= input->GetSignal()->GetLast(); channel++) {
+        TH1D *newsignal = new TH1D(*(TH1D *) (input->GetSignal()->At(channel)));
+        if(stat)
+           for(int i=1; i<=newsignal->GetNbinsX(); i++) {
+              newsignal->SetBinContent(i,newsignal->GetBinContent(i)+generator->Gaus(0,newsignal->GetBinError(i)));
+           }
+        newsignal->SetDirectory(0);
+        TH1D *newbackground = new TH1D(*(TH1D *) (input->GetBackground()->At(channel)));
+        if(stat)
+           for(int i=1; i<=newbackground->GetNbinsX(); i++)
+              newbackground->SetBinContent(i,newbackground->GetBinContent(i)+generator->Gaus(0,newbackground->GetBinError(i)));
+        newbackground->SetDirectory(0);
+        TH1D *newcandidates = new TH1D(*(TH1D *) (input->GetCandidates()));
+        newcandidates->SetDirectory(0);
+        result->AddChannel(newsignal, newbackground, newcandidates);
+     }
+        return result;
+   }
    // Find a choice for the random variation and
    // re-toss all random numbers if any background or signal
    // goes negative.  (background = 0 is bad too, so put a little protection
@@ -275,9 +298,16 @@ TLimitDataSource *TLimit::Fluctuate(TLimitDataSource * input, bool init,
    for (Int_t channel = 0; channel <= input->GetSignal()->GetLast();
         channel++) {
       TH1D *newsignal = new TH1D(*(TH1D *) (input->GetSignal()->At(channel)));
+      if(stat)
+         for(int i=1; i<=newsignal->GetNbinsX(); i++) {
+            newsignal->SetBinContent(i,newsignal->GetBinContent(i)+generator->Gaus(0,newsignal->GetBinError(i)));
+	 }
       newsignal->Scale(1 + serrf[channel]);
       newsignal->SetDirectory(0);
       TH1D *newbackground = new TH1D(*(TH1D *) (input->GetBackground()->At(channel)));
+      if(stat)
+         for(int i=1; i<=newbackground->GetNbinsX(); i++)
+            newbackground->SetBinContent(i,newbackground->GetBinContent(i)+generator->Gaus(0,newbackground->GetBinError(i)));
       newbackground->Scale(1 + berrf[channel]);
       newbackground->SetDirectory(0);
       TH1D *newcandidates = new TH1D(*(TH1D *) (input->GetCandidates()));

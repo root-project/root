@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.3 2002/07/31 21:59:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystemDirectory.cxx,v 1.4 2003/07/01 11:39:45 rdm Exp $
 // Author: Christian Bormann  13/10/97
 
 /*************************************************************************
@@ -106,7 +106,8 @@ Bool_t TSystemDirectory::IsDirectory(const char *name) const
 {
    // Check if name is a directory.
 
-   Long_t id, size, flags, modtime;
+   Long64_t size;
+   Long_t id, flags, modtime;
    const char *dirfile = GetTitle();
 
    gSystem->ChangeDirectory(dirfile);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.28 2003/03/11 14:27:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.31 2004/01/03 09:41:16 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -58,6 +58,7 @@ protected:
    TBuffer(const TBuffer &);           // not implemented
    void operator=(const TBuffer &);    // not implemented
 
+   Int_t  CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, const char* classname);
    void   CheckCount(UInt_t offset);
    UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
 
@@ -98,6 +99,7 @@ public:
    Int_t    Length() const { return (Int_t)(fBufCur - fBuffer); }
 
    Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
+   Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
    void     SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);
 
    Bool_t   IsReading() const { return (fMode & kWrite) == 0; }
@@ -109,7 +111,7 @@ public:
    char    *ReadString(char *s, Int_t max);
    void     WriteString(const char *s);
 
-   Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0);
+   Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, TClass *cl = 0);
    UInt_t    WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
 
    virtual TClass  *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0);
@@ -139,6 +141,7 @@ public:
    Int_t    ReadArray(ULong64_t *&l);
    Int_t    ReadArray(Float_t   *&f);
    Int_t    ReadArray(Double_t  *&d);
+   Int_t    ReadArrayDouble32(Double_t  *&d);
 
    Int_t    ReadStaticArray(Bool_t    *b);
    Int_t    ReadStaticArray(Char_t    *c);
@@ -153,6 +156,7 @@ public:
    Int_t    ReadStaticArray(ULong64_t *l);
    Int_t    ReadStaticArray(Float_t   *f);
    Int_t    ReadStaticArray(Double_t  *d);
+   Int_t    ReadStaticArrayDouble32(Double_t  *d);
 
    void     ReadFastArray(Bool_t    *b, Int_t n);
    void     ReadFastArray(Char_t    *c, Int_t n);
@@ -167,6 +171,9 @@ public:
    void     ReadFastArray(ULong64_t *l, Int_t n);
    void     ReadFastArray(Float_t   *f, Int_t n);
    void     ReadFastArray(Double_t  *d, Int_t n);
+   void     ReadFastArrayDouble32(Double_t  *d, Int_t n);
+   void     ReadFastArray(void  *start , TClass *cl, Int_t n=1, TMemberStreamer *s=0);
+   void     ReadFastArray(void **startp, TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
    void     WriteArray(const Bool_t    *b, Int_t n);
    void     WriteArray(const Char_t    *c, Int_t n);
@@ -181,6 +188,7 @@ public:
    void     WriteArray(const ULong64_t *l, Int_t n);
    void     WriteArray(const Float_t   *f, Int_t n);
    void     WriteArray(const Double_t  *d, Int_t n);
+   void     WriteArrayDouble32(const Double_t  *d, Int_t n);
 
    void     WriteFastArray(const Bool_t    *b, Int_t n);
    void     WriteFastArray(const Char_t    *c, Int_t n);
@@ -195,6 +203,9 @@ public:
    void     WriteFastArray(const ULong64_t *l, Int_t n);
    void     WriteFastArray(const Float_t   *f, Int_t n);
    void     WriteFastArray(const Double_t  *d, Int_t n);
+   void     WriteFastArrayDouble32(const Double_t  *d, Int_t n);
+   void     WriteFastArray(void  *start,  TClass *cl, Int_t n=1, TMemberStreamer *s=0);
+   Int_t    WriteFastArray(void **startp, TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
    void     StreamObject(void *obj, const type_info &typeinfo);
    void     StreamObject(void *obj, const char *className);

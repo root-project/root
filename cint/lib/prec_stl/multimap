@@ -27,6 +27,11 @@
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<pair<const Key,T> > >
 
+#elif defined (G__VISUAL) && (G__MSC_VER>=1300)
+
+template<class Key,class T,class Compare=std::less<Key>
+        ,class Allocator=std::allocator<pair<const Key, T> > >
+
 #elif defined(G__SUNPRO_CC) && (G__SUNPRO_CC>=0x500)
 template<class Key,class T,class Compare=std::less<Key>
         ,class Allocator=std::allocator<pair<const Key,T> > >
@@ -74,6 +79,52 @@ class multimap {
   typedef typename Allocator::difference_type       difference_type;
 #endif
 
+#if defined(G__VISUAL) && (G__MSC_VER>=1300)
+	class const_iterator
+		: public _Bidit<value_type, difference_type,  const_pointer, const_reference>
+	{	// iterator for nonmutable _Tree
+	public:
+		typedef bidirectional_iterator_tag iterator_category;
+		typedef Allocator::difference_type difference_type;
+		typedef Allocator::const_pointer pointer;
+		typedef Allocator::const_reference reference;
+                typedef pair<Key,T> value_type;
+
+		const_iterator();
+		const_reference operator*() const;
+		const_pointer operator->() const;
+		const_iterator& operator++();
+		const_iterator operator++(int);
+		const_iterator& operator--();
+		const_iterator operator--(int);
+		bool operator==(const const_iterator& _Right) const;
+		bool operator!=(const const_iterator& _Right) const;
+		void _Dec();
+		void _Inc();
+	};
+
+	class iterator
+		: public const_iterator
+	{	// iterator for mutable _Tree
+	public:
+		typedef bidirectional_iterator_tag iterator_category;
+		typedef bidirectional_iterator_tag iterator_category;
+		typedef Allocator::difference_type difference_type;
+		typedef Allocator::pointer pointer;
+		typedef Allocator::reference reference;
+		typedef Allocator::const_reference const_reference;
+                typedef pair<Key,T> value_type;
+
+		iterator();
+		reference operator*() const;
+		pointer operator->() const;
+		iterator& operator++();
+		iterator operator++(int);
+		iterator& operator--();
+		iterator operator--(int);
+   };
+
+#else
   class iterator 
 #if defined(G__VISUAL)
 	: public _Bidit<T,difference_type> 
@@ -106,7 +157,8 @@ class multimap {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if defined(G__GNUC) && !defined (G__KCC)
+#endif
+#if defined(G__GNUC) && !defined (G__KCC) && !defined(G__INTEL_COMPILER)
   friend bool operator==(const multimap::iterator& x ,const multimap::iterator& y) const;
   friend bool operator!=(const multimap::iterator& x ,const multimap::iterator& y) const;
 #endif
@@ -114,8 +166,14 @@ class multimap {
   friend bool operator!=(const multimap::iterator& x,const multimap::iterator& y)const;
 #endif
 
+#if defined(G__VISUAL) && (G__MSC_VER>=1300)
+   typedef std::reverse_iterator<iterator> reverse_iterator;
+	typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+#else
   class reverse_iterator 
-#if defined(G__VISUAL)
+#if defined(G__VISUAL) && (G__MSC_VER>=1300)
+	: public _Bidit<T, difference_type, const_pointer, const_reference>
+#elif defined(G__VISUAL)
 	: public _Bidit<T,difference_type> 
 #elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
 #elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
@@ -146,6 +204,7 @@ class multimap {
 
   typedef const iterator const_iterator;
   typedef const reverse_iterator const_reverse_iterator;
+#endif
 
   // _lib.multimap.cons_ construct/copy/destroy:
   multimap();

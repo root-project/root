@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.156 2003/11/24 10:26:40 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.159 2004/01/27 13:28:23 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -32,6 +32,8 @@
 #include "TGaxis.h"
 #include "TColor.h"
 #include "TPainter3dAlgorithms.h"
+#include "TGraphPainter.h"
+#include "TGraphDelaunay.h"
 #include "TView.h"
 #include "TMath.h"
 #include "TRandom.h"
@@ -83,6 +85,8 @@ THistPainter::THistPainter()
    fYbuf  = 0;
    fNcuts = 0;
    fStack = 0;
+   fLego  = 0;
+   fGraphPainter = 0;
 }
 
 //______________________________________________________________________________
@@ -399,6 +403,25 @@ void THistPainter::FitPanel()
 }
 
 //______________________________________________________________________________
+TList *THistPainter::GetContourList(Double_t contour) const
+{
+   // Get a contour (as a list of TGraphs) using the Delaunay triangulation
+
+   TGraphDelaunay *dt;
+
+   // Check if fH contains a TGraphDelaunay
+   TList *hl = fH->GetListOfFunctions();
+   dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
+   if (!dt) return 0;
+
+   gCurrentHist = fH;
+
+   if (!fGraphPainter) ((THistPainter*)this)->fGraphPainter = new TGraphPainter(dt);
+
+   return fGraphPainter->GetContourList(contour);
+}
+
+//______________________________________________________________________________
 char *THistPainter::GetObjectInfo(Int_t px, Int_t py) const
 {
 //   Redefines TObject::GetObjectInfo.
@@ -525,13 +548,13 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Star = Hoption.Arrow  = Hoption.Box     = Hoption.Text  = 0;
    Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx  = 0;
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
-   Hoption.Off  = 0;
+   Hoption.Off  = Hoption.Tri    = 0;
 
 //    special 2-D options
    Hoption.List     = 0;
    Hoption.Zscale   = 0;
-   Hoption.FrontBox = 0;
-   Hoption.BackBox  = 0;
+   Hoption.FrontBox = 1;
+   Hoption.BackBox  = 1;
    Hoption.System   = kCARTESIAN;
    
    Hoption.HighRes  = 0;
@@ -561,8 +584,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"LEGO");
    if (l) {
-      Hoption.FrontBox = 1;
-      Hoption.BackBox  = 1;
       Hoption.Scat = 0;
       Hoption.Lego = 1; strncpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Lego = 11; l[4] = ' '; }
@@ -570,10 +591,9 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
    }
+
    l = strstr(chopt,"SURF");
    if (l) {
-      Hoption.FrontBox = 1;
-      Hoption.BackBox  = 1;
       Hoption.Scat = 0;
       Hoption.Surf = 1; strncpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Surf = 11; l[4] = ' '; }
@@ -585,8 +605,13 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
    }
 
-   l = strstr(chopt,"FB"); if (l) { Hoption.FrontBox = 1; strncpy(l,"  ",2); Hoption.Scat = 0;}
-   l = strstr(chopt,"BB"); if (l) { Hoption.BackBox = 1;  strncpy(l,"  ",2); Hoption.Scat = 0;}
+   l = strstr(chopt,"TRI");
+   if (l) {
+      Hoption.Scat = 0;
+      Hoption.Tri = 1; strncpy(l,"    ",3);
+      l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
+      l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
+   }
 
    l = strstr(chopt,"LIST");    if (l) { Hoption.List = 1;  strncpy(l,"    ",4);}
 
@@ -598,6 +623,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[4] == '2') { Hoption.Contour = 12; l[4] = ' '; }
       if (l[4] == '3') { Hoption.Contour = 13; l[4] = ' '; }
       if (l[4] == '4') { Hoption.Contour = 14; l[4] = ' '; }
+      if (l[4] == '5') { Hoption.Contour = 15; l[4] = ' '; }
    }
    l = strstr(chopt,"HBAR");
    if (l) {
@@ -837,6 +863,7 @@ void THistPainter::Paint(Option_t *option)
 //    "CONT2"  : Draw a contour plot using the same line style for all contours
 //    "CONT3"  : Draw a contour plot using fill area colors
 //    "CONT4"  : Draw a contour plot using surface colors (SURF option at theta = 0)
+//    "CONT5"  : Draw a contour plot using Delaunay triangles
 //    "LIST"   : Generate a list of TGraph objects for each contour
 //    "FB"     : With LEGO or SURFACE, suppress the Front-Box
 //    "BB"     : With LEGO or SURFACE, suppress the Back-Box
@@ -1117,6 +1144,7 @@ void THistPainter::Paint(Option_t *option)
 //    "CONT2"  : Draw a contour plot using the same line style for all contours
 //    "CONT3"  : Draw a contour plot using fill area colors
 //    "CONT4"  : Draw a contour plot using surface colors (SURF option at theta = 0)
+//    "CONT5"  : Draw a contour plot using Delaunay triangles
 //
 //  The default number of contour levels is 20 equidistant levels and can
 //  be changed with TH1::SetContour or TStyle::SetNumberContours.
@@ -1294,12 +1322,12 @@ void THistPainter::Paint(Option_t *option)
    }
    TView *view = gPad->GetView();
    if (view) {
-      if (!Hoption.Lego && !Hoption.Surf ) {
+      if (!Hoption.Lego && !Hoption.Surf && !Hoption.Tri) {
          delete view;
          gPad->SetView(0);
       }
    }
-   if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf ) {
+   if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf) {
       PaintTable(option);
       fH->SetMinimum(minsav);
       if (Hoption.Func) {
@@ -1629,77 +1657,6 @@ void THistPainter::PaintAxis(Bool_t drawGridOnly)
    }
 }
 
-//______________________________________________________________________________
-void THistPainter::PaintAxis3D(Option_t *option)
-{
-   // Paint an empty 3D axis system and define the TView accroding to
-   // the histogram axis values. The method should be access via the Paint
-   // method. When accessed that way the follwoing option are available;
-   // h->Paint("BB");  // Defines the TView and paint the back box.
-   // h->Paint("bb");  // Defines the TView only.
-   // h->Paint("abb"); // Defines the TView and paint the axis.
-   // h->Paint("fb");  // Paint the front box.
-
-   TString opt = option;
-   Bool_t backbox  = opt.Contains("BB");
-
-   fXbuf[2] = Hparam.zmin;
-   fYbuf[2] = Hparam.zmax;
-   fXbuf[0] = Hparam.xmin;
-   fYbuf[0] = Hparam.xmax;
-   fXbuf[1] = Hparam.ymin;
-   fYbuf[1] = Hparam.ymax;
-
-   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
-
-   fLego->InitMoveScreen(-1.1,1.1);
-
-   TView *view = gPad->GetView();
-   if (!view) {
-      Error("PaintAxis3D", "no TView in current pad");
-      return;
-   }
-
-   Double_t thedeg =  90 - gPad->GetTheta();
-   Double_t phideg = -90 - gPad->GetPhi();
-   Double_t psideg = view->GetPsi();
-   Int_t irep;
-
-   view->SetView(phideg, thedeg, psideg, irep);
-
-   // Set color/style for back box
-   fLego->SetFillStyle(gPad->GetFrameFillStyle());
-   fLego->SetFillColor(gPad->GetFrameFillColor());
-   fLego->TAttFill::Modify();
-
-   Int_t backcolor = gPad->GetFrameFillColor();
-   if (Hoption.System != kCARTESIAN) backcolor = 0;
-   view->PadRange(backcolor);
-
-   fLego->SetFillStyle(fH->GetFillStyle());
-   fLego->SetFillColor(fH->GetFillColor());
-   fLego->TAttFill::Modify();
-
-   if (backbox) {
-      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
-      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
-      fLego->BackBox(90);
-   }
-
-   if (Hoption.FrontBox) {
-      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
-      fLego->FrontBox(90);
-   }
-
-   if (Hoption.Axis) {
-      TGaxis *axis = new TGaxis();
-      PaintLegoAxis(axis, 90);
-      Hoption.Axis = 0;
-      delete axis;
-   }
-
-   delete fLego; fLego = 0;
-}
 
 //______________________________________________________________________________
 void THistPainter::PaintBar(Option_t *)
@@ -2075,7 +2032,8 @@ void THistPainter::PaintContour(Option_t *option)
 //       11  Use colour to distinguish contours. ("cont1")
 //       12  Use line style to distinguish contours. ("cont2")
 //       13  Line style and colour are the same for all contours. ("cont3")
-//       14  same as 1 but uses the "SURF" algorithm ("cont4")
+//       14  Same as 1 but uses the "SURF" algorithm ("cont4")
+//       15  Use Delaunay triangles to compute the contours
 //
 //     When option "List" is specified together with option "cont",
 //     the points used to draw the contours are saved in the TGraph format
@@ -2114,6 +2072,16 @@ void THistPainter::PaintContour(Option_t *option)
       gPad->SetTheta(thesave);
       gPad->GetView()->SetBit(kCannotRotate); //tested in ExecuteEvent
 //      if (Hoption.Zscale) PaintPalette();
+      return;
+   }
+
+   if (Hoption.Contour == 15) {
+      TGraphDelaunay *dt;
+      TList *hl = fH->GetListOfFunctions();
+      dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
+      if (!dt) return;
+      if (!fGraphPainter) fGraphPainter = new TGraphPainter(dt);
+      fGraphPainter->Paint(option);
       return;
    }
 
@@ -2745,8 +2713,7 @@ void THistPainter::PaintFrame()
 
    RecalculateRange();
 
-   if (Hoption.Lego     || Hoption.Surf    || 
-       Hoption.FrontBox || Hoption.BackBox || Hoption.Contour == 14) {
+   if (Hoption.Lego || Hoption.Surf || Hoption.Tri || Hoption.Contour == 14) {
       TObject *frame = gPad->FindObject("TFrame");
       if (frame) gPad->GetListOfPrimitives()->Remove(frame);
       return;
@@ -4658,6 +4625,81 @@ void THistPainter::PaintSurface(Option_t *)
 
 
 //______________________________________________________________________________
+void THistPainter::PaintTriangles(Option_t *option)
+{
+   // Control function to draw a table using Delaunay triangles
+
+   TGraphDelaunay *dt;
+
+   // Check if fH contains a TGraphDelaunay
+   TList *hl = fH->GetListOfFunctions();
+   dt = (TGraphDelaunay*)hl->FindObject("TGraphDelaunay");
+   if (!dt) return;
+
+   // If needed, create a TGraphPainter
+   if (!fGraphPainter) fGraphPainter = new TGraphPainter(dt);
+
+   // Define the 3D view
+   fXbuf[0] = Hparam.xmin;
+   fYbuf[0] = Hparam.xmax;
+   fXbuf[1] = Hparam.ymin;
+   fYbuf[1] = Hparam.ymax;
+   fXbuf[2] = Hparam.zmin;
+   fYbuf[2] = Hparam.zmax;
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("PaintTriangles", "no TView in current pad");
+      return;
+   }
+   Double_t thedeg =  90 - gPad->GetTheta();
+   Double_t phideg = -90 - gPad->GetPhi();
+   Double_t psideg = view->GetPsi();
+   Int_t irep;
+   view->SetView(phideg, thedeg, psideg, irep);
+
+   // Set color/style for back box
+   fLego->SetFillStyle(gPad->GetFrameFillStyle());
+   fLego->SetFillColor(gPad->GetFrameFillColor());
+   fLego->TAttFill::Modify();
+   Int_t backcolor = gPad->GetFrameFillColor();
+   if (Hoption.System != kCARTESIAN) backcolor = 0;
+   view->PadRange(backcolor);
+   fLego->SetFillStyle(fH->GetFillStyle());
+   fLego->SetFillColor(fH->GetFillColor());
+   fLego->TAttFill::Modify();
+
+   // Paint the Back Box if needed
+   if (Hoption.BackBox) {
+      fLego->InitMoveScreen(-1.1,1.1);
+      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
+      fLego->BackBox(90);
+   }
+
+   // Paint the triangles
+   fGraphPainter->Paint(option);
+
+   // Paint the Front Box if needed
+   if (Hoption.FrontBox) {
+      fLego->InitMoveScreen(-1.1,1.1);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
+      fLego->FrontBox(90);
+   }
+
+   // Paint the Axis if needed
+   if (!Hoption.Axis && !Hoption.Same) {
+      TGaxis *axis = new TGaxis();
+      PaintLegoAxis(axis, 90);
+      delete axis;
+   }
+   
+   if (Hoption.Zscale) PaintPalette();
+
+   delete fLego; fLego = 0;
+}
+
+//______________________________________________________________________________
 void THistPainter::DefineColorLevels(Int_t ndivz)
 {
    Int_t i, irep;
@@ -4698,9 +4740,6 @@ void THistPainter::PaintTable(Option_t *option)
       delete fFunctions->FindObject("palette");      
    }
    
-   if ((Hoption.FrontBox || Hoption.BackBox) && 
-        !Hoption.Lego    && !Hoption.Surf) PaintAxis3D(option);
-
    if (fH->GetEntries() != 0 && !Hoption.Axis) {
       if (Hoption.Scat)    PaintScatterPlot(option);
       if (Hoption.Arrow)   PaintArrows(option);
@@ -4712,9 +4751,9 @@ void THistPainter::PaintTable(Option_t *option)
 
    if (Hoption.Lego) PaintLego(option);
    if (Hoption.Surf && !Hoption.Contour) PaintSurface(option);
+   if (Hoption.Tri) PaintTriangles(option);
    
-   if (!Hoption.Lego    && !Hoption.Surf &&
-       !Hoption.BackBox && !Hoption.FrontBox) PaintAxis(kFALSE); // Draw the axes
+   if (!Hoption.Lego && !Hoption.Surf && !Hoption.Tri) PaintAxis(kFALSE); // Draw the axes
 
    PaintTitle();    //    Draw histogram title
 //   PaintFile();     //    Draw Current File name corresp to current directory

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.169 2003/12/16 09:01:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.177 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -71,6 +71,8 @@
 //            - i : a 32 bit unsigned integer (UInt_t)
 //            - F : a 32 bit floating point (Float_t)
 //            - D : a 64 bit floating point (Double_t)
+//            - L : a 64 bit signed integer (Long64_t)
+//            - l : a 64 bit unsigned integer (ULong64_t)
 //
 //  ==> Case B
 //      ======
@@ -264,6 +266,7 @@
 #include "TEventList.h"
 #include "TBranchElement.h"
 #include "TBranchObject.h"
+#include "TClassEdit.h"
 #include "TLeafObject.h"
 #include "TLeaf.h"
 #include "TLeafB.h"
@@ -272,6 +275,7 @@
 #include "TLeafF.h"
 #include "TLeafS.h"
 #include "TLeafD.h"
+#include "TLeafL.h"
 #include "TLeafElement.h"
 #include "TBasket.h"
 #include "TMath.h"
@@ -293,12 +297,13 @@
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TFriendElement.h"
+#include "TVirtualCollectionProxy.h"
 #include "TVirtualFitter.h"
 #include "TCut.h"
 #include "Api.h"
 
-Int_t TTree::fgBranchStyle = 1;  //use new TBranch style with TBranchElement
-Int_t TTree::fgMaxTreeSize = 1900000000;
+Int_t    TTree::fgBranchStyle = 1;  //use new TBranch style with TBranchElement
+Long64_t TTree::fgMaxTreeSize = 1900000000;
 
 TTree *gTree;
 const Int_t kMaxLen = 512;
@@ -411,7 +416,7 @@ TTree::~TTree()
 //*-*                  =================
    if (fDirectory) {
       if (!fDirectory->TestBit(TDirectory::kCloseDirectory)) {
-         fDirectory->GetList()->Remove(this);
+         if (fDirectory->GetList()) fDirectory->GetList()->Remove(this);
       }
    }
    fLeaves.Clear();
@@ -1088,7 +1093,7 @@ TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj,
                      sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"i");
                   else if (code ==  5)
                      sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"F");
-                  else if (code ==  8)
+                  else if (code ==  8 || code == 9)
                      sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"D");
                   else {
                      printf("Cannot create branch for rdname=%s, code=%d\n",branchname, code);
@@ -1146,6 +1151,7 @@ TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj,
             else if (code == 13) sprintf(leaflist,"%s/%s",rdname,"i");
             else if (code ==  5) sprintf(leaflist,"%s/%s",rdname,"F");
             else if (code ==  8) sprintf(leaflist,"%s/%s",rdname,"D");
+            else if (code ==  9) sprintf(leaflist,"%s/%s",rdname,"D");
             else {
                printf("Cannot create branch for rdname=%s, code=%d\n",branchname, code);
                leaflist[0] = 0;
@@ -1251,7 +1257,31 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
          return branch;
       }
    }
+//		Now look vector<> or list<>
+   TString inclass;
+   int stlcont = TClassEdit::IsSTLCont(classname);
 
+   if (stlcont>=1 && stlcont<=2 ) {
+      inclass = TClassEdit::ShortType(classname,1+2+4).c_str();
+      TClass *inklass = gROOT->GetClass(inclass.Data());
+      if (!inklass) {
+         Error("Bronch","%s with no class defined in branch: %s",classname,name);
+         return 0;
+      }
+      G__ClassInfo* classinfo = inklass->GetClassInfo();
+      if (!classinfo) {
+         Error("Bronch","%s with no dictionary defined in branch: %s",classname,name);
+         return 0;
+      }
+      if (splitlevel > 0) {
+         if (classinfo->RootFlag() & 1)
+            Warning("Bronch","Using split mode on a class: %s with a custom Streamer",inclass.Data());
+      } else {
+         TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
+         fBranches.Add(branch);
+         return branch;
+      }
+   }
    Bool_t hasCustomStreamer = kFALSE;
    if (!cl->GetClassInfo()) {
       Error("Bronch","Cannot find dictionary for class: %s",classname);
@@ -1269,6 +1299,15 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    //====> special case of TClonesArray
    if(cl == TClonesArray::Class()) {
       TBranchElement *branch = new TBranchElement(name,(TClonesArray*)objadd,bufsize,splitlevel);
+      fBranches.Add(branch);
+      branch->SetAddress(add);
+      return branch;
+   }
+   //====>
+   //====> special case of vector<...> or list<...>
+   if(stlcont>=1 && stlcont<=2) {
+      TVirtualCollectionProxy *collProxy = cl->GetCollectionProxy()->Generate(); // TSTLCont  *tstl = new TSTLCont(classname,(void*)objadd);
+      TBranchElement *branch = new TBranchElement(name,collProxy,bufsize,splitlevel);
       fBranches.Add(branch);
       branch->SetAddress(add);
       return branch;
@@ -1770,7 +1809,7 @@ void TTree::Delete(Option_t *option)
          TBranch *branch = leaf->GetBranch();
          Int_t nbaskets = branch->GetMaxBaskets();
          for (Int_t i=0;i<nbaskets;i++) {
-            Int_t pos = branch->GetBasketSeek(i);
+            Long64_t pos = branch->GetBasketSeek(i);
             if (!pos) continue;
             gFile->GetRecordHeader(header,pos,16,nbytes,objlen,keylen);
             if (nbytes <= 0) continue;
@@ -2009,6 +2048,27 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //  Iteration$: return the current iteration over this formula for this
 //                 entry (i.e. varies from 0 to Length$).
 //
+//  Alt$(primary,alternate) : return the value of "primary" if it is available
+//                 for the current iteration otherwise return the value of "alternate".
+//                 For example, with arr1[3] and arr2[2]
+//    tree->Draw("arr1-Alt$(arr2,0)");
+//                 will draw arr[0]+arr2[0] ; arr[1]+arr2[1] and arr[1]+0
+//                 Or with a variable size array arr3
+//    tree->Draw("Alt$(arr3[0],0)+Alt$(arr3[1],0)+Alt$(arr3[2],0)");
+//                 will draw the sum arr3 for the index 0 to min(2,actual_size_of_arr3-1)
+//                 As a comparison
+//    tree->Draw("arr3[0]+arr3[1]+arr3[2]");
+//                 will draw the sum arr3 for the index 0 to 2 only if the 
+//                 actual_size_of_arr3 is greater or equal to 3.
+//                 Note that the array in 'primary' is flatened/linearilized thus using
+//                 Alt$ with multi-dimensional arrays of different dimensions in unlikely
+//                 to yield the expected results.  To visualize a bit more what elements
+//                 would be matched by TTree::Draw, TTree::Scan can be used:
+//    tree->Scan("arr1:Alt$(arr2,0)");
+//                 will print on one line the value of arr1 and (arr2,0) that will be 
+//                 matched by
+//    tree->Draw("arr1-Alt$(arr2,0)");
+//
 //     Making a Profile histogram
 //     ==========================
 //  In case of a 2-Dim expression, one can generate a TProfile histogram
@@ -2184,7 +2244,7 @@ Int_t TTree::Fill()
    //to the case where the Tree is in the top level directory.
    if (!fDirectory) return nbytes;
    TFile *file = fDirectory->GetFile();
-   if (file && file->GetEND() > (Double_t)fgMaxTreeSize) {
+   if (file && file->GetEND() > fgMaxTreeSize) {
       if (fDirectory == (TDirectory*)file) ChangeFile(file);
    }
 
@@ -2556,7 +2616,7 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
 //
 //    for (Int_t i=0;i<nentries;i++) {
 //       T.GetEntry(i);
-//       // the objrect event has been filled at this point
+//       // the object event has been filled at this point
 //    }
 //   The default (recommended). At the first entry an object of the
 //   class Event will be created and pointed by event.
@@ -2836,7 +2896,7 @@ Double_t TTree::GetMaximum(const char *columname)
 
 
 //______________________________________________________________________________
-Int_t TTree::GetMaxTreeSize()
+Long64_t TTree::GetMaxTreeSize()
 {
 // static function
 // return maximum size of a Tree file
@@ -3166,12 +3226,12 @@ void TTree::Print(Option_t *option) const
   TTree::Class()->WriteBuffer(b,(TTree*)this);
   total += b.Length();
 
-  Int_t file     = Int_t(fZipBytes) + s;
+  Long64_t file     = Long64_t(fZipBytes) + s;
   Float_t cx     = 1;
   if (fZipBytes) cx = fTotBytes/fZipBytes;
   Printf("******************************************************************************");
   Printf("*Tree    :%-10s: %-54s *",GetName(),GetTitle());
-  Printf("*Entries : %8d : Total = %15.10g bytes  File  Size = %10d *",Int_t(fEntries),total,file);
+  Printf("*Entries : %8d : Total = %15.10g bytes  File  Size = %lld *",Int_t(fEntries),total,file);
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
@@ -3597,7 +3657,9 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
       leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
       TString s = branch->GetName();
-      if (strcmp(bname,branch->GetName()) && s.Index(re) == kNPOS) continue;
+      if (strcmp(bname,"*")) { //Regexp gives wrong result for [] in name
+        if (strcmp(bname,branch->GetName()) && s.Index(re) == kNPOS) continue;
+      }
       nb++;
       if (status) branch->ResetBit(kDoNotProcess);
       else        branch->SetBit(kDoNotProcess);
@@ -3758,7 +3820,7 @@ void TTree::SetFileNumber(Int_t number)
 }
   
 //______________________________________________________________________________
-void TTree::SetMaxTreeSize(Int_t maxsize)
+void TTree::SetMaxTreeSize(Long64_t maxsize)
 {
 // static function
 // Set the maximum size of a Tree file.

@@ -1,139 +1,373 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.14 2002/10/23 20:47:47 brun Exp $
-// Author: Fons Rademakers   14/11/97
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.23 2004/01/26 22:29:25 brun Exp $
+// Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Linear Algebra Package -- Matrix Verifications.                      //
 //                                                                      //
-// This file implements a large set of TMatrix operation tests.         //
+// This file implements a large set of TMat operation tests.            //
+// *******************************************************************  //
+// *  Starting  Matrix - S T R E S S suite                              //
+// *******************************************************************  //
+// Test  1 : Allocation, Resizing.................................. OK  //
+// Test  2 : Filling, Inserting, Adopting.......................... OK  //
+// Test  3 : Uniform matrix operations............................. OK  //
+// Test  4 : Binary Matrix element-by-element operations............OK  //
+// Test  5 : Matrix transposition...................................OK  //
+// Test  6 : Haar/Hilbert Matrix....................................OK  //
+// Test  7 : Matrix promises........................................OK  //
+// Test  8 : Matrix Norms...........................................OK  //
+// Test  9 : Matrix Determinant.....................................OK  //
+// Test 10 : General Matrix Multiplications.........................OK  //
+// Test 11 : Symmetric Matrix Multiplications.......................OK  //
+// Test 12 : Matrix Vector Multiplications..........................OK  //
+// Test 13 : Matrix Inversion.......................................OK  //
+// Test 14 : Matrix Persistence.....................................OK  //
+// *******************************************************************  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <math.h>
-#include <float.h>
+//_____________________________batch only_____________________
+#ifndef __CINT__
 
 #include "Riostream.h"
-#include "TROOT.h"
-#include "TApplication.h"
 #include "TFile.h"
-#include "TMatrix.h"
-#include "TArrayF.h"
+#include "TMatrixD.h"
+#include "TArrayD.h"
 
+#include "TDecompLU.h"
+#include "TDecompQRH.h"
+#include "TDecompSVD.h"
 
-//
-//------------------------------------------------------------------------
-//            Service validation functions
-//
-void verify_matrix_identity(const TMatrix &m1, const TMatrix &m2)
-{ VerifyMatrixIdentity(m1,m2); }
+void stress_matrix                (Int_t verbose);
+void StatusPrint                  (Int_t id,const TString &title,Int_t status);
 
-void verify_vector_identity(const TVector &v1, const TVector &v2)
-{ VerifyVectorIdentity(v1,v2); }
+void stress_allocation            ();
+void stress_matrix_fill           (Int_t rsize,Int_t csize);
+void stress_element_op            (Int_t rsize,Int_t csize);
+void stress_binary_ebe_op         (Int_t rsize, Int_t csize);
+void stress_transposition         (Int_t msize);
+void stress_special_creation      (Int_t dim);
+void stress_matrix_fill           (Int_t rsize,Int_t csize);
+void stress_matrix_promises       (Int_t dim);
+void stress_norms                 (Int_t rsize,Int_t csize);
+void stress_determinant           (Int_t msize);
+void stress_mm_multiplications    (Int_t msize);
+void stress_sym_mm_multiplications(Int_t msize);
+void stress_vm_multiplications    (Int_t msize);
+void stress_inversion             (Int_t msize);
+void stress_matrix_io             ();
 
-void verify_element_value(const TMatrix &m, Real_t val)
-{ VerifyElementValue(m, val); }
-
-void are_compatible(const TMatrix &m1, const TMatrix &m2)
+int main(int argc,char **argv) 
 {
-   if (AreCompatible(m1, m2))
-      cout << "matrices are compatible" << endl;
-   else
-      cout << "matrices are NOT compatible" << endl;
+  Int_t verbose = 0;
+  Char_t c;
+  while (argc > 1 && argv[1][0] == '-' && argv[1][1] != 0) { 
+    for (Int_t i = 1; (c = argv[1][i]) != 0; i++) {
+      switch (c) {
+        case 'v':
+          verbose = 1;
+          break;  
+        default:
+          Fatal("Unknown flag -%s",&c);
+          break;  
+      }
+    }
+    argc--; 
+    argv++; 
+  }
+  stress_matrix(verbose);
+  return 0;
+}
+#endif
+
+#define EPSILON 1.0e-14
+
+Int_t gVerbose = 0;
+
+//________________________________common part_________________________
+
+void stress_matrix(Int_t verbose=0)
+{
+  cout << "******************************************************************" <<endl;
+  cout << "*  Starting  Matrix - S T R E S S suite                          *" <<endl;
+  cout << "******************************************************************" <<endl;
+
+  gVerbose = verbose;
+  stress_allocation();
+  stress_matrix_fill(20,10);
+  stress_element_op(20,10);
+  stress_binary_ebe_op(10,20);
+  stress_transposition(20);
+  stress_special_creation(20);
+#ifndef __CINT__
+  stress_matrix_promises(20);
+#endif
+  stress_norms(40,20);
+  stress_determinant(20);
+  stress_mm_multiplications(20);
+  stress_sym_mm_multiplications(20);
+  stress_vm_multiplications(20);
+  stress_inversion(20);
+
+  stress_matrix_io();
+  cout << "******************************************************************" <<endl;
 }
 
-//
+//------------------------------------------------------------------------
+void StatusPrint(Int_t id,const Char_t *title,Bool_t status)
+{
+  // Print test program number and its title
+//   const Int_t kMAX = 65;
+//   TString header = TString("Test ")+Form("%2d",id)+" : "+title;
+//   const Int_t nch = header.Length();
+//   for (Int_t i = nch; i < kMAX; i++) header += '.';
+//   cout << header << (status ? "OK" : "FAILED") << endl;
+  // Print test program number and its title
+   const Int_t kMAX = 65;
+   char header[80];
+   sprintf(header,"Test %2d : %s",id,title);
+   Int_t nch = strlen(header);
+   for (Int_t i=nch;i<kMAX;i++) header[i] = '.';
+   header[kMAX] = 0;
+   header[kMAX-1] = ' ';
+   cout << header << (status ? "OK" : "FAILED") << endl;
+}
+
 //------------------------------------------------------------------------
 //          Test allocation functions and compatibility check
 //
-void test_allocation()
+void stress_allocation()
 {
+  if (gVerbose)
+    cout << "\n\n---> Test allocation and compatibility check" << endl;
 
-   cout << "\n\n---> Test allocation and compatibility check" << endl;
+  Bool_t ok = kTRUE;
 
-   TMatrix m1(4,20);
-   TMatrix m2(0,3,0,19);
-   TMatrix m3(1,4,0,19);
-   TMatrix m4(m1);
+  Int_t i,j;
+  TMatrixD m1(4,20);
+  for (i = m1.GetRowLwb(); i <= m1.GetRowUpb(); i++)
+    for (j = m1.GetColLwb(); j <= m1.GetColUpb(); j++)
+      m1(i,j) = TMath::Pi()*i+TMath::E()*j;
 
-   cout << "\nStatus information reported for matrix m3:" << endl;
-   cout << "  Row lower bound ... " << m3.GetRowLwb() << endl;
-   cout << "  Row upper bound ... " << m3.GetRowUpb() << endl;
-   cout << "  Col lower bound ... " << m3.GetColLwb() << endl;
-   cout << "  Col upper bound ... " << m3.GetColUpb() << endl;
-   cout << "  No. rows ..........." << m3.GetNrows()  << endl;
-   cout << "  No. cols ..........." << m3.GetNcols()  << endl;
-   cout << "  No. of elements ...." << m3.GetNoElements() << endl;
+  TMatrixD m2(0,3,0,19);
+  TMatrixD m3(1,4,0,19);
+  TMatrixD m4(m1);
 
-   cout << "\nCheck matrices 1 & 2 for compatibility" << endl;
-   are_compatible(m1,m2);
+  if (gVerbose) {
+    cout << "\nStatus information reported for matrix m3:" << endl;
+    cout << "  Row lower bound ... " << m3.GetRowLwb() << endl;
+    cout << "  Row upper bound ... " << m3.GetRowUpb() << endl;
+    cout << "  Col lower bound ... " << m3.GetColLwb() << endl;
+    cout << "  Col upper bound ... " << m3.GetColUpb() << endl;
+    cout << "  No. rows ..........." << m3.GetNrows()  << endl;
+    cout << "  No. cols ..........." << m3.GetNcols()  << endl;
+    cout << "  No. of elements ...." << m3.GetNoElements() << endl;
+  }
 
-   cout << "Check matrices 1 & 4 for compatibility" << endl;
-   are_compatible(m1,m4);
+  if (gVerbose)
+    cout << "\nCheck matrices 1 & 2 for compatibility" << endl;
+  ok &= AreCompatible(m1,m2,gVerbose);
 
-   cout << "m2 has to be compatible with m3 after resizing to m3" << endl;
-   m2.ResizeTo(m3);
-   are_compatible(m2,m3);
+  if (gVerbose)
+    cout << "Check matrices 1 & 4 for compatibility" << endl;
+  ok &= AreCompatible(m1,m4,gVerbose);
 
-   TMatrix m5(m1.GetNrows()+1,m1.GetNcols()+5);
-   cout << "m1 has to be compatible with m5 after resizing to m5" << endl;
-   m1.ResizeTo(m5.GetNrows(),m5.GetNcols());
-   are_compatible(m1,m5);
+  if (gVerbose)
+    cout << "m2 has to be compatible with m3 after resizing to m3" << endl;
+  m2.ResizeTo(m3);
+  ok &= AreCompatible(m2,m3,gVerbose);
 
-   cout << "\nDone\n" << endl;
+  TMatrixD m5(m1.GetNrows()+1,m1.GetNcols()+5);
+  for (i = m5.GetRowLwb(); i <= m5.GetRowUpb(); i++)
+    for (j = m5.GetColLwb(); j <= m5.GetColUpb(); j++)
+      m5(i,j) = TMath::Pi()*i+TMath::E()*j;
+
+  if (gVerbose)
+    cout << "m1 has to be compatible with m5 after resizing to m5" << endl;
+  m1.ResizeTo(m5.GetNrows(),m5.GetNcols());
+  ok &= AreCompatible(m1,m5,gVerbose);
+
+  if (gVerbose)
+    cout << "m1 has to be equal to m4 after stretching and shrinking" << endl;
+  m1.ResizeTo(m4.GetNrows(),m4.GetNcols());
+  ok &= VerifyMatrixIdentity(m1,m4,gVerbose);
+  if (gVerbose)
+    cout << "m5 has to be equal to m1 after shrinking" << endl;
+  m5.ResizeTo(m1.GetNrows(),m1.GetNcols());
+  ok &= VerifyMatrixIdentity(m1,m5,gVerbose,EPSILON);
+
+  if (gVerbose)
+    cout << "stretching and shrinking for small matrices (stack)" << endl;
+  if (gVerbose)
+    cout << "m8 has to be equal to m7 after stretching and shrinking" << endl;
+  TMatrixD m6(4,4);
+  for (i = m6.GetRowLwb(); i <= m6.GetRowUpb(); i++)
+    for (j = m6.GetColLwb(); j <= m6.GetColUpb(); j++)
+      m6(i,j) = TMath::Pi()*i+TMath::E()*j;
+  TMatrixD m8(3,3);
+  for (i = m8.GetRowLwb(); i <= m8.GetRowUpb(); i++)
+    for (j = m8.GetColLwb(); j <= m8.GetColUpb(); j++)
+      m8(i,j) = TMath::Pi()*i+TMath::E()*j;
+  TMatrixD m7(m8);
+
+  m8.ResizeTo(4,4);
+  m8.ResizeTo(3,3);
+  ok &= VerifyMatrixIdentity(m7,m8,gVerbose,EPSILON);
+
+  if (gVerbose)
+    cout << "m6 has to be equal to m8 after shrinking" << endl;
+  m6.ResizeTo(3,3);
+  ok &= VerifyMatrixIdentity(m6,m8,gVerbose,EPSILON);
+
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
+
+  StatusPrint(1,"Allocation, Resizing",ok);
 }
 
-class FillMatrix : public TElementPosAction {
-   int no_elems, no_cols;
-   void Operation(Real_t &element) const
+class FillMatrix : public TElementPosActionD {
+   Int_t no_elems,no_cols;
+   void Operation(Double_t &element) const
       { element = 4*TMath::Pi()/no_elems * (fI*no_cols+fJ); }
 public:
-   FillMatrix(const TMatrix &m) :
-         no_elems(m.GetNoElements()), no_cols(m.GetNcols()) { }
+   FillMatrix() {}
+   FillMatrix(const TMatrixD &m) :
+         no_elems(m.GetNoElements()),no_cols(m.GetNcols()) { }
 };
 
 //
 //------------------------------------------------------------------------
 //          Test Filling of matrix
 //
-void test_matrix_fill(int rsize, int csize)
+void stress_matrix_fill(Int_t rsize,Int_t csize)
 {
-   cout << "\n\n---> Test different matrix filling methods\n" << endl;
+  if (gVerbose)
+    cout << "\n\n---> Test different matrix filling methods\n" << endl;
 
-   cout << "Creating m  with Apply function..." << endl;
-   TMatrix m(-1,rsize-2,1,csize);
-   FillMatrix f(m);
-   m.Apply(f);
+  Bool_t ok = kTRUE;
+  if (gVerbose)
+    cout << "Creating m  with Apply function..." << endl;
+  TMatrixD m(-1,rsize-2,1,csize);
+#ifndef __CINT__
+  FillMatrix f(m);
+  m.Apply(f);
+#else
+  for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
+    for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
+      m(i,j) = 4*TMath::Pi()/m.GetNoElements() * (i*m.GetNcols()+j);
+#endif
 
-   TMatrix m_overload1(-1,rsize-2,1,csize);
-   TMatrix m_overload2(-1,rsize-2,1,csize);
+  {
+    if (gVerbose)
+      cout << "Check identity between m and matrix filled through (i,j)" << endl;
 
-   TArrayF a_fortran(rsize*csize);
-   TArrayF a_c      (rsize*csize);
-   for (Int_t i = 0; i < rsize; i++)
-   {
-     for (Int_t j = 0; j < csize; j++)
-     {
-       a_c[i*csize+j] = 4*TMath::Pi()/rsize/csize*((i-1)*csize+j+1);
-       a_fortran[i+rsize*j] = a_c[i*csize+j];
-       m_overload1(i-1,j+1)  = a_c[i*csize+j];
-       m_overload2[i-1][j+1] = a_c[i*csize+j];
-     }
-   }
+    TMatrixD m_overload1(-1,rsize-2,1,csize);
+    TMatrixD m_overload2(-1,rsize-2,1,csize);
 
-   cout << "Creating m_fortran by filling with fortran stored matrix" << endl;
-   TMatrix m_fortran(-1,rsize-2,1,csize,a_fortran.GetArray(),"F");
-   cout << "Check identity between m and m_fortran" << endl;
-   verify_matrix_identity(m,m_fortran);
+    for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
+    {
+      for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
+      {
+        const Double_t val = 4*TMath::Pi()/rsize/csize*(i*csize+j);
+        m_overload1(i,j)  = val;
+        m_overload2[i][j] = val;
+      }
+    }
 
-   cout << "Creating m_c by filling with c stored matrix" << endl;
-   TMatrix m_c(-1,rsize-2,1,csize,a_c.GetArray());
-   cout << "Check identity between m_fortran and m_c" << endl;
-   verify_matrix_identity(m_fortran,m_c);
+    ok &= VerifyMatrixIdentity(m,m_overload1,gVerbose,EPSILON);
+    if (gVerbose)
+      cout << "Check identity between m and matrix filled through [i][j]" << endl;
+    ok &= VerifyMatrixIdentity(m,m_overload2,gVerbose,EPSILON);
+    if (gVerbose)
+      cout << "Check identity between matrix filled through [i][j] and (i,j)" << endl;
+    ok &= VerifyMatrixIdentity(m_overload1,m_overload2,gVerbose,EPSILON);
+  }
 
-   cout << "Check identity between matrix filled through [i][j] and (i,j)" << endl;
-   verify_matrix_identity(m_overload1,m_overload2);
+  {
+    TArrayD a_fortran(rsize*csize);
+    TArrayD a_c      (rsize*csize);
+    for (Int_t i = 0; i < rsize; i++)
+    {
+      for (Int_t j = 0; j < csize; j++)
+      {
+        a_c[i*csize+j]       = 4*TMath::Pi()/rsize/csize*((i-1)*csize+j+1);
+        a_fortran[i+rsize*j] = a_c[i*csize+j];
+      }
+    }
 
-   cout << "\nDone\n" << endl;
+    if (gVerbose)
+      cout << "Creating m_fortran by filling with fortran stored matrix" << endl;
+    TMatrixD m_fortran(-1,rsize-2,1,csize,a_fortran.GetArray(),"F");
+    if (gVerbose)
+      cout << "Check identity between m and m_fortran" << endl;
+    ok &= VerifyMatrixIdentity(m,m_fortran,gVerbose,EPSILON);
+
+    if (gVerbose)
+      cout << "Creating m_c by filling with c stored matrix" << endl;
+    TMatrixD m_c(-1,rsize-2,1,csize,a_c.GetArray());
+    if (gVerbose)
+      cout << "Check identity between m and m_c" << endl;
+    ok &= VerifyMatrixIdentity(m,m_c,gVerbose,EPSILON);
+  }
+
+  {
+    if (gVerbose)
+      cout << "Check insertion/extraction of sub-matrices" << endl;
+    {
+      TMatrixD m_sub1 = m;
+      m_sub1.ResizeTo(0,rsize-2,2,csize);
+      TMatrixD m_sub2 = m.GetSub(0,rsize-2,2,csize,"");
+      ok &= VerifyMatrixIdentity(m_sub1,m_sub2,gVerbose,EPSILON);
+    }
+
+    {
+      TMatrixD m2(-1,rsize-2,1,csize);
+      TMatrixD m_part1 = m.GetSub(0,rsize-2,2,csize,"");
+      TMatrixD m_part2 = m.GetSub(0,rsize-2,1,1,"");
+      TMatrixD m_part3 = m.GetSub(-1,-1,2,csize,"");
+      TMatrixD m_part4 = m.GetSub(-1,-1,1,1,"");
+      m2.SetSub(0,2,m_part1);
+      m2.SetSub(0,1,m_part2);
+      m2.SetSub(-1,2,m_part3);
+      m2.SetSub(-1,1,m_part4);
+      ok &= VerifyMatrixIdentity(m,m2,gVerbose,EPSILON);
+    }
+
+    {
+      TMatrixD m2(-1,rsize-2,1,csize);
+      TMatrixD m_part1 = m.GetSub(0,rsize-2,2,csize,"S");
+      TMatrixD m_part2 = m.GetSub(0,rsize-2,1,1,"S");
+      TMatrixD m_part3 = m.GetSub(-1,-1,2,csize,"S");
+      TMatrixD m_part4 = m.GetSub(-1,-1,1,1,"S");
+      m2.SetSub(0,2,m_part1);
+      m2.SetSub(0,1,m_part2);
+      m2.SetSub(-1,2,m_part3);
+      m2.SetSub(-1,1,m_part4);
+      ok &= VerifyMatrixIdentity(m,m2,gVerbose,EPSILON);
+    }
+  }
+
+  {
+    if (gVerbose)
+      cout << "Check array Adoption" << endl;
+    {
+      TMatrixD *m1 = new TMatrixD(m);
+      TMatrixD *m2 = new TMatrixD();
+      m2->Adopt(m1->GetRowLwb(),m1->GetRowUpb(),m1->GetColLwb(),m1->GetColUpb(),m1->GetMatrixArray());
+      ok &= VerifyMatrixIdentity(m,*m2,gVerbose,EPSILON);
+      m2->Sqr();
+      TMatrixD m3 = m; m3.Sqr();
+      ok &= VerifyMatrixIdentity(m3,*m1,gVerbose,EPSILON);
+      delete m1;
+      delete m2;
+    }
+  }
+
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
+
+  StatusPrint(2,"Filling, Inserting, Adopting",ok);
 }
 
 //
@@ -141,826 +375,1167 @@ void test_matrix_fill(int rsize, int csize)
 //                Test uniform element operations
 //
 typedef  double (*dfunc)(double);
-class ApplyFunction : public TElementAction {
+class ApplyFunction : public TElementActionD {
    dfunc fFunc;
-   void Operation(Real_t &element) const { element = fFunc(double(element)); }
+   void Operation(Double_t &element) const { element = fFunc(double(element)); }
 public:
    ApplyFunction(dfunc func) : fFunc(func) { }
 };
 
-void test_element_op(int rsize, int csize)
+void stress_element_op(Int_t rsize,Int_t csize)
 {
-   const double pattern = 8.625;
-   int i,j;
+  Bool_t ok = kTRUE;
+  const Double_t pattern = 8.625;
 
-   cout << "\n---> Test operations that treat each element uniformly" << endl;
+  TMatrixD m(-1,rsize-2,1,csize);
 
-   TMatrix m(-1,rsize-2,1,csize);
+  if (gVerbose)
+    cout << "\nWriting zeros to m..." << endl;
+  {
+    for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
+      for(Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
+        m(i,j) = 0;
+    ok &= VerifyMatrixValue(m,0,gVerbose);
+  }
 
-   cout << "\nWriting zeros to m..." << endl;
-   for (i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
-      for(j = m.GetColLwb(); j <= m.GetColUpb(); j++)
-         m(i,j) = 0;
-   verify_element_value(m,0);
+  if (gVerbose)
+    cout << "Creating zero m1 ..." << endl;
+  TMatrixD m1(TMatrixDBase::kZero, m);
+  ok &= VerifyMatrixValue(m1,0,gVerbose,EPSILON);
 
-   cout << "Creating zero m1 ..." << endl;
-   TMatrix m1(TMatrix::kZero, m);
-   verify_element_value(m1,0);
+  if (gVerbose)
+    cout << "Comparing m1 with 0 ..." << endl;
+  Assert(m1 == 0);
+  Assert(!(m1 != 0));
 
-   cout << "Comparing m1 with 0 ..." << endl;
-   Assert(m1 == 0);
-   Assert(!(m1 != 0));
+  if (gVerbose)
+    cout << "Writing a pattern " << pattern << " by assigning to m(i,j)..." << endl;
+  {
+    for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
+      for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
+        m(i,j) = pattern;
+    ok &= VerifyMatrixValue(m,pattern,gVerbose,EPSILON);
+  }
 
-   cout << "Writing a pattern " << pattern << " by assigning to m(i,j)..." << endl;
-   for (i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
-      for (j = m.GetColLwb(); j <= m.GetColUpb(); j++)
-         m(i,j) = pattern;
-   verify_element_value(m,pattern);
+  if (gVerbose)
+    cout << "Writing the pattern by assigning to m1 as a whole ..."  << endl;
+  m1 = pattern;
+  ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
 
-   cout << "Writing the pattern by assigning to m1 as a whole ..."  << endl;
-   m1 = pattern;
-   verify_element_value(m1,pattern);
+  if (gVerbose)
+    cout << "Comparing m and m1 ..." << endl;
+  Assert(m == m1);
+  if (gVerbose)
+    cout << "Comparing (m=0) and m1 ..." << endl;
+  Assert(!(m.Zero() == m1));
 
-   cout << "Comparing m and m1 ..." << endl;
-   Assert(m == m1);
-   cout << "Comparing (m=0) and m1 ..." << endl;
-   Assert(!(m.Zero() == m1));
+  if (gVerbose)
+    cout << "Clearing m1 ..." << endl;
+  m1.Zero();
+  ok &= VerifyMatrixValue(m1,0,gVerbose,EPSILON);
 
-   cout << "Clearing m1 ..." << endl;
-   m1.Zero();
-   verify_element_value(m1,0);
+  if (gVerbose)
+    cout << "\nClear m and add the pattern" << endl;
+  m.Zero();
+  m += pattern;
+  ok &= VerifyMatrixValue(m,pattern,gVerbose,EPSILON);
+  if (gVerbose)
+    cout << "   add the doubled pattern with the negative sign" << endl;
+  m += -2*pattern;
+  ok &= VerifyMatrixValue(m,-pattern,gVerbose,EPSILON);
+  if (gVerbose)
+    cout << "   subtract the trippled pattern with the negative sign" << endl;
+  m -= -3*pattern;
+  ok &= VerifyMatrixValue(m,2*pattern,gVerbose,EPSILON);
 
-   cout << "\nClear m and add the pattern" << endl;
-   m.Zero();
-   m += pattern;
-   verify_element_value(m,pattern);
-   cout << "   add the doubled pattern with the negative sign" << endl;
-   m += -2*pattern;
-   verify_element_value(m,-pattern);
-   cout << "   subtract the trippled pattern with the negative sign" << endl;
-   m -= -3*pattern;
-   verify_element_value(m,2*pattern);
+  if (gVerbose)
+    cout << "\nVerify comparison operations when all elems are the same" << endl;
+  m = pattern;
+  Assert( m == pattern && !(m != pattern) );
+  Assert( m > 0 && m >= pattern && m <= pattern );
+  Assert( m > -pattern && m >= -pattern );
+  Assert( m <= pattern && !(m < pattern) );
+  m -= 2*pattern;
+  Assert( m  < -pattern/2 && m <= -pattern/2 );
+  Assert( m  >= -pattern && !(m > -pattern) );
 
-   cout << "\nVerify comparison operations when all elems are the same" << endl;
-   m = pattern;
-   Assert( m == pattern && !(m != pattern) );
-   Assert( m > 0 && m >= pattern && m <= pattern );
-   Assert( m > -pattern && m >= -pattern );
-   Assert( m <= pattern && !(m < pattern) );
-   m -= 2*pattern;
-   Assert( m  < -pattern/2 && m <= -pattern/2 );
-   Assert( m  >= -pattern && !(m > -pattern) );
+  if (gVerbose)
+    cout << "\nVerify comparison operations when not all elems are the same" << endl;
+  m = pattern; m(m.GetRowUpb(),m.GetColUpb()) = pattern-1;
+  Assert( !(m == pattern) && !(m != pattern) );
+  Assert( m != 0 );                   // none of elements are 0
+  Assert( !(m >= pattern) && m <= pattern && !(m<pattern) );
+  Assert( !(m <= pattern-1) && m >= pattern-1 && !(m>pattern-1) );
 
-   cout << "\nVerify comparison operations when not all elems are the same" << endl;
-   m = pattern; m(m.GetRowUpb(),m.GetColUpb()) = pattern-1;
-   Assert( !(m == pattern) && !(m != pattern) );
-   Assert( m != 0 );                   // none of elements are 0
-   Assert( !(m >= pattern) && m <= pattern && !(m<pattern) );
-   Assert( !(m <= pattern-1) && m >= pattern-1 && !(m>pattern-1) );
+  if (gVerbose)
+    cout << "\nAssign 2*pattern to m by repeating additions" << endl;
+  m = 0; m += pattern; m += pattern;
+  if (gVerbose)
+    cout << "Assign 2*pattern to m1 by multiplying by two " << endl;
+  m1 = pattern; m1 *= 2;
+  ok &= VerifyMatrixValue(m1,2*pattern,gVerbose);
+  Assert( m == m1 );
+  if (gVerbose)
+    cout << "Multiply m1 by one half returning it to the 1*pattern" << endl;
+  m1 *= 1/2.;
+  ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
 
-   cout << "\nAssign 2*pattern to m by repeating additions" << endl;
-   m = 0; m += pattern; m += pattern;
-   cout << "Assign 2*pattern to m1 by multiplying by two " << endl;
-   m1 = pattern; m1 *= 2;
-   verify_element_value(m1,2*pattern);
-   Assert( m == m1 );
-   cout << "Multiply m1 by one half returning it to the 1*pattern" << endl;
-   m1 *= 1/2.;
-   verify_element_value(m1,pattern);
+  if (gVerbose)
+    cout << "\nAssign -pattern to m and m1" << endl;
+  m.Zero(); m -= pattern; m1 = -pattern;
+  ok &= VerifyMatrixValue(m,-pattern,gVerbose,EPSILON);
+  Assert( m == m1 );
+  if (gVerbose)
+    cout << "m = sqrt(sqr(m)); m1 = abs(m1); Now m and m1 have to be the same" << endl;
+  m.Sqr();
+  ok &= VerifyMatrixValue(m,pattern*pattern,gVerbose,EPSILON);
+  m.Sqrt();
+  ok &= VerifyMatrixValue(m,pattern,gVerbose,EPSILON);
+  m1.Abs();
+  ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
+  ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
 
-   cout << "\nAssign -pattern to m and m1" << endl;
-   m.Zero(); m -= pattern; m1 = -pattern;
-   verify_element_value(m,-pattern);
-   Assert( m == m1 );
-   cout << "m = sqrt(sqr(m)); m1 = abs(m1); Now m and m1 have to be the same" << endl;
-   m.Sqr();
-   verify_element_value(m,pattern*pattern);
-   m.Sqrt();
-   verify_element_value(m,pattern);
-   m1.Abs();
-   verify_element_value(m1,pattern);
-   Assert( m == m1 );
+  if (gVerbose)
+    cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << endl;
+  {
+#ifndef __CINT__
+    FillMatrix f(m);
+    m.Apply(f);
+#else
+    for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
+      for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
+        m(i,j) = 4*TMath::Pi()/m.GetNoElements() * (i*m.GetNcols()+j);
+#endif
+  }
+  m1 = m;
+  {
+#ifndef __CINT__
+    ApplyFunction s(&TMath::Sin);
+    ApplyFunction c(&TMath::Cos);
+    m.Apply(s);
+    m1.Apply(c);
+#else
+    for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
+      for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++) {
+        m(i,j)  = TMath::Sin(m(i,j));
+        m1(i,j) = TMath::Cos(m1(i,j));
+      }
+    }
+#endif
+  }
+  m.Sqr();
+  m1.Sqr();
+  m += m1;
+  ok &= VerifyMatrixValue(m,1,gVerbose,EPSILON);
 
-   cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << endl;
-   FillMatrix f(m);
-   m.Apply(f);
-   m1 = m;
-   ApplyFunction s(&TMath::Sin);
-   ApplyFunction c(&TMath::Cos);
-   m.Apply(s);
-   m1.Apply(c);
-   m.Sqr();
-   m1.Sqr();
-   m += m1;
-   verify_element_value(m,1);
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
 
-   cout << "\nDone\n" << endl;
+  StatusPrint(3,"Uniform matrix operations",ok);
 }
 
 //
 //------------------------------------------------------------------------
 //        Test binary matrix element-by-element operations
 //
-void test_binary_ebe_op(int rsize, int csize)
+void stress_binary_ebe_op(Int_t rsize, Int_t csize)
 {
-   const double pattern = 4.25;
-   int i, j;
+  if (gVerbose)
+    cout << "\n---> Test Binary Matrix element-by-element operations" << endl;
 
-   cout << "\n---> Test Binary Matrix element-by-element operations" << endl;
+  Bool_t ok = kTRUE;
+  const double pattern = 4.25;
 
-   TMatrix m(2,rsize+1,0,csize-1);
-   TMatrix m1(TMatrix::kZero,m);
-   TMatrix mp(TMatrix::kZero,m);
+  TMatrixD m(2,rsize+1,0,csize-1);
+  TMatrixD m1(TMatrixDBase::kZero,m);
+  TMatrixD mp(TMatrixDBase::kZero,m);
 
-   for (i = mp.GetRowLwb(); i <= mp.GetRowUpb(); i++)
-      for (j = mp.GetColLwb(); j <= mp.GetColUpb(); j++)
-         mp(i,j) = (i-m.GetNrows()/2.)*j*pattern;
+  {
+    for (Int_t i = mp.GetRowLwb(); i <= mp.GetRowUpb(); i++)
+      for (Int_t j = mp.GetColLwb(); j <= mp.GetColUpb(); j++)
+        mp(i,j) = (i-m.GetNrows()/2.)*j*pattern;
+  }
 
-   cout << "\nVerify assignment of a matrix to the matrix" << endl;
-   m = pattern;
-   m1.Zero();
-   m1 = m;
-   verify_element_value(m1,pattern);
-   Assert( m1 == m );
+  if (gVerbose)
+    cout << "\nVerify assignment of a matrix to the matrix" << endl;
+  m = pattern;
+  m1.Zero();
+  m1 = m;
+  ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
+  Assert( m1 == m );
 
-   cout << "\nAdding the matrix to itself, uniform pattern " << pattern << endl;
-   m.Zero(); m = pattern;
-   m1 = m; m1 += m1;
-   verify_element_value(m1,2*pattern);
-   cout << "  subtracting two matrices ..." << endl;
-   m1 -= m;
-   verify_element_value(m1,pattern);
-   cout << "  subtracting the matrix from itself" << endl;
-   m1 -= m1;
-   verify_element_value(m1,0);
-   cout << "  adding two matrices together" << endl;
-   m1 += m;
-   verify_element_value(m1,pattern);
+  if (gVerbose)
+    cout << "\nAdding the matrix to itself, uniform pattern " << pattern << endl;
+  m.Zero(); m = pattern;
+  m1 = m; m1 += m1;
+  ok &= VerifyMatrixValue(m1,2*pattern,gVerbose,EPSILON);
+  if (gVerbose)
+    cout << "  subtracting two matrices ..." << endl;
+  m1 -= m;
+  ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
+  if (gVerbose)
+    cout << "  subtracting the matrix from itself" << endl;
+  m1 -= m1;
+  ok &= VerifyMatrixValue(m1,0,gVerbose,EPSILON);
+  if (gVerbose)
+    cout << "  adding two matrices together" << endl;
+  m1 += m;
+  ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
 
-   cout << "\nArithmetic operations on matrices with not the same elements" << endl;
-   cout << "   adding mp to the zero matrix..." << endl;
-   m.Zero(); m += mp;
-   verify_matrix_identity(m,mp);
-   m1 = m;
-   cout << "   making m = 3*mp and m1 = 3*mp, via add() and succesive mult" << endl;
-   Add(m,2,mp);
-   m1 += m1; m1 += mp;
-   verify_matrix_identity(m,m1);
-   cout << "   clear both m and m1, by subtracting from itself and via add()" << endl;
-   m1 -= m1;
-   Add(m,-3,mp);
-   verify_matrix_identity(m,m1);
+  if (gVerbose) {
+    cout << "\nArithmetic operations on matrices with not the same elements" << endl;
+    cout << "   adding mp to the zero matrix..." << endl;
+  }
+  m.Zero(); m += mp;
+  ok &= VerifyMatrixIdentity(m,mp,gVerbose,EPSILON);
+  m1 = m;
+  if (gVerbose)
+    cout << "   making m = 3*mp and m1 = 3*mp, via add() and succesive mult" << endl;
+  Add(m,2,mp);
+  m1 += m1; m1 += mp;
+  ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
+  if (gVerbose)
+    cout << "   clear both m and m1, by subtracting from itself and via add()" << endl;
+  m1 -= m1;
+  Add(m,-3,mp);
+  ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
 
-   cout << "\nTesting element-by-element multiplications and divisions" << endl;
-   cout << "   squaring each element with sqr() and via multiplication" << endl;
-   m = mp; m1 = mp;
-   m.Sqr();
-   ElementMult(m1,m1);
-   verify_matrix_identity(m,m1);
-   cout << "   compare (m = pattern^2)/pattern with pattern" << endl;
-   m = pattern; m1 = pattern;
-   m.Sqr();
-   ElementDiv(m,m1);
-   verify_element_value(m,pattern);
-   Compare(m1,m);
+  if (gVerbose) {
+    cout << "\nTesting element-by-element multiplications and divisions" << endl;
+    cout << "   squaring each element with sqr() and via multiplication" << endl;
+  }
+  m = mp; m1 = mp;
+  m.Sqr();
+  ElementMult(m1,m1);
+  ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
+  if (gVerbose)
+    cout << "   compare (m = pattern^2)/pattern with pattern" << endl;
+  m = pattern; m1 = pattern;
+  m.Sqr();
+  ElementDiv(m,m1);
+  ok &= VerifyMatrixValue(m,pattern,gVerbose,EPSILON);
+  if (gVerbose)
+    Compare(m1,m);
 
-   cout << "\nDone\n" << endl;
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
+
+  StatusPrint(4,"Binary Matrix element-by-element operations",ok);
 }
 
 //
 //------------------------------------------------------------------------
 //              Verify matrix transposition
 //
-void test_transposition(int msize)
+void stress_transposition(Int_t msize)
 {
-   cout << "\n---> Verify matrix transpose "
-           "for matrices of a characteristic size " << msize << endl;
+  if (gVerbose) {
+    cout << "\n---> Verify matrix transpose "
+            "for matrices of a characteristic size " << msize << endl;
+  }
 
-   {
+  Bool_t ok = kTRUE;
+  {
+    if (gVerbose)
       cout << "\nCheck to see that a square UnitMatrix stays the same";
-      TMatrix m(msize,msize);
-      m.UnitMatrix();
-      TMatrix mt(TMatrix::kTransposed,m);
-      Assert( m == mt );
-   }
+    TMatrixD m(msize,msize);
+    m.UnitMatrix();
+    TMatrixD mt(TMatrixDBase::kTransposed,m);
+    ok &= ( m == mt ) ? kTRUE : kFALSE;
+  }
 
-   {
+  {
+    if (gVerbose)
       cout << "\nTest a non-square UnitMatrix";
-      TMatrix m(msize,msize+1);
-      m.UnitMatrix();
-      TMatrix mt(TMatrix::kTransposed,m);
-      Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows() );
-      int i,j;
-      for (i = m.GetRowLwb(); i <= TMath::Min(m.GetRowUpb(),m.GetColUpb()); i++)
-         for (j = m.GetColLwb(); j <= TMath::Min(m.GetRowUpb(),m.GetColUpb()); j++)
-            Assert( m(i,j) == mt(i,j) );
-   }
+    TMatrixD m(msize,msize+1);
+    m.UnitMatrix();
+    TMatrixD mt(TMatrixDBase::kTransposed,m);
+    Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows() );
+    for (Int_t i = m.GetRowLwb(); i <= TMath::Min(m.GetRowUpb(),m.GetColUpb()); i++)
+      for (Int_t j = m.GetColLwb(); j <= TMath::Min(m.GetRowUpb(),m.GetColUpb()); j++)
+        ok &= ( m(i,j) == mt(i,j) ) ? kTRUE : kFALSE;
+  }
 
-   {
+  {
+    if (gVerbose)
       cout << "\nCheck to see that a symmetric (Hilbert)Matrix stays the same";
-      TMatrix m = THilbertMatrix(msize,msize);
-      TMatrix mt(TMatrix::kTransposed,m);
-      Assert( m == mt );
-   }
+    TMatrixD m = THilbertMatrixD(msize,msize);
+    TMatrixD mt(TMatrixDBase::kTransposed,m);
+    ok &= ( m == mt ) ? kTRUE : kFALSE;
+  }
 
-   {
+  {
+    if (gVerbose)
       cout << "\nCheck transposing a non-symmetric matrix";
-      TMatrix m = THilbertMatrix(msize+1,msize);
-      m(1,2) = TMath::Pi();
-      TMatrix mt(TMatrix::kTransposed,m);
-      Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows());
-      Assert(mt(2,1) == (Real_t)TMath::Pi() && mt(1,2) != (Real_t)TMath::Pi());
-      Assert(mt[2][1] == (Real_t)TMath::Pi() && mt[1][2] != (Real_t)TMath::Pi());
+    TMatrixD m = THilbertMatrixD(msize+1,msize);
+    m(1,2) = TMath::Pi();
+    TMatrixD mt(TMatrixDBase::kTransposed,m);
+    Assert(m.GetNrows() == mt.GetNcols() && m.GetNcols() == mt.GetNrows());
+    Assert(mt(2,1)  == (Double_t)TMath::Pi() && mt(1,2)  != (Double_t)TMath::Pi());
+    Assert(mt[2][1] == (Double_t)TMath::Pi() && mt[1][2] != (Double_t)TMath::Pi());
 
+    if (gVerbose)
       cout << "\nCheck double transposing a non-symmetric matrix" << endl;
-      TMatrix mtt(TMatrix::kTransposed,mt);
-      Assert( m == mtt );
-   }
+    TMatrixD mtt(TMatrixDBase::kTransposed,mt);
+    ok &= ( m == mtt ) ? kTRUE : kFALSE;
+  }
 
-   cout << "\nDone\n" << endl;
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
+
+  StatusPrint(5,"Matrix transposition",ok);
 }
 
 //
 //------------------------------------------------------------------------
 //           Test special matrix creation
 //
-class MakeHilbert : public TElementPosAction {
-   void Operation(Real_t &element) const { element = 1./(fI+fJ+1); }
+class MakeHilbert : public TElementPosActionD {
+  void Operation(Double_t &element) const { element = 1./(fI+fJ+1); }
 public:
-   MakeHilbert() { }
+  MakeHilbert() { }
 };
 
-class TestUnit : public TElementPosAction {
-   mutable int fIsUnit;
-   void Operation(Real_t &element) const
-      { if (fIsUnit) fIsUnit = fI==fJ ? element == 1.0 : element == 0; }
+#ifndef __CINT__
+class TestUnit : public TElementPosActionD {
+  mutable Int_t fIsUnit;
+  void Operation(Double_t &element) const
+      { if (fIsUnit)
+          fIsUnit = ((fI==fJ) ? (element == 1.0) : (element == 0)); }
 public:
-   TestUnit() : fIsUnit(0==0) { }
-   int is_indeed_unit() const { return fIsUnit; }
+  TestUnit() : fIsUnit(0==0) { }
+  Int_t is_indeed_unit() const { return fIsUnit; }
 };
+#else
+  Bool_t is_indeed_unit(TMatrixD &m) {
+    Bool_t isUnit = kTRUE;
+    for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
+      for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++) {
+        if (isUnit)
+          isUnit = ((i==j) ? (m(i,j) == 1.0) : (m(i,j) == 0));
+      }
+    return isUnit;
+  }
+#endif
 
-void test_special_creation(int dim)
+void stress_special_creation(Int_t dim)
 {
-   cout << "\n---> Check creating some special matrices of dimension " <<
-   dim << endl;
+  if (gVerbose)
+    cout << "\n---> Check creating some special matrices of dimension " << dim << endl;
 
-   {
+  Int_t j;
+  Bool_t ok = kTRUE;
+  {
+    if (gVerbose)
       cout << "\ntest creating Hilbert matrices" << endl;
-      TMatrix m = THilbertMatrix(dim+1,dim);
-      TMatrix m1(TMatrix::kZero,m);
-      Assert( !(m == m1) );
-      Assert( m != 0 );
-      MakeHilbert mh;
-      m1.Apply(mh);
-      Assert( m1 != 0 );
-      Assert( m == m1 );
-   }
+    TMatrixD m = THilbertMatrixD(dim+1,dim);
+    TMatrixD m1(TMatrixDBase::kZero,m);
+    ok &= ( !(m == m1) ) ? kTRUE : kFALSE;
+    ok &= ( m != 0 ) ? kTRUE : kFALSE;
+#ifndef __CINT__
+    MakeHilbert mh;
+    m1.Apply(mh);
+#else
+    for (Int_t i = m1.GetRowLwb(); i <= m1.GetRowUpb(); i++)
+      for (j = m1.GetColLwb(); j <= m1.GetColUpb(); j++)
+        m1(i,j) = 1./(i+j+1);
+#endif
+    ok &= ( m1 != 0 ) ? kTRUE : kFALSE;
+    ok &= ( m == m1 ) ? kTRUE : kFALSE;
+  }
 
-   {
+  {
+    if (gVerbose)
       cout << "test creating zero matrix and copy constructor" << endl;
-      TMatrix m = THilbertMatrix(dim,dim+1);
-      Assert( m != 0 );
-      TMatrix m1(m);               // Applying the copy constructor
-      Assert( m1 == m );
-      TMatrix m2(TMatrix::kZero,m);
-      Assert( m2 == 0 );
-      Assert( m != 0 );
-   }
+    TMatrixD m = THilbertMatrixD(dim,dim+1);
+    ok &= ( m != 0 ) ? kTRUE : kFALSE;
+    TMatrixD m1(m);               // Applying the copy constructor
+    ok &= ( m1 == m ) ? kTRUE : kFALSE;
+    TMatrixD m2(TMatrixDBase::kZero,m);
+    ok &= ( m2 == 0 ) ? kTRUE : kFALSE;
+    ok &= ( m != 0 ) ? kTRUE : kFALSE;
+  }
 
-   {
+  {
+    if (gVerbose)
       cout << "test creating unit matrices" << endl;
-      TMatrix m(dim,dim);
-      {
-         TestUnit test_unit;
-         m.Apply(test_unit);
-         Assert( !test_unit.is_indeed_unit() );
-      }
-      m.UnitMatrix();
-      {
-         TestUnit test_unit;
-         m.Apply(test_unit);
-         Assert( test_unit.is_indeed_unit() );
-      }
-      m.ResizeTo(dim-1,dim);
-      TMatrix m2(TMatrix::kUnit,m);
-      {
-         TestUnit test_unit;
-         m2.Apply(test_unit);
-         Assert( test_unit.is_indeed_unit() );
-      }
-      m.ResizeTo(dim,dim-2);
-      m.UnitMatrix();
-      {
-         TestUnit test_unit;
-         m.Apply(test_unit);
-         Assert( test_unit.is_indeed_unit() );
-      }
-   }
+    TMatrixD m(dim,dim);
+#ifndef __CINT__
+    {
+      TestUnit test_unit;
+      m.Apply(test_unit);
+      ok &= ( !test_unit.is_indeed_unit() ) ? kTRUE : kFALSE;
+    }
+#else
+    ok &= ( !is_indeed_unit(m) ) ? kTRUE : kFALSE;
+#endif
+    m.UnitMatrix();
+#ifndef __CINT__
+    {
+      TestUnit test_unit;
+       m.Apply(test_unit);
+       ok &= ( test_unit.is_indeed_unit() ) ? kTRUE : kFALSE;
+    }
+#else
+    ok &= ( is_indeed_unit(m) ) ? kTRUE : kFALSE;
+#endif
+    m.ResizeTo(dim-1,dim);
+    TMatrixD m2(TMatrixDBase::kUnit,m);
+#ifndef __CINT__
+    {
+      TestUnit test_unit;
+      m2.Apply(test_unit);
+      ok &= ( test_unit.is_indeed_unit() ) ? kTRUE : kFALSE;
+    }
+#else
+    ok &= ( is_indeed_unit(m2) ) ? kTRUE : kFALSE;
+#endif
+    m.ResizeTo(dim,dim-2);
+    m.UnitMatrix();
+#ifndef __CINT__
+    {
+      TestUnit test_unit;
+      m.Apply(test_unit);
+      ok &= ( test_unit.is_indeed_unit() ) ? kTRUE : kFALSE;
+    }
+#else
+    ok &= ( is_indeed_unit(m) ) ? kTRUE : kFALSE;
+#endif
+  }
 
-   {
-      cout << "check to see that Haar matrix has *exactly* orthogonal columns"
-           << endl;
-      const int order = 5;
-      TMatrix haar = THaarMatrix(order);
-      Assert( haar.GetNrows() == (1<<order) && haar.GetNrows() == haar.GetNcols() );
-      TVector colj(1<<order), coll(1<<order);
-      int j;
-      for (j = haar.GetColLwb(); j <= haar.GetColUpb(); j++) {
-         colj = TMatrixColumn(haar,j);
-         Assert(TMath::Abs(TMath::Abs(colj*colj - 1.0)) <= FLT_EPSILON );
-         for (int l=j+1; l <= haar.GetColUpb(); l++) {
-            coll = TMatrixColumn(haar,l);
-            Assert( colj*coll == 0 );
-         }
+  {
+    if (gVerbose)
+      cout << "check to see that Haar matrix has *exactly* orthogonal columns" << endl;
+    const Int_t order = 5;
+    const TMatrixD haar = THaarMatrixD(order);
+    ok &= ( haar.GetNrows() == (1<<order) &&
+               haar.GetNrows() == haar.GetNcols() ) ? kTRUE : kFALSE;
+    TVectorD colj(1<<order);
+    TVectorD coll(1<<order);
+    for (j = haar.GetColLwb(); j <= haar.GetColUpb(); j++) {
+      colj = TMatrixDColumn_const(haar,j);
+      ok &= (TMath::Abs(colj*colj-1.0) <= 1.0e-15 ) ? kTRUE : kFALSE;
+      for (Int_t l = j+1; l <= haar.GetColUpb(); l++) {
+        coll = TMatrixDColumn_const(haar,l);
+        const Double_t val = colj*coll;
+        ok &= ( TMath::Abs(val) <= 1.0e-15 ) ? kTRUE : kFALSE;
       }
+    }
+
+    if (gVerbose)
       cout << "make Haar (sub)matrix and test it *is* a submatrix" << endl;
-      const int no_sub_cols = (1<<order) - 3;
-      TMatrix haar_sub = THaarMatrix(order,no_sub_cols);
-      Assert( haar_sub.GetNrows() == (1<<order) &&
-              haar_sub.GetNcols() == no_sub_cols );
-      for (j = haar_sub.GetColLwb(); j <= haar_sub.GetColUpb(); j++) {
-         colj = TMatrixColumn(haar,j);
-         coll = TMatrixColumn(haar_sub,j);
-         verify_vector_identity(colj,coll);
-      }
-   }
+    const Int_t no_sub_cols = (1<<order) - 3;
+    const TMatrixD haar_sub = THaarMatrixD(order,no_sub_cols);
+    ok &= ( haar_sub.GetNrows() == (1<<order) &&
+               haar_sub.GetNcols() == no_sub_cols ) ? kTRUE : kFALSE;
+    for (j = haar_sub.GetColLwb(); j <= haar_sub.GetColUpb(); j++) {
+      colj = TMatrixDColumn_const(haar,j);
+      coll = TMatrixDColumn_const(haar_sub,j);
+      ok &= VerifyVectorIdentity(colj,coll,gVerbose);
+    }
+  }
 
-   cout << "\nDone\n" << endl;
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
+
+  StatusPrint(6,"Haar/Hilbert Matrix",ok);
 }
 
 //
 //------------------------------------------------------------------------
 //           Test matrix promises
 //
-class hilbert_matrix_promise : public TLazyMatrix {
-   void FillIn(TMatrix &m) const { m = THilbertMatrix(m.GetRowLwb(),m.GetRowUpb(),
-                                                      m.GetColLwb(),m.GetColUpb()); }
+class hilbert_matrix_promise : public TMatrixDLazy {
+  void FillIn(TMatrixD &m) const { m = THilbertMatrixD(m.GetRowLwb(),m.GetRowUpb(),
+                                                   m.GetColLwb(),m.GetColUpb()); }
 
 public:
-   hilbert_matrix_promise(int nrows, int ncols)
-      : TLazyMatrix(nrows,ncols) {}
-   hilbert_matrix_promise(int row_lwb, int row_upb,
-                          int col_lwb, int col_upb)
-      : TLazyMatrix(row_lwb,row_upb,col_lwb,col_upb) { }
+  hilbert_matrix_promise(Int_t nrows,Int_t ncols)
+     : TMatrixDLazy(nrows,ncols) {}
+  hilbert_matrix_promise(Int_t row_lwb,Int_t row_upb,
+                         Int_t col_lwb,Int_t col_upb)
+     : TMatrixDLazy(row_lwb,row_upb,col_lwb,col_upb) { }
 };
 
-void test_matrix_promises(int dim)
+void stress_matrix_promises(Int_t dim)
 {
-   cout << "\n---> Check making/forcing promises, (lazy)matrices of dimension " <<
-           dim << endl;
+  if (gVerbose)
+    cout << "\n---> Check making/forcing promises, (lazy)matrices of dimension " << dim << endl;
 
-   {
+  Bool_t ok = kTRUE;
+  {
+    if (gVerbose)
       cout << "\nmake a promise and force it by a constructor" << endl;
-      TMatrix m = hilbert_matrix_promise(dim,dim+1);
-      TMatrix m1 = THilbertMatrix(dim,dim+1);
-      verify_matrix_identity(m,m1);
-   }
+    TMatrixD m  = hilbert_matrix_promise(dim,dim+1);
+    TMatrixD m1 = THilbertMatrixD(dim,dim+1);
+    ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
+  }
 
-   {
+  {
+    if (gVerbose)
       cout << "make a promise and force it by an assignment" << endl;
-      TMatrix m(-1,dim,0,dim);
-      m = hilbert_matrix_promise(-1,dim,0,dim);
-      TMatrix m1 = THilbertMatrix(-1,dim,0,dim);
-      verify_matrix_identity(m,m1);
-   }
+    TMatrixD m(-1,dim,0,dim);
+    m = hilbert_matrix_promise(-1,dim,0,dim);
+    TMatrixD m1 = THilbertMatrixD(-1,dim,0,dim);
+    ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
+  }
 
-   cout << "\nDone\n" << endl;
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
+
+  StatusPrint(7,"Matrix promises",ok);
 }
 
 //
 //------------------------------------------------------------------------
 //             Verify the norm calculation
 //
-void test_norms(int rsize, int csize)
+void stress_norms(Int_t rsize,Int_t csize)
 {
-   cout << "\n---> Verify norm calculations" << endl;
+  if (gVerbose)
+    cout << "\n---> Verify norm calculations" << endl;
 
-   const double pattern = 10.25;
+  Bool_t ok = kTRUE;
+  const double pattern = 10.25;
 
-   if (rsize % 2 == 1 || csize %2 == 1)
-      Fatal("test_norms",
-            "Sorry, size of the matrix to test must be even for this test\n");
+  if (rsize % 2 == 1 || csize %2 == 1)
+    Fatal("stress_norms","Sorry, size of the matrix to test must be even for this test\n");
 
-   TMatrix m(rsize,csize);
+  TMatrixD m(rsize,csize);
 
-   cout << "\nAssign " << pattern << " to all the elements and check norms" << endl;
-   m = pattern;
-   cout << "  1. (col) norm should be pattern*nrows" << endl;
-   Assert( m.Norm1() == pattern*m.GetNrows() );
-   Assert( m.Norm1() == m.ColNorm() );
-   cout << "  Inf (row) norm should be pattern*ncols" << endl;
-   Assert( m.NormInf() == pattern*m.GetNcols() );
-   Assert( m.NormInf() == m.RowNorm() );
-   cout << "  Square of the Eucl norm has got to be pattern^2 * no_elems" << endl;
-   Assert( m.E2Norm() == (pattern*pattern)*m.GetNoElements() );
-   TMatrix m1(TMatrix::kZero,m);
-   Assert( m.E2Norm() == E2Norm(m,m1) );
+  if (gVerbose)
+    cout << "\nAssign " << pattern << " to all the elements and check norms" << endl;
+  m = pattern;
+  if (gVerbose)
+    cout << "  1. (col) norm should be pattern*nrows" << endl;
+  ok &= ( m.Norm1() == pattern*m.GetNrows() ) ? kTRUE : kFALSE;
+  ok &= ( m.Norm1() == m.ColNorm() ) ? kTRUE : kFALSE;
+  if (gVerbose)
+    cout << "  Inf (row) norm should be pattern*ncols" << endl;
+  ok &= ( m.NormInf() == pattern*m.GetNcols() ) ? kTRUE : kFALSE;
+  ok &= ( m.NormInf() == m.RowNorm() ) ? kTRUE : kFALSE;
+  if (gVerbose)
+    cout << "  Square of the Eucl norm has got to be pattern^2 * no_elems" << endl;
+  ok &= ( m.E2Norm() == (pattern*pattern)*m.GetNoElements() ) ? kTRUE : kFALSE;
+  TMatrixD m1(TMatrixDBase::kZero,m);
+  ok &= ( m.E2Norm() == E2Norm(m,m1) ) ? kTRUE : kFALSE;
 
-   cout << "\nDone\n" << endl;
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
+
+  StatusPrint(8,"Matrix Norms",ok);
 }
 
 //
 //------------------------------------------------------------------------
 //              Verify the determinant evaluation
 //
-void test_determinant(int msize)
+void stress_determinant(Int_t msize)
 {
-   cout << "\n---> Verify determinant evaluation "
-           "for a square matrix of size " << msize << endl;
+  if (gVerbose)
+    cout << "\n---> Verify determinant evaluation for a square matrix of size " << msize << endl;
 
-   TMatrix m(msize,msize);
+  Bool_t ok = kTRUE;
+  TMatrixD m(msize,msize);
+  const double pattern = 2.5;
 
-   cout << "\nCheck to see that the determinant of the unit matrix is one";
-   m.UnitMatrix();
-   cout << "\n	determinant is " << m.Determinant();
-   Assert( m.Determinant() == 1 );
+  if (gVerbose)
+    cout << "\nCheck to see that the determinant of the unit matrix is one";
+  m.UnitMatrix();
+  if (gVerbose)
+    cout << "\n	determinant is " << m.Determinant();
+  ok &= ( m.Determinant() == 1 ) ? kTRUE : kFALSE;
 
-   const double pattern = 2.5;
-   cout << "\nCheck the determinant for the matrix with " << pattern <<
-           " at the diagonal";
-   int i, j;
-   for (i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
-      for (j = m.GetColLwb(); j <= m.GetColUpb(); j++)
-         m(i,j) = ( i==j ? pattern : 0 );
-   cout << "\n	determinant is " << m.Determinant();
-   Assert( m.Determinant() == TMath::Power(pattern,(double)m.GetNrows()) );
+  if (gVerbose)
+    cout << "\nCheck the determinant for the matrix with " << pattern << " at the diagonal";
+  {
+    for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
+      for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
+        m(i,j) = ( i==j ? pattern : 0 );
+  }
+  if (gVerbose)
+    cout << "\n	determinant is " << m.Determinant() << " should be " << TMath::Power(pattern,(double)m.GetNrows()) <<endl;
+  ok &= ( TMath::Abs(m.Determinant()-TMath::Power(pattern,(double)m.GetNrows())) < DBL_EPSILON  ) ? kTRUE : kFALSE;
 
-   cout << "\nCheck the determinant of the transposed matrix";
-   m.UnitMatrix();
-   m(1,2) = pattern;
-   TMatrix m_tran(TMatrix::kTransposed,m);
-   Assert( !(m == m_tran) );
-   Assert( m.Determinant() == m_tran.Determinant() );
+  if (gVerbose)
+    cout << "\nCheck the determinant of the transposed matrix";
+  m.UnitMatrix();
+  m(1,2) = pattern;
+  TMatrixD m_tran(TMatrixD::kTransposed,m);
+  ok &= ( !(m == m_tran) ) ? kTRUE : kFALSE;
+  ok &= ( m.Determinant() == m_tran.Determinant() ) ? kTRUE : kFALSE;
 
-   {
+  {
+    if (gVerbose)
       cout << "\nswap two rows/cols of a matrix through method 1 and watch det's sign";
-      m.UnitMatrix();
-      TMatrixRow(m,3) = pattern;
-      const double det1 = m.Determinant();
-      TMatrixRow row1(m,1);
-      TVector vrow1(m.GetRowLwb(),m.GetRowUpb()); vrow1 = row1;
-      TVector vrow3(m.GetRowLwb(),m.GetRowUpb()); vrow3 = TMatrixRow(m,3);
-      row1 = vrow3; TMatrixRow(m,3) = vrow1;
-      Assert( m.Determinant() == -det1 );
-      TMatrixColumn col2(m,2);
-      TVector vcol2(m.GetRowLwb(),m.GetRowUpb()); vcol2 = col2;
-      TVector vcol4(m.GetRowLwb(),m.GetRowUpb()); vcol4 = TMatrixColumn(m,4);
-      col2 = vcol4; TMatrixColumn(m,4) = vcol2;
-      Assert( m.Determinant() == det1 );
-   }
+    m.UnitMatrix();
+    TMatrixDRow(m,3) = pattern;
+    const double det1 = m.Determinant();
+    TMatrixDRow row1(m,1);
+    TVectorD vrow1(m.GetRowLwb(),m.GetRowUpb()); vrow1 = row1;
+    TVectorD vrow3(m.GetRowLwb(),m.GetRowUpb()); vrow3 = TMatrixDRow(m,3);
+    row1 = vrow3; TMatrixDRow(m,3) = vrow1;
+    ok &= ( m.Determinant() == -det1 ) ? kTRUE : kFALSE;
+    TMatrixDColumn col2(m,2);
+    TVectorD vcol2(m.GetRowLwb(),m.GetRowUpb()); vcol2 = col2;
+    TVectorD vcol4(m.GetRowLwb(),m.GetRowUpb()); vcol4 = TMatrixDColumn(m,4);
+    col2 = vcol4; TMatrixDColumn(m,4) = vcol2;
+    ok &= ( m.Determinant() == det1 ) ? kTRUE : kFALSE;
+  }
 
-   {
+  {
+    if (gVerbose)
       cout << "\nswap two rows/cols of a matrix through method 2 and watch det's sign";
-      m.UnitMatrix();
-      TMatrixRow(m,3) = pattern;
-      const double det1 = m.Determinant();
+    m.UnitMatrix();
+    TMatrixDRow(m,3) = pattern;
+    const double det1 = m.Determinant();
 
-      TMatrix m_save( m);
-      TMatrixRow(m,1) = TMatrixRow(m_save,3);
-      TMatrixRow(m,3) = TMatrixRow(m_save,1);
-      Assert( m.Determinant() == -det1 );
+    TMatrixD m_save( m);
+    TMatrixDRow(m,1) = TMatrixDRow(m_save,3);
+    TMatrixDRow(m,3) = TMatrixDRow(m_save,1);
+    ok &= ( m.Determinant() == -det1 ) ? kTRUE : kFALSE;
 
-      m_save = m;
-      TMatrixColumn(m,2) = TMatrixColumn(m_save,4);
-      TMatrixColumn(m,4) = TMatrixColumn(m_save,2);
-      Assert( m.Determinant() == det1 );
-   }
+    m_save = m;
+    TMatrixDColumn(m,2) = TMatrixDColumn(m_save,4);
+    TMatrixDColumn(m,4) = TMatrixDColumn(m_save,2);
+    ok &= ( m.Determinant() == det1 ) ? kTRUE : kFALSE;
+  }
 
-   cout << "\nCheck the determinant for the matrix with " << pattern <<
-           " at the anti-diagonal";
-   for (i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
-      for (j = m.GetColLwb(); j <= m.GetColUpb(); j++)
-         m(i,j) = ( i==(m.GetColUpb()+m.GetColLwb()-j) ? pattern : 0 );
-   Assert( m.Determinant() == TMath::Power(pattern,(double)m.GetNrows()) *
-         ( m.GetNrows()*(m.GetNrows()-1)/2 & 1 ? -1 : 1 ) );
+  if (gVerbose)
+    cout << "\nCheck the determinant for the matrix with " << pattern << " at the anti-diagonal";
+  {
+    for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
+      for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
+        m(i,j) = ( i==(m.GetColUpb()+m.GetColLwb()-j) ? pattern : 0 );
+    ok &= ( m.Determinant() == TMath::Power(pattern,(double)m.GetNrows()) *
+               ( m.GetNrows()*(m.GetNrows()-1)/2 & 1 ? -1 : 1 ) ) ? kTRUE : kFALSE;
+  }
 
-   cout << "\nCheck the determinant for the singular matrix"
-           "\n	defined as above with zero first row";
-   m.Zero();
-   for (i = m.GetRowLwb()+1; i <= m.GetRowUpb(); i++)
-      for (j = m.GetColLwb(); j <= m.GetColUpb(); j++)
-         m(i,j) = ( i==(m.GetColUpb()+m.GetColLwb()-j) ? pattern : 0 );
-   cout << "\n	determinant is " << m.Determinant();
-   Assert( m.Determinant() == 0 );
+  if (0)
+  {
+    if (gVerbose)
+      cout << "\nCheck the determinant for the singular matrix"
+              "\n	defined as above with zero first row";
+    m.Zero();
+    {
+      for (Int_t i = m.GetRowLwb()+1; i <= m.GetRowUpb(); i++)
+        for (Int_t j = m.GetColLwb(); j <= m.GetColUpb(); j++)
+          m(i,j) = ( i==(m.GetColUpb()+m.GetColLwb()-j) ? pattern : 0 );
+    }
+    if (gVerbose)
+      cout << "\n	determinant is " << m.Determinant();
+    ok &= ( m.Determinant() == 0 ) ? kTRUE : kFALSE;
+  }
 
-   cout << "\nCheck out the determinant of the Hilbert matrix";
-   TMatrix H = THilbertMatrix(3,3);
-   cout << "\n    3x3 Hilbert matrix: exact determinant 1/2160 ";
-   cout << "\n                              computed    1/"<< 1/H.Determinant();
+  if (gVerbose)
+    cout << "\nCheck out the determinant of the Hilbert matrix";
+  TMatrixD H = THilbertMatrixD(3,3);
+  if (gVerbose) {
+    cout << "\n    3x3 Hilbert matrix: exact determinant 1/2160 ";
+    cout << "\n                              computed    1/"<< 1/H.Determinant();
+  }
 
-   H.ResizeTo(4,4);
-   H = THilbertMatrix(4,4);
-   cout << "\n    4x4 Hilbert matrix: exact determinant 1/6048000 ";
-   cout << "\n                              computed    1/"<< 1/H.Determinant();
+  H.ResizeTo(4,4);
+  H = THilbertMatrixD(4,4);
+  if (gVerbose) {
+    cout << "\n    4x4 Hilbert matrix: exact determinant 1/6048000 ";
+    cout << "\n                              computed    1/"<< 1/H.Determinant();
+  }
 
-   H.ResizeTo(5,5);
-   H = THilbertMatrix(5,5);
-   cout << "\n    5x5 Hilbert matrix: exact determinant 3.749295e-12";
-   cout << "\n                              computed    "<< H.Determinant();
+  H.ResizeTo(5,5);
+  H = THilbertMatrixD(5,5);
+  if (gVerbose) {
+    cout << "\n    5x5 Hilbert matrix: exact determinant 3.749295e-12";
+    cout << "\n                              computed    "<< H.Determinant();
+  }
 
-   H.ResizeTo(7,7);
-   H = THilbertMatrix(7,7);
-   cout << "\n    7x7 Hilbert matrix: exact determinant 4.8358e-25";
-   cout << "\n                              computed    "<< H.Determinant();
+  if (gVerbose) {
+    TDecompQRH qrh(H);
+    Double_t d1,d2;
+    qrh.Det(d1,d2);
+    cout  << "\n qrh det = " << d1*TMath::Power(2.0,d2) <<endl;
+  }
 
-   H.ResizeTo(9,9);
-   H = THilbertMatrix(9,9);
-   cout << "\n    9x9 Hilbert matrix: exact determinant 9.72023e-43";
-   cout << "\n                              computed    "<< H.Determinant();
+  if (gVerbose) {
+    TDecompSVD svd(H);
+    Double_t d1,d2;
+    svd.Det(d1,d2);
+    cout  << "\n svd det = " << d1*TMath::Power(2.0,d2) <<endl;
+  }
 
-   H.ResizeTo(10,10);
-   H = THilbertMatrix(10,10);
-   cout << "\n    10x10 Hilbert matrix: exact determinant 2.16418e-53";
-   cout << "\n                              computed    "<< H.Determinant()
-        << endl;
+  H.ResizeTo(7,7);
+  H = THilbertMatrixD(7,7);
+  if (gVerbose) {
+    cout << "\n    7x7 Hilbert matrix: exact determinant 4.8358e-25";
+    cout << "\n                              computed    "<< H.Determinant();
+  }
 
-   cout << "\nDone\n" << endl;
+  H.ResizeTo(9,9);
+  H = THilbertMatrixD(9,9);
+  if (gVerbose) {
+    cout << "\n    9x9 Hilbert matrix: exact determinant 9.72023e-43";
+    cout << "\n                              computed    "<< H.Determinant();
+  }
+
+  H.ResizeTo(10,10);
+  H = THilbertMatrixD(10,10);
+  if (gVerbose) {
+    cout << "\n    10x10 Hilbert matrix: exact determinant 2.16418e-53";
+    cout << "\n                              computed    "<< H.Determinant();
+  }
+
+  if (gVerbose)
+  cout << "\nDone\n" << endl;
+
+  StatusPrint(9,"Matrix Determinant",ok);
 }
 
 //
 //------------------------------------------------------------------------
 //               Verify matrix multiplications
 //
-void test_mm_multiplications(int msize)
+void stress_mm_multiplications(Int_t msize)
 {
-   cout << "\n---> Verify matrix multiplications "
-           "for matrices of the characteristic size " << msize << endl;
+  if (gVerbose)
+    cout << "\n---> Verify matrix multiplications "
+            "for matrices of the characteristic size " << msize << endl;
 
-   {
+  const Double_t epsilon = EPSILON*msize/100;
+
+  Int_t i,j;
+  Bool_t ok = kTRUE;
+  {
+    if (gVerbose)
       cout << "\nTest inline multiplications of the UnitMatrix" << endl;
-      TMatrix m = THilbertMatrix(-1,msize,-1,msize);
-      TMatrix u(TMatrix::kUnit,m);
-      m(3,1) = TMath::Pi();
-      u *= m;
-      verify_matrix_identity(u,m);
-   }
+    TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
+    TMatrixD u(TMatrixDBase::kUnit,m);
+    m(3,1) = TMath::Pi();
+    u *= m;
+    ok &= VerifyMatrixIdentity(u,m,gVerbose,epsilon);
+  }
 
-   {
-      cout << "Test inline multiplications by a DiagMatrix" << endl;
-      TMatrix m = THilbertMatrix(msize+3,msize);
-      m(1,3) = TMath::Pi();
-      TVector v(msize);
-      int i;
-      for (i = v.GetLwb(); i <= v.GetUpb(); i++)
-         v(i) = 1+i;
-      TMatrix diag(msize,msize);
-      //(TMatrixDiag)diag = v;
-      TMatrixDiag td = diag;
-      td = v;
-      TMatrix eth = m;
-      for (i = eth.GetRowLwb(); i <= eth.GetRowUpb(); i++)
-         for (int j = eth.GetColLwb(); j <= eth.GetColUpb(); j++)
-            eth(i,j) *= v(j);
-      m *= diag;
-      verify_matrix_identity(m,eth);
-   }
+  {
+    if (gVerbose)
+      cout << "Test inline multiplications by a DiagMat" << endl;
+    TMatrixD m = THilbertMatrixD(msize+3,msize);
+    m(1,3) = TMath::Pi();
+    TVectorD v(msize);
+    for (i = v.GetLwb(); i <= v.GetUpb(); i++)
+      v(i) = 1+i;
+    TMatrixD diag(msize,msize);
+    TMatrixDDiag d = TMatrixDDiag(diag);
+    d = v;
+    TMatrixD eth = m;
+    for (i = eth.GetRowLwb(); i <= eth.GetRowUpb(); i++)
+      for (j = eth.GetColLwb(); j <= eth.GetColUpb(); j++)
+        eth(i,j) *= v(j);
+    m *= diag;
+    ok &= VerifyMatrixIdentity(m,eth,gVerbose,epsilon);
+  }
 
-   {
+  {
+    if (gVerbose)
       cout << "Test XPP = X where P is a permutation matrix" << endl;
-      TMatrix m = THilbertMatrix(msize-1,msize);
-      m(2,3) = TMath::Pi();
-      TMatrix eth = m;
-      TMatrix p(msize,msize);
-      for (int i = p.GetRowLwb(); i <= p.GetRowUpb(); i++)
-         p(p.GetRowUpb()+p.GetRowLwb()-i,i) = 1;
-      m *= p;
-      m *= p;
-      verify_matrix_identity(m,eth);
-   }
+    TMatrixD m = THilbertMatrixD(msize-1,msize);
+    m(2,3) = TMath::Pi();
+    TMatrixD eth = m;
+    TMatrixD p(msize,msize);
+    for (i = p.GetRowLwb(); i <= p.GetRowUpb(); i++)
+      p(p.GetRowUpb()+p.GetRowLwb()-i,i) = 1;
+    m *= p;
+    m *= p;
+    ok &= VerifyMatrixIdentity(m,eth,gVerbose,epsilon);
+  }
 
-   {
+  {
+    if (gVerbose)
       cout << "Test general matrix multiplication through inline mult" << endl;
-      TMatrix m = THilbertMatrix(msize-2,msize);
-      m(3,3) = TMath::Pi();
-      TMatrix mt(TMatrix::kTransposed,m);
-      TMatrix p = THilbertMatrix(msize,msize);
-      TMatrixDiag(p) += 1;
-      TMatrix mp(m,TMatrix::kMult,p);
-      TMatrix m1 = m;
-      m *= p;
-      verify_matrix_identity(m,mp);
-      TMatrix mp1(mt,TMatrix::kTransposeMult,p);
-      verify_matrix_identity(m,mp1);
-      Assert( !(m1 == m) );
-      TMatrix mp2(TMatrix::kZero,m1);
-      Assert( mp2 == 0 );
-      mp2.Mult(m1,p);
-      verify_matrix_identity(m,mp2);
+    TMatrixD m = THilbertMatrixD(msize-2,msize);
+    m(3,3) = TMath::Pi();
+    TMatrixD mt(TMatrixDBase::kTransposed,m);
+    TMatrixD p = THilbertMatrixD(msize,msize);
+    TMatrixDDiag(p) += 1;
+    TMatrixD mp(m,TMatrixDBase::kMult,p);
+    TMatrixD m1 = m;
+    m *= p;
+    ok &= VerifyMatrixIdentity(m,mp,gVerbose,epsilon);
+    TMatrixD mp1(mt,TMatrixDBase::kTransposeMult,p);
+    VerifyMatrixIdentity(m,mp1,gVerbose,epsilon);
+    ok &= ( !(m1 == m) );
+    TMatrixD mp2(TMatrixDBase::kZero,m1);
+    ok &= ( mp2 == 0 );
+    mp2.Mult(m1,p);
+    ok &= VerifyMatrixIdentity(m,mp2,gVerbose,epsilon);
 
+    if (gVerbose)
       cout << "Test XP=X*P  vs XP=X;XP*=P" << endl;
-      TMatrix mp3 = m1*p;
-      verify_matrix_identity(m,mp3);
-   }
+    TMatrixD mp3 = m1*p;
+    ok &= VerifyMatrixIdentity(m,mp3,gVerbose,epsilon);
+  }
 
-   {
+  {
+    if (gVerbose)
       cout << "Check to see UU' = U'U = E when U is the Haar matrix" << endl;
-      const int order = 5;
-      const int no_sub_cols = (1<<order) - 5;
-      TMatrix haar_sub = THaarMatrix(5,no_sub_cols);
-      TMatrix haar_sub_t(TMatrix::kTransposed,haar_sub);
-      TMatrix hsths(haar_sub_t,TMatrix::kMult,haar_sub);
-      TMatrix hsths1(TMatrix::kZero,hsths); hsths1.Mult(haar_sub_t,haar_sub);
-      TMatrix hsths_eth(TMatrix::kUnit,hsths);
-      Assert( hsths.GetNrows() == no_sub_cols && hsths.GetNcols() == no_sub_cols );
-      verify_matrix_identity(hsths,hsths_eth);
-      verify_matrix_identity(hsths1,hsths_eth);
+    const Int_t order = 5;
+    const Int_t no_sub_cols = (1<<order)-5;
+    TMatrixD haar_sub = THaarMatrixD(5,no_sub_cols);
+    TMatrixD haar_sub_t(TMatrixDBase::kTransposed,haar_sub);
+    TMatrixD hsths(haar_sub_t,TMatrixDBase::kMult,haar_sub);
+    TMatrixD hsths1(TMatrixDBase::kZero,hsths); hsths1.Mult(haar_sub_t,haar_sub);
+    TMatrixD hsths_eth(TMatrixDBase::kUnit,hsths);
+    ok &= ( hsths.GetNrows() == no_sub_cols && hsths.GetNcols() == no_sub_cols );
+    ok &= VerifyMatrixIdentity(hsths,hsths_eth,gVerbose,EPSILON);
+    ok &= VerifyMatrixIdentity(hsths1,hsths_eth,gVerbose,EPSILON);
+    TMatrixD haar = THaarMatrixD(5);
+    TMatrixD unit(TMatrixDBase::kUnit,haar);
+    TMatrixD haar_t(TMatrixDBase::kTransposed,haar);
+    TMatrixD hth(haar,TMatrixDBase::kTransposeMult,haar);
+    TMatrixD hht(haar,TMatrixDBase::kMult,haar_t);
+    TMatrixD hht1 = haar; hht1 *= haar_t;
+    TMatrixD hht2(TMatrixDBase::kZero,haar); hht2.Mult(haar,haar_t);
+    ok &= VerifyMatrixIdentity(unit,hth,gVerbose,EPSILON);
+    ok &= VerifyMatrixIdentity(unit,hht,gVerbose,EPSILON);
+    ok &= VerifyMatrixIdentity(unit,hht1,gVerbose,EPSILON);
+    ok &= VerifyMatrixIdentity(unit,hht2,gVerbose,EPSILON);
+  }
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
 
-      TMatrix haar = THaarMatrix(5);
-      TMatrix unit(TMatrix::kUnit,haar);
-      TMatrix haar_t(TMatrix::kTransposed,haar);
-      TMatrix hth(haar,TMatrix::kTransposeMult,haar);
-      TMatrix hht(haar,TMatrix::kMult,haar_t);
-      TMatrix hht1 = haar; hht1 *= haar_t;
-      TMatrix hht2(TMatrix::kZero,haar); hht2.Mult(haar,haar_t);
-      verify_matrix_identity(unit,hth);
-      verify_matrix_identity(unit,hht);
-      verify_matrix_identity(unit,hht1);
-      verify_matrix_identity(unit,hht2);
-   }
-   cout << "\nDone\n" << endl;
+  StatusPrint(10,"General Matrix Multiplications",ok);
+}
+
+//
+//------------------------------------------------------------------------
+//               Verify symmetric matrix multiplications
+//
+void stress_sym_mm_multiplications(Int_t msize)
+{
+  if (gVerbose)
+    cout << "\n---> Verify symmetric matrix multiplications "
+            "for matrices of the characteristic size " << msize << endl;
+
+  Bool_t ok = kTRUE;
+
+  Int_t i,j;
+  const Double_t epsilon = EPSILON*msize/100;
+
+  {
+    if (gVerbose)
+      cout << "\nTest inline multiplications of the UnitMatrix" << endl;
+    TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
+    TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
+    TMatrixDSym u(TMatrixDBase::kUnit,m_sym);
+    TMatrixD u2 = u * m_sym;
+    ok &= VerifyMatrixIdentity(u2,m_sym,gVerbose,epsilon);
+  }
+
+  if (ok)
+  { 
+    if (gVerbose)
+      cout << "\nTest symmetric multiplications" << endl;
+    {
+      if (gVerbose)
+        cout << "\n  Test m * m_sym == m_sym * m == m_sym * m_sym  multiplications" << endl;
+      TMatrixD m = THilbertMatrixD(-1,msize,-1,msize);
+      TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
+      TMatrixD mm      = m * m;
+      TMatrixD mm_sym1 = m_sym * m_sym;
+      TMatrixD mm_sym2 = m     * m_sym;
+      TMatrixD mm_sym3 = m_sym * m;
+      ok &= VerifyMatrixIdentity(mm,mm_sym1,gVerbose,epsilon);
+      ok &= VerifyMatrixIdentity(mm,mm_sym2,gVerbose,epsilon);
+      ok &= VerifyMatrixIdentity(mm,mm_sym3,gVerbose,epsilon);
+    }
+
+    {
+      if (gVerbose)
+        cout << "\n  Test n * m_sym == n * m multiplications" << endl;
+      TMatrixD n = THilbertMatrixD(-1,msize,-1,msize);
+      TMatrixD m = n;
+      n(1,3) = TMath::Pi();
+      n(3,1) = TMath::Pi();
+      TMatrixDSym m_sym(-1,msize,m.GetMatrixArray());
+      TMatrixD nm1 = n * m_sym;
+      TMatrixD nm2 = n * m;
+      ok &= VerifyMatrixIdentity(nm1,nm2,gVerbose,epsilon);
+    }
+  }
+
+  if (ok)
+  {
+    if (gVerbose)
+      cout << "Test inline multiplications by a DiagMatrix" << endl;
+    TMatrixDSym m = THilbertMatrixDSym(msize);
+    m(1,3) = TMath::Pi();
+    m(3,1) = TMath::Pi();
+    TVectorD v(msize);
+    for (i = v.GetLwb(); i <= v.GetUpb(); i++)
+      v(i) = 1+i;
+    TMatrixDSym diag(msize);
+    TMatrixDDiag(diag,0) = v;
+    TMatrixDSym eth = m;
+    for (i = eth.GetRowLwb(); i <= eth.GetRowUpb(); i++)
+      for (j = eth.GetColLwb(); j <= eth.GetColUpb(); j++)
+        eth(i,j) *= v(j);
+    TMatrixD m2 = m * diag;
+    ok &= VerifyMatrixIdentity(m2,eth,gVerbose,epsilon);
+  }
+
+  if (ok)
+  {
+    if (gVerbose)
+      cout << "Test XPP = X where P is a permutation matrix" << endl;
+    TMatrixDSym m = THilbertMatrixDSym(msize);
+    m(2,3) = TMath::Pi();
+    m(3,2) = TMath::Pi();
+    TMatrixDSym eth = m;
+    TMatrixDSym p(msize);
+    for (i = p.GetRowLwb(); i <= p.GetRowUpb(); i++)
+      p(p.GetRowUpb()+p.GetRowLwb()-i,i) = 1;
+    TMatrixD m2 = m * p;
+    m2 *= p;
+    ok &= VerifyMatrixIdentity(m2,eth,gVerbose,epsilon);
+  }
+
+  if (ok)
+  {
+    if (gVerbose)
+      cout << "Test general matrix multiplication through inline mult" << endl;
+    TMatrixDSym m = THilbertMatrixDSym(msize);
+    m(2,3) = TMath::Pi();
+    m(3,2) = TMath::Pi();
+    TMatrixDSym mt(TMatrixDBase::kTransposed,m);
+    TMatrixDSym p = THilbertMatrixDSym(msize);
+    TMatrixDDiag(p) += 1;
+    TMatrixD mp(m,TMatrixDBase::kMult,p);
+    TMatrixDSym m1 = m;
+    TMatrixD m3(m,TMatrixDBase::kMult,p);
+    memcpy(m.GetMatrixArray(),m3.GetMatrixArray(),msize*msize*sizeof(Double_t));
+    ok &= VerifyMatrixIdentity(m,mp,gVerbose,epsilon);
+    TMatrixD mp1(mt,TMatrixDBase::kTransposeMult,p);
+    ok &= VerifyMatrixIdentity(m,mp1,gVerbose,epsilon);
+    ok &= ( !(m1 == m) ) ? kTRUE : kFALSE;
+    TMatrixDSym mp2(TMatrixDBase::kZero,m);
+    ok &= ( mp2 == 0 ) ? kTRUE : kFALSE;
+
+    if (gVerbose)
+      cout << "Test XP=X*P  vs XP=X;XP*=P" << endl;
+    TMatrixD mp3 = m1*p;
+    ok &= VerifyMatrixIdentity(m,mp3,gVerbose,epsilon);
+  }
+
+  if (ok)
+  {
+    if (gVerbose)
+      cout << "Check to see UU' = U'U = E when U is the Haar matrix" << endl;
+    {
+      const Int_t order = 5;
+      const Int_t no_sub_cols = (1<<order)-5;
+      TMatrixD haarb = THaarMatrixD(5,no_sub_cols);
+      TMatrixD haarb_t(TMatrixDBase::kTransposed,haarb);
+      TMatrixD hth(haarb_t,TMatrixDBase::kMult,haarb);
+      TMatrixDSym  hth1(TMatrixDBase::kAtA,haarb);
+      ok &= VerifyMatrixIdentity(hth,hth1,gVerbose,epsilon);
+    }
+
+    {
+      TMatrixD haar = THaarMatrixD(5);
+      TMatrixD unit(TMatrixDBase::kUnit,haar);
+      TMatrixD haar_t(TMatrixDBase::kTransposed,haar);
+      TMatrixDSym  hth(TMatrixDBase::kAtA,haar);
+      TMatrixD hht(haar,TMatrixDBase::kMult,haar_t);
+      TMatrixD hht1 = haar; hht1 *= haar_t;
+      ok &= VerifyMatrixIdentity(unit,hth,gVerbose,epsilon);
+      ok &= VerifyMatrixIdentity(unit,hht,gVerbose,epsilon);
+      ok &= VerifyMatrixIdentity(unit,hht1,gVerbose,epsilon);
+    }
+  }
+
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
+
+  StatusPrint(11,"Symmetric Matrix Multiplications",ok);
 }
 
 //
 //------------------------------------------------------------------------
 //               Verify vector-matrix multiplications
 //
-void test_vm_multiplications(int msize)
+void stress_vm_multiplications(Int_t msize)
 {
-   cout << "\n---> Verify vector-matrix multiplications "
-          "for matrices of the characteristic size " << msize << endl;
-   {
-      cout << "\nCheck shrinking a vector by multiplying by a non-sq unit matrix"
-           << endl;
-      TVector vb(-2,msize);
-      for (int i = vb.GetLwb(); i <= vb.GetUpb(); i++)
-         vb(i) = TMath::Pi() - i;
-      Assert( vb != 0 );
-      TMatrix mc(1,msize-2,-2,msize);       // contracting matrix
-      mc.UnitMatrix();
-      TVector v1 = vb;
-      TVector v2 = vb;
-      v1 *= mc;
-      v2.ResizeTo(1,msize-2);
-      verify_vector_identity(v1,v2);
-   }
+  if (gVerbose)
+    cout << "\n---> Verify vector-matrix multiplications "
+           "for matrices of the characteristic size " << msize << endl;
 
-   {
-      cout << "Check expanding a vector by multiplying by a non-sq unit matrix"
-           << endl;
-      TVector vb(msize);
-      for (int i = vb.GetLwb(); i <= vb.GetUpb(); i++)
-         vb(i) = TMath::Pi() + i;
-      Assert( vb != 0 );
-      TMatrix me(2,msize+5,0,msize-1);    // expanding matrix
-      me.UnitMatrix();
-      TVector v1 = vb;
-      TVector v2 = vb;
-      v1 *= me;
-      v2.ResizeTo(v1);
-      verify_vector_identity(v1,v2);
-   }
+  const Double_t epsilon = EPSILON*msize/100;
 
-   {
+  Bool_t ok = kTRUE;
+  {
+    if (gVerbose)
+      cout << "\nCheck shrinking a vector by multiplying by a non-sq unit matrix" << endl;
+    TVectorD vb(-2,msize);
+    for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
+      vb(i) = TMath::Pi()-i;
+    ok &= ( vb != 0 ) ? kTRUE : kFALSE;
+    TMatrixD mc(1,msize-2,-2,msize);       // contracting matrix
+    mc.UnitMatrix();
+    TVectorD v1 = vb;
+    TVectorD v2 = vb;
+    v1 *= mc;
+    v2.ResizeTo(1,msize-2);
+    ok &= VerifyVectorIdentity(v1,v2,gVerbose,epsilon);
+  }
+
+  {
+    if (gVerbose)
+      cout << "Check expanding a vector by multiplying by a non-sq unit matrix" << endl;
+    TVectorD vb(msize);
+    for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
+      vb(i) = TMath::Pi()+i;
+    ok &= ( vb != 0 ) ? kTRUE : kFALSE;
+    TMatrixD me(2,msize+5,0,msize-1);    // expanding matrix
+    me.UnitMatrix();
+    TVectorD v1 = vb;
+    TVectorD v2 = vb;
+    v1 *= me;
+    v2.ResizeTo(v1);
+    ok &= VerifyVectorIdentity(v1,v2,gVerbose,epsilon);
+  }
+
+  {
+    if (gVerbose)
       cout << "Check general matrix-vector multiplication" << endl;
-      TVector vb(msize);
-      for (int i = vb.GetLwb(); i <= vb.GetUpb(); i++)
-         vb(i) = TMath::Pi() + i;
-      TMatrix vm(msize,1);
-      TMatrixColumn(vm,0) = vb;
-      TMatrix m = THilbertMatrix(0,msize,0,msize-1);
-      vb *= m;
-      Assert( vb.GetLwb() == 0 );
-      TMatrix mvm(m,TMatrix::kMult,vm);
-      TMatrix mvb(msize+1,1);
-      TMatrixColumn(mvb,0) = vb;
-      verify_matrix_identity(mvb,mvm);
-   }
+    TVectorD vb(msize);
+    for (Int_t i = vb.GetLwb(); i <= vb.GetUpb(); i++)
+      vb(i) = TMath::Pi()+i;
+    TMatrixD vm(msize,1);
+    TMatrixDColumn(vm,0) = vb;
+    TMatrixD m = THilbertMatrixD(0,msize,0,msize-1);
+    vb *= m;
+    ok &= ( vb.GetLwb() == 0 ) ? kTRUE : kFALSE;
+    TMatrixD mvm(m,TMatrixDBase::kMult,vm);
+    TMatrixD mvb(msize+1,1);
+    TMatrixDColumn(mvb,0) = vb;
+    ok &= VerifyMatrixIdentity(mvb,mvm,gVerbose,epsilon);
+  }
 
-   cout << "\nDone\n" << endl;
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
+
+  StatusPrint(12,"Matrix Vector Multiplications",ok);
 }
 
 //
 //------------------------------------------------------------------------
 //               Verify matrix inversion
 //
-void test_inversion(int msize)
+void stress_inversion(Int_t msize)
 {
-   cout << "\n---> Verify matrix inversion for square matrices "
-           "of size " << msize << endl;
-   {
+  if (gVerbose)
+    cout << "\n---> Verify matrix inversion for square matrices of size " << msize << endl;
+
+  const Double_t epsilon = EPSILON*msize/10;
+
+  Bool_t ok = kTRUE;
+  {
+    if (gVerbose)
       cout << "\nTest inversion of a diagonal matrix" << endl;
-      TMatrix m(-1,msize,-1,msize);
-      TMatrix mi(TMatrix::kZero,m);
-      for (int i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
-         mi(i,i) = 1/(m(i,i) = i-m.GetRowLwb()+1);
-      TMatrix mi1(TMatrix::kInverted,m);
-      m.Invert();
-      verify_matrix_identity(m,mi);
-      verify_matrix_identity(mi1,mi);
-   }
+    TMatrixD m(-1,msize,-1,msize);
+    TMatrixD mi(TMatrixD::kZero,m);
+    for (Int_t i = m.GetRowLwb(); i <= m.GetRowUpb(); i++)
+      mi(i,i) = 1/(m(i,i)=i-m.GetRowLwb()+1);
+    TMatrixD mi1(TMatrixD::kInverted,m);
+    m.Invert();
+    ok &= VerifyMatrixIdentity(m,mi,gVerbose,epsilon);
+    ok &= VerifyMatrixIdentity(mi1,mi,gVerbose,epsilon);
+  }
 
-   {
+  {
+    if (gVerbose)
       cout << "Test inversion of an orthonormal (Haar) matrix" << endl;
-      TMatrix m = THaarMatrix(3);
-      TMatrix morig = m;
-      TMatrix mt(TMatrix::kTransposed,m);
-      double det = -1;         // init to a wrong val to see if it's changed
-      m.Invert(&det);
-      Assert( TMath::Abs(det-1) <= FLT_EPSILON );
-      verify_matrix_identity(m,mt);
-      TMatrix mti(TMatrix::kInverted,mt);
-      verify_matrix_identity(mti,morig);
-   }
+    TMatrixD m = THaarMatrixD(3);
+    TMatrixD morig = m;
+    TMatrixD mt(TMatrixD::kTransposed,m);
+    double det = -1;         // init to a wrong val to see if it's changed
+    m.Invert(&det);
+    ok &= ( TMath::Abs(det-1) <= msize*epsilon ) ? kTRUE : kFALSE;
+    ok &= VerifyMatrixIdentity(m,mt,gVerbose,epsilon);
+    TMatrixD mti(TMatrixD::kInverted,mt);
+    ok &= VerifyMatrixIdentity(mti,morig,gVerbose,msize*epsilon);
+  }
 
-   {
+  {
+    if (gVerbose)
       cout << "Test inversion of a good matrix with diagonal dominance" << endl;
-      TMatrix m = THilbertMatrix(msize,msize);
-      TMatrixDiag(m) += 1;
-      TMatrix morig = m;
-      double det_inv = 0;
-      const double det_comp = m.Determinant();
-      m.Invert(&det_inv);
+    TMatrixD m = THilbertMatrixD(msize,msize);
+    TMatrixDDiag(m) += 1;
+    TMatrixD morig = m;
+    Double_t det_inv = 0;
+    const Double_t det_comp = m.Determinant();
+    m.Invert(&det_inv);
+    if (gVerbose) {
       cout << "\tcomputed determinant             " << det_comp << endl;
       cout << "\tdeterminant returned by Invert() " << det_inv << endl;
+    }
 
+    if (gVerbose)
       cout << "\tcheck to see M^(-1) * M is E" << endl;
-      TMatrix mim(m,TMatrix::kMult,morig);
-      TMatrix unit(TMatrix::kUnit,m);
-      verify_matrix_identity(mim,unit);
+    TMatrixD mim(m,TMatrixD::kMult,morig);
+    TMatrixD unit(TMatrixD::kUnit,m);
+    ok &= VerifyMatrixIdentity(mim,unit,gVerbose,epsilon);
 
+    if (gVerbose)
       cout << "\tcheck to see M * M^(-1) is E" << endl;
-      TMatrix mmi = morig; mmi *= m;
-      verify_matrix_identity(mmi,unit);
-   }
+    TMatrixD mmi = morig; mmi *= m;
+    ok &= VerifyMatrixIdentity(mmi,unit,gVerbose,epsilon);
+  }
 
-   cout << "\nDone\n" << endl;
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
+
+  StatusPrint(13,"Matrix Inversion",ok);
 }
 
 //
 //------------------------------------------------------------------------
 //           Test matrix I/O
 //
-void test_matrix_io()
+void stress_matrix_io()
 {
-   const double pattern = TMath::Pi();
+  if (gVerbose)
+    cout << "\n---> Test matrix I/O" << endl;
 
-   cout << "\n---> Test matrix I/O" << endl;
+  Bool_t ok = kTRUE;
+  const double pattern = TMath::Pi();
 
-   TMatrix m(40,40);
-   m = pattern;
+  TMatrixD m(40,40);
+  m = pattern;
 
-   cout << "\nWrite matrix m to database" << endl;
+  if (gVerbose)
+    cout << "\nWrite matrix m to database" << endl;
 
-   TFile *f = new TFile("vmatrix.root", "RECREATE");
+  TFile *f = new TFile("vmatrix.root", "RECREATE");
 
-   m.Write("m");
+  m.Write("m");
 
-   cout << "\nClose database" << endl;
-   delete f;
+  if (gVerbose)
+    cout << "\nClose database" << endl;
+  delete f;
 
-   cout << "\nOpen database in read-only mode and read matrix" << endl;
-   TFile *f1 = new TFile("vmatrix.root");
+  if (gVerbose)
+    cout << "\nOpen database in read-only mode and read matrix" << endl;
+  TFile *f1 = new TFile("vmatrix.root");
 
-   TMatrix *mr = (TMatrix*) f1->Get("m");
+  TMatrixD *mr = (TMatrixD*) f1->Get("m");
 
-   cout << "\nRead matrix should be same as original still in memory" << endl;
-   Assert((*mr) == m);
+  if (gVerbose)
+    cout << "\nRead matrix should be same as original still in memory" << endl;
+  ok &= ((*mr) == m) ? kTRUE : kFALSE;
 
-   delete f1;
+  delete f1;
 
-   cout << "\nDone\n" << endl;
-}
+  if (gVerbose)
+    cout << "\nDone\n" << endl;
 
-//
-//------------------------------------------------------------------------
-//                    Main module
-//
-int main(int argc, char **argv)
-{
-   // Make sure all registered dictionaries have been initialized
-   gROOT->SetBatch();
-   TApplication app("vmatrix", &argc, argv, 0, 0);
-
-   cout<< "\n\n" <<
-          "----------------------------------------------------------------" <<
-          "\n\t\tVerify Operations on Matrices" << endl;
-
-   test_allocation();
-   test_matrix_fill(20,10);
-   test_element_op(20,10);
-   test_binary_ebe_op(10,20);
-   test_transposition(20);
-   test_special_creation(20);
-   test_matrix_promises(20);
-   test_norms(40,20);
-
-   // test advanced matrix operations
-   test_determinant(20);
-   test_mm_multiplications(20);
-   test_vm_multiplications(20);
-   test_inversion(20);
-
-   test_matrix_io();
-
-   return 0;
+  StatusPrint(14,"Matrix Persistence",ok);
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.27 2003/07/04 13:05:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.29 2004/01/23 18:50:03 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -154,6 +154,7 @@ public:
    static Short_t  Abs(Short_t d);
    static Int_t    Abs(Int_t d);
    static Long_t   Abs(Long_t d);
+   static Long64_t Abs(Long64_t d);
    static Float_t  Abs(Float_t d);
    static Double_t Abs(Double_t d);
 
@@ -165,6 +166,7 @@ public:
    static Short_t  Sign(Short_t a, Short_t b);
    static Int_t    Sign(Int_t a, Int_t b);
    static Long_t   Sign(Long_t a, Long_t b);
+   static Long64_t Sign(Long64_t a, Long64_t b);
    static Float_t  Sign(Float_t a, Float_t b);
    static Double_t Sign(Double_t a, Double_t b);
 
@@ -175,6 +177,8 @@ public:
    static UInt_t   Min(UInt_t a, UInt_t b);
    static Long_t   Min(Long_t a, Long_t b);
    static ULong_t  Min(ULong_t a, ULong_t b);
+   static Long64_t Min(Long64_t a, Long64_t b);
+   static ULong64_t Min(ULong64_t a, ULong64_t b);
    static Float_t  Min(Float_t a, Float_t b);
    static Double_t Min(Double_t a, Double_t b);
 
@@ -185,6 +189,8 @@ public:
    static UInt_t   Max(UInt_t a, UInt_t b);
    static Long_t   Max(Long_t a, Long_t b);
    static ULong_t  Max(ULong_t a, ULong_t b);
+   static Long64_t Max(Long64_t a, Long64_t b);
+   static ULong64_t Max(ULong64_t a, ULong64_t b);
    static Float_t  Max(Float_t a, Float_t b);
    static Double_t Max(Double_t a, Double_t b);
 
@@ -194,11 +200,13 @@ public:
    static Int_t  LocMin(Int_t n, const Float_t *a);
    static Int_t  LocMin(Int_t n, const Double_t *a);
    static Int_t  LocMin(Int_t n, const Long_t *a);
+   static Int_t  LocMin(Int_t n, const Long64_t *a);
    static Int_t  LocMax(Int_t n, const Short_t *a);
    static Int_t  LocMax(Int_t n, const Int_t *a);
    static Int_t  LocMax(Int_t n, const Float_t *a);
    static Int_t  LocMax(Int_t n, const Double_t *a);
    static Int_t  LocMax(Int_t n, const Long_t *a);
+   static Int_t  LocMax(Int_t n, const Long64_t *a);
 
    // Range
    static Short_t  Range(Short_t lb, Short_t ub, Short_t x);
@@ -218,6 +226,8 @@ public:
    static Int_t BinarySearch(Int_t n, const Double_t **array, Double_t value);
    static Int_t BinarySearch(Int_t n, const Long_t *array, Long_t value);
    static Int_t BinarySearch(Int_t n, const Long_t **array, Long_t value);
+   static Int_t BinarySearch(Int_t n, const Long64_t *array, Long64_t value);
+   static Int_t BinarySearch(Int_t n, const Long64_t **array, Long64_t value);
 
    // Hashing
    static ULong_t Hash(const void *txt, Int_t ntxt);
@@ -234,6 +244,7 @@ public:
    static void Sort(Int_t n, const Float_t *a,  Int_t *index, Bool_t down=kTRUE);
    static void Sort(Int_t n, const Double_t *a, Int_t *index, Bool_t down=kTRUE);
    static void Sort(Int_t n, const Long_t *a,   Int_t *index, Bool_t down=kTRUE);
+   static void Sort(Int_t n, const Long64_t *a, Int_t *index, Bool_t down=kTRUE);
    static void BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2);
    static void BubbleLow (Int_t Narr, Double_t *arr1, Int_t *arr2);
 
@@ -301,6 +312,9 @@ inline Int_t TMath::Abs(Int_t d)
 inline Long_t TMath::Abs(Long_t d)
    { return (d > 0) ? d : -d; }
 
+inline Long64_t TMath::Abs(Long64_t d)
+   { return (d > 0) ? d : -d; }
+
 inline Float_t TMath::Abs(Float_t d)
    { return (d > 0) ? d : -d; }
 
@@ -316,6 +330,9 @@ inline Int_t TMath::Sign(Int_t a, Int_t b)
    { return (b >= 0) ? Abs(a) : -Abs(a); }
 
 inline Long_t TMath::Sign(Long_t a, Long_t b)
+   { return (b >= 0) ? Abs(a) : -Abs(a); }
+
+inline Long64_t TMath::Sign(Long64_t a, Long64_t b)
    { return (b >= 0) ? Abs(a) : -Abs(a); }
 
 inline Float_t TMath::Sign(Float_t a, Float_t b)
@@ -344,6 +361,12 @@ inline Long_t TMath::Min(Long_t a, Long_t b)
 inline ULong_t TMath::Min(ULong_t a, ULong_t b)
    { return a <= b ? a : b; }
 
+inline Long64_t TMath::Min(Long64_t a, Long64_t b)
+   { return a <= b ? a : b; }
+
+inline ULong64_t TMath::Min(ULong64_t a, ULong64_t b)
+   { return a <= b ? a : b; }
+
 inline Float_t TMath::Min(Float_t a, Float_t b)
    { return a <= b ? a : b; }
 
@@ -368,6 +391,12 @@ inline Long_t TMath::Max(Long_t a, Long_t b)
    { return a >= b ? a : b; }
 
 inline ULong_t TMath::Max(ULong_t a, ULong_t b)
+   { return a >= b ? a : b; }
+
+inline Long64_t TMath::Max(Long64_t a, Long64_t b)
+   { return a >= b ? a : b; }
+
+inline ULong64_t TMath::Max(ULong64_t a, ULong64_t b)
    { return a >= b ? a : b; }
 
 inline Float_t TMath::Max(Float_t a, Float_t b)
@@ -398,7 +427,7 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 
 #include <float.h>
 
-#ifdef R__WIN32
+#if defined(R__WIN32) && !defined(__CINT__)
 #   ifndef finite
 #      define finite _finite
 #      define isnan  _isnan

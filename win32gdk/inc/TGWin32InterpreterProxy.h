@@ -1,4 +1,4 @@
-// $Id: TGWin32InterpreterProxy.h,v 1.1 2003/11/24 10:51:55 brun Exp $
+// $Id: TGWin32InterpreterProxy.h,v 1.4 2004/01/21 23:15:52 brun Exp $
 // Author: Valeriy Onuchin  15/11/03
 
 /*************************************************************************
@@ -49,8 +49,8 @@ public:
    Int_t    InitializeDictionaries();
    Int_t    Load(const char *filenam, Bool_t system = kFALSE);
    void     LoadMacro(const char *filename, EErrorCode *error = 0);
-   Int_t    ProcessLine(const char *line, EErrorCode *error = 0);
-   Int_t    ProcessLineSynch(const char *line, EErrorCode *error = 0);
+   Long_t   ProcessLine(const char *line, EErrorCode *error = 0);
+   Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0);
    void     PrintIntro();
    void     Reset();
    void     ResetAll();
@@ -71,7 +71,7 @@ public:
    void     CreateListOfMethodArgs(TFunction *m);
    TString  GetMangledName(TClass *cl, const char *method, const char *params);
    TString  GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto);
-   Int_t    ExecuteMacro(const char *filename, EErrorCode *error = 0);
+   Long_t   ExecuteMacro(const char *filename, EErrorCode *error = 0);
    Bool_t   IsErrorMessagesEnabled();
    Bool_t   SetErrorMessages(Bool_t enable = kTRUE);
    void     ExecThreadCB(TWin32SendClass *) {}
@@ -81,6 +81,7 @@ public:
    char    *GetPrompt();
    void    *GetInterfaceMethod(TClass *cl, const char *method, const char *params);
    void    *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto);
+   const char *GetInterpreterTypeName(const char*);
    void     Execute(const char *function, const char *params, int *error = 0);
    void     Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0);
    void     Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0);

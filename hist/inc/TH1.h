@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.50 2003/11/07 08:59:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.51 2003/12/11 11:22:42 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -62,7 +62,7 @@ class TF1;
 class TH1D;
 class TBrowser;
 class TDirectory;
-class TVector;
+class TVectorF;
 class TVectorD;
 
 class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
@@ -440,7 +440,7 @@ public:
     TH1F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
     TH1F(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
     TH1F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
-    TH1F(const TVector &v);
+    TH1F(const TVectorF &v);
     TH1F(const TH1F &h1f);
     virtual ~TH1F();
 

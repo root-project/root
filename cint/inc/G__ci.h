@@ -7,7 +7,7 @@
  * Description:
  *  C/C++ interpreter header file
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto (cint@pcroot.cern.ch)
+ * Copyright(c) 1995~2004  Masaharu Goto (cint@pcroot.cern.ch)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150115
-#define G__CINTVERSIONSTR  "5.15.115, Dec 9 2003"
+#define G__CINTVERSION      50150117
+#define G__CINTVERSIONSTR  "5.15.117, Jan 4 2004"
 
 
 /**********************************************************************
@@ -1740,7 +1740,7 @@ typedef struct {
  * It turned out it is quite difficult if not impossible to support PowerPC.
  * PPC uses registers (general purpose 3-10, floating 1
  **********************************************/
-#define G__VAARG_NOSUPPORT
+//#define G__VAARG_NOSUPPORT
 #define G__VAARG_INC_COPY_N 4
 #define G__VAARG_PASS_BY_REFERENCE 8
 

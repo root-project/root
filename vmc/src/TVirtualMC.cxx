@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TVirtualMC.cxx,v 1.1 2003/07/15 09:56:58 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TVirtualMC.cxx,v 1.2 2003/09/27 09:28:45 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun , Federico Carminati 13/04/2002
    
 /**************************************************************************
@@ -107,7 +107,7 @@ void TVirtualMC::SetRandom(TRandom* random)
 // 
 // Set random number generator.
 //
-
+   gRandom = random;
    fRandom = random; 
 }
 

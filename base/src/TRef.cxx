@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.23 2002/12/14 07:52:49 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.24 2002/12/17 10:15:39 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -319,7 +319,7 @@ TObject *TRef::GetObject() const
    //if object not found, then exec action if an action has been defined
    if (!obj) {
       //execid in the first 8 bits
-      Int_t execid = TestBits(0xff00);
+      Int_t execid = TestBits(0xff0000);
       if (execid > 0) {
          execid = execid>>16;
          TExec *exec = (TExec*)fgExecs->At(execid-1);
