@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.h,v 1.5 2000/09/08 07:38:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.h,v 1.6 2000/09/11 06:19:57 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -54,7 +54,7 @@ public:
    TCollection        *GetListOfFolders() const { return fFolders; }
    Bool_t              IsFolder() const { return kTRUE; }
    Bool_t              IsOwner()  const { return fIsOwner; }
-   virtual void        ls(Option_t *option="");  // *MENU*
+   virtual void        ls(Option_t *option="*");  // *MENU*
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        Remove(TObject *obj);
    virtual void        SetOwner(Bool_t owner=kTRUE) {fIsOwner = owner;}
