@@ -578,6 +578,10 @@ FILE *fp;
     fprintf(fp,"  ::operator delete(p);\n");
     fprintf(fp,"#endif\n");
     fprintf(fp,"}\n\n");
+
+#ifndef G__OLDIMPLEMENTATION1447
+    fprintf(fp,"void G__DELDMY_%s() { G__operator_delete(0); }\n\n",G__NEWID);
+#endif
     
   }
   else {

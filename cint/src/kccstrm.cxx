@@ -7,7 +7,7 @@
 #include "kccstrm.h"
 //*KEND.
 
-#ifdef __linux__
+#if defind(__linux__) || defined(__linux) || defined(linux)
 // actually only needed for KCC 3.4
 #define MBSTATE_IS_STRUCT
 #endif

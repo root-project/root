@@ -653,9 +653,13 @@ void G__rewinddictionary()
     }
   }
 #ifndef G__OLDIMPLEMENTATION1422
+#ifndef G__OLDIMPLEMENTATION1448
   /* If the file info saved was related to a temporary file
-     there is no use to reput it */
-  if (errorifile.filenum!=G__MAXFILE-1) G__ifile = errorifile;
+   * there is no use to reput it */
+  if(errorifile.filenum!=G__MAXFILE-1) G__ifile = errorifile;
+#else
+  G__ifile = errorifile;
+#endif
 #endif
   errordictpos.var = (struct G__var_array*)NULL;
 }

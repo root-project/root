@@ -26,7 +26,7 @@ void* operator new(size_t size,G__bcstrmdOcxx_tag* p) {
 #ifndef G__ROOT
   return(malloc(size));
 #else
-  return new char[size];
+  return(::operator new(size));
 #endif
 }
 
@@ -37,7 +37,7 @@ void operator delete(void *p,G__bcstrmdOcxx_tag* x) {
 #ifndef G__ROOT
   free(p);
 #else
-  delete[] p;
+  ::operator delete(p);
 #endif
 }
 #endif
@@ -47,7 +47,7 @@ static void G__operator_delete(void *p) {
 #ifndef G__ROOT
   free(p);
 #else
-  delete[] p;
+  ::operator delete(p);
 #endif
 }
 

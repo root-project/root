@@ -126,7 +126,7 @@ int G__dlclose G__P((G__SHLHANDLE handle));
 * OSF or SunOS
 ****************************************************/
 #if defined(G__OSFDLL)
-#if defined(__FreeBSD__) || (defined(__alpha) && !defined(__linux)) || (defined(G__SUNOS4) && defined(G__NONANSI))
+#if defined(__FreeBSD__) || (defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux)) || (defined(G__SUNOS4) && defined(G__NONANSI))
 # define G__RTLD_NOW RTLD_NOW
 # define G__RTLD_LAZY RTLD_LAZY
 #else
@@ -289,7 +289,7 @@ TYPE_PROCEDURE);
 * OSF or SunOS
 ****************************************************/
 #if defined(G__OSFDLL)
-#if defined(__FreeBSD__) || (defined(__alpha) && !defined(__linux)) || (defined(G__SUNOS4) && defined(G__NONANSI))
+#if defined(__FreeBSD__) || (defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux)) || (defined(G__SUNOS4) && defined(G__NONANSI))
   handle = dlopen(path,RTLD_LAZY);
 #else
 #ifndef RTLD_GLOBAL
@@ -765,7 +765,7 @@ char *shlfile;
 #else
   if(sharedlib_func && (*sharedlib_func)()!=G__DLLREV) {
 #endif
-    G__check_setup_version((*sharedlib_func)(),"");
+    G__check_setup_version((*sharedlib_func)(),shlfile);
     error++;
   }
   if(sharedlib_func) {
@@ -782,7 +782,7 @@ char *shlfile;
 #else
   if(sharedlib_func && (*sharedlib_func)()!=G__DLLREV) {
 #endif
-    G__check_setup_version((*sharedlib_func)(),"");
+    G__check_setup_version((*sharedlib_func)(),shlfile);
     error++;
   }
   if(sharedlib_func) {
@@ -799,7 +799,7 @@ char *shlfile;
 #else
   if(sharedlib_func && (*sharedlib_func)()!=G__DLLREV) {
 #endif
-    G__check_setup_version((*sharedlib_func)(),"");
+    G__check_setup_version((*sharedlib_func)(),shlfile);
     error++;
   }
   if(sharedlib_func) {
@@ -816,7 +816,7 @@ char *shlfile;
 #else
   if(sharedlib_func && (*sharedlib_func)()!=G__DLLREV) {
 #endif
-    G__check_setup_version((*sharedlib_func)(),"");
+    G__check_setup_version((*sharedlib_func)(),shlfile);
     error++;
   }
   if(sharedlib_func) {

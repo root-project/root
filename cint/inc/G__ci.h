@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5014064
-#define G__CINTVERSIONSTR  "5.14.64, Nov 26 2000"
+#define G__CINTVERSION      5014065
+#define G__CINTVERSIONSTR  "5.14.65, Dec 6 2000"
 
 
 /**********************************************************************
@@ -180,7 +180,7 @@
 #endif
   
 /* added by Fons Radamakers in 2000 Oct 2 */
-#if defined(__linux) || defined(__linux__)
+#if defined(__linux) || defined(__linux__) || defined(linux)
 #   include <features.h>
 #   if __GLIBC__ == 2 && __GLIBC_MINOR__ >= 2
 #      define G__NONSCALARFPOS2
@@ -191,7 +191,7 @@
  * Define G__EH_DUMMY_DELETE in order to avoid some compiler dependency
  * about 'void operator delete(void*,[DLLID]_tag*);'
  ***********************************************************************/
-#if defined(__HP_aCC)
+#if defined(__HP_aCC) || defined(G__VISUAL)
 #define G__EH_DUMMY_DELETE
 #endif
 

@@ -1917,13 +1917,16 @@ int G__init_globals()
 ******************************************************************/
 void G__platformMacro() 
 {
-  char *p;
   char temp[G__ONELINE];
 #ifdef G__CINTVERSION
   sprintf(temp,"G__CINTVERSION=%ld",(long)G__CINTVERSION); G__add_macro(temp);
 #endif
-#ifdef __linux__
+#if defined(__linux__)
   sprintf(temp,"G__LINUX=%ld",(long)__linux__); G__add_macro(temp);
+#elif defined(__linux) 
+  sprintf(temp,"G__LINUX=%ld",(long)__linux); G__add_macro(temp);
+#elif defined(linux)
+  sprintf(temp,"G__LINUX=%ld",(long)linux); G__add_macro(temp);
 #endif
 #ifdef __FreeBSD__
   sprintf(temp,"G__FBSD=%ld",(long)__FreeBSD__); G__add_macro(temp);
@@ -1979,7 +1982,7 @@ void G__platformMacro()
 #ifdef __BCPLUSPLUS__
   sprintf(temp,"G__BCPLUSPLUS=%ld",(long)__BCPLUSPLUS__); G__add_macro(temp);
 #endif
-#if defined(__alpha) && !defined(__linux)
+#if defined(__alpha) && !defined(__linux) && !defined(__linux__) && !defined(linux)
   sprintf(temp,"G__ALPHA=%ld",(long)__alpha); G__add_macro(temp);
 #endif
 #ifdef __VMS

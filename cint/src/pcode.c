@@ -11005,7 +11005,7 @@ int isthrow;
       * 1 allocflag, 1: new object, 0: auto object
       ***************************************/
       if(isthrow) {
-	fprintf(G__serr,"%3lx: SETARYINDEX\n",pc);
+	fprintf(G__serr,"%3x: SETARYINDEX\n",pc);
       }
       pc+=2;
       break;
@@ -11017,7 +11017,7 @@ int isthrow;
       * 1 allocflag, 1: new object, 0: auto object
       ***************************************/
       if(isthrow) {
-	fprintf(G__serr,"%3lx: RESETARYINDEX\n",pc);
+	fprintf(G__serr,"%3x: RESETARYINDEX\n",pc);
       }
       pc+=2;
       break;
@@ -11028,7 +11028,7 @@ int isthrow;
       * 0 GETARYINDEX
       ***************************************/
       if(isthrow) {
-	fprintf(G__serr,"%3lx: GETARYINDEX\n",pc);
+	fprintf(G__serr,"%3x: GETARYINDEX\n",pc);
       }
       ++pc;
       break;
