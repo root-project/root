@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.55 2001/06/27 10:35:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.56 2001/07/12 19:13:38 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1757,7 +1757,7 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
          gF1->Copy(*fnew1);
          fFunctions->Add(fnew1);
          fnew1->SetParent(this);
-         fnew1->Save(xmin,xmax);
+         fnew1->Save(xmin,xmax,0,0,0,0);
          if (Foption.Nograph) fnew1->SetBit(TF1::kNotDraw);
          fnew1->SetBit(TFormula::kNotGlobal);
       } else if (GetDimension() < 3) {
@@ -1765,6 +1765,7 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
          gF1->Copy(*fnew2);
          fFunctions->Add(fnew2);
          fnew2->SetParent(this);
+         fnew2->Save(xmin,xmax,ymin,ymax,0,0);
          if (Foption.Nograph) fnew2->SetBit(TF1::kNotDraw);
          fnew2->SetBit(TFormula::kNotGlobal);
       } else {

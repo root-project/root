@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.6 2001/02/20 11:17:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.7 2001/02/28 07:53:09 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -380,6 +380,45 @@ void TF2::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xma
    zmax = 0;
 }
 
+
+//______________________________________________________________________________
+Double_t TF2::GetSave(const Double_t *xx)
+{
+    // Get value corresponding to X in array of fSave values
+
+   if (fNsave <= 0) return 0;
+   if (fSave == 0) return 0;
+   Int_t np = fNsave - 6;
+   Double_t xmin = Double_t(fSave[np+0]);
+   Double_t xmax = Double_t(fSave[np+1]);
+   Double_t ymin = Double_t(fSave[np+2]);
+   Double_t ymax = Double_t(fSave[np+3]);
+   Int_t npx     = Int_t(fSave[np+4]);
+   Int_t npy     = Int_t(fSave[np+5]);
+   Double_t x    = Double_t(xx[0]);
+   Double_t dx   = (xmax-xmin)/npx;
+   if (x < xmin || x > xmax) return 0;
+   if (dx <= 0) return 0;
+   Double_t y    = Double_t(xx[1]);
+   Double_t dy   = (ymax-ymin)/npy;
+   if (y < ymin || y > ymax) return 0;
+   if (dy <= 0) return 0;
+
+   //we make a bilinear interpolation using the 4 points surrounding x,y
+   Int_t ibin    = Int_t((x-xmin)/dx);
+   Int_t jbin    = Int_t((y-ymin)/dy);
+   Double_t xlow = xmin + ibin*dx;
+   Double_t ylow = ymin + jbin*dy;
+   Double_t t    = (x-xlow)/dx;
+   Double_t u    = (y-ylow)/dx;
+   Int_t k1      = jbin*(npx+1) + ibin;
+   Int_t k2      = jbin*(npx+1) + ibin +1;
+   Int_t k3      = (jbin+1)*(npx+1) + ibin +1;
+   Int_t k4      = (jbin+1)*(npx+1) + ibin;
+   Double_t z    = (1-t)*(1-u)*fSave[k1] +t*(1-u)*fSave[k2] +t*u*fSave[k3] + (1-t)*u*fSave[k4];
+   return z;
+}
+
 //______________________________________________________________________________
 Double_t TF2::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon)
 {
@@ -451,6 +490,47 @@ void TF2::Paint(Option_t *option)
    else                    fHistogram->Paint(option);
    gStyle->SetOptStat(optStat);
 
+}
+
+//______________________________________________________________________________
+void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t, Double_t)
+{
+    // Save values of function in array fSave
+
+   if (fSave != 0) {delete [] fSave; fSave = 0;}
+   Int_t nsave = (fNpx+1)*(fNpy+1);
+   fNsave = nsave+6;
+   if (fNsave <= 6) {fNsave=0; return;}
+   fSave  = new Double_t[fNsave];
+   Int_t i,j,k=0;
+   Double_t dx = (xmax-xmin)/fNpx;
+   Double_t dy = (ymax-ymin)/fNpy;
+   if (dx <= 0) {
+      dx = (fXmax-fXmin)/fNpx;
+      xmin = fXmin +0.5*dx;
+      xmax = fXmax -0.5*dx;
+   }
+   if (dy <= 0) {
+      dy = (fYmax-fYmin)/fNpy;
+      ymin = fYmin +0.5*dy;
+      ymax = fYmax -0.5*dy;
+   }
+   Double_t xv[2];
+   InitArgs(xv,fParams);
+   for (j=0;j<=fNpy;j++) {
+      xv[1]    = ymin + dy*j;
+      for (i=0;i<=fNpx;i++) {
+         xv[0]    = xmin + dx*i;
+         fSave[k] = EvalPar(xv,fParams);
+         k++;
+      }
+   }
+   fSave[nsave+0] = xmin;
+   fSave[nsave+1] = xmax;
+   fSave[nsave+2] = ymin;
+   fSave[nsave+3] = ymax;
+   fSave[nsave+4] = fNpx;
+   fSave[nsave+5] = fNpy;
 }
 
 //______________________________________________________________________________
@@ -608,9 +688,14 @@ void TF2::Streamer(TBuffer &R__b)
          fContour.Streamer(R__b);
       }
       R__b.CheckByteCount(R__s, R__c, TF2::IsA());
-      //====end of old versions
+      //====end of old versions 
       
    } else {
+      Int_t saved = 0;
+      if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,0,0);}
+      
       TF2::Class()->WriteBuffer(R__b,this);
+      
+      if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
    }
 }

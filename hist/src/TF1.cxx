@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.21 2001/06/27 10:34:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.22 2001/07/09 17:20:56 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1512,7 +1512,7 @@ void TF1::ReleaseParameter(Int_t ipar)
 }
 
 //______________________________________________________________________________
-void TF1::Save(Double_t xmin, Double_t xmax)
+void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Double_t)
 {
     // Save values of function in array fSave
 
@@ -1721,7 +1721,7 @@ void TF1::Streamer(TBuffer &b)
       
    } else {
       Int_t saved = 0;
-      if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax);}
+      if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,0,0,0,0);}
       
       TF1::Class()->WriteBuffer(b,this);
       
