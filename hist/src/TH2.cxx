@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.8 2000/06/29 10:07:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.9 2000/07/12 07:06:18 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -15,6 +15,8 @@
 #include "TF2.h"
 #include "TProfile.h"
 #include "TRandom.h"
+#include "TMatrix.h"
+#include "TMatrixD.h"
 
 ClassImp(TH2)
 
@@ -1560,6 +1562,18 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
 }
 
 //______________________________________________________________________________
+TH2F::TH2F(const TMatrix &m)
+     :TH2("TMatrix","",m.GetNrows(),0,m.GetNrows(),m.GetNcols(),0,m.GetNcols())
+{
+   TArrayF::Set(fNcells);
+   for (Int_t i=0;i<m.GetNrows();i++) {
+      for (Int_t j=0;j<m.GetNcols();j++) {
+         SetCellContent(i+1,j+1,m(i,j));
+      }
+   }     
+}
+
+//______________________________________________________________________________
 TH2F::TH2F(const TH2F &h2f)
 {
    ((TH2F&)h2f).Copy(*this);
@@ -1748,6 +1762,18 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Float_t *xbins
      :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
    TArrayD::Set(fNcells);
+}
+
+//______________________________________________________________________________
+TH2D::TH2D(const TMatrixD &m)
+     :TH2("TMatrixD","",m.GetNrows(),0,m.GetNrows(),m.GetNcols(),0,m.GetNcols())
+{
+   TArrayD::Set(fNcells);
+   for (Int_t i=0;i<m.GetNrows();i++) {
+      for (Int_t j=0;j<m.GetNcols();j++) {
+         SetCellContent(i+1,j+1,m(i,j));
+      }
+   }     
 }
 
 //______________________________________________________________________________
