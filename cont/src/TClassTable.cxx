@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.7 2001/04/21 17:21:44 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.8 2001/06/22 16:10:17 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -118,7 +118,7 @@ void TClassTable::Add(const char *cname, Version_t id, VoidFuncPtr_t dict,
    // check if already in table, if so return
    ClassRec_t *r = FindElement(cname, kTRUE);
    if (r->name) {
-      ::Warning("Add", "class %s allready in TClassTable", cname);
+      ::Warning("TClassTable::Add", "class %s allready in TClassTable", cname);
       return;
    }
 
