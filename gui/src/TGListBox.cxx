@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.33 2004/12/09 17:05:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.34 2004/12/10 17:35:58 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -139,19 +139,17 @@ void TGTextLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 
    x += 3;
    y += (fHeight - fTHeight) >> 1;
-   GCValues_t gval;
-   GContext_t gc = gVirtualX->CreateGC(id, &gval);
 
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
 
    if (fActive) {
-      gVirtualX->SetForeground(gc, fgDefaultSelectedBackground);
-      gVirtualX->FillRectangle(id, gc, x, y, fWidth, fHeight);
+      gVirtualX->SetWindowBackground(id, fgDefaultSelectedBackground);
+      gVirtualX->ClearArea(id, x, y, fWidth, fHeight);
       gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
       fText->Draw(id, fNormGC, x, y + max_ascent);
    } else {
-      gVirtualX->SetForeground(gc, fBkcolor);
-      gVirtualX->FillRectangle(id, gc, x, y, fWidth, fHeight);
+      gVirtualX->SetWindowBackground(id, fBkcolor);
+      gVirtualX->ClearArea(id, x, y, fWidth, fHeight);
       gVirtualX->SetForeground(fNormGC, fgBlackPixel);
       fText->Draw(id, fNormGC, x, y + max_ascent);
    }
@@ -627,12 +625,14 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
       Int_t newpos = vb->GetPosition() - 1;
       if (newpos < 0) newpos = 0;
       vb->SetPosition(newpos);
+      fClient->NeedRedraw(this);
       return kTRUE;
    }
    if ((event->fCode == kButton5) && vb) {
       // scroll 2 lines down (a button down is always followed by a button up)
       Int_t newpos = vb->GetPosition() + 1;
       vb->SetPosition(newpos);
+      fClient->NeedRedraw(this);
       return kTRUE;
    }
 
@@ -653,7 +653,6 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
                fLastActive = f;
                fLastActiveEl = el;
                f->Toggle();
-               fClient->NeedRedraw(this);
                fChangeStatus = f->IsActive() ? 1 : 0;
                SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                            f->EntryId(), 0);
@@ -682,7 +681,6 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
 
             if (activate)  {
                f->Activate(kTRUE);
-               fClient->NeedRedraw(this);
                fLastActive = f;
                fLastActiveEl = el;
             } else {
@@ -697,6 +695,7 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
          }
       }
    }
+   fClient->NeedRedraw(this);
    return kTRUE;
 }
 
@@ -734,7 +733,6 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
             if (activate) {
                if (fChangeStatus != (f->IsActive() ? 1 : 0)) {
                   f->Toggle();
-                  fClient->NeedRedraw(this);
                   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                               f->EntryId(), 0);
                }
@@ -756,13 +754,13 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
 
          if (activate)  {
             f->Activate(kTRUE);
-            fClient->NeedRedraw(this);
             fLastActive = f;
          } else {
             f->Activate(kFALSE);
          }
       }
    }
+   if (activate) fClient->NeedRedraw(this);
    return kTRUE;
 }
 
