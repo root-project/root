@@ -182,7 +182,7 @@ endif
 ##### TARGETS #####
 
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
-                clean distclean compiledata importcint version html \
+                clean distclean compiledata importcint version html changelog \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
                 $(patsubst %,distclean-%,$(MODULES))
@@ -271,7 +271,7 @@ version: $(CINTTMP)
 importcint: distclean-cint
 	@$(IMPORTCINT)
 
-html:    $(ROOTEXE)
+html: $(ROOTEXE)
 	@$(MAKELOGHTML)
 	@$(MAKEHTML)
 
