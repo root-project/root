@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 struct ClassRec_t {
    char          *name;
    Version_t      id;
+   Int_t          bits;
    VoidFuncPtr_t  dict;
    ClassRec_t    *next;
 };
@@ -51,11 +52,16 @@ private:
    static int          fgCursor;
 
 public:
+   // bits that can be set in pragmabits
+   enum { kNoStreamer = 0x01, kNoInputOperator = 0x02, kAutoStreamer = 0x04 };
+
    ~TClassTable();
 
-   static void          Add(const char *cname, Version_t id, VoidFuncPtr_t dict);
+   static void          Add(const char *cname, Version_t id,
+                            VoidFuncPtr_t dict, Int_t pragmabits);
    int                  Classes();
    static Version_t     GetID(const char *cname);
+   static Int_t         GetPragmaBits(const char *name);
    static VoidFuncPtr_t GetDict(const char *cname);
    static void          Init();
    static char         *Next();
@@ -69,7 +75,8 @@ public:
 
 R__EXTERN TClassTable *gClassTable;
 
-extern void AddClass(const char *cname, Version_t id, VoidFuncPtr_t dict);
+extern void AddClass(const char *cname, Version_t id, VoidFuncPtr_t dict,
+                     Int_t pragmabits);
 extern void RemoveClass(const char *cname);
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -74,7 +74,8 @@ void  TClassTable::Init() { fgCursor = 0; SortTable(); }
 
 
 //______________________________________________________________________________
-void TClassTable::Add(const char *cname, Version_t id, VoidFuncPtr_t dict)
+void TClassTable::Add(const char *cname, Version_t id, VoidFuncPtr_t dict,
+                      Int_t pragmabits)
 {
    // Add a class to the class table (this is a static function).
 
@@ -90,6 +91,7 @@ void TClassTable::Add(const char *cname, Version_t id, VoidFuncPtr_t dict)
 
    r->name = StrDup(cname);
    r->id   = id;
+   r->bits = pragmabits;
    r->dict = dict;
 
    fgTally++;
@@ -173,6 +175,16 @@ Version_t TClassTable::GetID(const char *cname)
 }
 
 //______________________________________________________________________________
+Int_t TClassTable::GetPragmaBits(const char *cname)
+{
+   // Returns the pragma bits as specified in the LinkDef.h file.
+
+   ClassRec_t *r = FindElement(cname);
+   if (r) return r->bits;
+   return 0;
+}
+
+//______________________________________________________________________________
 VoidFuncPtr_t TClassTable::GetDict(const char *cname)
 {
    // Given the class name returns the Dictionary() function of a class
@@ -218,20 +230,20 @@ void TClassTable::PrintTable()
 
    Printf("");
    Printf("Defined classes");
-   Printf("class                              version  initialized");
-   Printf("=======================================================");
+   Printf("class                              version  bits  initialized");
+   Printf("=============================================================");
    for (int i = 0; i < fgTally; i++) {
       ClassRec_t *r = fgSortedTable[i];
       n++;
       if (gROOT->GetClass(r->name, kFALSE)) {
          ninit++;
-         Printf("%-32s %7d        Yes", r->name, r->id);
+         Printf("%-32s %6d %7d       Yes", r->name, r->id, r->bits);
       } else
-         Printf("%-32s %7d        No", r->name, r->id);
+         Printf("%-32s %6d %7d       No",  r->name, r->id, r->bits);
    }
-   Printf("-------------------------------------------------------");
+   Printf("-------------------------------------------------------------");
    Printf("Total classes: %4d   initialized: %4d", n, ninit);
-   Printf("=======================================================");
+   Printf("=============================================================");
 
    Printf("");
 }
@@ -274,12 +286,13 @@ void TClassTable::Terminate()
 }
 
 //______________________________________________________________________________
-void AddClass(const char *cname, Version_t id, VoidFuncPtr_t dict)
+void AddClass(const char *cname, Version_t id, VoidFuncPtr_t dict,
+              Int_t pragmabits)
 {
    // Global function called by the ctor of a class's init class
    // (see the ClassImp macro).
 
-   TClassTable::Add(cname, id, dict);
+   TClassTable::Add(cname, id, dict, pragmabits);
 }
 
 //______________________________________________________________________________
