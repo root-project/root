@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.23 2000/12/18 15:12:17 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.24 2000/12/26 14:19:03 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2146,8 +2146,11 @@ void THistPainter::PaintFunction()
    TIter   next(fFunctions);
    while ((f = (TObject*) next())) {
       TVirtualPad *padsave = gPad;
-      if (f->IsA() == TF1::Class()) f->Paint("lsame");
-      else                          f->Paint();
+      if (f->IsA() == TF1::Class()) {
+         if (f->TestBit(TF1::kNotDraw) == 0) f->Paint("lsame");
+      } else  {
+         f->Paint();
+      }
       padsave->cd();
    }
 }

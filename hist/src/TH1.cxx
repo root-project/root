@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.33 2001/01/03 22:49:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.34 2001/01/12 08:27:11 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1540,7 +1540,7 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
    Double_t params[100], arglist[100];
    TF1 *fnew1;
    TF2 *fnew2;
-   TF3 *fnew3;
+   TF3 *fnew3; 
 
    xfirst  = fXaxis.GetFirst();
    xlast   = fXaxis.GetLast();
@@ -1726,11 +1726,13 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
          fFunctions->Add(fnew1);
          fnew1->SetParent(this);
          fnew1->Save(xmin,xmax);
+         if (Foption.Nograph) fnew1->SetBit(TF1::kNotDraw);
       } else if (GetDimension() < 3) {
          fnew2 = new TF2();
          gF1->Copy(*fnew2);
          fFunctions->Add(fnew2);
          fnew2->SetParent(this);
+         if (Foption.Nograph) fnew2->SetBit(TF1::kNotDraw);
       } else {
          fnew3 = new TF3();
          gF1->Copy(*fnew3);
@@ -1739,7 +1741,7 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
       }
       if (TestBit(kCanDelete)) return;
       if (!Foption.Nograph && GetDimension() < 3) Draw(goption);
-   }
+  }
 }
 
 //______________________________________________________________________________

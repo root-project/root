@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TFitPanel.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   24/11/96
 
 /*************************************************************************
@@ -221,7 +221,7 @@ void TFitPanel::Apply(const char *action)
 // Warning below. In case object is not a TH1, TH2,etc, cannot execute block.
    if (fObjectFit->InheritsFrom(TH1::Class())) {
       TH1 *h1 = (TH1*)fObjectFit;
-      h1->Fit((char*)fFunction.Data(), (char*)fOption.Data(), (char*)fSame.Data());
+      h1->Fit(fFunction.Data(), fOption.Data(), fSame.Data());
    }
    fOption   = "r";
    fFunction = "gaus";
