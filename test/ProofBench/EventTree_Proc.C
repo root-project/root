@@ -50,6 +50,7 @@ void EventTree_Proc::SlaveBegin(TTree *tree)
    TString option = GetOption();
 
    fHist = new TH1F("outdist","",100,0,5);
+   fHist->SetDirectory(0);
    fHist->GetXaxis()->SetTitle("p_{T}");
    fHist->GetYaxis()->SetTitle("dN/p_{T}dp_{T}");
 
@@ -57,7 +58,7 @@ void EventTree_Proc::SlaveBegin(TTree *tree)
 
 }
 
-Bool_t EventTree_Proc::Process(Int_t entry)
+Bool_t EventTree_Proc::Process(Long64_t entry)
 {
    // The Process() function is called for each entry in the tree (or possibly
    // keyed object in the case of PROOF) to be processed. The entry argument
@@ -105,6 +106,7 @@ void EventTree_Proc::Terminate()
    canvas->SetBorderMode(0);
    canvas->SetLogy();
    TH1F* h = dynamic_cast<TH1F*>(fOutput->FindObject("outdist"));
-   h->DrawCopy();
+   if (h) h->DrawCopy();
+   else Warning("Terminate", "no outdist found");
 
 }

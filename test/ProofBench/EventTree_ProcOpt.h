@@ -29,7 +29,7 @@ public :
    Double32_t      fTemperature;
    Int_t           fMeasures[10];
    Double32_t      fMatrix[4][4];
-   Double32_t      fClosestDistance[0];   //[fNvertex]
+   Double32_t      fClosestDistance[21];   //[fNvertex]
    EventHeader     fEvtHdr;
    TClonesArray*   fTracks;
    TRef            fLastTrack;
@@ -58,18 +58,18 @@ public :
    EventTree_ProcOpt(TTree *) { }
    EventTree_ProcOpt() { }
    ~EventTree_ProcOpt() { }
-   Int_t   Version() const {return 1;}
-   void    Begin(TTree *);
-   void    SlaveBegin(TTree *tree);
-   void    Init(TTree *tree);
-   Bool_t  Notify();
-   Bool_t  Process(Int_t entry);
-   void    SetOption(const char *option) { fOption = option; }
-   void    SetObject(TObject *obj) { fObject = obj; }
-   void    SetInputList(TList *input) {fInput = input;}
-   TList  *GetOutputList() const { return fOutput; }
-   void    SlaveTerminate();
-   void    Terminate();
+   virtual Int_t   Version() const {return 1;}
+   virtual void    Begin(TTree *);
+   virtual void    SlaveBegin(TTree *tree);
+   virtual void    Init(TTree *tree);
+   virtual Bool_t  Notify();
+   virtual Bool_t  Process(Long64_t entry);
+   virtual void    SetOption(const char *option) { fOption = option; }
+   virtual void    SetObject(TObject *obj) { fObject = obj; }
+   virtual void    SetInputList(TList *input) {fInput = input;}
+   virtual TList  *GetOutputList() const { return fOutput; }
+   virtual void    SlaveTerminate();
+   virtual void    Terminate();
 
    ClassDef(EventTree_ProcOpt,0);
 };
@@ -99,8 +99,7 @@ void EventTree_ProcOpt::Init(TTree *tree)
    fChain->SetBranchAddress("fTemperature",&fTemperature);
    fChain->SetBranchAddress("fMeasures[10]",fMeasures);
    fChain->SetBranchAddress("fMatrix[4][4]",fMatrix);
-   fChain->SetBranchAddress("fClosestDistance",&fClosestDistance);
-   fChain->SetBranchStatus("fClosestDistance",0);
+   fChain->SetBranchAddress("fClosestDistance",fClosestDistance);
    fChain->SetBranchAddress("fEvtHdr",&fEvtHdr);
    fChain->SetBranchAddress("fTracks",&fTracks);
    fChain->SetBranchAddress("fLastTrack",&fLastTrack);
