@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.13 2001/04/19 09:39:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.14 2001/04/25 14:03:51 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -736,7 +736,13 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option)
      pname = new char[nch];
      sprintf(pname,"%s%s",GetName(),name);
   }
-  TH1D *h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
+  TH1D *h1;
+  TArrayD *bins = fXaxis.GetXbins();
+  if (bins->fN == 0) {
+     h1 = new TH1D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax());
+  } else {
+     h1 = new TH1D(pname,GetTitle(),nx,bins->fArray);
+  }
   Bool_t computeErrors = kFALSE;
   if (opt.Contains("e")) {h1->Sumw2(); computeErrors = kTRUE;}
   if (pname != name)  delete [] pname;
