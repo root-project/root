@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.29 2002/10/03 18:01:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.30 2002/10/07 10:43:51 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -984,6 +984,17 @@ Int_t TProof::Collect(TMonitor *mon)
                answ << name << xmin << xmax << ymin << ymax << zmin << zmax;
 
                s->Send(answ);
+            }
+            break;
+
+         case kPROOF_PROGRESS:
+            {
+               PDB(kGlobal,2) Info("Collect","Got kPROOF_PROGRESS");
+               Long64_t total, processed;
+
+               (*mess) >> total >> processed;
+
+               fPlayer->Progress(total, processed);
             }
             break;
 

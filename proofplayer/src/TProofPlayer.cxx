@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.11 2002/10/03 18:11:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.12 2002/10/07 10:43:51 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -115,6 +115,18 @@ TList *TProofPlayer::GetOutputList() const
 void TProofPlayer::StoreOutput(TList *out)
 {
    MayNotUse("StoreOutput");
+}
+
+
+//______________________________________________________________________________
+void TProofPlayer::Progress(Long64_t total, Long64_t processed)
+{
+   Info("Progress","%2f (%ld/%ld)", 100.*processed/total, processed, total);
+
+   Long_t parm[2];
+   parm[0] = total;
+   parm[1] = processed;
+   Emit("Progress(Long64_t,Long64_t)", parm);
 }
 
 

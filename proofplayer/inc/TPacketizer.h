@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.5 2002/08/09 13:12:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.6 2002/10/07 10:43:51 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -31,12 +31,13 @@
 #endif
 
 class TMessage;
+class TTimer;
 
 
 class TPacketizer : public TVirtualPacketizer {
 
 private:
-   Int_t    fProcessed;       // number of entries processed
+   Long64_t fProcessed;       // number of entries processed
    TList   *fPackets;         // all processed packets
 
    Long64_t fTotalEntries;    // total number of entries to be distributed
@@ -47,10 +48,13 @@ private:
    TList   *fActive;          // nodes with unfinished files
    TObject *fActiveNext;      // cursor in fActive
    TList   *fSlaves;          // slaves processing
+   TTimer  *fProgress;        // progress updates timer
 
    TPacketizer();
    TPacketizer(const TPacketizer &);     // no implementation, will generate
    void operator=(const TPacketizer &);  // error on accidental usage
+
+   virtual Bool_t      HandleTimer(TTimer *timer);
 
 public:
    TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.8 2002/09/16 10:57:58 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.9 2002/10/07 10:43:51 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -33,6 +33,9 @@
 #include "TUrl.h"
 #include "TError.h"
 #include "TProofDebug.h"
+#include "TTimer.h"
+#include "TProofServ.h"
+#include "TSocket.h"
 
 ClassImp(TPacketizer)
 
@@ -63,7 +66,7 @@ private:
    TList         *fFiles;        // TDSetElements (files) stored on this node
    TIter         *fFileIter;     // iterator on fFiles
    TList         *fActive;       // files with work remaining
-   TObject       *fActiveNext;      // cursor in fActive
+   TObject       *fActiveNext;   // cursor in fActive
 
 public:
 
@@ -164,18 +167,20 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t nu
          e->SetNum( first + num - cur );
       }
 
-      // TODO: Names must be in rootd URL format, check where?
-      if ( !url.IsValid() || !strncmp(url.GetProtocol(),"root", 4) == 0 ) {
-         Error("TPacketizer","Filename not in rootd URL format (%s)",
-                e->GetFileName() );
-         fValid = kFALSE;
-         return;
+      // Map non URL filenames to dummy host
+      TString host;
+      if ( !url.IsValid() ||
+          (strncmp(url.GetProtocol(),"root", 4) &&
+           strncmp(url.GetProtocol(),"rfio", 4)) ) {
+         host = "no-host";
+      } else {
+         host = url.GetHost();
       }
 
-      TFileNode *node = (TFileNode*) fFileNodes->FindObject( url.GetHost() );
+      TFileNode *node = (TFileNode*) fFileNodes->FindObject( host );
 
       if ( node == 0 ) {
-         node = new TFileNode( url.GetHost() );
+         node = new TFileNode( host );
          fFileNodes->Add( node );
       }
 
@@ -212,6 +217,10 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t nu
       fSlaves->Add( slave );
       slave->SetFileNode( (TFileNode*) fFileNodes->FindObject(slave->GetName()) );
    }
+
+   fProgress = new TTimer;
+   fProgress->SetObject(this);
+   fProgress->Start(500,kFALSE);
 }
 
 
@@ -223,6 +232,7 @@ TPacketizer::~TPacketizer()
    delete fUnAllocated;
    delete fActive;
    delete fFileNodes;
+   delete fProgress;
 }
 
 
@@ -258,6 +268,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
       Double_t latency, proctime, proccpu;
 
       slstat->fProcessed += slstat->fCurElem->GetNum();
+      fProcessed += slstat->fCurElem->GetNum();
 
       fPackets->Add(slstat->fCurElem);
       (*r) >> latency >> proctime >> proccpu;
@@ -267,10 +278,14 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
                               latency, proctime, proccpu);
 
       slstat->fCurElem = 0;
+      if ( fProcessed == fTotalEntries ) {
+         fProgress->Stop();
+         HandleTimer(0);   // Send last timer message
+         // worry about lifetime of packetizer ?
+      }
    }
 
    // get a file if needed
-
 
    TFileStat *file = slstat->fCurFile;
 
@@ -348,4 +363,18 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
                                        base->GetDirectory(),first,num);
 
    return slstat->fCurElem;
+}
+
+
+//______________________________________________________________________________
+Bool_t TPacketizer::HandleTimer(TTimer *timer)
+{
+   TMessage m(kPROOF_PROGRESS);
+
+   m << fTotalEntries << fProcessed;
+
+   // send message to client;
+   gProofServ->GetSocket()->Send(m);
+
+   return kFALSE; // ignored?
 }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.1 2002/08/09 13:12:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.2 2002/10/07 10:43:51 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -31,15 +31,16 @@
 #endif
 
 
-class TMap;
 class TMessage;
+class TTimer;
 class TTree;
+class TMap;
 
 
 class TPacketizer2 : public TVirtualPacketizer {
 
 private:
-   Int_t    fProcessed;       // number of entries processed
+   Long64_t fProcessed;       // number of entries processed
    TList   *fPackets;         // all processed packets
    TTree   *fTrace;           // tree with a packet trace
 
@@ -51,10 +52,13 @@ private:
    TList   *fActive;          // nodes with unfinished files
    TObject *fActiveNext;      // cursor in fActive
    TMap    *fSlaveStats;      // slave status, keyed by correspondig TSlave
+   TTimer  *fProgress;        // progress updates timer
 
    TPacketizer2();
    TPacketizer2(const TPacketizer2 &);    // no implementation, will generate
    void operator=(const TPacketizer2 &);  // error on accidental usage
+
+   virtual Bool_t      HandleTimer(TTimer *timer);
 
 public:
    TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t num);

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.6 2002/08/07 15:53:53 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.7 2002/10/07 10:43:51 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -22,8 +22,13 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
-
+#ifndef ROOT_TObjString
 #include "TObjString.h"
+#endif
+#ifndef ROOT_TQObject
+#include "TQObject.h"
+#endif
+
 
 typedef long Long64_t;
 
@@ -41,7 +46,7 @@ class TMessage;
 
 //------------------------------------------------------------------------
 
-class TProofPlayer : public TObject {
+class TProofPlayer : public TObject, public TQObject {
 
 private:
    TList      *fAutoBins;  // Map of min/max values by name for slaves
@@ -50,6 +55,8 @@ protected:
    TList      *fInput;     //-> list with input objects
    TList      *fOutput;    //   list with output objects
    TSelector  *fSelector;  //!  The latest selector
+
+   void       *GetSender() { return this; }  //used to set gTQSender
 
 public:
    TProofPlayer();
@@ -65,6 +72,7 @@ public:
    virtual TObject  *GetOutput(const char *name) const;
    virtual TList    *GetOutputList() const;
    virtual void      StoreOutput(TList *out);   // Adopts the list
+   virtual void      Progress(Long64_t total, Long64_t processed); //*SIGNAL*
 
    virtual TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
    void              UpdateAutoBin(const char *name,

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.6 2002/10/07 10:43:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.7 2002/10/15 08:41:23 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -37,6 +37,8 @@
 #include "TError.h"
 #include "TProof.h"
 #include "TProofDebug.h"
+#include "TTimer.h"
+#include "TProofServ.h"
 
 ClassImp(TPacketizer2)
 
@@ -54,7 +56,7 @@ private:
 
 public:
    TFileStat(TFileNode *node, TDSetElement *elem)
-      : fNode(node), fElement(elem), fNextEntry(0) { }
+      : fNode(node), fElement(elem), fNextEntry(elem->GetFirst()) { }
 };
 
 
@@ -132,14 +134,14 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
    while ((e = (TDSetElement*)dset->Next())) {
       TUrl url = e->GetFileName();
 
-      // TODO: Names must be in rootd URL format, check where?
+      // Map non URL filenames to dummy host
+      TString host;
       if ( !url.IsValid() ||
           (strncmp(url.GetProtocol(),"root", 4) &&
            strncmp(url.GetProtocol(),"rfio", 4)) ) {
-         Error("TPacketizer2","Filename not in rootd or rfio URL format (%s)",
-               e->GetFileName() );
-         fValid = kFALSE;
-         return;
+         host = "no-host";
+      } else {
+         host = url.GetHost();
       }
 
       TFileNode *node = (TFileNode*) fFileNodes->FindObject( url.GetHost() );
@@ -365,10 +367,19 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
          e->SetNum( first + num - cur );
       }
 
-      TFileNode *node = (TFileNode*) fFileNodes->FindObject( url.GetHost() );
+      // Map non URL filenames to dummy host
+
+      TString host;
+      if ( !url.IsValid() || !strncmp(url.GetProtocol(),"root", 4) == 0 ) {
+         host = "no-host";
+      } else {
+         host = url.GetHost();
+      }
+
+      TFileNode *node = (TFileNode*) fFileNodes->FindObject( host );
 
       if ( node == 0 ) {
-         node = new TFileNode( url.GetHost() );
+         node = new TFileNode( host );
          fFileNodes->Add( node );
       }
 
@@ -401,6 +412,10 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
       slstat->fCurFile = 0;
    }
 
+   fProgress = new TTimer;
+   fProgress->SetObject(this);
+   fProgress->Start(500,kFALSE);
+
    PDB(kPacketizer,1) Info("TPacketizer2", "Return");
 }
 
@@ -409,13 +424,7 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
 TPacketizer2::~TPacketizer2()
 {
    if (fSlaveStats) {
-      TList l;
-      TIter n(fSlaveStats);
-      while( TObject *key = n() ) {
-         l.Add(fSlaveStats->GetValue(key));
-      }
-      l.SetOwner(kTRUE);
-      // The destructor of l will delete the values of fSlaveStats
+      fSlaveStats->DeleteValues();
    }
 
    delete fPackets;
@@ -423,6 +432,7 @@ TPacketizer2::~TPacketizer2()
    delete fUnAllocated;
    delete fActive;
    delete fFileNodes;
+   delete fProgress;
 }
 
 
@@ -458,6 +468,7 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
       Double_t latency, proctime, proccpu;
 
       slstat->fProcessed += slstat->fCurElem->GetNum();
+      fProcessed += slstat->fCurElem->GetNum();
 
       fPackets->Add(slstat->fCurElem);
       (*r) >> latency >> proctime >> proccpu;
@@ -467,10 +478,14 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
                               latency, proctime, proccpu);
 
       slstat->fCurElem = 0;
+      if ( fProcessed == fTotalEntries ) {
+         fProgress->Stop();
+         HandleTimer(0);   // Send last timer message
+         // worry about lifetime of packetizer ?
+      }
    }
 
    // get a file if needed
-
 
    TFileStat *file = slstat->fCurFile;
 
@@ -551,3 +566,16 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
    return slstat->fCurElem;
 }
 
+
+//______________________________________________________________________________
+Bool_t TPacketizer2::HandleTimer(TTimer *timer)
+{
+   TMessage m(kPROOF_PROGRESS);
+
+   m << fTotalEntries << fProcessed;
+
+   // send message to client;
+   gProofServ->GetSocket()->Send(m);
+
+   return kFALSE; // ignored?
+}
