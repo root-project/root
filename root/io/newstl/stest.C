@@ -2,7 +2,11 @@
 #include "test.C"
 
 void stest() {
-   checkHolder<setHolder>("set");
-   write<setHolder>("set");
-   read<setHolder>("set");
+   const char* testname = "set";
+   typedef setHolder holder;
+
+   std::cout << "Running test " << testname << std::endl;
+   checkHolder<holder>(testname);
+   write<holder>(testname);
+   read<holder>(testname);
 }

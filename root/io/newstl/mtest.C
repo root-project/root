@@ -2,7 +2,11 @@
 #include "test.C"
 
 void mtest() {
-   checkHolder<mapHolder>("map");
-   write<mapHolder>("map");
-   read<mapHolder>("map");
+   const char* testname = "map";
+   typedef mapHolder holder;
+
+   std::cout << "Running test " << testname << std::endl;
+   checkHolder<holder>(testname);
+   write<holder>(testname);
+   read<holder>(testname);
 }

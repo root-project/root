@@ -48,37 +48,39 @@ public:
 
    std::TEST_CONT<std::pair<float,int> >         fPairFlInt;
    std::TEST_CONT<std::pair<std::string,double> > fPairStrDb;
+
+   std::TEST_CONT<GHelper<GHelper<GHelper<float> > > > fTemplates;
    
    std::TEST_CONT<float >   fScalar;
    std::TEST_CONT<short >   fScalarArr[2];
-   UInt_t                fScalarArrVarSize;
+   UInt_t                   fScalarArrVarSize;
    std::TEST_CONT<char >   *fScalarArrVar; //[fScalarArrVarSize]
 
    std::TEST_CONT<int >    *fScalarPtr;
    std::TEST_CONT<double > *fScalarPtrArr[4];
-   UInt_t                fScalarPtrArrVarSize;
+   UInt_t                   fScalarPtrArrVarSize;
    std::TEST_CONT<int >    *fScalarPtrArrVar; //[fScalarPtrArrVarSize]
    
 
-   std::TEST_CONT<Helper >  fObject;
-   std::TEST_CONT<Helper > *fObjectPtr;
+   std::TEST_CONT<Helper >   fObject;
+   std::TEST_CONT<Helper >  *fObjectPtr;
 
-   std::TEST_CONT<Helper* > fPtrObject;
-   std::TEST_CONT<Helper* >*fPtrObjectPtr;
+   std::TEST_CONT<Helper* >  fPtrObject;
+   std::TEST_CONT<Helper* > *fPtrObjectPtr;
 
 
 #if defined(R__CANNOT_SPLIT_STL_CONTAINER)
-   std::TEST_CONT<THelper >  fTObject;      //||
-   std::TEST_CONT<THelper > *fTObjectPtr;   //||
+   std::TEST_CONT<THelper >    fTObject;      //||
+   std::TEST_CONT<THelper >   *fTObjectPtr;   //||
 
-   std::TEST_CONT<THelper* > fPtrTObject;   //||
-   std::TEST_CONT<THelper* >*fPtrTObjectPtr;//||
+   std::TEST_CONT<THelper* >   fPtrTObject;   //||
+   std::TEST_CONT<THelper* >  *fPtrTObjectPtr;//||
 #else
-   std::TEST_CONT<THelper >  fTObject;
-   std::TEST_CONT<THelper > *fTObjectPtr;
+   std::TEST_CONT<THelper >    fTObject;
+   std::TEST_CONT<THelper >   *fTObjectPtr;
 
-   std::TEST_CONT<THelper* > fPtrTObject;
-  std::TEST_CONT<THelper* >*fPtrTObjectPtr;
+   std::TEST_CONT<THelper* >   fPtrTObject;
+   std::TEST_CONT<THelper* >  *fPtrTObjectPtr;
 #endif
 
    std::TEST_CONT<std::string>         fString;
@@ -113,6 +115,13 @@ public:
       return utility::SetOrVerify("fEnum",fEnum,seed,entryNumber,reset,testname);
    }
    VERIFY(Enum);
+   
+
+   bool SetOrVerifyTemplates(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
+      Int_t seed = 1 * (entryNumber+1);
+      return utility::SetOrVerify("fTemplates",fTemplates,seed,entryNumber,reset,testname);
+   }
+   VERIFY(Templates);
    
 
    bool SetOrVerifyPairFlInt(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
@@ -349,6 +358,8 @@ protected:
    bool SetOrVerify(Int_t entryNumber, bool reset, const std::string &testname,int splitlevel) {
       bool result = true;
       result &= SetOrVerifyEnum(entryNumber,reset,testname,splitlevel);
+
+      result &= SetOrVerifyTemplates(entryNumber,reset,testname,splitlevel);
 
       result &= SetOrVerifyPairFlInt(entryNumber,reset,testname,splitlevel);
       result &= SetOrVerifyPairStrDb(entryNumber,reset,testname,splitlevel);

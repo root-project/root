@@ -8,6 +8,10 @@ template <> void fill(THelper& filled, UInt_t seed) {
    filled.val = seed;
 }
 
+template <class T> void fill(GHelper<T>& filled, UInt_t seed) {
+   fill(filled.val,seed);
+}
+
 template <> void fill(double& filled, UInt_t seed) {
    filled = seed;
 }

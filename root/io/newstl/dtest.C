@@ -2,7 +2,11 @@
 #include "test.C"
 
 void dtest() {
-   checkHolder<dequeHolder>("deque");
-   write<dequeHolder>("deque");
-   read<dequeHolder>("deque");
+   const char* testname = "deque";
+   typedef dequeHolder holder;
+
+   std::cout << "Running test " << testname << std::endl;
+   checkHolder<holder>(testname);
+   write<holder>(testname);
+   read<holder>(testname);
 }

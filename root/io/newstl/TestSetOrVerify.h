@@ -21,6 +21,11 @@ namespace utility {
       bool result = true;
 
       if (reset) {
+         if (DebugTest()&TestDebug::kAddresses) {
+            std::stringstream s;
+            s << testname << " address of " << dataname << " is " << &datamember << std::ends;
+            Debug(s.str());
+         }
          fill(datamember, seed);
       } else {
          T build;
@@ -44,6 +49,12 @@ namespace utility {
          delete datamember;
          datamember = new T;
          fill(*datamember, seed);
+
+         if (DebugTest()&TestDebug::kAddresses) {
+            std::stringstream s;
+            s << testname << " address of " << dataname << " is " << &datamember << " and new value is " << datamember << std::ends;
+            Debug(s.str());
+         }
       } else {
          T build;
          fill(build, seed);
@@ -62,6 +73,12 @@ namespace utility {
                                        bool reset, 
                                        const std::string &testname) {
       bool result = true;
+
+      if (reset && DebugTest()&TestDebug::kAddresses) {
+         std::stringstream s;
+         s << testname << " address of " << dataname << " value is " << datamember << std::ends;
+         Debug(s.str());
+      }
 
       for(UInt_t index=0; index<arraysize; index++) {
          // Int_t seed = 3 * (entryNumber+1);
@@ -86,6 +103,12 @@ namespace utility {
                                        bool reset, 
                                        const std::string &testname) {
       bool result = true;
+
+      if (reset && DebugTest()&TestDebug::kAddresses) {
+         std::stringstream s;
+         s << testname << " address of " << dataname << " value is " << datamember << std::ends;
+         Debug(s.str());
+      }
 
       for(UInt_t index=0; index<arraysize; index++) {
          // Int_t seed = 3 * (entryNumber+1);
@@ -123,6 +146,7 @@ namespace utility {
             TestError(testname,Form("For %s, wrong size for a variable array! Wrote %d and read %d\n",classname,calcSize,arraySize));
          }
       }
+
       return SetOrVerify(dataname, datamember, arraySize, seed, entryNumber, reset, testname);
    }
 

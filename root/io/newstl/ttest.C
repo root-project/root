@@ -2,7 +2,11 @@
 #include "test.C"
 
 void ttest() {
-   checkHolder<multisetHolder>("multiset");
-   write<multisetHolder>("multiset");
-   read<multisetHolder>("multiset");
+   const char* testname = "multiset";
+   typedef multisetHolder holder;   
+
+   std::cout << "Running test " << testname << std::endl;
+   checkHolder<holder>(testname);
+   write<holder>(testname);
+   read<holder>(testname);
 }

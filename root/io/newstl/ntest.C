@@ -2,7 +2,11 @@
 #include "test.C"
 
 void ntest() {
-   checkHolder<multimapHolder>("multimap");
-   write<multimapHolder>("multimap");
-   read<multimapHolder>("multimap");
+   const char* testname = "multimap";
+   typedef multimapHolder holder;
+
+   std::cout << "Running test " << testname << std::endl;
+   checkHolder<holder>(testname);
+   write<holder>(testname);
+   read<holder>(testname);
 }

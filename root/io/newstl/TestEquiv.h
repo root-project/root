@@ -2,6 +2,10 @@ bool IsEquiv(const std::string &, const EHelper &orig, const EHelper &copy) { re
 bool IsEquiv(const std::string &, const Helper &orig, const Helper &copy) { return  orig.IsEquiv(copy); }
 bool IsEquiv(const std::string &, const THelper &orig, const THelper &copy) { return  orig.IsEquiv(copy); }
 
+template <class T> bool IsEquiv(const std::string &test, const GHelper<T> &orig, const GHelper<T> &copy) {
+   return IsEquiv(test,orig.val,copy.val);
+}
+
 template <class T> bool IsEquiv(const std::string &test, T* orig, T* copy) {
    TClass *cl = gROOT->GetClass(typeid(T));
    const char* classname = cl?cl->GetName():typeid(T).name();
@@ -65,7 +69,7 @@ template <class T> bool IsEquiv(const std::string &test, const T& orig, const T&
                               classname,i));
          TestError(test,*iorig,*icopy);
          result = false;
-      } else if (DebugTest()) {
+      } else if (DebugTest()&TestDebug::kValues) {
          std::stringstream s;
          s << "(Debugging test) " << test << " elem #" << i << std::ends;
          TestError(s.str(),*iorig,*icopy);

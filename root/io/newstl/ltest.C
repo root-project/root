@@ -2,7 +2,11 @@
 #include "test.C"
 
 void ltest() {
-   checkHolder<listHolder>("list");
-   write<listHolder>("list");
-   read<listHolder>("list");
+   const char* testname = "list";
+   typedef listHolder holder;
+
+   std::cout << "Running test " << testname << std::endl;
+   checkHolder<holder>(testname);
+   write<holder>(testname);
+   read<holder>(testname);
 }

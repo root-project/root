@@ -3,7 +3,10 @@
 
 void vtest() {
    const char* testname = "vector";
-   checkHolder<vectorHolder>(testname);
-   write<vectorHolder>(testname);
-   read<vectorHolder>(testname);
+   typedef vectorHolder holder;
+
+   std::cout << "Running test " << testname << std::endl;
+   checkHolder<holder>(testname);
+   write<holder>(testname);
+   read<holder>(testname);
 }

@@ -11,26 +11,8 @@ include ../../Rules.mk
 
 LPWD := $(shell echo `pwd -P`)
 #debug := $(shell echo $(LPWD) 1>&2 )
-LIBDIR := $(subst .,-,$(subst /,-,$(shell root-config --version))).libs/$(LPWD)
+LIBDIR := $(subst .,-,$(subst /,-,$(shell root-config --version))).libs$(LPWD)/
 #debug := $(shell echo $(LIBDIR) 1>&2 )
-
-#-include TestHelpers_C.d
-
-#-include dequeHolder_C.d
-#-include listHolder_C.d
-#-include mapHolder_C.d
-#-include multimapHolder_C.d
-#-include multisetHolder_C.d
-#-include setHolder_C.d
-#-include vectorHolder_C.d
-
-#-include dtest_C.d
-#-include ltest_C.d
-#-include mtest_C.d
-#-include ntest_C.d
-#-include stest_C.d
-#-include ttest_C.d
-#-include vtest_C.d
 
 FTEST = $(wildcard ?test.C)
 FTEST_DLL = $(addprefix $(LIBDIR),$(subst .C,_C.$(DllSuf),$(FTEST)) )
@@ -39,10 +21,14 @@ HOLDER = $(wildcard *Holder.C)
 HOLDER_DLL = $(addprefix $(LIBDIR),$(subst .C,_C.$(DllSuf),$(HOLDER)))
 
 TEST_DLL = $(LIBDIR)TestHelpers_C.$(DllSuf) $(FTEST_DLL) $(HOLDER_DLL)
+#debug := $(shell echo $(TEST_DLL) 1>&2 )
 
-DEPENDENCY_FILES = $(TEST_DLL:.so=.d)
+DEPENDENCY_FILES = $(TEST_DLL:.so=.df)
+#debug := $(shell echo $(DEPENDENCY_FILES) 1>&2 )
 
 -include $(DEPENDENCY_FILES)
+
+#.PRECIOUS :  $(addprefix $(LIBDIR),$(subst .C,o.$(DllSuf),$(HOLDER) $(FTEST) $(LIBDIR)TestHelpers_C))
 
 deque: $(addprefix $(LIBDIR),dtest_C.$(DllSuf) dequeHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
 	$(CMDECHO) echo deque up to date
@@ -69,16 +55,23 @@ stllibs: $(FTEST_DLL) $(HOLDER_DLL) TestHelpers_C.$(DllSuf)
 
 # debug := $(shell echo $(FTEST_DLL) 1>&2 ) 
 
-%.o: %.C
-	@touch $@
+#$(LIBDIR)%.o: %.C
+#	@touch $@
 
-$(LIBDIR)%_C.$(DllSuf) : %.C %.o
+LIBDIR_SED=$(subst /,\\/,$(LIBDIR))
+LIBDIR_SED2=$(subst /,\\/,$(LPWD)/./)
+#debug := $(shell echo $(LIBDIR) 1>&2 )
+$(LIBDIR)%_C.df: $(LIBDIR)%_C.d
+	@cat $< | sed -e s/$(LIBDIR_SED2)// | sed -e s/$*.o/$(LIBDIR_SED)$*_C.so/ > $@
+
+$(LIBDIR)%_C.$(DllSuf) : %.C 
 	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\)
 	@touch $@
 #	$(CMDECHO) echo '.x ../../build.C("$<")' | root.exe -l -b -n
 
 stlIoTest.log: $(TEST_DLL)
-	$(CMDECHO) root.exe -q -l -b brun.C > stlIoTest.log 2>&1 
+#	$(CMDECHO) root.exe -q -l -b brun.C > stlIoTest.log 2>&1 
+	$(CMDECHO) root.exe -q -l -b brun.C 2>&1 | tee full.log | grep -v 'does not support' > stlIoTest.log && ( cat full.log | grep 'does not support'; echo )
 
 stlIoTest: stlIoTest.log
 	$(CMDECHO) diff -b stlIoTest.log stlIoTest.ref 

@@ -10,10 +10,22 @@
 #include <set>
 #include <map>
 
+namespace TestDebug {
+   enum { kValues    = 1<<0, 
+          kAddresses = 1<<1 };
+}
+
 UInt_t DebugTest(Int_t newLevel = -1) {
-   static Bool_t debugLevel = 0;
-   if (newLevel>=0) debugLevel = newLevel;
+   static UInt_t debugLevel = 0;
+
+   if (newLevel>0) debugLevel |= newLevel;
+   else if (newLevel==0) debugLevel = 0;
+
    return debugLevel;
+}
+
+void Debug(const std::string &msg) {
+   if (DebugTest()) std::cerr << "Debug: " << msg << "\n";
 }
 
 void Unsupported(const std::string &what) {
@@ -119,6 +131,14 @@ void TestError(const std::string &test, const Helper &orig, const Helper &copy) 
                         orig.val,copy.val));
 }
 
+template <class T> void TestError(const std::string &test, const GHelper<T> &orig, const GHelper<T> &copy) {
+   TClass *cl = gROOT->GetClass(typeid(T));
+   const char* classname = cl?cl->GetName():typeid(T).name();   
+   std::stringstream s;
+   s << test << " on GHelper of " << classname << std::ends;
+   TestError(s.str(), orig.val, copy.val);
+}
+
 const char* GetEHelperStringValue(const EHelper &eval) {
    switch(eval) {
       case kZero: return "kZero";
@@ -128,6 +148,7 @@ const char* GetEHelperStringValue(const EHelper &eval) {
       default:    return "unknown val";
    }
 }
+
 void TestError(const std::string &test, const EHelper &orig, const EHelper &copy) {
    std::stringstream s;
    s << "We wrote: " << GetEHelperStringValue(orig) 

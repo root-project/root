@@ -22,6 +22,13 @@ public:
    ClassDef(THelper,1);
 };
 
+template <class T> class GHelper {
+public:
+   T val;
+   GHelper() : val(0) {}
+   explicit GHelper(int v) : val(v) {}
+};
+
 enum EHelper { kZero = 0, kOne, kTwo,
                kEnd = 40 };
 

@@ -40,7 +40,7 @@ Bool_t HasNestedContainer(TFile *file) {
 Bool_t HasNestedConstString(TFile *file) {
    Bool_t result = file->GetVersion() >= R__NESTED_CONST_STRING;
    if (!result) {
-      static OutputOneErrorMessage error("nested stl containers");
+      static OutputOneErrorMessage error("stl containers of const string*");
    }
    return result;
 }
