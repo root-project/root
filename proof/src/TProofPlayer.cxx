@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.17 2002/12/02 18:50:05 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.18 2003/01/20 10:25:58 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -316,7 +316,7 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    }
 
    TMessage mesg(kPROOF_PROCESS);
-   TString fn(selector_file);
+   TString fn(gSystem->BaseName(selector_file));
 
    TDSet *set = dset;
    if ( fProof->IsMaster() ) {
@@ -327,9 +327,9 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
       delete fPacketizer;
 //      fPacketizer = new TPacketizer(dset, fProof->GetListOfActiveSlaves(),
-//                                 first, nentries);
+//                                    first, nentries);
       fPacketizer = new TPacketizer2(dset, fProof->GetListOfActiveSlaves(),
-                                 first, nentries);
+                                     first, nentries);
 
       if ( !fPacketizer->IsValid() ) {
          return -1;
