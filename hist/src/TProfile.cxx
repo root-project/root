@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.55 2005/02/14 15:59:17 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.56 2005/03/10 17:57:04 rdm Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1169,7 +1169,7 @@ Int_t TProfile::Merge(TCollection *list)
    //This function computes the min/max for the x axis,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
-   //Overflows and underflows are ignored.
+   //Overflows and underflows are ignored if limits are not all the same.
    //The function returns the merged number of entries if the merge is
    //successfull, -1 otherwise.
    //
@@ -1238,13 +1238,17 @@ Int_t TProfile::Merge(TCollection *list)
    if (!same) {
       SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax());
    }
+   Bool_t canRebin=TestBit(kCanRebin);
+   ResetBit(kCanRebin); // reset, otherwise getting the under/overflow will rebin
 
    //merge bin contents and errors
    TIter nextin(&inlist);
    Int_t ibin, bin;
    while ((h = (TProfile*)nextin())) {
       nx = h->GetXaxis()->GetNbins();
-      for (bin = 1;bin <= nx; bin++) {
+      for (bin = 0; bin <= nx + 1; bin++) {
+         if ((!same) && (bin == 0 || bin == nx + 1))
+            continue;
          ibin = fXaxis.FindBin(h->GetBinCenter(bin));
          fArray[ibin]             += h->GetW()[bin];
          fSumw2.fArray[ibin]      += h->GetW2()[bin];
@@ -1257,6 +1261,7 @@ Int_t TProfile::Merge(TCollection *list)
       fTsumwx2 += h->fTsumwx2;
       fTsumwy  += h->fTsumwy;
    }
+   if (canRebin) SetBit(kCanRebin);
    PutStats(totstats);
    SetEntries(nentries);
    if (hclone) delete hclone;

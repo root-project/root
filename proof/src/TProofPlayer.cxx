@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.52 2005/03/14 22:19:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.53 2005/03/17 10:43:30 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -497,19 +497,17 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
             output->Add(obj);
       }
       PDB(kLoop,1) Info("Process","Call Terminate()");
+      fOutput->Clear("nodelete");
       fSelector->Terminate();
       rv = fSelector->GetStatus();
      // copy the output list back and clean the selector's list
-//      delete fOutput;
-//      fOutput = new TList;
-      fOutput->Clear();
       TIter it(output);
       while(TObject* o = it()) {
          fOutput->Add(o);
       }
       // FIXME
       output->SetOwner(kFALSE);
-      output->Clear();
+      output->Clear("nodelete");
    }
    return rv;
 }

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.30 2005/01/31 13:40:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.31 2005/03/10 17:57:04 rdm Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -1266,7 +1266,7 @@ Int_t TProfile2D::Merge(TCollection *list)
    //This function computes the min/max for the axes,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
-   //Overflows and underflows are ignored.
+   //Overflows and underflows are ignored if limits are not all the same.
    //The function returns the merged number of entries if the merge is
    //successfull, -1 otherwise.
    //
@@ -1349,6 +1349,8 @@ Int_t TProfile2D::Merge(TCollection *list)
       SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
               newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax());
    }
+   Bool_t canRebin=TestBit(kCanRebin);
+   ResetBit(kCanRebin); // reset, otherwise getting the under/overflow will rebin
 
    nbix  = fXaxis.GetNbins();
    //merge bin contents and errors
@@ -1357,9 +1359,13 @@ Int_t TProfile2D::Merge(TCollection *list)
    while ((h=(TProfile2D*)nextin())) {
       nx   = h->GetXaxis()->GetNbins();
       ny   = h->GetYaxis()->GetNbins();
-      for (biny = 1; biny <= ny; biny++) {
+      for (biny = 0; biny <= ny + 1; biny++) {
+         if ((!same) && (biny == 0 || biny == ny + 1))
+            continue;
          iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
-         for (binx = 1; binx <= nx; binx++) {
+         for (binx = 0; binx <= nx + 1; binx++) {
+            if ((!same) && (binx == 0 || binx == nx + 1))
+               continue;
             ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
             bin = binx +(nx+2)*biny;
             ibin = ix +(nbix+2)*iy;
@@ -1378,7 +1384,9 @@ Int_t TProfile2D::Merge(TCollection *list)
       fTsumwxy += h->fTsumwxy;
       fTsumwz  += h->fTsumwz;
       fTsumwz2 += h->fTsumwz2;
-  }
+   }
+
+   if (canRebin) SetBit(kCanRebin);
    PutStats(totstats);
    SetEntries(nentries);
    if (hclone) delete hclone;

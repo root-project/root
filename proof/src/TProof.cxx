@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.81 2005/03/17 00:31:17 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.82 2005/03/17 15:00:47 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -281,11 +281,15 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    fProgressDialog = 0;
    fStatus         = 0;
    fSlaveInfo      = 0;
-   fFeedback       = 0;
-   fPlayer         = 0;
    fSecContext     = 0;
    fChains         = new TList;
    fUrlProtocol    = u->GetProtocol();
+
+   fPlayer = MakePlayer();
+   fFeedback = new TList;
+   fFeedback->SetOwner();
+   fFeedback->SetName("FeedbackList");
+   AddInput(fFeedback);
 
    delete u;
 
@@ -1206,10 +1210,8 @@ Int_t TProof::Collect(TMonitor *mon)
          case kPROOF_GETPACKET:
             {
                TDSetElement *elem = 0;
-               if (fPlayer) {
-                  sl = FindSlave(s);
-                  elem = fPlayer->GetNextPacket(sl, mess);
-               }
+               sl = FindSlave(s);
+               elem = fPlayer->GetNextPacket(sl, mess);
 
                TMessage answ(kPROOF_GETPACKET);
 
@@ -1294,9 +1296,7 @@ Int_t TProof::Collect(TMonitor *mon)
 
                (*mess) >> name >> xmin >> xmax >> ymin >> ymax >> zmin >> zmax;
 
-               if (fPlayer != 0 ) {
-                  fPlayer->UpdateAutoBin(name,xmin,xmax,ymin,ymax,zmin,zmax);
-               }
+               fPlayer->UpdateAutoBin(name,xmin,xmax,ymin,ymax,zmin,zmax);
 
                TMessage answ(kPROOF_AUTOBIN);
 
@@ -1573,9 +1573,6 @@ Int_t TProof::Process(TDSet *set, const char *selector, Option_t *option,
 
    if (!IsValid()) return -1;
 
-   if (!fPlayer)
-      fPlayer = new TProofPlayerRemote(this);
-
    if (fProgressDialog)
       fProgressDialog->ExecPlugin(5, this, selector, set->GetListOfElements()->GetSize(),
                                   first, nentries);
@@ -1592,16 +1589,13 @@ Int_t TProof::DrawSelect(TDSet *set, const char *varexp, const char *selection, 
 
    if (!IsValid()) return -1;
 
-   if (!fPlayer)
-      fPlayer = new TProofPlayerRemote(this);
-
    return fPlayer->DrawSelect(set, varexp, selection, option, nentries, first);
 }
 
 //______________________________________________________________________________
 void TProof::StopProcess(Bool_t abort)
 {
-   if (fPlayer != 0) fPlayer->StopProcess(abort);
+   fPlayer->StopProcess(abort);
 }
 
 //______________________________________________________________________________
@@ -1609,9 +1603,6 @@ void TProof::AddInput(TObject *obj)
 {
    // Add objects that might be needed during the processing of
    // the selector (see Process()).
-
-   if (!fPlayer)
-      fPlayer = new TProofPlayerRemote(this);
 
    fPlayer->AddInput(obj);
 }
@@ -1621,11 +1612,9 @@ void TProof::ClearInput()
 {
    // Clear input object list.
 
-   if (fPlayer) {
-      fPlayer->ClearInput();
+   fPlayer->ClearInput();
       // the system feedback list is always in the input list
-      if (fFeedback != 0) AddInput(fFeedback);
-   }
+   AddInput(fFeedback);
 }
 
 //______________________________________________________________________________
@@ -1634,9 +1623,7 @@ TObject *TProof::GetOutput(const char *name)
    // Get specified object that has been produced during the processing
    // (see Process()).
 
-   if (fPlayer)
-      return fPlayer->GetOutput(name);
-   return 0;
+   return fPlayer->GetOutput(name);
 }
 
 //______________________________________________________________________________
@@ -1644,9 +1631,7 @@ TList *TProof::GetOutputList()
 {
    // Get list with all object created during processing (see Process()).
 
-   if (fPlayer)
-      return fPlayer->GetOutputList();
-   return 0;
+   return fPlayer->GetOutputList();
 }
 
 //______________________________________________________________________________
@@ -2790,13 +2775,6 @@ void TProof::AddFeedback(const char *name)
    // Add object to feedback list.
 
    PDB(kFeedback, 3) Info("AddFeedback", "Adding object \"%s\" to feedback", name);
-   if (fFeedback == 0) {
-      fFeedback = new TList;
-      fFeedback->SetOwner();
-      fFeedback->SetName("FeedbackList");
-      AddInput(fFeedback);
-   }
-
    if (fFeedback->FindObject(name) == 0) fFeedback->Add(new TObjString(name));
 }
 
@@ -2804,8 +2782,6 @@ void TProof::AddFeedback(const char *name)
 void TProof::RemoveFeedback(const char *name)
 {
    // Remove object from feedback list.
-
-   if (fFeedback == 0) return;
 
    TObject *obj = fFeedback->FindObject(name);
    if (obj != 0) {
@@ -2819,8 +2795,6 @@ void TProof::ClearFeedback()
 {
    // Clear feedback list.
 
-   if (fFeedback == 0) return;
-
    fFeedback->Delete();
 }
 
@@ -2829,7 +2803,7 @@ void TProof::ShowFeedback() const
 {
    // Show items in feedback list.
 
-   if (fFeedback == 0 || fFeedback->GetSize() == 0) {
+   if (fFeedback->GetSize() == 0) {
       Info("","no feedback requested");
       return;
    }
@@ -2979,25 +2953,14 @@ void TProof::Browse(TBrowser *b)
 {
    // Build the proof's structure in the browser.
 
-   if (fFeedback == 0) {
-      fFeedback = new TList;
-      fFeedback->SetOwner();
-      fFeedback->SetName("FeedbackList");
-      AddInput(fFeedback);
-   }
-   if (!fPlayer)
-      fPlayer = new TProofPlayerRemote(this);
-
    b->Add(fActiveSlaves, fActiveSlaves->Class(), "fActiveSlaves");
    b->Add(&fMaster, fMaster.Class(), "fMaster");
    b->Add(fFeedback, fFeedback->Class(), "fFeedback");
    b->Add(fChains, fChains->Class(), "fChains");
 
-   if (fPlayer) {
-      b->Add(fPlayer->GetInputList(), fPlayer->GetInputList()->Class(), "InputList");
-      if (fPlayer->GetOutputList())
-         b->Add(fPlayer->GetOutputList(), fPlayer->GetOutputList()->Class(), "OutputList");
-   }
+   b->Add(fPlayer->GetInputList(), fPlayer->GetInputList()->Class(), "InputList");
+   if (fPlayer->GetOutputList())
+      b->Add(fPlayer->GetOutputList(), fPlayer->GetOutputList()->Class(), "OutputList");
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.152 2005/03/04 09:29:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.153 2005/03/07 09:15:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1109,7 +1109,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    Double_t par, we, al, bl;
    Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
    TF1 *fnew1;
-   
+
    // Check validity of function
    if (!f1) {
       Error("Fit", "function may not be null pointer");
@@ -1119,20 +1119,20 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       Error("Fit", "function is zombie");
       return 0;
    }
-   
+
    npar = f1->GetNpar();
    if (npar <= 0) {
       Error("Fit", "function %s has illegal number of parameters = %d", f1->GetName(), npar);
       return 0;
    }
-   
+
    // Check that function has same dimension as graph
    if (f1->GetNdim() > 1) {
       Error("Fit", "function %s is not 1-D", f1->GetName());
       return 0;
    }
    //}
-   
+
    Double_t *arglist = new Double_t[100];
 
    // Decode string choptin and fill fitOption structure
@@ -1216,12 +1216,12 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 	 delete TVirtualFitter::GetFitter();
 	 IsSet = kFALSE;
       }
-      if (!IsSet)	
-	 TVirtualFitter::SetFitter(0);	       
+      if (!IsSet)
+	 TVirtualFitter::SetFitter(0);
    }
    TVirtualFitter *grFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
    grFitter->Clear();
-   
+
 //*-*- Get pointer to the function by searching in the list of functions in ROOT
    grFitter->SetUserFunc(f1);
    grFitter->SetFitOption(fitOption);
@@ -1237,10 +1237,10 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 
 
 //*-*- If case of a predefined function, then compute initial values of parameters
-/////// 
+///////
    if (linear && !fitOption.Bound && !fitOption.Like && !fitOption.Errors){
      grFitter->ExecuteCommand("FitGraph", 0, 0);
-     
+
    } else {
 
       //Int_t special = f1->GetNumber();
@@ -1249,7 +1249,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       else if (special == 400)      InitGaus(xmin,xmax);
       else if (special == 200)      InitExpo(xmin,xmax);
       else if (special == 299+npar) InitPolynom(xmin,xmax);
-      
+
       //*-*- Some initialisations
       if (!fitOption.Verbose) {
 	 arglist[0] = -1;
@@ -1257,7 +1257,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 	 arglist[0] = 0;
 	 grFitter->ExecuteCommand("SET NOW",   arglist,0);
       }
-      /////////////////////////////////////////////////////////      
+      /////////////////////////////////////////////////////////
       //*-*- Set error criterion for chisquare
       arglist[0] = TVirtualFitter::GetErrorDef();
       if (!fitOption.User) grFitter->SetFitMethod("GraphFitChisquare");
@@ -1271,7 +1271,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 	 delete [] arglist;
 	 return fitResult;
       }
-      
+
       //*-*- Transfer names and initial values of parameters to Minuit
       Int_t nfixed = 0;
       for (i=0;i<npar;i++) {
@@ -1287,13 +1287,13 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 	 grFitter->SetParameter(i,f1->GetParName(i),par,we,al,bl);
       }
       if(nfixed > 0)grFitter->ExecuteCommand("FIX",arglist,nfixed); // Otto
-      
+
       //*-*- Reset Print level
       if (!fitOption.Quiet) {
 	 if (fitOption.Verbose) { arglist[0] = 2; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
 	 else                   { arglist[0] = 0; grFitter->ExecuteCommand("SET PRINT", arglist,1); }
       }
-      
+
       //*-*- Compute sum of squares of errors in the bin range
       Bool_t hasErrors = kFALSE;
       Double_t ex, ey, sumw2=0;
@@ -1313,14 +1313,14 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 	 grFitter->ExecuteCommand("HESSE",arglist,0);
 	 grFitter->ExecuteCommand("MINOS",arglist,0);
       }
-      
+
       grFitter->GetStats(amin,edm,errdef,nvpar,nparx);
       f1->SetChisquare(amin);
       Int_t ndf = f1->GetNumberFitPoints()-npar+nfixed;
       f1->SetNDF(ndf);
-      
+
       //////////////////////////////////////
-      
+
       //*-*- Get return status
       char parName[50];
       for (i=0;i<npar;i++) {
@@ -4300,5 +4300,29 @@ L170:
    if (ytest <= 0) goto L130;
    if (TMath::Abs(Y)-ytest <= 0) goto L150;
    goto L160;
+}
+
+
+//______________________________________________________________________________
+Int_t TGraph::Merge(TCollection* list)
+{
+   // Adds all graphs from the collection to this graph.
+   // Returns the total number of poins in the result or -1 in case of an error.
+
+   TIter next(list);
+   while (TObject* o = next()) {
+      TGraph *g = dynamic_cast<TGraph*> (o);
+      if (!g) {
+         Error("Merge",
+             "Cannot merge - an object which doesn't inherit from TGraph found in the list");
+         return -1;
+      }
+      Double_t x, y;
+      for (Int_t i = 0 ; i < g->GetN(); i++) {
+         g->GetPoint(i, x, y);
+         SetPoint(GetN(), x, y);
+      }
+   }
+   return GetN();
 }
 

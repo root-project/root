@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.44 2005/03/04 09:06:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.45 2005/03/07 09:15:45 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -137,6 +137,7 @@ public:
         virtual Bool_t   IsEditable() const {return !TestBit(kNotEditable);}
         virtual void     LeastSquareFit(Int_t m, Double_t *a, Double_t xmin=0, Double_t xmax=0);
         virtual void     LeastSquareLinearFit(Int_t n, Double_t &a0, Double_t &a1, Int_t &ifail, Double_t xmin=0, Double_t xmax=0);
+        virtual Int_t    Merge(TCollection* list);
         virtual void     Paint(Option_t *chopt="");
         virtual void     PaintFit(TF1 *fit);
         virtual void     PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *option="");

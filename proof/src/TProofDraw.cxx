@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.10 2005/03/17 10:43:30 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.11 2005/03/17 11:39:34 brun Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@
 #include "THLimitsFinder.h"
 #include "TView.h"
 #include "TStyle.h"
-
+#include <algorithm>
 
 ClassImp(TProofDraw)
 
@@ -620,6 +620,7 @@ void TProofDrawHist::Terminate(void)
          fHistogram->SetTitle(fTreeDrawArgsParser.GetObjectTitle());
       }
    }
+   fHistogram = 0;
 }
 
 
@@ -907,6 +908,7 @@ void TProofDrawProfile::Terminate(void)
          fProfile->SetTitle(fTreeDrawArgsParser.GetObjectTitle());
       }
    }
+   fProfile = 0;
 }
 
 
@@ -1102,11 +1104,34 @@ void TProofDrawProfile2D::Terminate(void)
          fProfile->SetTitle(fTreeDrawArgsParser.GetObjectTitle());
       }
    }
+   fProfile = 0;
 }
 
 
 ClassImp(TProofDrawGraph)
 
+//______________________________________________________________________________
+void TProofDrawGraph::Init(TTree *tree)
+{
+   // See TProofDraw::Init().
+                                                                                                               
+   PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
+                                                                                                               
+   if (fTree == 0) {
+      Assert(fGraph);
+      fGraph->SetMarkerStyle(tree->GetMarkerStyle());
+      fGraph->SetMarkerColor(tree->GetMarkerColor());
+      fGraph->SetMarkerSize(tree->GetMarkerSize());
+      fGraph->SetLineColor(tree->GetLineColor());
+      fGraph->SetLineStyle(tree->GetLineStyle());
+      fGraph->SetFillColor(tree->GetFillColor());
+      fGraph->SetFillStyle(tree->GetFillStyle());
+   }
+   fTree = tree;
+   CompileVariables();
+}
+
+                                                                                                               
 //______________________________________________________________________________
 void TProofDrawGraph::SlaveBegin(TTree *tree)
 {
@@ -1118,12 +1143,12 @@ void TProofDrawGraph::SlaveBegin(TTree *tree)
    fInitialExp = fInput->FindObject("varexp")->GetTitle();
    fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
 
-   SafeDelete(fScatterPlot);
+   SafeDelete(fGraph);
    fDimension = 2;
 
-   fScatterPlot = new TProofNTuple(2);
-   fScatterPlot->SetName("PROOF_SCATTERPLOT");
-   fOutput->Add(fScatterPlot);      // release ownership
+   fGraph = new TGraph();
+   fGraph->SetName("PROOF_GRAPH");
+   fOutput->Add(fGraph);                         // release ownership
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
@@ -1135,7 +1160,7 @@ void TProofDrawGraph::DoFill(Long64_t , Double_t , const Double_t *v)
 {
    // Fills the graph with the given values.
 
-   fScatterPlot->Fill(v[1], v[0]);
+   fGraph->SetPoint(fGraph->GetN(), v[1], v[0]);
 }
 
 
@@ -1149,9 +1174,9 @@ void TProofDrawGraph::Terminate(void)
    if (!fStatus)
       return;
 
-   fScatterPlot = (TProofNTuple*) fOutput->FindObject("PROOF_SCATTERPLOT");
-   if (fScatterPlot) {
-      SetStatus((Int_t) fScatterPlot->GetEntries());
+   fGraph = dynamic_cast<TGraph*> (fOutput->FindObject("PROOF_GRAPH"));
+   if (fGraph) {
+      SetStatus((Int_t) fGraph->GetN());
       TH2F* hist;
       TObject *orig = fTreeDrawArgsParser.GetOriginal();
       if ( (hist = dynamic_cast<TH2F*> (orig)) == 0 ) {
@@ -1184,10 +1209,12 @@ void TProofDrawGraph::Terminate(void)
             hist->Reset();
       }
       if (hist->TestBit(TH1::kCanRebin) && hist->TestBit(kCanDelete)) {
-         Double_t xmin = fScatterPlot->Min(1);
-         Double_t xmax = fScatterPlot->Max(1);
-         Double_t ymin = fScatterPlot->Min(2);
-         Double_t ymax = fScatterPlot->Max(2);
+         Double_t* xArray = fGraph->GetX();
+         Double_t* yArray = fGraph->GetY();
+         Double_t xmin = *std::min_element(xArray, xArray+fGraph->GetN());
+         Double_t xmax = *std::max_element(xArray, xArray+fGraph->GetN());
+         Double_t ymin = *std::min_element(yArray, yArray+fGraph->GetN());
+         Double_t ymax = *std::max_element(yArray, yArray+fGraph->GetN());
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hist,xmin,xmax,ymin,ymax);
       }
       if (!hist->TestBit(kCanDelete)) {
@@ -1198,31 +1225,47 @@ void TProofDrawGraph::Terminate(void)
       }
       gPad->Update();
 
-      TGraph *g = new TGraph(fScatterPlot->GetEntries());
-
-      for (int i = 0; i < fScatterPlot->GetEntries(); i++)
-         g->SetPoint(i, fScatterPlot->GetX(i), fScatterPlot->GetY(i));
-
-      g->SetEditable(kFALSE);
-      g->SetBit(kCanDelete);
+      fGraph->SetEditable(kFALSE);
+      fGraph->SetBit(kCanDelete);
       // FIXME set color, marker size, etc.
 
       if (fTreeDrawArgsParser.GetShouldDraw()) {
          if (fOption == "" || strcmp(fOption, "same") == 0)
-            g->Draw("p");
+            fGraph->Draw("p");
          else
-            g->Draw(fOption);
+            fGraph->Draw(fOption);
          gPad->Update();
       }
       if (!hist->TestBit(kCanDelete)) {
-         for (int i = 0; i < fScatterPlot->GetEntries(); i++)
-            hist->Fill(fScatterPlot->GetX(i), fScatterPlot->GetY(i), 1);
+         for (int i = 0; i < fGraph->GetN(); i++) {
+            Double_t x, y;
+            fGraph->GetPoint(i, x, y);
+            hist->Fill(x, y, 1);
+         }
       }
    }
+   fGraph = 0;
 }
 
 
 ClassImp(TProofDrawPolyMarker3D)
+
+//______________________________________________________________________________
+void TProofDrawPolyMarker3D::Init(TTree *tree)
+{
+   // See TProofDraw::Init().
+                                                                                                               
+   PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
+                                                                                                               
+   if (fTree == 0) {
+      Assert(fPolyMarker3D);
+      fPolyMarker3D->SetMarkerStyle(tree->GetMarkerStyle());
+      fPolyMarker3D->SetMarkerColor(tree->GetMarkerColor());
+      fPolyMarker3D->SetMarkerSize(tree->GetMarkerSize());
+   }
+   fTree = tree;
+   CompileVariables();
+}
 
 //______________________________________________________________________________
 void TProofDrawPolyMarker3D::SlaveBegin(TTree *tree)
@@ -1236,12 +1279,11 @@ void TProofDrawPolyMarker3D::SlaveBegin(TTree *tree)
    fTreeDrawArgsParser.Parse(fInitialExp, fSelection, fOption);
    Assert(fTreeDrawArgsParser.GetDimension() == 3);
 
-   SafeDelete(fScatterPlot);
+   SafeDelete(fPolyMarker3D);
    fDimension = 3;
 
-   fScatterPlot = new TProofNTuple(3);
-   fScatterPlot->SetName("PROOF_SCATTERPLOT");
-   fOutput->Add(fScatterPlot);      // release ownership
+   fPolyMarker3D = new TPolyMarker3D();
+   fOutput->Add(fPolyMarker3D);      // release ownership
 
    PDB(kDraw,1) Info("Begin","selection: %s", fSelection.Data());
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
@@ -1253,7 +1295,7 @@ void TProofDrawPolyMarker3D::DoFill(Long64_t , Double_t , const Double_t *v)
 {
    // Fills the scatter plot with the given values.
 
-   fScatterPlot->Fill(v[2], v[1], v[0]);
+   fPolyMarker3D->SetNextPoint(v[2], v[1], v[0]);
 }
 
 
@@ -1266,10 +1308,18 @@ void TProofDrawPolyMarker3D::Terminate(void)
    TProofDraw::Terminate();
    if (!fStatus)
       return;
+   
+   fPolyMarker3D = 0;
+   TIter next(fOutput);
+   while (TObject* o = next()) {
+      if (dynamic_cast<TPolyMarker3D*> (o)) {
+         fPolyMarker3D = dynamic_cast<TPolyMarker3D*> (o);
+         break;
+      }
+   }
 
-   fScatterPlot = (TProofNTuple*) fOutput->FindObject("PROOF_SCATTERPLOT");
-   if (fScatterPlot) {
-      SetStatus((Int_t) fScatterPlot->GetEntries());
+   if (fPolyMarker3D) {
+      SetStatus((Int_t) fPolyMarker3D->Size());
       TH3F* hist;
       TObject *orig = fTreeDrawArgsParser.GetOriginal();
       if ( (hist = dynamic_cast<TH3F*> (orig)) == 0 ) {
@@ -1310,16 +1360,23 @@ void TProofDrawPolyMarker3D::Terminate(void)
             hist->Reset();
       }
 
-      Double_t rmin[3], rmax[3];
+      Float_t rmin[3], rmax[3];
 
       // FIXME take rmin and rmax from the old histogram
       if (hist->TestBit(TH1::kCanRebin) && hist->TestBit(kCanDelete)) {
-         rmin[0] = fScatterPlot->Min(1);
-         rmax[0] = fScatterPlot->Max(1);
-         rmin[1] = fScatterPlot->Min(2);
-         rmax[1] = fScatterPlot->Max(2);
-         rmin[2] = fScatterPlot->Min(3);
-         rmax[2] = fScatterPlot->Max(3);
+         rmin[0] = rmax[0] = rmin[1] = rmax[1] = rmin[2] = rmax[2] = 0;
+         if (fPolyMarker3D->Size() > 0) {
+            fPolyMarker3D->GetPoint(0, rmin[0], rmin[1], rmin[2]);
+            fPolyMarker3D->GetPoint(0, rmax[0], rmax[1], rmax[2]);
+         }
+         for (int i = 1; i < fPolyMarker3D->Size(); i++) {
+            Float_t v[3];
+            fPolyMarker3D->GetPoint(i, v[0], v[1], v[2]);
+            for (int i = 0; i < 3; i++) {
+               if (v[i] < rmin[i]) rmin[i] = v[i];
+               if (v[i] > rmax[i]) rmax[i] = v[i];
+            }
+         }
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(hist,
                            rmin[0], rmax[0], rmin[1], rmax[1], rmin[2], rmax[2]);
       }
@@ -1336,16 +1393,16 @@ void TProofDrawPolyMarker3D::Terminate(void)
          gPad->Range(-1,-1,1,1);
          new TView(rmin,rmax,1);
       }
-      TPolyMarker3D *pm3D = new TPolyMarker3D(fScatterPlot->GetEntries());
       // FIXME set marker style
-      for (int i = 0; i < fScatterPlot->GetEntries(); i++)
-         pm3D->SetPoint(i, fScatterPlot->GetX(i), fScatterPlot->GetY(i), fScatterPlot->GetZ(i));
       if (fTreeDrawArgsParser.GetShouldDraw())
-         pm3D->Draw(fOption);
+         fPolyMarker3D->Draw(fOption);
       gPad->Update();
       if (!hist->TestBit(kCanDelete)) {
-         for (int i = 0; i < fScatterPlot->GetEntries(); i++)
-            hist->Fill(fScatterPlot->GetX(i), fScatterPlot->GetY(i), fScatterPlot->GetZ(i), 1);
+         for (int i = 0; i < fPolyMarker3D->Size(); i++) {
+            Float_t x, y, z;
+            fPolyMarker3D->GetPoint(i, x, y, z);
+            hist->Fill(x, y, z, 1);
+         }
       }
    }
 }

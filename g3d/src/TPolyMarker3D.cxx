@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.21 2005/03/09 18:19:26 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.22 2005/03/11 15:02:43 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -277,7 +277,7 @@ Int_t TPolyMarker3D::Merge(TCollection *list)
 
    //first loop to count the number of entries
    TPolyMarker3D *pm;
-   Int_t npoints = 0;
+   Int_t npoints = Size();
    while ((pm = (TPolyMarker3D*)next())) {
       if (!pm->InheritsFrom(TPolyMarker3D::Class())) {
          Error("Add","Attempt to add object of class: %s to a %s",pm->ClassName(),this->ClassName());
@@ -285,20 +285,20 @@ Int_t TPolyMarker3D::Merge(TCollection *list)
       }
       npoints += pm->Size();
    }
+   Int_t currPoint = Size();
 
    //extend this polymarker to hold npoints
-   pm->SetPoint(npoints-1,0,0,0);
+   SetPoint(npoints-1,0,0,0);
 
    //merge all polymarkers
    next.Reset();
    while ((pm = (TPolyMarker3D*)next())) {
       Int_t np = pm->Size();
       Float_t *p = pm->GetP();
-      for (Int_t i=0;i<np;i++) {
-         SetPoint(i,p[3*i],p[3*i+1],p[3*i+2]);
+      for (Int_t i = 0; i < np; i++) {
+         SetPoint(currPoint++, p[3*i], p[3*i+1], p[3*i+2]);
       }
    }
-
    return npoints;
 }
 
@@ -306,22 +306,22 @@ Int_t TPolyMarker3D::Merge(TCollection *list)
 void TPolyMarker3D::Paint(Option_t * /*option*/ )
 {
    static TBuffer3D buffer(TBuffer3DTypes::kMarker);
-   
+
    buffer.ClearSectionsValid();
 
    // Section kCore
    buffer.fID           = this;
-   buffer.fColor        = GetMarkerColor();   
-   buffer.fTransparency = 0;    
+   buffer.fColor        = GetMarkerColor();
+   buffer.fTransparency = 0;
    buffer.fLocalFrame   = kFALSE;
    buffer.SetSectionsValid(TBuffer3D::kCore);
-   
+
    // We fill kCore and kRawSizes on first pass and try with viewer
    Int_t reqSections = gPad->GetViewer3D()->AddObject(buffer);
    if (reqSections == TBuffer3D::kNone) {
       return;
    }
-   
+
    if (reqSections & TBuffer3D::kRawSizes) {
       if (!buffer.SetRawSizes(Size(), 3*Size(), 1, 1, 0, 0)) {
          return;
@@ -335,9 +335,9 @@ void TPolyMarker3D::Paint(Option_t * /*option*/ )
          buffer.fPnts[i] = (Double_t)fP[i];
       }
 
-      // Transform points - we don't support local->global matrix 
+      // Transform points - we don't support local->global matrix
       // so always work in global reference frame
-      if (gGeometry) {   
+      if (gGeometry) {
          Double_t dlocal[3];
          Double_t dmaster[3];
          for (UInt_t j=0; j<buffer.NbPnts(); j++) {
@@ -359,7 +359,7 @@ void TPolyMarker3D::Paint(Option_t * /*option*/ )
       buffer.fSegs[0] = c;
 
       buffer.SetSectionsValid(TBuffer3D::kRaw);
-      
+
       TAttMarker::Modify();
    }
 
@@ -607,3 +607,18 @@ void TPolyMarker3D::Streamer(TBuffer &b)
       b.SetByteCount(R__c, kTRUE);
    }
 }
+
+//_______________________________________________________________________
+void TPolyMarker3D::GetPoint(Int_t n, Float_t &x, Float_t &y, Float_t &z) const
+{
+   // Fills the parameters x, y, z with the coordinate of the n-th point
+   // n must be between 0 and Size() - 1.
+
+   if (n < 0 || n >= Size()) return;
+   if (!fP) return;
+   x = fP[kDimension*n  ];
+   y = fP[kDimension*n+1];
+   z = fP[kDimension*n+2];
+}
+
+

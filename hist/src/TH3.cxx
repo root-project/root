@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.58 2005/01/31 22:14:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.59 2005/03/10 17:57:04 rdm Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1194,7 +1194,7 @@ Int_t TH3::Merge(TCollection *list)
    //This function computes the min/max for the axes,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
-   //Overflows and underflows are ignored.
+   //Overflows and underflows are ignored if limits are not all the same.
    //The function returns the merged number of entries if the merge is 
    //successfull, -1 otherwise.
    //
@@ -1293,7 +1293,10 @@ Int_t TH3::Merge(TCollection *list)
               newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
               newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax());
    }
-   
+
+   Bool_t canRebin=TestBit(kCanRebin);
+   ResetBit(kCanRebin); // reset, otherwise getting the under/overflow will rebin
+ 
    //merge bin contents and errors
    TIter nextin(&inlist);
    Int_t ibin, bin, binx, biny, binz, ix, iy, iz;
@@ -1302,11 +1305,17 @@ Int_t TH3::Merge(TCollection *list)
       nx   = h->GetXaxis()->GetNbins();
       ny   = h->GetYaxis()->GetNbins();
       nz   = h->GetZaxis()->GetNbins();
-      for (binz = 1; binz <= nz; binz++) {
+      for (binz = 0; binz <= nz + 1; binz++) {
+         if ((!same) && (binz == 0 || binz == nz + 1))
+            continue;            // skip overlows if merging histograms with different limits
          iz = fZaxis.FindBin(h->GetZaxis()->GetBinCenter(binz));
-         for (biny = 1; biny <= ny; biny++) {
+         for (biny = 0; biny <= ny + 1; biny++) {
+            if ((!same) && (biny == 0 || biny == ny + 1))
+               continue;
             iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
-            for (binx = 1; binx <= nx; binx++) {
+            for (binx = 0; binx <= nx + 1; binx++) {
+               if ((!same) && (binx == 0 || binx == nx + 1))
+                  continue;
                ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
                bin = binx +(nx+2)*(biny + (ny+2)*binz);
                ibin = ix +(nbix+2)*(iy + (nbiy+2)*iz);
@@ -1320,7 +1329,8 @@ Int_t TH3::Merge(TCollection *list)
          }
       }
    }
-   
+   if (canRebin) SetBit(kCanRebin);
+ 
    //copy merged stats
    PutStats(totstats);
    SetEntries(nentries);

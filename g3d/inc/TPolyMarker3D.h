@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.9 2003/04/03 13:46:50 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.10 2004/08/03 16:01:17 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -59,6 +59,7 @@ public:
    virtual Int_t     GetLastPoint() const { return fLastPoint;}
    virtual Int_t     GetN() const { return fN;}
    virtual Float_t  *GetP() const { return fP;}
+   virtual void      GetPoint(Int_t n, Float_t &x, Float_t &y, Float_t &z) const;
    Option_t         *GetOption() const {return fOption.Data();}
    virtual void      ls(Option_t *option="") const;
    virtual Int_t     Merge(TCollection *list);
