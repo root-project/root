@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.69 2004/02/17 07:52:21 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.70 2004/02/18 15:36:38 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -275,6 +275,7 @@
 #   if defined(_xlc_)
 #      define ANSICPP
 #      define R__ANSISTREAM
+#      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
 #endif
 

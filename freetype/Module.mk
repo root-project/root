@@ -24,7 +24,7 @@ endif
 ##### local rules #####
 $(FREETYPELIB): $(FREETYPELIBA)
 		cp $< $@
-		@(if [ $(ARCH) = "macosx" ]; then \
+		@(if [ $(PLATFORM) = "macosx" ]; then \
 			ranlib $@; \
 		fi)
 
