@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.102 2002/11/21 20:38:39 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.103 2002/11/29 14:45:45 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -396,6 +396,7 @@ void* TFormLeafInfo::GetLocalValuePointer(TLeaf *leaf, Int_t instance)
    } else {
       thisobj = GetObjectAddress((TLeafElement*)leaf);
    }
+   if (!thisobj) return 0;
    return GetLocalValuePointer(thisobj, instance);
 }
 
@@ -689,6 +690,7 @@ Double_t TFormLeafInfoClones::ReadValue(char *where, Int_t instance) {
       sub_instance = 0;
    }
    TClonesArray * clones = (TClonesArray*)where;
+   if (!clones) return 0;
    // Note we take advantage of having only one physically variable
    // dimension:
    char * obj = (char*)clones->UncheckedAt(index);
@@ -2291,7 +2293,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   TBranch *branch = leaf->GetBranch();
                   branch->GetEntry(readentry);
                   TClonesArray * clones;
-                  if (previnfo) clones = (TClonesArray*)previnfo->GetLocalValuePointer(leaf,0);
+                  if (maininfo) clones = (TClonesArray*)maininfo->GetLocalValuePointer(leaf,0);
                   else {
                      // we have a unsplit TClonesArray leaves
                      TClass *mother_cl;
@@ -2312,6 +2314,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 
                      clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
                   }
+                  // NOTE clones can be zero!
                   TClass * inside_cl = clones->GetClass();
                   if (1 || inside_cl) cl = inside_cl;
                   // if inside_cl is nul ... we have a problem of inconsistency :(
@@ -2660,14 +2663,32 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice,
                   // clonesArray object before being able to look into the class inside.
                   // We need to do that because we are never interested in the TClonesArray
                   // itself but only in the object inside.
+                  TBranch *branch = leafcur->GetBranch();
+                  TFormLeafInfo *leafinfo = 0;
+                  if (branch->IsA()==TBranchElement::Class()
+                      && ((TBranchElement*)branch)->GetType()==31) { 
+                     // Case of a sub branch of a TClonesArray
+                     TBranchElement *BranchEl = (TBranchElement*)branch;
+                     TStreamerInfo *info = BranchEl->GetInfo();
+                     TClass * mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
+                     TStreamerElement *element = 
+                        (TStreamerElement *)info->GetElements()->At(BranchEl->GetID());
+                     leafinfo = new TFormLeafInfoClones(mother_cl, 0, element, kTRUE); 
+                  }
+
                   Int_t clones_offset;
                   cl->GetStreamerInfo()->GetStreamerElement(curelem->GetName(),clones_offset);
                   TFormLeafInfo* clonesinfo = new TFormLeafInfo(cl, clones_offset, curelem);
-                  TBranch *branch = leafcur->GetBranch();
+                  if (leafinfo) leafinfo->fNext = clonesinfo;
+                  else leafinfo = clonesinfo;
                   branch->GetEntry(readentry);
-                  TClonesArray * clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leafcur,0);
-                  if (!clones) break;
-                  delete clonesinfo;
+                  TClonesArray * clones = (TClonesArray*)leafinfo->GetLocalValuePointer(leafcur,0);                  
+                  delete leafinfo;
+                  // If TClonesArray object does not exist we have no information, so let go
+                  // on.  This is a weakish test since the TClonesArray object might exist in
+                  // the next entry ... In other word, we ONLY rely on the information available
+                  // in entry #0.
+                  if (!clones) continue;  
                   TClass *sub_cl = clones->GetClass();
 
                   // Now that we finally have the inside class, let's query it.
