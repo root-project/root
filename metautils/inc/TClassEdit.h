@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.7 2004/03/12 21:45:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.8 2004/04/15 06:41:49 brun Exp $
 // Author: Victor Perev   10/04/2003
 //         Philippe Canal 05/2004
 
@@ -34,7 +34,7 @@ namespace TClassEdit {
    } EModType;
 
    typedef enum {
-      kNone     = 0,
+      kNotSTL   = 0,
       kVector   = 1,
       kList     = 2,
       kDeque    = 3,

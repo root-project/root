@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.170 2004/06/22 21:55:59 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.171 2004/06/24 06:17:58 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1026,7 +1026,7 @@ int IsSTLContainer(G__DataMemberInfo &m)
    // Is this an STL container?
 
    const char *s = m.Type()->TrueName();
-   if (!s) return kNone;
+   if (!s) return kNotSTL;
 
    string type(s);
    int k = TClassEdit::IsSTLCont(type.c_str(),1);
@@ -1042,7 +1042,7 @@ int IsSTLContainer(G__BaseClassInfo &m)
    // Is this an STL container?
 
    const char *s = m.Name();
-   if (!s) return kNone;
+   if (!s) return kNotSTL;
 
    string type(s);
    int k = TClassEdit::IsSTLCont(type.c_str(),1);
