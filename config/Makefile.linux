@@ -47,4 +47,5 @@ F77FLAGS      =
 F77LIBS       = -lg2c -lnsl
 
 # Extras
+XMLLIBEXTRA   = -lpthread
 
