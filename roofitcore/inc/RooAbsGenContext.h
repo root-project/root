@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsGenContext.rdl,v 1.1 2001/10/12 01:48:43 verkerke Exp $
+ *    File: $Id: RooAbsGenContext.rdl,v 1.2 2001/10/13 00:38:52 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -39,6 +39,10 @@ public:
   }
 
 protected:
+
+  friend class RooProdGenContext ;
+  friend class RooAddGenContext ;
+  friend class RooSimGenContext ;
 
   virtual void initGenerator(const RooArgSet &theEvent);
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining) = 0;

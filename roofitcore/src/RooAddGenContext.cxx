@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddGenContext.cc,v 1.1 2001/10/12 01:48:44 verkerke Exp $
+ *    File: $Id: RooAddGenContext.cc,v 1.2 2001/10/13 00:38:53 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -21,6 +21,7 @@
 #include "RooFitCore/RooAddGenContext.hh"
 #include "RooFitCore/RooAddPdf.hh"
 #include "RooFitCore/RooDataSet.hh"
+#include "RooFitCore/RooRandom.hh"
 
 ClassImp(RooAddGenContext)
 ;
@@ -32,10 +33,41 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   // Constructor. Build an array of generator contexts for each product component PDF
   model._pdfIter->Reset() ;
   RooAbsPdf* pdf ;
+  _nComp = model._pdfList.getSize() ;
+  _coefThresh = new Double_t[_nComp+1] ;
+
+  Int_t i=1 ;
+  _coefThresh[0] = 0 ;
   while(pdf=(RooAbsPdf*)model._pdfIter->Next()) {
     RooAbsGenContext* cx = pdf->genContext(vars,prototype,verbose) ;
     _gcList.Add(cx) ;
+
+    // Store the fraction of this component
+    Bool_t accum(kTRUE) ;
+    if (model._allExtendable) {
+      // All PDFs extendable: coefficient is expected number of events
+      _coefThresh[i] = pdf->expectedEvents() ;
+    } else {
+      // N or N-1 coefficients
+      RooAbsReal* coef = (RooAbsReal*) model._coefList.at(i-1) ;
+      _coefThresh[i] = coef ? coef->getVal() : 1.0 ;
+      // If last coef is missing, skip accumulation and keep coefSum at 1.0 
+      accum = coef?kTRUE:kFALSE ;
+    }
+
+    // Accumulate coefficient
+    if (i>0 && accum) {
+      _coefThresh[i] += _coefThresh[i-1] ;
+    }
+    i++ ;
   }  
+  
+  // Normalize coefThresh array
+  if (_coefThresh[_nComp]!=1.0) {
+    for (i=1 ; i<_nComp ; i++) {
+      _coefThresh[i] /= _coefThresh[_nComp] ;
+    }      
+  }
 }
 
 
@@ -43,94 +75,36 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
 RooAddGenContext::~RooAddGenContext()
 {
   // Destructor. Delete all owned subgenerator contexts
+  delete[] _coefThresh ;
   _gcList.Delete() ;
 }
 
 
+
 void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
 {
+  // Forward initGenerator call to all components
+  TIterator* iter = _gcList.MakeIterator() ;
+  RooAbsGenContext* gc ;
+  while(gc=(RooAbsGenContext*)iter->Next()){
+    gc->initGenerator(theEvent) ;
+  }
+  delete iter ;
 }
+
+
 
 void RooAddGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
-}
-
-RooDataSet* RooAddGenContext::__generate(Int_t nEvents) const
-{
-  // Generate dependents of each PDF product component independently
-  // and merge results into a single data set
-
-  if(!isValid()) {
-    cout << ClassName() << "::" << GetName() << ": context is not valid" << endl;
-    return 0;
+  // Throw a random number to determin which component to generate
+  Double_t rand = RooRandom::uniform() ;
+  Int_t i=0 ;
+  for (i=0 ; i<_nComp ; i++) {
+    if (rand>_coefThresh[i] && rand<_coefThresh[i+1]) {
+      ((RooAbsGenContext*)_gcList.At(i))->generateEvent(theEvent,remaining) ;
+      return ;
+    }
   }
-
-  // Loop over the component generators
-  TIterator* iter = _gcList.MakeIterator() ;
-  TIterator* cIter = _pdf->_coefList.createIterator() ;
-  
-
-  RooAbsGenContext* gc ;
-  Int_t nEvtSum(0) ;
-  RooDataSet* sumData(0) ;
-  while(gc=(RooAbsGenContext*)iter->Next()) {
-    
-    if (_verbose) {
-      cout << "RooProdGenContext::generate: generating component PDF " << gc->GetName() << endl ;
-    }
-
-    // Calculate number of events for this component
-    Int_t nEvtComp(0) ;
-    if (nEvents>0) {
-      // Regular mode Nevt = Ntot*coef
-      RooAbsReal* coef = (RooAbsReal*) cIter->Next() ;
-      if (coef) {
-	nEvtComp = Int_t(nEvents*coef->getVal()+0.5) ;
-	nEvtSum += nEvtComp ;
-      } else {	
-	// Last component: take exact remainder of number of events
-	nEvtComp = nEvents - nEvtSum ;	
-
-	// If remainder is zero or negative due to rounding, 
-	// skip generation of last component altogether.
-	if (nEvtComp<=0) {
-	  if (_verbose) {
-	    cout << "RooProdGenContext::generate(" << GetName() << ") number of events to generate"
-		 << " for last component is " << nEvtComp << ", skipping last component" << endl ;
-	  }
-	  continue ;
-	}
-      }
-    } else {
-      // Extended mode: Nevt is calculated by component
-      nEvtComp = 0 ;
-    }
-
-    // Generate component 
-    RooDataSet *data = gc->generate(nEvtComp) ;
-
-    // Check if generation was successfull
-    if (!data) {
-      cout << "RooProdGenContext::generate(" << GetName() 
-	   << ") unable to generator component " << gc->GetName() << endl ;
-      delete data ;
-      delete sumData ;
-      return 0 ;
-    }
-
-    // Append component data to output data set
-    if (sumData) {
-      sumData->append(*data) ;
-      delete data ;
-    } else {
-      sumData = data ;
-    }
-
-  }
-  delete iter ;
-  delete cIter ;
-
-  return sumData ;
 }
 
 

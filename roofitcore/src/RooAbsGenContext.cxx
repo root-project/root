@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsGenContext.cc,v 1.1 2001/10/12 01:48:43 verkerke Exp $
+ *    File: $Id: RooAbsGenContext.cc,v 1.2 2001/10/13 00:38:52 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -44,7 +44,11 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   }
 
   // Remember the default number of events to generate when no prototype dataset is provided.
-  _expectedEvents= (Int_t)(model.expectedEvents() + 0.5);
+  if (model.canBeExtended()) {
+    _expectedEvents= (Int_t)(model.expectedEvents() + 0.5);
+  } else {
+    _expectedEvents= 0 ;
+  }
 }
 
 
