@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.98 2005/01/12 07:50:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.99 2005/01/25 17:05:16 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1074,7 +1074,7 @@ Long64_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 // will be named "merged_1.root", "merged_2.root", etc.
 // fgMaxTreeSize may be modified via the static function TTree::SetMaxTreeSize.
 //
-// IMPORTANT Note 2: The input file is automatically closed and deleted.
+// IMPORTANT Note 2: The output file is automatically closed and deleted.
 // This is required because in general the automatic file overflow described
 // above may happen during the merge.
 // If only the current file is produced (the file passed as first argument),
