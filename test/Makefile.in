@@ -459,6 +459,10 @@ GUITESTO      = guitest.$(ObjSuf)
 GUITESTS      = guitest.$(SrcSuf)
 GUITEST       = guitest$(ExeSuf)
 
+GUIVIEWERO    = guiviewer.$(ObjSuf) guiviewerDict.$(ObjSuf)
+GUIVIEWERS    = guiviewer.$(SrcSuf) guiviewerDict.$(SrcSuf)
+GUIVIEWER     = guiviewer$(ExeSuf)
+
 HELLOO        = Hello.$(ObjSuf) HelloDict.$(ObjSuf)
 HELLOS        = Hello.$(SrcSuf) HelloDict.$(SrcSuf)
 HELLOSO       = Hello.$(DllSuf)
@@ -492,8 +496,8 @@ PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
                 $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH)
 ifneq ($(ARCH),win32)
-OBJS         += $(GUITESTO) $(TETRISO)
-PROGRAMS     += $(GUITEST) $(TETRISSO)
+OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
+PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
 endif
 
 #------------------------------------------------------------------------------
@@ -579,6 +583,10 @@ $(VLAZY):       $(VLAZYO)
 		@echo "$@ done"
 
 $(GUITEST):     $(GUITESTO)
+		$(LD) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(GUIVIEWER):   $(GUIVIEWERO)
 		$(LD) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
@@ -713,28 +721,33 @@ Event.$(ObjSuf): Event.h
 MainEvent.$(ObjSuf): Event.h
 
 EventDict.$(SrcSuf): Event.h EventLinkDef.h
-	@echo "Generating dictionary EventDict..."
-	@rootcint -f EventDict.$(SrcSuf) -c Event.h EventLinkDef.h
+	@echo "Generating dictionary $@..."
+	@rootcint -f $@ -c $^
 
 Hello.$(ObjSuf): Hello.h
 HelloDict.$(SrcSuf): Hello.h
-	@echo "Generating dictionary HelloDict..."
-	@rootcint -f HelloDict.$(SrcSuf) -c Hello.h
+	@echo "Generating dictionary $@..."
+	@rootcint -f $@ -c $^
 
 Aclock.$(ObjSuf): Aclock.h
 AclockDict.$(SrcSuf): Aclock.h
-	@echo "Generating dictionary AclockDict..."
-	@rootcint -f AclockDict.$(SrcSuf) -c Aclock.h
+	@echo "Generating dictionary $@..."
+	@rootcint -f $@ -c $^
 
 Tetris.$(ObjSuf): Tetris.h
 TetrisDict.$(SrcSuf): Tetris.h
-	@echo "Generating dictionary TetrisDict..."
-	@rootcint -f TetrisDict.$(SrcSuf) -c Tetris.h
+	@echo "Generating dictionary $@..."
+	@rootcint -f $@ -c $^
 
 TBench.$(ObjSuf): TBench.h
-TBenchDict.$(SrcSuf): TBench.h
-	@echo "Generating dictionary TBenchDict..."
-	@rootcint -f TBenchDict.$(SrcSuf) -c TBench.h benchLinkDef.h
+TBenchDict.$(SrcSuf): TBench.h benchLinkDef.h
+	@echo "Generating dictionary $@..."
+	@rootcint -f $@ -c $^
+
+guiviewer.$(ObjSuf): guiviewer.h
+guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
+	@echo "Generating dictionary $@..."
+	@rootcint -f $@ -c $^
 
 .$(SrcSuf).$(ObjSuf):
 	$(CXX) $(CXXFLAGS) -c $<
