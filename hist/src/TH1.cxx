@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.9 2000/06/29 08:37:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.10 2000/06/30 16:00:15 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1389,10 +1389,8 @@ void TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Axis_t xxm
          TIter next(fFunctions, kIterBackward);
          TObject *obj;
          while ((obj = next())) {
-            if (obj->InheritsFrom(TF1::Class())) ldel->Add(obj);
+            if (obj->InheritsFrom(TF1::Class())) ldel->Remove(obj);
          }
-         ldel->Delete();
-         delete ldel;
       }
       if (GetDimension() < 2) {
          fnew1 = new TF1();
