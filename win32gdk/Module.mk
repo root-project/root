@@ -101,8 +101,10 @@ clean::         clean-win32gdk
 distclean-win32gdk: clean-win32gdk
 		@rm -f $(WIN32GDKDEP) $(WIN32GDKDS) $(WIN32GDKDH) \
 		   $(WIN32GDKLIB) $(GDKLIBS) $(GDKDLLS)
+ifeq ($(PLATFORM),win32)
 		-@(cd $(GDKDIRS); unset MAKEFLAGS; \
 		nmake -nologo -f makefile.msc clean)
+endif
 
 distclean::     distclean-win32gdk
 
