@@ -255,7 +255,7 @@ utils:  $(UTILS_LIBS) $(ROOTMAP)
 %.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
-ifeq ($(HAS_PYTHON),yes))
+ifeq ($(HAS_PYTHON),yes)
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) python $< > $@ 2>&1
 endif
