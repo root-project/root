@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.96 2001/10/16 16:29:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.97 2001/10/17 08:24:51 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -450,8 +450,8 @@ void TStreamerInfo::BuildOld()
          if (alength == 0) alength = 1;
          Int_t asize = element->GetSize();
          //align to pointer boundaries (important on 64 bit machines)
-         //align only the non-basic data types
-         if (element->GetType() > 30 && offset%sp != 0) offset = offset - offset%sp + sp;
+         //align also the non-basic data types (required on IRIX!!)
+         if (offset%sp != 0) offset = offset - offset%sp + sp;
          element->SetOffset(offset);
          offset += asize;
       } else if (dm && dm->IsPersistent()) {
