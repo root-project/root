@@ -88,6 +88,8 @@ void MyEvent::Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0)
    fAliveParticles = 1;
    fMatter = 0;
 
+   fDetector.ClearELoss();
+
    TVector3 location(0.0,fDetector.GetMinY(),0.0);
    TVector3 momentum(0.0,E_0,0.0);
 

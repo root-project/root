@@ -74,6 +74,7 @@ public:
     void        SetdT(Int_t idx, Double_t val) { fdT[idx] = val; }
     void        SetTheta0(Int_t idx, Double_t val) { fTheta0[idx] = val; }
     void        AddELoss(Double_t val) { fTotalELoss += val; }
+    void        ClearELoss() { fTotalELoss = 0.0; }
 
     ClassDef(MyDetector,1)   // Detector structure
 
