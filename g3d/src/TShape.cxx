@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -95,7 +95,7 @@ Int_t TShape::ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py)
   SetPoints(points);
   Float_t dpoint2, x1, y1, xndc[3];
   for (Int_t i = 0; i < numPoints; i++) {
-     gGeometry->Local2Master(&points[3*i],&points[3*i]);
+     if (gGeometry) gGeometry->Local2Master(&points[3*i],&points[3*i]);
      view->WCtoNDC(&points[3*i], xndc);
      x1     = gPad->XtoAbsPixel(xndc[0]);
      y1     = gPad->YtoAbsPixel(xndc[1]);
@@ -129,9 +129,11 @@ void TShape::PaintShape(X3DBuffer *buff, Bool_t rangeView)
     if (!buff) return;
 
     Float_t *point = &(buff->points[0]);
-    for (Int_t j = 0; j < buff->numPoints; j++)
+    if (gGeometry) {
+       for (Int_t j = 0; j < buff->numPoints; j++)
            gGeometry->Local2Master(&point[3*j],&point[3*j]);
-
+    }
+    
     Float_t x0, y0, z0, x1, y1, z1;
     const Int_t kExpandView = 2;
     int i0;
@@ -176,9 +178,14 @@ void TShape::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TShape.
 
-   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TShape::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TNamed::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
@@ -191,16 +198,10 @@ void TShape::Streamer(TBuffer &R__b)
       R__b >> fVisibility;
       R__b >> fMaterial;
       R__b.CheckByteCount(R__s, R__c, TShape::IsA());
+      //====end of old versions
+      
    } else {
-      R__c = R__b.WriteVersion(TShape::IsA(), kTRUE);
-      TNamed::Streamer(R__b);
-      TAttLine::Streamer(R__b);
-      TAttFill::Streamer(R__b);
-      TAtt3D::Streamer(R__b);
-      R__b << fNumber;
-      R__b << fVisibility;
-      R__b << fMaterial;
-      R__b.SetByteCount(R__c, kTRUE);
+      TShape::Class()->WriteBuffer(R__b,this);
    }
 }
 
