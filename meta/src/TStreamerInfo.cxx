@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.82 2001/07/10 19:58:45 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.83 2001/08/07 06:45:02 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1709,6 +1709,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
 
          // Class*   derived from TObject
          case kObjectP: { TObject **obj = (TObject**)(pointer+fOffset[i]);
+                          //delete the object or collection
+                          if (*obj) (*obj)->Delete();
                           b >> *obj;
                           break;
                         }
@@ -2084,6 +2086,8 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
             for (Int_t k=0;k<nc;k++) {
                pointer = (char*)clones->UncheckedAt(k);
                TObject **obj = (TObject**)(pointer+offset);
+               //delete the object or collection
+               if (*obj) (*obj)->Delete();
                b >> *obj;
             }
             break;}
