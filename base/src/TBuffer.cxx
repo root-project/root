@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.24 2002/02/25 12:36:52 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.25 2002/02/25 18:05:02 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -140,7 +140,7 @@ TBuffer::~TBuffer()
       delete [] fBuffer;
    }
    fBuffer = 0;
-   fParent  = 0;
+   fParent = 0;
 
    delete fMap;
 }
@@ -316,16 +316,15 @@ void TBuffer::Expand(Int_t newsize)
 //______________________________________________________________________________
 TObject *TBuffer::GetParent() const
 {
-   // return pointer to parent of this buffer
+   // Return pointer to parent of this buffer.
 
    return fParent;
 }
 
-
 //______________________________________________________________________________
 void TBuffer::SetParent(TObject *parent)
 {
-   // Set parent owning this buffer
+   // Set parent owning this buffer.
 
    fParent = parent;
 }
