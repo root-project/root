@@ -241,8 +241,10 @@ class vector {
      reverse_copy(vector::iterator first,vector::iterator last,
                   vector::iterator result);
   // forward iter
+#if (G__GNUC>=3)
   friend void rotate(vector::iterator first,vector::iterator mid,
                      vector::iterator last);
+#endif
   // forward iter
   friend vector::iterator 
     rotate_copy(vector::iterator first,vector::iterator mid,

@@ -594,6 +594,11 @@ char *statement;
 #ifndef G__OLDIMPLEMENTATION410
   if(strcmp(statement,"#line")==0) {
     G__setline(statement,c,&iout);
+#ifndef G__OLDIMPLEMENTATION1592
+    /* restore statement[0] as we found it because the
+       callers might look at it! */
+    statement[0]='#';
+#endif
     return(1);
   }
 #endif

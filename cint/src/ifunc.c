@@ -7119,7 +7119,14 @@ asm_ifunc_start:   /* loop compilation execution label */
     /**************************************************************
      * destroy malloced local memory area
      **************************************************************/
+#ifndef G__OLDIMPLEMENTATION1593
+    int store_security_error=G__security_error;
+    G__security_error = 0;
+#endif
     G__destroy(&G_local,G__LOCAL_VAR) ;
+#ifndef G__OLDIMPLEMENTATION1593
+    G__security_error=store_security_error;
+#endif
   }
 #else /* G__ASM_WHOLEFUNC */
   /**************************************************************
