@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.99 2002/08/05 17:20:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.100 2002/09/12 16:30:32 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -3463,6 +3463,7 @@ void TTreeFormula::UpdateFormulaLeaves()
    Int_t nleaves = fLeafNames.GetEntriesFast();
    for (Int_t i=0;i<nleaves;i++) {
       if (!fTree) continue;
+      if (!fLeafNames[i]) continue;
       sprintf(names,"%s/%s",fLeafNames[i]->GetTitle(),fLeafNames[i]->GetName());
       TLeaf *leaf = fTree->GetLeaf(names);
       fLeaves[i] = leaf;
