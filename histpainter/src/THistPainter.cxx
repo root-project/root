@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.18 2000/09/29 07:39:48 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.19 2000/10/25 14:33:26 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2036,7 +2036,7 @@ void THistPainter::PaintErrors()
 //          || ((xi3-s2x) < xmin && (xi3+s2x) > xmin)
 //          || ((xi3-s2x) < xmax && (xi3+s2x) > xmax))
 //         drawmarker = kFALSE;
-          if (ey1 <= 0) drawmarker = kFALSE;
+          if (Hoption.Error != 0 && ey1 <= 0) drawmarker = kFALSE;
       }
       if (!symbolsize || !errormarker) drawmarker = kFALSE;
 
