@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.7 2004/08/16 10:00:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.8 2004/08/19 12:06:36 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -15,53 +15,64 @@
 #include <utility>
 
 #include <TVirtualViewer3D.h>
-#include <TObjArray.h>
+#include <RQ_OBJECT.h>
 #include <TGFrame.h>
 #include <TPoint.h>
-#include <TList.h>
 
-class TGLWidget;
+#include "TGLRender.h"
+
+class TGLRenderArea;
+class TContextMenu;
+class TGLSelection;
+class TGPopupMenu;
+class TGLCamera;
+class TGLRender;
+class TBuffer3D;
+class TGMenuBar;
 class TGCanvas;
 class TArcBall;
-class TGMenuBar;
-class TGPopupMenu;
 
 class TViewerOpenGL : public TVirtualViewer3D, public TGMainFrame {
 
+RQ_OBJECT("TViewerOpenGL")
+
 private:
    typedef std::pair<Double_t, Double_t> PDD_t;
+   enum EMode{kNav, kPick, kMat};
+   enum EViews{kXOY, kXOZ, kYOZ, kPERSP};
 
    TGCanvas      *fCanvasWindow;
-   TGLWidget     *fCanvasContainer;
+   TGLRenderArea *fCanvasContainer;
    TGLayoutHints *fCanvasLayout;
-   TGLayoutHints *fMenuBarLayout;
-   TGLayoutHints *fMenuBarHelpLayout;
-   TGMenuBar     *fMenuBar;
-   TGPopupMenu   *fHelpMenu;
-   TList          fGLObjects;
-
-   Double_t       fXc;
-   Double_t       fYc;
-   Double_t       fZc;
-
-   PDD_t          fRangeX;
-   PDD_t          fRangeY;
-   PDD_t          fRangeZ;
-   Double_t       fRad;
-
-   ULong_t        fCtx;
-   Window_t       fGLWin;
-
-   Bool_t         fPressed;
-   mutable Int_t  fDList;
-   TArcBall      *fArcBall;
    
-   Double_t fFrP[3];
-   Double_t fZoom;
+   TGMenuBar     *fMenuBar;
+   TGPopupMenu   *fFileMenu, *fModeMenu, *fViewMenu, *fHelpMenu;
+   TGLayoutHints *fMenuBarLayout;
+   TGLayoutHints *fMenuBarItemLayout;
+   TGLayoutHints *fMenuBarHelpLayout;
 
-   UInt_t fSelected;
-   UInt_t fNbShapes;
-   TObjArray fGLBoxes;
+   TContextMenu  *fContextMenu;
+
+   TGLCamera     *fCamera[4];
+   Double_t      fViewVolume[4];
+   Double_t      fZoom[4];
+   Int_t         fActiveViewport[4];
+   UInt_t        fFakeHeight;
+
+   Double_t      fXc, fYc, fZc;
+   PDD_t         fRangeX, fRangeY, fRangeZ;
+   Double_t      fRad;
+
+   Bool_t        fPressed;
+   TArcBall      *fArcBall;
+
+   UInt_t        fSelected;
+   UInt_t        fNbShapes;
+   TGLRender     fRender;
+   TPoint        fLastPos;
+
+   EViews        fConf;
+   EMode         fMode;
 
 public:
    TViewerOpenGL(TVirtualPad * pad);
@@ -78,24 +89,21 @@ public:
 
 private:
    void CreateViewer();
-   void InitGLWindow();
    void DrawObjects()const;
-   void CreateContext();
-   void DeleteContext();
    void MakeCurrent()const;
    void SwapBuffers()const;
    void Show();
-   TObject *UpdateRange(const class TBuffer3D * buf);
-   void BuildGLList()const;
-   void TestSelection(Event_t *);
+   TGLSelection *UpdateRange(const TBuffer3D *buff);
+   TGLSceneObject *TestSelection(Event_t *);
+   void CalculateViewports();
+   void CalculateViewvolumes();
+   void CreateCameras();
    // final overriders from TGMainFrame
    void CloseWindow();
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-
    //non-copyable class
    TViewerOpenGL(const TViewerOpenGL &);
    TViewerOpenGL & operator = (const TViewerOpenGL &);
-
 
    ClassDef(TViewerOpenGL, 0)
 };

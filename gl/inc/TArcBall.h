@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.2 2004/08/09 23:44:12 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.3 2004/08/10 14:11:40 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -13,11 +13,10 @@
 #define ROOT_TArcBall
 
 #ifndef ROOT_Rtypes
-#include "Rtypes.h"
+#include <Rtypes.h>
 #endif
 
 class TPoint;
-
 
 class TArcBall {
 private:
@@ -33,7 +32,7 @@ private:
    TArcBall & operator = (const TArcBall &);
    void ResetMatrices();
 protected:
-   void MapToSphere(const class TPoint & NewPt, Double_t * NewVec)const;
+   void MapToSphere(const TPoint &NewPt, Double_t *NewVec)const;
 public:
    TArcBall(UInt_t NewWidth, UInt_t NewHeight);
 
@@ -46,7 +45,10 @@ public:
    void Click(const TPoint &NewPt);
    //Mouse drag, calculate rotation
    void Drag(const TPoint &NewPt);
-   Double_t *GetRotMatrix();
+   const Double_t *GetRotMatrix()const
+   {
+      return fTransform;
+   }
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.18 2004/08/19 12:06:36 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.19 2004/08/19 12:36:58 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 #include "TColor.h"
 #include "TError.h"
 #include "TPoints3DABC.h"
+#include "TGLRender.h"
 
 #include <GL/gl.h>
 
@@ -435,7 +436,7 @@ void TGLKernel::DeleteGLLists(Int_t ilist, Int_t range)
 Int_t TGLKernel::CreateGLLists(Int_t range)
 {
    //
-
+   
    return glGenLists(range);
 }
 
@@ -1442,4 +1443,29 @@ void TGLKernel::DrawFaceSet(const Double_t * pnts, const Int_t * pols, const Dou
          glEnd();
       }
    }
+}
+
+void TGLKernel::TraverseGraph(TGLRender *graph)
+{
+   graph->Traverse();
+}
+
+TGLSceneObject *TGLKernel::SelectObject(TGLRender *graph, Int_t x, Int_t y, Int_t cam)
+{
+   return graph->SelectObject(x, y, cam);
+}
+
+void TGLKernel::MoveSelected(TGLRender *render, Double_t x, Double_t y, Double_t z)
+{
+   render->MoveSelected(x, y, z);
+}
+
+void TGLKernel::EndMovement(TGLRender *render)
+{
+   render->EndMovement();
+}
+
+void TGLKernel::Invalidate(TGLRender *render)
+{
+   render->Invalidate();
 }

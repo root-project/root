@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.3 2004/08/16 10:00:45 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.4 2004/08/19 12:06:36 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -114,3 +114,8 @@ RETURN_METHOD_ARG0(VirtualGL, Int_t, ExitSelectionMode)
 VOID_METHOD_ARG4(VirtualGL, EnterSelectionMode, UInt_t *, buff, Int_t, size, Event_t *, ev, Int_t *, viewport, 1)
 VOID_METHOD_ARG1(VirtualGL, GLLoadName, UInt_t, name, 1)
 VOID_METHOD_ARG5(VirtualGL, DrawFaceSet, const Double_t *, pnts, const Int_t *, pols, const Double_t *, normals, const Float_t *, mat, UInt_t, size, 1)
+VOID_METHOD_ARG1(VirtualGL, TraverseGraph, TGLRender *, render, 1)
+RETURN_METHOD_ARG4(VirtualGL, TGLSceneObject *, SelectObject, TGLRender *, render, Int_t, x, Int_t, y, Int_t, camera)
+VOID_METHOD_ARG4(VirtualGL, MoveSelected, TGLRender *, render, Double_t, x, Double_t, y, Double_t, z, 1)
+VOID_METHOD_ARG1(VirtualGL, EndMovement, TGLRender *, render, 1)
+VOID_METHOD_ARG1(VirtualGL, Invalidate, TGLRender *, render, 1)
