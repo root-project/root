@@ -20,7 +20,7 @@ sepDictLibs: run.log
 	$(CMDECHO) diff -b -w run.good.output run.log
 
 run.log: run.C libmaster.$(DllSuf) libslave1.$(DllSuf) libslave2.$(DllSuf) 
-	$(CMDECHO)root.exe -q -l -b run.C 2>&1 | grep -v tagnum | $(RemoveLeadingDirs) | sed -e 's?FILE:[A-z]:.*[/\]?FILE:?' > run.log
+	$(CMDECHO)root.exe -q -l -b run.C 2>&1 | grep -v tagnum | $(RemoveLeadingDirs) | sed -e 's?FILE:[A-Za-z]:.*[/\]?FILE:?' > run.log
 
 all: sepDictLibs
 

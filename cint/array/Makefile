@@ -28,7 +28,7 @@ endif
 array1test.log: array1.C
 
 array1test.short.log : array1test.log
-	$(CMDECHO) cat array1test.log | sed -e 's/0x[^ ]*//g' -e 's/[A-z]:.*array1.C/array1.C/g' > $@
+	$(CMDECHO) cat array1test.log | sed -e 's/0x[^ ]*//g' -e 's/[A-Za-z]:.*array1.C/array1.C/g' > $@
 
 array1test: array1test.short.log
 	$(TestDiff)
