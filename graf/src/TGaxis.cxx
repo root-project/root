@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name$:$Id$
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -516,6 +516,12 @@ void TGaxis::PaintAxis(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
 
    timeformat = fTimeFormat;
 
+// correct for time offset not being integer
+   if (OptionTime) {
+      wmin += gStyle->GetTimeOffset() - (int)(gStyle->GetTimeOffset());
+      wmax += gStyle->GetTimeOffset() - (int)(gStyle->GetTimeOffset());
+   }
+   
 //*-*-              Determine number of divisions 1, 2 and 3
    N     = ndiv;
    N3A   = N/10000;
@@ -1134,7 +1140,7 @@ L110:
 //*-*-              Generate the time labels
 
                if (OptionTime) {
-                  timed = Wlabel + gStyle->GetTimeOffset();
+                  timed = Wlabel + (int)(gStyle->GetTimeOffset());
                   timelabel = (time_t)((Long_t)(timed));
                   utctis = gmtime(&timelabel);
                   strftime(LABEL,36,timeformat.Data(),utctis);
