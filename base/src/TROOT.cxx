@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.91 2003/04/11 11:48:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.92 2003/06/04 20:17:37 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -785,6 +785,9 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
        strstr(name, "deque<")    || strstr(name, "multimap<") ||
        strstr(name, "multiset<") || strstr(name, "::" ))
       return 0;   //reject STL containers
+
+   if (!strcmp(name, "long long")||!strcmp(name,"unsigned long long")) 
+      return 0; // reject long longs
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
    if (gInterpreter->CheckClassInfo(name)) {
