@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.13 2003/08/06 20:25:05 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.14 2003/08/20 14:14:21 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -431,6 +431,8 @@ public:
 
    static inline TVirtualX *Instance() { return fgRealObject; }
    static TVirtualX *Proxy();
+   static void Lock();
+   static void Unlock();
 
    ClassDef(TGWin32,0)  //Interface to Win32
 };

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.3 2003/08/11 11:45:43 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.4 2003/08/11 14:55:32 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 #include "TGWin32ProxyBase.h"
 #include "TRefCnt.h"
 #include "TList.h"
-
+#include "TGWin32.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 class TGWin32CallBackObject: public TObject
@@ -28,14 +28,11 @@ public:
    ~TGWin32CallBackObject() { if (fParam) delete fParam; }
 };
 
-
 ////////////////////////////////////////////////////////////////////////////////
 class TGWin32ProxyBasePrivate {
 public:
 
    HANDLE               fEvent;   // event used for syncronization
-   LPCRITICAL_SECTION   fCritSec; // critical section
-
    TGWin32ProxyBasePrivate();
    ~TGWin32ProxyBasePrivate();
 };
@@ -46,20 +43,12 @@ TGWin32ProxyBasePrivate::TGWin32ProxyBasePrivate()
    // ctor
 
    fEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
-   fCritSec = new CRITICAL_SECTION;
-   ::InitializeCriticalSection(fCritSec);
 }
 
 //______________________________________________________________________________
 TGWin32ProxyBasePrivate::~TGWin32ProxyBasePrivate()
 {
    // dtor
-
-   if (fCritSec) {
-      ::DeleteCriticalSection(fCritSec);
-      delete fCritSec;
-   }
-   fCritSec = 0;
 
    if (fEvent) ::CloseHandle(fEvent);
    fEvent = 0;
@@ -97,19 +86,19 @@ TGWin32ProxyBase::~TGWin32ProxyBase()
 }
 
 //______________________________________________________________________________
-void TGWin32ProxyBase::Lock() const
+void TGWin32ProxyBase::Lock()
 {
    // enter critical section
 
-   ::EnterCriticalSection(fPimpl->fCritSec);
+   TGWin32::Lock();
 }
 
 //______________________________________________________________________________
-void TGWin32ProxyBase::Unlock() const
+void TGWin32ProxyBase::Unlock()
 {
    // leave critical section
 
-   ::LeaveCriticalSection(fPimpl->fCritSec);
+   TGWin32::Unlock();
 }
 
 //______________________________________________________________________________

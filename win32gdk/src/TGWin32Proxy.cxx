@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32Proxy.cxx,v 1.8 2003/08/21 10:25:15 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32Proxy.cxx,v 1.9 2003/08/21 10:37:58 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -279,26 +279,32 @@ RETURN_METHOD_ARG2(TGWin32,Int_t,SetTextFont,char*,fontname,TVirtualX::ETextSetM
 RETURN_METHOD_ARG3(TGWin32,Pixmap_t,CreatePixmap,Drawable_t,wid,UInt_t,w,UInt_t,h)
 RETURN_METHOD_ARG1(TGWin32,ULong_t,GetPixel,Color_t,cindex)
 
-RETURN_METHOD_ARG3(TGWin32,Bool_t,CheckEvent,Window_t,id,EGEventType,type,Event_t&,ev)
-VOID_METHOD_ARG2(TGWin32,SendEvent,Window_t,id,Event_t*,ev,1)
-VOID_METHOD_ARG1(TGWin32,NextEvent,Event_t&,event,1)
-//RETURN_METHOD_ARG0(TGWin32,Int_t,EventsPending)
-
 //VOID_METHOD_ARG1(TGWin32,CreateOpenGLContext,Int_t,wid,1)
 //VOID_METHOD_ARG1(TGWin32,DeleteOpenGLContext,Int_t,wid,1)
 //VOID_METHOD_ARG1(TGWin32,RemoveWindow,ULong_t,qwid,1)
 //RETURN_METHOD_ARG1(TGWin32,ExecCommand,UInt_t,TGWin32Command*,code)
 //RETURN_METHOD_ARG3(TGWin32,Int_t,AddWindow,ULong_t,qwid,UInt_t,w,UInt_t,h)
 
+//RETURN_METHOD_ARG3(TGWin32,Bool_t,CheckEvent,Window_t,id,EGEventType,type,Event_t&,ev)
+//VOID_METHOD_ARG2(TGWin32,SendEvent,Window_t,id,Event_t*,ev,1)
+//VOID_METHOD_ARG1(TGWin32,NextEvent,Event_t&,event,1)
+//RETURN_METHOD_ARG0(TGWin32,Int_t,EventsPending)
 
 //////////////////////// some non-standard methods /////////////////////////////
-/*
 //______________________________________________________________________________
 Bool_t TGWin32Proxy::CheckEvent(Window_t id,EGEventType type,Event_t& ev)
 {
    //
 
    return TGWin32::Instance()->CheckEvent(id,type,ev);
+}
+
+//______________________________________________________________________________
+void TGWin32Proxy::SendEvent(Window_t id,Event_t* ev)
+{
+   //
+
+   TGWin32::Instance()->SendEvent(id,ev);
 }
 
 //______________________________________________________________________________
@@ -310,50 +316,14 @@ void TGWin32Proxy::NextEvent(Event_t& event)
 }
 
 //______________________________________________________________________________
-void TGWin32Proxy::SendEvent(Window_t id,Event_t* ev)
-{
-   //
-
-   TGWin32::Instance()->SendEvent(id,ev);
-}
-*/
-
-
-//______________________________________________________________________________
-void p2TGWin32ProxyEventsPending(void* in)
-{
-   //
-
-  struct tmp {
-      Int_t ret;
-   };
-   tmp *p = (tmp*)in;
-   p->ret = TGWin32::Instance()->EventsPending();
-}
-
 Int_t TGWin32Proxy::EventsPending()
 {
    //
 
-   DEBUG_PROFILE_PROXY_START(EventsPending)
    Int_t ret;
-   struct tmp {
-      Int_t ret;
-   };
-   fParam = new tmp;
-   fCallBack = &p2TGWin32ProxyEventsPending;
-   Bool_t batch = ForwardCallBack(1);
-   ret  = ((tmp*)fParam)->ret;
-   if (!batch) delete fParam;
-   if (gDebugProxy) {
-      if (debug) {
-         double dt = GetMilliSeconds() - start;
-         i++; total++;
-         t += dt;
-         total_time += dt;
-         //if (gDebugValue==kDebugTrace) printf(#method " %d\n",i);
-      }
-   }
+   TGWin32::Lock();
+   ret = (Int_t)gdk_event_queue_find_first();
+   TGWin32::Unlock();
    return ret;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.24 2003/08/06 20:25:05 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.25 2003/08/20 14:14:22 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -716,6 +716,7 @@ class TGWin32MainThread {
 public:
    void     *fHandle;      // handle of GUI thread
    DWORD    fId;           // id of GUI thread
+   LPCRITICAL_SECTION  fCritSec; // critical section
 
    TGWin32MainThread();
    ~TGWin32MainThread();
@@ -736,15 +737,21 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
    ::PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
 
    while (!endLoop) {
-      erret = ::GetMessage(&msg, NULL, TGWin32ProxyBase::fgPostMessageId, 
-                                       TGWin32ProxyBase::fgPostMessageId);
+      erret = ::GetMessage(&msg, NULL, NULL, NULL);
       if (erret <= 0) endLoop = kTRUE;
 
-      if (msg.wParam) {
-         TGWin32ProxyBase *proxy = (TGWin32ProxyBase*)msg.wParam;
-         proxy->ExecuteCallBack(msg.wParam);
+      if (msg.message==TGWin32ProxyBase::fgPostMessageId) {
+         if (msg.wParam) {
+            TGWin32ProxyBase *proxy = (TGWin32ProxyBase*)msg.wParam;
+            proxy->ExecuteCallBack(msg.wParam);
+         } else {
+            endLoop = kTRUE;
+         }
       } else {
-         endLoop = kTRUE;
+         TGWin32::Lock();
+         TranslateMessage (&msg);
+         DispatchMessage (&msg);
+         TGWin32::Unlock();
       }
    }
 
@@ -767,12 +774,20 @@ TGWin32MainThread::TGWin32MainThread()
    // dtor
 
    fHandle = ::CreateThread( NULL, 0, &MessageProcessingLoop, 0, 0, &fId );
+   fCritSec = new CRITICAL_SECTION;
+   ::InitializeCriticalSection(fCritSec);
 }
 
 //______________________________________________________________________________
 TGWin32MainThread::~TGWin32MainThread()
 {
    //
+
+   if (fCritSec) {
+      ::LeaveCriticalSection(fCritSec);
+      ::DeleteCriticalSection(fCritSec);
+   }
+   fCritSec = 0;
 
    if(fHandle) ::CloseHandle(fHandle);
    fHandle = 0;
@@ -897,6 +912,22 @@ TVirtualX *TGWin32::Proxy()
    gListOfProxies->Add(proxy);
 
    return proxy;
+}
+
+//______________________________________________________________________________
+void  TGWin32::Lock()
+{
+   //
+
+  ::EnterCriticalSection(gMainThread->fCritSec);
+}
+
+//______________________________________________________________________________
+void TGWin32::Unlock()
+{
+   //
+
+   ::LeaveCriticalSection(gMainThread->fCritSec);
 }
 
 //______________________________________________________________________________
@@ -5302,11 +5333,49 @@ void TGWin32::FreeColor(Colormap_t cmap, ULong_t pixel)
 }
 
 //______________________________________________________________________________
+Bool_t TGWin32::CheckEvent(Window_t id, EGEventType type, Event_t & ev)
+{
+   // Check if there is for window "id" an event of type "type". If there
+   // is fill in the event structure and return true. If no such event
+   // return false.
+
+   Event_t tev;
+   GdkEvent xev;
+
+   Lock();
+   tev.fType = type;
+   MapEvent(tev, xev, kTRUE);
+   Bool_t r = gdk_check_typed_window_event((GdkWindow *) id, xev.type, &xev);
+
+   if (r) MapEvent(ev, xev, kFALSE);
+   Unlock();
+   return r ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
+void TGWin32::SendEvent(Window_t id, Event_t * ev)
+{
+   // Send event ev to window id.
+
+   if (!ev) return;
+
+   Lock();
+   GdkEvent xev;
+   MapEvent(*ev, xev, kTRUE);
+   gdk_event_put(&xev);
+   Unlock();
+}
+
+//______________________________________________________________________________
 Int_t TGWin32::EventsPending()
 {
     // Returns number of pending events.
-
-   return (Int_t)gdk_events_pending(); //gdk_event_queue_find_first();
+   
+   Int_t ret;
+   Lock();
+   ret = (Int_t)gdk_event_queue_find_first();
+   Unlock();
+   return ret;
 }
 
 //______________________________________________________________________________
@@ -5316,7 +5385,8 @@ void TGWin32::NextEvent(Event_t & event)
    // and removes event from queue. Not all of the event fields are valid
    // for each event type, except fType and fWindow.
 
-   GdkEvent *xev = gdk_event_get();
+   Lock();
+   GdkEvent *xev = gdk_event_unqueue();
 
    // fill in Event_t
    event.fType = kOtherEvent;   // bb add
@@ -5325,8 +5395,8 @@ void TGWin32::NextEvent(Event_t & event)
    }
 
    MapEvent(event, *xev, kFALSE);
-   fXEvent = (Handle_t)gdk_event_copy(xev);
    gdk_event_free (xev);
+   Unlock();
 }
 
 //______________________________________________________________________________
@@ -5897,37 +5967,6 @@ void TGWin32::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
    // Clear a window area to the bakcground color.
 
    gdk_window_clear_area((GdkWindow *) id, x, y, w, h);
-}
-
-//______________________________________________________________________________
-Bool_t TGWin32::CheckEvent(Window_t id, EGEventType type, Event_t & ev)
-{
-   // Check if there is for window "id" an event of type "type". If there
-   // is fill in the event structure and return true. If no such event
-   // return false.
-
-   Event_t tev;
-   GdkEvent xev;
-
-   tev.fType = type;
-   MapEvent(tev, xev, kTRUE);
-   Bool_t r = gdk_check_typed_window_event((GdkWindow *) id, xev.type, &xev);
-
-   if (r) MapEvent(ev, xev, kFALSE);
-
-   return r ? kTRUE : kFALSE;
-}
-
-//______________________________________________________________________________
-void TGWin32::SendEvent(Window_t id, Event_t * ev)
-{
-   // Send event ev to window id.
-
-   if (!ev) return;
-
-   GdkEvent xev;
-   MapEvent(*ev, xev, kTRUE);
-   gdk_event_put(&xev);
 }
 
 //______________________________________________________________________________

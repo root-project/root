@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyDefs.h,v 1.4 2003/08/11 14:55:32 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyDefs.h,v 1.5 2003/08/12 09:53:47 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 
@@ -80,9 +80,9 @@ double total_time = 0;
 void _NAME2_(klass,Proxy)::method()\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
-   Lock();\
+   TGWin32::Lock();\
    klass::Instance()->method();\
-   Unlock();\
+   TGWin32::Unlock();\
    DEBUG_PROFILE_PROXY_STOP(method)\
 }
 
@@ -91,9 +91,9 @@ void _NAME2_(klass,Proxy)::method()\
 void _NAME2_(klass,Proxy)::method(type1 par1)\
 {\
    DEBUG_PROFILE_PROXY_START(method)\
-   Lock();\
+   TGWin32::Lock();\
    klass::Instance()->method(par1);\
-   Unlock();\
+   TGWin32::Unlock();\
    DEBUG_PROFILE_PROXY_STOP(method)\
 }
 
@@ -458,9 +458,9 @@ type _NAME2_(klass,Proxy)::method(type1 par1,type2 par2,type3 par3,type4 par4,ty
 type _NAME2_(klass,Proxy)::method() const\
 {\
    type ret;\
-   Lock();\
+   TGWin32::Lock();\
    ret = klass::Instance()->method();\
-   Unlock();\
+   TGWin32::Unlock();\
    return ret;\
 }
 
