@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.33 2003/05/10 15:52:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.34 2003/06/14 04:56:27 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1329,16 +1329,19 @@ TH1 *TH3::Project3D(Option_t *option) const
   Bool_t computeErrors = kFALSE;
   if (opt.Contains("e")) {h->Sumw2(); computeErrors = kTRUE;}
 
-// Fill the projected histogram
+// Fill the projected histogram taking into accounts underflow/overflows
   Float_t cont,e,e1;
   Double_t entries  = 0;
   Double_t newerror = 0;
-  for (Int_t ixbin=ixmin;ixbin<=ixmax;ixbin++){
+  for (Int_t ixbin=0;ixbin<=1+fXaxis.GetNbins();ixbin++){
      Int_t ix = ixbin-ixmin+1;
-     for (Int_t iybin=iymin;iybin<=iymax;iybin++){
+     if (ix < 0) ix=0; if (ix > nx+1) ix = nx+1;
+     for (Int_t iybin=0;iybin<=1+fYaxis.GetNbins();iybin++){
         Int_t iy = iybin-iymin+1;
-        for (Int_t izbin=izmin;izbin<=izmax;izbin++){
+        if (iy < 0) iy=0; if (iy > ny+1) iy = ny+1;
+        for (Int_t izbin=0;izbin<=1+fZaxis.GetNbins();izbin++){
            Int_t iz = izbin-izmin+1;
+           if (iz < 0) iz=0; if (iz > nz+1) iz = nz+1;
            Int_t bin = GetBin(ixbin,iybin,izbin);
            cont = GetBinContent(bin);
            switch (pcase) {
