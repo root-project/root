@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.7 2000/12/26 14:26:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.8 2001/02/21 11:50:43 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -25,7 +25,7 @@ ClassImp(TText)
 //
 //   TText is the base class for several text objects.
 //   See TAttText for a list of text attributes or fonts,
-//   and also for a discussion on text spped and font quality.
+//   and also for a discussion on text speed and font quality.
 //
 //  By default, the text is drawn in the pad coordinates system.
 //  One can draw in NDC coordinates [0,1] if the function SetNDC
