@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.25 2004/03/20 17:29:43 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.26 2004/03/22 16:13:24 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -33,6 +33,9 @@
 #include "Riostream.h"
 #include "TFile.h"
 #include "TMatrixD.h"
+#include "TMatrixDSym.h"
+#include "TMatrixDLazy.h"
+#include "TVectorD.h"
 #include "TArrayD.h"
 
 #include "TDecompLU.h"

@@ -8,6 +8,8 @@
 #include "TLegend.h"
 
 #include "TMatrixD.h"
+#include "TMatrixDSym.h"
+#include "TVectorD.h"
 #include "TQpProbDens.h"
 #include "TGondzioSolver.h"
 

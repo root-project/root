@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.4 2004/04/08 17:58:32 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDEigen.h,v 1.5 2004/05/12 10:39:29 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -22,6 +22,9 @@
 
 #ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
+#endif
+#ifndef ROOT_TVectorD
+#include "TVectorD.h"
 #endif
 
 class TMatrixDEigen

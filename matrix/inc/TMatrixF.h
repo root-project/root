@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.11 2004/05/18 14:16:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.h,v 1.12 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -23,6 +23,9 @@
 #ifndef ROOT_TMatrixFBase
 #include "TMatrixFBase.h"
 #endif
+#ifndef ROOT_TMatrixFUtils
+#include "TMatrixFUtils.h"
+#endif
 
 #ifdef CBLAS
 #include <vecLib/vBLAS.h>
@@ -30,6 +33,9 @@
 #endif
 
 class TMatrixD;
+class TMatrixFSym;
+class TMatrixFLazy;
+
 class TMatrixF : public TMatrixFBase {
 
 protected:

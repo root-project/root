@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.69 2004/07/20 12:30:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.70 2004/07/20 15:59:24 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -18,6 +18,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrixD.h"
+#include "TMatrixDSym.h"
+#include "TMatrixF.h"
+#include "TMatrixDLazy.h"
 #include "TMatrixDCramerInv.h"
 #include "TDecompLU.h"
 #include "TMatrixDEigen.h"

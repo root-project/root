@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.14 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.15 2004/06/22 19:57:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -68,8 +68,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TMatrixDSparse.h"
 #include "Riostream.h"
+#include "TMatrixDSparse.h"
+#include "TMatrixD.h"
 
 ClassImp(TMatrixDSparse)
 

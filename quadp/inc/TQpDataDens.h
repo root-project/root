@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.h,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.h,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -65,6 +65,9 @@
 
 #ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
+#endif
+#ifndef ROOT_TMatrixDSym
+#include "TMatrixDSym.h"
 #endif
 
 //////////////////////////////////////////////////////////////////////////

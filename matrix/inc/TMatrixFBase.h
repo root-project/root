@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.14 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.15 2004/06/22 19:57:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -43,9 +43,10 @@
 #include "TMatrixDBase.h"
 #endif
 
-class TMatrixDBase;
+class TVectorF;
 class TElementActionF;
 class TElementPosActionF;
+
 class TMatrixFBase : public TObject {
 
 private:
@@ -195,21 +196,5 @@ Bool_t VerifyMatrixValue   (const TMatrixFBase &m, Float_t val,
                             Int_t verbose=1,Float_t maxDevAllow=DBL_EPSILON);
 Bool_t VerifyMatrixIdentity(const TMatrixFBase &m1,const TMatrixFBase &m2,
                             Int_t verbose=1,Float_t maxDevAllow=DBL_EPSILON);
-
-#ifndef ROOT_TMatrixFUtils
-#include "TMatrixFUtils.h"
-#endif
-#ifndef ROOT_TMatrixFLazy
-#include "TMatrixFLazy.h"
-#endif
-#ifndef ROOT_TMatrixFSym
-#include "TMatrixFSym.h"
-#endif
-#ifndef ROOT_TMatrixF
-#include "TMatrixF.h"
-#endif
-#ifndef ROOT_TVectorF
-#include "TVectorF.h"
-#endif
 
 #endif

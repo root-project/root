@@ -97,6 +97,11 @@
 #include <TGraph.h>
 
 #include "TMatrixD.h"
+#include "TMatrixDSym.h"
+#include "TMatrixDSparse.h"
+#include "TMatrixDLazy.h"
+#include "TMatrixDUtils.h"
+#include "TVectorD.h"
 #include "TDecompLU.h"
 #include "TDecompChol.h"
 #include "TDecompQRH.h"

@@ -1,5 +1,6 @@
 #include "Riostream.h"
 #include "TMatrixD.h"
+#include "TMatrixDLazy.h"
 #include "TVectorD.h"
 #include "TDecompLU.h"
 #include "TDecompSVD.h"

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.13 2004/06/13 14:53:15 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.14 2004/07/12 20:00:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -193,8 +193,8 @@ void TDecompLU::SetMatrix(const TMatrixD &a)
   if (fNIndex != a.GetNcols()) {
     fNIndex = a.GetNcols();
     delete [] fIndex;
-    memset(fIndex,0,fNIndex*sizeof(Int_t));
     fIndex = new Int_t[fNIndex];
+    memset(fIndex,0,fNIndex*sizeof(Int_t));
   }
 
   fRowLwb = a.GetRowLwb();

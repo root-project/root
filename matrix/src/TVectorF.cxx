@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.24 2004/07/20 12:30:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.25 2004/07/20 15:59:24 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TVectorF.h"
+#include "TVectorD.h"
 
 ClassImp(TVectorF)
 

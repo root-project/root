@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.13 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.14 2004/06/22 19:57:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -22,8 +22,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TMatrixFSym.h"
+#include "TMatrixF.h"
+#include "TMatrixDSym.h"
+#include "TMatrixFLazy.h"
 #include "TDecompLU.h"
 #include "TMatrixDSymEigen.h"
+#include "TVectorF.h"
 
 ClassImp(TMatrixFSym)
 

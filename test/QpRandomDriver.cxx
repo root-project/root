@@ -23,10 +23,19 @@ int main(int argc,char *argv[])
     return 1;
   }
 
+  Int_t nnzQ = (Int_t) .20*(n1*n1);
+  Int_t nnzA = (Int_t) .15*(m1*n1);
+  Int_t nnzC = (Int_t) .10*(m2*n1);
+
+  if (nnzQ < 3*n1) nnzQ = 3*n1;
+  if (nnzA < 3*m1) nnzA = 3*m1;
+  if (nnzC < 3*m2) nnzC = 2*m2;
+
   TQpProbDens *qp = new TQpProbDens(n1,m1,m2);
   TQpDataDens *prob;
   TQpVar *soln;
   qp->MakeRandomData(prob,soln,0,0,0);
+//  qp->MakeRandomData(prob,soln,nnzQ,nnzA,nnzC);
   TQpVar      *vars  = qp->MakeVariables(prob);
   TQpResidual *resid = qp->MakeResiduals(prob);
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.cxx,v 1.5 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.cxx,v 1.6 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -28,7 +28,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TMatrixFBase.h"
+#include "TMatrixFUtils.h"
+#include "TMatrixF.h"
+#include "TMatrixFSym.h"
+#include "TVectorF.h"
 
 //______________________________________________________________________________
 TMatrixFRow_const::TMatrixFRow_const(const TMatrixF &matrix,Int_t row)

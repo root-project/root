@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.22 2004/05/19 15:47:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.23 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -30,7 +30,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TMatrixDBase.h"
+#include "TMatrixDUtils.h"
+#include "TMatrixD.h"
+#include "TMatrixDSym.h"
+#include "TMatrixDSparse.h"
+#include "TVectorD.h"
+
 
 //______________________________________________________________________________
 TMatrixDRow_const::TMatrixDRow_const(const TMatrixD &matrix,Int_t row)

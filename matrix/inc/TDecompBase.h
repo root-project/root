@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.10 2004/07/12 20:00:41 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompBase.h,v 1.11 2004/07/22 17:07:47 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -25,6 +25,12 @@
 
 #ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
+#endif
+#ifndef ROOT_TVectorD
+#include "TMatrixDUtils.h"
+#endif
+#ifndef ROOT_TVectorD
+#include "TVectorD.h"
 #endif
 
 class TDecompBase : public TObject

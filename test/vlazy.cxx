@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.7 2002/10/23 20:47:47 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.8 2004/01/25 20:33:32 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //
@@ -12,6 +12,7 @@
 
 #include "TStopwatch.h"
 #include "TMatrix.h"
+#include "TMatrixFLazy.h"
 #include "Riostream.h"
 
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.12 2004/05/18 14:21:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.13 2004/06/21 15:53:12 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -27,8 +27,12 @@
 #ifndef ROOT_TMatrixFBase
 #include "TMatrixFBase.h"
 #endif
+#ifndef ROOT_TMatrixFUtils
+#include "TMatrixFUtils.h"
+#endif
 
 class TMatrixF;
+class TMatrixFSymLazy;
 class TVectorF;
 
 class TMatrixFSym : public TMatrixFBase {

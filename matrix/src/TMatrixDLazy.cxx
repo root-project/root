@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDLazy.cxx,v 1.3 2004/01/26 20:03:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDLazy.cxx,v 1.4 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -20,7 +20,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TMatrixDBase.h"
+#include "TMatrixD.h"
+#include "TMatrixDSym.h"
+#include "TMatrixDLazy.h"
 
 ClassImp(TMatrixDLazy)
 ClassImp(TMatrixDSymLazy)
