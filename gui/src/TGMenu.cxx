@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.30 2004/03/18 14:22:03 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.31 2004/03/22 15:39:43 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -140,7 +140,7 @@ void TGMenuBar::AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l,
 
    if ((keycode = t->GetHotKeyCode()) != 0) {
       const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
-      main->BindKey(this, keycode, kKeyMod1Mask);
+      main->BindKey(this, keycode, kAnyModifier);
    }
 }
 
@@ -383,7 +383,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
 
    TGMenuTitle *target = 0;
 
-   if ((event->fType == kGKeyPress) && (event->fState == kKeyMod1Mask)) {
+   if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
       TGFrameElement *el;
       TIter next(fList);
       while ((el = (TGFrameElement *) next())) {
