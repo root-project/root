@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.9 2003/05/08 14:41:48 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.10 2003/05/13 14:59:36 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -917,9 +917,8 @@ void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
     if (fmax > funmax) funmax = fmax + 1;
 
 //*-*-          F I N D   A N D   D R A W   S U B P O L Y G O N S
-
-    f2 = fFunLevel[0];
-    for (ilev = 2; ilev <= nl+1; ++ilev) {
+    f2 = funmin;
+    for (ilev = 1; ilev <= nl+1; ++ilev) {
 //*-*-         S E T   L E V E L   L I M I T S
 	f1 = f2;
 	if (ilev == nl + 1) f2 = funmax;
@@ -940,11 +939,15 @@ void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
 	    x[i - 1] = p3[i*3 - 3];
 	    y[i - 1] = p3[i*3 - 2];
 	}
-	icol = fColorLevel[ilev - 2];
-	SetFillColor(icol);
-	SetFillStyle(1001);
-        TAttFill::Modify();
-	gPad->PaintFillArea(k, x, y);
+     if (ilev==1) {
+         icol=gPad->GetFillColor();
+     }else{
+         icol = fColorLevel[ilev - 2];
+	}
+     SetFillColor(icol);
+     SetFillStyle(1001);
+     TAttFill::Modify();
+     gPad->PaintFillArea(k, x, y);
     }
 }
 
