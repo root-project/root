@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.49 2004/07/30 19:09:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.50 2004/08/02 08:52:53 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -193,11 +193,13 @@ namespace TMath {
    Int_t     MinElement(Long64_t n, const Int_t *a);
    Float_t   MinElement(Long64_t n, const Float_t *a);
    Double_t  MinElement(Long64_t n, const Double_t *a);
+   Long_t    MinElement(Long64_t n, const Long_t *a);
    Long64_t  MinElement(Long64_t n, const Long64_t *a);
    Short_t   MaxElement(Long64_t n, const Short_t *a);
    Int_t     MaxElement(Long64_t n, const Int_t *a);
    Float_t   MaxElement(Long64_t n, const Float_t *a);
    Double_t  MaxElement(Long64_t n, const Double_t *a);
+   Long_t    MaxElement(Long64_t n, const Long_t *a);
    Long64_t  MaxElement(Long64_t n, const Long64_t *a);
 
    // Locate Min, Max element number in an array
@@ -205,11 +207,13 @@ namespace TMath {
    Long64_t  LocMin(Long64_t n, const Int_t *a);
    Long64_t  LocMin(Long64_t n, const Float_t *a);
    Long64_t  LocMin(Long64_t n, const Double_t *a);
+   Long64_t  LocMin(Long64_t n, const Long_t *a);
    Long64_t  LocMin(Long64_t n, const Long64_t *a);
    Long64_t  LocMax(Long64_t n, const Short_t *a);
    Long64_t  LocMax(Long64_t n, const Int_t *a);
    Long64_t  LocMax(Long64_t n, const Float_t *a);
    Long64_t  LocMax(Long64_t n, const Double_t *a);
+   Long64_t  LocMax(Long64_t n, const Long_t *a);
    Long64_t  LocMax(Long64_t n, const Long64_t *a);
 
    //Mean, Geometric Mean, Median, RMS
@@ -217,17 +221,20 @@ namespace TMath {
    Double_t  Mean(Long64_t n, const Int_t *a,   const Double_t *w=0);
    Double_t  Mean(Long64_t n, const Float_t *a, const Double_t *w=0);
    Double_t  Mean(Long64_t n, const Double_t *a,const Double_t *w=0);
+   Double_t  Mean(Long64_t n, const Long_t *a,  const Double_t *w=0);
    Double_t  Mean(Long64_t n, const Long64_t *a,const Double_t *w=0);
    Double_t  GeomMean(Long64_t n, const Short_t *a);
    Double_t  GeomMean(Long64_t n, const Int_t *a);
    Double_t  GeomMean(Long64_t n, const Float_t *a);
    Double_t  GeomMean(Long64_t n, const Double_t *a);
+   Double_t  GeomMean(Long64_t n, const Long_t *a);
    Double_t  GeomMean(Long64_t n, const Long64_t *a);
 
    Double_t  RMS(Long64_t n, const Short_t *a);
    Double_t  RMS(Long64_t n, const Int_t *a);
    Double_t  RMS(Long64_t n, const Float_t *a);
    Double_t  RMS(Long64_t n, const Double_t *a);
+   Double_t  RMS(Long64_t n, const Long_t *a);
    Double_t  RMS(Long64_t n, const Long64_t *a);
 
    template <class Element, class Index, class Size>  Double_t MedianImp(Size n, const Element *a, const Double_t *w=0, Index *work=0);
@@ -235,6 +242,7 @@ namespace TMath {
    Double_t  Median(Long64_t n, const Int_t *a,    const Double_t *w=0, Long64_t *work=0);
    Double_t  Median(Long64_t n, const Float_t *a,  const Double_t *w=0, Long64_t *work=0);
    Double_t  Median(Long64_t n, const Double_t *a, const Double_t *w=0, Long64_t *work=0);
+   Double_t  Median(Long64_t n, const Long_t *a,   const Double_t *w=0, Long64_t *work=0);
    Double_t  Median(Long64_t n, const Long64_t *a, const Double_t *w=0, Long64_t *work=0);
 
    //k-th order statistic
@@ -244,6 +252,7 @@ namespace TMath {
    Int_t     KOrdStat(Long64_t n, const Int_t *a,    Long64_t k, Long64_t *work=0);
    Float_t   KOrdStat(Long64_t n, const Float_t *a,  Long64_t k, Long64_t *work=0);
    Double_t  KOrdStat(Long64_t n, const Double_t *a, Long64_t k, Long64_t *work=0);
+   Long64_t  KOrdStat(Long64_t n, const Long_t *a,   Long64_t k, Long64_t *work=0);
    Long64_t  KOrdStat(Long64_t n, const Long64_t *a, Long64_t k, Long64_t *work=0);
 
    // Range
@@ -262,6 +271,8 @@ namespace TMath {
    Long64_t BinarySearch(Long64_t n, const Float_t **array,  Float_t value);
    Long64_t BinarySearch(Long64_t n, const Double_t *array,  Double_t value);
    Long64_t BinarySearch(Long64_t n, const Double_t **array, Double_t value);
+   Long64_t BinarySearch(Long64_t n, const Long_t   *array,  Long_t value);
+   Long64_t BinarySearch(Long64_t n, const Long_t   **array, Long_t value);
    Long64_t BinarySearch(Long64_t n, const Long64_t *array,  Long64_t value);
    Long64_t BinarySearch(Long64_t n, const Long64_t **array, Long64_t value);
 
@@ -280,11 +291,13 @@ namespace TMath {
    void Sort(Int_t n,    const Int_t *a,    Int_t *index,    Bool_t down=kTRUE);
    void Sort(Int_t n,    const Float_t *a,  Int_t *index,    Bool_t down=kTRUE);
    void Sort(Int_t n,    const Double_t *a, Int_t *index,    Bool_t down=kTRUE);
+   void Sort(Int_t n,    const Long_t *a,   Int_t *index,    Bool_t down=kTRUE);
    void Sort(Int_t n,    const Long64_t *a, Int_t *index,    Bool_t down=kTRUE);
    void Sort(Long64_t n, const Short_t *a,  Long64_t *index, Bool_t down=kTRUE);
    void Sort(Long64_t n, const Int_t *a,    Long64_t *index, Bool_t down=kTRUE);
    void Sort(Long64_t n, const Float_t *a,  Long64_t *index, Bool_t down=kTRUE);
    void Sort(Long64_t n, const Double_t *a, Long64_t *index, Bool_t down=kTRUE);
+   void Sort(Long64_t n, const Long_t *a,   Long64_t *index, Bool_t down=kTRUE);
    void Sort(Long64_t n, const Long64_t *a, Long64_t *index, Bool_t down=kTRUE);
    void BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2);
    void BubbleLow (Int_t Narr, Double_t *arr1, Int_t *arr2);

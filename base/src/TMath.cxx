@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.77 2004/07/31 16:26:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.78 2004/08/02 08:52:53 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1190,6 +1190,13 @@ Double_t TMath::MinElement(Long64_t n, const Double_t *a)
 }
 
 //______________________________________________________________________________
+Long_t TMath::MinElement(Long64_t n, const Long_t *a)
+{
+   // Return minimum of array a of length n.
+   return *min_element(a,a+n);
+}
+
+//______________________________________________________________________________
 Long64_t TMath::MinElement(Long64_t n, const Long64_t *a)
 {
    // Return minimum of array a of length n.
@@ -1219,6 +1226,13 @@ Float_t TMath::MaxElement(Long64_t n, const Float_t *a)
 
 //______________________________________________________________________________
 Double_t TMath::MaxElement(Long64_t n, const Double_t *a)
+{
+   // Return maximum of array a of length n.
+   return *max_element(a,a+n);
+}
+
+//______________________________________________________________________________
+Long_t TMath::MaxElement(Long64_t n, const Long_t *a)
 {
    // Return maximum of array a of length n.
    return *max_element(a,a+n);
@@ -1295,6 +1309,24 @@ Long64_t TMath::LocMin(Long64_t n, const Double_t *a)
    Double_t xmin = a[0];
    Long64_t loc = 0;
    for  (Long64_t i = 1; i < n; i++) {
+      if (xmin > a[i])  {
+         xmin = a[i];
+         loc = i;
+      }
+   }
+   return loc;
+}
+
+//______________________________________________________________________________
+Long64_t TMath::LocMin(Long64_t n, const Long_t *a)
+{
+   // Return index of array with the minimum element.
+   // If more than one element is minimum returns first found.
+
+   if  (n <= 0 || !a) return -1;
+   Long_t xmin = a[0];
+   Long64_t loc = 0;
+   for  (Int_t i = 1; i < n; i++) {
       if (xmin > a[i])  {
          xmin = a[i];
          loc = i;
@@ -1401,6 +1433,24 @@ Long64_t TMath::LocMax(Long64_t n, const Long64_t *a)
 
    if  (n <= 0 || !a) return -1;
    Long64_t xmax = a[0];
+   Long64_t loc = 0;
+   for  (Long64_t i = 1; i < n; i++) {
+      if (xmax < a[i])  {
+         xmax = a[i];
+         loc = i;
+      }
+   }
+   return loc;
+}
+
+//______________________________________________________________________________
+Long64_t TMath::LocMax(Long64_t n, const Long_t *a)
+{
+   // Return index of array with the maximum element.
+   // If more than one element is maximum returns first found.
+
+   if  (n <= 0 || !a) return -1;
+   Long_t xmax = a[0];
    Long64_t loc = 0;
    for  (Long64_t i = 1; i < n; i++) {
       if (xmax < a[i])  {
@@ -1536,6 +1586,37 @@ Double_t TMath::Mean(Long64_t n, const Double_t *a, const Double_t *w)
 }
 
 //______________________________________________________________________________
+Double_t TMath::Mean(Long64_t n, const Long_t *a, const Double_t *w)
+{
+   // Return the weighted mean of an array a with length n.
+
+   if (n <= 0 || !a) return 0;
+
+   Double_t sum = 0;
+   Double_t sumw = 0;
+   if (w) {
+     for (Long64_t i = 0; i < n; i++) {
+       if (w[i] < 0) {
+         ::Error("Mean","w[%d] = %.4e < 0 ?!",i,w[i]);
+         return 0;
+       }
+       sum  += w[i]*a[i];
+       sumw += w[i];
+     }
+     if (sumw <= 0) {
+       ::Error("Mean","sum of weights == 0 ?!");
+       return 0;
+     }
+   } else {
+     sumw = n;
+     for (Long64_t i = 0; i < n; i++)
+       sum += a[i];
+   }
+
+   return sum/sumw;
+}
+
+//______________________________________________________________________________
 Double_t TMath::Mean(Long64_t n, const Long64_t *a, const Double_t *w)
 {
    // Return the weighted mean of an array a with length n.
@@ -1640,6 +1721,24 @@ Double_t TMath::GeomMean(Long64_t n, const Double_t *a)
 
 //______________________________________________________________________________
 Double_t TMath::GeomMean(Long64_t n, const Long64_t *a)
+{
+   // Return the geometric mean of an array a with length n.
+   // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
+
+   if (n <= 0 || !a) return 0;
+
+   Double_t logsum = 0.;
+   for (Long64_t i = 0; i < n; i++) {
+     if (a[i] == 0) return 0.;
+     Double_t absa = (Double_t) TMath::Abs(a[i]);
+     logsum += TMath::Log(absa);
+   }
+
+   return TMath::Exp(logsum/n);
+}
+
+//______________________________________________________________________________
+Double_t TMath::GeomMean(Long64_t n, const Long_t *a)
 {
    // Return the geometric mean of an array a with length n.
    // geometric_mean = (Prod_i=0,n-1 |a[i]|)^1/n
@@ -1850,6 +1949,31 @@ Double_t TMath::Median(Long64_t n, const Double_t *a, const Double_t *w, Long64_
 }
 
 //______________________________________________________________________________
+Double_t TMath::Median(Long64_t n, const Long_t *a, const Double_t *w, Long64_t *work)
+{
+   // Return the median of the array a where each entry i has weight w[i] .
+   // Both arrays have a length of at least n . The median is a number obtained
+   // from the sorted array a through
+   //
+   // median = (a[jl]+a[jh])/2.  where (using also the sorted index on the array w)
+   //
+   // sum_i=0,jl w[i] <= sumTot/2
+   // sum_i=0,jh w[i] >= sumTot/2
+   // sumTot = sum_i=0,n w[i]
+   //
+   // If w=0, the algorithm defaults to the median definition where it is
+   // a number that divides the sorted sequence into 2 halves.
+   // When n is odd or n > 1000, the median is kth element k = (n + 1) / 2.
+   // when n is even and n < 1000the median is a mean of the elements k = n/2 and k = n/2 + 1.
+   //
+   // If work is supplied, it is used to store the sorting index and assumed to be
+   // >= n . If work=0, local storage is used, either on the stack if n < kWorkMax
+   // or on the heap for n >= kWorkMax .
+
+   return MedianImp(n, a, w, work);
+}
+
+//______________________________________________________________________________
 Double_t TMath::Median(Long64_t n, const Long64_t *a, const Double_t *w, Long64_t *work)
 {
    // Return the median of the array a where each entry i has weight w[i] .
@@ -2023,6 +2147,22 @@ Short_t TMath::KOrdStat(Long64_t n, const Short_t *a, Long64_t k, Long64_t *work
 }
 
 //______________________________________________________________________________
+Long64_t TMath::KOrdStat(Long64_t n, const Long_t *a, Long64_t k, Long64_t *work)
+{
+   // Returns k_th order statistic of the array a of size n
+   // (k_th smallest element out of n elements).
+   //
+   // C-convention is used for array indexing, so if you want
+   // the second smallest element, call KOrdStat(n, a, 1).
+   //
+   // If work is supplied, it is used to store the sorting index and
+   // assumed to be >= n. If work=0, local storage is used, either on
+   // the stack if n < kWorkMax or on the heap for n >= kWorkMax.
+
+   return KOrdStatImp(n, a, k, work);
+}
+
+//______________________________________________________________________________
 Long64_t TMath::KOrdStat(Long64_t n, const Long64_t *a, Long64_t k, Long64_t *work)
 {
    // Returns k_th order statistic of the array a of size n
@@ -2086,6 +2226,21 @@ Double_t TMath::RMS(Long64_t n, const Float_t *a)
 
 //______________________________________________________________________________
 Double_t TMath::RMS(Long64_t n, const Double_t *a)
+{
+   // Return the RMS of an array a with length n.
+
+   if (n <= 0 || !a) return 0;
+
+   Double_t tot = 0, tot2 =0;
+   for (Long64_t i=0;i<n;i++) {tot += a[i]; tot2 += a[i]*a[i];}
+   Double_t n1 = 1./n;
+   Double_t mean = tot*n1;
+   Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
+   return rms;
+}
+
+//______________________________________________________________________________
+Double_t TMath::RMS(Long64_t n, const Long_t *a)
 {
    // Return the RMS of an array a with length n.
 
@@ -2263,6 +2418,48 @@ Long64_t TMath::BinarySearch(Long64_t n, const Double_t *array, Double_t value)
 
 //______________________________________________________________________________
 Long64_t TMath::BinarySearch(Long64_t n, const Double_t **array, Double_t value)
+{
+   // Binary search in an array of n values to locate value.
+   //
+   // Array is supposed  to be sorted prior to this call.
+   // If match is found, function returns position of element.
+   // If no match found, function gives nearest element smaller than value.
+
+   Long64_t nabove, nbelow, middle;
+   nabove = n+1;
+   nbelow = 0;
+   while(nabove-nbelow > 1) {
+      middle = (nabove+nbelow)/2;
+      if (value == *array[middle-1]) return middle-1;
+      if (value  < *array[middle-1]) nabove = middle;
+      else                           nbelow = middle;
+   }
+   return nbelow-1;
+}
+
+//______________________________________________________________________________
+Long64_t TMath::BinarySearch(Long64_t n, const Long_t *array, Long_t value)
+{
+   // Binary search in an array of n values to locate value.
+   //
+   // Array is supposed  to be sorted prior to this call.
+   // If match is found, function returns position of element.
+   // If no match found, function gives nearest element smaller than value.
+
+   Long64_t nabove, nbelow, middle;
+   nabove = n+1;
+   nbelow = 0;
+   while(nabove-nbelow > 1) {
+      middle = (nabove+nbelow)/2;
+      if (value == array[middle-1]) return middle-1;
+      if (value  < array[middle-1]) nabove = middle;
+      else                          nbelow = middle;
+   }
+   return nbelow-1;
+}
+
+//______________________________________________________________________________
+Long64_t TMath::BinarySearch(Long64_t n, const Long_t **array, Long_t value)
 {
    // Binary search in an array of n values to locate value.
    //
@@ -2525,6 +2722,20 @@ void TMath::Sort(Int_t n1, const Double_t *a, Int_t *index, Bool_t down)
 }
 
 //_____________________________________________________________________________
+void TMath::Sort(Int_t n1, const Long_t *a, Int_t *index, Bool_t down)
+{
+   // Sort the n1 elements of the Long64_t array a.
+   // In output the array index contains the indices of the sorted array.
+   // If down is false sort in increasing order (default is decreasing order).
+   // This is a translation of the CERNLIB routine sortzv (M101)
+   // based on the quicksort algorithm.
+   // NOTE that the array index must be created with a length >= n1
+   // before calling this function.
+
+   SortImp(n1,a,index,down);
+}
+
+//_____________________________________________________________________________
 void TMath::Sort(Int_t n1, const Long64_t *a, Int_t *index, Bool_t down)
 {
    // Sort the n1 elements of the Long64_t array a.
@@ -2584,6 +2795,20 @@ void TMath::Sort(Long64_t n1, const Float_t *a, Long64_t *index, Bool_t down)
 void TMath::Sort(Long64_t n1, const Double_t *a, Long64_t *index, Bool_t down)
 {
    // Sort the n1 elements of the Double_t array a.
+   // In output the array index contains the indices of the sorted array.
+   // If down is false sort in increasing order (default is decreasing order).
+   // This is a translation of the CERNLIB routine sortzv (M101)
+   // based on the quicksort algorithm.
+   // NOTE that the array index must be created with a length >= n1
+   // before calling this function.
+
+   SortImp(n1,a,index,down);
+}
+
+//_____________________________________________________________________________
+void TMath::Sort(Long64_t n1, const Long_t *a, Long64_t *index, Bool_t down)
+{
+   // Sort the n1 elements of the Long64_t array a.
    // In output the array index contains the indices of the sorted array.
    // If down is false sort in increasing order (default is decreasing order).
    // This is a translation of the CERNLIB routine sortzv (M101)
