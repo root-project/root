@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.58 2001/12/21 09:56:25 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.59 2001/12/21 12:21:24 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1234,7 +1234,7 @@ void  TROOT::Message(Int_t id, const TObject *obj)
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLine(const char *line, int *error)
+void TROOT::ProcessLine(const char *line, Int_t *error)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed a-synchronously by sending
@@ -1258,7 +1258,7 @@ void TROOT::ProcessLine(const char *line, int *error)
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLineSync(const char *line, int *error)
+void TROOT::ProcessLineSync(const char *line, Int_t *error)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed synchronously (i.e. it will
@@ -1280,7 +1280,7 @@ void TROOT::ProcessLineSync(const char *line, int *error)
 }
 
 //______________________________________________________________________________
-Long_t TROOT::ProcessLineFast(const char *line, int *error)
+Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 {
    // Process interpreter command directly via CINT interpreter.
    // Only executable statements are allowed (no variable declarations),
@@ -1311,8 +1311,8 @@ void TROOT::Proof(const char *cluster)
 {
    // Start PROOF session on a specific cluster (default is
    // "proof://localhost"). The TProof object can be accessed via
-   // the gProof global. Creating a new TProof object will delete
-   // the current one. For more on PROOF see the TProof ctor.
+   // the gProof global. Creating a new TProof object will reset
+   // the gProof global. For more on PROOF see the TProof ctor.
 
    // make sure libProof is loaded and TProof can be created
    if (gROOT->LoadClass("TProof","Proof")) return;
