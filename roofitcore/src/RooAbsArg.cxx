@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.63 2001/10/31 07:19:28 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.64 2001/11/19 07:23:52 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -437,6 +437,18 @@ RooArgSet* RooAbsArg::getDependents(const RooArgSet* dataList) const
   delete bIter ;
 
   return depList ;
+}
+
+
+RooArgSet* RooAbsArg::getComponents() const
+{
+  TString name(GetName()) ;
+  name.Append("_components") ;
+
+  RooArgSet* set = new RooArgSet(name) ;
+  branchNodeServerList(set) ;
+
+  return set ;
 }
 
 

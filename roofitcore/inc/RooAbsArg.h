@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.61 2001/11/14 18:42:35 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.62 2001/11/21 21:35:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -89,6 +89,7 @@ public:
   RooArgSet* getDependents(const RooArgSet& set) const { return getDependents(&set) ; }
   RooArgSet* getDependents(const RooAbsData* set) const ;
   virtual RooArgSet* getDependents(const RooArgSet* depList) const ;
+  RooArgSet* getComponents() const ;	
   Bool_t dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
   Bool_t dependentOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;

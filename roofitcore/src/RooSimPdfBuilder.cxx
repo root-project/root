@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooSimPdfBuilder.cc,v 1.5 2001/11/28 19:49:00 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.6 2001/11/29 23:03:14 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -445,7 +445,7 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	 << " for mode " << fcState->GetName() << endl ;    
 
     // Customizer PDF for current state and add to master simPdf
-    RooAbsPdf* fcPdf = (RooAbsPdf*) physCustomizer->build(masterSplitCat.getLabel()) ;
+    RooAbsPdf* fcPdf = (RooAbsPdf*) physCustomizer->build(masterSplitCat.getLabel(),kTRUE) ;
     simPdf->addPdf(*fcPdf,fcState->GetName()) ;
   }
 
