@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.18 2001/08/28 15:04:28 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.19 2001/09/20 13:24:48 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1432,9 +1432,11 @@ L110:
                      textaxis->PaintTextNDC(XX,YY,"10");
                      Double_t s10 = textaxis->GetTextSize();
                      textaxis->SetTextSize (0.6*s10);
-                     Double_t pixels;
-                     if (padw < padh) pixels = s10*padw;
-                     else             pixels = s10*padh;
+                     Double_t pixels = 0.6*s10;
+                     if (textaxis->GetTextFont() % 10 < 3) {
+                        if (padw < padh) pixels = s10*padw;
+                        else             pixels = s10*padh;
+                     }
                      Int_t alig  = textaxis->GetTextAlign();
                      Int_t aligh = alig/10;
                      Int_t aligv = alig%10;
@@ -1446,7 +1448,7 @@ L110:
                      if (aligv == 3) YexpT = YY + 0.01*pixels/padh;
                      textaxis->SetTextAlign(11);
                      textaxis->PaintTextNDC(XexpT,YexpT,&LABEL[first]);
-                     textaxis->SetTextSize (charheight);
+                     textaxis->SetTextSize (s10);
                      textaxis->SetTextAlign(alig);
                   }
                }
