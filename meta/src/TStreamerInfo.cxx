@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.134 2002/05/30 21:44:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.135 2002/06/04 17:50:04 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -992,9 +992,24 @@ TStreamerBasicType *TStreamerInfo::GetElementCounter(const char *countName, TCla
 //______________________________________________________________________________
 Int_t TStreamerInfo::GetSize() const
 {
-//  return total size of all persistent elements of the class
+//  return total size of all persistent elements of the class (with offsets)
 
    return fSize;
+}
+
+//______________________________________________________________________________
+Int_t TStreamerInfo::GetSizeElements() const
+{
+//  return total size of all persistent elements of the class
+//  use GetSize if you want to get the real size in memory
+   
+   TIter next(fElements);
+   TStreamerElement *element;
+   Int_t asize = 0;
+   while ((element = (TStreamerElement*)next())) {
+      asize += element->GetSize();
+   }
+   return asize;
 }
 
 //______________________________________________________________________________
