@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.24 2001/08/28 21:47:01 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.25 2001/09/19 13:26:31 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1463,13 +1463,55 @@ Int_t TFormula::Compile(const char *expression)
 
 
 //*-* replace 'normal' == or != by ==(string) or !=(string) if needed.
-  Int_t is_it_string,last_string=0;
+  Int_t is_it_string,last_string=0,before_last_string=0;
   if (!fOper) fNoper = 0;
+   enum { kIsCharacter = BIT(12) };
   for (i=0; i<fNoper; i++) {
      is_it_string = 0;
      if ((fOper[i]>=105000 && fOper[i]<110000) || fOper[i] == 80000) is_it_string = 1;
-     else if (fOper[i] == 62 && last_string == 1) fOper[i] = 76;
-     else if (fOper[i] == 63 && last_string == 1) fOper[i] = 77;
+     else if (last_string) {
+
+       if (fOper[i] == 62) {
+          if (!before_last_string) {
+             Error("Compile", "Both operands of the operator == have too be either numbers or strings");
+             return -1;
+          }
+          fOper[i] = 76;
+          SetBit(kIsCharacter);
+       } else if (fOper[i] == 63) {
+          if (!before_last_string) {
+             Error("Compile", "Both operands of the operator != have too be either numbers or strings");
+             return -1;
+          }
+          fOper[i] = 77;
+          SetBit(kIsCharacter);
+       }
+       else if (fOper[i] == 23) {
+          if (! (before_last_string && last_string) ) {
+             Error("Compile", "strstr requires 2 string arguments");
+             return -1;
+          }
+          SetBit(kIsCharacter);
+       } else if (before_last_string) {
+          // the i-2 element is a string not used in a string operation, let's down grade it
+          // to a char array:
+          if (fOper[i-2]>=105000) {
+            fOper[i-2] -= 5000;
+            fNval++;
+            fNstring--;
+          }
+       }
+       
+     } else if (before_last_string) {
+        // the i-2 element is a string not used in a string operation, let's down grade it
+        // to a char array:
+        if (fOper[i-2]>=105000){
+           fOper[i-2] -= 5000;
+           fNval++;
+           fNstring--;
+        }
+     }
+     before_last_string = last_string;
      last_string = is_it_string;
   }
 

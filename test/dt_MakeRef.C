@@ -126,14 +126,11 @@ void MakeHisto(TTree *tree, TDirectory* To) {
       refGetHGetAxisMax->Fill(event->GetHistogram()->GetXaxis()->GetXmax());
       refGetRefHGetAxisMax->Fill(event->GetHistogram()->GetXaxis()->GetXmax());
       refSqrtNtrack->Fill(sqrt(event->GetNtrack()));
-
-      //NOTE: This is loop is to take in consideration a know bug :(
-      for (int i9=0;i9<20;i9++) {
-         if (!strcmp("type1",event->GetType())) 
-            refString->Fill(event->GetHeader()->GetEvtNum());
-         if (strstr(event->GetType(),"1"))
-            refString->Fill(event->GetHeader()->GetEvtNum());
-      }
+      
+      if (!strcmp("type1",event->GetType())) 
+        refString->Fill(event->GetHeader()->GetEvtNum());
+      if (strstr(event->GetType(),"1"))
+        refString->Fill(event->GetHeader()->GetEvtNum());
 
       Nvertex = event->GetNvertex();
       for(i0=0;i0<Nvertex;i0++) {

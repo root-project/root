@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.17 2001/10/06 07:30:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.18 2001/11/29 09:56:18 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -44,6 +44,7 @@ class TMethodCall;
 class TLeafObject;
 class TDataMember;
 class TStreamerElement;
+class TFormLeafInfoMultiVarDim;
 class TFormLeafInfo;
 class TBranchElement;
 
@@ -81,10 +82,13 @@ protected:
    TArrayI      *fVarDims[kMAXFORMDIM+1];             //List of variable sizes dimensions.
    TArrayI      *fCumulUsedVarDims;                   //fCumulUsedSizes(1) for multi variable dimensions case
 
-   void        DefineDimensions(Int_t code, Int_t size,  Int_t& virt_dim);
-   void        DefineDimensions(Int_t code, TBranchElement *branch,  Int_t& virt_dim);
-   void        DefineDimensions(Int_t code, TFormLeafInfo *info,  Int_t& virt_dim);
-   void        DefineDimensions(const char *size, Int_t code, Int_t& virt_dim);
+   void        DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim = 0);
+   void        DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * info, Int_t& virt_dim);
+
+   void        DefineDimensions(Int_t code, TBranchElement *branch);
+   void        DefineDimensions(Int_t code, TFormLeafInfo *info);
+   void        DefineDimensions(const char *size, Int_t code);
+
    virtual Double_t   GetValueFromMethod(Int_t i, TLeaf *leaf) const;
    Int_t       GetRealInstance(Int_t instance, Int_t codeindex);
    
@@ -92,6 +96,10 @@ protected:
    Bool_t      BranchHasMethod(TLeaf* leaf, TBranch* branch, 
                                const char* method,const char* params, 
                                UInt_t readentry) const;
+
+   TList      *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
+
+
 public:
              TTreeFormula();
              TTreeFormula(const char *name,const char *formula, TTree *tree);

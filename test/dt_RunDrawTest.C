@@ -73,7 +73,11 @@ Int_t Compare(TDirectory* from) {
          if (gInteractiveTest) {
             TCanvas * canv = new TCanvas();
             canv->Divide(2,1);
-            canv->cd(1); ref->Draw();
+            canv->cd(1); 
+            TString reftitle = "Ref: ";
+            reftitle.Append(ref->GetTitle());
+            ref->SetTitle(reftitle);
+            ref->Draw();
             canv->cd(2); draw->Draw();
             return 1;
          }
