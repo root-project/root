@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.21 2000/08/23 08:14:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.22 2000/08/31 20:03:18 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -661,9 +661,7 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
 
    Int_t nch = strlen(majorname) + strlen(minorname) + 10;
    char *varexp = new char[nch];
-   char *select = new char[nch];
-   sprintf(varexp,"%s:%s",majorname,minorname);
-   sprintf(select,"%s+%s*1e-9",majorname,minorname);
+   sprintf(varexp,"%s+%s*1e-9",majorname,minorname);
 
    Int_t oldEstimate = fEstimate;
    Int_t n = Int_t(fEntries);
@@ -671,10 +669,10 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
 
    if (n > fEstimate) SetEstimate(n);
 
-   Draw(varexp,select,"goff");
+   Draw(varexp,"","goff");
 
-   // Sort array fW (contains  majorname +minorname*1e-9) into fIndex
-   Double_t *w = GetPlayer()->GetW();
+   // Sort array fV1 (contains  majorname +minorname*1e-9) into fIndex
+   Double_t *w = GetPlayer()->GetV1();
    Int_t *ind = new Int_t[n];
    TMath::Sort(n,w,ind,0);
    fIndexValues.Set(n);
@@ -687,7 +685,6 @@ void TTree::BuildIndex(const char *majorname, const char *minorname)
 
    // clean up
    delete [] ind;
-   delete [] select;
    delete [] varexp;
 }
 
