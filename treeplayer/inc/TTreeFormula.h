@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.12 2001/04/27 06:59:32 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.13 2001/05/28 06:29:54 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -39,11 +39,14 @@ const Int_t kMAXCODES = kMAXFOUND; // must be the same as kMAXFOUND in TFormula
 const Int_t kMAXFORMDIM = 5; // Maximum number of array dimensions support in TTreeFormula
 
 class TTree;
+class TArrayI;
 class TMethodCall;
 class TLeafObject;
 class TDataMember;
 class TStreamerElement;
 class TFormLeafInfo;
+class TBranchElement;
+
 class TTreeFormula : public TFormula {
 
 protected:
@@ -55,6 +58,7 @@ protected:
    Int_t       fNdata[kMAXCODES]; //! This caches the physical number of element in the leaf or datamember.
    Int_t       fNcodes;           //  Number of leaves referenced in formula
    Int_t       fMultiplicity;     //  Number of array elements in leaves in case of a TClonesArray
+   Bool_t      fMultiVarDim;      //  True if one of the variable has 2 variable size dimensions.
    Int_t       fInstance;         //  Instance number for GetValue
    Int_t       fNindex;           //  Size of fIndex
    Int_t      *fLookupType;       //[fNindex] array indicating how each leaf should be looked-up
@@ -63,25 +67,33 @@ protected:
    TObjArray   fMethods;          //!  List of leaf method calls
    TObjArray   fNames;            //  List of TNamed describing leaves
    
-   Int_t         fNdimensions[kMAXCODES];             //Number of array dimensions in each leaf
-   Int_t         fCumulSizes[kMAXCODES][kMAXFORMDIM]; //Accumulated size of lower dimensions for each leaf
-   //mutable Int_t fUsedSizes[kMAXFORMDIM+1]; See GetNdata()
-   Int_t fUsedSizes[kMAXFORMDIM+1]; //Actual size of the dimensions as seen for this entry.
-   //mutable Int_t fCumulUsedSizes[kMAXFORMDIM+1]; See GetNdata()
-   Int_t fCumulUsedSizes[kMAXFORMDIM+1]; //Accumulated size of lower dimensions as seen for this entry.
+   Int_t         fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
+   Int_t         fFixedSizes[kMAXCODES][kMAXFORMDIM];  //Physical sizes of lower dimensions for each leaf
+   //the next line should have a mutable in front. See GetNdata()
+   Int_t         fCumulSizes[kMAXCODES][kMAXFORMDIM];  //Accumulated sizes of lower dimensions for each leaf after variable dimensions has been calculated
+   //the next line should be: mutable Int_t fUsedSizes[kMAXFORMDIM+1]; See GetNdata()
+   Int_t         fUsedSizes[kMAXFORMDIM+1];           //Actual size of the dimensions as seen for this entry.
+   //the next line should be: mutable Int_t fCumulUsedSizes[kMAXFORMDIM+1]; See GetNdata()
+   Int_t         fCumulUsedSizes[kMAXFORMDIM+1];      //Accumulated size of lower dimensions as seen for this entry.
    Int_t         fVirtUsedSizes[kMAXFORMDIM+1];       //Virtual size of lower dimensions as seen for this formula
    Int_t         fIndexes[kMAXCODES][kMAXFORMDIM];    //Index of array selected by user for each leaf
    TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM]; //Pointer to a variable index.
+   TArrayI      *fVarDims[kMAXFORMDIM+1];             //List of variable sizes dimensions.
+   TArrayI      *fCumulUsedVarDims;                   //fCumulUsedSizes for multi variable dimensions case
 
+   void        DefineDimensions(Int_t code, Int_t size,  Int_t& virt_dim);
+   void        DefineDimensions(Int_t code, TBranchElement *branch,  Int_t& virt_dim);
    void        DefineDimensions(Int_t code, TFormLeafInfo *info,  Int_t& virt_dim);
    void        DefineDimensions(const char *size, Int_t code, Int_t& virt_dim);
    virtual Double_t   GetValueFromMethod(Int_t i, TLeaf *leaf) const;
+   Int_t       GetRealInstance(Int_t instance, Int_t codeindex);
 public:
              TTreeFormula();
              TTreeFormula(const char *name,const char *formula, TTree *tree);
    virtual   ~TTreeFormula();
    virtual Int_t      DefinedVariable(TString &variable);
-   virtual Double_t   EvalInstance(Int_t i=0) const;
+   virtual Double_t   EvalInstance(Int_t i=0);
+   // EvalInstance should be const.  See comment on GetNdata()
    TObject           *GetLeafInfo(Int_t code) const;
    TMethodCall       *GetMethodCall(Int_t code) const;
    virtual Int_t      GetMultiplicity() const {return fMultiplicity;}
@@ -98,7 +110,7 @@ public:
    virtual void       SetTree(TTree *tree) {fTree = tree;}
    virtual void       UpdateFormulaLeaves();
 
-   ClassDef(TTreeFormula,4)  //The Tree formula
+   ClassDef(TTreeFormula,5)  //The Tree formula
 };
 
 #endif

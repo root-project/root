@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.17 2001/05/24 16:37:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.18 2001/05/25 09:44:15 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -72,7 +72,7 @@ public:
             Int_t    GetStreamerType() const {return fStreamerType;}
     TBranchElement  *GetSubBranch(const TBranchElement *br) const;
     virtual const char *GetTypeName() const;
-            Double_t GetValue(Int_t i, Int_t len) const;
+            Double_t GetValue(Int_t i, Int_t len, Bool_t subarr = kFALSE) const;
             Bool_t   IsBranchFolder() const {return TestBit(kBranchFolder);}
             Bool_t   IsFolder() const;
     virtual Bool_t   Notify() {fAddress = 0; return 1;}
