@@ -2606,7 +2606,7 @@ int isnew;
 #ifndef G__OLDIMPLEMENTATION923
          0==isnew &&
 #endif
-	 ('*'==symbol[strlen(symbol)-1] || strchr(symbol,' '))) {
+    ('*'==symbol[strlen(symbol)-1] || strchr(symbol,' ') ||  strchr(symbol,'<') )) {
 	char temp[G__LONGLINE];
 	strcpy(temp,symbol);
 	sprintf(symbol,"(%s)",temp);
