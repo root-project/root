@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.9 2002/02/22 09:37:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.10 2002/02/23 16:01:44 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -162,17 +162,17 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
 
    void *vp;
    if (ovp == 0) {
-      vp = ::operator new(size);
+      vp = ::operator new[](size);
       if (vp == 0)
          Fatal(where, spaceErr);
       return vp;
    }
 
-   vp = ::operator new(size);
+   vp = ::operator new[](size);
    if (vp == 0)
       Fatal(where, spaceErr);
    memmove(vp, ovp, size);
-   ::operator delete(ovp);
+   ::operator delete[](ovp);
    return vp;
 }
 
@@ -191,7 +191,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
 
    void *vp;
    if (ovp == 0) {
-     vp = ::operator new(size);
+     vp = ::operator new[](size);
      if (vp == 0)
         Fatal(where, spaceErr);
      return vp;
@@ -199,7 +199,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    if (oldsize == size)
       return ovp;
 
-   vp = ::operator new(size);
+   vp = ::operator new[](size);
    if (vp == 0)
       Fatal(where, spaceErr);
    if (size > oldsize) {
@@ -207,7 +207,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
       memset((char*)vp+oldsize, 0, size-oldsize);
    } else
       memcpy(vp, ovp, size);
-   ::operator delete(ovp);
+   ::operator delete[](ovp);
    return vp;
 }
 
