@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.2 2000/05/31 18:43:50 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -268,7 +268,7 @@ void TRint::PrintLogo()
 
 #ifdef R__UNIX
    if (!strcmp(gVirtualX->GetName(), "X11TTF"))
-      Printf("\nFreeType Engine v1.1 used to render TrueType fonts.");
+      Printf("\nFreeType Engine v1.x used to render TrueType fonts.");
 #endif
 #ifdef _REENTRANT
 #ifdef R__UNIX
