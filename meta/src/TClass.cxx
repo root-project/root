@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.101 2002/12/02 18:41:17 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.102 2002/12/02 18:50:04 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -917,24 +917,38 @@ Int_t TClass::GetDataMemberOffset(const char *name) const
    //
    // In case of a fake class, the list of fake TRealData is built
 
+   TRealData *rd = GetRealData(name);
+   if (rd) return rd->GetThisOffset();
+
+   return 0;
+}
+
+//______________________________________________________________________________
+TRealData *TClass::GetRealData(const char *name) const
+{
+   // return pointer to TRealData element with name.
+   // name can be a data member in the class itself,
+   // one of its base classes, or one member in
+   // one of the aggregated classes.
+   //
+   // In case of a fake class, the list of fake TRealData is built
+
    if (!fRealData) ((TClass*)this)->BuildRealData();
 
    TRealData *rd = (TRealData*)fRealData->FindObject(name);
-   if (rd) return rd->GetThisOffset();
+   if (rd) return rd;
 
    //may be member is a pointer
    rd = (TRealData*)fRealData->FindObject(Form("*%s",name));
-   if (rd) return rd->GetThisOffset();
+   if (rd) return rd;
 
    //new attempt starting after the first "." if any
    const char *dot = strchr(name,'.');
    if (!dot) return 0;
    rd = (TRealData*)fRealData->FindObject(dot+1);
-   if (rd) return rd->GetThisOffset();
+   if (rd) return rd;
    rd = (TRealData*)fRealData->FindObject(Form("*%s",dot+1));
-   if (rd) return rd->GetThisOffset();
-
-   return 0;
+   return rd;
 }
 
 //______________________________________________________________________________

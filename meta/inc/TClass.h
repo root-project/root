@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.29 2002/11/24 13:59:57 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.30 2002/11/26 10:24:09 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -154,6 +154,7 @@ public:
    ROOT::NewFunc_t    GetNew() const;
    ROOT::NewArrFunc_t GetNewArray() const;
    Int_t              GetNmethods();
+   TRealData         *GetRealData(const char *name) const;
    ShowMembersFunc_t  GetShowMembersWrapper() { return fShowMembers; }
    TObjArray         *GetStreamerInfos() const { return fStreamerInfo;}
    TStreamerInfo     *GetStreamerInfo(Int_t version=0);
