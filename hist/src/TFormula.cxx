@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.41 2003/06/17 20:07:33 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.42 2003/06/21 10:47:03 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2152,7 +2152,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
                      break;
           case  31 : dexp = tab[pos-1];
                      if (dexp < -700) {tab[pos-1] = 0; break;}
-                     if (dexp >  700) {tab[pos-1] = TMath::Exp(70); break;}
+                     if (dexp >  700) {tab[pos-1] = TMath::Exp(700); break;}
                      tab[pos-1] = TMath::Exp(dexp); break;
           case  32 : if (tab[pos-1] > 0) tab[pos-1] = TMath::Log10(tab[pos-1]);
                      else {tab[pos-1] = 0;} //{indetermination }
