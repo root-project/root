@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.44 2004/09/14 09:23:53 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.45 2004/09/14 10:51:33 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -1870,7 +1870,7 @@ TestDirList::TestDirList(const TGWindow *p, const TGWindow *main,
 
 TestDirList::~TestDirList()
 {
-   // dtor.
+   // Cleanup.
 
    delete fContents;
    fMain->Cleanup();
@@ -1879,7 +1879,7 @@ TestDirList::~TestDirList()
 
 TString TestDirList::DirName(TGListTreeItem* item)
 {
-   // returns an absolute path
+   // Returns an absolute path.
 
    TGListTreeItem* parent;
    TString dirname = item->GetText();
@@ -1894,7 +1894,7 @@ TString TestDirList::DirName(TGListTreeItem* item)
 
 void TestDirList::OnDoubleClick(TGListTreeItem* item, Int_t btn)
 {
-   // show contents of directory
+   // Show contents of directory.
 
    if ((btn!=kButton1) || !item || (Bool_t)item->GetUserData()) return;
 
@@ -1951,9 +1951,9 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
    fMain->AddFrame(lv,lo);
 
    Pixel_t white;
-   gClient->GetColorByName("white",white);
-   fContents = new TGFileContainer(lv,kSunkenFrame,white);
-   fContents->Connect("DoubleClicked(TGFrame*,Int_t)","TestFileList",this,
+   gClient->GetColorByName("white", white);
+   fContents = new TGFileContainer(lv, kSunkenFrame,white);
+   fContents->Connect("DoubleClicked(TGFrame*,Int_t)", "TestFileList", this,
                       "OnDoubleClick(TGLVEntry*,Int_t)");
 
    // position relative to the parent's window
@@ -1972,7 +1972,7 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
 
 TestFileList::~TestFileList()
 {
-   // dtor.
+   // Cleanup.
 
    delete fContents;
    fMain->Cleanup();
@@ -1981,7 +1981,7 @@ TestFileList::~TestFileList()
 
 void TestFileList::DoMenu(Int_t mode)
 {
-   // switch view mode
+   // Switch view mode.
 
    if (mode<10) {
       fContents->SetViewMode((EListViewMode)mode);
@@ -1992,7 +1992,7 @@ void TestFileList::DoMenu(Int_t mode)
 
 void TestFileList::DisplayFile(const TString &fname)
 {
-   // display content of ROOT file
+   // Display content of ROOT file.
 
    TFile file(fname);
    fContents->RemoveAll();
@@ -2018,7 +2018,7 @@ void TestFileList::DisplayFile(const TString &fname)
 
 void TestFileList::DisplayDirectory(const TString &fname)
 {
-   // display content of directory
+   // Display content of directory.
 
    fContents->SetDefaultHeaders();
    gSystem->ChangeDirectory(fname);
@@ -2030,7 +2030,7 @@ void TestFileList::DisplayDirectory(const TString &fname)
 
 void TestFileList::DisplayObject(const TString& fname,const TString& name)
 {
-   // browse object located in file
+   // Browse object located in file.
 
    TDirectory *sav = gDirectory;
 
@@ -2047,11 +2047,11 @@ void TestFileList::DisplayObject(const TString& fname,const TString& name)
    gDirectory = sav;
 }
 
-void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
+void TestFileList::OnDoubleClick(TGLVEntry *f, Int_t btn)
 {
-   // handle double click
+   // Handle double click.
 
-   if (btn!=kButton1) return;
+   if (btn != kButton1) return;
 
    // set kWatch cursor
    ULong_t cur = gVirtualX->CreateCursor(kWatch);
@@ -2061,7 +2061,7 @@ void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
    const char* fname = (const char*)f->GetUserData();
 
    if (fname) {
-      DisplayObject(fname,name);
+      DisplayObject(fname, name);
    } else if (name.EndsWith(".root")) {
       DisplayFile(name);
    } else {
