@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.5 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.6 2003/02/07 13:46:47 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -24,8 +24,6 @@
  *      fOrigin[3]    - position of box origin
  *
  *************************************************************************/
-
-class TGeoShape;
 
 class TGeoBBox : public TGeoShape
 {
