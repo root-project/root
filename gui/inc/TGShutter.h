@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.1 2000/09/29 08:54:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGShutter.h,v 1.2 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   18/9/2000
 
 /*************************************************************************
@@ -57,6 +57,7 @@ public:
                  UInt_t options = 0);
    virtual ~TGShutterItem();
 
+   TGButton *GetButton() const { return fButton; } 
    TGFrame  *GetContainer() const { return fCanvas->GetContainer(); }
 
    ClassDef(TGShutterItem,0)  // Shutter widget item
