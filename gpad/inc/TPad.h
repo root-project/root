@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.15 2002/01/07 18:03:52 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.16 2002/02/26 22:04:16 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -383,8 +383,8 @@ inline Int_t TPad::UtoPixel(Double_t u) const
    Double_t val;
    if (fAbsCoord) val = fUtoAbsPixelk + u*fUtoPixel;
    else           val = u*fUtoPixel;
-   if (val < 0) return -5;
-   if (val > 65000) return 65000;
+   if (val < -kMaxPixel) return -kMaxPixel;
+   if (val >  kMaxPixel) return  kMaxPixel;
    return Int_t(val);
 }
 
@@ -394,8 +394,8 @@ inline Int_t TPad::VtoPixel(Double_t v) const
    Double_t val;
    if (fAbsCoord) val = fVtoAbsPixelk + v*fVtoPixel;
    else           val = fVtoPixelk    + v*fVtoPixel;
-   if (val < 0) return -5;
-   if (val > 65000) return 65000;
+   if (val < -kMaxPixel) return -kMaxPixel;
+   if (val >  kMaxPixel) return  kMaxPixel;
    return Int_t(val);
 }
 
@@ -403,8 +403,8 @@ inline Int_t TPad::VtoPixel(Double_t v) const
 inline Int_t TPad::XtoAbsPixel(Double_t x) const
 {
    Double_t val = fXtoAbsPixelk + x*fXtoPixel;
-   if (val < 0) return -5;
-   if (val > 65000) return 65000;
+   if (val < -kMaxPixel) return -kMaxPixel;
+   if (val >  kMaxPixel) return  kMaxPixel;
    return Int_t(val);
 }
 
@@ -414,8 +414,8 @@ inline Int_t TPad::XtoPixel(Double_t x) const
    Double_t val;
    if (fAbsCoord) val = fXtoAbsPixelk + x*fXtoPixel;
    else           val = fXtoPixelk    + x*fXtoPixel;
-   if (val < 0) return -5;
-   if (val > 65000) return 65000;
+   if (val < -kMaxPixel) return -kMaxPixel;
+   if (val >  kMaxPixel) return  kMaxPixel;
    return Int_t(val);
 }
 
@@ -423,8 +423,8 @@ inline Int_t TPad::XtoPixel(Double_t x) const
 inline Int_t TPad::YtoAbsPixel(Double_t y) const
 {
    Double_t val = fYtoAbsPixelk + y*fYtoPixel;
-   if (val < 0) return -5;
-   if (val > 65000) return 65000;
+   if (val < -kMaxPixel) return -kMaxPixel;
+   if (val >  kMaxPixel) return  kMaxPixel;
    return Int_t(val);
 }
 
@@ -434,8 +434,8 @@ inline Int_t TPad::YtoPixel(Double_t y) const
    Double_t val;
    if (fAbsCoord) val = fYtoAbsPixelk + y*fYtoPixel;
    else           val = fYtoPixelk    + y*fYtoPixel;
-   if (val < 0) return -5;
-   if (val > 65000) return 65000;
+   if (val < -kMaxPixel) return -kMaxPixel;
+   if (val >  kMaxPixel) return  kMaxPixel;
    return Int_t(val);
 }
 
