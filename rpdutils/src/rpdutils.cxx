@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.13 2003/09/25 17:29:23 brun Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.14 2003/09/27 19:06:28 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -132,8 +132,8 @@ extern "C" {
 }
 #endif
 
-#include "Krb5Auth.h"
 #ifdef R__KRB5
+#include "Krb5Auth.h"
 #include <string>
 extern krb5_deltat krb5_clockskew;
 #endif
