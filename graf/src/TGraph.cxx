@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.125 2004/03/29 16:12:21 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.126 2004/04/14 14:17:20 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -991,7 +991,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
 //   ==========================
 //   Parameters must be initialized before invoking the Fit function.
 //   The setting of the parameter initial values is automatic for the
-//   predefined functions : poln, expo, gaus. One can however disable
+//   predefined functions : poln, expo, gaus, landau. One can however disable
 //   this automatic computation by specifying the option "B".
 //   You can specify boundary limits for some or all parameters via
 //        f1->SetParLimits(p_number, parmin, parmax);
@@ -1163,6 +1163,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    Int_t special = f1->GetNumber();
    if (fitOption.Bound) special = 0;
    if      (special == 100)      InitGaus(gxfirst,gxlast);
+   else if (special == 400)      InitGaus(gxfirst,gxlast);
    else if (special == 200)      InitExpo(gxfirst,gxlast);
    else if (special == 299+npar) InitPolynom(gxfirst,gxlast);
 
