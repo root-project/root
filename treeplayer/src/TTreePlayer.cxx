@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.44 2001/04/20 17:56:51 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.45 2001/04/23 14:08:07 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -284,6 +284,7 @@ TTreePlayer::TTreePlayer()
    fScanFileName   = 0;
    fScanRedirect   = kFALSE;
    fSelect         = 0;
+   fSelectedRows   = 0;
    fDraw           = 0;
    fPacketGen      = 0;
    fPacketSize     = 100;
@@ -698,7 +699,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //       - type the command  "TTreeViewer TV(treeName)"
 //       - execute statement "tree->StartViewer();"
 //
-   if (fTree->GetEntries() == 0) return 0;
+   if (fTree->GetEntriesFriend() == 0) return 0;
    TString  opt;
    char *hdefault = (char *)"htemp";
    char *varexp;
@@ -1082,8 +1083,8 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
    Double_t ww;
    Int_t  npoints;
    lastentry = firstentry + nentries - 1;
-   if (lastentry > fTree->GetEntries()-1) {
-      lastentry  = (Int_t)fTree->GetEntries() - 1;
+   if (lastentry > fTree->GetEntriesFriend()-1) {
+      lastentry  = (Int_t)fTree->GetEntriesFriend() - 1;
       nentries   = lastentry - firstentry + 1;
    }
 
@@ -1258,8 +1259,8 @@ void TTreePlayer::EstimateLimits(Int_t, Int_t nentries, Int_t firstentry)
 
    Int_t lastentry;
    lastentry = firstentry + nentries -1;
-   if (lastentry > fTree->GetEntries()-1) {
-      lastentry = (Int_t)fTree->GetEntries() -1;
+   if (lastentry > fTree->GetEntriesFriend()-1) {
+      lastentry = (Int_t)fTree->GetEntriesFriend() -1;
       nentries   = lastentry - firstentry + 1;
    }
    fVmin[0] = fVmin[1] = fVmin[2] = FLT_MAX;  //in float.h
@@ -2273,8 +2274,8 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
    if (nleaves < ncols) ncols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
    Int_t lastentry = firstentry + nentries -1;
-   if (lastentry > fTree->GetEntries()-1) {
-      lastentry  = (Int_t)fTree->GetEntries() -1;
+   if (lastentry > fTree->GetEntriesFriend()-1) {
+      lastentry  = (Int_t)fTree->GetEntriesFriend() -1;
       nentries   = lastentry - firstentry + 1;
    }
 
@@ -2449,7 +2450,7 @@ Int_t TTreePlayer::Process(TSelector *selector,Option_t *option, Int_t nentries,
    Int_t treeNumber = -1;
    Long_t entry, entryNumber;
    fSelectedRows = 0;
-   Int_t nent = Int_t(fTree->GetEntries());
+   Int_t nent = Int_t(fTree->GetEntriesFriend());
    TEventList *elist = fTree->GetEventList();
    if (elist) nent = elist->GetN();
    Int_t lastentry = firstentry + nentries -1;
@@ -2514,8 +2515,8 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection, Option_t *,
    if (nleaves < ncols) ncols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
    Int_t lastentry = firstentry + nentries -1;
-   if (lastentry > fTree->GetEntries()-1) {
-      lastentry  = (Int_t)fTree->GetEntries() -1;
+   if (lastentry > fTree->GetEntriesFriend()-1) {
+      lastentry  = (Int_t)fTree->GetEntriesFriend() -1;
       nentries   = lastentry - firstentry + 1;
    }
 
@@ -2652,8 +2653,8 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    if (nleaves < ncols) ncols = nleaves;
    nch = varexp ? strlen(varexp) : 0;
    Int_t lastentry = firstentry + nentries -1;
-   if (lastentry > fTree->GetEntries()-1) {
-      lastentry  = (Int_t)fTree->GetEntries() -1;
+   if (lastentry > fTree->GetEntriesFriend()-1) {
+      lastentry  = (Int_t)fTree->GetEntriesFriend() -1;
       nentries   = lastentry - firstentry + 1;
    }
 
@@ -3101,7 +3102,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
   // Make sure that the arrays V1,etc are created large enough to accomodate
   // all entries
   Int_t oldEstimate = fTree->GetEstimate();
-  Int_t nent = Int_t(fTree->GetEntries());
+  Int_t nent = Int_t(fTree->GetEntriesFriend());
   fTree->SetEstimate(TMath::Min(nent,nentries));
 
   Int_t nsel = DrawSelect(varexp, selection, "goff", nentries, firstentry);
