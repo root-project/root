@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.25 2002/08/17 16:29:31 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.26 2002/12/02 18:50:12 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -369,6 +369,7 @@ TGX11::~TGX11()
    delete fXEvent;
    if (fWindows) ::operator delete(fWindows);
 
+   if (!fColors) return;
    Long_t     key, value;
    TExMapIter it(fColors);
    while (it.Next(key, value)) {
