@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.113 2002/01/10 08:03:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.114 2002/01/19 13:19:29 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -116,7 +116,7 @@ void TStreamerInfo::Build()
    // one by one the list of data members of the analyzed class.
 
    TStreamerElement::Class()->IgnoreTObjectStreamer();
-   if (!strcmp(fClass->GetName(),"TVector3"))       fClass->IgnoreTObjectStreamer();
+   //if (!strcmp(fClass->GetName(),"TVector3"))       fClass->IgnoreTObjectStreamer();
    
    fClass->BuildRealData();
 
