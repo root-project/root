@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.60 2004/06/18 21:13:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.61 2004/06/19 13:38:56 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -232,6 +232,38 @@ Double_t TMath::Erfc(Double_t x)
    if (x < 0) v = 2-v; // erfc(-x)=2-erfc(x)
 
    return v;
+}
+
+//______________________________________________________________________________
+Double_t TMath::ErfInverse(Double_t x)
+{
+   // returns  the inverse error function
+   // x must be  <-1<x<1
+
+   Int_t kMaxit    = 50;
+   Double_t kEps   = 1e-14;
+   Double_t kConst = 0.8862269254527579;     // sqrt(pi)/2.0
+
+   if(TMath::Abs(x) <= kEps) return kConst*x;
+
+   // Newton iterations
+   Double_t erfi, derfi, Y0,Y1,DY0,DY1;
+   if(TMath::Abs(x) < 1.0) {
+      erfi  = kConst*TMath::Abs(x);
+      Y0    = TMath::Erf(0.9*erfi);
+      derfi = 0.1*erfi;
+      for (Int_t iter=0; iter<kMaxit; iter++) {
+         Y1  = 1. - TMath::Erfc(erfi);
+         DY1 = TMath::Abs(x) - Y1;
+         if (TMath::Abs(DY1) < kEps)  {if (x < 0) return -erfi; else return erfi;}
+         DY0    = Y1 - Y0;
+         derfi *= DY1/DY0;
+         Y0     = Y1;
+         erfi  += derfi;
+         if(TMath::Abs(derfi/erfi) < kEps) {if (x < 0) return -erfi; else return erfi;}
+      }
+   }
+   return 0; //did not converge
 }
 
 //______________________________________________________________________________
@@ -2310,6 +2342,72 @@ void TMath::Sort(Int_t n1, const Long64_t *a, Int_t *index, Bool_t down)
 
    Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
    Int_t i22 = 0;
+   Long_t ai;
+   n = n1;
+   if (n <= 0) return;
+   if (n == 1) {index[0] = 0; return;}
+   for (i=0;i<n;i++) index[i] = i+1;
+   for (i1=2;i1<=n;i1++) {
+      i3 = i1;
+      i33 = index[i3-1];
+      ai  = a[i33-1];
+      while(1) {
+         i2 = i3/2;
+         if (i2 <= 0) break;
+         i22 = index[i2-1];
+         if (ai <= a[i22-1]) break;
+         index[i3-1] = i22;
+         i3 = i2;
+      }
+      index[i3-1] = i33;
+   }
+
+   while(1) {
+      i3 = index[n-1];
+      index[n-1] = index[0];
+      ai = a[i3-1];
+      n--;
+      if(n-1 < 0) {index[0] = i3; break;}
+      i1 = 1;
+      while(2) {
+         i2 = i1+i1;
+         if (i2 <= n) i22 = index[i2-1];
+         if (i2-n > 0) {index[i1-1] = i3; break;}
+         if (i2-n < 0) {
+            i222 = index[i2];
+            if (a[i22-1] - a[i222-1] < 0) {
+                i2++;
+                i22 = i222;
+            }
+         }
+         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
+         index[i1-1] = i22;
+         i1 = i2;
+      }
+   }
+   for (i=0;i<n1;i++) index[i]--;
+   if (!down) return;
+   n2 = n1/2;
+   for (i=0;i<n2;i++) {
+      iswap         = index[i];
+      index[i]      = index[n1-i-1];
+      index[n1-i-1] = iswap;
+   }
+}
+
+//_____________________________________________________________________________
+void TMath::Sort(Long64_t n1, const Long64_t *a, Long64_t *index, Bool_t down)
+{
+   // Sort the n1 elements of the Long64_t array a.
+   // In output the array index contains the indices of the sorted array.
+   // If down is false sort in increasing order (default is decreasing order).
+   // This is a translation of the CERNLIB routine sortzv (M101)
+   // based on the quicksort algorithm.
+   // NOTE that the array index must be created with a length >= n1
+   // before calling this function.
+
+   Long64_t i,i1,n,i2,i3,i33,i222,iswap,n2;
+   Long64_t i22 = 0;
    Long_t ai;
    n = n1;
    if (n <= 0) return;

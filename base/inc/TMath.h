@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.42 2004/04/29 08:27:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.43 2004/06/19 13:38:56 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -267,6 +267,7 @@ public:
    static void Sort(Int_t n, const Double_t *a, Int_t *index, Bool_t down=kTRUE);
    static void Sort(Int_t n, const Long_t *a,   Int_t *index, Bool_t down=kTRUE);
    static void Sort(Int_t n, const Long64_t *a, Int_t *index, Bool_t down=kTRUE);
+   static void Sort(Long64_t n, const Long64_t *a, Long64_t *index, Bool_t down=kTRUE);
    static void BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2);
    static void BubbleLow (Int_t Narr, Double_t *arr1, Int_t *arr2);
 
@@ -283,6 +284,8 @@ public:
 
    static Double_t  Erf(Double_t x);
    static Double_t  Erfc(Double_t x);
+   static Double_t  ErfInverse(Double_t x);
+   static Double_t  ErfcInverse(Double_t x) {return TMath::ErfInverse(1-x);}
    static Double_t  Freq(Double_t x);
    static Double_t  Gamma(Double_t z);
    static Double_t  Gamma(Double_t a,Double_t x);
