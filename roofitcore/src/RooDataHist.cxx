@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.16 2002/02/07 02:21:36 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.17 2002/03/07 06:22:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -24,6 +24,7 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooMath.hh"
 #include "RooFitCore/RooBinning.hh"
+#include "RooFitCore/RooPlot.hh"
 
 ClassImp(RooDataHist) 
 ;
@@ -344,6 +345,34 @@ void RooDataHist::dump2()
     cout << "wgt[" << i << "] = " << _wgt[i] << " vol[" << i << "] = " << _binv[i] << endl ;
   }
 }
+
+
+
+RooPlot *RooDataHist::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions, const RooAbsBinning* bins) const 
+{
+  if (bins) return RooTreeData::plotOn(frame,cuts,drawOptions,bins) ;
+
+  if(0 == frame) {
+    cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
+    return 0;
+  }
+  RooAbsRealLValue *var= (RooAbsRealLValue*) frame->getPlotVar();
+  if(0 == var) {
+    cout << ClassName() << "::" << GetName()
+	 << ":plotOn: frame does not specify a plot variable" << endl;
+    return 0;
+  }
+
+  RooRealVar* dataVar = (RooRealVar*) _vars.find(var->GetName()) ;
+  if (!dataVar) {
+    cout << ClassName() << "::" << GetName()
+	 << ":plotOn: dataset doesn't contain plot frame variable" << endl;
+    return 0;
+  }
+
+  return RooTreeData::plotOn(frame,cuts,drawOptions,&dataVar->getBinning()) ;
+}
+
 
 
 Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize) 
