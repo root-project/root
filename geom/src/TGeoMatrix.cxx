@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.30 2004/12/07 15:44:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.32 2005/01/13 12:07:48 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -578,45 +578,24 @@ void TGeoTranslation::Add(const TGeoTranslation *other)
 }
 
 //_____________________________________________________________________________
-void TGeoTranslation::RotateX(Double_t angle)
+void TGeoTranslation::RotateX(Double_t /*angle*/)
 {
 // Rotate about X axis of the master frame with angle expressed in degrees.
-   Double_t phi = angle*TMath::DegToRad();
-   Double_t c = TMath::Cos(phi);
-   Double_t s = TMath::Sin(phi);
-   Double_t v[3];
-   v[0] = fTranslation[0];
-   v[1] = c*fTranslation[1]-s*fTranslation[2];
-   v[2] = s*fTranslation[1]+c*fTranslation[2];
-   memcpy(fTranslation,v,kN3);
+   Warning("RotateX", "Not implemented. Use TGeoCombiTrans instead");
 }
 
 //_____________________________________________________________________________
-void TGeoTranslation::RotateY(Double_t angle)
+void TGeoTranslation::RotateY(Double_t /*angle*/)
 {
 // Rotate about Y axis of the master frame with angle expressed in degrees.
-   Double_t phi = angle*TMath::DegToRad();
-   Double_t c = TMath::Cos(phi);
-   Double_t s = TMath::Sin(phi);
-   Double_t v[3];
-   v[0] = c*fTranslation[0]+s*fTranslation[2];
-   v[1] = fTranslation[1];
-   v[2] = -s*fTranslation[0]+c*fTranslation[2];
-   memcpy(fTranslation,v,kN3);
+   Warning("RotateY", "Not implemented. Use TGeoCombiTrans instead");
 }
 
 //_____________________________________________________________________________
-void TGeoTranslation::RotateZ(Double_t angle)
+void TGeoTranslation::RotateZ(Double_t /*angle*/)
 {
 // Rotate about Z axis of the master frame with angle expressed in degrees.
-   Double_t phi = angle*TMath::DegToRad();
-   Double_t c = TMath::Cos(phi);
-   Double_t s = TMath::Sin(phi);
-   Double_t v[3];
-   v[0] = c*fTranslation[0]-s*fTranslation[1];
-   v[1] = s*fTranslation[0]+c*fTranslation[1];
-   v[2] = fTranslation[2];
-   memcpy(fTranslation,v,kN3);
+   Warning("RotateZ", "Not implemented. Use TGeoCombiTrans instead");
 }
 
 //_____________________________________________________________________________
