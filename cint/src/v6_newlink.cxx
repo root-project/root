@@ -1944,10 +1944,18 @@ char *headerfilein;
       if('\0'==hdrpost[0]) {
 	switch(G__globalcomp) {
 	case G__CPPLINK: /* C++ link */
+#ifndef G__OLDIMPLEMENTATION1645
+	  strcpy(hdrpost,G__getmakeinfo1("CPPHDRPOST"));
+#else
 	  strcpy(hdrpost,G__getmakeinfo("CPPHDRPOST"));
+#endif
 	  break;
 	case G__CLINK: /* C link */
+#ifndef G__OLDIMPLEMENTATION1645
+	  strcpy(hdrpost,G__getmakeinfo1("CHDRPOST"));
+#else
 	  strcpy(hdrpost,G__getmakeinfo("CHDRPOST"));
+#endif
 	  break;
 	}
       }
@@ -8784,7 +8792,7 @@ void G__gen_extra_include() {
       fprintf(fp,"#include \"%s\"\n",G__extra_include[i]);
     }
     
-    /* Copy the rest of the header file */
+    /* Copy rest of the header file */
     while (fgets(line, BUFSIZ, ofp)) {
       fprintf(fp, "%s", line);
     }

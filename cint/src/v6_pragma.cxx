@@ -586,6 +586,18 @@ int G__setautoccnames()
   if(p) *p = '\0';
 
   /* assign autocc filenames */
+#ifndef G__OLDIMPLEMENTATION1645
+  if(G__iscpp) 
+    sprintf(G__autocc_c,"G__AC%s%s",fname,G__getmakeinfo1("CPPSRCPOST"));
+  else
+    sprintf(G__autocc_c,"G__AC%s%s",fname,G__getmakeinfo1("CSRCPOST"));
+  sprintf(G__autocc_h,"G__AC%s",fname);
+#ifdef G__WIN32
+  sprintf(G__autocc_sl,"G__AC%s%s",fname,G__getmakeinfo1("DLLPOST"));
+#else
+  sprintf(G__autocc_sl,"./G__AC%s%s",fname,G__getmakeinfo1("DLLPOST"));
+#endif
+#else
   if(G__iscpp) 
     sprintf(G__autocc_c,"G__AC%s%s",fname,G__getmakeinfo("CPPSRCPOST"));
   else
@@ -595,6 +607,7 @@ int G__setautoccnames()
   sprintf(G__autocc_sl,"G__AC%s%s",fname,G__getmakeinfo("DLLPOST"));
 #else
   sprintf(G__autocc_sl,"./G__AC%s%s",fname,G__getmakeinfo("DLLPOST"));
+#endif
 #endif
   sprintf(G__autocc_mak,"G__AC%s.mak",fname);
 

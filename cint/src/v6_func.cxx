@@ -20,6 +20,7 @@
 
 #include "common.h"
 
+
 #ifndef G__OLDIMPLEMENTATION863
 /* not ready yet
 typedef void* G__SHLHANDLE;
@@ -40,12 +41,28 @@ int G__getoptimizemode G__P(());
 extern int G__const_noerror;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1644
+static int G__exitcode = 0;
+/******************************************************************
+* G__getexitcode()
+******************************************************************/
+int G__getexitcode()
+{
+  int exitcode = G__exitcode;
+  G__exitcode = 0 ;
+  return(exitcode);
+}
+
+/******************************************************************
+* G__get_return()
+******************************************************************/
 int G__get_return(int *exitval)
 {
    if (exitval)
-      *exitval = 0;   /* should be value set by exit() */
+      *exitval = G__getexitcode();
    return G__return;
 }
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1618
 /******************************************************************
@@ -3484,6 +3501,9 @@ int hash;
     if(G__atexit) G__call_atexit(); /* Reduntant, also done in G__main() */
     G__return=G__RETURN_EXIT2;
     G__letint(result7,'i',G__int(libp->para[0]));
+#ifndef G__OLDIMPLEMENTATION1644
+    G__exitcode = result7->obj.i;
+#endif
     return(1);
   }
   

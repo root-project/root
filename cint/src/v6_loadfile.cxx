@@ -7,7 +7,7 @@
  * Description:
  *  Loading source file
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its
  * documentation for any purpose is hereby granted without fee,
@@ -345,6 +345,22 @@ char *item;
   fclose(fp);
   return(buf);
 }
+
+#ifndef G__OLDIMPLEMENTATION1645
+/******************************************************************
+* G__getmakeinfo1()
+*
+******************************************************************/
+char *G__getmakeinfo1(item)
+char *item;
+{
+  char *buf = G__getmakeinfo(item);
+  char *p = buf;
+  while(*p && !isspace(*p)) ++p;
+  *p = 0;
+  return(buf);
+}
+#endif
 
 /******************************************************************
 * G__getcintsysdir()
@@ -1131,20 +1147,36 @@ char *filenamein;
 	if((len>3&& (strcmp(filename+len-3,".sl")==0 ||
 		     strcmp(filename+len-3,".dl")==0 ||
 		     strcmp(filename+len-3,".so")==0))) {
+#ifndef G__OLDIMPLEMENTATION1645
+	  strcpy(filename+len-3,G__getmakeinfo1("DLLPOST"));
+#else
 	  strcpy(filename+len-3,G__getmakeinfo("DLLPOST"));
+#endif
 	}
 	else if((len>4&& (strcmp(filename+len-4,".dll")==0 ||
 			  strcmp(filename+len-4,".DLL")==0))) {
+#ifndef G__OLDIMPLEMENTATION1645
+	  strcpy(filename+len-4,G__getmakeinfo1("DLLPOST"));
+#else
 	  strcpy(filename+len-4,G__getmakeinfo("DLLPOST"));
+#endif
 	}
 	else if((len>2&& (strcmp(filename+len-2,".a")==0 ||
 			  strcmp(filename+len-2,".A")==0))) {
+#ifndef G__OLDIMPLEMENTATION1645
+	  strcpy(filename+len-2,G__getmakeinfo1("DLLPOST"));
+#else
 	  strcpy(filename+len-2,G__getmakeinfo("DLLPOST"));
+#endif
 	}
 #if defined(R__FBSD)
 	else if (len>strlen(soext) &&
 		 strcmp(filename+len-strlen(soext),soext)==0) {
+#ifndef G__OLDIMPLEMENTATION1645
+	  strcpy(filename+len-strlen(soext),G__getmakeinfo1("DLLPOST"));
+#else
 	  strcpy(filename+len-strlen(soext),G__getmakeinfo("DLLPOST"));
+#endif
 	}
 #endif
       }
@@ -1937,16 +1969,32 @@ char *macros,*undeflist,*ppopt,*includepath;
   else {
 #endif
     if('\0'==G__cppsrcpost[0]) {
+#ifndef G__OLDIMPLEMENTATION1645
+      strcpy(G__cppsrcpost,G__getmakeinfo1("CPPSRCPOST"));
+#else
       strcpy(G__cppsrcpost,G__getmakeinfo("CPPSRCPOST"));
+#endif
     }
     if('\0'==G__csrcpost[0]) {
+#ifndef G__OLDIMPLEMENTATION1645
+      strcpy(G__csrcpost,G__getmakeinfo1("CSRCPOST"));
+#else
       strcpy(G__csrcpost,G__getmakeinfo("CSRCPOST"));
+#endif
     }
     if('\0'==G__cpphdrpost[0]) {
+#ifndef G__OLDIMPLEMENTATION1645
+      strcpy(G__cpphdrpost,G__getmakeinfo1("CPPHDRPOST"));
+#else
       strcpy(G__cpphdrpost,G__getmakeinfo("CPPHDRPOST"));
+#endif
     }
     if('\0'==G__chdrpost[0]) {
+#ifndef G__OLDIMPLEMENTATION1645
+      strcpy(G__chdrpost,G__getmakeinfo1("CHDRPOST"));
+#else
       strcpy(G__chdrpost,G__getmakeinfo("CHDRPOST"));
+#endif
     }
     if(0==strcmp(inname+strlen(inname)-strlen(G__cppsrcpost),G__cppsrcpost)) {
       if(!G__clock) G__iscpp=1;
@@ -2021,13 +2069,21 @@ char *macros,*undeflist,*ppopt,*includepath;
 	tmplen=strlen(tmpfile);
 	if(G__CPPLINK==G__globalcomp || G__iscpp) {
 	  if('\0'==G__cppsrcpost[0]) {
+#ifndef G__OLDIMPLEMENTATION1645
+	    strcpy(G__cppsrcpost,G__getmakeinfo1("CPPSRCPOST"));
+#else
 	    strcpy(G__cppsrcpost,G__getmakeinfo("CPPSRCPOST"));
+#endif
 	  }
 	  strcpy(tmpfile+tmplen,G__cppsrcpost);
 	}
 	else {
 	  if('\0'==G__csrcpost[0]) {
+#ifndef G__OLDIMPLEMENTATION1645
+	    strcpy(G__csrcpost,G__getmakeinfo1("CSRCPOST"));
+#else
 	    strcpy(G__csrcpost,G__getmakeinfo("CSRCPOST"));
+#endif
 	  }
 	  strcpy(tmpfile+tmplen,G__csrcpost);
 	}

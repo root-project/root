@@ -29,7 +29,11 @@
 *
 * 
 *********************************************************************/
-class G__MethodInfo {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__MethodInfo {
   friend class G__MethodArgInfo;
  public:
   ~G__MethodInfo() {}

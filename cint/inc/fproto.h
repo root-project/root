@@ -756,15 +756,7 @@ struct G__ConstStringList* G__AddConstStringList G__P((struct G__ConstStringList
 void G__DeleteConstStringList G__P((struct G__ConstStringList* current));
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1485
-#ifdef G__FIX1
-int G__fprinterr (FILE* fp,char* fmt,...);
-#else
-int G__fprinterr G__P((FILE* fp,char* fmt,...));
-#endif
-int G__fputerr G__P((int c));
-#else
-#define G__fprinterr  fprintf
+#ifndef G__OLDIMPLEMENTATION1649
 #endif
 
 #ifdef G__SHMGLOBAL

@@ -30,7 +30,11 @@
 *
 * 
 *********************************************************************/
-class G__TypedefInfo : public G__TypeInfo {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__TypedefInfo : public G__TypeInfo {
  public:
   ~G__TypedefInfo() {}
   G__TypedefInfo() { Init(); }

@@ -34,7 +34,11 @@ class G__MethodInfo;
 * Outcome of discussion between Nenad Buncic of CERN. 15 Mar 1997
 * 
 *********************************************************************/
-class G__TokenInfo {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__TokenInfo {
  public:
   enum G__TokenType { t_invalid                                   // p_invalid
                     , t_class , t_typedef, t_fundamental , t_enum    // p_type

@@ -2249,12 +2249,12 @@ int G__fputs(char *string,FILE *fp)
 **************************************************************************/
 int G__puts(char *string)
 {
-   int result;
-   G__lockstdio=1;
-   if(G__autoconsole&&0==G__isconsole) G__AllocConsole();
-   result=puts(string);
-   G__lockstdio=0;
-   return(result);
+  int result;
+  G__lockstdio=1;
+  if(G__autoconsole&&0==G__isconsole) G__AllocConsole();
+  result=puts(string);
+  G__lockstdio=0;
+  return(result);
 }
 
 /**************************************************************************
@@ -2276,12 +2276,12 @@ char *G__fgets(char *string,int n,FILE *fp)
 **************************************************************************/
 char *G__gets(char *buffer)
 {
-   char *result;
-   G__lockstdio=1;
-   if(G__autoconsole&&0==G__isconsole) G__AllocConsole();
-   result=gets(buffer);
-   G__lockstdio=0;
-   return(result);
+  char *result;
+  G__lockstdio=1;
+  if(G__autoconsole&&0==G__isconsole) G__AllocConsole();
+  result=gets(buffer);
+  G__lockstdio=0;
+  return(result);
 }
 
 /**************************************************************************

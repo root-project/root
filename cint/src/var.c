@@ -2144,13 +2144,13 @@ struct G__var_array *varglobal,*varlocal;
 
   switch(item[0]) {
   case '*': /* value of pointer */
-#ifndef G__OLDIMPLEMENTATION576
     if(item[1]=='(' || 
        '+'==item[1] || '-'==item[1] ||
-       '+'==item[lenitem-1] || '-'==item[lenitem-1]) {
-#else
-    if(item[1]=='(') {
+       '+'==item[lenitem-1] || '-'==item[lenitem-1]
+#ifndef G__OLDIMPLEMENTATION1648
+       || ('*'==item[1] && 0==G__decl)
 #endif
+       ) {
       result=G__getexpr(item+1);
       G__ASSERT(isupper(result.type)||'u'==result.type);
       para[0]=G__letPvalue(&result,expression);
@@ -2896,7 +2896,19 @@ struct G__var_array *varglobal,*varlocal;
 	G__ASSIGN_VAR(G__DOUBLEALLOC,double,G__double)
 	    
       case 'c': /* char */
+#ifndef G__OLDIMPLEMENTATION1647
+	if(G__decl && INT_MAX==var->varlabel[ig15][1] && paran &&
+	   paran==var->paran[ig15] && 'p'==G__var_type && 
+	   0==G__struct_offset && 'C'==result.type && result.obj.i) {
+	  var->p[ig15] = result.obj.i;
+	  return(result);
+	}
+	else {
+	  G__ASSIGN_VAR(G__CHARALLOC,char,G__int)
+	}
+#else
 	G__ASSIGN_VAR(G__CHARALLOC,char,G__int)
+#endif
 	      
       case 'b': /* unsigned char */
 	G__ASSIGN_VAR(G__CHARALLOC,unsigned char ,G__int)
@@ -5258,7 +5270,7 @@ long G__struct_offset; /* used to be int */
 	    }
 	  }
 #ifndef G__OLDIMPLEMENTATION1641
-	  else if(!ig2) {
+	  else if(!ig2 && 'U'==result->type) {
 	    G__fprinterr(G__serr,"Error: Constructor %s not found",result7);
 	    G__genericerror((char*)NULL);
 	  }

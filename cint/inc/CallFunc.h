@@ -30,7 +30,11 @@
 *
 * 
 *********************************************************************/
-class G__CallFunc {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__CallFunc {
  public:
   ~G__CallFunc() {}
   G__CallFunc() ;

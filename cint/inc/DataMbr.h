@@ -29,7 +29,11 @@
 *
 *
 *********************************************************************/
-class G__DataMemberInfo {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__DataMemberInfo {
  public:
   ~G__DataMemberInfo() {}
   G__DataMemberInfo() : type() { Init(); }

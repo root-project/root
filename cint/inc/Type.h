@@ -29,7 +29,11 @@
 * class G__TypeInfo
 * 
 *********************************************************************/
-class G__TypeInfo : public G__ClassInfo  {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__TypeInfo : public G__ClassInfo  {
   friend class G__DataMemberInfo;
   friend class G__MethodInfo;
   friend class G__MethodArgInfo;

@@ -35,7 +35,11 @@ class G__FriendInfo;
 *
 * 
 *********************************************************************/
-class G__ClassInfo {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__ClassInfo {
  public:
   ~G__ClassInfo() {}
   G__ClassInfo() { Init(); }
@@ -143,7 +147,11 @@ class G__ClassInfo {
 *
 * 
 *********************************************************************/
-class G__FriendInfo {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__FriendInfo {
  public:
   G__FriendInfo(struct G__friendtag *pin=0) { Init(pin); }
   void operator=(const G__FriendInfo& x) { Init(x.pfriendtag); }

@@ -29,7 +29,11 @@
 *
 * 
 *********************************************************************/
-class G__MethodArgInfo {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__MethodArgInfo {
  public:
   ~G__MethodArgInfo() {}
   void Init(class G__MethodInfo &a);

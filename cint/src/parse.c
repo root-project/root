@@ -4361,6 +4361,16 @@ G__value G__exec_statement()
       
       
     case '"' : /* double quote */
+#ifndef G__OLDIMPLEMENTATION1051
+      if(8==iout && strcmp(statement,"#include")==0) {
+	fseek(G__ifile.fp,-1,SEEK_CUR);
+	if(G__dispsource) G__disp_mask=1;
+	G__include_file();
+	iout=0;
+	spaceflag=0;
+	if(mparen==0 || G__return>G__RETURN_NORMAL) return(G__null);
+      }
+#endif
       statement[iout++] = c ;
       spaceflag=5;
       if(single_quote==0) {

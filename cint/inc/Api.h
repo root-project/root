@@ -123,7 +123,11 @@ void G__InitUpdateClassInfo(G__pMethodUpdateClassInfo pmethod);
 /*********************************************************************
 * G__SourceFileInfo
 *********************************************************************/
-class G__SourceFileInfo {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__SourceFileInfo {
  public:
   G__SourceFileInfo() { Init(); }
   G__SourceFileInfo(int filenin) { filen = filenin; }
@@ -152,7 +156,11 @@ class G__SourceFileInfo {
 struct G__includepath;
 #endif
 
-class G__IncludePathInfo {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__IncludePathInfo {
  public:
   G__IncludePathInfo() { Init(); }
   ~G__IncludePathInfo() { }

@@ -32,7 +32,11 @@
 * Rene says OK
 * 
 *********************************************************************/
-class G__BaseClassInfo : public G__ClassInfo {
+class 
+#ifndef __CINT__
+G__EXPORT
+#endif
+G__BaseClassInfo : public G__ClassInfo {
  public:
   ~G__BaseClassInfo() {}
   G__BaseClassInfo(G__ClassInfo &a);

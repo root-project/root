@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015032
-#define G__CINTVERSIONSTR  "5.15.32, Feb 10 2002"
+#define G__CINTVERSION      5015033
+#define G__CINTVERSIONSTR  "5.15.33, Feb 24 2002"
 
 
 /**********************************************************************
@@ -38,6 +38,9 @@
 #define G__OLDIMPLEMENTATION1635
 #endif
 #endif
+
+/* 1649 is not ready yet */
+/* #define G__OLDIMPLEMENTATION1649 */
 
 /* Define following macro in order to disable iostream I/O redirection */
 /* #define G__OLDIMPLEMENTATION1635 */
@@ -271,6 +274,8 @@ typedef long fpos_tt; /* pos_t is defined to be a struct{32,32} in VMS.
 #endif
 
 #if (defined(G__BORLAND)||defined(G__CYGWIN)) && defined(G__CINTBODY)
+#define G__EXPORT __declspec(dllexport)
+#elif (defined(G__VISUAL)||defined(G__CYGWIN)) && defined(G__CINTBODY)
 #define G__EXPORT __declspec(dllexport)
 #else
 #define G__EXPORT
@@ -1667,6 +1672,22 @@ extern G__EXPORT void G__operator_delete_ary G__P((void *p)) ;
 #endif
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1644
+extern G__EXPORT int G__getexitcode G__P(());
+extern G__EXPORT int G__get_return G__P((int *exitval));
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1485
+#ifdef G__FIX1
+extern G__EXPORT int G__fprinterr (FILE* fp,char* fmt,...);
+#else
+extern G__EXPORT int G__fprinterr G__P((FILE* fp,char* fmt,...));
+#endif
+extern G__EXPORT int G__fputerr G__P((int c));
+#else
+#define G__fprinterr  fprintf
+#endif
+
 #ifdef G__ASM_WHOLEFUNC
 /**************************************************************************
 * Interface method to run bytecode function
@@ -1806,6 +1827,9 @@ extern G__EXPORT void G__set_aterror G__P((void (*p2f)()));
 extern G__EXPORT void G__p2f_void_void G__P((void* p2f));
 extern G__EXPORT void G__setglobalcomp G__P((int globalcomp));
 extern G__EXPORT char *G__getmakeinfo G__P((char *item));
+#ifndef G__OLDIMPLEMENTATION1645
+extern G__EXPORT char *G__getmakeinfo1 G__P((char *item));
+#endif
 extern G__EXPORT int G__get_security_error G__P((void));
 extern G__EXPORT char* G__map_cpp_name G__P((char *in));
 extern G__EXPORT char* G__Charref G__P((G__value *buf));
@@ -1833,7 +1857,6 @@ extern G__EXPORT void G__set_emergencycallback G__P((void (*p2f)()));
 #ifndef G__OLDIMPLEMENTATION1485
 extern G__EXPORT void G__set_errmsgcallback(void* p);
 #endif
-extern G__EXPORT int G__get_return G__P((int *exitval));
 
 #else /* G__MULTITHREADLIBCINT */
 

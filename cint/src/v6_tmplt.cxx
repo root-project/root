@@ -912,12 +912,21 @@ char *name;
   char *p;
   char *p1;
   char *p2;
+#ifndef G__OLDIMPLEMENTATION1642
+  char atom_name[G__LONGLINE];
+#endif
   int store_asm_noverflow = G__asm_noverflow ;
   struct G__Definetemplatefunc *result= NULL;
 
   /* separate "t" and "Handle" */
+#ifndef G__OLDIMPLEMENTATION1642
+  strcpy(atom_name,name);
+  p1 = strrchr(atom_name,'.');
+  p2 = G__strrstr(atom_name,"->");
+#else
   p1 = strrchr(name,'.');
   p2 = G__strrstr(name,"->");
+#endif
   if(!p1 && !p2) return(result);
 
   if(p1>p2 || !p2) {
@@ -933,7 +942,11 @@ char *name;
   G__suspendbytecode();
 
   {
+#ifndef G__OLDIMPLEMENTATION1642
+    int tagnum = G__getobjecttagnum(atom_name);
+#else
     int tagnum = G__getobjecttagnum(name);
+#endif
     if(-1!=tagnum) {
       int store_def_tagnum = G__def_tagnum;
       int store_tagdefining = G__tagdefining;
@@ -1395,7 +1408,11 @@ void G__declare_template()
       G__disp_mask = 1000;
       fgetpos(G__ifile.fp,&posx);
       linex = G__ifile.line_number;
+#ifndef G__OLDIMPLEMENTATION1646
+      c=G__fgetname(temp,"&*(;<");
+#else
       c=G__fgetname(temp,"*(;<");
+#endif
       if(0==strcmp(temp,"const")) {
 	G__constvar = G__CONSTVAR;
 	if(G__dispsource) G__fprinterr(G__serr,"%s",temp);

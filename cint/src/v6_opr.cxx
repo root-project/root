@@ -662,11 +662,9 @@ G__value *defined;
 	  break;
 #endif
 	default:
-#ifndef G__OLDIMPLEMENTATION999
-	  G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
-#else
-	  G__fprinterr(G__serr,"Error: %c ",operator);
-#endif
+	  if(G__ASM_FUNC_NOP==G__asm_wholefunction) {
+	    G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
+	  }
 	  G__genericerror("Illegal operator for pointer 1");
 	  break;
 	}

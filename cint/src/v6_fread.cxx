@@ -2886,6 +2886,8 @@ int G__fgetc()
   return( c ) ;
 }
 
+#ifndef G__OLDIMPLEMENTATION1649
+#endif
 
 
 /*
