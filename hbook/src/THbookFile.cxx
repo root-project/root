@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.15 2002/11/07 05:23:26 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.16 2002/12/02 18:50:03 rdm Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -388,7 +388,7 @@ void THbookFile::Close(Option_t *)
 
    fList->Delete();
    fKeys->Delete();
-   fgLuns[fLun-10] = 0;
+   if (fgLuns) fgLuns[fLun-10] = 0;
    hdelet(0);
 #ifndef WIN32
   hrend(PASSCHAR(GetTitle()),strlen(GetTitle()));

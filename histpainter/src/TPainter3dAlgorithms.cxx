@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.6 2002/08/05 09:26:08 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.7 2002/08/13 21:17:59 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -123,8 +123,7 @@ TPainter3dAlgorithms::~TPainter3dAlgorithms()
 //*-*-*-*-*-*-*-*-*-*-*Lego default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =======================
 
-   delete [] fRaster;
-   fRaster = 0;
+   if (fRaster) {delete [] fRaster; fRaster = 0;}
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.9 2002/11/15 20:02:56 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.10 2002/11/28 18:38:12 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -121,7 +121,7 @@ protected:
    virtual void StopFeedback();   // specialized teardown
 
 public:
-   TProofPlayerRemote() { fProof = 0; fOutputLists = 0; }
+   TProofPlayerRemote() { fProof = 0; fOutputLists = 0; fFeedbackLists=0; fPacketizer=0;}
    TProofPlayerRemote(TProof *proof);
    ~TProofPlayerRemote();   // Owns the fOutput list
 

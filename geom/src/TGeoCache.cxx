@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.11 2002/12/12 12:02:37 rdm Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.12 2003/01/07 11:24:55 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -796,6 +796,7 @@ TGeoNodeObjArray::TGeoNodeObjArray(Int_t size)
 TGeoNodeObjArray::~TGeoNodeObjArray()
 {
 // destructor
+   if (!fObjArray) return;
    fObjArray->Delete();
    delete fObjArray;
 }   

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.2 2001/04/03 10:36:21 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.3 2001/04/28 16:30:14 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -43,6 +43,7 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
    // Create a new window. Parent p must exist. No specified arguments
    // result in values from parent to be taken (or defaults).
 
+   if (!p && gClient) p = gClient->GetRoot();
    if (p) {
       fClient = p->fClient;
       fParent = p;

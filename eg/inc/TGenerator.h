@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.2 2000/11/21 16:52:19 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.h,v 1.3 2000/12/13 15:13:46 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -46,7 +46,7 @@ class TGenerator : public TNamed {
         TObjArray    *fParticles;    //->static container of the primary particles
  public:
 
-        TGenerator(){}; //Used by Dictionary
+        TGenerator(){fParticles=0;} //Used by Dictionary
         TGenerator(const char *name, const char *title="Generator class");
         virtual ~TGenerator();
         virtual void            Browse(TBrowser *b);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.2 2002/07/10 19:24:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoAtt.cxx,v 1.3 2002/12/03 16:01:39 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -26,6 +26,7 @@ TGeoAtt::TGeoAtt()
 {
 // Default constructor
    fGeoAtt = 0;
+   if (!gGeoManager) return;
    SetVisibility(kTRUE);
    SetVisDaughters(kTRUE);
    SetVisStreamed(kFALSE);

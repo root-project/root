@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.8 2002/06/12 16:46:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.9 2002/07/13 16:38:06 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -384,7 +384,7 @@ Bool_t TGMenuBar::HandleKey(Event_t *event)
 
 //______________________________________________________________________________
 TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
-    : TGFrame(p ? p : gClient->GetRoot(), w, h, options | kOwnBackground)
+    : TGFrame(p, w, h, options | kOwnBackground)
 {
    // Create a popup menu.
 

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.2 2002/12/02 18:50:05 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 const char *gCoPyRiGhT[] = {
      "STAR dataset C++ base class library:",
@@ -19,7 +19,7 @@ const char *gCoPyRiGhT[] = {
 };
 
 const char *Id = {
-    "$Id: TDataSet.cxx,v 1.1 2002/05/27 16:26:59 rdm Exp $"
+    "$Id: TDataSet.cxx,v 1.2 2002/12/02 18:50:05 rdm Exp $"
 };
 #include "Riostream.h"
 #include "TSystem.h"
@@ -160,7 +160,7 @@ TDataSet::TDataSet(const Char_t *name, TDataSet *parent, Bool_t arrayFlag)
            : TNamed(name,"TDataSet")
 {
   //  cout << "ctor for " << GetName() << " - " << GetTitle() << endl;
-   if (strchr(name,'/')) {
+   if (name && strchr(name,'/')) {
       Error("TDataSet::TDataSet","dataset name cannot contain a slash", name);
       return;
    }

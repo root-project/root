@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.16 2002/11/28 18:38:12 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.17 2002/12/02 18:50:05 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -75,6 +75,7 @@ TProofPlayer::TProofPlayer()
 {
    // Default ctor.
 
+   fAutoBins = 0;
    fInput    = new TList;
    fOutput   = 0;
    fSelector = 0;
@@ -630,6 +631,8 @@ ClassImp(TProofPlayerSlave)
 //______________________________________________________________________________
 TProofPlayerSlave::TProofPlayerSlave()
 {
+  fSocket = 0;
+  fFeedback = 0;
 }
 
 

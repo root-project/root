@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.25 2002/07/08 14:41:44 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.26 2002/09/13 19:43:12 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -289,11 +289,12 @@ ClassImp(TTreeViewer)
 
 //______________________________________________________________________________
 TTreeViewer::TTreeViewer(const char* treeName)
-          :TGMainFrame(gClient->GetRoot(),10,10,kVerticalFrame)
+          :TGMainFrame(0,10,10,kVerticalFrame)
 {
    // TTreeViewer default constructor
 
    fTree = 0;
+   if (!gClient) return;
    gROOT->ProcessLine("TTree *tv__tree = 0;");
    fTreeList = new TList;
    gROOT->ProcessLine("TList *tv__tree_list = new TList;");
@@ -943,6 +944,7 @@ TTreeViewer::~TTreeViewer()
 {
    // TTreeViewer destructor.
 
+   if (!gClient) return;
    gClient->FreePicture(fPicX);
    gClient->FreePicture(fPicY);
    gClient->FreePicture(fPicZ);
