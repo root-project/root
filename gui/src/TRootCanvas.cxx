@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.21 2004/01/08 23:07:40 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.22 2004/01/13 21:02:14 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -885,7 +885,7 @@ void TRootCanvas::FitCanvas()
 //______________________________________________________________________________
 void TRootCanvas::Lock()
 {
-   // lock updating canvas
+   // Lock updating canvas.
 
    if (IsLocked()) return;
 #ifdef WIN32
@@ -896,7 +896,7 @@ void TRootCanvas::Lock()
 //______________________________________________________________________________
 void TRootCanvas::Unlock()
 {
-   //  unlock updating canvas
+   //  Unlock updating canvas.
 
    if (!IsLocked()) return;
 #ifdef WIN32
