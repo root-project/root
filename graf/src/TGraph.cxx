@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.91 2003/01/02 22:41:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.92 2003/01/06 08:38:14 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1330,6 +1330,9 @@ TH1F *TGraph::GetHistogram() const
   uxmax    = rwxmax + dx;
   minimum  = rwymin - dy;
   maximum  = rwymax + dy;
+  if (fMinimum != -1111) minimum = fMinimum;
+  if (fMaximum != -1111) maximum = fMaximum;
+  
       // the graph is created with at least as many channels as there are points
       // to permit zooming on the full range
   if (uxmin < 0 && rwxmin >= 0) {
