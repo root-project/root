@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.40 2003/07/07 21:25:49 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.41 2003/07/10 15:37:34 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2444,7 +2444,8 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                out << "<a href=\"";
                if (*dir  
 		   && strncmp(htmlFile, "http://", 7) 
-		   && strncmp(htmlFile, "https://", 8))
+		   && strncmp(htmlFile, "https://", 8)
+		   && !gSystem->IsAbsoluteFileName(htmlFile))
                   out << dir;
                out << htmlFile;
 
@@ -2546,7 +2547,8 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                         out << "<a href=\"";
                         if (*dir 
 			    && strncmp(htmlFile, "http://", 7)
-			    && strncmp(htmlFile, "https://", 8))
+			    && strncmp(htmlFile, "https://", 8)
+			    && !gSystem->IsAbsoluteFileName(htmlFile))
                            out << dir;
                         out << htmlFile;
                         if (cl->GetDataMember(keyword)) {
@@ -2579,7 +2581,8 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                                  out << "<a href=\"";
                                  if (*dir 
                                      && strncmp(htmlFile2, "http://", 7)
-				     && strncmp(htmlFile2, "https://", 8))
+				     && strncmp(htmlFile2, "https://", 8)
+				     && !gSystem->IsAbsoluteFileName(htmlFile2))
                                     out << dir;
                                  out << htmlFile2;
                                  out << "#" << cm->GetName() << ":";
@@ -3038,7 +3041,9 @@ void THtml::MakeClass(const char *className, Bool_t force)
       char *htmlFile = GetHtmlFileName(classPtr);
       if (htmlFile 
 	  && (!strncmp(htmlFile, "http://", 7)
-	       || !strncmp(htmlFile, "https://", 8))) {
+	      || !strncmp(htmlFile, "https://", 8)
+	      || gSystem->IsAbsoluteFileName(htmlFile))
+	  ) {
          delete[]htmlFile;
          htmlFile = 0;
       }
@@ -3188,8 +3193,10 @@ void THtml::MakeTree(const char *className, Bool_t force)
 
       char *htmlFile = GetHtmlFileName(classPtr);
       if (htmlFile 
-	  && !(strncmp(htmlFile, "http://", 7)
-	       && strncmp(htmlFile, "https://", 8))) {
+	  && (!strncmp(htmlFile, "http://", 7)
+	      || !strncmp(htmlFile, "https://", 8)
+	      || gSystem->IsAbsoluteFileName(htmlFile))
+	  ) {
          delete[]htmlFile;
          htmlFile = 0;
       }
@@ -3684,7 +3691,8 @@ void THtml::WriteHtmlFooter(ofstream & out, const char *dir,
          out << "<a href=\"";
          if (*dir) {
             if (strncmp(userHomePage, "http://", 7)
-		&& strncmp(userHomePage, "https://", 8))
+		&& strncmp(userHomePage, "https://", 8)
+		&& !gSystem->IsAbsoluteFileName(userHomePage))
                out << dir;
          }
          out << userHomePage;
