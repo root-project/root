@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.19 2004/04/20 21:20:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.20 2004/04/21 10:13:31 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -581,7 +581,6 @@ TGFileItem *TGFileContainer::AddFile(const char *name)
       item = new TGFileItem(this, pic, lpic, spic, slpic, new TGString(name),
                             type, size, uid, gid, fViewMode);
       AddItem(item);
-      fTotal++;
    }
 
    return item;
