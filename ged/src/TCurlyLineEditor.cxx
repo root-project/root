@@ -11,9 +11,9 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  TCurlyLineEditor                                                        //
+//  TCurlyLineEditor                                                    //
 //                                                                      //
-//  Implements GUI for editing CurlyLine attributes: shape, size, angle.    //                                             //
+//  Implements GUI for editing CurlyLine attributes: shape, size, angle.//                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 //Begin_Html

@@ -11,9 +11,9 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  TCurlyArcEditor                                                        //
+//  TCurlyArcEditor                                                     //
 //                                                                      //
-//  Implements GUI for editing arrow attributes: shape, size, angle.    //                                             //
+//  Implements GUI for editing CurlyArc attributes: radius, phi1, phi2. //                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 //Begin_Html

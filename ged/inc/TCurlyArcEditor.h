@@ -16,7 +16,7 @@
 //                                                                      //
 //  TCurlyArcEditor                                                     //
 //                                                                      //
-//  Implements GUI for editing CurlyArc attributes: radius, phi1 phi2.  //                                             //
+//  Implements GUI for editing CurlyArc attributes: radius, phi1, phi2. //                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
