@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.3 2000/11/30 07:46:59 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.4 2000/12/13 15:13:52 brun Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -89,7 +89,8 @@ const char *TBaseClass::GetTitle() const
 {
    // Get base class description (comment).
 
-   return ((TBaseClass *)this)->GetClassPointer()->GetTitle();
+   TClass *c = ((TBaseClass *)this)->GetClassPointer();
+   return c ? c->GetTitle() : "";
 }
 
 //______________________________________________________________________________
