@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.158 2004/07/08 08:09:06 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.159 2004/07/09 04:40:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -823,13 +823,18 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       }
       return DrawScript("generatedSel",varexp0,selection,option,nentries,firstentry);
 
-   } else if (gSystem->IsFileInIncludePath(selection)) {
+   } else {
+      possibleFilename = selection;
+      if (possibleFilename.Index("Alt$")<0 && possibleFilename.Index("Entries$")<0 
+          && possibleFilename.Index("Length$")<0  && possibleFilename.Index("Entry$")<0 
+          && possibleFilename.Index("Iteration$")<0 
+          && gSystem->IsFileInIncludePath(possibleFilename.Data())) {
 
-      Error("DrawSelect",
-            "Drawing using a C++ file currently requires that both the expression and the selection are files\n\t\"%s\" is not a file",
-            varexp0);
-      return 0;
-
+         Error("DrawSelect",
+               "Drawing using a C++ file currently requires that both the expression and the selection are files\n\t\"%s\" is not a file",
+               varexp0);
+         return 0;
+      }
    }
 
    Int_t oldEstimate  = fTree->GetEstimate();
