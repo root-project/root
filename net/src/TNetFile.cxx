@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.8 2000/12/02 15:50:28 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.9 2000/12/13 15:13:53 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -115,6 +115,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
    // The preferred interface to this constructor is via TFile::Open().
 
    TAuthenticate *auth;
+   Int_t sec;
 
    fOffset = 0;
 
@@ -158,15 +159,18 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t 
    fSocket->SetOption(kRecvBuffer, 65536);
 
    // Authenticate to remote rootd server
-   auth = new TAuthenticate(fSocket, fUrl.GetProtocol(), fUrl.GetHost());
-   if (!auth->Authenticate(fUser)) {
-      if (!strcmp(fUrl.GetProtocol(), "roots"))
+   sec = !strcmp(fUrl.GetProtocol(), "roots") ?
+         TAuthenticate::kSRP : TAuthenticate::kNormal;
+   auth = new TAuthenticate(fSocket, fUrl.GetHost(), "rootd", sec);
+   if (!auth->Authenticate()) {
+      if (sec == TAuthenticate::kSRP)
          Error("TNetFile", "secure authentication failed for host %s", fUrl.GetHost());
       else
          Error("TNetFile", "authentication failed for host %s", fUrl.GetHost());
       delete auth;
       goto zombie;
    }
+   fUser = auth->GetUser();
    delete auth;
 
    if (forceOpen)
