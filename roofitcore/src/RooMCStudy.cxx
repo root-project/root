@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.cc,v 1.5 2002/01/23 02:47:24 verkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.6 2002/02/02 02:24:24 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -47,9 +47,11 @@ ClassImp(RooMCStudy)
 
 RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel, 
 		       const RooArgSet& dependents, const char* genOptions, 
-		       const char* fitOptions, const RooDataSet* genProtoData) :
+		       const char* fitOptions, const RooDataSet* genProtoData, 
+		       const RooArgSet& projDeps) :
   _genModel((RooAbsPdf*)&genModel), 
   _fitModel((RooAbsPdf*)&fitModel), 
+  _projDeps(projDeps),
   _dependents(dependents), 
   _fitOptions(fitOptions),
   _genProtoData(genProtoData)
@@ -281,7 +283,13 @@ Bool_t RooMCStudy::fitSample(RooDataSet* genSample)
 
   // Fit model to data set
   TString fitOpt2(_fitOptions) ; fitOpt2.Append("r") ;
-  RooFitResult* fr = (RooFitResult*) _fitModel->fitTo(*genSample,fitOpt2) ;
+
+  RooFitResult* fr ;
+  if (_projDeps.getSize()>0) {
+    fr = (RooFitResult*) _fitModel->fitTo(*genSample,_projDeps,fitOpt2) ;
+  } else {
+    fr = (RooFitResult*) _fitModel->fitTo(*genSample,fitOpt2) ;
+  }
 
   // If fit converged, store parameters and NLL
   Bool_t ok = (fr->status()==0) ;
