@@ -4,6 +4,7 @@
 #include "TDirectory.h"
 #include "TFile.h"
 #include "TH1.h"
+#include "TSystem.h"
 
 #ifndef __CINT__
 #include "Event.h"
@@ -222,7 +223,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
 
 void MakeRef(const char* from) {
    if (!TClassTable::GetDict("Event")) {
-      gROOT->ProcessLine(".L libEvent.so");
+      gSystem->Load("libEvent");
       gHasLibrary = kTRUE;
    }
 
