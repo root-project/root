@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.2 2000/09/08 16:11:03 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.3 2000/10/23 10:22:21 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -303,9 +303,10 @@ void TObjArray::Streamer(TBuffer &b)
 {
    // Stream all objects in the array to or from the I/O buffer.
 
+   UInt_t R__s, R__c;
    Int_t nobjects;
    if (b.IsReading()) {
-      Version_t v = b.ReadVersion();
+      Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 2)
          TObject::Streamer(b);
       if (v > 1)
@@ -323,8 +324,9 @@ void TObjArray::Streamer(TBuffer &b)
          }
       }
       Changed();
+      b.CheckByteCount(R__s, R__c,TObjArray::IsA());
    } else {
-      b.WriteVersion(TObjArray::IsA());
+      R__c = b.WriteVersion(TObjArray::IsA(), kTRUE);
       TObject::Streamer(b);
       fName.Streamer(b);
       nobjects = GetSize();
@@ -334,6 +336,7 @@ void TObjArray::Streamer(TBuffer &b)
       for (Int_t i = 0; i < nobjects; i++) {
          b << fCont[i];
       }
+      b.SetByteCount(R__c, kTRUE);
    }
 }
 
