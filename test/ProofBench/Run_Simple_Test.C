@@ -1,4 +1,4 @@
-// $Id: Run_Simple_Test.C,v 1.2 2004/12/22 15:16:34 brun Exp $
+// $Id: Run_Simple_Test.C,v 1.3 2005/02/07 18:02:37 rdm Exp $
 //
 //
 
@@ -8,6 +8,13 @@
 // - optional: change the data directory below (needs 350 Mb)
 // - start rootd
 // - start proofd
+
+#include "TSystem.h"
+#include "TEnv.h"
+#include "TProof.h"
+#include "TDSet.h"
+#include "TDrawFeedback.h"
+
 
 #include "make_event_trees.C"
 #include "make_tdset.C"
@@ -26,11 +33,12 @@ void Run_Simple_Test()
    gSystem->Load("../libEvent.so");
 
    gROOT->Proof();
+//   gProof->SetLogLevel(2);
 
    gProof->UploadPackage("event.par");
    gProof->EnablePackage("event");
 
-   make_event_trees(data_dir, 20000, 2);
+   make_event_trees(data_dir, 10000, 2);
 
    TDSet *d = make_tdset(data_dir, 1);
 
@@ -51,7 +59,7 @@ void Run_Simple_Test()
       fb = new TDrawFeedback(gProof);
    }
 
-   d->Process("EventTree_Proc.C+","");
+   d->Process("EventTree_Proc.C","");
 
    if (fb) delete fb;
 }

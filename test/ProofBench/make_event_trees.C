@@ -1,3 +1,12 @@
+// $Id:$
+//
+//
+
+#include "Riostream.h"
+#include "TProof.h"
+#include "TString.h"
+
+
 Bool_t make_event_trees(const Char_t* basedir, Int_t events_per_file, Int_t files_per_node)
 {
    // This script generates files on PROOF nodes with trees containing Event objects.

@@ -1,3 +1,16 @@
+// $Id:$
+//
+//
+
+#include "Riostream.h"
+#include "TArrayI.h"
+#include "TDSet.h"
+#include "THashList.h"
+#include "TList.h"
+#include "TObjString.h"
+#include "TProof.h"
+
+
 TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave)
 {
    // This script creates a TDSet object that can be used to process
@@ -19,7 +32,7 @@ TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave)
 
    if (files_per_slave <= 0) {
       cout << "files_per_slave must be > 0" << endl;
-      return kFALSE;
+      return 0;
    }
 
    THashList nodelist;
@@ -31,8 +44,9 @@ TDSet *make_tdset(const Char_t* basedir, Int_t files_per_slave)
    for(Int_t i=0 ; i < l->GetSize() ; i++){
       TSlaveInfo* si = dynamic_cast<TSlaveInfo*>(l->At(i));
       if (si->fStatus != TSlaveInfo::kActive) continue;
-      TObjString* host = 0;
-      if(host = dynamic_cast<TObjString*>(nodelist.FindObject(si->fHostName.Data()))) {
+      TObjString* host = dynamic_cast<TObjString*>(
+                           nodelist.FindObject(si->fHostName.Data()));
+      if (host != 0) {
          Int_t index = nodelist.IndexOf(host);
          nslaves[index]++;
       } else {
