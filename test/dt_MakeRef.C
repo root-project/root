@@ -169,7 +169,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
       Int_t ncx = refTriggerBits->GetXaxis()->GetNbins();
       Int_t nextbit = -1;
       while(1) {
-         nextbit = bits->FirstSetBit(nextbit+1);
+         nextbit = bits.FirstSetBit(nextbit+1);
          if (nextbit >= nbits) break;
          if (nextbit > ncx) refTriggerBits->Fill(ncx+1);
          else               refTriggerBits->Fill(nextbit);
@@ -247,7 +247,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          Int_t ncx = refTrackTrigger->GetXaxis()->GetNbins();
          Int_t nextbit = -1;
          while(1) {
-            nextbit = bits->FirstSetBit(nextbit+1);
+            nextbit = bits.FirstSetBit(nextbit+1);
             if (nextbit >= nbits) break;
             if (nextbit > ncx) refTrackTrigger->Fill(ncx+1);
             else               refTrackTrigger->Fill(nextbit);
