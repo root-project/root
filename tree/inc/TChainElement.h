@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.2 2000/11/21 20:47:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainElement.h,v 1.3 2000/12/13 15:13:54 brun Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -41,9 +41,11 @@ public:
         virtual ~TChainElement();
         virtual void     CreatePackets();
         virtual void    *GetBaddress() const {return fBaddress;}
+        virtual Int_t    GetEntries() const {return fEntries;}
         virtual char    *GetPackets() const {return fPackets;}
         virtual Int_t    GetPacketSize() const {return fPacketSize;}
         virtual Int_t    GetStatus() const {return fStatus;}
+        virtual void     ls(Option_t *option="") const;
         virtual void     SetBaddress(void *add) {fBaddress = add;}
         virtual void     SetNumberEntries(Int_t n) {fEntries=n;}
         virtual void     SetPacketSize(Int_t size = 100);

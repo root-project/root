@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TChainElement.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   11/02/97
 
 /*************************************************************************
@@ -71,6 +71,15 @@ void TChainElement::CreatePackets()
    for (Int_t i=0;i<fNPackets;i++) fPackets[i] = ' ';
    fPackets[fNPackets] = 0;
 
+}
+
+//_______________________________________________________________________
+void TChainElement::ls(Option_t *option) const
+{
+// List files in the chain
+//
+
+   printf("%s tree:%s entries=%d\n",GetTitle(),GetName(),fEntries);
 }
 
 //_______________________________________________________________________
