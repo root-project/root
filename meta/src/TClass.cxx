@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.121 2003/06/25 18:07:00 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.122 2003/06/25 20:30:36 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -859,7 +859,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl)
       Int_t offset = 0;
 
       TObjArray &elems = *(sinfo->GetElements());
-      Int_t size = elems.GetLast();
+      Int_t size = elems.GetLast()+1;
       for(Int_t i=0; i<size; i++) {
          element = (TStreamerElement*)elems[i];
          if (element->IsA() == TStreamerBase::Class()) {
