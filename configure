@@ -67,8 +67,8 @@ confhelp() {
     echo "   pythia6         Pythia6 EG support, requires libPythia6"
     echo "   venus           Venus EG suuport, requires libVenus"
     echo "with options, prefix with --with-, enables corresponding support"
-    echo "   xpm             XPM support, path to libXpm"
-    echo "   thread          Thread support, path to libpthread"
+    echo "   xpm-libdir      XPM support, path to libXpm"
+    echo "   thread-libdir   Thread support, path to libpthread"
     echo "   ttf-incdir      TTF support, location of freetype.h"
     echo "   ttf-libdir      TTF support, location of libttf"
     echo "   ttf-fontdir     TTF support, location of TTF fonts"
@@ -273,7 +273,10 @@ fi
 #
 # Check for posix thread library
 #
-if [ "x$enable_thread" != "xno"  -a "$arch" != "win32" ]; then
+if [ "$arch" = "linuxegcs" -a "x$enable_thread" = "x" ]; then
+   enable_thread="yes"
+fi
+if [ "x$enable_thread" = "xyes" -a "$arch" != "win32" ]; then
     echo $ac_n "Checking for libpthread ... $ac_c"
     if [ "x$threadlibdir" != "x" ]; then
         libdirs=$threadlibdir
@@ -1185,7 +1188,7 @@ libdir2=$libdir
 if [ "$prefix2" = "\$(ROOTSYS)" ]; then
     prefix2=\$ROOTSYS
     libdir2=\$ROOTSYS/lib
-    incdir2=\$ROOTSYS/inc
+    incdir2=\$ROOTSYS/include
 fi
 sed -e "s|@architecture@|$arch|"           \
     -e "s|@prefix@|$prefix2|"              \
