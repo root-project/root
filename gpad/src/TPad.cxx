@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.56 2001/11/28 16:05:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.57 2001/12/03 22:16:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -67,7 +67,7 @@ const Int_t kCurlyArc  = 201;
 static TPoint gPXY[kPXY];
 static Int_t readLevel = 0;
 
-ClassImp(TPad)
+ClassImpQ(TPad)
 
 //______________________________________________________________________________
 //  The Pad class is the most important graphics class in the ROOT system.
@@ -3634,10 +3634,9 @@ void TPad::Print(const char *filename, Option_t *option)
 //______________________________________________________________________________
 void TPad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set world coordinate system for the pad*-*-*-*-*-*-*
-//*-*                  =======================================
-
-   //if (!IsEditable()) return;
+   // Set world coordinate system for the pad.
+   // Emits signal "RangeChanged()", in the slot get the range
+   // via GetRange().
 
    if ((x1 >= x2) || (y1 >= y2)) {
       Error("Range", "illegal world coordinates range: x1=%f, y1=%f, x2=%f, y2=%f",x1,y1,x2,y2);
@@ -3656,23 +3655,23 @@ void TPad::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    fX2  = x2;
    fY2  = y2;
 
-//*-*- Compute pad conversion coefficients
+   // compute pad conversion coefficients
    ResizePad();
+
+   // emit signal
+   RangeChanged();
 }
 
 //______________________________________________________________________________
 void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set axis coordinate system for the pad*-*-*-*-*-*-*
-//*-*                  =======================================
-//  The axis coordinate system is a subset of the world coordinate system
-//  xmin,ymin are the origin of the current coordinate system
-//  xmax is the end of the X axis
-//  ymax is the end of the Y axis
-//  By default a margin of 10 per cent is left on all sides of the pad
-//
-
-   //if (!IsEditable()) return;
+   // Set axis coordinate system for the pad.
+   // The axis coordinate system is a subset of the world coordinate system
+   // xmin,ymin is the origin of the current coordinate system,
+   // xmax is the end of the X axis, ymax is the end of the Y axis.
+   // By default a margin of 10 per cent is left on all sides of the pad
+   // Emits signal "RangeAxisChanged()", in the slot get the axis range
+   // via GetRangeAxis().
 
    if ((xmin >= xmax) || (ymin >= ymax)) {
       Error("RangeAxis", "illegal axis coordinates range: xmin=%f, ymin=%f, xmax=%f, ymax=%f",
@@ -3684,6 +3683,9 @@ void TPad::RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
    fUymin  = ymin;
    fUxmax  = xmax;
    fUymax  = ymax;
+
+   // emit signal
+   RangeAxisChanged();
 }
 
 //______________________________________________________________________________

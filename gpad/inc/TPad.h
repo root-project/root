@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.11 2001/10/29 19:47:53 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.12 2001/10/30 17:22:32 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -270,7 +270,9 @@ public:
    virtual void      Print(const char *filename="") const;
    virtual void      Print(const char *filename, Option_t *option);
    virtual void      Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2); // *MENU* *ARGS={x1=>fX1,y1=>fY1,x2=>fX2,y2=>fY2}
+   virtual void      RangeChanged() { Emit("RangeChanged()"); } //*SIGNAL*
    virtual void      RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);
+   virtual void      RangeAxisChanged() { Emit("RangeAxisChanged()"); } //*SIGNAL*
    virtual void      RecursiveRemove(TObject *obj);
    virtual void      RedrawAxis(Option_t *option="");
    virtual void      ResetView3D(TPadView3D *view=0){fPadView3D=view;}
