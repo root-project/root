@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.29 2001/02/06 14:43:20 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.30 2001/02/15 07:17:33 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -930,9 +930,13 @@ void THistPainter::Paint(Option_t *option)
 //
 //  Option "Z" : Adding the color palette on the right side of the pad
 //  ==================================================================
-// For the options "BOX", "COL", "CONT", "SURF", "LEGO"
-// you can display the color palette with an axis indicating the value
-// of the corresponding color.
+// When this option is specified, a color palette with an axis indicating
+// the value of the corresponding color is drawn on the right side of
+// the picture. In case, not enough space is left, you can increase the size
+// of the right margin by calling TPad::SetRightMargin.
+// The attributes used to display the palette axis values are taken from
+// the Z axis of the object. For example, you can set the labels size
+// on the palette axis via hist->GetZaxis()->SetLabelSize().
 //  
 //  Setting the color palette
 //  =========================
@@ -1160,6 +1164,8 @@ void THistPainter::PaintArrows()
          }
       }
    }
+
+   if (Hoption.Zscale) PaintPalette();
    fH->SetLineStyle(linesav);
    fH->SetLineWidth(widthsav);
    fH->TAttLine::Modify();
@@ -1400,6 +1406,8 @@ void THistPainter::PaintBoxes()
          gPad->PaintBox(xlow, ylow, xup, yup);
       }
    }
+
+   if (Hoption.Zscale) PaintPalette();
    fH->SetFillStyle(fillsav);
    fH->SetLineStyle(linesav);
    fH->SetLineWidth(widthsav);
@@ -2810,7 +2818,7 @@ void THistPainter::PaintLego()
       if (Hoption.FrontBox) fLego->FrontBox(90);
    }
    if (!Hoption.Axis) PaintLegoAxis(axis, 90);
-   if (Hoption.Lego == 12 && Hoption.Zscale) PaintPalette();  // MOD MWH
+   if (Hoption.Zscale) PaintPalette();  // MOD MWH
    fNIDS = 0;
    delete axis;
    delete fLego; fLego = 0;
@@ -3187,6 +3195,8 @@ void THistPainter::PaintScatterPlot()
    }
    if (marker > 0) gPad->PaintPolyMarker(marker, fXbuf, fYbuf);
    gRandom->SetSeed(seedsave);
+
+   if (Hoption.Zscale) PaintPalette();
 }
 
 
@@ -3759,7 +3769,7 @@ void THistPainter::PaintSurface()
    }
    if (!Hoption.Axis) PaintLegoAxis(axis, 90);
 
-   if (Hoption.Surf >= 11 && Hoption.Zscale) PaintPalette();  // MOD MWH
+   if (Hoption.Zscale) PaintPalette();  // MOD MWH
    
    fNIDS = 0;
    delete axis;
