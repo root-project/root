@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.37 2004/07/12 20:06:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.38 2004/08/23 09:28:13 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -681,7 +681,9 @@ void TGraphErrors::Set(Int_t n)
    delete [] fY;
    delete [] fEX;
    delete [] fEY;
-   fNpoints =n;
+   fNpoints = n;
+   fMaxSize = n;
+   
    fX  = x;
    fY  = y;
    fEX = ex;
@@ -695,18 +697,23 @@ void TGraphErrors::SetPoint(Int_t i, Double_t x, Double_t y)
 //*-*                  =====================================
 
    if (i < 0) return;
-   if (i >= fNpoints) {
+   if (i >= fMaxSize) {
    // re-allocate the object
-      Double_t *savex  = new Double_t[i+1];
-      Double_t *savey  = new Double_t[i+1];
-      Double_t *saveex = new Double_t[i+1];
-      Double_t *saveey = new Double_t[i+1];
+      fMaxSize = 2*i;
+      Double_t *savex  = new Double_t[fMaxSize];
+      Double_t *savey  = new Double_t[fMaxSize];
+      Double_t *saveex = new Double_t[fMaxSize];
+      Double_t *saveey = new Double_t[fMaxSize];
       if (fNpoints > 0) {
          memcpy(savex, fX, fNpoints*sizeof(Double_t));
          memcpy(savey, fY, fNpoints*sizeof(Double_t));
          memcpy(saveex,fEX,fNpoints*sizeof(Double_t));
          memcpy(saveey,fEY,fNpoints*sizeof(Double_t));
       }
+      memset(&savex[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
+      memset(&savey[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
+      memset(&saveex[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
+      memset(&saveey[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
       if (fX)  delete [] fX;
       if (fY)  delete [] fY;
       if (fEX) delete [] fEX;
@@ -715,8 +722,8 @@ void TGraphErrors::SetPoint(Int_t i, Double_t x, Double_t y)
       fY  = savey;
       fEX = saveex;
       fEY = saveey;
-      fNpoints = i+1;
    }
+   if (i >= fNpoints) fNpoints = i+1;
    fX[i] = x;
    fY[i] = y;
    if (fHistogram) {

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.5 2004/07/12 20:06:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.6 2004/08/23 09:28:13 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -799,14 +799,15 @@ void TGraphBentErrors::SetPoint(Int_t i, Double_t x, Double_t y)
 //*-*                  =====================================
 
    if (i < 0) return;
-   if (i >= fNpoints) {
+   if (i >= fMaxSize) {
    // re-allocate the object
-      Double_t *savex   = new Double_t[i+1];
-      Double_t *savey   = new Double_t[i+1];
-      Double_t *saveexl = new Double_t[i+1];
-      Double_t *saveeyl = new Double_t[i+1];
-      Double_t *saveexh = new Double_t[i+1];
-      Double_t *saveeyh = new Double_t[i+1];
+      fMaxSize = 2*i;
+      Double_t *savex   = new Double_t[fMaxSize];
+      Double_t *savey   = new Double_t[fMaxSize];
+      Double_t *saveexl = new Double_t[fMaxSize];
+      Double_t *saveeyl = new Double_t[fMaxSize];
+      Double_t *saveexh = new Double_t[fMaxSize];
+      Double_t *saveeyh = new Double_t[fMaxSize];
       if (fNpoints > 0) {
          memcpy(savex,  fX,     fNpoints*sizeof(Double_t));
          memcpy(savey,  fY,     fNpoints*sizeof(Double_t));
@@ -815,6 +816,12 @@ void TGraphBentErrors::SetPoint(Int_t i, Double_t x, Double_t y)
          memcpy(saveexh,fEXhigh,fNpoints*sizeof(Double_t));
          memcpy(saveeyh,fEYhigh,fNpoints*sizeof(Double_t));
       }
+      memset(&savex[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
+      memset(&savey[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
+      memset(&saveexl[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
+      memset(&saveeyl[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
+      memset(&saveexh[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
+      memset(&saveeyh[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
       if (fX)      delete [] fX;
       if (fY)      delete [] fY;
       if (fEXlow)  delete [] fEXlow;
@@ -827,8 +834,8 @@ void TGraphBentErrors::SetPoint(Int_t i, Double_t x, Double_t y)
       fEYlow  = saveeyl;
       fEXhigh = saveexh;
       fEYhigh = saveeyh;
-      fNpoints = i+1;
    }
+   if (i >= fNpoints) fNpoints = i+1;
    fX[i] = x;
    fY[i] = y;
    if (fHistogram) {
