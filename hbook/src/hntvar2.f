@@ -35,7 +35,11 @@
 *KEEP,HCBOOK.
       INTEGER     NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,        LMAIN
       REAL                                       FENC   ,      HCV
-      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,HCV(9989)
+*
+* VERY IMPORTANT. The dimension of /pawc/must be the same as
+*                 in THbookFile. Otherwise FATAL on Windows
+      COMMON/PAWC/NWPAW,IXPAWC,IHDIV,IXHIGZ,IXKU,FENC(5),LMAIN,
+     +HCV(2000000-11)
       INTEGER   IQ        ,LQ
       REAL            Q
       DIMENSION IQ(2),Q(2),LQ(8000)
