@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.16 2003/03/05 14:28:55 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.17 2003/03/10 07:57:14 brun Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -988,10 +988,11 @@ Atom_t TGWin32::InternAtom(const char *atom_name, Bool_t only_if_exist)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.iParam = only_if_exist;
-   sprintf(fThreadP.sParam,"%s",atom_name);
+   fThreadP.sParam = _strdup(atom_name);
    PostThreadMessage(fIDThread, WIN32_GDK_ATOM, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    GdkAtom a = (GdkAtom)fThreadP.ulRet;
+   free(fThreadP.sParam);
    LeaveCriticalSection(flpCriticalSection);
    if (a == None)
       return kNone;
@@ -1038,10 +1039,11 @@ FontStruct_t TGWin32::LoadQueryFont(const char *font_name)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.pRet = NULL;
-   sprintf(fThreadP.sParam,"%s",font_name);
+   fThreadP.sParam = _strdup(font_name);
    PostThreadMessage(fIDThread, WIN32_GDK_FONT_LOAD, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    GdkFont *fs = (GdkFont *)fThreadP.pRet;
+   free(fThreadP.sParam);
    LeaveCriticalSection(flpCriticalSection);
    return (FontStruct_t) fs;
 }
@@ -1356,12 +1358,13 @@ Bool_t TGWin32::CreatePictureFromFile(Drawable_t id, const char *filename,
 
    GdkBitmap *gdk_pixmap_mask;
    fThreadP.Drawable = (GdkDrawable *) id;
-   sprintf(fThreadP.sParam,"%s",filename);
+   fThreadP.sParam = _strdup(filename);
    fThreadP.pRet = NULL;
    fThreadP.pParam1 = 0;
    PostThreadMessage(fIDThread, WIN32_GDK_PIXMAP_CREATE_FROM_XPM, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    pict = (Pixmap_t) fThreadP.pRet;
+   free(fThreadP.sParam);
 
    pict_mask = (Pixmap_t) fThreadP.pParam;
 
@@ -1425,12 +1428,13 @@ Bool_t TGWin32::ReadPictureDataFromFile(const char *filename,
    char **rdata;
 
    fThreadP.Drawable = (GdkDrawable *) NULL;
-   sprintf(fThreadP.sParam,"%s",filename);
+   fThreadP.sParam = _strdup(filename);
    fThreadP.pParam1 = 0;
    fThreadP.pRet = NULL;
    PostThreadMessage(fIDThread, WIN32_GDK_PIXMAP_CREATE_FROM_XPM, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    rdata = (char **)fThreadP.pRet;
+   free(fThreadP.sParam);
 
    ret_data = &rdata;
    LeaveCriticalSection(flpCriticalSection);
@@ -1494,7 +1498,7 @@ Bool_t TGWin32::ParseColor(Colormap_t cmap, const char *cname,
 
    GdkColor xc;
 
-   sprintf(fThreadP.sParam,"%s",cname);
+   fThreadP.sParam = _strdup(cname);
    PostThreadMessage(fIDThread, WIN32_GDK_COLOR_PARSE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
@@ -1508,6 +1512,7 @@ Bool_t TGWin32::ParseColor(Colormap_t cmap, const char *cname,
       LeaveCriticalSection(flpCriticalSection);
       return kTRUE;
    }
+   free(fThreadP.sParam);
    LeaveCriticalSection(flpCriticalSection);
    return kFALSE;
 }
@@ -2213,10 +2218,10 @@ void TGWin32::ChangeProperty(Window_t id, Atom_t property, Atom_t type,
    fThreadP.iParam = 8;
    fThreadP.iParam1 = GDK_PROP_MODE_REPLACE;
    fThreadP.iParam2 = len;
-//   fThreadP.pParam = data;
-   sprintf(fThreadP.sParam,"%s",data);
+   fThreadP.sParam = _strdup((char *)data);
    PostThreadMessage(fIDThread, WIN32_GDK_PROPERTY_CHANGE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+   free(fThreadP.sParam);
    LeaveCriticalSection(flpCriticalSection);
 }
 
@@ -2407,9 +2412,10 @@ void TGWin32::SetWindowName(Window_t id, char *name)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   sprintf(fThreadP.sParam,"%s",name);
+   fThreadP.sParam = _strdup(name);
    PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_TITLE, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+   free(fThreadP.sParam);
    LeaveCriticalSection(flpCriticalSection);
 }
 
@@ -2420,9 +2426,10 @@ void TGWin32::SetIconName(Window_t id, char *name)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   sprintf(fThreadP.sParam,"%s",name);
+   fThreadP.sParam = _strdup(name);
    PostThreadMessage(fIDThread, WIN32_GDK_WIN_SET_ICON_NAME, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+   free(fThreadP.sParam);
    LeaveCriticalSection(flpCriticalSection);
 }
 
@@ -2454,10 +2461,11 @@ void TGWin32::SetClassHints(Window_t id, char *className,
    GdkAtom type, prop;
 
    fThreadP.iParam = kFALSE;
-   sprintf(fThreadP.sParam,"WM_CLASS");
+   fThreadP.sParam = _strdup("WM_CLASS");
    PostThreadMessage(fIDThread, WIN32_GDK_ATOM, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    prop = (GdkAtom)fThreadP.ulRet;
+   free(fThreadP.sParam);
 
    len_nm = safestrlen(resourceName);
    len_cl = safestrlen(className);
@@ -2478,11 +2486,11 @@ void TGWin32::SetClassHints(Window_t id, char *className,
       fThreadP.iParam = 8;
       fThreadP.iParam1 = GDK_PROP_MODE_REPLACE;
       fThreadP.iParam2 = len_nm + len_cl + 2;
-      sprintf(fThreadP.sParam,"%s",class_string);
-//      fThreadP.pParam = (void *) class_string;
+      fThreadP.sParam = _strdup(class_string);
       PostThreadMessage(fIDThread, WIN32_WIN32_PROPERTY_CHANGE, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
+      free(fThreadP.sParam);
       free(class_string);
    }
    LeaveCriticalSection(flpCriticalSection);
@@ -2612,10 +2620,11 @@ void TGWin32::DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
    fThreadP.pParam = (void *) fThreadP.gcvals.font;
    fThreadP.x = x;
    fThreadP.y = y;
-   sprintf(fThreadP.sParam,"%s",s);
+   fThreadP.sParam = _strdup(s);
    fThreadP.iParam = len;
    PostThreadMessage(fIDThread, WIN32_GDK_DRAW_TEXT, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+   free(fThreadP.sParam);
 
    LeaveCriticalSection(flpCriticalSection);
 }
@@ -2628,9 +2637,10 @@ Int_t TGWin32::TextWidth(FontStruct_t font, const char *s, Int_t len)
 
    fThreadP.pParam = (void *) font;
    fThreadP.iParam = len;
-   sprintf(fThreadP.sParam,"%s",s);
+   fThreadP.sParam = _strdup(s);
    PostThreadMessage(fIDThread, WIN32_GDK_GET_TEXT_WIDTH, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+   free(fThreadP.sParam);
    LeaveCriticalSection(flpCriticalSection);
    return fThreadP.iRet;
 }
@@ -2839,6 +2849,7 @@ Window_t TGWin32::GetPrimarySelectionOwner()
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.pRet = NULL;
+   fThreadP.ulParam = clipboard_atom;
    PostThreadMessage(fIDThread, WIN32_GDK_SELECTION_OWNER_GET, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
@@ -2853,7 +2864,7 @@ void TGWin32::SetPrimarySelectionOwner(Window_t id)
    EnterCriticalSection(flpCriticalSection);
 
    fThreadP.Drawable = (GdkDrawable *) id;
-   fThreadP.lParam = clipboard_atom;
+   fThreadP.ulParam = clipboard_atom;
    PostThreadMessage(fIDThread, WIN32_GDK_SELECTION_OWNER_SET, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    LeaveCriticalSection(flpCriticalSection);
@@ -3351,12 +3362,13 @@ char **TGWin32::ListFonts(char *fontname, Int_t /*max*/, Int_t &count)
     EnterCriticalSection(flpCriticalSection);
 
     fThreadP.pRet = NULL;
-    sprintf(fThreadP.sParam,"%s",fontname);
+    fThreadP.sParam = _strdup(fontname);
     PostThreadMessage(fIDThread, WIN32_GDK_FONTLIST_NEW, 0, 0L);
     WaitForSingleObject(fThreadP.hThrSem, INFINITE);
     fontlist = (char **)fThreadP.pRet;
     fontcount = fThreadP.iRet;
     count = fontcount;
+    free(fThreadP.sParam);
     LeaveCriticalSection(flpCriticalSection);
     if (fontcount > 0)
         return fontlist;

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.19 2003/02/13 20:37:43 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.20 2003/03/10 07:57:14 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -86,14 +86,7 @@ static GdkPixmap *gFillPattern; // Fill pattern
 //
 // Text management
 //
-const Int_t kMAXFONT = 4;
-static struct {
-   GdkFont *id;
-   char name[80];               // Font name
-} gFont[kMAXFONT];              // List of fonts loaded
-
-static GdkFont *gTextFont;      // Current font
-static Int_t gCurrentFontNumber = 0;	// Current font number in gFont[]
+static char *gTextFont = "arial.ttf";      // Current font
 
 //
 // Markers
@@ -451,10 +444,11 @@ Bool_t TGWin32::Init()
    }
    if (!clipboard_atom) {
       fThreadP.iParam = kFALSE;
-      sprintf(fThreadP.sParam,"CLIPBOARD");
+      fThreadP.sParam = _strdup("CLIPBOARD");
       PostThreadMessage(fIDThread, WIN32_GDK_ATOM, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);
       clipboard_atom = (GdkAtom)fThreadP.ulRet;
+      free(fThreadP.sParam);
    }
    LeaveCriticalSection(flpCriticalSection);
    if (OpenDisplay() == -1)
@@ -786,10 +780,8 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
 //   xim->data = (char *) malloc(xim->bytes_per_line * h);
 //   memset(xim->data, 0, xim->bytes_per_line * h);
 
+   ULong_t   pixel;
    ULong_t   bg;
-//   XGCValues values;
-//   XGetGCValues(fDisplay, *GetGC(3), GCForeground | GCBackground, &values);
-
    fThreadP.GC = GetGC(3);
    PostThreadMessage(fIDThread, WIN32_GDK_GC_GET_VALUES, 0, 0L);  
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
@@ -810,7 +802,7 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
 
       for (int yp = 0; yp < (int) bim->height; yp++) {
          for (int xp = 0; xp < (int) bim->width; xp++) {
-            ULong_t pixel = GetPixel((Drawable_t)bim, xp, yp);
+            pixel = GetPixel((Drawable_t)bim, xp, yp);
             PutPixel((Drawable_t)xim, xo+xp, yo+yp, pixel);
          }
       }
@@ -821,7 +813,28 @@ void TGWin32::RenderString(Int_t x, Int_t y, ETextMode mode)
    } else {
       // if mode == kOpaque its simple, we just draw the background
 //      XAddPixel(xim, fThreadP.gcvals.background.pixel);
-      bg = fThreadP.gcvals.background.pixel;
+//      ULong_t pixel = fThreadP.gcvals.background.pixel;
+
+      GdkImage *bim = GetBackground(x1, y1, w, h);
+      if (!bim)
+         pixel = fThreadP.gcvals.background.pixel;
+      else
+         pixel = GetPixel((Drawable_t)bim, 0, 0);
+      Int_t xo = 0, yo = 0;
+      if (x1 < 0) xo = -x1;
+      if (y1 < 0) yo = -y1;
+      for (int yp = 0; yp < h; yp++) {
+         for (int xp = 0; xp < (int) w; xp++) {
+            PutPixel((Drawable_t)xim, xo+xp, yo+yp, pixel);
+         }
+      }
+      if (bim) {
+         fThreadP.pParam = bim;
+         PostThreadMessage(fIDThread, WIN32_GDK_IMAGE_UNREF, 0, 0L);  
+         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+         bg = (ULong_t) -1;
+      }
+      else bg = pixel;
    }
 
    // paint the glyphs in the XImage
@@ -1544,20 +1557,9 @@ void TGWin32::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
    // iw          : text width
    // ih          : text height
    // mess        : message
-   EnterCriticalSection(flpCriticalSection);
-
-   fThreadP.pParam = gTextFont;
-   fThreadP.iParam = strlen(mess);
-   sprintf(fThreadP.sParam,"%s",mess);
-   PostThreadMessage(fIDThread, WIN32_GDK_GET_TEXT_WIDTH, 0, 0L);
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   w = fThreadP.iRet;
-
-   PostThreadMessage(fIDThread, WIN32_GDK_GET_TEXT_HEIGHT, 0, 0L);
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   h = fThreadP.iRet;
-
-   LeaveCriticalSection(flpCriticalSection);
+   TTF::SetTextFont(gTextFont);
+   TTF::SetTextSize(fTextSize);
+   TTF::GetTextExtent(w, h, mess);
 }
 
 //______________________________________________________________________________
@@ -1598,8 +1600,6 @@ Int_t TGWin32::OpenDisplay()
 
    GdkPixmap *pixmp1, *pixmp2;
    GdkColor fore, back;
-   char **fontlist;
-   int fontcount = 0;
    int i;
 
    fScreenNumber = 0;           //DefaultScreen(fDisplay);
@@ -1720,59 +1720,6 @@ Int_t TGWin32::OpenDisplay()
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    gGCecho = (GdkGC *) fThreadP.pRet;
 
-   // Load a default Font
-   static int isdisp = 0;
-   if (!isdisp) {
-      for (i = 0; i < kMAXFONT; i++) {
-         gFont[i].id = 0;
-         strcpy(gFont[i].name, " ");
-      }
-
-      fThreadP.pRet = NULL;
-      sprintf(fThreadP.sParam,"*Arial*");
-      PostThreadMessage(fIDThread, WIN32_GDK_FONTLIST_NEW, 0, 0L);
-      WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-      fontlist = (char **)fThreadP.pRet;
-      fontcount = fThreadP.iRet;
-
-      if (fontcount != 0) {
-         fThreadP.pRet = NULL;
-         sprintf(fThreadP.sParam,"%s",fontlist[0]);
-         PostThreadMessage(fIDThread, WIN32_GDK_FONT_LOAD, 0, 0L);
-         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-         gFont[gCurrentFontNumber].id = (GdkFont *)fThreadP.pRet;
-         gTextFont = gFont[gCurrentFontNumber].id;
-         strcpy(gFont[gCurrentFontNumber].name, "Arial");
-         gCurrentFontNumber++;
-         fThreadP.pParam = fontlist;
-         PostThreadMessage(fIDThread, WIN32_GDK_FONTLIST_FREE, 0, 0L);
-         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-      } else {
-         // emergency: try fixed font
-         sprintf(fThreadP.sParam,"*fixed*");
-         fThreadP.pRet = NULL;
-         PostThreadMessage(fIDThread, WIN32_GDK_FONTLIST_NEW, 0, 0L);
-         WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-         fontlist = (char **) fThreadP.pRet;
-         fontcount = fThreadP.iRet;
-         if (fontcount != 0) {
-            sprintf(fThreadP.sParam,"%s",fontlist[0]);
-            fThreadP.pRet = NULL;
-            PostThreadMessage(fIDThread, WIN32_GDK_FONT_LOAD, 0, 0L);
-            WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-            gFont[gCurrentFontNumber].id = (GdkFont *)fThreadP.pRet;
-            gTextFont = gFont[gCurrentFontNumber].id;
-            strcpy(gFont[gCurrentFontNumber].name, "fixed");
-            gCurrentFontNumber++;
-            fThreadP.pParam = fontlist;
-            PostThreadMessage(fIDThread, WIN32_GDK_FONTLIST_FREE, 0, 0L);
-            WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-         } else {
-            Warning("OpenDisplay", "no default font loaded");
-         }
-      }
-      isdisp = 1;
-   }
    // Create a null cursor
    fThreadP.Drawable = (GdkDrawable *) NULL;
    fThreadP.pParam = (char *) null_cursor_bits;
@@ -2498,73 +2445,45 @@ Int_t TGWin32::RequestString(int x, int y, char *text)
    }
    for (nt = len_text; nt > 0 && text[nt - 1] == ' '; nt--);
    pt = nt;
-//   XGetInputFocus(fDisplay, &focuswindow, &focusrevert);
-//   XSetInputFocus(fDisplay, (GdkWindow *)gCws->window, focusrevert, CurrentTime);
    fThreadP.pRet = NULL;
-   PostThreadMessage(fIDThread, WIN32_GDK_SET_INPUT_FOCUS, 0, 0L);
+   PostThreadMessage(fIDThread, WIN32_GDK_GET_INPUT_FOCUS, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
    focuswindow = (HWND)fThreadP.pRet;
-//   SetFocus((HWND) GDK_DRAWABLE_XID((GdkWindow *) gCws->window));
    fThreadP.Drawable = (GdkDrawable *) gCws->window;
    PostThreadMessage(fIDThread, WIN32_GDK_SET_INPUT_FOCUS, 0, 0L);
    WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
+   TTF::SetTextFont(gTextFont);
+   TTF::SetTextSize(fTextSize);
    while (key < 0) {
+      char tmp[2];
       char keybuf[8];
       char nbytes;
-      int dx, ddx;
+      UInt_t dx, ddx, h;
       int i;
-      fThreadP.Drawable = (GdkDrawable *) gCws->window;
-      fThreadP.pParam = gTextFont;
-      fThreadP.GC = (GdkGC *) gGCtext;
-      fThreadP.x = x;
-      fThreadP.y = y;
-      sprintf(fThreadP.sParam,"%s",text);
-      fThreadP.iParam = nt;
-      PostThreadMessage(fIDThread, WIN32_GDK_DRAW_TEXT, 0, 0L);
-      WaitForSingleObject(fThreadP.hThrSem, INFINITE);
 
-      fThreadP.pParam = gTextFont;
-      fThreadP.iParam = nt;
-      sprintf(fThreadP.sParam,"%s",text);
-      PostThreadMessage(fIDThread, WIN32_GDK_GET_TEXT_WIDTH, 0, 0L);
-      WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-      dx = fThreadP.iRet;
+      DrawText(x, y, 0.0, 1.0, text, kOpaque);  
+      TTF::GetTextExtent(dx, h, text);
+      DrawText(x+dx, y, 0.0, 1.0, " ", kOpaque);  
 
-      fThreadP.Drawable = (GdkDrawable *) gCws->window;
-      fThreadP.pParam = gTextFont;
-      fThreadP.GC = (GdkGC *) gGCtext;
-      fThreadP.x = x + dx;
-      fThreadP.y = y;
-      sprintf(fThreadP.sParam," ");
-      fThreadP.iParam = 1;
-      PostThreadMessage(fIDThread, WIN32_GDK_DRAW_TEXT, 0, 0L);
-      WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+      if(pt == 0) dx = 0;
+      else {
+         char *stmp = new char[pt+1];
+         strncpy(stmp, text, pt);
+         stmp[pt] = '\0';
+         TTF::GetTextExtent(ddx, h, stmp);
+         dx = ddx;
+         delete stmp;
+      }
 
-      fThreadP.pParam = gTextFont;
-      fThreadP.iParam = pt;
-      sprintf(fThreadP.sParam,"%s",text);
-      PostThreadMessage(fIDThread, WIN32_GDK_GET_TEXT_WIDTH, 0, 0L);
-      WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-      ddx = fThreadP.iRet;
-
-      dx = pt == 0 ? 0 : ddx;
-
-      fThreadP.Drawable = (GdkDrawable *) gCws->window;
-      fThreadP.pParam = gTextFont;
-      fThreadP.GC = (GdkGC *) gGCinvt;
-      fThreadP.x = x + dx;
-      fThreadP.y = y;
-      if(pt < len_text)
-         sprintf(fThreadP.sParam,"%c",text[pt]);
+      if(pt < len_text) {
+         tmp[0] = text[pt];
+         tmp[1] = '\0';
+         DrawText(x+dx, y, 0.0, 1.0, tmp, kOpaque);
+      }
       else
-         sprintf(fThreadP.sParam," ");
-      fThreadP.iParam = 1;
-      PostThreadMessage(fIDThread, WIN32_GDK_DRAW_TEXT, 0, 0L);
-      WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+         DrawText(x+dx, y, 0.0, 1.0, " ", kOpaque);  
 
-//      XWindowEvent(fDisplay, (GdkWindow *)gCws->window, gKeybdMask, &event);
-//      gdk_window_set_events((GdkWindow *)gCws->window, (GdkEventMask)gKeybdMask);
       fThreadP.pRet = NULL;
       PostThreadMessage(fIDThread, WIN32_GDK_GET_EVENT, 0, 0L);
       WaitForSingleObject(fThreadP.hThrSem, INFINITE);

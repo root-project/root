@@ -728,24 +728,24 @@ void TGWin32::GdkThread( )
                 break;
 
             case WIN32_GDK_SELECTION_OWNER_GET:
-                fThreadP.pRet = gdk_selection_owner_get(gdk_atom_intern ("GDK_SELECTION_PRIMARY", 0));
+                fThreadP.pRet = gdk_selection_owner_get(fThreadP.ulParam);
                 break;
 
             case WIN32_GDK_SELECTION_OWNER_SET:
                 gdk_selection_owner_set((GdkWindow *) fThreadP.Drawable,
-                            fThreadP.lParam, GDK_CURRENT_TIME, 0);
+                            fThreadP.ulParam, GDK_CURRENT_TIME, 0);
                 break;
 
             case WIN32_GDK_SELECTION_CONVERT:
                 gdk_selection_convert((GdkWindow *) fThreadP.Drawable,
-                            fThreadP.lParam, gdk_atom_intern("GDK_TARGET_STRING", 0),
+                            fThreadP.ulParam, gdk_atom_intern("GDK_TARGET_STRING", 0),
                             fThreadP.uiParam);
                 break;
 
             case WIN32_GDK_SELECTION_PROP_GET:
                 fThreadP.iRet = gdk_selection_property_get((GdkWindow *) fThreadP.Drawable,
                                       (unsigned char **) &fThreadP.sRet,
-                                      (GdkAtom *) & fThreadP.lParam1, &fThreadP.iRet1);
+                                      (GdkAtom *) & fThreadP.ulParam, &fThreadP.iRet1);
                 break;
 
             case WIN32_GDK_PROP_DELETE:

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.10 2003/02/11 12:29:07 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.11 2003/03/10 07:57:14 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -94,7 +94,7 @@ struct ThreadParam_t {
     ULong_t         ulParam;
     ULong_t         ulParam1;
     ULong_t         ulParam2;
-    char            sParam[1024];
+    char            *sParam;
     Int_t           x;
     Int_t           x1;
     Int_t           x2;
