@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name$:$Id$
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1778,16 +1778,15 @@ int          TWinNTSystem::AnnounceUnixService(int port, int backlog)
    return WinNTWinNTService(port, backlog);
  }
 //______________________________________________________________________________
-void      TWinNTSystem::CloseConnection(int socket)
+void      TWinNTSystem::CloseConnection(int socket, Bool_t force)
 {
    // Close socket.
 
    if (socket == -1) return;
    SOCKET sock = socket;
 
-#if !defined(R__AIX) || defined(_AIX41)
-   ::shutdown(sock, 2);
-#endif
+   if (force)
+      ::shutdown(sock, 2);
 
    while (::closesocket(sock) == SOCKET_ERROR && WSAGetLastError() == WSAEINTR)
    ResetErrno();

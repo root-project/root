@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name$:$Id$
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -162,7 +162,7 @@ public:
    int               AnnounceTcpService(int port, Bool_t reuse, int backlog);
    int               AnnounceUnixService(int port, int backlog);
    int               AcceptConnection(int sock);
-   void              CloseConnection(int sock);
+   void              CloseConnection(int sock, Bool_t force = kFALSE);
    int               RecvRaw(int sock, void *buffer, int length, int flag);
    int               SendRaw(int sock, const void *buffer, int length, int flag);
    int               RecvBuf(int sock, void *buffer, int length);

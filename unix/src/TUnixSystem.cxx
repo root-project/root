@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.2 2000/06/16 15:23:02 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.3 2000/06/19 16:31:45 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1514,14 +1514,15 @@ int TUnixSystem::AcceptConnection(int sock)
 }
 
 //______________________________________________________________________________
-void TUnixSystem::CloseConnection(int sock)
+void TUnixSystem::CloseConnection(int sock, Bool_t force)
 {
    // Close socket.
 
    if (sock < 0) return;
 
 #if !defined(R__AIX) || defined(_AIX41) || defined(_AIX43)
-   //::shutdown(sock, 2);   // will also close connection of parent
+   if (force)
+      ::shutdown(sock, 2);   // will also close connection of parent
 #endif
 
    while (::close(sock) == -1 && GetErrno() == EINTR)
