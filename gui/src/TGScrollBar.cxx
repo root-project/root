@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.2 2000/07/03 18:48:58 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -268,6 +268,11 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
          SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERTRACK), fPos, 0);
 
       }
+
+      // last argument kFALSE forces all specified events to this window
+      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                             kPointerMotionMask, kNone, kNone,
+                             kTRUE, kFALSE);
    } else {
       fHead->SetState(kButtonUp);
       fTail->SetState(kButtonUp);
@@ -283,6 +288,8 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
       fPos = TMath::Min(fPos, fRange-fPsize);
 
       SendMessage(fMsgWindow, MK_MSG(kC_HSCROLL, kSB_SLIDERPOS), fPos, 0);
+
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
 }
@@ -450,6 +457,11 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
          SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERTRACK), fPos, 0);
 
       }
+
+      // last argument kFALSE forces all specified events to this window
+      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                             kPointerMotionMask, kNone, kNone,
+                             kTRUE, kFALSE);
    } else {
       fHead->SetState(kButtonUp);
       fTail->SetState(kButtonUp);
@@ -465,6 +477,8 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
       fPos = TMath::Min(fPos, fRange-fPsize);
 
       SendMessage(fMsgWindow, MK_MSG(kC_VSCROLL, kSB_SLIDERPOS), fPos, 0);
+
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
 }

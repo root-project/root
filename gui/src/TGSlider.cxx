@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.2 2000/09/07 00:44:42 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -158,9 +158,15 @@ Bool_t TGVSlider::HandleButton(Event_t *event)
                               fWidgetId, fPos);
       }
       fClient->NeedRedraw(this);
+
+      // last argument kFALSE forces all specified events to this window
+      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                             kPointerMotionMask, kNone, kNone,
+                             kTRUE, kFALSE);
    } else {
       // ButtonRelease
       fDragging = kFALSE;
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
 }
@@ -283,9 +289,15 @@ Bool_t TGHSlider::HandleButton(Event_t *event)
                               fWidgetId, fPos);
       }
       fClient->NeedRedraw(this);
+
+      // last argument kFALSE forces all specified events to this window
+      gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
+                             kPointerMotionMask, kNone, kNone,
+                             kTRUE, kFALSE);
    } else {
       // ButtonRelease
       fDragging = kFALSE;
+      gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    }
    return kTRUE;
 }
