@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXError.cxx,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXError.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -26,8 +26,6 @@
 #include "TDatime.h"
 #include "TXError.h"
 
-int gErrorIgnoreLevel = 0;
-int gErrorAbortLevel  = kSysError+1;
 
 //_________________________________________________________________________
 void TXNErrorHandler(int level, Bool_t abort, const char *location, const char *msg)
