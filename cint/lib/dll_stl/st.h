@@ -17,6 +17,7 @@ using namespace std;
 
 #pragma link C++ class set<int>;
 #pragma link C++ class set<long>;
+#pragma link C++ class set<float>;
 #pragma link C++ class set<double>;
 #pragma link C++ class set<void*>;
 #pragma link C++ class set<char*>;

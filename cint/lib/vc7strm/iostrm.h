@@ -550,7 +550,7 @@ ostream& operator<< ( ostream&, bool );
 
 istream& operator>> ( istream&, char& );
 istream& operator>> ( istream&, unsigned char& );
-istream& operator>> ( istream&, short& );
+//istream& operator>> ( istream&, short& );
 istream& operator>> ( istream&, unsigned short& );
 istream& operator>> ( istream&, int& );
 istream& operator>> ( istream&, unsigned int& );

@@ -113,6 +113,7 @@ static int G__sym_underscore=0;
 #endif
 
 void G__set_sym_underscore(x) int x; { G__sym_underscore=x; }
+int G__get_sym_underscore() { return(G__sym_underscore); }
 
 
 #ifndef __CINT__
@@ -901,13 +902,14 @@ char *shlfile;
   G__sl_handle[allsl] = G__dlopen(shlfile);
 
 #ifndef G__OLDIMPLEMENTATION1525
-#ifdef G__DLL_SYM_UNDERSCORE
-  G__SetCintApiPointers(&G__sl_handle[allsl],"_G__SetCCintApiPointers");
-  G__SetCintApiPointers(&G__sl_handle[allsl],"_G__SetCppCintApiPointers");
-#else
-  G__SetCintApiPointers(&G__sl_handle[allsl],"G__SetCCintApiPointers");
-  G__SetCintApiPointers(&G__sl_handle[allsl],"G__SetCppCintApiPointers");
-#endif
+  if(G__sym_underscore) {
+    G__SetCintApiPointers(&G__sl_handle[allsl],"_G__SetCCintApiPointers");
+    G__SetCintApiPointers(&G__sl_handle[allsl],"_G__SetCppCintApiPointers");
+  }
+  else {
+    G__SetCintApiPointers(&G__sl_handle[allsl],"G__SetCCintApiPointers");
+    G__SetCintApiPointers(&G__sl_handle[allsl],"G__SetCppCintApiPointers");
+  }
 #endif
 
   if(NULL==G__sl_handle[allsl]) {

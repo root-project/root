@@ -3895,13 +3895,22 @@ int hash;
   }
 #endif
 
-  if(1783==hash&&strcmp(funcname,"G__set_sym_underscore")==0) {
+  if(2210==hash&&strcmp(funcname,"G__set_sym_underscore")==0) {
     if(G__no_exec_compile) {
       G__abortbytecode();
       return(1);
     }
     G__set_sym_underscore((int)G__int(libp->para[0]));
     *result7=G__null;
+    return(1);
+  }
+
+  if(2198==hash&&strcmp(funcname,"G__get_sym_underscore")==0) {
+    if(G__no_exec_compile) {
+      G__abortbytecode();
+      return(1);
+    }
+    G__letint(result7,'i',(long)G__get_sym_underscore());
     return(1);
   }
 

@@ -21,6 +21,7 @@ using namespace std;
 
 #pragma link C++ class multiset<int>;
 #pragma link C++ class multiset<long>;
+#pragma link C++ class multiset<float>;
 #pragma link C++ class multiset<double>;
 #pragma link C++ class multiset<void*>;
 #pragma link C++ class multiset<char*>;

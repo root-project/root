@@ -843,13 +843,18 @@ static int G__G__API_35_7_5(G__value *result7,G__CONST char *funcname,struct G__
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G__G__API_35_9_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__G__API_35_8_5(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+      G__letint(result7,105,(long)((G__ClassInfo*)(G__getstructoffset()))->HasDefaultConstructor());
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__API_35_0_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,108,(long)((G__ClassInfo*)(G__getstructoffset()))->ClassProperty());
    return(1 || funcname || hash || result7 || libp) ;
 }
 
 // automatic copy constructor
-static int G__G__API_35_0_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+static int G__G__API_35_1_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
 {
    G__ClassInfo *p;
    p=new G__ClassInfo(*(G__ClassInfo*)G__int(libp->para[0]));
@@ -862,7 +867,7 @@ static int G__G__API_35_0_6(G__value *result7,G__CONST char *funcname,struct G__
 
 // automatic destructor
 typedef G__ClassInfo G__TG__ClassInfo;
-static int G__G__API_35_1_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__G__API_35_2_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
@@ -2172,11 +2177,12 @@ static void G__setup_memfuncG__ClassInfo(void) {
 "C - - 10 - name L - - 0 - poffset",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("HasMethod",893,G__G__API_35_6_5,105,-1,-1,0,1,1,1,0,"C - - 10 - fname",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("HasDataMember",1262,G__G__API_35_7_5,105,-1,-1,0,1,1,1,0,"C - - 10 - name",(char*)NULL,(void*)NULL,0);
-   G__memfunc_setup("ClassProperty",1371,G__G__API_35_9_5,108,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("HasDefaultConstructor",2183,G__G__API_35_8_5,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("ClassProperty",1371,G__G__API_35_0_6,108,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__ClassInfo",1159,G__G__API_35_0_6,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__ClassInfo),-1,0,1,1,1,0,"u 'G__ClassInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__ClassInfo",1159,G__G__API_35_1_6,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__ClassInfo),-1,0,1,1,1,0,"u 'G__ClassInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
-   G__memfunc_setup("~G__ClassInfo",1285,G__G__API_35_1_6,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
+   G__memfunc_setup("~G__ClassInfo",1285,G__G__API_35_2_6,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
    G__tag_memfunc_reset();
 }
 
@@ -2476,6 +2482,8 @@ extern "C" void G__cpp_setup_funcG__API() {
 * Class,struct,union,enum tag information setup
 *********************************************************/
 /* Setup class/struct taginfo */
+G__linked_taginfo G__G__APILN_G__friendtag = { "G__friendtag" , 115 , -1 };
+G__linked_taginfo G__G__APILN_G__bytecodefunc = { "G__bytecodefunc" , 115 , -1 };
 G__linked_taginfo G__G__APILN_G__MethodInfo = { "G__MethodInfo" , 99 , -1 };
 G__linked_taginfo G__G__APILN_G__DataMemberInfo = { "G__DataMemberInfo" , 99 , -1 };
 G__linked_taginfo G__G__APILN_G__FriendInfo = { "G__FriendInfo" , 99 , -1 };
@@ -2494,6 +2502,8 @@ G__linked_taginfo G__G__APILN_G__IncludePathInfo = { "G__IncludePathInfo" , 99 ,
 
 /* Reset class/struct taginfo */
 extern "C" void G__cpp_reset_tagtableG__API() {
+  G__G__APILN_G__friendtag.tagnum = -1 ;
+  G__G__APILN_G__bytecodefunc.tagnum = -1 ;
   G__G__APILN_G__MethodInfo.tagnum = -1 ;
   G__G__APILN_G__DataMemberInfo.tagnum = -1 ;
   G__G__APILN_G__FriendInfo.tagnum = -1 ;
@@ -2515,6 +2525,8 @@ extern "C" void G__cpp_reset_tagtableG__API() {
 extern "C" void G__cpp_setup_tagtableG__API() {
 
    /* Setting up class,struct,union tag entry */
+   G__get_linked_tagnum(&G__G__APILN_G__friendtag);
+   G__get_linked_tagnum(&G__G__APILN_G__bytecodefunc);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_G__MethodInfo),sizeof(G__MethodInfo),-1,34048,(char*)NULL,G__setup_memvarG__MethodInfo,G__setup_memfuncG__MethodInfo);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_G__DataMemberInfo),sizeof(G__DataMemberInfo),-1,34048,(char*)NULL,G__setup_memvarG__DataMemberInfo,G__setup_memfuncG__DataMemberInfo);
    G__tagtable_setup(G__get_linked_tagnum(&G__G__APILN_G__FriendInfo),sizeof(G__FriendInfo),-1,2304,(char*)NULL,G__setup_memvarG__FriendInfo,G__setup_memfuncG__FriendInfo);

@@ -29,6 +29,8 @@ extern void G__set_cpp_environmentG__API();
 #ifndef G__MEMFUNCBODY
 #endif
 
+extern G__linked_taginfo G__G__APILN_G__friendtag;
+extern G__linked_taginfo G__G__APILN_G__bytecodefunc;
 extern G__linked_taginfo G__G__APILN_G__MethodInfo;
 extern G__linked_taginfo G__G__APILN_G__DataMemberInfo;
 extern G__linked_taginfo G__G__APILN_G__FriendInfo;

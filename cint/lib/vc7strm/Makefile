@@ -1,8 +1,10 @@
 #
 # lib/snstream/Makefile
 #
-CP         = copy
-MV	   = move
+#CP         = copy
+#MV	   = move
+CP         = cp
+MV	   = mv
 
 CINTSYSDIR = ../..
 

@@ -5456,7 +5456,8 @@ int isrecursive;
 /***********************************************************************
 * G__rate_binary_operator()
 **********************************************************************/
-struct G__funclist* G__rate_binary_operator(libp,tagnum,funcname,hash,funclist,isrecursive)
+struct G__funclist* G__rate_binary_operator(p_ifunc,libp,tagnum,funcname,hash,funclist,isrecursive)
+struct G__ifunc_table *p_ifunc;
 struct G__param *libp;
 int tagnum;
 char* funcname;
@@ -5466,7 +5467,6 @@ int isrecursive;
 {
   int i;
   struct G__param fpara;
-  struct G__ifunc_table *p_ifunc = &G__ifunc;
 #ifdef G__DEBUG
   {
     int jdbg;
@@ -5583,6 +5583,9 @@ int isrecursive;
   int ambiguous = 0;
   int scopetagnum = p_ifunc->tagnum;
   struct G__ifunc_table *store_ifunc = p_ifunc; 
+#ifndef G__OLDIMPLEMENTATION1881
+  int ix=0;
+#endif
 
 
   /* Search for name match
@@ -5627,6 +5630,13 @@ int isrecursive;
       }
     }
     p_ifunc = p_ifunc->next;
+#ifndef G__OLDIMPLEMENTATION1881
+    if(!p_ifunc && store_ifunc==G__p_ifunc && 
+       ix<G__globalusingnamespace.basen) {
+      p_ifunc=G__struct.memfunc[G__globalusingnamespace.basetagnum[ix]];
+      ++ix;
+    }
+#endif
   }
 
   /* If exact match does not exist 
@@ -5639,7 +5649,15 @@ int isrecursive;
 
 #ifndef G__OLDIMPLEMENTATION1427
   if(!match && (G__TRYUNARYOPR==memfunc_flag||G__TRYBINARYOPR==memfunc_flag)) {
-    funclist = G__rate_binary_operator(libp,G__tagnum,funcname,hash
+#ifndef G__OLDIMPLEMENTATION1881
+    for(ix=0;ix<G__globalusingnamespace.basen;ix++) {
+      funclist=G__rate_binary_operator(
+		      G__struct.memfunc[G__globalusingnamespace.basetagnum[ix]]
+		                       ,libp,G__tagnum,funcname,hash
+				       ,funclist,isrecursive);
+    }
+#endif
+    funclist = G__rate_binary_operator(&G__ifunc,libp,G__tagnum,funcname,hash
 				       ,funclist,isrecursive);
   }
 #endif
