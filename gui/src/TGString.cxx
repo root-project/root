@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGString.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGString.cxx,v 1.2 2004/03/22 15:39:43 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -39,11 +39,17 @@ ClassImp(TGString)
 ClassImp(TGHotString)
 
 //______________________________________________________________________________
+TGString::TGString(const TGString *s) : TString(s->Data())
+{ 
+   // ctor
+}
+
+//______________________________________________________________________________
 void TGString::Draw(Drawable_t id, GContext_t gc, Int_t x, Int_t y)
 {
    // Draw string.
 
-   gVirtualX->DrawString(id, gc, x, y, fString.Data(), fString.Length());
+   gVirtualX->DrawString(id, gc, x, y, Data(), Length());
 }
 
 //______________________________________________________________________________
@@ -53,10 +59,10 @@ void TGString::DrawWrapped(Drawable_t id, GContext_t gc,
    // Draw a string in a column with width w. If string is longer than
    // w wrap it to next line.
 
-   const char *p     = fString.Data();
+   const char *p     = Data();
    const char *prev  = p;
    const char *chunk = p;
-   int tw, th, len = fString.Length();
+   int tw, th, len = Length();
 
    tw = gVirtualX->TextWidth(font, p, len);
    if (tw <= (int)w) {
@@ -94,10 +100,10 @@ Int_t TGString::GetLines(FontStruct_t font, UInt_t w)
 {
    // Get number of lines of width w the string would take using a certain font.
 
-   const char *p     = fString.Data();
+   const char *p     = Data();
    const char *prev  = p;
    const char *chunk = p;
-   int tw, nlines, len = fString.Length();
+   int tw, nlines, len = Length();
 
    nlines = 1;
 
@@ -123,11 +129,11 @@ Int_t TGString::GetLines(FontStruct_t font, UInt_t w)
 
 
 //______________________________________________________________________________
-TGHotString::TGHotString(const char *s) : TGString(s)
+TGHotString::TGHotString(const char *s) : TGString()
 {
    // Create a hot string.
 
-   char *dup = StrDup(fString.Data());
+   char *dup = StrDup(s);
    char *p;
 
    fLastGC = 0;
@@ -151,7 +157,7 @@ TGHotString::TGHotString(const char *s) : TGString(s)
          break;                        // allow only one hotkey per item
       }
    }
-   fString = dup;
+   Append(dup);
    delete [] dup;
 }
 
@@ -160,7 +166,7 @@ void TGHotString::Draw(Drawable_t id, GContext_t gc, Int_t x, Int_t y)
 {
    // Draw a hot string and underline the hot character.
 
-   gVirtualX->DrawString(id, gc, x, y, fString.Data(), fString.Length());
+   gVirtualX->DrawString(id, gc, x, y, Data(), Length());
 
    DrawHotChar(id, gc, x, y);
 }
@@ -172,10 +178,10 @@ void TGHotString::DrawWrapped(Drawable_t id, GContext_t gc,
    // Draw a hot string in a column with width w. If string is longer than
    // w wrap it to next line.
 
-   const char *p     = fString.Data();
+   const char *p     = Data();
    const char *prev  = p;
    const char *chunk = p;
-   int tw, th, len = fString.Length();
+   int tw, th, len = Length();
 
    tw = gVirtualX->TextWidth(font, p, len);
    if (tw <= (int)w) {
@@ -231,8 +237,8 @@ void TGHotString::DrawHotChar(Drawable_t id, GContext_t gc, Int_t x, Int_t y)
          gVirtualX->GetGCValues(gc, gcval);
          font = gVirtualX->GetFontStruct(gcval.fFont);
 
-         fOff1   = gVirtualX->TextWidth(font, fString.Data(), fHotPos-1); //+1;
-         fOff2   = gVirtualX->TextWidth(font, fString.Data(), fHotPos) - 1;
+         fOff1   = gVirtualX->TextWidth(font, Data(), fHotPos-1); //+1;
+         fOff2   = gVirtualX->TextWidth(font, Data(), fHotPos) - 1;
 
          gVirtualX->FreeFontStruct(font);
          fLastGC = gc;

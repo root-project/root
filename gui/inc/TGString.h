@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGString.h,v 1.3 2002/06/12 16:46:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGString.h,v 1.4 2003/08/11 12:51:31 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -31,28 +31,24 @@
 #endif
 
 
-class TGString {
-
-protected:
-   TString   fString;   // embedded string
+class TGString : public TString {
 
 public:
-   TGString() { }
-   TGString(TString s) { fString = s; }
-   TGString(const char *s) { fString = s; }
-   TGString(const TGString *s) { fString = s->fString; }
-   TGString(Int_t number) { fString += number; }
+   TGString() : TString() { }
+   TGString(TString s) : TString(s.Data()) { }
+   TGString(const char *s) : TString(s) { }
+   TGString(Int_t number) : TString() { *this += number; }
+   TGString(const TGString *s);
    virtual ~TGString() { }
 
-   Int_t GetLength() const { return fString.Length(); }
-   const char *GetString() const { return (const char *)fString; }
-   void SetString(const char *s) { fString = s; }
+   Int_t GetLength() const { return Length(); }
+   const char  *GetString() const { return Data(); }
+   virtual void SetString(const char *s) { *this = s; }
 
    virtual void Draw(Drawable_t id, GContext_t gc, Int_t x, Int_t y);
    virtual void DrawWrapped(Drawable_t id, GContext_t gc,
                             Int_t x, Int_t y, UInt_t w, FontStruct_t font);
    virtual Int_t GetLines(FontStruct_t font, UInt_t w);
-   TGString     &operator=(const char *s) { fString = s; return *this; }
 
    ClassDef(TGString,0)  // Graphics string
 };
