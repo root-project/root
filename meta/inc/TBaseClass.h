@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.h,v 1.2 2000/09/05 09:21:23 brun Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -25,6 +25,9 @@
 #ifndef ROOT_TDictionary
 #include "TDictionary.h"
 #endif
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
 
 class TBrowser;
 class TClass;
@@ -37,6 +40,7 @@ private:
    G__BaseClassInfo  *fInfo;      //pointer to CINT base class info
    TClass            *fClassPtr;  //pointer to the base class TClass
    TClass            *fClass;     //pointer to class
+   TString           fName;       //name of class
 
 public:
    TBaseClass(G__BaseClassInfo *info = 0, TClass *cl = 0);

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TBaseClass.cxx,v 1.2 2000/11/23 08:15:39 brun Exp $
 // Author: Fons Rademakers   08/02/95
 
 /*************************************************************************
@@ -39,6 +39,7 @@ TBaseClass::TBaseClass(G__BaseClassInfo *info, TClass *cl) : TDictionary()
    fInfo     = info;
    fClass    = cl;
    fClassPtr = 0;
+   fName = fInfo->Fullname();
 }
 
 //______________________________________________________________________________
@@ -63,7 +64,7 @@ TClass *TBaseClass::GetClassPointer()
 {
    // Get pointer to the base class TClass.
 
-   if (!fClassPtr) fClassPtr = gROOT->GetClass(GetName());
+   if (!fClassPtr) fClassPtr = gROOT->GetClass(fName);
    return fClassPtr;
 }
 
@@ -80,7 +81,7 @@ const char *TBaseClass::GetName() const
 {
    // Get base class name.
 
-   return fInfo->Fullname();
+   return fName;
 }
 
 //______________________________________________________________________________
@@ -98,7 +99,7 @@ Int_t TBaseClass::Compare(TObject *obj)
    // whether "this" is lexicographically less than, equal to, or
    // greater than obj.
 
-   return strcmp(fInfo->Name(), obj->GetName());
+   return strcmp(fName, obj->GetName());
 }
 
 //______________________________________________________________________________
@@ -106,8 +107,7 @@ ULong_t TBaseClass::Hash()
 {
    // Return hash value for TBaseClass based on its name.
 
-   TString s = fInfo->Name();
-   return s.Hash();
+   return fName.Hash();
 }
 
 //______________________________________________________________________________
