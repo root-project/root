@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.29 2002/07/16 13:08:03 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.30 2002/07/16 14:33:56 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -480,8 +480,6 @@ void TClonesArray::Streamer(TBuffer &b)
          return;
       }
 
-      if (GetEntriesFast() > 0) Delete();
-
       b >> nobjects;
       if (nobjects < 0)
          nobjects = -nobjects;  // still there for backward compatibility
@@ -510,8 +508,6 @@ void TClonesArray::Streamer(TBuffer &b)
          for (Int_t i = 0; i < nobjects; i++) {
             if (!fKeep->fCont[i])
                fKeep->fCont[i] = (TObject*)fClass->New();
-            else
-               fClass->New(fKeep->fCont[i]);
 
             fCont[i] = fKeep->fCont[i];
             fLast = i;
