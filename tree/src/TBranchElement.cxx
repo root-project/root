@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.105 2003/03/05 23:33:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.106 2003/03/06 21:53:46 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 #include "TStreamerElement.h"
 #include "TBrowser.h"
 #include "TFolder.h"
+#include "TRealData.h"
 #include "Api.h"
 
 const Int_t kMaxLen = 1024;
@@ -832,7 +833,7 @@ void TBranchElement::FillLeaves(TBuffer &b)
           case 14:  {b.WriteFastArray((ULong_t*) fAddress, n); break;}
           case 15:  {b.WriteFastArray((UInt_t*)  fAddress, n); break;}
        }
-       return;
+       return; 
     }
     TClonesArray *clones = (TClonesArray*)fObject;
     if (!clones) return;
@@ -1418,7 +1419,25 @@ void TBranchElement::SetAddress(void *add)
             if (clast) {
                fObject += clparent->GetDataMemberOffset(clast+1) -offsets[fID];
             } else {
-               fObject += clparent->GetDataMemberOffset(GetName()) -offsets[fID];
+               TRealData *rd = clparent->GetRealData(GetName());
+               if (!rd) {
+                  //Otto case
+                  //class TUsrSevtData2:public TMrbSubevent_Caen {
+                  //class TMrbSubevent_Caen:public TObject {
+                  //   TUsrHitBuffer fHitBuffer;
+                  //class TUsrHitBuffer:public TObject {
+                  //   Int_t fHighWater;
+                  //   TClonesArray *fHits;
+                  // code below to get the correct address for fHitBuffer.fHits
+                  char aname[512];
+                  strcpy(aname,GetName());
+                  char *dot = (char*)strchr(aname,'.');
+                  *dot = 0;
+                  rd = clparent->GetRealData(aname);
+                  if (rd) fObject += rd->GetThisOffset();
+               } else {
+                  fObject += rd->GetThisOffset() -offsets[fID];
+               }
             }
          }
       }
@@ -1440,9 +1459,22 @@ void TBranchElement::SetAddress(void *add)
 
       if (nb2 > 0) {
          if (info) {
+            TRealData *rd = clparent->GetRealData(branch->GetName());
+            Int_t mOffset = 0;
+            if (!rd) {
+               //Otto case (see above)
+               char aname[512];
+               strcpy(aname,branch->GetName());
+               char *dot = (char*)strchr(aname,'.');
+               if (dot) {
+                  *dot = 0;
+                  rd = clparent->GetRealData(aname);
+                  if (rd) mOffset = rd->GetThisOffset();
+               }
+            }
             Int_t *leafOffsets = info->GetOffsets();
             if (leafOffsets) {
-               branch->SetAddress(fObject + leafOffsets[id]);
+               branch->SetAddress(fObject + mOffset + leafOffsets[id]);
             } else {
                Error("SetAddress","info=%s, leafOffsets=0",info->GetName());
             }
@@ -1565,8 +1597,10 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
    Int_t unroll = 0;
    for (Int_t i=0;i<ndata;i++) {
       elem = (TStreamerElement*)elems[i];
-     if (gDebug > 1) printf("Unroll name=%s, cltop=%s, cl=%s, i=%d, elem=%s, splitlevel=%d, btype=%d \n",name,cltop->GetName(),cl->GetName(),i,elem->GetName(),splitlevel,btype);
-     if (elem->IsA() == TStreamerBase::Class()) {
+      Int_t offset = elem->GetOffset();
+      char *oldPointer = fBranchPointer;
+      if (gDebug > 0) printf("Unroll name=%s, cltop=%s, cl=%s, i=%d, elem=%s, offset=%d, splitlevel=%d, fBranchPointer=%x \n",name,cltop->GetName(),cl->GetName(),i,elem->GetName(),elem->GetOffset(),splitlevel,(Long_t)fBranchPointer);
+      if (elem->IsA() == TStreamerBase::Class()) {
          clbase = gROOT->GetClass(elem->GetName());
          //here one should consider the case of a TClonesArray with a class
          //deriving from an abstract class
@@ -1575,9 +1609,11 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
          if (clbase->Property() & kIsAbstract) {
             if (cl->InheritsFrom("TCollection")) unroll = -1;
          }
-         if (gDebug > 1) printf("Unrolling base class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
+         if (gDebug > 0) printf("Unrolling base class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
+         fBranchPointer += offset;
          if (unroll < 0 && btype != 31) return -1;
          else unroll = Unroll(name,cltop,clbase,basketsize,splitlevel-1,btype);
+         fBranchPointer = oldPointer;
          if (unroll < 0) {
             if (strlen(name)) sprintf(branchname,"%s.%s",name,elem->GetFullName());
             else              sprintf(branchname,"%s",elem->GetFullName());
@@ -1594,20 +1630,22 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
                clbase = gROOT->GetClass(elem->GetTypeName());
                if (clbase->Property() & kIsAbstract) return -1;
 
-            if (gDebug > 1) printf("Unrolling object class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
+            if (gDebug > 0) printf("Unrolling object class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
+            fBranchPointer += offset;
             if (elem->CannotSplit())    unroll = -1;
             else unroll = Unroll(branchname,cltop,clbase,basketsize,splitlevel-1,btype);
+            fBranchPointer = oldPointer;
             if (unroll < 0) {
-               branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
+               char *pointer = fBranchPointer + offset;
+               branch = new TBranchElement(branchname,info,jd,pointer,basketsize,0,btype);
                branch->SetParentName(cltop->GetName());
                fBranches.Add(branch);
             }
          } else {
             if (elem->GetClassPointer() == TClonesArray::Class()) {
                //process case of a TClonesArray in a derived class
-               char *pointer = fBranchPointer + elem->GetOffset();
+               char *pointer = fBranchPointer + offset;
                branch = new TBranchElement(branchname,info,jd,pointer,basketsize,splitlevel-1,btype);
-               //branch = new TBranchElement(branchname,info,jd,pointer,basketsize,0,btype);
             } else {
                branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
                branch->SetType(btype);
