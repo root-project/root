@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.71 2004/09/08 16:03:57 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.72 2004/09/08 23:15:00 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -170,7 +170,6 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    }
    fEventMask = (UInt_t) wattr.fEventMask;
 
-   AddInput(kButtonPressMask); // to allow Drag and Drop
    SetWindowName();
 }
 
@@ -214,7 +213,6 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fMustCleanup = kFALSE;
    fFE          = 0;
 
-   AddInput(kButtonPressMask); // to allow Drag and Drop
    SetWindowName();
 }
 
@@ -1265,6 +1263,7 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
          }
       }
    }
+   AddInput(kButtonPressMask); // to allow Drag and Drop
    SetWindowName();
 }
 
