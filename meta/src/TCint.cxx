@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.44 2001/12/20 15:29:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.45 2001/12/20 18:36:40 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -58,21 +58,22 @@ extern "C" int G__const_resetnoerror();
 extern "C" void G__clearfilebusy(int);
 extern "C" void G__clearstack();
 
-extern "C" int ScriptCompiler(const char* filename, const char* opt) {
+extern "C" int ScriptCompiler(const char *filename, const char *opt) {
    return gSystem->CompileMacro(filename, opt);
 }
 
-extern "C" int IgnoreInclude(const char* fname,const char* expandedfname) {
+extern "C" int IgnoreInclude(const char *fname, const char *expandedfname) {
    return gROOT->IgnoreInclude(fname,expandedfname);
 }
 
-extern "C" void TCint_UpdateClassInfo(char* c ,Long_t l) {
-  TCint::UpdateClassInfo(c,l);
+extern "C" void TCint_UpdateClassInfo(char *c, Long_t l) {
+  TCint::UpdateClassInfo(c, l);
 }
 
-extern "C" void* TCint_FindSpecialObject(char * c, G__ClassInfo *ci, void ** p1, void ** p2) {
-  return TCint::FindSpecialObject(c,ci,p1,p2);
+extern "C" void* TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, void **p2) {
+  return TCint::FindSpecialObject(c, ci, p1, p2);
 }
+
 // It is a "fantom" method to synchronize user keyboard input
 // and ROOT prompt line (for WIN32)
 const char *fantomline = "TRint::EndOfLineAction();";
@@ -121,7 +122,7 @@ void TCint::ClearFileBusy()
 }
 
 //______________________________________________________________________________
-void TCint::ClearStack() 
+void TCint::ClearStack()
 {
    // Delete existing temporary values
 
@@ -216,7 +217,7 @@ Bool_t TCint::IsLoaded(const char* filename) const
 }
 
 //______________________________________________________________________________
-void TCint::LoadMacro(const char *filename, EErrorCode* error)
+void TCint::LoadMacro(const char *filename, EErrorCode *error)
 {
    // Load a macro file in CINT's memory.
 
@@ -224,7 +225,7 @@ void TCint::LoadMacro(const char *filename, EErrorCode* error)
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLine(const char *line, EErrorCode* error)
+Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
 {
    // Let CINT process a command line.
 
@@ -240,10 +241,13 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode* error)
              G__free_tempobject();
              TCint::UpdateAllCanvases();
          } else {
-             int local_error = 0;
-             ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, 0);
-             if (error) *error = (EErrorCode)local_error;
-             gROOT->SetLineHasBeenProcessed();
+             if (error && *error!=TInterpreter::kProcessing) {
+                *error = TInterpreter::kNoError;
+             }
+             ret = G__process_cmd((char *)line, fPrompt, &fMore, (int*)error, 0);
+             if (error && *error == TInterpreter::kProcessing) {
+                *error = TInterpreter::kNoError;
+             }
          }
       } else
          ret = ProcessLineAsynch(line, error);
@@ -252,7 +256,7 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode* error)
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLineAsynch(const char *line, EErrorCode* error)
+Int_t TCint::ProcessLineAsynch(const char *line, EErrorCode *error)
 {
    // Let CINT process a command line asynch.
 
@@ -273,7 +277,7 @@ Int_t TCint::ProcessLineAsynch(const char *line, EErrorCode* error)
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLineSynch(const char *line, EErrorCode* error)
+Int_t TCint::ProcessLineSynch(const char *line, EErrorCode *error)
 {
    // Let CINT process a command line synchronously, i.e we are waiting
    // it will be finished.
@@ -467,13 +471,40 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
    // Set pointer to CINT's G__ClassInfo in TClass.
 
    if (!cl->fClassInfo || reload) {
-      // In the case where the class is not loaded and belong to a namespace
+      // In the case where the class is not loaded and belongs to a namespace
       // or is nested, looking for the full class name is outputing a lots of
       // (expected) error messages.  Currently the only way to avoid this is to
       // specifically check that each level of nesting is already loaded.
+      // In case of templates the idea is that everything between the outer
+      // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
+
       char *classname = StrDup(cl->GetName());
-      char *current = strstr(classname,"::");
-      while (current) {
+      char *current = classname;
+      while (*current) {
+
+         while (*current && *current != ':' && *current != '<')
+            current++;
+
+         if (!*current) break;
+
+         if (*current == '<') {
+            int level = 1;
+            current++;
+            while (*current && level > 0) {
+               if (*current == '<') level++;
+               if (*current == '>') level--;
+               current++;
+            }
+            continue;
+         }
+
+         // *current == ':', must be a "::"
+         if (*(current+1) != ':') {
+            Error("SetClassInfo", "unexpected token : in %s", classname);
+            delete [] classname;
+            return;
+         }
+
          *current = '\0';
          G__ClassInfo info(classname);
          if (!info.IsLoaded()) {
@@ -481,7 +512,7 @@ void TCint::SetClassInfo(TClass *cl, Bool_t reload)
             return;
          }
          *current = ':';
-         current = strstr(current+1,"::");
+         current += 2;
       }
       delete [] classname;
 
@@ -649,7 +680,8 @@ void TCint::Execute(const char *function, const char *params, int *error)
 }
 
 //______________________________________________________________________________
-void TCint::Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error)
+void TCint::Execute(TObject *obj, TClass *cl, const char *method,
+                    const char *params, int *error)
 {
    // Execute a method from class cl with arguments params.
 
@@ -667,7 +699,8 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method, const char *pa
 }
 
 //______________________________________________________________________________
-void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error)
+void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params,
+                    int *error)
 {
    // Execute a method from class cl with the arguments in array params
    // (params[0] ... params[n] = array of TObjString parameters).
@@ -726,12 +759,15 @@ void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params
 }
 
 //______________________________________________________________________________
-Int_t TCint::ExecuteMacro(const char *filename, EErrorCode* error)
+Int_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
 {
    // Execute a CINT macro.
+
    G__value result;
-   if (gApplication) gApplication->ProcessFile(filename, (int*)error);
-   else result = G__exec_tempfile((char*)filename);
+   if (gApplication)
+      gApplication->ProcessFile(filename, (int*)error);
+   else
+      result = G__exec_tempfile((char*)filename);
    return 0;  // could get return value from result, but what about return type?
 }
 
