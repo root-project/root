@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.65 2004/05/10 15:06:35 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.66 2004/05/24 11:23:26 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -5418,7 +5418,7 @@ void TGWin32::QueryColor(Colormap_t cmap, ColorStruct_t & color)
    GdkColorContext *cc = gdk_color_context_new(gdk_visual_get_system(), fColormap);
    gdk_color_context_query_color(cc, &xc);
 
-   color.fPixel = xc.pixel = RGB(xc.red, xc.green, xc.blue);
+   color.fPixel = xc.pixel;
    color.fRed = xc.red;
    color.fGreen = xc.green;
    color.fBlue = xc.blue;
