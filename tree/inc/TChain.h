@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.6 2000/07/12 17:13:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.7 2000/07/17 10:26:41 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -50,7 +50,7 @@ public:
     virtual void      Browse(TBrowser *b);
     virtual void      CreatePackets();
     virtual void      Draw(Option_t *opt);
-    virtual Int_t     Draw(TCut varexp, TCut selection, Option_t *option=""
+    virtual Int_t     Draw(const char *varexp, TCut selection, Option_t *option=""
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                      ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.7 2000/07/12 17:13:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.8 2000/07/17 10:26:41 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -230,7 +230,7 @@ void TChain::CreatePackets()
 }
 
 //______________________________________________________________________________
-Int_t TChain::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
+Int_t TChain::Draw(const char *varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
    // Draw expression varexp for selected entries.
    //
@@ -239,7 +239,7 @@ Int_t TChain::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries
    //    ntuple.Draw("x",cut1+cut2+cut3);
    //
 
-   return TChain::Draw(varexp.GetTitle(), selection.GetTitle(), option, nentries, firstentry);
+   return TChain::Draw(varexp, selection.GetTitle(), option, nentries, firstentry);
 }
 
 //______________________________________________________________________________
