@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.28 2001/11/21 21:35:05 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.29 2001/11/27 23:19:04 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -284,15 +284,19 @@ Double_t RooConvolutedPdf::evaluate() const
 
 
 Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, 
-	  				        RooArgSet& analVars, const RooArgSet* normSet) const 
+	  				        RooArgSet& analVars, const RooArgSet* normSet2) const 
 {
   // Handle trivial no-integration scenario
   if (allVars.getSize()==0) return 0 ;
 
+  // Select subset of allVars that are actual dependents
+  RooArgSet* allDeps = getDependents(allVars) ;
+  RooArgSet* normSet = normSet2 ? getDependents(normSet2) : 0 ;
+
   RooAbsArg *arg ;
   RooResolutionModel *conv ;
 
-  RooArgSet* intSetAll = new RooArgSet(allVars) ;
+  RooArgSet* intSetAll = new RooArgSet(*allDeps) ;
 
   // Split intSetAll in coef/conv parts
   RooArgSet* intCoefSet = new RooArgSet ; 
@@ -342,12 +346,13 @@ Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   }
 
 //   cout << "allVars     = " ; allVars.Print("1") ;
+//   cout << "allDeps     = " ; allDeps->Print("1") ;
 //   cout << "normSet     = " ; if (normSet) normSet->Print("1") ; else cout << "<none>" << endl ;
 //   cout << "intCoefSet  = " << intCoefSet << " " ; intCoefSet->Print("1") ;
 //   cout << "intConvSet  = " << intConvSet << " " ; intConvSet->Print("1") ;
 //   cout << "normCoefSet = " << normCoefSet << " " ; normCoefSet->Print("1") ;
 //   cout << "normConvSet = " << normConvSet << " " ; normConvSet->Print("1") ;
-  
+
   if (intCoefSet->getSize()==0) {
     delete intCoefSet ; intCoefSet=0 ;
   }
@@ -367,9 +372,9 @@ Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   Int_t tmp(0) ;
   masterCode = _codeReg.store(&tmp,1,intCoefSet,intConvSet,normCoefSet,normConvSet)+1 ; // takes ownership of all sets
 
-  RooArgSet* allDeps = getDependents(allVars) ;
   analVars.add(*allDeps) ;
   delete allDeps ;
+  if (normSet) delete normSet ;
 
 //   cout << this << "---> masterCode = " << masterCode << endl ;
   
