@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.36 2001/11/01 22:52:21 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.37 2001/11/15 23:14:41 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -284,24 +284,44 @@ RooFormula::DefinedVariable(TString &name)
 
   }
 
+
   // Check if already registered
-  if (!labelName) {
-    Int_t oldIdx = _useList.IndexOf(arg) ;
-    if (oldIdx>=0) {
-      //cout << "DefinedVariable " << arg->GetName() << " previously registered with code " << oldIdx << endl ;
-      return oldIdx ;
+  Int_t i ;
+  for(i=0 ; i<_useList.GetEntries() ; i++) {
+    RooAbsArg* var = (RooAbsArg*) _useList.At(i) ;
+    Bool_t varMatch = !TString(var->GetName()).CompareTo(arg->GetName()) ;
+
+    if (varMatch) {
+      TString& lbl= ((TObjString*) _labelList.At(i))->String() ;
+      Bool_t lblMatch(kFALSE) ;
+      if (!labelName && lbl.IsNull()) {
+	lblMatch=kTRUE ;
+      } else if (labelName && !lbl.CompareTo(labelName)) {
+	lblMatch=kTRUE ;
+      }
+
+      if (lblMatch) {
+	// Label and variable name match, recycle entry
+// 	cout << "DefinedVariable " << arg->GetName() ;
+// 	if (labelName) cout << "::" << labelName ;
+// 	cout << " previously registered with code " << i << endl ;
+	return i ;
+      }
     }
   }
 
-  // Add variable to use list
+  // Register new entry ;
   _useList.Add(arg) ;
-  if (labelName) {
-    _labelList.Add(new TObjString(labelName)) ;
-  } else {
+  if (!labelName) {
     _labelList.Add(new TObjString("")) ;
+  } else {
+    _labelList.Add(new TObjString(labelName)) ;
   }
 
-  //   cout << "DefinedVariable " << arg->GetName() << " registered with code " << _useList.GetEntries()-1 << endl ;
+//   cout << "DefinedVariable " << arg->GetName() ;
+//   if (labelName) cout << "::" << labelName ;
+//   cout << " registered with code " << _useList.GetEntries()-1 << endl ;
+
   return (_useList.GetEntries()-1) ;
 }
 
