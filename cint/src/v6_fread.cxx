@@ -2736,7 +2736,7 @@ char *string,*endmark;
 void G__fignoreline()
 {
   int c;
-  while((c=G__fgetc())!='\n' && c!='\r') {
+  while((c=G__fgetc())!='\n' && c!='\r' && c!=EOF) {
 #ifdef G__MULTIBYTE
     if(G__IsDBCSLeadByte(c)) {
       c=G__fgetc();
@@ -2768,7 +2768,7 @@ char *string;
 {
   int c;
   int i=0;
-  while((c=G__fgetc())!='\n' && c!='\r') {
+  while((c=G__fgetc())!='\n' && c!='\r' && c!=EOF) {
     string[i]=c;
     if(c=='\\') {
       c=G__fgetc();

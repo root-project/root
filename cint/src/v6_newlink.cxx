@@ -2960,8 +2960,12 @@ struct G__ifunc_table *ifunc;
 	for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
 #ifndef G__OLDIMPLEMENTATION1473
 	if(2==ifunc->ansi[ifn]) {
-#ifdef G__VAARG_COPYFUNC
+#if defined(G__VAARG_COPYFUNC)
 	  fprintf(fp,",libp,%d",k);
+#elif defined(__hpux)
+	int i;
+	for(i=G__VAARG_SIZE-1;i>G__VAARG_SIZE-100;i--)	
+	  fprintf(fp,",G__va_arg_bufobj.d[%d]",i);
 #else
 	  fprintf(fp,",G__va_arg_bufobj");
 #endif
@@ -3080,8 +3084,12 @@ struct G__ifunc_table *ifunc;
       for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
 #ifndef G__OLDIMPLEMENTATION1473
       if(2==ifunc->ansi[ifn]) {
-#ifdef G__VAARG_COPYFUNC
+#if defined(G__VAARG_COPYFUNC)
 	fprintf(fp,",libp,%d",k);
+#elif defined(__hpux)
+	int i;
+	for(i=G__VAARG_SIZE-1;i>G__VAARG_SIZE-100;i--)	
+	  fprintf(fp,",G__va_arg_bufobj.d[%d]",i);
 #else
 	fprintf(fp,",G__va_arg_bufobj");
 #endif
@@ -4062,8 +4070,12 @@ struct G__ifunc_table *ifunc;
       for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
 #ifndef G__OLDIMPLEMENTATION1473
       if(2==ifunc->ansi[ifn]) {
-#ifdef G__VAARG_COPYFUNC
+#if defined(G__VAARG_COPYFUNC)
 	fprintf(fp,",libp,%d",k);
+#elif defined(__hpux)
+	int i;
+	for(i=G__VAARG_SIZE-1;i>G__VAARG_SIZE-100;i--)	
+	  fprintf(fp,",G__va_arg_bufobj.d[%d]",i);
 #else
 	fprintf(fp,",G__va_arg_bufobj");
 #endif
@@ -4134,8 +4146,12 @@ struct G__ifunc_table *ifunc;
     for(k=0;k<m;k++) G__cppif_paratype(fp,ifn,ifunc,k);
 #ifndef G__OLDIMPLEMENTATION1473
     if(2==ifunc->ansi[ifn]) {
-#ifdef G__VAARG_COPYFUNC
+#if defined(G__VAARG_COPYFUNC)
       fprintf(fp,",libp,%d",k);
+#elif defined(__hpux)
+	int i;
+	for(i=G__VAARG_SIZE-1;i>G__VAARG_SIZE-100;i--)	
+	  fprintf(fp,",G__va_arg_bufobj.d[%d]",i);
 #else
       fprintf(fp,",G__va_arg_bufobj");
 #endif
@@ -6313,7 +6329,11 @@ int j;
 	 strcmp("iterator_category",ifunc->funcname[j])) fprintf(fp,"#if 0\n");
       else fprintf(fp,"#ifndef %s\n",ifunc->funcname[j]);
 
+#ifndef G__OLDIMPLEMENTATION1688
+      fprintf(fp,",(void*)(%s (*)("
+#else
       fprintf(fp,",(%s (*)("
+#endif
 	      ,G__type2string(ifunc->type[j]
 			      ,ifunc->p_tagtable[j]
 			      ,ifunc->p_typetable[j]

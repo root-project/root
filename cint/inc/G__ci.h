@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015054
-#define G__CINTVERSIONSTR  "5.15.54, Aug 18 2002"
+#define G__CINTVERSION      5015056
+#define G__CINTVERSIONSTR  "5.15.56, Sep 4 2002"
 
 
 /**********************************************************************
@@ -1618,14 +1618,15 @@ typedef struct {
  * HP-Precision Architecture, 
  *  Args > 8 bytes are passed by reference.  Args > 4 and <= 8 are
  *  right-justified in 8 bytes.  Args <= 4 are right-justified in
- *  4 bytes.
+ *  4 bytes. 
+ *  Because struct is passed by argument and also arguments are located
+ *  in decremental order in memory, this platform can not be supported.
  **********************************************/
+#define G__VAARG_NOSUPPORT
 
 #ifndef G__OLDIMPLEMENTATION1696
 #define G__VAARG_INC_COPY_N 4
 #define G__VAARG_PASS_BY_REFERENCE 8
-#else
-#define G__VAARG_NOSUPPORT
 #endif
 
 #define __WORD_MASK 0xFFFFFFFC
@@ -1636,8 +1637,8 @@ typedef struct {
  * Sun Sparc architecture
  *  No support yet,but give it a try
  **********************************************/
-
 #define G__VAARG_NOSUPPORT
+
 #ifndef G__OLDIMPLEMENTATION1696
 #define G__VAARG_INC_COPY_N 4
 #define G__VAARG_PASS_BY_REFERENCE 8

@@ -3,13 +3,17 @@
 #ifndef NULL
 #pragma setstdio
 #endif
-typedef long fpos_t;
+typedef struct fpos_t {
+  char dmy[12];
+} fpos_t;
+#pragma link off class fpos_t;
+#pragma link off typedef fpos_t;
 typedef unsigned int size_t;
 #define 	_IOFBF (0)
 #define 	_IOLBF (1)
 #define 	_IONBF (2)
 #define 	BUFSIZ (8192)
-#define 	FILENAME_MAX (4095)
+#define 	FILENAME_MAX (4096)
 #define 	L_tmpnam (20)
 #define 	TMP_MAX (238328)
 #ifndef SEEK_CUR

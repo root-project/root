@@ -441,6 +441,28 @@ G__value *presult3;
     }
     break;
 #endif
+#ifndef G__OLDIMPLEMENTATION1699
+  case 8:
+    if(strcmp(funcname,"unsigned")==0) {
+      presult3->type='h';
+      presult3->obj.i = G__int(libp->para[0]);
+#ifndef G__OLDIMPLEMENTATION571
+      if(presult3->ref) *(unsigned int*)presult3->ref = (unsigned int)presult3->obj.i;
+#endif
+      flag=1;
+    }
+    break;
+  case 9:
+    if(strcmp(funcname,"unsigned*")==0) {
+      presult3->type='H';
+      presult3->obj.i = G__int(libp->para[0]);
+#ifndef G__OLDIMPLEMENTATION571
+      if(presult3->ref) *(long*)presult3->ref = (long)presult3->obj.i;
+#endif
+      flag=1;
+    }
+    break;
+#endif
   case 11:
     if(strcmp(funcname,"unsignedint")==0) {
       presult3->type='h';

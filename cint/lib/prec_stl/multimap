@@ -62,7 +62,9 @@ class multimap {
   class iterator 
 #if defined(G__VISUAL)
 	: public _Bidit<T,difference_type> 
-#elif !defined(G__SUNPRO_C) && !defined(G__BORLANDCC5)
+#elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
+#elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#else
   	: public bidirectional_iterator<T,difference_type> 
 #endif
 	{
@@ -96,7 +98,9 @@ class multimap {
   class reverse_iterator 
 #if defined(G__VISUAL)
 	: public _Bidit<T,difference_type> 
-#elif !defined(G__SUNPRO_C) && !defined(G__BORLANDCC5)
+#elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
+#elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#else
   	: public bidirectional_iterator<T,difference_type> 
 #endif
 	{

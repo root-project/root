@@ -26,10 +26,17 @@ using namespace std;
 #pragma link C++ class vector<int>;
 #pragma link C++ class vector<long>;
 #pragma link C++ class vector<double>;
+#if (G__GNUC<3 || G__GNUC_MINOR<1) 
+// gcc3.1,3.2 has a problem with iterator<void*,...,void&>
 #pragma link C++ class vector<void*>;
+#endif
 #pragma link C++ class vector<char*>;
 #ifdef G__STRING_DLL
 #pragma link C++ class vector<string>;
+#endif
+
+#if (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#pragma link C++ namespace __gnu_cxx;
 #endif
 
 

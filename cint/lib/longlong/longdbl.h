@@ -21,6 +21,8 @@
 #ifndef G__LONGDOUBLE_H
 #define G__LONGDOUBLE_H
 
+#if !defined(__hpux) && !defined(G__HPUX)
+
 #ifndef IOS
 #define IOS
 #endif
@@ -195,5 +197,6 @@ int G__ateval(const G__longdouble& a) {
 */
 #endif
 
+#endif
 
 #endif /* G__LONGLONG_H */

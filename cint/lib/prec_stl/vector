@@ -32,22 +32,7 @@ template<class T,class Allocator=std::allocator<T> >
 class vector {
  public:
   typedef T value_type;
-#if defined(G__KCC) 
-  typedef typename Allocator::pointer		iterator;
-  typedef typename Allocator::const_pointer	const_iterator;
-  typedef Allocator				allocator_type;
-  typedef reverse_iterator<iterator>	        reverse_iterator;
-  typedef reverse_iterator<const_iterator>      const_reverse_iterator;
-#else
-#if !(G__GNUC>=3 && G__GNUC_MINOR<1)
-  typedef T* iterator;
-  typedef const T* const_iterator;
-#else
-  typedef vector<T, Allocator> vector_type;
-  typedef std::__normal_iterator<T*, vector_type> iterator;
-  typedef std::__normal_iterator<T*, vector_type> const_iterator;
-#endif
-#endif
+
 #if (defined(G__GNUC) && !defined(G__KCC)) || defined(G__HPUX)
   typedef value_type* pointer;
   typedef const value_type* const_pointer;
@@ -64,8 +49,31 @@ class vector {
   typedef typename Allocator::difference_type difference_type;
 #endif
 
+#if defined(G__KCC) 
+  typedef typename Allocator::pointer		iterator;
+  typedef typename Allocator::const_pointer	const_iterator;
+  typedef Allocator				allocator_type;
+  typedef reverse_iterator<iterator>	        reverse_iterator;
+  typedef reverse_iterator<const_iterator>      const_reverse_iterator;
+#elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+  typedef vector<T, Allocator> vector_type;
+  typedef __gnu_cxx::__normal_iterator<pointer, vector_type> 	iterator;
+  typedef __gnu_cxx::__normal_iterator<const_pointer, vector_type>
+                                                        const_iterator;
+#elif !(G__GNUC>=3 && G__GNUC_MINOR<1)
+  typedef T* iterator;
+  typedef const T* const_iterator;
+#else
+  typedef vector<T, Allocator> vector_type;
+  typedef std::__normal_iterator<T*, vector_type> iterator;
+  typedef std::__normal_iterator<T*, vector_type> const_iterator;
+#endif
+
 
 #if defined(G__BORLANDCC5)
+  typedef reverse_iterator<iterator> reverse_iterator;
+#elif (G__GNUC>=3 && G__GNUC_MINOR>=1) 
+  typedef reverse_iterator<const_iterator> const_reverse_iterator;
   typedef reverse_iterator<iterator> reverse_iterator;
 #else // G__BORLANDCC5
 #if defined(G__KCC) 
@@ -107,7 +115,9 @@ class vector {
   friend bool operator!=(const vector::reverse_iterator& x
                         ,const vector::reverse_iterator& y) const;
 
+#if !(G__GNUC>=3 && G__GNUC_MINOR>=1) 
   typedef const reverse_iterator const_reverse_iterator;
+#endif
 
 #if (G__GNUC>=3) || defined(G__KCC)
   friend bool operator==(vector::const_iterator& x

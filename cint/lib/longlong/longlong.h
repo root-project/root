@@ -306,7 +306,10 @@ class G__ulonglong {
   operator long() { return((long)dat); }
   operator int() { return((int)dat); }
 #endif
-  operator double() { return((double)dat); }
+#if defined(G__VISUAL)
+#else
+  //operator double() { return((double)dat); }
+#endif
 
   // unary operators
   G__ulonglong& operator++() { ++dat; return(*this); }

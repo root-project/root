@@ -51,14 +51,17 @@ class deque {
   class iterator 
 #if defined(G__VISUAL)
 	: public _Ranit<T,difference_type>
-#elif !defined(G__SUNPRO_C) && !defined(G__BORLANDCC5)
+#elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
+#elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#else
   	: public random_access_iterator<T,difference_type>
 #endif
 	{
    public:
     iterator() ;
     iterator(const iterator& x) ;
-#if !defined(G__BORLAND) && !defined(G__KCC)
+#if defined(G__BORLAND) || defined(G__KCC)
+#else
     iterator& operator=(const iterator& x) ;
 #endif
     T& operator*() const ;
@@ -66,8 +69,13 @@ class deque {
     iterator operator++(int a);
     iterator& operator--();
     iterator operator--(int a);
+#if (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#else
     bool operator==(const iterator& x) ;
-#ifndef G__HPUX
+#endif
+#if defined(G__HPUX)
+#elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#else
     bool operator!=(const iterator& x) ;
 #endif
     iterator operator+(long n);
@@ -84,7 +92,9 @@ class deque {
   class reverse_iterator 
 #if defined(G__VISUAL)
 	: public _Ranit<T,difference_type>
-#elif !defined(G__SUNPRO_C) && !defined(G__BORLANDCC5)
+#elif defined(G__SUNPRO_C) || defined(G__BORLANDCC5)
+#elif (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#else
 	: public random_access_iterator<T,difference_type>
 #endif
 	{

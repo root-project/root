@@ -1710,25 +1710,25 @@ static int G__G__IncludePathInfo_wAG__IncludePathInfo_8_0(G__value *result7,G__C
 
 
 /* Setting up global function */
-static int G___G__SetGlobalcomp_6_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___G__SetGlobalcomp_1_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__letint(result7,105,(long)G__SetGlobalcomp((char*)G__int(libp->para[0]),(char*)G__int(libp->para[1])
 ,(int)G__int(libp->para[2])));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___G__InitGetSpecialObject_7_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___G__InitGetSpecialObject_2_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       G__InitGetSpecialObject((G__pMethodSpecialObject)G__int(libp->para[0]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___G__InitGetSpecialValue_8_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___G__InitGetSpecialValue_3_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       G__InitGetSpecialValue((G__pMethodSpecialValue)G__int(libp->para[0]));
    return(1 || funcname || hash || result7 || libp) ;
 }
 
-static int G___G__InitUpdateClassInfo_9_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G___G__InitUpdateClassInfo_4_19(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
       G__setnull(result7);
       G__InitUpdateClassInfo((G__pMethodUpdateClassInfo)G__int(libp->para[0]));
    return(1 || funcname || hash || result7 || libp) ;
@@ -2157,7 +2157,7 @@ static void G__setup_memfuncG__ClassInfo(void) {
    // automatic copy constructor
    G__memfunc_setup("G__ClassInfo",1159,G__G__ClassInfo_G__ClassInfo_0_6,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__ClassInfo),-1,0,1,1,1,0,"u 'G__ClassInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
-   G__memfunc_setup("~G__ClassInfo",1285,G__G__ClassInfo_wAG__ClassInfo_1_6,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("~G__ClassInfo",1285,G__G__ClassInfo_wAG__ClassInfo_1_6,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
    G__tag_memfunc_reset();
 }
 
@@ -2173,7 +2173,7 @@ static void G__setup_memfuncG__BaseClassInfo(void) {
    // automatic copy constructor
    G__memfunc_setup("G__BaseClassInfo",1538,G__G__BaseClassInfo_G__BaseClassInfo_7_0,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__BaseClassInfo),-1,0,1,1,1,0,"u 'G__BaseClassInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
-   G__memfunc_setup("~G__BaseClassInfo",1664,G__G__BaseClassInfo_wAG__BaseClassInfo_8_0,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("~G__BaseClassInfo",1664,G__G__BaseClassInfo_wAG__BaseClassInfo_8_0,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
    G__tag_memfunc_reset();
 }
 
@@ -2196,7 +2196,7 @@ static void G__setup_memfuncG__TypeInfo(void) {
    // automatic copy constructor
    G__memfunc_setup("G__TypeInfo",1075,G__G__TypeInfo_G__TypeInfo_5_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__TypeInfo),-1,0,1,1,1,0,"u 'G__TypeInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
-   G__memfunc_setup("~G__TypeInfo",1201,G__G__TypeInfo_wAG__TypeInfo_6_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("~G__TypeInfo",1201,G__G__TypeInfo_wAG__TypeInfo_6_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
    G__tag_memfunc_reset();
 }
 
@@ -2271,7 +2271,7 @@ static void G__setup_memfuncG__TypedefInfo(void) {
    // automatic copy constructor
    G__memfunc_setup("G__TypedefInfo",1378,G__G__TypedefInfo_G__TypedefInfo_5_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__TypedefInfo),-1,0,1,1,1,0,"u 'G__TypedefInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
-   G__memfunc_setup("~G__TypedefInfo",1504,G__G__TypedefInfo_wAG__TypedefInfo_6_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("~G__TypedefInfo",1504,G__G__TypedefInfo_wAG__TypedefInfo_6_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,1);
    G__tag_memfunc_reset();
 }
 
@@ -2422,15 +2422,18 @@ extern "C" void G__cpp_setup_globalG__API() {
 static void G__cpp_setup_func0() {
    G__lastifuncposition();
 
-   G__memfunc_setup("G__SetGlobalcomp",1585,G___G__SetGlobalcomp_6_6,105,-1,-1,0,3,1,1,0,
+}
+
+static void G__cpp_setup_func1() {
+   G__memfunc_setup("G__SetGlobalcomp",1585,G___G__SetGlobalcomp_1_19,105,-1,-1,0,3,1,1,0,
 "C - - 0 - funcname C - - 0 - param "
 "i - - 0 - globalcomp",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__InitGetSpecialObject",2257,G___G__InitGetSpecialObject_7_6,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodSpecialObject' 0 - pmethod",(char*)NULL
+   G__memfunc_setup("G__InitGetSpecialObject",2257,G___G__InitGetSpecialObject_2_19,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodSpecialObject' 0 - pmethod",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__InitGetSpecialValue",2167,G___G__InitGetSpecialValue_8_6,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodSpecialValue' 0 - pmethod",(char*)NULL
+   G__memfunc_setup("G__InitGetSpecialValue",2167,G___G__InitGetSpecialValue_3_19,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodSpecialValue' 0 - pmethod",(char*)NULL
 ,(void*)NULL,0);
-   G__memfunc_setup("G__InitUpdateClassInfo",2174,G___G__InitUpdateClassInfo_9_6,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodUpdateClassInfo' 0 - pmethod",(char*)NULL
+   G__memfunc_setup("G__InitUpdateClassInfo",2174,G___G__InitUpdateClassInfo_4_19,121,-1,-1,0,1,1,1,0,"Y - 'G__pMethodUpdateClassInfo' 0 - pmethod",(char*)NULL
 ,(void*)NULL,0);
 
    G__resetifuncposition();
@@ -2438,6 +2441,7 @@ static void G__cpp_setup_func0() {
 
 extern "C" void G__cpp_setup_funcG__API() {
   G__cpp_setup_func0();
+  G__cpp_setup_func1();
 }
 
 /*********************************************************

@@ -1263,8 +1263,9 @@ int n;
   G__genericerror("Limitation: Variable argument is not supported for this platform");
 #endif
   for(i=n;i<libp->paran;i++) {
-    objsize = G__sizeof(&libp->para[i]);
     type = libp->para[i].type;
+    if(isupper(type)) objsize = G__LONGALLOC;
+    else              objsize = G__sizeof(&libp->para[i]);
 
     /* Platform that decrements address */
 #if (defined(__linux)&&defined(__i386)) || defined(_WIN32)
