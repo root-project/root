@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.155 2003/02/19 14:27:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.156 2003/02/22 13:22:55 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -465,6 +465,9 @@ void TStreamerInfo::BuildOld()
    // rebuild the TStreamerInfo structure
 
    if (gDebug > 0) printf("\n====>Rebuilding TStreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
+
+   fClass->BuildRealData();
+   
    TIter next(fElements);
    TStreamerElement *element;
    Int_t offset = 0;
