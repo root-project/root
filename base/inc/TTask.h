@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TTask.h,v 1.7 2002/01/23 15:48:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TTask.h,v 1.8 2002/07/04 10:19:44 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -50,8 +50,8 @@ public:
    TTask(const TTask &task);
    virtual ~TTask();
 
-           void  Abort();  // *MENU*
-           void  Add(TTask *task) {fTasks->Add(task);}
+   virtual void  Abort();  // *MENU*
+   virtual void  Add(TTask *task) {fTasks->Add(task);}
    virtual void  Browse(TBrowser *b);
    virtual void  CleanTasks();
    virtual void  Clear(Option_t *option="");
@@ -59,15 +59,15 @@ public:
    virtual void  Exec(Option_t *option);
    virtual void  ExecuteTask(Option_t *option="0");  // *MENU*
    virtual void  ExecuteTasks(Option_t *option);
-          Int_t  GetBreakin() const {return fBreakin;}
-          Int_t  GetBreakout() const {return fBreakout;}
+          Int_t  GetBreakin() const { return fBreakin; }
+          Int_t  GetBreakout() const { return fBreakout; }
          Bool_t  IsActive() const { return fActive; }
          Bool_t  IsFolder() const { return kTRUE; }
    virtual void  ls(Option_t *option="*") const;  // *MENU*
-           void  SetActive(Bool_t active=kTRUE) {fActive=active;} // *TOGGLE*
-           void  SetBreakin(Int_t breakin=1)    {fBreakin = breakin;} // *TOGGLE*
-           void  SetBreakout(Int_t breakout=1)  {fBreakout=breakout;} // *TOGGLE*
-          TList *GetListOfTasks() const {return fTasks;}
+           void  SetActive(Bool_t active=kTRUE) { fActive = active; } // *TOGGLE*
+           void  SetBreakin(Int_t breakin=1) { fBreakin = breakin; } // *TOGGLE*
+           void  SetBreakout(Int_t breakout=1) { fBreakout = breakout; } // *TOGGLE*
+          TList *GetListOfTasks() const { return fTasks; }
 
    ClassDef(TTask,1)  //Base class for tasks
 };
