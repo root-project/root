@@ -13,28 +13,30 @@ include ../../Rules.mk
 files: Event.root Event2.root
 
 unevenFriend: unevenFriend.out
-	$(CMDECHO) diff unevenFriend.out unevenFriend.ref
+	$(CMDECHO) diff -b unevenFriend.out unevenFriend.ref
 
 unevenFriend.out:  unevenFriend.C unevenFriend.ref
 	$(CMDECHO) root.exe -q -l -b unevenFriend.C > unevenFriend.out
 
-ifeq ($(PLATFORM),win32)
+ifeq ($(shell root-config --arch),win32)
 ROOTFILE = $(shell cygpath -u '$(ROOTSYS)/test/Event.root')
+ROOTDIR = $(shell cygpath -u '$(ROOTSYS)')
 else
 ROOTFILE = $(ROOTSYS)/test/Event.root
+ROOTDIR = $(ROOTSYS)
 endif
 
 $(ROOTFILE): $(ROOTSYS)/test/Event.h
 	$(CMDECHO) ( \
-		cd $(ROOTSYS)/test; \
-		gmake Event; \
-		Event 10 1 9 1; \
+		cd $(ROOTDIR)/test; \
+		gmake Event$(ExeSuf); \
+		./Event 10 1 9 1; \
 	) > createfile.out
 
-Event.root: $(ROOTSYS)/test/Event.root
+Event.root: $(ROOTDIR)/test/Event.root
 	$(CMDECHO) cp $(ROOTFILE) .
 
-Event2.root: $(ROOTSYS)/test/Event.root
+Event2.root: $(ROOTDIR)/test/Event.root
 	$(CMDECHO) cp $(ROOTFILE) Event2.root
 
 ChainFriend: Run.C  $(ROOTSYS)/lib/libTreePlayer.$(DllSuf) files
