@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TSeqCollection.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TSeqCollection.cxx,v 1.2 2001/01/09 18:33:59 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -19,6 +19,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TSeqCollection.h"
+#include "TVirtualMutex.h"
 
 
 ClassImp(TSeqCollection)
@@ -57,6 +58,7 @@ void TSeqCollection::QSort(TObject **a, Int_t first, Int_t last)
    // Sort array of TObject pointers using a quicksort algorithm.
    // Uses ObjCompare() to compare objects.
 
+   R__LOCKGUARD(gContainerMutex);
    static TObject *tmp;
    static int i;           // "static" to save stack space
    int j;
@@ -100,6 +102,7 @@ void TSeqCollection::QSort(TObject **a, TObject **b, Int_t first, Int_t last)
    // Array b will be sorted just like a (a determines the sort).
    // Uses ObjCompare() to compare objects.
 
+   R__LOCKGUARD(gContainerMutex);
    static TObject *tmp1, *tmp2;
    static int i;           // "static" to save stack space
    int j;
