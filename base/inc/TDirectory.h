@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.7 2001/05/16 10:21:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.8 2001/10/04 16:52:47 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -77,12 +77,15 @@ public:
    virtual void        Delete(const char *namecycle="");
    virtual void        Draw(Option_t *option="");
    virtual void        FillBuffer(char *&buffer);
+   virtual TKey       *FindKey(const char *keyname) const;
+   virtual TKey       *FindKeyAny(const char *keyname) const;
    virtual TObject    *FindObject(const char *name) const;
    virtual TObject    *FindObject(const TObject *obj) const;
+   virtual TObject    *FindObjectAny(const char *name) const;
    virtual TObject    *Get(const char *namecycle);
    TDatime            &GetCreationDate() {return fDatimeC;}
    virtual TFile      *GetFile() const {return fFile;}
-   virtual TKey       *GetKey(const char *name, Short_t cycle=9999);
+   virtual TKey       *GetKey(const char *name, Short_t cycle=9999) const;
    TList              *GetList() const { return fList; }
    TList              *GetListOfKeys() const { return fKeys; }
    TDatime            &GetModificationDate() {return fDatimeM;}
