@@ -4,7 +4,7 @@
 CLEAN_TARGETS += filltree.output arrayDrawTest.output myTree.root $(ALL_LIBRARIES) *.log  NtpRecord.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += ScanString multidim twodimvar arrayDrawTest arrayEventListTest boolOptTest indexMultiDimTest
+TEST_TARGETS += vectorOfvector ScanString multidim twodimvar arrayDrawTest arrayEventListTest boolOptTest indexMultiDimTest
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -69,4 +69,7 @@ multidim: multidim.log
 ScanString.log: ScanString_C.$(DllSuf)
 
 ScanString: ScanString.log
+	$(TestDiff)
+
+vectorOfvector: vectorOfvector.clog
 	$(TestDiff)

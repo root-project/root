@@ -8,4 +8,4 @@ twodim_0.root
 twodim_99.root
 filltree.output
 arrayDrawTest.output
-*.pdb *.def *.exp *ilk *.lib 
+*.pdb *.def *.exp *ilk *.lib *.clog
