@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.55 2004/03/12 16:45:36 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.56 2004/03/19 06:53:29 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1651,17 +1651,17 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
 
       Int_t nOK = 0;
 
-      for (Int_t i = 0; i < numberOfClasses; i++) {
+      Int_t i;
+      for (i = 0; i < numberOfClasses; i++) {
 
         // get class name
         const char *cname = gClassTable->Next();
-        classNames[nOK] = cname;
-
-        TClass *clsPtr = GetClass((const char *) classNames[nOK]);
-        if (!clsPtr) continue;
-
-        nOK++;
+        if (GetClass(cname)) {
+           classNames[nOK] = cname;
+           nOK++;
+        }
       }
+      for (i=nOK+1; i < numberOfClasses; i++) classNames[i] = 0;
 
       // quick sort
       SortNames(classNames, nOK);
@@ -1676,7 +1676,7 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
       out<<"</td>" << endl;
 
       // free allocated memory
-      delete[]classNames;
+      delete [] classNames;
     }   
     
     out << "</tr></table>" << endl;
@@ -3093,7 +3093,9 @@ TClass *THtml::GetClass(const char *name1, Bool_t load)
 {
 //*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*      =================================
+   if(!name1) return 0;
    Int_t n = strlen(name1);
+   if (!n) return 0;
    char *name = new char[n + 1];
    strcpy(name, name1);
    char *t = name + n - 1;
