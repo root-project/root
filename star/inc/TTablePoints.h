@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TTablePoints.h,v 1.2 2000/07/21 15:40:28 fine Exp $
 // Author: Valery Fine   14/05/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// $Id: TTablePoints.h,v 1.4 1999/12/17 23:28:41 fine Exp $
+// $Id: TTablePoints.h,v 1.2 2000/07/21 15:40:28 fine Exp $
 
 #ifndef ROOT_TTablePoints
 #define ROOT_TTablePoints
@@ -75,7 +75,12 @@ inline void TTablePoints::SetTablePointer(void *table){ fRows = table;}
 //____________________________________________________________________________
 // return the pointer to the original table object
   inline void *TTablePoints::GetTable(){
-    return fTableSorter ? fTableSorter->GetTable() : 0;
+    void *ret = 0;
+    if (fTableSorter) {
+      TTable *t = fTableSorter->GetTable();
+      if (t) ret = t->GetArray();
+    }
+    return ret;
   }
 //____________________________________________________________________________
   inline Int_t TTablePoints::Size() const { return fSize;}

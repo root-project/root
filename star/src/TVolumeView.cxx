@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.2 2000/07/13 16:00:10 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -251,8 +251,9 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
   }
   while ( (position = (TVolumePosition *)nextPosition()) ) {
      // define the the related TVolume
-     TVolume *node = position->GetNode();
+     TVolume *node     = position->GetNode();
      if (node) {
+        UInt_t positionId = position->GetId();
         Double_t newTranslation[3] = {position->GetX(),position->GetY(),position->GetZ()};
         Double_t newMatrix[9];
         TRotMatrix currentMatrix;
@@ -276,6 +277,7 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
         }
         TVolumePosition nextPos(node,newTranslation[0],newTranslation[1],
                                      newTranslation[2], &currentMatrix);
+        nextPos.SetId(positionId);
         if (optMarked && !node->IsMarked()) {
             TVolumeView fakeView(*node,maxDepLevel,&nextPos,iopt,rootVolume);
             continue;
@@ -289,6 +291,7 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
         newRotation->SetMatrix(currentMatrix.GetMatrix());
         TVolumePosition *nP = new TVolumePosition(node,newTranslation[0],newTranslation[1],
                                      newTranslation[2], newRotation);
+        nP->SetId(positionId);
         rootVolume->Add(new TVolumeView(*node,maxDepLevel?maxDepLevel-1:0,nP,iopt));
      }
      else
