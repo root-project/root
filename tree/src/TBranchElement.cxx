@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.51 2001/07/04 10:40:53 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.52 2001/07/17 10:29:45 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -526,7 +526,10 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
 
    if (nbranches) {
       //branch has daughters
-      //if (fType == 3) nbytes += TBranch::GetEntry(entry, getall);  //TClonesArray counter
+      //one must always read the branch counter. 
+      //In the case when one reads consicutively twice the same entry,
+      //the user may have cleared the TClonesArray between the 2 GetEntry
+      if (fType == 3) nbytes += TBranch::GetEntry(entry, getall);
 
       for (Int_t i=0;i<nbranches;i++)  {
          TBranch *branch = (TBranch*)fBranches[i];
@@ -1097,12 +1100,16 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
 //printf("Unroll name=%s, cltop=%s, cl=%s, i=%d, elem=%s, splitlevel=%d, btype=%d \n",name,cltop->GetName(),cl->GetName(),i,elem->GetName(),splitlevel,btype);
      if (elem->IsA() == TStreamerBase::Class()) {
          clbase = gROOT->GetClass(elem->GetName());
-         if (clbase->Property() & kIsAbstract) {
-            return -1;
-         }
+         //here one should consider the case of a TClonesArray with a class
+         //deriving from an abstract class
+         //if ((cltop != cl) && (clbase->Property() & kIsAbstract)) return -1;
+         //if (clbase->Property() & kIsAbstract) unroll = -1;
+         if (clbase->Property() & kIsAbstract) return -1;
 //printf("Unrolling base class, cltop=%s, clbase=%s\n",cltop->GetName(),clbase->GetName());
-         unroll = Unroll(name,cltop,clbase,basketsize,splitlevel-1,btype);
+         else unroll = Unroll(name,cltop,clbase,basketsize,splitlevel-1,btype);
          if (unroll < 0) {
+            if (strlen(name)) sprintf(branchname,"%s.%s",name,elem->GetFullName());
+            else              sprintf(branchname,"%s",elem->GetFullName());
             branch = new TBranchElement(branchname,info,jd,0,basketsize,0,btype);
             branch->SetParentName(cltop->GetName());
             fBranches.Add(branch);
