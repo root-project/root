@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.10 2001/01/30 11:31:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.11 2001/02/06 14:40:40 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1272,7 +1272,7 @@ L110:
                textaxis->PaintLatex(gPad->GetX1() + XX*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + YY*(gPad->GetY2() - gPad->GetY1()),
                            0,
-                           charheight,
+                           textaxis->GetTextSize(),
                            LABEL);
             }
          }
