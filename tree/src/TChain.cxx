@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.78 2003/07/27 05:16:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.79 2003/07/29 16:38:06 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1144,7 +1144,7 @@ void TChain::SetBranchAddress(const char *bname, void *add)
 }
 
 //_______________________________________________________________________
-void TChain::SetBranchStatus(const char *bname, Bool_t status)
+void TChain::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
 {
 // Set branch status Process or DoNotProcess
 //
@@ -1152,7 +1152,11 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status)
 //      status = 1  branch will be processed
 //             = 0  branch will not be processed
 //  See IMPORTANT REMARKS in TTree::SetBranchStatus
-   
+//
+//  If found is not 0, the number of branch(es) found matching the regular
+//  expression is returned in *found AND the error message 'unknown branch'
+//  is suppressed.
+
    //Check if bname is already in the Status list
    //Otherwise create a TChainElement object and set its status
    TChainElement *element = (TChainElement*)fStatus->FindObject(bname);
@@ -1166,7 +1170,9 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status)
 
    // Set also status in current Tree
    if (fTreeNumber >= 0) {
-       fTree->SetBranchStatus(bname,status);
+       fTree->SetBranchStatus(bname,status,found);
+   } else if (found) {
+      *found = 1;
    }
 }
 

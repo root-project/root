@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.157 2003/08/04 20:10:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.158 2003/08/04 21:35:26 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3427,7 +3427,7 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
 }
 
 //_______________________________________________________________________
-void TTree::SetBranchStatus(const char *bname, Bool_t status)
+void TTree::SetBranchStatus(const char *bname, Bool_t status, UInt_t *found)
 {
 //*-*-*-*-*-*-*-*-*Set branch status Process or DoNotProcess*-*-*-*-*-*-*-*
 //*-*              =========================================
@@ -3463,7 +3463,10 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
 //    TBranch *bre = T.GetBranch("e");
 //    brc->GetEntry(i);
 //    bre->GetEntry(i);
-
+//
+//  If found is not 0, the number of branch(es) found matching the regular
+//  expression is returned in *found AND the error message 'unknown branch'
+//  is suppressed.
 
    TBranch *branch, *bcount, *bson;
    TLeaf *leaf, *leafcount;
@@ -3490,11 +3493,38 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
          else        bcount->SetBit(kDoNotProcess);
       }
    }
-   if (!nb) {
-      Error("SetBranchStatus", "unknown branch -> %s", bname);
+
+   //search in list of friends
+   UInt_t foundInFriend = 0;
+   if (fFriends) {
+      TIter nextf(fFriends);
+      TFriendElement *fe;
+      char name[kMaxLen];
+      while ((fe = (TFriendElement*)nextf())) {
+         TTree *t = fe->GetTree();
+         if (t==0) continue;
+
+         // If the alias is present replace it with the real name.
+         char *subbranch = (char*)strstr(bname,fe->GetName());
+         if (subbranch!=bname) subbranch = 0;
+         if (subbranch) {
+            subbranch += strlen(fe->GetName());
+            if ( *subbranch != '.' ) subbranch = 0;
+            else subbranch ++;
+         }
+         if (subbranch) {
+            sprintf(name,"%s.%s",t->GetName(),subbranch);
+         } else {
+            strcpy(name,bname);
+         }
+         t->SetBranchStatus(name,status, &foundInFriend);
+      }
+   }
+   if (!nb && !foundInFriend) {
+      if (found==0) Error("SetBranchStatus", "unknown branch -> %s", bname);
       return;
    }
-
+   if (found) *found = nb + foundInFriend;
 
    // second pass, loop again on all branches
    // activate leafcount branches for active branches only

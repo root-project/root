@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.49 2003/07/07 21:08:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.50 2003/07/27 15:39:10 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -262,7 +262,7 @@ public:
     virtual void      SetAutoSave(Int_t autos=10000000) {fAutoSave=autos;}
     virtual void      SetBasketSize(const char *bname,Int_t buffsize=16000);
     virtual void      SetBranchAddress(const char *bname,void *add);
-    virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
+    virtual void      SetBranchStatus(const char *bname,Bool_t status=1,UInt_t *found=0);
     static  void      SetBranchStyle(Int_t style=1);  //style=0 for old branch, =1 for new branch style
     virtual void      SetChainOffset(Int_t offset=0) {fChainOffset=offset;}
     virtual void      SetDebug(Int_t level=1, Int_t min=0, Int_t max=9999999); // *MENU*
