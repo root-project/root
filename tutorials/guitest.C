@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.4 2001/04/03 10:37:18 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.5 2001/05/28 10:45:14 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -528,7 +528,7 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuHelp->AddEntry("&About", M_HELP_ABOUT);
 
    // Menu button messages are handled by the main frame (i.e. "this")
-   // ProcessMessage() method.
+   // HandleMenu() method.
    fMenuFile->Connect("Activated(Int_t)", "TestMainFrame", this,
                       "HandleMenu(Int_t)");
    fMenuTest->Connect("Activated(Int_t)", "TestMainFrame", this,
