@@ -37,11 +37,16 @@ CINTCFLAGS    = -pipe -W -Wall -fsigned-char -fno-common \
 COMPILER      = gnu
 
 # OS version
-MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion:[[:blank:]]*[0-9]*.\([0-9]*\).[0-9]*/\1/p')
+MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2)
 
 # Linker:
 LD            = g++
 LDFLAGS       = $(OPT) -bind_at_load -flat_namespace
+ifeq ($(MACOSX_MINOR),4)
+MACOSXTARGET  = MACOSX_DEPLOYMENT_TARGET=10.4
+SOFLAGS       = $(OPT) -dynamiclib -single_module -flat_namespace \
+                -undefined dynamic_lookup -install_name $(LIBDIR)/
+else
 ifeq ($(MACOSX_MINOR),3)
 MACOSXTARGET  = MACOSX_DEPLOYMENT_TARGET=10.3
 SOFLAGS       = $(OPT) -dynamiclib -single_module -flat_namespace \
@@ -49,6 +54,7 @@ SOFLAGS       = $(OPT) -dynamiclib -single_module -flat_namespace \
 else
 SOFLAGS       = $(OPT) -dynamiclib -single_module -flat_namespace \
                 -undefined suppress -install_name $(LIBDIR)/
+endif
 endif
 SOEXT         = dylib
 FORCELINK     = yes

@@ -84,12 +84,12 @@ elif [ $PLATFORM = "fbsd" ]; then
     echo $cmd
     $cmd
 elif [ $PLATFORM = "macosx" ]; then
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion:[[:blank:]]*[0-9]*.\([0-9]*\).[0-9]*/\1/p'`
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    # Look for a fink installation
    FINKDIR=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
    if [ $macosx_minor -ge 3 ]; then
       unset LD_PREBIND
-      export MACOSX_DEPLOYMENT_TARGET=10.3
+      export MACOSX_DEPLOYMENT_TARGET=10.$macosx_minor
    fi
    # We need two library files: a .dylib to link to and a .so to load
    BUNDLE=`echo $LIB | sed s/.dylib/.so/`

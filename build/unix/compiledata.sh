@@ -42,11 +42,11 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
 fi
 
 if [ "$ARCH" = "macosx" ]; then
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion:[[:blank:]]*[0-9]*.\([0-9]*\).[0-9]*/\1/p'`
+   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
    SOEXT="so"
    if [ $macosx_minor -ge 3 ]; then
       SOFLAGS="-bundle $OPT -flat_namespace -undefined dynamic_lookup"
-      MACOSXTARGET="MACOSX_DEPLOYMENT_TARGET=10.3"
+      MACOSXTARGET="MACOSX_DEPLOYMENT_TARGET=10.$macosx_minor"
    else
       SOFLAGS="-bundle $OPT -flat_namespace -undefined suppress"
    fi
