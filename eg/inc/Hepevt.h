@@ -1,4 +1,4 @@
-/* @(#)root/eg:$Name:  $:$Id: Hepevt.h,v 1.3 2004/03/12 08:35:53 rdm Exp $ */
+/* @(#)root/eg:$Name:  $:$Id: Hepevt.h,v 1.4 2004/03/12 16:07:34 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_HepEvt
-#define ROOT_HepEvt
+#ifndef ROOT_Hepevt
+#define ROOT_Hepevt
 
 extern "C" {
 
