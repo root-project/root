@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: netpar.cxx,v 1.2 2004/02/20 09:52:14 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: netpar.cxx,v 1.3 2004/04/20 15:21:50 rdm Exp $
 // Author: Fons Rademakers   06/02/2001
 
 /*************************************************************************
@@ -20,8 +20,16 @@
 
 #include "RConfig.h"
 
+// avoid warning due to wrong bzero prototype (used by FD_ZERO macro)
+#ifdef R__ALPHA
+#define _XOPEN_SOURCE_EXTENDED
+#endif
 #include <stdio.h>
 #include <string.h>
+#ifdef R__ALPHA
+#undef _XOPEN_SOURCE_EXTENDED
+#endif
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
