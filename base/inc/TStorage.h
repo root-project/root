@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.h,v 1.2 2000/08/20 14:49:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.h,v 1.3 2000/10/13 18:57:45 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -50,6 +50,8 @@ public:
    static size_t        GetMaxBlockSize();
    static void         *ReAlloc(void *vp, size_t size);
    static void         *ReAlloc(void *vp, size_t size, size_t oldsize);
+   static char         *ReAllocChar(char *vp, size_t size, size_t oldsize);
+   static Int_t        *ReAllocInt(Int_t *vp, size_t size, size_t oldsize);
    static void         *ObjectAlloc(size_t size);
    static void         *ObjectAlloc(size_t size, void *vp);
    static void          ObjectDealloc(void *vp);
