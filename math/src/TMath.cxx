@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.32 2003/01/26 13:21:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.33 2003/01/28 07:43:36 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -204,13 +204,8 @@ Double_t TMath::Erf(Double_t x)
 //______________________________________________________________________________
 Double_t TMath::Erfc(Double_t x)
 {
-   // Computation of the complementary error function erfc(x).
+   // Compute the complementary error function erfc(x).
    // Erfc(x) = (2/sqrt(pi)) Integral(exp(-t^2))dt between x and infinity
-   //
-   // The algorithm is based on a Chebyshev fit as denoted in
-   // Numerical Recipes 2nd ed. on p. 214 (W.H.Press et al.).
-   //
-   // The fractional error is always less than 1.2e-7.
    //
    //--- Nve 14-nov-1998 UU-SAP Utrecht
 
@@ -339,10 +334,7 @@ Double_t TMath::Gamma(Double_t z)
 {
    // Computation of gamma(z) for all z>0.
    //
-   // The algorithm is based on the article by C.Lanczos [1] as denoted in
-   // Numerical Recipes 2nd ed. on p. 207 (W.H.Press et al.).
-   //
-   // [1] C.Lanczos, SIAM Journal of Numerical Analysis B1 (1964), 86.
+   // C.Lanczos, SIAM Journal of Numerical Analysis B1 (1964), 86.
    //
    //--- Nve 14-nov-1998 UU-SAP Utrecht
 
@@ -357,9 +349,6 @@ Double_t TMath::Gamma(Double_t a,Double_t x)
 {
    // Computation of the incomplete gamma function P(a,x)
    //
-   // The algorithm is based on the formulas and code as denoted in
-   // Numerical Recipes 2nd ed. on p. 210-212 (W.H.Press et al.).
-   //
    //--- Nve 14-nov-1998 UU-SAP Utrecht
 
    if (a <= 0 || x <= 0) return 0;
@@ -373,9 +362,6 @@ Double_t TMath::GamCf(Double_t a,Double_t x)
 {
    // Computation of the incomplete gamma function P(a,x)
    // via its continued fraction representation.
-   //
-   // The algorithm is based on the formulas and code as denoted in
-   // Numerical Recipes 2nd ed. on p. 210-212 (W.H.Press et al.).
    //
    //--- Nve 14-nov-1998 UU-SAP Utrecht
 
@@ -413,9 +399,6 @@ Double_t TMath::GamSer(Double_t a,Double_t x)
 {
    // Computation of the incomplete gamma function P(a,x)
    // via its series representation.
-   //
-   // The algorithm is based on the formulas and code as denoted in
-   // Numerical Recipes 2nd ed. on p. 210-212 (W.H.Press et al.).
    //
    //--- Nve 14-nov-1998 UU-SAP Utrecht
 
@@ -529,10 +512,7 @@ Double_t TMath::LnGamma(Double_t z)
 {
    // Computation of ln[gamma(z)] for all z>0.
    //
-   // The algorithm is based on the article by C.Lanczos [1] as denoted in
-   // Numerical Recipes 2nd ed. on p. 207 (W.H.Press et al.).
-   //
-   // [1] C.Lanczos, SIAM Journal of Numerical Analysis B1 (1964), 86.
+   // C.Lanczos, SIAM Journal of Numerical Analysis B1 (1964), 86.
    //
    // The accuracy of the result is better than 2e-10.
    //
@@ -1998,13 +1978,7 @@ ULong_t TMath::Hash(const char *txt)
 //______________________________________________________________________________
 Double_t TMath::BesselI0(Double_t x)
 {
-   // Computation of the modified Bessel function I_0(x) for any real x.
-   //
-   // The algorithm is based on the article by Abramowitz and Stegun [1]
-   // as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
-   //
-   // [1] M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
-   //     Applied Mathematics Series vol. 55 (1964), Washington.
+   // Compute the modified Bessel function I_0(x) for any real x.
    //
    //--- NvE 12-mar-2000 UU-SAP Utrecht
 
@@ -2016,15 +1990,17 @@ Double_t TMath::BesselI0(Double_t x)
                   q4=-1.57565e-3,  q5= 9.16281e-3,  q6=-2.057706e-2,
                   q7= 2.635537e-2, q8=-1.647633e-2, q9= 3.92377e-3;
 
+   const Double_t k1 = 3.75;
    Double_t ax = TMath::Abs(x);
 
    Double_t y=0, result=0;
 
-   if (ax < 3.75) {
-      y = pow(x/3.75,2);
+   if (ax < k1) {
+      Double_t xx = x/k1;
+      y = xx*xx;
       result = p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7)))));
    } else {
-      y = 3.75/ax;
+      y = k1/ax;
       result = (TMath::Exp(ax)/TMath::Sqrt(ax))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*(q7+y*(q8+y*q9))))))));
    }
    return result;
@@ -2033,12 +2009,9 @@ Double_t TMath::BesselI0(Double_t x)
 //______________________________________________________________________________
 Double_t TMath::BesselK0(Double_t x)
 {
-   // Computation of the modified Bessel function K_0(x) for positive real x.
+   // Compute the modified Bessel function K_0(x) for positive real x.
    //
-   // The algorithm is based on the article by Abramowitz and Stegun [1]
-   // as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
-   //
-   // [1] M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
+   //  M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
    //     Applied Mathematics Series vol. 55 (1964), Washington.
    //
    //--- NvE 12-mar-2000 UU-SAP Utrecht
@@ -2055,13 +2028,13 @@ Double_t TMath::BesselK0(Double_t x)
       return 0;
    }
 
-   Double_t y=0,result=0;
+   Double_t y=0, result=0;
 
    if (x <= 2) {
-      y = x*x/4.;
+      y = x*x/4;
       result = (-log(x/2.)*TMath::BesselI0(x))+(p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7))))));
    } else {
-      y = 2./x;
+      y = 2/x;
       result = (exp(-x)/sqrt(x))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*q7))))));
    }
    return result;
@@ -2070,12 +2043,9 @@ Double_t TMath::BesselK0(Double_t x)
 //______________________________________________________________________________
 Double_t TMath::BesselI1(Double_t x)
 {
-   // Computation of the modified Bessel function I_1(x) for any real x.
+   // Compute the modified Bessel function I_1(x) for any real x.
    //
-   // The algorithm is based on the article by Abramowitz and Stegun [1]
-   // as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
-   //
-   // [1] M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
+   //  M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
    //     Applied Mathematics Series vol. 55 (1964), Washington.
    //
    //--- NvE 12-mar-2000 UU-SAP Utrecht
@@ -2088,15 +2058,17 @@ Double_t TMath::BesselI1(Double_t x)
                   q4= 1.63801e-3,  q5=-1.031555e-2, q6= 2.282967e-2,
                   q7=-2.895312e-2, q8= 1.787654e-2, q9=-4.20059e-3;
 
+   const Double_t k1 = 3.75;
    Double_t ax = TMath::Abs(x);
 
    Double_t y=0, result=0;
 
-   if (ax < 3.75) {
-      y = pow(x/3.75,2);
+   if (ax < k1) {
+      Double_t xx = x/k1;
+      y = xx*xx;
       result = x*(p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7))))));
    } else {
-      y = 3.75/ax;
+      y = k1/ax;
       result = (exp(ax)/sqrt(ax))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*(q7+y*(q8+y*q9))))))));
       if (x < 0) result = -result;
    }
@@ -2106,12 +2078,9 @@ Double_t TMath::BesselI1(Double_t x)
 //______________________________________________________________________________
 Double_t TMath::BesselK1(Double_t x)
 {
-   // Computation of the modified Bessel function K_1(x) for positive real x.
+   // Compute the modified Bessel function K_1(x) for positive real x.
    //
-   // The algorithm is based on the article by Abramowitz and Stegun [1]
-   // as denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
-   //
-   // [1] M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
+   //  M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
    //     Applied Mathematics Series vol. 55 (1964), Washington.
    //
    //--- NvE 12-mar-2000 UU-SAP Utrecht
@@ -2131,10 +2100,10 @@ Double_t TMath::BesselK1(Double_t x)
    Double_t y=0,result=0;
 
    if (x <= 2) {
-      y = x*x/4.;
+      y = x*x/4;
       result = (log(x/2.)*TMath::BesselI1(x))+(1./x)*(p1+y*(p2+y*(p3+y*(p4+y*(p5+y*(p6+y*p7))))));
    } else {
-      y = 2./x;
+      y = 2/x;
       result = (exp(-x)/sqrt(x))*(q1+y*(q2+y*(q3+y*(q4+y*(q5+y*(q6+y*q7))))));
    }
    return result;
@@ -2143,14 +2112,8 @@ Double_t TMath::BesselK1(Double_t x)
 //______________________________________________________________________________
 Double_t TMath::BesselK(Int_t n,Double_t x)
 {
-   // Computation of the Integer Order Modified Bessel function K_n(x)
+   // Compute the Integer Order Modified Bessel function K_n(x)
    // for n=0,1,2,... and positive real x.
-   //
-   // The algorithm uses the recurrence relation
-   //
-   //               K_n+1(x) = (2n/x)*K_n(x) + K_n-1(x)
-   //
-   // as denoted in Numerical Recipes 2nd ed. on p. 232 (W.H.Press et al.).
    //
    //--- NvE 12-mar-2000 UU-SAP Utrecht
 
@@ -2163,7 +2126,7 @@ Double_t TMath::BesselK(Int_t n,Double_t x)
    if (n==1) return TMath::BesselK1(x);
 
    // Perform upward recurrence for all x
-   Double_t tox = 2./x;
+   Double_t tox = 2/x;
    Double_t bkm = TMath::BesselK0(x);
    Double_t bk  = TMath::BesselK1(x);
    Double_t bkp = 0;
@@ -2178,19 +2141,14 @@ Double_t TMath::BesselK(Int_t n,Double_t x)
 //______________________________________________________________________________
 Double_t TMath::BesselI(Int_t n,Double_t x)
 {
-   // Computation of the Integer Order Modified Bessel function I_n(x)
+   // Compute the Integer Order Modified Bessel function I_n(x)
    // for n=0,1,2,... and any real x.
-   //
-   // The algorithm uses the recurrence relation
-   //
-   //               I_n+1(x) = (-2n/x)*I_n(x) + I_n-1(x)
-   //
-   // as denoted in Numerical Recipes 2nd ed. on p. 232 (W.H.Press et al.).
    //
    //--- NvE 12-mar-2000 UU-SAP Utrecht
 
    Int_t iacc = 40; // Increase to enhance accuracy
-   Double_t bigno = 1.e10, bigni = 1.e-10;
+   const Double_t kBigPositive = 1.e10;
+   const Double_t kBigNegative = 1.e-10;
 
    if (n < 0) {
       Error("TMath::BesselI", "*I* Invalid argument (n,x) = (%d, %g)\n",n,x);
@@ -2200,22 +2158,22 @@ Double_t TMath::BesselI(Int_t n,Double_t x)
    if (n==0) return TMath::BesselI0(x);
    if (n==1) return TMath::BesselI1(x);
 
-   if (TMath::Abs(x) < 1.e-10) return 0;
+   if (TMath::Abs(x) < kBigPositive) return 0;
 
-   Double_t tox = 2./TMath::Abs(x);
-   Double_t bip = 0,bim = 0;
+   Double_t tox = 2/TMath::Abs(x);
+   Double_t bip = 0, bim = 0;
    Double_t bi  = 1;
    Double_t result = 0;
-   Int_t m = 2*((n+Int_t(sqrt(Float_t(iacc*n))))); // Downward recurrence from even m
+   Int_t m = 2*((n+Int_t(sqrt(Float_t(iacc*n)))));
    for (Int_t j=m; j<=1; j--) {
       bim = bip+Double_t(j)*tox*bi;
       bip = bi;
       bi  = bim;
       // Renormalise to prevent overflows
-      if (TMath::Abs(bi) > bigno)  {
-         result *= bigni;
-         bi     *= bigni;
-         bip    *= bigni;
+      if (TMath::Abs(bi) > kBigPositive)  {
+         result *= kBigNegative;
+         bi     *= kBigNegative;
+         bip    *= kBigNegative;
       }
       if (j==n) result=bip;
    }
@@ -2230,121 +2188,141 @@ Double_t TMath::BesselI(Int_t n,Double_t x)
 Double_t TMath::BesselJ0(Double_t x)
 {
    // Returns the Bessel function J0(x) for any real x.
-   // As denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
 
    Double_t ax,z;
-   Double_t xx,y,ans,ans1,ans2;
+   Double_t xx,y,result,result1,result2;
+   const Double_t p1  = 57568490574.0, p2  = -13362590354.0, p3 = 651619640.7;
+   const Double_t p4  = -11214424.18,  p5  = 77392.33017,    p6 = -184.9052456;
+   const Double_t p7  = 57568490411.0, p8  = 1029532985.0,   p9 = 9494680.718;
+   const Double_t p10 = 59272.64853,   p11 = 267.8532712;
 
-   if ((ax=fabs(x)) < 8.0) {
+   const Double_t q1  = 0.785398164;
+   const Double_t q2  = -0.1098628627e-2,  q3  = 0.2734510407e-4;
+   const Double_t q4  = -0.2073370639e-5,  q5  = 0.2093887211e-6;
+   const Double_t q6  = -0.1562499995e-1,  q7  = 0.1430488765e-3;
+   const Double_t q8  = -0.6911147651e-5,  q9  = 0.7621095161e-6;
+   const Double_t q10 =  0.934935152e-7,   q11 = 0.636619772;
+
+   if ((ax=fabs(x)) < 8) {
       y=x*x;
-      ans1=57568490574.0+y*(-13362590354.0+y*(651619640.7
-           +y*(-11214424.18+y*(77392.33017+y*(-184.9052456)))));
-      ans2=57568490411.0+y*(1029532985.0+y*(9494680.718
-           +y*(59272.64853+y*(267.8532712+y*1.0))));
-      ans=ans1/ans2;
+      result1 = p1 + y*(p2 + y*(p3 + y*(p4  + y*(p5  + y*p6))));
+      result2 = p7 + y*(p8 + y*(p9 + y*(p10 + y*(p11 + y))));
+      result  = result1/result2;
    } else {
-      z=8.0/ax;
-      y=z*z;
-      xx=ax-0.785398164;
-      ans1=1.0+y*(-0.1098628627e-2+y*(0.2734510407e-4
-           +y*(-0.2073370639e-5+y*0.2093887211e-6)));
-      ans2=-0.1562499995e-1+y*(0.1430488765e-3
-           +y*(-0.6911147651e-5+y*(0.7621095161e-6
-           -y*0.934935152e-7)));
-      ans=sqrt(0.636619772/ax)*(cos(xx)*ans1-z*sin(xx)*ans2);
+      z  = 8/ax;
+      y  = z*z;
+      xx = ax-q1;
+      result1 = 1  + y*(q2 + y*(q3 + y*(q4 + y*q5)));
+      result2 = q6 + y*(q7 + y*(q8 + y*(q9 - y*q10)));
+      result  = sqrt(q11/ax)*(cos(xx)*result1-z*sin(xx)*result2);
    }
-   return ans;
+   return result;
 }
 
 //______________________________________________________________________________
 Double_t TMath::BesselJ1(Double_t x)
 {
    // Returns the Bessel function J1(x) for any real x.
-   // As denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
 
    Double_t ax,z;
-   Double_t xx,y,ans,ans1,ans2;
+   Double_t xx,y,result,result1,result2;
+   const Double_t p1  = 72362614232.0,  p2  = -7895059235.0, p3 = 242396853.1;
+   const Double_t p4  = -2972611.439,   p5  = 15704.48260,   p6 = -30.16036606;
+   const Double_t p7  = 144725228442.0, p8  = 2300535178.0,  p9 = 18583304.74;
+   const Double_t p10 = 99447.43394,    p11 = 376.9991397;
 
-   if ((ax=fabs(x)) < 8.0) {
+   const Double_t q1  = 2.356194491;
+   const Double_t q2  = 0.183105e-2,     q3  = -0.3516396496e-4;
+   const Double_t q4  = 0.2457520174e-5, q5  = -0.240337019e-6;
+   const Double_t q6  = 0.04687499995,   q7  = -0.2002690873e-3;
+   const Double_t q8  = 0.8449199096e-5, q9  = -0.88228987e-6;
+   const Double_t q10 = 0.105787412e-6,  q11 = 0.636619772;
+
+   if ((ax=fabs(x)) < 8) {
       y=x*x;
-      ans1=x*(72362614232.0+y*(-7895059235.0+y*(242396853.1
-           +y*(-2972611.439+y*(15704.48260+y*(-30.16036606))))));
-      ans2=144725228442.0+y*(2300535178.0+y*(18583304.74
-           +y*(99447.43394+y*(376.9991397+y*1.0))));
-      ans=ans1/ans2;
+      result1 = x*(p1 + y*(p2 + y*(p3 + y*(p4  + y*(p5  + y*p6)))));
+      result2 = p7    + y*(p8 + y*(p9 + y*(p10 + y*(p11 + y))));
+      result  = result1/result2;
    } else {
-      z=8.0/ax;
-      y=z*z;
-      xx=ax-2.356194491;
-      ans1=1.0+y*(0.183105e-2+y*(-0.3516396496e-4
-           +y*(0.2457520174e-5+y*(-0.240337019e-6))));
-      ans2=0.04687499995+y*(-0.2002690873e-3
-           +y*(0.8449199096e-5+y*(-0.88228987e-6
-           +y*0.105787412e-6)));
-      ans=sqrt(0.636619772/ax)*(cos(xx)*ans1-z*sin(xx)*ans2);
-      if (x < 0.0) ans = -ans;
+      z  = 8/ax;
+      y  = z*z;
+      xx = ax-q1;
+      result1 = 1  + y*(q2 + y*(q3 + y*(q4 + y*q5)));
+      result2 = q6 + y*(q7 + y*(q8 + y*(q9 + y*q10)));
+      result  = sqrt(q11/ax)*(cos(xx)*result1-z*sin(xx)*result2);
+      if (x < 0) result = -result;
    }
-   return ans;
+   return result;
 }
 
 //______________________________________________________________________________
 Double_t TMath::BesselY0(Double_t x)
 {
    // Returns the Bessel function Y0(x) for positive x.
-   // As denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
 
-   Double_t z,xx,y,ans,ans1,ans2;
+   Double_t z,xx,y,result,result1,result2;
+   const Double_t p1  = -2957821389.,  p2  = 7062834065.0, p3  = -512359803.6;
+   const Double_t p4  = 10879881.29,   p5  = -86327.92757, p6  = 228.4622733;
+   const Double_t p7  = 40076544269.,  p8  = 745249964.8,  p9  = 7189466.438;
+   const Double_t p10 = 47447.26470,   p11 = 226.1030244,  p12 = 0.636619772;
 
-   if (x < 8.0) {
-      y=x*x;
-      ans1=-2957821389.0+y*(7062834065.0+y*(-512359803.6
-           +y*(10879881.29+y*(-86327.92757+y*228.4622733))));
-      ans2=40076544269.0+y*(745249964.8+y*(7189466.438
-           +y*(47447.26470+y*(226.1030244+y*1.0))));
-      ans=(ans1/ans2)+0.636619772*TMath::BesselJ0(x)*log(x);
+   const Double_t q1  =  0.785398164;
+   const Double_t q2  = -0.1098628627e-2, q3  = 0.2734510407e-4;
+   const Double_t q4  = -0.2073370639e-5, q5  = 0.2093887211e-6;
+   const Double_t q6  = -0.1562499995e-1, q7  = 0.1430488765e-3;
+   const Double_t q8  = -0.6911147651e-5, q9  = 0.7621095161e-6;
+   const Double_t q10 = -0.934945152e-7,  q11 = 0.636619772;
+
+   if (x < 8) {
+      y = x*x;
+      result1 = p1 + y*(p2 + y*(p3 + y*(p4  + y*(p5  + y*p6))));
+      result2 = p7 + y*(p8 + y*(p9 + y*(p10 + y*(p11 + y))));
+      result  = (result1/result2) + p12*TMath::BesselJ0(x)*log(x);
    } else {
-      z=8.0/x;
-      y=z*z;
-      xx=x-0.785398164;
-      ans1=1.0+y*(-0.1098628627e-2+y*(0.2734510407e-4
-           +y*(-0.2073370639e-5+y*0.2093887211e-6)));
-      ans2=-0.1562499995e-1+y*(0.1430488765e-3
-           +y*(-0.6911147651e-5+y*(0.7621095161e-6
-           +y*(-0.934945152e-7))));
-      ans=sqrt(0.636619772/x)*(sin(xx)*ans1+z*cos(xx)*ans2);
+      z  = 8/x;
+      y  = z*z;
+      xx = x-q1;
+      result1 = 1  + y*(q2 + y*(q3 + y*(q4 + y*q5)));
+      result2 = q6 + y*(q7 + y*(q8 + y*(q9 + y*q10)));
+      result  = sqrt(q11/x)*(sin(xx)*result1+z*cos(xx)*result2);
    }
-   return ans;
+   return result;
 }
 
 //______________________________________________________________________________
 Double_t TMath::BesselY1(Double_t x)
 {
    // Returns the Bessel function Y1(x) for positive x.
-   // As denoted in Numerical Recipes 2nd ed. on p. 230 (W.H.Press et al.).
 
-   Double_t z,xx,y,ans,ans1,ans2;
+   Double_t z,xx,y,result,result1,result2;
+   const Double_t p1  = -0.4900604943e13, p2  = 0.1275274390e13;
+   const Double_t p3  = -0.5153438139e11, p4  = 0.7349264551e9;
+   const Double_t p5  = -0.4237922726e7,  p6  = 0.8511937935e4;
+   const Double_t p7  =  0.2499580570e14, p8  = 0.4244419664e12;
+   const Double_t p9  =  0.3733650367e10, p10 = 0.2245904002e8;
+   const Double_t p11 =  0.1020426050e6,  p12 = 0.3549632885e3;
+   const Double_t p13 =  0.636619772;
+   const Double_t q1  =  2.356194491;
+   const Double_t q2  =  0.183105e-2,     q3  = -0.3516396496e-4;
+   const Double_t q4  =  0.2457520174e-5, q5  = -0.240337019e-6;
+   const Double_t q6  =  0.04687499995,   q7  = -0.2002690873e-3;
+   const Double_t q8  =  0.8449199096e-5, q9  = -0.88228987e-6;
+   const Double_t q10 =  0.105787412e-6,  q11 =  0.636619772;
 
-   if (x < 8.0) {
+   if (x < 8) {
       y=x*x;
-      ans1=x*(-0.4900604943e13+y*(0.1275274390e13
-           +y*(-0.5153438139e11+y*(0.7349264551e9
-           +y*(-0.4237922726e7+y*0.8511937935e4)))));
-      ans2=0.2499580570e14+y*(0.4244419664e12
-           +y*(0.3733650367e10+y*(0.2245904002e8
-           +y*(0.1020426050e6+y*(0.3549632885e3+y)))));
-      ans=(ans1/ans2)+0.636619772*(TMath::BesselJ1(x)*log(x)-1.0/x);
+      result1 = x*(p1 + y*(p2 + y*(p3 + y*(p4 + y*(p5  + y*p6)))));
+      result2 = p7 + y*(p8 + y*(p9 + y*(p10 + y*(p11  + y*(p12+y)))));
+      result  = (result1/result2) + p13*(TMath::BesselJ1(x)*log(x)-1/x);
    } else {
-      z=8.0/x;
-      y=z*z;
-      xx=x-2.356194491;
-      ans1=1.0+y*(0.183105e-2+y*(-0.3516396496e-4
-           +y*(0.2457520174e-5+y*(-0.240337019e-6))));
-      ans2=0.04687499995+y*(-0.2002690873e-3
-           +y*(0.8449199096e-5+y*(-0.88228987e-6
-           +y*0.105787412e-6)));
-      ans=sqrt(0.636619772/x)*(sin(xx)*ans1+z*cos(xx)*ans2);
+      z  = 8/x;
+      y  = z*z;
+      xx = x-q1;
+      result1 = 1  + y*(q2 + y*(q3 + y*(q4 + y*q5)));
+      result2 = q6 + y*(q7 + y*(q8 + y*(q9 + y*q10)));
+      result  = sqrt(q11/x)*(sin(xx)*result1+z*cos(xx)*result2);
    }
-   return ans;
+   return result;
 }
 
 //______________________________________________________________________________
