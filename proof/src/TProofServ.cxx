@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.2 2000/06/11 12:25:48 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -210,7 +210,7 @@ TObject *TProofServ::Get(const char *namecycle)
 }
 
 //______________________________________________________________________________
-void TProofServ::GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Float_t *vmin, Float_t *vmax)
+void TProofServ::GetLimits(Int_t dim, Int_t nentries, Int_t *nbins, Double_t *vmin, Double_t *vmax)
 {
    // Get limits of histogram from master. This method is called by
    // TTree::TakeEstimate().
