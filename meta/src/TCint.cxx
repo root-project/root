@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.21 2001/05/29 19:07:32 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.22 2001/05/30 06:06:24 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -803,7 +803,7 @@ Bool_t TCint::IsErrorMessagesEnabled()
    // If error messages are disabled, the interpreter should suppress its
    // failures and warning messages from stdout.
 
-	return !G__const_whatnoerror();
+   return !G__const_whatnoerror();
 }
 
 //______________________________________________________________________________
