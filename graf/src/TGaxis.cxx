@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.70 2004/06/15 15:53:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.71 2004/06/16 08:23:27 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -313,7 +313,7 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
    SetBit(TAxis::kTickPlus,      axis->TestBit(TAxis::kTickPlus));
    SetBit(TAxis::kTickMinus,     axis->TestBit(TAxis::kTickMinus));
    SetBit(TAxis::kMoreLogLabels, axis->TestBit(TAxis::kMoreLogLabels));
-   SetBit(TAxis::kDecimals,      axis->TestBit(TAxis::kDecimals));
+   if (axis->GetDecimals())      SetBit(TAxis::kDecimals); //the bit is in TAxis::fAxis2   
    SetTimeFormat(axis->GetTimeFormat());
 }
 
