@@ -33,7 +33,7 @@ XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap
 
 # Fortran:
-F77LIBS       = /usr/shlib/libFutil.so /usr/shlib/libfor.so /usr/shlib/libots.so
+F77LIBS       = /usr/shlib/libfor.so -lg2c
 F77           = g77
 F77LD         = g77
 
