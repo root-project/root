@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsGenContext.rdl,v 1.3 2001/10/13 23:02:17 verkerke Exp $
+ *    File: $Id: RooAbsGenContext.rdl,v 1.4 2001/10/17 05:03:57 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -49,7 +49,7 @@ protected:
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining) = 0;
 
   const RooDataSet *_prototype;
-  RooArgSet _theEvent;
+  RooArgSet *_theEvent;
   Bool_t _isValid;
   Bool_t _verbose;
   UInt_t _expectedEvents;

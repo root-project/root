@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.14 2001/10/13 21:53:22 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.15 2001/10/19 06:56:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -528,7 +528,8 @@ RooAbsArg* RooTreeData::addColumn(RooAbsArg& newVar)
     valHolder->fillTreeBranch(*_tree) ;
   }
   
-  delete newVarCloneList;  
+  delete newVarCloneList;
+  
   return valHolder ;
 }
 
@@ -682,6 +683,119 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   return frame ;
 }
 
+TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "") const
+{
+  // Loop over columns of our tree data and fill the input histogram. Returns a pointer to the
+  // input histogram, or zero in case of an error. The input histogram can be any TH1 subclass, and
+  // therefore of arbitrary dimension. Variables are matched with the (x,y,...) dimensions of the input
+  // histogram according to the order in which they appear in the input plotVars list.
+
+  // Do we have a valid histogram to use?
+  if(0 == hist) {
+    cout << ClassName() << "::" << GetName() << ":fillHistogram: no valid histogram to fill" << endl;
+    return 0;
+  }
+
+  // Check that the number of plotVars matches the input histogram's dimension
+  Int_t hdim= hist->GetDimension();
+  if(hdim != plotVars.getSize()) {
+    cout << ClassName() << "::" << GetName() << ":fillHistogram: plotVars has the wrong dimension" << endl;
+    return 0;
+  }
+
+  // Check that the plot variables are all actually RooAbsReal's and print a warning if we do not
+  // explicitly depend on one of them. Clone any variables that we do not contain directly and
+  // redirect them to use our event data.
+  RooArgSet plotClones,localVars;
+  for(Int_t index= 0; index < plotVars.getSize(); index++) {
+    const RooAbsArg *var= plotVars.at(index);
+    const RooAbsReal *realVar= dynamic_cast<const RooAbsReal*>(var);
+    if(0 == realVar) {
+      cout << ClassName() << "::" << GetName() << ":fillHistogram: cannot plot variable \"" << var->GetName()
+	   << "\" of type " << var->ClassName() << endl;
+      return 0;
+    }
+    RooAbsArg *found= _vars.find(realVar->GetName());
+    if(!found) {
+      RooAbsArg *clone= plotClones.addClone(*realVar,kTRUE); // do not complain about duplicates
+      assert(0 != clone);
+      if(!clone->dependsOn(_vars)) {
+	cout << ClassName() << "::" << GetName()
+	     << ":fillHistogram: WARNING: data does not contain variable: " << realVar->GetName() << endl;
+      }
+      else {
+	clone->recursiveRedirectServers(_vars);
+      }
+      localVars.add(*clone);
+    }
+    else {
+      localVars.add(*found);
+    }
+  }
+
+  // Create selection formula if selection cuts are specified
+  RooFormula* select(0) ;
+  if(0 != cuts && strlen(cuts)) {
+    select=new RooFormula(cuts,cuts,_vars);
+    if (!select || !select->ok()) {
+      cout << ClassName() << "::" << GetName() << ":fillHistogram: invalid cuts \"" << cuts << "\"" << endl;
+      delete select;
+      return 0 ;
+    }
+  }
+  
+  // Lookup each of the variables we are binning in our tree variables
+  const RooAbsReal *xvar(0),*yvar(0),*zvar(0);
+  switch(hdim) {
+  case 3:
+    zvar= dynamic_cast<RooAbsReal*>(localVars.find(plotVars.at(2)->GetName()));
+    assert(0 != zvar);
+    // fall through to next case...
+  case 2:
+    yvar= dynamic_cast<RooAbsReal*>(localVars.find(plotVars.at(1)->GetName()));
+    assert(0 != yvar);
+    // fall through to next case...
+  case 1:
+    xvar= dynamic_cast<RooAbsReal*>(localVars.find(plotVars.at(0)->GetName()));
+    assert(0 != xvar);
+    break;
+  default:
+    cout << ClassName() << "::" << GetName() << ":fillHistogram: cannot fill histogram with "
+	 << hdim << " dimensions" << endl;
+    break;
+  }
+
+  // Loop over events and fill the histogram
+  Int_t nevent= (Int_t)_tree->GetEntries();
+  for(Int_t i=0; i < nevent; ++i) {
+    Int_t entryNumber= _tree->GetEntryNumber(i);
+    if (entryNumber<0) break;
+    get(entryNumber);
+
+    if (select && select->eval()==0) continue ;
+
+    Int_t bin(0);
+    switch(hdim) {
+    case 1:
+      bin= hist->FindBin(xvar->getVal());
+      break;
+    case 2:
+      bin= hist->FindBin(xvar->getVal(),yvar->getVal());
+      break;
+    case 3:
+      bin= hist->FindBin(xvar->getVal(),yvar->getVal(),zvar->getVal());
+      break;
+    default:
+      assert(hdim < 3);
+      break;
+    }
+    hist->AddBinContent(bin,weight());
+  }
+
+  if(0 != select) delete select;
+
+  return hist;
+}
 
 
 
@@ -710,7 +824,7 @@ TH1F* RooTreeData::createHistogram(const RooAbsReal& var, const char* cuts, cons
     ownPlotVar = kTRUE ;
 
     //Redirect servers of derived clone to internal ArgSet representing the data in this set
-    plotVar->redirectServers(const_cast<RooArgSet&>(_vars)) ;
+    plotVar->recursiveRedirectServers(_vars) ;
   }
 
   // Create selection formula if selection cuts are specified
@@ -776,7 +890,7 @@ Roo1DTable* RooTreeData::table(const RooAbsCategory& cat, const char* cuts, cons
     ownPlotVar = kTRUE ;    
 
     //Redirect servers of derived clone to internal ArgSet representing the data in this set
-    tableVar->redirectServers(_vars) ;
+    tableVar->recursiveRedirectServers(_vars) ;
   }
 
   Roo1DTable* table = tableVar->createTable("dataset") ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsGenContext.cc,v 1.2 2001/10/13 00:38:52 david Exp $
+ *    File: $Id: RooAbsGenContext.cc,v 1.3 2001/10/13 23:02:17 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -24,9 +24,12 @@ ClassImp(RooAbsGenContext)
 
 RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars,
 				   const RooDataSet *prototype, Bool_t verbose) :
-  TNamed(model), _prototype(prototype), _theEvent(vars), _verbose(verbose), _isValid(kTRUE)
+  TNamed(model), _prototype(prototype), _theEvent(0), _verbose(verbose), _isValid(kTRUE)
 {
   // Constructor
+
+  // Make a snapshot of the generated variables that we can overwrite.
+  _theEvent= (RooArgSet*)vars.snapshot(kFALSE);
 
   // Analyze the prototype dataset, if one is specified
   _nextProtoIndex= 0;
@@ -35,9 +38,9 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
     const RooAbsArg *proto(0);
     while(proto= (const RooAbsArg*)protoIterator->Next()) {
       // is this variable being generated or taken from the prototype?
-      if(!_theEvent.contains(*proto)) {
+      if(!_theEvent->contains(*proto)) {
 	_protoVars.add(*proto);
-	_theEvent.add(*proto);
+	_theEvent->addClone(*proto);
       }
     }
     delete protoIterator;
@@ -55,6 +58,8 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 RooAbsGenContext::~RooAbsGenContext()
 {
   // Destructor
+
+  if(0 != _theEvent) delete _theEvent;
 }
 
 RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
@@ -112,10 +117,10 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
   TString name(GetName()),title(GetTitle());
   name.Append("Data");
   title.Prepend("Generated From ");
-  RooDataSet *data= new RooDataSet(name.Data(), title.Data(), _theEvent);
+  RooDataSet *data= new RooDataSet(name.Data(), title.Data(), *_theEvent);
 
   // Perform any subclass implementation-specific initialization
-  initGenerator(_theEvent);
+  initGenerator(*_theEvent);
 
   // Loop over the events to generate
   for(Int_t evt= 0; evt < nEvents; evt++) {
@@ -126,7 +131,7 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
       const RooArgSet *subEvent= _prototype->get(_nextProtoIndex);
       _nextProtoIndex++;
       if(0 != subEvent) {
-	_theEvent= *subEvent;
+	*_theEvent= *subEvent;
       }
       else {
 	cout << ClassName() << "::" << GetName() << ":generate: cannot load event "
@@ -136,9 +141,9 @@ RooDataSet *RooAbsGenContext::generate(Int_t nEvents) {
     }
 
     // delegate the generation of the rest of this event to our subclass implementation
-    generateEvent(_theEvent, nEvents - evt);
+    generateEvent(*_theEvent, nEvents - evt);
 
-    data->add(_theEvent);
+    data->add(*_theEvent);
   }
   
   return data;
@@ -156,7 +161,7 @@ void RooAbsGenContext::printToStream(ostream &os, PrintOption opt, TString inden
     TString deeper(indent);
     indent.Append("  ");
     os << indent << "  Generator of ";
-    _theEvent.printToStream(os,less,deeper);
+    _theEvent->printToStream(os,less,deeper);
     os << indent << "  Prototype variables are ";
     _protoVars.printToStream(os,less,deeper);
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.53 2001/10/17 05:03:57 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.54 2001/10/19 06:56:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -587,9 +587,7 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
       cout << ClassName() << "::" << GetName()
 	   << ":fillHistogram: WARNING: variable is not an explicit dependent: " << realVar->GetName() << endl;
     }
-    else {
-      plotClones.addClone(*realVar,kTRUE); // do not complain about duplicates
-    }
+    plotClones.addClone(*realVar,kTRUE); // do not complain about duplicates
   }
 
   // Create a standalone projection object to use for calculating bin contents

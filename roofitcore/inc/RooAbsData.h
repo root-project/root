@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.rdl,v 1.9 2001/10/04 01:44:33 verkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.10 2001/10/19 06:56:51 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -24,6 +24,8 @@ class RooAbsCategory ;
 class Roo1DTable ;
 class RooPlot;
 class RooFitContext ;
+class RooArgList;
+class TH1;
 
 class RooAbsData : public TNamed, public RooPrintable {
 public:
@@ -59,6 +61,9 @@ public:
   virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, 
 			      const char* cut="", Option_t* drawOptions="P") const = 0 ;
  
+  // Fill an existing histogram
+  virtual TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "") const = 0;
+
   // Printing interface (human readable)
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
