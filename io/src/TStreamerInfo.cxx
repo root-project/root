@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.183 2003/12/26 18:38:21 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.186 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -458,6 +458,9 @@ void TStreamerInfo::BuildCheck()
    array->AddAtAndExpand(this,fClassVersion);
    fgCount++;
    fNumber = fgCount;
+
+   // Since we just read this streamerInfo from file, it has already been built.
+   fIsBuilt = kTRUE;  
 
    //add to the global list of StreamerInfo
    TObjArray *infos = (TObjArray*)gROOT->GetListOfStreamerInfo();
