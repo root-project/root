@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.4 2000/08/20 10:05:09 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.5 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -149,7 +149,7 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
    Int_t automat = 0;
    if (TMath::Abs(textsize -0.99) < 0.001) automat = 1;
    if (textsize == 0)   { textsize = 0.99; automat = 1;}
-   Int_t ypixel      = gPad->YtoPixel(y1) - gPad->YtoPixel(y2);
+   Int_t ypixel      = TMath::Abs(gPad->YtoPixel(y1) - gPad->YtoPixel(y2));
    Double_t labelsize = textsize*ypixel/hh;
    if (wh < hh) labelsize *= hh/wh;
    TLatex latex;
@@ -162,7 +162,7 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
       UInt_t w,h;
       latex.GetTextExtent(w,h,GetTitle());
       labelsize = h/hh;
-      Double_t wxlabel   = gPad->XtoPixel(x2) - gPad->XtoPixel(x1);
+      Double_t wxlabel   = TMath::Abs(gPad->XtoPixel(x2) - gPad->XtoPixel(x1));
       if (w > 0.99*wxlabel) {labelsize *= 0.99*wxlabel/w; h = UInt_t(h*0.99*wxlabel/w);}
       if (h < 1) h = 1;
       labelsize   = Double_t(h)/hh;
