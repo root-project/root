@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.13 2002/01/18 14:24:09 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.14 2002/01/27 13:57:01 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -83,6 +83,7 @@
 #pragma link C++ class TQConnection;
 #pragma link C++ class TUUID+;
 #pragma link C++ class TDSet+;
+#pragma link C++ class TDSetElement+;
 #pragma link C++ class TPluginHandler;
 #pragma link C++ class TPluginManager;
 
