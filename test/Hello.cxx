@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Hello.cxx,v 1.3 2000/12/21 09:20:29 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Hello.cxx,v 1.4 2001/01/09 08:06:07 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -48,8 +48,8 @@ Float_t TChar::GetWidth()
 
    if (!TVirtualPad::Pad()) return 0;
 
-   Float_t wh = (Float_t)gPad->XtoPixel(gPad->GetX2());
-   gVirtualX->GetTextExtent(w, h, (char*)GetTitle());
+   Float_t wh = (Float_t)gPad->XtoAbsPixel(gPad->GetX2());
+   GetTextExtent(w, h, (char*)GetTitle());
    return  w/wh;
 }
 
@@ -69,7 +69,7 @@ Hello::Hello(const char *text) : TTimer(40, kTRUE)
 
    while(text[fI]) {               // create  list of characters
       ch = new TChar(text[fI]);
-      ch->SetTextFont(71);         // times-bold-r-normal
+      ch->SetTextFont(72);         // times-bold-r-normal
       ch->SetTextSize(0.3);
       ch->Modify();
       fI++;
