@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.26 2004/09/06 16:39:02 brun Exp $
+// @(#)root/geom:$Name: v4-01-02 $:$Id: TGeoMatrix.cxx,v 1.27 2004/09/06 17:01:11 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1133,7 +1133,8 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoCombiTrans &other)
    if (other.IsRotation()) {   
       const TGeoRotation rot = *other.GetRotation();
       fRotation = new TGeoRotation(rot); 
-   }   
+   } 
+   else fRotation = 0;  
 }   
 
 //_____________________________________________________________________________
@@ -1151,6 +1152,7 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoMatrix &other)
       SetBit(kGeoRotation);
       fRotation = new TGeoRotation(other);
    }
+   else fRotation = 0;
 }
 
 //_____________________________________________________________________________
@@ -1165,7 +1167,8 @@ TGeoCombiTrans::TGeoCombiTrans(const TGeoTranslation &tr, const TGeoRotation &ro
       SetBit(kGeoRotation);   
       fRotation = new TGeoRotation(rot);
       SetBit(kGeoReflection, rot.TestBit(kGeoReflection));
-   }   
+   }
+   else fRotation = 0;   
 }   
 
 //_____________________________________________________________________________
@@ -1174,6 +1177,7 @@ TGeoCombiTrans::TGeoCombiTrans(const char *name)
 {
 // ctor
    for (Int_t i=0; i<3; i++) fTranslation[i] = 0.0;
+   fRotation = 0;
 }
 
 //_____________________________________________________________________________
@@ -1213,6 +1217,7 @@ TGeoCombiTrans &TGeoCombiTrans::operator=(const TGeoMatrix &matrix)
       if (!fRotation) fRotation = new TGeoRotation();
       fRotation->SetMatrix(matrix.GetRotationMatrix());
    }
+   else fRotation = 0;
    return *this;
 }
 
