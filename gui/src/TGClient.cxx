@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.18 2002/06/12 16:46:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.19 2003/01/20 08:44:46 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -625,6 +625,7 @@ FontStruct_t TGClient::GetFontByName(const char *name) const
 {
    // Get a font by name. If font is not found, fixed font is returned,
    // if fixed font also does not exist return 0 and print error.
+   // The loaded font needs to be freed using TVirtualX::DeleteFont().
 
    FontStruct_t font = gVirtualX->LoadQueryFont(name);
 
