@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.19 2001/02/21 07:30:10 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.20 2001/03/05 10:06:43 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -819,7 +819,12 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
    TKey *key;
    Int_t bsize = bufsize;
    if (!bsize) bsize = gFile->GetBestBuffer();
-   const char *oname = name ? name : GetName();
+
+   const char *oname;
+   if (name && *name)
+      oname = name;
+   else
+      oname = GetName();
 
    // Remove trailing blanks in object name
    Int_t nch = strlen(oname);
