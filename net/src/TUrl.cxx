@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.16 2004/02/16 22:49:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.18 2004/07/19 09:43:58 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -39,10 +39,10 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    //
    // url: [proto://][user[:passwd]@]host[:port]/file.ext[#anchor][?options]
    //
-   // Known protocols: http, root, proof, ftp, news, file, rfio, hpss, castor,
-   // dcache and dcap.
-   // The default protocol is http, unless defaultIsFile is true in which
-   // case the url is assumed to be of type file.
+   // Known protocols: http, root, proof, ftp, news and any special protocols
+   // defined in the rootrc Url.Special key.
+   // The default protocol is "http", unless defaultIsFile is true in which
+   // case the url is assumed to be of type "file".
    // If a passwd contains a @ it must be escaped by a \\, e.g.
    // "pip@" becomes "pip\\@".
    //
@@ -69,7 +69,7 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    // Find protocol
    char *s, sav;
 
-   // Handle special protocol cases: file:, rfio:, etc.
+   // Handle special protocol cases: "file:", "rfio:", etc.
    for (int i = 0; i < GetSpecialProtocols()->GetEntries(); i++) {
       TObjString *os = (TObjString*) GetSpecialProtocols()->UncheckedAt(i);
       TString &s = os->String();
@@ -81,6 +81,13 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
          else
             fFile = url+l;
          fPort = 0;
+         // look for an anchor so we can get the desired member in case
+         // of an archive file url
+         if ((i = fFile.Last('#')) != kNPOS) {
+            TString ff = fFile;
+            fFile = ff(0, i);
+            fAnchor = ff(i+1, ff.Length()-1);
+         }
          return;
       }
    }

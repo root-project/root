@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.66 2004/06/22 19:57:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.67 2004/06/24 09:12:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -2048,10 +2048,15 @@ void TMatrixD::Streamer(TBuffer &R__b)
       R__b >> fNelems;
       R__b >> fRowLwb;
       R__b >> fColLwb;
-      fElements = new Double_t[fNelems];
       Char_t isArray;
       R__b >> isArray;
-      if (isArray) R__b.ReadFastArray(fElements,fNelems);
+      if (isArray) {
+        if (fNelems > 0) {
+          fElements = new Double_t[fNelems];
+          R__b.ReadFastArray(fElements,fNelems);
+        } else
+          fElements = 0;
+      }
       R__b.CheckByteCount(R__s,R__c,TMatrixD::IsA());
     } else { //====process old versions before automatic schema evolution
       TObject::Streamer(R__b);
@@ -2063,11 +2068,12 @@ void TMatrixD::Streamer(TBuffer &R__b)
       fNelems = R__b.ReadArray(fElements);
       R__b.CheckByteCount(R__s,R__c,TMatrixD::IsA());
     }
-    if (fNelems <= kSizeMax) {
+    if (fNelems > 0 && fNelems <= kSizeMax) {
       memcpy(fDataStack,fElements,fNelems*sizeof(Double_t));
       delete [] fElements;
       fElements = fDataStack;
-    }
+    } else if (fNelems < 0)
+      Invalidate();
   } else {
     TMatrixD::Class()->WriteBuffer(R__b,this);
   }

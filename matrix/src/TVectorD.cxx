@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.49 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.50 2004/06/22 19:57:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1764,11 +1764,13 @@ void TVectorD::Streamer(TBuffer &R__b)
       fNrows = R__b.ReadArray(fElements);
       R__b.CheckByteCount(R__s, R__c, TVectorD::IsA());
     }
-    if (fNrows <= kSizeMax) {
+    if (fNrows > 0 && fNrows <= kSizeMax) {
       memcpy(fDataStack,fElements,fNrows*sizeof(Double_t));
       delete [] fElements;
       fElements = fDataStack;
-    }
+    } else if (fNrows < 0)
+      Invalidate();
+
     if (R__v < 3)
       MakeValid();
   } else {

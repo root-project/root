@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.22 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.23 2004/06/22 19:57:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -1635,11 +1635,13 @@ void TVectorF::Streamer(TBuffer &R__b)
       Error("TVectorF::Streamer:","Unknown version number: %d",R__v);
       Assert(0);
     }
-    if (fNrows <= kSizeMax) {
+    if (fNrows > 0 && fNrows <= kSizeMax) {
       memcpy(fDataStack,fElements,fNrows*sizeof(Float_t));
       delete [] fElements;
       fElements = fDataStack;
-    }
+    } else if (fNrows < 0)
+      Invalidate();
+
     if (R__v < 3)
       MakeValid();
   } else {
@@ -1666,10 +1668,11 @@ void TVector::Streamer(TBuffer &R__b)
       R__b >> fRowLwb;
       Char_t isArray;
       R__b >> isArray;
-      if (fNrows) {
+      if (fNrows > 0) {
         fElements = new Float_t[fNrows];
         R__b.ReadFastArray(fElements,fNrows);
-      }
+      } else
+        fElements = 0;
       R__b.CheckByteCount(R__s, R__c, TVector::IsA());
     } else { //====process old version 1
       TObject::Streamer(R__b);
@@ -1678,11 +1681,12 @@ void TVector::Streamer(TBuffer &R__b)
       fNrows = R__b.ReadArray(fElements);
       R__b.CheckByteCount(R__s, R__c, TVector::IsA());
     }
-    if (fNrows <= kSizeMax) {
+    if (fNrows > 0 && fNrows <= kSizeMax) {
       memcpy(fDataStack,fElements,fNrows*sizeof(Float_t));
       delete [] fElements;
       fElements = fDataStack;
-    }
+    } else if (fNrows < 0)
+      Invalidate();
   } else {
     TVectorF::Class()->WriteBuffer(R__b,this);
   }
