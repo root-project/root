@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.165 2004/06/14 20:58:20 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.166 2004/06/15 14:39:34 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3882,6 +3882,14 @@ int main(int argc, char **argv)
 #ifdef _WIN32
          argvv[argcc] = (char *)calloc(64, 1);
          sprintf(argvv[argcc], "-D_WIN32=%ld",(long)_WIN32); argcc++;
+#endif
+#ifdef WIN32
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-DWIN32=%ld",(long)WIN32); argcc++;
+#endif
+#ifdef GDK_WIN32
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-DGDK_WIN32=%ld",(long)GDK_WIN32); argcc++;
 #endif
 #ifdef _MSC_VER
          argvv[argcc] = (char *)calloc(64, 1);
