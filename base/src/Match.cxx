@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: Match.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -246,8 +246,13 @@ static const char *doccl(Pattern_t*  map, const char* src)
    memset(map, 0, MAPSIZE*sizeof(*map)); // bitmap initially empty
 
    while (*src && *src != CCLEND) {
+      int isCCL = (*src == CCL);  // support [] in pattern, don't put single [ before closing ]
       unsigned char first = esc(&src);
       SETBIT(first, map);
+      if (isCCL && *src && *src == CCLEND) {
+         first = esc(&src);
+         SETBIT(first, map);
+      }
       if (*src == '-' && src[1] && src[1] != CCLEND) {
          ++src;                    // skip to end-of-sequence char
          unsigned char last = esc(&src);

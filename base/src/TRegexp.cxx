@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.7 2002/08/16 14:16:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.8 2002/09/08 00:07:21 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -136,9 +136,9 @@ const char *TRegexp::MakeWildcard(const char *re)
       if (re[i] == '*') {
          //*s++ = '.';
 #ifndef R__WIN32
-         const char *wc = "[a-zA-Z0-9_\\.,: +-<>]";
+         const char *wc = "[a-zA-Z0-9-+_\\.,: []<>]";
 #else
-         const char *wc = "[a-zA-Z0-9_., +-<>]";
+         const char *wc = "[a-zA-Z0-9-+_., []<>]";
 #endif
          strcpy(s, wc);
          s += strlen(wc);
