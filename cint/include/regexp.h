@@ -9,7 +9,7 @@
 #ifndef G__REGEXPSL
 
 #ifdef G__SHAREDLIB
-#pragma include <RegE.dl>
+#pragma include <RegE.dll>
 #else
 #include <RegE.C>
 #endif

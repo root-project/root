@@ -225,7 +225,12 @@ char *string,*endmark;
       break;
 
     case '(':
-      if((single_quote==0)&&(double_quote==0)) ++nest;
+      if((single_quote==0)&&(double_quote==0)) {
+#ifndef G__OLDIMPLEMENTATION1520
+	pp = string+i+1;
+#endif
+	++nest;
+      }
       spaceflag=1;
       break;
 
@@ -472,6 +477,9 @@ char *string,*endmark;
       if((single_quote==0)&&(double_quote==0)) {
 	++nest;
 	inew=i+1;
+#ifdef G__OLDIMPLEMENTATION1520_YET_BUG
+	pp = string+i+1; /* This creates a side effect with stl/demo/testall */
+#endif
       }
       break;
     case '>':
@@ -673,6 +681,9 @@ char *string,*endmark;
     case '(':
     case '[':
       if((single_quote==0)&&(double_quote==0)) {
+#ifndef G__OLDIMPLEMENTATION1520 /* Bug fix is due to this one */
+	pp = string+i+1;
+#endif
 	nest++;
       }
       break;
@@ -860,6 +871,9 @@ char *string,*endmark;
     case '(':
     case '[':
       if((single_quote==0)&&(double_quote==0)) {
+#ifndef G__OLDIMPLEMENTATION1520
+	pp = string+i+1;
+#endif
 	nest++;
       }
       break;

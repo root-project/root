@@ -27,6 +27,12 @@
  * undefined symbols
  *********************************************************************/
 #ifdef __MAKECINT__
+#pragma link off class GLUquadric;
+#pragma link off class GLUnurbs;
+#pragma link off class GLUtesselator;
+#pragma link off class xmesa_context;
+#pragma link off class xmesa_visual;
+#pragma link off class xmesa_buffer;
 #pragma link off function gluBuild3DMipmapLevels;
 #pragma link off function gluBuild3DMipmaps;
 #pragma link off function gluBuild2DMipmapLevels;

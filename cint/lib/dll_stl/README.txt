@@ -35,7 +35,7 @@ ABSTRACT:
     stl/multiset.dll
     stl/stack.dll
     stl/queue.dll
-    stl/valarray.dll  (VC++5.0, BC++5.3 only)
+    stl/valarray.dll  (VC++5.0/6.0, BC++5.3, ARM/Linux only)
     stl/exception.dll
     stl/stdexcept.dll
 

@@ -194,7 +194,6 @@ int G__fdumpstream G__P((char *string,char *endmark));
 int G__fgetstream G__P((char *string,char *endmark));
 int G__fignorestream G__P((char *endmark));
 int G__fgetstream_new G__P((char *string,char *endmark));
-int G__fgetstream_spaces G__P((char *string,char *endmark));
 void G__fignoreline G__P((void));
 void G__fsetcomment G__P((struct G__comment_info *pcomment));
 int G__fgetc G__P((void));
@@ -532,6 +531,7 @@ char *G__catparam G__P((struct G__param *libp,int catn,char *connect));
 int G__fgetname_template G__P((char *string,char *endmark));
 int G__fgetstream_newtemplate G__P((char *string,char *endmark));
 int G__fgetstream_template G__P((char *string,char *endmark));
+int G__fgetstream_spaces G__P((char *string,char *endmark));
 int G__getstream_template G__P((char *source,int *isrc,char *string,char *endmark));
 #ifndef G__OLDIMPLEMENTATION691
 void G__IntList_init G__P((struct G__IntList *body,long iin,struct G__IntList *prev));

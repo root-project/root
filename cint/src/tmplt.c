@@ -964,7 +964,15 @@ void G__declare_template()
      * template<..> inline|const type f(T a,S b) { ... }
      *                               ^              */
     do {
+#ifndef G__OLDIMPLEMENTATION1488
       c=G__fgetname_template(temp,"(<");
+      if(isspace(c) && strcmp(temp,"operator")==0) {
+	c=G__fgetstream(temp+8,"(");
+	if('('==c&&0==strcmp(temp,"operator(")) c=G__fgetname(temp+9,"(");
+      }
+#else
+      c=G__fgetname_template(temp,"(<");
+#endif
     } while('('!=c && '<'!=c) ;
   }
 
@@ -2487,7 +2495,12 @@ int funcmatch;
     typenum = libp->para[i].typenum;
     ref = libp->para[i].ref;
 #ifndef G__OLDIMPLEMENTATION922
-    if(isupper(libp->para[i].type))reftype=libp->para[i].obj.reftype.reftype;
+    if(
+#ifndef G__OLDIMPLEMENTATION1521
+       'u'==libp->para[i].type ||
+#endif
+       isupper(libp->para[i].type))
+      reftype=libp->para[i].obj.reftype.reftype;
     /*else if(ref) reftype=G__PARAREFERENCE;*/
     else reftype=G__PARANORMAL;
 #else
@@ -2510,7 +2523,11 @@ int funcmatch;
 #endif
 #ifndef G__OLDIMPLEMENTATION716
       /* fixed argument type */
-      if(type==ftype&&ftagnum==tagnum&&(0==freftype||ref)) {
+      if(type==ftype&&ftagnum==tagnum&&(0==freftype||ref
+#ifndef G__OLDIMPLEMENTATION1521
+					||freftype==reftype
+#endif
+					)) {
 	continue;
       }
 #endif

@@ -32,5 +32,15 @@
 #ifdef __MAKECINT__
 #include "x11const.h"
 #include "x11mfunc.h"
+
+#pragma link off class _XPrivate;
+#pragma link off class _XrmHashBucketRec;
+#pragma link off class _XOM;
+#pragma link off class _XOC;
+#pragma link off class _XIM;
+#pragma link off class _XIC;
+#pragma link off class _XRegion;
+//#pragma link off function XStringToContext;
+//#pragma link off function XUniqueContext;
 #endif
 

@@ -7344,7 +7344,17 @@ long *poffset;
   struct G__funclist *funclist = (struct G__funclist*)NULL;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1523
+  int store_def_tagnum = G__def_tagnum;
+  int store_tagdefining = G__tagdefining;
+  G__def_tagnum = p_ifunc->tagnum;
+  G__tagdefining = p_ifunc->tagnum;
+#endif
   G__argtype2param(argtype,&para);
+#ifndef G__OLDIMPLEMENTATION1523
+  G__def_tagnum = store_def_tagnum;
+  G__tagdefining = store_tagdefining;
+#endif
   G__hash(funcname,hash,temp);
 
 #ifndef G__OLDIMPLEMENTATION1313

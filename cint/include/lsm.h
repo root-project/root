@@ -10,7 +10,7 @@
 
 #ifndef G__LSMSL 
 # ifdef G__SHAREDLIB
-#include <lsm.dl>
+#include <lsm.dll>
 # else
 #include <lsm.c>
 # endif

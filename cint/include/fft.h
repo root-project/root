@@ -16,7 +16,7 @@
 
 #ifndef G__FFTSL
 # ifdef G__SHAREDLIB
-#pragma include_noerr <fft.dl>
+#pragma include_noerr <fft.dll>
 #  ifndef G__FFTSL
 #include <fft.c>
 #  endif

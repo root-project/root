@@ -12,7 +12,7 @@
 #ifndef G__STATISTICSSL
 
 #ifdef G__SHAREDLIB
-#pragma include_noerr <statistics.dl>
+#pragma include_noerr <statistics.dll>
 # ifndef G__STATISTICSSL
 #include <statistics.c>
 # endif

@@ -9,7 +9,7 @@
 # ifndef G__READFILESL
 
 #  ifdef G__SHAREDLIB
-#pragma include_noerr <ReadF.dl>
+#pragma include_noerr <ReadF.dll>
 #   ifndef READFILE_H
 #include <ReadF.C>
 #   endif

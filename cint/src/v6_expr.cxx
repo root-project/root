@@ -714,12 +714,13 @@ int lenbuf;
 #define G__RESTORE_ANDOPR                                             \
   if(G__asm_noverflow) {                                              \
     while(pp_and) {                                                   \
-      G__free_tempobject();--G__templevel; /* 1516 */ \
+      G__free_tempobject(); --G__templevel; /* 1516 */ \
       if(G__asm_dbg)                                                  \
           G__fprinterr(G__serr,"     CNDJMP assigned %x\n",G__asm_cp);     \
       G__asm_inst[ppointer_and[--pp_and]] = G__asm_cp;                \
     }                                                                 \
-  }
+  } \
+  else while(pp_and) {G__free_tempobject();--G__templevel; --pp_and;/*1524*/}
 
 #define G__RESTORE_NOEXEC_OROPR                                       \
   if(pp_or) {                                                         \
@@ -733,12 +734,13 @@ int lenbuf;
 #define G__RESTORE_OROPR                                              \
   if(G__asm_noverflow) {                                              \
     while(pp_or) {                                                    \
-      G__free_tempobject();--G__templevel; /* 1516 */ \
+      G__free_tempobject(); --G__templevel; /* 1516 */ \
       if(G__asm_dbg)                                                  \
           G__fprinterr(G__serr,"     CND1JMP assigned %x\n",G__asm_cp);    \
       G__asm_inst[ppointer_or[--pp_or]] = G__asm_cp;                  \
     }                                                                 \
-  }
+  } \
+  else while(pp_or) {G__free_tempobject();--G__templevel; --pp_or;/*1524*/}
 
 #else /* G__ASM_DBG */
 
@@ -792,7 +794,8 @@ int lenbuf;
       G__free_tempobject();--G__templevel; /* 1516 */ \
       G__asm_inst[ppointer_and[--pp_and]] = G__asm_cp;                \
     }                                                                 \
-  }
+  } \
+  else while(pp_and) {G__free_tempobject();--G__templevel; --pp_and;/*1524*/}
 
 #define G__RESTORE_NOEXEC_OROPR                                       \
   if(pp_or) {                                                         \
@@ -807,7 +810,8 @@ int lenbuf;
       G__free_tempobject();--G__templevel; /* 1516 */ \
       G__asm_inst[ppointer_or[--pp_or]] = G__asm_cp;                  \
     }                                                                 \
-  }
+  } \
+  else while(pp_or) {G__free_tempobject();--G__templevel; --pp_or;/*1524*/}
 
 #endif /* G__ASM_DBG */
 

@@ -6622,6 +6622,13 @@ int globalcomp;
 * #pragma link C   global variablename;  can use regexp
 * #pragma link off global variablename;  can use regexp
 *
+* #pragma link C++ defined_in filename;
+* #pragma link C   defined_in filename;
+* #pragma link off defined_in filename;
+* #pragma link C++ defined_in classname;
+* #pragma link C   defined_in classname;
+* #pragma link off defined_in classname;
+*
 * #pragma link C++ typedef TypeName;      can use regexp
 * #pragma link C   typedef TypeName;      can use regexp
 * #pragma link off typedef TypeName;      can use regexp
@@ -6664,16 +6671,50 @@ int link_stub;
   /* Get link language interface */
   c = G__fgetname_template(buf,";\n\r");
   if(G__SPECIFYLINK==link_stub) {
-    if(strcmp(buf,"C++")==0)      globalcomp = G__CPPLINK;
-    else if(strcmp(buf,"C")==0)   globalcomp = G__CLINK;
+    if(strcmp(buf,"C++")==0) {
+      globalcomp = G__CPPLINK;
+      if(G__CLINK==G__globalcomp) {
+	G__fprinterr(G__serr,"Warning: '#pragma link C++' ignored. Use '#pragma link C'");
+	G__printlinenum();
+      }
+    }
+    else if(strcmp(buf,"C")==0) {
+      globalcomp = G__CLINK;
+      if(G__CPPLINK==G__globalcomp) {
+	G__fprinterr(G__serr,"Warning: '#pragma link C' ignored. Use '#pragma link C++'");
+	G__printlinenum();
+      }
+    }
     else if(strcmp(buf,"MACRO")==0) globalcomp = G__MACROLINK;
-    else                          globalcomp = G__NOLINK; /* off */
+    else if(strcmp(buf,"off")==0) globalcomp = G__NOLINK;
+    else if(strcmp(buf,"OFF")==0) globalcomp = G__NOLINK;
+    else {
+      G__genericerror("Error: '#pragma link' syntax error");
+      globalcomp = G__NOLINK; /* off */
+    }
   }
   else {
-    if(strcmp(buf,"C++")==0)      globalcomp = G__CPPSTUB;
-    else if(strcmp(buf,"C")==0)   globalcomp = G__CSTUB;
+    if(strcmp(buf,"C++")==0) {
+      globalcomp = G__CPPSTUB;
+      if(G__CLINK==G__globalcomp) {
+	G__fprinterr(G__serr,"Warning: '#pragma stub C++' ignored. Use '#pragma stub C'");
+	G__printlinenum();
+      }
+    }
+    else if(strcmp(buf,"C")==0) {
+      globalcomp = G__CSTUB;
+      if(G__CPPLINK==G__globalcomp) {
+	G__fprinterr(G__serr,"Warning: '#pragma stub C' ignored. Use '#pragma stub C++'");
+	G__printlinenum();
+      }
+    }
     else if(strcmp(buf,"MACRO")==0) globalcomp = G__MACROLINK;
-    else                          globalcomp = G__NOLINK; /* off */
+    else if(strcmp(buf,"off")==0) globalcomp = G__NOLINK;
+    else if(strcmp(buf,"OFF")==0) globalcomp = G__NOLINK;
+    else {
+      G__genericerror("Error: '#pragma link' syntax error");
+      globalcomp = G__NOLINK; /* off */
+    }
   }
 
 #ifndef G__OLDIMPLEMENTATION1272
@@ -6941,12 +6982,25 @@ int link_stub;
 #ifndef G__OLDIMPLEMENTATION1309
     char *cx;
 #endif
+#ifndef G__OLDIMPLEMENTATION1523
+    char *cy;
+#endif
     fpos_t pos;
     int store_line = G__ifile.line_number;
     fgetpos(G__ifile.fp,&pos);
     c = G__fgetstream_template(buf,";\n\r<>");
 #ifndef G__OLDIMPLEMENTATION1309
+#ifndef G__OLDIMPLEMENTATION1523
+    cy = strchr(buf,'(');
+    if(!cy) cx = G__strrstr(buf,"::");
+    else {
+      *cy = 0;
+      cx = G__strrstr(buf,"::");
+      *cy = '(';
+    }
+#else
     cx = G__strrstr(buf,"::");
+#endif
     if(cx) {
       int tagnum;
       char tmpbuf[G__ONELINE];
@@ -6954,6 +7008,7 @@ int link_stub;
       tagnum = G__defined_tagname(buf,2);
       if(-1==tagnum) {
 	G__fprinterr(G__serr,"Error: %s not found",buf);
+	G__printlinenum();
       }
       x_ifunc = G__struct.memfunc[tagnum];
       strcpy(tmpbuf,cx+2);

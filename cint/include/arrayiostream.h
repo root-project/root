@@ -22,7 +22,7 @@
 #ifndef G__XGRAPHSL
 
 #ifdef G__SHAREDLIB
-#pragma include_noerr <xgraph.dl>
+#pragma include_noerr <xgraph.dll>
 # ifndef G__XGRAPHSL
 #include <xgraph.c>
 # endif
