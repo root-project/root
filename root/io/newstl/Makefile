@@ -125,6 +125,9 @@ $(HELPER_DLL) : TestHelpers.C
 $(LIBDIR)%_C.$(DllSuf) : %.C $(HELPER_DLL)
 	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllSuf),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
 
+$(LIBDIR)sample_bx_classes_C.$(DllSuf) : sample_bx_classes.C 
+	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllSuf),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
+
 #	$(CMDECHO)touch $@
 #	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | root.exe -l -b -n
 
@@ -163,7 +166,7 @@ package:
    )
 endif
 
-samplerootfile.root: $(LIBDIR)/sample_bx_classes_C.$(DllSuf)
+samplerootfile.root: directories $(LIBDIR)sample_bx_classes_C.$(DllSuf)
 	$(CMDECHO) root.exe -b -q -l sample_writer.C > samplerootfile.log
 
 emptyCollection.log: samplerootfile.root $(LIBDIR)/sample_bx_classes_C.$(DllSuf) sample_reader.C
