@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooBCPSin2bgDecay.cc,v 1.4 2002/04/18 02:33:01 walkowia Exp $
+ *    File: $Id: RooBCPSin2bgDecay.cc,v 1.5 2002/05/31 01:07:40 verkerke Exp $
  * Authors:
  *   WW, Wolfgang Walkowiak, UC Santa Cruz, walkowia@slac.stanford.edu
  * History:
@@ -9,6 +9,8 @@
  *   12-Mar-2002 WW Added alphaD0 and rhoD0
  *   13-Mar-2002 WW Added 2nd constructor for offset type scheme
  *   09-Apr-2002 WW Inverted sign infront of the sin() term
+ *   17-Jun-2002 WW Added two separate constructors with separate
+ *                  absLambdaPrime infront of the sin() term.
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
@@ -22,13 +24,13 @@
 //       gam*exp(-gam*|dt|)/(1+|Lambda|^2)/4 * [
 //          ((1-S_tag*dw)*(1-alpha)+alpha*(1+S_mix*(1-2*rho)))*(1+|lambda|^2)
 //         + S_mix*(1-2*w)*(1-alpha)*(1-|lambda|^2)*cos(dm*dt)
-//         - S_tag*(1-2*w)*(1-alpha)*2*|lambda|*sin2bg*sin(dm*dt) ] 
+//         - S_tag*(1-2*w)*(1-alpha)*2*|lambda'|*sin2bg*sin(dm*dt) ] 
 //
 // 2)  f(dt,S_tag,S_mix) = 
 //       gam*exp(-gam*|dt|)/(1+|Lambda|^2)/4 * [
 //          ( 1-S_tag*dw' + S_mix*offset )*(1+|lambda|^2)
 //         + S_mix*(1-2*w')*(1-|lambda|^2)*cos(dm*dt)
-//         - S_tag*(1-2*w')*2*|lambda|*sin2bg*sin(dm*dt) ] 
+//         - S_tag*(1-2*w')*2*|lambda'|*sin2bg*sin(dm*dt) ] 
 //
 // with                                           / argLambdaPlus  for +
 //     sin2bg = sin(2*beta+gamma+tag*mix*delta) = |
@@ -38,6 +40,10 @@
 //     w'     = w  * (1-alpha)+alpha/2
 //     dw'    = dw * (1-alpha)
 //     offset = alpha * (1-2*rho)
+// 
+// For the first to constructors (A1 and A2) |lambda| == |lambda'|,
+// while the second set of constructors (B1 and B2) allow for 
+// and independent |lambda'| infront of the sin() term. 
 //
 
 #include <iostream.h>
@@ -65,6 +71,8 @@ RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title,
 				     DecayType type) :
     RooConvolutedPdf(name,title,model,t), 
     _absLambda("absLambda","Absolute value of lambda",this,absLambda),
+    _absLambdaPrime("absLambdaPrime","-- not used --",this,
+		    (RooRealVar&)RooRealConstant::value(0.)),
     _argLambdaPlus("argLambdaPlus","Arg(Lambda+)",this,argLambdaPlus),
     _argLambdaMinus("argLambdaPlus","Arg(Lambda-)",this,argLambdaMinus),
     _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
@@ -81,9 +89,10 @@ RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title,
     _genMixFrac(0),
     _genFlavFracMix(0),
     _genFlavFracUnmix(0),
-    _offsetImp(kFALSE)
+    _offsetImp(kFALSE),
+    _primeImp(kFALSE)
 {
-    // Constructor -- implementation 1 with alphaD0 and rhoD0
+    // Constructor -- implementation A1 with alphaD0 and rhoD0
     chooseBase(type,tau,dm) ;
 }
 
@@ -102,6 +111,8 @@ RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title,
 				     DecayType type) :
     RooConvolutedPdf(name,title,model,t), 
     _absLambda("absLambda","Absolute value of lambda",this,absLambda),
+    _absLambdaPrime("absLambdaPrime","-- not used --",this,
+		    (RooRealVar&)RooRealConstant::value(0.)),
     _argLambdaPlus("argLambdaPlus","Arg(Lambda+)",this,argLambdaPlus),
     _argLambdaMinus("argLambdaPlus","Arg(Lambda-)",this,argLambdaMinus),
     _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
@@ -119,9 +130,96 @@ RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title,
     _genMixFrac(0),
     _genFlavFracMix(0),
     _genFlavFracUnmix(0),
-    _offsetImp(kTRUE)
+    _offsetImp(kTRUE),
+    _primeImp(kFALSE)
 {
-    // Constructor -- implementation 2 with offset for decay-D0 tags
+    // Constructor -- implementation A2 with offset for decay-D0 tags
+    chooseBase(type,tau,dm) ;
+}
+
+RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title, 
+				     RooRealVar& t, 
+				     RooAbsCategory& mixState,
+				     RooAbsCategory& tagFlav,
+				     RooAbsReal& tau, RooAbsReal& dm,
+				     RooAbsReal& avgMistag, 
+				     RooAbsReal& absLambda, 
+				     RooAbsReal& argLambdaPlus,
+				     RooAbsReal& argLambdaMinus, 
+				     RooAbsReal& delMistag,
+				     RooAbsReal& alphaD0, 
+				     RooAbsReal& rhoD0,
+				     const RooResolutionModel& model, 
+				     RooAbsReal& absLambdaPrime,
+				     DecayType type) :
+    RooConvolutedPdf(name,title,model,t), 
+    _absLambda("absLambda","Absolute value of lambda",this,absLambda),
+    _absLambdaPrime("absLambdaPrime","Absolute value of lambda prime",
+		    this,absLambdaPrime),
+    _argLambdaPlus("argLambdaPlus","Arg(Lambda+)",this,argLambdaPlus),
+    _argLambdaMinus("argLambdaPlus","Arg(Lambda-)",this,argLambdaMinus),
+    _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
+    _delMistag("delMistag","Delta mistag rate",this,delMistag),  
+    _alphaD0("alphaD0","D0 tagged fraction",this,alphaD0),
+    _rhoOffD0("rhoOffD0","D0 mixed fraction",this,rhoD0),
+    _mixState("mixState","mix state",this,mixState),
+    _tagFlav("tagFlav","Btag flavor",this,tagFlav),
+    _tau("tau","decay time",this,tau),
+    _dm("dm","mixing frequency",this,dm),
+    _t("t","time",this,t),
+    _type(type),
+    _genFlavFrac(0),
+    _genMixFrac(0),
+    _genFlavFracMix(0),
+    _genFlavFracUnmix(0),
+    _offsetImp(kFALSE),
+    _primeImp(kTRUE)
+{
+    // Constructor -- implementation B1 with alphaD0 and rhoD0 
+    //                and separate absLambdaPrime for sin() term.
+    chooseBase(type,tau,dm) ;
+}
+
+RooBCPSin2bgDecay::RooBCPSin2bgDecay(const char *name, const char *title, 
+				     RooRealVar& t, 
+				     RooAbsCategory& mixState,
+				     RooAbsCategory& tagFlav,
+				     RooAbsReal& tau, RooAbsReal& dm,
+				     RooAbsReal& avgMistag, 
+				     RooAbsReal& absLambda, 
+				     RooAbsReal& argLambdaPlus,
+				     RooAbsReal& argLambdaMinus, 
+				     RooAbsReal& delMistag,
+				     RooAbsReal& offsetD0, 
+				     const RooResolutionModel& model, 
+				     RooAbsReal& absLambdaPrime, 
+				     DecayType type) :
+    RooConvolutedPdf(name,title,model,t), 
+    _absLambda("absLambda","Absolute value of lambda",this,absLambda),
+    _absLambdaPrime("absLambdaPrime","Absolute value of lambda prime",
+		    this,absLambdaPrime),
+    _argLambdaPlus("argLambdaPlus","Arg(Lambda+)",this,argLambdaPlus),
+    _argLambdaMinus("argLambdaPlus","Arg(Lambda-)",this,argLambdaMinus),
+    _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
+    _delMistag("delMistag","Delta mistag rate",this,delMistag),  
+    _alphaD0("alphaD0","-- not used --",this,
+	     (RooRealVar&)RooRealConstant::value(0.)),
+    _rhoOffD0("rhoOffD0","D0 offset",this,offsetD0),
+    _mixState("mixState","mix state",this,mixState),
+    _tagFlav("tagFlav","Btag flavor",this,tagFlav),
+    _tau("tau","decay time",this,tau),
+    _dm("dm","mixing frequency",this,dm),
+    _t("t","time",this,t),
+    _type(type),
+    _genFlavFrac(0),
+    _genMixFrac(0),
+    _genFlavFracMix(0),
+    _genFlavFracUnmix(0),
+    _offsetImp(kTRUE),
+    _primeImp(kTRUE)
+{
+    // Constructor -- implementation B2 with offset for decay-D0 tags
+    //                and separate absLambdaPrime for sin() term.
     chooseBase(type,tau,dm) ;
 }
 
@@ -129,6 +227,7 @@ RooBCPSin2bgDecay::RooBCPSin2bgDecay(const RooBCPSin2bgDecay& other,
 				     const char* name) : 
     RooConvolutedPdf(other,name), 
     _absLambda("absLambda",this,other._absLambda),
+    _absLambdaPrime("absLambdaPrime",this,other._absLambdaPrime),
     _argLambdaPlus("argLambdaPlus",this,other._argLambdaPlus),
     _argLambdaMinus("argLambdaMinus",this,other._argLambdaMinus),
     _avgMistag("avgMistag",this,other._avgMistag),
@@ -148,9 +247,10 @@ RooBCPSin2bgDecay::RooBCPSin2bgDecay(const RooBCPSin2bgDecay& other,
     _genMixFrac(other._genMixFrac),
     _genFlavFracMix(other._genFlavFracMix),
     _genFlavFracUnmix(other._genFlavFracUnmix),
-    _offsetImp(other._offsetImp)
+    _offsetImp(other._offsetImp),
+    _primeImp(other._primeImp)
 {
-  // Copy constructor
+    // Copy constructor
 }
 
 
@@ -180,9 +280,9 @@ Double_t RooBCPSin2bgDecay::coefficient(Int_t basisIndex) const
 	//sin term: - tag*dil*absLambda*ImLambda/2
         // ( = - tag * dil * |l| * sin(2b+g+/-d)/2 )
 	if ( _tagFlav*_mixState < 0 ) { 
-	    return -_tagFlav*dil*_absLambda*_argLambdaMinus/2 ;
+	    return -_tagFlav*dil*absLambdaP()*_argLambdaMinus/2 ;
 	} else {
-	    return -_tagFlav*dil*_absLambda*_argLambdaPlus/2 ;
+	    return -_tagFlav*dil*absLambdaP()*_argLambdaPlus/2 ;
 	}
     }
   
@@ -232,7 +332,7 @@ Double_t RooBCPSin2bgDecay::coefAnalyticalIntegral(Int_t basisIndex,
 		return (1+_absLambda*_absLambda)*(1-_tagFlav*dw)/2 ;
 	    }
 	    if (basisIndex==_basisSin) {
-		return -_tagFlav*dil*_absLambda
+		return -_tagFlav*dil*absLambdaP()
 		    *(_argLambdaPlus+_argLambdaMinus)/2 ;
 	    }
 	    if (basisIndex==_basisCos) {
@@ -245,7 +345,7 @@ Double_t RooBCPSin2bgDecay::coefAnalyticalIntegral(Int_t basisIndex,
 		return (1+_absLambda*_absLambda)*(1+_mixState*off)/2 ;
 	    }
 	    if (basisIndex==_basisSin ) {
-		return _mixState*dil*_absLambda
+		return _mixState*dil*absLambdaP()
 		*(_argLambdaPlus-_argLambdaMinus)/2 ;
 	    }
 	    if (basisIndex==_basisCos) {
@@ -394,12 +494,12 @@ void RooBCPSin2bgDecay::generateEvent(Int_t code)
 	Double_t maxAcceptProb = 
 	    (1+fabs(dw)+fabs(off))*(1+al2) 
 	    + fabs(dil*(1-al2)) 
-	    + fabs(2*dil*_absLambda*maxArgLambda) ;
+	    + fabs(2*dil*absLambdaP()*maxArgLambda) ;
 
 	Double_t acceptProb =   
 	    (1-_tagFlav*dw+_mixState*off)*(1+al2) 
 	    + _mixState*dil*(1-al2)*cos(_dm*tval)
-	    - _tagFlav*2*dil*_absLambda*argLambda*sin(_dm*tval) ;
+	    - _tagFlav*2*dil*absLambdaP()*argLambda*sin(_dm*tval) ;
 
 	// paranoid check
 	if ( acceptProb > maxAcceptProb ) {
@@ -453,6 +553,10 @@ void RooBCPSin2bgDecay::chooseBase(DecayType type,
     _basisCos = declareBasis("exp(-abs(@0)/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
     break ;
   }
+}
+
+Double_t RooBCPSin2bgDecay::absLambdaP() const {
+    return ( _primeImp ? _absLambdaPrime : _absLambda );
 }
 
 
