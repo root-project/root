@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.80 2004/04/13 07:50:45 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.81 2004/04/26 13:06:33 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3859,8 +3859,8 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
    // By default the geometry is saved without the voxelisation info.
    // Use option 'v" to save the voxelisation info.
 
-   TFile f(filename,"recreate");
-   if (f.IsZombie()) return 0;
+   TFile *f = TFile::Open(filename,"recreate");
+   if (!f || f->IsZombie()) return 0;
    char keyname[256];
    if (name) strcpy(keyname,name);
    if (strlen(keyname) == 0) strcpy(keyname,GetName());
@@ -3870,6 +3870,7 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
    else                   fStreamVoxels = kFALSE;
    Int_t nbytes = Write(keyname);
    fStreamVoxels = kFALSE;
+   delete f;
    return nbytes;
 }
 
@@ -3883,29 +3884,28 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    //before importing the new object.
 
    TFile *old = gFile;
-   TFile f(filename);
-   if (f.IsZombie()) {
+   TFile *f = TFile::Open(filename);
+   if (!f || f->IsZombie()) {
       if (old) old->cd();
       return 0;
    }   
    if (gGeoManager) delete gGeoManager;
    gGeoManager = 0;
    if (name && strlen(name) > 0) {
-      gGeoManager = (TGeoManager*)f.Get(name);
-      if (old) old->cd();
-      return gGeoManager;
+      gGeoManager = (TGeoManager*)f->Get(name);
    } else {
-      TIter next(f.GetListOfKeys());
+      TIter next(f->GetListOfKeys());
       TKey *key;
       while ((key = (TKey*)next())) {
          if (strcmp(key->GetClassName(),"TGeoManager") != 0) continue;
          gGeoManager = (TGeoManager*)key->ReadObj();
-         if (old) old->cd();
-         return gGeoManager;
+         break;
       }
    }
    if (old) old->cd();
-   return 0;
+   delete f;
+   if (gGeoManager) gROOT->GetListOfBrowsables()->Add(gGeoManager);
+   return gGeoManager;
 }
 //______________________________________________________________________________
 Int_t *TGeoManager::GetIntBuffer(Int_t length)
