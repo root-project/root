@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.6 2000/12/08 07:56:39 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.5 2000/11/27 12:23:15 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "snprintf.h"
 #include "TString.h"
 #include "TBuffer.h"
 #include "TError.h"
@@ -1176,43 +1177,34 @@ Bool_t TString::EndsWith(const char* s, ECaseCompare cmp) const
 
 //---- Global String Handling Functions ----------------------------------------
 
+static const int cb_size  = 4096;
+static const int fld_size = 2048;
 
 // a circular formating buffer
-static char *bfree  = 0;
-static int cb_size  = 2048;
+static char formbuf[cb_size];       // some slob for form overflow
+static char *bfree  = formbuf;
+static char *endbuf = &formbuf[cb_size-1];
 
 //______________________________________________________________________________
-static char *Format(const char* format, va_list ap)
+static char *Format(const char *format, va_list ap)
 {
    // Format a string in a circular formatting buffer (using a printf style
    // format descriptor).
 
-   static int fld_size;
-   static char *formbuf, *endbuf;
-   if (bfree == 0) {
-      fld_size = cb_size/2;
-      formbuf  = new char[cb_size];
-      bfree    = formbuf;
-      endbuf   = &formbuf[cb_size-1];
-   }
    char *buf = bfree;
 
    if (buf+fld_size > endbuf)
       buf = formbuf;
 
-   vsprintf(buf, format, ap);
-   int l = strlen(buf);
-   if (l > fld_size) {
-      delete [] formbuf;
-      cb_size += l;
-      fld_size = cb_size/2;
-      formbuf  = new char[cb_size];
-      bfree    = formbuf;
-      endbuf   = &formbuf[cb_size-1];
-      buf      = bfree;
-      vsprintf(buf, format, ap);
+   int n = vsnprintf(buf, fld_size, format, ap);
+   // old vsnprintf's return -1 if string is truncated new ones return
+   // total number of characters that would have been written
+   if (n == -1 || n >= fld_size) {
+      Warning("Format", "string truncated: %.30s...", buf);
+      n = fld_size - 1;
    }
-   bfree = buf+l+1;
+
+   bfree = buf+n+1;
    return buf;
 }
 
