@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.12 2004/04/26 13:45:33 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.13 2004/04/27 09:13:22 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -567,15 +567,15 @@ TGComboBox* TGedAttTextFrame::BuildTextAlignComboBox(TGFrame* parent, Int_t id)
 
    TGComboBox *c = new TGComboBox(parent, id);
 
-   c->AddEntry("13 Top, Left",   13);
-   c->AddEntry("23 Top, Middle", 23);
-   c->AddEntry("33 Top, Right",  33);
-   c->AddEntry("12 Middle, Left",   12);
-   c->AddEntry("22 Middle, Middle", 22);
-   c->AddEntry("32 Middle, Right",  32);
    c->AddEntry("11 Bottom, Left",   11);
    c->AddEntry("21 Bottom, Middle", 21);
    c->AddEntry("31 Bottom, Right",  31);
+   c->AddEntry("12 Middle, Left",   12);
+   c->AddEntry("22 Middle, Middle", 22);
+   c->AddEntry("32 Middle, Right",  32);
+   c->AddEntry("13 Top, Left",   13);
+   c->AddEntry("23 Top, Middle", 23);
+   c->AddEntry("33 Top, Right",  33);
 
    return c;
 }
