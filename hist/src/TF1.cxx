@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.5 2000/08/17 07:53:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.6 2000/08/18 06:22:20 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1536,7 +1536,7 @@ void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)
    if (ipar < 0 || ipar > fNpar-1) return;
    Int_t i;
    if (!fParMin) {fParMin = new Double_t[fNpar]; for (i=0;i<fNpar;i++) fParMin[i]=0;}
-   if (!fParMax) {fParMax = new Double_t[fNpar]; for (i=0;i<fNpar;i++) fParMin[i]=0;}
+   if (!fParMax) {fParMax = new Double_t[fNpar]; for (i=0;i<fNpar;i++) fParMax[i]=0;}
    fParMin[ipar] = parmin;
    fParMax[ipar] = parmax;
 }
