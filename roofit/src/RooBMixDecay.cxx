@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooBMixDecay.cc,v 1.12 2002/09/10 02:01:31 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,7 +50,7 @@ RooBMixDecay::RooBMixDecay(const char *name, const char *title,
     _basisCos = declareBasis("exp(-@0/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
     break ;
   case Flipped:
-    _basisExp = declareBasis("exp(@0)/@1)",RooArgList(tau,dm)) ;
+    _basisExp = declareBasis("exp(@0/@1)",RooArgList(tau,dm)) ;
     _basisCos = declareBasis("exp(@0/@1)*cos(@0*@2)",RooArgList(tau,dm)) ;
     break ;
   case DoubleSided:
