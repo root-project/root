@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.110 2001/12/17 15:29:04 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.111 2001/12/21 14:52:03 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1342,6 +1342,10 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
                        break;
                      }
 
+      case kOffsetL + kObject:
+      case kOffsetL + kTString:
+      case kOffsetL + kTObject:
+      case kOffsetL + kTNamed:
       case kStreamer: {
                       printf("printing kStreamer case (%d)",fType[i]);
                       Streamer_t pstreamer = fgElement->GetStreamer();
@@ -1503,6 +1507,10 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
                        break;
                      }
 
+      case kOffsetL + kObject:
+      case kOffsetL + kTString:
+      case kOffsetL + kTObject:
+      case kOffsetL + kTNamed:
       case kStreamer: {
                       printf("printing kStreamer case");
                       Streamer_t pstreamer = fgElement->GetStreamer();
@@ -1863,6 +1871,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                           break;
                         }
 
+         case kOffsetL + kObject:
+         case kOffsetL + kTString:
+         case kOffsetL + kTObject:
+         case kOffsetL + kTNamed:
          case kStreamer: {
                          Streamer_t pstreamer = fgElement->GetStreamer();
                          UInt_t start,count;
@@ -2330,6 +2342,10 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
             //}
             break;}
 
+         case kOffsetL + kObject:
+         case kOffsetL + kTString:
+         case kOffsetL + kTObject:
+         case kOffsetL + kTNamed:
          case kStreamer: {Streamer_t pstreamer = fgElement->GetStreamer();
                          UInt_t start,count;
                          b.ReadVersion(&start,&count);
@@ -2751,6 +2767,10 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                           break;
                         }
 
+         case kOffsetL + kObject:
+         case kOffsetL + kTString:
+         case kOffsetL + kTObject:
+         case kOffsetL + kTNamed:
          case kStreamer: {Streamer_t pstreamer = fgElement->GetStreamer();
                          UInt_t pos = b.WriteVersion(IsA(),kTRUE);
                          if (pstreamer == 0) {
@@ -2989,6 +3009,10 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                        break;
                      }
 
+         case kOffsetL + kObject:
+         case kOffsetL + kTString:
+         case kOffsetL + kTObject:
+         case kOffsetL + kTNamed:
          case kStreamer: {
                          Streamer_t pstreamer = fgElement->GetStreamer();
                          UInt_t pos = b.WriteVersion(IsA(),kTRUE);
