@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafS.cxx,v 1.15 2001/05/18 15:57:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafS.cxx,v 1.16 2002/09/09 19:52:11 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -132,8 +132,13 @@ void TLeafS::PrintValue(Int_t l) const
 {
 // Prints leaf value
 
-   Short_t *value = (Short_t *)GetValuePointer();
-   printf("%d",value[l]);
+   if (fIsUnsigned) {
+      UShort_t *uvalue = (UShort_t*)GetValuePointer();
+      printf("%u",uvalue[l]);
+   } else {
+      Short_t *value = (Short_t*)GetValuePointer();
+      printf("%d",value[l]);
+   }
 }
 
 //______________________________________________________________________________
