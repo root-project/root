@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.169 2004/03/26 17:15:55 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.170 2004/04/06 21:36:47 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -665,7 +665,19 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"AXIS"); if (l) { Hoption.Axis   = 1; strncpy(l,"    ",4); }
    l = strstr(chopt,"AXIG"); if (l) { Hoption.Axis   = 2; strncpy(l,"    ",4); }
    l = strstr(chopt,"SCAT"); if (l) { Hoption.Scat   = 1; strncpy(l,"    ",4); }
-   l = strstr(chopt,"TEXT"); if (l) { Hoption.Text   = 1; strncpy(l,"    ",4); Hoption.Scat = 0; }
+   l = strstr(chopt,"TEXT");
+   if (l) {
+      Int_t angle;
+      if (sscanf(&l[4],"%d",&angle) > 0) {
+         if (angle < 0)  angle=0;
+         if (angle > 90) angle=90;
+         Hoption.Text = 1000+angle; 
+      } else {
+         Hoption.Text = 1;
+      }
+      strncpy(l,"    ",4);
+      Hoption.Scat = 0;
+   }
    l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR;       strncpy(l,"   ",3); }
    l = strstr(chopt,"CYL");  if (l) { Hoption.System = kCYLINDRICAL; strncpy(l,"   ",3); }
    l = strstr(chopt,"SPH");  if (l) { Hoption.System = kSPHERICAL;   strncpy(l,"   ",3); }
@@ -674,7 +686,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"A"))   Hoption.Axis = -1;
    if (strstr(chopt,"B"))   Hoption.Bar  = 1;
    if (strstr(chopt,"C")) { Hoption.Curve =1; Hoption.Hist = -1;}
-   if (strstr(chopt,"E"))   Hoption.Error =1;
    if (strstr(chopt,"F"))   Hoption.Fill =1;
    if (strstr(chopt,"][")) {Hoption.Off  =1; Hoption.Hist =1;}
    if (strstr(chopt,"F2"))  Hoption.Fill =2;
@@ -686,11 +697,21 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"-"))   Hoption.Plus =-1;
    if (strstr(chopt,"H"))   Hoption.Hist =2;
    if (strstr(chopt,"P0"))  Hoption.Mark =10;
-   if (strstr(chopt,"E0"))  Hoption.Error =10;
-   if (strstr(chopt,"E1"))  Hoption.Error =11;
-   if (strstr(chopt,"E2"))  Hoption.Error =12;
-   if (strstr(chopt,"E3"))  Hoption.Error =13;
-   if (strstr(chopt,"E4"))  Hoption.Error =14;
+   if (strstr(chopt,"E")) {
+      if (fH->GetDimension() == 1) {
+         Hoption.Error =1;
+         if (strstr(chopt,"E0"))  Hoption.Error =10;
+         if (strstr(chopt,"E1"))  Hoption.Error =11;
+         if (strstr(chopt,"E2"))  Hoption.Error =12;
+         if (strstr(chopt,"E3"))  Hoption.Error =13;
+         if (strstr(chopt,"E4"))  Hoption.Error =14;
+      } else {
+         if (Hoption.Error == 0) {
+            Hoption.Error = 100;
+            Hoption.Scat  = 0;
+         }
+      }
+   }
    
    if (strstr(chopt,"9"))  Hoption.HighRes = 1;
 
@@ -703,7 +724,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
 //
 //   if (fSumw2.fN && !Hoption.Error) Hoption.Error = 2;
-   if (Hoption.Error) Hoption.Scat = 0;
 
 //      Copy options from current style
    Hoption.Logx = gPad->GetLogx();
@@ -878,7 +898,8 @@ void THistPainter::Paint(Option_t *option)
 //    "FB"     : With LEGO or SURFACE, suppress the Front-Box
 //    "BB"     : With LEGO or SURFACE, suppress the Back-Box
 //    "SCAT"   : Draw a scatter-plot (default)
-//    "TEXT"   : Draw cell contents as text
+//    "TEXT"   : Draw bin contents as text
+//    "TEXTnn" : Draw bin contents as text at angle nn (0 < nn < 90)
 //    "[cutg]" : Draw only the sub-range selected by the TCutG named "cutg"
 //
 // Most options can be concatenated without spaces or commas, for example:
@@ -1131,13 +1152,14 @@ void THistPainter::Paint(Option_t *option)
 //End_Html
 //
 //
-//  The TEXT Option
-//  ===============
-//    For each cell (i,j) the cell content is printed.
+//  The TEXT and TEXTnn Option
+//  ==========================
+//    For each bin the content is printed.
 //    The text attributes are:
 //      - text font = current TStyle font
 //      - text size = 0.02*padheight*markersize
 //      - text color= marker color
+//    "nn" is the angle used to draw the text (0 < nn < 90)
 //Begin_Html
 /*
 <img src="gif/h2_text.gif">
@@ -1403,6 +1425,8 @@ void THistPainter::Paint(Option_t *option)
       PaintErrors(option);
       if (Hoption.Hist == 2) PaintHist(option);
    }
+
+   if (Hoption.Text) PaintText(option);
 
 //         test for associated function
    if (Hoption.Func) {
@@ -2885,8 +2909,8 @@ void THistPainter::PaintFrame()
 
    RecalculateRange();
 
-   if (Hoption.Lego || Hoption.Surf || Hoption.Tri || Hoption.Contour == 14 ||
-       (Hoption.Error && fH->GetDimension()==2)) {
+   if (Hoption.Lego || Hoption.Surf || Hoption.Tri ||
+       Hoption.Contour == 14 || Hoption.Error >= 100) {
       TObject *frame = gPad->FindObject("TFrame");
       if (frame) gPad->GetListOfPrimitives()->Remove(frame);
       return;
@@ -4941,7 +4965,7 @@ void THistPainter::PaintTable(Option_t *option)
       if (Hoption.Color)   PaintColorLevels(option);
       if (Hoption.Contour) PaintContour(option);
       if (Hoption.Text)    PaintText(option);
-      if (Hoption.Error)   Paint2DErrors(option);
+      if (Hoption.Error >= 100)   Paint2DErrors(option);
    }
 
    if (Hoption.Lego) PaintLego(option);
@@ -4949,7 +4973,7 @@ void THistPainter::PaintTable(Option_t *option)
    if (Hoption.Tri) PaintTriangles(option);
    
    if (!Hoption.Lego && !Hoption.Surf &&
-       !Hoption.Tri  && !Hoption.Error) PaintAxis(kFALSE); // Draw the axes
+       !Hoption.Tri  && !(Hoption.Error >= 100)) PaintAxis(kFALSE); // Draw the axes
 
    PaintTitle();    //    Draw histogram title
 //   PaintFile();     //    Draw Current File name corresp to current directory
@@ -4975,46 +4999,70 @@ void THistPainter::PaintTable(Option_t *option)
 //______________________________________________________________________________
 void THistPainter::PaintText(Option_t *)
 {
-//    *-*-*-*Control function to draw a table with the bin values*-*-*-*-*-*
-//           ====================================================
-//
-//       For each cell (i,j) the cell content is printed.
-//       The text attributes are:
-//*_*      - text font = current TStyle font
-//         - text size = 0.02*padheight*markersize
-//         - text color= marker color
-//   By default the format "g" is used. This format can be redefined
-//   by calling gStyle->SetPaintTextFormat
-//
-//Begin_Html
-/*
-<img src="gif/PaintText.gif">
-*/
-//End_Html
-//
-//    *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   //  Control function to draw a histogram with the bin values
+   //
+   //  For each bin the content is printed.
+   //
+   //  The text attributes are:
+   //      - text font  = current TStyle font
+   //      - text size  = 0.02*padheight*markersize
+   //      - text color = marker color
+   //
+   //   By default the format "g" is used. This format can be redefined
+   //   by calling gStyle->SetPaintTextFormat
+   //
+   //Begin_Html
+   /*
+   <img src="gif/PaintText.gif">
+   */
+   //End_Html
+   //
    TText text;
    text.SetTextFont(gStyle->GetTextFont());
    text.SetTextColor(fH->GetMarkerColor());
-   text.SetTextAlign(22);
    text.SetTextSize(0.02*fH->GetMarkerSize());
-   text.TAttText::Modify();
 
-   Double_t x, y, z;
+   Double_t x, y, z, angle = 0;
    char value[50];
    char format[32];
    sprintf(format,"%s%s","%",gStyle->GetPaintTextFormat());
+   if (Hoption.Text >= 1000) angle = Hoption.Text-1000;
 
-   for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
-      y    = fYaxis->GetBinCenter(j);
+   // 1D histograms
+   if (fH->GetDimension() == 1) {
+      if (Hoption.Text ==  1) angle = 90;
+      text.SetTextAngle(angle);
+      text.SetTextAlign(11);
+      if (angle == 90) text.SetTextAlign(12);
+      if (angle ==  0) text.SetTextAlign(21);
+      text.TAttText::Modify();
+      Double_t dt = 0.02*(gPad->GetY2()-gPad->GetY1());
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
-         Int_t bin  = j*(fXaxis->GetNbins()+2) + i;
-         x    = fXaxis->GetBinCenter(i);
-         if (!IsInside(x,y)) continue;
-         z     = fH->GetBinContent(bin);
-         if (z <= Hparam.zmin) continue;
-         sprintf(value,format,z);
-         gPad->PaintText(x,y,value);
+         x = fH->GetXaxis()->GetBinCenter(i);
+         y = fH->GetBinContent(i);
+         if (y >= gPad->GetY2()) continue;
+         if (y <= gPad->GetY1()) continue;
+         sprintf(value,format,y);
+         gPad->PaintText(x,y+0.2*dt,value);
+      }
+
+   // 2D histograms
+   } else {
+      text.SetTextAlign(22);
+      if (Hoption.Text ==  1) angle = 0;
+      text.SetTextAngle(angle);
+      text.TAttText::Modify();
+      for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
+         y    = fYaxis->GetBinCenter(j);
+         for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
+            Int_t bin  = j*(fXaxis->GetNbins()+2) + i;
+            x    = fXaxis->GetBinCenter(i);
+            if (!IsInside(x,y)) continue;
+            z     = fH->GetBinContent(bin);
+            if (z <= Hparam.zmin) continue;
+            sprintf(value,format,z);
+            gPad->PaintText(x,y,value);
+         }
       }
    }
 }
