@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.81 2003/08/20 06:53:16 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.82 2003/08/25 17:31:42 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -189,7 +189,7 @@ Int_t TChain::Add(const char *name, Int_t nentries)
 //       read to read the number of entries in each Tree.
 
    // case with one single file
-   if (!TString(name).MaybeRegexp()) {
+   if (!TString(name).MaybeWildcard()) {
       return AddFile(name,nentries);
    }
 
@@ -201,9 +201,9 @@ Int_t TChain::Add(const char *name, Int_t nentries)
    TString behind_dot_root;
    if (dotslashpos>=0) {
       // Copy the tree name specification
-      behind_dot_root = basename(dotslashpos+6,basename.Length()-dotslashpos+6); 
+      behind_dot_root = basename(dotslashpos+6,basename.Length()-dotslashpos+6);
       // and remove it from basename
-      basename.Remove(dotslashpos+5);  
+      basename.Remove(dotslashpos+5);
    }
 
    Int_t slashpos = basename.Last('/');
@@ -235,7 +235,7 @@ Int_t TChain::Add(const char *name, Int_t nentries)
       TObjString *obj;
       while ((obj = (TObjString*)next())) {
          file = obj->GetName();
-         if (behind_dot_root.Length() != 0) 
+         if (behind_dot_root.Length() != 0)
             nf += AddFile(Form("%s/%s/%s",directory.Data(),file,behind_dot_root.Data()),kBigNumber);
          else
             nf += AddFile(Form("%s/%s",directory.Data(),file),kBigNumber);
@@ -493,13 +493,13 @@ void TChain::CanDeleteRefs(Bool_t flag)
 // when closing a file during the chain processing, the file
 // may be closed with option "R" if flag is set to kTRUE.
 // by default flag is kTRUE.
-// When closing a file with option "R", all TProcessIDs referenced by this 
+// When closing a file with option "R", all TProcessIDs referenced by this
 // file are deleted.
 // Calling TFile::Close("R") might be necessary in case one reads a long list
 // of files having TRef, writing some of the referenced objects or TRef
 // to a new file. If the TRef or referenced objects of the file being closed
 // will not be referenced again, it is possible to minimize the size
-// of the TProcessID data structures in memory by forcing a delete of 
+// of the TProcessID data structures in memory by forcing a delete of
 // the unused TProcessID.
 
    fCanDeleteRefs = flag;
@@ -594,7 +594,7 @@ TFile *TChain::GetFile() const
 {
 //  Return a pointer to the current file.
 //  if no file is connected, the first file is automatically loaded.
-   
+
    if (fFile) return fFile;
    ((TChain*)this)->LoadTree(0); //force reading first entry
    return fFile;
@@ -686,7 +686,7 @@ const char *TChain::GetAlias(const char *aliasName) const
 
    const char *alias = TTree::GetAlias(aliasName);
    if (alias) return alias;
-   
+
    if (fTree) return fTree->GetAlias(aliasName);
    const_cast<TChain*>(this)->LoadTree(0);
    if (fTree) return fTree->GetAlias(aliasName);
@@ -766,7 +766,7 @@ Int_t TChain::LoadTree(Int_t entry)
                }
             } else {
                // else we assume it is a simple tree
-               // If the tree is a direct friend of the chain, it should be scanned 
+               // If the tree is a direct friend of the chain, it should be scanned
                // used the chain entry number and NOT the tree entry number (fReadEntry)
                // hence we redo:
                t->LoadTree(entry);
@@ -785,7 +785,7 @@ Int_t TChain::LoadTree(Int_t entry)
    }
 
    // If the tree has some clone, let migrate them into the chain so we can
-   // continue to keep track of it.  This is to support the syntax: 
+   // continue to keep track of it.  This is to support the syntax:
    //    clone = (TTree*)chain->GetTree()->CloneTree(0)
    if (fTree && fTree->GetListOfClones()) {
       TObjLink *lnk = fTree->GetListOfClones()->FirstLink();
@@ -794,7 +794,7 @@ Int_t TChain::LoadTree(Int_t entry)
          AddClone(clone);
          lnk = lnk->Next();
       }
-      fTree->GetListOfClones()->Clear(); 
+      fTree->GetListOfClones()->Clear();
    }
 
    //Delete current tree and connect new tree
@@ -1155,7 +1155,7 @@ void TChain::SetBranchAddress(const char *bname, void *add)
                 if (cloneBr && cloneBr->GetAddress() == oldAdd ) {
                    // the clone's branch is still pointing to us
                    cloneBr->SetAddress(add);
-                } 
+                }
                 lnk = lnk->Next();
              } // while(lnk)
           } // if (fClones)

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.17 2002/07/19 12:58:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.18 2002/12/05 15:31:03 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -526,11 +526,23 @@ Ssiz_t TString::Index(const char* pattern, Ssiz_t plen, Ssiz_t startIndex,
 }
 
 //______________________________________________________________________________
-Bool_t TString::MaybeRegexp()
+Bool_t TString::MaybeRegexp() const
 {
    // Returns true if string contains one of the regexp characters "^$.[]*+?".
 
    const char *specials = "^$.[]*+?";
+
+   if (First(specials) == kNPOS)
+      return kFALSE;
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TString::MaybeWildcard() const
+{
+   // Returns true if string contains one of the wildcard characters "[]*?".
+
+   const char *specials = "[]*?";
 
    if (First(specials) == kNPOS)
       return kFALSE;
