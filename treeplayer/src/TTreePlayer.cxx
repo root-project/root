@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.37 2001/02/22 15:15:52 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.38 2001/02/26 10:28:53 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1498,7 +1498,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       lenb = strlen(blen);
       if (blen[lenb-1] == '_') {
          blen[lenb-1] = 0;
-         fprintf(fp,"   const Int_t kMax%s = %d;\n",blen,leaf->GetMaximum());
+         len = leaf->GetMaximum();
+         if (len <= 0) len = 1;
+         fprintf(fp,"   const Int_t kMax%s = %d;\n",blen,len);
       }
    }
 
@@ -1522,6 +1524,9 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    const char *headcom = " //";
    const char *head;
    char branchname[128];
+   char aprefix[128];
+   char *prefix = 0;
+   char *dot = 0;
    TObjArray branches(100);
    Int_t *leafStatus = new Int_t[nleaves];
    for (l=0;l<nleaves;l++) {
@@ -1532,6 +1537,16 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       TBranch *branch = leaf->GetBranch();
       branchname[0] = 0;
       strcpy(branchname,branch->GetName());
+      strcpy(aprefix,branch->GetName());
+      dot = strrchr(aprefix,'.');
+      prefix = 0;
+      if (dot) {
+         *(dot+1)=0;
+         if (fTree->GetBranch(aprefix)) {
+            prefix = aprefix;
+            *dot = '_';
+         }
+      }
       if (!branches.FindObject(branch)) branches.Add(branch);
       else leafStatus[l] = 1;
       if ( branch->GetNleaves() > 1) {
@@ -1545,7 +1560,10 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          }
       } else {
          if (leafcount) strcpy(branchname,branch->GetName());
-         else           strcpy(branchname,leaf->GetTitle());
+         else {
+            if (prefix) sprintf(branchname,"%s%s",prefix,leaf->GetTitle());
+            else        strcpy(branchname,leaf->GetTitle());
+         }
       }
       char *twodim = (char*)strstr(leaf->GetTitle(),"][");
       bname = branchname;
@@ -1741,6 +1759,16 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       len = leaf->GetLen();
       leafcount =leaf->GetLeafCount();
       TBranch *branch = leaf->GetBranch();
+      strcpy(aprefix,branch->GetName());
+      dot = strrchr(aprefix,'.');
+      prefix = 0;
+      if (dot) {
+         *(dot+1)=0;
+         if (fTree->GetBranch(aprefix)) {
+            prefix = aprefix;
+            *dot = '_';
+         }
+      }
 
       if ( branch->GetNleaves() > 1) {
          // More than one leaf for the branch we need to distinguish them
@@ -1754,7 +1782,10 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          }
       } else {
          if (leafcount) strcpy(branchname,branch->GetName());
-         else           strcpy(branchname,leaf->GetTitle());
+         else {
+            if (prefix) sprintf(branchname,"%s%s",prefix,leaf->GetTitle());
+            else        strcpy(branchname,leaf->GetTitle());
+         }
       }
       bname = branchname;
       char *twodim = (char*)strstr(bname,"[");
