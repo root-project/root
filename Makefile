@@ -230,6 +230,7 @@ endif
 COMPILEDATA   = include/compiledata.h
 MAKEINFO      = cint/MAKEINFO
 ROOTRC        = etc/system.rootrc
+ROOTMAP       = etc/system.rootmap
 
 ##### libCore #####
 
@@ -446,7 +447,7 @@ maintainer-clean:: distclean
 	-build/package/lib/makedebclean.sh
 	-build/package/lib/makerpmclean.sh
 	@rm -rf bin lib include htmldoc system.rootrc config/Makefile.config \
-	   test/Makefile etc/system.rootrc etc/root.mimes \
+	   test/Makefile $(ROOTRC) $(ROOTMAP) etc/root.mimes \
 	   build/misc/root-help.el
 
 version: $(CINTTMP)
@@ -471,7 +472,10 @@ html: $(ROOTEXE) changelog
 	@$(MAKELOGHTML)
 	@$(MAKEHTML)
 
-install: all
+map: $(RLIBMAP) rootlibs
+	$(RLIBMAP) -o $(ROOTMAP) $(ALLLIBS)
+
+install: all map
 	@if [ -d $(BINDIR) ]; then \
 	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
 	fi; \
