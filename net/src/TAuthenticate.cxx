@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.34 2003/12/01 07:18:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.35 2004/01/20 18:00:40 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -1636,7 +1636,6 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
 
    int Nuser = 0, CheckUser = 0;
    int nmeth = 0, found = 0;
-   Bool_t retval = kFALSE;
    char *net, *UserRq = 0;
 
    if (gSystem->Getenv("ROOTAUTHRC") != 0) {
@@ -2035,7 +2034,6 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
       }
       // Found new entry matching: superseed previous result
       found = 1;
-      retval = kTRUE;
    }
 
    if (CheckUser == 1 && nu == 1) {
