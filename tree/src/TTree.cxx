@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.74 2001/05/21 11:10:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.75 2001/05/23 16:09:40 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -294,6 +294,7 @@
 #include "TStreamerElement.h"
 #include "TFriendElement.h"
 #include "TVirtualFitter.h"
+#include "Api.h"
 
 Int_t TTree::fgBranchStyle = 1;  //use new TBranch style with TBranchElement
 
@@ -702,11 +703,8 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
   // Note that with the new style, classname does not need to derive from TObject.
   // It must derived from TObject if the branch style has been set to 0 (old)
   //
-  // The new branch style does not use the Streamer function for the top level
-  // object passed as argument. You can force the use of the Streamer function
-  // by specifying splitlevel = -1 for a top branch
       
-   if (fgBranchStyle == 1 && splitlevel >= 0) {
+   if (fgBranchStyle == 1) {
       return Bronch(name,classname,addobj,bufsize,splitlevel);
    } else {
       if (splitlevel < 0) splitlevel = 0;
@@ -978,6 +976,17 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
       return 0;
    }
 
+   //if splitlevel = 0 and class has a custom Streamer, we must create
+   //a TBranchObject. We cannot assume that TClass::ReadBuffer is consistent
+   //with the custom Streamer. The penalty is that one cannot process
+   //this Tree without the class library containing the class.
+   if (splitlevel <= 0 && cl->GetClassInfo()->RootFlag() == 0) {
+      TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
+      fBranches.Add(branch);
+      return branch;
+   }
+   
+   //hopefully normal case
    Bool_t delobj = kFALSE;
    char **ppointer = (char**)add;
    char *objadd = *ppointer;
