@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.28 2000/12/11 12:05:31 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.29 2000/12/12 12:19:47 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -255,6 +255,8 @@
 #include "TTreeRow.h"
 #include "TPrincipal.h"
 #include "Api.h"
+#include "TChain.h"
+#include "TChainElement.h"
 
 R__EXTERN Foption_t Foption;
 
@@ -1428,17 +1430,25 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    if (fTree->GetDirectory() && fTree->GetDirectory()->GetFile())
                 strcpy(treefile,fTree->GetDirectory()->GetFile()->GetName());
    else         strcpy(treefile,"Memory Directory");
+   // In the case of a chain, the GetDirectory information usually does
+   // pertain to the Chain itself but to the currently loaded tree.
+   // So we can not rely on it.
+   Bool_t ischain = fTree->InheritsFrom("TChain");
 
 //======================Generate classname.h=====================
    // Print header
    TObjArray *leaves = fTree->GetListOfLeaves();
-   Int_t nleaves = leaves->GetEntriesFast();
+   Int_t nleaves = leaves ? leaves->GetEntriesFast() : 0;
    TDatime td;
    fprintf(fp,"//////////////////////////////////////////////////////////\n");
    fprintf(fp,"//   This class has been automatically generated \n");
    fprintf(fp,"//     (%s by ROOT version%s)\n",td.AsString(),gROOT->GetVersion());
-   fprintf(fp,"//   from TTree %s/%s\n",fTree->GetName(),fTree->GetTitle());
-   fprintf(fp,"//   found on file: %s\n",treefile);
+   if (!ischain) {
+      fprintf(fp,"//   from TTree %s/%s\n",fTree->GetName(),fTree->GetTitle());
+      fprintf(fp,"//   found on file: %s\n",treefile);
+   } else {
+      fprintf(fp,"//   from TChain %s/%s\n",fTree->GetName(),fTree->GetTitle());
+   }
    fprintf(fp,"//////////////////////////////////////////////////////////\n");
    fprintf(fp,"\n");
    fprintf(fp,"\n");
@@ -1623,6 +1633,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"// if parameter tree is not specified (or zero), connect the file\n");
       fprintf(fp,"// used to generate this class and read the Tree.\n");
       fprintf(fp,"   if (tree == 0) {\n");
+      if (ischain) { 
+        fprintf(fp,"\n#ifdef SINGLE_TREE\n");
+        fprintf(fp,"      // The following code should be used if you want this class to access\n");
+        fprintf(fp,"      // a single tree instead of a chain\n");
+      }
       fprintf(fp,"      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(\"%s\");\n",treefile);
       fprintf(fp,"      if (!f) {\n");
       fprintf(fp,"         f = new TFile(\"%s\");\n",treefile);
@@ -1631,6 +1646,20 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       fprintf(fp,"      }\n");
       fprintf(fp,"      tree = (TTree*)gDirectory->Get(\"%s\");\n\n",fTree->GetName());
+      if (ischain) { 
+         fprintf(fp,"#else // SINGLE_TREE\n\n");
+         fprintf(fp,"      // The following code should be used if you want this class to access a chain\n");
+         fprintf(fp,"      // of trees.\n");
+         fprintf(fp,"      TChain * chain = new TChain(\"%s\",\"%s\");\n",
+                 fTree->GetName(),fTree->GetTitle());
+         TIter next(((TChain*)fTree)->GetListOfFiles());
+         TChainElement *element;
+         while ((element = (TChainElement*)next())) {
+            fprintf(fp,"      chain->Add(\"%s/%s\");\n",element->GetTitle(),element->GetName());
+         }
+         fprintf(fp,"      tree = chain;\n");
+         fprintf(fp,"#endif // SINGLE_TREE\n\n");
+      }
       fprintf(fp,"   }\n");
       fprintf(fp,"   Init(tree);\n");
       fprintf(fp,"}\n");
@@ -1954,17 +1983,25 @@ Int_t TTreePlayer::MakeCode(const char *filename)
    if (fTree->GetDirectory() && fTree->GetDirectory()->GetFile())
                 strcpy(treefile,fTree->GetDirectory()->GetFile()->GetName());
    else         strcpy(treefile,"Memory Directory");
+   // In the case of a chain, the GetDirectory information usually does
+   // pertain to the Chain itself but to the currently loaded tree.
+   // So we can not rely on it.
+   Bool_t ischain = fTree->InheritsFrom("TChain");
 
 // Print header
    TObjArray *leaves = fTree->GetListOfLeaves();
-   Int_t nleaves = leaves->GetEntriesFast();
+   Int_t nleaves = leaves ? leaves->GetEntriesFast() : 0;
    TDatime td;
    fprintf(fp,"{\n");
    fprintf(fp,"//////////////////////////////////////////////////////////\n");
    fprintf(fp,"//   This file has been automatically generated \n");
    fprintf(fp,"//     (%s by ROOT version%s)\n",td.AsString(),gROOT->GetVersion());
-   fprintf(fp,"//   from TTree %s/%s\n",fTree->GetName(),fTree->GetTitle());
-   fprintf(fp,"//   found on file: %s\n",treefile);
+   if (!ischain) {
+      fprintf(fp,"//   from TTree %s/%s\n",fTree->GetName(),fTree->GetTitle());
+      fprintf(fp,"//   found on file: %s\n",treefile);
+   } else {
+      fprintf(fp,"//   from TChain %s/%s\n",fTree->GetName(),fTree->GetTitle());
+   }
    fprintf(fp,"//////////////////////////////////////////////////////////\n");
    fprintf(fp,"\n");
    fprintf(fp,"\n");
@@ -1973,6 +2010,11 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 // Reset and file connect
    fprintf(fp,"//Reset ROOT and connect tree file\n");
    fprintf(fp,"   gROOT->Reset();\n");
+   if (ischain) { 
+      fprintf(fp,"\n#ifdef SINGLE_TREE\n");
+      fprintf(fp,"   // The following code should be used if you want this code to access\n");
+      fprintf(fp,"   // a single tree instead of a chain\n");
+   }
    fprintf(fp,"   TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject(\"%s\");\n",treefile);
    fprintf(fp,"   if (!f) {\n");
    fprintf(fp,"      f = new TFile(\"%s\");\n",treefile);
@@ -1981,6 +2023,19 @@ Int_t TTreePlayer::MakeCode(const char *filename)
    }
    fprintf(fp,"   }\n");
    fprintf(fp,"   TTree *%s = (TTree*)gDirectory->Get(\"%s\");\n\n",fTree->GetName(),fTree->GetName());
+   if (ischain) { 
+      fprintf(fp,"#else // SINGLE_TREE\n\n");
+      fprintf(fp,"   // The following code should be used if you want this code to access a chain\n");
+      fprintf(fp,"   // of trees.\n");
+      fprintf(fp,"   TChain *%s = new TChain(\"%s\",\"%s\");\n",
+                 fTree->GetName(),fTree->GetName(),fTree->GetTitle());
+      TIter next(((TChain*)fTree)->GetListOfFiles());
+      TChainElement *element;
+      while ((element = (TChainElement*)next())) {
+        fprintf(fp,"   %s->Add(\"%s/%s\");\n",fTree->GetName(),element->GetTitle(),element->GetName());
+      }
+      fprintf(fp,"#endif // SINGLE_TREE\n\n");
+   }
 
 // First loop on all leaves to generate type declarations
    fprintf(fp,"//Declaration of leaves types\n");
