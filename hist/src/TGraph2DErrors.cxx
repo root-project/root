@@ -84,7 +84,7 @@ TGraph2DErrors::TGraph2DErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z,
       else    fEX[i] = 0;
       if (ey) fEY[i] = ey[i];
       else    fEY[i] = 0;
-      if (ey) fEZ[i] = ez[i];
+      if (ez) fEZ[i] = ez[i];
       else    fEZ[i] = 0;
    }
 }
