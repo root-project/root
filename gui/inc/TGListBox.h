@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.5 2000/10/08 14:27:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.6 2000/10/12 16:53:38 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -187,23 +187,21 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TGListBox : public TGCompositeFrame {
+class TGListBox : public TGCompositeFrame, public TGWidget {
 
 protected:
-   Int_t            fListBoxId;       // listbox widget id
    UInt_t           fItemVsize;       // maximum height of single entry
    Bool_t           fIntegralHeight;  // true if height should be multiple of fItemVsize
    TGLBContainer   *fLbc;             // listbox container
    TGViewPort      *fVport;           // listbox viewport (see TGCanvas.h)
    TGVScrollBar    *fVScrollbar;      // vertical scrollbar
-   const TGWindow  *fMsgWindow;       // window handling listbox messages
 
    void SetContainer(TGFrame *f) { fVport->SetContainer(f); }
 
    virtual void InitListBox();
 
 public:
-   TGListBox(const TGWindow *p, Int_t id,
+   TGListBox(const TGWindow *p, Int_t id = -1,
              UInt_t options = kSunkenFrame | kDoubleBorder,
              ULong_t back = fgWhitePixel);
    virtual ~TGListBox();
@@ -239,7 +237,6 @@ public:
 
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
-   virtual void Associate(const TGWindow *w) { fMsgWindow = w; }
    virtual TGLBEntry *Select(Int_t id, Bool_t sel = kTRUE)
                                        { return fLbc->Select(id, sel); }
    virtual Int_t GetSelected() const;

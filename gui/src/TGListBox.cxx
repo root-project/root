@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.4 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.5 2000/10/12 16:53:38 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -580,7 +580,7 @@ TGListBox::TGListBox(const TGWindow *p, Int_t id,
    // Create a listbox.
 
    fMsgWindow = p;
-   fListBoxId = id;
+   fWidgetId  = id;
 
    fItemVsize = 1;
    fIntegralHeight = kTRUE;
@@ -903,7 +903,7 @@ Bool_t TGListBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          switch (GET_SUBMSG(msg)) {
             case kCT_ITEMCLICK:
                SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_LISTBOX),
-                           fListBoxId, parm1);
+                           fWidgetId, parm1);
             break;
          }
          break;
