@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.13 2003/12/30 13:16:51 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.14 2004/02/19 00:11:18 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -27,6 +27,12 @@
 #endif
 #ifndef ROOT_TUrl
 #include "TUrl.h"
+#endif
+#ifndef ROOT_TFTP
+#include "TFTP.h"
+#endif
+#ifndef ROOT_TSystem
+#include "TSystem.h"
 #endif
 #ifndef ROOT_MessageTypes
 #include "MessageTypes.h"
@@ -74,6 +80,35 @@ public:
    void    Seek(Long64_t offset, ERelativeTo pos = kBeg);
 
    ClassDef(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
+};
+
+
+class TNetSystem : public TSystem {
+
+private:
+   Bool_t      fDir;         // true if a directory is open remotely
+   void       *fDirp;        // directory handler
+   TFTP       *fFTP;         // Connection to rootd
+   TString     fHost;        // Remote host
+   TString     fUser;        // Remote user
+              
+   void       *GetDirPtr() const { return fDirp; }
+
+public:
+   TNetSystem();
+   TNetSystem(const char *url);
+   virtual ~TNetSystem();
+
+   Bool_t      ConsistentWith(const char *path, void *dirptr);
+   Int_t       MakeDirectory(const char *name);
+   void       *OpenDirectory(const char *name);
+   void        FreeDirectory(void *dirp = 0);
+   const char *GetDirEntry(void *dirp = 0);
+   Int_t       GetPathInfo(const char *path, Long_t *id, Long64_t *size,
+                           Long_t *flags, Long_t *modtime);
+   Bool_t      AccessPathName(const char *path, EAccessMode mode);
+
+   ClassDef(TNetSystem,0)  // Directory handler for NetFile
 };
 
 #endif

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.20 2004/05/05 14:43:34 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.21 2004/06/25 17:27:09 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -102,7 +102,11 @@ enum EMessageTypes {
    kROOTD_RFIO,                          //RFIO-like authentication follows
    kROOTD_NEGOTIA,                       //Negotiation follows
    kROOTD_RSAKEY,                        //RSA public key exchange
-   kROOTD_ENCRYPT                        //An encrypted message follows
+   kROOTD_ENCRYPT,                       //An encrypted message follows
+   kROOTD_OPENDIR,                       //Open directory
+   kROOTD_FREEDIR,                       //Free directory
+   kROOTD_DIRENTRY,                      //Get directory entry
+   kROOTD_ACCESS                         //Test Access
 };
 
 #endif

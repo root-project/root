@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.23 2004/04/20 21:32:02 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.cxx,v 1.24 2004/05/06 16:57:39 rdm Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 #include "TROOT.h"
 #include "TError.h"
 #include "NetErrors.h"
+#include "TRegexp.h"
 
 #if defined(R__UNIX)
 #define HAVE_MMAP
@@ -646,7 +647,7 @@ Int_t TFTP::ChangeDirectory(const char *dir) const
 }
 
 //______________________________________________________________________________
-Int_t TFTP::MakeDirectory(const char *dir) const
+Int_t TFTP::MakeDirectory(const char *dir, Bool_t print) const
 {
    // Make a remote directory. Anonymous users may not create directories.
    // Returns 0 in case of success and -1 in case of failure.
@@ -671,7 +672,11 @@ Int_t TFTP::MakeDirectory(const char *dir) const
       return -1;
    }
 
-   Printf("<TFTP::MakeDirectory>: %s", mess);
+   if (print)
+      Printf("<TFTP::MakeDirectory>: %s", mess);
+
+   if (!strncmp(mess,"OK:",3))
+      return 1;
 
    return 0;
 }
@@ -882,4 +887,184 @@ Int_t TFTP::Close()
    SafeDelete(fSocket);
 
    return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TFTP::OpenDirectory(const char *dir, Bool_t print)
+{
+   // Open a directory via rootd.
+   // Returns kTRUE in case of success.
+   // Returns kFALSE in case of error.
+
+   fDir = kFALSE;
+
+   if (!IsOpen()) return fDir;
+
+   if (!dir || !*dir) {
+      Error("OpenDirectory", "illegal directory name specified");
+      return fDir;
+   }
+
+   if (fSocket->Send(Form("%s", dir), kROOTD_OPENDIR) < 0) {
+      Error("OpenDirectory", "error sending kROOTD_OPENDIR command");
+      return fDir;
+   }
+
+   Int_t what;
+   char  mess[1024];;
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("OpenDirectory", "error receiving opendir confirmation");
+      return fDir;
+   }
+
+   if (print)
+      Printf("<TFTP::OpenDirectory>: %s", mess);
+
+   if (!strncmp(mess,"OK:",3)) {
+      fDir = kTRUE;
+      return fDir;
+   }
+   return fDir;
+}
+
+//______________________________________________________________________________
+void TFTP::FreeDirectory(Bool_t print)
+{
+   // Free a remotely open directory via rootd.
+
+   if (!IsOpen() || !fDir) return;
+
+   if (fSocket->Send(kROOTD_FREEDIR) < 0) {
+      Error("FreeDirectory", "error sending kROOTD_FREEDIR command");
+      return;
+   }
+
+   Int_t what;
+   char  mess[1024];;
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("FreeDirectory", "error receiving freedir confirmation");
+      return;
+   }
+
+   if (print)
+      Printf("<TFTP::FreeDirectory>: %s", mess);
+
+   return;
+}
+
+//______________________________________________________________________________
+const char *TFTP::GetDirEntry(Bool_t print)
+{
+   // Get directory entry via rootd.
+   // Returns 0 in case no more entries or in case of error.
+
+   static char dirent[1024] = {0};
+
+   if (!IsOpen() || !fDir) return 0;
+
+   if (fSocket->Send(kROOTD_DIRENTRY) < 0) {
+      Error("FreeDirectory", "error sending kROOTD_DIRENTRY command");
+      return 0;
+   }
+
+   Int_t what;
+   char  mess[1024];;
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("FreeDirectory", "error receiving dir entry confirmation");
+      return 0;
+   }
+
+   if (print)
+      Printf("<TFTP::FreeDirectory>: %s", mess);
+
+   if (!strncmp(mess,"OK:",3)) {
+      strcpy(dirent,mess+3);
+      return (const char *)dirent;
+   }
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TFTP::GetPathInfo(const char *path, Long_t *id, Long64_t *size,
+                               Long_t *flags, Long_t *modtime, Bool_t print)
+{
+   // Get info about a file: id, size, flags, modification time.
+   // Id      is 0 for RFIO file
+   // Size    is the file size
+   // Flags   is file type: 0 is regular file, bit 0 set executable,
+   //                       bit 1 set directory, bit 2 set special file
+   //                       (socket, fifo, pipe, etc.)
+   // Modtime is modification time.
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
+
+   TUrl url(path);
+
+   if (!IsOpen()) return 1;
+
+   if (!path || !*path) {
+      Error("GetPathInfo", "illegal path name specified");
+      return 1;
+   }
+
+   if (fSocket->Send(Form("%s", path), kROOTD_FSTAT) < 0) {
+      Error("GetPathInfo", "error sending kROOTD_FSTAT command");
+      return 1;
+   }
+
+   Int_t what;
+   char  mess[1024];;
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("GetPathInfo", "error receiving fstat confirmation");
+      return 1;
+   }
+   if (print)
+      Printf("<TFTP::GetPathInfo>: %s", mess);
+
+   sscanf(mess, "%ld %lld %ld %ld", id, size, flags, modtime);
+
+   if (*id == -1)
+      return 1;
+   return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TFTP::AccessPathName(const char *path, EAccessMode mode, Bool_t print)
+{
+   // Returns FALSE if one can access a file using the specified access mode.
+   // Mode is the same as for the Unix access(2) function.
+   // Attention, bizarre convention of return value!!
+
+
+   if (!IsOpen()) return kTRUE;
+
+   if (!path || !*path) {
+      Error("AccessPathName", "illegal path name specified");
+      return kTRUE;
+   }
+
+   if (fSocket->Send(Form("%s %d", path, mode), kROOTD_ACCESS) < 0) {
+      Error("AccessPathName", "error sending kROOTD_ACCESS command");
+      return kTRUE;
+   }
+
+   Int_t what;
+   char  mess[1024];;
+
+   if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
+      Error("AccessPathName", "error receiving access confirmation");
+      return kTRUE;
+   }
+   if (print)
+      Printf("<TFTP::AccessPathName>: %s", mess);
+
+   if (!strncmp(mess,"OK",2))
+      return kFALSE;
+   else
+      return kTRUE;
 }

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.89 2004/05/18 11:56:38 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.90 2004/07/01 18:49:31 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -88,7 +88,7 @@
 //                     (/etc/grid-security/gridmap); (re)defines the    //
 //                     GRIDMAP environment variable.                    //
 //   -i                says we were started by inetd                    //
-//   -noauth           do not require client authentication             // 
+//   -noauth           do not require client authentication             //
 //   -p port#          specifies a different port to listen on.         //
 //                     Use port1-port2 to find first available port in  //
 //                     range. Use 0-N for range relative to service     //
@@ -191,7 +191,8 @@
 // 8 -> 9: change in Kerberos authentication protocol
 // 9 -> 10: Receives client protocol with kROOTD_PROTOCOL + change cleaning protocol
 // 10 -> 11: modified SSH protocol + support for server 'no authentication' mode
-// 11 -> 12: added support for openSSL keys for encryption
+// 11 -> 12: added support for stat functionality (access,opendir,...) (cfr.TNetSystem)
+//           and support for openSSL keys for encryption
 
 #include "config.h"
 #include "RConfig.h"
@@ -211,6 +212,9 @@
 #include <errno.h>
 #include <netdb.h>
 #include "snprintf.h"
+
+#include <sys/types.h>
+#include <dirent.h>
 
 #if defined(__CYGWIN__) && defined(__GNUC__)
 #   define cygwingcc
@@ -339,6 +343,7 @@ static std::string gPasswd;
 
 static double  gBytesRead        = 0;
 static double  gBytesWritten     = 0;
+static DIR *gDirectory           = 0;
 static int gDownloaded           = 0;
 static int gFd                   = -1;
 static int gFtp                  = 0;
@@ -865,7 +870,7 @@ void RootdStat()
 }
 
 //______________________________________________________________________________
-void RootdFstat()
+void RootdFstat(const char *buf)
 {
    // Return file stat information in same format as TSystem::GetPathInfo().
 
@@ -875,14 +880,39 @@ void RootdFstat()
 
 #if defined(R__SEEK64)
    struct stat64 statbuf;
-   if (RootdIsOpen() && fstat64(gFd, &statbuf) >= 0) {
 #elif defined(WIN32)
    struct _stati64 statbuf;
-   if (RootdIsOpen() && _fstati64(gFd, &statbuf) >= 0) {
 #else
    struct stat statbuf;
-   if (RootdIsOpen() && fstat(gFd, &statbuf) >= 0) {
 #endif
+
+   int rc = -1;
+   if (!buf || !strlen(buf)) {
+
+      if (RootdIsOpen()) {
+#if defined(R__SEEK64)
+         rc = fstat64(gFd, &statbuf);
+#elif defined(WIN32)
+         rc = _fstati64(gFd, &statbuf);
+#else
+         rc = fstat(gFd, &statbuf);
+#endif
+      }
+   } else {
+
+      char *epath = (char *)buf;
+      if (buf[0] == '/')
+         epath++;
+#if defined(R__SEEK64)
+      rc = stat64(epath, &statbuf);
+#elif defined(WIN32)
+      rc = _stati64(epath, &statbuf);
+#else
+      rc = stat(epath, &statbuf);
+#endif
+   }
+
+   if (rc >= 0) {
 #if 0 && defined(__KCC) && defined(linux)
       id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;
 #else
@@ -901,6 +931,7 @@ void RootdFstat()
       sprintf(msg, "%ld %lld %ld %ld", id, size, flags, modtime);
    } else
       sprintf(msg, "-1 -1 -1 -1");
+
    NetSend(msg, kROOTD_FSTAT);
 }
 
@@ -986,7 +1017,7 @@ void RootdOpen(const char *msg)
    }
 
    if (!read && gReadOnly)
-      Error(ErrFatal, kErrNoAccess, 
+      Error(ErrFatal, kErrNoAccess,
             "RootdOpen: file %s can only be opened in \"READ\" mode", gFile);
 
    if (!gAnon) {
@@ -1025,7 +1056,7 @@ void RootdOpen(const char *msg)
          strcpy(gOption, "create");
       }
       if (update && access(gFile, W_OK))
-         Error(ErrFatal, kErrNoAccess, 
+         Error(ErrFatal, kErrNoAccess,
                "RootdOpen: no write permission for file %s", gFile);
    }
 
@@ -1616,11 +1647,117 @@ void RootdChdir(const char *dir)
 }
 
 //______________________________________________________________________________
-void RootdMkdir(const char *dir)
+void RootdAccess(const char *buf)
+{
+   // Test access permission on path
+
+   char buffer[kMAXPATHLEN];
+   char path[kMAXPATHLEN];
+   int mode;
+
+   int nw = 0;
+   if (buf)
+      nw = sscanf(buf,"%s %d",path,&mode);
+
+   if (nw >= 2) {
+
+      char *epath = &path[0];
+      if (path[0] == '/')
+         epath = &path[1];
+
+      if (access(epath, mode) == -1) {
+         SPrintf(buffer,kMAXPATHLEN,"cannot stat %s",epath);
+         Perror(buffer);
+         ErrorInfo("RootdAccess: %s", buffer);
+      } else
+         SPrintf(buffer,kMAXPATHLEN,"OK");
+
+   } else {
+      SPrintf(buffer,kMAXPATHLEN,"bad input format %s",buf);
+      ErrorInfo("RootdAccess: %s", buffer);
+   }
+
+   NetSend(buffer, kROOTD_ACCESS);
+}
+
+
+//______________________________________________________________________________
+void RootdFreeDir()
+{
+   // Free open directory.
+
+   char buffer[kMAXPATHLEN];
+
+   if (!gDirectory) {
+      SPrintf(buffer,kMAXPATHLEN,"no directory open");
+      ErrorInfo("RootdFreeDir: %s", buffer);
+   } else if (closedir(gDirectory) == -1) {
+      SPrintf(buffer,kMAXPATHLEN,"cannot free open directory");
+      Perror(buffer);
+      ErrorInfo("RootdFreeDir: %s", buffer);
+   } else
+      SPrintf(buffer,kMAXPATHLEN,"open directory freed");
+
+   NetSend(buffer, kROOTD_FREEDIR);
+}
+
+//______________________________________________________________________________
+void RootdGetDirEntry()
+{
+   // Get directory entry.
+
+   char buffer[kMAXPATHLEN];
+   struct dirent *dp = 0;
+
+   if (!gDirectory) {
+      SPrintf(buffer,kMAXPATHLEN,"no directory open");
+      ErrorInfo("RootdGetDirEntry: %s", buffer);
+   } else if ((dp = readdir(gDirectory)) == 0) {
+      SPrintf(buffer,kMAXPATHLEN,"cannot read open directory");
+      Perror(buffer);
+      ErrorInfo("RootdGetDirEntry: %s", buffer);
+   } else {
+      SPrintf(buffer,kMAXPATHLEN,"OK:%s",dp->d_name);
+   }
+
+   NetSend(buffer, kROOTD_DIRENTRY);
+}
+
+//______________________________________________________________________________
+void RootdOpenDir(const char *dir)
+{
+   // Open directory.
+
+   char buffer[kMAXPATHLEN];
+
+   char *edir = (char *)dir;
+   if (dir[0] == '/')
+      edir++;
+
+   if (gAnon) {
+      SPrintf(buffer,kMAXPATHLEN,
+              "anonymous users may not open directories");
+      ErrorInfo("RootdOpenDir: %s", buffer);
+   } else if ((gDirectory = opendir(edir)) == 0) {
+      SPrintf(buffer,kMAXPATHLEN,"cannot open directory %s",edir);
+      Perror(buffer);
+      ErrorInfo("RootdOpenDir: %s", buffer);
+   } else
+      SPrintf(buffer,kMAXPATHLEN,"OK: directory %s open",edir);
+
+   NetSend(buffer, kROOTD_OPENDIR);
+}
+
+//______________________________________________________________________________
+void RootdMkdir(const char *fdir)
 {
    // Make directory.
 
    char buffer[kMAXPATHLEN];
+
+   char *dir = (char *)fdir;
+   if (fdir[0] == '/')
+      dir++;
 
    if (gAnon) {
       SPrintf(buffer,kMAXPATHLEN,
@@ -1631,17 +1768,21 @@ void RootdMkdir(const char *dir)
       Perror(buffer);
       ErrorInfo("RootdMkdir: %s", buffer);
    } else
-      SPrintf(buffer,kMAXPATHLEN,"created directory %s",dir);
+      SPrintf(buffer,kMAXPATHLEN,"OK: created directory %s",dir);
 
    NetSend(buffer, kROOTD_MKDIR);
 }
 
 //______________________________________________________________________________
-void RootdRmdir(const char *dir)
+void RootdRmdir(const char *fdir)
 {
    // Delete directory.
 
    char buffer[kMAXPATHLEN];
+
+   char *dir = (char *)fdir;
+   if (fdir[0] == '/')
+      dir++;
 
    if (gAnon) {
       SPrintf(buffer,kMAXPATHLEN,
@@ -1856,7 +1997,7 @@ void RootdLoop()
                return;
             break;
          case kROOTD_FSTAT:
-            RootdFstat();
+            RootdFstat(recvbuf);
             break;
          case kROOTD_STAT:
             RootdStat();
@@ -1890,6 +2031,18 @@ void RootdLoop()
             break;
          case kROOTD_CHMOD:
             RootdChmod(recvbuf);
+            break;
+         case kROOTD_OPENDIR:
+            RootdOpenDir(recvbuf);
+            break;
+         case kROOTD_FREEDIR:
+            RootdFreeDir();
+            break;
+         case kROOTD_DIRENTRY:
+            RootdGetDirEntry();
+            break;
+         case kROOTD_ACCESS:
+            RootdAccess(recvbuf);
             break;
          case kROOTD_BYE:
             return;
@@ -2209,16 +2362,16 @@ int main(int argc, char **argv)
      rootdparentid = getppid(); // Identifies this family
 
    // default job options
-   unsigned int options = kDMN_RQAUTH | kDMN_INCTKN | 
+   unsigned int options = kDMN_RQAUTH | kDMN_INCTKN |
                           kDMN_HOSTEQ | kDMN_SYSLOG;
    // modify them if required
-   if (!requireauth) 
+   if (!requireauth)
       options &= ~kDMN_RQAUTH;
-   if (!inclusivetoken) 
+   if (!inclusivetoken)
       options &= ~kDMN_INCTKN;
-   if (!checkhostsequiv) 
+   if (!checkhostsequiv)
       options &= ~kDMN_HOSTEQ;
-   if (foregroundflag) 
+   if (foregroundflag)
       options &= ~kDMN_SYSLOG;
    RpdInit(gService, rootdparentid, gProtocol, options,
            reuseallow, sshdport,

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.91 2004/06/25 09:56:26 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.92 2004/06/25 17:27:09 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 #include "TObjString.h"
 #include "TError.h"
 #include "TPluginManager.h"
+#include "TNetFile.h"
 #include "TUrl.h"
 
 #include "compiledata.h"
@@ -52,7 +53,6 @@ const char *gProgPath;
 
 TSystem      *gSystem   = 0;
 TFileHandler *gXDisplay = 0;  // Display server event handler, set in TGClient
-
 
 ClassImp(TProcessEventTimer)
 
@@ -542,7 +542,6 @@ int TSystem::ClosePipe(FILE*)
 int TSystem::GetPid()
 {
    // Get process id.
-
    AbstractMethod("GetPid");
    return -1;
 }
@@ -587,21 +586,24 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
    TSystem *helper = 0;
    TUrl url(path, kTRUE);
 
-   // look for existing helper
+   // look for existing helpers
    TIter next(fHelpers);
    while ((helper = (TSystem*) next()))
-      if ((!helper->GetDirPtr() && path &&
-           !strcmp(url.GetProtocol(), helper->GetName())) ||
-          (helper->GetDirPtr() && helper->GetDirPtr() == dirptr))
+      if (helper->ConsistentWith(path, dirptr))
          return helper;
 
    if (!path)
       return 0;
 
    // create new helper
-   if (!strncmp(url.GetProtocol(), "root", 4)) {  // also roots and rootk
-
-   } else if (!strcmp(url.GetProtocol(), "http")) {
+   TRegexp re("^root.*:");  // also roots, rootk, etc
+   TString pname = path;
+   if (pname.Index(re) != kNPOS) {
+      // rootd daemon ...
+      helper = new TNetSystem(path);
+   } else if (!strcmp(url.GetProtocol(), "http") &&
+                     pname.BeginsWith("http")) {
+      // http ...
 
    } else if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
       if (h->LoadPlugin() == -1)
@@ -613,6 +615,28 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
       fHelpers->Add(helper);
 
    return helper;
+}
+
+//______________________________________________________________________________
+Bool_t TSystem::ConsistentWith(const char *path, void *dirptr)
+{
+   // Check consistency of this helper with the one required
+   // by 'path' or 'dirptr'
+
+   Bool_t checkproto = kFALSE;
+   if (path) {
+      if (!GetDirPtr()) {
+         TUrl url(path, kTRUE);
+         if (!strcmp(url.GetProtocol(), GetName()))
+            checkproto = kTRUE;
+      }
+   }
+
+   Bool_t checkdir = kFALSE;
+   if (GetDirPtr() && GetDirPtr() == dirptr)
+      checkdir = kTRUE;
+
+   return (checkproto || checkdir);
 }
 
 //______________________________________________________________________________
@@ -2624,4 +2648,3 @@ void TSystem::CleanCompiledMacros()
    while ((lib = (TObjString*)next()))
       Unlink(lib->GetString().Data());
 }
-

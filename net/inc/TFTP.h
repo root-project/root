@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.7 2002/11/07 18:17:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TFTP.h,v 1.8 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   13/02/2001
 
 /*************************************************************************
@@ -24,6 +24,9 @@
 
 #ifndef ROOT_TObject
 #include "TObject.h"
+#endif
+#ifndef ROOT_TSystem
+#include "TSystem.h"
 #endif
 #ifndef ROOT_TString
 #include "TString.h"
@@ -53,6 +56,7 @@ private:
    TSocket   *fSocket;      //! connection to rootd
    Double_t   fBytesWrite;  // number of bytes sent
    Double_t   fBytesRead;   // number of bytes received
+   Bool_t     fDir;         // Indicates if a remote directory is open
 
    TFTP() { fSocket = 0; }
    TFTP(const TFTP &);              // not implemented
@@ -87,10 +91,18 @@ public:
 
    Long64_t PutFile(const char *file, const char *remoteName = 0);
    Long64_t GetFile(const char *file, const char *localName = 0);
+
+   Bool_t   AccessPathName(const char *path, EAccessMode mode = kFileExists,
+                           Bool_t print = kFALSE);
+   const char *GetDirEntry(Bool_t print = kFALSE);
+   Int_t    GetPathInfo(const char *path, Long_t *id, Long64_t *size,
+                        Long_t *flags, Long_t *modtime, Bool_t print = kFALSE);
    Int_t    ChangeDirectory(const char *dir) const;
-   Int_t    MakeDirectory(const char *dir) const;
+   Int_t    MakeDirectory(const char *dir, Bool_t print = kFALSE) const;
    Int_t    DeleteDirectory(const char *dir) const;
    Int_t    ListDirectory(Option_t *cmd = "") const;
+   void     FreeDirectory(Bool_t print = kFALSE);
+   Bool_t   OpenDirectory(const char *name, Bool_t print = kFALSE);
    Int_t    PrintDirectory() const;
    Int_t    RenameFile(const char *file1, const char *file2) const;
    Int_t    DeleteFile(const char *file) const;
@@ -98,6 +110,7 @@ public:
    Int_t    Close();
    void     Binary() { SetMode(kBinary); }
    void     Ascii() { SetMode(kAscii); }
+   TSocket *GetSocket() const { return fSocket; }
 
    // standard ftp equivalents...
    void put(const char *file, const char *remoteName = 0) { PutFile(file, remoteName); }

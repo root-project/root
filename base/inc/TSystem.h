@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.41 2004/05/17 12:13:40 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.42 2004/06/25 09:56:26 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -184,6 +184,7 @@ protected:
    TSeqCollection  *fHelpers;          //List of helper classes for alternative file/directory access
 
    TSystem               *FindHelper(const char *path, void *dirptr = 0);
+   virtual Bool_t         ConsistentWith(const char *path, void *dirptr = 0);
    virtual const char    *ExpandFileName(const char *fname);
    virtual void           SigAlarmInterruptsSyscalls(Bool_t) { }
    virtual const char    *GetLinkedLibraries();
