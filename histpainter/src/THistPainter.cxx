@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.185 2004/09/02 12:40:30 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.186 2004/09/02 13:08:13 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3326,7 +3326,7 @@ Int_t THistPainter::PaintInit()
       if (Hoption.Logy) {
          if (ymax > 0) ymin = 0.001*ymax;
          else {
-            Error(where, "log scale is requested but maximum is less or equal 0 (%f)", ymax);
+            if (!Hoption.Same) Error(where, "log scale is requested but maximum is less or equal 0 (%f)", ymax);
             return 0;
          }
       }
@@ -3503,7 +3503,7 @@ Int_t THistPainter::PaintInitH()
       if (Hoption.Logx) {
          if (xmax > 0) xmin = 0.001*xmax;
          else {
-            Error(where, "log scale is requested but maximum is less or equal 0 (%f)", xmax);
+            if (!Hoption.Same) Error(where, "log scale is requested but maximum is less or equal 0 (%f)", xmax);
             return 0;
          }
       }
@@ -5428,14 +5428,14 @@ Int_t THistPainter::TableInit()
    if (maximum) zmax = fH->GetMaximumStored();
    if (minimum) zmin = fH->GetMinimumStored();
    if (Hoption.Logz && zmax <= 0) {
-      Error(where, "log scale is requested but maximum is less or equal 0 (%f)", zmax);
+      if (!Hoption.Same) Error(where, "log scale is requested but maximum is less or equal 0 (%f)", zmax);
       return 0;
    }
    if (zmin >= zmax && !Hoption.Plus) {
       if (Hoption.Logz) {
          if (zmax > 0) zmin = 0.001*zmax;
          else {
-            Error(where, "log scale is requested but maximum is less or equal 0 (%f)", zmax);
+            if (!Hoption.Same) Error(where, "log scale is requested but maximum is less or equal 0 (%f)", zmax);
             return 0;
          }
       }
