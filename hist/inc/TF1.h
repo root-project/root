@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.35 2003/05/15 13:56:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.36 2003/06/30 15:45:51 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -160,6 +160,12 @@ public:
    static  void     RejectPoint(Bool_t reject=kTRUE);
    static  Bool_t   RejectedPoint();
    static  void     SetCurrent(TF1 *f1);
+
+   //Moments
+   virtual Double_t Moment(Double_t n, Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001);
+   virtual Double_t CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001);
+   virtual Double_t Mean(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001) {return Moment(1,a,b,params,epsilon);}
+   virtual Double_t Variance(Double_t a, Double_t b, const Double_t *params=0, Double_t epsilon=0.000001) {return CentralMoment(2,a,b,params,epsilon);}
       
    ClassDef(TF1,7)  //The Parametric 1-D function
 };

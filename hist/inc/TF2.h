@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.15 2003/03/31 16:04:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.16 2003/06/30 15:45:51 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -81,6 +81,18 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t xmax);
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax); // *MENU*
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax);
+
+   //Moments
+   virtual Double_t Moment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t epsilon=0.000001);
+   virtual Double_t CentralMoment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t epsilon=0.000001);
+
+   virtual Double_t Mean2X(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return Moment2(1,ax,bx,0,ay,by,epsilon);}
+   virtual Double_t Mean2Y(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return Moment2(0,ax,bx,1,ay,by,epsilon);}
+
+   virtual Double_t Variance2X(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return CentralMoment2(2,ax,bx,0,ay,by,epsilon);}
+   virtual Double_t Variance2Y(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return CentralMoment2(0,ax,bx,2,ay,by,epsilon);}
+
+   virtual Double_t Covariance2XY(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsilon=0.000001) {return CentralMoment2(1,ax,bx,1,ay,by,epsilon);}
 
    ClassDef(TF2,4)  //The Parametric 2-D function
 };

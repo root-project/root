@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.10 2003/03/31 16:04:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.h,v 1.11 2003/06/30 15:45:51 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -71,6 +71,22 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax); // *MENU*
 
+   //Moments
+   virtual Double_t Moment3(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t nz, Double_t az, Double_t bz, Double_t epsilon=0.000001);
+   virtual Double_t CentralMoment3(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t nz, Double_t az, Double_t bz, Double_t epsilon=0.000001);
+
+   virtual Double_t Mean3X(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return Moment3(1,ax,bx,0,ay,by,0,az,bz,epsilon);}
+   virtual Double_t Mean3Y(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return Moment3(0,ax,bx,1,ay,by,0,az,bz,epsilon);}
+   virtual Double_t Mean3Z(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return Moment3(0,ax,bx,0,ay,by,1,az,bz,epsilon);}
+
+   virtual Double_t Variance3X(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return CentralMoment3(2,ax,bx,0,ay,by,0,az,bz,epsilon);}
+   virtual Double_t Variance3Y(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return CentralMoment3(0,ax,bx,2,ay,by,0,az,bz,epsilon);}
+   virtual Double_t Variance3Z(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return CentralMoment3(0,ax,bx,0,ay,by,2,az,bz,epsilon);}
+
+   virtual Double_t Covariance3XY(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return CentralMoment3(1,ax,bx,1,ay,by,0,az,bz,epsilon);}
+   virtual Double_t Covariance3XZ(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return CentralMoment3(1,ax,bx,0,ay,by,1,az,bz,epsilon);}
+   virtual Double_t Covariance3YZ(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsilon=0.000001) {return CentralMoment3(0,ax,bx,1,ay,by,1,az,bz,epsilon);}
+   
    ClassDef(TF3,2)  //The Parametric 3-D function
 };
 

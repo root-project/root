@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.23 2003/07/14 12:58:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.24 2003/08/07 09:53:43 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -771,3 +771,46 @@ void TF2::Streamer(TBuffer &R__b)
       if (saved) {delete [] fSave; fSave = 0; fNsave = 0;}
    }
 }
+
+//______________________________________________________________________________
+Double_t TF2::Moment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t epsilon)
+{
+// Return x^nx * y^ny moment of a 2d function in range [ax,bx],[ay,by]
+//   Author: Gene Van Buren <gene@bnl.gov>
+
+   Double_t norm = Integral(ax,bx,ay,by,epsilon);
+   if (norm == 0) {
+      Error("Moment2", "Integral zero over range");
+      return 0;
+   }
+
+   TF2 fnc("TF2_ExpValHelper",Form("%s*pow(x,%f)*pow(y,%f)",GetName(),nx,ny));
+   return fnc.Integral(ax,bx,ay,by,epsilon)/norm;
+}
+
+//______________________________________________________________________________
+Double_t TF2::CentralMoment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t epsilon)
+{
+// Return x^nx * y^ny central moment of a 2d function in range [ax,bx],[ay,by]
+//   Author: Gene Van Buren <gene@bnl.gov>
+
+   Double_t norm = Integral(ax,bx,ay,by,epsilon);
+   if (norm == 0) {
+      Error("CentralMoment2", "Integral zero over range");
+      return 0;
+   }
+
+   Double_t xbar = 0;
+   Double_t ybar = 0;
+   if (nx!=0) {
+      TF2 fncx("TF2_ExpValHelperx",Form("%s*x",GetName()));
+      xbar = fncx.Integral(ax,bx,ay,by,epsilon)/norm;
+   }
+   if (ny!=0) {
+      TF2 fncx("TF2_ExpValHelpery",Form("%s*y",GetName()));
+      ybar = fncx.Integral(ax,bx,ay,by,epsilon)/norm;
+   }
+   TF2 fnc("TF2_ExpValHelper",Form("%s*pow(x-%f,%f)*pow(y-%f,%f)",GetName(),xbar,nx,ybar,ny));
+   return fnc.Integral(ax,bx,ay,by,epsilon)/norm;
+}
+

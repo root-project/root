@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.13 2003/07/14 12:58:22 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.14 2003/08/07 09:53:43 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -387,3 +387,51 @@ void TF3::SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, D
    fZmax = zmax;
    Update();
 }
+
+//______________________________________________________________________________
+Double_t TF3::Moment3(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t nz, Double_t az, Double_t bz, Double_t epsilon)
+{
+// Return x^nx * y^ny * z^nz moment of a 3d function in range [ax,bx],[ay,by],[az,bz]
+//   Author: Gene Van Buren <gene@bnl.gov>
+
+   Double_t norm = Integral(ax,bx,ay,by,az,bz,epsilon);
+   if (norm == 0) {
+      Error("Moment3", "Integral zero over range");
+      return 0;
+   }
+
+   TF3 fnc("TF3_ExpValHelper",Form("%s*pow(x,%f)*pow(y,%f)*pow(z,%f)",GetName(),nx,ny,nz));
+   return fnc.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
+}
+
+//______________________________________________________________________________
+Double_t TF3::CentralMoment3(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t nz, Double_t az, Double_t bz, Double_t epsilon)
+{
+// Return x^nx * y^ny * z^nz central moment of a 3d function in range [ax,bx],[ay,by],[az,bz]
+//   Author: Gene Van Buren <gene@bnl.gov>
+   
+   Double_t norm = Integral(ax,bx,ay,by,az,bz,epsilon);
+   if (norm == 0) {
+      Error("CentralMoment3", "Integral zero over range");
+      return 0;
+   }
+
+   Double_t xbar = 0;
+   Double_t ybar = 0;
+   Double_t zbar = 0;
+   if (nx!=0) {
+      TF3 fncx("TF3_ExpValHelperx",Form("%s*x",GetName()));
+      xbar = fncx.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
+   }
+   if (ny!=0) {
+      TF3 fncy("TF3_ExpValHelpery",Form("%s*y",GetName()));
+      ybar = fncy.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
+   }
+   if (nz!=0) {
+      TF3 fncz("TF3_ExpValHelperz",Form("%s*z",GetName()));
+      zbar = fncz.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
+   }
+   TF3 fnc("TF3_ExpValHelper",Form("%s*pow(x-%f,%f)*pow(y-%f,%f)*pow(z-%f,%f)",GetName(),xbar,nx,ybar,ny,zbar,nz));
+   return fnc.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
+}
+

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.66 2003/07/08 06:56:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.67 2003/07/14 12:58:22 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1563,18 +1563,18 @@ CASE2:
   for (i=0;i<4;i++) {
      u     = c2*x[i];
      xx[0] = c1+u;
-     f1    = EvalPar(xx,params);
+     f1    = TMath::Abs(EvalPar(xx,params));
      xx[0] = c1-u;
-     f2    = EvalPar(xx,params);
+     f2    = TMath::Abs(EvalPar(xx,params));
      s8   += w[i]*(f1 + f2);
   }
   s16 = 0;
   for (i=4;i<12;i++) {
      u     = c2*x[i];
      xx[0] = c1+u;
-     f1    = EvalPar(xx,params);
+     f1    = TMath::Abs(EvalPar(xx,params));
      xx[0] = c1-u;
-     f2    = EvalPar(xx,params);
+     f2    = TMath::Abs(EvalPar(xx,params));
      s16  += w[i]*(f1 + f2);
   }
   s16 = c2*s16;
@@ -1749,14 +1749,14 @@ L20:
    sum3   = 0;
    for (j=0;j<n;j++) {
       z[j]    = ctr[j] - xl2*wth[j];
-      f2      = EvalPar(z,fParams);
+      f2      = TMath::Abs(EvalPar(z,fParams));
       z[j]    = ctr[j] + xl2*wth[j];
-      f2     += EvalPar(z,fParams);
+      f2     += TMath::Abs(EvalPar(z,fParams));
       wthl[j] = xl4*wth[j];
       z[j]    = ctr[j] - wthl[j];
-      f3      = EvalPar(z,fParams);
+      f3      = TMath::Abs(EvalPar(z,fParams));
       z[j]    = ctr[j] + wthl[j];
-      f3     += EvalPar(z,fParams);
+      f3     += TMath::Abs(EvalPar(z,fParams));
       sum2   += f2;
       sum3   += f3;
       dif     = TMath::Abs(7*f2-f3-12*sum1);
@@ -1777,7 +1777,7 @@ L20:
             for (m=0;m<2;m++) {
                wthl[k] = -wthl[k];
                z[k]    = ctr[k] + wthl[k];
-               sum4 += EvalPar(z,fParams);
+               sum4 += TMath::Abs(EvalPar(z,fParams));
             }
          }
          z[k] = ctr[k];
@@ -1791,7 +1791,7 @@ L20:
       z[j] = ctr[j] + wthl[j];
    }
 L90:
-   sum5 += EvalPar(z,fParams);
+   sum5 += TMath::Abs(EvalPar(z,fParams));
    for (j=0;j<n;j++) {
       wthl[j] = -wthl[j];
       z[j] = ctr[j] + wthl[j];
@@ -2353,3 +2353,43 @@ Bool_t TF1::RejectedPoint()
 // see TF1::RejectPoint above
    return fgRejectPoint;
 }
+
+//______________________________________________________________________________
+Double_t TF1::Moment(Double_t n, Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
+{
+// Return nth moment of function between a and b
+//
+// See TF1::Integral() for parameter definitions
+//   Author: Gene Van Buren <gene@bnl.gov>
+
+   Double_t norm = Integral(a,b,params,epsilon);
+   if (norm == 0) {
+      Error("Moment", "Integral zero over range");
+      return 0;
+   }
+
+   TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x,%f)",GetName(),n));
+   return fnc.Integral(a,b,params,epsilon)/norm;
+}
+
+//______________________________________________________________________________
+Double_t TF1::CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params, Double_t epsilon)
+{
+// Return nth central moment of function between a and b
+//
+// See TF1::Integral() for parameter definitions
+//   Author: Gene Van Buren <gene@bnl.gov>
+
+   Double_t norm = Integral(a,b,params,epsilon);
+   if (norm == 0) {
+      Error("CentralMoment", "Integral zero over range");
+      return 0;
+   }
+
+   TF1 fncx("TF1_ExpValHelperx",Form("%s*x",GetName()));
+   Double_t xbar = fncx.Integral(a,b,params,epsilon)/norm;
+
+   TF1 fnc("TF1_ExpValHelper",Form("%s*pow(x-%f,%f)",GetName(),xbar,n));
+   return fnc.Integral(a,b,params,epsilon)/norm;
+}
+
