@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.cxx,v 1.6 2004/08/12 20:55:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.cxx,v 1.7 2004/08/13 07:34:45 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -9,7 +9,6 @@
 #include "TROOT.h"
 #include "TObject.h"
 #include "TClass.h"
-#include "TSystem.h"
 
 // Standard
 #include <stdio.h>

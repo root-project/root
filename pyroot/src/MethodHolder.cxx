@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.18 2004/08/12 20:55:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.19 2004/08/13 06:02:40 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -20,6 +20,7 @@
 #include "TClassEdit.h"
 #include "Gtypes.h"
 #include "GuiTypes.h"
+#include "Rtypes.h"
 
 // CINT
 #include "Api.h"
@@ -49,16 +50,16 @@ namespace {
 
    bool longlong_convert( PyObject* obj, G__CallFunc* func, void*& buf ) {
    // get value
-      long long ll = PyLong_AsLongLong(	obj );
+      Long64_t ll = PyLong_AsLongLong( obj );
       if ( PyErr_Occurred() )
          return false;
 
    // create memory if necessary
       if ( ! buf )
-         buf = reinterpret_cast< void* >( new long long( 0 ) );
+         buf = reinterpret_cast< void* >( new Long64_t( 0 ) );
 
    // copy new value
-      *(reinterpret_cast< long long* >( buf )) = ll;
+      *(reinterpret_cast< Long64_t* >( buf )) = ll;
 
    // set value and declare success
       func->SetArg( (long) buf );
@@ -563,7 +564,7 @@ PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
    case Utility::kLongLong: {
       long returnValue = 0;
       execute( self, returnValue );
-      return PyLong_FromLongLong( *(reinterpret_cast< long long* >( returnValue )) );
+      return PyLong_FromLongLong( *(reinterpret_cast< Long64_t* >( returnValue )) );
    }
    case Utility::kVoid: {
       execute( self );
