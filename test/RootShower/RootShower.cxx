@@ -15,6 +15,7 @@
 #include <TRint.h>
 #include <TVirtualX.h>
 #include <TEnv.h>
+#include <KeySymbols.h>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -371,6 +372,8 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     Initialize(1);
     gROOT->GetListOfBrowsables()->Add(fEvent,"RootShower Event");
     gSystem->Load("libTreeViewer");
+    AddInput(kKeyPressMask | kKeyReleaseMask);
+    gVirtualX->SetInputFocus(GetId());
     gRootShower = this;
 }
 
@@ -390,14 +393,14 @@ void RootShower::MakeMenuBarFrame()
 
     // file popup menu
     fMenuFile = new TGPopupMenu(gClient->GetRoot());
-    fMenuFile->AddEntry("&Open...", M_FILE_OPEN);
-    fMenuFile->AddEntry("S&ave as...", M_FILE_SAVEAS);
+    fMenuFile->AddEntry("&Open...       Ctrl+O", M_FILE_OPEN);
+    fMenuFile->AddEntry("S&ave as...  Ctrl+A", M_FILE_SAVEAS);
     fMenuFile->AddEntry("&Close", -1);
     fMenuFile->AddSeparator();
     fMenuFile->AddEntry("&Print", -1);
     fMenuFile->AddEntry("P&rint setup...", -1);
     fMenuFile->AddSeparator();
-    fMenuFile->AddEntry("E&xit", M_FILE_EXIT);
+    fMenuFile->AddEntry("E&xit             Ctrl+Q", M_FILE_EXIT);
     fMenuFile->DisableEntry(M_FILE_SAVEAS);
     fMenuFile->Associate(this);
 
@@ -408,7 +411,7 @@ void RootShower::MakeMenuBarFrame()
     fMenuTest->AddEntry("Save &Parameters", M_SETTINGS_SAVE);
     fMenuTest->AddEntry("Show &Process", M_SHOW_PROCESS);
     fMenuTest->AddEntry("Animated &GIF", M_ANIMATE_GIF);
-    fMenuTest->AddEntry("&Infos...", M_SHOW_INFOS);
+    fMenuTest->AddEntry("&Infos...                   Ctrl+I", M_SHOW_INFOS);
     fMenuTest->AddSeparator();
     fMenuTest->AddEntry("&3D View", M_SHOW_3D);
     fMenuTest->AddEntry("&Show Selected  Track", M_SHOW_TRACK);
@@ -424,7 +427,7 @@ void RootShower::MakeMenuBarFrame()
     fMenuInspect = new TGPopupMenu(gClient->GetRoot());
     fMenuInspect->AddLabel("Simulation Tools...");
     fMenuInspect->AddSeparator();
-    fMenuInspect->AddEntry("Start &Browser", M_INSPECT_BROWSER);
+    fMenuInspect->AddEntry("Start &Browser          Ctrl+B", M_INSPECT_BROWSER);
     fMenuInspect->AddEntry("&Create Html Doc", M_FILE_HTML);
     fMenuInspect->Associate(this);
 
@@ -894,6 +897,7 @@ void RootShower::produce()
 {
     Int_t     local_num,local_last,local_end;
     Int_t     old_num;
+    Bool_t    first_pass;
     Char_t    strtmp[80];
 
     // Check if some Event parameters have changed
@@ -908,10 +912,17 @@ void RootShower::produce()
     fEvent->Init(0, fFirstParticle, fE0, fB);
 
     Interrupt(kFALSE);
+    first_pass = kTRUE;
     old_num = -1;
     // loop events until user interrupt or until all particles are dead
     while((!IsInterrupted()) && (fEvent->GetNAlives() > 0)) {
         gSystem->ProcessEvents();  // handle GUI events
+        if(first_pass && fEvent->GetTotal() > 1) {
+            fEventListTree->OpenItem(gBaseLTI);
+            fEventListTree->OpenItem(gLTI[0]);
+            fClient->NeedRedraw(fEventListTree);
+            first_pass = kFALSE;
+        }
         if(fEvent->GetTotal() > old_num) {
             sprintf(strtmp,"Simulation running, particles : %4d, please wait...",fEvent->GetTotal());
             old_num = fEvent->GetTotal();
@@ -944,6 +955,8 @@ void RootShower::OnShowerProduce()
     Int_t     i,gifindex;
     Char_t    gifname[80];
     fStatusBar->SetText("",1);
+
+    SetWindowName("Root Shower Event Display");
 
     // animation logo handling
     if(fPicReset > 0) fPicIndex = 1;
@@ -1031,8 +1044,8 @@ void RootShower::OnShowerProduce()
     padC->Update();
 
     // Open first list tree items
-    gEventListTree->OpenItem(gBaseLTI);
-    gEventListTree->OpenItem(gLTI[0]);
+    fEventListTree->OpenItem(gBaseLTI);
+    fEventListTree->OpenItem(gLTI[0]);
     fTimer->TurnOff();
     fIsRunning = kFALSE;
     if(fPicReset > 0)
@@ -1090,8 +1103,8 @@ void RootShower::OnOpenFile(const Char_t *filename)
 {
     // Opens a root file into which a previous event
     // has been saved.
-    Char_t   strtmp[80];
-    char  geofilename[128];
+    char   strtmp[256];
+    char   geofilename[128];
     Int_t  i;
     TFile *f = new TFile(filename);
     TTree *tree;
@@ -1116,9 +1129,9 @@ void RootShower::OnOpenFile(const Char_t *filename)
 
     gGeoManager->DrawTracks();
     for(i=0;i<=fEvent->GetTotal();i++) {
-        gTmpLTI = gEventListTree->AddItem(gBaseLTI, fEvent->GetParticle(i)->GetName());
+        gTmpLTI = fEventListTree->AddItem(gBaseLTI, fEvent->GetParticle(i)->GetName());
         sprintf(strtmp,"%1.2f GeV",fEvent->GetParticle(i)->Energy());
-        gEventListTree->SetToolTipItem(gTmpLTI, strtmp);
+        fEventListTree->SetToolTipItem(gTmpLTI, strtmp);
         gLTI[i] = gTmpLTI;
 
         if(fEvent->GetParticle(i)->GetChildId(0) == 0) {
@@ -1146,7 +1159,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
     // Reparent each list tree item regarding the
     // corresponding particle relations
     for(i=1;i<=fEvent->GetTotal();i++) {
-        gEventListTree->Reparent(gLTI[i],
+        fEventListTree->Reparent(gLTI[i],
             gLTI[fEvent->GetParticle(i)->GetFirstMother()]);
     }
     fEventListTree->OpenItem(gBaseLTI);
@@ -1187,6 +1200,8 @@ void RootShower::OnOpenFile(const Char_t *filename)
     fMenuTest->EnableEntry(M_SHOW_3D);
     fMenuFile->EnableEntry(M_FILE_SAVEAS);
     fButtonFrame->SetState(GButtonFrame::kAllActive);
+    sprintf(strtmp,"Root Shower Event Display - %s",filename);
+    SetWindowName(strtmp);
 }
 
 //______________________________________________________________________________
@@ -1194,6 +1209,7 @@ void RootShower::OnSaveFile(const Char_t *filename)
 {
     // Saves current event into a Root file
     TFile *hfile;
+    char  strtmp[256];
     char  geofilename[128];
 
     strncpy(geofilename,filename, strlen(filename)-5);
@@ -1209,6 +1225,8 @@ void RootShower::OnSaveFile(const Char_t *filename)
     hTree->Print();
     hfile->Close();
     gGeoManager->Export(geofilename, "detector");
+    sprintf(strtmp,"Root Shower Event Display - %s",filename);
+    SetWindowName(strtmp);
 }
 
 //______________________________________________________________________________
@@ -1247,6 +1265,63 @@ void RootShower::ShowInfos()
     hd->Move(ax, ay);
     hd->Popup();
     fClient->WaitFor(hd);
+}
+
+//______________________________________________________________________________
+Bool_t RootShower::HandleKey(Event_t *event)
+{
+   char   input[10];
+   Int_t  n;
+   UInt_t keysym;
+
+   if (event->fType == kGKeyPress) {
+      gVirtualX->LookupString(event, input, sizeof(input), keysym);
+      n = strlen(input);
+
+      switch ((EKeySym)keysym) {   // ignore these keys
+         case kKey_Shift:
+         case kKey_Control:
+         case kKey_Meta:
+         case kKey_Alt:
+         case kKey_CapsLock:
+         case kKey_NumLock:
+         case kKey_ScrollLock:
+            return kTRUE;
+         case kKey_F1:
+            SendMessage(this, MK_MSG(kC_COMMAND, kCM_MENU),
+                        M_HELP_SIMULATION, 0);
+            return kTRUE;
+         default:
+            break;
+      }
+      if (event->fState & kKeyControlMask) {   // Cntrl key modifier pressed
+         switch((EKeySym)keysym & ~0x20) {   // treat upper and lower the same
+            case kKey_A:
+               SendMessage(this, MK_MSG(kC_COMMAND, kCM_MENU),
+                           M_FILE_SAVEAS, 0);
+               return kTRUE;
+            case kKey_B:
+               SendMessage(this, MK_MSG(kC_COMMAND, kCM_MENU),
+                           M_INSPECT_BROWSER, 0);
+               return kTRUE;
+            case kKey_I:
+               SendMessage(this, MK_MSG(kC_COMMAND, kCM_MENU),
+                           M_SHOW_INFOS, 0);
+               return kTRUE;
+            case kKey_O:
+               SendMessage(this, MK_MSG(kC_COMMAND, kCM_MENU),
+                           M_FILE_OPEN, 0);
+               return kTRUE;
+            case kKey_Q:
+               SendMessage(this, MK_MSG(kC_COMMAND, kCM_MENU),
+                           M_FILE_EXIT, 0);
+               return kTRUE;
+            default:
+               break;
+         }
+      }
+   }
+   return TGMainFrame::HandleKey(event);
 }
 
 //______________________________________________________________________________
