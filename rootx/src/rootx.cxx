@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootx.cxx,v 1.2 2000/06/16 15:23:01 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -298,23 +298,21 @@ int main(int argc, char **argv)
 
    struct sigaction ignore, handle, saveintr, savequit, saveusr1;
 
-#if defined(__sun) && !defined(__i386) && !defined(__SunOS_5_6)
+#if defined(__sun) && !defined(__i386) && !defined(__SVR4)
    ignore.sa_handler = (void (*)())SIG_IGN;
-#else
-# if defined(__SunOS_5_6)
+#elif defined(__sun) && defined(__SVR4)
    ignore.sa_handler = (void (*)(int))SIG_IGN;
-# else
+#else
    ignore.sa_handler = SIG_IGN;
-# endif
 #endif
    sigemptyset(&ignore.sa_mask);
    ignore.sa_flags = 0;
    handle = ignore;
-#if defined(__sun) && !defined(__i386) && !defined(__SunOS_5_6)
+#if defined(__sun) && !defined(__i386) && !defined(__SVR4)
    handle.sa_handler = (void (*)())SigUsr1;
-#elif defined(__SunOS_5_6)
+#elif defined(__sun) && defined(__SVR4)
    handle.sa_handler = (void (*)(int))SigUsr1;
-#elif defined(__sgi) && !defined(__KCC)
+#elif (defined(__sgi) && !defined(__KCC)) || defined(__Lynx__)
 #   if defined(IRIX64)
    handle.sa_handler = (void (*)(int))SigUsr1;
 #   else

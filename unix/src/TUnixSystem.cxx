@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.9 2000/10/04 23:37:15 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.10 2000/11/17 10:30:11 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -405,14 +405,12 @@ void TUnixSystem::IgnoreInterrupt(Bool_t ignore)
       ignoreInt = ignore;
       if (ignore) {
          struct sigaction sigact;
-#if defined(R__SOLARIS) && !defined(R__I386) && !defined(__SunOS_5_6)
+#if defined(R__SUN)
          sigact.sa_handler = (void (*)())SIG_IGN;
-#else
-# if defined(__SunOS_5_6)
+#elif defined(R__SOLARIS)
          sigact.sa_handler = (void (*)(int))SIG_IGN;
-# else
+#else
          sigact.sa_handler = SIG_IGN;
-# endif
 #endif
          sigemptyset(&sigact.sa_mask);
 #if defined(SA_INTERRUPT)       // SunOS
@@ -1883,9 +1881,9 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
       gSignalMap[sig].handler    = handler;
       gSignalMap[sig].oldhandler = new struct sigaction();
 
-#if defined(R__SOLARIS) && !defined(R__I386) && !defined(__SunOS_5_6)
+#if defined(R__SUN)
       sigact.sa_handler = (void (*)())sighandler;
-#elif defined(__SunOS_5_6)
+#elif defined(R__SOLARIS)
       sigact.sa_handler = (void (*)(int))sighandler;
 #elif (defined(R__SGI) && !defined(R__KCC)) || defined(R__LYNXOS)
 #  if defined(R__SGI64)
