@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.7 2002/01/08 08:34:22 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -208,7 +208,6 @@ Bool_t TGWin32::Init(void *display)
   fDrawMode        = kCopy;
   fTextFontModified = 1;
 
-  fGLKernel = 0;
  // fGLKernel = new TWin32GLKernel();
 
   //
@@ -457,6 +456,7 @@ Bool_t TGWin32::Init(void *display)
 
 //*-*  Check whether we can use palette
 
+  static LPLOGPALETTE flpPalette = 0;
   flpPalette = 0;
   fMaxCol    = 0;
 //*-*
@@ -649,20 +649,14 @@ COLORREF TGWin32::ColorIndex(Color_t ic) {
 }
 
 //______________________________________________________________________________
-void TGWin32::GetPlanes(Int_t &nplanes)
-{
-   // Get maximum number of planes.
-   // nplanes returns the number of bit planes.
+void TGWin32::GetPlanes(Int_t &nplanes){
+//*-*-*-*-*-*-*-*-*-*-*-*Get maximum number of planes*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                    ============================
+//*-*  nplanes     : number of bit planes
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   HDC  hDCGlobal= CreateCompatibleDC(NULL);
 
-   HDC hDCGlobal= CreateCompatibleDC(NULL);
-
-   if (GetDeviceCaps(hDCGlobal,RASTERCAPS) & RC_PALETTE != 0)
-      nplanes = GetDeviceCaps(hDCGlobal,COLORRES);
-   else {
-      int nPlanes=GetDeviceCaps(hDCGlobal,PLANES);
-      int nBitsPixel=GetDeviceCaps(hDCGlobal,BITSPIXEL);
-      nplanes = nPlanes*nBitsPixel;
-   }
+   nplanes  = GetDeviceCaps(hDCGlobal,PLANES);
    ReleaseDC(NULL,hDCGlobal);
 }
 
@@ -1331,26 +1325,22 @@ void  TGWin32::MakePallete(HDC objectDC)
 {
   if (!flpPalette)
   {
-    int depth;
     HDC oDC = objectDC;
     if (oDC == 0) oDC =  CreateCompatibleDC(NULL);
 
     int iPalExist = GetDeviceCaps(oDC,RASTERCAPS) & RC_PALETTE ;
-    if (iPalExist) {
-        depth=GetDeviceCaps(oDC,COLORRES);
-    }
-    else{
-        int nPlanes=GetDeviceCaps(oDC,PLANES);
-        int nBitsPixel=GetDeviceCaps(oDC,BITSPIXEL);
-        depth = (nPlanes*nBitsPixel);
-    }
-    if(depth<=8){
-       fMaxCol = 256-20;
-    }
+
+    if (iPalExist)
+       fMaxCol = GetDeviceCaps(oDC,SIZEPALETTE);
     else {
-       if(depth > 24) depth = 24;
-       fMaxCol = 1 << depth;
+       fMaxCol = GetDeviceCaps(oDC,NUMCOLORS);
+       fMaxCol = 256-20;
+       fhdCommonPalette = 0;
     }
+
+//*-*  At present ROOT will use 236 colors only ???
+
+      fMaxCol = TMath::Min(256-20,fMaxCol);
 
 //*-*  Create palette
 
@@ -1358,8 +1348,7 @@ void  TGWin32::MakePallete(HDC objectDC)
                  (sizeof (PALETTEENTRY) * (fMaxCol))));
 
      if(!flpPalette){
-        MessageBox(NULL, "<WM_CREATE> Not enough memory for palette.", NULL,
-                   MB_OK | MB_ICONHAND);
+        MessageBox(NULL, "<WM_CREATE> Not enough memory for palette.", NULL, MB_OK | MB_ICONHAND);
         PostQuitMessage (0) ;
      }
 
@@ -1649,10 +1638,9 @@ void  TGWin32::Warp(int ix, int iy){
       ->W32_Warp(ix, iy);
 }
 //______________________________________________________________________________
-Int_t  TGWin32::WriteGIF(char *name){
-     //SafeCallWin32
-     fSelectedWindow->W32_WriteGIF(name);
-     return 0;
+void  TGWin32::WriteGIF(char *name){
+     SafeCallWin32
+      ->W32_WriteGIF(name);
 }
 //______________________________________________________________________________
 void  TGWin32::WritePixmap(int wid, UInt_t w, UInt_t h, char *pxname){

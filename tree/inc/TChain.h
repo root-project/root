@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.20 2002/01/19 11:04:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.11 2000/12/26 14:22:45 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -28,8 +28,6 @@
 class TFile;
 class TBrowser;
 
-const Int_t kBigNumber = 1234567890;
-
 class TChain : public TTree {
 
 protected:
@@ -41,66 +39,57 @@ protected:
     TFile       *fFile;             //! Pointer to current file
     TObjArray   *fFiles;            //->  List of file names containing the Trees
     TList       *fStatus;           //->  List of active/inactive branches
-  static Int_t   fgMaxMergeSize;    //  Maximum size of a merged file
+    TObject     *fNotify;           //! Object to be notified when loading a new file
 
 public:
-    // TChain status bits
-    enum {
-       kGlobalWeight   = BIT(15)
-    };
     TChain();
     TChain(const char *name, const char *title="");
     virtual ~TChain();
 
     virtual Int_t     Add(TChain *chain);
-    virtual Int_t     Add(const char *name, Int_t nentries=kBigNumber);
+    virtual Int_t     Add(const char *name, Int_t nentries=-1);
     virtual Int_t     AddFile(const char *name, Int_t nentries);
     virtual TFriendElement *AddFriend(const char *chainname, const char *dummy="");
-    virtual TFriendElement *AddFriend(const char *chainname, TFile *dummy);
     virtual void      Browse(TBrowser *b);
     virtual void      CreatePackets();
     virtual void      Draw(Option_t *opt);
     virtual Int_t     Draw(const char *varexp, TCut selection, Option_t *option=""
-                       ,Int_t nentries=kBigNumber, Int_t firstentry=0);
+                       ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
-                     ,Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*
-    virtual Int_t     Fill() {MayNotUse("Fill()"); return -1;}
+                     ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+    virtual Int_t     Fill() {MayNotUse("TChain::Fill()"); return -1;}
     virtual TBranch  *GetBranch(const char *name);
     virtual Int_t     GetChainEntryNumber(Int_t entry) const;
             Int_t     GetNtrees() const {return fNtrees;}
-    virtual Stat_t    GetEntries() const;
     virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);
     TFile            *GetFile() const {return fFile;}
     TLeaf            *GetLeaf(const char *name);
     TObjArray        *GetListOfBranches();
     TObjArray        *GetListOfFiles() const {return fFiles;}
     TObjArray        *GetListOfLeaves();
-    static  Int_t     GetMaxMergeSize();
     virtual Double_t  GetMaximum(const char *columname);
     virtual Double_t  GetMinimum(const char *columname);
     virtual Int_t     GetNbranches();
+    TObject          *GetNotify() const {return fNotify;}
     TList            *GetStatus() const {return fStatus;}
     TTree            *GetTree() const {return fTree;}
             Int_t     GetTreeNumber() const {return fTreeNumber;}
             Int_t    *GetTreeOffset() const {return fTreeOffset;}
             Int_t     GetTreeOffsetLen() const {return fTreeOffsetLen;}
-    virtual Double_t  GetWeight() const;
             Int_t     LoadTree(Int_t entry);
-    virtual void      Loop(Option_t *option="",Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*
+    virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual void      ls(Option_t *option="") const;
-    virtual Int_t     Merge(const char *name);
-    virtual Int_t     Merge(TFile *file, Int_t basketsize, Option_t *option="");
+    virtual void      Merge(const char *name);
+    virtual void      Merge(TFile *file, Int_t basketsize, Option_t *option="");
     virtual void      Print(Option_t *option="") const;
-    virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=kBigNumber, Int_t firstentry=0); // *MENU*
-    virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=kBigNumber, Int_t firstentry=0);
-    virtual void      Reset(Option_t *option="");
+    virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+    virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
-    static  void      SetMaxMergeSize(Int_t maxsize=1900000000);
     virtual void      SetPacketSize(Int_t size = 100);
-    virtual void      SetWeight(Double_t w=1, Option_t *option="");
+    virtual void      SetNotify(TObject *obj) {fNotify = obj;}
 
-    ClassDef(TChain,4)  //A chain of TTrees
+    ClassDef(TChain,3)  //A chain of TTrees
 };
 
 inline void TChain::Draw(Option_t *opt)

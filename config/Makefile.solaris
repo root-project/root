@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Solaris with CC
 
 PLATFORM      = solaris

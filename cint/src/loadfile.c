@@ -279,18 +279,14 @@ char *item;
 {
   char makeinfo[G__MAXFILENAME];
   FILE *fp;
-  char line[G__LARGEBUF];
-  char argbuf[G__LARGEBUF];
+  char line[G__LONGLINE*2];
+  char argbuf[G__LONGLINE*2];
   char *arg[G__MAXARG];
   int argn;
   char *p;
   static char buf[G__ONELINE];
 
   buf[0]='\0';
-
-#ifdef G__NOMAKEINFO
-  return("");
-#endif
 
 #ifndef G__OLDIMPLEMENTATION466
   /****************************************************************
@@ -1070,7 +1066,7 @@ char *filenamein;
        ){
 #endif
       if(G__prerun==0 || G__debugtrace)
-	G__fprinterr(G__serr,"Note: File \"%s\" already loaded\n",filename);
+	G__fprinterr(G__serr,"Warning: File \"%s\" already loaded\n",filename);
       /******************************************************
        * restore input file information to G__ifile
        * and reset G__eof to 0.
@@ -1641,12 +1637,7 @@ char *filenamein;
   store_p_local=G__p_local;
 #ifndef G__OLDIMPLEMENTATION616
   if(0==G__def_struct_member||-1==G__tagdefining||
-     ('n'!=G__struct.type[G__tagdefining]
-#ifndef G__OLDIMPLEMENTATION1608
-      && 'c'!=G__struct.type[G__tagdefining]
-      && 's'!=G__struct.type[G__tagdefining]
-#endif
-     )) {
+     'n'!=G__struct.type[G__tagdefining]) {
     G__p_local=NULL;
   }
 #else
@@ -1756,10 +1747,8 @@ char *filenamein;
    ******************************************************/
   if(G__NOLINK!=G__globalcomp && G__srcfile[fentry].fp) {
     if(!G__macroORtemplateINfile) {
-#ifdef G__OLDIMPLEMENTATION1562
       /* Close file for process max file open limitation with -cN option */
       fclose(G__srcfile[fentry].fp);
-#endif
 #ifndef G__PHILIPPE0
       /* After closing the file let's make sure than all reference to
 	 the file pointer are reset. When a preprocessor is used, we
@@ -1770,15 +1759,7 @@ char *filenamein;
 	  G__srcfile[i1].fp = (FILE*)NULL;
 	}
       }
-#ifndef G__OLDIMPLEMENTATION1562
-      /* Close file for process max file open limitation with -cN option */
-      fclose(tmpfp);
-#endif
 #else
-#ifndef G__OLDIMPLEMENTATION1562
-      /* Close file for process max file open limitation with -cN option */
-      fclose(G__srcfile[fentry].fp);
-#endif
       G__srcfile[fentry].fp = (FILE*)NULL;
 #endif
     }
@@ -1865,7 +1846,7 @@ char *outname,*inname;
 int cppflag;
 char *macros,*undeflist,*ppopt,*includepath;
 {
-  char temp[G__LARGEBUF];
+  char temp[G__LONGLINE*2];
   /* char *envcpp; */
   char tmpfile[G__MAXFILENAME];
   int tmplen;
@@ -2202,6 +2183,7 @@ char *badname;
 #endif
 }
 
+
 /**************************************************************************
 * G__tmpnam()
 **************************************************************************/
@@ -2258,12 +2240,10 @@ void G__openmfp()
 int G__closemfp()
 {
 #ifndef G__TMPFILE
-  if(G__mfp) return(fclose(G__mfp));
-  else return(0);
+  return(fclose(G__mfp));
 #else
-  if(G__mfp) fclose(G__mfp);
-  if(G__mfpname[0]) return(remove(G__mfpname));
-  else return(0);
+  fclose(G__mfp);
+  return(remove(G__mfpname));
 #endif
 }
 

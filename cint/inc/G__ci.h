@@ -7,7 +7,7 @@
  * Description:
  *  C/C++ interpreter parser header file
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -21,22 +21,24 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015028
-#define G__CINTVERSIONSTR  "5.15.28, Jan 20 2002"
-
+#define G__CINTVERSION      5015002
+#define G__CINTVERSIONSTR  "5.15.02, June 2 2001"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
 
+/* Delete following macro for DLL binary compatibility improvement */
+/* #define G__OLDIMPLEMENTATION1530 */
+
 /* Define following macro to enable multi-thread safe libcint and DLL
  * features. */
 /* #define G__MULTITHREADLIBCINT */
 
-/* Define G__ERRORCALLBACK to activat error message redirection. If
- * G__ERRORCALLBACK is defined, a user can set a callback routine for
- * handling error message by G__set_errmsgcallback() API */
-/* #define G__ERRORCALLBACK */
+/* Disable G__fprinterr */
+#ifndef G__ERRORCALLBACK
+#define G__OLDIMPLEMENTATION1485
+#endif
 
 /* New memory allocation scheme is turned on for ROOT by defining 
  * following macro. */
@@ -77,10 +79,10 @@
  * in platform dependency file OTHMACRO flag. Reason of not making this
  * default is because some old compilers may not support exception. */
 /* #define G__EXCEPTIONWRAPPER */
-
-/* Define G__STD_EXCEPTION for using std::exception in exception handler. 
- * If G__STD_EXCEPTION is defined, G__EXCEPTIONWRAPPER is also defined. */
 /* #define G__STD_EXCEPTION */
+#if defined(G__STD_EXCEPTION) && !defined(G__EXCEPTIONWRAPPER)
+#define G__EXCEPTIONWRAPPER
+#endif
 
 /* If you define G__REFCONV in platform dependency file, bug fix for 
  * reference argument conversion is activated. This macro breaks DLL
@@ -195,28 +197,6 @@
 #      define G__NONSCALARFPOS2
 #   endif
 #endif
-
-
-/***********************************************************************
- * Something that depends on platform
- ***********************************************************************/
-
-/* Exception */
-#if defined(G__WIN32) && !defined(G__STD_EXCEPTION)
-#define G__STD_EXCEPTION
-#endif
-#if defined(G__STD_EXCEPTION) && !defined(G__EXCEPTIONWRAPPER)
-#define G__EXCEPTIONWRAPPER
-#endif
-
-/* Error redirection ,  G__fprinterr */
-#if defined(G__WIN32) && !defined(G__ERRORCALLBACk)
-#define G__ERRORCALLBACK
-#endif
-#ifndef G__ERRORCALLBACK
-#define G__OLDIMPLEMENTATION1485
-#endif
-
 
 /***********************************************************************
  * Define G__EH_DUMMY_DELETE in order to avoid some compiler dependency
@@ -607,11 +587,10 @@ typedef int (*G__IgnoreInclude)();
 #define G__LONGLINE    1024  /* Length of expression */
 #define G__ONELINE      256  /* Length of subexpression,parameter,argument */
 #define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
-#define G__MAXNAME      256  /* Variable name */
+#define G__MAXNAME      128  /* Variable name */
 #endif
-#define G__LARGEBUF    6000  /* big temp buffer */
 #define G__MAXFILE     2000  /* Max interpreted source file */
-#define G__MAXFILENAME 1024  /* Max interpreted source file name length */
+#define G__MAXFILENAME  256  /* Max interpreted source file name length */
 #define G__MAXPARA      100  /* Number of argument for G__main(argc,argv)   */
 #define G__MAXARG       100  /* Number of argument for G__init_cint(char *) */
 #define G__MAXFUNCPARA   40  /* Function argument */
@@ -652,7 +631,6 @@ typedef int (*G__IgnoreInclude)();
 #define G__LOCALSTATIC (-2)
 #define G__LOCALSTATICBODY (-3)
 #define G__COMPILEDGLOBAL  (-4)
-#define G__AUTOARYDISCRETEOBJ (-5)
 
 #define G__LOCAL    0
 #ifdef G__MEMBERFUNC
@@ -972,11 +950,7 @@ struct G__ifunc_table {
   int allifunc;
 
   /* function name and hash for identification */
-#ifndef G__OLDIMPLEMENTATION1543
-  char *funcname[G__MAXIFUNC];
-#else
   char funcname[G__MAXIFUNC][G__MAXNAME];
-#endif
   int  hash[G__MAXIFUNC];
 
   struct G__funcentry entry[G__MAXIFUNC],*pentry[G__MAXIFUNC];
@@ -1062,11 +1036,7 @@ struct G__ifunc_table_VMS {
   int allifunc;
 
   /* function name and hash for identification */
-#ifndef G__OLDIMPLEMENTATION1543
-  char *funcname[G__MAXIFUNC];
-#else
   char funcname[G__MAXIFUNC][G__MAXNAME];
-#endif
   int  hash[G__MAXIFUNC];
 
   struct G__funcentry entry[G__MAXIFUNC];
@@ -1226,11 +1196,7 @@ struct G__var_array {
   /* union for variable pointer */
   long p[G__MEMDEPTH]; /* used to be int */
   int allvar;
-#ifndef G__OLDIMPLEMENTATION1543
-  char *varnamebuf[G__MEMDEPTH]; /* variable name */
-#else
   char varnamebuf[G__MEMDEPTH][G__MAXNAME]; /* variable name */
-#endif
   int hash[G__MEMDEPTH];                    /* hash table of varname */
   int varlabel[G__MEMDEPTH+1][G__MAXVARDIM];  /* points varpointer */
   short paran[G__MEMDEPTH];
@@ -1352,7 +1318,7 @@ struct G__typedef {
   short  tagnum[G__MAXTYPEDEF];
   char reftype[G__MAXTYPEDEF];
 #ifdef G__CPPLINK1
-  G__SIGNEDCHAR_T globalcomp[G__MAXTYPEDEF];
+  char globalcomp[G__MAXTYPEDEF];
 #endif
   int nindex[G__MAXTYPEDEF];
   int *index[G__MAXTYPEDEF];
@@ -1544,6 +1510,9 @@ char* G__p2f2funcname G__P((void *p2f));
 int G__isinterpretedp2f G__P((void* p2f));
 int G__compile_bytecode G__P((struct G__ifunc_table* ifunc,int index));
 
+#ifndef G__OLDIMPLEMENTATION1485
+extern G__EXPORT void G__set_errmsgcallback G__P((void *p));
+#endif
 
 
 #ifndef G__OLDIMPLEMENTATION1473
@@ -1667,17 +1636,6 @@ extern int G__exec_bytecode G__P((G__value *result7,G__CONST char *funcname,stru
  **************************************************************************/
 extern G__EXPORT int G__fprintf G__P((FILE* fp,char* fmt,...));
 extern G__EXPORT int G__setmasksignal G__P((int));
-#ifndef G__OLDIMPLEMENTATION1596
-extern void G__settemplevel G__P((int val));
-extern void G__clearstack G__P(());
-#endif
-#ifndef G__OLDIMPLEMENTATION1600
-extern G__EXPORT int G__lasterror G__P(()) ;
-extern G__EXPORT void G__reset_lasterror G__P(());
-#endif
-#ifndef G__OLDIMPLEMENTATION1601
-extern G__EXPORT int G__gettempfilenum G__P(());
-#endif
 
 #if (!defined(G__MULTITHREADLIBCINTC)) && (!defined(G__MULTITHREADLIBCINTCPP))
 
@@ -1728,10 +1686,10 @@ extern G__EXPORT void G__add_macro G__P((G__CONST char *macro));
 extern G__EXPORT void G__check_setup_version G__P((int version,G__CONST char *func));
 extern G__EXPORT long G__int G__P((G__value buf));
 extern G__EXPORT double G__double G__P((G__value buf));
-extern G__EXPORT G__value G__calc G__P((G__CONST char *expr));
-extern G__EXPORT int  G__loadfile G__P((G__CONST char* filename));
-extern G__EXPORT int  G__unloadfile G__P((G__CONST char* filename));
-extern G__EXPORT int G__init_cint G__P((G__CONST char* command));
+extern G__EXPORT G__value G__calc G__P((char *expr));
+extern G__EXPORT int  G__loadfile G__P((char *filename));
+extern G__EXPORT int  G__unloadfile G__P((char *filename));
+extern G__EXPORT int G__init_cint G__P((char *command));
 extern G__EXPORT void G__scratch_all G__P((void));
 extern G__EXPORT void G__setdouble G__P((G__value *pbuf,double d,void* pd,int type,int tagnum,int typenum,int reftype));
 extern G__EXPORT void G__setint G__P((G__value *pbuf,long d,void* pd,int type,int tagnum,int typenum,int reftype));
@@ -1742,7 +1700,7 @@ extern G__EXPORT char *G__type2string G__P((int type,int tagnum,int typenum,int 
 extern G__EXPORT void G__alloc_tempobject G__P((int tagnum,int typenum));
 extern G__EXPORT void G__set_p2fsetup G__P((void (*p2f)()));
 extern G__EXPORT void G__free_p2fsetup G__P((void));
-extern G__EXPORT int G__genericerror G__P((G__CONST char *message));
+extern G__EXPORT int G__genericerror G__P((char *message));
 extern G__EXPORT char* G__tmpnam G__P((char* name));
 extern G__EXPORT int G__setTMPDIR G__P((char* badname));
 extern G__EXPORT void G__setPrerun G__P((int prerun));
@@ -1783,7 +1741,6 @@ extern G__EXPORT int G__security_recover G__P((FILE* fout));
 extern G__EXPORT void G__breakkey G__P((int signame));
 extern G__EXPORT int G__stepmode G__P((int stepmode));
 extern G__EXPORT int G__tracemode G__P((int tracemode));
-extern G__EXPORT int G__setbreakpoint G__P((char *breakline,char *breakfile));
 extern G__EXPORT int G__getstepmode G__P(());
 extern G__EXPORT int G__gettracemode G__P(());
 extern G__EXPORT int G__printlinenum G__P((void));
@@ -1807,19 +1764,11 @@ extern G__EXPORT float* G__Floatref G__P((G__value *buf));
 extern G__EXPORT double* G__Doubleref G__P((G__value *buf));
 extern G__EXPORT int G__loadsystemfile G__P((G__CONST char* filename));
 extern G__EXPORT void G__set_ignoreinclude G__P((G__IgnoreInclude ignoreinclude));
-extern G__EXPORT G__value G__exec_tempfile G__P((G__CONST char *file));
-extern G__EXPORT G__value G__exec_text G__P((G__CONST char *unnamedmacro));
+extern G__EXPORT G__value G__exec_tempfile G__P((char *file));
+extern G__EXPORT G__value G__exec_text G__P((char *text));
 extern G__EXPORT char* G__lasterror_filename G__P(());
 extern G__EXPORT int G__lasterror_linenum G__P(());
 extern void G__EXPORT G__va_arg_put G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
-
-#ifndef G__OLDIMPLEMENTATION1546
-extern G__EXPORT char* G__load_text G__P((G__CONST char *namedmacro));
-extern G__EXPORT void G__set_emergencycallback G__P((void (*p2f)()));
-#endif
-#ifndef G__OLDIMPLEMENTATION1485
-extern G__EXPORT void G__set_errmsgcallback(void* p);
-#endif
 
 #else /* G__MULTITHREADLIBCINT */
 
@@ -1880,10 +1829,10 @@ static void (*G__add_macro) G__P((G__CONST char *macro));
 static void (*G__check_setup_version) G__P((int version,G__CONST char *func));
 static long (*G__int) G__P((G__value buf));
 static double (*G__double) G__P((G__value buf));
-static G__value (*G__calc) G__P((G__CONST char *expr));
-static int  (*G__loadfile) G__P((G__CONST char* filename));
-static int  (*G__unloadfile) G__P((G__CONST char* filename));
-static int (*G__init_cint) G__P((G__CONST char* command));
+static G__value (*G__calc) G__P((char *expr));
+static int  (*G__loadfile) G__P((char *filename));
+static int  (*G__unloadfile) G__P((char *filename));
+static int (*G__init_cint) G__P((char *command));
 static void (*G__scratch_all) G__P((void));
 static void (*G__setdouble) G__P((G__value *pbuf,double d,void* pd,int type,int tagnum,int typenum,int reftype));
 static void (*G__setint) G__P((G__value *pbuf,long d,void* pd,int type,int tagnum,int typenum,int reftype));
@@ -1894,7 +1843,7 @@ static char* (*G__type2string) G__P((int type,int tagnum,int typenum,int reftype
 static void (*G__alloc_tempobject) G__P((int tagnum,int typenum));
 static void (*G__set_p2fsetup) G__P((void (*p2f)()));
 static void (*G__free_p2fsetup) G__P((void));
-static int (*G__genericerror) G__P((G__CONST char *message));
+static int (*G__genericerror) G__P((char *message));
 static char* (*G__tmpnam) G__P((char* name));
 static int (*G__setTMPDIR) G__P((char* badname));
 static void (*G__setPrerun) G__P((int prerun));
@@ -1958,19 +1907,11 @@ static float* (*G__Floatref) G__P((G__value *buf));
 static double* (*G__Doubleref) G__P((G__value *buf));
 static int (*G__loadsystemfile) G__P((G__CONST char* filename));
 static void (*G__set_ignoreinclude) G__P((G__IgnoreInclude ignoreinclude));
-static G__value (*G__exec_tempfile) G__P((G__CONST char *file));
-static G__value (*G__exec_text) G__P((G__CONST char *unnamedmacro));
+static G__value (*G__exec_tempfile) G__P((char *file));
+static G__value (*G__exec_text) G__P((char *text));
 static char* (*G__lasterror_filename) G__P(());
 static int (*G__lasterror_linenum) G__P(());
 static void (*G__va_arg_put) G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n));
-
-#ifndef G__OLDIMPLEMENTATION1546
-static char* (*G__load_text) G__P((G__CONST char *namedmacro));
-static void (*G__set_emergencycallback) G__P((void (*p2f)()));
-#endif
-#ifndef G__OLDIMPLEMENTATION1485
-static void (*G__set_errmsgcallback) G__P((void* p));
-#endif
 
 #ifdef G__MULTITHREADLIBCINTC
 G__EXPORT void G__SetCCintApiPointers(
@@ -2098,15 +2039,7 @@ G__EXPORT void G__SetCppCintApiPointers(
 		void* a121,
 		void* a122,
 		void* a123,
-		void* a124
-#ifndef G__OLDIMPLEMENTATION1546
-		,void* a125
-		,void* a126
-#endif
-#ifndef G__OLDIMPLEMENTATION1485
-		,void* a127
-#endif
-		)
+		void* a124)
 {
   G__main = (int (*) G__P((int argc,char **argv)) ) a1;
   G__setothermain = (void (*) G__P((int othermain)) ) a2;
@@ -2155,10 +2088,10 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__check_setup_version = (void (*) G__P((int version,G__CONST char *func)) ) a37;
   G__int = (long (*) G__P((G__value buf)) ) a38;
   G__double = (double (*) G__P((G__value buf)) ) a39;
-  G__calc = (G__value (*) G__P((G__CONST char *expr)) ) a40;
-  G__loadfile = (int (*) G__P((G__CONST char *filename)) ) a41;
-  G__unloadfile = (int (*) G__P((G__CONST char *filename)) ) a42;
-  G__init_cint = (int (*) G__P((G__CONST char *command)) ) a43;
+  G__calc = (G__value (*) G__P((char *expr)) ) a40;
+  G__loadfile = (int (*) G__P((char *filename)) ) a41;
+  G__unloadfile = (int (*) G__P((char *filename)) ) a42;
+  G__init_cint = (int (*) G__P((char *command)) ) a43;
   G__scratch_all = (void (*) G__P((void)) ) a44;
   G__setdouble = (void (*) G__P((G__value *pbuf,double d,void* pd,int type,int tagnum,int typenum,int reftype)) ) a45;
   G__setint = (void (*) G__P((G__value *pbuf,long d,void* pd,int type,int tagnum,int typenum,int reftype)) ) a46;
@@ -2169,7 +2102,7 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__alloc_tempobject = (void (*) G__P((int tagnum,int typenum)) ) a51;
   G__set_p2fsetup = (void (*) G__P((void (*p2f)())) ) a52;
   G__free_p2fsetup = (void (*) G__P((void)) ) a53;
-  G__genericerror = (int (*) G__P((G__CONST char *message)) ) a54;
+  G__genericerror = (int (*) G__P((char *message)) ) a54;
   G__tmpnam = (char* (*) G__P((char* name)) ) a55;
   G__setTMPDIR = (int (*) G__P((char* badname)) ) a56;
   G__setPrerun = (void (*) G__P((int prerun)) ) a57;
@@ -2233,18 +2166,11 @@ G__EXPORT void G__SetCppCintApiPointers(
   G__Doubleref = (double* (*) G__P((G__value *buf)) ) a117;
   G__loadsystemfile = (int (*) G__P((G__CONST char* filename)) ) a118;
   G__set_ignoreinclude = (void (*) G__P((G__IgnoreInclude ignoreinclude)) ) a119;
-  G__exec_tempfile = (G__value (*) G__P((G__CONST char *file)) ) a120;
-  G__exec_text = (G__value (*) G__P((G__CONST char *unnamedmacro)) ) a121;
+  G__exec_tempfile = (G__value (*) G__P((char *file)) ) a120;
+  G__exec_text = (G__value (*) G__P((char *text)) ) a121;
   G__lasterror_filename = (char* (*) G__P(()) ) a122;
   G__lasterror_linenum = (int (*) G__P(()) ) a123;
   G__va_arg_put = (void (*) G__P((G__va_arg_buf* pbuf,struct G__param* libp,int n)) ) a124;
-#ifndef G__OLDIMPLEMENTATION1546
-  G__load_text = (char* (*) G__P((G__CONST char *namedmacro)) ) a125;
-  G__set_emergencycallback= (void (*) G__P((void (*p2f)())) ) a126;
-#endif
-#ifndef G__OLDIMPLEMENTATION1485
-  G__set_errmsgcallback= (void (*) G__P((void *p)) ) a127;
-#endif
 }
 
 #endif /* G__MULTITHREADLIBCINT */

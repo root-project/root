@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.7 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLine.cxx,v 1.4 2000/11/21 20:26:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -10,8 +10,9 @@
  *************************************************************************/
 
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TLine.h"
 #include "TVirtualPad.h"
@@ -262,7 +263,7 @@ void TLine::ls(Option_t *) const
 //*-*-*-*-*-*-*-*-*-*-*-*List this line with its attributes*-*-*-*-*-*-*-*-*
 //*-*                    ==================================
    TROOT::IndentLevel();
-   printf("%s  X1=%f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),fX1,fY1,fX2,fY2);
+   printf("%s  X1= %f Y1=%f X2=%f Y2=%f\n",IsA()->GetName(),fX1,fY1,fX2,fY2);
 }
 
 //______________________________________________________________________________
@@ -345,7 +346,7 @@ void TLine::Streamer(TBuffer &R__b)
       R__b >> x2; fX2 = x2;
       R__b >> y2; fY2 = y2;
       //====end of old versions
-
+      
    } else {
       TLine::Class()->WriteBuffer(R__b,this);
    }

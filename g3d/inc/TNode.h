@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.6 2001/02/28 11:04:06 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.h,v 1.5 2001/01/12 08:27:11 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -91,7 +91,7 @@ protected:
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        SetMatrix(TRotMatrix *matrix=0) {fMatrix = matrix;}
    virtual void        SetName(const char *name);
-   virtual void        SetParent(TNode *parent);
+   virtual void        SetParent(TNode *parent) {fParent=parent;}
    virtual void        SetNameTitle(const char *name, const char *title);
    virtual void        SetPosition( Double_t x=0, Double_t y=0, Double_t z=0) {fX=x; fY=y; fZ=z;}
    virtual void        SetVisibility(Int_t vis=1); // *MENU*

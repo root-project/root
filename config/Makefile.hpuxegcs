@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for HP-UX 10.x with egcs-1.1.1
 
 PLATFORM      = hpux

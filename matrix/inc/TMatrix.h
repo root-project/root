@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.10 2001/12/07 21:58:59 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.5 2001/04/11 14:24:16 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -48,22 +48,11 @@
 #include "TVector.h"
 #endif
 
-class TMatrix;
 class TLazyMatrix;
 class TMatrixRow;
 class TMatrixColumn;
 class TMatrixDiag;
 class TMatrixPivoting;
-
-TMatrix &operator+=(TMatrix &target, const TMatrix &source);
-TMatrix &operator-=(TMatrix &target, const TMatrix &source);
-TMatrix &Add(TMatrix &target, Double_t scalar, const TMatrix &source);
-TMatrix &ElementMult(TMatrix &target, const TMatrix &source);
-TMatrix &ElementDiv(TMatrix &target, const TMatrix &source);
-Bool_t   operator==(const TMatrix &im1, const TMatrix &im2);
-void     Compare(const TMatrix &im1, const TMatrix &im2);
-Bool_t   AreCompatible(const TMatrix &im1, const TMatrix &im2);
-Double_t E2Norm(const TMatrix &m1, const TMatrix &m2);
 
 
 class TMatrix : public TObject {
@@ -86,23 +75,17 @@ protected:
    void Allocate(Int_t nrows, Int_t ncols, Int_t row_lwb = 0, Int_t col_lwb = 0);
    void Invalidate() { fNrows = fNcols = fNelems = -1; fElements = 0; fIndex = 0; }
 
-   Int_t Pdcholesky(const Real_t *a, Real_t *u, const Int_t n);
-   void  MakeTridiagonal(TMatrix &a,TVector &d,TVector &e);
-   void  MakeEigenVectors(TVector &d,TVector &e,TMatrix &z);
-   void  EigenSort(TMatrix &eigenVectors,TVector &eigenValues);
-
    // Elementary constructors
    void Transpose(const TMatrix &m);
    void Invert(const TMatrix &m);
-   void InvertPosDef(const TMatrix &m);
    void AMultB(const TMatrix &a, const TMatrix &b);
    void AtMultB(const TMatrix &a, const TMatrix &b);
 
    friend void MakeHaarMatrix(TMatrix &m);
 
 public:
-   enum EMatrixCreatorsOp1 { kZero, kUnit, kTransposed, kInverted, kInvertedPosDef };
-   enum EMatrixCreatorsOp2 { kMult, kTransposeMult, kInvMult, kInvPosDefMult, kAtBA };
+   enum EMatrixCreatorsOp1 { kZero, kUnit, kTransposed, kInverted };
+   enum EMatrixCreatorsOp2 { kMult, kTransposeMult, kInvMult, kAtBA };
 
    TMatrix() { Invalidate(); }
    TMatrix(Int_t nrows, Int_t ncols);
@@ -120,7 +103,6 @@ public:
    void ResizeTo(const TMatrix &m);
 
    Bool_t IsValid() const;
-   Bool_t IsSymmetric() const;
 
    Int_t GetRowLwb() const     { return fRowLwb; }
    Int_t GetRowUpb() const     { return fNrows+fRowLwb-1; }
@@ -156,9 +138,6 @@ public:
    TMatrix &Apply(TElementPosAction &action);
 
    TMatrix &Invert(Double_t *determ_ptr = 0);
-   TMatrix &InvertPosDef();
-
-   TMatrix EigenVectors(TVector &eigenValues);
 
    TMatrix &UnitMatrix();
    TMatrix &HilbertMatrix();
@@ -281,7 +260,7 @@ inline TMatrix &TMatrix::operator=(const TMatrix &source)
    return *this;
 }
 
-inline TMatrix::TMatrix(const TMatrix &another) : TObject()
+inline TMatrix::TMatrix(const TMatrix &another)
 {
    if (another.IsValid()) {
       Allocate(another.fNrows, another.fNcols, another.fRowLwb, another.fColLwb);

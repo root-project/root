@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name$:$Id$
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -123,7 +123,7 @@ TDataMember *TMethod::FindDataMember()
       Int_t token_cnt = 0;
       do {
           ptr1 = strtok((char*) (cnt++ ? 0:ptr2),",;"); //extract tokens
-                                                        // separated by , or ;
+                                                         // separated by , or ;
           if (ptr1) {
              tok = new char[strlen(ptr1)+1];
              strcpy(tok,ptr1);
@@ -182,8 +182,6 @@ TDataMember *TMethod::FindDataMember()
          sprintf(basename,"%s",funcname+3);
       else if ( strncmp(funcname,"Is",2) == 0 )
          sprintf(basename,"%s",funcname+2);
-      else if (strncmp(funcname, "Has", 3) == 0)
-         sprintf(basename, "%s", funcname+3);
       else
          return 0;
 

@@ -15,5 +15,5 @@ Requires: root-cint >= %ver, libroot >= %ver, libroot-dev >= %ver, root-bin >= %
 #---------------------------------------------------------------------
 # Files that go into this package 
 %files -n task-root
-%attr(-,root,root) %doc build/package/common/README LICENSE 
+%attr(-,root,root) %doc build/package/rpm/README.Redhat LICENSE 
 

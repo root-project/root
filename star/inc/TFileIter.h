@@ -1,4 +1,4 @@
-// $Id: TFileIter.h,v 1.4 2001/05/14 06:44:09 brun Exp $
+// $Id: TFileIter.h,v 1.5 2001/05/07 22:16:45 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
 //
@@ -71,7 +71,7 @@ class TFileIter : public TListIter {
               const char *ftitle = "", Int_t compress = 1,
               Int_t netopt = 0);
     TFileIter(TFile *file=0);
-    TFileIter(const TFileIter &) : TListIter() {;}
+    TFileIter(const TFileIter &) {;}
     virtual ~TFileIter();
 // --- draft !!!     virtual Int_t Copy(TFile *destFile);
     Int_t   CurrentCursorPosition() const;
@@ -115,40 +115,26 @@ class TFileIter : public TListIter {
 
 //__________________________________________________________________________
 inline Int_t TFileIter::CurrentCursorPosition() const
-{ 
-	// return the current 
-	return fCursorPosition;
-}
+{ return fCursorPosition;}
 
 //__________________________________________________________________________
 inline const TFile *TFileIter::GetTFile() const { return fRootFile; }
 
 //__________________________________________________________________________
 inline TObject *TFileIter::Next()
-{ 
-	// Make 1 step over the file objects and returns its pointer
-	// or 0, if there is no object left in the container
-	return Next(1); 
-}
+{ return Next(1); }
 
 //__________________________________________________________________________
 inline void  TFileIter::SetCursorPosition(Int_t cursorPosition)
-{ 
-	// Make <cursorPosition> steps (>0 - forward) over the file 
-	// objects to skip it
-	SkipObjects(cursorPosition - fCursorPosition); 
-}
+{ SkipObjects(cursorPosition - fCursorPosition); }
 
 //__________________________________________________________________________
 inline TFileIter &TFileIter::operator=(const char *keyNameToFind)
-{ 
-	// Interate unless the name of the object matches <keyNameToFind>
-	SetCursorPosition(keyNameToFind); return *this;}
+{ SetCursorPosition(keyNameToFind); return *this;}
 
 //__________________________________________________________________________
 inline TFileIter &TFileIter::operator=(Int_t cursorPosition)
 { 
-  // Interate over <cursorPosition>
   SetCursorPosition(cursorPosition);
   return *this;
 }
@@ -175,10 +161,7 @@ inline TFileIter::operator int () const
 { return CurrentCursorPosition(); }
 //__________________________________________________________________________
 inline TFileIter::operator const char *() const 
-{ 
-	// return the current key name
-	return GetKeyName();
-}
+{ return GetKeyName();}
 //__________________________________________________________________________
 inline int TFileIter::operator==(const char *name) const
 { return name ? !strcmp(name,GetKeyName()):0;}

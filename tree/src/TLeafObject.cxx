@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.13 2001/06/22 16:10:21 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.11 2001/05/02 20:44:33 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -64,7 +64,7 @@ void TLeafObject::FillBasket(TBuffer &b)
 //*-*                  =========================================
 
    if (!fObjAddress) return;
-   TObject *object  = GetObject();
+   TObject *object  = GetObject(); 
    if (object) {
       if (fVirtual) {
          UChar_t n = strlen(object->ClassName());
@@ -100,7 +100,7 @@ TMethodCall *TLeafObject::GetMethodCall(const char *name)
    strcpy(namecpy,name);
    char *params = strchr(namecpy,'(');
    if (params) { *params = 0; params++; }
-   else params = (char *) ")";
+   else params = ")";
 
    if (!fClass) fClass      = gROOT->GetClass(GetTitle());
    TMethodCall *m = new TMethodCall(fClass, namecpy, params);
@@ -148,7 +148,7 @@ void TLeafObject::ReadBasket(TBuffer &b)
    if (fVirtual) {
       b >> n;
       b.ReadFastArray(classname,n+1);
-      fClass      = gROOT->GetClass(classname);
+      fClass      = gROOT->GetClass(GetTitle());
    }
    if (fClass) {
       TObject *object;
@@ -220,7 +220,7 @@ void TLeafObject::Streamer(TBuffer &b)
       if (R__v == 1) fVirtual = kTRUE;
       if (R__v == 3) b >> fVirtual;
       //====end of old versions
-
+      
    } else {
       TLeafObject::Class()->WriteBuffer(b,this);
    }

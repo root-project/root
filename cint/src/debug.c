@@ -226,18 +226,6 @@ char *func;
 }
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1601
-static int G__tempfilenum = G__MAXFILE-1;
-
-/****************************************************************
-* G__gettempfilenum()
-****************************************************************/
-int G__gettempfilenum()
-{
-  return(G__tempfilenum);
-}
-#endif
-
 /****************************************************************
 * G__exec_tempfile()
 ****************************************************************/
@@ -277,9 +265,7 @@ char *file;
 
   int len;
 
-#ifdef G__OLDIMPLEMENTATION1601
   static int filenum = G__MAXFILE-1;
-#endif
   fpos_t pos;
   char store_var_type;
   struct G__input_file ftemp,store_ifile;
@@ -308,15 +294,6 @@ char *file;
   if(ftemp.fp) {
     ftemp.line_number = 1;
     sprintf(ftemp.name,file);
-#ifndef G__OLDIMPLEMENTATION1601
-    ftemp.filenum = G__tempfilenum;
-    G__srcfile[G__tempfilenum].fp = ftemp.fp;
-    G__srcfile[G__tempfilenum].filename=ftemp.name;
-    G__srcfile[G__tempfilenum].hash=0;
-    G__srcfile[G__tempfilenum].maxline=0;
-    G__srcfile[G__tempfilenum].breakpoint = (char*)NULL;
-    --G__tempfilenum;
-#else
     ftemp.filenum = filenum;
     G__srcfile[filenum].fp = ftemp.fp;
     G__srcfile[filenum].filename=ftemp.name;
@@ -324,7 +301,6 @@ char *file;
     G__srcfile[filenum].maxline=0;
     G__srcfile[filenum].breakpoint = (char*)NULL;
     --filenum;
-#endif
     if(G__ifile.fp && G__ifile.filenum>=0) {
       fgetpos(G__ifile.fp,&pos);
     }
@@ -422,15 +398,9 @@ char *file;
      * done for 'x' and 'E' command  but not for { } command */
     /* G__security = G__srcfile[G__ifile.filenum].security; */
     fclose(ftemp.fp);
-#ifndef G__OLDIMPLEMENTATION1601
-    ++G__tempfilenum;
-    G__srcfile[G__tempfilenum].fp = (FILE*)NULL;
-    G__srcfile[G__tempfilenum].filename=(char*)NULL;
-#else
     ++filenum;
     G__srcfile[filenum].fp = (FILE*)NULL;
     G__srcfile[filenum].filename=(char*)NULL;
-#endif
 #ifndef G__OLDIMPLEMENTATION630
     if(G__RETURN_IMMEDIATE>=G__return) G__return=G__RETURN_NON;
 #else
@@ -456,8 +426,8 @@ char *file;
 /**************************************************************************
 * G__exec_text()
 **************************************************************************/
-G__value G__exec_text(unnamedmacro)
-char *unnamedmacro;
+G__value G__exec_text(text)
+char *text;
 {
 #ifndef G__TMPFILE
   char tname[L_tmpnam+10], sname[L_tmpnam+10];
@@ -472,17 +442,17 @@ char *unnamedmacro;
   int addsemicolumn =0;
 
   i=0;
-  while(unnamedmacro[i] && isspace(unnamedmacro[i])) ++i;
-  if(unnamedmacro[i]!='{') addmparen = 1;
+  while(text[i] && isspace(text[i])) ++i;
+  if(text[i]!='{') addmparen = 1;
 
-  i = strlen(unnamedmacro)-1;
-  while(i && isspace(unnamedmacro[i])) --i;
-  if(unnamedmacro[i]=='}')       addsemicolumn = 0;
-  else if(unnamedmacro[i]==';')  addsemicolumn = 0;
+  i = strlen(text)-1;
+  while(i && isspace(text[i])) --i;
+  if(text[i]=='}')       addsemicolumn = 0;
+  else if(text[i]==';')  addsemicolumn = 0;
   else                   addsemicolumn = 1;
 
-  for(i=0;i<strlen(unnamedmacro);i++) {
-    switch(unnamedmacro[i]) {
+  for(i=0;i<strlen(text);i++) {
+    switch(text[i]) {
     case '(': case '[': case '{':
       if(!single_quote && !double_quote) ++nest; break;
     case ')': case ']': case '}':
@@ -494,7 +464,7 @@ char *unnamedmacro;
     }
   }
   if(nest!=0 || single_quote!=0 || double_quote!=0) {
-    G__fprinterr(G__serr,"!!!Error in given statement!!! \"%s\"\n",unnamedmacro);
+    G__fprinterr(G__serr,"!!!Error in given statement!!! \"%s\"\n",text);
     return(G__null);
   }
   
@@ -502,7 +472,7 @@ char *unnamedmacro;
   fp = fopen(tname,"w");
   if(!fp) return G__null;
   if(addmparen) fprintf(fp,"{\n");
-  fprintf(fp,"%s",unnamedmacro);
+  fprintf(fp,"%s",text);
   if(addsemicolumn) fprintf(fp,";");
   fprintf(fp,"\n");
   if(addmparen) fprintf(fp,"}\n");
@@ -515,45 +485,6 @@ char *unnamedmacro;
   remove(sname);
 
   return(buf);
-}
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1546
-/**************************************************************************
-* G__load_text()
-**************************************************************************/
-char* G__load_text(namedmacro)
-char *namedmacro;
-{
-  char* result = (char*)NULL;
-#ifndef G__TMPFILE
-  static char tname[L_tmpnam+10];
-#else
-  static char tname[G__MAXFILENAME];
-#endif
-  FILE *fp;
-  
-  G__tmpnam(tname);
-  strcat(tname,G__NAMEDMACROEXT);
-  fp = fopen(tname,"w");
-  if(!fp) return((char*)NULL);
-  fprintf(fp,"%s",namedmacro);
-  fprintf(fp,"\n");
-  fclose(fp);
-
-  switch(G__loadfile(tname)) {
-  case G__LOADFILE_SUCCESS:
-    result = tname;
-    break;
-  case G__LOADFILE_DUPLICATE:
-  case G__LOADFILE_FAILURE:
-  case G__LOADFILE_FATAL:
-    remove(tname);
-    result = (char*)NULL;
-    break;
-  }
-
-  return(result);
 }
 #endif
 

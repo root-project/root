@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.10 2001/12/05 11:18:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.8 2001/04/20 17:29:57 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -60,8 +60,7 @@ protected:
    TList   *GetListOfSignals() const { return fListOfSignals; }
    TList   *GetListOfConnections() const { return fListOfConnections; }
 
-   virtual void       *GetSender() { return this; }
-   virtual const char *GetSenderClassName() const { return ""; }
+   virtual void *GetSender() { return this; }
 
    static Bool_t ConnectToClass(TQObject *sender,
                                 const char *signal,
@@ -74,11 +73,6 @@ protected:
                                 TClass *receiver_class,
                                 void *receiver,
                                 const char *slot);
-
-   static Bool_t CheckConnectArgs(TQObject *sender,
-                                  TClass *sender_class, const char *signal,
-                                  TClass *receiver_class, const char *slot);
-
 public:
    TQObject();
    virtual ~TQObject();
@@ -167,18 +161,15 @@ R__EXTERN void *gTQSender;   // the latest sender object
 class TQObjSender : public TQObject {
 
 protected:
-   void    *fSender;        //delegation object
-   TString  fSenderClass;   //class name of delegation object
+   void   *fSender;    //delegation object
 
-   virtual void       *GetSender() { return fSender; }
-   virtual const char *GetSenderClassName() const { return fSenderClass; }
+   virtual void *GetSender() { return fSender; }
 
 public:
    TQObjSender() : TQObject() { }
    virtual ~TQObjSender() { Disconnect(); }
 
    virtual void SetSender(void *sender) { fSender = sender; }
-   void SetSenderClassName(const char *sclass = "") { fSenderClass = sclass; }
 
    ClassDef(TQObjSender,0) //Used to "delegate" TQObject functionality
                            //to interpreted classes, see also RQ_OBJECT.h
@@ -203,14 +194,12 @@ public:
    ClassDef(TQClass,0)  // Class with connections
 };
 
-
 // Global function which simplifies making connections in interpreted
 // ROOT session
 //
 //  ConnectCINT      - connects to interpreter(CINT) command
 
-extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
-                          const char *slot);
+extern Bool_t ConnectCINT(TQObject *sender, char *signal, char *slot);
 
 
 //---- ClassImpQ macro ----------------------------------------------

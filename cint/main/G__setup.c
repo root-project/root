@@ -2,7 +2,7 @@
 /***********************************************************************
  * cint (C/C++ interpreter)
  ************************************************************************
- * Source file main/G__setup.c
+ * Source file main/G__setup.C
  ************************************************************************
  * Description:
  *  Archived precompiled library initialization routine
@@ -17,13 +17,6 @@
  * representations about the suitability of this software for any
  * purpose.  It is provided "as is" without express or implied warranty.
  ************************************************************************/
-
-#ifdef G__CPPLINK_ON
-void G__cpp_setup();
-#endif
-#ifdef G__CLINK_ON
-void G__c_setup();
-#endif
 
 int G__globalsetup() {
 #ifdef G__CPPLINK_ON

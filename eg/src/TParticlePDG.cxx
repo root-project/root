@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.5 2001/08/17 07:32:12 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticlePDG.cxx,v 1.3 2001/03/05 09:09:42 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 #include "TDecayChannel.h"
@@ -10,25 +10,7 @@ ClassImp(TParticlePDG)
 //______________________________________________________________________________
 TParticlePDG::TParticlePDG()
 {
-  fPdgCode      = 0;
-  fMass         = 0;
-  fCharge       = 0;
-  fLifetime     = 0;
-  fWidth        = 0;
-  fParity       = 0;
-  fSpin         = 0;
-  fIsospin      = 0;
-  fI3           = 0;
-  fStrangeness  = 0;
-  fCharm        = 0;
-  fBeauty       = 0;
-  fTop          = 0;
-  fY            = 0;
-  fX            = 0;
-  fStable       = 0;
-  fDecayList    = 0;
-  fTrackingCode = 0;
-  fAntiParticle = 0;
+  fDecayList  = NULL;
 }
 
 //______________________________________________________________________________
@@ -36,25 +18,7 @@ TParticlePDG::TParticlePDG(Int_t )
 {
   // empty for the time  being
 
-  fPdgCode      = 0;
-  fMass         = 0;
-  fCharge       = 0;
-  fLifetime     = 0;
-  fWidth        = 0;
-  fParity       = 0;
-  fSpin         = 0;
-  fIsospin      = 0;
-  fI3           = 0;
-  fStrangeness  = 0;
-  fCharm        = 0;
-  fBeauty       = 0;
-  fTop          = 0;
-  fY            = 0;
-  fX            = 0;
-  fStable       = 0;
-  fDecayList    = 0;
-  fTrackingCode = 0;
-  fAntiParticle = 0;
+  fDecayList  = NULL;
 }
 
 //______________________________________________________________________________
@@ -66,18 +30,6 @@ TParticlePDG::TParticlePDG(const char* Name, const char* Title, Double_t Mass,
 {
 
     // empty for the time  being
-    fLifetime      = 0;
-    fParity        = 0;
-    fSpin          = 0;
-    fIsospin       = 0;
-    fI3            = 0;
-    fStrangeness   = 0;
-    fCharm         = 0;
-    fBeauty        = 0;
-    fTop           = 0;
-    fY             = 0;
-    fX             = 0;
-    fStable        = 0;
 
     fMass          = Mass;
     fStable        = Stable;

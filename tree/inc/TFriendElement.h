@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.2 2001/04/10 16:34:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TFriendElement.h,v 1.1 2001/04/09 07:52:33 brun Exp $
 // Author: Rene Brun   07/04/2001
 
 /*************************************************************************
@@ -34,26 +34,24 @@ class TTree;
 class TFriendElement : public TNamed {
 
 protected:
-    TTree        *fParentTree;  //!pointer to the parent TTree
-    TTree        *fTree;        //!pointer to the TTree described by this element
-    TFile        *fFile;        //!pointer to the file containing the friend TTree
-    TString       fTreeName;    // name of the friend TTree
-    Bool_t        fOwnFile;     // true if file is managed by this class
-
+    TTree        *fParentTree;      //!pointer  to the parent TTree
+    TTree        *fTree;            //!pointer  to the TTree described by this element
+    TFile        *fFile;            //!pointer to the file containing the friend Tree
+    TString       fTreeName;        // name of the friend Tree
+    
 public:
-   TFriendElement();
-   TFriendElement(TTree *tree, const char *treename, const char *filename);
-   TFriendElement(TTree *tree, const char *treename, TFile *file);
-   virtual ~TFriendElement();
-   virtual TTree      *Connect();
-   virtual TTree      *DisConnect();
-   virtual TFile      *GetFile();
-   virtual TTree      *GetParentTree() const {return fParentTree;}
-   virtual TTree      *GetTree();
-   virtual const char *GetTreeName() const {return fTreeName.Data();}
-   virtual void        ls(Option_t *option="") const;
+        TFriendElement();
+        TFriendElement(TTree *tree, const char *treename, const char *filename);
+        virtual ~TFriendElement();
+        virtual TTree   *Connect();
+        virtual TTree   *DisConnect();
+        virtual TFile   *GetFile();
+        virtual TTree   *GetParentTree() const {return fParentTree;}
+        virtual TTree   *GetTree();
+   virtual const char   *GetTreeName() const {return fTreeName.Data();}
+        virtual void     ls(Option_t *option="") const;
 
-   ClassDef(TFriendElement,1)  //A friend element of another TTree
+        ClassDef(TFriendElement,1)  //A friend element of another TTree
 };
 
 #endif

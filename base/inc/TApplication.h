@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.6 2001/09/20 17:07:22 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.h,v 1.3 2001/04/22 16:00:56 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -46,7 +46,6 @@ private:
    TApplicationImp   *fAppImp;         //!Window system specific application implementation
    Bool_t             fReturnFromRun;  //When true return from Run()
    Bool_t             fNoLog;          //Do not process logon and logoff macros
-   Bool_t             fNoLogo;         //Do not show splash screen and welcome message
    Bool_t             fQuit;           //Exit after having processed input files
    TObjArray         *fFiles;          //Array of input files (TObjString's)
    char              *fIdleCommand;    //Command to execute while application is idle
@@ -69,10 +68,10 @@ public:
    virtual void    GetOptions(int *argc, char **argv);
    TSignalHandler *GetSignalHandler() const { return fSigHandler; }
    virtual void    HandleIdleTimer();
-   virtual Bool_t  HandleTermInput() { return kFALSE; }
+   virtual void    HandleTermInput() { }
    virtual void    Init() { fAppImp->Init(); }
-   virtual void    ProcessLine(const char *line, Bool_t sync = kFALSE, int* error = 0);
-   virtual void    ProcessFile(const char *line, int* error = 0);
+   virtual void    ProcessLine(const char *line, Bool_t sync = kFALSE);
+   virtual void    ProcessFile(const char *line);
    virtual void    Run(Bool_t retrn = kFALSE);
    virtual void    SetIdleTimer(UInt_t idleTimeInSec, const char *command);
    virtual void    RemoveIdleTimer();
@@ -95,7 +94,6 @@ public:
    char          **Argv() const  { return fArgv; }
    char           *Argv(int index) const { return fArgv[index]; }
    Bool_t          NoLogOpt() const { return fNoLog; }
-   Bool_t          NoLogoOpt() const { return fNoLogo; }
    Bool_t          QuitOpt() const { return fQuit; }
    TObjArray      *InputFiles() const { return fFiles; }
    void            ClearInputFiles();

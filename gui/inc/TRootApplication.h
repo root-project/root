@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootApplication.h,v 1.2 2001/04/22 16:00:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootApplication.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -42,7 +42,8 @@ private:
    void GetOptions(Int_t *argc, char **argv);
 
 public:
-   TRootApplication(const char *appClassName, Int_t *argc, char **argv);
+   TRootApplication(const char *appClassName, Int_t *argc, char **argv,
+                    void *options = 0, Int_t numOptions = 0);
    virtual ~TRootApplication();
 
    TGClient     *Client() const { return fClient; }

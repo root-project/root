@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.16 2001/07/02 16:06:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.13 2001/04/28 11:39:53 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -186,10 +186,10 @@ Int_t TBranchObject::GetEntry(Int_t entry, Int_t getall)
       nbytes = 0;
       for (Int_t i=0;i<nbranches;i++)  {
          TBranch *branch = (TBranch*)fBranches[i];
-         if (branch) nbytes += branch->GetEntry(entry, getall);
+         if (branch) nbytes += branch->GetEntry(entry);
       }
    } else {
-      nbytes = TBranch::GetEntry(entry, getall);
+      nbytes = TBranch::GetEntry(entry);
    }
    return nbytes;
 }
@@ -395,13 +395,12 @@ void TBranchObject::SetBasketSize(Int_t buffsize)
 //*-*            ==========================================================
 //
 
-   TBranch::SetBasketSize(buffsize);
-
+   fBasketSize = buffsize;
    Int_t i;
    Int_t nbranches = fBranches.GetEntriesFast();
    for (i=0;i<nbranches;i++)  {
       TBranch *branch = (TBranch*)fBranches[i];
-      branch->SetBasketSize(fBasketSize);
+      branch->SetBasketSize(buffsize);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.6 2001/10/29 16:23:54 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataMember.cxx,v 1.4 2000/12/13 15:13:52 brun Exp $
 // Author: Fons Rademakers   04/02/95
 
 /*************************************************************************
@@ -175,7 +175,6 @@
 #include "TIterator.h"
 #include "TList.h"
 #include "TGlobal.h"
-#include "TRealData.h"
 
 
 ClassImp(TDataMember)
@@ -475,22 +474,10 @@ const char *TDataMember::GetName() const
 //______________________________________________________________________________
 Int_t TDataMember::GetOffset() const
 {
-   // Get offset from "this".
+   // Get offset from "this". This information is only available for
+   // public datamembers.
 
-   //case of an interpreted or fake class
-   if (fClass->GetDeclFileLine() < 0) return fInfo->Offset();
-   
-   //case of a compiled class
-   //Note that the offset cannot be computed in case of an abstract class
-   //for which the list of real data has not yet been computed via 
-   //a real daughter class.
-   fClass->BuildRealData();
-   TIter next(fClass->GetListOfRealData());
-   TRealData *rdm;
-   while ((rdm = (TRealData*)next())) {
-      if (rdm->GetDataMember() == this) return rdm->GetThisOffset();
-   }
-   return 0;
+   return fInfo->Offset();
 }
 
 //______________________________________________________________________________
@@ -597,13 +584,10 @@ TMethodCall *TDataMember::GetterMethod()
 
       char gettername[128];
       sprintf(gettername, "Get%s", dataname+1);
-      if (strstr(gettername, "Is")) sprintf(gettername, "Get%s", dataname+3);
+      if (strstr(gettername, "Is")) sprintf(gettername, "Set%s", dataname+3);
       if (GetClass()->GetMethod(gettername, ""))
          return fValueGetter = new TMethodCall(fClass, gettername, "");
       sprintf(gettername, "Is%s", dataname+1);
-      if (GetClass()->GetMethod(gettername, ""))
-         return fValueGetter = new TMethodCall(fClass, gettername, "");
-      sprintf(gettername, "Has%s", dataname+1);
       if (GetClass()->GetMethod(gettername, ""))
          return fValueGetter = new TMethodCall(fClass, gettername, "");
    }
@@ -663,3 +647,8 @@ TOptionListItem::~TOptionListItem()
    if (fOptName)  delete fOptName;
    if (fOptLabel) delete fOptLabel;
 }
+
+
+
+
+

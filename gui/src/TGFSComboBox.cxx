@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.6 2001/06/22 16:10:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.4 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -42,10 +42,10 @@
 //--- this is temp here...
 
 struct lbc_t {
-  const char *name;
-  const char *path;
-  const char *pixmap;
-  Int_t       id, indent, flags;
+  char   *name;
+  char   *path;
+  char   *pixmap;
+  Int_t   id, indent, flags;
 };
 
 static struct lbc_t gLbc[] = {
@@ -204,11 +204,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
                                  kLHintsExpandY, 4, 0, 0, 0));
 
    fListBox->GetContainer()->AddInput(kButtonPressMask | kButtonReleaseMask |
-#ifndef GDK_WIN32
                                       kPointerMotionMask);
-#else
-                                      kButtonMotionMask);
-#endif
 
    //--- first check for the existence of some directories...
 
@@ -299,7 +295,7 @@ void TGFSComboBox::Update(const char *path)
       if (*tailpath == '/') ++tailpath;
       if (*tailpath)
          while (1) {
-            const char *picname;
+            char *picname;
             const char *semi = strchr(tailpath, '/');
             if (semi == 0) {
                strcpy(dirname, tailpath);

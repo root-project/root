@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.47 2001/12/21 14:43:38 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.22 2001/05/30 06:06:24 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -34,6 +34,8 @@
 #include "TList.h"
 #include "TVirtualPad.h"
 #include "TSystem.h"
+#include "G__ci.h"
+
 
 #ifdef WIN32
 #  ifndef ROOT_TGWin32Command
@@ -56,24 +58,22 @@ extern "C" int G__const_setnoerror();
 extern "C" int G__const_resetnoerror();
 
 extern "C" void G__clearfilebusy(int);
-extern "C" void G__clearstack();
 
-extern "C" int ScriptCompiler(const char *filename, const char *opt) {
+extern "C" int ScriptCompiler(const char* filename, const char* opt) {
    return gSystem->CompileMacro(filename, opt);
 }
 
-extern "C" int IgnoreInclude(const char *fname, const char *expandedfname) {
+extern "C" int IgnoreInclude(const char* fname,const char* expandedfname) {
    return gROOT->IgnoreInclude(fname,expandedfname);
 }
 
-extern "C" void TCint_UpdateClassInfo(char *c, Long_t l) {
-  TCint::UpdateClassInfo(c, l);
+extern "C" void TCint_UpdateClassInfo(char* c ,Long_t l) {
+  TCint::UpdateClassInfo(c,l);
 }
 
-extern "C" void* TCint_FindSpecialObject(char *c, G__ClassInfo *ci, void **p1, void **p2) {
-  return TCint::FindSpecialObject(c, ci, p1, p2);
+extern "C" void* TCint_FindSpecialObject(char * c, G__ClassInfo *ci, void ** p1, void ** p2) {
+  return TCint::FindSpecialObject(c,ci,p1,p2);
 }
-
 // It is a "fantom" method to synchronize user keyboard input
 // and ROOT prompt line (for WIN32)
 const char *fantomline = "TRint::EndOfLineAction();";
@@ -122,14 +122,6 @@ void TCint::ClearFileBusy()
 }
 
 //______________________________________________________________________________
-void TCint::ClearStack()
-{
-   // Delete existing temporary values
-
-   G__clearstack();
-}
-
-//______________________________________________________________________________
 Int_t TCint::InitializeDictionaries()
 {
    // Initialize all registered dictionaries. Normally this is already done
@@ -153,18 +145,13 @@ void TCint::ExecThreadCB(TWin32SendClass *command)
    // This function must be called from the "Command thread only".
 
 #ifdef WIN32
-#ifndef GDK_WIN32
    char *line = (char *)(command->GetData(0));
-   EErrorCode *error = (EErrorCode*)(command->GetData(1));
-   Int_t iret = ProcessLine((const char *)line,error);
+   Int_t iret = ProcessLine((const char *)line);
    delete [] line;
    if (LOWORD(command->GetCOP()) == kSendWaitClass)
       ((TWin32SendWaitClass *)command)->Release();
    else
       delete command;
-#else
-   if (command) { }
-#endif
 #else
    if (command) { }
 #endif
@@ -217,85 +204,74 @@ Bool_t TCint::IsLoaded(const char* filename) const
 }
 
 //______________________________________________________________________________
-void TCint::LoadMacro(const char *filename, EErrorCode *error)
+void TCint::LoadMacro(const char *filename)
 {
    // Load a macro file in CINT's memory.
 
-   ProcessLine(Form(".L %s", filename), error);
+   ProcessLine(Form(".L %s", filename));
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
+Int_t TCint::ProcessLine(const char *line)
 {
    // Let CINT process a command line.
 
    Int_t ret = 0;
+
    if (gApplication) {
       if (gApplication->IsCmdThread()) {
          gROOT->SetLineIsProcessing();
 
          // It checks whether the input line contains the "fantom" method
          // to synchronize user keyboard input and ROOT prompt line
-         if (strstr(line,fantomline)) {
-            G__free_tempobject();
-            TCint::UpdateAllCanvases();
-         } else {
-            int local_error = 0;
-            ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, 0);
-            if (error) *error = (EErrorCode)local_error;
-         }
 
+         if (strstr(line,fantomline))
+             TCint::UpdateAllCanvases();
+         else
+             ret = G__process_cmd((char *)line, fPrompt, &fMore, 0, 0);
          gROOT->SetLineHasBeenProcessed();
       } else
-         ret = ProcessLineAsynch(line, error);
+         ret = ProcessLineAsynch(line);
    }
    return ret;
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLineAsynch(const char *line, EErrorCode *error)
+Int_t TCint::ProcessLineAsynch(const char *line)
 {
    // Let CINT process a command line asynch.
 
 #ifndef WIN32
-   return ProcessLine(line, error);
+   return ProcessLine(line);
 #else
-#ifndef GDK_WIN32
-   if (error) *error = kProcessing;
    char *cmd = new char[strlen(line)+1];
    strcpy(cmd,line);
-   TWin32SendClass *code = new TWin32SendClass(this,(UInt_t)cmd,(UInt_t)error,0,0);
+   TWin32SendClass *code = new TWin32SendClass(this,(UInt_t)cmd,0,0,0);
    ExecCommandThread(code,kFALSE);
    return 0;
-#else
-   return ProcessLine(line, error);
-#endif
 #endif
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLineSynch(const char *line, EErrorCode *error)
+Int_t TCint::ProcessLineSynch(const char *line)
 {
    // Let CINT process a command line synchronously, i.e we are waiting
    // it will be finished.
 
   if (gApplication && gApplication->IsCmdThread())
-     return ProcessLine(line, error);
+     return ProcessLine(line);
 #ifdef WIN32
-#ifndef GDK_WIN32
-   if (error) *error = kProcessing;
    char *cmd = new char[strlen(line)+1];
    strcpy(cmd,line);
-   TWin32SendWaitClass code(this,(UInt_t)cmd,(UInt_t)error,0,0);
+   TWin32SendWaitClass code(this,(UInt_t)cmd,0,0,0);
    ExecCommandThread(&code,kFALSE);
    code.Wait();
-#endif
 #endif
    return 0;
 }
 
 //______________________________________________________________________________
-Long_t TCint::Calc(const char *line, EErrorCode *error)
+Long_t TCint::Calc(const char *line)
 {
    // Directly execute an executable statement (e.g. "func()", "3+5", etc.
    // however not declarations, like "Int_t x;").
@@ -316,7 +292,6 @@ Long_t TCint::Calc(const char *line, EErrorCode *error)
 #endif
 
    result = (Long_t) G__int(G__calc((char *)line));
-   if (error) *error = (EErrorCode)G__lasterror();
 
 #ifdef WIN32
    if (gApplication && gApplication->GetApplicationImp())
@@ -350,7 +325,7 @@ void TCint::ResetAll()
 {
    // Reset the CINT state to its initial state.
 
-   G__init_cint("cint +V");
+   G__init_cint("cint");
    G__init_process_cmd();
 }
 
@@ -448,81 +423,37 @@ void TCint::UpdateListOfTypes()
    // Update the list of pointers to Datatype (typedef) definitions. This
    // function is called by TROOT::GetListOfTypes().
 
-   G__TypedefInfo t;
+   G__TypedefInfo t, *a;
    while (t.Next()) {
       if (t.IsValid() && t.Name()) {
          TDataType *d = (TDataType *)gROOT->fTypes->FindObject(t.Name());
          // only add new types, don't delete old ones with the same name
          // (as is done in UpdateListOfGlobals())
-         // This 'feature' is being used in TROOT::GetType.
          if (!d) {
-            gROOT->fTypes->Add(new TDataType( new G__TypedefInfo(t) ));
+            a = new G__TypedefInfo(t);
+            gROOT->fTypes->Add(new TDataType(a));
          }
       }
    }
 }
 
 //______________________________________________________________________________
-void TCint::SetClassInfo(TClass *cl, Bool_t reload)
+void TCint::SetClassInfo(TClass *cl)
 {
    // Set pointer to CINT's G__ClassInfo in TClass.
 
-   if (!cl->fClassInfo || reload) {
-      // In the case where the class is not loaded and belongs to a namespace
-      // or is nested, looking for the full class name is outputing a lots of
-      // (expected) error messages.  Currently the only way to avoid this is to
-      // specifically check that each level of nesting is already loaded.
-      // In case of templates the idea is that everything between the outer
-      // '<' and '>' has to be skipped, e.g.: aap<pipo<noot>::klaas>::a_class
-
-      char *classname = StrDup(cl->GetName());
-      char *current = classname;
-      while (*current) {
-
-         while (*current && *current != ':' && *current != '<')
-            current++;
-
-         if (!*current) break;
-
-         if (*current == '<') {
-            int level = 1;
-            current++;
-            while (*current && level > 0) {
-               if (*current == '<') level++;
-               if (*current == '>') level--;
-               current++;
-            }
-            continue;
-         }
-
-         // *current == ':', must be a "::"
-         if (*(current+1) != ':') {
-            Error("SetClassInfo", "unexpected token : in %s", classname);
-            delete [] classname;
-            return;
-         }
-
-         *current = '\0';
-         G__ClassInfo info(classname);
-         if (!info.IsLoaded()) {
-            delete [] classname;
-            return;
-         }
-         *current = ':';
-         current += 2;
-      }
-      delete [] classname;
-
+   if (!cl->fClassInfo) {
+      if (strstr(cl->GetName(),"::")) return;
       cl->fClassInfo = new G__ClassInfo(cl->GetName());
 
-      // In case a class contains an external enum, the enum will be seen as a
-      // class. We must detect this special case and make the class a Zombie.
-      // Here we assume that a class has at least one method.
-      if (cl->Property() & (kIsClass|kIsStruct) == 0) {
+      //In case a class contains an external enum, the enum will be seen as a class
+      //We must detect this special case and make the class a Zombie
+      //Here we assume that a class has at least one method
+      if (cl->fClassInfo->NMethods() == 0) {
          cl->MakeZombie();
       }
-
-      if (!cl->fClassInfo->IsLoaded()) {
+      
+      if (!cl->fClassInfo->IsValid()) {
          // this happens when no CINT dictionary is available
          delete cl->fClassInfo;
          cl->fClassInfo = 0;
@@ -660,7 +591,7 @@ void *TCint::GetInterfaceMethodWithPrototype(TClass *cl, char *method, char *pro
 }
 
 //______________________________________________________________________________
-void TCint::Execute(const char *function, const char *params, int *error)
+void TCint::Execute(const char *function, const char *params)
 {
    // Execute a global function with arguments params.
 
@@ -673,12 +604,10 @@ void TCint::Execute(const char *function, const char *params, int *error)
 
    // call function
    func.Exec(0);
-   if (error) *error = G__lasterror();
 }
 
 //______________________________________________________________________________
-void TCint::Execute(TObject *obj, TClass *cl, const char *method,
-                    const char *params, int *error)
+void TCint::Execute(TObject *obj, TClass *cl, const char *method, const char *params)
 {
    // Execute a method from class cl with arguments params.
 
@@ -692,12 +621,10 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method,
    // call function
    address = (void*)((Long_t)obj + offset);
    func.Exec(address);
-   if (error) *error = G__lasterror();
 }
 
 //______________________________________________________________________________
-void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params,
-                    int *error)
+void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params)
 {
    // Execute a method from class cl with the arguments in array params
    // (params[0] ... params[n] = array of TObjString parameters).
@@ -752,19 +679,15 @@ void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params
        listpar = complete.Data();
    }
 
-   Execute(obj, cl, (char *)method->GetName(), (char *)listpar, error);
+   Execute(obj, cl, (char *)method->GetName(), (char *)listpar);
 }
 
 //______________________________________________________________________________
-Int_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
+Int_t TCint::ExecuteMacro(const char *filename)
 {
    // Execute a CINT macro.
 
-   G__value result;
-   if (gApplication)
-      gApplication->ProcessFile(filename, (int*)error);
-   else
-      result = G__exec_tempfile((char*)filename);
+   G__value result = G__exec_tempfile((char*)filename);
    return 0;  // could get return value from result, but what about return type?
 }
 
@@ -875,7 +798,7 @@ const char* TCint::GetSharedLibs()
 }
 
 //______________________________________________________________________________
-Bool_t TCint::IsErrorMessagesEnabled()
+Bool_t TCint::IsErrorMessagesEnabled() 
 {
    // If error messages are disabled, the interpreter should suppress its
    // failures and warning messages from stdout.

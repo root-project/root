@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.9 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TBox.cxx,v 1.5 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -10,8 +10,9 @@
  *************************************************************************/
 
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TBox.h"
 #include "TVirtualPad.h"
@@ -115,9 +116,8 @@ Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
 
 //*-*- Are we inside the box?
 //*-*  ======================
-   if (GetFillStyle()) {
-      if ( (px > pxl && px < pxt) && (py > pyl && py < pyt) ) return 0;
-      else return 9999;
+   if ( (px > pxl && px < pxt) && (py > pyl && py < pyt) ) {
+      if (GetFillStyle()) return 0;  //*-* if box is filled
    }
 
 //*-*- Are we on the edges?
@@ -548,7 +548,7 @@ void TBox::Print(Option_t *) const
 //*-*-*-*-*-*-*-*-*-*-*Dump this box with its attributes*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================
 
-   printf("%s  X1=%f Y1=%f X2=%f Y2=%f",IsA()->GetName(),fX1,fY1,fX2,fY2);
+   printf("%s  X1= %f Y1=%f X2=%f Y2=%f",IsA()->GetName(),fX1,fY1,fX2,fY2);
    if (GetLineColor() != 1) printf(" Color=%d",GetLineColor());
    if (GetLineStyle() != 1) printf(" Style=%d",GetLineStyle());
    if (GetLineWidth() != 1) printf(" Width=%d",GetLineWidth());

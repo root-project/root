@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.6 2001/06/05 13:13:05 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGeometry.cxx,v 1.5 2000/12/13 15:13:47 brun Exp $
 // Author: Rene Brun   22/09/95
 
 /*************************************************************************
@@ -600,7 +600,7 @@ void TGeometry::UpdateMatrix(TNode *node)
    Int_t saveGeomLevel = fGeomLevel;
    //Update matrices in the hierarchy
    for (fGeomLevel=1;i<=saveGeomLevel;fGeomLevel++) {
-      node = nodes[i-1];
+      node = nodes[i-i];
       UpdateTempMatrix(node->GetX(),node->GetY(),node->GetZ(),node->GetMatrix());
    }
 }

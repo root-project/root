@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.12 2001/10/15 06:59:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.9 2001/04/21 12:04:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -66,7 +66,6 @@ protected:
     Int_t       fEntryNumber;     //  Current entry number (last one filled in this branch)
     Int_t       fOffset;          //  Offset of this branch
     Int_t       fMaxBaskets;      //  Maximum number of Baskets so far
-    Int_t       fSplitLevel;      //  Branch split level
     Int_t       fNleaves;         //! Number of leaves
     Int_t       fReadBasket;      //! Current basket number when reading
     Int_t       fReadEntry;       //! Current entry number when reading
@@ -100,7 +99,6 @@ public:
     virtual TLeaf   *FindLeaf(const char *name);
     virtual char    *GetAddress() const {return fAddress;}
     virtual Int_t    GetBasketSize() const {return fBasketSize;}
-    virtual const char* GetClassName() const { return ""; }
     virtual Int_t    GetCompressionLevel() const {return fCompress;}
     virtual Int_t    GetEntry(Int_t entry=0, Int_t getall = 0);
     virtual Int_t    GetEntryExport(Int_t entry, Int_t getall, TClonesArray *list, Int_t n);
@@ -126,7 +124,6 @@ public:
           TObjArray *GetListOfLeaves()   {return &fLeaves;}
             Int_t    GetMaxBaskets() const  {return fMaxBaskets;}
             Int_t    GetNleaves() const {return fNleaves;}
-            Int_t    GetSplitLevel() const {return fSplitLevel;}
             Stat_t   GetEntries() const {return fEntries;}
             TTree   *GetTree() const {return fTree;}
     virtual Int_t    GetRow(Int_t row);
@@ -139,7 +136,7 @@ public:
     virtual void     ResetReadEntry() {fReadEntry = -1;}
     virtual void     SetAddress(void *add);
     virtual void     SetAutoDelete(Bool_t autodel=kTRUE);
-    virtual void     SetBasketSize(Int_t buffsize);
+    virtual void     SetBasketSize(Int_t buffsize) {fBasketSize=buffsize;}
     virtual void     SetBufferAddress(TBuffer *entryBuffer);
     virtual void     SetCompressionLevel(Int_t level=1);
     virtual void     SetEntryOffsetLen(Int_t len) {fEntryOffsetLen = len;}
@@ -151,7 +148,7 @@ public:
     
     static  void     ResetCount() {fgCount = 0;}
 
-    ClassDef(TBranch,7)  //Branch descriptor
+    ClassDef(TBranch,6)  //Branch descriptor
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.27 2002/01/27 15:55:57 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.16 2001/06/06 16:48:33 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -116,67 +116,6 @@
 
 const char *kProtocolName   = "tcp";
 
-// for testing purpose only !!!
-#ifdef GDK_WIN32
-HANDLE hEvent1;
-HANDLE hThread1,hThread2;
-unsigned thread1ID,thread2ID;
-#endif
-
-
-#ifdef GDK_WIN32
-struct  itimerval {
-   struct  timeval it_interval;
-   struct  timeval it_value;
-};
-
-static UINT   timer_active = 0;
-static struct itimerval itv;
-static DWORD  start_time;
-
-#define ITIMER_REAL     0
-#define ITIMER_VIRTUAL  1
-#define ITIMER_PROF     2
-
-int setitimer (int which, const struct itimerval *value, struct itimerval *oldvalue)
-{
-  UINT elapse;
-
-  if (which != ITIMER_REAL)
-    {
-      return -1;
-    }
-  /* Check if we will wrap */
-  if (itv.it_value.tv_sec >= (long) (UINT_MAX / 1000))
-    {
-      return -1;
-    }
-  if (timer_active)
-    {
-      KillTimer (NULL, timer_active);
-      timer_active = 0;
-    }
-  if (oldvalue)
-    *oldvalue = itv;
-  if (value == NULL)
-    {
-      return -1;
-    }
-  itv = *value;
-  elapse = itv.it_value.tv_sec * 1000 + itv.it_value.tv_usec / 1000;
-  if (elapse == 0)
-    if (itv.it_value.tv_usec)
-      elapse = 1;
-    else
-      return 0;
-  if (!(timer_active = SetTimer (NULL, 1, elapse, NULL)))
-    {
-      return -1;
-    }
-  start_time = GetTickCount ();
-  return 0;
-}
-#endif
 
 //______________________________________________________________________________
 BOOL ConsoleSigHandler(DWORD sig)
@@ -278,45 +217,19 @@ TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
 TWinNTSystem::~TWinNTSystem()
 {
 
-   SafeDelete(fWin32Timer);
+ SafeDelete(fWin32Timer);
 
-   // Clean up the WinSocket connectios
-   WSACleanup();
+//*-* Clean up the WinSocket connectios
+  WSACleanup();
 
-   if (fDirNameBuffer) {
-      delete [] fDirNameBuffer;
-      fDirNameBuffer = 0;
-   }
+  if (fDirNameBuffer) {
+   delete [] fDirNameBuffer;  fDirNameBuffer = 0;
+  }
 
-   if (fhSmallIconList) {
-      ImageList_Destroy(fhSmallIconList);
-      fhSmallIconList = 0;
-   }
-   if (fhNormalIconList) {
-      ImageList_Destroy(fhNormalIconList);
-      fhNormalIconList = 0;
-   }
+ if (fhSmallIconList)  {ImageList_Destroy(fhSmallIconList);  fhSmallIconList = 0; }
+ if (fhNormalIconList) {ImageList_Destroy(fhNormalIconList); fhNormalIconList = 0; }
 
-#ifdef GDK_WIN32
-   if (hThread1) CloseHandle(hThread1);
-#endif
-   CloseHandle(fhTermInputEvent);
 }
-
-#ifdef GDK_WIN32
-unsigned __stdcall HandleConsoleThread(void *pArg )
-{
-    while (1) {
-        if(gROOT->GetApplication()) {
-            WaitForSingleObject(hEvent1, 10);
-            if(gROOT->GetApplication())
-                gROOT->GetApplication()->HandleTermInput();
-        }
-    }
-    _endthreadex( 0 );
-    return 0;
-}
-#endif
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::Init()
@@ -364,20 +277,9 @@ Bool_t TWinNTSystem::Init()
    gRootDir= ROOTPREFIX;
 #endif
 
-#ifndef GDK_WIN32
-   // The the name of the DLL to be used as a stock of the icon
+//*-*  The the name of the DLL to be used as a stock of the icon
    SetShellName();
    CreateIcons();
-#endif
-
-   // Create Event HANDLE for stand-alone ROOT-based applications
-   fhTermInputEvent = CreateEvent(NULL,TRUE,FALSE,NULL);
-
-#ifdef GDK_WIN32
-    hEvent1 = CreateEvent(NULL, FALSE, FALSE, NULL);
-    hThread1 = (HANDLE)_beginthreadex( NULL, 0, &HandleConsoleThread, fhTermInputEvent, 0,
-        &thread1ID );
-#endif
 
    return kFALSE;
 }
@@ -612,17 +514,18 @@ const char *TWinNTSystem::GetError()
 }
 
 //______________________________________________________________________________
-const char *TWinNTSystem::HostName()
+const char *TWinNTSystem::Hostname()
 {
    // Return the system's host name.
 
    if (fHostname == "") {
       char hn[64];
-      DWORD il = sizeof(hn);
-      GetComputerName(hn, &il);
+      int il = sizeof(hn);
+      GetComputerName((LPTSTR)hn,( LPDWORD)&il);
+//      gethostname(hn, sizeof(hn));
       fHostname = hn;
    }
-   return fHostname;
+   return (const char *)fHostname;
 }
 
 //---- EventLoop ---------------------------------------------------------------
@@ -714,7 +617,6 @@ void TWinNTSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
    // behaviour.
 }
 
-#ifndef GDK_WIN32
 //______________________________________________________________________________
 Bool_t TWinNTSystem::ProcessEvents()
 {
@@ -725,98 +627,77 @@ Bool_t TWinNTSystem::ProcessEvents()
    gROOT->SetInterrupt(kFALSE);
    return intr;
 }
-
 //______________________________________________________________________________
 void TWinNTSystem::DispatchOneEvent(Bool_t)
 {
  // Dispatch a single event via Command thread
 
-  if (!gApplication->HandleTermInput()) {
-     // wait ExitLoop()
-     WaitForSingleObject(fhTermInputEvent,INFINITE);
-     ResetEvent(fhTermInputEvent);
-  }
-}
-#else
+  gROOT->GetApplication()->HandleTermInput();
+#if 0
+     // check for file descriptors ready for reading/writing
+  if (fNfd > 0 && fFileHandler->GetSize() > 0) {
+      TFileHandler *fh;
+      TIter next(fFileHandler);
 
-//______________________________________________________________________________
-void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
-{
- // Dispatch a single event via Command thread
-
-   while (1) {
-      fReadready  = fReadmask;
-      fWriteready = fWritemask;
-      PulseEvent(hEvent1);
-      if ((gXDisplay) && gXDisplay->Notify()) {
-         if (fReadready.IsSet(gXDisplay->GetFd())) {
-            fReadready.Clr(gXDisplay->GetFd());
-            fNfd--;
-         }
-         if (!pendingOnly) {
-             return;
-         }
-      }
-      // check for file descriptors ready for reading/writing
-      if (fNfd > 0 && fFileHandler->GetSize() > 0) {
-          TFileHandler *fh;
-          TIter next(fFileHandler);
-
-          while (fh = (TFileHandler*) next()) {
-              int fd = fh->GetFd();
-              if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
-                  fReadready.Clr(fd);
-                  if (fh->ReadNotify()) {
-                      return;
-                  }
-              }
-              if (fd <= fMaxwfd && fWriteready.IsSet(fd)) {
-                  fWriteready.Clr(fd);
-                  if (fh->WriteNotify()) {
-                      return;
-                  }
-              }
+      while (fh = (TFileHandler*) next()) {
+          int fd = fh->GetFd();
+          if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
+              fReadready.Clr(fd);
+              if (fh->ReadNotify())
+                  return;
+          }
+          if (fd <= fMaxwfd && fWriteready.IsSet(fd)) {
+              fWriteready.Clr(fd);
+              if (fh->WriteNotify())
+                  return;
           }
       }
-      fNfd = 0;
-      fReadready.Zero();
-      fWriteready.Zero();
+  }
+  fNfd = 0;
+  fReadready.Zero();
+  fWriteready.Zero();
 
-      // check synchronous signals
-      if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
-         if (CheckSignals(kTRUE))
-            if (!pendingOnly) return;
-      fSigcnt = 0;
-      fSignals.Zero();
+  // check synchronous signals
+  if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
+      if (CheckSignals(kTRUE))
+      return;
+  fSigcnt = 0;
+  fSignals.Zero();
 
       // check synchronous timers
-      if (fTimers && fTimers->GetSize() > 0)
-         if (DispatchTimers(kTRUE)) {
-            // prevent timers from blocking file descriptor monitoring
-            Long_t to = NextTimeOut(kTRUE);
-            if (to > kItimerResolution || to == -1)
-               return;
-         }
+  if (fTimers && fTimers->GetSize() > 0)
+      if (DispatchTimers(kTRUE))
+      return;
 
-      if (pendingOnly) return;
-   }
-
-}
+  // nothing ready, so setup select call
+  fReadready  = fReadmask;
+  fWriteready = fWritemask;
+  int mxfd = TMath::Max(fMaxrfd, fMaxwfd) + 1;
+  fNfd = WinNTSelect(mxfd, &fReadready, &fWriteready, NextTimeOut(kTRUE));
+  if (fNfd < 0 && fNfd != -2) {
+      int fd, rc;
+      TFdSet t;
+      for (fd = 0; fd < mxfd; fd++) {
+          t.Set(fd);
+          if (fReadmask.IsSet(fd)) {
+              rc = WinNTSelect(fd+1, &t, 0, 0);
+              if (rc < 0 && rc != -2) {
+                  fprintf(stderr, "select: read error on %d\n", fd);
+                  fReadmask.Clr(fd);
+              }
+          }
+          if (fWritemask.IsSet(fd)) {
+              rc = WinNTSelect(fd+1, 0, &t, 0);
+              if (rc < 0 && rc != -2) {
+                  fprintf(stderr, "select: write error on %d\n", fd);
+                  fWritemask.Clr(fd);
+              }
+          }
+          t.Clr(fd);
+      }
+  }
 #endif
 
-//______________________________________________________________________________
-void TWinNTSystem::ExitLoop()
-{
-   TSystem::ExitLoop();
-
-   // Release Dispatch one event
-   SetEvent(fhTermInputEvent);
-}
-
-//______________________________________________________________________________
-void TWinNTSystem::InnerLoop()
-{
-   TSystem::InnerLoop();
 }
 
 //---- handling of system events -----------------------------------------------
@@ -1067,7 +948,8 @@ const char *TWinNTSystem::DirName(const char *pathname)
        char *r = max(rslash, bslash);
        const char *ptr = pathname;
        while (ptr <= r) {
-         if (*ptr == ':') {
+         if (r == ":")
+         {
            // Windows path may contain a drive letter
            // For NTFS ":" may be a "stream" delimiter as well
            pathname =  ptr + 1;
@@ -1182,7 +1064,6 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
 {
    // Returns FALSE if one can access a file using the specified access mode.
    // Mode is the same as for the WinNT access(2) function.
-   // Attention, bizarre convention of return value!!
 
    if (::_access(path, mode) == 0)
       return kFALSE;
@@ -1311,32 +1192,13 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    const char *patbuf = (const char *)patbuf0;
    const char *hd, *p;
    char   *cmd = 0;
+   char    stuffedPat[kMAXPATHLEN], name[70];
    char  *q;
    int    ch, i;
 
    // skip leading blanks
    while (*patbuf == ' ')
       patbuf++;
-
-   // skip leading ':'
-   while (*patbuf == ':')
-      patbuf++;
-
-   // skip leading ';'
-   while (*patbuf == ';')
-      patbuf++;
-
-   // Transform a Unix list of directory into a Windows list
-   // by changing the separator from ':' into ';'
-   for (q = (char*)patbuf; *q; q++) {
-      if ( *q == ':' ) {
-               // We are avoiding substitution in the case of
-               // ....;c:....
-         if ( ((q-2)>patbuf) && ( (*(q-2)!=';') || !isalpha(*(q-1)) ) )
-             *q=';';
-
-        }
-   }
 
    // any shell meta characters ?
    for (p = patbuf; *p; p++)
@@ -1486,7 +1348,7 @@ const char *TWinNTSystem::GetDynamicPath()
 char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mode)
 {
    // Find location of file in a search path.
-   // User must delete returned string. Returns 0 in case file is not found.
+   // User must delete returned string.
 
    static char name[kMAXPATHLEN];
    char *lpFilePart = 0;
@@ -1559,9 +1421,46 @@ char *TWinNTSystem::DynamicPathName(const char *lib, Bool_t quiet)
 
    if (!name && !quiet)
       Error("DynamicPathName",
-            "%s does not exist in %s,\nor has wrong file extension (.dll)", lib,
-            GetDynamicPath());
+      "dll does not exist or wrong file extension (.dll)", lib);
 
+#if 0
+    if (!lib || !strlen(lib)) return 0;
+    char *name = 0;
+
+   // Append an extention if any
+
+   if (!strchr(lib, '.')) {
+      name = Form("%s.dll", lib);
+      name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+   }
+   else {
+       int len = strlen(lib);
+       if (len > 4 && !(strnicmp(lib+len-4, ".dll",4)))
+       {
+           name = gSystem->Which(GetDynamicPath(), lib, kReadPermission);
+       }
+       else {
+           ::Error("TWinNTSystem::DynamicPathName",
+               "DLL library must have extension: .dll", lib);
+           name = 0;
+       }
+   }
+#endif
+#if 0
+   if (name)
+   {
+     char driveletter = DriveName(name);
+     char *dirname    = (char *)DirName(name);
+     delete [] name;  // allocated by Which()
+     if (driveletter) {
+        name = Form("%c:%s",driveletter,dirname);
+        delete [] dirname;
+        return StrDup(name);
+     } else
+        return dirname;
+   }
+   return 0;
+#endif
    return name;
 }
 
@@ -1583,7 +1482,9 @@ void TWinNTSystem::Unload(const char *module)
 #ifdef NOCINT
    WinNTDynUnload(module);
 #else
-   if (module) { TSystem::Unload(module); }
+   if (module) { }
+   // should call CINT unload file here, but does not work for sl's yet.
+   Warning("Unload", "CINT does not support unloading shared libs");
 #endif
 }
 
@@ -1623,36 +1524,36 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
 
    if ( (opt.First('L')!=kNPOS) ) {
       TRegexp separator("[^ \\t\\s]+");
-      TRegexp user_dll("\.dll$", kFALSE);
-      TRegexp user_lib("\.lib$", kFALSE);
+      TRegexp user_dll("*.dll", kTRUE);
+      TRegexp user_lib("*.lib", kTRUE);
       TString s;
       Ssiz_t start, index, end;
       start = index = end = 0;
 
       while ((start < libs.Length()) && (index != kNPOS)) {
-         index = libs.Index(separator,&end,start);
-         if (index >= 0) {
-            s = libs(index,end);
-            if (s.Index(user_dll) != kNPOS) {
-               s.ReplaceAll(".dll",".lib");
-               if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
-                  s.Replace( 0, s.Last('/')+1, 0, 0);
-                  s.Replace( 0, s.Last('\\')+1, 0, 0);
-               }
-            } else if (s.Index(user_lib) != kNPOS) {
-               if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
-                  s.Replace( 0, s.Last('/')+1, 0, 0);
-                  s.Replace( 0, s.Last('\\')+1, 0, 0);
-               }
-            }
-            if (!fListLibs.IsNull()) ntlibs.Append(" ");
-            ntlibs.Append(s);
-         }
-         start += end+1;
+	index = libs.Index(separator,&end,start);
+	if (index >= 0) {
+	  s = libs(index,end);
+	  if (s.Index(user_dll) != kNPOS) {
+	    s.ReplaceAll(".dll",".lib");
+	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+	      s.Replace( 0, s.Last('/')+1, 0, 0);
+	      s.Replace( 0, s.Last('\\')+1, 0, 0);
+	    }
+	  } else if (s.Index(user_lib) != kNPOS) {
+	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
+	      s.Replace( 0, s.Last('/')+1, 0, 0);
+	      s.Replace( 0, s.Last('\\')+1, 0, 0);
+	    }
+	  }
+	  if (!fListLibs.IsNull())
+	    ntlibs.Append(" ");
+	  ntlibs.Append(s);
+	}
+	start += end+1;
       }
-   } else {
-      ntlibs = libs;
-   }
+   } else
+     ntlibs = libs;
 
    fListLibs = ntlibs;
    return fListLibs;
@@ -1664,7 +1565,6 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
 //______________________________________________________________________________
 void TWinNTSystem::AddTimer(TTimer *ti)
 {
-#ifndef GDK_WIN32
     if (ti)
     {
         TSystem::AddTimer(ti);
@@ -1676,61 +1576,16 @@ void TWinNTSystem::AddTimer(TTimer *ti)
                 RemoveTimer(ti);
         }
     }
-#else
-   TSystem::AddTimer(ti);
-   if (!fInsideNotify && ti->IsAsync())
-      WinNTSetitimer(NextTimeOut(kFALSE));
-#endif
 }
 //______________________________________________________________________________
 TTimer *TWinNTSystem::RemoveTimer(TTimer *ti)
 {
-#ifndef GDK_WIN32
     if (ti && fWin32Timer ) {
        fWin32Timer->KillTimer(ti);
        return TSystem::RemoveTimer(ti);
     }
     return 0;
-#else
-   TTimer *t = TSystem::RemoveTimer(ti);
-   if (ti->IsAsync())
-      WinNTSetitimer(NextTimeOut(kFALSE));
-   return t;
-#endif
 }
-
-#ifdef GDK_WIN32
-//______________________________________________________________________________
-Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
-{
-   // Handle and dispatch timers. If mode = kTRUE dispatch synchronous
-   // timers else a-synchronous timers.
-
-   if (!fTimers) return kFALSE;
-
-   fInsideNotify = kTRUE;
-
-   TOrdCollectionIter it((TOrdCollection*)fTimers);
-   TTimer *t;
-   Bool_t  timedout = kFALSE;
-
-   while ((t = (TTimer *) it.Next())) {
-      TTime now = Now();
-      now += TTime(kItimerResolution);
-      if (mode && t->IsSync()) {
-         if (t->CheckTimer(now))
-            timedout = kTRUE;
-      } else if (!mode && t->IsAsync()) {
-         if (t->CheckTimer(now)) {
-            WinNTSetitimer(NextTimeOut(kFALSE));
-            timedout = kTRUE;
-         }
-      }
-   }
-   fInsideNotify = kFALSE;
-   return timedout;
-}
-#endif
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::DispatchSynchTimers()
@@ -1905,7 +1760,7 @@ char *TWinNTSystem::GetServiceByPort(int port)
 
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)) == 0) {
+   if ((sp = getservbyport(port, kProtocolName)) == 0) {
       //::Error("GetServiceByPort", "no service \"%d\" with protocol \"%s\"",
       //        port, kProtocolName);
       return Form("%d", port);
@@ -2475,31 +2330,23 @@ long TWinNTSystem::WinNTNow()
    return (t.wMinute*60 + t.wSecond) * 1000 + t.wMilliseconds;
 }
 
-#ifndef GDK_WIN32
 //______________________________________________________________________________
 int TWinNTSystem::WinNTSetitimer(TTimer *ti)
 {
    // Set interval timer to time-out in ms milliseconds.
 
-   return 0;
-}
-
-#else
-//______________________________________________________________________________
-int TWinNTSystem::WinNTSetitimer(Long_t ms)
-{
-   // Set interval timer to time-out in ms milliseconds.
-
-   struct itimerval itval;
-   itval.it_interval.tv_sec = itval.it_interval.tv_usec = 0;
-   itval.it_value.tv_sec = itval.it_value.tv_usec = 0;
+#ifndef WIN32
+   struct itimerval itv;
+   itv.it_interval.tv_sec = itv.it_interval.tv_usec = 0;
+   itv.it_value.tv_sec = itv.it_value.tv_usec = 0;
    if (ms >= 0) {
-      itval.it_value.tv_sec  = ms / 1000;
-      itval.it_value.tv_usec = (ms % 1000) * 1000;
+      itv.it_value.tv_sec  = ms / 1000;
+      itv.it_value.tv_usec = (ms % 1000) * 1000;
    }
-   return setitimer(ITIMER_REAL, &itval, 0);
-}
+   return setitimer(ITIMER_REAL, &itv, 0);
 #endif
+        return 0;
+}
 
 //---- file descriptors --------------------------------------------------------
 
@@ -2780,7 +2627,7 @@ int TWinNTSystem::WinNTTcpConnect(const char *hostname, int port,
    short  sport;
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
@@ -2869,7 +2716,7 @@ int TWinNTSystem::WinNTTcpService(int port, Bool_t reuse, int backlog,
       return -1;
    }
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
@@ -3051,12 +2898,69 @@ int TWinNTSystem::WinNTSend(int socket, const void *buffer, int length, int flag
 
 //---- Dynamic Loading ---------------------------------------------------------
 
+#ifdef R__HPUX
+//______________________________________________________________________________
+static const char *DynamicPathName(const char *lib)
+{
+   // Returns the path of a shared library (searches for library in the
+   // shared library search path). If no file name extension is provided
+   // it first tries .so, sl and then .dl. Static utility function.
+
+   const char *name = lib;
+
+   if (!strchr(name, '.')) {
+      name = Form("%s.dll", lib);
+      name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+   } else {
+
+      int len = strlen(name);
+      if (len > 4 && (!strcmp(name+len-4, ".dll"))
+         name = gSystem->Which(GetDynamicPath(), name, kReadPermission);
+      else {
+         ::Error("TUnixSystem::DynamicPathName",
+                 "shared library must have extension: .dll", lib);
+         name = 0;
+      }
+   }
+   return name;
+}
+
+//______________________________________________________________________________
+static shl_t FindDynLib(const char *lib)
+{
+   // Returns the handle to a loaded shared library. Returns 0 when library
+   // not loaded.
+
+   const char *path;
+
+   if (path = DynamicPathName(lib)) {
+      // find handle of shared library using its name
+      struct shl_descriptor *desc;
+      int index = 0;
+      while (shl_get(index++, &desc) == 0)
+         if (!strcmp(path, desc->filename))
+            return desc->handle;
+   }
+   return 0;
+}
+#endif
+
 //______________________________________________________________________________
 int TWinNTSystem::WinNTDynLoad(const char *lib)
 {
    // Load a shared library. Returns 0 on successful loading.
 
-   return 0;
+#ifdef R__HPUX
+   const char *path;
+
+   if (path = DynamicPathName(lib)) {
+//    shl_t handle = cxxshl_load(path, BIND_DEFERRED, 0L);
+      shl_t handle = cxxshl_load(path, BIND_IMMEDIATE | BIND_NONFATAL, 0L);
+      if (handle) return 0;
+   }
+   return 1;
+#endif
+        return 0;
 }
 
 //______________________________________________________________________________
@@ -3064,6 +2968,18 @@ Func_t TWinNTSystem::WinNTDynFindSymbol(const char *lib, const char *entry)
 {
    // Finds and returns a function pointer to a symbol in the shared library.
    // Returns 0 when symbol not found.
+
+#ifdef R__HPUX
+   shl_t handle;
+
+   if (handle = FindDynLib(lib)) {
+      Func_t addr;
+      if (shl_findsym(&handle, entry, TYPE_PROCEDURE, addr) == -1)
+         ::SysError("TWinNTSystem::WinNTDynFindSymbol", "shl_findsym");
+      return addr;
+   }
+   return 0;
+#endif
 
    // Assume always found
    return (Func_t)1;
@@ -3075,6 +2991,43 @@ void TWinNTSystem::WinNTDynListSymbols(const char *lib, const char *regexp)
    // List symbols in a shared library. One can use wildcards to list only
    // the intresting symbols.
 
+#ifdef R__HPUX
+   shl_t handle;
+
+   if (handle = FindDynLib(lib)) {
+      struct shl_symbol *symbols;
+      int nsym = shl_getsymbols(handle, TYPE_PROCEDURE,
+                                EXPORT_SYMBOLS|NO_VALUES, (void *(*)())malloc,
+                                &symbols);
+      if (nsym != -1) {
+         if (nsym > 0) {
+            int cnt = 0;
+            TRegexp *re = 0;
+            if (regexp && strlen(regexp)) re = new TRegexp(regexp, kTRUE);
+            Printf("");
+            Printf("Functions exported by library %s", DynamicPathName(lib));
+            Printf("=========================================================");
+            for (int i = 0; i < nsym; i++)
+               if (symbols[i].type == TYPE_PROCEDURE) {
+                  cnt++;
+                  char *dsym = cplus_demangle(symbols[i].name,
+                                              DMGL_PARAMS|DMGL_ANSI|DMGL_ARM);
+                  if (re) {
+                     TString s = dsym;
+                     if (s.Index(*re) != kNPOS) Printf("%s", dsym);
+                  } else
+                     Printf("%s", dsym);
+                  free(dsym);
+               }
+            Printf("---------------------------------------------------------");
+            Printf("%d exported functions", cnt);
+            Printf("=========================================================");
+            delete re;
+         }
+         free(symbols);
+      }
+   }
+#endif
 }
 
 //______________________________________________________________________________
@@ -3082,6 +3035,27 @@ void TWinNTSystem::WinNTDynListLibs(const char *lib)
 {
    // List all loaded shared libraries.
 
+#ifdef R__HPUX
+   TRegexp *re = 0;
+   if (lib && strlen(lib)) re = new TRegexp(lib, kTRUE);
+   struct shl_descriptor *desc;
+   int index = 0;
+
+   Printf("");
+   Printf("Loaded shared libraries");
+   Printf("=======================");
+
+   while (shl_get(index++, &desc) == 0)
+      if (re) {
+         TString s = desc->filename;
+         if (s.Index(*re) != kNPOS) Printf("%s", desc->filename);
+      } else
+         Printf("%s", desc->filename);
+   Printf("-----------------------");
+   Printf("%d libraries loaded", index-1);
+   Printf("=======================");
+   delete re;
+#endif
 }
 
 //______________________________________________________________________________
@@ -3089,4 +3063,11 @@ void TWinNTSystem::WinNTDynUnload(const char *lib)
 {
    // Unload a shared library.
 
+#ifdef R__HPUX
+   shl_t handle;
+
+   if (handle = FindDynLib(lib))
+      if (cxxshl_unload(handle) == -1)
+         ::SysError("TWinNTSystem::WinNTDynUnLoad", "could not unload library %s", lib);
+#endif
 }

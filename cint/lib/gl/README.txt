@@ -12,7 +12,3 @@ Files:
        setup	     : gl.dll compile script
        TOP.h	     : Header file for making gl.dll
        GL.h	     : Header file for making gl.dll
-
-2001/Sep/29
- gcc-3.00 is supported from cint5.15.14, however, gl.dll can not be compiled.
-The author is working to solve this problem.

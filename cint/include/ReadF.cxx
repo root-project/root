@@ -19,7 +19,7 @@ ReadFile::ReadFile(const char *filename)
     openflag=1;
   }
   else {
-    fprintf(stderr,"ReadFile: can not open %s\n",filename);
+    fprintf(stderr,"ReadFile: %s can not open\n",filename);
   }
 }
 

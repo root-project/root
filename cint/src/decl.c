@@ -7,7 +7,7 @@
  * Description:
  *  Variable declaration
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -351,12 +351,6 @@ char *new_name;
 	cin=G__fgetvarname(new_name+3,",;=():");
       }
 #endif
-#ifndef G__OLDIMPLEMENTATION1630
-      else if(strcmp(new_name,"virtual")==0) {
-	G__virtual = 1;
-	cin=G__fgetvarname(new_name,",;=():");
-      }
-#endif
     }
 
     if(isspace(cin)) {
@@ -675,89 +669,6 @@ char *name;
   }
   buf[j] = 0;
   strcpy(name,buf);
-}
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1552
-/******************************************************************
-* G__initstructary(p_inc,new_name)
-*
-*  A string[3] = { "abc", "def", "hij" };
-*  A string[]  = { "abc", "def", "hij" };
-*                 ^
-******************************************************************/
-void G__initstructary(new_name,tagnum)
-char* new_name;
-int tagnum;
-{
-  char *index;
-  int p_inc;
-  int cin;
-  char buf[G__ONELINE];
-  G__value reg;
-  long store_struct_offset = G__store_struct_offset;
-  long store_globalvarpointer = G__globalvarpointer;
-  long adr;
-  long len;
-  int known;
-  int i;
-
-#ifdef G__ASM
-  G__abortbytecode();
-#endif
-
-  /* count number of array elements if needed */
-  index = strchr(new_name,'[');
-  if(*(index+1)==']') {
-    fpos_t store_pos;
-    int store_line = G__ifile.line_number; 
-    fgetpos(G__ifile.fp,&store_pos);
-
-    p_inc=0;
-    do {
-      cin = G__fgetstream(buf,",}");
-      ++p_inc;
-    } while(cin!='}'); 
-
-    strcpy(buf,index+1);
-    sprintf(index+1,"%d",p_inc);
-    strcat(new_name,buf);
-
-    G__ifile.line_number = store_line; 
-    fsetpos(G__ifile.fp,&store_pos);
-  }
-  else {
-    p_inc=G__getarrayindex(index);
-  }
-
-  /* allocate memory */
-  reg = G__null;
-  G__decl_obj=2;
-  adr=G__int(G__letvariable(new_name,reg,&G__global,G__p_local));
-  G__decl_obj=0;
-
-  /* read and initalize each element */
-  strcpy(buf,G__struct.name[tagnum]);
-  strcat(buf,"(");
-  len = strlen(buf);
-  i=0;
-  do {
-    cin = G__fgetstream(buf+len,",}");
-    strcat(buf,")");
-    if(G__CPPLINK!=G__struct.iscpplink[tagnum]) {
-      G__store_struct_offset = adr + i*G__struct.size[tagnum];
-    }
-    else {
-      G__globalvarpointer = adr + i*G__struct.size[tagnum];
-    }
-    reg=G__getfunction(buf,&known,G__CALLCONSTRUCTOR);
-    ++i;
-  } while(cin!='}'); 
-
-  /* post processing */
-  G__store_struct_offset = store_struct_offset;
-  G__globalvarpointer = store_globalvarpointer;
-
 }
 #endif
 
@@ -1334,11 +1245,6 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION927
 	if(G__static_alloc&&0==G__prerun) {
 	  if(';'!=cin&&','!=cin) cin = G__fignorestream(",;");
-#ifndef G__OLDIMPLEMENTATION1624
-	  if('{'==cin) { /* don't know if this part is needed */
-	    while('}'!=cin) cin = G__fignorestream(";,");
-	  }
-#endif
 	  G__var_type = var_type;
 	  G__letvariable(new_name,reg,&G__global,G__p_local);
 	  goto readnext;
@@ -1362,17 +1268,6 @@ int tagnum,typenum;      /* overrides global variables */
 	  reg = G__getexpr(temp);
 #endif
 	  cin = G__fignorestream(",;");
-#ifndef G__OLDIMPLEMENTATION1623
-	  if(G__PARAREFERENCE==G__reftype && 0==G__asm_wholefunction) {
-	    if(0==reg.ref) {
-	      G__fprinterr(G__serr
-			   ,"Error: reference type %s with no initialization "
-			   ,new_name);
-	      G__genericerror((char*)NULL);
-	    }
-	    G__globalvarpointer = reg.ref;
-	  }	
-#endif
 	  goto create_body;
 	}
 	sprintf(temp1,"%s(%s)",G__struct.name[G__tagnum],temp);
@@ -1687,7 +1582,7 @@ int tagnum,typenum;      /* overrides global variables */
           /* PHILIPPE17: the following is fixed in 1306! */
 	  /* static class object member must call constructor 
 	   * TO BE IMPLEMENTED */
-#ifndef G__OLDIMPLEMENTATION1296
+#ifndef G__OLDIMPLEMENtATION1296
 	  sprintf(temp,"%s::%s",G__fulltagname(G__def_tagnum,1),new_name+i);
 #else
 	  sprintf(temp,"%s::%s",G__struct.name[G__def_tagnum],new_name+i);
@@ -1870,14 +1765,8 @@ int tagnum,typenum;      /* overrides global variables */
 #endif
 	G__reftype=G__PARANORMAL;
 #ifndef G__OLDIMPLEMENTATION1093
-#ifndef G__OLDIMPLEMENTATION1549
-	  if(store_prerun||0==store_static_alloc||G__IsInMacro()) {
-	    reg=G__getexpr(temp);
-	  }
-#else
 	if(store_prerun||0==G__static_alloc||G__IsInMacro())
 	  reg=G__getexpr(temp);
-#endif
 	else reg=G__null;
 #else
 	reg = G__getexpr(temp);
@@ -1929,14 +1818,8 @@ int tagnum,typenum;      /* overrides global variables */
 	    G__static_alloc=0;
 #endif
 	  }
-#ifndef G__OLDIMPLEMENTATION1549
-	  if(store_prerun||0==store_static_alloc||G__IsInMacro()) {
-	    reg=G__getexpr(temp);
-	  }
-#else
 	  if(store_prerun||0==G__static_alloc||G__IsInMacro())
 	    reg = G__getpower(temp);
-#endif
 	  else reg=G__null;
 	  G__prerun=store_prerun;
 	  G__decl=store_decl;
@@ -1972,15 +1855,9 @@ int tagnum,typenum;      /* overrides global variables */
 	    G__static_alloc=0;
 #endif
 	  }
-#ifndef G__OLDIMPLEMENTATION1549
-	  if(store_prerun||0==store_static_alloc||G__IsInMacro()) {
-	    reg=G__getexpr(temp);
-	  }
-#else
 	  if(store_prerun||0==G__static_alloc||G__IsInMacro()) {
 	    reg=G__getexpr(temp);
 	  }
-#endif
 	  else reg=G__null;
 	  G__prerun=store_prerun;
 	  G__decl=store_decl;
@@ -2085,31 +1962,10 @@ int tagnum,typenum;      /* overrides global variables */
 
 #ifndef G__OLDIMPLEMENTATION927
 	if(G__static_alloc&&0==G__prerun) {
-#ifndef G__OLDIMPLEMENTATION1624
-	  if('{'==cin) {
-	    while('}'!=cin) cin = G__fignorestream(";,");
-	  }
-#endif
 	  if(';'!=cin&&','!=cin) cin = G__fignorestream(";,");
 	  G__var_type = var_type;
 	  G__letvariable(new_name,reg,&G__global,G__p_local);
 	  goto readnext;
-	}
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1552
-	if(initary && strchr(new_name,'[') &&
-	   (G__struct.funcs[G__tagnum]&G__HAS_CONSTRUCTOR)) {
-	  G__initstructary(new_name,G__tagnum);
-	  G__decl=store_decl;
-	  G__constvar=0;
-	  G__tagnum = store_tagnum;
-	  G__typenum = store_typenum;
-	  G__reftype=G__PARANORMAL;
-	  G__static_alloc=store_static_alloc2;
-	  G__dynconst=0;
-	  G__globalvarpointer = G__PVOID;
-	  return;
 	}
 #endif
 
@@ -2378,9 +2234,6 @@ int tagnum,typenum;      /* overrides global variables */
 		  G__debug=store_debug;
 		  G__step=store_step;
 		  G__setdebugcond();
-#ifndef G__OLDIMPLEMENTATION1624
-		  G__prerun = store_prerun;
-#endif
 		}
 		cin=G__initstruct(new_name);
 	      }
@@ -2839,12 +2692,6 @@ char *new_name;
   int size;
   int prev;
   long tmp;
-#ifndef G__OLDIMPLEMENTATION1607
-  int stringflag=0;
-#endif
-#ifndef G__OLDIMPLEMENTATION1632
-  int typedary=0; 
-#endif
   
   /* G__ASSERT(0==G__store_struct_offset); */
 
@@ -2954,9 +2801,6 @@ char *new_name;
       char store_var_type = G__var_type;
       size=G__Lsizeof(G__newtype.name[buf.typenum]);
       G__var_type = store_var_type;
-#ifndef G__OLDIMPLEMENTATION1632
-      typedary=1; 
-#endif
     }
     else {
       size=G__sizeof(&buf);
@@ -2985,23 +2829,6 @@ char *new_name;
       /********************************************
        * increment the pointer
        ********************************************/
-#ifndef G__OLDIMPLEMENTATION1607
-      if('c'==var->type[ig15] && '"'==expr[0]) {
-#ifndef G__OLDIMPLEMENTATION1632
-	if(0==typedary) size = var->varlabel[ig15][var->paran[ig15]];
-#else
-	size = var->varlabel[ig15][var->paran[ig15]];
-#endif
-	stringflag=1;
-#ifndef G__OLDIMPLEMENTATION1621
-	if(0>size && -1==var->varlabel[ig15][1]) {
-	  isauto=0;
-	  size = 1;
-	  stringflag=2;
-	}
-#endif
-      }
-#endif
       prev=pinc;
       if(inc) pinc = pinc - pinc%inc + inc;
       if(pinc>var->varlabel[ig15][1]) {
@@ -3017,10 +2844,6 @@ char *new_name;
 	  if(tmp) var->p[ig15] = tmp;
 	  else    G__malloc_error(new_name);
 	}
-#ifndef G__OLDIMPLEMENTATION1621
-	else if(2==stringflag) {
-	}
-#endif
 	else {
 	  /*************************************
 	   * error , array index out of range
@@ -3060,32 +2883,7 @@ char *new_name;
        *******************************************/
       buf.obj.i=var->p[ig15]+size*pinc;
       reg=G__getexpr(expr);
-#ifndef G__OLDIMPLEMENTATION1607
-      if(
-#ifndef G__OLDIMPLEMENTATION1621
-	 1==
-#endif
-	 stringflag) {
-	strcpy((char*)buf.obj.i,(char*)reg.obj.i);
-      }
-#ifndef G__OLDIMPLEMENTATION1621
-      else if(2==stringflag && 0==var->p[ig15]) {
-	var->varlabel[ig15][1]=strlen((char*)reg.obj.i);
-	tmp=(long)malloc((size_t)(size*(var->varlabel[ig15][1]+1)));
-	if(tmp) {
-	  var->p[ig15] = tmp;
-	  buf.obj.i = var->p[ig15];
-	  strcpy((char*)buf.obj.i,(char*)reg.obj.i);
-	}
-	else    G__malloc_error(new_name);
-      }
-#endif
-      else {
-	G__letvalue(&buf,reg);
-      }
-#else
       G__letvalue(&buf,reg);
-#endif
     }
     switch(c) {
     case '{':
@@ -3106,9 +2904,6 @@ char *new_name;
   /**********************************************************
    * initialize remaining object to 0
    **********************************************************/
-#ifndef G__OLDIMPLEMENTATION1621
-  if(0==stringflag)
-#endif
 #ifndef G__OLDIMPLEMENTATION1329
   {
     int initnum = var->varlabel[ig15][1];
@@ -3460,17 +3255,6 @@ char *new_name;
         if(isupper(memvar->type[memindex])) {
           *(long *)(buf.obj.i)=(long)G__int(reg);
         }
-#ifndef G__OLDIMPLEMENTATION1603
-	else if('c'==memvar->type[memindex] && 
-		0<memvar->varlabel[memindex][1] &&
-		'"'==expr[0]) {
-	  if(memvar->varlabel[memindex][1]+1>strlen((char*)reg.obj.i)) 
-	    strcpy((char*)buf.obj.i,(char*)reg.obj.i);
-	  else
-	    strncpy((char*)buf.obj.i,(char*)reg.obj.i
-		    ,memvar->varlabel[memindex][1]+1);
-	}
-#endif
         else {
           G__letvalue(&buf,reg);
         }

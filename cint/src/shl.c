@@ -670,33 +670,6 @@ int (*sharedlib_func)();
 /**************************************************************************
  * G__show_dllrev
  **************************************************************************/
-#if !defined(G__OLDIMPLEMENTATION1485)
-typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*));
-#elif !defined(G__OLDIMPLEMENTATION1546)
-typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
-	void*,void*,void*,void*,void*,void*,void*,void*,void*));
-#else
 typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
@@ -709,7 +682,6 @@ typedef void (*G__SetCintApiPointers_t) G__P((void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,void*,
 	void*,void*,void*,void*,void*,void*,void*));
-#endif
 
 /**************************************************************************
 * G__SetCIntApiPointers
@@ -845,15 +817,7 @@ char *fname;
 	G__exec_text,
 	G__lasterror_filename,
 	G__lasterror_linenum,
-	G__va_arg_put
-#ifndef G__OLDIMPLEMENTATION1546
-	,G__load_text
-	,G__set_emergencycallback
-#endif
-#ifndef G__OLDIMPLEMENTATION1485
-	,G__set_errmsgcallback
-#endif
-	);
+	G__va_arg_put);
 }
 
 #endif
@@ -884,13 +848,6 @@ char *shlfile;
     return(EXIT_FAILURE);
   }
   else ++G__allsl;
-
-#ifndef G__OLDIMPLEMENTATION1566
-#ifdef G__ROOT
-  /* this pointer must be set before calling dlopen! */
-  G__initpermanentsl = (void (*)())NULL;
-#endif
-#endif
 
   G__sl_handle[allsl] = G__dlopen(shlfile);
 
@@ -1076,10 +1033,8 @@ char *shlfile;
     G__CALL_SETUP(dllid);
   }
 #ifdef G__ROOT
-#ifdef G__OLDIMPLEMENTATION1566
-#ifndef G__OLDIMPLEMENTATION1207
+#ifndef G__OLDKIMPLEMENTATION1207
   G__initpermanentsl = (void (*)())NULL;
-#endif
 #endif
   if (sharedlib_func==NULL) G__call_setup_funcs();
 #endif
@@ -1464,11 +1419,7 @@ G__value *buf;
   ifunc=G__p_ifunc;
   do {
     for(i=0;i<ifunc->allifunc;i++) {
-      if(
-#ifndef G__OLDIMPLEMENTATION1561
-	 ifunc->funcname[i] && funcname &&
-#endif
-	 strcmp(ifunc->funcname[i],funcname)==0) {
+      if(strcmp(ifunc->funcname[i],funcname)==0) {
 #ifdef G__TRUEP2F
 	if(-1 == ifunc->pentry[i]->filenum) { /* precompiled function */
 	  G__letint(buf,'Q',(long)ifunc->pentry[i]->tp2f);
@@ -1505,11 +1456,7 @@ G__value *buf;
   /* search for compiled ANSI library function */
   i=0;
   while(G__completionlist[i].name!=NULL) {
-    if(
-#ifndef G__OLDIMPLEMENTATION1561
-       funcname &&
-#endif
-       strcmp(G__completionlist[i].name,funcname)==0) {
+    if(strcmp(G__completionlist[i].name,funcname)==0) {
       if((long)G__completionlist[i].pfunc!=0) {
 	G__letint(buf,'Q',(long)G__completionlist[i].pfunc);
       }

@@ -34,7 +34,7 @@ void tree1w()
    t1.Branch("px",&px,"px/F");
    t1.Branch("py",&py,"py/F");
    t1.Branch("pz",&pz,"pz/F");
-   t1.Branch("random",&random,"random/D");
+   t1.Branch("random",&random,"random/F");
    t1.Branch("ev",&ev,"ev/I");
    
    //fill the tree

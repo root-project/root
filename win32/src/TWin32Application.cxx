@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Application.cxx,v 1.5 2001/07/09 07:01:37 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32Application.cxx,v 1.2 2001/04/22 16:00:56 rdm Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -72,7 +72,7 @@ unsigned int _stdcall ROOT_CmdLoop(HANDLE ThrSem)
 //*-*     the return value is -1.
 //*-*
 
-       if ((msg.hwnd == NULL) && (msg.message == ROOT_CMD || msg.message == ROOT_SYNCH_CMD)) {
+       if (msg.hwnd == NULL & (msg.message == ROOT_CMD || msg.message == ROOT_SYNCH_CMD)) {
 
            if (TWin32HookViaThread::ExecuteEvent(&msg, msg.message==ROOT_SYNCH_CMD)) continue;
        }
@@ -146,12 +146,13 @@ unsigned int ROOT_DlgLoop(HANDLE ThrSem)
 
 //______________________________________________________________________________
 TWin32Application::TWin32Application(const char *appClassName, int *argc,
-                                     char **argv)
-                  : fIDCmdThread(NULL)
+                                     char **argv, void *options, int numOptions)
 {
    fApplicationName = appClassName;
    SetConsoleTitle(appClassName);
    CreateCmdThread();
+//   gVirtualX->Init();
+//   CreateDlgThread();
 }
 //______________________________________________________________________________
    TWin32Application::~TWin32Application() {
@@ -162,6 +163,14 @@ TWin32Application::TWin32Application(const char *appClassName, int *argc,
                                TerminateThread(fhdCmdThread, -1); ;
         CloseHandle(fhdCmdThread);
     }
+
+    if (fIDDlgThread) {
+        PostThreadMessage(fIDDlgThread,WM_QUIT,0,0);
+        if (WaitForSingleObject(fhdDlgThread,10000)==WAIT_FAILED)
+                               TerminateThread(fhdDlgThread, -1);
+        CloseHandle(fhdDlgThread);
+    }
+
 }
 
 //______________________________________________________________________________
@@ -188,6 +197,30 @@ Int_t TWin32Application::CreateCmdThread()
       int  erret = GetLastError();
       Error("CreatCmdThread", "Thread was not created");
       Printf(" %d \n", erret);
+  }
+
+  WaitForSingleObject(ThrSem, INFINITE);
+  CloseHandle(ThrSem);
+
+  return 0;
+}
+
+//______________________________________________________________________________
+Int_t TWin32Application::CreateDlgThread()
+{
+  HANDLE ThrSem;
+
+  //
+  //  Create thread to do the Dialogs loop
+  //
+
+  ThrSem = CreateSemaphore(NULL, 0, 1, NULL);
+
+  if (!(fhdDlgThread = CreateThread(NULL,0, (LPTHREAD_START_ROUTINE) ROOT_DlgLoop,
+                 (LPVOID) ThrSem, 0,  &fIDDlgThread))){
+      int  erret = GetLastError();
+      Error("CreatCmdThread", "Thread was not created");
+      Printf("%d \n", erret);
   }
 
   WaitForSingleObject(ThrSem, INFINITE);

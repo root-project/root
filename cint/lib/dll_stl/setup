@@ -1,8 +1,3 @@
-# Comment out following line to precompile generic algorithm. But, be careful
-# for doing that. Your compiler may not support certain algorithm function.
-ALGO=-DG__NOALGORITHM
-
-
 #rm ../../stl/iterator.dll 
 rm ../../stl/string.dll 
 rm ../../stl/vector.dll 
@@ -21,7 +16,6 @@ rm ../../stl/exception.dll
 rm ../../stl/stdexcept.dll 
 rm G__*
 
-
 #makecint -mk Makeiter -dl iterator.dll -H iter.h  -cint -Z0
 #make -f Makeiter
 #mv iterator.dll ../../stl/iterator.dll
@@ -30,39 +24,39 @@ makecint -mk Makestr -dl string.dll -H str.h -cint -Z0
 make -f Makestr
 mv string.dll ../../stl/string.dll
 
-makecint -mk Makevec -dl vector.dll $ALGO -H vec.h  -cint -Z0
+makecint -mk Makevec -dl vector.dll -H vec.h  -cint -Z0
 make -f Makevec
 mv vector.dll ../../stl/vector.dll
 
-makecint -mk Makelist -dl list.dll $ALGO -H lst.h  -cint -Z0
+makecint -mk Makelist -dl list.dll -H lst.h  -cint -Z0
 make -f Makelist 
 mv list.dll ../../stl/list.dll
 
-makecint -mk Makedeque -dl deque.dll $ALGO -H dqu.h  -cint -Z0
+makecint -mk Makedeque -dl deque.dll -H dqu.h  -cint -Z0
 make -f Makedeque
 mv deque.dll ../../stl/deque.dll
 
-makecint -mk Makemap -dl map.dll $ALGO -H mp.h  -cint -Z0
+makecint -mk Makemap -dl map.dll -H mp.h  -cint -Z0
 make -f Makemap 
 mv map.dll ../../stl/map.dll
 
-makecint -mk Makemap2 -dl map2.dll $ALGO -DG__MAP2 -H mp.h  -cint -Z0
+makecint -mk Makemap2 -dl map2.dll -DG__MAP2 -H mp.h  -cint -Z0
 make -f Makemap2 
 mv map2.dll ../../stl/map2.dll
 
-makecint -mk Makeset -dl set.dll $ALGO -H st.h  -cint -Z0
+makecint -mk Makeset -dl set.dll -H st.h  -cint -Z0
 make -f Makeset
 mv set.dll ../../stl/set.dll
 
-makecint -mk Makemmap -dl multimap.dll $ALGO -H multmp.h  -cint -Z0
+makecint -mk Makemmap -dl multimap.dll -H multmp.h  -cint -Z0
 make -f Makemmap 
 mv multimap.dll ../../stl/multimap.dll
 
-makecint -mk Makemmap2 -dl multimap2.dll $ALGO -DG__MAP2 -H multmp.h  -cint -Z0
+makecint -mk Makemmap2 -dl multimap2.dll -DG__MAP2 -H multmp.h  -cint -Z0
 make -f Makemmap2
 mv multimap2.dll ../../stl/multimap2.dll
 
-makecint -mk Makemset -dl multiset.dll $ALGO -H multst.h  -cint -Z0
+makecint -mk Makemset -dl multiset.dll -H multst.h  -cint -Z0
 make -f Makemset
 mv multiset.dll ../../stl/multiset.dll
 

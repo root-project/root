@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.11 2001/07/17 14:38:41 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.7 2001/06/02 17:22:05 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 // This class implements threads. A thread is an execution environment  //
 // much lighter than a process. A single process can have multiple      //
 // threads. The actual work is done via the TThreadImp class (either    //
-// TPosixThread, TThreadSolaris or TThreadNT).                          //
+// TThreadPosix, TThreadSolaris or TThreadNT).                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -30,7 +30,6 @@
 #include "TCanvas.h"
 #include "TError.h"
 #include "CallFunc.h"
-#include "TMethodCall.h"
 
 
 TThreadImp     *TThread::fgThreadImp = 0;
@@ -238,9 +237,8 @@ void TThread::Constructor()
 {
    // Common thread constructor.
 
-   fHolder = 0;
-   fClean  = 0;
-   fState  = kNewState;
+   fClean = 0;
+   fState = kNewState;
 
    fId = 0;
    if (!fgThreadImp) { // *** Only once ***
@@ -464,9 +462,9 @@ Int_t TThread::GetTime(ULong_t *absSec, ULong_t *absNanoSec)
    return fgThreadImp->GetTime(absSec, absNanoSec);
 }
 
-Int_t TThread::Lock()    { return (fgMainMutex ? fgMainMutex->Lock() : 0);}    // lock main mutex
-Int_t TThread::TryLock() { return (fgMainMutex ? fgMainMutex->TryLock(): 0); } // lock main mutex
-Int_t TThread::UnLock()  { return (fgMainMutex ? fgMainMutex->UnLock() :0); }  // unlock main mutex
+Int_t TThread::Lock() { return fgMainMutex->Lock(); }       // lock main mutex
+Int_t TThread::TryLock() { return fgMainMutex->TryLock(); } // lock main mutex
+Int_t TThread::UnLock() { return fgMainMutex->UnLock(); }   // unlock main mutex
 
 //______________________________________________________________________________
 ULong_t TThread::Call(void *p2f,void *arg)
@@ -690,8 +688,8 @@ Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
 //______________________________________________________________________________
 void TThread::XAction()
 {
-   char const acts[] = "PRTF CUPD CANV CDEL PDCD METH";
-   enum {kPRTF=0,kCUPD=5,kCANV=10,kCDEL=15,kPDCD=20,kMETH=25};
+   char const acts[] = "PRTF CUPD CANV CDEL PDCD";
+   enum {kPRTF=0,kCUPD=5,kCANV=10,kCDEL=15,kPDCD=20};
    int iact = strstr(acts,fgXAct) - acts;
 
    switch (iact) {
@@ -752,11 +750,7 @@ void TThread::XAction()
                                   *((Int_t*)(fgXArr[6])));
 
          break;
-      case kMETH:
-      ((TMethodCall *) fgXArr[1])->Execute((void*)(fgXArr[2]),(const char*)(fgXArr[3]));
-         break;      
-         
-         default:
+      default:
          fprintf(stderr,"TThread::XARequest. Wrong case\n");
    }
 

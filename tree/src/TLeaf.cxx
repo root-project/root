@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.6 2001/11/17 15:56:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.3 2000/12/13 15:13:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -52,7 +52,6 @@ TLeaf::TLeaf(const char *name, const char *)
 //     See the TTree and TBranch constructors for explanation of parameters.
 
    fLeafCount  = GetLeafCounter(fLen);
-   if (fLen == -1) {MakeZombie(); return;}
    fIsRange    = 0;
    fIsUnsigned = 0;
    fLenType    = 4;
@@ -75,11 +74,7 @@ TLeaf::~TLeaf()
 //*-*        ===============================
 
 //   if (fBranch) fBranch->GetListOfLeaves().Remove(this);
-   if (!fBranch) return;
-   TTree *tree = fBranch->GetTree();
    fBranch = 0;
-   if (!tree) return;
-   tree->GetListOfLeaves()->Remove(this);
 }
 
 
@@ -113,11 +108,10 @@ TLeaf *TLeaf::GetLeafCounter(Int_t &countval) const
 //*-*          ============================================
 //
 //  If leaf name has the forme var[nelem], where nelem is alphanumeric, then
-//     If nelem is a leaf name, return countval = 1 and the pointer to 
-//     the leaf named nelem.
+//     If nelem is a leaf name, return countval = 0 and the pointer to leaf.
 //  If leaf name has the forme var[nelem], where nelem is a digit, then
-//     return countval = nelem and a null pointer.
-//  Otherwise return countval=0 and a null pointer.
+//     return countval = nelemr and a null pointer.
+//  Otherwise return countval=1 and a null pointer.
 //
 
    countval = 1;
@@ -159,7 +153,6 @@ TLeaf *TLeaf::GetLeafCounter(Int_t &countval) const
    for (i=0;i<nch;i++) {
       if (!isdigit(countname[i])) {
         delete [] countname;
-        countval = -1;
         return 0;
       }
    }

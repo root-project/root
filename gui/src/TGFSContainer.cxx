@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.5 2000/12/13 16:58:31 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.4 2000/12/13 16:45:36 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -36,10 +36,6 @@
 #ifndef __VMS
 #include <grp.h>
 #endif
-#endif
-
-#ifdef GDK_WIN32
-#include <sys/stat.h>
 #endif
 
 #include "TGFSContainer.h"
@@ -109,17 +105,7 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
         else if (S_ISREG(type2) && (type2 & S_IXUSR)) type2 = 5;
         else type2 = 6;
 #else
-#ifndef GDK_WIN32
         Error("Compare", "not yet implemented for Win32");
-#else
-        if (type1 & _S_IFDIR) type1 = 1;
-        else if ((type1 & _S_IFREG) && (type1 & S_IEXEC)) type1 = 5;
-        else type1 = 6;
-
-        if (type2 & _S_IFDIR) type2 = 1;
-        else if ((type2 & _S_IFREG) && (type2 & S_IEXEC)) type2 = 5;
-        else type2 = 6;
-#endif
 #endif
         if (type1 < type2) return -1;
         if (type1 > type2) return 1;
@@ -261,51 +247,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                      fSubnames[i]->GetLength());
 #else
-#ifndef GDK_WIN32
    Error("TGFileItem", "not yet implemented for Win32");
-#else
-   char *temp;
-   sprintf(tmp, "%c%c%c%c",
-                (fIsLink ?
-                 'l' :
-                 ((type & _S_IFREG) ?
-                  '-' :
-                  ((type & _S_IFDIR) ?
-                   'd' : '?'))),
-                 ((type & _S_IREAD) ? 'r' : '-'),
-                 ((type & S_IWRITE) ? 'w' : '-'),
-                 ((type & S_IEXEC) ? 'x' : '-'));
-   fSubnames[0] = new TGString(tmp);
-
-   // file size
-   fsize = bsize = fSize;
-   if (fsize > 1024) {
-      fsize /= 1024;
-      if (fsize > 1024) {
-         // 3.7MB is more informative than just 3MB
-         sprintf(tmp, "%ld.%ldM", fsize/1024, (fsize%1024)/103);
-      } else {
-         sprintf(tmp, "%ld.%ldK", bsize/1024, (bsize%1024)/103);
-      }
-   } else {
-      sprintf(tmp, "%ld", bsize);
-   }
-   fSubnames[1] = new TGString(tmp);
-   if (temp = getenv("USERNAME"))
-        fSubnames[2] = new TGString(temp);
-   else
-        fSubnames[2] = new TGString("user");
-   fSubnames[3] = new TGString("group");
-   fSubnames[4] = 0;
-
-   int i;
-   for (i = 0; fSubnames[i] != 0; ++i)
-      ;
-   fCtw = new int[i];
-   for (i = 0; fSubnames[i] != 0; ++i)
-      fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
-                                     fSubnames[i]->GetLength());
-#endif
 #endif
 }
 
@@ -420,14 +362,7 @@ Bool_t TGFileContainer::HandleTimer(TTimer *)
    if (stat(fDirectory.Data(), &sbuf) == 0)
       if (fMtime != (ULong_t)sbuf.st_mtime) DisplayDirectory();
 #else
-#ifndef GDK_WIN32
    Error("HandleTImer", "not yet implemented for Win32");
-#else
-   struct stat sbuf;
-
-   if (stat(fDirectory.Data(), &sbuf) == 0)
-      if (fMtime != (ULong_t)sbuf.st_mtime) DisplayDirectory();
-#endif
 #endif
 
    return kTRUE;
@@ -471,14 +406,7 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
       if (S_ISDIR(file_type))
          *pic = small ? fFolder_t : fFolder_s;
 #else
-#ifndef GDK_WIN32
       Error("GetFilePictures", "not yet implemented for Win32");
-#else
-      if ((file_type & _S_IFREG) && (file_type & _S_IEXEC))
-         *pic = small ? fApp_t : fApp_s;
-      if (file_type & _S_IFDIR)
-         *pic = small ? fFolder_t : fFolder_s;
-#endif
 #endif
    }
 
@@ -533,13 +461,8 @@ void TGFileContainer::CreateFileList()
    struct stat sbuf;
    if (stat(".", &sbuf) == 0) fMtime = sbuf.st_mtime;
 #else
-#ifndef GDK_WIN32
    Error("CreateFileList", "not yet implemented for Win32");
    return;
-#else
-   struct stat sbuf;
-   if (stat(".", &sbuf) == 0) fMtime = sbuf.st_mtime;
-#endif
 #endif
 
    void *dirp;
@@ -573,12 +496,8 @@ TGFileItem *TGFileContainer::AddFile(const char *name)
 #ifndef WIN32
    struct stat sbuf;
 #else
-#ifndef GDK_WIN32
    Error("AddFile", "not yet implemented for Win32");
    return item;
-#else
-   struct stat sbuf;
-#endif
 #endif
 
    type = 0;
@@ -612,42 +531,6 @@ TGFileItem *TGFileContainer::AddFile(const char *name)
 
    filename = name;
    if (S_ISDIR(type) || fFilter == 0 ||
-       (fFilter && filename.Index(*fFilter) != kNPOS)) {
-      GetFilePictures(&pic, &lpic, type, is_link, name, kFALSE);
-      GetFilePictures(&spic, &slpic, type, is_link, name, kTRUE);
-      item = new TGFileItem(this, pic, lpic, spic, slpic, new TGString(name),
-                            type, size, uid, gid, fViewMode);
-      AddItem(item);
-      fTotal++;
-   }
-#endif
-#else
-#ifdef GDK_WIN32
-   is_link = kFALSE;
-   if (stat(name, &sbuf) == 0) {
-      is_link = kFALSE;
-      type = sbuf.st_mode;
-      size = sbuf.st_size;
-      uid = sbuf.st_uid;
-      gid = sbuf.st_gid;
-      if (is_link) {
-         if (stat(name, &sbuf) == 0) {
-            type = sbuf.st_mode;
-            size = sbuf.st_size;
-         }
-      }
-   } else {
-      char msg[256];
-
-      sprintf(msg, "Can't read file attributes of \"%s\": %s.",
-              name, gSystem->GetError());
-      new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                   "Error", msg, kMBIconStop, kMBOk);
-      return item;
-   }
-
-   filename = name;
-   if ((type & _S_IFDIR) || fFilter == 0 ||
        (fFilter && filename.Index(*fFilter) != kNPOS)) {
       GetFilePictures(&pic, &lpic, type, is_link, name, kFALSE);
       GetFilePictures(&spic, &slpic, type, is_link, name, kTRUE);

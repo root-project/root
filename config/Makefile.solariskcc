@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Solaris with KCC
 
 PLATFORM      = solaris
@@ -10,7 +8,7 @@ CXXOPT        = +K0 -O0
 NOOPT         =
 else
 OPT           = -O4
-CXXOPT        = +K1
+CXXOPT        = +K3
 NOOPT         =
 endif
 

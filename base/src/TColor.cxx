@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.10 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.5 2001/05/07 18:41:48 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TColor.h"
 #include "TObjArray.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
-#include "TError.h"
-
 
 ClassImp(TColor)
 
@@ -120,7 +119,7 @@ void TColor::Copy(TObject &obj)
 {
    // Copy this color to obj.
 
-   TNamed::Copy((TNamed&)obj);
+   TObject::Copy(obj);
    ((TColor&)obj).fRed   = fRed;
    ((TColor&)obj).fGreen = fGreen;
    ((TColor&)obj).fBlue  = fBlue;
@@ -132,7 +131,7 @@ void TColor::Copy(TObject &obj)
 //______________________________________________________________________________
 void TColor::HLStoRGB(Float_t hue, Float_t light, Float_t satur, Float_t &r, Float_t &g, Float_t &b)
 {
-   // Static method to compute HLS from RGB (see HIGZ routine IGHTOR).
+   // Compute HLS from RGB (see HIGZ routine IGHTOR).
 
    Float_t rh, rl, rs, rm1, rm2;
    rh = rl = rs = 0;
@@ -153,7 +152,7 @@ void TColor::HLStoRGB(Float_t hue, Float_t light, Float_t satur, Float_t &r, Flo
 //______________________________________________________________________________
 Float_t TColor::HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei)
 {
-   // Static method. Auxiliary to HLStoRGB (see HIGZ routine IGHR01).
+   // Auxiliary to HLStoRGB (see HIGZ routine IGHR01).
 
    Float_t hue = huei;
    if (hue > 360) hue = hue - 360;
@@ -169,8 +168,7 @@ void TColor::ls(Option_t *) const
 {
    // List this color with its attributes.
 
-   printf("Color:%d  Red=%f Green=%f Blue=%f Name=%s\n",
-          fNumber, fRed, fGreen, fBlue, GetName());
+   printf("Color:%d  Red=%f Green=%f Blue=%f\n",fNumber,fRed,fGreen,fBlue);
 }
 
 //______________________________________________________________________________
@@ -184,7 +182,7 @@ void TColor::Print(Option_t *) const
 //______________________________________________________________________________
 void TColor::RGBtoHLS(Float_t r, Float_t g, Float_t b, Float_t &hue, Float_t &light, Float_t &satur )
 {
-   // Static method to compute HLS from RGB.
+   // Compute HLS from RGB.
 
    Float_t rnorm, gnorm, bnorm, minval, maxval, msum, mdiff;
    minval = r;
@@ -267,95 +265,4 @@ void TColor::Allocate()
    if (gVirtualX && !gROOT->IsBatch())
       gVirtualX->SetRGB(fNumber, fRed, fGreen, fBlue);
 }
-
-//______________________________________________________________________________
-Int_t TColor::GetColor(const char *hexcolor)
-{
-   // Static method returning color number for color specified by
-   // hex color string of form: #rrggbb, where rr, gg and bb are in
-   // hex between [0,FF], e.g. "#c0c0c0".
-   // If specified color does not exist it will be created with as
-   // name "#rrggbb" with rr, gg and bb in hex between [0,FF].
-
-   if (hexcolor && *hexcolor == '#') {
-      Int_t r, g, b;
-      if (sscanf(hexcolor+1, "%02x%02x%02x", &r, &g, &b) == 3)
-         return GetColor(r, g, b);
-   }
-   ::Error("TColor::GetColor(const char*)", "incorrect color string");
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TColor::GetColor(Float_t r, Float_t g, Float_t b)
-{
-   // Static method returning color number for color specified by
-   // r, g and b. The r,g,b should be in the range [0,1].
-   // If specified color does not exist it will be created
-   // with as name "#rrggbb" with rr, gg and bb in hex between
-   // [0,FF].
-
-   Int_t rr, gg, bb;
-   rr = Int_t(r * 255);
-   gg = Int_t(g * 255);
-   bb = Int_t(b * 255);
-
-   return GetColor(rr, gg, bb);
-}
-
-//______________________________________________________________________________
-Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
-{
-   // Static method returning color number for color specified by
-   // r, g and b. The r,g,b should be in the range [0,255].
-   // If the specified color does not exist it will be created
-   // with as name "#rrggbb" with rr, gg and bb in hex between
-   // [0,FF].
-
-   if (r < 0) r = 0;
-   if (g < 0) g = 0;
-   if (b < 0) b = 0;
-   if (r > 255) r = 255;
-   if (g > 255) g = 255;
-   if (b > 255) b = 255;
-
-   // Get list of all defined colors
-   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
-
-   TColor *color = 0;
-
-   // Look for color by name
-   if ((color = (TColor*)colors->FindObject(Form("#%02x%02x%02x", r, g, b))))
-      // We found the color by name, so we use that right away
-      return color->GetNumber();
-
-   Float_t rr, gg, bb;
-   rr = Float_t(r)/255.;
-   gg = Float_t(g)/255.;
-   bb = Float_t(b)/255.;
-
-   TIter next(colors);
-
-   // Loop over all defined colors
-   while ((color = (TColor*)next())) {
-      if (color->GetRed() != rr)
-         continue;
-      if (color->GetGreen() != gg)
-         continue;
-      if (color->GetBlue() != bb)
-         continue;
-
-      // We found a matching color in the color table
-      return color->GetNumber();
-   }
-
-   // We didn't find a matching color in the color table, so we
-   // add it. Note name is of the form "#rrggbb" where rr, etc. are
-   // hexadecimal numbers.
-   color = new TColor(colors->GetEntries(), rr, gg, bb,
-                      Form("#%02x%02x%02x", r, g, b));
-
-   return color->GetNumber();
-}
-
 

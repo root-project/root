@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.17 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.11 2001/03/29 11:25:48 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -44,9 +44,6 @@
 // If a folder has been declared the owner of its objects/folders via
 // TFolder::SetOwner, then the contained objects are deleted when the
 // folder is deleted. By default, a folder does not own its contained objects.
-// NOTE that folder ownership can be set
-//   - via TFolder::SetOwner
-//   - or via TCollection::SetOwner on the collection specified to TFolder::AddFolder
 //
 // Standard Root objects are automatically added to the folder hierarchy.
 // For example, the following folders exist:
@@ -77,14 +74,14 @@
 */
 //End_Html
 
-#include "Riostream.h"
+#include <iostream.h>
+
 #include "Strlen.h"
 #include "TFolder.h"
 #include "TBrowser.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TError.h"
-#include "TFile.h"
 #include "TRegexp.h"
 
 const int kMAXDEPTH = 64;
@@ -99,9 +96,6 @@ TFolder::TFolder() : TNamed()
 {
 // default constructor used by the Input functions
 //
-// This constructor should not be called by a user directly.
-// The normal way to create a folder is by calling TFolder::AddFolder
-
    fFolders = 0;
    fIsOwner = kFALSE;
 }
@@ -254,7 +248,7 @@ TObject *TFolder::FindObject(const char *name) const
 // this folder.
 // name may be of the forms:
 //   A, specify a full pathname starting at the top ROOT folder
-//     //root/xxx/yyy/name
+//     //root/xxx/yyy/name 
 //
 //   B, specify a pathname starting with a single slash. //root is assumed
 //     /xxx/yyy/name
@@ -263,7 +257,6 @@ TObject *TFolder::FindObject(const char *name) const
 //     xxx/yyy/name
 //     name
 
-   if (!fFolders) return 0;
    if (name == 0) return 0;
    if (name[0] == '/') {
       if (name[1] == '/') {
@@ -313,17 +306,6 @@ TObject *TFolder::FindObjectAny(const char *name) const
 }
 
 //______________________________________________________________________________
-Bool_t TFolder::IsOwner()  const
-{
-// folder ownership has been set via
-//   - TFolder::SetOwner
-//   - TCollection::SetOwner on the collection specified to TFolder::AddFolder
-
-   if (!fFolders) return kFALSE;
-   return fFolders->IsOwner();
-}
-
-//______________________________________________________________________________
 void TFolder::ls(Option_t *option) const
 {
 // List folder contents
@@ -334,7 +316,6 @@ void TFolder::ls(Option_t *option) const
 //
 //  The <regexp> will be used to match the name of the objects.
 //
-   if (!fFolders) return;
    TROOT::IndentLevel();
    cout <<ClassName()<<"*\t\t"<<GetName()<<"\t"<<GetTitle()<<endl;
    TROOT::IncreaseDirLevel();
@@ -367,7 +348,6 @@ Int_t TFolder::Occurence(const TObject *object) const
 // found in the list of objects in this folder before object itself.
 // If only one object is found, return 0;
    Int_t n = 0;
-   if (!fFolders) return 0;
    TIter next(fFolders);
    TObject *obj;
    while ((obj=next())) {
@@ -388,7 +368,7 @@ void TFolder::RecursiveRemove(TObject *obj)
 {
 // Recursively remove object from a Folder
 
-   if (fFolders) fFolders->RecursiveRemove(obj);
+   fFolders->RecursiveRemove(obj);
 }
 
 //______________________________________________________________________________
@@ -399,33 +379,3 @@ void TFolder::Remove(TObject *obj)
    if (obj == 0 || fFolders == 0) return;
    fFolders->Remove(obj);
 }
-
-//______________________________________________________________________________
-void TFolder::SaveAs(const char *filename)
-{
-// Save all objects in this folder in filename
-// Each object in this folder will have a key in the file where the name of
-// the key will be the name of the object.
-
-   TFile f(filename,"recreate");
-   if (f.IsZombie()) return;
-   if (fFolders) fFolders->Write();
-   printf("Folder: %s saved to file: %s\n",GetName(),filename);
-}
-
-//______________________________________________________________________________
-void TFolder::SetOwner(Bool_t owner)
-{
-// Set ownership
-// If the folder is declared owner, when the folder is deleted, all
-// the objects added via TFolder::Add are deleted via TObject::Delete,
-// otherwise TObject::Clear is called.
-//
-// NOTE that folder ownership can be set
-//   - via TFolder::SetOwner
-//   - or via TCollection::SetOwner on the collection specified to TFolder::AddFolder
-
-   if (!fFolders) fFolders = new TList();
-   fFolders->SetOwner(owner);
-}
-

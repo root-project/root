@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.24 2001/08/30 16:37:50 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.20 2001/02/22 15:18:56 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -34,8 +34,7 @@
 // Connecting to a rootd requires the remote user id and password.      //
 // TNetFile allows three ways for you to provide your login:            //
 //   1) Setting it globally via the static functions:                   //
-//         TAuthenticate::SetGlobalUser() and                           //
-//         TAuthenticate::SetGlobalPasswd()                             //
+//          TNetFile::SetUser() and TNetFile::SetPasswd()               //
 //   2) Getting it from the ~/.netrc file (same file as used by ftp)    //
 //   3) Command line prompt                                             //
 // The different methods will be tried in the order given above.        //
@@ -129,9 +128,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    EMessageTypes kind;
    Int_t sec, tcpwindowsize = 65535;
 
-   fSocket    = 0;
-   fOffset    = 0;
-   fErrorCode = -1;
+   fOffset = 0;
 
    Bool_t forceOpen = kFALSE;
    if (option[0] == 'F' || option[0] == 'f') {
@@ -323,11 +320,10 @@ void TNetFile::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TNetFile::PrintError(const char *where, Int_t err)
+void TNetFile::PrintError(const char *where, Int_t err) const
 {
    // Print error string depending on error code.
 
-   fErrorCode = err;
    Error(where, gRootdErrStr[err]);
 }
 
@@ -367,7 +363,6 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
    Int_t         stat, n;
    EMessageTypes kind;
 
-   fErrorCode = -1;
    if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
       PrintError("ReadBuffer", stat);
       result = kTRUE;
@@ -439,7 +434,6 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
    Int_t         stat;
    EMessageTypes kind;
 
-   fErrorCode = -1;
    if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
       PrintError("WriteBuffer", stat);
       result = kTRUE;

@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.4 2001/02/06 10:34:19 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.3 2000/12/05 10:56:10 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -61,7 +61,6 @@ protected:
         Bool_t  IsModified(TClass *classPtr, const Int_t type);
         Bool_t  IsName(Int_t c);
         Bool_t  IsWord(Int_t c);
-		void	NameSpace2FileName(char *name);
         void    ReplaceSpecialChars(ofstream &out, const char c);
         void    ReplaceSpecialChars(ofstream &out, const char *string);
         void    SortNames(const char **strings, Int_t num, Bool_t type=0);

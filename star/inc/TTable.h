@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.13 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.8 2001/04/06 17:32:25 fisyak Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-
+ 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -28,22 +28,17 @@
 #include "Ttypes.h"
 #include "TDataSet.h"
 #include "tableDescriptor.h"
-#ifndef ROOT_TCut
 #include "TCut.h"
-#endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 
 #ifndef __CINT__
 #  include <string.h>
-#  include <assert.h>
+#include <fstream.h>
+#include <assert.h>
 #endif
 
 enum ETableBits {
-    kIsNotOwn         = BIT(23)   // if the TTable wrapper doesn't own the STAF table
-		                          // As result of the Update() method for example
+    kIsNotOwn         = BIT(23)   // if the TTable wrapper doesn't own the STAF table                                 // As result of the Update() method for example
 };
 class TTableDescriptor;
 class TH1;
@@ -51,7 +46,7 @@ class TH1;
 class TTable : public TDataSet {
    friend class TDataSet;
    friend class St_XDFFile;
-protected:
+private:
    Long_t     fSize;       // Size of the one element (row) of the table
 
 protected:
@@ -75,7 +70,7 @@ protected:
    void       StreamerHeader(TBuffer &b,Version_t version=3);
    void       StreamerTable(TBuffer &b,Version_t version=3);
    virtual TTableDescriptor *GetDescriptorPointer() const;
-   virtual void  SetDescriptorPointer(TTableDescriptor *list);
+   virtual void  SetDescriptorPointer(TTableDescriptor *list) const ;
 
    void       ReAlloc(Int_t newsize);
 
@@ -83,7 +78,7 @@ public:
 
    enum EColumnType {kNAN, kFloat, kInt, kLong, kShort, kDouble, kUInt
                           ,kULong, kUShort, kUChar, kChar };
-   static const char *fgTypeName[kChar+1];
+   static const char *fgTypeName[kChar+1]; 
    TTable(const Text_t *name=0, Int_t size=0);
    TTable(const Text_t *name, Int_t n,Int_t size);
    TTable(const Text_t *name, Int_t n, Char_t *array,Int_t size);
@@ -169,7 +164,7 @@ public:
    static const char *GetTypeName(EColumnType type);
    static EColumnType GetTypeId(const char *typeName);
 
-   ClassDef(TTable,4)  // vector of the C structures
+   ClassDef(TTable,4)  // Array of the C structures
 };
 
 //________________________________________________________________________

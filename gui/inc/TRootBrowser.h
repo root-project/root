@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name$:$Id$
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -96,6 +96,7 @@ private:
    void  Chdir(TGListTreeItem *item);
    void  DisplayDirectory();
    void  DisplayTotal(Int_t total, Int_t selected);
+   void  SetDefaults();
    void  SetViewMode(Int_t new_mode, Bool_t force = kFALSE);
    void  SetSortMode(Int_t new_mode);
 
@@ -116,7 +117,6 @@ public:
    void     ShowToolBar(Bool_t show = kTRUE);
    void     ShowStatusBar(Bool_t show = kTRUE);
    void     Show() { MapRaised(); }
-   void     SetDefaults(const char *iconStyle = 0, const char *sortBy = 0);
 
    // overridden from TGMainFrame
    void     CloseWindow();

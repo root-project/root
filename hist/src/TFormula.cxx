@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.28 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.18 2001/05/29 06:57:13 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <iostream.h>
 #include <math.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TFormula.h"
@@ -295,8 +295,8 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
    Int_t valeur,find,n,i,j,k,lchain,nomb,virgule,inter;
    Int_t compt,compt2,compt3,compt4,hexa;
-   Double_t vafConst;
-   ULong_t vafConst2;
+   Float_t vafConst;
+   UInt_t vafConst2;
    Bool_t parenthese;
    TString s,chaine_error,chaine1ST;
    TString s1,s2,s3,ctemp;
@@ -375,10 +375,10 @@ if (err==0) {
     if (chaine(i-1,1)=="&" && compt==0 && compt2==0 && etx==0) {etx=i;puiss=0;}
     if (chaine(i-1,1)=="|" && compt==0 && compt2==0 && oux==0) {puiss10=0; oux=i;}
     if (chaine(i-1,2)==">>" && compt==0 && compt2==0 && rshift==0) {puiss10=0; rshift=i;}
-    if (chaine(i-1,1)==">" && compt==0 && compt2==0 && rshift==0 && grand==0)
+    if (chaine(i-1,1)==">" && compt==0 && compt2==0 && rshift==0 && grand==0) 
         {puiss10=0; grand=i;}
     if (chaine(i-1,2)=="<<" && compt==0 && compt2==0 && lshift==0) {puiss10=0; lshift=i;}
-    if (chaine(i-1,1)=="<" && compt==0 && compt2==0 && lshift==0 && petit==0)
+    if (chaine(i-1,1)=="<" && compt==0 && compt2==0 && lshift==0 && petit==0) 
         {puiss10=0; petit=i;}
     if ((chaine(i-1,2)=="<=" || chaine(i-1,2)=="=<") && compt==0 && compt2==0
         && peteg==0) {peteg=i; puiss10=0; petit=0;}
@@ -833,7 +833,7 @@ if (err==0) {
                  fExpr[fNoper] = "sqrt";
                  fOper[fNoper] = 22;
                  fNoper++;
-
+			
 //*-*- Look for an exponential
 //*-*  =======================
                } else if (chaine(0,4)=="expo" || chaine(1,4)=="expo" || chaine(2,4)=="expo") {
@@ -883,7 +883,7 @@ if (err==0) {
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
-                      if (fNpar == 2) SetNumber(200);
+                      SetNumber(200);
                    }
                 }
             } else if (chaine(4,1) == "(") {
@@ -905,7 +905,7 @@ if (err==0) {
                             if (inter+2>fNpar) fNpar = inter+2;
                             if (fNpar>=MAXPAR) err=7; // too many parameters
                             if (!err) fNoper++;
-                            if (fNpar == 2) SetNumber(200);
+                            SetNumber(200);
                          } else err=20;
                       } else err = 20; // non integer value for parameter number
                     } else {
@@ -960,7 +960,7 @@ if (err==0) {
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
-                      if (fNpar == 3) SetNumber(100);
+                      SetNumber(100);
                    }
                 }
             } else if (chaine(4,1) == "(" && err==0) {
@@ -982,7 +982,7 @@ if (err==0) {
                              if (inter+3>fNpar) fNpar = inter+3;
                              if (fNpar>=MAXPAR) err=7; // too many parameters
                              if (!err) fNoper++;
-                             if(fNpar == 3) SetNumber(100);
+                             SetNumber(100);
                          } else err = 20; // non integer value for parameter number
                       }
                    } else if (err==0) {
@@ -1037,7 +1037,7 @@ if (err==0) {
                    if (!err) {
                       fNoper++;
                       if (fNdim < 1) fNdim = 1;
-                      if (fNpar == 3) SetNumber(400);
+                      SetNumber(400);
                    }
                 }
             } else if (chaine(6,1) == "(" && err==0) {
@@ -1059,7 +1059,7 @@ if (err==0) {
                              if (inter+3>fNpar) fNpar = inter+3;
                              if (fNpar>=MAXPAR) err=7; // too many parameters
                              if (!err) fNoper++;
-                             if (fNpar == 3) SetNumber(400);
+                             SetNumber(400);
                          } else err = 20; // non integer value for parameter number
                       }
                    } else if (err==0) {
@@ -1267,9 +1267,9 @@ if (err==0) {
             }
             if (fNconst >= MAXCONST) err = 27;
             if (!err) {
-               if (hexa==0) {if (sscanf((const char*)chaine,"%lg",&vafConst) > 0) err = 0; else err =1;}
-               else {if (sscanf((const char*)chaine,"%lx",&vafConst2) > 0) err = 0; else err=1;
-               vafConst = (Double_t) vafConst2;}
+               if (hexa==0) {if (sscanf((const char*)chaine,"%g",&vafConst) > 0) err = 0; else err =1;}
+               else {if (sscanf((const char*)chaine,"%x",&vafConst2) > 0) err = 0; else err=1;
+               vafConst = (Float_t) vafConst2;}
                fExpr[fNoper] = chaine;
                k = -1;
                for (j=0;j<fNconst;j++) {
@@ -1390,8 +1390,6 @@ Int_t TFormula::Compile(const char *expression)
       fExpr[i] = "";
       fOper[i] = 0;
   }
-  for (i=0; i<MAXCONST; i++)
-      fConst[i] = 0;
 
 //*-*- Substitution of some operators to C++ style
 //*-*  ===========================================
@@ -1412,7 +1410,7 @@ Int_t TFormula::Compile(const char *expression)
              if (chaine(i-1,2) == "--") {
                 chaine = chaine(0,i-1) + "+" + chaine(i+1,lc-i-1);
                 i=0;
-             } else
+             } else 
                if (chaine(i-1,2) == "->") {
                   chaine = chaine(0,i-1) + "." + chaine(i+1,lc-i-1);
                   i=0;
@@ -1463,55 +1461,13 @@ Int_t TFormula::Compile(const char *expression)
 
 
 //*-* replace 'normal' == or != by ==(string) or !=(string) if needed.
-  Int_t is_it_string,last_string=0,before_last_string=0;
+  Int_t is_it_string,last_string=0;
   if (!fOper) fNoper = 0;
-   enum { kIsCharacter = BIT(12) };
   for (i=0; i<fNoper; i++) {
      is_it_string = 0;
      if ((fOper[i]>=105000 && fOper[i]<110000) || fOper[i] == 80000) is_it_string = 1;
-     else if (last_string) {
-
-       if (fOper[i] == 62) {
-          if (!before_last_string) {
-             Error("Compile", "Both operands of the operator == have too be either numbers or strings");
-             return -1;
-          }
-          fOper[i] = 76;
-          SetBit(kIsCharacter);
-       } else if (fOper[i] == 63) {
-          if (!before_last_string) {
-             Error("Compile", "Both operands of the operator != have too be either numbers or strings");
-             return -1;
-          }
-          fOper[i] = 77;
-          SetBit(kIsCharacter);
-       }
-       else if (fOper[i] == 23) {
-          if (! (before_last_string && last_string) ) {
-             Error("Compile", "strstr requires 2 string arguments");
-             return -1;
-          }
-          SetBit(kIsCharacter);
-       } else if (before_last_string) {
-          // the i-2 element is a string not used in a string operation, let's down grade it
-          // to a char array:
-          if (fOper[i-2]>=105000) {
-            fOper[i-2] -= 5000;
-            fNval++;
-            fNstring--;
-          }
-       }
-
-     } else if (before_last_string) {
-        // the i-2 element is a string not used in a string operation, let's down grade it
-        // to a char array:
-        if (fOper[i-2]>=105000){
-           fOper[i-2] -= 5000;
-           fNval++;
-           fNstring--;
-        }
-     }
-     before_last_string = last_string;
+     else if (fOper[i] == 62 && last_string == 1) fOper[i] = 76;
+     else if (fOper[i] == 63 && last_string == 1) fOper[i] = 77;
      last_string = is_it_string;
   }
 
@@ -1533,36 +1489,11 @@ void TFormula::Copy(TObject &obj)
    ((TFormula&)obj).fNconst = fNconst;
    ((TFormula&)obj).fNumber = fNumber;
    ((TFormula&)obj).fNval   = fNval;
-   ((TFormula&)obj).fExpr   = 0;
-   ((TFormula&)obj).fOper   = 0;
-   ((TFormula&)obj).fConst  = 0;
-   ((TFormula&)obj).fParams = 0;
-   ((TFormula&)obj).fNames  = 0;
-   if (fExpr && fNoper) {
-      ((TFormula&)obj).fExpr = new TString[fNoper];
-      for (i=0; i<fNoper; i++)
-         ((TFormula&)obj).fExpr[i] = "";
-   }
-   if (fOper && fNoper) {
-      ((TFormula&)obj).fOper = new Int_t[fNoper];
-      for (i=0; i<fNoper; i++)
-         ((TFormula&)obj).fOper[i] = 0;
-   }
-   if (fConst && fNconst) {
-      ((TFormula&)obj).fConst = new Double_t[fNconst];
-      for (i=0; i<fNconst; i++)
-         ((TFormula&)obj).fConst[i] = 0;
-   }
-   if (fParams && fNpar) {
-      ((TFormula&)obj).fParams = new Double_t[fNpar];
-      for (i=0; i<fNpar; i++)
-         ((TFormula&)obj).fParams[i] = 0;
-   }
-   if (fNames && fNpar) {
-      ((TFormula&)obj).fNames = new TString[fNpar];
-      for (i=0; i<fNpar; i++)
-         ((TFormula&)obj).fNames[i] = "";
-   }
+   if (fNoper)  ((TFormula&)obj).fExpr   = new TString[fNoper];
+   if (fNoper)  ((TFormula&)obj).fOper   = new Int_t[fNoper];
+   if (fNconst) ((TFormula&)obj).fConst  = new Double_t[fNconst];
+   if (fNpar)   ((TFormula&)obj).fParams = new Double_t[fNpar];
+   if (fNpar)   ((TFormula&)obj).fNames  = new TString[fNpar];
    for (i=0;i<fNoper;i++)  ((TFormula&)obj).fExpr[i]   = fExpr[i];
    for (i=0;i<fNoper;i++)  ((TFormula&)obj).fOper[i]   = fOper[i];
    for (i=0;i<fNconst;i++) ((TFormula&)obj).fConst[i]  = fConst[i];
@@ -1826,25 +1757,13 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
           pos++;
           inter=action/100-20;
           int1=action-inter*100;
-          if (fParams[int1-1999] == 0) {
-             intermede2=1e10;
-          } else {
-             intermede2=Double_t((x[inter]-fParams[int1-2000])/fParams[int1-1999]);
-          }
+          intermede2=Double_t((x[inter]-fParams[int1-2000])/fParams[int1-1999]);
           tab[pos-1] = fParams[int1-2001]*TMath::Exp(-0.5*intermede2*intermede2);
 //*-*- xygaus
     } else if (action > 2500 && action < 2600) {
           pos++;
-          if (fParams[action-2499] == 0) {
-             intermede1=1e10;
-          } else {
-             intermede1=Double_t((x[0]-fParams[action-2500])/fParams[action-2499]);
-          }
-          if (fParams[action-2497] == 0) {
-             intermede2=1e10;
-          } else {
-             intermede2=Double_t((x[1]-fParams[action-2498])/fParams[action-2497]);
-          }
+          intermede1=Double_t((x[0]-fParams[action-2500])/fParams[action-2499]);
+          intermede2=Double_t((x[1]-fParams[action-2498])/fParams[action-2497]);
           tab[pos-1] = fParams[action-2501]*TMath::Exp(-0.5*(intermede1*intermede1+intermede2*intermede2));
 //*-*- landau, xlandau, ylandau or zlandau
     } else if (action > 4000 && action < 4500) {
@@ -1865,19 +1784,10 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
 }
 
 //______________________________________________________________________________
-Double_t TFormula::GetParameter(Int_t ipar) const
-{
-  //return value of parameter number ipar
-
-  if (ipar <0 && ipar >= fNpar) return 0;
-  return fParams[ipar];
-}
-
-//______________________________________________________________________________
 Double_t TFormula::GetParameter(const char *parName) const
 {
   //return value of parameter named parName
-
+   
   const Double_t kNaN = 1e-300;
   Int_t index = GetParNumber(parName);
   if (index==-1) {
@@ -1902,7 +1812,7 @@ const char *TFormula::GetParName(Int_t ipar) const
 Int_t TFormula::GetParNumber(const char *parName) const
 {
   // return parameter number by name
-
+   
    for (Int_t i=0; i<fNpar; i++) {
       if (fNames[i] == parName) return i;
    }
@@ -1984,15 +1894,6 @@ void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Dou
 }
 
 //______________________________________________________________________________
-void TFormula::SetParName(Int_t ipar, const char *name)
-{
-// Set name of parameter number ipar
-
-   if (ipar <0 || ipar >= fNpar) return;
-   fNames[ipar] = name;
-}
-
-//______________________________________________________________________________
 void TFormula::SetParNames(const char*name0,const char*name1,const char*name2,const char*name3,const char*name4,
                      const char*name5,const char*name6,const char*name7,const char*name8,const char*name9,const char*name10)
 {
@@ -2023,7 +1924,7 @@ void TFormula::Streamer(TBuffer &b)
       Version_t v = b.ReadVersion(&R__s, &R__c);
       if (v > 3) {
          TFormula::Class()->ReadBuffer(b, this, v, R__s, R__c);
-         if (!TestBit(kNotGlobal)) gROOT->GetListOfFunctions()->Add(this);
+         gROOT->GetListOfFunctions()->Add(this);
          return;
       }
       //====process old versions before automatic schema evolution
@@ -2047,7 +1948,7 @@ void TFormula::Streamer(TBuffer &b)
       gROOT->GetListOfFunctions()->Add(this);
       b.CheckByteCount(R__s, R__c, TFormula::IsA());
       //====end of old versions
-
+      
    } else {
       TFormula::Class()->WriteBuffer(b,this);
    }

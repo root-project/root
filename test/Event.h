@@ -11,13 +11,86 @@
 
 #include "TObject.h"
 #include "TClonesArray.h"
-#include "TRefArray.h"
-#include "TRef.h"
 #include "TH1.h"
 #include "TMath.h"
 
+#include <iostream.h>
+
 
 class TDirectory;
+
+
+class EventHeader {
+
+private:
+   Int_t   fEvtNum;
+   Int_t   fRun;
+   Int_t   fDate;
+
+public:
+   EventHeader() : fEvtNum(0), fRun(0), fDate(0) { }
+   virtual ~EventHeader() { }
+   void   Set(Int_t i, Int_t r, Int_t d) { fEvtNum = i; fRun = r; fDate = d; }
+   Int_t  GetEvtNum() const { return fEvtNum; }
+   Int_t  GetRun() const { return fRun; }
+   Int_t  GetDate() const { return fDate; }
+
+   ClassDef(EventHeader,1)  //Event Header
+};
+
+
+class Event : public TObject {
+
+private:
+   char           fType[20];
+   Int_t          fNtrack;
+   Int_t          fNseg;
+   Int_t          fNvertex;
+   UInt_t         fFlag;
+   Float_t        fTemperature;
+   EventHeader    fEvtHdr;
+   TClonesArray  *fTracks;            //->
+   TH1F          *fH;                 //->
+   Int_t          fMeasures[10];
+   Float_t        fMatrix[4][4];
+   Float_t       *fClosestDistance;   //[fNvertex] 
+
+   static TClonesArray *fgTracks;
+   static TH1F         *fgHist;
+
+public:
+   Event();
+   virtual ~Event();
+   void          Clear(Option_t *option ="");
+   static void   Reset(Option_t *option ="");
+   void          ResetHistogramPointer() {fH=0;}
+   void          SetNseg(Int_t n) { fNseg = n; }
+   void          SetNtrack(Int_t n) { fNtrack = n; }
+   void          SetNvertex(Int_t n) { fNvertex = n; SetRandomVertex(); }
+   void          SetFlag(UInt_t f) { fFlag = f; }
+   void          SetTemperature(Float_t t) { fTemperature = t; }
+   void          SetType(char *type) {strcpy(fType,type);}
+   void          SetHeader(Int_t i, Int_t run, Int_t date, Float_t random);
+   void          AddTrack(Float_t random);
+   void          SetMeasure(UChar_t which, Int_t what);
+   void          SetMatrix(UChar_t x, UChar_t y, Float_t what) { if (x<3&&y<3) fMatrix[x][y]=what;}
+   void          SetRandomVertex();
+
+   char         *GetType() {return fType;}
+   Int_t         GetNtrack() const { return fNtrack; }
+   Int_t         GetNseg() const { return fNseg; }
+   Int_t         GetNvertex() const { return fNvertex; }
+   UInt_t        GetFlag() const { return fFlag; }
+   Float_t       GetTemperature() const { return fTemperature; }
+   EventHeader  *GetHeader() { return &fEvtHdr; }
+   TClonesArray *GetTracks() const { return fTracks; }
+   TH1F         *GetHistogram() const { return fH; }
+   Int_t         GetMeasure(UChar_t which) { return (which<10)?fMeasures[which]:0; }
+   Float_t       GetMatrix(UChar_t x, UChar_t y) { return (x<4&&y<4)?fMatrix[x][y]:0; }
+
+   ClassDef(Event,1)  //Event structure
+};
+
 
 class Track : public TObject {
 
@@ -68,89 +141,6 @@ public:
 
    ClassDef(Track,1)  //A track segment
 };
-
-class EventHeader {
-
-private:
-   Int_t   fEvtNum;
-   Int_t   fRun;
-   Int_t   fDate;
-
-public:
-   EventHeader() : fEvtNum(0), fRun(0), fDate(0) { }
-   virtual ~EventHeader() { }
-   void   Set(Int_t i, Int_t r, Int_t d) { fEvtNum = i; fRun = r; fDate = d; }
-   Int_t  GetEvtNum() const { return fEvtNum; }
-   Int_t  GetRun() const { return fRun; }
-   Int_t  GetDate() const { return fDate; }
-
-   ClassDef(EventHeader,1)  //Event Header
-};
-
-
-class Event : public TObject {
-
-private:
-   char           fType[20];          //event type
-   char          *fEventName;         //run+event number in character format
-   Int_t          fNtrack;            //Number of tracks
-   Int_t          fNseg;              //Number of track segments
-   Int_t          fNvertex;
-   UInt_t         fFlag;
-   Float_t        fTemperature;
-   Int_t          fMeasures[10];
-   Float_t        fMatrix[4][4];
-   Float_t       *fClosestDistance;   //[fNvertex]
-   EventHeader    fEvtHdr;
-   TClonesArray  *fTracks;            //->array with all tracks
-   TRefArray     *fHighPt;            //array of High Pt tracks only
-   TRefArray     *fMuons;             //array of Muon tracks only
-   TRef           fLastTrack;         //reference pointer to last track
-   TRef           fWebHistogram;      //EXEC:GetWebHistogram reference to an histogram in a TWebFile
-   TH1F          *fH;                 //->
-
-   static TClonesArray *fgTracks;
-   static TH1F         *fgHist;
-
-public:
-   Event();
-   virtual ~Event();
-   void          Build(Int_t ev, Int_t arg5=600, Float_t ptmin=1);
-   void          Clear(Option_t *option ="");
-   static void   Reset(Option_t *option ="");
-   void          ResetHistogramPointer() {fH=0;}
-   void          SetNseg(Int_t n) { fNseg = n; }
-   void          SetNtrack(Int_t n) { fNtrack = n; }
-   void          SetNvertex(Int_t n) { fNvertex = n; SetRandomVertex(); }
-   void          SetFlag(UInt_t f) { fFlag = f; }
-   void          SetTemperature(Float_t t) { fTemperature = t; }
-   void          SetType(char *type) {strcpy(fType,type);}
-   void          SetHeader(Int_t i, Int_t run, Int_t date, Float_t random);
-   Track        *AddTrack(Float_t random, Float_t ptmin=1);
-   void          SetMeasure(UChar_t which, Int_t what);
-   void          SetMatrix(UChar_t x, UChar_t y, Float_t what) { if (x<3&&y<3) fMatrix[x][y]=what;}
-   void          SetRandomVertex();
-
-   Float_t       GetClosestDistance(Int_t i) {return fClosestDistance[i];}
-   char         *GetType() {return fType;}
-   Int_t         GetNtrack() const { return fNtrack; }
-   Int_t         GetNseg() const { return fNseg; }
-   Int_t         GetNvertex() const { return fNvertex; }
-   UInt_t        GetFlag() const { return fFlag; }
-   Float_t       GetTemperature() const { return fTemperature; }
-   EventHeader  *GetHeader() { return &fEvtHdr; }
-   TClonesArray *GetTracks() const {return fTracks;}
-   TRefArray    *GetHighPt() const {return fHighPt;}
-   TRefArray    *GetMuons()  const {return fMuons;}
-   Track        *GetLastTrack() const {return (Track*)fLastTrack.GetObject();}
-   TH1F         *GetHistogram() const {return fH;}
-   TH1          *GetWebHistogram()  const {return (TH1*)fWebHistogram.GetObject();}
-   Int_t         GetMeasure(UChar_t which) { return (which<10)?fMeasures[which]:0; }
-   Float_t       GetMatrix(UChar_t x, UChar_t y) { return (x<4&&y<4)?fMatrix[x][y]:0; }
-
-   ClassDef(Event,1)  //Event structure
-};
-
 
 
 class HistogramManager {

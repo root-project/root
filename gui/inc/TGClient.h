@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.3 2001/05/15 14:17:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.2 2001/04/28 16:30:14 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -90,7 +90,6 @@ public:
    void    ProcessLine(TString cmd, Long_t msg, Long_t parm1, Long_t parm2);
    void    WaitFor(TGWindow *w);
    void    WaitForUnmap(TGWindow *w);
-   Bool_t  ProcessEventsFor(TGWindow *w);
 
    const TGPicturePool *GetPicturePool() const { return fPicturePool; }
    const TGPicture *GetPicture(const char *name);

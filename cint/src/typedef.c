@@ -147,7 +147,7 @@ void G__define_type()
   int typenum;
   int isorgtypepointer=0;
   int store_def_tagnum;
-#ifndef G__OLDIMPLEMENTATION188
+#ifndef G__OLDIMPLEMENTATINO188
   int reftype=G__PARANORMAL;
   int rawunsigned=0;
 #endif
@@ -285,32 +285,6 @@ void G__define_type()
     c=G__fgetname(type1,"");
   }
 #endif
-#ifndef G__OLDIMPLEMENTATION1548
-  else if(strcmp(type1,"unsigned*")==0) {
-    unsigned_flag=1;
-    strcpy(type1,"int*");
-  }
-  else if(strcmp(type1,"signed*")==0) {
-    unsigned_flag=0;
-    strcpy(type1,"int*");
-  }
-  else if(strcmp(type1,"unsigned&")==0) {
-    unsigned_flag=1;
-    strcpy(type1,"int&");
-  }
-  else if(strcmp(type1,"signed&")==0) {
-    unsigned_flag=0;
-    strcpy(type1,"int&");
-  }
-  else if(strcmp(type1,"unsigned*&")==0) {
-    unsigned_flag=1;
-    strcpy(type1,"int*&");
-  }
-  else if(strcmp(type1,"signed*&")==0) {
-    unsigned_flag=0;
-    strcpy(type1,"int*&");
-  }
-#endif
 
   /*
    *  typedef  [struct|union|enum]  tagname { member } newtype;
@@ -321,7 +295,7 @@ void G__define_type()
    *                        ^
    */
 
-#ifndef G__OLDIMPLEMENTATION188
+#ifndef G__OLDIMPLEMENTATINO188
   if('\0'!=type1[0] && '&'==type1[strlen(type1)-1]) {
     reftype=G__PARAREFERENCE;
     type1[strlen(type1)-1]='\0';
@@ -361,11 +335,6 @@ void G__define_type()
     if(unsigned_flag==0) type='l';
     else                 type='k';
   }
-#ifndef G__OLDIMPLEMENTATION1604
-  else if(strcmp(type1,"bool")==0) {
-    type='g';
-  }
-#endif
   else if(strcmp(type1,"void")==0) {
     type='y';
   }
@@ -801,7 +770,7 @@ void G__define_type()
 #ifndef G__OLDIMPLEMENTATION673
   /* typedef oldtype &newtype */
   if(typename[0]=='&') {
-    if(G__PARAP2P==reftype) G__fprinterr(stderr,"cint internal limitation in %s %d\n",__FILE__,__LINE__);
+    if(G__PARAP2P==reftype) fprintf(stderr,"cint internal limitation in %s %d\n",__FILE__,__LINE__);
     reftype = G__PARAREFERENCE;
     if(strlen(typename)>1) {
       strcpy(val,typename);

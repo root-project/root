@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.11 2001/08/21 17:29:39 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.8 2001/05/29 10:22:57 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -77,7 +77,6 @@ class TGWin32  :  public TVirtualX  {
    friend class TGWin32WindowsObject;
    friend class TGWin32PixmapObject;
    friend class TWin32GLViewerImp;
-   friend class TWin32InventorViewerImp;
    friend class TPadOpenGLView;
 
 protected:
@@ -230,7 +229,7 @@ public:
     void      SetTitle(const char *title);
     void      UpdateWindow(Int_t mode);
     void      Warp(Int_t ix, Int_t iy);
-    Int_t     WriteGIF(char *name);
+    void      WriteGIF(char *name);
     void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
 
     UInt_t    ExecCommand(TGWin32Command *command);
@@ -358,7 +357,6 @@ public:
                                       UInt_t w, UInt_t h);
    virtual void         DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nseg);
    virtual void         SelectInput(Window_t id, UInt_t evmask);
-   virtual Window_t     GetInputFocus() { return kNone; }
    virtual void         SetInputFocus(Window_t id);
    virtual Window_t     GetPrimarySelectionOwner() { return kNone; }
    virtual void         SetPrimarySelectionOwner(Window_t id);

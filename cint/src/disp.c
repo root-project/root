@@ -1878,12 +1878,6 @@ long offset;
 	  sprintf(msg,"=%g",*(double*)addr); 
 	  if(G__more(fout,msg)) return(1);
 	  break;
-#ifndef G__OLDIMPLEMENTATION1604
-	case 'g': 
-	  sprintf(msg,"=%d",(*(int*)addr)?1:0); 
-	  if(G__more(fout,msg)) return(1);
-	  break;
-#endif
 #ifndef G__FONS31
 	default: 
 	  sprintf(msg,"=0x%lx",*(long*)addr); 
@@ -2008,6 +2002,7 @@ va_list arg;
 {
   int result;
   va_list argptr;
+  fp;
   va_start(argptr,fmt);
   if(G__ErrMsgCallback && G__serr==G__stderr) {
     char buf[G__LONGLINE];
@@ -2015,9 +2010,7 @@ va_list arg;
     (*G__ErrMsgCallback)(buf);
   }
   else {
-    if(fp) result = vfprintf(fp,fmt,argptr);
-    else if(G__serr) result = vfprintf(G__serr,fmt,argptr);
-    else result = vfprintf(stderr,fmt,argptr);
+    result = vfprintf(G__serr,fmt,argptr);
   }
   va_end(argptr);
   return(result);

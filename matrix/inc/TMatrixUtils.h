@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.5 2001/07/02 19:23:48 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.h,v 1.3 2000/11/21 21:58:19 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -103,11 +103,11 @@ protected:
    Int_t fColUpb;
    Int_t fColLwb;
 
-   TLazyMatrix(const TLazyMatrix &) : TObject() { }
-   void operator=(const TLazyMatrix &) { }
-
 private:
    virtual void FillIn(TMatrix &m) const = 0;
+
+   TLazyMatrix(const TLazyMatrix &) { }
+   void operator=(const TLazyMatrix &) { }
 
 public:
    TLazyMatrix() { fRowUpb = fRowLwb = fColUpb = fColLwb = 0; }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.9 2002/01/07 09:08:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.5 2001/05/09 13:27:44 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -120,7 +120,6 @@ private:
         Float_t       fStatY;             //Y position of top right corner of stat box
         Float_t       fStatW;             //width of stat box
         Float_t       fStatH;             //height of stat box
-        Bool_t        fStripDecimals;     //Strip decimals in axis labels
         Color_t       fTitleColor;        //title fill area color
         Color_t       fTitleTextColor;    //title text color
         Width_t       fTitleBorderSize;   //border size of Title PavelLabel
@@ -135,11 +134,9 @@ private:
         TArrayI       fPalette;           //Color palette
         TString       fLineStyle[30];     //String describing line style i (for postScript)
         TString       fHeaderPS;          //User defined additional Postscript header
-        TString       fTitlePS;           //User defined Postscript file title
         TString       fFitFormat;         //Printing format for fit parameters
-        TString       fPaintTextFormat;   //Printing format for TH2::PaintText
         Float_t       fLineScalePS;       //Line scale factor when drawing lines on Postscript
-        Double_t      fTimeOffset;        //Time offset to the beginning of an axis
+        Double_t      fTimeOffset;        //Time offset (UTC) to the beginning of an axis
 
 public:
         enum EPaperSize { kA4, kUSLetter };
@@ -223,7 +220,6 @@ public:
         Int_t            GetOptLogx() const {return fOptLogx;}
         Int_t            GetOptLogy() const {return fOptLogy;}
         Int_t            GetOptLogz() const {return fOptLogz;}
-        const char      *GetPaintTextFormat() const {return fPaintTextFormat.Data();}
         void             GetPaperSize(Float_t &xsize, Float_t &ysize);
         Int_t            GetShowEventStatus() const {return fShowEventStatus;}
         Float_t          GetScreenFactor() const {return fScreenFactor;}
@@ -238,7 +234,6 @@ public:
         Float_t          GetStatY() const     {return fStatY;}
         Float_t          GetStatW() const     {return fStatW;}
         Float_t          GetStatH() const     {return fStatH;}
-        Int_t            GetStripDecimals() const {return fStripDecimals;}
         Double_t         GetTimeOffset() const {return fTimeOffset;} //return axis time offset
         Color_t          GetTitleColor() const {return fTitleColor;}  //return histogram title fill area color
         Color_t          GetTitleTextColor() const {return fTitleTextColor;}  //return histogram title text color
@@ -255,14 +250,12 @@ public:
         Float_t          GetTitleW() const     {return fTitleW;}  //return width of histogram title TPaveLabel
         Float_t          GetTitleH() const     {return fTitleH;}  //return height of histogram title TPavelabel
         const char      *GetHeaderPS() const {return fHeaderPS.Data();}
-        const char      *GetTitlePS()  const {return fTitlePS.Data();}
         const char      *GetLineStyleString(Int_t i=1) const;
         Float_t          GetLineScalePS() const {return fLineScalePS;}
         virtual void     Reset(Option_t *option="");
 
         void             SetFitFormat(const char *format="5.4g") {fFitFormat = format;}
         void             SetHeaderPS(const char *header);
-        void             SetTitlePS(const char *pstitle);
         void             SetLineScalePS(Float_t scale=3) {fLineScalePS=scale;}
         void             SetLineStyleString(Int_t i, const char *text);
         void             SetNdivisions(Int_t n=510, Option_t *axis="X");
@@ -328,7 +321,6 @@ public:
         void             SetHistFillStyle(Style_t styl=0)  {fHistFillStyle = styl;}
         void             SetHistLineStyle(Style_t styl=0)  {fHistLineStyle = styl;}
         void             SetHistLineWidth(Width_t width=1) {fHistLineWidth = width;}
-        void             SetPaintTextFormat(const char *format="g") {fPaintTextFormat = format;}
         void             SetPaperSize(EPaperSize size);
         void             SetPaperSize(Float_t xsize=20, Float_t ysize=26);
         void             SetStatColor(Int_t color=19) {fStatColor=color;}
@@ -342,7 +334,6 @@ public:
         void             SetStatY(Float_t y=0)    {fStatY=y;}
         void             SetStatW(Float_t w=0.19) {fStatW=w;}
         void             SetStatH(Float_t h=0.1)  {fStatH=h;}
-        void             SetStripDecimals(Bool_t strip=kTRUE);
         void             SetTimeOffset(Double_t toffset);
         void             SetTitleColor(Int_t color=19)      {fTitleColor=color;}
         void             SetTitleTextColor(Int_t color=1)   {fTitleTextColor=color;}
@@ -361,7 +352,7 @@ public:
         void             ToggleEventStatus() { fShowEventStatus = fShowEventStatus ? 0 : 1; }
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
-        ClassDef(TStyle,7)  //A collection of all graphics attributes
+        ClassDef(TStyle,5)  //A collection of all graphics attributes
 };
 
 

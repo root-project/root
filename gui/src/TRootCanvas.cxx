@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.9 2001/06/27 16:54:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.7 2001/04/04 13:36:12 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -155,8 +155,8 @@ TRootContainer::TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *p)
    fCanvas = c;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                         kButtonPressMask | kButtonReleaseMask,
-                         kNone, kNone);
+                    kButtonPressMask | kButtonReleaseMask,
+                    kNone, kNone);
 
    AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
             kExposureMask | kStructureNotifyMask | kLeaveWindowMask);
@@ -195,6 +195,8 @@ void TRootCanvas::CreateCanvas(const char *name)
    // Create the actual canvas.
 
    fButton  = 0;
+   fCwidth  = 0;
+   fCheight = 0;
    fAutoFit = kTRUE;   // check also menu entry
 
    // Create menus
@@ -455,25 +457,20 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
                   case kFileOpen:
                      {
-                        static TString dir(".");
                         TGFileInfo fi;
-                        fi.fFileTypes = gOpenTypes;
-                        fi.fIniDir    = StrDup(dir);
+                        fi.fFileTypes = (char **) gOpenTypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen,&fi);
                         if (!fi.fFilename) return kTRUE;
-                        dir = fi.fIniDir;
                         new TFile(fi.fFilename, "update");
+                        delete [] fi.fFilename;
                      }
                      break;
                   case kFileSaveAs:
                      {
-                        static TString dir(".");
                         TGFileInfo fi;
-                        fi.fFileTypes = gSaveAsTypes;
-                        fi.fIniDir    = StrDup(dir);
+                        fi.fFileTypes = (char **) gSaveAsTypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDSave,&fi);
                         if (!fi.fFilename) return kTRUE;
-                        dir = fi.fIniDir;
                         if (strstr(fi.fFilename, ".root") ||
                             strstr(fi.fFilename, ".ps")   ||
                             strstr(fi.fFilename, ".eps")  ||
@@ -483,6 +480,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                            fCanvas->SaveSource(fi.fFilename);
                         else
                            Warning("ProcessMessage", "file cannot be save with this extension (%s)", fi.fFilename);
+                        delete [] fi.fFilename;
                      }
                      break;
                   case kFileSaveAsRoot:
@@ -906,17 +904,6 @@ Bool_t TRootCanvas::HandleContainerConfigure(Event_t *)
       fCanvas->Resize();
       fCanvas->Update();
    }
-
-   if (fCanvas->HasFixedAspectRatio()) {
-      // get menu height
-      static Int_t dh = 0;
-      if (!dh)
-         dh = GetHeight() - fCanvasContainer->GetHeight();
-      UInt_t h = TMath::Nint(fCanvasContainer->GetWidth()/
-                             fCanvas->GetAspectRatio()) + dh;
-      SetWindowSize(GetWidth(), h);
-   }
-
    return kTRUE;
 }
 

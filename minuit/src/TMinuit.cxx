@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.13 2001/08/22 07:33:45 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.8 2001/05/04 13:20:53 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -40,7 +40,7 @@
 //*-*     format statements and to print on currently defined output file.*
 //*-*   - The derived class TMinuitOld contains obsolete routines from    *
 //*-*     the Fortran based version.                                      *
-//*-*   - The functions SetObjectFit(TObject *obj)/GetObjectFit() can be  *
+//*-*   - The functions SetObjFit(TObject *obj) and GetObjFit() can be    *
 //*-*     used inside the FCN function to set/get a referenced object     *
 //*-*     instead of using global variables.                              *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -373,7 +373,7 @@ void TMinuit::BuildArrays(Int_t maxpar)
    fVhmat  = new Double_t[mnihl];
    fVthmat = new Double_t[mnihl];
    fP      = new Double_t[mni*(mni+1)];
-   fPstar  = new Double_t[2*mni];
+   fPstar  = new Double_t[mni];
    fPstst  = new Double_t[mni];
    fPbar   = new Double_t[mni];
    fPrho   = new Double_t[mni];
@@ -5492,7 +5492,7 @@ void TMinuit::mnparm(Int_t k1, TString cnamj, Double_t uk, Double_t wk, Double_t
 	    Printf(" CANNOT RELEASE. MAX NPAR EXCEEDED.");
 	    goto L800;
 	}
-	mnfree(-k);
+	mnfree(1);
     }
 //*-*-                      if redefining previously variable parameter
     if (fNiofex[k-1] > 0) kint = fNpar - 1;
@@ -5523,7 +5523,7 @@ L122:
 	nvl = 4;
 	fLnolim = kFALSE;
 	if (fISW[4] >= 0) {
-            Printf(" %5d %-10s %13.5e%13.5e  %13.5e%13.5e",k,(const char*)cnamk,uk,wk,a,b);
+            Printf(" %5d '%-10s' %13.5e%13.5e  %13.5e%13.5e",k,(const char*)cnamk,uk,wk,a,b);
 	}
     }
 //*-*-                            . . request for another variable parameter
@@ -7577,7 +7577,7 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
           ityp = 1;
 	  if (fLwarn) {
              Printf(" MINUIT WARNING IN %s",(const char*)corg);
-             Printf(" ============== %s",(const char*)cmes);
+             Printf(" ============== ",(const char*)cmes);
 	     return;
 	  }
        } else {
@@ -7594,9 +7594,9 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
        ++fIcirc[ityp-1];
        if (fIcirc[ityp-1] > 10) 	fIcirc[ityp-1] = 1;
        ic = fIcirc[ityp-1];
-       fOrigin[ic] = corg;
-       fWarmes[ic] = cmes;
-       fNfcwar[ic] = fNfcn;
+       fOrigin[ic + ityp*10 - 11] = corg;
+       fWarmes[ic + ityp*10 - 11] = cmes;
+       fNfcwar[ic + ityp*10 - 11] = fNfcn;
        return;
    }
 
@@ -7624,7 +7624,9 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
 	for (i = 1; i <= nm; ++i) {
 	    ++ic;
 	    if (ic > MAXMES) ic = 1;
-            Printf(" %6d  %s  %s", fNfcwar[ic],fOrigin[ic].Data(),fWarmes[ic].Data());
+            Printf(" %6d %s %s", fNfcwar[ic + ityp*10 - 11],
+                               (const char*)fOrigin + (ic + ityp*10 - 11)*10,
+                               (const char*)fWarmes + (ic + ityp*10 - 11)*60);
 	}
 	fNwrmes[ityp-1] = 0;
 	Printf(" ");

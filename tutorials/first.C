@@ -1,5 +1,5 @@
-void first() {
-   
+{
+   gROOT->Reset();
    TCanvas *nut = new TCanvas("nut", "FirstSession",100,10,700,900);
    nut->Range(0,0,20,24);
    nut->SetFillColor(10);
@@ -34,13 +34,21 @@ void first() {
    t.DrawText(4,10.9,"sqrt(6) = 2.449490");
 
    TPad *pad = new TPad("pad","pad",.2,.05,.8,.35);
-   pad->SetFillColor(42);
-   pad->SetFrameFillColor(33);
-   pad->SetBorderSize(10);
    pad->Draw();
    pad->cd();
    pad->SetGrid();
-   TF1 *f1 = new TF1("f1","sin(x)/x",0,10);
-   f1->Draw();
+   TF1 f1("f1","sin(x)/x",0,10);
+   f1.Draw();
+
+   nut.cd();
+  //--signature
+   TText sig(.2,.2,"/user/brun/root/aihep/first.C");
+   sig.SetTextFont(72);
+   sig.SetTextSize(0.020);
+   sig.Draw();
+
+   nut->Modified();
+   nut->Print("first.ps");
    nut->cd();
+   nut->Update();
 }

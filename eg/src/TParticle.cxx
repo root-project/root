@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.6 2001/08/23 22:11:48 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.4 2001/03/05 09:09:42 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -10,14 +10,8 @@
 ClassImp(TParticle)
 
 //______________________________________________________________________________
-TParticle::TParticle() :
-  fPdgCode(0), fStatusCode(0), fWeight(0),fCalcMass(0), fPx(0), fPy(0),
-  fPz(0), fE(0), fVx(0), fVy(0), fVz(0), fVt(0), fPolarTheta(0), fPolarPhi(0)
+TParticle::TParticle()
 {
-  fMother[0]   = 0;
-  fMother[1]   = 0;
-  fDaughter[0] = 0;
-  fDaughter[1] = 0;
   fParticlePDG = 0;
 }
 
@@ -78,7 +72,25 @@ TParticle::TParticle(const TParticle &p)
 {
     // copy constructor
 
-   *this = p;
+  fPdgCode     = p.fPdgCode;
+  fStatusCode  = p.fStatusCode;
+  fMother[0]   = p.fMother[0];
+  fMother[1]   = p.fMother[1];
+  fDaughter[0] = p.fDaughter[0];
+  fDaughter[1] = p.fDaughter[1];
+  fWeight      = p.fWeight;
+  fCalcMass    = p.fCalcMass;
+  fPx          = p.fPx;
+  fPy          = p.fPy;
+  fPz          = p.fPz;
+  fE           = p.fE;
+  fVx          = p.fVx;
+  fVy          = p.fVy;
+  fVz          = p.fVz;
+  fVt          = p.fVt;
+  fPolarTheta  = p.fPolarTheta;
+  fPolarPhi    = p.fPolarPhi;
+  fParticlePDG = p.fParticlePDG;
 }
 
 //______________________________________________________________________________

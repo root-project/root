@@ -78,19 +78,6 @@ void G__scratch_all()
   /*******************************************
    * clear interpriveve global variables
    *******************************************/
-#ifndef G__OLDIMPLEMENTATION1559
-#ifdef G__MEMTEST
-  fprintf(G__memhist,"Freeing temp object %d\n",G__templevel);
-#endif
-  if(G__p_tempbuf) {
-    if(G__templevel>0) G__templevel = 0;
-    G__free_tempobject();
-  }
-#endif
-
-  /*******************************************
-   * clear interpriveve global variables
-   *******************************************/
 #ifdef G__MEMTEST
   fprintf(G__memhist,"Freeing global variables\n");
 #endif
@@ -257,9 +244,6 @@ void G__scratch_all()
   /*************************************************************
    * Initialize cint body global variables
    *************************************************************/
-#ifndef G__OLDIMPLEMENTATION1599
-  G__init = 0;
-#endif
   G__init_globals();
 
   G__reset_setup_funcs();
@@ -306,9 +290,6 @@ int G__free_ifunc_table(ifunc)
 struct G__ifunc_table *ifunc;
 {
   int i,j;
-#ifndef G__OLDIMPLEMENTATION1588
-  int flag;
-#endif
   if(ifunc->next) {
     G__free_ifunc_table(ifunc->next);
     free((void*)ifunc->next);
@@ -319,23 +300,8 @@ struct G__ifunc_table *ifunc;
 #ifdef G__MEMTEST
     fprintf(G__memhist,"func %s\n",ifunc->funcname[i]);
 #endif
-#ifndef G__OLDIMPLEMENTATION1588
-      flag = 0;
-#endif /* 1588 */
-#ifndef G__OLDIMPLEMENTATION1543
-    if(ifunc->funcname[i]) {
-      free((void*)ifunc->funcname[i]);
-      ifunc->funcname[i] = (char*)NULL;
-#ifndef G__OLDIMPLEMENTATION1588
-      flag = 1;
-#endif /* 1588 */
-    }
-#endif
 #ifdef G__ASM_WHOLEFUNC
     if(
-#ifndef G__OLDIMPLEMENTATION1588
-       flag &&
-#endif
 #ifndef G__OLDIMPLEMENTATION1501
        ifunc->pentry[i] && 
 #endif
@@ -345,34 +311,24 @@ struct G__ifunc_table *ifunc;
     }
 #endif
 #ifdef G__FRIEND
-#ifndef G__OLDIMPLEMENTATION1588
-    if(flag) G__free_friendtag(ifunc->friendtag[i]);
-#else
     G__free_friendtag(ifunc->friendtag[i]);
 #endif
-#endif
-#ifndef G__OLDIMPLEMENTATION1588
-    if(flag) {
-#endif
-      for(j=ifunc->para_nu[i]-1;j>=0;j--) {
-	if(ifunc->para_name[i][j]) {
-	  free((void*)ifunc->para_name[i][j]);
-	  ifunc->para_name[i][j]=(char*)NULL;
-	}
-	if(ifunc->para_def[i][j]) {
-	  free((void*)ifunc->para_def[i][j]);
-	  ifunc->para_def[i][j]=(char*)NULL;
-	}
-	if(ifunc->para_default[i][j] &&
-	   (&G__default_parameter)!=ifunc->para_default[i][j] &&
-	   (G__value*)(-1)!=ifunc->para_default[i][j]) {
-	  free((void*)ifunc->para_default[i][j]);
-	  ifunc->para_default[i][j]=(G__value*)NULL;
-	}
+    for(j=ifunc->para_nu[i]-1;j>=0;j--) {
+      if(ifunc->para_name[i][j]) {
+	free((void*)ifunc->para_name[i][j]);
+	ifunc->para_name[i][j]=(char*)NULL;
       }
-#ifndef G__OLDIMPLEMENTATION1588
+      if(ifunc->para_def[i][j]) {
+	free((void*)ifunc->para_def[i][j]);
+	ifunc->para_def[i][j]=(char*)NULL;
+      }
+      if(ifunc->para_default[i][j] &&
+	 (&G__default_parameter)!=ifunc->para_default[i][j] &&
+	 (G__value*)(-1)!=ifunc->para_default[i][j]) {
+	free((void*)ifunc->para_default[i][j]);
+	ifunc->para_default[i][j]=(G__value*)NULL;
+      }
     }
-#endif
   }
   ifunc->page=0;
 
@@ -517,31 +473,10 @@ int isglobal;
 	 * destruction of array 
 	 ********************************************************/
 	if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
-#ifndef G__OLDIMPLEMENTATION1552
-	  if(G__AUTOARYDISCRETEOBJ==var->statictype[itemp]) {
-	    long store_globalvarpointer = G__globalvarpointer;
-	    size=G__struct.size[G__tagnum];
-	    for(i=var->varlabel[itemp][1];i>=0;--i) {
-	      G__store_struct_offset = var->p[itemp]+size*i;
-	      G__globalvarpointer = G__store_struct_offset;
-	      G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
-	      if(0==itemp1) break;
-	    }
-	    G__globalvarpointer = store_globalvarpointer;
-	    free((void*)var->p[itemp]);
-	  }
-	  else {
-	    G__store_struct_offset = var->p[itemp];
-	    if((i=var->varlabel[itemp][1])>0) G__cpp_aryconstruct=i+1;
-	    G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
-	    G__cpp_aryconstruct=0;
-	  }
-#else
 	  G__store_struct_offset = var->p[itemp];
 	  if((i=var->varlabel[itemp][1])>0) G__cpp_aryconstruct=i+1;
 	  G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
 	  G__cpp_aryconstruct=0;
-#endif
 	  cpplink=1;
 	}
 	else {
@@ -588,11 +523,7 @@ int isglobal;
       fprintf(G__memhist,"Free(%s)\n",var->varnamebuf[itemp]);
 #endif
       /* ??? Scott Snyder fixed as var->p[itemp]>0x10000 ??? */
-      if(G__NOLINK==cpplink && var->p[itemp] 
-#ifndef G__OLDIMPLEMENTATION1576
-	 && -1!=var->p[itemp]
-#endif
-	 ) free((void*)var->p[itemp]);
+      if(G__NOLINK==cpplink && var->p[itemp]) free((void*)var->p[itemp]);
       
     } /* end of statictype==LOCALSTATIC or COMPILEDGLOBAL */
     
@@ -617,13 +548,6 @@ int isglobal;
     for(itemp1=0;itemp1<G__MAXVARDIM;itemp1++) {
       var->varlabel[itemp][itemp1]=0;
     }
-#ifndef G__OLDIMPLEMENTATION1543
-    if(var->varnamebuf[itemp]) {
-      free((void*)var->varnamebuf[itemp]);
-      var->varnamebuf[itemp] = (char*)NULL;
-    }
-#endif
-
   }
   
   var->allvar = remain;
@@ -718,14 +642,6 @@ int G__close_inputfiles()
       G__srcfile[iarg].prepname=(char*)NULL;
     }
     if(G__srcfile[iarg].filename) {
-#ifndef G__OLDIMPLEMENTATION1546
-      int len = strlen(G__srcfile[iarg].filename);
-      if(len>strlen(G__NAMEDMACROEXT2) && 
-	 strcmp(G__srcfile[iarg].filename+len-strlen(G__NAMEDMACROEXT2),
-		G__NAMEDMACROEXT2)==0) {
-	remove(G__srcfile[iarg].filename);
-      }
-#endif
       free((void*)G__srcfile[iarg].filename);
       G__srcfile[iarg].filename=(char*)NULL;
     }
