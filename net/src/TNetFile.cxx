@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.2 2000/05/30 17:17:10 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 // absolute pathname requires a // after the host or port specifier     //
 // (see last example). Further the expansion of the standard shell      //
 // characters, like ~, $, .., are handled as expected.                  //
-// TNetFile (actually TUrl) uses 432 as default port for rootd.         //
+// TNetFile (actually TUrl) uses 1094 as default port for rootd.        //
 //                                                                      //
 // Connecting to a rootd requires the remote user id and password.      //
 // TNetFile allows three ways for you to provide your login:            //

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.2 2000/05/23 15:10:58 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -18,11 +18,11 @@
 // a connection to a rootd server or by hand (i.e. from the command     //
 // line). The rootd server works with the ROOT TNetFile class. It       //
 // allows remote access to ROOT database files in either read or        //
-// write mode. By default TNetFile assumes port 432 (which requires     //
-// rootd to be started as root). To run rootd via inetd add the         //
+// write mode. By default TNetFile uses port 1094 (allocated by IANA,   //
+// www.iana.org, to rootd). To run rootd via inetd add the              //
 // following line to /etc/services:                                     //
 //                                                                      //
-// rootd     432/tcp                                                    //
+// rootd     1094/tcp                                                   //
 //                                                                      //
 // and to /etc/inetd.conf:                                              //
 //                                                                      //
