@@ -1,10 +1,10 @@
 // this test program compares the I/O performance obtained with
-// STL vector of objects or pointers to objects versus the native
+// all STL collections of objects or pointers to objects and also
 // Root collection class TClonesArray.
 // Trees in compression and non compression mode are created for each
 // of the following cases:
-//  -vector<THit>
-//  -vector<THit*>
+//  -STLcollection<THit>
+//  -STLcollection<THit*>
 //  -TClonesArray(TObjHit) in no split mode
 //  -TClonesArray(TObjHit) in split mode
 // where:
@@ -14,11 +14,7 @@
 // The test prints a summary table comparing performances for all above cases
 // (CPU, file size, compression factors).
 // Reference numbers on a Pentium IV 2.4 Ghz machine are given as reference.
-//
-// A canvas is created showing the same results in a graphical form.
-// The bench can be run in batch mode (bench -b).
-// A Postscript file bench.ps is also produced.
-//      Author:  Rene Brun
+//      Authors:  Rene Brun, Markus Frank
 
 #include "TROOT.h"
 #include "TClonesArray.h"
@@ -26,87 +22,22 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TSystem.h"
-#include "TCanvas.h"
-#include "TPaveText.h"
-#include "TArrow.h"
-#include "TH1.h"
-#include "TBox.h"
-#include "TStyle.h"
-#include "TText.h"
-#include "TRint.h"
 
 #include "TBench.h"
-
-void showhist(const char *title, const char *ytitle, float a, float b, float c, float d, float ar, float br, float cr, float dr)
-{
-   //function to display one result unit
-   TH1F *h = new TH1F("h",title,4,0,4);
-   h->SetDirectory(0);
-   h->GetXaxis()->SetLabelFont(22);
-   h->GetXaxis()->SetLabelOffset(99);
-   h->GetXaxis()->SetNdivisions(4);
-   h->GetYaxis()->SetNdivisions(5);
-   h->GetYaxis()->SetLabelSize(.1);
-   h->SetStats(0);
-   gPad->SetGrid();
-   gPad->SetBottomMargin(0.05);
-   gPad->SetTopMargin(0.16);
-   gPad->SetLeftMargin(0.14);
-   gPad->SetRightMargin(0.05);
-   if (strlen(ytitle)) {
-      h->GetYaxis()->SetTitle(ytitle);
-      h->GetYaxis()->SetTitleOffset(0.7);
-      h->GetYaxis()->SetTitleSize(0.09);
-   } else {
-      h->GetYaxis()->SetLabelOffset(99);
-   }
-
-   float ymax = a;
-   if (b  > ymax) ymax = b;
-   if (c  > ymax) ymax = c;
-   if (d  > ymax) ymax = d;
-   if (ar > ymax) ymax = ar;
-   if (br > ymax) ymax = br;
-   if (cr > ymax) ymax = cr;
-   if (dr > ymax) ymax = dr;
-   if (b > ymax) ymax = b;
-   ymax *=1.05;
-   h->SetMinimum(0);
-   h->SetMaximum(ymax);
-   h->Draw();
-   float dx  = 0.4;
-   float dxr = 0.1;
-   TBox *boxa  = new TBox(0.5-dx ,0,0.5+dx ,a); boxa->SetFillColor(46);  boxa->Draw();
-   TBox *boxb  = new TBox(1.5-dx ,0,1.5+dx ,b); boxb->SetFillColor(5);  boxb->Draw();
-   TBox *boxc  = new TBox(2.5-dx ,0,2.5+dx ,c); boxc->SetFillColor(6);  boxc->Draw();
-   TBox *boxd  = new TBox(3.5-dx ,0,3.5+dx ,d); boxd->SetFillColor(2);  boxd->Draw();
-   TBox *boxar = new TBox(0.5-dxr,0,0.5+dxr,ar); boxar->SetFillColor(1); boxar->Draw();
-   TBox *boxbr = new TBox(1.5-dxr,0,1.5+dxr,br); boxbr->SetFillColor(1); boxbr->Draw();
-   TBox *boxcr = new TBox(2.5-dxr,0,2.5+dxr,cr); boxcr->SetFillColor(1); boxcr->Draw();
-   TBox *boxdr = new TBox(3.5-dxr,0,3.5+dxr,dr); boxdr->SetFillColor(1); boxdr->Draw();
-   boxa->SetFillStyle(3013);
-   boxb->SetFillStyle(3010);
-   boxc->SetFillStyle(3014);
-   boxd->SetFillStyle(3012);
-}
 
 
 int main(int argc, char** argv)
 {
-  TRint *theApp = new TRint("Rint", &argc, argv, 0, 0);
-
   int nhits       = 1000;
   int nevents     = 400;
   Float_t cx;
 
-  TTree::SetBranchStyle(1); // use the new Bronch style
-
-  //testing STL vector of THit
   Double_t cptot = 0;
   TStopwatch timer;
 
   //delete temp file used for the benchmark
   gSystem->Exec("rm -f /tmp/bench.root");
+  
   /// STL VECTOR
   timer.Start();
   TSTLhit *STLhit = new TSTLhit(nhits);
@@ -534,7 +465,6 @@ int main(int argc, char** argv)
   Float_t cx3SS;
   Int_t nbytes3SS = STLhit_setstar->MakeTree(1,nevents,1,99,cx3SS);
   timer.Stop();
-  Double_t rt3wSS = timer.RealTime();
   Double_t cp3wSS = timer.CpuTime();
   cptot += cp3wSS;
   printf("4 set*     w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wDS-rt1DS,cp3wSS-cp1SS,nbytes3SS,cx3SS);
@@ -574,7 +504,6 @@ int main(int argc, char** argv)
   Float_t cx3MS;
   Int_t nbytes3MS = STLhit_multisetstar->MakeTree(1,nevents,1,99,cx3MS);
   timer.Stop();
-  Double_t rt3wMS = timer.RealTime();
   Double_t cp3wMS = timer.CpuTime();
   cptot += cp3wMS;
   printf("4 multiset*w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wDS-rt1DS,cp3wDS-cp1DS,nbytes3DS,cx3DS);
@@ -660,7 +589,6 @@ int main(int argc, char** argv)
   Float_t cx3MMAPS;
   Int_t nbytes3MMAPS = STLhit_multimapstar->MakeTree(1,nevents,1,99,cx3MMAPS);
   timer.Stop();
-  Double_t rt3wMMAPS = timer.RealTime();
   Double_t cp3wMMAPS = timer.CpuTime();
   cptot += cp3wMMAPS;
   printf("4 multimap*w: RT=%6.2f s  Cpu=%6.2f s, size= %8d bytes, cx=%5.2f\n",rt3wMAPS-rt1MAPS,cp3wMAPS-cp1MAPS,nbytes3MAPS,cx3MAPS);
@@ -674,8 +602,8 @@ int main(int argc, char** argv)
   cptot += cp3rMMAPS;
   printf("5 multimap* : RT=%6.2f s  Cpu=%6.2f s\n",rt3rMMAPS,cp3rMMAPS);
   delete STLhit_multimapstar;
-#ifndef R__ALPHA
-  printf("map and multimap do not work on alpha. test is disabled\n");
+#ifdef R__ALPHA
+  printf("/n======> map and multimap do not work on alpha. test is disabled<===\n\n");
 #endif
   
   //testing TClonesArray of TObjHit deriving from THit
@@ -745,7 +673,7 @@ int main(int argc, char** argv)
   Double_t cp11r = timer.CpuTime();
   cptot += cp11r;
   printf("9 Clones2  r: RT=%6.2f s  Cpu=%6.2f s\n",rt11r,cp11r);
-  Double_t cpref = 24.92;
+  Double_t cpref = 153.47;
   Double_t rootmarks = cpref*600/cptot;
 
   //print all results
@@ -768,161 +696,88 @@ int main(int argc, char** argv)
      if (!os) printf("*  Windows 95\n");
      else     printf("*  %s %s \n",os,gSystem->Getenv("PROCESSOR_IDENTIFIER"));
   }
-  printf("*     Reference machine pcnotebrun.cern.ch  RedHat Linux 6.1                 *\n");
-  printf("*         (Pentium IV 2.4 Ghz 512 Mbytes RAM, IDE disk)                     *\n");
+  printf("*     Reference machine pcbrun.cern.ch  RedHat Linux 7.3                     *\n");
+  printf("*         (Pentium IV 2.4 Ghz 512 Mbytes RAM, IDE disk)                      *\n");
   printf("*           (send your results to rootdev@root.cern.ch)                      *\n");
   printf("******************************************************************************\n");
   printf("* Time to fill the structures (seconds)   Reference      cx      Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        0.98     %5.2f        3.77     *\n",cp1,cx3);
-  printf("* list<THit>                    %6.2f        xxxx     %5.2f        xxxx     *\n",cp1L,cx3L);
-  printf("* deque<THit>                   %6.2f        xxxx     %5.2f        xxxx     *\n",cp1D,cx3D);
-  printf("* set<THit>                     %6.2f        xxxx     %5.2f        xxxx     *\n",cp1S,cx3S);
-  printf("* multiset<THit>                %6.2f        xxxx     %5.2f        xxxx     *\n",cp1M,cx3M);
-  printf("* map<int,THit>                 %6.2f        xxxx     %5.2f        xxxx     *\n",cp1MAP,cx3MAP);
-  printf("* multimap<int,THit>            %6.2f        xxxx     %5.2f        xxxx     *\n",cp1MMAP,cx3MMAP);
-  printf("* vector<THit*>                 %6.2f        0.90     %5.2f        3.78     *\n",cp4,cx6);
-  printf("* list<THit*>                   %6.2f        xxxx     %5.2f        xxxx     *\n",cp1LS,cx3LS);
-  printf("* deque<THit*>                  %6.2f        xxxx     %5.2f        xxxx     *\n",cp1DS,cx3DS);
-  printf("* set<THit*>                    %6.2f        xxxx     %5.2f        xxxx     *\n",cp1SS,cx3SS);
-  printf("* multiset<THit*>               %6.2f        xxxx     %5.2f        xxxx     *\n",cp1MS,cx3MS);
-  printf("* map<int,THit*>                %6.2f        xxxx     %5.2f        xxxx     *\n",cp1MAPS,cx3MAPS);
-  printf("* multimap<int,THit*>           %6.2f        xxxx     %5.2f        xxxx     *\n",cp1MMAPS,cx3MMAPS);
-  printf("* TClonesArray(TObjHit)         %6.2f        0.74     %5.2f        5.40     *\n",cp7,cx9);
-  printf("* TClonesArray(TObjHit) split   %6.2f        0.74     %5.2f        5.40     *\n",cp7,cx11);
+  printf("* vector<THit>                  %6.2f        0.98     %5.2f        5.38     *\n",cp1,cx3);
+  printf("* list<THit>                    %6.2f        1.10     %5.2f        5.38     *\n",cp1L,cx3L);
+  printf("* deque<THit>                   %6.2f        1.01     %5.2f        5.38     *\n",cp1D,cx3D);
+  printf("* set<THit>                     %6.2f        1.19     %5.2f        6.22     *\n",cp1S,cx3S);
+  printf("* multiset<THit>                %6.2f        1.16     %5.2f        6.22     *\n",cp1M,cx3M);
+  printf("* map<int,THit>                 %6.2f        1.95     %5.2f        5.26     *\n",cp1MAP,cx3MAP);
+  printf("* multimap<int,THit>            %6.2f        1.42     %5.2f        5.26     *\n",cp1MMAP,cx3MMAP);
+  printf("* vector<THit*>                 %6.2f        0.91     %5.2f        3.73     *\n",cp4,cx6);
+  printf("* list<THit*>                   %6.2f        1.06     %5.2f        3.73     *\n",cp1LS,cx3LS);
+  printf("* deque<THit*>                  %6.2f        0.92     %5.2f        3.73     *\n",cp1DS,cx3DS);
+  printf("* set<THit*>                    %6.2f        1.22     %5.2f        3.68     *\n",cp1SS,cx3SS);
+  printf("* multiset<THit*>               %6.2f        1.19     %5.2f        3.68     *\n",cp1MS,cx3MS);
+  printf("* map<int,THit*>                %6.2f        1.17     %5.2f        3.78     *\n",cp1MAPS,cx3MAPS);
+  printf("* multimap<int,THit*>           %6.2f        1.16     %5.2f        3.78     *\n",cp1MMAPS,cx3MMAPS);
+  printf("* TClonesArray(TObjHit)         %6.2f        0.76     %5.2f        5.38     *\n",cp7,cx9);
+  printf("* TClonesArray(TObjHit) split   %6.2f        0.76     %5.2f        5.38     *\n",cp7,cx11);
   printf("******************************************************************************\n");
   printf("* Size of file in bytes         comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %8d   42053619   %8d   11144596    *\n",nbytes1,nbytes3);
-  printf("* list<THit>                    %8d   xxxxxxxx   %8d   xxxxxxxx    *\n",nbytes1L,nbytes3L);
-  printf("* deque<THit>                   %8d   xxxxxxxx   %8d   xxxxxxxx    *\n",nbytes1D,nbytes3D);
-  printf("* set<THit>                     %8d   xxxxxxxx   %8d   xxxxxxxx    *\n",nbytes1S,nbytes3S);
-  printf("* multiset<THit>                %8d   xxxxxxxx   %8d   xxxxxxxx    *\n",nbytes1M,nbytes3M);
-  printf("* map<int,THit>                 %8d   xxxxxxxx   %8d   xxxxxxxx    *\n",nbytes1MAP,nbytes3MAP);
-  printf("* multimap<int,THit>            %8d   xxxxxxxx   %8d   xxxxxxxx    *\n",nbytes1MMAP,nbytes3MMAP);
-  printf("* vector<THit*>                 %8d   42078956   %8d   11144412    *\n",nbytes5,nbytes6);
-  printf("* list<THit*>                   %8d   xxxxxxxx   %8d   xxxxxxxx    *\n",nbytes1LS,nbytes3LS);
-  printf("* deque<THit*>                  %8d   xxxxxxxx   %8d   xxxxxxxx    *\n",nbytes1DS,nbytes3DS);
-  printf("* set<THit*>                    %8d   xxxxxxxx   %8d   xxxxxxxx    *\n",nbytes1SS,nbytes3SS);
-  printf("* multiset<THit*>               %8d   xxxxxxxx   %8d   xxxxxxxx    *\n",nbytes1MS,nbytes3MS);
-  printf("* map<int,THit*>                %8d   xxxxxxxx   %8d   xxxxxxxx    *\n",nbytes1MAPS,nbytes3MAPS);
-  printf("* multimap<int,THit*>           %8d   xxxxxxxx   %8d   xxxxxxxx    *\n",nbytes1MMAPS,nbytes3MMAPS);
-  printf("* TClonesArray(TObjHit)         %8d   39804763   %8d    7377591    *\n",nbytes8,nbytes9);
-  printf("* TClonesArray(TObjHit) split   %8d   39804763   %8d    7377664    *\n",nbytes10,nbytes11);
+  printf("* vector<THit>                  %8d   39725057   %8d   7386553     *\n",nbytes1,nbytes3);
+  printf("* list<THit>                    %8d   39725099   %8d   7386439     *\n",nbytes1L,nbytes3L);
+  printf("* deque<THit>                   %8d   39725106   %8d   7386333     *\n",nbytes1D,nbytes3D);
+  printf("* set<THit>                     %8d   39725093   %8d   6389527     *\n",nbytes1S,nbytes3S);
+  printf("* multiset<THit>                %8d   39725135   %8d   6389494     *\n",nbytes1M,nbytes3M);
+  printf("* map<int,THit>                 %8d   41336713   %8d   7853614     *\n",nbytes1MAP,nbytes3MAP);
+  printf("* multimap<int,THit>            %8d   41336755   %8d   7854089     *\n",nbytes1MMAP,nbytes3MMAP);
+  printf("* vector<THit*>                 %8d   45257302   %8d  12141849     *\n",nbytes5,nbytes6);
+  printf("* list<THit*>                   %8d   45257328   %8d  12140234     *\n",nbytes1LS,nbytes3LS);
+  printf("* deque<THit*>                  %8d   45257341   %8d  12141094     *\n",nbytes1DS,nbytes3DS);
+  printf("* set<THit*>                    %8d   45257324   %8d  12295977     *\n",nbytes1SS,nbytes3SS);
+  printf("* multiset<THit*>               %8d   45257368   %8d  12293041     *\n",nbytes1MS,nbytes3MS);
+  printf("* map<int,THit*>                %8d   46857329   %8d  12403158     *\n",nbytes1MAPS,nbytes3MAPS);
+  printf("* multimap<int,THit*>           %8d   46857375   %8d  12403982     *\n",nbytes1MMAPS,nbytes3MMAPS);
+  printf("* TClonesArray(TObjHit)         %8d   39723595   %8d   7385550     *\n",nbytes8,nbytes9);
+  printf("* TClonesArray(TObjHit) split   %8d   39723595   %8d   7385295     *\n",nbytes10,nbytes11);
   printf("******************************************************************************\n");
   printf("* Time to write in seconds      comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        0.44    %6.2f        2.17     *\n",cp2w-cp1, cp3w-cp1);
-  printf("* list<THit>                    %6.2f        xxxx    %6.2f        xxxx     *\n",cp2wL-cp1L,cp3wL-cp1L);
-  printf("* deque<THit>                   %6.2f        xxxx    %6.2f        xxxx     *\n",cp2wD-cp1D,cp3wD-cp1D);
-  printf("* set<THit>                     %6.2f        xxxx    %6.2f        xxxx     *\n",cp2wS-cp1S,cp3wS-cp1S);
-  printf("* multiset<THit>                %6.2f        xxxx    %6.2f        xxxx     *\n",cp2wM-cp1M,cp3wM-cp1M);
-  printf("* map<int,THit>                 %6.2f        xxxx    %6.2f        xxxx     *\n",cp2wMAP-cp1MAP,cp3wMAP-cp1MAP);
-  printf("* multimap<int,THit>            %6.2f        xxxx    %6.2f        xxxx     *\n",cp2wMMAP-cp1MMAP,cp3wMMAP-cp1MMAP);
-  printf("* vector<THit*>                 %6.2f        0.38    %6.2f        2.27     *\n",cp5w-cp1, cp6w-cp1);
-  printf("* list<THit*>                   %6.2f        xxxx    %6.2f        xxxx     *\n",cp2wLS-cp1LS,cp3wLS-cp1LS);
-  printf("* deque<THit*>                  %6.2f        xxxx    %6.2f        xxxx     *\n",cp2wDS-cp1DS,cp3wDS-cp1DS);
-  printf("* set<THit*>                    %6.2f        xxxx    %6.2f        xxxx     *\n",cp2wSS-cp1SS,cp3wSS-cp1SS);
-  printf("* multiset<THit*>               %6.2f        xxxx    %6.2f        xxxx     *\n",cp2wMS-cp1MS,cp3wMS-cp1MS);
-  printf("* map<int,THit*>                %6.2f        xxxx    %6.2f        xxxx     *\n",cp2wMAPS-cp1MAPS,cp3wMAPS-cp1MAPS);
-  printf("* multimap<int,THit*>           %6.2f        xxxx    %6.2f        xxxx     *\n",cp2wMMAPS-cp1MMAPS,cp3wMMAPS-cp1MMAPS);
-  printf("* TClonesArray(TObjHit)         %6.2f        0.09    %6.2f        1.28     *\n",cp8w-cp1, cp9w-cp1);
-  printf("* TClonesArray(TObjHit) split   %6.2f        0.09    %6.2f        1.28     *\n",cp10w-cp1,cp11w-cp1);
+  printf("* vector<THit>                  %6.2f        0.40    %6.2f        1.42     *\n",cp2w-cp1, cp3w-cp1);
+  printf("* list<THit>                    %6.2f        0.47    %6.2f        1.58     *\n",cp2wL-cp1L,cp3wL-cp1L);
+  printf("* deque<THit>                   %6.2f        0.45    %6.2f        1.53     *\n",cp2wD-cp1D,cp3wD-cp1D);
+  printf("* set<THit>                     %6.2f        0.46    %6.2f        1.41     *\n",cp2wS-cp1S,cp3wS-cp1S);
+  printf("* multiset<THit>                %6.2f        0.46    %6.2f        1.42     *\n",cp2wM-cp1M,cp3wM-cp1M);
+  printf("* map<int,THit>                 %6.2f        0.51    %6.2f        1.74     *\n",cp2wMAP-cp1MAP,cp3wMAP-cp1MAP);
+  printf("* multimap<int,THit>            %6.2f        0.51    %6.2f        1.75     *\n",cp2wMMAP-cp1MMAP,cp3wMMAP-cp1MMAP);
+  printf("* vector<THit*>                 %6.2f        1.31    %6.2f        3.16     *\n",cp5w-cp1, cp6w-cp1);
+  printf("* list<THit*>                   %6.2f        1.45    %6.2f        3.27     *\n",cp2wLS-cp1LS,cp3wLS-cp1LS);
+  printf("* deque<THit*>                  %6.2f        1.37    %6.2f        3.22     *\n",cp2wDS-cp1DS,cp3wDS-cp1DS);
+  printf("* set<THit*>                    %6.2f        1.48    %6.2f        3.32     *\n",cp2wSS-cp1SS,cp3wSS-cp1SS);
+  printf("* multiset<THit*>               %6.2f        1.52    %6.2f        3.33     *\n",cp2wMS-cp1MS,cp3wMS-cp1MS);
+  printf("* map<int,THit*>                %6.2f        1.55    %6.2f        3.45     *\n",cp2wMAPS-cp1MAPS,cp3wMAPS-cp1MAPS);
+  printf("* multimap<int,THit*>           %6.2f        1.54    %6.2f        3.39     *\n",cp2wMMAPS-cp1MMAPS,cp3wMMAPS-cp1MMAPS);
+  printf("* TClonesArray(TObjHit)         %6.2f        0.10    %6.2f        1.27     *\n",cp8w-cp1, cp9w-cp1);
+  printf("* TClonesArray(TObjHit) split   %6.2f        0.12    %6.2f        1.25     *\n",cp10w-cp1,cp11w-cp1);
   printf("******************************************************************************\n");
   printf("* Time to read in seconds       comp 0    Reference    comp 1    Reference   *\n");
   printf("******************************************************************************\n");
-  printf("* vector<THit>                  %6.2f        0.68    %6.2f        1.29     *\n",cp2r,cp3r);
-  printf("* list<THit>                    %6.2f        xxxx    %6.2f        xxxx     *\n",cp2rL,cp3rL);
-  printf("* deque<THit>                   %6.2f        xxxx    %6.2f        xxxx     *\n",cp2rD,cp3rD);
-  printf("* set<THit>                     %6.2f        xxxx    %6.2f        xxxx     *\n",cp2rS,cp3rS);
-  printf("* multiset<THit>                %6.2f        xxxx    %6.2f        xxxx     *\n",cp2rM,cp3rM);
-  printf("* map<int,THit>                 %6.2f        xxxx    %6.2f        xxxx     *\n",cp2rMAP,cp3rMAP);
-  printf("* multimap<int,THit>            %6.2f        xxxx    %6.2f        xxxx     *\n",cp2rMMAP,cp3rMMAP);
-  printf("* vector<THit*>                 %6.2f        0.65    %6.2f        1.31     *\n",cp5r,cp6r);
-  printf("* list<THit*>                   %6.2f        xxxx    %6.2f        xxxx     *\n",cp2rLS,cp3rLS);
-  printf("* deque<THit*>                  %6.2f        xxxx    %6.2f        xxxx     *\n",cp2rDS,cp3rDS);
-  printf("* set<THit*>                    %6.2f        xxxx    %6.2f        xxxx     *\n",cp2rSS,cp3rSS);
-  printf("* multiset<THit*>               %6.2f        xxxx    %6.2f        xxxx     *\n",cp2rMS,cp3rMS);
-  printf("* map<int,THit*>                %6.2f        xxxx    %6.2f        xxxx     *\n",cp2rMAPS,cp3rMAPS);
-  printf("* multimap<int,THit*>           %6.2f        xxxx    %6.2f        xxxx     *\n",cp2rMMAPS,cp3rMMAPS);
-  printf("* TClonesArray(TObjHit)         %6.2f        0.34    %6.2f        0.76     *\n",cp8r,cp9r);
-  printf("* TClonesArray(TObjHit) split   %6.2f        0.33    %6.2f        0.75     *\n",cp10r,cp11r);
+  printf("* vector<THit>                  %6.2f        0.43    %6.2f        0.84     *\n",cp2r,cp3r);
+  printf("* list<THit>                    %6.2f        0.67    %6.2f        1.10     *\n",cp2rL,cp3rL);
+  printf("* deque<THit>                   %6.2f        0.53    %6.2f        0.96     *\n",cp2rD,cp3rD);
+  printf("* set<THit>                     %6.2f        0.95    %6.2f        1.24     *\n",cp2rS,cp3rS);
+  printf("* multiset<THit>                %6.2f        0.94    %6.2f        1.24     *\n",cp2rM,cp3rM);
+  printf("* map<int,THit>                 %6.2f        0.98    %6.2f        1.43     *\n",cp2rMAP,cp3rMAP);
+  printf("* multimap<int,THit>            %6.2f        0.98    %6.2f        1.43     *\n",cp2rMMAP,cp3rMMAP);
+  printf("* vector<THit*>                 %6.2f        1.81    %6.2f        2.44     *\n",cp5r,cp6r);
+  printf("* list<THit*>                   %6.2f        2.01    %6.2f        2.72     *\n",cp2rLS,cp3rLS);
+  printf("* deque<THit*>                  %6.2f        1.86    %6.2f        2.46     *\n",cp2rDS,cp3rDS);
+  printf("* set<THit*>                    %6.2f        2.13    %6.2f        2.82     *\n",cp2rSS,cp3rSS);
+  printf("* multiset<THit*>               %6.2f        2.11    %6.2f        2.76     *\n",cp2rMS,cp3rMS);
+  printf("* map<int,THit*>                %6.2f        2.14    %6.2f        2.81     *\n",cp2rMAPS,cp3rMAPS);
+  printf("* multimap<int,THit*>           %6.2f        2.10    %6.2f        2.90     *\n",cp2rMMAPS,cp3rMMAPS);
+  printf("* TClonesArray(TObjHit)         %6.2f        0.38    %6.2f        0.80     *\n",cp8r,cp9r);
+  printf("* TClonesArray(TObjHit) split   %6.2f        0.36    %6.2f        0.79     *\n",cp10r,cp11r);
   printf("******************************************************************************\n");
   printf("* Total CPU time              %8.2f    %8.2f                           *\n",cptot,cpref);
   printf("* Estimated ROOTMARKS         %8.2f      600.00                           *\n",rootmarks);
   printf("******************************************************************************\n");
-
-#if 0
-  // show results with graphics
-   gStyle->SetTitleH(0.12);
-   gStyle->SetTitleW(0.8);
-   gStyle->SetFrameFillColor(33);
-   TCanvas *cbench = new TCanvas("cbench","Results of Root benchmark",10,10,600,800);
-   TPaveText *head = new TPaveText(.05,.81,.95,.99);
-   head->SetFillColor(42);
-   head->SetTextAlign(22);
-   head->AddText(line1);
-   head->AddText(line2);
-   head->AddText("Reference machine pcbrun.cern.ch  RH 7.3/gcc3.2");
-   head->AddText("(Pentium IV 2.4Ghz 512 Mbytes RAM, IDE disk)");
-   head->AddText("(send your results to rootdev@root.cern.ch)");
-   head->Draw();
-   TPad *pmain = new TPad("pmain","pmain",0,0,1,.8);
-   pmain->SetFillColor(20);
-   pmain->Draw();
-   pmain->Divide(2,4);
-   pmain->cd(1);
-   showhist("legend","",5,4,3,2,9,6,4,3);
-   TText t;
-   t.SetTextFont(23);
-   t.SetTextSize(15);
-   t.DrawText(1.0,8.0,"vector<THit>");
-   t.DrawText(1.5,6.8,"vector<THit*>");
-   t.DrawText(2.5,5.6,"TClonesArray");
-   t.DrawText(2.8,4.5,"-nosplit");
-   t.DrawText(3.1,3.4,"-split");
-   TArrow *arrow = new TArrow(-0.0519789,8.04398,0.327782,6.94924,0.03,"|>");
-   arrow->SetFillColor(1);
-   arrow->SetFillStyle(1001);
-   arrow->Draw();
-   TPaveText *pt = new TPaveText(0.02,0.65,0.16,0.80,"brNDC");
-   pt->AddText("Ref.");
-   pt->AddText("machine");
-   pt->Draw();
-   arrow = new TArrow(1.19087,7.87556,0.828376,5.43344,0.03,"|>");
-   arrow->SetFillColor(1);
-   arrow->SetFillStyle(1001);
-   arrow->Draw();
-   arrow = new TArrow(2.05397,6.61239,1.82956,4.33869,0.03,"|>");
-   arrow->SetFillColor(1);
-   arrow->SetFillStyle(1001);
-   arrow->Draw();
-   arrow = new TArrow(2.8998,4.50712,2.72718,3.41237,0.03,"|>");
-   arrow->SetFillColor(1);
-   arrow->SetFillStyle(1001);
-   arrow->Draw();
-   arrow = new TArrow(3.24504,3.24395,3.2623,2.40184,0.03,"|>");
-   arrow->SetFillColor(1);
-   arrow->SetFillStyle(1001);
-   arrow->Draw();
-   Float_t z = 1.e-6;
-   pmain->cd(2);
-   showhist("Time to fill collections","seconds",cp1,cp4,cp7,cp7,1.88,1.81,1.60,1.60);
-   pmain->cd(3);
-   showhist("File size no compression","Megabytes",z*nbytes1,z*nbytes5,z*nbytes8,z*nbytes10, 42.05,42.08,39.69,39.78);
-   pmain->cd(4);
-   showhist("File size compression 1","Megabytes",z*nbytes3,z*nbytes6,z*nbytes9,z*nbytes11,9.21,9.21,6.09,5.93);
-   pmain->cd(5);
-   showhist("Time to write no compression","seconds",cp2w-cp1,cp5w-cp1,cp8w-cp1,cp10w-cp1,1.76,1.77,1.30,1.30);
-   pmain->cd(6);
-   showhist("Time to write compression 1","seconds",cp3w-cp1,cp6w-cp1,cp9w-cp1,cp11w-cp1,9.68,9.70,7.62,6.01);
-   pmain->cd(7);
-   showhist("Time to read no compression","seconds",cp2r,cp5r,cp8r,cp10r,2.21,2.04,1.58,1.36);
-   pmain->cd(8);
-   showhist("Time to read compression 1","seconds",cp3r,cp6r,cp9r,cp11r,3.46,3.17,2.12,1.95);
-   cbench->Print();
-
-   theApp->Run();
-#endif
    return 0;
 }
