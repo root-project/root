@@ -14,42 +14,42 @@ launch () {
 #  echo test $1 level $2 
 #  (echo 'gROOT->ProcessLine(".L dt_RunDrawTest.C+");gSystem->Exit(!dt_RunDrawTest("'$1'",'$2'));' | root.exe -l -b 2>&1; return $?;) | grep -v "$3";
 # (root.exe -l -b -q 'gROOT->ProcessLine(".L dt_RunDrawTest.C+");gSystem->Exit(!dt_RunDrawTest("'$1'",'$2'));' 2>&1; return $?;) | grep -v "$3";
-  (root.exe -l -b -q 'dt_wrap.C("'$1'",'$2')' 2>&1; return $?;) | grep -v "$3";
+  (root.exe -l -b -q 'dt_wrap.C("'$1'",'$2')' 2>&1; return $?;) | eval grep -v $3;
 }
 
 
-launch "Event.old.split.root" 0 "$ClassWarning\|$RootPrompt\|$EmptyLine" && \
-launch "Event.old.split.root" 1 "$RootPrompt\|$EmptyLine" && \
-launch "Event.old.split.root" 2 "$ClassWarning\|$RootPrompt\|$EmptyLine" && \
-launch "Event.old.split.root" 3 "$RootPrompt\|$EmptyLine" && \
-launch "Event.old.split.root" 4 "$RootPrompt\|$EmptyLine"
+launch "Event.old.split.root" 0 "-e '$ClassWarning' -e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.old.split.root" 1 "-e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.old.split.root" 2 "-e '$ClassWarning' -e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.old.split.root" 3 "-e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.old.split.root" 4 "-e '$RootPrompt' -e '$EmptyLine' "
 
-launch "Event.old.streamed.root" 0 "$Streamer\|$ClassWarning\|$RootPrompt\|$EmptyLine" && \
-launch "Event.old.streamed.root" 1 "$RootPrompt\|$EmptyLine" && \
-launch "Event.old.streamed.root" 2 "$ClassWarning\|$RootPrompt\|$EmptyLine" && \
-launch "Event.old.streamed.root" 3 "$RootPrompt\|$EmptyLine" && \
-launch "Event.old.streamed.root" 4 "$RootPrompt\|$EmptyLine"
+launch "Event.old.streamed.root" 0 "-e '$Streamer' -e '$ClassWarning' -e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.old.streamed.root" 1 "-e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.old.streamed.root" 2 "-e '$ClassWarning' -e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.old.streamed.root" 3 "-e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.old.streamed.root" 4 "-e '$RootPrompt' -e '$EmptyLine' "
 
-launch "Event.new.split9.root" 0 "$ClassWarning\|$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split9.root" 1 "$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split9.root" 2 "$ClassWarning\|$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split9.root" 3 "$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split9.root" 4 "$RootPrompt\|$EmptyLine"
+launch "Event.new.split9.root" 0 "-e '$ClassWarning' -e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split9.root" 1 "-e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split9.root" 2 "-e '$ClassWarning' -e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split9.root" 3 "-e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split9.root" 4 "-e '$RootPrompt' -e '$EmptyLine' "
 
-launch "Event.new.split2.root" 0 "$ClassWarning\|$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split2.root" 1 "$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split2.root" 2 "$ClassWarning\|$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split2.root" 3 "$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split2.root" 4 "$RootPrompt\|$EmptyLine"
+launch "Event.new.split2.root" 0 "-e '$ClassWarning' -e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split2.root" 1 "-e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split2.root" 2 "-e '$ClassWarning' -e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split2.root" 3 "-e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split2.root" 4 "-e '$RootPrompt' -e '$EmptyLine' "
 
-launch "Event.new.split1.root" 0 "$ClassWarning\|$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split1.root" 1 "$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split1.root" 2 "$ClassWarning\|$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split1.root" 3 "$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split1.root" 4 "$RootPrompt\|$EmptyLine"
+launch "Event.new.split1.root" 0 "-e '$ClassWarning' -e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split1.root" 1 "-e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split1.root" 2 "-e '$ClassWarning' -e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split1.root" 3 "-e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split1.root" 4 "-e '$RootPrompt' -e '$EmptyLine' "
 
-launch "Event.new.split0.root" 0 "$Streamer\|$ClassWarning\|$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split0.root" 1 "$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split0.root" 2 "$ClassWarning\|$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split0.root" 3 "$RootPrompt\|$EmptyLine" && \
-launch "Event.new.split0.root" 4 "$RootPrompt\|$EmptyLine"
+launch "Event.new.split0.root" 0 "-e '$Streamer' -e '$ClassWarning' -e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split0.root" 1 "-e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split0.root" 2 "-e '$ClassWarning' -e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split0.root" 3 "-e '$RootPrompt' -e '$EmptyLine' " && \
+launch "Event.new.split0.root" 4 "-e '$RootPrompt' -e '$EmptyLine' "
