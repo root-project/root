@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.156 2004/12/07 11:14:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.157 2004/12/07 16:38:20 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2971,8 +2971,10 @@ void TPad::PaintFillArea(Int_t nn, Float_t *xx, Float_t *yy, Option_t *)
 
 //*-*- Paint the fill area with hatches
    Int_t fillstyle = gVirtualX->GetFillStyle();
-   if (fillstyle/1000 == 3 && fillstyle%1000 > 100) {
+   if (fillstyle >= 3100 && fillstyle < 4000) {
       PaintFillAreaHatches(nn, x, y, fillstyle);
+      delete [] x;
+      delete [] y;
       return;
    }
 
@@ -3063,8 +3065,10 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
 
 //*-*- Paint the fill area with hatches
    Int_t fillstyle = gVirtualX->GetFillStyle();
-   if (fillstyle/1000 == 3 && fillstyle%1000 > 100) {
+   if (fillstyle >= 3100 && fillstyle < 4000) {
       PaintFillAreaHatches(nn, x, y, fillstyle);
+      delete [] x;
+      delete [] y;
       return;
    }
 
