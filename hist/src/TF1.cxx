@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.39 2002/06/29 16:32:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.40 2002/06/29 17:19:06 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -642,6 +642,50 @@ void TF1::Draw(Option_t *option)
    newf1->AppendPad(option);
    newf1->SetBit(kCanDelete);
    return newf1;
+}
+
+//______________________________________________________________________________
+void TF1::DrawDerivative(Option_t *option)
+{
+// Draw derivative of this function
+//
+// An intermediate TGraph object is built and drawn with option.
+//
+// The resulting graph will be drawn into the current pad.
+// If this function is used via the context menu, it recommended
+// to create a new canvas/pad before invoking this function.
+   
+   TVirtualPad *pad = gROOT->GetSelectedPad();
+   TVirtualPad *padsav = gPad;
+   if (pad) pad->cd();
+
+   char cmd[512];
+   sprintf(cmd,"{TGraph *R__%s_Derivative = new TGraph((TF1*)0x%lx,\"d\");R__%s_Derivative->Draw(\"%s\");}",GetName(),(Long_t)this,GetName(),option);
+   printf("cmd=%s\n",cmd);
+   gROOT->ProcessLine(cmd);
+   if (padsav) padsav->cd();
+}
+
+//______________________________________________________________________________
+void TF1::DrawIntegral(Option_t *option)
+{
+// Draw integral of this function
+//
+// An intermediate TGraph object is built and drawn with option.
+//
+// The resulting graph will be drawn into the current pad.
+// If this function is used via the context menu, it recommended
+// to create a new canvas/pad before invoking this function.
+
+   TVirtualPad *pad = gROOT->GetSelectedPad();
+   TVirtualPad *padsav = gPad;
+   if (pad) pad->cd();
+
+   char cmd[512];
+   sprintf(cmd,"{TGraph *R__%s_Integral = new TGraph((TF1*)0x%lx,\"i\");R__%s_Integral->Draw(\"%s\");}",GetName(),(Long_t)this,GetName(),option);
+   printf("cmd=%s\n",cmd);
+   gROOT->ProcessLine(cmd);
+   if (padsav) padsav->cd();
 }
 
 //______________________________________________________________________________
