@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TTime.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   28/11/96
 
 /*************************************************************************
@@ -56,6 +56,7 @@ public:
    friend Bool_t operator>= (const TTime &t1, const TTime &t2);
 
    operator long() const;
+   operator unsigned long() const;
    const char *AsString() const;
 
    ClassDef(TTime,1)  //Basic time type with milli second precision
@@ -73,6 +74,8 @@ inline TTime TTime::operator/=(const TTime &t)
         { fMilliSec /= t.fMilliSec; return *this; }
 inline TTime::operator long() const
         { return fMilliSec; }
+inline TTime::operator unsigned long() const
+        { return (ULong_t) fMilliSec; }
 
 inline TTime operator+(const TTime &t1, const TTime &t2)
         { return TTime(t1.fMilliSec + t2.fMilliSec); }
