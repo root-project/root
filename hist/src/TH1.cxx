@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.199 2004/08/17 08:31:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.200 2004/08/28 07:05:19 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2431,7 +2431,7 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
   Int_t   xmax = asym->GetNbinsX();
   Int_t   ymax = asym->GetNbinsY();
   Int_t   zmax = asym->GetNbinsZ();
-  Double_t as, bot, error, a, b, da, db;
+  Double_t bot, error, a, b, da, db;
 
   // now loop over bins to calculate the correct errors
   // the reason this error calculation looks complex is because of c2
@@ -2443,7 +2443,6 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
 	// calculation a little more legible:
         a   = h1->GetBinContent(i,j,k);
         b   = h2->GetBinContent(i,j,k);
-        as  = asym->GetBinContent(i,j,k);
         bot = bottom->GetBinContent(i,j,k);
 
         // make sure there are some events, if not, then the errors are set = 0
