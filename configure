@@ -360,7 +360,7 @@ guess_architecture () {
         linux:ppc*:*)          arch=linuxppcegcs    ;;
         linux:i*86:*)          arch=linux           ;;
         lynx:*:*)              arch=lynxos          ;;
-        darwin:i*86:*)         arch=macosx          ;;
+        darwin:Power*:*)       arch=macosx          ;;
         darwin:powerpc:*)      arch=macosx          ;;
         irix*:sgi*:*)          arch=sgicc           ;;
         sunos:sun*:6*)         arch=solarisCC5      ;;
