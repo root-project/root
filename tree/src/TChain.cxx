@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.71 2003/07/06 19:41:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.72 2003/07/06 19:44:31 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -748,6 +748,19 @@ Int_t TChain::LoadTree(Int_t entry)
 
       }
       return fReadEntry;
+   }
+
+   // If the tree has some clone, let migrate them into the chain so we can
+   // continue to keep track of it.  This is to support the syntax: 
+   //    clone = (TTree*)chain->GetTree()->CloneTree(0)
+   if (fTree && fTree->GetListOfClones()) {
+      TObjLink *lnk = fTree->GetListOfClones()->FirstLink();
+      while (lnk) {
+         TTree *clone = (TTree*)lnk->GetObject();
+         AddClone(clone);
+         lnk = lnk->Next();
+      }
+      fTree->GetListOfClones()->Clear(); 
    }
 
    //Delete current tree and connect new tree

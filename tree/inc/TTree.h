@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.47 2003/06/30 15:45:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.48 2003/07/04 13:27:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -201,6 +201,7 @@ public:
     virtual Double_t *GetIndexValues() {return &fIndexValues.fArray[0];}
     virtual TIterator*GetIteratorOnAllLeaves(Bool_t dir = kIterForward);
     virtual TLeaf    *GetLeaf(const char *name);
+    virtual TList    *GetListOfClones() { return fClones; }
     virtual TObjArray       *GetListOfBranches() {return &fBranches;}
     virtual TObjArray       *GetListOfLeaves()   {return &fLeaves;}
     virtual TList    *GetListOfFriends() const  {return fFriends;}
