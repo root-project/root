@@ -52,5 +52,5 @@ void pserv()
    Double_t ctime = timer.CpuTime();
 
    printf("%d bytes received in %f seconds\n", niter*bsize, rtime);
-   printf("%5.2f MB/s\n", Double_t(niter*bsize/1024/1024)/rtime);
+   if (rtime > 0) printf("%5.2f MB/s\n", Double_t(niter*bsize/1024/1024)/rtime);
 }

@@ -62,9 +62,7 @@
       if (mess->What() == kMESS_STRING) {
          char str[64];
          mess->ReadString(str, 64);
-         //printf("Client %d: %s\n", s==s0 ? 0 : 1, str);
-         printf("Client %d\n", s==s0 ? 0 : 1);
-         printf("Client %s\n", str);
+         printf("Client %d: %s\n", s==s0 ? 0 : 1, str);
          mon->Remove(s);
          if (mon->GetActive() == 0) {
             printf("No more active clients... stopping\n");
@@ -88,6 +86,11 @@
 
       delete mess;
    }
+
+   printf("Client 0: bytes recv = %d, bytes sent = %d\n", s0->GetBytesRecv(),
+          s0->GetBytesSent());
+   printf("Client 1: bytes recv = %d, bytes sent = %d\n", s1->GetBytesRecv(),
+          s1->GetBytesSent());
 
    // Close the socket.
    s0->Close();

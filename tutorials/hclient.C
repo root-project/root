@@ -24,6 +24,11 @@
    // server tells us who we are
    int idx = !strcmp(str, "go 0") ? 0 : 1;
 
+   Float_t messlen  = 0;
+   Float_t cmesslen = 0;
+   if (idx == 1)
+      sock->SetCompressionLevel(1);
+
    TH1 *hpx;
    if (idx == 0) {
       // Create the histogram
@@ -50,9 +55,14 @@
          mess.Reset();              // re-use TMessage object
          mess.WriteObject(hpx);     // write object in message buffer
          sock->Send(mess);          // send message
+         messlen  += mess.Length();
+         cmesslen += mess.CompLength();
       }
    }
    sock->Send("Finished");          // tell server we are finished
+
+   if (cmesslen > 0)
+      printf("Average compression ratio: %g\n", messlen/cmesslen);
 
    gBenchmark->Show("hclient");
 
