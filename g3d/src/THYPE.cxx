@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THYPE.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: THYPE.cxx,v 1.2 2002/11/11 11:21:16 brun Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -27,14 +27,10 @@ ClassImp(THYPE)
 //     - phi        stereo angle
 
 
-
-
 //______________________________________________________________________________
 THYPE::THYPE()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*HYPE shape default constructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ==============================
-
+   // HYPE shape default constructor
 }
 
 
@@ -43,17 +39,13 @@ THYPE::THYPE(const char *name, const char *title, const char *material, Float_t 
              Float_t rmax, Float_t dz, Float_t phi)
       : TTUBE(name,title,material,rmin,rmax,dz)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*HYPE shape normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
-
-    fPhi = phi;
+   // HYPE shape normal constructor
+   fPhi = phi;
 }
 
 
 //______________________________________________________________________________
 THYPE::~THYPE()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*HYPE shape default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
-
+   // HYPE shape default destructor
 }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.h,v 1.3 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.h,v 1.4 2002/02/23 15:45:56 rdm Exp $
 // Author: "Valery fine"   31/10/97
 
 /*************************************************************************
@@ -39,9 +39,6 @@
 #ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
 #endif
-#ifndef ROOT_X3DBuffer
-#include "X3DBuffer.h"
-#endif
 
 class TH1;
 
@@ -61,9 +58,6 @@ protected:
     Float_t  fPhi;             // Angle of box x axis with respect to main Xaxis
     TObject *fRefObject;       // Pointer to an object
 
-protected:
-    virtual void    PaintGLPoints(Float_t *buff);
-
 public:
     TMarker3DBox();
     TMarker3DBox(Float_t x, Float_t y, Float_t z,
@@ -80,16 +74,12 @@ public:
 
     virtual void    Paint(Option_t *option);
     static  void    PaintH3(TH1 *h, Option_t *option);
-    virtual void    PaintShape(X3DBuffer *buff, Bool_t rangeView=kFALSE);
     virtual void    SavePrimitive(ofstream &out, Option_t *option);
-    virtual void    SetPoints(Float_t *buff);
+    virtual void    SetPoints(Double_t *buff);
     virtual void    SetDirection(Float_t theta, Float_t phi);
     virtual void    SetPosition(Float_t x, Float_t y, Float_t z);
     virtual void    SetSize(Float_t dx, Float_t dy, Float_t dz);
     virtual void    SetRefObject(TObject *obj=0) {fRefObject = obj;}
-
-    virtual void    Sizeof3D() const;
-    static  void    SizeofH3(TH1 *h) ;
 
     ClassDef(TMarker3DBox,2)  //A special 3-D marker designed for event display
 };

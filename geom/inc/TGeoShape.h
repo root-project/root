@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.22 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.23 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -16,6 +16,9 @@
 #include "TNamed.h"
 #endif
 
+#ifndef ROOT_TBuffer3D
+#include "TBuffer3D.h"
+#endif
 
 // forward declarations
 class TGeoBoolCombinator;
@@ -123,6 +126,7 @@ public:
    void                  SetRuntime(Bool_t flag=kTRUE) {SetShapeBit(kGeoRunTimeShape, flag);}
    Int_t                 ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) const;
    virtual void          Sizeof3D() const                        = 0;
+   void                  TransformPoints(TBuffer3D *buff) const;
 
    //----- bit manipulation
    void     SetShapeBit(UInt_t f, Bool_t set);

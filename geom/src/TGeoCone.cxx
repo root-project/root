@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.28 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.29 2004/06/25 11:59:55 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -66,6 +66,8 @@
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoCone.h"
+#include "TVirtualPad.h"
+#include "TBuffer3D.h"
 
 ClassImp(TGeoCone)
    
@@ -612,10 +614,109 @@ void *TGeoCone::Make3DBuffer(const TGeoVolume *vol) const
 //_____________________________________________________________________________
 void TGeoCone::Paint(Option_t *option)
 {
-// paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->PaintTube(this, option);
+   // Paint this shape according to option
+
+   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
+   Int_t i, j, n = 20;
+   if (gGeoManager) n = gGeoManager->GetNsegments();
+   Int_t NbPnts = 4*n;
+   Int_t NbSegs = 8*n;
+   Int_t NbPols = 4*n; 
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   if (!buff) return;
+
+   buff->fType = TBuffer3D::kTUBE;
+   buff->fId   = this;
+
+   // Fill gPad->fBuffer3D. Points coordinates are in Master space
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+   // In case of option "size" it is not necessary to fill the buffer
+   if (strstr(option,"size")) {
+      buff->Paint(option);
+      return;
+   }
+
+   SetPoints(buff->fPnts);
+
+   TransformPoints(buff);
+
+   // Basic colors: 0, 1, ... 7
+   Int_t c = ((gGeoManager->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;
+   if (c < 0) c = 0;
+
+   for (i = 0; i < 4; i++) {
+      for (j = 0; j < n; j++) {
+         buff->fSegs[(i*n+j)*3  ] = c;
+         buff->fSegs[(i*n+j)*3+1] = i*n+j;
+         buff->fSegs[(i*n+j)*3+2] = i*n+j+1;
+      }
+      buff->fSegs[(i*n+j-1)*3+2] = i*n;
+   }
+   for (i = 4; i < 6; i++) {
+      for (j = 0; j < n; j++) {
+         buff->fSegs[(i*n+j)*3  ] = c+1;
+         buff->fSegs[(i*n+j)*3+1] = (i-4)*n+j;
+         buff->fSegs[(i*n+j)*3+2] = (i-2)*n+j;
+      }
+   }
+   for (i = 6; i < 8; i++) {
+      for (j = 0; j < n; j++) {
+         buff->fSegs[(i*n+j)*3  ] = c;
+         buff->fSegs[(i*n+j)*3+1] = 2*(i-6)*n+j;
+         buff->fSegs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
+      }
+   }
+
+   Int_t indx = 0;
+   i=0;
+   for (j = 0; j < n; j++) {
+      indx = 6*(i*n+j);
+      buff->fPols[indx  ] = c;
+      buff->fPols[indx+1] = 4;
+      buff->fPols[indx+5] = i*n+j;
+      buff->fPols[indx+4] = (4+i)*n+j;
+      buff->fPols[indx+3] = (2+i)*n+j;
+      buff->fPols[indx+2] = (4+i)*n+j+1;
+   }
+   buff->fPols[indx+2] = (4+i)*n;
+   i=1;
+   for (j = 0; j < n; j++) {
+      indx = 6*(i*n+j);
+      buff->fPols[indx  ] = c;
+      buff->fPols[indx+1] = 4;
+      buff->fPols[indx+2] = i*n+j;
+      buff->fPols[indx+3] = (4+i)*n+j;
+      buff->fPols[indx+4] = (2+i)*n+j;
+      buff->fPols[indx+5] = (4+i)*n+j+1;
+   }
+   buff->fPols[indx+5] = (4+i)*n;
+   i=2;
+   for (j = 0; j < n; j++) {
+      indx = 6*(i*n+j);
+      buff->fPols[indx  ] = c+i;
+      buff->fPols[indx+1] = 4;
+      buff->fPols[indx+2] = (i-2)*2*n+j;
+      buff->fPols[indx+3] = (4+i)*n+j;
+      buff->fPols[indx+4] = ((i-2)*2+1)*n+j;
+      buff->fPols[indx+5] = (4+i)*n+j+1;
+   }
+   buff->fPols[indx+5] = (4+i)*n;
+   i=3;
+   for (j = 0; j < n; j++) {
+      indx = 6*(i*n+j);
+      buff->fPols[indx  ] = c+i;
+      buff->fPols[indx+1] = 4;
+      buff->fPols[indx+5] = (i-2)*2*n+j;
+      buff->fPols[indx+4] = (4+i)*n+j;
+      buff->fPols[indx+3] = ((i-2)*2+1)*n+j;
+      buff->fPols[indx+2] = (4+i)*n+j+1;
+   }
+   buff->fPols[indx+2] = (4+i)*n;
+
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
 }
 
 //_____________________________________________________________________________
@@ -838,14 +939,14 @@ Int_t TGeoCone::GetNmeshVertices() const
 //_____________________________________________________________________________
 void TGeoCone::Sizeof3D() const
 {
-// fill size of this 3-D object
-    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-    if (!painter) return;
-    Int_t n = gGeoManager->GetNsegments();
-    Int_t numPoints = n*4;
-    Int_t numSegs   = n*8;
-    Int_t numPolys  = n*4;
-    painter->AddSize3D(numPoints, numSegs, numPolys);
+///// fill size of this 3-D object
+///    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+///    if (!painter) return;
+///    Int_t n = gGeoManager->GetNsegments();
+///    Int_t numPoints = n*4;
+///    Int_t numSegs   = n*8;
+///    Int_t numPolys  = n*4;
+///    painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
 
@@ -1516,10 +1617,114 @@ void *TGeoConeSeg::Make3DBuffer(const TGeoVolume *vol) const
 //_____________________________________________________________________________
 void TGeoConeSeg::Paint(Option_t *option)
 {
-// paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->PaintTubs(this, option);
+   // Paint this shape according to option
+
+   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
+   Int_t i, j, n = 20;
+   if (gGeoManager) n = gGeoManager->GetNsegments()+1;
+   Int_t NbPnts = 4*n;
+   Int_t NbSegs = 2*NbPnts;
+   Int_t NbPols = NbPnts-2; 
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   if (!buff) return;
+
+   buff->fType = TBuffer3D::kTUBS;
+   buff->fId   = this;
+
+   // Fill gPad->fBuffer3D. Points coordinates are in Master space
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+   // In case of option "size" it is not necessary to fill the buffer
+   if (strstr(option,"size")) {
+      buff->Paint(option);
+      return;
+   }
+
+   SetPoints(buff->fPnts);
+
+   TransformPoints(buff);
+
+   // Basic colors: 0, 1, ... 7
+   Int_t c = ((gGeoManager->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;
+   if (c < 0) c = 0;
+
+   memset(buff->fSegs, 0, buff->fNbSegs*3*sizeof(Int_t));
+   for (i = 0; i < 4; i++) {
+      for (j = 1; j < n; j++) {
+         buff->fSegs[(i*n+j-1)*3  ] = c;
+         buff->fSegs[(i*n+j-1)*3+1] = i*n+j-1;
+         buff->fSegs[(i*n+j-1)*3+2] = i*n+j;
+      }
+   }
+   for (i = 4; i < 6; i++) {
+      for (j = 0; j < n; j++) {
+         buff->fSegs[(i*n+j)*3  ] = c+1;
+         buff->fSegs[(i*n+j)*3+1] = (i-4)*n+j;
+         buff->fSegs[(i*n+j)*3+2] = (i-2)*n+j;
+      }
+   }
+   for (i = 6; i < 8; i++) {
+      for (j = 0; j < n; j++) {
+         buff->fSegs[(i*n+j)*3  ] = c;
+         buff->fSegs[(i*n+j)*3+1] = 2*(i-6)*n+j;
+         buff->fSegs[(i*n+j)*3+2] = (2*(i-6)+1)*n+j;
+      }
+   }
+
+   Int_t indx = 0;
+   memset(buff->fPols, 0, buff->fNbPols*6*sizeof(Int_t));
+   i = 0;
+   for (j = 0; j < n-1; j++) {
+      buff->fPols[indx++] = c;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = (4+i)*n+j+1;
+      buff->fPols[indx++] = (2+i)*n+j;
+      buff->fPols[indx++] = (4+i)*n+j;
+      buff->fPols[indx++] = i*n+j;
+   }
+   i = 1;
+   for (j = 0; j < n-1; j++) {
+      buff->fPols[indx++] = c;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = i*n+j;
+      buff->fPols[indx++] = (4+i)*n+j;
+      buff->fPols[indx++] = (2+i)*n+j;
+      buff->fPols[indx++] = (4+i)*n+j+1;
+   }
+   i = 2;
+   for (j = 0; j < n-1; j++) {
+      buff->fPols[indx++] = c+i;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = (i-2)*2*n+j;
+      buff->fPols[indx++] = (4+i)*n+j;
+      buff->fPols[indx++] = ((i-2)*2+1)*n+j;
+      buff->fPols[indx++] = (4+i)*n+j+1;
+   }
+   i = 3;
+   for (j = 0; j < n-1; j++) {
+      buff->fPols[indx++] = c+i;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = (4+i)*n+j+1;
+      buff->fPols[indx++] = ((i-2)*2+1)*n+j;
+      buff->fPols[indx++] = (4+i)*n+j;
+      buff->fPols[indx++] = (i-2)*2*n+j;
+   }
+   buff->fPols[indx++] = c+2;
+   buff->fPols[indx++] = 4;
+   buff->fPols[indx++] = 6*n;
+   buff->fPols[indx++] = 4*n;
+   buff->fPols[indx++] = 7*n;
+   buff->fPols[indx++] = 5*n;
+   buff->fPols[indx++] = c+2;
+   buff->fPols[indx++] = 4;
+   buff->fPols[indx++] = 6*n-1;
+   buff->fPols[indx++] = 8*n-1;
+   buff->fPols[indx++] = 5*n-1;
+   buff->fPols[indx++] = 7*n-1;
+
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
 }
 
 
@@ -1727,14 +1932,14 @@ Int_t TGeoConeSeg::GetNmeshVertices() const
 //_____________________________________________________________________________
 void TGeoConeSeg::Sizeof3D() const
 {
-// fill size of this 3-D object
-    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-    if (!painter) return;
-
-    Int_t n = gGeoManager->GetNsegments()+1;
-
-    Int_t numPoints = n*4;
-    Int_t numSegs   = n*8;
-    Int_t numPolys  = n*4-2;
-    painter->AddSize3D(numPoints, numSegs, numPolys);
+///// fill size of this 3-D object
+///    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+///    if (!painter) return;
+///
+///    Int_t n = gGeoManager->GetNsegments()+1;
+///
+///    Int_t numPoints = n*4;
+///    Int_t numSegs   = n*8;
+///    Int_t numPolys  = n*4-2;
+///    painter->AddSize3D(numPoints, numSegs, numPolys);
 }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.2 2000/11/21 20:14:43 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.3 2000/12/13 15:13:47 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -25,29 +25,23 @@
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
-
 #ifndef ROOT_TMaterial
 #include "TMaterial.h"
 #endif
-
 #ifndef ROOT_TAttLine
 #include "TAttLine.h"
 #endif
-
 #ifndef ROOT_TAttFill
 #include "TAttFill.h"
 #endif
-
 #ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
 #endif
-
 #ifndef ROOT_X3DBuffer
 #include "X3DBuffer.h"
 #endif
-
-#ifndef ROOT_TPolyLine3D
-#include "TPolyLine3D.h"
+#ifndef ROOT_TBuffer3D
+#include "TBuffer3D.h"
 #endif
 
 class TNode;
@@ -69,18 +63,16 @@ public:
    virtual Int_t   GetNumber()     const {return fNumber;}
            Int_t   GetVisibility() const {return fVisibility;}
    virtual void    Paint(Option_t *option="");
-   virtual void    PaintGLPoints(Float_t *vertex);
-   virtual void    PaintShape(X3DBuffer *buff, Bool_t rangeView=kFALSE);
    virtual void    SetName(const char *name);
-   virtual void    SetPoints(Float_t *buffer);
+   virtual void    SetPoints(Double_t *buffer);
    virtual void    SetVisibility(Int_t vis) {fVisibility = vis;} // *MENU*
+           void    TransformPoints(TBuffer3D *buff) const;
 
    ClassDef(TShape,2)  //Basic shape
 };
 
 R__EXTERN TNode *gNode;
 
-inline void TShape::PaintGLPoints(Float_t *) { }
 inline void TShape::SetName(const char *) { }
 
 #endif

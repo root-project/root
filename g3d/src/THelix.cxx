@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.8 2002/10/31 07:27:34 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.9 2003/07/07 16:14:37 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -537,16 +537,6 @@ void THelix::SetRange(Double_t r1, Double_t r2, EHelixRangeType rType)
    Double_t range[2];
    range[0] = r1;       range[1] = r2;
    SetRange(range, rType);
-}
-
-//______________________________________________________________________________
-void THelix::Sizeof3D() const
-{
-   // Return total X3D size of this shape with its attributes.
-
-    gSize3D.numPoints += fN;
-    gSize3D.numSegs   += (fN-1);
-    gSize3D.numPolys  += 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////

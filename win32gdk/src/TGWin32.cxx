@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.81 2004/07/23 13:30:10 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.82 2004/07/27 23:02:11 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -49,6 +49,9 @@
 #include "TGWin32InterpreterProxy.h"
 #include "TGLKernel.h"
 #include "TWin32SplashThread.h"
+
+#include <GL/gl.h>
+#include <GL/glu.h>
 
 extern "C" {
 void gdk_win32_draw_rectangle (GdkDrawable    *drawable,
@@ -7436,4 +7439,3 @@ void TGWin32::glNormal3fv(const Float_t *norm)
 
    ::glNormal3fv((const GLfloat *)norm);
 }
-

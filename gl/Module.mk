@@ -12,7 +12,13 @@ GLDIRS       := $(GLDIR)/src
 GLDIRI       := $(GLDIR)/inc
 
 ##### libRGL #####
+GLL          := $(MODDIRI)/LinkDef.h
+GLDS         := $(MODDIRS)/G__GL.cxx
+GLDO         := $(GLDS:.cxx=.o)
+GLDH         := $(GLDS:.cxx=.h)
 GLH          := $(wildcard $(MODDIRI)/*.h)
+GLH1         := $(MODDIRI)/TViewerOpenGL.h
+
 ifeq ($(ARCH),win32)
 GLS          := TGdkGLKernel.cxx
 else
@@ -33,6 +39,7 @@ IVLIBS       := $(OPENIVLIBDIR) $(OPENIVLIB) \
                 $(X11LIBDIR) -lXm -lXt -lXext -lX11 -lm
 endif
 endif
+GLS          += TViewerOpenGL.cxx
 GLS          := $(patsubst %,$(MODDIRS)/%,$(GLS))
 
 GLO          := $(GLS:.cxx=.o)
@@ -52,10 +59,30 @@ INCLUDEFILES += $(GLDEP)
 include/%.h:    $(GLDIRI)/%.h
 		cp $< $@
 
-$(GLLIB):       $(GLO) $(MAINLIBS) $(GLLIBDEP)
+ifeq ($(ARCH),win32)
+$(GLLIB):       $(GLO) $(GLDO) $(MAINLIBS) $(GLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO)" \
+		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLDO)" \
+		   "$(GLLIBEXTRA) Glu32.lib Opengl32.lib $(GLLIBS) $(IVLIBS)"
+else
+$(GLLIB):       $(GLO) $(GLDO) $(MAINLIBS) $(GLLIBDEP)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLDO)" \
 		   "$(GLLIBEXTRA) $(GLLIBS) $(IVLIBS)"
+endif
+
+$(GLDS):	$(GLH1) $(GLL) $(ROOTCINTTMP)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(GLH1) $(GLL)
+
+ifeq ($(ARCH),win32)
+$(GLDO):        $(GLDS)
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(WIN32GDKDIR)/gdk/src \
+		-I$(GDKDIRI) -I$(GLIBDIRI) -o $@ -c $<
+else
+$(GLDO):        $(GLDS)
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+endif
 
 all-gl:         $(GLLIB)
 
@@ -70,7 +97,7 @@ clean-gl:
 clean::         clean-gl
 
 distclean-gl:   clean-gl
-		@rm -f $(GLDEP) $(GLLIB)
+		@rm -f $(GLDEP) $(GLLIB) $(GLDS) $(GLDH)
 
 distclean::     distclean-gl
 

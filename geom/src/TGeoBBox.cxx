@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.26 2004/04/13 07:04:42 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.27 2004/06/25 11:59:55 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
 
@@ -77,6 +77,8 @@
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoBBox.h"
+#include "TVirtualPad.h"
+#include "TBuffer3D.h"
 
 ClassImp(TGeoBBox)
    
@@ -436,10 +438,64 @@ void *TGeoBBox::Make3DBuffer(const TGeoVolume *vol) const
 //_____________________________________________________________________________
 void TGeoBBox::Paint(Option_t *option)
 {
-// paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->PaintBox(this, option);
+   // Paint this shape according to option
+
+   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
+   Int_t NbPnts = 8;
+   Int_t NbSegs = 12;
+   Int_t NbPols = 6;
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   if (!buff) return;
+   
+   buff->fType = TBuffer3D::kBRIK;
+   buff->fId   = this;
+   
+   // Fill gPad->fBuffer3D. Points coordinates are in Master space
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+   // In case of option "size" it is not necessary to fill the buffer
+   if (strstr(option,"size")) {
+      buff->Paint(option);
+      return;
+   }
+
+   SetPoints(buff->fPnts);
+
+   TransformPoints(buff);
+
+   // Basic colors: 0, 1, ... 7
+   Int_t c = ((gGeoManager->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;
+   if (c < 0) c = 0;
+   
+   buff->fSegs[ 0] = c   ; buff->fSegs[ 1] = 0   ; buff->fSegs[ 2] = 1   ;
+   buff->fSegs[ 3] = c+1 ; buff->fSegs[ 4] = 1   ; buff->fSegs[ 5] = 2   ;
+   buff->fSegs[ 6] = c+1 ; buff->fSegs[ 7] = 2   ; buff->fSegs[ 8] = 3   ;
+   buff->fSegs[ 9] = c   ; buff->fSegs[10] = 3   ; buff->fSegs[11] = 0   ;
+   buff->fSegs[12] = c+2 ; buff->fSegs[13] = 4   ; buff->fSegs[14] = 5   ;
+   buff->fSegs[15] = c+2 ; buff->fSegs[16] = 5   ; buff->fSegs[17] = 6   ;
+   buff->fSegs[18] = c+3 ; buff->fSegs[19] = 6   ; buff->fSegs[20] = 7   ;
+   buff->fSegs[21] = c+3 ; buff->fSegs[22] = 7   ; buff->fSegs[23] = 4   ;
+   buff->fSegs[24] = c   ; buff->fSegs[25] = 0   ; buff->fSegs[26] = 4   ;
+   buff->fSegs[27] = c+2 ; buff->fSegs[28] = 1   ; buff->fSegs[29] = 5   ;
+   buff->fSegs[30] = c+1 ; buff->fSegs[31] = 2   ; buff->fSegs[32] = 6   ;
+   buff->fSegs[33] = c+3 ; buff->fSegs[34] = 3   ; buff->fSegs[35] = 7   ;
+   
+   buff->fPols[ 0] = c   ; buff->fPols[ 1] = 4   ;  buff->fPols[ 2] = 0  ;
+   buff->fPols[ 3] = 9   ; buff->fPols[ 4] = 4   ;  buff->fPols[ 5] = 8  ;
+   buff->fPols[ 6] = c+1 ; buff->fPols[ 7] = 4   ;  buff->fPols[ 8] = 1  ;
+   buff->fPols[ 9] = 10  ; buff->fPols[10] = 5   ;  buff->fPols[11] = 9  ;
+   buff->fPols[12] = c   ; buff->fPols[13] = 4   ;  buff->fPols[14] = 2  ;
+   buff->fPols[15] = 11  ; buff->fPols[16] = 6   ;  buff->fPols[17] = 10 ;
+   buff->fPols[18] = c+1 ; buff->fPols[19] = 4   ;  buff->fPols[20] = 3  ;
+   buff->fPols[21] = 8   ; buff->fPols[22] = 7   ;  buff->fPols[23] = 11 ;
+   buff->fPols[24] = c+2 ; buff->fPols[25] = 4   ;  buff->fPols[26] = 0  ;
+   buff->fPols[27] = 3   ; buff->fPols[28] = 2   ;  buff->fPols[29] = 1  ;
+   buff->fPols[30] = c+3 ; buff->fPols[31] = 4   ;  buff->fPols[32] = 4  ;
+   buff->fPols[33] = 5   ; buff->fPols[34] = 6   ;  buff->fPols[35] = 7  ;
+   
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
 }
 
 //_____________________________________________________________________________
@@ -546,7 +602,7 @@ void TGeoBBox::SetPoints(Float_t *buff) const
 //_____________________________________________________________________________
 void TGeoBBox::Sizeof3D() const
 {
-// fill size of this 3-D object
-    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-    if (painter) painter->AddSize3D(8, 12, 6);
+///// fill size of this 3-D object
+///    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+///    if (painter) painter->AddSize3D(8, 12, 6);
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.14 2004/02/18 20:13:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.15 2004/07/30 01:13:50 rdm Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -51,6 +51,8 @@ class TH1F;
 class TFrame;
 class TBox;
 class TPadView3D;
+class TBuffer3D;
+class TVirtualViewer3D;
 
 class TVirtualPad : public TObject, public TAttLine, public TAttFill,
                     public TAttPad, public TQObject {
@@ -238,6 +240,12 @@ public:
    virtual void     CloseToolTip(TObject *tip) = 0;
 
    virtual void     x3d(Option_t *option="") = 0;
+
+   virtual TBuffer3D *AllocateBuffer3D(Int_t n1, Int_t n2, Int_t n3) = 0;
+   virtual TBuffer3D *GetBuffer3D() = 0;
+   virtual TVirtualViewer3D *GetViewer3D() = 0;
+   virtual void SetViewer3D(TVirtualViewer3D *v) = 0;
+
 
    static TVirtualPad *&Pad();
 

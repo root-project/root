@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.4 2001/04/11 14:24:16 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.5 2002/01/16 13:53:53 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -24,6 +24,9 @@
 #ifndef ROOT_TGFrame
 #include "TGFrame.h"
 #endif
+#ifndef ROOT_TVirtualViewer3D
+#include "TVirtualViewer3D.h"
+#endif
 
 class TVirtualPad;
 class TGCanvas;
@@ -33,13 +36,13 @@ class TGLayoutHints;
 class TX3DContainer;
 
 
-class TViewerX3D : public TGMainFrame {
+class TViewerX3D : public TVirtualViewer3D, public TGMainFrame {
 
 friend class TX3DContainer;
 
 private:
-   TVirtualPad    *fPad;                // pad that should be displayed in X3D
    TString         fOption;             // option string to be passed to X3D
+   TString         fTitle;              // viewer title
    Window_t        fX3DWin;             // X3D window
    TGCanvas       *fCanvas;             // canvas widget
    TX3DContainer  *fContainer;          // container containing X3D window
@@ -50,6 +53,10 @@ private:
    TGLayoutHints  *fMenuBarItemLayout;  // layout hints for menu in menubar
    TGLayoutHints  *fMenuBarHelpLayout;  // layout hint for help menu in menubar
    TGLayoutHints  *fCanvasLayout;       // layout for canvas widget
+   UInt_t          fWidth;              // viewer width 
+   UInt_t          fHeight;             // viewer height
+   Int_t           fXPos;               // viewer X position
+   Int_t           fYPos;               // viewer Y position
 
    void     CreateViewer(const char *name);
    void     InitX3DWindow();
@@ -60,6 +67,7 @@ private:
    static Bool_t fgActive;    // TViewerX3D is a singleton
 
 public:
+   TViewerX3D(TVirtualPad *pad);
    TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title="X3D Viewer",
               UInt_t width = 800, UInt_t height = 600);
    TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
@@ -72,11 +80,16 @@ public:
    void     Show() { MapRaised(); }
    void     Update();
 
+   void     CreateScene(Option_t *option);
+   void     UpdateScene(Option_t *option);
+
+   void     PaintPolyMarker(Option_t *option);
+
    // overridden from TGMainFrame
    void     CloseWindow();
    Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
-   ClassDef(TViewerX3D,0)  //C++ interface to the X3D viewer
+   ClassDef(TViewerX3D,0)  //Interface to the X3D viewer
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.15 2002/10/31 07:27:34 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.16 2003/07/02 20:04:01 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -10,19 +10,13 @@
  *************************************************************************/
 
 #include "Riostream.h"
-#include "TROOT.h"
 #include "TView.h"
-#include "TStyle.h"
 #include "TPolyMarker3D.h"
-#include "TPoint.h"
 #include "TVirtualPad.h"
-#include "TVirtualPS.h"
-#include "TVirtualGL.h"
-#include "TVirtualX.h"
-#include "TPadView3D.h"
-#include "TH1.h"
 #include "TH3.h"
 #include "TRandom.h"
+#include "TBuffer3D.h"
+#include "TGeometry.h"
 
 ClassImp(TPolyMarker3D)
 
@@ -59,8 +53,6 @@ const Int_t kDimension = 3;
 //                 TPolyMarker3D (150, ptr, 1);
 //
 //
-
-
 
 
 //______________________________________________________________________________
@@ -296,80 +288,45 @@ Int_t TPolyMarker3D::Merge(TCollection *list)
 void TPolyMarker3D::Paint(Option_t *option)
 {
    // Paint this 3-D polymarker.
-   // Option could be 'x3d', and it means that output
-   // will be performed by X3D package.
 
-   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
-   if (view3D) view3D->PaintPolyMarker(this,option);
-   // Check if option is 'x3d'.      NOTE: This is a simple checking
-   //                                      but since there is no other
-   //                                      options yet, this works fine.
+   Int_t NbPnts = Size();
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 1, 0);
+   if (!buff) return;
 
-   if ((*option != 'x') && (*option != 'X')) {
-       Marker_t marker = GetMarkerStyle();
-       PaintPolyMarker(Size(), fP, marker, option);
-   } else {
-      Int_t size = Size();
-      Int_t mode;
-      Int_t i, j, k, n;
+   buff->fType = TBuffer3D::kMARKER;
+   buff->fId   = this;
 
-      X3DBuffer *buff = new X3DBuffer;
-      if(!buff) return;
-
-      if (size > 10000) mode = 1;         // One line marker    '-'
-      else if (size > 3000) mode = 2;     // Two lines marker   '+'
-      else mode = 3;                      // Three lines marker '*'
-
-      buff->numSegs   = size*mode;
-      buff->numPoints = buff->numSegs*2;
-      buff->numPolys  = 0;         //NOTE: Because of different structure, our
-      buff->polys     = NULL;      //      TPolyMarker3D can't use polygons
-
-
-      // Allocate memory for points
-      Double_t delta = 0.002;
-
-      buff->points = new Float_t[buff->numPoints*3];
-      if (buff->points) {
-         for (i = 0; i < size; i++) {
-            for (j = 0; j < mode; j++) {
-               for (k = 0; k < 2; k++) {
-                  delta *= -1;
-                  for (n = 0; n < 3; n++) {
-                     buff->points[mode*6*i+6*j+3*k+n] =
-                     fP[3*i+n] * (1 + (j == n ? delta : 0));
-                  }
-               }
-            }
-         }
-      }
-
-      Int_t c = ((GetMarkerColor() % 8) - 1) * 4;  // Basic colors: 0, 1, ... 8
-      if (c < 0) c = 0;
-
-      // Allocate memory for segments
-      buff->segs = new Int_t[buff->numSegs*3];
-      if (buff->segs) {
-         for (i = 0; i < buff->numSegs; i++) {
-            buff->segs[3*i  ] = c;
-            buff->segs[3*i+1] = 2*i;
-            buff->segs[3*i+2] = 2*i+1;
-         }
-      }
-
-      if (buff->points && buff->segs)  //If everything seems to be OK ...
-         FillX3DBuffer(buff);
-      else {                           // ... something very bad was happened
-         gSize3D.numPoints -= buff->numPoints;
-         gSize3D.numSegs   -= buff->numSegs;
-         gSize3D.numPolys  -= buff->numPolys;
-      }
-
-      if (buff->points)   delete [] buff->points;
-      if (buff->segs)     delete [] buff->segs;
-      if (buff->polys)    delete [] buff->polys;
-      if (buff)           delete    buff;
+   // Fill gPad->fBuffer3D. Points coordinates are in Master space
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = 0;
+   buff->fNbPols = 0;
+   // In case of option "size" it is not necessary to fill the buffer
+   if (buff->fOption == TBuffer3D::kSIZE) {
+      buff->Paint(option);
+      return;
    }
+    
+   for (Int_t i=0; i<3*NbPnts; i++) buff->fPnts[i] = (Double_t)fP[i];
+
+   if (gGeometry) {   
+      Double_t dlocal[3];
+      Double_t dmaster[3];
+      for (Int_t j=0; j<buff->fNbPnts; j++) {
+         dlocal[0] = buff->fPnts[3*j];
+         dlocal[1] = buff->fPnts[3*j+1];
+         dlocal[2] = buff->fPnts[3*j+2];
+         gGeometry->Local2Master(&dlocal[0],&dmaster[0]);
+         buff->fPnts[3*j]   = dmaster[0];
+         buff->fPnts[3*j+1] = dmaster[1];
+         buff->fPnts[3*j+2] = dmaster[2];
+      }
+   }
+
+   // Paint gPad->fBuffer3D
+   buff->fSegs[0] = ((GetMarkerColor() % 8) - 1) * 4;
+   if ( buff->fSegs[0]<0 ) buff->fSegs[0] = 0;
+   TAttMarker::Modify();
+   buff->Paint(option);
 }
 
 //______________________________________________________________________________
@@ -448,53 +405,6 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
    }
    pm3d->Paint(option);
    delete pm3d;
-}
-
-//______________________________________________________________________________
-void TPolyMarker3D::PaintPolyMarker(Int_t n, Float_t *p, Marker_t, Option_t *)
-{
-   // Paint 3-D polymarker with new coordinates from p. Does not change
-   // original polyline. Should be static method.
-
-   if (n <= 0) return;
-
-   //Create temorary storage
-   TPoint *pxy = new TPoint[n];
-   Double_t *x  = new Double_t[n];
-   Double_t *y  = new Double_t[n];
-   Double_t xndc[3], temp[3];
-   Float_t *ptr = p;
-
-   TView *view = gPad->GetView();      //Get current 3-D view
-   if(!view) return;                   //Check if `view` is valid
-
-   // convert points from world to pixel coordinates
-   Int_t nin = 0;
-   for (Int_t i = 0; i < n; i++) {
-      for (Int_t j=0;j<3;j++) temp[j] = ptr[j];
-      view->WCtoNDC(temp, xndc);
-      ptr += 3;
-      if (xndc[0] < gPad->GetX1() || xndc[0] > gPad->GetX2()) continue;
-      if (xndc[1] < gPad->GetY1() || xndc[1] > gPad->GetY2()) continue;
-      x[nin] = xndc[0];
-      y[nin] = xndc[1];
-      pxy[nin].fX = gPad->XtoPixel(x[nin]);
-      pxy[nin].fY = gPad->YtoPixel(y[nin]);
-      nin++;
-   }
-
-   TAttMarker::Modify();  //Change marker attributes only if necessary
-
-   // invoke the graphics subsystem
-   if (!gPad->IsBatch()) gVirtualX->DrawPolyMarker(nin, pxy);
-
-   if (gVirtualPS) {
-      gVirtualPS->DrawPolyMarker(nin, x, y);
-   }
-   delete [] x;
-   delete [] y;
-
-   delete [] pxy;
 }
 
 //______________________________________________________________________________
@@ -613,57 +523,6 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_
    SetMarkerStyle(marker);
    fOption = option;
    fLastPoint = fN-1;
-}
-
-//______________________________________________________________________________
-void TPolyMarker3D::Sizeof3D() const
-{
-   // Return total size of this 3-D polymarker with its attributes.
-
-   Int_t mode;
-   Int_t size = Size();
-
-   if (size > 10000) mode = 1;         // One line marker    '-'
-   else if (size > 3000) mode = 2;     // Two lines marker   '+'
-   else mode = 3;                      // Three lines marker '*'
-
-   gSize3D.numSegs   += size*mode;
-   gSize3D.numPoints += size*mode*2;
-   gSize3D.numPolys  += 0;
-}
-
-//______________________________________________________________________________
-void TPolyMarker3D::SizeofH3(TH1 *h)
-{
-   // Return total size of 3-D histogram h.
-
-   // take into account the 4 polylines of the OutlinetoCube
-   gSize3D.numSegs   += 4*3;
-   gSize3D.numPoints += 4*4;
-
-   if (h->GetEntries() <= 0) return;
-   Int_t nx  = h->GetXaxis()->GetNbins();
-   Int_t ny  = h->GetYaxis()->GetNbins();
-   Int_t nz  = h->GetZaxis()->GetNbins();
-   Int_t entry = 0;
-   Int_t bin, binx, biny, binz;
-   for (binz=1;binz<=nz;binz++) {
-      for (biny=1;biny<=ny;biny++) {
-         for (binx=1;binx<=nx;binx++) {
-            bin = h->GetBin(binx,biny,binz);
-            for (Int_t in=0;in<h->GetBinContent(bin);in++) {
-               entry++;
-            }
-         }
-      }
-   }
-   Int_t mode;
-   if (entry > 10000) mode = 1;         // One line marker    '-'
-   else if (entry > 3000) mode = 2;     // Two lines marker   '+'
-   else mode = 3;                       // Three lines marker '*'
-   gSize3D.numSegs   += entry*mode;
-   gSize3D.numPoints += entry*mode*2;
-   gSize3D.numPolys  += 0;
 }
 
 //_______________________________________________________________________

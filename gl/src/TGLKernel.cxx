@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.7 2002/02/23 15:50:36 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.8 2002/12/02 18:50:02 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -17,7 +17,6 @@
 // All interactions with OpenGL should go via this class.               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
 #include "TGLKernel.h"
 #include "TMath.h"
 #include "TVirtualX.h"
@@ -993,6 +992,134 @@ void TGLKernel::UpdateMatrix(Double_t *translate, Double_t *rotate, Bool_t isref
         TGLKernel::MultGLMatrix(rotate);
     }
 }
+//[tpochep]
+void TGLKernel::ClearGLDepth(Float_t val)const
+{
+    glClearDepth(val);
+}
+
+void TGLKernel::MatrixModeGL(EG3D2GLmode mode)const
+{
+    glMatrixMode(GLCommand[mode]);
+    glLoadIdentity();
+}
+
+void TGLKernel::FrustumGL(
+			 Double_t xmin, Double_t xmax, Double_t ymin, 
+			 Double_t ymax, Double_t znear, Double_t zfar
+			)const
+{
+    glFrustum(xmin, xmax, ymin, ymax, znear, zfar);
+}
+
+void TGLKernel::GLLight(EG3D2GLmode name, const Float_t * lig_mat)const
+{
+    glLightfv(GLCommand[name], GL_POSITION, lig_mat);
+}
+
+void TGLKernel::LightModel(EG3D2GLmode name, const Float_t * lig_mat)const
+{
+    glLightModelfv(GLCommand[name], lig_mat);
+}
+
+void TGLKernel::LightModel(EG3D2GLmode name, Int_t prop)const
+{
+    glLightModeli(GLCommand[name], prop);
+}
+
+void TGLKernel::CullFaceGL(EG3D2GLmode face)const
+{
+    glCullFace(GLCommand[face]);
+}
+
+void TGLKernel::ViewportGL(Int_t x, Int_t y, Int_t w, Int_t h)const
+{
+    glViewport(x, y, w, h);
+}
+
+void TGLKernel::MaterialGL(EG3D2GLmode face, const Float_t * mat_prop)const
+{
+    glMaterialfv(GLCommand[face], GL_SPECULAR, mat_prop);
+    glMaterialfv(GLCommand[face], GL_DIFFUSE, mat_prop);
+}
+
+void TGLKernel::MaterialGL(EG3D2GLmode face, Float_t mat_prop)const
+{
+    glMaterialf(GLCommand[face], GL_SHININESS, mat_prop);
+}
+
+void TGLKernel::BeginGL()const
+{
+    glBegin(GL_POLYGON);
+}
+
+void TGLKernel::EndGL()const
+{
+    glEnd();
+}
+
+void TGLKernel::SetGLVertex(const Double_t * vert)const
+{
+    glVertex3dv(vert);
+}
+
+void TGLKernel::SetGLNormal(const Double_t * normal)const
+{
+    glNormal3dv(normal);
+}
+
+//tesselators
+GLUtesselator * TGLKernel::GLUNewTess()const
+{
+    return gluNewTess();
+}
+
+void TGLKernel::GLUDeleteTess(GLUtesselator * t_obj)const
+{
+    gluDeleteTess(t_obj);
+}
+
+void TGLKernel::GLUTessCallback(GLUtesselator * t_obj)const
+{
+//here some troubles with cl are possible :(((
+    gluTessCallback(t_obj, GLU_BEGIN, reinterpret_cast<void(*)()>(glBegin));
+    gluTessCallback(t_obj, GLU_END, glEnd);
+    gluTessCallback(t_obj, GLU_VERTEX, reinterpret_cast<void (*)()>(glVertex3dv));
+}
+
+void TGLKernel::GLUNextContour(GLUtesselator * t_obj)const
+{
+    gluNextContour(t_obj, GLU_UNKNOWN);
+}
+
+void TGLKernel::GLUBeginPolygon(GLUtesselator * t_obj)const
+{
+    gluBeginPolygon(t_obj);
+}
+
+void TGLKernel::GLUEndPolygon(GLUtesselator * t_obj)const
+{
+    gluEndPolygon(t_obj);
+}
+
+void TGLKernel::GLUTessVertex(GLUtesselator * t_obj, const Double_t * vert)const
+{
+    gluTessVertex(t_obj, const_cast<Double_t *>(vert), const_cast<Double_t *>(vert));
+}
+
+void TGLKernel::NewMVGL()const
+{
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
+void TGLKernel::NewPRGL()const
+{
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+}
+
+//[/tpochep]
 
 #if 0
 The gluProject() function maps object coordinates to window coordinates.

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.5 2004/04/22 14:29:30 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.6 2004/06/25 11:59:56 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -52,6 +52,8 @@
 #include "TGeoPolygon.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoXtru.h"
+#include "TVirtualPad.h"
+#include "TBuffer3D.h"
 
 ClassImp(TGeoXtru)
 
@@ -648,10 +650,95 @@ void *TGeoXtru::Make3DBuffer(const TGeoVolume *vol) const
 //_____________________________________________________________________________
 void TGeoXtru::Paint(Option_t *option)
 {
-// paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->PaintXtru(this, option);
+   // Paint this shape according to option
+
+   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
+   Int_t nz = GetNz();
+   Int_t nvert = GetNvert();
+   Int_t NbPnts = nz*nvert;
+   Int_t NbSegs = nvert*(2*nz-1);
+   Int_t NbPols = nvert*(nz-1)+2;
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs,
+                                            6*(NbPols-2)+2*(2+nvert));
+   if (!buff) return;
+
+   buff->fType = TBuffer3D::kXTRU;
+   buff->fId   = this;
+
+   // Fill gPad->fBuffer3D. Points coordinates are in Master space
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+   // In case of option "size" it is not necessary to fill the buffer
+   if (strstr(option,"size")) {
+      buff->Paint(option);
+      return;
+   }
+
+   SetPoints(buff->fPnts);
+
+   TransformPoints(buff);
+
+   // Basic colors: 0, 1, ... 7
+   Int_t c = ((gGeoManager->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;
+   if (c < 0) c = 0;
+
+   Int_t i,j;
+   Int_t indx, indx2, k;
+   indx = indx2 = 0;
+   for (i=0; i<nz; i++) {
+      // loop Z planes
+      indx2 = i*nvert;
+      // loop polygon segments
+      for (j=0; j<nvert; j++) {
+         k = (j+1)%nvert;
+         buff->fSegs[indx++] = c;
+         buff->fSegs[indx++] = indx2+j;
+         buff->fSegs[indx++] = indx2+k;
+      }
+   } // total: nz*nvert polygon segments
+   for (i=0; i<nz-1; i++) {
+      // loop Z planes
+      indx2 = i*nvert;
+      // loop polygon segments
+      for (j=0; j<nvert; j++) {
+         k = j + nvert;
+         buff->fSegs[indx++] = c;
+         buff->fSegs[indx++] = indx2+j;
+         buff->fSegs[indx++] = indx2+k;
+      }
+   } // total (nz-1)*nvert lateral segments
+
+   indx = 0;
+
+   // fill lateral polygons
+   for (i=0; i<nz-1; i++) {
+      indx2 = i*nvert;
+      for (j=0; j<nvert; j++) {
+      k = (j+1)%nvert;
+      buff->fPols[indx++] = c+j%3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = indx2+j;
+      buff->fPols[indx++] = nz*nvert+indx2+k;
+      buff->fPols[indx++] = indx2+nvert+j;
+      buff->fPols[indx++] = nz*nvert+indx2+j;
+      }
+   } // total (nz-1)*nvert polys
+   buff->fPols[indx++] = c+2;
+   buff->fPols[indx++] = nvert;
+   indx2 = 0;
+   for (j=0; j<nvert; j++) {
+      buff->fPols[indx++] = indx2+j;
+   }
+   buff->fPols[indx++] = c;
+   buff->fPols[indx++] = nvert;
+   indx2 = (nz-1)*nvert;
+   for (j=0; j<nvert; j++) {
+      buff->fPols[indx++] = indx2+j;
+   }
+
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
 }
 
 //_____________________________________________________________________________
@@ -862,13 +949,13 @@ Int_t TGeoXtru::GetNmeshVertices() const
 //_____________________________________________________________________________
 void TGeoXtru::Sizeof3D() const
 {
-// fill size of this 3-D object
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-
-   Int_t numPoints = fNz*fNvert;
-   Int_t numSegs   = fNvert*(2*fNz-1);
-   Int_t numPolys  = fNvert*(fNz-1)+2;
-   painter->AddSize3D(numPoints, numSegs, numPolys);
+///// fill size of this 3-D object
+///   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+///   if (!painter) return;
+///
+///   Int_t numPoints = fNz*fNvert;
+///   Int_t numSegs   = fNvert*(2*fNz-1);
+///   Int_t numPolys  = fNvert*(fNz-1)+2;
+///   painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.24 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.25 2004/06/25 11:59:56 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -30,8 +30,10 @@
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
-
 #include "TGeoSphere.h"
+#include "TVirtualPad.h"
+#include "TBuffer3D.h"
+
 
 ClassImp(TGeoSphere)
    
@@ -783,10 +785,211 @@ void TGeoSphere::InspectShape() const
 //_____________________________________________________________________________
 void TGeoSphere::Paint(Option_t *option)
 {
-// paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->PaintSphere(this, option);
+   // Paint this shape according to option
+
+   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
+   Int_t i, j, n = 20;  
+   if (gGeoManager) SetNumberOfDivisions(gGeoManager->GetNsegments());
+   n = GetNumberOfDivisions()+1;
+   Double_t ph1 = GetPhi1();
+   Double_t ph2 = GetPhi2();
+   Int_t nz     = GetNz()+1;
+   if (nz < 2) return;
+   Int_t NbPnts = 2*n*nz;
+   if (NbPnts <= 0) return;
+
+   Bool_t specialCase = kFALSE;
+   if (TMath::Abs(TMath::Sin(2*(ph2 - ph1))) <= 0.01) specialCase = kTRUE;
+
+   Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
+   Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   if (!buff) return;
+
+   buff->fType = TBuffer3D::kSPHE;
+   buff->fId   = this;
+
+   // Fill gPad->fBuffer3D. Points coordinates are in Master space
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+   // In case of option "size" it is not necessary to fill the buffer
+   if (strstr(option,"size")) {
+      buff->Paint(option);
+      return;
+   }
+
+   SetPoints(buff->fPnts);
+
+   TransformPoints(buff);
+
+   // Basic colors: 0, 1, ... 7
+   Int_t c = ((gGeoManager->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;
+   if (c < 0) c = 0;
+
+   Int_t indx, indx2, k;
+   indx = indx2 = 0;
+
+   //inside & outside spheres, number of segments: 2*nz*(n-1)
+   //             special case number of segments: 2*nz*n
+   for (i = 0; i < nz*2; i++) {
+      indx2 = i*n;
+      for (j = 1; j < n; j++) {
+         buff->fSegs[indx++] = c;
+         buff->fSegs[indx++] = indx2+j-1;
+         buff->fSegs[indx++] = indx2+j;
+      }
+      if (specialCase) {
+         buff->fSegs[indx++] = c;
+         buff->fSegs[indx++] = indx2+j-1;
+         buff->fSegs[indx++] = indx2;
+      }
+   }
+
+   //bottom & top lines, number of segments: 2*n
+   for (i = 0; i < 2; i++) {
+      indx2 = i*(nz-1)*2*n;
+      for (j = 0; j < n; j++) {
+         buff->fSegs[indx++] = c;
+         buff->fSegs[indx++] = indx2+j;
+         buff->fSegs[indx++] = indx2+n+j;
+      }
+   }
+
+   //inside & outside spheres, number of segments: 2*(nz-1)*n
+   for (i = 0; i < (nz-1); i++) {
+      //inside sphere
+      indx2 = i*n*2;
+      for (j = 0; j < n; j++) {
+         buff->fSegs[indx++] = c+2;
+         buff->fSegs[indx++] = indx2+j;
+         buff->fSegs[indx++] = indx2+n*2+j;
+      }
+      //outside sphere
+      indx2 = i*n*2+n;
+      for (j = 0; j < n; j++) {
+         buff->fSegs[indx++] = c+3;
+         buff->fSegs[indx++] = indx2+j;
+         buff->fSegs[indx++] = indx2+n*2+j;
+      }
+   }
+
+   //left & right sections, number of segments: 2*(nz-2)
+   //          special case number of segments: 0
+   if (!specialCase) {
+      for (i = 1; i < (nz-1); i++) {
+         for (j = 0; j < 2; j++) {
+            buff->fSegs[indx++] = c;
+            buff->fSegs[indx++] =  2*i    * n + j*(n-1);
+            buff->fSegs[indx++] = (2*i+1) * n + j*(n-1);
+         }
+      }
+   }
+
+   Int_t m = n - 1 + (specialCase == kTRUE);
+   indx = 0;
+
+   //bottom & top, number of polygons: 2*(n-1)
+   // special case number of polygons: 2*n
+   i = 0;
+   for (j = 0; j < n-1; j++) {
+      buff->fPols[indx++] = c+3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = i*(nz*2-2)*m+j;
+      buff->fPols[indx++] = 2*nz*m+i*n+j+1;
+      buff->fPols[indx++] = i*(nz*2-2)*m+m+j;
+      buff->fPols[indx++] = 2*nz*m+i*n+j;
+   }
+   if (specialCase) {
+      buff->fPols[indx++] = c+3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = i*(nz*2-2)*m+j;
+      buff->fPols[indx++] = 2*nz*m+i*n;
+      buff->fPols[indx++] = i*(nz*2-2)*m+m+j;
+      buff->fPols[indx++] = 2*nz*m+i*n+j;
+   }
+   i = 1;
+   for (j = 0; j < n-1; j++) {
+      buff->fPols[indx++] = c+3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = 2*nz*m+i*n+j;
+      buff->fPols[indx++] = i*(nz*2-2)*m+m+j;
+      buff->fPols[indx++] = 2*nz*m+i*n+j+1;
+      buff->fPols[indx++] = i*(nz*2-2)*m+j;
+   }
+   if (specialCase) {
+      buff->fPols[indx++] = c+3;
+      buff->fPols[indx++] = 4;
+      buff->fPols[indx++] = 2*nz*m+i*n+j;
+      buff->fPols[indx++] = i*(nz*2-2)*m+m+j;
+      buff->fPols[indx++] = 2*nz*m+i*n;
+      buff->fPols[indx++] = i*(nz*2-2)*m+j;
+   }
+
+   //inside & outside, number of polygons: (nz-1)*2*(n-1)
+   for (k = 0; k < (nz-1); k++) {
+      i = 0;
+      for (j = 0; j < n-1; j++) {
+         buff->fPols[indx++] = c+i;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = (2*k+i*1)*m+j;
+         buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
+         buff->fPols[indx++] = (2*k+i*1+2)*m+j;
+         buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
+      }
+      if (specialCase) {
+         buff->fPols[indx++] = c+i;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = (2*k+i*1)*m+j;
+         buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
+         buff->fPols[indx++] = (2*k+i*1+2)*m+j;
+         buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n;
+      }
+      i = 1;
+      for (j = 0; j < n-1; j++) {
+         buff->fPols[indx++] = c+i;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
+         buff->fPols[indx++] = (2*k+i*1+2)*m+j;
+         buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
+         buff->fPols[indx++] = (2*k+i*1)*m+j;
+      }
+      if (specialCase) {
+         buff->fPols[indx++] = c+i;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n;
+         buff->fPols[indx++] = (2*k+i*1+2)*m+j;
+         buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
+         buff->fPols[indx++] = (2*k+i*1)*m+j;
+      }
+   }
+
+   //left & right sections, number of polygons: 2*(nz-1)
+   //          special case number of polygons: 0
+   if (!specialCase) {
+      indx2 = nz*2*(n-1);
+      for (k = 0; k < (nz-1); k++) {
+         i = 0;
+         buff->fPols[indx++] = c+2;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
+         buff->fPols[indx++] = indx2+2*(k+1)*n+i*(n-1);
+         buff->fPols[indx++] = indx2+2*nz*n+2*k+i;
+         buff->fPols[indx++] = indx2+(2*k+3)*n+i*(n-1);
+         i = 1;
+         buff->fPols[indx++] = c+2;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
+         buff->fPols[indx++] = indx2+2*(k+1)*n+i*(n-1);
+         buff->fPols[indx++] = indx2+2*nz*n+2*k+i;
+         buff->fPols[indx++] = indx2+(2*k+3)*n+i*(n-1);
+      }
+      buff->fPols[indx-8] = indx2+n;
+      buff->fPols[indx-2] = indx2+2*n-1;
+   }
+
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
 }
 
 //_____________________________________________________________________________
@@ -991,20 +1194,20 @@ Int_t TGeoSphere::GetNmeshVertices() const
 //_____________________________________________________________________________
 void TGeoSphere::Sizeof3D() const
 {
-// fill size of this 3-D object
-    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-    if (!painter) return;
-    
-    Int_t n;
-    n = fNseg+1;
-    Int_t nz = fNz+1;
-    Bool_t specialCase = kFALSE;
-
-    if (TMath::Abs(TMath::Sin(2*(fPhi2 - fPhi1))) <= 0.01)  //mark this as a very special case, when
-          specialCase = kTRUE;                                  //we have to draw this PCON like a TUBE
-
-    Int_t numPoints = 2*n*nz;
-    Int_t numSegs   = 4*(nz*n-1+(specialCase == kTRUE));
-    Int_t numPolys  = 2*(nz*n-1+(specialCase == kTRUE));
-    painter->AddSize3D(numPoints, numSegs, numPolys);
+///// fill size of this 3-D object
+///    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+///    if (!painter) return;
+///    
+///    Int_t n;
+///    n = fNseg+1;
+///    Int_t nz = fNz+1;
+///    Bool_t specialCase = kFALSE;
+///
+///    if (TMath::Abs(TMath::Sin(2*(fPhi2 - fPhi1))) <= 0.01)  //mark this as a very special case, when
+///          specialCase = kTRUE;                                  //we have to draw this PCON like a TUBE
+///
+///    Int_t numPoints = 2*n*nz;
+///    Int_t numSegs   = 4*(nz*n-1+(specialCase == kTRUE));
+///    Int_t numPolys  = 2*(nz*n-1+(specialCase == kTRUE));
+///    painter->AddSize3D(numPoints, numSegs, numPolys);
 }

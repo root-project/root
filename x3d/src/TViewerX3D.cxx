@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.8 2003/01/12 12:50:46 rdm Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.9 2004/06/01 14:36:41 rdm Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,6 +32,8 @@
 #include "TGWidget.h"
 #include "TGMsgBox.h"
 #include "TVirtualX.h"
+
+#include "TBuffer3D.h"
 
 #include "HelpText.h"
 
@@ -121,6 +123,7 @@ public:
                 { return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
 };
 
+
 //______________________________________________________________________________
 TX3DContainer::TX3DContainer(TViewerX3D *c, Window_t id, const TGWindow *p)
    : TGCompositeFrame(gClient, id, p)
@@ -128,79 +131,64 @@ TX3DContainer::TX3DContainer(TViewerX3D *c, Window_t id, const TGWindow *p)
    // Create a canvas container.
 
    fViewer = c;
-
-   /* already done in x3d InitDisplay()
-   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                    kButtonPressMask | kButtonReleaseMask,
-                    kNone, kNone);
-
-   gVirtualX->SelectInput(fId, kKeyPressMask | kExposureMask | kPointerMotionMask |
-                     kStructureNotifyMask);
-   */
 }
 
+
 ClassImp(TViewerX3D)
+
+
+//______________________________________________________________________________
+TViewerX3D::TViewerX3D(TVirtualPad *pad)
+   : TVirtualViewer3D(pad) ,
+     TGMainFrame(gClient->GetRoot(), 800, 600)
+{
+   // Create ROOT X3D viewer.
+
+   fOption = "x3d";
+   fX3DWin = 0;
+   fWidth  = 800;
+   fHeight = 600;
+   fXPos   = 0;
+   fYPos   = 0;
+   fTitle  = "x3d";
+}
+
 
 //______________________________________________________________________________
 TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
                        UInt_t width, UInt_t height)
-   : TGMainFrame(gClient->GetRoot(), width, height)
+   : TVirtualViewer3D(pad) ,
+     TGMainFrame(gClient->GetRoot(), width, height)
 {
    // Create ROOT X3D viewer.
 
-   fPad = 0;
-   if (fgActive) {
-      Int_t retval;
-      new TGMsgBox(gClient->GetRoot(), gClient->GetRoot(),
-                   "X3D Viewer Warning", "Can have only one X3D viewer active",
-                   kMBIconExclamation, kMBOk, &retval);
-      return;
-   }
-
-   fPad    = pad;
    fOption = option;
    fX3DWin = 0;
-
-   CreateViewer(title);
-   if (!fX3DWin) return;
-
-   Resize(width, height);
-
-   x3d_update();
-
-   fgActive = kTRUE;
+   fWidth  = width;
+   fHeight = height;
+   fXPos   = 0;
+   fYPos   = 0;
+   fTitle  = title;
 }
+
 
 //______________________________________________________________________________
 TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
                        Int_t x, Int_t y, UInt_t width, UInt_t height)
-   : TGMainFrame(gClient->GetRoot(), width, height)
+   : TVirtualViewer3D(pad) ,
+     TGMainFrame(gClient->GetRoot(), width, height)
 {
    // Create ROOT X3D viewer.
 
-   fPad = 0;
-   if (fgActive) {
-      Int_t retval;
-      new TGMsgBox(gClient->GetRoot(), gClient->GetRoot(),
-                   "X3D Viewer", "Can have only one X3D viewer active",
-                   kMBIconExclamation, kMBOk, &retval);
-      return;
-   }
-
-   fPad    = pad;
    fOption = option;
    fX3DWin = 0;
-
-   CreateViewer(title);
-   if (!fX3DWin) return;
-
-   MoveResize(x, y, width, height);
-   SetWMPosition(x, y);
-
-   x3d_update();
-
-   fgActive = kTRUE;
+   fWidth  = width;
+   fHeight = height;
+   fXPos   = x;
+   fYPos   = y;
+   fTitle  = title;
 }
+
 
 //______________________________________________________________________________
 TViewerX3D::~TViewerX3D()
@@ -210,7 +198,7 @@ TViewerX3D::~TViewerX3D()
    if (!fPad) return;
 
    DeleteX3DWindow();
-
+   
    delete fContainer;
    delete fCanvas;
    delete fFileMenu;
@@ -220,9 +208,17 @@ TViewerX3D::~TViewerX3D()
    delete fMenuBarItemLayout;
    delete fMenuBarHelpLayout;
    delete fCanvasLayout;
-
    fgActive = kFALSE;
 }
+
+
+//______________________________________________________________________________
+void TViewerX3D::CloseWindow()
+{
+   fPad->SetViewer3D(0);
+   delete this;
+}
+
 
 //______________________________________________________________________________
 void TViewerX3D::CreateViewer(const char *name)
@@ -297,6 +293,122 @@ void TViewerX3D::CreateViewer(const char *name)
    Show();
 }
 
+
+//______________________________________________________________________________
+void TViewerX3D::CreateScene(Option_t *)
+{
+   // Open the X3D window and creates the 3D scene inside
+
+   if (fgActive) {
+      Int_t retval;
+      new TGMsgBox(gClient->GetRoot(), gClient->GetRoot(),
+                   "X3D Viewer", "Can have only one X3D viewer active",
+                   kMBIconExclamation, kMBOk, &retval);
+      return;
+   }
+   
+   CreateViewer(fTitle);
+   if (!fX3DWin) return;
+   
+   MoveResize(fXPos, fYPos, fWidth, fHeight);
+   SetWMPosition(fXPos, fYPos);
+   
+   x3d_update();
+   
+   fgActive = kTRUE;
+}
+
+
+//______________________________________________________________________________
+void TViewerX3D::UpdateScene(Option_t *option)
+{
+   TBuffer3D *buff = fPad->GetBuffer3D();
+
+   switch (buff->fOption) {
+      case TBuffer3D::kSIZE:
+         if ( buff->fType==TBuffer3D::kMARKER ) {
+            PaintPolyMarker(option);
+         } else {
+            gSize3D.numPoints += buff->fNbPnts;
+            gSize3D.numSegs   += buff->fNbSegs;
+            gSize3D.numPolys  += buff->fNbPols;
+         }
+         break;
+
+      case TBuffer3D::kX3D:
+         if ( buff->fType==TBuffer3D::kMARKER ) {
+            PaintPolyMarker(option);
+         } else {
+            X3DBuffer *X3Dbuff = new X3DBuffer;
+            X3Dbuff->numPoints = buff->fNbPnts;
+            X3Dbuff->numSegs   = buff->fNbSegs;
+            X3Dbuff->numPolys  = buff->fNbPols;
+            X3Dbuff->points    = new Float_t[3*buff->fNbPnts];
+            for (int i=0; i<3*buff->fNbPnts;i++)
+   	     X3Dbuff->points[i] = (Float_t)buff->fPnts[i];
+            X3Dbuff->segs      = buff->fSegs;
+            X3Dbuff->polys     = buff->fPols;
+            FillX3DBuffer(X3Dbuff);
+            delete [] X3Dbuff->points;
+         }
+         break;
+   }
+}
+
+
+//______________________________________________________________________________
+void TViewerX3D::PaintPolyMarker(Option_t *)
+{
+   Int_t i, j, k, n, mode;
+
+   TBuffer3D *buff = fPad->GetBuffer3D();
+
+   if (buff->fNbPnts > 10000) mode = 1;     // One line marker    '-'
+   else if (buff->fNbPnts > 3000) mode = 2; // Two lines marker   '+'
+   else mode = 3;                           // Three lines marker '*'
+
+   switch (buff->fOption) {
+      case TBuffer3D::kSIZE:
+         gSize3D.numPoints += 2*mode*buff->fNbPnts;
+         gSize3D.numSegs   += mode*buff->fNbPnts;
+         break;
+
+      case TBuffer3D::kX3D:
+         X3DBuffer *X3Dbuff = new X3DBuffer;
+         X3Dbuff->numPoints = 2*mode*buff->fNbPnts;
+         X3Dbuff->numSegs   = mode*buff->fNbPnts;
+         X3Dbuff->numPolys  = 0;
+         X3Dbuff->points    = new Float_t[3*X3Dbuff->numPoints];
+         X3Dbuff->segs      = new Int_t[3*X3Dbuff->numSegs];
+         X3Dbuff->polys     = NULL;
+
+         Double_t delta = 0.002;
+         for (i = 0; i < buff->fNbPnts; i++) {
+            for (j = 0; j < mode; j++) {
+               for (k = 0; k < 2; k++) {
+                  delta *= -1;
+                  for (n = 0; n < 3; n++) {
+                     X3Dbuff->points[mode*6*i+6*j+3*k+n] =
+                     buff->fPnts[3*i+n] * (1 + (j == n ? delta : 0));
+                  }
+               }
+            }
+         }
+
+         for ( i=0; i<X3Dbuff->numSegs; i++) {
+            X3Dbuff->segs[3*i  ] = buff->fSegs[0];
+            X3Dbuff->segs[3*i+1] = 2*i;
+            X3Dbuff->segs[3*i+2] = 2*i+1;
+         }
+
+         FillX3DBuffer(X3Dbuff);
+         delete [] X3Dbuff->points;
+         delete [] X3Dbuff->segs;
+         break;
+   }
+}
+
+
 //______________________________________________________________________________
 Int_t TViewerX3D::ExecCommand(Int_t px, Int_t py, char command)
 {
@@ -346,12 +458,13 @@ Int_t TViewerX3D::ExecCommand(Int_t px, Int_t py, char command)
    return x3d_exec_command(px,py,command);
 }
 
+
 //______________________________________________________________________________
 void TViewerX3D::GetPosition(Float_t &longitude, Float_t &latitude, Float_t &psi)
 {
-
    x3d_get_position(&longitude, &latitude, &psi);
 }
+
 
 //______________________________________________________________________________
 void TViewerX3D::InitX3DWindow()
@@ -359,7 +472,6 @@ void TViewerX3D::InitX3DWindow()
    // Setup geometry and initialize X3D.
 
    TObject *obj;
-   char x3dopt[32];
 
    TView *view = fPad->GetView();
    if (!view) {
@@ -371,17 +483,12 @@ void TViewerX3D::InitX3DWindow()
    gSize3D.numSegs   = 0;
    gSize3D.numPolys  = 0;
 
+   TBuffer3D *buff = fPad->GetBuffer3D();
+   buff->fOption = TBuffer3D::kSIZE;
    TObjLink *lnk = fPad->GetListOfPrimitives()->FirstLink();
    while (lnk) {
       obj = lnk->GetObject();
-      TAtt3D *att;
-#ifdef R__INTEL_COMPILER
-      // bug in dynamic_cast !!
-      if ((att = (TAtt3D*)obj->IsA()->DynamicCast(TAtt3D::Class(), obj)))
-#else
-      if ((att = dynamic_cast<TAtt3D*>(obj)))
-#endif
-         att->Sizeof3D();
+      if (obj->InheritsFrom(TAtt3D::Class())) obj->Paint("size");
       lnk = lnk->Next();
    }
 
@@ -395,16 +502,15 @@ void TViewerX3D::InitX3DWindow()
       return;
    }
 
+   buff->fOption = TBuffer3D::kX3D;
    lnk = fPad->GetListOfPrimitives()->FirstLink();
    while (lnk) {
       obj = lnk->GetObject();
-      if (obj->InheritsFrom(TAtt3D::Class())) {
-         strcpy(x3dopt,"x3d");
-         strcat(x3dopt,fOption.Data());
-         obj->Paint(x3dopt);
-      }
+      if (obj->InheritsFrom(TAtt3D::Class())) obj->Paint("x3d");
       lnk = lnk->Next();
    }
+
+   buff->fOption = TBuffer3D::kPAD;
 
    const Float_t kPI = Float_t (TMath::Pi());
 
@@ -418,6 +524,7 @@ void TViewerX3D::InitX3DWindow()
                                  fOption.Data(), fCanvas->GetViewPort()->GetId());
 }
 
+
 //______________________________________________________________________________
 void TViewerX3D::DeleteX3DWindow()
 {
@@ -426,13 +533,6 @@ void TViewerX3D::DeleteX3DWindow()
    x3d_terminate();
 }
 
-//______________________________________________________________________________
-void TViewerX3D::CloseWindow()
-{
-   // In case viewer is closed via WM we get here.
-
-   DeleteWindow();
-}
 
 //______________________________________________________________________________
 void TViewerX3D::Update()
@@ -441,6 +541,7 @@ void TViewerX3D::Update()
 
    x3d_update();
 }
+
 
 //______________________________________________________________________________
 Bool_t TViewerX3D::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
@@ -495,6 +596,7 @@ Bool_t TViewerX3D::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    }
    return kTRUE;
 }
+
 
 //______________________________________________________________________________
 Bool_t TViewerX3D::HandleContainerButton(Event_t *ev)

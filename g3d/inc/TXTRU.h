@@ -1,8 +1,8 @@
-//@@(#)root/g3d:$Name:  $:$Id: TXTRU.h,v 1.4 2001/10/04 16:52:47 rdm Exp $
+//@@(#)root/g3d:$Name:  $:$Id: TXTRU.h,v 1.5 2002/10/31 07:27:34 brun Exp $
 // Author: Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 ////////////////////////////////////////////////////////////////////////////
-// $Id: TXTRU.h,v 1.4 2001/10/04 16:52:47 rdm Exp $
+// $Id: TXTRU.h,v 1.5 2002/10/31 07:27:34 brun Exp $
 //
 // TXTRU
 //
@@ -51,9 +51,8 @@ class TXTRU : public TShape {
    virtual Float_t *GetX0() const {return fX0; }
    virtual Float_t *GetY0() const {return fY0; }
    virtual void     Paint(Option_t *option);
-   virtual void     PaintGLPoints(Float_t *buff);
    virtual void     Print(Option_t *option="") const;
-   virtual void     SetPoints(Float_t *buff);
+   virtual void     SetPoints(Double_t *buff);
    virtual void     Sizeof3D() const;
            void     SplitConcavePolygon(Bool_t split = kTRUE);
    virtual void     TruncateNxy(Int_t npts);

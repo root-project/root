@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.8 2002/10/31 07:27:34 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.9 2003/04/03 13:46:50 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -29,9 +29,6 @@
 #endif
 #ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
-#endif
-#ifndef ROOT_X3DBuffer
-#include "X3DBuffer.h"
 #endif
 
 class TH1;
@@ -66,18 +63,15 @@ public:
    virtual void      ls(Option_t *option="") const;
    virtual Int_t     Merge(TCollection *list);
    virtual void      Paint(Option_t *option="");
-   virtual void      PaintPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");
    virtual void      Print(Option_t *option="") const;
    virtual void      SavePrimitive(ofstream &out, Option_t *option);
    void              SetPoint(Int_t n, Double_t x, Double_t y, Double_t z); // *MENU*
    virtual void      SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");
    virtual void      SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_t *option="");
    virtual Int_t     SetNextPoint(Double_t x, Double_t y, Double_t z); // *MENU*
-   virtual void      Sizeof3D() const;
    virtual Int_t     Size() const {return fLastPoint+1;}
 
    static  void      PaintH3(TH1 *h, Option_t *option);
-   static  void      SizeofH3(TH1 *h);
 
    ClassDef(TPolyMarker3D,1)  //An array of 3-D points with the same marker
 };

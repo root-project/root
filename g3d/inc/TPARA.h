@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPARA.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPARA.h,v 1.2 2000/12/13 15:13:46 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -45,7 +45,7 @@ class TPARA : public TBRIK {
         virtual Float_t  GetAlpha() const  {return fAlpha;}
         virtual Float_t  GetTheta() const  {return fTheta;}
         virtual Float_t  GetPhi() const    {return fPhi;}
-        virtual void     SetPoints  (Float_t *buff);
+        virtual void     SetPoints  (Double_t *buff);
 
         ClassDef(TPARA,1)  //PARA shape
 };

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.h,v 1.4 2001/02/28 11:04:06 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.h,v 1.5 2003/03/21 20:57:05 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -50,8 +50,6 @@ class TSPHE : public TShape {
         Float_t faZ;      // Coeff along Oz
         
         virtual void    MakeTableOfCoSin();  // Create the table of the fSiTab; fCoTab
-        virtual void    PaintGLPoints(Float_t *vertex);
-
 
 
     public:
@@ -73,7 +71,7 @@ class TSPHE : public TShape {
         virtual void    SetAspectRatio(Float_t factor=1.0){ fAspectRatio = factor; MakeTableOfCoSin();}
         virtual void    SetEllipse(const Float_t *factors);
         virtual void    SetNumberOfDivisions (Int_t p);
-        virtual void    SetPoints  (Float_t *buff);
+        virtual void    SetPoints (Double_t *buff);
         virtual void    Sizeof3D() const;
 
         ClassDef(TSPHE,3)  //SPHE shape

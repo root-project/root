@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.47 2004/06/25 17:15:23 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.48 2004/07/13 12:46:06 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -858,10 +858,10 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      Iconify();
                      break;
                   case kViewX3D:
-                     gPad->x3d();
+                     gPad->x3d("x3d");
                      break;
                   case kViewOpenGL:
-                     gPad->x3d("OPENGL");
+                     gPad->x3d("ogl");
                      break;
 
                   // Handle Option menu items...

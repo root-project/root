@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TPARA.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -33,14 +33,10 @@ ClassImp(TPARA)
 //                  faces at -DZ and +DZ in z
 
 
-
-
 //______________________________________________________________________________
 TPARA::TPARA()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*PARA shape default constructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ==============================
-
+   // PARA shape default constructor
 }
 
 
@@ -48,54 +44,50 @@ TPARA::TPARA()
 TPARA::TPARA(const char *name, const char *title, const char *material, Float_t dx, Float_t dy, Float_t dz,
              Float_t alpha, Float_t theta, Float_t phi) : TBRIK(name, title,material, dx, dy, dz)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*PARA shape normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
+   // PARA shape normal constructor
 
-    fAlpha = alpha;
-    fTheta = theta;
-    fPhi   = phi;
+   fAlpha = alpha;
+   fTheta = theta;
+   fPhi   = phi;
 }
 
 
 //______________________________________________________________________________
 TPARA::~TPARA()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*PARA shape default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
-
+   // PARA shape default destructor
 }
 
+
 //______________________________________________________________________________
-void TPARA::SetPoints(Float_t *buff)
+void TPARA::SetPoints(Double_t *buff)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Create PARA points*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                            ==================
+   // Create PARA points
 
-    if (!buff) return;
-    Float_t dx, dy, dz, theta, phi, alpha;
-    const Float_t PI = Float_t (TMath::Pi());
+   if (!buff) return;
+   Float_t dx, dy, dz, theta, phi, alpha;
+   const Float_t PI = Float_t (TMath::Pi());
 
-    alpha = fAlpha * PI/180.0;
-    theta = fTheta * PI/180.0;
-    phi   = fPhi   * PI/180.0;
+   alpha = fAlpha * PI/180.0;
+   theta = fTheta * PI/180.0;
+   phi   = fPhi   * PI/180.0;
 
-    dx = TBRIK::fDx;
-    dy = TBRIK::fDy;
-    dz = TBRIK::fDz;
-//    Parallelepiped change angles to tangents (by Pavel Nevski 12/04/99)
-      Float_t TXY,TTH,TXZ,TYZ;
+   dx = TBRIK::fDx;
+   dy = TBRIK::fDy;
+   dz = TBRIK::fDz;
 
-      TXY = TMath::Tan(alpha);
-      TTH = TMath::Tan(theta);
-      TXZ = TTH*TMath::Cos(phi);
-      TYZ = TTH*TMath::Sin(phi);
+   // Parallelepiped change angles to tangents (by Pavel Nevski 12/04/99)
+   Double_t TXY = TMath::Tan(alpha);
+   Double_t TTH = TMath::Tan(theta);
+   Double_t TXZ = TTH*TMath::Cos(phi);
+   Double_t TYZ = TTH*TMath::Sin(phi);
 
-      *buff++ = -dz*TXZ-TXY*dy-dx; *buff++ = -dy-dz*TYZ; *buff++ = -dz;
-      *buff++ = -dz*TXZ-TXY*dy+dx; *buff++ = -dy-dz*TYZ; *buff++ = -dz;
-      *buff++ = -dz*TXZ+TXY*dy+dx; *buff++ = +dy-dz*TYZ; *buff++ = -dz;
-      *buff++ = -dz*TXZ+TXY*dy-dx; *buff++ = +dy-dz*TYZ; *buff++ = -dz;
-      *buff++ = +dz*TXZ-TXY*dy-dx; *buff++ = -dy+dz*TYZ; *buff++ = +dz;
-      *buff++ = +dz*TXZ-TXY*dy+dx; *buff++ = -dy+dz*TYZ; *buff++ = +dz;
-      *buff++ = +dz*TXZ+TXY*dy+dx; *buff++ = +dy+dz*TYZ; *buff++ = +dz;
-      *buff++ = +dz*TXZ+TXY*dy-dx; *buff++ = +dy+dz*TYZ; *buff++ = +dz;
+   *buff++ = -dz*TXZ-TXY*dy-dx ; *buff++ = -dy-dz*TYZ ; *buff++ = -dz;
+   *buff++ = -dz*TXZ-TXY*dy+dx ; *buff++ = -dy-dz*TYZ ; *buff++ = -dz;
+   *buff++ = -dz*TXZ+TXY*dy+dx ; *buff++ = +dy-dz*TYZ ; *buff++ = -dz;
+   *buff++ = -dz*TXZ+TXY*dy-dx ; *buff++ = +dy-dz*TYZ ; *buff++ = -dz;
+   *buff++ = +dz*TXZ-TXY*dy-dx ; *buff++ = -dy+dz*TYZ ; *buff++ = +dz;
+   *buff++ = +dz*TXZ-TXY*dy+dx ; *buff++ = -dy+dz*TYZ ; *buff++ = +dz;
+   *buff++ = +dz*TXZ+TXY*dy+dx ; *buff++ = +dy+dz*TYZ ; *buff++ = +dz;
+   *buff++ = +dz*TXZ+TXY*dy-dx ; *buff++ = +dy+dz*TYZ ; *buff++ = +dz;
 }

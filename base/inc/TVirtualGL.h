@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.3 2000/09/14 07:03:43 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.4 2002/02/23 15:50:36 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -46,6 +46,7 @@ R__EXTERN TVirtualGL *gVirtualGL;
 
 #include "GLConstants.h"
 
+extern "C" struct GLUtesselator;
 
 class TVirtualGL {
 
@@ -66,6 +67,35 @@ public:
    virtual void BeginGLCmd(EG3D2GLmode mode);
    virtual void ClearColor(Int_t color);
    virtual void ClearGLColor(Float_t red, Float_t green, Float_t blue, Float_t alpha);
+   //[tpochep]
+   virtual void ClearGLDepth(Float_t val)const;
+   virtual void MatrixModeGL(EG3D2GLmode matrix)const;
+   virtual void NewMVGL()const;
+   virtual void NewPRGL()const;
+   virtual void FrustumGL(
+			  Double_t xmin, Double_t xmax, Double_t ymin, 
+			  Double_t ymax, Double_t znear, Double_t zfar
+			 )const;
+   virtual void GLLight(EG3D2GLmode name, const Float_t * lig_prop)const;
+   virtual void LightModel(EG3D2GLmode name, const Float_t * lig_prop)const;
+   virtual void LightModel(EG3D2GLmode name, Int_t prop)const;
+   virtual void CullFaceGL(EG3D2GLmode)const;
+   virtual void ViewportGL(Int_t xmin, Int_t ymin, Int_t width, Int_t height)const;
+   virtual void MaterialGL(EG3D2GLmode face, const Float_t * mat_prop)const;
+   virtual void MaterialGL(EG3D2GLmode face, Float_t mat_prop)const;
+   virtual void BeginGL()const;
+   virtual void EndGL()const;
+   virtual void SetGLVertex(const Double_t * vert)const;
+   virtual void SetGLNormal(const Double_t * norm)const;
+   //tesselator
+   virtual GLUtesselator * GLUNewTess()const;
+   virtual void GLUDeleteTess(GLUtesselator *)const;
+   virtual void GLUTessCallback(GLUtesselator *)const;
+   virtual void GLUNextContour(GLUtesselator *)const;
+   virtual void GLUBeginPolygon(GLUtesselator *)const;
+   virtual void GLUEndPolygon(GLUtesselator *)const;
+   virtual void GLUTessVertex(GLUtesselator *, const Double_t *)const;
+   //[/tpochep]
    virtual void ClearGL(UInt_t bufbits );
    virtual Int_t CreateGLLists(Int_t range);
    virtual TGLViewerImp *CreateGLViewerImp(TPadOpenGLView *c, const char *title, UInt_t width, UInt_t height);
@@ -161,5 +191,29 @@ inline void TVirtualGL::PaintBrik(Float_t [24]) { }
 inline void TVirtualGL::PaintXtru(Float_t *, Int_t, Int_t) { }
 inline void TVirtualGL::SetLineAttr(Color_t, Int_t) { }
 inline void TVirtualGL::UpdateMatrix(Double_t *, Double_t *, Bool_t) { }
-
+//[tpochep]
+inline void TVirtualGL::ClearGLDepth(Float_t)const{}
+inline void TVirtualGL::MatrixModeGL(EG3D2GLmode)const{}
+inline void TVirtualGL::NewMVGL()const{}
+inline void TVirtualGL::NewPRGL()const{}
+inline void TVirtualGL::FrustumGL(Double_t, Double_t, Double_t, Double_t, Double_t, Double_t)const{}
+inline void TVirtualGL::GLLight(EG3D2GLmode, const Float_t *)const{}
+inline void TVirtualGL::LightModel(EG3D2GLmode, const Float_t *)const{}
+inline void TVirtualGL::LightModel(EG3D2GLmode, Int_t)const{}
+inline void TVirtualGL::CullFaceGL(EG3D2GLmode)const{}
+inline void TVirtualGL::ViewportGL(Int_t, Int_t, Int_t, Int_t)const{}
+inline void TVirtualGL::MaterialGL(EG3D2GLmode, const Float_t *)const{}
+inline void TVirtualGL::MaterialGL(EG3D2GLmode, Float_t)const{}
+inline void TVirtualGL::BeginGL()const{}
+inline void TVirtualGL::EndGL()const{}
+inline void TVirtualGL::SetGLVertex(const Double_t *)const{}
+inline void TVirtualGL::SetGLNormal(const Double_t *)const{}
+inline GLUtesselator * TVirtualGL::GLUNewTess()const{return 0;}
+inline void TVirtualGL::GLUDeleteTess(GLUtesselator *)const{}
+inline void TVirtualGL::GLUTessCallback(GLUtesselator *)const{}
+inline void TVirtualGL::GLUNextContour(GLUtesselator *)const{}
+inline void TVirtualGL::GLUBeginPolygon(GLUtesselator *)const{}
+inline void TVirtualGL::GLUEndPolygon(GLUtesselator *)const{}
+inline void TVirtualGL::GLUTessVertex(GLUtesselator *, const Double_t *)const{}
+//[/tpochep]
 #endif

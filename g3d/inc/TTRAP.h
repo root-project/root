@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTRAP.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTRAP.h,v 1.2 2000/12/13 15:13:47 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -59,7 +59,7 @@ class TTRAP : public TBRIK {
         virtual Float_t  GetBl2() const    {return fBl2;}
         virtual Float_t  GetTl2() const    {return fTl2;}
         virtual Float_t  GetAlpha2() const {return fAlpha2;}
-        virtual void     SetPoints(Float_t *buff);
+        virtual void     SetPoints(Double_t *buff);
 
         ClassDef(TTRAP,1)  //TRAP shape
 };

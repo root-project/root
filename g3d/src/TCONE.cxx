@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCONE.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TCONE.cxx,v 1.2 2002/11/11 11:21:16 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -28,17 +28,10 @@ ClassImp(TCONE)
 //     - rmax2      outside radius at +DZ in z
 
 
-
-
-
-
 //______________________________________________________________________________
 TCONE::TCONE()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*CONE shape default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ==============================
-
-
+   // CONE shape default constructor
 }
 
 
@@ -48,11 +41,10 @@ TCONE::TCONE(const char *name, const char *title, const char *material, Float_t 
              Float_t rmin2, Float_t rmax2)
       : TTUBE(name, title,material,rmin1,rmax1,dz)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*CONE shape normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
+   // CONE shape normal constructor
 
-    fRmin2 = rmin2;
-    fRmax2 = rmax2;
+   fRmin2 = rmin2;
+   fRmax2 = rmax2;
 }
 
 
@@ -60,64 +52,55 @@ TCONE::TCONE(const char *name, const char *title, const char *material, Float_t 
 TCONE::TCONE(const char *name, const char *title, const char *material, Float_t dz, Float_t rmax1
             , Float_t rmax2) : TTUBE(name, title,material,0,rmax1,dz)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*CONE shape "simplified" constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ==================================
+   // CONE shape "simplified" constructor
 
-    fRmin2 = 0;
-    fRmax2 = rmax2;
+   fRmin2 = 0;
+   fRmax2 = rmax2;
 }
 //______________________________________________________________________________
 TCONE::~TCONE()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*CONE shape default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
-
+   // CONE shape default destructor
 }
 
 //______________________________________________________________________________
-void TCONE::SetPoints(Float_t *buff)
+void TCONE::SetPoints(Double_t *buff)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Create CONE points*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                            ==================
+   // Create CONE points
 
-    Float_t rmin1, rmax1, dz;
-    Int_t j, n;
+   Double_t rmin1, rmax1, dz;
+   Int_t j, n;
 
-    n = GetNumberOfDivisions();
+   n = GetNumberOfDivisions();
 
-    rmin1 = TTUBE::fRmin;
-    rmax1 = TTUBE::fRmax;
-    dz    = TTUBE::fDz;
+   rmin1 = TTUBE::fRmin;
+   rmax1 = TTUBE::fRmax;
+   dz    = TTUBE::fDz;
 
-    Int_t indx = 0;
+   Int_t indx = 0;
 
-//*-* We've to checxk whether the table does exist and create it
-//*-* since fCoTab/fSiTab are not saved with any TShape::Streamer function
-    if (!fCoTab)   MakeTableOfCoSin();
+   if (!fCoTab) MakeTableOfCoSin();
 
-    if (buff) {
-        for (j = 0; j < n; j++) {
-            buff[indx++] = rmin1 * fCoTab[j];
-            buff[indx++] = rmin1 * fSiTab[j];
-            buff[indx++] = -dz;
-        }
-        for (j = 0; j < n; j++) {
-
-            buff[indx++] = rmax1 * fCoTab[j];
-            buff[indx++] = rmax1 * fSiTab[j];
-            buff[indx++] = -dz;
-        }
-
-        for (j = 0; j < n; j++) {
-            buff[indx++] = fRmin2 * fCoTab[j];
-            buff[indx++] = fRmin2 * fSiTab[j];
-            buff[indx++] = dz;
-        }
-
-        for (j = 0; j < n; j++) {
-            buff[indx++] = fRmax2 * fCoTab[j];
-            buff[indx++] = fRmax2 * fSiTab[j];
-            buff[indx++] = dz;
-        }
-    }
+   if (buff) {
+      for (j = 0; j < n; j++) {
+         buff[indx++] = rmin1 * fCoTab[j];
+         buff[indx++] = rmin1 * fSiTab[j];
+         buff[indx++] = -dz;
+      }
+      for (j = 0; j < n; j++) {
+         buff[indx++] = rmax1 * fCoTab[j];
+         buff[indx++] = rmax1 * fSiTab[j];
+         buff[indx++] = -dz;
+      }
+      for (j = 0; j < n; j++) {
+         buff[indx++] = fRmin2 * fCoTab[j];
+         buff[indx++] = fRmin2 * fSiTab[j];
+         buff[indx++] = dz;
+      }
+      for (j = 0; j < n; j++) {
+         buff[indx++] = fRmax2 * fCoTab[j];
+         buff[indx++] = fRmax2 * fSiTab[j];
+         buff[indx++] = dz;
+      }
+   }
 }

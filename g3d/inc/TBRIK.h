@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TBRIK.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TBRIK.h,v 1.2 2000/12/13 15:13:46 brun Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -42,8 +42,7 @@ class TBRIK : public TShape {
         Float_t         GetDy() const {return fDy;}
         Float_t         GetDz() const {return fDz;}
         virtual void    Paint(Option_t *option);
-        virtual void    PaintGLPoints(Float_t *buff);
-        virtual void    SetPoints(Float_t *buff);
+        virtual void    SetPoints(Double_t *buff);
         virtual void    Sizeof3D() const;
 
         ClassDef(TBRIK,1)  //TBRIK shape

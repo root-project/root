@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.23 2004/06/04 00:39:37 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.24 2004/06/04 19:11:26 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -140,6 +140,8 @@
 #pragma link C++ class TVirtualFitter+;
 #pragma link C++ class TVirtualPad-;
 // Those are NOT going to be saved ... so no need for a +
+#pragma link C++ class TVirtualViewer3D;
+#pragma link C++ class TBuffer3D;
 #pragma link C++ class TPadView3D;
 #pragma link C++ class TVirtualGL;
 #pragma link C++ class TVirtualPS;

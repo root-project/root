@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.19 2003/04/14 20:06:01 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.20 2003/07/18 08:48:46 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 #include "TNode.h"
 #include "TBrowser.h"
 #include "X3DBuffer.h"
-#include "TPadView3D.h"
+#include "TBuffer3D.h"
 
 #if 0
 const Int_t kMAXLEVELS = 20;
@@ -312,7 +312,10 @@ void TNode::Draw(Option_t *option)
    if (!view) {
       view = new TView(1);
       view->SetAutoRange(kTRUE);
+      TBuffer3D *buff = gPad->GetBuffer3D();
+      buff->fOption = TBuffer3D::kRANGE;
       Paint("range");
+      buff->fOption = TBuffer3D::kPAD;
       view->SetAutoRange(kFALSE);
    }
 }
@@ -604,8 +607,6 @@ void TNode::Paint(Option_t *option)
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
-
    Int_t level = 0;
    if (gGeometry) level = gGeometry->GeomLevel();
 // restrict the levels for "range" option
@@ -613,8 +614,6 @@ void TNode::Paint(Option_t *option)
 //*-*- Update translation vector and rotation matrix for new level
    if (level) {
       gGeometry->UpdateTempMatrix(fX,fY,fZ,fMatrix->GetMatrix(),fMatrix->IsReflection());
-      if (view3D)
-          view3D->UpdateNodeMatrix(this,option);
    }
 
 //*-*- Paint Referenced shape
@@ -636,8 +635,6 @@ void TNode::Paint(Option_t *option)
       fShape->SetLineWidth(GetLineWidth());
       fShape->SetFillColor(GetFillColor());
       fShape->SetFillStyle(GetFillStyle());
-      if (view3D)
-          view3D->SetAttNode(this,option);
       fShape->Paint(option);
    }
    if ( TestBit(kSonsInvisible) ) return;
@@ -650,13 +647,8 @@ void TNode::Paint(Option_t *option)
    TObject *obj;
    TIter  next(fNodes);
    while ((obj = next())) {
-      if (view3D)
-          view3D->PushMatrix();
-
       node = (TNode*)obj;
       node->Paint(option);
-      if (view3D)
-          view3D->PopMatrix();
    }
    gGeometry->PopLevel();
 }

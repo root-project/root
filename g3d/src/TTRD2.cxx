@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TTRD2.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   13/09/95
 
 /*************************************************************************
@@ -29,15 +29,10 @@ ClassImp(TTRD2)
 //     - dz         half-length along the z-axis
 
 
-
-
 //______________________________________________________________________________
 TTRD2::TTRD2()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*TRD2 shape default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ==============================
-
-
+  // TRD2 shape default constructor
 }
 
 
@@ -45,45 +40,41 @@ TTRD2::TTRD2()
 TTRD2::TTRD2(const char *name, const char *title, const char *material, Float_t dx1, Float_t dx2, Float_t dy1,
        Float_t dy2, Float_t dz) : TBRIK(name, title,material,dx1,dy1,dz)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*TRD2 shape normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
+   // TRD2 shape normal constructor
 
-    fDx2 = dx2;
-    fDy2 = dy2;
+   fDx2 = dx2;
+   fDy2 = dy2;
 }
 
 
 //______________________________________________________________________________
 TTRD2::~TTRD2()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*TRD2 shape default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
-
-
+   // TRD2 shape default destructor
 }
 
+
 //______________________________________________________________________________
-void TTRD2::SetPoints(Float_t *buff)
+void TTRD2::SetPoints(Double_t *buff)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Create TRD2 points*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                          ==================
+   // Create TRD2 points
 
-    Float_t dx1, dx2, dy1, dy2, dz;
+   Float_t dx1, dx2, dy1, dy2, dz;
 
-    dx1 = TBRIK::fDx;
-    dx2 = fDx2;
-    dy1 = TBRIK::fDy;
-    dy2 = fDy2;
-    dz  = TBRIK::fDz;
+   dx1 = TBRIK::fDx;
+   dx2 = fDx2;
+   dy1 = TBRIK::fDy;
+   dy2 = fDy2;
+   dz  = TBRIK::fDz;
 
-    if (buff) {
-        buff[ 0] = -dx1;  buff[ 1] = -dy1;  buff[ 2] = -dz;
-        buff[ 3] =  dx1;  buff[ 4] = -dy1;  buff[ 5] = -dz;
-        buff[ 6] =  dx1;  buff[ 7] =  dy1;  buff[ 8] = -dz;
-        buff[ 9] = -dx1;  buff[10] =  dy1;  buff[11] = -dz;
-        buff[12] = -dx2;  buff[13] = -dy2;  buff[14] =  dz;
-        buff[15] =  dx2;  buff[16] = -dy2;  buff[17] =  dz;
-        buff[18] =  dx2;  buff[19] =  dy2;  buff[20] =  dz;
-        buff[21] = -dx2;  buff[22] =  dy2;  buff[23] =  dz;
-    }
+   if (buff) {
+      buff[ 0] = -dx1 ; buff[ 1] = -dy1 ; buff[ 2] = -dz;
+      buff[ 3] =  dx1 ; buff[ 4] = -dy1 ; buff[ 5] = -dz;
+      buff[ 6] =  dx1 ; buff[ 7] =  dy1 ; buff[ 8] = -dz;
+      buff[ 9] = -dx1 ; buff[10] =  dy1 ; buff[11] = -dz;
+      buff[12] = -dx2 ; buff[13] = -dy2 ; buff[14] =  dz;
+      buff[15] =  dx2 ; buff[16] = -dy2 ; buff[17] =  dz;
+      buff[18] =  dx2 ; buff[19] =  dy2 ; buff[20] =  dz;
+      buff[21] = -dx2 ; buff[22] =  dy2 ; buff[23] =  dz;
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.15 2003/07/02 20:04:00 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.16 2003/07/07 16:14:37 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -13,11 +13,9 @@
 #include "TROOT.h"
 #include "TPolyLine3D.h"
 #include "TVirtualPad.h"
-#include "TVirtualGL.h"
-#include "TVirtualX.h"
-#include "TPoint.h"
 #include "TView.h"
-#include "TPadView3D.h"
+#include "TBuffer3D.h"
+#include "TGeometry.h"
 
 ClassImp(TPolyLine3D)
 
@@ -68,8 +66,6 @@ ClassImp(TPolyLine3D)
 //      }
 //      l->Draw();
 //   }
-
-
 
 
 //______________________________________________________________________________
@@ -441,86 +437,56 @@ Int_t TPolyLine3D::Merge(TCollection *list)
 void TPolyLine3D::Paint(Option_t *option)
 {
    // Paint this 3-D polyline with its current attributes.
-   // Option could be 'x3d', and it means that output
-   // will be performed by X3D package.
 
-   // Check whether there is some 3D view class for this TPad
-   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
-   if (view3D) view3D->PaintPolyLine(this,option);
+   Int_t i;
+   Int_t NbPnts = Size();
+   Int_t NbSegs = NbPnts-1;
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 0);
+   if (!buff) return;
 
-   // Check if option is 'x3d'.      NOTE: This is a simple checking
-   //                                      but since there is no other
-   //                                      options yet, this works fine.
-   Int_t size =Size();
-   if ((*option != 'x') && (*option != 'X')) {
-      PaintPolyLine(size, fP, option);
-   } else {
-      X3DBuffer *buff = new X3DBuffer;
-      if (buff) {
-         buff->numPoints = size;
-         buff->numSegs   = size-1;
-         buff->numPolys  = 0;        //NOTE: Because of different structure, our
-         buff->polys     = NULL;     //      TPolyLine3D can't use polygons
-         buff->points    = fP;
-      }
+   buff->fType = TBuffer3D::kLINE;
+   buff->fId   = this;
 
-      Int_t c = ((GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 8
-      if (c < 0) c = 0;
-
-      // Allocate memory for segments *-*
-      buff->segs = new Int_t[buff->numSegs*3];
-      if (buff->segs) {
-         for (Int_t i = 0; i < buff->numSegs; i++) {
-             buff->segs[3*i  ] = c;
-             buff->segs[3*i+1] = i;
-             buff->segs[3*i+2] = i+1;
-         }
-      }
-
-      if (buff && buff->points && buff->segs) //If everything seems to be OK ...
-         FillX3DBuffer(buff);
-      else {                            // ... something very bad was happened
-         gSize3D.numPoints -= buff->numPoints;
-         gSize3D.numSegs   -= buff->numSegs;
-         gSize3D.numPolys  -= buff->numPolys;
-      }
-
-      if (buff->segs)     delete [] buff->segs;
-      if (buff->polys)    delete [] buff->polys;
-      if (buff)           delete    buff;
+   // Fill gPad->fBuffer3D. Points coordinates are in Master space
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = 0;
+   // In case of option "size" it is not necessary to fill the buffer
+   if (buff->fOption == TBuffer3D::kSIZE) {
+      buff->Paint(option);
+      return;
    }
-}
 
-//______________________________________________________________________________
-void TPolyLine3D::PaintPolyLine(Int_t n, Float_t *p, Option_t *)
-{
-   // Draw this 3-D polyline with new coordinates from p. Does not change
-   // original polyline. Should be static method.
+   for (i=0; i<3*NbPnts; i++) buff->fPnts[i] = (Double_t)fP[i];
 
-   if (n < 2) return;
+   // Basic colors: 0, 1, ... 8
+   Int_t c = ((GetLineColor() % 8) - 1) * 4;
+   if (c < 0) c = 0;
 
-   TAttLine::Modify();  //Change line attributes only if necessary
-
-   // Loop on each individual line
-   for (Int_t i=1;i<n;i++) {
-      gPad->PaintLine3D(&p[3*i-3], &p[3*i]);
+   // Allocate memory for segments *-*
+   for (i = 0; i < NbSegs; i++) {
+       buff->fSegs[3*i  ] = c;
+       buff->fSegs[3*i+1] = i;
+       buff->fSegs[3*i+2] = i+1;
    }
-}
 
-//______________________________________________________________________________
-void TPolyLine3D::PaintPolyLine(Int_t n, Double_t *p, Option_t *)
-{
-   // Draw this 3-D polyline with new coordinates from p. Does not change
-   // original polyline. Should be static method.
-
-   if (n < 2) return;
-
-   TAttLine::Modify();  //Change line attributes only if necessary
-
-   // Loop on each individual line
-   for (Int_t i=1;i<n;i++) {
-      gPad->PaintLine3D(&p[3*i-3], &p[3*i]);
+   if (gGeometry) {   
+      Double_t dlocal[3];
+      Double_t dmaster[3];
+      for (Int_t j=0; j<buff->fNbPnts; j++) {
+         dlocal[0] = buff->fPnts[3*j];
+         dlocal[1] = buff->fPnts[3*j+1];
+         dlocal[2] = buff->fPnts[3*j+2];
+         gGeometry->Local2Master(&dlocal[0],&dmaster[0]);
+         buff->fPnts[3*j]   = dmaster[0];
+         buff->fPnts[3*j+1] = dmaster[1];
+         buff->fPnts[3*j+2] = dmaster[2];
+      }
    }
+
+   // Paint gPad->fBuffer3D
+   TAttLine::Modify();
+   buff->Paint(option); 
 }
 
 //______________________________________________________________________________
@@ -652,16 +618,6 @@ void TPolyLine3D::SetPolyLine(Int_t n, Double_t *p, Option_t *option)
    }
    fOption = option;
    fLastPoint = fN-1;
-}
-
-//______________________________________________________________________________
-void TPolyLine3D::Sizeof3D() const
-{
-   // Return total X3D size of this 3-D polyline with its attributes.
-
-   gSize3D.numPoints += Size();
-   gSize3D.numSegs   += (Size()-1);
-   gSize3D.numPolys  += 0;
 }
 
 //_______________________________________________________________________

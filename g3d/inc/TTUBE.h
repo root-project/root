@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBE.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBE.h,v 1.2 2000/11/21 20:14:59 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -48,8 +48,6 @@ class TTUBE : public TShape {
         Double_t   *fCoTab;   //! Table of cos(fPhi1) .... cos(fPhil+fDphi1)
 
         virtual void    MakeTableOfCoSin();  // Create the table of the fSiTab; fCoTab
-        virtual void    PaintGLPoints(Float_t *vertex);
-
 
     public:
         TTUBE();
@@ -66,8 +64,8 @@ class TTUBE : public TShape {
         virtual Int_t   GetNumberOfDivisions () const {if (fNdiv) return fNdiv; else return kDivNum;}
         virtual void    Paint(Option_t *option);
         virtual void    SetNumberOfDivisions (Int_t ndiv);
-        virtual void    SetPoints(Float_t *buff);
         virtual void    SetAspectRatio(Float_t factor=1){fAspectRatio = factor;}
+	virtual void    SetPoints(Double_t *buff);
         virtual void    Sizeof3D() const;
 
         ClassDef(TTUBE,3)  //TUBE shape

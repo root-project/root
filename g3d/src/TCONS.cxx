@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TCONS.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -43,10 +43,7 @@ ClassImp(TCONS)
 //______________________________________________________________________________
 TCONS::TCONS()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*CONS shape default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ==============================
-
-
+   // CONS shape default constructor
 }
 
 
@@ -55,11 +52,10 @@ TCONS::TCONS(const char *name, const char *title, const char *material, Float_t 
              Float_t phi1, Float_t phi2)
       : TTUBS(name,title,material,rmin1,rmax1,dz,phi1,phi2)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*CONS shape normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
+   // CONS shape normal constructor
 
-    fRmin2 = rmin2;
-    fRmax2 = rmax2;
+   fRmin2 = rmin2;
+   fRmax2 = rmax2;
 }
 
 
@@ -68,63 +64,56 @@ TCONS::TCONS(const char *name, const char *title, const char *material,  Float_t
                           , Float_t phi1, Float_t phi2, Float_t rmax2)
              : TTUBS(name,title,material,rmax1,dz,phi1,phi2)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*CONS shape normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
+   // CONS shape normal constructor
 
-    fRmin2 = 0;
-    fRmax2 = rmax2;
+   fRmin2 = 0;
+   fRmax2 = rmax2;
 }
 
 //______________________________________________________________________________
 TCONS::~TCONS()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*CONS shape default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
-
+   // CONS shape default destructor
 }
 
 //______________________________________________________________________________
-void TCONS::SetPoints(Float_t *buff)
+void TCONS::SetPoints(Double_t *buff)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Create CONS points*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                            ==================
+   // Create CONS points
 
-    Int_t j, n;
-    Float_t rmin1, rmax1, dz;
+   Int_t j, n;
+   Float_t rmin1, rmax1, dz;
 
-    n = GetNumberOfDivisions()+1;
+   n = GetNumberOfDivisions()+1;
 
-    rmin1 = TTUBE::fRmin;
-    rmax1 = TTUBE::fRmax;
-    dz    = TTUBE::fDz;
+   rmin1 = TTUBE::fRmin;
+   rmax1 = TTUBE::fRmax;
+   dz    = TTUBE::fDz;
 
-    Int_t indx = 0;
+   Int_t indx = 0;
 
-//*-* We've to checxk whether the table does exist and create it
-//*-* since fCoTab/fSiTab are not saved with any TShape::Streamer function
-    if (!fCoTab)   MakeTableOfCoSin();
+   if (!fCoTab) MakeTableOfCoSin();
 
-    if (buff) {
-        for (j = 0; j < n; j++) {
-            buff[indx++] = rmin1 * fCoTab[j];
-            buff[indx++] = rmin1 * fSiTab[j];
-            buff[indx++] = -dz;
-        }
-        for (j = 0; j < n; j++) {
-            buff[indx++] = rmax1 * fCoTab[j];
-            buff[indx++] = rmax1 * fSiTab[j];
-            buff[indx++] = -dz;
-        }
-        for (j = 0; j < n; j++) {
-            buff[indx++] = fRmin2 * fCoTab[j];
-            buff[indx++] = fRmin2 * fSiTab[j];
-            buff[indx++] = dz;
-        }
-        for (j = 0; j < n; j++) {
-            buff[indx++] = fRmax2 * fCoTab[j];
-            buff[indx++] = fRmax2 * fSiTab[j];
-            buff[indx++] = dz;
-        }
-
-    }
+   if (buff) {
+      for (j = 0; j < n; j++) {
+         buff[indx++] = rmin1 * fCoTab[j];
+         buff[indx++] = rmin1 * fSiTab[j];
+         buff[indx++] = -dz;
+      }
+      for (j = 0; j < n; j++) {
+         buff[indx++] = rmax1 * fCoTab[j];
+         buff[indx++] = rmax1 * fSiTab[j];
+         buff[indx++] = -dz;
+      }
+      for (j = 0; j < n; j++) {
+         buff[indx++] = fRmin2 * fCoTab[j];
+         buff[indx++] = fRmin2 * fSiTab[j];
+         buff[indx++] = dz;
+      }
+      for (j = 0; j < n; j++) {
+         buff[indx++] = fRmax2 * fCoTab[j];
+         buff[indx++] = fRmax2 * fSiTab[j];
+         buff[indx++] = dz;
+      }
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.136 2004/07/20 09:26:13 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.137 2004/07/30 01:13:51 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "TClassTable.h"
 #include "TVirtualPS.h"
 #include "TVirtualX.h"
+#include "TVirtualViewer3D.h"
 #include "TView.h"
 #include "TPoint.h"
 #include "TGraph.h"
@@ -143,7 +144,8 @@ TPad::TPad(): TVirtualPad()
    fEditable   = kTRUE;
    fCrosshair  = 0;
    fCrosshairPos = 0;
-   fPadView3D  = 0;
+   fViewer3D   = 0;
+   fBuffer3D   = 0;
    fMother     = (TPad*)gPad;
 
    fFixedAspectRatio = kFALSE;
@@ -228,7 +230,8 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fNumber     = 0;
    fAbsCoord   = kFALSE;
    fEditable   = kTRUE;
-   fPadView3D  = 0;
+   fViewer3D   = 0;
+   fBuffer3D   = 0;
    fCrosshair  = 0;
    fCrosshairPos = 0;
 
@@ -290,10 +293,7 @@ TPad::~TPad()
    DeleteToolTip(fTip);
    SafeDelete(fPrimitives);
    SafeDelete(fExecs);
-   if (fPadView3D) {
-      fPadView3D->SetPad();
-      fPadView3D = 0;
-   }
+   if (fViewer3D) delete fViewer3D;
 }
 
 //______________________________________________________________________________
@@ -2501,12 +2501,6 @@ void TPad::Paint(Option_t *option)
 
    fPadPaint = 1;
    cd();
-//*-*   TView must be drawn here (is TView contains OpenGL context)
-
-//*-*   Start OpenGL Model if present
-   if (fPadView3D)
-       fPadView3D->PaintBeginModel(option);
-//   else
 
    PaintBorder(GetFillColor(), kTRUE);
    PaintDate();
@@ -2518,13 +2512,6 @@ void TPad::Paint(Option_t *option)
       obj = lnk->GetObject();
       obj->Paint(lnk->GetOption());
       lnk = (TObjOptLink*)lnk->Next();
-   }
-
-   if (fPadView3D) {
-//*-*   Finish 3D Model
-       fPadView3D->PaintEnd(option);
-//*-*   Start 3D scene
-       fPadView3D->PaintScene(option);
    }
 
    if (padsav) padsav->cd();
@@ -2719,12 +2706,6 @@ void TPad::PaintModified()
          gVirtualX->SetFillColor(10);
          gVirtualX->DrawBox(px1,py1,px2,py2,TVirtualX::kFilled);
       }
-      if (fPadView3D)
-#if 1
-         fPadView3D->PaintBeginModel();
-#else
-         gROOT->ProcessLine(Form("((TPadView3D *)0x%lx)->PaintBeginModel();",(Long_t)fPadView3D));
-#endif
        PaintBorder(GetFillColor(), kTRUE);
    }
 
@@ -2743,21 +2724,6 @@ void TPad::PaintModified()
          obj->Paint(lnk->GetOption());
       }
       lnk = (TObjOptLink*)lnk->Next();
-   }
-
-   if (IsModified() && fPadView3D)
-   {
-#if 1
-//*-*   Finish 3D Model
-       fPadView3D->PaintEnd();
-//*-*   Start 3D scene
-       fPadView3D->PaintScene();
-#else
-//*-*   Finish 3D Model
-       gROOT->ProcessLine(Form("((TPadView3D *)0x%lx)->PaintEnd();",(Long_t)fPadView3D));
-//*-*   Start 3D scene
-       gROOT->ProcessLine(Form("((TPadView3D *)0x%lx)->PaintScene();",(Long_t)fPadView3D));
-#endif
    }
 
    if (padsav) padsav->cd();
@@ -5050,41 +5016,31 @@ void TPad::CloseToolTip(TObject *tip)
 //______________________________________________________________________________
 void TPad::x3d(Option_t *option)
 {
-//*-*-*-*-*-*Invokes the x3d package to view the content of a pad*-*-*-*-*-*-*
-//*-*        ====================================================
+   // Invokes a 3D viewer
 
-#ifndef WIN32
-   if (!strcasecmp(option, "OPENGL"))
-#endif
-   {
-      // Disconnect the previous 3D context
-      if (fPadView3D)
-         fPadView3D->SetPad(0);
-      fPadView3D = gVirtualGL->CreatePadGLView(this);
-      if (!fPadView3D) {
-         gROOT->LoadClass("TGLKernel", "RGL");
-         fPadView3D = gVirtualGL->CreatePadGLView(this);
-         if (!fPadView3D)
-            Error("x3d", "OpenGL shared libraries not loaded");
-      }
-      if (fPadView3D) {
-          Modified();
-          Update();
-      }
-      return;
+   fViewer3D = 0;
+   fViewer3D = TVirtualViewer3D::Viewer3D(option);
+   if (fViewer3D) {
+      fViewer3D->CreateScene(option);
+   } else {
+      Error("x3d", "Cannot load 3D viewer with option: %s",option);
    }
+}
 
-#ifndef WIN32
-      TString guiBackend(gEnv->GetValue("Gui.Backend", "native"));
-      guiBackend.ToLower();
-      if (guiBackend == "native")
-         guiBackend = "x11";
+//______________________________________________________________________________
+TBuffer3D *TPad::AllocateBuffer3D(Int_t n1, Int_t n2, Int_t n3)
+{
+   if (!fBuffer3D) {
+      fBuffer3D = new TBuffer3D(n1, n2, n3);
+   } else {
+      fBuffer3D->ReAllocate(n1, n2, n3);
+   }
+   return fBuffer3D;
+}
 
-      TPluginHandler *h;
-      if ((h = gROOT->GetPluginManager()->FindHandler("TViewerX3D", guiBackend))) {
-         if (h->LoadPlugin() == -1)
-            return;
-         h->ExecPlugin(5,this,option,"X3D Viewer",800,600);
-      }
-#endif
+//______________________________________________________________________________
+TBuffer3D *TPad::GetBuffer3D()
+{
+   if (!fBuffer3D) fBuffer3D = new TBuffer3D();
+   return fBuffer3D;
 }

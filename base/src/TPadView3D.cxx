@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TPadView3D.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   30/05/97
 
 /*************************************************************************
@@ -30,7 +30,7 @@ TPadView3D::~TPadView3D()
   // Delete 3D viewer.
 
   if (fParent) {
-     fParent->ResetView3D();
+///  fParent->ResetView3D();
      SetPad();
   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TGTRA.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TGTRA.h,v 1.2 2000/12/13 15:13:46 brun Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -56,7 +56,7 @@ class TGTRA : public TBRIK {
         Float_t         GetTl2() const    {return fTl2;}
         Float_t         GetAlpha2() const {return fAlpha2;}
 
-        virtual void    SetPoints(Float_t *buff);
+        virtual void    SetPoints(Double_t *buff);
 
         ClassDef(TGTRA,1)  //GTRA shape
 };

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.9 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.10 2004/06/25 11:59:56 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -32,6 +32,9 @@
 #include "TGeoTube.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoTorus.h"
+#include "TVirtualPad.h"
+#include "TBuffer3D.h"
+
 
 ClassImp(TGeoTorus)
 
@@ -500,10 +503,196 @@ void *TGeoTorus::Make3DBuffer(const TGeoVolume *vol) const
 //_____________________________________________________________________________
 void TGeoTorus::Paint(Option_t *option)
 {
-// paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->PaintTorus(this, option);
+   // Paint this shape according to option
+
+   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
+   Int_t i, j;
+   const Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t indx, indp, startcap=0;
+   Int_t NbPnts = n*(n-1);
+   Bool_t hasrmin = (GetRmin()>0)?kTRUE:kFALSE;
+   Bool_t hasphi  = (GetDphi()<360)?kTRUE:kFALSE;
+   if (hasrmin) NbPnts *= 2;
+   else if (hasphi) NbPnts += 2;
+
+   Int_t NbSegs = (2*n-1)*(n-1);
+   Int_t NbPols = (n-1)*(n-1);
+   if (hasrmin) {
+      NbSegs += (2*n-1)*(n-1);
+      NbPols += (n-1)*(n-1);
+   }
+   if (hasphi) {
+      NbSegs += 2*(n-1);
+      NbPols += 2*(n-1);
+   }
+
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   if (!buff) return;
+
+   buff->fType = TBuffer3D::kTORUS;
+   buff->fId   = this;
+
+   // Fill gPad->fBuffer3D. Points coordinates are in Master space
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+   // In case of option "size" it is not necessary to fill the buffer
+   if (strstr(option,"size")) {
+      buff->Paint(option);
+      return;
+   }
+
+   SetPoints(buff->fPnts);
+
+   TransformPoints(buff);
+
+   // Basic colors: 0, 1, ... 7
+   Int_t c = ((gGeoManager->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;
+   if (c < 0) c = 0;
+
+   indp = n*(n-1); // start index for points on inner surface
+   memset(buff->fSegs, 0, buff->fNbSegs*3*sizeof(Int_t));
+
+   // outer surface phi circles = n*(n-1) -> [0, n*(n-1) -1]
+   // connect point j with point j+1 on same row
+   indx = 0;
+   for (i = 0; i < n; i++) { // rows [0,n-1]
+      for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
+         buff->fSegs[indx+(i*(n-1)+j)*3] = c;
+         buff->fSegs[indx+(i*(n-1)+j)*3+1] = i*(n-1)+j;   // j on row i
+         buff->fSegs[indx+(i*(n-1)+j)*3+2] = i*(n-1)+((j+1)%(n-1)); // j+1 on row i
+      }
+   }
+   indx += 3*n*(n-1);
+   // outer surface generators = (n-1)*(n-1) -> [n*(n-1), (2*n-1)*(n-1) -1]
+   // connect point j on row i with point j on row i+1
+   for (i = 0; i < n-1; i++) { // rows [0, n-2]
+      for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
+         buff->fSegs[indx+(i*(n-1)+j)*3] = c;
+         buff->fSegs[indx+(i*(n-1)+j)*3+1] = i*(n-1)+j;     // j on row i
+         buff->fSegs[indx+(i*(n-1)+j)*3+2] = (i+1)*(n-1)+j; // j on row i+1
+      }
+   }
+   indx += 3*(n-1)*(n-1);
+   startcap = (2*n-1)*(n-1);
+
+   if (hasrmin) {
+      // inner surface phi circles = n*(n-1) -> [(2*n-1)*(n-1), (3*n-1)*(n-1) -1]
+      // connect point j with point j+1 on same row
+      for (i = 0; i < n; i++) { // rows [0, n-1]
+         for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
+            buff->fSegs[indx+(i*(n-1)+j)*3] = c;              // lighter color
+            buff->fSegs[indx+(i*(n-1)+j)*3+1] = indp + i*(n-1)+j;   // j on row i
+            buff->fSegs[indx+(i*(n-1)+j)*3+2] = indp + i*(n-1)+((j+1)%(n-1)); // j+1 on row i
+         }
+      }
+      indx += 3*n*(n-1);
+      // inner surface generators = (n-1)*n -> [(3*n-1)*(n-1), (4*n-2)*(n-1) -1]
+      // connect point j on row i with point j on row i+1
+      for (i = 0; i < n-1; i++) { // rows [0, n-2]
+         for (j = 0; j < n-1; j++) {  // points on a row [0, n-2]
+            buff->fSegs[indx+(i*(n-1)+j)*3] = c;                // lighter color
+            buff->fSegs[indx+(i*(n-1)+j)*3+1] = indp + i*(n-1)+j;     // j on row i
+            buff->fSegs[indx+(i*(n-1)+j)*3+2] = indp + (i+1)*(n-1)+j; // j on row i+1
+         }
+      }
+      indx += 3*(n-1)*(n-1);
+      startcap = (4*n-2)*(n-1);
+   }
+
+   if (hasphi) {
+      if (hasrmin) {
+         // endcaps = 2*(n-1) -> [(4*n-2)*(n-1), 4*n*(n-1)-1]
+         i = 0;
+         for (j = 0; j < n-1; j++) {
+            buff->fSegs[indx+j*3] = c+1;
+            buff->fSegs[indx+j*3+1] = (n-1)*i+j;     // outer j on row 0
+            buff->fSegs[indx+j*3+2] = indp+(n-1)*i+j; // inner j on row 0
+         }
+         indx += 3*(n-1);
+         i = n-1;
+         for (j = 0; j < n-1; j++) {
+            buff->fSegs[indx+j*3] = c+1;
+            buff->fSegs[indx+j*3+1] = (n-1)*i+j;     // outer j on row n-1
+            buff->fSegs[indx+j*3+2] = indp+(n-1)*i+j; // inner j on row n-1
+         }
+         indx += 3*(n-1);
+      } else {
+         i = 0;
+         for (j = 0; j < n-1; j++) {
+            buff->fSegs[indx+j*3] = c+1;
+            buff->fSegs[indx+j*3+1] = (n-1)*i+j;     // outer j on row 0
+            buff->fSegs[indx+j*3+2] = n*(n-1);       // center of first endcap
+         }
+         indx += 3*(n-1);
+         i = n-1;
+         for (j = 0; j < n-1; j++) {
+            buff->fSegs[indx+j*3] = c+1;
+            buff->fSegs[indx+j*3+1] = (n-1)*i+j;     // outer j on row n-1
+            buff->fSegs[indx+j*3+2] = n*(n-1)+1;     // center of second endcap
+         }
+         indx += 3*(n-1);
+      }
+   }
+
+   indx = 0;
+   memset(buff->fPols, 0, buff->fNbPols*6*sizeof(Int_t));
+
+   // outer surface = (n-1)*(n-1) -> [0, (n-1)*(n-1)-1]
+   // normal pointing out
+   for (i=0; i<n-1; i++) {
+      for (j=0; j<n-1; j++) {
+         buff->fPols[indx++] = c;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = n*(n-1)+(n-1)*i+((j+1)%(n-1)); // generator j+1 on outer row i
+         buff->fPols[indx++] = (n-1)*(i+1)+j; // seg j on outer row i+1
+         buff->fPols[indx++] = n*(n-1)+(n-1)*i+j; // generator j on outer row i
+         buff->fPols[indx++] = (n-1)*i+j; // seg j on outer row i
+      }
+   }
+   if (hasrmin) {
+      indp = (2*n-1)*(n-1); // start index of inner segments
+      // inner surface = (n-1)*(n-1) -> [(n-1)*(n-1), 2*(n-1)*(n-1)-1]
+      // normal pointing out
+      for (i=0; i<n-1; i++) {
+         for (j=0; j<n-1; j++) {
+            buff->fPols[indx++] = c;
+            buff->fPols[indx++] = 4;
+            buff->fPols[indx++] = indp+n*(n-1)+(n-1)*i+j; // generator j on inner row i
+            buff->fPols[indx++] = indp+(n-1)*(i+1)+j; // seg j on inner row i+1
+            buff->fPols[indx++] = indp+n*(n-1)+(n-1)*i+((j+1)%(n-1)); // generator j+1 on inner r>
+            buff->fPols[indx++] = indp+(n-1)*i+j; // seg j on inner row i
+         }
+      }
+   }
+   if (hasphi) {
+      // endcaps = 2*(n-1) -> [2*(n-1)*(n-1), 2*n*(n-1)-1]
+      i=0; // row 0
+      Int_t np = (hasrmin)?4:3;
+      for (j=0; j<n-1; j++) {
+         buff->fPols[indx++] = c+1;
+         buff->fPols[indx++] = np;
+         buff->fPols[indx++] = (n-1)*i+j;         // seg j on outer row 0
+         buff->fPols[indx++] = startcap+((j+1)%(n-1)); // endcap j+1 on row 0
+         if (hasrmin)
+         buff->fPols[indx++] = indp+(n-1)*i+j; // seg j on inner row 0
+         buff->fPols[indx++] = startcap+j;        // endcap j on row 0
+      }
+
+      i=n-1; // row n-1
+      for (j=0; j<n-1; j++) {
+         buff->fPols[indx++] = c+1;
+         buff->fPols[indx++] = np;
+         buff->fPols[indx++] = (n-1)*i+j;         // seg j on outer row n-1
+         buff->fPols[indx++] = startcap+(n-1)+j;      // endcap j on row n-1
+         if (hasrmin)
+         buff->fPols[indx++] = indp+(n-1)*i+j; // seg j on inner row n-1
+         buff->fPols[indx++] = startcap+(n-1)+((j+1)%(n-1));    // endcap j+1 on row n-1
+      }
+   }
+
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
 }
 
 //_____________________________________________________________________________
@@ -680,28 +869,28 @@ Int_t TGeoTorus::GetNmeshVertices() const
 //_____________________________________________________________________________
 void TGeoTorus::Sizeof3D() const
 {
-// fill size of this 3-D object
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t numPoints = n*(n-1);
-   Int_t numSegs   = (2*n-1)*(n-1);
-   Int_t numPolys  = (n-1)*(n-1);
-
-   Bool_t hasrmin = (fRmin>0)?kTRUE:kFALSE;
-   Bool_t hasphi  = (fDphi<360)?kTRUE:kFALSE;
-   if (hasrmin) numPoints *= 2;
-   else if (hasphi) numPoints += 2;
-   if (hasrmin) {
-      numSegs   += (2*n-1)*(n-1);
-      numPolys  += (n-1)*(n-1);
-   }   
-   if (hasphi) {
-      numSegs   += 2*(n-1);
-      numPolys  += 2*(n-1);
-   }   
-    
-   painter->AddSize3D(numPoints, numSegs, numPolys);
+///// fill size of this 3-D object
+///   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+///   if (!painter) return;
+///   Int_t n = gGeoManager->GetNsegments()+1;
+///   Int_t numPoints = n*(n-1);
+///   Int_t numSegs   = (2*n-1)*(n-1);
+///   Int_t numPolys  = (n-1)*(n-1);
+///
+///   Bool_t hasrmin = (fRmin>0)?kTRUE:kFALSE;
+///   Bool_t hasphi  = (fDphi<360)?kTRUE:kFALSE;
+///   if (hasrmin) numPoints *= 2;
+///   else if (hasphi) numPoints += 2;
+///   if (hasrmin) {
+///      numSegs   += (2*n-1)*(n-1);
+///      numPolys  += (n-1)*(n-1);
+///   }   
+///   if (hasphi) {
+///      numSegs   += 2*(n-1);
+///      numPolys  += 2*(n-1);
+///   }   
+///    
+///   painter->AddSize3D(numPoints, numSegs, numPolys);
 }
 
 //_____________________________________________________________________________

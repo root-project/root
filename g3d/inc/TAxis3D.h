@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.6 2002/10/31 07:27:34 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TAxis3D.h,v 1.7 2003/07/10 15:35:34 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   07/01/2000
 
 /*************************************************************************
@@ -10,7 +10,7 @@
  *************************************************************************/
 #ifndef ROOT_TAxis3D
 #define ROOT_TAxis3D
-// $Id: TAxis3D.h,v 1.6 2002/10/31 07:27:34 brun Exp $
+// $Id: TAxis3D.h,v 1.7 2003/07/10 15:35:34 brun Exp $
 // ***********************************************************************
 // * C++ class library to paint axis "arround" TView object
 // * Copyright(c) 1997~1999  [BNL] Brookhaven National Laboratory, STAR, All rights reserved

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPCON.h,v 1.2 2000/11/21 20:13:28 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPCON.h,v 1.3 2000/12/13 15:13:46 brun Exp $
 // Author: Nenad Buncic   29/09/95
 
 /*************************************************************************
@@ -49,7 +49,6 @@ class TPCON : public TShape {
         
         virtual void    MakeTableOfCoSin();  // Create the table of the fSiTab; fCoTab
         virtual void    FillTableOfCoSin(Double_t phi, Double_t angstep,Int_t n); // Fill the table of cosin
-        virtual void    PaintGLPoints(Float_t *vertex);
 
     public:
         TPCON();
@@ -68,7 +67,7 @@ class TPCON : public TShape {
         virtual Int_t    GetNdiv() const  {return fNdiv;}
         virtual void     Paint(Option_t *option);
         virtual void     SetNumberOfDivisions (Int_t p);
-        virtual void     SetPoints(Float_t *buff);
+        virtual void     SetPoints(Double_t *buff);
         virtual void     Sizeof3D() const;
 
         ClassDef(TPCON,2)  //PCON shape

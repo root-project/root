@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.h,v 1.3 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.h,v 1.4 2002/10/31 07:27:34 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -68,14 +68,9 @@ public:
    virtual ~THelix();
 
    virtual void    Copy(TObject &helix) const;
-// virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
    virtual void    Draw(Option_t *option="");
-// virtual void    DrawHelix(Int_t n, Float_t *p, Option_t *option="");
-// virtual void    ExecuteEvent(Int_t event, Int_t px, Int_t py);
    Option_t       *GetOption() const {return fOption.Data();}
-// virtual void    ls(Option_t *option="") const;
    virtual void    Paint(Option_t *option="") { TPolyLine3D::Paint(option); }
-// virtual void    PaintPolyLine(Int_t n, Float_t *p, Option_t *option="");
    virtual void    Print(Option_t *option="") const;
    virtual void    SavePrimitive(ofstream &out, Option_t *option);
    virtual void    SetOption(Option_t *option="") {fOption = option;}
@@ -86,7 +81,6 @@ public:
            void    SetHelix(Double_t *xyz,  Double_t *v, Double_t w,
                             Double_t *range=0, EHelixRangeType type=kUnchanged,
                             Double_t *axis=0);
-   virtual void    Sizeof3D() const;
 
    ClassDef(THelix,2)  //A Helix drawn as a PolyLine3D
 };

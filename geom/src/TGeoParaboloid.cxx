@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.1 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.2 2004/07/10 05:10:20 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -26,6 +26,8 @@
 #include "TGeoVolume.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoParaboloid.h"
+#include "TVirtualPad.h"
+#include "TBuffer3D.h"
 
 ClassImp(TGeoParaboloid)
    
@@ -285,10 +287,102 @@ void *TGeoParaboloid::Make3DBuffer(const TGeoVolume *vol) const
 //_____________________________________________________________________________
 void TGeoParaboloid::Paint(Option_t *option)
 {
-// paint this shape according to option
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->PaintParaboloid(this, option);
+   // Paint this shape according to option
+
+   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
+   Int_t indx, i, j, n = 20;
+   if (gGeoManager) n = gGeoManager->GetNsegments();
+   Int_t NbPnts = n*(n+1)+2;
+   Int_t NbSegs = n*(2*n+3);
+   Int_t NbPols = n*(n+2);
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 2*n*5 + n*n*6);
+   if (!buff) return;
+
+   buff->fType = TBuffer3D::kPARA;
+   buff->fId   = this;
+
+   // Fill gPad->fBuffer3D. Points coordinates are in Master space
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+   // In case of option "size" it is not necessary to fill the buffer
+   if (strstr(option,"size")) {
+      buff->Paint(option);
+      return;
+   }
+
+   SetPoints(buff->fPnts);
+
+   TransformPoints(buff);
+
+   // Basic colors: 0, 1, ... 7
+   Int_t c = ((gGeoManager->GetCurrentVolume()->GetLineColor() % 8) - 1) * 4;
+   if (c < 0) c = 0;
+
+   Int_t nn1 = (n+1)*n+1;
+   indx = 0;
+   // Lower end-cap (n radial segments)
+   for (j=0; j<n; j++) {
+      buff->fSegs[indx++] = c+2;
+      buff->fSegs[indx++] = 0;
+      buff->fSegs[indx++] = j+1;
+   }
+   // Sectors (n)
+   for (i=0; i<n+1; i++) {
+      // lateral (circles) segments (n)
+      for (j=0; j<n; j++) {
+         buff->fSegs[indx++] = c;
+         buff->fSegs[indx++] = n*i+1+j;
+         buff->fSegs[indx++] = n*i+1+((j+1)%n);
+      }
+      if (i==n) break;  // skip i=n for generators
+      // generator segments (n)
+      for (j=0; j<n; j++) {
+         buff->fSegs[indx++] = c;
+         buff->fSegs[indx++] = n*i+1+j;
+         buff->fSegs[indx++] = n*(i+1)+1+j;
+      }
+   }
+   // Upper end-cap
+   for (j=0; j<n; j++) {
+      buff->fSegs[indx++] = c+1;
+      buff->fSegs[indx++] = n*n+1+j;
+      buff->fSegs[indx++] = nn1;
+   }
+
+   indx = 0;
+
+   // lower end-cap (n polygons)
+   for (j=0; j<n; j++) {
+      buff->fPols[indx++] = c+2;
+      buff->fPols[indx++] = 3;
+      buff->fPols[indx++] = n+j;
+      buff->fPols[indx++] = (j+1)%n;
+      buff->fPols[indx++] = j;
+   }
+   // Sectors (n)
+   for (i=0; i<n; i++) {
+      // lateral faces (n)
+      for (j=0; j<n; j++) {
+         buff->fPols[indx++] = c;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = (2*i+1)*n+j;
+         buff->fPols[indx++] = 2*(i+1)*n+j;
+         buff->fPols[indx++] = (2*i+3)*n+j;
+         buff->fPols[indx++] = 2*(i+1)*n+((j+1)%n);
+      }
+   }
+   // upper end-cap (n polygons)
+   for (j=0; j<n; j++) {
+      buff->fPols[indx++] = c+1;
+      buff->fPols[indx++] = 3;
+      buff->fPols[indx++] = (2*n+1)*n+j;
+      buff->fPols[indx++] = 2*n*(n+1)+((j+1)%n);
+      buff->fPols[indx++] = 2*n*(n+1)+j;
+   }
+
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
 }
 
 //_____________________________________________________________________________
@@ -441,7 +535,7 @@ void TGeoParaboloid::SetPoints(Float_t *buff) const
 //_____________________________________________________________________________
 void TGeoParaboloid::Sizeof3D() const
 {
-   Int_t n = gGeoManager->GetNsegments();
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (painter) painter->AddSize3D(n*(n+1)+2, n*(2*n+3), n*(n+2));
+///   Int_t n = gGeoManager->GetNsegments();
+///   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+///   if (painter) painter->AddSize3D(n*(n+1)+2, n*(2*n+3), n*(n+2));
 }

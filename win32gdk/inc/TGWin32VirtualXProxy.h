@@ -1,4 +1,4 @@
-// $Id: TGWin32VirtualXProxy.h,v 1.7 2004/06/14 08:01:57 brun Exp $
+// $Id: TGWin32VirtualXProxy.h,v 1.8 2004/07/27 23:02:11 rdm Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -314,7 +314,6 @@ public:
    Bool_t       CheckEvent(Window_t id, EGEventType type, Event_t &ev) { return fgRealObject->CheckEvent(id,type,ev); }
    void         SendEvent(Window_t id, Event_t *ev) { fgRealObject->SendEvent(id,ev); }
    Bool_t       IsCmdThread() const { return fgRealObject->IsCmdThread(); }
-
    static TVirtualX *RealObject();
    static TVirtualX *ProxyObject();
 };

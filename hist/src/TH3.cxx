@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.46 2004/03/18 13:12:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.47 2004/05/24 15:39:35 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1781,21 +1781,6 @@ void TH3::Reset(Option_t *option)
    fTsumwz2 = 0;
    fTsumwxz = 0;
    fTsumwyz = 0;
-}
-
-//______________________________________________________________________________
-void TH3::Sizeof3D() const
-{
-//*-*-*-*-*-*-*Return total size of this 3-D shape with its attributes*-*-*
-//*-*          ==========================================================
-
-   char *cmd;
-   if (GetDrawOption() && strstr(GetDrawOption(),"box")) {
-      cmd = Form("TMarker3DBox::SizeofH3((TH3 *)0x%lx);",(Long_t)this);
-   } else {
-      cmd = Form("TPolyMarker3D::SizeofH3((TH3 *)0x%lx);",(Long_t)this);
-   }
-   gROOT->ProcessLine(cmd);
 }
 
 //______________________________________________________________________________

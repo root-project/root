@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.6 2003/03/21 20:57:05 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.7 2004/03/05 17:48:30 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -12,7 +12,8 @@
 #include "TSPHE.h"
 #include "TNode.h"
 #include "TVirtualPad.h"
-#include "TVirtualGL.h"
+#include "TBuffer3D.h"
+#include "TGeometry.h"
 
 
 ClassImp(TSPHE)
@@ -38,21 +39,20 @@ ClassImp(TSPHE)
 //______________________________________________________________________________
 TSPHE::TSPHE()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*SPHE shape default constructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ==============================
+   // SPHE shape default constructor
 
-  fRmin       = 0;
-  fRmax       = 0;
-  fThemin     = 0;
-  fThemax     = 0;
-  fPhimin     = 0;
-  fPhimax     = 0;
-  fSiTab      = 0;
-  fCoTab      = 0;
-  fCoThetaTab = 0;
-  fNdiv       = 0;
-  fAspectRatio=1.0;
-  faX = faY = faZ = 1.0;      // Coeff along Ox
+   fRmin       = 0;
+   fRmax       = 0;
+   fThemin     = 0;
+   fThemax     = 0;
+   fPhimin     = 0;
+   fPhimax     = 0;
+   fSiTab      = 0;
+   fCoTab      = 0;
+   fCoThetaTab = 0;
+   fNdiv       = 0;
+   fAspectRatio=1.0;
+   faX = faY = faZ = 1.0;      // Coeff along Ox
 }
 
 
@@ -61,25 +61,24 @@ TSPHE::TSPHE(const char *name, const char *title, const char *material, Float_t 
              Float_t themax, Float_t phimin, Float_t phimax)
      : TShape(name, title,material)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*SPHE shape normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
+   // SPHE shape normal constructor
 
-    fRmin   = rmin;
-    fRmax   = rmax;
-    fThemin = themin;
-    fThemax = themax;
-    fPhimin = phimin;
-    fPhimax = phimax;
+   fRmin   = rmin;
+   fRmax   = rmax;
+   fThemin = themin;
+   fThemax = themax;
+   fPhimin = phimin;
+   fPhimax = phimax;
 
-    fSiTab      = 0;
-    fCoTab      = 0;
-    fCoThetaTab = 0;
-    fNdiv       = 0;
+   fSiTab      = 0;
+   fCoTab      = 0;
+   fCoThetaTab = 0;
+   fNdiv       = 0;
 
-    fAspectRatio=1.0;
-    faX = faY = faZ = 1.0;      // Coeff along Ox
+   fAspectRatio=1.0;
+   faX = faY = faZ = 1.0;      // Coeff along Ox
 
-    SetNumberOfDivisions (20);
+   SetNumberOfDivisions (20);
 }
 
 
@@ -87,314 +86,299 @@ TSPHE::TSPHE(const char *name, const char *title, const char *material, Float_t 
 TSPHE::TSPHE(const char *name, const char *title, const char *material, Float_t rmax)
      : TShape(name, title,material)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*SPHE shape "simplified" constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ===================================
+   // SPHE shape "simplified" constructor
 
-    fRmin   = 0;
-    fRmax   = rmax;
-    fThemin = 0;
-    fThemax = 180;
-    fPhimin = 0;
-    fPhimax = 360;
+   fRmin   = 0;
+   fRmax   = rmax;
+   fThemin = 0;
+   fThemax = 180;
+   fPhimin = 0;
+   fPhimax = 360;
 
-    fSiTab      = 0;
-    fCoTab      = 0;
-    fCoThetaTab = 0;
-    fNdiv       = 0;
+   fSiTab      = 0;
+   fCoTab      = 0;
+   fCoThetaTab = 0;
+   fNdiv       = 0;
 
-    fAspectRatio=1.0;
-    faX = faY = faZ = 1.0;      // Coeff along Ox
+   fAspectRatio=1.0;
+   faX = faY = faZ = 1.0;      // Coeff along Ox
 
-    SetNumberOfDivisions (20);
+   SetNumberOfDivisions (20);
 }
+
+
 //______________________________________________________________________________
 TSPHE::~TSPHE()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*SPHE shape default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
-    if (fCoThetaTab)   delete [] fCoThetaTab;
-    if (fSiTab) delete [] fSiTab;
-    if (fCoTab) delete [] fCoTab;
+   // SPHE shape default destructor
 
-    fCoTab = 0;
-    fSiTab = 0;
-    fCoThetaTab=0;
+   if (fCoThetaTab) delete [] fCoThetaTab;
+   if (fSiTab) delete [] fSiTab;
+   if (fCoTab) delete [] fCoTab;
 
+   fCoTab = 0;
+   fSiTab = 0;
+   fCoThetaTab=0;
 }
+
+
 //______________________________________________________________________________
 Int_t TSPHE::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*Compute distance from point px,py to a PSPHE-*-*-*-*-*-*-*-*-*-*
-//*-*            ===========================================
-//*-*
-//*-*  Compute the closest distance of approach from point px,py to each
-//*-*  computed outline point of the PSPHE (stolen from PCON).
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Compute distance from point px,py to a PSPHE
+   //
+   // Compute the closest distance of approach from point px,py to each
+   // computed outline point of the PSPHE (stolen from PCON).
+
    Int_t n = GetNumberOfDivisions()+1;
    Int_t numPoints = 2*n*(fNz+1);
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
+
+
 //______________________________________________________________________________
 void TSPHE::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*Paint this 3-D shape with its current attributes*-*-*-*-*-*-*-*
-//*-*            ================================================
+   // Paint this 3-D shape with its current attributes
+
    Int_t i, j;
    const Int_t n = GetNumberOfDivisions()+1;
    Int_t nz = fNz+1;
-   Int_t numpoints = 2*n*nz;
    if (nz < 2) return;
-
-  if (numpoints <= 0) return;
-   //*-* Allocate memory for points *-*
-
-   Float_t *points = new Float_t[3*numpoints];
-   if (!points) return;
-   SetPoints(points);
-
-   Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
-   if (!rangeView && gPad->GetView3D()) PaintGLPoints(points);
-
- //==  for (i = 0; i < numpoints; i++)
- //==          gNode->Local2Master(&points[3*i],&points[3*i]);
-
+   Int_t NbPnts = 2*n*nz;
+   if (NbPnts <= 0) return;
+ 
    Bool_t specialCase = kFALSE;
+   if (TMath::Abs(TMath::Sin(2*(fPhimax - fPhimin))) <= 0.01) specialCase = kTRUE;
 
-   if (TMath::Abs(TMath::Sin(2*(fPhimax - fPhimin))) <= 0.01)  //mark this as a very special case, when
-         specialCase = kTRUE;                                  //we have to draw this PCON like a TUBE
+   Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
+   Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
 
-    X3DBuffer *buff = new X3DBuffer;
-    if (buff) {
-        buff->numPoints = numpoints;
-        buff->numSegs   = 4*(nz*n-1+(specialCase == kTRUE));
-        buff->numPolys  = 2*(nz*n-1+(specialCase == kTRUE));
-    }
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   if (!buff) return;
 
-//*-* Allocate memory for points *-*
+   buff->fType = TBuffer3D::kSPHE;
+   buff->fId   = this;
 
-    buff->points = points;
+   // Fill gPad->fBuffer3D. Points coordinates are in Master space
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+   // In case of option "size" it is not necessary to fill the buffer
+   if (buff->fOption == TBuffer3D::kSIZE) {
+      buff->Paint(option);
+      return;
+   }
 
-    Int_t c = ((GetLineColor() % 8) - 1) * 4;     // Basic colors: 0, 1, ... 7
-    if (c < 0) c = 0;
+   SetPoints(buff->fPnts);
 
-//*-* Allocate memory for segments *-*
+   TransformPoints(buff);
 
-    Int_t indx, indx2, k;
-    indx = indx2 = 0;
+   // Basic colors: 0, 1, ... 7
+   Int_t c = ((GetLineColor() % 8) - 1) * 4;
+   if (c < 0) c = 0;
 
-    buff->segs = new Int_t[buff->numSegs*3];
-    if (buff->segs) {
+   Int_t indx, indx2, k;
+   indx = indx2 = 0;
+   //inside & outside spheres, number of segments: 2*nz*(n-1)
+   //             special case number of segments: 2*nz*n
+   for (i = 0; i < nz*2; i++) {
+      indx2 = i*n;
+      for (j = 1; j < n; j++) {
+         buff->fSegs[indx++] = c;
+         buff->fSegs[indx++] = indx2+j-1;
+         buff->fSegs[indx++] = indx2+j;
+      }
+      if (specialCase) {
+         buff->fSegs[indx++] = c;
+         buff->fSegs[indx++] = indx2+j-1;
+         buff->fSegs[indx++] = indx2;
+      }
+   }
 
-        //inside & outside spheres, number of segments: 2*nz*(n-1)
-        //             special case number of segments: 2*nz*n
-        for (i = 0; i < nz*2; i++) {
-            indx2 = i*n;
-            for (j = 1; j < n; j++) {
-                buff->segs[indx++] = c;
-                buff->segs[indx++] = indx2+j-1;
-                buff->segs[indx++] = indx2+j;
-            }
-            if (specialCase) {
-                buff->segs[indx++] = c;
-                buff->segs[indx++] = indx2+j-1;
-                buff->segs[indx++] = indx2;
-            }
-        }
+   //bottom & top lines, number of segments: 2*n
+   for (i = 0; i < 2; i++) {
+      indx2 = i*(nz-1)*2*n;
+      for (j = 0; j < n; j++) {
+         buff->fSegs[indx++] = c;
+         buff->fSegs[indx++] = indx2+j;
+         buff->fSegs[indx++] = indx2+n+j;
+      }
+   }
 
-        //bottom & top lines, number of segments: 2*n
-        for (i = 0; i < 2; i++) {
-            indx2 = i*(nz-1)*2*n;
-            for (j = 0; j < n; j++) {
-                buff->segs[indx++] = c;
-                buff->segs[indx++] = indx2+j;
-                buff->segs[indx++] = indx2+n+j;
-            }
-        }
+   //inside & outside spheres, number of segments: 2*(nz-1)*n
+   for (i = 0; i < (nz-1); i++) {
 
-        //inside & outside spheres, number of segments: 2*(nz-1)*n
-        for (i = 0; i < (nz-1); i++) {
+      //inside sphere
+      indx2 = i*n*2;
+      for (j = 0; j < n; j++) {
+         buff->fSegs[indx++] = c+2;
+         buff->fSegs[indx++] = indx2+j;
+         buff->fSegs[indx++] = indx2+n*2+j;
+      }
+      //outside sphere
+      indx2 = i*n*2+n;
+      for (j = 0; j < n; j++) {
+         buff->fSegs[indx++] = c+3;
+         buff->fSegs[indx++] = indx2+j;
+         buff->fSegs[indx++] = indx2+n*2+j;
+      }
+   }
 
-            //inside sphere
-            indx2 = i*n*2;
-            for (j = 0; j < n; j++) {
-                buff->segs[indx++] = c+2;
-                buff->segs[indx++] = indx2+j;
-                buff->segs[indx++] = indx2+n*2+j;
-            }
-            //outside sphere
-            indx2 = i*n*2+n;
-            for (j = 0; j < n; j++) {
-                buff->segs[indx++] = c+3;
-                buff->segs[indx++] = indx2+j;
-                buff->segs[indx++] = indx2+n*2+j;
-            }
-        }
+   //left & right sections, number of segments: 2*(nz-2)
+   //          special case number of segments: 0
+   if (!specialCase) {
+      for (i = 1; i < (nz-1); i++) {
+         for (j = 0; j < 2; j++) {
+            buff->fSegs[indx++] = c;
+            buff->fSegs[indx++] =  2*i    * n + j*(n-1);
+            buff->fSegs[indx++] = (2*i+1) * n + j*(n-1);
+         }
+      }
+   }
 
-        //left & right sections, number of segments: 2*(nz-2)
-        //          special case number of segments: 0
-        if (!specialCase) {
-            for (i = 1; i < (nz-1); i++) {
-                for (j = 0; j < 2; j++) {
-                    buff->segs[indx++] = c;
-                    buff->segs[indx++] =  2*i    * n + j*(n-1);
-                    buff->segs[indx++] = (2*i+1) * n + j*(n-1);
-                }
-            }
-        }
-    }
+   Int_t m = n - 1 + (specialCase == kTRUE);
+   indx = 0;
 
+   //bottom & top, number of polygons: 2*(n-1)
+   // special case number of polygons: 2*n
+   for (i = 0; i < 2; i++) {
+      for (j = 0; j < n-1; j++) {
+         buff->fPols[indx++] = c+3;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = 2*nz*m+i*n+j;
+         buff->fPols[indx++] = i*(nz*2-2)*m+m+j;
+         buff->fPols[indx++] = 2*nz*m+i*n+j+1;
+         buff->fPols[indx++] = i*(nz*2-2)*m+j;
+      }
+      if (specialCase) {
+         buff->fPols[indx++] = c+3;
+         buff->fPols[indx++] = 4;
+         buff->fPols[indx++] = 2*nz*m+i*n+j;
+         buff->fPols[indx++] = i*(nz*2-2)*m+m+j;
+         buff->fPols[indx++] = 2*nz*m+i*n;
+         buff->fPols[indx++] = i*(nz*2-2)*m+j;
+      }
+   }
 
-    Int_t m = n - 1 + (specialCase == kTRUE);
+   //inside & outside, number of polygons: (nz-1)*2*(n-1)
+   for (k = 0; k < (nz-1); k++) {
+      for (i = 0; i < 2; i++) {
+         for (j = 0; j < n-1; j++) {
+            buff->fPols[indx++] = c+i;
+            buff->fPols[indx++] = 4;
+            buff->fPols[indx++] = (2*k+i*1)*m+j;
+            buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
+            buff->fPols[indx++] = (2*k+i*1+2)*m+j;
+            buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
+         }
+         if (specialCase) {
+            buff->fPols[indx++] = c+i;
+            buff->fPols[indx++] = 4;
+            buff->fPols[indx++] = (2*k+i*1)*m+j;
+            buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
+            buff->fPols[indx++] = (2*k+i*1+2)*m+j;
+            buff->fPols[indx++] = nz*2*m+(2*k+i*1+2)*n;
+         }
+      }
+   }
 
-//*-* Allocate memory for polygons *-*
+   //left & right sections, number of polygons: 2*(nz-1)
+   //          special case number of polygons: 0
+   if (!specialCase) {
+      indx2 = nz*2*(n-1);
+      for (k = 0; k < (nz-1); k++) {
+         for (i = 0; i < 2; i++) {
+            buff->fPols[indx++] = c+2;
+            buff->fPols[indx++] = 4;
+            buff->fPols[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
+            buff->fPols[indx++] = indx2+2*(k+1)*n+i*(n-1);
+            buff->fPols[indx++] = indx2+2*nz*n+2*k+i;
+            buff->fPols[indx++] = indx2+(2*k+3)*n+i*(n-1);
+         }
+      }
+      buff->fPols[indx-8] = indx2+n;
+      buff->fPols[indx-2] = indx2+2*n-1;
+   }
 
-    indx = 0;
-
-    buff->polys = new Int_t[buff->numPolys*6];
-
-    if (buff->polys) {
-
-        //bottom & top, number of polygons: 2*(n-1)
-        // special case number of polygons: 2*n
-        for (i = 0; i < 2; i++) {
-            for (j = 0; j < n-1; j++) {
-                buff->polys[indx++] = c+3;
-                buff->polys[indx++] = 4;
-                buff->polys[indx++] = 2*nz*m+i*n+j;
-                buff->polys[indx++] = i*(nz*2-2)*m+m+j;
-                buff->polys[indx++] = 2*nz*m+i*n+j+1;
-                buff->polys[indx++] = i*(nz*2-2)*m+j;
-            }
-            if (specialCase) {
-                buff->polys[indx++] = c+3;
-                buff->polys[indx++] = 4;
-                buff->polys[indx++] = 2*nz*m+i*n+j;
-                buff->polys[indx++] = i*(nz*2-2)*m+m+j;
-                buff->polys[indx++] = 2*nz*m+i*n;
-                buff->polys[indx++] = i*(nz*2-2)*m+j;
-            }
-        }
-
-
-        //inside & outside, number of polygons: (nz-1)*2*(n-1)
-        for (k = 0; k < (nz-1); k++) {
-            for (i = 0; i < 2; i++) {
-                for (j = 0; j < n-1; j++) {
-                    buff->polys[indx++] = c+i;
-                    buff->polys[indx++] = 4;
-                    buff->polys[indx++] = (2*k+i*1)*m+j;
-                    buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-                    buff->polys[indx++] = (2*k+i*1+2)*m+j;
-                    buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j+1;
-                }
-                if (specialCase) {
-                    buff->polys[indx++] = c+i;
-                    buff->polys[indx++] = 4;
-                    buff->polys[indx++] = (2*k+i*1)*m+j;
-                    buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n+j;
-                    buff->polys[indx++] = (2*k+i*1+2)*m+j;
-                    buff->polys[indx++] = nz*2*m+(2*k+i*1+2)*n;
-                }
-            }
-        }
-
-
-        //left & right sections, number of polygons: 2*(nz-1)
-        //          special case number of polygons: 0
-        if (!specialCase) {
-            indx2 = nz*2*(n-1);
-            for (k = 0; k < (nz-1); k++) {
-                for (i = 0; i < 2; i++) {
-                    buff->polys[indx++] = c+2;
-                    buff->polys[indx++] = 4;
-                    buff->polys[indx++] = k==0 ? indx2+i*(n-1) : indx2+2*nz*n+2*(k-1)+i;
-                    buff->polys[indx++] = indx2+2*(k+1)*n+i*(n-1);
-                    buff->polys[indx++] = indx2+2*nz*n+2*k+i;
-                    buff->polys[indx++] = indx2+(2*k+3)*n+i*(n-1);
-                }
-            }
-            buff->polys[indx-8] = indx2+n;
-            buff->polys[indx-2] = indx2+2*n-1;
-        }
-    }
-
-    //*-* Paint in the pad
-    PaintShape(buff,rangeView);
-
-    if (strstr(option, "x3d")) {
-        if(buff && buff->points && buff->segs)
-            FillX3DBuffer(buff);
-        else {
-            gSize3D.numPoints -= buff->numPoints;
-            gSize3D.numSegs   -= buff->numSegs;
-            gSize3D.numPolys  -= buff->numPolys;
-        }
-    }
-
-    delete [] points;
-    if (buff->segs)     delete [] buff->segs;
-    if (buff->polys)    delete [] buff->polys;
-    if (buff)           delete    buff;
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
 }
+
 
 //______________________________________________________________________________
 void TSPHE::SetEllipse(const Float_t *factors){
 
-  if (factors[0] > 0) faX = factors[0];
-  if (factors[1] > 0) faY = factors[1];
-  if (factors[2] > 0) faZ = factors[2];
-//  MakeTableOfCoSin();
+   if (factors[0] > 0) faX = factors[0];
+   if (factors[1] > 0) faY = factors[1];
+   if (factors[2] > 0) faZ = factors[2];
 }
+
 
 //______________________________________________________________________________
 void TSPHE::SetNumberOfDivisions (Int_t p)
 {
-
     if (GetNumberOfDivisions () == p) return;
     fNdiv=p;
     fNz = Int_t(fAspectRatio*fNdiv*(fThemax - fThemin )/(fPhimax - fPhimin )) + 1;
     MakeTableOfCoSin();
 }
 
+
 //______________________________________________________________________________
-void TSPHE::SetPoints(Float_t *buff)
+void TSPHE::SetPoints(Double_t *buff)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Create SPHE points*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                            ==================
-    Int_t i, j;
-    Int_t indx = 0;
+   // Create SPHE points
 
-    if (buff) {
+   Int_t i, j, n;
+   Int_t indx = 0;
 
-        Int_t n            = GetNumberOfDivisions()+1;
+   n = GetNumberOfDivisions()+1;
 
-//*-* We've to check whether the table does exist and create it
-//*-* since fCoTab/fSiTab are not saved with any TShape::Streamer function
-        if (!fCoTab)   MakeTableOfCoSin();
-
-        Float_t z;
-        for (i = 0; i < fNz+1; i++)
-        {
-            z = fRmin * fCoThetaTab[i]; // fSinPhiTab[i];
-            Float_t sithet = TMath::Sqrt(TMath::Abs(1-fCoThetaTab[i]*fCoThetaTab[i]));
-            Float_t zi = fRmin*sithet;
-            for (j = 0; j < n; j++)
-            {
-                buff[indx++] = faX*zi * fCoTab[j];
-                buff[indx++] = faY*zi * fSiTab[j];
-                buff[indx++] = faZ*z;
-            }
-            z = fRmax * fCoThetaTab[i];
-            zi = fRmax*sithet;
-            for (j = 0; j < n; j++)
-            {
-                buff[indx++] = faX*zi * fCoTab[j];
-                buff[indx++] = faY*zi * fSiTab[j];
-                buff[indx++] = faZ*z;
-            }
-        }
-    }
+   if (buff) {
+      if (!fCoTab)   MakeTableOfCoSin();
+      Float_t z;
+      for (i = 0; i < fNz+1; i++) {
+         z = fRmin * fCoThetaTab[i]; // fSinPhiTab[i];
+         Float_t sithet = TMath::Sqrt(TMath::Abs(1-fCoThetaTab[i]*fCoThetaTab[i]));
+         Float_t zi = fRmin*sithet;
+         for (j = 0; j < n; j++) {
+            buff[indx++] = faX*zi * fCoTab[j];
+            buff[indx++] = faY*zi * fSiTab[j];
+            buff[indx++] = faZ*z;
+         }
+         z = fRmax * fCoThetaTab[i];
+         zi = fRmax*sithet;
+         for (j = 0; j < n; j++) {
+            buff[indx++] = faX*zi * fCoTab[j];
+            buff[indx++] = faY*zi * fSiTab[j];
+            buff[indx++] = faZ*z;
+         }
+      }
+   }
 }
+
+
+//______________________________________________________________________________
+void TSPHE::Sizeof3D() const
+{
+   // Return total X3D needed by TNode::ls (when called with option "x")
+
+   Int_t n;
+
+   n = GetNumberOfDivisions()+1;
+   Int_t nz = fNz+1;
+   Bool_t specialCase = kFALSE;
+
+   if (TMath::Abs(TMath::Sin(2*(fPhimax - fPhimin))) <= 0.01)  //mark this as a very special case, when
+         specialCase = kTRUE;                                  //we have to draw this PCON like a TUBE
+
+   gSize3D.numPoints += 2*n*nz;
+   gSize3D.numSegs   += 4*(nz*n-1+(specialCase == kTRUE));
+   gSize3D.numPolys  += 2*(nz*n-1+(specialCase == kTRUE));
+}
+
+
 //______________________________________________________________________________
 void TSPHE::MakeTableOfCoSin()
 {
@@ -451,37 +435,12 @@ void TSPHE::MakeTableOfCoSin()
 
 }
 
-//_______________________________________________________________________
-void TSPHE::PaintGLPoints(Float_t *vertex)
-{
- gVirtualGL->PaintCone(vertex,-(GetNumberOfDivisions()+1),fNz+1);
-}
-
-//______________________________________________________________________________
-void TSPHE::Sizeof3D() const
-{
-//*-*-*-*-*-*-*Return total X3D size of this shape with its attributes*-*-*-*-*-*
-//*-*          =======================================================
-
-    Int_t n;
-
-    n = GetNumberOfDivisions()+1;
-    Int_t nz = fNz+1;
-    Bool_t specialCase = kFALSE;
-
-    if (TMath::Abs(TMath::Sin(2*(fPhimax - fPhimin))) <= 0.01)  //mark this as a very special case, when
-          specialCase = kTRUE;                                  //we have to draw this PCON like a TUBE
-
-    gSize3D.numPoints += 2*n*nz;
-    gSize3D.numSegs   += 4*(nz*n-1+(specialCase == kTRUE));
-    gSize3D.numPolys  += 2*(nz*n-1+(specialCase == kTRUE));
-}
 
 //_______________________________________________________________________
 void TSPHE::Streamer(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*              =========================================
+   // Stream a class object
+
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
@@ -515,4 +474,3 @@ void TSPHE::Streamer(TBuffer &b)
       TSPHE::Class()->WriteBuffer(b,this);
    }
 }
-

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.5 2002/01/20 10:02:40 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.6 2002/10/31 07:27:34 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -36,9 +36,6 @@
 #ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
 #endif
-#ifndef ROOT_X3DBuffer
-#include "X3DBuffer.h"
-#endif
 
 
 class TPolyLine3D : public TObject, public TAttLine, public TAtt3D {
@@ -72,8 +69,6 @@ public:
    virtual void      ls(Option_t *option="") const;
    virtual Int_t     Merge(TCollection *list);
    virtual void      Paint(Option_t *option="");
-   virtual void      PaintPolyLine(Int_t n, Float_t *p, Option_t *option="");
-   virtual void      PaintPolyLine(Int_t n, Double_t *p, Option_t *option="");
    virtual void      Print(Option_t *option="") const;
    virtual void      SavePrimitive(ofstream &out, Option_t *option);
    virtual Int_t     SetNextPoint(Double_t x, Double_t y, Double_t z); // *MENU*
@@ -82,7 +77,6 @@ public:
    virtual void      SetPolyLine(Int_t n, Option_t *option="");
    virtual void      SetPolyLine(Int_t n, Float_t *p, Option_t *option="");
    virtual void      SetPolyLine(Int_t n, Double_t *p, Option_t *option="");
-   virtual void      Sizeof3D() const;
    virtual Int_t     Size() const { return fLastPoint+1;}
 
    static  void      DrawOutlineCube(TList *outline, Double_t *rmin, Double_t *rmax);

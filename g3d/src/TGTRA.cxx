@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TGTRA.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Nenad Buncic   19/09/95
 
 /*************************************************************************
@@ -78,66 +78,61 @@ TGTRA::TGTRA (const char *name, const char *title, const char *material, Float_t
               Float_t h2, Float_t bl2, Float_t tl2, Float_t alpha2)
       : TBRIK (name, title, material, theta, phi, dz)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*GTRA shape normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
+   // GTRA shape normal constructor
 
-    fTwist  = twist;
-    fH1     = h1;
-    fBl1    = bl1;
-    fTl1    = tl1;
-    fAlpha1 = alpha1;
-    fH2     = h2;
-    fBl2    = bl2;
-    fTl2    = tl2;
-    fAlpha2 = alpha2;
+   fTwist  = twist;
+   fH1     = h1;
+   fBl1    = bl1;
+   fTl1    = tl1;
+   fAlpha1 = alpha1;
+   fH2     = h2;
+   fBl2    = bl2;
+   fTl2    = tl2;
+   fAlpha2 = alpha2;
 }
 
 
 //______________________________________________________________________________
 TGTRA::~TGTRA ()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*GTRA shape default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
-
-
+   // GTRA shape default destructor
 }
 
 //______________________________________________________________________________
-void TGTRA::SetPoints (Float_t *buff)
+void TGTRA::SetPoints (Double_t *buff)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Create GTRA points*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                            ==================
+   // Create GTRA points
 
-    Float_t x, y, dx, dy, dx1, dx2, dz, theta, phi, alpha1, alpha2, twist;
-    const Float_t PI = Float_t (TMath::Pi());
+   Double_t x, y, dx, dy, dx1, dx2, dz, theta, phi, alpha1, alpha2, twist;
+   const Float_t PI = Float_t (TMath::Pi());
 
-    alpha1 = fAlpha1    * PI/180.0;
-    alpha2 = fAlpha2    * PI/180.0;
-    theta  = TBRIK::fDx * PI/180.0;
-    phi    = TBRIK::fDy * PI/180.0;
-    twist  = fTwist     * PI/180.0;
+   alpha1 = fAlpha1    * PI/180.0;
+   alpha2 = fAlpha2    * PI/180.0;
+   theta  = TBRIK::fDx * PI/180.0;
+   phi    = TBRIK::fDy * PI/180.0;
+   twist  = fTwist     * PI/180.0;
 
-    dx  = 2*fDz*TMath::Sin(theta)*TMath::Cos(phi);
-    dy  = 2*fDz*TMath::Sin(theta)*TMath::Sin(phi);
-    dz  = TBRIK::fDz;
+   dx  = 2*fDz*TMath::Sin(theta)*TMath::Cos(phi);
+   dy  = 2*fDz*TMath::Sin(theta)*TMath::Sin(phi);
+   dz  = TBRIK::fDz;
 
-    dx1 = 2*fH1*TMath::Tan(alpha1);
-    dx2 = 2*fH2*TMath::Tan(alpha2);
+   dx1 = 2*fH1*TMath::Tan(alpha1);
+   dx2 = 2*fH2*TMath::Tan(alpha2);
 
-    if (buff) {
-        buff[ 0] = -fBl1;        buff[ 1] = -fH1;    buff[ 2] = -dz;
-        buff[ 3] =  fBl1;        buff[ 4] = -fH1;    buff[ 5] = -dz;
-        buff[ 6] =  fTl1+dx1;    buff[ 7] =  fH1;    buff[ 8] = -dz;
-        buff[ 9] = -fTl1+dx1;    buff[10] =  fH1;    buff[11] = -dz;
-        buff[12] = -fBl2+dx;     buff[13] = -fH2+dy; buff[14] = dz;
-        buff[15] =  fBl2+dx;     buff[16] = -fH2+dy; buff[17] = dz;
-        buff[18] =  fTl2+dx+dx2; buff[19] =  fH2+dy; buff[20] = dz;
-        buff[21] = -fTl2+dx+dx2; buff[22] =  fH2+dy; buff[23] = dz;
-        for (Int_t i = 12; i < 24; i+=3) {
-            x = buff[i];
-            y = buff[i+1];
-            buff[i]     = x*TMath::Cos(twist) + y*TMath::Sin(twist);
-            buff[i+1]  = -x*TMath::Sin(twist) + y*TMath::Cos(twist);
-        }
-    }
+   if (buff) {
+      buff[ 0] = -fBl1;        buff[ 1] = -fH1;    buff[ 2] = -dz;
+      buff[ 3] =  fBl1;        buff[ 4] = -fH1;    buff[ 5] = -dz;
+      buff[ 6] =  fTl1+dx1;    buff[ 7] =  fH1;    buff[ 8] = -dz;
+      buff[ 9] = -fTl1+dx1;    buff[10] =  fH1;    buff[11] = -dz;
+      buff[12] = -fBl2+dx;     buff[13] = -fH2+dy; buff[14] = dz;
+      buff[15] =  fBl2+dx;     buff[16] = -fH2+dy; buff[17] = dz;
+      buff[18] =  fTl2+dx+dx2; buff[19] =  fH2+dy; buff[20] = dz;
+      buff[21] = -fTl2+dx+dx2; buff[22] =  fH2+dy; buff[23] = dz;
+      for (Int_t i = 12; i < 24; i+=3) {
+         x = buff[i];
+         y = buff[i+1];
+         buff[i]     = x*TMath::Cos(twist) + y*TMath::Sin(twist);
+         buff[i+1]  = -x*TMath::Sin(twist) + y*TMath::Cos(twist);
+      }
+   }
 }

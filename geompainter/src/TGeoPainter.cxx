@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name: HEAD $:$Id: TGeoPainter.cxx,v 1.38 2004/05/04 14:41:52 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.39 2004/06/25 12:13:44 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -471,7 +471,10 @@ void TGeoPainter::Draw(Option_t *option)
    if (!view) {
       view = new TView(11);
       view->SetAutoRange(kTRUE);
+      TBuffer3D *buff = gPad->GetBuffer3D();
+      buff->fOption = TBuffer3D::kRANGE;
       fGeom->GetTopVolume()->Paint("range");
+      buff->fOption = TBuffer3D::kPAD;
       view->SetAutoRange(kFALSE);
       if (has_pad) gPad->Update();
    }
@@ -2384,6 +2387,12 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
 // paint recursively a node and its content accordind to visualization options
    TGeoNode *daughter = 0;
    TGeoVolume *vol = node->GetVolume();
+// Temporary solution must go in TGeovolume ...
+   if (!strstr(option,"range")) {
+      ((TAttLine*)vol)->Modify();  //Change line attributes only if necessary
+      ((TAttFill*)vol)->Modify();  //Change fill area attributes only if necessary
+   }   
+//////
    Int_t nd = node->GetNdaughters();
    Bool_t last = kFALSE;
    Int_t level = fGeom->GetLevel();

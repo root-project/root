@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.16 2003/12/10 17:09:07 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.17 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -310,3 +310,27 @@ void TGeoShape::SetShapeBit(UInt_t f, Bool_t set)
    }
 }
          
+//_____________________________________________________________________________
+void TGeoShape::TransformPoints(TBuffer3D *buff) const
+{
+   // Tranform a buffer (LocalToMaster)
+
+   if (gGeoManager) {
+      Double_t dlocal[3];
+      Double_t dmaster[3];
+      for (Int_t j = 0; j < buff->fNbPnts; j++) {
+         dlocal[0] = buff->fPnts[3*j];
+         dlocal[1] = buff->fPnts[3*j+1];
+         dlocal[2] = buff->fPnts[3*j+2];
+         if (gGeoManager->IsMatrixTransform()) {
+            TGeoHMatrix *glmat = gGeoManager->GetGLMatrix();
+            glmat->LocalToMaster(&dlocal[0],&dmaster[0]);
+         } else {
+            gGeoManager->LocalToMaster(&dlocal[0],&dmaster[0]);
+         }
+         buff->fPnts[3*j]   = dmaster[0];
+         buff->fPnts[3*j+1] = dmaster[1];
+         buff->fPnts[3*j+2] = dmaster[2];
+      }
+   }
+}

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.h,v 1.2 2000/09/14 06:28:00 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.h,v 1.3 2002/02/23 15:50:36 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -104,6 +104,35 @@ public:
    virtual void ShadeGLModel(EG3D2GLmode mode);
    virtual void SetLineAttr(Color_t color, Int_t width);
    virtual void UpdateMatrix(Double_t *translate=0, Double_t *rotate=0, Bool_t isreflection=kFALSE);
+   //[tpochep]  
+   void ClearGLDepth(Float_t val)const;
+   void MatrixModeGL(EG3D2GLmode mode)const;
+   void NewMVGL()const;
+   void NewPRGL()const;
+   void FrustumGL(
+		  Double_t xmin, Double_t xmax, Double_t ymin, 
+		  Double_t ymax, Double_t znear, Double_t zfar
+		 )const;
+   void GLLight(EG3D2GLmode name, const Float_t * lig_prop)const;
+   void LightModel(EG3D2GLmode name, const Float_t * lig_prop)const;
+   void LightModel(EG3D2GLmode name, Int_t prop)const;
+   void CullFaceGL(EG3D2GLmode)const;
+   void ViewportGL(Int_t x, Int_t y, Int_t width, Int_t height)const;
+   void MaterialGL(EG3D2GLmode face, const Float_t * mat_prop)const;
+   void MaterialGL(EG3D2GLmode face, Float_t mat_prop)const;
+   void BeginGL()const;
+   void EndGL()const;
+   void SetGLVertex(const Double_t * vertex)const;
+   void SetGLNormal(const Double_t * normal)const;
+   //tesselator
+   GLUtesselator * GLUNewTess()const;
+   void GLUDeleteTess(GLUtesselator *)const;
+   void GLUTessCallback(GLUtesselator *)const;
+   void GLUNextContour(GLUtesselator *)const;
+   void GLUBeginPolygon(GLUtesselator *)const;
+   void GLUEndPolygon(GLUtesselator *)const;
+   void GLUTessVertex(GLUtesselator *, const Double_t *)const;      
+   //[/tpochep]
 };
 
 #endif

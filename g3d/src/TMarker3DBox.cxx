@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.6 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.cxx,v 1.7 2002/02/02 11:56:14 brun Exp $
 // Author: "Valery fine"   31/10/97
 
 
@@ -15,11 +15,11 @@
 #include "TView.h"
 #include "TMarker3DBox.h"
 #include "TVirtualPad.h"
-#include "TVirtualGL.h"
-#include "TPadView3D.h"
 #include "TH1.h"
 #include "TH3.h"
 #include "TFile.h"
+#include "TBuffer3D.h"
+#include "TGeometry.h"
 
 ClassImp(TMarker3DBox)
 
@@ -38,16 +38,12 @@ ClassImp(TMarker3DBox)
 // Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/Marker3DBox.gif"> </P> End_Html
 
 
-
-
 //______________________________________________________________________________
 TMarker3DBox::TMarker3DBox()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Marker3DBox  default constructor*-*-*-*-*-*-*-*-*-*
-//*-*                      ================================
+   // Marker3DBox  default constructor
 
    fRefObject = 0;
-   //just in case of a stupid call to this constructor
    fDx = 1;
    fDy = 1;
    fDz = 1;
@@ -67,44 +63,40 @@ TMarker3DBox::TMarker3DBox( Float_t x, Float_t y, Float_t z,
                             Float_t theta, Float_t phi)
               :TAttLine(1,1,1), TAttFill(1,0)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Marker3DBox normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
+   // Marker3DBox normal constructor
 
-    fDx = dx;
-    fDy = dy;
-    fDz = dz;
+   fDx = dx;
+   fDy = dy;
+   fDz = dz;
 
-    fX  = x;
-    fY  = y;
-    fZ  = z;
+   fX  = x;
+   fY  = y;
+   fZ  = z;
 
-    fTheta = theta;
-    fPhi   = phi;
-    fRefObject = 0;
+   fTheta = theta;
+   fPhi   = phi;
+   fRefObject = 0;
 }
 
 
 //______________________________________________________________________________
 TMarker3DBox::~TMarker3DBox()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Marker3DBox shape default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
-
+   // Marker3DBox shape default destructor
 }
+
 
 //______________________________________________________________________________
 Int_t TMarker3DBox::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*Compute distance from point px,py to a Marker3DBox*-*-*-*-*
-//*-*            ==================================================
-//*-*
-//*-*  Compute the closest distance of approach from point px,py to each corner
-//*-*  point of the Marker3DBox.
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Compute distance from point px,py to a Marker3DBox
+   //
+   // Compute the closest distance of approach from point px,py to each corner
+   // point of the Marker3DBox.
 
    const Int_t numPoints = 8;
    Int_t dist = 9999;
-   Float_t points[3*numPoints];
+   Double_t points[3*numPoints];
 
    TView *view = gPad->GetView();
    if (!view) return dist;
@@ -115,7 +107,7 @@ Int_t TMarker3DBox::DistancetoPrimitive(Int_t px, Int_t py)
 
    Int_t i, i1, i2, dsegment;
    Double_t x1,y1,x2,y2;
-   Float_t xndc[3];
+   Double_t xndc[3];
    for (i = 0; i < 12; i++) {
       i1 = 3*seg1[i];
       view->WCtoNDC(&points[i1], xndc);
@@ -140,123 +132,96 @@ Int_t TMarker3DBox::DistancetoPrimitive(Int_t px, Int_t py)
 //______________________________________________________________________________
 void TMarker3DBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*-*-*-*-*-*-*
-//*-*                =========================================
-//*-*
-//*-*  This member function must be implemented to realize the action
-//*-*  corresponding to the mouse click on the object in the window
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+   // Execute action corresponding to one event
+   //
+   // This member function must be implemented to realize the action
+   // corresponding to the mouse click on the object in the window
 
-        if (gPad->GetView())
-                gPad->GetView()->ExecuteRotateView(event, px, py);
-
+   if (gPad->GetView()) gPad->GetView()->ExecuteRotateView(event, px, py);
 }
+
 
 //______________________________________________________________________________
 void TMarker3DBox::Paint(Option_t *option)
 {
-//*-*-*-*-*-*-*-*Paint this 3-D box marker with its current attributes*-*-*-*
-//*-*            =====================================================
+   // Paint this 3-D box marker with its current attributes
 
-   const Int_t numpoints = 8;
+   Int_t NbPnts = 8;
+   Int_t NbSegs = 12;
+   Int_t NbPols = 6;
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   if (!buff) return;
 
-//*-* Allocate memory for points *-*
+   buff->fType = TBuffer3D::kM3DBOX;
+   buff->fId   = this;
 
-   Float_t *points = new Float_t[3*numpoints];
-   if (!points) return;
-
-   SetPoints(points);
-
-   TPadView3D *view3D = (TPadView3D*)gPad->GetView3D();
-   Bool_t rangeView = option && *option && strcmp(option,"range")==0 ? kTRUE : kFALSE;
-   if (view3D && !rangeView) {
-     gVirtualGL->SetLineAttr(GetLineColor(),GetLineWidth());
-     PaintGLPoints(points);
+   // Fill gPad->fBuffer3D. Points coordinates are in Master space
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+   // In case of option "size" it is not necessary to fill the buffer
+   if (buff->fOption == TBuffer3D::kSIZE) {
+      buff->Paint(option);
+      return;
    }
 
-   Int_t c = ((GetLineColor() % 8) - 1) * 4;  // Basic colors: 0, 1, ... 7
+   SetPoints(buff->fPnts);
+
+   if (gGeometry) {   
+      Double_t dlocal[3];
+      Double_t dmaster[3];
+      for (Int_t j=0; j<buff->fNbPnts; j++) {
+         dlocal[0] = buff->fPnts[3*j];
+         dlocal[1] = buff->fPnts[3*j+1];
+         dlocal[2] = buff->fPnts[3*j+2];
+         gGeometry->Local2Master(&dlocal[0],&dmaster[0]);
+         buff->fPnts[3*j]   = dmaster[0];
+         buff->fPnts[3*j+1] = dmaster[1];
+         buff->fPnts[3*j+2] = dmaster[2];
+      }
+   }
+
+   // Basic colors: 0, 1, ... 7
+   Int_t c = ((GetLineColor() % 8) - 1) * 4;
    if (c < 0) c = 0;
 
-//*-* Allocate memory for segments *-*
+   buff->fSegs[ 0] = c   ; buff->fSegs[ 1] = 0 ; buff->fSegs[ 2] = 1;
+   buff->fSegs[ 3] = c+1 ; buff->fSegs[ 4] = 1 ; buff->fSegs[ 5] = 2;
+   buff->fSegs[ 6] = c+1 ; buff->fSegs[ 7] = 2 ; buff->fSegs[ 8] = 3;
+   buff->fSegs[ 9] = c   ; buff->fSegs[10] = 3 ; buff->fSegs[11] = 0;
+   buff->fSegs[12] = c+2 ; buff->fSegs[13] = 4 ; buff->fSegs[14] = 5;
+   buff->fSegs[15] = c+2 ; buff->fSegs[16] = 5 ; buff->fSegs[17] = 6;
+   buff->fSegs[18] = c+3 ; buff->fSegs[19] = 6 ; buff->fSegs[20] = 7;
+   buff->fSegs[21] = c+3 ; buff->fSegs[22] = 7 ; buff->fSegs[23] = 4;
+   buff->fSegs[24] = c   ; buff->fSegs[25] = 0 ; buff->fSegs[26] = 4;
+   buff->fSegs[27] = c+2 ; buff->fSegs[28] = 1 ; buff->fSegs[29] = 5;
+   buff->fSegs[30] = c+1 ; buff->fSegs[31] = 2 ; buff->fSegs[32] = 6;
+   buff->fSegs[33] = c+3 ; buff->fSegs[34] = 3 ; buff->fSegs[35] = 7;
 
-    X3DBuffer *buff = new X3DBuffer;
-    if (buff) {
-        buff->numPoints = 8;
-        buff->numSegs   = 12;
-        buff->numPolys  = 6;
-    }
+   buff->fPols[ 0] = c   ; buff->fPols[ 1] = 4 ; buff->fPols[ 2] = 0;
+   buff->fPols[ 3] = 9   ; buff->fPols[ 4] = 4 ; buff->fPols[ 5] = 8;
+   buff->fPols[ 6] = c+1 ; buff->fPols[ 7] = 4 ; buff->fPols[ 8] = 1;
+   buff->fPols[ 9] = 10  ; buff->fPols[10] = 5 ; buff->fPols[11] = 9;
+   buff->fPols[12] = c   ; buff->fPols[13] = 4 ; buff->fPols[14] = 2;
+   buff->fPols[15] = 11  ; buff->fPols[16] = 6 ; buff->fPols[17] = 10;
+   buff->fPols[18] = c+1 ; buff->fPols[19] = 4 ; buff->fPols[20] = 3;
+   buff->fPols[21] = 8   ; buff->fPols[22] = 7 ; buff->fPols[23] = 11;
+   buff->fPols[24] = c+2 ; buff->fPols[25] = 4 ; buff->fPols[26] = 0;
+   buff->fPols[27] = 3   ; buff->fPols[28] = 2 ; buff->fPols[29] = 1;
+   buff->fPols[30] = c+3 ; buff->fPols[31] = 4 ; buff->fPols[32] = 4;
+   buff->fPols[33] = 5   ; buff->fPols[34] = 6 ; buff->fPols[35] = 7;
 
-//*-* Allocate memory for points *-*
-
-    buff->points = points;
-    buff->segs = new Int_t[buff->numSegs*3];
-    if (buff->segs) {
-        buff->segs[ 0] = c;    buff->segs[ 1] = 0;    buff->segs[ 2] = 1;
-        buff->segs[ 3] = c+1;  buff->segs[ 4] = 1;    buff->segs[ 5] = 2;
-        buff->segs[ 6] = c+1;  buff->segs[ 7] = 2;    buff->segs[ 8] = 3;
-        buff->segs[ 9] = c;    buff->segs[10] = 3;    buff->segs[11] = 0;
-        buff->segs[12] = c+2;  buff->segs[13] = 4;    buff->segs[14] = 5;
-        buff->segs[15] = c+2;  buff->segs[16] = 5;    buff->segs[17] = 6;
-        buff->segs[18] = c+3;  buff->segs[19] = 6;    buff->segs[20] = 7;
-        buff->segs[21] = c+3;  buff->segs[22] = 7;    buff->segs[23] = 4;
-        buff->segs[24] = c;    buff->segs[25] = 0;    buff->segs[26] = 4;
-        buff->segs[27] = c+2;  buff->segs[28] = 1;    buff->segs[29] = 5;
-        buff->segs[30] = c+1;  buff->segs[31] = 2;    buff->segs[32] = 6;
-        buff->segs[33] = c+3;  buff->segs[34] = 3;    buff->segs[35] = 7;
-    }
-
-//*-* Allocate memory for polygons *-*
-
-    buff->polys = new Int_t[buff->numPolys*6];
-    if (buff->polys) {
-        buff->polys[ 0] = c;   buff->polys[ 1] = 4;  buff->polys[ 2] = 0;
-        buff->polys[ 3] = 9;   buff->polys[ 4] = 4;  buff->polys[ 5] = 8;
-        buff->polys[ 6] = c+1; buff->polys[ 7] = 4;  buff->polys[ 8] = 1;
-        buff->polys[ 9] = 10;  buff->polys[10] = 5;  buff->polys[11] = 9;
-        buff->polys[12] = c;   buff->polys[13] = 4;  buff->polys[14] = 2;
-        buff->polys[15] = 11;  buff->polys[16] = 6;  buff->polys[17] = 10;
-        buff->polys[18] = c+1; buff->polys[19] = 4;  buff->polys[20] = 3;
-        buff->polys[21] = 8;   buff->polys[22] = 7;  buff->polys[23] = 11;
-        buff->polys[24] = c+2; buff->polys[25] = 4;  buff->polys[26] = 0;
-        buff->polys[27] = 3;   buff->polys[28] = 2;  buff->polys[29] = 1;
-        buff->polys[30] = c+3; buff->polys[31] = 4;  buff->polys[32] = 4;
-        buff->polys[33] = 5;   buff->polys[34] = 6;  buff->polys[35] = 7;
-    }
-
-    //*-* Paint in the pad
-    PaintShape(buff,rangeView);
-
-    if (strstr(option, "x3d")) {
-        if(buff && buff->points && buff->segs)
-            FillX3DBuffer(buff);
-        else {
-            gSize3D.numPoints -= buff->numPoints;
-            gSize3D.numSegs   -= buff->numSegs;
-            gSize3D.numPolys  -= buff->numPolys;
-        }
-    }
-
-    delete [] points;
-    if (buff->segs)     delete [] buff->segs;
-    if (buff->polys)    delete [] buff->polys;
-    if (buff)           delete    buff;
-
+   // Paint gPad->fBuffer3D
+   TAttLine::Modify();
+   TAttFill::Modify();
+   buff->Paint(option);
 }
 
-//______________________________________________________________________________
-void TMarker3DBox::PaintGLPoints(Float_t *vertex)
-{
-//*-*-*-*-*-*-*-*-*-*-*Direct copy of TBRIK::PaintGLPoints*-*-*-*-*-*-*-*-*-*
-//*-*                  ===================================
-    gVirtualGL->PaintBrik(vertex);
-}
 
 //______________________________________________________________________________
 void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
 {
-//*-*-*-*-*-*-*-*Paint 3-d histogram h with marker3dboxes*-*-*-*
-//*-*            ========================================
+   // Paint 3-d histogram h with marker3dboxes
 
    Int_t bin,ix,iy,iz;
    Double_t xmin,xmax,ymin,ymax,zmin,zmax,wmin,wmax,w;
@@ -317,49 +282,6 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
    }
 }
 
-//______________________________________________________________________________
-void TMarker3DBox::PaintShape(X3DBuffer *buff, Bool_t rangeView)
-{
-//*-*-*-*-*Paint 3-D marker in current pad with its current attributes*-*-*-*-*
-//*-*      ==========================================================
-
-    //*-* Paint in the pad
-
-    Double_t points[6], x0, y0, z0, x1, y1, z1;
-    const Int_t kExpandView = 2;
-    int i0;
-
-    x0 = y0 = z0 = x1 = y1 = z1 = buff->points[0];
-
-    TAttLine::Modify();  //Change line attributes only if necessary
-    TAttFill::Modify();  //Change fill area attributes only if necessary
-
-    for (Int_t i = 0; i < buff->numSegs; i++) {
-        i0 = 3*buff->segs[3*i+1];
-        points[0] = buff->points[i0++];
-        points[1] = buff->points[i0++];
-        points[2] = buff->points[i0];
-
-        i0 = 3*buff->segs[3*i+2];
-        points[3] = buff->points[i0++];
-        points[4] = buff->points[i0++];
-        points[5] = buff->points[i0];
-
-        x0 = points[0] < x0 ? points[0] : x0;
-        y0 = points[1] < y0 ? points[1] : y0;
-        z0 = points[2] < z0 ? points[2] : z0;
-        x1 = points[0] > x1 ? points[0] : x1;
-        y1 = points[1] > y1 ? points[1] : y1;
-        z1 = points[2] > z1 ? points[2] : z1;
-
-       if (!rangeView) gPad->PaintLine3D(&points[0], &points[3]);
-    }
-    if (rangeView){
-      TView *view = gPad->GetView();
-      if (view->GetAutoRange()) view->SetRange(x0,y0,z0,x1,y1,z1,kExpandView);
-    }
-
-}
 
 //______________________________________________________________________________
 void TMarker3DBox::SavePrimitive(ofstream &out, Option_t *)
@@ -387,113 +309,75 @@ void TMarker3DBox::SavePrimitive(ofstream &out, Option_t *)
    out<<"   marker3DBox->Draw();"<<endl;
 }
 
+
 //______________________________________________________________________________
 void TMarker3DBox::SetDirection(Float_t theta, Float_t phi)
 {
-  fTheta = theta;
-  fPhi   = phi;
+   fTheta = theta;
+   fPhi   = phi;
 }
+
 
 //______________________________________________________________________________
 void TMarker3DBox::SetSize(Float_t dx, Float_t dy, Float_t dz)
 {
-  fDx = dx;
-  fDy = dy;
-  fDz = dz;
+   fDx = dx;
+   fDy = dy;
+   fDz = dz;
 }
+
 
 //______________________________________________________________________________
 void TMarker3DBox::SetPosition(Float_t x, Float_t y, Float_t z)
 {
-  fX  = x;
-  fY  = y;
-  fZ  = z;
+   fX  = x;
+   fY  = y;
+   fZ  = z;
 }
 
-//______________________________________________________________________________
-void TMarker3DBox::SetPoints(Float_t *buff)
-{
-//*-*-*-*-*-*-*-*-*-*-*Direct copy of TBRIK::SetPoints *-*-*-*-*-*-*-*-*-*-*
-//*-*                  ===============================
-
-    if (buff) {
-        buff[ 0] = -fDx;    buff[ 1] = -fDy;    buff[ 2] = -fDz;
-        buff[ 3] =  fDx;    buff[ 4] = -fDy;    buff[ 5] = -fDz;
-        buff[ 6] =  fDx;    buff[ 7] =  fDy;    buff[ 8] = -fDz;
-        buff[ 9] = -fDx;    buff[10] =  fDy;    buff[11] = -fDz;
-        buff[12] = -fDx;    buff[13] = -fDy;    buff[14] =  fDz;
-        buff[15] =  fDx;    buff[16] = -fDy;    buff[17] =  fDz;
-        buff[18] =  fDx;    buff[19] =  fDy;    buff[20] =  fDz;
-        buff[21] = -fDx;    buff[22] =  fDy;    buff[23] =  fDz;
-    }
-
-   Double_t x, y, z;
-   const Double_t kPI = TMath::Pi();
-   Double_t theta  = fTheta*kPI/180;
-   Double_t phi    = fPhi*kPI/180;
-   Double_t sinth = TMath::Sin(theta);
-   Double_t costh = TMath::Cos(theta);
-   Double_t sinfi = TMath::Sin(phi);
-   Double_t cosfi = TMath::Cos(phi);
-
-   //
-   // Matrix to convert from fruit frame to master frame
-   //
-
-   Double_t M[9];
-   M[0] =  costh * cosfi;       M[1] = -sinfi;          M[2] = sinth*cosfi;
-   M[3] =  costh * sinfi;       M[4] =  cosfi;          M[5] = sinth*sinfi;
-   M[6] = -sinth;               M[7] =  0;              M[8] = costh;
-   for (Int_t i = 0; i < 8; i++) {
-      x = buff[3*i];
-      y = buff[3*i+1];
-      z = buff[3*i+2];
-
-      buff[3*i]   = fX + M[0] * x + M[1] * y + M[2] * z;
-      buff[3*i+1] = fY + M[3] * x + M[4] * y + M[5] * z;
-      buff[3*i+2] = fZ + M[6] * x + M[7] * y + M[8] * z;
-   }
-
-}
 
 //______________________________________________________________________________
-void TMarker3DBox::Sizeof3D() const
+void TMarker3DBox::SetPoints(Double_t *buff)
 {
-//*-*-*-*-*-*-*Return total X3D size of this marker*-*-*-*-*-*-*-*
-//*-*          ====================================
+   if (buff) {
+      buff[ 0] = -fDx ; buff[ 1] = -fDy ; buff[ 2] = -fDz;
+      buff[ 3] = -fDx ; buff[ 4] =  fDy ; buff[ 5] = -fDz;
+      buff[ 6] =  fDx ; buff[ 7] =  fDy ; buff[ 8] = -fDz;
+      buff[ 9] =  fDx ; buff[10] = -fDy ; buff[11] = -fDz;
+      buff[12] = -fDx ; buff[13] = -fDy ; buff[14] =  fDz;
+      buff[15] = -fDx ; buff[16] =  fDy ; buff[17] =  fDz;
+      buff[18] =  fDx ; buff[19] =  fDy ; buff[20] =  fDz;
+      buff[21] =  fDx ; buff[22] = -fDy ; buff[23] =  fDz;
 
-    gSize3D.numPoints += 8;
-    gSize3D.numSegs   += 12;
-    gSize3D.numPolys  += 6;
-}
-
-//______________________________________________________________________________
-void TMarker3DBox::SizeofH3(TH1 *h)
-{
-//*-*-*-*-*-*-*Return total X3D size of 3-D histogram h*-*-*-*-*-*-*-*
-//*-*          ========================================
-
-   // take into account the 4 polylines of the OutlinetoCube
-   gSize3D.numSegs   += 4*3;
-   gSize3D.numPoints += 4*4;
-
-   Int_t ix,iy,iz;
-   Int_t nbinsx = h->GetXaxis()->GetNbins();
-   Int_t nbinsy = h->GetYaxis()->GetNbins();
-   Int_t nbinsz = h->GetZaxis()->GetNbins();
-   Int_t ncells = 0;
-   for (ix=1;ix<=nbinsx;ix++) {
-      for (iy=1;iy<=nbinsy;iy++) {
-         for (iz=1;iz<=nbinsz;iz++) {
-            if (((TH3F*)h)->GetBinContent(((TH3F*)h)->GetBin(ix,iy,iz)) != 0)
-                ncells++;
-         }
+      Double_t x, y, z;
+      const Double_t kPI = TMath::Pi();
+      Double_t theta  = fTheta*kPI/180;
+      Double_t phi    = fPhi*kPI/180;
+      Double_t sinth = TMath::Sin(theta);
+      Double_t costh = TMath::Cos(theta);
+      Double_t sinfi = TMath::Sin(phi);
+      Double_t cosfi = TMath::Cos(phi);
+   
+      //
+      // Matrix to convert from fruit frame to master frame
+      //
+   
+      Double_t M[9];
+      M[0] =  costh * cosfi;       M[1] = -sinfi;          M[2] = sinth*cosfi;
+      M[3] =  costh * sinfi;       M[4] =  cosfi;          M[5] = sinth*sinfi;
+      M[6] = -sinth;               M[7] =  0;              M[8] = costh;
+      for (Int_t i = 0; i < 8; i++) {
+         x = buff[3*i];
+         y = buff[3*i+1];
+         z = buff[3*i+2];
+   
+         buff[3*i]   = fX + M[0] * x + M[1] * y + M[2] * z;
+         buff[3*i+1] = fY + M[3] * x + M[4] * y + M[5] * z;
+         buff[3*i+2] = fZ + M[6] * x + M[7] * y + M[8] * z;
       }
    }
-   gSize3D.numPoints += 8*ncells;
-   gSize3D.numSegs   += 12*ncells;
-   gSize3D.numPolys  += 6*ncells;
 }
+
 
 //______________________________________________________________________________
 void TMarker3DBox::Streamer(TBuffer &R__b)

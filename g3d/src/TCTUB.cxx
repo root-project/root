@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TCTUB.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TCTUB.cxx,v 1.2 2000/11/21 20:15:33 brun Exp $
 // Author: Rene Brun   26/06/97
 
 /*************************************************************************
@@ -41,10 +41,7 @@ ClassImp(TCTUB)
 //______________________________________________________________________________
 TCTUB::TCTUB()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*CTUB shape default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ==============================
-
-
+   // CTUB shape default constructor
 }
 
 
@@ -55,18 +52,18 @@ TCTUB::TCTUB(const char *name, const char *title, const char *material, Float_t 
              Float_t coshx, Float_t coshy, Float_t coshz)
       : TTUBS(name,title,material,rmin,rmax,dz,phi1,phi2)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*CTUB shape normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
+   // CTUB shape normal constructor
 
-    fCosLow[0]  = coslx;
-    fCosLow[1]  = cosly;
-    fCosLow[2]  = coslz;
-    fCosHigh[0] = coshx;
-    fCosHigh[1] = coshy;
-    fCosHigh[2] = coshz;
-    TMath::Normalize(fCosLow);
-    TMath::Normalize(fCosHigh);
+   fCosLow[0]  = coslx;
+   fCosLow[1]  = cosly;
+   fCosLow[2]  = coslz;
+   fCosHigh[0] = coshx;
+   fCosHigh[1] = coshy;
+   fCosHigh[2] = coshz;
+   TMath::Normalize(fCosLow);
+   TMath::Normalize(fCosHigh);
 }
+
 
 //______________________________________________________________________________
 TCTUB::TCTUB(const char *name, const char *title, const char *material, Float_t rmin,
@@ -74,72 +71,71 @@ TCTUB::TCTUB(const char *name, const char *title, const char *material, Float_t 
              Float_t *lowNormal, Float_t *highNormal)
       : TTUBS(name,title,material,rmin,rmax,dz,phi1,phi2)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*CTUB shape normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
-    memcpy(fCosLow, lowNormal, sizeof(fCosLow) );
-    memcpy(fCosHigh,highNormal,sizeof(fCosHigh));
-    TMath::Normalize(fCosLow);
-    TMath::Normalize(fCosHigh);
+   // CTUB shape normal constructor
+
+   memcpy(fCosLow, lowNormal, sizeof(fCosLow) );
+   memcpy(fCosHigh,highNormal,sizeof(fCosHigh));
+   TMath::Normalize(fCosLow);
+   TMath::Normalize(fCosHigh);
 }
+
 
 //______________________________________________________________________________
 TCTUB::~TCTUB()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*CTUB shape default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      =============================
-
+   // CTUB shape default destructor
 }
 
+
 //______________________________________________________________________________
-static Float_t Product(const Float_t *x, const Float_t *y)
+static Double_t Product(const Double_t *x, const Float_t *y)
 {
  Double_t s = 0;
  for (int i= 0 ; i <2 ; i++ ) s += x[i]*y[i];
- return Float_t(s);
+ return s;
 }
+
+
 //______________________________________________________________________________
-void TCTUB::SetPoints(Float_t *buff)
+void TCTUB::SetPoints(Double_t *buff)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Create TUBS points*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                            ==================
+   // Create TUBS points
 
-    Float_t dz;
-    Int_t j, n;
+   Float_t dz;
+   Int_t j, n;
 
-    n = GetNumberOfDivisions()+1;
+   n = GetNumberOfDivisions()+1;
 
-    dz   = TTUBE::fDz;
+   dz   = TTUBE::fDz;
 
-    if (buff) {
-        Int_t indx = 0;
-//*-* We've to checxk whether the table does exist and create it
-//*-* since fCoTab/fSiTab are not saved with any TShape::Streamer function
+   if (buff) {
+      Int_t indx = 0;
 
-        if (!fCoTab)   MakeTableOfCoSin();
+      if (!fCoTab)   MakeTableOfCoSin();
 
-        for (j = 0; j < n; j++) {
-            buff[indx+6*n] = buff[indx] = fRmin * fCoTab[j];
-            indx++;
-            buff[indx+6*n] = buff[indx] = fAspectRatio*fRmin * fSiTab[j];
-            indx++;
-            buff[indx+6*n] = dz;
-            buff[indx+6*n]-= Product(&buff[indx+6*n-2],fCosHigh)/fCosHigh[2];
-            buff[indx]     =-dz;
-            buff[indx]    -= Product(&buff[indx-2],fCosLow)/fCosLow[2];
-            indx++;
-        }
-        for (j = 0; j < n; j++) {
-            buff[indx+6*n] = buff[indx] = fRmax * fCoTab[j];
-            indx++;
-            buff[indx+6*n] = buff[indx] = fAspectRatio*fRmax * fSiTab[j];
-            indx++;
-            buff[indx+6*n] = dz;
-            buff[indx+6*n]-= Product(&buff[indx+6*n-2],fCosHigh)/fCosHigh[2];
-            buff[indx]     =-dz;
-            buff[indx]    -= Product(&buff[indx-2],fCosLow)/fCosLow[2];
-            indx++;
-        }
-    }
+      for (j = 0; j < n; j++) {
+         buff[indx+6*n] = buff[indx] = fRmin * fCoTab[j];
+         indx++;
+         buff[indx+6*n] = buff[indx] = fAspectRatio*fRmin * fSiTab[j];
+         indx++;
+         buff[indx+6*n] = dz;
+         buff[indx+6*n]-= Product(&buff[indx+6*n-2],fCosHigh)/fCosHigh[2];
+         buff[indx]     =-dz;
+         buff[indx]    -= Product(&buff[indx-2],fCosLow)/fCosLow[2];
+         indx++;
+      }
+      for (j = 0; j < n; j++) {
+         buff[indx+6*n] = buff[indx] = fRmax * fCoTab[j];
+         indx++;
+         buff[indx+6*n] = buff[indx] = fAspectRatio*fRmax * fSiTab[j];
+         indx++;
+         buff[indx+6*n] = dz;
+         buff[indx+6*n]-= Product(&buff[indx+6*n-2],fCosHigh)/fCosHigh[2];
+         buff[indx]     =-dz;
+         buff[indx]    -= Product(&buff[indx-2],fCosLow)/fCosLow[2];
+         indx++;
+      }
+   }
 }
 
 

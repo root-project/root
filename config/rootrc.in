@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.75 2004/06/25 16:49:09 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.76 2004/07/07 23:25:33 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -290,6 +290,10 @@ Plugin.TVirtualProof:        * TProof        Proof        "TProof(const char*,co
 Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
 #Plugin.TVirtualPadEditor:  Ged TPadEditorOld GedOld       "TPadEditorOld()"
 Plugin.TVirtualPadEditor: Ged TGedEditor    Ged          "TGedEditor(TCanvas*)"
+Plugin.TVirtualViewer3D:    x3d TViewerX3D    X3d   "TViewerX3D(TVirtualPad*)"
++Plugin.TVirtualViewer3D:   ogl TViewerOpenGL RGL   "TViewerOpenGL(TVirtualPad*)"
++Plugin.TVirtualViewer3D:   oiv TViewerOIV    OIV   "TViewerOIV(TVirtualPad*)"
+
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.
