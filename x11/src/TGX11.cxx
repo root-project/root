@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.20 2002/02/21 12:14:14 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.21 2002/02/23 15:52:36 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -661,7 +661,21 @@ void TGX11::DrawPolyLine(int n, TPoint *xyt)
 
    XPoint *xy = (XPoint*)xyt;
 
-   if (n > 1) {
+   const Int_t kMaxPoints = 1000001;
+
+   if (n > kMaxPoints) {
+      int ibeg = 0;
+      int iend = kMaxPoints - 1;
+      while (iend < n) {
+         DrawPolyLine( kMaxPoints, &xyt[ibeg] );
+         ibeg = iend;
+         iend += kMaxPoints - 1;
+      }
+      if (ibeg < n) {
+         int npt = n - ibeg;
+         DrawPolyLine( npt, &xyt[ibeg] );
+      }
+   } else if (n > 1) {
       if (gLineStyle == LineSolid)
          XDrawLines(fDisplay, gCws->drawing, *gGCline, xy, n, CoordModeOrigin);
       else {
