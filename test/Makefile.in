@@ -13,7 +13,7 @@ ObjSuf        = o
 SrcSuf        = cxx
 ExeSuf        =
 DllSuf        = so
-OutPutOpt     = -o 
+OutPutOpt     = -o
 
 EVENTLIB      = $(EVENTSO)
 
@@ -610,7 +610,7 @@ clean:
 
 distclean:      clean
 		@rm -f $(PROGRAMS) $(EVENTSO) $(EVENTLIB) *Dict.* *.def *.exp \
-		   *.root *.ps .def so_locations
+		   *.root *.ps *.so .def so_locations
 
 .SUFFIXES: .$(SrcSuf)
 
