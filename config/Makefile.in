@@ -158,3 +158,5 @@ TABLE          := @enable_table@
 INSTALL        := cp -dpR
 INSTALLDATA    := cp -dpR
 INSTALLDIR     := mkdir -p
+
+ROOTDRPMREL    := 1

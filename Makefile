@@ -495,6 +495,72 @@ redhat:
 #	rpm -bb --rcfile rpm/rpmrc --buildroot `pwd`/rpm/tmp rpm/root.spec
 #	@echo "Redhat Linux packages done. They are put in '../<arch>'"
 
+rootdrpm:
+	@if [ ! -x `which rpm` ]; then \
+	   echo "You must have rpm installed to make the root-rootd package"; \
+	   exit 1; fi
+	@echo "OK, you have RPM on your system - good"
+	@if [ "x$(ARCOMP)" != "x" ]; then \
+	    rm -f rootd-$(ARCOMP)-*-$(ROOTDRPMREL).spec ; \
+	else  \
+	    rm -f rootd-*-$(ROOTDRPMREL).spec ; \
+	fi
+	build/package/lib/makerpmspecs.sh rpm build/package/common \
+	        build/package/rpm root-rootd >> root-rootd.spec.tmp
+	@if [ "x$(ARCOMP)" != "x" ]; then \
+	    echo "Architecture+compiler flag: $(ARCOMP)" ; \
+	fi
+	@if [ "x$(ROOTDRPMREL)" != "x" ]; then \
+	    echo "RPM release set to: $(ROOTDRPMREL)" ; \
+	fi
+	@if [ ! -d "/tmp/rootdrpm" ]; then \
+	   echo "Creating build directory /tmp/rootdrpm ..."; \
+	   mkdir -p /tmp/rootdrpm; \
+	   chmod 0777 /tmp/rootdrpm; \
+	fi
+	@echo "Make the substitutions ..."
+	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` ; \
+	        echo "Version is $$vers ... " ; \
+	   rootdir=`echo $(PWD)` ; \
+	        echo "Rootdir: $$rootdir" ; \
+	   prefix=`dirname $(DESTDIR)$(BINDIR)` ; \
+	        echo "Prefix: $$prefix" ; \
+	   etcdir=`echo $(DESTDIR)$(ETCDIR)` ; \
+	        echo "Etcdir: $$etcdir" ; \
+	   arcomp="" ; \
+	   if [ "x$(ARCOMP)" != "x" ]; then \
+	      arcomp=`echo -$(ARCOMP)` ; \
+	   fi ; \
+	   sed -e "s|@version@|$$vers|" \
+	       -e "s|@rootdir@|$$rootdir|" \
+	       -e "s|@prefix@|$$prefix|" \
+	       -e "s|@etcdir@|$$etcdir|" \
+	       -e "s|@arcomp@|$$arcomp|" \
+	       -e "s|@release@|$(ROOTDRPMREL)|" \
+	           < root-rootd.spec.tmp \
+	           > rootd$$arcomp-$$vers-$(ROOTDRPMREL).spec
+	@echo " "
+	@echo "To build the RPM package run:"
+	@specfile=`ls -1 rootd*$(ARCOMP)*-$(ROOTDRPMREL).spec` ; \
+	        echo "   rpmbuild -ba $$specfile "
+	@rm -f root-rootd.spec.tmp root-rootd.spec.tmp.*
+	@if [ "x$(ARCOMP)" == "x" ]; then \
+	    echo " " ; \
+	    echo "To add a flag to the package name re-run with" ; \
+	    echo " " ; \
+	    echo "  make rootdrpm ARCOMP=<flag> " ; \
+	    echo " " ; \
+	    echo "The RPM will then be called rootd-<flag> " ; \
+	    echo " " ; \
+	fi
+	@if [ "x$(ROOTDRPMREL)" == "x1" ]; then \
+	    echo " " ; \
+	    echo "To change the release version number re-run with" ; \
+	    echo " " ; \
+	    echo "  make rootdrpm ROOTDRPMREL=<new_release_version_number> " ; \
+	    echo " " ; \
+	fi
+
 clean::
 	@rm -f __compiledata __makeinfo *~ core
 

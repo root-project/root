@@ -495,7 +495,8 @@ MEMPROBEOUT=bin/memprobe
 MIMEUNIXIN=config/mimes.unix.in
 MIMEWIN32IN=config/mimes.win32.in
 MIMEOUT=etc/root.mimes
-
+ROOTDIN=config/rootd.in
+ROOTDOUT=etc/rootd
 
 ######################################################################
 #
@@ -698,7 +699,7 @@ fi
 ### echo %%% Some clean up
 #
 trap "rm -f Makefile.tmp config.tmp root-config.tmp rootrc.tmp \
-      rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp; exit 1" 1 2 3 15
+      rootauthrc.tmp rootdaemonrc.tmp memprobe.tmp rootd.tmp; exit 1" 1 2 3 15
 
 ######################################################################
 #
@@ -838,6 +839,9 @@ if test "x$noact" = "xno"; then
     cp -f $ROOTAUTHRCIN rootauthrc.tmp
     cp -f $ROOTDAEMONRCIN rootdaemonrc.tmp
     cp -f $MEMPROBEIN memprobe.tmp
+    if test ! "x$haveconfig" = "x" ; then
+       cp -f $ROOTDIN rootd.tmp
+    fi
 fi
 
 ######################################################################
@@ -2867,6 +2871,18 @@ else
    cp -f $MIMEUNIXIN $MIMEOUT
 fi
 echo "done"
+
+#---------------------------------------------------------------------
+# etc/rootd
+#
+if test ! "x$haveconfig" = "x" ; then
+   message "Writing $ROOTDOUT"
+   sed \
+       -e "s|@bindir@|$bindir|" \
+       < rootd.tmp > $ROOTDOUT
+   rm -f rootd.tmp
+   echo "done"
+fi
 
 #---------------------------------------------------------------------
 # bin/memprobe

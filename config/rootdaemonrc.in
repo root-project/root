@@ -3,7 +3,9 @@
 #      This files describe the names of the hosts for which
 #      the allowed authentication methods are not the default ones
 #      as specified in system.rootrc (if any).
-#      This file is used by the 'rootd' and 'proofd' daemons.
+#      This file is used by the 'rootd', 'proofd' and 'sockd' daemons
+#      ('sockd' indicates servers run from ROOT interactive sessions
+#       via teh TServerSocket class).
 #
 #      If existing, $HOME/.rootdaemonrc has priority over
 #      $ROOTSYS/etc/system.rootdaemonrc
@@ -15,8 +17,8 @@
 #      their FQDN (eg, pcepsft43.cern.ch) or their IP address
 #      (eg 137.138.99.73).
 #
-#    - host names can be followed by :rootd or :proofd to define directives
-#      applying only to the given service
+#    - host names can be followed by :rootd, :proofd or :sockd to define
+#      directives applying only to the given service
 #
 #    - directives applying to all host can be specified either by
 #      'default' or '*'
@@ -34,8 +36,8 @@
 #    - truncated IP address can also be used to indicate a set of
 #      machines; they are interpreted as the very first or very last
 #      part of the address; for example, to select 137.138.99.73,
-#      any of these is valid: '137.138.99', '137.138', '137`, '99.73';
-#      or with wild cards: '137.13*' or '*.99.73`; however, '138.99'
+#      any of these is valid: '137.138.99', '137.138', '137', '99.73';
+#      or with wild cards: '137.13*' or '*.99.73'; however, '138.99'
 #      is invalid because ambiguous.
 #
 #    - the information following the name or IP address indicates, in order
@@ -86,10 +88,8 @@
 # default              ssh 0 uidgid
 # 137.138.             4 0
 # pceple19.cern.ch     4 1 3 2 5 0
-# lxplus*.cern.ch      4 1 globus 0:ganis:gganis 5
-# pcepsft43.cern.ch    4 3 1 5 2 0
-# afal57.cern.ch       0 5 4
-# pcep*.cern.ch:rootd  4 1 3 2 5 0
+# lxplus*.cern.ch      4 1 globus 0:qwerty:uytre 5
+# pcep*.cern.ch:rootd  4 1 5:qwerty 
 #
 # Everything allowed from the local host (for testing)
 #
