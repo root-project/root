@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.h,v 1.1 2002/11/15 16:04:57 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.h,v 1.2 2003/01/06 08:14:20 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -51,6 +51,7 @@ public:
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
          TGaxis *GetAxis() {return &fAxis;}
      Option_t   *GetName() const {return fName.Data();}
+   virtual char *GetObjectInfo(Int_t px, Int_t py) const;
    virtual void  Paint(Option_t *option="");
    virtual void  SavePrimitive(ofstream &out, Option_t *option);
    virtual void  SetName(const char *name="") {fName = name;} // *MENU*

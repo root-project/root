@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.5 2003/01/09 17:13:36 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPaletteAxis.cxx,v 1.6 2003/01/13 13:53:55 brun Exp $
 // Author: Rene Brun   15/11/2002
 
 /*************************************************************************
@@ -160,10 +160,10 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
       if (ratio2 - ratio1 > 0.05) {
          if (fH->GetDimension() == 2) {
-            Float_t zmin = fH->GetMinimum();
-            Float_t zmax = fH->GetMaximum();
-            Float_t newmin = zmin + (zmax-zmin)*ratio1;
-            Float_t newmax = zmin + (zmax-zmin)*ratio2;
+            Double_t zmin = fH->GetMinimum();
+            Double_t zmax = fH->GetMaximum();
+            Double_t newmin = zmin + (zmax-zmin)*ratio1;
+            Double_t newmax = zmin + (zmax-zmin)*ratio2;
             if(newmin < zmin)newmin = fH->GetBinContent(fH->GetMinimumBin());
             if(newmax > zmax)newmax = fH->GetBinContent(fH->GetMaximumBin());
             fH->SetMinimum(newmin);
@@ -177,6 +177,36 @@ void TPaletteAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
    }
 }
+
+//______________________________________________________________________________
+char *TPaletteAxis::GetObjectInfo(Int_t /* px */, Int_t py) const
+{
+//   Redefines TObject::GetObjectInfo.
+//   Displays the z value corresponding to cursor position py
+// 
+   Double_t z;
+   static char info[64];
+
+   Double_t zmin = fH->GetMinimum();
+   Double_t zmax = fH->GetMaximum();
+   Int_t   y1   = gPad->GetWh()-gPad->VtoPixel(fY1NDC);
+   Int_t   y2   = gPad->GetWh()-gPad->VtoPixel(fY2NDC);
+   Int_t   y    = gPad->GetWh()-py;
+
+   if (gPad->GetLogz()) {
+      if (zmin <= 0 && zmax > 0) zmin = 0.001*zmax;
+      Double_t zminl = TMath::Log10(zmin);
+      Double_t zmaxl = TMath::Log10(zmax);
+      Double_t zl    = (zmaxl-zminl)*((Double_t)(y-y1)/(Double_t)(y2-y1))+zminl;
+      z = TMath::Power(10.,zl);
+   } else {
+      z = (zmax-zmin)*((Double_t)(y-y1)/(Double_t)(y2-y1))+zmin;
+   }
+
+   sprintf(info,"(z=%g)",z);
+   return info;
+}
+
 
 //______________________________________________________________________________
 void TPaletteAxis::Paint(Option_t *)
@@ -230,7 +260,7 @@ void TPaletteAxis::Paint(Option_t *)
          color = Int_t(0.01+(w1-wlmin)*scale);
       }
 
-      theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
+      theColor = Int_t((color+0.99)*Double_t(ncolors)/Double_t(ndivz));
       SetFillColor(gStyle->GetColorPalette(theColor));
       TAttFill::Modify();
       gPad->PaintBox(xmin,y1,xmax,y2);
