@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.14 2005/03/08 09:19:18 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.15 2005/03/10 17:57:04 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -59,7 +59,7 @@
 #include "TVirtualPerfStats.h"
 #include "TVirtualProof.h"
 #include "TProof.h"
-#include "TProofChain.h"
+#include "TChainProof.h"
 #include "TPluginManager.h"
 #include "TChain.h"
 #include "TChainElement.h"
@@ -896,10 +896,10 @@ void TDSet::StartViewer()
       Error("StartViewer", "TDSet contents should be of type TTree (or subtype)");
       return;
    }
-   TProofChain *w = TProofChain::MakeProofChain(this, gProof);
+   TChainProof *w = TChainProof::MakeChainProof(this, gProof);
    // TODO: w should be freed somewhere, probably in the TTreeViewer destructor.
    if (!w) {
-      Error("StartViewer", "failure creating a TProofChain");
+      Error("StartViewer", "failure creating a TChainProof");
       return;
    }
 

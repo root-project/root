@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TProofChain.cxx,v 1.2 2005/03/17 00:31:17 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChainProof.cxx,v 1.3 2005/03/17 15:00:47 rdm Exp $
 // Author: Marek Biskup   10/3/2005
 
 /*************************************************************************
@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProofChain                                                          //
+// TChainProof                                                          //
 //                                                                      //
 // A wrapper for TDSet to behave as a Tree/Chain.                       //
 // Uses an internal TDSet to handle processing and a TTree              //
@@ -19,15 +19,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TProofChain.h"
+#include "TChainProof.h"
 #include "TDSet.h"
 #include "TVirtualProof.h"
 #include "TDrawFeedback.h"
 
-ClassImp(TProofChain)
+ClassImp(TChainProof)
 
 //______________________________________________________________________________
-TProofChain::TProofChain(TDSet *set, TTree *tree) : TTree()
+TChainProof::TChainProof(TDSet *set, TTree *tree) : TTree()
 {
    // Crates a new TProof chain containing the files from the TDSet.
    // The tree is just a dummy containing descriptions of all the tree leaves.
@@ -39,7 +39,7 @@ TProofChain::TProofChain(TDSet *set, TTree *tree) : TTree()
 }
 
 //______________________________________________________________________________
-TProofChain::~TProofChain()
+TChainProof::~TChainProof()
 {
    // Destructor - removes the chain from the proof in case a proof was set.
 
@@ -48,137 +48,137 @@ TProofChain::~TProofChain()
 }
 
 //______________________________________________________________________________
-void TProofChain::AddClone(TTree *)
+void TChainProof::AddClone(TTree *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::AddClone","not implemented");
+   Error("TChainProof::AddClone","not implemented");
 }
 
 //______________________________________________________________________________
-TFriendElement *TProofChain::AddFriend(const char *, const char *)
+TFriendElement *TChainProof::AddFriend(const char *, const char *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 //______________________________________________________________________________
-TFriendElement *TProofChain::AddFriend(const char *, TFile *)
+TFriendElement *TChainProof::AddFriend(const char *, TFile *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 
 }
 //______________________________________________________________________________
-TFriendElement *TProofChain::AddFriend(TTree *, const char*, Bool_t)
+TFriendElement *TChainProof::AddFriend(TTree *, const char*, Bool_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::AutoSave(Option_t *)
+Long64_t TChainProof::AutoSave(Option_t *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::AutoSave","not implemented");
+   Error("TChainProof::AutoSave","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::Branch(TList *, Int_t, Int_t)
+Int_t TChainProof::Branch(TList *, Int_t, Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::Branch","not implemented");
+   Error("TChainProof::Branch","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::Branch(TCollection *, Int_t, Int_t, const char *)
+Int_t TChainProof::Branch(TCollection *, Int_t, Int_t, const char *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::Branch","not implemented");
+   Error("TChainProof::Branch","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::Branch(const char *, Int_t, Int_t)
+Int_t TChainProof::Branch(const char *, Int_t, Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::Branch","not implemented");
+   Error("TChainProof::Branch","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-TBranch *TProofChain::Branch(const char *, TClonesArray **, Int_t, Int_t)
+TBranch *TChainProof::Branch(const char *, TClonesArray **, Int_t, Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::Branch","not implemented");
+   Error("TChainProof::Branch","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-TBranch *TProofChain::Branch(const char *, void *, const char *, Int_t)
+TBranch *TChainProof::Branch(const char *, void *, const char *, Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::Branch","not implemented");
+   Error("TChainProof::Branch","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-TBranch *TProofChain::Branch(const char *, void *, Int_t, Int_t)
+TBranch *TChainProof::Branch(const char *, void *, Int_t, Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::Branch","not implemented");
+   Error("TChainProof::Branch","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-TBranch *TProofChain::Branch(const char *, const char *, void *, Int_t, Int_t)
+TBranch *TChainProof::Branch(const char *, const char *, void *, Int_t, Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::Branch","not implemented");
+   Error("TChainProof::Branch","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-TBranch *TProofChain::BranchOld(const char *, const char *, void *, Int_t, Int_t)
+TBranch *TChainProof::BranchOld(const char *, const char *, void *, Int_t, Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::BranchOld","not implemented");
+   Error("TChainProof::BranchOld","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-TBranch *TProofChain::BranchRef()
+TBranch *TChainProof::BranchRef()
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::BranchRef", "not implemented");
+   Error("TChainProof::BranchRef", "not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-TBranch *TProofChain::Bronch(const char *, const char *, void *, Int_t, Int_t)
+TBranch *TChainProof::Bronch(const char *, const char *, void *, Int_t, Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::Bronch","not implemented");
+   Error("TChainProof::Bronch","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-void TProofChain::Browse(TBrowser *b)
+void TChainProof::Browse(TBrowser *b)
 {
    // Forwards the execution to the dummy tree header.
    // See TTree::Browse().
@@ -187,83 +187,83 @@ void TProofChain::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::BuildIndex(const char *, const char *)
+Int_t TChainProof::BuildIndex(const char *, const char *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::BuildIndex","not implemented");
+   Error("TChainProof::BuildIndex","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-void TProofChain::SetTreeIndex(TVirtualIndex *)
+void TChainProof::SetTreeIndex(TVirtualIndex *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::SetTreeIndex","not implemented");
+   Error("TChainProof::SetTreeIndex","not implemented");
 }
 
 //______________________________________________________________________________
-TStreamerInfo *TProofChain::BuildStreamerInfo(TClass *, void *)
+TStreamerInfo *TChainProof::BuildStreamerInfo(TClass *, void *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::BuildStreamerInfo","not implemented");
+   Error("TChainProof::BuildStreamerInfo","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-TFile *TProofChain::ChangeFile(TFile *)
+TFile *TChainProof::ChangeFile(TFile *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::ChangeFile","not implemented");
+   Error("TChainProof::ChangeFile","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-TTree *TProofChain::CloneTree(Long64_t, Option_t *)
+TTree *TChainProof::CloneTree(Long64_t, Option_t *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::CloneTree","not implemented");
+   Error("TChainProof::CloneTree","not implemented");
    return 0;
 }
 
 //______________________________________________________________________________
-void TProofChain::CopyAddresses(TTree* )
+void TChainProof::CopyAddresses(TTree* )
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
-   Error("TProofChain::CopyAddresses","not implemented");
+   Error("TChainProof::CopyAddresses","not implemented");
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::CopyEntries(TTree *, Long64_t)
+Long64_t TChainProof::CopyEntries(TTree *, Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
-
-   return 0;
-}
-
-//______________________________________________________________________________
-TTree *TProofChain::CopyTree(const char *, Option_t *, Long64_t , Long64_t )
-{
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-void TProofChain::Delete(Option_t *)
+TTree *TChainProof::CopyTree(const char *, Option_t *, Long64_t , Long64_t )
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
+
+   return 0;
+}
+
+//______________________________________________________________________________
+void TChainProof::Delete(Option_t *)
+{
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return;
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::Draw(const char *varexp, const TCut &selection, Option_t *option, Long64_t nentries, Long64_t firstentry)
+Long64_t TChainProof::Draw(const char *varexp, const TCut &selection, Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
    // Forwards the execution to the TDSet.
    // See TDSet::Browse().
@@ -280,7 +280,7 @@ Long64_t TProofChain::Draw(const char *varexp, const TCut &selection, Option_t *
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::Draw(const char *varexp, const char *selection, Option_t *option,Long64_t nentries, Long64_t firstentry)
+Long64_t TChainProof::Draw(const char *varexp, const char *selection, Option_t *option,Long64_t nentries, Long64_t firstentry)
 {
    // Forwards the execution to the TDSet.
    // See TDSet::Browse().
@@ -296,23 +296,23 @@ Long64_t TProofChain::Draw(const char *varexp, const char *selection, Option_t *
 }
 
 //______________________________________________________________________________
-void TProofChain::DropBuffers(Int_t)
+void TChainProof::DropBuffers(Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return;
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::Fill()
+Int_t TChainProof::Fill()
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-TBranch *TProofChain::FindBranch(const char* branchname)
+TBranch *TChainProof::FindBranch(const char* branchname)
 {
    // Forwards the execution to the dummy tree header.
    // See TTree::FindBranch().
@@ -321,7 +321,7 @@ TBranch *TProofChain::FindBranch(const char* branchname)
 }
 
 //______________________________________________________________________________
-TLeaf *TProofChain::FindLeaf(const char* searchname)
+TLeaf *TChainProof::FindLeaf(const char* searchname)
 {
    // Forwards the execution to the dummy tree header.
    // See TTree::FindLeaf().
@@ -330,24 +330,24 @@ TLeaf *TProofChain::FindLeaf(const char* searchname)
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::Fit(const char * ,const char *, const char *, Option_t *,
+Long64_t TChainProof::Fit(const char * ,const char *, const char *, Option_t *,
                           Option_t *, Long64_t, Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-const char *TProofChain::GetAlias(const char *) const
+const char *TChainProof::GetAlias(const char *) const
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-TBranch *TProofChain::GetBranch(const char *name)
+TBranch *TChainProof::GetBranch(const char *name)
 {
    // Forwards the execution to the dummy tree header.
    // See TTree::GetBranch().
@@ -356,7 +356,7 @@ TBranch *TProofChain::GetBranch(const char *name)
 }
 
 //______________________________________________________________________________
-Bool_t TProofChain::GetBranchStatus(const char *branchname) const
+Bool_t TChainProof::GetBranchStatus(const char *branchname) const
 {
    // Forwards the execution to the dummy tree header.
    // See TTree::GetBranchStatus().
@@ -365,7 +365,7 @@ Bool_t TProofChain::GetBranchStatus(const char *branchname) const
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::GetBranchStyle()
+Int_t TChainProof::GetBranchStyle()
 {
    // See TTree::GetBranchStyle().
 
@@ -373,120 +373,120 @@ Int_t TProofChain::GetBranchStyle()
 }
 
 //______________________________________________________________________________
-TFile *TProofChain::GetCurrentFile() const
+TFile *TChainProof::GetCurrentFile() const
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::GetEntriesFriend() const
+Long64_t TChainProof::GetEntriesFriend() const
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::GetEntry(Long64_t, Int_t)
+Int_t TChainProof::GetEntry(Long64_t, Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::GetEntryNumber(Long64_t) const
+Long64_t TChainProof::GetEntryNumber(Long64_t) const
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::GetEntryNumberWithBestIndex(Int_t, Int_t) const
+Long64_t TChainProof::GetEntryNumberWithBestIndex(Int_t, Int_t) const
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 
 //______________________________________________________________________________
-Long64_t TProofChain::GetEntryNumberWithIndex(Int_t, Int_t) const
+Long64_t TChainProof::GetEntryNumberWithIndex(Int_t, Int_t) const
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::GetEntryWithIndex(Int_t, Int_t)
+Int_t TChainProof::GetEntryWithIndex(Int_t, Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-const char *TProofChain::GetFriendAlias(TTree *) const
+const char *TChainProof::GetFriendAlias(TTree *) const
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-TIterator* TProofChain::GetIteratorOnAllLeaves(Bool_t)
+TIterator* TChainProof::GetIteratorOnAllLeaves(Bool_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-TLeaf *TProofChain::GetLeaf(const char *)
+TLeaf *TChainProof::GetLeaf(const char *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Double_t TProofChain::GetMaximum(const char *)
+Double_t TChainProof::GetMaximum(const char *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::GetMaxTreeSize()
+Long64_t TChainProof::GetMaxTreeSize()
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Double_t TProofChain::GetMinimum(const char *)
+Double_t TChainProof::GetMinimum(const char *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-const char *TProofChain::GetNameByIndex(TString &, Int_t *, Int_t) const
+const char *TChainProof::GetNameByIndex(TString &, Int_t *, Int_t) const
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-TVirtualTreePlayer *TProofChain::GetPlayer()
+TVirtualTreePlayer *TChainProof::GetPlayer()
 {
    // Forwards the execution to the dummy tree header.
    // See TTree::GetPlayer().
@@ -495,138 +495,138 @@ TVirtualTreePlayer *TProofChain::GetPlayer()
 }
 
 //______________________________________________________________________________
-TList *TProofChain::GetUserInfo()
+TList *TChainProof::GetUserInfo()
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-void TProofChain::KeepCircular()
+void TChainProof::KeepCircular()
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return;
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::LoadTree(Long64_t)
+Long64_t TChainProof::LoadTree(Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::LoadBaskets(Long64_t)
+Int_t TChainProof::LoadBaskets(Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::LoadTreeFriend(Long64_t, TTree *)
+Long64_t TChainProof::LoadTreeFriend(Long64_t, TTree *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::MakeSelector(const char *)
+Int_t TChainProof::MakeSelector(const char *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::MakeProxy(const char *, const char *,
+Int_t TChainProof::MakeProxy(const char *, const char *,
                              const char *, const char *,
                              Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::MakeClass(const char *, Option_t *)
+Int_t TChainProof::MakeClass(const char *, Option_t *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Int_t TProofChain::MakeCode(const char *)
+Int_t TChainProof::MakeCode(const char *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-void TProofChain::MakeIndex(TString &, Int_t *)
+void TChainProof::MakeIndex(TString &, Int_t *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return;
 }
 
 //______________________________________________________________________________
-Bool_t TProofChain::MemoryFull(Int_t)
+Bool_t TChainProof::MemoryFull(Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-TTree *TProofChain::MergeTrees(TList *)
+TTree *TChainProof::MergeTrees(TList *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::Merge(TCollection *)
+Long64_t TChainProof::Merge(TCollection *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Bool_t TProofChain::Notify()
+Bool_t TChainProof::Notify()
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-TPrincipal *TProofChain::Principal(const char *, const char *, Option_t *,
+TPrincipal *TChainProof::Principal(const char *, const char *, Option_t *,
                                    Long64_t, Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-void TProofChain::Print(Option_t *) const
+void TChainProof::Print(Option_t *) const
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return;
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::Process(const char *filename,Option_t *option,Long64_t nentries, Long64_t firstentry)
+Long64_t TChainProof::Process(const char *filename,Option_t *option,Long64_t nentries, Long64_t firstentry)
 {
    // Forwards the execution to the TDSet.
    // See TDSet::Process().
@@ -635,9 +635,9 @@ Long64_t TProofChain::Process(const char *filename,Option_t *option,Long64_t nen
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::Process(TSelector *selector,Option_t *option, Long64_t nentries, Long64_t firstentry)
+Long64_t TChainProof::Process(TSelector *selector,Option_t *option, Long64_t nentries, Long64_t firstentry)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    if (selector ||  option || nentries || firstentry);
    //   return fSet->Process(selector, option, nentries, firstentry);
@@ -646,111 +646,111 @@ Long64_t TProofChain::Process(TSelector *selector,Option_t *option, Long64_t nen
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::Project(const char *, const char *, const char *,
+Long64_t TChainProof::Project(const char *, const char *, const char *,
                               Option_t *, Long64_t, Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-TSQLResult *TProofChain::Query(const char *, const char *, Option_t *,
+TSQLResult *TChainProof::Query(const char *, const char *, Option_t *,
                                Long64_t, Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::ReadFile(const char *, const char *)
+Long64_t TChainProof::ReadFile(const char *, const char *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-void TProofChain::Refresh()
+void TChainProof::Refresh()
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //______________________________________________________________________________
-void TProofChain::RemoveFriend(TTree *)
+void TChainProof::RemoveFriend(TTree *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //______________________________________________________________________________
-void TProofChain::Reset(Option_t *)
+void TChainProof::Reset(Option_t *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //______________________________________________________________________________
-void TProofChain::ResetBranchAddresses()
+void TChainProof::ResetBranchAddresses()
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //______________________________________________________________________________
-Long64_t  TProofChain::Scan(const char *, const char *, Option_t *,
+Long64_t  TChainProof::Scan(const char *, const char *, Option_t *,
                             Long64_t, Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-Bool_t TProofChain::SetAlias(const char *, const char *)
+Bool_t TChainProof::SetAlias(const char *, const char *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //_______________________________________________________________________
-void TProofChain::SetBasketSize(const char *, Int_t)
+void TChainProof::SetBasketSize(const char *, Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //_______________________________________________________________________
-void TProofChain::SetBranchAddress(const char *, void *)
+void TChainProof::SetBranchAddress(const char *, void *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 //_______________________________________________________________________
-void TProofChain::SetBranchAddress(const char *, void *,
+void TChainProof::SetBranchAddress(const char *, void *,
                                    TClass *, EDataType, Bool_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //_______________________________________________________________________
-void TProofChain::SetBranchStatus(const char *, Bool_t, UInt_t *)
+void TChainProof::SetBranchStatus(const char *, Bool_t, UInt_t *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 
 //______________________________________________________________________________
-void TProofChain::SetBranchStyle(Int_t)
+void TChainProof::SetBranchStyle(Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //______________________________________________________________________________
-void TProofChain::SetCircular(Long64_t)
+void TChainProof::SetCircular(Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //______________________________________________________________________________
-void TProofChain::SetDebug(Int_t level, Long64_t min, Long64_t max)
+void TChainProof::SetDebug(Int_t level, Long64_t min, Long64_t max)
 {
    // See TTree::SetDebug
 
@@ -758,39 +758,39 @@ void TProofChain::SetDebug(Int_t level, Long64_t min, Long64_t max)
 }
 
 //______________________________________________________________________________
-void TProofChain::SetDirectory(TDirectory *)
+void TChainProof::SetDirectory(TDirectory *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //_______________________________________________________________________
-Long64_t TProofChain::SetEntries(Long64_t)
+Long64_t TChainProof::SetEntries(Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //_______________________________________________________________________
-void TProofChain::SetEstimate(Long64_t)
+void TChainProof::SetEstimate(Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //_______________________________________________________________________
-void TProofChain::SetFileNumber(Int_t)
+void TChainProof::SetFileNumber(Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //______________________________________________________________________________
-void TProofChain::SetMaxTreeSize(Long64_t)
+void TChainProof::SetMaxTreeSize(Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //______________________________________________________________________________
-void TProofChain::SetName(const char *name)
+void TChainProof::SetName(const char *name)
 {
    // See TTree::GetName.
 
@@ -798,61 +798,61 @@ void TProofChain::SetName(const char *name)
 }
 
 //______________________________________________________________________________
-void TProofChain::SetObject(const char *, const char *)
+void TChainProof::SetObject(const char *, const char *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //______________________________________________________________________________
-void TProofChain::SetWeight(Double_t, Option_t *)
+void TChainProof::SetWeight(Double_t, Option_t *)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //_______________________________________________________________________
-void TProofChain::Show(Long64_t, Int_t)
+void TChainProof::Show(Long64_t, Int_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //_______________________________________________________________________
-void TProofChain::StartViewer()
+void TChainProof::StartViewer()
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //_______________________________________________________________________
-void TProofChain::Streamer(TBuffer &)
+void TChainProof::Streamer(TBuffer &)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::UnbinnedFit(const char * ,const char *, const char *,
+Long64_t TChainProof::UnbinnedFit(const char * ,const char *, const char *,
                                   Option_t *,Long64_t, Long64_t)
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 
    return 0;
 }
 
 //______________________________________________________________________________
-void TProofChain::UseCurrentStyle()
+void TChainProof::UseCurrentStyle()
 {
-   // Not implemented in TProofChain. Shouldn't be used.
+   // Not implemented in TChainProof. Shouldn't be used.
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::GetEntries() const
+Long64_t TChainProof::GetEntries() const
 {
-   // Returns the total number of entries in the TProofChain, which is
+   // Returns the total number of entries in the TChainProof, which is
    // the number of entries in the TDSet that it holds.
 
    return fTree->GetMaxEntryLoop();  // this was used for holding the total number of entries
 }
 
 //______________________________________________________________________________
-void TProofChain::Progress(Long64_t total, Long64_t processed)
+void TChainProof::Progress(Long64_t total, Long64_t processed)
 {
    // Changes the number of processed entries.
 
@@ -865,7 +865,7 @@ void TProofChain::Progress(Long64_t total, Long64_t processed)
 }
 
 //______________________________________________________________________________
-Long64_t TProofChain::GetReadEntry() const
+Long64_t TChainProof::GetReadEntry() const
 {
    // Returns the number of processed entries.
 
@@ -873,7 +873,7 @@ Long64_t TProofChain::GetReadEntry() const
 }
 
 //______________________________________________________________________________
-void TProofChain::ReleaseProof()
+void TChainProof::ReleaseProof()
 {
    // Releases PROOF. Disconnect the "progress" signal.
 
@@ -887,7 +887,7 @@ void TProofChain::ReleaseProof()
 }
 
 //______________________________________________________________________________
-void TProofChain::ConnectProof(TVirtualProof *proof)
+void TChainProof::ConnectProof(TVirtualProof *proof)
 {
    // Connects the proof - creates a "DrawFeedback" and connects the
    // "Progress" signal.
@@ -898,27 +898,27 @@ void TProofChain::ConnectProof(TVirtualProof *proof)
 
    fDrawFeedback = fProof->CreateDrawFeedback();
 
-   fProof->Connect("Progress(Long64_t,Long64_t)", "TProofChain",
+   fProof->Connect("Progress(Long64_t,Long64_t)", "TChainProof",
                    this, "Progress(Long64_t,Long64_t)");
 }
 
 //______________________________________________________________________________
-TProofChain *TProofChain::MakeProofChain(TDSet *set, TVirtualProof *proof)
+TChainProof *TChainProof::MakeChainProof(TDSet *set, TVirtualProof *proof)
 {
-   // Creates a new TProofChain that keeps the TDSet.
+   // Creates a new TChainProof that keeps the TDSet.
    // uses proof to get the three header.
 
    if (!set->IsTree()) {
-      set->Error("MakeProofChain", "TDSet contents should be of type TTree (or subtype)");
+      set->Error("MakeChainProof", "TDSet contents should be of type TTree (or subtype)");
       return 0;
    }
 
    TTree *t = proof->GetTreeHeader(set);
    if (!t) {
-      set->Error("TProofChain::MakeProofChain", "Error getting a tree header");
+      set->Error("TChainProof::MakeChainProof", "Error getting a tree header");
       return 0;
    }
-   TProofChain *w = new TProofChain(set, t);   // t will be deleted in w's destructor
+   TChainProof *w = new TChainProof(set, t);   // t will be deleted in w's destructor
    w->ConnectProof(proof);
    w->SetDirectory(0);
    w->SetName(TString(t->GetName())  + "_Wrapped");

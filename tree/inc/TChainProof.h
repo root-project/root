@@ -1,20 +1,21 @@
+// @(#)root/tree:$Name:$:$Id:$
 // Author: Marek Biskup   10/12/2004
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TProofChain
-#define ROOT_TProofChain
+#ifndef ROOT_TChainProof
+#define ROOT_TChainProof
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TProofChain                                                          //
+// TChainProof                                                          //
 //                                                                      //
 // A wrapper for TDSet to behave as a Tree/Chain.                       //
 // Uses an internal TDSet to handle processing and a TTree              //
@@ -30,7 +31,7 @@ class TDSet;
 class TDrawFeedback;
 
 
-class TProofChain : public TTree {
+class TChainProof : public TTree {
 
 protected:
     TTree         *fTree;             // dummy tree
@@ -46,8 +47,8 @@ protected:
     virtual TFile   *ChangeFile(TFile *file);
 
 public:
-    TProofChain(TDSet *set, TTree* tree);
-    virtual ~TProofChain();
+    TChainProof(TDSet *set, TTree* tree);
+    virtual ~TChainProof();
 
     virtual TFriendElement *AddFriend(const char *treename, const char *filename="");
     virtual TFriendElement *AddFriend(const char *treename, TFile *file);
@@ -230,9 +231,10 @@ public:
     void                 UseCurrentStyle();
     virtual void         ConnectProof(TVirtualProof* proof);
     virtual void         ReleaseProof();
-    static  TProofChain *MakeProofChain(TDSet* set, TVirtualProof* proof);
 
-    ClassDef(TProofChain,0)  //Tree descriptor (the main ROOT I/O class)
+    static  TChainProof *MakeChainProof(TDSet *set, TVirtualProof *proof);
+
+    ClassDef(TChainProof,0)  //TChain proxy for running chains on PROOF
 };
 
 #endif
