@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.8 2003/01/30 13:34:48 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.9 2003/01/31 17:00:11 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -33,8 +33,8 @@
 //#include "Typedf.h"
 //#include "Class.h"
 
-#ifndef ROOT_TNamed
-#include "TNamed.h"
+#ifndef ROOT_TROOT
+#include "TROOT.h"
 #endif
 #ifndef ROOT_TDictionary
 #include "TDictionary.h"
@@ -42,14 +42,8 @@
 #ifndef ROOT_TMap
 #include "TMap.h"
 #endif
-#ifndef ROOT_TList
-#include "TList.h"
-#endif
 #ifndef ROOT_THashList
 #include "THashList.h"
-#endif
-#ifndef ROOT_TString
-#include "TString.h"
 #endif
 
 class TClass;

@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.35 2003/01/30 14:07:03 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.36 2003/01/31 17:00:11 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
 #include "TBaseClass.h"
 #include "TVirtualPad.h"
 #include "TClass.h"
@@ -23,7 +22,6 @@
 #include "TMethod.h"
 #include "TMethodArg.h"
 #include "TSystem.h"
-#include "TString.h"
 #include "TObjString.h"
 #include "TInterpreter.h"
 #include "TRegexp.h"
