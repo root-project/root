@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.98 2005/01/18 21:04:17 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.99 2005/02/11 18:40:08 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -227,31 +227,31 @@ Bool_t TCint::IsLoaded(const char* filename) const
 
    char *next = gSystem->Which(TROOT::GetMacroPath(), filename, kReadPermission);
    if (next) {
-     file.Init(next);
-     delete [] next;
-     if (file.IsValid()) { return kTRUE; };
+      file.Init(next);
+      delete [] next;
+      if (file.IsValid()) { return kTRUE; };
    }
 
    TString incPath = gSystem->GetIncludePath(); // of the form -Idir1  -Idir2 -Idir3
    incPath.Append(":").Prepend(" ");
    incPath.ReplaceAll(" -I",":");       // of form :dir1 :dir2:dir3
    while ( incPath.Index(" :") != -1 ) {
-     incPath.ReplaceAll(" :",":");
+      incPath.ReplaceAll(" :",":");
    }
    incPath.Prepend(".:");
    incPath.Append(":$ROOTSYS/cint/include:$ROOTSYS/cint/stl");
    next = gSystem->Which(incPath, filename, kReadPermission);
    if (next) {
-     file.Init(next);
-     delete [] next;
-     if (file.IsValid()) { return kTRUE; };
+      file.Init(next);
+      delete [] next;
+      if (file.IsValid()) { return kTRUE; };
    }
 
    next = gSystem->DynamicPathName(filename,kTRUE);
    if (next) {
-     file.Init(next);
-     delete [] next;
-     if (file.IsValid()) { return kTRUE; };
+      file.Init(next);
+      delete [] next;
+      if (file.IsValid()) { return kTRUE; };
    }
 
    return kFALSE;
@@ -1004,7 +1004,7 @@ Int_t TCint::LoadLibraryMap()
          // considers "::" a terminator
          cls.Remove(0,8);
          cls.ReplaceAll("@@", "::");
-         
+
          if ( strchr(cls.Data(),':')!=0 ) {
             // We have a namespace and we have to check it first
 
@@ -1021,7 +1021,7 @@ Int_t TCint::LoadLibraryMap()
                         // std is not declared but is also ignored by CINT!
                         break;
                      } else {
-                        G__set_class_autoloading_table((char*)base.c_str(), lib);                        
+                        G__set_class_autoloading_table((char*)base.c_str(), lib);
                      }
                   }
                }
@@ -1135,21 +1135,21 @@ void *TCint::FindSpecialObject(const char *item, G__ClassInfo *type,
    return *prevObj;
 }
 
+//______________________________________________________________________________
+// Helper class for UpdateClassInfo
 namespace {
-   //______________________________________________________________________________
-   // Helper class for UpdateClassInfo
    class TInfoNode {
    private:
       string fName;
       Long_t fTagnum;
    public:
       TInfoNode(const char *item, Long_t tagnum)
-         : fName(item),fTagnum(tagnum) 
+         : fName(item),fTagnum(tagnum)
       {}
       void Update() {
          Update(fName.c_str(),fTagnum);
       }
-      static void Update(const char *item, Long_t tagnum) 
+      static void Update(const char *item, Long_t tagnum)
       {
          Bool_t load = kFALSE;
          if (strchr(item,'<')) {
@@ -1159,13 +1159,12 @@ namespace {
             TClass *cl;
 
             TString resolvedItem(
-               TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,TClassEdit::kDropStlDefault).c_str()
-               ,kTRUE) );
+               TClassEdit::ResolveTypedef(TClassEdit::ShortType(item,
+                  TClassEdit::kDropStlDefault).c_str(), kTRUE) );
             TString resolved;
             while ( (cl = (TClass*)next()) ) {
                resolved = TClassEdit::ResolveTypedef(TClassEdit::ShortType(cl->GetName(),
-                  TClassEdit::kDropStlDefault).c_str()
-                  ,kTRUE);
+                  TClassEdit::kDropStlDefault).c_str(), kTRUE);
                if (resolved==resolvedItem) {
                   // we found at least one equivalent.
                   // let's force a reload
@@ -1202,12 +1201,12 @@ void TCint::UpdateClassInfo(char *item, Long_t tagnum)
       if (topLevel) {
          TInfoNode::Update(item,tagnum);
       } else {
-         // If we are called indirectly from within another call to 
-         // TCint::UpdateClassInfo, we delay the update until the dictionary loading 
+         // If we are called indirectly from within another call to
+         // TCint::UpdateClassInfo, we delay the update until the dictionary loading
          // is finished (i.e. when we return to the top level TCint::UpdateClassInfo).
-         // This allows for the dictionary to be fully populated when we actually 
-         // update the TClass object.   The updating of the TClass sometimes 
-         // (STL containers and when there is an emulated class) forces the building 
+         // This allows for the dictionary to be fully populated when we actually
+         // update the TClass object.   The updating of the TClass sometimes
+         // (STL containers and when there is an emulated class) forces the building
          // of the TClass object's real data (which needs the dictionary info).
          updateList.push_back(TInfoNode(item,tagnum));
       }
@@ -1249,7 +1248,7 @@ const char* TCint::GetSharedLibs()
       if ( (len>3 && strcmp(end-2,".a") == 0) ||
            (len>4 && (strcmp(end-3,".sl") == 0 ||
                       strcmp(end-3,".dl") == 0 ||
-                      strcmp(end-3,".so") == 0)) || 
+                      strcmp(end-3,".so") == 0)) ||
            (len>5 && (strcmp(end-4,".dll") == 0 ||
                       strcmp(end-4,".DLL") == 0))) {
          if (!fSharedLibs.IsNull())
@@ -1325,37 +1324,42 @@ Bool_t TCint::SetErrorMessages(Bool_t enable)
    // If error messages are disabled, the interpreter should  suppress its
    // failures and warning messages from stdout.
 
-  if (enable) G__const_resetnoerror();
-  else        G__const_setnoerror();
-  return     !G__const_whatnoerror();
+   if (enable)
+      G__const_resetnoerror();
+   else
+      G__const_setnoerror();
+   return !G__const_whatnoerror();
 }
 
 //______________________________________________________________________________
 void TCint::AddIncludePath(const char *path)
 {
-  // Add the given path to the list of directory in which the interpreter
-  // look for include files.
+   // Add the given path to the list of directories in which the interpreter
+   // looks for include files. Only one path item can be specified at a
+   // time, i.e. "path1:path2" is not supported.
 
-  G__add_ipath((char*)path);
+   char *incpath = gSystem->ExpandPathName(path);
 
+   G__add_ipath(incpath);
+
+   delete [] incpath;
 }
 
 //______________________________________________________________________________
-const char* TCint::GetIncludePath()
+const char *TCint::GetIncludePath()
 {
-  // Refresh the list of include path known to the interpreter and return it,
-  // with -I prepended.
+   // Refresh the list of include paths known to the interpreter and return it
+   // with -I prepended.
 
-  fIncludePath = "";
+   fIncludePath = "";
 
-  G__IncludePathInfo path;
+   G__IncludePathInfo path;
 
-  while ( path.Next() ) {
-    const char *pathname = path.Name();
-    fIncludePath.Append(" -I").Append(pathname);
-  } ;
+   while (path.Next()) {
+     const char *pathname = path.Name();
+     fIncludePath.Append(" -I").Append(pathname);
+   }
 
-  return fIncludePath;
-
+   return fIncludePath;
 }
 
