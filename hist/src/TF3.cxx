@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.4 2002/05/18 08:21:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF3.cxx,v 1.5 2002/05/29 18:39:44 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -305,6 +305,7 @@ void TF3::Paint(Option_t *option)
 void TF3::SetClippingBoxOff()
 {
    // Set the function clipping box (for drawing) "off".
+   if (gROOT->LoadClass("THistPainter","HistPainter")) return;
    char *cmd;
    cmd = Form("TPainter3dAlgorithms::SetF3ClippingBoxOff();");
    gROOT->ProcessLine(cmd);
@@ -316,6 +317,7 @@ void TF3::SetClippingBoxOn(Double_t xclip, Double_t yclip, Double_t zclip)
    // Set the function clipping box (for drawing) "on" and define the clipping box.
    // xclip, yclip and zclip is a point within the function range. All the
    // function value having x<=xclip and y<=yclip and z>=zclip are clipped.
+   if (gROOT->LoadClass("THistPainter","HistPainter")) return;
    char *cmd;
    cmd = Form("TPainter3dAlgorithms::SetF3ClippingBoxOn(%g,%g,%g);",
               (Double_t)xclip, (Double_t)yclip, (Double_t)zclip);
