@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.41 2002/06/16 08:44:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.42 2002/08/06 21:29:55 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -911,7 +911,8 @@ void TObject::Streamer(TBuffer &R__b)
          UInt_t uid = fUniqueID & 0xffffff;
          R__b << uid;
          R__b << fBits;
-         pidf = TProcessID::WriteProcessID(0,file);
+         TProcessID *pid = TProcessID::GetProcessWithUID(fUniqueID);
+         pidf = TProcessID::WriteProcessID(pid,file);
          R__b << pidf;
       }
    }
