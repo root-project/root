@@ -1,0 +1,16 @@
+
+Processing run.C...
+OBJ: TClass	TH1F	1-Dim histograms (one float per channel)
+OBJ: TClass	TH1F	1-Dim histograms (one float per channel)
+OBJ: TClass	TH1F	1-Dim histograms (one float per channel)
+OBJ: TClass	TH1F	1-Dim histograms (one float per channel)
+OBJ: TClass	TAxis	Axis class
+OBJ: TClass	TAxis	Axis class
+OBJ: TClass	TAxis	Axis class
+OBJ: TClass	TAxis	Axis class
+OBJ: TClass	TClass	Dictionary containing class information
+OBJ: TClass	TClass	Dictionary containing class information
+OBJ: TClass	Track	A track segment
+OBJ: TClass	Track	A track segment
+OBJ: TClass	Track	A track segment
+OBJ: TClass	Track	A track segment
