@@ -118,7 +118,11 @@ char *exprwithspace;
       exprnospace[iout] = '\0'; /* temporarily terminate string */
       len=strlen(exprnospace);
       if((single_quote!=0)||(double_quote!=0)||
-	 (len>=3+ipunct&&strncmp(exprnospace+ipunct,"new",3)==0)) {
+	 (len>=3+ipunct&&strncmp(exprnospace+ipunct,"new",3)==0)
+#ifndef G__OLDIMPLEMENTATION1808
+	 || (len>=5+ipunct&&strncmp(exprnospace+ipunct,"const",5)==0)
+#endif
+	 ) {
 	exprnospace[iout++] = exprwithspace[iin] ;
       }
       else if(len>=8&&strncmp(exprnospace,"delete[]",8)==0) {

@@ -1512,7 +1512,12 @@ char type;
       baseclass->property[*pbasen]=G__ISDIRECTINHERIT + isvirtualbase;
       baseclass->basetagnum[*pbasen]=G__defined_tagname(basename,0);
 #ifndef G__OLDIMPLEMENTATION693
-      if(1==G__struct.size[lstore_tagnum])
+      if(1==G__struct.size[lstore_tagnum]
+#ifndef G__OLDIMPLEMENTATION1807
+	 && 0==G__struct.memvar[lstore_tagnum]->allvar 
+	 && 0==G__struct.baseclass[lstore_tagnum]->basen
+#endif
+	 )
 	baseclass->baseoffset[*pbasen]=0;
       else
 	baseclass->baseoffset[*pbasen]=G__struct.size[lstore_tagnum];
@@ -1527,7 +1532,12 @@ char type;
       /* virtual base class for interpretation to be implemented and
        * 2 limitation messages above should be deleted. */
 #ifndef G__OLDIMPLEMENTATION693
-      if(1==G__struct.size[baseclass->basetagnum[*pbasen]]) {
+      if(1==G__struct.size[baseclass->basetagnum[*pbasen]]
+#ifndef G__OLDIMPLEMENTATION1807
+	 && 0==G__struct.memvar[baseclass->basetagnum[*pbasen]]->allvar 
+	 && 0==G__struct.baseclass[baseclass->basetagnum[*pbasen]]->basen
+#endif
+	 ) {
 	if(isvirtualbase)
 	  G__struct.size[G__tagnum] += G__DOUBLEALLOC;
 	else
@@ -1835,7 +1845,11 @@ char type;
 	 * the size is aligned.
 	 ********************************************/
 #ifndef G__OLDIMPLEMENTATION1777
-	if(1==G__struct.memvar[G__tagnum]->allvar) {
+	if(1==G__struct.memvar[G__tagnum]->allvar
+#ifndef G__OLDIMPLEMENTATION1807
+	   && 0==G__struct.baseclass[G__tagnum]->basen
+#endif
+	   ) {
 	  /* this is still questionable, inherit0.c */
 	  struct G__var_array *v=G__struct.memvar[G__tagnum];
 	  if('c'==v->type[0]) { 

@@ -494,6 +494,10 @@ int G__gettingspecial = 0;
 int G__gcomplevellimit=1000;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1726
+int G__catchexception=1;
+#endif
+
 
 /*
  * Local Variables:

@@ -2348,6 +2348,13 @@ G__value *rslt;
 #endif
     }
 
+#ifndef G__OLDIMPLEMENTATION1815
+    else if(strncmp("exception",com,4)==0) {
+      G__catchexception ^= 1;
+      fprintf(G__sout,"G__catchexception=%d\n",G__catchexception);
+    }
+#endif
+
     else if(strncmp("status",com,4)==0) {
 #ifdef G__ASM_DBG
       fprintf(G__sout,"G__asm_noverflow=%d\n",G__asm_noverflow);

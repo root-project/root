@@ -329,7 +329,7 @@ G__value result3;
     }
 #ifndef G__OLDIMPLEMENTATION1739
     if(strcmp(casttype,"longlong")==0) {
-      char conv[G__ONELINE];
+      char conv[50];
       int match=0;
       int store_tagnum = G__tagnum;
       if(0==G__defined_macro("G__LONGLONG_H")) {

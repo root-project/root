@@ -21,13 +21,17 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015076
-#define G__CINTVERSIONSTR  "5.15.76, Feb 17 2003"
+#define G__CINTVERSION      5015078
+#define G__CINTVERSIONSTR  "5.15.78, Mar 3 2003"
 
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+#ifndef G__ROOT
+#define G__ROOT
+#endif
+#define G__OLDIMPLEMENTATION1809
 
 
 /* 1770 changes implementation of skipping function implementation during
@@ -669,9 +673,14 @@ typedef int (*G__IgnoreInclude)();
 #define G__MAXNAME     4096  /* Variable name */
 #else
 #define G__LONGLINE    1024  /* Length of expression */
+#ifdef G__ROOT
 #define G__ONELINE      512  /* Length of subexpression,parameter,argument */
-#define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
 #define G__MAXNAME      256  /* Variable name */
+#else
+#define G__ONELINE      256  /* Length of subexpression,parameter,argument */
+#define G__MAXNAME      256  /* Variable name */
+#endif
+#define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
 #endif
 #define G__LARGEBUF    6000  /* big temp buffer */
 #define G__MAXFILE     2000  /* Max interpreted source file */
@@ -1827,6 +1836,10 @@ extern G__EXPORT int G__fputerr G__P((int c));
 
 #ifndef G__OLDIMPLEMENTATION1731
 extern G__EXPORT void G__SetUseCINTSYSDIR G__P((int UseCINTSYSDIR));
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1815
+extern G__EXPORT void G__SetCatchException G__P((int mode));
 #endif
 
 #ifdef G__ASM_WHOLEFUNC

@@ -30,6 +30,17 @@ using namespace std;
 #pragma link C++ class map<double,double>;
 #pragma link C++ class map<double,void*>;
 #pragma link C++ class map<double,char*>;
+
+#pragma link off function pair<const long,int>::operator=;
+#pragma link off function pair<const long,long>::operator=;
+#pragma link off function pair<const long,double>::operator=;
+#pragma link off function pair<const long,void*>::operator=;
+#pragma link off function pair<const long,char*>::operator=;
+#pragma link off function pair<const double,int>::operator=;
+#pragma link off function pair<const double,long>::operator=;
+#pragma link off function pair<const double,double>::operator=;
+#pragma link off function pair<const double,void*>::operator=;
+#pragma link off function pair<const double,char*>::operator=;
 #endif
 
 #ifndef G__MAP2

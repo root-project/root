@@ -253,7 +253,19 @@ char *cindex;
   int index;
   int len;
   char sindex[G__ONELINE];
+#ifndef G__OLDIMPLEMENTATION1818
+  char *p;
+#endif
   strcpy(sindex,cindex);
+#ifndef G__OLDIMPLEMENTATION1818
+  p=strstr(sindex,"][");
+  if(p) {
+    *(p+1) = 0;
+    G__getindexedvalue(result3,sindex);
+    p=strstr(cindex,"][");
+    strcpy(sindex,p+1);
+  }
+#endif
   len=strlen(sindex);
 #ifdef G__OLDIMPLEMENTATION424
   /* maybe unnecessary */
@@ -4143,6 +4155,15 @@ int hash;
 					     ));
     return(1);
   }
+
+#ifndef G__OLDIMPLEMENTATION1815
+  if(strcmp(funcname,"G__SetCatchException")==0) {
+    if(G__no_exec_compile) return(1);
+    G__SetCatchException((int)G__int(libp->para[0]));
+    *result7=G__null;
+    return(1);
+  }
+#endif
   
 #endif
   

@@ -315,7 +315,12 @@ struct G__ifunc_table *ifunc;
 	fprintf(fp," a%d",k);
       }
     }
+#ifndef G__OLDIMPLEMENTATION1809
+    if(ifunc->isconst[ifn]&G__CONSTFUNC) fprintf(fp,") const {\n");
+    else fprintf(fp,") {\n");
+#else
     fprintf(fp,") {\n");
+#endif
   }
 
   /*******************************************************************

@@ -6740,12 +6740,19 @@ int parameter00;
 
 #ifndef G__OLDIMPLEMENTATION672
   if('u'!=tolower(var->type[ig15])&&'u'==result.type&&-1!=result.tagnum) {
+#ifndef G__OLDIMPLEMENTATION1821
+    int store_decl = G__decl;
+    G__decl=0;
+#endif
     G__fundamental_conversion_operator(var->type[ig15]
 				       ,var->p_tagtable[ig15]
 				       ,var->p_typetable[ig15]
 				       ,var->reftype[ig15]
 				       ,var->constvar[ig15]
 				       ,&result,ttt);
+#ifndef G__OLDIMPLEMENTATION1821
+    G__decl=store_decl;
+#endif
   }
 #endif /* ON672 */
 

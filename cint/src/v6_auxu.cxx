@@ -134,7 +134,16 @@ char *arg[];
 {
   /* int i; */
   char *null_fgets;
+#define G__OLDIMPLEMENTATION1816
+#ifndef G__OLDIMPLEMENTATION1816
+  struct G__input_file store_ifile = G__ifile;
+  G__ifile.fp = fp;
+  if(EOF==G__fgetline(line)) null_fgets=(char*)NULL;
+  else                       null_fgets=line;
+  G__ifile = store_ifile;
+#else
   null_fgets=fgets(line,G__LONGLINE*2,fp);
+#endif
   if(null_fgets!=NULL) {
     strcpy(argbuf,line);
     G__split(line,argbuf,argn,arg);

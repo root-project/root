@@ -539,7 +539,15 @@ int gen_stddef()
 
   /* NULL */
   /* offsetof(); */
+#ifdef __GNUC__
+  fprintf(fp,"#if (G__GNUC==2)\n");
+  INT_TYPEDEF_PREFER_INT(fp,ptrdiff_t,"ptrdiff_t");
+  fprintf(fp,"#else\n");
   INT_TYPEDEF_PREFER_LONG(fp,ptrdiff_t,"ptrdiff_t");
+  fprintf(fp,"#endif\n");
+#else
+  INT_TYPEDEF_PREFER_LONG(fp,ptrdiff_t,"ptrdiff_t");
+#endif
   UINT_TYPEDEF_PREFER_INT(fp,size_t,"size_t");
 
 #ifndef G__NONANSI

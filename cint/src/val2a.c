@@ -575,8 +575,17 @@ int type,tagnum,typenum,reftype,isconst;
 	if(G__PARAREFERENCE!=reftype) reftype = G__PARANORMAL;
 	break;
       default:
+#ifndef G__OLDIMPLEMENTATION1819
+	if(pointlevel>0) {
+	  type = toupper(type);
+	  reftype = pointlevel;
+	}
+	else {
+	}
+#else
 	type = toupper(type);
 	reftype = pointlevel;
+#endif
 	break;
       }
     }

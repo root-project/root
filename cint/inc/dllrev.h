@@ -39,19 +39,26 @@
 #define G__TF 0
 #endif
 
+#ifdef G__ROOT
+/* #define G__RT 40000000 */
+#define G__RT 0
+#else
+#define G__RT 0
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1530
-#define G__CREATEDLLREV       (51515+G__VF+G__TF)
-#define G__ACCEPTDLLREV_FROM  (51501+G__VF+G__TF)
-#define G__ACCEPTDLLREV_UPTO  (51599+G__VF+G__TF)
+#define G__CREATEDLLREV       (51515+G__VF+G__TF+G__RT)
+#define G__ACCEPTDLLREV_FROM  (51501+G__VF+G__TF+G__RT)
+#define G__ACCEPTDLLREV_UPTO  (51599+G__VF+G__TF+G__RT)
 #else
   #ifdef G__CONSTNESSFLAG
-  #define G__CREATEDLLREV       (51472+G__VF+G__TF)
-  #define G__ACCEPTDLLREV_FROM  (51111+G__VF+G__TF)
-  #define G__ACCEPTDLLREV_UPTO  (51472+G__VF+G__TF)
+  #define G__CREATEDLLREV       (51472+G__VF+G__TF+G__RT)
+  #define G__ACCEPTDLLREV_FROM  (51111+G__VF+G__TF+G__RT)
+  #define G__ACCEPTDLLREV_UPTO  (51472+G__VF+G__TF+G__RT)
   #else
-  #define G__CREATEDLLREV       (51111+G__VF+G__TF)
-  #define G__ACCEPTDLLREV_FROM  (51111+G__VF+G__TF)
-  #define G__ACCEPTDLLREV_UPTO  (51415+G__VF+G__TF)
+  #define G__CREATEDLLREV       (51111+G__VF+G__TF+G__RT)
+  #define G__ACCEPTDLLREV_FROM  (51111+G__VF+G__TF+G__RT)
+  #define G__ACCEPTDLLREV_UPTO  (51415+G__VF+G__TF+G__RT)
   #endif
 #endif
 

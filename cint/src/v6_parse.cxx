@@ -3476,6 +3476,18 @@ G__value G__exec_statement()
 	    if((mparen==1)&& (strcmp(statement,"case")==0)) {
 	      char casepara[G__ONELINE];
 	      G__fgetstream(casepara,":");
+#ifndef G__OLDIMPLEMENTATION1811
+	      c=G__fgetc();
+	      while(':'==c) {
+		int lenxxx;
+		strcat(casepara,"::");
+		lenxxx=strlen(casepara);
+		G__fgetstream(casepara+lenxxx,":");
+		c=G__fgetc();
+	      }
+	      fseek(G__ifile.fp,-1,SEEK_CUR);
+	      G__disp_mask=1;
+#endif
 	      if(G__switch!=0) {
 		int store_no_execXX;
 #ifndef G__OLDIMPLEMENTATION844

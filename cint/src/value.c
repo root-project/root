@@ -223,6 +223,12 @@ G__value p;
 
   result=p;
 
+#ifndef G__OLDIMPLEMENTATION1401
+  if(-1!=p.typenum && G__newtype.nindex[p.typenum]) {
+    result.typenum = -1;
+  }
+#endif
+
 #ifdef G__ASM
   if(G__asm_noverflow) {
 #ifdef G__ASM_DBG

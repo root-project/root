@@ -1733,6 +1733,11 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	/* Copy constructor */
 	G__struct.funcs[G__def_tagnum] |= G__HAS_COPYCONSTRUCTOR;
       }
+#ifndef G__OLDIMPLEMENTATION1809
+      else {
+	G__struct.funcs[G__def_tagnum] |= G__HAS_XCONSTRUCTOR;
+      }
+#endif
     }
     else if(strcmp("operator=",G__p_ifunc->funcname[func_now])==0) {
       /* operator= */
@@ -8058,7 +8063,12 @@ int funcmatch;
 	  /* scan each parameter */
 	  while(itemp<p_ifunc->para_nu[ifn]) {
 	    if((G__value*)NULL==p_ifunc->para_default[ifn][itemp] && 
-	       itemp>libp->paran) {
+#ifndef G__OLDIMPLEMENTATION1820
+	       itemp>=libp->paran
+#else
+	       itemp>libp->paran
+#endif
+	       ) {
 	      ipara = 0;
 	    }
 #ifndef G__FONS41

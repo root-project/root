@@ -411,6 +411,12 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
 				   ,struct G__param *libp
 				   ,int hash)
 {
+#ifndef G__OLDIMPLEMENTATION1726
+  if(!G__catchexception) {
+    (*funcp)(result7,funcname,libp,hash);
+    return 1;
+  }
+#endif
   try {
     (*funcp)(result7,funcname,libp,hash);
     return 1;

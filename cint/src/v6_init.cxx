@@ -30,6 +30,12 @@ extern int G__ispermanentsl;
 extern G__DLLINIT G__initpermanentsl;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1817
+#ifdef G__ROOT
+void G__cpp_setuplongif();
+#endif
+#endif
+
 /**************************************************************************
 * For C++ dictionary setup
 **************************************************************************/
@@ -668,6 +674,20 @@ char *argv[] ;
    *************************************************************/
   G__macros[0]='\0';
   G__set_stdio();
+
+
+#ifndef G__OLDIMPLEMENTATION1817
+#ifdef G__ROOT
+  {
+    int xtagnum,xtypenum;
+    G__cpp_setuplongif();
+    xtagnum=G__defined_tagname("G__longlong",2);
+    xtypenum=G__search_typename("long long",'u',xtagnum,G__PARANORMAL);
+    xtagnum=G__defined_tagname("G__ulonglong",2);
+    xtypenum=G__search_typename("unsigned long long",'u',xtagnum,G__PARANORMAL);
+  }
+#endif
+#endif
 
   /* Signal handling moved after getopt to enable core dump with 'E' */
 
@@ -2289,10 +2309,29 @@ FILE* sout;
 FILE* serr;
 FILE* sin;
 {
+#ifndef G__OLDIMPLEMENTATION1812
+  char temp[G__ONELINE];
+#endif
+
   G__sout = G__stdout = sout;
   G__serr = G__stderr = serr;
   G__sin  = G__stdin  = sin;
+
+#ifndef G__OLDIMPLEMENTATION1812
+  G__var_type='E';
+  sprintf(temp,"stdout=(FILE*)(%ld)",(long)G__intp_sout);
+  G__getexpr(temp);
+
+  G__var_type='E';
+  sprintf(temp,"stderr=(FILE*)(%ld)",(long)G__intp_serr);
+  G__getexpr(temp);
+
+  G__var_type='E';
+  sprintf(temp,"stdin=(FILE*)(%ld)",(long)G__intp_sin);
+  G__getexpr(temp);
+#else
   G__set_stdio();
+#endif
 }
 
 
@@ -2393,6 +2432,19 @@ void G__LockCpp()
   G__cpplock=1;
   G__iscpp=1;
 }
+
+#ifndef G__OLDIMPLEMENTATION1815
+/**************************************************************************
+* G__SetCatchException()
+*
+**************************************************************************/
+void G__SetCatchException(mode)
+int mode;
+{
+  G__catchexception = mode;
+}
+#endif
+
 
 
 /*

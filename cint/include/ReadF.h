@@ -19,9 +19,9 @@
 #endif
 
 
-#define MAX_LINE_LENGTH  2048
-#define MAX_TOKEN        512
-#define MAX_SEPARATOR    20
+#define MAX_LINE_LENGTH  8048
+#define MAX_TOKEN        1024
+#define MAX_SEPARATOR    32
 #define MAX_ENDOFLINE    10
 
 class ReadFile {

@@ -1123,6 +1123,9 @@ char *name;
 #ifndef G__OLDIMPLEMENTATION1484
      || strchr(name,'(')
 #endif
+#ifndef G__OLDIMPLEMENTATION1810
+     || isdigit(name[0]) || (!isalpha(name[0]) && '_'!=name[0])
+#endif
      )
      return((struct G__Definedtemplateclass *)NULL);
 
@@ -2660,43 +2663,43 @@ int parent_tagnum;
     }
     if('\0' != symbol[0]) {
       if(0==double_quote && 0==single_quote) {
-        if(isspace(c)) {
-          c2=c;
-          SET_READINGFILE; /* ON777 */
+	if(isspace(c)) {
+	  c2=c;
+	  SET_READINGFILE; /* ON777 */
           while(isspace(c=G__fgetc())){
              if (c=='\n') c2='\n';
           };
-          if('<'!=c) {
-            fseek(G__ifile.fp,-1,SEEK_CUR);
-            c=c2;
-          }
-          SET_WRITINGFILE; /* ON777 */
-        }
+	  if('<'!=c) {
+	    fseek(G__ifile.fp,-1,SEEK_CUR);
+	    c=c2;
+	  }
+	  SET_WRITINGFILE; /* ON777 */
+	}
 #ifndef G__OLDIMPLEMENTATION923
         if(strcmp("new",symbol)==0) isnew=1;
 #ifndef G__PHILIPPE13
         if(strcmp("operator",symbol)==0) isnew=1;
 #endif
-        if(G__templatesubstitute(symbol,callpara,def_para,templatename
-                                 ,tagname,c,npara,isnew) && '>'!=c) {
+	if(G__templatesubstitute(symbol,callpara,def_para,templatename
+				 ,tagname,c,npara,isnew) && '>'!=c) {
 #else
-        if(G__templatesubstitute(symbol,callpara,def_para,templatename
-                                 ,tagname,c,npara) && '>'!=c) {
+	if(G__templatesubstitute(symbol,callpara,def_para,templatename
+				 ,tagname,c,npara) && '>'!=c) {
 #endif
-          char ignorebuf[G__LONGLINE];
-          SET_READINGFILE; /* ON777 */
-          c=G__fgetstream(ignorebuf,">");
-          SET_WRITINGFILE; /* ON777 */
-          G__ASSERT('>'==c);
-          c='>';
-        }      
+	  char ignorebuf[G__LONGLINE];
+	  SET_READINGFILE; /* ON777 */
+	  c=G__fgetstream(ignorebuf,">");
+	  SET_WRITINGFILE; /* ON777 */
+	  G__ASSERT('>'==c);
+	  c='>';
+	}      
       }
 #ifndef G__OLDIMPLEMENTATION1317
       if(const_c && '*'==symbol[strlen(symbol)-1]) {
-        fsetpos(G__mfp,&const_pos);
-        fprintf(G__mfp,"%s",symbol);
-        fprintf(G__mfp," const%c",const_c); /* printing %c is not perfect */
-        const_c = 0;
+      fsetpos(G__mfp,&const_pos);
+      fprintf(G__mfp,"%s",symbol);
+      fprintf(G__mfp," const%c",const_c); /* printing %c is not perfect */
+      const_c = 0;
       }
       else {
       if(';'!=c && strcmp("const",symbol)==0) {
@@ -2721,51 +2724,51 @@ int parent_tagnum;
 #else
       if('/'==c) {
 #endif
-        SET_READINGFILE; /* ON777 */
+	SET_READINGFILE; /* ON777 */
 #ifndef G__OLDIMPLEMENTATION1100
-        G__fgetline(symbol);
-#else 
-        G__fignoreline();
-#endif
-        SET_WRITINGFILE; /* ON777 */
-#ifndef G__OLDIMPLEMENTATION1100
-        fprintf(G__mfp,"/%s\n",symbol);
-        if(G__dispsource) G__fprinterr(G__serr,"/%s\n",symbol);
+	G__fgetline(symbol);
 #else
-        fprintf(G__mfp,"/\n");
-        if(G__dispsource) G__fprinterr(G__serr,"/\n");
+	G__fignoreline();
 #endif
-         ++G__mline;
-         continue;
+	SET_WRITINGFILE; /* ON777 */
+#ifndef G__OLDIMPLEMENTATION1100
+	fprintf(G__mfp,"/%s\n",symbol);
+	if(G__dispsource) G__fprinterr(G__serr,"/%s\n",symbol);
+#else
+	fprintf(G__mfp,"/\n");
+	if(G__dispsource) G__fprinterr(G__serr,"/\n");
+#endif
+	++G__mline;
+	continue;
       }
 #ifndef G__OLDIMPLEMENTATION714
       else if('*'==c && 0==symbol[0]) {
 #else
       else if('*'==c) {
 #endif
-        fprintf(G__mfp,"/\n");
-        if(G__dispsource) G__fprinterr(G__serr,"/\n");
-        ++G__mline;
-        SET_READINGFILE; /* ON777 */
-        G__skip_comment();
-        SET_WRITINGFILE; /* ON777 */
-        continue;
+	fprintf(G__mfp,"/\n");
+	if(G__dispsource) G__fprinterr(G__serr,"/\n");
+	++G__mline;
+	SET_READINGFILE; /* ON777 */
+	G__skip_comment();
+	SET_WRITINGFILE; /* ON777 */
+	continue;
       }
     }
 
     if(0==single_quote && 0==double_quote) {
       if('{'==c) ++mparen;
       else if('}'==c) {
-        --mparen;
-        if(0==mparen) {
-          fputc(c,G__mfp);
+	--mparen;
+	if(0==mparen) {
+	  fputc(c,G__mfp);
 #ifndef G__OLDIMPLEMENTATION1485
-          if(G__dispsource) G__fputerr(c);
+	  if(G__dispsource) G__fputerr(c);
 #else
-          if(G__dispsource) fputc(c,G__serr);
+	  if(G__dispsource) fputc(c,G__serr);
 #endif
-          break;
-        }
+	  break;
+	}
       }
       else if(';'==c && 0==mparen) break;
     }

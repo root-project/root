@@ -707,6 +707,10 @@ extern int G__gettingspecial;
 extern int G__gcomplevellimit;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1726
+extern int G__catchexception;
+#endif
+
 
 
 #ifndef __CINT__
