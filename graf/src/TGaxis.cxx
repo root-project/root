@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.58 2003/09/19 14:02:31 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.59 2003/09/23 14:56:50 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -524,6 +524,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    time_t timelabel;
    Double_t timed, wTimeIni;
    struct tm* utctis;
+   Double_t rangeOffset = 0;
 
    Double_t epsilon   = 1e-5;
    const Double_t kPI = TMath::Pi();
@@ -630,6 +631,17 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       }
       wmin += timeoffset - (int)(timeoffset);
       wmax += timeoffset - (int)(timeoffset);
+    // correct for time offset at a good limit (min, hour, day, month, year)
+      Double_t range = wmax - wmin;
+      Long_t rangeBase = 60;
+      if (range>60)       rangeBase = 60;       // minutes
+      if (range>3600)     rangeBase = 3600;     // hours
+      if (range>86400)    rangeBase = 86400;    // days
+      if (range>2419200)  rangeBase = 2419200;  // months (28 days)
+      if (range>31536000) rangeBase = 31536000; // years
+      rangeOffset = (Double_t) ((Long_t)(timeoffset)%rangeBase);
+      wmax += rangeOffset;
+      wmin += rangeOffset;
    }
 
 //*-*-              Determine number of divisions 1, 2 and 3
@@ -1339,7 +1351,7 @@ L110:
 //*-*-              Generate the time labels
 
                if (OptionTime) {
-                  timed = Wlabel + (int)(timeoffset);
+                  timed = Wlabel + (int)(timeoffset) - rangeOffset;
                   timelabel = (time_t)((Long_t)(timed));
                   utctis = localtime(&timelabel);
                   TString timeformattmp;
