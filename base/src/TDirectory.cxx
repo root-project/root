@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.7 2000/09/08 07:40:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.8 2000/10/09 10:11:49 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -315,12 +315,13 @@ Bool_t TDirectory::cd1(const char *path)
 
    // path starts with a slash (assumes current file)
    if (path[0] == '/') {
+      TDirectory *td = fFile ? fFile : gROOT;
 #ifdef cxxbug
       //this special case to circumvent one more bug in the alpha cxx compiler.
       //seems to be same bug also found in Btree.
-      fFile->cd(path+1);
+      td->cd(path+1);
 #else
-      if (!fFile->cd1(path+1)) {
+      if (!td->cd1(path+1)) {
          gDirectory = savdir;
          return kFALSE;
       }
