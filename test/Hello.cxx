@@ -1,4 +1,4 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Name:  $:$Id: Hello.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ Hello::Hello(const char *text) : TTimer(40, kTRUE)
    // Hello constructor
 
    TChar *ch;
-   int fI = 0;
+   fI = 0;
    fList = new TList();
 
    if (!TVirtualPad::Pad())
