@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.37 2003/01/16 17:57:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.38 2003/01/17 19:06:27 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -978,7 +978,7 @@ void TRootBrowser::BrowseObj(TObject *obj)
    fIconBox->Refresh();
    if (fBrowser)
       fBrowser->SetRefreshFlag(kFALSE);
-   Emit("BrowseObj(TObject*)", obj);
+   Emit("BrowseObj(TObject*)", (Long_t)obj);
 }
 
 //______________________________________________________________________________
@@ -1059,7 +1059,7 @@ void TRootBrowser::ExecuteDefaultAction(TObject *obj)
          } else
             gApplication->ProcessLine(act.Data());
       }
-      Emit("ExecuteDefaultAction(TObject*)", obj);
+      Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
       return;
    }
 
@@ -1515,6 +1515,14 @@ void TRootBrowser::ToUpSystemDirectory()
 }
 
 //______________________________________________________________________________
+void TRootBrowser::DoubleClicked(TObject *obj)
+{
+   // Emits signal when double clicking on icon.
+
+   Emit("DoubleClicked(TObject*)", (Long_t)obj);
+}
+
+//______________________________________________________________________________
 void TRootBrowser::IconBoxAction(TObject *obj)
 {
    // Default action when double clicking on icon.
@@ -1589,6 +1597,7 @@ void TRootBrowser::IconBoxAction(TObject *obj)
 
       if (useLock) fTreeLock = kTRUE;
       obj->Browse(fBrowser);
+      DoubleClicked(obj);
       if (useLock) fTreeLock = kFALSE;
 
 out:

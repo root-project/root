@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.5 2002/11/20 08:24:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.h,v 1.6 2003/01/16 17:57:36 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -110,6 +110,7 @@ public:
    virtual void AddToTree(TObject *obj, const char *name);
    virtual void BrowseObj(TObject *obj);            //*SIGNAL*
    virtual void ExecuteDefaultAction(TObject *obj); //*SIGNAL*
+   virtual void DoubleClicked(TObject *obj);        //*SIGNAL*
    virtual void Iconify() { }
    virtual void RecursiveRemove(TObject *obj);
    virtual void Refresh(Bool_t force = kFALSE);
