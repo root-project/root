@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.132 2003/03/06 23:48:52 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.133 2003/03/07 00:01:23 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -470,8 +470,6 @@ TH1::~TH1()
    if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
    if (fBuffer)   {delete [] fBuffer;   fBuffer   = 0;}
    if (fFunctions) {
-      //TList *functions = fFunctions;
-      //delete functions->FindObject("stats"); // to avoid recursive delete
       fFunctions->SetBit(kInvalidObject);
       fFunctions->Delete();
       delete fFunctions;
@@ -3806,7 +3804,9 @@ void TH1::RecursiveRemove(TObject *obj)
 {
 // Recursively remove object from the list of functions
 
-   //if (fFunctions) fFunctions->RecursiveRemove(obj);
+   if (fFunctions) {
+      if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
+   }
 }
 
 //______________________________________________________________________________
