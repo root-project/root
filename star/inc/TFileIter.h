@@ -1,4 +1,4 @@
-// $Id: TFileIter.h,v 1.1 2001/03/02 21:25:09 fine Exp $
+// $Id: TFileIter.h,v 1.1.1.1 2001/03/05 14:54:32 fisyak Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
 //
@@ -48,6 +48,8 @@ class TFileIter : public TListIter {
     TFile      *fFileBackUp;       //! temporary data-members 
     TDirectory *fDirectoryBackUp;  //! to save/restore TFile/TDirectory global scope
 
+    virtual TIterator &operator=(const TIterator &) { return *this; }
+ 
   protected:
     TFile   *fRootFile;            // Tfile to be iterated over
     TString  fEventName;           // current key name
@@ -56,12 +58,11 @@ class TFileIter : public TListIter {
     Int_t    fCursorPosition;      // the position of the current key in the sorted TKey list
     Bool_t   fOwnTFile;            // Bit whether this classs creates TFile on its own to delete
   
-    TObject *ReadObj(const TKey *key) const;
-
   protected:
     void     Initialize();
-    void     SaveFileScope();
+    TObject *ReadObj(const TKey *key) const;
     void     RestoreFileScope();
+    void     SaveFileScope();
     TKey    *NextEventKey(UInt_t eventNumber=UInt_t(-1), UInt_t runNumber=UInt_t(-1), const char *name="*");
 
   public:
@@ -70,6 +71,7 @@ class TFileIter : public TListIter {
               const char *ftitle = "", Int_t compress = 1,
               Int_t netopt = 0);
     TFileIter(TFile *file=0);
+    TFileIter(const TFileIter &);
     virtual ~TFileIter();
     Int_t   CurrentCursorPosition() const;
     virtual const TFile *GetTFile() const;
