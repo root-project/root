@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.3 2001/03/16 07:59:11 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.4 2001/03/16 21:31:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,21 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooAbsArg is the common abstract base class for objects that represent a
+// value (of arbitrary type) that in general depends on (is a client of)
+// other RooAbsArg subclasses. The only state information about a value that
+// is maintained in this base class consists of named attributes and flags
+// that track when either the value or the shape of this object changes (the
+// meaning of shape depends on the client implementation but could be, for
+// example, the allowed range of a value). The base class is also responsible
+// for managing client/server links and propagating value/shape changes
+// through an expression tree.
+//
+// RooAbsArg implements public interfaces for inspecting client/server
+// relationships and setting/clearing/testing named attributes. The class
+// also defines a pure virtual public interface for I/O streaming.
 
 #include "TObjString.h"
 
@@ -22,17 +37,22 @@ Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 
 RooAbsArg::RooAbsArg() : TNamed(), _attribList()
 {
+  // Default constructor.
 }
 
 RooAbsArg::RooAbsArg(const char *name, const char *title) : 
   TNamed(name,title), _valueDirty(kTRUE), _shapeDirty(kTRUE)
 {    
-  // Default constructor
+  // Create an object with the specified name and descriptive title.
+  // The newly created object has no clients or servers and has its
+  // dirty flags set.
 }
 
 RooAbsArg::RooAbsArg(const RooAbsArg& other) : TNamed(other)
 {
-  // Copy constructor
+  // Copy constructor transfers attributes and servers from the original
+  // object. The newly created object has no clients and has its dirty
+  // flags set.
 
   // take attributes from target
   TObject* obj ;
@@ -55,6 +75,9 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other) : TNamed(other)
 
 RooAbsArg::~RooAbsArg() 
 {
+  // Destructor notifies its servers that they no longer need to serve us and
+  // notifies its clients that they are now in limbo (!)
+
   _attribList.Delete() ;
 
   //Notify all servers that they no longer need to serve us
@@ -79,7 +102,7 @@ RooAbsArg::~RooAbsArg()
 
 
 TObject* RooAbsArg::Clone() {
-  // Special clone function that takes care of bidirectional client-server links
+  // Special clone function that takes care of bidirectional client-server links.
   
   // Streamer-based clone()
   RooAbsArg* clone = (RooAbsArg*) TObject::Clone() ;
@@ -96,7 +119,7 @@ TObject* RooAbsArg::Clone() {
 
 RooAbsArg& RooAbsArg::operator=(RooAbsArg& other) 
 {  
-  // Assignment operator 
+  // Assignment operator.
 
   // Base class operator
   TNamed::operator=(other) ;
@@ -124,7 +147,7 @@ RooAbsArg& RooAbsArg::operator=(RooAbsArg& other)
 
 void RooAbsArg::setAttribute(Text_t* name, Bool_t value) 
 {
-  // Add or remove attribute from hash list
+  // Set (default) or clear a named boolean attribute of this object.
 
   TObject* oldAttrib = _attribList.FindObject(name) ;
 
@@ -145,7 +168,8 @@ void RooAbsArg::setAttribute(Text_t* name, Bool_t value)
 
 Bool_t RooAbsArg::getAttribute(Text_t* name) const
 {
-  // Check presence of attribute in list
+  // Check if a named attribute is set. By default, all attributes
+  // are unset.
   return _attribList.FindObject(name)?kTRUE:kFALSE ;
 }
 
@@ -330,17 +354,53 @@ Bool_t RooAbsArg::isValid()
 
 
 
-void RooAbsArg::printToStream(ostream& str, PrintOption opt) 
+void RooAbsArg::printToStream(ostream& str, PrintOption opt) const
 {
-  // Print contents
+  // Print the state of this object to the specified output stream.
+  // With PrintOption=Verbose, print out lists of attributes, clients,
+  // and servers. Otherwise, print our class, name and title only.
 
-  // We only have attributes to show
-  str << GetName() << ": attributes :" ;
-  printAttribList(str) ;
-  str << endl ;
-  
+  cout << GetName() << ": " << GetTitle() << endl;
+  if(opt == Verbose) {
+    // attribute list
+    str << "  Attributes :" ;
+    printAttribList(str) ;
+    str << endl ;
+    // client list
+    str << "  Clients:";
+    TIterator *clientIter= _clientList.MakeIterator();
+    RooAbsArg* client ;
+    while (client=(RooAbsArg*)clientIter->Next()) {
+      client->printToStream(str,OneLine);
+    }
+    // server list
+    str << "  Servers:";
+    TIterator *serverIter= _serverList.MakeIterator();
+    RooAbsArg* server ;
+    while (server=(RooAbsArg*)serverIter->Next()) {
+      server->printToStream(str,OneLine);
+    }
+  }
 }
 
+void RooAbsArg::Print(Option_t *options) const {
+  // Print the state of this object using printToStream() with the
+  // following PrintOption mapping:
+  //
+  //  "1" - OneLine
+  //  "S" - Shape
+  //  "V" - Verbose
+  //
+  // The default is Standard.
+
+  TString opts(options);
+  opts.ToLower();
+  PrintOption popt(Standard);
+  if(opts.Contains("1")) popt= OneLine;
+  if(opts.Contains("S")) popt= Shape;
+  if(opts.Contains("V")) popt= Verbose;
+  printToStream(cout,popt);
+}
 
 ostream& operator<<(ostream& os, RooAbsArg &arg)
 {
@@ -355,32 +415,12 @@ istream& operator>>(istream& is, RooAbsArg &arg)
 }
 
 
-void RooAbsArg::printAttribList(ostream& os) 
+void RooAbsArg::printAttribList(ostream& os) const
 {
   // Print the attribute list 
   TIterator *attribIter= _attribList.MakeIterator();
   TObjString* attrib ;
   while (attrib=(TObjString*)attribIter->Next()) {
     os << " " << attrib->String() ;
-  }
-}
-
-
-void RooAbsArg::printLinks() 
-{
-  // DEBUG: Print client and server links of this object 
-  cout << GetName() << "(" << (void*)this << "): link map" << endl ;
-  cout << "\tClients (depending on this RooAbsArg)" << endl ;
-  TIterator *clientIter= _clientList.MakeIterator();
-  RooAbsArg* client ;
-  while (client=(RooAbsArg*)clientIter->Next()) {
-    cout << "\t" << client->GetName() << "(" << (void*)client << ")" << endl ;
-  }
-  
-  cout << "\tServers (needed by this RooAbsArg)" << endl ;
-  TIterator *serverIter= _serverList.MakeIterator();
-  RooAbsArg* server ;
-  while (server=(RooAbsArg*)serverIter->Next()) {
-    cout << "\t" << server->GetName() << "(" << (void*)server << ")" << endl ;
   }
 }

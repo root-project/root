@@ -6,8 +6,9 @@ void makedocs(const char *version, const char *where= "./html") {
   sourceDir.Append("/RooFitCore");
   gEnv->SetValue("Root.Html.SourceDir",sourceDir.Data());
   gEnv->SetValue("Root.Html.OutputDir",where);
-  gEnv->SetValue("Root.Html.LastUpdate","*    File: ");
+  gEnv->SetValue("Root.Html.Description","// -- CLASS DESCRIPTION --");
+  gEnv->SetValue("Root.Html.LastUpdate","File: $#$");
 
   THtml docMaker;
-  docMaker.MakeAll(kFALSE,"Roo*");
+  docMaker.MakeAll(kTRUE,"Roo*");
 }
