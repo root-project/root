@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.2 2000/09/05 09:21:23 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -33,7 +33,7 @@ class TVirtualPad;
 
 class THtml : public TObject {
 
-private:
+protected:
     TString      fXwho;            // by default http://xwho.cern.ch/WHO/people?
   const char    *fSourcePrefix;    // prefix to relative source path
   const char    *fSourceDir;       // source path
