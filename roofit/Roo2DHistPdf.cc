@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: Roo2DHistPdf.cc,v 1.3 2001/08/20 21:47:29 bevan Exp $
+ *    File: $Id: Roo2DHistPdf.cc,v 1.1 2001/08/25 22:25:43 bevan Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -184,14 +184,16 @@ Double_t Roo2DHistPdf::evaluate() const
   }
 
   //give the choice of extrapolation between bins and using the bin content
-  Double_t p = 0.0;
   if(_iWantToExtrapolate)
   {
-    Double_t dx = (x-(_lox + ix*_xbinWidth))/_xbinWidth;
-    Double_t dy = (y-(_loy + iy*_ybinWidth))/_ybinWidth;
-    p = _p[ix][iy] + dy*_p[ix][iy+1] + dx*_p[ix+1][iy];
+    Double_t dfdx = (_p[ix+1][iy] - _p[ix][iy])/_xbinWidth;
+    Double_t dfdy = (_p[ix][iy+1] - _p[ix][iy])/_ybinWidth;
+
+    Double_t dx = (x-( _lox + (Double_t)ix * _xbinWidth));
+    Double_t dy = (y-( _loy + (Double_t)iy * _ybinWidth));
+
+    return( _p[ix][iy] + dx*dfdx + dy * dfdy );
   }
-  else p = _p[ix][iy];
-  return p;
+  else return (_p[ix][iy]);
 }
 
