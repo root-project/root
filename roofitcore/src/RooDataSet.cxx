@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.6 2001/03/21 15:14:20 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.7 2001/03/22 15:31:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -181,7 +181,7 @@ void RooDataSet::dump() {
   for(Int_t i=0; i < nevent; ++i) {
     Int_t entryNumber=GetEntryNumber(i);
     if (entryNumber<0) break;
-    GetEntry(entryNumber,1);
+    get(entryNumber);
      
     _iterator->Reset() ;
     // Copy from source to destination

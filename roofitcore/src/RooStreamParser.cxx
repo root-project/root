@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStreamParser.cc,v 1.2 2001/03/21 15:14:21 verkerke Exp $
+ *    File: $Id: RooStreamParser.cc,v 1.3 2001/03/22 15:31:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,13 +19,14 @@
 
 ClassImp(RooStreamParser)
 
+
 RooStreamParser::RooStreamParser(istream& is) : 
-  _is(is), _prefix("")
+  _is(is), _prefix(""), _punct("()[]{}<>|/\\;:?.,=+-_&^%$#@!`~")
 {
 }
 
 RooStreamParser::RooStreamParser(istream& is, TString errorPrefix) : 
-  _is(is), _prefix(errorPrefix)
+  _is(is), _prefix(errorPrefix), _punct("()[]{}<>|/\\;:?.,=+-_&^%$#@!`~")
 {
 }
 
@@ -35,10 +36,25 @@ RooStreamParser::~RooStreamParser()
 }
 
 
+void RooStreamParser::setPunctuation(TString punct) {
+  _punct = punct ;
+}
+
+
+Bool_t RooStreamParser::isPunctChar(char c) const {
+  const char* punct = _punct.Data() ;
+  for (int i=0 ; i<_punct.Length() ; i++)
+    if (punct[i] == c) {
+      return kTRUE ;
+    }
+  return kFALSE ;
+}
+
+
 TString RooStreamParser::readToken() 
 {
   // Smart tokenizer. Absorb white space and token must be either punctuation or alphanum
-  Bool_t isPunct(kFALSE), first(kTRUE) ;
+  Bool_t first(kTRUE), quotedString(kFALSE) ;
   char buffer[1024], c, cnext, cprev=' ' ;
   Int_t bufptr=0 ;
 
@@ -48,16 +64,21 @@ TString RooStreamParser::readToken()
   while(1) {
     _is.get(c) ;
 
+    // Terminate at EOF, EOL or trouble
     if (!_is.good() || c=='\n') break ;
+
+    // Terminate as SPACE, unless we haven't seen any non-SPACE yet
     if (isspace(c)) {
       if (first) 
 	continue ; 
       else 
-	break ;
+	if (!quotedString) {
+	  break ;
+	}
     }
 
     // If '-' or '/' see what the next character is
-    if (c=='-' || c=='/') {
+    if (c == '.' || c=='-' || c=='/') {
       _is.get(cnext) ;
       _is.putback(cnext) ;
     }
@@ -67,20 +88,39 @@ TString RooStreamParser::readToken()
       zapToEnd() ;
       break ;
     }
-    
-    // Decide if token is punctuation or alphanumeric
-    if (isalnum(c) || c=='.' || c=='*' || (c=='-' && (isdigit(cnext) || cnext=='.'))) {
-      if (!first && isPunct) {
-	// Punct -> Alpha, end token
-	_is.putback(c) ;
+
+    // Special handling of quoted strings
+    if (c=='"') {
+      if (first) {
+	quotedString=kTRUE ;		
+      } else if (!quotedString) {
+	// Terminate current token. Next token will be quoted string
+	_is.putback('"') ;
 	break ;
       }
+    }
+
+    if (!quotedString) {
+      // Decide if next char is punctuation (exempt - and . that are part of floating point numbers)
+      if (isPunctChar(c) && !(c=='.' && (isdigit(cnext)||isdigit(cprev))) 
+	  && !(c=='-' && (isdigit(cnext)||cnext=='.'))) {
+	if (first) {
+	  // Make this a one-char punctuation token
+	  buffer[bufptr++]=c ;
+	  break ;
+	} else {
+	  // Put back punct. char and terminate current alphanum token
+	  _is.putback(c) ;
+	  break ;
+	} 
+      }       
     } else {
-      if (first)
-	isPunct=kTRUE ;
-      else if (!isPunct) {
-	// Alpha -> Punct, end token
-	_is.putback(c) ;
+      // Inside quoted string conventional tokenizing rules do not apply
+
+      // Terminate token on closing quote
+      if (c=='"' && !first) {
+	buffer[bufptr++]=c ;	
+	quotedString=kFALSE ;
 	break ;
       }
     }
@@ -89,19 +129,35 @@ TString RooStreamParser::readToken()
     buffer[bufptr++]=c ;
     first=kFALSE ;
     cprev=c ;
-  }  
+  }
 
-  // Absorb trailing white space
+  // Check if closing quote was encountered
+  if (quotedString) {
+    cout << "RooStreamParser::readToken: closing quote (\") missing" << endl ;
+  }
+
+  // Absorb trailing white space or absorb rest of line if // is encountered
   if (c=='\n') {
     _is.putback(c) ;
   } else {
     c = _is.peek() ;
-    while (isspace(c) && c != '\n') {
-      _is.get(c) ;
-      c = _is.peek() ;
+
+    while ((isspace(c) || c=='/') && c != '\n') {
+      if (c=='/') {
+	_is.get(c) ;
+	if (_is.peek()=='/') {
+	  zapToEnd() ;	
+	} else {
+	  _is.putback('/') ;
+	}
+	break ;
+      } else {
+	_is.get(c) ;
+	c = _is.peek() ;
+      }
     }
   }
-
+  
   // Zero terminate buffer and convert to TString
   buffer[bufptr]=0 ;
   return TString(buffer) ;
@@ -230,7 +286,19 @@ Bool_t RooStreamParser::readString(TString& value, Bool_t zapOnError)
 
 Bool_t RooStreamParser::convertToString(TString token, TString& string) 
 {
-  string=token ;
+  // Transport to buffer 
+  char buffer[1024],*ptr ;
+  strcpy(buffer,token) ;
+  int len = strlen(buffer) ;
+
+  // Remove trailing quote if any
+  if ((len) && (buffer[len-1]=='"'))
+    buffer[len-1]=0 ;
+
+  // Skip leading quote, if present
+  ptr=(buffer[0]=='"') ? buffer+1 : buffer ;
+
+  string = ptr ;
   return kFALSE ;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.3 2001/03/19 15:57:30 verkerke Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.4 2001/03/22 15:31:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,6 +15,7 @@
 
 #include "THashList.h"
 #include "TString.h"
+#include "TClass.h"
 #include "RooFitCore/RooAbsArg.hh"
 
 class RooAbsArg ;

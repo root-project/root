@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.5 2001/03/22 02:13:47 davidk Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.6 2001/03/22 15:31:24 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -413,7 +413,6 @@ istream& operator>>(istream& is, RooAbsArg &arg)
   arg.readFromStream(is,kTRUE,kFALSE) ;
   return is ;
 }
-
 
 void RooAbsArg::printAttribList(ostream& os) const
 {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.6 2001/03/22 02:13:47 davidk Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.7 2001/03/22 15:31:24 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -92,7 +92,7 @@ protected:
   // Global   
   friend ostream& operator<<(ostream& os, RooAbsArg &arg);  
   friend istream& operator>>(istream& is, RooAbsArg &arg) ;
-
+  
   // Debug stuff
   static Bool_t _verboseDirty ;
 

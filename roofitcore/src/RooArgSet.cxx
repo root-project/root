@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.5 2001/03/22 02:13:47 davidk Exp $
+ *    File: $Id: RooArgSet.cc,v 1.6 2001/03/22 15:31:24 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -13,6 +13,7 @@
 
 #include <iostream.h>
 #include <fstream.h>
+#include "TClass.h"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooFormula.hh"
@@ -392,6 +393,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	  if (parser.expectToken("=",kTRUE)) {
 	    parser.zapToEnd() ;
 	    retVal=kTRUE ;
+	    cout << "RooArgSet::readFromStream(" << GetName() << "): missing '=' sign: " << arg << endl ;
 	    continue ;
 	  }
 	  retVal |= arg->readFromStream(is,kFALSE,verbose) ;	
