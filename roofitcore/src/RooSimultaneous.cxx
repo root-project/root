@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.38 2002/06/08 00:45:01 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.39 2002/06/12 23:53:26 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -483,7 +483,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 
   // Fix appropriate coefficient normalization in plot function
   if (_plotCoefNormSet.getSize()>0) {
-    plotVar->fixCoefNormalization(_plotCoefNormSet) ;
+    plotVar->fixAddCoefNormalization(_plotCoefNormSet) ;
   }
 
   RooAbsData* projDataTmp(0) ;

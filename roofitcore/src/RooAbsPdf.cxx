@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.69 2002/06/12 23:53:25 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.70 2002/06/19 20:59:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -213,9 +213,10 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 
     // Evaluate denominator
     Double_t normVal(_norm->getVal()) ;
-    if (normVal==0.) error=kTRUE ;
+    Double_t normError(kFALSE) ;
+    if (normVal==0.) normError=kTRUE ;
 
-    _value = error ? 0 : (rawVal / normVal) ;
+    _value = normError ? 0 : (rawVal / normVal) ;
 
     if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() << "): value = " 
 			     << rawVal << " / " << _norm->getVal() << " = " << _value << endl ;
