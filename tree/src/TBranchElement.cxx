@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.78 2002/01/18 09:50:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.79 2002/01/23 08:38:59 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -409,8 +409,14 @@ void TBranchElement::Browse(TBrowser *b)
          if (len) {
             if (mothername(len-1)!='.') {
                mothername.Append(".");
+               name.Prepend(mothername);
+            } else {
+               // If the mother's name end with a dot then 
+               // the daughter probabley already contains the mother's name
+               if (name.Index(mothername)==kNPOS) {
+                  name.Prepend(mothername);
+               }
             }
-            name.Prepend(mothername);
          }
       }
 

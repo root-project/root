@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.81 2002/01/10 21:09:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.82 2002/01/15 10:31:27 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1728,6 +1728,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
 
    if (!final && branch) { // NOTE: should we add && !leaf ???
       leaf = (TLeaf*)branch->GetListOfLeaves()->UncheckedAt(0);
+      if (!leaf) return -1;
       final = leaf->IsOnTerminalBranch();
    }
 
