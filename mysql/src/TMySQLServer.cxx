@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.1.1.1 2000/05/16 17:00:58 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.2 2001/08/24 16:34:18 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -55,7 +55,8 @@ TMySQLServer::TMySQLServer(const char *db, const char *uid, const char *pw)
       fDB   = dbase;
       fPort = url.GetPort();
    } else {
-      Error("TMySQLServer", "connection to %s failed", url.GetHost());
+      Error("TMySQLServer", "connection to database %s on %s failed (error: %s)",
+            dbase, url.GetHost(), mysql_error(fMySQL));
       MakeZombie();
    }
 }
