@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.76 2002/03/21 16:15:43 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.77 2002/04/02 10:39:53 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4228,7 +4228,6 @@ void THistPainter::PaintSurface(Option_t *)
       Hoption.Surf = 23;
       fLego->SetSurfaceFunction(&TLego::SurfaceFunction);
       fLego->SetDrawFace(&TLego::DrawFaceMode2);
-      nx--; ny--;
       if (Hoption.System == kPOLAR)       fLego->SurfacePolar(1,nx,ny,"BF");
       if (Hoption.System == kCYLINDRICAL) fLego->SurfaceCylindrical(1,nx,ny,"BF");
       if (Hoption.System == kSPHERICAL)   fLego->SurfaceSpherical(0,1,nx,ny,"BF");
