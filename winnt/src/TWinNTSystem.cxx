@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.29 2002/02/26 17:57:20 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.30 2002/03/25 20:52:44 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1661,8 +1661,8 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
       while ((start < libs.Length()) && (index != kNPOS)) {
          index = libs.Index(separator,&end,start);
          if (index >= 0) {
-            // Change .dll into .lib and remove the
-            // path info if it not accessible.
+            // Change .dll into .lib and remove the
+            // path info if it not accessible.
             s = libs(index,end);
             if (s.Index(user_dll) != kNPOS) {
                s.ReplaceAll(".dll",".lib");
@@ -1685,7 +1685,7 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
       ntlibs = libs;
    }
 
-   fListLibs.ReplaceAll("/","\\");
+   fListLibs.ReplaceAll("/","\\");
    return fListLibs;
 }
 
