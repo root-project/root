@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.91 2002/04/22 19:02:33 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.92 2002/04/24 16:50:12 rdm Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2033,6 +2033,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                }
                leafinfo = 0;
                current = &(work[0]);
+               *current = 0;
                continue;
             } else if (right[i] == ')') {
                // We should have the end of a cast operator.  Let's introduce a TFormLeafCast
@@ -2053,6 +2054,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   }
                   leafinfo = 0;
                   current = &(work[0]);
+                  *current = 0;
 
                   cl = casted;
                   continue;
@@ -2210,6 +2212,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   cl = element->GetClassPointer();
                }
                current = &(work[0]);
+               *current = 0;
 
                if (right[i] == '[') {
                  int bracket = i;
@@ -2236,6 +2239,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             fDataMembers.AddAtAndExpand(maininfo,code);
             fLookupType[code] = kDataMember;
          }
+      }
+
+      if (strlen(work)!=0) {
+         // We have something left to analyze.  Let's make this an error case!
+         return -1;
       }
 
       // Let see if we can understand the structure of this branch.
