@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.22 2003/04/18 12:55:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.23 2003/09/13 09:03:22 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -453,6 +453,8 @@ void THStack::Paint(Option_t *option)
       }
       fHistogram->SetStats(0);
       TH1::AddDirectory(add);
+   } else {
+      fHistogram->SetTitle(GetTitle());
    }
 
    if (nostack) {*nostack = 0; strcat(nostack,nostack+7);}
