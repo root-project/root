@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.9 2000/07/13 09:04:37 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.10 2000/08/15 07:37:37 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -977,8 +977,8 @@ void TPad::CreateNewPolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
             yline[npoints] = yline[0];
             npoints++;
             gr = (TGraph*)gROOT->ProcessLineFast(
-                 Form("new TCutG(\"CUTG\",%d,(Double_t*)0x%lx,(Double_t*)0x%lx)",
-                      npoints,(Long_t)xline,(Long_t)yline));
+                 Form("new %s(\"CUTG\",%d,(Double_t*)0x%lx,(Double_t*)0x%lx)",
+                      gROOT->GetCutClassName(),npoints,(Long_t)xline,(Long_t)yline));
             if (gr) gr->Draw("L");
          }
          npoints = 0;
