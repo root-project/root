@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.37 2000/12/21 14:03:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.38 2000/12/26 14:23:51 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -457,16 +457,12 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
    TIter      next(cl->GetListOfRealData());
    while ((rd = (TRealData *) next())) {
       TDataMember *dm = rd->GetDataMember();
-      if (rd->IsObject()) {
-//printf("found IsObject:%s, class:%s\n",dm->GetName(),dm->GetFullTypeName());
-         //TClass *clm = gROOT->GetClass(dm->GetFullTypeName());
-         //We should build the StreamerInfo in this case.
-         //However, there is a problem in case one cannot call class->New !!
-         //if (clm) BuildStreamerInfo(clm,obj+rd->GetThisOffset());
-         continue;
-      }
       if (!dm->IsPersistent()) continue; //do not process members with a ! as the first
                                          // character in the comment field
+      if (rd->IsObject()) {
+         TClass *clm = gROOT->GetClass(dm->GetFullTypeName());
+         if (clm) BuildStreamerInfo(clm,(char*)obj+rd->GetThisOffset());
+      }
       rdname = rd->GetName();
       dname  = dm->GetName();
       
