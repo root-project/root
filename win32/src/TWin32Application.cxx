@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32Application.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TWin32Application.cxx,v 1.2 2001/04/22 16:00:56 rdm Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -171,11 +171,6 @@ TWin32Application::TWin32Application(const char *appClassName, int *argc,
         CloseHandle(fhdDlgThread);
     }
 
-}
-
-//______________________________________________________________________________
-   char   *TWin32Application::ApplicationName() const{
-    return 0;
 }
 
 //______________________________________________________________________________
