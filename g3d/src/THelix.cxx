@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.5 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.6 2002/01/24 11:39:27 rdm Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -215,7 +215,7 @@ THelix::~THelix()
 
 
 //______________________________________________________________________________
-THelix::THelix(const THelix &helix)
+THelix::THelix(const THelix &helix) : TPolyLine3D(helix)
 {
    ((THelix&)helix).Copy(*this);
 }

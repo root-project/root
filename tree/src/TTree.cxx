@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.121 2002/04/12 19:19:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.122 2002/04/19 09:37:06 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3346,7 +3346,7 @@ TTreeFriendLeafIter::TTreeFriendLeafIter(const TTree * tree, Bool_t dir)
 }
 
 //______________________________________________________________________________
-TTreeFriendLeafIter::TTreeFriendLeafIter(const TTreeFriendLeafIter&iter)
+TTreeFriendLeafIter::TTreeFriendLeafIter(const TTreeFriendLeafIter&iter) : TIterator(iter)
 {
   // Copy constructor
 

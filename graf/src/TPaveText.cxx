@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.13 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.14 2002/03/20 20:47:02 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -78,7 +78,7 @@ TPaveText::~TPaveText()
 }
 
 //______________________________________________________________________________
-TPaveText::TPaveText(const TPaveText &pavetext)
+TPaveText::TPaveText(const TPaveText &pavetext) : TPave(pavetext), TAttText(pavetext)
 {
    ((TPaveText&)pavetext).Copy(*this);
 }

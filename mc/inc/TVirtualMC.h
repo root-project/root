@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TVirtualMC.h,v 1.19 2002/04/08 15:06:08 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TVirtualMC.h,v 1.3 2002/04/26 08:46:10 brun Exp $
 // Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
@@ -247,7 +247,7 @@ class TVirtualMC : public TNamed {
     TVirtualMCApplication* fApplication; //! User MC application
 
   private:
-    TVirtualMC(const TVirtualMC &) {}
+    TVirtualMC(const TVirtualMC &mc) : TNamed(mc) {}
     TVirtualMC & operator=(const TVirtualMC &) {return (*this);}
 
     static TVirtualMC*  fgMC; // Monte Carlo singleton instance

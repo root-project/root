@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.13 2002/03/25 20:21:06 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.14 2002/04/01 17:19:13 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -194,7 +194,7 @@ TRef::TRef(TObject *obj)
 }
 
 //______________________________________________________________________________
-TRef::TRef(const TRef &ref)
+TRef::TRef(const TRef &ref) : TObject(ref)
 {
    *this = ref;
 }

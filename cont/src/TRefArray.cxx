@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.7 2002/02/03 16:14:31 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.8 2002/03/07 18:11:15 rdm Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -613,7 +613,7 @@ TRefArrayIter::TRefArrayIter(const TRefArray *arr, Bool_t dir)
 }
 
 //______________________________________________________________________________
-TRefArrayIter::TRefArrayIter(const TRefArrayIter &iter)
+TRefArrayIter::TRefArrayIter(const TRefArrayIter &iter) : TIterator(iter)
 {
    // Copy ctor.
 

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.4 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.5 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -49,7 +49,7 @@ TArc::TArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t phimax)
 }
 
 //______________________________________________________________________________
-TArc::TArc(const TArc &arc)
+TArc::TArc(const TArc &arc) : TEllipse(arc)
 {
    ((TArc&)arc).Copy(*this);
 }

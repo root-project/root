@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.9 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPave.cxx,v 1.10 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -83,7 +83,7 @@ TPave::~TPave()
 }
 
 //______________________________________________________________________________
-TPave::TPave(const TPave &pave)
+TPave::TPave(const TPave &pave) : TBox(pave)
 {
    ((TPave&)pave).Copy(*this);
 }

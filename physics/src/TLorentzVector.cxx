@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.5 2002/01/19 13:18:38 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.6 2002/01/21 16:29:20 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()
@@ -256,8 +256,8 @@ TLorentzVector::TLorentzVector(const Float_t * x0)
 TLorentzVector::TLorentzVector(const TVector3 & p, Double_t e)
                : fP(p), fE(e) {}
 
-TLorentzVector::TLorentzVector(const TLorentzVector & p)
-               : fP(p.Vect()), fE(p.T()) {}
+TLorentzVector::TLorentzVector(const TLorentzVector & p) : TObject(p)
+               , fP(p.Vect()), fE(p.T()) {}
 
 TLorentzVector::~TLorentzVector()  {}
 

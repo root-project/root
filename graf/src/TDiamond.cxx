@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.3 2002/01/23 17:52:48 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TDiamond.cxx,v 1.4 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   22/06/96
 
 /*************************************************************************
@@ -65,7 +65,7 @@ TDiamond::~TDiamond()
 }
 
 //______________________________________________________________________________
-TDiamond::TDiamond(const TDiamond &diamond)
+TDiamond::TDiamond(const TDiamond &diamond) : TPaveText(diamond)
 {
    ((TDiamond&)diamond).Copy(*this);
 }

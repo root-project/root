@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.32 2002/04/26 10:21:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.33 2002/05/08 17:36:40 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -72,7 +72,7 @@ TAxis::~TAxis()
 }
 
 //______________________________________________________________________________
-TAxis::TAxis(const TAxis &axis)
+TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis)
 {
    ((TAxis&)axis).Copy(*this);
 }

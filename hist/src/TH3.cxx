@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.21 2002/04/12 09:18:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.22 2002/04/22 08:55:29 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1518,7 +1518,7 @@ TH3C::TH3C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 }
 
 //______________________________________________________________________________
-TH3C::TH3C(const TH3C &h3c)
+TH3C::TH3C(const TH3C &h3c) : TH3(h3c), TArrayC(h3c)
 {
    ((TH3C&)h3c).Copy(*this);
 }
@@ -1731,7 +1731,7 @@ TH3S::TH3S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 }
 
 //______________________________________________________________________________
-TH3S::TH3S(const TH3S &h3s)
+TH3S::TH3S(const TH3S &h3s) : TH3(h3s), TArrayS(h3s)
 {
    ((TH3S&)h3s).Copy(*this);
 }
@@ -1944,7 +1944,7 @@ TH3F::TH3F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 }
 
 //______________________________________________________________________________
-TH3F::TH3F(const TH3F &h3f)
+TH3F::TH3F(const TH3F &h3f) : TH3(h3f), TArrayF(h3f)
 {
    ((TH3F&)h3f).Copy(*this);
 }
@@ -2136,7 +2136,7 @@ TH3D::TH3D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 }
 
 //______________________________________________________________________________
-TH3D::TH3D(const TH3D &h3d)
+TH3D::TH3D(const TH3D &h3d) : TH3(h3d), TArrayD(h3d)
 {
    ((TH3D&)h3d).Copy(*this);
 }

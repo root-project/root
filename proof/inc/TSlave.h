@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.6 2001/04/11 14:24:16 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.7 2002/04/19 18:24:00 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -57,7 +57,7 @@ private:
    Float_t       fCpuTime;   //CPU time spent executing commands (info obtained from slave)
 
    TSlave() { fOrdinal = -1; fSocket = 0; fProof = 0; }
-   TSlave(const TSlave &) { }
+   TSlave(const TSlave &s) : TObject(s) { }
    void operator=(const TSlave &) { }
 
    TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,

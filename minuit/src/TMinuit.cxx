@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.17 2002/03/13 07:40:24 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.18 2002/05/11 08:12:08 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -313,7 +313,7 @@ TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
 }
 
 //______________________________________________________________________________
-TMinuit::TMinuit(const TMinuit &)
+TMinuit::TMinuit(const TMinuit &minuit) : TNamed(minuit)
 {
    // Private TMinuit copy ctor. TMinuit can not be copied.
 

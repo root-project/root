@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.11 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.12 2002/01/24 11:39:29 rdm Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -52,7 +52,7 @@ TText::~TText()
 }
 
 //______________________________________________________________________________
-TText::TText(const TText &text)
+TText::TText(const TText &text) : TNamed(text), TAttText(text)
 {
    ((TText&)text).Copy(*this);
 }

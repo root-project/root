@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.10 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.11 2002/01/24 23:31:12 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -108,7 +108,7 @@ TColor::~TColor()
 }
 
 //______________________________________________________________________________
-TColor::TColor(const TColor &color)
+TColor::TColor(const TColor &color) : TNamed(color)
 {
    // Color copy ctor.
 

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPaveClass.cxx,v 1.3 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPaveClass.cxx,v 1.4 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   06/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -54,7 +54,7 @@ TPaveClass::~TPaveClass()
 }
 
 //______________________________________________________________________________
-TPaveClass::TPaveClass(const TPaveClass &PaveClass)
+TPaveClass::TPaveClass(const TPaveClass &PaveClass) : TPaveLabel(PaveClass)
 {
    ((TPaveClass&)PaveClass).Copy(*this);
 }
