@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.50 2005/03/06 16:45:46 fine Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.51 2005/03/23 22:08:44 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -45,6 +45,55 @@ ClassImp(TQtWidget)
 //
 //           This widget can be used as a Qt "custom widget" 
 //         to build a custom GUI interfaces with  Qt Designer
+//
+// class emits Qt signals and has a Qt public slots
+//
+//  Public slots:  (Qt)
+//
+//   virtual void cd();  // make the associated TCanvas the current one (shortcut to TCanvas::cd()) 
+//   virtual void cd(int subpadnumber); // as above - shortcut to Canvas::cd(int subpadnumber)
+//   void Disconnect(); // disconnect the Qidget from the ROOT TCanvas (used in the class dtor)
+//   void Refresh();    // forece the aasociated TCanvas::Update to be called
+//   virtual bool Save(const QString &fileName) const;  // Save the widget image with some ppixmap file 
+//   virtual bool Save(const char    *fileName) const;
+//   virtual bool Save(const QString &fileName,const char *format,int quality=60) const;
+//   virtual bool Save(const char    *fileName,const char *format,int quality=60) const;
+//
+//  signals        (Qt)
+//
+//    CanvasPainted();  // Signal the TCanvas has been painted onto the screen
+//    Saved(bool ok);   // Signal the TCanvas has been saved into the file
+//    RootEventProcessed(TObject *selected, unsigned int event, TCanvas *c);
+//                     // Signal the Qt mouse/keybord events have been process by ROOT
+// 
+//
+//  For example to create the custom responce to the mouse crossing TCanvas
+//  connect the RootEventProsecced signal witrh your qt slot:
+//
+// connect(tQtWidget,SIGNAL(RootEventProcessed(TObject *, unsigned int, TCanvas *))
+//          ,this,SLOT(CanvasEvent(TObject *, unsigned int, TCanvas *)));
+//  . . . 
+//
+//void qtrootexample1::CanvasEvent(TObject *obj, unsigned int event, TCanvas *)
+//{
+//  TQtWidget *tipped = (TQtWidget *)sender();
+//  const char *objectInfo = 
+//        obj->GetObjectInfo(tipped->GetEventX(),tipped->GetEventY());
+//  QString tipText ="You have ";
+//  if  (tipped == tQtWidget1)
+//     tipText +="clicked";
+//  else
+//     tipText +="passed";
+//  tipText += " the object <";
+//  tipText += obj->GetName();
+//  tipText += "> of class "; 
+//  tipText += obj->ClassName();
+//  tipText += " : ";
+//  tipText += objectInfo;
+//  
+//  QToolTip::remove(tipped);
+//  QToolTip::add(tipped,tipText);
+// }
 //
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,4 +1,5 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.7 2005/03/04 07:11:54 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.8 2005/03/07 07:44:12 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.137 2005/03/23 22:08:44 fine Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -99,6 +100,7 @@ public:
    bool              HasValid(EContext bit) const { return TESTBIT (fMask , bit); }
    Mask_t            Mask() const { return fMask; }
    void              SetMask(Mask_t mask){ fMask = mask;}
+   void              SetForeground(ULong_t foreground);
    GContext_t        gc() const { return (GContext_t)this; }
    operator          GContext_t() const { return gc(); }
    const QtGContext &operator=(const GCValues_t &gval){ return Copy(gval);}
@@ -276,7 +278,7 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
          fROp = Qt::SetROP;     // dst = 1
          break;
       default:
-	     fROp = Qt::CopyROP;
+	      fROp = Qt::CopyROP;
 	break;
       }
       DumpROp(fROp);
@@ -299,11 +301,15 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
    if ((mask & kGCForeground)) {
       // xmask |= GDK_GC_FOREGROUND;
       // QColor paletteBackgroundColor - the background color of the widget
+#if 1            
+       SetForeground(gval.fForeground);
+#else     
         SETBIT(fMask,kBrush);
         SETBIT(fMask,kPen);
         setPaletteForegroundColor (QtColor(gval.fForeground));
 	     fBrush.setColor(QtColor(gval.fForeground));
 	     fPen.setColor(QtColor(gval.fForeground));
+#endif        
 	 // fprintf(stderr," kGCForeground %s \root.exen", (const char*)QtColor(gval.fForeground).name());
    }
    if ((mask & kGCBackground)) {
@@ -359,6 +365,7 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
          case kFillTiled:          style = Qt::Dense1Pattern; break;
          case kFillStippled:       style = Qt::Dense6Pattern; break;
          case kFillOpaqueStippled: style = Qt::Dense7Pattern; break;
+         default:                  style = Qt::NoBrush;       break;
       };
       fBrush.setStyle(style);
    }
@@ -414,6 +421,17 @@ const QtGContext  &QtGContext::Copy(const GCValues_t &gval)
       fClipMask = (QBitmap *) gval.fClipMask;
    }
    return *this;
+}
+//______________________________________________________________________________
+void   QtGContext::SetForeground(ULong_t foreground)
+{
+   // xmask |= GDK_GC_FOREGROUND;
+   // QColor paletteBackgroundColor - the background color of the widget
+   SETBIT(fMask,kBrush);
+   SETBIT(fMask,kPen);
+   setPaletteForegroundColor (QtColor(foreground));
+   fBrush.setColor(QtColor(foreground));
+   fPen.setColor(QtColor(foreground)); 
 }
 //______________________________________________________________________________
 //
@@ -910,7 +928,8 @@ void         TGQt::SetWindowBackground(Window_t id, ULong_t color)
 {
    // Set the window background color.
    if (id == kNone || id == kDefault ) return;
-   wid(id)->setPaletteBackgroundColor(QtColor(color));
+   wid(id)->setEraseColor(QtColor(color));
+   // wid(id)->setPaletteBackgroundColor(QtColor(color));
 }
 //______________________________________________________________________________
 void         TGQt::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
@@ -1444,7 +1463,14 @@ void         TGQt::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
    wid(id)->erase (x, y, w, h );
 }
 //______________________________________________________________________________
-Bool_t       TGQt::CheckEvent(Window_t, EGEventType, Event_t &) { return kFALSE; }
+Bool_t       TGQt::CheckEvent(Window_t, EGEventType, Event_t &) 
+{
+   // Check if there is for window "id" an event of type "type". If there
+   // is fill in the event structure and return true. If no such event
+   // return false.
+  
+    return kFALSE; 
+}
 //______________________________________________________________________________
 void         TGQt::SendEvent(Window_t id, Event_t *ev)
 {
@@ -1526,7 +1552,7 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
    //   ,evmask,id,((TQtClientWidget*)wid(id)));
     if (id == kNone) return;
     assert(confine==kNone);
-    if (grab) {
+    if (grab ) {
 //       if (cursor == kNone) {
           ((TQtClientWidget*)wid(id))->SetButtonMask(modifier,button); //grabMouse();
           ((TQtClientWidget*)wid(id))->SetEventMask(evmask); //grabMouse();
@@ -2168,11 +2194,8 @@ void         TGQt::SetForeground(GContext_t gc, ULong_t foreground)
    // Set foreground color in graphics context (shortcut for ChangeGC with
    // only foreground mask set).
    // The interface is confusing . This function MUST be not here (VF 07/07/2003)
-   GCValues_t face;
-   memset(&face,0,sizeof(GCValues_t));
-   face.fMask       = kGCForeground;
-   face.fForeground = foreground;
-   qtcontext(gc) = face;
+   
+   qtcontext(gc).SetForeground(foreground);
 }
 //______________________________________________________________________________
 void         TGQt::SetClipRectangles(GContext_t gc, Int_t x, Int_t y,

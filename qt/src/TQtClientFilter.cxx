@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.3 2005/03/01 07:24:01 brun Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtClientFilter.cxx,v 1.4 2005/03/08 05:48:55 brun Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -194,7 +194,7 @@ static inline void MapEvent(const TQUserEvent &qev, Event_t &ev)
 //______________________________________________________________________________________
 static inline TQtClientWidget *GrabEvent(Event_t &event/*,QPtrList<TQtClientWidget> &grabList*/)
 {
-   // Substitute the orginal window if with the grabbed one if any
+   // Substitute the orginal window with the grabbed one if any
 #if 1
    TQtClientWidget *grabbedWidget = (TQtClientWidget *)TGQt::wid(event.fWindow);
    while (grabbedWidget && !(grabbedWidget->IsGrabbed(event))) {
@@ -306,10 +306,13 @@ bool TQtClientFilter::eventFilter( QObject *qWidget, QEvent *e ){
          MapEvent(*mouseEvent,event);
          selectEventMask |=  kButtonPressMask;
          // Passive grab
+#if 0         
          if ( fPointerGrabber ) {
 //            ((QMouseEvent *)e)->accept();
             grabEvent = kTRUE;
-         } else if ( fButtonGrabList.findRef(frame) >=0 && frame->IsGrabbed(event) )
+         } else 
+#endif             
+            if ( fButtonGrabList.findRef(frame) >=0 && frame->IsGrabbed(event) )
          {
             ((QMouseEvent *)e)->accept();
             grabEvent = kTRUE;
