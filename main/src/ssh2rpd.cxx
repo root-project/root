@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.5 2004/04/20 15:21:51 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.6 2004/04/20 21:32:02 brun Exp $
 // Author: Gerardo Ganis    1/7/2003
 
 /*************************************************************************
@@ -24,15 +24,18 @@
 #include <syslog.h>
 #include <errno.h>
 #include <pwd.h>
-#include <string.h>
 #include <string>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/stat.h>
-#include "Varargs.h"
 #include <netinet/in.h>
+#include "Varargs.h"
 #include "snprintf.h"
+#include <string.h>
+#ifdef R__GLOBALSTL
+namespace std { using ::string; }
+#endif
 
 
 #define kMAXPATHLEN 2048
@@ -69,14 +72,14 @@ int main(int argc, char **argv)
 
    if (argc < 3) {
       Info("ssh2rpd: argc=%d"
-           ": at least one additional argument required - exit", 
+           ": at least one additional argument required - exit",
            argc);
       exit(1);
    }
 
    // Parse Arguments
    gDebug = atoi(argv[1]);
-   if (argc > 2) 
+   if (argc > 2)
       PipeId   = strdup(argv[2]);
    if (argc > 3)
       TmpDir = strdup(argv[3]);
@@ -95,7 +98,7 @@ int main(int argc, char **argv)
    struct passwd *pw = getpwuid(getuid());
 
    char PipeFile[kMAXPATHLEN];
-   if (!TmpDir) 
+   if (!TmpDir)
       snprintf(PipeFile,kMAXPATHLEN, "%s/RootSshPipe.%s", pw->pw_dir, PipeId);
    else
       snprintf(PipeFile,kMAXPATHLEN,"%s/RootSshPipe.%s", TmpDir, PipeId);
@@ -104,7 +107,7 @@ int main(int argc, char **argv)
    char Pipe[kMAXPATHLEN];
    if (fpipe) {
       while (fgets(Pipe, sizeof(Pipe), fpipe)) {
-         if (Pipe[strlen(Pipe)-1] == '\n') 
+         if (Pipe[strlen(Pipe)-1] == '\n')
             Pipe[strlen(Pipe)-1] = 0;
       }
       fclose(fpipe);

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.13 2004/03/17 17:52:24 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.14 2004/04/20 15:21:50 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -32,6 +32,9 @@
 #include "rpderr.h"
 #endif
 #include <string>
+#ifdef R__GLOBALSTL
+namespace std { using ::string; }
+#endif
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -43,13 +46,13 @@
 // Typedefs
 typedef void (*SigPipe_t)(int);
 
-//      
+//
 // Global consts
 #include "AuthConst.h"
 const int  kMAXRECVBUF       = 1024;
 const int  kMAXPATHLEN       = kMAXSECBUF;
 
-//      
+//
 // type of service
 enum  EService  { kSOCKD = 0, kROOTD, kPROOFD };
 
@@ -59,7 +62,7 @@ namespace ROOT {
 
 // Utility functions
 int SPrintf(char *buf, size_t size, const char *va_(fmt), ...);
-      
+
 // error handling functions
 void Error(ErrorHandler_t ErrHand,int code,const char *va_(fmt), ...);
 void ErrorInfo(const char *va_(fmt), ...);
@@ -67,7 +70,7 @@ void ErrorInit(const char *ident);
 int  GetErrno();
 void Perror(char *buf, int size = kMAXPATHLEN);
 void ResetErrno();
-      
+
 // network functions
 void   NetClose();
 double NetGetBytesRecv();
@@ -88,7 +91,7 @@ void   NetSetSigPipeHook(SigPipe_t hook);
 
 // fork functionality
 void DaemonStart(int ignsigcld, int fdkeep, EService service);
-      
+
 // rpdutils.cxx
 void RpdAuthCleanup(const char *sstr, int opt);
 int  RpdGenRSAKeys(int);
@@ -99,7 +102,7 @@ int  RpdInitSession(int, std::string &, int &);
 int  RpdInitSession(int, std::string &, int &, int &, std::string &);
 void RpdInit(EService serv, int pid, int sproto, int rlog, int inctok,
              int rumsk, int sshp, const char *tmpd, const char *asrpp);
-void RpdSetErrorHandler(ErrorHandler_t Err, ErrorHandler_t Sys, 
+void RpdSetErrorHandler(ErrorHandler_t Err, ErrorHandler_t Sys,
                         ErrorHandler_t Fatal);
 #ifdef R__KRB5
 void RpdSetKeytabFile(const char *keytabfile);
@@ -152,7 +155,7 @@ int  RpdCheckAuthTab(int Sec, const char *User, const char *Host,
                      int RemId, int *OffSet);
 int  RpdCheckDaemon(const char *daemon);
 int  RpdCheckHost(const char *Host, const char *host);
-int  RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId, 
+int  RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
                     int *OffSet, char **tkn, int *shmid, char **glbsuser);
 int  RpdCheckSpecialPass(const char *passwd);
 int  RpdCheckSshd(int opt);
