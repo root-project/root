@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.13 2004/11/24 14:48:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.14 2004/11/24 15:06:18 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 #include "Gtypes.h"
 #endif
 
+class TGLFrustum;
 class TBuffer3D;
 
 /////////////////////////////////////////////////////////////
@@ -74,7 +75,7 @@ public:
    virtual Bool_t IsTransparent()const;
    virtual void ResetTransparency(char newval);
 
-   virtual void GLDraw()const = 0;
+   virtual void GLDraw(const TGLFrustum *fr)const = 0;
    virtual void Shift(Double_t x, Double_t y, Double_t z);
    virtual void Stretch(Double_t xs, Double_t ys, Double_t zs);
 
@@ -137,7 +138,7 @@ public:
 
    Bool_t IsTransparent()const;
    void ResetTransparency(char newVal);
-   void GLDraw()const;
+   void GLDraw(const TGLFrustum *fr)const;
    void Shift(Double_t x, Double_t y, Double_t z);
    void Stretch(Double_t xs, Double_t ys, Double_t zs);
 
@@ -153,7 +154,7 @@ private:
 
 public:
    TGLPolyMarker(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
-   void GLDraw()const;
+   void GLDraw(const TGLFrustum *fr)const;
 
 private:
    void DrawStars()const;
@@ -163,7 +164,7 @@ private:
 class TGLPolyLine : public TGLSceneObject {
 public:
    TGLPolyLine(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
-   void GLDraw()const;
+   void GLDraw(const TGLFrustum *fr)const;
 };
 
 // Utility class to draw a Sphere using OpenGL Sphere primitive
@@ -177,7 +178,7 @@ private:
 
 public:
    TGLSphere(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
-   void GLDraw()const;
+   void GLDraw(const TGLFrustum *fr)const;
    void Shift(Double_t x, Double_t y, Double_t z);
    Bool_t IsTransparent()const;
 };
@@ -199,7 +200,7 @@ private:
 
 public:
    TGLTube(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
-   void GLDraw()const;
+   void GLDraw(const TGLFrustum *fr)const;
    void Shift(Double_t x, Double_t y, Double_t z);
    Bool_t IsTransparent()const;
 };
@@ -211,7 +212,7 @@ private:
 
 public:
    TGLSimpleLight(UInt_t glName, UInt_t lightName, const Float_t *color, const Double_t *position);
-   void GLDraw()const;
+   void GLDraw(const TGLFrustum *fr)const;
    void Shift(Double_t x, Double_t y, Double_t z);
    void SetBulbRad(Float_t newRad);
 };

@@ -22,7 +22,7 @@ GLH1         := $(MODDIRI)/TViewerOpenGL.h $(MODDIRI)/TGLRenderArea.h \
                 $(MODDIRI)/TGLEditor.h $(MODDIRI)/TArcBall.h \
                 $(MODDIRI)/TGLCamera.h $(MODDIRI)/TGLSceneObject.h
 GLS          := TGLKernel.cxx TViewerOpenGL.cxx TArcBall.cxx TGLRenderArea.cxx \
-                TGLSceneObject.cxx TGLRender.cxx TGLCamera.cxx TGLEditor.cxx
+                TGLSceneObject.cxx TGLRender.cxx TGLCamera.cxx TGLEditor.cxx TGLFrustum.cxx
 ifneq ($(ARCH),win32)
 GLS          += TX11GL.cxx
 GLH1         += $(MODDIRI)/TX11GL.h

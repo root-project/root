@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.37 2004/11/23 21:42:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.38 2004/11/24 13:11:46 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -429,6 +429,10 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
    case kKey_Right:
       MoveCenter(kKey_Right);
       break;
+   case kKey_S:
+   case kKey_s:
+      fRender->GetStat();
+      break;
    }
 
    return kTRUE;
@@ -838,7 +842,7 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
    }
 
    if (wid == kTBa || wid == kTBa1 || wid == kTBaf) {
-      gVirtualGL->Invalidate(fRender);
+//      gVirtualGL->Invalidate(fRender);
    }
 
    DrawObjects();

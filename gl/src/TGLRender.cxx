@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.17 2004/11/24 15:16:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.18 2004/11/26 15:55:16 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -11,6 +11,8 @@
 #ifdef GDK_WIN32
 #include "Windows4Root.h"
 #endif
+
+#include <iostream>
 
 #include <algorithm>
 #include <utility>
@@ -55,9 +57,7 @@ TGLRender::TGLRender()
    fGLInit = kFALSE;
    fAllActive = kTRUE;
    fIsPicking = kFALSE;
-   fBoxInList = kFALSE;
    fActiveCam = 0;
-   fDList = 0;
    fPlaneEqn[0] = 1.;
    fPlaneEqn[1] = fPlaneEqn[2] = fPlaneEqn[3] = 0.;
    fClipping = kFALSE;
@@ -73,8 +73,6 @@ TGLRender::TGLRender()
 //______________________________________________________________________________
 TGLRender::~TGLRender()
 {
-   if (fDList)
-      glDeleteLists(fDList, 1);
 }
 
 //______________________________________________________________________________
@@ -84,13 +82,6 @@ void TGLRender::Traverse()
       fGLInit = kTRUE;
       Init();
    }
-/*   if (!fDList) {
-      if (!(fDList = glGenLists(1))) {
-         Error("TGLRender::Traverse", "could not create gl list");
-         return;
-      }
-      BuildGLList();
-   }*/
 
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    Int_t start = 0, end = fGLCameras.GetEntriesFast();
@@ -103,15 +94,18 @@ void TGLRender::Traverse()
    for (; start < end; ++start) {
       TGLCamera *currCam = (TGLCamera *)fGLCameras.At(start);
       currCam->TurnOn();
+      fFrustum.Update();
 
       if (fClipping) {
          glClipPlane(GL_CLIP_PLANE0, fPlaneEqn);
       }
 
-      RunGLList();
+      DrawScene();
+
       if (fSelectionBox) {
          fSelectionBox->DrawBox();
       }
+      
       if(fAxes) DrawAxes();
    }
 }
@@ -149,7 +143,9 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
    actCam->TurnOn(x, y);
-   RunGLList();
+
+   DrawScene(kFALSE);
+   
    Int_t hits = glRenderMode(GL_RENDER);
 
    if (hits < 0) {
@@ -213,66 +209,7 @@ void TGLRender::SetPlane(const Double_t *n)
 //______________________________________________________________________________
 void TGLRender::EndMovement()
 {
-   if (fIsPicking) {
-      fIsPicking = kFALSE;
-/*      glDeleteLists(fDList, 1);
-      if (!(fDList = glGenLists(1))) {
-         Error("TGLSceneGraph::EndMovement", "could not create display list");
-         return;
-      }
-      fFirstT = 0;
-      BuildGLList();*/
-   }
-}
-
-//______________________________________________________________________________
-void TGLRender::BuildGLList(Bool_t exec)
-{
-//   glNewList(fDList, exec ? GL_COMPILE_AND_EXECUTE : GL_COMPILE);
-   Bool_t isTr = kFALSE;
-   if (fSelectedObj && !(isTr = fSelectedObj->IsTransparent())) {
-      fSelectedObj->GLDraw();
-   }
-
-   for (Int_t i = 0, e = fGLObjects.GetEntriesFast(); i < e; ++i) {
-      TGLSceneObject *currObj = (TGLSceneObject *)fGLObjects.At(i);
-      if (currObj->IsTransparent() && currObj != fSelectedObj) {
-         currObj->SetNextT(fFirstT);
-         fFirstT = currObj;
-      } else if (currObj != fSelectedObj) {
-         currObj->GLDraw();
-      }
-   }
-
-   if (isTr)
-      fSelectedObj->GLDraw();
-
-   while (fFirstT) {
-      fFirstT->GLDraw();
-      fFirstT = fFirstT->GetNextT();
-   }
-
-//   glEndList();
-}
-
-//______________________________________________________________________________
-void TGLRender::RunGLList()
-{
-  // glCallList(fDList);
-   BuildGLList();
-}
-
-//______________________________________________________________________________
-void TGLRender::Invalidate()
-{
-/*   if(fDList)
-      glDeleteLists(fDList, 1);
-   if (!(fDList = glGenLists(1))) {
-      Error("TGLSceneGraph::EndMovement", "could not create display list");
-      return;
-   }
-   fFirstT = 0;
-   BuildGLList();*/
+   if (fIsPicking) fIsPicking = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -359,6 +296,7 @@ void TGLRender::DrawAxes()
    glPopAttrib();
 }
 
+//______________________________________________________________________________
 void TGLRender::SetFamilyColor(const Float_t *newColor)
 {
    if (TObject *ro = fSelectedObj->GetRealObject()) {
@@ -371,6 +309,7 @@ void TGLRender::SetFamilyColor(const Float_t *newColor)
    } else fSelectedObj->SetColor(newColor);
 }
 
+//______________________________________________________________________________
 void TGLRender::Init()
 {
    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
@@ -382,4 +321,40 @@ void TGLRender::Init()
    glCullFace(GL_BACK);
    glClearColor(0., 0., 0., 0.);
    glClearDepth(1.);
+}
+
+//______________________________________________________________________________
+void TGLRender::DrawScene(Bool_t clip)
+{
+   Bool_t isTr = kFALSE;
+   TGLFrustum *frObj = clip ? &fFrustum : 0;
+
+   if (fSelectedObj && !(isTr = fSelectedObj->IsTransparent())) {
+      fSelectedObj->GLDraw(frObj);
+   }
+
+   for (Int_t i = 0, e = fGLObjects.GetEntriesFast(); i < e; ++i) {
+      TGLSceneObject *currObj = (TGLSceneObject *)fGLObjects.At(i);
+      if (currObj->IsTransparent() && currObj != fSelectedObj) {
+         currObj->SetNextT(fFirstT);
+         fFirstT = currObj;
+      } else if (currObj != fSelectedObj) {
+         currObj->GLDraw(frObj);
+      }
+   }
+
+   if (isTr)
+      fSelectedObj->GLDraw(frObj);
+
+   while (fFirstT) {
+      fFirstT->GLDraw(frObj);
+      fFirstT = fFirstT->GetNextT();
+   }
+}
+
+//______________________________________________________________________________
+void TGLRender::GetStat()const
+{
+   std::cout<<"There are "<<fGLObjects.GetEntries()<<" objects in scene\n";
+   std::cout<<"There are "<<fFrustum.GetVisible()<<" objects in frustum\n";
 }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.20 2004/11/26 11:08:05 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.21 2004/11/26 12:50:49 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TError.h"
 
 #include "TGLSceneObject.h"
+#include "TGLFrustum.h"
 
 ClassImp(TGLSceneObject)
 
@@ -297,8 +298,13 @@ void TGLFaceSet::ResetTransparency(char newval)
 }
 
 //______________________________________________________________________________
-void TGLFaceSet::GLDraw()const
+void TGLFaceSet::GLDraw(const TGLFrustum *fr)const
 {
+   //need clip checking
+   if (fr) {
+      if (!fr->ClipOnBoundingBox(*this)) return;
+   }
+
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
    glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
@@ -455,8 +461,12 @@ TGLPolyMarker::TGLPolyMarker(const TBuffer3D &b, const Float_t *c, UInt_t n, TOb
 }
 
 //______________________________________________________________________________
-void TGLPolyMarker::GLDraw()const
+void TGLPolyMarker::GLDraw(const TGLFrustum *fr)const
 {
+   if (fr) {
+      if (!fr->ClipOnBoundingBox(*this)) return;
+   }
+
    const Double_t *vertices = &fVertices[0];
    UInt_t size = fVertices.size();
    Int_t stacks = 6, slices = 6;
@@ -565,8 +575,12 @@ TGLPolyLine::TGLPolyLine(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject
 }
 
 //______________________________________________________________________________
-void TGLPolyLine::GLDraw()const
+void TGLPolyLine::GLDraw(const TGLFrustum *fr)const
 {
+   if (fr) {
+      if (!fr->ClipOnBoundingBox(*this)) return;
+   }
+
    glLoadName(GetGLName());
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glBegin(GL_LINE_STRIP);
@@ -596,8 +610,12 @@ Bool_t TGLSphere::IsTransparent()const
 }
 
 //______________________________________________________________________________
-void TGLSphere::GLDraw()const
+void TGLSphere::GLDraw(const TGLFrustum *fr)const
 {
+   if (fr) {
+      if (!fr->ClipOnBoundingBox(*this)) return;
+   }
+
    // Draw a Sphere using OpenGL Sphere primitive gluSphere
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
@@ -666,8 +684,12 @@ Bool_t TGLTube::IsTransparent()const
 }
 
 //______________________________________________________________________________
-void TGLTube::GLDraw()const
+void TGLTube::GLDraw(const TGLFrustum *fr)const
 {
+   if (fr) {
+      if (!fr->ClipOnBoundingBox(*this)) return;
+   }
+
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
    glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
@@ -747,8 +769,12 @@ TGLSimpleLight::TGLSimpleLight(UInt_t n, UInt_t l, const Float_t *c, const Doubl
 }
 
 //______________________________________________________________________________
-void TGLSimpleLight::GLDraw()const
+void TGLSimpleLight::GLDraw(const TGLFrustum *fr)const
 {
+   if (fr) {
+      if (!fr->ClipOnBoundingBox(*this)) return;
+   }
+
    const Float_t nullColor[] = {0.f, 0.f, 0.f, 1.f};
    const Float_t lightPos[] = {Float_t(fVertices[0]), Float_t(fVertices[1]),
                                Float_t(fVertices[2]), 1.f};

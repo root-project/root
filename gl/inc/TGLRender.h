@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.10 2004/11/24 14:48:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.11 2004/11/24 15:16:45 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -18,6 +18,10 @@
 #include "TObjArray.h"
 #endif
 
+#ifndef ROOT_TGLFrustum
+#include "TGLFrustum.h"
+#endif
+
 class TGLSceneObject;
 class TGLSelection;
 class TGLCamera;
@@ -26,13 +30,13 @@ class TGLRender {
 private:
    TObjArray      fGLObjects;
    TObjArray      fGLCameras;
+   //Trial
+   TGLFrustum     fFrustum;
 
    Bool_t         fGLInit;
    Bool_t         fAllActive;
    Bool_t         fIsPicking;
-   Bool_t         fBoxInList;
    Int_t          fActiveCam;
-   Int_t          fDList;
    UInt_t         fSelected;
 
    TGLSceneObject *fFirstT;
@@ -70,7 +74,6 @@ public:
       return fGLObjects.GetEntriesFast();
    }
    void EndMovement();
-   void Invalidate();
    void SetAxes(const PDD_t &x, const PDD_t &y, const PDD_t &z);
    void ResetAxes()
    {
@@ -78,10 +81,10 @@ public:
    }
 
    void SetFamilyColor(const Float_t *newColor);
+   void GetStat()const;
 
 private:
-   void BuildGLList(Bool_t execute = kFALSE);
-   void RunGLList();
+   void DrawScene(Bool_t clip = kTRUE);
    void DrawAxes();
 
    void Init();

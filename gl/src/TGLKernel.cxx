@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.26 2004/11/24 14:48:02 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.27 2004/11/24 15:06:18 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -1474,9 +1474,8 @@ void TGLKernel::EndMovement(TGLRender *render)
 }
 
 //______________________________________________________________________________
-void TGLKernel::Invalidate(TGLRender *render)
+void TGLKernel::Invalidate(TGLRender *)
 {
-   render->Invalidate();
 }
 
 static GLUquadric *GetQuadric1()
