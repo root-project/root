@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.54 2001/06/22 16:10:21 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.55 2001/07/12 17:21:45 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2497,6 +2497,14 @@ void TTreeFormula::UpdateFormulaLeaves()
          }
       }
       if (fLookupType[j]==kDataMember) GetLeafInfo(j)->Update();
+      if (j<fNval && fCodes[j]<0) {
+         TCutG *gcut = (TCutG*)fMethods.At(j);
+         if (gcut) {
+           TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
+           TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
+           if (fx) fx->UpdateFormulaLeaves();
+           if (fy) fy->UpdateFormulaLeaves();
+         }
+      }
    }
-
 }
