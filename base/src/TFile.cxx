@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.76 2002/12/10 12:11:31 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.77 2002/12/16 18:25:22 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1128,7 +1128,10 @@ Int_t TFile::ReOpen(Option_t *mode)
    // did not change (was already as requested or wrong input arguments)
    // and -1 in case of failure, in which case the file cannot be used
    // anymore.
+   // The Current Directory is changed to this file
 
+   cd();
+   
    TString opt = mode;
    opt.ToUpper();
 
@@ -1146,9 +1149,6 @@ Int_t TFile::ReOpen(Option_t *mode)
       // flush data still in the pipeline and close the file
       if (IsOpen() && IsWritable()) {
          WriteStreamerInfo();
-
-         TDirectory *cursav = gDirectory;
-         cd();
 
          // save directory key list and header
          Save();
@@ -1168,9 +1168,6 @@ Int_t TFile::ReOpen(Option_t *mode)
 
          SysClose(fD);
          fD = -1;
-
-         if (cursav)
-            cursav->cd();
 
          fWritable = kFALSE;
       }
