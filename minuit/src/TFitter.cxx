@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.15 2004/02/06 14:32:28 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.16 2004/07/06 14:48:42 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -439,7 +439,7 @@ void GraphFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
 //            University of Washington
 //            February 3, 2004
 
-   Double_t cu,eu,exh,exl,ey,eux,fu,fsum,fm,fp;
+   Double_t cu,eu,exh,exl,ey,eux,fu,fsum;
    Double_t x[1];
    Double_t xm,xp;
    Int_t bin, npfits=0;
