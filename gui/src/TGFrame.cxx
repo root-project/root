@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.21 2002/12/09 14:03:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.22 2003/01/14 15:44:56 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -543,7 +543,8 @@ void TGCompositeFrame::Cleanup()
 
    while ((el = (TGFrameElement *) next())) {
       delete el->fFrame;
-      delete el->fLayout;
+      if (el->fLayout != fgDefaultHints)
+         delete el->fLayout;
    }
    fList->Delete();
 }
