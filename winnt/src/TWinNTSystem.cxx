@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.36 2002/11/13 22:25:01 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.37 2002/12/10 17:26:48 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1576,7 +1576,7 @@ void TWinNTSystem::ListLibraries(const char *regexp)
 }
 
 //______________________________________________________________________________
-const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options
+const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options,
                                        Bool_t isRegexp)
 {
    // Return a space separated list of loaded shared libraries.
