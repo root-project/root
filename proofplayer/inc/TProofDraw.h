@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.9 2005/04/06 10:01:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.10 2005/04/06 10:55:18 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw
@@ -44,6 +44,8 @@ class TProfile2D;
 class TGraph;
 class TPolyMarker3D;
 class TCollection;
+
+
 class TProofDraw : public TSelector {
 
 protected:
@@ -88,7 +90,7 @@ public:
 class TProofDrawHist : public TProofDraw {
 
 protected:
-   TH1                 *fHistogram;
+   TH1                *fHistogram;
 
    virtual void        Begin1D(TTree *t);
    virtual void        Begin2D(TTree *t);
@@ -109,13 +111,15 @@ public:
 class TProofDrawEventList : public TProofDraw {
 
 protected:
-    TEventList*    fElist;          //  event list
-    TList*         fEventLists;     //  a list of EventLists
-   virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
+   TEventList*    fElist;          //  event list
+   TList*         fEventLists;     //  a list of EventLists
+
+   virtual void   DoFill(Long64_t entry, Double_t w, const Double_t *v);
 
 public:
    TProofDrawEventList() : fElist(0), fEventLists(0) {}
    ~TProofDrawEventList();
+
    virtual void        Init(TTree *);
    virtual void        SlaveBegin(TTree *);
    virtual void        SlaveTerminate();
@@ -129,6 +133,7 @@ class TProofDrawProfile : public TProofDraw {
 
 protected:
    TProfile           *fProfile;
+
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
 
 public:
@@ -145,7 +150,8 @@ public:
 class TProofDrawProfile2D : public TProofDraw {
 
 protected:
-   TProfile2D           *fProfile;
+   TProfile2D         *fProfile;
+
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
 
 public:
@@ -163,6 +169,7 @@ class TProofDrawGraph : public TProofDraw {
 
 protected:
    TGraph             *fGraph;
+
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
 
 public:
@@ -179,6 +186,7 @@ class TProofDrawPolyMarker3D : public TProofDraw {
 
 protected:
    TPolyMarker3D      *fPolyMarker3D;
+
    virtual void        DoFill(Long64_t entry, Double_t w, const Double_t *v);
 
 public:
@@ -192,17 +200,20 @@ public:
 
 template <typename T>
 class TProofVectorContainer : public TNamed {
-   // Owns an std::vector<T>. 
-   // Implements Merge(TCollection*) which merges vectors holded 
+   // Owns an std::vector<T>.
+   // Implements Merge(TCollection*) which merges vectors holded
    // by all the TProofVectorContainers in the collection.
 protected:
-   std::vector<T> *fVector;
+   std::vector<T> *fVector;   // vector
+
 public:
    TProofVectorContainer<T>(std::vector<T>* anVector) : fVector(anVector) { };
    TProofVectorContainer<T>() : fVector(0) { };
    ~TProofVectorContainer<T>() { delete fVector; }
-   std::vector<T>* GetVector() const { return fVector; }
-   Long64_t Merge(TCollection* list);
+
+   std::vector<T> *GetVector() const { return fVector; }
+   Long64_t        Merge(TCollection* list);
+
    ClassDef(TProofVectorContainer,1)
 };
 

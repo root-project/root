@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.15 2005/04/06 10:01:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.16 2005/04/06 10:55:18 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -1126,9 +1126,9 @@ ClassImp(TProofDrawGraph)
 void TProofDrawGraph::Init(TTree *tree)
 {
    // See TProofDraw::Init().
-                                                                                                               
+
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
-                                                                                                               
+
    if (fTree == 0) {
       Assert(fGraph);
       fGraph->SetMarkerStyle(tree->GetMarkerStyle());
@@ -1143,7 +1143,7 @@ void TProofDrawGraph::Init(TTree *tree)
    CompileVariables();
 }
 
-                                                                                                               
+
 //______________________________________________________________________________
 void TProofDrawGraph::SlaveBegin(TTree *tree)
 {
@@ -1266,9 +1266,9 @@ ClassImp(TProofDrawPolyMarker3D)
 void TProofDrawPolyMarker3D::Init(TTree *tree)
 {
    // See TProofDraw::Init().
-                                                                                                               
+
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
-                                                                                                               
+
    if (fTree == 0) {
       Assert(fPolyMarker3D);
       fPolyMarker3D->SetMarkerStyle(tree->GetMarkerStyle());
@@ -1320,7 +1320,7 @@ void TProofDrawPolyMarker3D::Terminate(void)
    TProofDraw::Terminate();
    if (!fStatus)
       return;
-   
+
    fPolyMarker3D = 0;
    TIter next(fOutput);
    while (TObject* o = next()) {
@@ -1509,7 +1509,7 @@ void TProofDrawListOfGraphs::Terminate(void)
          rmin[0] = rmax[0] = (*points)[0].fX;
          rmin[1] = rmax[1] = (*points)[0].fY;
          rmin[2] = rmax[2] = (*points)[0].fZ;
-         
+
          for (vector<Point3D_t>::const_iterator i = points->begin() + 1; i < points->end(); ++i) {
             if (rmax[0] < i->fX) rmax[0] = i->fX;
             if (rmax[1] < i->fY) rmax[1] = i->fY;
@@ -1582,9 +1582,9 @@ void TProofDrawListOfPolyMarkers3D::SlaveBegin(TTree *tree)
    Assert(fTreeDrawArgsParser.GetDimension() == 4);
 
    SafeDelete(fPoints);
-                                                                                                        
+
    fDimension = 4;
-                                                                                                        
+
    fPoints = new TProofVectorContainer<Point4D_t>(new std::vector<Point4D_t>);
    fPoints->SetName("PROOF_SCATTERPLOT");
    fOutput->Add(fPoints);      // release ownership (? FIXME)
