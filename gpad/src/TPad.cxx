@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.40 2001/06/25 12:54:33 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.41 2001/06/25 16:54:37 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -52,6 +52,7 @@
 #include "TExec.h"
 #include "TPadView3D.h"
 #include "TDatime.h"
+#include "TColor.h"
 
 const Int_t kDistanceMaximum = 5;
 
@@ -2418,8 +2419,21 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    Color_t oldcolor = GetFillColor();
    SetFillColor(color);
    TAttFill::Modify();
-   Color_t light    = color + 150;
-   Color_t dark     = color + 100;
+   Color_t light;
+   Color_t dark;
+   if (color <= 50) {
+      light    = color + 150;
+      dark     = color + 100;
+   } else {
+      Float_t r, g, b, h, l, s;
+      TColor *c = gROOT->GetColor(color);
+      c->GetRGB(r, g, b);
+      TColor::RGBtoHLS(r, g, b, h, l, s);
+      TColor::HLStoRGB(h, 0.7*l, s, r, g, b);
+      dark = TColor::GetColor(r, g, b);
+      TColor::HLStoRGB(h, 1.2*l, s, r, g, b);
+      light = TColor::GetColor(r, g, b);
+   }
 
 //*-*- Compute real left bottom & top right of the box in pixels
    px1 = XtoPixel(fX1);   py1 = YtoPixel(fY1);
