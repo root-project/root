@@ -1,16 +1,25 @@
-// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.1 2004/02/08 15:46:38 brun Exp $
-//
+// @(#)root/physics:$Name:$:$Id:$
+// Author: Jan Conrad    9/2/2004
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 //////////////////////////////////////////////////////////////////////////////
-// 
+//
 //  TRolke
 //
-//  This class computes confidence intervals for the rate of a Poisson  
-//  in the presence of background and efficiency with a fully frequentist 
-//  treatment of the uncertainties in the efficiency and background estimate 
-//  using the profile likelihood method. 
-// 
-//   The signal is always assumed to be Poisson. 
-//   
+//  This class computes confidence intervals for the rate of a Poisson
+//  in the presence of background and efficiency with a fully frequentist
+//  treatment of the uncertainties in the efficiency and background estimate
+//  using the profile likelihood method.
+//
+//   The signal is always assumed to be Poisson.
+//
 //   It allows the following Models:
 //
 //       1: Background - Poisson, Efficiency - Binomial  (cl,x,y,z,tau,m)
@@ -31,12 +40,12 @@
 //
 //  z = number of simulated signal events
 //
-//  em = measurement of the efficiency. 
+//  em = measurement of the efficiency.
 //
 //  bm = background estimate
 //
 //  tau = ratio between signal and background region (in case background is
-//  observed) ratio between observed and simulated livetime in case 
+//  observed) ratio between observed and simulated livetime in case
 //  background is determined from MC.
 //
 //  sd(x) = sigma of the Gaussian
@@ -51,9 +60,9 @@
 //
 //  For a description of the method and its properties:
 //
-//  W.Rolke, A. Lopez, J. Conrad  
-//  "A marvelous and completely perfect method without flaws" 
-//  NiM xyz blabal
+//  W.Rolke, A. Lopez, J. Conrad
+//  "A marvelous and completely perfect method without flaws"
+//  NiM xyz blabla
 //
 // Author: Jan Conrad (CERN)
 //
@@ -85,9 +94,9 @@ TRolke::~TRolke()
 //_____________________________________________________________________
 Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em,Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m)
 {
-  // Calculates the Confidence Interval  
+  // Calculates the Confidence Interval
 
-  Double_t dchi2 =  Chi2Percentile(1,1-fCL); 
+  Double_t dchi2 =  Chi2Percentile(1,1-fCL);
 
 
   Double_t tempxy[2],limits[2] = {0,0};
@@ -95,22 +104,22 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
   Double_t med = 0;
   Double_t maxiter=1000, acc = 0.00001;
   Int_t i;
-  
-  if ((mid != 3) && (mid != 5)) bm = (Double_t)y;   
+
+  if ((mid != 3) && (mid != 5)) bm = (Double_t)y;
 
   if (x == 0 && bm > 0 ){
     for(Int_t i = 0; i < 2; i++) {
-       x++;    
+       x++;
        a = CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
        tempxy[i] = a;
     }
     slope = tempxy[1] - tempxy[0];
     limits[1] = tempxy[1] - slope;
     if (limits[1] < 0) limits[1] = 0;
-    goto done; 
+    goto done;
   }
 
-    
+
   if (x > 0 && bm == 0){
     for(Int_t i = 0; i < 2; i++) {
        bm++;
@@ -120,14 +129,14 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
     slope = tempxy[1] - tempxy[0];
     limits[1] = tempxy[0] - slope;
     if (limits[1] < 0) limits[1] = 0;
-    goto done;  
+    goto done;
  }
- 
- 
+
+
  if (x == 0 && bm == 0){
     x++;
     bm++;
-  
+
     limits[1] = CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
     tempxy[0] = limits[1];
     x  = 1;
@@ -139,7 +148,7 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
     limits[1] = CalculateInterval(x,y,z,bm,em,e,mid,sde,sdb,tau,b,m);
     limits[1] = 3*tempxy[0] -tempxy[1] - limits[1];
     if (limits[1] < 0) limits[1] = 0;
-    goto done;  
+    goto done;
   }
 
   mu0 = Likelihood(0,x,y,z,bm,em,e,mid,sde,sdb,tau,b,m,1);
@@ -149,39 +158,39 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
   test = 0;
 
   f0 = Likelihood(test,x,y,z,bm,em,e,mid,sde,sdb,tau,b,m,3);
-  
+
   target = maximum - dchi2;
-  
+
   if (f0 > target) {
      limits[0] = 0;
-  } else {    
+  } else {
     if (mu0 < 0){
        limits[0] = 0;
-       limits[1] = 0;     
+       limits[1] = 0;
     }
-       
+
     low   = 0;
     flow  = f0;
     high  = mu0;
     fhigh = maximum;
-       
+
     for(Int_t i = 0; i < maxiter; i++) {
-      l = (target-fhigh)/(flow-fhigh);     
+      l = (target-fhigh)/(flow-fhigh);
       if (l < 0.2) l = 0.2;
       if (l > 0.8) l = 0.8;
-      
+
       med = l*low + (1-l)*high;
       fmid = Likelihood(med,x,y,z,bm,em,e,mid,sde,sdb,tau,b,m,3);
 
       if (fmid > target) {
 	 high  = med;
-	 fhigh = fmid;	
-      }	else {	
+	 fhigh = fmid;
+      }	else {
 	 low  = med;
-	 flow = fmid;		
+	 flow = fmid;
       }
       if ((high-low) < acc*high) break;
-    }  
+    }
     limits[0] = med;
   }
 
@@ -192,18 +201,18 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
   } else {
      low  = 0;
      flow = f0;
-  }  
+  }
 
   test = low +1 ;
 
   ftest = Likelihood(test,x,y,z,bm,em,e,mid,sde,sdb,tau,b,m,3);
-   
+
   if (ftest < target) {
      high  = test;
-     fhigh = ftest;    
+     fhigh = ftest;
   } else {
      slope = (ftest - flow)/(test - low);
-     high  = test + (target -ftest)/slope; 
+     high  = test + (target -ftest)/slope;
      fhigh = Likelihood(high,x,y,z,bm,em,e,mid,sde,sdb,tau,b,m,3);
   }
 
@@ -217,22 +226,22 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
      if (fmid < target) {
         high  = med;
 	fhigh = fmid;
-     }	else {	
+     }	else {
 	low  = med;
-	flow = fmid;		
+	flow = fmid;
      }
      if (high-low < acc*high) break;
   }
   limits[1] = med;
- 
+
   done:
- 
+
   if ( (mid == 4) || (mid==5) ) {
      limits[0] /= e;
      limits[1] /= e;
   }
-  
- 
+
+
   fUpperLimit = limits[1];
   fLowerLimit = limits[0];
 
@@ -243,14 +252,14 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
 //___________________________________________________________________________
 Double_t TRolke::Likelihood(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t bm,Double_t em, Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m, Int_t what)
 {
-  // Chooses between the different profile likelihood functions to use for the 
+  // Chooses between the different profile likelihood functions to use for the
   // different models.
   // Returns evaluation of the profile likelihood functions.
-  
+
   switch (mid) {
      case 1: return EvalLikeMod1(mu,x,y,z,e,tau,b,m,what);
      case 2: return EvalLikeMod2(mu,x,y,em,e,sde,tau,b,what);
-     case 3: return EvalLikeMod3(mu,x,bm,em,e,sde,sdb,b,what);    
+     case 3: return EvalLikeMod3(mu,x,bm,em,e,sde,sdb,b,what);
      case 4: return EvalLikeMod4(mu,x,y,tau,b,what);
      case 5: return EvalLikeMod5(mu,x,bm,sdb,b,what);
      case 6: return EvalLikeMod6(mu,x,z,e,b,m,what);
@@ -271,10 +280,10 @@ Double_t TRolke::EvalLikeMod1(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t e
   // otherwise parameters as described in the beginning of the class)
 
   Double_t f  = 0;
-  Double_t zm = Double_t(z)/m; 
-  
+  Double_t zm = Double_t(z)/m;
+
   if (what == 1) {
-     f = (x-y/tau)/zm; 
+     f = (x-y/tau)/zm;
   }
 
   if (what == 2) {
@@ -289,10 +298,10 @@ Double_t TRolke::EvalLikeMod1(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t e
        b = (x+y)/(1.0+tau);
        e = zm;
        f = LikeMod1(mu,b,e,x,y,z,tau,m);
-     } else { 
+     } else {
        TRolke g;
-       g.ProfLikeMod1(mu,b,e,x,y,z,tau,m);   
-       f = LikeMod1(mu,b,e,x,y,z,tau,m); 
+       g.ProfLikeMod1(mu,b,e,x,y,z,tau,m);
+       f = LikeMod1(mu,b,e,x,y,z,tau,m);
      }
   }
 
@@ -323,7 +332,7 @@ void TRolke::ProfLikeMod1(Double_t mu,Double_t &b,Double_t &e,Int_t x,Int_t y, I
 
   for(Int_t i = 0; i < maxiter; i++) {
      med = (low+high)/2.;
-  
+
      fmid = LikeGradMod1(med,mu,x,y,z,tau,m);
 
      if(high < 0.5) acc = 0.00001*high;
@@ -366,18 +375,18 @@ Double_t TRolke::EvalLikeMod2(Double_t mu, Int_t x, Int_t y, Double_t em, Double
   Double_t v =  sde*sde;
   Double_t coef[4],roots[3];
   Double_t f = 0;
-  
+
   if (what == 1) {
     f = (x-y/tau)/em;
   }
-  
-  if (what == 2) {    
+
+  if (what == 2) {
     mu = (x-y/tau)/em;
     b = y/tau;
     e = em;
     f = LikeMod2(mu,b,e,x,y,em,tau,v);
   }
-  
+
   if (what == 3) {
     if (mu == 0 ) {
       b = (x+y)/(1+tau);
@@ -387,16 +396,16 @@ Double_t TRolke::EvalLikeMod2(Double_t mu, Int_t x, Int_t y, Double_t em, Double
       coef[2] = mu*mu*v-2*em*mu-mu*mu*v*tau;
       coef[1] = ( - x)*mu*v - mu*mu*mu*v*v*tau - mu*mu*v*em + em*mu*mu*v*tau + em*em*mu - y*mu*v;
       coef[0] = x*mu*mu*v*v*tau + x*em*mu*v - y*mu*mu*v*v + y*em*mu*v;
-      
+
       TMath::RootsCubic(coef,roots[0],roots[1],roots[2]);
 
       e = roots[1];
       b = y/(tau + (em - e)/mu/v);
-      f = LikeMod2(mu,b,e,x,y,em,tau,v);                          
+      f = LikeMod2(mu,b,e,x,y,em,tau,v);
     }
-  }    
-  
-  return f;  
+  }
+
+  return f;
 }
 
 //_________________________________________________________________________
@@ -422,7 +431,7 @@ Double_t TRolke::EvalLikeMod3(Double_t mu, Int_t x, Double_t bm, Double_t em, Do
   Double_t f = 0.;
   Double_t  v = sde*sde;
   Double_t  u = sdb*sdb;
-  
+
   if (what == 1) {
      f = (x-bm)/em;
   }
@@ -448,8 +457,8 @@ Double_t TRolke::EvalLikeMod3(Double_t mu, Int_t x, Double_t bm, Double_t em, Do
       temp[2] = mu*mu*v*v*bm-mu*v*u*em-mu*v*bm*em+u*em*em-mu*mu*v*v*x;
       e = (-temp[1]+TMath::Sqrt(temp[1]*temp[1]-4*temp[0]*temp[2]))/2/temp[0];
       b = bm-(u*(em-e))/v/mu;
-      f = LikeMod3(mu,b,e,x,bm,em,u,v);                        
-    }       
+      f = LikeMod3(mu,b,e,x,bm,em,u,v);
+    }
   }
 
   return f;
@@ -484,9 +493,9 @@ Double_t TRolke::EvalLikeMod4(Double_t mu, Int_t x, Int_t y, Double_t tau, Doubl
   }
   if (what == 3) {
     if (mu == 0.0) {
-       b = Double_t(x+y)/(1+tau); 
+       b = Double_t(x+y)/(1+tau);
        f = LikeMod4(mu,b,x,y,tau);
-    } else {      
+    } else {
        b = (x+y-(1+tau)*mu+sqrt((x+y-(1+tau)*mu)*(x+y-(1+tau)*mu)+4*(1+tau)*y*mu))/2/(1+tau);
        f = LikeMod4(mu,b,x,y,tau);
     }
@@ -512,7 +521,7 @@ Double_t TRolke::EvalLikeMod5(Double_t mu, Int_t x, Double_t bm, Double_t sdb, D
   // what = 2: Profile Likelihood of Maxmimum Likelihood estimate is returned.
   // what = 3: Profile Likelihood of Test hypothesis is returned
   // otherwise parameters as described in the beginning of the class)
-  
+
   Double_t u=sdb*sdb;
   Double_t f = 0;
 
@@ -522,13 +531,13 @@ Double_t TRolke::EvalLikeMod5(Double_t mu, Int_t x, Double_t bm, Double_t sdb, D
   if(what == 2) {
      mu = x-bm;
      b  = bm;
-     f  = LikeMod5(mu,b,x,bm,u);	    
+     f  = LikeMod5(mu,b,x,bm,u);
   }
-  
+
   if (what == 3) {
-     b = ((bm-u-mu)+TMath::Sqrt((bm-u-mu)*(bm-u-mu)-4*(mu*u-mu*bm-u*x)))/2; 
-     f = LikeMod5(mu,b,x,bm,u);                          
-  }    
+     b = ((bm-u-mu)+TMath::Sqrt((bm-u-mu)*(bm-u-mu)-4*(mu*u-mu*bm-u*x)))/2;
+     f = LikeMod5(mu,b,x,bm,u);
+  }
   return f;
 }
 
@@ -536,7 +545,7 @@ Double_t TRolke::EvalLikeMod5(Double_t mu, Int_t x, Double_t bm, Double_t sdb, D
 Double_t TRolke::LikeMod5(Double_t mu,Double_t b,Int_t x,Double_t bm,Double_t u)
 {
   // Profile Likelihood function for MODEL 5:
-  // Gauss background/Efficiency known 
+  // Gauss background/Efficiency known
 
   return 2*(x*TMath::Log(mu+b)-(mu + b)-TMath::Log(TMath::Factorial(x))-0.9189385-TMath::Log(u)/2-((bm-b)*(bm-b))/u/2);
 }
@@ -554,16 +563,16 @@ Double_t TRolke::EvalLikeMod6(Double_t mu, Int_t x, Int_t z, Double_t e, Double_
   Double_t coef[4],roots[3];
   Double_t f = 0.;
   Double_t zm = Double_t(z)/m;
-  
-  if(what==1){ 
+
+  if(what==1){
      f = (x-b)/zm;
   }
-  
+
   if(what==2){
      mu = (x-b)/zm;
      e  = zm;
      f  = LikeMod6(mu,b,e,x,z,m);
-  }        
+  }
   if(what == 3){
     if(mu==0){
        e = zm;
@@ -575,8 +584,8 @@ Double_t TRolke::EvalLikeMod6(Double_t mu, Int_t x, Int_t z, Double_t e, Double_
        TMath::RootsCubic(coef,roots[0],roots[1],roots[2]);
        e = roots[1];
     }
-    f =LikeMod6(mu,b,e,x,z,m);                          
-  }      
+    f =LikeMod6(mu,b,e,x,z,m);
+  }
   return f;
 }
 
@@ -584,7 +593,7 @@ Double_t TRolke::EvalLikeMod6(Double_t mu, Int_t x, Int_t z, Double_t e, Double_
 Double_t TRolke::LikeMod6(Double_t mu,Double_t b,Double_t e,Int_t x,Int_t z,Int_t m)
 {
   // Profile Likelihood function for MODEL 6:
-  // background known/ Efficiency binomial 
+  // background known/ Efficiency binomial
 
   Double_t f = 0.0;
 
@@ -593,7 +602,7 @@ Double_t TRolke::LikeMod6(Double_t mu,Double_t b,Double_t e,Int_t x,Int_t z,Int_
   } else {
      f = 2*(x*TMath::Log(e*mu+b)-(e*mu+b)-TMath::Log(TMath::Factorial(x))+TMath::Log(TMath::Factorial(m))-TMath::Log(TMath::Factorial(z))-TMath::Log(TMath::Factorial(m-z))+z*TMath::Log(e)+(m-z)*TMath::Log(1-e));
   }
-  return f;       
+  return f;
 }
 
 
@@ -601,7 +610,7 @@ Double_t TRolke::LikeMod6(Double_t mu,Double_t b,Double_t e,Int_t x,Int_t z,Int_
 Double_t TRolke::EvalLikeMod7(Double_t mu, Int_t x, Double_t em, Double_t e, Double_t sde, Double_t b, Int_t what)
 {
   // Calculates the Profile Likelihood for MODEL 7:
-  // background known/Efficiency Gauss 
+  // background known/Efficiency Gauss
   // what = 1: Maximum likelihood estimate is returned
   // what = 2: Profile Likelihood of Maxmimum Likelihood estimate is returned.
   // what = 3: Profile Likelihood of Test hypothesis is returned
@@ -618,15 +627,15 @@ Double_t TRolke::EvalLikeMod7(Double_t mu, Int_t x, Double_t em, Double_t e, Dou
      mu = (x-b)/em;
      e  = em;
      f  = LikeMod7(mu, b, e, x, em, v);
-  }        
+  }
 
   if(what == 3) {
     if(mu==0) {
        e = em;
     } else {
-       e = ( -(mu*em-b-mu*mu*v)-TMath::Sqrt((mu*em-b-mu*mu*v)*(mu*em-b-mu*mu*v)+4*mu*(x*mu*v-mu*b*v + b * em)))/( - mu)/2;  
+       e = ( -(mu*em-b-mu*mu*v)-TMath::Sqrt((mu*em-b-mu*mu*v)*(mu*em-b-mu*mu*v)+4*mu*(x*mu*v-mu*b*v + b * em)))/( - mu)/2;
     }
-    f = LikeMod7(mu, b, e, x, em, v);                          
+    f = LikeMod7(mu, b, e, x, em, v);
   }
 
   return f;
@@ -636,15 +645,15 @@ Double_t TRolke::EvalLikeMod7(Double_t mu, Int_t x, Double_t em, Double_t e, Dou
 Double_t TRolke::LikeMod7(Double_t mu,Double_t b,Double_t e,Int_t x,Double_t em,Double_t v)
 {
   // Profile Likelihood function for MODEL 6:
-  // background known/ Efficiency binomial 
+  // background known/ Efficiency binomial
 
-  return 2*(x*TMath::Log(e*mu+b)-(e*mu + b)-TMath::Log(TMath::Factorial(x))-0.9189385-TMath::Log(v)/2-(em-e)*(em-e)/v/2); 
+  return 2*(x*TMath::Log(e*mu+b)-(e*mu + b)-TMath::Log(TMath::Factorial(x))-0.9189385-TMath::Log(v)/2-(em-e)*(em-e)/v/2);
 }
 
 //______________________________________________________________________
 Double_t TRolke::Chi2Percentile(Double_t df,Double_t CL1)
 {
- // 
+ //
  // Finds the Chi-square argument x such that the integral
  // from x to infinity of the Chi-square density is equal
  // to the given cumulative probability y.
@@ -655,13 +664,13 @@ Double_t TRolke::Chi2Percentile(Double_t df,Double_t CL1)
  //
  //   Author Jan Conrad (CERN) Jan.Conrad@cern.ch
  //   Copyright by Stephen L. Moshier (Cephes Math Library)
-    
+
   return  2*InverseIncompleteGamma(df/2,CL1);
 }
 
 //______________________________________________________________________
 Double_t TRolke::InverseIncompleteGamma(Double_t df,Double_t CL1)
-{ 
+{
   // calculates the inverse of the incomplete (complemented)gamma integral
   // for df degrees of freedom and fraction CL1
   // * Given p, the function finds x such that
@@ -672,11 +681,11 @@ Double_t TRolke::InverseIncompleteGamma(Double_t df,Double_t CL1)
   // where
   //
   //  t = 1 - d - InverseNormal(p) sqrt(df)
-  // 
+  //
   // and
-  // 
+  //
   // d = 1/9df,
-  // 
+  //
   // the routine performs up to 10 Newton iterations to find the
   // root of 1- TMath::Gamma(df,CL1) - p = 0.
   // Author Jan Conrad (CERN) Jan.Conrad@cern.ch
@@ -684,17 +693,17 @@ Double_t TRolke::InverseIncompleteGamma(Double_t df,Double_t CL1)
 
 
   const Double_t MACHEP = 1.11022302462515654042E-12;   /* 2**-53 */
-  const Double_t MAXLOG = 8.8029691931113054295988E1; 
-  const Double_t MAXNUM = 1.701411834604692317316873e38;  
+  const Double_t MAXLOG = 8.8029691931113054295988E1;
+  const Double_t MAXNUM = 1.701411834604692317316873e38;
   const Double_t dithresh = 5.0*MACHEP;
-  
+
   // bound the solution
   Double_t x0 = MAXNUM;
   Double_t y1 = 0;
   Double_t x1 = 0;
-  Double_t yh = 1.0;  
-  
-  // approximation to the inverse function  
+  Double_t yh = 1.0;
+
+  // approximation to the inverse function
   Double_t d = 1/(9*df);
   Double_t y = ( 1 - d - InverseNormal(CL1) * TMath::Sqrt(d) );
   Double_t x = df * y * y * y;
@@ -702,37 +711,37 @@ Double_t TRolke::InverseIncompleteGamma(Double_t df,Double_t CL1)
 
   Int_t i,dir;
 
-  for (i = 0; i < 10; i++) {   
+  for (i = 0; i < 10; i++) {
      if (x > x0 || x < x1) goto ihalve;
      y = 1 - TMath::Gamma(df,x);
-     if (y < y1 || y > yh) goto ihalve;    
+     if (y < y1 || y > yh) goto ihalve;
      if (y < CL1) {
 	x0 = x;
-	y1 = y;	 
+	y1 = y;
      } else {
-	x1 =x;	 
-        yh =y;	 
+	x1 =x;
+        yh =y;
      }
-     
-     // compute derivative of the function at this point  
+
+     // compute derivative of the function at this point
      d = (df  - 1)*TMath::Log(x) -x - TMath::LnGamma(df);
      if (d < -MAXLOG ) goto ihalve;
-     d = -TMath::Exp(d); 
-     
-     // compute the step to the next approximatioin of x 
+     d = -TMath::Exp(d);
+
+     // compute the step to the next approximatioin of x
      d = (y -CL1)/d;
      if (TMath::Abs(d/x) < MACHEP) goto done;
      x = x -d;
-	
-     // Resort to interval halving if Newton iteration did not converge 
-			
+
+     // Resort to interval halving if Newton iteration did not converge
+
      ihalve:
-	d = 0.0625;	
+	d = 0.0625;
         if ( x0 == MAXNUM ) {
            if( x <= 0 ) x = 1;
            while( x0 == MAXNUM ) {
-	      x = (1 + d) * x;	  
-	      y = 1 - TMath::Gamma(df,x);	  
+	      x = (1 + d) * x;
+	      y = 1 - TMath::Gamma(df,x);
 	      if (y < CL1 ) {
 	         x0 = x;
 	         y1 = y;
@@ -743,16 +752,16 @@ Double_t TRolke::InverseIncompleteGamma(Double_t df,Double_t CL1)
         }
         d = 0.5;
   }
-  
+
   dir = 0;
-  
+
   for (i=0; i < 400; i++) {
-      x = x1 + d * (x0-x1);      
+      x = x1 + d * (x0-x1);
       y = 1 - TMath::Gamma(df,x);
-            
+
       lgm = (x0-x1)/(x1+x0);
       if (TMath::Abs(lgm) < dithresh ) break;
-      
+
       lgm = (y-CL1)/CL1;
       if (TMath::Abs(lgm) < dithresh ) break;
       if (y >= CL1) {
@@ -766,7 +775,7 @@ Double_t TRolke::InverseIncompleteGamma(Double_t df,Double_t CL1)
 	    d = 0.5*d + 0.5;
 	  else
 	    d = (CL1-y1)/(yh-y1);
-	  dir += 1;  
+	  dir += 1;
       } else {
 	  x0 = x;
 	  CL1 = y;
@@ -780,15 +789,15 @@ Double_t TRolke::InverseIncompleteGamma(Double_t df,Double_t CL1)
 	    d = (CL1-y1)/(yh-y1);
 	  dir -= 1;
       }
-      
+
    }
-  
+
    if ( x == 0) {
       cout << "ERROR" << endl;
    }
 
    done:
-   return x;  
+   return x;
 }
 
 
@@ -806,11 +815,11 @@ Double_t TRolke::InverseNormal(Double_t CL1)
   // There are two rational functions P/Q, one for 0 < y < exp(-32)
   // and the other for y up to exp(-2).  For larger arguments,
   // w = y - 0.5, and  x/sqrt(2pi) = w + w**3 R(w**2)/S(w**2)).
-  // 
+  //
   //   Author Jan Conrad (CERN) Jan.Conrad@cern.ch
   //   Copyright by Stephen L. Moshier (Cephes Math Library)
 
-  const Double_t MAXNUM = 1.7976931348623158E308;   
+  const Double_t MAXNUM = 1.7976931348623158E308;
   const Double_t s2pi   = 2.50662827463100050242E0;
 
 
@@ -822,7 +831,7 @@ Double_t TRolke::InverseNormal(Double_t CL1)
 
   const Int_t Q1[32] = {54299,41275,36698,16431,10607,35310,45572,16454,17948,8844,43162,16452,55365,40327,5575,16430,47648,43068,2437,16388,562,52699,13068,49090,45853,17773,32590,49059,1566,31101,38079,48974};
 
-  const Int_t P2[36] = {54644,59283,59112,16393,30731,49959,43313,16411,45228,62251,33454,16399,39436,6375,21532,16373,9809,62302,51781,16329,13645,36969,22096,16265,6162,59598,50098,16179,8756,19468,19497,16070,36857,12376,52396,15930}; 
+  const Int_t P2[36] = {54644,59283,59112,16393,30731,49959,43313,16411,45228,62251,33454,16399,39436,6375,21532,16373,9809,62302,51781,16329,13645,36969,22096,16265,6162,59598,50098,16179,8756,19468,19497,16070,36857,12376,52396,15930};
 
   const Int_t Q2[32] = {59432,22155,6362,16408,14358,43730,28749,16397,25088,10927,2119,16374,15515,24534,44455,16331,51083,44470,31783,16267,10499,26111,32555,16181,52471,62454,17292,16072,27453,47222,10725,15933};
 
@@ -843,7 +852,7 @@ Double_t TRolke::InverseNormal(Double_t CL1)
      y  = y - 0.5;
      y2 = y * y;
      x  = y + y * (y2 * EvalPolynomial( y2, P0, 4)/EvalMonomial( y2, Q0, 8 ));
-     x  = x * s2pi; 
+     x  = x * s2pi;
      return x;
   }
 
@@ -851,7 +860,7 @@ Double_t TRolke::InverseNormal(Double_t CL1)
   x0 = x - TMath::Log(x)/x;
 
   z = 1.0/x;
-  if ( x < 8.0 ) { // y > exp(-32) = 1.2664165549e-14  
+  if ( x < 8.0 ) { // y > exp(-32) = 1.2664165549e-14
      x1 = z * EvalPolynomial( z, P1, 8 )/EvalMonomial( z, Q1, 8 );
   } else {
      x1 = z * EvalPolynomial( z, P2, 8 )/EvalMonomial( z, Q2, 8 );
@@ -882,17 +891,17 @@ Double_t TRolke::EvalPolynomial(Double_t x, const Int_t  coef[], Int_t N)
 Double_t TRolke::EvalMonomial(Double_t x, const Int_t coef[], Int_t N)
 {
    // evaluate mononomial
-  
+
   Double_t ans;
   const Int_t   *p;
 
   p   = coef;
   ans = x + *p++;
   Int_t i = N-1;
-  
+
   do
      ans = ans * x  + *p++;
   while( --i );
-  
+
   return ans;
 }

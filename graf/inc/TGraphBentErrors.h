@@ -1,3 +1,14 @@
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.1 2003/06/30 09:21:33 brun Exp $
+// Author: Dave Morrison  30/06/2003
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TGraphBentErrors
 #define ROOT_TGraphBentErrors
 
@@ -31,21 +42,21 @@ protected:
 public:
         TGraphBentErrors();
         TGraphBentErrors(Int_t n);
-        TGraphBentErrors(Int_t n, 
-			 const Float_t *x, const Float_t *y, 
-			 const Float_t *exl=0, const Float_t *exh=0, 
+        TGraphBentErrors(Int_t n,
+			 const Float_t *x, const Float_t *y,
+			 const Float_t *exl=0, const Float_t *exh=0,
 			 const Float_t *eyl=0, const Float_t *eyh=0,
-			 const Float_t *exld=0, const Float_t *exhd=0, 
+			 const Float_t *exld=0, const Float_t *exhd=0,
 			 const Float_t *eyld=0, const Float_t *eyhd=0);
-        TGraphBentErrors(Int_t n, 
-			 const Double_t *x, const Double_t *y, 
-			 const Double_t *exl=0, const Double_t *exh=0, 
+        TGraphBentErrors(Int_t n,
+			 const Double_t *x, const Double_t *y,
+			 const Double_t *exl=0, const Double_t *exh=0,
 			 const Double_t *eyl=0, const Double_t *eyh=0,
-			 const Double_t *exld=0, const Double_t *exhd=0, 
+			 const Double_t *exld=0, const Double_t *exhd=0,
 			 const Double_t *eyld=0, const Double_t *eyhd=0);
         virtual ~TGraphBentErrors();
         virtual void    Apply(TF1 *f);
-        virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, 
+        virtual void    ComputeRange(Double_t &xmin, Double_t &ymin,
 				     Double_t &xmax, Double_t &ymax) const;
         Double_t        GetErrorX(Int_t bin) const;
         Double_t        GetErrorY(Int_t bin) const;
@@ -59,12 +70,12 @@ public:
         virtual Int_t   RemovePoint(); // *MENU*
         virtual Int_t   RemovePoint(Int_t ipoint);
         virtual void    SavePrimitive(ofstream &out, Option_t *option);
-        virtual void    Set(Int_t n); 
+        virtual void    Set(Int_t n);
         virtual void    SetPoint(Int_t i, Double_t x, Double_t y);
-        virtual void    SetPointError(Double_t exl, Double_t exh, 
+        virtual void    SetPointError(Double_t exl, Double_t exh,
 				      Double_t eyl, Double_t eyh); // *MENU*
-        virtual void    SetPointError(Int_t i, 
-				      Double_t exl, Double_t exh, 
+        virtual void    SetPointError(Int_t i,
+				      Double_t exl, Double_t exh,
 				      Double_t eyl, Double_t eyh);
 
         ClassDef(TGraphBentErrors,1)  //A graph with bent, asymmetric error bars

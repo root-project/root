@@ -1,20 +1,32 @@
+// @(#)root/physics:$Name:$:$Id:$
+// Author: Adrian Bevan  2001
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2001, Liverpool University.                             *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 ////////////////////////////////////////////////////////////////////////////
 // TFeldmanCousins
 //
-// class to calculate the CL upper limit using 
+// class to calculate the CL upper limit using
 // the Feldman-Cousins method as described in PRD V57 #7, p3873-3889
 //
-// The default confidence interval calvculated using this method is 90% 
-// This is set either by having a default the constructor, or using the 
+// The default confidence interval calvculated using this method is 90%
+// This is set either by having a default the constructor, or using the
 // appropriate fraction when instantiating an object of this class (e.g. 0.9)
 //
 // The simple extension to a gaussian resolution function bounded at zero
-// has not been addressed as yet -> `time is of the essence' as they write 
+// has not been addressed as yet -> `time is of the essence' as they write
 // on the wall of the maze in that classic game ...
 //
-//    VARIABLES THAT CAN BE ALTERED   
-//    -----------------------------   
-// => depending on your desired precision: The intial values of fMuMin, 
+//    VARIABLES THAT CAN BE ALTERED
+//    -----------------------------
+// => depending on your desired precision: The intial values of fMuMin,
 // fMuMax, fMuStep and fNMax are those used in the PRD:
 //   fMuMin = 0.0
 //   fMuMax = 50.0
@@ -214,8 +226,8 @@ Double_t TFeldmanCousins::Prob(Int_t N, Double_t mu, Double_t B)
 //______________________________________________________________________________
 void TFeldmanCousins::SetMuMax(Double_t newMax)
 {
- fMuMax   = newMax; 
- fNMax    = (Int_t)newMax; 
+ fMuMax   = newMax;
+ fNMax    = (Int_t)newMax;
  SetMuStep(fMuStep);
 }
 

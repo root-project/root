@@ -1,5 +1,15 @@
+// @(#)root/table:$Name:$:$Id:$
 // Author: Victor Perevoztchikov (fine@bnl.gov)   01/03/2001
-// Copyright(c) 2001 [BNL] Brookhaven National Laboratory. All right reserved
+
+/*************************************************************************
+ * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2001 [BNL] Brookhaven National Laboratory.              *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -57,11 +67,11 @@ TDsKey &TDsKey::operator=( const char *from)
 }
 //______________________________________________________________________________
 Bool_t TDsKey::operator==(const TDsKey &from) const
-{   
+{
    // Compare two keys
    Bool_t res  =    ( fName == from.fName )
                  && ( fUrr.GetSize() == from.fUrr.GetSize() ) ;
-                 
+
    Bool_t numMatch = kTRUE;
    int i = 0;
    for (; i < fUrr.GetSize(); i++) {

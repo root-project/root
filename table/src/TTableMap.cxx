@@ -1,10 +1,22 @@
+// @(#)root/table:$Name:$:$Id:$
+// Author: Valery Fine(fine@bnl.gov)   01/03/2001
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2001 [BNL] Brookhaven National Laboratory.              *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "TArrayL.h"
 #include "TTableMap.h"
 
 //////////////////////////////////////////////////////////////////////////////
 // TTableMap class is helper class to keep the list of the referencs to the
 // TTable rows and iterate over it.
-// TTableMap is a persistent class. 
+// TTableMap is a persistent class.
 // The pointer to the TTableMap object may be used as an element
 // of the TTable row and saved with the table all together.
 //
@@ -26,7 +38,7 @@
 //     // Find all hits of this track
 //      LArHitTable::iterator hit     = hits->begin();
 //      LArHitTable::iterator lastHit = hits->end();
-//      Long_t hitIndx = 0;    
+//      Long_t hitIndx = 0;
 //      // Create an empty list of this track hits
 //      (*track).hits = new TTableMap(hits);
 //      for(;hit != lastHit;hit++,hitIndx) {

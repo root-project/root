@@ -1,5 +1,14 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.33 2003/04/15 09:51:39 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.1 2003/06/30 09:21:33 brun Exp $
 // Author: Dave Morrison  30/06/2003
+
+/*************************************************************************
+ * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <string.h>
 
 #include "Riostream.h"
@@ -104,11 +113,11 @@ TGraphBentErrors::TGraphBentErrors(Int_t n)
 
 
 //_____________________________________________________________________________
-TGraphBentErrors::TGraphBentErrors(Int_t n, 
-				   const Float_t *x, const Float_t *y, 
-				   const Float_t *exl, const Float_t *exh, 
+TGraphBentErrors::TGraphBentErrors(Int_t n,
+				   const Float_t *x, const Float_t *y,
+				   const Float_t *exl, const Float_t *exh,
 				   const Float_t *eyl, const Float_t *eyh,
-				   const Float_t *exld, const Float_t *exhd, 
+				   const Float_t *exld, const Float_t *exhd,
 				   const Float_t *eyld, const Float_t *eyhd)
   : TGraph(n,x,y)
 {
@@ -154,11 +163,11 @@ TGraphBentErrors::TGraphBentErrors(Int_t n,
 }
 
 //_____________________________________________________________________________
-TGraphBentErrors::TGraphBentErrors(Int_t n, 
-				   const Double_t *x, const Double_t *y, 
-				   const Double_t *exl, const Double_t *exh, 
+TGraphBentErrors::TGraphBentErrors(Int_t n,
+				   const Double_t *x, const Double_t *y,
+				   const Double_t *exl, const Double_t *exh,
 				   const Double_t *eyl, const Double_t *eyh,
-				   const Double_t *exld, const Double_t *exhd, 
+				   const Double_t *exld, const Double_t *exhd,
 				   const Double_t *eyld, const Double_t *eyhd)
   : TGraph(n,x,y)
 {
@@ -614,7 +623,7 @@ void TGraphBentErrors::SavePrimitive(ofstream &out, Option_t *option)
       out<<"   grae->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<endl;
       out<<"   grae->SetPointError("<<i<<","<<fEXlow[i]<<","<<fEXhigh[i]<<","<<fEYlow[i]<<","<<fEYhigh[i]<<");"<<endl;
    }
-   
+
    static Int_t frameNumber = 0;
    if (fHistogram) {
       frameNumber++;
@@ -646,16 +655,16 @@ void TGraphBentErrors::SavePrimitive(ofstream &out, Option_t *option)
 }
 
 //______________________________________________________________________________
-void TGraphBentErrors::Set(Int_t n) 
+void TGraphBentErrors::Set(Int_t n)
 {
 // Set number of points in the graph
 // Existing coordinates are preserved
 // New coordinates and errors above fNpoints are preset to 0.
   if (n < 0) n = 0;
   if (n == fNpoints) return;
-                
+
   TGraph::Set(n);
-        
+
   Double_t *exh=0, *exl=0, *eyh=0, *eyl=0;
   if (n > 0) {
           exh = new Double_t[n];
@@ -680,7 +689,7 @@ void TGraphBentErrors::Set(Int_t n)
   delete [] fEXhigh;
   delete [] fEYlow;
   delete [] fEYhigh;
-        
+
   fEXhigh = exh;
   fEXlow  = exl;
   fEYhigh = eyh;
@@ -777,17 +786,17 @@ void TGraphBentErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Double
 }
 
 //_____________________________________________________________________________
-void TGraphBentErrors::SwapPoints(Int_t pos1, Int_t pos2) 
+void TGraphBentErrors::SwapPoints(Int_t pos1, Int_t pos2)
 {
   SwapValues(fEXlow,  pos1, pos2);
   SwapValues(fEXhigh, pos1, pos2);
   SwapValues(fEYlow,  pos1, pos2);
   SwapValues(fEYhigh, pos1, pos2);
-  
+
   SwapValues(fEXlowd,  pos1, pos2);
   SwapValues(fEXhighd, pos1, pos2);
   SwapValues(fEYlowd,  pos1, pos2);
   SwapValues(fEYhighd, pos1, pos2);
-  
+
   TGraph::SwapPoints(pos1, pos2);
 }

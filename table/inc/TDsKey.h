@@ -1,4 +1,14 @@
-//* Author: Victor Perevoztchikov (perev@bnl.gov)
+// @(#)root/table:$Name:$:$Id:$
+// Author: Victor Perevoztchikov (perev@bnl.gov)   01/03/2001
+
+/*************************************************************************
+ * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2001 [BNL] Brookhaven National Laboratory.              *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TDsKey
 #define ROOT_TDsKey
@@ -26,9 +36,9 @@ class TDsKey
     virtual  Bool_t operator==(const TDsKey &from) const;
     virtual  UInt_t  operator[](Int_t i) const { return (*(TArrayI *)(&fUrr))[i]; }
     virtual  void    Update(const TDsKey &from,const char *name=0);
-    virtual  void    SetName(const char *name){fName=name;} 
-    virtual  const char *GetName() const {return fName;} 
-    virtual  TString GetKey() const; 
+    virtual  void    SetName(const char *name){fName=name;}
+    virtual  const char *GetName() const {return fName;}
+    virtual  TString GetKey() const;
     virtual  UInt_t  EventNumber() const { return (*this)[1];}
     virtual  UInt_t  RunNumber() const { return (*this)[0];}
     virtual  void    SetKey(const char *key);

@@ -1,3 +1,14 @@
+// @(#)root/hist:$Name:$:$Id:$
+// Author: Christian Holm Christensen    1/8/2000
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 //____________________________________________________________________
 //Begin_Html <!--
 /* -->
@@ -656,8 +667,8 @@ in the transformed space.
 <!--*/
 // -->End_Html
 
-// $Id: TPrincipal.cxx,v 1.24 2003/09/03 06:08:34 brun Exp $
-// $Date: 2003/09/03 06:08:34 $
+// $Id: TPrincipal.cxx,v 1.25 2004/01/25 20:33:32 brun Exp $
+// $Date: 2004/01/25 20:33:32 $
 // $Author: brun $
 
 #include "TPrincipal.h"

@@ -1,23 +1,35 @@
+// @(#)root/physics:$Name:$:$Id:$
+// Author: Adrian Bevan  2001
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2001, Liverpool University.                             *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TFeldmanCousins
 #define ROOT_TFeldmanCousins
 
 ////////////////////////////////////////////////////////////////////////////
 // TFeldmanCousins
 //
-// class to calculate the CL upper limit using 
+// class to calculate the CL upper limit using
 // the Feldman-Cousins method as described in PRD V57 #7, p3873-3889
 //
-// The default confidence interval calvculated using this method is 90% 
-// This is set either by having a default the constructor, or using the 
+// The default confidence interval calvculated using this method is 90%
+// This is set either by having a default the constructor, or using the
 // appropriate fraction when instantiating an object of this class (e.g. 0.9)
 //
 // The simple extension to a gaussian resolution function bounded at zero
-// has not been addressed as yet -> `time is of the essence' as they write 
+// has not been addressed as yet -> `time is of the essence' as they write
 // on the wall of the maze in that classic game ...
 //
-//    VARIABLES THAT CAN BE ALTERED   
-//    -----------------------------   
-// => depending on your desired precision: The intial values of fMuMin, 
+//    VARIABLES THAT CAN BE ALTERED
+//    -----------------------------
+// => depending on your desired precision: The intial values of fMuMin,
 // fMuMax, fMuStep and fNMax are those used in the PRD:
 //   fMuMin = 0.0
 //   fMuMax = 50.0
@@ -48,7 +60,7 @@ protected:
   Int_t    fQUICK;      // take a short cut to speed up the process of generating a
                         // lut.  This scans from Nobserved-Nbackground-fMuMin upwards
                         // assuming that UL > Nobserved-Nbackground.
-  
+
   ////////////////////////////////////////////////
   // calculate the poissonian probability for   //
   // a mean of mu+B events with a variance of N //
@@ -85,7 +97,7 @@ public:
   inline Double_t GetMuMax(void)      { return fMuMax;  }
   inline Double_t GetMuStep(void)     { return fMuStep; }
   inline Double_t GetNMax(void)       { return fNMax;   }
-  
+
   inline void SetNobserved(Double_t NObs)         { fNobserved   = NObs;  }
   inline void SetNbackground(Double_t Nbg)        { fNbackground = Nbg;   }
   inline void SetCL(Double_t newCL)               { fCL          = newCL; }

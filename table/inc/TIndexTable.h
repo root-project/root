@@ -1,7 +1,21 @@
+// @(#)root/table:$Name:$:$Id:$
+// Author: Valery Fine(fine@bnl.gov)   01/03/2001
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2001 [BNL] Brookhaven National Laboratory.              *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TIndexTable
 #define ROOT_TIndexTable
 
+#ifndef ROOT_TTable
 #include "TTable.h"
+#endif
 
 //////////////////////////////////////////////////////
 //
@@ -14,8 +28,8 @@
 class TIndexTable : public TTable
 {
 protected:
-   const TTable *fRefTable; 
-public:	
+   const TTable *fRefTable;
+public:
    class iterator {
    protected:
       const TTable *fTable;
@@ -37,7 +51,7 @@ public:
       operator int()  { return *fCurrentRow;}
       Bool_t operator==(const iterator &t) const { return (fCurrentRow == t.fCurrentRow); }
       Bool_t operator!=(const iterator &t) const { return !operator==(t); }
-   };                                        
+   };
    TIndexTable(const TTable *table);
    TIndexTable(const TIndexTable &indx): TTable(indx){}
    int  *GetTable(Int_t i=0);
@@ -55,7 +69,7 @@ protected:
 
 // define ClassDefTable(TIndexTable,int)
   protected:
-     static TTableDescriptor *fgColDescriptors;     
+     static TTableDescriptor *fgColDescriptors;
      virtual TTableDescriptor *GetDescriptorPointer() const { return fgColDescriptors;}
      virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = list;}
   public:

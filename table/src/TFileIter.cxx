@@ -1,7 +1,15 @@
-// $Id: TFileIter.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
+// @(#)root/table:$Name:$:$Id:$
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
-// Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine (fine@bnl.gov). All right reserved",
-//
+
+/*************************************************************************
+ * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 2001 [BNL] Brookhaven National Laboratory.              *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
 // Class to iterate (read / write ) the events written to TFile.         //
@@ -12,14 +20,14 @@
 // and stored as the TKey name of the object written                     //
 //                                                                       //
 //        ///////        //////////      ////////        ///////     //////
-// 
+//
 // void TestFileIter(){
 // // This macros tests the various methods of TFileIter class.
 //   gSystem->Load("libTable");
-// 
+//
 //   //First create simple ROOT file
 //   TDataSet *ds = new TDataSet("event");
-//   TObject *nextObject = 0; 
+//   TObject *nextObject = 0;
 //   TRandom run;
 //   TRandom event;
 //   {
@@ -40,13 +48,13 @@
 //   // the number of the object available directly from "MyDataSet.root"
 //   Int_t size = readObj.TotalKeys();
 //   printf(" The total number of the objects: %d\n",size);
-// 
+//
 //   //-----------------------------------------------------------------------
 //   // Loop over all objects, read them in to memory one by one
-// 
+//
 //   printf(" -- > Loop over all objects, read them in to memory one by one < -- \n");
-//   for( readObj = 0; int(readObj) < size; ++readObj){ 
-//       nextObject = *readObj; 
+//   for( readObj = 0; int(readObj) < size; ++readObj){
+//       nextObject = *readObj;
 //       printf(" %d bytes of the object \"%s\" of class \"%s\" written with TKey \"%s\"  has been read from file\n"
 //                ,readObj.GetObjlen()
 //                ,nextObject->GetName()
@@ -59,8 +67,8 @@
 // //  Now loop over all objects in inverse order
 //  printf(" -- > Now loop over all objects in inverse order < -- \n");
 //  for( readObj = size-1; (int)readObj >= 0; --readObj)
-//  { 
-//       nextObject = *readObj; 
+//  {
+//       nextObject = *readObj;
 //       if (nextObject) {
 //          printf(" Object \"%s\" of class \"%s\" written with TKey \"%s\"  has been read from file\n"
 //                 ,nextObject->GetName()
@@ -75,8 +83,8 @@
 // //-----------------------------------------------------------------------
 // // Loop over the objects starting from the object with the key name "event.02.01"
 //   printf(" -- > Loop over the objects starting from the object with the key name \"event.02.01\" < -- \n");
-//   for( readObj = "event.02.01"; (const char *)readObj != 0; ++readObj){ 
-//       nextObject = *readObj; 
+//   for( readObj = "event.02.01"; (const char *)readObj != 0; ++readObj){
+//       nextObject = *readObj;
 //       printf(" Object \"%s\" of class \"%s\" written with Tkey \"%s\"  has been read from file\n"
 //               , nextObject->GetName()
 //               , nextObject->IsA()->GetName()
@@ -84,10 +92,10 @@
 //             );
 //       delete nextObject;
 //   }
-// 
+//
 //   printf(" -- > Loop over the objects starting from the 86-th object" < -- \n");
-//   for( readObj = (const char *)(readObj = 86); (const char *)readObj != 0; ++readObj){ 
-//       nextObject = *readObj; 
+//   for( readObj = (const char *)(readObj = 86); (const char *)readObj != 0; ++readObj){
+//       nextObject = *readObj;
 //       printf(" Object \"%s\" of class \"%s\" written with Tkey \"%s\"  has been read from file\n"
 //               , nextObject->GetName()
 //               , nextObject->IsA()->GetName()
@@ -95,7 +103,7 @@
 //             );
 //       delete nextObject;
 //   }
-// 
+//
 // }
 //-----------------------------------------------------------------------
 ///////////////////////////////////////////////////////////////////////////
@@ -121,7 +129,7 @@ TFileIter::TFileIter(TFile *file) : fRootFile(file),
 //__________________________________________________________________________
 TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
                      , Int_t compress, Int_t /*netopt*/) : fRootFile (0)
-{ 
+{
    // Open ROOT TFile by the name provided;
    // This TFile is to be deleted by the TFileIter alone
    if (name && name[0]) {
@@ -153,11 +161,11 @@ TFileIter::TFileIter(const TFileIter &dst) : TListIter()
 
   Initialize();
   // Adjust this iterator position
-  SkipObjects(dst.fCursorPosition); 
+  SkipObjects(dst.fCursorPosition);
 }
 //__________________________________________________________________________
-TFileIter::~TFileIter() 
-{ 
+TFileIter::~TFileIter()
+{
   if (fRootFile && fOwnTFile )
   {  // delete own TFile if any
     if (fRootFile->IsWritable()) fRootFile->Write();
@@ -169,13 +177,13 @@ TFileIter::~TFileIter()
 #if 0
 //__________________________________________________________________________
 Int_t TFileIter::Copy(TFile *destFile)
-{ 
+{
    Int_t nBytes = 0;
    class TCopyKey : public TKey {
      public:
        // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
        TCopyKey(const TKey &src) : TName(src) {
-         Mirror(src);  
+         Mirror(src);
        }
        // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
        void Mirror(const TKey &src) {
@@ -234,29 +242,29 @@ Int_t TFileIter::Copy(TFile *destFile)
 }
 #endif
 //__________________________________________________________________________
-void TFileIter::Initialize() 
-{ 
+void TFileIter::Initialize()
+{
    if (fRootFile) {
       fDirection =  kIterForward;
       if (fRootFile &&  fRootFile->IsOpen() && !fRootFile->IsZombie() ) Reset();
       else  {
          if (fRootFile && fOwnTFile ) delete fRootFile;
          fRootFile = 0;
-      }      
+      }
    }
 }
 //__________________________________________________________________________
-TKey *TFileIter::GetCurrentKey() const 
-{ 
+TKey *TFileIter::GetCurrentKey() const
+{
   // return the pointer to the current TKey
-   TKey *key = 0; 
-   if (fCurCursor) key = (TKey *)fCurCursor->GetObject(); 
+   TKey *key = 0;
+   if (fCurCursor) key = (TKey *)fCurCursor->GetObject();
    return key;
 }
 //__________________________________________________________________________
 const char *TFileIter::GetKeyName() const
 {
-  // return the name of the current TKey 
+  // return the name of the current TKey
   const char *name = 0;
   TKey *key  = GetCurrentKey();
   if (key) name = key->GetName();
@@ -276,8 +284,8 @@ TObject *TFileIter::GetObject() const
   return ReadObj(GetCurrentKey());
 }
 //__________________________________________________________________________
-Int_t TFileIter::GetObjlen() const 
-{ 
+Int_t TFileIter::GetObjlen() const
+{
   // Returns the uncompressed length of the current object
   Int_t lenObj = 0;
   TKey *key = GetCurrentKey();
@@ -286,18 +294,18 @@ Int_t TFileIter::GetObjlen() const
 }
 //__________________________________________________________________________
 Int_t TFileIter::TotalKeys() const
-{  
+{
   // The total number of the TKey keys in this current TFile
   // Usually this means the total number of different objects
   // thos can be read separately with one "read" operation
 
-  Int_t size = 0; 
-  if(fList) size =  fList->GetSize(); 
+  Int_t size = 0;
+  if(fList) size =  fList->GetSize();
   return size;
 }
 //__________________________________________________________________________
-TObject *TFileIter::Next(Int_t  nSkip) 
-{ 
+TObject *TFileIter::Next(Int_t  nSkip)
+{
   // return the pointer to the object defined by next TKey
   // This method is not recommended. It was done for the sake
   // of the compatibility with TListIter
@@ -307,24 +315,24 @@ TObject *TFileIter::Next(Int_t  nSkip)
 }
 //__________________________________________________________________________
 void TFileIter::Reset()
-{ 
+{
   // Reset the status of the iterator
 
   TListIter::Reset();
-  if (!fRootFile->IsWritable()) 
+  if (!fRootFile->IsWritable())
   {
     TList *listOfKeys = fRootFile->GetListOfKeys();
     if (listOfKeys) {
-      if (!listOfKeys->IsSorted()) listOfKeys->Sort();       
+      if (!listOfKeys->IsSorted()) listOfKeys->Sort();
       fList = listOfKeys;
       if (fDirection == kIterForward) {
         fCursorPosition = 0;
         fCurCursor = fList->FirstLink();
-        if (fCurCursor) fCursor = fCurCursor->Next(); 
+        if (fCurCursor) fCursor = fCurCursor->Next();
       } else {
         fCursorPosition = fList->GetSize()-1;
         fCurCursor = fList->LastLink();
-        if (fCurCursor) fCursor = fCurCursor->Prev(); 
+        if (fCurCursor) fCursor = fCurCursor->Prev();
       }
     }
   }
@@ -344,20 +352,20 @@ TObject *TFileIter::SkipObjects(Int_t  nSkip)
  // nSkip = 0; the state of the iterator is not changed
  //
  // nSkip > 0; iterator skips nSkip objects in the container.
- //            the direction of the iteration is 
+ //            the direction of the iteration is
  //            sign(nSkip)*kIterForward
  //
  TObject *nextObject  = 0;
  Int_t collectionSize = 0;
- if (fList && (collectionSize = fList->GetSize())  ) {    
+ if (fList && (collectionSize = fList->GetSize())  ) {
    if (fDirection !=kIterForward) nSkip = -nSkip;
    Int_t newPos = fCursorPosition + nSkip;
-   if (0 <= newPos && newPos < collectionSize) {     
+   if (0 <= newPos && newPos < collectionSize) {
      do {
        if (fCursorPosition < newPos) {
          fCursorPosition++;
          fCurCursor = fCursor;
-         fCursor    = fCursor->Next(); 
+         fCursor    = fCursor->Next();
        } else if (fCursorPosition > newPos) {
          fCursorPosition--;
          fCurCursor = fCursor;
@@ -367,13 +375,13 @@ TObject *TFileIter::SkipObjects(Int_t  nSkip)
      if (fCurCursor) nextObject = fCurCursor->GetObject();;
    } else  {
      fCurCursor = fCursor = 0;
-     if (newPos < 0) { 
+     if (newPos < 0) {
        fCursorPosition = -1;
        if (fList) fCursor = fList->FirstLink();
      } else  {
        fCursorPosition = collectionSize;
        if (fList) fCursor = fList->LastLink();
-     }     
+     }
    }
  }
  return nextObject;
@@ -388,8 +396,8 @@ TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *
  if (name && name[0] && name[0] != '*') { if (fEventName > name) reset = kTRUE; fEventName   = name; }
  if (runNumber   !=UInt_t(-1) ) { if (fRunNumber > runNumber)     reset = kTRUE; fRunNumber   = runNumber;}
  if (eventNumber !=UInt_t(-1) ) { if (fEventNumber > eventNumber) reset = kTRUE; fEventNumber = eventNumber;}
- 
- if (reset) Reset(); 
+
+ if (reset) Reset();
 //   TIter &nextKey = *fKeysIterator;
  TKey *key = 0;
  TDsKey thisKey;
@@ -400,7 +408,7 @@ TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *
      thisKey.SetKey(key->GetName());
      if (thisKey.GetName() < name)  continue;
      if (thisKey.GetName() > name) { key = 0; break; }
-   }  
+   }
    // Check "run number"
    if (runNumber != UInt_t(-1)) {
      UInt_t thisRunNumber = thisKey.RunNumber();
@@ -412,14 +420,14 @@ TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *
      UInt_t thisEventNumber = thisKey.EventNumber();
      if (thisEventNumber < eventNumber) continue;
      if (thisEventNumber > eventNumber) {key = 0; break; }
-   }   
+   }
    break;
  }
  return key;
 }
 //__________________________________________________________________________
 TObject *TFileIter::NextEventGet(UInt_t eventNumber, UInt_t runNumber, const char *name)
-{  
+{
   // reads, creates and returns the object by TKey name that matches
   // the "name" ."runNumber" ." eventNumber" schema
   // Attention: This method does create a new TObject and it is the user
@@ -455,12 +463,12 @@ Int_t  TFileIter::NextEventPut(TObject *obj, UInt_t eventNum,  UInt_t runNumber
   // Create a special TKey name with obj provided and write it out.
 
   Int_t wBytes = 0;
-  if (obj && fRootFile &&  fRootFile->IsOpen() && fRootFile->IsWritable()) 
+  if (obj && fRootFile &&  fRootFile->IsOpen() && fRootFile->IsWritable())
   {
     TDsKey thisKey(runNumber,eventNum);
-    if (name && name[0]) 
+    if (name && name[0])
        thisKey.SetName(name);
-    else 
+    else
        thisKey.SetName(obj->GetName());
 
     if (fRootFile != gFile) {
@@ -482,13 +490,13 @@ TString TFileIter::MapName(const char *name, const char *localSystemKey,const ch
    // MapName(const char *name, const char *localSystemKey,const char *mountedFileSystemKey)
    // --------------------------------------------------------------------------------------
    // Substitute the logical name with the real one if any
-   // 1. add a line into system.rootrc or ~/.rootrc or ./.rootrc 
+   // 1. add a line into system.rootrc or ~/.rootrc or ./.rootrc
    //
    //  TFileIter.ForeignFileMap  mapFile // the name of the file
                                          // to map the local name
                                          // to the global file service
    //
-   //  If this line is omitted then TFileIter class seeks for 
+   //  If this line is omitted then TFileIter class seeks for
    //  the default mapping file in the current directory "io.config"
 
    // 2. If the "io.config" file found then it defines the mapping as follows:
@@ -507,18 +515,18 @@ TString TFileIter::MapName(const char *name, const char *localSystemKey,const ch
    const char *foreignName  = 0;
    if ( gSystem->AccessPathName(fileMap) == 0 ){
       TEnv myMapResource(fileMap);
-      localName    = myMapResource.Defined(localSystemKey) ? 
-                                    myMapResource.GetValue(localSystemKey,"") : 0; 
-      foreignName  = myMapResource.Defined(mountedFileSystemKey) ? 
-                                    myMapResource.GetValue(mountedFileSystemKey,""):0; 
+      localName    = myMapResource.Defined(localSystemKey) ?
+                                    myMapResource.GetValue(localSystemKey,"") : 0;
+      foreignName  = myMapResource.Defined(mountedFileSystemKey) ?
+                                    myMapResource.GetValue(mountedFileSystemKey,""):0;
    } else {
       localName    = "/castor";      // This is the default CERN name
       foreignName  = "rfio:/castor"; // and it needs "RFIO"
    }
-   if (localName && localName[0] 
-                 && foreignName 
+   if (localName && localName[0]
+                 && foreignName
                  && foreignName[0]
                  && newName.BeginsWith(localName) )
        newName.Replace(0,strlen(localName),foreignName);
-   return newName;   
+   return newName;
 }
