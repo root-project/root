@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.9 2001/03/05 15:34:32 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.10 2001/04/11 11:10:44 brun Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -39,9 +39,12 @@ class TMessage;
 class TSocket;
 class TMonitor;
 class TFile;
-class TTree;
 class TSignalHandler;
 class TSlave;
+class TPlayer;
+class TDSet;
+class TEventList;
+class TTree;  // obsolete
 
 // PROOF magic constants
 const Int_t       kPROOF_Protocol = 1;            // protocol version number
@@ -80,9 +83,9 @@ private:
    Double_t  fBytesRead;     //bytes read by all slaves during the session
    Float_t   fRealTime;      //realtime spent by all slaves during the session
    Float_t   fCpuTime;       //CPU time spent by all slaves during the session
-   TTree    *fTree;          //object being PROOFed
    Int_t     fLimits;        //used by Limits()
    TSignalHandler *fIntHandler; //interrupt signal handler (ctrl-c)
+   TPlayer  *fPlayer;        //current player
 
    Int_t     Init(const char *masterurl, const char *conffile,
                   const char *confdir, Int_t loglevel);
@@ -154,7 +157,13 @@ public:
    void     DeActivateAsyncInput();
    void     HandleAsyncInput(TSocket *s);
 
-   void     Loop(TTree *tree);
+   void     Loop(TTree * /*tree*/) { }  // obsolete
+   Int_t    Process(TDSet *set, const char *selector, Int_t nentries = -1,
+                    Int_t first = 0, TEventList *evl = 0);
+   void     AddInput(TObject *obj);
+   void     ClearInput();
+   TObject *GetOutput(const char *name);
+   TList   *GetOutputList();
    void     RecvLogFile(TSocket *s, Int_t size);
 
    Int_t    DisConnectFile(const TFile *file);
