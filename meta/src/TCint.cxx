@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.4 2000/06/20 06:47:05 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.5 2000/08/15 10:55:51 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -100,8 +100,11 @@ TCint::~TCint()
 {
    // Destroy the CINT interpreter interface.
 
-   if (fMore != -1)
-      G__scratch_all();
+   if (fMore != -1) {
+     // only close the opened files do not free memory:   
+     // G__scratch_all();
+     G__close_inputfiles();
+   }
 }
 
 //______________________________________________________________________________

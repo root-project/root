@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.7 2000/08/18 13:43:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.8 2000/08/18 15:45:20 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -336,7 +336,7 @@ TROOT::~TROOT()
       if (!fVersionInt) return;
 
       // ATTENTION!!! Order is important!
-
+      
 //      fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
 #ifdef WIN32
 //  Under Windows, one has to restore the color palettes created by individual canvases
@@ -364,15 +364,16 @@ TROOT::~TROOT()
 //      SafeDelete(fGlobalFunctions);
 //      fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
 
-      // Problem deleting the interpreter. Want's to delete objects already
-      // deleted in the dtor's above. Crash.
-      //SafeDelete(fInterpreter);
-
       // Remove shared libraries produced by the TSystem::CompileMacro() call
       gSystem->CleanCompiledMacros();
 
       // Cleanup system class
       delete gSystem;
+
+      // Problem deleting the interpreter. Want's to delete objects already
+      // deleted in the dtor's above. Crash.
+      // It should only close the files and NOT delete.
+      SafeDelete(fInterpreter);
 
       // Prints memory stats
       TStorage::PrintStatistics();
