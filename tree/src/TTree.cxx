@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.99 2001/10/25 10:45:32 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.100 2001/11/03 16:53:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -575,29 +575,99 @@ void TTree::AutoSave()
 }
 
 //______________________________________________________________________________
-Int_t TTree::Branch(TList *list, Int_t bufsize, Int_t splitlevel)
+Int_t TTree::Branch(TCollection *list, Int_t bufsize, Int_t splitlevel, const char *name)
 {
-//   This new function creates one branch for each element in the list.
+//   This function creates one branch for each element in the collection.
+//   Each entry in the collection becomes a top level branch if the 
+//   corresponding class is not a collection. If it is a collection, the entry
+//   in the collection becomes in turn top level branches, etc.
+//   The splitlevel is decreased by 1 everytime a new collection is found.
+//   For example if list is a TObjArray* 
+//     - if splitlevel = 1, one top level branch is created for each element
+//        of the TObjArray.
+//     - if splitlevel = 2, one top level branch is created for each array element.
+//       if, in turn, one of the array elements is a TCollection, one top level
+//       branch will be created for each element of this collection.
+//
+//   In case a collection element is a TClonesArray, the special Tree constructor
+//   for TClonesArray is called.
+//   The collection itself cannot be a TClonesArray.
+//         
 //   The function returns the total number of branches created.
-
+//
+//   If name is given, all branch names will be prefixed with name_.
+//
+// IMPORTANT NOTE1: This function should not be called with splitlevel < 1.
+//
+// IMPORTANT NOTE2: The branches created by this function will have names
+// corresponding to the collection or object names. It is important
+// to give names to collections to avoid misleading branch names or
+// identical branch names. By default collections have a name equal to
+// the corresponding class name, eg the default name for a TList is "TList".
+//
+// Example--------------------------------------------------------------:
+/*
+{
+   TTree T("T","test list");
+   TList *l = new TList();
+   
+   TObjArray *a1 = new TObjArray();
+   a1->SetName("a1");
+   l->Add(a1);
+   TH1F *ha1a = new TH1F("ha1a","ha1",100,0,1);
+   TH1F *ha1b = new TH1F("ha1b","ha1",100,0,1);
+   a1->Add(ha1a);
+   a1->Add(ha1b);
+   TObjArray *b1 = new TObjArray();
+   b1->SetName("b1");
+   l->Add(b1);
+   TH1F *hb1a = new TH1F("hb1a","hb1",100,0,1);
+   TH1F *hb1b = new TH1F("hb1b","hb1",100,0,1);
+   b1->Add(hb1a);
+   b1->Add(hb1b);
+    
+   TObjArray *a2 = new TObjArray();
+   a2->SetName("a2");
+   l->Add(a2);
+   TH1S *ha2a = new TH1S("ha2a","ha2",100,0,1);
+   TH1S *ha2b = new TH1S("ha2b","ha2",100,0,1);
+   a2->Add(ha2a);
+   a2->Add(ha2b);
+   
+   T.Branch(l,16000,2);
+   T.Print();
+}
+*/
+//----------------------------------------------------------------------
    if (list == 0) return 0;
    TObject *obj;
    Int_t nbranches = GetListOfBranches()->GetEntries();
-   TObjLink *lnk = list->FirstLink();
+   if (list->InheritsFrom(TClonesArray::Class())) {
+         Error("Branch", "Cannot call this constructor for a TClonesArray");
+         return 0;
+   }
+   
+   Int_t nch = strlen(name);
+   char branchname[kMaxLen];
+   TIter next(list);
 
-   while (lnk) {
-      obj = lnk->GetObject();
-      if (obj->InheritsFrom(TClonesArray::Class())) {
-         TClonesArray *clones = (TClonesArray*)obj;
-         //splitlevel = 1;
-         //if (clones->TestBit(TClonesArray::kForgetBits)) splitlevel = 2;
-         //if (clones->TestBit(TClonesArray::kNoSplit))    splitlevel = 0;
-         Branch(clones->GetName(),lnk->GetObjectRef(),bufsize,splitlevel);
+   while ((obj = next())) {
+      if (splitlevel > 1 &&  obj->InheritsFrom(TCollection::Class())
+                         && !obj->InheritsFrom(TClonesArray::Class())) {
+         TCollection *col = (TCollection*)obj;
+         if (nch) sprintf(branchname,"%s_%s_",name,col->GetName());
+         else     sprintf(branchname,"%s_",col->GetName());
+         Branch(col,bufsize,splitlevel-1,branchname);
       } else {
-         splitlevel = 0;
-         Branch(obj->GetName(),obj->ClassName(),lnk->GetObjectRef(),bufsize,splitlevel);
+         if (nch && name[nch-1] == '_') sprintf(branchname,"%s%s",name,obj->GetName());
+         else {
+            if (nch)  sprintf(branchname,"%s_%s",name,obj->GetName());
+            else      sprintf(branchname,"%s",obj->GetName());
+         }
+         if (splitlevel > 1) strcat(branchname,".");
+         Bronch(branchname,obj->ClassName(),
+                list->GetObjectRef(obj),bufsize,splitlevel-1);
       }
-      lnk = lnk->Next();
    }
    return GetListOfBranches()->GetEntries() - nbranches;
 }
@@ -1081,7 +1151,6 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    Int_t id = -1;
    if (splitlevel > 0) id = -2;
    char *dot = (char*)strchr(name,'.');
-   //char *dot = strchr(name,'_');
    Int_t nch = strlen(name);
    Bool_t dotlast = kFALSE;
    if (nch && name[nch-1] == '.') dotlast = kTRUE;
@@ -1101,15 +1170,13 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
          if (isBase) {
             TClass *clbase = element->GetClassPointer();
             if (clbase == TObject::Class() && cl->CanIgnoreTObjectStreamer()) continue;
-            }
+         }
          if (dot) {
             if (dotlast) {
-               if (isBase) {sprintf(bname,"%s",name); bname[nch-1] = 0;}
-               else         sprintf(bname,"%s%s",name,element->GetFullName());
+               sprintf(bname,"%s%s",name,element->GetFullName());
             } else {
                if (isBase) sprintf(bname,"%s",name);
                else        sprintf(bname,"%s.%s",name,element->GetFullName());
-               //else        sprintf(bname,"%s_%s",name,element->GetFullName());
             }
          } else {
             sprintf(bname,"%s",element->GetFullName());
