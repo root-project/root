@@ -1676,7 +1676,7 @@ G__value *presult;
 {
   int hash=0;
   long scope_struct_offset=0;
-  int scope_tagnum;
+  int scope_tagnum = -1;
   int ifn;
   struct G__ifunc_table *memfunc;
   char *p = strstr(item,"::");

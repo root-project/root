@@ -587,6 +587,58 @@ G__value *p,result;
   case 'U':
     result=G__classassign(p->obj.i,p->tagnum, result);
     break;
+#ifndef G__OLDIMPLEMENTATION1663
+  case 'u':
+    {
+      G__value para;
+      char refopr[G__MAXNAME];
+      long store_struct_offsetX = G__store_struct_offset;
+      int store_tagnumX = G__tagnum;
+      int done=0;
+      int store_var_type = G__var_type;
+      G__var_type='p';
+#ifdef G__ASM
+      if(G__asm_noverflow) {
+	if(G__LETPVAL==G__asm_inst[G__asm_cp-1]||
+	   G__LETVVAL==G__asm_inst[G__asm_cp-1]) {
+#ifdef G__ASM_DBG
+	  if(G__asm_dbg) G__fprinterr(G__serr,"LETPVAL,LETVVAL cancelled\n");
+#endif
+	  G__inc_cp_asm(-1,0);
+	}
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) {
+	  G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+	  G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	}
+#endif
+	G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+	G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+	G__inc_cp_asm(2,0);
+      }
+#endif
+      G__store_struct_offset = p->obj.i;
+      G__tagnum = p->tagnum;
+      strcpy(refopr,"operator*()");
+      para=G__getfunction(refopr,&done,G__TRYMEMFUNC);
+      G__tagnum = store_tagnumX;
+      G__store_struct_offset = store_struct_offsetX;
+      G__var_type=store_var_type;
+#ifdef G__ASM
+      if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) {
+	  G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp-2);
+	}
+#endif
+	G__asm_inst[G__asm_cp] = G__POPSTROS;
+	G__inc_cp_asm(1,0);
+      }
+      G__letVvalue(&para,result);
+#endif
+    }
+    break;
+#endif /* 1663 */
   default:
 #ifdef G__ASM
 #ifdef G__ASM_DBG

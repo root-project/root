@@ -439,8 +439,10 @@ char *new_name;
 #ifndef G__OLDIMPLEMENTATION1149
       if(store_len>1&&isalnum(new_name[store_len])&&
 	 isalnum(new_name[store_len-1])) {
-	G__fprinterr(G__serr,"Warning: %s  Syntax error??",new_name);
-	G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: %s  Syntax error??",new_name);
+	  G__printlinenum();
+	}
       }
 #endif
 
@@ -1774,8 +1776,10 @@ int tagnum,typenum;      /* overrides global variables */
 #ifndef G__OLDIMPLEMENTATION894
 	if(0==bitfieldwarn) {
 #endif
-	  G__fprinterr(G__serr,"Note: Bit-field not accessible from interpreter");
-	  G__printlinenum();
+	  if(G__dispmsg>=G__DISPNOTE) {
+	    G__fprinterr(G__serr,"Note: Bit-field not accessible from interpreter");
+	    G__printlinenum();
+	  }
 #ifndef G__OLDIMPLEMENTATION894
 	  bitfieldwarn=1;
 	}
@@ -1818,8 +1822,10 @@ int tagnum,typenum;      /* overrides global variables */
 	 -1!=G__tagdefining && 
 	 ('c'==G__struct.type[G__tagdefining]||
 	  's'==G__struct.type[G__tagdefining])) {
-	G__fprinterr(G__serr,"Warning: In-class initialization of non-const static member not allowed in C++ standard");
-	G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: In-class initialization of non-const static member not allowed in C++ standard");
+	  G__printlinenum();
+	}
       }
 #endif
 
@@ -2803,8 +2809,10 @@ int tagnum,typenum;      /* overrides global variables */
 	var_type = tolower(var_type);
 	G__var_type = var_type;
 	if(G__asm_dbg) {
-	  G__fprinterr(G__serr,"Note: type* a,b,... declaration");
-	  G__printlinenum();
+	  if(G__dispmsg>=G__DISPNOTE) {
+	    G__fprinterr(G__serr,"Note: type* a,b,... declaration");
+	    G__printlinenum();
+	  }
 	}
       }
       /* type  var1 , var2 , var3 ;
@@ -2883,12 +2891,33 @@ char *new_name;
   G__abortbytecode();
 #endif
 #endif
-  
+
+#ifndef G__OLDIMPLEMENTATION1667
+  { 
+    char *pp = G__strrstr(name,"::");
+    if(pp && G__prerun && -1==G__func_now) {
+      /* Handle static data member initialization */
+      int tagnum;
+      *pp=0;
+      tagnum = G__defined_tagname(name,0);
+      strcpy(expr,pp+2);
+      G__hash(expr,hash,i)
+      var = G__getvarentry(expr,hash,&ig15,G__struct.memvar[tagnum]
+			   ,G__struct.memvar[tagnum]);
+    }
+    else {
+      /* calculate hash */
+      G__hash(name,hash,i)
+      /* get variable table entry */
+      var = G__getvarentry(name,hash,&ig15,&G__global,G__p_local);
+    }
+  }
+#else
   /* calculate hash */
   G__hash(name,hash,i)
-    
   /* get variable table entry */
   var = G__getvarentry(name,hash,&ig15,&G__global,G__p_local);
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1119
   if(!var) {

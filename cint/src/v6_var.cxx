@@ -2561,14 +2561,19 @@ struct G__var_array *varglobal,*varlocal;
        && 0==G__decl_obj
 #endif
        ) {
+      if( 
 #ifndef G__OLDIMPLEMENTATION1073
-      if( (0==G__decl || !G__asm_wholefunction) ) { /* ??? */
+	 (0==G__decl || !G__asm_wholefunction) &&
 #endif
+#ifndef G__OLDIMPLEMENTATION1661
+	  ('v'!=G__var_type || 'u'!=var->type[ig15])
+#else
+	 1
+#endif
+	  ) { /* ??? */
 	G__asm_gen_stvar(G__struct_offset,ig15,paran,var,item
 			 ,store_struct_offset,G__var_type);
-#ifndef G__OLDIMPLEMENTATION1073
       }
-#endif
     }
     else if('u'==G__var_type&&G__AUTO==var->statictype[ig15]&&
 	    (G__decl||G__cppconstruct)) {
@@ -2888,7 +2893,8 @@ struct G__var_array *varglobal,*varlocal;
 	  result.obj.i = result.obj.i?1:0;
 	  break;
 	}
-	G__ASSIGN_VAR(G__INTALLOC,int,G__int)
+	/* 1666 G__ASSIGN_VAR(G__INTALLOC,int,G__int) */
+	G__ASSIGN_VAR(G__CHARALLOC,int,G__int)
 #endif
       case 'i': /* int */
 	G__ASSIGN_VAR(G__INTALLOC,int,G__int)
@@ -4060,7 +4066,8 @@ struct G__var_array *varglobal,*varlocal;
 	G__GET_VAR(G__FLOATALLOC,float ,G__letdouble,'f','F')
 #ifndef G__OLDIMPLEMENTATION1604
       case 'g': /* bool */
-	G__GET_VAR(G__INTALLOC ,unsigned char ,G__letint ,'g' ,'G')
+	/* 1666 G__GET_VAR(G__INTALLOC ,unsigned char ,G__letint ,'g' ,'G') */
+	G__GET_VAR(G__CHARALLOC ,unsigned char ,G__letint ,'g' ,'G')
 #endif
 
 	  /****************************************
@@ -4686,8 +4693,10 @@ int objptr;  /* 1 : object , 2 : pointer */
 #else
       if(G__MAXFILE-1!=G__ifile.filenum) {
 #endif
-	G__fprinterr(G__serr,"Warning: wrong member access operator '->'");
-	G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: wrong member access operator '->'");
+	  G__printlinenum();
+	}
       }
 #endif /* G__ROOT */
     }
@@ -4699,8 +4708,10 @@ int objptr;  /* 1 : object , 2 : pointer */
 #else
     if(G__MAXFILE-1!=G__ifile.filenum) {
 #endif
-      G__fprinterr(G__serr,"Warning: wrong member access operator '.'");
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: wrong member access operator '.'");
+	G__printlinenum();
+      }
     }
   }
 #endif /* G__ROOT */
@@ -4712,8 +4723,10 @@ int objptr;  /* 1 : object , 2 : pointer */
   if(G__MAXFILE-1!=G__ifile.filenum &&
 #endif
      ((isupper(result.type)&&1==objptr)||(islower(result.type)&&2==objptr))) {
-    G__fprinterr(G__serr,"Warning: wrong member access operator '.' or '->'");
-    G__printlinenum();
+    if(G__dispmsg>=G__DISPWARN) {
+      G__fprinterr(G__serr,"Warning: wrong member access operator '.' or '->'");
+      G__printlinenum();
+    }
   }
 #endif /* G__ROOT */
 #endif /* 1265 */
@@ -5044,8 +5057,10 @@ int objptr;  /* 1 : object , 2 : pointer */
 #else
       if(G__MAXFILE-1!=G__ifile.filenum) {
 #endif
-	G__fprinterr(G__serr,"Warning: wrong member access operator '->'");
-	G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: wrong member access operator '->'");
+	  G__printlinenum();
+	}
       }
 #endif
     }
@@ -5057,8 +5072,10 @@ int objptr;  /* 1 : object , 2 : pointer */
 #else
     if(G__MAXFILE-1!=G__ifile.filenum) {
 #endif
-      G__fprinterr(G__serr,"Warning: wrong member access operator '.'");
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: wrong member access operator '.'");
+	G__printlinenum();
+      }
     }
   }
 #endif
@@ -5070,8 +5087,10 @@ int objptr;  /* 1 : object , 2 : pointer */
   if(G__MAXFILE-1!=G__ifile.filenum &&
 #endif
      ((isupper(result.type)&&1==objptr)||(islower(result.type)&&2==objptr))) {
-    G__fprinterr(G__serr,"Warning: wrong member access operator '.' or '->'");
-    G__printlinenum();
+    if(G__dispmsg>=G__DISPWARN) {
+      G__fprinterr(G__serr,"Warning: wrong member access operator '.' or '->'");
+      G__printlinenum();
+    }
   }
 #endif
 #endif
@@ -5486,14 +5505,65 @@ long G__struct_offset; /* used to be int */
       long store_struct_offsetX = G__store_struct_offset;
       int store_tagnumX = G__tagnum;
       int done=0;
+#ifndef G__OLDIMPLEMENTATION1662
+      int store_var_type = G__var_type;
+      G__var_type='p';
+#endif
       G__store_struct_offset 
 	= (long)(G__struct_offset+(var->p[ig15])
 		 +p_inc*G__struct.size[var->p_tagtable[ig15]]);
       G__tagnum = var->p_tagtable[ig15];
+#ifndef G__OLDIMPLEMENTATION1661
+#ifdef G__ASM
+      if(G__asm_noverflow) {
+	if(G__struct_offset) {
+	  G__asm_inst[G__asm_cp]=G__LD_MSTR;
+	}
+	else {
+	  G__asm_inst[G__asm_cp]=G__LD_VAR;
+	}
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) 
+	  G__fprinterr(G__serr,"%3x: LD_VAR  %s index=%d paran=%d\n"
+		       ,G__asm_cp,var->varnamebuf[ig15],ig15,0);
+#endif
+	G__asm_inst[G__asm_cp+1]=ig15;
+	G__asm_inst[G__asm_cp+2]=paran;
+	G__asm_inst[G__asm_cp+3]='p';
+	G__asm_inst[G__asm_cp+4]=(long)var;
+	G__inc_cp_asm(5,0);
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) {
+	  G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp-2);
+	  G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp-1);
+	}
+#endif
+	G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+	G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+	G__inc_cp_asm(2,0);
+      }
+#endif
+#endif /* 1661 */
       strcpy(refopr,"operator*()");
       para=G__getfunction(refopr,&done,G__TRYMEMFUNC);
       G__tagnum = store_tagnumX;
       G__store_struct_offset = store_struct_offsetX;
+#ifndef G__OLDIMPLEMENTATION1662
+      G__var_type=store_var_type;
+#endif
+#ifndef G__OLDIMPLEMENTATION1661
+#ifdef G__ASM
+      if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) {
+	  G__fprinterr(G__serr,"%3x: POPSTROS\n",G__asm_cp-2);
+	}
+#endif
+	G__asm_inst[G__asm_cp] = G__POPSTROS;
+	G__inc_cp_asm(1,0);
+      }
+#endif
+#endif /* 1661 */
       if(0==done) {
 	G__assign_error(item,result);
       }
@@ -5919,9 +5989,11 @@ int parameter00;
         /* to follow the example of other places .. Should printlinenum
            be replaced by G__genericerror ? */
 #endif
-      G__fprinterr(G__serr,
-	   "Warning: Automatic variable %s allocated in global scope",item);
-      G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,
+	  "Warning: Automatic variable %s allocated in global scope",item);
+	  G__printlinenum();
+	}
 #ifndef G__PHILIPPE21
       }
 #endif
@@ -6154,8 +6226,10 @@ int parameter00;
       }
 #ifndef G__OLDIMPLEMENTATION1091
       else if(G__nfile<G__ifile.filenum) {
-	G__fprinterr(G__serr,"Warning: 'static' ignored in '{ }' style macro");
-	G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: 'static' ignored in '{ }' style macro");
+	  G__printlinenum();
+	}
 	G__static_alloc=0;
       }
 #endif
@@ -6871,8 +6945,10 @@ int parameter00;
     if((G__definemacro==0)&&(G__globalcomp==G__NOLINK)) {
 #ifndef G__OLDIMPLEMENTATION566
       if(-1!=var->tagnum) {
-	G__fprinterr(G__serr,"Warning: Undeclared data member %s",item);
-	G__genericerror((char*)NULL);
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: Undeclared data member %s",item);
+	  G__genericerror((char*)NULL);
+	}
 	return(result);
       }
 #endif
@@ -6888,8 +6964,10 @@ int parameter00;
       }
 #endif
 #else
-      G__fprinterr(G__serr,"Warning: Undeclared symbol %s. Automatic variable allocated",item);
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: Undeclared symbol %s. Automatic variable allocated",item);
+	G__printlinenum();
+      }
 #endif
       var->type[ig15]='o';
     }
@@ -7499,8 +7577,10 @@ int mparen;
       * function. */
     if(G__NOLINK!=G__globalcomp && -1!=G__def_tagnum && 	
        'n'!=G__struct.type[G__def_tagnum]) {
-      G__fprinterr(G__serr,"Warning: This friend declaration may cause creation of wrong stub function in dictionary. Use '#pragma link off function ...;' to avoid it.");
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: This friend declaration may cause creation of wrong stub function in dictionary. Use '#pragma link off function ...;' to avoid it.");
+	G__printlinenum();
+      }
     }
     while((G__def_tagnum!=-1)&&(G__struct.type[G__def_tagnum]!='n')) {
       G__def_tagnum = G__struct.parent_tagnum[G__def_tagnum];

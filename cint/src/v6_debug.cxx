@@ -700,9 +700,11 @@ int c;
 void G__lockedvariable(item)
 char *item;
 {
-  G__fprinterr(G__serr,"Warning: Assignment to %s locked FILE:%s LINE:%d\n"
-	  ,item
-	  ,G__ifile.name,G__ifile.line_number);
+  if(G__dispmsg>=G__DISPWARN) {
+    G__fprinterr(G__serr,"Warning: Assignment to %s locked FILE:%s LINE:%d\n"
+		 ,item
+		 ,G__ifile.name,G__ifile.line_number);
+  }
 }
 
 
@@ -716,8 +718,10 @@ char *varname;
   struct G__var_array *var;
 
 #ifndef G__OLDIMPLEMENTATION1119
-  G__fprinterr(G__serr,"Warning: lock variable obsolete feature");
-  G__printlinenum();
+  if(G__dispmsg>=G__DISPWARN) {
+    G__fprinterr(G__serr,"Warning: lock variable obsolete feature");
+    G__printlinenum();
+  }
 #endif
   
   G__hash(varname,hash,ig15)
@@ -746,8 +750,10 @@ char *varname;
   struct G__var_array *var;
 
 #ifndef G__OLDIMPLEMENTATION1119
-  G__fprinterr(G__serr,"Warning: lock variable obsolete feature");
-  G__printlinenum();
+  if(G__dispmsg>=G__DISPWARN) {
+    G__fprinterr(G__serr,"Warning: lock variable obsolete feature");
+    G__printlinenum();
+  }
 #endif
   
   G__hash(varname,hash,ig15)

@@ -5,11 +5,9 @@
 # Copying $CINTSYSDIR/MAKEINFO #############################
 
 ############################################################
-# platform/linux_RH6.2_gcc3_mtso
+# platform/linux_RH6.2
 #  Platform dependent information for LINUX 2.0 RedHatH6.2 or later
-#  using gcc-3.00
-#  Build libcint.so instead of G__ci.a. And creates multi-thread safe DLLs.
-#  Based on Christoph Bugel's proposal about multi-threading.
+#  Redhat-6.2
 ############################################################
 
 # Tools
@@ -19,7 +17,7 @@ AR	    = ar
 AROPT       = clq
 KRCC        = gcc -traditional
 CC          = gcc -fexceptions -Wall
-CPP         = g++ -Wall 
+CPP         = g++ -Wall -fguiding-decls
 LD          = g++
 CPREP       = gcc -E -C
 CPPPREP     = g++ -E -C
@@ -28,20 +26,19 @@ CPPPREP     = g++ -E -C
 CCDLLOPT    = -fPIC
 LDDLLOPT    = -shared
 OPTIMIZE    = -O2
-LDOPT       = -lm -L/usr/lib/termcap -ltermcap -lbsd -ldl -rdynamic 
+LDOPT       = -lm -L/usr/lib/termcap -ltermcap -lbsd -ldl -rdynamic
 SYSMACRO    = -DG__REGEXP -DG__SHAREDLIB -DG__OSFDLL -DG__ANSI -DG__ERRORCALLBACK
-OTHMACRO    = -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION $(CCDLLPOST) -DG__MULTITHREADLIBCINT
+OTHMACRO    = -DG__P2FCAST -DG__REDIRECTIO -DG__DETECT_NEWDEL -DG__POSIX -DG__STD_EXCEPTION 
 SYSIPATH    =
 
 # libraries
 MAINO	    = $(CINTSYSDIR)/main/G__cppmain.o
-CINTLIB     = $(CINTSYSDIR)/libcint.so
-#READLINEA   = /usr/lib/libreadline.a
-READLINEA   = 
+CINTLIB     = $(CINTSYSDIR)/src/G__ci.a
+READLINEA   = /usr/lib/libreadline.a
 APIO	    = Api.o Class.o BaseCls.o Type.o DataMbr.o Method.o MethodAr.o CallFunc.o Typedf.o Apiif.o Token.o
 RANLIB	    = /usr/bin/ranlib
-STDLIBS     = gcc3strm.o stdstrct.o
-PLATFORM    = $(CINTSYSDIR)/main/G__setup.o
+STDLIBS     = libstrm.o stdstrct.o
+PLATFORM    =
 
 # source code postfix
 CSRCPOST    = .c
@@ -60,7 +57,7 @@ DLLPOST     = .dl
 IPATH      = $(SYSIPATH) 
 MACRO      = $(SYSMACRO)\
 		-D_POSIX_C_SOURCE=199506L 
-CINTSYSDIR = /home/gotom/src/cint-gcc3.0
+CINTSYSDIR = /home/gotom/src/cint
 CINTIPATH  = -I$(CINTSYSDIR)
 OBJECT     = pthread.dll
 OPTION     = $(CCDLLOPT)

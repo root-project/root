@@ -626,8 +626,10 @@ FILE *fp;
       fprintf(fp,"}\n");
     }
     else {
-      G__fprinterr(G__serr,"Note: operator new() masked %x\n"
-	      ,G__is_operator_newdelete);
+      if(G__dispmsg>=G__DISPNOTE) {
+	G__fprinterr(G__serr,"Note: operator new() masked %x\n"
+		     ,G__is_operator_newdelete);
+      }
     }
 #ifdef G__N_EXPLICITDESTRUCTOR
     if(0==(G__is_operator_newdelete&
@@ -639,8 +641,10 @@ FILE *fp;
       fprintf(fp,"}\n");
     }
     else {
-      G__fprinterr(G__serr,"Note: operator delete() masked %x\n"
-	      ,G__is_operator_newdelete);
+      if(G__dispmsg>=G__DISPNOTE) {
+	G__fprinterr(G__serr,"Note: operator delete() masked %x\n"
+		     ,G__is_operator_newdelete);
+      }
     }
 #endif /* G__N_EXPLICITDESTRUCTOR */
   }
@@ -746,8 +750,10 @@ void G__gen_cpplink()
     fprintf(fp,"}\n");
   }
   else {
-    G__fprinterr(G__serr,"Note: operator new() masked %x\n"
-	    ,G__is_operator_newdelete);
+    if(G__dispmsg>=G__DISPNOTE) {
+      G__fprinterr(G__serr,"Note: operator new() masked %x\n"
+		   ,G__is_operator_newdelete);
+    }
   }
 #ifdef G__N_EXPLICITDESTRUCTOR
   if(0==(G__is_operator_newdelete&
@@ -759,8 +765,10 @@ void G__gen_cpplink()
     fprintf(fp,"}\n");
   }
   else {
-    G__fprinterr(G__serr,"Note: operator delete() masked %x\n"
-	    ,G__is_operator_newdelete);
+    if(G__dispmsg>=G__DISPNOTE) {
+      G__fprinterr(G__serr,"Note: operator delete() masked %x\n"
+		   ,G__is_operator_newdelete);
+    }
   }
 #endif /* G__N_EXPLICITDESTRUCTOR */
 #endif /* 1423 */
@@ -2157,8 +2165,10 @@ char *macroin;
 #endif
   strcpy(temp,G__macros);
   if(strlen(temp)+strlen(macro)+3>G__LONGLINE) {
-    G__fprinterr(G__serr,"Warning: can not add any more macros in the list\n");
-    G__printlinenum();
+    if(G__dispmsg>=G__DISPWARN) {
+      G__fprinterr(G__serr,"Warning: can not add any more macros in the list\n");
+      G__printlinenum();
+    }
   }
   else {
     sprintf(G__macros,"%s-D%s ",temp,macro);
@@ -4518,16 +4528,18 @@ FILE *hfp;
 #endif
 
       if(-1==G__struct.line_number[i]) { 
-	if(G__NOLINK==G__struct.iscpplink[i]) {
-	  G__fprinterr(G__serr,"Note: Link requested for undefined class %s (ignore this message)"
-		  ,G__fulltagname(i,1));
+	if(G__dispmsg>=G__DISPNOTE) {
+	  if(G__NOLINK==G__struct.iscpplink[i]) {
+	    G__fprinterr(G__serr,"Note: Link requested for undefined class %s (ignore this message)"
+			 ,G__fulltagname(i,1));
+	  }
+	  else {
+	    G__fprinterr(G__serr,
+			 "Note: Link requested for already precompiled class %s (ignore this message)"
+			 ,G__fulltagname(i,1));
+	  }
+	  G__printlinenum();
 	}
-	else {
-	  G__fprinterr(G__serr,
-		  "Note: Link requested for already precompiled class %s (ignore this message)"
-		  ,G__fulltagname(i,1));
-	}
-	G__printlinenum();
 	/* G__genericerror((char*)NULL); */
       }
 
@@ -4841,8 +4853,8 @@ FILE *fp;
 			,temp,G__fulltagname(basetagnum,1));
 	      else {
 		G__fprinterr(G__serr,
-			"Warning: multiple ambiguous inheritance %s and %s. Cint will not get correct base object address\n"
-			,temp,G__fulltagname(i,1));
+			     "Warning: multiple ambiguous inheritance %s and %s. Cint will not get correct base object address\n"
+			     ,temp,G__fulltagname(i,1));
 		fprintf(fp,"       %s *G__Lpbase=(%s*)((long)G__Lderived);\n"
 			,temp,G__fulltagname(basetagnum,1));
 	      }
@@ -5135,9 +5147,13 @@ FILE *fp;
 	       ) && 0==var->bitfield[j])||
 	     G__precomp_private) {
 	    ++count;
-	    if(-1!=var->p_tagtable[j]&&
-	       islower(var->type[j])&&var->constvar[j]&&
-	       'e'==G__struct.type[var->p_tagtable[j]])
+	    if((-1!=var->p_tagtable[j]&&
+		islower(var->type[j])&&var->constvar[j]&&
+		'e'==G__struct.type[var->p_tagtable[j]])
+#ifdef G__UNADDRESSABLEBOOL
+	       ||'g'==var->type[j]
+#endif
+	       )
 	      pvoidflag=1;
 	    else pvoidflag=0;
 	    fprintf(fp,"   G__memvar_setup(");
@@ -5202,6 +5218,9 @@ FILE *fp;
 	    if(pvoidflag
 #ifndef G__OLDIMPLEMENTATION1378
 	       && G__LOCALSTATIC==var->statictype[j]
+#endif
+#ifdef G__UNADDRESSABLEBOOL
+	       && 'g'!=var->type[j]
 #endif
 	       ) {
 	      /* local enum member as static member.
@@ -5819,10 +5838,13 @@ FILE *fp;
 
 	if((-1!=var->p_tagtable[j]&&
 	    islower(var->type[j])&&var->constvar[j]&&
-	    'e'==G__struct.type[var->p_tagtable[j]])||
-	   'p'==tolower(var->type[j])
+	    'e'==G__struct.type[var->p_tagtable[j]])
+	   || 'p'==tolower(var->type[j])
 #ifndef G__OLDIMPLEMENTATION904
 	   || 'T'==var->type[j]
+#endif
+#ifdef G__UNADDRESSABLEBOOL
+	   || 'g'==var->type[j]
 #endif
 	   )
 	  pvoidflag=1;
@@ -6272,18 +6294,30 @@ G__incsetup setup_memfunc;
       (*G__struct.incsetup_memvar[tagnum])();
     if(G__struct.incsetup_memfunc[tagnum])
       (*G__struct.incsetup_memfunc[tagnum])();
-    G__struct.incsetup_memvar[tagnum] = setup_memvar;
-    G__struct.incsetup_memfunc[tagnum] = setup_memfunc;
+
+    if(G__struct.incsetup_memvar[tagnum] != setup_memvar)
+      G__struct.incsetup_memvar[tagnum] = setup_memvar;
+    else
+      G__struct.incsetup_memvar[tagnum] = (G__incsetup)NULL;
+
+    if(G__struct.incsetup_memfunc[tagnum] != setup_memfunc)
+      G__struct.incsetup_memfunc[tagnum] = setup_memfunc;
+    else
+      G__struct.incsetup_memfunc[tagnum] = (G__incsetup)NULL;
+
     if(G__struct.incsetup_memvar[tagnum])
       (*G__struct.incsetup_memvar[tagnum])();
     if(G__struct.incsetup_memfunc[tagnum])
       (*G__struct.incsetup_memfunc[tagnum])();
+
     G__struct.incsetup_memvar[tagnum] = (G__incsetup)NULL;
     G__struct.incsetup_memfunc[tagnum] = (G__incsetup)NULL;
 #endif
     if(G__asm_dbg ) {
-      G__fprinterr(G__serr,"Warning: Try to reload %s from DLL\n"
-		   ,G__fulltagname(tagnum,1));
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: Try to reload %s from DLL\n"
+		     ,G__fulltagname(tagnum,1));
+      }
     }
     return(0);
   }
@@ -6519,6 +6553,11 @@ int tagnum;
 #endif
   G__tagnum = tagnum;
   G__p_ifunc = G__struct.memfunc[G__tagnum];
+
+#ifndef G__OLDIMPLEMENTATION1664
+  --G__p_ifunc->allifunc;
+  G__memfunc_next();
+#endif
   return(0);
 }
 
@@ -7333,8 +7372,10 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr(G__serr,"Note: link requested for unknown class %s",buf);
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPNOTE) {
+	G__fprinterr(G__serr,"Note: link requested for unknown class %s",buf);
+	G__printlinenum();
+      }
     }
 #endif
   }
@@ -7582,8 +7623,10 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr(G__serr,"Note: link requested for unknown function %s",buf);
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPNOTE) {
+	G__fprinterr(G__serr,"Note: link requested for unknown function %s",buf);
+	G__printlinenum();
+      }
     }
 #endif
   }
@@ -7679,8 +7722,10 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr(G__serr,"Note: link requested for unknown global variable %s",buf);
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPNOTE) {
+	G__fprinterr(G__serr,"Note: link requested for unknown global variable %s",buf);
+	G__printlinenum();
+      }
     }
 #endif
   }
@@ -7796,8 +7841,10 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr(G__serr,"Note: link requested for unknown typedef %s",buf);
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPNOTE) {
+	G__fprinterr(G__serr,"Note: link requested for unknown typedef %s",buf);
+	G__printlinenum();
+      }
     }
 #endif
   }
@@ -8019,8 +8066,10 @@ int link_stub;
     }
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
-      G__fprinterr(G__serr,"Note: link requested for unknown srcfile %s",buf);
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPNOTE) {
+	G__fprinterr(G__serr,"Note: link requested for unknown srcfile %s",buf);
+	G__printlinenum();
+      }
     }
 #endif
   }

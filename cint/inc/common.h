@@ -23,6 +23,15 @@
 
 
 /**************************************************************************
+* Note, Warning message display flag
+**************************************************************************/
+#define G__DISPNONE  0
+#define G__DISPERR   1
+#define G__DISPWARN  2
+#define G__DISPNOTE  3
+#define G__DISPALL   4
+
+/**************************************************************************
 * HSTD local facilities are turned on by defining G__HSTD. 
 * Usually doesn't matter
 **************************************************************************/

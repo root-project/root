@@ -301,13 +301,17 @@ int G__pragma()
   }
   else if(strcmp(command,"bytecode")==0) {
     if(G__asm_dbg) {
-      G__fprinterr(G__serr,"Warning: #pragma bytecode obsoleted");
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: #pragma bytecode obsoleted");
+	G__printlinenum();
+      }
     }
 #ifdef G__DEBUG
     else {
-      G__fprinterr(G__serr,"Warning: #pragma bytecode obsoleted");
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: #pragma bytecode obsoleted");
+	G__printlinenum();
+      }
     }
 #endif
     /*
@@ -326,7 +330,7 @@ int G__pragma()
     G__nonansi_func=1;
     if(!G__globalcomp)
       G__genericerror(
-	"Warning: #pragma K&R only legal in parameter information file"
+	"Error: #pragma K&R only legal in parameter information file"
 		      );
   }
   else if(strcmp(command,"ANSI")==0) {
@@ -420,8 +424,10 @@ int G__pragma()
 #ifndef G__OLDIMPLEMENTATION1434
 	if(G__setautoccnames()) {
 	  G__compilemode = 0;
-	  G__fprinterr(G__serr,"Warning: auto-compile disabled. Can not open tmp file");
-	  G__printlinenum();
+	  if(G__dispmsg>=G__DISPWARN) {
+	    G__fprinterr(G__serr,"Warning: auto-compile disabled. Can not open tmp file");
+	    G__printlinenum();
+	  }
 	  return(1);
 	}
 #else
@@ -430,8 +436,10 @@ int G__pragma()
 	G__fpautocc=fopen(G__autocc_c,"w");
 #ifndef G__OLDIMPLEMENTATION1434
 	if((FILE*)NULL==G__fpautocc) {
-	  G__fprinterr(G__serr,"Warning: auto-compile disabled. Can not open tmp file");
-	  G__printlinenum();
+	  if(G__dispmsg>=G__DISPWARN) {
+	    G__fprinterr(G__serr,"Warning: auto-compile disabled. Can not open tmp file");
+	    G__printlinenum();
+	  }
 	  G__compilemode = 0;
 	  return(1);
 	}
@@ -824,9 +832,11 @@ char *string;
       len = strlen(string)-1;
       level = string[len] - '0';
       if(level>3) {
-	G__fprinterr(G__serr,
-		"Warning: Security level%d only experimental, High risk\n"
-		,level);
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,
+		   "Warning: Security level%d only experimental, High risk\n"
+		       ,level);
+	}
       }
       switch(level) {
       case 0: code = G__SECURE_LEVEL0; break;
@@ -860,13 +870,17 @@ char *string;
 #else 
   if(G__security&G__SECURE_NO_CHANGE) {
 #endif
-    G__fprinterr(G__serr,"Warning: security level locked, can't change");
-    G__printlinenum();
+    if(G__dispmsg>=G__DISPWARN) {
+      G__fprinterr(G__serr,"Warning: security level locked, can't change");
+      G__printlinenum();
+    }
     code = G__security;
   }
   else if(G__security&G__SECURE_NO_RELAX) {
-    G__fprinterr(G__serr,"Warning: security level locked, can't relax");
-    G__printlinenum();
+    if(G__dispmsg>=G__DISPWARN) {
+      G__fprinterr(G__serr,"Warning: security level locked, can't relax");
+      G__printlinenum();
+    }
     code |= G__security;
   }
 
@@ -879,8 +893,10 @@ char *string;
 #else
     if(G__srcfile[G__ifile.filenum].security&G__SECURE_NO_CHANGE) {
 #endif
-      G__fprinterr(G__serr,"Warning: security level locked, can't change");
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: security level locked, can't change");
+	G__printlinenum();
+      }
     }
     else {
       G__srcfile[G__ifile.filenum].security = code | G__SECURE_NO_CHANGE;

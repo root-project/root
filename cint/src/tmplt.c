@@ -234,7 +234,15 @@ struct G__Charlist *charlist;
 {
   char *p;
   p=strchr(tagname,'<');
+#ifndef G__OLDIMPLEMENTATION1665
+  if(p) ++p;
+  else {
+    p = tagname + strlen(tagname);
+    *p++ = '<';
+  }
+#else
   ++p;
+#endif
   /* B<int,5*2>
    *   ^ => p */
   while(charlist->next) {
@@ -740,8 +748,10 @@ int isforwarddecl;
 #endif
 #ifndef G__OLDIMPLEMENTATION1202
 	/* ignore duplicate template class definition */
-	G__fprinterr(G__serr,"Warning: template %s duplicate definition",new_name);
-	G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: template %s duplicate definition",new_name);
+	  G__printlinenum();
+	}
 	G__fignorestream(";");
 	return(0);
 #else

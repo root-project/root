@@ -3153,4 +3153,3 @@ extern "C" void G__cpp_setupG__stream(void) {
    if(0==G__getsizep2memfunc()) G__get_sizep2memfuncG__stream();
   return;
 }
-

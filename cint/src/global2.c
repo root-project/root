@@ -481,6 +481,8 @@ int G__init=0;
 int G__last_error = 0;
 #endif
 
+int G__dispmsg = G__DISPALL;
+
 /*
  * Local Variables:
  * c-tab-always-indent:nil

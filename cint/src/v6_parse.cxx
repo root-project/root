@@ -518,8 +518,10 @@ G__value *presult;
     }
     *presult=G__execfuncmacro(statement,piout);
     if(0==(*piout))  {
-      G__fprinterr(G__serr,"Warning: %s Missing ';'",statement );
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: %s Missing ';'",statement );
+	G__printlinenum();
+      }
     }
     fseek(G__ifile.fp,-1,SEEK_CUR);
     if(G__dispsource) G__disp_mask=1;
@@ -4701,8 +4703,10 @@ char *pvar_type;
     fsetpos(G__ifile.fp,&pos);
     if(G__dispsource) G__disp_mask=0;
     if(G__asm_dbg) {
-      G__fprinterr(G__serr,"Note: pointer to function exists");
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPNOTE) {
+	G__fprinterr(G__serr,"Note: pointer to function exists");
+	G__printlinenum();
+      }
     }
     if(line2) {
       /* function returning pointer to function 

@@ -1364,12 +1364,16 @@ int memfunc_flag;
 	oprp=1;
       }
       else {
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: Empty arg%d",1);
+	  G__printlinenum();
+	}
+      }
+#else
+      if(G__dispmsg>=G__DISPWARN) {
 	G__fprinterr(G__serr,"Warning: Empty arg%d",1);
 	G__printlinenum();
       }
-#else
-      G__fprinterr(G__serr,"Warning: Empty arg%d",1);
-      G__printlinenum();
 #endif
     }
     fpara.paran=0;
@@ -1460,8 +1464,10 @@ int memfunc_flag;
 #endif
 #ifndef G__OLDIMPLEMENTATION1221
       if(0==fpara.parameter[ig15][0]) {
-	G__fprinterr(G__serr,"Warning: Empty arg%d",ig15+1);
-	G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: Empty arg%d",ig15+1);
+	  G__printlinenum();
+	}
       }
 #endif
       fpara.para[ig15]=G__getexpr(fpara.parameter[ig15]);

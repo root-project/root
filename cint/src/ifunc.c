@@ -114,8 +114,10 @@ struct G__param *libp; /* argument buffer */
      0!=libp->para[itemp].obj.i &&
      G__VARIABLE==p_ifunc->para_isconst[ifn][itemp]) {
 #ifdef G__OLDIMPLEMENTATION1167
-    G__fprinterr(G__serr,"Warning: implicit type conversion of non-const reference arg %d",itemp);
-    G__printlinenum();
+    if(G__dispmsg>=G__DISPWARN) {
+      G__fprinterr(G__serr,"Warning: implicit type conversion of non-const reference arg %d",itemp);
+      G__printlinenum();
+    }
 #endif
   }
 }
@@ -1236,9 +1238,11 @@ char *funcheader;   /* funcheader = 'funcname(' */
 	 && strncmp(funcheader,"ClassDef",8)!=0
 #endif
 	 ) {
-	G__fprinterr(G__serr,"Warning: Unknown type %s in function argument"
-		,paraname);
-	G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: Unknown type %s in function argument"
+		       ,paraname);
+	  G__printlinenum();
+	}
       }
 #endif
       G__p_ifunc->ansi[func_now]=0;
@@ -1437,10 +1441,12 @@ char *funcheader;   /* funcheader = 'funcname(' */
     if(G__tagdefining>=0) ++G__struct.isabstract[G__tagdefining];
 #ifndef G__OLDIMPLEMENTATION1232
     if('~'==G__p_ifunc->funcname[func_now][0]) {
-      G__fprinterr(G__serr,"Warning: Pure virtual destructor may cause problem. Define as 'virtual %s() { }'"
-	      ,G__p_ifunc->funcname[func_now]
-	      );
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: Pure virtual destructor may cause problem. Define as 'virtual %s() { }'"
+		     ,G__p_ifunc->funcname[func_now]
+		     );
+	G__printlinenum();
+      }
     }
 #endif
     if(0==strncmp(paraname,"const",5))
@@ -2069,7 +2075,49 @@ int func_now;
     else if(strcmp(paraname,"int")==0) type='i'+isunsigned;
     else if(strcmp(paraname,"char")==0) type='c'+isunsigned;
     else if(strcmp(paraname,"short")==0) type='s'+isunsigned ;
-    else if(strcmp(paraname,"long")==0) type='l'+isunsigned;
+    else if(strcmp(paraname,"long")==0) {
+#ifndef G__OLDIMPLEMENTATION1668
+      if(','!=c && ')'!=c) {
+	fpos_t pos;
+	int store_line = G__ifile.line_number;
+	int store_c = c;
+	fgetpos(G__ifile.fp,&pos);
+	c=G__fgetname(paraname,",)&*[(=");
+	if(strcmp(paraname,"long")==0 || strcmp(paraname,"double")==0) {
+	  if(0==G__defined_macro("G__LONGLONG_H")) {
+	    int store_def_struct_member = G__def_struct_member;
+	    G__def_struct_member = 0;
+	    G__loadfile("long.dll"); 
+	    G__def_struct_member = store_def_struct_member;
+	  }
+	  if(strcmp(paraname,"long")==0) {
+	    type='u';
+	    tagnum=G__defined_tagname("G__longlong",2);
+	    typenum=G__search_typename("long long",'u',tagnum,G__PARANORMAL);
+	  }
+	  else if(strcmp(paraname,"double")==0) {
+	    type='u';
+	    tagnum=G__defined_tagname("G__longdouble",2);
+	    typenum=G__search_typename("long double",'u',tagnum,G__PARANORMAL);
+	  }
+	}
+	else if(strcmp(paraname,"int")==0) {
+	  type='l'+isunsigned;
+	}
+	else {
+	  G__ifile.line_number = store_line;
+	  fsetpos(G__ifile.fp,&pos);
+	  c = store_c;
+	  type='l'+isunsigned;
+	}
+      }
+      else {
+	type='l'+isunsigned;
+      }
+#else
+      type='l'+isunsigned;
+#endif
+    }
     else if(strcmp(paraname,"float")==0) type='f'+isunsigned;
     else if(strcmp(paraname,"double")==0) type='d'+isunsigned;
 #ifndef G__OLDIMPLEMENTATION1604
@@ -2105,10 +2153,12 @@ int func_now;
 	    type='i'+isunsigned;
 #ifndef G__OLDIMPLEMENTATION1126
 	    if(!isdigit(paraname[0]) && 0==isunsigned) {
-	      G__fprinterr(G__serr,
-            "Warning: Unknown type '%s' in function argument handled as int"
-		      ,paraname);
-	      G__printlinenum();
+	      if(G__dispmsg>=G__DISPWARN) {
+		G__fprinterr(G__serr,
+	"Warning: Unknown type '%s' in function argument handled as int"
+			     ,paraname);
+		G__printlinenum();
+	      }
 	    }
 #endif
 	  }
@@ -6859,9 +6909,12 @@ asm_ifunc_start:   /* loop compilation execution label */
        ***************************************************/
     case 'y': /* void */
       if(G__RETURN_NORMAL==G__return) {
-	G__fprinterr(G__serr,"Warning: Return value of void %s() ignored"
-		,p_ifunc->funcname[ifn]);
-	G__genericerror((char*)NULL);
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,"Warning: Return value of void %s() ignored"
+		       ,p_ifunc->funcname[ifn]);
+	  G__printlinenum();
+	  /* G__genericerror((char*)NULL); */
+	}
       }
       *result7 = G__null ;
       break;
@@ -7280,10 +7333,12 @@ asm_ifunc_start:   /* loop compilation execution label */
       G__destroy(localvar,G__BYTECODELOCAL_VAR) ;
       free((void*)localvar);
       if(G__asm_dbg) {
-	G__fprinterr(G__serr,
-		"Warning: Bytecode compilation of %s failed. Maybe slow"
-		,p_ifunc->funcname[ifn]);
-	G__printlinenum();
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,
+		       "Warning: Bytecode compilation of %s failed. Maybe slow"
+		       ,p_ifunc->funcname[ifn]);
+	  G__printlinenum();
+	}
       }
       if(G__return>=G__RETURN_IMMEDIATE) G__return=G__RETURN_NON;
       G__security_error=G__NOERROR;

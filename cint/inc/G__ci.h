@@ -21,13 +21,18 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015037
-#define G__CINTVERSIONSTR  "5.15.37, Apr 30 2002"
+#define G__CINTVERSION      5015039
+#define G__CINTVERSIONSTR  "5.15.39, May 11 2002"
 
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+/* For a machine which has unaddressable bool */
+#ifndef G__UNADDRESSABLEBOOL
+#define G__UNADDRESSABLEBOOL
+#endif
 
 /* Speed up G__strip_quotation */
 #ifdef G__ROOT 
@@ -48,7 +53,6 @@
 
 /* Define following macro in order to disable iostream I/O redirection */
 #define G__OLDIMPLEMENTATION1635
-#define G__OLDIMPLEMENTATION1656
 
 /* Define following macro to enable multi-thread safe libcint and DLL
  * features. */

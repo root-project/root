@@ -726,9 +726,12 @@ char *argv[] ;
    * Get command options
    *************************************************************/
   while((c=getopt(argc,argv
-  ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
+  ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:J:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
 	!=EOF) {
     switch(c) {
+
+    case 'J':
+      G__dispmsg = atoi(optarg);
 
 #ifndef G__OLDIMPLEMENTATION1525
     case 'j':
@@ -1095,6 +1098,7 @@ char *argv[] ;
 #ifndef G__OLDIMPLEMENTATION1525
       G__more(G__sout,"* -j [0|1]: Create multi-thread safe DLL(experimental)\n");
 #endif
+      G__more(G__sout,"  -J0 : Do not display Note & warning messages\n");
       /* G__more(G__sout,"  -k : function key on\n"); */
       G__more(G__sout,"  -K : C mode\n");
 #ifdef G__SHAREDLIB

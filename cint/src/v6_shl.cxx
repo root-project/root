@@ -906,8 +906,10 @@ char *shlfile;
 
   if(NULL==G__sl_handle[allsl]) {
     if(G__ispragmainclude) {
-      G__fprinterr(G__serr,"Warning: Can not load Dynamic Link Library %s",shlfile);
-      G__printlinenum();
+      if(G__dispmsg>=G__DISPWARN) {
+	G__fprinterr(G__serr,"Warning: Can not load Dynamic Link Library %s",shlfile);
+	G__printlinenum();
+      }
 #ifndef G__OLDIMPLEMENTATION936
       --G__allsl;
 #endif
@@ -1044,7 +1046,9 @@ char *shlfile;
     return(EXIT_FAILURE);
   }
   if(G__asm_dbg&&0==cintdll) {
-    G__fprinterr(G__serr,"Warning: No CINT symbol table in %s\n",shlfile);
+    if(G__dispmsg>=G__DISPWARN) {
+      G__fprinterr(G__serr,"Warning: No CINT symbol table in %s\n",shlfile);
+    }
   }
 
 

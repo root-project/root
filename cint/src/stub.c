@@ -500,9 +500,12 @@ struct G__dictposition *dictpos;
   while(dictpos->var) {
     for(ig15=dictpos->ig15;ig15<dictpos->var->allvar;ig15++) {
       if('p'!=dictpos->var->type[ig15]) {
-	G__fprinterr(G__serr,
-	"Warning: global variable %s specified in stub file. Ignored\n"
-		,dictpos->var->varnamebuf[ig15]);
+	if(G__dispmsg>=G__DISPWARN) {
+	  G__fprinterr(G__serr,
+	       "Warning: global variable %s specified in stub file. Ignored\n"
+		       ,dictpos->var->varnamebuf[ig15]);
+	}
+
       }
     }
     dictpos->var=dictpos->var->next;
@@ -526,8 +529,10 @@ struct G__dictposition *dictpos;
       ifunc=ifunc->next;
     }
 #else
-    G__fprinterr(G__serr,"Warning: class/struct/union %s specified in stub file\n"
-	    ,G__struct.name[tagnum]);
+    if(G__dispmsg>=G__DISPWARN) {
+      G__fprinterr(G__serr,"Warning: class/struct/union %s specified in stub file\n"
+		   ,G__struct.name[tagnum]);
+    }
 #endif
   }
 

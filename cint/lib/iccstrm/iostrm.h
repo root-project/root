@@ -5,7 +5,7 @@
  * header file iostrm.h
  ************************************************************************
  * Description:
- *  Stub file for making iostream library for g++ 3.00
+ *  Stub file for making iostream library for ICC (Intel compiler)
  ************************************************************************
  * Copyright(c) 2001-2002   Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *

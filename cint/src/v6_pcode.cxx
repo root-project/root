@@ -6357,8 +6357,10 @@ G__value *pbuf;
 void G__suspendbytecode() 
 {
   if(G__asm_dbg && G__asm_noverflow) {
-    G__fprinterr(G__serr,"Note: Bytecode compiler suspended(off) and resumed(on)");
-    G__printlinenum();
+    if(G__dispmsg>=G__DISPNOTE) {
+      G__fprinterr(G__serr,"Note: Bytecode compiler suspended(off) and resumed(on)");
+      G__printlinenum();
+    }
   }
   G__asm_noverflow=0;
 }
@@ -6368,8 +6370,10 @@ void G__suspendbytecode()
 void G__resetbytecode() 
 {
   if(G__asm_dbg && G__asm_noverflow) {
-    G__fprinterr(G__serr,"Note: Bytecode compiler reset (off)");
-    G__printlinenum();
+    if(G__dispmsg>=G__DISPNOTE) {
+      G__fprinterr(G__serr,"Note: Bytecode compiler reset (off)");
+      G__printlinenum();
+    }
   }
   G__asm_noverflow=0;
 }
@@ -6383,16 +6387,18 @@ void G__abortbytecode()
 {
   if(G__asm_dbg && G__asm_noverflow) {
 #ifndef G__OLDIMPLEMENTATION1164
-    if(0==G__xrefflag) 
-      G__fprinterr(G__serr,"Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
-	      ,G__asm_noverflow);
-    else
-      G__fprinterr(G__serr,"Note: Bytecode limitation encountered but compiler continuers for Local variable cross referencing");
+    if(G__dispmsg>=G__DISPNOTE) {
+      if(0==G__xrefflag) 
+	G__fprinterr(G__serr,"Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
+		     ,G__asm_noverflow);
+      else
+	G__fprinterr(G__serr,"Note: Bytecode limitation encountered but compiler continuers for Local variable cross referencing");
 #else
-    G__fprinterr(G__serr,"Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
-	    ,G__asm_noverflow);
+      G__fprinterr(G__serr,"Note: Bytecode compiler stops at this line. Enclosing loop or function may be slow %d"
+		   ,G__asm_noverflow);
 #endif
-    G__printlinenum();
+      G__printlinenum();
+    }
   }
 #ifndef G__OLDIMPLEMENTATION1164
   if(0==G__xrefflag) G__asm_noverflow=0;
