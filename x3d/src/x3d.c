@@ -1,4 +1,4 @@
-/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.3 2000/10/15 01:29:48 rdm Exp $ */
+/* @(#)root/x3d:$Name:  $:$Id: x3d.c,v 1.4 2001/05/08 18:11:04 rdm Exp $ */
 /* Author: Mark Spychalla*/
 /*
   Copyright 1992 Mark Spychalla
@@ -884,6 +884,9 @@ int numColors;
       3, 3, 3 for 15 bits).
    */
 
+   /* if this does not work for some reason, replace by more generic code as
+      in TGX11::OpenDisplay().
+   */
    /* settings for 16 bit true color displays */
    int greenshift = 5;
    int redshift   = 6 + greenshift;

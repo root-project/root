@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.4 2001/04/11 15:19:11 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.5 2001/05/07 00:13:50 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -67,12 +67,12 @@ static XWindow_t *gTws;      // gTws: temporary pointer
 const Int_t kBIGGEST_RGB_VALUE = 65535;
 const Int_t kMAXCOL = 1000;
 static struct {
-  Int_t   defined;
-  ULong_t pixel;
-  Float_t red;
-  Float_t green;
-  Float_t blue;
-} gColors[kMAXCOL] = { {0, 0, 1., 1., 1.} };
+  ULong_t  pixel;
+  UShort_t red;
+  UShort_t green;
+  UShort_t blue;
+  Bool_t   defined;
+} gColors[kMAXCOL] = { {0, 65535, 65535, 65535, kFALSE} };
 
 //
 // Primitives Graphic Contexts global for all windows
@@ -297,8 +297,8 @@ TGX11::TGX11(const TGX11 &org)
    int i;
 
    fDisplay         = org.fDisplay;
-   fScreenNumber    = org.fScreenNumber;
    fColormap        = org.fColormap;
+   fScreenNumber    = org.fScreenNumber;
    fHasTTFonts      = org.fHasTTFonts;
    fTextAlignH      = org.fTextAlignH;
    fTextAlignV      = org.fTextAlignV;
@@ -306,6 +306,12 @@ TGX11::TGX11(const TGX11 &org)
    fTextMagnitude   = org.fTextMagnitude;
    fCharacterUpX    = org.fCharacterUpX;
    fCharacterUpY    = org.fCharacterUpY;
+   fDepth           = org.fDepth;
+   fRedDiv          = org.fRedDiv;
+   fGreenDiv        = org.fGreenDiv;
+   fBlueDiv         = org.fBlueDiv;
+   fRedShift        = org.fRedShift;
+   fGreenShift      = org.fGreenShift;
    fDrawMode        = org.fDrawMode;
    fXEvent          = new XEvent;
 
@@ -350,6 +356,61 @@ Bool_t TGX11::Init(void *display)
 
    if (OpenDisplay((Display *) display) == -1) return kFALSE;
    return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TGX11::AllocColor(Colormap cmap, XColor *color)
+{
+   // Allocate color in colormap. If we are on an <= 8 plane machine
+   // we will use XAllocColor. If we are on a >= 15 (15, 16 or 24) plane
+   // true color machine we will calculate the pixel value using:
+   // for 15 and 16 bit true colors have 6 bits precision per color however
+   // only the 5 most significant bits are used in the color index.
+   // Except for 16 bits where green uses all 6 bits. I.e.:
+   //   15 bits = rrrrrgggggbbbbb
+   //   16 bits = rrrrrggggggbbbbb
+   // for 24 bits each r, g and b are represented by 8 bits.
+   //
+   // Since all colors are set with a max of 65535 (16 bits) per r, g, b
+   // we just right shift them by 10, 11 and 10 bits for 16 planes, and
+   // (10, 10, 10 for 15 planes) and by 8 bits for 24 planes.
+   // Returns kFALSE in case color allocation failed.
+
+   if (fRedDiv == -1) {
+      if (XAllocColor(fDisplay, cmap, color))
+         return kTRUE;
+   } else {
+      color->pixel = (color->red   >> fRedDiv)   << fRedShift |
+                     (color->green >> fGreenDiv) << fGreenShift |
+                     (color->blue  >> fBlueDiv);
+      return kTRUE;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+void TGX11::QueryColors(Colormap cmap, XColor *color, Int_t ncolors)
+{
+   // Returns the current RGB value for the pixel in the XColor structure.
+
+   if (fRedDiv == -1) {
+      XQueryColors(fDisplay, cmap, color, ncolors);
+   } else {
+      ULong_t r, g, b;
+      Visual *vis = DefaultVisual(fDisplay, fScreenNumber);
+      for (Int_t i = 0; i < ncolors; i++) {
+         r = (color[i].pixel & vis->red_mask) >> fRedShift;
+         color[i].red = UShort_t(r*kBIGGEST_RGB_VALUE/(vis->red_mask >> fRedShift));
+
+         g = (color[i].pixel & vis->green_mask) >> fGreenShift;
+         color[i].green = UShort_t(g*kBIGGEST_RGB_VALUE/(vis->green_mask >> fGreenShift));
+
+         b = (color[i].pixel & vis->blue_mask);
+         color[i].blue = UShort_t(b*kBIGGEST_RGB_VALUE/vis->blue_mask);
+
+         color[i].flags = DoRed | DoGreen | DoBlue;
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -421,7 +482,8 @@ void TGX11::CloseWindow1()
    if (gCws->buffer) XFreePixmap(fDisplay, gCws->buffer);
 
    if (gCws->new_colors) {
-      XFreeColors(fDisplay, fColormap, gCws->new_colors, gCws->ncolors, 0);
+      if (fRedDiv == -1)
+         XFreeColors(fDisplay, fColormap, gCws->new_colors, gCws->ncolors, 0);
       delete [] gCws->new_colors;
       gCws->new_colors = 0;
    }
@@ -791,9 +853,9 @@ void TGX11::GetRGB(int index, float &r, float &g, float &b)
 {
    // Get rgb values for color "index".
 
-   r = gColors[index].red;
-   g = gColors[index].green;
-   b = gColors[index].blue;
+   r = ((float) gColors[index].red) / ((float) kBIGGEST_RGB_VALUE);
+   g = ((float) gColors[index].green) / ((float) kBIGGEST_RGB_VALUE);
+   b = ((float) gColors[index].blue) / ((float) kBIGGEST_RGB_VALUE);
 }
 
 //______________________________________________________________________________
@@ -863,9 +925,9 @@ Int_t TGX11::OpenDisplay(Display *disp)
    if (DisplayPlanes(fDisplay, fScreenNumber) > 1)
       fColormap = DefaultColormap(fDisplay, fScreenNumber);
 
-   gColors[1].defined = 1; // default foreground
+   gColors[1].defined = kTRUE; // default foreground
    gColors[1].pixel = BlackPixel(fDisplay, fScreenNumber);
-   gColors[0].defined = 1; // default background
+   gColors[0].defined = kTRUE; // default background
    gColors[0].pixel = WhitePixel(fDisplay, fScreenNumber);
 
    // Inquire the the XServer Vendor
@@ -960,6 +1022,35 @@ Int_t TGX11::OpenDisplay(Display *disp)
    fCursors[kArrowRight]  = XCreateFontCursor(fDisplay, XC_arrow);
    fCursors[kCaret]       = XCreateFontCursor(fDisplay, XC_xterm);
    fCursors[kWatch]       = XCreateFontCursor(fDisplay, XC_watch);
+
+   // Setup color information
+   fRedDiv = fGreenDiv = fBlueDiv = fRedShift = fGreenShift = -1;
+   fDepth = DefaultDepth(fDisplay, fScreenNumber);
+
+   Visual *vis = DefaultVisual(fDisplay, fScreenNumber);
+   if (vis->c_class == TrueColor) {
+      int i;
+      for (i = 0; i < int(sizeof(vis->blue_mask)*8); i++)
+         if ((vis->blue_mask >> i) == 1) {
+            fGreenShift = i + 1;
+            fBlueDiv = sizeof(UShort_t)*8 - fGreenShift;
+            break;
+         }
+      for (i = 0; i < int(sizeof(vis->green_mask)*8); i++)
+         if ((vis->green_mask >> (i+fGreenShift)) == 1) {
+            fRedShift = i + 1;
+            fGreenDiv = sizeof(UShort_t)*8 - fRedShift;
+            fRedShift += fGreenShift;
+            break;
+         }
+      for (i = 0; i < int(sizeof(vis->red_mask)*8); i++)
+         if ((vis->red_mask >> (i+fRedShift)) == 1) {
+            fRedDiv = sizeof(UShort_t)*8 - (i+1);
+            break;
+         }
+      //printf("fRedDiv = %d, fGreenDiv = %d, fBlueDiv = %d, fRedShift = %d, fGreenShift = %d\n",
+      //       fRedDiv, fGreenDiv, fBlueDiv, fRedShift, fGreenShift);
+   }
 
    return 0;
 }
@@ -1156,7 +1247,8 @@ void TGX11::RemoveWindow(ULong_t qwid)
    if (gCws->buffer) XFreePixmap(fDisplay, gCws->buffer);
 
    if (gCws->new_colors) {
-      XFreeColors(fDisplay, fColormap, gCws->new_colors, gCws->ncolors, 0);
+      if (fRedDiv == -1)
+         XFreeColors(fDisplay, fColormap, gCws->new_colors, gCws->ncolors, 0);
       delete [] gCws->new_colors;
       gCws->new_colors = 0;
    }
@@ -2441,7 +2533,8 @@ void TGX11::SetOpacity(Int_t percent)
 
    // clean up
    if (tmpc) {
-      XFreeColors(fDisplay, fColormap, tmpc, ntmpc, 0);
+      if (fRedDiv == -1)
+         XFreeColors(fDisplay, fColormap, tmpc, ntmpc, 0);
       delete [] tmpc;
    }
    XDestroyImage(image);
@@ -2486,9 +2579,9 @@ void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
    for (i = 0; i < ncolors; i++) {
       xcol[i].pixel = orgcolors[i];
       xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
-      xcol[i].flags = DoRed || DoGreen || DoBlue;
+      xcol[i].flags = DoRed | DoGreen | DoBlue;
    }
-   XQueryColors(fDisplay, fColormap, xcol, ncolors);
+   QueryColors(fColormap, xcol, ncolors);
 
    UShort_t add = percent * kBIGGEST_RGB_VALUE / 100;
 
@@ -2503,7 +2596,7 @@ void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
       val = xcol[i].blue + add;
       if (val > kBIGGEST_RGB_VALUE) val = kBIGGEST_RGB_VALUE;
       xcol[i].blue = (UShort_t) val;
-      if (!XAllocColor(fDisplay, fColormap, &xcol[i]))
+      if (!AllocColor(fColormap, &xcol[i]))
          Warning("MakeOpaqueColors", "failed to allocate color %hd, %hd, %hd",
                  xcol[i].red, xcol[i].green, xcol[i].blue);
       // assumes that in case of failure xcol[i].pixel is not changed
@@ -2545,16 +2638,17 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
       xcol.green = (unsigned short)( g * kBIGGEST_RGB_VALUE );
       xcol.blue  = (unsigned short)( b * kBIGGEST_RGB_VALUE );
       xcol.flags = DoRed || DoGreen || DoBlue;
-      if (gColors[cindex].defined == 1) {
-         gColors[cindex].defined = 0;
-         XFreeColors(fDisplay, fColormap, &gColors[cindex].pixel, 1, 0);
+      if (gColors[cindex].defined) {
+         gColors[cindex].defined = kFALSE;
+         if (fRedDiv == -1)
+            XFreeColors(fDisplay, fColormap, &gColors[cindex].pixel, 1, 0);
       }
-      if (XAllocColor( fDisplay, fColormap, &xcol ) != 0) {
-         gColors[cindex].defined = 1;
+      if (AllocColor(fColormap, &xcol)) {
+         gColors[cindex].defined = kTRUE;
          gColors[cindex].pixel   = xcol.pixel;
-         gColors[cindex].red     = r;
-         gColors[cindex].green   = g;
-         gColors[cindex].blue    = b;
+         gColors[cindex].red     = xcol.red;
+         gColors[cindex].green   = xcol.green;
+         gColors[cindex].blue    = xcol.blue;
       }
    }
 }
@@ -2834,9 +2928,9 @@ void TGX11::ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int
    for (i = 0; i < ncolors; i++) {
       xcol[i].pixel = orgcolors[i];
       xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
-      xcol[i].flags = DoRed || DoGreen || DoBlue;
+      xcol[i].flags = DoRed | DoGreen | DoBlue;
    }
-   XQueryColors(fDisplay, fColormap, xcol, ncolors);
+   QueryColors(fColormap, xcol, ncolors);
 
    // create RGB arrays and store RGB's for each color and set number of colors
    // (space must be delete by caller)

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.15 2001/04/04 13:33:30 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.16 2001/04/11 17:09:42 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1187,10 +1187,13 @@ Bool_t TGX11::AllocColor(Colormap_t cmap, ColorStruct_t &color)
 
    MapColorStruct(&color, xc);
 
-   int status = XAllocColor(fDisplay, (Colormap)cmap, &xc);
-   color.fPixel = xc.pixel;
+   color.fPixel = 0;
+   if (AllocColor((Colormap)cmap, &xc)) {
+      color.fPixel = xc.pixel;
+      return kTRUE;
+   }
 
-   return status != 0 ? kTRUE : kFALSE;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -1204,7 +1207,11 @@ void TGX11::QueryColor(Colormap_t cmap, ColorStruct_t &color)
 
    xc.pixel = color.fPixel;
 
+   // still very slight dark shift ??
+   //QueryColors((Colormap)cmap, &xc, 1);
+   //printf("1 xc.red = %u, xc.greem = %u, xc.blue = %u\n", xc.red, xc.green, xc.blue);
    XQueryColor(fDisplay, (Colormap)cmap, &xc);
+   //printf("2 xc.red = %u, xc.greem = %u, xc.blue = %u\n", xc.red, xc.green, xc.blue);
 
    color.fRed   = xc.red;
    color.fGreen = xc.green;

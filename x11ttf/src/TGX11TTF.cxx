@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.3 2000/12/13 16:28:49 brun Exp $
+// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.cxx,v 1.4 2001/02/17 11:42:23 rdm Exp $
 // Author: Fons Rademakers   21/11/98
 
 /*************************************************************************
@@ -1228,11 +1228,11 @@ void TGX11TTF::DrawImage(TTChar *c, ULong_t fore, ULong_t back, XImage *xim,
          for (y = 0; y < (int) c->fHeight; y++) {
             for (x = 0; x < (int) charlen; x++, bc++) {
                bc->pixel = XGetPixel(xim, bx + c->fXoff + x, by - c->fAscent + y);
-               bc->flags = DoRed|DoGreen|DoBlue;
+               bc->flags = DoRed | DoGreen | DoBlue;
                if (++dotcnt >= maxdots) break;
             }
          }
-         XQueryColors(fDisplay, fColormap, bcol, dots);
+         QueryColors(fColormap, bcol, dots);
          r = g = b = 0;
          bc = bcol;
          dotcnt = 0;
@@ -1265,18 +1265,18 @@ void TGX11TTF::DrawImage(TTChar *c, ULong_t fore, ULong_t back, XImage *xim,
          col[4].flags = DoRed|DoGreen|DoBlue;
          if (back != (ULong_t) -1) {
             col[3].pixel = back;
-            col[3].flags = DoRed|DoGreen|DoBlue;
-            XQueryColors(fDisplay, fColormap, &col[3], 2);
+            col[3].flags = DoRed | DoGreen | DoBlue;
+            QueryColors(fColormap, &col[3], 2);
             col[0] = col[3];
          } else
-            XQueryColor(fDisplay, fColormap, &col[4]);
+            QueryColors(fColormap, &col[4], 1);
 
          // interpolate between fore and backgound colors
          for (x = 3; x > 0; x--) {
             col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
             col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
             col[x].blue  = (col[4].blue *x + col[0].blue *(4-x)) /4;
-            if (!XAllocColor(fDisplay, fColormap, &col[x])) {
+            if (!AllocColor(fColormap, &col[x])) {
                Warning("DrawImage", "cannot allocate smoothing color");
                col[x].pixel = col[x+1].pixel;
             }
