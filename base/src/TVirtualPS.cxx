@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.2 2002/02/14 18:04:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.3 2002/02/22 08:30:37 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -8,15 +8,14 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
- 
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TVirtualPS is an abstract interface to a Postscript and SVG drivers  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <fstream.h>
- 
+#include "Riostream.h"
 #include "TVirtualPS.h"
 
 TVirtualPS *gVirtualPS = 0;
@@ -70,7 +69,7 @@ void TVirtualPS::PrintStr(const char *str)
       fPrinted = kTRUE;
       return;
    }
- 
+
    if( str[len-1] == '@') {
       if( fLenBuffer ) {
          fStream->write(fBuffer, fLenBuffer);
@@ -82,7 +81,7 @@ void TVirtualPS::PrintStr(const char *str)
       fPrinted = kTRUE;
       return;
    }
- 
+
    if( (len + fLenBuffer ) > kMaxBuffer) {
       fStream->write(fBuffer, fLenBuffer);
       fStream->write("\n",1);

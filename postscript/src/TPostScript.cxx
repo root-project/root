@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.27 2002/03/15 20:45:11 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.28 2002/03/18 16:43:15 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -28,8 +28,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <fstream.h>
 
+#include "Riostream.h"
 #include "TROOT.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
@@ -266,7 +266,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
       }
       fXsize = xrange; fYsize = yrange;
    }
- 
+
    // open OS file
    fStream = new ofstream(fname,ios::out);
    if (fStream == 0) {
@@ -274,7 +274,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
       return;
    }
    gVirtualPS = this;
- 
+
    for (Int_t i=0;i<512;i++) fBuffer[i] = ' ';
    if( fType == 113) {
       fBoundingBox = kFALSE;
@@ -284,7 +284,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
       PrintStr("%!PS-Adobe-2.0@");
       Initialize();
    }
- 
+
    fClipStatus = kFALSE;
    fRange      = kFALSE;
 
@@ -383,10 +383,10 @@ void TPostScript::CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2,
    Int_t iy1 = YtoPS(y1);
 
    Int_t WT = Int_t(0.5+(288/2.54)*gPad->GetAbsWNDC()*
-              fXsize*((x2 - x1)/(gPad->GetX2()-gPad->GetX1())));  
+              fXsize*((x2 - x1)/(gPad->GetX2()-gPad->GetX1())));
    Int_t HT = Int_t(0.5+(288/2.54)*gPad->GetAbsHNDC()*
-              fYsize*((y2 - y1)/(gPad->GetY2()-gPad->GetY1())));  
-   
+              fYsize*((y2 - y1)/(gPad->GetY2()-gPad->GetY1())));
+
    fLastCellRed     = 300;
    fLastCellGreen   = 300;
    fLastCellBlue    = 300;
@@ -833,7 +833,7 @@ void TPostScript::DrawPolyLineNDC(Int_t nn, TPoints *xy)
    }
    if( idx ) MovePS(idx,0);
    if( idy ) MovePS(0,idy);
- 
+
    if (nn > 0 ) {
       if (xy[0].GetX() == xy[n-1].GetX() && xy[0].GetY() == xy[n-1].GetY()) PrintFast(3," cl");
       PrintFast(2," s");
@@ -878,7 +878,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
       WriteInteger(Int_t(markersize));
       PrintFast(40," def /w2 {w 2 div} def /w3 {w 3 div} def");
    }
- 
+
    WriteInteger(XtoPS(x[0]));
    WriteInteger(YtoPS(y[0]));
    if (n == 1) {
@@ -925,7 +925,7 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    if (markerstyle >= 6 && markerstyle <= 19) strcpy(chtemp, " m20");
    if (markerstyle >= 20 && markerstyle <= 31 ) sprintf(chtemp, " m%d", markerstyle);
    if (markerstyle >= 32) strcpy(chtemp, " m20");
- 
+
    // Set the PostScript marker size
    Double_t msize = 0.92*fMarkerSize*TMath::Max(fXsize,fYsize)/20;
    markersize     = CMtoPS(msize);
@@ -1106,7 +1106,7 @@ void TPostScript::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
          }
       }
    }
- 
+
    Int_t jxd0 = XtoPS(xw[0]);
    Int_t jyd0 = YtoPS(yw[0]);
    ixd0 = jxd0;
@@ -1620,7 +1620,7 @@ void TPostScript::MakeGreek()
    PrintStr(" 61 /notequal");
    PrintStr(" 40 /equivalence");
    PrintStr(" 41 /second");
- 
+
    PrintStr(" 97 /approxequal");
    PrintStr(" 98 /congruent");
    PrintStr(" 99 /perpendicular");
@@ -2199,7 +2199,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    const Int_t npiece = 50;
    const Int_t kline  = 80;
    Int_t ifnb[npiece], ifns[npiece], level[npiece], lback[npiece];
-   
+
    // maximum length of a (PostScript) string
    Int_t ideb, n1, n2, ipiece, fnb;
    ideb = 0;
@@ -2450,7 +2450,7 @@ L60:
          }
          goto LOOPEND;
       }
-   
+
    // 3. treat normal text
       else {
          char2[inew] = newtext[iold-1];
