@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.2 2000/11/21 16:05:13 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.3 2001/09/18 21:58:38 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -59,7 +59,7 @@ public:
    virtual ~TBrowser();
 
    void          Add(TObject *obj, const char *name = 0);
-   void          Create(TObject *obj = 0);      // Create this Browser
+   virtual void  Create(TObject *obj = 0);      // Create this Browser
    void          ExecuteDefaultAction(TObject *obj);
    TBrowserImp  *GetBrowserImp() const         { return fImp; }
    TContextMenu *GetContextMenu() const        { return fContextMenu; }
