@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooDMixDecayHadronic.cc,v 1.2 2002/04/03 08:25:58 mwilson Exp $
+ *    File: $Id: RooDMixDecayHadronic.cc,v 1.3 2002/05/31 01:07:41 verkerke Exp $
  * Authors:
  *   MW, Michael Wilson, UC Santa Cruz, mwilson@slac.stanford.edu
  * History:
@@ -114,7 +114,7 @@ Double_t RooDMixDecayHadronic::coefficient(Int_t basisIndex) const
     return ( (R_M2*R_D2)/(4.0*R_DCS) * (xprime*xprime + yprime*yprime) );
   }
 
-  std::cerr << "Unknown basisIndex " << basisIndex << std::endl;
+  cerr << "Unknown basisIndex " << basisIndex << endl;
   assert(0);
   return 0.0;
 }
@@ -177,7 +177,7 @@ Double_t RooDMixDecayHadronic::coefAnalyticalIntegral(Int_t coef, Int_t code) co
     
   }
 
-  std::cerr << "Illegal code in coefAnalyticIntegral: " << code << std::endl;
+  cerr << "Illegal code in coefAnalyticIntegral: " << code << endl;
   assert(0);
   return 0.0;
 }
@@ -338,16 +338,16 @@ void RooDMixDecayHadronic::generateEvent(Int_t code)
     }
   }
   catch(MaxProbError err) {
-    std::cerr << "maximum probability function is less than PDF:" << std::endl;
-    std::cerr << "  maxProb = "    << err.max << "\t";
-    std::cerr << "acceptProb = " << err.accept << "\t";
-    std::cerr << "tval = "       << err.tval << std::endl;
-    std::cerr << "  genMaxLife = " << genMaxLife << "\t";
-    std::cerr << "genMaxCoeff = " << genMaxCoeff << std::endl;
-    std::cerr << "  tau = " << tau << "\t";
-    std::cerr << "t term = " << err.tTerm << "\t";
-    std::cerr << "t^2 term = " << err.t2Term << std::endl;
-    std::cerr << "Exiting now"     << std::endl;
+    cerr << "maximum probability function is less than PDF:" << endl;
+    cerr << "  maxProb = "    << err.max << "\t";
+    cerr << "acceptProb = " << err.accept << "\t";
+    cerr << "tval = "       << err.tval << endl;
+    cerr << "  genMaxLife = " << genMaxLife << "\t";
+    cerr << "genMaxCoeff = " << genMaxCoeff << endl;
+    cerr << "  tau = " << tau << "\t";
+    cerr << "t term = " << err.tTerm << "\t";
+    cerr << "t^2 term = " << err.t2Term << endl;
+    cerr << "Exiting now"     << endl;
     exit(1);
   }
 }

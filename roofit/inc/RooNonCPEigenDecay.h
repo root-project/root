@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooNonCPEigenDecay.rdl,v 1.4 2002/05/02 00:12:05 stark Exp $
+ *    File: $Id: RooNonCPEigenDecay.rdl,v 1.5 2002/05/31 01:07:41 verkerke Exp $
  * Authors:
  *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
  *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
@@ -86,14 +86,14 @@ public:
 
 protected:
 
-  RooRealProxy     _acp;
-  RooRealProxy     _C;
-  RooRealProxy     _delC;
-  RooRealProxy     _S;
-  RooRealProxy     _delS;
-  RooRealProxy     _avgW;
-  RooRealProxy     _delW;
-  RooRealProxy     _t;
+  RooRealProxy     _acp ;
+  RooRealProxy     _avgC ;
+  RooRealProxy     _delC ;
+  RooRealProxy     _avgS ;
+  RooRealProxy     _delS ;
+  RooRealProxy     _avgW ;
+  RooRealProxy     _delW ;
+  RooRealProxy     _t ;
   RooRealProxy     _tau;
   RooRealProxy     _dm;
   RooCategoryProxy _tag;

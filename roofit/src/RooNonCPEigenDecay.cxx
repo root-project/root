@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.9 2002/06/09 00:24:55 stark Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.10 2002/06/13 17:51:18 stark Exp $
  * Authors:
  *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
  *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
@@ -63,9 +63,9 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
     _correctQ ( "correctQ", "correction of rhoQ", this, correctQ ),
     _wQ       ( "wQ",       "mischarge",          this, wQ       ),
     _acp      ( "acp",      "acp",                this, acp      ),
-    _C        ( "C",        "C",                  this, C        ),
+    _avgC        ( "C",        "C",                  this, C        ),
     _delC     ( "delC",     "delC",               this, delC     ),
-    _S        ( "S",        "S",                  this, S        ),
+    _avgS        ( "S",        "S",                  this, S        ),
     _delS     ( "delS",     "delS",               this, delS     ),
     _avgW     ( "avgW",     "Average mistag rate",this, avgW     ),
     _delW     ( "delW",     "Shift mistag rate",  this, delW     ),
@@ -118,9 +118,9 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
     _rhoQ     ( "rhoQ",     "Charge of the rho",  this, rhoQ     ),
     _correctQ ( "correctQ", "correction of rhoQ", this, correctQ ),
     _acp      ( "acp",      "acp",                this, acp      ),
-    _C        ( "C",        "C",                  this, C        ),
+    _avgC        ( "C",        "C",                  this, C        ),
     _delC     ( "delC",     "delC",               this, delC     ),
-    _S        ( "S",        "S",                  this, S        ),
+    _avgS        ( "S",        "S",                  this, S        ),
     _delS     ( "delS",     "delS",               this, delS     ),
     _avgW     ( "avgW",     "Average mistag rate",this, avgW     ),
     _delW     ( "delW",     "Shift mistag rate",  this, delW     ),
@@ -161,9 +161,9 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const RooNonCPEigenDecay& other, const c
     _correctQ ( "correctQ", this, other._correctQ ),
     _wQ       ( "wQ",       this, other._wQ       ),
     _acp      ( "acp",      this, other._acp      ),
-    _C        ( "C",        this, other._C        ),
+    _avgC        ( "C",        this, other._avgC        ),
     _delC     ( "delC",     this, other._delC     ),
-    _S        ( "S",        this, other._S        ),
+    _avgS        ( "S",        this, other._avgS        ),
     _delS     ( "delS",     this, other._delS     ),
     _avgW     ( "avgW",     this, other._avgW     ),
     _delW     ( "delW",     this, other._delW     ),
@@ -197,10 +197,10 @@ Double_t RooNonCPEigenDecay::coefficient( Int_t basisIndex ) const
   Int_t rhoQc = _rhoQ * int(_correctQ);
   assert( rhoQc == 1 || rhoQc == -1 );
 
-  Double_t a_sin_p = _S + _delS;
-  Double_t a_sin_m = _S - _delS;
-  Double_t a_cos_p = _C + _delC;
-  Double_t a_cos_m = _C - _delC;
+  Double_t a_sin_p = _avgS + _delS;
+  Double_t a_sin_m = _avgS - _delS;
+  Double_t a_cos_p = _avgC + _delC;
+  Double_t a_cos_m = _avgC - _delC;
 
   if (basisIndex == _basisExp) {
     if (rhoQc == -1 || rhoQc == +1) 
@@ -257,10 +257,10 @@ Double_t RooNonCPEigenDecay::coefAnalyticalIntegral( Int_t basisIndex,
   // correct for the right/wrong charge...
   Int_t rhoQc = _rhoQ*int(_correctQ);
 
-  Double_t a_sin_p = _S + _delS;
-  Double_t a_sin_m = _S - _delS;
-  Double_t a_cos_p = _C + _delC;
-  Double_t a_cos_m = _C - _delC;
+  Double_t a_sin_p = _avgS + _delS;
+  Double_t a_sin_m = _avgS - _delS;
+  Double_t a_cos_p = _avgC + _delC;
+  Double_t a_cos_m = _avgC - _delC;
 
   switch(code) {
 
@@ -364,10 +364,10 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
     // opposite charge?
     Int_t rhoQc = _rhoQ*int(_correctQ);
 
-    Double_t a_sin_p = _S + _delS;
-    Double_t a_sin_m = _S - _delS;
-    Double_t a_cos_p = _C + _delC;
-    Double_t a_cos_m = _C - _delC;
+    Double_t a_sin_p = _avgS + _delS;
+    Double_t a_sin_m = _avgS - _delS;
+    Double_t a_cos_p = _avgC + _delC;
+    Double_t a_cos_m = _avgC - _delC;
   
     // maximum probability density 
     double a1 = 1 + sqrt(pow(a_cos_m, 2) + pow(a_sin_m, 2));
