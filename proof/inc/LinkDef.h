@@ -1,4 +1,4 @@
-/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.13 2004/03/11 18:06:32 brun Exp $ */
+/* @(#)root/proof:$Name:  $:$Id: LinkDef.h,v 1.14 2004/03/11 18:47:00 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -37,5 +37,7 @@
 #pragma link C++ class TCondor+;
 #pragma link C++ class TCondorSlave+;
 #pragma link C++ class TProofDraw+;
+#pragma link C++ class TProofStats;
+#pragma link C++ class TProofEvent+;
 
 #endif

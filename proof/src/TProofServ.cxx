@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.69 2004/03/17 17:52:23 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.70 2004/04/11 18:18:01 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -618,6 +618,7 @@ void TProofServ::HandleSocketInput()
 
             if (IsMaster()) {
                p = new TProofPlayerRemote(fProof);
+               fProof->SetPlayer(p);
             } else {
                p = new TProofPlayerSlave(fSocket);
             }

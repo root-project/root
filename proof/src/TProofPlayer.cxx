@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.32 2004/03/09 16:44:57 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.33 2004/03/11 11:02:55 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -37,6 +37,8 @@
 #include "TProofDebug.h"
 #include "TTimer.h"
 #include "TMap.h"
+#include "TEnv.h"
+#include "TProofStats.h"
 
 #include "Api.h"
 
@@ -338,6 +340,7 @@ TProofPlayerRemote::TProofPlayerRemote(TProof *proof)
    fOutputLists   = 0;
    fPacketizer    = 0;
    fFeedbackLists = 0;
+   fProofStats    = 0;
 }
 
 //______________________________________________________________________________
@@ -369,6 +372,23 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    delete fOutput;
    fOutput = new TList;
 
+   if(fProof->IsMaster()){
+      Bool_t doHist = (fInput->FindObject("PROOF_StatsHist") != 0);
+      Bool_t doTrace = (fInput->FindObject("PROOF_StatsTrace") != 0);
+
+      if (doHist || doTrace) {
+         Int_t nslaves = fProof->GetListOfSlaves()->GetSize();
+         fProofStats = new TProofStats(nslaves, fOutput, doHist, doTrace);
+         fProofStats->SimpleEvent(TProofEvent::kStart);
+      }
+   } else {
+      if (gEnv->GetValue("Proof.StatsHist", 0)) {
+         fInput->Add(new TNamed("PROOF_StatsHist",""));
+      }
+      if (gEnv->GetValue("Proof.StatsTrace", 0)) {
+         fInput->Add(new TNamed("PROOF_StatsTrace",""));
+      }
+   }
 
    // If the filename does not contain "." assume class is compiled in
    if ( strchr(selector_file,'.') != 0 ) {
@@ -428,7 +448,6 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    fProof->Broadcast(mesg);
 
    PDB(kGlobal,1) Info("Process","Calling Collect");
-   fProof->SetPlayer(this);  // Fix SetPlayer to release current player
    fProof->Collect();
 
    StopFeedback();
@@ -436,7 +455,14 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    PDB(kGlobal,1) Info("Process","Calling Merge Output");
    MergeOutput();
 
-   if (!fProof->IsMaster()) {
+   
+   if (fProof->IsMaster()) {
+      if (fProofStats != 0) {
+         fProofStats->SimpleEvent(TProofEvent::kStop);
+         delete fProofStats;
+         fProofStats=0;
+      }
+   } else {
       TIter next(fOutput);
       TList *output = fSelector->GetOutputList();
       while(TObject* obj = next()) {

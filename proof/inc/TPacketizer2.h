@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.3 2002/10/25 01:23:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.4 2002/11/28 18:38:12 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -35,27 +35,28 @@ class TMessage;
 class TTimer;
 class TTree;
 class TMap;
+class TProofStats;
 
 
 class TPacketizer2 : public TVirtualPacketizer {
 
 private:
-   Long64_t fProcessed;       // number of entries processed
-   TList   *fPackets;         // all processed packets
-   TTree   *fTrace;           // tree with a packet trace
+   Long64_t       fProcessed;    // number of entries processed
+   TList         *fPackets;      // all processed packets
+   TProofStats   *fStat;         // PROOF runtime statistics
 
-   Long64_t fTotalEntries;    // total number of entries to be distributed
+   Long64_t       fTotalEntries; // total number of entries to be distributed
 
-   TList   *fFileNodes;       // nodes with files
-   TList   *fUnAllocated;     // nodes with unallocated files
-   TObject *fUnAllocNext;     // cursor in fUnAllocated
-   TList   *fActive;          // nodes with unfinished files
-   TObject *fActiveNext;      // cursor in fActive
-   TMap    *fSlaveStats;      // slave status, keyed by correspondig TSlave
-   TTimer  *fProgress;        // progress updates timer
+   TList         *fFileNodes;    // nodes with files                             
+   TList         *fUnAllocated;  // nodes with unallocated files                 
+   TObject       *fUnAllocNext;  // cursor in fUnAllocated                       
+   TList         *fActive;       // nodes with unfinished files                  
+   TObject       *fActiveNext;   // cursor in fActive                            
+   TMap          *fSlaveStats;   // slave status, keyed by correspondig TSlave   
+   TTimer        *fProgress;     // progress updates timer                       
 
-   Long64_t fPacketSize;      // global base packet size
-   Int_t    fMaxPerfIdx;      // maximum of our slaves' performance index
+   Long64_t       fPacketSize;   // global base packet size                      
+   Int_t          fMaxPerfIdx;   // maximum of our slaves' performance index     
 
    TPacketizer2();
    TPacketizer2(const TPacketizer2 &);    // no implementation, will generate

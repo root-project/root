@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.20 2003/10/24 00:40:40 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.21 2004/03/11 11:02:55 brun Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -39,6 +39,8 @@
 #include "TProofDebug.h"
 #include "TTimer.h"
 #include "TProofServ.h"
+#include "TProofPlayer.h"
+#include "TProofStats.h"
 
 
 //
@@ -156,6 +158,10 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
    PDB(kPacketizer,1) Info("TPacketizer2", "Enter");
 
    fValid = kTRUE;
+
+   TProof* proof = dynamic_cast<TProof*>(gProof);
+   TProofPlayerRemote* rplayer = dynamic_cast<TProofPlayerRemote*>(proof->GetPlayer());
+   fStat = rplayer->GetProofStats();
 
    fProcessed = 0;
    fMaxPerfIdx = 1;
@@ -543,16 +549,22 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
    if ( slstat->fCurElem != 0 ) {
       Double_t latency, proctime, proccpu;
 
-      slstat->fProcessed += slstat->fCurElem->GetNum();
-      fProcessed += slstat->fCurElem->GetNum();
+      Int_t numev = slstat->fCurElem->GetNum();
+      slstat->fProcessed += numev;
+      fProcessed += numev;
 
       fPackets->Add(slstat->fCurElem);
       (*r) >> latency >> proctime >> proccpu;
       PDB(kPacketizer,2) Info("GetNextPacket","slave-%d (%s): %lld %7.3lf %7.3lf %7.3lf",
                               sl->GetOrdinal(), sl->GetName(),
-                              slstat->fCurElem->GetNum(),
-                              latency, proctime, proccpu);
+                              numev, latency, proctime, proccpu);
 
+      if (fStat != 0) {
+         fStat->PacketEvent(sl->GetName(), slstat->fCurElem->GetFileName(),
+                                 sl->GetOrdinal(), numev, latency, proctime,
+                                 proccpu);
+      }
+         
       slstat->fCurElem = 0;
       if ( fProcessed == fTotalEntries ) {
          HandleTimer(0);   // Send last timer message
