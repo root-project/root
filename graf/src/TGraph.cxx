@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.108 2003/09/03 12:42:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.109 2003/09/08 10:08:39 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2437,7 +2437,9 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
   Double_t vxmax = gPad->PadtoX(gPad->GetUxmax() - dxframe);
   Double_t dyframe = -gPad->AbsPixeltoY(fwidth/2) + gPad->AbsPixeltoY(0);
   Double_t vymin = gPad->GetUymin() + dyframe; //y already in log scale
-
+  vxmin = TMath::Max(vxmin,wmin);
+  vxmax = TMath::Min(vxmax,wmax);
+  
 //*-*-           Draw the histogram with a fill area
 
   gxwork  = new Double_t[2*npoints+10];
