@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.24 2003/12/15 09:43:25 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.25 2004/02/18 16:17:33 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -1374,14 +1374,6 @@ void TGTextEdit::ScrollCanvas(Int_t new_top, Int_t direction)
 }
 
 //______________________________________________________________________________
-void TGTextEdit::SetFocus()
-{
-   // Gives the keyboard input focus to this text edit widget.
-
-   gVirtualX->SetInputFocus(fCanvas->GetId());
-}
-
-//______________________________________________________________________________
 void TGTextEdit::DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
    // Redraw the text edit widget.
@@ -1620,7 +1612,7 @@ void TGTextEdit::SavePrimitive(ofstream &out, Option_t *)
    TGText *txt = GetText();
    Bool_t fromfile = strlen(txt->GetFileName()) ? kTRUE : kFALSE;
    char fn[kMAXPATHLEN];
-   
+
    if (fromfile) {
       const char *filename = txt->GetFileName();
       sprintf(fn, gSystem->ExpandPathName(gSystem->UnixPathName(filename)));

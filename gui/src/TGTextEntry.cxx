@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.20 2004/02/18 16:17:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.21 2004/04/15 10:13:41 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1543,14 +1543,6 @@ void TGTextEntry::UpdateOffset()
    else if (fAlignment == kTextRight)   fOffset = w - textWidth - 1;
    else if (fAlignment == kTextCenterX) fOffset = (w - textWidth)/2;
    else if (fAlignment == kTextLeft)    fOffset = 0;
-}
-
-//______________________________________________________________________________
-void TGTextEntry::SetFocus()
-{
-   // Gives the keyboard input focus to this text entry widget.
-
-   gVirtualX->SetInputFocus(fId);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.12 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.13 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -147,7 +147,7 @@ public:
    virtual  void        SetEchoMode(EEchoMode mode = kNormal);
             void        SetEdited(Bool_t flag = kTRUE) { fEdited = flag; }
             void        SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }
-   virtual  void        SetFocus();
+   virtual  void        SetFocus() { RequestFocus(); }
    virtual  void        SetFont(FontStruct_t font);
             void        SetFont(const char* fontName);
    virtual  void        SetFrameDrawn(Bool_t flag = kTRUE);
