@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.90 2003/04/04 00:39:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.91 2003/04/11 11:48:10 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -660,8 +660,6 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
    if (!temp) {
       temp  = fFunctions->FindObject(name);
       where = fFunctions;
-   }
-   if (!temp) {
    }
    if (!temp) {
       temp  = fCanvases->FindObject(name);
