@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.28 2003/12/11 10:37:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.29 2004/01/18 12:31:54 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -289,26 +289,32 @@ Bool_t TGeoArb8::Contains(Double_t *point) const
    // compute intersection between Z plane containing point and the arb8
    Double_t poly[8];
 //   memset(&poly[0], 0, 8*sizeof(Double_t));
-   SetPlaneVertices(point[2], &poly[0]);
+   //SetPlaneVertices(point[2], &poly[0]);
+   Double_t cf = 0.5*(fDz-point[2])/fDz;
+   Int_t i,j;
+   for (Int_t i=0; i<4; i++) {
+      poly[2*i]   = fXY[i+4][0]+cf*(fXY[i][0]-fXY[i+4][0]);
+      poly[2*i+1] = fXY[i+4][1]+cf*(fXY[i][1]-fXY[i+4][1]);
+   }
    // find the intersections of Y=Ypoint with this poly.
    Double_t segx[4];
    Double_t x1, x2, y1, y2;
    Int_t npts = 0;
-   Int_t i;
    for (i=0; i<4; i++) {
-      y1 = poly[2*(i%4)+1];
-      y2 = poly[2*((i+1)%4)+1];
+      j  = (i+1)%4;
+	  y1 = poly[2*i+1];
+      y2 = poly[2*j+1];
 //      printf("check Yp=%f against y1=%f y2=%f\n", point[1], y1, y2);
       if ((point[1]-y1)*(y2-point[1])<0) continue;
-      x1 = poly[2*(i%4)];
-      x2 = poly[2*((i+1)%4)];
+      x1 = poly[2*i];
+      x2 = poly[2*j];
 //      printf("    x1=%f  x2=%f\n", x1,x2);
       // check if point is on the line connecting points 1-2
       if (y1 == y2) {
          if ((point[0]<x1) || (point[0]>x2)) return kFALSE;
          return kTRUE;
       }
-      Double_t cf = (point[1]-y1)/(y2-y1);
+      cf = (point[1]-y1)/(y2-y1);
       segx[npts++] = x1+cf*(x2-x1);
 //      printf("   x1+cf*(x2-x1) : %f+%f*(%f-%f)=%f\n",x1, cf, x2, x1, x1+cf*(x2-x1));
       // sort intersection points by X
@@ -344,26 +350,29 @@ Double_t TGeoArb8::DistToPlane(Double_t *point, Double_t *dir, Int_t ipl, Bool_t
 // ipl=3 : points 3,7,0,4
    Double_t xa,xb,xc,xd;
    Double_t ya,yb,yc,yd;
+   Int_t j = (ipl+1)%4;
    xa=fXY[ipl][0];
    ya=fXY[ipl][1];
    xb=fXY[ipl+4][0];
    yb=fXY[ipl+4][1];
-   xc=fXY[(ipl+1)%4][0];
-   yc=fXY[(ipl+1)%4][1];
-   xd=fXY[4+(ipl+1)%4][0];
-   yd=fXY[4+(ipl+1)%4][1];
-   Double_t tx1=0.5*(xb-xa)/fDz;
-   Double_t ty1=0.5*(yb-ya)/fDz;
-   Double_t tx2=0.5*(xd-xc)/fDz;
-   Double_t ty2=0.5*(yd-yc)/fDz;
-   Double_t xs1=xa+tx1*(fDz+point[2]);
-   Double_t ys1=ya+ty1*(fDz+point[2]);
-   Double_t xs2=xc+tx2*(fDz+point[2]);
-   Double_t ys2=yc+ty2*(fDz+point[2]);
-   Double_t dxs=xs2-xs1;
-   Double_t dys=ys2-ys1;
-   Double_t dtx=tx2-tx1;
-   Double_t dty=ty2-ty1;
+   xc=fXY[j][0];
+   yc=fXY[j][1];
+   xd=fXY[4+j][0];
+   yd=fXY[4+j][1];
+   Double_t dz2 =0.5/fDz;
+   Double_t tx1 =dz2*(xb-xa);
+   Double_t ty1 =dz2*(yb-ya);
+   Double_t tx2 =dz2*(xd-xc);
+   Double_t ty2 =dz2*(yd-yc);
+   Double_t dzp =fDz+point[2];
+   Double_t xs1 =xa+tx1*dzp;
+   Double_t ys1 =ya+ty1*dzp;
+   Double_t xs2 =xc+tx2*dzp;
+   Double_t ys2 =yc+ty2*dzp;
+   Double_t dxs =xs2-xs1;
+   Double_t dys =ys2-ys1;
+   Double_t dtx =tx2-tx1;
+   Double_t dty =ty2-ty1;
    Double_t a=(dtx*dir[1]-dty*dir[0]+(tx1*ty2-tx2*ty1)*dir[2])*dir[2];
    Double_t b=dxs*dir[1]-dys*dir[0]+(dtx*point[1]-dty*point[0]+ty2*xs1-ty1*xs2
               +tx1*ys2-tx2*ys1)*dir[2];
