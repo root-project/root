@@ -42,16 +42,13 @@ TVirtualPadEditor *TVirtualPadEditor::LoadEditor()
 
       TPluginHandler *h;
       if (fgEditorName.Length() == 0) 
-         fgEditorName = gEnv->GetValue("Root.PadEditor","GedOld");
+         fgEditorName = gEnv->GetValue("Root.PadEditor","Ged");
          h = gROOT->GetPluginManager()->FindHandler("TVirtualPadEditor",
                                                      fgEditorName.Data());
       if (h) {
          if (h->LoadPlugin() == -1)
             return 0;
-         if (fgEditorName == "GedOld")   
-            fgPadEditor = (TVirtualPadEditor*) h->ExecPlugin(0);
-         else
-            fgPadEditor = (TVirtualPadEditor*) h->ExecPlugin(1, gPad);
+         fgPadEditor = (TVirtualPadEditor*) h->ExecPlugin(1, gPad);
       }
 
    return fgPadEditor;

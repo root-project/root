@@ -25,6 +25,7 @@
 #include "TVirtualPadEditor.h"
 #endif
 
+class TCanvas;
 class TControlBar;
 
 class TPadEditorOld : public TVirtualPadEditor {
@@ -33,7 +34,7 @@ protected:
    TControlBar   *fControlBar;  // control bar
    
 public:
-   TPadEditorOld();
+   TPadEditorOld(TCanvas* canvas = 0);
    virtual      ~TPadEditorOld();
 
    void          Build();

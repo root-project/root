@@ -33,7 +33,7 @@
 ClassImp(TPadEditorOld)
 
 //______________________________________________________________________________
-TPadEditorOld::TPadEditorOld() : TVirtualPadEditor() 
+TPadEditorOld::TPadEditorOld(TCanvas*) : TVirtualPadEditor() 
 {
    // Create the old Editor 
 
