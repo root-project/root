@@ -175,14 +175,19 @@ pattern = TChain
 icon = chain_s.xpm chain_t.xpm
 action = ->Browse()
 
-[root/tbranch]
-pattern = TBranch*
+[root/tbranchelement-folder]
+pattern = TBranchElement-folder
+icon = branch_folder_s.xpm branch_folder_t.xpm
+action = ->Browse()
+
+[root/tbranchelement-leaf]
+pattern = TBranchElement-leaf
 icon = leaf_s.xpm leaf_t.xpm
 action = ->Browse()
 
-[root/tbranchelement]
-pattern = TBranchElement*
-icon = leaf_s.xpm leaf_t.xpm
+[root/tbranch]
+pattern = TBranch*
+icon = branch_folder_s.xpm branch_folder_t.xpm
 action = ->Browse()
 
 [root/tleaf]

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.21 2002/09/18 13:12:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.23 2002/10/12 10:49:38 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -310,7 +310,7 @@ void TRootIconBox::GetObjPictures(const TGPicture **pic, const TGPicture **spic,
    // Retrieve icons associated with class "name". Association is made
    // via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
 
-   if(fCachedPicName==name) {
+   if (fCachedPicName == name) {
       *pic = fLargeCachedPic;
       *spic = fSmallCachedPic;
       return;

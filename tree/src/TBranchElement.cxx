@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.92 2002/10/11 06:54:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.93 2002/10/18 16:32:39 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -868,6 +868,17 @@ Int_t TBranchElement::GetEntry(Int_t entry, Int_t getall)
       }
    }
    return nbytes;
+}
+
+//______________________________________________________________________________
+const char *TBranchElement::GetIconName() const
+{
+   // Return icon name depending on type of branch element.
+
+   if (IsFolder())
+      return "TBranchElement-folder";
+   else
+      return "TBranchElement-leaf";
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.24 2002/04/14 14:38:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.25 2002/07/09 06:25:19 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -47,7 +47,7 @@ protected:
     TStreamerInfo      *fInfo;          //!Pointer to StreamerInfo
     char               *fObject;        //!Pointer to object at *fAddress
     char               *fBranchPointer; //!Pointer to object for a master branch
-    
+
 public:
     TBranchElement();
     TBranchElement(const char *name, TStreamerInfo *sinfo, Int_t id, char *pointer, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t btype=0);
@@ -66,6 +66,7 @@ public:
     virtual const char  *GetClassName() const {return fClassName.Data();}
     virtual const char  *GetClonesName() const {return fClonesName.Data();}
             Int_t    GetEntry(Int_t entry=0, Int_t getall = 0);
+            const char  *GetIconName() const;
             Int_t    GetID() const {return fID;}
     TStreamerInfo   *GetInfo();
     char    *GetObject() const { return fObject; };
