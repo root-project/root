@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.66 2002/01/28 17:33:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.67 2002/02/23 09:45:25 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -63,7 +63,8 @@
 #include "config.h"
 #endif
 
-#include <string.h>
+#include <string>
+#include <map>
 #include <stdlib.h>
 
 #include "Riostream.h"
@@ -171,6 +172,42 @@ static void CleanUpROOTAtExit()
    }
 }
 
+//______________________________________________________________________________
+namespace ROOT {
+   class MapTypeToTClass {
+     // This wrapper class allow to avoid putting #include <map> in the
+     // TROOT.h header file.
+   public:
+      typedef std::map<std::string,TClass*> IdMap_t;
+      typedef IdMap_t::key_type                   key_type;
+      typedef IdMap_t::const_iterator             const_iterator;
+      typedef IdMap_t::size_type                  size_type;
+#ifdef R__WIN32
+     // Window's std::map does NOT defined mapped_type
+      typedef TClass*                             mapped_type;
+#else
+      typedef IdMap_t::mapped_type                mapped_type;
+#endif
+
+   private:
+      IdMap_t fMap;
+
+   public:
+      IdMap_t *operator->() { return &fMap; }
+      mapped_type &operator[](const key_type &key) { return fMap[key]; }
+
+      size_type erase(const key_type &key) { return fMap.erase(key); }
+      const_iterator end() const { return fMap.end(); }
+      const_iterator find(const key_type &key) const { return fMap.find(key); }
+      void printall() {
+         cerr << "Printing the typeinfo map in TROOT\n";
+         for (const_iterator iter = fMap.begin(); iter != fMap.end(); iter++ ) {
+            cerr << "Key: " << iter->first.c_str()
+                 << " points to " << iter->second << endl;
+         }
+      }
+   };
+}
 
 TROOT      *gROOT;         // The ROOT of EVERYTHING
 TRandom    *gRandom;       // Global pointer to random generator
@@ -280,6 +317,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fSpecials    = new TList;
    fBrowsables  = new TList;
    fCleanups    = new TList;
+   fIdMap       = new IdMap_t;
    fStreamerInfo= new TObjArray(100);
    fMessageHandlers = new TList;
 
@@ -439,6 +477,18 @@ TROOT::~TROOT()
       TStorage::PrintStatistics();
 
       gROOT = 0;
+   }
+}
+
+//______________________________________________________________________________
+void TROOT::AddClass(TClass *cl)
+{
+   // Add a class to the list and map of classes.
+
+   if (!cl) return;
+   GetListOfClasses()->Add(cl);
+   if (cl->GetTypeInfo()) {
+      (*fIdMap)[cl->GetTypeInfo()->name()] = cl;
    }
 }
 
@@ -706,6 +756,57 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
       if (!ncl->IsZombie()) return ncl;
       delete ncl;
    }
+   return 0;
+}
+
+//______________________________________________________________________________
+TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
+{
+//*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*      =================================
+
+   if (!GetListOfClasses())    return 0;
+
+#ifdef DEBUG_ID
+   cerr << "While TROOT searches for " << typeinfo.name() << " at " << &typeinfo << endl;
+   fIdMap->printall();
+#endif
+   IdMap_t::const_iterator iter = fIdMap->find(typeinfo.name());
+   TClass *cl = 0;
+   if (iter != fIdMap->end()) cl = iter->second;
+
+   if (cl) {
+      if (cl->IsLoaded()) return cl;
+      //we may pass here in case of a dummy class created by TStreamerInfo
+      load = kTRUE;
+   } else {
+     // Note we might need support for typedefs and simple types!
+
+     //      TDataType *objType = gROOT->GetType(name, load);
+     //if (objType) {
+     //    const char *typdfName = objType->GetTypeName();
+     //    if (typdfName && strcmp(typdfName, name)) {
+     //       cl = GetClass(typdfName, load);
+     //       return cl;
+     //    }
+     // }
+   }
+
+   if (!load) return 0;
+
+   VoidFuncPtr_t dict = TClassTable::GetDict(typeinfo);
+   if (dict) {
+      (dict)();
+      return GetClass(typeinfo);
+   }
+   if (cl) return cl;
+
+   //last attempt. Look in CINT list of all (compiled+interpreted) classes
+   //   if (gInterpreter->CheckClassInfo(name)) {
+   //      TClass *ncl = new TClass(name, 1, 0, 0, 0, -1, -1);
+   //      if (!ncl->IsZombie()) return ncl;
+   //      delete ncl;
+   //   }
    return 0;
 }
 
@@ -1338,6 +1439,18 @@ void TROOT::Proof(const char *cluster)
    if (gROOT->LoadClass("TTreePlayer","TreePlayer")) return;
 
    ProcessLine(Form("new TProof(\"%s\");", cluster));
+}
+
+//______________________________________________________________________________
+void TROOT::RemoveClass(TClass *oldcl)
+{
+   // Add a class to the list and map of classes
+
+   if (!oldcl) return;
+   GetListOfClasses()->Remove(oldcl);
+   if (oldcl->GetTypeInfo()) {
+      fIdMap->erase(oldcl->GetTypeInfo()->name());
+   }
 }
 
 //______________________________________________________________________________

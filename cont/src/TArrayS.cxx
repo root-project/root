@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayS.cxx,v 1.4 2002/01/08 22:13:00 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayS.cxx,v 1.5.4.1 2002/02/25 18:03:31 rdm Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -156,11 +156,3 @@ void TArrayS::Streamer(TBuffer &b)
    }
 }
 
-//_______________________________________________________________________
-TBuffer &operator>>(TBuffer &buf, TArrayS *&obj)
-{
-   // Read TArrayS object from buffer. Declared in ClassDef.
-
-   obj = (TArrayS *) TArray::ReadArray(buf, TArrayS::Class());
-   return buf;
-}

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayC.h,v 1.4 2001/02/28 07:51:22 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayC.h,v 1.5 2002/04/04 10:28:35 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -52,6 +52,14 @@ public:
 
    ClassDef(TArrayC,1)  //Array of chars
 };
+
+inline TBuffer &operator>>(TBuffer &buf, TArrayC *&obj)
+{
+   // Read TArrayC object from buffer.
+
+   obj = (TArrayC *) TArray::ReadArray(buf, TArrayC::Class());
+   return buf;
+}
 
 inline Char_t TArrayC::At(Int_t i) const
 {

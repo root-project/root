@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.17 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.18 2002/04/19 12:52:48 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -190,7 +190,7 @@ static TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
    if (!gInterpreter) return 0;
 
    Long_t faddr = 0;
-   if (cl->GetDeclFileLine() == -1) {
+   if (!cl->IsLoaded()) { 
       // interpreted class
       G__MethodInfo meth;
       long offset;
@@ -234,7 +234,7 @@ static TMethod *GetMethod(TClass *cl, const char *method, const char *params)
    if (!gInterpreter) return 0;
 
    Long_t faddr = 0;
-   if (cl->GetDeclFileLine() == -1) {
+   if (!cl->IsLoaded()) {
       // interpreted class
       G__CallFunc  func;
       long         offset;
