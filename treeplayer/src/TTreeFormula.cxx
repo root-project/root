@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.97 2002/08/01 21:33:48 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.98 2002/08/02 21:09:44 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -650,7 +650,6 @@ public:
                        TStreamerElement* element = &gFakeClonesElem,
                        Bool_t top = kFALSE) :
       TFormLeafInfo(classptr,offset,element),fTop(top) {};
-   TFormLeafInfoClones() : fTop(kFALSE) {};
    TFormLeafInfoClones(const TFormLeafInfoClones& orig) : TFormLeafInfo(orig) {
       fTop = orig.fTop;
    };
