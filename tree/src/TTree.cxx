@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.204 2004/08/04 06:15:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.205 2004/08/20 14:59:50 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -460,6 +460,8 @@ TTree::~TTree()
    }
    
    delete fTreeIndex;
+
+   delete fBranchRef;
    
    fDirectory  = 0; //must be done after the destruction of friends
 }
