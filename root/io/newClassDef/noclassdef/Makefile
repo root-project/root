@@ -39,7 +39,7 @@ endif
 endif
 endif
 
-ifeq ($(ARCH),win32)
+ifeq ($(PLATFORM),win32)
 CXXFLAGS += /TP /GX 
 LIBSFORLINK = $(LIBS)
 CLDFLAGS := /link $(LDFLAGS) -debug

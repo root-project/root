@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 using std::vector;
+#include <string>
 // #include "TObject.h"
 
 class TBuffer;
@@ -69,6 +70,9 @@ public:
    int virt;
    vector<int> list;
    vector<RootPCfix*> list2;
+   typedef double value;
+   value vv;
+   std::string s;
    virtual ~RootPCvirt() {};
    void Print() {
      RootPCellID::Print();
@@ -101,9 +105,13 @@ public:
 
 template <class T> class RootPCtempObj : public RootPCellID {
 public:
-   RootPCtempObj() : RootPCellID("none",0) {}
-   RootPCtempObj(T n) :  RootPCellID("template",-11) {}
-   T temp;
+   RootPCtempObj() : RootPCellID("none",0),temp(0),temp2(0)  {}
+   RootPCtempObj(T n) :  RootPCellID("template",-11),temp(0),temp2(0) {}
+   RootPCtempObj(const RootPCtempObj &) : RootPCellID("none",0),temp(),temp2()  {}
+
+   T *temp; //!
+   typedef T *value;
+   value temp2; //!
    void Print() {
      RootPCellID::Print();
      //std::cout  << "templated \t" << temp << std::endl;
