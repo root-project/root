@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.1.1.6 2001/04/13 13:06:11 fisyak Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.11 2001/05/08 09:17:03 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -511,9 +511,12 @@ void TObjArray::SetLast(Int_t last)
    // Set index of last object in array, effectively truncating the
    // array. Use carefully since whenever last position has to be
    // recalculated, e.g. after a Remove() or Sort() it will be reset
-   // to the last non-empty slot.
+   // to the last non-empty slot. If last is -2 this will force the
+   // recalculation of the last used slot.
 
-   if (BoundsOk("SetLast", last))
+   if (last == -2)
+      fLast = -2;
+   else if (BoundsOk("SetLast", last))
       fLast = last - fLowerBound;
 }
 

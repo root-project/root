@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.7 2001/05/08 09:17:03 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.h,v 1.8 2001/05/08 14:21:36 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -130,16 +130,17 @@ inline Bool_t TObjArray::BoundsOk(const char *where, Int_t at) const
 inline TObject *&TObjArray::operator[](Int_t at)
 {
    int j = at-fLowerBound;
-   if (j>=0 && j<fSize) return fCont[j];
+   if (j >= 0 && j < fSize) return fCont[j];
    BoundsOk("operator[]", at);
    fLast = -2; // invalidate fLast since the result may be used as an lvalue
    return fCont[0];
 }
+
 inline TObject *TObjArray::At(Int_t i) const
 {
    // Return the object at position i. Returns 0 if i is out of bounds.
    int j = i-fLowerBound;
-   if (j >= 0 && j< fSize) return fCont[j];
+   if (j >= 0 && j < fSize) return fCont[j];
    BoundsOk("At", i);
    return 0;
 }
