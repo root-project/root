@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.20 2002/04/06 14:55:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.21 2002/05/07 16:46:23 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -71,7 +71,7 @@ TBranchObject::TBranchObject(const char *name, const char *classname, void *addo
    SetName(name);
    SetTitle(name);
    fCompress = compress;
-   if (compress == -1) {
+   if (compress == -1 && gTree->GetDirectory()) {
       TFile *bfile = gTree->GetDirectory()->GetFile();
       if (bfile) fCompress = bfile->GetCompressionLevel();
    }
