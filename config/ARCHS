@@ -33,6 +33,7 @@ sgikcc               for SGI IRIX 6.x KCC
 sgiegcs              for SGI IRIX 6.x egcs 1.1.x
 sgin32egcs           for SGI IRIX 6.4 egcs 1.1.x using n32 ABI
 aix                  for AIX 4.x xlC
+aix5                 for AIX 5.x xlC
 aixegcs              for AIX 4.x egcs 1.1.x
 lynxos               for LynxOS with gcc
 macosx               for MacOS X with cc

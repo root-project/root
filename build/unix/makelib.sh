@@ -27,16 +27,23 @@ EXTRA=$8
 rm -f $LIB
 
 if [ $PLATFORM = "aix" ]; then
+   makeshared="/usr/ibmcxx/bin/makeC++SharedLib"
+fi
+if [ $PLATFORM = "aix5" ]; then
+   makeshared="/usr/vacpp/bin/makeC++SharedLib"
+fi
+
+if [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
    if [ $LD = "xlC" ]; then
       if [ $LIB = "lib/libCint.a" ]; then
-         echo /usr/ibmcxx/bin/makeC++SharedLib -o $LIB -p 0 $OBJS -Llib $EXTRA
-         /usr/ibmcxx/bin/makeC++SharedLib -o $LIB -p 0 $OBJS -Llib $EXTRA
+         echo $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA
+         $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA
       elif [ $LIB = "lib/libCore.a" ]; then
-         echo /usr/ibmcxx/bin/makeC++SharedLib -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint
-         /usr/ibmcxx/bin/makeC++SharedLib -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint
+         echo $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint
+         $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint
       else
-         echo /usr/ibmcxx/bin/makeC++SharedLib -o $LIB -p 0 $OBJS -Llib $EXTRA -lCore -lCint
-         /usr/ibmcxx/bin/makeC++SharedLib -o $LIB -p 0 $OBJS -Llib $EXTRA -lCore -lCint
+         echo $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCore -lCint
+         $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCore -lCint
       fi
    fi
 elif [ $PLATFORM = "alpha" ] && [ $LD = "cxx" ]; then

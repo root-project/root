@@ -51,7 +51,18 @@ SOFLAGS       = -fPIC -shared
 endif
 
 ifeq ($(ARCH),aix)
-# IBM AIX
+# IBM AIX xlC 4.x
+CXX           = xlC
+CXXFLAGS      = -O
+LD            = xlC
+LDFLAGS       = -O
+SOFLAGS       =
+ROOTLIBS     := $(shell root-config --nonew --libs)
+ROOTGLIBS    := $(shell root-config --nonew --glibs)
+endif
+
+ifeq ($(ARCH),aix5)
+# IBM AIX xlC 5.x
 CXX           = xlC
 CXXFLAGS      = -O
 LD            = xlC
@@ -512,6 +523,10 @@ ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(EVENTSO) \
 		   $(LIBS) -p 0 $(EVENTO)
 else
+ifeq ($(ARCH),aix5)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $(EVENTSO) \
+		   $(LIBS) -p 0 $(EVENTO)
+else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
 # a shared library. One must use ld instead.
@@ -535,6 +550,7 @@ ifeq ($(ARCH),win32)
 		   $(OutPutOpt)$@
 else
 		$(LD) $(SOFLAGS) $(LDFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
+endif
 endif
 endif
 endif
@@ -603,6 +619,9 @@ $(HELLOSO):     $(HELLOO)
 ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(HELLOSO) $(LIBS) -p 0 $(HELLOO)
 else
+ifeq ($(ARCH),aix5)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $(HELLOSO) $(LIBS) -p 0 $(HELLOO)
+else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
 # a shared library. One must use ld instead.
@@ -624,11 +643,15 @@ endif
 endif
 endif
 endif
+endif
 
 Aclock:         $(ACLOCKSO)
 $(ACLOCKSO):    $(ACLOCKO)
 ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(ACLOCKSO) $(LIBS) -p 0 $(ACLOCKO)
+else
+ifeq ($(ARCH),aix5)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $(ACLOCKSO) $(LIBS) -p 0 $(ACLOCKO)
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
@@ -651,11 +674,15 @@ endif
 endif
 endif
 endif
+endif
 
 Tetris:         $(TETRISSO)
 $(TETRISSO):    $(TETRISO)
 ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(TETRISSO) $(GLIBS) -p 0 $(TETRISO)
+else
+ifeq ($(ARCH),aix5)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $(TETRISSO) $(GLIBS) -p 0 $(TETRISO)
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
@@ -678,10 +705,14 @@ endif
 endif
 endif
 endif
+endif
 
 $(TBENCHSO):    $(TBENCHO)
 ifeq ($(ARCH),aix)
 		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(TBENCHSO) $(GLIBS) -p 0 $(TBENCHO)
+else
+ifeq ($(ARCH),aix5)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $(TBENCHSO) $(GLIBS) -p 0 $(TBENCHO)
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
@@ -704,6 +735,7 @@ endif
 endif
 endif
 endif
+endif
 
 clean:
 		@rm -f $(OBJS) core
@@ -722,32 +754,56 @@ MainEvent.$(ObjSuf): Event.h
 
 EventDict.$(SrcSuf): Event.h EventLinkDef.h
 	@echo "Generating dictionary $@..."
+ifeq ($(ARCH),aix5)
+	@(export LIBPATH=$(LD_LIBRARY_PATH) && rootcint -f $@ -c $^)
+else
 	@rootcint -f $@ -c $^
+endif
 
 Hello.$(ObjSuf): Hello.h
 HelloDict.$(SrcSuf): Hello.h
 	@echo "Generating dictionary $@..."
+ifeq ($(ARCH),aix5)
+	@(export LIBPATH=$(LD_LIBRARY_PATH) && rootcint -f $@ -c $^)
+else
 	@rootcint -f $@ -c $^
+endif
 
 Aclock.$(ObjSuf): Aclock.h
 AclockDict.$(SrcSuf): Aclock.h
 	@echo "Generating dictionary $@..."
+ifeq ($(ARCH),aix5)
+	@(export LIBPATH=$(LD_LIBRARY_PATH) && rootcint -f $@ -c $^)
+else
 	@rootcint -f $@ -c $^
+endif
 
 Tetris.$(ObjSuf): Tetris.h
 TetrisDict.$(SrcSuf): Tetris.h
 	@echo "Generating dictionary $@..."
+ifeq ($(ARCH),aix5)
+	@(export LIBPATH=$(LD_LIBRARY_PATH) && rootcint -f $@ -c $^)
+else
 	@rootcint -f $@ -c $^
+endif
 
 TBench.$(ObjSuf): TBench.h
 TBenchDict.$(SrcSuf): TBench.h benchLinkDef.h
 	@echo "Generating dictionary $@..."
+ifeq ($(ARCH),aix5)
+	@(export LIBPATH=$(LD_LIBRARY_PATH) && rootcint -f $@ -c $^)
+else
 	@rootcint -f $@ -c $^
+endif
 
 guiviewer.$(ObjSuf): guiviewer.h
 guiviewerDict.$(SrcSuf): guiviewer.h guiviewerLinkDef.h
 	@echo "Generating dictionary $@..."
+ifeq ($(ARCH),aix5)
+	@(export LIBPATH=$(LD_LIBRARY_PATH) && rootcint -f $@ -c $^)
+else
 	@rootcint -f $@ -c $^
+endif
 
 .$(SrcSuf).$(ObjSuf):
 	$(CXX) $(CXXFLAGS) -c $<

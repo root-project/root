@@ -41,7 +41,7 @@ hpuxegcs)
    auxlibs="-lm -ldld"
    auxglibs=${auxlibs}
    ;;
-aix)
+aix|aix5)
    # IBM AIX
    auxcflags="-qnoro -qnoroconst -qmaxmem=-1"
    auxlibs=
