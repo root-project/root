@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.3 2000/10/22 19:21:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.h,v 1.4 2000/10/27 16:28:38 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -53,8 +53,8 @@ class TQObject {
 friend class TQConnection;
 
 protected:
-   TList   *fListOfSignals;       // list of signals from this object
-   TList   *fListOfConnections;   // list of connections to this object
+   TList   *fListOfSignals;       //! list of signals from this object
+   TList   *fListOfConnections;   //! list of connections to this object
 
    TList   *GetListOfClassSignals() const;
    TList   *GetListOfSignals() const { return fListOfSignals; }
@@ -149,7 +149,7 @@ public:
 
    static void    LoadRQ_OBJECT();
 
-   ClassDef(TQObject,0) //Base class for object communication mechanism
+   ClassDef(TQObject,1) //Base class for object communication mechanism
 };
 
 R__EXTERN void *gTQSender;   // the latest sender object
