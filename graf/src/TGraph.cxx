@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.72 2002/07/15 11:01:19 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.73 2002/07/15 15:02:23 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -327,6 +327,143 @@ TGraph::TGraph(const TH1 *h)
    SetTitle(h->GetTitle());   
 }
          
+
+//______________________________________________________________________________
+TGraph::TGraph(const TF1 *f, Option_t *option)
+       : TNamed("Graph","Graph"), TAttLine(), TAttFill(1,1001), TAttMarker()
+{
+// Graph constructor importing its parameters from the TF1 object passed as argument
+// if option =="" (default), a TGraph is created with points computed
+//                at the fNpx points of f.
+// if option =="d", a TGraph is created with points computed with the derivatives
+//                at the fNpx points of f.
+// if option =="i", a TGraph is created with points computed with the integral
+//                at the fNpx points of f.
+// if option =="I", a TGraph is created with points computed with the integral
+//                at the fNpx+1 points of f and the integral is normalized to 1.
+    
+   fFunctions = 0;
+   fHistogram = 0;
+   fNpoints   = 0;
+   fX         = 0;
+   fY         = 0;
+   if (!f) {
+      Error("TGraph", "Pointer to function is null");
+      return;
+   }
+   char coption = ' ';
+   if (option) coption = *option;   
+   fFunctions = new TList;
+   fNpoints   = f->GetNpx();
+   Double_t xmin = f->GetXmin();
+   Double_t xmax = f->GetXmax();
+   Double_t dx   = (xmax-xmin)/fNpoints;
+   if (coption == 'i' || coption == 'I') fNpoints++;
+   fX         = new Double_t[fNpoints];
+   fY         = new Double_t[fNpoints];
+   fMaximum   = -1111;
+   fMinimum   = -1111;
+   SetBit(kClipFrame);
+   Double_t integ = 0;
+   Int_t i;
+   for (i=0;i<fNpoints;i++) {
+      if (coption == 'i' || coption == 'I') {
+         fX[i] = xmin +i*dx;
+         if (i == 0) fY[i] = 0;
+         else        fY[i] = integ + ((TF1*)f)->Integral(fX[i]-dx,fX[i]);
+         integ = fY[i];
+      } else if (coption == 'd' || coption == 'D') {
+         fX[i] = xmin + (i+0.5)*dx;         
+         fY[i] = ((TF1*)f)->Derivative(fX[i]);
+      } else {
+         fX[i] = xmin + (i+0.5)*dx;         
+         fY[i] = ((TF1*)f)->Eval(fX[i]);
+      }  
+   }
+   if (integ != 0 && coption == 'I') {
+      for (i=1;i<fNpoints;i++) fY[i] /= integ;
+   }
+   
+   SetLineColor(f->GetLineColor());;
+   SetLineWidth(f->GetLineWidth());
+   SetLineStyle(f->GetLineStyle());
+   SetFillColor(f->GetFillColor());
+   SetFillStyle(f->GetFillStyle());
+   
+   SetName(f->GetName());
+   SetTitle(f->GetTitle());   
+}
+
+//______________________________________________________________________________
+TGraph::TGraph(const char *fname, Option_t *option)
+       : TNamed("Graph",fname), TAttLine(), TAttFill(1,1001), TAttMarker()
+{
+// Graph constructor importing its parameters from the TF1 named fname
+// if option =="" (default), a TGraph is created with points computed
+//                at the fNpx points of fname.
+// if option =="d", a TGraph is created with points computed with the derivatives
+//                at the fNpx points of fname.
+// if option =="i", a TGraph is created with points computed with the integral
+//                at the fNpx+1 points of fname.
+// if option =="I", a TGraph is created with points computed with the integral
+//                at the fNpx+1 points of fname and the integral is normalized to 1.
+         
+   fFunctions = 0;
+   fHistogram = 0;
+   fNpoints   = 0;
+   fX         = 0;
+   fY         = 0;
+   
+   TF1 *f = (TF1*)gROOT->GetFunction(fname);
+
+   if (!f) {
+      MakeZombie();
+      Error("TGraph", "Unknown function: %s, TGraph is Zombie",fname);
+      return;
+   }
+   char coption = ' ';
+   if (option) coption = *option;   
+   fFunctions = new TList;
+   fNpoints   = f->GetNpx();
+   Double_t xmin = f->GetXmin();
+   Double_t xmax = f->GetXmax();
+   Double_t dx   = (xmax-xmin)/fNpoints;
+   if (coption == 'i' || coption == 'I') fNpoints++;
+   fX         = new Double_t[fNpoints];
+   fY         = new Double_t[fNpoints];
+   fMaximum   = -1111;
+   fMinimum   = -1111;
+   SetBit(kClipFrame);
+   Double_t integ = 0;
+   Int_t i;
+   for (i=0;i<fNpoints;i++) {
+      if (coption == 'i' || coption == 'I') {
+         fX[i] = xmin +i*dx;
+         if (i == 0) fY[i] = 0;
+         else        fY[i] = integ + ((TF1*)f)->Integral(fX[i]-dx,fX[i]);
+         integ = fY[i];
+      } else if (coption == 'd' || coption == 'D') {
+         fX[i] = xmin + (i+0.5)*dx;         
+         fY[i] = ((TF1*)f)->Derivative(fX[i]);
+      } else {
+         fX[i] = xmin + (i+0.5)*dx;         
+         fY[i] = ((TF1*)f)->Eval(fX[i]);
+      }  
+   }
+   if (integ != 0 && coption == 'I') {
+      for (i=1;i<fNpoints;i++) fY[i] /= integ;
+   }
+   
+   SetLineColor(f->GetLineColor());;
+   SetLineWidth(f->GetLineWidth());
+   SetLineStyle(f->GetLineStyle());
+   SetFillColor(f->GetFillColor());
+   SetFillStyle(f->GetFillStyle());
+   
+   SetName(f->GetName());
+   SetTitle(f->GetTitle());   
+}   
+   
 //______________________________________________________________________________
 TGraph::~TGraph()
 {
