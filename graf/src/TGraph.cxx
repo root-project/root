@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.66 2002/04/27 07:49:00 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.67 2002/05/07 20:38:35 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1248,12 +1248,16 @@ void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int
             eu *= eu;
          }
       } else {
-         xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
-         xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
-         xx[0] = xm; fm = grF1->EvalPar(xx,u);
-         xx[0] = xp; fp = grF1->EvalPar(xx,u);
-         eux = (fp-fm)/2;
-         eu = ey*ey +eux*eux;
+         if (ex > 0) {
+            xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
+            xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
+            xx[0] = xm; fm = grF1->EvalPar(xx,u);
+            xx[0] = xp; fp = grF1->EvalPar(xx,u);
+            eux = (fp-fm)/2;
+            eu = ey*ey +eux*eux;
+         } else {
+            eu = ey*ey;
+         }
       }
       if (eu <= 0) eu = 1;
       if (flag == 2) {
