@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.98 2005/01/08 16:09:02 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.99 2005/02/10 20:44:08 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -2697,6 +2697,8 @@ void TF1::Streamer(TBuffer &b)
       //====end of old versions
 
    } else {
+      if (fMethodCall || fFunction) 
+         Warning("Streamer", "cannot save a Cint interpreted or compiled function.");
       Int_t saved = 0;
       if (fType > 0 && fNsave <= 0) { saved = 1; Save(fXmin,fXmax,0,0,0,0);}
 
