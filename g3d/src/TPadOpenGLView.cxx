@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.cxx,v 1.2 2000/06/05 07:28:47 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -84,7 +84,10 @@ TPadOpenGLView::TPadOpenGLView(TVirtualPad *pad) : TPadView3D(pad)
 //____________________________________________________________________________
 TPadOpenGLView::~TPadOpenGLView()
 {
-    if (!fParent) return;
+    if (!fParent) {
+       delete fGLViewerImp;
+       return;
+    }
 //*-*  Delete OpenGL lists;
    if (fGLViewerImp) {
 #ifdef STEREO_GL
@@ -95,7 +98,8 @@ TPadOpenGLView::~TPadOpenGLView()
       }
 #endif
       if (fGLList) {
-         gVirtualGL->DeleteGLLists(fGLList,kGLListSize);
+         // causes crash if more than one viewer is open at a time
+         //gVirtualGL->DeleteGLLists(fGLList,kGLListSize);
          fGLList =0;
       }
       delete fGLViewerImp;
@@ -107,7 +111,7 @@ TPadOpenGLView::~TPadOpenGLView()
 void TPadOpenGLView::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
 
-   if (!GetPad()->IsEditable()) return;
+    if (GetPad() && !GetPad()->IsEditable()) return;
 
     switch ((EEventType)event)
     {

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.2 2000/06/05 07:28:06 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TRootGLViewer.cxx,v 1.3 2000/10/13 19:00:46 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -357,7 +357,10 @@ Bool_t TRootGLViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                switch (parm1) {
                   // Handle File menu items...
                   case kFileNewViewer:
-                     if (fGLView) fGLView->GetPad()->x3d("OPENGL");
+                     if (fGLView && fGLView->GetPad())
+                        fGLView->GetPad()->x3d("OPENGL");
+                     else
+                        fFileMenu->DisableEntry(kFileNewViewer);
                      break;
                   case kFileSave:
                   case kFileSaveAs:
