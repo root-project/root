@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWidget.h,v 1.3 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWidget.h,v 1.4 2001/09/18 10:57:35 rdm Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -70,8 +70,8 @@ protected:
    Int_t ClearFlags(Int_t flags) { return fWidgetFlags &= ~flags; }
 
 public:
-   TGWidget() { }
-   TGWidget(Int_t id) { fWidgetId = id; }
+   TGWidget() { fWidgetId = -1; fWidgetFlags = 0; fMsgWindow = 0;}
+   TGWidget(Int_t id) { fWidgetId = id; fWidgetFlags = 0; fMsgWindow = 0; }
    virtual ~TGWidget() { }
 
    Int_t         WidgetId() const { return fWidgetId; }
