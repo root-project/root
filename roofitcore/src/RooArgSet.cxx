@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.10 2001/04/08 00:06:48 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.11 2001/04/11 00:54:36 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -444,7 +444,7 @@ void RooArgSet::printToStream(ostream& os, PrintOption opt, const char *indent) 
     int index= 0;
     RooAbsArg *next(0);
     while(0 != (next= (RooAbsArg*)iterator->Next())) {
-      os << " (" << setwidth(3) << ++index << ") ";
+      os << " (" << setw(3) << ++index << ") ";
       next->printToStream(os,opt);
     }
     delete iterator;

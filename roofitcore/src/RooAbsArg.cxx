@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.12 2001/04/05 01:49:09 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.13 2001/04/08 00:06:48 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -425,67 +425,44 @@ void RooAbsArg::copyList(TList& dest, const TList& source) const
   delete sIter ;
 }
 
-
-
-
-void RooAbsArg::printToStream(ostream& str, PrintOption opt)  const
+void RooAbsArg::printToStream(ostream& os, PrintOption opt, const char *indent)  const
 {
   // Print the state of this object to the specified output stream.
   // With PrintOption=Verbose, print out lists of attributes, clients,
   // and servers. Otherwise, print our class, name and title only.
- 
-  cout << GetName() << ": " << GetTitle() << endl;
+
+  oneLinePrint(os,*this);
   if(opt == Verbose) {
     // attribute list
-    str << "  Attributes: " ;
-    printAttribList(str) ;
-    str << endl ;
+    os << indent << "  Attributes: " ;
+    printAttribList(os) ;
+    os << endl ;
     // client list
-    str << "  Clients: ";
+    os << indent << "  Clients: ";
     TIterator *clientIter= _clientList.MakeIterator();
     RooAbsArg* client ;
     while (client=(RooAbsArg*)clientIter->Next()) {
-      str << client->GetName() << "("
-          << (void*)client 
-	  << (_clientListValue.FindObject(client)?",V":"")
-	  << (_clientListShape.FindObject(client)?",S":"")
-	  << ") " ;
+      os << indent << client->GetName() << "("
+	 << (void*)client 
+	 << (_clientListValue.FindObject(client)?",V":"")
+	 << (_clientListShape.FindObject(client)?",S":"")
+	 << ") " ;
     }
-    str << endl ;
+    os << endl ;
     // server list
-    str << "  Servers: ";
+    os << indent << "  Servers: ";
     TIterator *serverIter= _serverList.MakeIterator();
     RooAbsArg* server ;
     while (server=(RooAbsArg*)serverIter->Next()) {
-      str << server->GetName() << "("
-          << (void*)server
-	  << (server->_clientListValue.FindObject((TObject*)this)?",V":"")
-	  << (server->_clientListShape.FindObject((TObject*)this)?",S":"")
-	  << ") " ;
+      os << indent << server->GetName() << "("
+	 << (void*)server
+	 << (server->_clientListValue.FindObject((TObject*)this)?",V":"")
+	 << (server->_clientListShape.FindObject((TObject*)this)?",S":"")
+	 << ") " ;
     }
-    str << endl ;
+    os << endl ;
   }
 }                                                                                                                                                                          
-
-void RooAbsArg::Print(Option_t *options) const {
-  // Print the state of this object using printToStream() with the
-  // following PrintOption mapping:
-  //
-  //  "1" - OneLine
-  //  "S" - Shape
-  //  "V" - Verbose
-  //
-  // The default is Standard.
-
-  TString opts(options);
-  opts.ToLower();
-  PrintOption popt(Standard);
-  if(opts.Contains("1")) { popt= OneLine ; }
-  if(opts.Contains("s")) { popt= Shape; }
-  if(opts.Contains("v")) { popt= Verbose;}
-  printToStream(cout,popt);
-}
-
 ostream& operator<<(ostream& os, RooAbsArg &arg)
 {
   arg.writeToStream(os,kTRUE) ;

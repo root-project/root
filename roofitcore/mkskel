@@ -1,0 +1,98 @@
+#!@PERL@ -w
+############################################################################
+## Project: BaBar detector at the SLAC PEP-II B-factory
+## Package: RooFitCore
+##    File: $Id: skimData,v 1.19 2000/05/19 23:58:31 davidk Exp $
+## Authors:
+##   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
+## History:
+##   10-Apr-2001 DK Created initial version
+##
+## Copyright (C) 2001 Stanford University
+############################################################################
+
+use strict;
+use File::Basename;
+use Getopt::Long;
+
+my $package= "@PACKAGE@";
+my $versionID= q$Id: skimData,v 1.19 2000/05/19 23:58:31 davidk Exp $;
+my $myname= basename($0);
+
+sub usage {
+    my $exitCode= shift @_;
+    print << "EOT";
+usage: $myname [OPTIONS] CLASSNAME [CLASSNAME...]
+
+ -H, --help        print this text and exit
+ -V, --version     print version info and exit
+
+ -f, --files       comma-separated list of file types to create
+EOT
+    exit $exitCode;
+}
+
+# process and check the command-line arguments
+Getopt::Long::config('bundling_override');
+my($version,$help);
+my $files= "rdl,cc";
+GetOptions("help|H"=> \$help, "version|V"=> \$version, "files|f"=> \$files)
+    or usage(-1);
+usage(0) if defined $help;
+if(defined $version) {
+    print "$versionID\n";
+    exit 0;
+}
+
+my %producers= ( "rdl"=> \&rdlMaker, "cc"=> \&ccMaker );
+
+# check for a valid list of files to create for each class
+my @fileList= split ",",$files;
+foreach my $ext (@fileList) {
+    die "$myname: cannot make \"$ext\" files\n" unless defined $producers{$ext};
+}
+
+# loop over class names
+foreach my $classname (@ARGV) {
+    # loop over output files for this class
+    foreach my $ext (@fileList) {
+	my $file= "$package/$classname.$ext";
+	print "creating $file...\n";
+	# check that this file does not already exist
+	if(-f $file) {
+	    #warn "$myname: skipping existing file $file\n";
+	    #next;
+	}
+	# open this file
+	open FILE, ">$file" || die "$myname: cannot open $file: $!\n";
+	# call our producer to do the real work
+	my $producer= $producers{$ext};
+	&$producer();
+	close FILE;
+    }
+}
+
+sub rdlMaker {
+    writeHeader();
+}
+
+sub ccMaker {
+    writeHeader();
+}
+
+sub writeHeader {
+    print FILE <<EOT;
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: $package
+ *    File: \$Id\$
+ * Authors:
+ *   DK, David Kirkby, Stanford University, kirkby\@hep.stanford.edu
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke\@slac.stanford.edu
+ * History:
+ *   07-Mar-2001 WV Created initial version
+ *
+ * Copyright (C) 2001 University of California
+ *****************************************************************************/
+EOT
+}

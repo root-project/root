@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.13 2001/04/08 00:06:48 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.14 2001/04/11 00:54:36 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,12 +17,13 @@
 #include <assert.h>
 #include "TNamed.h"
 #include "THashList.h"
+#include "RooFitCore/RooPrintable.hh"
 
 class TTree ;
 class RooArgSet ;
 class RooDataSet ;
 
-class RooAbsArg : public TNamed {
+class RooAbsArg : public TNamed, public RooPrintable {
 public:
 
   // Constructors, cloning and assignment
@@ -44,9 +45,10 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const = 0 ;
 
   // Printing interface (human readable)
-  enum PrintOption { OneLine=0, Standard=1, Shape=2, Verbose=3 } ;
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
-  void Print(Option_t * = 0) const ;
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, const char *indent= "") const;
+  inline virtual void Print(Option_t *options= 0) const {
+    printToStream(defaultStream(),parseOptions(options));
+  }
 
   // Accessors to attributes
   void setAttribute(Text_t* name, Bool_t value=kTRUE) ;
