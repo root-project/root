@@ -206,7 +206,7 @@ endif
 
 .PHONY:         all fast config rootcint rootlibs rootexecs dist distsrc \
                 clean distclean maintainer-clean compiledata importcint \
-                version html changelog install showbuild cintdlls \
+                version html changelog install uninstall showbuild cintdlls \
                 debian redhat \
                 $(patsubst %,all-%,$(MODULES)) \
                 $(patsubst %,clean-%,$(MODULES)) \
@@ -221,7 +221,7 @@ include $(patsubst %,%/Module.mk,$(MODULES))
 -include MyRules.mk            # allow local rules
 
 ifeq ($(findstring $(MAKECMDGOALS),clean distclean maintainer-clean dist \
-      distsrc version importcint install showbuild changelog html \
+      distsrc version importcint install uninstall showbuild changelog html \
       debian redhat),)
 ifeq ($(findstring $(MAKECMDGOALS),fast),)
 include $(INCLUDEFILES)
