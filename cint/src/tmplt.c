@@ -1634,11 +1634,8 @@ void G__declare_template()
 #ifndef G__OLDIMPLEMENTATION2157
        c = G__fgetname_template(temp2,"*&(;=");
        if (c=='=' && strncmp(temp2,"operator",strlen("operator"))==0) {
-          fprintf(stderr,"temp2 is %s\n",temp2);
           strcat(temp2,"=");
-          fprintf(stderr,"temp2 is %s\n",temp2);
           c = G__fgetname_template(temp2+strlen(temp2),"*&(;=");
-          fprintf(stderr,"temp2 is %s\n",temp2);
        }
 #else
        c = G__fgetname_template(temp2,"*&(;");
