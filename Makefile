@@ -294,11 +294,6 @@ $(CORELIB): $(COREO) $(COREDO) $(CINTLIB) $(CORELIBDEP)
 	   "$(SOFLAGS)" libCore.$(SOEXT) $@ "$(COREO) $(COREDO)" \
 	   "$(CORELIBEXTRA)"
 
-ifeq ($(PLATFORM),macosx)
-$(CORELIBDEP): /usr/lib/libcc_dynamic.a
-	ar -x /usr/lib/libcc_dynamic.a $@
-endif
-
 dist:
 	@$(MAKEDIST)
 
