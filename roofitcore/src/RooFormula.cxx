@@ -33,6 +33,23 @@ RooFormula::RooFormula(const char* name, const char* formula, RooArgSet& list) :
 }
 
 
+Bool_t RooFormula::reCompile(const char* newFormula) 
+{
+  fNval=0 ;
+  _useList.Clear() ;  
+
+  TString oldFormula=GetTitle() ;
+  if (Compile(newFormula)) {
+    cout << "RooFormula::reCompile: new equation doesn't compile, formula unchanged" << endl ;
+    reCompile(oldFormula) ;
+    return kTRUE ;
+  }
+
+  SetTitle(newFormula) ;
+  return kFALSE ;
+}
+
+
 RooFormula::RooFormula(const RooFormula& other) : 
   TFormula(other), _origList(other._origList)
 {
@@ -103,6 +120,7 @@ Double_t RooFormula::eval()
 Double_t
 RooFormula::DefinedValue(Int_t code) {
   // Return current value for parameter indicated by internal reference code
+  if (code>=_useList.GetEntries()) return 0 ;
   return ((RooAbsReal*)_useList.At(code))->getVal() ;
 }
 
@@ -114,7 +132,6 @@ RooFormula::DefinedVariable(TString &name)
   RooAbsReal* rrv= (RooAbsReal*) _origList->find(name) ;
   if (!rrv) return -1 ;
   _useList.Add(rrv) ;
-
   return _useList.GetEntries()-1 ;
 }
 

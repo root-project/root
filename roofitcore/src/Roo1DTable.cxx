@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: Roo1DTable.cc,v 1.1 2001/03/17 03:47:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,12 +21,18 @@ ClassImp(Roo1DTable)
 Roo1DTable::Roo1DTable(const char *name, const char *title, RooAbsCategory& cat) : RooTable(name,title), _nOverflow(0)
 {
   //Take types from reference category
+  Int_t nbin(0) ;
   TIterator* tIter = cat.typeIterator() ;
   RooCatType* type ;
   while (type = (RooCatType*)tIter->Next()) {
-    _contents.Add(new RooCatType(type->GetName(),0)) ;
+    _types.Add(new RooCatType(*type)) ;
+    nbin++ ;
   }
   delete tIter ;
+
+  // Create counter array and initialize
+  _count = new Int_t[nbin] ;
+  for (int i=0 ; i<nbin ; i++) _count[i] = 0 ;
 }
 
 
@@ -35,26 +41,33 @@ Roo1DTable::Roo1DTable(const Roo1DTable& other) : RooTable(other), _nOverflow(ot
 {  
   //Take types from reference category
   RooCatType* type ;
-  for (int i=0 ; i<other._contents.GetEntries() ; i++) {
-    _contents.Add(new RooCatType(*(RooCatType*)other._contents.At(i))) ;
+  Int_t nbin(0) ;
+  for (int i=0 ; i<other._types.GetEntries() ; i++) {
+    _types.Add(new RooCatType(*(RooCatType*)other._types.At(i))) ;
+    nbin++ ;
   }
+
+  // Create counter array and initialize
+  _count = new Int_t[nbin] ;
+  for (int i=0 ; i<nbin ; i++) _count[i] = other._count[i] ;
 }
 
 
 Roo1DTable::~Roo1DTable()
 {
   // We own the contents of the object array
-  _contents.Delete() ;
+  _types.Delete() ;
+  delete[] _count ;
 }
 
 
 void Roo1DTable::fill(RooAbsCategory& cat) 
 {
   Bool_t found(kFALSE) ;
-  for (int i=0 ; i<_contents.GetEntries() ; i++) {
-    RooCatType* entry = (RooCatType*) _contents.At(i) ;
-    if (!TString(cat.getLabel()).CompareTo(entry->GetName())) {
-      entry->setVal(entry->getVal()+1) ;
+  for (int i=0 ; i<_types.GetEntries() ; i++) {
+    RooCatType* entry = (RooCatType*) _types.At(i) ;
+    if (cat.getIndex()==entry->getVal()) {
+      _count[i]++ ;
       found=kTRUE ;
     }
   }  
@@ -72,11 +85,11 @@ void Roo1DTable::printToStream(ostream& os, PrintOption opt=Standard)
   // Determine maximum label and count width
   Int_t labelWidth(0) ;
   Int_t maxCount(1) ;
-  for (int i=0 ; i<_contents.GetEntries() ; i++) {
-    RooCatType* entry = (RooCatType*) _contents.At(i) ;
+  for (int i=0 ; i<_types.GetEntries() ; i++) {
+    RooCatType* entry = (RooCatType*) _types.At(i) ;
     labelWidth=strlen(entry->GetName())>labelWidth
               ?strlen(entry->GetName()):labelWidth ;    
-    maxCount=entry->getVal()>maxCount?entry->getVal():maxCount ;
+    maxCount=_count[i]>maxCount?_count[i]:maxCount ;
   }
   // Adjust formatting if overflow field will be present
   if (_nOverflow>0) {
@@ -90,9 +103,9 @@ void Roo1DTable::printToStream(ostream& os, PrintOption opt=Standard)
   os << setfill(' ') ;
 
   // Contents
-  for (int i=0 ; i<_contents.GetEntries() ; i++) {
-    RooCatType* entry = (RooCatType*) _contents.At(i) ;
-    os << "  | " << setw(labelWidth) << entry->GetName() << " | " << setw(countWidth) << entry->getVal() << " |" << endl ;
+  for (int i=0 ; i<_types.GetEntries() ; i++) {
+    RooCatType* entry = (RooCatType*) _types.At(i) ;
+    os << "  | " << setw(labelWidth) << entry->GetName() << " | " << setw(countWidth) << _count[i] << " |" << endl ;
   }
 
   // Overflow field

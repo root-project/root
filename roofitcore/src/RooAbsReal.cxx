@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsReal.cc,v 1.1 2001/03/17 00:32:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -79,6 +79,14 @@ Double_t RooAbsReal::getVal()
 }
 
 
+
+Bool_t RooAbsReal::operator==(Double_t value) 
+{
+  return (getVal()==value) ;
+}
+
+
+
 const char *RooAbsReal::getPlotLabel() const {
   // Get the label associated with the variable
   return _label.IsNull() ? fName.Data() : _label.Data();
@@ -118,7 +126,7 @@ void RooAbsReal::setPlotMin(Double_t value) {
 
   // Check if new limit is consistent
   if (_plotMin>_plotMax) {
-    cout << "RooRealVar::setIntegMin(" << GetName() 
+    cout << "RooAbsReal::setPlotMin(" << GetName() 
 	 << "): Proposed new integration min. larger than max., setting min. to max." << endl ;
     _plotMin = _plotMax ;
   } else {
@@ -133,7 +141,7 @@ void RooAbsReal::setPlotMax(Double_t value) {
 
   // Check if new limit is consistent
   if (_plotMax<_plotMin) {
-    cout << "RooRealVar::setIntegMax(" << GetName() 
+    cout << "RooAbsReal::setPlotMax(" << GetName() 
 	 << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
     _plotMax = _plotMin ;
   } else {
@@ -143,6 +151,21 @@ void RooAbsReal::setPlotMax(Double_t value) {
   setShapeDirty(kTRUE) ;
 }
 
+
+void RooAbsReal::setPlotRange(Double_t min, Double_t max) {
+  // Check if new limit is consistent
+  if (min>max) {
+    cout << "RooAbsReal::setPlotMinMax(" << GetName() 
+	 << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
+    _plotMin = min ;
+    _plotMax = min ;
+  } else {
+    _plotMin = min ;
+    _plotMax = max ;
+  }
+
+  setShapeDirty(kTRUE) ;  
+}
 
 
 void RooAbsReal::setPlotBins(Int_t value) {

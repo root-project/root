@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.1 2001/03/17 00:32:53 verkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.2 2001/03/17 03:47:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -36,6 +36,8 @@ public:
   // Value accessors
   virtual Int_t getIndex() ;
   virtual const char* getLabel() ; 
+  Bool_t operator==(Int_t index) ;
+  Bool_t operator==(const char* label) ;
   
   // Type definition management
   Bool_t defineType(Int_t index, char* label) ;

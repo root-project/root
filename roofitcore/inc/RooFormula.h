@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.rdl,v 1.3 2001/03/16 07:59:12 verkerke Exp $
+ *    File: $Id: RooFormula.rdl,v 1.4 2001/03/17 00:32:54 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -37,6 +37,7 @@ public:
 
   // Debugging
   void dump() ;
+  Bool_t reCompile(const char* newFormula) ;
 
 protected:
   

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.cc,v 1.1 2001/03/17 00:32:54 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.2 2001/03/17 03:47:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -56,38 +56,37 @@ RooAbsArg& RooCategory::operator=(RooAbsArg& aother)
 
 
 
-Bool_t RooCategory::setIndex(Int_t index) 
+Bool_t RooCategory::setIndex(Int_t index, Bool_t printError) 
 {
-  RooCatType* type ;  
-  for (int i=0 ; i<_types.GetEntries() ; i++) {
-    RooCatType& entry = *(RooCatType*)_types.At(i) ;
-    if (entry == index) {      
-      _value = entry ;
-      setValueDirty(kTRUE) ;
-      return kFALSE ;
-    }
-  }
-  cout << "Rooindex::setIndex(" << GetName() << "): index " << index << " is not defined" << endl ;
-  return kTRUE ;  
+  const RooCatType* type = lookupType(index,printError) ;
+  if (!type) return kTRUE ;
+  _value = *type ;
+  setValueDirty(kTRUE) ;
+  return kFALSE ;
 }
 
 
 
-Bool_t RooCategory::setLabel(char* label) 
+Bool_t RooCategory::setLabel(const char* label, Bool_t printError) 
 {
-  RooCatType* type ;  
-  for (int i=0 ; i<_types.GetEntries() ; i++) {
-    RooCatType& entry = *(RooCatType*)_types.At(i) ;
-    if (entry==label) {
-      _value = entry ;
-      setValueDirty(kTRUE) ;
-      return kFALSE ;
-    }
-  }
-  cout << "Rooindex::setIndex(" << GetName() << "): label " << label << " is not defined" << endl ;
-  return kTRUE ;  
+  const RooCatType* type = lookupType(label,printError) ;
+  if (!type) return kTRUE ;
+  _value = *type ;
+  setValueDirty(kTRUE) ;
+  return kFALSE ;
 }
 
+
+RooCategory& RooCategory::operator=(Int_t index) {
+  setIndex(index,kTRUE) ;
+  return *this ;
+}
+
+
+RooCategory& RooCategory::operator=(const char*label) {
+  setLabel(label) ;
+  return *this ;
+}
 
 
 Bool_t RooCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
@@ -98,30 +97,7 @@ Bool_t RooCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   // Read single token
   TString token ;
   is >> token ;
-
-  // Convert token to double
-  char *endptr(0) ;
-  Int_t index = strtol(token.Data(),&endptr,10) ;	  
-  int nscan = endptr-((const char *)token.Data()) ;	  
-  if (nscan<token.Length() && !token.IsNull()) {
-    if (verbose) {
-      cout << "RooCategory::readFromStream(" << GetName() 
-	   << "): cannot convert token \"" << token 
-	   << "\" to integer number" << endl ;
-    }
-    return kTRUE ;
-  }
-
-  if (isValidIndex(index)) {
-    setIndex(index) ;
-    return kFALSE ;  
-  } else {
-    if (verbose) {
-      cout << "RooCategory::readFromStream(" << GetName() 
-	   << "): index undefined: " << index << endl ;
-    }
-    return kTRUE;
-  }
+  return setLabel(token,verbose) ;
 }
 
 

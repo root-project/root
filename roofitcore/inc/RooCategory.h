@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.rdl,v 1.1 2001/03/17 00:32:54 verkerke Exp $
+ *    File: $Id: RooCategory.rdl,v 1.2 2001/03/17 03:47:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,8 +26,10 @@ public:
   virtual RooAbsArg& operator=(RooAbsArg& other) ; 
 
   // Value modifiers
-  Bool_t setIndex(Int_t index) ;
-  Bool_t setLabel(char* label) ;
+  Bool_t setIndex(Int_t index, Bool_t printError=kTRUE) ;
+  Bool_t setLabel(const char* label, Bool_t printError=kTRUE) ;
+  RooCategory& operator=(int index) ; 
+  RooCategory& operator=(const char* label) ; 
   
   // Value accessors (overridden from base class)
   virtual Int_t getIndex() { return _value.getVal(); }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.1 2001/03/17 00:32:53 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.2 2001/03/17 03:47:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -102,6 +102,19 @@ const char* RooAbsCategory::getLabel()
 
 
 
+Bool_t RooAbsCategory::operator==(Int_t index) 
+{
+  return (index==getIndex()) ;
+}
+
+
+
+Bool_t RooAbsCategory::operator==(const char* label) 
+{
+  return !TString(label).CompareTo(getLabel()) ;
+}
+
+
 Bool_t RooAbsCategory::isValidIndex(Int_t index) 
 {
   return lookupType(index)?kTRUE:kFALSE ;
@@ -200,7 +213,7 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
   char *endptr(0) ;
   Int_t val = strtol(label,&endptr,10) ;
   if (endptr-label==strlen(label)) {
-    return lookupType(val) ;
+    return lookupType(val,printError) ;
   }
 
   RooCatType* type ;

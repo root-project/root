@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.1 2001/03/17 00:32:55 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.2 2001/03/17 03:47:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -50,6 +50,7 @@ public:
   inline Double_t getIntegMax() const { return _integMax ; }
   void setIntegMin(Double_t value) ;
   void setIntegMax(Double_t value) ;
+  void setIntegRange(Double_t min, Double_t max) ;
   Bool_t inIntegRange(Double_t value, Double_t* clippedValue=0) const;
   Bool_t hasIntegLimits() const { return kTRUE ; }
 
@@ -75,8 +76,6 @@ protected:
 
   virtual Bool_t isValid() ;
   virtual Bool_t isValid(Double_t value) ;
-
-  Bool_t readDouble(istream& is, Double_t& value) ;
 
   Double_t _integMin ;
   Double_t _integMax ;

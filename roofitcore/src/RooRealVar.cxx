@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.1 2001/03/17 00:32:55 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.2 2001/03/17 03:47:39 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,6 +18,7 @@
 #include "TObjString.h"
 #include "TTree.h"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooStreamParser.hh"
 
 ClassImp(RooRealVar)
 
@@ -51,7 +52,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   RooAbsReal(name, title, minValue, maxValue, unit), _error(0), _blinder(blinder),
   _integMin(minValue), _integMax(maxValue)
 {
-//   if (_blinder) _blinder->redoBlind() ;
+  //   if (_blinder) _blinder->redoBlind() ;
   _value = value ;
   setValueDirty(kTRUE) ;
   setShapeDirty(kTRUE) ;
@@ -134,6 +135,23 @@ void RooRealVar::setIntegMax(Double_t value)
 }
 
 
+void RooRealVar::setIntegRange(Double_t min, Double_t max) {
+  // Check if new limit is consistent
+  if (min>max) {
+    cout << "RooRealVar::setIntegMinMax(" << GetName() 
+	 << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
+    _integMin = min ;
+    _integMax = min ;
+  } else {
+    _integMin = min ;
+    _integMax = max ;
+  }
+
+  setShapeDirty(kTRUE) ;  
+}
+
+
+
 Double_t RooRealVar::operator=(Double_t newValue) 
 {
   // Clip 
@@ -213,25 +231,16 @@ void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
 Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   // Read object contents from given stream
+  TString token,errorPrefix("RooRealVar::readFromStream(") ;
+  errorPrefix.Append(GetName()) ;
+  errorPrefix.Append(")") ;
+  RooStreamParser parser(is,errorPrefix) ;
+  Double_t value(0) ;
 
   if (compact) {
-  // Read single token
-    TString token ;
-    is >> token ;
-    
-    // Convert token to double
-    char *endptr(0) ;
-    Double_t value = strtod(token.Data(),&endptr) ;	  
-    int nscan = endptr-((const char *)token.Data()) ;	  
-    if (nscan<token.Length() && !token.IsNull()) {
-      if (verbose) {
-	cout << "RooRealVar::readFromStream(" << GetName() 
-	     << "): cannot convert token \"" << token 
-	     << "\" to floating point number" << endl ;
-      }
-      return kTRUE ;
-    }
-    
+    // Compact mode: Read single token
+    if (parser.readDouble(value,verbose)) return kTRUE ;
+
     if (inIntegRange(value)) {
       setVal(value) ;
       return kFALSE ;  
@@ -242,49 +251,61 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
       }
       return kTRUE;
     }
+
   } else {
-    cout << "RooRealVar::readFromStream(" << GetName() << "): non-compact read not yet implemented" << endl ;
-    return kTRUE ;
+    // Extended mode: Read multiple tokens on a single line   
+    Bool_t haveValue(kFALSE) ;
+    while(1) {
+      token=parser.readToken() ;
+      if (token.IsNull()) break ;
+
+      if (!token.CompareTo("+/-")) {
+
+	// Next token is error
+	Double_t error ;
+	if (parser.readDouble(error)) break ;
+	setError(error) ;
+
+      } else if (!token.CompareTo("C")) {
+
+	// Set constant
+	setConstant(kTRUE) ;
+
+      } else if (!token.CompareTo("P")) {
+
+	// Next tokens are plot limits
+	Double_t plotMin, plotMax ;
+        Int_t plotBins ;
+	if (parser.expectToken("(",kTRUE) ||
+	    parser.readDouble(plotMin,kTRUE) ||
+	    parser.expectToken("-",kTRUE) ||
+	    parser.readDouble(plotMax,kTRUE) ||
+            parser.expectToken(":",kTRUE) ||
+            parser.readInteger(plotBins,kTRUE) || 
+	    parser.expectToken(")",kTRUE)) break ;
+	setPlotRange(plotMin,plotMax) ;
+
+      } else if (!token.CompareTo("I")) {
+
+	// Next tokens are integration limits
+	Double_t integMin, integMax ;
+	if (parser.expectToken("(",kTRUE) ||
+	    parser.readDouble(integMin,kTRUE) ||
+	    parser.expectToken("-",kTRUE) ||
+	    parser.readDouble(integMax,kTRUE) ||
+	    parser.expectToken(")",kTRUE)) break ;
+	setIntegRange(integMin,integMax) ;
+      } else {
+	// Token is value
+	if (parser.convertToDouble(token,value)) { parser.zapToEnd() ; break ; }
+	haveValue = kTRUE ;
+	// Defer value assignment to end
+      }
+    }    
+
+    if (haveValue) setVal(value) ;
+    return kFALSE ;
   }
-}
-
-Bool_t RooRealVar::readDouble(istream& is, Double_t& value) {
-
-  char buffer[1024], c ;
-  Int_t bufptr=0 ;
-  Bool_t first=kTRUE, haveExp=kFALSE ; ;
-
-  while(1) {
-    // Read next char
-    is >> c ;
-    if (!is.good()) break ;
-
-    // Ignore leading spaces
-    if (first && isspace(c)) continue ;
-
-    // Add chars that could be part of a float to the buffer
-    if (isdigit(c) || c=='.' || (first && c=='-') || (!haveExp && (c=='e'||c=='E'))) {
-      buffer[bufptr++]=c ;
-    } else {
-      // Put back non-space char thats not part of float representation
-      if (!isspace(c)) 
-	is.putback(c) ;
-      break ;
-    }
-    
-    if (c=='e'||c=='E') haveExp=kTRUE ;
-    first=kFALSE ;
-  }
-
-  //Zero terminate buffer
-  buffer[bufptr]=0 ;
-
-  //Attempt conversion to float
-  char* endptr(0) ;
-  value = strtod(buffer,&endptr) ;
-
-  // Return error if conversion didn't use full buffer
-  return (endptr-buffer!=bufptr) ;
 }
 
 
@@ -309,7 +330,7 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact)
       os << "C " ;
     }      
     // Append plot limits
-    os << "P(" << getPlotMin() << " - " << getPlotMax() << ") " ;      
+    os << "P(" << getPlotMin() << " - " << getPlotMax() << " : " << getPlotBins() << ") " ;      
     // Append integration limits if not +Inf:-Inf
     if (hasIntegLimits()) {
       os << "I(" << getIntegMin() << " - " << getIntegMax() << ") " ;      

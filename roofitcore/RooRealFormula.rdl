@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooRealFormula.rdl,v 1.1 2001/03/17 00:32:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,12 +26,15 @@ public:
   RooRealFormula& operator=(RooRealFormula& other) {} ;
   virtual ~RooRealFormula();
 
+  // Formula editing interface
+  Bool_t setFormula(const char* formula) ;
+
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) {} ;
-  virtual void writeToStream(ostream& os, Bool_t compact) {} ;
+  virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
+  virtual void writeToStream(ostream& os, Bool_t compact) ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, Option_t* = 0) ;
+  virtual void printToStream(ostream& stream, PrintOption opt=Standard) ;
 
   // Debugging
   void dumpFormula() { _formula.dump() ; }

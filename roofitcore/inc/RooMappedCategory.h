@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.rdl,v 1.1 2001/03/17 00:09:29 verkerke Exp $
+ *    File: $Id: RooMappedCategory.rdl,v 1.2 2001/03/17 00:32:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -25,15 +25,15 @@ public:
 
   // Mapping definition functions
   Bool_t setDefault(int def)  ;	
-  Bool_t setDefault(char* def_key)  ;	
+  Bool_t setDefault(const char* def_key)  ;	
   Bool_t mapValue(int   in,     int   out) ; 
-  Bool_t mapValue(char* in_key, int   out) ; 
-  Bool_t mapValue(int   in,     char* out_key) ; 
-  Bool_t mapValue(char* in_key, char* out_key) ; 
+  Bool_t mapValue(const char* in_key, int   out) ; 
+  Bool_t mapValue(int   in,     const char* out_key) ; 
+  Bool_t mapValue(const char* in_key, const char* out_key) ; 
 
-  Bool_t mapRange(char* inlo_key, char* inhi_key, int   out) ;
-  Bool_t mapRange(int   inlo,     int   inhi,     char* out) ;
-  Bool_t mapRange(char* inlo_key, char* inhi_key, char* out_key) ;
+  Bool_t mapRange(const char* inlo_key, const char* inhi_key, int   out) ;
+  Bool_t mapRange(int   inlo,     int   inhi,     const char* out) ;
+  Bool_t mapRange(const char* inlo_key, const char* inhi_key, const char* out_key) ;
   Bool_t mapRange(int   inlo,     int   inhi,     int   out) ;
 
   // Printing interface (human readable)

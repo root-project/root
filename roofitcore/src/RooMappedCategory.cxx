@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.cc,v 1.1 2001/03/17 00:09:29 verkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.2 2001/03/17 00:32:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include "TString.h"
 #include "RooFitCore/RooMappedCategory.hh"
-
+#include "RooFitCore/RooStreamParser.hh"
 
 ClassImp(RooMappedCategory)
 
@@ -44,8 +44,8 @@ Bool_t RooMappedCategory::setDefault(int def) {
   return kFALSE ;
 }
 
-Bool_t RooMappedCategory::setDefault(char* def_key) {
-  const RooCatType* defType = lookupType(def_key) ;
+Bool_t RooMappedCategory::setDefault(const char* def_key) {
+  const RooCatType* defType = lookupType(def_key,kTRUE) ;
   if (!defType)
     return kTRUE ;
 
@@ -54,7 +54,7 @@ Bool_t RooMappedCategory::setDefault(char* def_key) {
 }
 
 
-Bool_t RooMappedCategory::mapValue(char* in_key, int out_idx) 
+Bool_t RooMappedCategory::mapValue(const char* in_key, int out_idx) 
 {
   const RooCatType* inType  = inputCat()->lookupType(in_key,kTRUE) ;
   const RooCatType* outType = lookupType(out_idx,kTRUE) ;
@@ -62,14 +62,14 @@ Bool_t RooMappedCategory::mapValue(char* in_key, int out_idx)
 }
 
 
-Bool_t RooMappedCategory::mapValue(int in_idx, char* out_key) {
+Bool_t RooMappedCategory::mapValue(int in_idx, const char* out_key) {
   const RooCatType* inType  = inputCat()->lookupType(in_idx,kTRUE) ;
   const RooCatType* outType = lookupType(out_key,kTRUE) ;
   return addMap(outType,inType,inType) ;
 }
 
 
-Bool_t RooMappedCategory::mapValue(char* in_key, char* out_key) 
+Bool_t RooMappedCategory::mapValue(const char* in_key, const char* out_key) 
 {
   const RooCatType* inType  = inputCat()->lookupType(in_key,kTRUE) ;
   const RooCatType* outType = lookupType(out_key,kTRUE) ;
@@ -92,7 +92,7 @@ Bool_t RooMappedCategory::mapRange(int inlo_idx, int inhi_idx, int out_idx)
   return addMap(outType,inTypeLo,inTypeHi) ;
 }
 
-Bool_t RooMappedCategory::mapRange(int inlo_idx, int inhi_idx, char* out_key) 
+Bool_t RooMappedCategory::mapRange(int inlo_idx, int inhi_idx, const char* out_key) 
 {
   const RooCatType* inTypeLo = inputCat()->lookupType(inlo_idx,kTRUE) ;
   const RooCatType* inTypeHi = inputCat()->lookupType(inhi_idx,kTRUE) ;
@@ -100,14 +100,14 @@ Bool_t RooMappedCategory::mapRange(int inlo_idx, int inhi_idx, char* out_key)
   return addMap(outType,inTypeLo,inTypeHi) ;
 }
 
-Bool_t RooMappedCategory::mapRange(char* inlo_key, char* inhi_key, int out_idx) {
+Bool_t RooMappedCategory::mapRange(const char* inlo_key, const char* inhi_key, int out_idx) {
   const RooCatType* inTypeLo = inputCat()->lookupType(inlo_key,kTRUE) ;
   const RooCatType* inTypeHi = inputCat()->lookupType(inhi_key,kTRUE) ;
   const RooCatType* outType  = lookupType(out_idx,kTRUE) ;
   return addMap(outType,inTypeLo,inTypeHi) ;
 }
 
-Bool_t RooMappedCategory::mapRange(char* inlo_key, char* inhi_key, char* out_key) {
+Bool_t RooMappedCategory::mapRange(const char* inlo_key, const char* inhi_key, const char* out_key) {
   const RooCatType* inTypeLo = inputCat()->lookupType(inlo_key,kTRUE) ;
   const RooCatType* inTypeHi = inputCat()->lookupType(inhi_key,kTRUE) ;
   const RooCatType* outType  = lookupType(out_key,kTRUE) ;
@@ -159,7 +159,9 @@ void RooMappedCategory::printToStream(ostream& os, PrintOption opt)
 	   << ") -> " << out->GetName() << " (" << out->getVal() << ")" << endl ;
       }
     }
-    os << "   Default -> " << _defout.GetName() << " (" << _defout.getVal() << ")" << endl ;
+    if (!TString(_defout.GetName()).IsNull()) {
+      os << "   Default -> " << _defout.GetName() << " (" << _defout.getVal() << ")" << endl ;
+    }
   } else {
     os << "RooMappedCategory: " << GetName() << " = " << inputCat()->GetName() 
        << ":" << inputCat()->getLabel() << "(" << inputCat()->getIndex() 
@@ -175,63 +177,63 @@ void RooMappedCategory::printToStream(ostream& os, PrintOption opt)
 Bool_t RooMappedCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   if (compact) {
-    cout << "RooMappedCategory::readFromSteam(" << GetName() << "): Compact mode not implemented" << endl ;
+    cout << "RooMappedCategory::readFromSteam(" << GetName() << "): can't read in compact mode" << endl ;
     return kTRUE ;    
-  }
+  } else {
+    TString token,errorPrefix("RooMappedCategory::readFromStream(") ;
+    errorPrefix.Append(GetName()) ;
+    errorPrefix.Append(")") ;
+    RooStreamParser parser(is,errorPrefix) ;
+    
+    TString destKey,srcKey1,srcKey2 ;
+    Bool_t readToken(kTRUE) ;
 
-  // Read a line
-  char line[1024] ;
-  is.getline(line,sizeof(line)) ;
-  if(!is.good() || is.eof()) return false;
+    // Loop over definition sequences
+    while(1) {      
+      if (readToken) token=parser.readToken() ;
+      if (token.IsNull()) break ;
+      readToken=kTRUE ;
 
-  cout << "line = " << line << endl ;
+      destKey = token ;
+      if (parser.expectToken(":",kTRUE)) break ;
 
-  char *token = strtok(line," ") ;
-  if(TString(token).CompareTo("=")) {
-    cout << "RooMappedCategory::readFromStream: parse error, expecing '='" << endl;
-    return false ;
-  }
+      // Loop over list of sources for this destination
+      while(1) { 
+	srcKey1 = parser.readToken() ;	
+	token = parser.readToken() ;
+	if (!token.CompareTo("-")) {	  
+	  // Map a range
+	  srcKey2 = parser.readToken() ;
+	  mapRange(srcKey1,srcKey2,destKey) ;
+	  token = parser.readToken() ;
+	} else {
+	  if (!srcKey1.CompareTo("*")) {
+	    // Set the default destination
+	    setDefault(destKey) ;
+	  } else {
+	    // Map a value
+	    mapValue(srcKey1,destKey) ;
+	  }
+	}
 
-  // Decode mapping sequences
-  while(token = strtok(0," ")) {
-    cout << "token = |" << token << "|" << endl ; 
-   
-    // Find colon
-    char *ptr = strchr(token,':') ;
-    if (!ptr) {
-      cout << "RooMappedCategory::readFromStream: ignoring invalid token '" << token << "'" << endl;
-      continue ;
-    }
-
-    // Isolate output word & move on to input list
-    *ptr=0 ; ptr++ ;
-    char *ptr2 ;
-    while(true) {
-      ptr2 = strchr(ptr,',') ; 
-      if (ptr2) *ptr2 = 0 ;
-
-      // Range or single number or default?
-      char *psep ;
-      if (*ptr=='*') {
-	setDefault(token) ;
-      } else if (psep=strchr(ptr,'-')) {
-	*psep=0 ;
-	mapRange(ptr,psep+1,token) ;
-      } else {
-	mapValue(ptr,token) ;
-      }
-
-      if (!ptr2) break ;
-      ptr = ptr2+1 ;      
+	// Unless next token is ',' current token 
+        // is destination part of next sequence
+	if (token.CompareTo(",")) {	  	  
+	  readToken = kFALSE ;
+	  break ;
+	} 	
+      }      
     } 
   }
-  
-  return true ;
 }
 
 
 
 void RooMappedCategory::writeToStream(ostream& os, Bool_t compact) 
 {
-  os << getIndex() << endl ;
+  if (compact) {
+    cout << "RooMappedCategory::writeToStream(" << GetName() << "): can't write in compact mode" << endl ;    
+  } else {
+    os << getIndex() ;
+  }
 }

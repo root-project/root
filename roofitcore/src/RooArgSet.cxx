@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.1 2001/03/14 02:45:47 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.2 2001/03/16 07:59:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,7 +11,9 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
+#include <iostream.h>
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooStreamParser.hh"
 
 ClassImp(RooArgSet)
 
@@ -230,6 +232,62 @@ void RooArgSet::print(RooAbsArg::PrintOption opt)
 {
   printToStream(cout,opt) ;
 }
+
+
+Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+{
+  if (compact) {
+
+    TIterator *iterator= MakeIterator();
+    RooAbsArg *next(0);
+    while(0 != (next= (RooAbsArg*)iterator->Next())) {
+      next->readFromStream(is,kTRUE,verbose) ;
+    }
+    delete iterator;    
+
+  } else {
+
+    RooStreamParser parser(is) ;
+    TString token ;
+    while (1) {
+      token = parser.readToken() ;
+      if (token.IsNull()) break ;
+      RooAbsArg *arg ;
+      if (arg = find(token)) {
+	if (parser.expectToken("=",kTRUE)) {
+	  parser.zapToEnd() ;
+	  continue ;
+	}
+	arg->readFromStream(is,kFALSE,verbose) ;	
+      } else {
+	cout << "RooArgSet::readFromStream(" << GetName() << "): argument " 
+	     << token << " not in list, ignored" << endl ;
+	parser.zapToEnd() ;
+      }
+    }
+  }
+}
+
+
+
+void RooArgSet::writeToStream(ostream& os, Bool_t compact) 
+{
+  TIterator *iterator= MakeIterator();
+  RooAbsArg *next(0);
+  while(0 != (next= (RooAbsArg*)iterator->Next())) {
+    if (compact) {
+      next->writeToStream(os,kTRUE) ;
+      os << " " ;
+    } else  {
+      os << next->GetName() << " = " ;
+      next->writeToStream(os,kFALSE) ;
+      os << endl ;
+    }
+  }
+  delete iterator;  
+  if (compact) os << endl ;
+}
+
 
 
 void RooArgSet::printToStream(ostream& os, RooAbsArg::PrintOption opt) {
