@@ -239,7 +239,13 @@ private:
    const TGPicture *fLargeCachedPic;  //
    const TGPicture *fSmallCachedPic;  //
    Bool_t           fWasGrouped;
+   TObject         *fActiveObject;    //
 
+protected:
+   TGFrameElement *FindFrame(const TString& name,
+                             Bool_t direction = kTRUE,
+                             Bool_t caseSensitive = kTRUE,
+                             Bool_t beginWith = kFALSE);
 public:
    TRootIconBox(const TGWindow *p, TGListView *lv, UInt_t w, UInt_t h,
                 UInt_t options = kSunkenFrame,
@@ -255,7 +261,9 @@ public:
    void   RemoveAll();
    void   SetGroupSize(Int_t siz) { fGroupSize = siz; }
    Int_t  GetGroupSize() const { return fGroupSize; }
+   TGFrameElement *FindFrame(Int_t x,Int_t y,Bool_t exclude=kTRUE) { return TGContainer::FindFrame(x,y,exclude); }
    Bool_t WasGrouped() const { return fWasGrouped; }
+
 };
 
 //______________________________________________________________________________
@@ -275,6 +283,7 @@ TRootIconBox::TRootIconBox(const TGWindow *p, TGListView *lv, UInt_t w,
    fGroupSize = 1000;
    fCurrentName = 0;
    fWasGrouped = kFALSE;
+   fActiveObject = 0;
 
    // Don't use timer HERE (timer is set in TBrowser).
    delete fRefresh;
@@ -450,13 +459,88 @@ void TRootIconList::Browse(TBrowser *b)
       fi->SetUserData(obj);
       fIconBox->AddItem(fi);
       fIconBox->fTotal++;
+
+      if (obj==fIconBox->fActiveObject) {
+         fIconBox->ActivateItem((TGFrameElement*)fIconBox->fList->Last());
+      }
    }
+
    fIconBox->fGarbage->Remove(this);
    fIconBox->fGarbage->Delete();
    fIconBox->fGarbage->Add(this);
    fIconBox->Refresh();
+   fIconBox->AdjustPosition();
+
    fIconBox->fWasGrouped = kTRUE;
    gVirtualX->SetCursor(fIconBox->fId, kNone);
+}
+
+//______________________________________________________________________________
+TGFrameElement* TRootIconBox::FindFrame(const TString& name, Bool_t direction,
+                                       Bool_t caseSensitive,Bool_t beginWith)
+{
+   // find frame with name beginning with "name"
+
+   if (!fGrouped) {
+      return TGContainer::FindFrame(name,direction,caseSensitive,beginWith);
+   }
+
+   if (name.IsNull()) return 0;
+   int idx = kNPOS;
+
+   TGFrameElement *el = 0;
+   TString str;
+   TString::ECaseCompare cmp = caseSensitive ? TString::kExact : TString::kIgnoreCase;
+
+   fLastDir = direction;
+   fLastCase = caseSensitive;
+   fLastName = name;
+
+   if (fLastActiveEl) {
+      el = fLastActiveEl;
+   } else {
+      if (direction) el = (TGFrameElement *)fList->First();
+      else el  = (TGFrameElement *)fList->Last();
+   }
+
+   TGLVEntry *lv = 0;
+   TObject *obj = 0;
+   TList *li = 0;
+
+   while (el) {
+      if (direction) {
+         el = (TGFrameElement *)fList->After(el);
+      } else {
+         el = (TGFrameElement *)fList->Before(el);
+      }
+      if (!el) break;
+      if (!el->fFrame->InheritsFrom(TGLVEntry::Class())) continue;
+
+      lv = (TGLVEntry*) el->fFrame;
+      li = (TList*) lv->GetUserData();
+
+      TIter next(li);
+
+      while ((obj=next())) {
+         str = obj->GetName();
+
+         idx = str.Index(name,0,cmp);
+
+         if (idx!=kNPOS) {
+            if (beginWith) {
+               if (idx==0) {
+                  fActiveObject = obj;
+                  return el;
+               }
+            } else {
+               fActiveObject = obj;
+               return el;
+            }
+         }
+      }
+   }
+   fActiveObject = 0;
+   return 0;
 }
 
 //______________________________________________________________________________
