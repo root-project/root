@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.19 2001/01/26 16:44:35 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.20 2001/02/06 19:12:35 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -129,6 +129,7 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <errno.h>
+#include <sys/vfs.h>
 
 #if defined(linux)
 #   include <features.h>
@@ -1159,6 +1160,9 @@ void RootdOpen(const char *msg)
 //______________________________________________________________________________
 void RootdPut(const char *msg)
 {
+   // Receive a buffer and write it at the specified offset in the currently
+   // open file.
+
    int offset, len;
 
    sscanf(msg, "%d %d", &offset, &len);
@@ -1197,6 +1201,9 @@ void RootdPut(const char *msg)
 //______________________________________________________________________________
 void RootdGet(const char *msg)
 {
+   // Get a buffer from the specified offset from the currently open file
+   // and send it to the client.
+
    int offset, len;
 
    sscanf(msg, "%d %d", &offset, &len);
@@ -1231,6 +1238,109 @@ void RootdGet(const char *msg)
    if (gDebug > 0)
       ErrorInfo("RootdGet: read %d bytes starting at %d from file %s",
                 len, offset, gFile);
+}
+
+//______________________________________________________________________________
+void RootdPutFile(const char *msg)
+{
+   // Receive a file from the remote client.
+
+   char file[kMAXPATHLEN];
+   long size, restartat;
+   int  blocksize;
+
+   sscanf(msg, "%s %d %ld %ld", file, &blocksize, &size, &restartat);
+
+   // anon user may not overwrite existing file...
+   // add check here...
+
+   // open local file
+   int fd;
+   if (!restartat)
+#ifndef WIN32
+      fd = open(file, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+#else
+      fd = open(file, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
+                S_IREAD | S_IWRITE);
+#endif
+   else
+#ifndef WIN32
+      fd = open(file, O_WRONLY, 0600);
+#else
+      fd = open(file, O_WRONLY | O_BINARY, S_IREAD | S_IWRITE);
+#endif
+
+   if (fd < 0) {
+      Error(kErrFileOpen, "RootdPutFile: cannot open file %s", file);
+      return;
+   }
+
+   // check file system space
+   struct statfs statfsbuf;
+   if (fstatfs(fd, &statfsbuf) == 0) {
+      double space = (double)statfsbuf.f_bsize * (double)statfsbuf.f_bavail;
+      if (space < size - restartat) {
+         Error(kErrNoSpace, "RootdPutFile: not enough space to store file %s", file);
+         close(fd);
+         return;
+      }
+   }
+
+   // seek to restartat position
+   if (restartat) {
+      if (lseek(fd, restartat, SEEK_SET) < 0) {
+         Error(kErrRestartSeek, "RootdPutFile: cannot seek to position %d in file %s",
+               restartat, file);
+         close(fd);
+         return;
+      }
+   }
+
+   // setup ok
+   NetSend(0, kROOTD_PUTFILE);
+
+   char *buf = new char[blocksize];
+
+   long pos  = restartat & ~(blocksize-1);
+   int  skip = restartat - pos;
+
+   while (pos < size) {
+      long left = size - pos;
+      if (left > blocksize)
+         left = blocksize;
+
+      NetRecvRaw(buf, left-skip);
+
+      // in case of ascii file, loop here over buffer and remove \r's
+      // if (gType == kASCII) { } else { current write }
+
+      ssize_t siz;
+      while ((siz = write(fd, buf, left-skip)) < 0 && GetErrno() == EINTR)
+         ResetErrno();
+
+      if (siz < 0)
+         ErrorSys(kErrFilePut, "RootdPutFile: error writing to file %s", file);
+
+      if (siz != left)
+         ErrorFatal(kErrFilePut, "RootdPutFile: error writing all requested bytes to file %s, wrote %d of %d",
+                    file, siz, left);
+
+      gBytesWritten += left-skip;
+
+      pos += left;
+      skip = 0;
+   }
+
+   // file stored ok
+   NetSend(0, kROOTD_PUTFILE);
+
+   delete [] buf;
+
+   fchmod(fd, 0644);
+
+   close(fd);
+
+   ErrorInfo("RootdPutFile: uploaded file %s (%ld)", file, size);
 }
 
 //______________________________________________________________________________
@@ -1306,6 +1416,9 @@ void RootdLoop()
             break;
          case kROOTD_PROTOCOL:
             RootdProtocol();
+            break;
+         case kROOTD_PUTFILE:
+            RootdPutFile(recvbuf);
             break;
          default:
             ErrorFatal(kErrBadOp, "RootdLoop: received bad opcode %d", kind);

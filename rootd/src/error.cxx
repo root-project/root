@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name$:$Id$
+// @(#)root/rootd:$Name:  $:$Id: error.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -131,4 +131,20 @@ void ErrorFatal(ERootdErrors code, const char *va_(fmt), ...)
    NetSendError(code);
    RootdClose();
    exit(1);
+}
+
+//______________________________________________________________________________
+void Error(ERootdErrors code, const char *va_(fmt), ...)
+{
+   // Write fatal message to syslog and exit.
+
+   char    buf[1024];
+   va_list ap;
+
+   va_start(ap,va_(fmt));
+   vsprintf(buf, fmt, ap);
+   va_end(ap);
+
+   syslog(LOG_ERR, buf);
+   NetSendError(code);
 }

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name$:$Id$
+// @(#)root/rootd:$Name:  $:$Id: rootd.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -45,7 +45,8 @@ enum ERootdErrors {
    kErrNoPasswd,
    kErrBadPasswd,
    kErrNoSRP,
-   kErrFatal
+   kErrFatal,
+   kErrRestartSeek
 };
 
 #endif
