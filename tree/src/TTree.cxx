@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.12 2000/07/13 19:19:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.13 2000/07/17 10:26:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1412,7 +1412,45 @@ void TTree::Loop(Option_t *option, Int_t nentries, Int_t firstentry)
 }
 
 //______________________________________________________________________________
-Int_t TTree::MakeClass(const char *classname)
+Int_t TTree::MakeAnal(const char *classname)
+{
+//====>
+//*-*-*-*-*-*-*Generate skeleton analysis class for this Tree*-*-*-*-*-*-*
+//*-*          ==============================================
+//
+//   The following files are produced: anal.h and anal.C
+//   if classname is NULL, classname will be nameoftree.
+//
+//   The generated code in anal.h includes the following:
+//      - Identification of the original Tree and Input file name
+//      - Definition of analysis class anal(data and functions)
+//      - the following class functions:
+//         - constructor and destructor
+//         - void    Begin(TTree *tree)
+//         - void    Init(TTree *tree)
+//         - Bool_t  Notify()
+//         - Bool_t  ProcessCut(Int-t entry)
+//         - void    ProcessFill(Int-t entry)
+//         - void    Terminate
+//
+//   The class anal derives from TSelector.
+//   The generated code in anal.C includes empty functions defined above:
+//
+//   To use this function:
+//      - connect your Tree file (eg: TFile f("myfile.root");)
+//      - T->MakeAnal("anal");
+//    where T is the name of the Tree in file myfile.root
+//    and anal.h, anal.C the name of the files created by this function.
+//   In a Root session, you can do:
+//      Root > T->Process("anal.C")
+//
+//====>
+
+   return MakeClass(classname,"anal");
+}
+
+//______________________________________________________________________________
+Int_t TTree::MakeClass(const char *classname, Option_t *option)
 {
 //====>
 //*-*-*-*-*-*-*Generate skeleton analysis class for this Tree*-*-*-*-*-*-*
@@ -1420,6 +1458,9 @@ Int_t TTree::MakeClass(const char *classname)
 //
 //   The following files are produced: classname.h and classname.C
 //   if classname is NULL, classname will be nameoftree.
+//
+//   When the option "anal" is specified, the function generates the
+//   analysis class described in TTree::makeAnal.
 //
 //   The generated code in classname.h includes the following:
 //      - Identification of the original Tree and Input file name
@@ -1450,7 +1491,7 @@ Int_t TTree::MakeClass(const char *classname)
 
    GetPlayer();
    if (!fPlayer) return 0;
-   return fPlayer->MakeClass(classname);
+   return fPlayer->MakeClass(classname,option);
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.6 2000/07/10 06:17:57 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.7 2000/07/17 10:26:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -106,7 +106,7 @@ public:
     virtual Double_t *GetV3()   {return fV3;}
     virtual Double_t *GetW()    {return fW;}
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0);
-    virtual Int_t     MakeClass(const char *classname=0);
+    virtual Int_t     MakeClass(const char *classname=0, Option_t *option="");
     virtual Int_t     MakeCode(const char *filename=0);
     virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0);
     virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.8 2000/07/17 10:29:15 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.9 2000/07/18 07:11:32 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -198,7 +198,8 @@ public:
     Bool_t            IsFolder() {return kTRUE;}
     virtual Int_t     LoadTree(Int_t entry);
     virtual void      Loop(Option_t *option="",Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
-    virtual Int_t     MakeClass(const char *classname=0);
+    virtual Int_t     MakeAnal(const char *classname=0);
+    virtual Int_t     MakeClass(const char *classname=0,Option_t *option="");
     virtual Int_t     MakeCode(const char *filename=0);
     Bool_t            MemoryFull(Int_t nbytes);
     virtual void      Print(Option_t *option=""); // *MENU*
