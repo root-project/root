@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddPdf.cc,v 1.43 2002/06/19 22:37:09 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.44 2002/07/02 23:36:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -705,10 +705,10 @@ void RooAddPdf::selectNormalization(const RooArgSet* depSet, Bool_t force)
 
 RooAbsGenContext* RooAddPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, Bool_t verbose) const 
 {
-  // WVE --- only use add context if no prototype vars are used
-  if (prototype&&dependsOn(*prototype->get())) {
-    return RooAbsPdf::genContext(vars,prototype,verbose) ;
-  }
+//    // WVE --- only use add context if no prototype vars are used
+//    if (prototype&&dependsOn(*prototype->get())) {
+//      return RooAbsPdf::genContext(vars,prototype,verbose) ;
+//    }
   return new RooAddGenContext(*this,vars,prototype,verbose) ;
 }
 
