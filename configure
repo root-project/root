@@ -453,6 +453,8 @@ if [ "x$enable_opengl" != "xno" -a "$arch" != "win32" ]; then
         openglincdirs=$openglincdir
     else
         openglincdirs="$OPENGL $OPENGL/include /usr/include \
+                        /usr/include/X11 /usr/X11/include /usr/X11R6/include \
+                        /usr/local/include/X11 /usr/local/X11R6/include \
                         /usr/local/include /usr/include/Mesa \
                         /usr/local/include/Mesa /usr/Mesa/include \
                         /usr/local/Mesa/include /usr/Mesa \
