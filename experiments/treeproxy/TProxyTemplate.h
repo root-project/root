@@ -82,3 +82,37 @@ class TArray2Proxy {
 
 };
 
+template <class T> 
+class TClaObjProxy  {
+   TClaProxy obj;
+ public:
+   InjectProxyInterface();
+
+   void Print() {
+      obj.Print();
+      cout << "obj.fWhere " << obj.fWhere << endl;
+      //if (obj.fWhere) cout << "value? " << *(T*)obj.fWhere << endl;
+   }
+
+   TClaObjProxy() : obj() {}; 
+   TClaObjProxy(TProxyDirector *director, const char *name) : obj(director,name) {};
+   TClaObjProxy(TProxyDirector *director,  const char *top, const char *name) : 
+      obj(director,top,name) {};
+   ~TClaObjProxy() {};
+
+   const T* at(int i) {
+      static T default_val;
+      if (!obj.read()) return &default_val;
+      if (obj.fWhere==0) return &default_val;
+     
+      TClonesArray *tca = (TClonesArray*)obj.fWhere;
+      
+      if (tca->GetLast()<i) return &default_val;
+
+      const char *location = (const char*)tca->At(i);
+      return (T*)(location+obj.fOffset);
+   }
+
+   const T* operator [](int i) { return at(i); }
+
+};

@@ -32,6 +32,22 @@ class TProxy;
 
 void reset(TProxy*);
 
+class TProxyHelper {
+public:
+   TString name;
+   TProxyHelper(const char *left,const char *right = 0) :
+      name() {
+      if (left) {
+         name = left;
+         if (strlen(left)&&right) name += ".";
+      } 
+      if (right) {
+         name += right;
+      }
+   }
+   operator const char*() { return name.Data(); };
+};
+   
 class TProxyDirector {
 public:
    //This class could actually be the selector itself.
@@ -96,6 +112,9 @@ class TProxy {
       fInitialized(false), fRead(-1), fLastTree(0), fWhere(0),
       fOffset(0), fIsaPointer(false)
       {
+         if (fBranchName.Length() && fBranchName[fBranchName.Length()-1]!='.') {
+            ((TString&)fBranchName).Append(".");
+         }
          ((TString&)fBranchName).Append(name); 
          boss->attach(this);
       }

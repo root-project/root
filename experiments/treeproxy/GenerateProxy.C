@@ -6,6 +6,7 @@ class TBranch;
 
 #include "TClass.h"
 #include "TClonesArray.h"
+#include "TError.h"
 
 class TProxyDescriptor : public TNamed {
    TString fBranchName;
@@ -17,7 +18,7 @@ public:
    const char *GetBranchName() { return fBranchName.Data(); }
 
    void OutputDecl(FILE *hf, int offset, UInt_t maxVarname){
-      fprintf(hf,"%-*s%-*s %s;\n",  offset," ",  maxVarname,GetTypeName(),  GetDataName()); // might want to add a comment      
+      fprintf(hf,"%-*s%-*s %s;\n",  offset," ",  maxVarname, GetTypeName(), GetDataName()); // might want to add a comment      
    };
 
    ClassDef(TProxyDescriptor,0); 
@@ -28,20 +29,15 @@ class TProxyClassDescriptor : public TNamed {
    UInt_t  fMaxDatamemberType;
    UInt_t  fSplitLevel;
    TString fBranchName;
+   TString fSubBranchPrefix;
    Bool_t  fIsClones;
 
-public:
-   TProxyClassDescriptor(const char *type, const char *branchname, Bool_t isclones) :
-      TNamed(type,type), 
-      fMaxDatamemberType(3),
-      fSplitLevel(0),
-      fBranchName(branchname),
-      fIsClones(isclones)
-   {
+   void FixName() { 
+
       // Make the typename a proper class name without having the really deal with 
       // namespace and templates.
             
-      TString newname = type;
+      TString newname = GetName();
       newname.ReplaceAll(":","_");
       newname.ReplaceAll("<","_");
       newname.ReplaceAll(">","_");
@@ -50,6 +46,30 @@ public:
       newname.ReplaceAll("&","rf");
       newname.Prepend("TPx_");
       SetName(newname);
+   }
+
+public:
+   TProxyClassDescriptor(const char *type, const char *branchname, Bool_t isclones) :
+      TNamed(type,type), 
+      fMaxDatamemberType(3),
+      fSplitLevel(0),
+      fBranchName(branchname),
+      fSubBranchPrefix(branchname),
+      fIsClones(isclones)
+   {
+      FixName();
+   }
+
+   TProxyClassDescriptor(const char *type, const char *branchname, 
+                         const char *branchPrefix, Bool_t isclones) :
+      TNamed(type,type), 
+      fMaxDatamemberType(3),
+      fSplitLevel(0),
+      fBranchName(branchname),
+      fSubBranchPrefix(branchPrefix),
+      fIsClones(isclones)
+   {
+      FixName();
    }
 
    void AddDescriptor(TProxyDescriptor *desc) {
@@ -69,6 +89,10 @@ public:
       return fBranchName.Data();
    }
 
+   const char* GetSubBranchPrefix() const {
+      return fSubBranchPrefix.Data();
+   }
+
    UInt_t GetSplitLevel() const { return fSplitLevel; }
    Bool_t IsClones() const { return fIsClones; }
 
@@ -78,46 +102,49 @@ public:
       TProxyDescriptor *desc;
       fprintf(hf,"%-*sstruct %s {\n", offset," ", GetName() );
 
-      fprintf(hf,"%-*s   %s(TProxyDirector* director,const char *top) :\n",
+      fprintf(hf,"%-*s   %s(TProxyDirector* director,const char *top,const char *mid=0) :",
               offset," ", GetName());
-      TIter next(&fListOfSubProxies);
-      if (IsLoaded()) {
-         fprintf(hf,"%-*s      %-*s(director,\"%s\")",
-                 offset," ",fMaxDatamemberType,"obj",GetBranchName());
-      } else if ( (desc = (TProxyDescriptor*)next()) ) {
-         const char *subbranchname = desc->GetBranchName();
-         const char *above = "";
-         if (strncmp(GetBranchName(),desc->GetBranchName(),strlen(GetBranchName()))==0) {
-            subbranchname += strlen(GetBranchName())+1; // +1 for the dot "."
-            above = "top, ";
-         }
-         fprintf(hf,"%-*s      %-*s(director, %s\"%s\")",
-                 offset," ",fMaxDatamemberType,desc->GetName(), above, subbranchname);
+
+      fprintf(hf,"\n%-*s      %-*s(top,mid)",offset," ",fMaxDatamemberType,"ffPrefix");
+
+      bool wroteFirst = true;
+      if (IsLoaded() || IsClones() ) {
+         fprintf(hf,"%s\n%-*s      %-*s(director,\"%s\")",
+                 wroteFirst?",":"",offset," ",fMaxDatamemberType,"obj",GetBranchName());
+         wroteFirst = true;
+
       }
+      TIter next(&fListOfSubProxies);
       while ( (desc = (TProxyDescriptor*)next()) ) {
          const char *subbranchname = desc->GetBranchName();
          const char *above = "";
-         if (strncmp(GetBranchName(),desc->GetBranchName(),strlen(GetBranchName()))==0) {
-            subbranchname += strlen(GetBranchName())+1; // +1 for the dot "."
-            above = "top, ";
+         if (strncmp(GetSubBranchPrefix(),desc->GetBranchName(),strlen(GetSubBranchPrefix()))==0) {
+            subbranchname += strlen(GetSubBranchPrefix())+1; // +1 for the dot "."
+            above = "ffPrefix, ";
          }
-         fprintf(hf,",\n%-*s      %-*s(director, %s\"%s\")",
-                 offset," ",fMaxDatamemberType,desc->GetName(), above, subbranchname);
+         fprintf(hf,"%s\n%-*s      %-*s(director, %s\"%s\")",
+                 wroteFirst?",":"",offset," ",fMaxDatamemberType,desc->GetName(), above, subbranchname);
+         wroteFirst = true;
       }
-      fprintf(hf,"%-*s   {};\n",offset," ");
+      fprintf(hf,"\n%-*s   {};\n",offset," ");
+
+      fprintf(hf,"%-*s%-*s %s;\n",  offset+3," ",  fMaxDatamemberType, "TProxyHelper", "ffPrefix");
 
       // If the real class is available, make it available via the arrow operator:
-      if (IsLoaded()) {
+      if (IsLoaded() || IsClones()) {
+         const char *type = IsClones() ? "TClonesArray" : GetTitle();
          fprintf(hf,"%-*sInjectProxyInterface();\n", offset+3," ");
          //Can the real type contain a leading 'const'? If so the following is incorrect.
-         fprintf(hf,"%-*sconst %s* operator->() { return obj.ptr(); }\n", offset+3," ",GetTitle());
-         fprintf(hf,"%-*sTObjProxy< %s > obj;\n", offset+3, " ", GetTitle());
+         fprintf(hf,"%-*sconst %s* operator->() { return obj.ptr(); }\n", offset+3," ",type);
+         fprintf(hf,"%-*sTObjProxy< %s > obj;\n", offset+3, " ", type);
       }
+
       next.Reset();
       while( (desc = ( TProxyDescriptor *)next()) ) {
          desc->OutputDecl(hf,offset+3,fMaxDatamemberType);
       }
       fprintf(hf,"%-*s};\n",offset," ");
+
       //TProxyDescriptor::OutputDecl(hf,offset,maxVarname);
    }
    ClassDef(TProxyClassDescriptor,0);
@@ -146,9 +173,9 @@ public:
 
    bool NeedToEmulate(TClass *cl, UInt_t level);
 
-   void AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassDescriptor *desc);
-   void AnalyzeTree();
-   void WriteHeader();
+   UInt_t AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassDescriptor *desc);
+   void   AnalyzeTree();
+   void   WriteHeader();
 };
 
 #include "TBranchElement.h"
@@ -330,14 +357,20 @@ void TGenerateProxy::AddDescriptor(TProxyDescriptor *desc) {
    
 }
 
-void TGenerateProxy::AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassDescriptor *topdesc) 
+UInt_t TGenerateProxy::AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassDescriptor *topdesc) 
 {
+   // Analyze the branch and populate the TGenerateProxy or the topdesc with
+   // its findings.  Sometimes several branch of the mom are also analyzed,
+   // the number of such branches is returned (this happens in the case of
+   // embedded objects inside an object inside a clones array split more than
+   // one level.
 
    TString type;
    TString prefix;
    TString dataMemberName;
    TString cname;
    TString middle;
+   UInt_t  extraLookedAt = 0;
    Bool_t  isclones = false;
    EContainer container = kNone;
    if (topdesc && topdesc->IsClones()) {
@@ -430,13 +463,14 @@ void TGenerateProxy::AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassDes
             case TStreamerInfo::kAnyP: {
                TClass *cl = element->GetClassPointer();
                if (cl) {
-                  type = Form("TObjProxy<%s >",cl->GetName());
+                  type = Form("T%sObjProxy<%s >",
+                              middle.Data(),cl->GetName());
                   cname = cl->GetName();
                   if (cl==TClonesArray::Class()) {
                      isclones = true;
                      cname = be->GetClonesName();
                      if (!cname) {
-                        fprintf(stderr,"introspection of TClonesArrya in older file not implemented yet\n");
+                        fprintf(stderr,"introspection of TClonesArray in older file not implemented yet\n");
                      }
                   }
                }
@@ -459,14 +493,13 @@ void TGenerateProxy::AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassDes
    } else {
       
       fprintf(stderr,"non TBranchElement not implemented yet\n");
-      return;
+      return extraLookedAt;
       
    }
    
    if ( branch->GetListOfBranches()->GetEntries() > 0 ) {
       
       // See AnalyzeTree for similar code!
-      const char *branchname = branch->GetName();
       TProxyClassDescriptor *cldesc;
 
       TClass *cl = gROOT->GetClass(cname);
@@ -476,26 +509,27 @@ void TGenerateProxy::AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassDes
          if (added) type = added->GetName();
          if (added!=cldesc) cldesc = 0;
       }
-      fprintf(stderr,"nesting br %s of class %s and type %s\n",
-              branchname,cname.Data(),type.Data());
-
-      TBranch *subbranch;
-      TIter subnext( branch->GetListOfBranches() );
+      //fprintf(stderr,"nesting br %s of class %s and type %s\n",
+      //        branchname,cname.Data(),type.Data());
 
       if (cldesc) {
+         TBranch *subbranch;
+         TIter subnext( branch->GetListOfBranches() );
          while ( (subbranch = (TBranch*)subnext()) ) {
-            AnalyzeBranch(subbranch,level+1,cldesc);
+            Int_t skipped = AnalyzeBranch(subbranch,level+1,cldesc);
+            Int_t s = 0;
+            while( s<skipped && subnext() ) { s++; };
          }         
       }
 
    }
    TLeaf *leaf = (TLeaf*)branch->GetListOfLeaves()->At(0);
    
-   if (leaf && strlen(leaf->GetTypeName()) == 0) return;
+   if (leaf && strlen(leaf->GetTypeName()) == 0) return extraLookedAt;
    
    if (leaf && type.Length()==0) type=leaf->GetTypeName() ;
    
-   if (leaf) dataMemberName = leaf->GetName(); 
+   if (leaf && !isclones) dataMemberName = leaf->GetName(); 
    else dataMemberName = branch->GetName();
 
    Int_t pos;
@@ -506,7 +540,67 @@ void TGenerateProxy::AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassDes
    pos = dataMemberName.Index("[");
    if (pos != -1) {
       dataMemberName.Remove(pos);
-   }   
+   }
+   pos = dataMemberName.Index(".");
+
+   if (pos != -1 && container==kClones && branch->IsA()==TBranchElement::Class()) {
+      // We still have a "." in the name, we assume that we are in the case
+      // where we reach an embedded object in the object contained in the
+      // TClonesArray
+      
+      // Discover the type of this object.
+      TString name = dataMemberName(0,pos);
+      TBranchElement *mom = (TBranchElement*)branch->GetMother();
+      TString cname = mom->GetClonesName();
+      TString prefix = mom->GetName();
+      prefix += ".";
+      prefix += name;
+      // prefix += ".";
+      TStreamerElement* elem = (TStreamerElement*)
+         mom->GetInfo()->GetElements()->FindObject("fTriggerBits");
+      TClass *cl = elem->GetClassPointer();
+
+      cname = cl->GetName();
+      type = Form("TClaObjProxy<%s >",cname.Data());
+      
+      TProxyClassDescriptor *cldesc;
+
+      cldesc = new TProxyClassDescriptor( cl->GetName(), prefix.Data(), prefix.Data(), isclones);
+      TProxyClassDescriptor *added = AddClass(cldesc);
+      if (added) type = added->GetName();
+      if (added!=cldesc) cldesc = 0;
+      
+      TIter next(mom->GetListOfBranches());
+      TBranch *subbranch;
+      while ( (subbranch = (TBranch*)next()) && subbranch!=branch ) {};
+      
+      Assert( subbranch == branch );
+
+      do {
+         TString subname = subbranch->GetName();
+         if ( subname.BeginsWith( prefix ) ) {
+            Int_t skipped = 0;
+            if (cldesc) {
+               
+               skipped = AnalyzeBranch( subbranch, level+1, cldesc);
+               Int_t s = 0;
+               while( s<skipped && next() ) { s++; };
+
+            }
+            extraLookedAt += 1 + skipped;
+         } else { 
+            break;
+         }
+      } while ( (subbranch = (TBranch*)next()) );
+      
+      dataMemberName.Remove(pos);
+
+   } else {
+
+      // Assume we coming recursively from the previous case!
+      dataMemberName.Remove(0,pos+1);
+   }
+
    dataMemberName.Prepend(prefix);
 
    TProxyDescriptor *desc;
@@ -515,9 +609,9 @@ void TGenerateProxy::AnalyzeBranch(TBranch *branch, UInt_t level, TProxyClassDes
    } else {
       AddDescriptor( desc = new TProxyDescriptor( dataMemberName.Data(), type, branch->GetName() ) );
    } 
-   fprintf(stderr,"%-*s      %-*s(director,\"%s\")\n",
-           0," ",10,desc->GetName(), desc->GetBranchName());
-
+   //fprintf(stderr,"%-*s      %-*s(director,\"%s\")\n",
+   //        0," ",10,desc->GetName(), desc->GetBranchName());
+   return extraLookedAt;
 }
 
 void TGenerateProxy::AnalyzeTree() {
@@ -563,17 +657,19 @@ void TGenerateProxy::AnalyzeTree() {
 
       TBranch *subbranch;
       TIter subnext( branch->GetListOfBranches() );
-
+      UInt_t skipped = 0;
       if (desc) {
          while ( (subbranch = (TBranch*)subnext()) ) {
-            AnalyzeBranch(subbranch,1,desc);
+            skipped = AnalyzeBranch(subbranch,1,desc);
+            if (skipped != 0) fprintf(stderr,"unexpectly read more than one branch in AnalyzeTree\n");
          }         
       }
       if ( branchname[strlen(branchname)-1] != '.' ) {
          // If there is no dot also included the data member directly
          subnext.Reset();
          while ( (subbranch = (TBranch*)subnext()) ) {
-            AnalyzeBranch(subbranch,1,0);
+            skipped = AnalyzeBranch(subbranch,1,0);
+            if (skipped != 0) fprintf(stderr,"unexpectly read more than one branch in AnalyzeTree\n");
          }
       }
    }

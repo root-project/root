@@ -40,15 +40,16 @@ void script() {
       cout << "fLastTrack: " << fLastTrack.GetUniqueID() << endl;
 #else
       cout << fEvtHdr.fEvtNum << endl;
-      // NOT YET cout << fTracks->GetLast()+1 << endl;
-      // NOT YET cout << fTracks.fPx[0] << endl;
-      // NOT YET cout << fTracks.fPx[1] << endl;
-      // NOT YET cout << "fTracks.fNsp[0]: " << fTracks.fNsp[0] << endl;
-      // NOT YET cout << "fTracks.fPointValue[0][0]: " << fTracks.fPointValue[0][0] << endl;
-      // NOT YET cout << "fLastTrack: " << fLastTrack->GetUniqueID() << endl;
+      cout << fTracks->GetLast()+1 << endl;
+      cout << fTracks.fPx[0] << endl;
+      cout << fTracks.fPx[1] << endl;
+      cout << "fTracks.fNsp[0]: " << fTracks.fNsp[0] << endl;
+      cout << "fTracks.fPointValue[0][0]: " << fTracks.fPointValue[0][0] << endl;
+      cout << "fLastTrack: " << fLastTrack->GetUniqueID() << endl;
 #endif
       // new!
       cout << "fTriggerBits nbits " << fTriggerBits->GetNbits() << "==" << fTriggerBits.fNbits<< endl;
+      cout << "fTracks[2].fTriggerBits nbits " << fTracks.fTriggerBits[20]->GetNbits()  << "==" << /* fTriggerBits.fNbits */ "not yet" << endl;
 #ifdef WITH_EVENT
 #ifdef seold_cxx
 #else
