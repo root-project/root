@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.9 2002/07/11 19:45:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.10 2002/08/20 10:51:49 rdm Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -42,11 +42,5 @@ namespace ROOT {
       }
    }
 }
-
-// macro used in dictionary
-#define R__GenerateInitInstance(name) \
-   static ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = \
-      GenerateInitInstance((name*)0x0); \
-   R__UseDummy(_R__UNIQUE_(Init))
 
 #endif

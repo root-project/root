@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.94 2002/07/30 22:30:22 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.95 2002/08/20 10:51:50 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1413,7 +1413,8 @@ void WriteClassInit(G__ClassInfo &cl)
    fprintf(fp, "      return &instance;\n");
    fprintf(fp, "   }\n");
    fprintf(fp, "   // Static variable to force the class initialization\n");
-   fprintf(fp, "   R__GenerateInitInstance(const %s);\n", cl.Fullname());
+   // must be one long line otherwise R__UseDummy does not work
+   fprintf(fp, "   static ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance((const %s*)0x0); R__UseDummy(_R__UNIQUE_(Init));\n", cl.Fullname());
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {
       fprintf(fp, "\n   // Dictionary for non-ClassDef classes\n");
