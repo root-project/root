@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.4 2001/05/07 00:22:45 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TColor.cxx,v 1.5 2001/05/07 18:41:48 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 
 #include "TROOT.h"
 #include "TColor.h"
+#include "TObjArray.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 
@@ -82,7 +83,8 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name)
    const char *cname = GetName();
 
    // enter in the list of colors
-   gROOT->GetListOfColors()->AddAt(this, color);
+   TObjArray *lcolors = (TObjArray*)gROOT->GetListOfColors();
+   lcolors->AddAtAndExpand(this, color);
 
    if (color > 0 && color < 51) {
       // now create associated colors for WBOX shading
