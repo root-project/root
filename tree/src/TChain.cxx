@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.25 2001/09/22 10:43:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.26 2001/09/26 09:43:08 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -726,6 +726,8 @@ void TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 //
 //  The SetBranchAddress statement is not necessary if the Tree
 //  contains only basic types (case of files converted from hbook)
+//
+//  NOTE that the merged Tree contains only the active branches.
 
    if (!file) return;
    TObjArray *lbranches = GetListOfBranches();
@@ -764,13 +766,13 @@ void TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
          TIter next(fTree->GetListOfBranches());
 	 Bool_t failed = kFALSE;
          while ((branch = (TBranch*)next())) {
+	    TBranch *new_branch = hnew->GetBranch( branch->GetName() );
+	    if (!new_branch) continue;
             void *add = branch->GetAddress();
             // in case branch addresses have not been set, give a last chance
             // for simple Trees (h2root converted for example)
             if (!add) {
 	       TLeaf *leaf, *new_leaf;
-	       TBranch *new_branch = hnew->GetBranch( branch->GetName() );
-	       if (!new_branch) continue;
                TIter next_l(branch->GetListOfLeaves());
 	       while ((leaf = (TLeaf*) next_l())) {
 		 add = leaf->GetValuePointer();
@@ -782,7 +784,7 @@ void TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 		 }
 	       }
             } else {
-               hnew->SetBranchAddress(branch->GetName(),add);
+               new_branch->SetAddress(add);
 	    }
             if (failed) Warning("Merge","Tree branch addresses not defined");
          }
@@ -790,7 +792,7 @@ void TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
       hnew->Fill();
    }
 
-// Write new tree header
+// Write new tree header 
    hnew->Write();
 }
 
