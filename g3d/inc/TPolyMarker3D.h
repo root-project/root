@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.5 2001/12/27 17:20:27 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.6 2002/01/20 10:02:41 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #endif
 
 class TH1;
+class TCollection;
 
 class TPolyMarker3D : public TObject, public TAttMarker, public TAtt3D {
 
