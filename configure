@@ -590,7 +590,7 @@ fi
 #
 ### echo %%% Some clean up
 #
-trap "rm -f Makefile.tmp config.tmp root-config.tmp TMakefile.tmp rootrc.tmp \
+trap "rm -f Makefile.tmp config.tmp root-config.tmp rootrc.tmp \
       memprobe.tmp; exit 1" 1 2 3 15
 
 ######################################################################
@@ -2032,8 +2032,7 @@ fi
 # config/Makefile.config
 #
 message "Writing $MAKEOUT"
-sed \
-    -e "s|@aclocaldir@|$aclocaldir|"            \
+sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@afslib@|$afslib|"                    \
     -e "s|@afslibdir@|$afslibdir|"              \
     -e "s|@alienincdir@|$alienincdir|"          \
@@ -2083,7 +2082,10 @@ sed \
     -e "s|@ldapincdir@|$ldapincdir|"            \
     -e "s|@ldaplib@|$ldaplib|"                  \
     -e "s|@ldaplibdir@|$ldaplibdir|"            \
-    -e "s|@ldflags@||"                          \
+        < Makefile.tmp > Makefile.tmpp
+mv Makefile.tmpp Makefile.tmp
+
+sed -e "s|@ldflags@||"                          \
     -e "s|@libdir@|$libdir|"                    \
     -e "s|@macrodir@|$macrodir|"                \
     -e "s|@mandir@|$mandir|"                    \
