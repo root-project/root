@@ -2,7 +2,7 @@
 #include <iostream>
 using namespace std;
 
-void runsprintfselect) {
+void runsprintfselect() {
 
  char str[1000];
  const double EPSILON = 0.5;
