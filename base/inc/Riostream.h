@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: Riostream.h,v 1.1 2002/01/24 11:39:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: Riostream.h,v 1.2 2003/04/14 13:10:34 rdm Exp $
 // Author: Fons Rademakers   23/1/02
 
 /*************************************************************************
@@ -28,7 +28,7 @@
 #endif
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
-std::ostream& operator<<(std::ostream& os, __int64 i)
+static std::ostream& operator<<(std::ostream& os, __int64 i)
 {
    char buf[20];
    sprintf(buf,"%I64d", i);
@@ -36,7 +36,7 @@ std::ostream& operator<<(std::ostream& os, __int64 i)
    return os;
 }
 
-std::ostream& operator<<(std::ostream& os, unsigned __int64 i)
+static std::ostream& operator<<(std::ostream& os, unsigned __int64 i)
 { return os << (__int64) i; }
 #endif
 

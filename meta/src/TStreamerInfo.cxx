@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.165 2003/04/08 17:07:48 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.166 2003/04/11 11:48:11 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1140,7 +1140,11 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
       case kUShort:            {UShort_t *val  = (UShort_t*)ladd;  return Double_t(*val);}
       case kUInt:              {UInt_t *val    = (UInt_t*)ladd;    return Double_t(*val);}
       case kULong:             {ULong_t *val   = (ULong_t*)ladd;   return Double_t(*val);}
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+      case kULong64:           {Long64_t *val  = (Long64_t*)ladd;  return Double_t(*val);}
+#else
       case kULong64:           {ULong64_t *val = (ULong64_t*)ladd; return Double_t(*val);}
+#endif
       case kBits:              {UInt_t *val    = (UInt_t*)ladd;    return Double_t(*val);}
 
          // array of basic types  array[8]
@@ -1155,7 +1159,11 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
       case kOffsetL + kUShort:  {UShort_t *val  = (UShort_t*)ladd;  return Double_t(val[j]);}
       case kOffsetL + kUInt:    {UInt_t *val    = (UInt_t*)ladd;    return Double_t(val[j]);}
       case kOffsetL + kULong:   {ULong_t *val   = (ULong_t*)ladd;   return Double_t(val[j]);}
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+      case kOffsetL + kULong64: {Long64_t *val  = (Long64_t*)ladd;  return Double_t(val[j]);}
+#else
       case kOffsetL + kULong64: {ULong64_t *val = (ULong64_t*)ladd; return Double_t(val[j]);}
+#endif
 
          // pointer to an array of basic types  array[n]
       case kOffsetP + kChar:    {Char_t **val    = (Char_t**)ladd;    return Double_t((*val)[j]);}
@@ -1169,7 +1177,11 @@ Double_t TStreamerInfo::GetValue(char *pointer, Int_t i, Int_t j, Int_t len) con
       case kOffsetP + kUShort:  {UShort_t **val  = (UShort_t**)ladd;  return Double_t((*val)[j]);}
       case kOffsetP + kUInt:    {UInt_t **val    = (UInt_t**)ladd;    return Double_t((*val)[j]);}
       case kOffsetP + kULong:   {ULong_t **val   = (ULong_t**)ladd;   return Double_t((*val)[j]);}
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+      case kOffsetP + kULong64: {Long64_t **val  = (Long64_t**)ladd;  return Double_t((*val)[j]);}
+#else
       case kOffsetP + kULong64: {ULong64_t **val = (ULong64_t**)ladd; return Double_t((*val)[j]);}
+#endif
          // array counter //[n]
       case kCounter:            {Int_t *val      = (Int_t*)ladd;      return Double_t(*val);}
    }
@@ -1202,7 +1214,11 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
       case kUShort:            {UShort_t *val  = (UShort_t*)ladd;  return Double_t(*val);}
       case kUInt:              {UInt_t *val    = (UInt_t*)ladd;    return Double_t(*val);}
       case kULong:             {ULong_t *val   = (ULong_t*)ladd;   return Double_t(*val);}
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+      case kULong64:           {Long64_t *val  = (Long64_t*)ladd;  return Double_t(*val);}
+#else
       case kULong64:           {ULong64_t *val = (ULong64_t*)ladd; return Double_t(*val);}
+#endif
       case kBits:              {UInt_t *val    = (UInt_t*)ladd;    return Double_t(*val);}
 
          // array of basic types  array[8]
@@ -1217,7 +1233,11 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
       case kOffsetL + kUShort:  {UShort_t *val  = (UShort_t*)ladd;  return Double_t(val[k]);}
       case kOffsetL + kUInt:    {UInt_t *val    = (UInt_t*)ladd;    return Double_t(val[k]);}
       case kOffsetL + kULong:   {ULong_t *val   = (ULong_t*)ladd;   return Double_t(val[k]);}
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+      case kOffsetL + kULong64: {Long64_t *val  = (Long64_t*)ladd;  return Double_t(val[k]);}
+#else
       case kOffsetL + kULong64: {ULong64_t *val = (ULong64_t*)ladd; return Double_t(val[k]);}
+#endif
 
          // pointer to an array of basic types  array[n]
       case kOffsetP + kChar:    {Char_t **val    = (Char_t**)ladd;    return Double_t((*val)[k]);}
@@ -1231,7 +1251,11 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
       case kOffsetP + kUShort:  {UShort_t **val  = (UShort_t**)ladd;  return Double_t((*val)[k]);}
       case kOffsetP + kUInt:    {UInt_t **val    = (UInt_t**)ladd;    return Double_t((*val)[k]);}
       case kOffsetP + kULong:   {ULong_t **val   = (ULong_t**)ladd;   return Double_t((*val)[k]);}
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+      case kOffsetP + kULong64: {Long64_t **val  = (Long64_t**)ladd;  return Double_t((*val)[k]);}
+#else
       case kOffsetP + kULong64: {ULong64_t **val = (ULong64_t**)ladd; return Double_t((*val)[k]);}
+#endif
          // array counter //[n]
       case kCounter:            {Int_t *val      = (Int_t*)ladd;      return Double_t(*val);}
    }
@@ -2446,7 +2470,11 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
       case kConv + kUShort:  ConvBasicType(UShort_t)
       case kConv + kUInt:    ConvBasicType(UInt_t)
       case kConv + kULong:   ConvBasicType(ULong_t)
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+      case kConv + kULong64: ConvBasicType(Long64_t)
+#else
       case kConv + kULong64: ConvBasicType(ULong64_t)
+#endif
       case kConv + kBits:    ConvBasicType(UInt_t)
 
       // convert array of basic types  array[8]
@@ -2461,7 +2489,11 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
       case kConvL + kUShort:  ConvBasicArray(UShort_t)
       case kConvL + kUInt:    ConvBasicArray(UInt_t)
       case kConvL + kULong:   ConvBasicArray(ULong_t)
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+      case kConvL + kULong64: ConvBasicArray(Long64_t)
+#else
       case kConvL + kULong64: ConvBasicArray(ULong64_t)
+#endif
 
       // convert pointer to an array of basic types  array[n]
       case kConvP + kChar:    ConvBasicPointer(Char_t)
@@ -2475,7 +2507,11 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
       case kConvP + kUShort:  ConvBasicPointer(UShort_t)
       case kConvP + kUInt:    ConvBasicPointer(UInt_t)
       case kConvP + kULong:   ConvBasicPointer(ULong_t)
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+      case kConvP + kULong64: ConvBasicPointer(Long64_t)
+#else
       case kConvP + kULong64: ConvBasicPointer(ULong64_t)
+#endif
 
       default:
         //Error("ReadBuffer","The element type %d is not supported yet\n",fType[i]);
@@ -3316,7 +3352,11 @@ char *pointer = 0;
       case kConv + kUShort:  ConvCBasicType(UShort_t)
       case kConv + kUInt:    ConvCBasicType(UInt_t)
       case kConv + kULong:   ConvCBasicType(ULong_t)
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+      case kConv + kULong64: ConvCBasicType(Long64_t)
+#else
       case kConv + kULong64: ConvCBasicType(ULong64_t)
+#endif
       case kConv + kBits:    ConvCBasicType(UInt_t)
 
       // convert array of basic types  array[8]
@@ -3331,7 +3371,11 @@ char *pointer = 0;
       case kConvL + kUShort:  ConvCBasicArray(UShort_t)
       case kConvL + kUInt:    ConvCBasicArray(UInt_t)
       case kConvL + kULong:   ConvCBasicArray(ULong_t)
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+      case kConvL + kULong64: ConvCBasicArray(Long64_t)
+#else
       case kConvL + kULong64: ConvCBasicArray(ULong64_t)
+#endif
 
       // convert pointer to an array of basic types  array[n]
       case kConvP + kChar:    ConvCBasicPointer(Char_t)
@@ -3345,7 +3389,11 @@ char *pointer = 0;
       case kConvP + kUShort:  ConvCBasicPointer(UShort_t)
       case kConvP + kUInt:    ConvCBasicPointer(UInt_t)
       case kConvP + kULong:   ConvCBasicPointer(ULong_t)
+#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+      case kConvP + kULong64: ConvCBasicPointer(Long64_t)
+#else
       case kConvP + kULong64: ConvCBasicPointer(ULong64_t)
+#endif
 
       default:
         //Error("ReadBufferClones","The element type %d is not supported yet\n",fType[i]);
