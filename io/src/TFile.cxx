@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.115 2004/01/22 14:44:20 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.116 2004/02/19 00:11:18 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1985,6 +1985,11 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
          f = (TFile*) h->ExecPlugin(4, name+5, option, ftitle, compress);
       else
          f = new TFile(name, option, ftitle, compress);
+   } else if (strstr(name, ".xml")) {
+      if ((h = gROOT->GetPluginManager()->FindHandler("TFile", "xml:")) &&
+          h->LoadPlugin() >= 0) {
+         f = (TFile*) h->ExecPlugin(4, name, option, ftitle, compress);
+      }
    } else if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
       if (h->LoadPlugin() == -1)
          return 0;
