@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<extension class="command.ShellCommandTest" kind="test"><argument name="environment"><set/></argument><argument name="stdin"><text/></argument><argument name="command"><text>cd root/io/newstl; gmake</text></argument><argument name="timeout"><integer>-1</integer></argument><argument name="stderr"><text/></argument><argument name="stdout"><text>ROOT 4.00/04 does not support variable size array of stl containers
+
+All test succeeded in ./newstl</text></argument><argument name="prerequisites"><set/></argument><argument name="target_group"><text>.*</text></argument><argument name="exit_code"><integer>0</integer></argument><argument name="resources"><set/></argument></extension>
