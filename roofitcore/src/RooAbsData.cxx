@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.cc,v 1.4 2001/08/23 01:35:14 verkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.5 2001/08/23 23:43:42 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -45,8 +45,7 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
 	   << "): Data set cannot contain non-fundamental types, ignoring " 
 	   << var->GetName() << endl ;
     } else {
-      RooAbsArg* varClone = (RooAbsArg*) var->Clone() ;
-      _vars.add(*varClone) ;
+      _vars.addClone(*var);
     }
   }
   delete iter ;
@@ -59,9 +58,13 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
 
 
 RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) : 
-  TNamed(newname?newname:GetName(),other.GetTitle()), _vars(other._vars)
+  TNamed(newname?newname:other.GetName(),other.GetTitle()), _vars(other._vars),
+  _cachedVars("Cached Variables"), _doDirtyProp(kTRUE)
 {
   // Copy constructor
+
+  _iterator= _vars.createIterator();
+  _cacheIter = _cachedVars.createIterator() ;
 }
 
 

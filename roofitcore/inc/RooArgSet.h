@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.19 2001/08/02 21:39:08 verkerke Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.20 2001/08/23 23:43:42 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -132,6 +132,7 @@ private:
   friend class RooMultiCatIter;      // needs getCollection()
   friend class RooPdfCustomizer;     // needs Sort()
   friend class RooRealBinding;       // needs At()
+  friend class RooBRArrayPdf;        // needs At()
 
   ClassDef(RooArgSet,1) // Set of RooAbsArg objects
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.31 2001/08/22 01:01:32 david Exp $
+ *    File: $Id: RooArgSet.cc,v 1.32 2001/08/23 23:43:42 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -158,7 +158,7 @@ RooArgSet::~RooArgSet()
 {
   // delete all variables in our list if we own them
   if(_isCopy){ 
-    Delete();
+    _list.Delete();
   }
   RooTrace::destroy(this) ;
 }
@@ -245,14 +245,17 @@ RooAbsArg *RooArgSet::addClone(const RooAbsArg& var, Bool_t silent) {
   // Add a clone of the specified argument to list. Returns a pointer to
   // the clone if successful, or else zero if a variable of the same name
   // is already in the list or the list does *not* own its variables (in
-  // this case, try add() instead.)
+  // this case, try add() instead.) Calling addClone() on an empty list
+  // forces it to take ownership of all its subsequent variables.
 
   const char *name= var.GetName();
-  // check that this *is* a copy of a list
-  if(!_isCopy) {
+
+  // check that we own our variables or else are empty
+  if(!_isCopy && (getSize() > 0)) {
     cout << "RooArgSet(" << _name << "): can only add clones to a copied list" << endl;
     return 0;
   }
+  _isCopy= kTRUE;
 
   // is this variable name already in this list?
   RooAbsArg *other(0);
@@ -300,7 +303,7 @@ Bool_t RooArgSet::add(const RooAbsArg& var, Bool_t silent) {
     return kFALSE;
   }
   // add a pointer to this variable to our list (we don't own it!)
-  add(var);
+  _list.Add((TObject*)&var);
   return kTRUE;
 }
 

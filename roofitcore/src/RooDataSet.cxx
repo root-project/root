@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.39 2001/08/23 01:21:47 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.40 2001/08/23 23:43:42 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -200,9 +200,6 @@ RooDataSet::~RooDataSet()
   RooTrace::destroy(this) ;
 
   delete _tree ;
-  
-  // we cloned the initial AbsArgs ourselves and own them
-  _vars.Delete() ;
 }
 
 
