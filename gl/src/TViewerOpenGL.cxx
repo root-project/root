@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.35 2004/11/22 23:49:13 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.36 2004/11/23 14:00:29 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -127,8 +127,8 @@ ClassImp(TViewerOpenGL)
 
 const Int_t TViewerOpenGL::fgInitX = 0;
 const Int_t TViewerOpenGL::fgInitY = 0;
-const Int_t TViewerOpenGL::fgInitW = 750;
-const Int_t TViewerOpenGL::fgInitH = 640;
+const Int_t TViewerOpenGL::fgInitW = 780;
+const Int_t TViewerOpenGL::fgInitH = 670;
 
 //______________________________________________________________________________
 TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
@@ -154,6 +154,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    fMenuBar = 0;
    fFileMenu = fViewMenu = fHelpMenu = 0;
    fMenuBarLayout = fMenuBarItemLayout = fMenuBarHelpLayout = 0;
+   fLightMask = 0x1f;   
    fXc = fYc = fZc = fRad = 0.;
    fPressed = kFALSE;
    fNbShapes = 0;
@@ -219,9 +220,11 @@ void TViewerOpenGL::CreateViewer()
    fShutItem1 = new TGShutterItem(fShutter, new TGHotString("Color"), 5001);
    fShutItem2 = new TGShutterItem(fShutter, new TGHotString("Object's geometry"), 5002);
    fShutItem3 = new TGShutterItem(fShutter, new TGHotString("Scene"), 5003);
+   fShutItem4 = new TGShutterItem(fShutter, new TGHotString("Lights"), 5004);
    fShutter->AddItem(fShutItem1);
    fShutter->AddItem(fShutItem2);
    fShutter->AddItem(fShutItem3);
+   fShutter->AddItem(fShutItem4);
 
    TGCompositeFrame *shutCont = (TGCompositeFrame *)fShutItem1->GetContainer();
    fColorEditor = new TGLColorEditor(shutCont, this);
@@ -238,6 +241,10 @@ void TViewerOpenGL::CreateViewer()
    shutCont = (TGCompositeFrame *)fShutItem3->GetContainer();
    fSceneEditor = new TGLSceneEditor(shutCont, this);
    shutCont->AddFrame(fSceneEditor, fL4);
+
+   shutCont = (TGCompositeFrame *)fShutItem4->GetContainer();
+   fLightEditor = new TGLLightEditor(shutCont, this);
+   shutCont->AddFrame(fLightEditor, fL4);
 
    fV2 = new TGVerticalFrame(fMainFrame, 10, 10, kSunkenFrame);
    fL3 = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2);
@@ -511,7 +518,27 @@ void TViewerOpenGL::CreateScene(Option_t *)
    fZc = fRangeZ.first + zdiff / 2;
    fRender->SetAxes(fRangeX, fRangeY, fRangeZ);
 
+   Float_t pos1[] = {0., fRad + fYc, -fRad - fZc, 1.f};
+   Float_t pos2[] = {fRad + fXc, 0.f, -fRad - fZc, 1.f};
+   Float_t pos3[] = {0.f, -fRad - fYc, -fRad - fZc, 1.f};
+   Float_t pos4[] = {-fRad - fXc, 0.f, -fRad - fZc, 1.f};
+   Float_t pos5[] = {0.f, 0.f, 0.f, 1.f};
+   
+   Float_t whiteCol[] = {.7f, .7f, .7f, 1.f};
+
    MakeCurrent();
+   gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos1);
+   gVirtualGL->GLLight(kLIGHT0, kDIFFUSE, whiteCol);
+
+   gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos2);
+   gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, whiteCol);
+   gVirtualGL->GLLight(kLIGHT2, kPOSITION, pos3);
+   gVirtualGL->GLLight(kLIGHT2, kDIFFUSE, whiteCol);
+   gVirtualGL->GLLight(kLIGHT3, kPOSITION, pos4);
+   gVirtualGL->GLLight(kLIGHT3, kDIFFUSE, whiteCol);
+   gVirtualGL->GLLight(kLIGHT4, kPOSITION, pos5);
+   gVirtualGL->GLLight(kLIGHT4, kDIFFUSE, whiteCol);
+   
    gVirtualGL->EnableGL(kLIGHT0);
    gVirtualGL->EnableGL(kLIGHT1);
    gVirtualGL->EnableGL(kLIGHT2);
@@ -586,32 +613,6 @@ void TViewerOpenGL::DrawObjects()const
 {
    MakeCurrent();
    gVirtualGL->NewMVGL();
-   Float_t pos[] = {0.f, 0.f, 0.f, 1.f};
-   Float_t ligProp1[] = {.5f, .5f, .5f, 1.f};
-   Float_t ligProp2[] = {1.f, 1.f, 1.f, 1.f};
-
-   gVirtualGL->PushGLMatrix();
-   gVirtualGL->TranslateGL(0., fRad + fYc, -fRad - fZc);   
-   gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos);
-   gVirtualGL->GLLight(kLIGHT0, kDIFFUSE, ligProp1);
-
-   gVirtualGL->TranslateGL(0., -2. * (fRad + fYc), 0);   
-   gVirtualGL->GLLight(kLIGHT1, kPOSITION, pos);
-   gVirtualGL->GLLight(kLIGHT1, kDIFFUSE, ligProp1);
-
-   gVirtualGL->TranslateGL(fRad + fXc, fRad + fYc, 0);   
-   gVirtualGL->GLLight(kLIGHT2, kPOSITION, pos);
-   gVirtualGL->GLLight(kLIGHT2, kDIFFUSE, ligProp1);
-
-   gVirtualGL->TranslateGL(-2 * (fRad + fXc), 0., 0.);   
-   gVirtualGL->GLLight(kLIGHT3, kPOSITION, pos);
-   gVirtualGL->GLLight(kLIGHT3, kDIFFUSE, ligProp1);
-
-   gVirtualGL->TranslateGL(fRad + fXc, 0., 3 * fRad);   
-   gVirtualGL->GLLight(kLIGHT4, kPOSITION, pos);
-   gVirtualGL->GLLight(kLIGHT4, kDIFFUSE, ligProp2);
-
-   gVirtualGL->PopGLMatrix();
    gVirtualGL->TraverseGraph((TGLRender *)fRender);
    SwapBuffers();
 }
@@ -815,6 +816,26 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
          fSceneEditor->GetPlaneEqn(eqn);
          fRender->SetPlane(eqn);
       }
+   case kTBTop:
+      if ((fLightMask ^= 1) & 1) gVirtualGL->EnableGL(kLIGHT0);
+      else gVirtualGL->DisableGL(kLIGHT0);
+      break;
+   case kTBRight:
+      if ((fLightMask ^= 2) & 2) gVirtualGL->EnableGL(kLIGHT1);
+      else gVirtualGL->DisableGL(kLIGHT1);
+      break;
+   case kTBBottom:
+      if ((fLightMask ^= 4) & 4) gVirtualGL->EnableGL(kLIGHT2);
+      else gVirtualGL->DisableGL(kLIGHT2);
+      break;
+   case kTBLeft:
+      if ((fLightMask ^= 8) & 8) gVirtualGL->EnableGL(kLIGHT3);
+      else gVirtualGL->DisableGL(kLIGHT3);
+      break;
+   case kTBFront:
+      if ((fLightMask ^= 16) & 16) gVirtualGL->EnableGL(kLIGHT4);
+      else gVirtualGL->DisableGL(kLIGHT4);
+      break;
    }
 
    if (wid == kTBa || wid == kTBa1 || wid == kTBaf) {

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.9 2004/10/18 09:10:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.10 2004/10/19 13:04:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -21,6 +21,9 @@
 #include "TGLEditor.h"
 
 ClassImp(TGLColorEditor)
+ClassImp(TGLGeometryEditor)
+ClassImp(TGLSceneEditor)
+ClassImp(TGLLightEditor)
 
 class TGLMatView : public TGCompositeFrame {
 private:
@@ -631,4 +634,55 @@ void TGLSceneEditor::GetPlaneEqn(Double_t *eqn)
    eqn[1] = fGeomData[kPlaneB]->GetNumber();
    eqn[2] = fGeomData[kPlaneC]->GetNumber();
    eqn[3] = fGeomData[kPlaneD]->GetNumber();
+}
+
+//______________________________________________________________________________
+TGLLightEditor::TGLLightEditor(const TGWindow *parent, TViewerOpenGL *v)
+               :TGCompositeFrame(parent, 100, 100, kVerticalFrame | kRaisedFrame),
+                fViewer(v)
+{
+   fTrash.SetOwner(kTRUE);
+   TGGroupFrame *ligFrame = new TGGroupFrame(this, "Light sources:", kLHintsTop | kLHintsCenterX);
+   fTrash.Add(ligFrame);
+   ligFrame->SetTitlePos(TGGroupFrame::kLeft);
+   TGLayoutHints *l = new TGLayoutHints(kLHintsTop | kLHintsCenterX, 2, 0, 2, 2);
+   AddFrame(ligFrame, l);
+   
+   TGMatrixLayout *ml = new TGMatrixLayout(ligFrame, 0, 1, 10);
+   fTrash.Add(ml);
+   ligFrame->SetLayoutManager(ml);
+
+   fLights[kTop] = new TGCheckButton(ligFrame, "Top", kTBTop);
+   fLights[kTop]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
+   fLights[kTop]->SetState(kButtonDown);
+   fTrash.Add(fLights[kTop]);
+   fLights[kRight] = new TGCheckButton(ligFrame, "Right", kTBRight);
+   fLights[kRight]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
+   fLights[kRight]->SetState(kButtonDown);
+   fTrash.Add(fLights[kRight]);
+   fLights[kBottom] = new TGCheckButton(ligFrame, "Bottom", kTBBottom);
+   fLights[kBottom]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
+   fLights[kBottom]->SetState(kButtonDown);
+   fTrash.Add(fLights[kBottom]);
+   fLights[kLeft] = new TGCheckButton(ligFrame, "Left", kTBLeft);
+   fLights[kLeft]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
+   fLights[kLeft]->SetState(kButtonDown);
+   fTrash.Add(fLights[kLeft]);
+   fLights[kFront] = new TGCheckButton(ligFrame, "Front", kTBFront);
+   fLights[kFront]->Connect("Clicked()", "TGLLightEditor", this, "DoButton()");
+   fLights[kFront]->SetState(kButtonDown);
+   fTrash.Add(fLights[kFront]);
+
+   ligFrame->AddFrame(fLights[kTop]);
+   ligFrame->AddFrame(fLights[kRight]);
+   ligFrame->AddFrame(fLights[kBottom]);
+   ligFrame->AddFrame(fLights[kLeft]);
+   ligFrame->AddFrame(fLights[kFront]);
+}
+
+void TGLLightEditor::DoButton()
+{
+   TGButton *btn = (TGButton *) gTQSender;
+   Int_t id = btn->WidgetId();
+   fViewer->ModifyScene(id);
 }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.20 2004/11/22 23:49:13 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.21 2004/11/23 14:00:29 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -40,6 +40,7 @@ class TGVSplitter;
 class TGPopupMenu;
 class TGLColorEditor;
 class TGLSceneEditor;
+class TGLLightEditor;
 class TGLCamera;
 class TBuffer3D;
 class TGMenuBar;
@@ -54,11 +55,12 @@ private:
    TGLColorEditor    *fColorEditor;
    TGLGeometryEditor *fGeomEditor;
    TGLSceneEditor    *fSceneEditor;
+   TGLLightEditor    *fLightEditor;
    TGCanvas          *fCanvasWindow;
    TGLRenderArea     *fCanvasContainer;
    TGLRender         *fRender;
    TGShutter         *fShutter;
-   TGShutterItem     *fShutItem1, *fShutItem2, *fShutItem3;
+   TGShutterItem     *fShutItem1, *fShutItem2, *fShutItem3, *fShutItem4;
 
    TGLayoutHints     *fL1, *fL2, *fL3, *fL4;
    TGLayoutHints     *fCanvasLayout;
@@ -74,6 +76,7 @@ private:
    Double_t          fViewVolume[4];
    Double_t          fZoom[4];
    Int_t             fActiveViewport[4];
+   Int_t             fLightMask;
 
    typedef std::pair<Double_t, Double_t> PDD_t;
    PDD_t             fRangeX, fRangeY, fRangeZ, fLastPosRot;

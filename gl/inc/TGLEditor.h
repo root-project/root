@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.6 2004/10/18 09:10:55 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.7 2004/10/19 13:04:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -38,6 +38,11 @@ enum EApplyButtonIds {
    kTBda,
    kTBa,
    kTBaf,
+   kTBTop,
+   kTBRight,
+   kTBBottom,
+   kTBLeft,
+   kTBFront,            
    kTBa1
 };
 
@@ -167,6 +172,29 @@ private:
    TGLSceneEditor &operator = (const TGLSceneEditor &);
 
    ClassDef(TGLSceneEditor, 0);
+};
+
+class TGLLightEditor : public TGCompositeFrame {
+private:
+   enum EBuiltInLight {
+      kTop,
+      kRight,
+      kBottom,
+      kLeft,
+      kFront,
+      kTot      
+   };
+   
+   TGButton       *fLights[kTot];
+   TViewerOpenGL  *fViewer;
+   TList          fTrash;
+   
+public:
+   TGLLightEditor(const TGWindow *parent, TViewerOpenGL *viewer);
+   
+   void DoButton();
+   
+   ClassDef(TGLLightEditor, 0);
 };
 
 #endif
