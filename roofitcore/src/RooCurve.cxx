@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.16 2001/09/19 01:35:29 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.17 2001/09/20 01:40:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -40,7 +40,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.16 2001/09/19 01:35:29 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.17 2001/09/20 01:40:10 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -107,8 +107,13 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
       title.Append(" (Projected)") ;
       projected= new RooRealIntegral(name.Data(),title.Data(),f,vars,&bindNormSet);
       cout << "RooCurve(" << f.GetName() << "): projecting function over " ; vars.Print("1") ; cout << endl ;
-      //projected->Print("v") ;
-      if(!projected->isValid()) return; 
+      if(0 == projected || !projected->isValid()) {
+	cout << ClassName() << ": cannot integrate out ";
+	vars.Print();
+	// cleanup and exit
+	if(0 != projected) delete projected;
+	return;
+      }
       funcPtr= projected->bindVars(x,&bindNormSet);
     }
   } else {
