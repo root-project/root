@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.145 2003/12/13 09:25:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.146 2003/12/14 16:28:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2595,7 +2595,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 //   settings.  Otherwise the fit will effectively just maximize the
 //   area.
 //
-//   In practice it is convenient to have a normalization variable
+//   It is mandatory to have a normalization variable
 //   which is fixed for the fit.  e.g.
 //
 //     TF1* f1 = new TF1("f1", "gaus(0)/sqrt(2*3.14159)/[2]", 0, 5);
