@@ -83,7 +83,7 @@ if [ ! -s $1.ref ]; then
     echo "Processing run$1.C..." >> $1.ref
 fi
 
-if [ ! -s $run$1.C ]; then
+if [ ! -s run$1.C ]; then
     echo "{"  > run$1.C
     echo "// Fill out the code of the actual test" >> run$1.C 
     echo "}" >> run$1.C 
