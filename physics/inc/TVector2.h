@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.6 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.7 2002/07/13 06:59:20 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -91,6 +91,7 @@ public:
 
   Double_t Phi           () const { return kPI+TMath::ATan2(-fY,-fX); };
   Double_t DeltaPhi(const TVector2& v) const;
+  void     SetMagPhi(Double_t mag, Double_t phi);
 
                                         // unit vector in the direction of *this
 
@@ -192,6 +193,12 @@ inline  TVector2 TVector2::Norm(const TVector2& v) const {return *this-Proj(v); 
 inline void TVector2::Set(const TVector2& v   )     { fX = v.fX; fY = v.fY; }
 inline void TVector2::Set(Double_t x0, Double_t y0) { fX = x0  ; fY = y0 ;  }
 inline void TVector2::Set(float  x0, float  y0)     { fX = x0  ; fY = y0 ;  }
+
+inline void TVector2::SetMagPhi(Double_t mag, Double_t phi) {
+     Double_t amag = TMath::Abs(mag);
+     fX = amag * TMath::Cos(phi);
+     fY = amag * TMath::Sin(phi);
+}
 
                                         // returns phi angle in the interval
                                         // [0,2*PI)

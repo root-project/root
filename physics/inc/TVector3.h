@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.8 2002/02/23 15:45:56 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.h,v 1.9 2002/04/22 06:26:26 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 
 /*************************************************************************
@@ -113,6 +113,7 @@ public:
   inline Double_t DeltaR(const TVector3 &) const;
   inline Double_t DrEtaPhi(const TVector3 &) const;
   inline TVector2 EtaPhiVector();
+  inline void SetMagThetaPhi(Double_t mag, Double_t theta, Double_t phi);
 
   inline TVector3 & operator = (const TVector3 &);
   // Assignment.
@@ -404,6 +405,13 @@ inline Double_t TVector3::DeltaR(const TVector3 & v) const {
   Double_t deta = Eta()-v.Eta();
   Double_t dphi = TVector2::Phi_mpi_pi(Phi()-v.Phi());
   return TMath::Sqrt( deta*deta+dphi*dphi );
+}
+
+inline void TVector3::SetMagThetaPhi(Double_t mag, Double_t theta, Double_t phi) {
+     Double_t amag = TMath::Abs(mag);
+     fX = amag * TMath::Sin(theta) * TMath::Cos(phi);
+     fY = amag * TMath::Sin(theta) * TMath::Sin(phi);
+     fZ = amag * TMath::Cos(theta);
 }
 
 
