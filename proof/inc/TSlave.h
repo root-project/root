@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.7 2002/04/19 18:24:00 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.8 2002/05/18 08:22:00 brun Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -49,6 +49,7 @@ private:
    Int_t         fOrdinal;   //slave's ordinal number
    Int_t         fPerfIdx;   //relative CPU performance index
    Int_t         fSecurity;  //authentication method (0 = standard, 1 = SRP)
+   Int_t         fProtocol;  //slave's protocol level
    TSocket      *fSocket;    //socket to slave
    TProof       *fProof;     //proof cluster to which slave belongs
    TFileHandler *fInput;     //input handler related to this slave
@@ -78,6 +79,7 @@ public:
    Int_t         GetPort() const { return fPort; }
    Int_t         GetOrdinal() const { return fOrdinal; }
    Int_t         GetPerfIdx() const { return fPerfIdx; }
+   Int_t         GetProtocol() const { return fProtocol; }
    TSocket      *GetSocket() const { return fSocket; }
    TProof       *GetProof() const { return fProof; }
    Double_t      GetBytesRead() const { return fBytesRead; }

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.34 2002/12/02 18:50:05 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.35 2003/03/04 17:29:29 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1369,13 +1369,19 @@ void TProofServ::Setup()
    }
    fSocket->Send(str);
 
+   // exchange protocol level between client and master and between
+   // master and slave
+   Int_t what;
+   fSocket->Recv(fProtocol, what);
+   fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL);
+
    TMessage *mess;
    fSocket->Recv(mess);
 
    if (IsMaster())
-      (*mess) >> fUser >> fPasswd >> fConfFile >> fProtocol;
+      (*mess) >> fUser >> fPasswd >> fConfFile;
    else
-      (*mess) >> fUser >> fPasswd >> fProtocol >> fOrdinal;
+      (*mess) >> fUser >> fPasswd >> fOrdinal;
 
    for (int i = 0; i < fPasswd.Length(); i++) {
       char inv = ~fPasswd(i);

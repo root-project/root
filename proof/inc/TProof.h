@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.28 2002/12/05 15:56:12 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.29 2003/03/04 17:29:29 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -92,7 +92,7 @@ private:
    TString   fImage;         //master's image name
    Int_t     fPort;          //port we are connected to (proofd = 1093)
    Int_t     fSecurity;      //security level used to connect to master server
-   Int_t     fProtocol;      //protocol version number
+   Int_t     fProtocol;      //remote PROOF server protocol version number
    Int_t     fLogLevel;      //server debug logging level
    Int_t     fStatus;        //remote return status (part of kPROOF_LOGDONE)
    Int_t     fParallel;      //number of active slaves (only set on client, on server use fActiveSlaves)
@@ -214,7 +214,8 @@ public:
    const char *GetWorkDir() const { return fWorkDir; }
    const char *GetImage() const { return fImage; }
    Int_t       GetPort() const { return fPort; }
-   Int_t       GetProtocol() const { return fProtocol; }
+   Int_t       GetRemoteProtocol() const { return fProtocol; }
+   Int_t       GetClientProtocol() const { return kPROOF_Protocol; }
    Int_t       GetStatus() const { return fStatus; }
    Int_t       GetLogLevel() const { return fLogLevel; }
    Int_t       GetParallel() const;

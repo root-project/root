@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.36 2002/12/02 18:50:05 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.37 2003/03/04 17:29:29 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1069,7 +1069,8 @@ void TProof::Print(Option_t *option) const
                                           IsValid() ? "valid" : "invalid");
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
-      Printf("Protocol version:         %d", GetProtocol());
+      Printf("Client protocol version:  %d", GetClientProtocol());
+      Printf("Remote protocol version:  %d", GetRemoteProtocol());
       Printf("Log level:                %d", GetLogLevel());
       if (IsValid())
          ((TProof*)this)->SendPrint();
@@ -1085,7 +1086,7 @@ void TProof::Print(Option_t *option) const
       Printf("Master host name:         %s", gSystem->HostName());
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
-      Printf("Protocol version:         %d", GetProtocol());
+      Printf("Protocol version:         %d", GetClientProtocol());
       Printf("Image name:               %s", GetImage());
       Printf("Working directory:        %s", gSystem->WorkingDirectory());
       Printf("Config directory:         %s", GetConfDir());

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.10 2002/04/19 18:24:01 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.11 2002/10/03 18:07:34 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -145,9 +145,15 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
             return;
          }
 
+         // exchange protocol level between client and master and between
+         // master and slave
+         fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL);
+         fSocket->Recv(fProtocol, what);
+         fProof->fProtocol = fProtocol;   // on master this is the protocol
+                                          // of the last slave
          TMessage mess;
 
-         // Send user name and passwd to remote host (use trivial
+         // send user name and passwd to remote host (use trivial
          // inverted byte encoding)
          TString passwd = fProof->fPasswd;
          for (int i = 0; i < passwd.Length(); i++) {
@@ -156,10 +162,9 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          }
 
          if (!fProof->IsMaster())
-            mess << fProof->fUser << passwd << fProof->fConfFile <<
-                    fProof->fProtocol;
+            mess << fProof->fUser << passwd << fProof->fConfFile;
          else
-            mess << fProof->fUser << passwd << fProof->fProtocol << fOrdinal;
+            mess << fProof->fUser << passwd << fOrdinal;
 
          fSocket->Send(mess);
 
@@ -205,17 +210,18 @@ void TSlave::Print(Option_t *) const
    // Printf info about slave.
 
    Printf("*** Slave %d  (%s)", fOrdinal, fSocket ? "valid" : "invalid");
-   Printf("    Host name:            %s", GetName());
-   Printf("    Port number:          %d", GetPort());
-   Printf("    User:                 %s", GetUser());
-   Printf("    Image name:           %s", GetImage());
-   Printf("    Working directory:    %s", GetWorkDir());
-   Printf("    Performance index:    %d", GetPerfIdx());
-   Printf("    MB's processed:       %.2f", float(GetBytesRead())/(1024*1024));
-   Printf("    MB's sent:            %.2f", fSocket ? float(fSocket->GetBytesRecv())/(1024*1024) : 0.0);
-   Printf("    MB's received:        %.2f", fSocket ? float(fSocket->GetBytesSent())/(1024*1024) : 0.0);
-   Printf("    Real time used (s):   %.3f", GetRealTime());
-   Printf("    CPU time used (s):    %.3f", GetCpuTime());
+   Printf("    Host name:               %s", GetName());
+   Printf("    Port number:             %d", GetPort());
+   Printf("    User:                    %s", GetUser());
+   Printf("    Slave protocol version:  %d", GetProtocol());
+   Printf("    Image name:              %s", GetImage());
+   Printf("    Working directory:       %s", GetWorkDir());
+   Printf("    Performance index:       %d", GetPerfIdx());
+   Printf("    MB's processed:          %.2f", float(GetBytesRead())/(1024*1024));
+   Printf("    MB's sent:               %.2f", fSocket ? float(fSocket->GetBytesRecv())/(1024*1024) : 0.0);
+   Printf("    MB's received:           %.2f", fSocket ? float(fSocket->GetBytesSent())/(1024*1024) : 0.0);
+   Printf("    Real time used (s):      %.3f", GetRealTime());
+   Printf("    CPU time used (s):       %.3f", GetCpuTime());
 }
 
 //______________________________________________________________________________
