@@ -59,6 +59,8 @@ int main(int argc,char **argv)
 
 #endif
 
+#define EPSILON 1.0e-14
+
 Int_t gVerbose = 0;
 
 //________________________________common part_________________________
@@ -203,12 +205,12 @@ void stress_element_op(Int_t vsize)
     cout << "\nWriting zeros to v..." << endl;
   for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
     v(i) = 0;
-  ok &= VerifyVectorValue(v,0.0,gVerbose);
+  ok &= VerifyVectorValue(v,0.0,gVerbose,EPSILON);
 
   if (gVerbose)
     cout << "Clearing v1 ..." << endl;
   v1.Zero();
-  ok &= VerifyVectorValue(v1,0.0,gVerbose);
+  ok &= VerifyVectorValue(v1,0.0,gVerbose,EPSILON);
 
   if (gVerbose)
     cout << "Comparing v1 with 0 ..." << endl;
@@ -219,13 +221,13 @@ void stress_element_op(Int_t vsize)
   {
     for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
       v(i) = pattern;
-    ok &= VerifyVectorValue(v,pattern,gVerbose);
+    ok &= VerifyVectorValue(v,pattern,gVerbose,EPSILON);
   }
 
   if (gVerbose)
     cout << "Writing the pattern by assigning to v1 as a whole ..." << endl;
   v1 = pattern;
-  ok &= VerifyVectorValue(v1,pattern,gVerbose);
+  ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
 
   if (gVerbose)
     cout << "Comparing v and v1 ..." << endl;
@@ -238,15 +240,15 @@ void stress_element_op(Int_t vsize)
     cout << "\nClear v and add the pattern" << endl;
   v.Zero();
   v += pattern;
-  ok &= VerifyVectorValue(v,pattern,gVerbose);
+  ok &= VerifyVectorValue(v,pattern,gVerbose,EPSILON);
   if (gVerbose)
     cout << "   add the doubled pattern with the negative sign" << endl;
   v += -2*pattern;
-  ok &= VerifyVectorValue(v,-pattern,gVerbose);
+  ok &= VerifyVectorValue(v,-pattern,gVerbose,EPSILON);
   if (gVerbose)
     cout << "   subtract the trippled pattern with the negative sign" << endl;
   v -= -3*pattern;
-  ok &= VerifyVectorValue(v,2*pattern,gVerbose);
+  ok &= VerifyVectorValue(v,2*pattern,gVerbose,EPSILON);
 
   if (gVerbose)
     cout << "\nVerify comparison operations" << endl;
@@ -266,26 +268,26 @@ void stress_element_op(Int_t vsize)
   if (gVerbose)
     cout << "Assign 2*pattern to v1 by multiplying by two" << endl;
   v1 = pattern; v1 *= 2;
-  ok &= VerifyVectorValue(v1,2*pattern,gVerbose);
+  ok &= VerifyVectorValue(v1,2*pattern,gVerbose,EPSILON);
   ok &= ( v == v1 ) ? kTRUE : kFALSE;
   if (gVerbose)
     cout << "Multiply v1 by one half returning it to the 1*pattern" << endl;
   v1 *= 1/2.;
-  ok &= VerifyVectorValue(v1,pattern,gVerbose);
+  ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
 
   if (gVerbose)
     cout << "\nAssign -pattern to v and v1" << endl;
   v.Zero(); v -= pattern; v1 = -pattern;
-  ok &= VerifyVectorValue(v,-pattern,gVerbose);
+  ok &= VerifyVectorValue(v,-pattern,gVerbose,EPSILON);
   ok &= ( v == v1 ) ? kTRUE : kFALSE;
   if (gVerbose)
     cout << "v = sqrt(sqr(v)); v1 = abs(v1); Now v and v1 have to be the same" << endl;
   v.Sqr();
-  ok &= VerifyVectorValue(v,pattern*pattern,gVerbose);
+  ok &= VerifyVectorValue(v,pattern*pattern,gVerbose,EPSILON);
   v.Sqrt();
-  ok &= VerifyVectorValue(v,pattern,gVerbose);
+  ok &= VerifyVectorValue(v,pattern,gVerbose,EPSILON);
   v1.Abs();
-  ok &= VerifyVectorValue(v1,pattern,gVerbose);
+  ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
   ok &= ( v == v1 ) ? kTRUE : kFALSE;
 
   {
@@ -309,7 +311,7 @@ void stress_element_op(Int_t vsize)
     v.Sqr();
     v1.Sqr();
     v += v1;
-    ok &= VerifyVectorValue(v,1,gVerbose);
+    ok &= VerifyVectorValue(v,1,gVerbose,EPSILON);
   }
 
   if (gVerbose)
@@ -324,7 +326,7 @@ void stress_element_op(Int_t vsize)
   {
     for (Int_t i = vit.GetLwb(); i <= vit.GetUpb(); i++)
       vit(i) = Double_t(i);
-    ok &= VerifyVectorIdentity(vi,vit,gVerbose);
+    ok &= VerifyVectorIdentity(vi,vit,gVerbose,EPSILON);
   }
 
   if (gVerbose)
@@ -344,6 +346,8 @@ void stress_binary_op(Int_t vsize)
   Bool_t ok = kTRUE;
   const double pattern = TMath::Pi();
 
+  const Double_t epsilon = EPSILON*vsize/10;
+
   TVectorD v(2,vsize+1);
   TVectorD v1(v);
 
@@ -352,26 +356,26 @@ void stress_binary_op(Int_t vsize)
   v = pattern;
   v1.Zero();
   v1 = v;
-  ok &= VerifyVectorValue(v1,pattern,gVerbose);
+  ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
   ok &= ( v1 == v ) ? kTRUE : kFALSE;
 
   if (gVerbose)
     cout << "\nAdding one vector to itself, uniform pattern " << pattern << endl;
   v.Zero(); v = pattern;
   v1 = v; v1 += v1;
-  ok &= VerifyVectorValue(v1,2*pattern,gVerbose);
+  ok &= VerifyVectorValue(v1,2*pattern,gVerbose,EPSILON);
   if (gVerbose)
     cout << "  subtracting two vectors ..." << endl;
   v1 -= v;
-  ok &= VerifyVectorValue(v1,pattern,gVerbose);
+  ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
   if (gVerbose)
     cout << "  subtracting the vector from itself" << endl;
   v1 -= v1;
-  ok &= VerifyVectorValue(v1,0,gVerbose);
+  ok &= VerifyVectorValue(v1,0,gVerbose,EPSILON);
   if (gVerbose)
     cout << "  adding two vectors together" << endl;
   v1 += v;
-  ok &= VerifyVectorValue(v1,pattern,gVerbose);
+  ok &= VerifyVectorValue(v1,pattern,gVerbose,EPSILON);
 
   TVectorD vp(2,vsize+1);
   {
@@ -386,19 +390,19 @@ void stress_binary_op(Int_t vsize)
   v.Zero();
   ok &= ( v == 0.0 ) ? kTRUE : kFALSE;
   v += vp;
-  ok &= VerifyVectorIdentity(v,vp,gVerbose);
+  ok &= VerifyVectorIdentity(v,vp,gVerbose,epsilon);
 //  ok &= ( v == vp ) ? kTRUE : kFALSE;
   v1 = v;
   if (gVerbose)
     cout << "   making v = 3*vp and v1 = 3*vp, via add() and succesive mult" << endl;
   Add(v,2,vp);
   v1 += v1; v1 += vp;
-  ok &= VerifyVectorIdentity(v,v1,gVerbose);
+  ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
   if (gVerbose)
     cout << "   clear both v and v1, by subtracting from itself and via add()" << endl;
   v1 -= v1;
   Add(v,-3,vp);
-  ok &= VerifyVectorIdentity(v,v1,gVerbose,1.0e-14);
+  ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
 
   if (gVerbose) {
     cout << "\nTesting element-by-element multiplications and divisions" << endl;
@@ -407,13 +411,13 @@ void stress_binary_op(Int_t vsize)
   v = vp; v1 = vp;
   v.Sqr();
   ElementMult(v1,v1);
-  ok &= VerifyVectorIdentity(v,v1,gVerbose);
+  ok &= VerifyVectorIdentity(v,v1,gVerbose,epsilon);
   if (gVerbose)
     cout << "   compare (v = pattern^2)/pattern with pattern" << endl;
   v = pattern; v1 = pattern;
   v.Sqr();
   ElementDiv(v,v1);
-  ok &= VerifyVectorValue(v,pattern,gVerbose);
+  ok &= VerifyVectorValue(v,pattern,gVerbose,epsilon);
   if (gVerbose)
    Compare(v1,v);
 
@@ -541,7 +545,7 @@ void stress_matrix_slices(Int_t vsize)
     vc = TMatrixDColumn(m,i);
     ok &= VerifyVectorValue(vc,2*(pattern-1),gVerbose);
     vc = TMatrixDColumn(m,i+1 > m.GetColUpb() ? m.GetColLwb() : i+1);
-    ok &= VerifyVectorValue(vc,pattern,gVerbose);
+    ok &= VerifyVectorValue(vc,pattern,gVerbose,EPSILON);
     TMatrixDColumn(m,i) *= 0.5;
     TMatrixDColumn(m,i) += 1;
     ok &= ( m == pattern ) ? kTRUE : kFALSE;
@@ -558,11 +562,11 @@ void stress_matrix_slices(Int_t vsize)
         mc(j) *= 4;
     }
     vc = TMatrixDColumn(m,i);
-    ok &= VerifyVectorValue(vc,4*(pattern+1),gVerbose);
+    ok &= VerifyVectorValue(vc,4*(pattern+1),gVerbose,EPSILON);
     TMatrixDColumn(m,i) *= 0.25;
     TMatrixDColumn(m,i) += -1;
     vc = TMatrixDColumn(m,i);
-    ok &= VerifyVectorValue(vc,pattern,gVerbose);
+    ok &= VerifyVectorValue(vc,pattern,gVerbose,EPSILON);
     ok &= ( m == pattern ) ? kTRUE : kFALSE;
   }
 
@@ -574,9 +578,9 @@ void stress_matrix_slices(Int_t vsize)
     TMatrixDRow(m,i) = pattern+2;
     ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
     vr = TMatrixDRow(m,i);
-    ok &= VerifyVectorValue(vr,pattern+2,gVerbose);
+    ok &= VerifyVectorValue(vr,pattern+2,gVerbose,EPSILON);
     vr = TMatrixDRow(m,i+1 > m.GetRowUpb() ? m.GetRowLwb() : i+1);
-    ok &= VerifyVectorValue(vr,pattern,gVerbose);
+    ok &= VerifyVectorValue(vr,pattern,gVerbose,EPSILON);
     TMatrixDRow(m,i) += -2;
     ok &= ( m == pattern ) ? kTRUE : kFALSE;
   }
@@ -592,11 +596,11 @@ void stress_matrix_slices(Int_t vsize)
         mr(j) *= 8;
     }
     vr = TMatrixDRow(m,i);
-    ok &= VerifyVectorValue(vr,8*(pattern-2),gVerbose);
+    ok &= VerifyVectorValue(vr,8*(pattern-2),gVerbose,EPSILON);
     TMatrixDRow(m,i) *= 1./8;
     TMatrixDRow(m,i) += 2;
     vr = TMatrixDRow(m,i);
-    ok &= VerifyVectorValue(vr,pattern,gVerbose);
+    ok &= VerifyVectorValue(vr,pattern,gVerbose,EPSILON);
     ok &= ( m == pattern ) ? kTRUE : kFALSE;
   }
 
@@ -608,7 +612,7 @@ void stress_matrix_slices(Int_t vsize)
   td = pattern-3;
   ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
   vc = TMatrixDDiag(m);
-  ok &= VerifyVectorValue(vc,pattern-3,gVerbose);
+  ok &= VerifyVectorValue(vc,pattern-3,gVerbose,EPSILON);
   //TMatrixDDiag(m) += 3;
   td += 3;
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
@@ -622,11 +626,11 @@ void stress_matrix_slices(Int_t vsize)
       md(j) /= 1.5;
   }
   vc = TMatrixDDiag(m);
-  ok &= VerifyVectorValue(vc,(pattern+3)/1.5,gVerbose);
+  ok &= VerifyVectorValue(vc,(pattern+3)/1.5,gVerbose,EPSILON);
   TMatrixDDiag(m) *= 1.5;
   TMatrixDDiag(m) += -3;
   vc = TMatrixDDiag(m);
-  ok &= VerifyVectorValue(vc,pattern,gVerbose);
+  ok &= VerifyVectorValue(vc,pattern,gVerbose,EPSILON);
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
 
   if (gVerbose) {
@@ -654,7 +658,7 @@ void stress_matrix_slices(Int_t vsize)
     vc1 = TMatrixDColumn(mm,i);
     vc1 *= vr(i);                    // Do a column-wise multiplication
     vc2 = TMatrixDColumn(m,i);
-    ok &= VerifyVectorIdentity(vc1,vc2,gVerbose);
+    ok &= VerifyVectorIdentity(vc1,vc2,gVerbose,EPSILON);
   }
 
   if (gVerbose)
