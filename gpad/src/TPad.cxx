@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.10 2000/08/15 07:37:37 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.11 2000/08/18 14:46:31 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1440,7 +1440,7 @@ TH1F *TPad::DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
 
    TH1F *hframe = (TH1F*)GetPrimitive("hframe");
    if (hframe) delete hframe;
-   hframe = new TH1F("hframe",title,100,xmin,xmax);
+   hframe = new TH1F("hframe",title,1000,xmin,xmax);
    hframe->SetBit(TH1::kNoStats);
    hframe->SetMinimum(ymin);
    hframe->SetMaximum(ymax);
