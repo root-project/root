@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.81 2001/07/09 21:41:11 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.82 2001/07/10 19:58:45 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1726,7 +1726,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                             ((TObject*)(pointer+fOffset[i]))->Streamer(b);
                             break;
                          } else {
-                            cl->GetStreamerInfo()->ReadBuffer(b,pointer+fOffset[i],0);
+                            cl->GetStreamerInfo()->ReadBuffer(b,pointer+fOffset[i],-1);
                          }
                          break;
                         }
@@ -2101,10 +2101,20 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
 
          // Class  derived from TObject
          case kObject:  {
-            for (Int_t k=0;k<nc;k++) {
-               pointer = (char*)clones->UncheckedAt(k);
-               ((TObject*)(pointer+offset))->Streamer(b);
+            TStreamerElement *element = (TStreamerElement*)fElem[i];
+            TClass *cl = element->GetClassPointer();
+            if (cl->GetClassInfo()) {
+               for (Int_t k=0;k<nc;k++) {
+                  pointer = (char*)clones->UncheckedAt(k);
+                  ((TObject*)(pointer+offset))->Streamer(b);
+               }
+            } else {
+               for (Int_t k=0;k<nc;k++) {
+                  pointer = (char*)clones->UncheckedAt(k);
+                  cl->GetStreamerInfo()->ReadBuffer(b,pointer+offset,-1);
+               }
             }
+            //((TObject*)(pointer+offset))->Streamer(b);
             break;}
 
          // Special case for TString, TObject, TNamed
