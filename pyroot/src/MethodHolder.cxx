@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.12 2004/07/29 04:41:38 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.13 2004/08/02 21:00:04 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -294,6 +294,9 @@ bool PyROOT::MethodHolder::initDispatch_() {
 
 // buffers for argument dispatching
    const int nArgs = m_method->GetNargs();
+   if ( nArgs == 0 )
+      return true;
+
    m_argsBuffer.resize( nArgs );        // zeroes as defaults
    m_argsConverters.resize( nArgs );    // id.
 
@@ -390,55 +393,6 @@ PyROOT::MethodHolder::~MethodHolder() {
 
 
 //- protected members -----------------------------------------------------------
-bool PyROOT::MethodHolder::initialize() {
-// done if cache is already setup
-   if ( m_isInitialized == true )
-      return true;
-
-   if ( ! initDispatch_() )
-      return false;
-
-// determine effective return type
-   std::string returnType = m_method->GetReturnTypeName();
-   m_rtShortName = TClassEdit::ShortType( G__TypeInfo( returnType.c_str() ).TrueName(), 1 );
-   m_returnType = Utility::effectiveType( returnType );
-
-// setup call func
-   assert( m_methodCall == 0 );
-
-   m_methodCall = new G__CallFunc();
-   m_methodCall->SetFuncProto(
-      m_class->GetClassInfo(), m_method->GetName(), m_callString.c_str(), &m_offset );
-
-// init done
-   m_isInitialized = true;
-
-   return true;
-}
-
-
-bool PyROOT::MethodHolder::setMethodArgs( PyObject* aTuple ) {
-// clean slate
-   m_methodCall->ResetArg();
-
-   int argc = PyTuple_GET_SIZE( aTuple );
-
-// argc must be between min and max number of arguments
-   if ( argc - 1 < int( m_method->GetNargs() - m_method->GetNargsOpt() ) ||
-        int( m_argsBuffer.size() ) < argc - 1 )
-      return false;
-
-// convert the arguments to the method call array
-   for ( int i = 1; i < argc; i++ ) {
-      if ( ! m_argsConverters[i-1](
-              PyTuple_GET_ITEM( aTuple, i ), m_methodCall, m_argsBuffer[i-1] ) )
-         return false;
-   }
-
-   return true;
-}
-
-
 bool PyROOT::MethodHolder::execute( void* self ) {
    R__LOCKGUARD( gCINTMutex );
 
@@ -473,42 +427,67 @@ bool PyROOT::MethodHolder::execute( void* self, double& val ) {
 
 
 //- public members -------------------------------------------------------------
-PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict */ ) {
-// precaution
-   if ( aTuple == 0 )
-      return 0;                              // should not happen
+bool PyROOT::MethodHolder::initialize() {
+// done if cache is already setup
+   if ( m_isInitialized == true )
+      return true;
 
-// setup as necessary
-   if ( ! initialize() )
-      return 0;                              // important: 0, not PyNone
+   if ( ! initDispatch_() )
+      return false;
 
-// translate the arguments
-   if ( ! setMethodArgs( aTuple ) )
-      return 0;                              // important: 0, not PyNone
+// determine effective return type
+   std::string returnType = m_method->GetReturnTypeName();
+   m_rtShortName = TClassEdit::ShortType( G__TypeInfo( returnType.c_str() ).TrueName(), 1 );
+   m_returnType = Utility::effectiveType( returnType );
 
-// start actual method invocation
-   ObjectHolder* obh = Utility::getObjectHolder( PyTuple_GET_ITEM( aTuple, 0 ) );
-   if ( ! ( obh && obh->getObject() ) ) {
-      PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
-      return 0;
+// setup call func
+   assert( m_methodCall == 0 );
+
+   m_methodCall = new G__CallFunc();
+   m_methodCall->SetFuncProto(
+      m_class->GetClassInfo(), m_method->GetName(), m_callString.c_str(), &m_offset );
+
+// init done
+   m_isInitialized = true;
+
+   return true;
+}
+
+
+bool PyROOT::MethodHolder::setMethodArgs( PyObject* aTuple, int offset ) {
+// clean slate
+   m_methodCall->ResetArg();
+
+   int argc = PyTuple_GET_SIZE( aTuple );
+
+// argc must be between min and max number of arguments
+   if ( argc - offset < int( m_method->GetNargs() - m_method->GetNargsOpt() ) ||
+        int( m_argsBuffer.size() ) < argc - offset )
+      return false;
+
+// convert the arguments to the method call array
+   for ( int i = offset; i < argc; i++ ) {
+      if ( ! m_argsConverters[ i - offset ](
+              PyTuple_GET_ITEM( aTuple, i ), m_methodCall, m_argsBuffer[ i - offset ] ) )
+         return false;
    }
 
-   void* obj = obh->getObject();
+   return true;
+}
 
-// reset offset as appropriate
-   calcOffset_( obj, obh->objectIsA() );
 
+PyObject* PyROOT::MethodHolder::callMethod( void* self ) {
 // execute the method and translate return type
    switch ( m_returnType ) {
    case Utility::kFloat:
    case Utility::kDouble: {
       double returnValue;
-      execute( obj, returnValue );
+      execute( self, returnValue );
       return PyFloat_FromDouble( returnValue );
    }
    case Utility::kString: {
       long returnValue = 0;
-      execute( obj, returnValue );
+      execute( self, returnValue );
       return PyString_FromString( (char*) returnValue );
    }
    case Utility::kBool:
@@ -518,11 +497,11 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
    case Utility::kLong:
    case Utility::kLongLong: {
       long returnValue;
-      execute( obj, returnValue );
+      execute( self, returnValue );
       return PyLong_FromLong( returnValue );
    }
    case Utility::kVoid: {
-      execute( obj );
+      execute( self );
       Py_INCREF( Py_None );
       return Py_None;
    }
@@ -531,7 +510,7 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
       TClass* cls = gROOT->GetClass( m_rtShortName.c_str() );
       if ( cls != 0 ) {
          long address;
-         execute( obj, address );
+         execute( self, address );
 
       // upgrade to real class for TObject and TGlobal returns
          if ( address ) {
@@ -570,7 +549,7 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
 // pointer types
    if ( Utility::kDoublePtr <= m_returnType ) {
       long address;
-      execute( obj, address );
+      execute( self, address );
 
       if ( address ) {
          switch ( m_returnType ) {
@@ -602,4 +581,34 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
 // still here? confused ...
    PyErr_SetString( PyExc_TypeError, "return type in method not handled" );
    return 0;
+}
+
+
+PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict */ ) {
+// precaution
+   if ( aTuple == 0 )
+      return 0;                              // should not happen
+
+// setup as necessary
+   if ( ! initialize() )
+      return 0;                              // important: 0, not PyNone
+
+// translate the arguments
+   if ( ! setMethodArgs( aTuple, 1 ) )
+      return 0;                              // important: 0, not PyNone
+
+// start actual method invocation
+   ObjectHolder* obh = Utility::getObjectHolder( PyTuple_GET_ITEM( aTuple, 0 ) );
+   if ( ! ( obh && obh->getObject() ) ) {
+      PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
+      return 0;
+   }
+
+   void* obj = obh->getObject();
+
+// reset offset as appropriate
+   calcOffset_( obj, obh->objectIsA() );
+
+// execute function
+   return callMethod( obj );
 }

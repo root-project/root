@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.cxx,v 1.3 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.cxx,v 1.4 2004/06/12 05:35:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -45,7 +45,11 @@ bool PyROOT::MethodDispatcher::addToClass( MethodDispatcher* pmd, PyObject* cls 
    pdef->ml_doc   = NULL;
 
    PyObject* func = PyCFunction_New( pdef, PyCObject_FromVoidPtr( pmd, MethodDispatcher::destroy ) );
-   PyObject* method = PyMethod_New( func, NULL, cls );
+   PyObject* method = 0;
+   if ( pmd->m_isStatic == true )
+      method = PyStaticMethod_New( func );
+   else
+      method = PyMethod_New( func, NULL, cls );
    PyObject_SetAttrString( cls, pdef->ml_name, method );
    Py_DECREF( func );
    Py_DECREF( method );

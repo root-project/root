@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.h,v 1.3 2004/07/30 06:31:18 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.h,v 1.4 2004/08/02 21:00:04 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_OBJECTHOLDER_H
@@ -21,7 +21,7 @@ namespace PyROOT {
 
    class ObjectHolder {
    public:
-      ObjectHolder( void* obj, TClass* cls, bool own = true ) :
+      ObjectHolder( void* obj, TClass* cls, bool own = false ) :
             m_object( obj ), m_class( cls ), m_ref( 0 ) {
          if ( own == true )
             m_ref = new int( 1 );

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.5 2004/07/27 12:27:04 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.h,v 1.6 2004/07/29 04:41:38 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODHOLDER_H
@@ -24,7 +24,7 @@ namespace PyROOT {
 /** Python side ROOT method
       @author  WLAV
       @date    05/06/2004
-      @version 1.6
+      @version 1.7
  */
 
    class MethodHolder {
@@ -34,14 +34,17 @@ namespace PyROOT {
       MethodHolder& operator=( const MethodHolder& );
       virtual ~MethodHolder();
 
-      virtual PyObject* operator()( PyObject* aTuple, PyObject* aDict );
-
    public:
       typedef bool (*cnvfct_t)( PyObject*, G__CallFunc*, void*& );
 
-   protected:
+   public:
+      virtual PyObject* operator()( PyObject* aTuple, PyObject* aDict );
+
       virtual bool initialize();
-      virtual bool setMethodArgs( PyObject* aTuple );
+      virtual bool setMethodArgs( PyObject* aTuple, int offset = 0 );
+      virtual PyObject* callMethod( void* self );
+
+   protected:
       virtual bool execute( void* self );
       virtual bool execute( void* self, long& retVal );
       virtual bool execute( void* self, double& retVal );
@@ -72,6 +75,8 @@ namespace PyROOT {
 
    private:
    // representation
+      std::string  m_name;
+
       TClass*      m_class;
       TMethod*     m_method;
       G__CallFunc* m_methodCall;

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.8 2004/07/27 12:27:04 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.9 2004/07/30 06:31:18 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -9,6 +9,7 @@
 #include "MethodDispatcher.h"
 #include "ConstructorDispatcher.h"
 #include "MethodHolder.h"
+#include "ClassMethodHolder.h"
 #include "PropertyHolder.h"
 #include "MemoryRegulator.h"
 #include "TPyClassGenerator.h"
@@ -159,7 +160,7 @@ int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass ) {
 
 // load all public methods
    typedef std::map< std::string, MethodDispatcher > DispatcherCache_t;
-   DispatcherCache_t dispatcherCache;
+   DispatcherCache_t dispCache;
 
    TIter nextmethod( cls->GetListOfMethods() );
    while ( TMethod* mt = (TMethod*)nextmethod() ) {
@@ -188,33 +189,29 @@ int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass ) {
             mtName = pop->second;
       }
 
-   // allowable range in number of arguments
-   //    unsigned maxArgs = mt->GetNargs() + 1;
-   //    unsigned minArgs = maxArgs - mt->GetNargsOpt();
-
    // use full signature as a doc string
       std::string doc( mt->GetReturnTypeName() );
       (((((doc += ' ') += className) += "::") += mtName) += mt->GetSignature());
 
-   // construct method dispatchers
-      if ( mtName == className ) {        // found a constructor
-      // lookup dispatcher and store method
-         MethodDispatcher& md = (*(dispatcherCache.insert( std::make_pair(
-            std::string( "__init__" ), MethodDispatcher( "__init__" ) ) ).first) ).second;
-         md.addMethod( new ConstructorDispatcher( cls, mt ) );
+   // construct holder
+      MethodHolder* pmh = 0;
+      if ( mt->Property() & G__BIT_ISSTATIC )     // class method
+         pmh = new ClassMethodHolder( cls, mt );
+      else if ( mtName == className ) {           // constructor
+         pmh = new ConstructorDispatcher( cls, mt );
+         mtName = "__init__";
       }
-      else {                              // found a member function
-      // lookup dispatcher and store method
-         MethodDispatcher& md = (*(dispatcherCache.insert(
-            std::make_pair( mtName, MethodDispatcher( mtName ) ) ).first)).second;
-         md.addMethod( new MethodHolder( cls, mt ) );
-      }
+      else                                        // member function
+         pmh = new MethodHolder( cls, mt );
 
+   // lookup method dispatcher and store method
+      MethodDispatcher& md = (*(dispCache.insert( std::make_pair( mtName,
+         MethodDispatcher( mtName, mt->Property() & G__BIT_ISSTATIC ) ) ).first)).second;
+      md.addMethod( pmh );
    }
 
 // add the methods to the class dictionary
-   for ( DispatcherCache_t::iterator imd = dispatcherCache.begin();
-         imd != dispatcherCache.end(); ++imd ) {
+   for ( DispatcherCache_t::iterator imd = dispCache.begin(); imd != dispCache.end(); ++imd ) {
       MethodDispatcher::addToClass( new MethodDispatcher( imd->second ), pyclass );
    }
 
@@ -292,7 +289,10 @@ PyObject* PyROOT::makeRootClass( PyObject*, PyObject* args ) {
 
 PyObject* PyROOT::makeRootClassFromString( const char* className ) {
 // retrieve ROOT class (this verifies className)
-   TClass* cls = gROOT->GetClass( className );
+   TClass* cls = gROOT->GetClass( className, 0 );
+   if ( cls == 0 && gInterpreter->AutoLoad( className ) != 0 )
+      cls = gROOT->GetClass( className );
+
    if ( cls == 0 ) {
       PyErr_SetString( PyExc_TypeError,
          ( "requested class " + std::string( className ) + " does not exist" ).c_str() );

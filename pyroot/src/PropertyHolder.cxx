@@ -3,6 +3,7 @@
 // Bindings
 #include "PyROOT.h"
 #include "PropertyHolder.h"
+#include "PyBufferFactory.h"
 
 // ROOT
 #include "TDataMember.h"
@@ -83,8 +84,27 @@ PyObject* PyROOT::PropertyHolder::get( PyObject* args, PyObject* ) {
    case Utility::kLong: {
       return PyLong_FromLong( *((int*)((int)obj+offset)) );
    }
+   case Utility::kFloat: {
+      return PyFloat_FromDouble( *((float*)((int)obj+offset)) );
+   }
    case Utility::kDouble: {
       return PyFloat_FromDouble( *((double*)((int)obj+offset)) );
+   }
+   case Utility::kIntPtr: {
+      return PyBufferFactory::getInstance()->PyBuffer_FromMemory(
+         *((int**)((int)obj+offset)), 1 );
+   }
+   case Utility::kLongPtr: {
+      return PyBufferFactory::getInstance()->PyBuffer_FromMemory(
+         *((long**)((int)obj+offset)), 1 );
+   }
+   case Utility::kFloatPtr: {
+      return PyBufferFactory::getInstance()->PyBuffer_FromMemory(
+         *((float**)((int)obj+offset)), 1 );
+   }
+   case Utility::kDoublePtr: {
+      return PyBufferFactory::getInstance()->PyBuffer_FromMemory(
+         *((double**)((int)obj+offset)), 1 );
    }
    default:
       PyErr_SetString( PyExc_RuntimeError, "sorry this is experimental ... stay tuned" );
@@ -103,12 +123,16 @@ void PyROOT::PropertyHolder::set( PyObject* args, PyObject* ) {
       *((int*)((int)obj+offset)) = PyLong_AsLong( PyTuple_GetItem( args, 1 ) );
       break;
    }
+   case Utility::kFloat: {
+      *((float*)((int)obj+offset)) = PyFloat_AsDouble( PyTuple_GetItem( args, 1 ) );
+      break;
+   }
    case Utility::kDouble: {
       *((double*)((int)obj+offset)) = PyFloat_AsDouble( PyTuple_GetItem( args, 1 ) );
       break;
    }
    default:
-      PyErr_SetString( PyExc_RuntimeError, "sorry this is experimental ... stay tuned" );
+      PyErr_SetString( PyExc_RuntimeError, "this property doesn't allow assignment" );
    }
 
    if ( PyErr_Occurred() )

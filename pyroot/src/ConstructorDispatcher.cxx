@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorDispatcher.cxx,v 1.2 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorDispatcher.cxx,v 1.3 2004/07/30 06:31:17 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -38,7 +38,7 @@ PyObject* PyROOT::ConstructorDispatcher::operator()( PyObject* aTuple, PyObject*
       return 0;                              // important: 0, not PyNone
 
 // translate the arguments
-   if ( ! setMethodArgs( aTuple ) )
+   if ( ! setMethodArgs( aTuple, 1 ) )
       return 0;                              // important: 0, not PyNone
 
    TClass* cls = getClass();

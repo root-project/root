@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.h,v 1.2 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodDispatcher.h,v 1.3 2004/06/12 05:35:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_METHODDISPATCHER_H
@@ -18,7 +18,7 @@ namespace PyROOT {
 /** Python side ROOT method
       @author  WLAV
       @date    09/29/2003
-      @version 1.3
+      @version 1.4
  */
 
    class MethodDispatcher {
@@ -30,7 +30,8 @@ namespace PyROOT {
       static bool addToClass( MethodDispatcher*, PyObject* aClass );
 
    public:
-      MethodDispatcher( const std::string& name ) : m_name( name ) {}
+      MethodDispatcher( const std::string& name, bool isStatic ) :
+         m_name( name ), m_isStatic( isStatic ) {}
       virtual ~MethodDispatcher() {}
 
       const std::string& getName() const {
@@ -49,6 +50,7 @@ namespace PyROOT {
 
    private:
       std::string m_name;
+      bool m_isStatic;
 
       DispatchMap_t m_dispatchMap;
       Methods_t     m_methods;
