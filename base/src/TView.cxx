@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.14 2002/11/20 09:52:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.15 2003/01/31 22:24:00 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -51,6 +51,7 @@ TView::TView()
    fOutline = 0;
    fDefaultOutline = kFALSE;
    fAutoRange      = kFALSE;
+   SetBit(kMustCleanup);
 }
 
 //____________________________________________________________________________
@@ -96,6 +97,8 @@ TView::TView(Int_t system)
       }
    }
          
+   SetBit(kMustCleanup);
+   
    fSystem = system;
    fOutline = 0;
    fDefaultOutline = kFALSE;
@@ -152,6 +155,8 @@ TView::TView(const Float_t *rmin, const Float_t *rmax, Int_t system)
           h->ExecPlugin(0);
       }
    }
+         
+   SetBit(kMustCleanup);
 
    fSystem = system;
    fOutline = 0;
@@ -207,6 +212,8 @@ TView::TView(const Double_t *rmin, const Double_t *rmax, Int_t system)
           h->ExecPlugin(0);
       }
    }
+         
+   SetBit(kMustCleanup);
 
    fSystem = system;
    fOutline = 0;
