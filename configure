@@ -402,6 +402,9 @@ check_symbol() {
     symbollib=$1  ; shift
     symboldir=$1
 
+    symbollib=`echo $symbollib | sed s/^-l/lib/`
+    symboldir=`echo $symboldir | sed s/^-L//`
+
     # Check if we got a specific argument as to where the library
     # is to be found
     symbolfile=$symbollib
