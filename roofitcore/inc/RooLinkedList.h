@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinkedList.rdl,v 1.3 2001/11/19 07:23:57 verkerke Exp $
+ *    File: $Id: RooLinkedList.rdl,v 1.4 2002/04/03 23:37:25 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -20,19 +20,52 @@ class RooLinkedListIter ;
 class RooLinkedList : public TObject {
 public:
   // Constructor
-  RooLinkedList(Bool_t doHash=kFALSE) : 
+  RooLinkedList(Int_t htsize=0) : 
     _size(0), _first(0), _last(0), _htable(0) {
-    if (doHash) _htable = new RooHashTable ;
+    setHashTableSize(htsize) ;
   }
 
   // Copy constructor
   RooLinkedList(const RooLinkedList& other) :
     _size(0), _first(0), _last(0), _htable(0) {
-    if (other._htable) _htable = new RooHashTable ;
+    if (other._htable) _htable = new RooHashTable(other._htable->size()) ;
     RooLinkedListElem* elem = other._first ;
     while(elem) {
       Add(elem->_arg) ;
       elem = elem->_next ;
+    }
+  }
+
+
+  Int_t getHashTableSize() const {
+    return _htable ? _htable->size() : 0 ;
+  }
+
+  void setHashTableSize(Int_t size) {        
+    if (size<0) {
+      cout << "RooLinkedList::setHashTable() ERROR size must be positive" << endl ;
+      return ;
+    }
+    if (size==0) {
+      if (!_htable) {
+	// No hash table present
+	return ;
+      } else {
+	// Remove existing hash table
+	delete _htable ;
+	_htable = 0 ;
+      }
+    } else {
+      // (Re)create hash table
+      if (_htable) delete _htable ;
+      _htable = new RooHashTable(size) ;
+
+      // Fill hash table with existing entries
+      RooLinkedListElem* ptr = _first ;
+      while(ptr) {
+	_htable->add(ptr->_arg) ;
+	ptr = ptr->_next ;
+      }      
     }
   }
 
@@ -186,7 +219,6 @@ protected:
     return 0 ;
   }
     
-  Bool_t _doHash ;             //  Use hash table
   Int_t _size ;                //  Current size of list
   RooLinkedListElem*  _first ; //! Link to first element of list
   RooLinkedListElem*  _last ;  //! Link to last element of list

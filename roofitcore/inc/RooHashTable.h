@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooHashTable.rdl,v 1.1 2001/11/19 07:23:56 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -30,6 +30,7 @@ public:
   Bool_t remove(RooAbsArg* arg) ;
   RooAbsArg* find(const char* name) const ;
   Bool_t replace(const RooAbsArg* oldArg, const RooAbsArg* newArg) ;
+  Int_t size() const { return _size ; }
 
 protected:  
 

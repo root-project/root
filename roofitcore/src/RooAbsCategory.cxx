@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.32 2002/01/10 00:08:59 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.33 2002/03/07 06:22:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,6 +37,7 @@ RooAbsCategory::RooAbsCategory(const char *name, const char *title) :
   RooAbsArg(name,title)
 {
   // Constructor
+  _typeIter = _types.MakeIterator() ;
   setValueDirty() ;  
   setShapeDirty() ;  
 }
@@ -45,12 +46,13 @@ RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
   RooAbsArg(other,name), _value(other._value) 
 {
   // Copy constructor, copies the registered category states from the original.
-  TIterator* iter=other._types.MakeIterator() ;
+  _typeIter = _types.MakeIterator() ;
+
+  other._typeIter->Reset() ;
   TObject* obj ;
-  while (obj=iter->Next()) {
+  while (obj=other._typeIter->Next()) {
     _types.Add(obj->Clone()) ;
   }
-  delete iter ;
 
   setValueDirty() ;
   setShapeDirty() ;
@@ -62,6 +64,7 @@ RooAbsCategory::~RooAbsCategory()
   // Destructor
 
   // We own the contents of _types 
+  delete _typeIter ;
   _types.Delete() ;
 }
 
@@ -163,6 +166,19 @@ const RooCatType* RooAbsCategory::defineType(const char* label)
 }
 
 
+const RooCatType* RooAbsCategory::defineTypeUnchecked(const char* label, Int_t index) 
+{
+  Bool_t first = _types.GetEntries()?kFALSE:kTRUE ;
+  RooCatType *newType = new RooCatType(label,index) ;
+  _types.Add(newType) ;
+
+  if (first) _value = RooCatType(label,index) ;
+  setShapeDirty() ;
+
+  return newType ;  
+}
+
+
 
 const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index) 
 {
@@ -180,14 +196,7 @@ const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index)
     return 0 ;
   }
 
-  Bool_t first = _types.GetEntries()?kFALSE:kTRUE ;
-  RooCatType *newType = new RooCatType(label,index) ;
-  _types.Add(newType) ;
-
-  if (first) _value = RooCatType(label,index) ;
-  setShapeDirty() ;
-
-  return newType ;
+  return defineTypeUnchecked(label,index) ;
 }
 
 
@@ -208,9 +217,8 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t pri
   // Find our type that matches the specified type, or return 0 for no match.
 
   RooCatType* type ;
-  Int_t n= _types.GetEntries();
-  for (int i=0 ; i < n; i++) {
-    type = (RooCatType*)_types.At(i) ;
+  _typeIter->Reset() ;
+  while(type=(RooCatType*)_typeIter->Next()){
     if((*type) == other) return type; // delegate comparison to RooCatType
   }
 
@@ -226,9 +234,8 @@ const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) con
   // Find our type corresponding to the specified index, or return 0 for no match.
 
   RooCatType* type ;
-  Int_t n= _types.GetEntries();
-  for (int i=0 ; i < n; i++) {
-    type = (RooCatType*)_types.At(i) ;
+  _typeIter->Reset() ;
+  while(type=(RooCatType*)_typeIter->Next()){  
     if((*type) == index) return type; // delegate comparison to RooCatType
   }
   if (printError) {
@@ -241,11 +248,10 @@ const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) con
 const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printError) const 
 {
   // Find our type corresponding to the specified label, or return 0 for no match.
-
+ 
   RooCatType* type ;
-  Int_t n= _types.GetEntries();
-  for (int i=0 ; i < n; i++) {
-    type = (RooCatType*)_types.At(i) ;
+  _typeIter->Reset() ;
+  while(type=(RooCatType*)_typeIter->Next()){  
     if((*type) == label) return type; // delegate comparison to RooCatType
   }
 
@@ -253,10 +259,10 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
   char* endptr ;
   Int_t idx=strtol(label,&endptr,10)  ;
   if (endptr==label+strlen(label)) {
-    for (int i=0 ; i < n; i++) {
-    type = (RooCatType*)_types.At(i) ;
-    if((*type) == idx) return type; // delegate comparison to RooCatType
-    }
+    _typeIter->Reset() ;
+    while(type=(RooCatType*)_typeIter->Next()){  
+       if((*type) == idx) return type; // delegate comparison to RooCatType
+     }
   }
 
   if (printError) {
@@ -320,9 +326,8 @@ void RooAbsCategory::printToStream(ostream& os, PrintOption opt, TString indent)
     indent.Append("    ");
     opt= lessVerbose(opt);
     RooCatType *type;
-    Int_t n= _types.GetEntries();
-    for (int i=0 ; i < n ; i++) {
-      type= (RooCatType*)_types.At(i);
+    _typeIter->Reset() ;
+    while(type=(RooCatType*)_typeIter->Next()) {
       os << indent;
       type->printToStream(os,opt,indent);
     }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.51 2002/03/07 06:22:21 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.52 2002/04/03 23:37:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -779,7 +779,7 @@ Double_t RooFitContext::nLogLikelihood(Bool_t extended, Int_t nObserved) const
   }
 
   // include the extended maximum likelihood term, if requested
-  nObserved = (nObserved==-1) ? _dataClone->numEntries() : nObserved ;
+  nObserved = (nObserved==-1) ? _dataClone->numEntries(kTRUE) : nObserved ;
   if(extended) {
     result+= _pdfClone->extendedTerm(nObserved);
   }

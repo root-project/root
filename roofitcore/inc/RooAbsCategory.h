@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.26 2001/10/08 05:20:10 verkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.27 2001/10/19 06:56:51 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,6 +16,7 @@
 #include <iostream.h>
 #include "TNamed.h"
 #include "TObjArray.h"
+#include "THashList.h"
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooCatType.hh"
 
@@ -27,7 +28,7 @@ class Roo1DTable ;
 class RooAbsCategory : public RooAbsArg {
 public:
   // Constructors, assignment etc.
-  RooAbsCategory() {} ;
+  RooAbsCategory() { _typeIter = _types.MakeIterator() ; } ;
   RooAbsCategory(const char *name, const char *title);
   RooAbsCategory(const RooAbsCategory& other, const char* name=0) ;
   virtual ~RooAbsCategory();
@@ -68,6 +69,7 @@ protected:
   // Type definition management
   const RooCatType* defineType(const char* label) ;
   const RooCatType* defineType(const char* label, Int_t index) ;
+  const RooCatType* defineTypeUnchecked(const char* label, Int_t index) ;
   const RooCatType* getOrdinal(UInt_t n) const;
   void clearTypes() ;
 
@@ -81,6 +83,7 @@ protected:
 
   mutable RooCatType _value ; // Current value
   TObjArray  _types ;         // Array of allowed values
+  TIterator* _typeIter ;      //!
 
   ClassDef(RooAbsCategory,1) // Abstract index variable
 };

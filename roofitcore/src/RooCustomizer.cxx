@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCustomizer.cc,v 1.7 2002/03/07 06:22:20 verkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.8 2002/04/03 23:37:24 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -119,6 +119,10 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
   _cloneBranchList("cloneBranchList"), _sterile(kFALSE)
 {
   // Constructor with masterCat state. Customizers created by this constructor offer the full functionality
+  _masterBranchList.setHashTableSize(1000) ;
+  _masterLeafList.setHashTableSize(1000) ;
+  _cloneBranchList.setHashTableSize(1000) ;
+
   initialize() ;
 }
 
@@ -132,6 +136,9 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
 {
   // Sterile Constructor. Customizers created by this constructor offer only the replace() method. The supplied
   // 'name' is used as suffix for any cloned branch nodes
+  _masterBranchList.setHashTableSize(1000) ;
+  _masterLeafList.setHashTableSize(1000) ;
+  _cloneBranchList.setHashTableSize(1000) ;
   initialize() ;
 }
 
@@ -266,10 +273,18 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   RooArgSet masterNodesToBeReplaced("masterNodesToBeReplaced") ;
   RooArgSet masterReplacementNodes("masterReplacementNodes") ;
   RooArgSet clonedMasterNodes("clonedMasterNodes") ;
+
+  masterNodesToBeSplit.setHashTableSize(1000) ;
+  masterNodesToBeReplaced.setHashTableSize(1000) ;
+  masterReplacementNodes.setHashTableSize(1000) ;
+  clonedMasterNodes.setHashTableSize(1000) ;
+
   _masterLeafListIter->Reset() ;
   RooAbsArg* node ;
 
   RooArgSet nodeList(_masterLeafList) ;
+  nodeList.setHashTableSize(1000) ;
+
   nodeList.add(_masterBranchList) ;
   TIterator* nIter = nodeList.createIterator() ;
 
@@ -353,6 +368,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 
   // Find branches that are affected by splitting and must be cloned
   RooArgSet masterBranchesToBeCloned("masterBranchesToBeCloned") ;
+  masterBranchesToBeCloned.setHashTableSize(1000) ;
   _masterBranchListIter->Reset() ;
   RooAbsArg* branch ;
   while(branch=(RooAbsArg*)_masterBranchListIter->Next()) {
@@ -389,6 +405,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   // Clone branches, changes their names 
   RooAbsArg* cloneTopPdf = 0;
   RooArgSet clonedMasterBranches("clonedMasterBranches") ;
+  clonedMasterBranches.setHashTableSize(1000) ;
   TIterator* iter = masterBranchesToBeCloned.createIterator() ;
   while(branch=(RooAbsArg*)iter->Next()) {
     TString newName(branch->GetName()) ;

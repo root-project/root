@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCollection.rdl,v 1.11 2002/03/22 22:43:52 verkerke Exp $
+ *    File: $Id: RooAbsCollection.rdl,v 1.12 2002/03/29 03:18:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -41,6 +41,10 @@ public:
 
   // Copy list and contents (and optionally 'deep' servers)
   RooAbsCollection *snapshot(Bool_t deepCopy=kTRUE) const ;
+
+  // Hash table control
+  void setHashTableSize(Int_t i) { _list.setHashTableSize(i) ; }
+  Int_t getHashTableSize() const { return _list.getHashTableSize() ; }
 
   // List content management
   virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimPdfBuilder.cc,v 1.15 2002/03/22 22:43:58 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.16 2002/03/29 03:19:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -450,6 +450,8 @@ ClassImp(RooSimPdfBuilder)
 RooSimPdfBuilder::RooSimPdfBuilder(const RooArgSet& protoPdfSet) :
   _protoPdfSet(protoPdfSet)
 {
+  _compSplitCatSet.setHashTableSize(1000) ;
+  _splitNodeList.setHashTableSize(10000) ;
 }
 
 

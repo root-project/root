@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.14 2001/10/23 00:45:26 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.15 2001/11/28 19:49:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -83,15 +83,15 @@ TIterator* RooSuperCategory::MakeIterator() const
 void RooSuperCategory::updateIndexList()
 {
   // Update the list of super-category states 
-
   clearTypes() ;
 //   RooArgSet* catListClone = (RooArgSet*) _catSet.snapshot(kTRUE) ;
 
   RooMultiCatIter mcIter(_catSet) ;
   TObjString* obj ;
+  Int_t i(0) ;
   while(obj = (TObjString*) mcIter.Next()) {
     // Register composite label
-    defineType(obj->String()) ;
+    defineTypeUnchecked(obj->String(),i++) ;
   }
 //   _catSet = *catListClone ;
 //   delete catListClone ;
@@ -128,8 +128,15 @@ RooCatType
 RooSuperCategory::evaluate() const
 {
   // Calculate the current value 
-  if (isShapeDirty()) const_cast<RooSuperCategory*>(this)->updateIndexList() ;
-  return *lookupType(currentLabel()) ;
+  if (isShapeDirty()) {
+    const_cast<RooSuperCategory*>(this)->updateIndexList() ;
+  }
+  const RooCatType* ret = lookupType(currentLabel(),kTRUE) ;
+  if (!ret) {
+    cout << "RooSuperCat::evaluate(" << this << ") error: current state not defined: '" << currentLabel() << "'" << endl ;
+    Print("v") ;
+  }
+  return *ret ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooHashTable.cc,v 1.1 2001/11/19 07:23:56 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -22,7 +22,6 @@ RooHashTable::RooHashTable(Int_t capacity)
   if (capacity <= 0) {
     capacity = TCollection::kInitHashTableCapacity;
   }  
-
   _size = (Int_t)TMath::NextPrime(TMath::Max(capacity,(int)TCollection::kInitHashTableCapacity));
   _arr  = new RooLinkedList* [_size] ;
   memset(_arr, 0, _size*sizeof(RooLinkedList*));
@@ -50,8 +49,8 @@ void RooHashTable::add(RooAbsArg* arg)
 {
   Int_t slot = arg->Hash() % _size ;
   if (!_arr[slot]) {
-      _arr[slot] = new RooLinkedList(kFALSE) ;
-      _usedSlots++ ;
+    _arr[slot] = new RooLinkedList(kFALSE) ;
+    _usedSlots++ ;
    }
    _arr[slot]->Add(arg);
    _entries++;
