@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.18 2003/10/07 11:10:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.19 2004/06/25 18:42:19 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -31,6 +31,7 @@ class TTreeFormula;
 class TSQLResult;
 class TSelector;
 class TPrincipal;
+class TVirtualIndex;
 
 class TVirtualTreePlayer : public TObject {
 
@@ -41,6 +42,7 @@ private:
 public:
     TVirtualTreePlayer() { }
     virtual ~TVirtualTreePlayer() { }
+    virtual TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname) = 0;
     virtual TTree         *CopyTree(const char *selection, Option_t *option=""
                             ,Int_t nentries=1000000000, Int_t firstentry=0) = 0;
     virtual Int_t          DrawScript(const char* wrapperPrefix, 
