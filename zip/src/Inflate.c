@@ -1,4 +1,4 @@
-/* @(#)root/zip:$Name:  $:$Id: Inflate.c,v 1.6 2002/12/02 18:50:12 rdm Exp $ */
+/* @(#)root/zip:$Name:  $:$Id: Inflate.c,v 1.8 2003/08/23 00:08:13 rdm Exp $ */
 /* Author: */
 #include <stdio.h>
 #include <stdlib.h>
@@ -1175,8 +1175,8 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   /* if (obufptr - tgt != isize) {
     There are some rare cases when a few more bytes are required */
   if (obufptr - tgt > *tgtsize) {
-    fprintf(stderr,"R__unzip: discrepancy (%d) with initial size: %ld, tgtsize=%d\n",
-            obufptr - tgt,isize,*tgtsize);
+    fprintf(stderr,"R__unzip: discrepancy (%ld) with initial size: %ld, tgtsize=%d\n",
+            (long)(obufptr - tgt),isize,*tgtsize);
     *irep = obufptr - tgt;
     return;
   }
