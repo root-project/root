@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.84 2003/02/24 20:34:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.85 2003/02/26 10:11:51 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -386,14 +386,15 @@ void TFile::Init(Bool_t create)
       frombuf(buffer, &headerLength);
       fBEGIN = (Seek_t)headerLength;
       if (fVersion < 1000000) { //small file
-         frombuf(buffer, &fEND);
-         frombuf(buffer, &fSeekFree);
+         Int_t send,sfree,sinfo;
+         frombuf(buffer, &send);         fEND     = (Seek_t)send;
+         frombuf(buffer, &sfree);        fSeekFree= (Seek_t)sfree;
          frombuf(buffer, &fNbytesFree);
          frombuf(buffer, &nfree);
          frombuf(buffer, &fNbytesName);
          frombuf(buffer, &fUnits );
          frombuf(buffer, &fCompress);
-         frombuf(buffer, &fSeekInfo);
+         frombuf(buffer, &sinfo);        fSeekInfo = (Seek_t)sinfo;
          frombuf(buffer, &fNbytesInfo);
       } else { // new format to support large files
          Long_t send,sfree,sinfo;
