@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.19 2002/07/09 21:03:17 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.20 2002/07/13 16:40:29 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -72,6 +72,7 @@
 #pragma link C++ class TROOT;
 #pragma link C++ class TRealData+;
 #pragma link C++ class TRegexp;
+#pragma link C++ class TRefCnt;
 #pragma link C++ class TSignalHandler;
 #pragma link C++ class TStopwatch+;
 #pragma link C++ class TStorage;
