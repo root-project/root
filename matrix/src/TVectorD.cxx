@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.25 2003/02/05 23:36:59 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.26 2003/05/26 03:36:12 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -132,10 +132,20 @@ TVectorD::~TVectorD()
 {
    // TVectorD destructor.
 
-   if (IsValid())
-      TStorage::Dealloc(fElements);
+   Clear();
 
    Invalidate();
+}
+
+//______________________________________________________________________________
+void TVectorD::Clear(Option_t *)
+{
+   // delete dynamic structures
+
+   if (IsValid()) {
+      TStorage::Dealloc(fElements);
+      fElements = 0;
+   }
 }
 
 //______________________________________________________________________________

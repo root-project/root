@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.20 2002/10/25 13:35:21 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.21 2002/10/25 15:29:50 rdm Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -113,6 +113,7 @@ public:
 
    virtual ~TVectorD();
 
+   void Clear(Option_t *option="");
    void Draw(Option_t *option=""); // *MENU*
    void ResizeTo(Int_t n);
    void ResizeTo(Int_t lwb, Int_t upb);
