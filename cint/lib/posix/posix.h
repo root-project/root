@@ -99,7 +99,7 @@ extern struct dirent *readdir(DIR *dir);
 #if defined(G__KCC) || defined(__KCC)
 extern void seekdir(DIR* dir,off_t loc);
 
-#elif (defined(G__alpha)||defined(__alpha)) && defined(G__GNU)
+#elif defined(G__alpha) || defined(__alpha)
 
 extern int seekdir(DIR *, long);
 
