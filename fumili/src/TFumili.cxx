@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.2 2003/05/05 20:50:12 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.3 2003/05/05 20:58:24 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //BEGIN_HTML
@@ -1323,7 +1323,7 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
     "SET       "};// 29 err
 
   TString  cfname, cmode, ckind,  cwarn, copt, ctemp, ctemp2;
-  Int_t ind;
+  Int_t i, ind;
   Bool_t SETCommand=kFALSE;
   for (ind = 0; ind < nntot; ++ind) {
     ctemp  = cname[ind];
@@ -1357,7 +1357,7 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
 	  if(parnum<0 || parnum>=fNpar) return -2; //no such parameter
 	  Printf("Parameter %s = %E",fANames[parnum].Data(),fA[parnum]);
 	} else
-	  for (Int_t i=0;i<fNpar;i++)
+	  for (i=0;i<fNpar;i++)
 	    Printf("Parameter %s = %E",fANames[i].Data(),fA[i]);
 	
       }
@@ -1368,7 +1368,7 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
       Int_t parnum;
       Double_t lolim,uplim;
       if (nargs<1) {
-	for(Int_t i=0;i<fNpar;i++) 
+	for(i=0;i<fNpar;i++) 
 	  if(SETCommand) {
 	    fAMN[i]=kMINDOUBLE;
 	    fAMX[i]=kMAXDOUBLE;
@@ -1405,8 +1405,8 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
       if(SETCommand) return 0;
       Printf("\nCovariant matrix ");
       Int_t L = 0,nn=0,nnn=0;
-      for (Int_t i=0;i<fNpar;i++) if(fPL0[i]>0.) nn++;
-      for (Int_t i=0;i<nn;i++) {
+      for (i=0;i<fNpar;i++) if(fPL0[i]>0.) nn++;
+      for (i=0;i<nn;i++) {
 	for(;fPL0[nnn]<=0.;nnn++);
 	printf("%5s: ",fANames[nnn++].Data());
 	for (Int_t j=0;j<=i;j++) 
@@ -1419,7 +1419,7 @@ Int_t TFumili::ExecuteSetCommand(Int_t nargs){
   case 4:
     if(SETCommand) return 0;
     Printf("\nGlobal correlation factors (maximum correlation of the parameter\n  with arbitrary linear combination of other parameters)");
-    for(Int_t i=0;i<fNpar;i++) {
+    for(i=0;i<fNpar;i++) {
       printf("%5s: ",fANames[i].Data());
       printf("%11.3E\n",TMath::Sqrt(1-1/((fR[i]!=0.)?fR[i]:1.)) );
     }
@@ -1568,7 +1568,8 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
   fCword = comand;
   fCword.ToUpper();
   if (nargs<=0) fCmPar[0] = 0;
-  for(Int_t i=0;i<fMaxParam;i++){
+  Int_t i;
+  for(i=0;i<fMaxParam;i++){
     if(i<=nargs) fCmPar[i] = args[i];
   }
   /*
@@ -1610,7 +1611,7 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
     return 0;
   case 8: // FIX <parno> ....
     if (nargs<1) return -1; // No parameters specified
-    for (Int_t i=0;i<nargs;i++) {
+    for (i=0;i<nargs;i++) {
       Int_t parnum = Int_t(fCmPar[i])-1;
       FixParameter(parnum);
     }
@@ -1618,7 +1619,7 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
   case 9: // REStore <code>
     if (nargs<1) return 0;
     if(fCmPar[0]==0.) 
-     for (Int_t i=0;i<fNpar;i++)
+     for (i=0;i<fNpar;i++)
        ReleaseParameter(i);
     else
       if(fCmPar[0]==1.) {
@@ -1628,7 +1629,7 @@ Int_t TFumili::ExecuteCommand(const char *command, Double_t *args, Int_t nargs){
     return 0;
   case 10: // RELease <parno> ...
     if (nargs<1) return -1; // No parameters specified
-    for (Int_t i=0;i<nargs;i++) {
+    for (i=0;i<nargs;i++) {
       Int_t parnum = Int_t(fCmPar[i])-1;
       ReleaseParameter(parnum);
     }
@@ -1687,7 +1688,7 @@ void H1FitChisquareFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, 
 {
    Double_t cu,eu,fu,fsum;
    Double_t x[3];
-   Int_t bin,binx,biny,binz;
+   Int_t i, bin,binx,biny,binz;
    Axis_t binlow, binup, binsize;
    Double_t *zik=0;
    Double_t *pl0=0;
@@ -1746,7 +1747,7 @@ void H1FitChisquareFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, 
 	    hFitter->Derivatives(df,x);
 	    Int_t N = 0;
 	    fsum = (fu-cu)/eu;
-	    for (Int_t i=0;i<npar;i++) 
+	    for (i=0;i<npar;i++) 
 	      if (pl0[i]>0){
 		df[N] = df[i]/eu; 
 		// left only non-fixed param derivatives / by Sigma
@@ -1754,7 +1755,7 @@ void H1FitChisquareFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, 
 		N++;
 	      }
 	    Int_t L = 0;
-	    for (Int_t i=0;i<N;i++)
+	    for (i=0;i<N;i++)
 	      for (Int_t j=0;j<=i;j++) 
 		zik[L++] += df[i]*df[j];
             f += .5*fsum*fsum;
@@ -1781,7 +1782,7 @@ void H1FitLikelihoodFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
 
    Double_t cu,fu,fobs,fsub;
    Double_t x[3];
-   Int_t bin,binx,biny,binz,icu;
+   Int_t i, bin,binx,biny,binz,icu;
    Axis_t binlow, binup, binsize;
 
    Int_t npfits = 0;
@@ -1840,7 +1841,7 @@ void H1FitLikelihoodFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
 	    int N=0;
 	    // Here we need gradients of Log likelihood function
 	    // 
-	    for (Int_t i=0;i<npar;i++) 
+	    for (i=0;i<npar;i++) 
 	      if (pl0[i]>0){
 	    	df[N] = df[i]*(icu/fu-1); 
 	    	gin[i] -= df[N];
@@ -1849,7 +1850,7 @@ void H1FitLikelihoodFumili(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
 	    Int_t L = 0;
 	    // Z-matrix here - production of first derivatives  
 	    //  of log-likelihood function
-	    for (Int_t i=0;i<N;i++)
+	    for (i=0;i<N;i++)
 	      for (Int_t j=0;j<=i;j++) 
 	    	zik[L++] += df[i]*df[j];
             
@@ -1886,7 +1887,7 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
    Double_t cu,eu,ex,ey,eux,fu,fsum,fm,fp;
    Double_t x[1], xx[1];
    Double_t xm,xp;
-   Int_t bin, npfits=0;
+   Int_t i, bin, npfits=0;
 
    TFumili *grFitter = (TFumili*)TVirtualFitter::GetFitter();
    TGraph *gr     = (TGraph*)grFitter->GetObjectFit();
@@ -1944,7 +1945,7 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
       grFitter->Derivatives(df,x);
       Int_t N = 0;
       fsum = (fu-cu)/eusq;
-      for (Int_t i=0;i<npar;i++) 
+      for (i=0;i<npar;i++) 
 	if (pl0[i]>0){
 	  df[N] = df[i]/eusq; 
 	  // left only non-fixed param derivatives / by Sigma
@@ -1952,7 +1953,7 @@ void GraphFitChisquareFumili(Int_t &npar, Double_t * gin, Double_t &f,
 	  N++;
 	}
       Int_t L = 0;
-      for (Int_t i=0;i<N;i++)
+      for (i=0;i<N;i++)
 	for (Int_t j=0;j<=i;j++) 
 	  zik[L++] += df[i]*df[j];
       f += .5*fsum*fsum;
