@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.71 2001/12/21 08:46:18 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.72 2002/01/02 21:48:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -260,6 +260,7 @@
 #include "TChainElement.h"
 #include "TF1.h"
 #include "TVirtualFitter.h"
+#include "TEnv.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
@@ -623,9 +624,35 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 //    will draw sqrt(x) and save the histogram as "hsqrt" in the current
 //    directory.
 //
+//  The binning information is taken from the environment variables
+//
+//     Hist.Binning.?D.?
+//
+//  In addition, the name of the histogram can be followed by up to 9
+//  numbers between '(' and ')', where the numbers describe the
+//  following:
+//  
+//   1 - bins in x-direction
+//   2 - lower limit in x-direction
+//   3 - upper limit in x-direction
+//   4-6 same for y-direction
+//   7-9 same for z-direction
+//
+//   When a new binning is used the new value will become the default.
+//   Values can be skipped.
+//  Example:
+//    tree.Draw("sqrt(x)>>hsqrt(500,10,20)"
+//          // plot sqrt(x) between 10 and 20 using 500 bins
+//    tree.Draw("sqrt(x):sin(y)>>hsqrt(100,10,,50,.1,.5)"  
+//          // plot sqrt(x) against sin(y)
+//          // 100 bins in x-direction; lower limit on x-axis is 10; no upper limit
+//          //  50 bins in y-direction; lower limit on y-axis is .1; upper limit is .5
+// 
 //  By default, the specified histogram is reset.
 //  To continue to append data to an existing histogram, use "+" in front
-//  of the histogram name;
+//  of the histogram name.
+//  A '+' in front of the histogram name is ignored, when the name is followed by
+//  binning information as described in the previous paragraph.
 //    tree.Draw("sqrt(x)>>+hsqrt","y>0")
 //      will not reset hsqrt, but will continue filling.
 //  This works for 1-D, 2-D and 3-D histograms.
@@ -759,6 +786,16 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    if ( inElist && inElist->GetReapplyCut() ) {
       realSelection = realSelection && inElist->GetTitle();
    }
+   
+// what each variable should contain:
+//   varexp0   - original expression eg "a:b>>htest"
+//   hname     - name of new or old histogram
+//   hkeep     - flag if to keep new histogram
+//   hnameplus - flag if to add to current histo
+//   i         - length of variable expression stipped of everything after ">>"
+//   varexp    - variable expression stipped of everything after ">>"
+//   oldh1     - pointer to hist hname
+//   elist     - pointer to selection list of hname
 
    fHistogram = 0;
    char *hname = 0;
@@ -771,7 +808,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    }
    //   char *hname = (char*)strstr(varexp0,">>");
    if (hname) {
-      i = (int)( hname - varexp0 );
+      i = (int)( hname - varexp0 );  //  length of varexp0 before ">>"
       hname += 2;
       hkeep  = 1;
       varexp = new char[i+1];
@@ -874,7 +911,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    if (fDimension == 1) {
       action = 1;
       if (!oldh1) {
-         fNbins[0] = 100;
+         fNbins[0] = gEnv->GetValue("Hist.Binning.1D.x",100);
          if (gPad && opt.Contains("same")) {
             TListIter np(gPad->GetListOfPrimitives());
             TObject *op;
@@ -975,9 +1012,9 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       action = 2;
      // if (!opt.Contains("same") && !opt.Contains("goff") && gPad)  gPad->Clear();
       if (!oldh1 || !opt.Contains("same")) {
-         fNbins[0] = 40;
-         fNbins[1] = 40;
-         if (opt.Contains("prof")) fNbins[1] = 100;
+         fNbins[0] = gEnv->GetValue("Hist.Binning.2D.y",40);
+         fNbins[1] = gEnv->GetValue("Hist.Binning.2D.x",40);
+         if (opt.Contains("prof")) fNbins[1] = gEnv->GetValue("Hist.Binning.2D.Prof",100);
          if (opt.Contains("same")) {
              TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
              if (oldhtemp) {
@@ -988,10 +1025,10 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
                 fVmin[0]  = oldhtemp->GetYaxis()->GetXmin();
                 fVmax[0]  = oldhtemp->GetYaxis()->GetXmax();
              } else {
-                fNbins[1] = 40;
+                fNbins[1] = gEnv->GetValue("Hist.Binning.2D.x",40);
                 fVmin[1]  = gPad->GetUxmin();
                 fVmax[1]  = gPad->GetUxmax();
-                fNbins[0] = 40;
+                fNbins[0] = gEnv->GetValue("Hist.Binning.2D.y",40);
                 fVmin[0]  = gPad->GetUymin();
                 fVmax[0]  = gPad->GetUymax();
              }
@@ -1073,9 +1110,9 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       action = 3;
      // if (!opt.Contains("same") && !opt.Contains("goff") && gPad)  gPad->Clear();
       if (!oldh1 || !opt.Contains("same")) {
-         fNbins[0] = 20;
-         fNbins[1] = 20;
-         fNbins[2] = 20;
+         fNbins[0] = gEnv->GetValue("Hist.Binning.3D.z",20);
+         fNbins[1] = gEnv->GetValue("Hist.Binning.3D.y",20);
+         fNbins[2] = gEnv->GetValue("Hist.Binning.3D.x",20);
          if (opt.Contains("same")) {
              TH1 *oldhtemp = (TH1*)gPad->FindObject(hdefault);
              if (oldhtemp) {
@@ -1092,13 +1129,13 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
                 TView *view = gPad->GetView();
                 Double_t *rmin = view->GetRmin();
                 Double_t *rmax = view->GetRmax();
-                fNbins[2] = 20;
+                fNbins[2] = gEnv->GetValue("Hist.Binning.3D.z",20);
                 fVmin[2]  = rmin[0];
                 fVmax[2]  = rmax[0];
-                fNbins[1] = 20;
+                fNbins[1] = gEnv->GetValue("Hist.Binning.3D.y",20);
                 fVmin[1]  = rmin[1];
                 fVmax[1]  = rmax[1];
-                fNbins[0] = 20;
+                fNbins[0] = gEnv->GetValue("Hist.Binning.3D.x",20);
                 fVmin[0]  = rmin[2];
                 fVmax[0]  = rmax[2];
              }
