@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.94 2004/10/11 16:25:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.95 2004/10/12 11:57:31 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -423,7 +423,7 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
             fgDbw = event->fWindow;
 
             if (dbl_clk) {
-               if ((event->fState == (kKeyControlMask | kButton1Mask)) && 
+               if ((event->fState == (kKeyControlMask | kButton1Mask)) &&
                     !IsEditDisabled() && gGuiBuilder) {
                   StartGuiBuilding(!IsEditable());
                   return kTRUE;
@@ -1820,8 +1820,11 @@ void TGGroupFrame::DrawBorder()
    r = fWidth - 1;
    // next three lines are for backward compatibility in case of horizontal layout
    TGLayoutManager * lm = GetLayoutManager();
-   if (lm->InheritsFrom(TGVerticalLayout::Class())) b = fHeight - t;
-   else b = fHeight - 1;
+   if ((lm->InheritsFrom(TGHorizontalLayout::Class())) ||
+       (lm->InheritsFrom(TGMatrixLayout::Class())))
+      b = fHeight - 1;
+   else
+      b = fHeight - t;
 
    sep = 3;
    UInt_t rr = 5 + (sep << 1) + tw;
