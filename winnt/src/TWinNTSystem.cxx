@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.72 2004/02/02 15:32:57 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.73 2004/02/04 17:23:00 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -48,7 +48,9 @@
 #include <signal.h>
 #include <stdio.h>
 #include <errno.h>
+#include <lm.h>
 
+int groupIdx, memberIdx;
 
 const char *kProtocolName   = "tcp";
 typedef void (*SigHandler_t)(ESignals);
@@ -598,6 +600,19 @@ Bool_t TWinNTSystem::Init()
    fhTermInputEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
 #endif
 
+   if (::GetVersion() < 0x80000000) { // Windows NT/2000/XP
+      fActUser = 0;
+      fNbGroups = fNbUsers = 0;
+      GetNbGroups();
+
+      fGroups = (struct group *)calloc(fNbGroups, sizeof(struct group));
+      for(int i=0;i<fNbGroups;i++) {
+        fGroups[i].gr_mem = (char **)calloc(fNbUsers, sizeof (char*));
+      }
+      fPasswords = (struct passwd *)calloc(fNbUsers, sizeof(struct passwd));
+
+      CollectGroups();
+   }
    return kFALSE;
 }
 
@@ -1969,6 +1984,632 @@ char *TWinNTSystem::Which(const char *search, const char *infile, EAccessMode mo
       found = 0;
    }
    return found;
+}
+
+//---- Users & Groups ----------------------------------------------------------
+
+//________________________________________________________________________________
+Bool_t TWinNTSystem::CountMembers(const char *lpszGroupName)
+{
+   NET_API_STATUS NetStatus = NERR_Success;
+   LPBYTE Data = NULL;
+   DWORD Index = 0, ResumeHandle = 0, Total = 0;
+   LOCALGROUP_MEMBERS_INFO_1 *MemberInfo;
+   WCHAR wszGroupName[256];
+   int iRetOp = 0;
+   DWORD dwLastError = 0;
+
+   if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
+       return kFALSE;
+
+   iRetOp = MultiByteToWideChar (
+            (UINT)CP_ACP,                // code page
+            (DWORD)MB_PRECOMPOSED,       // character-type options
+            (LPCSTR)lpszGroupName,       // address of string to map
+            (int)-1,                     // number of bytes in string
+            (LPWSTR)wszGroupName,        // address of wide-character buffer
+            (int)sizeof(wszGroupName) ); // size of buffer
+
+   if (iRetOp == 0) {
+      dwLastError = GetLastError();
+      if (Data)  
+         NetApiBufferFree(Data);
+      return FALSE;
+   }
+
+   // The NetLocalGroupGetMembers() API retrieves a list of the members 
+   // of a particular local group.
+   NetStatus = NetLocalGroupGetMembers (NULL, wszGroupName, 1, 
+                            &Data, 8192, &Index, &Total, &ResumeHandle );
+
+   if (NetStatus != NERR_Success || Data == NULL) {
+      dwLastError = GetLastError();
+
+      if (dwLastError == ERROR_ENVVAR_NOT_FOUND) {
+         // This usually means that the current Group has no members.
+         // We call NetLocalGroupGetMembers() again. 
+         // This time, we set the level to 0. 
+         // We do this just to confirm that the number of members in 
+         // this group is zero.
+         NetStatus = NetLocalGroupGetMembers ( NULL, wszGroupName, 0,
+                                  &Data, 8192, &Index, &Total, &ResumeHandle );
+      }
+
+      if (Data)  
+         NetApiBufferFree(Data);
+      return FALSE;
+   }
+
+   fNbUsers += Total;  
+   MemberInfo = (LOCALGROUP_MEMBERS_INFO_1 *)Data;
+
+   if (Data)  
+      NetApiBufferFree(Data);
+
+   return TRUE;
+}
+
+//________________________________________________________________________________
+Bool_t TWinNTSystem::GetNbGroups()
+{
+   NET_API_STATUS NetStatus = NERR_Success;
+   LPBYTE Data = NULL;
+   DWORD Index = 0, ResumeHandle = 0, Total = 0, i;
+   LOCALGROUP_INFO_0 *GroupInfo;
+   char szAnsiName[256];
+   DWORD dwLastError = 0;
+   int  iRetOp = 0;
+
+   if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
+       return kFALSE;
+
+   NetStatus = NetLocalGroupEnum(NULL, 0, &Data, 8192, &Index, 
+                                    &Total, &ResumeHandle );
+    
+   if (NetStatus != NERR_Success || Data == NULL) {
+      dwLastError = GetLastError();
+      if (Data)  
+         NetApiBufferFree(Data);
+      return FALSE;
+   }
+
+   fNbGroups = Total;
+   GroupInfo = (LOCALGROUP_INFO_0 *)Data;
+   for (i=0; i < Total; i++) {
+      // Convert group name from UNICODE to ansi.
+      iRetOp = WideCharToMultiByte (
+               (UINT)CP_ACP,                    // code page
+               (DWORD)0,                        // performance and mapping flags
+               (LPCWSTR)(GroupInfo->lgrpi0_name), // address of wide-char string
+               (int)-1,                        // number of characters in string
+               (LPSTR)szAnsiName,            // address of buffer for new string
+               (int)(sizeof(szAnsiName)),    // size of buffer
+               (LPCSTR)NULL,     // address of default for unmappable characters
+               (LPBOOL)NULL );     // address of flag set when default char used.
+
+      // Now lookup all members of this group and record down their names and 
+      // SIDs into the output file.
+      CountMembers((LPCTSTR)szAnsiName);
+
+      GroupInfo++;
+   }
+
+   if (Data)  
+      NetApiBufferFree(Data);
+
+   return TRUE;
+}
+
+//________________________________________________________________________________
+Long_t TWinNTSystem::LookupSID (const char *lpszAccountName, int what)
+{
+   //
+   // Take the name and look up a SID so that we can get full 
+   // domain/user information
+   //
+   BOOL bRetOp = FALSE;
+   PSID pSid = NULL;
+   DWORD dwSidSize, dwDomainNameSize;
+   BYTE bySidBuffer[MAX_SID_SIZE];
+   char szDomainName[MAX_NAME_STRING];
+   SID_NAME_USE sidType;   
+   PUCHAR puchar_SubAuthCount = NULL;
+   SID_IDENTIFIER_AUTHORITY sid_identifier_authority;
+   PSID_IDENTIFIER_AUTHORITY psid_identifier_authority = NULL;
+   char szIdentAuthValue[80];
+   int i;
+   unsigned char j = 0;
+   DWORD dwLastError = 0;
+
+   if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
+       return 0;
+
+   pSid = (PSID)bySidBuffer;
+   dwSidSize = sizeof(bySidBuffer);
+   dwDomainNameSize = sizeof(szDomainName);
+
+   bRetOp = LookupAccountName (
+            (LPCTSTR)NULL,             // address of string for system name
+            (LPCTSTR)lpszAccountName,  // address of string for account name
+            (PSID)pSid,                // address of security identifier
+            (LPDWORD)&dwSidSize,       // address of size of security identifier
+            (LPTSTR)szDomainName,      // address of string for referenced domain
+            (LPDWORD)&dwDomainNameSize,// address of size of domain string
+            (PSID_NAME_USE)&sidType ); // address of SID-type indicator
+
+   if (bRetOp == FALSE) {
+      dwLastError = GetLastError();
+      return -1;  // Unable to obtain Account SID.
+   }
+
+   bRetOp = IsValidSid((PSID)pSid);
+
+   if (bRetOp == FALSE) {
+      dwLastError = GetLastError();
+      return -2;  // SID returned is invalid.
+   }
+
+   // Obtain via APIs the identifier authority value.
+   psid_identifier_authority = GetSidIdentifierAuthority ((PSID)pSid);
+
+   // Make a copy of it.
+   memcpy (&sid_identifier_authority, psid_identifier_authority, 
+       sizeof(SID_IDENTIFIER_AUTHORITY));
+
+   // Determine how many sub-authority values there are in the current SID.
+   puchar_SubAuthCount = (PUCHAR)GetSidSubAuthorityCount((PSID)pSid);
+   // Assign it to a more convenient variable.
+   j = (unsigned char)(*puchar_SubAuthCount);
+   // Now obtain all the sub-authority values from the current SID.
+   DWORD dwSubAuth = 0;
+   PDWORD pdwSubAuth = NULL;
+   char szSubAuthValue[80];
+   // Obtain the current sub-authority DWORD (referenced by a pointer)
+   pdwSubAuth = (PDWORD)GetSidSubAuthority (
+                (PSID)pSid,  // address of security identifier to query
+                (DWORD)j-1); // index of subauthority to retrieve
+   dwSubAuth = *pdwSubAuth;
+   if(what == SID_MEMBER) {
+       fPasswords[memberIdx].pw_uid = dwSubAuth;
+       fPasswords[memberIdx].pw_gid = fGroups[groupIdx].gr_gid;
+       fPasswords[memberIdx].pw_group = strdup(fGroups[groupIdx].gr_name);
+   }
+   else if(what == SID_GROUP) {
+       fGroups[groupIdx].gr_gid = dwSubAuth;
+   }
+   return 0;
+}
+
+//________________________________________________________________________________
+Bool_t TWinNTSystem::CollectMembers(const char *lpszGroupName)
+{
+   NET_API_STATUS NetStatus = NERR_Success;
+   LPBYTE Data = NULL;
+   DWORD Index = 0, ResumeHandle = 0, Total = 0, i;
+   LOCALGROUP_MEMBERS_INFO_1 *MemberInfo;
+   char szAnsiMemberName[256];
+   char szFullMemberName[256];
+   char szMemberHomeDir[256];
+   WCHAR wszGroupName[256];
+   int iRetOp = 0;
+   char  act_name[256];
+   DWORD length = sizeof (act_name);
+   DWORD dwLastError = 0;
+   LPUSER_INFO_11  pUI11Buf = NULL;
+   NET_API_STATUS  nStatus;
+
+   if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
+       return kFALSE;
+
+   iRetOp = MultiByteToWideChar (
+            (UINT)CP_ACP,                // code page
+            (DWORD)MB_PRECOMPOSED,       // character-type options
+            (LPCSTR)lpszGroupName,       // address of string to map
+            (int)-1,                     // number of bytes in string
+            (LPWSTR)wszGroupName,        // address of wide-character buffer
+            (int)sizeof(wszGroupName) ); // size of buffer
+
+   if (iRetOp == 0) {
+      dwLastError = GetLastError();
+      if (Data)  
+         NetApiBufferFree(Data);
+      return FALSE;
+   }
+
+   GetUserName (act_name, &length);
+
+   // The NetLocalGroupGetMembers() API retrieves a list of the members 
+   // of a particular local group.
+   NetStatus = NetLocalGroupGetMembers (NULL, wszGroupName, 1, 
+                            &Data, 8192, &Index, &Total, &ResumeHandle );
+
+   if (NetStatus != NERR_Success || Data == NULL) {
+      dwLastError = GetLastError();
+
+      if (dwLastError == ERROR_ENVVAR_NOT_FOUND) {
+         // This usually means that the current Group has no members.
+         // We call NetLocalGroupGetMembers() again. 
+         // This time, we set the level to 0. 
+         // We do this just to confirm that the number of members in 
+         // this group is zero.
+         NetStatus = NetLocalGroupGetMembers ( NULL, wszGroupName, 0,
+                                  &Data, 8192, &Index, &Total, &ResumeHandle );
+      }
+
+      if (Data)  
+         NetApiBufferFree(Data);
+      return FALSE;
+   }
+
+   MemberInfo = (LOCALGROUP_MEMBERS_INFO_1 *)Data;
+   for (i=0; i < Total; i++) {
+      iRetOp = WideCharToMultiByte (
+               (UINT)CP_ACP,                     // code page
+               (DWORD)0,                         // performance and mapping flags
+               (LPCWSTR)(MemberInfo->lgrmi1_name), // address of wide-char string
+               (int)-1,                         // number of characters in string
+               (LPSTR)szAnsiMemberName,       // address of buffer for new string
+               (int)(sizeof(szAnsiMemberName)), // size of buffer
+               (LPCSTR)NULL,      // address of default for unmappable characters
+               (LPBOOL)NULL );      // address of flag set when default char used.
+
+      if (iRetOp == 0) {
+         dwLastError = GetLastError();
+      }
+
+      fPasswords[memberIdx].pw_name = strdup(szAnsiMemberName);
+      fPasswords[memberIdx].pw_passwd = strdup("");
+      fGroups[groupIdx].gr_mem[i] = strdup(szAnsiMemberName);
+
+      if(!stricmp(fPasswords[memberIdx].pw_name, act_name))
+         fActUser = memberIdx;
+
+
+      TCHAR szUserName[255]=TEXT(""); 
+      MultiByteToWideChar(CP_ACP, 0, szAnsiMemberName, -1, (LPWSTR)szUserName, 255); 
+      //
+      // Call the NetUserGetInfo function; specify level 10.
+      //
+      nStatus = NetUserGetInfo(NULL, (LPCWSTR)szUserName, 11, (LPBYTE *)&pUI11Buf);
+      //
+      // If the call succeeds, print the user information.
+      //
+      if (nStatus == NERR_Success) {
+         if (pUI11Buf != NULL) {
+            wsprintf(szFullMemberName,"%S",pUI11Buf->usri11_full_name);
+            fPasswords[memberIdx].pw_gecos = strdup(szFullMemberName);
+            wsprintf(szMemberHomeDir,"%S",pUI11Buf->usri11_home_dir);
+            fPasswords[memberIdx].pw_dir = strdup(szMemberHomeDir);
+         }
+      }
+      if((fPasswords[memberIdx].pw_gecos == NULL) || (strlen(fPasswords[memberIdx].pw_gecos) == 0))
+         fPasswords[memberIdx].pw_gecos = strdup(fPasswords[memberIdx].pw_name);
+      if((fPasswords[memberIdx].pw_dir == NULL) || (strlen(fPasswords[memberIdx].pw_dir) == 0))
+         fPasswords[memberIdx].pw_dir = strdup("c:\\");
+      //
+      // Free the allocated memory.
+      //
+      if (pUI11Buf != NULL)
+         NetApiBufferFree(pUI11Buf);
+
+      /* Ensure SHELL is defined. */
+      if (getenv ("SHELL") == NULL)
+         putenv ((GetVersion () & 0x80000000) ? "SHELL=command" : "SHELL=cmd");
+
+      /* Set dir and shell from environment variables. */
+      fPasswords[memberIdx].pw_shell = getenv ("SHELL");
+
+      // Find out the SID of the Member.
+      LookupSID ((LPCTSTR)szAnsiMemberName, SID_MEMBER);
+      memberIdx++;
+      MemberInfo++;
+   }
+
+   if (Data)  
+      NetApiBufferFree(Data);
+
+   return TRUE;
+}
+
+//________________________________________________________________________________
+Bool_t TWinNTSystem::CollectGroups()
+{
+   NET_API_STATUS NetStatus = NERR_Success;
+   LPBYTE Data = NULL;
+   DWORD Index = 0, ResumeHandle = 0, Total = 0, i;
+   LOCALGROUP_INFO_0 *GroupInfo;
+   char szAnsiName[256];
+   DWORD dwLastError = 0;
+   int  iRetOp = 0;
+
+   groupIdx = memberIdx = 0;
+
+   if (::GetVersion() >= 0x80000000)  // Not Windows NT/2000/XP
+       return kFALSE;
+
+   NetStatus = NetLocalGroupEnum(NULL, 0, &Data, 8192, &Index, 
+                                    &Total, &ResumeHandle );
+    
+   if (NetStatus != NERR_Success || Data == NULL) {
+      dwLastError = GetLastError();
+      if (Data)  
+         NetApiBufferFree(Data);
+      return FALSE;
+   }
+
+   GroupInfo = (LOCALGROUP_INFO_0 *)Data;
+   for (i=0; i < Total; i++) {
+      // Convert group name from UNICODE to ansi.
+      iRetOp = WideCharToMultiByte (
+               (UINT)CP_ACP,                    // code page
+               (DWORD)0,                        // performance and mapping flags
+               (LPCWSTR)(GroupInfo->lgrpi0_name), // address of wide-char string
+               (int)-1,                        // number of characters in string
+               (LPSTR)szAnsiName,            // address of buffer for new string
+               (int)(sizeof(szAnsiName)),    // size of buffer
+               (LPCSTR)NULL,     // address of default for unmappable characters
+               (LPBOOL)NULL );     // address of flag set when default char used.
+
+      fGroups[groupIdx].gr_name = strdup(szAnsiName);
+      fGroups[groupIdx].gr_passwd = strdup("");
+
+      // Find out the SID of the Group.
+      LookupSID ((LPCTSTR)szAnsiName, SID_GROUP);
+      // Now lookup all members of this group and record down their names and 
+      // SIDs into the output file.
+      CollectMembers((LPCTSTR)szAnsiName);
+
+      groupIdx++;
+      GroupInfo++;
+   }
+
+   if (Data)  
+      NetApiBufferFree(Data);
+
+   return TRUE;
+}
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::GetUid(const char *user)
+{
+   // Returns the user's id. If user = 0, returns current user's id.
+
+   if (::GetVersion() >= 0x80000000) {  // Not Windows NT/2000/XP
+      int   uid;
+      char  name[256];
+      DWORD length = sizeof (name);
+      if (::GetUserName (name, &length)) {
+         if (stricmp ("administrator", name) == 0)
+            uid = 0;
+         else
+            uid = 123;
+      }
+      else {
+         uid = 123;
+      }
+      return uid;
+   }
+   if (!user || !user[0])
+      return fPasswords[fActUser].pw_uid;
+   else {
+      struct passwd *pwd = 0;
+      for(int i=0;i<fNbUsers;i++) {
+         if (!stricmp (user, fPasswords[i].pw_name)) {
+            pwd = &fPasswords[i];
+            break;
+         }
+      }
+      if (pwd)
+         return pwd->pw_uid;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::GetEffectiveUid()
+{
+   // Returns the effective user id. The effective id corresponds to the
+   // set id bit on the file being executed.
+
+   if (::GetVersion() >= 0x80000000) {  // Not Windows NT/2000/XP
+      int   uid;
+      char  name[256];
+      DWORD length = sizeof (name);
+      if (::GetUserName (name, &length)) {
+         if (stricmp ("administrator", name) == 0)
+            uid = 0;
+         else
+            uid = 123;
+      }
+      else {
+         uid = 123;
+      }
+      return uid;
+   }
+   return fPasswords[fActUser].pw_uid;
+}
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::GetGid(const char *group)
+{
+   // Returns the group's id. If group = 0, returns current user's group.
+
+   if (::GetVersion() >= 0x80000000) {  // Not Windows NT/2000/XP
+      int   gid;
+      char  name[256];
+      DWORD length = sizeof (name);
+      if (::GetUserName (name, &length)) {
+         if (stricmp ("administrator", name) == 0)
+            gid = 0;
+         else
+            gid = 123;
+      }
+      else {
+         gid = 123;
+      }
+      return gid;
+   }
+   if (!group || !group[0])
+      return fPasswords[fActUser].pw_gid;
+   else {
+      struct group *grp = 0;
+      for(int i=0;i<fNbGroups;i++) {
+         if (!stricmp (group, fGroups[i].gr_name)) {
+            grp = &fGroups[i];
+            break;
+         }
+      }
+      if (grp)
+         return grp->gr_gid;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TWinNTSystem::GetEffectiveGid()
+{
+   // Returns the effective group id. The effective group id corresponds
+   // to the set id bit on the file being executed.
+
+   if (::GetVersion() >= 0x80000000) {  // Not Windows NT/2000/XP
+      int   gid;
+      char  name[256];
+      DWORD length = sizeof (name);
+      if (::GetUserName (name, &length)) {
+         if (stricmp ("administrator", name) == 0)
+            gid = 0;
+         else
+            gid = 123;
+      }
+      else {
+         gid = 123;
+      }
+      return gid;
+   }
+   return fPasswords[fActUser].pw_gid;
+}
+
+//______________________________________________________________________________
+UserGroup_t *TWinNTSystem::GetUserInfo(Int_t uid)
+{
+   // Returns all user info in the UserGroup_t structure. The returned
+   // structure must be deleted by the user. In case of error 0 is returned.
+
+   if (::GetVersion() >= 0x80000000) {  // Not Windows NT/2000/XP
+      char  name[256];
+      DWORD length = sizeof (name);
+      UserGroup_t *ug = new UserGroup_t;
+      if (::GetUserName (name, &length)) {
+         ug->fUser = name;
+         if (stricmp ("administrator", name) == 0) {
+            ug->fUid = 0;
+            ug->fGroup = "administrators";
+         }
+         else {
+            ug->fUid = 123;
+            ug->fGroup = "users";
+         }
+         ug->fGid = ug->fUid;
+      }
+      else {
+         ug->fUser = "unknown";
+         ug->fGroup = "unknown";
+         ug->fUid = ug->fGid = 123;
+      }
+      ug->fPasswd = "";
+      ug->fRealName = ug->fUser;
+      ug->fShell = "command";
+      return ug;
+   }
+   struct passwd *pwd = 0;
+   for(int i=0;i<fNbUsers;i++) {
+      if (uid == fPasswords[i].pw_uid) {
+         pwd = &fPasswords[i];
+         break;
+      }
+   }
+   if (pwd) {
+      UserGroup_t *ug = new UserGroup_t;
+      ug->fUid      = pwd->pw_uid;
+      ug->fGid      = pwd->pw_gid;
+      ug->fUser     = pwd->pw_name;
+      ug->fPasswd   = pwd->pw_passwd;
+      ug->fRealName = pwd->pw_gecos;
+      ug->fShell    = pwd->pw_shell;
+      ug->fGroup    = pwd->pw_group;
+      return ug;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+UserGroup_t *TWinNTSystem::GetUserInfo(const char *user)
+{
+   // Returns all user info in the UserGroup_t structure. If user = 0, returns
+   // current user's id info. The returned structure must be deleted by the
+   // user. In case of error 0 is returned.
+
+   return GetUserInfo(GetUid(user));
+}
+
+//______________________________________________________________________________
+UserGroup_t *TWinNTSystem::GetGroupInfo(Int_t gid)
+{
+   // Returns all group info in the UserGroup_t structure. The only active
+   // fields in the UserGroup_t structure for this call are:
+   //    fGid and fGroup
+   // The returned structure must be deleted by the user. In case of
+   // error 0 is returned.
+
+   if (::GetVersion() >= 0x80000000) {  // Not Windows NT/2000/XP
+      char  name[256];
+      DWORD length = sizeof (name);
+      UserGroup_t *gr = new UserGroup_t;
+      if (::GetUserName (name, &length)) {
+         if (stricmp ("administrator", name) == 0) {
+            gr->fGroup = "administrators";
+            gr->fGid = 0;
+         }
+         else {
+            gr->fGroup = "users";
+            gr->fGid = 123;
+         }
+      }
+      else {
+         gr->fGroup = "unknown";
+         gr->fGid = 123;
+      }
+      gr->fUid = 0;
+      return gr;
+   }
+   struct group *grp = 0;
+   for(int i=0;i<fNbGroups;i++) {
+      if (gid == fGroups[i].gr_gid) {
+         grp = &fGroups[i];
+         break;
+      }
+   }
+   if (grp) {
+      UserGroup_t *gr = new UserGroup_t;
+      gr->fUid   = 0;
+      gr->fGid   = grp->gr_gid;
+      gr->fGroup = grp->gr_name;
+      return gr;
+   }
+   return 0;
+
+}
+
+//______________________________________________________________________________
+UserGroup_t *TWinNTSystem::GetGroupInfo(const char *group)
+{
+   // Returns all group info in the UserGroup_t structure. The only active
+   // fields in the UserGroup_t structure for this call are:
+   //    fGid and fGroup
+   // If group = 0, returns current user's group. The returned structure
+   // must be deleted by the user. In case of error 0 is returned.
+
+   return GetGroupInfo(GetGid(group));
 }
 
 //---- environment manipulation ------------------------------------------------
