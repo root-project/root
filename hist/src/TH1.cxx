@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.73 2001/12/10 21:14:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.74 2001/12/12 09:01:39 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2070,7 +2070,7 @@ void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
 //*-*-*-*-*-*Minimization function for H1s using a Likelihood method*-*-*-*-*-*
 //*-*        =======================================================
 //     Basically, it forms the likelihood by determining the Poisson
-//     probability that given a number of entries in a particualar bin,
+//     probability that given a number of entries in a particular bin,
 //     the fit would predict it's value.  This is then done for each bin,
 //     and the sum of the logs is taken as the likelihood.
 
