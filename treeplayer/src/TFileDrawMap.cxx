@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.2 2003/01/19 21:18:36 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFileDrawMap.cxx,v 1.3 2003/01/19 21:47:50 brun Exp $
 // Author: Rene Brun   15/01/2003
 
 /*************************************************************************
@@ -294,10 +294,10 @@ void TFileDrawMap::DrawObject()
    // case of a TTree
    char info[512];
    strcpy(info,GetName());
-   char *cbasket = strstr(info,", basket=");
+   char *cbasket = (char*)strstr(info,", basket=");
    if (cbasket) {
       *cbasket = 0;
-      char *cbranch = strstr(info,", branch=");
+      char *cbranch = (char*)strstr(info,", branch=");
       if (!cbranch) return;
       *cbranch = 0;
       cbranch += 9;
@@ -322,13 +322,13 @@ void TFileDrawMap::DumpObject()
       obj->Dump();
       return;
    }
-   char *centry = strstr(GetName(),"entry=");
+   char *centry = (char*)strstr(GetName(),"entry=");
    if (!centry) return;
    Int_t entry = 0;
    sscanf(centry+6,"%d",&entry);
    char info[512];
    strcpy(info,GetName());
-   char *colon = strstr(info,"::");
+   char *colon = (char*)strstr(info,"::");
    if (!colon) return;
    colon--;
    *colon = 0;
