@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.87 2002/10/31 07:27:37 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.88 2002/11/01 19:12:09 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -344,7 +344,7 @@ void TClass::Init(const char *name, Version_t cversion,
    // Advertise ourself as the loading class for this class name
    gROOT->AddClass(this);
 
-   if (!fClassInfo) {
+   if (!fClassInfo && fImplFileLine>=0) {
       if (!gInterpreter)
          ::Fatal("TClass::TClass", "gInterpreter not initialized");
 
@@ -357,9 +357,9 @@ void TClass::Init(const char *name, Version_t cversion,
             return;
          }
       }
-      if (!fClassInfo)
-         ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
    }
+   if (!fClassInfo)
+     ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
 
    fgClassCount++;
    SetUniqueID(fgClassCount);

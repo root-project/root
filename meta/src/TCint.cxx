@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.59 2002/09/05 18:42:49 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.60 2002/10/29 13:30:00 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -569,7 +569,7 @@ Bool_t TCint::CheckClassInfo(const char *name)
    // Checks if a class with the specified name is defined in CINT.
    // Returns kFALSE is class is not defined.
 
-   Int_t tagnum = G__defined_tagname(name, 1);
+   Int_t tagnum = G__defined_tagname(name, 2);
    if (tagnum >= 0) return kTRUE;
    return kFALSE;
 }
