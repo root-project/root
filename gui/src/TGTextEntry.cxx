@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.18 2003/11/07 22:47:53 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.19 2003/12/15 18:04:27 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1295,7 +1295,7 @@ Bool_t TGTextEntry::HandleButton(Event_t *event)
       } else if (event->fCode == kButton2) {
          if (gVirtualX->GetPrimarySelectionOwner() == kNone) {
             // No primary selection, so use the cut buffer
-            PastePrimary(fClient->GetRoot()->GetId(), kCutBuffer, kFALSE);
+            PastePrimary(fClient->GetDefaultRoot()->GetId(), kCutBuffer, kFALSE);
          } else {
             gVirtualX->ConvertPrimarySelection(fId, fClipboard, event->fTime);
          }
@@ -1566,7 +1566,7 @@ void TGTextEntry::SetToolTipText(const char *text, Long_t delayms)
    }
 
    if (text && strlen(text))
-      fTip = new TGToolTip(fClient->GetRoot(), this, text, delayms);
+      fTip = new TGToolTip(fClient->GetDefaultRoot(), this, text, delayms);
 }
 
 //_____________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.8 2003/03/17 16:38:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.9 2003/05/28 11:55:31 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -1168,7 +1168,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
                         ax, ay, wdum);
    } else {
       UInt_t root_w, root_h;
-      gVirtualX->GetWindowSize(gClient->GetRoot()->GetId(), ax, ay, root_w, root_h);
+      gVirtualX->GetWindowSize(gClient->GetDefaultRoot()->GetId(), ax, ay, root_w, root_h);
       ax = (root_w - fWidth) >> 1;
       ay = (root_h - fHeight) >> 1;
    }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.4 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorSelect.cxx,v 1.5 2003/11/05 13:08:25 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -261,7 +261,7 @@ void TGColorPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
       Int_t retc;
       ULong_t color = fCurrentColor;
 
-      new TGColorDialog(gClient->GetRoot(), this, &retc, &color);
+      new TGColorDialog(gClient->GetDefaultRoot(), this, &retc, &color);
 
       if (retc == kMBOk) {
          fCurrentColor = color;
@@ -386,9 +386,9 @@ Bool_t TGColorSelect::HandleButton(Event_t *event)
          Int_t ax, ay;
 
          if (!fColorPopup)
-            fColorPopup = new TGColorPopup(gClient->GetRoot(), this, fColor);
+            fColorPopup = new TGColorPopup(gClient->GetDefaultRoot(), this, fColor);
 
-         gVirtualX->TranslateCoordinates(fId, gClient->GetRoot()->GetId(),
+         gVirtualX->TranslateCoordinates(fId, gClient->GetDefaultRoot()->GetId(),
                                          0, fHeight, ax, ay, wdummy);
 
          fColorPopup->PlacePopup(ax, ay, fColorPopup->GetDefaultWidth(),

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.3 2002/05/18 08:21:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.4 2003/07/15 14:25:21 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -399,7 +399,7 @@ void TGRegionWithId::SetToolTipText(const char *text, Long_t delayms,
    }
 
    if (text && strlen(text))
-      fTip = new TGToolTip(gClient->GetRoot(), frame, text, delayms);
+      fTip = new TGToolTip(gClient->GetDefaultRoot(), frame, text, delayms);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -607,7 +607,7 @@ void TGImageMap::SetToolTipText(const char *text, Long_t delayms)
    fMainTip = 0;
 
    if (text && strlen(text))
-      fMainTip = new TGToolTip(fClient->GetRoot(), this, text, delayms);
+      fMainTip = new TGToolTip(fClient->GetDefaultRoot(), this, text, delayms);
 }
 
 //______________________________________________________________________________

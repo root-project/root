@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.2 2003/12/15 08:54:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGResourcePool.cxx,v 1.3 2003/12/15 09:44:21 brun Exp $
 // Author: Fons Rademakers   19/5/2003
 
 /*************************************************************************
@@ -183,12 +183,12 @@ TGResourcePool::TGResourcePool(TGClient *client)
       fTipForeColor = fBlack;
 
    // Setup checkered pix/bit-maps...
-   fCheckered = gVirtualX->CreatePixmap(fClient->GetRoot()->GetId(),
+   fCheckered = gVirtualX->CreatePixmap(fClient->GetDefaultRoot()->GetId(),
                                         (const char *)gray_bits,
                                         gray_width, gray_height,
                                         fBackColor, fWhite /*fHilite*/,
                                         gVirtualX->GetDepth());
-   fCheckeredBitmap = gVirtualX->CreatePixmap(fClient->GetRoot()->GetId(),
+   fCheckeredBitmap = gVirtualX->CreatePixmap(fClient->GetDefaultRoot()->GetId(),
                                               (const char *)gray_bits,
                                               gray_width, gray_height,
                                               1, 0, 1);

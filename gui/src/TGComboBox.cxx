@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.10 2003/11/05 13:08:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.11 2003/11/07 22:47:53 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -145,7 +145,7 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
    AddFrame(fDDButton, fLhb = new TGLayoutHints(kLHintsRight |
                                                 kLHintsExpandY));
 
-   fComboFrame = new TGComboBoxPopup(fClient->GetRoot(), 100, 100, kVerticalFrame);
+   fComboFrame = new TGComboBoxPopup(fClient->GetDefaultRoot(), 100, 100, kVerticalFrame);
 
    fListBox = new TGListBox(fComboFrame, fWidgetId, kChildFrame);
    fListBox->Resize(100, 100);

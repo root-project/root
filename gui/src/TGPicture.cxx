@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.4 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.5 2003/12/15 08:54:29 brun Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -80,7 +80,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
       return 0;
    }
 
-   if (gVirtualX->CreatePictureFromFile(fClient->GetRoot()->GetId(), picnam,
+   if (gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(), picnam,
                                     pic->fPic, pic->fMask,
                                     pic->fAttributes)) {
       fPicList->Add(pic);
@@ -187,7 +187,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
          y += 1.0 / yscale;
       }
 
-      retc = gVirtualX->CreatePictureFromData(fClient->GetRoot()->GetId(), smalldata,
+      retc = gVirtualX->CreatePictureFromData(fClient->GetDefaultRoot()->GetId(), smalldata,
                                          pic->fPic, pic->fMask,
                                          pic->fAttributes);
 
@@ -196,14 +196,14 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       delete [] smalldata;
 
    } else {
-      retc = gVirtualX->CreatePictureFromData(fClient->GetRoot()->GetId(), data,
+      retc = gVirtualX->CreatePictureFromData(fClient->GetDefaultRoot()->GetId(), data,
                                               pic->fPic, pic->fMask,
                                               pic->fAttributes);
    }
 
    gVirtualX->DeletePictureData(data);
 #else
-   Bool_t retc = gVirtualX->CreatePictureFromFile(fClient->GetRoot()->GetId(),
+   Bool_t retc = gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(),
                                                   picnam, pic->fPic, pic->fMask,
                                                   pic->fAttributes);
    delete [] picnam;
@@ -321,7 +321,7 @@ TGSelectedPicture::TGSelectedPicture(const TGClient *client, const TGPicture *p)
    UInt_t     w, h;
 
    fClient = client;
-   Window_t root  = fClient->GetRoot()->GetId();
+   Window_t root  = fClient->GetDefaultRoot()->GetId();
 
    w = p->GetWidth();
    h = p->GetHeight();

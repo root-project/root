@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.23 2003/12/12 18:57:22 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.24 2003/12/15 09:43:25 brun Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -114,7 +114,7 @@ void TGTextEdit::Init()
    gVirtualX->SetCursor(fCanvas->GetId(), fClient->GetResourcePool()->GetTextCursor());
 
    // create popup menu with default editor actions
-   fMenu = new TGPopupMenu(fClient->GetRoot());
+   fMenu = new TGPopupMenu(fClient->GetDefaultRoot());
    fMenu->AddEntry("New", kM_FILE_NEW);
    fMenu->AddEntry("Open...", kM_FILE_OPEN);
    fMenu->AddSeparator();
@@ -209,7 +209,7 @@ Bool_t TGTextEdit::SaveFile(const char *filename, Bool_t saveas)
          TGFileInfo fi;
          fi.fFileTypes = gFiletypes;
          fi.fIniDir    = StrDup(dir);
-         new TGFileDialog(fClient->GetRoot(), this, kFDSave, &fi);
+         new TGFileDialog(fClient->GetDefaultRoot(), this, kFDSave, &fi);
          if (fi.fFilename && strlen(fi.fFilename)) {
             dir = fi.fIniDir;
             return fText->Save(fi.fFilename);
@@ -303,11 +303,11 @@ void TGTextEdit::Print(Option_t *) const
       sprintf(msg, "Printed: %s\nLines: %ld\nUsing: %s -P%s",
               untitled ? "Untitled" : fText->GetFileName(),
               fText->RowCount() - 1, gPrintCommand, gPrinter);
-      new TGMsgBox(fClient->GetRoot(), this, "Editor", msg,
+      new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg,
                    kMBIconAsterisk, kMBOk, 0);
    } else {
       sprintf(msg, "Could not execute: %s -P%s\n", gPrintCommand, gPrinter);
-      new TGMsgBox(fClient->GetRoot(), this, "Editor", msg,
+      new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg,
                    kMBIconExclamation, kMBOk, 0);
    }
 }
@@ -1058,7 +1058,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                         sprintf(msg, "Save \"%s\"?",
                                 untitled ? "Untitled" : fText->GetFileName());
-                        new TGMsgBox(fClient->GetRoot(), this, "Editor", msg,
+                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg,
                            kMBIconExclamation, kMBYes|kMBNo|kMBCancel, &retval);
 
                         if (retval == kMBCancel)
@@ -1076,7 +1076,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      if (parm1 == kM_FILE_OPEN) {
                         TGFileInfo fi;
                         fi.fFileTypes = gFiletypes;
-                        new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
+                        new TGFileDialog(fClient->GetDefaultRoot(), this, kFDOpen, &fi);
                         if (fi.fFilename && strlen(fi.fFilename)) {
                            LoadFile(fi.fFilename);
                            SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_OPEN),
@@ -1106,7 +1106,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                            gPrinter = StrDup("892_2_cor"); // use gEnv
                            gPrintCommand = StrDup("xprint");
                         }
-                        new TGPrintDialog(fClient->GetRoot(), this, 400, 150,
+                        new TGPrintDialog(fClient->GetDefaultRoot(), this, 400, 150,
                                           &gPrinter, &gPrintCommand, &ret);
                         if (ret)
                            Print();
@@ -1129,14 +1129,14 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         Int_t ret = 0;
                         if (!fSearch)
                            fSearch = new TGSearchType;
-                        new TGSearchDialog(fClient->GetRoot(), this, 400, 150,
+                        new TGSearchDialog(fClient->GetDefaultRoot(), this, 400, 150,
                                            fSearch, &ret);
                         if (ret) {
                            if (!Search(fSearch->fBuffer, fSearch->fDirection,
                                        fSearch->fCaseSensitive)) {
                               char msg[256];
                               sprintf(msg, "Couldn't find \"%s\"", fSearch->fBuffer);
-                              new TGMsgBox(fClient->GetRoot(), this, "Editor", msg,
+                              new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg,
                                            kMBIconExclamation, kMBOk, 0);
                            }
                         } else {
@@ -1155,14 +1155,14 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                                  fSearch->fCaseSensitive)) {
                         char msg[256];
                         sprintf(msg, "Couldn't find \"%s\"", fSearch->fBuffer);
-                        new TGMsgBox(fClient->GetRoot(), this, "Editor", msg,
+                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg,
                                      kMBIconExclamation, kMBOk, 0);
                      }
                      break;
                   case kM_SEARCH_GOTO:
                      {
                         Long_t ret = fCurrent.fY+1;
-                        new TGGotoDialog(fClient->GetRoot(), this, 400, 150, &ret);
+                        new TGGotoDialog(fClient->GetDefaultRoot(), this, 400, 150, &ret);
                         if (ret > -1) {
                            ret--;   // user specifies lines starting at 1
                            Goto(ret);

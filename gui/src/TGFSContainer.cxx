@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.14 2003/11/25 15:57:34 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.15 2003/12/03 00:25:19 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -663,7 +663,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name)
 
       sprintf(msg, "Can't read file attributes of \"%s\": %s.",
               name, gSystem->GetError());
-      new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
+      new TGMsgBox(fClient->GetDefaultRoot(), GetMainFrame(),
                    "Error", msg, kMBIconStop, kMBOk);
       return item;
    }
@@ -699,7 +699,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name)
 
       sprintf(msg, "Can't read file attributes of \"%s\": %s.",
               name, gSystem->GetError());
-      new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
+      new TGMsgBox(fClient->GetDefaultRoot(), GetMainFrame(),
                    "Error", msg, kMBIconStop, kMBOk);
       return item;
    }
