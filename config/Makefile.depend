@@ -54,13 +54,11 @@ VMCLIBEXTRA         = lib/libEG.lib lib/libGeom.lib
 PHYSICSLIBDEP       = $(MATRIXLIB)
 PHYSICSLIBEXTRA     = lib/libMatrix.lib
 PYTHIALIBDEP        = $(EGLIB) $(GRAFLIB)
-PYTHIALIBEXTRA      = lib/libEG.lib lib/libGraf.lib \
-                      $(FPYTHIALIBDIR) $(FPYTHIALIB)
+PYTHIALIBEXTRA      = lib/libEG.lib lib/libGraf.lib
 PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB)
-PYTHIA6LIBEXTRA     = lib/libEG.lib lib/libGraf.lib \
-                      $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)
+PYTHIA6LIBEXTRA     = lib/libEG.lib lib/libGraf.lib
 VENUSLIBDEP         = $(EGLIB)
-VENUSLIBEXTRA       = lib/libEG.lib $(FVENUSLIBDIR) $(FVENUSLIB)
+VENUSLIBEXTRA       = lib/libEG.lib
 TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
 TABLELIBEXTRA       = lib/libTree.lib lib/libGpad.lib \
                       lib/libGraf3d.lib lib/libGraf.lib lib/libHist.lib
