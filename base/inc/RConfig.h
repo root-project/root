@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.20 2001/05/07 00:08:07 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.21 2001/05/11 17:13:09 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -211,17 +211,17 @@
 #ifdef __GNUG__
 #   define R__GNU
 #   define ANSICPP
-#   if __GNUC_MINOR__ >= 90    /* egcs 1.0.3 */
+#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90    /* egcs 1.0.3 */
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   endif
-#   if __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
+#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
-#   if __GNUC_MINOR__ >= 97    /* gcc 3.0pre */
+#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 97    /* gcc 3.0pre */
 #      define R__NEWSTDHEADER    /* has only headers like: iostream without .h */
 #   endif
-#   if defined(__ia64__)       /* gcc 2.9x (MINOR is 9! So above tests fail) */
+#   if defined(__ia64__) &&  __GNUC__ < 3       /* gcc 2.9x (MINOR is 9!) */
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */

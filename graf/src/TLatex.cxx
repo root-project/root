@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.17 2001/06/01 14:00:09 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.18 2001/06/05 11:27:50 rdm Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <stdio.h>
+#include <iostream.h>
 
 #include "TROOT.h"
 #include "TLatex.h"

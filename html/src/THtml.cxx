@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.7 2001/05/16 08:55:58 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.8 2001/05/18 06:47:34 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <fstream.h>
+#include <iostream.h>
 
 THtml *gHtml = 0;
 
@@ -2447,7 +2448,7 @@ void THtml::MakeAll( Bool_t force, const char *filter)
     gClassTable->Init();
 
 
-    for( i = 0; i < numberOfClasses; i++ ) {       
+    for( i = 0; i < numberOfClasses; i++ ) {
       const char *cname = gClassTable->Next();
       TString s = cname;
       if (s.Index(re) == kNPOS) continue;
@@ -2525,7 +2526,7 @@ void THtml::MakeIndex(const char *filter)
    TString reg = filter;
    TRegexp re(reg, kTRUE);
    Int_t nOK = 0;
-   
+
    for( Int_t i = 0; i < numberOfClasses; i++ ) {
 
       // get class name
