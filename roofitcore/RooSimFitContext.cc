@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.6 2001/08/15 23:38:44 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.7 2001/08/18 02:13:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,20 +14,20 @@
 #include "RooFitCore/RooSimFitContext.hh"
 #include "RooFitCore/RooSimultaneous.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooDataSet.hh"
+#include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooFormulaVar.hh"
 
 ClassImp(RooSimFitContext)
 ;
 
-RooSimFitContext::RooSimFitContext(const RooDataSet* data, const RooSimultaneous* simpdf) : RooFitContext(data,simpdf,kFALSE,kTRUE)
+RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous* simpdf) : RooFitContext(data,simpdf,kFALSE,kTRUE)
 {
   RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->_indexCat.arg() ;
 
   _nCtx = simCat.numTypes() ;
   _nCtxFilled = 0 ;
   _ctxArray = new pRooFitContext[_nCtx] ;
-  _dsetArray = new pRooDataSet[_nCtx] ;
+  _dsetArray = new pRooAbsData[_nCtx] ;
   _offArray = new Double_t[_nCtx] ;
   _nllArray = new Double_t[_nCtx] ;
   _dirtyArray = new Bool_t[_nCtx] ;
@@ -50,8 +50,11 @@ RooSimFitContext::RooSimFitContext(const RooDataSet* data, const RooSimultaneous
       //Refine a dataset containing only events for this simCat state
       char cutSpec[1024] ;
       sprintf(cutSpec,"%s==%d",simCatName.Data(),simCat.getIndex()) ;
-      RooDataSet* dset = new RooDataSet("dset_simcat","dset_simcat",
-					_dataClone,*_dataClone->get(),RooFormulaVar("simCatCut",cutSpec,simCat)) ;
+      RooFormulaVar simCatCut("simCatCut",cutSpec,simCat) ;
+      RooAbsData* dset = _dataClone->reduceEng(*_dataClone->get(),&simCatCut,kFALSE) ;
+
+//       new RooDataSet("dset_simcat","dset_simcat",
+// 		     _dataClone,*_dataClone->get(),RooFormulaVar("simCatCut",cutSpec,simCat)) ;
       _dsetArray[n] = dset ;
       _ctxArray[n] = new RooFitContext(dset,pdf,kFALSE,kTRUE) ;
       _dirtyArray[n] = kTRUE ;
@@ -73,7 +76,7 @@ RooSimFitContext::RooSimFitContext(const RooDataSet* data, const RooSimultaneous
   Double_t logNF = log(_nCtxFilled) ;
   for (i=0 ; i<_nCtx ; i++) {
     if (_ctxArray[i]) {
-      _offArray[i] = _ctxArray[i]->_dataClone->GetEntries()*logNF ;
+      _offArray[i] = _ctxArray[i]->_dataClone->numEntries()*logNF ;
     } else {
       _offArray[i] = 0 ;
     }

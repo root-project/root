@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.47 2001/09/04 01:37:41 david Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.48 2001/09/06 20:49:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -32,7 +32,7 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgProxy.hh"
 #include "RooFitCore/RooSetProxy.hh"
-#include "RooFitCore/RooDataSet.hh"
+#include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooTrace.hh"
@@ -330,7 +330,7 @@ void RooAbsArg::treeNodeServerList(RooArgSet* list, const RooAbsArg* arg, Bool_t
 }
 
 
-RooArgSet* RooAbsArg::getParameters(const RooDataSet* set) const 
+RooArgSet* RooAbsArg::getParameters(const RooAbsData* set) const 
 {
   // Create a list of leaf nodes in the arg tree starting with
   // ourself as top node that don't match any of the names of the variable list
@@ -373,7 +373,7 @@ RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset) const
 
 
 
-RooArgSet* RooAbsArg::getDependents(const RooDataSet* set) const 
+RooArgSet* RooAbsArg::getDependents(const RooAbsData* set) const 
 {
   // Create a list of leaf nodes in the arg tree starting with
   // ourself as top node that match any of the names of the variable list
@@ -480,7 +480,7 @@ Bool_t RooAbsArg::overlaps(const RooAbsArg& testArg) const
 
 
 
-Bool_t RooAbsArg::dependentOverlaps(const RooDataSet* dset, const RooAbsArg& testArg) const
+Bool_t RooAbsArg::dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const
 {
   // Test if any of the dependents of the arg tree (as determined by getDependents) 
   // overlaps with those of the testArg.
@@ -969,7 +969,7 @@ void RooAbsArg::printAttribList(ostream& os) const
   if (!first) os << "] " ;
 }
 
-void RooAbsArg::attachDataSet(const RooDataSet &set) 
+void RooAbsArg::attachDataSet(const RooAbsData &set) 
 {
   // Replace server nodes with names matching the dataset variable names
   // with those data set variables, making this PDF directly dependent on the dataset

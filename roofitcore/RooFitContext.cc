@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.22 2001/08/24 21:49:26 chcheng Exp $
+ *    File: $Id: RooFitContext.cc,v 1.23 2001/09/08 01:49:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,11 +28,12 @@
 
 #include <fstream.h>
 #include <iomanip.h>
+#include "TH1.h"
 #include "TStopwatch.h"
 #include "TFitter.h"
 #include "TMinuit.h"
 #include "RooFitCore/RooFitContext.hh"
-#include "RooFitCore/RooDataSet.hh"
+#include "RooFitCore/RooAbsData.hh"
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooResolutionModel.hh"
 #include "RooFitCore/RooRealVar.hh"
@@ -44,7 +45,7 @@ ClassImp(RooFitContext)
 static TVirtualFitter *_theFitter(0);
 
 
-RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_t cloneData, Bool_t clonePdf) :
+RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, Bool_t cloneData, Bool_t clonePdf) :
   TNamed(*pdf), _origLeafNodeList("origLeafNodeList"), _extendedMode(kFALSE), _doOptCache(kFALSE),
   _ownData(cloneData)
 {
@@ -61,9 +62,9 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_
 
   // Clone data 
   if (cloneData) {
-    _dataClone = new RooDataSet(*data) ;
+    _dataClone = (RooAbsData*) data->Clone() ;
   } else {
-    _dataClone = (RooDataSet*) data ;
+    _dataClone = (RooAbsData*) data ;
   }
 
   // Clone all PDF compents by copying all branch nodes
@@ -250,8 +251,9 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
       delete iter ;
       
       // Create trimmed data set
-      RooDataSet *trimData = new RooDataSet("trimData","Reduced data set for fit context",
-					    _dataClone,newVarList,kTRUE) ;
+      RooAbsData *trimData = _dataClone->reduceEng(newVarList,0,kTRUE) ;
+//       new RooAbsData("trimData","Reduced data set for fit context",
+// 					    _dataClone,newVarList,kTRUE) ;
       
       // Unattach PDF clone from previous dataset
       _pdfClone->recursiveRedirectServers(_origLeafNodeList,kFALSE);
@@ -311,7 +313,7 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
 
 
 
-Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset, 
+Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooAbsData* dset, 
 					    RooArgSet& cacheList) 
 {
   // Find branch PDFs with all-constant parameters, and add them
@@ -354,7 +356,7 @@ Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset,
 
 
 
-void RooFitContext::findUnusedDataVariables(RooAbsPdf* pdf,RooDataSet* dset,RooArgSet& pruneList) 
+void RooFitContext::findUnusedDataVariables(RooAbsPdf* pdf,RooAbsData* dset,RooArgSet& pruneList) 
 {
   TIterator* vIter = dset->get()->createIterator() ;
   RooAbsArg* arg ;
@@ -365,7 +367,7 @@ void RooFitContext::findUnusedDataVariables(RooAbsPdf* pdf,RooDataSet* dset,RooA
 }
 
 
-void RooFitContext::findRedundantCacheServers(RooAbsPdf* pdf,RooDataSet* dset,RooArgSet& cacheList, RooArgSet& pruneList) 
+void RooFitContext::findRedundantCacheServers(RooAbsPdf* pdf,RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList) 
 {
   TIterator* vIter = dset->get()->createIterator() ;
   RooAbsArg *var ;
@@ -635,13 +637,13 @@ Double_t RooFitContext::nLogLikelihood(Bool_t dummy) const
     return 0.0;
     }
 
-  Stat_t events= _dataClone->GetEntries();
+  Stat_t events= _dataClone->numEntries();
   for(Int_t index= 0; index<events; index++) {
 
     // get the data values for this event
     _dataClone->get(index);
 
-    Double_t term = _pdfClone->getLogVal(_normSet); // WVE modified
+    Double_t term = _dataClone->weight() * _pdfClone->getLogVal(_normSet); // WVE modified
     if(term == 0) return 0;
     result-= term;
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.rdl,v 1.1 2001/07/31 05:54:21 verkerke Exp $
+ *    File: $Id: RooSimFitContext.rdl,v 1.2 2001/08/10 22:22:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,17 +20,17 @@
 #include "RooFitCore/RooArgSet.hh"
 
 class RooAbsPdf ;
-class RooDataSet ;
+class RooAbsData ;
 class RooAbsArg ;
 class RooSimultaneous ;
 typedef RooFitContext* pRooFitContext ;
-typedef RooDataSet* pRooDataSet ;
+typedef RooAbsData* pRooAbsData ;
 
 class RooSimFitContext : public RooFitContext {
 public:
 
   // Constructors, assignment etc
-  RooSimFitContext(const RooDataSet* data, const RooSimultaneous* pdf) ;
+  RooSimFitContext(const RooAbsData* data, const RooSimultaneous* pdf) ;
   virtual ~RooSimFitContext() ;
 
   virtual Double_t nLogLikelihood(Bool_t dummy=kFALSE) const ;  
@@ -38,7 +38,7 @@ public:
 
   Int_t          _nCtx        ; // Number of sub-contexts 
   Int_t          _nCtxFilled  ;
-  pRooDataSet*    _dsetArray  ;
+  pRooAbsData*   _dsetArray  ;
   pRooFitContext* _ctxArray   ; // Array of sub-contexts representing part of the total NLL
   Double_t*      _offArray    ; // Array with NLL offsets to compensate for normalization factor
   Double_t*      _nllArray    ; // Cached values of NLL from sub contexts

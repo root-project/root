@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.42 2001/08/17 01:18:43 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.43 2001/08/23 23:43:41 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,7 +23,8 @@
 
 class TTree ;
 class RooArgSet ;
-class RooDataSet ;
+class RooTreeData ;
+class RooAbsData ;
 class RooAbsProxy ;
 class RooArgProxy ;
 class RooSetProxy ;
@@ -80,14 +81,14 @@ public:
   inline virtual Bool_t isLValue() const { return kFALSE; }
 
   // Parameter & dependents interpretation of servers
-  RooArgSet* getParameters(const RooDataSet* set) const ;
+  RooArgSet* getParameters(const RooAbsData* set) const ;
   RooArgSet* getParameters(const RooArgSet* depList) const ;
-  RooArgSet* getDependents(const RooDataSet* set) const ;
+  RooArgSet* getDependents(const RooAbsData* set) const ;
   RooArgSet* getDependents(const RooArgSet* depList) const ;
-  Bool_t dependentOverlaps(const RooDataSet* dset, const RooAbsArg& testArg) const ;
+  Bool_t dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
   Bool_t dependentOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;
-  void attachDataSet(const RooDataSet &set);
+  void attachDataSet(const RooAbsData &set);
 
   // Plotting, binned fit interface
   virtual Int_t getPlotBin() const = 0 ;
@@ -195,7 +196,8 @@ protected:
   THashList _attribList ;
   void printAttribList(ostream& os) const;
 
-  // Hooks for RooDataSet interface
+  // Hooks for RooTreeData interface
+  friend class RooTreeData ;
   friend class RooDataSet ;
   virtual void syncCache(const RooArgSet* nset=0) = 0 ;
   virtual void copyCache(const RooAbsArg* source) = 0 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.24 2001/08/23 23:43:43 david Exp $
+ *    File: $Id: RooFormula.cc,v 1.25 2001/09/04 01:37:42 david Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -173,8 +173,8 @@ Bool_t RooFormula::changeDependents(const RooArgSet& newDeps, Bool_t mustReplace
       _origList.AddBefore(arg,replace) ;
       _origList.Remove(arg) ;
     } else if (mustReplaceAll) {
-      cout << "RooFormula::changeDependents(3): cannot find replacement for " 
-	   << arg->GetName() << "(" << arg << ")" << endl ;
+//       cout << "RooFormula::changeDependents(3): cannot find replacement for " 
+// 	   << arg->GetName() << "(" << arg << ")" << endl ;
       errorStat = kTRUE ;
     }
   }

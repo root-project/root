@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.7 2001/08/23 23:43:42 david Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.8 2001/08/24 21:49:25 chcheng Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.7 2001/08/23 23:43:42 david Exp $";
+"$Id: RooAcceptReject.cc,v 1.8 2001/08/24 21:49:25 chcheng Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose)
@@ -187,7 +187,7 @@ void RooAcceptReject::generateEvents(Int_t nEvents, RooDataSet &container) {
     else {
       // When we have used up the cache, start a new cache and add
       // some more events to it.      
-      cache.Reset();
+      cache.reset();
       _eventsUsed= 0;
       // Calculate how many more events to generate using our best estimate of our efficiency.
       // Always generate at least one more event so we don't get stuck.
@@ -223,7 +223,7 @@ Bool_t RooAcceptReject::acceptEvent(const RooDataSet &cache, RooRealVar *funcVal
     if(r*_maxFuncVal > funcVal->getVal()) continue;
     // copy this event into the output container
     if(_verbose) cout << "accepted event (used " << _eventsUsed << " of "
-		      << cache.GetEntries() << " so far)" << endl;
+		      << cache.numEntries() << " so far)" << endl;
     container.add(*event);
     return kTRUE;
   }
@@ -254,7 +254,7 @@ void RooAcceptReject::addEvent(RooDataSet &cache, TIterator *nextCatVar, TIterat
   _funcSum+= val;
 
   // fill a new entry in our cache dataset for this point
-  cache.Fill();
+  cache.fill();
   _totalEvents++;
 
   if(_verbose) cout << "=== [" << _totalEvents << "] " << val << " (I = "

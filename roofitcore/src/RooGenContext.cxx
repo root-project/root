@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.11 2001/08/23 23:43:43 david Exp $
+ *    File: $Id: RooGenContext.cc,v 1.12 2001/08/24 21:49:26 chcheng Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,7 +28,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.11 2001/08/23 23:43:43 david Exp $";
+"$Id: RooGenContext.cc,v 1.12 2001/08/24 21:49:26 chcheng Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose) :
@@ -168,7 +168,7 @@ RooDataSet *RooGenContext::generate(Int_t nEvents) const {
   // Calculate the expected number of events if necessary
   if(nEvents <= 0) {
     if(_prototype) {
-      nEvents= (Int_t)_prototype->GetEntries();
+      nEvents= (Int_t)_prototype->numEntries();
     }
     else {
       nEvents= (Int_t)(_pdfClone->expectedEvents() + 0.5);
@@ -226,7 +226,7 @@ RooDataSet *RooGenContext::generate(Int_t nEvents) const {
     // use the model's generator
     _pdfClone->generateEvent(_code);
     // add this event to the dataset
-    data->Fill();
+    data->fill();
   }
 
   return data;

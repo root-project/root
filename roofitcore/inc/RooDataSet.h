@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.29 2001/09/08 01:49:40 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,24 +17,10 @@
 #ifndef ROO_DATA_SET
 #define ROO_DATA_SET
 
-#include "TTree.h"
-#include "RooFitCore/RooAbsData.hh"
+#include "RooFitCore/RooTreeData.hh"
 
-class TIterator;
-class TBranch;
-class TH1F;
-class TH2F;
-class TPaveText;
-class RooAbsArg;
-class RooAbsReal ;
-class RooAbsCategory ;
-class RooAbsString ;
-class Roo1DTable ;
-class RooPlot;
-class RooFitContext ;
-class RooFormulaVar ;
 
-class RooDataSet : public RooAbsData {
+class RooDataSet : public RooTreeData {
 public:
 
   // Constructors, factory methods etc.
@@ -60,14 +46,11 @@ public:
 			  const char *opts= "", const char* commonPath="",
 			  const char *indexCatName=0) ;
 
+  virtual Double_t weight() const { return 1.0 ; } ; 
+
   // Add one ore more rows of data
   virtual void add(const RooArgSet& row, Double_t weight=1.0);
   void append(RooDataSet& data) ;
-  RooAbsArg* addColumn(RooAbsArg& var) ;
-
-  // Load a given row of data
-  virtual const RooArgSet* get(Int_t index) const;
-  virtual const RooArgSet* get() const { return &_vars ; } 
 
   virtual Roo1DTable* table(RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
 
@@ -84,55 +67,13 @@ public:
   virtual void printToStream(ostream& os, PrintOption opt= Standard, 
 			     TString indent= "") const;
 
-  virtual Int_t numEntries() const { return (Int_t)GetEntries() ; }
-  virtual void reset() { Reset() ; }
-
-  // Forwarded from TTree
-  inline Stat_t GetEntries() const { return _tree->GetEntries() ; }
-  inline void Reset(Option_t* option=0) { _tree->Reset(option) ; }
-  inline Int_t Fill() { return _tree->Fill() ; }
-  inline Int_t GetEntry(Int_t entry = 0, Int_t getall = 0) { return _tree->GetEntry(entry,getall) ; }
-  inline Int_t Scan(const char* varexp="", const char* selection="", Option_t* option="", 
-		    Int_t nentries = 1000000000, Int_t firstentry = 0) {
-    _tree->Scan(varexp,selection,option,nentries,firstentry) ; 
-  }
-
-
-  // WVE Debug stuff
-  void dump() ;
-  void origPrint() { _tree->Print() ; }
-
   // Cache copy feature is not publicly accessible
+  RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;
   RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
-	     const RooArgSet& vars, Bool_t copyCache);
+	     const RooArgSet& vars, const RooFormulaVar* cutVar, Bool_t copyCache);
 
 protected:
 
-  // RooFitContext optimizer interface
-  friend class RooFitContext ;
-  virtual void cacheArg(RooAbsArg& var) ;
-  virtual void cacheArgs(RooArgSet& varSet) ;
-
-  void fillCacheArgs() ;
-
-  // Load data from another TTree
-  void loadValues(const TTree *t, RooFormulaVar* cutVar=0) ; 
-  void loadValues(const char *filename, const char *treename,
-		  RooFormulaVar *cutVar=0);
-
-
-  TTree *_tree ; 
-
-  // Column structure definition
-  RooArgSet _truth;        
-  TString _blindString ;
-
-private:
-
-  void initialize(const RooArgSet& vars);
-  void initCache(const RooArgSet& cachedVars) ; 
-
-  enum { bufSize = 8192 };
   ClassDef(RooDataSet,1) // Unbinned data set
 };
 

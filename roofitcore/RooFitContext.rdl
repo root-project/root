@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.rdl,v 1.7 2001/08/21 01:46:53 verkerke Exp $
+ *    File: $Id: RooFitContext.rdl,v 1.8 2001/09/08 01:49:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,7 +20,7 @@
 #include "RooFitCore/RooArgSet.hh"
 
 class RooAbsPdf ;
-class RooDataSet ;
+class RooAbsData ;
 class RooAbsArg ;
 class RooFitResult ;
 
@@ -28,13 +28,13 @@ class RooFitContext : public TNamed, public RooPrintable {
 public:
 
   // Constructors, assignment etc
-  RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf, Bool_t cloneData=kTRUE, Bool_t clonePdf=kTRUE) ;
+  RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, Bool_t cloneData=kTRUE, Bool_t clonePdf=kTRUE) ;
   virtual ~RooFitContext() ;
 
   const RooFitResult* fit(Option_t *fitOpt="", Option_t *optOpt="") ;
 
   inline RooAbsPdf* pdf() const { return _pdfClone; }
-  inline RooDataSet* data() const { return _dataClone ; }
+  inline RooAbsData* data() const { return _dataClone ; }
   inline Int_t getNPar() const { return _nPar ; }
   inline ofstream* logfile() const { return _logfile ; }
   inline Bool_t extendedMode() const { return _extendedMode ; }
@@ -61,15 +61,15 @@ protected:
   
   
   // Prefit optimizer
-  Bool_t findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset, RooArgSet& cacheList) ;
-  void findUnusedDataVariables(RooAbsPdf* pdf,RooDataSet* dset,RooArgSet& pruneList) ;
-  void findRedundantCacheServers(RooAbsPdf* pdf,RooDataSet* dset,RooArgSet& cacheList, RooArgSet& pruneList) ;
+  Bool_t findCacheableBranches(RooAbsPdf* pdf, RooAbsData* dset, RooArgSet& cacheList) ;
+  void findUnusedDataVariables(RooAbsPdf* pdf,RooAbsData* dset,RooArgSet& pruneList) ;
+  void findRedundantCacheServers(RooAbsPdf* pdf,RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList) ;
   Bool_t allClientsCached(RooAbsArg* var, RooArgSet& cacheList) ;
 
 public:
 
   Bool_t      _ownData ;
-  RooDataSet* _dataClone ;
+  RooAbsData* _dataClone ;
   RooArgSet*  _pdfCompList ;
   RooAbsPdf*  _pdfClone ;
   RooArgSet*  _normSet ;
