@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.11 2003/12/19 07:55:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.12 2004/06/22 15:36:42 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -149,6 +149,15 @@ TLeaf *TLeaf::GetLeafCounter(Int_t &countval) const
   TTree* pTree = fBranch ? fBranch->GetTree() : gTree;
   if (!pTree) pTree = gTree;
   TLeaf *leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
+  //if not found, make one more trial in case the leaf name has a "."
+  if (!leaf && strchr(GetName(),'.')) {
+     char *withdot = new char[1000];
+     strcpy(withdot,GetName());
+     char *lastdot = strrchr(withdot,'.');
+     strcpy(lastdot,countname);
+     leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
+     delete [] withdot;
+  }
   Int_t i;
   if (leaf) {
      countval = 1;
