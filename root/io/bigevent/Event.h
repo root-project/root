@@ -70,6 +70,8 @@ friend Bool_t  operator<=(const EventHeader& h1, const EventHeader& h2);
 inline Bool_t     operator<=(const EventHeader& s1, const EventHeader& s2)
 { return 0; }
 
+template <class T> struct template1 {};
+template <class T> struct template2 {};
 
 class Event : public TObject {
 //class Event  {
@@ -100,6 +102,8 @@ private:
    list<string>             *fListString;      //STL list of strings
    list<string *>            fListStringp;     //STL list of pointers to strings
    map<TNamed*,int>          fMapTNamedp;      //STL map
+
+   template2< template1< int > > fTemplateMember; 
 
    map<TString,TList*>       fMapList;         // STL map
    map<TString,TString*>     fMapTString;      //!STL map

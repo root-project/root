@@ -36,4 +36,10 @@
 
 #pragma link C++ class RootPCmisClDef+;
 
+#ifdef INC_FAILURE
+#pragma link C++ class RootPrivPCobject+;
+#pragma link C++ class RootPrivPCobject2+;
+#pragma link C++ class RootPrivPC+;
+#endif
+
 #endif

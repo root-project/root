@@ -50,6 +50,20 @@ endif
 
 CXXFLAGS := $(patsubst -O2,/Z7,$(CXXFLAGS))
 
+ifeq ($(FAIL),)
+#Make sure the failing code is excluded
+exec1 := $(shell if test -e fail.mode ; then rm -f fail.mode *.o; fi )
+exec2 := $(shell if test ! -e pass.mode ; then touch pass.mode; fi 1>&2 )
+MODE_FILE = pass.mode
+CFLAGS += -DSKIP_FAILURE
+else
+#Make sure the failing code is included
+exec1 := $(shell if test -e pass.mode; then rm -f pass.mode *.o; fi )
+exec2 := $(shell if test ! -e fail.mode ; then touch fail.mode; fi 1>&2 )
+MODE_FILE = fail.mode
+CFLAGS += -DINC_FAILURE
+endif
+
 test2:
 	echo $(arch)
 
@@ -69,7 +83,7 @@ endif
 local_clean:
 	rm -rf *.o *.so ti_files ii_files 
 	rm -rf mydict.* driver$(ExeSuf) *~
-	rm -rf *.obj .def *.root
+	rm -rf *.obj .def *.root *.mode
 
 clean: local_clean
 
@@ -77,8 +91,8 @@ clean: local_clean
 #driver: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
 
 
-driver$(ExeSuf): main.cc mydict.cc
-	$(CXX)  $^ $(CXXFLAGS) $(CLDFLAGS) $(LIBS) $(OutPutOpt)$@
+driver$(ExeSuf): main.cc mydict.cc 
+	$(CXX)  $^ $(CFLAGS) $(CXXFLAGS) $(CLDFLAGS) $(LIBS) $(OutPutOpt)$@
 
 stuff:
 ifeq ($(ARCH),aix)
@@ -114,10 +128,10 @@ endif
 #	$(CXX) -g -o driver $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
 
 infodriver: tmain.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
-	$(CXX) -g -o infodriver $(CXXFLAGS) tmain.cc mydict.cc $(LIBS) 
+	$(CXX) -g -o infodriver $(CFLAGS) $(CXXFLAGS) tmain.cc mydict.cc $(LIBS) 
 
-mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTSYS)/bin/rootcint
-	rootcint -f mydict.cc -c RootData.h RootCaloHit.h LinkDef.h
+mydict.cc:  LinkDef.h RootData.h RootCaloHit.h  RootPCellID.h $(ROOTSYS)/bin/rootcint 
+	rootcint -f mydict.cc -c $(CFLAGS) RootData.h RootCaloHit.h LinkDef.h
 
 ifeq ($(PLATFORM),win32)
 libIotest.so: main.$(ObjSuf) mydict.$(ObjSuf)
@@ -128,8 +142,8 @@ libIotest.so: main.$(ObjSuf) mydict.$(ObjSuf)
                    $(OutPutOpt)$@
 else
 libIotest.so: main.cc mydict.cc RootCaloHit.h  RootData.h  RootPCellID.h $(ROOTSYS)/include/Rtypes.h
-	$(CXX) -g -shared -o libIotest.so -DSHARED $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
+	$(CXX) -g -shared -o libIotest.so -DSHARED $(CFLAGS) $(CXXFLAGS) main.cc mydict.cc $(LIBS) 
 endif
 
 .cc.$(ObjSuf):
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c $<

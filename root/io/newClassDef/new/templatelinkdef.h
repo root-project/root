@@ -15,7 +15,9 @@
 #pragma link C++ class RtbLorentzVector+;
 #pragma link C++ class RtbVArray+;
 #pragma link C++ class RtbVTArray<RtbLorentzVector>+;
+#pragma link C++ class RtbVTArray<RtbVArray>+;
 #pragma link C++ class RtbCArray<RtbLorentzVector>+;
+#pragma link C++ class RtbCArray<RtbVArray>+;
 
 #pragma link C++ function template_driver;
 

@@ -4,6 +4,7 @@ test: tests ChainFriend
 
 override SUBDIRS =  
 
+CLEAN_TARGET += main *Dict* Event.root *~ createfile.out run.out 
 TEST_TARGETS = ChainFriend
 
 include ../../Rules.mk
@@ -17,25 +18,31 @@ else
 ROOTFILE = $(ROOTSYS)/test/Event.root
 endif
 
+$(ROOTFILE): $(ROOTSYS)/test/Event.h
+	$(CMDECHO) ( \
+		cd $(ROOTSYS)/test; \
+		gmake Event; \
+		Event 10 1 9 1; \
+	) > createfile.out
+
 Event.root: $(ROOTSYS)/test/Event.root
-	cp $(ROOTFILE) .
+	$(CMDECHO) cp $(ROOTFILE) .
 
 Event2.root: $(ROOTSYS)/test/Event.root
-	cp $(ROOTFILE) Event2.root
+	$(CMDECHO) cp $(ROOTFILE) Event2.root
 
 ChainFriend: Run.C  $(ROOTSYS)/lib/libTreePlayer.$(DllSuf) files
-	root.exe -q -b -l Run.C
+	$(CMDECHO) root.exe -q -b -l Run.C > run.out 2>&1
 
 main: main.C fooDict.C barDict.C foo.C bar.C
-	g++ -g -o $@ $^ -I. `root-config --cflags --libs` -lTreePlayer -lProof
+	$(CMDECHO) g++ -g -o $@ $^ -I. `root-config --cflags --libs` -lTreePlayer -lProof
 
 libFoo.so: main.C fooDict.C barDict.C foo.C bar.C
-	g++ -g -shared -o $@ $^ -I. `root-config --cflags --libs`
+	$(CMDECHO) g++ -g -shared -o $@ $^ -I. `root-config --cflags --libs`
 
 %Dict.C: %.h %Linkdef.h
-	rootcint -f $@ -c $^
+	$(CMDECHO) rootcint -f $@ -c $^
 
 #clean:
 #	rm -f main *Dict* Event.root *~
 
-CLEAN_TARGET += main *Dict* Event.root *~

@@ -89,7 +89,22 @@ int main()
 
     std::cerr << "Reading multiple inherited objects with newer methods" << std::endl;
     //myobjp = (MyClass*)f.Get("obj1",RootPCobject::Class());
-    
+
+#ifdef INC_FAILURE
+    std::cerr << "Check the base class offset in the case of private (and protected) inheritance" << std::endl;
+
+    TClass *cl = gROOT->GetClass(typeid(RootPrivPCobject));
+    cl->Print();
+    std::cerr << "base class offset for RootPrivPCobject's TObject is: " << 
+      cl->GetBaseClassOffset(TObject::Class()) << std::endl;
+
+    cl = gROOT->GetClass(typeid(RootPrivPCobject2));
+    cl->Print();
+    std::cerr << "base class offset for RootPrivPCobject2's TObject is: " << 
+      cl->GetBaseClassOffset(TObject::Class()) << std::endl;
+    std::cerr << "base class offset for RootPrivPCobject2's RootPCellID is: " << 
+      cl->GetBaseClassOffset(gROOT->GetClass(typeid(RootPCellID))) << std::endl;
+#endif
 
     f.Close();
         
@@ -101,7 +116,9 @@ int main()
     result &= verifyVersion("RootPCnodict",1);
     //no class template wide version setting yet result &= verifyVersion("RootPCtemp<int>",5);
     
+#ifdef INC_FAILURE
     RootCaloHit::Class()->GetStreamerInfo()->ls();
+#endif
     
     return !result;
 }

@@ -14,7 +14,11 @@ $(TEST_TARGETS): %.test:
 #ArraySyntax: Event.root
 #	@echo built
 
+# we expect the test to fail!
 ArraySave: main $(ROOTSYS)/lib/libTreePlayer.so
+	@echo WARNING `pwd` has failing test, run gmake RealArraySave to see it.
+
+RealArraySave: main $(ROOTSYS)/lib/libTreePlayer.so
 	./main
 
 main: main.C fooDict.C barDict.C foo.C bar.C

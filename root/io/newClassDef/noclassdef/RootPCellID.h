@@ -63,6 +63,8 @@ public:
    }
 };
 
+template <class T> class helper {};
+
 class RootPCvirt : public RootPCellID {
 public:
    RootPCvirt() : RootPCellID("none",0),virt(0) {}
@@ -70,9 +72,19 @@ public:
    int virt;
    vector<int> list;
    vector<RootPCfix*> list2;
+   vector<helper<float>* > list3; //!
+   vector<helper<float*> > list4; //!
+   vector<vector<float*> > list5; //!
+   vector<vector<float>* > list6; //!
    typedef double value;
    value vv;
    std::string s;
+   enum Enumeration { kInit, kSecond };
+   Enumeration status;
+#ifdef INC_FAILURE
+   union Stuff { int a; double b; };
+   Stuff stuff;
+#endif
    virtual ~RootPCvirt() {};
    void Print() {
      RootPCellID::Print();
@@ -97,6 +109,7 @@ public:
    RootPCtemp() : RootPCellID("none",0),temp(0) {}
    RootPCtemp(T n) :  RootPCellID("template",n),temp(66) {}
    T temp;
+   vector<RootPCtemp<T>*> list;//!
    void Print() {
      RootPCellID::Print();
      std::cout  << "templated \t" << temp << std::endl;
@@ -112,6 +125,7 @@ public:
    T *temp; //!
    typedef T *value;
    value temp2; //!
+   vector<RootPCtempObj<T>*> list;//!
    void Print() {
      RootPCellID::Print();
      //std::cout  << "templated \t" << temp << std::endl;
@@ -175,6 +189,47 @@ class RootPCmisClDef : public RootPCellID, public TObject  {
    }   
    // intentionally NOT putting the ClasDef
 
+};
+
+class RootPrivPCobject : RootPCellID, public TObject {
+public:
+   RootPrivPCobject() : RootPCellID("none",0),obj(0) {}
+   RootPrivPCobject(int n) :  RootPCellID("obj1",n),obj(101) {}
+   virtual ~RootPrivPCobject() {};
+   int obj;
+   void Print() {
+     RootPCellID::Print();
+     std::cout  << "obj \t" << obj << std::endl;
+     //Dump();
+   }   
+   ClassDef(RootPrivPCobject,1) // inherit second from TObject
+};
+
+class RootPrivPCobject2 :  public TObject, private RootPCellID {
+public:
+   RootPrivPCobject2() : RootPCellID("none",0),obj(0) {}
+   RootPrivPCobject2(int n) :  RootPCellID("obj1",n),obj(101) {}
+   virtual ~RootPrivPCobject2() {};
+   int obj;
+   void Print() {
+     RootPCellID::Print();
+     std::cout  << "obj \t" << obj << std::endl;
+     //Dump();
+   }   
+   ClassDef(RootPrivPCobject2,1) // inherit second from TObject
+};
+
+class RootPrivPC : RootPCellID {
+public:
+   RootPrivPC() : RootPCellID("none",0),obj(0) {}
+   RootPrivPC(int n) :  RootPCellID("obj1",n),obj(101) {}
+   virtual ~RootPrivPC() {};
+   int obj;
+   void Print() {
+     RootPCellID::Print();
+     std::cout  << "obj \t" << obj << std::endl;
+     //Dump();
+   }   
 };
 
 //inline Short_t GetClassVersion(RootPCellID*) { return 2; }

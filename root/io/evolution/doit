@@ -1,0 +1,3 @@
+root.exe -q -l -b write.C
+root.exe -q -l -b readold.C
+root.exe -q -l -b readnew.C

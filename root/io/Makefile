@@ -2,7 +2,7 @@ all: tests
 test: tests
 
 SUBDIRS = arrayobject bigevent newClassDef namespacedict newdelete \
-	multipleInherit
+	multipleInherit evolution
 
 include ../Rules.mk
 

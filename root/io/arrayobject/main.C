@@ -102,7 +102,6 @@ main()
   result &= runHisto(tree, "fp[].i","hist1",1.5);
   result &= runHisto(tree, "fp[].f","hist1",3);
 
-
   result &= runHisto(tree, "f.i","hist0",1.5);
   result &= runHisto(tree, "f[].i","hist1",1.5);
   result &= runHisto(tree, "f[].f","hist1",3);

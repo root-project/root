@@ -6,7 +6,7 @@ bool Classes();
 //void *operator new(int); 
 
 class PrivateDestructor {
-  friend TObject;
+  friend class TObject;
   ~PrivateDestructor();
 public:
   int a;
@@ -30,6 +30,28 @@ public:
   int a;
   NodefaultOpNew(int aa) : a(aa) {};
   void *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
+};
+
+class OpNew {
+public:
+  int a;
+  OpNew() : a(0) {};
+  void *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
+};
+
+class OpNewPlacement {
+public:
+  int a;
+  OpNewPlacement() : a(0) {};
+  void *operator new(size_t sz, void *p) { return TStorage::ObjectAlloc(sz,p); }
+};
+
+class OpNewBoth {
+public:
+  int a;
+  OpNewBoth() : a(0) {};
+  void *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
+  void *operator new(size_t sz, void *p) { return TStorage::ObjectAlloc(sz,p); }
 };
 
 class Default {
@@ -73,6 +95,31 @@ public:
   TNodefaultOpNew(int aa) : a(aa) {};
   void *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); };
   ClassDef(TNodefaultOpNew,0);
+};
+
+class TOpNew : public TObject  {
+public:
+  int a;
+  TOpNew() : a(0) {};
+  void *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); };
+  ClassDef(TOpNew,1);
+};
+
+class TOpNewPlacement : public TObject {
+public:
+  int a;
+  TOpNewPlacement() : a(0) {};
+  void *operator new(size_t sz, void *p) { return TStorage::ObjectAlloc(sz,p); }
+  ClassDef(TOpNewPlacement,1);
+};
+
+class TOpNewBoth : public TObject {
+public:
+  int a;
+  TOpNewBoth() : a(0) {};
+  void *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
+  void *operator new(size_t sz, void *p) { return TStorage::ObjectAlloc(sz,p); }
+  ClassDef(TOpNewBoth,1);
 };
 
 class TDefault  : public TObject{

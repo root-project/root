@@ -1,4 +1,4 @@
-CLEAN_TARGETS += local_clean
+CLEAN_TARGETS += $(local_clean)
 TEST_TARGESTS += bigeventTest
 
 include ../../Rules.mk
@@ -22,12 +22,9 @@ libEvent.$(DllSuf) :  Event.o EventDict.o
 EventDict.cxx: Event.h EventLinkDef.h $(ROOTSYS)/bin/rootcint $(ROOTSYS)/lib/libCint.$(DllSuf)
 	rootcint -f EventDict.cxx -c Event.h EventLinkDef.h
 
-Event.o: Event.cxx Event.h
-
 .cxx.o:
 	$(CXX) $(CXXFLAGS) -I$(ROOTSYS)/include -c $<
 
-local_clean:
-	rm -f Event libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~
+local_clean = Event libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~
 
 

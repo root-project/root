@@ -85,8 +85,10 @@ template <class T>
 class RtbCArray : public RtbVTArray<T>
 { 
   // ...
- private:      
- ClassDef(RtbCArray,1);
+private:
+  typedef T value_type;
+  value_type a;
+  ClassDef(RtbCArray,1);
 } ;
 
 // une classe etrangere
@@ -94,6 +96,7 @@ class RtbLorentzVector
 { 
   //...     
 };
+
 
 void template_driver();
 

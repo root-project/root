@@ -8,7 +8,7 @@ MyClassDict.C: Header.h Linkdef.h $(ROOTSYS)/bin/rootcint
 	rootcint -f MyClassDict.C -c Header.h Linkdef.h
 
 TeleDict.C: Tele.h TeleLinkdef.h $(ROOTSYS)/bin/rootcint
-	rootcint -f TeleDict.C -c Tele.h TeleLinkdef.h
+	test ! `rootcint -f TeleDict.C -c Tele.h TeleLinkdef.h` && touch TeleDict.C
 
 
 
