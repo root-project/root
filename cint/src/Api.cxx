@@ -400,7 +400,8 @@ extern "C" void G__operator_delete_ary(void *p) {
 #include <set>
 #include <string>
 #if (!defined(__hpux) && !defined(_MSC_VER)) || defined(__HP_aCC)
-using namespace std;
+    namespace std {};
+    using namespace std;
 #endif
 /******************************************************************
 * char* G__savestring()
