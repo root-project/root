@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.21 2001/08/27 12:59:09 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.22 2001/12/04 14:40:20 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -97,6 +97,9 @@
 //  -----------------------                                               //
 //                                                                        //
 // $Log: TTable.cxx,v $
+// Revision 1.22  2001/12/04 14:40:20  brun
+// delete #include <float.h>. Now included in Tmath.h
+//
 // Revision 1.21  2001/08/27 12:59:09  brun
 // Must activate the definition of the function "finite" on Solaris systems.
 //
@@ -1042,7 +1045,7 @@ TTable::TTable(const Text_t *name, const Text_t *type, Int_t n, Char_t *array, I
 }
 
 //______________________________________________________________________________
-TTable::TTable(const TTable &table)
+TTable::TTable(const TTable &table) :TDataSet(table)
 {
    // Copy constructor.
    fTable    = 0;
