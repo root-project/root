@@ -87,8 +87,10 @@ ifneq ($(SAPDBCLILIB),)
 MODULES      += sapdb
 endif
 endif
+ifneq ($(SHIFTINCDIR),)
 ifneq ($(SHIFTLIB),)
 MODULES      += rfio
+endif
 endif
 ifneq ($(DCAPINCDIR),)
 ifneq ($(DCAPLIB),)
