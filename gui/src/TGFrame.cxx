@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.74 2004/09/10 19:57:25 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.75 2004/09/11 16:27:09 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -449,9 +449,7 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
                   HandleButton(event);
                }
             } else {
-               if (!gDragManager || gDragManager->IgnoreEvent(event)) {
-                  HandleButton(event);
-               }
+               HandleButton(event);
             }
          }
          break;
