@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.7 2000/06/13 12:55:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.8 2000/07/20 15:48:11 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -804,41 +804,38 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
             fs1 = Analyse(x+1.3*square,y,spec,text+5,length-5);
             Double_t adjust = GetHeight()*spec.size/20;
             Double_t r1 = 0.62*square;
-            Double_t y1 = y-0.5*square-adjust;
+            Double_t y1 = y-0.3*square-adjust;
             DrawCircle(x+0.6*square,y1,r1,spec) ;
             DrawCircle(x+0.6*square,y1,r1/100,spec) ;
          }
          result = fs1 + FormSize(square,square,0);
       }
       else if (Operp) {
-         Double_t square = GetHeight()*spec.size/2;
+         Double_t square = GetHeight()*spec.size/1.4;
          if (!fShow) {
             fs1 = Anal1(spec,text+5,length-5);
          } else {
-            fs1 = Analyse(x+1.0*square,y,spec,text+5,length-5);
+            fs1 = Analyse(x+0.5*square,y,spec,text+5,length-5);
             Double_t x0 = x  + 0.50*square;
-            Double_t x1 = x0 - 0.45*square;
-            Double_t x2 = x0 + 0.45*square;
-            Double_t y1 = y;
-            Double_t y2 = y1 - 1.2*square;
+            Double_t x1 = x0 - 0.48*square;
+            Double_t x2 = x0 + 0.48*square;
+            Double_t y1 = y  + 0.6*square;
+            Double_t y2 = y1 - 1.3*square;
             DrawLine(x1,y1,x2,y1,spec);
             DrawLine(x0,y1,x0,y2,spec);
          }
-//         result = fs1 + FormSize(square,square,0);
-//         result = fs1 + FormSize(square,square,0);
          result = fs1;
-//         result =  FormSize(0,0,0);
       }
       else if (Oparallel) {
-         Double_t square = GetHeight()*spec.size/2;
+         Double_t square = GetHeight()*spec.size/1.4;
          if (!fShow) {
             fs1 = Anal1(spec,text+9,length-9);
          } else {
             fs1 = Analyse(x+0.5*square,y,spec,text+9,length-9);
             Double_t x1 = x + 0.15*square;
-            Double_t x2 = x + 0.35*square;
-            Double_t y1 = y;
-            Double_t y2 = y1-1.3*square;
+            Double_t x2 = x + 0.45*square;
+            Double_t y1 = y + 0.3*square;
+            Double_t y2 = y1- 1.3*square;
             DrawLine(x1,y1,x1,y2,spec);
             DrawLine(x2,y1,x2,y2,spec);
          }
