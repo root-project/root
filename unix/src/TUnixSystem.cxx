@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.8 2000/09/13 10:40:30 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.9 2000/10/04 23:37:15 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -354,10 +354,21 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
    if (oh) {       // found
-      fReadmask.Clr(oh->GetFd());
-      fWritemask.Clr(oh->GetFd());
-
-      // need to reset fMaxrfd and fMaxwfd
+      TFileHandler *th;
+      TIter next(fFileHandler);
+      fReadmask.Zero();
+      fWritemask.Zero();
+      while ((th = (TFileHandler *) next())) {
+         int fd = th->GetFd();
+         if (th->HasReadInterest()) {
+            fReadmask.Set(fd);
+            fMaxrfd = TMath::Max(fMaxrfd, fd);
+         }
+         if (th->HasWriteInterest()) {
+            fWritemask.Set(fd);
+            fMaxwfd = TMath::Max(fMaxwfd, fd);
+         }
+      }
    }
    return oh;
 }
@@ -742,7 +753,9 @@ int TUnixSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
    // Size    is the file size
    // Flags   is file type: bit 1 set executable, bit 2 set directory,
    //                       bit 3 set regular file
-   // Modtime is modification time
+   // Modtime is modification time.
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
 
    return UnixFilestat(path, id,  size, flags, modtime);
 }
@@ -2107,7 +2120,7 @@ int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long_t *size,
    // Size    is the file size
    // Flags   is file type: bit 0 set executable, bit 1 set directory,
    //                       bit 2 set regular file
-   // Modtime is modification time
+   // Modtime is modification time.
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
