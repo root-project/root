@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -44,6 +44,8 @@ private:
    const TGFrame     *fWindow;  // frame to which tool tip is associated
    const TVirtualPad *fPad;     // pad to which tooltip is associated
    const TBox        *fBox;     // box in pad to which tooltip is associated
+   Int_t              fX;       // X position in fWindow where to popup
+   Int_t              fY;       // Y position in fWindow where to popup
 
    static ULong_t fgLightYellowPixel;
 
@@ -60,6 +62,8 @@ public:
    void   Hide();
    void   Reset();
    void   Reset(const TVirtualPad *parent);
+   void   SetText(const char *new_text);
+   void   SetPosition(Int_t x, Int_t y);
 
    ClassDef(TGToolTip,0)  //One line help text
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -86,6 +86,7 @@ TGToolTip::TGToolTip(const TGWindow *p, const TGFrame *f, const char *text,
    fWindow = f;
    fPad    = 0;
    fBox    = 0;
+   fX = fY = -1;
    fDelay = new TTipDelayTimer(this, delayms);
 }
 
@@ -229,8 +230,9 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
 
    if (fWindow) {
       gVirtualX->TranslateCoordinates(fWindow->GetId(), GetParent()->GetId(),
-                                 fWindow->GetWidth() >> 1, fWindow->GetHeight(),
-                                 x, y, wtarget);
+                                      fX == -1 ? fWindow->GetWidth() >> 1 : fX,
+                                      fY == -1 ? fWindow->GetHeight() : fY,
+                                      x, y, wtarget);
    } else {
 
       if (!fPad) {
@@ -275,4 +277,36 @@ Bool_t TGToolTip::HandleTimer(TTimer *)
    fDelay->Remove();
 
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGToolTip::SetText(const char *new_text)
+{
+   // Set new tool tip text.
+
+   fLabel->SetText(new TGString(new_text));
+   Resize(GetDefaultSize());
+}
+
+//______________________________________________________________________________
+void TGToolTip::SetPosition(Int_t x, Int_t y)
+{
+   // Set popup position within specified frame (as specified in the ctor).
+   // To get back default behaviour (in the middle just below the designated
+   // frame) set position to -1,-1.
+
+   fX = x;
+   fY = y;
+
+   if (fX < -1)
+      fX = 0;
+   if (fY < -1)
+      fY = 0;
+
+   if (fWindow) {
+      if (fX > (Int_t) fWindow->GetWidth())
+         fX = fWindow->GetWidth();
+      if (fY > (Int_t) fWindow->GetHeight())
+         fY = fWindow->GetHeight();
+   }
 }
