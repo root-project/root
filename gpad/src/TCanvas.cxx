@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.39 2002/01/26 10:08:46 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.40 2002/09/18 13:12:59 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -892,14 +892,6 @@ void TCanvas::UseCurrentStyle()
    SetFillColor(gStyle->GetCanvasColor());
    fBorderSize = gStyle->GetCanvasBorderSize();
    fBorderMode = gStyle->GetCanvasBorderMode();
-}
-
-//______________________________________________________________________________
-void *TCanvas::GetPadDivision(Int_t, Int_t)
-{
-//*-*-*-*-*-*-*-*-*Return pad corresponding to one canvas division*-*-*-*-*
-//*-*              ===============================================
-   return 0;
 }
 
 //______________________________________________________________________________

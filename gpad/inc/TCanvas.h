@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.14 2002/09/18 12:21:04 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.15 2002/09/18 13:12:58 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -135,7 +135,6 @@ public:
    Int_t             GetEventX() const { return fEventX; }
    Int_t             GetEventY() const { return fEventY; }
    Color_t           GetHighLightColor() const { return fHighLightColor; }
-   virtual void     *GetPadDivision(Int_t xdivision=1, Int_t ydivision=1);
    TVirtualPad      *GetPadSave() const { return fPadSave; }
    TObject          *GetSelected() const {return fSelected;}
    Option_t         *GetSelectedOpt() const {return fSelectedOpt.Data();}
