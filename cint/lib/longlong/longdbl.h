@@ -7,7 +7,7 @@
  * Description:
  *  Support 'long double' 
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for non-commercial purpose is hereby granted without fee,
@@ -26,8 +26,14 @@
 #endif
 
 #ifdef IOS
+#ifdef G__NEWSTDHEADER
+#include <iostream>
+#else
 #include <iostream.h>
-//using namespace std;
+#endif
+#ifndef __hpux
+using namespace std;
+#endif
 #endif
 
 /**************************************************************************

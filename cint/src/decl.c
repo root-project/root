@@ -2953,6 +2953,13 @@ char *new_name;
       if('c'==var->type[ig15] && '"'==expr[0]) {
 	size = var->varlabel[ig15][var->paran[ig15]];
 	stringflag=1;
+#ifndef G__OLDIMPLEMENTATION1621
+	if(0>size && -1==var->varlabel[ig15][1]) {
+	  isauto=0;
+	  size = 1;
+	  stringflag=2;
+	}
+#endif
       }
 #endif
       prev=pinc;
@@ -2970,6 +2977,10 @@ char *new_name;
 	  if(tmp) var->p[ig15] = tmp;
 	  else    G__malloc_error(new_name);
 	}
+#ifndef G__OLDIMPLEMENTATION1621
+	else if(2==stringflag) {
+	}
+#endif
 	else {
 	  /*************************************
 	   * error , array index out of range
@@ -3010,9 +3021,25 @@ char *new_name;
       buf.obj.i=var->p[ig15]+size*pinc;
       reg=G__getexpr(expr);
 #ifndef G__OLDIMPLEMENTATION1607
-      if(stringflag) {
+      if(
+#ifndef G__OLDIMPLEMENTATION1621
+	 1==
+#endif
+	 stringflag) {
 	strcpy((char*)buf.obj.i,(char*)reg.obj.i);
       }
+#ifndef G__OLDIMPLEMENTATION1621
+      else if(2==stringflag && 0==var->p[ig15]) {
+	var->varlabel[ig15][1]=strlen((char*)reg.obj.i);
+	tmp=(long)malloc((size_t)(size*(var->varlabel[ig15][1]+1)));
+	if(tmp) {
+	  var->p[ig15] = tmp;
+	  buf.obj.i = var->p[ig15];
+	  strcpy((char*)buf.obj.i,(char*)reg.obj.i);
+	}
+	else    G__malloc_error(new_name);
+      }
+#endif
       else {
 	G__letvalue(&buf,reg);
       }
@@ -3039,6 +3066,9 @@ char *new_name;
   /**********************************************************
    * initialize remaining object to 0
    **********************************************************/
+#ifndef G__OLDIMPLEMENTATION1621
+  if(2!=stringflag)
+#endif
 #ifndef G__OLDIMPLEMENTATION1329
   {
     int initnum = var->varlabel[ig15][1];

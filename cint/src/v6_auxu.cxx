@@ -46,8 +46,11 @@ char *argv[];
   
   while((string[i]!='\n')&&
 	(string[i]!='\r')&&
-	(string[i]!='\0')&&
-	(string[i]!=EOF)) i++;
+	(string[i]!='\0')
+#ifdef G__OLDIMPLEMENTATION1616
+	&& (string[i]!=EOF)
+#endif
+	) i++;
   string[i]='\0';
   line[i]='\0';
   lenstring=i;

@@ -1079,6 +1079,9 @@ int *piout;
 int G__skip_comment()
 {
   char statement[5];
+#ifndef G__OLDIMPLEMENTATION1616
+  int c;
+#endif
   statement[0]=G__fgetc();
   statement[1]=G__fgetc();
   statement[2]='\0';
@@ -1094,12 +1097,22 @@ int G__skip_comment()
 #else
     statement[0]=statement[1];
 #endif
+#ifndef G__OLDIMPLEMENTATION1616
+    if(EOF==(c=G__fgetc())) {
+      G__genericerror("Error: unexpected /* ...EOF");
+      if(G__key!=0) system("key .cint_key -l execute");
+      G__eof=2;
+      return(EOF);
+    }
+    statement[1] = c;
+#else
     if(EOF==(statement[1]=G__fgetc())) {
       G__genericerror("Error: unexpected /* ...EOF");
       if(G__key!=0) system("key .cint_key -l execute");
       G__eof=2;
       return(EOF);
     }
+#endif
   }
   return(0);
 }

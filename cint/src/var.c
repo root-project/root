@@ -7,7 +7,7 @@
  * Description:
  *  Variable initialization, assignment and referencing
  ************************************************************************
- * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -279,6 +279,48 @@ else { /* type *var; pointer */                                  \
 *
 *  get variable 
 **************************************************************************/
+#ifndef G__OLDIMPLEMENTATION1619
+
+#define G__GET_VAR(SIZE,CASTTYPE,CONVFUNC,TYPE,PTYPE)                        \
+switch(G__var_type) {                                                        \
+case 'p': /* return value */                                                 \
+  if(var->paran[ig15]<=paran) {                                              \
+ /* if(var->varlabel[ig15][paran+1]==0) { */                                 \
+    /* value , an integer */                                                 \
+    result.ref = (G__struct_offset+var->p[ig15]+p_inc*SIZE);                 \
+    CONVFUNC(&result,TYPE,(CASTTYPE)(*(CASTTYPE *)(result.ref)));            \
+  }                                                                          \
+  else { /* array , pointer */                                               \
+    G__letint(&result,PTYPE,(G__struct_offset+var->p[ig15]+p_inc*SIZE));     \
+    if(var->paran[ig15]-paran>1)                            /*993*/          \
+      result.obj.reftype.reftype=var->paran[ig15]-paran;    /*993*/          \
+  }                                                                          \
+  break;                                                                     \
+case 'P': /* return pointer */                                               \
+  G__letint(&result,PTYPE,(G__struct_offset+var->p[ig15]+p_inc*SIZE));       \
+  break;                                                                     \
+/* case 'v': */                                                              \
+default :                                                                    \
+  if(var->paran[ig15]<=paran)  /* 1619 */ \
+    G__reference_error(item);                                                \
+  else { /* 1619 */ \
+    if(var->paran[ig15]-paran==1) { /*1619*/ \
+      result.ref = (G__struct_offset+var->p[ig15]+p_inc*SIZE); /*1619*/ \
+      CONVFUNC(&result,TYPE,(CASTTYPE)(*(CASTTYPE *)(result.ref))); /*1619*/ \
+    } /* 1619 */ \
+    else { /* 1619 */ \
+      G__letint(&result,PTYPE,(G__struct_offset+var->p[ig15]+p_inc*SIZE)); /*1619*/ \
+      if(var->paran[ig15]-paran>2) /*1619*/ \
+        result.obj.reftype.reftype=var->paran[ig15]-paran-1; /*1619*/ \
+    } /* 1619 */ \
+  } /* 1619 */ \
+  break;                                                                     \
+}                                                                            \
+G__var_type='p';                                                             \
+return(result);               
+
+#else
+
 #define G__GET_VAR(SIZE,CASTTYPE,CONVFUNC,TYPE,PTYPE)                        \
 switch(G__var_type) {                                                        \
 case 'p': /* return value */                                                 \
@@ -304,6 +346,8 @@ default :                                                                    \
 }                                                                            \
 G__var_type='p';                                                             \
 return(result);               
+
+#endif
 
 /**************************************************************************
 * G__GET_STRUCTVAR()
@@ -3992,6 +4036,10 @@ struct G__var_array *varglobal,*varlocal;
 	G__GET_VAR(G__LONGALLOC,unsigned long ,G__letint,'k','K')
       case 'f': /* float */
 	G__GET_VAR(G__FLOATALLOC,float ,G__letdouble,'f','F')
+#ifndef G__OLDIMPLEMENTATION1604
+      case 'g': /* bool */
+	G__GET_VAR(G__INTALLOC ,int ,G__letint ,'g' ,'G')
+#endif
 
 	  /****************************************
 	   * G__getvariable()
@@ -6245,7 +6293,11 @@ int parameter00;
      ***********************************************************/
     if(parameter00=='\0') {
 #ifndef G__OLDIPMLEMENTATION877
-      if(G__asm_wholefunction && (0==G__funcheader||1==paran)) {
+      if(G__asm_wholefunction && (0==G__funcheader||1==paran)
+#ifndef G__OLDIPMLEMENTATION1617
+	 && 0==G__static_alloc
+#endif
+	 ) {
       /* Tried, but does not work */
       /* if(1==paran && G__asm_wholefunction && G__funcheader) {  */
 #else

@@ -47,7 +47,7 @@ extern int G__list_stub G__P((FILE *fp));
 
 /* in src/xxx.c */
 /* struct G__var_array *G__rawvarentry G__P((char *name,int hash,int *ig15,struct G__var_array *memvar)); */
-int G__split G__P((char *line,char *string,int *argc,char **argv));
+/* int G__split G__P((char *line,char *string,int *argc,char **argv)); */
 int G__readsimpleline G__P((FILE *fp,char *line));
 #ifdef G__OLDIMPLEMENTATION451
 int G__readline G__P((FILE *fp,char *line,char *argbuf,int *argn,char **arg));

@@ -2615,7 +2615,7 @@ int parent_tagnum;
 #endif /* ON682 */
   G__var_type = 'p';
   G__breaksignal=0;
-  G__abortbytecode();
+  G__abortbytecode(); /* This has to be 'suspend', indeed. */
   G__no_exec_compile=0;
   G__func_now = -1;
   G__func_page = 0;

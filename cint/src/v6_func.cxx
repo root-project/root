@@ -40,6 +40,29 @@ int G__getoptimizemode G__P(());
 extern int G__const_noerror;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1618
+/******************************************************************
+* G__bytecodedebugmode()
+******************************************************************/
+int G__bytecodedebugmode(mode)
+int mode;
+{
+  G__asm_dbg = mode;
+#ifndef G__OLDIMPLEMENTATION1155
+#endif
+  return(G__asm_dbg);
+}
+
+/******************************************************************
+* G__getoptmizemode()
+******************************************************************/
+int G__getbytecodedebugmode()
+{
+  return(G__asm_dbg);
+}
+#endif
+
+
 #ifndef G__OLDIMPLEMENTATION1198
 static struct G__input_file G__lasterrorpos;
 /******************************************************************
@@ -289,7 +312,11 @@ G__value *presult3;
     }
 #endif
 #ifndef G__OLDIMPLEMENTATION1332
-    else if(strcmp(funcname,"bool")==0 && 'u'==libp->para[0].type) {
+    else if(strcmp(funcname,"bool")==0 
+#ifdef G__OLDIMPLEMENTATION1604
+	    && 'u'==libp->para[0].type
+#endif
+	    ) {
 #ifndef G__OLDIMPLEMENTATION1604
       presult3->type='g';
       presult3->obj.i = G__int(libp->para[0])?1:0;
@@ -3799,6 +3826,19 @@ int hash;
   }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1618
+  if(strcmp(funcname,"G__bytecodedebugmode")==0) {
+    if(G__no_exec_compile) return(1);
+    G__letint(result7,'i',(long)G__bytecodedebugmode((int)G__int(libp->para[0])));
+    return(1);
+  }
+  if(strcmp(funcname,"G__getbytecodedebugmode")==0) {
+    if(G__no_exec_compile) return(1);
+    G__letint(result7,'i',(long)G__getbytecodedebugmode());
+    return(1);
+  }
+#endif
+
 #ifndef G__OLDIMPLEMENTATION478
   if(strcmp(funcname,"G__clearerror")==0) {
     if(G__no_exec_compile) return(1);
@@ -4088,6 +4128,18 @@ char *result;
 	onefmt[ionefmt++]=pformat[ichar];
       }
       break;
+#endif
+#ifndef G__OLDIMPLEMENTATION1615
+    case ' ':
+    case '\t' : /* tab */
+    case '\n': /* end of line */
+    case '\r': /* end of line */
+    case '\f': /* end of line */
+      if(fmtflag) {
+	if('%'!=onefmt[ionefmt-1] && !isspace(onefmt[ionefmt-1])) fmtflag=0;
+	onefmt[ionefmt++]=pformat[ichar];
+	break;
+      }
 #endif
     default:
       fmtflag=0;

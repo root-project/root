@@ -47,8 +47,15 @@ typedef int INT;
 /**************************************************************************
 * gcc
 ***************************************************************************/
+#ifdef G__FBSD
+#include <time.h>
+#endif
+
+#ifndef G__FBSD
 #define __signed__ 
 #define __const
+#endif
+
 //#define __BEGIN_DECLS
 #define __extension__
 

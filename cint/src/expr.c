@@ -7,7 +7,7 @@
  * Description:
  *  Parse C/C++ expression
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -24,6 +24,9 @@
 #define G__OLDIMPLEMENTATION918
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1620
+#define G__NOPOWEROPR
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1103
 extern int G__const_noerror;
@@ -1223,11 +1226,18 @@ char *expression;
 	  /* *a */
 	  /* it is questionable whether to change following to 
 	   * G__exec_unaopr(c); */
+#define G__OLDIMPLEMENTATION1619
+#ifndef G__OLDIMPLEMENTATION1619
+	  /* This doesn't work for '*first++' */
+	  if('('==expression[ig1+1]) G__exec_unaopr(c);
+	  else ebuf[lenbuf++]=c;
+#else
 #ifndef G__OLDIMPLEMENTATION747
 	   G__exec_unaopr(c);
 #else
 	  if('('==expression[ig1+1]) G__exec_unaopr(c);
-	  else                       G__var_type = 'v';
+	  else G__var_type = 'v';
+#endif
 #endif
 	}
       }
