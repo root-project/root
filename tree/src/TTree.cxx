@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.105 2001/12/04 14:40:20 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.106 2001/12/12 09:48:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3109,6 +3109,7 @@ void TTree::Show(Int_t entry)
       if (branch->GetListOfBranches()->GetEntriesFast() > 0) continue;
       if (leaf->IsA() == TLeafF::Class()) len = TMath::Min(len,5);
       if (leaf->IsA() == TLeafD::Class()) len = TMath::Min(len,5);
+      if (leaf->IsA() == TLeafC::Class()) len = 1;    
       printf(" %-15s = ",leaf->GetName());
       for (Int_t l=0;l<len;l++) {
          leaf->PrintValue(l);
