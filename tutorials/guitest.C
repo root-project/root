@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.31 2003/07/24 16:00:00 brun Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.32 2003/07/25 17:22:38 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -517,8 +517,7 @@ public:
 
 TileFrame::TileFrame(const TGWindow *p)
 {
-   // Create tile view container. Used to shconst TGWindow *p, const TGWindow *main,
-   //                      UInt_t w, UInt_t how colormap.
+   // Create tile view container. Used to show colormap.
 
    fFrame = new TGCompositeFrame(p, 10, 10, kHorizontalFrame,
                                  TGFrame::GetWhitePixel());
@@ -1871,7 +1870,7 @@ void TestDirList::OnDoubleClick(TGListTreeItem* item, Int_t btn)
                fContents->AddItem(item,fname.Data());
             }
          } else if (fname.EndsWith(".root")) {   // add root files
-            fContents->AddItem(item,fname.Data(),fIcon,fIcon);      
+            fContents->AddItem(item,fname.Data(),fIcon,fIcon);
          }
       }
       delete files;
@@ -1882,7 +1881,7 @@ void TestDirList::OnDoubleClick(TGListTreeItem* item, Int_t btn)
 TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h)
 {
    // Create transient frame containing a filelist widget.
-   
+
    TGLayoutHints *lo;
 
    fMain = new TGTransientFrame(p, main, w, h);
@@ -2014,20 +2013,22 @@ void TestFileList::OnDoubleClick(TGLVEntry* f, Int_t btn)
    if (btn!=kButton1) return;
 
    // set kWatch cursor
-   gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(17));
+   ULong_t cur = gVirtualX->CreateCursor(kWatch);
+   gVirtualX->SetCursor(fContents->GetId(), cur);
 
    TString name(f->GetName());
    const char* fname = (const char*)f->GetUserData();
 
    if (fname) {
-      DisplayObject(fname,name); 
+      DisplayObject(fname,name);
    } else if (name.EndsWith(".root")) {
       DisplayFile(name);
    } else {
       DisplayDirectory(name);
    }
    // set kPointer cursor
-   gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(14));
+   cur = gVirtualX->CreateCursor(kPointer);
+   gVirtualX->SetCursor(fContents->GetId(), cur);
 }
 
 
