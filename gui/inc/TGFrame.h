@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.7 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.8 2000/10/29 14:29:43 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -320,6 +320,8 @@ public:
 class TGMainFrame : public TGCompositeFrame {
 
 protected:
+   enum { kDontCallClose = BIT(14) };
+
    TList    *fBindList;    // list with key bindings
 
    virtual const TGWindow *GetMainFrame() const { return this; }
@@ -331,8 +333,10 @@ public:
 
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleClientMessage(Event_t *event);
+   virtual void   SendCloseMessage();
    virtual void   CloseWindow();   //*SIGNAL*
 
+   void DontCallClose();
    void SetWindowName(const char *name);
    void SetIconName(const char *name);
    void SetIconPixmap(const char *iconName);
@@ -370,7 +374,6 @@ public:
                     UInt_t options = kMainFrame | kVerticalFrame);
 
    const TGWindow *GetMain() const { return fMain; }
-   virtual void CloseWindow();   //*SIGNAL*
 
    ClassDef(TGTransientFrame,0)  // Frame for dialog (transient) windows
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.6 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.7 2000/10/29 14:29:43 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -782,9 +782,34 @@ Bool_t TGMainFrame::HandleClientMessage(Event_t *event)
 
    TGCompositeFrame::HandleClientMessage(event);
 
-   if ((event->fFormat == 32) && ((Atom_t)event->fUser[0] == gWM_DELETE_WINDOW))
-      CloseWindow();
+   if ((event->fFormat == 32) && ((Atom_t)event->fUser[0] == gWM_DELETE_WINDOW)) {
+      Emit("CloseWindow()");
+      if (TestBit(kNotDeleted) && !TestBit(kDontCallClose))
+         CloseWindow();
+   }
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGMainFrame::SendCloseMessage()
+{
+   // Send close message to self. This method should be called from
+   // a button to close this window.
+
+   Event_t event;
+
+   event.fType   = kClientMessage;
+   event.fFormat = 32;
+   event.fHandle = gWM_DELETE_WINDOW;
+
+   event.fWindow  = GetId();
+   event.fUser[0] = (Long_t) gWM_DELETE_WINDOW;
+   event.fUser[1] = 0;
+   event.fUser[2] = 0;
+   event.fUser[3] = 0;
+   event.fUser[4] = 0;
+
+   gVirtualX->SendEvent(GetId(), &event);
 }
 
 //______________________________________________________________________________
@@ -793,13 +818,20 @@ void TGMainFrame::CloseWindow()
    // Close main frame. We get here in response to ALT+F4 or a window
    // manager close command. To terminate the application when this
    // happens override this method and call gApplication->Terminate(0) or
-   // make a connection to this is signal. If not the window will be just
+   // make a connection to this signal. If not the window will be just
    // destroyed and can not be used anymore.
 
-   if (HasConnection("CloseWindow()"))
-      Emit("CloseWindow()");
-   else
-      DestroyWindow();
+   DestroyWindow();
+}
+
+//______________________________________________________________________________
+void TGMainFrame::DontCallClose()
+{
+   // Typically call this method in the slot connected to the CloseWindow()
+   // signal to prevent the calling of the default or any derived CloseWindow()
+   // methods to prevent premature or double deletion of this window.
+
+   SetBit(kDontCallClose);
 }
 
 //______________________________________________________________________________
@@ -897,18 +929,6 @@ TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
       gVirtualX->SetWMTransientHint(fId, fMain->GetId());
 }
 
-//______________________________________________________________________________
-void TGTransientFrame::CloseWindow()
-{
-   // Close transient window. Override this to intercept close or
-   // make a connection to this is signal. If not the window will
-   // be just destroyed and can not be used anymore.
-
-   if (HasConnection("CloseWindow()"))
-      Emit("CloseWindow()");
-   else
-      DestroyWindow();
-}
 
 //______________________________________________________________________________
 TGGroupFrame::TGGroupFrame(const TGWindow *p, TGString *title,
