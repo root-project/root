@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPS.cxx,v 1.2 2002/02/14 18:04:15 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
