@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.54 2003/02/27 18:48:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.56 2003/03/03 20:42:26 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -845,7 +845,7 @@ Bool_t TSystem::AccessPathName(const char *, EAccessMode)
 }
 
 //______________________________________________________________________________
-int TSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
+int TSystem::CopyFile(const char *, const char *, Bool_t)
 {
    // Copy a file. If overwrite is true and file already exists the
    // file will be overwritten. Returns 0 when successful, -1 in case
