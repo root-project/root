@@ -46,7 +46,7 @@ $(SUCCESS_FILE): $(TEST_TARGETS)
 
 tests: $(SUCCESS_FILE) 
 	@len=`echo Tests in $(CALLDIR) | wc -m `;end=`expr 68 - $$len`;printf 'Tests in %s %.*s ' $(CALLDIR) $$end $(DOTS)
-	@if [ -f .success ] ; then printf 'OK\n' ; else printf 'FAIL\n' ; fi
+	@if [ -f $(SUCCESS_FILE) ] ; then printf 'OK\n' ; else printf 'FAIL\n' ; fi
 
 #@echo "All test succeeded in $(CALLDIR)"
 
