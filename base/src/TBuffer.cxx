@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.57 2003/07/14 17:29:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.58 2003/12/25 17:47:02 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -860,6 +860,31 @@ Int_t TBuffer::ReadArray(Double_t *&d)
 }
 
 //______________________________________________________________________________
+Int_t TBuffer::ReadArrayDouble32(Double_t *&d)
+{
+   // Read array of doubles (written as float) from the I/O buffer. 
+   // Returns the number of doubles read. 
+   // If argument is a 0 pointer then space will be allocated for the array.
+
+   Assert(IsReading());
+
+   Int_t n;
+   *this >> n;
+
+   if (n <= 0 || n > fBufSize) return 0;
+
+   if (!d) d = new Double_t[n];
+
+   Float_t afloat;
+   for (int i = 0; i < n; i++) {
+      frombuf(fBufCur, &afloat);
+	  d[i] = Double_t(afloat);
+   }
+
+   return n;
+}
+
+//______________________________________________________________________________
 Int_t TBuffer::ReadStaticArray(Bool_t *b)
 {
    // Read array of bools from the I/O buffer. Returns the number of bools
@@ -1083,6 +1108,30 @@ Int_t TBuffer::ReadStaticArray(Double_t *d)
 }
 
 //______________________________________________________________________________
+Int_t TBuffer::ReadStaticArrayDouble32(Double_t *d)
+{
+   // Read array of doubles (written as float) from the I/O buffer.
+   // Returns the number of doubles read.
+
+   Assert(IsReading());
+
+   Int_t n;
+   *this >> n;
+
+   if (n <= 0 || n > fBufSize) return 0;
+
+   if (!d) return 0;
+
+   Float_t afloat;
+   for (int i = 0; i < n; i++) {
+      frombuf(fBufCur, &afloat);
+	  d[i] = afloat;
+   }
+
+   return n;
+}
+
+//______________________________________________________________________________
 void TBuffer::ReadFastArray(Bool_t *b, Int_t n)
 {
    // Read array of n bools from the I/O buffer.
@@ -1224,6 +1273,20 @@ void TBuffer::ReadFastArray(Double_t *d, Int_t n)
    memcpy(d, fBufCur, l);
    fBufCur += l;
 #endif
+}
+
+//______________________________________________________________________________
+void TBuffer::ReadFastArrayDouble32(Double_t *d, Int_t n)
+{
+   // Read array of n doubles (written as float) from the I/O buffer.
+
+   if (n <= 0 || n > fBufSize) return;
+
+   Float_t afloat;
+   for (int i = 0; i < n; i++) {
+      frombuf(fBufCur, &afloat);
+	  d[i]=afloat;
+   }
 }
 
 //______________________________________________________________________________
@@ -1450,6 +1513,26 @@ void TBuffer::WriteArray(const Double_t *d, Int_t n)
 }
 
 //______________________________________________________________________________
+void TBuffer::WriteArrayDouble32(const Double_t *d, Int_t n)
+{
+   // Write array of n doubles (as float) into the I/O buffer.
+
+   Assert(IsWriting());
+
+   *this << n;
+
+   if (n <= 0) return;
+
+   Assert(d);
+
+   Int_t l = sizeof(Float_t)*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+
+   for (int i = 0; i < n; i++)
+      tobuf(fBufCur, Float_t(d[i]));
+}
+
+//______________________________________________________________________________
 void TBuffer::WriteFastArray(const Bool_t *b, Int_t n)
 {
    // Write array of n bools into the I/O buffer.
@@ -1618,6 +1701,20 @@ void TBuffer::WriteFastArray(const Double_t *d, Int_t n)
    memcpy(fBufCur, d, l);
    fBufCur += l;
 #endif
+}
+
+//______________________________________________________________________________
+void TBuffer::WriteFastArrayDouble32(const Double_t *d, Int_t n)
+{
+   // Write array of n doubles (as float) into the I/O buffer.
+
+   if (n <= 0) return;
+
+   Int_t l = sizeof(Float_t)*n;
+   if (fBufCur + l > fBufMax) Expand(TMath::Max(2*fBufSize, fBufSize+l));
+
+   for (int i = 0; i < n; i++)
+      tobuf(fBufCur, Float_t(d[i]));
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.29 2003/04/11 11:48:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.30 2003/12/25 17:47:02 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -139,6 +139,7 @@ public:
    Int_t    ReadArray(ULong64_t *&l);
    Int_t    ReadArray(Float_t   *&f);
    Int_t    ReadArray(Double_t  *&d);
+   Int_t    ReadArrayDouble32(Double_t  *&d);
 
    Int_t    ReadStaticArray(Bool_t    *b);
    Int_t    ReadStaticArray(Char_t    *c);
@@ -153,6 +154,7 @@ public:
    Int_t    ReadStaticArray(ULong64_t *l);
    Int_t    ReadStaticArray(Float_t   *f);
    Int_t    ReadStaticArray(Double_t  *d);
+   Int_t    ReadStaticArrayDouble32(Double_t  *d);
 
    void     ReadFastArray(Bool_t    *b, Int_t n);
    void     ReadFastArray(Char_t    *c, Int_t n);
@@ -167,6 +169,7 @@ public:
    void     ReadFastArray(ULong64_t *l, Int_t n);
    void     ReadFastArray(Float_t   *f, Int_t n);
    void     ReadFastArray(Double_t  *d, Int_t n);
+   void     ReadFastArrayDouble32(Double_t  *d, Int_t n);
 
    void     WriteArray(const Bool_t    *b, Int_t n);
    void     WriteArray(const Char_t    *c, Int_t n);
@@ -181,6 +184,7 @@ public:
    void     WriteArray(const ULong64_t *l, Int_t n);
    void     WriteArray(const Float_t   *f, Int_t n);
    void     WriteArray(const Double_t  *d, Int_t n);
+   void     WriteArrayDouble32(const Double_t  *d, Int_t n);
 
    void     WriteFastArray(const Bool_t    *b, Int_t n);
    void     WriteFastArray(const Char_t    *c, Int_t n);
@@ -195,6 +199,7 @@ public:
    void     WriteFastArray(const ULong64_t *l, Int_t n);
    void     WriteFastArray(const Float_t   *f, Int_t n);
    void     WriteFastArray(const Double_t  *d, Int_t n);
+   void     WriteFastArrayDouble32(const Double_t  *d, Int_t n);
 
    void     StreamObject(void *obj, const type_info &typeinfo);
    void     StreamObject(void *obj, const char *className);
