@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.5 2003/06/23 07:13:09 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TExMap.cxx,v 1.6 2005/01/26 06:42:24 brun Exp $
 // Author: Fons Rademakers   26/05/99
 
 /*************************************************************************
@@ -210,17 +210,18 @@ void TExMap::Expand(Int_t newSize)
 {
    // Expand the TExMap.
 
+   Int_t i;
    Assoc_t *oldTable = fTable;
    Int_t oldsize = fSize;
    newSize = (Int_t)TMath::NextPrime(newSize);
    fTable  = new Assoc_t [newSize];
 
-   for (int i=newSize; --i >= 0;) {
+   for (i=newSize; --i >= 0;) {
       fTable[i].Clear();
    }
 
    fSize   = newSize;
-   for (int i = 0; i < oldsize; i++)
+   for (i = 0; i < oldsize; i++)
       if (oldTable[i].InUse()) {
          Int_t slot = FindElement(oldTable[i].GetHash(), oldTable[i].fKey);
          if (!fTable[slot].InUse())
