@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015016
-#define G__CINTVERSIONSTR  "5.15.16, Oct 13 2001"
+#define G__CINTVERSION      5015017
+#define G__CINTVERSIONSTR  "5.15.17, Oct 25 2001"
 
 
 /**********************************************************************
@@ -1667,6 +1667,10 @@ extern int G__exec_bytecode G__P((G__value *result7,G__CONST char *funcname,stru
  **************************************************************************/
 extern G__EXPORT int G__fprintf G__P((FILE* fp,char* fmt,...));
 extern G__EXPORT int G__setmasksignal G__P((int));
+#ifndef G__OLDIMPLEMENTATION1596
+extern void G__settemplevel G__P((int val));
+extern void G__clearstack G__P(());
+#endif
 
 #if (!defined(G__MULTITHREADLIBCINTC)) && (!defined(G__MULTITHREADLIBCINTCPP))
 

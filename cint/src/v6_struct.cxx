@@ -386,7 +386,9 @@ int G__defined_tagname(tagname,noerror)
 char *tagname;
 int noerror;
 {
+#ifdef G__OLDIMPLEMENTATION1593
   static int boolflag=0;
+#endif
   int i,len;
   char *p;
   char temp[G__LONGLINE];
@@ -508,7 +510,13 @@ int noerror;
 
 #ifndef G__OLDIMPLEMENTATION884
   if(strcmp(tagname,"bool")==0) {
-    if(0==boolflag) {
+    if(
+#ifndef G__OLDIMPLEMENTATION1593
+       0==G__boolflag
+#else
+       0==boolflag
+#endif
+       ) {
 #ifndef G__OLDIMPLEMENTATION913
       long store_globalvarpointer=G__globalvarpointer;
       int store_tagdefining=G__tagdefining;
@@ -528,7 +536,11 @@ int noerror;
       G__tagnum = -1;
       G__p_ifunc = &G__ifunc;
 #endif
+#ifndef G__OLDIMPLEMENTATION1593
+      G__boolflag=1;
+#else
       boolflag=1;
+#endif
       G__loadfile("bool.h");
       i=G__defined_tagname(tagname,noerror);
 #ifndef G__OLDIMPLEMENTATION1584

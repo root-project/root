@@ -1862,13 +1862,15 @@ void G__free_tempobject()
   int store_tagnum;
   int iout=0;
   int store_return;
-  /*
-   The only 2 potential risks of making this a static are
-    - a destructor indirectly provokes a call to G__free_tempobject
-    - multi-thread application (but the rest of CINT is not 
-        multi-threadable anyway).
-  */
+#ifndef G__OLDIMPLEMENTATION1596
+   /* The only 2 potential risks of making this a static are
+    * - a destructor indirectly provokes a call to G__free_tempobject
+    * - multi-thread application (but the rest of CINT is not 
+    *   multi-threadable anyway). */
   static char statement[G__ONELINE];
+#else
+  char statement[G__ONELINE];
+#endif
   struct G__tempobject_list *store_p_tempbuf;
 
 #ifndef G__OLDIMPLEMENTATION1164
@@ -4719,14 +4721,15 @@ int *pmparen;
   return(0);
 }
 
-void G__settemplevel(int val)
+#ifndef G__OLDIMPLEMENTATION1596
+void G__settemplevel(val)
+int val; 
 {
    G__templevel += val;
 }
 
-void G__clearstack()
+void G__clearstack() 
 {
-
    int store_command_eval = G__command_eval;
    ++G__templevel;
    G__command_eval = 0;
@@ -4736,7 +4739,9 @@ void G__clearstack()
    G__command_eval = store_command_eval;
    --G__templevel;
 }
+#endif
    
+
 
 /*
  * Local Variables:

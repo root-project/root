@@ -1847,6 +1847,9 @@ int memfunc_flag;
      *
      ***************************************************************/
     if( G__library_func(&result3,funcname,&fpara,hash)==1 ) {
+#ifndef G__OLDIMPLEMENTATION1595
+      if(G__no_exec_compile) result3.type = 'i';
+#endif
 #ifdef G__ASM
       if(G__asm_noverflow) {
 	/****************************************

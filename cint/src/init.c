@@ -1965,6 +1965,10 @@ int G__init_globals()
   G__ispermanentsl=0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1593
+  G__boolflag=0;
+#endif
+
   return(0);
 }
 

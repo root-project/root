@@ -22,7 +22,7 @@
 
 #if defined(G__ANSIISOLIB)
 template<class T,class Allocator=allocator<T> >
-#elif defined(G__GNUC)
+#elif defined(G__GNUC) && !defined(G__KCC)
 template<class T,class Allocator=alloc>
 #elif defined(G__HPUX)
 template<class T,class Allocator=allocator>

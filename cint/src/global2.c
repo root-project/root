@@ -467,6 +467,10 @@ void (*G__emergencycallback)();
 int G__asm_clear_mask = 0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1593
+int G__boolflag;
+#endif
+
 /*
  * Local Variables:
  * c-tab-always-indent:nil
