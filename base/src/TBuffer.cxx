@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.70 2004/11/17 06:02:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.71 2004/12/09 07:14:03 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -515,6 +515,11 @@ void TBuffer::ResetMap()
    fClassMap     = 0;
    fMapCount     = 0;
    fDisplacement = 0;
+
+   // reset user bits
+   ResetBit(kUser1);
+   ResetBit(kUser2);
+   ResetBit(kUser3);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.42 2004/11/19 14:28:17 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.43 2004/12/09 07:14:02 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -61,8 +61,6 @@ protected:
    TStreamerInfo  *fInfo;          //Pointer to TStreamerInfo object writing/reading the buffer
    InfoList_t      fInfos;         //Stack of pointers to the TStreamerInfos
 
-   enum { kIsOwner = BIT(14) };  //If set TBuffer owns fBuffer
-
    static Int_t fgMapSize; //Default map size for all TBuffer objects
 
    // Default ctor
@@ -91,6 +89,8 @@ public:
    enum { kInitialSize = 1024, kMinimalSize = 128 };
    enum { kMapSize = 503 };
    enum { kStreamedMemberWise = BIT(14) }; //Added to version number to know if a collection has been stored member-wise.
+   enum { kIsOwner = BIT(15) };  //If set TBuffer owns fBuffer
+   enum { kUser1 = BIT(21), kUser2 = BIT(22), kUser3 = BIT(23)}; //free for user
 
    TBuffer(EMode mode);
    TBuffer(EMode mode, Int_t bufsiz);
