@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.21 2004/06/03 21:05:24 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.22 2004/06/04 00:39:37 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -137,10 +137,7 @@ public:
 #else
            Int_t       WriteObject(const TObject *obj) { return WriteObject(obj,obj->GetName()); };
 #endif
-   template <class T> Int_t WriteObject(const T* obj, const char* name, Option_t *option="") // See TDirectory::WriteObject or TDirectoryWriteObjectAny for explanation
-      {
-         return WriteObjectAny(obj,TClass::GetClass(typeid(T)),name,option);
-      }
+   template <class T> Int_t WriteObject(const T* obj, const char* name, Option_t *option="");
    virtual Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="");
    virtual Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="");
    virtual void        WriteDirHeader();

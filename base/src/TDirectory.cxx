@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.50 2004/06/02 19:07:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.51 2004/06/03 21:05:24 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1521,6 +1521,13 @@ Int_t TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
 
    cursav->cd();
    return nbytes;
+}
+
+//______________________________________________________________________________
+template <class T> Int_t WriteObject(const T* obj, const char* name, Option_t *option) 
+{
+   // see TDirectory::WriteObject or TDirectoryWriteObjectAny for explanation
+    return WriteObjectAny(obj,TClass::GetClass(typeid(T)),name,option);
 }
 
 //______________________________________________________________________________
