@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.4 2001/04/21 20:30:26 brun Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.5 2001/04/27 06:32:45 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -14,6 +14,9 @@
 //  if compress is missing (or = 1)the ROOT file will be compressed
 //  if compress = 0 the ROOT file will not be compressed.
 //  if tolower is missing (or = 1) ntuple column names are converted to lower case
+//                but the first character is converted to upper case.
+//  if tolower = 2 same as tolower=1 except that the first character is also
+//                convertex to lower case
 /////////////////////////////////////////////////////////////////////////
 #include <stdlib.h>
 #include <string.h>
@@ -574,6 +577,8 @@ int main(int argc, char **argv)
        if (name[j] == ' ' && last == 0) name[j] = 0;
        else last = j;
     }
+    if (golower == 2) name[0] = tolower(name[0]);
+    
     // suppress heading blanks
     for (j=0;j<Nchar;j++) {
        if (name[j] != ' ') break;
@@ -663,6 +668,8 @@ int main(int argc, char **argv)
         if(golower) name[j] = tolower(name[j]);
         if (name[j] == ' ') name[j] = 0;
      }
+     if (golower == 2) name[0] = tolower(name[0]);
+     
      for (j=62;j>0;j--) {
         if(golower && fullname[j-1] != '[') fullname[j] = tolower(fullname[j]);
         if (fullname[j] == ' ') fullname[j] = 0;
