@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TUUID.cxx,v 1.1 2001/10/01 14:39:14 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -326,7 +326,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
    // high resolution performance counter
    QueryPerformanceCounter(&r.pc);
    // milliseconds since last boot
-   r.tc = GetTickcount();
+   r.tc = GetTickCount();
    r.l = MAX_COMPUTERNAME_LENGTH;
    GetComputerName(r.hostname, &r.l);
 #else
