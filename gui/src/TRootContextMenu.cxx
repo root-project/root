@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.10 2004/07/08 10:02:31 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.11 2005/02/16 15:22:06 brun Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -454,7 +454,7 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
          break;
    }
 
-   if (savedPad) gPad = savedPad;
+   if (savedPad && savedPad->TestBit(kNotDeleted)) gPad = savedPad;
 
    return kTRUE;
 }
