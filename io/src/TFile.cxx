@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.78 2002/12/20 21:08:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.79 2003/01/02 22:39:13 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -394,12 +394,12 @@ void TFile::Init(Bool_t create)
       delete [] header;
 //*-*-------------Read Free segments structure if file is writable
       if (fWritable) {
-        fFree = new TList;
-        if (fSeekFree > fBEGIN) {
-           ReadFree();
-        } else {
-           Warning("Init","file %s probably not closed, cannot read free segments",GetName());
-        }
+         fFree = new TList;
+         if (fSeekFree > fBEGIN) {
+            ReadFree();
+         } else {
+            Warning("Init","file %s probably not closed, cannot read free segments",GetName());
+         }
       }
 //*-*-------------Read directory info
       Int_t nbytes = fNbytesName + TDirectory::Sizeof();
@@ -445,7 +445,7 @@ void TFile::Init(Bool_t create)
          TDirectory::ReadKeys();
          gDirectory = this;
          if (!GetNkeys()) Recover();
-      } else if ((fBEGIN+nbytes == fEND) && (fEND==size)) {
+      } else if ((fBEGIN+nbytes == fEND) && (fEND == size)) {
          //the file might be open by another process and nothing written to the file yet
          Warning("Init","file %s has no keys", GetName());
          gDirectory = this;
@@ -1016,12 +1016,12 @@ void TFile::ReadFree()
 //  as a single data record
 //
 
-   TKey *headerfree  = new TKey(fSeekFree,fNbytesFree);
+   TKey *headerfree = new TKey(fSeekFree,fNbytesFree);
    headerfree->ReadFile();
    char *buffer = headerfree->GetBuffer();
    headerfree->ReadBuffer(buffer);
-   buffer =  headerfree->GetBuffer();
-   while(1) {
+   buffer = headerfree->GetBuffer();
+   while (1) {
       TFree *afree = new TFree();
       afree->ReadBuffer(buffer);
       fFree->Add(afree);
