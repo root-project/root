@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.114 2003/01/14 18:19:00 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.115 2003/01/17 13:55:47 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -575,6 +575,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[4] == '2') { Hoption.Surf = 12; l[4] = ' '; }
       if (l[4] == '3') { Hoption.Surf = 13; l[4] = ' '; }
       if (l[4] == '4') { Hoption.Surf = 14; l[4] = ' '; }
+      if (l[4] == '5') { Hoption.Surf = 15; l[4] = ' '; }
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
    }
@@ -648,10 +649,13 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    
    if (strstr(chopt,"9"))  Hoption.HighRes = 1;
 
-   if (Hoption.Surf == 14 && Hoption.System != kCARTESIAN) {
-      Hoption.System = kCARTESIAN;
-      Warning("MakeChopt","option SURF4 only supported in Cartesian mode");
+   if (Hoption.Surf == 15) {
+      if (Hoption.System == kPOLAR || Hoption.System == kCARTESIAN) {
+         Hoption.Surf = 13;
+         Warning("MakeChopt","option SURF5 is not supported in Cartesian and Polar modes");
+      }
    }
+
 //
 //   if (fSumw2.fN && !Hoption.Error) Hoption.Error = 2;
 
@@ -780,6 +784,10 @@ void THistPainter::Paint(Option_t *option)
 //    "SURF2"  : Draw a surface plot using colors to show the cell contents
 //    "SURF3"  : same as SURF with in addition a contour view drawn on the top
 //    "SURF4"  : Draw a surface using Gouraud shading
+//    "SURF5"  : Same as SURF3 but only the colored contour is drawn. Used with
+//               option CYL, SPH or PSR it allows to draw colored contours on a
+//               sphere, a cylinder or a in pseudo rapidy space. In cartesian  
+//               or polar coordinates, option SURF3 is used.
 //
 //  The following options are supported for 1-D types:
 //    "AH"     : Draw histogram, but not the axis labels and tick marks
@@ -4437,7 +4445,7 @@ void THistPainter::PaintSurface(Option_t *)
    Int_t ndivz  = TMath::Abs(ndiv);
    if (fH->TestBit(TH1::kUserContour) == 0) fH->SetContour(ndiv);
 
-   if (Hoption.Surf == 13) fLego->SetMesh(3);
+   if (Hoption.Surf == 13 || Hoption.Surf == 15) fLego->SetMesh(3);
    if (Hoption.Surf == 12 || Hoption.Surf == 14) fLego->SetMesh(0);
 
 //     Close the surface in case of non cartesian coordinates.
@@ -4473,7 +4481,8 @@ void THistPainter::PaintSurface(Option_t *)
 //     Draw the filled contour on top
    Int_t icol1 = fH->GetFillColor();
 
-   if (Hoption.Surf == 13) {
+   Int_t Hoption35 = Hoption.Surf;
+   if (Hoption.Surf == 13 || Hoption.Surf == 15) {
       DefineColorLevels(ndivz);
       Hoption.Surf = 23;
       fLego->SetSurfaceFunction(&TPainter3dAlgorithms::SurfaceFunction);
@@ -4483,7 +4492,7 @@ void THistPainter::PaintSurface(Option_t *)
       if (Hoption.System == kSPHERICAL)   fLego->SurfaceSpherical(0,1,nx,ny,"BF");
       if (Hoption.System == kRAPIDITY )   fLego->SurfaceSpherical(1,1,nx,ny,"BF");
       if (Hoption.System == kCARTESIAN)   fLego->SurfaceCartesian(90,nx,ny,"BF");
-      Hoption.Surf = 13;
+      Hoption.Surf = Hoption35;
       fLego->SetMesh(1);
    }
 
@@ -4528,8 +4537,9 @@ void THistPainter::PaintSurface(Option_t *)
       if (Hoption.System == kSPHERICAL)   fLego->SurfaceSpherical(0,1,nx,ny,"BF");
       if (Hoption.System == kRAPIDITY )   fLego->SurfaceSpherical(1,1,nx,ny,"BF");
       if (Hoption.System == kCARTESIAN)   fLego->SurfaceCartesian(90,nx,ny,"BF");
-   }
-   else {
+   } else if (Hoption.Surf == 15) {
+// The surface is not drawn in this case. 
+   } else {
 //     Draw the surface
       if (Hoption.Surf == 11 || Hoption.Surf == 12) {
          DefineColorLevels(ndivz);
