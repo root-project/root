@@ -1,4 +1,4 @@
-// Author: Ivana Hrivnacova, 27.3.2002 (Ivana.Hrivnacova@cern.ch)
+// Author: Ivana Hrivnacova, 27/03/2002
 
 #include "TVirtualMCStack.h"
 

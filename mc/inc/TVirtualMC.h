@@ -1,4 +1,4 @@
-// Authors: Ivana Hrivnacova, Rene Brun  13/04/2002
+// Authors: Ivana Hrivnacova, Rene Brun, Federico Carminati 13/04/2002
 
 #ifndef ROOT_TVirtualMC
 #define ROOT_TVirtualMC
@@ -108,7 +108,7 @@ class TVirtualMC : public TNamed {
 		        Double_t ul = 0.01, Double_t vl = 0.01) = 0;
 
     // Euclid
-    virtual void WriteEuclid(const char*, const char*, Int_t, Int_t) = 0;
+    virtual void  WriteEuclid(const char*, const char*, Int_t, Int_t) = 0;
 		               
     // get methods
     virtual Int_t VolId(const Text_t* volName) const = 0;
@@ -122,14 +122,14 @@ class TVirtualMC : public TNamed {
     //
  
     // set methods
-    virtual void SetCut(const char* cutName, Double_t cutValue) = 0;
-    virtual void SetProcess(const char* flagName, Int_t flagValue) = 0;
+    virtual void     SetCut(const char* cutName, Double_t cutValue) = 0;
+    virtual void     SetProcess(const char* flagName, Int_t flagValue) = 0;
     virtual Double_t Xsec(char*, Double_t, Int_t, Int_t) = 0; 
  
         // particle table usage         
     virtual Int_t   IdFromPDG(Int_t id) const =0;  
     virtual Int_t   PDGFromId(Int_t pdg) const =0;  
-    virtual void   DefineParticles() = 0;      
+    virtual void    DefineParticles() = 0;      
   
     //
     // methods for step management
@@ -147,25 +147,25 @@ class TVirtualMC : public TNamed {
 
     // get methods
          // tracking volume(s) 
-    virtual Int_t CurrentVolID(Int_t& copyNo) const =0;
-    virtual Int_t CurrentVolOffID(Int_t off, Int_t& copyNo) const =0;
+    virtual Int_t    CurrentVolID(Int_t& copyNo) const =0;
+    virtual Int_t    CurrentVolOffID(Int_t off, Int_t& copyNo) const =0;
     virtual const char* CurrentVolName() const =0;
     virtual const char* CurrentVolOffName(Int_t off) const =0;
-    virtual Int_t CurrentMaterial(Float_t &a, Float_t &z, 
-                    Float_t &dens, Float_t &radl, Float_t &absl) const =0;  
-    virtual Int_t CurrentEvent() const =0; 
-    virtual void  Gmtod(Float_t* xm, Float_t* xd, Int_t iflag) = 0;
-    virtual void  Gmtod(Double_t* xm, Double_t* xd, Int_t iflag) = 0;
-    virtual void  Gdtom(Float_t* xd, Float_t* xm, Int_t iflag)= 0 ;
-    virtual void  Gdtom(Double_t* xd, Double_t* xm, Int_t iflag)= 0 ;
+    virtual Int_t    CurrentMaterial(Float_t &a, Float_t &z, 
+                       Float_t &dens, Float_t &radl, Float_t &absl) const =0;  
+    virtual Int_t    CurrentEvent() const =0; 
+    virtual void     Gmtod(Float_t* xm, Float_t* xd, Int_t iflag) = 0;
+    virtual void     Gmtod(Double_t* xm, Double_t* xd, Int_t iflag) = 0;
+    virtual void     Gdtom(Float_t* xd, Float_t* xm, Int_t iflag)= 0 ;
+    virtual void     Gdtom(Double_t* xd, Double_t* xm, Int_t iflag)= 0 ;
     virtual Double_t MaxStep() const =0;
-    virtual Int_t GetMaxNStep() const = 0;
-    virtual Int_t GetMedium() const =0;
+    virtual Int_t    GetMaxNStep() const = 0;
+    virtual Int_t    GetMedium() const =0;
 
         // tracking particle 
         // dynamic properties
-    virtual void    TrackPosition(TLorentzVector& position) const =0;
-    virtual void    TrackMomentum(TLorentzVector& momentum) const =0;
+    virtual void     TrackPosition(TLorentzVector& position) const =0;
+    virtual void     TrackMomentum(TLorentzVector& momentum) const =0;
     virtual Double_t TrackStep() const =0;
     virtual Double_t TrackLength() const =0; 
     virtual Double_t TrackTime() const =0;
@@ -177,21 +177,21 @@ class TVirtualMC : public TNamed {
     virtual Double_t Etot() const =0;
 
         // track status
-    virtual Bool_t  IsNewTrack() const =0;
-    virtual Bool_t  IsTrackInside() const =0;
-    virtual Bool_t  IsTrackEntering() const =0;
-    virtual Bool_t  IsTrackExiting() const =0;
-    virtual Bool_t  IsTrackOut() const =0;
-    virtual Bool_t  IsTrackDisappeared() const =0;
-    virtual Bool_t  IsTrackStop() const =0;
-    virtual Bool_t  IsTrackAlive() const=0;
+    virtual Bool_t   IsNewTrack() const =0;
+    virtual Bool_t   IsTrackInside() const =0;
+    virtual Bool_t   IsTrackEntering() const =0;
+    virtual Bool_t   IsTrackExiting() const =0;
+    virtual Bool_t   IsTrackOut() const =0;
+    virtual Bool_t   IsTrackDisappeared() const =0;
+    virtual Bool_t   IsTrackStop() const =0;
+    virtual Bool_t   IsTrackAlive() const=0;
 
         // secondaries
-    virtual Int_t  NSecondaries() const=0;
-    virtual void  GetSecondary(Int_t isec, Int_t& particleId, 
-                      TLorentzVector& position, TLorentzVector& momentum) =0;
+    virtual Int_t    NSecondaries() const=0;
+    virtual void     GetSecondary(Int_t isec, Int_t& particleId, 
+                        TLorentzVector& position, TLorentzVector& momentum) =0;
     virtual TMCProcess ProdProcess(Int_t isec) const =0; 
-    virtual Int_t StepProcesses(TArrayI &proc) const = 0;
+    virtual Int_t    StepProcesses(TArrayI &proc) const = 0;
 
     //
     // other (then geometry/step/run management) methods
@@ -233,7 +233,6 @@ class TVirtualMC : public TNamed {
     //
     virtual void SetStack(TVirtualMCStack* stack);
     virtual void SetExternalDecayer(TVirtualMCDecayer* decayer);
-    //virtual void SetRandom(TMCRandom* random);
     virtual void SetRandom(TRandom* random);
 
     //

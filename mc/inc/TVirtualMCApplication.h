@@ -1,4 +1,4 @@
-// Author: Ivana Hrivnacova, 27.3.2002 (Ivana.Hrivnacova@cern.ch)
+// Author: Ivana Hrivnacova, 23/03/2002
 
 #ifndef ROOT_TVirtualMCApplication
 #define ROOT_TVirtualMCApplication
@@ -34,7 +34,7 @@ class TVirtualMCApplication : public TNamed {
     
     virtual Double_t TrackingRmax() const = 0;
     virtual Double_t TrackingZmax() const = 0;
-    virtual void Field(Double_t* x, Double_t* b) const = 0;
+    virtual void     Field(Double_t* x, Double_t* b) const = 0;
 
   private:
     // static data members

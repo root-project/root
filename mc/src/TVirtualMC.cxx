@@ -1,4 +1,4 @@
-// Authors: Ivana Hrivnacova, Rene Brun  13/04/2002
+// Authors: Ivana Hrivnacova, Rene Brun , Federico Carminati 13/04/2002
    
 /**************************************************************************
  * Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. *
