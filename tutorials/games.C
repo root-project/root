@@ -33,11 +33,10 @@ void games()
       if (UNIX) {
          printf("===>The macro games will try to build the Tetris library\n");
          gSystem->Exec("(cd $ROOTSYS/test; make Tetris.so)");
-         st3 = gSystem->Load("$(ROOTSYS)/test/Tetris");
       } else {
-         printf(" Sorry! No tetris for Windows yet.");
-         st3 = 0;
+         gSystem->Exec("(cd $ROOTSYS/test; nmake Tetris.dll)");
       }
+      st3 = gSystem->Load("$(ROOTSYS)/test/Tetris");
    }
 
    if (st1 || st2 || st3) {
