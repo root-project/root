@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.80 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.81 2005/02/08 22:45:46 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1492,11 +1492,6 @@ void TProofServ::RedirectOutput()
 
    if ((fLogFile = fopen(logfile, "r")) == 0)
       SysError("RedirectOutput", "could not open logfile");
-
-   if (fProtocol < 4 && fWorkDir != kPROOF_WorkDir) {
-      Warning("RedirectOutput", "no way to tell master (or client) where"
-              " to upload packages");
-   }
 }
 
 //______________________________________________________________________________
@@ -1747,17 +1742,31 @@ void TProofServ::Setup()
    } else {
       sprintf(str, "**** PROOF slave server @ %s started ****", gSystem->HostName());
    }
-   fSocket->Send(str);
+
+   if (fSocket->Send(str) != 1+static_cast<Int_t>(strlen(str))) {
+      Error("Setup", "failed to send proof server startup message");
+      gSystem->Exit(1);
+   }
 
    // exchange protocol level between client and master and between
    // master and slave
    Int_t what;
-   fSocket->Recv(fProtocol, what);
-   fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL);
+   if (fSocket->Recv(fProtocol, what) != 2*sizeof(Int_t)) {
+      Error("Setup", "failed to receive remote proof protocol");
+      gSystem->Exit(1);
+   }
+   if (fSocket->Send(kPROOF_Protocol, kROOTD_PROTOCOL) != 2*sizeof(Int_t)) {
+      Error("Setup", "failed to send local proof protocol");
+      gSystem->Exit(1);
+   }
 
    // First receive, decode and store the public part of RSA key
    Int_t retval, kind;
-   fSocket->Recv(retval,kind);
+   if (fSocket->Recv(retval,kind) != 2*sizeof(Int_t)) {
+      //other side has closed connection
+      Info("Setup", "socket has been closed due to protocol mismatch - Exiting");
+      gSystem->Exit(0);
+   }
 
    Int_t RSAKey = 0;
    TApplication *lApp = gROOT->GetApplication();
@@ -1783,13 +1792,19 @@ void TProofServ::Setup()
          }
 
          // Receive passwd
-         fSocket->SecureRecv(fPasswd, 2, RSAKey);
+         if (fSocket->SecureRecv(fPasswd, 2, RSAKey) < 0) {
+            Error("Setup", "failed to receive password");
+            gSystem->Exit(1);
+         }
 
       } else if (retval == -1) {
 
          // Receive inverted passwd
          TMessage *mess;
-         fSocket->Recv(mess);
+         if ((fSocket->Recv(mess) <= 0) || !mess) {
+            Error("Setup", "failed to receive inverted password");
+            gSystem->Exit(1);
+         }
          (*mess) >> fPasswd;
          delete mess;
 
@@ -1804,7 +1819,10 @@ void TProofServ::Setup()
    // Receive user and passwd information
    TMessage *mess;
 
-   fSocket->Recv(mess);
+   if ((fSocket->Recv(mess) <= 0) || !mess) {
+      Error("Setup", "failed to receive ordinal and config info");
+      gSystem->Exit(1);
+   }
 
    if (IsMaster()) {
       if (fProtocol < 4) {
@@ -1864,8 +1882,7 @@ void TProofServ::Setup()
             fclose(pconf);
          } else {
             Error("Setup", "could not open config file %s", fconf.Data());
-            SendLogFile(-99);
-            Terminate(0);
+            gSystem->Exit(1);
          }
       }
    } else {
@@ -1896,10 +1913,16 @@ void TProofServ::Setup()
    // Read user or system authentication directives and
    // receive auth info transmitted from the client
 
+   Int_t hostauthret;
    if (IsMaster())
-      fSocket->RecvHostAuth("M", fConfFile);
+      hostauthret = fSocket->RecvHostAuth("M", fConfFile);
    else
-      fSocket->RecvHostAuth("S");
+      hostauthret = fSocket->RecvHostAuth("S");
+
+   if (hostauthret < 0) {
+      Error("Setup", "failed to receive HostAuth info");
+      gSystem->Exit(1);
+   }
 
    // deny write access for group and world
    gSystem->Umask(022);
@@ -1938,17 +1961,17 @@ void TProofServ::Setup()
    fWorkDir = workdir;
    delete [] workdir;
 
-   if (gSystem->AccessPathName(fWorkDir.Data())) {
-      gSystem->MakeDirectory(fWorkDir.Data());
-      if (!gSystem->ChangeDirectory(fWorkDir.Data())) {
+   if (gSystem->AccessPathName(fWorkDir)) {
+      gSystem->MakeDirectory(fWorkDir);
+      if (!gSystem->ChangeDirectory(fWorkDir)) {
          SysError("Setup", "can not change to PROOF directory %s",
                   fWorkDir.Data());
       }
    } else {
-      if (!gSystem->ChangeDirectory(fWorkDir.Data())) {
-         gSystem->Unlink(fWorkDir.Data());
-         gSystem->MakeDirectory(fWorkDir.Data());
-         if (!gSystem->ChangeDirectory(fWorkDir.Data())) {
+      if (!gSystem->ChangeDirectory(fWorkDir)) {
+         gSystem->Unlink(fWorkDir);
+         gSystem->MakeDirectory(fWorkDir);
+         if (!gSystem->ChangeDirectory(fWorkDir)) {
             SysError("Setup", "can not change to PROOF directory %s",
                      fWorkDir.Data());
          }
@@ -1997,6 +2020,11 @@ void TProofServ::Setup()
       } else {
          gSystem->Setenv("PROOF_SANDBOX", fSessionDir);
       }
+   }
+
+   if (fProtocol < 4 && fWorkDir != kPROOF_WorkDir) {
+      Warning("Setup", "no way to tell master (or client) where"
+              " to upload packages");
    }
 
    // Incoming OOB should generate a SIGURG
