@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.3 2000/08/21 10:37:30 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.4 2000/08/21 14:48:37 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -233,6 +233,20 @@ Int_t TSocket::Send(Int_t kind)
 }
 
 //______________________________________________________________________________
+Int_t TSocket::Send(Int_t status, Int_t kind)
+{
+   // Send a status and a single message opcode. Use kind (opcode) to set the
+   // TMessage "what" field. Returns the number of bytes that were sent
+   // (always 2*sizeof(Int_t)) and -1 in case of error. In case the kind has
+   // been or'ed with kMESS_ACK, the call will only return after having
+   // received an acknowledgement, making the sending process synchronous.
+
+   TMessage mess(kind);
+   mess << status;
+   return Send(mess);
+}
+
+//______________________________________________________________________________
 Int_t TSocket::Send(const char *str, Int_t kind)
 {
    // Send a character string buffer. Use kind to set the TMessage "what" field.
@@ -370,6 +384,29 @@ Int_t TSocket::Recv(char *str, Int_t max, Int_t &kind)
 
    return n;   // number of bytes read (len of str + sizeof(kind)
 }
+
+//______________________________________________________________________________
+Int_t TSocket::Recv(Int_t &status, Int_t &kind)
+{
+   // Receives a status and a message type. Returns length of received
+   // integers, 2*sizeof(Int_t) (can be 0 if other side of connection
+   // is closed) or -1 in case of error or -4 in case a non-blocking
+   // socket would block (i.e. there is nothing to be read).
+
+   Int_t     n;
+   TMessage *mess;
+
+   if ((n = Recv(mess)) <= 0)
+      return n;
+
+   kind = mess->What();
+   (*mess) >> status;
+
+   delete mess;
+
+   return n;   // number of bytes read (2 * sizeof(Int_t)
+}
+
 
 //______________________________________________________________________________
 Int_t TSocket::Recv(TMessage *&mess)

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name$:$Id$
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -99,10 +99,12 @@ public:
    UInt_t                GetBytesRecv() const { return fBytesRecv; }
    virtual Int_t         Send(const TMessage &mess);
    virtual Int_t         Send(Int_t kind);
+   virtual Int_t         Send(Int_t status, Int_t kind);
    virtual Int_t         Send(const char *mess, Int_t kind = kMESS_STRING);
    virtual Int_t         SendObject(const TObject *obj, Int_t kind = kMESS_OBJECT);
    virtual Int_t         SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt = kDefault);
    virtual Int_t         Recv(TMessage *&mess);
+   virtual Int_t         Recv(Int_t &status, Int_t &kind);
    virtual Int_t         Recv(char *mess, Int_t max);
    virtual Int_t         Recv(char *mess, Int_t max, Int_t &kind);
    virtual Int_t         RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt = kDefault);
