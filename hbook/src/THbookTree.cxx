@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.1 2002/02/18 18:02:57 rdm Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookTree.cxx,v 1.2 2002/02/20 16:57:31 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -70,7 +70,7 @@ void THbookTree::InitBranches()
    if (nfill > 0) {fInit = kFALSE; return;}
    if (fInit) return;
    fInit = kTRUE;
-   fFile->InitLeaves(fID, 5,GetPlayer()->GetMultiplicity());
+   //fFile->InitLeaves(fID, 5,GetPlayer()->GetMultiplicity());
    fFile->InitLeaves(fID, 0,GetPlayer()->GetSelect());
    fFile->InitLeaves(fID, 3,GetPlayer()->GetVar3());
    fFile->InitLeaves(fID, 2,GetPlayer()->GetVar2());
