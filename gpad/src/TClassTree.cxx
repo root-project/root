@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TClassTree.cxx,v 1.2 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   01/12/98
 
 /*************************************************************************
@@ -244,10 +244,10 @@ TClassTree::~TClassTree()
 //*-*                =============================
 
    for (Int_t i=0;i<fNclasses;i++) {
-      delete fOptions[i];
-      fLinks[i]->Delete();
-      delete fLinks[i];
-      delete [] fDerived[i];
+      //delete fOptions[i]; 
+      if (fLinks[i]) fLinks[i]->Delete();
+      //delete fLinks[i];
+      //if (fDerived[i]) {delete [] fDerived[i]; fDerived[i] = 0;}
    }
    delete [] fCnames;
    delete [] fCtitles;
