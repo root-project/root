@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootxx.cxx,v 1.4 2004/01/09 09:22:08 rdm Exp $
+// @(#)root/rootx:$Name:  $:$Id: rootxx.cxx,v 1.5 2004/01/09 15:43:10 rdm Exp $
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -128,18 +128,6 @@ static void Sleep(int milliSec)
    tv.tv_usec = (milliSec % 1000) * 1000;
 
    select(0, 0, 0, 0, &tv);
-}
-
-static Pixel Color(const char *name)
-{
-   // Convert NAME into a color, using PIX as default.
-
-   XColor exact, color;
-   Colormap cmap = DefaultColormap(gDisplay, DefaultScreen(gDisplay));
-
-   XAllocNamedColor(gDisplay, cmap, (char*)name, &exact, &color);
-
-   return color.pixel;
 }
 
 static Pixmap GetRootLogo()
