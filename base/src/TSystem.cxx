@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.106 2004/10/15 16:55:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.107 2004/11/10 06:22:37 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2328,7 +2328,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       string libtoload;
       while ( liblist >> libtoload ) {
          // Load the needed library except for the library we are currently building!
-         if (libtoload != library && libtoload != libname_ext) {
+         if (libtoload != library.Data() && libtoload != libname.Data() && libtoload != libname_ext.Data()) {
             gROOT->LoadClass("",libtoload.c_str());
          }
       }
