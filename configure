@@ -619,7 +619,7 @@ if test ! "$platform" = "win32"; then
 	/usr/X11/lib /usr/lib32 /usr/lib/X11R5
     x11libdir=$found_dir
 
-    if test "x$x11libdir" = "x" ; then
+    if test "x$found_lib" = "x" ; then
 	echo "`basename $0`: libX11 MUST be installed"
         exit 1
     fi
@@ -661,7 +661,7 @@ esac
 if test "$platform" = "macosx" ; then
     enable_explicitlink="no"
 fi
-if test "x$enable_explicitlink" = "xyes"; then
+if test "x$enable_explicitlink" = "xyes" && test ! "$platform" = "win32" ; then
     mkliboption=$mkliboption"-x "
 fi
 

@@ -5,6 +5,22 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
+# the -v and -x options are not used, but handled anyway
+if [ "$1" = "-v" ] ; then
+   R__MAJOR=$2
+   R__MINOR=$3
+   R__REVIS=$4
+   shift
+   shift
+   shift
+   shift
+fi
+
+if [ "$1" = "-x" ] ; then
+   R__EXPLICIT="yes"
+   shift
+fi
+
 R__PLATFORM=$1
 R__LD=$2
 R__LDFLAGS=$3
