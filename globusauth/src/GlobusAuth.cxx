@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.10 2004/03/17 17:52:23 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.11 2004/04/11 18:18:01 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -78,8 +78,10 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    // Globus authentication code.
    // Returns 0 in case authentication failed
    //         1 in case of success
-   //         2 in case of the remote node doesn not seem to support Globus Authentication
-   //         3 in case of the remote node doesn not seem to have certificates for our CA
+   //         2 in case of the remote node doesn not seem to support
+   //           Globus Authentication
+   //         3 in case of the remote node doesn not seem to have
+   //           certificates for our CA or is unable to init credentials
 
    int auth = 0, rc;
    int retval = 0, kind = 0, type = 0, server_auth = 0, brcv = 0, bsnd = 0;
@@ -210,7 +212,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    // Now we send the issuer to the server daemon
    char buf[20];
    sprintf(buf, "%d", (int) (isuj.Length() + 1));
-   if ((bsnd = sock->Send(buf, kMESS_STRING)) != (int) (strlen(buf) + 1)) {
+   if ((bsnd = sock->Send(buf, kMESS_STRING)) != (int) (strlen(buf)+1)) {
       if (gDebug > 0)
          Error("GlobusAuthenticate",
             "Length of Issuer name not send correctly: bytes sent: %d (tot len: %d)",
@@ -218,7 +220,7 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
       return 0;
    }
    // Now we send it to the server daemon
-   if ((bsnd = sock->Send(isuj.Data(), kMESS_STRING)) < (Int_t) (isuj.Length() + 1)) {
+   if ((bsnd = sock->Send(isuj.Data(), kMESS_STRING)) < (Int_t)(isuj.Length()+1)) {
       if (gDebug > 0)
          Error("GlobusAuthenticate",
             "Issuer name not send correctly: bytes sent: %d (tot len: %d)",
@@ -227,6 +229,12 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    }
    // Now we wait for the replay from the server ...
    sock->Recv(retval, kind);
+   if (kind == kROOTD_ERR) {
+      if (gDebug > 0)
+         Error("GlobusAuthenticate",
+               "recv host subj: host unable init credentials");
+      return 3;
+   }
    if (kind != kROOTD_GLOBUS) {
       if (gDebug > 0)
          Error("GlobusAuthenticate",
@@ -356,7 +364,8 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
    if (ReUse == 1 && OffSet > -1) {
       if (TAuthenticate::SecureRecv(sock, RSAKey, &Token) == -1) {
          Warning("SRPAuthenticate",
-                 "Problems secure-receiving Token - may result in corrupted Token");
+                 "Problems secure-receiving Token -"
+                 " may result in corrupted Token");
       }
       if (gDebug > 3)
          Info("GlobusAuthenticate", "received from server: token: '%s' ",
