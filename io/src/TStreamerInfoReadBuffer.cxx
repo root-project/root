@@ -382,7 +382,6 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, void *ptr, Int_t first,
                UInt_t start,count;
                // Version_t v = 
                b.ReadVersion(&start, &count, cle);
-               //NOTE: missing backward compatibility code (see kStreamer)
                if (pstreamer == 0) {
                   DOLOOP {
                      void **contp = (void**)(arr[k]+ioffset);
@@ -413,7 +412,13 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, void *ptr, Int_t first,
                UInt_t start,count;
                // Version_t v = 
                b.ReadVersion(&start, &count, cle);
-               //NOTE: missing backward compatibility code (see kStreamer)
+               if (fOldVersion<3){   // case of old TStreamerInfo
+                  //  Backward compatibility. Some TStreamerElement's where without
+                  //  Streamer but were not removed from element list
+                  if (aElement->IsBase() && aElement->IsA()!=TStreamerBase::Class()) {    
+                     b.SetBufferOffset(start);  //thre is no byte count
+                  }
+               }
                if (pstreamer == 0) {
                   DOLOOP {
                      b.ReadFastArray((void*)(arr[k]+ioffset),cle,fLength[i],(TMemberStreamer*)0);

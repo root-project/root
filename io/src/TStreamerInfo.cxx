@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.187 2004/01/12 16:55:15 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.188 2004/01/16 16:27:36 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -681,7 +681,7 @@ void TStreamerInfo::BuildOld()
       int iel,jel=0,kel=0;
       for (iel=0;iel<narr;iel++) {
          element = (TStreamerElement*)arr[iel];
-         if (element->IsA()!=TStreamerBase::Class()) tai[kel++] = element;
+         if (element->IsBase() && element->IsA()!=TStreamerBase::Class()) tai[kel++] = element;
          else                                        arr[jel++] = element;
       }
       for (kel=0;jel<narr;) arr[jel++]=tai[kel++];
