@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.44 2004/10/25 17:19:11 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.45 2004/10/26 08:51:52 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1025,7 +1025,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
                break;
             case 3: // hat
                x2 = x+fs1.Width()/2 ;
-               y1 = y -9*sub; 
+               y1 = y -9*sub;
                y2 = y1-2*sub;
                x1 = x2-fs1.Width()/3 ;
                x3 = x2+fs1.Width()/3 ;
@@ -1242,16 +1242,8 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          } else {
             fs2 = Readfs();
             fs1 = Readfs();
-            Double_t addW1,addW2;
-            if (fs1.Width()<fs2.Width()) {
-               addW1 = (fs2.Width()-fs1.Width())/2;
-               addW2 = 0;
-            } else {
-               addW1 = 0;
-               addW2 = (fs1.Width()-fs2.Width())/2;
-            }
-            Analyse(x+addW2,y+fs2.Dessus()-height,spec,text+OpCurlyCurly+2,length-OpCurlyCurly-3);  // second line
-            Analyse(x+addW1,y-fs1.Dessous()-3*height,spec,text+OpSplitLine+11,OpCurlyCurly-OpSplitLine-11); //first line
+            Analyse(x,y+fs2.Dessus()-height,spec,text+OpCurlyCurly+2,length-OpCurlyCurly-3);  // second line
+            Analyse(x,y-fs1.Dessous()-3*height,spec,text+OpSplitLine+11,OpCurlyCurly-OpSplitLine-11); //first line
          }
 
          result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
@@ -1393,7 +1385,7 @@ const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","t
          Double_t width = w;
 
          fs1.Set(width,hy,0);
-         
+
          if (fShow) {
             // paint the Latex sub-expression per sub-expression
             Double_t Xorigin = (Double_t)gPad->XtoAbsPixel(fX);
@@ -1904,7 +1896,7 @@ Double_t TLatex::GetXsize()
 //______________________________________________________________________________
 void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h)
 {
-// return text size in pixels 
+// return text size in pixels
       if (!gPad) return;
       TString newText = GetTitle();
       if( newText.Length() == 0) return;
