@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.11 2000/12/20 15:45:37 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.12 2000/12/26 14:22:16 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -537,6 +537,12 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
       if (!basket) return 0;
    }
    TBuffer *buf    = basket->GetBufferRef();
+//     This test necessary to read very old Root files (NvE)
+   if (!buf) {
+      TFile *file = GetFile(0);
+      basket->ReadBasketBuffers(fBasketSeek[fReadBasket],fBasketBytes[fReadBasket],file);
+      buf    = basket->GetBufferRef();
+   }
 //     Set entry offset in buffer and read data from all leaves
    buf->ResetMap();
    if (!buf->IsReading()) {
