@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooCategory.rdl,v 1.1 2001/03/17 00:32:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,6 +43,7 @@ public:
 protected:
 
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+  virtual void postTreeLoadHook() ;
 
   ClassDef(RooCategory,1) // a real-valued variable and its value
 };

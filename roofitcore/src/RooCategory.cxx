@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooCategory.cc,v 1.1 2001/03/17 00:32:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -151,6 +151,13 @@ void RooCategory::attachToTree(TTree& t, Int_t bufSize)
   }
 }
 
+void RooCategory::postTreeLoadHook() 
+{
+  if (isValid()) {
+    // Synchronize label with new index
+    _value = *lookupType(_value.getVal()) ;
+  }
+}
 
 void RooCategory::printToStream(ostream& os, PrintOption opt) 
 {

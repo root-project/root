@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.3 2001/03/16 07:59:11 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.4 2001/03/16 21:31:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -86,6 +86,7 @@ protected:
   // Hooks for RooDataSet interface
   friend class RooDataSet ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+  virtual void postTreeLoadHook() {} ;
   virtual Bool_t isValid() ;
 
   // Global   

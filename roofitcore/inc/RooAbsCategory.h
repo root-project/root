@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsCategory.rdl,v 1.1 2001/03/17 00:32:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -22,6 +22,7 @@
 class TTree ;
 class RooArgSet ;
 class RooDataSet ;
+class Roo1DTable ;
 
 class RooAbsCategory : public RooAbsArg {
 public:
@@ -41,6 +42,8 @@ public:
   Bool_t isValidIndex(Int_t index) ;
   Bool_t isValidLabel(char* label) ;
   TIterator* typeIterator() ;
+
+  Roo1DTable *createTable(const char *label) ;
 
   // I/O streaming interface
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;

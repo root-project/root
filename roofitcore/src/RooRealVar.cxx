@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooRealVar.cc,v 1.1 2001/03/17 00:32:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,6 +14,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "TObjString.h"
 #include "TTree.h"
 #include "RooFitCore/RooRealVar.hh"
@@ -213,44 +214,110 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 {
   // Read object contents from given stream
 
-  // compact only at the moment
+  if (compact) {
   // Read single token
-  TString token ;
-  is >> token ;
-
-  // Convert token to double
-  char *endptr(0) ;
-  Double_t value = strtod(token.Data(),&endptr) ;	  
-  int nscan = endptr-((const char *)token.Data()) ;	  
-  if (nscan<token.Length() && !token.IsNull()) {
-    if (verbose) {
-      cout << "RooRealVar::readFromStream(" << GetName() 
-	   << "): cannot convert token \"" << token 
-	   << "\" to floating point number" << endl ;
+    TString token ;
+    is >> token ;
+    
+    // Convert token to double
+    char *endptr(0) ;
+    Double_t value = strtod(token.Data(),&endptr) ;	  
+    int nscan = endptr-((const char *)token.Data()) ;	  
+    if (nscan<token.Length() && !token.IsNull()) {
+      if (verbose) {
+	cout << "RooRealVar::readFromStream(" << GetName() 
+	     << "): cannot convert token \"" << token 
+	     << "\" to floating point number" << endl ;
+      }
+      return kTRUE ;
     }
-    return kTRUE ;
-  }
-
-  if (inIntegRange(value)) {
-    setVal(value) ;
-    return kFALSE ;  
+    
+    if (inIntegRange(value)) {
+      setVal(value) ;
+      return kFALSE ;  
+    } else {
+      if (verbose) {
+	cout << "RooRealVar::readFromStream(" << GetName() 
+	     << "): value out of range: " << value << endl ;
+      }
+      return kTRUE;
+    }
   } else {
-    if (verbose) {
-      cout << "RooRealVar::readFromStream(" << GetName() 
-	   << "): value out of range: " << value << endl ;
-    }
-    return kTRUE;
+    cout << "RooRealVar::readFromStream(" << GetName() << "): non-compact read not yet implemented" << endl ;
+    return kTRUE ;
   }
 }
 
+Bool_t RooRealVar::readDouble(istream& is, Double_t& value) {
+
+  char buffer[1024], c ;
+  Int_t bufptr=0 ;
+  Bool_t first=kTRUE, haveExp=kFALSE ; ;
+
+  while(1) {
+    // Read next char
+    is >> c ;
+    if (!is.good()) break ;
+
+    // Ignore leading spaces
+    if (first && isspace(c)) continue ;
+
+    // Add chars that could be part of a float to the buffer
+    if (isdigit(c) || c=='.' || (first && c=='-') || (!haveExp && (c=='e'||c=='E'))) {
+      buffer[bufptr++]=c ;
+    } else {
+      // Put back non-space char thats not part of float representation
+      if (!isspace(c)) 
+	is.putback(c) ;
+      break ;
+    }
+    
+    if (c=='e'||c=='E') haveExp=kTRUE ;
+    first=kFALSE ;
+  }
+
+  //Zero terminate buffer
+  buffer[bufptr]=0 ;
+
+  //Attempt conversion to float
+  char* endptr(0) ;
+  value = strtod(buffer,&endptr) ;
+
+  // Return error if conversion didn't use full buffer
+  return (endptr-buffer!=bufptr) ;
+}
 
 
 void RooRealVar::writeToStream(ostream& os, Bool_t compact)
 {
   // Write object contents to given stream
 
-  // compact only at the moment
-  os << getVal() ;
+  if (compact) {
+    // Write value only
+    os << getVal() ;
+  } else {
+    // Write value
+    os << getVal() << " " ;
+  
+    // Append error if non-zero 
+    Double_t err = getError() ;
+    if (err!=0) {
+      os << "+/- " << err << " " ;
+    }
+    // Append limits if not constants
+    if (isConstant()) {
+      os << "C " ;
+    }      
+    // Append plot limits
+    os << "P(" << getPlotMin() << " - " << getPlotMax() << ") " ;      
+    // Append integration limits if not +Inf:-Inf
+    if (hasIntegLimits()) {
+      os << "I(" << getIntegMin() << " - " << getIntegMax() << ") " ;      
+    }
+    // Add comment with unit, if unit exists
+    if (!_unit.IsNull())
+      os << "// [" << getUnit() << "]" ;
+  }
 }
 
 

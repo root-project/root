@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.3 2001/03/16 07:59:11 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.4 2001/03/17 00:32:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -44,6 +44,8 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooAbsReal.hh"
+#include "RooFitCore/RooAbsCategory.hh"
+#include "RooFitCore/Roo1DTable.hh"
 
 ClassImp(RooDataSet)
 
@@ -233,7 +235,8 @@ TH1F* RooDataSet::Plot(RooAbsReal& var, const char* cuts, const char* opts)
   Bool_t ownPlotVar(kFALSE) ;
   if (!plotVar) {
     if (!var.dependsOn(_vars)) {
-      cout << "RooDataSet::Plot: Argument " << var.GetName() << " is not in dataset and is also not dependent on data set" << endl ;
+      cout << "RooDataSet::Plot: Argument " << var.GetName() 
+	   << " is not in dataset and is also not dependent on data set" << endl ;
       return 0 ; 
     }
 
@@ -261,6 +264,42 @@ TH1F* RooDataSet::Plot(RooAbsReal& var, const char* cuts, const char* opts)
 }
 
 
+Roo1DTable* RooDataSet::Table(RooAbsCategory& cat, const char* cuts, const char* opts)
+{
+  // First see if var is in data set 
+  RooAbsCategory* tableVar = (RooAbsCategory*) _vars.find(cat.GetName()) ;
+  Bool_t ownPlotVar(kFALSE) ;
+  if (!tableVar) {
+    if (!cat.dependsOn(_vars)) {
+      cout << "RooDataSet::Table(" << GetName() << "): Argument " << cat.GetName() 
+	   << " is not in dataset and is also not dependent on data set" << endl ;
+      return 0 ; 
+    }
+
+    // Clone derived variable 
+    tableVar = (RooAbsCategory*) cat.Clone()  ;
+    ownPlotVar = kTRUE ;    
+
+    //Redirect servers of derived clone to internal ArgSet representing the data in this set
+    tableVar->redirectServers(_vars) ;
+  }
+
+  Roo1DTable* table = tableVar->createTable("dataset") ;
+  
+  // Dump contents   
+  Int_t nevent= (Int_t)GetEntries();
+  for(Int_t i=0; i < nevent; ++i) {
+    Int_t entryNumber=GetEntryNumber(i);
+    if (entryNumber<0) break;
+    get(entryNumber);
+    table->fill(*tableVar) ;
+  }
+
+  if (ownPlotVar) delete tableVar ;
+
+  return table ;
+}
+
 
 void RooDataSet::printToStream(ostream& os, PrintOption opt) 
 {
@@ -283,6 +322,7 @@ const RooArgSet* RooDataSet::get(Int_t index) const {
   _iterator->Reset() ;
   RooAbsArg* var(0) ;
   while (var=(RooAbsArg*)_iterator->Next()) {
+    var->postTreeLoadHook() ;
     var->setValueDirty(kTRUE) ;
   } 
   

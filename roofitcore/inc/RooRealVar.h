@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooRealVar.rdl,v 1.1 2001/03/17 00:32:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -75,6 +75,8 @@ protected:
 
   virtual Bool_t isValid() ;
   virtual Bool_t isValid(Double_t value) ;
+
+  Bool_t readDouble(istream& is, Double_t& value) ;
 
   Double_t _integMin ;
   Double_t _integMax ;

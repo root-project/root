@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsCategory.cc,v 1.1 2001/03/17 00:32:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -17,6 +17,7 @@
 #include "TH1.h"
 #include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/Roo1DTable.hh"
 
 ClassImp(RooAbsCategory) 
 ;
@@ -225,6 +226,12 @@ Bool_t RooAbsCategory::isValid()
 Bool_t RooAbsCategory::isValid(RooCatType value) 
 {
   return isValidIndex(value.getVal()) ;
+}
+
+
+Roo1DTable* RooAbsCategory::createTable(const char *label) 
+{
+  return new Roo1DTable(GetName(),label,*this) ;
 }
 
 
