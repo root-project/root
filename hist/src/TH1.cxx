@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.122 2003/01/11 12:54:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.123 2003/01/11 17:28:35 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -877,7 +877,7 @@ Int_t TH1::BufferEmpty(Bool_t deleteBuffer)
 
    FillN(nbentries,&fBuffer[2],&fBuffer[1],2);
 
-   if (deleteBuffer) { delete fBuffer; fBuffer = 0; fBufferSize = 0;}
+   if (deleteBuffer) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
    else fBuffer[0] = 0;
    return nbentries;
 }
