@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.11 2002/07/18 11:02:46 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.12 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2128,4 +2128,17 @@ ULong_t TGeoManager::SizeOf(TGeoNode *node, Option_t *option)
 // computes the total size in bytes of the branch starting with node.
 // The option can specify if all the branch has to be parsed or only the node
    return 0;
+}
+
+//______________________________________________________________________________
+void TGeoManager::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TGeoManager.
+
+   if (R__b.IsReading()) {
+      TGeoManager::Class()->ReadBuffer(R__b, this);
+      CloseGeometry();
+   } else {
+      TGeoManager::Class()->WriteBuffer(R__b, this);
+   }
 }
