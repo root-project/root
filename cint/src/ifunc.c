@@ -1164,7 +1164,11 @@ char *funcheader;   /* funcheader = 'funcname(' */
    */
 
   isparam=0;
+#ifndef G__OLDIMPLEMENTATION1651
+  cin=G__fgetname_template(paraname,"<*&,()=");
+#else
   cin=G__fgetname_template(paraname,"<*&,)=");
+#endif
 #ifndef G__PHILIPPE8
   if (strlen(paraname) && isspace(cin)) {
     /* There was an argument and the parsing was stopped by a white
