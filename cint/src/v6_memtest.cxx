@@ -9,7 +9,7 @@
  * Comment:
  *  This source is usually unnecessary. 
  ************************************************************************
- * Copyright(c) 1995~1999  Masaharu Goto 
+ * Copyright(c) 1995~2005  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -23,6 +23,7 @@
 #define G__MEMTEST_C
 #define G__MEMTEST_H
 #include "common.h"
+
 
 #if !defined(G__SMALLOBJECT) && defined(G__DEBUG)
 
@@ -49,6 +50,37 @@ G__memtest G__mem[G__MALLOCSIZE];
 int G__imem=0;
 FILE *G__memhist=NULL;
 
+
+#ifndef G__OLDIMPLEMENTATION2226
+/*************************************************************************
+* G__break_memtest
+*
+*************************************************************************/
+int G__nth_memory = -1;
+int G__mth_event = -1;
+void G__break_memtest(i,comment) 
+int i;
+char* comment;
+{
+  static int m=1;
+#if 0
+  printf("break memtest %s %d:%d %d:%d\n"
+	 ,comment,i,G__nth_memory,m,G__mth_event); 
+#endif
+  if(G__nth_memory==i) {
+    if(G__mth_event==m || G__mth_event==0) {
+      printf("0x%lx=%s()\talive=%d\tuse=%d i=%d %dth FILE:%s LINE:%d\n"
+	   ,(long)G__mem[i].p,comment,G__mem[i].alive,G__mem[i].use,i,m
+	   ,G__ifile.name,G__ifile.line_number);
+      /*G__pause();*/
+    }
+    ++m;
+  }
+  else if(i<-1) {
+    printf("");
+  }
+}
+#endif
 
 /*************************************************************************
 * G__TEST_Malloc()
@@ -115,6 +147,9 @@ size_t size;
 	  ,G__ifile.name,G__ifile.line_number);
 #endif
   fflush(G__memhist);
+#ifndef G__OLDIMPLEMENTATION2226
+  G__break_memtest(i,"malloc");
+#endif
 #endif
   return(result);
 }
@@ -188,6 +223,9 @@ size_t n,bsize;
 	  ,G__ifile.name,G__ifile.line_number);
 #endif
   fflush(G__memhist);
+#ifndef G__OLDIMPLEMENTATION2226
+  G__break_memtest(i,"calloc");
+#endif
 #endif
   return(result);
 }
@@ -239,6 +277,9 @@ void *p;
 	      ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i
 	      ,G__ifile.name,G__ifile.line_number);
 #endif
+#ifndef G__OLDIMPLEMENTATION2226
+    G__break_memtest(i,"free");
+#endif
 #endif
   }
   else {
@@ -257,6 +298,9 @@ void *p;
     G__fprinterr(G__serr,"free(0x%x) not allocated",p);
 #endif
     G__printlinenum();
+#ifndef G__OLDIMPLEMENTATION2226
+    G__break_memtest(-2,"free");
+#endif
   }
 #ifdef G__DUMPMEMHISTORY
   fflush(G__memhist);
@@ -303,6 +347,9 @@ size_t size;
 	    ,tmp ,G__mem[i].p,size ,G__mem[i].alive,G__mem[i].use,i
 	    ,G__ifile.name,G__ifile.line_number);
 #endif
+#ifndef G__OLDIMPLEMENTATION2226
+    G__break_memtest(i,"realloc");
+#endif
 #endif
     
     if(tmp) {
@@ -336,6 +383,9 @@ size_t size;
     G__fprinterr(G__serr,"realloc(0x%x,%d) not allocated",p,size);
 #endif
     G__printlinenum();
+#ifndef G__OLDIMPLEMENTATION2226
+    G__break_memtest(-2,"realloc");
+#endif
   }
 #ifdef G__DUMPMEMHISTORY
   fflush(G__memhist);
@@ -594,6 +644,18 @@ void *G__TEST_tmpfile()
 }
 
 #endif /* G__SMALLOBJECT */
+
+#ifndef G__OLDIMPLEMENTATION2226
+void G__setmemtestbreak(n,m)
+int n;
+int m;
+{
+#ifdef G__DEBUG
+  G__nth_memory = n;
+  G__mth_event = m;
+#endif
+}
+#endif
 
 /*
  * Local Variables:

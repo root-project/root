@@ -171,7 +171,10 @@ long G__TypeInfo::Property()
   if(G__ClassInfo::IsValid()) property|=G__ClassInfo::Property();
 #endif
   if(isupper((int)type)) property|=G__BIT_ISPOINTER;
-#ifndef G__OLDIMPLEMENTATION1453
+#if !defined(G__OLDIMPLEMENTATION2228)
+  if(reftype==G__PARAREFERENCE||reftype>G__PARAREF) 
+    property|=G__BIT_ISREFERENCE;
+#elif !defined(G__OLDIMPLEMENTATION1453)
   if (reftype) property |= G__BIT_ISREFERENCE;
 #endif
 #ifndef G__OLDIMPLEMENTATION401

@@ -35,17 +35,19 @@ using namespace std;
 #pragma link C++ class vector<double>;
 //#if (G__GNUC<3 || G__GNUC_MINOR<1) && !defined(G__KCC)
 //#if (!(G__GNUC==3 && G__GNUC_MINOR==1)) && !defined(G__KCC)
-#if (!(G__GNUC==3 && G__GNUC_MINOR==1)) && !defined(G__KCC) && (!defined(G__VISUAL) || G__MSC_VER<1300)
+//#if (!(G__GNUC==3 && G__GNUC_MINOR==1)) && !defined(G__KCC) && (!defined(G__VISUAL) || G__MSC_VER<1300)
+#if (G__GNUC_VER!=3001&&G__GNUC_VER!=3002) && !defined(G__KCC) && (!defined(G__VISUAL) || G__MSC_VER<1300)
 // gcc3.1,3.2 has a problem with iterator<void*,...,void&>
 #pragma link C++ class vector<void*>;
 #endif
 #pragma link C++ class vector<char*>;
-// #pragma link C++ class vector<const char*>;
-#if defined(G__STRING_DLL) || defined(G__ROOT)
+#pragma link C++ class vector<const char*>;
+#if defined(G__STRING_DLL) // || defined(G__ROOT)
 #pragma link C++ class vector<string>;
 #endif
 
-#if (G__GNUC_VER>=3001)
+//#if (G__GNUC>=3 && G__GNUC_MINOR>=1)
+#if defined(G__GNUC_VER) && (G__GNUC_VER>=3001) 
 #ifdef G__OLDIMPLEMENTATION1703
 #pragma link C++ namespace __gnu_cxx;
 #endif

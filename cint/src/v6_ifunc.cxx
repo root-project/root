@@ -208,7 +208,7 @@ int instsize;
   /* copy compiled and library function name buffer */
 #ifndef G__OLDIMPLEMENTATION513
   if(0==G__asm_name_p) {
-    free(G__asm_name);
+    if(G__asm_name) free(G__asm_name);
     bytecode->asm_name = (char*)NULL;
   }
   else {

@@ -1599,7 +1599,7 @@ struct G__param *libp;
       case 'k':
 	libp->para[i].obj.d = libp->para[i].obj.i;
 	libp->para[i].type = formal_type;
-	libp->para[i].ref = &libp->para[i].obj.d;
+	libp->para[i].ref = (long)(&libp->para[i].obj.d);
 	break;
       }
       break;
@@ -1616,7 +1616,7 @@ struct G__param *libp;
       case 'f':
 	libp->para[i].obj.i = libp->para[i].obj.d;
 	libp->para[i].type = formal_type;
-	libp->para[i].ref = &libp->para[i].obj.i;
+	libp->para[i].ref = (long)(&libp->para[i].obj.i);
 	break;
       }
       break;

@@ -757,9 +757,15 @@ char *argv[] ;
    * Get command options
    *************************************************************/
   while((c=getopt(argc,argv
-  ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:H:I:J:KM:N:O:P:QRSTU:VW:X:Y:Z:-:@"))
+  ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:H:I:J:KM:N:O:P:QRSTU:VW:X:Y:Z:-:@+:"))
 	!=EOF) {
     switch(c) {
+
+#ifndef G__OLDIMPLEMENTATION2226
+    case '+':
+      G__setmemtestbreak(atoi(optarg)/10000,atoi(optarg)%10000);
+      break;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION2068
 #ifdef G__CINT_VER6

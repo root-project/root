@@ -20,6 +20,7 @@
 
 #include "common.h"
 
+
 #define G__OLDIMPLEMENTATION2051
 #ifndef G__OLDIMPLEMENTATION2051
 extern void G__cpp_setupG__bcdict();
@@ -5942,6 +5943,15 @@ int hash;
   if(strcmp(funcname,"G__getstepmode")==0) {
     if(G__no_exec_compile) return(1);
     G__letint(result7,'i',(long)G__getstepmode());
+    return(1);
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2226
+  if(strcmp(funcname,"G__setmemtestbreak")==0) {
+    if(G__no_exec_compile) return(1);
+    *result7=G__null;
+    G__setmemtestbreak((int)G__int(libp->para[0]),(int)G__int(libp->para[1]));
     return(1);
   }
 #endif

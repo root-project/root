@@ -66,8 +66,8 @@ G__CallFunc {
   void SetArg(long l) ;
   void SetArg(double d) ;
 #ifdef G__NATIVELONGLONG
-  void SetArg(long long ll);
-  void SetArg(unsigned long long ull);
+  void SetArg(G__int64 ll);
+  void SetArg(G__uint64 ull);
   void SetArg(long double ld);
 #endif
   // end old interface

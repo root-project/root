@@ -450,7 +450,7 @@ int ifn;
 				  ,G__asm_cp,ifunc->funcname[ifn],libp->paran);
 #endif
       G__asm_inst[G__asm_cp]=G__LD_FUNC;
-      G__asm_inst[G__asm_cp+1] = ifunc;
+      G__asm_inst[G__asm_cp+1] = (long)ifunc;
       G__asm_inst[G__asm_cp+2]= ifn;
       G__asm_inst[G__asm_cp+3]=libp->paran;
       G__asm_inst[G__asm_cp+4]=(long)cppfunc;
@@ -5339,14 +5339,16 @@ int k;
 	   * void f(value_type*& x); // bad 
 	   *  reference and pointer to pointer can not happen at once */
 	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:*(%s*)(&G__Mlong(libp->para[%d]))"
-#ifndef G__OLDIMPLEMENTATION1111
-#ifndef G__OLDIMPLEMENTATION1493
+#if !defined(G__OLDIMPLEMENTATION2225)
+		  ,k,G__type2string(type,tagnum,typenum,0,isconst&G__CONSTVAR) 
+		  ,k,G__type2string(type,tagnum,typenum,0,isconst&G__CONSTVAR)
+		  ,k);
+#elif !defined(G__OLDIMPLEMENTATION1493)
 		  ,k,G__type2string(type,tagnum,typenum,0,isconst) 
 		  ,k,G__type2string(type,tagnum,typenum,0,isconst) ,k);
-#else
+#elif !defined(G__OLDIMPLEMENTATION1111)
 		  ,k,G__type2string(type,tagnum,typenum,0,0) 
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k);
-#endif
 #else
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,0) 
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,0) ,k);
@@ -5356,7 +5358,12 @@ int k;
 	   * identical */
 	}
 	else {
-#if !defined(G__OLDIMPLEMENTATION1976)
+#if !defined(G__OLDIMPLEMENTATION2225)
+	    fprintf(fp,"libp->para[%d].ref?*(%s)libp->para[%d].ref:*(%s)(&G__Mlong(libp->para[%d]))"
+		,k,G__type2string(type,tagnum,typenum,2,isconst&G__CONSTVAR) 
+		,k,G__type2string(type,tagnum,typenum,2,isconst&G__CONSTVAR)
+		    ,k);
+#elif !defined(G__OLDIMPLEMENTATION1976)
 	    fprintf(fp,"libp->para[%d].ref?*(%s)libp->para[%d].ref:*(%s)(&G__Mlong(libp->para[%d]))"
 		    ,k,G__type2string(type,tagnum,typenum,2,isconst) 
 		    ,k,G__type2string(type,tagnum,typenum,2,isconst),k);
@@ -5366,7 +5373,11 @@ int k;
 		    ,k,G__type2string(type,tagnum,typenum,2,isconst&~G__CONSTVAR),k);
 #else /* 1973 */
 	  fprintf(fp,"libp->para[%d].ref?*(%s**)libp->para[%d].ref:*(%s**)(&G__Mlong(libp->para[%d]))"
-#ifndef G__OLDIMPLEMENTATION1493
+#if !defined(G__OLDIMPLEMENTATION2225)
+        ,k,G__type2string(tolower(type),tagnum,typenum,0,isconst&G__CONSTVAR) 
+	,k,G__type2string(tolower(type),tagnum,typenum,0,isconst&G__CONSTVAR)
+		  ,k);
+#elif !defined(G__OLDIMPLEMENTATION1493)
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,isconst) 
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,isconst),k);
 #else /* 1493 */

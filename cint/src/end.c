@@ -274,6 +274,9 @@ void G__scratch_all()
 
   G__reset_setup_funcs();
 
+#ifndef G__OLDIMPLEMENTATION2227
+  G__clear_errordictpos();
+#endif
 
 #ifdef G__MEMTEST
   G__memresult();
@@ -752,6 +755,12 @@ int G__close_inputfiles()
 #endif
   for(iarg=0;iarg<G__nfile;iarg++) {
     if(G__srcfile[iarg].dictpos) {
+#ifndef G__OLDIMPLEMENTATION2227
+      if(G__srcfile[iarg].dictpos->ptype &&
+	 G__srcfile[iarg].dictpos->ptype!=G__PVOID) {
+	free((void*)G__srcfile[iarg].dictpos->ptype);
+      }
+#endif
       free((void*)G__srcfile[iarg].dictpos);
       G__srcfile[iarg].dictpos=(struct G__dictposition*)NULL;
     }

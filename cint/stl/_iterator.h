@@ -448,7 +448,7 @@ inline T* value_type(const _Randit<T, Distance>&) {
 
 #if (G__GNUC>=3)
 
-#if (G__GNUC_MINOR>=1 || G__GNUC>=4) 
+#if (G__GNUC_VER>=3001) 
 
 // vector ///////////////////////////////////////////////////////////////
 template <class T> 
@@ -510,7 +510,7 @@ template <class T,class Distance>
 inline Distance* 
 distance_type(const set<T>::iterator&) {return (Distance*)(0);}
 
-#endif // (GNUC_MINOR>=1)
+#endif // (GNUC_VER>=3001)
 
 // This iterator adapter is 'normal' in the sense that it does not
 // change the semantics of any of the operators of its itererator

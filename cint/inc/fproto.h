@@ -972,6 +972,14 @@ long double G__Longdouble G__P((G__value buf)); /* used to be int */
 void G__display_purevirtualfunc G__P((int tagnum));
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2226
+void G__setmemtestbreak G__P((int n,int m));
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2227
+void G__clear_errordictpos();
+#endif
+
 #ifdef __cplusplus
 }
 #endif
