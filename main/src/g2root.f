@@ -96,13 +96,15 @@
       character *80 gname
       character *80 fname
       character *8 chtop
-      integer npar
+      character *8 crecl
+      integer npar, lrecl
 
       call hlimit(nwpaw)
 
       npar = iargc()
       if (npar.eq.0) then
-         print *, 'Invoke g2root [-f map_name] geant_name macro_name'
+         print *, 
+     +       'Invoke g2root [-f map_name] geant_name macro_name [lrecl]'
          go to 90
       endif
       narg = 1
@@ -130,18 +132,24 @@
       endif
       if (npar.ge.1) then
          call getarg(narg,fname)
+         narg = narg + 1
       else
          idot=index(gname,'.')
          fname = gname(1:idot-1)//'.C'
       endif
 
-      call rzopen(1,chtop,gname,'W',1024,istat)
+      lrecl = 1024
+      if (npar.ge.2) then
+         call getarg(narg,crecl)
+         read (crecl,'(I6)') lrecl
+      endif
+      call rzopen(1,chtop,gname,'W',lrecl,istat)
       if (istat.ne.0) then
          print *,'Cannot open file'
          go to 90
       endif
       call rzfile(1,chtop,' ')
-**      call rzldir(' ',' ')
+      call rzldir(' ',' ')
 
       call g2rin
 
