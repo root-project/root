@@ -1,0 +1,3 @@
+<?xml version="1.0" ?>
+<extension class="command.ShellCommandTest" kind="test"><argument name="environment"><set/></argument><argument name="stdin"><text/></argument><argument name="command"><text>cd root/io/treeForeign; gmake</text></argument><argument name="timeout"><integer>-1</integer></argument><argument name="stderr"><text/></argument><argument name="stdout"><text>All test succeeded in ./treeForeign
+</text></argument><argument name="prerequisites"><set/></argument><argument name="target_group"><text>.*</text></argument><argument name="exit_code"><integer>0</integer></argument><argument name="resources"><set/></argument></extension>

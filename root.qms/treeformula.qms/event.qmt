@@ -1,0 +1,5 @@
+<?xml version="1.0" ?>
+<extension class="command.ShellCommandTest" kind="test"><argument name="environment"><set/></argument><argument name="stdin"><text/></argument><argument name="command"><text>cd root/treeformula/event; gmake</text></argument><argument name="timeout"><integer>-1</integer></argument><argument name="stderr"><text/></argument><argument name="stdout"><text>./Event 10 1 1 1 &gt; Event.write.log
+./Event 10 1 1 20 &gt; Event.read.log
+All test succeeded in ./event
+</text></argument><argument name="prerequisites"><set/></argument><argument name="target_group"><text>.*</text></argument><argument name="exit_code"><integer>0</integer></argument><argument name="resources"><set/></argument></extension>
