@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.26 2003/05/26 03:36:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.27 2003/07/12 19:43:59 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -79,6 +79,8 @@ TVectorD::TVectorD(Int_t lwb, Int_t upb, Double_t va_(iv1), ...)
    // Double_t values to assign to vector elements. The list must be
    // terminated by the string "END". Example:
    // TVectorD foo(1,3,0.0,1.0,1.5,"END");
+   // WARNING! This method cannot be called at the CINT prompt.
+   // Use method TVectorD::TVectorD(Int_t lwb, Int_t upb, const Double_t *elements) instead
 
    va_list args;
    va_start(args,va_(iv1));             // Init 'args' to the beginning of
