@@ -639,6 +639,13 @@ int *known3;
       G__store_struct_offset = result3.obj.i;
 #ifdef G__ASM
       if(G__asm_noverflow) {
+#ifndef G__OLDIMPLEMENTATION1449
+#ifdef G__ASM_DBG
+        if(G__asm_dbg) fprintf(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
+#endif
+        G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+        G__inc_cp_asm(1,0);
+#endif  /* 1449 */
 #ifdef G__ASM_DBG
 	if(G__asm_dbg) fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp);
 #endif
