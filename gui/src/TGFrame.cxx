@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.47 2004/02/23 23:49:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.48 2004/03/04 11:29:43 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -391,7 +391,7 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
              fgDby = event->fYRoot;
              fgDbw = event->fWindow;
 
-            if (!dbl_clk && IsEditEvent(event) && 
+            if (!dbl_clk && IsEditEvent(event) &&
                 (event->fCode == kButton3)) {
                OnContextMenu(event);
             }
@@ -703,7 +703,7 @@ TGCompositeFrame::~TGCompositeFrame()
 //______________________________________________________________________________
 Bool_t TGCompositeFrame::IsEditable() const
 {
-   // return kTRUE if frame is being eddited
+   // Return kTRUE if frame is being edited.
 
    return (fClient->GetRoot() == (TGWindow*)this);
 }
@@ -712,12 +712,12 @@ Bool_t TGCompositeFrame::IsEditable() const
 void TGCompositeFrame::SetEditable(Bool_t on)
 {
    // Switch ON/OFF edit mode.
-   // If edit mode is ON it is possible: 
-   //    
+   // If edit mode is ON it is possible:
+   //
    //  1. embed other ROOT GUI application (a la ActiveX)
    //
    //  For example:
-   //    TGMainFrame *m = new TGMainFrame(gClient->GetRoot(), 500, 500); 
+   //    TGMainFrame *m = new TGMainFrame(gClient->GetRoot(), 500, 500);
    //    m->SetEditable();
    //    gSystem->Load("$ROOTSYS/test/Aclock"); // load Aclock demo
    //    Aclock a;
@@ -725,7 +725,7 @@ void TGCompositeFrame::SetEditable(Bool_t on)
    //    m->SetEditable(0);
    //    m->MapWindow();
    //
-   //  2. ... to be continued   
+   //  2. ... to be continued
 
    if (on) {
       fClient->SetRoot(this);
@@ -1077,7 +1077,7 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    AddInput(kKeyPressMask | kKeyReleaseMask);
 
    // if parent is editting/embedable add this frame to the parent
-   if (fClient->IsEditable() && (p==fClient->GetRoot())) {
+   if (fClient->IsEditable() && (p == fClient->GetRoot())) {
       TGCompositeFrame *frame;
       if (p->InheritsFrom(TGCompositeFrame::Class())) {
          frame = (TGCompositeFrame*)p;
@@ -1297,7 +1297,7 @@ void TGMainFrame::SetMWMHints(UInt_t value, UInt_t funcs, UInt_t input)
 {
    // Set decoration style for MWM-compatible wm (mwm, ncdwm, fvwm?).
 
-   if (fClient->IsEditable() && (fParent==fClient->GetRoot())) return;
+   if (fClient->IsEditable() && (fParent == fClient->GetRoot())) return;
 
    fMWMValue = value;
    fMWMFuncs = funcs;
@@ -1310,7 +1310,7 @@ void TGMainFrame::SetWMPosition(Int_t x, Int_t y)
 {
    // Give the window manager a window position hint.
 
-   if (fClient->IsEditable() && (fParent==fClient->GetRoot())) return;
+   if (fClient->IsEditable() && (fParent == fClient->GetRoot())) return;
 
    fWMX = x;
    fWMY = y;
@@ -1322,7 +1322,7 @@ void TGMainFrame::SetWMSize(UInt_t w, UInt_t h)
 {
    // Give the window manager a window size hint.
 
-   if (fClient->IsEditable() && (fParent==fClient->GetRoot())) return;
+   if (fClient->IsEditable() && (fParent == fClient->GetRoot())) return;
 
    fWMWidth  = w;
    fWMHeight = h;
@@ -1337,7 +1337,7 @@ void TGMainFrame::SetWMSizeHints(UInt_t wmin, UInt_t hmin,
    // Give the window manager minimum and maximum size hints. Also
    // specify via winc and hinc the resize increments.
 
-   if (fClient->IsEditable() && (fParent==fClient->GetRoot())) return;
+   if (fClient->IsEditable() && (fParent == fClient->GetRoot())) return;
 
    fWMMinWidth  = wmin;
    fWMMinHeight = hmin;
@@ -1353,7 +1353,7 @@ void TGMainFrame::SetWMState(EInitialState state)
 {
    // Set the initial state of the window. Either kNormalState or kIconicState.
 
-   if (fClient->IsEditable() && (fParent==fClient->GetRoot())) return;
+   if (fClient->IsEditable() && (fParent == fClient->GetRoot())) return;
 
    fWMInitState = state;
    gVirtualX->SetWMState(fId, state);
@@ -1585,7 +1585,7 @@ void TGFrame::SaveUserColor(ofstream &out, Option_t *)
       out << "   gClient->GetColorByName(" << quote << ucolorname << quote
           << ",ucolor);" << endl;
       fgUserColor = ucolor;
-   } 
+   }
 }
 
 //______________________________________________________________________________
@@ -1793,7 +1793,7 @@ void TGCompositeFrame::SavePrimitive(ofstream &out, Option_t *option)
       GetLayoutManager()->SavePrimitive(out, option);
       out << ");" << endl;
    }
-   
+
 }
 
 //______________________________________________________________________________
@@ -2002,7 +2002,7 @@ void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
 {
    // Save a main frame widget as a C++ statement(s) on output stream out.
 
-   if (fParent!=gClient->GetDefaultRoot()) { // frame is embedded 
+   if (fParent!=gClient->GetDefaultRoot()) { // frame is embedded
       fOptions &= ~kMainFrame;
       TGCompositeFrame::SavePrimitive(out, option);
       fOptions |= kMainFrame;
@@ -2160,19 +2160,19 @@ void TGGroupFrame::SavePrimitive(ofstream &out, Option_t *option)
    char ParGC[50], ParFont[50];
    sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
    sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-   
+
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      } 
+      }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } 
+      }
    }
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
