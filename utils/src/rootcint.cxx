@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.101 2002/09/17 14:38:20 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.102 2002/09/23 18:24:27 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -432,6 +432,50 @@ int GetClassVersion(G__ClassInfo &cl)
    int version = (int)G__int(G__calc(name));
    delete [] name;
    return version;
+}
+
+string GetNonConstTypeName(G__DataMemberInfo &m) {
+   if (m.Property() & (G__BIT_ISCONSTANT|G__BIT_ISPCONSTANT)) {
+      G__TypeInfo* type = m.Type();
+      const char *typeName = type->TrueName();
+      static const char *constwd = "const";
+      const char *s; int lev=0;
+      string ret;
+      for (s=typeName;*s;s++) {
+         if (*s=='<') lev++;
+         if (*s=='>') lev--;
+         if (lev==0 && strncmp(constwd,s,strlen(constwd))==0) {
+            const char *after = s+strlen(constwd);
+            if (strspn(after,"&* ")>=1 || *after==0) {
+               s+=strlen(constwd)-1;
+               continue;
+            }
+         }
+         ret += *s;
+      }
+      return ret;
+   } else {
+      return m.Type()->TrueName();
+   }
+      
+}
+
+//______________________________________________________________________________
+string GetNonConstMemberName(G__DataMemberInfo &m) {
+   // Return the name of the data member so that it can be used 
+   // by non-const operation (so it includes a const_cast if necessary
+   
+   if (m.Property() & (G__BIT_ISCONSTANT|G__BIT_ISPCONSTANT)) {
+      string ret = "const_cast< ";
+      ret += GetNonConstTypeName(m);
+      ret += " &>( ";
+      ret += m.Name();
+      ret += " ) ";
+      return ret;
+   } else {
+      return m.Name();
+   }
+
 }
 
 //______________________________________________________________________________
@@ -1457,6 +1501,8 @@ const char *ShortTypeName(const char *typeDesc)
    // You need to use the result immediately before it is being overwritten.
 
   static char t[1024];
+  static const char* constwd = "const ";
+  static const char* constwdend = "const";
   const char *s;
   char *p=t;
   int lev=0;
@@ -1464,7 +1510,12 @@ const char *ShortTypeName(const char *typeDesc)
      if (*s=='<') lev++;
      if (*s=='>') lev--;
      if (lev==0 && *s=='*') continue;
-     if (lev==0 && *s==' ') { p = t; continue;}
+     if (lev==0 && (strncmp(constwd,s,strlen(constwd))==0 
+                    ||strcmp(constwdend,s)==0 ) ) {
+        s+=strlen(constwd)-1;
+        continue;
+     }
+     if (lev==0 && *s==' ' && !*(s+1)=='*') { p = t; continue;}
      *p++ = *s;
   }
   p[0]=0;
@@ -1632,9 +1683,9 @@ void WriteStreamer(G__ClassInfo &cl)
                      if (i == 0) {
                         fprintf(fp, "      delete []%s; \n",m.Name());
                         fprintf(fp, "      %s = new %s[%s]; \n",
-                                m.Name(),ShortTypeName(m.Type()->Name()),indexvar);
+                                GetNonConstMemberName(m).c_str(),ShortTypeName(m.Type()->Name()),indexvar);
                         fprintf(fp, "      R__b.ReadFastArray(%s,%s); \n",
-                                m.Name(),indexvar);
+                                GetNonConstMemberName(m).c_str(),indexvar);
                      } else {
                         fprintf(fp, "      R__b.WriteFastArray(%s,%s); \n",
                                 m.Name(),indexvar);
@@ -1676,9 +1727,9 @@ void WriteStreamer(G__ClassInfo &cl)
                      fprintf(fp, "      R__b << (Int_t)%s;\n", m.Name());
                } else {
                   if (i == 0)
-                     fprintf(fp, "      R__b >> %s;\n", m.Name());
+                     fprintf(fp, "      R__b >> %s;\n", GetNonConstMemberName(m).c_str());
                   else
-                     fprintf(fp, "      R__b << %s;\n", m.Name());
+                     fprintf(fp, "      R__b << %s;\n", GetNonConstMemberName(m).c_str());
                }
             } else {
                // we have an object...
@@ -1703,12 +1754,12 @@ void WriteStreamer(G__ClassInfo &cl)
                   }
                   fprintf(fp, "      for (R__i = 0; R__i < %d; R__i++)\n", s);
                   if (i == 0)
-                     fprintf(fp, "         R__b >> %s", m.Name());
+                     fprintf(fp, "         R__b >> %s", GetNonConstMemberName(m).c_str());
                   else {
                      if (m.Type()->IsBase("TObject") && m.Type()->IsBase("TArray"))
                         fprintf(fp, "         R__b << (TObject*)%s", m.Name());
                      else
-                        fprintf(fp, "         R__b << %s", m.Name());
+                        fprintf(fp, "         R__b << %s", GetNonConstMemberName(m).c_str());
                   }
                   WriteArrayDimensions(m.ArrayDim());
                   fprintf(fp, "[R__i];\n");
@@ -1730,12 +1781,12 @@ void WriteStreamer(G__ClassInfo &cl)
                         fprintf(fp, "      %s->Streamer(R__b);\n", m.Name());
                      } else {
                         if (i == 0)
-                           fprintf(fp, "      R__b >> %s;\n", m.Name());
+                           fprintf(fp, "      R__b >> %s;\n", GetNonConstMemberName(m).c_str());
                         else {
                            if (m.Type()->IsBase("TObject") && m.Type()->IsBase("TArray"))
                               fprintf(fp, "      R__b << (TObject*)%s;\n", m.Name());
                            else
-                              fprintf(fp, "      R__b << %s;\n", m.Name());
+                              fprintf(fp, "      R__b << %s;\n", GetNonConstMemberName(m).c_str());
                         }
                      }
                   }
@@ -1748,12 +1799,21 @@ void WriteStreamer(G__ClassInfo &cl)
                      decli = 1;
                   }
                   fprintf(fp, "      for (R__i = 0; R__i < %d; R__i++)\n", s);
-                  fprintf(fp, "         %s", m.Name());
-                  WriteArrayDimensions(m.ArrayDim());
-                  fprintf(fp, "[R__i].Streamer(R__b);\n");
+                  const char *mTypeName = m.Type()->Name();
+                  const char *constwd = "const ";
+                  if (strncmp(constwd,mTypeName,strlen(constwd))==0) {
+                     mTypeName += strlen(constwd);
+                     fprintf(fp, "         const_cast< %s &>(%s",  mTypeName, m.Name());
+                     WriteArrayDimensions(m.ArrayDim());
+                     fprintf(fp, "[R__i]).Streamer(R__b);\n");
+                  } else {
+                     fprintf(fp, "         %s",  GetNonConstMemberName(m).c_str());
+                     WriteArrayDimensions(m.ArrayDim());
+                     fprintf(fp, "[R__i].Streamer(R__b);\n");
+                  }
                } else {
                   if ((m.Type())->HasMethod("Streamer"))
-                     fprintf(fp, "      %s.Streamer(R__b);\n", m.Name());
+                     fprintf(fp, "      %s.Streamer(R__b);\n", GetNonConstMemberName(m).c_str());
                   else {
                      fprintf(fp, "      R__b.StreamObject(&(%s),typeid(%s));\n",m.Name(),m.Type()->Name());               //R__t.Streamer(R__b);\n");
 //VP                     if (i == 0)
@@ -1889,17 +1949,20 @@ void WritePointersSTL(G__ClassInfo &cl)
          fprintf(fp, "void R__%s_%s(TBuffer &R__b, void *R__p, int)\n",clName,m.Name());
       }
       fprintf(fp, "{\n");
+      // remove A leading 'const' keyword.
+      string mTypeName = GetNonConstTypeName(m).c_str();
+      // Define a variable for easy access to the data member.
       if (m.Property() & G__BIT_ISARRAY) {
-         fprintf(fp, "   %s* %s = (%s*)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+         fprintf(fp, "   %s* %s = (%s*)R__p;\n",mTypeName.c_str(),m.Name(),mTypeName.c_str());
       } else {
          if (m.Property() & G__BIT_ISPOINTER) {
             if (pCounter) {
-               fprintf(fp, "   %s* %s = (%s*)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+               fprintf(fp, "   %s* %s = (%s*)R__p;\n",mTypeName.c_str(),m.Name(),mTypeName.c_str());
             } else {
-               fprintf(fp, "   %s* %s = (%s*)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+               fprintf(fp, "   %s* %s = (%s*)R__p;\n",mTypeName.c_str(),m.Name(),mTypeName.c_str());
             }
          } else {
-            fprintf(fp, "   %s &%s = *(%s *)R__p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+            fprintf(fp, "   %s &%s = *(%s *)R__p;\n",mTypeName.c_str(),m.Name(),mTypeName.c_str());
          }
       }
       fprintf(fp, "   if (R__b.IsReading()) {\n");
@@ -2122,7 +2185,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                   fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", &%s%s);\n",
                           m.Name(), prefix, m.Name());
                   fprintf(fp, "      %s%s.ShowMembers(R__insp, strcat(R__parent,\"%s.\")); R__parent[R__ncp] = 0;\n",
-                          prefix,m.Name(), m.Name());
+                          prefix,GetNonConstMemberName(m).c_str(), m.Name());
                   if (clflag && IsStreamable(m)) fprintf(fp, "      R__cl->SetStreamer(\"%s\",R__%s_%s);\n", m.Name(), clName, m.Name());
                } else {
                   // NOTE: something to be added here!
