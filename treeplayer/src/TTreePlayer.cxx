@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.99 2002/06/11 15:47:36 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.100 2002/07/16 20:35:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -819,15 +819,18 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
    
    fHistogram = 0;
    char *hname = 0;
+   char *hnamealloc = 0;
    for(UInt_t k=strlen(varexp0)-1;k>0;k--) {
       if (varexp0[k]=='>' && varexp0[k-1]=='>') {
-         hname = (char*) &(varexp0[k-1]);
+         i = (int)( &(varexp0[k-1]) - varexp0 );  //  length of varexp0 before ">>"
+         hnamealloc = new char[strlen(&(varexp0[k-1]))+1];
+         hname = hnamealloc;
+         strcpy(hname,&(varexp0[k-1]));
          break;
       }
    }
    //   char *hname = (char*)strstr(varexp0,">>");
    if (hname) {
-      i = (int)( hname - varexp0 );  //  length of varexp0 before ">>"
       hname += 2;
       hkeep  = 1;
       varexp = new char[i+1];
@@ -1366,6 +1369,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
       fTree->SetEstimate(oldEstimate);
    }
    if (hkeep) delete [] varexp;
+   if (hnamealloc) delete [] hnamealloc;
    if (cleanElist) {
      // We are in the case where the input list was reset!
      fTree->SetEventList(elist);
