@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.114 2003/10/20 15:55:54 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.115 2003/10/29 08:51:44 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -507,9 +507,9 @@ void TGraph::Draw(Option_t *option)
    TString opt = option;
    opt.ToLower();
 
-   if (opt.Contains("same"))
-      Error("Draw", "option \"same\" not supported,\n"
-            "see TGraph::PaintGraph() for options");
+   //if (opt.Contains("same"))
+   //   Error("Draw", "option \"same\" not supported,\n"
+   //         "see TGraph::PaintGraph() for options");
 
    // in case of option *, set marker style to 3 (star) and replace
    // * option by option P.
@@ -1847,6 +1847,7 @@ void TGraph::PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Opt
   }
    TString opt = chopt;
    opt.ToUpper();
+   opt.ReplaceAll("SAME","");
 
    if(opt.Contains("L")) OptionLine = 1;  else OptionLine = 0;
    if(opt.Contains("A")) OptionAxis = 1;  else OptionAxis = 0;
