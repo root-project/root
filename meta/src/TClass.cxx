@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.47 2001/05/20 17:33:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.48 2001/05/23 09:46:34 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1133,7 +1133,11 @@ void *TClass::New(void *arena, Bool_t defConstructor)
 
    if (!fClassInfo) {
       // We only have a fake class. Use TStreamerInfo service.
-      GetStreamerInfo()->New((char*)arena);
+      TStreamerInfo *sinfo = GetStreamerInfo();
+      Int_t l = sinfo->GetSize();
+      char *pp = (char*)arena;
+      for (Int_t i=0;i<l;i++) pp[i] = 0;
+      sinfo->New(pp);
       return arena;
    }
 
