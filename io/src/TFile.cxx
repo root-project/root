@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.8 2000/10/09 13:45:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.9 2000/11/21 16:31:18 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1171,13 +1171,15 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
 //                   Existing classes with the same name are replaced by the
 //                   new definition. If the directory dirname doest not exist,
 //                   same effect as "new".
-// if, in addition to one of the 3 above options, the option "++" is specified,
+// if, in addition to one of the 3 above options, the option "+" is specified,
 // the function will generate:
 //   - a script called MAKE to build the shared lib
 //   - a LinkDef.h file
 //   - rootcint will be run to generate a dirnameProjectDict.cxx file
 //   - dirnameProjectDict.cxx will be compiled with the current options in compiledata.h
 //   - a shared lib dirname.so will be created.
+// if the option "++" is specified, the generated shared lib is dynamically
+// linked with the current executable module.
 // example:
 //  file.MakeProject("demo","*","recreate++");
 //  - creates a new directory demo unless it already exist
@@ -1189,15 +1191,16 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
 //  - runs rootcint generating demoProjectDict.cxx
 //  - compiles demoProjectDict.cxx into demoProjectDict.o
 //  - generates a shared lib demo.so
-//  At this point, the shared lib can be dynamically linked to the current
-//  executable module with:
+//  - dynamically links the shared lib demo.so to the executable
+//  If only the option "+" had been specified, one can still link the 
+//  shared lib to the current executable module with:
 //     gSystem->load("demo/demo.so");
 //
 
    TString opt = option;
    opt.ToLower();
    void *dir = gSystem->OpenDirectory(dirname);
-   char path[256];
+   char *path = new char[2000];
       
    if (opt.Contains("update")) {
       // check that directory exist, if not create it
@@ -1225,6 +1228,7 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
       // if directory already exist, print error message and return
       if (dir) {
          Error("MakeProject","Cannot create directory:%s, already existing",dirname);
+         delete [] path;
          return;
       }
       gSystem->mkdir(dirname);
@@ -1235,6 +1239,7 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
    TList *list = (TList*)Get("StreamerInfo");
    if (list == 0) {
       Error("MakeProject","File has no StreamerInfo");
+      delete [] path;
       return;
    }
       
@@ -1250,7 +1255,7 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
    printf("MakeProject has generated %d classes in %s\n",ngener,dirname);
    
    // generate the shared lib
-   if (!opt.Contains("++")) return;
+   if (!opt.Contains("+")) { delete [] path; return;}
    
    // create the MAKE file by looping on all *.h files
    // delete MAKE if it already exists
@@ -1258,6 +1263,7 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
    FILE *fpMAKE = fopen(path,"w");
    if (!fpMAKE) {
       printf("Cannot open file:%s\n",path);
+      delete [] path;
       return;
    }
    
@@ -1270,6 +1276,7 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
    FILE *fp = fopen(path,"w");
    if (!fp) {
       printf("Cannot open path file:%s\n",path);
+      delete [] path;
       return;
    }
    fprintf(fp,"#ifdef __CINT__\n");
@@ -1312,14 +1319,24 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
    fprintf(fpMAKE,"%s %sProjectDict.%s %s %s.%s\n",compiler,dirname,gSystem->GetObjExt(),objectFiles+12,dirname,gSystem->GetSoExt());
       
    fclose(fpMAKE);
-
+   printf("%s/MAKE file has been generated\n",dirname);
+   
    // now execute the generated script compiling and generating the shared lib
    strcpy(path,gSystem->WorkingDirectory());
    gSystem->ChangeDirectory(dirname);
    gSystem->Exec("chmod +x MAKE");
    gSystem->Exec("MAKE");
    gSystem->ChangeDirectory(path);
-   printf("Shared lib %s/%s.%s has been generated\n",dirname,dirname,gSystem->GetSoExt());   
+   sprintf(path,"%s/%s.%s",dirname,dirname,gSystem->GetSoExt());
+   printf("Shared lib %s has been generated\n",path);   
+   
+   //dynamically link the generated shared lib
+   if (opt.Contains("++")) {
+      gSystem->Load(path);
+      printf("Shared lib %s has been dynamically linked\n",path); 
+   }  
+      
+   delete [] path;
 }
                          
 //______________________________________________________________________________
