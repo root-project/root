@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.17 2003/03/10 07:57:14 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.18 2003/03/28 21:27:48 brun Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -1941,7 +1941,7 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
       if (ev.fType == kGKeyPress || ev.fType == kKeyRelease) {
          ev.fWindow = (Window_t) xev.key.window;
          MapModifierState(ev.fState, xev.key.state, kFALSE);	// key mask
-         ev.fCode = xev.key.keyval;	// key code
+         ev.fCode = (xev.key.keyval);	// key code
          ev.fUser[1] = xev.key.length;
          if (xev.key.length > 0)
             ev.fUser[2] = xev.key.string[0];
@@ -2726,18 +2726,11 @@ Int_t TGWin32::KeysymToKeycode(UInt_t keysym)
    // Convert a keysym to the appropriate keycode. For example keysym is
    // a letter and keycode is the matching keyboard key (which is dependend
    // on the current keyboard mapping).
-   EnterCriticalSection(flpCriticalSection);
+   //EnterCriticalSection(flpCriticalSection);
 
    UInt_t xkeysym;
-
    MapKeySym(keysym, xkeysym);
-   fThreadP.uiParam = xkeysym;
-   PostThreadMessage(fIDThread, WIN32_GDK_KEYVAL_FROM_NAME, 0, 0L);
-   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
-   xkeysym = fThreadP.uiRet;
-   LeaveCriticalSection(flpCriticalSection);
    return xkeysym;
-   return 0;
 }
 
 //______________________________________________________________________________
