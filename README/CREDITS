@@ -166,6 +166,10 @@ E: axel@fnal.gov
 D: THtml improvements (namespace, header/footer)
 D: many suggestions for Trees
 
+N: Anne-Sylvie Nicollerat
+E: Anne-Sylvie.Nicollerat@cern.ch
+D: Improvements in tutorial hadd.C to take into account Trees
+
 N: John Odonnell
 E: odonnell@lanl.gov
 D: contributed to TFormula: support for recursive functions definitions.
