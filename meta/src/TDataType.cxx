@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.5 2002/11/26 10:24:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.6 2003/04/11 11:48:11 rdm Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -108,9 +108,9 @@ const char *TDataType::AsString(void *buf) const
    else if (!strcmp("long", name))
       sprintf(line, "%ld", *(long *)buf);
    else if (!strcmp("unsigned long long", name))
-      sprintf(line, "%llu", *(unsigned long long *)buf);
+      sprintf(line, "%llu", *(ULong64_t *)buf);
    else if (!strcmp("long long", name))
-      sprintf(line, "%lld", *(long long *)buf);
+      sprintf(line, "%lld", *(Long64_t *)buf);
    else if (!strcmp("unsigned short", name))
       sprintf(line, "%hu", *(unsigned short *)buf);
    else if (!strcmp("short", name))

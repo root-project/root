@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.36 2002/11/11 16:23:15 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.37 2003/04/11 11:48:10 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -73,7 +73,7 @@ typedef short          Version_t;   //Class version identifier (short)
 typedef const char     Option_t;    //Option string (const char)
 typedef int            Ssiz_t;      //String size (int)
 typedef float          Real_t;      //TVector and TMatrix element type (float)
-#ifdef R__WIN32
+#if defined(R__WIN32) && !defined(__CINT__)
 typedef __int64            Long64_t;  //Portable signed long integer 8 bytes
 typedef unsigned __int64   ULong64_t; //Portable unsigned long integer 8 bytes
 #else
