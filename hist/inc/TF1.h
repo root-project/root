@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.25 2002/10/31 07:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.h,v 1.26 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -110,6 +110,7 @@ public:
    virtual Double_t GetProb() const;
    virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum); 
    virtual Double_t GetRandom();
+   virtual Double_t GetRandom(Double_t xmin, Double_t xmax);
    virtual void     GetRange(Double_t &xmin, Double_t &xmax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax);

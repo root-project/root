@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.12 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.h,v 1.13 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -58,6 +58,7 @@ public:
           Int_t     GetNpy() const {return fNpy;}
    virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
        Double_t     GetRandom();
+       Double_t     GetRandom(Double_t xmin, Double_t xmax);
    virtual void     GetRandom2(Double_t &xrandom, Double_t &yrandom);
    virtual void     GetRange(Double_t &xmin, Double_t &xmax) { TF1::GetRange(xmin, xmax); }
    virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax);

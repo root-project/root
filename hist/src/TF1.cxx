@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.51 2002/12/20 15:26:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.52 2003/01/03 23:56:38 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1011,8 +1011,7 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 //______________________________________________________________________________
 Double_t TF1::GetRandom()
 {
-//*-*-*-*-*-*Return a random number following this function shape*-*-*-*-*-*-*
-//*-*        ====================================================
+// Return a random number following this function shape
 //*-*
 //*-*   The distribution contained in the function fname (TF1) is integrated
 //*-*   over the channel contents.
@@ -1029,8 +1028,6 @@ Double_t TF1::GetRandom()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**-*-*-*-*-*-*-*
 
 //  Check if integral array must be build
-   Int_t i,bin;
-   Double_t xx,rr;
    if (fIntegral == 0) {
       Double_t dx = (fXmax-fXmin)/fNpx;
       fIntegral = new Double_t[fNpx+1];
@@ -1040,6 +1037,7 @@ Double_t TF1::GetRandom()
       fIntegral[0] = 0;
       Double_t integ;
       Int_t intNegative = 0;
+      Int_t i;
       for (i=0;i<fNpx;i++) {
          integ = Integral(Double_t(fXmin+i*dx), Double_t(fXmin+i*dx+dx));
          if (integ < 0) {intNegative++; integ = -integ;}
@@ -1074,15 +1072,102 @@ Double_t TF1::GetRandom()
 
 // return random number
    Double_t r  = gRandom->Rndm();
-   bin  = TMath::BinarySearch(fNpx,fIntegral,r);
-   rr = r - fIntegral[bin];
+   Int_t bin  = TMath::BinarySearch(fNpx,fIntegral,r);
+   Double_t rr = r - fIntegral[bin];
 
+   Double_t xx;
    if(fGamma[bin])
       xx = (-fBeta[bin] + TMath::Sqrt(fBeta[bin]*fBeta[bin]+2*fGamma[bin]*rr))/fGamma[bin];
    else
       xx = rr/fBeta[bin];
    Double_t x = fAlpha[bin] + xx;
    return x;
+}
+
+//______________________________________________________________________________
+Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
+{
+// Return a random number following this function shape in [xmin,xmax]
+//*-*
+//*-*   The distribution contained in the function fname (TF1) is integrated
+//*-*   over the channel contents.
+//*-*   It is normalized to 1.
+//*-*   For each bin the integral is approximated by a parabola.
+//*-*   The parabola coefficients are stored as non persistent data members
+//*-*   Getting one random number implies:
+//*-*     - Generating a random number between 0 and 1 (say r1)
+//*-*     - Look in which bin in the normalized integral r1 corresponds to
+//*-*     - Evaluate the parabolic curve in the selected bin to find
+//*-*       the corresponding X value.
+//*-*   The parabolic approximation is very good as soon as the number
+//*-*   of bins is greater than 50.
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**-*-*-*-*-*-*-*
+
+//  Check if integral array must be build
+   if (fIntegral == 0) {
+      Double_t dx = (fXmax-fXmin)/fNpx;
+      fIntegral = new Double_t[fNpx+1];
+      fAlpha    = new Double_t[fNpx];
+      fBeta     = new Double_t[fNpx];
+      fGamma    = new Double_t[fNpx];
+      fIntegral[0] = 0;
+      Double_t integ;
+      Int_t intNegative = 0;
+      Int_t i;
+      for (i=0;i<fNpx;i++) {
+         integ = Integral(Double_t(fXmin+i*dx), Double_t(fXmin+i*dx+dx));
+         if (integ < 0) {intNegative++; integ = -integ;}
+         fIntegral[i+1] = fIntegral[i] + integ;
+      }
+      if (intNegative > 0) {
+         Warning("GetRandom","function:%s has %d negative values: abs assumed",GetName(),intNegative);
+      }
+      if (fIntegral[fNpx] == 0) {
+         Error("GetRandom","Integral of function is zero");
+         return 0;
+      }
+      Double_t total = fIntegral[fNpx];
+      for (i=1;i<=fNpx;i++) {  // normalize integral to 1
+         fIntegral[i] /= total;
+      }
+      //the integral r for each bin is approximated by a parabola
+      //  x = alpha + beta*r +gamma*r**2
+      // compute the coefficients alpha, beta, gamma for each bin
+      Double_t x0,r1,r2;
+      for (i=0;i<fNpx;i++) {
+         x0 = fXmin+i*dx;
+         r2 = fIntegral[i+1] - fIntegral[i];
+         r1 = Integral(x0,x0+0.5*dx)/total;
+         fGamma[i] = (2*r2 - 4*r1)/(dx*dx);
+         fBeta[i]  = r2/dx - fGamma[i]*dx;
+         fAlpha[i] = x0;
+         fGamma[i] *= 2;
+      }
+   }
+
+
+// return random number
+   Double_t dx = (fXmax-fXmin)/fNpx;
+   Int_t nbinmin=(Int_t)((xmin-fXmin)/dx);
+   Int_t nbinmax=(Int_t)((xmax-fXmin)/dx)+1;
+
+    Double_t pmin=fIntegral[nbinmin];
+    Double_t pmax=fIntegral[nbinmax];
+
+    Double_t r,x,xx,rr;
+    do {
+       r  = gRandom->Uniform(pmin,pmax);
+
+       Int_t bin  = TMath::BinarySearch(fNpx,fIntegral,r);
+       rr = r - fIntegral[bin];
+
+       if(fGamma[bin])
+          xx = (-fBeta[bin] + TMath::Sqrt(fBeta[bin]*fBeta[bin]+2*fGamma[bin]*rr))/fGamma[bin]; 
+       else
+          xx = rr/fBeta[bin];
+       x = fAlpha[bin] + xx;
+    } while(x<xmin || x>xmax);
+    return x;
 }
 
 //______________________________________________________________________________

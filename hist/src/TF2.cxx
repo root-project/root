@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.15 2002/10/31 07:27:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF2.cxx,v 1.16 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   23/08/95
 
 /*************************************************************************
@@ -291,7 +291,17 @@ Double_t TF2::GetRandom()
 //*-*-*-*-*-*Return a random number following this function shape*-*-*-*-*-*-*
 //*-*        ====================================================
 //*-*
-   printf("GetRandom cannot be called for TF2/3, use GetRandom2/3 instead\n");
+   Error("GetRandom","cannot be called for TF2/3, use GetRandom2/3 instead");
+   return 0;  // not yet implemented
+}
+
+//______________________________________________________________________________
+Double_t TF2::GetRandom(Double_t, Double_t)
+{
+//*-*-*-*-*-*Return a random number following this function shape*-*-*-*-*-*-*
+//*-*        ====================================================
+//*-*
+   Error("GetRandom","cannot be called for TF2/3, use GetRandom2/3 instead");
    return 0;  // not yet implemented
 }
 
