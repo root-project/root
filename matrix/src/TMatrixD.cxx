@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.29 2002/10/24 19:45:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.30 2002/10/25 06:29:03 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -2532,7 +2532,7 @@ void VerifyMatrixIdentity(const TMatrixD &m1, const TMatrixD &m2)
 }
 
 
-#if defined(R__HPUX) || defined(R__MACOSX)
+#if defined(R__MACOSX)
 
 //______________________________________________________________________________
 //  These functions should be inline

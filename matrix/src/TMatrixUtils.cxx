@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.9 2002/10/23 21:56:31 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixUtils.cxx,v 1.10 2002/10/25 06:29:03 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -798,7 +798,7 @@ void THilbertMatrix::FillIn(TMatrix &m) const
    MakeHilbertMatrix(m);
 }
 
-#if defined(R__HPUX) || defined(R__MACOSX)
+#if defined(R__MACOSX)
 
 //______________________________________________________________________________
 //  These functions should be inline

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.16 2002/08/08 18:35:26 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.h,v 1.18 2002/10/23 21:56:31 brun Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -190,7 +190,7 @@ void VerifyVectorIdentity(const TVector &v1, const TVector &v2);
 
 //----- inlines ----------------------------------------------------------------
 
-#if !defined(R__HPUX) && !defined(R__MACOSX)
+#if !defined(R__MACOSX)
 
 #ifndef __CINT__
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.17 2002/07/27 11:05:49 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.19 2002/10/23 21:56:31 brun Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -227,7 +227,7 @@ void VerifyElementValue(const TMatrixD &m, Double_t val);
 void VerifyMatrixIdentity(const TMatrixD &m1, const TMatrixD &m2);
 
 
-#if !defined(R__HPUX) && !defined(R__MACOSX)
+#if !defined(R__MACOSX)
 inline Bool_t TMatrixD::IsValid() const
    { if (fNrows == -1) return kFALSE; return kTRUE; }
 #endif
@@ -239,7 +239,7 @@ inline Bool_t TMatrixD::IsValid() const
 
 //----- inlines ----------------------------------------------------------------
 
-#if !defined(R__HPUX) && !defined(R__MACOSX)
+#if !defined(R__MACOSX)
 
 #ifndef __CINT__
 

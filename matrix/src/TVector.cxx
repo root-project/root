@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.19 2002/10/25 06:29:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVector.cxx,v 1.20 2002/10/25 07:36:32 brun Exp $
 // Author: Fons Rademakers   05/11/97
 
 /*************************************************************************
@@ -951,7 +951,7 @@ void VerifyVectorIdentity(const TVector &v1, const TVector &v2)
 
 
 
-#if defined(R__HPUX) || defined(R__MACOSX)
+#if defined(R__MACOSX)
 
 //______________________________________________________________________________
 //  These functions should be inline
