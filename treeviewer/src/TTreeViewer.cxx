@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.15 2001/02/26 10:28:53 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.16 2001/03/09 11:02:24 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1600,7 +1600,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         info.fFileTypes = (char **) gOpenTypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &info);
                         if (!info.fFilename) return kTRUE;
-                        char command[100];
+                        char command[1024];
                         command[0] = 0;
                         sprintf(command, "TFile *treeFile = new TFile(\"%s\");", info.fFilename);
                         ExecuteCommand(command);
@@ -1628,7 +1628,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &info);
                         if (!info.fFilename) return kTRUE;
                         if (!gInterpreter->IsLoaded(info.fFilename)) gInterpreter->LoadMacro(info.fFilename);
-                        char command[100];
+                        char command[1024];
                         command[0] = 0;
                         sprintf(command,"open_session((void*)0x%lx);", (Long_t)this);
                         ExecuteCommand(command);
