@@ -88,27 +88,27 @@
       DOLOOP {                                           \
           b.ReadFastArray(readbuf, fLength[i]);          \
       }                                                  \
-      delete readbuf;                                    \
+      delete[] readbuf;                                  \
       break;                                             \
     }
 
-
-#define SkipCBasicArrayOld(name)                        \
-   {  name dummy;                                       \
-      DOLOOP{                                           \
-         for (Int_t j=0;j<fLength[i];j++) b >> dummy;   \
-      }                                                 \
-      break;                                            \
-   }
-
 #define SkipCBasicPointer(name)                                           \
    {                                                                      \
-      int len = aElement->GetArrayDim()?aElement->GetArrayLength():1;     \
-      Char_t isArray;                                                     \
-      if ((imethod>0) && (fMethod[i]>0)) {                                \
+      Int_t addCounter = -111;                                            \
+      if ((imethod>0) && (fMethod[i]>0)) addCounter = -1;                 \
+      if((addCounter<-1) && dynamic_cast<TStreamerBasicPointer*>(aElement)) { \
+         TStreamerElement* elemCounter = (TStreamerElement*) GetElements()->FindObject((dynamic_cast<TStreamerBasicPointer*>(aElement))->GetCountName()); \
+         if (elemCounter) {                                               \
+            addCounter = elemCounter->GetTObjectOffset();                 \
+            Warning("ReadBufferSkip","Counter %s = %d for data member %s should not be skipped, trying to survive", aElement->GetTitle(), addCounter, aElement->GetName()); \
+         }                                                                \
+      }                                                                   \
+      if (addCounter>=-1) {                                               \
+         int len = aElement->GetArrayDim()?aElement->GetArrayLength():1;  \
+         Char_t isArray;                                                  \
          DOLOOP {                                                         \
             b >> isArray;                                                 \
-            Int_t *l = (Int_t*)(arr[k]+imethod);                          \
+            Int_t *l = (addCounter==-1) ? (Int_t*)(arr[k]+imethod) : &addCounter;  \
             if (*l>0) {                                                   \
                name* readbuf = new name[*l];                              \
                for (int j=0;j<len;j++)                                    \
@@ -117,20 +117,9 @@
             }                                                             \
          }                                                                \
       } else {                                                            \
-         Error("ReadBufferSkip","Counter: %s for data memeber: %s should not be skipped", aElement->GetTitle(), aElement->GetName()); \
+         Error("ReadBufferSkip","Counter: %s for data member: %s should not be skipped", aElement->GetTitle(), aElement->GetName()); \
       }                                                                   \
-                                                                          \
       break;                                                              \
-   }
-
-
-#define SkipCBasicPointerOld(name)                                      \
-   {                                                                    \
-      Int_t *n = (Int_t*)(arr[0]+imethod);                              \
-      Int_t l = b.Length();                                             \
-      int len = aElement->GetArrayDim()?aElement->GetArrayLength():1;   \
-      b.SetBufferOffset(l+1+narr*(*n)*sizeof( name )*len);              \
-      break;                                                            \
    }
 
 //______________________________________________________________________________
@@ -233,6 +222,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkip + TStreamerInfo::kCounter: {
          DOLOOP {
             Int_t dummy; b >> dummy;
+            aElement->SetTObjectOffset(dummy);
          }
          break;
       }

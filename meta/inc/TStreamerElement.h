@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.33 2004/05/04 15:57:24 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.h,v 1.34 2004/05/05 06:13:54 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -82,6 +82,7 @@ public:
    virtual void     SetArrayDim(Int_t dim);
    virtual void     SetMaxIndex(Int_t dim, Int_t max);
    virtual void     SetOffset(Int_t offset) {fOffset=offset;}
+   virtual void     SetTObjectOffset(Int_t tobjoffset) {fTObjectOffset=tobjoffset;}
    virtual void     SetStreamer(TMemberStreamer *streamer);
    virtual void     SetSize(Int_t dsize) {fSize = dsize;}
    virtual void     SetNewType(Int_t dtype) {fNewType = dtype;}

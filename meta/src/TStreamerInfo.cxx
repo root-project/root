@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.212 2004/11/18 06:13:14 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.213 2004/11/19 20:38:36 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1123,7 +1123,9 @@ void TStreamerInfo::Compile()
       fElem[fNdata]   = (ULong_t)element;
       fMethod[fNdata] = element->GetMethod();
       // try to group consecutive members of the same type
-      if (!TestBit(kCannotOptimize) && keep>=0 && (element->GetType() < 10)
+      if (!TestBit(kCannotOptimize) 
+          && (keep>=0)
+          && (element->GetType() < 10)
           && (fType[fNdata] == fNewType[fNdata])
           && (fMethod[keep] == 0)
           && (element->GetType() > 0)
@@ -1137,10 +1139,22 @@ void TStreamerInfo::Compile()
          fType[keep] = element->GetType() + kRegrouped;
          fOptimized = kTRUE;
       } else {
+/*          
          if (fType[fNdata] != kCounter) {
             if (fNewType[fNdata] != fType[fNdata]) {
                if (fNewType[fNdata] > 0) fType[fNdata] += kConv;
                else                      fType[fNdata] += kSkip;
+            }
+         }
+*/
+         if (fNewType[fNdata] != fType[fNdata]) {
+            if (fNewType[fNdata] > 0) {
+              if (fType[fNdata] != kCounter) 
+                 fType[fNdata] += kConv;
+              else
+                 Error("Compile","Cannot convert counter %s to other type",element->GetName());   
+            } else {
+               fType[fNdata] += kSkip;   
             }
          }
          keep = fNdata;
