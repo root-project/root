@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayC.h,v 1.3 2001/02/08 15:31:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayC.h,v 1.4 2001/02/28 07:51:22 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -48,6 +48,7 @@ public:
    void       Set(Int_t n);
    void       Set(Int_t n, const Char_t *array);
    Char_t    &operator[](Int_t i);
+   Char_t     operator[](Int_t i) const;
 
    ClassDef(TArrayC,1)  //Array of chars
 };
@@ -60,6 +61,13 @@ inline Char_t TArrayC::At(Int_t i) const
 }
 
 inline Char_t &TArrayC::operator[](Int_t i)
+{
+   if (!BoundsOk("TArrayC::operator[]", i))
+      i = 0;
+   return fArray[i];
+}
+
+inline Char_t TArrayC::operator[](Int_t i) const
 {
    if (!BoundsOk("TArrayC::operator[]", i))
       i = 0;

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayD.h,v 1.3 2001/02/08 15:31:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayD.h,v 1.4 2001/02/28 07:54:22 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -48,6 +48,7 @@ public:
    void       Set(Int_t n);
    void       Set(Int_t n, const Double_t *array);
    Double_t  &operator[](Int_t i);
+   Double_t   operator[](Int_t i) const;
 
    ClassDef(TArrayD,1)  //Array of doubles
 };
@@ -60,6 +61,13 @@ inline Double_t TArrayD::At(Int_t i) const
 }
 
 inline Double_t &TArrayD::operator[](Int_t i)
+{
+   if (!BoundsOk("TArrayD::operator[]", i))
+      i = 0;
+   return fArray[i];
+}
+
+inline Double_t TArrayD::operator[](Int_t i) const
 {
    if (!BoundsOk("TArrayD::operator[]", i))
       i = 0;
