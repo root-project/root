@@ -25,8 +25,6 @@ CUSTOMSHARED=$9
 shift
 CUSTOMEXE=$9
 shift
-ARCH=$9
-shift
 
 if [ "$INCDIR" = "$ROOTSYS/include" ]; then
    INCDIR=\$ROOTSYS/include
@@ -35,17 +33,10 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
    LIBDIR=\$ROOTSYS/lib
 fi
 
-if [ "x`echo $SOFLAGS | grep -- '-soname,$' `" != "x" ]; then
-    # If soname is specified, add the library name.
-    SOFLAGS=$SOFLAGS\$LibName.$SOEXT
-    # Alternatively we could remove the soname flag.
-    #    SOFLAGS=`echo $SOFLAGS | sed  -e 's/-soname,/ /' -e 's/ -Wl, / /' `
-fi
 rm -f __compiledata
 
-echo "Running $0"
+echo "Running $COMPILEDATA"
 echo "/* This is file is automatically generated */" > __compiledata
-echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then
@@ -70,7 +61,7 @@ if [ -r $COMPILEDATA ]; then
       echo "Changing $COMPILEDATA"
       mv __compiledata $COMPILEDATA;
    else
-      rm -f __compiledata; fi
+      rm -f __compiledata; fi;
 else
    echo "Making $COMPILEDATA"
    mv __compiledata $COMPILEDATA; fi

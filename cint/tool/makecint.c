@@ -8,7 +8,7 @@
  *  This tool creates Makefile for encapsurating arbitrary C/C++ object
  * into Cint as Dynamic Link Library or archived library
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~2000  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -53,7 +53,7 @@ char G__CPPHDRPOST[20];
 char G__DLLPOST[20];
 char G__OBJPOST[20];
 
-int G__isDLL=1;
+int G__isDLL=0;
 char G__object[G__MAXFILENAME];
 char G__makefile[G__MAXFILENAME];
 char G__DLLID[G__MAXNAME];
@@ -77,8 +77,10 @@ struct G__string_list *G__CPPHDR;
 struct G__string_list *G__CSRC;
 struct G__string_list *G__CPPSRC;
 struct G__string_list *G__LIB;
+#ifndef G__OLDIMPLEMENTATION783
 struct G__string_list *G__CCOPT;
 struct G__string_list *G__CIOPT;
+#endif
 struct G__string_list *G__CSTUB;
 struct G__string_list *G__CPPSTUB;
 
@@ -87,7 +89,9 @@ int G__ismain=0;
 
 enum G__MODE { G__IDLE, G__CHEADER, G__CSOURCE, G__CPPHEADER, G__CPPSOURCE
 	     , G__LIBRARY , G__CSTUBFILE , G__CPPSTUBFILE
+#ifndef G__OLDIMPLEMENTATION783
 	     , G__COMPILEROPT, G__CINTOPT
+#endif
 };
 
 enum G__PRINTMODE { G__PRINTOBJECT, G__PRINTSTRING , G__PRINTOBJECT_WPLUS
@@ -118,8 +122,7 @@ void G__printtitle()
   printf("# makecint : interpreter-compiler for cint (UNIX version)\n");
 #endif
   printf("#\n");
-  printf("# Copyright(c) 1995~2002 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
-  printf("#                        (cint mailing list 'cint@root.cern.ch')\n");
+  printf("# Copyright(c) 1995~2000 Masaharu Goto (MXJ02154@niftyserve.or.jp)\n");
   printf("################################################################\n");
 }
 
@@ -151,14 +154,10 @@ void G__displayhelp()
   printf("  -i [stub].h   :C STUB function parameter information file\n");
   printf("  -c [sut].c    :Same as '-h [sut].c -C [sut].c'\n");
   printf("  -l -l[lib]    :Compiled object, Library or linker options\n");
-#ifndef G__OLDIMPLEMENTATION1452
-  printf("  -u [file]     :Generate dummy class for undefined typename\n");
-  printf("  -U [dir]      :Directory to disable interface method generation\n");
-  printf("  -Y [0|1]      :Ignore std namespace (default=1:ignore)\n");
-  printf("  -Z [0|1]      :Automatic loading of standard header files\n");
-#endif
+#ifndef G__OLDIMPLEMENTATION783
   printf("  -cc   [opt]   :Compiler option\n");
   printf("  -cint [opt]   :Cint option\n");
+#endif
   printf("  -B [funcname] :Initialization function name\n");
   printf("  -y [LIBNAME]  :Name of CINT core DLL, LIBCINT or WILDC(WinNT/95 only)\n");
 }
@@ -190,17 +189,12 @@ int *argc;
   int single_quote=0,double_quote=0,back_slash=0;
   
   while((string[i]!='\n')&&
-	(string[i]!='\0')
-#ifdef G__OLDIMPLEMENTATION1616
-	&&(string[i]!=EOF)
-#endif
-	) i++;
+	(string[i]!='\0')&&
+	(string[i]!=EOF)) i++;
   string[i]='\0';
   line[i]='\0';
   lenstring=i;
-#ifdef G__OLDIMPLEMENTATION1616
   if(string[i]==EOF) n_eof=0;
-#endif
   argv[0]=line;
 
   *argc=0;
@@ -321,9 +315,6 @@ int G__getcintsysdir()
 # endif
 #else
     env=getenv("CINTSYSDIR");
-# ifdef CINTSYSDIR
-    if(!env || !env[0]) env = CINTSYSDIR;
-# endif
 #endif
     if(env) {
 #ifdef G__ROOT
@@ -381,7 +372,7 @@ void G__readMAKEINFO()
   /* Open MAKEINFO file */
   fp = fopen(makeinfo,"r");
   if(!fp) {
-    fprintf(stderr,"Error: can not open %s. Makecint aborted\n",makeinfo);
+    fprintf(stderr,"Error: %s can not open. Makecint aborted\n",makeinfo);
     fprintf(stderr
 ,"!!!Advice. There are examples of MAKEINFO files under %s/platform/ directory.\n"
 	    ,G__cintsysdir);
@@ -479,8 +470,10 @@ void G__cleanup()
   if(G__CSRC)   G__freestringlist(G__CSRC);
   if(G__CPPSRC) G__freestringlist(G__CPPSRC);
   if(G__LIB)    G__freestringlist(G__LIB);
+#ifndef G__OLDIMPLEMENTATION783
   if(G__CCOPT)    G__freestringlist(G__CCOPT);
   if(G__CIOPT)    G__freestringlist(G__CIOPT);
+#endif
   if(G__CSTUB)   G__freestringlist(G__CSTUB);
   if(G__CPPSTUB)   G__freestringlist(G__CPPSTUB);
 }
@@ -659,11 +652,11 @@ char *compiler;
   while(p) {
     if(p->string && p->object) {
       fprintf(fp,"%s : %s %s\n",p->object,p->string,headers);
-#ifdef CINTSYSDIR
-      fprintf(fp,"\t%s $(IPATH) $(CINTIPATH) $(MACRO) $(OPTIMIZE) $(OPTION) $(CCOPT) -o %s -c %s\n"
+#ifndef G__OLDIMPLEMENTATION783
+      fprintf(fp,"\t%s $(IPATH) $(MACRO) $(OPTIMIZE) $(OPTION) $(CCOPT) -o %s -c %s\n"
 	      ,compiler,p->object,p->string);
 #else
-      fprintf(fp,"\t%s $(IPATH) $(MACRO) $(OPTIMIZE) $(OPTION) $(CCOPT) -o %s -c %s\n"
+      fprintf(fp,"\t%s $(IPATH) $(MACRO) $(OPTIMIZE) $(OPTION) -o %s -c %s\n"
 	      ,compiler,p->object,p->string);
 #endif
       fprintf(fp,"\n");
@@ -693,48 +686,6 @@ char **argv;
       strcpy(G__preprocess,argv[i]);
       mode = G__IDLE;
     }
-#ifndef G__OLDIMPLEMENTATION1452
-    /*************************************************************************/
-    else if(strcmp(argv[i],"-u")==0) {
-      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
-      G__CIOPT=G__storestringlist(G__CIOPT,argv[++i]);
-      mode = G__IDLE;
-    }
-    else if(strncmp(argv[i],"-u",2)==0) {
-      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
-      mode = G__IDLE;
-    }
-    /*************************************************************************/
-    else if(strcmp(argv[i],"-U")==0) {
-      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
-      G__CIOPT=G__storestringlist(G__CIOPT,argv[++i]);
-      mode = G__IDLE;
-    }
-    else if(strncmp(argv[i],"-U",2)==0) {
-      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
-      mode = G__IDLE;
-    }
-    /*************************************************************************/
-    else if(strcmp(argv[i],"-Y")==0) {
-      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
-      G__CIOPT=G__storestringlist(G__CIOPT,argv[++i]);
-      mode = G__IDLE;
-    }
-    else if(strncmp(argv[i],"-Y",2)==0) {
-      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
-      mode = G__IDLE;
-    }
-    /*************************************************************************/
-    else if(strcmp(argv[i],"-Z")==0) {
-      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
-      G__CIOPT=G__storestringlist(G__CIOPT,argv[++i]);
-      mode = G__IDLE;
-    }
-    else if(strncmp(argv[i],"-Z",2)==0) {
-      G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
-      mode = G__IDLE;
-    }
-#endif
     /*************************************************************************/
     else if(strcmp(argv[i],"-m")==0) {
       G__ismain = 1;
@@ -756,7 +707,9 @@ char **argv;
       mode = G__IDLE;
     }
     else if(strncmp(argv[i],"-D",2)==0
+#ifndef G__OLDIMPLEMENTATION783
 	    && G__COMPILEROPT!=mode && G__CINTOPT!=mode
+#endif
 	    ) {
       G__MACRO = G__storestringlist(G__MACRO,argv[i]);
       mode = G__IDLE;
@@ -769,7 +722,9 @@ char **argv;
       mode = G__IDLE;
     }
     else if(strncmp(argv[i],"-I",2)==0 
+#ifndef G__OLDIMPLEMENTATION783
 	    && G__COMPILEROPT!=mode && G__CINTOPT!=mode
+#endif
 	    ) {
       G__IPATH = G__storestringlist(G__IPATH,argv[i]);
       mode = G__IDLE;
@@ -838,12 +793,14 @@ char **argv;
     else if(strcmp(argv[i],"-l")==0) {
       mode = G__LIBRARY;
     }
+#ifndef G__OLDIMPLEMENTATION783
     else if(strcmp(argv[i],"-cc")==0) {
       mode = G__COMPILEROPT;
     }
     else if(strcmp(argv[i],"-cint")==0) {
       mode = G__CINTOPT;
     }
+#endif
     else if(strcmp(argv[i],"-i")==0) {
       mode = G__CSTUBFILE;
     }
@@ -872,12 +829,14 @@ char **argv;
       case G__LIBRARY:
 	G__LIB=G__storestringlist(G__LIB,argv[i]);
 	break;
+#ifndef G__OLDIMPLEMENTATION783
       case G__COMPILEROPT:
 	G__CCOPT=G__storestringlist(G__CCOPT,argv[i]);
 	break;
       case G__CINTOPT:
 	G__CIOPT=G__storestringlist(G__CIOPT,argv[i]);
 	break;
+#endif
       case G__CSTUBFILE:
 	G__CSTUB=G__storestringlist(G__CSTUB,argv[i]);
 	break;
@@ -1060,6 +1019,7 @@ char **argv;
   fprintf(fp,"\n");
   fprintf(fp,"\n");
 
+#ifndef G__OLDIMPLEMENTATION783
   fprintf(fp,"CCOPT      = ");
   G__printstringlist(fp,G__CCOPT,G__PRINTSTRING);
   fprintf(fp,"\n");
@@ -1069,6 +1029,7 @@ char **argv;
   G__printstringlist(fp,G__CIOPT,G__PRINTSTRING);
   fprintf(fp,"\n");
   fprintf(fp,"\n");
+#endif
 
   fprintf(fp,"COFILES    = ");
   G__printstringlist(fp,G__CSRC,G__PRINTOBJECT);
@@ -1128,27 +1089,35 @@ char **argv;
    ***************************************************************************/
   fprintf(fp,"# Link Object #############################################\n");
   if(G__isDLL) {
-#if defined(_AIX)
+#ifdef _AIX
     fprintf(fp,"$(OBJECT) : $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO)\n");
     fprintf(fp,"\t$(LDDLL) $(LDDLLOPT) -o $(OBJECT) $(COFILES) $(CIFO) $(CPPIFO) $(CPPOFILES) $(LIBS)\n");
-#elif defined(G__CYGWIN)
-    /* Problem reported by Joseph Canedo 2001/6/7 $(CINTLIB) added for DLL */
-    fprintf(fp,"$(OBJECT) : $(CINTLIB) $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO)\n");
-    fprintf(fp,"\t$(LD) $(LDDLLOPT) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(COFILES) $(CIFO) $(CPPIFO) $(CPPOFILES) $(CINTLIB) $(LIBS)\n");
 #else
     fprintf(fp,"$(OBJECT) : $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO)\n");
+#ifndef G__OLDIMPLEMENTATION783
     fprintf(fp,"\t$(LD) $(LDDLLOPT) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(COFILES) $(CIFO) $(CPPIFO) $(CPPOFILES) $(LIBS)\n");
+#else
+    fprintf(fp,"\t$(LD) $(LDDLLOPT) $(OPTIMIZE) $(IPATH) $(MACRO) -o $(OBJECT) $(COFILES) $(CIFO) $(CPPIFO) $(CPPOFILES) $(LIBS)\n");
+#endif
 #endif
   }
   else if(G__ismain) {
 #ifdef _AIX
     fprintf(fp
    ,"$(OBJECT) : $(CINTLIB) $(READLINEA) $(DLFCN) G__setup.o $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO) \n");
+#ifndef G__OLDIMPLEMENTATION783
     fprintf(fp,"\t$(LD) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(CIFO) $(CPPIFO) $(COFILES) $(CPPOFILES) $(CINTLIB) G__setup.o $(READLINEA) $(DLFCN) $(LIBS) $(LDOPT)\n");
+#else
+    fprintf(fp,"\t$(LD) $(OPTIMIZE) $(IPATH) $(MACRO) -o $(OBJECT) $(CIFO) $(CPPIFO) $(COFILES) $(CPPOFILES) $(CINTLIB) G__setup.o $(READLINEA) $(DLFCN) $(LIBS) $(LDOPT)\n");
+#endif
 #else
     fprintf(fp
    ,"$(OBJECT) : $(CINTLIB) $(READLINEA) G__setup.o $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO) \n");
+#ifndef G__OLDIMPLEMENTATION783
     fprintf(fp,"\t$(LD) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(CIFO) $(CPPIFO) $(COFILES) $(CPPOFILES) $(CINTLIB) G__setup.o $(READLINEA) $(LIBS) $(LDOPT)\n");
+#else
+    fprintf(fp,"\t$(LD) $(OPTIMIZE) $(IPATH) $(MACRO) -o $(OBJECT) $(CIFO) $(CPPIFO) $(COFILES) $(CPPOFILES) $(CINTLIB) G__setup.o $(READLINEA) $(LIBS) $(LDOPT)\n");
+#endif
 #endif
   }
   else {
@@ -1160,11 +1129,19 @@ char **argv;
     fprintf(fp,"\trm -f shr.o\n");
     fprintf(fp,"\techo \"#!\" > $(OBJECT).exp ; cat $(OBJECT).nm >> $(OBJECT).exp\n");
     fprintf(fp,"\trm -f $(OBJECT).nm\n");
+#ifndef G__OLDIMPLEMENTATION783
     fprintf(fp,"\t$(LD) $(OPTIMIZE) -bE:$(OBJECT).exp -bM:SRE  $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(MAINO) $(CIFO) $(CPPIFO) $(COFILES) $(CPPOFILES) $(CINTLIB) G__setup.o $(READLINEA) $(DLFCN) $(LIBS) $(LDOPT)\n");
+#else
+    fprintf(fp,"\t$(LD) $(OPTIMIZE) -bE:$(OBJECT).exp -bM:SRE  $(IPATH) $(MACRO) -o $(OBJECT) $(MAINO) $(CIFO) $(CPPIFO) $(COFILES) $(CPPOFILES) $(CINTLIB) G__setup.o $(READLINEA) $(DLFCN) $(LIBS) $(LDOPT)\n");
+#endif
 #else
     fprintf(fp
    ,"$(OBJECT) : $(MAINO) $(CINTLIB) $(READLINEA) G__setup.o $(COFILES) $(CPPOFILES) $(CIFO) $(CPPIFO) \n");
+#ifndef G__OLDIMPLEMENTATION783
     fprintf(fp,"\t$(LD) $(OPTIMIZE) $(IPATH) $(MACRO) $(CCOPT) -o $(OBJECT) $(MAINO) $(CIFO) $(CPPIFO) $(COFILES) $(CPPOFILES) $(CINTLIB) G__setup.o $(READLINEA) $(LIBS) $(LDOPT)\n");
+#else
+    fprintf(fp,"\t$(LD) $(OPTIMIZE) $(IPATH) $(MACRO) -o $(OBJECT) $(MAINO) $(CIFO) $(CPPIFO) $(COFILES) $(CPPOFILES) $(CINTLIB) G__setup.o $(READLINEA) $(LIBS) $(LDOPT)\n");
+#endif
 #endif
   }
   fprintf(fp,"\n");
@@ -1195,12 +1172,14 @@ char **argv;
   if(G__CHDR) {
     fprintf(fp,"# Compile C Interface routine ############################\n");
     fprintf(fp,"$(CIFO) : $(CIFC)\n");
+#ifndef G__OLDIMPLEMENTATION783
     fprintf(fp,"\t$(CC) $(CINTIPATH) $(IPATH) $(MACRO) $(OPTIMIZE) $(OPTION) $(CCOPT) -c $(CIFC)\n");
+#else
+    fprintf(fp,"\t$(CC) $(CINTIPATH) $(IPATH) $(MACRO) $(OPTIMIZE) $(OPTION) -c $(CIFC)\n");
+#endif
     fprintf(fp,"\n");
     fprintf(fp,"# Create C Interface routine #############################\n");
-#if defined(CINTSYSDIR)
-    fprintf(fp,"$(CIFC) : $(CHEADER) $(CSTUB)\n");
-#elif defined(G__DJGPP)
+#ifdef G__DJGPP
     fprintf(fp,"$(CIFC) : $(CHEADER) $(CSTUB) $(CINTSYSDIR)/cint.exe\n");
 #else
     fprintf(fp,"$(CIFC) : $(CHEADER) $(CSTUB) $(CINTSYSDIR)/cint\n");
@@ -1210,11 +1189,11 @@ char **argv;
      * it will set G__clock flags so that it will create K&R compatible 
      * function headers. This is not a good manner but -K -c-2 and -c-2 -K
      * has different meaning. */
-#ifdef CINTSYSDIR
-    fprintf(fp,"\tcint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CINTOPT) $(CHEADERCINT)" 
+#ifndef G__OLDIMPLEMENTATION783
+    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CINTOPT) $(CHEADERCINT)" 
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #else
-    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CINTOPT) $(CHEADERCINT)" 
+    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -K -w%d -z%s -n$(CIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-2 $(KRMODE) $(IPATH) $(MACRO) $(CHEADERCINT)" 
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #endif
     if(G__CSTUB) fprintf(fp," +STUB $(CSTUBCINT) -STUB\n");
@@ -1224,21 +1203,23 @@ char **argv;
   if(G__CPPHDR) {
     fprintf(fp,"# Compile C++ Interface routine ##########################\n");
     fprintf(fp,"$(CPPIFO) : $(CPPIFC)\n");
+#ifndef G__OLDIMPLEMENTATION783
     fprintf(fp,"\t$(CPP) $(CINTIPATH) $(IPATH) $(MACRO) $(OPTIMIZE) $(OPTION) $(CCOPT) -c $(CPPIFC)\n");
+#else
+    fprintf(fp,"\t$(CPP) $(CINTIPATH) $(IPATH) $(MACRO) $(OPTIMIZE) $(OPTION) -c $(CPPIFC)\n");
+#endif
     fprintf(fp,"\n");
     fprintf(fp,"# Create C++ Interface routine ###########################\n");
-#if defined(CINTSYSDIR)
-    fprintf(fp,"$(CPPIFC) : $(CPPHEADER) $(CPPSTUB)\n");
-#elif defined(G__DJGPP)
+#ifdef G__DJGPP
     fprintf(fp,"$(CPPIFC) : $(CPPHEADER) $(CPPSTUB) $(CINTSYSDIR)/cint.exe\n");
 #else
     fprintf(fp,"$(CPPIFC) : $(CPPHEADER) $(CPPSTUB) $(CINTSYSDIR)/cint\n");
 #endif
-#ifdef CINTSYSDIR
-    fprintf(fp,"\tcint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)"
+#ifndef G__OLDIMPLEMENTATION783
+    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)"
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #else
-    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CINTOPT) $(CPPHEADERCINT)"
+    fprintf(fp,"\t$(CINTSYSDIR)/cint %s -w%d -z%s -n$(CPPIFC) $(DLLSPEC) -D__MAKECINT__ -DG__MAKECINT %s -c-1 -A $(IPATH) $(MACRO) $(CPPHEADERCINT)"
 	    ,G__INITFUNC,G__isDLL,G__DLLID,G__preprocess);
 #endif
     if(G__CPPSTUB) fprintf(fp," +STUB $(CPPSTUBCINT) -STUB\n");

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Varargs.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
+/* @(#)root/base:$Name$:$Id$ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -12,8 +12,7 @@
 #define ROOT_Varargs
 
 #ifdef __CINT__
-/* typedef char *va_list; */
-#include <stdarg.h>
+typedef char *va_list;
 #endif
 
 #if defined(sparc) && defined(__CC_ATT301__)

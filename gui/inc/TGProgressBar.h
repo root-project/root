@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.3 2000/10/11 16:13:23 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.h,v 1.2 2000/10/10 10:20:10 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -58,18 +58,18 @@ protected:
    virtual void DoRedraw() = 0;
 
    static FontStruct_t  fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
    static TGGC          fgDefaultGC;
    static TGGC          fgDefaultBarColorGC;
 
 public:
-   static FontStruct_t  GetDefaultFontStruct();
-   static const TGGC   &GetDefaultGC();
-
    TGProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
-                 ULong_t back = GetWhitePixel(),
-                 ULong_t barcolor = GetDefaultSelectedBackground(),
-                 GContext_t norm = GetDefaultGC()(),
-                 FontStruct_t font = GetDefaultFontStruct(),
+                 ULong_t back = fgWhitePixel,
+                 ULong_t barcolor = fgDefaultSelectedBackground,
+                 GContext_t norm = fgDefaultGC(),
+                 FontStruct_t font = fgDefaultFontStruct,
                  UInt_t options = kDoubleBorder | kSunkenFrame);
    virtual ~TGProgressBar() { }
 
@@ -86,6 +86,9 @@ public:
    EFillType    GetFillType() const { return fType; }
    Bool_t       UsePercent() const { return fPercent; }
 
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
+
    ClassDef(TGProgressBar,0)  // Progress bar abstract base class
 };
 
@@ -98,10 +101,10 @@ protected:
 public:
    TGHProgressBar(const TGWindow *p,
                   UInt_t w = 4, UInt_t h = kProgressBarTextWidth,
-                  ULong_t back = GetWhitePixel(),
-                  ULong_t barcolor = GetDefaultSelectedBackground(),
-                  GContext_t norm = GetDefaultGC()(),
-                  FontStruct_t font = GetDefaultFontStruct(),
+                  ULong_t back = fgWhitePixel,
+                  ULong_t barcolor = fgDefaultSelectedBackground,
+                  GContext_t norm = fgDefaultGC(),
+                  FontStruct_t font = fgDefaultFontStruct,
                   UInt_t options = kDoubleBorder | kSunkenFrame) :
       TGProgressBar(p, w, h, back, barcolor, norm, font, options) { fBarWidth = h; }
    TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w);
@@ -125,10 +128,10 @@ protected:
 public:
    TGVProgressBar(const TGWindow *p,
                   UInt_t w = kProgressBarTextWidth, UInt_t h = 4,
-                  ULong_t back = GetWhitePixel(),
-                  ULong_t barcolor = GetDefaultSelectedBackground(),
-                  GContext_t norm = GetDefaultGC()(),
-                  FontStruct_t font = GetDefaultFontStruct(),
+                  ULong_t back = fgWhitePixel,
+                  ULong_t barcolor = fgDefaultSelectedBackground,
+                  GContext_t norm = fgDefaultGC(),
+                  FontStruct_t font = fgDefaultFontStruct,
                   UInt_t options = kDoubleBorder | kSunkenFrame) :
       TGProgressBar(p, w, h, back, barcolor, norm, font, options) { fBarWidth = w; }
    TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h);

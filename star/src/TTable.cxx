@@ -1,157 +1,39 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.25 2002/01/23 17:52:51 rdm Exp $
-// Author: Valery Fine(fine@bnl.gov)   03/07/98
-// Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
+// $Id: TTable.cxx,v 1.6 2000/09/29 07:15:30 brun Exp $
+//
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.6 2000/09/29 07:15:30 brun Exp $
+// Author: Valery Fine(fine@mail.cern.ch)   03/07/98
+// Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
+//
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TTable                                                               //
+//                                                                      //
+// Wraps the array of the STAF C-structures (one STAF Table per element)//
+//                                                                      //
+// class TTable provides the automatic schema evolution for             //
+// the derived "table" classes saved with ROOT format.                  //
+//                                                                      //
+// "Automatic Schema evolution" provides:                               //
+//   -  skipping data-member if it is not present for the current       //
+//      implementation of the "table" but was present at the time the   //
+//      table was written;                                              //
+//   -  assign a default value ZERO for the brand-new data-members,     //
+//      those were not in the structure when the object was written but //
+//      present now;                                                    //
+//   -  trace propely any change in the order of the data-members       //
+//                                                                      //
+// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/st2tab.gif"> </P> End_Html //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TTable                                                                 //
-//                                                                        //
-// Wraps the array of the plain C-structures (one C-structure per element)//
-//                                                                        //
-// class TTable provides the automatic schema evolution for               //
-// the derived "table" classes saved with ROOT format.                    //
-//                                                                        //
-// "Automatic Schema evolution" provides:                                 //
-//   -  skipping data-member if it is not present for the current         //
-//      implementation of the "table" but was present at the time the     //
-//      table was written;                                                //
-//   -  assign a default value ZERO for the brand-new data-members,       //
-//      those were not in the structure when the object was written but   //
-//      present now;                                                      //
-//   -  trace propely any change in the order of the data-members         //
-//                                                                        //
-// To enjoy this class one has to derive his/her own custom class:        //
-//                                                                        //
-// St_dst_track_Table.h:                                                  //
-// ---------------------                                                  //
-//  #ifndef STAF_St_dst_track_Table                                       //
-//  #define STAF_St_dst_track_Table                                       //
-//                                                                        //
-//  #include "TTable.h"                                                   //
-//                                                                        //
-// // #include "dst_track.h"  the C-structure defintion may be kept       //
-//                            separately                                  //
-//  typedef struct dst_track_st {                                         //
-//  	float r0;             /* radius at start (cm). See also comments*/
-//  	float phi0;           /* azimuthal angle at start (deg)         */
-//  	float z0;             /* z-coord. at start (cm)                 */
-//  	float psi;            /* azimuthal angle of pT vector (deg)     */
-//  	float tanl;           /* tan(dip) =pz/pt at start               */
-//  	float invpt;          /* 1/pt at start (GeV/c)^(-1)             */
-//  	float curvature;      /* Track curvature (1/cm)                 */
-//  	float covar[15];      /* full covariance matrix                 */
-//  	float chisq[2];       /* Chi-square per degree of freedom       */
-//  	float x_first[3];     /* coord. of first measured point (cm)    */
-//  	float x_last[3];      /* coord. of last measured point (cm)     */
-//  	float length;         /* from first to last point (cm)          */
-//  	float impact;         /* primary vertex (cm)                    */
-//  	unsigned long map[2]; /* extrap. info. (see preceeding comments)*/
-//  	int id;               /* Primary key (see comments)             */
-//  	int iflag;            /* bitmask quality info. (see comments)   */
-//  	int det_id;           /* Detector id information                */
-//  	int method;           /* Track finding/fitting method, packed   */
-//  	int pid;              /* Geant particle ID for assumed mass     */
-//  	int n_point;          /* SVT, TPC, FTPC component #s are packed */
-//  	int n_max_point;      /* SVT, TPC, FTPC component #s are packed */
-//  	int n_fit_point;      /* SVT, TPC, FTPC component #s are packed */
-//  	int icharge;          /* Particle charge in units of |e|        */
-//  	int id_start_vertex;  /* final fit and primary track candidates */
-//  } DST_TRACK_ST;                                                       //
-//                                                                        //
-//  class St_dst_track : public TTable                                    //
-//  {                                                                     //
-//   public:                                                              //
-//     ClassDefTable(St_dst_track,dst_track_st)                           //
-//     ClassDef(St_dst_track,2) //C++ wrapper for <dst_track> StAF table  //
-//  };                                                                    //
-//  #endif                                                                //
-// ---------------------                                                  //
-//                                                                        //
-//  where the CPP macro defines several convinient methods for the        //
-//  "table" class (see: $ROOTSYS/star/inc/Ttypes.h for details:           //
-//                                                                        //
-//  #define ClassDefTable(className,structName)
-//    protected:
-//       static TTableDescriptor *fgColDescriptors;
-//       virtual TTableDescriptor *GetDescriptorPointer() const { return fgColDescriptors;}
-//       virtual void SetDescriptorPointer(TTableDescriptor *list) const { fgColDescriptors = list;}
-//    public:
-//      typedef structName* iterator;
-//      className() : TTable(_QUOTE_(className),sizeof(structName))    {SetType(_QUOTE_(structName));}
-//      className(const Text_t *name) : TTable(name,sizeof(structName)) {SetType(_QUOTE_(structName));}
-//      className(Int_t n) : TTable(_QUOTE_(className),n,sizeof(structName)) {SetType(_QUOTE_(structName));}
-//      className(const Text_t *name,Int_t n) : TTable(name,n,sizeof(structName)) {SetType(_QUOTE_(structName));}
-//      structName *GetTable(Int_t i=0) const { return ((structName *)GetArray())+i;}
-//      structName &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }
-//      const structName &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const structName *)(GetTable(i))); }
-//      structName *begin() const  {                      return GetNRows()? GetTable(0):0;}
-//      structName *end()   const  {Int_t i = GetNRows(); return          i? GetTable(i):0;}
-//                                                                        //
-//  The class implementation file may 2 lines and look as follows:        //
-//  (for the example above):                                              //
-//                                                                        //
-//  St_dst_track_Table.cxx:                                               //
-//  -----------------------                                               //
-//       #include "St_dst_track_Table.h"                                  //
-//       TableClassImpl(St_dst_track, dst_track_st)                       //
-//  -----------------------                                               //
-//                                                                        //
-// $Log: TTable.cxx,v $
-// Revision 1.25  2002/01/23 17:52:51  rdm
-// use Riosfwd.h in headers instead of <iosfwd> or many other ifdef'ed variant
-// and Riostream.h in the source instead of <iostream[.h]>, <fstream[.h]> and
-// <iomanip[.h]>.
-//
-// Revision 1.24  2002/01/15 10:33:34  brun
-// Use THLimitsFinder instead of TGaxis::Optimize.
-//
-// Revision 1.23  2001/12/11 07:25:09  brun
-// Fix a bug in TTable copy constructor. Must call the base class (TSataSet)
-// copy constructor. (from Valery)
-//
-// Revision 1.22  2001/12/04 14:40:20  brun
-// delete #include <float.h>. Now included in Tmath.h
-//
-// Revision 1.21  2001/08/27 12:59:09  brun
-// Must activate the definition of the function "finite" on Solaris systems.
-//
-// Revision 1.20  2001/07/11 06:46:19  brun
-// New version of the Star classes from Valery.
-//
-// Revision 1.17  2001/05/29 19:10:04  brun
-// // New methods:
-// // ------------
-// // class TCL
-// // New method trsequ to solve
-// //           Ax=B
-// // from Victor Perevoztchikov
-// // where A is a symmetric unpacked matrix
-//
-// // class TTable:
-// // meta-variables i$ and n$ introduced
-// // where "i$" stands for the current row index
-// //       "n$" stands for the total number of rows
-// // meta-variable can be used along the normal
-// // table column names in the C++ (Cint) expressions
-// // (see for example method TTable::Draw
-//
-// Revision 1.16  2001/05/29 19:08:08  brun
-// New version of some STAR classes from Valery.
-//
-// Revision 1.19  2001/05/29 16:07:51  fine
-//  comments make up
-//                                                   //
-// Revision 1.18  2001/05/27 02:39:02  fine                               //
-// meta-variables i$ and n$ introduced                                    //
-// where "i$" stands for the current row index                            //
-//       "n$" stands for the total number of rows                         //
-// meta-variable can be used along the normal                             //
-// table column names in the expressions (see for example                 //
-// method TTable::Draw                                                    //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
+#include <iostream.h>
+#include <fstream.h>
+#include <iomanip.h>
 
-#include "Riostream.h"
+#ifdef WIN32
+# include <float.h>
+#endif
+
 #include "TROOT.h"
 #include "TBaseClass.h"
 #include "TSystem.h"
@@ -161,11 +43,12 @@
 #include "TBrowser.h"
 #include "TString.h"
 #include "Api.h"
-#include "TDataSetIter.h"
+#include "TRealData.h"
+#include "TDataMember.h"
+#include "TDataType.h"
 #include "TTable.h"
 #include "TTableDescriptor.h"
 #include "TColumnView.h"
-#include "TFile.h"
 
 #include "TGaxis.h"
 #include "TH1.h"
@@ -177,7 +60,6 @@
 #include "TView.h"
 #include "TGaxis.h"
 #include "TPolyMarker3D.h"
-#include "THLimitsFinder.h"
 
 TH1 *gCurrentTableHist = 0;
 
@@ -186,14 +68,8 @@ static   Int_t         fNbins[4] = {100,100,100,100};     //Number of bins per d
 static   Float_t       fVmin[4]  = {0,0,0,0};             //Minima of varexp columns
 static   Float_t       fVmax[4]  = {20,20,20,20};         //Maxima of varexp columns
 
-const char *TTable::fgTypeName[] = {
-                       "NAN", "float", "int", "long", "short", "double"
-                     , "unsigned int", "unsigned long","unsigned short"
-                     , "unsigned char", "char"
-                                   };
-
 //______________________________________________________________________________
-static void ArrayLayout(UInt_t *layout,const UInt_t *size, Int_t dim)
+static void ArrayLayout(Int_t *layout,Int_t *size, Int_t dim)
 {
   //
   // ArrayLayout - calculates the array layout recursively
@@ -227,51 +103,36 @@ TTableDescriptor *TTable::GetTableDescriptors() const {
 }
 
 //______________________________________________________________________________
-void TTable::AsString(void *buf, EColumnType type, Int_t width,ostream &out) const
+void TTable::AsString(void *buf, const char *name, Int_t width) const
 {
   //
   // AsString represents the value provided via "void *b" with type defined
   //          by "name"
   //
   //   void *buf  - the pointer to the value to be printed out.
-  //        type  - the basic data type for the value above
+  //        name  - the name of the type for the value above
   //       width  - the number of psotion to be used to print the value out
   //
-   switch (type) {
-    case kFloat:
-         out << setw(width) << setprecision(width-3) << *(float *)buf;
-         break;
-    case kInt:
-         out <<  setw(width) << *(int *)buf;
-         break;
-    case kLong:
-         out << setw(width) << *(long *)buf;
-         break;
-    case kShort:
-         out << setw(width) << *(short *)buf;
-         break;
-    case kDouble:
-         out << setw(width) << setprecision(width-3) << *(double *)buf;
-         break;
-    case kUInt:
-         out << setw(width) << *(unsigned int *)buf;
-         break;
-    case kULong:
-         out << setw(width) << *(unsigned long *)buf;
-         break;
-    case kUShort:
-         out << setw(width) << hex << *(unsigned short *)buf;
-         break;
-    case kUChar:
-         out << setw(width) << hex << *(unsigned char *)buf;
-         break;
-    case kChar:
-         out << setw(width) << *(char *)buf;
-         break;
-    default:
-         out << "\"NaN\"";
-         break;
-   };
+   if (!strcmp("unsigned int", name))
+      cout << setw(width) << *(unsigned int *)buf;
+   else if (!strcmp("int", name))
+      cout <<  setw(width) <<  *(int *)buf;
+   else if (!strcmp("unsigned long", name))
+      cout <<  setw(width) <<  *(unsigned long *)buf;
+   else if (!strcmp("long", name))
+      cout <<  setw(width) <<  *(long *)buf;
+   else if (!strcmp("unsigned short", name))
+      cout <<  setw(width) <<  hex << *(unsigned short *)buf;
+   else if (!strcmp("short", name))
+      cout <<  setw(width) << *(short *)buf;
+   else if (!strcmp("unsigned char", name))
+      cout <<  setw(width) <<  hex << *(unsigned char *)buf;
+   else if (!strcmp("char", name))
+      cout <<   setw(width) << *(char *)buf;
+   else if (!strcmp("float", name))
+      cout <<   setw(width) << setprecision(width-3) << *(float *)buf;
+   else if (!strcmp("double", name))
+      cout <<   setw(width) << setprecision(width-3) << *(double *)buf;
 }
 
 //______________________________________________________________________________
@@ -286,7 +147,7 @@ const void *TTable::At(Int_t i) const
 }
 
 //______________________________________________________________________________
-Int_t TTable::CopyRows(const TTable *srcTable, Long_t srcRow, Long_t dstRow, Long_t nRows, Bool_t expand)
+Int_t TTable::CopyRows(const TTable *srcTable, Int_t srcRow, Int_t dstRow, Int_t nRows, Bool_t expand)
 {
  // CopyRows copies nRows from starting from the srcRow of srcTable
  // to the dstRow in this table upto nRows or by the end of this table.
@@ -316,7 +177,7 @@ Int_t TTable::CopyRows(const TTable *srcTable, Long_t srcRow, Long_t dstRow, Lon
    // check this table current capacity
    if (!nRows) nRows = srcTable->GetNRows();
    Long_t tSize = GetTableSize();
-   Long_t extraRows = (tSize - dstRow) - nRows;
+   Int_t extraRows = (tSize - dstRow) - nRows;
    if (extraRows < 0) {
      if (expand) {
        ReAllocate(tSize - extraRows);
@@ -325,7 +186,7 @@ Int_t TTable::CopyRows(const TTable *srcTable, Long_t srcRow, Long_t dstRow, Lon
      nRows += extraRows;
    }
    if (dstRow+nRows > GetNRows()) SetNRows(dstRow+nRows);
-   ::memmove((*this)[dstRow],(*srcTable)[srcRow],(size_t)GetRowSize()*nRows);
+   ::memcpy((*this)[dstRow],(*srcTable)[srcRow],GetRowSize()*nRows);
    return nRows;
  } else
      Error("CopyRows",
@@ -333,17 +194,7 @@ Int_t TTable::CopyRows(const TTable *srcTable, Long_t srcRow, Long_t dstRow, Lon
            ,srcTable->GetType());
  return 0;
 }
-//______________________________________________________________________________
-void TTable::DeleteRows(Long_t indx, UInt_t nRows)
-{
-  // Delete one or several rows from the table
-  //
-  //  Int_t indx  - index of the first row to be deleted
-  //  Int_t nRows - the total number of rows to be deleted
-  //              = 1 "by default
-  if (CopyRows(this, indx+nRows, indx, GetNRows()-indx-nRows))
-       SetUsedRows(GetNRows() - nRows);
-}
+
 //______________________________________________________________________________
 TH1  *TTable::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries, Int_t firstentry)
 {
@@ -369,19 +220,12 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
 //
 //  varexp is an expression of the general form e1:e2:e3
 //    where e1,etc is a C++ expression referencing a combination of the TTable columns
-//          One can use two extra meta variable "i$" and "n$" along with the table
-//          column names.
-//          i$ is to involve the current row number
-//          n$ refers the total num,ber of rows of this table provided by TTable::GetNRows()
-//
 //  Example:
 //     varexp = x     simplest case: draw a 1-Dim distribution of column named x
 //            = sqrt(x)            : draw distribution of sqrt(x)
 //            = x*y/z
 //            = y:sqrt(x) 2-Dim dsitribution of y versus sqrt(x)
-//            = i$:sqrt(x) 2-Dim dsitribution of i versus sqrt(x[i])
 //            = phep[0]:sqrt(phep[3]) 2-Dim dsitribution of phep[0] versus sqrt(phep[3])
-//
 //  Note that the variables e1, e2 or e3 may contain a boolean expression as well.
 //  example, if e1= x*(y<0), the value histogrammed will be x if y<0
 //  and will be 0 otherwise.
@@ -392,13 +236,11 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
 //  If the expression includes only boolean operations, the result
 //  is 0 or 1. If the result is 0, the histogram is not filled.
 //  In general, the expression may be of the form:
-//
 //      value*(boolean expression)
-//
 //  if boolean expression is true, the histogram is filled with
 //  a weight = value.
 //  Examples:
-//      selection1 = "x<y && sqrt(z)>3.2 && 6 < i$ && i$ < n$"
+//      selection1 = "x<y && sqrt(z)>3.2"
 //      selection2 = "(x+y)*(sqrt(z)>3.2"
 //      selection3 = "signal*(log(signal)>1.2)"
 //  selection1 returns a weigth = 0 or 1
@@ -461,8 +303,8 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
 
    if (GetNRows() == 0 || varexp00 == 0 || varexp00[0]==0) return 0;
    TString  opt;
-//   Text_t *hdefault = (char *)"htemp";
-   const char *hdefault = "htemp";
+   Text_t *hdefault = (char *)"htemp";
+   Text_t *varexp="";
    Int_t i,j,action;
    Int_t hkeep = 0;
    opt = option;
@@ -479,6 +321,8 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
       hname += 2;
       hkeep  = 1;
       i = strcspn(varexp0,">>");
+      varexp = new char[i+1];
+      varexp[0] = 0; //necessary if i=0
       Bool_t hnameplus = kFALSE;
       while (*hname == ' ') hname++;
       if (*hname == '+') {
@@ -493,6 +337,7 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
          }
       }
       if (i) {
+         strncpy(varexp,varexp0,i); varexp[i]=0;
          oldh1 = (TH1*)gDirectory->Get(hname);
          if (oldh1 && !hnameplus) oldh1->Reset();
       } else {
@@ -503,14 +348,6 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
          if (elist && !hnameplus) elist->Reset();
       }
    }
-   if (!hname || *hname==0) {
-      hkeep  = 0;
-      if (gDirectory) {
-         oldh1 = (TH1*)gDirectory->Get(hdefault);
-         if (oldh1 ) { oldh1->Delete(); oldh1 = 0;}
-      }
-   }
-
   // Look for colons
   const Char_t *expressions[] ={varexp0,0,0,0,selection};
   Int_t maxExpressions = sizeof(expressions)/sizeof(Char_t *);
@@ -525,14 +362,19 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
 
   expressions[colIndex] = selection;
 
-
+  if (!hname) {
+      hname  = hdefault;
+      hkeep  = 0;
+      varexp = (char*)varexp0;
+      if (gDirectory) {
+         oldh1 = (TH1*)gDirectory->Get(hname);
+         if (oldh1 ) { oldh1->Delete(); oldh1 = 0;}
+      }
+   }
 //--------------------------------------------------
     printf(" Draw %s for <%s>\n", varexp00, selection);
     Char_t *exprFileName = MakeExpression(expressions,colIndex+1);
-    if (!exprFileName) {
-      delete [] varexp0;
-      return 0;
-    }
+    if (!exprFileName) return 0;
 
 //--------------------------------------------------
 //   if (!fVar1 && !elist) return 0;
@@ -709,8 +551,8 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
       EntryLoop(exprFileName,action,elist,nentries, firstentry, option);
 //      SetEstimate(oldEstimate);
    }
-  delete [] exprFileName;
-  delete [] varexp0;
+  if (exprFileName) delete [] exprFileName;
+  if (hkeep) delete [] varexp;
   return gCurrentTableHist;
 }
 
@@ -722,6 +564,7 @@ static void FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &
 //*-*  This mathod is a straight copy of void TTree::FindGoodLimits method
 //*-*
 
+   static TGaxis gaxis_tree;
    Double_t binlow,binhigh,binwidth;
    Int_t n;
    Double_t dx = 0.1*(xmax-xmin);
@@ -730,7 +573,7 @@ static void FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &
    if (umin < 0 && xmin >= 0) umin = 0;
    if (umax > 0 && xmax <= 0) umax = 0;
 
-   THLimitsFinder::Optimize(umin,umax,nbins,binlow,binhigh,n,binwidth,"");
+   gaxis_tree.Optimize(umin,umax,nbins,binlow,binhigh,n,binwidth);
 
    if (binwidth <= 0 || binwidth > 1.e+39) {
       xmin = -1;
@@ -779,13 +622,11 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
     return kFALSE; // can not load file
   }
 
-  // Float_t  Selection(Float_t *results[], void *address[], int& i$, int n$)
-  //   where  i$ - meta variable to set current row index
-  //          n$ - meta variable to set the total table size
+  // Float_t  Selection(Float_t *results[], void *address[])
   const Char_t *funcName = "SelectionQWERTY";
 #define BYTECODE
 #ifdef BYTECODE
-  const Char_t *argtypes = "Float_t *,float **, int&, int& ";
+  const Char_t *argtypes = "Float_t *,float **";
   long offset;
   G__ClassInfo globals;
   G__MethodInfo func = globals.GetMethod(funcName,argtypes,&offset);
@@ -800,8 +641,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
 #endif
   // Prepare callfunc object
   int i;
-  int nRows =  GetNRows();
-  TTableDescriptor    *tabsDsc   = GetRowDescriptors();
+  TTableDescriptor  *tabsDsc   = GetRowDescriptors();
   tableDescriptor_st  *descTable = tabsDsc->GetTable();
   Float_t  results[]    = {1,1,1,1,1};
   Char_t **addressArray = (Char_t **)new ULong_t[tabsDsc->GetNRows()];
@@ -810,15 +650,11 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
   G__CallFunc callfunc;
   callfunc.SetBytecode(pbc);
 
-  callfunc.SetArg((long)(&results[0]));   // give 'Float_t *results[5]'     as 1st argument
+  callfunc.SetArg((long)(&results[0]));   // give 'Float_t *results[5]' as 1st argument
   callfunc.SetArg((long)(addressArray));  // give 'void    *addressArray[]' as 2nd argument
-  callfunc.SetArg((long)(&i));            // give 'int& i$'                 as 3nd argument
-  callfunc.SetArg((long)(&nRows));        // give 'int& n$= nRows           as 4th argument
 #else
   char buf[200];
-  sprintf(buf,"%s((Float_t*)(%ld),(void**)(%ld),*(int*)(%ld),*(int*)(%ld))"
-             ,funcName
-             ,(long int)results,(long int)addressArray,(long int)(&i),(long int)(&nRows));
+  sprintf(buf,"%s((Float_t*)(%ld),(void**)(%ld))",funcName,(long int)results,(long int)addressArray);
 #endif
 
   // Call bytecode in loop
@@ -839,10 +675,10 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
 #define TAKEACTION_END  for (int j=0; j < tabsDsc->GetNRows(); j++ ) addressArray[j] += rSize;}
 
 
-  if (firstentry < nRows ) {
+  if (firstentry < GetNRows() ) {
       Long_t rSize         = GetRowSize();
       Char_t *addressEntry = thisTable + rSize*firstentry;
-      Int_t lastEntry = TMath::Min(UInt_t(firstentry+nentries),UInt_t(nRows));
+      Int_t lastEntry = TMath::Min(UInt_t(firstentry+nentries),UInt_t(GetNRows()));
       if (action < 0) {
         fVmin[0] = fVmin[1] = fVmin[2] = 1e30;
         fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
@@ -1020,7 +856,7 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
 
 //______________________________________________________________________________
 TTable::TTable(const Text_t *name, Int_t size) : TDataSet(name),
-         fSize(size),fN(0), fTable(0),fMaxIndex(0)
+        fSize(size),fTable(0),fMaxIndex(0)
 {
    // Default TTable ctor.
    if (size == 0) Warning("TTable(0)","Wrong table format");
@@ -1028,7 +864,7 @@ TTable::TTable(const Text_t *name, Int_t size) : TDataSet(name),
 
 //______________________________________________________________________________
 TTable::TTable(const Text_t *name, Int_t n,Int_t size) : TDataSet(name),
-        fSize(size),fN(0),fTable(0),fMaxIndex(0)
+        fSize(size),fTable(0),fMaxIndex(0)
 {
    // Create TTable object and set array size to n longs.
    if (n > 0) Set(n);
@@ -1036,7 +872,7 @@ TTable::TTable(const Text_t *name, Int_t n,Int_t size) : TDataSet(name),
 
 //______________________________________________________________________________
 TTable::TTable(const Text_t *name, Int_t n, Char_t *table,Int_t size) : TDataSet(name),
-         fSize(size),fN(0),fTable(0),fMaxIndex(0)
+        fSize(size),fTable(0),fMaxIndex(0)
 {
    // Create TTable object and initialize it with values of array.
 
@@ -1055,7 +891,7 @@ TTable::TTable(const Text_t *name, const Text_t *type, Int_t n, Char_t *array, I
 }
 
 //______________________________________________________________________________
-TTable::TTable(const TTable &table) :TDataSet(table)
+TTable::TTable(const TTable &table)
 {
    // Copy constructor.
    fTable    = 0;
@@ -1104,7 +940,7 @@ void TTable::Adopt(Int_t n, void *arr)
 //______________________________________________________________________________
 Int_t TTable::AddAt(const void *row)
 {
-  // Add        the "row" at the GetNRows() position, and
+  // Add        the "row" at the GetNRows() position, and 
   // reallocate the table if neccesary,               and
   // return     the row index the "row" has occupied.
   //
@@ -1113,16 +949,16 @@ Int_t TTable::AddAt(const void *row)
   Int_t gap = GetTableSize() - GetNRows();
   if (gap <= 1) ReAllocate(GetTableSize() + TMath::Max(1,Int_t(0.3*GetTableSize())));
   Int_t indx = GetNRows();
-  AddAt(row,indx);
+  AddAt(row,indx);  
   return indx;
 }
 //______________________________________________________________________________
 void TTable::AddAt(const void *row, Int_t i)
 {
-   // Add    one element ("row") of structure at position "i".
+   // Add    one element ("row") of structure at position "i". 
    // Check  for out of bounds.
    //
-   //        If the row == 0 the "i" cell is still occupied and
+   //        If the row == 0 the "i" cell is still occupied and 
    // filled with the pattern "ff"
 
    if (!BoundsOk("TTable::AddAt", i))
@@ -1139,37 +975,14 @@ void TTable::CopyStruct(Char_t *dest, const Char_t *src)
  // the length of the strucutre is defined by this class descriptor
     ::memcpy(dest,src,fSize*fN);
 }
+
 //______________________________________________________________________________
 void TTable::CopySet(TTable &array)
 {
   array.Set(fN);
   CopyStruct(array.fTable,fTable);
 }
-//______________________________________________________________________________
-Long_t TTable::InsertRows(const void *row, Long_t indx, UInt_t nRows)
-{
-  // void InsertRows(cons void *row, Long_t indx, UInt_t nRows)
-  //
-  // Insert one or several rows into the table at "indx" position
-  // The rest table stuff is shifted down
-  //
-  //  cons void    - a pointer to the array of rows to be inserted
-  //  Long_t indx  - The position these rows will be instered to
-  //  Int_t nRows  - the total number of rows to be inserted
-  //                 = 1 "by default
-  //  return:
-  //  The number of the rows has been shifted to accomodate
-  //  the new rows.
-  //
-  Long_t nShifted = 0;
-  if (nRows > 0) {
-     // Shift the table down
-     nShifted = CopyRows(this, indx, indx+nRows, GetNRows()+nRows);
-     // Copy (insert) the extra staff in
-     ::memmove(fTable+indx*fSize,row,fSize*nRows);
-  }
-  return nShifted;
-}
+
 //______________________________________________________________________________
 void *TTable::ReAllocate()
 {
@@ -1182,6 +995,7 @@ void *TTable::ReAllocate()
    ReAlloc(GetNRows()+1);
    return (void *)fTable;
 }
+
 //______________________________________________________________________________
 void *TTable::ReAllocate(Int_t newsize)
 {
@@ -1256,7 +1070,7 @@ void TTable::Browse(TBrowser *b){
      UInt_t nDim = GetDimensions(i);
      const Char_t *colName = GetColumnName(i);
      if (!nDim) { // scalar
-        // This will cause a small memory leak
+        // This will cause a small memory leak 
         // unless TBrowser recognizes kCanDelete bit
         view = new TColumnView(GetColumnName(i),this);
         view->SetBit(kCanDelete);
@@ -1291,7 +1105,7 @@ void TTable::Clear(Option_t *opt)
     fMaxIndex = 0;
     SetfN(0);
     return;
-  }
+  } 
 }
 
 //______________________________________________________________________________
@@ -1383,23 +1197,55 @@ const Char_t *TTable::GetType() const
 }
 
 //______________________________________________________________________________
-Bool_t TTable::IsFolder() const {
+Bool_t TTable::IsFolder() const { 
   // return Folder flag to be used by TBrowse object
-  // The table is a folder if
+  // The tablke is a folder if
   //  - it has sub-dataset
-  //    or
-  //  - GetNRows > 0
-  return kTRUE; // to provide the "fake" folder bit to workaround TKey::Browse()
-
-#if 0
-  // this became useless due TKey::Browse new implementation
-  return
-	 (fList && fList->Last() ? kTRUE : kFALSE)
-   ||
+  //  - GetNRows > 0 
+  return 
+     (fList && fList->Last() ? kTRUE : kFALSE) 
+   || 
      (GetNRows() > 0);
-#endif
 }
 
+//______________________________________________________________________________
+void TTable::ls(Option_t *option) const
+{
+  TDataSet::ls(option);
+  TROOT::IncreaseDirLevel();
+  TROOT::IndentLevel();
+  cout       <<Path()
+             <<"\t --> Allocated rows: "<<fN
+             <<"\t Used rows: "<<fMaxIndex
+             <<"\t Row size: "      << fSize << " bytes"
+      <<endl;
+  //  Print();
+  TROOT::DecreaseDirLevel();
+}
+
+//_____________________________________________________________________________
+void TTable::ls(Int_t deep) const
+{
+   TDataSet::ls(deep);
+   TROOT::IncreaseDirLevel();
+   TROOT::IndentLevel();
+   cout      <<Path()
+             <<"\t --> Allocated rows: "<<fN
+             <<"\t Used rows: "<<fMaxIndex
+             <<"\t Row size: " << fSize << " bytes"
+      <<endl;
+   //   Print();
+   TROOT::DecreaseDirLevel();
+}
+
+
+#ifdef WIN32
+# ifndef finite
+#   define finite _finite
+# endif
+#else
+extern "C" {int finite( double x );}
+#endif
 
 //______________________________________________________________________________
 Int_t TTable::NaN()
@@ -1415,7 +1261,7 @@ Int_t TTable::NaN()
   int icol,irow,colsize,wordsize,nwords,iword,nerr,offset;
 
   TTableDescriptor *rowDes = GetRowDescriptors();
-  assert(rowDes!=0);
+  assert(rowDes);
   table = (const char*)GetArray();
 
   int ncols = rowDes->GetNumberOfColumns();
@@ -1476,83 +1322,88 @@ TTable *TTable::New(const Char_t *name, const Char_t *type, void *array, UInt_t 
   }
   return table;
 }
-//______________________________________________________________________________
-Bool_t TTable::OutOfBoundsError(const char *where, Int_t i) const
-{
-   // Generate an out-of-bounds error. Always returns false.
-   Error(where, "index %d out of bounds (size: %d, this: 0x%08x)", i, fN, this);
-   return kFALSE;
-}
+
 //______________________________________________________________________________
 Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
 {
   // Create IDL table defintion (to be used for XDF I/O)
+
+  Char_t buffer[100];
+  strcpy(buffer,GetTitle());
+ 
+//  ostrstream  out(strbuf,lenbuf);
   Int_t iOut = 0;
 
-  TTableDescriptor *dscT = GetRowDescriptors();
-  if (!dscT ) {
-     Error("Print"," No dictionary entry for <%s> structure", GetTitle());
-     if (lenbuf>0) iOut += sprintf(strbuf+iOut," *** Errror ***");
-     return strbuf;
-  }
+  G__ClassInfo m(buffer);
+  G__DataMemberInfo data(m);
 
+  if (!m.Name()) {
+      Error("Print"," No dictionary entry for <%s> structure", buffer);
+      if (lenbuf>0) iOut += sprintf(strbuf+iOut," *** Errror ***");
+      return strbuf;
+  }
+  TROOT::IndentLevel();
+
+  if (lenbuf>0) {
+  // cut of the "_st" suffix
+     Char_t *typenam =  new Char_t [strlen(m.Name())+1];
+     strcpy(typenam,m.Name());
+  // look for the last "_"
+     Char_t *last = strrchr(typenam,'_');
+  // Check whether it is "_st"
+     Char_t *eon = 0;
+     if (last) eon = strstr(last,"_st");
+  // Cut it off if any
+     if (eon) *eon = '\0';
+ //====      out << "struct " << typenam << " {";
+     iOut += sprintf(strbuf+iOut,"struct %s {",typenam);
+     delete [] typenam;
+   }
+   else
+      cout << "struct " << m.Name() << " {" << endl;
+
+  while(data.Next())
+  {
+    Int_t dim = data.ArrayDim();
+
+    G__TypeInfo *t = data.Type();
+
+    TROOT::IndentLevel();
+
+    if (lenbuf>0) {
+//        out << " " << t->Name() << " " << data.Name();
+       TString name = t->Name();
+       name.ReplaceAll("unsigned char","octet");
+       iOut += sprintf(strbuf+iOut," %s %s",name.Data(),data.Name());
+    }
+    else
+        cout << '\t'<< t->Name() << '\t'<< data.Name();
+
+    Int_t indx = 0;
+    while (indx < dim) {
+          if (lenbuf>0)
+  //             out <<  "[" << data.MaxIndex(indx)<<"]";
+                 iOut += sprintf(strbuf+iOut,"[%d]",data.MaxIndex(indx));
+          else
+               cout <<  "[" << data.MaxIndex(indx)<<"]";
+          indx++;
+    }
+    if (lenbuf>0)
+//        out << "; " << data.Title();
+//          iOut += sprintf(strbuf+iOut, "; %s", data.Title());
+          iOut += sprintf(strbuf+iOut, ";");
+    else
+        cout << ";\t//" <<  data.Title() << endl;
+  }
   TROOT::IndentLevel();
   if (lenbuf>0) {
-    // cut of the "_st" suffix
-       Char_t *typenam =  new Char_t [strlen(dscT->GetName())+1];
-       strcpy(typenam,dscT->GetName());
-    // look for the last "_"
-       Char_t *last = strrchr(typenam,'_');
-    // Check whether it is "_st"
-       Char_t *eon = 0;
-       if (last) eon = strstr(last,"_st");
-    // Cut it off if any
-       if (eon) *eon = '\0';
-       iOut += sprintf(strbuf+iOut,"struct %s {",typenam);
-       delete [] typenam;
-   } else {
-       cout << "struct " << dscT->GetName() << " {" << endl;
-   }
-
-   TTableDescriptor::iterator dsc  = dscT->begin();
-   TTableDescriptor::iterator dscE = dscT->end();
-   TDataSetIter nextComment(dscT->FindByName(".comments"));
-   for (;dsc != dscE; dsc++) {
-     TROOT::IndentLevel();
-     TString name = GetTypeName(EColumnType((*dsc).fType));
-     if (lenbuf>0) {
-       // convert C type names to CORBA type names
-       name.ReplaceAll("unsigned char","octet");
-       name.ReplaceAll("int","long");
-       iOut += sprintf(strbuf+iOut," %s %s",name.Data(),(*dsc).fColumnName);
-     }
-     else
-       cout << '\t'<< name.Data() << '\t'<< (*dsc).fColumnName;
-
-     Int_t indx;
-     Int_t dim = (*dsc).fDimensions;
-     for  (indx = 0; indx < dim; indx++) {
-       if (lenbuf>0)
-         iOut += sprintf(strbuf+iOut,"[%d]",(*dsc).fIndexArray[indx]);
-       else
-         cout <<  "[" << (*dsc).fIndexArray[indx]<<"]";
-     }
-     // print comment if any
-     TDataSet *nxc = nextComment();
-     if (lenbuf>0)
-       iOut += sprintf(strbuf+iOut, ";");
-     else {
-       const char *title = nxc ? nxc->GetTitle() : " ";
-       cout << ";\t//" << title << endl;
-     }
-   } /* dsc */
-
-   TROOT::IndentLevel();
-   if (lenbuf>0)
-     iOut += sprintf(strbuf+iOut, "}");
-   else
+//     out << "}";
+          iOut += sprintf(strbuf+iOut, "}");
+  }
+  else
      cout << "}" << endl;
-   return strbuf;
+
+  return strbuf;
 }
 
 //______________________________________________________________________________
@@ -1571,9 +1422,9 @@ const Char_t *TTable::PrintHeader() const
 //______________________________________________________________________________
 const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Char_t *) const
 {
-  //const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *colfirst, const Char_t *collast) const
+///const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *colfirst, const Char_t *collast) const
   //
-  //  Print the contents of internal table per COLUMN.
+  //  Print the contents of STAF tables per COLUMN.
   //
   //  row       - the index of the first row to print (counting from ZERO)
   //  rownumber - the total number of rows to print out (=10 by default)
@@ -1601,9 +1452,18 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
    Int_t ctime = 0;
    UInt_t *cdatime = 0;
    Bool_t isdate = kFALSE;
+//   char *pname;
 
-   TTableDescriptor *dscT = GetRowDescriptors();
-   if (!dscT ) return 0;
+//   if  (GetNRows() == 0) return 0;
+
+   TClass *classPtr = GetRowClass();
+
+
+   if (classPtr == 0) return 0;
+   if (!classPtr->GetListOfRealData()) classPtr->BuildRealData();
+   if (!classPtr->GetNdata()) return 0;
+
+   TIter      next( classPtr->GetListOfDataMembers());
 
    //  3. Loop by "rowStep x lines"
 
@@ -1614,109 +1474,149 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
    while (rowCount) {
      PrintHeader();
      if  (GetNRows() == 0) {// to Print empty table header
-       cout  << " ======================================================================================" << endl
-             << "   There is NO filled row in this table"                                                 << endl
-             << " ======================================================================================" << endl;
+        cout  << " ======================================================================================" << endl
+              << "   There is NO filled row in this table"                                                 << endl
+              << " ======================================================================================" << endl;
        return 0;
      }
-     cout << " Table: " << dscT->GetName()<< "\t";
-     for (Int_t j = row+rowNumber-rowCount; j<row+rowNumber-rowCount+rowStep && j < row+rowNumber ;j++)
-     {
-       Int_t hW = width-2;
-       if (j>=10) hW -= (int)TMath::Log10(float(j))-1;
-       cout  << setw(hW) << "["<<j<<"]";
-       cout  << " :" ;
-     }
-     cout << endl
-     <<       " ======================================================================================" << endl;
-     TTableDescriptor::iterator member = dscT->begin();
-     TTableDescriptor::iterator   dscE = dscT->end();
-     TDataSetIter nextComment(dscT->FindByName(".comments"));
+      cout << " Table: " << classPtr->GetName()<< "\t";
+      for (Int_t j = row+rowNumber-rowCount; j<row+rowNumber-rowCount+rowStep && j < row+rowNumber ;j++)
+      {
+         Int_t hW = width-2;
+         if (j>=10) hW -= (int)TMath::Log10(float(j))-1;
+         cout  << setw(hW) << "["<<j<<"]";
+         cout  << " :" ;
+      }
+      cout << endl
+      <<       " ======================================================================================" << endl;
+      next.Reset();
+      TDataMember *member = 0;
+      while ((member = (TDataMember*) next())) {
+         TDataType *membertype = member->GetDataType();
+         isdate = kFALSE;
+         if (strcmp(member->GetName(),"fDatime") == 0 && strcmp(member->GetTypeName(),"UInt_t") == 0) {
+            isdate = kTRUE;
+         }
 
-     for (; member != dscE; member++){
-       TString membertype = GetTypeName(EColumnType((*member).fType));
-       isdate = kFALSE;
-       if (strcmp((*member).fColumnName,"fDatime") == 0 && membertype == "UInt_t")
-                                                                                   isdate = kTRUE;
-       cout << membertype.Data();
+//         cout << member->GetTypeName() << "\t" << member->GetName();
+         cout << member->GetTypeName();
 
-       // Add the dimensions to "array" members
-       Int_t dim = (*member).fDimensions;
-       Int_t indx = 0;
-       UInt_t *arrayLayout = 0;
-       if (dim) {
-         arrayLayout = new UInt_t[dim];
-         memset(arrayLayout,0,dim*sizeof(Int_t));
-       }
-       Int_t arrayLength  = 1;
-       while (indx < dim ){ // Take in account the room this index will occupy
-         arrayLength *= (*member).fIndexArray[indx];
-         indx++;
-       }
-       // Encode data value or pointer value
-       Int_t offset = (*member).fOffset;
-       Int_t thisStepRows;
-       thisLoopLenth = TMath::Min(rowCount,rowStep);
-       Int_t indexOffset;
-       Bool_t breakLoop = kFALSE;
-
-       for (indexOffset=0; indexOffset < arrayLength && !breakLoop; indexOffset++) {
-         nextRow = startRow;
-
-         if (!indexOffset) cout << "\t" << (*member).fColumnName;
-         else              cout << "\t" << setw(strlen((*member).fColumnName)) << " ";
-
+         // Add the dimensions to "array" members
+         Int_t dim = member->GetArrayDim();
+         Int_t indx = 0;
+         Int_t *arrayLayout = 0;
+         Int_t *arraySize = 0;
          if (dim) {
-	   for (Int_t i=0;i<dim;i++) cout << "["<<arrayLayout[i]<<"]";
-           ArrayLayout(arrayLayout,(*member).fIndexArray,dim);
+           arrayLayout = new Int_t[dim];
+           arraySize  = new Int_t[dim];
+           memset(arrayLayout,0,dim*sizeof(Int_t));
          }
-         cout << "\t";
-         if ( strlen((*member).fColumnName)+3*dim < 8) cout << "\t";
+         Int_t arrayLength  = 1;
+         while (indx < dim ){
+            arraySize[indx] = member->GetMaxIndex(indx);
+            arrayLength *= arraySize[indx];
+//            cout << "["<<  arraySize[indx] <<"]";
+           // Take in account the room this index will occupy
+           indx++;
+         }
 
-         for (thisStepRows = 0;thisStepRows < thisLoopLenth; thisStepRows++,nextRow += GetRowSize()) {
-           const char *pointer = nextRow + offset  + indexOffset*(*member).fTypeSize;
-	   if (isdate) {
-             cdatime = (UInt_t*)pointer;
-             TDatime::GetDateTime(cdatime[0],cdate,ctime);
-             cout << cdate << "/" << ctime;
-           } else if ((*member).fType == kChar && dim == 1) {
-             char charbuffer[11];
-             strncpy(charbuffer,pointer,TMath::Min(10,arrayLength));
-             charbuffer[10] = 0;
-             cout << "\"" << charbuffer;
-             if (arrayLength > 10)
-	                            cout << " . . . ";
-             cout << "\"";
-             breakLoop = kTRUE;
-           } else {
-             AsString((void *)pointer,EColumnType((*member).fType),width,cout);
-             cout << " :";
+         // Encode data value or pointer value
+         Int_t offset = member->GetOffset();
+         Int_t thisStepRows;
+         thisLoopLenth = TMath::Min(rowCount,rowStep);
+         Int_t indexOffset;
+         Bool_t breakLoop = kFALSE;
+
+         for (indexOffset=0; indexOffset < arrayLength && !breakLoop; indexOffset++)
+         {
+           nextRow = startRow;
+           if (!indexOffset) cout << "\t" << member->GetName();
+           else              cout << "\t" << setw(strlen(member->GetName())) << " ";
+//           if (dim && indexOffset) {
+           if (dim) {
+                for (Int_t i=0;i<dim;i++) cout << "["<<arrayLayout[i]<<"]";
+                ArrayLayout(arrayLayout,arraySize,dim);
            }
+           cout << "\t";
+           if ( strlen(member->GetName())+3*dim < 8) cout << "\t";
+
+           for (thisStepRows = 0;thisStepRows < thisLoopLenth; thisStepRows++,nextRow += GetRowSize())
+           {
+             const char *pointer = nextRow + offset  + indexOffset*membertype->Size();
+             const char **ppointer = (const char**)(pointer);
+
+             if (member->IsaPointer()) {
+                const char **p3pointer = (const char**)(*ppointer);
+                if (!p3pointer) {
+                   printf("->0");
+                } else if (!member->IsBasic()) {
+//                   if (pass == 1) tlink = new TLink(xvalue+0.1, ytext, p3pointer);
+                   cout << "N/A :" ;
+                } else if (membertype) {
+                   if (!strcmp(membertype->GetTypeName(), "char"))
+                      cout << *ppointer;
+                   else {
+                        if (dim == 1) {
+                          char charbuffer[11];
+                          strncpy(charbuffer,*p3pointer,TMath::Min(10,arrayLength));
+                          charbuffer[10] = 0;
+                          cout << "\"" << charbuffer;
+                          if (arrayLength > 10) cout << " . . . ";
+                          cout << "\"";
+                          breakLoop = kTRUE;
+                        }
+                        else
+//                           cout << membertype->AsString(p3pointer) << " :";
+                           AsString(p3pointer,membertype->GetTypeName(),width);
+                           cout << " :";
+                   }
+                } else if (!strcmp(member->GetFullTypeName(), "char*") ||
+                         !strcmp(member->GetFullTypeName(), "const char*")) {
+                   cout << setw(width) << *ppointer;
+                } else {
+//                   if (pass == 1) tlink = new TLink(xvalue+0.1, ytext, p3pointer);
+                   cout << setw(width) << " N/A ";
+                }
+             } else if (membertype)
+                if (isdate) {
+                   cdatime = (UInt_t*)pointer;
+                   TDatime::GetDateTime(cdatime[0],cdate,ctime);
+                   cout << cdate << "/" << ctime;
+                } else if (strcmp(membertype->GetFullTypeName(),"char")==0 && dim == 1) {
+                    char charbuffer[11];
+                    strncpy(charbuffer,pointer,TMath::Min(10,arrayLength));
+                    charbuffer[10] = 0;
+                    cout << "\"" << charbuffer;
+                    if (arrayLength > 10) cout << " . . . ";
+                    cout << "\"";
+                    breakLoop = kTRUE;
+                 }
+                 else{
+                    AsString((void *)pointer,membertype->GetTypeName(),width);
+                    cout << " :";
+//                    cout << membertype->AsString((void *)pointer) <<" :";
+                 }
+             else
+                cout << "->" << (Long_t)pointer;
+           }
+        // Encode data member title
+           if (indexOffset==0) {
+             if (isdate == kFALSE && strcmp(member->GetFullTypeName(), "char*") &&
+                 strcmp(member->GetFullTypeName(), "const char*")) {
+                    cout << " " << member->GetTitle();
+             }
+           }
+           cout << endl;
          }
-         // Encode  the column's comment
-         if (indexOffset==0) {
-           TDataSet *nxc = nextComment();
-           cout << " " << (const char *)(nxc ? nxc->GetTitle() : "no comment");
-         }
-         cout << endl;
-       }
-       if (arrayLayout) delete [] arrayLayout;
-     }
-     rowCount -= thisLoopLenth;
-     startRow  = nextRow;
+        if (arrayLayout) delete [] arrayLayout;
+        if (arraySize) delete [] arraySize;
+      }
+      rowCount -= thisLoopLenth;
+      startRow  = nextRow;
   }
   cout << "---------------------------------------------------------------------------------------" << endl;
   return 0;
  }
-//______________________________________________________________________________
-void TTable::PrintContents(Option_t *) const
-{
-  TDataSet::PrintContents();
-  TROOT::IndentLevel();
-  printf("\tclass %s: public TTable\t --> Allocated rows: %d\t Used rows: %d\t Row size: %d bytes\n",
-         IsA()->GetName(),int(fN),int(fMaxIndex),int(fSize));
-
-}
 
 //______________________________________________________________________________
 void TTable::Project(const Text_t *hname, const Text_t *varexp, const Text_t *selection, Option_t *option,Int_t nentries, Int_t firstentry)
@@ -1755,25 +1655,29 @@ Int_t TTable::Purge(Option_t *opt)
 void TTable::SavePrimitive(ofstream &out, Option_t *)
 {
 //   Save a primitive as a C++ statement(s) on output stream "out".
-  UInt_t arrayLayout[10],arraySize[10];
+  Int_t arrayLayout[10],arraySize[10];
   const unsigned char *pointer=0,*startRow=0;
   int i,rowCount;unsigned char ic;
 
   out << "TDataSet *CreateTable() { " << endl;
 
   Int_t rowNumber =  GetNRows();
-  TTableDescriptor *dscT = GetRowDescriptors();
+  TClass *classPtr = GetRowClass();
 
 //                      Is anything Wrong??
-  if (!rowNumber || !dscT ) {//
+  if (!rowNumber || !classPtr ) {//
      out << "// The output table was bad-defined!" << endl
          << " fprintf(stderr, \"Bad table found. Please remove me\\n\");" << endl
          << " return 0; } "    << endl;
      return;
   }
 
+  if (!classPtr->GetListOfRealData()) classPtr->BuildRealData();
+
+  TIter      next( classPtr->GetListOfDataMembers());
+
   startRow = (const UChar_t *)GetArray();
-  assert(startRow!=0);
+  assert(startRow);
 
   const Char_t *rowId = "row";
   const Char_t *tableId = "tableSet";
@@ -1786,46 +1690,42 @@ void TTable::SavePrimitive(ofstream &out, Option_t *)
   out << "// "   << Path()
       << " Allocated rows: "<< rowNumber
       <<"  Used rows: "<<      rowNumber
-      <<"  Row size: " << fSize << " bytes"                 << endl;
-  out << "// "  << " Table: " << dscT->GetName()<<"[0]--> "
-      << dscT->GetName()<<"["<<rowNumber-1 <<"]"            << endl;
+      <<"  Row size: " << fSize << " bytes"                    << endl;
+  out << "// "  << " Table: " << classPtr->GetName()<<"[0]--> "
+      << classPtr->GetName()<<"["<<rowNumber-1 <<"]"            << endl;
   out << "// ====================================================================" << endl;
   out << "// ------  Test whether this table share library was loaded ------"      << endl;
   out << "  if (!gROOT->GetClass(\"" << className << "\")) return 0;"    << endl;
-  out <<    dscT->GetName() << " " << rowId << ";" << endl
+  out <<    classPtr->GetName() << " " << rowId << ";" << endl
       <<  className << " *" << tableId << " = new "
       <<  className
       << "(\""<<GetName()<<"\"," << GetNRows() << ");" << endl
       << "//" <<endl ;
 
 //              Row loop
-  TDataSetIter nextComment(dscT->FindByName(".comments"));
-  for (rowCount=0;rowCount<rowNumber; rowCount++,startRow += fSize, nextComment.Reset()) {     //row loop
+  for (rowCount=0;rowCount<rowNumber; rowCount++) {     //row loop
     out << "memset(" << "&" << rowId << ",0," << tableId << "->GetRowSize()" << ");" << endl ;
+    next.Reset();
+    TDataMember *member = 0;
 
 //              Member loop
-   TTableDescriptor::iterator member  = dscT->begin();
-   TTableDescriptor::iterator   dscE  = dscT->end();
-   for (; member != dscE; member++) {  //LOOP over members
-      TString memberType = GetTypeName(EColumnType((*member).fType));
-      TString memberName((*member).fColumnName);
-
-      // Encode  the column's comment
-      TDataSet *nxc = nextComment();
-      TString memberTitle(nxc ? nxc->GetTitle() : "no comment");
-
-      Int_t offset = (*member).fOffset;
+    while ((member = (TDataMember*) next())) {  //LOOP over members
+      TDataType *membertype = member->GetDataType();
+      TString memberName(member->GetName());
+      TString memberTitle(member->GetTitle());
+      Int_t offset = member->GetOffset();
       int mayBeName = 0;
       if (memberName.Index("name",0,TString::kIgnoreCase)>=0) mayBeName=1999;
       if (memberName.Index("file",0,TString::kIgnoreCase)>=0) mayBeName=1999;
-      int typeSize = (*member).fTypeSize;
+      TString memberType(member->GetFullTypeName());
+      int memberSize = membertype->Size();
 
 //              Add the dimensions to "array" members
-      Int_t dim = (*member).fDimensions;
+      Int_t dim = member->GetArrayDim();
       if (dim) memset(arrayLayout,0,dim*sizeof(Int_t));
       Int_t arrayLength  = 1;
       for (int indx=0;indx < dim ;indx++){
-         arraySize[indx] =  (*member).fIndexArray[indx];;
+         arraySize[indx] = member->GetMaxIndex(indx);
          arrayLength *= arraySize[indx];
       }
 
@@ -1873,9 +1773,10 @@ void TTable::SavePrimitive(ofstream &out, Option_t *)
 //                      Generate "="
         out << "\t = ";
 
-        pointer = startRow + offset  + indexOffset*typeSize;
+        pointer = startRow + offset  + indexOffset*memberSize;
+        assert(!member->IsaPointer());
 
-        AsString((void *)pointer,EColumnType((*member).fType),10,out);
+        out << setw(10) << membertype->AsString((void *)pointer) ;
 
 //                      Encode data member title
         if (indexOffset==0)  out << "; // " << (const char*)memberTitle;
@@ -1883,7 +1784,9 @@ void TTable::SavePrimitive(ofstream &out, Option_t *)
       }//end array loop
     }//end of member loop
 
-    out << tableId << "->AddAt(&" << rowId <<");" << endl;
+    out << tableId << "->AddAt(&" << rowId << "," << rowCount <<");" << endl;
+
+    startRow  += fSize;
 
   }//end of row loop
   out << "// ----------------- end of code ---------------" << endl
@@ -1917,6 +1820,13 @@ void TTable::SetType(const Text_t *const type)
 }
 
 //______________________________________________________________________________
+int TTable::PointerToPointer(G__DataMemberInfo &m)
+{
+   if (strstr(m.Type()->Name(), "**")) return 1;
+   return 0;
+}
+
+//______________________________________________________________________________
 static Char_t *GetExpressionFileName()
 {
   // Create a name of the file in the temporary directory if any
@@ -1935,14 +1845,7 @@ static Char_t *GetExpressionFileName()
 //______________________________________________________________________________
 Char_t *TTable::MakeExpression(const Char_t *expressions[],Int_t nExpressions)
 {
-  // Create CINT macro to evaluate the user-provided expresssion
-  // Expression may contains:
-  //   -  the table columen names
-  //   - 2 meta names: i$ - the current column index,
-  //                   n$ - the total table size provided by TTable::GetNRows() method
-  //
   // return the name of temporary file with the current expressions
-  //
    const Char_t *typeNames[] = {"NAN","float", "int",  "long",  "short",         "double"
                                 ,"unsigned int","unsigned long", "unsigned short","unsigned char"
                                 ,"char"};
@@ -1950,7 +1853,7 @@ Char_t *TTable::MakeExpression(const Char_t *expressions[],Int_t nExpressions)
    const char *addressID = "address";
    Char_t *fileName = GetExpressionFileName();
    if (!fileName) {
-       Error("MakeExpression","Can not create a temporary file");
+       Error("MakeExpression","Can not create a temoprary file");
        return 0;
    }
 
@@ -1965,7 +1868,7 @@ Char_t *TTable::MakeExpression(const Char_t *expressions[],Int_t nExpressions)
    TTableDescriptor *dsc = GetRowDescriptors();
    const tableDescriptor_st *descTable  = dsc->GetTable();
    // Create function
-   str << "void SelectionQWERTY(float *"<<resID<<", float **"<<addressID<< ", int& i$, int& n$ )"   << endl;
+   str << "void SelectionQWERTY(float *"<<resID<<", float **"<<addressID<<")"   << endl;
    str << "{"                                                        << endl;
    int i = 0;
    for (i=0; i < dsc->GetNRows(); i++,descTable++ ) {
@@ -2054,8 +1957,7 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
   // Read "table parameters first"
   if (b.IsReading())
   {
-   Long_t rbytes;
-#ifdef __STAR__
+   long rbytes;
    if (version < 3) {
      // skip obsolete  STAR fields (for the sake of the backward compatibility)
      //   char name[20];   /* table name */
@@ -2064,15 +1966,12 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
      long len = b.Length() + (20+4) + (20+4) + 4;
      b.SetBufferOffset(len);
    }
-#endif
-   b >> fMaxIndex;         // fTableHeader->nok;          /* # rows filled */
-   b >> rbytes;            /* number of bytes per row */
-   if (GetRowSize() == -1) fSize = rbytes;
+   b >> fMaxIndex;       // fTableHeader->nok;          /* # rows filled */
+   b >> rbytes;          /* number of bytes per row */
    if (rbytes - GetRowSize()) {
       Warning("StreamerHeader","Wrong row size: must be %d, read %d bytes\n",GetRowSize(),rbytes);
    }
 
-#ifdef __STAR__
    if (version < 3) {
      // skip obsolete  STAR fields (for the sake of the backward compatibility)
      //    long dsl_pointer;  /* swizzled (DS_DATASET_T*) */
@@ -2080,56 +1979,55 @@ void TTable::StreamerHeader(TBuffer &b, Version_t version)
      long len = b.Length() + (4) + (4);
      b.SetBufferOffset(len);
    }
-#endif
   }
   else {
-    b << fMaxIndex;         //fTableHeader->nok;          /* # rows filled */
-    b << fSize;             //  fTableHeader->rbytes;     /* number of bytes per row */
+    b << fMaxIndex;              //fTableHeader->nok;          /* # rows filled */
+    b << fSize;                  //  fTableHeader->rbytes;     /* number of bytes per row */
   }
 }
+
 //_______________________________________________________________________
 Int_t TTable::SetfN(Long_t len)
 {
    fN = len;
    return fN;
 }
+
 //____________________________________________________________________________
 #ifdef StreamElelement
 #define __StreamElelement__ StreamElelement
 #undef StreamElelement
 #endif
 
-#define StreamElementIn(type)  case TTableDescriptor::_NAME2_(k,type):        \
+#define StreamElementIn(type)  case TTableDescriptor::_NAME2_(k,type):   \
  if (evolutionOn) {                                  \
      if (nextCol->fDimensions)  {                    \
-       if(old225File) { Int_t skip; R__b >> skip;}   \
-       if (nextCol->fOffset != UInt_t(-1)) {         \
-          R__b.ReadFastArray((_NAME2_(type,_t) *)(row+nextCol->fOffset),nextCol->fSize/sizeof(_NAME2_(type,_t)));   \
-       } else {                                        \
-           _NAME2_(type,_t) *readPtrV = new _NAME2_(type,_t)[nextCol->fSize/sizeof(_NAME2_(type,_t))];              \
-           R__b.ReadFastArray((_NAME2_(type,_t) *)(row+nextCol->fOffset),nextCol->fSize/sizeof(_NAME2_(type,_t)));  \
+       if (nextCol->fOffset != UInt_t(-1))           \
+           R__b.ReadStaticArray((_NAME2_(type,_t) *)(row+nextCol->fOffset));     \
+       else {                                        \
+           _NAME2_(type,_t) *readPtrV = 0;           \
+           R__b.ReadArray(readPtrV);                 \
            delete [] readPtrV;                       \
            readPtrV = 0;                             \
        }                                             \
      }                                               \
      else  {                                         \
        _NAME2_(type,_t) skipBuffer;                  \
-       _NAME2_(type,_t) *readPtr =  (_NAME2_(type,_t) *)(row+nextCol->fOffset); \
-       if (nextCol->fOffset == UInt_t(-1)) readPtr = &skipBuffer;               \
+       _NAME2_(type,_t) *readPtr =  (_NAME2_(type,_t) *)(row+nextCol->fOffset);  \
+       if (nextCol->fOffset == UInt_t(-1)) readPtr = &skipBuffer;                \
        R__b >> *readPtr;                             \
      }                                               \
  } else {                                            \
-   if (nextCol->fDimensions)  {                      \
-     if(old225File) {UInt_t skip; R__b >> skip;}     \
-     R__b.ReadFastArray  ((_NAME2_(type,_t) *)(row+nextCol->fOffset),nextCol->fSize/sizeof(_NAME2_(type,_t)));  \
-   } else                                                       \
+   if (nextCol->fDimensions)                         \
+     R__b.ReadStaticArray((_NAME2_(type,_t) *)(row+nextCol->fOffset));           \
+   else                                                         \
      R__b >> *(_NAME2_(type,_t) *)(row+nextCol->fOffset);       \
  }                                                              \
  break
 
 #define StreamElementOut(type) case TTableDescriptor::_NAME2_(k,type):    \
  if (nextCol->fDimensions)                                    \
-    R__b.WriteFastArray((_NAME2_(type,_t) *)(row+nextCol->fOffset), nextCol->fSize/sizeof(_NAME2_(type,_t))); \
+    R__b.WriteArray((_NAME2_(type,_t) *)(row+nextCol->fOffset), nextCol->fSize/sizeof(_NAME2_(type,_t))); \
  else                                                         \
     R__b << *(_NAME2_(type,_t) *)(row+nextCol->fOffset);      \
  break
@@ -2142,7 +2040,7 @@ TTableDescriptor  *TTable::GetRowDescriptors() const
   if (!dsc) {
     Error("GetRowDescriptors()","%s has no dictionary !",GetName());
     dsc = GetTableDescriptors();
-    ((TTableDescriptor *)this)->SetDescriptorPointer(dsc);
+    SetDescriptorPointer(dsc);
   }
   return dsc;
 }
@@ -2154,7 +2052,7 @@ TTableDescriptor *TTable::GetDescriptorPointer() const
 }
 
 //______________________________________________________________________________
-void TTable::SetDescriptorPointer(TTableDescriptor *)
+void TTable::SetDescriptorPointer(TTableDescriptor *) const
 {
    assert(0);
 }
@@ -2167,37 +2065,25 @@ void TTable::Streamer(TBuffer &R__b)
    TTableDescriptor *currentDescriptor = ioDescriptor;
    Version_t R__v = 0;
    if (R__b.IsReading()) {
-      // Check whether the file is the "obsolete" one
-#ifdef __STAR__
-      Bool_t old225File = (gFile && gFile->GetVersion() < 30006);
-#else
-      Bool_t old225File =  kFALSE;
-#endif
       R__v = R__b.ReadVersion();
       Bool_t evolutionOn = kFALSE;
       if (R__v>=2) {
          if (IsA() != TTableDescriptor::Class()) {
-	       if (R__v>3) {
-  	          R__b >> ioDescriptor;
-		   } else {  // backward compatibility
-              ioDescriptor =  new TTableDescriptor();
-              ioDescriptor->Streamer(R__b);
-		   }
-
-		   if (!currentDescriptor) {
-			  currentDescriptor = ioDescriptor;
-			  SetDescriptorPointer(currentDescriptor);
-		   }
-		   if (currentDescriptor->fSecondDescriptor) {
-             if (currentDescriptor->fSecondDescriptor != ioDescriptor) {
-                // Protection against of memory leak.
-                delete currentDescriptor->fSecondDescriptor;
-                currentDescriptor->fSecondDescriptor = ioDescriptor;
-			 }
-
-             // compare two descriptors
-             evolutionOn = (Bool_t)ioDescriptor->UpdateOffsets(currentDescriptor);
-		   }
+            ioDescriptor =  new TTableDescriptor();
+            ioDescriptor->Streamer(R__b);
+            // compare two descriptors
+            if (ioDescriptor->UpdateOffsets(currentDescriptor)) {
+              // Remember the real descriptor
+              TString dType = "Broken:";
+              dType += GetType();
+              ioDescriptor->SetName(dType.Data());
+              Add(ioDescriptor);
+              evolutionOn = kTRUE;
+            }
+            else {
+              delete ioDescriptor;
+              ioDescriptor = currentDescriptor;
+            }
          }
       }
       TTable::StreamerTable(R__b,R__v);
@@ -2227,19 +2113,9 @@ void TTable::Streamer(TBuffer &R__b)
       }
      }
    } else {
-      TSeqCollection *save = fList;
       R__b.WriteVersion(TTable::IsA());
      //      if (Class_Version()==2)
-      if (IsA() != TTableDescriptor::Class()) {
-        if ( Class_Version()>3 ) {
-          R__b << ioDescriptor;
-	} else {  // backward compatibility
-          ioDescriptor->Streamer(R__b);
-	}
-      } else {
-	if ( Class_Version()<=3 ) fList = 0;
-      }
-
+      if (IsA() != TTableDescriptor::Class()) ioDescriptor->Streamer(R__b);
       TTable::StreamerTable(R__b);
       if (fMaxIndex <= 0) return;
       char *row= fTable;
@@ -2265,7 +2141,6 @@ void TTable::Streamer(TBuffer &R__b)
         };
       }
      }
-     fList = save;
    }
 }
 #ifdef __StreamElelement__

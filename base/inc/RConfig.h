@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.28 2002/01/22 10:53:28 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.11 2000/12/10 14:23:47 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -27,18 +27,10 @@
 /*---- machines --------------------------------------------------------------*/
 
 #ifdef __hpux
-#   ifdef __ia64
-#      define R__HPUX11    /* find a better test for HP-UX 11 */
-#   endif
 #   define R__HPUX
 #   define R__UNIX
 #   define ANSICPP
-#   ifdef __ia64
-#      define R__B64
-#   endif
-#   ifndef R__HPUX11
-#      define NEED_SNPRINTF
-#   endif
+#   define NEED_SNPRINTF
 #endif
 
 #ifdef _AIX
@@ -48,24 +40,10 @@
 #   define NEED_STRCASECMP
 #endif
 
-#ifdef __linux
-#   ifndef linux
-#      define linux
-#   endif
-#endif
-
 #if defined(__alpha) && !defined(linux)
-#   include <standards.h>
-#   ifdef _XOPEN_SOURCE
-#      if _XOPEN_SOURCE+0 > 0
-#         define R__TRUE64
-#      endif
-#   endif
 #   define R__ALPHA
 #   define ANSICPP
-#   ifndef R__TRUE64
-#      define NEED_SNPRINTF
-#   endif
+#   define NEED_SNPRINTF
 #   ifndef __VMS
 #      define R__UNIX
 #      define R__B64
@@ -156,14 +134,7 @@
 #   define NEED_SIGJMP
 #endif
 
-#if defined(linux) && defined(__arm__)
-#   define R__LINUX
-#   define R__UNIX
-#   define R__BYTESWAP
-#   define NEED_SIGJMP
-#endif
-
-#if defined(linux) && defined(__sparc__)
+#if defined(linux) && defined(__sun)
 #   define R__LINUX
 #   define R__UNIX
 #   define NEED_SIGJMP
@@ -182,18 +153,9 @@
 #   define R__LINUX
 #   define R__UNIX
 #   define NEED_SIGJMP
-#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90   /* modern egcs/gcc */
+#   if __GNUC_MINOR__ >= 90   /* egcs */
 #      define R__PPCEGCS
 #   endif
-#endif
-
-#if defined(__MACH__) && defined(__i386__)
-#   define R__HURD
-#   define f2cFortran   /* cfortran.h does not know HURD - sigh */
-#   define R__UNIX
-#   define R__BYTESWAP
-#   define R__GLIBC     /* GNU/Hurd always use GLIBC 2.x :-) */
-#   define NEED_SIGJMP
 #endif
 
 #if defined(__Lynx__) && defined(__powerpc__)
@@ -209,12 +171,7 @@
 #   define R__FBSD
 #   define R__UNIX
 #   define R__BYTESWAP
-#   define R__NOSTATS      /* problem using stats with FreeBSD malloc/free */
-#endif
-
-#if defined(__APPLE__)     /* MacOS X support, initially following FreeBSD */
-#   define R__MACOSX
-#   define R__UNIX
+#   define R__NOSTATS         /* problem using stats with FreeBSD malloc/free */
 #endif
 
 #ifdef _HIUX_SOURCE
@@ -228,14 +185,17 @@
 #ifdef __GNUG__
 #   define R__GNU
 #   define ANSICPP
-#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90    /* egcs 1.0.3 */
+#   if __GNUC_MINOR__ >= 90    /* egcs 1.0.3 */
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   endif
-#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
+#   if __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
-#   if defined(__ia64__) &&  __GNUC__ < 3       /* gcc 2.9x (MINOR is 9!) */
+#   if __GNUC_MINOR__ >= 97    /* gcc 3.0pre */
+#      define R__NEWSTDHEADER    /* has only headers like: iostream without .h */
+#   endif
+#   if defined(__ia64__)       /* gcc 2.9x (MINOR is 9! So above tests fail) */
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
@@ -247,27 +207,11 @@
 #   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
-#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#   define ANSICPP
-#endif
-
-#ifdef __INTEL_COMPILER
-#   define R__INTEL_COMPILER
-#   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
-#   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   define ANSICPP
 #endif
 
 #ifdef R__ACC
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   if __HP_aCC >= 53000
-#      define R__PLACEMENTDELETE /* supports overloading placement delete */
-#      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#      define R__THROWNEWDELETE  /* new/delete throw exceptions */
-#      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
-#      define R__TMPLTSTREAM     /* iostream implemented with templates */
-#   endif
 #endif
 
 #ifdef _WIN32
@@ -275,7 +219,6 @@
 #   ifndef WIN32
 #      define WIN32
 #   endif
-#   define R__BYTESWAP
 #endif
 
 #ifdef BORLAND
@@ -295,23 +238,19 @@
 #   elif WIN32
 #      define NEED_STRING
 #      define NEED_STRCASECMP
-#      define NEED_SNPRINTF
 #      define ANSICPP
 #   else
 #      define MSDOS
 #      define NEED_STRCASECMP
-#      define R__BYTESWAP
 #   endif
 #endif
 
-#ifdef _MSC_VER
-#   define R__VISUAL_CPLUSPLUS
+#ifdef R__WIN32
 #   define NEED_STRING
 #   define NEED_STRCASECMP
 #   define NEED_SNPRINTF
 #   define ANSICPP
-#   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   define R__PLACEMENTDELETE /* supports overloading placement delete */
+#   define R__BYTESWAP
 #endif
 
 #ifdef __MWERKS__
@@ -320,7 +259,6 @@
 #   define ANSICPP
 #   define NEED_STRING
 #   define NEED_STRCASECMP
-#   define NEED_SNPRINTF
 #endif
 
 

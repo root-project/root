@@ -61,8 +61,7 @@ cp $SRCO/*.cxx $SRCT/
 cp $ORG/platform/aixdlfcn/dlfcn.c $SRCT/
 
 tar cf - -C $ORG --exclude lib/WildCard --exclude lib/cintocx \
-   --exclude lib/wintcldl --exclude lib/wintcldl83 \
-   include lib main stl tool | (cd $ASM; tar xf -)
+   --exclude lib/wintcldl include lib main stl tool | (cd $ASM; tar xf -)
 
 rm -f $SRCT/dmystrm.c
 rm -f $SRCT/dmystrct.c
@@ -70,13 +69,9 @@ rm -f $INCLT/done
 rm -f $INCLT/error
 rm -f $INCLT/iosenum.*
 
-# copy man pages directly to man directory
-cp $ORG/doc/man1/cint.1 man/man1/
-cp $ORG/doc/man1/makecint.1 man/man1/
-
 # compare files in assembly area with the ones in the CVS area
 
-# make a sorted list of all files in the assembly area
+# make a sorted list of all files in the assmebly area
 find /tmp/cint -type f -print | sort | sed -e "s@/tmp/@@" > $NEWF
 find $INC $INCL $LIB $MAIN $SRC $STL $TOOL -path '*/CVS' -prune -o \
      -type f ! -name *.d ! -name *.o -print | sort > $OLDF

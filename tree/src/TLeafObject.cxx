@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.13 2001/06/22 16:10:21 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafObject.cxx,v 1.3 2000/11/21 20:50:38 brun Exp $
 // Author: Rene Brun   27/01/96
 
 /*************************************************************************
@@ -63,7 +63,6 @@ void TLeafObject::FillBasket(TBuffer &b)
 //*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
 //*-*                  =========================================
 
-   if (!fObjAddress) return;
    TObject *object  = GetObject();
    if (object) {
       if (fVirtual) {
@@ -74,8 +73,7 @@ void TLeafObject::FillBasket(TBuffer &b)
       object->Streamer(b);
    } else {
      if (fClass) {
-        if (fClass->Property() & kIsAbstract) object = new TObject;
-        else                                  object = (TObject *)fClass->New();
+        object = (TObject *)fClass->New();
         object->SetBit(kInvalidObject);
         object->SetUniqueID(123456789);
         object->Streamer(b);
@@ -100,7 +98,7 @@ TMethodCall *TLeafObject::GetMethodCall(const char *name)
    strcpy(namecpy,name);
    char *params = strchr(namecpy,'(');
    if (params) { *params = 0; params++; }
-   else params = (char *) ")";
+   else params = ")";
 
    if (!fClass) fClass      = gROOT->GetClass(GetTitle());
    TMethodCall *m = new TMethodCall(fClass, namecpy, params);
@@ -121,23 +119,6 @@ const char *TLeafObject::GetTypeName() const
 }
 
 //______________________________________________________________________________
-Bool_t TLeafObject::Notify()
-{
-   // This method must be overridden to handle object notifcation.
-
-   fClass      = gROOT->GetClass(GetTitle());
-   return kFALSE;
-}
-
-//______________________________________________________________________________
-void TLeafObject::PrintValue(Int_t) const
-{
-// Prints leaf value
-
-   printf("%lx\n",(Long_t)GetValuePointer());
-}
-
-//______________________________________________________________________________
 void TLeafObject::ReadBasket(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
@@ -148,7 +129,7 @@ void TLeafObject::ReadBasket(TBuffer &b)
    if (fVirtual) {
       b >> n;
       b.ReadFastArray(classname,n+1);
-      fClass      = gROOT->GetClass(classname);
+      fClass      = gROOT->GetClass(GetTitle());
    }
    if (fClass) {
       TObject *object;
@@ -163,17 +144,7 @@ void TLeafObject::ReadBasket(TBuffer &b)
          object = (TObject *)fClass->New();
       }
       if (!object) return;
-
-      if (fClass->GetClassInfo()) {
-         object->Streamer(b);
-      } else {
-         //fake class has no Streamer
-         if (!TestBit(kWarn)) {
-            Warning("ReadBasket","%s::Streamer not available, using TClass::ReadBuffer instead",fClass->GetName());
-            SetBit(kWarn);
-         }
-         fClass->ReadBuffer(b,object);
-      }
+      object->Streamer(b);
       // in case we had written a null pointer a Zombie object was created
       // we must delete it
       if (object->TestBit(kInvalidObject)) {
@@ -203,9 +174,8 @@ void TLeafObject::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      if (R__v > 3 || R__v == 2) {
+      if (R__v > 1) {
          TLeafObject::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
-         if (R__v == 2) fVirtual = kTRUE;
          fObjAddress = 0;
          fClass  = gROOT->GetClass(fTitle.Data());
          if (!fClass) Warning("Streamer","Cannot find class:%s",fTitle.Data());
@@ -216,11 +186,9 @@ void TLeafObject::Streamer(TBuffer &b)
       fObjAddress = 0;
       fClass  = gROOT->GetClass(fTitle.Data());
       if (!fClass) Warning("Streamer","Cannot find class:%s",fTitle.Data());
-      if (R__v  < 1) fVirtual = kFALSE;
-      if (R__v == 1) fVirtual = kTRUE;
-      if (R__v == 3) b >> fVirtual;
+      if (R__v < 1) fVirtual = kFALSE;
       //====end of old versions
-
+      
    } else {
       TLeafObject::Class()->WriteBuffer(b,this);
    }

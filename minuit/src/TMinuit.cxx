@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.13 2001/08/22 07:33:45 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.3 2000/12/04 17:50:53 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -40,7 +40,7 @@
 //*-*     format statements and to print on currently defined output file.*
 //*-*   - The derived class TMinuitOld contains obsolete routines from    *
 //*-*     the Fortran based version.                                      *
-//*-*   - The functions SetObjectFit(TObject *obj)/GetObjectFit() can be  *
+//*-*   - The functions SetObjFit(TObject *obj) and GetObjFit() can be    *
 //*-*     used inside the FCN function to set/get a referenced object     *
 //*-*     instead of using global variables.                              *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -373,7 +373,7 @@ void TMinuit::BuildArrays(Int_t maxpar)
    fVhmat  = new Double_t[mnihl];
    fVthmat = new Double_t[mnihl];
    fP      = new Double_t[mni*(mni+1)];
-   fPstar  = new Double_t[2*mni];
+   fPstar  = new Double_t[mni];
    fPstst  = new Double_t[mni];
    fPbar   = new Double_t[mni];
    fPrho   = new Double_t[mni];
@@ -465,8 +465,6 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
   //
   // The TGraph object is created via the interpreter. The user must cast it
   // to a TGraph*
-  //
-  // You can find an example in $ROOTSYS/tutorials/fitcont.C
 
   if (npoints<4) {
     // we need at least 4 points
@@ -739,8 +737,8 @@ void TMinuit::mnamin()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t fnew;
-    Int_t nparx;
+    static Double_t fnew;
+    static Int_t nparx;
 
     nparx = fNpar;
     if (fISW[4] >= 1) {
@@ -766,7 +764,7 @@ void TMinuit::mnbins(Double_t a1, Double_t a2, Int_t naa, Double_t &bl, Double_t
 
     /* Local variables */
     Double_t awid,ah, al, sigfig, sigrnd, alb;
-    Int_t kwid, lwid, na=0, log_;
+    static Int_t kwid, lwid, na, log_;
 
     al = TMath::Min(a1,a2);
     ah = TMath::Max(a1,a2);
@@ -839,8 +837,8 @@ void TMinuit::mncalf(Double_t *pvec, Double_t &ycalf)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Int_t ndex, i, j, m, n, nparx;
-    Double_t denom, f;
+    static Int_t ndex, i, j, m, n, nparx;
+    static Double_t denom, f;
 
     nparx = fNpar;
     mninex(&pvec[0]);
@@ -910,8 +908,8 @@ void TMinuit::mncntr(Int_t ike1, Int_t ike2, Int_t &ierrf)
     Double_t fcna[115], fcnb[115], contur[20];
     Double_t  ylabel, fmn, fmx, xlo, ylo, xup, yup;
     Double_t devs, xsav, ysav,  bwidx,  bwidy, unext, ff, xb4;
-    Int_t i,  ngrid, ixmid, nparx, ix, nx, ny, ki1, ki2, ixzero, iy, ics;
-    TString chmid, chln, chzero;
+    static Int_t i,  ngrid, ixmid, nparx, ix, nx, ny, ki1, ki2, ixzero, iy, ics;
+    static TString chmid, chln, chzero;
 
     Int_t ke1 = ike1+1;
     Int_t ke2 = ike2+1;
@@ -1081,9 +1079,9 @@ void TMinuit::mncomd(const char *crdbin, Int_t &icondn)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Int_t ierr, ipos, i, llist, lenbuf, lnc;
-    Bool_t leader;
-    TString comand, crdbuf, ctemp;
+    static Int_t ierr, ipos, i, llist, lenbuf, lnc;
+    static Bool_t leader;
+    static TString comand, crdbuf, ctemp;
 
     crdbuf = crdbin;
     crdbuf.ToUpper();
@@ -1167,13 +1165,13 @@ void TMinuit::mncont(Int_t ike1, Int_t ike2, Int_t nptu, Double_t *xptu, Double_
 
     /* Local variables */
     Double_t d__1, d__2;
-    Double_t dist, xdir, ydir, aopt,  u1min, u2min;
-    Double_t abest, scalx, scaly;
-    Double_t a1, a2, val2mi, val2pl, dc, sclfac, bigdis, sigsav;
-    Int_t nall, iold, line, mpar, ierr, inew, move, next, i, j, nfcol, iercr;
-    Int_t idist=0, npcol, kints, i2, i1, lr, nfcnco=0, ki1, ki2, ki3, ke3;
-    Int_t nowpts, istrav, nfmxin, isw2, isw4;
-    Bool_t ldebug;
+    static Double_t dist, xdir, ydir, aopt,  u1min, u2min;
+    static Double_t abest, scalx, scaly;
+    static Double_t a1, a2, val2mi, val2pl, dc, sclfac, bigdis, sigsav;
+    static Int_t nall, iold, line, mpar, ierr, inew, move, next, i, j, nfcol, iercr;
+    static Int_t idist, npcol, kints, i2, i1, lr, nfcnco, ki1, ki2, ki3, ke3;
+    static Int_t nowpts, istrav, nfmxin, isw2, isw4;
+    static Bool_t ldebug;
 
     /* Function Body */
     Int_t ke1 = ike1+1;
@@ -1450,9 +1448,9 @@ void TMinuit::mncrck(TString cardbuf, Int_t maxcwd, TString &comand, Int_t &lnc,
     const char *cnumer = "123456789-.0+";
 
     /* Local variables */
-    Int_t ifld, iend, lend, left, nreq, ipos, kcmnd, nextb, ic, ibegin, ltoadd;
-    Int_t ielmnt, lelmnt[25], nelmnt;
-    TString ctemp;
+    static Int_t ifld, iend, lend, left, nreq, ipos, kcmnd, nextb, ic, ibegin, ltoadd;
+    static Int_t ielmnt, lelmnt[25], nelmnt;
+    static TString ctemp;
     char *celmnt[25];
     char command[25];
 
@@ -1566,14 +1564,14 @@ void TMinuit::mncros(Double_t &aopt, Int_t &iercr)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t alsb[3], flsb[3], bmin, bmax, zmid, sdev, zdir, zlim;
-    Double_t coeff[3], aleft, aulim, fdist, adist, aminsv;
-    Double_t anext, fnext, slope, s1, s2, x1, x2, ecarmn, ecarmx;
-    Double_t determ, rt, smalla, aright, aim, tla, tlf, dfda,ecart;
-    Int_t iout=0, i, ileft, ierev, maxlk, ibest, ik, it;
-    Int_t noless, iworst=0, iright, itoohi, kex, ipt;
-    Bool_t ldebug;
-    const char *chsign;
+    static Double_t alsb[3], flsb[3], bmin, bmax, zmid, sdev, zdir, zlim;
+    static Double_t coeff[3], aleft, aulim, fdist, adist, aminsv;
+    static Double_t anext, fnext, slope, s1, s2, x1, x2, ecarmn, ecarmx;
+    static Double_t determ, rt, smalla, aright, aim, tla, tlf, dfda,ecart;
+    static Int_t iout, i, ileft, ierev, maxlk, ibest, ik, it;
+    static Int_t noless, iworst, iright, itoohi, kex, ipt;
+    static Bool_t ldebug;
+    static const char *chsign;
     x2 = 0;
 
     ldebug = fIdbg[6] >= 1;
@@ -1899,8 +1897,8 @@ void TMinuit::mncuve()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t dxdi, wint;
-    Int_t ndex, iext, i, j;
+    static Double_t dxdi, wint;
+    static Int_t ndex, iext, i, j;
 
     if (fISW[3] < 1) {
 	Printf(" FUNCTION MUST BE MINIMIZED BEFORE CALLING %s",(const char*)fCfrom);
@@ -1948,10 +1946,10 @@ void TMinuit::mnderi()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t step, dfmin, stepb4, dd, df, fs1;
-    Double_t tlrstp, tlrgrd, epspri, optstp, stpmax, stpmin, fs2, grbfor=0, d1d2, xtf;
-    Int_t icyc, ncyc, iint, iext, i, nparx;
-    Bool_t ldebug;
+    static Double_t step, dfmin, stepb4, dd, df, fs1;
+    static Double_t tlrstp, tlrgrd, epspri, optstp, stpmax, stpmin, fs2, grbfor, d1d2, xtf;
+    static Int_t icyc, ncyc, iint, iext, i, nparx;
+    static Bool_t ldebug;
 
     nparx = fNpar;
     ldebug = fIdbg[2] >= 1;
@@ -2080,8 +2078,8 @@ void TMinuit::mneig(Double_t *a, Int_t ndima, Int_t n, Int_t mits, Double_t *wor
     Double_t d__1;
 
     /* Local variables */
-    Double_t b, c, f, h, r, s, hh, gl, pr, pt;
-    Int_t i, j, k, l, m=0, i0, i1, j1, m1, n1;
+    static Double_t b, c, f, h, r, s, hh, gl, pr, pt;
+    static Int_t i, j, k, l, m, i0, i1, j1, m1, n1;
 
 //*-*-         PRECIS is the machine precision EPSMAC
     /* Parameter adjustments */
@@ -2274,9 +2272,9 @@ void TMinuit::mnemat(Double_t *emat, Int_t ndim)
     Int_t emat_dim1, emat_offset;
 
     /* Local variables */
-    Double_t dxdi, dxdj;
-    Int_t i, j, k, npard, k2, kk, iz, nperln, kga, kgb;
-    TString ctemp;
+    static Double_t dxdi, dxdj;
+    static Int_t i, j, k, npard, k2, kk, iz, nperln, kga, kgb;
+    static TString ctemp;
 
     /* Parameter adjustments */
     emat_dim1 = ndim;
@@ -2346,8 +2344,8 @@ void TMinuit::mnerrs(Int_t number, Double_t &eplus, Double_t &eminus, Double_t &
 //*-*       GCC is global correlation coefficient from error matrix
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t dxdi;
-    Int_t ndiag, iin, iex;
+    static Double_t dxdi;
+    static Int_t ndiag, iin, iex;
 
     iex = number+1;
 
@@ -2389,7 +2387,7 @@ void TMinuit::mneval(Double_t anext, Double_t &fnext, Int_t &ierev)
 //*-*      and (if KE2CR .NE. 0)  U(KE2CR) = YMIDCR + ANEXT*YDIRCR
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t nparx;
+    static Int_t nparx;
 
     fU[fKe1cr-1] = fXmidcr + anext*fXdircr;
     if (fKe2cr != 0) fU[fKe2cr-1] = fYmidcr + anext*fYdircr;
@@ -2478,16 +2476,16 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
       "LIMITS    ",
       "PUNCH     "};
 
-    Int_t nntot = 40;
+    static Int_t nntot = 40;
 
     /* Local variables */
-    Double_t step, xptu[101], yptu[101], f, rno;
-    Int_t icol, kcol, ierr, iint, iext, lnow, nptu, i, iflag, ierrf;
-    Int_t ilist, nparx, izero, nf, lk, it, iw, inonde, nsuper;
-    Int_t it2, ke1, ke2, nowprt, kll, krl;
-    TString chwhy, c26, cvblnk, cneway, comd;
-    TString ctemp;
-    Bool_t lfreed, ltofix, lfixed;
+    static Double_t step, xptu[101], yptu[101], f, rno;
+    static Int_t icol, kcol, ierr, iint, iext, lnow, nptu, i, iflag, ierrf;
+    static Int_t ilist, nparx, izero, nf, lk, it, iw, inonde, nsuper;
+    static Int_t it2, ke1, ke2, nowprt, kll, let, krl;
+    static TString chwhy, c26, cvblnk, cneway, comd;
+    static TString ctemp;
+    static Bool_t lfreed, ltofix, lfixed;
 
 //*-*  alphabetical order of command names!
 
@@ -2496,7 +2494,14 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
     lk = comand.Length();
     if (lk > 20) lk = 20;
     fCword =  comand;
-    fCword.ToUpper();
+//*-*-             get upper case
+    for (icol = 1; icol <= lk; ++icol) {
+	for (let = 1; let <= 26; ++let) {
+	    if (fCword(icol-1,1) == clower[let-1]) {
+		fCword(icol-1,1)  = cupper[let-1];
+	    }
+	}
+    }
 //*-*-          Copy the first MAXP arguments into WORD7, making
 //*-*-          sure that WORD7(1)=0 if LLIST=0
     for (iw = 1; iw <= fMaxpar; ++iw) {
@@ -2920,8 +2925,8 @@ void TMinuit::mnexin(Double_t *pint)
 //*-*        values in the dense array PINT.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t pinti;
-    Int_t iint, iext;
+    static Double_t pinti;
+    static Int_t iint, iext;
 
     fLimset = kFALSE;
     for (iint = 1; iint <= fNpar; ++iint) {
@@ -2940,8 +2945,8 @@ void TMinuit::mnfixp(Int_t iint1, Int_t &ierr)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t yyover;
-    Int_t kold, nold, ndex, knew, iext, i, j, m, n, lc, ik;
+    static Double_t yyover;
+    static Int_t kold, nold, ndex, knew, iext, i, j, m, n, lc, ik;
 
 //*-*-                          first see if it can be done
     ierr = 0;
@@ -3028,8 +3033,8 @@ void TMinuit::mnfree(Int_t k)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t grdv, xv, dirinv, g2v, gstepv, xtv;
-    Int_t i, ipsav, ka, lc, ik, iq, ir, is;
+    static Double_t grdv, xv, dirinv, g2v, gstepv, xtv;
+    static Int_t i, ipsav, ka, lc, ik, iq, ir, is;
 
     if (k > 1) {
 	Printf(" CALL TO MNFREE IGNORED.  ARGUMENT GREATER THAN ONE");
@@ -3135,9 +3140,9 @@ void TMinuit::mngrad()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t fzero, err;
-    Int_t i, nparx, lc, istsav;
-    Bool_t lnone;
+    static Double_t fzero, err;
+    static Int_t i, nparx, lc, istsav;
+    static Bool_t lnone;
     static TString cwd = "    ";
 
     fISW[2] = 1;
@@ -3791,10 +3796,10 @@ void TMinuit::mnhess()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t dmin_, dxdi, elem, wint, tlrg2, d, dlast, ztemp, g2bfor;
-    Double_t df, aimsag, fs1, tlrstp, fs2, stpinm, g2i, sag=0, xtf, xti, xtj;
-    Int_t icyc, ncyc, ndex, idrv, iext, npar2, i, j, ifail, npard, nparx, id, multpy;
-    Bool_t ldebug;
+    static Double_t dmin_, dxdi, elem, wint, tlrg2, d, dlast, ztemp, g2bfor;
+    static Double_t df, aimsag, fs1, tlrstp, fs2, stpinm, g2i, sag, xtf, xti, xtj;
+    static Int_t icyc, ncyc, ndex, idrv, iext, npar2, i, j, ifail, npard, nparx, id, multpy;
+    static Bool_t ldebug;
 
     ldebug = fIdbg[3] >= 1;
     if (fAmin == fUndefi) {
@@ -4017,10 +4022,10 @@ void TMinuit::mnhes1()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t dmin_, d, dfmin, dgmin=0, change, chgold, grdold=0, epspri;
-    Double_t fs1, optstp, fs2, grdnew=0, sag, xtf;
-    Int_t icyc, ncyc=0, idrv, i, nparx;
-    Bool_t ldebug;
+    static Double_t dmin_, d, dfmin, dgmin, change, chgold, grdold, epspri;
+    static Double_t fs1, optstp, fs2, grdnew, sag, xtf;
+    static Int_t icyc, ncyc, idrv, i, nparx;
+    static Bool_t ldebug;
 
     ldebug = fIdbg[5] >= 1;
     if (fIstrat <= 0) ncyc = 1;
@@ -4098,10 +4103,10 @@ void TMinuit::mnimpr()
     static Double_t rnum = 0;
 
     /* Local variables */
-    Double_t amax, ycalf, ystar, ystst;
-    Double_t pb, ep, wg, xi, sigsav, reg, sig2;
-    Int_t npfn, ndex, loop=0, i, j, ifail, iseed;
-    Int_t jhold, nloop, nparx, nparp1, jh, jl, iswtr;
+    static Double_t amax, ycalf, ystar, ystst;
+    static Double_t pb, ep, wg, xi, sigsav, reg, sig2;
+    static Int_t npfn, ndex, loop, i, j, ifail, iseed;
+    static Int_t jhold, nloop, nparx, nparp1, jh, jl;
 
     if (fNpar <= 0) return;
     if (fAmin == fUndefi) mnamin();
@@ -4116,7 +4121,6 @@ void TMinuit::mnimpr()
     wg = 1 / Double_t(fNpar);
     sigsav = fEDM;
     fApsi  = fAmin;
-    iswtr   = fISW[4] - 2*fItaur;
     for (i = 1; i <= fNpar; ++i) {
 	fXt[i-1]       = fX[i-1];
 	fIMPRdsav[i-1] = fWerr[i-1];
@@ -4292,7 +4296,7 @@ L350:
     if (fISW[1] < 2) goto L380;
     if (loop < nloop && fISW[0] < 1) goto L20;
 L380:
-    if (iswtr >= 0) mnprin(5, fAmin);
+    mnprin(5, fAmin);
     fItaur = 0;
 } /* mnimpr_ */
 
@@ -4327,8 +4331,8 @@ void TMinuit::mninit(Int_t i1, Int_t i2, Int_t i3)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t piby2, epsp1, epsbak, epstry, distnn;
-    Int_t i, idb;
+    static Double_t piby2, epsp1, epsbak, epstry, distnn;
+    static Int_t i, idb;
 
 //*-*-           I/O unit numbers
     fIsysrd = i1;
@@ -4417,8 +4421,8 @@ void TMinuit::mnlims()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t dxdi, snew;
-    Int_t kint, i2, newcod, ifx=0, inu;
+    static Double_t dxdi, snew;
+    static Int_t kint, i2, newcod, ifx, inu;
 
     fCfrom  = "SET LIM ";
     fNfcnfr = fNfcn;
@@ -4538,11 +4542,11 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t xpq[12], ypq[12], slam, sdev, coeff[3], denom, flast;
-    Double_t fvals[3], xvals[3], f1, fvmin, xvmin, ratio, f2, f3, fvmax;
-    Double_t toler8, toler9, overal, undral, slamin, slamax, slopem;
-    Int_t i, nparx, nvmax=0, nxypt, kk, ipt;
-    Bool_t ldebug;
+    static Double_t xpq[12], ypq[12], slam, sdev, coeff[3], denom, flast;
+    static Double_t fvals[3], xvals[3], f1, fvmin, xvmin, ratio, f2, f3, fvmax;
+    static Double_t toler8, toler9, overal, undral, slamin, slamax, slopem;
+    static Int_t i, nparx, nvmax, nxypt, kk, ipt;
+    static Bool_t ldebug;
     TString cmess;
     char chpq[13];
     int     l65, l70, l80;
@@ -4769,9 +4773,9 @@ void TMinuit::mnmatu(Int_t kode)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Int_t ndex, i, j, m, n, ncoef, nparm, id, it, ix;
-    Int_t nsofar, ndi, ndj, iso, isw2, isw5;
-    TString ctemp;
+    static Int_t ndex, i, j, m, n, ncoef, nparm, id, it, ix;
+    static Int_t nsofar, ndi, ndj, iso, isw2, isw5;
+    static TString ctemp;
 
     isw2 = fISW[1];
     if (isw2 < 1) {
@@ -4849,13 +4853,13 @@ void TMinuit::mnmigr()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t gdel, gami, vlen, dsum, gssq, vsum, d;
-    Double_t fzero, fs, ri, delgam, rhotol;
-    Double_t gdgssq, gvg, vgi;
-    Int_t npfn, ndex, iext, i, j, m, n, npsdf, nparx;
-    Int_t iswtr, lined2, kk, nfcnmg, nrstrt,iter;
-    Bool_t ldebug;
-    Double_t toler = 0.05;
+    static Double_t gdel, gami, vlen, dsum, gssq, vsum, d;
+    static Double_t fzero, fs, ri, delgam, rhotol;
+    static Double_t gdgssq, gvg, vgi;
+    static Int_t npfn, ndex, iext, i, j, m, n, npsdf, nparx;
+    static Int_t iswtr, lined2, kk, nfcnmg, nrstrt,iter;
+    static Bool_t ldebug;
+    static Double_t toler = 0.05;
 
     if (fNpar <= 0) return;
     if (fAmin == fUndefi) mnamin();
@@ -5189,8 +5193,8 @@ void TMinuit::mnmnos()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t val2mi, val2pl;
-    Int_t nbad, ilax, ilax2, ngood, nfcnmi, iin, knt;
+    static Double_t val2mi, val2pl;
+    static Int_t nbad, ilax, ilax2, ngood, nfcnmi, iin, knt;
 
     if (fNpar <= 0) goto L700;
     ngood = 0;
@@ -5269,12 +5273,12 @@ void TMinuit::mnmnot(Int_t ilax, Int_t ilax2, Double_t &val2pl, Double_t &val2mi
     Int_t i__1;
 
     /* Local variables */
-    Double_t delu, aopt, eros;
-    Double_t abest, xunit, dc, ut, sigsav, du1;
-    Double_t fac, sig, sav;
-    Int_t marc, isig, mpar, ndex, imax, indx, ierr, i, j;
-    Int_t iercr, it, istrav, nfmxin, nlimit, isw2, isw4;
-    TString csig;
+    static Double_t delu, aopt, eros;
+    static Double_t abest, xunit, dc, ut, sigsav, du1;
+    static Double_t fac, sig, sav;
+    static Int_t marc, isig, mpar, ndex, imax, indx, ierr, i, j;
+    static Int_t iercr, it, istrav, nfmxin, nlimit, isw2, isw4;
+    static TString csig;
 
 //*-*-                                       . . save and prepare start vals
     isw2    = fISW[1];
@@ -5466,9 +5470,9 @@ void TMinuit::mnparm(Int_t k1, TString cnamj, Double_t uk, Double_t wk, Double_t
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t vplu, a_small, gsmin, pinti, vminu, danger, sav, sav2;
-    Int_t ierr, kint, in, ix, ktofix, lastin, kinfix, nvl;
-    TString cnamk, chbufi;
+    static Double_t vplu, a_small, gsmin, pinti, vminu, danger, sav, sav2;
+    static Int_t ierr, kint, in, ix, ktofix, lastin, kinfix, nvl;
+    static TString cnamk, chbufi;
 
     Int_t k = k1+1;
     cnamk   = cnamj;
@@ -5492,7 +5496,7 @@ void TMinuit::mnparm(Int_t k1, TString cnamj, Double_t uk, Double_t wk, Double_t
 	    Printf(" CANNOT RELEASE. MAX NPAR EXCEEDED.");
 	    goto L800;
 	}
-	mnfree(-k);
+	mnfree(1);
     }
 //*-*-                      if redefining previously variable parameter
     if (fNiofex[k-1] > 0) kint = fNpar - 1;
@@ -5523,7 +5527,7 @@ L122:
 	nvl = 4;
 	fLnolim = kFALSE;
 	if (fISW[4] >= 0) {
-            Printf(" %5d %-10s %13.5e%13.5e  %13.5e%13.5e",k,(const char*)cnamk,uk,wk,a,b);
+            Printf(" %5d '%-10s' %13.5e%13.5e  %13.5e%13.5e",k,(const char*)cnamk,uk,wk,a,b);
 	}
     }
 //*-*-                            . . request for another variable parameter
@@ -5664,10 +5668,10 @@ void TMinuit::mnpars(TString &crdbuf, Int_t &icondn)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t a=0, b=0, fk=0, uk=0, wk=0, xk=0;
-    Int_t ierr, kapo1, kapo2;
-    Int_t k, llist, ibegin, lenbuf, istart, lnc, icy;
-    TString cnamk, comand, celmnt, ctemp;
+    static Double_t a, b, fk, uk, wk, xk;
+    static Int_t ierr, kapo1, kapo2;
+    static Int_t k, llist, ibegin, lenbuf, istart, lnc, icy;
+    static TString cnamk, comand, celmnt, ctemp;
     char stmp[128];
 
     lenbuf = strlen((const char*)crdbuf);
@@ -5754,7 +5758,7 @@ void TMinuit::mnpfit(Double_t *parx2p, Double_t *pary2p, Int_t npar2p, Double_t 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t a, f, s, t, y, s2, x2, x3, x4, y2, cz[3], xm, xy, x2y;
+    static Double_t a, f, s, t, y, s2, x2, x3, x4, y2, cz[3], xm, xy, x2y;
     x2 = x3 = 0;
     Int_t i;
 
@@ -5816,9 +5820,9 @@ void TMinuit::mnpint(Double_t &pexti, Int_t i1, Double_t &pinti)
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t a, alimi, blimi, yy, yy2;
-    Int_t igo;
-    TString chbuf2, chbufi;
+    static Double_t a, alimi, blimi, yy, yy2;
+    static Int_t igo;
+    static TString chbuf2, chbufi;
 
     Int_t i = i1+1;
     pinti   = pexti;
@@ -5867,13 +5871,13 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
      static TString cslash = "/";
 
      /* Local variables */
-     Double_t xmin, ymin, xmax, ymax, savx, savy, yprt;
-     Double_t bwidx, bwidy, xbest, ybest, ax, ay, bx, by;
-     Double_t xvalus[12], any, dxx, dyy;
-     Int_t iten, i, j, k, maxnx, maxny, iquit, ni, linodd;
-     Int_t nxbest, nybest, km1, ibk, isp1, nx, ny, ks, ix;
-     TString chmess, ctemp;
-     Bool_t overpr;
+     static Double_t xmin, ymin, xmax, ymax, savx, savy, yprt;
+     static Double_t bwidx, bwidy, xbest, ybest, ax, ay, bx, by;
+     static Double_t xvalus[12], any, dxx, dyy;
+     static Int_t iten, i, j, k, maxnx, maxny, iquit, ni, linodd;
+     static Int_t nxbest, nybest, km1, ibk, isp1, nx, ny, ks, ix;
+     static TString chmess, ctemp;
+     static Bool_t overpr;
      char cline[120];
      char chsav, chbest;
 
@@ -6034,7 +6038,7 @@ void TMinuit::mnpout(Int_t iuext1, TString &chnam, Double_t &val, Double_t &err,
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Int_t iint, iext, nvl;
+    static Int_t iint, iext, nvl;
 
     Int_t iuext = iuext1 + 1;
     xlolim = 0;
@@ -6098,9 +6102,9 @@ void TMinuit::mnprin(Int_t inkode, Double_t fval)
     /* Local variables */
     Double_t dcmax, x1, x2, x3, dc;
     x2 = x3 = 0;
-    Int_t nadd, i, k, l, m, ikode, ic, nc, ntrail, lbl;
-    TString chedm;
-    TString colhdl[6], colhdu[6], cx2, cx3, cheval;
+    static Int_t nadd, i, k, l, m, ikode, ic, nc, ntrail, lbl;
+    static TString chedm;
+    static TString colhdl[6], colhdu[6], cx2, cx3, cheval;
 
     if (fNu == 0) {
 	Printf(" THERE ARE CURRENTLY NO PARAMETERS DEFINED");
@@ -6282,9 +6286,9 @@ void TMinuit::mnpsdf()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t dgmin, padd, pmin, pmax, dg, epspdf, epsmin;
-    Int_t ndex, i, j, ndexd, ip, ifault;
-    TString chbuff, ctemp;
+    static Double_t dgmin, padd, pmin, pmax, dg, epspdf, epsmin;
+    static Int_t ndex, i, j, ndexd, ip, ifault;
+    static TString chbuff, ctemp;
 
     epsmin = 1e-6;
     epspdf = TMath::Max(epsmin,fEpsma2);
@@ -6353,8 +6357,8 @@ void TMinuit::mnrazz(Double_t ynew, Double_t *pnew, Double_t *y, Int_t &jh, Int_
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t pbig, plit;
-    Int_t i, j, nparp1;
+    static Double_t pbig, plit;
+    static Int_t i, j, nparp1;
 
     /* Function Body */
     for (i = 1; i <= fNpar; ++i) { fP[i + jh*fMaxpar - fMaxpar-1] = pnew[i-1]; }
@@ -6430,7 +6434,7 @@ void TMinuit::mnrset(Int_t iopt)
 //*-*        after SET LIMITS, SET PARAM, CALL FCN 6
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t iext, i;
+    static Int_t iext, i;
 
     fCstatu = "RESET     ";
     if (iopt >= 1) {
@@ -6480,9 +6484,9 @@ void TMinuit::mnscan()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t step, uhigh, xhreq, xlreq, ubest, fnext, unext, xh, xl;
-    Int_t ipar, iint, icall, ncall, nbins, nparx;
-    Int_t nxypt, nccall, iparwd;
+    static Double_t step, uhigh, xhreq, xlreq, ubest, fnext, unext, xh, xl;
+    static Int_t ipar, iint, icall, ncall, nbins, nparx;
+    static Int_t nxypt, nccall, iparwd;
 
     xlreq = TMath::Min(fWord7[2],fWord7[3]);
     xhreq = TMath::Max(fWord7[2],fWord7[3]);
@@ -6590,9 +6594,9 @@ void TMinuit::mnseek()
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
     /* Local variables */
-    Double_t dxdi, rnum, ftry, rnum1, rnum2, alpha;
-    Double_t flast, bar;
-    Int_t ipar, iext, j, ifail, iseed, nparx, istep, ib, mxfail, mxstep;
+    static Double_t dxdi, rnum, ftry, rnum1, rnum2, alpha;
+    static Double_t flast, bar;
+    static Int_t ipar, iext, j, ifail, iseed, nparx, istep, ib, mxfail, mxstep;
 
     mxfail = Int_t(fWord7[0]);
     if (mxfail <= 0) mxfail = fNpar*20 + 100;
@@ -6746,11 +6750,11 @@ void TMinuit::mnset()
     Int_t f_inqu();
 
     /* Local variables */
-    Double_t val;
-    Int_t iset, iprm, i, jseed, kname, iseed, iunit, id, ii, kk;
-    Int_t ikseed, idbopt, igrain, iswsav, isw2;
-    TString  cfname, cmode, ckind,  cwarn, copt, ctemp, ctemp2;
-    Bool_t lname=kFALSE;
+    static Double_t val;
+    static Int_t iset, iprm, i, jseed, kname, iseed, iunit, id, ii, kk;
+    static Int_t ikseed, idbopt, igrain, iswsav, isw2;
+    static TString  cfname, cmode, ckind,  cwarn, copt, ctemp, ctemp2;
+    static Bool_t lname;
 
     for (i = 1; i <= nntot; ++i) {
 	ctemp  = cname[i-1];
@@ -7031,7 +7035,7 @@ L1060:
     Printf("                           %s",cprlev[2].Data());
     Printf("                           %s",cprlev[3].Data());
     Printf("                           %s",cprlev[4].Data());
-    Printf(" CURRENT PRINTOUT LEVEL IS %s",cprlev[fISW[4]+1].Data());
+    Printf(" CURRENT PRINTOUT LEVEL IS %s",cprlev[fISW[4]].Data());
     return;
 //*-*-                                       . . . . . . . show nograd, grad
 L1070:
@@ -7213,11 +7217,11 @@ void TMinuit::mnsimp()
     static Double_t rhomax = 8;
 
     /* Local variables */
-    Double_t dmin_, dxdi, yrho, f, ynpp1, aming, ypbar;
-    Double_t bestx, ystar, y1, y2, ystst, pb, wg;
-    Double_t absmin, rho, sig2, rho1, rho2;
-    Int_t npfn, i, j, k, jhold, ncycl, nparx;
-    Int_t nparp1, kg, jh, nf, jl, ns;
+    static Double_t dmin_, dxdi, yrho, f, ynpp1, aming, ypbar;
+    static Double_t bestx, ystar, y1, y2, ystst, pb, wg;
+    static Double_t absmin, rho, sig2, rho1, rho2;
+    static Int_t npfn, i, j, k, jhold, ncycl, nparx;
+    static Int_t nparp1, kg, jh, nf, jl, ns;
 
     if (fNpar <= 0) return;
     if (fAmin == fUndefi) mnamin();
@@ -7446,7 +7450,7 @@ Bool_t TMinuit::mnunpt(TString &cfname)
 //*-*        ========================================================
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Int_t i, l, ic;
+    static Int_t i, l, ic;
     Bool_t ret_val;
     static TString cpt = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890./;:[]$%*_!@#&+()";
 
@@ -7477,8 +7481,8 @@ void TMinuit::mnvert(Double_t *a, Int_t l, Int_t, Int_t n, Int_t &ifail)
     Int_t a_offset;
 
     /* Local variables */
-    Double_t si;
-    Int_t i, j, k, kp1, km1;
+    static Double_t si;
+    static Int_t i, j, k, kp1, km1;
 
     /* Parameter adjustments */
     a_offset = l + 1;
@@ -7567,8 +7571,8 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
     TString cmes = cmes1;
 
     const Int_t MAXMES = 10;
-    Int_t ityp, i, ic, nm;
-    TString englsh, ctyp;
+    static Int_t ityp, i, ic, nm;
+    static TString englsh, ctyp;
 
     if (corg(0,3) != "SHO" || cmes(0,3) != "SHO") {
 
@@ -7577,7 +7581,7 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
           ityp = 1;
 	  if (fLwarn) {
              Printf(" MINUIT WARNING IN %s",(const char*)corg);
-             Printf(" ============== %s",(const char*)cmes);
+             Printf(" ============== ",(const char*)cmes);
 	     return;
 	  }
        } else {
@@ -7594,9 +7598,9 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
        ++fIcirc[ityp-1];
        if (fIcirc[ityp-1] > 10) 	fIcirc[ityp-1] = 1;
        ic = fIcirc[ityp-1];
-       fOrigin[ic] = corg;
-       fWarmes[ic] = cmes;
-       fNfcwar[ic] = fNfcn;
+       fOrigin[ic + ityp*10 - 11] = corg;
+       fWarmes[ic + ityp*10 - 11] = cmes;
+       fNfcwar[ic + ityp*10 - 11] = fNfcn;
        return;
    }
 
@@ -7624,7 +7628,9 @@ void TMinuit::mnwarn(const char *copt1, const char *corg1, const char *cmes1)
 	for (i = 1; i <= nm; ++i) {
 	    ++ic;
 	    if (ic > MAXMES) ic = 1;
-            Printf(" %6d  %s  %s", fNfcwar[ic],fOrigin[ic].Data(),fWarmes[ic].Data());
+            Printf(" %6d %s %s", fNfcwar[ic + ityp*10 - 11],
+                               (const char*)fOrigin + (ic + ityp*10 - 11)*10,
+                               (const char*)fWarmes + (ic + ityp*10 - 11)*60);
 	}
 	fNwrmes[ityp-1] = 0;
 	Printf(" ");
@@ -7640,8 +7646,8 @@ void TMinuit::mnwerr()
 //*-*      whenever a new covariance matrix is available.
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-    Double_t denom, ba, al, dx, du1, du2;
-    Int_t ndex, ierr, i, j, k, l, ndiag, k1, iin;
+    static Double_t denom, ba, al, dx, du1, du2;
+    static Int_t ndex, ierr, i, j, k, l, ndiag, k1, iin;
 
 //*-*-                        calculate external error if v exists
     if (fISW[1] >= 1) {

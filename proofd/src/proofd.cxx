@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.22 2002/01/22 10:53:28 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.18 2000/12/19 17:49:55 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -41,19 +41,15 @@
 // Notice: no & is needed. Proofd will go in background by itself.      //
 //                                                                      //
 // Proofd arguments:                                                    //
-//   -i                says we were started by inetd                    //
-//   -p port#          specifies a different port to listen on          //
-//   -b tcpwindowsize  specifies the tcp window size in bytes (e.g. see //
-//                     http://www.psc.edu/networking/perf_tune.html)    //
-//                     Default is 65535. Only change default for pipes  //
-//                     with a high bandwidth*delay product.             //
-//   -d level          level of debug info written to syslog            //
-//                     0 = no debug (default)                           //
-//                     1 = minimum                                      //
-//                     2 = medium                                       //
-//                     3 = maximum                                      //
-//   rootsys_dir       directory which must contain bin/proofserv and   //
-//                     proof/etc/proof.conf                             //
+//   -i              says we were started by inetd                      //
+//   -p port#        specifies a different port to listen on            //
+//   -d level        level of debug info written to syslog              //
+//                   0 = no debug (default)                             //
+//                   1 = minimum                                        //
+//                   2 = medium                                         //
+//                   3 = maximum                                        //
+//   rootsys_dir     directory which must contain bin/proofserv and     //
+//                   proof/etc/proof.conf                               //
 //                                                                      //
 //  When your system uses shadow passwords you have to compile proofd   //
 //  with -DR__SHADOWPW. Since shadow passwords can only be accessed     //
@@ -104,9 +100,6 @@
 #      endif
 #   endif
 #endif
-#ifdef __MACH__
-#   define R__GLIBC
-#endif
 
 #if defined(__FreeBSD__) && (__FreeBSD__ < 4)
 #include <sys/file.h>
@@ -116,7 +109,7 @@
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__MACH__)
+    defined(_AIX) || defined(__FreeBSD__)
 #include <grp.h>
 #include <sys/types.h>
 #endif
@@ -142,7 +135,7 @@ extern "C" {
 
 #if defined(_AIX)
 extern "C" {
-   //int initgroups(const char *name, int basegid);
+   int initgroups(const char *name, int basegid);
    int seteuid(uid_t euid);
    int setegid(gid_t egid);
 }
@@ -307,11 +300,7 @@ void ProofdSRPUser(const char *user)
       return;
    }
 
-#if R__SRP_1_1
-   struct t_server *ts = t_serveropen(gUser, tpw, tcnf);
-#else
    struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
-#endif
    if (!ts)
       ErrorFatal("ProofdSRPUser: user %s not found SRP password file", gUser);
 
@@ -778,7 +767,6 @@ void ProofdExec()
 int main(int argc, char **argv)
 {
    char *s;
-   int   tcpwindowsize = 65535;
 
    ErrorInit(argv[0]);
 
@@ -799,21 +787,10 @@ int main(int argc, char **argv)
                break;
 
             case 'd':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr, "-d requires a debug level as argument\n");
-                  ErrorFatal("-d requires a debug level as argument");
-               }
-               gDebug = atoi(*++argv);
-               break;
-
-            case 'b':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr, "-b requires a buffersize in bytes as argument\n");
-                  ErrorFatal("-b requires a buffersize in bytes as argument");
-               }
-               tcpwindowsize = atoi(*++argv);
+               if (--argc <= 0)
+                  gDebug = 0;
+               else
+                  gDebug = atoi(*++argv);
                break;
 
             default:
@@ -839,7 +816,7 @@ int main(int argc, char **argv)
 
       DaemonStart(1);
 
-      NetInit(kProofdService, gPort, tcpwindowsize);
+      NetInit(kProofdService, gPort);
    }
 
    if (gDebug > 0)

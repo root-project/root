@@ -128,7 +128,7 @@ char *string;
 #endif
 
 /************************************************************
-* char *G__input()
+* char *G__input(char *prompt)
 *
 *  command input frontend
 *************************************************************/
@@ -159,7 +159,7 @@ char *prompt;
     }
     pchar=readline(prompt);
     while(pchar&&strlen(pchar)>G__ONELINE-5) {
-      G__fprinterr(G__serr,"!!! User command too long !!!\n");
+      fprintf(G__serr,"!!! User command too long !!!\n");
       pchar=readline(prompt);
     }
     if(pchar) strcpy(line,pchar);
@@ -225,6 +225,7 @@ char *prompt;
 #endif
   return(line);
 }
+
 
 /****************************************************************
 *  Support libraries for GNU readline completion

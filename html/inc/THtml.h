@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.4 2001/02/06 10:34:19 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.h,v 1.2 2000/09/05 09:21:23 brun Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -61,7 +61,6 @@ protected:
         Bool_t  IsModified(TClass *classPtr, const Int_t type);
         Bool_t  IsName(Int_t c);
         Bool_t  IsWord(Int_t c);
-		void	NameSpace2FileName(char *name);
         void    ReplaceSpecialChars(ofstream &out, const char c);
         void    ReplaceSpecialChars(ofstream &out, const char *string);
         void    SortNames(const char **strings, Int_t num, Bool_t type=0);
@@ -77,9 +76,9 @@ public:
     const char  *GetSourceDir()  { return fSourceDir; }
     const char  *GetOutputDir()  { return fOutputDir; }
     const char  *GetXwho() const { return fXwho.Data(); }
-          void   MakeAll(Bool_t force=kFALSE, const char *filter="*");
+          void   MakeAll(Bool_t force=kFALSE);
           void   MakeClass(const char *className, Bool_t force=kFALSE);
-          void   MakeIndex(const char *filter="*");
+          void   MakeIndex();
           void   MakeTree(const char *className, Bool_t force=kFALSE);
           void   SetEscape(char esc='\\') { fEsc = esc; }
           void   SetSourcePrefix(const char *prefix) { fSourcePrefix = prefix; }

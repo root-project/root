@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.7 2001/01/25 14:06:04 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.4 2000/12/02 15:49:45 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -18,10 +18,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG
-#include "config.h"
-#endif
-
 #ifndef R__LYNXOS
 #include <sys/stat.h>
 #endif
@@ -34,6 +30,7 @@
 #include "TError.h"
 #include "Getline.h"
 
+R__EXTERN const char *kRootdErrStr[];
 
 TString      TAuthenticate::fgUser;
 TString      TAuthenticate::fgPasswd;
@@ -90,11 +87,7 @@ Bool_t TAuthenticate::Authenticate()
    if (fSecurity == kSRP && fUser != "anonymous" && fUser != "rootd") {
       if (!fgSecAuthHook) {
          char *p;
-#ifdef ROOTLIBDIR
-         TString lib = TString(ROOTLIBDIR) + "/libSRPAuth";
-#else
          TString lib = TString(gRootDir) + "/lib/libSRPAuth";
-#endif
          if ((p = gSystem->DynamicPathName(lib, kTRUE))) {
             delete [] p;
             gSystem->Load(lib);
@@ -208,11 +201,8 @@ again:
 #endif
          if (first) {
             TInetAddress addr = gSystem->GetHostByName(fRemote);
-            if (addr.IsValid()) {
+            if (addr.IsValid())
                remote = addr.GetHostName();
-               if (remote == "UnNamedHost")
-                  remote = addr.GetHostAddress();
-            }
          }
          FILE *fd = fopen(net, "r");
          char line[256];
@@ -310,7 +300,7 @@ void TAuthenticate::AuthError(const char *where, Int_t err)
 {
    // Print error string depending on error code.
 
-   ::Error(where, gRootdErrStr[err]);
+   ::Error(where, kRootdErrStr[err]);
 }
 
 //______________________________________________________________________________

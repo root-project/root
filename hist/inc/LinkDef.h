@@ -1,4 +1,4 @@
-/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.8 2001/12/09 17:38:34 brun Exp $ */
+/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.4 2000/10/31 11:21:02 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,8 +14,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ enum EErrorType;
-
 #pragma link C++ class TAxis-;
 #pragma link C++ class TFormula-;
 #pragma link C++ class TF1-;
@@ -26,7 +24,6 @@
 #pragma link C++ class TH1D+;
 #pragma link C++ class TH1F+;
 #pragma link C++ class TH1S+;
-#pragma link C++ class TH1K+;
 #pragma link C++ class TH2-;
 #pragma link C++ class TH2C-;
 #pragma link C++ class TH2D-;
@@ -37,8 +34,6 @@
 #pragma link C++ class TH3D-;
 #pragma link C++ class TH3F-;
 #pragma link C++ class TH3S-;
-#pragma link C++ class THLimitsFinder+;
-#pragma link C++ class THStack+;
 #pragma link C++ class TMultiDimFit+;
 #pragma link C++ class TPolyMarker-;
 #pragma link C++ class TPrincipal+;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMsgBox.cxx,v 1.2 2001/12/20 10:19:26 rdm Exp $
+// @(#)root/gui:$Name$:$Id$
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -33,7 +33,6 @@
 #include "TGIcon.h"
 #include "TGLabel.h"
 #include "TMath.h"
-#include "TList.h"
 
 
 ClassImp(TGMsgBox)
@@ -225,7 +224,7 @@ void TGMsgBox::PMsgBox(const TGWindow *main, const char *title,
    fMsgList->Add(label);
    fLabelFrame->AddFrame(label, fL4);
    delete [] tmpMsg;
-
+	
    fIconFrame->AddFrame(fLabelFrame, fL4);
    AddFrame(fIconFrame, fL5);
 
@@ -241,9 +240,9 @@ void TGMsgBox::PMsgBox(const TGWindow *main, const char *title,
    if (main) {
       Window_t wdum;
       gVirtualX->TranslateCoordinates(main->GetId(), GetParent()->GetId(),
-                        (Int_t)(((TGFrame *) main)->GetWidth() - fWidth) >> 1,
-                        (Int_t)(((TGFrame *) main)->GetHeight() - fHeight) >> 1,
-                        ax, ay, wdum);
+                          (((TGFrame *) main)->GetWidth() - fWidth) >> 1,
+                          (((TGFrame *) main)->GetHeight() - fHeight) >> 1,
+                          ax, ay, wdum);
    } else {
       UInt_t root_w, root_h;
       gVirtualX->GetWindowSize(fClient->GetRoot()->GetId(), ax, ay, root_w, root_h);

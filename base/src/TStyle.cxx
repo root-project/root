@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.14 2002/01/07 09:08:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.5 2000/12/13 15:13:46 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -12,16 +12,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <math.h>
 
 #include "TROOT.h"
 #include "TStyle.h"
-#include "TColor.h"
 
 TStyle  *gStyle;
 
 ClassImp(TStyle)
-
+   
 
 //______________________________________________________________________________
 //
@@ -51,47 +49,9 @@ TStyle::TStyle() :TNamed()
 //______________________________________________________________________________
 TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 {
-// Create a new TStyle.
-// The following names are reserved to create special styles
-//   -Default: the default style set in TStyle::Reset
-//   -Plain: a black&white oriented style
-//   -Bold:
-//   -Video;
-//   -Pub:
-//     (see the definition of these styles below).
-//
-// Note a side-effect of calling gStyle->SetFillColor(0). This is nearly
-// equivalent of selecting the "Plain" style.
-//
-// Many graphics attributes may be set via the TStyle, see in particular
-//  - TStyle::SetNdivisions
-//  - TStyle::SetAxisColor
-//  - TStyle::SetHeaderPS
-//  - TStyle::SetTitlePS
-//  - TStyle::SetLabelColor
-//  - TStyle::SetLabelFont
-//  - TStyle::SetLabelOffset
-//  - TStyle::SetLabelSize
-//  - TStyle::SetOptDate
-//  - TStyle::SetLineStyleString
-//  - TStyle::SetOptFit
-//  - TStyle::SetOptStat
-//  - TStyle::SetPaperSize
-//  - TStyle::SetTickLength
-//  - TStyle::SetTitleOffset
-//  - TStyle::SetTitleSize
-//  - TStyle::SetPalette
-//  - TStyle::SetTimeOffset
-//  - TStyle::SetStripDecimals
-//
-//  The current style is pointed by gStyle.
-//  When calling myStyle->cd(), gStyle is set to myStyle.
-//  One can also use gROOT to change the current style, eg
-//    gROOT->SetStyle("Plain") will change the current style gStyle to the "Plain" style
-//  See also TROOT::ForceStyle and TROOT::UseCurrentStyle
-
+   gStyle = 0;  //gStyle is used by TAttAxis::ResetAttAxis called by Reset
    Reset();
-
+   gStyle = this;
    gROOT->GetListOfStyles()->Add(this);
 
    //may be a standard style to be initialyzed
@@ -274,9 +234,6 @@ void TStyle::Copy(TObject &obj)
    ((TStyle&)obj).fFuncColor      = fFuncColor;
    ((TStyle&)obj).fFuncStyle      = fFuncStyle;
    ((TStyle&)obj).fFuncWidth      = fFuncWidth;
-   ((TStyle&)obj).fGridColor      = fGridColor;
-   ((TStyle&)obj).fGridStyle      = fGridStyle;
-   ((TStyle&)obj).fGridWidth      = fGridWidth;
    ((TStyle&)obj).fFrameFillColor = fFrameFillColor;
    ((TStyle&)obj).fFrameFillStyle = fFrameFillStyle;
    ((TStyle&)obj).fFrameLineColor = fFrameLineColor;
@@ -307,7 +264,6 @@ void TStyle::Copy(TObject &obj)
    ((TStyle&)obj).fStatTextColor  = fStatTextColor;
    ((TStyle&)obj).fStatBorderSize = fStatBorderSize;
    ((TStyle&)obj).fStatFont       = fStatFont;
-   ((TStyle&)obj).fStatFontSize   = fStatFontSize;
    ((TStyle&)obj).fStatStyle      = fStatStyle;
    ((TStyle&)obj).fStatFormat     = fStatFormat;
    ((TStyle&)obj).fStatW          = fStatW;
@@ -317,7 +273,6 @@ void TStyle::Copy(TObject &obj)
    ((TStyle&)obj).fTitleColor     = fTitleColor;
    ((TStyle&)obj).fTitleTextColor = fTitleTextColor;
    ((TStyle&)obj).fTitleFont      = fTitleFont;
-   ((TStyle&)obj).fTitleFontSize  = fTitleFontSize;
    ((TStyle&)obj).fTitleStyle     = fTitleStyle;
    ((TStyle&)obj).fTitleBorderSize= fTitleBorderSize;
    ((TStyle&)obj).fTitleW         = fTitleW;
@@ -327,10 +282,8 @@ void TStyle::Copy(TObject &obj)
    ((TStyle&)obj).fDateX          = fDateX;
    ((TStyle&)obj).fDateY          = fDateY;
    ((TStyle&)obj).fFitFormat      = fFitFormat;
-   ((TStyle&)obj).fPaintTextFormat= fPaintTextFormat;
    ((TStyle&)obj).fShowEventStatus= fShowEventStatus;
    ((TStyle&)obj).fLegoInnerR     = fLegoInnerR;
-   ((TStyle&)obj).fStripDecimals  = fStripDecimals;
    Int_t i;
    for (i=0;i<30;i++) {
       ((TStyle&)obj).fLineStyle[i]     = fLineStyle[i];
@@ -341,7 +294,6 @@ void TStyle::Copy(TObject &obj)
       ((TStyle&)obj).fPalette.fArray[i] = fPalette.fArray[i];
    }
    ((TStyle&)obj).fHeaderPS       = fHeaderPS;
-   ((TStyle&)obj).fTitlePS        = fTitlePS;
    ((TStyle&)obj).fLineScalePS    = fLineScalePS;
    ((TStyle&)obj).fTimeOffset     = fTimeOffset;
 }
@@ -379,9 +331,6 @@ void TStyle::Reset(Option_t *)
    fFuncColor      = 1;
    fFuncStyle      = 1;
    fFuncWidth      = 3;
-   fGridColor      = 0;
-   fGridStyle      = 3;
-   fGridWidth      = 1;
    fHistLineColor  = 1;
    fHistFillColor  = 0;
    fHistFillStyle  = 1001;
@@ -413,7 +362,6 @@ void TStyle::Reset(Option_t *)
    fStatTextColor  = 1;
    fStatBorderSize = 2;
    fStatFont       = 62;
-   fStatFontSize   = 0;
    fStatStyle      = 1001;
    fStatW          = 0.20;
    fStatH          = 0.16;
@@ -421,11 +369,9 @@ void TStyle::Reset(Option_t *)
    fStatY          = 0.98;
    SetStatFormat();
    SetFitFormat();
-   SetPaintTextFormat();
    fTitleColor     = fCanvasColor;
    fTitleTextColor = 1;
    fTitleFont      = 62;
-   fTitleFontSize  = 0;
    fTitleStyle     = 1001;
    fTitleBorderSize= 2;
    fTitleW         = 0;
@@ -435,8 +381,6 @@ void TStyle::Reset(Option_t *)
    fShowEventStatus= 0;
    fLegoInnerR     = 0.5;
    fHeaderPS       = "";
-   fTitlePS        = "";
-   fStripDecimals  = kTRUE;
 
    SetDateX();
    SetDateY();
@@ -639,15 +583,6 @@ void TStyle::SetHeaderPS(const char *header)
 }
 
 //______________________________________________________________________________
-void TStyle::SetTitlePS(const char *pstitle)
-{
-// Define a string to be used in the %%Title of the Postscript files.
-// If this string is not defined, ROOT will use the canvas title.
-
-   fTitlePS = pstitle;
-}
-
-//______________________________________________________________________________
 void TStyle::SetLabelColor(Color_t color, Option_t *axis)
 {
 // Set axis labels color.
@@ -847,7 +782,7 @@ void TStyle::SetPaperSize(Float_t xsize, Float_t ysize)
    // Set paper size for PostScript output.
    // The paper size is specified in centimeters. Default is 20x26.
    // See also TPad::Print
-
+   
    fPaperSizeX = xsize;
    fPaperSizeY = ysize;
 }
@@ -904,104 +839,6 @@ void TStyle::SetTitleSize(Float_t size, Option_t *axis)
 }
 
 //______________________________________________________________________________
-Int_t TStyle::CreateGradientColorTable(UInt_t Number, Double_t* Length,
-                              Double_t* Red, Double_t* Green,
-                              Double_t* Blue, UInt_t NColors)
-{
-  // STATIC function.
-  // Linear gradient color table:
-  // Red, Green and Blue are several RGB colors with values from 0.0 .. 1.0.
-  // Their number is "Intervals".
-  // Length is the length of the color interval between the RGB-colors:
-  // Imaging the whole gradient goes from 0.0 for the first RGB color to 1.0
-  // for the last RGB color, then each "Length"-entry in between stands for
-  // the length of the intervall between the according RGB colors.
-  //
-  // This definition is similar to the povray-definition of gradient
-  // color tables.
-  //
-  // In order to create a color table do the following:
-  // Define the RGB Colors:
-  // > UInt_t Number = 5;
-  // > Double_t Red[5]   = { 0.00, 0.09, 0.18, 0.09, 0.00 };
-  // > Double_t Green[5] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
-  // > Double_t Blue[5]  = { 0.17, 0.39, 0.62, 0.79, 0.97 };
-  // Define the length of the (color)-interval between this points
-  // > Double_t Stops[5] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
-  // i.e. the color interval between Color 2 and Color 3 is
-  // 0.79 - 0.62 => 17 % of the total palette area between these colors
-  //
-  //  Original code by Andreas Zoglauer <zog@mpe.mpg.de>
-
-  UInt_t g, c;
-  UInt_t NPalette = 0;
-  Int_t *Palette = new Int_t[NColors+1];
-  UInt_t NColorsGradient;
-  TColor *Color;
-  Int_t HighestIndex = 0;
-
-  // Check if all RGB values are between 0.0 and 1.0 and
-  // Length goes from 0.0 to 1.0 in increasing order.
-  for (c = 0; c < Number; c++) {
-    if (Red[c] < 0 || Red[c] > 1.0 ||
-        Green[c] < 0 || Green[c] > 1.0 ||
-        Blue[c] < 0 || Blue[c] > 1.0 ||
-        Length[c] < 0 || Length[c] > 1.0) {
-      //Error("CreateGradientColorTable",
-      //      "All RGB colors and interval lengths have to be between 0.0 and 1.0");
-      delete [] Palette;
-      return -1;
-    }
-    if (c >= 1) {
-      if (Length[c-1] > Length[c]) {
-        //Error("CreateGradientColorTable",
-        //      "The interval lengths have to be in increasing order");
-        delete [] Palette;
-        return -1;
-      }
-    }
-  }
-
-  // Search for the highest color index not used in ROOT:
-  // We do not want to overwrite some colors...
-  TSeqCollection *ColorTable = gROOT->GetListOfColors();
-  if ((Color = (TColor *) ColorTable->Last()) != 0) {
-    if (Color->GetNumber() > HighestIndex) {
-      HighestIndex = Color->GetNumber();
-    }
-    while ((Color = (TColor *) (ColorTable->Before(Color))) != 0) {
-      if (Color->GetNumber() > HighestIndex) {
-      HighestIndex = Color->GetNumber();
-      }
-    }
-  }
-  HighestIndex++;
-
-  // Now create the colors and add them to the default palette:
-
-  // For each defined gradient...
-  for (g = 1; g < Number; g++) {
-    // create the colors...
-    NColorsGradient = (Int_t) (floor(NColors*Length[g]) - floor(NColors*Length[g-1]));
-    for (c = 0; c < NColorsGradient; c++) {
-      Color = new TColor(HighestIndex,
-                         Red[g-1] + c * (Red[g] - Red[g-1])/ NColorsGradient,
-                         Green[g-1] + c * (Green[g] - Green[g-1])/ NColorsGradient,
-                         Blue[g-1] + c * (Blue[g] - Blue[g-1])/ NColorsGradient,
-                         "  ");
-      Palette[NPalette] = HighestIndex;
-      NPalette++;
-      HighestIndex++;
-    }
-  }
-
-  gStyle->SetPalette(NPalette, Palette);
-  delete [] Palette;
-
-  return HighestIndex - NColors;
-}
-
-//______________________________________________________________________________
 void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
 {
 // The color palette is used by the histogram classes
@@ -1019,9 +856,6 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
 //     a Pretty Palette with a Spectrum Violet->Red is created.
 //   It is recommended to use this Pretty palette when drawing legos,
 //   surfaces or contours.
-//
-// if ncolors > 50 and colors=0, the DeepSea palette is used.
-//     (see TStyle::CreateGradientColorTable for more details)
 //
 // if ncolors > 0 and colors = 0, the default palette is used
 // with a maximum of ncolors.
@@ -1050,7 +884,6 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
       return;
    }
-
    // set Pretty Palette Spectrum Violet->Red
    if (ncolors == 1 && colors == 0) {
       ncolors = 50;
@@ -1058,19 +891,8 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
       for (i=0;i<ncolors;i++) fPalette.fArray[i] = 51+i;
       return;
    }
-
-   // set DeepSea palette
-   if (colors == 0 && ncolors > 50) {
-      const Int_t NRGBs = 5;
-      Double_t Stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
-      Double_t Red[NRGBs] = { 0.00, 0.09, 0.18, 0.09, 0.00 };
-      Double_t Green[NRGBs] = { 0.01, 0.02, 0.39, 0.68, 0.97 };
-      Double_t Blue[NRGBs] = { 0.17, 0.39, 0.62, 0.79, 0.97 };
-      CreateGradientColorTable(NRGBs, Stops, Red, Green, Blue, ncolors);
-      return;
-   }
-
    // set user defined palette
+   if (colors == 0 && ncolors > 50) ncolors = 50;
    fPalette.Set(ncolors);
    if (colors)  for (i=0;i<ncolors;i++) fPalette.fArray[i] = colors[i];
    else         for (i=0;i<ncolors;i++) fPalette.fArray[i] = palette[i];
@@ -1079,26 +901,14 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors)
 //______________________________________________________________________________
 void TStyle::SetTimeOffset(Double_t toffset)
 {
-// Change the time offset for time plotting.
-// Times are expressed in seconds. The corresponding numbers usually have 9
-// digits (or more if one takes into account fractions of seconds).
-// Thus, since it is very inconvenient to plot very large numbers on a scale,
-// one has to set an offset time that will be added to the axis begining,
-// in order to plot times correctly and conveniently. A convenient way to
-// set the time offset is to use TDatime::Convert().
+//*-*-*-*-*-*-*-*-*-*-*Change the time offset for time plotting *-*-*-*-*-*-*-*
+//*-*                  ========================================
+//   Times are expressed in UTC (Coordinated Universal Time), in seconds
+//   The corresponding numbers usually have 9 digits (or more if one
+//   takes into account fractions of seconds).
+//   Thus, since it is very inconvenient to plot very large numbers on a scale,
+//   one has to set an offset (UTC) time that will be added to the axis begining,
+//   in order to plot times correctly and conveniently
 
    fTimeOffset = toffset;
-}
-
-//______________________________________________________________________________
-void TStyle::SetStripDecimals(Bool_t strip)
-{
-//  Set option to strip decimals when drawing axis labels.
-//  By default, TGaxis::PaintAxis removes trailing 0s after a dot
-//  in the axis labels. Ex: {0,0.5,1,1.5,2,2.5, etc}
-//  If this function is called with strip=kFALSE, TGAxis::PaintAxis will
-//  draw labels with the same number of digits after the dot
-//  Ex: (0.0,0.5,1.0,1.5,2.0,2.5,etc}
-
-   fStripDecimals = strip;
 }

@@ -1,4 +1,4 @@
-/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.10 2001/08/12 09:00:10 brun Exp $ */
+/* @(#)root/tree:$Name:  $:$Id: LinkDef.h,v 1.4 2000/10/31 11:20:13 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,16 +17,12 @@
 #pragma link C++ class TBasket-;
 #pragma link C++ class TBranch-;
 #pragma link C++ class TBranchClones-;
-#pragma link C++ class TBranchElement+;
 #pragma link C++ class TBranchObject+;
 #pragma link C++ class TChain-;
 #pragma link C++ class TChainElement;
 #pragma link C++ class TCut+;
 #pragma link C++ class TEventList-;
-#pragma link C++ class TFriendElement+;
-#pragma link C++ class TTreeFriendLeafIter;
 #pragma link C++ class TLeaf-;
-#pragma link C++ class TLeafElement+;
 #pragma link C++ class TLeafObject-;
 #pragma link C++ class TLeafB+;
 #pragma link C++ class TLeafC+;
@@ -35,13 +31,12 @@
 #pragma link C++ class TLeafI+;
 #pragma link C++ class TLeafS+;
 #pragma link C++ class TNtuple-;
-#pragma link C++ class TNtupleD-;
 #pragma link C++ class TSelector+;
 #pragma link C++ class TSelectorCint+;
 #pragma link C++ class TTree-;
 #pragma link C++ class TVirtualTreePlayer;
 #pragma link C++ class TTreeResult+;
-#pragma link C++ class TTreeRow-;
+#pragma link C++ class TTreeRow+;
 
 #pragma link C++ function operator+(const TCut&, const char*);
 #pragma link C++ function operator+(const char*, const TCut&);

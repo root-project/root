@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.2 2000/11/27 10:46:50 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -41,12 +41,10 @@ private:
    TSocket  *fReady;      //socket which is ready to be read
 
 public:
-   enum EInterest { kRead = 1, kWrite = 2 };
-
    TMonitor();
    virtual ~TMonitor();
 
-   void Add(TSocket *sock, EInterest interest = kRead);
+   void Add(TSocket *sock);
    void Remove(TSocket *sock);
    void RemoveAll();
 

@@ -1,10 +1,14 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.10 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.3 2000/08/09 08:41:22 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
+// $Id:
+// $Log:
 
+#include <fstream.h>
+#include <iostream.h>
+#include <iomanip.h>
 #include <assert.h>
 #include <stdlib.h>
 
-#include "Riostream.h"
 #include "TCanvas.h"
 #include "TPad.h"
 #include "TCL.h"
@@ -57,7 +61,7 @@ TVolumeView::TVolumeView(TVolumeView *viewNode,TVolumePosition *nodePosition)
      while ( (nextView = (TVolumeView *)next(mode)) ){
        mode = kContinue;
        if (nextView->IsMarked()) {
-         TVolumePosition *position =next[0];
+         TVolumePosition *position = next[0];
          if (!position->GetNode()) {
              Error("TVolumeView ctor","%s %s ",GetName(),nextView->GetName());
          }
@@ -276,7 +280,6 @@ TVolumeView::TVolumeView(TVolume &pattern,Int_t maxDepLevel,
         nextPos.SetId(positionId);
         if (optMarked && !node->IsMarked()) {
             TVolumeView fakeView(*node,maxDepLevel,&nextPos,iopt,rootVolume);
-            fakeView.DoOwner(kFALSE);
             continue;
         }
 
@@ -588,7 +591,7 @@ void TVolumeView::GetLocalRange(Float_t *min, Float_t *max)
 //______________________________________________________________________________
 Text_t *TVolumeView::GetObjectInfo(Int_t px, Int_t py) const
 {
-   if (!gPad) return 0;
+   if (!gPad) return "";
    static char info[512];
    Double_t x[3] = {0,0,0.5};
    ((TPad *)gPad)->AbsPixeltoXY(px,py,x[0],x[1]);

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.12 2001/10/15 06:59:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.4 2000/11/24 10:29:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -50,7 +50,6 @@ class TClonesArray;
 
    const Int_t kDoNotProcess = BIT(10); // Active bit for branches
    const Int_t kIsClone      = BIT(11); // to indicate a TBranchClones
-   const Int_t kBranchObject = BIT(12); // branch is a TObject*
 
 class TBranch : public TNamed {
 
@@ -58,7 +57,6 @@ protected:
     // TBranch status bits
     enum { kAutoDelete = BIT(15) };
 
-   static Int_t fgCount;          //! branch counter
     Int_t       fCompress;        //  (=1 branch is compressed, 0 otherwise)
     Int_t       fBasketSize;      //  Initial Size of  Basket Buffer
     Int_t       fEntryOffsetLen;  //  Initial Length of fEntryOffset table in the basket buffers
@@ -66,7 +64,6 @@ protected:
     Int_t       fEntryNumber;     //  Current entry number (last one filled in this branch)
     Int_t       fOffset;          //  Offset of this branch
     Int_t       fMaxBaskets;      //  Maximum number of Baskets so far
-    Int_t       fSplitLevel;      //  Branch split level
     Int_t       fNleaves;         //! Number of leaves
     Int_t       fReadBasket;      //! Current basket number when reading
     Int_t       fReadEntry;       //! Current entry number when reading
@@ -95,12 +92,8 @@ public:
     virtual void     Browse(TBrowser *b);
     virtual void     DropBaskets();
     virtual Int_t    Fill();
-    virtual void     FillLeaves(TBuffer &b);
-    virtual TBranch *FindBranch(const char *name);
-    virtual TLeaf   *FindLeaf(const char *name);
     virtual char    *GetAddress() const {return fAddress;}
     virtual Int_t    GetBasketSize() const {return fBasketSize;}
-    virtual const char* GetClassName() const { return ""; }
     virtual Int_t    GetCompressionLevel() const {return fCompress;}
     virtual Int_t    GetEntry(Int_t entry=0, Int_t getall = 0);
     virtual Int_t    GetEntryExport(Int_t entry, Int_t getall, TClonesArray *list, Int_t n);
@@ -109,7 +102,6 @@ public:
     virtual TLeaf   *GetLeaf(const char *name) const;
             TBasket *GetBasket(Int_t basket);
             Int_t   *GetBasketBytes() const {return fBasketBytes;}
-            Int_t   *GetBasketEntry() const {return fBasketEntry;}
     virtual Seek_t   GetBasketSeek(Int_t basket) const;
     TDirectory      *GetDirectory() const {return fDirectory;}
     virtual TFile   *GetFile(Int_t mode=0);
@@ -126,7 +118,6 @@ public:
           TObjArray *GetListOfLeaves()   {return &fLeaves;}
             Int_t    GetMaxBaskets() const  {return fMaxBaskets;}
             Int_t    GetNleaves() const {return fNleaves;}
-            Int_t    GetSplitLevel() const {return fSplitLevel;}
             Stat_t   GetEntries() const {return fEntries;}
             TTree   *GetTree() const {return fTree;}
     virtual Int_t    GetRow(Int_t row);
@@ -134,12 +125,11 @@ public:
     Bool_t           IsFolder() const;
     virtual void     Print(Option_t *option="") const;
     virtual void     ReadBasket(TBuffer &b);
-    virtual void     ReadLeaves(TBuffer &b);
     virtual void     Reset(Option_t *option="");
     virtual void     ResetReadEntry() {fReadEntry = -1;}
     virtual void     SetAddress(void *add);
     virtual void     SetAutoDelete(Bool_t autodel=kTRUE);
-    virtual void     SetBasketSize(Int_t buffsize);
+    virtual void     SetBasketSize(Int_t buffsize) {fBasketSize=buffsize;}
     virtual void     SetBufferAddress(TBuffer *entryBuffer);
     virtual void     SetCompressionLevel(Int_t level=1);
     virtual void     SetEntryOffsetLen(Int_t len) {fEntryOffsetLen = len;}
@@ -148,10 +138,8 @@ public:
     virtual void     SetOffset(Int_t offset=0) {fOffset=offset;}
     virtual void     SetTree(TTree *tree) { fTree = tree;}
     virtual void     UpdateAddress() {;}
-    
-    static  void     ResetCount() {fgCount = 0;}
 
-    ClassDef(TBranch,7)  //Branch descriptor
+    ClassDef(TBranch,6)  //Branch descriptor
 };
 
 #endif

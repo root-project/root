@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.13 2001/09/24 00:40:29 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.2 2000/05/31 18:43:50 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "TObjectTable.h"
 #include "TClassTable.h"
 #include "TStopwatch.h"
+#include "TCanvas.h"
 #include "TBenchmark.h"
 #include "TRint.h"
 #include "TSystem.h"
@@ -45,7 +46,7 @@
 
 extern "C" {
    extern int G__get_security_error();
-   extern int G__genericerror(const char* msg);
+   extern int G__genericerror(char* msg);
 }
 #endif
 
@@ -71,6 +72,8 @@ Bool_t TInterruptHandler::Notify()
 
    // make sure we use the sbrk heap (in case of mapped files)
    gMmallocDesc = 0;
+//  go via the interpreter???
+//   if (gProof) gProof->Interrupt(TProof::kHardInterrupt);
 
    if (!G__get_security_error())
       G__genericerror("\n *** Break *** keyboard interrupt");
@@ -97,7 +100,8 @@ public:
 //______________________________________________________________________________
 Bool_t TTermInputHandler::Notify()
 {
-   return gApplication->HandleTermInput();
+   gApplication->HandleTermInput();
+   return kTRUE;
 }
 
 
@@ -119,7 +123,7 @@ TRint::TRint(const char *appClassName, int *argc, char **argv, void *options,
 
    gBenchmark = new TBenchmark();
 
-   if (!noLogo && !NoLogoOpt())
+   if (!noLogo)
       PrintLogo();
 
    // Everybody expects iostream to be available, so load it...
@@ -161,11 +165,11 @@ TRint::TRint(const char *appClassName, int *argc, char **argv, void *options,
 
    // Install interrupt and terminal input handlers
    TInterruptHandler *ih = new TInterruptHandler();
-   ih->Add();
+   gSystem->AddSignalHandler(ih);
    SetSignalHandler(ih);
 
    TTermInputHandler *th = new TTermInputHandler(0);
-   th->Add();
+   gSystem->AddFileHandler(th);
 
    // Goto into raw terminal input mode
    char defhist[128];
@@ -192,9 +196,7 @@ TRint::~TRint()
 void TRint::Run(Bool_t retrn)
 {
    // Main application eventloop. First process files given on the command
-   // line and then go into the main application event loop, unless the -q
-   // command line option was specfied in which case the program terminates.
-   // When retrun is true this method returns even when -q was specified.
+   // line and then go into the main application event loop.
 
    Getlinem(kInit, GetPrompt());
 
@@ -223,20 +225,12 @@ void TRint::Run(Bool_t retrn)
          }
       } ENDTRY;
 
-      if (QuitOpt()) {
-         if (retrn) return;
+      if (QuitOpt())
          Terminate(0);
-      }
 
       ClearInputFiles();
 
       Getlinem(kInit, GetPrompt());
-   }
-
-   if (QuitOpt()) {
-      printf("\n");
-      if (retrn) return;
-      Terminate(0);
    }
 
    TApplication::Run(retrn);
@@ -281,13 +275,7 @@ void TRint::PrintLogo()
    else
 #endif
       printf("\n");
-   Printf("Compiled for %s with thread support.", gSystem->GetBuildArch());
-#else
-#ifdef R__UNIX
-   else
-#endif
-      printf("\n");
-   Printf("Compiled for %s.", gSystem->GetBuildArch());
+   Printf("Compiled with thread support.");
 #endif
 
    gInterpreter->PrintIntro();
@@ -309,7 +297,7 @@ char *TRint::GetPrompt()
    if (s[0])
       strcpy(fPrompt, s);
    else
-      sprintf(fPrompt, fDefaultPrompt.Data(), fNcmd);
+      sprintf(fPrompt, fDefaultPrompt, fNcmd);
 
    return fPrompt;
 }
@@ -325,18 +313,18 @@ const char *TRint::SetPrompt(const char *newPrompt)
    // root [0] ((TRint*)gROOT->GetApplication())->SetPrompt("aap> ")
    // aap>
 
-   static TString op = fDefaultPrompt;
+   const char *op = fDefaultPrompt;
 
-   if (newPrompt && strlen(newPrompt) <= 55)
+   if (strlen(newPrompt) <= 55)
       fDefaultPrompt = newPrompt;
    else
       Error("SetPrompt", "newPrompt too long (> 55 characters)");
 
-   return op.Data();
+   return op;
 }
 
 //______________________________________________________________________________
-Bool_t TRint::HandleTermInput()
+void TRint::HandleTermInput()
 {
    // Handle input coming from terminal.
 
@@ -368,7 +356,6 @@ Bool_t TRint::HandleTermInput()
       gTabCom->ClearAll();
       Getlinem(kInit, GetPrompt());
    }
-   return kTRUE;
 }
 
 //______________________________________________________________________________

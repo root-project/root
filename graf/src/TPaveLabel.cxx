@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.9 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.5 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -9,7 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TPaveLabel.h"
 #include "TLatex.h"
@@ -143,17 +145,13 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
 //*-*- Draw label
    Double_t wh   = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t hh   = (Double_t)gPad->YtoPixel(gPad->GetY1());
-   Double_t labelsize, textsize = GetTextSize();
+   Double_t textsize  = GetTextSize();
    Int_t automat = 0;
-   if (GetTextFont()%10 > 2) {  // fixed size font specified in pixels
-      labelsize = GetTextSize();
-   } else {
-      if (TMath::Abs(textsize -0.99) < 0.001) automat = 1;
-      if (textsize == 0)   { textsize = 0.99; automat = 1;}
-      Int_t ypixel      = TMath::Abs(gPad->YtoPixel(y1) - gPad->YtoPixel(y2));
-      labelsize = textsize*ypixel/hh;
-      if (wh < hh) labelsize *= hh/wh;
-   }
+   if (TMath::Abs(textsize -0.99) < 0.001) automat = 1;
+   if (textsize == 0)   { textsize = 0.99; automat = 1;}
+   Int_t ypixel      = TMath::Abs(gPad->YtoPixel(y1) - gPad->YtoPixel(y2));
+   Double_t labelsize = textsize*ypixel/hh;
+   if (wh < hh) labelsize *= hh/wh;
    TLatex latex;
    latex.SetTextAngle(GetTextAngle());
    latex.SetTextFont(GetTextFont());
@@ -194,14 +192,12 @@ void TPaveLabel::SavePrimitive(ofstream &out, Option_t *)
    } else {
        out<<"   TPaveLabel *";
    }
-   TString s = fLabel.Data();
-   s.ReplaceAll("\"","\\\"");
    if (fOption.Contains("NDC")) {
       out<<"pl = new TPaveLabel("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
-         <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
+         <<","<<quote<<fLabel<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
    } else {
       out<<"pl = new TPaveLabel("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-         <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
+         <<","<<quote<<fLabel<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
    }
    if (fBorderSize != 3) {
       out<<"   pt->SetBorderSize("<<fBorderSize<<");"<<endl;

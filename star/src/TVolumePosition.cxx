@@ -1,8 +1,10 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.4 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TVolumePosition.cxx,v 1.4 2002/01/23 17:52:51 rdm Exp $
+// $Id: TVolumePosition.cxx,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 
-#include "Riostream.h"
+#include <iostream.h>
+#include <iomanip.h>
+
 #include "TCL.h"
 #include "TVolumePosition.h"
 #include "TVolume.h"
@@ -143,8 +145,8 @@ void TVolumePosition::ExecuteEvent(Int_t, Int_t, Int_t)
 //______________________________________________________________________________
 Text_t *TVolumePosition::GetObjectInfo(Int_t, Int_t) const
 {
-   if (!gPad) return 0;
-   if (!GetNode()) return 0;
+   if (!gPad) return "";
+   if (!GetNode()) return "";
    static char info[64];
    sprintf(info,"%s/%s, shape=%s/%s",GetNode()->GetName(),GetNode()->GetTitle(),GetNode()->GetShape()->GetName(),GetNode()->GetShape()->ClassName());
    return info;

@@ -7,7 +7,7 @@
  * Description:
  *  Support 'long long' 64bit integer in 32bit architecture
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for non-commercial purpose is hereby granted without fee,
@@ -24,14 +24,8 @@
 #define IOS
 
 #ifdef IOS
-#ifdef G__NEWSTDHEADER
-#include <iostream>
-#else
 #include <iostream.h>
-#endif
-#ifndef __hpux
-using namespace std;
-#endif
+//using namespace std;
 #endif
 
 /**************************************************************************
@@ -143,7 +137,7 @@ class G__longlong {
 
 #ifdef IOS
   friend ostream& operator<<(ostream& ost,const G__longlong& a);
-  friend istream& operator>>(istream& ist,G__longlong& a);
+  friend istream& operator>>(istream& ist,const G__longlong& a);
 #endif
 
  private: 
@@ -231,7 +225,7 @@ inline ostream& operator<<(ostream& ost,const G__longlong& a) {
   return(ost);
 }
 
-inline istream& operator>>(istream& ist,G__longlong& a) {
+inline istream& operator>>(istream& ist,const G__longlong& a) {
   //long *upper = (long*)(&a+1);
   long *lower = (long*)&a;
   ist >> *lower;

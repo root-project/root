@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.16 2001/07/02 16:06:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.7 2000/12/13 15:13:56 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -58,15 +58,7 @@ TBranchObject::TBranchObject(const char *name, const char *classname, void *addo
       Error("TBranchObject","Cannot find class:%s",classname);
       return;
    }
-   char **apointer = (char**)(addobj);
-   TObject *obj = (TObject*)(*apointer);
-   Bool_t delobj = kFALSE;
-   if (!obj) {
-      obj = (TObject*)cl->New();
-      delobj = kTRUE;
-   }
-   gTree->BuildStreamerInfo(cl,obj);
-   if (delobj) delete obj;
+   gTree->BuildStreamerInfo(cl);
    
    SetName(name);
    SetTitle(name);
@@ -160,10 +152,6 @@ Int_t TBranchObject::GetEntry(Int_t entry, Int_t getall)
 //*-*      ====================================================================
 //   If entry = 0 take current entry number + 1
 //   If entry < 0 reset entry number to 0
-//
-//  The function returns the number of bytes read from the input buffer.
-//  If entry does not exist or an I/O error occurs, the function returns 0.
-//  if entry is the same as the previous call, the function returns 1.
 
    if (TestBit(kDoNotProcess) && !getall) return 0;
    Int_t nbytes;
@@ -186,10 +174,10 @@ Int_t TBranchObject::GetEntry(Int_t entry, Int_t getall)
       nbytes = 0;
       for (Int_t i=0;i<nbranches;i++)  {
          TBranch *branch = (TBranch*)fBranches[i];
-         if (branch) nbytes += branch->GetEntry(entry, getall);
+            nbytes += branch->GetEntry(entry);
       }
    } else {
-      nbytes = TBranch::GetEntry(entry, getall);
+      nbytes = TBranch::GetEntry(entry);
    }
    return nbytes;
 }
@@ -202,7 +190,7 @@ Bool_t TBranchObject::IsFolder() const
 //*-*      ==================================================
 
    Int_t nbranches = fBranches.GetEntriesFast();
-   if (nbranches >= 1) return kTRUE; 
+   if (nbranches >= 1) return kTRUE;
    else                return kFALSE;
 }
 
@@ -220,7 +208,7 @@ void TBranchObject::Print(Option_t *option) const
       Printf("*............................................................................*");
       for (i=0;i<nbranches;i++)  {
          TBranch *branch = (TBranch*)fBranches.At(i);
-         if (branch) branch->Print(option);
+         branch->Print(option);
       }
    } else {
       TBranch::Print(option);
@@ -259,7 +247,7 @@ void TBranchObject::SetAddress(void *add)
       SetBit(kWarn);
       return;
    }
-   fReadEntry = -1; 
+   fReadEntry = -1;
    Int_t nbranches = fBranches.GetEntriesFast();
    TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
    if (leaf) leaf->SetAddress(add);
@@ -267,14 +255,12 @@ void TBranchObject::SetAddress(void *add)
    fAddress = (char*)add;
    char *pointer   = fAddress;
    void **ppointer = (void**)add;
-   TObject *obj = 0;
-   if (add) obj = (TObject*)(*ppointer);
+   TObject *obj = (TObject*)(*ppointer);
    TClass *cl = gROOT->GetClass(fClassName.Data());
    if (!obj && cl) {
       obj = (TObject*)cl->New();
       *ppointer = (void*)obj;
    }
-   //fOldObject = obj;
    Int_t i, offset;
    if (!cl) {
       for (i=0;i<nbranches;i++)  {
@@ -395,13 +381,12 @@ void TBranchObject::SetBasketSize(Int_t buffsize)
 //*-*            ==========================================================
 //
 
-   TBranch::SetBasketSize(buffsize);
-
+   fBasketSize = buffsize;
    Int_t i;
    Int_t nbranches = fBranches.GetEntriesFast();
    for (i=0;i<nbranches;i++)  {
       TBranch *branch = (TBranch*)fBranches[i];
-      branch->SetBasketSize(fBasketSize);
+      branch->SetBasketSize(buffsize);
    }
 }
 

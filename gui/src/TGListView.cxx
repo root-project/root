@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.7 2001/11/12 14:17:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.5 2000/10/12 16:53:38 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -241,7 +241,7 @@ TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
    TGCompositeFrame(p, w, h, options, back)
 {
    // Create a list view container. This is the (large) frame that contains
-   // all the list items. It will be shown through a TGViewPort (which is
+   // all the list items. It will be show through a TGViewPort (which is
    // created by the TGCanvas derived TGListView).
 
    fMsgWindow  = p;
@@ -889,20 +889,12 @@ Bool_t TGListView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
       switch (GET_SUBMSG(msg)) {
          case kCT_ITEMCLICK:
-            if ((cnt->NumSelected() == 1) && (entry != 0)) {
-               Int_t x = (Int_t)(parm2 & 0xffff);
-               Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
+            if ((cnt->NumSelected() == 1) && (entry != 0))
                Clicked((TGLVEntry*)entry, (Int_t)parm1);
-               Clicked((TGLVEntry*)entry, (Int_t)parm1, x, y);
-            }
             break;
          case kCT_ITEMDBLCLICK:
-            if ((cnt->NumSelected() == 1) && (entry!=0)) {
-               Int_t x = (Int_t)(parm2 & 0xffff);
-               Int_t y = (Int_t)((parm2 >> 16) & 0xffff);
+            if ((cnt->NumSelected() == 1) && (entry!=0))
                DoubleClicked((TGLVEntry*)entry, (Int_t)parm1);
-               DoubleClicked((TGLVEntry*)entry, (Int_t)parm1, x, y);
-            }
             break;
          case kCT_SELCHANGED:
             SelectionChanged();
@@ -913,34 +905,6 @@ Bool_t TGListView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       return TGCanvas::ProcessMessage(msg, parm1, parm2);
    }
    return kTRUE;
-}
-
-//______________________________________________________________________________
-void TGListView::Clicked(TGLVEntry *entry, Int_t btn)
-{
-   // Emit Clicked() signal.
-
-   Long_t args[2];
-
-   args[0] = (Long_t)entry;
-   args[1] = btn;
-
-   Emit("Clicked(TGLVEntry*,Int_t)", args);
-}
-
-//______________________________________________________________________________
-void TGListView::Clicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y)
-{
-   // Emit Clicked() signal.
-
-   Long_t args[4];
-
-   args[0] = (Long_t)entry;
-   args[1] = btn;
-   args[2] = x;
-   args[3] = y;
-
-   Emit("Clicked(TGLVEntry*,Int_t,Int_t,Int_t)", args);
 }
 
 //______________________________________________________________________________
@@ -957,16 +921,14 @@ void TGListView::DoubleClicked(TGLVEntry *entry, Int_t btn)
 }
 
 //______________________________________________________________________________
-void TGListView::DoubleClicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y)
+void TGListView::Clicked(TGLVEntry *entry, Int_t btn)
 {
-   // Emit DoubleClicked() signal.
+   // Emit Clicked() signal.
 
-   Long_t args[4];
+   Long_t args[2];
 
    args[0] = (Long_t)entry;
    args[1] = btn;
-   args[2] = x;
-   args[3] = y;
 
-   Emit("DoubleClicked(TGLVEntry*,Int_t,Int_t,Int_t)", args);
+   Emit("Clicked(TGLVEntry*,Int_t)", args);
 }

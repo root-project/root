@@ -22,10 +22,6 @@
 #include "Api.h"
 #include "common.h"
 
-#ifndef G__OLDIMPLEMENTATION1586
-static char G__buf[G__ONELINE];
-#endif
-
 /*********************************************************************
 * class G__TypeInfo
 * 
@@ -99,13 +95,7 @@ int G__TypeInfo::operator!=(const G__TypeInfo& a)
 const char* G__TypeInfo::TrueName()
 {
 #ifndef G__OLDIMPLEMENTATION401
-#ifndef G__OLDIMPLEMENTATION1586
-  strcpy(G__buf,
-	 G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst));
-  return(G__buf);
-#else
   return(G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst));
-#endif
 #else
   return(G__type2string((int)type,(int)tagnum,-1,(int)reftype));
 #endif
@@ -114,14 +104,8 @@ const char* G__TypeInfo::TrueName()
 const char* G__TypeInfo::Name()
 {
 #ifndef G__OLDIMPLEMENTATION401
-#ifndef G__OLDIMPLEMENTATION1586
-  strcpy(G__buf,G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
-			       ,(int)isconst));
-  return(G__buf);
-#else
   return(G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
 	,(int)isconst));
-#endif
 #else
   return(G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype));
 #endif
@@ -144,9 +128,6 @@ long G__TypeInfo::Property()
   if(-1==tagnum) property|=G__BIT_ISFUNDAMENTAL;
   if(G__ClassInfo::IsValid()) property|=G__ClassInfo::Property();
   if(isupper((int)type)) property|=G__BIT_ISPOINTER;
-#ifndef G__OLDIMPLEMENTATION1453
-  if (reftype) property |= G__BIT_ISREFERENCE;
-#endif
 #ifndef G__OLDIMPLEMENTATION401
   if(isconst&G__CONSTVAR)  property|=G__BIT_ISCONSTANT;
   if(isconst&G__PCONSTVAR) property|=G__BIT_ISPCONSTANT;

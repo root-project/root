@@ -133,7 +133,6 @@ public:
 	iterator(iterator& x) { node=x.node; }
 #endif
 	bool operator==(const iterator& x) const { return node == x.node; }
-	bool operator!=(const iterator& x) const { return node != x.node; }
 	reference operator*() const { return (*node).data; }
 	iterator& operator++() { 
 	    node = (link_type)((*node).next);
@@ -166,9 +165,6 @@ public:
     friend class list<T>;
     protected:
 	link_type node;
-#ifdef __CINT__
-    public:
-#endif
 	const_iterator(link_type x) : node(x) {}
     public:     
 	const_iterator() {}
@@ -179,7 +175,6 @@ public:
 #endif
 	const_iterator(const iterator& x) : node(x.node) {}
 	bool operator==(const const_iterator& x) const { return node == x.node; } 
-	bool operator!=(const const_iterator& x) const { return node != x.node; } 
 	const_reference operator*() const { return (*node).data; }
 	const_iterator& operator++() { 
 	    node = (link_type)((*node).next);
@@ -256,23 +251,14 @@ public:
 	link_type tmp = get_node();
 	construct(value_allocator.address((*tmp).data), x);
 	(*tmp).next = position.node;
-#ifdef __CINT__
-	/* 1539 related change. Maybe wrong way to fix the problem. */
-	if(position.node) {
-	  (*tmp).prev = (*position.node).prev;
-	  list_node *p = (*position.node).prev;
-	  p->next = tmp;
-	  (*position.node).prev = tmp;
-	}
-	else {
-	  (*tmp).prev = 0;
-	  p->next = 0;
-	}
-#else
 	(*tmp).prev = (*position.node).prev;
+#ifdef __CINT__
+	list_node *p = (*position.node).prev;
+	p->next = tmp;
+#else
 	(*(link_type((*position.node).prev))).next = tmp;
-	(*position.node).prev = tmp;
 #endif
+	(*position.node).prev = tmp;
 	++length;
 #ifdef __CINT__
         // implicit conversion of return type not supported

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayL.cxx,v 1.4 2002/01/08 22:13:00 rdm Exp $
+// @(#)root/cont:$Name$:$Id$
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -41,7 +41,7 @@ TArrayL::TArrayL(Int_t n)
 }
 
 //______________________________________________________________________________
-TArrayL::TArrayL(Int_t n, const Long_t *array)
+TArrayL::TArrayL(Int_t n, Long_t *array)
 {
    // Create TArrayL object and initialize it with values of array.
 
@@ -126,7 +126,7 @@ void TArrayL::Set(Int_t n)
 }
 
 //______________________________________________________________________________
-void TArrayL::Set(Int_t n, const Long_t *array)
+void TArrayL::Set(Int_t n, Long_t *array)
 {
    // Set size of this array to n longs and set the contents.
 
@@ -147,10 +147,7 @@ void TArrayL::Streamer(TBuffer &b)
    // Stream a TArrayL object.
 
    if (b.IsReading()) {
-      Int_t n;
-      b >> n;
-      Set(n);
-      b.ReadFastArray(fArray,n);
+      fN = b.ReadArray(fArray);
    } else {
       b.WriteArray(fArray, fN);
    }

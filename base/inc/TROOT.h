@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.20 2002/01/27 13:57:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.11 2000/12/02 15:47:42 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -44,20 +44,15 @@ class TBrowser;
 class TGlobal;
 class TFunction;
 class TFolder;
-class TPluginManager;
-
 
 class TROOT : public TDirectory {
 
 friend class TCint;
 
 private:
-   Int_t           fLineIsProcessing;     //To synchronize multi-threads
-
-   static TString  fgMacroPath;           //Macro search path
-   static Int_t    fgDirLevel;            //Indentation level for ls()
+   static Int_t    fgDirLevel;            //indentation level for ls()
    static Bool_t   fgRootInit;            //Singleton initialization flag
-   static Bool_t   fgMemCheck;            //Turn on memory leak checker
+   Int_t           fLineIsProcessing;     //To synchronize multi-threads
 
 protected:
    TString         fVersion;              //ROOT version (from CMZ VERSQQ) ex 0.05/01
@@ -102,7 +97,6 @@ protected:
    TSeqCollection  *fStreamerInfo;        //List of active StreamerInfo classes
    TFolder         *fRootFolder;          //top level folder //root
    TList           *fBrowsables;          //List of browsables
-   TPluginManager  *fPluginManager;       //Keeps track of plugin library handlers
    TString         fCutClassName;         //Name of default CutG class in graphics editor
    TString         fDefCanvasName;        //Name of default canvas
 
@@ -126,9 +120,8 @@ public:
    const char       *FindObjectClassName(const char *name) const;
    const char       *FindObjectPathName(const TObject *obj) const;
    void              ForceStyle(Bool_t force=kTRUE) {fForceStyle = force;}
-   Bool_t            FromPopUp() const {return fFromPopUp;}
-   TPluginManager   *GetPluginManager() const { return fPluginManager; }
-   TApplication     *GetApplication() const {return fApplication;}
+   Bool_t            FromPopUp() {return fFromPopUp;}
+   TApplication     *GetApplication() {return fApplication;}
    TClass           *GetClass(const char *name, Bool_t load=kTRUE) const;
    TColor           *GetColor(Int_t color) const;
    const char       *GetCutClassName() const {return fCutClassName.Data();}
@@ -183,14 +176,14 @@ public:
    Bool_t            IsLineProcessing() const { return fLineIsProcessing; }
    Bool_t            IsProofServ() const { return fName == "Proofserv" ? kTRUE : kFALSE; }
    void              ls(Option_t *option="") const;
-   Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
-   void              LoadMacro(const char *filename, Int_t *error = 0);
-   Int_t             Macro(const char *filename, Int_t *error = 0);
+   Int_t             LoadClass(const char *classname, const char *libname);
+   void              LoadMacro(const char *filename);
+   Int_t             Macro(const char *filename);
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() {return fMustClean;}
-   void              ProcessLine(const char *line, Int_t *error = 0);
-   void              ProcessLineSync(const char *line, Int_t *error = 0);
-   Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
+   void              ProcessLine(const char *line);
+   void              ProcessLineSync(const char *line);
+   Long_t            ProcessLineFast(const char *line);
    void              Proof(const char *cluster = "proof://localhost");
    Bool_t            ReadingObject() {return fReadingObject;}
    void              Reset(Option_t *option="");
@@ -217,12 +210,10 @@ public:
    static Int_t       DecreaseDirLevel();
    static Int_t       GetDirLevel();
    static const char *GetMacroPath();
-   static void        SetMacroPath(const char *newpath);
    static Int_t       IncreaseDirLevel();
    static void        IndentLevel();
    static Bool_t      Initialized();
-   static Bool_t      MemCheck();
-   static void        SetDirLevel(Int_t level = 0);
+   static void        SetDirLevel(Int_t level=0);
    static void        SetMakeDefCanvas(VoidFuncPtr_t makecanvas);
 
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes

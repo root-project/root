@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.4 2000/12/11 00:01:22 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.3 2000/12/10 17:43:45 rdm Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -154,43 +154,6 @@ void TSpline::Paint(Option_t *option)
      fGraph->SetMarkerStyle(GetMarkerStyle());
      fGraph->SetMarkerSize(GetMarkerSize());
      fGraph->Paint("p");
-   }
-}
-
-//______________________________________________________________________________
-void TSpline::Streamer(TBuffer &R__b)
-{
-   // Stream an object of class TSpline.
-
-   if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TSpline::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      } 
-      //====process old versions before automatic schema evolution
-      TNamed::Streamer(R__b);
-      TAttLine::Streamer(R__b);
-      TAttFill::Streamer(R__b);
-      TAttMarker::Streamer(R__b);
-      
-      fNp = 0;
-      /*
-      R__b >> fDelta;
-      R__b >> fXmin;
-      R__b >> fXmax;
-      R__b >> fNp;
-      R__b >> fKstep;
-      R__b >> fHistogram;
-      R__b >> fGraph;
-      R__b >> fNpx;
-      */
-      R__b.CheckByteCount(R__s, R__c, TSpline::IsA());
-      //====end of old versions
-      
-   } else {
-      TSpline::Class()->WriteBuffer(R__b,this);
    }
 }
 
@@ -736,19 +699,11 @@ void TSpline3::Streamer(TBuffer &R__b)
    // Stream an object of class TSpline3.
 
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TSpline3::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      } 
-      //====process old versions before automatic schema evolution
+      Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       TSpline::Streamer(R__b);
-      if (fNp > 0) {
-         fPoly = new TSplinePoly3[fNp];
-         for(Int_t i=0; i<fNp; ++i) {
-	   fPoly[i].Streamer(R__b);
-         }
+      fPoly = new TSplinePoly3[fNp];
+      for(Int_t i=0; i<fNp; ++i) {
+	fPoly[i].Streamer(R__b);
       }
       //      R__b >> fPoly;
       R__b >> fValBeg;
@@ -756,7 +711,16 @@ void TSpline3::Streamer(TBuffer &R__b)
       R__b >> fBegCond;
       R__b >> fEndCond;
    } else {
-      TSpline3::Class()->WriteBuffer(R__b,this);
+      R__b.WriteVersion(TSpline3::IsA());
+      TSpline::Streamer(R__b);
+      for(Int_t i=0; i<fNp; ++i) {
+	fPoly[i].Streamer(R__b);
+      }
+      //      R__b << fPoly;
+      R__b << fValBeg;
+      R__b << fValEnd;
+      R__b << fBegCond;
+      R__b << fEndCond;
    }
 }
 
@@ -1735,23 +1699,20 @@ void TSpline5::Streamer(TBuffer &R__b)
    // Stream an object of class TSpline5.
 
    if (R__b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TSpline5::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      } 
-      //====process old versions before automatic schema evolution
+      Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       TSpline::Streamer(R__b);
-      if (fNp > 0) {
-         fPoly = new TSplinePoly5[fNp];
-         for(Int_t i=0; i<fNp; ++i) {
-	   fPoly[i].Streamer(R__b);
-         }
+      fPoly = new TSplinePoly5[fNp];
+      for(Int_t i=0; i<fNp; ++i) {
+	fPoly[i].Streamer(R__b);
       }
       //      R__b >> fPoly;
    } else {
-      TSpline5::Class()->WriteBuffer(R__b,this);
+      R__b.WriteVersion(TSpline5::IsA());
+      TSpline::Streamer(R__b);
+      for(Int_t i=0; i<fNp; ++i) {
+	fPoly[i].Streamer(R__b);
+      }
+      //      R__b << fPoly;
    }
 }
 

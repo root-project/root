@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.4 2001/05/30 06:03:43 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.2 2000/09/05 09:21:24 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 // Description of parameters to position a 3-D geometry object          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-//check
+
 #ifndef ROOT_TVolumePosition
 #define ROOT_TVolumePosition
 
@@ -29,7 +29,7 @@ class TRotMatrix;
 class TVolumePosition  : public TObject {
  protected:
    Double_t        fX[3];        //X offset with respect to parent object
-   TRotMatrix     *fMatrix;      //->Pointer to rotation matrix
+   TRotMatrix     *fMatrix;      //Pointer to rotation matrix
    TVolume        *fNode;        //Refs pointer to the node defined
    UInt_t          fId;          // Unique ID of this position
 
@@ -77,7 +77,7 @@ class TVolumePosition  : public TObject {
         virtual void        SetZ(Double_t z){ fX[2]  =  z;}
         virtual void        SetId(UInt_t id){fId  = id;}
 
-        ClassDef(TVolumePosition,2)  //Description of parameters to position a 3-D geometry object
+        ClassDef(TVolumePosition,1)  //Description of parameters to position a 3-D geometry object
 };
 
 inline TDataSet *TVolumePosition::DefineSet(){ return GetNode(); }

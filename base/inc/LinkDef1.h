@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.9 2001/11/05 17:31:37 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef1.h,v 1.5 2000/11/21 15:59:30 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -17,7 +17,6 @@
 #pragma link C++ global kTRUE;
 #pragma link C++ global kFALSE;
 #pragma link C++ global kNPOS;
-#pragma link C++ global kInfo;
 #pragma link C++ global kWarning;
 #pragma link C++ global kError;
 #pragma link C++ global kSysError;
@@ -36,27 +35,16 @@
 #pragma link C++ global gRandom;
 #pragma link C++ global gDebug;
 #pragma link C++ global gErrorIgnoreLevel;
-#pragma link C++ global gErrorAbortLevel;
 #pragma link C++ global gStyle;
 #pragma link C++ global gVirtualGL;
 #pragma link C++ global gVirtualX;
 #pragma link C++ global gVirtualPS;
-#pragma link C++ global gRootDir;
-#pragma link C++ global gProgName;
-#pragma link C++ global gProgPath;
 
-#pragma link C++ function Form;
-#pragma link C++ function Printf;
 #pragma link C++ function Strip;
 #pragma link C++ function StrDup;
 #pragma link C++ function Compress;
 #pragma link C++ function EscChar;
 #pragma link C++ function UnEscChar;
-#pragma link C++ function Info;
-#pragma link C++ function Warning;
-#pragma link C++ function Error;
-#pragma link C++ function SysError;
-#pragma link C++ function Fatal;
 #pragma link C++ function operator+(const TString&,const TString&);
 #pragma link C++ function operator+(const TString&,const char*);
 #pragma link C++ function operator+(const char*,const TString&);

@@ -58,7 +58,6 @@ void principal(Int_t n=10, Int_t m=10000)
 
     // Then we create the correlated variables
     for (Int_t j = 0 ; j < c; j++) {
-      data[n - c + j] = 0;
       for (Int_t k = 0; k < n - c - j; k++)
 	data[n - c + j] += data[k];
     }

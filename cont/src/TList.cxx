@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.10 2001/03/29 11:25:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.6 2000/11/21 16:49:40 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -327,7 +327,7 @@ void TList::Clear(Option_t *option)
    Bool_t nodel = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
 
    if (!nodel && IsOwner()) {
-      Delete(option);
+      Delete();
       return;
    }
 
@@ -473,21 +473,6 @@ TObject *TList::First() const
 }
 
 //______________________________________________________________________________
-TObject **TList::GetObjectRef(TObject *obj) const
-{
-   // Return address of pointer to obj
-
-   TObjLink *lnk = FirstLink();
-
-   while (lnk) {
-      TObject *ob = lnk->GetObject();
-      if (ob->IsEqual(obj)) return lnk->GetObjectRef();
-      lnk = lnk->Next();
-   }
-   return 0;
-}
-
-//______________________________________________________________________________
 TObject *TList::Last() const
 {
    // Return the last object in the list. Returns 0 when list is empty.
@@ -558,10 +543,8 @@ TObject *TList::Remove(TObject *obj)
 
    if (lnk == fFirst) {
       fFirst = lnk->Next();
-      if (lnk == fLast)
-         fLast = fFirst;
-      else
-         fFirst->fPrev = 0;
+      if (lnk == fLast) fLast = fFirst;
+      else              fFirst->fPrev = 0;
       DeleteLink(lnk);
    } else if (lnk == fLast) {
       fLast = lnk->Prev();
@@ -591,10 +574,8 @@ TObject *TList::Remove(TObjLink *lnk)
 
    if (lnk == fFirst) {
       fFirst = lnk->Next();
-      if (lnk == fLast)
-         fLast = fFirst;
-      else
-         fFirst->fPrev = 0;
+      if (lnk == fLast) fLast = fFirst;
+      else              fFirst->fPrev = 0;
       DeleteLink(lnk);
    } else if (lnk == fLast) {
       fLast = lnk->Prev();
@@ -857,7 +838,7 @@ void TList::Streamer(TBuffer &b)
          b.CheckByteCount(R__s, R__c,TList::IsA());
          return;
       }
-
+      
       //  process old versions when TList::Streamer was in TCollection::Streamer
       if (v > 2)
          TObject::Streamer(b);
@@ -869,7 +850,7 @@ void TList::Streamer(TBuffer &b)
          Add(obj);
       }
       b.CheckByteCount(R__s, R__c,TList::IsA());
-
+      
    } else {
       R__c = b.WriteVersion(TList::IsA(), kTRUE);
       TObject::Streamer(b);

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.9 2002/01/07 09:08:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -73,9 +73,6 @@ private:
         Color_t       fFuncColor;         //function color
         Style_t       fFuncStyle;         //function style
         Width_t       fFuncWidth;         //function line width
-        Color_t       fGridColor;         //grid line color (if 0 use axis line color)
-        Style_t       fGridStyle;         //grid line style
-        Width_t       fGridWidth;         //grid line width
         Color_t       fFrameFillColor;    //pad frame fill color
         Color_t       fFrameLineColor;    //pad frame line color
         Style_t       fFrameFillStyle;    //pad frame fill style
@@ -113,19 +110,16 @@ private:
         Color_t       fStatTextColor;     //stat text color
         Width_t       fStatBorderSize;    //border size of Stats PaveLabel
         Style_t       fStatFont;          //font style of Stats PaveLabel
-        Float_t       fStatFontSize;      //font size in pixels for fonts with precision type 3
         Style_t       fStatStyle;         //fill area style of Stats PaveLabel
         TString       fStatFormat;        //Printing format for stats
         Float_t       fStatX;             //X position of top right corner of stat box
         Float_t       fStatY;             //Y position of top right corner of stat box
         Float_t       fStatW;             //width of stat box
         Float_t       fStatH;             //height of stat box
-        Bool_t        fStripDecimals;     //Strip decimals in axis labels
         Color_t       fTitleColor;        //title fill area color
         Color_t       fTitleTextColor;    //title text color
         Width_t       fTitleBorderSize;   //border size of Title PavelLabel
         Style_t       fTitleFont;         //font style of Title PaveLabel
-        Float_t       fTitleFontSize;     //font size in pixels for fonts with precision type 3
         Style_t       fTitleStyle;        //fill area style of title PaveLabel
         Float_t       fTitleX;            //X position of top left corner of title box
         Float_t       fTitleY;            //Y position of top left corner of title box
@@ -135,11 +129,9 @@ private:
         TArrayI       fPalette;           //Color palette
         TString       fLineStyle[30];     //String describing line style i (for postScript)
         TString       fHeaderPS;          //User defined additional Postscript header
-        TString       fTitlePS;           //User defined Postscript file title
         TString       fFitFormat;         //Printing format for fit parameters
-        TString       fPaintTextFormat;   //Printing format for TH2::PaintText
         Float_t       fLineScalePS;       //Line scale factor when drawing lines on Postscript
-        Double_t      fTimeOffset;        //Time offset to the beginning of an axis
+        Double_t      fTimeOffset;        //Time offset (UTC) to the beginning of an axis
 
 public:
         enum EPaperSize { kA4, kUSLetter };
@@ -154,8 +146,6 @@ public:
         virtual void     Copy(TObject &style);
         virtual void     cd();
 
-        static Int_t     CreateGradientColorTable(UInt_t Number, Double_t* Length,
-                              Double_t* Red, Double_t* Green, Double_t* Blue, UInt_t NColors);
         Int_t            GetNdivisions(Option_t *axis="X") const;
         TAttText        *GetAttDate() {return &fAttDate;}
         Color_t          GetAxisColor(Option_t *axis="X") const;
@@ -199,9 +189,6 @@ public:
         Color_t          GetFuncColor() const       {return fFuncColor;}
         Style_t          GetFuncStyle() const       {return fFuncStyle;}
         Width_t          GetFuncWidth() const       {return fFuncWidth;}
-        Color_t          GetGridColor() const       {return fGridColor;}
-        Style_t          GetGridStyle() const       {return fGridStyle;}
-        Width_t          GetGridWidth() const       {return fGridWidth;}
         Color_t          GetFrameFillColor() const {return fFrameFillColor;}
         Color_t          GetFrameLineColor() const {return fFrameLineColor;}
         Style_t          GetFrameFillStyle() const {return fFrameFillStyle;}
@@ -223,7 +210,6 @@ public:
         Int_t            GetOptLogx() const {return fOptLogx;}
         Int_t            GetOptLogy() const {return fOptLogy;}
         Int_t            GetOptLogz() const {return fOptLogz;}
-        const char      *GetPaintTextFormat() const {return fPaintTextFormat.Data();}
         void             GetPaperSize(Float_t &xsize, Float_t &ysize);
         Int_t            GetShowEventStatus() const {return fShowEventStatus;}
         Float_t          GetScreenFactor() const {return fScreenFactor;}
@@ -231,20 +217,17 @@ public:
         Color_t          GetStatTextColor() const {return fStatTextColor;}
         Width_t          GetStatBorderSize() const {return fStatBorderSize;}
         Style_t          GetStatFont() const  {return fStatFont;}
-        Float_t          GetStatFontSize() const  {return fStatFontSize;}
         Style_t          GetStatStyle() const  {return fStatStyle;}
         const char      *GetStatFormat() const {return fStatFormat.Data();}
         Float_t          GetStatX() const     {return fStatX;}
         Float_t          GetStatY() const     {return fStatY;}
         Float_t          GetStatW() const     {return fStatW;}
         Float_t          GetStatH() const     {return fStatH;}
-        Int_t            GetStripDecimals() const {return fStripDecimals;}
         Double_t         GetTimeOffset() const {return fTimeOffset;} //return axis time offset
         Color_t          GetTitleColor() const {return fTitleColor;}  //return histogram title fill area color
         Color_t          GetTitleTextColor() const {return fTitleTextColor;}  //return histogram title text color
         Style_t          GetTitleStyle() const  {return fTitleStyle;}
         Style_t          GetTitleFont() const  {return fTitleFont;} //return histogram title font
-        Float_t          GetTitleFontSize() const  {return fTitleFontSize;} //return histogram title font size
         Width_t          GetTitleBorderSize() const {return fTitleBorderSize;} //return border size of histogram title TPaveLabel
         Float_t          GetTitleXOffset() const {return GetTitleOffset("X");} //return X axis title offset
         Float_t          GetTitleXSize() const   {return GetTitleSize("X");}   //return X axis title size
@@ -255,14 +238,12 @@ public:
         Float_t          GetTitleW() const     {return fTitleW;}  //return width of histogram title TPaveLabel
         Float_t          GetTitleH() const     {return fTitleH;}  //return height of histogram title TPavelabel
         const char      *GetHeaderPS() const {return fHeaderPS.Data();}
-        const char      *GetTitlePS()  const {return fTitlePS.Data();}
         const char      *GetLineStyleString(Int_t i=1) const;
         Float_t          GetLineScalePS() const {return fLineScalePS;}
         virtual void     Reset(Option_t *option="");
 
         void             SetFitFormat(const char *format="5.4g") {fFitFormat = format;}
         void             SetHeaderPS(const char *header);
-        void             SetTitlePS(const char *pstitle);
         void             SetLineScalePS(Float_t scale=3) {fLineScalePS=scale;}
         void             SetLineStyleString(Int_t i, const char *text);
         void             SetNdivisions(Int_t n=510, Option_t *axis="X");
@@ -313,9 +294,6 @@ public:
         void             SetFuncStyle(Style_t style=1) {fFuncStyle = style;}
         void             SetFuncColor(Color_t color=1) {fFuncColor = color;}
         void             SetFuncWidth(Width_t width=4) {fFuncWidth = width;}
-        void             SetGridStyle(Style_t style=3) {fGridStyle = style;}
-        void             SetGridColor(Color_t color=0) {fGridColor = color;}
-        void             SetGridWidth(Width_t width=1) {fGridWidth = width;}
         void             SetFrameFillColor(Color_t color=1) {fFrameFillColor = color;}
         void             SetFrameLineColor(Color_t color=1) {fFrameLineColor = color;}
         void             SetFrameFillStyle(Style_t styl=0)  {fFrameFillStyle = styl;}
@@ -328,7 +306,6 @@ public:
         void             SetHistFillStyle(Style_t styl=0)  {fHistFillStyle = styl;}
         void             SetHistLineStyle(Style_t styl=0)  {fHistLineStyle = styl;}
         void             SetHistLineWidth(Width_t width=1) {fHistLineWidth = width;}
-        void             SetPaintTextFormat(const char *format="g") {fPaintTextFormat = format;}
         void             SetPaperSize(EPaperSize size);
         void             SetPaperSize(Float_t xsize=20, Float_t ysize=26);
         void             SetStatColor(Int_t color=19) {fStatColor=color;}
@@ -336,32 +313,29 @@ public:
         void             SetStatStyle(Style_t style=1001) {fStatStyle=style;}
         void             SetStatBorderSize(Width_t size=2) {fStatBorderSize=size;}
         void             SetStatFont(Style_t font=62) {fStatFont=font;}
-        void             SetStatFontSize(Float_t size=0)  {fStatFontSize=size;}
         void             SetStatFormat(const char *format="6.4g") {fStatFormat = format;}
         void             SetStatX(Float_t x=0)    {fStatX=x;}
         void             SetStatY(Float_t y=0)    {fStatY=y;}
         void             SetStatW(Float_t w=0.19) {fStatW=w;}
         void             SetStatH(Float_t h=0.1)  {fStatH=h;}
-        void             SetStripDecimals(Bool_t strip=kTRUE);
         void             SetTimeOffset(Double_t toffset);
         void             SetTitleColor(Int_t color=19)      {fTitleColor=color;}
         void             SetTitleTextColor(Int_t color=1)   {fTitleTextColor=color;}
         void             SetTitleStyle(Style_t style=1001)  {fTitleStyle=style;}
         void             SetTitleFont(Style_t font=62)      {fTitleFont=font;}
-        void             SetTitleFontSize(Float_t size=0)   {fTitleFontSize=size;}
         void             SetTitleBorderSize(Width_t size=2) {fTitleBorderSize=size;}
         void             SetTitleXOffset(Float_t offset=1)  {SetTitleOffset(offset,"X");}
         void             SetTitleXSize(Float_t size=0.02)   {SetTitleSize(size,"X");}
         void             SetTitleYOffset(Float_t offset=1)  {SetTitleOffset(offset,"Y");}
         void             SetTitleYSize(Float_t size=0.02)   {SetTitleSize(size,"Y");}
-        void             SetTitleX(Float_t x=0)     {fTitleX=x;}
-        void             SetTitleY(Float_t y=0.985) {fTitleY=y;}
-        void             SetTitleW(Float_t w=0)     {fTitleW=w;}
-        void             SetTitleH(Float_t h=0)     {fTitleH=h;}
+        void             SetTitleX(Float_t x=0) {fTitleX=x;}
+        void             SetTitleY(Float_t y=1) {fTitleY=y;}
+        void             SetTitleW(Float_t w=0) {fTitleW=w;}
+        void             SetTitleH(Float_t h=0) {fTitleH=h;}
         void             ToggleEventStatus() { fShowEventStatus = fShowEventStatus ? 0 : 1; }
         void             SetPalette(Int_t ncolors=0, Int_t *colors=0);
 
-        ClassDef(TStyle,7)  //A collection of all graphics attributes
+        ClassDef(TStyle,3)  //A collection of all graphics attributes
 };
 
 

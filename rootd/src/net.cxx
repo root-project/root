@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.13 2001/06/22 16:10:19 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.8 2000/12/13 17:44:44 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -37,9 +37,6 @@
 #      endif
 #   endif
 #endif
-#ifdef __MACH__
-#   define R__GLIBC
-#endif
 
 #include "rootdp.h"
 
@@ -59,9 +56,6 @@ static int                tcp_srv_sock;
 static struct sockaddr_in tcp_srv_addr;
 static struct sockaddr_in tcp_cli_addr;
 
-extern "C" {
-   static void SigPipe(int);
-}
 
 //______________________________________________________________________________
 static void SigPipe(int)
@@ -123,25 +117,13 @@ int NetSendRaw(const void *buf, int len)
 {
    // Send buffer of len bytes.
 
-   if (gParallel > 0) {
+   if (gSockFd == -1) return -1;
 
-      if (NetParSend(buf, len) != len) {
-         ErrorInfo("NetSendRaw: NetParSend error");
-         RootdClose();
-         exit(1);
-      }
-
-   } else {
-
-      if (gSockFd == -1) return -1;
-
-      if (Sendn(gSockFd, buf, len) != len) {
-         ErrorInfo("NetSendRaw: Sendn error");
-         RootdClose();
-         exit(1);
-      }
+   if (Sendn(gSockFd, buf, len) != len) {
+      ErrorInfo("NetSendRaw: Sendn error");
+      RootdClose();
+      exit(1);
    }
-
    return len;
 }
 
@@ -203,25 +185,13 @@ int NetRecvRaw(void *buf, int len)
 {
    // Receive a buffer of maximum len bytes.
 
-   if (gParallel > 0) {
+   if (gSockFd == -1) return -1;
 
-      if (NetParRecv(buf, len) != len) {
-         ErrorInfo("NetRecvRaw: NetParRecv error");
-         RootdClose();
-         exit(1);
-      }
-
-   } else {
-
-      if (gSockFd == -1) return -1;
-
-      if (Recvn(gSockFd, buf, len) < 0) {
-         ErrorInfo("NetRecvRaw: Recvn error");
-         RootdClose();
-         exit(1);
-      }
+   if (Recvn(gSockFd, buf, len) < 0) {
+      ErrorInfo("NetRecvRaw: Recvn error");
+      RootdClose();
+      exit(1);
    }
-
    return len;
 }
 
@@ -274,7 +244,7 @@ int NetRecv(char *msg, int len, EMessageTypes &kind)
 }
 
 //______________________________________________________________________________
-void NetInit(const char *service, int port, int tcpwindowsize)
+void NetInit(const char *service, int port)
 {
    // Initialize the network connection for the server, when it has *not*
    // been invoked by inetd.
@@ -317,9 +287,6 @@ void NetInit(const char *service, int port, int tcpwindowsize)
                   sizeof(val)) == -1)
       ErrorSys(kErrFatal, "NetInit: can't set SO_REUSEADDR socket option");
 
-   // Set several general performance network options
-   NetSetOptions(tcp_srv_sock, tcpwindowsize);
-
    if (bind(tcp_srv_sock, (struct sockaddr *) &tcp_srv_addr,
             sizeof(tcp_srv_addr)) < 0)
       ErrorSys(kErrFatal, "NetInit: can't bind local address");
@@ -345,14 +312,6 @@ int NetOpen(int inetdflag)
    // started by a master daemon, then we must wait for a client's
    // request to arrive.
 
-#if defined(USE_SIZE_T)
-   size_t clilen = sizeof(tcp_cli_addr);
-#elif defined(USE_SOCKLEN_T)
-   socklen_t clilen = sizeof(tcp_cli_addr);
-#else
-   int clilen = sizeof(tcp_cli_addr);
-#endif
-
    if (inetdflag) {
 
       // When we're fired up by inetd, file decriptors 0, 1 and 2
@@ -361,6 +320,13 @@ int NetOpen(int inetdflag)
       gSockFd = 0;
 
       if (gDebug > 0) {
+#if defined(USE_SIZE_T)
+         size_t clilen = sizeof(tcp_cli_addr);
+#elif defined(USE_SOCKLEN_T)
+         socklen_t clilen = sizeof(tcp_cli_addr);
+#else
+         int clilen = sizeof(tcp_cli_addr);
+#endif
          if (!getpeername(gSockFd, (struct sockaddr *)&tcp_cli_addr, &clilen)) {
             struct hostent *hp;
             if ((hp = gethostbyaddr((const char *)&tcp_cli_addr.sin_addr,
@@ -376,9 +342,6 @@ int NetOpen(int inetdflag)
          ErrorInfo("NetOpen: connection established via socket %d", gSockFd);
       }
 
-      // Set several general performance network options
-      NetSetOptions(gSockFd, 65535);
-
       return 0;
 
    }
@@ -391,6 +354,13 @@ int NetOpen(int inetdflag)
    // (for which we caught the SIGCLD signal).
 
 again:
+#if defined(USE_SIZE_T)
+   size_t clilen = sizeof(tcp_cli_addr);
+#elif defined(USE_SOCKLEN_T)
+   socklen_t clilen = sizeof(tcp_cli_addr);
+#else
+   int clilen = sizeof(tcp_cli_addr);
+#endif
    int newsock = accept(tcp_srv_sock, (struct sockaddr *)&tcp_cli_addr, &clilen);
    if (newsock < 0) {
       if (GetErrno() == EINTR) {
@@ -447,59 +417,33 @@ void NetClose()
 {
    // Close the network connection.
 
-   if (gParallel > 0) {
+   close(gSockFd);
+   gSockFd = -1;
 
-      NetParClose();
-
-   } else {
-
-      close(gSockFd);
-
-      if (gDebug > 0)
-         ErrorInfo("NetClose: host = %s, fd = %d, file = %s", openhost, gSockFd,
-                   gFile);
-
-      gSockFd = -1;
-   }
+   if (gDebug > 0)
+      ErrorInfo("NetClose: host = %s, fd = %d, file = %s", openhost, gSockFd,
+                gFile);
 }
 
 //______________________________________________________________________________
-void NetSetOptions(int sock, int tcpwindowsize)
+void NetSetOptions()
 {
    // Set some options for network socket.
 
    int val = 1;
-   if (!setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(val))) {
+   if (!setsockopt(gSockFd, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(val))) {
        if (gDebug > 0) ErrorInfo("NetSetOptions: set TCP_NODELAY");
    }
-   if (!setsockopt(sock, SOL_SOCKET,  SO_KEEPALIVE, (char *)&val, sizeof(val))) {
+   if (!setsockopt(gSockFd, SOL_SOCKET,  SO_KEEPALIVE, (char *)&val, sizeof(val))) {
       if (gDebug > 0) ErrorInfo("NetSetOptions: set SO_KEEPALIVE");
       signal(SIGPIPE, SigPipe);   // handle SO_KEEPALIVE failure
    }
 
-   val = tcpwindowsize;
-   if (!setsockopt(sock, SOL_SOCKET,  SO_SNDBUF,    (char *)&val, sizeof(val))) {
+   val = 65536;
+   if (!setsockopt(gSockFd, SOL_SOCKET,  SO_SNDBUF,    (char *)&val, sizeof(val))) {
       if (gDebug > 0) ErrorInfo("NetSetOptions: set SO_SNDBUF %d", val);
    }
-   if (!setsockopt(sock, SOL_SOCKET,  SO_RCVBUF,    (char *)&val, sizeof(val))) {
+   if (!setsockopt(gSockFd, SOL_SOCKET,  SO_RCVBUF,    (char *)&val, sizeof(val))) {
       if (gDebug > 0) ErrorInfo("NetSetOptions: set SO_RCVBUF %d", val);
-   }
-
-   if (gDebug > 0) {
-#if defined(USE_SIZE_T)
-      size_t optlen = sizeof(val);
-#elif defined(USE_SOCKLEN_T)
-      socklen_t optlen = sizeof(val);
-#else
-      int optlen = sizeof(val);
-#endif
-      getsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&val, &optlen);
-      ErrorInfo("NetSetOptions: get TCP_NODELAY: %d", val);
-      getsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)&val, &optlen);
-      ErrorInfo("NetSetOptions: get SO_KEEPALIVE: %d", val);
-      getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&val, &optlen);
-      ErrorInfo("NetSetOptions: get SO_SNDBUF: %d", val);
-      getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)&val, &optlen);
-      ErrorInfo("NetSetOptions: get SO_RCVBUF: %d", val);
    }
 }

@@ -10,7 +10,6 @@
 #include <math.h>
 #include <string.h>
 #define G__ANSIHEADER
-#define G__DICTIONARY
 #include "G__ci.h"
 extern "C" {
 extern void G__cpp_setup_tagtableG__stream();

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.5 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TGroupButton.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TROOT.h"
 #include "TBox.h"
 #include "TGroupButton.h"
@@ -120,21 +121,15 @@ void TGroupButton::ExecuteAction()
       Int_t npixels = Int_t((YtoPixel(0) - YtoPixel(1))*text->GetTextSize());
       Double_t dy;
       pad = gROOT->GetSelectedPad();
-      if (obj->InheritsFrom("TPaveLabel")) {
+      if (obj->InheritsFrom("TPaveLabel::Class()")) {
          TBox *pl = (TBox*)obj;
          dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
          sprintf(params,"%f",dy/(pl->GetY2() - pl->GetY1()));
-         obj->Execute("SetTextSize",params);
       } else {
-         if (obj->InheritsFrom("TPave")) {
-            dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
-            sprintf(params,"%f",dy/(pad->GetY2() - pad->GetY1()));
-            obj->Execute("SetTextSize",params);
-         } else {
-            sprintf(params,"%d",npixels);
-            obj->Execute("SetTextSizePixels",params);
-         }
+         dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
+         sprintf(params,"%f",dy/(pad->GetY2() - pad->GetY1()));
       }
+      obj->Execute("SetTextSize",params);
    }
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.4 2001/03/29 11:25:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -47,8 +47,9 @@ private:
    Int_t       fRehashLevel;   //Average collision rate which triggers rehash
 
    Int_t       GetHashValue(const TObject *obj) const;
-   Int_t       GetHashValue(TString &s) const { return s.Hash() % fSize; }
-   Int_t       GetHashValue(const char *str) const { return ::Hash(str) % fSize; }
+   Int_t       GetHashValue(TString &s) { return s.Hash() % fSize; }
+   Int_t       GetHashValue(const char *str) const
+                  { TString s = str; return s.Hash() % fSize; }
 
 public:
    THashTable(Int_t capacity = TCollection::kInitHashTableCapacity, Int_t rehash = 0);
@@ -61,7 +62,6 @@ public:
    void          Delete(Option_t *option="");
    TObject      *FindObject(const char *name) const;
    TObject      *FindObject(const TObject *obj) const;
-   TObject     **GetObjectRef(TObject *obj) const;
    Int_t         GetSize() const { return fEntries; }
    TIterator    *MakeIterator(Bool_t dir = kIterForward) const;
    void          Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGImageMap.h,v 1.2 2000/12/12 18:17:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.h,v 1.1 2000/10/19 10:40:02 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -141,11 +141,11 @@ public:
    void SetCursor(ECursor cursor = kHand) { fCursorMouseOver = cursor; }
    void SetPicture(const TGPicture * /*new_pic*/) { } // disabled
 
-   virtual void RegionClicked(Int_t id); // *SIGNAL*
-   virtual void DoubleClicked(Int_t id); // *SIGNAL*
-   virtual void DoubleClicked();         // *SIGNAL*
-   virtual void OnMouseOver(Int_t id);   // *SIGNAL*
-   virtual void OnMouseOut(Int_t id);    // *SIGNAL*
+   void RegionClicked(Int_t id); // *SIGNAL*
+   void DoubleClicked(Int_t id); // *SIGNAL*
+   void DoubleClicked();         // *SIGNAL*
+   void OnMouseOver(Int_t id);   // *SIGNAL*
+   void OnMouseOut(Int_t id);    // *SIGNAL*
 
    ClassDef(TGImageMap,0)  // Clickable image (like MAP in HTML)
 };

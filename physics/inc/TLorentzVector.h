@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.7 2002/01/19 13:18:38 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************
@@ -58,8 +58,8 @@ public:
                           Double_t z = 0.0, Double_t t = 0.0);
   // Constructor giving the components x, y, z, t.
 
-  TLorentzVector(const Double_t * carray);
-  TLorentzVector(const Float_t * carray);
+  TLorentzVector(Double_t * carray);
+  TLorentzVector(Float_t * carray);
   // Constructor from an array, not checked!
 
   TLorentzVector(const TVector3 & vector3, Double_t t);
@@ -90,8 +90,7 @@ public:
   inline Double_t Px() const;
   inline Double_t Py() const;
   inline Double_t Pz() const;
-  inline Double_t P()  const;
-  inline Double_t E()  const;
+  inline Double_t E() const;
   inline Double_t Energy() const;
   // Get momentum and energy.
 
@@ -126,8 +125,8 @@ public:
   // Setters to provide the functionality (but a more meanigful name) of
   // the previous version eg SetV4... PsetV4...
 
-  inline void GetXYZT(Double_t *carray) const;
-  inline void GetXYZT(Float_t *carray) const;
+  inline void GetXYZT(Double_t *carray);
+  inline void GetXYZT(Float_t *carray);
   // Getters into an arry
   // no checking!
 
@@ -213,9 +212,7 @@ public:
 
   inline Double_t Plus() const;
   inline Double_t Minus() const;
-  // Returns t +/- z.
-  // Related to the positive/negative light-cone component,
-  // which some define this way and others define as (t +/- z)/sqrt(2)
+  // Returns the positive/negative light-cone component t +/- z.
 
   inline TVector3 BoostVector() const ;
   // Returns the spatial components divided by the time component.
@@ -259,7 +256,7 @@ private:
   TVector3 fP;  // 3 vector component
   Double_t fE;  // time or energy of (x,y,z,t) or (px,py,pz,e)
 
-  ClassDef(TLorentzVector,4) // A four vector with (-,-,-,+) metric
+  ClassDef(TLorentzVector,2) // A four vector with (-,-,-,+) metric
 
 };
 
@@ -283,7 +280,6 @@ inline void TLorentzVector::SetT(Double_t a) { fE = a; }
 inline Double_t TLorentzVector::Px() const { return X(); }
 inline Double_t TLorentzVector::Py() const { return Y(); }
 inline Double_t TLorentzVector::Pz() const { return Z(); }
-inline Double_t TLorentzVector::P()  const { return fP.Mag(); }
 inline Double_t TLorentzVector::E()  const { return T(); }
 inline Double_t TLorentzVector::Energy()  const { return T(); }
 
@@ -340,20 +336,19 @@ inline void TLorentzVector::SetXYZM(Double_t  x, Double_t  y, Double_t  z, Doubl
 
 inline void TLorentzVector::SetPtEtaPhiM(Double_t pt, Double_t eta, Double_t phi, Double_t m) {
   pt = TMath::Abs(pt);
-  SetXYZM(pt*TMath::Cos(phi), pt*TMath::Sin(phi), pt/TMath::Tan(2.0*TMath::ATan(TMath::Exp(-eta))),m);
+  SetPxPyPzE(pt*TMath::Cos(phi), pt*TMath::Sin(phi), pt/TMath::Tan(2.0*TMath::ATan(TMath::Exp(-eta))), m);
 }
 
 inline void TLorentzVector::SetPtEtaPhiE(Double_t pt, Double_t eta, Double_t phi, Double_t e) {
-  pt = TMath::Abs(pt);
-  SetXYZT(pt*TMath::Cos(phi), pt*TMath::Sin(phi), pt/TMath::Tan(2.0*TMath::ATan(TMath::Exp(-eta))),e);
+  SetPtEtaPhiM(pt, eta, phi, e);
 }
 
-inline void TLorentzVector::GetXYZT(Double_t *carray) const {
+inline void TLorentzVector::GetXYZT(Double_t *carray){
   fP.GetXYZ(carray);
   carray[3] = fE;
 }
 
-inline void TLorentzVector::GetXYZT(Float_t *carray) const{
+inline void TLorentzVector::GetXYZT(Float_t *carray){
   fP.GetXYZ(carray);
   carray[3] = fE;
 }
@@ -513,17 +508,6 @@ inline Double_t
 TLorentzVector::operator * (const TLorentzVector & q) const {
   return Dot(q);
 }
-
-//Member functions Plus() and Minus() return the positive and negative
-//light-cone components: 
-//
-//  Double_t pcone = v.Plus(); 
-//  Double_t mcone = v.Minus();
-//
-//CAVEAT: The values returned are T{+,-}Z. It is known that some authors
-//find it easier to define these components as (T{+,-}Z)/sqrt(2). Thus
-//check what definition is used in the physics you're working in and adapt
-//your code accordingly.
 
 inline Double_t TLorentzVector::Plus() const {
   return T() + Z();

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.2 2000/12/13 15:13:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.1 2000/11/24 16:21:00 brun Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 #ifndef ROOT_TMultiDimFit
@@ -113,7 +113,7 @@ protected:
   Bool_t       fIsVerbose;            // 
 
   virtual Double_t EvalFactor(Int_t p, Double_t x);
-  virtual Double_t EvalControl(const Int_t *powers);
+  virtual Double_t EvalControl(Int_t *powers);
   virtual void     MakeCoefficientErrors(); 
   virtual void     MakeCorrelation();
   virtual Double_t MakeGramSchmidt(Int_t function);
@@ -124,7 +124,7 @@ protected:
   virtual void     MakeRealCode(const char *filename, 
 				const char *classname, 
 				Option_t   *option="");
-  virtual Bool_t   Select(const Int_t *iv);
+  virtual Bool_t   Select(Int_t *iv);
   virtual Bool_t   TestFunction(Double_t squareResidual,  
 				Double_t dResidur);
 public:
@@ -134,12 +134,12 @@ public:
 	       Option_t *option=""); 
   virtual ~TMultiDimFit();
 
-  virtual void     AddRow(const Double_t *x, Double_t D, Double_t E=0);
-  virtual void     AddTestRow(const Double_t *x, Double_t D, Double_t E=0);
+  virtual void     AddRow(Double_t *x, Double_t D, Double_t E=0);
+  virtual void     AddTestRow(Double_t *x, Double_t D, Double_t E=0);
   virtual void     Browse(TBrowser* b);
   virtual void     Clear(Option_t *option=""); // *MENU* 
   virtual void     Draw(Option_t *option="d") {}
-  virtual Double_t Eval(const Double_t *x, const Double_t *coeff=0); 
+  virtual Double_t Eval(Double_t *x, Double_t *coeff=0); 
   virtual void     FindParameterization(Option_t* option=""); // *MENU* 
   virtual void     Fit(Option_t *option=""); // *MENU* 
 
@@ -188,7 +188,7 @@ public:
 
   static TMultiDimFit* Instance()              { return fgInstance; }
   virtual Bool_t   IsFolder()            const { return kTRUE; }
-  virtual Double_t MakeChi2(const Double_t* coeff=0);
+  virtual Double_t MakeChi2(Double_t* coeff=0);
   virtual void     MakeCode(const char *functionName="MDF", Option_t *option=""); // *MENU* 
   virtual void     MakeHistograms(Option_t* option="A"); // *MENU* 
   virtual void     MakeMethod(const Char_t* className="MDF", Option_t* option=""); // *MENU* 
@@ -196,13 +196,13 @@ public:
 
   void             SetMaxAngle(Double_t angle=0);
   void             SetMaxFunctions(Int_t n) { fMaxFunctions = n; }
-  void             SetMaxPowers(const Int_t *powers);
+  void             SetMaxPowers(Int_t *powers);
   void             SetMaxStudy(Int_t n) { fMaxStudy  = n; }
   void             SetMaxTerms(Int_t terms) { fMaxTerms = terms; }
   void             SetMinRelativeError(Double_t error);
   void             SetMinAngle(Double_t angle=1);
   void             SetPowerLimit(Double_t limit=1e-3);
-  virtual void     SetPowers(const Int_t *powers, Int_t terms);
+  virtual void     SetPowers(Int_t *powers, Int_t terms);
 
   ClassDef(TMultiDimFit,1) // Multi dimensional fit class
 }

@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: getpagesize.c,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $ */
+/* @(#)root/clib:$Name$:$Id$ */
 /* Author: */
 #ifdef WIN32
 #include <windows.h>
@@ -17,7 +17,7 @@ int getpagesize()
 
 #ifndef __GNUC__
 /* Prevent "empty translation unit" warnings. */
-#include <stdio.h>
+static char file_intentionally_empty = 69;
 #endif
 
 #endif

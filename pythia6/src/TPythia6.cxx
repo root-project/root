@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.4 2001/01/26 07:38:52 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.2 2000/07/11 17:11:14 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@
 #include "TPythia6.h"
 
 #include "TClonesArray.h"
-#include "TMCParticle6.h"
+#include "TMCParticle.h"
 #include "TParticle.h"
 
 TPythia6*  TPythia6::fgInstance = 0;
@@ -224,7 +224,7 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
   Int_t numpart = fPyjets->N;
   if (!strcmp(option,"") || !strcmp(option,"Final")) {
     for (Int_t i = 0; i<numpart; i++) {
-      if (fPyjets->K[0][i] == 1) {
+      if (fPyjets->K[1][i] == 1) {
 //
 //  Use the common block values for the TParticle constructor
 //

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.5 2000/10/08 14:27:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.4 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -172,22 +172,6 @@ Bool_t TGScrollBar::HandleTimer(TTimer *t)
    HandleButton(&ev);
 
    return kTRUE;
-}
-
-//______________________________________________________________________________
-Pixmap_t TGScrollBar::GetBckgndPixmap()
-{
-   // Static method returning scrollbar background pixmap.
-
-   return fgBckgndPixmap;
-}
-
-//______________________________________________________________________________
-Int_t TGScrollBar::GetScrollBarWidth()
-{
-   // Static method returning the scrollbar width.
-
-   return fgScrollBarWidth;
 }
 
 

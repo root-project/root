@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.3 2000/10/11 16:13:23 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGProgressBar.cxx,v 1.2 2000/10/10 10:20:10 rdm Exp $
 // Author: Fons Rademakers   10/10/2000
 
 /*************************************************************************
@@ -73,10 +73,6 @@ void TGProgressBar::SetPosition(Float_t pos)
 
    if (pos < fMin) pos = fMin;
    if (pos > fMax) pos = fMax;
-
-   if (fPos == pos)
-      return;
-
    fPos = pos;
 
    //fClient->NeedRedraw(this);
@@ -88,9 +84,6 @@ void TGProgressBar::SetPosition(Float_t pos)
 void TGProgressBar::Increment(Float_t inc)
 {
    // Increment progress position.
-
-   if (fPos == fMax)
-      return;
 
    fPos += inc;
    if (fPos > fMax) fPos = fMax;

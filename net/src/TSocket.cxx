@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.8 2001/01/29 00:03:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.4 2000/08/21 14:48:37 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -33,13 +33,10 @@ UInt_t TSocket::fgBytesRecv = 0;
 ClassImp(TSocket)
 
 //______________________________________________________________________________
-TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
+TSocket::TSocket(TInetAddress addr, const char *service)
          : TNamed(addr.GetHostName(), service)
 {
    // Create a socket. Connect to the named service at address addr.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Returns when connection has been accepted by remote side. Use IsValid()
    // to check the validity of the socket. Every socket is added to the TROOT
    // sockets list which will make sure that any open sockets are properly
@@ -55,21 +52,17 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    fBytesRecv = 0;
 
    if (fAddress.GetPort() != -1) {
-      fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
-                                        tcpwindowsize);
+      fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort());
       if (fSocket != -1) gROOT->GetListOfSockets()->Add(this);
    } else
       fSocket = -1;
 }
 
 //______________________________________________________________________________
-TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
+TSocket::TSocket(TInetAddress addr, Int_t port)
          : TNamed(addr.GetHostName(), "")
 {
    // Create a socket. Connect to the specified port # at address addr.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Returns when connection has been accepted by remote side. Use IsValid()
    // to check the validity of the socket. Every socket is added to the TROOT
    // sockets list which will make sure that any open sockets are properly
@@ -85,8 +78,7 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    fBytesSent = 0;
    fBytesRecv = 0;
 
-   fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
-                                     tcpwindowsize);
+   fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort());
    if (fSocket == -1)
       fAddress.fPort = -1;
    else
@@ -94,13 +86,10 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
 }
 
 //______________________________________________________________________________
-TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
+TSocket::TSocket(const char *host, const char *service)
          : TNamed(host, service)
 {
    // Create a socket. Connect to named service on the remote host.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Returns when connection has been accepted by remote side. Use IsValid()
    // to check the validity of the socket. Every socket is added to the TROOT
    // sockets list which will make sure that any open sockets are properly
@@ -117,20 +106,17 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    fBytesRecv = 0;
 
    if (fAddress.GetPort() != -1) {
-      fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
+      fSocket = gSystem->OpenConnection(host, fAddress.GetPort());
       if (fSocket != -1) gROOT->GetListOfSockets()->Add(this);
    } else
       fSocket = -1;
 }
 
 //______________________________________________________________________________
-TSocket::TSocket(const char *host, Int_t port, Int_t tcpwindowsize)
+TSocket::TSocket(const char *host, Int_t port)
          : TNamed(host, "")
 {
    // Create a socket. Connect to specified port # on the remote host.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Returns when connection has been accepted by remote side. Use IsValid()
    // to check the validity of the socket. Every socket is added to the TROOT
    // sockets list which will make sure that any open sockets are properly
@@ -147,7 +133,7 @@ TSocket::TSocket(const char *host, Int_t port, Int_t tcpwindowsize)
    fBytesSent = 0;
    fBytesRecv = 0;
 
-   fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
+   fSocket = gSystem->OpenConnection(host, fAddress.GetPort());
    if (fSocket == -1)
       fAddress.fPort = -1;
    else
@@ -211,7 +197,7 @@ TInetAddress TSocket::GetLocalInetAddress()
    // Return internet address of local host to which the socket is bound.
    // In case of error TInetAddress::IsValid() returns kFALSE.
 
-   if (IsValid()) {
+   if (fSocket != -1) {
       if (fLocalAddress.GetPort() == -1)
          fLocalAddress = gSystem->GetSockName(fSocket);
       return fLocalAddress;
@@ -225,9 +211,9 @@ Int_t TSocket::GetLocalPort()
    // Return the local port # to which the socket is bound.
    // In case of error return -1.
 
-   if (IsValid()) {
+   if (fSocket != -1) {
       if (fLocalAddress.GetPort() == -1)
-         GetLocalInetAddress();
+         fLocalAddress = GetLocalInetAddress();
       return fLocalAddress.GetPort();
    }
    return -1;
@@ -286,9 +272,6 @@ Int_t TSocket::Send(const TMessage &mess)
    // that were sent and -1 in case of error. In case the TMessage::What
    // has been or'ed with kMESS_ACK, the call will only return after having
    // received an acknowledgement, making the sending process synchronous.
-   // Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
-
-   TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;
    if (mess.IsReading()) {
@@ -298,15 +281,14 @@ Int_t TSocket::Send(const TMessage &mess)
 
    Int_t nsent;
    mess.SetLength();   //write length in first word of buffer
-   if ((nsent = gSystem->SendRaw(fSocket, mess.Buffer(), mess.Length(), 0)) <= 0)
-      return nsent;
+   if ((nsent = gSystem->SendRaw(fSocket, mess.Buffer(), mess.Length(), 0)) < 0)
+      return -1;
 
    fBytesSent  += nsent;
    fgBytesSent += nsent;
 
    // If acknowledgement is desired, wait for it
    if (mess.What() & kMESS_ACK) {
-      TSystem::ResetErrno();
       char buf[2];
       if (gSystem->RecvRaw(fSocket, buf, sizeof(buf), 0) < 0)
          return -1;
@@ -340,16 +322,13 @@ Int_t TSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 {
    // Send a raw buffer of specified length. Using option kOob one can send
    // OOB data. Returns the number of bytes sent or -1 in case of error.
-   // Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
-
-   TSystem::ResetErrno();
 
    if (fSocket == -1) return -1;
 
    Int_t nsent;
 
-   if ((nsent = gSystem->SendRaw(fSocket, buffer, length, (int) opt)) <= 0)
-      return nsent;
+   if ((nsent = gSystem->SendRaw(fSocket, buffer, length, (int) opt)) < 0)
+      return -1;
 
    fBytesSent  += nsent;
    fgBytesSent += nsent;
@@ -428,13 +407,14 @@ Int_t TSocket::Recv(Int_t &status, Int_t &kind)
    return n;   // number of bytes read (2 * sizeof(Int_t)
 }
 
+
 //______________________________________________________________________________
 Int_t TSocket::Recv(TMessage *&mess)
 {
    // Receive a TMessage object. The user must delete the TMessage object.
    // Returns length of message in bytes (can be 0 if other side of connection
-   // is closed) or -1 in case of error or -4 in case a non-blocking socket
-   // would block (i.e. there is nothing to be read). In those case mess == 0.
+   // is closed) or -1 in case of error or -4 in case a non-blocking socket would
+   // block (i.e. there is nothing to be read). In those case mess == 0.
 
    TSystem::ResetErrno();
 

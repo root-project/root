@@ -7,7 +7,7 @@
  * Description:
  *  Cleanup function
  ************************************************************************
- * Copyright(c) 1995~2001  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -74,19 +74,6 @@ void G__scratch_all()
     G__destroy(local,G__LOCAL_VAR);
     local=local->prev_local;
   }
-
-  /*******************************************
-   * clear interpriveve global variables
-   *******************************************/
-#ifndef G__OLDIMPLEMENTATION1559
-#ifdef G__MEMTEST
-  fprintf(G__memhist,"Freeing temp object %d\n",G__templevel);
-#endif
-  if(G__p_tempbuf) {
-    if(G__templevel>0) G__templevel = 0;
-    G__free_tempobject();
-  }
-#endif
 
   /*******************************************
    * clear interpriveve global variables
@@ -183,7 +170,7 @@ void G__scratch_all()
   if(G__mfp) {
 #ifdef G__MEMTEST
     fprintf(G__memhist,"Ignore this error:");
-    G__fprinterr(G__serr,"Ignore this error:");
+    fprintf(G__serr,"Ignore this error:");
 #endif
     G__closemfp();
     G__mfp=NULL;
@@ -249,17 +236,9 @@ void G__scratch_all()
   }
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1451
-  G__DeleteConstStringList(G__SystemIncludeDir);
-  G__SystemIncludeDir = (struct G__ConstStringList*)NULL;
-#endif
-
   /*************************************************************
    * Initialize cint body global variables
    *************************************************************/
-#ifndef G__OLDIMPLEMENTATION1599
-  G__init = 0;
-#endif
   G__init_globals();
 
   G__reset_setup_funcs();
@@ -306,9 +285,6 @@ int G__free_ifunc_table(ifunc)
 struct G__ifunc_table *ifunc;
 {
   int i,j;
-#ifndef G__OLDIMPLEMENTATION1588
-  int flag;
-#endif
   if(ifunc->next) {
     G__free_ifunc_table(ifunc->next);
     free((void*)ifunc->next);
@@ -319,60 +295,31 @@ struct G__ifunc_table *ifunc;
 #ifdef G__MEMTEST
     fprintf(G__memhist,"func %s\n",ifunc->funcname[i]);
 #endif
-#ifndef G__OLDIMPLEMENTATION1588
-      flag = 0;
-#endif /* 1588 */
-#ifndef G__OLDIMPLEMENTATION1543
-    if(ifunc->funcname[i]) {
-      free((void*)ifunc->funcname[i]);
-      ifunc->funcname[i] = (char*)NULL;
-#ifndef G__OLDIMPLEMENTATION1588
-      flag = 1;
-#endif /* 1588 */
-    }
-#endif
 #ifdef G__ASM_WHOLEFUNC
-    if(
-#ifndef G__OLDIMPLEMENTATION1588
-       flag &&
-#endif
-#ifndef G__OLDIMPLEMENTATION1501
-       ifunc->pentry[i] && 
-#endif
-       ifunc->pentry[i]->bytecode) {
+    if(ifunc->pentry[i]->bytecode) {
       G__free_bytecode(ifunc->pentry[i]->bytecode);
       ifunc->pentry[i]->bytecode = (struct G__bytecodefunc*)NULL;
     }
 #endif
 #ifdef G__FRIEND
-#ifndef G__OLDIMPLEMENTATION1588
-    if(flag) G__free_friendtag(ifunc->friendtag[i]);
-#else
     G__free_friendtag(ifunc->friendtag[i]);
 #endif
-#endif
-#ifndef G__OLDIMPLEMENTATION1588
-    if(flag) {
-#endif
-      for(j=ifunc->para_nu[i]-1;j>=0;j--) {
-	if(ifunc->para_name[i][j]) {
-	  free((void*)ifunc->para_name[i][j]);
-	  ifunc->para_name[i][j]=(char*)NULL;
-	}
-	if(ifunc->para_def[i][j]) {
-	  free((void*)ifunc->para_def[i][j]);
-	  ifunc->para_def[i][j]=(char*)NULL;
-	}
-	if(ifunc->para_default[i][j] &&
-	   (&G__default_parameter)!=ifunc->para_default[i][j] &&
-	   (G__value*)(-1)!=ifunc->para_default[i][j]) {
-	  free((void*)ifunc->para_default[i][j]);
-	  ifunc->para_default[i][j]=(G__value*)NULL;
-	}
+    for(j=ifunc->para_nu[i]-1;j>=0;j--) {
+      if(ifunc->para_name[i][j]) {
+	free((void*)ifunc->para_name[i][j]);
+	ifunc->para_name[i][j]=(char*)NULL;
       }
-#ifndef G__OLDIMPLEMENTATION1588
+      if(ifunc->para_def[i][j]) {
+	free((void*)ifunc->para_def[i][j]);
+	ifunc->para_def[i][j]=(char*)NULL;
+      }
+      if(ifunc->para_default[i][j] &&
+	 (&G__default_parameter)!=ifunc->para_default[i][j] &&
+	 (G__value*)(-1)!=ifunc->para_default[i][j]) {
+	free((void*)ifunc->para_default[i][j]);
+	ifunc->para_default[i][j]=(G__value*)NULL;
+      }
     }
-#endif
   }
   ifunc->page=0;
 
@@ -500,11 +447,12 @@ int isglobal;
 	sprintf(temp,"~%s()",G__struct.name[G__tagnum]);
 	if(G__dispsource) {
 #ifndef G__FONS31
-	  G__fprinterr(G__serr,"\n!!!Calling destructor 0x%lx.%s for %s ary%d:link%d"
+	  fprintf(G__serr
+		  ,"\n!!!Calling destructor 0x%lx.%s for %s ary%d:link%d"
 		  ,G__store_struct_offset ,temp ,var->varnamebuf[itemp]
 		  ,var->varlabel[itemp][1],G__struct.iscpplink[G__tagnum]);
 #else
-	  G__fprinterr(G__serr,"\n!!!Calling destructor 0x%x.%s for %s ary%d:link%d"
+	  fprintf(G__serr,"\n!!!Calling destructor 0x%x.%s for %s ary%d:link%d"
 		  ,G__store_struct_offset ,temp ,var->varnamebuf[itemp]
 		  ,var->varlabel[itemp][1],G__struct.iscpplink[G__tagnum]);
 #endif
@@ -517,31 +465,10 @@ int isglobal;
 	 * destruction of array 
 	 ********************************************************/
 	if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
-#ifndef G__OLDIMPLEMENTATION1552
-	  if(G__AUTOARYDISCRETEOBJ==var->statictype[itemp]) {
-	    long store_globalvarpointer = G__globalvarpointer;
-	    size=G__struct.size[G__tagnum];
-	    for(i=var->varlabel[itemp][1];i>=0;--i) {
-	      G__store_struct_offset = var->p[itemp]+size*i;
-	      G__globalvarpointer = G__store_struct_offset;
-	      G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
-	      if(0==itemp1) break;
-	    }
-	    G__globalvarpointer = store_globalvarpointer;
-	    free((void*)var->p[itemp]);
-	  }
-	  else {
-	    G__store_struct_offset = var->p[itemp];
-	    if((i=var->varlabel[itemp][1])>0) G__cpp_aryconstruct=i+1;
-	    G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
-	    G__cpp_aryconstruct=0;
-	  }
-#else
 	  G__store_struct_offset = var->p[itemp];
 	  if((i=var->varlabel[itemp][1])>0) G__cpp_aryconstruct=i+1;
 	  G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
 	  G__cpp_aryconstruct=0;
-#endif
 	  cpplink=1;
 	}
 	else {
@@ -550,9 +477,9 @@ int isglobal;
 	    G__store_struct_offset = var->p[itemp]+size*i;
 	    if(G__dispsource) {
 #ifndef G__FONS31
-	      G__fprinterr(G__serr,"\n0x%lx.%s",G__store_struct_offset,temp);
+	      fprintf(G__serr,"\n0x%lx.%s",G__store_struct_offset,temp);
 #else
-	      G__fprinterr(G__serr,"\n0x%x.%s",G__store_struct_offset,temp);
+	      fprintf(G__serr,"\n0x%x.%s",G__store_struct_offset,temp);
 #endif
 	    }
 	    G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
@@ -588,11 +515,7 @@ int isglobal;
       fprintf(G__memhist,"Free(%s)\n",var->varnamebuf[itemp]);
 #endif
       /* ??? Scott Snyder fixed as var->p[itemp]>0x10000 ??? */
-      if(G__NOLINK==cpplink && var->p[itemp] 
-#ifndef G__OLDIMPLEMENTATION1576
-	 && -1!=var->p[itemp]
-#endif
-	 ) free((void*)var->p[itemp]);
+      if(G__NOLINK==cpplink && var->p[itemp]) free((void*)var->p[itemp]);
       
     } /* end of statictype==LOCALSTATIC or COMPILEDGLOBAL */
     
@@ -617,13 +540,6 @@ int isglobal;
     for(itemp1=0;itemp1<G__MAXVARDIM;itemp1++) {
       var->varlabel[itemp][itemp1]=0;
     }
-#ifndef G__OLDIMPLEMENTATION1543
-    if(var->varnamebuf[itemp]) {
-      free((void*)var->varnamebuf[itemp]);
-      var->varnamebuf[itemp] = (char*)NULL;
-    }
-#endif
-
   }
   
   var->allvar = remain;
@@ -659,7 +575,7 @@ int rtn;
 int G__call_atexit()
 {
   char temp[G__ONELINE];
-  if(G__breaksignal) G__fprinterr(G__serr,"!!! atexit() call\n");
+  if(G__breaksignal) fprintf(G__serr,"!!! atexit() call\n");
   G__ASSERT(G__atexit);
   sprintf(temp,"%s()",G__atexit);
   G__atexit=NULL;
@@ -718,14 +634,6 @@ int G__close_inputfiles()
       G__srcfile[iarg].prepname=(char*)NULL;
     }
     if(G__srcfile[iarg].filename) {
-#ifndef G__OLDIMPLEMENTATION1546
-      int len = strlen(G__srcfile[iarg].filename);
-      if(len>strlen(G__NAMEDMACROEXT2) && 
-	 strcmp(G__srcfile[iarg].filename+len-strlen(G__NAMEDMACROEXT2),
-		G__NAMEDMACROEXT2)==0) {
-	remove(G__srcfile[iarg].filename);
-      }
-#endif
       free((void*)G__srcfile[iarg].filename);
       G__srcfile[iarg].filename=(char*)NULL;
     }
@@ -774,7 +682,7 @@ int G__interpretexit()
 {
   if(G__atexit) G__call_atexit();
   G__scratch_all();
-  if(G__breaksignal) G__fprinterr(G__serr,"\nEND OF EXECUTION\n");
+  if(G__breaksignal) fprintf(G__serr,"\nEND OF EXECUTION\n");
   return(0);
 }
 

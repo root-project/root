@@ -1,4 +1,4 @@
-// @(#)root/x11ttf:$Name:  $:$Id: TGX11TTF.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/x11ttf:$Name$:$Id$
 // Author: Fons Rademakers   21/11/98
 
 /*************************************************************************
@@ -20,8 +20,8 @@
 // Interface to low level X11 (Xlib). This class gives access to basic  //
 // X11 graphics via the parent class TGX11. However, all text and font  //
 // handling is done via the Freetype TrueType library. When the         //
-// shared library containing this class is loaded the global gVirtualX  //
-// is redirected to point to this class.                                //
+// shared library containing this class is loaded the global gVirtualX is    //
+// redirected to point to this class.                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

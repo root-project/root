@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRegexp.cxx,v 1.3 2002/01/20 17:48:45 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -21,7 +21,7 @@
 #include "TString.h"
 #include "TError.h"
 
-const unsigned TRegexp::fgMaxpat = 2048;
+const unsigned TRegexp::fgMaxpat = 128;
 
 
 ClassImp(TRegexp)
@@ -119,12 +119,10 @@ const char *TRegexp::MakeWildcard(const char *re)
    // a general regular expression used for pattern matching.
    // When using wildcards the regular expression is assumed to be
    // preceded by a "^" (BOL) and terminated by a "$" (EOL). Also, all
-   // "*"'s (closures) are assumed to be preceded by a "." (i.e. any character,
-   // except "/"'s) and all .'s are escaped (so *.ps is different from *.eps).
-   // The special treatment of "/" allows the easy matching of pathnames, e.g.
-   // "*.root" will match "aap.root", but not "pipo/aap.root".
+   // "*"'s (closures) are assumed to be preceded by a "." (any character)
+   // and all .'s are escaped (so *.ps is different from *.eps).
 
-   static char buf[fgMaxpat];
+   static char buf[100];
    char *s = buf;
    int   len = strlen(re);
 
@@ -133,16 +131,8 @@ const char *TRegexp::MakeWildcard(const char *re)
    for (int i = 0; i < len; i++) {
       if (i == 0 && re[i] != '^')
          *s++ = '^';
-      if (re[i] == '*') {
-         //*s++ = '.';
-#ifndef R__WIN32
-         strcpy(s, "[a-zA-Z0-9_\\.:-]");
-         s += 16;
-#else
-         strcpy(s, "[a-zA-Z0-9_.-]");
-         s += 14;
-#endif
-      }
+      if (re[i] == '*')
+         *s++ = '.';
       if (re[i] == '.')
          *s++ = '\\';
       *s++ = re[i];

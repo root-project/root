@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TSeqCollection.h,v 1.4 2000/09/27 10:05:23 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TSeqCollection.h,v 1.3 2000/09/08 16:11:02 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -55,7 +55,7 @@ public:
    virtual TObject  *First() const = 0;
    virtual TObject  *Last() const = 0;
    Int_t             LastIndex() const { return GetSize() - 1; }
-   virtual Int_t     IndexOf(const TObject *obj) const;
+   virtual Int_t     IndexOf(TObject *obj) const;
    virtual Bool_t    IsSorted() const { return fSorted; }
    void              UnSort() { fSorted = kFALSE; }
 

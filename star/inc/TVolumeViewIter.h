@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeViewIter.h,v 1.2 2001/05/29 20:55:28 fine Exp $
+// @(#)root/star:$Name$:$Id$
 // Author: Valery Fine(fine@bnl.gov)   25/01/99
 
 /*************************************************************************
@@ -29,21 +29,16 @@ protected:
 public:
      TVolumeViewIter(TVolumeView *view, Int_t depth=1, Bool_t dir=kIterForward);
     ~TVolumeViewIter();
-     virtual Bool_t          Notify();
      virtual void            Notify(TDataSet *set);
      virtual void            Reset(TDataSet *l=0,Int_t depth=0);
 
-     virtual TDataSet       *operator[](const Char_t *path);
-     TVolumePosition        *operator[](Int_t level);
+     TVolumePosition        *operator[](Int_t level) const ;
 
      TVolumePosition        *UpdateTempMatrix(TVolumePosition *curPosition);
      void                    ResetPosition(Int_t level=0, TVolumePosition *newPosition=0);
      ClassDef(TVolumeViewIter,0)
 };
 
-inline Bool_t  TVolumeViewIter::Notify() { return TDataSetIter::Notify();}
-inline TDataSet  *TVolumeViewIter::operator[](const Char_t *path)
-{return TDataSetIter::operator[](path); }
 
 #endif
 

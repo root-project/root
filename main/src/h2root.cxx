@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.11 2002/01/23 17:52:50 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.2 2000/06/13 09:49:54 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -14,16 +14,12 @@
 //  if compress is missing (or = 1)the ROOT file will be compressed
 //  if compress = 0 the ROOT file will not be compressed.
 //  if tolower is missing (or = 1) ntuple column names are converted to lower case
-//                but the first character is converted to upper case.
-//  if tolower = 2 same as tolower=1 except that the first character is also
-//                convertex to lower case
 /////////////////////////////////////////////////////////////////////////
-
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
-#include "Riostream.h"
+#include <iostream.h>
+#include "TROOT.h"
 #include "TFile.h"
 #include "TDirectory.h"
 #include "TTree.h"
@@ -108,7 +104,6 @@ void MAIN__() {}
 # define hij     hij_
 # define hix     hix_
 # define hijxy   hijxy_
-# define hije    hije_
 # define hcdir   hcdir_
 # define zitoh   zitoh_
 # define uhtoc   uhtoc_
@@ -142,7 +137,6 @@ void MAIN__() {}
 # define hij     HIJ
 # define hix     HIX
 # define hijxy   HIJXY
-# define hije    HIJE
 # define hcdir   HCDIR
 # define zitoh   ZITOH
 # define uhtoc   UHTOC
@@ -205,7 +199,6 @@ extern "C" float type_of_call hif(const int&,const int&);
 extern "C" float type_of_call hij(const int&,const int&,const int&);
 extern "C" void  type_of_call hix(const int&,const int&,const float&);
 extern "C" void  type_of_call hijxy(const int&,const int&,const int&,const float&,const float&);
-extern "C" float type_of_call hije(const int&,const int&,const int&);
 #ifndef WIN32
 extern "C" void  type_of_call hcdir(DEFCHAR,DEFCHAR ,const int,const int);
 #else
@@ -219,7 +212,7 @@ extern "C" void  type_of_call uhtoc(const int&,const int&,DEFCHAR,int&,const int
 extern "C" void  type_of_call uhtoc(const int&,const int&,DEFCHAR,int&);
 #endif
 
-extern void convert_directory(const char*);
+extern void convert_directory(char*);
 extern void convert_1d(Int_t id);
 extern void convert_2d(Int_t id);
 extern void convert_profile(Int_t id);
@@ -228,6 +221,8 @@ extern void convert_rwn(Int_t id);
 
 Int_t golower  = 1;
 Int_t bufsize  = 8000;
+
+TROOT conv("h2root","Conversion from HBOOK to ROOT");
 
 int main(int argc, char **argv)
 {
@@ -294,19 +289,18 @@ int main(int argc, char **argv)
 
   char root_file_title[128];
   sprintf(root_file_title,"HBOOK file: %s converted to ROOT",file_in);
-  TFile* hfile= TFile::Open(file_out,"RECREATE",root_file_title,compress);
+  TFile hfile(file_out,"RECREATE",root_file_title,compress);
 
   convert_directory("//example");
 
-  hfile->Write();
-  hfile->ls();
-  hfile->Close();
-  delete hfile;
+  hfile.Write();
+  hfile.ls();
+  hfile.Close();
   return(0);
 }
 
 //____________________________________________________________________________
-void convert_directory(const char *dir)
+  void convert_directory(char *dir)
 {
 
   printf(" Converting directory %s\n",dir);
@@ -476,18 +470,12 @@ void convert_directory(const char *dir)
   TH2F *h2 = new TH2F(idname,chtitl,ncx,xmin,xmax,ncy,ymin,ymax);
   Float_t offsetx = 0.5*(xmax-xmin)/ncx;
   Float_t offsety = 0.5*(ymax-ymin)/ncy;
-  Int_t lw = lq[lcont];
-  if (lw) h2->Sumw2();
 
   Float_t x,y;
   for (Int_t j=0;j<=ncy+1;j++) {
      for (Int_t i=0;i<=ncx+1;i++) {
         hijxy(id,i,j,x,y);
         h2->Fill(x+offsetx,y+offsety,hij(id,i,j));
-        if (lw) {
-           Double_t err2 = hije(id,i,j);
-           h2->SetCellError(i,j,err2);
-        }
      }
   }
   h2->SetEntries(nentries);
@@ -518,7 +506,7 @@ void convert_directory(const char *dir)
 #endif
   Float_t offsetx = 0.5*(xmax-xmin)/ncx;
   chtitl[4*nwt] = 0;
-  const char *option= " ";
+  char *option= " ";
   if (iq[lw] == 1) option = "S";
   if (iq[lw] == 2) option = "I";
   TProfile *p = new TProfile(idname,chtitl,ncx,xmin,xmax,ymin,ymax,option);
@@ -589,8 +577,6 @@ void convert_directory(const char *dir)
        if (name[j] == ' ' && last == 0) name[j] = 0;
        else last = j;
     }
-    if (golower == 2) name[0] = tolower(name[0]);
-
     // suppress heading blanks
     for (j=0;j<Nchar;j++) {
        if (name[j] != ' ') break;
@@ -680,16 +666,10 @@ void convert_directory(const char *dir)
         if(golower) name[j] = tolower(name[j]);
         if (name[j] == ' ') name[j] = 0;
      }
-     if (golower == 2) name[0] = tolower(name[0]);
-
      for (j=62;j>0;j--) {
         if(golower && fullname[j-1] != '[') fullname[j] = tolower(fullname[j]);
-        // convert also character after [, if golower == 2
-        if (golower == 2) fullname[j] = tolower(fullname[j]);
         if (fullname[j] == ' ') fullname[j] = 0;
      }
-     // convert also first character, if golower == 2
-     if (golower == 2) fullname[0] = tolower(fullname[0]);
      for (j=30;j>0;j--) {
         if (block[j] == ' ') block[j] = 0;
         else break;
@@ -719,7 +699,6 @@ printf("Creating branch:%s, block:%s, fullname:%s, nsub=%d, itype=%d, isize=%d, 
      }
      TBranch *branch = tree->Branch(name,(void*)&bigbuf[bufpos],fullname,bufsize);
      boolflag[i] = -10;
-     charflag[i] = 0;
      if (itype == 4) {isabool++; boolflag[i] = bufpos; lenbool[i] = ielem;}
      bufpos += isize*ielem;
      if (ischar) {isachar++; charflag[i] = bufpos-1; lenchar[i] = isize*ielem;}

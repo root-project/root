@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.3 2000/10/31 11:19:34 brun Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -887,7 +887,7 @@ TObject *TBtInnerNode::Found(const TObject *what, TBtNode **which, Int_t *where)
 
    Assert(what->IsSortable());
    for (Int_t i = 1 ; i <= fLast; i++) {
-      if (GetKey(i)->Compare(what) == 0) {
+      if (GetKey(i)->Compare((TObject*)what) == 0) {
          // then could go in either fItem[i].fTree or fItem[i-1].fTree
          // should go in one with the most room, but that's kinda
          // hard to calculate, so we'll stick it in fItem[i].fTree
@@ -895,7 +895,7 @@ TObject *TBtInnerNode::Found(const TObject *what, TBtNode **which, Int_t *where)
          *where = i;
          return GetKey(i);
       }
-      if (GetKey(i)->Compare(what) > 0)
+      if (GetKey(i)->Compare((TObject*)what) > 0)
          return GetTree(i-1)->Found(what, which, where);
    }
    // *what > *(*this)[fLast].fKey, so recurse on last fItem.fTree
@@ -1445,9 +1445,9 @@ Int_t TBtLeafNode::FindRank(const TObject *what) const
    // not in the tree.
 
    for (Int_t i = 0; i <= fLast; i++) {
-      if (fItem[i]->Compare(what) == 0)
+      if (fItem[i]->Compare((TObject*)what) == 0)
          return i;
-      if (fItem[i]->Compare(what) > 0)
+      if (fItem[i]->Compare((TObject*)what) > 0)
          return -1;
    }
    return -1;
@@ -1467,12 +1467,12 @@ TObject *TBtLeafNode::Found(const TObject *what, TBtNode **which, Int_t *where)
 
    Assert(what->IsSortable());
    for (Int_t i = 0; i <= fLast; i++) {
-      if (fItem[i]->Compare(what) == 0) {
+      if (fItem[i]->Compare((TObject*)what) == 0) {
          *which = this;
          *where = i;
          return fItem[i];
       }
-      if (fItem[i]->Compare(what) > 0) {
+      if (fItem[i]->Compare((TObject*)what) > 0) {
          *which = this;
          *where = i;
          return 0;

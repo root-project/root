@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.4 2001/01/09 16:33:15 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.2 2000/09/11 06:16:26 brun Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 //_____________________________________________________________________________________
@@ -9,8 +9,6 @@
 //  The event is generated in the center-of-mass frame, 
 //  but the decay products are finally boosted
 //  using the betas of the original particle.
-//
-// see example of use in $ROOTSYS/tutorials/PhaseSpace.C
 
 #include "TGenPhaseSpace.h"
 #include "TRandom.h"
@@ -99,11 +97,11 @@ Double_t TGenPhaseSpace::Generate()
   while (1) {
     fDecPro[i].SetPxPyPzE(0, -pd[i-1], 0 , TMath::Sqrt(pd[i-1]*pd[i-1]+fMass[i]*fMass[i]) );
 
-    Double_t cZ   = 2*gRandom->Rndm() - 1;
-    Double_t sZ   = TMath::Sqrt(1-cZ*cZ);
-    Double_t angY = 2*TMath::Pi() * gRandom->Rndm();
-    Double_t cY   = TMath::Cos(angY);
-    Double_t sY   = TMath::Sin(angY);
+    Double_t angZ = 2*TMath::Pi() * gRandom->Rndm();
+    Double_t cZ = TMath::Cos(angZ);
+    Double_t sZ = TMath::Sin(angZ); 
+    Double_t cY = 2*gRandom->Rndm() - 1;
+    Double_t sY = TMath::Sqrt(1-cY*cY);
     for (j=0; j<=i; j++) {
       TLorentzVector *v = fDecPro+j;
       Double_t x = v->Px();

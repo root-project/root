@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.h,v 1.3 2001/03/16 14:25:56 brun Exp $
+// @(#)root/rint:$Name$:$Id$
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -22,20 +22,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TApplication
 #include "TApplication.h"
-#endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
 
 
 class TRint : public TApplication {
 
 private:
    Int_t       fNcmd;               //Command history number
-   TString     fDefaultPrompt;      //Default prompt: "root [%d] "
    char        fPrompt[64];         //Interpreter prompt
+   const char *fDefaultPrompt;      //Default prompt: "root [%d] "
    Bool_t      fInterrupt;          //If true macro execution will be stopped
 
 public:
@@ -44,7 +39,7 @@ public:
    virtual             ~TRint();
    virtual char       *GetPrompt();
    virtual const char *SetPrompt(const char *newPrompt);
-   virtual Bool_t      HandleTermInput();
+   virtual void        HandleTermInput();
    virtual void        PrintLogo();
    virtual void        Run(Bool_t retrn = kFALSE);
    virtual void        Terminate(int status);

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.4 2001/05/13 11:10:06 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.h,v 1.1.1.1 2000/05/16 17:00:49 rdm Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
 
 /*************************************************************************
@@ -11,24 +11,18 @@
 #ifndef ROOT_TTableDescriptor
 #define ROOT_TTableDescriptor
 
-#include "TClass.h"
 #include "TTable.h"
 #include "tableDescriptor.h"
 
 class TTableDescriptor : public TTable {
   protected:
-     friend class TTable;
-     TClass  *fRowClass;                  // TClass defining 
-                                          // the table row C-structure
-     TTableDescriptor *fSecondDescriptor; // shadow descriptor 
-                                          // to back TTable::Streamer
+     TClass  *fRowClass;  // TClass defining the table row C-structure
      virtual void Init(TClass *classPtr);
 
   public:
 
     TTableDescriptor(const TTable *parentTable);
     TTableDescriptor(TClass *classPtr);
-    TTableDescriptor(const TTableDescriptor &dsc):TTable(dsc),fRowClass(dsc.fRowClass),fSecondDescriptor(0){}
    ~TTableDescriptor();
     TString CreateLeafList() const;
              void        LearnTable(const TTable *parentTable);
@@ -52,34 +46,13 @@ class TTableDescriptor : public TTable {
              void        SetSize(UInt_t size,Int_t column);
              void        SetTypeSize(UInt_t size,Int_t column);
              void        SetDimensions(UInt_t dim,Int_t column);
-			 Int_t       Sizeof() const;
              void        SetColumnType(TTable::EColumnType type,Int_t column);
     virtual  Int_t       UpdateOffsets(const TTableDescriptor *newDesciptor);
-
-    static   TTableDescriptor *MakeDescriptor(const char *structName);
-
-//    ClassDefTable(TTableDescriptor,tableDescriptor_st)
-  protected:                                        
-     static  TTableDescriptor *fgColDescriptors;     
-     virtual TTableDescriptor *GetDescriptorPointer() const     { return fgColDescriptors;}                 
-     virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = list;}                  
-  public:                                           
-    typedef tableDescriptor_st* iterator;                   
-    TTableDescriptor() : TTable("TTableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}      
-    TTableDescriptor(const Text_t *name) : TTable(name,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}     
-    TTableDescriptor(Int_t n) : TTable("TTableDescriptor",n,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
-    TTableDescriptor(const Text_t *name,Int_t n) : TTable(name,n,sizeof(tableDescriptor_st)), fRowClass(0), fSecondDescriptor(0) {SetType("tableDescriptor_st");}
-    tableDescriptor_st *GetTable(Int_t i=0) const { return ((tableDescriptor_st *)GetArray())+i;}                       
-    tableDescriptor_st &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }             
-    const tableDescriptor_st &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const tableDescriptor_st *)(GetTable(i))); } 
-    tableDescriptor_st *begin() const  {                      return GetNRows()? GetTable(0):0;}
-    tableDescriptor_st *end()   const  {Long_t i = GetNRows(); return          i? GetTable(i):0;}
-
-    ClassDef(TTableDescriptor,0) // descrpitor defining the internal layout of TTable objects
+    ClassDefTable(TTableDescriptor,tableDescriptor_st)
+    ClassDef(TTableDescriptor,0)
 };
 
 //______________________________________________________________________________
-// inline  TTableDescriptor(const TTableDescriptor &dsc) : TTable(dsc), fRowClass(dsc.fRowClass),fSecondDescriptor(0){}
 inline  const Char_t *TTableDescriptor::ColumnName(Int_t column)const {return ((tableDescriptor_st *)At(column))->fColumnName;}
 inline  UInt_t  TTableDescriptor::Offset(Int_t column)          const {return ((tableDescriptor_st *)At(column))->fOffset;    }
 inline  const UInt_t *TTableDescriptor::IndexArray(Int_t column)const {return ((tableDescriptor_st *)At(column))->fIndexArray;}
@@ -94,7 +67,6 @@ inline  void    TTableDescriptor::SetSize(UInt_t size,Int_t column)      {((tabl
 inline  void    TTableDescriptor::SetTypeSize(UInt_t size,Int_t column)  {((tableDescriptor_st *)At(column))->fTypeSize   = size;  }
 inline  void    TTableDescriptor::SetDimensions(UInt_t dim,Int_t column) {((tableDescriptor_st *)At(column))->fDimensions = dim;   }
 inline  void    TTableDescriptor::SetColumnType(TTable::EColumnType type,Int_t column) {((tableDescriptor_st *)At(column))->fType = type;  }
-inline  Int_t   TTableDescriptor::Sizeof() const { return RowClass()->Size();}
 
 
 #endif

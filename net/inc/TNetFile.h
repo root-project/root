@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.8 2001/02/22 09:44:41 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.2 2000/11/27 10:47:26 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -42,32 +42,25 @@ private:
    TString   fUser;       //remote user name
    Seek_t    fOffset;     //seek offset
    TSocket  *fSocket;     //connection to rootd server
-   Int_t     fProtocol;   //rootd protocol level
-   Int_t     fErrorCode;  //error code returned by rootd (matching gRootdErrStr)
 
    TNetFile() : fUrl("dummy") { fSocket = 0; }
    void   Init(Bool_t create);
    void   Print(Option_t *option) const;
-   void   PrintError(const char *where, Int_t err);
+   void   PrintError(const char *where, Int_t err) const;
    Int_t  Recv(Int_t &status, EMessageTypes &kind);
-   Int_t  SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime);
 
 public:
-   TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
-            Int_t compress = 1, Int_t netopt = 0);
+   TNetFile(const char *url, Option_t *option="", const char *ftitle="", Int_t compress=1);
    virtual ~TNetFile();
 
    void    Close(Option_t *option=""); // *MENU*
    void    Flush();
-   Int_t   GetErrorCode() const { return fErrorCode; }
    Bool_t  IsOpen() const;
-   Bool_t  ReadBuffer(char *buf, Int_t len);
-   Bool_t  WriteBuffer(const char *buf, Int_t len);
+   Bool_t  ReadBuffer(char *buf, int len);
+   Bool_t  WriteBuffer(const char *buf, int len);
    void    Seek(Seek_t offset, ERelativeTo pos = kBeg);
 
    ClassDef(TNetFile,1)  //A ROOT file that reads/writes via a rootd server
 };
-
-R__EXTERN const char *gRootdErrStr[];
 
 #endif

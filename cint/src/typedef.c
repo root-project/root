@@ -147,7 +147,7 @@ void G__define_type()
   int typenum;
   int isorgtypepointer=0;
   int store_def_tagnum;
-#ifndef G__OLDIMPLEMENTATION188
+#ifndef G__OLDIMPLEMENTATINO188
   int reftype=G__PARANORMAL;
   int rawunsigned=0;
 #endif
@@ -285,32 +285,6 @@ void G__define_type()
     c=G__fgetname(type1,"");
   }
 #endif
-#ifndef G__OLDIMPLEMENTATION1548
-  else if(strcmp(type1,"unsigned*")==0) {
-    unsigned_flag=1;
-    strcpy(type1,"int*");
-  }
-  else if(strcmp(type1,"signed*")==0) {
-    unsigned_flag=0;
-    strcpy(type1,"int*");
-  }
-  else if(strcmp(type1,"unsigned&")==0) {
-    unsigned_flag=1;
-    strcpy(type1,"int&");
-  }
-  else if(strcmp(type1,"signed&")==0) {
-    unsigned_flag=0;
-    strcpy(type1,"int&");
-  }
-  else if(strcmp(type1,"unsigned*&")==0) {
-    unsigned_flag=1;
-    strcpy(type1,"int*&");
-  }
-  else if(strcmp(type1,"signed*&")==0) {
-    unsigned_flag=0;
-    strcpy(type1,"int*&");
-  }
-#endif
 
   /*
    *  typedef  [struct|union|enum]  tagname { member } newtype;
@@ -321,7 +295,7 @@ void G__define_type()
    *                        ^
    */
 
-#ifndef G__OLDIMPLEMENTATION188
+#ifndef G__OLDIMPLEMENTATINO188
   if('\0'!=type1[0] && '&'==type1[strlen(type1)-1]) {
     reftype=G__PARAREFERENCE;
     type1[strlen(type1)-1]='\0';
@@ -361,11 +335,6 @@ void G__define_type()
     if(unsigned_flag==0) type='l';
     else                 type='k';
   }
-#ifndef G__OLDIMPLEMENTATION1604
-  else if(strcmp(type1,"bool")==0) {
-    type='g';
-  }
-#endif
   else if(strcmp(type1,"void")==0) {
     type='y';
   }
@@ -463,8 +432,8 @@ void G__define_type()
 	break;
       case G__PARAREFERENCE:
 	if(G__PARANORMAL!=G__newtype.reftype[itemp]) {
-	  G__fprinterr(G__serr,
-	 "Limitation: reference or pointer type not handled properly");
+	  fprintf(G__serr
+	 ,"Limitation: reference or pointer type not handled properly");
 	  G__printlinenum();
 	}
 	break;
@@ -473,8 +442,8 @@ void G__define_type()
 	case G__PARANORMAL:
 	  break;
 	case G__PARAREFERENCE:
-	  G__fprinterr(G__serr,
-	  "Limitation: reference or pointer type not handled properly");
+	  fprintf(G__serr
+	  ,"Limitation: reference or pointer type not handled properly");
 	  G__printlinenum();
 	  break;
 	default:
@@ -494,16 +463,7 @@ void G__define_type()
     if(-1!=itemp) {
       tagtype=G__struct.type[itemp];
 #ifndef G__OLDIMPLEMENTATION710
-#ifndef G__OLDIMPLEMENTATION1503
-      if(-1!=G__struct.parent_tagnum[itemp])
-	sprintf(tagname,"%s::%s"
-		,G__fulltagname(G__struct.parent_tagnum[itemp],0)
-		,G__struct.name[itemp]);
-      else
-	strcpy(tagname,G__struct.name[itemp]);
-#else
       strcpy(tagname,G__fulltagname(itemp,0));
-#endif
 #else
       strcpy(tagname,G__struct.name[itemp]);
 #endif
@@ -539,51 +499,21 @@ void G__define_type()
 	int store_def_struct_member = G__def_struct_member;
 	G__def_struct_member = 0;
 #endif
-	G__loadfile("long.dll"); /* used to switch case between .dl and .dll */
+#ifdef G__WIN32
+	G__loadfile("long.dll");
+#else
+	G__loadfile("long.dl");
+#endif
 #ifndef G__OLDIMPLEMENTATION1153
 	G__def_struct_member = store_def_struct_member;
 #endif
       }
-#ifndef G__OLDIMPLEMENTATION1533
-      strcpy(tagname,"G__longdouble");
-      itemp=G__defined_tagname(tagname,2);
-      G__search_typename("long double",'u',itemp,G__PARANORMAL);
-#endif
       strcpy(tagname,"G__longlong");
       itemp=G__defined_tagname(tagname,2);
       if(-1==itemp) {
 	G__genericerror("Error: 'long long' not ready. Go to $CINTSYSDIR/lib/longlong and run setup");
       }
       G__search_typename("long long",'u',itemp,G__PARANORMAL);
-      type='u';
-    }
-    c=G__fgetname(typename,";,[");
-  }
-#endif
-#ifndef G__OLDIMPLEMENTATION1533
-  if(strcmp(typename,"double")==0) {
-    if('l'==type) {
-      if(0==G__defined_macro("G__LONGLONG_H")) {
-#ifndef G__OLDIMPLEMENTATION1153
-	int store_def_struct_member = G__def_struct_member;
-	G__def_struct_member = 0;
-#endif
-	G__loadfile("long.dll"); /* used to switch case between .dl and .dll */
-#ifndef G__OLDIMPLEMENTATION1153
-	G__def_struct_member = store_def_struct_member;
-#endif
-      }
-
-      strcpy(tagname,"G__longlong");
-      itemp=G__defined_tagname(tagname,2);
-      G__search_typename("long long",'u',itemp,G__PARANORMAL);
-
-      strcpy(tagname,"G__longdouble");
-      itemp=G__defined_tagname(tagname,2);
-      if(-1==itemp) {
-	G__genericerror("Error: 'long double' not ready. Go to $CINTSYSDIR/lib/longlong and run setup");
-      }
-      G__search_typename("long double",'u',itemp,G__PARANORMAL);
       type='u';
     }
     c=G__fgetname(typename,";,[");
@@ -801,7 +731,7 @@ void G__define_type()
 #ifndef G__OLDIMPLEMENTATION673
   /* typedef oldtype &newtype */
   if(typename[0]=='&') {
-    if(G__PARAP2P==reftype) G__fprinterr(stderr,"cint internal limitation in %s %d\n",__FILE__,__LINE__);
+    if(G__PARAP2P==reftype) fprintf(stderr,"cint internal limitation in %s %d\n",__FILE__,__LINE__);
     reftype = G__PARAREFERENCE;
     if(strlen(typename)>1) {
       strcpy(val,typename);
@@ -828,8 +758,8 @@ void G__define_type()
   if(-1==typenum) {
 
     if(G__newtype.alltype==G__MAXTYPEDEF) {
-      G__fprinterr(G__serr,
-	      "Limitation: Number of typedef exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXTYPEDEF in G__ci.h and recompile %s\n"
+      fprintf(G__serr
+	      ,"Limitation: Number of typedef exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXTYPEDEF in G__ci.h and recompile %s\n"
 	      ,G__MAXTYPEDEF
 	      ,G__ifile.name
 	      ,G__ifile.line_number
@@ -852,10 +782,6 @@ void G__define_type()
     G__newtype.comment[typenum].filenum = -1;
 #endif
     G__newtype.nindex[typenum]=nindex;
-#ifdef G__TYPEDEFFPOS
-    G__newtype.filenum[typenum] = G__ifile.filenum;
-    G__newtype.linenum[typenum] = G__ifile.line_number;
-#endif
     if(nindex) {
       G__newtype.index[typenum]
 	=(int*)malloc((size_t)(G__INTALLOC*nindex));
@@ -895,7 +821,7 @@ void G__define_type()
     else if(-1!=G__func_now) {
       env_tagnum = -2;
 #ifndef G__OLDIMPLEMENTATION1145
-      G__fprinterr(G__serr,"Limitation: In function typedef not allowed in cint");
+      fprintf(G__serr,"Limitation: In function typedef not allowed in cint");
       G__printlinenum();
 #endif
     }
@@ -996,7 +922,7 @@ void G__define_type()
 	    break;
 	  default:
 	    /* enum already handled above */
-	    G__fprinterr(G__serr,"Error: Illegal tagtype. struct,union,enum expected\n");
+	    fprintf(G__serr,"Error: Illegal tagtype. struct,union,enum expected\n");
 	    break;
 	  }
 	
@@ -1341,8 +1267,8 @@ int reftype;
   /* allocate new type table entry */
   if(flag==0 && typein) {
     if(G__newtype.alltype==G__MAXTYPEDEF) {
-      G__fprinterr(G__serr,
-	      "Limitation: Number of typedef exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXTYPEDEF in G__ci.h and recompile %s\n"
+      fprintf(G__serr
+	      ,"Limitation: Number of typedef exceed %d FILE:%s LINE:%d\nFatal error, exit program. Increase G__MAXTYPEDEF in G__ci.h and recompile %s\n"
 	      ,G__MAXTYPEDEF ,G__ifile.name ,G__ifile.line_number ,G__nam);
       G__eof=1;
       G__var_type = 'p';

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRotation.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/physics:$Name$:$Id$
 // Author: Peter Malzacher   19/06/99
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
@@ -73,7 +73,7 @@ axes
 <BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | -sin(a) 0 cos(a) |</TT>
 
 <P><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | cos(a) -sin(a) 0 |</TT>
-<BR><TT>Rz(a) = | sin(a) cos(a) 0 |</TT>
+<BR><TT>Rz(a) = | cos(a) -sin(a) 0 |</TT>
 <BR><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 0&nbsp;&nbsp;&nbsp;&nbsp; 1 |</TT>
 <BR>and are implemented as member functions <TT>RotateX()</TT>, <TT>RotateY()</TT>

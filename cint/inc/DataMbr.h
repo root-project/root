@@ -43,7 +43,6 @@ class G__DataMemberInfo {
   G__TypeInfo* Type() { return(&type); }
   long Property();
   long Offset() ;
-  int Bitfield();
   int ArrayDim() ;
   int MaxIndex(int dim) ;
   G__ClassInfo* MemberOf() { return(belongingclass); }

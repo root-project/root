@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.11 2001/12/02 16:50:08 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.3 2000/12/13 15:56:17 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -26,7 +26,6 @@
 #include "TMath.h"
 #include "TString.h"
 #include "TError.h"
-#include "TRegexp.h"
 
 
 TClassTable *gClassTable;
@@ -59,43 +58,11 @@ TClassTable::~TClassTable()
 }
 
 //______________________________________________________________________________
-void TClassTable::Print(Option_t *option) const
+void TClassTable::Print(Option_t *) const
 {
-   // Print the class table. Before printing the table is sorted
-   // alphabetically. Only classes specified in option are listed.
-   // default is to list all classes.
-   // Standard wilcarding notation supported.
+   // Print the class table.
 
-   if (fgTally == 0 || !fgTable)
-      return;
-
-   SortTable();
-
-   int n = 0, ninit = 0, nl = 0;
-
-   int nch = strlen(option);
-   TRegexp re(option,kTRUE);
-   Printf("");
-   Printf("Defined classes");
-   Printf("class                              version  bits  initialized");
-   Printf("=============================================================");
-   for (int i = 0; i < fgTally; i++) {
-      ClassRec_t *r = fgSortedTable[i];
-      n++;
-      TString s = r->name;
-      if (nch && strcmp(option,r->name) && s.Index(re) == kNPOS) continue;
-      nl++;
-      if (gROOT->GetClass(r->name, kFALSE)) {
-         ninit++;
-         Printf("%-32s %6d %7d       Yes", r->name, r->id, r->bits);
-      } else
-         Printf("%-32s %6d %7d       No",  r->name, r->id, r->bits);
-   }
-   Printf("-------------------------------------------------------------");
-   Printf("Listed Classes: %4d  Total classes: %4d   initialized: %4d",nl, n, ninit);
-   Printf("=============================================================");
-
-   Printf("");
+   PrintTable();
 }
 
 //---- static members --------------------------------------------------------
@@ -118,7 +85,7 @@ void TClassTable::Add(const char *cname, Version_t id, VoidFuncPtr_t dict,
    // check if already in table, if so return
    ClassRec_t *r = FindElement(cname, kTRUE);
    if (r->name) {
-      ::Warning("TClassTable::Add", "class %s allready in TClassTable", cname);
+      ::Warning("Add", "class %s allready in TClassTable", cname);
       return;
    }
 
@@ -249,7 +216,7 @@ char *TClassTable::Next()
 }
 
 //______________________________________________________________________________
-void TClassTable::PrintTable()
+void TClassTable::PrintTable() 
 {
    // Print the class table. Before printing the table is sorted
    // alphabetically.
@@ -295,7 +262,7 @@ void TClassTable::SortTable()
          for (ClassRec_t *r = fgTable[i]; r; r = r->next)
             fgSortedTable[j++] = r;
 
-      ::qsort(fgSortedTable, fgTally, sizeof(ClassRec_t *), ::ClassComp);
+      ::qsort(fgSortedTable, fgTally, sizeof(ClassRec_t *), &::ClassComp);
       fgSorted = kTRUE;
    }
 }
@@ -334,18 +301,9 @@ void RemoveClass(const char *cname)
    // Global function called by the dtor of a class's init class
    // (see the ClassImp macro).
 
-   // don't delete class information since it is needed by the I/O system
-   // to write the StreamerInfo to file
-   if (cname) { 
-     // Let's still remove this information to allow reloading later.
-     // Anyway since the shared library has been unloaded, the dictionary
-     // pointer is now invalid ....
-     // We still keep the TClass object around because TFile needs to 
-     // get to the TStreamerInfo.
-     if (gROOT && gROOT->GetListOfClasses()) {
-        TClass *cl = gROOT->GetClass(cname, kFALSE);
-        if (cl) cl->SetUnloaded();
-     }
-     TClassTable::Remove(cname);
-   }
+   TClassTable::Remove(cname);
+   if (gROOT && gROOT->GetListOfClasses()) {
+      TClass *cl = gROOT->GetClass(cname, kFALSE);
+      delete cl;  // interesting, for delete to call TClass::~TClass
+   }              // Class.h needs to be included
 }

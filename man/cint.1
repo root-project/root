@@ -1,0 +1,270 @@
+.\"
+.\" $Id$
+.\" 
+.TH CINT 1 "Version 3" "ROOT"
+.\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
+.\" other parms are allowed: see man(7), man(1)
+.SH NAME
+cint \- C/C++ interactive interpretor
+.SH SYNOPSIS
+.B cint
+.I "[options] files ..."
+.SH "DESCRIPTION"
+This manual page documents briefly the
+.BR cint ,
+program.
+.PP
+.B CINT 
+is a C/C++ interpreter which is aimed at processing C/C++
+scripts. Scripts are programs which perform specific tasks. Generally
+execution time is not critical, but rapid development is. Using an
+interpreter the compile and link cycle is dramatically reduced
+facilitating rapid development. 
+.PP
+.B CINT 
+is not aimed to be a 100% ANSI/ISO compliant C/C++ language
+processor. It rather is a portable script language environment which
+is close enough to the standard C++. 
+.PP
+Regulary check either of 
+.I /tmp /usr/tmp /temp /windows/temp 
+directory and remove temp-files which are accidentally left by 
+.BR CINT . 
+.PP
+.B CINT 
+reads source file on-the-fly from the file system. Do not change the
+active source during 
+.BR cint run . 
+Use 
+.B -C 
+option or 
+.B C1 
+command otherwise. 
+.PP
+In source code trace mode, 
+.B CINT 
+sometimes displays extra-characters. This is harmless. Please ignore.
+.PP
+.B CINT 
+covers about 95% of ANSI C and 85% of C++. 
+.BR CINT , 
+written in ANSI C (about 80000 loc), is solid enough
+to interpret itself and let the interpreted version execute a program. 
+.PP
+.B CINT 
+makes C/C++ programming enjoyable even for part-time programmers. 
+.PP
+.B CINT 
+is developed by 
+.BR Masaharu Goto , 
+who works for HP Japan. Masaharu collaborates closely with the 
+.B ROOT
+team to integrate 
+.B CINT 
+seamlessly into 
+.B ROOT 
+and to further optimize 
+.BR CINT / ROOT. 
+.PP 
+The 
+.B ROOT 
+system embeds 
+.B CINT 
+to be able to execute C++ scripts and C++ command line input. 
+.B CINT
+also provides 
+.B ROOT 
+with extensive RTTI (Run Time Type Identification) capabilities. 
+.PP
+This manual page was written for the Debian GNU/Linux distribution
+because the original program does not have a manual page.
+.SH OPTIONS
+.TP
+.BR -A
+ ANSI C++ mode(default)
+.TP
+.BR -b [line]
+set break line
+.TP  
+.B -c -1
+make C++ precompiled interface method files
+.TP
+.B -c -2
+ make C precompiled interface method files
+.TP
+.BR -C
+ copy src to $TMPDIR so that src can be change during cint run
+.TP
+.BR -d [dumpfile]
+ dump function call history
+.TP
+.BR -D [macro]
+ define macro symbol for #ifdef
+.TP
+.BR -e
+ Not ignore extern declarations
+.TP
+.BR -E
+ Dump core at error
+.TP
+.BR -f [file]
+ set break file
+.TP
+.BR -F [assignement]
+ set global variable
+.TP
+.BR -G [tracedmp]
+ dump exec trace into file
+.TP
+.BR -i
+ interactively return undefined symbol value
+.TP
+.BR -I [includepath]
+ set include file search path
+.TP
+.BR -K
+ C mode
+.TP
+.BR -l [dynamiclinklib]
+ link dynamic link library
+.TP
+.BR -n [linkname]
+ Specify precompiled interface method filename
+.TP
+.BR -N [DLL_name]
+ Specify DLL interface method name
+.TP
+.BR -O [0~4]
+ Loop compiler on(1~5) off(0). Default on(4)
+.TP
+.BR -p
+ use preprocessor prior to interpretation
+.TP
+.BR -q [security]
+ Set security level(default 0)
+.TP
+.BR -r
+ revision and linked function/global info
+.TP
+.BR -R
+ display input file at break point
+.TP
+.BR -s
+ step execution mode
+.TP
+.BR -S
+ step execution mode, First stop in main()
+.TP
+.BR -t
+ trace execution
+.TP
+.BR -T
+ trace from pre-run
+.TP
+.BR -u [undefout]
+ listup possible undefined typenames
+.TP
+.BR -V
+ Generate symbols for non-public member with -c option
+.TP
+.BR -v
+ Bytecode compiler debug mode
+.TP
+.BR -X [readlinedumpfile]
+ Execute readline dumpfile
+.TP
+.BR -x 'main() {...}'
+ Execute argument as source code
+suboptions
+.TP
+.B  
++V
+turn on class title comment mode for following source fies
+.TP
+.BR -V
+ turn off class title comment mode for following source fies
+.TP
+.B +P 
+turn on preprocessor for following source files
+.TP
+.BR -P
+ turn off preprocessor for following source files
+.TP
+.B +STUB
+stub function header begin
+.TP
+.BR -STUB
+ stub function header end
+.TP
+.B [files]
+Any valid C/C++ source or header files
+.SH "EXAMPLES"
+.RS
+$ cint prog.c main.c
+.RE
+where the file 
+.I main.c
+may contain any ANSI C code, say 
+.RS 
+.ft 3
+.nf
+.sp
+int main() { 
+  char* greeting = "Hello World"
+  printf("The classic greeting: \"%s\"\n", greeting);
+  return 0;
+}
+.ft
+.LP
+.RE
+Interpreting the above file like
+.RS
+$ cint -S prog.c main.c
+.RE
+will single step through the body of 
+.BR main() .
+.SH "SEE ALSO"
+The program is documented fully on  
+.RS
+.I http://root.cern.ch/root/Cint.html
+.RE
+.sp 1
+.IR root(1), 
+.IR rootcint(1)
+.SH "ORIGINAL AUTHORS"
+.B Masaharu Goto
+.SH "COPYRIGHT"
+ROOT Software Terms and Conditions
+.PP
+The authors hereby grant permission to use, copy, and distribute this
+software and its documentation for any purpose, provided that existing
+copyright notices are retained in all copies and that this notice is
+included verbatim in any distributions. Additionally, the authors grant
+permission to modify this software and its documentation for any purpose,
+provided that such modifications are not distributed without the explicit
+consent of the authors and that existing copyright notices are retained in
+all copies. Users of the software are asked to feed back problems, benefits,
+and/or suggestions about the software to the ROOT Development Team
+(rootdev@root.cern.ch). Support for this software - fixing of bugs,
+incorporation of new features - is done on a best effort basis. All bug
+fixes and enhancements will be made available under the same terms and
+conditions as the original software,
+.PP
+IN NO EVENT SHALL THE AUTHORS OR DISTRIBUTORS BE LIABLE TO ANY PARTY FOR
+DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES ARISING OUT
+OF THE USE OF THIS SOFTWARE, ITS DOCUMENTATION, OR ANY DERIVATIVES THEREOF,
+EVEN IF THE AUTHORS HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.PP
+THE AUTHORS AND DISTRIBUTORS SPECIFICALLY DISCLAIM ANY WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. THIS SOFTWARE IS
+PROVIDED ON AN "AS IS" BASIS, AND THE AUTHORS AND DISTRIBUTORS HAVE NO
+OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
+MODIFICATIONS.
+.SH AUTHOR 
+This manual page was written by Christian Holm Christensen
+<cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
+others). 
+.\"
+.\" $Log$
+.\" 

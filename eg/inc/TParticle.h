@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.3 2000/11/21 20:09:46 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************
@@ -105,7 +105,7 @@ public:
   Double_t       GetCalcMass     () const { return fCalcMass; }
   Double_t       GetMass         ()       { return GetPDG()->Mass();}
 
-  Int_t          GetNDaughters   () const { return fDaughter[1]>0 ? fDaughter[1]-fDaughter[0]+1 : 0;}
+  Int_t          GetNDaughters   () const { return fDaughter[1]-fDaughter[0]+1;}
   void           GetPolarisation(TVector3 &v);
   Float_t        GetWeight       () const { return fWeight;}
   TParticlePDG*  GetPDG          (Int_t mode = 0);

@@ -18,7 +18,7 @@
 
 #ifndef G__ARRAYSL
 # ifdef G__SHAREDLIB
-#pragma include_noerr <array.dll>  
+#pragma include_noerr <array.dl>  
 #  ifndef G__ARRAYSL
 #include <array.c>  
 #  endif
@@ -32,7 +32,7 @@
 
 #ifndef G__CARRAYSL
 # ifdef G__SHAREDLIB
-#pragma include_noerr <carray.dll>
+#pragma include_noerr <carray.dl>
 #  ifndef G__CARRAYSL
 #include <carray.c>
 #  endif

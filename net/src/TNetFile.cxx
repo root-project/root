@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.24 2001/08/30 16:37:50 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.9 2000/12/13 15:13:53 brun Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -34,8 +34,7 @@
 // Connecting to a rootd requires the remote user id and password.      //
 // TNetFile allows three ways for you to provide your login:            //
 //   1) Setting it globally via the static functions:                   //
-//         TAuthenticate::SetGlobalUser() and                           //
-//         TAuthenticate::SetGlobalPasswd()                             //
+//          TNetFile::SetUser() and TNetFile::SetPasswd()               //
 //   2) Getting it from the ~/.netrc file (same file as used by ftp)    //
 //   3) Command line prompt                                             //
 // The different methods will be tried in the order given above.        //
@@ -63,14 +62,14 @@
 #include "TNetFile.h"
 #include "TAuthenticate.h"
 #include "TROOT.h"
-#include "TPSocket.h"
+#include "TSocket.h"
 #include "TSystem.h"
 #include "TApplication.h"
 #include "TSysEvtHandler.h"
 #include "Bytes.h"
 
-// Must match order of ERootdErrors enum defined in rootd.h
-const char *gRootdErrStr[] = {
+// Must match order of ERootdErrors enum define in rootd.h
+const char *kRootdErrStr[] = {
    "undefined error",
    "file not found",
    "error in file name",
@@ -91,16 +90,14 @@ const char *gRootdErrStr[] = {
    "can't get passwd info",
    "wrong passwd",
    "no SRP support in remote daemon",
-   "fatal error",
-   "cannot seek to restart position"
+   "fatal error"
 };
 
 
 ClassImp(TNetFile)
 
 //______________________________________________________________________________
-TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
-                   Int_t compress, Int_t netopt)
+TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle, Int_t compress)
          : TFile(url, "NET", ftitle, compress), fUrl(url)
 {
    // Create a NetFile object. A net file is the same as a TFile
@@ -114,24 +111,13 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    // sure this is not the case you can force open the file by preceding the
    // option argument with an "f" or "F" , e.g.: "frecreate". Do this only
    // in cases when you are very sure nobody else is using the file.
-   // The netopt argument can be used to specify the size of the tcp window in
-   // bytes (for more info see: http://www.psc.edu/networking/perf_tune.html).
-   // The default and minimum tcp window size is 65535 bytes.
-   // If netopt < -1 then |netopt| is the number of parallel sockets that will
-   // be used to connect to rootd. This option should be used on fat pipes
-   // (i.e. high bandwidth, high latency links). The ideal number of parallel
-   // sockets depends on the bandwidth*delay product. Generally 5-7 is a good
-   // number.
    // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
 
    TAuthenticate *auth;
-   EMessageTypes kind;
-   Int_t sec, tcpwindowsize = 65535;
+   Int_t sec;
 
-   fSocket    = 0;
-   fOffset    = 0;
-   fErrorCode = -1;
+   fOffset = 0;
 
    Bool_t forceOpen = kFALSE;
    if (option[0] == 'F' || option[0] == 'f') {
@@ -159,39 +145,18 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
       goto zombie;
    }
 
-   if (netopt > tcpwindowsize)
-      tcpwindowsize = netopt;
-
    // Open connection to remote rootd server
-   if (netopt < -1) {
-      fSocket = new TPSocket(fUrl.GetHost(), fUrl.GetPort(), -netopt,
-                             tcpwindowsize);
-      if (!fSocket->IsValid()) {
-         Error("TNetFile", "can't open %d parallel connections to rootd on "
-               "host %s at port %d", -netopt, fUrl.GetHost(), fUrl.GetPort());
-         goto zombie;
-      }
-
-      // kNoDelay is internally set by TPSocket
-
-   } else {
-      fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort(), tcpwindowsize);
-      if (!fSocket->IsValid()) {
-         Error("TNetFile", "can't open connection to rootd on host %s at port %d",
-               fUrl.GetHost(), fUrl.GetPort());
-         goto zombie;
-      }
-
-      // Set some socket options
-      fSocket->SetOption(kNoDelay, 1);
-
-      // Tell rootd we want non parallel connection
-      fSocket->Send((Int_t) 0, (Int_t) 0);
+   fSocket = new TSocket(fUrl.GetHost(), fUrl.GetPort());
+   if (!fSocket->IsValid()) {
+      Error("TNetFile", "can't open connection to rootd on host %s at port %d",
+            fUrl.GetHost(), fUrl.GetPort());
+      goto zombie;
    }
 
-   // Get rootd protocol level
-   fSocket->Send(kROOTD_PROTOCOL);
-   Recv(fProtocol, kind);
+   // Set some socket options
+   fSocket->SetOption(kNoDelay, 1);
+   fSocket->SetOption(kSendBuffer, 65536);
+   fSocket->SetOption(kRecvBuffer, 65536);
 
    // Authenticate to remote rootd server
    sec = !strcmp(fUrl.GetProtocol(), "roots") ?
@@ -213,7 +178,9 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    else
       fSocket->Send(Form("%s %s", fUrl.GetFile(), ToLower(fOption).Data()), kROOTD_OPEN);
 
-   int stat;
+   int           stat;
+   EMessageTypes kind;
+
    Recv(stat, kind);
 
    if (kind == kROOTD_ERR) {
@@ -244,28 +211,6 @@ TNetFile::~TNetFile()
 
    Close();
    SafeDelete(fSocket);
-}
-
-//______________________________________________________________________________
-Int_t TNetFile::SysStat(Int_t, Long_t *id, Long_t *size, Long_t *flags, Long_t *modtime)
-{
-   // Return file stat information. The interface and return value is
-   // identical to TSystem::GetPathInfo().
-
-   if (fProtocol < 3) return 1;
-
-   fSocket->Send(kROOTD_FSTAT);
-
-   char  msg[128];
-   Int_t kind;
-   fSocket->Recv(msg, 128, kind);
-
-   sscanf(msg, "%ld %ld %ld %ld", id, size, flags, modtime);
-
-   if (*id == -1)
-      return 1;
-
-   return 0;
 }
 
 //______________________________________________________________________________
@@ -323,16 +268,15 @@ void TNetFile::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-void TNetFile::PrintError(const char *where, Int_t err)
+void TNetFile::PrintError(const char *where, Int_t err) const
 {
    // Print error string depending on error code.
 
-   fErrorCode = err;
-   Error(where, gRootdErrStr[err]);
+   Error(where, kRootdErrStr[err]);
 }
 
 //______________________________________________________________________________
-Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
+Bool_t TNetFile::ReadBuffer(char *buf, int len)
 {
    // Read specified byte range from remote file via rootd daemon.
    // Returns kTRUE in case of error.
@@ -341,24 +285,10 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
 
    Bool_t result = kFALSE;
 
-   if (fCache) {
-      Int_t st;
-      Seek_t off = fOffset;
-      if ((st = fCache->ReadBuffer(fOffset, buf, len)) < 0) {
-         Error("ReadBuffer", "error reading from cache");
-         return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::ReadBuffer(), reset it
-         fOffset = off + len;
-         return result;
-      }
-   }
-
    if (gApplication && gApplication->GetSignalHandler())
       gApplication->GetSignalHandler()->Delay();
 
-   if (fSocket->Send(Form("%ld %d", (Long_t)fOffset, len), kROOTD_GET) < 0) {
+   if (fSocket->Send(Form("%d %d", fOffset, len), kROOTD_GET) < 0) {
       Error("ReadBuffer", "error sending kROOTD_GET command");
       result = kTRUE;
       goto end;
@@ -367,8 +297,9 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
    Int_t         stat, n;
    EMessageTypes kind;
 
-   fErrorCode = -1;
-   if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
+   n = Recv(stat, kind);
+
+   if (kind == kROOTD_ERR || n < 0) {
       PrintError("ReadBuffer", stat);
       result = kTRUE;
       goto end;
@@ -400,7 +331,7 @@ end:
 }
 
 //______________________________________________________________________________
-Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
+Bool_t TNetFile::WriteBuffer(const char *buf, int len)
 {
    // Write specified byte range to remote file via rootd daemon.
    // Returns kTRUE in case of error.
@@ -409,23 +340,9 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
 
    Bool_t result = kFALSE;
 
-   if (fCache) {
-      Int_t st;
-      Seek_t off = fOffset;
-      if ((st = fCache->WriteBuffer(fOffset, buf, len)) < 0) {
-         Error("WriteBuffer", "error writing to cache");
-         return kTRUE;
-      }
-      if (st > 0) {
-         // fOffset might have been changed via TCache::WriteBuffer(), reset it
-         fOffset = off + len;
-         return result;
-      }
-   }
-
    gSystem->IgnoreInterrupt();
 
-   if (fSocket->Send(Form("%ld %d", (Long_t)fOffset, len), kROOTD_PUT) < 0) {
+   if (fSocket->Send(Form("%d %d", fOffset, len), kROOTD_PUT) < 0) {
       Error("WriteBuffer", "error sending kROOTD_PUT command");
       result = kTRUE;
       goto end;
@@ -436,11 +353,12 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
       goto end;
    }
 
-   Int_t         stat;
+   Int_t         stat, n;
    EMessageTypes kind;
 
-   fErrorCode = -1;
-   if (Recv(stat, kind) < 0 || kind == kROOTD_ERR) {
+   n = Recv(stat, kind);
+
+   if (kind == kROOTD_ERR || n < 0) {
       PrintError("WriteBuffer", stat);
       result = kTRUE;
       goto end;
@@ -491,7 +409,7 @@ void TNetFile::Seek(Seek_t offset, ERelativeTo pos)
       fOffset += offset;
       break;
    case kEnd:
-      fOffset = fEND + offset;  // is fEND really EOF or logical EOF?
+      fOffset = fEND - offset;  // is fEND really EOF or logical EOF?
       break;
    }
 }

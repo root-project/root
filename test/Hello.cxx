@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Hello.cxx,v 1.3 2000/12/21 09:20:29 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Hello.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -69,7 +69,7 @@ Hello::Hello(const char *text) : TTimer(40, kTRUE)
 
    while(text[fI]) {               // create  list of characters
       ch = new TChar(text[fI]);
-      ch->SetTextFont(71);         // times-bold-r-normal
+      ch->SetTextFont(77);         // times-bold-r-normal
       ch->SetTextSize(0.3);
       ch->Modify();
       fI++;

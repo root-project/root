@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.13 2001/10/15 06:59:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.8 2000/12/13 15:13:56 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -73,8 +73,6 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
    gTree->BuildStreamerInfo(cl);
 
    fClassName = cl->GetName();
-   
-   fSplitLevel = splitlevel;
 
 //*-*- Create a branch to store the array count
    if (basketsize < 100) basketsize = 100;
@@ -91,18 +89,17 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
 //*-*-  Create the first basket
    TBasket *basket = new TBasket(branchcount,fTree->GetName(),this);
    fBaskets.Add(basket);
-   
+
 //*-*- Loop on all public data members of the class and its base classes
    const char *itype = 0;
    TRealData *rd;
    TIter      next(cl->GetListOfRealData());
    while ((rd = (TRealData *) next())) {
-      if (rd->IsObject()) continue;
       TDataMember *member = rd->GetDataMember();
       if (!member->IsPersistent()) continue; //do not process members with a ! as the first
                                              // character in the comment field
       if (!member->IsBasic() || member->IsaPointer() ) {
-         Warning("BranchClones","Cannot process: %s::%s",cl->GetName(),member->GetName());
+         Warning("BranchClones","Cannot process member:%s",member->GetName());
          continue;
       }
       // forget TObject part if splitlevel = 2
@@ -111,13 +108,10 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
          if (strcmp(member->GetName(),"fBits")     == 0) continue;
          if (strcmp(member->GetName(),"fUniqueID") == 0) continue;
       }
-      
-      gTree->BuildStreamerInfo(gROOT->GetClass(member->GetFullTypeName()));
-      
       TDataType *membertype = member->GetDataType();
       Int_t type = membertype->GetType();
       if (type == 0) {
-         Warning("BranchClones","Cannot process: %s::%s",cl->GetName(),member->GetName());
+         Warning("BranchClones","Cannot process member:%s",member->GetName());
          continue;
       }
       if (type == 1)  itype = "B";
@@ -216,7 +210,7 @@ Int_t TBranchClones::GetEntry(Int_t entry, Int_t getall)
 //*-*      ====================================================================
 
    if (TestBit(kDoNotProcess) && !getall) return 0;
-   Int_t nbytes = fBranchCount->GetEntry(entry, getall);
+   Int_t nbytes = fBranchCount->GetEntry(entry);
    TLeaf *leafcount = (TLeaf*)fBranchCount->GetListOfLeaves()->UncheckedAt(0);
    fN = Int_t(leafcount->GetValue());
    if (fN <= 0) {
@@ -309,13 +303,12 @@ void TBranchClones::SetBasketSize(Int_t buffsize)
 //*-*            ==========================================================
 //
 
-   TBranch::SetBasketSize(buffsize);
-
+   fBasketSize = buffsize;
    Int_t i;
    Int_t nbranches = fBranches.GetEntriesFast();
    for (i=0;i<nbranches;i++)  {
       TBranch *branch = (TBranch*)fBranches[i];
-      branch->SetBasketSize(fBasketSize);
+      branch->SetBasketSize(buffsize);
    }
 }
 

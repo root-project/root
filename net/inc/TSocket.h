@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.5 2001/01/29 00:03:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -50,8 +50,7 @@ enum ESockOptions {
 enum ESendRecvOptions {
    kDefault,           // default option (= 0)
    kOob,               // send or receive out-of-band data
-   kPeek,              // peek at incoming message (receive only)
-   kDontBlock          // send/recv as much data as possible without blocking
+   kPeek               // peek at incoming message (receive only)
 };
 
 
@@ -66,11 +65,11 @@ protected:
    Int_t         fSocket;         // socket descriptor
    TString       fService;        // name of service (matches remote port #)
    TInetAddress  fAddress;        // remote internet address and port #
-   TInetAddress  fLocalAddress;   // local internet address and port #
 
    TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0; }
 
 private:
+   TInetAddress  fLocalAddress;   // local internet address and port #
    UInt_t        fBytesSent;      // total bytes sent using this socket
    UInt_t        fBytesRecv;      // total bytes received over this socket
 
@@ -82,16 +81,16 @@ private:
    Option_t *GetOption() const { return TObject::GetOption(); }
 
 public:
-   TSocket(TInetAddress address, const char *service, Int_t tcpwindowsize = -1);
-   TSocket(TInetAddress address, Int_t port, Int_t tcpwindowsize = -1);
-   TSocket(const char *host, const char *service, Int_t tcpwindowsize = -1);
-   TSocket(const char *host, Int_t port, Int_t tcpwindowsize = -1);
+   TSocket(TInetAddress address, const char *service);
+   TSocket(TInetAddress address, Int_t port);
+   TSocket(const char *host, const char *service);
+   TSocket(const char *host, Int_t port);
    TSocket(Int_t descriptor);
    TSocket(const TSocket &s);
    virtual ~TSocket() { Close(); }
 
    virtual void          Close(Option_t *opt="");
-   virtual Int_t         GetDescriptor() const { return fSocket; }
+   Int_t                 GetDescriptor() const { return fSocket; }
    TInetAddress          GetInetAddress() const { return fAddress; }
    virtual TInetAddress  GetLocalInetAddress();
    Int_t                 GetPort() const { return fAddress.GetPort(); }
@@ -109,7 +108,7 @@ public:
    virtual Int_t         Recv(char *mess, Int_t max);
    virtual Int_t         Recv(char *mess, Int_t max, Int_t &kind);
    virtual Int_t         RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt = kDefault);
-   virtual Bool_t        IsValid() const { return fSocket < 0 ? kFALSE : kTRUE; }
+   Bool_t                IsValid() const { return fSocket < 0 ? kFALSE : kTRUE; }
    Int_t                 GetErrorCode() const;
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    virtual Int_t         GetOption(ESockOptions opt, Int_t &val);

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.3 2000/11/21 20:44:47 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector3.cxx,v 1.2 2000/10/11 07:13:11 brun Exp $
 // Author: Pasha Murat, Peter Malzacher   12/02/99
 //    Aug 11 1999: added Pt == 0 guard to Eta()
 //    Oct  8 1999: changed Warning to Error and
@@ -173,10 +173,10 @@ TVector3::TVector3(const TVector3 & p)
 TVector3::TVector3(Double_t x, Double_t y, Double_t z)
 : fX(x), fY(y), fZ(z) {}
 
-TVector3::TVector3(const Double_t * x0)
+TVector3::TVector3(Double_t * x0)
 : fX(x0[0]), fY(x0[1]), fZ(x0[2]) {}
 
-TVector3::TVector3(const Float_t * x0)
+TVector3::TVector3(Float_t * x0)
 : fX(x0[0]), fY(x0[1]), fZ(x0[2]) {}
 
 TVector3::~TVector3() {}

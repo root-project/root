@@ -7,7 +7,7 @@
  * Description:
  *  Strip and add quotation
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1995~1999  Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -36,7 +36,7 @@ G__value *pval;
    * put defined
    **************************************/
 #ifdef G__ASM_DBG
-  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD 0x%lx(%s) from %x\n"
+  if(G__asm_dbg) fprintf(G__serr,"%3x: LD 0x%lx(%s) from %x\n"
 			 ,G__asm_cp ,G__int(*pval)
 			 ,(char *)G__int(*pval) ,G__asm_dt);
 #endif
@@ -60,21 +60,12 @@ char *string;
   char temp[G__LONGLINE];
   G__value result;
   struct G__ConstStringList *pconststring;
-#ifndef G__OLDIMPLEMENTATION1631
-  int lenm1 = strlen(string)-1;
-#endif
 
   result.tagnum = -1;
   result.typenum = -1;
   result.ref = 0;
   if((string[0]=='"')||(string[0]=='\'')) {
-    for(itemp=1;
-#ifndef G__OLDIMPLEMENTATION1631
-	itemp<lenm1;
-#else
-	itemp<strlen(string)-1;
-#endif
-	itemp++ ) {
+    for(itemp=1;itemp<strlen(string)-1;itemp++ ) {
       /*
       temp[itemp2++] = string[itemp];
       */
@@ -482,7 +473,7 @@ char *temp;
     break;
   case 'd':
   case 'f':
-    sprintf(temp,"%.17e",buf.obj.d);
+    sprintf(temp,"%.12e",buf.obj.d);
     break;
   case 'w':
     G__logicstring(buf,1,temp1);

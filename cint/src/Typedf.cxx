@@ -134,7 +134,7 @@ const char* G__TypedefInfo::FileName() {
     return((char*)NULL);
   }
 #else
-  G__fprinterr("Warning: G__TypedefInfo::FIleName() not supported in this configuration. define G__TYPEDEFFPOS macro in platform dependency file and recompile cint");
+  fprintf(G__serr,"Warning: G__TypedefInfo::FIleName() not supported in this configuration. define G__TYPEDEFFPOS macro in platform dependency file and recompile cint");
   G__printlinenum();
   return((char*)NULL);
 #endif
@@ -149,7 +149,7 @@ int G__TypedefInfo::LineNumber() {
     return(-1);
   }
 #else
-  G__fprinterr("Warning: G__TypedefInfo::LineNumber() not supported in this configuration. define G__TYPEDEFFPOS macro in platform dependency file and recompile cint");
+  fprintf(G__serr,"Warning: G__TypedefInfo::LineNumber() not supported in this configuration. define G__TYPEDEFFPOS macro in platform dependency file and recompile cint");
   G__printlinenum();
   return(-1);
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.17 2002/01/08 08:34:22 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -14,8 +14,8 @@
 // TGX11                                                                //
 //                                                                      //
 // This class is the basic interface to the X11 graphics system. It is  //
-// an implementation of the abstract TVirtualX class. The companion     //
-// class for Win32 is TGWin32.                                          //
+// an implementation of the abstract TVirtualX class. The companion class    //
+// for Win32 is TGWin32.                                                //
 //                                                                      //
 // This code was initially developed in the context of HIGZ and PAW     //
 // by Olivier Couet (package X11INT).                                   //
@@ -29,7 +29,6 @@
 #include "TMath.h"
 #include "TStorage.h"
 #include "TStyle.h"
-#include "TExMap.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -59,7 +58,21 @@ extern XPoint *XRotTextExtents(Display*, XFontStruct*, float,
 static XWindow_t *gCws;      // gCws: pointer to the current window
 static XWindow_t *gTws;      // gTws: temporary pointer
 
+
+//
+// gColors[0]           : background also used for b/w screen
+// gColors[1]           : foreground also used for b/w screen
+// gColors[2..kMAXCOL-1]: colors which can be set by SetColor
+//
 const Int_t kBIGGEST_RGB_VALUE = 65535;
+const Int_t kMAXCOL = 1000;
+static struct {
+  Int_t   defined;
+  ULong_t pixel;
+  Float_t red;
+  Float_t green;
+  Float_t blue;
+} gColors[kMAXCOL] = { {0, 0, 1., 1., 1.} };
 
 //
 // Primitives Graphic Contexts global for all windows
@@ -247,7 +260,6 @@ TGX11::TGX11()
    fScreenNumber = 0;
    fColormap     = 0;
    fWindows      = 0;
-   fColors       = 0;
    fXEvent       = new XEvent;
 }
 
@@ -272,12 +284,9 @@ TGX11::TGX11(const char *name, const char *title) : TVirtualX(name, title)
    fXEvent          = new XEvent;
 
    fMaxNumberOfWindows = 10;
-   //fWindows = new XWindow_t[fMaxNumberOfWindows];
-   fWindows = (XWindow_t*) ::operator new(fMaxNumberOfWindows*sizeof(XWindow_t));
+   fWindows = new XWindow_t[fMaxNumberOfWindows];
    for (int i = 0; i < fMaxNumberOfWindows; i++)
       fWindows[i].open = 0;
-
-   fColors = new TExMap;
 }
 
 //______________________________________________________________________________
@@ -288,8 +297,8 @@ TGX11::TGX11(const TGX11 &org)
    int i;
 
    fDisplay         = org.fDisplay;
-   fColormap        = org.fColormap;
    fScreenNumber    = org.fScreenNumber;
+   fColormap        = org.fColormap;
    fHasTTFonts      = org.fHasTTFonts;
    fTextAlignH      = org.fTextAlignH;
    fTextAlignV      = org.fTextAlignV;
@@ -297,19 +306,11 @@ TGX11::TGX11(const TGX11 &org)
    fTextMagnitude   = org.fTextMagnitude;
    fCharacterUpX    = org.fCharacterUpX;
    fCharacterUpY    = org.fCharacterUpY;
-   fDepth           = org.fDepth;
-   fRedDiv          = org.fRedDiv;
-   fGreenDiv        = org.fGreenDiv;
-   fBlueDiv         = org.fBlueDiv;
-   fRedShift        = org.fRedShift;
-   fGreenShift      = org.fGreenShift;
-   fBlueShift       = org.fBlueShift;
    fDrawMode        = org.fDrawMode;
    fXEvent          = new XEvent;
 
    fMaxNumberOfWindows = org.fMaxNumberOfWindows;
-   //fWindows = new XWindow_t[fMaxNumberOfWindows];
-   fWindows = (XWindow_t*) ::operator new(fMaxNumberOfWindows*sizeof(XWindow_t));
+   fWindows = new XWindow_t[fMaxNumberOfWindows];
    for (i = 0; i < fMaxNumberOfWindows; i++) {
       fWindows[i].open          = org.fWindows[i].open;
       fWindows[i].double_buffer = org.fWindows[i].double_buffer;
@@ -326,25 +327,10 @@ TGX11::TGX11(const TGX11 &org)
       fWindows[i].hclip         = org.fWindows[i].hclip;
       fWindows[i].new_colors    = org.fWindows[i].new_colors;
       fWindows[i].ncolors       = org.fWindows[i].ncolors;
-      fWindows[i].shared        = org.fWindows[i].shared;
    }
 
    for (i = 0; i < kNumCursors; i++)
       fCursors[i] = org.fCursors[i];
-
-   fColors = new TExMap;
-   Long_t     key, value;
-   TExMapIter it(org.fColors);
-   while (it.Next(key, value)) {
-      XColor_t *colo = (XColor_t *) value;
-      XColor_t *col  = new XColor_t;
-      col->pixel   = colo->pixel;
-      col->red     = colo->red;
-      col->green   = colo->green;
-      col->blue    = colo->blue;
-      col->defined = colo->defined;
-      fColors->Add(key, (Long_t) col);
-   }
 }
 
 //______________________________________________________________________________
@@ -353,15 +339,7 @@ TGX11::~TGX11()
    // Destructor.
 
    delete fXEvent;
-   if (fWindows) ::operator delete(fWindows);
-
-   Long_t     key, value;
-   TExMapIter it(fColors);
-   while (it.Next(key, value)) {
-      XColor_t *col = (XColor_t *) value;
-      delete col;
-   }
-   delete fColors;
+   if (fWindows) delete [] fWindows;
 }
 
 //______________________________________________________________________________
@@ -371,61 +349,6 @@ Bool_t TGX11::Init(void *display)
 
    if (OpenDisplay((Display *) display) == -1) return kFALSE;
    return kTRUE;
-}
-
-//______________________________________________________________________________
-Bool_t TGX11::AllocColor(Colormap cmap, XColor *color)
-{
-   // Allocate color in colormap. If we are on an <= 8 plane machine
-   // we will use XAllocColor. If we are on a >= 15 (15, 16 or 24) plane
-   // true color machine we will calculate the pixel value using:
-   // for 15 and 16 bit true colors have 6 bits precision per color however
-   // only the 5 most significant bits are used in the color index.
-   // Except for 16 bits where green uses all 6 bits. I.e.:
-   //   15 bits = rrrrrgggggbbbbb
-   //   16 bits = rrrrrggggggbbbbb
-   // for 24 bits each r, g and b are represented by 8 bits.
-   //
-   // Since all colors are set with a max of 65535 (16 bits) per r, g, b
-   // we just right shift them by 10, 11 and 10 bits for 16 planes, and
-   // (10, 10, 10 for 15 planes) and by 8 bits for 24 planes.
-   // Returns kFALSE in case color allocation failed.
-
-   if (fRedDiv == -1) {
-      if (XAllocColor(fDisplay, cmap, color))
-         return kTRUE;
-   } else {
-      color->pixel = (color->red   >> fRedDiv)   << fRedShift |
-                     (color->green >> fGreenDiv) << fGreenShift |
-                     (color->blue  >> fBlueDiv)  << fBlueShift;
-      return kTRUE;
-   }
-   return kFALSE;
-}
-
-//______________________________________________________________________________
-void TGX11::QueryColors(Colormap cmap, XColor *color, Int_t ncolors)
-{
-   // Returns the current RGB value for the pixel in the XColor structure.
-
-   if (fRedDiv == -1) {
-      XQueryColors(fDisplay, cmap, color, ncolors);
-   } else {
-      ULong_t r, g, b;
-      Visual *vis = DefaultVisual(fDisplay, fScreenNumber);
-      for (Int_t i = 0; i < ncolors; i++) {
-         r = (color[i].pixel & vis->red_mask) >> fRedShift;
-         color[i].red = UShort_t(r*kBIGGEST_RGB_VALUE/(vis->red_mask >> fRedShift));
-
-         g = (color[i].pixel & vis->green_mask) >> fGreenShift;
-         color[i].green = UShort_t(g*kBIGGEST_RGB_VALUE/(vis->green_mask >> fGreenShift));
-
-         b = (color[i].pixel & vis->blue_mask) >> fBlueShift;
-         color[i].blue = UShort_t(b*kBIGGEST_RGB_VALUE/(vis->blue_mask >> fBlueShift));
-
-         color[i].flags = DoRed | DoGreen | DoBlue;
-      }
-   }
 }
 
 //______________________________________________________________________________
@@ -449,7 +372,7 @@ void TGX11::ClearWindow()
    // Clear current window.
 
    if (!gCws->ispixmap && !gCws->double_buffer) {
-      XSetWindowBackground(fDisplay, gCws->drawing, GetColor(0).pixel);
+      XSetWindowBackground(fDisplay, gCws->drawing, gColors[0].pixel);
       XClearWindow(fDisplay, gCws->drawing);
       XFlush(fDisplay);
    } else {
@@ -473,10 +396,7 @@ void TGX11::CloseWindow()
 {
    // Delete current window.
 
-   if (gCws->shared)
-      gCws->open = 0;
-   else
-      CloseWindow1();
+   CloseWindow1();
 
    // Never close connection. TApplication takes care of that
    //   if (!gCws) Close();    // close X when no open window left
@@ -497,8 +417,7 @@ void TGX11::CloseWindow1()
    if (gCws->buffer) XFreePixmap(fDisplay, gCws->buffer);
 
    if (gCws->new_colors) {
-      if (fRedDiv == -1)
-         XFreeColors(fDisplay, fColormap, gCws->new_colors, gCws->ncolors, 0);
+      XFreeColors(fDisplay, fColormap, gCws->new_colors, gCws->ncolors, 0);
       delete [] gCws->new_colors;
       gCws->new_colors = 0;
    }
@@ -594,7 +513,7 @@ void TGX11::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
       for (j = 0; j < ny; j++) {
          icol = ic[i+(nx*j)];
          if (icol != current_icol) {
-            XSetForeground(fDisplay, *gGCfill, GetColor(icol).pixel);
+            XSetForeground(fDisplay, *gGCfill, gColors[icol].pixel);
             current_icol = icol;
          }
          XFillRectangle(fDisplay, gCws->drawing, *gGCfill, ix, iy, w, h);
@@ -779,20 +698,6 @@ void TGX11::GetCharacterUp(Float_t &chupx, Float_t &chupy)
 }
 
 //______________________________________________________________________________
-XColor_t &TGX11::GetColor(Int_t cid)
-{
-   // Return reference to internal color structure associated
-   // to color index cid.
-
-   XColor_t *col = (XColor_t*) fColors->GetValue(cid);
-   if (!col) {
-      col = new XColor_t;
-      fColors->Add(cid, (Long_t) col);
-   }
-   return *col;
-}
-
-//______________________________________________________________________________
 XWindow_t *TGX11::GetCurrentWindow() const
 {
    // Return current window pointer. Protected method used by TGX11TTF.
@@ -852,10 +757,6 @@ void TGX11::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &
       XTranslateCoordinates(fDisplay, gTws->window,
                             RootWindow( fDisplay, fScreenNumber),
                             0, 0, &x, &y, &junkwin);
-      if (width >= 65535)
-         width = 1;
-      if (height >= 65535)
-         height = 1;
       if (width > 0 && height > 0) {
          gTws->width  = width;
          gTws->height = height;
@@ -886,16 +787,9 @@ void TGX11::GetRGB(int index, float &r, float &g, float &b)
 {
    // Get rgb values for color "index".
 
-   if (index == 0) {
-      r = g = b = 1.0;
-   } else if (index == 1) {
-      r = g = b = 0.0;
-   } else {
-      XColor_t &col = GetColor(index);
-      r = ((float) col.red) / ((float) kBIGGEST_RGB_VALUE);
-      g = ((float) col.green) / ((float) kBIGGEST_RGB_VALUE);
-      b = ((float) col.blue) / ((float) kBIGGEST_RGB_VALUE);
-   }
+   r = gColors[index].red;
+   g = gColors[index].green;
+   b = gColors[index].blue;
 }
 
 //______________________________________________________________________________
@@ -965,14 +859,14 @@ Int_t TGX11::OpenDisplay(Display *disp)
    if (DisplayPlanes(fDisplay, fScreenNumber) > 1)
       fColormap = DefaultColormap(fDisplay, fScreenNumber);
 
-   GetColor(1).defined = kTRUE; // default foreground
-   GetColor(1).pixel = BlackPixel(fDisplay, fScreenNumber);
-   GetColor(0).defined = kTRUE; // default background
-   GetColor(0).pixel = WhitePixel(fDisplay, fScreenNumber);
+   gColors[1].defined = 1; // default foreground
+   gColors[1].pixel = BlackPixel(fDisplay, fScreenNumber);
+   gColors[0].defined = 1; // default background
+   gColors[0].pixel = WhitePixel(fDisplay, fScreenNumber);
 
    // Inquire the the XServer Vendor
    char vendor[132];
-   strcpy(vendor, XServerVendor(fDisplay));
+   strcpy (vendor, XServerVendor(fDisplay));
 
    // Create primitives graphic contexts
    for (i = 0; i < kMAXGC; i++)
@@ -985,11 +879,6 @@ Int_t TGX11::OpenDisplay(Display *disp)
    } else {
       Error("OpenDisplay", "cannot get GC values");
    }
-
-   // Turn-off GraphicsExpose and NoExpose event reporting for the pixmap
-   // manipulation GC, this to prevent these events from being stacked up
-   // without ever being processed and thereby wasting a lot of memory.
-   XSetGraphicsExposures(fDisplay, *gGCpxmp, False);
 
    // Create input echo graphic context
    XGCValues echov;
@@ -1063,41 +952,6 @@ Int_t TGX11::OpenDisplay(Display *disp)
    fCursors[kCaret]       = XCreateFontCursor(fDisplay, XC_xterm);
    fCursors[kWatch]       = XCreateFontCursor(fDisplay, XC_watch);
 
-   // Setup color information
-   fRedDiv = fGreenDiv = fBlueDiv = fRedShift = fGreenShift = fBlueShift = -1;
-   fDepth = DefaultDepth(fDisplay, fScreenNumber);
-
-   Visual *vis = DefaultVisual(fDisplay, fScreenNumber);
-   if (vis->c_class == TrueColor) {
-      int i;
-      for (i = 0; i < int(sizeof(vis->blue_mask)*kBitsPerByte); i++) {
-         if (fBlueShift == -1 && ((vis->blue_mask >> i) & 1))
-            fBlueShift = i;
-         if ((vis->blue_mask >> i) == 1) {
-            fBlueDiv = sizeof(UShort_t)*kBitsPerByte - i - 1 + fBlueShift;
-            break;
-         }
-      }
-      for (i = 0; i < int(sizeof(vis->green_mask)*kBitsPerByte); i++) {
-         if (fGreenShift == -1 && ((vis->green_mask >> i) & 1))
-            fGreenShift = i;
-         if ((vis->green_mask >> i) == 1) {
-            fGreenDiv = sizeof(UShort_t)*kBitsPerByte - i - 1 + fGreenShift;
-            break;
-         }
-      }
-      for (i = 0; i < int(sizeof(vis->red_mask)*kBitsPerByte); i++) {
-         if (fRedShift == -1 && ((vis->red_mask >> i) & 1))
-            fRedShift = i;
-         if ((vis->red_mask >> i) == 1) {
-            fRedDiv = sizeof(UShort_t)*kBitsPerByte - i - 1 + fRedShift;
-            break;
-         }
-      }
-      //printf("fRedDiv = %d, fGreenDiv = %d, fBlueDiv = %d, fRedShift = %d, fGreenShift = %d, fBlueShift = %d\n",
-      //       fRedDiv, fGreenDiv, fBlueDiv, fRedShift, fGreenShift, fBlueShift);
-   }
-
    return 0;
 }
 
@@ -1154,7 +1008,6 @@ again:
    gCws->width          = wval;
    gCws->height         = hval;
    gCws->new_colors     = 0;
-   gCws->shared         = kFALSE;
 
    return wid;
 }
@@ -1199,9 +1052,9 @@ again:
 
    // Create window
 
-   attributes.background_pixel = GetColor(0).pixel;
+   attributes.background_pixel = gColors[0].pixel;
    attr_mask |= CWBackPixel;
-   attributes.border_pixel = GetColor(1).pixel;
+   attributes.border_pixel = gColors[1].pixel;
    attr_mask |= CWBorderPixel;
    attributes.event_mask = NoEventMask;
    attr_mask |= CWEventMask;
@@ -1232,81 +1085,8 @@ again:
    gCws->width          = wval;
    gCws->height         = hval;
    gCws->new_colors     = 0;
-   gCws->shared         = kFALSE;
 
    return wid;
-}
-
-//______________________________________________________________________________
-Int_t TGX11::AddWindow(ULong_t qwid, UInt_t w, UInt_t h)
-{
-   // Register a window created by Qt as a ROOT window (like InitWindow()).
-
-   Int_t wid;
-
-   // Select next free window number
-
-again:
-   for (wid = 0; wid < fMaxNumberOfWindows; wid++)
-      if (!fWindows[wid].open) {
-         fWindows[wid].open = 1;
-         fWindows[wid].double_buffer = 0;
-         gCws = &fWindows[wid];
-         break;
-      }
-
-   if (wid == fMaxNumberOfWindows) {
-      int newsize = fMaxNumberOfWindows + 10;
-      fWindows = (XWindow_t*) TStorage::ReAlloc(fWindows, newsize*sizeof(XWindow_t),
-                                  fMaxNumberOfWindows*sizeof(XWindow_t));
-      for (int i = fMaxNumberOfWindows; i < newsize; i++)
-         fWindows[i].open = 0;
-      fMaxNumberOfWindows = newsize;
-      goto again;
-   }
-
-   gCws->window = qwid;
-
-   //init Xwindow_t struct
-   gCws->drawing        = gCws->window;
-   gCws->buffer         = 0;
-   gCws->double_buffer  = 0;
-   gCws->ispixmap       = 0;
-   gCws->clip           = 0;
-   gCws->width          = w;
-   gCws->height         = h;
-   gCws->new_colors     = 0;
-   gCws->shared         = kTRUE;
-
-   return wid;
-}
-
-//______________________________________________________________________________
-void TGX11::RemoveWindow(ULong_t qwid)
-{
-   // Remove a window created by Qt (like CloseWindow1()).
-
-   SelectWindow((int)qwid);
-
-   if (gCws->buffer) XFreePixmap(fDisplay, gCws->buffer);
-
-   if (gCws->new_colors) {
-      if (fRedDiv == -1)
-         XFreeColors(fDisplay, fColormap, gCws->new_colors, gCws->ncolors, 0);
-      delete [] gCws->new_colors;
-      gCws->new_colors = 0;
-   }
-
-   gCws->open = 0;
-
-   // make first window in list the current window
-   for (Int_t wid = 0; wid < fMaxNumberOfWindows; wid++)
-      if (fWindows[wid].open) {
-         gCws = &fWindows[wid];
-         return;
-      }
-
-   gCws = 0;
 }
 
 //______________________________________________________________________________
@@ -1380,7 +1160,7 @@ Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
    if (cursor == 0) {
       if (ctyp > 1) {
          XDefineCursor(fDisplay, gCws->window, gNullCursor);
-         XSetForeground(fDisplay, gGCecho, GetColor(0).pixel);
+         XSetForeground(fDisplay, gGCecho, gColors[0].pixel);
       } else {
          cursor = XCreateFontCursor(fDisplay, XC_crosshair);
          XDefineCursor(fDisplay, gCws->window, cursor);
@@ -1848,7 +1628,7 @@ void TGX11::SetCharacterUp(Float_t chupx, Float_t chupy)
    else if (chupx == 0  && chupy == -1) fTextAngle = 180;
    else if (chupx == 1  && chupy ==  0) fTextAngle = 270;
    else {
-      fTextAngle = ((TMath::ACos(chupx/TMath::Sqrt(chupx*chupx +chupy*chupy))*180.)/TMath::Pi())-90;
+      fTextAngle = ((TMath::ACos(chupx/TMath::Sqrt(chupx*chupx +chupy*chupy))*180.)/3.14159)-90;
       if (chupy < 0) fTextAngle = 180 - fTextAngle;
       if (TMath::Abs(fTextAngle) <= 0.01) fTextAngle = 0;
    }
@@ -1899,31 +1679,31 @@ void  TGX11::SetColor(GC gc, int ci)
 {
    // Set the foreground color in GC.
 
-   TColor *color = gROOT->GetColor(ci);
-   if (color)
-      SetRGB(ci, color->GetRed(), color->GetGreen(), color->GetBlue());
-   else
-      Warning("SetColor", "color with index %d not defined", ci);
+   if (ci >= 0 && ci < kMAXCOL && !gColors[ci].defined) {
+      TColor *color = gROOT->GetColor(ci);
+      if (color) SetRGB(ci,color->GetRed(),color->GetGreen(),color->GetBlue());
+   }
 
-   XColor_t &col = GetColor(ci);
-   if (fColormap && !col.defined) {
-      col = GetColor(0);
-   } else if (!fColormap && (ci < 0 || ci > 1)) {
-      col = GetColor(0);
+   if (fColormap && ( ci < 0 || ci >= kMAXCOL || !gColors[ci].defined)) {
+      ci = 0;
+   } else if (!fColormap && ci < 0) {
+      ci = 0;
+   } else if (!fColormap && ci > 1) {
+      ci = 0;
    }
 
    if (fDrawMode == kXor) {
       XGCValues values;
       XGetGCValues(fDisplay, gc, GCBackground, &values);
-      XSetForeground(fDisplay, gc, col.pixel ^ values.background);
+      XSetForeground(fDisplay, gc, gColors[ci].pixel ^ values.background);
    } else {
-      XSetForeground(fDisplay, gc, col.pixel);
+      XSetForeground(fDisplay, gc, gColors[ci].pixel);
 
       // make sure that foreground and background are different
       XGCValues values;
       XGetGCValues(fDisplay, gc, GCForeground | GCBackground, &values);
       if (values.foreground == values.background)
-         XSetBackground(fDisplay, gc, GetColor(!ci).pixel);
+         XSetBackground(fDisplay, gc, gColors[!ci].pixel);
    }
 }
 
@@ -2554,7 +2334,7 @@ void TGX11::SetOpacity(Int_t percent)
    }
    if (ncolors == 0) {
       XDestroyImage(image);
-      ::operator delete(orgcolors);
+      delete [] orgcolors;
       return;
    }
 
@@ -2577,12 +2357,11 @@ void TGX11::SetOpacity(Int_t percent)
 
    // clean up
    if (tmpc) {
-      if (fRedDiv == -1)
-         XFreeColors(fDisplay, fColormap, tmpc, ntmpc, 0);
+      XFreeColors(fDisplay, fColormap, tmpc, ntmpc, 0);
       delete [] tmpc;
    }
    XDestroyImage(image);
-   ::operator delete(orgcolors);
+   delete [] orgcolors;
 }
 
 //______________________________________________________________________________
@@ -2594,7 +2373,7 @@ void TGX11::CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolor
    if (maxcolors == 0) {
       ncolors   = 0;
       maxcolors = 100;
-      orgcolors = (ULong_t*) ::operator new(maxcolors*sizeof(ULong_t));
+      orgcolors = new ULong_t[maxcolors];
    }
 
    for (int i = 0; i < ncolors; i++)
@@ -2623,9 +2402,9 @@ void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
    for (i = 0; i < ncolors; i++) {
       xcol[i].pixel = orgcolors[i];
       xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
-      xcol[i].flags = DoRed | DoGreen | DoBlue;
+      xcol[i].flags = DoRed || DoGreen || DoBlue;
    }
-   QueryColors(fColormap, xcol, ncolors);
+   XQueryColors(fDisplay, fColormap, xcol, ncolors);
 
    UShort_t add = percent * kBIGGEST_RGB_VALUE / 100;
 
@@ -2640,7 +2419,7 @@ void TGX11::MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors)
       val = xcol[i].blue + add;
       if (val > kBIGGEST_RGB_VALUE) val = kBIGGEST_RGB_VALUE;
       xcol[i].blue = (UShort_t) val;
-      if (!AllocColor(fColormap, &xcol[i]))
+      if (!XAllocColor(fDisplay, fColormap, &xcol[i]))
          Warning("MakeOpaqueColors", "failed to allocate color %hd, %hd, %hd",
                  xcol[i].red, xcol[i].green, xcol[i].blue);
       // assumes that in case of failure xcol[i].pixel is not changed
@@ -2675,28 +2454,23 @@ void TGX11::SetRGB(int cindex, float r, float g, float b)
    // cindex     : color index
    // r,g,b      : red, green, blue intensities between 0.0 and 1.0
 
-   if (fColormap) {
-      XColor xcol;
-      xcol.red   = (UShort_t)(r * kBIGGEST_RGB_VALUE);
-      xcol.green = (UShort_t)(g * kBIGGEST_RGB_VALUE);
-      xcol.blue  = (UShort_t)(b * kBIGGEST_RGB_VALUE);
+   XColor xcol;
+
+   if (fColormap && cindex >= 0 && cindex < kMAXCOL) {
+      xcol.red   = (unsigned short)( r * kBIGGEST_RGB_VALUE );
+      xcol.green = (unsigned short)( g * kBIGGEST_RGB_VALUE );
+      xcol.blue  = (unsigned short)( b * kBIGGEST_RGB_VALUE );
       xcol.flags = DoRed || DoGreen || DoBlue;
-      XColor_t &col = GetColor(cindex);
-      if (col.defined) {
-         // if color is already defined with same rgb just return
-         if (col.red  == xcol.red && col.green == xcol.green &&
-             col.blue == xcol.blue)
-            return;
-         col.defined = kFALSE;
-         if (fRedDiv == -1)
-            XFreeColors(fDisplay, fColormap, &col.pixel, 1, 0);
+      if (gColors[cindex].defined == 1) {
+         gColors[cindex].defined = 0;
+         XFreeColors(fDisplay, fColormap, &gColors[cindex].pixel, 1, 0);
       }
-      if (AllocColor(fColormap, &xcol)) {
-         col.defined = kTRUE;
-         col.pixel   = xcol.pixel;
-         col.red     = xcol.red;
-         col.green   = xcol.green;
-         col.blue    = xcol.blue;
+      if (XAllocColor( fDisplay, fColormap, &xcol ) != 0) {
+         gColors[cindex].defined = 1;
+         gColors[cindex].pixel   = xcol.pixel;
+         gColors[cindex].red     = r;
+         gColors[cindex].green   = g;
+         gColors[cindex].blue    = b;
       }
    }
 }
@@ -2774,7 +2548,7 @@ void TGX11::SetTextColor(Color_t cindex)
    } else {
       Error("SetTextColor", "cannot get GC values");
    }
-   XSetBackground(fDisplay, *gGCtext, GetColor(0).pixel);
+   XSetBackground(fDisplay, *gGCtext, gColors[0].pixel);
 }
 
 //______________________________________________________________________________
@@ -2891,8 +2665,7 @@ void TGX11::Warp(int ix, int iy)
    // iy       : New Y coordinate of pointer
    // (both coordinates are relative to the origin of the current window)
 
-   // Causes problems when calling ProcessEvents()... BadWindow
-   //XWarpPointer(fDisplay, None, gCws->window, 0, 0, 0, 0, ix, iy);
+   XWarpPointer(fDisplay,0,gCws->window,0,0,0,0,ix,iy);
 }
 
 //______________________________________________________________________________
@@ -2976,9 +2749,9 @@ void TGX11::ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int
    for (i = 0; i < ncolors; i++) {
       xcol[i].pixel = orgcolors[i];
       xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
-      xcol[i].flags = DoRed | DoGreen | DoBlue;
+      xcol[i].flags = DoRed || DoGreen || DoBlue;
    }
-   QueryColors(fColormap, xcol, ncolors);
+   XQueryColors(fDisplay, fColormap, xcol, ncolors);
 
    // create RGB arrays and store RGB's for each color and set number of colors
    // (space must be delete by caller)
@@ -3004,11 +2777,11 @@ void TGX11::ImgPickPalette(XImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int
 
    // cleanup
    delete [] xcol;
-   ::operator delete(orgcolors);
+   delete [] orgcolors;
 }
 
 //______________________________________________________________________________
-Int_t TGX11::WriteGIF(char *name)
+void TGX11::WriteGIF(char *name)
 {
    // Writes the current window into GIF file.
 
@@ -3051,19 +2824,14 @@ Int_t TGX11::WriteGIF(char *name)
 
    out = fopen(name, "w+");
 
-   if (out) {
-      GIFencode(gCws->width, gCws->height,
+   GIFencode(gCws->width, gCws->height,
              ncol, r, g, b, scline, GetPixel, PutByte);
-      fclose(out);
-      i = 1;
-   } else {
-      Error("WriteGIF","cannot write file: %s",name);
-      i = 0;
-   }
+
+   fclose(out);
+
    delete [] R;
    delete [] G;
    delete [] B;
-   return i;
 }
 
 //______________________________________________________________________________

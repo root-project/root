@@ -1,6 +1,4 @@
-# -*- mode: makefile -*-
-# 
-# Makefile of ROOT for Windows with MS Visual C++ compiler in Cygwin environment
+# Makefile of ROOT for Linux with glibc and egcs (RH5.1)
 
 PLATFORM      = win32
 
@@ -20,17 +18,21 @@ endif
 # Compiler:
 CXX           = build/win/cxx.sh
 CC            = build/win/cc.sh
-CXXFLAGS      = -G5 -GR -MD -DWIN32 -D_WINDOWS -DWINVER=0x0400 \
-                -nologo -DCRTAPI1=_cdecl -DCRTAPI2=_cdecl \
+CXXFLAGS      = -G5 -MD -DWIN32 -D_WINDOWS -DWINVER=0x0400 \
+                -nologo -Dtry=__try -Dexcept=__except -Dleave=__leave \
+                -Dfinally=__finally -DCRTAPI1=_cdelc -DCRTAPI2=_cdecl \
                 -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS $(EXTRA_CXXFLAGS)
-CFLAGS        = -G5 -MD -DWIN32 -D_WINDOWS -DWINVER=0x0400 -FIsehmap.h \
+CFLAGS        = -G5 -MD -DWIN32 -D_WINDOWS -DWINVER=0x0400 \
                 -nologo -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -G5 -GR -MD -DWIN32 -D_WIN32 -D_WINDOWS \
-                -DWINVER=0x0400 -nologo -DCRTAPI1=_cdecl \
+CINTCXXFLAGS  = -G5 -MD -DWIN32 -D_WIN32 -D_WINDOWS \
+                -DWINVER=0x0400 -nologo -Dtry=__try -Dexcept=__except \
+                -Dleave=__leave -Dfinally=__finally -DCRTAPI1=_cdelc \
                 -DCRTAPI2=_cdecl -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS \
                 -DG__SHAREDLIB -DG__UNIX -DG__ROOT -DG__WIN32 $(EXTRA_CXXFLAGS)
-CINTCFLAGS    = -G5 -MD -DWIN32 -D_WIN32 -D_WINDOWS -DWINVER=0x0400 \
-                -FIsehmap.h -nologo -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS \
+CINTCFLAGS    = -G5 -MD -DWIN32 -D_WIN32 -D_WINDOWS \
+                -DWINVER=0x0400 -nologo -Dtry=__try -Dexcept=__except \
+                -Dleave=__leave -Dfinally=__finally -DCRTAPI1=_cdelc \
+                -DCRTAPI2=_cdecl -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS \
                 -DG__SHAREDLIB -DG__UNIX -DG__ROOT -DG__WIN32 $(EXTRA_CXXFLAGS)
 
 # Linker:
@@ -94,4 +96,3 @@ STARLIBEXTRA        = lib/libTree.lib lib/libProof.lib lib/libGpad.lib \
                       lib/libGraf3d.lib lib/libGraf.lib lib/libHist.lib
 GLLIBDEP            = $(G3DLIB) $(WIN32LIB)
 GLLIBEXTRA          = lib/libGraf3d.lib lib/libWin32.lib Glu32.lib Opengl32.lib
-RFIOLIBEXTRA        = WSock32.lib Ws2_32.lib

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.13 2001/03/29 10:51:51 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.10 2000/12/13 15:56:17 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -42,7 +42,6 @@
 #include "TROOT.h"
 #include "TBrowser.h"
 #include "TObjectTable.h"
-#include "TRegexp.h"
 
 TCollection  *TCollection::fgCurrentCollection = 0;
 TObjectTable *TCollection::fgGarbageCollection = 0;
@@ -122,32 +121,16 @@ void TCollection::Browse(TBrowser *b)
 void TCollection::Draw(Option_t *option)
 {
    // Draw all objects in this collection.
-   // wildcarding supported, eg option="xxx*" draws only objects
-   // with names xxx*
-   
-   TRegexp re(option,kTRUE);
-   TIter next(this);
-   TObject *object;
-   Int_t nch = strlen(option);
 
-   while ((object = next())) {
-      TString s = object->GetName();
-      if (nch && strcmp(option,object->GetName()) && s.Index(re) == kNPOS) continue;
-      object->Draw(option);
-   }
+   this->ForEach(TObject,Draw)(option);
 }
 
 //______________________________________________________________________________
 void TCollection::Dump() const
 {
    // Dump all objects in this collection.
-   
-   TIter next(this);
-   TObject *object;
 
-   while ((object = next())) {
-      object->Dump();
-   }
+   ((TCollection*)this)->ForEach(TObject,Dump)();
 }
 
 //______________________________________________________________________________
@@ -191,16 +174,6 @@ TObject *TCollection::FindObject(const TObject *obj) const
 }
 
 //______________________________________________________________________________
-const char *TCollection::GetName() const
-{
-  // Return name of this collection.
-  // if no name, return the collection class name.
-   
-   if (fName.Length() > 0) return fName.Data();
-   return ClassName();
-}
-   
-//______________________________________________________________________________
 Int_t TCollection::GrowBy(Int_t delta) const
 {
   // Increase the collection's capacity by delta slots.
@@ -224,22 +197,8 @@ Bool_t  TCollection::IsArgNull(const char *where, const TObject *obj) const
 void TCollection::ls(Option_t *option) const
 {
    // List (ls) all objects in this collection.
-   // wildcarding supported, eg option="xxx*" lists only objects
-   // with names xxx*
-   
-   TRegexp re(option,kTRUE);
-   TIter next(this);
-   TObject *object;
-   char *star = 0;
-   if (option) star = (char*)strchr(option,'*');
 
-   while ((object = next())) {
-      if (star) {
-         TString s = object->GetName();
-         if (strcmp(option,object->GetName()) && s.Index(re) == kNPOS) continue;
-      }
-      object->ls(option);
-   }
+   ((TCollection*)this)->ForEach(TObject,ls)(option);
 }
 
 //______________________________________________________________________________
@@ -255,19 +214,8 @@ void TCollection::Paint(Option_t *option)
 void TCollection::Print(Option_t *option) const
 {
    // Print all objects in this collection.
-   // wildcarding supported, eg option="xxx*" prints only objects
-   // with names xxx*
-   
-   TRegexp re(option,kTRUE);
-   TIter next(this);
-   TObject *object;
-   Int_t nch = strlen(option);
 
-   while ((object = next())) {
-      TString s = object->GetName();
-      if (nch && strcmp(option,object->GetName()) && s.Index(re) == kNPOS) continue;
-      object->Print(option);
-   }
+   ((TCollection*)this)->ForEach(TObject,Print)(option);
 }
 
 //______________________________________________________________________________

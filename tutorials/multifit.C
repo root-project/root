@@ -24,7 +24,7 @@
                     0.6029015,0.5600163,0.7477068,1.188785, 1.938228,
                     2.602717, 3.472962, 4.465014, 5.177035};
 
-   h = new TH1F("h","Example of several fits in subranges",np,85,134);
+   h = new TH1F("g1","Example of several fits in subranges",np,85,134);
    h->SetMaximum(7);
 
    for (int i=0;i<np;i++) {
@@ -37,12 +37,13 @@
    g3    = new TF1("g3","gaus",110,121);
    total = new TF1("total","gaus(0)+gaus(3)+gaus(6)",85,125);
    total->SetLineColor(2);
-   h->Fit(g1,"R");
-   h->Fit(g2,"R+");
-   h->Fit(g3,"R+");
+   h->Fit(g1,"R0");
+   h->Fit(g2,"R0+");
+   h->Fit(g3,"R0+");
    g1->GetParameters(&par[0]);
    g2->GetParameters(&par[3]);
    g3->GetParameters(&par[6]);
    total->SetParameters(par);
-   h->Fit(total,"R+");
+   h->Fit(total,"R0+");
+   h->Draw();
 }

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.12 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.5 2000/11/21 20:27:34 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <fstream.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TPaveText.h"
 #include "TPaveLabel.h"
@@ -424,11 +424,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
       if (mode == kDiamond) textsize *= 0.66;
       SetTextSize(textsize);
    }
-   Double_t yfont;
-   if (GetTextFont()%10 > 2)
-      yfont = (gPad->PixeltoY(Int_t(-textsize))-gPad->PixeltoY(0))/(y2-y1)*dy;
-   else
-      yfont = textsize*dy;
+   Double_t yfont = textsize*dy;
    Double_t ytext = fY2 + 0.5*yspace;
    Double_t xtext = 0;
    Int_t halign, valign;
@@ -544,7 +540,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
    SetTextSize(textsave);
 
    // if a label create & paint a pavetext title
-   if (fLabel.Length() > 0) {
+      if (fLabel.Length() > 0) {
       dy = gPad->GetY2() - gPad->GetY1();
       x1 = fX1 + 0.25*dx;
       x2 = fX2 - 0.25*dx;
@@ -728,10 +724,8 @@ void TPaveText::SaveLines(ofstream &out, const char *name)
              out<<"   TText *";
          }
          if (!linet->GetX() && !linet->GetY()) {
-            TString s = linet->GetTitle();
-            s.ReplaceAll("\"","\\\"");
             out<<"text = "<<name<<"->AddText("
-               <<quote<<s.Data()<<quote<<");"<<endl;
+               <<quote<<linet->GetTitle()<<quote<<");"<<endl;
          } else {
             out<<"text = "<<name<<"->AddText("
                <<linet->GetX()<<","<<linet->GetY()<<","<<quote<<linet->GetTitle()<<quote<<");"<<endl;
@@ -761,10 +755,8 @@ void TPaveText::SaveLines(ofstream &out, const char *name)
              out<<"   TText *";
          }
          if (!latex->GetX() && !latex->GetY()) {
-            TString sl = latex->GetTitle();
-            sl.ReplaceAll("\"","\\\"");
             out<<"text = "<<name<<"->AddText("
-               <<quote<<sl.Data()<<quote<<");"<<endl;
+               <<quote<<latex->GetTitle()<<quote<<");"<<endl;
          } else {
             out<<"text = "<<name<<"->AddText("
                <<latex->GetX()<<","<<latex->GetY()<<","<<quote<<latex->GetTitle()<<quote<<");"<<endl;
@@ -808,9 +800,6 @@ void TPaveText::SavePrimitive(ofstream &out, Option_t *)
    } else {
       out<<"pt = new "<<ClassName()<<"("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
       <<","<<quote<<fOption<<quote<<");"<<endl;
-   }
-   if (strcmp(GetName(),"TPave")) {
-      out<<"   pt->SetName("<<quote<<GetName()<<quote<<");"<<endl;
    }
    if (fLabel.Length() > 0) {
       out<<"   pt->SetLabel("<<quote<<fLabel<<quote<<");"<<endl;
@@ -871,7 +860,7 @@ void TPaveText::Streamer(TBuffer &R__b)
       R__b >> fLines;
       R__b.CheckByteCount(R__s, R__c, TPaveText::IsA());
       //====end of old versions
-
+      
    } else {
       TPaveText::Class()->WriteBuffer(R__b,this);
    }

@@ -1,0 +1,71 @@
+#rm ../../stl/iterator.dll 
+rm ../../stl/string.dll 
+rm ../../stl/vector.dll 
+rm ../../stl/list.dll 
+rm ../../stl/deque.dll 
+rm ../../stl/map.dll 
+rm ../../stl/set.dll 
+rm ../../stl/multimap.dll 
+rm ../../stl/multiset.dll 
+rm ../../stl/stack.dll 
+rm ../../stl/queue.dll 
+rm ../../stl/valarray.dll 
+rm ../../stl/exception.dll 
+rm G__*
+
+#makecint -mk Makeiter -dl iterator.dll -H iter.h  -cint -M0x1c -Z0
+#make -f Makeiter
+#mv iterator.dll ../../stl/iterator.dll
+
+makecint -mk Makestr -dl string.dll -H str.h  -cint -M0x1c -Z0
+make -f Makestr
+mv string.dll ../../stl/string.dll
+
+makecint -mk Makevec -dl vector.dll -H vec.h  -cint -M0x1c -Z0
+make -f Makevec
+mv vector.dll ../../stl/vector.dll
+
+makecint -mk Makelist -dl list.dll -H lst.h  -cint -M0x1c -Z0
+make -f Makelist 
+mv list.dll ../../stl/list.dll
+
+makecint -mk Makedeque -dl deque.dll -H dqu.h  -cint -M0x1c -Z0
+make -f Makedeque
+mv deque.dll ../../stl/deque.dll
+
+makecint -mk Makemap -dl map.dll -H mp.h  -cint -M0x1c -Z0
+make -f Makemap 
+mv map.dll ../../stl/map.dll
+
+makecint -mk Makeset -dl set.dll -H st.h  -cint -M0x1c -Z0
+make -f Makeset
+mv set.dll ../../stl/set.dll
+
+makecint -mk Makemmap -dl multimap.dll -H multmp.h  -cint -M0x1c -Z0
+make -f Makemmap 
+mv multimap.dll ../../stl/multimap.dll
+
+makecint -mk Makemset -dl multiset.dll -H multst.h  -cint -M0x1c -Z0
+make -f Makemset
+mv multiset.dll ../../stl/multiset.dll
+
+makecint -mk Makestk -dl stack.dll -H stk.h  -cint -M0x1c -Z0
+make -f Makestk
+mv stack.dll ../../stl/stack.dll
+
+makecint -mk Makeque -dl queue.dll -H que.h  -cint -M0x1c -Z0
+make -f Makeque
+mv queue.dll ../../stl/queue.dll
+
+makecint -mk Makevary -dl valarray.dll -H vary.h  -cint -M0x1c -Z0
+make -f Makevary
+mv valarray.dll ../../stl/valarray.dll
+
+makecint -mk Makeeh -dl exception.dll -H eh.h  -Z0
+make -f Makeeh
+mv exception.dll ../../stl/exception.dll
+
+
+rm G__*
+rm Make*
+

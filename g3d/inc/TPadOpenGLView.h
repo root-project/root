@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.h,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPadOpenGLView.h,v 1.3 2000/11/21 20:13:47 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   08/05/97
 
 /*************************************************************************
@@ -57,7 +57,7 @@ class TPadOpenGLView : public TPadView3D
     virtual void MapOpenGL();
     void         UpdateModelView();
     void         UpdateObjectView();
-    void         MoveModelView(Char_t option,Int_t count=1);
+    void         MoveModelView(const Char_t option,Int_t count=1);
     void         MoveModelView(const Char_t *commands, Int_t display_time=0);
     void         RotateView(Int_t x, Int_t y);
 

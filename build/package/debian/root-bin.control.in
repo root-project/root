@@ -1,7 +1,0 @@
-Package: root-bin
-Architecture: any
-Depends: ${shlibs:Depends}
-Recommends: libc6-dev, libstdc++-dev, libroot-dev
-Suggests: root-gl, root-ttf, root-zebra
-Description: @short@
-@long@

@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TWin32BrowserImp.h,v 1.2 2001/05/23 16:41:24 brun Exp $
+// @(#)root/win32:$Name$:$Id$
 // Author: Valery Fine(fine@vxcern.cern.ch)   21/10/96
 
 /*************************************************************************
@@ -127,23 +127,6 @@ private:
   //    Message ID: WM_SYSCOMMAND
   //                =============
   virtual LRESULT APIENTRY OnSysCommand(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
- 
-// Default actions
- 
-   LRESULT APIENTRY OnChar       (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-   LRESULT APIENTRY OnKeyDown    (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
- 
- 
-   LRESULT APIENTRY OnActivate          (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-   LRESULT APIENTRY OnCommandForControl (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-   LRESULT APIENTRY OnEraseBkgnd        (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-   LRESULT APIENTRY OnExitSizeMove      (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-   LRESULT APIENTRY OnGetMinMaxInfo     (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-   LRESULT APIENTRY OnMouseActivate     (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-   LRESULT APIENTRY OnPaletteChanged    (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-   LRESULT APIENTRY OnSetFocus          (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-   LRESULT APIENTRY OnKillFocus         (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-   LRESULT APIENTRY OnSizing            (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 
   void  ExecThreadCB(TWin32SendClass *command);
@@ -185,7 +168,6 @@ public:
    HICON                   GetNormalIcon(Int_t IconIdx){return fhNormalIconList ? ImageList_GetIcon(fhNormalIconList,IconIdx,ILD_NORMAL):0; }
    HIMAGELIST              GetNormalIconList(){ return fhNormalIconList; }
 
-   void                    BrowseObj(TObject *);
    void                    RecursiveRemove(TObject *obj);
    void                    SetListBlocked(Bool_t block=kTRUE){fListBlocked = block;}          // Change the lock state of the list view;
    void                    SetViewFlag(ETypeOfView flag){fTreeListFlag = (ETypeOfView) (fTreeListFlag | flag);}

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.5 2000/12/19 14:34:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.h,v 1.4 2000/12/13 15:13:53 brun Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -33,7 +33,6 @@
 
 class TSocket;
 class TFileHandler;
-class TProof;
 
 
 class TSlave : public TObject {

@@ -1,4 +1,4 @@
-// @(#)rootproofd:$Name:  $:$Id: net.cxx,v 1.3 2001/01/26 16:44:35 rdm Exp $
+// @(#)rootproofd:$Name:  $:$Id: net.cxx,v 1.1 2000/12/15 19:38:35 rdm Exp $
 // Author: Fons Rademakers   15/12/2000
 
 /*************************************************************************
@@ -37,9 +37,6 @@
 #         define R__GLIBC
 #      endif
 #   endif
-#endif
-#ifdef __MACH__
-#   define R__GLIBC
 #endif
 
 #include "proofdp.h"
@@ -226,11 +223,11 @@ int NetRecv(char *msg, int max)
 
    EMessageTypes kind;
 
-   return NetRecv((char *)msg, max, kind);
+   return NetRecv(msg, max, kind);
 }
 
 //______________________________________________________________________________
-void NetInit(const char *service, int port, int tcpwindowsize)
+void NetInit(const char *service, int port)
 {
    // Initialize the network connection for the server, when it has *not*
    // been invoked by inetd.
@@ -272,9 +269,6 @@ void NetInit(const char *service, int port, int tcpwindowsize)
    if (setsockopt(tcp_srv_sock, SOL_SOCKET, SO_REUSEADDR, (char*) &val,
                   sizeof(val)) == -1)
       ErrorSys("NetInit: can't set SO_REUSEADDR socket option");
-
-   // Set several general performance network options
-   NetSetOptions(tcp_srv_sock, tcpwindowsize);
 
    if (bind(tcp_srv_sock, (struct sockaddr *) &tcp_srv_addr,
             sizeof(tcp_srv_addr)) < 0)
@@ -330,9 +324,6 @@ int NetOpen(int inetdflag)
 
          ErrorInfo("NetOpen: connection established via socket %d", gSockFd);
       }
-
-      // Set several general performance network options
-      NetSetOptions(gSockFd, 65535);
 
       return 0;
 
@@ -414,32 +405,4 @@ void NetClose()
 
    if (gDebug > 0)
       ErrorInfo("NetClose: host = %s, fd = %d", openhost, gSockFd);
-}
-
-//______________________________________________________________________________
-void NetSetOptions(int sock, int tcpwindowsize)
-{
-   // Set some options for network socket.
-
-   int val = tcpwindowsize;
-   if (!setsockopt(sock, SOL_SOCKET,  SO_SNDBUF,    (char *)&val, sizeof(val))) {
-      if (gDebug > 0) ErrorInfo("NetSetOptions: set SO_SNDBUF %d", val);
-   }
-   if (!setsockopt(sock, SOL_SOCKET,  SO_RCVBUF,    (char *)&val, sizeof(val))) {
-      if (gDebug > 0) ErrorInfo("NetSetOptions: set SO_RCVBUF %d", val);
-   }
-
-   if (gDebug > 0) {
-#if defined(USE_SIZE_T)
-      size_t optlen = sizeof(val);
-#elif defined(USE_SOCKLEN_T)
-      socklen_t optlen = sizeof(val);
-#else
-      int optlen = sizeof(val);
-#endif
-      getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&val, &optlen);
-      ErrorInfo("NetSetOptions: get SO_SNDBUF: %d", val);
-      getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)&val, &optlen);
-      ErrorInfo("NetSetOptions: get SO_RCVBUF: %d", val);
-   }
 }

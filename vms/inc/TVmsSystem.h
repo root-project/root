@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.h,v 1.4 2001/01/23 19:01:55 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.h,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -51,9 +51,9 @@ protected:
    static const char  *VmsSigname(ESignals sig);
    static int          VmsFilestat(const char *path, unsigned short *id, Long_t *size,
                                     Long_t *flags, Long_t *modtime);
-   static int          VmsTcpConnect(const char *hostname, int port, int tcpwindowsize);
+   static int          VmsTcpConnect(const char *hostname, int port);
    static int          VmsVmsConnect(int port);
-   static int          VmsTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize);
+   static int          VmsTcpService(int port, Bool_t reuse, int backlog);
    static int          VmsVmsService(int port, int backlog);
    static int          VmsRecv(int sock, void *buf, int len, int flag);
    static int          VmsSend(int sock, const void *buf, int len, int flag);
@@ -83,12 +83,11 @@ public:
    const char       *HostName();
 
    //---- EventLoop --------------------------------------------
-   void              DispatchOneEvent(Bool_t pendingOnly = kFALSE);
+   void              DispatchOneEvent();
 
    //---- Handling of system events ----------------------------
    void              CheckChilds();
    Bool_t            CheckSignals(Bool_t sync);
-   Bool_t            CheckDescriptors();
    void              DispatchSignals(ESignals sig);
    void              AddSignalHandler(TSignalHandler *sh);
    TSignalHandler   *RemoveSignalHandler(TSignalHandler *sh);
@@ -157,9 +156,9 @@ public:
    TInetAddress      GetSockName(int sock);
    int               GetServiceByName(const char *service);
    char             *GetServiceByPort(int port);
-   int               ConnectService(const char *server, int port, int tcpwindowsize);
-   int               OpenConnection(const char *server, int port, int tcpwindowsize = -1);
-   int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
+   int               ConnectService(const char *server, int port);
+   int               OpenConnection(const char *server, int port);
+   int               AnnounceTcpService(int port, Bool_t reuse, int backlog);
    int               AnnounceVmsService(int port, int backlog);
    int               AcceptConnection(int sock);
    void              CloseConnection(int sock, Bool_t force = kFALSE);

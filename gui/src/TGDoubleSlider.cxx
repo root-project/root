@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.4 2001/01/08 11:45:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -58,15 +58,14 @@
 
 #include "TGDoubleSlider.h"
 
-
 ClassImp(TGDoubleSlider)
 ClassImp(TGDoubleVSlider)
 ClassImp(TGDoubleHSlider)
 
+
 //______________________________________________________________________________
 TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
-                               UInt_t options, ULong_t back,
-                               Bool_t reversed, Bool_t mark_ends)
+                               UInt_t options, ULong_t back)
    : TGFrame(p, w, h, options, back)
 {
    // Slider constructor.
@@ -78,22 +77,15 @@ TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t typ
    fScaleType = type;
    fScale = 10;
 
-   fReversedScale = reversed;
-   fMarkEnds = mark_ends;
-
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                     kButtonPressMask | kButtonReleaseMask |
                     kPointerMotionMask, kNone, kNone);
 }
 
-
-
 //______________________________________________________________________________
 TGDoubleVSlider::TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id,
-                                 UInt_t options, ULong_t back,
-                                 Bool_t reversed, Bool_t mark_ends)
-    : TGDoubleSlider(p, kDoubleSliderWidth, h, type, id, options, back,
-                     reversed, mark_ends)
+                                 UInt_t options, ULong_t back) :
+   TGDoubleSlider(p, kDoubleSliderWidth, h, type, id, options, back)
 {
    // Create a vertical slider widget.
 
@@ -146,21 +138,12 @@ void TGDoubleVSlider::DoRedraw()
    if (fScale > 0 && !(fScaleType & kDoubleScaleNo)) {
       int lines = ((int)fHeight-16) / fScale;
       int remain = ((int)fHeight-16) % fScale;
-      if (lines < 1) lines = 1;
       for (int i = 0; i <= lines; i++) {
          int y = i * fScale + (i * remain) / lines;
          gVirtualX->DrawLine(fId, fgBlackGC(), fWidth/2+8, y+7, fWidth/2+10, y+7);
          if ((fScaleType && kDoubleScaleBoth))
             gVirtualX->DrawLine(fId, fgBlackGC(), fWidth/2-9, y+7, fWidth/2-11, y+7);
       }
-   }
-
-   if (fMarkEnds) {
-      // Draw scaling zones.
-      int y1 = (relMax - relMin) / 4 + relMin;
-      int y2 = (relMax - relMin) / 4 * 3 + relMin;
-      gVirtualX->DrawLine(fId, fgBlackGC(), fWidth/2-6, y1, fWidth/2+5, y1);
-      gVirtualX->DrawLine(fId, fgBlackGC(), fWidth/2-6, y2, fWidth/2+5, y2);
    }
 }
 
@@ -253,10 +236,8 @@ Bool_t TGDoubleVSlider::HandleMotion(Event_t *event)
 
 //______________________________________________________________________________
 TGDoubleHSlider::TGDoubleHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id,
-                                 UInt_t options, ULong_t back,
-                                 Bool_t reversed, Bool_t mark_ends)
-    : TGDoubleSlider(p, w, kDoubleSliderHeight, type, id, options, back,
-                     reversed, mark_ends)
+                                 UInt_t options, ULong_t back) :
+   TGDoubleSlider(p, w, kDoubleSliderHeight, type, id, options, back)
 {
    // Create horizontal slider widget.
 
@@ -307,21 +288,12 @@ void TGDoubleHSlider::DoRedraw()
    if (fScale > 0 && !(fScaleType & kDoubleScaleNo)) {
       int lines = ((int)fWidth-16) / fScale;
       int remain = ((int)fWidth-16) % fScale;
-      if (lines < 1) lines = 1;
       for (int i = 0; i <= lines; i++) {
          int x = i * fScale + (i * remain) / lines;
          gVirtualX->DrawLine(fId, fgBlackGC(), x+7, fHeight/2+8, x+7, fHeight/2+10);
          if ((fScaleType && kDoubleScaleBoth))
             gVirtualX->DrawLine(fId, fgBlackGC(), x+7, fHeight/2-9, x+7, fHeight/2-11);
       }
-   }
-
-   if (fMarkEnds) {
-      // Draw scaling zones.
-      int x1 = (relMax - relMin) / 4 + relMin;
-      int x2 = (relMax - relMin) / 4 * 3 + relMin;
-      gVirtualX->DrawLine(fId, fgBlackGC(), x1, fHeight/2-6, x1, fHeight/2+5);
-      gVirtualX->DrawLine(fId, fgBlackGC(), x2, fHeight/2-6, x2, fHeight/2+5);
    }
 }
 

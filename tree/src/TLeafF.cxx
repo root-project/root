@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafF.cxx,v 1.14 2001/05/18 15:57:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafF.cxx,v 1.3 2000/09/29 07:51:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -102,21 +102,12 @@ void TLeafF::Import(TClonesArray *list, Int_t n)
 }
 
 //______________________________________________________________________________
-void TLeafF::PrintValue(Int_t l) const
-{
-// Prints leaf value
-
-   Float_t *value = (Float_t *)GetValuePointer();
-   printf("%g",value[l]);
-}
-
-//______________________________________________________________________________
 void TLeafF::ReadBasket(TBuffer &b)
 {
 //*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
 //*-*                  ===========================================
 
-   if (!fLeafCount && fNdata == 1) {
+   if (fNdata == 1) {
       b >> fValue[0];
    }else {
       if (fLeafCount) {
@@ -125,7 +116,6 @@ void TLeafF::ReadBasket(TBuffer &b)
             printf("ERROR leaf:%s, len=%d and max=%d\n",GetName(),len,fLeafCount->GetMaximum());
             len = fLeafCount->GetMaximum();
          }
-         fNdata = len*fLen;
          b.ReadFastArray(fValue,len*fLen);
       } else {
          b.ReadFastArray(fValue,fLen);
@@ -162,26 +152,17 @@ void TLeafF::SetAddress(void *add)
 //*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
 //*-*                  ============================
 
-   if (ResetAddress(add)) {
-      delete [] fValue;
-   }
+   if (ResetAddress(add)) delete [] fValue;
 
    if (add) {
       if (TestBit(kIndirectAddress)) {
          fPointer = (Float_t**) add;
-         Int_t ncountmax = fLen;
-         if (fLeafCount) ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
-         if (ncountmax > fNdata || *fPointer == 0) {
-            if (*fPointer) delete [] *fPointer;
-            if (ncountmax > fNdata) fNdata = ncountmax;
-            *fPointer = new Float_t[fNdata];
-         }
+         if (*fPointer==0) *fPointer = new Float_t[fNdata];
          fValue = *fPointer;
       } else {
          fValue = (Float_t*)add;
       }
    } else {
       fValue = new Float_t[fNdata];
-      fValue[0] = 0;
    }
 }
