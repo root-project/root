@@ -1,4 +1,4 @@
-// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.3 2003/09/23 14:03:15 brun Exp $
+// @(#)root/mc:$Name:  $:$Id: TGeoMCGeometry.cxx,v 1.4 2004/03/19 17:42:47 brun Exp $
 // Authors: ... 25/06/2002
 
 //______________________________________________________________________________
@@ -7,7 +7,8 @@
 // for building TGeo geometry.
 //______________________________________________________________________________
 
-   
+#include "TError.h"   
+
 #include "TGeoMCGeometry.h"
 #include "TGeoManager.h" 
 #include "TGeoVolume.h" 
@@ -556,6 +557,72 @@ Int_t TGeoMCGeometry::NofVolumes() const
   //
 
   return gGeoManager->GetListOfUVolumes()->GetEntriesFast()-1;
+}
+
+//_____________________________________________________________________________
+Int_t TGeoMCGeometry::NofVolDaughters(const char* volName) const
+{
+// Return number of daughters of the volume specified by volName
+// According to A. Morsch' G3toRoot class (by A. Morsch)
+// ---
+
+  TGeoVolume* volume = gGeoManager->GetVolume(volName);
+
+  if (!volume) {
+     Error("NofVolDaughters", "Volume %s not found.", volName);
+     return 0;
+  }
+     
+  return volume->GetNdaughters();
+}
+
+//_____________________________________________________________________________
+const char*  TGeoMCGeometry::VolDaughterName(const char* volName, Int_t i) const
+{
+// Return the name of i-th daughters of the volume specified by volName
+// According to A. Morsch' G3toRoot class.
+// ---
+
+  // Get volume
+  TGeoVolume* volume = gGeoManager->GetVolume(volName);
+  if (!volume) { 
+     Error("VolDaughterName", "Volume %s not found.", volName);
+     return "";
+  }
+  
+  // Check index
+  if (i<0 || i>=volume->GetNdaughters()) {
+     Error("VolDaughterName", "Index out of limits", volName);
+     return "";
+  }
+
+  // Return node's volume name
+  return volume->GetNode(i)->GetVolume()->GetName();
+}
+
+//_____________________________________________________________________________
+Int_t TGeoMCGeometry::VolDaughterCopyNo(const char* volName, Int_t i) const
+{
+// Return the copyNo of i-th daughters of the volume specified by volName
+// According to A. Morsch' G3toRoot class.
+// ---
+
+
+  // Get volume
+  TGeoVolume* volume = gGeoManager->GetVolume(volName);
+  if (!volume) { 
+     Error("VolDaughterName", "Volume %s not found.", volName);
+     return 0;
+  }
+  
+  // Check index
+  if (i<0 || i>=volume->GetNdaughters()) {
+     Error("VolDaughterName", "Index out of limits", volName);
+     return 0;
+  }
+
+  // Return node's copyNo
+  return volume->GetNode(i)->GetNumber();
 }
 
 //_____________________________________________________________________________

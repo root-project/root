@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.4 2004/03/19 17:42:47 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TGeoMCGeometry.h,v 1.5 2004/05/14 09:45:07 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TGeoMCGeometry
@@ -7,7 +7,7 @@
 /* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. *
  * See cxx source for full Copyright notice                               */
 
-/* $Id: TGeoMCGeometry.h,v 1.4 2004/03/19 17:42:47 brun Exp $ */
+/* $Id: TGeoMCGeometry.h,v 1.5 2004/05/14 09:45:07 brun Exp $ */
 
 //
 // Class TGeoMCGeometry
@@ -89,6 +89,9 @@ class TGeoMCGeometry : public TVirtualMCGeometry {
     virtual Int_t VolId(const Text_t* volName) const;
     virtual const char* VolName(Int_t id) const;
     virtual Int_t NofVolumes() const;
+    virtual Int_t NofVolDaughters(const char* volName) const;
+    virtual const char*  VolDaughterName(const char* volName, Int_t i) const;
+    virtual Int_t        VolDaughterCopyNo(const char* volName, Int_t i) const;
     virtual Int_t VolId2Mate(Int_t id) const;
 
   private:

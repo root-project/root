@@ -1,4 +1,4 @@
-// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.2 2003/08/05 22:08:24 brun Exp $
+// @(#)root/vmc:$Name:  $:$Id: TVirtualMCGeometry.h,v 1.3 2003/09/23 14:03:15 brun Exp $
 // Authors: ... 25/06/2002
 
 #ifndef ROOT_TVirtualMCGeometry
@@ -84,6 +84,11 @@ class TVirtualMCGeometry : public TNamed {
     virtual Int_t VolId(const Text_t* volName) const = 0;
     virtual const char* VolName(Int_t id) const = 0;
     virtual Int_t NofVolumes() const = 0;
+    virtual Int_t NofVolDaughters(const char* volName) const;
+    virtual const char*  VolDaughterName(const char* volName, Int_t i) const;
+    virtual Int_t        VolDaughterCopyNo(const char* volName, Int_t i) const;
+            // New functions
+	    // Make them = 0 with the next release
     virtual Int_t VolId2Mate(Int_t id) const = 0;
 
   protected:
@@ -94,6 +99,26 @@ class TVirtualMCGeometry : public TNamed {
 
   ClassDef(TVirtualMCGeometry,1)  //Interface to Monte Carlo geometry construction
 };
+
+// inline fuctions
+
+// Temporary implementation of new functions
+// To be removed with the next release
+
+inline Int_t TVirtualMCGeometry::NofVolDaughters(const char* /*volName*/) const {  
+  Warning("NofVolDaughters", "New function - not yet implemented.");
+  return 0;
+}    
+
+inline const char*  TVirtualMCGeometry::VolDaughterName(const char* /*volName*/, Int_t /*i*/) const {
+  Warning("VolDaughterName", "New function - not yet implemented.");
+  return "";
+}    
+
+inline Int_t  TVirtualMCGeometry::VolDaughterCopyNo(const char* /*volName*/, Int_t /*i*/) const {
+  Warning("VolDaughterCopyNo", "New function - not yet implemented.");
+  return 0;
+}    
 
 #endif //ROOT_TVirtualMCGeometry
 
