@@ -1168,7 +1168,10 @@ void WritePointersSTL(G__ClassInfo &cl)
                      fprintf(fp, "      }\n");
                   } else {
                      if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
-                     else                                fprintf(fp, "      R__b << (TObject*)%s;\n",m.Name());
+                     else {
+                        if (m.Type()->IsBase("TObject")) fprintf(fp, "      R__b << (TObject*)%s;\n",m.Name());
+                        else                             fprintf(fp, "      R__b << %s;\n",m.Name());
+                     }
                   }
                } else {
                   fprintf(fp, "      %s.Streamer(R__b);\n",m.Name());
