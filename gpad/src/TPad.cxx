@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.159 2005/01/12 18:46:11 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.160 2005/01/18 15:17:25 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2830,16 +2830,9 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
             }
 
             if (style > 3100) {
-               Double_t xb[4];
-               Double_t yb[4];
-               xb[0] = x1;
-               xb[1] = x1;
-               xb[2] = x2;
-               xb[3] = x2;
-               yb[0] = y1;
-               yb[1] = y2;
-               yb[2] = y2;
-               yb[3] = y1;
+               Double_t xb[4], yb[4];
+               xb[0] = x1; xb[1] = x1; xb[2] = x2; xb[3] = x2;
+               yb[0] = y1; yb[1] = y2; yb[2] = y2; yb[3] = y1;
                PaintFillAreaHatches(4, xb, yb, style);
                return;
             }
@@ -2880,7 +2873,17 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
 
    if (gVirtualPS) {
       Int_t style0 = gVirtualPS->GetFillStyle();
-      if (option[0] == 's') gVirtualPS->SetFillStyle(0);
+      if (option[0] == 's') {
+         gVirtualPS->SetFillStyle(0);
+      } else {
+         if (style0 > 3100) {
+            Double_t xb[4], yb[4];
+            xb[0] = x1; xb[1] = x1; xb[2] = x2; xb[3] = x2;
+            yb[0] = y1; yb[1] = y2; yb[2] = y2; yb[3] = y1;
+            PaintFillAreaHatches(4, xb, yb, style0);
+            return;
+         }
+      }
       gVirtualPS->DrawBox(x1, y1, x2, y2);
       if (option[0] == 's') gVirtualPS->SetFillStyle(style0);
    }
