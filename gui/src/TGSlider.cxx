@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.4 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSlider.cxx,v 1.5 2000/10/22 19:28:58 rdm Exp $
 // Author: Fons Rademakers   14/01/98
 
 /*************************************************************************
@@ -121,6 +121,7 @@ void TGVSlider::DoRedraw()
    if (fScale > 0 && !(fType & kScaleNo)) {
       int lines = ((int)fHeight-16) / fScale;
       int remain = ((int)fHeight-16) % fScale;
+      if (lines < 1) lines = 1;
       for (int i = 0; i <= lines; i++) {
          int y = i * fScale + (i * remain) / lines;
          gVirtualX->DrawLine(fId, fgBlackGC(), fWidth/2+8, y+7, fWidth/2+10, y+7);
@@ -263,6 +264,7 @@ void TGHSlider::DoRedraw()
    if (fScale > 0 && !(fType & kScaleNo)) {
       int lines = ((int)fWidth-16) / fScale;
       int remain = ((int)fWidth-16) % fScale;
+      if (lines < 1) lines = 1;
       for (int i = 0; i <= lines; i++) {
          int x = i * fScale + (i * remain) / lines;
          gVirtualX->DrawLine(fId, fgBlackGC(), x+7, fHeight/2+8, x+7, fHeight/2+10);
