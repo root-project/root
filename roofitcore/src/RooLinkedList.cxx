@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinkedList.cc,v 1.1 2001/10/17 05:03:59 verkerke Exp $
+ *    File: $Id: RooLinkedList.cc,v 1.2 2001/10/19 22:19:49 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -18,6 +18,7 @@
 
 #include "RooFitCore/RooLinkedList.hh"
 #include "RooFitCore/RooLinkedListIter.hh"
+#include "RooFitCore/RooHashTable.hh"
 
 ClassImp(RooLinkedList)
 ;

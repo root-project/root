@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.10 2001/09/27 18:22:27 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.11 2001/10/08 05:20:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -58,7 +58,7 @@ RooAbsCategoryLValue::~RooAbsCategoryLValue()
 }
 
 
-RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(Int_t index) 
+RooAbsArg& RooAbsCategoryLValue::operator=(Int_t index) 
 {
   // Assignment operator from integer index number
   setIndex(index,kTRUE) ;
@@ -66,12 +66,26 @@ RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(Int_t index)
 }
 
 
-RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(const char *label) 
+RooAbsArg& RooAbsCategoryLValue::operator=(const char *label) 
 {
   // Assignment operator from string pointer
   setLabel(label) ;
   return *this ;
 }
+
+RooAbsArg& RooAbsCategoryLValue::operator=(const RooAbsCategory& other) 
+{
+  // Assignment from another RooCategory
+  if (&other==this) return *this ;
+
+  const RooCatType* type = lookupType(other.getLabel(),kTRUE) ;
+  if (!type) return *this ;
+
+  _value = *type ;
+  setValueDirty() ;
+  return *this ;
+}
+
 
 Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n) 
 {

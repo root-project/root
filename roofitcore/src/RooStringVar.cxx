@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.cc,v 1.13 2001/10/19 06:56:53 verkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.14 2001/11/01 22:52:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -73,7 +73,7 @@ void RooStringVar::setVal(TString value) {
 
 
 
-RooStringVar& RooStringVar::operator=(const char* newValue) 
+RooAbsArg& RooStringVar::operator=(const char* newValue) 
 {
   // Set value to given TString
   if (!isValidString(newValue)) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.10 2001/11/14 18:42:37 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.11 2001/11/15 17:21:34 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -117,9 +117,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
     cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << xvar->GetName() << " must be real" << endl ;
     assert(0) ;
   }
-  xvar->setPlotBins(histo->GetNbinsX()) ;
+//   xvar->setPlotBins(histo->GetNbinsX()) ;
   xvar->setFitBins(histo->GetNbinsX()) ;
-  xvar->setPlotRange(histo->GetXaxis()->GetXmin(),histo->GetXaxis()->GetXmax()) ;
+//   xvar->setPlotRange(histo->GetXaxis()->GetXmin(),histo->GetXaxis()->GetXmax()) ;
   xvar->setFitRange(histo->GetXaxis()->GetXmin(),histo->GetXaxis()->GetXmax()) ;
 
   // Y
@@ -129,9 +129,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << yvar->GetName() << " must be real" << endl ;
       assert(0) ;
     }
-    yvar->setPlotBins(histo->GetNbinsY()) ;
+//     yvar->setPlotBins(histo->GetNbinsY()) ;
     yvar->setFitBins(histo->GetNbinsY()) ;
-    yvar->setPlotRange(histo->GetYaxis()->GetXmin(),histo->GetYaxis()->GetXmax()) ;
+//     yvar->setPlotRange(histo->GetYaxis()->GetXmin(),histo->GetYaxis()->GetXmax()) ;
     yvar->setFitRange(histo->GetYaxis()->GetXmin(),histo->GetYaxis()->GetXmax()) ;
   }
   
@@ -142,9 +142,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << zvar->GetName() << " must be real" << endl ;
       assert(0) ;
     }
-    zvar->setPlotBins(histo->GetNbinsZ()) ;
+//     zvar->setPlotBins(histo->GetNbinsZ()) ;
     zvar->setFitBins(histo->GetNbinsZ()) ;
-    zvar->setPlotRange(histo->GetZaxis()->GetXmin(),histo->GetZaxis()->GetXmax()) ;
+//     zvar->setPlotRange(histo->GetZaxis()->GetXmin(),histo->GetZaxis()->GetXmax()) ;
     zvar->setFitRange(histo->GetZaxis()->GetXmin(),histo->GetZaxis()->GetXmax()) ;
   }
   

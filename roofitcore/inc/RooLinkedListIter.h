@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooLinkedListIter.rdl,v 1.1 2001/10/17 05:03:59 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -31,7 +31,7 @@ public:
   
   virtual ~RooLinkedListIter() { ; }
   
-  RooLinkedListIter& operator=(const TIterator& other) {
+  TIterator& operator=(const TIterator& other) {
 
     if (&other==this) return *this ;
     const RooLinkedListIter* iter = dynamic_cast<const RooLinkedListIter*>(&other) ;

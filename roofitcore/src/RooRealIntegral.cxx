@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.48 2001/10/13 21:53:21 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.49 2001/10/31 07:19:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -95,6 +95,12 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   
   // Make internal copy of dependent list
   RooArgSet intDepList(depList) ;
+
+  // Force projected dependents as parameters
+  RooAbsCollection* pdset = intDepList.selectByAttrib("ProjectedDependent",kTRUE) ;
+  intDepList.remove(*pdset) ;
+  delete pdset ;
+
   RooAbsArg *arg ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -368,6 +374,19 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     // No integration performed
     _operMode = PassThrough ;
   }
+
+  // Determine auto-dirty status
+  
+  // If any of our servers are is forcedDirty than we should be too
+  Bool_t adirty(kFALSE) ;
+  TIterator* iter = serverIterator() ;  
+  while(arg=(RooAbsArg*)iter->Next()){
+    if (arg->operMode()==ADirty && arg->isValueServer(*this)) {      
+      setOperMode(ADirty) ;
+      break ;
+    }
+  }
+  delete iter ;
 }
 
 

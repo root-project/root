@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.20 2001/11/14 18:42:36 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.21 2001/11/15 01:30:23 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -35,6 +35,7 @@
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooRandom.hh"
+#include "RooFitCore/RooRealConstant.hh"
 
 ClassImp(RooAddModel)
 ;
@@ -45,6 +46,7 @@ RooAddModel::RooAddModel(const char *name, const char *title,
   RooResolutionModel(name,title,((RooResolutionModel*)modelList.at(0))->convVar()),
   _modelProxyIter(_modelProxyList.MakeIterator()),
   _coefProxyIter(_coefProxyList.MakeIterator()),
+  _dummyProxy("dummyProxy","dummy proxy",this,(RooRealVar&)RooRealConstant::value(0)),
   _isCopy(kFALSE),
   _codeReg(10),
   _genReg(10),
@@ -120,6 +122,7 @@ RooAddModel::RooAddModel(const RooAddModel& other, const char* name) :
   RooResolutionModel(other,name),
   _modelProxyIter(_modelProxyList.MakeIterator()),
   _coefProxyIter(_coefProxyList.MakeIterator()),
+  _dummyProxy("dummyProxy",this,other._dummyProxy),
   _codeReg(other._codeReg),
   _genReg(other._genReg),
   _isCopy(kTRUE), 
@@ -273,22 +276,25 @@ Double_t RooAddModel::evaluate() const
   Double_t value(0) ;
   Double_t lastCoef(1) ;
 
+  // Must handle normalization explicitly here!!!!!
+
+  const RooArgSet* nset = _dummyProxy.nset() ;
+
   // Do running sum of coef/model pairs, calculate lastCoef.
   RooRealProxy* coef ;
   RooRealProxy* model ;
   while(coef=(RooRealProxy*)_coefProxyIter->Next()) {
     model = (RooRealProxy*)_modelProxyIter->Next() ;
-    Double_t coefVal = *coef ;
+    Double_t coefVal = coef->arg().getVal(nset) ;
     if (coefVal) {
-      value += (*model)*(*coef) ;
-      lastCoef -= (*coef) ;
+      value += model->arg().getVal(nset)*coef->arg().getVal(nset) ;
+      lastCoef -= coef->arg().getVal(nset) ;
     }
   }
 
   // Add last model with correct coefficient
   model = (RooRealProxy*) _modelProxyIter->Next() ;
-  value += (*model)*lastCoef ;
-
+  value += model->arg().getVal(nset)*lastCoef ;
 
   // Warn about coefficient degeneration
   if ((lastCoef<0.0 || lastCoef>1.0) && ++_errorCount<=10) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.42 2001/11/01 22:52:20 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.43 2001/11/14 18:42:36 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -75,11 +75,8 @@ public:
   const char *getPlotLabel() const;
   virtual Bool_t inPlotRange(Double_t value) const;
 
-  // Build 1-dimensional plots
-
 public:
 
-  RooPlot *frame() const;
 
   enum ScaleType { Raw, Relative, NumEvent, RelativeExpected } ;
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor=1.0, 

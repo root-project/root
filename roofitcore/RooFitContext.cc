@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.39 2001/11/15 08:46:30 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.40 2001/11/16 02:23:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -50,7 +50,8 @@ ClassImp(RooFitContext)
 static TVirtualFitter *_theFitter(0);
 
 
-RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, Bool_t cloneData, Bool_t clonePdf) :
+RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, 
+			     Bool_t cloneData, Bool_t clonePdf, const RooArgSet* projDeps) :
   TNamed(*pdf), _origLeafNodeList("origLeafNodeList"), _extendedMode(kFALSE), _doOptCache(kFALSE),
   _ownData(cloneData), _zombie(kFALSE)
 {
@@ -66,9 +67,6 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, Bool_
     cout << "RooFitContext: cannot create without valid PDF" << endl;
     return;
   }
-
-  
-
 
   // Clone data 
   if (cloneData) {
@@ -166,6 +164,23 @@ RooFitContext::RooFitContext(const RooAbsData* data, const RooAbsPdf* pdf, Bool_
 
   // Store normalization set
   _normSet = (RooArgSet*) data->get()->snapshot(kFALSE) ;
+
+
+  // Mark projected dependents
+  ((RooArgSet*)_dataClone->get())->setAttribAll("ProjectedDependent",kFALSE) ;
+  if (projDeps) {
+    TIterator* iter = projDeps->createIterator() ;
+    RooAbsArg* pdep ;
+    while(pdep=(RooAbsArg*)iter->Next()) {
+      RooAbsArg* pdep2 = _dataClone->get()->find(pdep->GetName()) ;
+      if (!pdep2) {
+	cout << "RooFitContext(" << GetName() << ") WARNING: projection request for non-dependent " 
+	     << pdep->GetName() << " ignored" << endl ;
+	continue ;
+      }
+      pdep2->setAttribute("ProjectedDependent",kTRUE) ;
+    }
+  }
 }
 
 
@@ -263,7 +278,9 @@ Bool_t RooFitContext::optimize(Bool_t doPdf, Bool_t doData, Bool_t doCache)
     TIterator* bIter = branchList.createIterator() ;
     RooAbsArg* branch ;
     while(branch=(RooAbsArg*)bIter->Next()) {
-      branch->setOperMode(RooAbsArg::ADirty) ;
+      if (branch->dependsOn(*_dataClone->get())) {
+	branch->setOperMode(RooAbsArg::ADirty) ;
+      }
     }
     delete bIter ;
   }
@@ -452,7 +469,7 @@ Bool_t RooFitContext::allClientsCached(RooAbsArg* var, RooArgSet& cacheList)
 
 
 
-const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions) 
+RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOptions) 
 {
   // Setup and perform MINUIT fit of PDF to dataset
 
@@ -708,7 +725,7 @@ const RooFitResult* RooFitContext::fit(Option_t *fitOptions, Option_t* optOption
 
 
 
-Double_t RooFitContext::nLogLikelihood(Bool_t dummy) const 
+Double_t RooFitContext::nLogLikelihood(Bool_t extended) const 
 {
   // Return the likelihood of this PDF for the given dataset
   Double_t result(0);
@@ -730,7 +747,7 @@ Double_t RooFitContext::nLogLikelihood(Bool_t dummy) const
   }
 
   // include the extended maximum likelihood term, if requested
-  if(_extendedMode) {
+  if(extended) {
     result+= _pdfClone->extendedTerm(events);
   }
 
@@ -831,7 +848,7 @@ void RooFitGlue(Int_t &np, Double_t *gin,
   }
 
   // Calculate the negative log-likelihood for these parameters
-  f= context->nLogLikelihood();
+  f= context->nLogLikelihood(context->_extendedMode);
   if (f==0) {
     // if any event has a prob <=0 return a flat likelihood 
     // at the max value we have seen so far

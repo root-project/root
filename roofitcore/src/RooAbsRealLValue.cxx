@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.14 2001/09/28 21:59:28 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.15 2001/10/08 05:20:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,6 +33,7 @@
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooRandom.hh"
 #include "RooFitCore/RooRealFixedBinIter.hh"
+#include "RooFitCore/RooPlot.hh"
 
 ClassImp(RooAbsRealLValue)
 
@@ -118,7 +119,7 @@ void RooAbsRealLValue::writeToStream(ostream& os, Bool_t compact) const
 }
 
 
-RooAbsRealLValue& RooAbsRealLValue::operator=(Double_t newValue) 
+RooAbsArg& RooAbsRealLValue::operator=(Double_t newValue) 
 {
   // Assignment operator from a Double_t
 
@@ -131,12 +132,43 @@ RooAbsRealLValue& RooAbsRealLValue::operator=(Double_t newValue)
 }
 
 
-RooAbsRealLValue& RooAbsRealLValue::operator=(const RooAbsReal& arg) 
+RooAbsArg& RooAbsRealLValue::operator=(const RooAbsReal& arg) 
 {
   return operator=(arg.getVal()) ;
 }
 
 
+
+RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi, Int_t nbins) const {
+  // Create a new RooPlot on the heap with a drawing frame initialized for this
+  // object, but no plot contents. Use x.frame() as the first argument to a
+  // y.plotOn(...) method, for example. The caller is responsible for deleting
+  // the returned object.
+
+  return new RooPlot(*this,xlo,xhi,nbins);
+}
+
+
+RooPlot *RooAbsRealLValue::frame() const {
+  // Create a new RooPlot on the heap with a drawing frame initialized for this
+  // object, but no plot contents. Use x.frame() as the first argument to a
+  // y.plotOn(...) method, for example. The caller is responsible for deleting
+  // the returned object.
+  //
+  // The current fit range may not be open ended or empty.
+
+  // Plot range of variable may not be infinite or empty
+  if (getFitMin()==getFitMax()) {
+    cout << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << endl ;
+    return 0 ;
+  }
+  if (RooNumber::isInfinite(getFitMin())||RooNumber::isInfinite(getFitMax())) {
+    cout << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << endl ;
+    return 0 ;
+  }
+
+  return new RooPlot(*this,getFitMin(),getFitMax(),getFitBins());
+}
 
 
 

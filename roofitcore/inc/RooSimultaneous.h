@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.16 2001/10/22 07:12:14 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.17 2001/10/27 22:28:23 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -40,9 +40,9 @@ public:
   Bool_t addPdf(const RooAbsPdf& pdf, const char* catLabel) ;
 
   virtual ExtendMode extendMode() const { 
-    if (!_allCanExtend) return CanNotBeExtended ;
+    if (_anyCanExtend) return CanBeExtended ;
     if (_anyMustExtend) return MustBeExtended ;
-    return CanBeExtended ; 
+    return CanNotBeExtended ; 
   }
 
   virtual Double_t expectedEvents() const ;
@@ -50,8 +50,6 @@ public:
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kTRUE ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
-
-  virtual const RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;
 
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, 
 			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0) const ; 
@@ -65,6 +63,7 @@ protected:
   friend class RooSimGenContext ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
 				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
+  virtual RooFitContext* fitContext(const RooAbsData& dset, const RooArgSet* projDeps=0) const ;
 
   mutable RooAICRegistry _codeReg ;  // Auxiliary class keeping tracking of composite analytical integration codes
  
@@ -72,7 +71,7 @@ protected:
   RooCategoryProxy _indexCat ; // Index category
   TList    _pdfProxyList ;     // List of PDF proxies (named after applicable category state)
   Double_t _numPdf ;           // Number of registered PDFs
-  Bool_t   _allCanExtend ;     // Flag set if all component PDFs are extendable
+  Bool_t   _anyCanExtend ;     // Flag set if all component PDFs are extendable
   Bool_t   _anyMustExtend ;    // Flag set if all component PDFs are extendable
 
   ClassDef(RooSimultaneous,1)  // Description goes here

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.cc,v 1.11 2001/10/08 05:20:21 verkerke Exp $
+ *    File: $Id: RooSimFitContext.cc,v 1.12 2001/10/27 22:28:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,7 +23,8 @@
 ClassImp(RooSimFitContext)
 ;
 
-RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous* simpdf) : RooFitContext(data,simpdf,kFALSE,kTRUE)
+RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous* simpdf, const RooArgSet* projDeps) : 
+  RooFitContext(data,simpdf,kFALSE,kTRUE,projDeps)
 {
   RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->_indexCat.arg() ;
 
@@ -56,16 +57,13 @@ RooSimFitContext::RooSimFitContext(const RooAbsData* data, const RooSimultaneous
       char cutSpec[1024] ;
       sprintf(cutSpec,"%s==%d",simCatName.Data(),simCat.getIndex()) ;
       RooAbsData* dset = _dataClone->reduce(RooFormulaVar("simCatCut",cutSpec,simCat)) ;
-//       new RooDataSet("dset_simcat","dset_simcat",
-// 		     _dataClone,*_dataClone->get(),RooFormulaVar("simCatCut",cutSpec,simCat)) ;
       cout << " (" << dset->numEntries() << " dataset entries)" << endl ;
       _dsetArray[n] = dset ;
-      _ctxArray[n] = new RooFitContext(dset,pdf,kFALSE,kTRUE) ;
+      _ctxArray[n] = new RooFitContext(dset,pdf,kFALSE,kTRUE,projDeps) ;
       _dirtyArray[n] = kTRUE ;
       _nCtxFilled++ ;
 
     } else {
-      //cout << "RooSimFitContext::RooSimFitContext: no pdf for state " << type->GetName() << endl ;
       _dsetArray[n] = 0 ;
       _ctxArray[n] = 0 ;
       _dirtyArray[n] = kFALSE ;
@@ -117,7 +115,8 @@ Double_t RooSimFitContext::nLogLikelihood(Bool_t dummy) const
   for (i=0 ; i<_nCtx ; i++) {
     if (_ctxArray[i]) {
       if (_dirtyArray[i]) {
-	_nllArray[i] = _ctxArray[i]->nLogLikelihood() + _offArray[i] ;
+	Bool_t extend = (_extendedMode && _ctxArray[i]->_pdfClone->canBeExtended()) ;
+	_nllArray[i] = _ctxArray[i]->nLogLikelihood(extend) + _offArray[i] ;
 	_dirtyArray[i] = kFALSE ;
       }
       nllSum += _nllArray[i] ;

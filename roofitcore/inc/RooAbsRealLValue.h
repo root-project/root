@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.rdl,v 1.11 2001/08/23 01:21:46 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.12 2001/09/27 18:22:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,8 +34,10 @@ public:
   
   // Parameter value and error accessors
   virtual void setVal(Double_t value)=0;
-  virtual RooAbsRealLValue& operator=(Double_t newValue);
-  virtual RooAbsRealLValue& operator=(const RooAbsReal& other) ;
+  virtual RooAbsArg& operator=(const RooAbsReal& other) ;
+  virtual RooAbsArg& operator=(Double_t newValue);
+  virtual RooAbsArg& operator=(Int_t ival) { return RooAbsArg::operator=(ival) ; } 
+  virtual RooAbsArg& operator=(const char* cval) { return RooAbsArg::operator=(cval) ; }
   void randomize();
 
   // Binned fit interface
@@ -75,6 +77,10 @@ public:
 
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
+  
+  // Build 1-dimensional plots
+  RooPlot *frame(Double_t lo, Double_t hi, Int_t nbins) const;
+  RooPlot *frame() const;
 
 protected:
 

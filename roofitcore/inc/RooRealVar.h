@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.30 2001/10/19 06:56:53 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.31 2001/10/27 22:28:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,7 +23,6 @@
 
 class RooArgSet ;
 class RooErrorVar ;
-class MakeRooRealVar ;
 
 class RooRealVar : public RooAbsRealLValue {
 public:
@@ -73,14 +72,6 @@ public:
 
   static void printScientific(Bool_t flag=kFALSE) { _printScientific = flag ; }
   static void printSigDigits(Int_t ndig=5) { _printSigDigits = ndig>1?ndig:1 ; }
-
-  // Named parameter decorators 
-  RooRealVar& wLimits(Double_t min, Double_t max) { setFitRange(min,max) ; return *this ; }
-  RooRealVar& wPlotRange(Double_t min, Double_t max) { setFitRange(min,max) ; return *this ; }
-  RooRealVar& wConstant(Bool_t flag=kTRUE) { setConstant(flag) ; return *this ; }
-  RooRealVar& wPlotBins(Int_t bins) { setPlotBins(bins) ; return *this ; }
-  RooRealVar& wFitBins(Int_t bins) { setFitBins(bins) ; return *this ; }
-  RooRealVar* create() { return new RooRealVar(*this) ; }
 
 protected:
 

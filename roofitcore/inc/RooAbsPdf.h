@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.45 2001/11/07 02:54:41 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.46 2001/11/14 18:42:36 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -66,12 +66,15 @@ public:
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
 
   // Interactions with a dataset  
-  virtual const RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;
+  virtual RooFitResult* fitTo(RooAbsData& data, const RooArgSet& projDeps, 
+			      Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;
+  virtual RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds") ;
 
   // Function evaluation support
   virtual Bool_t traceEvalHook(Double_t value) const ;  
   virtual Double_t getVal(const RooArgSet* set=0) const ;
   Double_t getLogVal(const RooArgSet* set=0) const ;
+  Double_t getNorm(const RooArgSet& nset) const { return getNorm(&nset) ; }
   virtual Double_t getNorm(const RooArgSet* set=0) const ;
   void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value) ;
@@ -108,6 +111,7 @@ protected:
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
 				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
 
+  virtual RooFitContext* fitContext(const RooAbsData& dset, const RooArgSet* projDeps=0) const ;
 
   friend class RooExtendPdf ;
   RooAbsPdf(const RooAbsPdf& other, const char* name=0);

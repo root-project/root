@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.cc,v 1.16 2001/10/08 05:20:13 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.17 2001/10/13 21:53:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -115,20 +115,6 @@ Bool_t RooCategory::defineType(const char* label, Int_t index)
   }
 
   return RooAbsCategory::defineType(label,index)?kFALSE:kTRUE ; 
-}
-
-
-RooCategory& RooCategory::operator=(const RooCategory& other) 
-{
-  // Assignment from another RooCategory
-  if (&other==this) return *this ;
-
-  const RooCatType* type = lookupType(other._value,kTRUE) ;
-  if (!type) return *this ;
-
-  _value = *type ;
-  setValueDirty() ;
-  return *this ;
 }
 
 

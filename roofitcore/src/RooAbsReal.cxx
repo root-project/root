@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.60 2001/11/07 23:14:04 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.61 2001/11/15 08:46:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -243,23 +243,27 @@ void RooAbsReal::setPlotMax(Double_t value) {
 
 void RooAbsReal::setPlotRange(Double_t min, Double_t max) {
   // Set a new plot range
+  cout << "RooAbsReal::setPlotBins(" << GetName() 
+       << ") WARNING: setPlotRange deprecated. Specify plot range in RooAbsReal::frame() when different from fitRange" << endl ;
 
-  // Check if new limit is consistent
-  if (min>max) {
-    cout << "RooAbsReal::setPlotMinMax(" << GetName() 
-	 << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
-    _plotMin = min ;
-    _plotMax = min ;
-  } else {
-    _plotMin = min ;
-    _plotMax = max ;
-  }
+//   // Check if new limit is consistent
+//   if (min>max) {
+//     cout << "RooAbsReal::setPlotMinMax(" << GetName() 
+// 	 << "): Proposed new integration max. smaller than min., setting max. to min." << endl ;
+//     _plotMin = min ;
+//     _plotMax = min ;
+//   } else {
+//     _plotMin = min ;
+//     _plotMax = max ;
+//   }
 }
 
 
 void RooAbsReal::setPlotBins(Int_t value) {
   // Set number of histogram bins 
-  _plotBins = value ;  
+  cout << "RooAbsReal::setPlotBins(" << GetName() 
+       << ") WARNING: setPlotBins deprecated. Specify plot bins in RooAbsReal::frame() when different from fitBins" << endl ;
+//   _plotBins = value ;  
 }
 
 
@@ -758,10 +762,12 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 
   // Create projection integral
   RooArgSet* projectionCompList ;
-  const RooAbsReal *projection = createProjection(RooArgSet(*plotVar), &projectedVars, projectionCompList) ;
+  RooArgSet deps(*plotVar) ;
+  //if (projDataNeededVars) deps.add(*projDataNeededVars) ;
+  const RooAbsReal *projection = createProjection(deps, &projectedVars, projectionCompList) ;
 
   // Reset name of projection to name of PDF to get appropriate curve name
-  ((RooAbsArg*)projection)->SetName(GetName()) ;
+  //((RooAbsArg*)projection)->SetName(GetName()) ;
 
 
   // Apply data projection, if requested
@@ -786,9 +792,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 	   << ") only the following components of the projection data will be used: " ; 
       projDataNeededVars->Print("1") ;
     }
-        
+
+    projectionCompList->find(GetName())->attachDataSet(*projDataSel) ;
     RooDataProjBinding projBind(*projection,*projDataSel,*plotVar) ;
-    ((RooAbsReal*)projection)->attachDataSet(*projDataSel) ;
     RooScaledFunc scaleBind(projBind,scaleFactor);
     RooCurve *curve = new RooCurve(projection->GetName(),projection->GetTitle(),scaleBind,
 				   plotVar->getPlotMin(),plotVar->getPlotMax(),plotVar->getPlotBins()) ;
@@ -1242,33 +1248,13 @@ RooAbsArg *RooAbsReal::createFundamental(const char* newname) const {
 
   RooRealVar *fund= new RooRealVar(newname?newname:GetName(),GetTitle(),_value,getUnit());
   fund->removeFitRange();
-  fund->setPlotRange(getPlotMin(),getPlotMax());
+//   fund->setPlotRange(getPlotMin(),getPlotMax());
+//   fund->setPlotBins(getPlotBins());
   fund->setPlotLabel(getPlotLabel());
-  fund->setPlotBins(getPlotBins());
   fund->setAttribute("fundamentalCopy");
   return fund;
 }
 
-RooPlot *RooAbsReal::frame() const {
-  // Create a new RooPlot on the heap with a drawing frame initialized for this
-  // object, but no plot contents. Use x.frame() as the first argument to a
-  // y.plotOn(...) method, for example. The caller is responsible for deleting
-  // the returned object.
-  //
-  // The current plot range may not be open ended or empty.
-
-  // Plot range of variable may not be infinite or empty
-  if (getPlotMin()==getPlotMax()) {
-    cout << "RooAbsReal::frame(" << GetName() << ") ERROR: empty plot range" << endl ;
-    return 0 ;
-  }
-  if (RooNumber::isInfinite(getPlotMin())||RooNumber::isInfinite(getPlotMax())) {
-    cout << "RooAbsReal::frame(" << GetName() << ") ERROR: open ended plot range" << endl ;
-    return 0 ;
-  }
-
-  return new RooPlot(*this);
-}
 
 
 Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, 

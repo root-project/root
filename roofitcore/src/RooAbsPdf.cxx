@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.54 2001/11/07 02:54:41 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.55 2001/11/14 18:42:36 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -218,6 +218,11 @@ Double_t RooAbsPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
   // This function applies the normalization specified by 'normSet' to the integral returned
   // by RooAbsReal::analyticalIntegral(). The passthrough scenario (code=0) is also changed
   // to return a normalized answer
+
+  if (_verboseEval>1) {
+    cout << "RooAbsPdf::analyticalIntegralWN(" << GetName() << ") code = " << code << " normset = " ;
+    if (normSet) normSet->Print("1") ; else cout << "<none>" << endl ;
+  }
 
   if (code==0) return getVal(normSet) ;
   if (normSet) {
@@ -489,9 +494,17 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed) const
 }
 
 
+RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooArgSet& projDeps, Option_t *fitOpt, Option_t *optOpt) 
+{
+  RooFitContext* cx = fitContext(data,&projDeps) ;
+  RooFitResult* result =  cx->fit(fitOpt,optOpt) ;
+  delete cx ;
+  return result ;
+}
 
 
-const RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt) 
+
+RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt) 
 {
   // Fit this PDF to given data set
   //
@@ -505,6 +518,7 @@ const RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_
   //  "h" = run HESSE after MIGRAD
   //  "e" = Perform extended MLL fit
   //  "0" = Run MIGRAD with strategy MINUIT 0 (no correlation matrix calculation at end)
+  //        Does not apply to HESSE or MINOS, if run afterwards.
   // 
   //  "q" = Switch off verbose mode
   //  "l" = Save log file with parameter values at each MINUIT step
@@ -529,9 +543,19 @@ const RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, Option_t *fitOpt, Option_
   // The function always return null unless the "r" fit option is specified. In that case a pointer to a RooFitResult
   // is returned. The RooFitResult object contains the full fit output, including the correlation matrix.
 
-  RooFitContext context(&data,this) ;
-  return context.fit(fitOpt,optOpt) ;
+  RooFitContext* cx = fitContext(data) ;
+  RooFitResult* result =  cx->fit(fitOpt,optOpt) ;
+  delete cx ;
+  return result ;
 }
+
+
+
+RooFitContext* RooAbsPdf::fitContext(const RooAbsData& dset, const RooArgSet* projDeps) const 
+{
+  return new RooFitContext(&dset,this,kTRUE,kTRUE,projDeps) ;
+}
+
 
 
 void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) const

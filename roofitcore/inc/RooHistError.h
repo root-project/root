@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHistError.rdl,v 1.3 2001/11/15 01:49:33 david Exp $
+ *    File: $Id: RooHistError.rdl,v 1.4 2001/11/16 01:48:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -67,20 +67,24 @@ private:
   // -----------------------------------------------------------
   class BinomialSum : public RooAbsFunc {
   public:
-    inline BinomialSum(Int_t n, Int_t m) : RooAbsFunc(1), _n(n), _N(n+m) { }
-    inline Double_t operator()(const Double_t xvec[]) const {
-      Double_t p1(0.5*(1+xvec[0])),p2(1-p1),result(0),fact1(1),fact2(1);
-      for(Int_t k= 0; k <= _n; k++) {
-	if(k > 0) { fact2*= k; fact1*= _N-k+1; }
-	result+= fact1/fact2*pow(p1,k)*pow(p2,_N-k);
-      }
-      return result;
-    };
+    BinomialSum(Int_t n, Int_t m) : RooAbsFunc(1), _n1(n), _N1(n+m) { }
+    inline Double_t operator()(const Double_t xvec[]) const 
+      {
+	Double_t p1(0.5*(1+xvec[0])),p2(1-p1),result(0),fact1(1),fact2(1);
+	for(Int_t k= 0; k <= _n1; k++) {
+	  if(k > 0) { fact2*= k; fact1*= _N1-k+1; }
+	  result+= fact1/fact2*pow(p1,k)*pow(p2,_N1-k);
+	}
+	return result;
+      };
+
     inline Double_t getMinLimit(UInt_t index) const { return -1; }
     inline Double_t getMaxLimit(UInt_t index) const { return +1; }
+
   private:
-    Int_t _n,_N;
-  };
+    Int_t _n1 ; // WVE Solaris CC5 doesn't want _n or _N here (likely compiler bug)
+    Int_t _N1 ;
+  } ;
 
   ClassDef(RooHistError,1) // Utility class for calculating histogram errors
 };

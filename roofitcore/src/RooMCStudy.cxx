@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.cc,v 1.1 2001/10/11 01:28:50 verkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.2 2001/11/07 01:56:06 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -399,9 +399,7 @@ RooPlot* RooMCStudy::plotNLL(Double_t lo, Double_t hi, Int_t nBins)
   // Create a RooPlot of the NLL distribution in the range lo-hi
   // with 'nBins' bins
 
-  _nllVar->setPlotRange(lo,hi) ;
-  _nllVar->setPlotBins(nBins) ;
-  RooPlot* frame = _nllVar->frame() ;
+  RooPlot* frame = _nllVar->frame(lo,hi,nBins) ;
   
   _fitParData->plotOn(frame) ;
   return frame ;
@@ -415,10 +413,7 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, Double_t lo, Double_t hi
   // The range lo-hi is plotted in nbins bins
 
   RooErrorVar* evar = param.errorVar() ;
-  evar->setPlotRange(lo,hi) ;
-  evar->setPlotBins(nbins) ;
-
-  RooPlot* frame = evar->frame() ;
+  RooPlot* frame = evar->frame(lo,hi,nbins) ;
   _fitParData->plotOn(frame) ;
 
   delete evar ;
@@ -438,7 +433,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, Double_t lo, Double_t hi,
   TString name(param.GetName()), title(param.GetTitle()) ;
   name.Append("pull") ; title.Append(" Pull") ;
   RooRealVar pvar(name,title,lo,hi) ;
-  pvar.setPlotBins(nbins) ;
+  pvar.setFitBins(nbins) ;
 
   RooPlot* frame = pvar.frame() ;
   _fitParData->plotOn(frame) ;

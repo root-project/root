@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTruthModel.cc,v 1.12 2001/11/07 22:41:26 verkerke Exp $
+ *    File: $Id: RooTruthModel.cc,v 1.13 2001/11/14 18:42:38 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -130,6 +130,9 @@ Double_t RooTruthModel::evaluate() const
     return exp(-fabs(x)/tau)*cos(x*dm) ;
   }
   }
+
+  assert(0) ;
+  return 0 ;
 }
 
 
@@ -202,7 +205,9 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
       return result / (1/(tau*tau) + dm*dm) ;
     }
   }
-  
+
+  assert(0) ;
+  return 0 ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.rdl,v 1.8 2001/08/23 01:21:45 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.rdl,v 1.9 2001/09/27 18:22:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,8 +28,10 @@ public:
   // Value modifiers
   virtual Bool_t setIndex(Int_t index, Bool_t printError=kTRUE) = 0 ;
   virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) = 0 ;
-  RooAbsCategoryLValue& operator=(int index) ; 
-  RooAbsCategoryLValue& operator=(const char* label) ; 
+  RooAbsArg& operator=(int index) ; 
+  RooAbsArg& operator=(const char* label) ; 
+  RooAbsArg& operator=(Double_t fval) { return RooAbsArg::operator=(fval) ; }
+  RooAbsArg& operator=(const RooAbsCategory& other) ;
 
   // Binned fit interface
   virtual void setFitBin(Int_t ibin) ;

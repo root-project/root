@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.30 2001/10/12 01:48:46 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.31 2001/10/19 06:56:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -54,7 +54,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 
   _value= 0.5*(minValue + maxValue);
 
-  setPlotRange(minValue,maxValue) ;
+//   setPlotRange(minValue,maxValue) ;
   setFitRange(minValue,maxValue) ;
 }  
 
@@ -65,7 +65,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 {
   // Constructor with value, range and unit
   _value = value ;
-  setPlotRange(minValue,maxValue) ;
+//   setPlotRange(minValue,maxValue) ;
   setFitRange(minValue,maxValue) ;
 }  
 
@@ -225,9 +225,11 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
             parser.expectToken(":",kTRUE) ||
             parser.readInteger(plotBins,kTRUE) || 
 	    parser.expectToken(")",kTRUE)) break ;
-	setPlotRange(plotMin,plotMax) ;
+//   	setPlotRange(plotMin,plotMax) ;
+	cout << "RooRealVar::readFromStream(" << GetName() 
+	     << ") WARNING: plot range deprecated, removed P(...) token" << endl ;
 
-      } else if (!token.CompareTo("F")) {
+      } else if ((!token.CompareTo("F")) || (!token.CompareTo("L"))) {
 
 	// Next tokens are fit limits
 	Double_t fitMin, fitMax ;
@@ -285,10 +287,10 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
       os << "C " ;
     }      
     // Append plot limits
-    os << "P(" << getPlotMin() << " - " << getPlotMax() << " : " << getPlotBins() << ") " ;      
+    // os << "P(" << getPlotMin() << " - " << getPlotMax() << " : " << getPlotBins() << ") " ;      
 
     // Append fit limits if not +Inf:-Inf
-    os << "F(" ;
+    os << "L(" ;
     if(hasFitMin()) {
       os << getFitMin();
     }

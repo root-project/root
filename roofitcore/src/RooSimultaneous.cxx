@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.22 2001/11/09 02:08:06 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.23 2001/11/14 18:42:38 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -46,7 +46,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   RooAbsPdf(name,title), _numPdf(0.),
   _indexCat("indexCat","Index category",this,indexCat),
   _codeReg(10),
-  _allCanExtend(kTRUE),
+  _anyCanExtend(kFALSE),
   _anyMustExtend(kFALSE)
 {
   // Constructor from index category. PDFs associated with indexCat
@@ -64,7 +64,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   RooAbsPdf(name,title), _numPdf(0.),
   _indexCat("indexCat","Index category",this,indexCat),
   _codeReg(10),
-  _allCanExtend(kTRUE),
+  _anyCanExtend(kFALSE),
   _anyMustExtend(kFALSE)
 {
   // Constructor from index category and full list of PDFs. 
@@ -88,7 +88,7 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title,
   while (pdf=(RooAbsPdf*)pIter->Next()) {
     type = (RooCatType*) cIter->Next() ;
     addPdf(*pdf,type->GetName()) ;
-    if (!pdf->canBeExtended()) _allCanExtend = kFALSE ;
+    if (pdf->canBeExtended()) _anyCanExtend = kTRUE ;
     if (pdf->mustBeExtended()) _anyMustExtend = kTRUE ;
   }
 
@@ -102,7 +102,7 @@ RooSimultaneous::RooSimultaneous(const RooSimultaneous& other, const char* name)
   RooAbsPdf(other,name),
   _indexCat("indexCat",this,other._indexCat), _numPdf(other._numPdf),
   _codeReg(other._codeReg),
-  _allCanExtend(other._allCanExtend),
+  _anyCanExtend(other._anyCanExtend),
   _anyMustExtend(other._anyMustExtend)
 {
   // Copy constructor
@@ -158,7 +158,7 @@ Bool_t RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
   _pdfProxyList.Add(proxy) ;
   _numPdf += 1.0 ;
 
-  if (!pdf.canBeExtended()) _allCanExtend = kFALSE ;
+  if (pdf.canBeExtended()) _anyCanExtend = kTRUE ;
   if (pdf.mustBeExtended()) _anyMustExtend = kTRUE ;
 
   return kFALSE ;
@@ -181,6 +181,7 @@ Double_t RooSimultaneous::evaluate() const
 }
 
 
+
 Double_t RooSimultaneous::expectedEvents() const 
 {
   // Return the number of expected events:
@@ -197,22 +198,9 @@ Double_t RooSimultaneous::expectedEvents() const
 
 
 
-const RooFitResult* RooSimultaneous::fitTo(RooAbsData& data, Option_t *fitOpt, Option_t *optOpt) 
+RooFitContext* RooSimultaneous::fitContext(const RooAbsData& dset, const RooArgSet* projDeps) const 
 {
-  // Overloaded fitTo() function implements additional fit optimization specific to cases
-  // where RooSimultaneous is the top-level PDF. See RooAbsPdf::fitTo() for additional information.
-
-  TString opts = optOpt ;
-  opts.ToLower() ;
-
-  if (!opts.Contains("s")) {
-  // Fit this PDF to given data set using a regular fit context    
-    return RooAbsPdf::fitTo(data,fitOpt,optOpt) ;
-  } 
-
-  // Fit this PDF to given data set using a SimFit context
-  RooSimFitContext context(&data,this) ;
-  return context.fit(fitOpt,optOpt) ;  
+  return new RooSimFitContext(&dset,this,projDeps) ;
 }
 
 

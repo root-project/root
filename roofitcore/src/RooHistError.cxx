@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHistError.cc,v 1.5 2001/11/16 01:48:24 david Exp $
+ *    File: $Id: RooHistError.cc,v 1.6 2001/11/17 01:44:51 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -26,7 +26,7 @@ ClassImp(RooHistError)
   ;
 
 static const char rcsid[] =
-"$Id: RooHistError.cc,v 1.5 2001/11/16 01:48:24 david Exp $";
+"$Id: RooHistError.cc,v 1.6 2001/11/17 01:44:51 david Exp $";
 
 const RooHistError &RooHistError::instance() {
   // Return a reference to a singleton object that is created the
@@ -70,7 +70,7 @@ Bool_t RooHistError::getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, D
 }
 
 Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,
-					 Double_t &asym1, Double_t &asym2, Double_t nSigma= 1) const
+					 Double_t &asym1, Double_t &asym2, Double_t nSigma) const
 {
   // sanity checks
   if(n < 0 || m < 0) {

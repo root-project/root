@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooResolutionModel.rdl,v 1.11 2001/10/30 07:29:15 verkerke Exp $
+ *    File: $Id: RooResolutionModel.rdl,v 1.12 2001/10/31 07:19:31 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -50,7 +50,7 @@ protected:
   friend class RooAddModel ;
   RooRealProxy x ;                   // Dependent/convolution variable
 
-  virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const { return kTRUE ; } ;
+  virtual Bool_t syncNormalizationPreHook(RooAbsReal* norm,const RooArgSet* nset) const { return (_basisCode!=0) ; } ;
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) ;
   virtual void changeBasis(RooFormulaVar* basis) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.62 2001/10/30 07:29:13 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.63 2001/10/31 07:19:28 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -557,7 +557,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source) const
 
   if (_operMode!=Auto) return ;
 
-  if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << GetName() << "," << this
+  if (_verboseDirty) cout << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
 			  << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
 
   // Handle no-propagation scenarios first

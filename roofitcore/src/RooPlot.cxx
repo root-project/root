@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.23 2001/10/31 07:19:30 verkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.24 2001/11/09 03:12:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -44,7 +44,7 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.23 2001/10/31 07:19:30 verkerke Exp $";
+"$Id: RooPlot.cc,v 1.24 2001/11/09 03:12:08 verkerke Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
@@ -64,8 +64,8 @@ RooPlot::RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax) :
   initialize();
 }
 
-RooPlot::RooPlot(const RooAbsReal &var) :
-  TH1(histName(),"RooPlot",var.getPlotBins(),var.getPlotMin(),var.getPlotMax()),
+RooPlot::RooPlot(const RooAbsReal &var, Float_t xmin, Float_t xmax, Int_t nbins) :
+  TH1(histName(),"RooPlot",nbins,xmin,xmax),
   _plotVarClone(0), _plotVarSet(0), _items(), _defYmin(1e-5), _defYmax(1)
 {
   // Create an empty frame with its title and x-axis range and label taken
@@ -91,7 +91,7 @@ RooPlot::RooPlot(const RooAbsReal &var) :
   SetTitle(title.Data());
   initialize();
 
-  _normBinWidth = (var.getPlotMax()-var.getPlotMin())/var.getPlotBins() ;
+  _normBinWidth = (xmax-xmin)/nbins ; 
 }
 
 void RooPlot::initialize() {
@@ -325,6 +325,22 @@ void RooPlot::printToStream(ostream& os, PrintOption opt, TString indent) const 
     }
   }
 }
+
+
+const char* RooPlot::nameOf(Int_t idx) const 
+{
+  // Return the name of the object at slot 'idx' in this RooPlot.
+  // If the given index is out of range, return a null pointer
+  
+  TObject* obj = _items.At(idx) ;
+  if (!obj) {
+    cout << "RooPlot::nameOf(" << GetName() << ") index " << idx << " out of range" << endl ;
+    return 0 ;
+  }
+  return obj->GetName() ;
+}
+
+
 
 TAttLine *RooPlot::getAttLine(const char *name) const {
   // Return a pointer to the line attributes of the named object in this plot,

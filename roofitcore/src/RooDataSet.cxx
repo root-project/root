@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.57 2001/11/01 22:52:21 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.58 2001/11/16 01:48:23 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -330,6 +330,8 @@ TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2
   // The histogram will be created using RooAbsReal::createHistogram() with
   // the name provided (with our dataset name prepended).
 
+  static Int_t counter(0) ;
+
   Bool_t ownPlotVarX(kFALSE) ;
   // Is this variable in our dataset?
   RooAbsReal* plotVarX= (RooAbsReal*)_vars.find(var1.GetName());
@@ -381,6 +383,8 @@ TH2F* RooDataSet::createHistogram(const RooAbsReal& var1, const RooAbsReal& var2
   TString histName(name);
   histName.Prepend("_");
   histName.Prepend(fName);
+  histName.Append("_") ;
+  histName.Append(Form("%08x",counter++)) ;
 
   // create the histogram
   TH2F* histogram=new TH2F(histName.Data(), "Events", nx, var1.getPlotMin(), var1.getPlotMax(), 

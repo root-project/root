@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooExtendPdf.cc,v 1.1 2001/10/09 18:16:29 verkerke Exp $
+ *    File: $Id: RooExtendPdf.cc,v 1.2 2001/10/10 17:59:01 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -59,8 +59,8 @@ RooExtendPdf::RooExtendPdf(const char *name, const char *title, const RooAbsPdf&
   // is 'norm'
 
   // Copy various setting from pdf
-  setPlotRange(_pdf.arg().getPlotMin(),_pdf.arg().getPlotMax()) ;
-  setPlotBins(_pdf.arg().getPlotBins()) ;
+//   setPlotRange(_pdf.arg().getPlotMin(),_pdf.arg().getPlotMax()) ;
+//   setPlotBins(_pdf.arg().getPlotBins()) ;
   setUnit(_pdf.arg().getUnit()) ;
   setPlotLabel(_pdf.arg().getPlotLabel()) ;
 }
@@ -110,8 +110,8 @@ RooExtendPdf::RooExtendPdf(const char *name, const char *title, const RooAbsPdf&
   }
   
   // Copy various setting from pdf
-  setPlotRange(_pdf.arg().getPlotMin(),_pdf.arg().getPlotMax()) ;
-  setPlotBins(_pdf.arg().getPlotBins()) ;
+//   setPlotRange(_pdf.arg().getPlotMin(),_pdf.arg().getPlotMax()) ;
+//   setPlotBins(_pdf.arg().getPlotBins()) ;
   setUnit(_pdf.arg().getUnit()) ;
   setPlotLabel(_pdf.arg().getPlotLabel()) ;
 

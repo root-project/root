@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooHistPdf.cc,v 1.2 2001/10/08 05:20:16 verkerke Exp $
+ *    File: $Id: RooHistPdf.cc,v 1.3 2001/10/12 01:48:45 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -85,7 +85,14 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars)
   // Simplest scenario, integrate over all dependents
   if ((allVars.getSize()==_depList.getSize()) && 
       matchArgs(allVars,analVars,_depList)) return 1000 ;
-  
+
+  // Find subset of _depList that integration is requested over
+  RooArgSet* allVarsSel = (RooArgSet*) allVars.selectCommon(_depList) ;
+  if (allVarsSel->getSize()==0) {
+    delete allVarsSel ;
+    return 0 ;
+  }
+
   // Partial integration scenarios.
   // Build unique code from bit mask of integrated variables in depList
   Int_t code(0),n(0) ;
@@ -96,10 +103,12 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars)
     n++ ;
   }
   delete iter ;
-  analVars.add(allVars) ;
+  analVars.add(*allVarsSel) ;
 
   // Register bit pattern and store with associated argset of variable to be integrated
-  return _codeReg.store(&code,1,new RooArgSet(allVars))+1 ;
+  Int_t masterCode =  _codeReg.store(&code,1,new RooArgSet(*allVarsSel))+1 ;
+  delete allVarsSel ;
+  return masterCode ;
 }
 
 
