@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.20 2004/12/07 15:34:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.21 2005/01/05 09:27:15 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -51,6 +51,7 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
    if (!gClient) new TGClient();
 
    UInt_t type = wtype;
+   fId = 0;
 
    if (!p && gClient) {
       p = gClient->GetRoot();
@@ -61,11 +62,13 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
       if (fClient->IsEditable()) type = wtype & ~1;
 
       fParent = p;
-      fId = gVirtualX->CreateWindow(fParent->fId, x, y,
-                                    TMath::Max(w, (UInt_t) 1),
-                                    TMath::Max(h, (UInt_t) 1), border,
-                                    depth, clss, visual, attr, type);
-      fClient->RegisterWindow(this);
+      if (fParent && fParent->IsMapSubwindows() ) {
+         fId = gVirtualX->CreateWindow(fParent->fId, x, y,
+                                     TMath::Max(w, (UInt_t) 1),
+                                     TMath::Max(h, (UInt_t) 1), border,
+                                     depth, clss, visual, attr, type);
+         fClient->RegisterWindow(this);
+      }
       fNeedRedraw = kFALSE;
 
       // name will be used in SavePrimitive methods

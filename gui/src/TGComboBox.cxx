@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.23 2004/10/07 14:08:18 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.24 2004/10/22 07:31:58 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -72,6 +72,8 @@ TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
    gVirtualX->ChangeWindowAttributes(fId, &wattr);
 
    AddInput(kStructureNotifyMask);
+
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -215,6 +217,7 @@ void TGComboBox::Init()
    // items when the mouse crosses.
    fListBox->GetContainer()->AddInput(kButtonPressMask | kButtonReleaseMask |
                                       kPointerMotionMask);
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -458,6 +461,8 @@ TGLineStyleComboBox::TGLineStyleComboBox(const TGWindow *p, Int_t id,
 
    GetListBox()->Resize(GetListBox()->GetWidth(), 72);
    Select(1);  // to have first entry selected
+
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -475,6 +480,7 @@ TGLineWidthComboBox::TGLineWidthComboBox(const TGWindow *p, Int_t id,
       AddEntry(new TGLineLBEntry(GetListBox()->GetContainer(), i, Form("%d",i), i, 0),
                new TGLayoutHints(kLHintsTop | kLHintsExpandX));
    Select(1);  // to have first entry selected
+   SetWindowName();
 }
 
 
@@ -527,6 +533,7 @@ TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
       ;
    fFonts[noFonts] = 0;
    Select(1);  // to have first entry selected
+   SetWindowName();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.13 2004/09/06 18:56:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.cxx,v 1.14 2004/09/11 16:27:09 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -62,6 +62,7 @@ TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
    Resize(fTWidth, fTHeight + 1);
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -84,6 +85,7 @@ TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
    Resize(fTWidth, fTHeight + 1);
+   SetWindowName();
 }
 
 //______________________________________________________________________________

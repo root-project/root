@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.10 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.11 2004/12/09 22:55:06 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -129,6 +129,7 @@ TGMdiDecorFrame::TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame,
    Layout();
 
    MapWindow();
+   TGFrame::SetWindowName();
 
    fFrame->RaiseWindow();
    fTitlebar->RaiseWindow();
@@ -333,6 +334,7 @@ TGMdiTitleBar::TGMdiTitleBar(const TGWindow *p, const TGWindow *mdiwin,
    MapWindow();
    MapSubwindows();
    Layout();
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -602,6 +604,7 @@ TGMdiButtons::TGMdiButtons(const TGWindow *p, const TGWindow *titlebar) :
    AddFrame(fButton[4], fCloseHint);
    fButton[4]->SetBackgroundColor(GetDefaultFrameBackground());
    fButton[4]->Associate(titlebar);
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -638,6 +641,7 @@ TGMdiTitleIcon::TGMdiTitleIcon(const TGWindow *p, const TGWindow *titlebar,
    fPopup->Associate(titlebar);
 
    AddInput(kButtonPressMask | kButtonReleaseMask);
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -702,6 +706,7 @@ TGMdiWinResizer::TGMdiWinResizer(const TGWindow *p, const TGWindow *mdiwin,
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier,
               kButtonPressMask | kButtonReleaseMask | kButtonMotionMask,
               kNone, kNone);
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -982,6 +987,7 @@ TGMdiHorizontalWinResizer::TGMdiHorizontalWinResizer(const TGWindow *p,
 
    fEditDisabled = kTRUE;
    gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(kArrowHor));
+   SetWindowName();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.25 2004/10/22 15:21:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.26 2004/12/10 17:35:58 brun Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -110,13 +110,6 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
 
    fViewMode = (EListViewMode)-1;
    SetViewMode(viewMode);
-
-   if (p && p->InheritsFrom(TGContainer::Class())) {
-      TGContainer* cont = (TGContainer*)p;
-      if (!cont->IsMapSubwindows()) {
-         fClient->UnregisterWindow(this);
-      }
-   }
 }
 
 //______________________________________________________________________________
@@ -177,10 +170,6 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
 
    fViewMode = (EListViewMode)-1;
    SetViewMode((EListViewMode)p->GetViewMode());
-
-   if (!p->IsMapSubwindows()) {
-      fClient->UnregisterWindow(this);
-   }
 }
 
 //______________________________________________________________________________
@@ -320,23 +309,23 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
       ix = (fWidth - fCurrent->GetWidth()) >> 1;
       iy = 0;
       lx = (fWidth - fTWidth) >> 1;
-      ly = fHeight - (fTHeight+1) - 2;
+      ly = fHeight - (fTHeight + 1) - 2;
    } else {
       ix = 0;
       iy = (fHeight - fCurrent->GetHeight()) >> 1;
       lx = fCurrent->GetWidth() + 2;
-      ly = (fHeight - (fTHeight+1)) >> 1;
+      ly = (fHeight - (fTHeight + 1)) >> 1;
    }
 
    if (fActive) {
-      if (fSelPic) fSelPic->Draw(id, fNormGC, x+ix, y+iy);
+      if (fSelPic) fSelPic->Draw(id, fNormGC, x + ix, y + iy);
       gVirtualX->SetForeground(fNormGC, fgDefaultSelectedBackground);
-      gVirtualX->FillRectangle(id, fNormGC, x+lx, y+ly, fTWidth, fTHeight+1);
+      gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, fTWidth, fTHeight + 1);
       gVirtualX->SetForeground(fNormGC, fClient->GetResourcePool()->GetSelectedFgndColor());
    } else {
-      fCurrent->Draw(id, fNormGC, x+ix, y+iy);
+      fCurrent->Draw(id, fNormGC, x + ix, y + iy);
       gVirtualX->SetForeground(fNormGC, fgWhitePixel);
-      gVirtualX->FillRectangle(id, fNormGC, x+lx, y+ly, fTWidth, fTHeight+1);
+      gVirtualX->FillRectangle(id, fNormGC, x + lx, y + ly, fTWidth, fTHeight + 1);
       gVirtualX->SetForeground(fNormGC, fgBlackPixel);
    }
 
@@ -355,8 +344,8 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
             else // default to TEXT_LEFT
                lx = fCpos[i] + 2;
 
-            if (x+lx<0) break; // quick fix for mess in name
-            fSubnames[i]->Draw(id, fNormGC, x+lx, y+ly + max_ascent);
+            if (x + lx < 0) break; // quick fix for mess in name
+            fSubnames[i]->Draw(id, fNormGC, x + lx, y + ly + max_ascent);
          }
       }
    }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.28 2004/12/08 17:13:41 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.cxx,v 1.29 2004/12/10 17:35:58 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -127,6 +127,7 @@ TGViewPort::TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
    fX0 = fY0  = 0;
 
    AddInput(kStructureNotifyMask);
+   SetWindowName(); 
 }
 
 //______________________________________________________________________________
@@ -302,6 +303,7 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
                         kPointerMotionMask, kNone, kNone);
 
    AddInput(kKeyPressMask | kPointerMotionMask);
+   SetWindowName(); 
 }
 
 //______________________________________________________________________________
@@ -334,6 +336,7 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
                          kPointerMotionMask, kNone, kNone);
 
    AddInput(kKeyPressMask | kPointerMotionMask);
+   SetWindowName(); 
 }
 
 //______________________________________________________________________________
@@ -514,7 +517,7 @@ void TGContainer::UnSelectAll()
    // Unselect all items in the container.
 
    TIter next(fList);
-   TGFrameElement* el;
+   TGFrameElement *el;
 
    while ((el = (TGFrameElement *) next())) {
       el->fFrame->Activate(kFALSE);
@@ -688,17 +691,6 @@ void TGContainer::SetPageDimension(UInt_t w, UInt_t h)
 }
 
 //______________________________________________________________________________
-void TGContainer::MapSubwindows()
-{
-   // Map subwindows.
-
-   if (!fMapSubwindows)
-      return;
-   else
-      TGCompositeFrame::MapSubwindows();
-}
-
-//______________________________________________________________________________
 void TGContainer::DoRedraw()
 {
    // Redraw content of container in the viewport region.
@@ -722,10 +714,10 @@ void TGContainer::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
    TIter next(fList);
 
    while ((el = (TGFrameElement *) next())) {
-      if ((Int_t(el->fFrame->GetY())> yy - (Int_t)el->fFrame->GetHeight()) &&
-          (Int_t(el->fFrame->GetX())> xx - (Int_t)el->fFrame->GetWidth()) &&
-          (Int_t(el->fFrame->GetY())< yy + Int_t(h + el->fFrame->GetHeight())) &&
-          (Int_t(el->fFrame->GetX())< xx + Int_t(w + el->fFrame->GetWidth()))) {
+      if ((Int_t(el->fFrame->GetY()) > yy - (Int_t)el->fFrame->GetHeight()) &&
+          (Int_t(el->fFrame->GetX()) > xx - (Int_t)el->fFrame->GetWidth()) &&
+          (Int_t(el->fFrame->GetY()) < yy + Int_t(h + el->fFrame->GetHeight())) &&
+          (Int_t(el->fFrame->GetX()) < xx + Int_t(w + el->fFrame->GetWidth()))) {
 
          // draw either in container window or in double-buffer
          if (!fMapSubwindows) {
@@ -1824,6 +1816,8 @@ TGCanvas::TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
 
    fHScrollbar->Associate(this);
    fVScrollbar->Associate(this);
+
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -1841,10 +1835,14 @@ void TGCanvas::MapSubwindows()
 {
    // Map all canvas sub windows.
 
-   fHScrollbar->MapSubwindows();
-   fVScrollbar->MapSubwindows();
-   fVport->MapSubwindows();
-   fVport->MapWindow();
+   if (fHScrollbar) fHScrollbar->MapSubwindows();
+   if (fVScrollbar) fVScrollbar->MapSubwindows();
+
+   if (fVport) {
+      fVport->GetContainer()->MapSubwindows();
+      fVport->MapSubwindows();
+      fVport->MapWindow();
+   }
    Layout();
 }
 
@@ -1918,7 +1916,7 @@ void TGCanvas::Layout()
    if (!fixedh) container->SetHeight(ch);
 
    if (container->GetDefaultWidth() > cw) {
-      if (fScrolling & kCanvasScrollHorizontal) {
+      if ((fScrolling & kCanvasScrollHorizontal) && fHScrollbar) {
          need_hsb = kTRUE;
          ch -= fHScrollbar->GetDefaultHeight();
          if ((Int_t) ch < 0) {
@@ -1930,7 +1928,7 @@ void TGCanvas::Layout()
    }
 
    if (container->GetDefaultHeight() > ch) {
-      if (fScrolling & kCanvasScrollVertical) {
+      if ((fScrolling & kCanvasScrollVertical) && fVScrollbar) {
          need_vsb = kTRUE;
          cw -= fVScrollbar->GetDefaultWidth();
          if ((Int_t) cw < 0) {
@@ -1945,7 +1943,7 @@ void TGCanvas::Layout()
 
    if (container->GetDefaultWidth() > cw) {
       if (!need_hsb) {
-         if (fScrolling & kCanvasScrollHorizontal) {
+         if ((fScrolling & kCanvasScrollHorizontal) && fHScrollbar) {
             need_hsb = kTRUE;
             ch -= fHScrollbar->GetDefaultHeight();
             if ((Int_t) ch < 0) {
@@ -1975,22 +1973,26 @@ void TGCanvas::Layout()
       container->Resize(tcw, tch);
    }
 
-   if (need_hsb) {
-      fHScrollbar->MoveResize(fBorderWidth, ch+fBorderWidth, cw, fHScrollbar->GetDefaultHeight());
-      fHScrollbar->SetRange((Int_t)container->GetWidth(), (Int_t)fVport->GetWidth());
-      fHScrollbar->MapWindow();
-   } else {
-      fHScrollbar->UnmapWindow();
-      fHScrollbar->SetPosition(0);
+   if (fHScrollbar) {
+      if (need_hsb) {
+         fHScrollbar->MoveResize(fBorderWidth, ch+fBorderWidth, cw, fHScrollbar->GetDefaultHeight());
+         fHScrollbar->SetRange((Int_t)container->GetWidth(), (Int_t)fVport->GetWidth());
+         fHScrollbar->MapWindow();
+      } else {
+         fHScrollbar->UnmapWindow();
+         fHScrollbar->SetPosition(0);
+      }
    }
 
-   if (need_vsb) {
-      fVScrollbar->MoveResize(cw+fBorderWidth, fBorderWidth, fVScrollbar->GetDefaultWidth(), ch);
-      fVScrollbar->SetRange((Int_t)container->GetHeight(), (Int_t)fVport->GetHeight());
-      fVScrollbar->MapWindow();
-   } else {
-      fVScrollbar->UnmapWindow();
-      fVScrollbar->SetPosition(0);
+   if (fVScrollbar) {
+      if (need_vsb) {
+         fVScrollbar->MoveResize(cw+fBorderWidth, fBorderWidth, fVScrollbar->GetDefaultWidth(), ch);
+         fVScrollbar->SetRange((Int_t)container->GetHeight(), (Int_t)fVport->GetHeight());
+         fVScrollbar->MapWindow();
+      } else {
+         fVScrollbar->UnmapWindow();
+         fVScrollbar->SetPosition(0);
+      }
    }
 }
 

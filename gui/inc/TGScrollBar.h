@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.8 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.h,v 1.9 2004/09/08 09:03:44 brun Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -99,7 +99,7 @@ public:
                Pixel_t back = GetDefaultFrameBackground()) :
       TGFrame(p, w, h, options | kOwnBackground, back)
             { fMsgWindow = p; fRepeat = 0; fGrabPointer = kTRUE;
-              SetBackgroundPixmap(GetBckgndPixmap()); }
+              SetBackgroundPixmap(GetBckgndPixmap()); SetWindowName(); }
    virtual ~TGScrollBar();
 
    void           GrabPointer(Bool_t grab) { fGrabPointer = grab; }

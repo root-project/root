@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.19 2004/10/25 12:06:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.20 2004/12/06 07:22:55 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -103,6 +103,9 @@ public:
    virtual void        SetWindowName(const char *name = 0);
    virtual const char *GetName() const { return fName; }
    virtual void        SetName(const char *name) { fName = name; }
+
+   virtual void   SetMapSubwindows(Bool_t /*on*/) {  }
+   virtual Bool_t IsMapSubwindows() const { return kTRUE; }
 
    static Int_t        GetCounter();
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.23 2004/10/22 15:21:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.24 2004/12/08 17:13:41 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -58,7 +58,6 @@ protected:
    Int_t              fTotal;         // total items
    Int_t              fSelected;      // number of selected items
    TTimer            *fScrollTimer;   // autoscroll timer
-   Bool_t             fMapSubwindows; // kTRUE - map subwindows
    Bool_t             fOnMouseOver;   // kTRUE when mouse pointer is over entry
    TGSearchType      *fSearch;        // structure used by search dialog
    Bool_t             fLastDir;       // direction of last search
@@ -101,7 +100,6 @@ public:
 
    virtual ~TGContainer();
 
-   virtual void MapSubwindows();
    virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void Associate(const TGWindow *w) { fMsgWindow = w; }
    virtual void AdjustPosition();
@@ -118,8 +116,6 @@ public:
    TGDimension       GetPageDimension() const;
    TGCanvas         *GetCanvas() const { return fCanvas; }          
 
-   virtual void   SetMapSubwindows(Bool_t on) { fMapSubwindows = on; }
-   virtual Bool_t IsMapSubwindows() const { return fMapSubwindows; }
    virtual Int_t  NumSelected() const { return fSelected; }
    virtual Int_t  NumItems() const { return fTotal; }
    virtual TGFrameElement *FindFrame(Int_t x,Int_t y,Bool_t exclude=kTRUE);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.5 2004/08/03 19:45:14 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDockableFrame.cxx,v 1.6 2004/09/16 18:50:09 brun Exp $
 // Author: Abdelhalim Ssadik   07/07/04
 
 /*************************************************************************
@@ -67,6 +67,7 @@ TGDockButton::TGDockButton(const TGCompositeFrame *p, int id) :
    fHiBg = TColor::RGB2Pixel(r, g, b);
 
    AddInput(kEnterWindowMask | kLeaveWindowMask);
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -141,6 +142,7 @@ TGDockHideButton::TGDockHideButton(const TGCompositeFrame *p) :
 
    Resize(10, 8);
    fAspectRatio = 0;
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -179,6 +181,7 @@ TGUndockedFrame::TGUndockedFrame(const TGWindow *p, TGDockableFrame *dockable) :
                kMWMFuncAll | kMWMFuncResize | kMWMFuncMaximize |
                              kMWMFuncMinimize,
                kMWMInputModeless);
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -247,6 +250,7 @@ TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
 
    MapSubwindows();
    Resize(GetDefaultSize());
+   TGFrame::SetWindowName();
 }
 
 //______________________________________________________________________________

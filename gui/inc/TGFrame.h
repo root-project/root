@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.57 2004/10/07 09:56:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.58 2004/10/25 12:06:50 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -319,6 +319,7 @@ protected:
    TList           *fList;            // container of frame elements
    Bool_t           fLayoutBroken;    // no layout manager is used
    Int_t            fMustCleanup;     // cleanup mode (see EFrameCleanup)
+   Bool_t           fMapSubwindows;   // kTRUE - map subwindows
 
    static TContextMenu  *fgContextMenu;   // context menu for setting GUI attributes
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
@@ -380,6 +381,8 @@ public:
    virtual void   SetCleanup(Int_t mode = kLocalCleanup);
    virtual Int_t  MustCleanup() const { return fMustCleanup; }
    virtual void   Cleanup();
+   virtual void   SetMapSubwindows(Bool_t on) {  fMapSubwindows = on; }
+   virtual Bool_t IsMapSubwindows() const { return fMapSubwindows; }
 
    virtual void   Print(Option_t *option="") const;
    virtual void   SavePrimitive(ofstream &out, Option_t *option);
@@ -393,7 +396,7 @@ public:
    TGVerticalFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground()) :
-      TGCompositeFrame(p, w, h, options | kVerticalFrame, back) { }
+      TGCompositeFrame(p, w, h, options | kVerticalFrame, back) { SetWindowName(); }
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGVerticalFrame,0)  // Composite frame with vertical child layout
@@ -404,7 +407,7 @@ public:
    TGHorizontalFrame(const TGWindow *p = 0, UInt_t w = 1, UInt_t h = 1,
                      UInt_t options = kChildFrame,
                      Pixel_t back = GetDefaultFrameBackground()) :
-      TGCompositeFrame(p, w, h, options | kHorizontalFrame, back) { }
+      TGCompositeFrame(p, w, h, options | kHorizontalFrame, back) { SetWindowName(); }
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGHorizontalFrame,0)  // Composite frame with horizontal child layout

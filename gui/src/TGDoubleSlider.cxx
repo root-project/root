@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.10 2003/12/11 16:26:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGDoubleSlider.cxx,v 1.11 2003/12/15 18:04:27 brun Exp $
 // Author: Reiner Rohlfs   30/09/98
 
 /*************************************************************************
@@ -86,6 +86,7 @@ TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t typ
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                     kButtonPressMask | kButtonReleaseMask |
                     kPointerMotionMask, kNone, kNone);
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -143,6 +144,7 @@ TGDoubleVSlider::TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t
 
    // set initial values
    fSmin = h/8*3; fSmax = h/8*5; fVmin = 0; fVmax = h;
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -314,6 +316,7 @@ TGDoubleHSlider::TGDoubleHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t
 
    // set initial values
    fSmin = w/8*3; fSmax = w/8*5; fVmin = 0; fVmax = w;
+   SetWindowName();
 }
 
 //______________________________________________________________________________

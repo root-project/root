@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.5 2004/02/18 16:17:33 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGImageMap.cxx,v 1.6 2004/07/08 10:02:31 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
@@ -424,6 +424,7 @@ TGImageMap::TGImageMap(const TGWindow *p, const TGPicture *pic) :
 
    AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
             kStructureNotifyMask | kLeaveWindowMask);
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -447,6 +448,7 @@ TGImageMap::TGImageMap(const TGWindow *p, const TString &pic) :
 
    AddInput(kKeyPressMask | kKeyReleaseMask | kPointerMotionMask |
             kStructureNotifyMask | kLeaveWindowMask);
+   SetWindowName();
 }
 
 //______________________________________________________________________________

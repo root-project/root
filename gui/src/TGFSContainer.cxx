@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.22 2004/10/15 17:07:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.23 2004/10/15 17:44:20 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -242,6 +242,8 @@ TGFileItem::TGFileItem(const TGWindow *p,
    for (i = 0; fSubnames[i] != 0; ++i)
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                      fSubnames[i]->GetLength());
+
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -309,6 +311,8 @@ TGFileContainer::TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
        !fDoc_s    || !fDoc_t    ||
        !fSlink_s  || !fSlink_t)
       Error("TGFileContainer", "required pixmap(s) missing\n");
+
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -338,6 +342,8 @@ TGFileContainer::TGFileContainer(TGCanvas *p, UInt_t options, ULong_t back) :
        !fDoc_s    || !fDoc_t    ||
        !fSlink_s  || !fSlink_t)
       Error("TGFileContainer", "required pixmap(s) missing\n");
+
+   SetWindowName();
 }
 
 //______________________________________________________________________________

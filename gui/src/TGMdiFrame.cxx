@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.4 2004/09/10 14:00:40 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiFrame.cxx,v 1.5 2004/10/19 17:13:27 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.37 2004/12/21 19:44:22 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.38 2005/01/05 09:27:15 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -207,6 +207,8 @@ void TGX11::MapWindow(Window_t id)
 {
    // Map window on screen.
 
+   if (!id) return;
+
    XMapWindow(fDisplay, (Window) id);
 }
 
@@ -214,6 +216,8 @@ void TGX11::MapWindow(Window_t id)
 void TGX11::MapSubwindows(Window_t id)
 {
    // Map sub windows.
+
+   if (!id) return;
 
    XMapSubwindows(fDisplay, (Window) id);
 }
@@ -223,6 +227,8 @@ void TGX11::MapRaised(Window_t id)
 {
    // Map window on screen and put on top of all windows.
 
+   if (!id) return;
+
    XMapRaised(fDisplay, (Window) id);
 }
 
@@ -230,6 +236,8 @@ void TGX11::MapRaised(Window_t id)
 void TGX11::UnmapWindow(Window_t id)
 {
    // Unmap window from screen.
+
+   if (!id) return;
 
    XUnmapWindow(fDisplay, (Window) id);
 }
@@ -239,6 +247,8 @@ void TGX11::DestroyWindow(Window_t id)
 {
    // Destroy window.
 
+   if (!id) return;
+
    XDestroyWindow(fDisplay, (Window) id);
 }
 
@@ -246,6 +256,8 @@ void TGX11::DestroyWindow(Window_t id)
 void TGX11::DestroySubwindows(Window_t id)
 {
    // Destroy subwindows of this window.
+
+   if (!id) return;
 
    XDestroySubwindows(fDisplay, (Window) id);
 }
@@ -255,6 +267,8 @@ void TGX11::RaiseWindow(Window_t id)
 {
    // Put window on top of window stack.
 
+   if (!id) return;
+
    XRaiseWindow(fDisplay, (Window) id);
 }
 
@@ -262,6 +276,8 @@ void TGX11::RaiseWindow(Window_t id)
 void TGX11::LowerWindow(Window_t id)
 {
    // Lower window so it lays below all its siblings.
+
+   if (!id) return;
 
    XLowerWindow(fDisplay, (Window) id);
 }
@@ -271,6 +287,8 @@ void TGX11::MoveWindow(Window_t id, Int_t x, Int_t y)
 {
    // Move a window.
 
+   if (!id) return;
+   
    XMoveWindow(fDisplay, (Window) id, x, y);
 }
 
@@ -278,6 +296,8 @@ void TGX11::MoveWindow(Window_t id, Int_t x, Int_t y)
 void TGX11::MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Move and resize a window.
+
+   if (!id) return;
 
    XMoveResizeWindow(fDisplay, (Window) id, x, y, w, h);
 }
@@ -287,6 +307,8 @@ void TGX11::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
 {
    // Resize the window.
 
+   if (!id) return;
+
    XResizeWindow(fDisplay, (Window) id, w, h);
 }
 
@@ -294,6 +316,8 @@ void TGX11::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
 void TGX11::IconifyWindow(Window_t id)
 {
    // Iconify the window.
+
+   if (!id) return;
 
    XIconifyWindow(fDisplay, (Window) id, fScreenNumber);
 }
@@ -303,6 +327,8 @@ void TGX11::ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y)
 {
    // Reparent window to new parent window at position (x,y).
 
+   if (!id) return;
+
    XReparentWindow(fDisplay, (Window) id, (Window) pid, x, y);
 }
 
@@ -311,6 +337,8 @@ void TGX11::SetWindowBackground(Window_t id, ULong_t color)
 {
    // Set the window background color.
 
+   if (!id) return;
+
    XSetWindowBackground(fDisplay, (Window) id, color);
 }
 
@@ -318,6 +346,8 @@ void TGX11::SetWindowBackground(Window_t id, ULong_t color)
 void TGX11::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
 {
    // Set pixmap as window background.
+
+   if (!id) return;
 
    XSetWindowBackgroundPixmap(fDisplay, (Window) id, (Pixmap) pxm);
 }
@@ -718,6 +748,8 @@ void TGX11::GetWindowAttributes(Window_t id, WindowAttributes_t &attr)
 {
    // Get window attributes and return filled in attributes structure.
 
+   if (!id) return;
+
    XWindowAttributes xattr;
 
    XGetWindowAttributes(fDisplay, id, &xattr);
@@ -871,6 +903,8 @@ Window_t TGX11::GetParent(Window_t id) const
 {
    // Return the parent of the window.
 
+   if (!id) return (Window_t)0;
+
    Window  root, parent;
    Window *children = 0;
    UInt_t  nchildren;
@@ -926,7 +960,7 @@ GContext_t TGX11::CreateGC(Drawable_t id, GCValues_t *gval)
    if (gval)
       MapGCValues(*gval, xmask, xgval);
 
-   if ((Drawable) id == fRootWin)
+   if (!id || ((Drawable) id == fRootWin))
       id = (Drawable_t) fVisRootWin;
 
    GC gc = XCreateGC(fDisplay, (Drawable) id, xmask, &xgval);
@@ -994,6 +1028,8 @@ void TGX11::SetCursor(Window_t id, Cursor_t curid)
 {
    // Set the specified cursor.
 
+  if (!id) return;
+
    XDefineCursor(fDisplay, (Window) id, (Cursor) curid);
 }
 
@@ -1003,7 +1039,7 @@ Pixmap_t TGX11::CreatePixmap(Drawable_t id, UInt_t w, UInt_t h)
    // Creates a pixmap of the width and height you specified
    // and returns a pixmap ID that identifies it.
 
-   return (Pixmap_t) XCreatePixmap(fDisplay, (Drawable) id, w, h, fDepth);
+   return (Pixmap_t) XCreatePixmap(fDisplay, (Drawable) (id ? id : fRootWin), w, h, fDepth);
 }
 
 //______________________________________________________________________________
@@ -1014,7 +1050,7 @@ Pixmap_t TGX11::CreatePixmap(Drawable_t id, const char *bitmap,
    // Create a pixmap from bitmap data. Ones will get foreground color and
    // zeroes background color.
 
-   return (Pixmap_t) XCreatePixmapFromBitmapData(fDisplay, id, (char *)bitmap,
+   return (Pixmap_t) XCreatePixmapFromBitmapData(fDisplay, (id ? id : fRootWin), (char *)bitmap,
                            width, height, forecolor, backcolor, depth);
 }
 
@@ -1024,7 +1060,7 @@ Pixmap_t TGX11::CreateBitmap(Drawable_t id, const char *bitmap,
 {
    // Create a bitmap (i.e. pixmap with depth 1) from the bitmap data.
 
-   return (Pixmap_t) XCreateBitmapFromData(fDisplay, id, (char *)bitmap,
+   return (Pixmap_t) XCreateBitmapFromData(fDisplay, (id ? id : fRootWin), (char *)bitmap,
                                            width, height);
 }
 
@@ -1146,7 +1182,7 @@ Bool_t TGX11::CreatePictureFromFile(Drawable_t id, const char *filename,
       xpmattr.depth = fDepth;
    }
 
-   Int_t res = XpmReadFileToPixmap(fDisplay, id, (char*)filename,
+   Int_t res = XpmReadFileToPixmap(fDisplay, (id ? id : fRootWin), (char*)filename,
                                    (Pixmap*)&pict, (Pixmap*)&pict_mask, &xpmattr);
 
    MapPictureAttributes(attr, xpmattr, kFALSE);
@@ -1189,7 +1225,7 @@ Bool_t TGX11::CreatePictureFromData(Drawable_t id, char **data, Pixmap_t &pict,
       xpmattr.depth = fDepth;
    }
 
-   Int_t res = XpmCreatePixmapFromData(fDisplay, id, data, (Pixmap*)&pict,
+   Int_t res = XpmCreatePixmapFromData(fDisplay, (id ? id : fRootWin), data, (Pixmap*)&pict,
                                        (Pixmap*)&pict_mask, &xpmattr);
 
    MapPictureAttributes(attr, xpmattr, kFALSE);
@@ -1609,6 +1645,8 @@ void TGX11::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
    // The graphics context gc will be used and the source will be copied
    // from src_x,src_y,src_x+width,src_y+height to dest_x,dest_y.
 
+   if (!src || !dest) return;
+
    XCopyArea(fDisplay, src, dest, (GC) gc, src_x, src_y, width, height,
              dest_x, dest_y);
 }
@@ -1617,6 +1655,8 @@ void TGX11::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
 void TGX11::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *attr)
 {
    // Change window attributes.
+
+   if (!id) return;
 
    XSetWindowAttributes xattr;
    ULong_t              xmask = 0;
@@ -1638,6 +1678,8 @@ void TGX11::ChangeProperty(Window_t id, Atom_t property, Atom_t type,
    // causes the X server to generate a PropertyNotify event on that
    // window.
 
+   if (!id) return;
+
    XChangeProperty(fDisplay, (Window) id, (Atom) property, (Atom) type,
                    8, PropModeReplace, data, len);
 }
@@ -1647,6 +1689,8 @@ void TGX11::DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2,
 {
    // Draw a line.
 
+   if (!id) return;
+
    XDrawLine(fDisplay, (Drawable) id, (GC) gc, x1, y1, x2, y2);
 }
 
@@ -1654,6 +1698,8 @@ void TGX11::DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2,
 void TGX11::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Clear a window area to the bakcground color.
+
+   if (!id) return;
 
    XClearArea(fDisplay, (Window) id, x, y, w, h, False);
 }
@@ -1664,6 +1710,8 @@ Bool_t TGX11::CheckEvent(Window_t id, EGEventType type, Event_t &ev)
    // Check if there is for window "id" an event of type "type". If there
    // is fill in the event structure and return true. If no such event
    // return false.
+
+   if (!id) return kFALSE;
 
    Event_t tev;
    XEvent  xev;
@@ -1684,7 +1732,7 @@ void TGX11::SendEvent(Window_t id, Event_t *ev)
 {
    // Send event ev to window id.
 
-   if (!ev) return;
+   if (!ev || !id) return;
 
    XEvent xev;
 
@@ -1697,6 +1745,8 @@ void TGX11::SendEvent(Window_t id, Event_t *ev)
 void TGX11::WMDeleteNotify(Window_t id)
 {
    // Tell WM to send message when window is closed via WM.
+
+   if (!id) return;
 
    XSetWMProtocols(fDisplay, (Window) id, &gWM_DELETE_WINDOW, 1);
 }
@@ -1720,6 +1770,8 @@ void TGX11::GrabKey(Window_t id, Int_t keycode, UInt_t modifier, Bool_t grab)
    // are active then the keyboard will be grabed for window id.
    // When grab is false, ungrab the keyboard for this key and modifier.
 
+//   if (!id) return;
+
    UInt_t xmod;
 
    MapModifierState(modifier, xmod);
@@ -1740,6 +1792,8 @@ void TGX11::GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
    // certain mouse button is hit while certain modifier's (Shift, Control,
    // Meta, Alt) are active then the mouse will be grabed for window id.
    // When grab is false, ungrab the mouse button for this button and modifier.
+
+   if (!id) return;
 
    UInt_t xmod;
 
@@ -1764,6 +1818,8 @@ void TGX11::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
    // effect, further pointer events are only reported to the grabbing
    // client window.
 
+//   if (!id) return;
+
    if (grab) {
       UInt_t xevmask;
       MapEventMask(evmask, xevmask);
@@ -1780,6 +1836,8 @@ void TGX11::SetWindowName(Window_t id, char *name)
 {
    // Set window name.
 
+   if (!id) return;
+
    XTextProperty wname;
 
    if (XStringListToTextProperty(&name, 1, &wname) == 0) {
@@ -1794,6 +1852,8 @@ void TGX11::SetWindowName(Window_t id, char *name)
 void TGX11::SetIconName(Window_t id, char *name)
 {
    // Set window icon name.
+
+   if (!id) return;
 
    XTextProperty wname;
 
@@ -1810,6 +1870,8 @@ void TGX11::SetIconPixmap(Window_t id, Pixmap_t pic)
 {
    // Set pixmap the WM can use when the window is iconized.
 
+   if (!id) return;
+
    XWMHints hints;
 
    hints.flags = IconPixmapHint;
@@ -1823,6 +1885,8 @@ void TGX11::SetClassHints(Window_t id, char *className, char *resourceName)
 {
    // Set the windows class and resource name.
 
+   if (!id) return;
+
    XClassHint class_hints;
 
    class_hints.res_class = className;
@@ -1834,6 +1898,8 @@ void TGX11::SetClassHints(Window_t id, char *className, char *resourceName)
 void TGX11::SetMWMHints(Window_t id, UInt_t value, UInt_t funcs, UInt_t input)
 {
    // Set decoration style for MWM-compatible wm (mwm, ncdwm, fvwm?).
+
+   if (!id) return;
 
    MWMHintsProperty_t prop;
 
@@ -1853,6 +1919,8 @@ void TGX11::SetWMPosition(Window_t id, Int_t x, Int_t y)
 {
    // Tell the window manager the desired window position.
 
+   if (!id) return;
+
    XSizeHints hints;
 
    hints.flags = USPosition | PPosition;
@@ -1866,6 +1934,8 @@ void TGX11::SetWMPosition(Window_t id, Int_t x, Int_t y)
 void TGX11::SetWMSize(Window_t id, UInt_t w, UInt_t h)
 {
    // Tell the window manager the desired window size.
+
+   if (!id) return;
 
    XSizeHints hints;
 
@@ -1884,6 +1954,8 @@ void TGX11::SetWMSizeHints(Window_t id, UInt_t wmin, UInt_t hmin,
    // Give the window manager minimum and maximum size hints. Also
    // specify via winc and hinc the resize increments.
 
+   if (!id) return;
+
    XSizeHints hints;
 
    hints.flags = PMinSize | PMaxSize | PResizeInc;
@@ -1901,6 +1973,8 @@ void TGX11::SetWMSizeHints(Window_t id, UInt_t wmin, UInt_t hmin,
 void TGX11::SetWMState(Window_t id, EInitialState state)
 {
    // Set the initial state of the window. Either kNormalState or kIconicState.
+
+   if (!id) return;
 
    XWMHints hints;
    Int_t    xstate = NormalState;
@@ -1921,6 +1995,8 @@ void TGX11::SetWMTransientHint(Window_t id, Window_t main_id)
 {
    // Tell window manager that window is a transient window of main.
 
+   if (!id) return;
+
    XSetTransientForHint(fDisplay, (Window) id, (Window) main_id);
 }
 
@@ -1929,6 +2005,8 @@ void TGX11::DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
                        const char *s, Int_t len)
 {
    // Draw a string using a specific graphics context in position (x,y).
+
+   if (!id) return;
 
    XDrawString(fDisplay, (Drawable) id, (GC) gc, x, y, (char *) s, len);
 }
@@ -2012,6 +2090,8 @@ void TGX11::ClearWindow(Window_t id)
 {
    // Clear window.
 
+   if (!id) return;
+
    XClearWindow(fDisplay, (Window) id);
 }
 
@@ -2033,6 +2113,8 @@ void TGX11::FillRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y, UInt_t
 {
    // Draw a filled rectangle. Filling is done according to the gc.
 
+   if (!id) return;
+
    XFillRectangle(fDisplay, (Drawable) id, (GC) gc, x, y, w, h);
 }
 
@@ -2041,6 +2123,8 @@ void TGX11::DrawRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y, UInt_t
 {
    // Draw a rectangle outline.
 
+   if (!id) return;
+
    XDrawRectangle(fDisplay, (Drawable) id, (GC) gc, x, y, w, h);
 }
 
@@ -2048,6 +2132,8 @@ void TGX11::DrawRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y, UInt_t
 void TGX11::DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nseg)
 {
    // Draws multiple line segments. Each line is specified by a pair of points.
+
+   if (!id) return;
 
    XDrawSegments(fDisplay, (Drawable) id, (GC) gc, (XSegment *) seg, nseg);
 }
@@ -2059,6 +2145,8 @@ void TGX11::SelectInput(Window_t id, UInt_t evmask)
    // events are propageted up the window stack. This mask can also be
    // set at window creation time via the SetWindowAttributes_t::fEventMask
    // attribute.
+
+   if (!id) return;
 
    UInt_t xevmask;
 
@@ -2084,6 +2172,8 @@ void TGX11::SetInputFocus(Window_t id)
 {
    // Set keyboard input focus to window id.
 
+   if (!id) return;
+
    XWindowAttributes xattr;
 
    XGetWindowAttributes(fDisplay, (Window) id, &xattr);
@@ -2107,6 +2197,8 @@ void TGX11::SetPrimarySelectionOwner(Window_t id)
    // Makes the window id the current owner of the primary selection.
    // That is the window in which, for example some text is selected.
 
+   if (!id) return;
+
    XSetSelectionOwner(fDisplay, XA_PRIMARY, id, CurrentTime);
 }
 
@@ -2122,6 +2214,8 @@ void TGX11::ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when)
    // (when).
    // The selection owner responds by sending a SelectionNotify event, which
    // confirms the selected atom and type.
+
+   if (!id) return;
 
    XConvertSelection(fDisplay, XA_PRIMARY, XA_STRING, (Atom) clipboard,
                      (Window) id, (Time) when);
@@ -2198,6 +2292,8 @@ void TGX11::GetPasteBuffer(Window_t id, Atom_t atom, TString &text, Int_t &nchar
    // Get contents of paste buffer atom into string. If del is true delete
    // the paste buffer afterwards.
 
+   if (!id) return;
+
    Atom actual_type, property = (Atom) atom;
    int  actual_format;
    unsigned long nitems, bytes_after, nread;
@@ -2240,6 +2336,8 @@ void TGX11::TranslateCoordinates(Window_t src, Window_t dest, Int_t src_x,
    // in a mapped child of the destination, the id of that child is
    // returned as well.
 
+   if (!src || !dest) return;
+
    Window xchild;
 
    XTranslateCoordinates(fDisplay, (Window) src, (Window) dest, src_x,
@@ -2252,6 +2350,8 @@ void TGX11::GetWindowSize(Drawable_t id, Int_t &x, Int_t &y, UInt_t &w, UInt_t &
 {
    // Return geometry of window (should be called GetGeometry but signature
    // already used).
+
+   if (!id) return;
 
    Window wdummy;
    UInt_t bdum, ddum;
@@ -2269,6 +2369,8 @@ void TGX11::FillPolygon(Window_t id, GContext_t gc, Point_t *points, Int_t npnt)
    // inside the polygon, the line segment connecting them does not
    // intersect the path.
 
+   if (!id) return;
+
    XFillPolygon(fDisplay, (Window) id, (GC) gc, (XPoint *) points, npnt,
                 Convex, CoordModeOrigin);
 }
@@ -2285,6 +2387,8 @@ void TGX11::QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
    // the child that contains the pointer, if any, or else kNone to
    // childw. QueryPointer returns the current logical state of the
    // keyboard buttons and the modifier keys in mask.
+
+   if (!id) return;
 
    Window xrootw, xchildw;
    UInt_t xmask;
@@ -2497,6 +2601,8 @@ void TGX11::PutImage(Drawable_t win, GContext_t gc, Drawable_t img, Int_t dx,
                      Int_t dy, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Put (x,y,w,h) part of image img in window win at position dx,dy.
+
+   if (!win) return;
 
    XPutImage(fDisplay, (Drawable) win, (GC) gc, (XImage*) img,
              x, y, dx, dy, w, h);

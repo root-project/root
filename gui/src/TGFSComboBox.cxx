@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.12 2004/12/08 11:41:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.13 2004/12/08 12:04:53 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -97,6 +97,7 @@ TGTreeLBEntry::TGTreeLBEntry(const TGWindow *p, TGString *text,
    fTWidth = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -280,6 +281,7 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
                   new TGLayoutHints(kLHintsLeft | kLHintsTop, indent, 0, 0, 0));
       }
    }
+   SetWindowName();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.87 2004/10/20 13:11:39 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.88 2004/10/20 22:32:45 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -629,6 +629,8 @@ static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offse
 {
    //
 
+   if (!id) return 0;
+
    char *atomName;
    char *data, *destPtr;
    char propName[32];
@@ -670,6 +672,8 @@ static int _GetWindowProperty(GdkWindow * id, Atom_t property, Long_t long_offse
 static ULong_t GetPixelImage(Drawable_t id, Int_t x, Int_t y)
 {
    //
+
+   if (!id) return 0;
 
    GdkImage *image = (GdkImage *)id;
    ULong_t pixel;
@@ -3000,7 +3004,7 @@ void TGWin32::SetColor(GdkGC *gc, int ci)
    GdkGCValues gcvals;
    GdkColor color;
 
-	if (ci<=0) ci = 10; //white
+   if (ci<=0) ci = 10; //white
 
    if (ci >= 0 && ci < kMAXCOL && !gColors[ci].defined) {
       TColor *tcol = gROOT->GetColor(ci);
@@ -3063,6 +3067,8 @@ void TGWin32::SetCursor(int wid, ECursor cursor)
 void TGWin32::SetCursor(Window_t id, Cursor_t curid)
 {
    // Set the specified cursor.
+
+   if (!id) return;
 
    static GdkWindow *lid = 0;
    static GdkCursor *lcur = 0;
@@ -4074,6 +4080,8 @@ void TGWin32::Warp(int ix, int iy, Window_t id)
    // Coordinates are relative to the origin of the window id
    // or to the origin of the current window if id == 0.
 
+   if (!id) return;
+
    POINT cpt, tmp;
    HWND dw;
    if (!id)
@@ -4431,6 +4439,8 @@ void TGWin32::MapWindow(Window_t id)
 {
    // Map window on screen.
 
+   if (!id) return;
+
    gdk_window_show((GdkWindow *)id);
    if ((GDK_DRAWABLE_TYPE((GdkWindow *)id) != GDK_WINDOW_TEMP) &&
        (GetParent(id) == GetDefaultRootWindow())) {
@@ -4444,6 +4454,8 @@ void TGWin32::MapSubwindows(Window_t id)
 {
    //
 
+   if (!id) return;
+
    HWND wp;
    EnumChildWindows((HWND)GDK_DRAWABLE_XID((GdkWindow *)id),
                     EnumChildProc, (LPARAM) NULL);
@@ -4453,6 +4465,8 @@ void TGWin32::MapSubwindows(Window_t id)
 void TGWin32::MapRaised(Window_t id)
 {
    // Map window on screen and put on top of all windows.
+
+   if (!id) return;
 
    HWND hwnd = ::GetForegroundWindow();
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
@@ -4475,6 +4489,8 @@ void TGWin32::UnmapWindow(Window_t id)
 {
    // Unmap window from screen.
 
+   if (!id) return;
+
    gdk_window_hide((GdkWindow *) id);
 }
 
@@ -4482,6 +4498,8 @@ void TGWin32::UnmapWindow(Window_t id)
 void TGWin32::DestroyWindow(Window_t id)
 {
    // Destroy window.
+
+   if (!id) return;
 
    gdk_window_destroy((GdkDrawable *) id, kTRUE);
 }
@@ -4491,6 +4509,8 @@ void TGWin32::DestroySubwindows(Window_t id)
 {
    // Destroy all internal subwindows
 
+   if (!id) return;
+
    gdk_window_destroy((GdkDrawable *) id, kFALSE);
 }
 
@@ -4498,6 +4518,8 @@ void TGWin32::DestroySubwindows(Window_t id)
 void TGWin32::RaiseWindow(Window_t id)
 {
    // Put window on top of window stack.
+
+   if (!id) return;
 
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
    if (GDK_DRAWABLE_TYPE((GdkWindow *)id) == GDK_WINDOW_TEMP) {
@@ -4515,6 +4537,8 @@ void TGWin32::LowerWindow(Window_t id)
 {
    // Lower window so it lays below all its siblings.
 
+   if (!id) return;
+
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
    ::SetWindowPos(window, HWND_BOTTOM, 0, 0, 0, 0,
                   SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
@@ -4525,6 +4549,8 @@ void TGWin32::MoveWindow(Window_t id, Int_t x, Int_t y)
 {
    // Move a window.
 
+   if (!id) return;
+
    gdk_window_move((GdkDrawable *) id, x, y);
 }
 
@@ -4534,6 +4560,8 @@ void TGWin32::MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w,
 {
    // Move and resize a window.
 
+   if (!id) return;
+
    gdk_window_move_resize((GdkWindow *) id, x, y, w, h);
 }
 
@@ -4542,6 +4570,8 @@ void TGWin32::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
 {
    // Resize the window.
 
+   if (!id) return;
+
    gdk_window_resize((GdkWindow *) id, w, h);
 }
 
@@ -4549,6 +4579,8 @@ void TGWin32::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
 void TGWin32::IconifyWindow(Window_t id)
 {
    // Iconify the window.
+
+   if (!id) return;
 
    gdk_window_lower((GdkWindow *) id);
    ::CloseWindow((HWND)GDK_DRAWABLE_XID((GdkWindow *)id));
@@ -4560,6 +4592,8 @@ void TGWin32::ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y)
    // Reparent window, make pid the new parent and position the window at
    // position (x,y) in new parent.
 
+   if (!id) return;
+
    gdk_window_reparent((GdkWindow *)id, (GdkWindow *)pid, x, y);
 }
 
@@ -4567,6 +4601,8 @@ void TGWin32::ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y)
 void TGWin32::SetWindowBackground(Window_t id, ULong_t color)
 {
    // Set the window background color.
+
+   if (!id) return;
 
    GdkColor back;
    back.pixel = color;
@@ -4581,6 +4617,8 @@ void TGWin32::SetWindowBackground(Window_t id, ULong_t color)
 void TGWin32::SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm)
 {
    // Set pixmap as window background.
+
+   if (!id) return;
 
    gdk_window_set_back_pixmap((GdkWindow *) id, (GdkPixmap *) pxm, 0);
 }
@@ -5074,6 +5112,8 @@ void TGWin32::GetWindowAttributes(Window_t id, WindowAttributes_t & attr)
 {
    // Get window attributes and return filled in attributes structure.
 
+   if (!id) return;
+
    GdkWindowAttr xattr;
 
    gdk_window_get_geometry((GdkWindow *) id,
@@ -5149,6 +5189,8 @@ Window_t TGWin32::GetParent(Window_t id) const
 {
    // Return the parent of the window.
 
+   if (!id) return (Window_t)0;
+
    return (Window_t)gdk_window_get_parent((GdkWindow *) id);
 }
 
@@ -5186,6 +5228,8 @@ GContext_t TGWin32::CreateGC(Drawable_t id, GCValues_t *gval)
 {
    // Create a graphics context using the values set in gval (but only for
    // those entries that are in the mask).
+
+   if (!id) return (GContext_t)0;
 
    GdkGCValues xgval;
    ULong_t xmask = 0;
@@ -5307,8 +5351,10 @@ Pixmap_t TGWin32::CreatePixmap(Drawable_t id, UInt_t w, UInt_t h)
    // Creates a pixmap of the width and height you specified
    // and returns a pixmap ID that identifies it.
 
-   return (Pixmap_t) gdk_pixmap_new((GdkWindow *) id, w, h,
-                                    gdk_visual_get_best_depth());
+   GdkWindow *wid = (GdkWindow *)id;
+   if (!id) wid =  GDK_ROOT_PARENT();
+
+   return (Pixmap_t) gdk_pixmap_new(wid, w, h, gdk_visual_get_best_depth());
 }
 
 //______________________________________________________________________________
@@ -5331,8 +5377,10 @@ Pixmap_t TGWin32::CreatePixmap(Drawable_t id, const char *bitmap,
    back.green = GetGValue(backcolor);
    back.blue = GetBValue(backcolor);
 
-   return (Pixmap_t) gdk_pixmap_create_from_data((GdkWindow *) id,
-                                                 (char *) bitmap, width,
+   GdkWindow *wid = (GdkWindow *)id;
+   if (!id) wid =  GDK_ROOT_PARENT();
+
+   return (Pixmap_t) gdk_pixmap_create_from_data(wid, (char *) bitmap, width,
                                                  height, depth, &fore, &back);
 }
 
@@ -5347,7 +5395,10 @@ Pixmap_t TGWin32::CreateBitmap(Drawable_t id, const char *bitmap,
    for (int i=0; i<siz; i++) {
       ibitmap[i] = ~bitmap[i];
    }
-   Pixmap_t ret = (Pixmap_t) gdk_bitmap_create_from_data((GdkWindow *) id,
+   GdkWindow *wid = (GdkWindow *)id;
+   if (!id) wid =  GDK_ROOT_PARENT();
+
+   Pixmap_t ret = (Pixmap_t) gdk_bitmap_create_from_data(wid,
                                                  (char *) ibitmap, width, height);
    delete [] ibitmap;
    return ret;
@@ -5373,8 +5424,10 @@ Bool_t TGWin32::CreatePictureFromFile(Drawable_t id, const char *filename,
 
    GdkBitmap *gdk_pixmap_mask;
    if (strstr(filename, ".xpm") || strstr(filename, ".XPM")) {
-      pict = (Pixmap_t) gdk_pixmap_create_from_xpm((GdkWindow *) id,
-                                                &gdk_pixmap_mask, 0,
+      GdkWindow *wid = (GdkWindow *)id;
+      if (!id) wid =  GDK_ROOT_PARENT();
+
+      pict = (Pixmap_t) gdk_pixmap_create_from_xpm(wid, &gdk_pixmap_mask, 0,
                                                 filename);
       pict_mask = (Pixmap_t) gdk_pixmap_mask;
    } else if (strstr(filename, ".gif") || strstr(filename, ".GIF")) {
@@ -5404,8 +5457,10 @@ Bool_t TGWin32::CreatePictureFromData(Drawable_t id, char **data,
    // kFALSE otherwise. If mask does not exist it is set to kNone.
 
    GdkBitmap *gdk_pixmap_mask;
-   pict = (Pixmap_t) gdk_pixmap_create_from_xpm_d((GdkWindow *) id,
-                                                  &gdk_pixmap_mask, 0,
+   GdkWindow *wid = (GdkWindow *)id;
+   if (!id) wid =  GDK_ROOT_PARENT();
+
+   pict = (Pixmap_t) gdk_pixmap_create_from_xpm_d(wid, &gdk_pixmap_mask, 0,
                                                   data);
    pict_mask = (Pixmap_t) gdk_pixmap_mask;
 
@@ -5554,6 +5609,8 @@ Bool_t TGWin32::CheckEvent(Window_t id, EGEventType type, Event_t & ev)
    // is fill in the event structure and return true. If no such event
    // return false.
 
+   if (!id) return kFALSE;
+
    Event_t tev;
    GdkEvent xev;
 
@@ -5573,7 +5630,7 @@ void TGWin32::SendEvent(Window_t id, Event_t * ev)
 {
    // Send event ev to window id.
 
-   if (!ev) return;
+   if (!ev || !id) return;
 
    TGWin32MainThread::LockMSG();
    GdkEvent xev;
@@ -6062,6 +6119,8 @@ void TGWin32::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
    // The graphics context gc will be used and the source will be copied
    // from src_x,src_y,src_x+width,src_y+height to dest_x,dest_y.
 
+   if (!src || !dest) return;
+
    gdk_window_copy_area((GdkDrawable *) dest, (GdkGC *) gc, dest_x, dest_y,
                         (GdkDrawable *) src, src_x, src_y, width, height);
 }
@@ -6070,6 +6129,8 @@ void TGWin32::CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
 void TGWin32::ChangeWindowAttributes(Window_t id, SetWindowAttributes_t * attr)
 {
    // Change window attributes.
+
+   if (!id) return;
 
    GdkWMDecoration deco;
    GdkColor color;
@@ -6120,6 +6181,8 @@ void TGWin32::ChangeProperty(Window_t id, Atom_t property, Atom_t type,
    // causes the X server to generate a PropertyNotify event on that
    // window.
 
+   if (!id) return;
+
    gdk_property_change((GdkWindow *) id, (GdkAtom) property,
                        (GdkAtom) type, 8, GDK_PROP_MODE_REPLACE, data,len);
 }
@@ -6130,6 +6193,8 @@ void TGWin32::DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1,
 {
    // Draw a line.
 
+   if (!id) return;
+
    gdk_draw_line((GdkDrawable *) id, (GdkGC *) gc, x1, y1, x2, y2);
 }
 
@@ -6138,6 +6203,8 @@ void TGWin32::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Clear a window area to the bakcground color.
 
+   if (!id) return;
+
    gdk_window_clear_area((GdkWindow *) id, x, y, w, h);
 }
 
@@ -6145,6 +6212,8 @@ void TGWin32::ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h)
 void TGWin32::WMDeleteNotify(Window_t id)
 {
    // Tell WM to send message when window is closed via WM.
+
+   if (!id) return;
 
    Atom prop;
    prop = (Atom_t) gdk_atom_intern("WM_DELETE_WINDOW", FALSE);
@@ -6198,6 +6267,8 @@ void TGWin32::GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
    UInt_t xevmask;
    UInt_t xmod;
 
+   if (!id) return;
+
    MapModifierState(modifier, xmod);
 
    if (grab) {
@@ -6235,6 +6306,8 @@ void TGWin32::SetWindowName(Window_t id, char *name)
 {
    // Set window name.
 
+   if (!id) return;
+
    gdk_window_set_title((GdkWindow *) id, name);
 }
 
@@ -6243,6 +6316,8 @@ void TGWin32::SetIconName(Window_t id, char *name)
 {
    // Set window icon name.
 
+   if (!id) return;
+
    gdk_window_set_icon_name((GdkWindow *) id, name);
 }
 
@@ -6250,6 +6325,8 @@ void TGWin32::SetIconName(Window_t id, char *name)
 void TGWin32::SetIconPixmap(Window_t id, Pixmap_t pic)
 {
    // Set pixmap the WM can use when the window is iconized.
+
+   if (!id) return;
 
    gdk_window_set_icon((GdkWindow *)id, NULL, (GdkPixmap *)pic, (GdkPixmap *)pic);
 }
@@ -6260,6 +6337,8 @@ void TGWin32::SetIconPixmap(Window_t id, Pixmap_t pic)
 void TGWin32::SetClassHints(Window_t id, char *className, char *resourceName)
 {
    // Set the windows class and resource name.
+
+   if (!id) return;
 
    char *class_string;
    char *s;
@@ -6299,6 +6378,8 @@ void TGWin32::SetMWMHints(Window_t id, UInt_t value, UInt_t funcs,
 {
    // Set decoration style for MWM-compatible wm (mwm, ncdwm, fvwm?).
 
+   if (!id) return;
+
    gdk_window_set_decorations((GdkDrawable *) id, (GdkWMDecoration) value);
    gdk_window_set_functions((GdkDrawable *) id, (GdkWMFunction) funcs);
 }
@@ -6308,6 +6389,8 @@ void TGWin32::SetWMPosition(Window_t id, Int_t x, Int_t y)
 {
    //
 
+   if (!id) return;
+
    gdk_window_move((GdkDrawable *) id, x, y);
 }
 
@@ -6315,6 +6398,8 @@ void TGWin32::SetWMPosition(Window_t id, Int_t x, Int_t y)
 void TGWin32::SetWMSize(Window_t id, UInt_t w, UInt_t h)
 {
    //
+
+   if (!id) return;
 
    gdk_window_resize((GdkWindow *) id, w, h);
 }
@@ -6326,6 +6411,8 @@ void TGWin32::SetWMSizeHints(Window_t id, UInt_t wmin, UInt_t hmin,
 {
    // Give the window manager minimum and maximum size hints. Also
    // specify via winc and hinc the resize increments.
+
+   if (!id) return;
 
    GdkGeometry hints;
    GdkWindowHints flags;
@@ -6347,6 +6434,9 @@ void TGWin32::SetWMSizeHints(Window_t id, UInt_t wmin, UInt_t hmin,
 void TGWin32::SetWMState(Window_t id, EInitialState state)
 {
    // Set the initial state of the window. Either kNormalState or kIconicState.
+
+   if (!id) return;
+
 #if 0
    XWMHints hints;
    Int_t xstate = NormalState;
@@ -6368,6 +6458,8 @@ void TGWin32::SetWMTransientHint(Window_t id, Window_t main_id)
 {
    // Tell window manager that window is a transient window of gdk_parent_root.
 
+   if (!id) return;
+
    gdk_window_set_transient_for((GdkWindow *) id, (GdkWindow *) main_id);
 }
 
@@ -6376,6 +6468,8 @@ void TGWin32::DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
                          const char *s, Int_t len)
 {
    // Draw a string using a specific graphics context in position (x,y).
+
+   if (!id) return;
 
    GdkGCValues values;
    gdk_gc_get_values((GdkGC *) gc, &values);
@@ -6438,6 +6532,8 @@ void TGWin32::ClearWindow(Window_t id)
 {
    // Clear window.
 
+   if (!id) return;
+
    gdk_window_clear((GdkDrawable *) id);
 }
 
@@ -6459,6 +6555,8 @@ void TGWin32::FillRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
 {
    // Draw a filled rectangle. Filling is done according to the gc.
 
+   if (!id) return;
+
    gdk_win32_draw_rectangle((GdkDrawable *) id, (GdkGC *) gc, kTRUE, x, y, w, h);
 }
 
@@ -6468,6 +6566,8 @@ void TGWin32::DrawRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
 {
    // Draw a rectangle outline.
 
+   if (!id) return;
+
    gdk_win32_draw_rectangle((GdkDrawable *) id, (GdkGC *) gc, kFALSE, x, y, w, h);
 }
 
@@ -6476,6 +6576,8 @@ void TGWin32::DrawSegments(Drawable_t id, GContext_t gc, Segment_t * seg,
                            Int_t nseg)
 {
    // Draws multiple line segments. Each line is specified by a pair of points.
+
+   if (!id) return;
 
    gdk_win32_draw_segments((GdkDrawable *) id, (GdkGC *) gc, (GdkSegment *)seg, nseg);
 }
@@ -6487,6 +6589,8 @@ void TGWin32::SelectInput(Window_t id, UInt_t evmask)
    // events are propageted up the window stack. This mask can also be
    // set at window creation time via the SetWindowAttributes_t::fEventMask
    // attribute.
+
+   if (!id) return;
 
    UInt_t xevmask;
    MapEventMask(evmask, xevmask, kTRUE);
@@ -6507,6 +6611,8 @@ void TGWin32::SetInputFocus(Window_t id)
 {
    // Set keyboard input focus to window id.
 
+   if (!id) return;
+
    HWND hwnd = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
    ::SetFocus(hwnd);
 }
@@ -6526,6 +6632,8 @@ void TGWin32::SetPrimarySelectionOwner(Window_t id)
    // Makes the window id the current owner of the primary selection.
    // That is the window in which, for example some text is selected.
 
+   if (!id) return;
+
    gdk_selection_owner_set((GdkWindow *) id, gClipboardAtom, GDK_CURRENT_TIME, 0);
 }
 
@@ -6541,6 +6649,8 @@ void TGWin32::ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when
    // (when).
    // The selection owner responds by sending a SelectionNotify event, which
    // confirms the selected atom and type.
+
+   if (!id) return;
 
    gdk_selection_convert((GdkWindow *) id, clipboard,
                          gdk_atom_intern("GDK_TARGET_STRING", 0), when);
@@ -6609,6 +6719,8 @@ void TGWin32::GetPasteBuffer(Window_t id, Atom_t atom, TString & text,
    // Get contents of paste buffer atom into string. If del is true delete
    // the paste buffer afterwards.
 
+   if (!id) return;
+
    char *data;
    int nread, actual_format;
 
@@ -6642,6 +6754,8 @@ void TGWin32::TranslateCoordinates(Window_t src, Window_t dest,
    // in a mapped child of the destination, the id of that child is
    // returned as well.
 
+   if (!src || !dest) return;
+
    HWND sw, dw, ch = NULL;
    POINT point;
    sw = (HWND)GDK_DRAWABLE_XID((GdkWindow *)src);
@@ -6669,6 +6783,8 @@ void TGWin32::GetWindowSize(Drawable_t id, Int_t & x, Int_t & y,
    // Return geometry of window (should be called GetGeometry but signature
    // already used).
 
+   if (!id) return;
+
    Int_t ddum;
    if (GDK_DRAWABLE_TYPE(id) == GDK_DRAWABLE_PIXMAP) {
       x = y = 0;
@@ -6691,6 +6807,8 @@ void TGWin32::FillPolygon(Window_t id, GContext_t gc, Point_t * points,
    // inside the polygon, the line segment connecting them does not
    // intersect the path.
 
+   if (!id) return;
+
    gdk_win32_draw_polygon((GdkWindow *) id, (GdkGC *) gc, 1, (GdkPoint *) points, npnt);
 }
 
@@ -6707,6 +6825,8 @@ void TGWin32::QueryPointer(Window_t id, Window_t &rootw,
    // the child that contains the pointer, if any, or else kNone to
    // childw. QueryPointer returns the current logical state of the
    // keyboard buttons and the modifier keys in mask.
+
+   if (!id) return;
 
    POINT mousePt, sPt, currPt;
    HWND chw, window;
@@ -6967,6 +7087,8 @@ void TGWin32::PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel)
 {
    //
 
+   if (!id) return;
+
    GdkImage *image = (GdkImage *)id;
    if (image->depth == 1) {
       if (pixel & 1) {
@@ -6995,6 +7117,8 @@ void TGWin32::PutImage(Drawable_t id, GContext_t gc, Drawable_t img, Int_t dx,
                        Int_t dy, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    //
+
+   if (!id) return;
 
    gdk_draw_image((GdkDrawable *) id, (GdkGC *)gc, (GdkImage *)img,
                   x, y, dx, dy, w, h);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.31 2004/02/18 20:13:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.32 2004/10/22 15:21:19 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -173,6 +173,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
 
    AddInput(kPointerMotionMask | kEnterWindowMask |
             kLeaveWindowMask | kKeyPressMask);
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -207,6 +208,7 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
 
    AddInput(kPointerMotionMask | kEnterWindowMask |
             kLeaveWindowMask | kKeyPressMask);
+   SetWindowName();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.103 2004/12/07 15:34:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.104 2005/01/05 09:27:15 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -770,6 +770,7 @@ TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fList          = new TList;
    fLayoutBroken  = kFALSE;
    fMustCleanup   = kNoCleanup;
+   fMapSubwindows = fParent->IsMapSubwindows();
 
    if (fOptions & kHorizontalFrame)
       SetLayoutManager(new TGHorizontalLayout(this));
@@ -791,6 +792,7 @@ TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *par
    fList          = new TList;
    fLayoutBroken  = kFALSE;
    fMustCleanup   = kNoCleanup;
+   fMapSubwindows = fParent->IsMapSubwindows();
 
    SetLayoutManager(new TGVerticalLayout(this));
    SetWindowName();
@@ -1032,6 +1034,11 @@ void TGCompositeFrame::RemoveFrame(TGFrame *f)
 void TGCompositeFrame::MapSubwindows()
 {
    // Map all sub windows that are part of the composite frame.
+
+   if (!fMapSubwindows) {
+      MapWindow();
+      return;
+   }
 
    TGWindow::MapSubwindows();
 
