@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.42 2004/07/15 23:46:40 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.43 2004/07/30 16:41:58 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -120,8 +120,6 @@ TGMenuBar::~TGMenuBar()
       if ((keycode = t->GetHotKeyCode()) != 0 && main)
          main->RemoveBind(this, keycode, kKeyMod1Mask);
    }
-
-   BindKeys(kFALSE);
 
    // delete TGMenuTitles
    if (fTitles) fTitles->Delete();
