@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.20 2003/11/07 03:29:42 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.21 2003/11/26 10:33:08 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -113,7 +113,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
                             auth->GetUser(), host);
             delete auth;
             // This is to terminate properly remote proofd in case of failure
-            fSocket->Send(Form("%d %s", getpid(), host), kROOTD_CLEANUP);
+            fSocket->Send(Form("%d %s", gSystem->GetPid(), host), kROOTD_CLEANUP);
             SafeDelete(fSocket);
             return;
          }
@@ -148,7 +148,7 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
                             auth->GetUser(), host);
             delete auth;
             // This is to terminate properly remote proofd in case of failure
-            fSocket->Send(Form("%d %s", getpid(), host), kROOTD_CLEANUP);
+            fSocket->Send(Form("%d %s", gSystem->GetPid(), host), kROOTD_CLEANUP);
             SafeDelete(fSocket);
             return;
          }
