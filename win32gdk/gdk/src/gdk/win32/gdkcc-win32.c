@@ -1247,9 +1247,12 @@ gdk_color_context_query_colors(GdkColorContext * cc,
                                                                       bits.
                                                                       blue);
 #else
-            tc->red = ((tc->pixel & cc->masks.red) >> cc->shifts.red) * 257;
-            tc->green = ((tc->pixel & cc->masks.green) >> cc->shifts.green) * 257;
-            tc->blue = ((tc->pixel & cc->masks.blue) >> cc->shifts.blue) * 257;
+            tc->red = 65535. * (double)((tc->pixel & cc->masks.red) 
+                >> cc->shifts.red) / ((1 << cc->visual->red_prec) - 1);
+            tc->green = 65535. * (double)((tc->pixel & cc->masks.green) 
+                >> cc->shifts.green) / ((1 << cc->visual->green_prec) - 1);
+            tc->blue = 65535. * (double)((tc->pixel & cc->masks.blue) 
+                >> cc->shifts.blue) / ((1 << cc->visual->blue_prec) - 1);
 #endif
       } else {
          my_x_query_colors(cc->colormap, colors, num_colors);
