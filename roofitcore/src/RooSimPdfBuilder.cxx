@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooSimPdfBuilder.cc,v 1.2 2001/11/01 22:52:22 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.3 2001/11/07 02:54:41 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -75,21 +75,7 @@ RooArgSet* RooSimPdfBuilder::createProtoBuildConfig()
 
 
 
-const RooAbsPdf* RooSimPdfBuilder::buildPdf(const char* buildConfigFile, const RooAbsData* dataSet)
-{
-  // Read configuration from file
-  RooArgSet* buildConfig = createProtoBuildConfig() ;
-  buildConfig->readFromFile(buildConfigFile) ;
-
-  const RooAbsPdf* ret = buildPdf(*buildConfig,dataSet) ;
-
-  delete buildConfig ;
-  return ret ;
-}
-
-
-
-const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet)
+const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, const RooArgSet* auxSplitCats)
 {
   // Initialize needed components
   const RooArgSet* dataVars = dataSet->get() ;
@@ -192,6 +178,39 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
   
   cout << "RooSimPdfBuilder::buildPdf: list of splitting categories " ; splitCatSet.Print("1") ;
 
+  // Clone auxiliary split cats and attach to splitCatSet
+  RooArgSet auxSplitSet ;
+  RooArgSet* auxSplitCloneSet(0) ;
+  if (auxSplitCats) {
+    // Deep clone auxililary split cats
+    auxSplitCloneSet = (RooArgSet*) auxSplitCats->snapshot(kTRUE) ;
+
+    TIterator* iter = auxSplitCats->createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      // Find counterpart in cloned set
+      RooAbsArg* aux = auxSplitCats->find(arg->GetName()) ;
+
+      // Check that all servers of this aux cat are contained in splitCatSet
+      RooArgSet* parSet = aux->getParameters(splitCatSet) ;
+      if (parSet->getSize()>0) {
+	cout << "RooSimPdfBuilder::buildPdf: WARNING: ignoring auxiliary category " << aux->GetName() 
+	     << " because it has servers that are not listed in splitCatSet: " ;
+	parSet->Print("1") ;
+	delete parSet ;
+	continue ;
+      }
+
+      // Redirect servers to splitCatSet
+      aux->recursiveRedirectServers(splitCatSet) ;
+
+      // Add top level nodes to auxSplitSet
+      auxSplitSet.add(*aux) ;
+    }
+    delete iter ;
+
+    cout << "RooSimPdfBuilder::buildPdf: list of auxiliary splitting categories " ; auxSplitSet.Print("1") ;
+  }
 
 
   TList customizerList ;
@@ -252,11 +271,19 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 		//cout << "composite splitcat: " << splitCat->GetName() ;
 	      }
 	    } else {
-	      // Fundamental splitting category
+	      // Simple splitting category
+	      
+	      // First see if it is a simple splitting category
 	      splitCat = (RooAbsCategoryLValue*) splitCatSet.find(splitCatName) ;
+
+	      // If not, check if it is an auxiliary splitcat
+	      if (!splitCat) {
+		splitCat = (RooAbsCategoryLValue*) auxSplitSet.find(splitCatName) ;
+	      }
+
 	      if (!splitCat) {
 		cout << "RooSimPdfBuilder::buildPdf: ERROR splitting category " 
-		     << splitCatName << " not found in the splitcat list" << endl ;
+		     << splitCatName << " not found in the primary or auxiliary splitcat list" << endl ;
 		customizerList.Delete() ;
 		return 0 ;
 	      }
@@ -359,6 +386,7 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
   // Move customizers (owning the cloned branch node components) to the attic
   _retiredCustomizerList.AddAll(&customizerList) ;
 
+  if (auxSplitCloneSet) delete auxSplitCloneSet ;
   delete physIter ;
   return simPdf ;
 }

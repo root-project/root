@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.26 2001/11/14 18:42:37 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.27 2001/11/21 19:36:37 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -495,7 +495,7 @@ Bool_t RooConvolutedPdf::forceAnalyticalInt(const RooAbsArg& dep) const
                
 
 
-Double_t RooConvolutedPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset=0) const 
+Double_t RooConvolutedPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset) const 
 {
   if (nset==0) return coefficient(coefIdx) ;
 
@@ -510,7 +510,7 @@ Double_t RooConvolutedPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset=0) c
 
 
 
-Double_t RooConvolutedPdf::getCoefNorm2(Int_t coefIdx, const RooArgSet* nset=0) const 
+Double_t RooConvolutedPdf::getCoefNorm2(Int_t coefIdx, const RooArgSet* nset) const 
 {
   if (nset==0) return coefficient(coefIdx) ;
 
