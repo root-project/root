@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsHiddenReal.rdl,v 1.1 2001/11/20 03:53:06 verkerke Exp $
+ *    File: $Id: RooAbsHiddenReal.rdl,v 1.2 2002/01/16 17:19:49 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -36,6 +36,7 @@ public:
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
   
   inline Bool_t isHidden() const { return _state.arg().getIndex()!=0 ; }
+  Double_t getHiddenVal(const RooArgSet* nset=0) const { return RooAbsReal::getVal(nset) ; }
 
 protected:
 
