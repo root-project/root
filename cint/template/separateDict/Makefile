@@ -17,12 +17,12 @@ ROOTLIBS     := $(patsubst -lCore, -lThread -lCore, $(shell root-config --libs))
 ROOTLIBS     += -lGui
 ROOTGLIBS    := $(shell root-config --glibs)
 
-sepDictLibs: run.log
-	$(CMDECHO) diff -b -w run.good.output run.log
+sepDictLibs: sepDictLibs.log
+	$(CMDECHO) diff -b -w sepDictLibs.ref sepDictLibs.log
 
 
-run.log: run.C libmaster.$(DllSuf) libslave1.$(DllSuf) libslave2.$(DllSuf) 
-	$(CMDECHO)root.exe -q -l -b run.C 2>&1 | grep -v tagnum | $(RemoveLeadingDirs) | sed -e 's?FILE:[A-Zaz]:.*[/\]?FILE:?' > run.log
+sepDictLibs.log: run.C libmaster.$(DllSuf) libslave1.$(DllSuf) libslave2.$(DllSuf) 
+	$(CMDECHO)root.exe -q -l -b run.C 2>&1 | grep -v tagnum | $(RemoveLeadingDirs) | sed -e 's?FILE:[A-Za-z]:.*[/\]?FILE:?' > sepDictLibs.log
 
 all: sepDictLibs
 
