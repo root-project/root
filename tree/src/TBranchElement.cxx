@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.41 2001/05/21 14:03:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.42 2001/05/23 16:12:51 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -480,7 +480,7 @@ void TBranchElement::FillLeaves(TBuffer &b)
     TClonesArray *clones = (TClonesArray*)fObject;
     if (!clones) return; 
     Int_t n = clones->GetEntriesFast();
-    fInfo->WriteBufferClones(b,clones,n,fID);
+    fInfo->WriteBufferClones(b,clones,n,fID,fOffset);
   } else if (fType <= 2) {
     Int_t n = fInfo->WriteBuffer(b,fObject,fID);
     if (fStreamerType == 6) {
@@ -651,7 +651,7 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len) const
 
    if (fType == 31) {
       TClonesArray *clones = (TClonesArray*)fObject;
-      return fInfo->GetValueClones(clones,fID, j/len, j%len);
+      return fInfo->GetValueClones(clones,fID, j/len, j%len,fOffset);
    } else {
       return fInfo->GetValue(fObject,fID,j,-1);
    }
@@ -733,7 +733,7 @@ void TBranchElement::PrintValue(Int_t len) const
       printf(" %-15s = %d\n",GetName(),fNdata);
    } else if (fType == 31) {
       TClonesArray *clones = (TClonesArray*)fObject;
-      fInfo->PrintValueClones(GetName(),clones,fID);
+      fInfo->PrintValueClones(GetName(),clones,fID,fOffset);
    } else {
       fInfo->PrintValue(GetName(),fObject,fID,-1);
    }
@@ -827,7 +827,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
     fNdata = fBranchCount->GetNdata();
     TClonesArray *clones = (TClonesArray*)fObject;
     if (!clones) return; 
-    fInfo->ReadBufferClones(b,clones,fNdata,fID);
+    fInfo->ReadBufferClones(b,clones,fNdata,fID,fOffset);
   } else if (fType <= 2) {     // branch in split mode
     if (fBranchCount) fNdata = (Int_t)fBranchCount->GetValue(0,0);
     else fNdata = 1;
@@ -913,8 +913,30 @@ void TBranchElement::SetAddress(void *add)
    }
    
    if (fType == 31) {
-      //if (fClassName != fParentName) fObject = fAddress + fInfo->GetOffsets()[fID];   
-      //if(gDebug > -1) printf("   branch: %s fObject=%x, offset=%d\n",fObject,fInfo->GetOffsets()[fID]);
+      if (fClassName != fParentName) {
+         TClass *clparent = gROOT->GetClass(GetParentName());
+         char ename[kMaxLen];
+         strcpy(ename,GetName());
+         char *lastdot = (char*)strrchr(ename,'.');
+         if (!lastdot) return;
+         *lastdot=0;
+         lastdot = (char*)strrchr(ename,'.');
+         if (!lastdot) return;
+         strcpy(ename,lastdot+1);
+         TStreamerInfo *einfo = clparent->GetStreamerInfo();
+         TStreamerElement *elem = (TStreamerElement*)einfo->GetElements()->FindObject(ename);
+         if (elem) fOffset = elem->GetOffset();         
+         TClass *clabove = elem->GetClassPointer();
+         if (!clabove) return;
+         Int_t baseOffset = 0;
+         TClass *clm = gROOT->GetClass(GetClassName());
+         if (clabove->GetBaseClass(clm)) {
+            baseOffset = clabove->GetBaseClassOffset(clm);
+            if (baseOffset < 0) baseOffset = 0;
+         }
+         fOffset += baseOffset; 
+         //printf("Branch: %s, Computing offset of %s in %s, fOffset=%d, baseOffset=%d\n",GetName(),ename,fParentName.Data(),fOffset,baseOffset);
+      }
    }
    if (nbranches == 0) return;
    for (Int_t i=0;i<nbranches;i++)  {
