@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.60 2001/09/29 16:03:24 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.61 2001/10/16 09:03:48 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1171,7 +1171,7 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
    if (!fV3 && fVar3)   fV3 = new Double_t[fTree->GetEstimate()];
    if (!fW)             fW  = new Double_t[fTree->GetEstimate()];
    Int_t force = fTree->TestBit(TTree::kForceRead);
-   if (!fMultiplicity || !fDimension) {
+   if (!fMultiplicity) {
       for (entry=firstentry;entry<firstentry+nentries;entry++) {
          entryNumber = fTree->GetEntryNumber(entry);
          if (entryNumber < 0) break;
@@ -1250,11 +1250,13 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
          fW[fNfill] = fSelect->EvalInstance(0);
          if (!fW[fNfill]  && !SelectMultiple) continue;
       } else fW[fNfill] = 1;
-      fV1[fNfill] = fVar1->EvalInstance(0);
-      if (fVar2) {
-         fV2[fNfill] = fVar2->EvalInstance(0);
-         if (fVar3) {
-           fV3[fNfill] = fVar3->EvalInstance(0);
+      if (fVar1) {
+         fV1[fNfill] = fVar1->EvalInstance(0);
+         if (fVar2) {
+            fV2[fNfill] = fVar2->EvalInstance(0);
+            if (fVar3) {
+               fV3[fNfill] = fVar3->EvalInstance(0);
+            }
          }
       }
       if (fW[fNfill]) {
@@ -1271,14 +1273,16 @@ void TTreePlayer::EntryLoop(Int_t &action, TObject *obj, Int_t nentries, Int_t f
             ww = fSelect->EvalInstance(i);
             if (ww == 0) continue;
          }
-         if (Var1Multiple) fV1[fNfill] = fVar1->EvalInstance(i);
-         else              fV1[fNfill] = fV1[nfill0];
-         if (fVar2) {
-            if (Var2Multiple) fV2[fNfill] = fVar2->EvalInstance(i);
-            else              fV2[fNfill] = fV2[nfill0];
-            if (fVar3) {
-               if (Var3Multiple) fV3[fNfill] = fVar3->EvalInstance(i);
-               else              fV3[fNfill] = fV3[nfill0];
+         if (fVar1) {
+            if (Var1Multiple) fV1[fNfill] = fVar1->EvalInstance(i);
+            else              fV1[fNfill] = fV1[nfill0];
+            if (fVar2) {
+               if (Var2Multiple) fV2[fNfill] = fVar2->EvalInstance(i);
+               else              fV2[fNfill] = fV2[nfill0];
+               if (fVar3) {
+                  if (Var3Multiple) fV3[fNfill] = fVar3->EvalInstance(i);
+                  else              fV3[fNfill] = fV3[nfill0];
+               }
             }
          }
          fW[fNfill] = ww;

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.68 2001/10/06 07:30:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.69 2001/10/08 12:54:25 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1405,6 +1405,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             if (cname[i]) work[strlen(work)-1] = '\0';
             sprintf(scratch,"%s.%s",first,work);
 
+            // First look for the current 'word' in the list of 
+            // leaf of the 
             if (branch) {
                tmp_leaf = branch->FindLeaf(work);
                if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
@@ -1442,7 +1444,8 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                leaf = tmp_leaf;
             } else {
                //We need to put the delimiter back!
-               work[strlen(work)] = cname[i];
+               if (strlen(work)) work[strlen(work)] = cname[i];
+               else --current;
             }
          }
       }
