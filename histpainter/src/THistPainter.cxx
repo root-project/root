@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.178 2004/06/28 12:14:57 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.179 2004/07/08 12:18:50 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -5090,9 +5090,17 @@ void THistPainter::PaintText(Option_t *)
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
          x = fH->GetXaxis()->GetBinCenter(i);
          y = fH->GetBinContent(i);
+         sprintf(value,format,y);
+         if (Hoption.Logx) {
+            if (x > 0)  x  = TMath::Log10(x);
+            else continue;
+         }
+         if (Hoption.Logy) {
+            if (y > 0)  y  = TMath::Log10(y);
+            else continue;
+         }
          if (y >= gPad->GetY2()) continue;
          if (y <= gPad->GetY1()) continue;
-         sprintf(value,format,y);
          gPad->PaintText(x,y+0.2*dt,value);
       }
 
@@ -5104,9 +5112,17 @@ void THistPainter::PaintText(Option_t *)
       text.TAttText::Modify();
       for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
          y    = fYaxis->GetBinCenter(j);
+         if (Hoption.Logy) {
+            if (y > 0)  y  = TMath::Log10(y);
+            else continue;
+         }
          for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
             Int_t bin  = j*(fXaxis->GetNbins()+2) + i;
             x    = fXaxis->GetBinCenter(i);
+            if (Hoption.Logx) {
+               if (x > 0)  x  = TMath::Log10(x);
+               else continue;
+            }
             if (!IsInside(x,y)) continue;
             z     = fH->GetBinContent(bin);
             if (z <= Hparam.zmin) continue;
