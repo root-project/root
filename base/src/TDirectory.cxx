@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.53 2004/06/04 16:28:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.54 2004/06/16 12:00:03 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1570,6 +1570,8 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    //  The function returns the total number of bytes written to the directory.
    //  It returns 0 if the object cannot be written.
 
+   // BE CAREFUL! When this function is called, gDirectory may not be equal to this!
+
    if (!fFile->IsWritable()) {
       if (!fFile->TestBit(TFile::kWriteError)) {
          // Do not print the error if the file already had a SysError.
@@ -1608,14 +1610,14 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *o
    if (opt.Contains("overwrite")) {
       //One must use GetKey. FindObject would return the lowest cycle of the key!
       //key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
-      key = (TKey*)GetKey(oname);
+      key = (TKey*)gDirectory->GetKey(oname);
       if (key) {
          key->Delete();
          delete key;
       }
    }
    if (opt.Contains("writedelete")) {
-      oldkey = (TKey*)GetKey(oname);
+      oldkey = (TKey*)gDirectory->GetKey(oname);
    }
    key = new TKey(obj, oname, bsize);
    if (newName) delete [] newName;
@@ -1715,14 +1717,14 @@ Int_t TDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *
    if (opt.Contains("overwrite")) {
       //One must use GetKey. FindObject would return the lowest cycle of the key!
       //key = (TKey*)gDirectory->GetListOfKeys()->FindObject(oname);
-      key = (TKey*)GetKey(oname);
+      key = (TKey*)gDirectory->GetKey(oname);
       if (key) {
          key->Delete();
          delete key;
       }
    }
    if (opt.Contains("writedelete")) {
-      oldkey = (TKey*)GetKey(oname);
+      oldkey = (TKey*)gDirectory->GetKey(oname);
    }
    key = new TKey(obj, cl, oname, bsize);
    if (newName) delete [] newName;
