@@ -80,7 +80,7 @@ void iobug(int split=0, int classtype = 0, int clonesmode = 0, int show = 0, int
    if (dumpmode&0x2) g->Dump();
    //f.Write();
    if (dumpmode&0x4) t->Print();
-   if (clonesmode&0x1) t->Scan("fMarkerColor:fMarkerSize:graph.fMarkerStyle","","colsize=20");
-   if (clonesmode&0x2) t->Scan("fMarkerColor:graphCl.fMarkerSize:graphCl.fMarkerStyle","","colsize=20");
+   if (clonesmode&0x1) t->Scan("fMarkerColor:fMarkerSize:graph.fMarkerStyle","","colsize=20 precision=6");
+   if (clonesmode&0x2) t->Scan("fMarkerColor:graphCl.fMarkerSize:graphCl.fMarkerStyle","","colsize=20 precision=6");
 }
 
