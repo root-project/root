@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.3 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.4 2000/12/13 16:45:36 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -48,7 +48,8 @@ class TQSlot : public TObject, public TRefCnt {
 protected:
    G__CallFunc   *fFunc;      // CINT method invocation environment
    Long_t         fOffset;    // offset added to object pointer
-   TString        fName;      // full name of  method
+   TString        fName;      // full name of method
+   Int_t          fExecuting; // true if one of this slot's ExecuteMethod methods is being called
 
 public:
    TQSlot(TClass *cl, const char *method, const char *funcname);
@@ -62,8 +63,8 @@ public:
    void ExecuteMethod(void *object, Double_t param);
    void ExecuteMethod(void *object, const char *params);
    void ExecuteMethod(void *object, Long_t *paramArr);
-   void Print(Option_t *opt= "") const ;
-   void ls(Option_t *opt= "") const  { Print(opt); }
+   void Print(Option_t *opt= "") const;
+   void ls(Option_t *opt= "") const { Print(opt); }
 };
 
 
@@ -80,13 +81,14 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
    // consists of '=').
    // To execute the method call TQSlot::ExecuteMethod(object,...).
 
-   fFunc   = 0;
-   fOffset = 0;
-   fName   = "";
+   fFunc      = 0;
+   fOffset    = 0;
+   fName      = "";
+   fExecuting = 0;
 
    // cl==0, is the case of interpreted function.
 
-   fName =  method_name;
+   fName = method_name;
 
    char *method = new char[strlen(method_name)+1];
    if (method) strcpy(method, method_name);
@@ -97,7 +99,7 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
 
    // separate method and protoype strings
 
-   if ((proto =  strchr(method,'('))) {
+   if ((proto = strchr(method,'('))) {
 
       // substitute first '(' symbol with '\0'
       *proto++ = '\0';
@@ -109,10 +111,7 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
    if (!proto) proto = "";
    if (proto && (params = strchr(proto,'='))) *params = ' ';
 
-   if (!fFunc)
-      fFunc = new G__CallFunc;
-   else
-      fFunc->Init();
+   fFunc = new G__CallFunc;
 
    // initiate class method (function) with proto
    // or with default params
@@ -150,9 +149,10 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    // consists of '=').
    // To execute the method call TQSlot::ExecuteMethod(object,...).
 
-   fFunc   = 0;
-   fOffset = 0;
-   fName   =  funcname;
+   fFunc      = 0;
+   fOffset    = 0;
+   fName      = funcname;
+   fExecuting = 0;
 
    char *method = new char[strlen(funcname)+1];
    if (method) strcpy(method, funcname);
@@ -171,10 +171,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
    if (!proto) proto = "";
    if (proto && (params = strchr(proto,'='))) *params = ' ';
 
-   if (!fFunc)
-      fFunc = new G__CallFunc;
-   else
-      fFunc->Init();
+   fFunc = new G__CallFunc;
 
    G__ClassInfo gcl;
 
@@ -197,7 +194,9 @@ TQSlot::~TQSlot()
 {
    // TQSlot dtor.
 
-   delete fFunc;
+   // don't delete executing environment of a slot that is being executed
+   if (!fExecuting)
+      delete fFunc;
 }
 
 //______________________________________________________________________________
@@ -208,7 +207,11 @@ inline void TQSlot::ExecuteMethod(void *object)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
+   fExecuting++;
    fFunc->Exec(address);
+   fExecuting--;
+   if (!TestBit(kNotDeleted) && !fExecuting)
+      delete fFunc;
 }
 
 //______________________________________________________________________________
@@ -221,7 +224,11 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t param)
    fFunc->ResetArg();
    fFunc->SetArg(param);
    if (object) address = (void*)((Long_t)object + fOffset);
+   fExecuting++;
    fFunc->Exec(address);
+   fExecuting--;
+   if (!TestBit(kNotDeleted) && !fExecuting)
+      delete fFunc;
 }
 
 //______________________________________________________________________________
@@ -234,7 +241,11 @@ inline void TQSlot::ExecuteMethod(void *object, Double_t param)
    fFunc->ResetArg();
    fFunc->SetArg(param);
    if (object) address = (void*)((Long_t)object + fOffset);
+   fExecuting++;
    fFunc->Exec(address);
+   fExecuting--;
+   if (!TestBit(kNotDeleted) && !fExecuting)
+      delete fFunc;
 }
 
 //______________________________________________________________________________
@@ -246,7 +257,11 @@ inline void TQSlot::ExecuteMethod(void *object, const char *param)
    gTQSlotParams = (char*)param;
    fFunc->SetArgs("gTQSlotParams");
    if (object) address = (void*)((Long_t)object + fOffset);
+   fExecuting++;
    fFunc->Exec(address);
+   fExecuting--;
+   if (!TestBit(kNotDeleted) && !fExecuting)
+      delete fFunc;
 }
 
 //______________________________________________________________________________
@@ -262,7 +277,11 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr)
    void *address = 0;
    fFunc->SetArgArray(paramArr);
    if (object) address = (void*)((Long_t)object + fOffset);
+   fExecuting++;
    fFunc->Exec(address);
+   fExecuting--;
+   if (!TestBit(kNotDeleted) && !fExecuting)
+      delete fFunc;
 }
 
 //______________________________________________________________________________
