@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.149 2003/01/10 15:56:14 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.150 2003/01/21 13:51:20 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -373,6 +373,7 @@ void TStreamerInfo::BuildCheck()
          for (Int_t i=0;i<nel;i++) {
             e1 = (TStreamerElement *)fElements->At(i);
             e2 = (TStreamerElement *)elems->At(i);
+            if (!e1 || !e2) continue;
             if (strlen(e1->GetTitle()) != strlen(e2->GetTitle())) {
                e2->SetTitle(e1->GetTitle());
             }
