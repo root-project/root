@@ -189,7 +189,8 @@ ttfincdirs="$TTF $TTF/include /usr/include /usr/local/include \
               /usr/include/freetype /usr/local/include/freetype \
               /usr/freetype/include /usr/local/freetype/include \
               /usr/freetype /usr/local/freetype /opt/freetype \
-              /opt/freetype/include"
+              /opt/freetype/include /usr/local/ttf/include \
+              /opt/ttf/include"
 
 if [ -z "$ttfincdir" ]; then
    ttfincdir=NO
@@ -210,7 +211,8 @@ echo $ac_n "Checking for libttf.a... $ac_c"
 ttflibdirs="$TTF $TTF/lib /usr/lib /usr/local/lib /usr/lib/freetype \
               /usr/local/lib/freetype /usr/freetype/lib \
               /usr/local/freetype/lib /usr/freetype /usr/local/freetype \
-              /opt/freetype /opt/freetype/lib"
+              /opt/freetype /opt/freetype/lib /usr/local/ttf/lib \
+              /opt/ttf/lib"
 
 if [ -z "$ttflibdir" ]; then
    ttflibdir=NO
@@ -231,8 +233,9 @@ echo $ac_n "Checking for ttf fonts (arial.ttf)... $ac_c"
 ttffontdirs="$TTF $TTF/fonts /usr/lib/X11/fonts /usr/lib/X11/fonts/ttf \
               /usr/share /usr/share/fonts /usr/share/fonts/ttf \
               /usr/share/ttf /usr/local/share /usr/local/share/fonts \
-              /usr/local/share/fonts/ttf /usr/local/share/ttf
-              /opt/fonts /opt/fonts/ttf /opt/ttf"
+              /usr/local/share/fonts/ttf /usr/local/share/ttf \
+              /opt/fonts /opt/fonts/ttf /opt/ttf /opt/ttf/fonts \
+              /usr/local/ttf/fonts"
 
 if [ -z "$ttffontdir" ]; then
    ttffontdir=NO
