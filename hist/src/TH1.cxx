@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.83 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.84 2002/01/26 10:02:03 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -972,9 +972,11 @@ void TH1::Copy(TObject &obj)
    fContour.Copy(((TH1&)obj).fContour);
    fSumw2.Copy(((TH1&)obj).fSumw2);
 //   fFunctions->Copy(((TH1&)obj).fFunctions);
-   gDirectory->Append(&obj);
-//   ((TH1&)obj).AppendDirectory();
-   ((TH1&)obj).fDirectory = gDirectory;
+   ((TH1&)obj).fDirectory = 0;
+   if (fgAddDirectory && gDirectory) {
+      gDirectory->Append(&obj);
+      ((TH1&)obj).fDirectory = gDirectory;
+   }
 }
 
 //______________________________________________________________________________
