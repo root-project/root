@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.3 2000/08/31 17:05:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.4 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -49,7 +49,7 @@ public:
         virtual void    SetPoint(Int_t i, Double_t x, Double_t y);
         virtual void    SetPointError(Int_t i, Double_t ex, Double_t ey);
 
-        ClassDef(TGraphErrors,2)  //a Graph with error bars
+        ClassDef(TGraphErrors,3)  //a Graph with error bars
 };
 
 #endif

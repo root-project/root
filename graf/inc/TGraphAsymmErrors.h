@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.2 2000/06/13 10:58:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.h,v 1.3 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -52,7 +52,7 @@ public:
         virtual void    SetPoint(Int_t i, Double_t x, Double_t y);
         virtual void    SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh);
 
-        ClassDef(TGraphAsymmErrors,2)  //a Graph with asymmetric error bars
+        ClassDef(TGraphAsymmErrors,3)  //a Graph with asymmetric error bars
 };
 
 #endif

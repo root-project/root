@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.6 2000/11/21 20:26:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.7 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -404,7 +404,7 @@ void TGraphErrors::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
+      if (R__v > 2) {
          TGraphErrors::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
          return;
       }
@@ -412,15 +412,21 @@ void TGraphErrors::Streamer(TBuffer &b)
       TGraph::Streamer(b);
       fEX = new Double_t[fNpoints];
       fEY = new Double_t[fNpoints];
-      Float_t *ex = new Float_t[fNpoints];
-      Float_t *ey = new Float_t[fNpoints];
-      b.ReadFastArray(ex,fNpoints);
-      b.ReadFastArray(ey,fNpoints);
-      for (Int_t i=0;i<fNpoints;i++) {
-         fEX[i] = ex[i];
-         fEY[i] = ey[i];
+      if (R__v < 2) {
+         Float_t *ex = new Float_t[fNpoints];
+         Float_t *ey = new Float_t[fNpoints];
+         b.ReadFastArray(ex,fNpoints);
+         b.ReadFastArray(ey,fNpoints);
+         for (Int_t i=0;i<fNpoints;i++) {
+            fEX[i] = ex[i];
+            fEY[i] = ey[i];
+         }
+         delete [] ey;
+         delete [] ex;
+      } else {
+         b.ReadFastArray(fEX,fNpoints);
+         b.ReadFastArray(fEY,fNpoints);
       }
-      delete [] ey;
       b.CheckByteCount(R__s, R__c, TGraphErrors::IsA());
       //====end of old versions
       

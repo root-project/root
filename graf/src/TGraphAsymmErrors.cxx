@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.5 2000/11/21 20:25:49 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.6 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -400,7 +400,7 @@ void TGraphAsymmErrors::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
+      if (R__v > 2) {
          TGraphAsymmErrors::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
          return;
       }
@@ -410,24 +410,31 @@ void TGraphAsymmErrors::Streamer(TBuffer &b)
       fEYlow  = new Double_t[fNpoints];
       fEXhigh = new Double_t[fNpoints];
       fEYhigh = new Double_t[fNpoints];
-      Float_t *exlow  = new Float_t[fNpoints];
-      Float_t *eylow  = new Float_t[fNpoints];
-      Float_t *exhigh = new Float_t[fNpoints];
-      Float_t *eyhigh = new Float_t[fNpoints];
-      b.ReadFastArray(exlow,fNpoints);
-      b.ReadFastArray(eylow,fNpoints);
-      b.ReadFastArray(exhigh,fNpoints);
-      b.ReadFastArray(eyhigh,fNpoints);
-      for (Int_t i=0;i<fNpoints;i++) {
-         fEXlow[i]  = exlow[i];
-         fEYlow[i]  = eylow[i];
-         fEXhigh[i] = exhigh[i];
-         fEYhigh[i] = eyhigh[i];
+      if (R__v < 2) {
+         Float_t *exlow  = new Float_t[fNpoints];
+         Float_t *eylow  = new Float_t[fNpoints];
+         Float_t *exhigh = new Float_t[fNpoints];
+         Float_t *eyhigh = new Float_t[fNpoints];
+         b.ReadFastArray(exlow,fNpoints);
+         b.ReadFastArray(eylow,fNpoints);
+         b.ReadFastArray(exhigh,fNpoints);
+         b.ReadFastArray(eyhigh,fNpoints);
+         for (Int_t i=0;i<fNpoints;i++) {
+            fEXlow[i]  = exlow[i];
+            fEYlow[i]  = eylow[i];
+            fEXhigh[i] = exhigh[i];
+            fEYhigh[i] = eyhigh[i];
+         }
+         delete [] eylow;
+         delete [] exlow;
+         delete [] eyhigh;
+         delete [] exhigh;
+      } else {
+         b.ReadFastArray(fEXlow,fNpoints);
+         b.ReadFastArray(fEYlow,fNpoints);
+         b.ReadFastArray(fEXhigh,fNpoints);
+         b.ReadFastArray(fEYhigh,fNpoints);
       }
-      delete [] eylow;
-      delete [] exlow;
-      delete [] eyhigh;
-      delete [] exhigh;
       b.CheckByteCount(R__s, R__c, TGraphAsymmErrors::IsA());
       //====end of old versions
       

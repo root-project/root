@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.7 2000/12/08 16:00:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.8 2000/12/13 15:13:49 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -100,7 +100,7 @@ public:
                 void     Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Double_t &Y
                           ,Int_t maxiterations);
 
-        ClassDef(TGraph,2)  //Graph graphics class
+        ClassDef(TGraph,3)  //Graph graphics class
 };
 
 #endif
