@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.29 2004/06/18 10:28:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.30 2004/06/22 15:36:42 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -160,8 +160,10 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
       if (lastbin  > nbins+1) lastbin = nbins;
       for (Int_t iBin=firstbin; iBin<=lastbin; iBin++) {
          TH1* hProj=0;
-         if (useX) hProj=hist2->ProjectionX(Form("_px%d",iBin), iBin, iBin, proj_option);
-         else hProj=hist2->ProjectionY(Form("_py%d",iBin), iBin, iBin, proj_option);
+         if (useX) hProj=hist2->ProjectionX(Form("%s_px%d",hist2->GetName(), iBin), 
+					    iBin, iBin, proj_option);
+         else hProj=hist2->ProjectionY(Form("%s_py%d",hist2->GetName(), iBin), 
+				       iBin, iBin, proj_option);
          Add(hProj, draw_option);
       }
    } else {
@@ -198,7 +200,8 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
          for (Int_t iBin=firstbin; iBin<=lastbin; iBin++) {
             haxis->SetRange(iBin, iBin);
             // build projection named axis_iBin (passed through "option")
-            TH1* hProj=hist3->Project3D(Form("%s%s_%d", axis, proj_option, iBin));
+            TH1* hProj=hist3->Project3D(Form("%s_%s%s_%d", hist3->GetName(), 
+					     axis, proj_option, iBin));
             Add(hProj, draw_option);
          }
          haxis->SetRange(iFirstOld, iLastOld);
@@ -239,7 +242,8 @@ THStack::THStack(const TH1* hist, Option_t *axis /*="x"*/,
             for (Int_t jBin=firstbin2; jBin<=lastbin2; jBin++) {
                haxis2->SetRange(jBin, jBin);
                // build projection named axis_iBin (passed through "option")
-               TH1* hProj=hist3->Project3D(Form("%s%s_%d", axis, proj_option, iBin));
+               TH1* hProj=hist3->Project3D(Form("%s_%s%s_%d", hist3->GetName(), 
+						axis, proj_option, iBin));
                Add(hProj, draw_option);
             }
          }
