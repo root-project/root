@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.2 2000/06/13 11:25:02 brun Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -102,7 +102,7 @@ TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1
 //
 //   Note that the button coordinates x1,y1,x2,y2 are always in the range [0,1]
 //
-   SetEditable(kFALSE);
+   //SetEditable(kFALSE);
    fFraming=0;
    SetBit(kCanDelete);
    fModified = kTRUE;
@@ -111,6 +111,7 @@ TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1
       TLatex *text = new TLatex(0.5*(fX1+fX2),0.5*(fY1+fY2),title);
       fPrimitives->Add(text);
    }
+   SetEditable(kFALSE);
 }
 
 //______________________________________________________________________________
