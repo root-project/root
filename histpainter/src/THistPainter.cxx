@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.155 2003/11/18 09:40:33 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.156 2003/11/24 10:26:40 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1343,8 +1343,8 @@ void THistPainter::Paint(Option_t *option)
          if (gridx) gPad->SetGridx(1);
          if (gridy) gPad->SetGridy(1);
        }
-       delete [] fXbuf; delete [] fYbuf;
-      return;
+	  if (Hoption.Same ==1) Hoption.Same = 2;
+	  goto paintstat;
    }
    if (gridx || gridy) PaintAxis(kTRUE); //    Draw the grid only
 
@@ -1384,7 +1384,8 @@ void THistPainter::Paint(Option_t *option)
    
    PaintTitle();    //    Draw histogram title
      //    Draw box with histogram statistics and/or fit parameters
-   if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
+paintstat:
+if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
       TObject *obj = 0;
       while ((obj = next())) {
