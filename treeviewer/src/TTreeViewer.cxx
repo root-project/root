@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.39 2004/01/08 23:07:40 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.40 2004/01/09 11:44:02 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -208,6 +208,10 @@
 #include "TGFileDialog.h"
 #include "TGProgressBar.h"
 #include "TClonesArray.h"
+
+#ifdef WIN32
+#include "TWin32SplashThread.h"
+#endif
 
 // drawing options
 static const char* optgen[16] =
@@ -1861,11 +1865,15 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         rootx += "/root -a &";
                         gSystem->Exec(rootx);
 #else
+#ifdef WIN32
+                        new TWin32SplashThread(kTRUE);
+#else
                         char str[32];
                         sprintf(str, "About ROOT %s...", gROOT->GetVersion());
                         hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
+#endif
 #endif
                      }
                      break;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.47 2003/11/14 16:11:28 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.49 2004/01/10 10:52:29 brun Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -52,6 +52,9 @@
 
 #include "HelpText.h"
 #include "TGFrame.h"
+#ifdef WIN32
+#include "TWin32SplashThread.h"
+#endif
 
 // Browser menu command ids
 enum ERootBrowserCommands {
@@ -1228,11 +1231,27 @@ Bool_t TRootBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kHelpAbout:
                      // coming soon
                      {
+#ifdef R__UNIX
+                        TString rootx;
+# ifdef ROOTBINDIR
+                        rootx = ROOTBINDIR;
+# else
+                        rootx = gSystem->Getenv("ROOTSYS");
+                        if (!rootx.IsNull()) rootx += "/bin";
+# endif
+                        rootx += "/root -a &";
+                        gSystem->Exec(rootx);
+#else
+#ifdef WIN32
+                        new TWin32SplashThread(kTRUE);
+#else
                         char str[32];
                         sprintf(str, "About ROOT %s...", gROOT->GetVersion());
                         hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
+#endif
+#endif
                      }
                      break;
                   case kHelpOnCanvas:

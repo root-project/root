@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.20 2003/11/25 15:57:34 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.21 2004/01/08 23:07:40 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -40,6 +40,10 @@
 #include "TFile.h"
 #include "TInterpreter.h"
 #include "Riostream.h"
+
+#ifdef WIN32
+#include "TWin32SplashThread.h"
+#endif
 
 #include "HelpText.h"
 
@@ -752,11 +756,16 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         rootx += "/root -a &";
                         gSystem->Exec(rootx);
 #else
+#ifdef WIN32
+                        new TWin32SplashThread(kTRUE);
+#else
+
                         char str[32];
                         sprintf(str, "About ROOT %s...", gROOT->GetVersion());
                         hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
+#endif
 #endif
                      }
                      break;
