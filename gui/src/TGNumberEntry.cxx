@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.1 2001/09/18 10:55:45 rdm Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -705,7 +705,7 @@ static Double_t RealToDouble(const RealInfo_t ri)
       return (Double_t) ri.fSign * ri.fIntNum;
       // Fraction type real
    case kRSFrac:
-      return (Double_t) ri.fSign * (fabs(ri.fIntNum) +
+      return (Double_t) ri.fSign * ((Double_t) TMath::Abs(ri.fIntNum) +
                                     (Double_t) ri.fFracNum / ri.fFracBase);
       // Exponent only
    case kRSExpo:
@@ -713,7 +713,7 @@ static Double_t RealToDouble(const RealInfo_t ri)
           TMath::Power(10, ri.fExpoNum);
       // Fraction and exponent
    case kRSFracExpo:
-      return (Double_t) ri.fSign * (fabs(ri.fIntNum) +
+      return (Double_t) ri.fSign * ((Double_t) TMath::Abs(ri.fIntNum) +
                                     (Double_t) ri.fFracNum /
                                     ri.fFracBase) * TMath::Power(10,
                                                                  ri.fExpoNum);
@@ -841,22 +841,22 @@ static void IncreaseReal(RealInfo_t & ri, Double_t mag, Bool_t logstep,
          x = max;
    }
    // check format after log step
-   if ((x != 0) && logstep && (fabs(mag) > kEpsilon)) {
+   if ((x != 0) && logstep && (TMath::Abs(mag) > kEpsilon)) {
       for (int j = 0; j < 10; j++) {
          // Integer: special case
-         if ((ri.fStyle == kRSInt) && (fabs(x) < 1) &&
-             (fabs(x) > kEpsilon)) {
+         if ((ri.fStyle == kRSInt) && (TMath::Abs(x) < 1) &&
+             (TMath::Abs(x) > kEpsilon)) {
             ri.fStyle = kRSFrac;
             ri.fFracDigits = 1;
             ri.fFracBase = 10;
             continue;
          }
-         if ((ri.fStyle == kRSInt) && (fabs(x) > 10000)) {
+         if ((ri.fStyle == kRSInt) && (TMath::Abs(x) > 10000)) {
             ri.fStyle = kRSFracExpo;
             ri.fExpoNum = 4;
             ri.fFracDigits = 4;
             ri.fFracBase = 10000;
-            Long_t rest = Round(fabs(x)) % 10000;
+            Long_t rest = Round(TMath::Abs(x)) % 10000;
             for (int k = 0; k < 4; k++) {
                if (rest % 10 != 0) {
                   break;
@@ -876,9 +876,9 @@ static void IncreaseReal(RealInfo_t & ri, Double_t mag, Bool_t logstep,
          // caluclate first digit
          Double_t y;
          if ((ri.fStyle == kRSExpo) || (ri.fStyle == kRSFracExpo)) {
-            y = fabs(x) * TMath::Power(10, -ri.fExpoNum);
+            y = TMath::Abs(x) * TMath::Power(10, -ri.fExpoNum);
          } else {
-            y = fabs(x);
+            y = TMath::Abs(x);
          }
          // adjust exponent if num < 1
          if ((Truncate(y) == 0) && (y > 0.001)) {
@@ -909,22 +909,22 @@ static void IncreaseReal(RealInfo_t & ri, Double_t mag, Bool_t logstep,
    case kRSInt:
       {
          ri.fSign = (x < 0) ? -1 : 1;
-         ri.fIntNum = Round(fabs(x));
+         ri.fIntNum = Round(TMath::Abs(x));
          break;
       }
       // Fraction type real
    case kRSFrac:
       {
          ri.fSign = (x < 0) ? -1 : 1;
-         ri.fIntNum = Truncate(fabs(x));
-         ri.fFracNum = Round((fabs(x) - fabs(ri.fIntNum)) * ri.fFracBase);
+         ri.fIntNum = Truncate(TMath::Abs(x));
+         ri.fFracNum = Round((TMath::Abs(x) - TMath::Abs(ri.fIntNum)) * ri.fFracBase);
          break;
       }
       // Exponent only
    case kRSExpo:
       {
          ri.fSign = (x < 0) ? -1 : 1;
-         ri.fIntNum = Round(fabs(x) * TMath::Power(10, -ri.fExpoNum));
+         ri.fIntNum = Round(TMath::Abs(x) * TMath::Power(10, -ri.fExpoNum));
          if (ri.fIntNum == 0) {
             ri.fStyle = kRSInt;
          }
@@ -934,9 +934,9 @@ static void IncreaseReal(RealInfo_t & ri, Double_t mag, Bool_t logstep,
    case kRSFracExpo:
       {
          ri.fSign = (x < 0) ? -1 : 1;
-         Double_t y = fabs(x) * TMath::Power(10, -ri.fExpoNum);
+         Double_t y = TMath::Abs(x) * TMath::Power(10, -ri.fExpoNum);
          ri.fIntNum = Truncate(y);
-         ri.fFracNum = Round((y - fabs(ri.fIntNum)) * ri.fFracBase);
+         ri.fFracNum = Round((y - TMath::Abs(ri.fIntNum)) * ri.fFracBase);
          if ((ri.fIntNum == 0) && (ri.fFracNum == 0)) {
             ri.fStyle = kRSFrac;
          }
@@ -1117,7 +1117,7 @@ void TGNumberEntryField::SetNumber(Double_t val)
       SetIntNumber(Round(val));
       break;
    case kNESHex:
-      SetIntNumber((UInt_t) (fabs(val) + 0.5));
+      SetIntNumber((UInt_t) (TMath::Abs(val) + 0.5));
       break;
    }
 }
