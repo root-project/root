@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.104 2004/06/15 14:16:50 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.105 2004/06/25 23:12:51 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2123,7 +2123,14 @@ const char *TUnixSystem::GetLinkedLibraries()
    }
    ClosePipe(p);
 #elif defined(R__LINUX) || defined(R__SOLARIS)
-   FILE *p = OpenPipe(Form("ldd %s", exe), "r");
+#if defined(R__WINGCC )
+   const char* cLDD="cygcheck";
+   const char* cSOEXT=".dll";
+#else
+   const char* cLDD="ldd";
+   const char* cSOEXT=".so";
+#endif
+   FILE *p = OpenPipe(Form("%s %s", cLDD, exe), "r");
    TString ldd;
    while (ldd.Gets(p)) {
       TString delim(" \t");
@@ -2139,7 +2146,7 @@ const char *TUnixSystem::GetLinkedLibraries()
       }
       if (solibName) {
          TString solib = solibName->String();
-         if (solib.EndsWith(".so")) {
+         if (solib.EndsWith(cSOEXT)) {
             if (!linkedLibs.IsNull())
                linkedLibs += " ";
             linkedLibs += solib;
