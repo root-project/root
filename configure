@@ -385,7 +385,7 @@ if [ "x$enable_ttf" != "xno" -a "$arch" != "win32" ]; then
     unset ttfheaders
     unset ttfincdirs
 
-    echo $ac_n "Checking for ttf library ... $ac_c"
+    echo $ac_n "Checking for libttf ... $ac_c"
     if [ "x$ttflibdir" != "x" ]; then
         # If the user gave an explixit path, then check it
         libdirs=$ttflibdir
