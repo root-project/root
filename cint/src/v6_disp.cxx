@@ -1974,7 +1974,7 @@ int G__fprinterr(char* fmt,...)
 #else
 int G__fprinterr(fmt)
 char* fmt;
-...
+
 #endif
 {
   int result;
