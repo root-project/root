@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.8 2001/05/18 06:47:34 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.9 2001/06/25 12:54:33 rdm Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -491,6 +491,8 @@ void THtml::Class2Html( TClass *classPtr, Bool_t force )
 
             delete [] methodNames;
 
+            classFile << "</pre>" << endl;
+
             // make a loop on data members
             first = kFALSE;
             TDataMember *member;
@@ -549,6 +551,7 @@ void THtml::Class2Html( TClass *classPtr, Bool_t force )
                     classFile << "<h3>" << tab2 << "<a name=\"";
                     classFile << classPtr->GetName();
                     classFile << ":Data Members\">Data Members</a></h3>" << endl;
+                    classFile << "<pre>" << endl;
 
                     for( j = 0; j < 3; j++ ) {
                         if( memberArray[j*ndata] ) {
