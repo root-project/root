@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.4 2000/08/15 08:41:53 brun Exp $
-// $Date: 2000/08/15 08:41:53 $
+// $Id: TPrincipal.cxx,v 1.5 2000/08/15 08:44:15 brun Exp $
+// $Date: 2000/08/15 08:44:15 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -1401,7 +1401,7 @@ TPrincipal::MakeHistograms(const char* name, Option_t *opt)
 
     if (makeX||makeP||makeD||makeS)
       // update the original data histogram 
-      x  = const_cast<Double_t*>(GetRow(i));
+      x  = (Double_t*)(GetRow(i));
 
     if (makeP||makeD||makeS)
       // calculate the corresponding principal component
