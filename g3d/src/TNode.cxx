@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.14 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.15 2002/01/24 11:39:27 rdm Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -284,11 +284,7 @@ Int_t TNode::DistancetoPrimitive(Int_t px, Int_t py)
       gGeometry->PopLevel();
    }
 
-   if (gGeometry->GeomLevel()==0 && dnode > maxdist) {
-      gPad->SetSelected(view);
-      return 0;
-   } else
-      return dnode;
+   return dnode;
 }
 
 //______________________________________________________________________________
