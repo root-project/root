@@ -2499,7 +2499,7 @@ G__EXPORT void G__SetCppCintApiPointers(
 
 #ifdef G__FIX1
 int G__printf (char* fmt,...);
-#elsee
+#else
 int G__printf G__P((char* fmt,...));
 #endif
 int G__fputc G__P((int character,FILE *fp));
