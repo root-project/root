@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.21 2004/09/15 14:26:58 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.22 2004/09/17 08:33:33 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -104,7 +104,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    fNbShapes = 0;
    fConf = kPERSP;
    fMode = kNav;
-   fActivePlane = kAPXOY;
+   fContextMenu = 0;
    fSelectedObj = 0;
 
    static struct Init {
@@ -229,6 +229,7 @@ TViewerOpenGL::~TViewerOpenGL()
    delete fL2;
    delete fL3;
    delete fL4;
+   delete fContextMenu;
 }
 
 //______________________________________________________________________________
@@ -285,6 +286,8 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
       if ((fSelectedObj = TestSelection(event))) {
          fSelectedObj->GetColor(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
          fEditor->SetRGBA(fRGBA[0], fRGBA[1], fRGBA[2], fRGBA[3]);
+         if (!fContextMenu) fContextMenu = new TContextMenu("glcm", "glcm");
+         fContextMenu->Popup(event->fXRoot, event->fYRoot, fSelectedObj->GetRealObject());
       } else {
          fEditor->GetButton()->SetState(kButtonDisabled);
          fEditor->Stop();
@@ -297,6 +300,9 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
             gVirtualGL->EndMovement(&fRender);
             DrawObjects();
          }
+      } else if(event->fCode == kButton3) {
+//         delete fContextMenu;
+//         fContextMenu = 0;
       }
    }
 
@@ -367,11 +373,10 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
          TGLWindow *glWin = fCanvasContainer->GetGLWindow();
          Double_t xshift = (event->fX - fLastPos.fX) / Double_t(glWin->GetWidth());
          Double_t yshift = (event->fY - fLastPos.fY) / Double_t(glWin->GetHeight());
+         xshift *= fViewVolume[0] * 1.9 * fZoom[fConf];
+         yshift *= fViewVolume[1] * 1.9 * fZoom[fConf];
 
          if (fConf != kPERSP) {
-            xshift *= fViewVolume[0] * 1.9 * fZoom[fConf];
-            yshift *= fViewVolume[1] * 1.9 * fZoom[fConf];
-
             MakeCurrent();
             switch (fConf) {
             case kXOY:
@@ -387,6 +392,15 @@ Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
 	            break;
             }
          } else {
+            const Double_t *rotM = fArcBall->GetRotMatrix();
+            Double_t matrix[3][4] = {{rotM[0], -rotM[8], rotM[4], xshift},
+                                     {rotM[1], -rotM[9], rotM[5], -yshift},
+                                     {rotM[2], -rotM[10], rotM[6], 0.}};
+                                     
+            TToySolver tr(*matrix);
+            Double_t shift[3] = {0.};
+            tr.GetSolution(shift);
+            gVirtualGL->MoveSelected(&fRender, shift[0], shift[1], shift[2]);
          }
 
          DrawObjects();
@@ -594,11 +608,6 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             break;
          case kGLPickMode:
             fMode = kPick;
-            if (fConf == kPERSP) {
-               fConf = kXOY;
-               fRender.SetActive(fConf);
-               DrawObjects();
-            }
             break;
          case kGLXOY:
 
@@ -631,8 +640,6 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                fConf = kPERSP;
                fRender.SetActive(fConf);
                DrawObjects();
-               if(fMode != kNav)
-                  fMode = kNav;
             }
             break;
          case kGLExit:

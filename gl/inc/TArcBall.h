@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.4 2004/09/03 12:52:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TArcBall.h,v 1.5 2004/09/14 15:37:34 rdm Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -49,6 +49,45 @@ public:
    {
       return fTransform;
    }
+};
+
+class TEqRow {
+private:
+   Double_t fData[4];
+public:
+   TEqRow();
+   TEqRow(const Double_t *source);
+
+   void SetRow(const Double_t *source);
+
+   Double_t &operator [] (UInt_t ind)
+   {
+      return fData[ind];
+   }
+   Double_t operator [] (UInt_t ind)const
+   {
+      return fData[ind];
+   }
+
+   TEqRow &operator *= (Double_t x);
+   TEqRow &operator /= (Double_t x);
+   TEqRow &operator += (const TEqRow &row);
+};
+
+TEqRow operator * (const TEqRow &row, Double_t x);
+TEqRow operator * (Double_t x, const TEqRow &row);
+TEqRow operator / (const TEqRow &row, Double_t x);
+TEqRow operator + (const TEqRow &row1, const TEqRow &row2);
+
+class TToySolver {
+private:
+   TEqRow fMatrix[3];
+   Int_t fBase[3];   
+public:
+   TToySolver(const Double_t *source);
+   void GetSolution(Double_t *sink);
+private:   
+   void AddNewBV(UInt_t i, UInt_t j);
 };
 
 #endif

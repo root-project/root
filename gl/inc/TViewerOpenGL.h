@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.11 2004/09/14 15:37:34 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.12 2004/09/15 14:26:58 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -31,6 +31,7 @@
 #endif
 
 class TGLRenderArea;
+class TContextMenu;
 class TGLSelection;
 class TGVSplitter;
 class TGPopupMenu;
@@ -80,14 +81,13 @@ private:
 
    enum EMode{kNav, kPick};
    enum EViews{kXOY, kXOZ, kYOZ, kPERSP};
-   enum EActivePlane{kAPXOY, kAPXOZ, kAPYOZ};
 
    EViews            fConf;
    EMode             fMode;
-   EActivePlane      fActivePlane;
 
+   TContextMenu      *fContextMenu;
    TGLSceneObject    *fSelectedObj;
-   Color_t fRGBA[4];
+   Color_t           fRGBA[4];
 
 public:
    TViewerOpenGL(TVirtualPad * pad);
