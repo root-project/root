@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.6 2001/01/30 13:18:42 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.7 2002/03/20 18:47:30 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -68,15 +68,15 @@ protected:
    TInetAddress  fAddress;        // remote internet address and port #
    TInetAddress  fLocalAddress;   // local internet address and port #
 
-   TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0; }
-
-private:
    UInt_t        fBytesSent;      // total bytes sent using this socket
    UInt_t        fBytesRecv;      // total bytes received over this socket
 
    static UInt_t fgBytesSent;     // total bytes sent by all socket objects
    static UInt_t fgBytesRecv;     // total bytes received by all socket objects
 
+   TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0; }
+
+private:
    void operator=(const TSocket &);  // not implemented
    void SetDescriptor(Int_t desc) { fSocket = desc; }
    Option_t *GetOption() const { return TObject::GetOption(); }
