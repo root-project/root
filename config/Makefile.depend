@@ -25,6 +25,7 @@ GEDLIBEXTRA         = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
                       lib/libGui.lib
 GEDOLDLIBDEP        = $(GPADLIB) $(GRAFLIB)
 GEDOLDLIBEXTRA      = lib/libGpad.lib lib/libGraf.lib
+POSTSCRIPTLIBEXTRA  = lib/libGraf.lib
 GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
 GUILIBEXTRA         = lib/libGpad.lib lib/libGraf.lib
 HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB)
