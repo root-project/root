@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.36 2004/05/29 17:42:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.37 2004/06/22 18:09:27 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -79,7 +79,9 @@ protected:
    void Expand(Int_t newsize);  //Expand buffer to newsize
 
    Int_t Read(const char *name) { return TObject::Read(name); }
-   Int_t Write(const char *name, Int_t opt, Int_t bufs)
+   Int_t Write(const char *name, Int_t opt, Int_t bufs) 
+                                { return TObject::Write(name, opt, bufs); }
+   Int_t Write(const char *name, Int_t opt, Int_t bufs) const
                                 { return TObject::Write(name, opt, bufs); }
 
    virtual  void     WriteObject(const void *actualObjStart, const TClass *actualClass);

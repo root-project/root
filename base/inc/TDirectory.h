@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.24 2004/06/04 16:28:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.25 2004/07/01 04:55:05 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -132,6 +132,7 @@ public:
    void                SetMother(const TObject *mother) {fMother = (TObject*)mother;}
    virtual Int_t       Sizeof() const;
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
+   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const ;
    virtual Int_t       WriteTObject(const TObject *obj, const char *name=0, Option_t *option="");
    template <class T> inline Int_t WriteObject(const T* obj, const char* name, Option_t *option="") // see TDirectory::WriteObject or TDirectoryWriteObjectAny for explanation
       {

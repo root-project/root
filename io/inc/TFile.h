@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.31 2004/05/11 15:31:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.32 2004/07/07 23:25:33 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -149,6 +149,7 @@ public:
    virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = TCache::kDfltPageSize);
    virtual Bool_t    WriteBuffer(const char *buf, Int_t len);
    virtual Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
+   virtual Int_t     Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const;
    virtual void      WriteFree();
    virtual void      WriteHeader();
    virtual void      WriteStreamerInfo();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.60 2004/05/10 12:09:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.61 2004/06/04 16:28:30 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -692,9 +692,9 @@ void TObject::UseCurrentStyle()
 }
 
 //______________________________________________________________________________
-Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
+Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
 {
-   // Write this object to the current directory
+   // Write this object to the current directory.
    // The data structure corresponding to this object is serialized.
    // The corresponding buffer is written to the current directory
    // with an associated key with name "name".
@@ -748,10 +748,19 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
    if (option & kSingleKey)   opt += "SingleKey";
    if (option & kOverwrite)   opt += "OverWrite";
    if (option & kWriteDelete) opt += "WriteDelete";
-   
+
    Int_t nbytes = gFile->WriteTObject(this,name,opt.Data());
    if (bufsize) gFile->SetBufferSize(0);
    return nbytes;
+}
+
+//______________________________________________________________________________
+Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
+{
+   // Write this object to the current directory. For more see the
+   // const version of this method.
+
+   return ((const TObject*)this)->Write(name, option, bufsize);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.5 2004/06/04 16:28:31 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLFile.h,v 1.6 2004/06/29 14:45:38 brun Exp $
 // Author: Sergey Linev  10.05.2004
 
 /*************************************************************************
@@ -88,6 +88,7 @@ class TXMLFile : public TFile, public TXMLSetup {
       virtual void      UseCache(Int_t = 10, Int_t = TCache::kDfltPageSize) {}
       virtual Bool_t    WriteBuffer(const char*, Int_t) { return kFALSE; }
       virtual Int_t     Write(const char* =0, Int_t=0, Int_t=0) { return 0; }
+      virtual Int_t     Write(const char* =0, Int_t=0, Int_t=0) const { return 0; }
       virtual void      WriteFree() {}
       virtual void      WriteHeader() {}
       virtual Int_t     WriteTObject(const TObject* obj, const char* name = 0, Option_t *option="");

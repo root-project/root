@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.127 2004/07/19 12:10:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.128 2004/07/19 13:32:09 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1528,6 +1528,15 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 
    cursav->cd();
    return nbytes;
+}
+
+//______________________________________________________________________________
+Int_t TFile::Write(const char *n, Int_t opt, Int_t bufsize) const
+{
+   // One can not save a const TDirectory object.
+
+   Error("Write const","A const TFile object should not be saved. We try to proceed anyway.");
+   return const_cast<TFile*>(this)->Write(n, opt, bufsize);
 }
 
 //______________________________________________________________________________

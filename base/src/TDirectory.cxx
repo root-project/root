@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.56 2004/07/01 04:55:05 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.57 2004/07/07 22:44:07 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1504,7 +1504,7 @@ Int_t TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
    // Loop on all objects in memory (including subdirectories).
    // A new key is created in the KEYS linked list for each object.
    // For allowed options see TObject::Write().
-   // The directory header info is rewritten on the directory header record
+   // The directory header info is rewritten on the directory header record.
 
    if (!IsWritable()) return 0;
    TDirectory *cursav = gDirectory;
@@ -1521,6 +1521,15 @@ Int_t TDirectory::Write(const char *, Int_t opt, Int_t bufsiz)
 
    cursav->cd();
    return nbytes;
+}
+
+//______________________________________________________________________________
+Int_t TDirectory::Write(const char *n, Int_t opt, Int_t bufsize) const
+{
+   // One can not save a const TDirectory object.
+
+   Error("Write const","A const TDirectory object should not be saved. We try to proceed anyway.");
+   return const_cast<TDirectory*>(this)->Write(n, opt, bufsize);
 }
 
 //____________________________________________________________________________________

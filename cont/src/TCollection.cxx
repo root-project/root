@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.22 2004/01/23 23:52:56 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.23 2004/07/17 23:18:57 rdm Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -342,7 +342,7 @@ void TCollection::Streamer(TBuffer &b)
 }
 
 //______________________________________________________________________________
-Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize)
+Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize) const
 {
    // Write all objects in this collection. By default all objects in
    // the collection are written individually (each object gets its
@@ -363,6 +363,19 @@ Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize)
       }
       return nbytes;
    }
+}
+
+//______________________________________________________________________________
+Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize)
+{
+   // Write all objects in this collection. By default all objects in
+   // the collection are written individually (each object gets its
+   // own key). Note, this is recursive, i.e. objects in collections
+   // in the collection are also written individually. To write all
+   // objects using a single key specify a name and set option to
+   // TObject::kSingleKey (i.e. 1).
+
+   return ((const TCollection*)this)->Write(name,option,bsize);
 }
 
 // -------------------- Static data members access -----------------------------

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.24 2003/02/05 23:48:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.25 2003/05/01 07:42:36 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -149,6 +149,7 @@ public:
    virtual void        SetUniqueID(UInt_t uid);
    virtual void        UseCurrentStyle();
    virtual Int_t       Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
+   virtual Int_t       Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
 
    //----- operators
    void    *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name: v3-10-01 $:$Id: TDataSet.h,v 1.2 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.3 2003/10/09 18:53:02 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -161,6 +161,7 @@ class TDataSet : public TNamed
     virtual void         Update();                            // Update dataset
     virtual void         Update(TDataSet *set,UInt_t opt=0);// Update this dataset with the new one
     virtual Int_t        Write(const Text_t *name=0, Int_t option=0, Int_t bufsize=0);
+    virtual Int_t        Write(const Text_t *name=0, Int_t option=0, Int_t bufsize=0) const;
     ClassDef(TDataSet,1) // The base class to create the hierarchical data structures
 };
 

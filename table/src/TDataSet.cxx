@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.5 2003/10/09 18:53:02 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.6 2004/01/27 20:14:21 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 static const char *gCoPyRiGhT[] = {
      "Dataset C++ base class library:",
@@ -19,7 +19,7 @@ static const char *gCoPyRiGhT[] = {
 };
 
 static const char *Id = {
-    "$Id: TDataSet.cxx,v 1.5 2003/10/09 18:53:02 brun Exp $"
+    "$Id: TDataSet.cxx,v 1.6 2004/01/27 20:14:21 brun Exp $"
 };
 #include "Riostream.h"
 #include "TSystem.h"
@@ -832,6 +832,21 @@ Int_t TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize)
   fParent = 0;
   Int_t nbytes = TObject::Write(name,option, bufsize);
   fParent = saveParent;
+  return nbytes;
+}
+
+//______________________________________________________________________________
+Int_t TDataSet::Write(const Text_t *name, Int_t option, Int_t bufsize) const
+{
+ //
+ // To Write object first we should temporary break the
+ // the backward fParent pointer (otherwise ROOT follows this links
+ // and will pull fParent out too.
+ //
+  TDataSet *saveParent = fParent; // GetParent();
+  const_cast<TDataSet*>(this)->fParent = 0;
+  Int_t nbytes = TObject::Write(name,option, bufsize);
+  const_cast<TDataSet*>(this)->fParent = saveParent;
   return nbytes;
 }
 
