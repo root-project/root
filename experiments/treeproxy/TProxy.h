@@ -157,7 +157,8 @@ class TProxy {
                fIsaPointer = false;
                fWhere = be->GetObject();
                
-            } else if (be->GetType()==31) {
+            } else if (be->GetType()==31 || be->GetType()==2) {
+               // this might also be the right path for GetType()==1
 
                fWhere = be->GetObject();
 
@@ -586,6 +587,15 @@ typedef TClaImpProxy<UChar_t>  TClaUCharProxy;
 typedef TClaImpProxy<Int_t>    TClaIntProxy;
 typedef TClaImpProxy<Short_t>  TClaShortProxy;
 typedef TClaImpProxy<Char_t>   TClaCharProxy;
+
+typedef TClaArrayProxy<double>   TClaArrayDoubleProxy;
+typedef TClaArrayProxy<float>    TClaArrayFloatProxy;
+typedef TClaArrayProxy<UInt_t>   TClaArrayUIntProxy;
+typedef TClaArrayProxy<UShort_t> TClaArrayUShortProxy;
+typedef TClaArrayProxy<UChar_t>  TClaArrayUCharProxy;
+typedef TClaArrayProxy<Int_t>    TClaArrayIntProxy;
+typedef TClaArrayProxy<UShort_t> TClaArrayShortProxy;
+//specialized ! typedef TClaArrayProxy<Char_t>  TClaArrayCharProxy;
 
 #endif // TPROXY_H
 

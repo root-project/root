@@ -39,7 +39,7 @@ void script() {
       cout << "fTracks.fPointValue[2][1]: " << fTracks_fPointValue[2][1] << endl;
       cout << "fLastTrack: " << fLastTrack.GetUniqueID() << endl;
 #else
-      // NOT YET cout << fEvtHdr.fEvtNum << endl;
+      cout << fEvtHdr.fEvtNum << endl;
       // NOT YET cout << fTracks->GetLast()+1 << endl;
       // NOT YET cout << fTracks.fPx[0] << endl;
       // NOT YET cout << fTracks.fPx[1] << endl;
@@ -47,6 +47,8 @@ void script() {
       // NOT YET cout << "fTracks.fPointValue[0][0]: " << fTracks.fPointValue[0][0] << endl;
       // NOT YET cout << "fLastTrack: " << fLastTrack->GetUniqueID() << endl;
 #endif
+      // new!
+      cout << "fTriggerBits nbits " << fTriggerBits->GetNbits() << "==" << fTriggerBits.fNbits<< endl;
 #ifdef WITH_EVENT
 #ifdef seold_cxx
 #else

@@ -1,8 +1,8 @@
 {
-new TFile("Event.new.split9.root");
-//new TFile("Event.new.split2.root");
+//new TFile("Event.new.split9.root");
+new TFile("Event.new.split2.root");
 //new TFile("Event.new.split1.root");
-//members not defined: new TFile("Event.new.split0.root");
+//new TFile("Event.new.split0.root");
 
 tree = (TTree*)gFile->Get("T");
 gROOT->ProcessLine(".L GenerateProxy.C+g");
