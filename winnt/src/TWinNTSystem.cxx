@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.69 2004/01/28 11:28:28 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.70 2004/01/29 16:02:03 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2189,7 +2189,7 @@ Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
 
 #ifndef GDK_WIN32
    return kFALSE;
-#endif
+#else
    if (!fTimers) return kFALSE;
 
    fInsideNotify = kTRUE;
@@ -2214,6 +2214,7 @@ Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
    }
    fInsideNotify = kFALSE;
    return timedout;
+#endif
 }
 
 //______________________________________________________________________________
