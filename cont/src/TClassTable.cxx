@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.15 2002/05/09 20:22:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.16 2002/05/10 11:07:22 rdm Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -49,7 +49,7 @@ ClassImp(TClassTable)
 //______________________________________________________________________________
 namespace ROOT {
    //#define R__USE_STD_MAP
-   class MapTypeToClassRec {
+   class TMapTypeToClassRec {
 #if defined R__USE_STD_MAP
      // This wrapper class allow to avoid putting #include <map> in the
      // TROOT.h header file.
@@ -105,7 +105,9 @@ namespace ROOT {
          fMap.Add(realkey, (TObject*)obj);
       }
       ClassRec_t* Find(const char* key) const {
-         return (ClassRec_t*) fMap.FindObject(key);
+         const TAssoc* a = (const TAssoc *)fMap.FindObject(key);
+         if (a) return (ClassRec_t*) a->Value();
+         return 0;
       }
       void Remove(const char* key) {
          TObjString realkey(key);

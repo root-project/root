@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.8 2002/05/03 14:30:43 brun Exp $ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.10 2002/05/09 20:22:00 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.8 2002/05/03 14:30:43 brun Exp $
+// $Id: Ttypes.h,v 1.10 2002/05/09 20:22:00 brun Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //
@@ -145,7 +145,7 @@ virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = 
 
 
 namespace ROOT {
-   template <class T> class TTableInitBehavior: public DefaultInitBehavior {
+   template <class T> class TTableInitBehavior: public TDefaultInitBehavior {
    public:
       static const char* fgStructName; // Need to be instantiated
       virtual TClass* CreateClass(const char *cname, Version_t id,
@@ -153,14 +153,14 @@ namespace ROOT {
                                   ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const {
-         TClass * cl = DefaultInitBehavior::CreateClass(cname, id, info, isa, show, 
+         TClass * cl = TDefaultInitBehavior::CreateClass(cname, id, info, isa, show, 
                                                               dfil, ifil,dl, il);
          fgStructName = T::TableDictionary();
          return cl;
       }
       virtual void Unregister(const char* classname) const {
-         DefaultInitBehavior::Unregister(classname);
-         DefaultInitBehavior::Unregister(fgStructName);
+         TDefaultInitBehavior::Unregister(classname);
+         TDefaultInitBehavior::Unregister(fgStructName);
       }
    };
    template <class T> const char * TTableInitBehavior<T >::fgStructName = 0;

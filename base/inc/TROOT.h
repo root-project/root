@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.23 2002/05/03 14:30:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.25 2002/05/09 20:21:59 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -46,7 +46,7 @@ class TFunction;
 class TFolder;
 class TPluginManager;
 namespace ROOT {
-   class MapTypeToTClass;
+   class TMapTypeToTClass;
 }
 
 class TROOT : public TDirectory {
@@ -62,7 +62,7 @@ private:
    static Bool_t   fgMemCheck;            //Turn on memory leak checker
 
 protected:
-   typedef ROOT::MapTypeToTClass IdMap_t;
+   typedef ROOT::TMapTypeToTClass IdMap_t;
 
    TString         fVersion;              //ROOT version (from CMZ VERSQQ) ex 0.05/01
    Int_t           fVersionInt;           //ROOT version in integer format (501)

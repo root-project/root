@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.4 2002/05/03 14:30:42 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.h,v 1.6 2002/05/09 20:22:00 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -39,7 +39,7 @@ struct ClassRec_t {
 };
 
 namespace ROOT {
-  class MapTypeToClassRec;
+  class TMapTypeToClassRec;
 }
 
 class TClassTable : public TObject {
@@ -50,7 +50,7 @@ private:
    static ClassRec_t  *FindElement(const char *cname, Bool_t insert=kFALSE);
    static void         SortTable();
 
-   typedef ROOT::MapTypeToClassRec IdMap_t;
+   typedef ROOT::TMapTypeToClassRec IdMap_t;
 
    static ClassRec_t **fgTable;
    static ClassRec_t **fgSortedTable;

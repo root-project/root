@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.70 2002/05/09 20:21:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.71 2002/05/10 11:07:21 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -177,7 +177,7 @@ static void CleanUpROOTAtExit()
 //______________________________________________________________________________
 namespace ROOT {
    // #define R__USE_STD_MAP
-   class MapTypeToTClass {
+   class TMapTypeToTClass {
 #if defined R__USE_STD_MAP
      // This wrapper class allow to avoid putting #include <map> in the
      // TROOT.h header file.
@@ -232,7 +232,9 @@ namespace ROOT {
          fMap.Add(realkey, obj);
       }
       TClass* Find(const char* key) const {
-         return (TClass*) fMap.FindObject(key);
+         const TAssoc* a = (const TAssoc *)fMap.FindObject(key);
+         if (a) return (TClass*) a->Value();
+         return 0;
       }
       void Remove(const char* key) {
          TObjString realkey(key);

@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.18 2002/05/09 20:21:59 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.19 2002/05/09 22:55:12 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -119,7 +119,7 @@ template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj);
 
 namespace ROOT {
 
-   class GenericClassInfo;
+   class TGenericClassInfo;
    template <class RootClass> Short_t SetClassVersion();
 
    extern TClass *CreateClass(const char *cname, Version_t id,
@@ -139,25 +139,14 @@ namespace ROOT {
 #if 0
    // This function is only implemented in the dictionary file.
    // The parameter is 'only' for overloading resolution.
-   // Used to be a template <class T> GenericClassInfo *GenerateInitInstance(const T*);
-   template <class T> GenericClassInfo *GetClassInfo(const T* t) {
-      GenericClassInfo *GenerateInitInstance(const T*);
+   // Used to be a template <class T> TGenericClassInfo *GenerateInitInstance(const T*);
+   template <class T> TGenericClassInfo *GetClassInfo(const T* t) {
+      TGenericClassInfo *GenerateInitInstance(const T*);
       return CreateInitInstance(t);
    };
 #endif
 
-   // Because of the template defined here, we have to insure that
-   // CINT does not see this file twice, even if it is preprocessed by
-   // an external preprocessor.
-   #ifdef __CINT__
-   #pragma define ROOT_Rtypes_In_Cint_Interpreter
-   #endif
-   #if defined(__CINT__) && !defined(ROOT_Rtypes_In_Cint_Interpreter)
-   #pragma ifndef ROOT_Rtypes_For_Cint
-   #pragma define ROOT_Rtypes_For_Cint
-   #endif
-
-   class InitBehavior {
+   class TInitBehavior {
       // This class defines the interface for the class registration and
       // the TClass creation. To modify the default behavior, one would
       // inherit from this class and overload ROOT::DefineBehavior().
@@ -173,7 +162,7 @@ namespace ROOT {
                                   Int_t dl, Int_t il) const = 0;
    };
 
-   class DefaultInitBehavior : public InitBehavior {
+   class TDefaultInitBehavior : public TInitBehavior {
    public:
       virtual void Register(const char *cname, Version_t id, const type_info &info,
                             VoidFuncPtr_t dict, Int_t pragmabits) const {
@@ -191,77 +180,25 @@ namespace ROOT {
       }
    };
 
-   class GenericClassInfo {
-      // This class in not inlined because it is used is non time critical
-      // section (the dictionaries) and inline would lead to too much
-      // repetition of the code (once per class!).
+   const TInitBehavior *DefineBehavior(void * /*parent_type*/,
+                                       void * /*actual_type*/);
 
-      const InitBehavior  *fAction;
-      TClass              *fClass;
-      const char          *fClassName;
-      const char          *fDeclFileName;
-      Int_t                fDeclFileLine;
-      VoidFuncPtr_t        fDictionary;
-      const type_info     &fInfo;
-      const char          *fImplFileName;
-      Int_t                fImplFileLine;
-      IsAFunc_t            fIsA;
-      void                *fShowMembers;
-      Int_t                fVersion;
-
-   public:
-      GenericClassInfo(const char *fullClassname,
-                       const char *declFileName, Int_t declFileLine,
-                       const type_info &info, const InitBehavior *action,
-                       void *showmembers, VoidFuncPtr_t dictionary,
-                       IsAFunc_t isa, Int_t pragmabits);
-
-      GenericClassInfo(const char *fullClassname, Int_t version,
-                       const char *declFileName, Int_t declFileLine,
-                       const type_info &info, const InitBehavior *action,
-                       void *showmembers,  VoidFuncPtr_t dictionary,
-                       IsAFunc_t isa, Int_t pragmabits);
-
-      GenericClassInfo(const char *fullClassname, Int_t version,
-                       const char *declFileName, Int_t declFileLine,
-                       const type_info &info, const InitBehavior *action,
-                       VoidFuncPtr_t dictionary, Int_t pragmabits);
-
-      GenericClassInfo(const char *fullClassname, Int_t version,
-                       const char *declFileName, Int_t declFileLine,
-                       const type_info &info, const InitBehavior *action,
-                       void *showmembers, VoidFuncPtr_t dictionary, Int_t pragmabits);
-
-      void Init(Int_t pragmabits);
-      ~GenericClassInfo();
-
-      const InitBehavior &GetAction() const;
-      TClass *GetClass();
-      const char *GetClassName() const;
-      const type_info &GetInfo() const;
-      void *GetShowMembers() const;
-      Short_t SetVersion(Short_t version);
-      void SetFromTemplate();
-      Int_t SetImplFile(const char *file, Int_t line);
-      const char *GetDeclFileName() const;
-      Int_t GetDeclFileLine() const;
-      const char *GetImplFileName();
-      Int_t GetImplFileLine();
-      Int_t GetVersion() const;
-      TClass *IsA(const void *obj);
-      IsAFunc_t GetIsA() const;
-   };
-
-  #if defined(__CINT__) && !defined(ROOT_Rtypes_In_Cint_Interpreter)
-  #pragma endif
-  #endif
 
 } // End of namespace ROOT
+
+// The macro below use this TGenericClassInfo, so let's insure it is
+// included
+#ifndef ROOT_TGenericClassInfo
+#include "TGenericClassInfo.h"
+#endif
 
 // Common part of ClassDef definition.
 // ImplFileLine() is not part of it since CINT uses that as trigger for
 // the class comment string.
 #define _ClassDef_(name,id) \
+private: \
+   static TClass *fgIsA; \
+public: \
    static TClass *Class(); \
    static const char *Class_Name(); \
    static Version_t Class_Version() { return id; } \
@@ -279,21 +216,15 @@ namespace ROOT {
 #if !defined(R__ACCESS_IN_SYMBOL) || defined(__CINT__)
 
 #define ClassDef(name,id) \
-private: \
-   static TClass *fgIsA; \
-public: \
    _ClassDef_(name,id) \
    static int ImplFileLine();
 
 #else
 
 #define ClassDef(name,id) \
-private: \
-   static TClass *fgIsA; \
-public: \
+   _ClassDef_(name,id) \
    friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp, \
                                      char *R__parent); \
-   _ClassDef_(name,id) \
    static int ImplFileLine();
 
 #endif
@@ -301,12 +232,9 @@ public: \
 #else
 
 #define ClassDef(name,id) \
-private: \
-   static TClass *fgIsA; \
-public: \
+   _ClassDef_(name,id) \
    friend TBuffer &operator>>(TBuffer &buf, name *&obj); \
    friend TBuffer &operator>>(TBuffer &buf, const name *&obj); \
-   _ClassDef_(name,id) \
    static int ImplFileLine();
 
 #endif
@@ -314,7 +242,7 @@ public: \
 
 #define ClassImp(name) \
 namespace ROOT { \
-   GenericClassInfo *GenerateInitInstance(const name*); \
+   TGenericClassInfo *GenerateInitInstance(const name*); \
    static int _R__UNIQUE_(R__dummyint) = \
             GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__);  \
 }
@@ -332,29 +260,16 @@ namespace ROOT { \
 #if !defined(R__ACCESS_IN_SYMBOL) || defined(__CINT__)
 
 #define ClassDefT(name,id) \
-private: \
-   static TClass *fgIsA; \
-public: \
    _ClassDef_(name,id) \
    static int ImplFileLine();
 
 #else
 
 #define ClassDefT(name,id) \
-private: \
-   static TClass *fgIsA; \
-public: \
+   _ClassDef_(name,id) \
    friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp, \
                                      char *R__parent); \
-   _ClassDef_(name,id) \
    static int ImplFileLine();
-
-#define newClassDefT2(name,Tmpl) \
-   template <class Tmpl> \
-   TBuffer &operator>>(TBuffer &buf, name<Tmpl> *&obj); \
-   template <class Tmpl> \
-   TBuffer &operator>>(TBuffer &buf, const name<Tmpl> *&obj) \
-      { return operator>>(buf, (name<Tmpl> *&) obj); }
 
 #endif
 
@@ -388,7 +303,7 @@ static TNamed *_R__UNIQUE_(R__dummyholder) = \
 
 #define RootClassVersion(name, VersionNumber) \
 namespace ROOT { \
-   GenericClassInfo *GenerateInitInstance(const name*); \
+   TGenericClassInfo *GenerateInitInstance(const name*); \
    static Short_t _R__UNIQUE_(R__dummyVersionNumber) = \
            GenerateInitInstance((name*)0x0)->SetVersion(VersionNumber); \
 }

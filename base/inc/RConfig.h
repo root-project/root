@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.39 2002/05/09 22:54:19 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.40 2002/05/10 11:07:21 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -367,7 +367,7 @@
 
 #endif
 
-/* produce an indentifier that is almost unique inside a file */
+/* produce an identifier that is almost unique inside a file */
 #ifndef __CINT__
 #   define _R__JOIN_(X,Y) _NAME2_(X,Y)
 #   define _R__UNIQUE_(X) _R__JOIN_(X,__LINE__)

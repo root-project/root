@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.63 2002/05/03 15:59:41 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.65 2002/05/09 20:22:01 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1192,14 +1192,14 @@ void WriteClassInit(G__ClassInfo &cl)
 
 #if 0
    fprintf(fp, "#if defined R__NAMESPACE_TEMPLATE_IMP_BUG\n");
-   fprintf(fp, "   template <> ROOT::GenericClassInfo *ROOT::GenerateInitInstance< %s >(const %s*)\n   {\n", 
+   fprintf(fp, "   template <> ROOT::TGenericClassInfo *ROOT::GenerateInitInstance< %s >(const %s*)\n   {\n", 
            cl.Fullname(), cl.Fullname() );
    fprintf(fp, "#else\n");
-   fprintf(fp, "   template <> ROOT::GenericClassInfo *GenerateInitInstance< %s >(const %s*)\n   {\n", 
+   fprintf(fp, "   template <> ROOT::TGenericClassInfo *GenerateInitInstance< %s >(const %s*)\n   {\n", 
            cl.Fullname(), cl.Fullname() );
    fprintf(fp, "#endif\n");
 #endif 
-   fprintf(fp, "   GenericClassInfo *GenerateInitInstance(const %s*)\n   {\n", 
+   fprintf(fp, "   TGenericClassInfo *GenerateInitInstance(const %s*)\n   {\n", 
            cl.Fullname());
 
 
@@ -1212,7 +1212,7 @@ void WriteClassInit(G__ClassInfo &cl)
    fprintf(fp, "      %s *ptr = 0;\n",cl.Fullname());
 
    //fprintf(fp, "      static ROOT::ClassInfo< %s > \n",cl.Fullname());
-   fprintf(fp, "      static ROOT::GenericClassInfo \n");
+   fprintf(fp, "      static ROOT::TGenericClassInfo \n");
 
    fprintf(fp, "         instance(\"%s\",",cl.Fullname());
    if (cl.HasMethod("Class_Version")) {
@@ -1251,11 +1251,11 @@ void WriteClassInit(G__ClassInfo &cl)
    fprintf(fp, "\"%s\",%d,\n",filename,cl.LineNumber());
    fprintf(fp, "                  typeid(%s), DefineBehavior(ptr, ptr),\n",cl.Fullname());
    //   fprintf(fp, "                  (ROOT::ClassInfo< %s >::ShowMembersFunc_t)&ROOT::ShowMembers,%d);\n", cl.Fullname(),cl.RootFlag());
-
+   fprintf(fp, "                  ");
    if (cl.HasMethod("ShowMembers") && !cl.IsTmplt()){
       //      fprintf(fp, "                  0, ");
    } else {
-      fprintf(fp, "                  (void*)&%s_ShowMembers, ",G__map_cpp_name((char *)cl.Fullname()));
+      fprintf(fp, "(void*)&%s_ShowMembers, ",G__map_cpp_name((char *)cl.Fullname()));
    }
 
    if (cl.HasMethod("Dictionary") && !cl.IsTmplt()) {
@@ -1275,7 +1275,7 @@ void WriteClassInit(G__ClassInfo &cl)
    fprintf(fp, "   // Static variable to force the class initialization\n");
    //   fprintf(fp, "   static ROOT::ClassInfo< %s > & _R__UNIQUE_(Init) \n",
    //        cl.Fullname() );
-   fprintf(fp, "   static ROOT::GenericClassInfo * _R__UNIQUE_(Init) \n" );
+   fprintf(fp, "   static ROOT::TGenericClassInfo * _R__UNIQUE_(Init) \n" );
    fprintf(fp, "      = GenerateInitInstance((const %s*)0x0);\n\n", cl.Fullname());
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: RtypesImp.h,v 1.6 2002/05/09 22:56:28 rdm Exp $
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
@@ -17,16 +17,6 @@
 #endif
 
 namespace ROOT {
-   const InitBehavior *DefineBehavior(void * /*parent_type*/,
-                                      void * /*actual_type*/);
-
-#if 0
-   template <class T> GenericClassInfo &GenerateInitInstance(const T*) {
-      ::Warning("GenerateInitInstance", "No Dictionary Created for this class");
-      static GenericClassInfo nullClassInfo("NoDict",0,"",0,typeid(T),0,0,0,0,0,0);
-      return nullClassInfo;
-   }
-#endif
 
    inline void GenericShowMembers(const char *topClassName,
                                   void *obj, TMemberInspector &R__insp,
@@ -41,18 +31,6 @@ namespace ROOT {
       }
    }
 
-
-#if 0
-   template <class T> const InitBehavior *ClassInfo<T>::fgAction       = 0;
-   template <class T> TClass             *ClassInfo<T>::fgClass        = 0;
-   template <class T> const char         *ClassInfo<T>::fgClassName    = 0;
-   template <class T> Int_t               ClassInfo<T>::fgVersion      = 0;
-   template <class T> const char         *ClassInfo<T>::fgImplFileName = 0;
-   template <class T> Int_t               ClassInfo<T>::fgImplFileLine = 0;
-   template <class T> const char         *ClassInfo<T>::fgDeclFileName = 0;
-   template <class T> Int_t               ClassInfo<T>::fgDeclFileLine = 0;
-   template <class T> typename ClassInfo<T>::ShowMembersFunc_t  ClassInfo<T>::fgShowMembers = 0;
-#endif
 
 }
 
