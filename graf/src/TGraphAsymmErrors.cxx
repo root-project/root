@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.36 2004/06/19 15:47:19 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.37 2004/07/05 06:55:07 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -280,7 +280,7 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 // Fills this TGraphAsymmErrors by dividing two input TH1 histograms pass/total. 
 //
 // Andy Haas (haas@fnal.gov)
-// Univeristy of Washington
+// University of Washington
 //
 // Method and code directly taken from:
 // Marc Paterno (paterno@fnal.gov)
@@ -331,12 +331,12 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 	Double_t stats[10];
 	//compare sum of weights with sum of squares of weights
 	pass->GetStats(stats);
-	if (TMath::Abs(stats[0] -stats[1]) < 1e-6) {
+	if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
 		Error("BayesDivide","Pass histogram has not been filled with weights = 1");
 		return;
 	}
 	total->GetStats(stats);
-	if (TMath::Abs(stats[0] -stats[1]) < 1e-6) {
+	if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
 		Error("BayesDivide","Total histogram has not been filled with weights = 1");
 		return;
 	}
@@ -548,6 +548,7 @@ void TGraphAsymmErrors::Efficiency(int k, int N, double conflevel,
    // that contains CONFLEVEL probability. We use Brent's method,
    // except in two special cases: when k=0, or when k=N
    // Main driver routine
+   // Author: Marc Paterno
 
    //If there are no entries, then we know nothing, thus return the prior...
    if (0==N) {
