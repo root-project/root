@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.9 2001/02/13 11:57:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.10 2001/02/28 07:53:09 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -782,7 +782,7 @@ TH1 *TH3::Project3D(Option_t *option)
    //
    // The projection is made for the selected bins only.
    // To select a bin range along an axis, use TAxis::SetRange, eg
-   //    h3.GetYAxis()->SetRange(23,56);
+   //    h3.GetYaxis()->SetRange(23,56);
 
   TString opt = option; opt.ToLower();
   Int_t ixmin = fXaxis.GetFirst();
