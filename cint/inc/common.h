@@ -454,8 +454,9 @@
 #define G__PUTHEAPOBJ         (long)0x7fff004e /* not implemented yet */
 #define G__CASE               (long)0x7fff004f
 /* #define G__SETARYCTOR         (long)0x7fff0050 */
-
 #define G__MEMCPY             (long)0x7fff0050
+#define G__MEMSETINT          (long)0x7fff0051
+#define G__JMPIFVIRTUALOBJ    (long)0x7fff0052
 
 #define G__PAUSE              (long)0x7fff00fe
 

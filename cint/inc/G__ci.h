@@ -22,11 +22,11 @@
 #define G__CI_H
 
 #ifdef G__CINT_VER6
-#define G__CINTVERSION      6000017
-#define G__CINTVERSIONSTR  "6.0.17, Sep 20 2004"
+#define G__CINTVERSION      6000018
+#define G__CINTVERSIONSTR  "6.0.18, Sep 29 2004"
 #else
-#define G__CINTVERSION      50150153
-#define G__CINTVERSIONSTR  "5.15.153, Sep 20 2004"
+#define G__CINTVERSION      50150154
+#define G__CINTVERSIONSTR  "5.15.154, Sep 29 2004"
 #endif
 
 #define G__ALWAYS
@@ -36,6 +36,7 @@
 **********************************************************************/
 
 #ifndef G__CINT_VER6
+#define G__OLDIMPLEMENTATION2147
 #define G__OLDIMPLEMENTATION2146
 #define G__OLDIMPLEMENTATION2143
 #define G__OLDIMPLEMENTATION2142

@@ -6692,7 +6692,7 @@ asm_ifunc_start:   /* loop compilation execution label */
 			       ,G__asm_cp,funcname,libp->paran);
 #endif
         G__asm_inst[G__asm_cp]=G__LD_FUNC;
-        G__asm_inst[G__asm_cp+1]=p_ifunc->tagnum;
+        G__asm_inst[G__asm_cp+1]=p_ifunc->tagnum; /* ??? */
         G__asm_inst[G__asm_cp+2]=(p_ifunc->vtblindex[ifn]&0xffff)
                                  +(p_ifunc->vtblbasetagnum[ifn]*0x10000);
         G__asm_inst[G__asm_cp+3]=libp->paran;
@@ -6708,10 +6708,15 @@ asm_ifunc_start:   /* loop compilation execution label */
         G__asm_inst[G__asm_cp+1]=(long)p_ifunc;
         G__asm_inst[G__asm_cp+2]=ifn;
         G__asm_inst[G__asm_cp+3]=libp->paran;
-        if(-1!=p_ifunc->tagnum && strcmp(funcname,G__struct.name[p_ifunc->tagnum])==0)
+        if(-1!=p_ifunc->tagnum && strcmp(funcname,G__struct.name[p_ifunc->tagnum])==0) {
+#ifndef G__OOLDIMPLEMENTATION2150
+	  G__bc_Baseclassctor_vbase(p_ifunc->tagnum);
+#endif
           G__asm_inst[G__asm_cp+4]=(long)G__bc_exec_ctor_bytecode;
-        else
+	}
+        else {
           G__asm_inst[G__asm_cp+4]=(long)G__bc_exec_normal_bytecode;
+	}
         G__inc_cp_asm(5,0);
       }
     }

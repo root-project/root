@@ -1,9 +1,7 @@
-#if !(defined(G__WIN32) && defined(__MAKECINT__))
-#ifndef G__MAP_H
+#if !defined(G__MAP_DLL) && !defined(G__NOCINTDLL)
 #pragma include_noerr <pair.dll>
 #pragma include_noerr <map.dll>
 #pragma include_noerr <map2.dll>
-#endif
 #endif
 
 #ifdef __MAKECINT__

@@ -3,11 +3,8 @@
 #ifndef G__STRING
 #define G__STRING
 
-
-#if !(defined(G__WIN32) && defined(__MAKECINT__))
-#ifndef G__STRING_DLL
+#if !defined(G__STRING_DLL) && !defined(G__NOCINTDLL)
 #pragma include_noerr <string.dll>
-#endif
 #endif
 
 #ifdef __MAKECINT__

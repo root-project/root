@@ -275,6 +275,15 @@ struct G__vbaseaddrlist *pvbaseaddrlist;
 
 /**************************************************************************
 * G__setvbaseaddrlist()
+*
+* class B : virtual public A { };
+* class C : virtual public A { };
+* class D : public B, public C { };
+*
+* ----AAAABBBB----aaaaCCCCDDDD
+*   8          -x
+*  vos
+*
 **************************************************************************/
 static void G__setvbaseaddrlist(tagnum,pobject,baseoffset)
 int tagnum;
@@ -448,8 +457,6 @@ struct G__baseparam *pbaseparam;
       if(flag) sprintf(construct,"%s(%s)" ,tagname,pbaseparam->param[j]);
       else sprintf(construct,"%s()",tagname);
 #endif
-      
-      
       if(G__dispsource) {
 	G__fprinterr(G__serr,"\n!!!Calling base class constructor %s",construct);
       }

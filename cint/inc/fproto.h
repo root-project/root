@@ -303,8 +303,8 @@ int G__copyfile G__P((FILE *to,FILE *from));
 
 #ifndef G__OLDIMPLEMENTATION1196
 int G__matchfilename G__P((int i1,char* filename));
-char* G__stripfilename G__P((char* filename));
 #endif
+char* G__stripfilename G__P((char* filename));
 #ifndef G__OLDIMPLEMENTATION1197
 int G__cleardictfile G__P((int flag));
 #endif
@@ -918,6 +918,10 @@ int G__Isvalidassignment_val G__P((G__value* ltype,int lparan,int lvar_type,G__v
 int G__bc_setdebugview G__P((int i,struct G__view *pview));
 int G__bc_showstack G__P((FILE* fp));
 void G__bc_setlinenum G__P((int line));
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2150
+void G__bc_Baseclassctor_vbase G__P((int tagnum));
 #endif
 
 G__value G__alloc_exceptionbuffer G__P((int tagnum));

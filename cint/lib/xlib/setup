@@ -8,9 +8,18 @@ machine=`uname -m`   # 9000/7xx,9000/8xx,9000/3xx,9000/4xx,i486,etc
 
 case $os in
 Linux)
-	# For Linux RedHat6.2 system
-	X11INC='-I/usr/X11R6/include'
-	X11LIB='-L/usr/X11R6/lib -lX11'
+	case $machine in
+	*86_64)
+		# For Linux RedHat6.2 system
+		X11INC='-I/usr/X11R6/include'
+		X11LIB='-L/usr/X11R6/lib64 -lX11'
+		;;
+	*)
+		# For Linux RedHat6.2 system
+		X11INC='-I/usr/X11R6/include'
+		X11LIB='-L/usr/X11R6/lib -lX11'
+		;;
+	esac
 	;;
 HP-UX)
 	# For my HP-UX system

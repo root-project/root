@@ -3043,6 +3043,71 @@ long localmem;
 #endif
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2147
+    case G__MEMSETINT:
+      /***************************************
+      * inst
+      * 0 MEMSETINT
+      * 1 mode,  0:no offset, 1: G__store_struct_offset, 2: localmem
+      * 2 numdata
+      * 3 adr
+      * 4 data
+      * 5 adr
+      * 6 data
+      * ...
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: MEMSETINT %ld %ld\n",pc,sp
+				  ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+#endif
+      {
+        int i;
+	int n=G__asm_inst[pc+2];
+	long plong;
+	switch(G__asm_inst[pc+1]) {
+        case 0: plong=0; break;
+        case 1: plong=G__store_struct_offset; break;
+        case 2: plong=localmem; break;
+	}
+        for(i=0;i<n;++i) {
+#ifdef G__ASM_DBG
+	  if(G__asm_dbg) G__fprinterr(G__serr,"  %ld %ld\n"
+				      ,G__asm_inst[pc+3+i*2]
+				      ,G__asm_inst[pc+4+i*2]);
+#endif
+	  *(long*)(plong+G__asm_inst[pc+3+i*2]) = G__asm_inst[pc+4+i*2];
+        }
+      }
+      pc+=G__asm_inst[pc+2]*2+3;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+
+    case G__JMPIFVIRTUALOBJ:
+      /***************************************
+      * inst
+      * 0 JMPIFVIRTUALOBJ
+      * 1 offset
+      * 2 next_pc
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: JMPIFVIRTUALOBJ %lx %lx\n"
+				  ,pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+#endif
+      {
+        long *pvos= G__store_struct_offset + G__asm_inst[pc+1];
+	if(*pvos<0) pc=G__asm_inst[pc+2];
+	else pc+=3;
+      }
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+#endif /* 2147 */
+
 #ifndef G__OLDIMPLEMENTATION2142
     case G__PAUSE:
       /***************************************
@@ -10964,6 +11029,43 @@ int *start;
       break;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2147
+    case G__MEMSETINT:
+      /***************************************
+      * inst
+      * 0 MEMSETINT
+      * 1 mode,  0:no offset, 1: G__store_struct_offset, 2: localmem
+      * 2 numdata
+      * 3 adr
+      * 4 data
+      * 5 adr
+      * 6 data
+      * ...
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: MEMSETINT %ld %ld\n",pc
+				  ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+#endif
+      /* no optimization */
+      pc+=G__asm_inst[pc+2]*2+3;
+      break;
+
+    case G__JMPIFVIRTUALOBJ:
+      /***************************************
+      * inst
+      * 0 JMPIFVIRTUALOBJ
+      * 1 offset
+      * 2 next_pc
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x: JMPIFVIRTUALOBJ %lx %lx\n",pc
+				  ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+#endif
+      /* no optimization */
+      pc+=3;
+      break;
+#endif /* 2147 */
+
 #ifndef G__OLDIMPLEMENTATION2142
     case G__PAUSE:
       /***************************************
@@ -12321,6 +12423,41 @@ int isthrow;
       ++pc;
       break;
 #endif
+
+#ifndef G__OLDIMPLEMENTATION2147
+    case G__MEMSETINT:
+      /***************************************
+      * inst
+      * 0 MEMSETINT
+      * 1 mode,  0:no offset, 1: G__store_struct_offset, 2: localmem
+      * 2 numdata
+      * 3 adr
+      * 4 data
+      * 5 adr
+      * 6 data
+      * ...
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(0==isthrow) fprintf(fout,"%3x: MEMSETINT %ld %ld\n",pc
+			     ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+#endif
+      pc+=G__asm_inst[pc+2]*2+3;
+      break;
+
+    case G__JMPIFVIRTUALOBJ:
+      /***************************************
+      * inst
+      * 0 JMPIFVIRTUALOBJ
+      * 1 offset
+      * 2 next_pc
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(0==isthrow) fprintf(fout,"%3x: JMPIFVIRTUALOBJ %lx %lx\n",pc
+			     ,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+#endif
+      pc+=3;
+      break;
+#endif /* 2147 */
 
 #ifndef G__OLDIMPLEMENTATION2142
     case G__PAUSE:

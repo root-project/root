@@ -3,15 +3,21 @@
 #ifndef NULL
 #pragma setstdio
 #endif
-typedef long fpos_t;
+typedef struct fpos_t {
+  long l,u;
+  fpos_t(long i=0){l=i;u=0;}
+  void operator=(long i){l=i;u=0;}
+} fpos_t;
+#pragma link off class fpos_t;
+#pragma link off typedef fpos_t;
 typedef unsigned int size_t;
 #define 	_IOFBF (0)
 #define 	_IOLBF (1)
 #define 	_IONBF (2)
 #define 	BUFSIZ (1024)
-#define 	FILENAME_MAX (259)
-#define 	L_tmpnam (259)
-#define 	TMP_MAX (26)
+#define 	FILENAME_MAX (1024)
+#define 	L_tmpnam (1024)
+#define 	TMP_MAX (308915776)
 #ifndef SEEK_CUR
 #define 	SEEK_CUR (1)
 #endif

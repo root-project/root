@@ -1,10 +1,8 @@
-#if !(defined(G__WIN32) && defined(__MAKECINT__))
-#ifndef G__UTILITY_DLL
+#if !defined(G__UTILITY_DLL) && !defined(G__NOCINTDLL)
 #pragma include_noerr <utility.dll>
 #endif
-#ifndef G__PAIR_DLL
+#if !defined(G__UTILITY_DLL) && !defined(G__NOCINTDLL)
 #pragma include_noerr <pair.dll>
-#endif
 #endif
 
 #ifdef __MAKECINT__

@@ -64,7 +64,11 @@ long G__BaseClassInfo::Property()
   if(IsValid()) {
     property = G__ClassInfo::Property();
     if(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISVIRTUALBASE)
+#ifndef G__OLDIMPLEMENTATION2148
+      property|=G__BIT_ISVIRTUALBASE;
+#else
       property|=G__BIT_ISVIRTUAL;
+#endif
 #ifndef G__OLDIMPLEMENTATION1888
     if(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT)
       property|=G__BIT_ISDIRECTINHERIT;
@@ -99,14 +103,20 @@ int G__BaseClassInfo::IsValid()
 }
 
 ///////////////////////////////////////////////////////////////////////////
+int G__BaseClassInfo::Next() {
+  return(Next(1)); 
+}
 
-int G__BaseClassInfo::Next()
+///////////////////////////////////////////////////////////////////////////
+int G__BaseClassInfo::Next(int onlydirect)
 {
   ++basep;
 #ifndef G__FONS56
-  while (IsValid() &&
+  if(onlydirect) {
+    while (IsValid() &&
      !(G__struct.baseclass[derivedtagnum]->property[basep]&G__ISDIRECTINHERIT))
-     ++basep;
+      ++basep;
+  }
   // initialize base class so we can get name of baseclass
   if (IsValid()) {
      G__ClassInfo::Init(G__struct.baseclass[derivedtagnum]->basetagnum[basep]);

@@ -1,7 +1,5 @@
-#if !(defined(G__WIN32) && defined(__MAKECINT__))
 #ifndef G__ALGORITHM_DLL
 #pragma include_noerr <algorithm.dll>
-#endif
 #endif
 
 #ifdef __MAKECINT__

@@ -1,7 +1,5 @@
-#if !(defined(G__WIN32) && defined(__MAKECINT__))
-#ifndef G__FUNCTIONAL_DLL
+#if !defined(G__FUNCTIONAL_DLL) && !defined(G__NOCINTDLL)
 #pragma include_noerr <functional.dll>
-#endif
 #endif
 
 #ifdef __MAKECINT__

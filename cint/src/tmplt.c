@@ -515,7 +515,10 @@ char* source;
   struct G__Templatearg *targ=NULL;
   struct G__Templatearg *p=NULL;
   char type[G__MAXNAME];
-  int c,i,j,nest;
+  int c;
+#ifndef G__OLDIMPLEMENTATION2149
+  int i,j,nest;
+#endif
   int stat=1;
   int isrc=0;
   int len;
@@ -541,28 +544,28 @@ char* source;
     p->type = 0;
     /*  templatename<T*,E,int> ...
      *                ^                            */
-#ifdef G__OLD
-	c = G__getname(source,&isrc,type,",>");
-   if (strcmp (type, "const") == 0 && c == ' ') {
-      p->type |= G__TMPLT_CONSTARG;
-      c=G__getname(source,&isrc,type,",>");
-   }
-#else
-   /* We need to insure to get the real arguments and nothing else! */
-   if (strncmp (source, "const ", strlen("const ")) == 0) {
+#ifndef G__OLDIMPLEMENTATION2149
+    /* We need to insure to get the real arguments and nothing else! */
+    if(strncmp (source, "const ", strlen("const ")) == 0) {
       p->type |= G__TMPLT_CONSTARG;
       isrc = strlen("const ");
-   }
-   len = strlen(source);
-   for(i=isrc,j=0,nest=0;i<len;++i) {
+    }
+    len = strlen(source);
+    for(i=isrc,j=0,nest=0;i<len;++i) {
       switch(source[i]) {
-         case '<': ++nest; break;
-         case '>': --nest; if (nest<0) { i=len; continue; } break;
-         case ',': if (nest==0) { i=len; continue; } break;
+      case '<': ++nest; break;
+      case '>': --nest; if (nest<0) { i=len; continue; } break;
+      case ',': if (nest==0) { i=len; continue; } break;
       }
       type[j++] = source[i];
-	}
-   type[j] = 0;
+    }
+    type[j] = 0;
+#else
+    c = G__getname(source,&isrc,type,",>");
+    if (strcmp (type, "const") == 0 && c == ' ') {
+      p->type |= G__TMPLT_CONSTARG;
+      c=G__getname(source,&isrc,type,",>");
+    }
 #endif
     len = strlen(type);
     if('&'==type[len-1]) {

@@ -704,6 +704,7 @@ char* filename;
   return(0);
 #endif /* PHILIPPE28 */
 }
+#endif
 
 /******************************************************************
 * G__stripfilename(filename)
@@ -743,7 +744,6 @@ char* filename;
   }
   else return(filename);
 }
-#endif
 
 #ifndef G__OLDIMPLEMENTATION1273
 /******************************************************************
