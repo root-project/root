@@ -2783,8 +2783,10 @@ void astress_lineqn()
     // dominant one fore sizes > 100, otherwise the verification might fail
 
     TMatrixD m_orig = THilbertMatrixD(msize,msize);
-    if (msize > 100)
-      TMatrixDDiag(m_orig) += 1.;
+    if (msize > 100) {
+      TMatrixDDiag diag = TMatrixDDiag(m_orig,0);
+      diag += 1.;
+    }
     const TMatrixD m = m_orig;
 
     TVectorD rowsum(msize); rowsum.Zero();
