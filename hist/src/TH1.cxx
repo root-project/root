@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.35 2001/01/19 17:28:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.36 2001/02/07 21:03:50 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3755,6 +3755,7 @@ void TH1::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax)
       Error("SetBins","Operation only valid for 1-d histograms");
       return;
    }
+   fXaxis.SetRange(0,0);
    fXaxis.Set(nx,xmin,xmax);
    fNcells = nx+2;
    SetBinsLength(fNcells);
@@ -3778,6 +3779,8 @@ void TH1::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axi
       Error("SetBins","Operation only valid for 2-d histograms");
       return;
    }
+   fXaxis.SetRange(0,0);
+   fYaxis.SetRange(0,0);
    fXaxis.Set(nx,xmin,xmax);
    fYaxis.Set(ny,ymin,ymax);
    fNcells = (nx+2)*(ny+2);
@@ -3802,6 +3805,9 @@ void TH1::SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axi
       Error("SetBins","Operation only valid for 3-d histograms");
       return;
    }
+   fXaxis.SetRange(0,0);
+   fYaxis.SetRange(0,0);
+   fZaxis.SetRange(0,0);
    fXaxis.Set(nx,xmin,xmax);
    fYaxis.Set(ny,ymin,ymax);
    fZaxis.Set(nz,zmin,zmax);
