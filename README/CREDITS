@@ -101,6 +101,10 @@ N: Victor Perevoztchikov
 E: perev@bnl.gov
 D: optimized hash function, filename expander
 
+N: Art Poskanzer
+E: AMPoskanzer@lbl.gov
+D: contributed to styles Bold, Video, Pub
+
 N: Sven Ravndal
 E: Sven.Ravndal@dresdner-bank.com
 D: initial event generator interface
