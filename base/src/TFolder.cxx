@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.20 2002/08/09 21:22:18 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.21 2002/12/02 18:50:01 rdm Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -103,6 +103,16 @@ TFolder::TFolder() : TNamed()
 // The normal way to create a folder is by calling TFolder::AddFolder
 
    fFolders = 0;
+   fIsOwner = kFALSE;
+}
+
+//______________________________________________________________________________
+TFolder::TFolder(const char *name, const char *title) : TNamed(name,title)
+{
+// create a normal folder.
+// use Add or AddFolder to add objects or folders to this folder
+
+   fFolders = new TList();
    fIsOwner = kFALSE;
 }
 

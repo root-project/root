@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.h,v 1.12 2002/01/23 15:48:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.h,v 1.13 2002/10/31 07:27:33 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -42,6 +42,7 @@ private:
 public:
 
    TFolder();
+   TFolder(const char *name, const char *title);
    virtual ~TFolder();
    virtual void        Add(TObject *obj);
    TFolder            *AddFolder(const char *name, const char *title, TCollection *collection=0);
