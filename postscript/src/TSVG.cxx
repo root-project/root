@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.7 2002/12/02 18:50:05 rdm Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.8 2003/01/20 08:44:47 brun Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -106,7 +106,8 @@ void TSVG::Open(const char *fname, Int_t wtype)
       return;
    }
 
-   fType = abs(wtype);
+   fLenBuffer = 0;
+   fType      = abs(wtype);
    SetLineScale(gStyle->GetLineScalePS());
    gStyle->GetPaperSize(fXsize, fYsize);
    Float_t xrange, yrange;
