@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.12 2001/02/03 14:46:43 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.13 2001/02/12 14:30:02 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1105,9 +1105,12 @@ int TWinNTSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
    // Get info about a file: id, size, flags, modification time.
    // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
    // Size    is the file size
-   // Flags   is file type: bit 1 set executable, bit 2 set directory,
-   //                       bit 3 set regular file
+   // Flags   is file type: 0 is regular file, bit 0 set executable,
+   //                       bit 1 set directory, bit 2 set special file
+   //                       (socket, fifo, pipe, etc.)
    // Modtime is modification time
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
 
    return WinNTFilestat(path, id,  size, flags, modtime);
 }
@@ -2472,9 +2475,12 @@ int TWinNTSystem::WinNTFilestat(const char *path, Long_t *id, Long_t *size,
    // Get info about a file: id, size, flags, modification time.
    // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
    // Size    is the file size
-   // Flags   is file type: bit 1 set executable, bit 2 set directory,
-   //                       bit 3 set regular file
+   // Flags   is file type: 0 is regular file, bit 0 set executable,
+   //                       bit 1 set directory, bit 2 set special file
+   //                       (socket, fifo, pipe, etc.)
    // Modtime is modification time
+   // The function returns 0 in case of success and 1 if the file could
+   // not be stat'ed.
 
    struct stat statbuf;
    if (id)      *id = 0;
