@@ -1,3 +1,6 @@
+// @(#)root/win32gdk:$Name:  $:$Id:$
+// Author: Valeriy Onuchin  08/08/2003
+
 /*************************************************************************
  * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -18,9 +21,9 @@
 class TGWin32CallBackObject: public TObject
 {
 public:
-   TGWin32CallBack   fCallBack;  // callback function (called by GUI thread) 
+   TGWin32CallBack   fCallBack;  // callback function (called by GUI thread)
    void              *fParam;    // arguments passed to/from callback function
-   
+
    TGWin32CallBackObject(TGWin32CallBack cb,void *p):fCallBack(cb),fParam(p) {}
    ~TGWin32CallBackObject() { if (fParam) delete fParam; }
 };
@@ -75,7 +78,7 @@ TGWin32ProxyBase::TGWin32ProxyBase()
    fParam = 0;
    fListOfCallBacks = new TList();
    fBatchLimit = 20;
-   fId = ::GetCurrentThreadId(); 
+   fId = ::GetCurrentThreadId();
    fPimpl = new TGWin32ProxyBasePrivate();
 
    if (!fgPostMessageId) fgPostMessageId = ::RegisterWindowMessage("TGWin32ProxyBase::Post");
@@ -156,10 +159,10 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
    //    - post message to main thread.
    //    - execute callbacks from fListOfCallBacks
    //    - wait for response
-   // else 
+   // else
    //    -  add callback to fListOfCallBacks
    //
-   // returns kTRUE if callback execution is delayed (batched) 
+   // returns kTRUE if callback execution is delayed (batched)
 
    if (!fgMainThreadId) return kFALSE;
 
@@ -174,7 +177,7 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
      Int_t wait = 0;
       // wait because there is chance that message queue does not exist yet
       ::SleepEx(50,1);
-      if (wait++>100) return kFALSE; // failed to post 
+      if (wait++>100) return kFALSE; // failed to post
    }
 
    ::WaitForSingleObject(fPimpl->fEvent,INFINITE);

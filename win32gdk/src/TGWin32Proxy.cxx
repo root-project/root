@@ -1,3 +1,6 @@
+// @(#)root/win32gdk:$Name:  $:$Id:$
+// Author: Valeriy Onuchin  08/08/2003
+
 /*************************************************************************
  * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -21,7 +24,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________ 
+//______________________________________________________________________________
 TGWin32Proxy::~TGWin32Proxy()
 {
    // dtor
@@ -62,7 +65,7 @@ VOID_METHOD_ARG1(TGWin32,SetTextColor,Color_t,cindex,0)
 VOID_METHOD_ARG1(TGWin32,SetTextMagnitude,Float_t,mgn,0)
 VOID_METHOD_ARG1(TGWin32,SetTextSize,Float_t,textsize,0)
 VOID_METHOD_ARG1(TGWin32,SetTextSizePixels,Int_t,npixels,0)
-VOID_METHOD_ARG1(TGWin32,SetTextAngle,Float_t,tangle,1) 
+VOID_METHOD_ARG1(TGWin32,SetTextAngle,Float_t,tangle,1)
 VOID_METHOD_ARG1(TGWin32,UpdateWindow,Int_t,mode,1)
 VOID_METHOD_ARG1(TGWin32,MapWindow,Window_t,id,1)
 VOID_METHOD_ARG1(TGWin32,MapSubwindows,Window_t,id,1)
@@ -301,7 +304,7 @@ void TGWin32Proxy::NextEvent(Event_t& event)
 {
    //
 
-   TGWin32::Instance()->NextEvent(event); 
+   TGWin32::Instance()->NextEvent(event);
 }
 
 //______________________________________________________________________________

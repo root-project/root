@@ -1,3 +1,5 @@
+// @(#)root/win32gdk:$Name:  $:$Id:$
+// Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -26,7 +28,7 @@ protected:
    static ULong_t    fgMainThreadId;      // main thread ID
    Int_t             fBatchLimit;         // batch limit
    TList             *fListOfCallBacks;   // list of callbacks (used for batch processing)
-   TGWin32CallBack   fCallBack;           // callback function (executed by "main" thread) 
+   TGWin32CallBack   fCallBack;           // callback function (executed by "main" thread)
    void              *fParam;             // arguments passed to/from callback function
    ULong_t           fId;                 // thread id. There is one proxy per thread
 

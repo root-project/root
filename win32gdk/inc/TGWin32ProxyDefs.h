@@ -1,3 +1,5 @@
+// @(#)root/win32gdk:$Name:  $:$Id:$
+// Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -23,7 +25,7 @@
 //
 // root [0] gDebug = -123 //  start profiling
 //or
-// root [0] gDebug = -1234 //  start profiling and debugging(call trace) 
+// root [0] gDebug = -1234 //  start profiling and debugging(call trace)
 //
 // root [1] .x macro.C    //  profile macro.C
 // root [2] gDebug = 0    //  stop profiling

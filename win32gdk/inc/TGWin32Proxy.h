@@ -1,3 +1,5 @@
+// @(#)root/win32gdk:$Name:  $:$Id:$
+// Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
