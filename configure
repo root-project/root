@@ -847,7 +847,7 @@ if test ! "x$enable_mysql" = "xno"; then
     # (formally only needed when linking against the static libmysqlclient.a)
     if test ! "x$mysqllib" = "x" ; then
 	case $arch in
-	    linux*) mysqllib="$mysqllib -lz" ;;
+	    linux*|win32gcc) mysqllib="$mysqllib -lz" ;;
 	esac
     fi
 
