@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TAttAxis.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -80,7 +80,7 @@ public:
         virtual void     SetTitleColor(Color_t color=1);       // *MENU*
         virtual void     SetTitleFont(Style_t font=62);        // *MENU*
 
-        ClassDef(TAttAxis,3)  //Axis attributes
+        ClassDef(TAttAxis,4)  //Axis attributes
 };
 
 #endif
