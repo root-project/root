@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.89 2002/07/05 17:29:52 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.90 2002/07/11 19:45:14 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2292,7 +2292,6 @@ void GetFullyQualifiedName(G__ClassInfo &cl, string &fullyQualifiedName)
    int nesting = 0;
    const char *current, *next;
    current = next = 0;
-   name[len] = 0;
    current = &(name[0]);
    next = &(name[0]);
    for (int c = 0; c<len; c++) {
@@ -2889,6 +2888,34 @@ int main(int argc, char **argv)
             default:        argvv[argcc++] = "-J1"; break;
          }
 
+#ifdef __KCC
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-D__KCC=%ld", (long)__KCC); argcc++;
+#endif
+#ifdef __INTEL_COMPILER
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
+#endif
+#ifdef __GNUC__
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-D__GNUC__=%ld", (long)__GNUC__); argcc++;
+#endif
+#ifdef __GNUC_MINOR__
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-D__GNUC_MINOR__=%ld", (long)__GNUC_MINOR__); argcc++;
+#endif
+#ifdef __HP_aCC
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-D__HP_aCC=%ld", (long)__HP_aCC); argcc++;
+#endif
+#ifdef __SUNPRO_CC
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-D__SUNPRO_CC=%ld", (long)__SUNPRO_CC); argcc++;
+#endif
+#ifdef __ia64__
+         argvv[argcc] = (char *)calloc(64, 1);
+         sprintf(argvv[argcc], "-D__ia64__=%ld", (long)__ia64__); argcc++;
+#endif
          argvv[argcc++] = "-DTRUE=1";
          argvv[argcc++] = "-DFALSE=0";
          argvv[argcc++] = "-Dexternalref=extern";
