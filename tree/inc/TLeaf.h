@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.2 2000/06/13 09:27:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.3 2000/09/29 07:51:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -37,14 +37,14 @@ class TLeaf : public TNamed {
 
 protected:
 
-    Int_t       fLen;             //Number of fixed length elements
-    Int_t       fLenType;         //Number of bytes for this data type
-    Int_t       fNdata;           //Number of elements in fAddress data buffer
-    Int_t       fOffset;          //Offset in ClonesArray object (if one)
-    TLeaf       *fLeafCount;      //Pointer to Leaf count if variable length
-    Bool_t      fIsRange;         //(=kTRUE if leaf has a range, kFALSE otherwise)
-    Bool_t      fIsUnsigned;      //(=kTRUE if unsigned, kFALSE otherwise)
-    TBranch     *fBranch;         //Pointer to supporting branch
+    Int_t       fNdata;           //! Number of elements in fAddress data buffer
+    Int_t       fLen;             //  Number of fixed length elements
+    Int_t       fLenType;         //  Number of bytes for this data type
+    Int_t       fOffset;          //  Offset in ClonesArray object (if one)
+    Bool_t      fIsRange;         //  (=kTRUE if leaf has a range, kFALSE otherwise)
+    Bool_t      fIsUnsigned;      //  (=kTRUE if unsigned, kFALSE otherwise)
+    TLeaf      *fLeafCount;       //  Pointer to Leaf count if variable length
+    TBranch    *fBranch;          //! Pointer to supporting branch
 
 public:
     enum { kIndirectAddress = BIT(11), // Addresses passed via pointer
@@ -84,7 +84,7 @@ public:
     virtual void     SetRange(Bool_t range=kTRUE) { fIsRange = range; }
     virtual void     SetUnsigned() { fIsUnsigned = kTRUE; }
 
-    ClassDef(TLeaf,1)  //Leaf: description of a Branch data type
+    ClassDef(TLeaf,2)  //Leaf: description of a Branch data type
 };
 
 inline void     TLeaf::Export(TClonesArray *, Int_t) { }
