@@ -944,7 +944,7 @@ C
                itrans = 0
             endif
             irot=q(jin+4)
-            matrixs=''
+            matrixs=' '
             if(irot.eq.0)then
                matrix='0'
                ncmatrix=1
@@ -1057,7 +1057,7 @@ C
       character *4 cname
       character *16 pname
       nind = 0
-      pname = ''
+      pname = ' '
       write(pname,'(a4)')cname 
       do i=1,4
           nind = nind+1
@@ -1083,7 +1083,7 @@ C
       subroutine ptname(cname, pname)
       character *4 cname
       character *16 pname
-      pname = ''
+      pname = ' '
       write(pname,'(a4)')cname 
       do i=1,4
           if(ichar(cname(i:i)).eq.92) then 
