@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.1 2001/06/05 16:41:54 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.2 2001/06/22 16:12:02 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TGClient.h"
-
+#include "TPluginManager.h"
 #include "TError.h"
 #include "TEnv.h"
 #include "TVirtualX.h"
@@ -79,8 +79,11 @@ TGApplication::TGApplication(const char *appClassName,
 # endif
       char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
 
-      if (!gROOT->IsBatch() && ttfont && gEnv->GetValue("Root.UseTTFonts", 1))
-         gROOT->LoadClass("TGX11TTF", "GX11TTF");
+      if (!gROOT->IsBatch() && ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
+         TPluginHandler *h;
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
+            h->LoadPlugin();
+      }
 
       delete [] ttfont;
    }
@@ -123,15 +126,42 @@ TGApplication::~TGApplication()
 //_____________________________________________________________________________
 void TGApplication::LoadGraphicsLibs()
 {
-  // Load shared libs neccesary for GUI.
+   // Load shared libs neccesary for GUI.
 
-#ifndef WIN32
-   gROOT->LoadClass("TGX11", "GX11");  // implicitely loads X11 and Xpm
-   gROOT->ProcessLineFast("new TGX11(\"X11\", \"ROOT interface to X11\");");
+   TString name;
+   TString title1 = "ROOT interface to ";
+   TString nativex, title;
+#ifndef R__WIN32
+   nativex = "x11";
+   name    = "X11";
+   title   = title1 + "X11";
 #else
-   gROOT->LoadClass("TGWin32", "Win32");
-   gVirtualX = (TVirtualX *) gROOT->ProcessLineFast("new TGWin32(\"Win32\", \"ROOT interface to Win32\");");
+#ifndef GDK_WIN32
+   nativex = "win32";
+   name    = "Win32";
+   title   = title1 + "Win32";
+#else
+   nativex = "win32gdk";
+   name    = "Win32gdk";
+   title   = title1 + "Win32gdk";
 #endif
+#endif
+
+   TString guiBackend(gEnv->GetValue("Gui.Backend", "native"));
+   guiBackend.ToLower();
+   if (guiBackend == "native") {
+      guiBackend = nativex;
+   } else {
+      name   = guiBackend;
+      title  = title1 + guiBackend;
+   }
+
+   TPluginHandler *h;
+   if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", guiBackend))) {
+      if (h->LoadPlugin() == -1)
+         return;
+      gVirtualX = (TVirtualX *) h->ExecPlugin(2, name.Data(), title.Data());
+   }
 }
 
 //______________________________________________________________________________

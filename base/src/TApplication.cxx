@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.32 2002/07/17 14:59:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.33 2002/08/01 15:36:25 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -165,8 +165,11 @@ TApplication::TApplication(const char *appClassName,
 # endif
       char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
 
-      if (!gROOT->IsBatch() && ttfont && gEnv->GetValue("Root.UseTTFonts", 1))
-         gROOT->LoadClass("TGX11TTF", "GX11TTF");
+      if (!gROOT->IsBatch() && ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
+         TPluginHandler *h;
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
+            h->LoadPlugin();
+      }
 
       delete [] ttfont;
    }
@@ -496,26 +499,28 @@ void TApplication::LoadGraphicsLibs()
 
    if (gROOT->IsBatch()) return;
 
-   gROOT->LoadClass("TCanvas", "Gpad");
+   TPluginHandler *h;
+   if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPad")))
+      h->LoadPlugin();
 
    TString name;
-   TString title = "ROOT interface to ";
-   TString nativex;
+   TString title1 = "ROOT interface to ";
+   TString nativex, title;
    TString nativeg = "root";
 #ifndef R__WIN32
    nativex = "x11";
    name    = "X11";
-   title  += "X11";
+   title   = title1 + "X11";
 #else
 #ifndef GDK_WIN32
    nativex = "win32";
    nativeg = "win32";
    name    = "Win32";
-   title  += "Win32";
+   title   = title1 + "Win32";
 #else
    nativex = "win32gdk";
    name    = "Win32gdk";
-   title  += "Win32gdk";
+   title   = title1 + "Win32gdk";
 #endif
 #endif
 
@@ -525,9 +530,9 @@ void TApplication::LoadGraphicsLibs()
       guiBackend = nativex;
    } else {
       name   = guiBackend;
-      title += guiBackend;
+      title  = title1 + guiBackend;
    }
-   TPluginHandler *h;
+
    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", guiBackend))) {
       if (h->LoadPlugin() == -1)
          return;
