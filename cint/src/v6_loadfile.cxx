@@ -1,4 +1,4 @@
-//* /% C %/ */
+/* /% C %/ */
 /***********************************************************************
  * cint (C/C++ interpreter)
  ************************************************************************
@@ -169,6 +169,9 @@ int G__include_file()
   int store_cpp;
   int store_globalcomp;
   int expandflag=0;
+#ifndef G__OLDIMPLEMENTATION1725
+  static int G__gcomplevel=0;
+#endif
 
   while((c=G__fgetc())!='\n' && c!='\r'
 #ifndef G__OLDIMPLEMENTATION1261
@@ -241,13 +244,27 @@ int G__include_file()
   G__cpp=G__include_cpp;
 
   if(G__USERHEADER==G__kindofheader) {
+#ifndef G__OLDIMPLEMENTATION1725
+    store_globalcomp = G__globalcomp;
+    if(++G__gcomplevel>=G__gcomplevellimit) G__globalcomp=G__NOLINK;
     result = G__loadfile(filename);
+    --G__gcomplevel;
+    G__globalcomp=store_globalcomp;
+#else
+    result = G__loadfile(filename);
+#endif
   }
   else {
     /* <xxx.h> , 'xxx.h' */
     store_globalcomp=G__globalcomp;
     /* G__globalcomp=G__NOLINK; */
+#ifndef G__OLDIMPLEMENTATION1725
+    if(++G__gcomplevel>=G__gcomplevellimit) G__globalcomp=G__NOLINK;
+#endif
     result = G__loadfile(filename);
+#ifndef G__OLDIMPLEMENTATION1725
+    --G__gcomplevel;
+#endif
     G__globalcomp=store_globalcomp;
   }
   G__kindofheader = G__USERHEADER;
@@ -259,7 +276,17 @@ int G__include_file()
     if(G__LOADFILE_FAILURE==result && G__ispragmainclude) {
       G__ispragmainclude=0;
       c = G__fgetname(filename,"\n\r");
+#ifndef G__OLDIMPLEMENTATION1725
+      store_globalcomp = G__globalcomp;
+      if(++G__gcomplevel>=G__gcomplevellimit) G__globalcomp=G__NOLINK;
       if('\n'!=c && '\r'!=c) result = G__include_file();
+#ifndef G__OLDIMPLEMENTATION1725
+      --G__gcomplevel;
+#endif
+      G__globalcomp=store_globalcomp;
+#else
+      if('\n'!=c && '\r'!=c) result = G__include_file();
+#endif
     }
     else {
       G__fignoreline();
@@ -362,6 +389,18 @@ char *item;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1731
+/******************************************************************
+ * G__SetUseCINTSYSDIR()
+ ******************************************************************/
+static int G__UseCINTSYSDIR=0;
+void G__SetUseCINTSYSDIR(UseCINTSYSDIR)
+int UseCINTSYSDIR;
+{
+  G__UseCINTSYSDIR=UseCINTSYSDIR;
+}
+#endif
+
 /******************************************************************
 * G__getcintsysdir()
 *
@@ -378,7 +417,12 @@ int G__getcintsysdir()
 #  ifdef CINTINCDIR
     env = CINTINCDIR;
 #  else
+#ifndef G__OLDIMPLEMENTATION1731
+    if(G__UseCINTSYSDIR) env=getenv("CINTSYSDIR");
+    else                 env=getenv("ROOTSYS");
+#else /* 1731 */
     env=getenv("ROOTSYS");
+#endif /* 1731 */
 #  endif
 # endif
 #elif defined(G__WILDC)
@@ -397,21 +441,26 @@ int G__getcintsysdir()
 /*      sprintf(G__cintsysdir,env);
       strcpy(&G__cintsysdir[strlen(G__cintsysdir)-1],".cint]");*/
       sprintf(G__cintsysdir,"%s[cint]",env);
-#else
+#else /* G__VMS */
 # ifdef ROOTBUILD
       sprintf(G__cintsysdir, "%s", env);
-# else
+# else /* ROOTBUILD */
 #  ifdef CINTINCDIR
       sprintf(G__cintsysdir, "%s", CINTINCDIR);
 #  else
+#ifndef G__OLDIMPLEMENTATION1731
+      if(G__UseCINTSYSDIR) strcpy(G__cintsysdir,env);
+      else                 sprintf(G__cintsysdir, "%s%scint", env, G__psep);
+#else /* 1731 */
       sprintf(G__cintsysdir, "%s%scint", env, G__psep);
+#endif /* 1731 */
 #  endif
-# endif
-#endif
+# endif /* ROOTBUILD */
+#endif /* G__VMS */
 
-#else
+#else /* G__ROOT */
       strcpy(G__cintsysdir,env);
-#endif
+#endif /* G__ROOT */
       return(EXIT_SUCCESS);
     }
     else {
@@ -1014,7 +1063,8 @@ char *filenamein;
   * The + or ++ can also be followed by either a 'g'
   * or an 'O' which means respectively to compile
   * in debug or optimized mode.
-  *************************************************/
+  *************************************************/  
+#ifndef G__OLDIMPLEMENTATION1734
   compiler_option = 0;
   if ( len>2 && (strncmp(filename+len-2,"+",1)==0 )
        && (strcmp(filename+len-1,"O")==0
@@ -1060,7 +1110,29 @@ char *filenamein;
 	return(G__LOADFILE_FAILURE);
     }
   }
+#else /* 1734 */
+  if ( len>1&& (strcmp(filename+len-1,"+")==0 ) ) {
+    if (len>2 && (strcmp(filename+len-2,"++")==0 ) ) {
+#ifndef G__OLDIMPLEMENTATION1303
+      compiler_option = "kf";
 #endif
+      len -= 2;
+    } else {
+      compiler_option = "k";
+      len -= 1;
+    } 
+    filename[len]='\0';
+    external_compiler = 1; /* Request external compilation
+			    * if available (in ROOT) */
+    if (G__ScriptCompiler!=0) {
+      if ( (*G__ScriptCompiler)(filename,compiler_option) )
+	return(G__LOADFILE_SUCCESS);
+      else
+	return(G__LOADFILE_FAILURE);
+    }
+  }
+#endif /* 1734 */
+#endif /* PHIL1 */
 
 #ifndef G__OLDIMPLEMENTATION1345
   G__LockCriticalSection();
@@ -2330,8 +2402,11 @@ char *name;
     return(tempname);
   }
 #elif ((__GNUC__>=3)||(__GNUC__>=2)&&(__GNUC_MINOR__>=96))&&(defined(__linux)||defined(__linux__))
-  strcpy(name,"/tmp/cint_XXXXXX");
+  const char *appendix="_cint";
+  strcpy(name,"/tmp/XXXXXX");
   mkstemp(name);
+  remove(name); /* mkstemp creates this file anyway. Delete it. questionable */
+  if(strlen(name)<G__MAXFILENAME-6) strcat(name,appendix);
   return(name);
 #else
   const char *appendix="_cint";

@@ -494,6 +494,10 @@ int G__default_link = 1;
 /* 1713 */
 int G__gettingspecial = 0;
 
+#ifndef G__OLDIMPLEMENTATION1725
+int G__gcomplevellimit=1000;
+#endif
+
 /*
  * Local Variables:
  * c-tab-always-indent:nil

@@ -93,6 +93,7 @@ enum G__MODE { G__IDLE, G__CHEADER, G__CSOURCE, G__CPPHEADER, G__CPPSOURCE
 enum G__PRINTMODE { G__PRINTOBJECT, G__PRINTSTRING , G__PRINTOBJECT_WPLUS
 		      , G__PRINTOBJECT_WSRC };
 
+
 /**************************************************************************
 * Path separator
 **************************************************************************/

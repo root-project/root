@@ -2152,7 +2152,11 @@ char *tagnamein;
   }
 
 #ifndef G__OLDIMPLEMENTATION682
-  if(-1!=scope_tagnum) {
+  if(-1!=scope_tagnum
+#ifndef G__OLDIMPLEMENTATION1736
+     || ':'==templatename[0]
+#endif
+     ) {
     int i=0;
     char *p = strrchr(templatename,':');
 #ifndef G__OLDIMPLEMENTATION778
@@ -3363,6 +3367,9 @@ int funcmatch;
 #ifndef G__OLDIMPLEMENTATION812
   struct G__ifunc_table *ifunc;
 #endif
+#ifndef G__OLDIMPLEMENTATION1728
+  char *pexplicitarg;
+#endif
 #ifndef G__OLDIMPLEMENTATION687
   int env_tagnum=G__get_envtagnum();
   struct G__inheritance *baseclass;
@@ -3378,6 +3385,17 @@ int funcmatch;
   if(0==baseclass->basen) baseclass = (struct G__inheritance*)NULL;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1728
+  if(/* 0==libp->paran && */ (pexplicitarg=strchr(funcname,'<'))) {
+    /* funcname="f<int>" ->  funcname="f" , pexplicitarg="int>" */
+    int tmp=0;
+    *pexplicitarg = 0;
+    ++pexplicitarg;
+    G__hash(funcname,hash,tmp);
+  }
+  /* else pexplicitarg==NULL */
+#endif
+
   call_para.string = (char*)NULL;
   call_para.next = (struct G__Charlist*)NULL;
   deftmpfunc = &G__definedtemplatefunc;
@@ -3386,7 +3404,11 @@ int funcmatch;
   while(deftmpfunc->next) {
     G__freecharlist(&call_para);
     if(deftmpfunc->hash==hash && strcmp(deftmpfunc->name,funcname)==0 &&
-       G__matchtemplatefunc(deftmpfunc,libp,&call_para,funcmatch)) {
+       (G__matchtemplatefunc(deftmpfunc,libp,&call_para,funcmatch)
+#ifndef G__OLDIMPLEMENTATION1728
+	|| pexplicitarg
+#endif
+	)) {
 
 #ifndef G__OLDIMPLEMENTATION687
       if(-1!=deftmpfunc->parent_tagnum &&
@@ -3409,9 +3431,37 @@ int funcmatch;
       G__friendtagnum = deftmpfunc->friendtagnum;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1728
+      if(pexplicitarg) {
+	int npara=0;
+	G__gettemplatearglist(pexplicitarg,&call_para
+			      ,deftmpfunc->def_para,&npara);
+      }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1728
+      if(pexplicitarg) {
+	int tmp=0;
+	char *p = pexplicitarg-1;
+	pexplicitarg = (char*)malloc(strlen(funcname)+1);
+	strcpy(pexplicitarg,funcname);
+	*p = '<';
+	G__hash(funcname,hash,tmp);
+      }
+      else {
+	pexplicitarg = "";
+      }
+#endif
+
       /* matches funcname and parameter,
        * then expand the template and parse as prerun */
-      G__replacetemplate("",funcname
+      G__replacetemplate(
+#ifndef G__OLDIMPLEMENTATION1728
+			 pexplicitarg
+#else
+			 ""
+#endif
+			 ,funcname
 			 ,&call_para /* needs to make this up */
 			 ,deftmpfunc->def_fp
 			 ,deftmpfunc->line
@@ -3427,6 +3477,12 @@ int funcmatch;
 
 #ifndef G__OLDIMPLEMENTATION972
       G__friendtagnum = store_friendtagnum;
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1728
+      if(pexplicitarg && pexplicitarg[0]) {
+	free((void*)pexplicitarg);
+      }
 #endif
 
       /* call the expanded template function */

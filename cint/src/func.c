@@ -1813,6 +1813,37 @@ int memfunc_flag;
 	    return(G__null);
 	  }
 #endif
+#ifndef G__OLDIMPLEMENTATION1729
+	  /******************************************************************
+	   * Search template function
+	   ******************************************************************/
+	  G__exec_memberfunc = 1;
+	  G__memberfunc_tagnum=G__tagnum;
+	  G__memberfunc_struct_offset=G__store_struct_offset;
+	  if((G__EXACT==funcmatch||G__USERCONV==funcmatch)&&
+	     G__templatefunc(&result3,funcname,&fpara,hash,funcmatch)==1){
+	    
+#ifdef G__DUMPFILE
+	    if(G__dumpfile!=NULL && 0==G__no_exec_compile) {
+	      G__dumpspace -= 3;
+	      for(ipara=0;ipara<G__dumpspace;ipara++) fprintf(G__dumpfile," ");
+	      G__valuemonitor(result3,result7);
+	      fprintf(G__dumpfile ,"/* return(lib) %s()=%s */\n"
+		      ,funcname,result7);
+	    }
+#endif
+	    G__exec_memberfunc = store_exec_memberfunc;
+	    G__memberfunc_tagnum=store_memberfunc_tagnum;
+	    G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+	    /* don't know why if(oprp) is needed, copied from line 2111 */
+	    if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
+	    else *known3=1;
+	    return(result3);
+	  }
+	  G__exec_memberfunc = store_exec_memberfunc;
+	  G__memberfunc_tagnum=store_memberfunc_tagnum;
+	  G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+#endif /* 1729 */
 	case G__CALLCONSTRUCTOR:
 #ifndef G__OLDIMPLEMENTATION1376
 	  if(G__NOLINK > G__globalcomp) break;
@@ -2078,6 +2109,9 @@ int memfunc_flag;
       G__memberfunc_struct_offset=store_memberfunc_struct_offset;
 #ifndef G__OLDIMPLEMENTATION1515
       if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
+#ifndef G__OLDIMPLEMENTATION1729
+      else *known3=1; /* don't know why this was missing */
+#endif
 #endif
       return(result3);
     }

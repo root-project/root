@@ -927,7 +927,23 @@ long localmem;
       for(i=0;i<fpara.paran;i++) {
 	fpara.para[i]=G__asm_stack[sp-fpara.paran+i];
 #ifndef G__OLDIMPLEMENTATION724
-	if(0==fpara.para[i].ref) fpara.para[i].ref=(long)(&fpara.para[i].obj);
+	if(0==fpara.para[i].ref) {
+#ifndef G__OLDIMPLEMENTATION1726
+	  switch(fpara.para[i].type) {
+	  case 'f':
+	  case 'b':
+	  case 'c':
+	  case 'r':
+	  case 's':
+	    break;
+	  default:
+	    fpara.para[i].ref=(long)(&fpara.para[i].obj);
+	    break;
+	  }
+#else
+	  fpara.para[i].ref=(long)(&fpara.para[i].obj);
+#endif
+	}
 #endif
       }
       sp-=fpara.paran;

@@ -91,6 +91,13 @@ int G__using_namespace()
        ) return 1;
 #endif
     basetagnum = G__defined_tagname(buf,2);
+#ifndef G__OLDIMPLEMENTATION1732
+    if(-1==basetagnum) {
+      G__fprinterr(G__serr,"Error: namespace %s is not defined",buf);
+      G__genericerror((char*)NULL);
+      return(0);
+    }
+#endif
     if(G__def_struct_member) {
       /* using directive in other namespace or class/struct */
       envtagnum=G__get_envtagnum();
@@ -622,6 +629,28 @@ int noerror;
   }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1735
+  /* search for typename */
+  store_var_type = G__var_type;
+  i=G__defined_typename(tagname);
+  G__var_type=store_var_type;
+  if(-1!=i) {
+    i=G__newtype.tagnum[i];
+    if(-1!=i) return(i);
+  }
+#ifndef G__OLDIMPLEMENTATION957
+  {
+    int i2=0,cx;
+      while((cx=tagname[i2++])) if(G__isoperator(cx)) return(-1);
+  }
+#endif
+  /* not found */
+  if(noerror==0) {
+    G__fprinterr(G__serr,
+	    "Error: class,struct,union or type %s not defined " ,tagname);
+    G__genericerror((char*)NULL);
+  }
+#else /* 1735 */
   /* not found */
   if(noerror==0) {
 #ifndef G__OLDIMPLEMENTATION957
@@ -641,6 +670,7 @@ int noerror;
 	    "Error: class,struct,union or type %s not defined " ,tagname);
     G__genericerror((char*)NULL);
   }
+#endif /* 1735 */
   return(-1);
 
 }
@@ -1069,6 +1099,8 @@ char type;
     G__genericerror((char*)NULL);
   }
 #endif
+
+ doitagain:
   
   /*
    * [struct|union|enum]   tagname{ member }  item ;
@@ -1103,7 +1135,23 @@ char type;
     }
   }
   else if(c==':') {
+#ifndef G__OLDIMPLEMENTATION1733
+    /* inheritance or nested class */
+    c = G__fgetc();
+    if(':'==c) {
+      strcat(tagname,"::");
+      len=strlen(tagname);
+      c=G__fgetname_template(tagname+len,"{:;=&");
+      goto doitagain;
+    }
+    else {
+      fseek(G__ifile.fp,-1,SEEK_CUR);
+      if(G__dispsource) G__disp_mask=1;
+      c=':';
+    }
+#else
     /* inheritance */
+#endif
   }
   else if(c==';') {
     /* tagname declaration */

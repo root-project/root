@@ -34,8 +34,6 @@
 #define G__OLDIMPLEMENTATION1714
 #endif
 
-#define G__MACROLINK  (-5)
-
 
 #define G__OLDIMPLEMENTATION1336
 #ifndef G__OLDIMPLEMENTATION1336
@@ -463,8 +461,25 @@ static void G__ctordtor_initialize()
 {
   int i;
   G__ctordtor_status=(int*)malloc(sizeof(int)*(G__struct.alltag+1));
-  for(i=0;i<G__struct.alltag+1;i++)
+  for(i=0;i<G__struct.alltag+1;i++) {
+#ifndef G__OLDIMPLEMENTATION1730
+    /* If link for this class is turned off but one or more member functions
+     * are explicitly turned on, set G__ONLYMETHODLINK flag for the class */
+    struct G__ifunc_table *ifunc=G__struct.memfunc[i];
+    int ifn;
+    if(G__NOLINK==G__struct.globalcomp[i]) {
+      while(ifunc) {
+	for(ifn=0;ifn<ifunc->allifunc;ifn++) {
+	  if(G__METHODLINK==ifunc->globalcomp[ifn]) {
+	    G__struct.globalcomp[i] = G__ONLYMETHODLINK;
+	  }
+	}
+	ifunc=ifunc->next;
+      }
+    }
+#endif
     G__ctordtor_status[i]=G__CTORDTOR_UNINITIALIZED;
+  }
 }
 /**************************************************************************
 * G__ctordtor_destruct()
@@ -1510,7 +1525,11 @@ FILE *hfp;
 #endif
   fprintf(fp,"/* Setup class/struct taginfo */\n");
   for(i=0;i<G__struct.alltag;i++) {
-    if(G__NOLINK > G__struct.globalcomp[i] &&
+    if((G__NOLINK > G__struct.globalcomp[i]
+#ifndef G__OLDIMPLEMENTATION1730
+	|| G__ONLYMETHODLINK==G__struct.globalcomp[i]
+#endif
+	) &&
        (
 #ifndef G__OLDIMPLEMENTATION1677
 	(G__struct.hash[i] || 0==G__struct.name[i][0])
@@ -2453,7 +2472,13 @@ FILE *hfp;
   fprintf(fp,"*********************************************************/\n");
 
   for(i=0;i<G__struct.alltag;i++) {
-    if((G__CPPLINK==G__struct.globalcomp[i]||G__CLINK==G__struct.globalcomp[i])&&
+    if(
+       (G__CPPLINK==G__struct.globalcomp[i]||
+	G__CLINK==G__struct.globalcomp[i]
+#ifndef G__OLDIMPLEMENTATION1730
+	|| G__ONLYMETHODLINK==G__struct.globalcomp[i]
+#endif
+	) &&
        (-1==(int)G__struct.parent_tagnum[i]
 #ifndef G__OLDIMPLEMENTATION651
 	|| G__nestedclass
@@ -2486,6 +2511,10 @@ FILE *hfp;
 #endif
 #endif
 	     ) {
+#ifndef G__OLDIMPLEMENTATION1730
+	    if(G__ONLYMETHODLINK==G__struct.globalcomp[i]&&
+	       G__METHODLINK!=ifunc->globalcomp[j]) continue;
+#endif
 #ifndef G__OLDIMPLEMENTATION1656
 	    if(ifunc->pentry[j]->filenum<0) continue; /* already precompiled */
 #endif
@@ -2567,6 +2596,9 @@ FILE *hfp;
 	if(NULL==ifunc->next
 #ifndef G__OLDIMPLEMENTATON1656
 	   && G__NOLINK==G__struct.iscpplink[i]
+#endif
+#ifndef G__OLDIMPLEMENTATION1730
+	   && G__ONLYMETHODLINK!=G__struct.globalcomp[i]
 #endif
 	   )
 	  G__cppif_gendefault(fp,hfp,i,j,ifunc
@@ -2993,6 +3025,10 @@ struct G__ifunc_table *ifunc;
 	  int i;
 	  for(i=G__VAARG_SIZE/4-1;i>G__VAARG_SIZE/4-100;i--)	
 	    fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
+#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
+	  int i;
+	  for(i=0;i<100 /* G__VAARG_SIZE/4 */;i++)	
+	    fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
 	  int i;
 	  for(i=0;i<100;i++)	
@@ -3120,6 +3156,10 @@ struct G__ifunc_table *ifunc;
 #elif defined(__hpux)
 	int i;
 	for(i=G__VAARG_SIZE/4-1;i>G__VAARG_SIZE/4-100;i--)	
+	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
+#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
+	int i;
+	for(i=0;i<100 /* G__VAARG_SIZE/4 */;i++)	
 	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
 	int i;
@@ -4111,6 +4151,10 @@ struct G__ifunc_table *ifunc;
 	int i;
 	for(i=G__VAARG_SIZE/4-1;i>G__VAARG_SIZE/4-100;i--)	
 	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
+#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
+	int i;
+	for(i=0;i<100 /* G__VAARG_SIZE/4 */;i++)	
+	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
 	int i;
 	for(i=0;i<100;i++)	
@@ -4190,6 +4234,14 @@ struct G__ifunc_table *ifunc;
 #elif defined(__hpux)
 	int i;
 	for(i=G__VAARG_SIZE/4-1;i>G__VAARG_SIZE/4-100;i--)	
+	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
+#elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
+	int i;
+	for(i=0;i<100 /* G__VAARG_SIZE/4 */;i++)	
+	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
+#elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
+	int i;
+	for(i=0;i<100;i++)	
 	  fprintf(fp,",G__va_arg_bufobj.x.i[%d]",i);
 #else
       fprintf(fp,",G__va_arg_bufobj");
@@ -4796,6 +4848,9 @@ FILE *hfp;
 #endif
        (G__CPPLINK==G__struct.globalcomp[i]
 	||G__CLINK==G__struct.globalcomp[i]
+#ifndef G__OLDIMPLEMENTATION651
+	||G__ONLYMETHODLINK==G__struct.globalcomp[i]
+#endif
 	)) {
 #ifndef G__OLDIMPLEMENTATION651
       if(!G__nestedclass) {
@@ -4886,6 +4941,23 @@ FILE *hfp;
 	  strcpy(mappedtagname,G__map_cpp_name(tagname));
 	  if(G__CPPLINK==G__globalcomp && '$'!=G__struct.name[i][0]) {
 #ifndef G__OLDIMPLEMENTATION618
+#ifndef G__OLDIMPLEMENTATION618
+	    if(G__ONLYMETHODLINK==G__struct.globalcomp[i])
+	      fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,NULL,G__setup_memfunc%s);\n"
+		      ,G__mark_linked_tagnum(i)
+		      ,G__type2string('u',i,-1,0,0)
+		      ,G__globalcomp 
+#if !defined(G__OLDIMPLEMENTATION1545) && defined(G__ROOTSPECIAL)
+		      ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+		      +G__struct.rootflag[i]*0x10000
+#elif !defined(G__OLDIMPLEMENTATION1442)
+		      ,G__struct.isabstract[i]+G__struct.funcs[i]*0x100
+#else
+		      ,G__struct.isabstract[i]
+#endif
+		      ,buf ,mappedtagname);
+	    else
+#endif
 	    if(G__suppress_methods) 
 	      fprintf(fp,"   G__tagtable_setup(G__get_linked_tagnum(&%s),sizeof(%s),%d,%d,%s,G__setup_memvar%s,NULL);\n"
 		      ,G__mark_linked_tagnum(i)
@@ -5639,7 +5711,11 @@ FILE *fp;
   }
 
   for(i=0;i<G__struct.alltag;i++) {
-    if(G__CPPLINK==G__struct.globalcomp[i]&&
+    if((G__CPPLINK==G__struct.globalcomp[i]
+#ifndef G__OLDIMPLEMENTATION1730
+	|| G__ONLYMETHODLINK==G__struct.globalcomp[i]
+#endif
+	)&&
        (-1==(int)G__struct.parent_tagnum[i]
 #ifndef G__OLDIMPLEMENTATION651
 	|| G__nestedclass
@@ -5697,6 +5773,10 @@ FILE *fp;
 #endif
 #endif
 	     ) {
+#ifndef G__OLDIMPLEMENTATION1730
+	    if(G__ONLYMETHODLINK==G__struct.globalcomp[i]&&
+	       G__METHODLINK!=ifunc->globalcomp[j]) continue;
+#endif
 #ifndef G__OLDIMPLEMENTATION1656
 	    if(ifunc->pentry[j]->filenum<0) continue; /* already precompiled */
 #endif
@@ -5934,6 +6014,9 @@ FILE *fp;
 	if(NULL==ifunc->next
 #ifndef G__OLDIMPLEMENTATON1656
 	   && G__NOLINK==G__struct.iscpplink[i]
+#endif
+#ifndef G__OLDIMPLEMENTATON1730
+	   && G__ONLYMETHODLINK!=G__struct.globalcomp[i]
 #endif
 	   ) {
 	  page=ifunc->page;
@@ -7492,6 +7575,9 @@ int globalcomp;
 * #pragma link off all variables;
 * #pragma link off all typedefs;
 * #pragma link off all methods;
+*
+* #pragma link [C++|off] all_method     ClassName;
+* #pragma link [C++|off] all_datamember ClassName;
 *              ^
 *
 * #pragma link postprocess file func;
@@ -7875,6 +7961,11 @@ int link_stub;
     int store_line = G__ifile.line_number;
     fgetpos(G__ifile.fp,&pos);
     c = G__fgetstream_template(buf,";\n\r<>");
+
+#ifndef G__OLDIMPLEMENTATION1730
+    if(G__CPPLINK==globalcomp) globalcomp=G__METHODLINK;
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1309
 #ifndef G__OLDIMPLEMENTATION1523
     cy = strchr(buf,'(');
@@ -7956,6 +8047,17 @@ int link_stub;
     p = G__strrstr(buf,"::");
     if(p) {
       int ixx=0;
+#ifndef G__OLDIMPLEMENTATION1727
+      if(-1==x_ifunc->tagnum) {
+	int tagnum;
+	*p = 0;
+	tagnum = G__defined_tagname(buf,0);
+	if(-1!=tagnum) {
+	  x_ifunc = G__struct.memfunc[tagnum];
+	}
+	*p = ':';
+      }
+#endif
       p+=2;
       while(*p) buf[ixx++] = *p++;
       buf[ixx] = 0;
@@ -8098,6 +8200,22 @@ int link_stub;
 	ifunc = ifunc->next;
       }
     }
+#ifndef G__OLDIMPLEMENTATION1727
+    if(!done && (p=strchr(buf,'<'))) {
+      struct G__param fpara;
+      struct G__funclist *funclist=(struct G__funclist*)NULL;
+      int tmp=0;
+
+      fpara.paran=0;
+
+      G__hash(buf,hash,tmp);
+      funclist=G__add_templatefunc(buf,&fpara,hash,funclist,x_ifunc,0);
+      if(funclist) {
+	funclist->ifunc->globalcomp[funclist->ifn] = globalcomp;
+	++done;
+      }
+    }
+#endif
 #ifndef G__OLDIMPLEMENTATION1138
     if(!done && G__NOLINK!=globalcomp) {
 #ifdef G__ROOT
@@ -8213,9 +8331,86 @@ int link_stub;
 #endif
   }
 
+#ifndef G__OLDIMPLEMENTATION1730
+  /*************************************************************************
+  * #pragma link [spec] all_datamember [classname];
+  *  This is not needed because G__METHODLINK and G__ONLYMETHODLINK are
+  *  introduced. Keeping this just for future needs.
+  *************************************************************************/
+  else if(strncmp(buf,"all_datamembers",5)==0) {
+    if(';'!=c) c = G__fgetstream_template(buf,";\n\r");
+    if(buf[0]) {
+      struct G__var_array *var;
+      int ig15;
+      if(strcmp(buf,"::")==0) {
+	var = &G__global;
+      }
+      else {
+	int tagnum = G__defined_tagname(buf,0);
+	if(-1!=tagnum) {
+	  var= G__struct.memvar[tagnum];
+	}
+	else { /* must be an error */
+	  return;
+	}
+      }
+      while(var) {
+	for(ig15=0;ig15<var->allvar;ig15++) {
+	  var->globalcomp[ig15] = globalcomp;
+	  if(G__NOLINK==globalcomp) var->access[ig15] = G__PRIVATE;
+	  else                      var->access[ig15] = G__PUBLIC;
+	}
+	var=var->next;
+      }
+    }
+  }
+#endif /* 1730 */
+
+#ifndef G__OLDIMPLEMENTATION1730
+  /*************************************************************************
+  * #pragma link [spec] all_function|all_method [classname];
+  *  This is not needed because G__METHODLINK and G__ONLYMETHODLINK are
+  *  introduced. Keeping this just for future needs.
+  *************************************************************************/
+  else if(strncmp(buf,"all_methods",5)==0||
+	  strncmp(buf,"all_functions",5)==0) {
+    if(';'!=c) c = G__fgetstream_template(buf,";\n\r");
+#ifndef G__OLDIMPLEMENTATION1730
+    if(G__CPPLINK==globalcomp) globalcomp=G__METHODLINK;
+#endif
+    if(buf[0]) {
+      struct G__ifunc_table *ifunc;
+      int ifn;
+      if(strcmp(buf,"::")==0) {
+	ifunc = &G__ifunc;
+      }
+      else {
+	int tagnum = G__defined_tagname(buf,0);
+	if(-1!=tagnum) {
+	  ifunc = G__struct.memfunc[tagnum];
+	}
+	else { /* must be an error */
+	  return;
+	}
+      }
+      while(ifunc) {
+	for(ifn=0;ifn<ifunc->allifunc;ifn++) {
+	  ifunc->globalcomp[ifn] = globalcomp;
+	  if(G__NOLINK==globalcomp) ifunc->access[ifn] = G__PRIVATE;
+	  else                      ifunc->access[ifn] = G__PUBLIC;
+	}
+	ifunc=ifunc->next;
+      }
+    }
+    else {
+      G__suppress_methods = (globalcomp==G__NOLINK);
+    }
+  }
+#endif
+
 #ifndef G__OLDIMPLEMENTATION606
   /*************************************************************************
-  * #pragma link [spec] all methods;
+  * #pragma link [spec] methods;
   *************************************************************************/
   else if(strncmp(buf,"methods",3)==0) {
     G__suppress_methods = (globalcomp==G__NOLINK);
@@ -8396,6 +8591,27 @@ int link_stub;
 	    /* link class,struct */
 	    for(i=0;i<G__struct.alltag;i++) {
 	      if(G__struct.filenum[i]==ifile) {
+#ifndef G__OLDIMPLEMENTATION1730
+		struct G__var_array *var = G__struct.memvar[i];
+		int ifn;
+		while(var) {
+		  for(ifn=0;ifn<var->allvar;ifn++) {
+		    if(var->filenum[ifn]==ifile) {
+		      var->globalcomp[ifn] = globalcomp;
+		    }
+		  }
+		  var = var->next;
+		}
+		ifunc=G__struct.memfunc[i];
+		while(ifunc) {
+		  for(ifn=0;ifn<ifunc->allifunc;ifn++) {
+		    if(ifunc->pentry[ifn]&&ifunc->pentry[ifn]->filenum==ifile) {
+		      ifunc->globalcomp[ifn] = globalcomp;
+		    }
+		  }
+		  ifunc = ifunc->next;
+		}
+#endif
 		G__struct.globalcomp[i]=globalcomp;
 #ifndef G__OLDIMPLEMENTATION1597
                 /* Note this make the equivalent of '+' the
@@ -8450,6 +8666,27 @@ int link_stub;
       int j,flag;
       if(-1!=parent_tagnum) {
 	for(i=0;i<G__struct.alltag;i++) {
+#ifndef G__OLDIMPLEMENTATION1730
+	  struct G__var_array *var = G__struct.memvar[parent_tagnum];
+	  int ifn;
+	  while(var) {
+	    for(ifn=0;ifn<var->allvar;ifn++) {
+	      if(var->filenum[ifn]==ifile) {
+		var->globalcomp[ifn] = globalcomp;
+	      }
+	    }
+	    var = var->next;
+	  }
+	  ifunc=G__struct.memfunc[i];
+	  while(ifunc) {
+	    for(ifn=0;ifn<ifunc->allifunc;ifn++) {
+	      if(ifunc->pentry[ifn]&&ifunc->pentry[ifn]->filenum==ifile) {
+		ifunc->globalcomp[ifn] = globalcomp;
+	      }
+	    }
+	    ifunc = ifunc->next;
+	  }
+#endif
 	  flag = 0;
 	  j = i;
 	  G__struct.globalcomp[parent_tagnum]=globalcomp;
@@ -8459,6 +8696,26 @@ int link_stub;
 	  }
 #ifndef G__OLDIMPLEMENTATION1597
 	  if(flag) {
+#ifndef G__OLDIMPLEMENTATION1730
+	    var = G__struct.memvar[i];
+	    while(var) {
+	      for(ifn=0;ifn<var->allvar;ifn++) {
+		if(var->filenum[ifn]==ifile) {
+		  var->globalcomp[ifn] = globalcomp;
+		}
+	      }
+	      var = var->next;
+	    }
+	    ifunc=G__struct.memfunc[i];
+	    while(ifunc) {
+	      for(ifn=0;ifn<ifunc->allifunc;ifn++) {
+		if(ifunc->pentry[ifn]&&ifunc->pentry[ifn]->filenum==ifile) {
+		  ifunc->globalcomp[ifn] = globalcomp;
+		}
+	      }
+	      ifunc = ifunc->next;
+	    }
+#endif
 	    G__struct.globalcomp[i]=globalcomp;
 	    /* Note this make the equivalent of '+' the
 	       default for defined_in type of linking */
@@ -9291,8 +9548,9 @@ G__value *buf;
 float* G__Floatref(buf)
 G__value *buf;
 {
-  if('f'==buf->type && buf->ref) 
+  if('f'==buf->type && buf->ref) {
     return((float*)buf->ref);
+  }
   else if('d'==buf->type || 'f'==buf->type) 
     buf->obj.fl = (float)buf->obj.d;
   else 

@@ -944,8 +944,19 @@ struct G__AppPragma {
 /*********************************************************************
 * x
 *********************************************************************/
-#define G__NAMEDMACROEXT  "_NM"
-#define G__NAMEDMACROEXT2 "_cint_NM"
+#define G__NAMEDMACROEXT  "NM"
+#define G__NAMEDMACROEXT2 "_cintNM"
+
+/***********************************************************************
+* for function overloading
+**********************************************************************/
+struct G__funclist {
+  struct G__ifunc_table *ifunc;
+  int ifn;
+  unsigned int rate;
+  unsigned int p_rate[G__MAXFUNCPARA];
+  struct G__funclist *prev;
+};
 
 /*********************************************************************
 * cint parser function and global variable prototypes

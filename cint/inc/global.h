@@ -703,6 +703,11 @@ extern int G__default_link;
 /* 1713 */
 extern int G__gettingspecial;
 
+#ifndef G__OLDIMPLEMENTATION1725
+extern int G__gcomplevellimit;
+#endif
+
+
 #ifndef __CINT__
 #ifdef __cplusplus
 }

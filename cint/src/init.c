@@ -728,9 +728,15 @@ char *argv[] ;
    * Get command options
    *************************************************************/
   while((c=getopt(argc,argv
-  ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:I:J:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
+  ,"a:b:c:d:ef:gij:kl:mn:pq:rstu:vw:x:y:z:AB:CD:EF:G:H:I:J:KM:N:O:P:QRSTU:VW:X:Y:Z:"))
 	!=EOF) {
     switch(c) {
+
+#ifndef G__OLDIMPLEMENTATION1725
+    case 'H': /* level of inclusion for dictionary generation */
+      G__gcomplevellimit = atoi(optarg);
+      break;
+#endif
 
     case 'J':
       G__dispmsg = atoi(optarg);
@@ -1008,7 +1014,7 @@ char *argv[] ;
        */
       G__globalcomp=atoi(optarg);
 #ifndef G__OLDIMPLEMENTATION1700
-      if(G__globalcomp<=10) {
+      if(G__globalcomp>=10) {
 	G__default_link = abs(G__globalcomp)%10;
 	G__globalcomp /= 10;
       }
@@ -1115,6 +1121,7 @@ char *argv[] ;
       G__more(G__sout,"  -f [file] : set break file\n");
       G__more(G__sout,"  -F [assignement] : set global variable\n");
       G__more(G__sout,"  -G [tracedmp] : dump exec trace into file\n");
+      G__more(G__sout,"* -H[1-100] : level of header inclusion activated for dictionary generation\n");
       G__more(G__sout,"  -i : interactively return undefined symbol value\n");
       G__more(G__sout,"  -I [includepath] : set include file search path\n");
 #ifndef G__OLDIMPLEMENTATION1525

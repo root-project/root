@@ -97,7 +97,15 @@ int *pmode;
   char command[G__ONELINE];
   c=G__fgetstream(command,";\n\r");
   if(strcmp(command,"on")==0||'\0'==command[0]) *pmode=1;
-  else if(strcmp(command,"off")==0) *pmode=0;
+  else if(strcmp(command,"ON")==0)              *pmode=1;
+  else if(strcmp(command,"off")==0)             *pmode=0;
+  else if(strcmp(command,"OFF")==0)             *pmode=0;
+#ifdef G__NEVER
+  else if(strcmp(command,"always")==0)          *pmode=2;
+  else if(strcmp(command,"ALWAYS")==0)          *pmode=2;
+  else if(strcmp(command,"all")==0)             *pmode=3;
+  else if(strcmp(command,"ALL")==0)             *pmode=3;
+#endif
   else                              *pmode=G__int(G__getexpr(command));
   return(c);
 }
@@ -782,8 +790,12 @@ FILE *fp;
       fprintf(fp,"%s\n",arg[0]);
     }
   }
+#ifndef G__OLDIMPLEMENTATON1724
+  return(EXIT_SUCCESS);
+#else
   G__genericerror("Error: '#pragma endcompile' not found");
   return(EXIT_FAILURE);
+#endif
 }
 /**************************************************************************
 * G__isautoccupdate()

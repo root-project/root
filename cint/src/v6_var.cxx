@@ -3791,6 +3791,10 @@ struct G__var_array *varglobal,*varlocal;
 	*known2=1;
 #ifndef G__OLDIMPLEMENTATION1175
 	result = G__null;
+#ifndef G__OLDIMPLEMENTATION1737
+	result.tagnum = var->p_tagtable[ig15];
+	result.typenum = var->p_typetable[ig15];
+#endif
         switch(G__var_type) {
 	case 'p':
           if(var->paran[ig15]<=paran) {

@@ -159,7 +159,7 @@ int instsize;
 
   /* check if the function is already compiled, replace old one */
   if(ifunc->pentry[ifn]->bytecode) {
-    G__genericerror("Internal error: G__asm_storebytecodefunc duplicate");
+    G__genericerror("Internal error: G__asm_storebytecodefunc duplicated");
   }
 
   /* allocate bytecode buffer */
@@ -3680,16 +3680,9 @@ int formal_isconst;
 #define G__TOVOIDPMATCH   0x00000003
 
 /***********************************************************************
-* struct G__overload_func
-**********************************************************************/
-struct G__funclist {
-  struct G__ifunc_table *ifunc;
-  int ifn;
-  unsigned int rate;
-  unsigned int p_rate[G__MAXFUNCPARA];
-  struct G__funclist *prev;
-};
-
+ * function overloading resolution
+ * G__funclist is defined in common.h
+ **********************************************************************/
 struct G__funclist* G__funclist_add(last,ifunc,ifn,rate)
 struct G__funclist *last;
 struct G__ifunc_table *ifunc;
@@ -5118,6 +5111,9 @@ int isrecursive;
 #ifndef G__OLDIMPLEMENTATION1560
   char *ptmplt;
 #endif
+#ifndef G__OLDIMPLEMENTATION1727
+  char *pexplicitarg;
+#endif
 
   funcname = (char*)malloc(strlen(funcnamein)+1);
   strcpy(funcname,funcnamein);
@@ -5125,6 +5121,7 @@ int isrecursive;
   if(-1!=env_tagnum) baseclass = G__struct.baseclass[env_tagnum];
   else               baseclass = &G__globalusingnamespace;
   if(0==baseclass->basen) baseclass = (struct G__inheritance*)NULL;
+
 
   call_para.string = (char*)NULL;
   call_para.next = (struct G__Charlist*)NULL;
@@ -5144,6 +5141,17 @@ int isrecursive;
     }
   }
 #endif
+
+#ifndef G__OLDIMPLEMENTATION1727
+  if((pexplicitarg=strchr(funcname,'<'))) {
+    /* funcname="f<int>" ->  funcname="f" , pexplicitarg="int>" */
+    int tmp=0;
+    *pexplicitarg = 0;
+    ++pexplicitarg;
+    G__hash(funcname,hash,tmp);
+  }
+  /* else {pexplicitarg=NULL;} */
+#endif
   
   /* Search matching template function name */
   while(deftmpfunc->next) {
@@ -5161,7 +5169,11 @@ int isrecursive;
     }
 #endif
     if(deftmpfunc->hash==hash && strcmp(deftmpfunc->name,funcname)==0 &&
-       G__matchtemplatefunc(deftmpfunc,libp,&call_para,G__PROMOTION)) {
+       (G__matchtemplatefunc(deftmpfunc,libp,&call_para,G__PROMOTION)
+#ifndef G__OLDIMPLEMENTATION1727
+	|| pexplicitarg
+#endif
+	)) {
 
       if(-1!=deftmpfunc->parent_tagnum && 
 	 env_tagnum!=deftmpfunc->parent_tagnum) {
@@ -5179,10 +5191,38 @@ int isrecursive;
     match_found:
 
       G__friendtagnum = deftmpfunc->friendtagnum;
+
+#ifndef G__OLDIMPLEMENTATION1727
+      if(pexplicitarg) {
+	int npara=0;
+	G__gettemplatearglist(pexplicitarg,&call_para
+			      ,deftmpfunc->def_para,&npara);
+      }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1727
+      if(pexplicitarg) {
+	int tmp=0;
+	char *p = pexplicitarg-1;
+	pexplicitarg = (char*)malloc(strlen(funcname)+1);
+	strcpy(pexplicitarg,funcname);
+	*p = '<';
+	G__hash(funcname,hash,tmp);
+      }
+      else {
+	pexplicitarg = "";
+      }
+#endif
       
       /* matches funcname and parameter,
        * then expand the template and parse as prerun */
-      G__replacetemplate("",funcname
+      G__replacetemplate(
+#ifndef G__OLDIMPLEMENTATION1727
+			 pexplicitarg
+#else
+			 ""
+#endif
+			 ,funcname
 			 ,&call_para /* needs to make this up */
 			 ,deftmpfunc->def_fp
 			 ,deftmpfunc->line
@@ -5195,6 +5235,13 @@ int isrecursive;
 			 );
 
       G__friendtagnum = store_friendtagnum;
+
+#ifndef G__OLDIMPLEMENTATION1727
+      if(pexplicitarg && pexplicitarg[0]) {
+	free((void*)pexplicitarg);
+      }
+      pexplicitarg=(char*)NULL;
+#endif
 
       /* search for instantiated template function */
       ifunc = p_ifunc;

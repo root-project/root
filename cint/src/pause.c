@@ -1473,7 +1473,7 @@ char *pipefile;
 	  G__serr = fopen(filename,openmode);
 	  break;
 #ifndef G__OLDIMPLEMENTATION1722
-	case G__NUM_STDERR: /* stderr */
+	case G__NUM_STDBOTH: /* stdout & stderr */
 	  *psout = G__sout;
 	  *pserr = G__serr;
 	  G__sout = fopen(filename,openmode);

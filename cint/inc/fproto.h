@@ -573,6 +573,11 @@ void G__freetemplatememfunc G__P((struct G__Definedtemplatememfunc *memfunctmplt
 char *G__gettemplatearg G__P((int n,struct G__Templatearg *def_para));
 void G__freetemplatearg G__P((struct G__Templatearg *def_para));
 void G__freetemplatefunc G__P((struct G__Definetemplatefunc *deftmpfunc));
+#ifndef G__OLDIMPLEMENTATION1727
+struct G__funclist* G__add_templatefunc G__P((char *funcnamein,struct G__param *libp,int hash,struct G__funclist *funclist,struct G__ifunc_table *p_ifunc,int isrecursive));
+struct G__funclist* G__funclist_add G__P((struct G__funclist *last,struct G__ifunc_table *ifunc,int ifn,int rate));
+void G__funclist_delete(struct G__funclist *body);
+#endif
 int G__templatefunc G__P((G__value *result,char *funcname,struct G__param *libp,int hash,int funcmatch));
 int G__matchtemplatefunc G__P((struct G__Definetemplatefunc *deftmpfunc,struct G__param *libp,struct G__Charlist *pcall_para,int funcmatch));
 int G__createtemplatefunc G__P((char *funcname,struct G__Templatearg *targ,int line_number,fpos_t *ppos));

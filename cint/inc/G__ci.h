@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015060
-#define G__CINTVERSIONSTR  "5.15.60, Sep 29 2002"
+#define G__CINTVERSION      5015061
+#define G__CINTVERSIONSTR  "5.15.61, Oct 6 2002"
 
 
 /**********************************************************************
@@ -623,7 +623,16 @@ typedef int (*G__IgnoreInclude)();
 #define G__CSTUB       6
 #define G__CLINK      -2
 
+/* Link macro as function */
+#define G__MACROLINK  (-5)
+
+/* Link macro as function */
+#define G__METHODLINK  (-6)
+#define G__ONLYMETHODLINK  6
+
 #define G__NOLINK      0
+
+
 
 #else /* of G__CPLUSPLUS */
 
@@ -1653,9 +1662,10 @@ typedef struct {
 #elif defined(__sparc) || defined(__sparc__) || defined(__SUNPRO_C)
 /**********************************************
  * Sun Sparc architecture
- *  No support yet,but give it a try
+ * Alignment is similar to Intel, but class/struct
+ * objects are passed by reference
  **********************************************/
-#define G__VAARG_NOSUPPORT
+/* #define G__VAARG_NOSUPPORT */
 
 #ifndef G__OLDIMPLEMENTATION1696
 #define G__VAARG_INC_COPY_N 4
@@ -1665,7 +1675,10 @@ typedef struct {
 #elif (defined(__PPC__)||defined(__ppc__))&&(defined(_AIX)||defined(__APPLE__))
 /**********************************************
  * PowerPC, AIX and Apple Mac
+ * It turned out it is quite difficult if not impossible to support PowerPC.
+ * PPC uses registers (general purpose 3-10, floating 1
  **********************************************/
+#define G__VAARG_NOSUPPORT
 #define G__VAARG_INC_COPY_N 4
 #define G__VAARG_PASS_BY_REFERENCE 8
 
@@ -1782,6 +1795,10 @@ extern G__EXPORT int G__fprinterr G__P((FILE* fp,char* fmt,...));
 extern G__EXPORT int G__fputerr G__P((int c));
 #else
 #define G__fprinterr  fprintf
+#endif
+
+#ifndef G__OLDIMPLEMENTATION1731
+extern G__EXPORT void G__SetUseCINTSYSDIR G__P((int UseCINTSYSDIR));
 #endif
 
 #ifdef G__ASM_WHOLEFUNC

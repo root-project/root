@@ -247,7 +247,11 @@ struct G__ifunc_table *ifunc;
 #else
 		  ,' '
 #endif
+#ifndef G__OLDIMPLEMENTATION1730
+		  ,G__globalcomp?ifunc->globalcomp[i]:ifunc->busy[i]
+#else
 		  ,ifunc->busy[i]
+#endif
 		  );
 	  if(G__more(fp,msg)) return(1);
 #ifdef G__ASM_DBG
