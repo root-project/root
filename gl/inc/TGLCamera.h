@@ -54,7 +54,7 @@ class TGLPerspectiveCamera : public TGLCamera {
 private:
    TGLSimpleTransform fTransformation;
 public:
-   TGLPerspectiveCamera(const Double_t *vv, const Int_t *vp, 
+   TGLPerspectiveCamera(const Double_t *vv, const Int_t *vp,
                         const TGLSimpleTransform &tr);
    void TurnOn()const;
    void TurnOn(Int_t x, Int_t y)const;

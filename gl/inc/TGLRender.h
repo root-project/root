@@ -12,7 +12,7 @@ private:
    TObjArray fGLObjects;
    TObjArray fGLCameras;
    TObjArray fGLBoxes;
-   
+
    Bool_t fAllActive;
    Bool_t fIsPicking;
    Bool_t fBoxInList;
@@ -20,7 +20,7 @@ private:
    Int_t fDList;
    Int_t fPlane;
    UInt_t fSelected;
-      
+
    TGLSceneObject *fFirstT;
    TGLSceneObject *fSelectedObj;
    TGLSceneObject *fSelectionBox;

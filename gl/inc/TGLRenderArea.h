@@ -38,4 +38,4 @@ private:
    ClassDef(TGLRenderArea, 0)
 };
 
-#endif 
+#endif

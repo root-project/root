@@ -28,10 +28,10 @@ public:
    {
       fNextT = next;
    }
-   TGLSceneObject *GetNextT()const 
+   TGLSceneObject *GetNextT()const
    {
       return fNextT;
-   }  
+   }
    UInt_t GetGLName()const
    {
       return fGLName;
@@ -65,7 +65,7 @@ public:
 
    void SetColor(const Float_t *newcolor = 0);
    void Shift(Double_t x, Double_t y, Double_t z);
-   
+
    TObject *GetRealObject()const
    {
       return fRealObj;
