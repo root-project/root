@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.183 2004/07/30 20:31:43 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.185 2004/07/30 23:46:34 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2331,12 +2331,12 @@ void WriteNamespaceInit(G__ClassInfo &cl)
    fprintf(fp, "      }\n");
    fprintf(fp, "      // Static variable to force the class initialization\n");
    // must be one long line otherwise R__UseDummy does not work
-   fprintf(fp, "      static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance(); R__UseDummy(_R__UNIQUE_(Init));\n", classname.c_str());
+   fprintf(fp, "      static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance(); R__UseDummy(_R__UNIQUE_(Init));\n");
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {
       fprintf(fp, "\n      // Dictionary for non-ClassDef classes\n");
       fprintf(fp, "      static void %s_Dictionary() {\n",mappedname.c_str());
-      fprintf(fp, "         GenerateInitInstance()->GetClass();\n",classname.c_str());
+      fprintf(fp, "         GenerateInitInstance()->GetClass();\n");
       fprintf(fp, "      }\n\n");
    }
    
