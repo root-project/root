@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.3 2004/10/08 15:17:11 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.4 2004/10/19 15:20:56 brun Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 /*************************************************************************
@@ -99,7 +99,6 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include "TRobustEstimator.h"
-//#include "/scratch/akrechtc/script/TRobustEstimator2.h"
 #include "TRandom.h"
 #include "TMath.h"
 #include "TH1D.h"
@@ -749,10 +748,10 @@ TH1D* TRobustEstimator::GetRDistHisto()
 
   Char_t buffer[30];
   sprintf(buffer, "cutoff = %f", kChiQuant[fNvar-1]);
-  TPaveLabel *pl=new TPaveLabel(0.7, 0.77, 0.98, 0.82, buffer, "brNDC");
-  pl->SetTextFont(62);
-  pl->SetTextSize(0.5);
-  histo->GetListOfFunctions()->Add(pl);
+  //TPaveLabel *pl=new TPaveLabel(0.7, 0.77, 0.98, 0.82, buffer, "brNDC");
+  //pl->SetTextFont(62);
+  //pl->SetTextSize(0.5);
+  //histo->GetListOfFunctions()->Add(pl);
 
   return histo;
 }
