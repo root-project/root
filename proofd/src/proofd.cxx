@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.5 2000/06/16 15:23:01 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.6 2000/09/13 07:03:01 brun Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -53,7 +53,7 @@ extern "C" char *crypt(const char *, const char *);
 #endif
 
 #if defined(__alpha) && !defined(__linux) && !defined(__FreeBSD__)
-extern "C" int initgroups(char *name, int basegid);
+extern "C" int initgroups(const char *name, int basegid);
 #endif
 
 #if defined(__sgi) && !defined(__GNUG__) && (!defined(SGI_REL) || (SGI_REL<62))
@@ -65,7 +65,7 @@ extern "C" {
 
 #if defined(_AIX)
 extern "C" {
-   int initgroups(char *name, int basegid);
+   int initgroups(const char *name, int basegid);
    int seteuid(uid_t euid);
    int setegid(gid_t egid);
 }
