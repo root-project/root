@@ -21,15 +21,14 @@ r=`echo $1 | grep '/'`
 mkdir $1
 
 #Copy Makefile.template to the new test directory
-cp scripts/Makefile.template $1
+cp scripts/Makefile.template $1/Makefile
 
 #Add to CVS
 #cvs add $1
 
-# change directory and rename the Makfile.templete to Makefile
-cd $1
-mv Makefile.template Makefile
+# change directory 
 
+cd $1
 #Add & Commit Makefile to CVS
 #cvs add Makefile
 #cvs commit -m "Makefile" Makefile
