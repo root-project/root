@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.199 2005/01/26 19:59:15 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.200 2005/02/11 21:48:58 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -555,6 +555,10 @@ void LoadLibraryMap() {
                }
             }
 
+            if (strncmp("ROOT::TImpProxy",classname.c_str(),strlen("ROOT::TImpProxy"))==0) {
+               // Do not register the ROOT::TImpProxy so that they can be instantiated.
+               continue;
+            }
             gAutoloads[classname] = line;
             G__set_class_autoloading_table((char*)classname.c_str(),
                                            (char*)line.c_str());
@@ -569,9 +573,9 @@ extern "C" {
 }
 
 void EnableAutoLoading() {
-   G__set_class_autoloading_callback(&AutoLoadCallback);
    G__set_class_autoloading_table("ROOT","libCore.so");
    LoadLibraryMap();
+   G__set_class_autoloading_callback(&AutoLoadCallback);
 }
 
 //______________________________________________________________________________
