@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.6 2003/01/27 20:41:37 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.7 2004/05/12 19:11:45 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -521,10 +521,13 @@ void TVolumeView::Draw(Option_t *option)
 //*-*- Create a 3-D View
     TView *view = gPad->GetView();
     if (!view) {
-       view = new TView(1);
-       view->SetAutoRange(kTRUE);
-       Paint("range");
-       view->SetAutoRange(kFALSE);
+      view = new TView(1);
+      view->SetAutoRange(kTRUE);
+      TBuffer3D *buff = gPad->GetBuffer3D();
+      buff->fOption = TBuffer3D::kRANGE;
+      Paint("range");
+      buff->fOption = TBuffer3D::kPAD;
+      view->SetAutoRange(kFALSE);
     }
 }
 
