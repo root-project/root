@@ -218,6 +218,7 @@ void* G__allocheapobjectstack G__P((struct G__ifunc_table* ifunc,int ifn,int sco
 void G__copyheapobjectstack G__P((void* p,G__value* result,struct G__ifunc_table *ifunc,int ifn));
 #endif
 
+#ifdef G__OLDIMPLEMENTATION2112
 /**************************************************************************
 * G__exec_bytecode()
 *
@@ -495,6 +496,7 @@ int hash; /* not used */
 
   return(0);
 }
+#endif /* 2112 */
 
 
 #ifndef G__OLDIMPLEMENTATION523
@@ -6229,6 +6231,9 @@ int memfunc_flag;
   char asm_name[G__ASM_FUNCNAMEBUF];
 
   long *store_asm_inst;
+#ifndef G__OLDIMPLEMENTATION2116
+  int store_asm_instsize;
+#endif
   G__value *store_asm_stack;
   char *store_asm_name;
   int store_asm_name_p;
@@ -6863,7 +6868,10 @@ asm_ifunc_start:   /* loop compilation execution label */
 
 #ifndef G__OLDIMPLEMENTATION2067
   if(G__cintv6 && G__BYTECODE_NOTYET==p_ifunc->pentry[ifn]->bytecodestatus) {
-    G__bc_compile_function(p_ifunc,ifn);
+    if(G__BYTECODE_FAILURE==G__bc_compile_function(p_ifunc,ifn)) {
+      G__exec_memberfunc=store_exec_memberfunc;
+      return(1);
+    }
   }
 #endif
 
@@ -6937,6 +6945,11 @@ asm_ifunc_start:   /* loop compilation execution label */
   store_asm_cp  = G__asm_cp ;
   store_asm_dt  = G__asm_dt ;
   store_asm_index  = G__asm_index ;
+
+#ifndef G__OLDIMPLEMENTATION2116
+  store_asm_instsize = G__asm_instsize;
+  G__asm_instsize = 0; /* G__asm_inst is not resizable */
+#endif
 
   G__asm_inst = asm_inst_g;
   G__asm_stack = asm_stack_g;
@@ -8223,6 +8236,9 @@ asm_ifunc_start:   /* loop compilation execution label */
 #ifdef G__ASM_IFUNC
   /* Pop loop compilation environment */
   G__asm_inst = store_asm_inst;
+#ifndef G__OLDIMPLEMENTATION2116
+  G__asm_instsize = store_asm_instsize;
+#endif
   G__asm_stack = store_asm_stack;
   G__asm_name = store_asm_name;
   G__asm_name_p = store_asm_name_p;

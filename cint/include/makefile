@@ -1,7 +1,7 @@
 #
 # cint dynimic link standard library makefile
 #
-done: statistics.dll array.dll carray.dll fft.dll xgraph.dll lsm.dll ReadF.dll RegE.dll
+done: statistics.dll array.dll carray.dll fft.dll xgraph.dll lsm.dll matrix.dll ReadF.dll RegE.dll
 	rm G__* *.o | echo 'G__* not exist'
 	echo > done
 
@@ -39,3 +39,4 @@ RegE.dll : RegE.h RegE.C ../cint
 
 matrix.dll : matrix.h matrix.cxx ../cint
 	makecint -mk Makeit -dl matrix.dll -H matrix.h -C++ matrix.cxx ReadF.C
+	make -f Makeit

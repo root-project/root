@@ -63,6 +63,24 @@ int G__getoptimizemode G__P(());
 extern int G__const_noerror;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2120
+/******************************************************************
+*
+* G__gen_PUSHSTROS_SETSTROS() 
+******************************************************************/
+void G__gen_PUSHSTROS_SETSTROS() {
+#ifdef G__ASM_DBG
+  if(G__asm_dbg) {
+    G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);
+    G__fprinterr(G__serr,"%3x: SETSTROS\n",G__asm_cp+1);
+  }
+#endif
+  G__asm_inst[G__asm_cp] = G__PUSHSTROS;
+  G__asm_inst[G__asm_cp+1] = G__SETSTROS;
+  G__inc_cp_asm(2,0);
+}
+#endif
+
 /******************************************************************
 * G__dispvalue()
 ******************************************************************/
@@ -319,10 +337,18 @@ char *cindex;
 
   if('u'==result3->type) {
     struct G__param fpara;
+#ifndef G__OLDIMPLEMENTATION2120
+#ifdef G__ASM
+    if(G__asm_noverflow) G__gen_PUSHSTROS_SETSTROS();
+#endif
+#endif
     fpara.paran=1;
     fpara.para[0]=G__getexpr(sindex+1);
-    G__parenthesisovldobj(result3,result3,"operator[]"
-			  ,&fpara,G__TRYNORMAL);
+#ifndef G__OLDIMPLEMENTATION2120
+    G__parenthesisovldobj(result3,result3,"operator[]",&fpara,1);
+#else
+    G__parenthesisovldobj(result3,result3,"operator[]",&fpara,G__TRYNORMAL);
+#endif
     return;
   }
 
@@ -336,12 +362,11 @@ char *cindex;
     struct G__param fpara;
     fpara.paran=1;
     G__letint(&fpara.para[0],'i',index);
-    G__parenthesisovldobj(result3,result3,"operator[]"
-			  ,&fpara,G__TRYNORMAL);
+    G__parenthesisovldobj(result3,result3,"operator[]",&fpara,G__TRYNORMAL);
     return;
   }
 #endif
-#endif/* 2018 */
+#endif /* 2018 */
 
   size = G__sizeof(result3);
 #ifdef G__ASM
@@ -1274,10 +1299,20 @@ char* funcname;
     }
   }
 
+#ifndef G__OLDIMPLEMENTATION2120
+#ifdef G__ASM
+  if(G__asm_noverflow) G__gen_PUSHSTROS_SETSTROS();
+#endif
+#endif
+
   for(itmp=0;itmp<fpara.paran;itmp++) {
     fpara.para[itmp] = G__getexpr(fpara.parameter[itmp]);
   }
+#ifndef G__OLDIMPLEMENTATION2120
+  G__parenthesisovldobj(&result3,presult,"operator()",&fpara,1);
+#else
   G__parenthesisovldobj(&result3,presult,"operator()",&fpara,G__TRYNORMAL);
+#endif
 
   return(result3);
 }
@@ -2019,6 +2054,32 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION843
 #ifdef G__ASM
 	  if(G__asm_noverflow) {
+#ifndef G__OLDIMPLEMENTATION2111
+	    if(G__throwingexception) {
+#ifdef G__ASM_DBG
+	      if(G__asm_dbg) {
+	        G__fprinterr(G__serr,"%3x: ALLOCEXCEPTION %d\n"
+                            ,G__asm_cp,G__tagnum);
+	      }
+#endif
+	      G__asm_inst[G__asm_cp]=G__ALLOCEXCEPTION;
+	      G__asm_inst[G__asm_cp+1]=G__tagnum;
+	      G__inc_cp_asm(2,0);
+	    }
+            else {
+#ifdef G__ASM_DBG
+	      if(G__asm_dbg) {
+	        G__fprinterr(G__serr,"%3x: ALLOCTEMP %d\n"
+                             ,G__asm_cp,G__tagnum);
+	        G__fprinterr(G__serr,"%3x: SETTEMP\n",G__asm_cp);
+	      }
+#endif
+	      G__asm_inst[G__asm_cp]=G__ALLOCTEMP;
+	      G__asm_inst[G__asm_cp+1]=G__tagnum;
+	      G__asm_inst[G__asm_cp+2]=G__SETTEMP;
+	      G__inc_cp_asm(3,0);
+	    }
+#else /* ON2111 */
 #ifdef G__ASM_DBG
 	    if(G__asm_dbg) {
 	      G__fprinterr(G__serr,"%3x: ALLOCTEMP %d\n",G__asm_cp,G__tagnum);
@@ -2029,6 +2090,7 @@ int memfunc_flag;
 	    G__asm_inst[G__asm_cp+1]=G__tagnum;
 	    G__asm_inst[G__asm_cp+2]=G__SETTEMP;
 	    G__inc_cp_asm(3,0);
+#endif /* ON2111 */
 	  }
 #endif
 #endif
@@ -2050,7 +2112,11 @@ int memfunc_flag;
 				    ,G__TRYCONSTRUCTOR);
 	  if(*known3) break;
 	}
-	if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
+	if(G__CPPLINK==G__struct.iscpplink[G__tagnum]
+#ifndef G__OLDIMPLEMENTATION2111
+	   && !G__throwingexception
+#endif
+           ) {
 	  G__store_tempobject(result3);
 	  if(G__dispsource) {
 	    G__fprinterr(G__serr,
@@ -2098,14 +2164,26 @@ int memfunc_flag;
 	G__store_struct_offset=store_struct_offset;
 #ifndef G__OLDIMPLEMENTATION1500
 #ifdef G__ASM
-	  if(G__asm_noverflow) {
-#ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPTEMP -1\n",G__asm_cp);
+	if(G__asm_noverflow
+#ifndef G__OLDIMPLEMENTATION2111
+	   && (!G__throwingexception || 
+	       (-1!=result3.tagnum &&
+                G__CPPLINK!=G__struct.iscpplink[result3.tagnum]))
 #endif
-	    G__asm_inst[G__asm_cp]=G__POPTEMP;
-	    G__asm_inst[G__asm_cp+1] = -1;
-	    G__inc_cp_asm(2,0);
-	  }
+          ) {
+	  G__asm_inst[G__asm_cp]=G__POPTEMP;
+#ifndef G__OLDIMPLEMENTATION2111
+	  if(G__throwingexception) G__asm_inst[G__asm_cp+1] = result3.tagnum;
+          else                     G__asm_inst[G__asm_cp+1] = -1;
+#else
+	  G__asm_inst[G__asm_cp+1] = -1;
+#endif
+#ifdef G__ASM_DBG
+	  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPTEMP %d\n"
+                                      ,G__asm_cp,G__asm_inst[G__asm_cp+1]);
+#endif
+	  G__inc_cp_asm(2,0);
+	}
 #endif
 #endif
 
@@ -2235,8 +2313,7 @@ int memfunc_flag;
       if(len>1) libp->parameter[0][len-1]=0;
       libp->para[0] = G__getexpr(libp->parameter[0]);
       libp->paran=1;
-      G__parenthesisovldobj(&result3,&result3,"operator[]"
-			    ,libp,G__TRYNORMAL);
+      G__parenthesisovldobj(&result3,&result3,"operator[]",libp,G__TRYNORMAL);
     }
 #endif
 #ifndef G__OLDIMPLEMENTATION1515
@@ -3804,6 +3881,32 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION843
 #ifdef G__ASM
 	  if(G__asm_noverflow) {
+#ifndef G__OLDIMPLEMENTATION2111
+	    if(G__throwingexception) {
+#ifdef G__ASM_DBG
+	      if(G__asm_dbg) {
+	        G__fprinterr(G__serr,"%3x: ALLOCEXCEPTION %d\n"
+                            ,G__asm_cp,G__tagnum);
+	      }
+#endif
+	      G__asm_inst[G__asm_cp]=G__ALLOCEXCEPTION;
+	      G__asm_inst[G__asm_cp+1]=G__tagnum;
+	      G__inc_cp_asm(2,0);
+	    }
+            else {
+#ifdef G__ASM_DBG
+	      if(G__asm_dbg) {
+	        G__fprinterr(G__serr,"%3x: ALLOCTEMP %d\n"
+                             ,G__asm_cp,G__tagnum);
+	        G__fprinterr(G__serr,"%3x: SETTEMP\n",G__asm_cp);
+	      }
+#endif
+	      G__asm_inst[G__asm_cp]=G__ALLOCTEMP;
+	      G__asm_inst[G__asm_cp+1]=G__tagnum;
+	      G__asm_inst[G__asm_cp+2]=G__SETTEMP;
+	      G__inc_cp_asm(3,0);
+	    }
+#else /* 2111 */
 #ifdef G__ASM_DBG
 	    if(G__asm_dbg) {
 	      G__fprinterr(G__serr,"%3x: ALLOCTEMP %d\n",G__asm_cp,G__tagnum);
@@ -3814,6 +3917,7 @@ int memfunc_flag;
 	    G__asm_inst[G__asm_cp+1]=G__tagnum;
 	    G__asm_inst[G__asm_cp+2]=G__SETTEMP;
 	    G__inc_cp_asm(3,0);
+#endif /* 2111 */
 	  }
 #endif
 #endif
@@ -3835,7 +3939,11 @@ int memfunc_flag;
 				    ,G__TRYCONSTRUCTOR);
 	  if(*known3) break;
 	}
-	if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
+	if(G__CPPLINK==G__struct.iscpplink[G__tagnum]
+#ifndef G__OLDIMPLEMENTATION2111
+	   && !G__throwingexception
+#endif
+           ) {
 	  G__store_tempobject(result3);
 	  if(G__dispsource) {
 	    G__fprinterr(G__serr,
@@ -3883,14 +3991,26 @@ int memfunc_flag;
 	G__store_struct_offset=store_struct_offset;
 #ifndef G__OLDIMPLEMENTATION1500
 #ifdef G__ASM
-	  if(G__asm_noverflow) {
-#ifdef G__ASM_DBG
-	    if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPTEMP -1\n",G__asm_cp);
+	if(G__asm_noverflow
+#ifndef G__OLDIMPLEMENTATION2111
+	   && (!G__throwingexception || 
+	       (-1!=result3.tagnum &&
+                G__CPPLINK!=G__struct.iscpplink[result3.tagnum]))
 #endif
-	    G__asm_inst[G__asm_cp]=G__POPTEMP;
-	    G__asm_inst[G__asm_cp+1] = -1;
-	    G__inc_cp_asm(2,0);
-	  }
+           ) {
+	  G__asm_inst[G__asm_cp]=G__POPTEMP;
+#ifndef G__OLDIMPLEMENTATION2111
+	  if(G__throwingexception) G__asm_inst[G__asm_cp+1] = result3.tagnum;
+          else                     G__asm_inst[G__asm_cp+1] = -1;
+#else
+	  G__asm_inst[G__asm_cp+1] = -1;
+#endif
+#ifdef G__ASM_DBG
+	  if(G__asm_dbg) G__fprinterr(G__serr,"%3x: POPTEMP %d\n"
+                                      ,G__asm_cp,G__asm_inst[G__asm_cp+1]);
+#endif
+	  G__inc_cp_asm(2,0);
+	}
 #endif
 #endif
 
@@ -5395,6 +5515,14 @@ int hash;
     *result7 = G__null;
     return(1);
   }
+
+#ifndef G__OLDIMPLEMENTATION2119
+  if(strcmp(funcname,"G__delete_ipath")==0) {
+    if(G__no_exec_compile) return(1);
+    G__letint(result7,'i',(long)G__delete_ipath((char*)G__int(libp->para[0])));
+    return(1);
+  }
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1963
   if(strcmp(funcname,"G__SetCINTSYSDIR")==0) {

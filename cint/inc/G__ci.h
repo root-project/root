@@ -22,11 +22,11 @@
 #define G__CI_H
 
 #ifdef G__CINT_VER6
-#define G__CINTVERSION      6000010
-#define G__CINTVERSIONSTR  "6.0.10, July 25 2004"
+#define G__CINTVERSION      6000015
+#define G__CINTVERSIONSTR  "6.0.15, Sep 5 2004"
 #else
-#define G__CINTVERSION      50150146
-#define G__CINTVERSIONSTR  "5.15.146, July 25 2004"
+#define G__CINTVERSION      50150151
+#define G__CINTVERSIONSTR  "5.15.151, Sep 5 2004"
 #endif
 
 #define G__ALWAYS
@@ -36,6 +36,20 @@
 **********************************************************************/
 
 #ifndef G__CINT_VER6
+#define G__OLDIMPLEMENTATION2132
+#define G__OLDIMPLEMENTATION2131
+#define G__OLDIMPLEMENTATION2129
+#define G__OLDIMPLEMENTATION2128
+#define G__OLDIMPLEMENTATION2127
+#define G__OLDIMPLEMENTATION2122
+#define G__OLDIMPLEMENTATION2117
+#define G__OLDIMPLEMENTATION2116
+/* #define G__OLDIMPLEMENTATION2115 */
+/* #define G__OLDIMPLEMENTATION2114 */
+#define G__OLDIMPLEMENTATION2112
+#define G__OLDIMPLEMENTATION2111
+#define G__OLDIMPLEMENTATION2110
+#define G__OLDIMPLEMENTATION2109
 #define G__OLDIMPLEMENTATION2105
 #define G__OLDIMPLEMENTATION2102
 #define G__OLDIMPLEMENTATION2089
@@ -2019,6 +2033,7 @@ extern G__EXPORT void G__store_tempobject G__P((G__value reg));
 extern G__EXPORT int G__inheritance_setup G__P((int tagnum,int basetagnum,long baseoffset,int baseaccess,int property));
 extern G__EXPORT void G__add_compiledheader G__P((G__CONST char *headerfile));
 extern G__EXPORT void G__add_ipath G__P((G__CONST char *ipath));
+extern G__EXPORT int G__delete_ipath G__P((G__CONST char *ipath));
 extern G__EXPORT void G__add_macro G__P((G__CONST char *macro));
 extern G__EXPORT void G__check_setup_version G__P((int version,G__CONST char *func));
 extern G__EXPORT long G__int G__P((G__value buf));

@@ -1503,7 +1503,9 @@ void G__declare_template()
 #ifndef G__OLDIMPLEMENTATION691
   int isforwarddecl = 0;
 #endif
+#ifndef G__OLDIMPLEMENTATION2106
   int isfrienddecl = 0;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION1412
 #ifndef G__OLDIMPLEMENTATION1601
@@ -1542,10 +1544,12 @@ void G__declare_template()
 
   do {
     c=G__fgetname_template(temp,"(<");
+#ifndef G__OLDIMPLEMENTATION2106
     if (strcmp(temp,"friend")==0) {
        isfrienddecl = 1;
        c=G__fgetname_template(temp,"(<");
     }
+#endif
   } while(strcmp(temp,"inline")==0||strcmp(temp,"const")==0
 #ifndef G__OLDIMPLEMENTATION1463
 	  || strcmp(temp,"typename")==0
@@ -2326,7 +2330,11 @@ char *tagnamein;
 #endif
 
 #ifdef G__ASM
+#ifndef G__OLDIMPLEMENTATION2124
+  if(!G__cintv6) G__abortbytecode();
+#else
   G__abortbytecode();
+#endif
 #endif
 
   call_para.string=(char*)NULL;

@@ -278,7 +278,11 @@ char *item;
   if(G__no_exec_compile && 0==G__asm_noverflow) return(0);
 #endif
   if(G__in_pause) return(0);
-  if(G__ASM_FUNC_COMPILE&G__asm_wholefunction) {
+  if(
+#ifndef G__OLDIMPLEMENTATION2105
+     !G__cintv6 &&
+#endif
+     G__ASM_FUNC_COMPILE&G__asm_wholefunction) {
     G__CHECK(G__SECURE_PAUSE,1,G__pause());
     G__CHECK(G__SECURE_EXIT_AT_ERROR,1,G__return=G__RETURN_EXIT1);
   }
@@ -581,6 +585,13 @@ char *message;
     G__return=G__RETURN_NON;
     G__p2f_void_void((void*)G__aterror);
     G__return=store_return;
+  }
+#endif
+
+#ifndef G__OLDIMPLEMENTATION2117
+  if(G__cintv6) {
+    if(G__cintv6&G__BC_COMPILEERROR) G__bc_throw_compile_error();
+    if(G__cintv6&G__BC_RUNTIMEERROR) G__bc_throw_runtime_error();
   }
 #endif
 

@@ -182,56 +182,56 @@ G__value *defined;
 long val;
 {
   if(isupper(defined->type)) {
-    *(long*)defined->ref = (long)val;
+    if(defined->ref) *(long*)defined->ref = (long)val;
     defined->obj.i = (long)val;
     return;
   }
 
   switch(defined->type) {
   case 'i': /* int */
-    *(int*)defined->ref = (int)val;
+    if(defined->ref) *(int*)defined->ref = (int)val;
     defined->obj.i = (int)val;
     break;
   case 'c': /* char */
-    *(char*)defined->ref = (char)val;
+    if(defined->ref) *(char*)defined->ref = (char)val;
     defined->obj.i = (char)val;
     break;
   case 'l': /* long */
-    *(long*)defined->ref = (long)val;
+    if(defined->ref) *(long*)defined->ref = (long)val;
     defined->obj.i = (long)val;
     break;
   case 's': /* short */
-    *(short*)defined->ref = (short)val;
+    if(defined->ref) *(short*)defined->ref = (short)val;
     defined->obj.i = (short)val;
     break;
   case 'k': /* unsigned long */
-    *(unsigned long*)defined->ref = (unsigned long)val;
+    if(defined->ref) *(unsigned long*)defined->ref = (unsigned long)val;
     defined->obj.i = (unsigned long)val;
     break;
   case 'h': /* unsigned int */
-    *(unsigned int*)defined->ref = (unsigned int)val;
+    if(defined->ref) *(unsigned int*)defined->ref = (unsigned int)val;
     defined->obj.i = (unsigned int)val;
     break;
   case 'r': /* unsigned short */
-    *(unsigned short*)defined->ref = (unsigned short)val;
+    if(defined->ref) *(unsigned short*)defined->ref = (unsigned short)val;
     defined->obj.i = (unsigned short)val;
     break;
   case 'b': /* unsigned char */
-    *(unsigned char*)defined->ref = (unsigned char)val;
+    if(defined->ref) *(unsigned char*)defined->ref = (unsigned char)val;
     defined->obj.i = (unsigned char)val;
     break;
 #ifndef G__OLDIMPLEMENTATION1604
   case 'g': /* bool */
-    *(unsigned char*)defined->ref = (unsigned char)(val?1:0);
+    if(defined->ref) *(unsigned char*)defined->ref = (unsigned char)(val?1:0);
     defined->obj.i = (int)val?1:0;
     break;
 #endif
   case 'd': /* double */
-    *(double*)defined->ref = (double)val;
+    if(defined->ref) *(double*)defined->ref = (double)val;
     defined->obj.d = (double)val;
     break;
   case 'f': /* float */
-    *(float*)defined->ref = (float)val;
+    if(defined->ref) *(float*)defined->ref = (float)val;
     defined->obj.d = (float)val;
     break;
   default:
@@ -2477,7 +2477,7 @@ G__value *result3;
 G__value *result;
 char *realname;
 struct G__param *libp;
-int flag;
+int flag; /* flag whether to generate PUSHSTROS, SETSTROS */
 {
   int known;
   long store_struct_offset;
@@ -2502,7 +2502,11 @@ int flag;
   G__tagnum = result->tagnum;
 
 #ifdef G__ASM
-  if(G__asm_noverflow) {
+  if(G__asm_noverflow
+#ifndef G__OLDIMPLEMENTATION2120
+     && !flag
+#endif
+     ) {
 #ifdef G__ASM_DBG
     if(G__asm_dbg) {
       G__fprinterr(G__serr,"%3x: PUSHSTROS\n",G__asm_cp);

@@ -422,6 +422,27 @@ char* statement;
 }
 
 /***********************************************************************
+* G__alloc_exceptionbuffer
+*
+***********************************************************************/
+G__value G__alloc_exceptionbuffer(tagnum) 
+int tagnum;
+{
+  G__value buf;
+  /* create class object */
+  buf.obj.i = (long)malloc((size_t)G__struct.size[tagnum]);
+#ifndef G__OLDIMPLEMENTATION1978
+  buf.obj.reftype.reftype = G__PARANORMAL;
+#endif
+  buf.type = 'u';
+  buf.tagnum = tagnum;
+  buf.typenum = -1;
+  buf.ref = G__p_tempbuf->obj.obj.i;
+
+  return(buf);
+}
+
+/***********************************************************************
 * G__free_exceptionbuffer
 *
 ***********************************************************************/
@@ -441,7 +462,8 @@ int G__free_exceptionbuffer()
     else G__globalvarpointer = G__PVOID;
     sprintf(destruct,"~%s()",G__fulltagname(G__tagnum,1));
     if(G__dispsource) {
-      G__fprinterr(G__serr,"!!!Destructing exception buffer %s",destruct);
+      G__fprinterr(G__serr,"!!!Destructing exception buffer %s %lx"
+		   ,destruct,G__exceptionbuffer.obj.i);
       G__printlinenum();
     }
     G__getfunction(destruct,&dmy ,G__TRYDESTRUCTOR);
@@ -450,6 +472,9 @@ int G__free_exceptionbuffer()
       free((void*)G__store_struct_offset);
 #else
     free((void*)G__store_struct_offset);
+#endif
+#ifndef G__OLDIMPLEMENTATION2111
+    /* do nothing here, exception object shouldn't be stored in legacy temp buf */
 #endif
     G__tagnum = store_tagnum;
     G__store_struct_offset = store_struct_offset;

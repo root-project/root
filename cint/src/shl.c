@@ -2044,7 +2044,15 @@ void* G__GetShlHandle()
  **************************************************************************/
 int G__GetShlFilenum()
 {
+#ifdef G__SHAREDLIB
+#ifndef G__OLDIMPLEMENTATION2012
   return(G__Shlfilenum);
+#else
+  return(0);
+#endif
+#else
+  return(0);
+#endif
 }
 #endif
 

@@ -711,6 +711,11 @@ G__value *p,result;
     }
     break;
 #endif /* 1663 */
+#ifndef G__OLDIMPLEMENTATION2128
+  case 'c':
+    memcpy((void*)p->ref,(void*)result.obj.i,strlen((char*)result.obj.i)+1);
+    break;
+#endif
   default:
 #ifdef G__ASM
 #ifdef G__ASM_DBG

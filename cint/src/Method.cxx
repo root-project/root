@@ -888,3 +888,4 @@ void G__MethodInfo::SetVtblBasetagnum(int basetagnum) {
   ifunc->vtblbasetagnum[index] = (short)basetagnum;
 }
 #endif
+

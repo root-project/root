@@ -102,6 +102,8 @@ int G__get_newname G__P((char *new_name));
 int G__unsignedintegral G__P((int *pspaceflag,int *piout,int mparen));
 void G__define_var G__P((int tagnum,int typenum));
 int G__initary G__P((char *new_name));
+struct G__var_array* G__initmemvar G__P((int tagnum,int* pindex,G__value *pbuf));
+struct G__var_array* G__incmemvar G__P((struct G__var_array* memvar,int* pindex,G__value *pbuf));
 int G__initstruct G__P((char *new_name));
 int G__ignoreinit G__P((char *new_name));
 int G__listfunc G__P((FILE *fp,int access,char* fname,struct G__ifunc_table *ifunc));
@@ -860,6 +862,10 @@ int G__LD_IFUNC_optimize G__P((struct G__ifunc_table* ifunc,int ifn ,long *inst,
 #ifndef G__OLDIMPLEMENTATION2067
 int G__bc_compile_function G__P((struct G__ifunc_table *ifunc,int iexist));
 #endif
+#ifndef G__OLDIMPLEMENTATION2117
+int G__bc_throw_compile_error();
+int G__bc_throw_runtime_error();
+#endif
 
 #ifndef G__OLDIMPLEMENTATION2074
 int G__bc_exec_virtual_bytecode G__P((G__value *result7
@@ -895,6 +901,15 @@ void G__bc_delete_vtbl G__P((int tagnum)) ;
 G__value G__bc_new_operator G__P((const char *expression)) ;
 #endif
 void G__bc_delete_operator G__P((const char *expression,int isarray)) ;
+
+#ifndef G__OLDIMPLEMENTATION2109
+int G__bc_exec_try_bytecode G__P((int start,int stack,G__value *presult,long localmem)) ;
+int G__bc_exec_throw_bytecode G__P((G__value* pval));
+int G__bc_exec_typematch_bytecode G__P((G__value* catchtype,G__value* excptobj));
+int G__Isvalidassignment_val G__P((G__value* ltype,G__value* rtype));
+#endif
+
+G__value G__alloc_exceptionbuffer G__P((int tagnum));
 
 void G__argtype2param G__P((char *argtype,struct G__param *libp));
 

@@ -132,7 +132,10 @@ int G__TypeInfo::Size()
   buf.typenum=(int)typenum;
   buf.ref=reftype;
 #ifndef G__OLDIMPLEMENTATION2106
-  if(isupper(type)) buf.obj.reftype.reftype=reftype;
+  if(isupper(type)) {
+    buf.obj.reftype.reftype=reftype;
+    return(sizeof(void*));
+  }
 #endif
   return(G__sizeof(&buf));
 }

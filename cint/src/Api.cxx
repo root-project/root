@@ -21,6 +21,10 @@
 #include "Api.h"
 #include "common.h"
 
+#ifndef G__OLDIMPLEMENTATION2112
+#include "bc_eh.h"
+#endif
+
 
 /*********************************************************************
 * $xxx object resolution function Generic form
@@ -421,6 +425,11 @@ extern "C" int G__ExceptionWrapper(G__InterfaceMethod funcp
     (*funcp)(result7,funcname,libp,hash);
     return 1;
   }
+#ifndef G__OLDIMPLEMENTATION2112
+  catch(G__bc_exception& x) {
+    throw;
+  }
+#endif
 #ifdef G__STD_EXCEPTION
   catch(exception& x) {
     char buf[G__LONGLINE];
@@ -583,7 +592,7 @@ extern "C" const char* G__saveconststring(const char* s)
 #ifndef G__OLDIMPLEMENTATION1689
 extern "C" void G__initcxx() 
 {
-#if defined(__HP_aCC)||defined(__SUNPRO_CC)||defined(__BCPLUSPLUS__)||defined(__KCC)|| (defined(__INTEL_COMPILER) && (__INTEL_COMPILER < 810))
+#if defined(__HP_aCC)||defined(__SUNPRO_CC)||defined(__BCPLUSPLUS__)||defined(__KCC)||defined(__INTEL_COMPILER)
   char temp[G__ONELINE];
 #endif
 #ifdef __HP_aCC     /* HP aCC C++ compiler */
@@ -598,7 +607,7 @@ extern "C" void G__initcxx()
 #ifdef __KCC        /* KCC  C++ compiler */
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
-#if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 810 /* icc and ecc C++ compilers */
+#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER<810) /* icc and ecc C++ compilers */
   sprintf(temp,"G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
 #endif
   /*

@@ -57,6 +57,13 @@ G__TypeInfo : public G__ClassInfo  {
     isconst = 0;
 #endif
   }
+  void Init(struct G__var_array *var,int ig15) {
+    type    = var->type[ig15]; 
+    typenum = var->p_typetable[ig15]; 
+    tagnum  = var->p_tagtable[ig15];
+    reftype = var->reftype[ig15];
+    isconst = var->constvar[ig15];
+  }
 #endif
   int operator==(const G__TypeInfo& a);
   int operator!=(const G__TypeInfo& a);

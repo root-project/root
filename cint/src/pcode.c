@@ -763,6 +763,23 @@ long localmem;
       * 0 CL
       *  clear stack pointer
       ***************************************/
+#ifndef G__OLDIMPLEMENTATION2132
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CL %s:%d\n",pc,sp
+		 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
+				  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
+#endif
+      if(G__breaksignal) {
+        struct G__input_file store_ifile = G__ifile;
+	G__ifile.line_number=G__asm_inst[pc+1]&G__CL_LINEMASK;
+        G__ifile.filenum=G__asm_inst[pc+1]/G__CL_FILESHIFT;
+        if(G__ifile.filenum>=0) 
+          strcpy(G__ifile.name,G__srcfile[G__ifile.filenum].filename);
+        G__pr(G__serr,G__ifile);
+	G__pause();
+	G__ifile=store_ifile;
+      }
+#else /* 2132 */
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: CL %d\n",pc,sp,G__asm_inst[pc+1]);
 #endif
@@ -772,6 +789,7 @@ long localmem;
 	G__pause();
 	G__ifile.line_number=sp;
       }
+#endif /* 2132 */
 #ifndef G__OLDIMPLEMENTATION2062
       G__delete_autoobjectstack(G__scopelevel);
 #endif /* 2062 */
@@ -2234,7 +2252,7 @@ long localmem;
     case G__RTN_FUNC:
       /***************************************
       * 0 RTN_FUNC
-      * 1 isreturnvalue
+      * 1 isreturnvalue    0:no return val, 1:with return val, 2:
       * stack
       * sp-1   -> return this
       * sp
@@ -2242,6 +2260,10 @@ long localmem;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: RTN_FUNC %d\n"
 			     ,pc,sp ,G__asm_inst[pc+1]);
+#endif
+#ifndef G__OLDIMPLEMENTATION2110
+      /* return from   'try {  }' block */
+      if(2==G__asm_inst[pc+1]) return(1); 
 #endif
       G__asm_exec = 0;
       G__return=G__RETURN_NORMAL;
@@ -2643,6 +2665,112 @@ long localmem;
 #endif
 #endif /* ON1073 */
 
+
+#ifndef G__OLDIMPLEMENTATION2109
+    case G__TRY:
+      /***************************************
+      * inst
+      * 0 TRY
+      * 1 first_catchblock 
+      * 2 endof_catchblock
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) 
+	G__fprinterr(G__serr,"%3x,%d: TRY %lx %lx\n",pc,sp,G__asm_inst[pc+1],G__asm_inst[pc+2]);
+#endif
+      {
+        switch(G__bc_exec_try_bytecode(pc+3,sp,presult,localmem)) {
+        case G__TRY_NORMAL:
+          pc=G__asm_inst[pc+2];
+          break;
+        case G__TRY_INTERPRETED_EXCEPTION:
+        case G__TRY_COMPILED_EXCEPTION:
+          G__delete_autoobjectstack(G__scopelevel);
+          G__asm_stack[sp++]=G__exceptionbuffer;
+          pc=G__asm_inst[pc+1];
+          break;
+        case G__TRY_UNCAUGHT:
+        default:
+          /* pc+=3; */
+          break;
+        }
+      }
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+
+    case G__TYPEMATCH:
+      /***************************************
+      * inst
+      * 0 TYPEMATCH
+      * 1 address in data stack
+      * stack
+      * sp-1    a      <- comparee
+      * sp             <- ismatch
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) 
+	G__fprinterr(G__serr,"%3x,%d: TYPEMATCH %ld\n",pc,sp,G__asm_inst[pc+1]);
+#endif
+      G__letint(&G__asm_stack[sp],'i',
+		(long)G__bc_exec_typematch_bytecode(&G__asm_stack[G__asm_inst[pc+1]],
+						    &G__asm_stack[sp-1]));
+      pc+=2;
+      ++sp;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+
+    case G__ALLOCEXCEPTION:
+      /***************************************
+      * inst
+      * 0 ALLOCEXCEPTION
+      * 1 tagnum
+      * stack
+      * sp    a
+      * sp+1             <-
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) 
+	G__fprinterr(G__serr,"%3x,%d: ALLOCEXCEPTION %ld\n"
+                     ,pc,sp,G__asm_inst[pc+1]);
+#endif
+      G__asm_stack[sp] = G__alloc_exceptionbuffer(G__asm_inst[pc+1]);
+      store_struct_offset = G__store_struct_offset;
+      store_tagnum = G__tagnum;
+      store_return=G__return;
+      G__store_struct_offset = G__asm_stack[sp].obj.i;
+      G__tagnum = G__asm_stack[sp].tagnum;
+      G__return=G__RETURN_NON; /* ??? */
+      pc+=2;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+
+    case G__DESTROYEXCEPTION:
+      /***************************************
+      * inst
+      * 0 DESTROYEXCEPTION
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) 
+	G__fprinterr(G__serr,"%3x,%d: DESTROYEXCEPTION\n",pc,sp);
+#endif
+      G__free_exceptionbuffer();
+      ++pc;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+#endif /* 2109 */
+
 #ifndef G__OLDIMPLEMENTATION1270
     case G__THROW:
       /***************************************
@@ -2652,11 +2780,23 @@ long localmem;
       * sp-1    <-
       * sp
       ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3x,%d: THROW\n",pc,sp);
+#endif
+#ifndef G__OLDIMPLEMENTATION2109
+      // TODO, it is questionable to set G__exceptionbuffer here. 
+      // Maybe better setting this in catch block in G__bc_try_bytecode()
+      G__exceptionbuffer = G__asm_stack[sp-1]; 
+
+      G__bc_exec_throw_bytecode(&G__asm_stack[sp-1]);
+#else
       G__exceptionbuffer = G__asm_stack[sp-1];
+      /* TODO, Use true throw here, instead of following return operation */
       if('U'==G__exceptionbuffer.type) G__exceptionbuffer.type='u';
       G__return = G__RETURN_TRY;
       --sp;
       pc+=1;
+#endif
 #ifndef G__OLDIMPLEMENTATION1281
       return(1);
 #else
@@ -2669,7 +2809,7 @@ long localmem;
 
     case G__CATCH:
       /***************************************
-      * inst
+      * inst         This instruction is not needed. Never used
       * 0 CATCH
       * 1 filenum
       * 2 linenum
@@ -5532,6 +5672,18 @@ G__value *bufm2;
 
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2129
+/*************************************************************************
+* G__OP2_addvoidptr()
+*************************************************************************/
+void G__OP2_addvoidptr(bufm1,bufm2)
+G__value *bufm1;
+G__value *bufm2;
+{
+  bufm2->obj.i += bufm1->obj.i;
+}
+#endif
+
 /****************************************************************
 * G__OP2_OPTIMIZED
 ****************************************************************/
@@ -6689,6 +6841,21 @@ int cp_inc,dt_dec;
   G__asm_dt-=dt_dec;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2116
+  if(G__asm_instsize && G__asm_cp>G__asm_instsize-8) {
+    G__asm_instsize += 0x100;
+    void *p = realloc((void*)G__asm_stack,sizeof(long)*G__asm_instsize);
+    if(!p) G__genericerror("Error: memory exhausted for bytecode instruction buffer\n");
+    G__asm_inst = (long*)p;
+  }
+  else if(!G__asm_instsize && G__asm_cp>G__MAXINST-8) {
+    if(G__asm_dbg) {
+      G__fprinterr(G__serr,"Warning: loop compile instruction overflow");
+      G__printlinenum();
+    }
+    G__abortbytecode();
+  }
+#else /* 2116 */
   if(G__asm_cp>G__MAXINST-8) {
 #ifndef G__OLDIMPLEMENTATION841
     if(G__asm_dbg) {
@@ -6698,6 +6865,7 @@ int cp_inc,dt_dec;
 #endif
     G__abortbytecode();
   }
+#endif /* 2116 */
 
   if(G__asm_dt<30) {
 #ifndef G__OLDIMPLEMENTATION841
@@ -6754,7 +6922,12 @@ int G__asm_clear()
 
   if(G__asm_cp<2 || G__CL!=G__asm_inst[G__asm_cp-2]) {
     G__asm_inst[G__asm_cp]=G__CL;
+#ifndef G__OLDIMPLEMENTATION2132
+    G__asm_inst[G__asm_cp+1]= (G__ifile.line_number&G__CL_LINEMASK) 
+                    + (G__ifile.filenum&G__CL_FILEMASK)*G__CL_FILESHIFT;
+#else
     G__asm_inst[G__asm_cp+1]=G__ifile.line_number;
+#endif
     G__inc_cp_asm(2,0);
   }
   return(0);
@@ -7067,11 +7240,11 @@ int *start;
    *      2      paran                                   NOP
    *      3      point_level     <- check  3             NOP
    *      4      *var                     (2)            NOP
-   *      5      LD              <- check  1             NOP
+   *      5      LD              <- check  1             NOP  bydy of *b
    *      6      data_stack      <- check  2 (int)       CMPJMP
    *      7      CMP2            <- check  1             *compare()
-   *      8      <,<=,>,>=,==,!=    case                 *a
-   *      9      CNDJMP          <- check  1             *b
+   *      8      <,<=,>,>=,==,!=    case                 *a  var->p[]
+   *      9      CNDJMP          <- check  1             *b  ptr to inst[5]
    *     10      next_pc=G__asm_cp                       next_pc=G__asm_cp
    *          .                                           .
    *     -2      JMP                                     JMP
@@ -7114,8 +7287,12 @@ int *start;
        )
       G__asm_inst[*start+8] += G__store_struct_offset;
 
-    /* long to int conversion */
-    pb = (int*)(&(G__asm_stack[G__asm_inst[*start+6]].obj.i));
+    /* long to int conversion */ /* TODO, Storing ptr to temporary stack buffer, is this Bad? */
+#ifndef G__OLDIMPLEMENTATION2113
+    pb = (int*)(&G__asm_inst[*start+5]);
+#else
+    pb = (int*)(&(G__asm_stack[G__asm_inst[*start+6]].obj.i));  /* TODO, ??? */
+#endif
     *pb = G__int(G__asm_stack[G__asm_inst[*start+6]]);
     G__asm_inst[*start+9]=(long)(pb);
     G__asm_inst[*start+6]=G__CMPJMP;
@@ -7145,8 +7322,8 @@ int *start;
    *      8      point_level     <- check  3             NOP
    *      9      *var                     (2)            CMPJMP
    *      10     CMP2            <- check  1             *compare()
-   *      11     <,<=,>,>=,==,!=    case                 *a
-   *      12     CNDJMP          <- check  1             *b
+   *      11     <,<=,>,>=,==,!=    case                 *a  var->[]
+   *      12     CNDJMP          <- check  1             *b  var->[]
    *      13     next_pc=G__asm_cp                       next_pc=G__asm_pc
    *          .
    *     -2      JMP                                     JMP
@@ -7224,7 +7401,7 @@ int *start;
    *               before                     ----------> after
    *
    *     -9      G__LD_VAR,LD_MSTR                        INCJMP
-   *     -8      index                                    *a
+   *     -8      index                                    *a  var->p[]
    *     -7      paran                                    1,,-1
    *     -6      point_level                              next_pc
    *     -5      *var                                     NOP
@@ -7303,7 +7480,7 @@ int *start;
    *               before                     ----------> after
    *
    *     -11     G__LD_VAR,LD_MSTR                        INCJMP
-   *     -10     index                                    *a
+   *     -10     index                                    *a  var->p[]
    *     -9      paran                                    1,,-1
    *     -8      point_level                              next_pc
    *     -7      *var                                     NOP
@@ -7382,7 +7559,7 @@ int *start;
    *               before                     ----------> after
    *
    *     -16     G__LD_VAR,MSTR<- check     1             INCJMP
-   *     -15     index         <- check     2             *a
+   *     -15     index         <- check     2             *a  var->p[]
    *     -14     paran         <- check     3             inc
    *     -13     point_level   <- check     3             next_pc
    *     -12     *var          <-          (2)            NOP
@@ -8927,6 +9104,11 @@ int pc;
   case G__OPR_DIVASSIGN_FD:
     G__asm_inst[pc+1] = (long)G__OP2_divassign_fd;
     break;
+#ifndef G__OLDIMPLEMENTATION2129
+  case G__OPR_ADDVOIDPTR:
+    G__asm_inst[pc+1] = (long)G__OP2_addvoidptr;
+    break;
+#endif
   default:
     done=0;
     break;
@@ -9167,7 +9349,13 @@ int *start;
       *  clear stack pointer
       ***************************************/
 #ifdef G__ASM_DBG
+#ifndef G__OLDIMPLEMENTATION2132
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CL %s:%d\n",pc
+		 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
+				  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
+#else
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CL %d\n",pc,G__asm_inst[pc+1]);
+#endif
 #endif
       /* no optimize */
       pc+=2;
@@ -10456,6 +10644,68 @@ int *start;
       ++pc;
       break;
 
+#ifndef G__OLDIMPLEMENTATION2109
+    case G__TRY:
+      /***************************************
+      * inst
+      * 0 TRY
+      * 1 first_catchblock 
+      * 2 endof_catchblock
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: TRY %lx %lx\n",pc
+				  ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]);
+#endif
+      /* no optimization */
+      pc+=3;
+      break;
+
+    case G__TYPEMATCH:
+      /***************************************
+      * inst
+      * 0 TYPEMATCH
+      * 1 address in data stack
+      * stack
+      * sp-1    a      <- comparee
+      * sp             <- ismatch
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: TYPEMATCH\n",pc);
+#endif
+      /* no optimization */
+      pc+=2;
+      break;
+
+    case G__ALLOCEXCEPTION:
+      /***************************************
+      * inst
+      * 0 ALLOCEXCEPTION
+      * 1 tagnum
+      * stack
+      * sp    a
+      * sp+1             <-
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) 
+        G__fprinterr(G__serr,"%3lx: ALLOCEXCEPTION %d\n",pc,G__asm_inst[pc+1]);
+#endif
+      /* no optimization */
+      pc+=2;
+      break;
+
+    case G__DESTROYEXCEPTION:
+      /***************************************
+      * inst
+      * 0 DESTROYEXCEPTION
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: DESTROYEXCEPTION\n",pc);
+#endif
+      /* no optimization */
+      ++pc;
+      break;
+#endif /* 2109 */
+
 #ifndef G__OLDIMPLEMENTATION1270
     case G__THROW:
       /***************************************
@@ -10465,11 +10715,11 @@ int *start;
       * sp-1    <-
       * sp
       ***************************************/
-      pc+=1;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: THROW\n",pc);
 #endif
       /* no optimization */
+      pc+=1;
       break;
 
     case G__CATCH:
@@ -10481,11 +10731,11 @@ int *start;
       * 3 pos
       * 4  "
       ***************************************/
-      pc+=5;
 #ifdef G__ASM_DBG
       if(G__asm_dbg) G__fprinterr(G__serr,"%3lx: CATCH\n",pc);
 #endif
       /* no optimization */
+      pc+=5;
       break;
 #endif
 
@@ -10810,7 +11060,13 @@ int isthrow;
       *  clear stack pointer
       ***************************************/
       if(0==isthrow) {
+#ifndef G__OLDIMPLEMENTATION2132
+	fprintf(fout,"%3x: CL %s:%d\n",pc
+		 ,G__srcfile[G__asm_inst[pc+1]/G__CL_FILESHIFT].filename
+				  ,G__asm_inst[pc+1]&G__CL_LINEMASK);
+#else
 	fprintf(fout,"%3x: CL %ld\n",pc,G__asm_inst[pc+1]);
+#endif
       }
       pc+=2;
       break;
@@ -11699,6 +11955,63 @@ int isthrow;
       pc+=4;
       break;
 #endif
+
+#ifndef G__OLDIMPLEMENTATION2109
+    case G__TRY:
+      /***************************************
+      * inst
+      * 0 TRY
+      * 1 first_catchblock 
+      * 2 endof_catchblock
+      ***************************************/
+      if(0==isthrow) {
+         fprintf(fout,"%3x: TRY %lx %lx\n",pc
+		  ,G__asm_inst[pc+1] ,G__asm_inst[pc+2]);
+      }
+      pc+=3;
+      break;
+
+    case G__TYPEMATCH:
+      /***************************************
+      * inst
+      * 0 TYPEMATCH
+      * 1 address in data stack
+      * stack
+      * sp-1    a      <- comparee
+      * sp             <- ismatch
+      ***************************************/
+      if(0==isthrow) {
+        fprintf(fout,"%3x: TYPEMATCH\n",pc);
+      }
+      pc+=2;
+      break;
+
+    case G__ALLOCEXCEPTION:
+      /***************************************
+      * inst
+      * 0 ALLOCEXCEPTION
+      * 1 tagnum
+      * stack
+      * sp    a
+      * sp+1             <-
+      ***************************************/
+      if(0==isthrow) {
+        fprintf(fout,"%3x: ALLOCEXCEPTION %ld\n",pc,G__asm_inst[pc+1]);
+      }
+      pc+=2;
+      break;
+
+    case G__DESTROYEXCEPTION:
+      /***************************************
+      * inst
+      * 0 DESTROYEXCEPTION
+      ***************************************/
+      if(0==isthrow) {
+        fprintf(fout,"%3x: DESTROYEXCEPTION\n",pc);
+      }
+      ++pc;
+      break;
+#endif /* 2109 */
 
 #ifndef G__OLDIMPLEMENTATION1270
     case G__THROW:

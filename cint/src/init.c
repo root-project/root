@@ -1725,6 +1725,9 @@ int G__init_globals()
   G__asm_dt=G__MAXSTACK-1;   /* constant data address */
 #ifdef G__ASM_IFUNC
   G__asm_inst = G__asm_inst_g;
+#ifndef G__OLDIMPLEMENTATION2116
+  G__asm_instsize = 0; /* 0 means G__asm_inst is not resizable */
+#endif
   G__asm_stack = G__asm_stack_g;
   G__asm_name = G__asm_name_g;
   G__asm_name_p = 0;
@@ -2246,7 +2249,7 @@ void G__platformMacro()
 #ifdef __KCC        /* KCC  C++ compiler */
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
-#if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 810 /* icc and ecc C++ compilers */
+#if defined(__INTEL_COMPILER) && (__INTEL_COMPILER<810) /* icc and ecc C++ compilers */
   sprintf(temp,"G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
 #endif
 #ifndef _AIX

@@ -33,7 +33,9 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
-#if defined(__GNU_LIBRARY__) && !defined(_SEM_SEMUN_UNDEFINED)
+#if defined(G__APPLE) || defined(__APPLE__)
+/* union semun is defined by including <sys/sem.h> */
+#elif defined(__GNU_LIBRARY__) && !defined(_SEM_SEMUN_UNDEFINED)
 /* union semun is defined by including <sys/sem.h> */
 #else
 /* according to X/OPEN we have to define it ourselves */
@@ -194,10 +196,12 @@ struct msgbuf {
 
 struct msqid_ds;
 
+#if !(defined(G__APPLE) || defined(__APPLE__))
 int msgget(key_t key,int msgflg);
 int *msgsnd(int msgid,struct msgbuf *msgp,int msgsz,int msgflg);
 int msgrcv(int msgid,struct msgbuf *msgp,int msgsz,long msgtyp,int msgflg);
 int msgctl(int msgid, int cmd,struct msqid_ds *buf);
+#endif
 
 
 #pragma link off struct msgbuf;

@@ -906,6 +906,20 @@ G__value *presult;
 #ifndef G__OLDIMPLEMENTATION1911
   if(0 && item) return 0;
 #endif
+#ifndef G__OLDIMPLEMENTATION2122
+  if(G__cintv6) {
+    G__value ltype = G__null;
+    ltype.type = var->type[ig15];
+    ltype.tagnum = var->p_tagtable[ig15];
+    ltype.typenum = var->p_typetable[ig15];
+    ltype.obj.reftype.reftype = var->reftype[ig15];
+    if(!G__Isvalidassignment_val(&ltype,presult)) {
+      G__fprinterr(G__serr,"Error: assignment type mismatch %s "
+                    ,var->varnamebuf[ig15]);
+      G__genericerror((char*)NULL);
+    }
+  }
+#endif
 #ifndef G__OLDIMPLEMENTATION2089
   if(G__cintv6 &&
      ('U'==var->type[ig15] || ('u'==var->type[ig15]&&

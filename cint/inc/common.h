@@ -156,6 +156,8 @@
 #define G__OPR_POSTFIXDEC   15
 #define G__OPR_PREFIXDEC    16
 
+#define G__OPR_ADDVOIDPTR   17
+
 #ifndef G__OLDIMPLEMENTATION572
 #define G__OPR_POSTFIXINC_I  0x110
 #define G__OPR_PREFIXINC_I   0x111
@@ -436,18 +438,22 @@
 #define G__TOPVALUE           (long)0x0040
 #define G__CTOR_SETGVP        (long)0x0041
 
-#define G__THROW              (long)0x0042
-#define G__CATCH              (long)0x0043
-#define G__SETARYINDEX        (long)0x0044
-#define G__RESETARYINDEX      (long)0x0045
-#define G__GETARYINDEX        (long)0x0046
+#define G__TRY                (long)0x0042
+#define G__TYPEMATCH          (long)0x0043
+#define G__ALLOCEXCEPTION     (long)0x0044
+#define G__DESTROYEXCEPTION   (long)0x0045
+#define G__THROW              (long)0x0046
+#define G__CATCH              (long)0x0047 /* never used */
+#define G__SETARYINDEX        (long)0x0048
+#define G__RESETARYINDEX      (long)0x0049
+#define G__GETARYINDEX        (long)0x004a
 
-#define G__ENTERSCOPE         (long)0x0047
-#define G__EXITSCOPE          (long)0x0048
-#define G__PUTAUTOOBJ         (long)0x0049
-#define G__PUTHEAPOBJ         (long)0x0050 /* not implemented yet */
-#define G__CASE               (long)0x0051
-/* #define G__SETARYCTOR         (long)0x0052 */
+#define G__ENTERSCOPE         (long)0x004b
+#define G__EXITSCOPE          (long)0x004c
+#define G__PUTAUTOOBJ         (long)0x004d
+#define G__PUTHEAPOBJ         (long)0x004e /* not implemented yet */
+#define G__CASE               (long)0x004f
+/* #define G__SETARYCTOR         (long)0x0050 */
 
 #define G__NOP                (long)0x00ff
 
@@ -457,6 +463,14 @@
 #define G__INST(x)  x
 /* #define G__INST(x) (x&G__INSTMASK) */ /* not ready yet */
 #define G__LINE(x) ((x&G__LINEMASK)/0x100)
+
+/********************************************
+* G__TRY G__bc_exec_try_bytecode return value
+********************************************/
+#define G__TRY_NORMAL                 1
+#define G__TRY_INTERPRETED_EXCEPTION  2
+#define G__TRY_COMPILED_EXCEPTION     3
+#define G__TRY_UNCAUGHT               9
 
 struct G__breakcontinue_list {
   int destination;
@@ -471,6 +485,16 @@ struct G__breakcontinue_list {
 #define G__MAXINST     0x1000
 #define G__MAXSTACK    0x100
 #define G__MAXSTRSTACK  0x10
+
+#ifndef G__OLDIMPLEMENTATION2132
+/*********************************************
+* G__CL  line+filenum offset
+*********************************************/
+#define G__CL_LINEMASK  0x000fffff
+#define G__CL_FILEMASK  0x00000fff
+#define G__CL_FILESHIFT 0x00100000
+#endif
+
 
 /*********************************************
 * macros for loop compiler
@@ -1030,6 +1054,15 @@ struct G__funclist {
 #define G__ULONGLONG   2
 #define G__LONGDOUBLE  3
 #endif
+
+/*********************************************************************
+* cintv6, flags
+*********************************************************************/
+/* G__cintv6 flags */
+/* #define G__CINT_VER6 1 */ /* defined in platform configuration */
+#define G__BC_CINTVER6     0x01
+#define G__BC_COMPILEERROR 0x02
+#define G__BC_RUNTIMEERROR 0x04
 
 /*********************************************************************
 * cint parser function and global variable prototypes

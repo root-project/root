@@ -520,8 +520,13 @@ int G__mask_error=0;
 G__eolcallback_t G__eolcallback;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION2111
+int G__throwingexception=0;
+#endif
+
 int G__scopelevel=0;
 int G__cintv6 = 0;
+
 
 /*
  * Local Variables:

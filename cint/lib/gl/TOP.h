@@ -16,7 +16,7 @@
 #endif
 
 /* C preprocessor is used for GL.h before Cint reads it */
-#include "GL.h"
+#include "cintGL.h"
 
 #ifdef __MAKECINT__
 #pragma preprocessor off
@@ -66,6 +66,14 @@
 #pragma link off function     XMesaDitherColor;
 #pragma link off function     XMesaFindBuffer ;
 #pragma link off function     XMesaMakeCurrent ;
+
+#ifdef G__WIN32
+#pragma link off function  auxInitWindowW;
+#pragma link off function  auxRGBImageLoadW;
+#pragma link off function  auxDIBImageLoadW;
+#pragma link off function  auxDrawStrW;
+//#pragma link off global    auxRGBMap;
+#endif
 
 #endif
 

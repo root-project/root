@@ -1435,6 +1435,7 @@ char *expression;
 		strcmp(ebuf,"static_cast")==0 ||
 		strcmp(ebuf,"reinterpret_cast")==0 ||
 		strcmp(ebuf,"const_cast")==0) {
+          /* TODO, implement casts, may need to introduce new instruction */
 	  ++ig1;
           ebuf[0]='(';
 	  c=G__getstream_template(expression,&ig1,ebuf+1,">");

@@ -634,8 +634,13 @@ char *typename;
     break;
   }
   if(type) strcpy(type,vtype);
-  if(tagname && buf.tagnum>=0) strcpy(tagname,G__struct.name[buf.tagnum]) ;
-  if(typename && buf.typenum>=0) strcpy(typename,G__newtype.name[buf.typenum]) ;
+#ifndef G__OLDIMPLEMENTATION2108
+  if(tagname && buf.tagnum>=0) strcpy(tagname,G__struct.name[buf.tagnum]);
+  if(typename && buf.typenum>=0) strcpy(typename,G__newtype.name[buf.typenum]);
+#else
+  if(tagname) strcpy(tagname,G__struct.name[buf.tagnum]) ;
+  if(typename) strcpy(typename,G__newtype.name[buf.typenum]) ;
+#endif
   
   sprintf(vtype,"&%s",name);
   buf = G__calc_internal(vtype);

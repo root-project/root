@@ -2580,7 +2580,12 @@ int tagnum,typenum;      /* overrides global variables */
 	    }
 	    /* struct class initialization ={x,y,z} */
 	    if(initary) {
-	      if(known) {
+	      if(known
+#ifndef G__OLDIMPLEMENTATION2130
+		 && (G__struct.funcs[tagnum]& G__HAS_XCONSTRUCTOR)
+		 /* && (G__struct.funcs[tagnum]& G__HAS_DEFAULTCONSTRUCTOR) */
+#endif
+                ) {
 		G__fprinterr(G__serr,
 		"Error: Illegal initialization of %s. Constructor exists "
 			,new_name);
@@ -3381,7 +3386,16 @@ char *new_name;
        * initiazlize this element
        *******************************************/
       buf.obj.i=var->p[ig15]+size*pinc;
+#ifndef G__OLDIMPLEMENTATION2125
+      {
+        int store_prerun=G__prerun;
+        G__prerun=0;
+        reg=G__getexpr(expr);
+        G__prerun=store_prerun;
+      }
+#else
       reg=G__getexpr(expr);
+#endif
 #ifndef G__OLDIMPLEMENTATION1607
       if(
 #ifndef G__OLDIMPLEMENTATION1621
@@ -3500,7 +3514,7 @@ char *new_name;
 /**************************************************************************
 * G__initmemvar()
 **************************************************************************/
-static struct G__var_array* G__initmemvar(tagnum,pindex,pbuf)
+struct G__var_array* G__initmemvar(tagnum,pindex,pbuf)
 int tagnum;
 int* pindex;
 G__value *pbuf;
@@ -3508,6 +3522,9 @@ G__value *pbuf;
   struct G__var_array* memvar;
   *pindex=0;
   if(-1!=tagnum) {
+#ifndef G__OLDIMPLEMENTATION2131
+    G__incsetup_memvar(tagnum);
+#endif
     memvar=G__struct.memvar[tagnum];
     pbuf->tagnum=memvar->p_tagtable[*pindex];
     pbuf->typenum=memvar->p_typetable[*pindex];
@@ -3523,7 +3540,7 @@ G__value *pbuf;
 /**************************************************************************
 * G__incmemvar()
 **************************************************************************/
-static struct G__var_array* G__incmemvar(memvar,pindex,pbuf)
+struct G__var_array* G__incmemvar(memvar,pindex,pbuf)
 struct G__var_array* memvar;
 int* pindex;
 G__value *pbuf;

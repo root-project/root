@@ -2692,6 +2692,82 @@ char *path;
 }
 
 
+#ifndef G__OLDIMPLEMENTATION2119
+/**************************************************************************
+* G__delete_ipath()
+*
+**************************************************************************/
+int G__delete_ipath(path)
+char *path;
+{
+  struct G__includepath *ipath;
+  struct G__includepath *previpath;
+  char temp[G__ONELINE];
+  char temp2[G__ONELINE];
+  int i=0,flag=0;
+  char *p;
+
+  /* strip double quotes if exist */
+  if('"'==path[0]) {
+    strcpy(temp,path+1);
+    if('"'==temp[strlen(temp)-1]) temp[strlen(temp)-1]='\0';
+  }
+  else {
+    strcpy(temp,path);
+  }
+
+  /* to the end of list */
+  ipath = &G__ipathentry;
+  previpath = (struct G__includepath*)NULL;
+  while(ipath->next) {
+    if(ipath->pathname&&strcmp(ipath->pathname,temp)==0) {
+      /* delete this entry */
+      free((void*)ipath->pathname);
+      ipath->pathname=(char*)NULL;
+      if(previpath) {
+        previpath->next = ipath->next;
+        free((void*)ipath);
+      }
+      else if(ipath->next) {
+#if 1
+        G__ipathentry.pathname = calloc(1,1);
+#else
+        G__ipathentry.pathname = ipath->next->pathname;
+        G__ipathentry.next = ipath->next->next;
+        free((void*)ipath->next);
+#endif
+      }
+      else {
+        free((void*)G__ipathentry.pathname);
+        G__ipathentry.pathname=(char*)NULL;
+      }
+      break;
+    }
+    ipath = ipath->next;
+  }
+
+  /* G__allincludepath will be given to real preprocessor */
+  if(!G__allincludepath) return(0);
+  i=0;
+  while(temp[i]) if(isspace(temp[i++])) flag=1;
+  if(flag) sprintf(temp2,"-I\"%s\" ",temp);
+  else     sprintf(temp2,"-I%s ",temp);
+
+  p = strstr(G__allincludepath,temp2);
+  if(p) {
+    char *p2 = p+strlen(temp2);
+    while(*p2) *p++ = *p2++;
+    *p = *p2;
+    return(1);
+  }
+
+  return(0);
+}
+
+
+#endif
+
+
 /**************************************************************************
 **************************************************************************
 * Generate C++ function access entry function

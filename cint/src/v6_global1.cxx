@@ -67,6 +67,9 @@ int G__asm_wholefunc_default_cp;
 #ifdef G__ASM_IFUNC
 
 long *G__asm_inst; /* p-code instruction buffer */
+#ifndef G__OLDIMPLEMENTATION2116
+int G__asm_instsize;
+#endif
 G__value *G__asm_stack; /* data stack and constant buffer */
 char *G__asm_name;
 
