@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.2 2001/10/03 13:18:04 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TUUID.h,v 1.3 2001/10/03 14:27:14 rdm Exp $
 // Author: Fons Rademakers   30/9/2001
 
 /*************************************************************************
@@ -32,6 +32,9 @@
 #endif
 #ifndef ROOT_TInetAddress
 #include "TInetAddress.h"
+#endif
+#ifndef ROOT_TDatime
+#include "TDatime.h"
 #endif
 
 
@@ -67,6 +70,7 @@ public:
    UShort_t     Hash() const;
    void         Print() const;
    TInetAddress GetHostAddress() const;
+   TDatime      GetTime() const;
    void         GetUUID(UChar_t uuid[16]) const;
    void         SetUUID(const char *uuid_str);
 
