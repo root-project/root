@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.35 2004/06/03 05:11:00 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.36 2004/06/13 16:26:36 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -131,8 +131,9 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // Allow the usage of ClassDef and ClassImp in interpreted macros
    ProcessLine("#include <RtypesCint.h>", kTRUE);
 
-   // The following lib is also useful to have, make sure they are loaded...
-   gROOT->LoadClass("THtml",  "Html");
+   // The following libs are also useful to have, make sure they are loaded...
+   gROOT->LoadClass("TPostScript", "Postscript");
+   gROOT->LoadClass("THtml",       "Html");
 
    // Load user functions
    const char *logon;
@@ -229,7 +230,7 @@ void TRint::Run(Bool_t retrn)
             fNcmd++;
 
             // The ProcessLine might throw an 'exception'.  In this case,
-            // GetLinem(kInit,"Root >") is called and we are jump back 
+            // GetLinem(kInit,"Root >") is called and we are jump back
             // to RETRY ... and we have to avoid the Getlinem(kInit, GetPrompt());
             needGetlinemInit = kFALSE;
             retval = ProcessLine(cmd, kFALSE, &error);
