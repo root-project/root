@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.23 2004/07/06 13:53:48 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TTabCom.cxx,v 1.24 2004/07/06 16:34:31 rdm Exp $
 // Author: Christian Lacunza <lacunza@cdfsg6.lbl.gov>   27/04/99
 
 // Modified by Artur Szostak <artur@alice.phy.uct.ac.za> : 1 June 2003
@@ -178,6 +178,7 @@ extern "C" int gl_root_tab_hook(char *buf, int /*prompt_width */ ,
 //              constructors
 //
 
+//______________________________________________________________________________
 TTabCom::TTabCom()
 {
    fpDirectives = 0;
@@ -208,6 +209,7 @@ TTabCom::TTabCom()
 //
 
 
+//______________________________________________________________________________
 void TTabCom::ClearClasses()
 {
    if (!fpClasses)
@@ -225,6 +227,7 @@ void TTabCom::ClearClasses()
    fpNamespaces = 0;
 }
 
+//______________________________________________________________________________
 void TTabCom::ClearCppDirectives()
 {
    if (!fpDirectives)
@@ -234,6 +237,7 @@ void TTabCom::ClearCppDirectives()
    fpDirectives = 0;
 }
 
+//______________________________________________________________________________
 void TTabCom::ClearEnvVars()
 {
    if (!fpEnvVars)
@@ -243,6 +247,7 @@ void TTabCom::ClearEnvVars()
    fpEnvVars = 0;
 }
 
+//______________________________________________________________________________
 void TTabCom::ClearFiles()
 {
    if (!fpFiles)
@@ -252,6 +257,7 @@ void TTabCom::ClearFiles()
    fpFiles = 0;
 }
 
+//______________________________________________________________________________
 void TTabCom::ClearGlobalFunctions()
 {
    if (!fpGlobalFuncs)
@@ -261,6 +267,7 @@ void TTabCom::ClearGlobalFunctions()
    fpGlobalFuncs = 0;
 }
 
+//______________________________________________________________________________
 void TTabCom::ClearGlobals()
 {
    if (!fpGlobals)
@@ -270,6 +277,7 @@ void TTabCom::ClearGlobals()
    fpGlobals = 0;
 }
 
+//______________________________________________________________________________
 void TTabCom::ClearPragmas()
 {
    if (!fpPragmas)
@@ -279,6 +287,7 @@ void TTabCom::ClearPragmas()
    fpPragmas = 0;
 }
 
+//______________________________________________________________________________
 void TTabCom::ClearSysIncFiles()
 {
    if (!fpSysIncFiles)
@@ -288,6 +297,7 @@ void TTabCom::ClearSysIncFiles()
    fpSysIncFiles = 0;
 }
 
+//______________________________________________________________________________
 void TTabCom::ClearUsers()
 {
    if (!fpUsers)
@@ -297,6 +307,7 @@ void TTabCom::ClearUsers()
    fpUsers = 0;
 }
 
+//______________________________________________________________________________
 void TTabCom::ClearAll()
 {
    // clears all lists
@@ -313,59 +324,69 @@ void TTabCom::ClearAll()
 //   ClearUsers();       <-- this one stays cached
 }
 
+//______________________________________________________________________________
 void TTabCom::RehashClasses()
 {
    ClearClasses();
    GetListOfClasses();
 }
 
+//______________________________________________________________________________
 void TTabCom::RehashCppDirectives()
 {
    ClearCppDirectives();
    GetListOfCppDirectives();
 }
 
+//______________________________________________________________________________
 void TTabCom::RehashEnvVars()
 {
    ClearEnvVars();
    GetListOfEnvVars();
 }
 
+//______________________________________________________________________________
 void TTabCom::RehashFiles()
 {
    ClearFiles();                /* path unknown */
 }                               // think about this
 
+//______________________________________________________________________________
 void TTabCom::RehashGlobalFunctions()
 {
    ClearGlobalFunctions();
    GetListOfGlobalFunctions();
 }
 
+//______________________________________________________________________________
 void TTabCom::RehashGlobals()
 {
    ClearGlobals();
    GetListOfGlobals();
 }
 
+//______________________________________________________________________________
 void TTabCom::RehashPragmas()
 {
    ClearPragmas();
    GetListOfPragmas();
 }
 
+//______________________________________________________________________________
 void TTabCom::RehashSysIncFiles()
 {
    ClearSysIncFiles();
    GetListOfSysIncFiles();
 }
 
+//______________________________________________________________________________
 void TTabCom::RehashUsers()
 {
    ClearUsers();
    GetListOfUsers();
 }
 
+//______________________________________________________________________________
 void TTabCom::RehashAll()
 {
    // clears and then rebuilds all lists
@@ -382,6 +403,7 @@ void TTabCom::RehashAll()
 //   RehashUsers();       <-- this one stays cached
 }
 
+//______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfClasses(void)
 {
    if (!fpClasses) {
@@ -456,6 +478,8 @@ const TSeqCol *TTabCom::GetListOfClasses(void)
 
    return fpClasses;
 }
+
+//______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfCppDirectives()
 {
    if (!fpDirectives) {
@@ -477,6 +501,8 @@ const TSeqCol *TTabCom::GetListOfCppDirectives()
 
    return fpDirectives;
 }
+
+//______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfFilesInPath(const char path[])
 {
    // "path" should be initialized with a colon separated list of
@@ -494,6 +520,8 @@ const TSeqCol *TTabCom::GetListOfFilesInPath(const char path[])
 
    return fpFiles;
 }
+
+//______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfEnvVars()
 {
    // calls "/bin/env"
@@ -609,6 +637,8 @@ const TSeqCol *TTabCom::GetListOfGlobalFunctions()
 
    return fpGlobalFuncs;
 }
+
+//______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfPragmas()
 {
    if (!fpPragmas) {
@@ -636,6 +666,8 @@ const TSeqCol *TTabCom::GetListOfPragmas()
 
    return fpPragmas;
 }
+
+//______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfSysIncFiles()
 {
    if (!fpSysIncFiles) {
@@ -645,6 +677,8 @@ const TSeqCol *TTabCom::GetListOfSysIncFiles()
    return fpSysIncFiles;
 
 }
+
+//______________________________________________________________________________
 const TSeqCol *TTabCom::GetListOfUsers()
 {
    // reads from "/etc/passwd"
@@ -677,6 +711,7 @@ const TSeqCol *TTabCom::GetListOfUsers()
 //                           static utility funcitons
 //
 
+//______________________________________________________________________________
 Char_t TTabCom::AllAgreeOnChar(int i, const TSeqCol * pList,
                                Int_t & nGoodStrings)
 {
@@ -746,6 +781,8 @@ Char_t TTabCom::AllAgreeOnChar(int i, const TSeqCol * pList,
 
    return 0;
 }
+
+//______________________________________________________________________________
 void TTabCom::AppendListOfFilesInDirectory(const char dirName[],
                                            TSeqCol * pList)
 {
@@ -794,6 +831,7 @@ void TTabCom::AppendListOfFilesInDirectory(const char dirName[],
 }
 
 // -----\/-------- homemade RTTI ---------------\/------------------------
+//______________________________________________________________________________
 TString TTabCom::DetermineClass(const char varName[])
 {
    //[static utility function]/////////////////////////////
@@ -884,6 +922,7 @@ TString TTabCom::DetermineClass(const char varName[])
    return type;
 }
 
+//______________________________________________________________________________
 Bool_t TTabCom::ExcludedByFignore(TString s)
 {
    //[static utility function]/////////////////////////////
@@ -916,6 +955,8 @@ Bool_t TTabCom::ExcludedByFignore(TString s)
       return kFALSE;
    }
 }
+
+//______________________________________________________________________________
 TString TTabCom::GetSysIncludePath(void)
 {
    //[static utility function]/////////////////////////////
@@ -1019,6 +1060,7 @@ TString TTabCom::GetSysIncludePath(void)
    return path;
 }
 
+//______________________________________________________________________________
 Bool_t TTabCom::IsDirectory(const char fileName[])
 {
    //[static utility function]/////////////////////////////
@@ -1032,6 +1074,8 @@ Bool_t TTabCom::IsDirectory(const char fileName[])
    gSystem->GetPathInfo(fileName, 0, (Long_t*)0, &flags, 0);
    return (int) flags & 2;
 }
+
+//______________________________________________________________________________
 TSeqCol *TTabCom::NewListOfFilesInPath(const char path1[])
 {
    //[static utility function]/////////////////////////////
@@ -1069,6 +1113,7 @@ TSeqCol *TTabCom::NewListOfFilesInPath(const char path1[])
    return pList;
 }
 
+//______________________________________________________________________________
 Bool_t TTabCom::PathIsSpecifiedInFileName(const TString & fileName)
 {
    //[static utility function]/////////////////////////////
@@ -1086,6 +1131,7 @@ Bool_t TTabCom::PathIsSpecifiedInFileName(const TString & fileName)
        || fileName.BeginsWith("../");
 }
 
+//______________________________________________________________________________
 void TTabCom::NoMsg(Int_t errorLevel)
 {
    //[static utility function]/////////////////////////////
@@ -1150,7 +1196,7 @@ void TTabCom::NoMsg(Int_t errorLevel)
 //
 //
 
-
+//______________________________________________________________________________
 Int_t TTabCom::Complete(const TRegexp & re,
                         const TSeqCol * pListOfCandidates,
                         const char appendage[])
@@ -1200,6 +1246,8 @@ Int_t TTabCom::Complete(const TRegexp & re,
    // -----------------------------------------
    TList listOfMatches;         // list of matches (local filenames only) (insertion order must agree across these 3 lists)
    TList listOfFullPaths;       // list of matches (full filenames)       (insertion order must agree across these 3 lists)
+   listOfMatches.SetOwner();
+   listOfFullPaths.SetOwner();
 
    int nMatches = 0;            // number of matches
    TObject *pObj;               // pointer returned by iterator
@@ -1366,6 +1414,8 @@ Int_t TTabCom::Complete(const TRegexp & re,
 
    return pos;
 }
+
+//______________________________________________________________________________
 void TTabCom::CopyMatch(char dest[], const char localName[],
                         const char appendage[],
                         const char fullName[]) const
@@ -1417,6 +1467,7 @@ void TTabCom::CopyMatch(char dest[], const char localName[],
    }
 }
 
+//______________________________________________________________________________
 TTabCom::EContext_t TTabCom::DetermineContext() const
 {
    // [private]
@@ -1440,6 +1491,7 @@ TTabCom::EContext_t TTabCom::DetermineContext() const
    return kUNKNOWN_CONTEXT;     //* RETURN *//
 }
 
+//______________________________________________________________________________
 TString TTabCom::DeterminePath(const TString & fileName,
                                const char defaultPath[]) const
 {
@@ -1471,6 +1523,8 @@ TString TTabCom::DeterminePath(const TString & fileName,
       return extendedPath;
    }
 }
+
+//______________________________________________________________________________
 TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
 {
    // [private]
@@ -1502,6 +1556,7 @@ TString TTabCom::ExtendPath(const char originalPath[], TString newBase) const
    return newPath.Strip(TString::kTrailing, kDelim);
 }
 
+//______________________________________________________________________________
 Int_t TTabCom::Hook(char *buf, int *pLoc)
 {
    // [private]
@@ -2107,6 +2162,8 @@ Int_t TTabCom::Hook(char *buf, int *pLoc)
 
    return pos;
 }
+
+//______________________________________________________________________________
 void TTabCom::InitPatterns(void)
 {
    // [private]
@@ -2167,6 +2224,8 @@ void TTabCom::InitPatterns(void)
    SetPattern(kCXX_Global, "[_a-zA-Z][_a-zA-Z0-9]*$");
    SetPattern(kCXX_GlobalProto, "[_a-zA-Z][_a-zA-Z0-9]* *($");
 }
+
+//______________________________________________________________________________
 TClass *TTabCom::MakeClassFromClassName(const char className[]) const
 {
    // [private]
@@ -2193,7 +2252,7 @@ TClass *TTabCom::MakeClassFromClassName(const char className[]) const
    return pClass;
 }
 
-
+//______________________________________________________________________________
 TClass *TTabCom::TryMakeClassFromClassName(const char className[]) const
 {
    // Same as above but does not print the error message.
@@ -2212,7 +2271,7 @@ TClass *TTabCom::TryMakeClassFromClassName(const char className[]) const
    return pClass;
 }
 
-
+//______________________________________________________________________________
 TClass *TTabCom::MakeClassFromVarName(const char varName[],
                                       EContext_t & context)
 {
@@ -2344,6 +2403,8 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
    return new TClass(className);
 }
+
+//______________________________________________________________________________
 void TTabCom::SetPattern(EContext_t handle, const char regexp[])
 {
    // [private]
