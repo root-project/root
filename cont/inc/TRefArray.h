@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.4 2001/10/16 17:27:35 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.5 2001/11/28 14:51:43 brun Exp $
 // Author: Rene Brun    02/10/2001
 
 /*************************************************************************
@@ -78,7 +78,6 @@ public:
    virtual TObject *Remove(TObject *obj);
 
    TObject         *At(Int_t idx) const;
-   TObject         *UncheckedAt(Int_t i) const { return (TObject*)fUIDs[i]; }
    TObject         *Before(TObject *obj) const;
    TObject         *After(TObject *obj) const;
    TObject         *First() const;
