@@ -3286,7 +3286,11 @@ long ig15;
     p_inc += ary*G__int(buf[ig25]);
     ary /= var->varlabel[ig15][ig25+2];
   }
+#ifndef G__OLDIMPLEMENTATION1847
+  buf->tagnum = var->p_tagtable[ig15];
+#else
   buf->tagnum = -1;
+#endif
   buf->type = var->type[ig15];
   buf->typenum = var->p_typetable[ig15];
   buf->ref = var->p[ig15]+offset+p_inc*sizeof(long);

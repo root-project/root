@@ -54,7 +54,7 @@ G__CallFunc {
 #endif
 #ifndef G__OLDIMPLEMENTATION533
   int IsValid() { /* return(pfunc?1:0l; */ return(method.IsValid());}
-  void SetArgArray(long *p);
+  void SetArgArray(long *p,int narg= -1);
 #endif
   void ResetArg() { para.paran=0; }
   void SetArg(long l) ;

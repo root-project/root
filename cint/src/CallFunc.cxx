@@ -122,11 +122,19 @@ void G__CallFunc::SetBytecode(struct G__bytecodefunc* bc)
 #endif
 #ifndef G__OLDIMPLEMENTATION533
 ///////////////////////////////////////////////////////////////////////////
-void G__CallFunc::SetArgArray(long *p)
+void G__CallFunc::SetArgArray(long *p,int narg)
 {
   int i,n;
   if(method.IsValid()) {
-    n = method.NArg();
+    if(0>narg) n = method.NArg();
+    else {
+      n = narg;
+      if (narg > method.NArg()) {
+	G__fprinterr(G__serr,"Warning: G__CallFunc::SetArgArray() too many arguments specified (%d expected %d)\n",narg,method.NArg());
+        n = method.NArg();
+      } else if (narg < method.NArg()-method.NDefaultArg())
+        G__fprinterr(G__serr,"Error: G__CallFunc::SetArgArray() too few arguments specified (%d expected %d)\n",narg,method.NArg()-method.NDefaultArg());
+    }
 #ifndef G__OLDIMPLEMENTATION1220 /* NEEDEDSINCE_FIX1167 */
     G__MethodArgInfo arginfo;
     arginfo.Init(method);
@@ -136,7 +144,7 @@ void G__CallFunc::SetArgArray(long *p)
 #endif
     for(i=0;i<n;i++) {
 #ifndef G__OLDIMPLEMENTATION1707
-      if (p[i]) {
+      //if (p[i]) {
         para.para[i].obj.i = p[i];
         para.para[i].ref = p[i];
         // Following data shouldn't matter, but set just in case
@@ -149,8 +157,8 @@ void G__CallFunc::SetArgArray(long *p)
         para.para[i].tagnum = -1;
         para.para[i].typenum = -1;
         para.paran=i+1;
-      } else
-        break;
+      //} else
+      //  break;
 #else /* 1707 */
       para.para[i].obj.i = p[i];
       para.para[i].ref = p[i];
@@ -402,9 +410,9 @@ int G__CallFunc::ExecInterpretedFunc(G__value* presult)
 {
   int ret=0;
   if(method.IsValid()) {
-#ifdef G__OLDIMPLEMENTATION1840
+#ifndef G__OLDIMPLEMENTATION1840
     G__ClassInfo *pcls=method.MemberOf();
-    if(pcls && pcls->Name() && method.Name() &&
+    if(pcls && pcls->Name() && method.Name() && 
        strcmp(pcls->Name(),method.Name())==0) {
 #ifdef G__ROOT
       G__store_struct_offset = (long)(new char[pcls->Size()]);

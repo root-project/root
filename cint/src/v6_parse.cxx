@@ -834,9 +834,6 @@ char *statement;
     else if(isspace(c)) {
 #ifndef G__OLDIMPLEMENTATION1843
       if(G__istypename(tcname)) {
-	G__fprinterr(G__serr
-	 ,"Warning: Illegal template specialization syntax");
-	G__printlinenum();
 	G__ifile.line_number = line_number;
 	fsetpos(G__ifile.fp,&pos);
 	G__exec_statement(); 

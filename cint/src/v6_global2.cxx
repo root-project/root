@@ -498,6 +498,10 @@ int G__gcomplevellimit=1000;
 int G__catchexception=1;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1551
+int G__eval_localstatic=0;
+#endif
+
 
 /*
  * Local Variables:

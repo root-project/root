@@ -565,10 +565,16 @@ void G__define_type()
     if('l'==type) {
       G__loadlonglong(&itemp,&tmptypenum,G__LONGLONG);
       type = 'u';
+#ifndef G__OLDIMPLEMENTATION1850
+      strcpy(tagname,"G__longlong");
+#endif
     }
     else if('k'==type) {
       G__loadlonglong(&itemp,&tmptypenum,G__ULONGLONG);
       type = 'u';
+#ifndef G__OLDIMPLEMENTATION1850
+      strcpy(tagname,"G__ulonglong");
+#endif
     }
 #else /* 1836 */
     if('l'==type || 'k'==type) {

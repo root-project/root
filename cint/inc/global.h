@@ -711,6 +711,9 @@ extern int G__gcomplevellimit;
 extern int G__catchexception;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1551
+extern int G__eval_localstatic;
+#endif
 
 
 #ifndef __CINT__

@@ -5829,6 +5829,10 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION1357
   G__value *store_p_tempobject=0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1848
+  int store_memberfunc_struct_offset;
+  int store_memberfunc_tagnum;
+#endif
 
 #ifdef G__NEWINHERIT
   store_inherit_offset = G__store_struct_offset;
@@ -6785,6 +6789,10 @@ asm_ifunc_start:   /* loop compilation execution label */
   if(G__TRYNORMAL!=memfunc_flag) G__exec_memberfunc=1;
 #endif
   G__setclassdebugcond(G__tagnum,0);
+#ifndef G__OLDIMPLEMENTATION1848
+  store_memberfunc_tagnum = G__memberfunc_tagnum;
+  store_memberfunc_struct_offset = G__memberfunc_struct_offset;
+#endif
   G__memberfunc_tagnum = G__tagnum;
   G__memberfunc_struct_offset=G__store_struct_offset;
   
@@ -7249,6 +7257,10 @@ asm_ifunc_start:   /* loop compilation execution label */
   if(G__return>G__RETURN_EXIT1) {
     G__exec_memberfunc=store_exec_memberfunc;
     G__security = store_security;
+#ifndef G__OLDIMPLEMENTATION1848
+    G__memberfunc_tagnum = store_memberfunc_tagnum;
+    G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+#endif
     return(1);
   }
 #endif
@@ -7929,7 +7941,10 @@ asm_ifunc_start:   /* loop compilation execution label */
 
   G__exec_memberfunc=store_exec_memberfunc;
   G__security = store_security;
-
+#ifndef G__OLDIMPLEMENTATION1848
+  G__memberfunc_tagnum = store_memberfunc_tagnum;
+  G__memberfunc_struct_offset = store_memberfunc_struct_offset;
+#endif
 
   return(1);
 }

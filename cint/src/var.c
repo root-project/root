@@ -3880,7 +3880,13 @@ struct G__var_array *varglobal,*varlocal;
 			  ,&store_struct_offset,&ig15,0);
 
 #ifndef G__OLDIMPLEMENTATION986
-  if(!var && G__prerun && G__func_now>=0) {
+  if(!var && 
+#ifndef G__OLDIMPLEMENTATION1551
+     (G__prerun || G__eval_localstatic)
+#else
+     G__prerun 
+#endif
+     && G__func_now>=0) {
     char temp[G__ONELINE];
     int itmpx;
 #ifndef G__OLDIMPLEMENTATION1012

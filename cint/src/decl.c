@@ -2095,7 +2095,14 @@ int tagnum,typenum;      /* overrides global variables */
 	  }
 #ifndef G__OLDIMPLEMENTATION1549
 	  if(store_prerun||0==store_static_alloc||G__IsInMacro()) {
+#ifndef G__OLDIMPLEMENTATION1551
+	    int store_eval_localstatic = G__eval_localstatic;
+	    G__eval_localstatic=1;
+#endif
 	    reg=G__getexpr(temp);
+#ifndef G__OLDIMPLEMENTATION1551
+	    G__eval_localstatic=store_eval_localstatic;
+#endif
 	  }
 #else
 	  if(store_prerun||0==G__static_alloc||G__IsInMacro()) {

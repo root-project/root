@@ -36,6 +36,30 @@
 #include <windows.h>
 #endif
 
+
+#define G__OLDIMPLEMENTATION1849
+#ifndef G__OLDIMPLEMENTATION1849
+#define G__RESTORE_LOADFILEENV \
+  G__func_now = store_func_now; \
+  G__macroORtemplateINfile = store_macroORtemplateINfile; \
+  G__var_type = store_var_type; \
+  G__tagnum = store_tagnum; \
+  G__typenum = store_typenum; \
+  G__nobreak=store_nobreak; \
+  G__prerun=store_prerun; \
+  G__p_local=store_p_local; \
+  G__asm_noverflow = store_asm_noverflow; \
+  G__no_exec_compile = store_no_exec_compile; \
+  G__asm_exec = store_asm_exec; \
+  G__ifile = store_file ; \
+  G__eof = 0; \
+  G__step=store_step; \
+  G__globalcomp=G__store_globalcomp; \
+  G__iscpp=store_iscpp; \
+  G__security = store_security
+#endif
+  
+
 /******************************************************************
 * Define G__EDU_VERSION for CINT C++ educational version.
 * If G__EDU_VERSION is defined, CINT will search ./include and
@@ -1078,6 +1102,9 @@ char *filenamein;
 #if defined(R__FBSD)
   char soext[]=SOEXT;
 #endif
+#ifndef G__OLDIMPLEMENTATION1849
+  int store_return;
+#endif
 #ifndef G__OLDIMPLEMENTATION1536
   char hdrprop = G__NONCINTHDR;
 #endif
@@ -1866,6 +1893,10 @@ char *filenamein;
   G__no_exec_compile = 0;
   G__asm_exec = 0;
 #endif
+#ifndef G__OLDIMPLEMENTATION1849
+  store_return=G__return;
+  G__return=G__RETURN_NON;
+#endif
 
 #ifdef G__SHAREDLIB
   len = strlen(filename);
@@ -1915,6 +1946,9 @@ char *filenamein;
 #ifndef G__OLDIMPLEMENTATION1345
 	G__UnlockCriticalSection();
 #endif
+#ifndef G__OLDIMPLEMENTATION1849
+	G__RESTORE_LOADFILEENV;
+#endif
 	return(G__LOADFILE_FAILURE);
       }
 #ifndef G__OLDIMPLEMENTATION970
@@ -1939,6 +1973,9 @@ char *filenamein;
 #endif
 #ifndef G__OLDIMPLEMENTATION1345
       G__UnlockCriticalSection();
+#endif
+#ifndef G__OLDIMPLEMENTATION1849
+      G__RESTORE_LOADFILEENV;
 #endif
       return(G__LOADFILE_FAILURE);
     }
@@ -2020,8 +2057,15 @@ char *filenamein;
 #ifndef G__OLDIMPLEMENTATION1345
     G__UnlockCriticalSection();
 #endif
+#ifndef G__OLDIMPLEMENTATION1849
+    G__return=store_return;
+#endif
     return(G__LOADFILE_FAILURE);
   }
+
+#ifndef G__OLDIMPLEMENTATION1849
+  G__return=store_return;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION487
 #ifdef G__AUTOCOMPILE
