@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $Id:  $
+// @(#)root/star:$Name:  $Id: TGenericTable.h,v 1.1 2001/07/11 06:46:19 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   30/06/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
 
@@ -65,5 +65,5 @@ class TGenericTable : public TTable {
     iterator end()   const  {Long_t i = GetNRows(); return i? iterator(*this, *GetTable(i)):iterator(*this,*(char *)0);}
 	ClassDef(TGenericTable,3) // Generic array of C-structure (a'la STL vector)
 };
-
+ 
 #endif
