@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.8 2004/11/17 08:46:43 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.9 2004/11/17 17:56:53 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -137,7 +137,7 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t &instance)
    Int_t offset = (id<0)?0:info->GetOffsets()[id];
    char* address = (char*)branch->GetAddress();
    if (address) {
-      Int_t type = (id<0)?0:info->GetNewTypes()[id];
+      Int_t type = (id<0)?-1:info->GetNewTypes()[id];
       switch (type) {
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
          case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectP:
@@ -166,6 +166,7 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t &instance)
 
             instance = sub_instance;
             break;
+         case TStreamerInfo::kBase:
          case TStreamerInfo::kObject:
          case TStreamerInfo::kTString:
          case TStreamerInfo::kTNamed:
@@ -408,7 +409,8 @@ Bool_t TFormLeafInfo::Update()
                Int_t type = element->GetNewType();
                if (type<60) {
                   fOffset += offset;
-               } else if (type == TStreamerInfo::kAny ||
+               } else if (type == TStreamerInfo::kBase ||
+                          type == TStreamerInfo::kAny ||
                           type == TStreamerInfo::kObject ||
                           type == TStreamerInfo::kTString  ||
                           type == TStreamerInfo::kTNamed  ||
@@ -586,6 +588,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
       case TStreamerInfo::kTNamed:
       case TStreamerInfo::kTObject:
       case TStreamerInfo::kAny:
+      case TStreamerInfo::kBase:
       case TStreamerInfo::kSTL:
         {TObject *obj = (TObject*)(thisobj+fOffset);   return obj; }
 
@@ -1331,6 +1334,7 @@ Double_t  TFormLeafInfoPointer::ReadValue(char *where, Int_t instance)
       case TStreamerInfo::kTNamed:
       case TStreamerInfo::kTObject:
       case TStreamerInfo::kAny:
+      case TStreamerInfo::kBase:
       case TStreamerInfo::kSTL:
          {
             TObject *obj = (TObject*)(whereoffset);
