@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.148 2003/12/16 18:55:49 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.149 2003/12/16 21:58:58 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2302,9 +2302,6 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
                manager->Add((TTreeFormula*)fFormulaList->At(i));
             }
             manager->Sync();
-            if (manager->GetMultiplicity() > 0) {
-               hasArray = kTRUE;
-            }
          }
       }
       for(i=0;i<=fFormulaList->LastIndex();i++) {
@@ -2365,25 +2362,31 @@ Int_t TTreePlayer::Scan(const char *varexp, const char *selection,
       if (tnumber != fTree->GetTreeNumber()) {
          tnumber = fTree->GetTreeNumber();
          if (manager) manager->UpdateFormulaLeaves();
+         else {
+            for(i=0;i<=fFormulaList->LastIndex();i++) {
+               ((TTreeFormula*)fFormulaList->At(i))->UpdateFormulaLeaves();
+            }
+         }
       }
 
       int ndata = 1;
-      if (forceDim) { // manager && manager->GetMultiplicity()) {
+      if (forceDim) { 
 
-         if (manager) ndata = manager->GetNdata(kTRUE);
+         if (manager) {
 
-         // let's print the max number of column
+            ndata = manager->GetNdata(kTRUE);
 
-         for (i=0;i<ncols;i++) {
-            if (var[i]!=select) {
-               
+         } else {
+
+            // let's print the max number of column
+            for (i=0;i<ncols;i++) {
                if (ndata < var[i]->GetNdata() ) {
-                   ndata = var[i]->GetNdata();
+                  ndata = var[i]->GetNdata();
                }
             }
+            if (select && select->GetNdata()==0) ndata = 0;
          }
          
-         if (ndata<=0) ndata = 1;
       }
 
       if (lenmax && ndata>(int)lenmax) ndata = lenmax;
