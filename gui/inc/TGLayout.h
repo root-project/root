@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.7 2003/12/03 00:25:19 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.h,v 1.8 2003/12/05 01:17:03 brun Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -26,7 +26,9 @@
 #ifndef ROOT_TGDimension
 #include "TGDimension.h"
 #endif
-
+#ifndef ROOT_TRefCnt
+#include "TRefCnt.h"
+#endif
 
 //---- layout hints
 
@@ -48,19 +50,7 @@ class TGFrame;
 class TGCompositeFrame;
 class TGLayoutHints;
 class TList;
-
-
-// Temporarily public as we need to share this class definition
-// with the frame manager class
-
-class TGFrameElement : public TObject {
-public:
-   TGFrame        *fFrame;
-   Int_t           fState;
-   TGLayoutHints  *fLayout;
-   ClassDef(TGFrameElement, 0);
-};
-
+class TGFrameElement;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -70,7 +60,14 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-class TGLayoutHints : public TObject {
+class TGLayoutHints : public TObject, public TRefCnt {
+
+friend class TGFrameElement;
+friend class TGCompositeFrame;
+
+private:
+   TGFrameElement *fFE;       // back pointer to the last frame element
+   TGFrameElement *fPrev;     // previous element sharing this layout_hints
 
 protected:
    ULong_t  fLayoutHints;     // layout hints (combination of ELayoutHints)
@@ -79,23 +76,57 @@ protected:
    Int_t    fPadleft;         // amount of left padding
    Int_t    fPadright;        // amount of right padding
 
+   void UpdateFrameElements(TGLayoutHints *l);
+
 public:
    TGLayoutHints(ULong_t hints = kLHintsNormal,
                  Int_t padleft = 0, Int_t padright = 0,
                  Int_t padtop = 0, Int_t padbottom = 0)
        { fPadleft = padleft; fPadright = padright;
          fPadtop  = padtop;  fPadbottom = padbottom;
-         fLayoutHints = hints; }
-   virtual ~TGLayoutHints() { }
+         fLayoutHints = hints; SetRefCount(0); fFE = 0; fPrev = 0; }
+
+   TGLayoutHints(const TGLayoutHints &lh);
+
+   virtual ~TGLayoutHints();
 
    ULong_t GetLayoutHints() const { return fLayoutHints; }
    Int_t   GetPadTop() const { return fPadtop; }
    Int_t   GetPadBottom() const { return fPadbottom; }
    Int_t   GetPadLeft() const { return fPadleft; }
    Int_t   GetPadRight() const { return fPadright; }
+
+   virtual void SetLayoutHints(ULong_t lh) { fLayoutHints = lh; }
+   virtual void SetPadTop(Int_t v)  {  fPadtop = v; }
+   virtual void SetPadBottom(Int_t v)  {  fPadbottom = v; }
+   virtual void SetPadLeft(Int_t v)  {  fPadleft = v; }
+   virtual void SetPadRight(Int_t v)  {  fPadright = v; }
+
+   void Print(Option_t* option = "") const;
+   void ls(Option_t* option = "") const { Print(option); }
+
    virtual void SavePrimitive(ofstream &out, Option_t *);
 
    ClassDef(TGLayoutHints,0)  // Class describing GUI layout hints
+};
+
+// Temporarily public as we need to share this class definition
+// with the frame manager class
+
+class TGFrameElement : public TObject {
+public:
+   TGFrame        *fFrame;    // frame used in layout
+   Int_t           fState;    // EFrameState defined in TGFrame.h
+   TGLayoutHints  *fLayout;   // layout hints used in layout
+
+   TGFrameElement() { fFrame = 0; fState = 0; fLayout = 0; }
+   TGFrameElement(TGFrame *f, TGLayoutHints *l);
+   ~TGFrameElement();
+
+   void Print(Option_t* option = "") const;
+   void ls(Option_t* option = "") const { Print(option); }
+
+   ClassDef(TGFrameElement, 0);
 };
 
 

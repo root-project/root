@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.11 2003/12/19 16:36:16 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLayout.cxx,v 1.12 2004/01/23 15:38:50 rdm Exp $
 // Author: Fons Rademakers   02/01/98
 
 /*************************************************************************
@@ -68,6 +68,139 @@ ClassImp(TGTileLayout)
 ClassImp(TGListLayout)
 ClassImp(TGListDetailsLayout)
 
+
+//______________________________________________________________________________
+TGFrameElement::TGFrameElement(TGFrame *f, TGLayoutHints *l)
+{
+   // ctor
+
+   fFrame  = f;
+   if (f) f->SetFrameElement(this);
+
+   if (l) {
+      l->AddReference();
+      fLayout = l;
+      l->fPrev = l->fFE;
+      l->fFE = this;
+   }
+   fState = 1;
+}
+
+//______________________________________________________________________________
+TGFrameElement::~TGFrameElement()
+{
+   // destructor. Decrease ref.count of fLayout
+
+   if (fFrame) fFrame->SetFrameElement(0);
+   if (fLayout) fLayout->fFE = 0;
+}
+
+//______________________________________________________________________________
+void TGFrameElement::Print(Option_t *option) const
+{
+   // print this
+
+   TObject::Print(option);
+
+   cout << "\t";
+   if (fFrame) {
+      cout << fFrame->ClassName() << "::" << fFrame->GetName();
+   }
+   if (fLayout) {
+      fLayout->Print(option);
+   }
+   cout << endl;
+}
+
+//______________________________________________________________________________
+TGLayoutHints::TGLayoutHints(const TGLayoutHints &lh) : TObject(lh), TRefCnt(lh)
+{ 
+   // ctor
+
+   fPadleft = lh.fPadleft; fPadright = lh.fPadright;
+   fPadtop  = lh.fPadtop;  fPadbottom = lh.fPadbottom;
+   fLayoutHints = lh.fLayoutHints;
+   SetRefCount(0);
+   fFE = lh.fFE; fPrev = lh.fPrev; 
+}
+
+//______________________________________________________________________________
+TGLayoutHints::~TGLayoutHints()
+{
+   // dtor
+
+   if (fFE) RemoveReference();
+
+   if (References() <= 0) {
+      UpdateFrameElements(0);
+   } else {
+      TGLayoutHints *l = new TGLayoutHints();
+      l->fPadleft = fPadleft; l->fPadright = fPadright;
+      l->fPadtop  = fPadtop;  l->fPadbottom = fPadbottom;
+      l->fLayoutHints = fLayoutHints; l->fRefs = fRefs;
+      l->fFE = fFE;
+      UpdateFrameElements(l);
+   }
+}
+
+//______________________________________________________________________________
+void TGLayoutHints::UpdateFrameElements(TGLayoutHints *l)
+{
+   //
+
+   if (fFE) fFE->fLayout = l;
+   else return;
+
+   TGFrameElement *p = fPrev;
+
+   while (p) {
+      p->fLayout = l;
+      if (p->fLayout) p = p->fLayout->fPrev;
+      else return;
+   }
+}
+
+//______________________________________________________________________________
+void TGLayoutHints::Print(Option_t *) const
+{
+   // printing
+
+   if (fLayoutHints & kLHintsLeft) {
+      cout << " kLHintsLeft " << "|";
+   }
+   if (fLayoutHints & kLHintsCenterX) {
+      cout << " kLHintsCenterX " << "|";
+   }
+   if (fLayoutHints & kLHintsLeft) {
+      cout << " kLHintsLeft " << "|";
+   }
+   if (fLayoutHints & kLHintsRight) {
+      cout << " kLHintsRight " << "|";
+   }
+   if (fLayoutHints & kLHintsTop) {
+      cout << " kLHintsTop " << "|";
+   }
+   if (fLayoutHints & kLHintsCenterY) {
+      cout << " kLHintsCenterY " << "|";
+   }
+   if (fLayoutHints & kLHintsBottom) {
+      cout << " kLHintsBottom " << "|";
+   }
+   if (fLayoutHints & kLHintsExpandX) {
+      cout << " kLHintsExpandX " << "|";
+   }
+   if (fLayoutHints & kLHintsExpandY) {
+      cout << " kLHintsExpandY " << "|";
+   }
+   if (fLayoutHints & kLHintsNoHints) {
+      cout << "kLHintsNoHints " << "|";
+   }
+   cout << " fPadtop=" << fPadtop;
+   cout << " fPadbottom=" << fPadbottom;
+   cout << " fPadleft=" << fPadleft;
+   cout << " fPadright=" << fPadright;
+   cout << endl;
+}
 
 //______________________________________________________________________________
 TGVerticalLayout::TGVerticalLayout(TGCompositeFrame *main)
