@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.82 2001/07/01 13:55:54 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.83 2001/07/03 16:46:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -986,9 +986,8 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    //with the custom Streamer. The penalty is that one cannot process
    //this Tree without the class library containing the class.
    Bool_t HasCustomStreamer = kFALSE;
-   if (cl == TClonesArray::Class()) HasCustomStreamer = kTRUE;
-   //add here additional cases when RootFlag will be functional   
-   //if (splitlevel <= 0 && (cl->GetClassInfo()->RootFlag() == 0)) {
+   if (cl == TClonesArray::Class())          HasCustomStreamer = kTRUE;
+   if (cl->GetClassInfo()->RootFlag() == 0)  HasCustomStreamer = kTRUE;
    
    if (splitlevel < 0 || (splitlevel == 0 && HasCustomStreamer)) {
       TBranchObject *branch = new TBranchObject(name,classname,add,bufsize,0);
