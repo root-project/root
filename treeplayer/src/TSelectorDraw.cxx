@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.17 2003/11/20 15:09:21 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.18 2003/11/22 22:02:02 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -1048,6 +1048,7 @@ void TSelectorDraw::TakeAction()
    //__________________________2D scatter plot_______________________
    else if (fAction == 12) {
       TGraph *pm = new TGraph(fNfill);
+	  pm->SetEditable(kFALSE);
       pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
@@ -1206,6 +1207,7 @@ void TSelectorDraw::TakeEstimate()
          gPad->Update();
       }
       TGraph *pm = new TGraph(fNfill);
+	  pm->SetEditable(kFALSE);
       pm->SetBit(kCanDelete);
       pm->SetMarkerStyle(fTree->GetMarkerStyle());
       pm->SetMarkerColor(fTree->GetMarkerColor());
