@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.27 2001/12/05 18:01:09 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.28 2001/12/06 07:06:37 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -408,9 +408,13 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
   delete pIter ;
   delete wTable ;
 
-  RooAddPdf *plotVar = new RooAddPdf("plotVar","weighted sum of RS components",pdfCompList,wgtCompList) ;
+  TString plotVarName(GetName()) ;
+  RooAddPdf *plotVar = new RooAddPdf(plotVarName,"weighted sum of RS components",pdfCompList,wgtCompList) ;
 
   // Plot temporary function
+  
+  cout << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
+       << " projects index variable " << _indexCat.arg().GetName() << " with data" << endl ;
   RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor,stype,projData,projSet) ;
 
   // Cleanup
@@ -426,7 +430,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t
 RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, 
 					const RooDataSet *prototype, Bool_t verbose) const 
 {
-  if (vars.find(_indexCat.arg().GetName())) {
+  const char* idxCatName = _indexCat.arg().GetName() ;
+  const RooArgSet* protoVars = prototype ? prototype->get() : 0 ;
+
+  if (vars.find(idxCatName) || (protoVars && protoVars->find(idxCatName))) {
     // Generating index category: return special sim-context
     return new RooSimGenContext(*this,vars,prototype,verbose) ;
   } else if (_indexCat.arg().isDerived()) {

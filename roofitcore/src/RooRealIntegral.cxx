@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.51 2001/11/27 23:19:05 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.52 2001/11/28 19:49:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -274,7 +274,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegralWN(anIntOKDepList,_anaList,_funcNormSet) ;    
 
   // WVE kludge: synchronize dset for use in analyticalIntegral
-  function.getVal(funcNormSet) ;
+  function.getVal(_funcNormSet) ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * F) Make list of numerical integration variables consisting of:            *  

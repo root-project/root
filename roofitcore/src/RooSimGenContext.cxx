@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimGenContext.cc,v 1.6 2001/11/14 18:42:37 verkerke Exp $
+ *    File: $Id: RooSimGenContext.cc,v 1.7 2001/12/01 08:12:48 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -37,8 +37,14 @@ RooSimGenContext::RooSimGenContext(const RooSimultaneous &model, const RooArgSet
   // Determine if we are requested to generate the index category
   RooAbsCategory *idxCat = (RooAbsCategory*) model._indexCat.absArg() ;
   RooArgSet pdfVars(vars) ;
+
+  RooArgSet allPdfVars(pdfVars) ;
+  if (prototype) allPdfVars.add(*prototype->get(),kTRUE) ;
+
   if (!idxCat->isDerived()) {
-    Bool_t doGenIdx = pdfVars.remove(*idxCat,kTRUE,kTRUE) ;
+    pdfVars.remove(*idxCat,kTRUE,kTRUE) ;
+    Bool_t doGenIdx = allPdfVars.find(idxCat->GetName())?kTRUE:kFALSE ;
+
     if (!doGenIdx) {
       cout << "RooSimGenContext::ctor(" << GetName() << ") ERROR: This context must"
 	   << " generate the index category" << endl ;
@@ -130,7 +136,11 @@ RooSimGenContext::~RooSimGenContext()
 void RooSimGenContext::initGenerator(const RooArgSet &theEvent)
 {
   // Attach the index category clone to the event
-  _idxCat->recursiveRedirectServers(theEvent,kTRUE) ;
+  if (_idxCat->isDerived()) {
+    _idxCat->recursiveRedirectServers(theEvent,kTRUE) ;
+  } else {
+    _idxCat = (RooAbsCategoryLValue*) theEvent.find(_idxCat->GetName()) ;
+  }
 
   // Forward initGenerator call to all components
   RooAbsGenContext* gc ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.71 2001/12/19 20:06:58 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.72 2002/01/10 00:09:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -292,7 +292,39 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
 {
   TString name(GetName()) ;
   TString title(GetTitle()) ;
-  name.Append("Int") ;
+  if (iset.getSize()>0) {
+    name.Append("_Int[") ;
+    TIterator* iter = iset.createIterator() ;
+    RooAbsArg* arg ;
+    Bool_t first(kTRUE) ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      if (first) {
+	first=kFALSE ;
+      } else {
+	name.Append(",") ;
+      }
+      name.Append(arg->GetName()) ;
+    }
+    delete iter ;
+    name.Append("]") ;
+  }
+  if (nset && nset->getSize()>0) {
+    name.Append("_Norm[") ;
+    Bool_t first(kTRUE); 
+    TIterator* iter  = nset->createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      if (first) {
+	first=kFALSE ;
+      } else {
+	name.Append(",") ;
+      }
+      name.Append(arg->GetName()) ;
+    }
+    name.Append("]") ;
+    delete iter ;
+  }
+
   title.Prepend("Integral of ") ;
   return new RooRealIntegral(name,title,*this,iset,nset) ;
 }
@@ -616,7 +648,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
     cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
 	 << " projects variables " ; projectedVars.Print("1") ;
   }  
-  if (projDataNeededVars) {
+  if (projDataNeededVars && projDataNeededVars->getSize()>0) {
     cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
 	 << " projects with data variables " ; projDataNeededVars->Print("1") ;
   }
@@ -640,7 +672,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
 
 
   // Apply data projection, if requested
-  if (projData) {
+  if (projData && projDataNeededVars && projDataNeededVars->getSize()>0) {
 
     // Disable dirty state propagation in projection
     RooArgSet branchList("branchList") ;
