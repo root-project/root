@@ -4,7 +4,7 @@
 CLEAN_TARGETS += filltree.output arrayDrawTest.output myTree.root $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += arrayDrawTest arrayEventListTest
+TEST_TARGETS += arrayDrawTest arrayEventListTest boolOptTest
 
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
@@ -33,6 +33,12 @@ arrayEventListTest.log: eventlist.C
 
 arrayEventListTest: arrayEventListTest.log
 	$(CMDECHO) diff -b arrayEventListTest.ref arrayEventListTest.log
+
+boolOptTest.log: boolOpt.C
+	$(CMDECHO) root.exe -b -l -q boolOpt.C > boolOptTest.log 2>&1 
+
+boolOptTest: boolOptTest.log
+	$(CMDECHO) diff -b boolOptTest.ref boolOptTest.log
 
 testWithFailure:
 ifeq ($(FAIL),)
