@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.173 2004/05/12 12:36:55 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.174 2004/05/13 10:09:10 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3358,6 +3358,13 @@ Int_t THistPainter::PaintInit()
    Hparam.factor = factor;
    ymax = factor*ymax;
    ymin = factor*ymin;
+   //just in case the norm factor is negative
+   // this may happen with a positive norm factor and a negative integral !
+   if (ymax < ymin) { 
+      Double_t temp = ymax;
+      ymax = ymin;
+      ymin = temp;
+   }
 
 //    ----
 //         For log scales, histogram coordinates are LOG10(ymin) and
