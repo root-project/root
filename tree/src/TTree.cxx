@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.193 2004/06/09 06:10:21 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.194 2004/06/14 11:17:10 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1507,8 +1507,8 @@ TFile *TTree::ChangeFile(TFile *file)
   // The new file name has a suffix "_N" where N is equal to fFileNumber+1.
   // By default a Root session starts with fFileNumber=0. One can set
   // fFileNumber to a different value via TTree::SetFileNumber.
-  // In case a file named "_N" already exists, the function increments
-  // fFileNumber until it finds a non-existing file.
+  // In case a file named "_N" already exists, the function will try
+  // a file named "__N", then "___N", etc.
   //
   // fgMaxTreeSize can be set via the static function TTree::SetMaxTreeSize.
   // The default value of fgMaxTreeSize is 1.9 Gigabytes.
@@ -1537,34 +1537,40 @@ TFile *TTree::ChangeFile(TFile *file)
    Write();
    Reset();
    char *fname = new char[2000];
-
+   fFileNumber++;
+   char uscore[10];
+   for (Int_t i=0;i<10;i++) uscore[i] = 0;
+   Int_t nus = 0;
+   
    //try to find a suitable file name that does not already exist
-   while(1) {
-      fFileNumber++;
+   while(nus < 10) {
+      uscore[nus] = '_';
       fname[0] = 0;
       strcpy(fname,file->GetName());
       if (fFileNumber > 1) {
          char *cunder = strrchr(fname,'_');
          if (cunder) {
-            sprintf(cunder,"_%d",fFileNumber);
+            sprintf(cunder,"%s%d",uscore,fFileNumber);
             strcat(fname,strrchr(file->GetName(),'.'));
          } else {
             char fcount[10];
-            sprintf(fcount,"_%d",fFileNumber);
+            sprintf(fcount,"%s%d",uscore,fFileNumber);
             strcat(fname,fcount);
          }
       } else {
          char *cdot = strrchr(fname,'.');
          if (cdot) {
-            sprintf(cdot,"_%d",fFileNumber);
+            sprintf(cdot,"%s%d",uscore,fFileNumber);
             strcat(fname,strrchr(file->GetName(),'.'));
          } else {
             char fcount[10];
-            sprintf(fcount,"_%d",fFileNumber);
+            sprintf(fcount,"%s%d",uscore,fFileNumber);
             strcat(fname,fcount);
          }
       }
       if (gSystem->AccessPathName(fname)) break;
+      nus++;
+      Warning("ChangeFile","file %s already exist, trying with %d underscores",fname,nus+1);
    }
    
    Int_t compress = file->GetCompressionLevel();
