@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.165 2004/03/18 21:35:36 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.166 2004/03/19 14:45:53 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2120,7 +2120,7 @@ void THistPainter::PaintContour(Option_t *option)
    for (i=0;i<kMAXCONTOUR;i++) itarr[i] = 0;
 
    ncontour  = fH->GetContour();
-   if (!ncontour) {
+   if (!ncontour || fH->TestBit(TH1::kUserContour) == 0) {
       ncontour = gStyle->GetNumberContours();
       fH->SetContour(ncontour);
    }
