@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.41 2004/01/20 10:41:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.42 2004/01/21 12:26:05 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1381,6 +1381,7 @@ TGGroupFrame::TGGroupFrame(const TGWindow *p, TGString *title,
    fText       = title;
    fFontStruct = font;
    fNormGC     = norm;
+   fTitlePos   = kLeft;
 
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
