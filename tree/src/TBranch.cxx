@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.2 2000/05/30 06:57:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.3 2000/06/14 09:09:26 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -365,7 +365,7 @@ Int_t TBranch::Fill()
      objectStart = fEntryBuffer->Length();
      fEntryBuffer->SetBufferOffset(startpos);
 
-     basket->Update(lold, objectStart);
+     basket->Update(lold, objectStart - fEntryBuffer->GetBufferDisplacement());
    } else  basket->Update(lold);
    fEntries++;
    fEntryNumber++;
@@ -542,7 +542,7 @@ Int_t TBranch::GetEntry(Int_t entry, Int_t getall)
    if (entryOffset) bufbegin = entryOffset[entry-first];
    else             bufbegin = basket->GetKeylen() + (entry-first)*basket->GetNevBufSize();
    buf->SetBufferOffset(bufbegin);
-   char *displacement = basket->GetDisplacement();
+   Int_t *displacement = basket->GetDisplacement();
    if (displacement) buf->SetBufferDisplacement(displacement[entry-first]);
    else buf->SetBufferDisplacement();
 
@@ -593,7 +593,7 @@ Int_t TBranch::GetEntryExport(Int_t entry, Int_t getall, TClonesArray *list, Int
    if (entryOffset) bufbegin = entryOffset[entry-first];
    else             bufbegin = basket->GetKeylen() + (entry-first)*basket->GetNevBufSize();
    buf->SetBufferOffset(bufbegin);
-   char *displacement = basket->GetDisplacement();
+   Int_t *displacement = basket->GetDisplacement();
    if (displacement) buf->SetBufferDisplacement(displacement[entry-first]);
    else buf->SetBufferDisplacement();
 

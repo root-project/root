@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.2 2000/05/24 10:31:47 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -113,8 +113,11 @@ public:
    TObject *ReadObject(const TClass *cl);
    void     WriteObject(const TObject *obj);
 
-   void     SetBufferDisplacement(Int_t skipped = -1)
-            { fDisplacement = (skipped==-1) ? 0 : (Int_t)(Length() - skipped); }
+   void     SetBufferDisplacement(Int_t skipped)
+            { fDisplacement =  (Int_t)(Length() - skipped); }
+   void     SetBufferDisplacement()
+            { fDisplacement = 0; }
+   Int_t    GetBufferDisplacement() { return fDisplacement; }
 
    Int_t    ReadArray(Char_t   *&c);
    Int_t    ReadArray(UChar_t  *&c);
