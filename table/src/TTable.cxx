@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.5 2003/02/11 12:17:19 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.6 2003/10/14 07:39:24 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -94,6 +94,18 @@
 //  -----------------------                                               //
 //       #include "St_dst_track_Table.h"                                  //
 //       TableClassImpl(St_dst_track, dst_track_st)                       //
+//  -----------------------                                               //
+//  LinkDef.h                                                             //
+//  -----------------------                                               //
+//  To provide ROOT I/O for this class TWO CINT dictonary entries         //
+//  should be defined with your custom LinkDef.h file                     //
+//     1. First entry (as usually) for the class derived from TTable      //
+//        for example:                                                    //                           
+// #pragma C++ class St_dst_track                                         //
+//     2. Second entry for the C-structure wrapped into the class.        //
+//         Since C-structuire is not derived from TObject it must be      //
+//         properly defined as "foreign" ROOT class                       //
+//    #pragma C++ class dst_track_st+;                                    //
 //  -----------------------                                               //
 // meta-variables i$ and n$ introduced                                    //
 // where "i$" stands for the current row index                            //
@@ -1086,7 +1098,8 @@ Int_t TTable::AddAt(const void *row)
   // row == 0 see method TTable::AddAt(const void *row, Int_t i)
 
   Int_t gap = GetTableSize() - GetNRows();
-  if (gap <= 1) ReAllocate(GetTableSize() + TMath::Max(1,Int_t(0.3*GetTableSize())));
+  // do we need to add an extra space?
+  if (gap < 1) ReAllocate(GetTableSize() + TMath::Max(1,Int_t(0.3*GetTableSize())));
   Int_t indx = GetNRows();
   AddAt(row,indx);  
   return indx;
@@ -1129,6 +1142,23 @@ const Char_t *TTable::GetColumnComment(Int_t columnIndex) const {
    return nxc ? nxc->GetTitle() : 0;
 }
 //______________________________________________________________________________
+Long_t TTable::AppendRows(const void *row, UInt_t nRows)
+{ 
+   // Append nRows row of the array "row" to the table
+   // return
+   //    - the new table size (# of table rows) 
+   //    - 0 if the object doesn't own the internal array and can not expand it
+   Long_t size = 0;
+   if (!TestBit(kIsNotOwn) && row && nRows ) {
+     Int_t indx = GetNRows();
+     ReAllocate(nRows);
+     // Copy (insert) the extra staff in
+     ::memmove(fTable+indx*fSize,row,fSize*nRows);
+     size = GetSize();
+   }
+   return TestBit(kIsNotOwn) ? 0 : GetSize();
+}
+//______________________________________________________________________________
 Long_t TTable::InsertRows(const void *row, Long_t indx, UInt_t nRows)
 {
   // void InsertRows(cons void *row, Long_t indx, UInt_t nRows)
@@ -1137,7 +1167,7 @@ Long_t TTable::InsertRows(const void *row, Long_t indx, UInt_t nRows)
   // The rest table stuff is shifted down
   //
   //  cons void    - a pointer to the array of rows to be inserted
-  //  Long_t indx  - The position these rows will be instered to
+  //  Long_t indx =  The position these rows will be inserted to
   //  Int_t nRows  - the total number of rows to be inserted
   //                 = 1 "by default
   //  return:
@@ -1152,6 +1182,7 @@ Long_t TTable::InsertRows(const void *row, Long_t indx, UInt_t nRows)
      ::memmove(fTable+indx*fSize,row,fSize*nRows);
   }
   return nShifted;
+
 }
 //______________________________________________________________________________
 void *TTable::ReAllocate()
@@ -2331,6 +2362,10 @@ void TTable::Update(TDataSet *set, UInt_t opt)
     {
       TTable *table =  (TTable *)set;
       Adopt(table->GetSize(),table->GetArray());
+      // Adopt can not distniguish the "allocated" and "used" 
+      // rows,
+      // correct the corrupted number of the "used" rows 
+      SetUsedRows(table->GetNRows());
       // mark that object lost the STAF table and can not delete it anymore
       table->SetBit(kIsNotOwn);
       // mark we took over of this STAF table

@@ -1,4 +1,4 @@
-/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $ */
+/* @(#)root/star:$Name:  $:$Id: Ttypes.h,v 1.6 2003/01/27 20:41:36 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Stypes                                                               //
-// $Id: Ttypes.h,v 1.3 2003/01/03 20:17:12 fisyak Exp $
+// $Id: Ttypes.h,v 1.6 2003/01/27 20:41:36 brun Exp $
 // Basic types used by STAF - ROOT interface.                           //
 //                                                                      //
 // This header file contains the set of the macro definitions           //
@@ -90,6 +90,24 @@ virtual void SetDescriptorPointer(TTableDescriptor *list)  { fgColDescriptors = 
 //  public:
 //    _NAME2_(className,C)(className *tableClass) : TChair(tableClass) {;}
 
+#define ClassDefineChair(classChairName,classTableName,structName)    \
+  public:                                               \
+    typedef structName* iterator;                       \
+    structName *GetTable(Int_t i) const  {              \
+              if (fLastIndx != UInt_t(i)) {             \
+                ((classChairName *)this)->fLastIndx = i;        \
+                ((classChairName *)this)->fLastRow =            \
+                  ((classTableName *)GetThisTable())->GetTable(i);    \
+           }; return (structName *)fLastRow; };          \
+    structName &operator[](Int_t i){ assert(i>=0 && i < GetNRows()); return *GetTable(i); }    \
+    const structName &operator[](Int_t i) const { assert(i>=0 && i < GetNRows()); return *((const structName *)(GetTable(i))); }\
+    structName *begin() const  {                      return GetNRows()? GetTable(0):0;}\
+    structName *end()   const  {Int_t i = GetNRows(); return          i? GetTable(i):0;}
+
+//
+//    ClassDefineChair(_NAME2_(className,C),className,structName)
+//    We have to define this macro in full because RootCint doesn't provide the deep CPP evaluation
+//    V.Fine 17/12/2003 
 #define ClassDefChair(className,structName)             \
   public:                                               \
     typedef structName* iterator;                       \

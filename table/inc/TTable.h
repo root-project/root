@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.6 2004/02/09 21:12:10 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.7 2004/02/09 21:38:28 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
  
 /*************************************************************************
@@ -109,6 +109,7 @@ public:
    virtual     Int_t      AddAt(const void *c);
    virtual     void       AddAt(const void *c, Int_t i);
    virtual     void       AddAt(TDataSet *dataset,Int_t idx=0);
+   virtual     Long_t     AppendRows(const void *row, UInt_t nRows);
    virtual     void       AsString(void *buf, EColumnType type, Int_t width, ostream &out) const;
               const void *At(Int_t i) const;
    virtual     void       Browse(TBrowser *b);
@@ -200,6 +201,7 @@ public:
            fRowSize(table.GetRowSize()), 
            fThisTable(&table), 
            fCurrentRow(*(vector<Long_t>::iterator *)(void *)&rowPtr) {;}
+//           fCurrentRow(* const_cast<vector<Long_t>::iterator *>(&rowPtr) ) {;}
         iterator(const iterator& iter) : fRowSize (iter.fRowSize), fThisTable(iter.fThisTable),fCurrentRow(iter.fCurrentRow){}
         void operator=(const iterator& iter)   { fRowSize = iter.fRowSize; fThisTable = iter.fThisTable; fCurrentRow=iter.fCurrentRow; }
         void operator++()    { ++fCurrentRow;   }
