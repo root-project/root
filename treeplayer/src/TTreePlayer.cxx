@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.184 2005/03/11 21:25:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.185 2005/03/13 07:38:15 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2098,14 +2098,27 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 }
 
 //______________________________________________________________________________
-Int_t TTreePlayer::MakeProxy(const char *classname,
+Int_t TTreePlayer::MakeProxy(const char *proxyClassname,
                              const char *macrofilename, const char *cutfilename,
                              const char *option, Int_t maxUnrolling)
 {
-    // Generate a skeleton analysis class for this Tree using TBranchProxy.
+   // Generate a skeleton analysis class for this Tree using TBranchProxy.
    // TBranchProxy is the base of a class hierarchy implementing an 
    // indirect access to the content of the branches of a TTree. 
    //
+   // "proxyClassname" is expected to be of the form:
+   //    [path/]fileprefix
+   // The skeleton will then be generated in the file:
+   //    fileprefix.h
+   // located in the current directory or in 'path/' if it is specified.
+   // The class generated will be named 'fileprefix'
+   //
+   // "macrofilename" and optionally "cutfilename" are expected to point
+   // to source file which will be included in by the generated skeletong.
+   // Method of the same name as the file(minus the extension and path)
+   // will be called by the generated skeleton's Process method as follow:
+   //    [if (cutfilename())] htemp->Fill(macrofilename());
+   // 
    // "option" can be used select some of the optional features during
    // the code generation.  The possible options are:
    //    nohist : indicates that the generated ProcessFill should not
@@ -2197,7 +2210,7 @@ Int_t TTreePlayer::MakeProxy(const char *classname,
       return 0;
    }
 
-   TTreeProxyGenerator gp(fTree,macrofilename,cutfilename,classname,option,maxUnrolling);
+   TTreeProxyGenerator gp(fTree,macrofilename,cutfilename,proxyClassname,option,maxUnrolling);
 
    return 0;
 }

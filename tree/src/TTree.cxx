@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.239 2005/03/11 21:25:11 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.240 2005/03/13 07:38:15 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3413,7 +3413,7 @@ Int_t TTree::MakeSelector(const char *selector)
 }
 
 //______________________________________________________________________________
-Int_t TTree::MakeProxy(const char *classname, const char *macrofilename,
+Int_t TTree::MakeProxy(const char *proxyClassname, const char *macrofilename,
                        const char *cutfilename, const char *option,
                        Int_t maxUnrolling)
 {
@@ -3421,6 +3421,19 @@ Int_t TTree::MakeProxy(const char *classname, const char *macrofilename,
    // TBranchProxy is the base of a class hierarchy implementing an 
    // indirect access to the content of the branches of a TTree. 
    //
+   // "proxyClassname" is expected to be of the form:
+   //    [path/]fileprefix
+   // The skeleton will then be generated in the file:
+   //    fileprefix.h
+   // located in the current directory or in 'path/' if it is specified.
+   // The class generated will be named 'fileprefix'
+   //
+   // "macrofilename" and optionally "cutfilename" are expected to point
+   // to source file which will be included in by the generated skeletong.
+   // Method of the same name as the file(minus the extension and path)
+   // will be called by the generated skeleton's Process method as follow:
+   //    [if (cutfilename())] htemp->Fill(macrofilename());
+   // 
    // "option" can be used select some of the optional features during
    // the code generation.  The possible options are:
    //    nohist : indicates that the generated ProcessFill should not
@@ -3508,7 +3521,7 @@ Int_t TTree::MakeProxy(const char *classname, const char *macrofilename,
 
    GetPlayer();
    if (!fPlayer) return 0;
-   return fPlayer->MakeProxy(classname,macrofilename,cutfilename,option,maxUnrolling);
+   return fPlayer->MakeProxy(proxyClassname,macrofilename,cutfilename,option,maxUnrolling);
 }
 
 //______________________________________________________________________________
