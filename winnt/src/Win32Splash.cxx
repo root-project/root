@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.10 2004/01/15 10:59:48 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.11 2004/01/15 18:13:35 brun Exp $
 // Author: Bertrand Bellenot   30/07/02
 
 /*************************************************************************
@@ -82,7 +82,7 @@ static int          gCreditsBmpHeight;
 
 static bool         gStayUp        = true;
 static bool         gAbout         = false;
-static RECT         gCreditsRect   = { 15, 155, 300, 285 }; // clip rect in logo
+static RECT         gCreditsRect   = { 15, 155, 305, 285 }; // clip rect in logo
 static unsigned int gCreditsWidth  = gCreditsRect.right - gCreditsRect.left; // credits pixmap size
 static unsigned int gCreditsHeight = gCreditsRect.bottom - gCreditsRect.top; // credits rect height
 
