@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.199 2004/07/09 10:41:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.200 2004/07/09 16:21:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3131,7 +3131,8 @@ Int_t TTree::MakeSelector(const char *selector)
 
 //______________________________________________________________________________
 Int_t TTree::MakeProxy(const char *classname, const char *macrofilename, 
-                       const char *cutfilename, Int_t maxUnrolling)
+                       const char *cutfilename, const char *option,
+                       Int_t maxUnrolling)
 {
    // Generate a skeleton analysis class for this Tree using TBranchProxy
    //
@@ -3144,6 +3145,11 @@ Int_t TTree::MakeProxy(const char *classname, const char *macrofilename,
    //
    // Only the branch used will be read.
    //
+   // "option" is passed to ROOT::TTreeProxyGenerator to stir the 
+   // optional features in the generated code.  The possible options are:
+   //    nohist : indicates that the generated ProcessFill should not 
+   //             fill the histogram.
+   //
    // 'maxUnrolling' controls how deep in the class hierachy does the 
    // system 'unroll' class that are not split.
    //
@@ -3152,7 +3158,7 @@ Int_t TTree::MakeProxy(const char *classname, const char *macrofilename,
 
       GetPlayer();
    if (!fPlayer) return 0;
-   return fPlayer->MakeProxy(classname,macrofilename,cutfilename,maxUnrolling);
+   return fPlayer->MakeProxy(classname,macrofilename,cutfilename,option,maxUnrolling);
 }
 
 //______________________________________________________________________________

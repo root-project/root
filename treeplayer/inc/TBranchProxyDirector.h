@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxyDirector.h,v 1.2 2004/06/25 22:45:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxyDirector.h,v 1.3 2004/06/28 16:42:12 brun Exp $
 // Author: Philippe Canal 13/05/2003
 
 /*************************************************************************
@@ -24,6 +24,7 @@ namespace std {
 
 namespace ROOT {
    class TBranchProxy;
+   class TFriendProxy;
 
    class TBranchProxyDirector {
 
@@ -31,6 +32,7 @@ namespace ROOT {
       TTree *fTree;
       Long64_t fEntry;
       std::list<TBranchProxy*> fDirected;
+      std::list<TFriendProxy*> fFriends;
 
    public:
 
@@ -38,6 +40,7 @@ namespace ROOT {
       TBranchProxyDirector(TTree* tree, Int_t i);     // cint has (had?) a problem casting int to long long
 
       void     Attach(TBranchProxy* p);
+      void     Attach(TFriendProxy* f);
       Long64_t GetReadEntry() const;
       TTree*   GetTree() const;
       // void   Print();

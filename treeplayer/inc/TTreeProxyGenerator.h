@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.h,v 1.1 2004/06/25 18:42:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.h,v 1.2 2004/06/25 22:45:41 rdm Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -26,6 +26,7 @@ class TStreamerElement;
 
 namespace ROOT {
    class TBranchProxy;
+   class TFriendProxyDescriptor;
    class TBranchProxyDescriptor;
    class TBranchProxyClassDescriptor;
 
@@ -33,34 +34,44 @@ namespace ROOT {
    {
    public:
       enum EContainer { kNone, kClones };
+      enum EOption { kNoOption, kNoHist };
       UInt_t   fMaxDatamemberType;
       TString  fScript;
       TString  fCutScript;
       TString  fPrefix;
       TString  fHeaderFilename;
+      TString  fOptionStr;
+      UInt_t   fOptions;
       UInt_t   fMaxUnrolling;
       TTree   *fTree;
       TList    fListOfHeaders;
       TList    fListOfClasses;
+      TList    fListOfFriends;
       TList    fListOfTopProxies;
+      TList   *fCurrentListOfTopProxies; //!
       TList    fListOfForwards;
-      TTreeProxyGenerator(TTree* tree, const char *script, const char *fileprefix, UInt_t maxUnrolling);
-      TTreeProxyGenerator(TTree* tree, const char *script, const char *cutscript, const char *fileprefix, UInt_t maxUnrolling);
+      TTreeProxyGenerator(TTree* tree, const char *script, const char *fileprefix, 
+                          const char *option, UInt_t maxUnrolling);
+      TTreeProxyGenerator(TTree* tree, const char *script, const char *cutscript, 
+                          const char *fileprefix, const char *option, UInt_t maxUnrolling);
 
       TBranchProxyClassDescriptor* AddClass(TBranchProxyClassDescriptor *desc);
       void AddForward(TClass *cl);
       void AddForward(const char *classname);
+      void AddFriend(TFriendProxyDescriptor *desc);
       void AddHeader(TClass *cl);
       void AddHeader(const char *classname);
       void AddDescriptor(TBranchProxyDescriptor *desc);
 
       bool NeedToEmulate(TClass *cl, UInt_t level);
 
+      void   ParseOptions();
+
       UInt_t AnalyzeBranch(TBranch *branch, UInt_t level, TBranchProxyClassDescriptor *desc);
       UInt_t AnalyzeOldBranch(TBranch *branch, UInt_t level, TBranchProxyClassDescriptor *desc);
       UInt_t AnalyzeOldLeaf(TLeaf *leaf, UInt_t level, TBranchProxyClassDescriptor *topdesc);
       void   AnalyzeElement(TBranch *branch, TStreamerElement *element, UInt_t level, TBranchProxyClassDescriptor *desc, const char* path);
-      void   AnalyzeTree();
+      void   AnalyzeTree(TTree *tree);
       void   WriteProxy();
 
       const char *GetFilename() { return fHeaderFilename; }

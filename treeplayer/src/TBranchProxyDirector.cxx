@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxyDirector.cxx,v 1.1 2004/06/25 18:42:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxyDirector.cxx,v 1.2 2004/06/28 17:00:36 brun Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -22,6 +22,7 @@
 
 #include "TBranchProxyDirector.h"
 #include "TBranchProxy.h"
+#include "TFriendProxy.h"
 #include "TTree.h"
 
 #include <algorithm>
@@ -30,7 +31,19 @@ namespace std {} using namespace std;
 
 namespace ROOT {
 
-   void Reset(TBranchProxy*x) {x->Reset();} 
+   // Helper function to call Reset on each TBranchProxy
+   void Reset(TBranchProxy *x) { x->Reset(); } 
+
+   // Helper function to call SetReadEntry on all TFriendProxy
+   void ResetReadEntry(TFriendProxy *x) { x->ResetReadEntry(); }
+
+   // Helper class to call Update on all TFriendProxy
+   struct Update {
+      Update(TTree *newtree) : fNewTree(newtree) {}
+      TTree *fNewTree;
+      void operator()(TFriendProxy *x) { x->Update(fNewTree); }
+   };
+
 
    TBranchProxyDirector::TBranchProxyDirector(TTree* tree, Long64_t i) : 
       fTree(tree),
@@ -55,6 +68,14 @@ namespace ROOT {
       fDirected.push_back(p);
    }
 
+   void TBranchProxyDirector::Attach(TFriendProxy* p) {
+
+      // Attach a TFriendProxy object to this director.  The director just
+      // 'remembers' this BranchProxy and does not own it.  It will be use
+      // to apply Tree wide operation (like reseting).
+      fFriends.push_back(p);
+   }
+
    Long64_t TBranchProxyDirector::GetReadEntry() const {
       
       // return the entry currently being read
@@ -71,6 +92,7 @@ namespace ROOT {
 
       // move to a new entry to read
       fEntry = entry;
+      for_each(fFriends.begin(),fFriends.end(),ResetReadEntry);
    }
 
    TTree* TBranchProxyDirector::SetTree(TTree *newtree) {
@@ -85,6 +107,8 @@ namespace ROOT {
       //if (fInitialized) fInitialized = setup();
       //fprintf(stderr,"calling SetTree for %p\n",this);
       for_each(fDirected.begin(),fDirected.end(),Reset);
+      Update update(fTree);
+      for_each(fFriends.begin(),fFriends.end(),update);
       return oldtree;
    }
 

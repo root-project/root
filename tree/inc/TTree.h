@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.66 2004/07/08 08:08:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.67 2004/07/09 16:21:00 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -251,14 +251,16 @@ public:
     virtual Int_t        LoadTreeFriend(Int_t entry, TTree *T);
     virtual Int_t        MakeClass(const char *classname=0,Option_t *option="");
     virtual Int_t        MakeCode(const char *filename=0);
-    virtual Int_t        MakeProxy(const char *classname, const char *macrofilename = 0, const char *cutfilename = 0, Int_t maxUnrolling = 3);
+    virtual Int_t        MakeProxy(const char *classname, const char *macrofilename = 0, 
+                                   const char *cutfilename = 0, 
+                                   const char *option = 0, Int_t maxUnrolling = 3);
     virtual Int_t        MakeSelector(const char *selector=0);
     Bool_t               MemoryFull(Int_t nbytes);
     virtual Int_t        Merge(TCollection *list);
     static  TTree       *MergeTrees(TList *list);
     virtual Bool_t       Notify();
     TPrincipal          *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
-                          ,Int_t nentries=1000000000, Int_t firstentry=0);
+                                   ,Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void         Print(Option_t *option="") const; // *MENU*
     virtual Int_t        Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual Int_t        Process(TSelector *selector, Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0);

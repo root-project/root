@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.29 2004/06/25 18:42:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.30 2004/07/08 08:09:06 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -92,7 +92,9 @@ public:
     virtual Double_t *GetW() const    {return fSelector->GetW();}
     virtual Int_t     MakeClass(const char *classname, Option_t *option);
     virtual Int_t     MakeCode(const char *filename);
-    virtual Int_t     MakeProxy(const char *classname, const char *macrofilename = 0, const char *cutfilename = 0, Int_t maxUnrolling = 3);
+    virtual Int_t     MakeProxy(const char *classname, 
+                                const char *macrofilename = 0, const char *cutfilename = 0, 
+                                const char *option = 0, Int_t maxUnrolling = 3);
     TPrincipal       *Principal(const char *varexp, const char *selection, Option_t *option
                        ,Int_t nentries, Int_t firstentry);
     virtual Int_t     Process(const char *filename,Option_t *option, Int_t nentries, Int_t firstentry);

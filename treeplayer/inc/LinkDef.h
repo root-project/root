@@ -1,4 +1,4 @@
-/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.14 2004/07/07 09:50:40 rdm Exp $ */
+/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.12 2004/06/25 18:42:19 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -26,7 +26,9 @@
 
 #pragma link C++ class ROOT::TBranchProxyDirector+;
 #pragma link C++ class ROOT::TBranchProxy+;
+#pragma link C++ class ROOT::TFriendProxy+;
 
+#pragma link C++ class ROOT::TFriendProxyDescriptor;
 #pragma link C++ class ROOT::TBranchProxyDescriptor;
 #pragma link C++ class ROOT::TBranchProxyClassDescriptor;
 

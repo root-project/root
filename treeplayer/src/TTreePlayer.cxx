@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.159 2004/07/09 04:40:49 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.160 2004/07/14 00:19:12 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -447,7 +447,7 @@ Int_t TTreePlayer::DrawScript(const char* wrapperPrefix,
    
    TString selname = wrapperPrefix;
    
-   TTreeProxyGenerator gp(fTree,realname,realcutname,selname,3);
+   TTreeProxyGenerator gp(fTree,realname,realcutname,selname,"",3);
    
    selname = gp.GetFilename();
    if (aclicMode.Length()==0) {
@@ -2012,17 +2012,18 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 //______________________________________________________________________________
 Int_t TTreePlayer::MakeProxy(const char *classname, 
                              const char *macrofilename, const char *cutfilename,
-                             Int_t maxUnrolling)
+                             const char *option, Int_t maxUnrolling)
 {
    // Generate a skeleton analysis class for this Tree using TBranchProxy
-   
+   // See TTree::MakeProxy or ROOT::TTreeProxyGenerator for a description 
+
    if (macrofilename==0 || strlen(macrofilename)==0 ) {
       // We currently require a file name for the script
       Error("MakeProxy","A file name for the user script is required");
       return 0;
    }
 
-   TTreeProxyGenerator gp(fTree,macrofilename,cutfilename,classname,maxUnrolling);
+   TTreeProxyGenerator gp(fTree,macrofilename,cutfilename,classname,option,maxUnrolling);
 
    return 0;
 }

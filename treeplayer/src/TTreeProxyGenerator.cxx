@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.3 2004/06/28 16:38:00 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.4 2004/06/30 12:59:51 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 
 #include "TTreeProxyGenerator.h"
 
+#include "TFriendProxyDescriptor.h"
 #include "TBranchProxyDescriptor.h"
 #include "TBranchProxyClassDescriptor.h"
 
@@ -63,6 +64,7 @@ class TStreamerElement;
 #include "TBranchElement.h"
 #include "TChain.h"
 #include "TFile.h"
+#include "TFriendElement.h"
 #include "TLeaf.h"
 #include "TTree.h"
 #include "TStreamerInfo.h"
@@ -188,34 +190,44 @@ namespace ROOT {
 
    TTreeProxyGenerator::TTreeProxyGenerator(TTree* tree,
                                             const char *script,
-                                            const char *fileprefix, UInt_t maxUnrolling) :
+                                            const char *fileprefix, 
+                                            const char *option, UInt_t maxUnrolling) :
       fMaxDatamemberType(2),
       fScript(script),
       fCutScript(),
       fPrefix(fileprefix),
       fHeaderFilename(),
+      fOptionStr(option),
+      fOptions(0),
       fMaxUnrolling(maxUnrolling),
-      fTree(tree)
+      fTree(tree),
+      fCurrentListOfTopProxies(&fListOfTopProxies)
    {
-
-      AnalyzeTree();
+      ParseOptions(); 
+     
+      AnalyzeTree(fTree);
 
       WriteProxy();
    }
 
    TTreeProxyGenerator::TTreeProxyGenerator(TTree* tree,
                                             const char *script, const char *cutscript,
-                                            const char *fileprefix, UInt_t maxUnrolling) :
+                                            const char *fileprefix, 
+                                            const char *option, UInt_t maxUnrolling) :
       fMaxDatamemberType(2),
       fScript(script),
       fCutScript(cutscript),
       fPrefix(fileprefix),
       fHeaderFilename(),
+      fOptionStr(option),
+      fOptions(0),
       fMaxUnrolling(maxUnrolling),
-      fTree(tree)
+      fTree(tree),
+      fCurrentListOfTopProxies(&fListOfTopProxies)
    {
+      ParseOptions();
 
-      AnalyzeTree();
+      AnalyzeTree(fTree);
 
       WriteProxy();
    }
@@ -254,6 +266,52 @@ namespace ROOT {
       fListOfClasses.Add(desc);
       return desc;
    }
+
+   void TTreeProxyGenerator::AddFriend( TFriendProxyDescriptor* desc )
+   {
+      if (desc==0) return;
+
+      TFriendProxyDescriptor *existing =
+         (TFriendProxyDescriptor*)fListOfFriends(desc->GetName());
+
+      int count = 0;
+      while (existing) {
+         if (! existing->IsEquivalent( desc )  ) {
+            TString newname = desc->GetName();
+            count++;
+            newname += "_";
+            newname += count;
+
+            desc->SetName(newname);
+            existing = (TFriendProxyDescriptor*)fListOfFriends(desc->GetName());
+
+         } else {
+
+            desc->SetDuplicate();
+            break;
+         }
+      }
+      
+      // Insure uniqueness of the title also.
+      TString basetitle = desc->GetTitle();
+      TIter next( &fListOfFriends );
+      while ( (existing = (TFriendProxyDescriptor*)next()) ) {
+         if (strcmp(existing->GetTitle(),desc->GetTitle())==0) {
+
+            TString newtitle = basetitle;
+            count++;
+            newtitle += "_";
+            newtitle += count;
+
+            desc->SetTitle(newtitle);
+
+            // Restart of the begining of the loop.
+            next = &fListOfFriends;
+         }
+      }
+            
+      fListOfFriends.Add(desc);
+   }   
 
    void TTreeProxyGenerator::AddForward( const char *classname )
    {
@@ -299,7 +357,7 @@ namespace ROOT {
    void TTreeProxyGenerator::AddDescriptor(TBranchProxyDescriptor *desc)
    {
       if (desc) {
-         fListOfTopProxies.Add(desc);
+         fCurrentListOfTopProxies->Add(desc);
          UInt_t len = strlen(desc->GetTypeName());
          if ((len+2)>fMaxDatamemberType) fMaxDatamemberType = len+2;
       }
@@ -849,15 +907,16 @@ namespace ROOT {
       }
 
       TString branchName = leaf->GetBranch()->GetName();
+      TString dataMemberName = branchName;
+
       TBranchProxyDescriptor *desc;
       if (topdesc) {
-         topdesc->AddDescriptor( desc = new TBranchProxyDescriptor( branchName.Data(),
+         topdesc->AddDescriptor( desc = new TBranchProxyDescriptor( dataMemberName.Data(),
                                                                     type,
                                                                     branchName.Data() ),
                                  0 );
       } else {
-         // leafname.Prepend(prefix);
-         AddDescriptor( desc = new TBranchProxyDescriptor( branchName.Data(),
+         AddDescriptor( desc = new TBranchProxyDescriptor( dataMemberName.Data(),
                                                            type,
                                                            branchName.Data() ) );
       }
@@ -896,15 +955,17 @@ namespace ROOT {
             extraLookedAt += AnalyzeOldLeaf(leaf,level+1,cldesc);
          }
 
+         TString dataMemberName = branchName;
+
          TBranchProxyDescriptor *desc;
          if (topdesc) {
-            topdesc->AddDescriptor( desc = new TBranchProxyDescriptor( branchName.Data(),
+            topdesc->AddDescriptor( desc = new TBranchProxyDescriptor( dataMemberName.Data(),
                                                                        type,
                                                                        branchName.Data() ),
                                     0 );
          } else {
             // leafname.Prepend(prefix);
-            AddDescriptor( desc = new TBranchProxyDescriptor( branchName.Data(),
+            AddDescriptor( desc = new TBranchProxyDescriptor( dataMemberName.Data(),
                                                               type,
                                                               branchName.Data() ) );
          }
@@ -921,9 +982,11 @@ namespace ROOT {
 
    }
 
-   void TTreeProxyGenerator::AnalyzeTree() {
+   void TTreeProxyGenerator::AnalyzeTree(TTree *tree) {
 
-      TIter next( fTree->GetListOfBranches() );
+      // Analyze a TTree and its (potential) friends.
+
+      TIter next( tree->GetListOfBranches() );
       TBranch *branch;
       while ( (branch = (TBranch*)next()) ) {
          const char *branchname = branch->GetName();
@@ -978,7 +1041,10 @@ namespace ROOT {
 
                desc = AddClass(desc);
                type = desc->GetName();
-               AddDescriptor( new TBranchProxyDescriptor( branchname, type, branchname ) );
+
+               TString dataMemberName = branchname;
+
+               AddDescriptor( new TBranchProxyDescriptor( dataMemberName, type, branchname ) );
             } else {
 
                // We have a top level raw type.
@@ -1003,7 +1069,8 @@ namespace ROOT {
             }
             desc = AddClass(desc);
             type = desc->GetName();
-            AddDescriptor( new TBranchProxyDescriptor( branchname, type, branchname ) );
+            TString dataMemberName = branchname;
+            AddDescriptor( new TBranchProxyDescriptor( dataMemberName, type, branchname ) );
 
             if ( branchname[strlen(branchname)-1] != '.' ) {
                // If there is no dot also included the data member directly
@@ -1018,6 +1085,26 @@ namespace ROOT {
          } // if split or non split
       }
 
+      // Now let's add the TTreeFriend (if any)
+      if (tree->GetListOfFriends()) {
+         TFriendElement *fe;
+         Int_t count = 0;
+
+         TIter nextfriend(tree->GetListOfFriends());
+         while ((fe = (TFriendElement*)nextfriend())) {
+            TTree *t = fe->GetTree();
+            TFriendProxyDescriptor *desc;
+            desc = new TFriendProxyDescriptor(t->GetName(), fe->GetName(), count);
+
+            AddFriend( desc );
+         
+            fCurrentListOfTopProxies = desc->GetListOfTopProxies();
+            AnalyzeTree(t);
+
+            count++;
+         }
+      }
+      fCurrentListOfTopProxies = &fListOfTopProxies;
    }
 
    void TTreeProxyGenerator::AnalyzeElement(TBranch *branch, TStreamerElement *element,
@@ -1219,7 +1306,22 @@ namespace ROOT {
       }
    }
 
-   void TTreeProxyGenerator::WriteProxy() 
+   //----------------------------------------------------------------------------------------------
+   void TTreeProxyGenerator::ParseOptions() 
+   {
+      // Parse the options string.
+     
+      TString opt = fOptionStr;
+
+      fOptions = 0;
+      if ( opt.Contains("nohist") ) {
+        opt.ReplaceAll("nohist","");
+        fOptions |= kNoHist;
+      }
+   }        
+
+   //----------------------------------------------------------------------------------------------
+   void TTreeProxyGenerator::WriteProxy()
    {
       // Check whether the file exist and do something useful if it does
       if (fScript.Length()==0) {
@@ -1360,6 +1462,7 @@ namespace ROOT {
       fprintf(hf,"#include <TBranchProxy.h>\n");
       fprintf(hf,"#include <TBranchProxyDirector.h>\n");
       fprintf(hf,"#include <TBranchProxyTemplate.h>\n");
+      fprintf(hf,"#include <TFriendProxy.h>\n");
       fprintf(hf,"#include <TMethodCall.h>\n\n");
       fprintf(hf,"using namespace ROOT;\n"); // questionable
       fprintf(hf,"\n");
@@ -1397,19 +1500,36 @@ namespace ROOT {
       fprintf(hf, "   TMethodCall     fSlaveTerminateMethod;\n");
       fprintf(hf, "   TMethodCall     fTerminateMethod;\n");
 
-      fprintf(hf, "   // Wrapper class for each unwounded class\n");
-      next = &fListOfClasses;
-      TBranchProxyClassDescriptor *clp;
-      while ( (clp = (TBranchProxyClassDescriptor*)next()) ) {
-         clp->OutputDecl(hf, 3, fMaxDatamemberType);
+      if (fListOfClasses.LastIndex()>=0) {
+         fprintf(hf, "\n   // Wrapper class for each unwounded class\n");
+         next = &fListOfClasses;
+         TBranchProxyClassDescriptor *clp;
+         while ( (clp = (TBranchProxyClassDescriptor*)next()) ) {
+            clp->OutputDecl(hf, 3, fMaxDatamemberType);
+         }
       }
-      fprintf(hf,"\n\n");
 
-      fprintf(hf, "   // Proxy for each of the branches and leaves of the tree\n");
+      if (fListOfFriends.LastIndex()>=0) {
+         fprintf(hf, "\n   // Wrapper class for each friend TTree\n");
+         next = &fListOfFriends;
+         TFriendProxyDescriptor *clp;
+         while ( (clp = (TFriendProxyDescriptor*)next()) ) {
+            if (!clp->IsDuplicate()) clp->OutputClassDecl(hf, 3, fMaxDatamemberType);
+         }
+      }
+
+      fprintf(hf, "\n   // Proxy for each of the branches, leaves and friends of the tree\n");
       next = &fListOfTopProxies;
       TBranchProxyDescriptor *data;
       while ( (data = (TBranchProxyDescriptor*)next()) ) {
          data->OutputDecl(hf, 3, fMaxDatamemberType);
+      }
+      if (fListOfFriends.LastIndex()>=0) {
+         next = &fListOfFriends;
+         TFriendProxyDescriptor *clp;
+         while ( (clp = (TFriendProxyDescriptor*)next()) ) {
+           clp->OutputDecl(hf, 3, fMaxDatamemberType);
+         }
       }
       fprintf(hf,"\n\n");
 
@@ -1427,10 +1547,16 @@ namespace ROOT {
       fprintf(hf,   ",\n      fProcessMethod        (fClass,\"%s_Process\",\"0\")",scriptfunc.Data());
       fprintf(hf,   ",\n      fSlaveTerminateMethod (fClass,\"%s_SlaveTerminate\",\"\")",scriptfunc.Data());
       fprintf(hf,   ",\n      fTerminateMethod      (fClass,\"%s_Terminate\",\"\")",scriptfunc.Data());
-      next.Reset();
+      next = &fListOfTopProxies;
       while ( (data = (TBranchProxyDescriptor*)next()) ) {
          fprintf(hf,",\n      %-*s(&fDirector,\"%s\")",
                  fMaxDatamemberType, data->GetName(), data->GetBranchName());
+      }
+      next = &fListOfFriends;
+      TFriendProxyDescriptor *clp;
+      while ( (clp = (TFriendProxyDescriptor*)next()) ) {
+          fprintf(hf,",\n      %-*s(&fDirector,tree,%d)",
+                 fMaxDatamemberType, clp->GetTitle(), clp->GetIndex());
       }
 
       fprintf(hf,    "\n      { }\n");
@@ -1467,9 +1593,12 @@ namespace ROOT {
       fprintf(hf,"\n\n");
 
       fprintf(hf,"#ifdef __MAKECINT__\n");
-      next = &fListOfClasses;
-      while ( (clp = (TBranchProxyClassDescriptor*)next()) ) {
-         fprintf(hf,"#pragma link C++ class %s::%s-;\n",classname.Data(),clp->GetName());
+      if (fListOfClasses.LastIndex()>=0) {
+          TBranchProxyClassDescriptor *clp;
+          next = &fListOfClasses;
+          while ( (clp = (TBranchProxyClassDescriptor*)next()) ) {
+             fprintf(hf,"#pragma link C++ class %s::%s-;\n",classname.Data(),clp->GetName());
+          }
       }
       fprintf(hf,"#pragma link C++ class %s;\n",classname.Data());
       fprintf(hf,"#endif\n");
@@ -1570,10 +1699,18 @@ namespace ROOT {
       fprintf(hf,"\n");
       fprintf(hf,"\n");
       fprintf(hf,"   fDirector.SetReadEntry(entry);\n");
-      if (cutfilename) {
-         fprintf(hf,"   if (%s()) htemp->Fill(%s());\n",cutscriptfunc.Data(),scriptfunc.Data());
+      if (fOptions & kNoHist) {
+         if (cutfilename) {
+            fprintf(hf,"   if (%s()) %s();\n",cutscriptfunc.Data(),scriptfunc.Data());
+         } else {
+            fprintf(hf,"   %s();\n",scriptfunc.Data());
+         }
       } else {
-         fprintf(hf,"   htemp->Fill(%s());\n",scriptfunc.Data());
+         if (cutfilename) {
+            fprintf(hf,"   if (%s()) htemp->Fill(%s());\n",cutscriptfunc.Data(),scriptfunc.Data());
+         } else {
+            fprintf(hf,"   htemp->Fill(%s());\n",scriptfunc.Data());
+         }
       }
       fprintf(hf,"   if (fProcessMethod.IsValid()) fProcessMethod.Execute(this,Form(\"%%d\",entry));\n");
       fprintf(hf,"   return kTRUE;\n");

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.19 2004/06/25 18:42:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TVirtualTreePlayer.h,v 1.20 2004/07/08 08:08:08 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -68,7 +68,9 @@ public:
     virtual Double_t      *GetW() const = 0;
     virtual Int_t          MakeClass(const char *classname, const char *option) = 0;
     virtual Int_t          MakeCode(const char *filename) = 0;
-    virtual Int_t          MakeProxy(const char *classname, const char *macrofilename = 0, const char *cutfilename = 0, Int_t maxUnrolling = 3) = 0;
+    virtual Int_t          MakeProxy(const char *classname, 
+                                     const char *macrofilename = 0, const char *cutfilename = 0, 
+                                     const char *option = 0, Int_t maxUnrolling = 3) = 0;
     virtual TPrincipal    *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
                            ,Int_t nentries=1000000000, Int_t firstentry=0) = 0;
     virtual Int_t          Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0) = 0;
