@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.9 2000/10/17 12:27:15 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.10 2000/10/20 12:20:56 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -22,12 +22,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//*-*x7.5 macros/layout_class
+//*-*x7.5 macros/layout_class 
 
 #include <iostream.h>
 
 #include "TROOT.h"
 #include "TClass.h"
+#include "TObjArray.h"
 #include "TBaseClass.h"
 #include "TBrowser.h"
 #include "TDataMember.h"
@@ -41,6 +42,7 @@
 #include "TMemberInspector.h"
 #include "TError.h"
 #include "TMapFile.h"
+#include "TStreamerInfo.h"
 #include "Api.h"
 
 #ifndef WIN32
@@ -108,7 +110,9 @@ TClass::TClass() : TDictionary()
    fClassInfo    = 0;
    fAllPubData   = 0;
    fAllPubMethod = 0;
-
+   fStreamerInfo = 0;
+   fCheckSum     = 0;
+      
    ResetInstanceCount();
 }
 
@@ -136,7 +140,9 @@ TClass::TClass(const char *name, Version_t cversion,
    fClassInfo      = 0;
    fAllPubData     = 0;
    fAllPubMethod   = 0;
-
+   fCheckSum       = 0;
+   fStreamerInfo   = new TObjArray(fClassVersion+1);
+   
    ResetInstanceCount();
 
    if (!fClassInfo) {
@@ -204,24 +210,29 @@ void TClass::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-void TClass::BuildRealData()
+void TClass::BuildRealData(void *pointer)
 {
    // Build a full list of persistent data members.
    // Scans the list of all data members in the class itself and also
    // in all base classes. For each persistent data member, inserts a
    // TRealData object in the list fRealData.
+   //
+   // if pointer is NULL, uses the object at pointer
+   // otherwise creates a temporary object object of this class
 
    if (!fClassInfo) return;
    if (fRealData) return;
 
-   TObject *realDataObject;
+   TObject *realDataObject = (TObject*)pointer;
 
    fRealData = new TList;
 
    // Create an instance of this class
-   if (!strcmp(GetName(),"TROOT")) realDataObject = gROOT;
-   else                            realDataObject = (TObject*)New();
-
+   if (!realDataObject) {
+      if (!strcmp(GetName(),"TROOT")) realDataObject = gROOT;
+      else                            realDataObject = (TObject*)New();
+   }
+   
    // The following statement will call recursively all the subclasses
    // of this class.
    if (realDataObject) {
@@ -230,7 +241,7 @@ void TClass::BuildRealData()
       TBuildRealData brd(realDataObject, this);
       if (InheritsFrom(TObject::Class())) {
          realDataObject->ShowMembers(brd, parent);
-         realDataObject->StreamerInfo();
+ ////        realDataObject->StreamerInfo();
       } else {
          G__CallFunc func;
          void *address;
@@ -244,7 +255,7 @@ void TClass::BuildRealData()
       }
    }
 
-   if( realDataObject && realDataObject != gROOT) {
+   if( !pointer && realDataObject && realDataObject != gROOT) {
       if (InheritsFrom(TObject::Class())) {
          realDataObject->SetBit(kZombie); //this info useful in object destructor
          delete realDataObject;
@@ -256,9 +267,23 @@ void TClass::BuildRealData()
 }
 
 //______________________________________________________________________________
+void TClass::BypassStreamer(Bool_t bypass)
+{
+//  When the class kBypassStreamer bit is set, the automatically 
+//  generated Streamer can call directly TClass::WriteBuffer
+//  This option can be set for critical classes in collections.
+//  It saves a non negligible overhead in time at the expense of losing 
+//  the control for additional operations in the Streamer function.
+   
+   if (bypass) SetBit(kBypassStreamer);
+   else        ResetBit(kBypassStreamer);
+}
+
+ 
+//______________________________________________________________________________
 Int_t TClass::Compare(TObject *obj)
 {
-   // Compare to other object. Returns 0<, 0 or >0 depending on
+  // Compare to other object. Returns 0<, 0 or >0 depending on
    // whether "this" is lexicographically less than, equal to, or
    // greater than obj.
 
@@ -742,6 +767,34 @@ Int_t TClass::GetNmethods()
 }
 
 //______________________________________________________________________________
+TStreamerInfo *TClass::GetStreamerInfo(Int_t version)
+{
+   // returns a pointer to the TStreamerInfo object for version
+   // If the object doest not exist, it is created
+   
+   if (version <= 0) version = fClassVersion;
+   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(version);
+   if (sinfo) return sinfo;
+   sinfo = new TStreamerInfo(this,"");      
+   fStreamerInfo->AddAt(sinfo,fClassVersion);
+   if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
+   sinfo->Build();
+   return sinfo;
+}
+
+//______________________________________________________________________________
+void TClass::IgnoreTObjectStreamer(Bool_t ignore)
+{
+//  When the class kIgnoreTObjectStreamer bit is set, the automatically 
+//  generated Streamer will not call TObject::Streamer.
+//  This option saves the TObject space overhead on the file.
+//  However, the information (fBits, fUniqueID) of TObject is lost.
+   
+   if (ignore) SetBit(kIgnoreTObjectStreamer);
+   else        ResetBit(kIgnoreTObjectStreamer);
+}
+
+//______________________________________________________________________________
 Bool_t TClass::InheritsFrom(const char *classname) const
 {
    // Return kTRUE if this class inherits from a class with name "classname".
@@ -898,23 +951,16 @@ TClass *CreateClass(const char *cname, Version_t id, const char *dfil,
 }
 
 //______________________________________________________________________________
-const char *TClass::GetStreamerInfo()
+Bool_t TClass::IsCallingNew()
 {
-   // Returns a string describing the names/types of object attributes
-   // as written by the Streamer function.
-   // The default function is valid only for Streamer functions
-   // automatically generated by rootcint.
-   // This function must be overriden in case of a user-written Streamer.
+   // Static method returning the defConstructor flag passed to TClass::New().
+   // This function cannot be inline (problems with NT linker).
 
-   //build StreamerInfo string in case the current string is empty
-   if (fStreamerInfo.Length() == 0) {
-      SetStreamerInfo();
-   }
-   return fStreamerInfo.Data();
+   return fgCallingNew;
 }
 
 //______________________________________________________________________________
-void TClass::SetStreamerInfo(const char *info)
+TStreamerInfo *TClass::SetStreamerInfo(Int_t version, const char *info)
 {
    // Info is a string describing the names and types of attributes
    // written by the class Streamer function.
@@ -928,6 +974,7 @@ void TClass::SetStreamerInfo(const char *info)
    // info is specified, nothing to do, except that we should verify
    // that it contains a valid descriptor.
 
+/*
    TDataMember *dm;
    Int_t nch = strlen(info);
    Bool_t update = kTRUE;
@@ -991,7 +1038,7 @@ void TClass::SetStreamerInfo(const char *info)
          temp = colon+1;
          if (*temp == 0) break;
       }
-      fStreamerInfo = final;
+ ////     fStreamerInfo = final;
       delete [] final;
       delete [] save;
       return;
@@ -1033,8 +1080,10 @@ void TClass::SetStreamerInfo(const char *info)
          sprintf(local,"%s %s[%s];",dm->GetFullTypeName(),dm->GetName(),index);
       strcat(temp,local);
    }
-   fStreamerInfo = temp;
+   //fStreamerInfo = temp;
    delete [] temp;
+*/
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -1047,6 +1096,7 @@ void TClass::FillStreamerInfoList(TList *list)
    // Other types are resolved to known basic types. The TList will own
    // the TNamed objects in it.
 
+/*
    if (list == 0) return;
    if (list->FindObject(GetName())) return;
    //discard some standard Root classes
@@ -1097,6 +1147,7 @@ void TClass::FillStreamerInfoList(TList *list)
       delete [] token;
       info += nch+1;
    }
+*/
 }
 
 //______________________________________________________________________________
@@ -1105,6 +1156,7 @@ void TClass::PrintStreamerInfoList(TList *list)
    // Print streamerInfo items in the list.
    // If the list pointer is 0, print StreamerInfo for this class.
 
+/*
    TList *l = list;
    if (list == 0) {
       l = new TList();
@@ -1132,13 +1184,183 @@ void TClass::PrintStreamerInfoList(TList *list)
    }
    if (list == 0)
       delete l;
+*/
 }
 
 //______________________________________________________________________________
-Bool_t TClass::IsCallingNew()
+UInt_t TClass::GetCheckSum() const
 {
-   // Static method returning the defConstructor flag passed to TClass::New().
-   // This function cannot be inline (problems with NT linker).
+//   Compute and/or return the class check sum.
+//  The class ckecksum is used by the automatic schema evolution algorithm
+//  to uniquely identify a class version.
+//  The check sum is built from the names/types of base classes and
+//  data members
+//  Algorithm from Victor Perevovchikov (perev@bnl.gov)
+   
+   int il;
 
-   return fgCallingNew;
+   UInt_t id = fCheckSum;
+   if (id) return id;
+
+   TString name = GetName();
+   TString type;
+   il = name.Length();
+   for (int i=0; i<il; i++) id = id*3+name[i];
+
+   TList *tlb = ((TClass*)this)->GetListOfBases();
+   if (tlb) {   // Loop over bases
+
+     TIter nextBase(tlb);
+
+     TBaseClass *tbc=0;
+     while((tbc=(TBaseClass*)nextBase())) {
+       name = tbc->GetName();
+       il = name.Length();
+       for (int i=0; i<il; i++) id = id*3+name[i];
+     }/*EndBaseLoop*/
+   }
+   TList *tlm = ((TClass*)this)->GetListOfDataMembers();
+   if (tlm) {   // Loop over members
+     TIter nextMemb(tlm);
+     TDataMember *tdm=0;
+     Long_t prop = 0;
+     while((tdm=(TDataMember*)nextMemb())) {
+       if (!tdm->IsPersistent())        continue;
+               //  combine properties
+       prop = (tdm->Property());
+       TDataType* tdt = tdm->GetDataType();
+       if (tdt) prop |= tdt->Property();
+
+       if ( prop&kIsStatic)             continue;
+       name = tdm->GetName(); il = name.Length();
+       if ( prop&kIsEnum) id = id*3 + 1;
+
+       int i;
+       for (i=0; i<il; i++) id = id*3+name[i];
+       type = tdm->GetFullTypeName(); il = type.Length();
+       for (i=0; i<il; i++) id = id*3+type[i];
+
+       int dim = tdm->GetArrayDim();
+       if (prop&kIsArray) {
+         for (int i=0;i<dim;i++) id = id*3+tdm->GetMaxIndex(i);}
+     }/*EndMembLoop*/
+   }
+   ((TClass*)this)->fCheckSum =id;
+   return id;
+}
+
+//______________________________________________________________________________
+void TClass::SetStreamer(const char *name, void *p)
+{
+// store pointer to function to Stream non basic member name
+   
+   if (!fRealData) return;
+   Int_t nch = strlen(name);
+   TIter next(fRealData);
+   TRealData *rd;
+   while ((rd = (TRealData*)next())) {
+      if (strcmp(rd->GetName(),name) == 0) { rd->SetStreamer(p); break;}
+      if (name[nch-1] == '.') {
+         if (strncmp(rd->GetName(),name,nch) == 0) rd->SetStreamer(p);
+      }
+   }
+}
+   
+//______________________________________________________________________________
+Int_t TClass::ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count)
+{
+// function called by the Streamer functions to deserialize information
+// from buffer b into object at p.
+// This function assumes that the class version and the byte count information
+// have been read.
+//   version  is the version number of the class
+//   start    is the starting position in the buffer b
+//   count    is the number of bytes for this object in the buffer
+   
+   //the StreamerInfo should exist at this point
+   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(version);
+   if (sinfo == 0) return 0;
+   if (!fRealData) {
+      BuildRealData(pointer);
+      sinfo->BuildOld();
+   }      
+   
+   //deserialize the object
+   sinfo->ReadBuffer(b,(char*)pointer);   
+   
+   //check that the buffer position correesponds to the byte count 
+   b.CheckByteCount(start,count,this);
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TClass::ReadBuffer(TBuffer &b, void *pointer)
+{
+// function called by the Streamer functions to deserialize information
+// from buffer b into object at p
+   
+
+   // read the class version from the buffer
+   UInt_t R__s, R__c;
+   Version_t version = b.ReadVersion(&R__s, &R__c);
+   
+   //the StreamerInfo should exist at this point
+   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(version);
+   //TStreamerInfo *sinfo = GetStreamerInfo(version);
+   if (sinfo == 0) {
+      BuildRealData(pointer);
+      sinfo = new TStreamerInfo(this,"");      
+      fStreamerInfo->AddAt(sinfo,version);
+      if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),version);
+      sinfo->Build();
+   } else if (!fRealData) {
+      BuildRealData(pointer);
+      sinfo->BuildOld();
+   }      
+   
+   //deserialize the object
+   sinfo->ReadBuffer(b,(char*)pointer);  
+   
+   //check that the buffer position correesponds to the byte count 
+   b.CheckByteCount(R__s, R__c,this);
+   
+   if (gDebug > 2) printf(" ReadBuffer for class: %s has read %d bytes\n",GetName(),R__c);
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TClass::WriteBuffer(TBuffer &b, void *pointer, const char *info)
+{
+// function called by the Streamer functions to serialize object at p
+// to buffer b. The optional argument info may be specified to give an
+// alternative StreamerInfo instead of using the default StreamerInfo
+// automatically built from the class definition.
+// For more information, see class TStreamerInfo.
+   
+   //build the StreamerInfo if first time for the class
+   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(fClassVersion);
+   if (sinfo == 0) {
+      BuildRealData(pointer);
+      sinfo = new TStreamerInfo(this,info);      
+      fStreamerInfo->AddAt(sinfo,fClassVersion);
+      if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
+      sinfo->Build();
+   } else if (!fRealData) {
+      BuildRealData(pointer);
+      sinfo->BuildOld();
+   }      
+   
+   //write the class version number and reserve space for the byte count
+   UInt_t R__c = b.WriteVersion(this, kTRUE);
+   
+   //serialize the object
+   sinfo->WriteBuffer(b,(char*)pointer);
+   
+   //write the byte count at the start of the buffer   
+   b.SetByteCount(R__c, kTRUE);
+   
+   if (gDebug > 2) printf(" WriteBuffer for class: %s has written %d bytes\n",GetName(),R__c);
+   
+   return 0;
 }

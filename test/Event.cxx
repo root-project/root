@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.7 2000/09/29 07:47:49 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.8 2000/10/02 15:46:19 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -183,6 +183,7 @@ void Event::Streamer(TBuffer &R__b)
       fTracks->Streamer(R__b);
       if (!fH) fH = new TH1F();
       fH->Streamer(R__b);
+      //R__b >> fH;
       R__b.ReadFastArray(fMeasures,10);
       R__b.ReadFastArray((float*)fMatrix,16);
    } else {
@@ -197,6 +198,7 @@ void Event::Streamer(TBuffer &R__b)
       fEvtHdr.Streamer(R__b);
       fTracks->Streamer(R__b);
       fH->Streamer(R__b);
+      //R__b << (TObject*)fH;
       R__b.WriteFastArray(fMeasures,10);
       R__b.WriteFastArray((float*)fMatrix,16);
    }
