@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.53 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.54 2003/08/29 17:23:31 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -258,18 +258,6 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #endif
 #endif
 
-#if defined(linux)
-#   include <features.h>
-#   if __GNU_LIBRARY__ == 6
-#      ifndef R__GLIBC
-#         define R__GLIBC
-#      endif
-#   endif
-#endif
-#if defined(cygwingcc) || (defined(__MACH__) && !defined(__APPLE__))
-#   define R__GLIBC
-#endif
-
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__APPLE__)
 #include <sys/file.h>
 #define lockf(fd, op, sz)   flock((fd), (op))
@@ -305,14 +293,6 @@ int fcntl_lockf(int fd, int op, off_t off)
 #include <signal.h>
 #endif
 
-#if defined(__sun) || defined(R__GLIBC)
-#include <crypt.h>
-#endif
-
-#if defined(__osf__) || defined(__sgi)
-extern "C" char *crypt(const char *, const char *);
-#endif
-
 #if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__)
 extern "C" int initgroups(const char *name, int basegid);
 #endif
@@ -332,39 +312,11 @@ extern "C" {
 }
 #endif
 
-#if defined(__sun)
-#ifndef R__SHADOWPW
-#define R__SHADOWPW
-#endif
-#endif
-
-#ifdef R__SHADOWPW
-#include <shadow.h>
-#endif
-
-#ifdef R__AFS
-//#include <afs/kautils.h>
-#define KA_USERAUTH_VERSION 1
-#define KA_USERAUTH_DOSETPAG 0x10000
-#define NOPAG  0xffffffff
-extern "C" int ka_UserAuthenticateGeneral(int,char*,char*,char*,char*,int,int,int,char**);
-#endif
-
-#ifdef R__SRP
-extern "C" {
-#include <t_pwd.h>
-#include <t_server.h>
-}
-#endif
-
 #ifdef R__KRB5
 extern "C" {
    #include <com_err.h>
    #include <krb5.h>
-   int krb5_net_write(krb5_context, int, const char *, int);
 }
-#include <string>
-extern krb5_deltat krb5_clockskew;
 #endif
 
 // Local include
@@ -1062,20 +1014,6 @@ void RootdLogin()
 }
 
 //______________________________________________________________________________
-void RootdUser(const char *sstr)
-{
-   // Check user's UID.
-
-   gAuth = 0;
-
-   // Evaluate credentials ...
-   RpdUser(sstr);
-
-   // Login, if ok ...
-   if (gAuth == 1) RootdLogin();
-}
-
-//______________________________________________________________________________
 void RootdPass(const char *pass)
 {
    // Check user's password.
@@ -1085,6 +1023,21 @@ void RootdPass(const char *pass)
 
    // Evaluate credentials ...
    RpdPass(pass);
+
+   // Login, if ok ...
+   if (gAuth == 1) RootdLogin();
+}
+
+//______________________________________________________________________________
+void RootdUser(const char *sstr)
+{
+   // Check user's UID.
+
+   // Reset global variable
+   gAuth = 0;
+
+   // Evaluate credentials ...
+   RpdUser(sstr);
 
    // Login, if ok ...
    if (gAuth == 1) RootdLogin();

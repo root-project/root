@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.2 2003/08/29 17:23:32 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.3 2003/08/30 19:27:09 brun Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -33,6 +33,10 @@
 #include <netinet/in.h>
 #include <errno.h>
 #include <netdb.h>
+
+#if defined(__CYGWIN__) && defined(__GNUC__)
+#   define cygwingcc
+#endif
 #if defined(__alpha) && !defined(linux)
 #   ifdef _XOPEN_SOURCE
 #      if _XOPEN_SOURCE+0 > 0
@@ -55,19 +59,6 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #include <sys/statfs.h>
 #endif
 
-#if defined(linux) || defined(__hpux) || defined(_AIX) || defined(__alpha) || \
-    defined(__sun) || defined(__sgi) || defined(__FreeBSD__) || \
-    defined(__APPLE__)
-#define HAVE_MMAP
-#endif
-
-#ifdef HAVE_MMAP
-#   include <sys/mman.h>
-#ifndef MAP_FILE
-#define MAP_FILE 0              /* compatability flag */
-#endif
-#endif
-
 #if defined(linux)
 #   include <features.h>
 #   if __GNU_LIBRARY__ == 6
@@ -76,7 +67,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #      endif
 #   endif
 #endif
-#if defined(__MACH__) && !defined(__APPLE__)
+#if defined(cygwingcc) || (defined(__MACH__) && !defined(__APPLE__))
 #   define R__GLIBC
 #endif
 
@@ -91,12 +82,20 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #endif
 #endif
 
-#if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
-    defined(__MACH__)
-#include <grp.h>
-#include <sys/types.h>
-#include <signal.h>
+#if defined(cygwingcc)
+#define F_LOCK F_WRLCK
+#define F_ULOCK F_UNLCK
+int fcntl_lockf(int fd, int op, off_t off)
+{
+   flock fl;
+   fl.l_whence = SEEK_SET;
+   fl.l_start  = off;
+   fl.l_len    = 0;       // whole file
+   fl.l_pid    = getpid();
+   fl.l_type   = op;
+   return fcntl(fd, F_SETLK, &fl);
+}
+#define lockf fcntl_lockf
 #endif
 
 #if defined(__sun) || defined(R__GLIBC)
@@ -107,31 +106,16 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 extern "C" char *crypt(const char *, const char *);
 #endif
 
-#if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__)
-extern "C" int initgroups(const char *name, int basegid);
-#endif
-
-#if defined(__sgi) && !defined(__GNUG__) && (SGI_REL<62)
-extern "C" {
-   int seteuid(int euid);
-   int setegid(int egid);
-}
-#endif
-#if defined(_AIX)
-extern "C" {
-   //int initgroups(const char *name, int basegid);
-   int seteuid(uid_t euid);
-   int setegid(gid_t egid);
-}
-#endif
 #if defined(__sun)
 #ifndef R__SHADOWPW
 #define R__SHADOWPW
 #endif
 #endif
+
 #ifdef R__SHADOWPW
 #include <shadow.h>
 #endif
+
 #ifdef R__AFS
 //#include <afs/kautils.h>
 #define KA_USERAUTH_VERSION 1
@@ -143,14 +127,15 @@ extern "C" int ka_UserAuthenticateGeneral(int, char *, char *, char *,
 
 #ifdef R__SRP
 extern "C" {
-#include <t_pwd.h>
-#include <t_server.h>
+   #include <t_pwd.h>
+   #include <t_server.h>
 }
 #endif
+
 #ifdef R__KRB5
 extern "C" {
-#include <com_err.h>
-#include <krb5.h>
+   #include <com_err.h>
+   #include <krb5.h>
    int krb5_net_write(krb5_context, int, const char *, int);
 }
 #include <string>
@@ -159,8 +144,8 @@ extern krb5_deltat krb5_clockskew;
 
 #include "rpdp.h"
 extern "C" {
-#include "rsadef.h"
-#include "rsalib.h"
+   #include "rsadef.h"
+   #include "rsalib.h"
 }
 
 namespace ROOT {//--- Globals ------------------------------------------------------------------

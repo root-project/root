@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.34 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.35 2003/08/29 17:23:31 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -151,7 +151,6 @@
 // 7: added support for Globus, SSH and uid/gid authentication and negotiation
 
 #include "config.h"
-#include "RConfig.h"
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -170,38 +169,16 @@
 #include <errno.h>
 #include <sys/un.h>
 
-#if defined(linux)
-#   include <features.h>
-#   if __GNU_LIBRARY__ == 6
-#      ifndef R__GLIBC
-#         define R__GLIBC
-#      endif
-#   endif
-#endif
-#if defined(__MACH__) && !defined(__APPLE__) || \
-    (defined(__CYGWIN__) && defined(__GNUC__))
-#   define R__GLIBC
-#endif
-
-#if defined(__FreeBSD__) && (__FreeBSD__ < 4)
-#include <sys/file.h>
-#define lockf(fd, op, sz)   flock((fd), (op))
-#define F_LOCK             (LOCK_EX | LOCK_NB)
-#define F_ULOCK             LOCK_UN
+#if defined(__CYGWIN__) && defined(__GNUC__)
+#   define cygwingcc
 #endif
 
 #if defined(linux) || defined(__sun) || defined(__sgi) || \
-    defined(_AIX) || defined(__FreeBSD__) || defined(__MACH__)
+    defined(_AIX) || defined(__FreeBSD__) || defined(__APPLE__) || \
+    defined(__MACH__) || defined(cygwingcc)
 #include <grp.h>
 #include <sys/types.h>
-#endif
-
-#if defined(__sun) || defined(R__GLIBC)
-#include <crypt.h>
-#endif
-
-#if defined(__osf__) || defined(__sgi)
-extern "C" char *crypt(const char *, const char *);
+#include <signal.h>
 #endif
 
 #if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__)
@@ -229,38 +206,13 @@ extern "C" int gethostname(char *, unsigned int);
 #else
 extern "C" int gethostname(char *, int);
 #endif
-#ifndef R__SHADOWPW
-#define R__SHADOWPW
-#endif
-#endif
-
-#ifdef R__SHADOWPW
-#include <shadow.h>
-#endif
-
-#ifdef R__AFS
-//#include <afs/kautils.h>
-#define KA_USERAUTH_VERSION 1
-#define KA_USERAUTH_DOSETPAG 0x10000
-#define NOPAG  0xffffffff
-extern "C" int ka_UserAuthenticateGeneral(int,char*,char*,char*,char*,int,int,int,char**);
-#endif
-
-#ifdef R__SRP
-extern "C" {
-#include <t_pwd.h>
-#include <t_server.h>
-}
 #endif
 
 #ifdef R__KRB5
 extern "C" {
    #include <com_err.h>
    #include <krb5.h>
-   int krb5_net_write(krb5_context, int, const char *, int);
 }
-#include <string>
-extern krb5_deltat krb5_clockskew;
 #endif
 
 #include "proofdp.h"
@@ -272,8 +224,8 @@ extern krb5_context gKcontext;
 
 //--- Globals ------------------------------------------------------------------
 
-const int   kMaxSlaves       = 32;
-const char *gAuthMeth[kMAXSEC]= {"UsrPwdClear","SRP","Krb5","Globus","SSH","UidGidClear"};
+const int   kMaxSlaves         = 32;
+const char *gAuthMeth[kMAXSEC] = {"UsrPwdClear","SRP","Krb5","Globus","SSH","UidGidClear"};
 
 char    gFilePA[40]              = { 0 };
 
@@ -401,7 +353,7 @@ void ProofdLogin()
   // Notify authentication to client ...
    NetSend(gAuth, kROOTD_AUTH);
    // Send also new offset if it changed ...
-   if (gAuth==2) NetSend(gOffSet, kROOTD_AUTH);
+   if (gAuth == 2) NetSend(gOffSet, kROOTD_AUTH);
 
    if (gDebug > 0)
       ErrorInfo("ProofdLogin: user %s authenticated", gUser);
@@ -412,11 +364,14 @@ void ProofdPass(const char *pass)
 {
    // Check user's password.
 
+   // Reset global variable
+   gAuth = 0;
+
    // Evaluate credentials ...
    RpdPass(pass);
 
    // Login, if ok ...
-   if (gAuth==1) ProofdLogin();
+   if (gAuth == 1) ProofdLogin();
 
    return;
 }
@@ -424,14 +379,16 @@ void ProofdPass(const char *pass)
 //______________________________________________________________________________
 void ProofdUser(const char *sstr)
 {
-   // Check user's password.
+   // Check user's UID.
+
+   // Reset global variable
    gAuth = 0;
 
    // Evaluate credentials ...
    RpdUser(sstr);
 
    // Login, if ok ...
-   if (gAuth==1) ProofdLogin();
+   if (gAuth == 1) ProofdLogin();
 
    return;
 }
@@ -448,7 +405,7 @@ void ProofdKrb5Auth(const char *sstr)
    RpdKrb5Auth(sstr);
 
    // Login, if ok ...
-   if (gAuth==1) ProofdLogin();
+   if (gAuth == 1) ProofdLogin();
 
 }
 
@@ -464,7 +421,7 @@ void ProofdSshAuth(const char *sstr)
    RpdSshAuth(sstr);
 
    // Login, if ok ...
-   if (gAuth==1) ProofdLogin();
+   if (gAuth == 1) ProofdLogin();
 
    return;
 }
@@ -482,7 +439,7 @@ void ProofdSRPUser(const char *sstr)
    RpdSRPUser(sstr);
 
    // Login, if ok ...
-   if (gAuth==1) ProofdLogin();
+   if (gAuth == 1) ProofdLogin();
 
    return;
 }
@@ -490,7 +447,7 @@ void ProofdSRPUser(const char *sstr)
 //______________________________________________________________________________
 void ProofdRfioAuth(const char *sstr)
 {
-   // Authenticate via Rfio
+   // Authenticate via UID/GID (Rfio).
 
    // Reset global variable
    gAuth = 0;
@@ -499,13 +456,14 @@ void ProofdRfioAuth(const char *sstr)
    RpdRfioAuth(sstr);
 
    // ... and login
-   if (gAuth==1) ProofdLogin();
+   if (gAuth == 1) ProofdLogin();
 
 }
 
 //______________________________________________________________________________
-void ProofdGlobusAuth(const char *sstr){
-   // Authenticate via Globus
+void ProofdGlobusAuth(const char *sstr)
+{
+   // Authenticate via Globus.
 
    // Reset global variable
    gAuth = 0;
@@ -514,7 +472,7 @@ void ProofdGlobusAuth(const char *sstr){
    RpdGlobusAuth(sstr);
 
    // Login, if ok ...
-   if (gAuth==1) ProofdLogin();
+   if (gAuth == 1) ProofdLogin();
 
    return;
 }
