@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.29 2004/07/08 14:45:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.30 2004/09/13 10:03:08 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -80,6 +80,9 @@ public:
    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * ="") const {return 0;}
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="") const;
    virtual Int_t    Merge(TCollection *list);
+   virtual TH2     *RebinX(Int_t ngroup=2, const char *newname="");
+   virtual TH2     *RebinY(Int_t ngroup=2, const char *newname="");  
+   virtual TH2     *Rebin2D(Int_t nxgroup=2, Int_t nxgroup=2, const char *newname="");     
       TProfile     *ProfileX(const char *name="_pfx", Int_t firstybin=-1, Int_t lastybin=-1, Option_t *option="") const;   // *MENU*
       TProfile     *ProfileY(const char *name="_pfy", Int_t firstxbin=-1, Int_t lastxbin=-1, Option_t *option="") const ;   // *MENU*
           TH1D     *ProjectionX(const char *name="_px", Int_t firstybin=-1, Int_t lastybin=-1, Option_t *option="") const; // *MENU*

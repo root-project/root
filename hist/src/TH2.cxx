@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.55 2004/09/03 10:51:36 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.56 2004/09/13 10:03:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1369,7 +1369,202 @@ Int_t TH2::Merge(TCollection *list)
    
    return nentries;
 }   
+
+//______________________________________________________________________________
+
+TH2 *TH2::RebinX(Int_t ngroup, const char *newname)
+{
+   // Rebin only the X axis 
+   // see Rebin2D
    
+   return Rebin2D(ngroup, 1, newname);
+}
+
+//______________________________________________________________________________
+
+TH2 *TH2::RebinY(Int_t ngroup, const char *newname)
+{
+   // Rebin only the Y axis 
+   // see Rebin2D
+   
+   return Rebin2D(1, ngroup, newname);
+}
+
+   
+//______________________________________________________________________________
+
+
+TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
+{
+//   -*-*-*Rebin this histogram grouping nxgroup/nygroup bins along the xaxis/yaxis together*-*-*-*-
+//         =================================================================================
+//   if newname is not blank a new temporary histogram hnew is created.
+//   else the current histogram is modified (default)
+//   The parameter nxgroup/nygroup indicate how many bins along the xaxis/yaxis of this 
+//   have to me merged into one bin of hnew
+//   If the original histogram has errors stored (via Sumw2), the resulting
+//   histograms has new errors correctly calculated.
+//
+//   examples: if hpxpy is an existing TH2 histogram with 40 x 40 bins
+//     hpxpy->Rebin();  // merges two bins along the xaxis and yaxis in one in hpxpy
+//                      // Carefull: previous contents of hpxpy are lost
+//     hpxpy->RebinX(5); //merges five bins along the xaxis in one in hpxpy
+//     TH2 *hnew = hpxpy->RebinY(5,"hnew"); // creates a new histogram hnew
+//                                          // merging 5 bins of h1 along the yaxis in one bin
+//
+//   NOTE1: If nxgroup/nygroup is not an exact divider of the number of bins,
+//          along the xaxis/yaxis the top limit(s) of the rebinned histogram 
+//          is changed to the upper edge of the xbin=newxbins*nxgroup resp. 
+//          ybin=newybins*nygroup and the corresponding bins are added to 
+//          the overflow bin.
+//          Statistics will be recomputed from the new bin contents.
+//
+//   NOTE2: This function cannot be used with variable bin size histograms.
+
+   Int_t nxbins  = fXaxis.GetNbins();
+   Int_t nybins  = fYaxis.GetNbins();
+   Axis_t xmin  = fXaxis.GetXmin();
+   Axis_t xmax  = fXaxis.GetXmax();
+   Axis_t ymin  = fYaxis.GetXmin();
+   Axis_t ymax  = fYaxis.GetXmax();
+   if ((nxgroup <= 0) || (nxgroup > nxbins)) {
+      Error("Rebin", "Illegal value of nxgroup=%d",nxgroup);
+      return 0;
+   }
+   if ((nygroup <= 0) || (nygroup > nybins)) {
+      Error("Rebin", "Illegal value of nygroup=%d",nygroup);
+      return 0;
+   }
+   if (fDimension != 2 || InheritsFrom("TProfile")) {
+      Error("Rebin", "Operation valid on 2-D histograms only");
+      return 0;
+   }
+   if (fXaxis.GetXbins()->GetSize() > 0 || fYaxis.GetXbins()->GetSize() > 0) {
+      Error("Rebin", "Cannot rebin variable bin size histograms");
+      return 0;
+   }
+
+   Int_t newxbins = nxbins/nxgroup;
+   Int_t newybins = nybins/nygroup;   
+
+   // Save old bin contents into a new array
+   Double_t entries = fEntries;
+   Double_t *oldBins = new Double_t[nxbins*nybins];
+   for (Int_t xbin = 0; xbin < nxbins; xbin++) {
+      for (Int_t ybin = 0; ybin < nybins; ybin++) {
+         oldBins[xbin*nybins+ybin] = GetBinContent(xbin+1, ybin+1);
+      }
+   }
+   Double_t *oldErrors = 0;
+   if (fSumw2.fN != 0) {
+      oldErrors = new Double_t[nxbins*nybins];
+      for (Int_t xbin = 0; xbin < nxbins; xbin++) {
+         for (Int_t ybin = 0; ybin < nybins; ybin++) {    
+	    oldErrors[xbin*nybins+ybin] = GetBinError(xbin+1, ybin+1);
+	 }
+      }
+   }
+   
+   // create a clone of the old histogram if newname is specified
+   TH2 *hnew = this;
+   if (strlen(newname) > 0) {
+      hnew = (TH2*)Clone();
+      hnew->SetName(newname);
+   }
+
+   // change axis specs and rebuild bin contents array
+   if(newxbins*nxgroup != nxbins) {
+      xmax = fXaxis.GetBinUpEdge(newxbins*nxgroup);
+      hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
+   }
+   if(newybins*nygroup != nybins) {
+      ymax = fYaxis.GetBinUpEdge(newybins*nygroup);
+      hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
+   }      
+   // save the TAttAxis members (reset by SetBins) for x axis
+        Int_t    NXdivisions  = fXaxis.GetNdivisions();
+        Color_t  XAxisColor   = fXaxis.GetAxisColor();
+        Color_t  XLabelColor  = fXaxis.GetLabelColor();
+        Style_t  XLabelFont   = fXaxis.GetLabelFont();
+        Float_t  XLabelOffset = fXaxis.GetLabelOffset();
+        Float_t  XLabelSize   = fXaxis.GetLabelSize();
+        Float_t  XTickLength  = fXaxis.GetTickLength();
+        Float_t  XTitleOffset = fXaxis.GetTitleOffset();
+        Float_t  XTitleSize   = fXaxis.GetTitleSize();
+        Color_t  XTitleColor  = fXaxis.GetTitleColor();
+        Style_t  XTitleFont   = fXaxis.GetTitleFont();
+   // save the TAttAxis members (reset by SetBins) for y axis
+        Int_t    NYdivisions  = fYaxis.GetNdivisions();
+        Color_t  YAxisColor   = fYaxis.GetAxisColor();
+        Color_t  YLabelColor  = fYaxis.GetLabelColor();
+        Style_t  YLabelFont   = fYaxis.GetLabelFont();
+        Float_t  YLabelOffset = fYaxis.GetLabelOffset();
+        Float_t  YLabelSize   = fYaxis.GetLabelSize();
+        Float_t  YTickLength  = fYaxis.GetTickLength();
+        Float_t  YTitleOffset = fYaxis.GetTitleOffset();
+        Float_t  YTitleSize   = fYaxis.GetTitleSize();
+        Color_t  YTitleColor  = fYaxis.GetTitleColor();
+        Style_t  YTitleFont   = fYaxis.GetTitleFont();
+
+
+   // copy merged bin contents (ignore under/overflows)
+   if (nxgroup != 1 || nygroup != 1) {
+      hnew->SetBins(newxbins,xmin,xmax, newybins, ymin, ymax); //this also changes errors array (if any)
+      Double_t binContent, binError;
+      Int_t oldxbin = 0;      
+      for (Int_t xbin = 0; xbin <= newxbins; xbin++) {
+         Int_t oldybin = 0;
+         for (Int_t ybin = 0; ybin <= newybins; ybin++) {          
+            binContent = 0;
+            binError   = 0;
+            for (Int_t i = 0; i < nxgroup; i++) { 
+               if (oldxbin+i >= nxbins) break;
+	       for (Int_t j =0; j < nygroup; j++) {
+	          if (oldybin+j >= nybins) break;
+                  binContent += oldBins[oldybin+j + (oldxbin+i)*nybins];
+                  if (oldErrors) binError += oldErrors[oldybin+ j + (oldxbin+i)*nybins]*oldErrors[oldybin + j + (oldxbin+i)*nybins];
+	       }
+            }
+            hnew->SetBinContent(xbin+1,ybin+1, binContent);
+            if (oldErrors) hnew->SetBinError(xbin+1,ybin+1,TMath::Sqrt(binError));
+            oldybin += nygroup;
+         }
+         oldxbin += nxgroup;
+      }
+   }
+
+   // Restore x axis attributes
+   fXaxis.SetNdivisions(NXdivisions);
+   fXaxis.SetAxisColor(XAxisColor);
+   fXaxis.SetLabelColor(XLabelColor);
+   fXaxis.SetLabelFont(XLabelFont);
+   fXaxis.SetLabelOffset(XLabelOffset);
+   fXaxis.SetLabelSize(XLabelSize);
+   fXaxis.SetTickLength(XTickLength);
+   fXaxis.SetTitleOffset(XTitleOffset);
+   fXaxis.SetTitleSize(XTitleSize);
+   fXaxis.SetTitleColor(XTitleColor);
+   fXaxis.SetTitleFont(XTitleFont);
+   // Restore y axis attributes
+   fYaxis.SetNdivisions(NYdivisions);
+   fYaxis.SetAxisColor(YAxisColor);
+   fYaxis.SetLabelColor(YLabelColor);
+   fYaxis.SetLabelFont(YLabelFont);
+   fYaxis.SetLabelOffset(YLabelOffset);
+   fYaxis.SetLabelSize(YLabelSize);
+   fYaxis.SetTickLength(YTickLength);
+   fYaxis.SetTitleOffset(YTitleOffset);
+   fYaxis.SetTitleSize(YTitleSize);
+   fYaxis.SetTitleColor(YTitleColor);
+   fYaxis.SetTitleFont(YTitleFont);
+   
+   hnew->SetEntries(entries); //was modified by SetBinContent
+
+   delete [] oldBins;
+   if (oldErrors) delete [] oldErrors;
+   return hnew;
+}
+  
 //______________________________________________________________________________
 TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option) const
 {

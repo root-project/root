@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.201 2004/09/03 14:06:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.202 2004/09/13 10:03:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3855,17 +3855,16 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
 //     h1->Rebin(5); //merges five bins in one in h1
 //     TH1F *hnew = h1->Rebin(5,"hnew"); // creates a new histogram hnew
 //                                       //merging 5 bins of h1 in one bin
-//   NOTE1: This function is currently implemented only for 1-D histograms
 //
-//   NOTE2: If ngroup is not an exact divider of the number of bins,
+//   NOTE1: If ngroup is not an exact divider of the number of bins,
 //          the top limit of the rebinned histogram is changed
 //          to the upper edge of the bin=newbins*ngroup and the corresponding
 //          bins are added to the overflow bin.
 //          Statistics will be recomputed from the new bin contents.
 //
-//   NOTE3: This function cannot be used with variable bin size histograms.
+//   NOTE2: This function cannot be used with variable bin size histograms.
 
-   Int_t nbins   = fXaxis.GetNbins();
+   Int_t nbins  = fXaxis.GetNbins();
    Axis_t xmin  = fXaxis.GetXmin();
    Axis_t xmax  = fXaxis.GetXmax();
    if ((ngroup <= 0) || (ngroup > nbins)) {
