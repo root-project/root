@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TQpProbDens.cxx,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TQpProbDens.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Mar 2004
 
 /*************************************************************************
@@ -57,6 +57,8 @@ ClassImp(TQpProbDens)
 TQpProbDens::TQpProbDens(Int_t nx,Int_t my,Int_t mz)
   : TQpProbBase(nx,my,mz)
 {
+  // We do not wanr more constrains than variables
+  Assert(nx-my-mz > 0);
 }
 
 //______________________________________________________________________________
@@ -66,51 +68,89 @@ TQpProbDens::TQpProbDens(const TQpProbDens &another) : TQpProbBase(another)
 }                        
 
 //______________________________________________________________________________
-void TQpProbDens::MakeData(Double_t *c,
-                           Double_t *Q,
-                           Double_t *xlow,Bool_t *ixlow,
-                           Double_t *xupp,Bool_t *ixupp,
-                           Double_t *A,   
-                           Double_t *bA,
-                           Double_t *C,
-                           Double_t *clow,Bool_t *iclow,
-                           Double_t *cupp,Bool_t *icupp,
-                           TQpDataBase *&data_in)
+TQpDataBase *TQpProbDens::MakeData(Double_t *c,
+                                   Double_t *Q,
+                                   Double_t *xlo,Bool_t   *ixlo,
+                                   Double_t *xup,Bool_t   *ixup,
+                                   Double_t *A,  Double_t *bA,
+                                   Double_t *C,
+                                   Double_t *clo,Bool_t   *iclo,
+                                   Double_t *cup,Bool_t   *icup)
 { 
-  TVectorD    vc   ; vc   .Use(fNx,c);
-  TMatrixDSym mQ   ; mQ   .Use(fNx,Q);
-  TVectorD    vxlow; vxlow.Use(fNx,xlow);
-  TVectorD    vxupp; vxupp.Use(fNx,xupp);
-  TMatrixD    mA   ; mA   .Use(fMy,fNx,A);
-  TVectorD    vbA  ; vbA  .Use(fMy,bA);
-  TMatrixD    mC   ; mC   .Use(fMz,fNx,C);
-  TVectorD    vclow; vclow.Use(fMz,clow);
-  TVectorD    vcupp; vcupp.Use(fMz,cupp);
+  TVectorD    vc  ; vc  .Use(fNx,c);
+  TMatrixDSym mQ  ; mQ  .Use(fNx,Q);
+  TVectorD    vxlo; vxlo.Use(fNx,xlo);
+  TVectorD    vxup; vxup.Use(fNx,xup);
+  TMatrixD    mA  ;
+  TVectorD    vbA ;
+  if (fMy > 0) {
+    mA  .Use(fMy,fNx,A);
+    vbA .Use(fMy,bA);
+  }
+  TMatrixD    mC  ;
+  TVectorD    vclo;
+  TVectorD    vcup;
+  if (fMz > 0) {
+    mC  .Use(fMz,fNx,C);
+    vclo.Use(fMz,clo);
+    vcup.Use(fMz,cup);
+  }
 
-  TVectorD vixlow(fNx);
-  TVectorD vixupp(fNx);
+  TVectorD vixlo(fNx);
+  TVectorD vixup(fNx);
   for (Int_t ix = 0; ix < fNx; ix++) {
-    vixlow[ix] = (ixlow[ix]) ? 1.0 : 0.0;
-    vixupp[ix] = (ixupp[ix]) ? 1.0 : 0.0;
+    vixlo[ix] = (ixlo[ix]) ? 1.0 : 0.0;
+    vixup[ix] = (ixup[ix]) ? 1.0 : 0.0;
   }
 
-  TVectorD viclow(fMz);
-  TVectorD vicupp(fMz);
+  TVectorD viclo(fMz);
+  TVectorD vicup(fMz);
   for (Int_t ic = 0; ic < fMz; ic++) {
-    viclow[ic] = (iclow[ic]) ? 1.0 : 0.0;
-    vicupp[ic] = (icupp[ic]) ? 1.0 : 0.0;
+    viclo[ic] = (iclo[ic]) ? 1.0 : 0.0;
+    vicup[ic] = (icup[ic]) ? 1.0 : 0.0;
   }
 
-  TQpDataDens *&data = (TQpDataDens *&) data_in;
-  data = new TQpDataDens(vc,mQ,vxlow,vixlow,vxupp,vixupp,mA,vbA,mC,vclow,
-                         viclow,vcupp,vicupp);
+  TQpDataDens *data = new TQpDataDens(vc,mQ,vxlo,vixlo,vxup,vixup,mA,vbA,mC,vclo,
+                                      viclo,vcup,vicup);
+
+  return data;
 }
 
 //______________________________________________________________________________
-void TQpProbDens::MakeData(TQpDataBase *&data_in)
+TQpDataBase *TQpProbDens::MakeData(TVectorD     &c,
+                                   TMatrixDBase &Q_in,
+                                   TVectorD     &xlo, TVectorD &ixlo,
+                                   TVectorD     &xup, TVectorD &ixup,
+                                   TMatrixDBase &A_in,TVectorD &bA,
+                                   TMatrixDBase &C_in,
+                                   TVectorD     &clo, TVectorD &iclo,
+                                   TVectorD     &cup, TVectorD &icup)
 { 
-  TQpDataDens *&data = (TQpDataDens *&) data_in;
-  data = new TQpDataDens(fNx,fMy,fMz);
+  TMatrixDSym &Q = (TMatrixDSym &) Q_in;
+  TMatrixD    &A = (TMatrixD    &) A_in;
+  TMatrixD    &C = (TMatrixD    &) C_in;
+
+  Assert(Q.GetNrows() == fNx && Q.GetNcols() == fNx);
+  if (fMy > 0) Assert(A.GetNrows() == fMy && A.GetNcols() == fNx);
+  else         Assert(A.GetNrows() == fMy);
+  if (fMz > 0) Assert(C.GetNrows() == fMz && C.GetNcols() == fNx);
+  else         Assert(C.GetNrows() == fMz);
+
+  Assert(c.GetNrows()    == fNx);
+  Assert(xlo.GetNrows()  == fNx);
+  Assert(ixlo.GetNrows() == fNx);
+  Assert(xup.GetNrows()  == fNx);
+  Assert(ixup.GetNrows() == fNx);
+
+  Assert(bA.GetNrows()   == fMy);
+  Assert(clo.GetNrows()  == fMz);
+  Assert(iclo.GetNrows() == fMz);
+  Assert(cup.GetNrows()  == fMz);
+  Assert(icup.GetNrows() == fMz);
+
+  TQpDataDens *data = new TQpDataDens(c,Q,xlo,ixlo,xup,ixup,A,bA,C,clo,iclo,cup,icup);
+
+  return data;
 }
 
 //______________________________________________________________________________

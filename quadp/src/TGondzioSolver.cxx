@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.cxx,v 1.3 2004/06/02 06:45:34 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -55,7 +55,7 @@ ClassImp(TGondzioSolver)
 //______________________________________________________________________________
 TGondzioSolver::TGondzioSolver()
 {
-  fPrintlevel               = 10;
+  fPrintlevel               = 0;
   fTsig                     = 0.0;
   fMaximum_correctors       = 0;
   fNumberGondzioCorrections = 0;
@@ -73,14 +73,14 @@ TGondzioSolver::TGondzioSolver()
 }
 
 //______________________________________________________________________________
-TGondzioSolver::TGondzioSolver(TQpProbBase *of,TQpDataBase *prob)
+TGondzioSolver::TGondzioSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose)
 {
   fFactory = of;
   fStep            = fFactory->MakeVariables(prob);
   fCorrector_step  = fFactory->MakeVariables(prob);
   fCorrector_resid = fFactory->MakeResiduals(prob);
 
-  fPrintlevel = 10;
+  fPrintlevel = verbose;
   fTsig       = 3.0; // the usual value for the centering exponent (tau)
 
   fMaximum_correctors = 3; // maximum number of Gondzio correctors
@@ -178,7 +178,9 @@ Int_t TGondzioSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid
       fNumberGondzioCorrections = 0;
 
       // enter the Gondzio correction loop:
-      cout << "**** Entering the correction loop ****" << endl;
+      if (fPrintlevel >= 10)
+        cout << "**** Entering the correction loop ****" << endl;
+
       while (fNumberGondzioCorrections < fMaximum_correctors  &&
 	     alpha < 1.0 && !StopCorrections) {
 

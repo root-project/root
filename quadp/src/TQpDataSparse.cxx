@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataSparse.cxx,v 1.3 2004/06/02 06:45:34 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -85,11 +85,23 @@ TQpDataSparse::TQpDataSparse(TVectorD       &c_in,   TMatrixDSparse &Q_in,
   fNx = fG.GetNrows();
   fQ.Use(Q_in);
 
-  fA.Use(A_in);
-  fMy = fA.GetNrows();
+  if (A_in.GetNrows() > 0) {
+    fA.Use(A_in);
+    fMy = fA.GetNrows();
+  } else
+    fMy = 0;
 
-  fC.Use(C_in);
-  fMz = fC.GetNrows();
+  if (C_in.GetNrows()) {
+    fC.Use(C_in);
+    fMz = fC.GetNrows();
+  } else
+    fMz = 0;
+  fQ.Print();
+  fA.Print();
+  fC.Print();
+  printf("fNx: %d\n",fNx);
+  printf("fMy: %d\n",fMy);
+  printf("fMz: %d\n",fMz);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.h,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpProbBase.h,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -120,6 +120,14 @@ public:
 
   virtual ~TQpProbBase() {}
 
+  virtual TQpDataBase      *MakeData     (TVectorD     &c,
+                                          TMatrixDBase &Q_in,
+                                          TVectorD     &xlo, TVectorD &ixlo,
+                                          TVectorD     &xup, TVectorD &ixup,
+                                          TMatrixDBase &A_in,TVectorD &bA,
+                                          TMatrixDBase &C_in,
+                                          TVectorD     &clo, TVectorD &iclo,
+                                          TVectorD     &cup, TVectorD &icup) = 0;
   virtual TQpResidual      *MakeResiduals(const TQpDataBase *data) = 0;
   virtual TQpVar           *MakeVariables(const TQpDataBase *data) = 0;
   virtual TQpLinSolverBase *MakeLinSys   (const TQpDataBase *data) = 0;

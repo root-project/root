@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpVar.cxx,v 1.3 2004/06/02 06:45:34 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -70,22 +70,22 @@ TQpVar::TQpVar(TVectorD &x_in,TVectorD &s_in,TVectorD &y_in,TVectorD &z_in,
                TVectorD &t_in,TVectorD &lambda_in,TVectorD &u_in,TVectorD &pi_in,
                TVectorD &ixlow_in,TVectorD &ixupp_in,TVectorD &iclow_in,TVectorD &icupp_in)
 {
-  fX.       Use(x_in     .GetNrows(),x_in     .GetMatrixArray());
-  fS.       Use(s_in     .GetNrows(),s_in     .GetMatrixArray());
-  fY.       Use(y_in     .GetNrows(),y_in     .GetMatrixArray());
-  fZ.       Use(z_in     .GetNrows(),z_in     .GetMatrixArray());
-  fV.       Use(v_in     .GetNrows(),v_in     .GetMatrixArray());
-  fPhi.     Use(phi_in   .GetNrows(),phi_in   .GetMatrixArray());
-  fW.       Use(w_in     .GetNrows(),w_in     .GetMatrixArray());
-  fGamma.   Use(gamma_in .GetNrows(),gamma_in .GetMatrixArray());
-  fT.       Use(t_in     .GetNrows(),t_in     .GetMatrixArray());
-  fLambda.  Use(lambda_in.GetNrows(),lambda_in.GetMatrixArray());
-  fU.       Use(u_in     .GetNrows(),u_in     .GetMatrixArray());
-  fPi.      Use(pi_in    .GetNrows(),pi_in    .GetMatrixArray());
-  fXloIndex.Use(ixlow_in .GetNrows(),ixlow_in .GetMatrixArray());
-  fXupIndex.Use(ixupp_in .GetNrows(),ixupp_in .GetMatrixArray());
-  fCloIndex.Use(iclow_in .GetNrows(),iclow_in .GetMatrixArray());
-  fCupIndex.Use(icupp_in .GetNrows(),icupp_in .GetMatrixArray());
+  if (x_in     .GetNrows() > 0) fX.       Use(x_in     .GetNrows(),x_in     .GetMatrixArray());
+  if (s_in     .GetNrows() > 0) fS.       Use(s_in     .GetNrows(),s_in     .GetMatrixArray());
+  if (y_in     .GetNrows() > 0) fY.       Use(y_in     .GetNrows(),y_in     .GetMatrixArray());
+  if (z_in     .GetNrows() > 0) fZ.       Use(z_in     .GetNrows(),z_in     .GetMatrixArray());
+  if (v_in     .GetNrows() > 0) fV.       Use(v_in     .GetNrows(),v_in     .GetMatrixArray());
+  if (phi_in   .GetNrows() > 0) fPhi.     Use(phi_in   .GetNrows(),phi_in   .GetMatrixArray());
+  if (w_in     .GetNrows() > 0) fW.       Use(w_in     .GetNrows(),w_in     .GetMatrixArray());
+  if (gamma_in .GetNrows() > 0) fGamma.   Use(gamma_in .GetNrows(),gamma_in .GetMatrixArray());
+  if (t_in     .GetNrows() > 0) fT.       Use(t_in     .GetNrows(),t_in     .GetMatrixArray());
+  if (lambda_in.GetNrows() > 0) fLambda.  Use(lambda_in.GetNrows(),lambda_in.GetMatrixArray());
+  if (u_in     .GetNrows() > 0) fU.       Use(u_in     .GetNrows(),u_in     .GetMatrixArray());
+  if (pi_in    .GetNrows() > 0) fPi.      Use(pi_in    .GetNrows(),pi_in    .GetMatrixArray());
+  if (ixlow_in .GetNrows() > 0) fXloIndex.Use(ixlow_in .GetNrows(),ixlow_in .GetMatrixArray());
+  if (ixupp_in .GetNrows() > 0) fXupIndex.Use(ixupp_in .GetNrows(),ixupp_in .GetMatrixArray());
+  if (iclow_in .GetNrows() > 0) fCloIndex.Use(iclow_in .GetNrows(),iclow_in .GetMatrixArray());
+  if (icupp_in .GetNrows() > 0) fCupIndex.Use(icupp_in .GetNrows(),icupp_in .GetMatrixArray());
 
   fNx = fX.GetNrows();
   fMy = fY.GetNrows();
@@ -130,10 +130,10 @@ TQpVar::TQpVar(Int_t nx,Int_t my,Int_t mz,TVectorD &ixlow,TVectorD &ixupp,
   fMclo = iclow.NonZeros();
   fMcup = icupp.NonZeros();
 
-  fXloIndex.Use(ixlow.GetNrows(),ixlow.GetMatrixArray()); 
-  fXupIndex.Use(ixupp.GetNrows(),ixupp.GetMatrixArray());  
-  fCloIndex.Use(iclow.GetNrows(),iclow.GetMatrixArray()); 
-  fCupIndex.Use(icupp.GetNrows(),icupp.GetMatrixArray());
+  if (ixlow.GetNrows() > 0) fXloIndex.Use(ixlow.GetNrows(),ixlow.GetMatrixArray()); 
+  if (ixupp.GetNrows() > 0) fXupIndex.Use(ixupp.GetNrows(),ixupp.GetMatrixArray());  
+  if (iclow.GetNrows() > 0) fCloIndex.Use(iclow.GetNrows(),iclow.GetMatrixArray()); 
+  if (icupp.GetNrows() > 0) fCupIndex.Use(icupp.GetNrows(),icupp.GetMatrixArray());
   
   fNx = nx;
   fMy = my;

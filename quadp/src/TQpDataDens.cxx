@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpDataDens.cxx,v 1.3 2004/06/02 06:45:34 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -71,8 +71,8 @@ TQpDataDens::TQpDataDens(TVectorD &c_in,   TMatrixDSym &Q_in,
                          TVectorD &clow_in,TVectorD    &iclow_in,
                          TVectorD &cupp_in,TVectorD    &icupp_in)
 {
-  fG   .ResizeTo(c_in)    ; fG    = c_in;
-  fBa  .ResizeTo(bA_in)   ; fBa   = bA_in;
+  fG       .ResizeTo(c_in)    ; fG        = c_in;
+  fBa      .ResizeTo(bA_in)   ; fBa       = bA_in;
   fXloBound.ResizeTo(xlow_in) ; fXloBound = xlow_in;
   fXloIndex.ResizeTo(ixlow_in); fXloIndex = ixlow_in;
   fXupBound.ResizeTo(xupp_in) ; fXupBound = xupp_in;
@@ -83,13 +83,19 @@ TQpDataDens::TQpDataDens(TVectorD &c_in,   TMatrixDSym &Q_in,
   fCupIndex.ResizeTo(icupp_in); fCupIndex = icupp_in;
 
   fNx = fG.GetNrows();
-  fQ.Use(Q_in.GetNrows(),Q_in.GetNcols(),Q_in.GetMatrixArray());
+  fQ.Use(Q_in);
 
-  fA.Use(A_in.GetNrows(),A_in.GetNcols(),A_in.GetMatrixArray());
-  fMy = fA.GetNrows();
+  if (A_in.GetNrows() > 0) {
+    fA.Use(A_in);
+    fMy = fA.GetNrows();
+  } else
+    fMy = 0;
 
-  fC.Use(C_in.GetNrows(),C_in.GetNcols(),C_in.GetMatrixArray());
-  fMz = fC.GetNrows();
+  if (C_in.GetNrows() > 0) {
+    fC.Use(C_in);
+    fMz = fC.GetNrows();
+  } else
+    fMz = 0;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverSparse.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpLinSolverSparse.cxx,v 1.3 2004/06/02 06:45:34 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -61,12 +61,14 @@ TQpLinSolverSparse::TQpLinSolverSparse(TQpProbSparse *factory,TQpDataSparse *dat
   const Int_t n = factory->fNx+factory->fMy+factory->fMz;
   fKkt.ResizeTo(n,n);
 
-  data->PutAIntoAt(fKkt,fNx,    0);
-  data->PutCIntoAt(fKkt,fNx+fMy,0);                                     
+  if (fMy > 0) data->PutAIntoAt(fKkt,fNx,    0);
+  if (fMz > 0) data->PutCIntoAt(fKkt,fNx+fMy,0);                                     
 
-  // trick to makesure that A and C are inserted symmetrically
-  TMatrixDSparse tmp(TMatrixDSparse::kTransposed,fKkt);                 
-  fKkt += tmp;
+  // trick to make sure that A and C are inserted symmetrically
+  if (fMy > 0 || fMz > 0) {
+    TMatrixDSparse tmp(TMatrixDSparse::kTransposed,fKkt);                 
+    fKkt += tmp;
+  }
 
   data->PutQIntoAt(fKkt,0,0); 
 }

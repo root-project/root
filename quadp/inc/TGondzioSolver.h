@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.h,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TGondzioSolver.h,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -83,7 +83,7 @@ protected:
 public:
 
   TGondzioSolver();
-  TGondzioSolver(TQpProbBase *of,TQpDataBase *prob);
+  TGondzioSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose=0);
   TGondzioSolver(const TGondzioSolver &another);
 
   virtual ~TGondzioSolver();

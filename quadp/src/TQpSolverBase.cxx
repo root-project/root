@@ -1,4 +1,4 @@
-// @(#)root/quadp:$Name:  $:$Id: TQpSolverBase.cxx,v 1.1 2004/05/24 12:04:27 brun Exp $
+// @(#)root/quadp:$Name:  $:$Id: TQpSolverBase.cxx,v 1.2 2004/05/24 12:45:40 brun Exp $
 // Author: Eddy Offermann   May 2004
 
 /*************************************************************************
@@ -271,7 +271,6 @@ Int_t TQpSolverBase::DefStatus(TQpDataBase * /* data */,TQpVar * /* vars */,
      (fRnorm_history[idx]/fMu_history[idx])/(fRnorm_history[0]/fMu_history[0]) >= 1.e8) 
     stop_code = kUNKNOWN;
 
-  printf("stop_code: %d iterate: %d\n",stop_code,iterate);
   return stop_code;
 }
 
