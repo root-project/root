@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.31 2001/04/30 15:08:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.32 2001/05/11 17:06:59 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -428,8 +428,9 @@ Int_t TBranchElement::Fill()
       }
       if (fObject != (char*)*fAddress) SetAddress(fAddress);
    }
-   if (fType == 3)  nbytes += TBranch::Fill();  //TClonesArray counter
    if (nbranches) {
+      if (fType == 3)  nbytes += TBranch::Fill();  //TClonesArray counter
+      else             fEntries++;
       for (Int_t i=0;i<nbranches;i++)  {
          TBranchElement *branch = (TBranchElement*)fBranches[i];
          if (!branch->TestBit(kDoNotProcess)) nbytes += branch->Fill();
