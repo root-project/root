@@ -138,12 +138,12 @@ $CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_queue.o \
 $MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" queue.dll \
    $CINTDIRS/queue.dll $STLDIR/G__cpp_queue.o
 
-$CINT -w1 -zvalarray -n$STLDIR/G__cpp_valarray.cxx -D__MAKECINT__ \
-   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/vary.h
-$CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_valarray.o \
-   -c $STLDIR/G__cpp_valarray.cxx
-$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" valarray.dll \
-   $CINTDIRS/valarray.dll $STLDIR/G__cpp_valarray.o
+#$CINT -w1 -zvalarray -n$STLDIR/G__cpp_valarray.cxx -D__MAKECINT__ \
+#   -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/vary.h
+#$CXX $OPT $CINTCXXFLAGS -I. -I- -o $STLDIR/G__cpp_valarray.o \
+#   -c $STLDIR/G__cpp_valarray.cxx
+#$MAKELIB $PLATFORM $LD "$LDFLAGS" "$SOFLAGS" valarray.dll \
+#   $CINTDIRS/valarray.dll $STLDIR/G__cpp_valarray.o
 
 $CINT -w1 -zexception -n$STLDIR/G__cpp_exception.cxx -D__MAKECINT__ \
    -DG__MAKECINT -c-1 -A -M0x10 -Z0 $STLDIR/eh.h
