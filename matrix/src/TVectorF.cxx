@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.25 2004/07/20 15:59:24 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.26 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -798,25 +798,29 @@ TVectorF &TVectorF::operator*=(const TMatrixF &a)
     return *this;
   }
 
-  if ((fNrows != a.GetNrows() || fRowLwb != a.GetRowLwb()) && !fIsOwner) {
+  const Bool_t doResize = (fNrows != a.GetNrows() || fRowLwb != a.GetRowLwb());
+  if (doResize && !fIsOwner) {
     Error("operator*=(const TMatrixF &)","vector has to be resized but not owner");
     Invalidate();
     return *this;
   }
 
+  Float_t work[kWorkMax];
+  Bool_t isAllocated = kFALSE;
+  Float_t *elements_old = work;
   const Int_t nrows_old = fNrows;
-  Float_t *elements_old;
-  if (nrows_old <= kSizeMax) {
+  if (nrows_old > kWorkMax) {
+    isAllocated = kTRUE;
     elements_old = new Float_t[nrows_old];
-    memcpy(elements_old,fElements,nrows_old*sizeof(Float_t));
   }
-  else
-    elements_old = fElements;
+  memcpy(elements_old,fElements,nrows_old*sizeof(Float_t));
 
-  fRowLwb = a.GetRowLwb();
-  Assert((fNrows = a.GetNrows()) > 0);
-
-  Allocate(fNrows,fRowLwb);
+  if (doResize) {
+    const Int_t rowlwb_new = a.GetRowLwb();
+    const Int_t nrows_new  = a.GetNrows();
+    ResizeTo(rowlwb_new,rowlwb_new+nrows_new-1);
+  }
+  memset(fElements,0,fNrows*sizeof(Float_t));
 
   const Float_t *mp = a.GetMatrixArray();     // Matrix row ptr
         Float_t *tp = this->GetMatrixArray(); // Target vector ptr
@@ -834,10 +838,8 @@ TVectorF &TVectorF::operator*=(const TMatrixF &a)
   Assert(mp == a.GetMatrixArray()+a.GetNoElements());
 #endif
 
-  if (nrows_old <= kSizeMax)
+  if (isAllocated)
     delete [] elements_old;
-  else
-    Delete_m(nrows_old,elements_old);
 
   return *this;
 }
@@ -857,12 +859,19 @@ TVectorF &TVectorF::operator*=(const TMatrixFSym &a)
     return *this;
   }
 
-  Float_t * const elements_old = new Float_t[fNrows];
+  Float_t work[kWorkMax];
+  Bool_t isAllocated = kFALSE;
+  Float_t *elements_old = work;
+  if (fNrows > kWorkMax) {
+    isAllocated = kTRUE;
+    elements_old = new Float_t[fNrows];
+  }
+
   memcpy(elements_old,fElements,fNrows*sizeof(Float_t));
   memset(fElements,0,fNrows*sizeof(Float_t));
 
   const Float_t *mp1 = a.GetMatrixArray(); // Matrix row ptr
-        Float_t *tp1 = fElements;       // Target vector ptr
+        Float_t *tp1 = fElements;          // Target vector ptr
 #ifdef CBLAS
   cblas_ssymv(CblasRowMajor,CblasUpper,fNrows,1.0,mp1,
               fNrows,elements_old,1,0.0,tp1,1);
@@ -891,7 +900,8 @@ TVectorF &TVectorF::operator*=(const TMatrixFSym &a)
   Assert(tp1 == fElements+fNrows);
 #endif
 
-  delete [] elements_old;
+  if (isAllocated)
+    delete [] elements_old;
 
   return *this;
 }

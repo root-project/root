@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.52 2004/07/20 15:59:24 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.53 2004/09/03 13:41:34 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -850,25 +850,29 @@ TVectorD &TVectorD::operator*=(const TMatrixD &a)
     return *this;
   }
 
-  if ((fNrows != a.GetNrows() || fRowLwb != a.GetRowLwb()) && !fIsOwner) {
+  const Bool_t doResize = (fNrows != a.GetNrows() || fRowLwb != a.GetRowLwb());
+  if (doResize && !fIsOwner) {
     Error("operator*=(const TMatrixD &)","vector has to be resized but not owner");
     Invalidate();
     return *this;
   }
 
+  Double_t work[kWorkMax];
+  Bool_t isAllocated = kFALSE;
+  Double_t *elements_old = work;
   const Int_t nrows_old = fNrows;
-  Double_t *elements_old;
-  if (nrows_old <= kSizeMax) {
+  if (nrows_old > kWorkMax) {
+    isAllocated = kTRUE;
     elements_old = new Double_t[nrows_old];
-    memcpy(elements_old,fElements,nrows_old*sizeof(Double_t));
   }
-  else
-    elements_old = fElements;
+  memcpy(elements_old,fElements,nrows_old*sizeof(Double_t));
 
-  fRowLwb = a.GetRowLwb();
-  Assert((fNrows = a.GetNrows()) > 0);
-
-  Allocate(fNrows,fRowLwb);
+  if (doResize) {
+    const Int_t rowlwb_new = a.GetRowLwb();
+    const Int_t nrows_new  = a.GetNrows();
+    ResizeTo(rowlwb_new,rowlwb_new+nrows_new-1);
+  }
+  memset(fElements,0,fNrows*sizeof(Double_t));
 
   const Double_t *mp = a.GetMatrixArray();     // Matrix row ptr
         Double_t *tp = this->GetMatrixArray(); // Target vector ptr
@@ -886,10 +890,8 @@ TVectorD &TVectorD::operator*=(const TMatrixD &a)
   Assert(mp == a.GetMatrixArray()+a.GetNoElements());
 #endif
 
-  if (nrows_old <= kSizeMax)
+  if (isAllocated)
     delete [] elements_old;
-  else
-    Delete_m(nrows_old,elements_old);
 
   return *this;
 }
@@ -909,25 +911,29 @@ TVectorD &TVectorD::operator*=(const TMatrixDSparse &a)
     return *this;
   }
 
-  if ((fNrows != a.GetNrows() || fRowLwb != a.GetRowLwb()) && !fIsOwner) {
+  const Bool_t doResize = (fNrows != a.GetNrows() || fRowLwb != a.GetRowLwb());
+  if (doResize && !fIsOwner) {
     Error("operator*=(const TMatrixDSparse &)","vector has to be resized but not owner");
     Invalidate();
     return *this;
   }
 
+  Double_t work[kWorkMax];
+  Bool_t isAllocated = kFALSE;
+  Double_t *elements_old = work;
   const Int_t nrows_old = fNrows;
-  Double_t *elements_old;
-  if (nrows_old <= kSizeMax) {
+  if (nrows_old > kWorkMax) {
+    isAllocated = kTRUE;
     elements_old = new Double_t[nrows_old];
-    memcpy(elements_old,fElements,nrows_old*sizeof(Double_t));
   }
-  else
-    elements_old = fElements;
+  memcpy(elements_old,fElements,nrows_old*sizeof(Double_t));
 
-  fRowLwb = a.GetRowLwb();
-  Assert((fNrows = a.GetNrows()) > 0);
-
-  Allocate(fNrows,fRowLwb);
+  if (doResize) {
+    const Int_t rowlwb_new = a.GetRowLwb();
+    const Int_t nrows_new  = a.GetNrows();
+    ResizeTo(rowlwb_new,rowlwb_new+nrows_new-1);
+  }
+  memset(fElements,0,fNrows*sizeof(Double_t));
 
   const Int_t    * const pRowIndex = a.GetRowIndexArray();
   const Int_t    * const pColIndex = a.GetColIndexArray();
@@ -947,10 +953,8 @@ TVectorD &TVectorD::operator*=(const TMatrixDSparse &a)
     tp[irow] = sum;
   }
 
-  if (nrows_old <= kSizeMax)
+  if (isAllocated)
     delete [] elements_old;
-  else
-    Delete_m(nrows_old,elements_old);
 
   return *this;
 }
@@ -970,7 +974,14 @@ TVectorD &TVectorD::operator*=(const TMatrixDSym &a)
     return *this;
   }
 
-  Double_t * const elements_old = new Double_t[fNrows];
+  Double_t work[kWorkMax];
+  Bool_t isAllocated = kFALSE;
+  Double_t *elements_old = work;
+  if (fNrows > kWorkMax) {
+    isAllocated = kTRUE;
+    elements_old = new Double_t[fNrows];
+  }
+
   memcpy(elements_old,fElements,fNrows*sizeof(Double_t));
   memset(fElements,0,fNrows*sizeof(Double_t));
 
@@ -1004,7 +1015,8 @@ TVectorD &TVectorD::operator*=(const TMatrixDSym &a)
   Assert(tp1 == fElements+fNrows);
 #endif
 
-  delete [] elements_old;
+  if (isAllocated)
+    delete [] elements_old;
 
   return *this;
 }

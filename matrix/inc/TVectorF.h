@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.13 2004/06/22 19:57:01 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.14 2004/10/16 18:09:16 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -35,6 +35,8 @@ protected:
   Float_t  *fElements;             //[fNrows] elements themselves
 
   enum {kSizeMax = 5};             // size data container on stack, see New_m(),Delete_m()
+  enum {kWorkMax = 100};           // size of work array's in several routines
+
   Float_t   fDataStack[kSizeMax];  //! data container
   Bool_t    fIsOwner;              //!default kTRUE, when Use array kFALSE
 
