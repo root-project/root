@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatUtils.h,v 1.17 2003/08/18 16:40:33 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.18 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -25,8 +25,8 @@
 //   TMatrixDDiag_const   TMatrixDDiag                                  //
 //   TMatrixDFlat_const   TMatrixDFlat                                  //
 //                                                                      //
-//   TElementActionD                                                        //
-//   TElementPosActionD                                                     //
+//   TElementActionD                                                    //
+//   TElementPosActionD                                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,7 @@ class TMatrixDSym;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TElementActionD                                                          //
+// TElementActionD                                                      //
 //                                                                      //
 // A class to do a specific operation on every vector or matrix element //
 // (regardless of it position) as the object is being traversed.        //
@@ -52,7 +52,6 @@ class TMatrixDSym;
 
 class TElementActionD {
 
-friend class TMatrixDBase;
 friend class TMatrixD;
 friend class TMatrixDSym;
 friend class TVectorD;
@@ -64,7 +63,7 @@ private:
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TElementPosActionD                                                       //
+// TElementPosActionD                                                   //
 //                                                                      //
 // A class to do a specific operation on every vector or matrix element //
 // as the object is being traversed. This is an abstract class.         //
@@ -76,7 +75,6 @@ private:
 
 class TElementPosActionD {
 
-friend class TMatrixDBase;
 friend class TMatrixD;
 friend class TMatrixDSym;
 friend class TVectorD;

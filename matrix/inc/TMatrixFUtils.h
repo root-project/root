@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatUtils.h,v 1.17 2003/08/18 16:40:33 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFUtils.h,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -52,7 +52,6 @@ class TMatrixFSym;
 
 class TElementActionF {
 
-friend class TMatrixFBase;
 friend class TMatrixF;
 friend class TMatrixFSym;
 friend class TVectorF;
@@ -76,7 +75,6 @@ private:
 
 class TElementPosActionF {
 
-friend class TMatrixFBase;
 friend class TMatrixF;
 friend class TMatrixFSym;
 friend class TVectorF;
