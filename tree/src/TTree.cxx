@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.109 2002/01/19 11:04:41 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.110 2002/01/24 09:54:23 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -314,6 +314,7 @@ TTree::TTree(): TNamed()
    fEntries        = 0;
    fTotBytes       = 0;
    fZipBytes       = 0;
+   fWeight         = 1;
    fAutoSave       = 100000000;
    fSavedBytes     = 0;
    fTotalBuffers   = 0;
@@ -354,6 +355,7 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
    fEntries        = 0;
    fTotBytes       = 0;
    fZipBytes       = 0;
+   fWeight         = 1;
    fAutoSave       = 100000000;
    fSavedBytes     = 0;
    fTotalBuffers   = 0;
@@ -399,8 +401,9 @@ TTree::~TTree()
 //*-*-*-*-*-*-*-*-*-*-*Tree destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =================
    if (fDirectory) {
-      if (!fDirectory->TestBit(TDirectory::kCloseDirectory))
+      if (!fDirectory->TestBit(TDirectory::kCloseDirectory)) {
          fDirectory->GetList()->Remove(this);
+      }
    }
    fLeaves.Clear();
    fBranches.Delete();
@@ -3100,6 +3103,26 @@ void TTree::SetObject(const char *name, const char *title)
    if (fDirectory) fDirectory->GetList()->Add(this);
 }
 
+//______________________________________________________________________________
+void TTree::SetWeight(Double_t w, Option_t *)
+{
+//  Set tree weight.
+//  The weight is used by TTree::Draw to automatically weight each
+//  selected entry in the resulting histogram.
+//  For example the equivalent of
+//     T.Draw("x","w")
+//  is
+//     T.SetWeight(w);
+//     T.Draw("x");
+//
+// This function is redefined by TChain::SetWeight. In case of a TChain,
+// an option "global" may be specified to set the same weight
+// for all Trees in the TChain instead of the default behaviour
+// using the weights of each Tree in the chain. (see TChain::SetWeight)
+   
+   fWeight = w;
+}
+
 //_______________________________________________________________________
 void TTree::Show(Int_t entry)
 {
@@ -3155,11 +3178,11 @@ void TTree::Streamer(TBuffer &b)
       gTree = this;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 4) {
+         fDirectory = gDirectory;
+         gDirectory->Append(this);
          TTree::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
          if (fEstimate <= 10000) fEstimate = 1000000;
          fSavedBytes = fTotBytes;
-         fDirectory = gDirectory;
-         gDirectory->Append(this);
          return;
       }
       //====process old versions before automatic schema evolution

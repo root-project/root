@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.36 2002/01/18 11:29:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.37 2002/01/19 11:04:41 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -87,10 +87,11 @@ class TFriendElement;
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
 protected:
-    Stat_t        fEntries;           //  Number of entries
-    Stat_t        fTotBytes;          //  Total number of bytes in all branches before compression
-    Stat_t        fZipBytes;          //  Total number of bytes in all branches after compression
-    Stat_t        fSavedBytes;        //  Number of autosaved bytes
+    Double_t      fEntries;           //  Number of entries
+    Double_t      fTotBytes;          //  Total number of bytes in all branches before compression
+    Double_t      fZipBytes;          //  Total number of bytes in all branches after compression
+    Double_t      fSavedBytes;        //  Number of autosaved bytes
+    Double_t      fWeight;            //  Tree weight (see TTree::SetWeight)
     Int_t         fTimerInterval;     //  Timer interval in milliseconds
     Int_t         fScanField;         //  Number of runs before prompting in Scan
     Int_t         fUpdate;            //  Update frequency for EntryLoop
@@ -175,9 +176,9 @@ public:
             Int_t     GetDebugMax()  const {return fDebugMax;}
             Int_t     GetDebugMin()  const {return fDebugMin;}
     TDirectory       *GetDirectory() const {return fDirectory;}
-    virtual Stat_t    GetEntries() const   {return fEntries;}
-    virtual Stat_t    GetEntriesFast() const   {return fEntries;}
-    virtual Stat_t    GetEntriesFriend() const;
+    virtual Double_t  GetEntries() const   {return fEntries;}
+    virtual Double_t  GetEntriesFast() const   {return fEntries;}
+    virtual Double_t  GetEntriesFriend() const;
     virtual Int_t     GetEstimate() const { return fEstimate; }
     virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);
             Int_t     GetEvent(Int_t entry=0, Int_t getall=0) {return GetEntry(entry,getall);}
@@ -209,9 +210,10 @@ public:
     TTreeFormula     *GetSelect()    {return GetPlayer()->GetSelect();}
     virtual Int_t     GetSelectedRows() {return GetPlayer()->GetSelectedRows();}
     virtual Int_t     GetTimerInterval() const {return fTimerInterval;}
+    virtual Double_t  GetTotBytes() const {return fTotBytes;}
     virtual TTree    *GetTree() const {return (TTree*)this;}
-    virtual Int_t     GetUpdate() const {return fUpdate;}
     virtual Int_t     GetTreeNumber() const {return 0;}
+    virtual Int_t     GetUpdate() const {return fUpdate;}
     TTreeFormula     *GetVar1() {return GetPlayer()->GetVar1();}
     TTreeFormula     *GetVar2() {return GetPlayer()->GetVar2();}
     TTreeFormula     *GetVar3() {return GetPlayer()->GetVar3();}
@@ -220,7 +222,7 @@ public:
     virtual Double_t *GetV2()   {return GetPlayer()->GetV2();}
     virtual Double_t *GetV3()   {return GetPlayer()->GetV3();}
     virtual Double_t *GetW()    {return GetPlayer()->GetW();}
-    virtual Stat_t    GetTotBytes() const {return fTotBytes;}
+    virtual Double_t  GetWeight() const   {return fWeight;}
     virtual Stat_t    GetZipBytes() const {return fZipBytes;}
     virtual void      IncrementTotalBuffers(Int_t nbytes) {fTotalBuffers += nbytes;}
     Bool_t            IsFolder() const {return kTRUE;}
@@ -261,6 +263,7 @@ public:
     virtual void      SetObject(const char *name, const char *title);
     virtual void      SetScanField(Int_t n=50) {fScanField = n;} // *MENU*
     virtual void      SetTimerInterval(Int_t msec=333) {fTimerInterval=msec;}
+    virtual void      SetWeight(Double_t w=1, Option_t *option="");
     virtual void      SetUpdate(Int_t freq=0) {fUpdate = freq;}
     virtual void      Show(Int_t entry=-1);
     virtual void      StartViewer(); // *MENU*
@@ -268,7 +271,7 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     void              UseCurrentStyle();
 
-    ClassDef(TTree,7)  //Tree descriptor (the main ROOT I/O class)
+    ClassDef(TTree,8)  //Tree descriptor (the main ROOT I/O class)
 };
 
 //////////////////////////////////////////////////////////////////////////
