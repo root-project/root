@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.127 2003/01/22 08:04:40 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.128 2003/01/22 17:49:01 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1091,7 +1091,8 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       fprintf(fp, "   }\n");
 
       fprintf(fp, "   void destruct_%s(void *p) {\n",G__map_cpp_name((char *)cl.Fullname()));
-      fprintf(fp, "      ((::%s*)p)->~%s();\n",cl.Fullname(),cl.TmpltName());
+      fprintf(fp, "      typedef ::%s current_t;\n",cl.Fullname());
+      fprintf(fp, "      ((current_t*)p)->~current_t();\n");
       fprintf(fp, "   }\n");
    }
 
