@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.83 2004/03/17 17:52:24 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.84 2004/03/30 13:10:17 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -193,6 +193,7 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <stdlib.h>
 #include <unistd.h>
 #include <time.h>
@@ -305,50 +306,39 @@ extern "C" {
 
 #include "rootdp.h"
 
-#ifdef R__KRB5
-#include "Krb5Auth.h"
-namespace ROOT {
-   extern krb5_keytab  gKeytab;      // to allow specifying on the command line
-   extern krb5_context gKcontext;
-}
-#endif
 extern "C" {
-   #include "rsadef.h"
-   #include "rsalib.h"
+#include "rsadef.h"
+#include "rsalib.h"
 }
 
-//--- Globals ------------------------------------------------------------------
+// Debug flag
+int     gDebug  = 0;
+
+//--- Local Globals -----------------------------------------------------------
 
 enum { kBinary, kAscii };
 
-double  gBytesRead               = 0;
-double  gBytesWritten            = 0;
-char    gConfDir[kMAXPATHLEN]    = { 0 };  // Needed to localize root stuff
-char    gDaemonrc[kMAXPATHLEN]   = { 0 };
-int     gDebug                   = 0;
-int     gDownloaded              = 0;
-int     gFd                      = -1;
-int     gForegroundFlag          = 0;
-int     gFtp                     = 0;
-int     gInetdFlag               = 0;
-char    gOption[32]              = { 0 };
-int     gPort1                   = 0;
-int     gPort2                   = 0;
-int     gProtocol                = 10;      // increase when protocol changes
-int     gRootLog                 = 0;
-char    gRpdAuthTab[kMAXPATHLEN] = { 0 };   // keeps track of authentication info
-char    gRootdTab[kMAXPATHLEN]   = { 0 };   // keeps track of open files
-int     gUploaded                = 0;
-int     gWritable                = 0;
-int     gReadOnly                = 0;
-int     gRootdParentId           = -1;      // Parent process ID
+static std::string gDaemonrc;
+static std::string gRootdTab;     // keeps track of open files
+static std::string gRpdAuthTab;   // keeps track of authentication info
+static EService gService         = kROOTD;
+static int gProtocol             = 10;      // increase when protocol changes
+static int gClientProtocol       = -1;  // Determined by RpdInitSession
+static int gAnon                 = 0;      // anonymous user flag
+static std::string gUser;
+static std::string gPasswd;
 
-namespace ROOT {
-int     gRSAInit = 0;
-rsa_KEY gRSAPriKey;
-rsa_KEY gRSAPubKey;
-rsa_KEY_export gRSAPubExport;
-}
+static double  gBytesRead        = 0;
+static double  gBytesWritten     = 0;
+static int gDownloaded           = 0;
+static int gFd                   = -1;
+static int gFtp                  = 0;
+static int gInetdFlag            = 0;
+static char gOption[32]          = { 0 };
+static char gFile[kMAXPATHLEN]   = { 0 };
+static int gUploaded             = 0;
+static int gWritable             = 0;
+static int gReadOnly             = 0;
 
 using namespace ROOT;
 
@@ -585,7 +575,7 @@ int RootdCheckTab(int mode)
    // The lockf() call can fail if the directory is NFS mounted
    // and the lockd daemon is not running.
 
-   const char *sfile = gRootdTab;
+   const char *sfile = gRootdTab.c_str();
    int fid, create = 0;
 
    int noupdate = 0;
@@ -604,7 +594,7 @@ again:
 
    if (fid == -1) {
       if (sfile[1] == 'u') {
-         sfile = gRootdTab+4;
+         sfile = gRootdTab.c_str()+4;
          goto again;
       }
       Error(ErrSys, kErrFatal, "RootdCheckTab: error opening %s", sfile);
@@ -615,7 +605,7 @@ again:
       if (sfile[1] == 'u' && create) {
          close(fid);
          remove(sfile);
-         sfile = gRootdTab+4;
+         sfile = gRootdTab.c_str()+4;
          goto again;
       }
       Error(ErrSys, kErrFatal, "RootdCheckTab: error locking %s", sfile);
@@ -658,7 +648,8 @@ again:
          unsigned long dev, ino;
          sscanf(s, "%s %lu %lu %s %s %d", msg, &dev, &ino, gmode, user, &pid);
          if (kill(pid, 0) == -1 && GetErrno() == ESRCH) {
-            ErrorInfo("RootdCheckTab: remove stale lock (%s %lu %lu %s %s %d)\n", msg, dev, ino, gmode, user, pid);
+            ErrorInfo("RootdCheckTab: remove stale lock (%s %lu %lu %s %s %d)\n",
+                msg, dev, ino, gmode, user, pid);
             if (n >= flast) {
                siz = int(s - fbuf);
                changed = 1;
@@ -693,8 +684,15 @@ again:
    if (result && !noupdate) {
       unsigned long dev = device;
       unsigned long ino = inode;
-      sprintf(msg, "%s %lu %lu %s %s %d\n", gFile, dev, ino, smode, gUser, (int) getpid());
-      write(fid, msg, strlen(msg));
+      char *tmsg = msg;
+      int lmsg = strlen(gFile) + gUser.length() + strlen(smode) + 40;
+      if (lmsg > kMAXPATHLEN) 
+         tmsg = new char[lmsg]; 
+      sprintf(tmsg, "%s %lu %lu %s %s %d\n", 
+                   gFile, dev, ino, smode, gUser.c_str(), (int) getpid());
+      write(fid, tmsg, strlen(tmsg));
+      if (tmsg && tmsg != msg)
+         delete[] tmsg;
    }
 
    // unlock the file
@@ -718,13 +716,13 @@ void RootdCloseTab(int force = 0)
    // funny happened and the original reference was not correctly removed.
    // Stale locks are detected by checking each pid and then removed.
 
-   const char *sfile = gRootdTab;
+   const char *sfile = gRootdTab.c_str();
    int fid;
 
 again:
    if (access(sfile, F_OK) == -1) {
       if (sfile[1] == 'u') {
-         sfile = gRootdTab+4;
+         sfile = gRootdTab.c_str()+4;
          goto again;
       }
       ErrorInfo("RootdCloseTab: file %s does not exist", sfile);
@@ -773,10 +771,12 @@ again:
          sscanf(s, "%s %lu %lu %s %s %d", msg, &dev, &ino, gmode, user, &pid);
          if (kill(pid, 0) == -1 && GetErrno() == ESRCH) {
             stale = 1;
-            ErrorInfo("Remove Stale Lock (%s %lu %lu %s %s %d)\n", msg, dev, ino, gmode, user, pid);
+            ErrorInfo("Remove Stale Lock (%s %lu %lu %s %s %d)\n",
+                       msg, dev, ino, gmode, user, pid);
          }
          if (stale || (!force && mypid == pid) ||
-             (force && device == dev && inode == ino && !strcmp(gUser, user))) {
+            (force && device == dev && inode == ino && 
+             !strcmp(gUser.c_str(), user))) {
             if (n >= flast) {
                siz = int(s - fbuf);
                changed = 1;
@@ -826,11 +826,15 @@ int RootdIsOpen()
 void RootdCloseFtp()
 {
    if (gDebug > 0)
-      ErrorInfo("RootdCloseFtp: %d files uploaded, %d files downloaded, rd=%g, wr=%g, rx=%g, tx=%g",
-                gUploaded, gDownloaded, gBytesRead, gBytesWritten, gBytesRecv, gBytesSent);
+      ErrorInfo("RootdCloseFtp: %d files uploaded, %d files downloaded,"
+                " rd=%g, wr=%g, rx=%g, tx=%g",
+                gUploaded, gDownloaded, gBytesRead, gBytesWritten,
+                NetGetBytesRecv(), NetGetBytesSent());
    else
-      ErrorInfo("Rootd: %d files uploaded, %d files downloaded, rd=%g, wr=%g, rx=%g, tx=%g",
-                gUploaded, gDownloaded, gBytesRead, gBytesWritten, gBytesRecv, gBytesSent);
+      ErrorInfo("Rootd: %d files uploaded, %d files downloaded, rd=%g,"
+                " wr=%g, rx=%g, tx=%g",
+                gUploaded, gDownloaded, gBytesRead, gBytesWritten,
+                NetGetBytesRecv(), NetGetBytesSent());
 }
 
 //______________________________________________________________________________
@@ -850,10 +854,12 @@ void RootdClose()
 
    if (gDebug > 0)
       ErrorInfo("RootdClose: file %s closed, rd=%g, wr=%g, rx=%g, tx=%g",
-                gFile, gBytesRead, gBytesWritten, gBytesRecv, gBytesSent);
+                gFile, gBytesRead, gBytesWritten, 
+                NetGetBytesRecv(), NetGetBytesSent());
    else
       ErrorInfo("Rootd: file %s closed, rd=%g, wr=%g, rx=%g, tx=%g", gFile,
-                gBytesRead, gBytesWritten, gBytesRecv, gBytesSent);
+                gBytesRead, gBytesWritten,
+                NetGetBytesRecv(), NetGetBytesSent());
 }
 
 //______________________________________________________________________________
@@ -960,7 +966,8 @@ void RootdOpen(const char *msg)
 
    char file[kMAXPATHLEN], option[32];
 
-   gBytesRead = gBytesWritten = gBytesRecv = gBytesSent = 0;
+   gBytesRead = gBytesWritten = 0;
+   NetResetByteCount();
 
    sscanf(msg, "%s %s", file, option);
 
@@ -1102,10 +1109,10 @@ void RootdOpen(const char *msg)
    else {
       if (gAnon)
          ErrorInfo("RootdOpen: file %s (dev=%lu,inode=%lu,%s) opened by %s/%s",
-                   gFile, dev, ino, gOption, gUser, gPasswd);
+                   gFile, dev, ino, gOption, gUser.c_str(), gPasswd.c_str());
       else
          ErrorInfo("RootdOpen: file %s (dev=%lu,inode=%lu,%s) opened by %s",
-                   gFile, dev, ino, gOption, gUser);
+                   gFile, dev, ino, gOption, gUser.c_str());
    }
 }
 
@@ -1488,7 +1495,7 @@ void RootdGetFile(const char *msg)
    NetSend(0, kROOTD_GETFILE);
 
    char mess[128];
-   sprintf(mess, "%lld", size);
+   SPrintf(mess, 128, "%lld", size);
    NetSend(mess, kROOTD_GETFILE);
 
    struct timeval started, ended;
@@ -1575,7 +1582,8 @@ void RootdChdir(const char *dir)
 {
    // Change directory.
 
-   char buffer[kMAXPATHLEN + 256];
+   const int MAXBUFLEN = kMAXPATHLEN + 256;
+   char buffer[MAXBUFLEN];
 
    if (dir && *dir == '~') {
       struct passwd *pw;
@@ -1587,16 +1595,16 @@ void RootdChdir(const char *dir)
          buffer[i++] = *p++;
       buffer[i] = 0;
 
-      if ((pw = getpwnam(i ? buffer : gUser)))
-         sprintf(buffer, "%s%s", pw->pw_dir, p);
+      if ((pw = getpwnam(i ? buffer : gUser.c_str())))
+         SPrintf(buffer, MAXBUFLEN, "%s%s", pw->pw_dir, p);
       else
          *buffer = 0;
    } else
       *buffer = 0;
 
    if (chdir(*buffer ? buffer : (dir && *dir ? dir : "/")) == -1) {
-      sprintf(buffer, "cannot change directory to %s", dir);
-      Perror(buffer);
+      SPrintf(buffer,MAXBUFLEN,"cannot change directory to %s",dir);
+      Perror(buffer,MAXBUFLEN);
       NetSend(buffer, kROOTD_CHDIR);
       return;
    } else {
@@ -1613,7 +1621,7 @@ void RootdChdir(const char *dir)
 
       if (!getcwd(buffer, kMAXPATHLEN)) {
          if (*dir == '/')
-            sprintf(buffer, "%s", dir);
+            SPrintf(buffer, MAXBUFLEN, "%s", dir);
       }
       NetSend(buffer, kROOTD_CHDIR);
    }
@@ -1627,14 +1635,15 @@ void RootdMkdir(const char *dir)
    char buffer[kMAXPATHLEN];
 
    if (gAnon) {
-      sprintf(buffer, "anonymous users may not create directories");
+      SPrintf(buffer,kMAXPATHLEN,
+              "anonymous users may not create directories");
       ErrorInfo("RootdMkdir: %s", buffer);
    } else if (mkdir(dir, 0755) < 0) {
-      sprintf(buffer, "cannot create directory %s", dir);
+      SPrintf(buffer,kMAXPATHLEN,"cannot create directory %s",dir);
       Perror(buffer);
       ErrorInfo("RootdMkdir: %s", buffer);
    } else
-      sprintf(buffer, "created directory %s", dir);
+      SPrintf(buffer,kMAXPATHLEN,"created directory %s",dir);
 
    NetSend(buffer, kROOTD_MKDIR);
 }
@@ -1647,14 +1656,15 @@ void RootdRmdir(const char *dir)
    char buffer[kMAXPATHLEN];
 
    if (gAnon) {
-      sprintf(buffer, "anonymous users may not delete directories");
+      SPrintf(buffer,kMAXPATHLEN,
+              "anonymous users may not delete directories");
       ErrorInfo("RootdRmdir: %s", buffer);
    } else if (rmdir(dir) < 0) {
-      sprintf(buffer, "cannot delete directory %s", dir);
+      SPrintf(buffer, kMAXPATHLEN, "cannot delete directory %s", dir);
       Perror(buffer);
       ErrorInfo("RootdRmdir: %s", buffer);
    } else
-      sprintf(buffer, "deleted directory %s", dir);
+      SPrintf(buffer, kMAXPATHLEN, "deleted directory %s", dir);
 
    NetSend(buffer, kROOTD_RMDIR);
 }
@@ -1669,19 +1679,19 @@ void RootdLsdir(const char *cmd)
    // make sure all commands start with ls (should use snprintf)
    if (gAnon) {
       if (strlen(cmd) < 2 || strncmp(cmd, "ls", 2))
-         sprintf(buffer, "ls %s", cmd);
+         SPrintf(buffer, kMAXPATHLEN, "ls %s", cmd);
       else
-         sprintf(buffer, "%s", cmd);
+         SPrintf(buffer, kMAXPATHLEN, "%s", cmd);
    } else {
       if (strlen(cmd) < 2 || strncmp(cmd, "ls", 2))
-         sprintf(buffer, "ls %s 2>/dev/null", cmd);
+         SPrintf(buffer, kMAXPATHLEN, "ls %s 2>/dev/null", cmd);
       else
-         sprintf(buffer, "%s 2>/dev/null", cmd);
+         SPrintf(buffer, kMAXPATHLEN, "%s 2>/dev/null", cmd);
    }
 
    FILE *pf;
    if ((pf = popen(buffer, "r")) == 0) {
-      sprintf(buffer, "error in popen");
+      SPrintf(buffer,kMAXPATHLEN, "error in popen");
       Perror(buffer);
       NetSend(buffer, kROOTD_LSDIR);
       ErrorInfo("RootdLsdir: %s", buffer);
@@ -1717,7 +1727,7 @@ void RootdPwd()
    char buffer[kMAXPATHLEN];
 
    if (!getcwd(buffer, kMAXPATHLEN)) {
-      sprintf(buffer, "current directory not readable");
+      SPrintf(buffer, kMAXPATHLEN, "current directory not readable");
       Perror(buffer);
       ErrorInfo("RootdPwd: %s", buffer);
    }
@@ -1734,14 +1744,16 @@ void RootdMv(const char *msg)
    sscanf(msg, "%s %s", file1, file2);
 
    if (gAnon) {
-      sprintf(buffer, "anonymous users may not rename files");
+      SPrintf(buffer, kMAXPATHLEN, "anonymous users may not rename files");
       ErrorInfo("RootdMv: %s", buffer);
    } else if (rename(file1, file2) < 0) {
-      sprintf(buffer, "cannot rename file %s to %s", file1, file2);
+      SPrintf(buffer, kMAXPATHLEN, "cannot rename file %s to %s",
+              file1, file2);
       Perror(buffer);
       ErrorInfo("RootdMv: %s", buffer);
    } else
-      sprintf(buffer, "renamed file %s to %s", file1, file2);
+      SPrintf(buffer, kMAXPATHLEN, "renamed file %s to %s",
+              file1, file2);
 
    NetSend(buffer, kROOTD_MV);
 }
@@ -1754,14 +1766,14 @@ void RootdRm(const char *file)
    char buffer[kMAXPATHLEN];
 
    if (gAnon) {
-      sprintf(buffer, "anonymous users may not delete files");
+      SPrintf(buffer, kMAXPATHLEN, "anonymous users may not delete files");
       ErrorInfo("RootdRm: %s", buffer);
    } else if (unlink(file) < 0) {
-      sprintf(buffer, "cannot unlink file %s", file);
+      SPrintf(buffer, kMAXPATHLEN, "cannot unlink file %s", file);
       Perror(buffer);
       ErrorInfo("RootdRm: %s", buffer);
    } else
-      sprintf(buffer, "removed file %s", file);
+      SPrintf(buffer, kMAXPATHLEN, "removed file %s", file);
 
    NetSend(buffer, kROOTD_RM);
 }
@@ -1777,14 +1789,16 @@ void RootdChmod(const char *msg)
    sscanf(msg, "%s %d", file, &mode);
 
    if (gAnon) {
-      sprintf(buffer, "anonymous users may not change file permissions");
+      SPrintf(buffer, kMAXPATHLEN,
+              "anonymous users may not change file permissions");
       ErrorInfo("RootdChmod: %s", buffer);
    } else if (chmod(file, mode) < 0) {
-      sprintf(buffer, "cannot chmod file %s to 0%o", file, mode);
+      SPrintf(buffer, kMAXPATHLEN, "cannot chmod file %s to 0%o", file, mode);
       Perror(buffer);
       ErrorInfo("RootdChmod: %s", buffer);
    } else
-      sprintf(buffer, "changed permission of file %s to 0%o", file, mode);
+      SPrintf(buffer, kMAXPATHLEN, "changed permission of file %s to 0%o",
+              file, mode);
 
    NetSend(buffer, kROOTD_CHMOD);
 }
@@ -1798,7 +1812,7 @@ static void RootdTerm(int)
    // Terminate properly
    RpdAuthCleanup(0,0);
    // Trim Auth Table
-   RpdUpdateAuthTab(0,0,0);
+   RpdUpdateAuthTab(0,(const char *)0, (char **)0);
    // Close network connection
    NetClose();
    // exit
@@ -1832,8 +1846,8 @@ void RootdLoop()
          Error(ErrFatal, kErrFatal, "RootdLoop: error receiving message");
 
       if (gDebug > 2 && kind != kROOTD_PASS)
-         ErrorInfo("RootdLoop: kind:%d -- buf:'%s' (len:%d) -- auth:%d",
-                   kind, recvbuf, strlen(recvbuf), gAuth);
+         ErrorInfo("RootdLoop: kind:%d -- buf:'%s' (len:%d)",
+                   kind, recvbuf, strlen(recvbuf));
 
       switch (kind) {
          case kROOTD_OPEN:
@@ -1902,63 +1916,54 @@ void RootdLoop()
 int main(int argc, char **argv)
 {
    char *s;
-   int   tcpwindowsize = 65535;
-   int   inclusivetoken = 1;
+   int tcpwindowsize  = 65535;
+   int inclusivetoken = 1;
+   int sshdport       = 22;
+   int port1          = 0;
+   int port2          = 0;
+   int reuseallow     = 0x1F;
+   int foregroundflag = 0;
+   std::string tmpdir = "";
+   std::string confdir = "";
+   std::string rootbindir = "";
+   std::string altSRPpass = "";
+   std::string daemonrc = "";
+   std::string rootetcdir = "";
+#ifdef R__GLBS
+   std::string gridmap = "";
+   std::string hostcertconf = "";
+#endif
 
-   // Error handlers
-   gErrSys   = ErrSys;
-   gErrFatal = ErrFatal;
-   gErr      = Err;
+   // Init error handlers
+   RpdSetErrorHandler(Err, ErrSys, ErrFatal);
 
-   // function for dealing with SIGPIPE signals (used in NetSetOptions(),
-   // rpdutils/net.cxx)
-   gSigPipeHook = SigPipe;
+   // function for dealing with SIGPIPE signals 
+   // (used by NetSetOptions() in rpdutils/net.cxx)
+   NetSetSigPipeHook(SigPipe);
 
+   // Init syslog
    ErrorInit(argv[0]);
 
    // To terminate correctly ... maybe not needed
    signal(SIGTERM, RootdTerm);
    signal(SIGINT, RootdTerm);
 
-#ifdef R__KRB5
-   const char *kt_fname;
-
-   int retval = krb5_init_context(&gKcontext);
-   if (retval) {
-      fprintf(stderr, "%s while initializing krb5\n",
-            error_message(retval));
-      Error(Err, -1, "%s while initializing krb5",
-            error_message(retval));
-   }
-#endif
-#ifdef R__GLBS
-   char    GridMap[kMAXPATHLEN]         = { 0 };
-#endif
-
-   // Define service
-   strcpy(gService, "rootd");
-
-   // Set Server Protocol
-   gServerProtocol = gProtocol;
-
-   // Try determining gExecDir and gConfDir
-   char *exec;
-   exec = RootdExpandPathName(argv[0]);
-   if (exec && exec[0] == '/') {
-      char *pstr = strrchr(exec, '/');
-      if (pstr) {
-         int plen = (int)(pstr-exec);
-         strncpy(gExecDir, exec, plen);
-         gExecDir[plen] = 0;
-         pstr--;
-         pstr = strrchr(pstr, '/');
-         if (pstr) {
-            plen = (int)(pstr-exec);
-            strncpy(gConfDir, exec, plen);
-            gConfDir[plen] = 0;
+   char *tmp = RootdExpandPathName(argv[0]);
+   if (tmp) {
+      int p = strlen(tmp)-1;
+      while ((p+1) && tmp[p] != '/')
+         p--;
+      if (p+1) {
+         tmp[p] = '\0';
+         rootbindir = std::string(tmp);
+         while ((p+1) && tmp[p] != '/')
+            p--;
+         if (p+1) {
+            tmp[p] = '\0';
+            confdir = std::string(tmp);
          }
       }
-      free(exec);
+      free(tmp);
    }
 
    while (--argc > 0 && (*++argv)[0] == '-')
@@ -1984,7 +1989,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal, kErrFatal,"-C requires a file name for"
                                     " the host certificates file location");
                }
-               sprintf(gHostCertConf, "%s", *++argv);
+               hostcertconf = std::string(*++argv);
                break;
 #endif
             case 'd':
@@ -2005,7 +2010,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal, kErrFatal,"-D requires a file path name"
                                     "  for the file defining access rules");
                }
-               sprintf(gDaemonrc, "%s", *++argv);
+               gDaemonrc = std::string(*++argv);
                break;
 
             case 'E':
@@ -2013,7 +2018,7 @@ int main(int argc, char **argv)
                break;
 
             case 'f':
-               gForegroundFlag = 1;
+               foregroundflag = 1;
                break;
 #ifdef R__GLBS
             case 'G':
@@ -2024,11 +2029,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal,kErrFatal,"-G requires a file name for"
                                     " the gridmap file");
                }
-               sprintf(GridMap, "%s", *++argv);
-               if (setenv("GRIDMAP",GridMap,1) ) {
-                  Error(ErrFatal,kErrFatal,"while setting the GRIDMAP"
-                                    " environment variable");
-               }
+               gridmap = std::string(*++argv);
                break;
 #endif
             case 'i':
@@ -2043,12 +2044,12 @@ int main(int argc, char **argv)
                                     " argument");
                }
                char *p;
-               gPort1 = strtol(*++argv, &p, 10);
+               port1 = strtol(*++argv, &p, 10);
                if (*p == '-')
-                  gPort2 = strtol(++p, &p, 10);
+                  port2 = strtol(++p, &p, 10);
                else if (*p == '\0')
-                  gPort2 = gPort1;
-               if (*p != '\0' || gPort2 < gPort1 || gPort2 < 0) {
+                  port2 = port1;
+               if (*p != '\0' || port2 < port1 || port2 < 0) {
                   if (!gInetdFlag)
                      fprintf(stderr,"invalid port number or range: %s\n",
                                      *argv);
@@ -2065,8 +2066,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal,kErrFatal,"-P requires a file name for SRP"
                                     " password file");
                }
-               gAltSRP = 1;
-               sprintf(gAltSRPPass, "%s", *++argv);
+               altSRPpass = std::string(*++argv);
                break;
 
             case 'r':
@@ -2081,7 +2081,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal,kErrFatal,"-R requires a hex but mask as"
                                     " argument");
                }
-               gReUseAllow = strtol(*++argv, (char **)0, 16);
+               reuseallow = strtol(*++argv, (char **)0, 16);
                break;
 
             case 's':
@@ -2092,7 +2092,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal,kErrFatal,"-s requires as argument a port"
                                     " number for the sshd daemon");
                }
-               gSshdPort = atoi(*++argv);
+               sshdport = atoi(*++argv);
                break;
 #ifdef R__KRB5
             case 'S':
@@ -2102,10 +2102,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal,kErrFatal,"-S requires a path to your"
                                     " keytab\n");
                }
-               kt_fname = *++argv;
-               if ((retval = krb5_kt_resolve(gKcontext, kt_fname, &gKeytab)))
-                  Error(ErrFatal,kErrFatal,"%s while resolving keytab file %s",
-                        error_message(retval), kt_fname);
+               RpdSetKeytabFile((const char *)(*++argv));
                break;
 #endif
             case 'T':
@@ -2116,7 +2113,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal, kErrFatal,"-T requires a dir path for"
                                     " temporary files [/usr/tmp]");
                }
-               sprintf(gTmpDir, "%s", *++argv);
+               tmpdir = std::string(*++argv);
                break;
 
             default:
@@ -2126,85 +2123,100 @@ int main(int argc, char **argv)
          }
 
    // dir for temporary files
-   if (strlen(gTmpDir) == 0) {
-      strcpy(gTmpDir, "/usr/tmp");
-      if (access(gTmpDir, W_OK) == -1) {
-         strcpy(gTmpDir, "/tmp");
-      }
-   }
+   if (!tmpdir.length())
+      tmpdir = std::string("/usr/tmp");
+   if (access(tmpdir.c_str(), W_OK) == -1)
+      tmpdir = std::string("/tmp");
 
    // root tab file
-   sprintf(gRootdTab, "%s/rootdtab", gTmpDir);
-
-   // authentication tab file
-   sprintf(gRpdAuthTab, "%s/rpdauthtab", gTmpDir);
-
-   // Set auth tab file in rpdutils...
-   RpdSetAuthTabFile(gRpdAuthTab);
-
-   // Log to stderr if not started as daemon ...
-   if (gForegroundFlag) RpdSetRootLogFlag(1);
+   gRootdTab = std::string(tmpdir).append("/rootdtab");
 
    if (argc > 0) {
-      strncpy(gConfDir, *argv, kMAXPATHLEN-1);
-      gConfDir[kMAXPATHLEN-1] = 0;
-      sprintf(gExecDir, "%s/bin", gConfDir);
-      sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
+      confdir = std::string(*argv);
    } else {
       // try to guess the config directory...
 #ifndef ROOTPREFIX
-      if (strlen(gConfDir) == 0) {
+      if (!confdir.length()) {
          if (getenv("ROOTSYS")) {
-            strcpy(gConfDir, getenv("ROOTSYS"));
-            sprintf(gExecDir, "%s/bin", gConfDir);
-            sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
+            confdir = getenv("ROOTSYS");
             if (gDebug > 0)
                ErrorInfo("main: no config directory specified using"
-                         " ROOTSYS (%s)", gConfDir);
+                         " ROOTSYS (%s)", confdir.c_str());
          } else {
             if (!gInetdFlag)
-               fprintf(stderr,
-                       "rootd: no config directory specified\n");
-            Error(ErrFatal, kErrFatal,
-                       "main: no config directory specified");
+               fprintf(stderr,"rootd: no config directory specified\n");
+            Error(ErrFatal, kErrFatal, "main: no config directory specified");
          }
       }
 #else
-      strcpy(gConfDir, ROOTPREFIX);
+      confdir = ROOTPREFIX;
 #endif
 #ifdef ROOTBINDIR
-      strcpy(gExecDir, ROOTBINDIR);
+      rootbindir= ROOTBINDIR;
 #endif
 #ifdef ROOTETCDIR
-      sprintf(gSystemDaemonRc, "%s/system%s", ROOTETCDIR, kDaemonRc);
+      rootetcdir= ROOTETCDIR;
 #endif
+   }
+
+   // Define rootbindir if not done already
+   if (!rootbindir.length())
+      rootbindir = std::string(confdir).append("/bin");
+   // Make it available to all the session via env
+   if (rootbindir.length()) {
+      char *tmp = new char[15 + rootbindir.length()];
+      sprintf(tmp, "ROOTBINDIR=%s", rootbindir.c_str());
+      putenv(tmp);
+   }
+
+   // Define rootetcdir if not done already
+   if (!rootetcdir.length())
+      rootetcdir = std::string(confdir).append("/etc");
+   // Make it available to all the session via env
+   if (rootetcdir.length()) {
+      char *tmp = new char[15 + rootetcdir.length()];
+      sprintf(tmp, "ROOTETCDIR=%s", rootetcdir.c_str());
+      putenv(tmp);
    }
 
    // If specified, set the special daemonrc file to be used
-   char *daemonrc = 0;
-   if (strlen(gDaemonrc)) {
-      daemonrc = new char[15+strlen(gDaemonrc)];
-      sprintf(daemonrc, "ROOTDAEMONRC=%s", gDaemonrc);
-      putenv(daemonrc);
+   if (daemonrc.length()) {
+      char *tmp = new char[15+daemonrc.length()];
+      sprintf(tmp, "ROOTDAEMONRC=%s", daemonrc.c_str());
+      putenv(tmp);
    }
+#ifdef R__GLBS
+   // If specified, set the special gridmap file to be used
+   if (gridmap.length()) {
+      char *tmp = new char[15+gridmap.length()];
+      sprintf(tmp, "GRIDMAP=%s", gridmap.c_str());
+      putenv(tmp);
+   }
+   // If specified, set the special hostcert.conf file to be used
+   if (hostcertconf.length()) {
+      char *tmp = new char[15+hostcertconf.length()];
+      sprintf(tmp, "ROOTHOSTCERT=%s", hostcertconf.c_str());
+      putenv(tmp);
+   }
+#endif
 
    // Parent ID
+   int rootdparentid = -1;      // Parent process ID
    if (!gInetdFlag)
-     gRootdParentId = getpid(); // Identifies this family
+     rootdparentid = getpid(); // Identifies this family
    else
-     gRootdParentId = getppid(); // Identifies this family
+     rootdparentid = getppid(); // Identifies this family
 
-   // Set debug level, parent id and inclusive token flag in RPDUtil ...
-   RpdSetDebugFlag(gDebug);
-   RpdSetParentId(gRootdParentId);
-   RpdSetInclusiveToken(inclusivetoken);
+   // Set job options
+   int rootlog = (foregroundflag) ? 1 : 0;
+   RpdInit(gService, rootdparentid, gProtocol, inclusivetoken,
+           reuseallow, rootlog, sshdport,
+           tmpdir.c_str(),altSRPpass.c_str());
 
-   if (gRSAInit == 0) {
-      // Generate Local RSA keys for the session
-      if (RpdGenRSAKeys(0)) {
-         fprintf(stderr, "rootd: unable to generate local RSA keys\n");
-         Error(Err, -1, "rootd: unable to generate local RSA keys");
-      }
+   // Generate Local RSA keys for the session
+   if (RpdGenRSAKeys(0)) {
+      fprintf(stderr, "rootd: unable to generate local RSA keys\n");
+      Error(Err, -1, "rootd: unable to generate local RSA keys");
    }
 
    if (!gInetdFlag) {
@@ -2213,9 +2225,9 @@ int main(int argc, char **argv)
       // Also initialize the network connection - create the socket
       // and bind our well-know address to it.
 
-      gPort = gPort1;
-      int fdkeep = NetInit(gService, gPort, gPort2, tcpwindowsize);
-      if (!gForegroundFlag) DaemonStart(1, fdkeep, kROOTD);
+      int fdkeep = NetInit(gService, port1, port2, tcpwindowsize);
+      if (!foregroundflag) 
+         DaemonStart(1, fdkeep, gService);
    }
 
    if (gDebug > 0)
@@ -2229,12 +2241,12 @@ int main(int argc, char **argv)
 
    while (1) {
 
-      if (NetOpen(gInetdFlag, kROOTD) == 0) {
+      if (NetOpen(gInetdFlag, gService) == 0) {
 
          // Init Session (get protocol, run authentication, login, ...)
-         RpdInitSession(kROOTD);
+         RpdInitSession(gService, gUser, gClientProtocol, gAnon, gPasswd);
 
-         ErrorInfo("main: gRootdParentId = %d (%d)", gRootdParentId, getppid());
+         ErrorInfo("main: rootdparentid = %d (%d)", rootdparentid, getppid());
 
          // RootdParallel is called after authentication in RootdLogin
          RootdLoop();      // child processes client's requests
@@ -2246,9 +2258,5 @@ int main(int argc, char **argv)
 
    }
 
-#ifdef R__KRB5
-   // never called... needed?
-   krb5_free_context(gKcontext);
-#endif
 }
 

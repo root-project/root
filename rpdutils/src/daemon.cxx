@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.3 2004/03/17 17:52:24 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: daemon.cxx,v 1.4 2004/04/11 18:18:01 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 // Modifified: Gerardo Ganis 8/04/2003
 
@@ -56,9 +56,11 @@
 
 #include "rpdp.h"
 
+extern int gDebug;
+
 namespace ROOT {
 
-extern int     gDebug;
+extern ErrorHandler_t gErrSys;
 
 #if defined(USE_SIGCHLD)
 //______________________________________________________________________________

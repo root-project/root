@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.6 2004/02/19 00:11:19 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.7 2004/03/17 17:52:24 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -30,15 +30,14 @@
 #include "rpdp.h"
 
 
+extern int gDebug;
 
 namespace ROOT {
 
-extern int gDebug;
 
-//--- Globals ------------------------------------------------------------------
-char gHostCertConf[kMAXPATHLEN] = "/etc/root/hostcert.conf"; // Defines certificate location for globus authentication
+//--- Globals ---------------------------------------------------------------
 
-//______________________________________________________________________________
+//___________________________________________________________________________
 void GlbsToolError(char *mess, int majs, int mins, int toks)
 {
    // Handle error ...
@@ -48,8 +47,8 @@ void GlbsToolError(char *mess, int majs, int mins, int toks)
    if (!globus_gss_assist_display_status_str
       (&GlbErr, mess, majs, mins, toks)) {
    } else {
-      GlbErr = new char[kMAXPATHLEN];
-      sprintf(GlbErr, "%s: error messaged not resolved ", mess);
+      char GlbErr[kMAXPATHLEN];
+      SPrintf(GlbErr,kMAXPATHLEN,"%s: error messaged not resolved ", mess);
    }
    NetSend(kErrFatal, kROOTD_ERR);
    ErrorInfo("Error: %s (majst=%d,minst=%d,tokst:%d)", GlbErr, majs, mins,
@@ -66,6 +65,7 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
    // Returns number of potentially valid dir/cert/key triplets found.
 
    int retval = 1;
+   std::string HostCertConf = "/hostcert.conf"; 
    char *certdir_default  = "/etc/grid-security/certificates";
    char *hostcert_default = "/etc/grid-security/hostcert.pem";
    char *hostkey_default  = "/etc/grid-security/hostkey.pem";
@@ -81,16 +81,26 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
    if (gDebug > 2)
       ErrorInfo("GlbsToolCheckCert: enter: %s", ClientIssuerName);
 
-   if (gHostCertConf != 0) {
+   // Check if a non-standard file has been requested
+   if (getenv("ROOTHOSTCERT")) {
+      HostCertConf = getenv("ROOTHOSTCERT");
+   } else {
+      if (getenv("ROOTETCDIR"))
+         HostCertConf.insert(0,getenv("ROOTETCDIR"));
+      else
+         HostCertConf.insert(0,"/etc/root");
+   }
+
+   if (HostCertConf.length()) {
       // The user/administrator provided a file ... check if it exists
       // and can be read
       FILE *fconf = 0;
-      if (!access(gHostCertConf, R_OK) &&
-          (fconf = fopen(gHostCertConf, "r")) != 0) {
+      if (!access(HostCertConf.data(), R_OK) &&
+          (fconf = fopen(HostCertConf.data(), "r")) != 0) {
          char line[kMAXPATHLEN];
          if (gDebug > 2)
             ErrorInfo("GlbsToolCheckCert: reading host cert file %s",
-                      gHostCertConf);
+                      HostCertConf.data());
 
          // ... let's see what it's inside
          while (fgets(line, sizeof(line), fconf)) {
@@ -153,46 +163,39 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
                      /// Load certificate
                      fcert = fopen(cert_tmp, "r");
                      if (!PEM_read_X509(fcert, &xcert, 0, 0)) {
-                        ErrorInfo
-                            ("GlbsToolCheckCert: unable to load host certificate (%s)",
-                             cert_tmp);
+                        ErrorInfo("GlbsToolCheckCert: unable to load host"
+                                  " certificate (%s)", cert_tmp);
                         goto goout;;
                      }
                      // Get the issuer name
                      issuer_name =
-                         X509_NAME_oneline(X509_get_issuer_name(xcert), 0,
-                                           0);
+                         X509_NAME_oneline(X509_get_issuer_name(xcert), 0, 0);
                      if (strstr(issuer_name, ClientIssuerName) != 0) {
                         CertFound = 1;
                         if (gDebug > 2)
-                           ErrorInfo
-                               ("GlbsToolCheckCert: Issuer Subject: %s matches",
-                                issuer_name);
+                           ErrorInfo("GlbsToolCheckCert: Issuer Subject:"
+                                     " %s matches",issuer_name);
                         fclose(fconf);
                         goto found;
                      }
                   } else {
                      if (gDebug > 2)
-                        ErrorInfo
-                            ("GlbsToolCheckCert: key file not existing or not readable (%s)",
-                             key_tmp);
+                        ErrorInfo("GlbsToolCheckCert: key file not existing"
+                                  " or not readable (%s)", key_tmp);
                   }
                } else {
                   if (gDebug > 2)
-                     ErrorInfo
-                         ("GlbsToolCheckCert: cert file not existing or not readable (%s)",
-                          cert_tmp);
+                     ErrorInfo("GlbsToolCheckCert: cert file not existing"
+                               " or not readable (%s)", cert_tmp);
                }
             } else {
                if (gDebug > 2)
-                  ErrorInfo
-                      ("GlbsToolCheckCert: cert directory not existing or not readable (%s)",
-                       dir_tmp);
+                  ErrorInfo("GlbsToolCheckCert: cert directory not existing"
+                            " or not readable (%s)",dir_tmp);
             }
             if (gDebug > 2)
-               ErrorInfo
-                   ("GlbsToolCheckCert: read cert key map files: %s %s %s %s",
-                    dir_tmp, cert_tmp, key_tmp, map_tmp);
+               ErrorInfo("GlbsToolCheckCert: read cert key map files:"
+                         " %s %s %s %s",dir_tmp, cert_tmp, key_tmp, map_tmp);
             // Cleanup memory
             if (dir_tmp)
                delete[]dir_tmp;
@@ -208,7 +211,7 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
       } else {
          if (gDebug > 2)
             ErrorInfo("GlbsToolCheckCert: host cert conf not existing or"
-                      " not readable (%s)",gHostCertConf);
+                      " not readable (%s)",HostCertConf.data());
       }
    } else if (gDebug > 2)
       ErrorInfo("GlbsToolCheckCert: HOSTCERTCONF undefined");
@@ -216,7 +219,8 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
       ErrorInfo
           ("GlbsToolCheckCert: Try to use env definitions or defaults ...");
 
-   // We have not found a goof one: try with these envs definitions or the defaults ...
+   // We have not found a goof one: try with these envs definitions
+   // or the defaults ...
    if (getenv("X509_CERT_DIR") != 0) {
       strcpy(dir_def, getenv("X509_CERT_DIR"));
    } else
@@ -441,6 +445,7 @@ int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
                                SecContExp)) != GSS_S_COMPLETE) {
       GlbsToolError("GlbsToolStoreContext: gss_export_sec_context",
                     MajStat, MinStat, 0);
+      gss_release_buffer(&MinStat,SecContExp);
       delete SecContExp;
       return 0;
    } else if (gDebug > 2)
@@ -460,6 +465,7 @@ int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
       ErrorInfo
           ("GlbsToolStoreContext: while allocating shared memory segment (rc=%d)",
            ShmId);
+      gss_release_buffer(&MinStat,SecContExp);
       delete SecContExp;
       return 0;
    } else if (gDebug > 2)
@@ -473,7 +479,7 @@ int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
       ErrorInfo
           ("GlbsToolStoreContext: while attaching to shared memory segment (rc=%d)",
            (int) databuf);
-      delete SecContExp;
+      gss_release_buffer(&MinStat,SecContExp);
       return 0;
    }
    databuf->length = SecContExp->length;
@@ -489,6 +495,11 @@ int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
           ("GlbsToolStoreContext: unable to detach from shared memory segment (rc=%d)",
            rc);
    }
+
+   // Release buffer used for export
+   if ((MajStat = gss_release_buffer(&MinStat, SecContExp)) != GSS_S_COMPLETE)
+      GlbsToolError("GlbsToolStoreContext: gss_release_buffer",
+                    MajStat, MinStat, 0);
    delete SecContExp;
 
    // We need to change the ownership of the shared memory segment used
@@ -606,6 +617,7 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
    // user specifications
    // Called when running as non-root
 
+   std::string HostCertConf = "/hostcert.conf"; 
    char *certdir_default  = "/etc/grid-security/certificates";
    char *gridmap_default  = "/etc/grid-security/grid-mapfile";
    char dir_def[kMAXPATHLEN] = {0}, map_def[kMAXPATHLEN] = {0},
@@ -614,16 +626,26 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
    if (gDebug > 2)
       ErrorInfo("GlbsToolCheckProxy: enter: %s", ClientIssuerName);
 
-   if (gHostCertConf != 0) {
+   // Check if a non-standard file has been requested
+   if (getenv("ROOTHOSTCERT")) {
+      HostCertConf = getenv("ROOTHOSTCERT");
+   } else {
+      if (getenv("ROOTETCDIR"))
+         HostCertConf.insert(0,getenv("ROOTETCDIR"));
+      else
+         HostCertConf.insert(0,"/etc/root");
+   }
+
+   if (HostCertConf.length()) {
       // The user/administrator provided a file ... check if it
       // exists and can be read
       FILE *fconf = 0;
-      if (!access(gHostCertConf, R_OK) &&
-          (fconf = fopen(gHostCertConf, "r")) != 0) {
+      if (!access(HostCertConf.data(), R_OK) &&
+          (fconf = fopen(HostCertConf.data(), "r")) != 0) {
          char line[kMAXPATHLEN];
          if (gDebug > 2)
             ErrorInfo("GlbsToolCheckProxy: reading host cert file %s",
-                      gHostCertConf);
+                       HostCertConf.data());
 
          // ... let's see what it's inside
          while (fgets(line, sizeof(line), fconf)) {
@@ -654,7 +676,7 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
          if (gDebug > 2)
             ErrorInfo
                 ("GlbsToolCheckProxy: host cert conf not existing"
-                 " or not readable (%s)",gHostCertConf);
+                 " or not readable (%s)",HostCertConf.data());
       }
    } else if (gDebug > 2)
       ErrorInfo("GlbsToolCheckProxy: HOSTCERTCONF undefined");
@@ -760,7 +782,7 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
 
    // Now check if there is a proxy file associated with this user
    char proxy_file[256];
-   sprintf(proxy_file, "/tmp/x509up_u%d", getuid());
+   SPrintf(proxy_file, 256, "/tmp/x509up_u%d", getuid());
 
    if (gDebug > 2)
       ErrorInfo("GlbsToolCheckProxy: testing Proxy file: %s",

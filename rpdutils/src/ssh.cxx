@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.7 2004/02/20 09:52:14 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.8 2004/03/17 17:52:24 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -43,12 +43,9 @@
 
 #include "rpdp.h"
 
-
-namespace ROOT {
-
-//--- Globals ------------------------------------------------------------------
 extern int gDebug;
 
+namespace ROOT {
 
 //______________________________________________________________________________
 int SshToolAllocateSocket(unsigned int Uid, unsigned int Gid, char **pipe)

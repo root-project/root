@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.61 2004/03/30 13:10:16 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.62 2004/04/11 18:18:01 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -150,6 +150,7 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -207,50 +208,30 @@ extern "C" int gethostname(char *, int);
 
 #include "proofdp.h"
 extern "C" {
-   #include "rsadef.h"
-   #include "rsalib.h"
+#include "rsadef.h"
+#include "rsalib.h"
 }
 
-#ifdef R__KRB5
-#include "Krb5Auth.h"
-namespace ROOT {
-   extern krb5_keytab  gKeytab; // to allow specifying on the command line
-   extern krb5_context gKcontext;
-}
-#endif
+// General globals
+int     gDebug                   = 0;
 
-#ifdef R__GLBS
-namespace ROOT {
-   extern int gShmIdCred;  // global, to pass the shm ID to proofserv
-}
-#endif
-
-//--- Globals ------------------------------------------------------------------
+//--- Local Globals ---------------------------------------------------------
 
 const int kMaxSlaves             = 32;
 
-char    gFilePA[40]              = { 0 };
-
-char    gAuthrc[kMAXPATHLEN]     = { 0 };
-char    gConfDir[kMAXPATHLEN]    = { 0 };
-char    gDaemonrc[kMAXPATHLEN]   = { 0 };
-int     gDebug                   = 0;
-int     gForegroundFlag          = 0;
-char    gReadHomeAuthrc[2]       = {"0"};
-int     gInetdFlag               = 0;
-int     gMaster                  =-1;
-int     gProtocol                = 9;       // increase when protocol changes
-char    gRcFile[kMAXPATHLEN]     = { 0 };
-int     gRootLog                 = 0;
-char    gRpdAuthTab[kMAXPATHLEN] = { 0 };   // keeps track of authentication info
-int     gProofdParentId          = -1;      // Parent process ID
-
-namespace ROOT {
-int     gRSAInit = 0;
-rsa_KEY gRSAPriKey;
-rsa_KEY gRSAPubKey;
-rsa_KEY_export gRSAPubExport;
-}
+static std::string gAuthrc;
+static std::string gConfDir;
+static std::string gOpenHost;
+static std::string gRootBinDir;
+static std::string gRpdAuthTab;   // keeps track of authentication info
+static std::string gTmpDir;
+static std::string gUser;
+static EService gService         = kPROOFD;
+static int gProtocol             = 9;       // increase when protocol changes
+static int gRemPid               = -1;      // remote process ID
+static std::string gReadHomeAuthrc = "0";
+static int gInetdFlag            = 0;
+static int gMaster               =-1;
 
 using namespace ROOT;
 
@@ -326,18 +307,21 @@ const char *RerouteUser()
 {
    // Look if user should be rerouted to another server node.
 
-   char conffile[1024];
+   std::string conffile = "proof.conf";
    FILE *proofconf;
 
-   conffile[0] = 0;
    if (getenv("HOME")) {
-      sprintf(conffile, "%s/.proof.conf", getenv("HOME"));
-      if (access(conffile, R_OK))
-         conffile[0] = 0;
+      conffile.insert(0,"/.");
+      conffile.insert(0,getenv("HOME"));
+      if (access(conffile.c_str(), R_OK))
+         conffile = "";
    }
-   if (conffile[0] == 0)
-      sprintf(conffile, "%s/etc/proof.conf", gConfDir);
-   if ((proofconf = fopen(conffile, "r")) != 0) {
+   if (!conffile.length()) {
+      conffile.insert(0,"/etc/");
+      conffile.insert(0,gConfDir);
+   }
+   if ((proofconf = fopen(conffile.c_str(), "r")) != 0) {
+
       // read configuration file
       static char user_on_node[32];
       struct stat statbuf;
@@ -373,7 +357,8 @@ const char *RerouteUser()
          //    user <name> on <node>
          //
          if (nword >= 4 && strcmp(word[0], "user") == 0 &&
-             strcmp(word[1], gUser) == 0 && strcmp(word[2], "on") == 0) {
+             strcmp(word[1], gUser.c_str()) == 0 && 
+             strcmp(word[2], "on") == 0) {
             // user <name> on <node>
             strcpy(user_on_node, word[3]);
             continue;
@@ -392,11 +377,11 @@ const char *RerouteUser()
       // get the node name from next.node update by a daemon monitoring
       // the system load; make sure the file is not completely out of date
       //
-      sprintf(conffile, "%s/etc/next.node", gConfDir);
-      if (stat(conffile, &statbuf) == -1) {
+      conffile = gConfDir + "/etc/next.node";
+      if (stat(conffile.c_str(), &statbuf) == -1) {
          return 0;
       } else if (difftime(time(0), statbuf.st_mtime) < 600 &&
-                 (proofconf = fopen(conffile, "r")) != 0) {
+                 (proofconf = fopen(conffile.c_str(), "r")) != 0) {
          if (fgets(line, sizeof(line), proofconf) != 0) {
             sscanf(line, " %s ", user_on_node);
             for (i = 0; i < nnodes; i++) {
@@ -419,10 +404,10 @@ void ProofdExec()
    // gConfdir is the location where the PROOF config files and binaries live.
 
    char *argvv[11];
-   char  arg0[256];
-   char  msg[80];
+   std::string arg0;
+   std::string msg;
    char  sfd[64];
-   char  rpid[64];
+   char  rpid[20] = {0};
 
 #ifdef R__DEBUG
    int debug = 1;
@@ -430,11 +415,17 @@ void ProofdExec()
       ;
 #endif
 
-   if (gDebug > 0)
-      ErrorInfo("ProofdExec: gOpenHost = %s", gOpenHost);
+   // Remote Host
+   NetGetRemoteHost(gOpenHost);
+   
+   // Socket descriptor
+   int SockFd = NetGetSockFd();
 
    if (gDebug > 0)
-      ErrorInfo("ProofdExec: gConfDir = %s", gConfDir);
+      ErrorInfo("ProofdExec: gOpenHost = %s", gOpenHost.c_str());
+
+   if (gDebug > 0)
+      ErrorInfo("ProofdExec: gConfDir = %s", gConfDir.c_str());
 
    // only reroute in case of master server
    const char *node_name;
@@ -464,8 +455,8 @@ void ProofdExec()
                // to avoid possible problems with host name aliases
                //
                if (strcmp(host_numb, node_numb) != 0) {
-                  sprintf(msg, "Reroute:%s", node_numb);
-                  NetSend(msg);
+                  msg = std::string("Reroute:").append(node_numb);
+                  NetSend(msg.c_str());
                   exit(0);
                }
             }
@@ -473,20 +464,20 @@ void ProofdExec()
       }
    }
    if (gDebug > 0)
-      ErrorInfo("ProofdExec: send Okay (gSockFd: %d)", gSockFd);
+      ErrorInfo("ProofdExec: send Okay (SockFd: %d)", SockFd);
 
    NetSend("Okay");
 
    // Find a free filedescriptor outside the standard I/O range
-   if (gSockFd == 0 || gSockFd == 1 || gSockFd == 2) {
+   if (SockFd == 0 || SockFd == 1 || SockFd == 2) {
       Int_t fd;
       struct stat stbuf;
       for (fd = 3; fd < NOFILE; fd++) {
          ResetErrno();
          if (fstat(fd, &stbuf) == -1 && GetErrno() == EBADF) {
-            dup2(gSockFd, fd);
-            close(gSockFd);
-            gSockFd = fd;
+            dup2(SockFd, fd);
+            close(SockFd);
+            SockFd = fd;
             close(2);
             close(1);
             close(0);
@@ -503,22 +494,22 @@ void ProofdExec()
 
 #ifdef R__GLBS
    // to pass over shm id to proofserv
-   char  cShmIdCred[64];
-   sprintf(cShmIdCred, "%d", gShmIdCred);
+   char  cShmIdCred[20];
+   snprintf(cShmIdCred,20,"%d",RpdGetShmIdCred());
 #endif
 
    // start server version
-   sprintf(arg0, "%s/bin/proofserv", gConfDir);
-   argvv[0] = arg0;
+   arg0 = gRootBinDir + "/proofserv";
+   argvv[0] = (char *)arg0.c_str();
    argvv[1] = (char *)(gMaster ? "proofserv" : "proofslave");
-   argvv[2] = gConfDir;
-   argvv[3] = gTmpDir;
-   argvv[4] = gOpenHost;
-   sprintf(rpid, "%d", gRemPid);
+   argvv[2] = (char *)gConfDir.c_str();
+   argvv[3] = (char *)gTmpDir.c_str();
+   argvv[4] = (char *)gOpenHost.c_str();
+   snprintf(rpid,20,"%d", gRemPid);
    argvv[5] = rpid;
-   argvv[6] = gUser;
-   argvv[7] = gReadHomeAuthrc;
-   sprintf(sfd, "%d", gSockFd);
+   argvv[6] = (char *)gUser.c_str();
+   argvv[7] = (char *)gReadHomeAuthrc.c_str();
+   snprintf(sfd,64,"%d", SockFd);
    argvv[8] = sfd;
 #ifdef R__GLBS
    argvv[9] = cShmIdCred;
@@ -528,35 +519,36 @@ void ProofdExec()
 #endif
 
 #ifndef ROOTPREFIX
-   char *rootsys = new char[9+strlen(gConfDir)];
-   sprintf(rootsys, "ROOTSYS=%s", gConfDir);
+   char *rootsys = new char[9+gConfDir.length()];
+   sprintf(rootsys, "ROOTSYS=%s", gConfDir.c_str());
    putenv(rootsys);
 #endif
 #ifndef ROOTLIBDIR
    char *ldpath;
 #   if defined(__hpux) || defined(_HIUX_SOURCE)
    if (getenv("SHLIB_PATH")) {
-      ldpath = new char[32+strlen(gConfDir)+strlen(getenv("SHLIB_PATH"))];
-      sprintf(ldpath, "SHLIB_PATH=%s/lib:%s", gConfDir, getenv("SHLIB_PATH"));
+      ldpath = new char[32+gConfDir.length()+strlen(getenv("SHLIB_PATH"))];
+      sprintf(ldpath, "SHLIB_PATH=%s/lib:%s", gConfDir.c_str(), getenv("SHLIB_PATH"));
    } else {
-      ldpath = new char[32+strlen(gConfDir)];
-      sprintf(ldpath, "SHLIB_PATH=%s/lib", gConfDir);
+      ldpath = new char[32+gConfDir.length()];
+      sprintf(ldpath, "SHLIB_PATH=%s/lib", gConfDir.c_str());
    }
 #   elif defined(_AIX)
    if (getenv("LIBPATH")) {
-      ldpath = new char[32+strlen(gConfDir)+strlen(getenv("LIBPATH"))];
-      sprintf(ldpath, "LIBPATH=%s/lib:%s", gConfDir, getenv("LIBPATH"));
+      ldpath = new char[32+gConfDir.length()+strlen(getenv("LIBPATH"))];
+      sprintf(ldpath, "LIBPATH=%s/lib:%s", gConfDir.c_str(), getenv("LIBPATH"));
    } else {
-      ldpath = new char[32+strlen(gConfDir)];
-      sprintf(ldpath, "LIBPATH=%s/lib", gConfDir);
+      ldpath = new char[32+gConfDir.length()];
+      sprintf(ldpath, "LIBPATH=%s/lib", gConfDir.c_str());
    }
 #   else
    if (getenv("LD_LIBRARY_PATH")) {
-      ldpath = new char[32+strlen(gConfDir)+strlen(getenv("LD_LIBRARY_PATH"))];
-      sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib:%s", gConfDir, getenv("LD_LIBRARY_PATH"));
+      ldpath = new char[32+gConfDir.length()+strlen(getenv("LD_LIBRARY_PATH"))];
+      sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib:%s", 
+                      gConfDir.c_str(), getenv("LD_LIBRARY_PATH"));
    } else {
-      ldpath = new char[32+strlen(gConfDir)];
-      sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib", gConfDir);
+      ldpath = new char[32+gConfDir.length()];
+      sprintf(ldpath, "LD_LIBRARY_PATH=%s/lib", gConfDir.c_str());
    }
 #   endif
    putenv(ldpath);
@@ -566,11 +558,11 @@ void ProofdExec()
    // has been given for later use in TAuthenticate; if yes,
    // set the corresponding environment variable
    char *authrc = 0;
-   if (strlen(gAuthrc)) {
+   if (gAuthrc.length()) {
       if (gDebug > 0)
-         ErrorInfo("ProofdExec: setting ROOTAUTHRC to %s", gAuthrc);
-      authrc = new char[15+strlen(gAuthrc)];
-      sprintf(authrc, "ROOTAUTHRC=%s", gAuthrc);
+         ErrorInfo("ProofdExec: seetting ROOTAUTHRC to %s",gAuthrc.c_str());
+      authrc = new char[15+gAuthrc.length()];
+      sprintf(authrc, "ROOTAUTHRC=%s", gAuthrc.c_str());
       putenv(authrc);
    }
 
@@ -587,67 +579,56 @@ void ProofdExec()
 #endif
 
    // Start proofserv
-   execv(arg0, argvv);
+   execv(arg0.c_str(), argvv);
 
    // tell client that exec failed
-   sprintf(msg, "Cannot start PROOF server --- make sure %s exists!", arg0);
-   NetSend(msg);
+   msg = "Cannot start PROOF server --- make sure " + arg0 + " exists!";
+   NetSend(msg.c_str());
 }
 
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
    char *s;
-   int   tcpwindowsize = 65535;
-   int   inclusivetoken = 1;
+   int tcpwindowsize  = 65535;
+   int inclusivetoken = 1;
+   int sshdport       = 22;
+   int port1          = 0;
+   int port2          = 0;
+   int reuseallow     = 0x1F;
+   int foregroundflag = 0;
+   std::string altSRPpass = "";
+   std::string daemonrc = "";
+   std::string rootetcdir = "";
+#ifdef R__GLBS
+   std::string gridmap = "";
+   std::string hostcertconf = "";
+#endif
 
-   // Error Handlers
-   gErrSys   = ErrSys;
-   gErrFatal = ErrFatal;
-   gErr      = Err;
+   // Init error handlers
+   RpdSetErrorHandler(Err, ErrSys, ErrFatal);
 
+   // Init syslog
    ErrorInit(argv[0]);
 
    // To terminate correctly ... maybe not needed
    signal(SIGTERM, ProofdTerm);
    signal(SIGINT, ProofdTerm);
 
-#ifdef R__KRB5
-   const char *kt_fname;
-
-   int retval = krb5_init_context(&gKcontext);
-   if (retval) {
-      fprintf(stderr, "%s while initializing krb5\n",
-            error_message(retval));
-      Error(Err, -1, "%s while initializing krb5",
-            error_message(retval));
-   }
-#endif
-
-#ifdef R__GLBS
-   char GridMap[kMAXPATHLEN] = { 0 };
-#endif
-
-   // Define service
-   strcpy(gService, "proofd");
-
-   // Set Server Protocol
-   gServerProtocol = gProtocol;
-
    while (--argc > 0 && (*++argv)[0] == '-')
       for (s = argv[0]+1; *s != 0; s++)
          switch (*s) {
 
             case 'A':
-               strcpy(gReadHomeAuthrc,"1");
+               gReadHomeAuthrc = std::string("1");
                // Next argument may be the name of a file with the
                // authentication directives to be used
                if((*(argv+1)) && (*(argv+1))[0] != '-') {
-                  sprintf(gAuthrc, "%s", *(argv+1));
+                  gAuthrc = std::string(*(argv+1));
                   struct stat st;
-                  if (stat(gAuthrc,&st) == -1 || !S_ISREG(st.st_mode)) {
+                  if (stat(gAuthrc.c_str(),&st) == -1 || !S_ISREG(st.st_mode)) {
                      // Not a regular file: discard it
-                     gAuthrc[0] = 0;
+                     gAuthrc.erase();
                   } else {
                      // Got a regular file as argument: go to next
                      argc--;
@@ -675,7 +656,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal,-1,"-C requires a file name for the host"
                                     " certificates file location");
                }
-               sprintf(gHostCertConf, "%s", *++argv);
+               hostcertconf = std::string(*++argv);
                break;
 #endif
             case 'd':
@@ -695,7 +676,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal, kErrFatal,"-D requires a file path name"
                                     "  for the file defining access rules");
                }
-               sprintf(gDaemonrc, "%s", *++argv);
+               daemonrc = std::string(*++argv);
                break;
 
             case 'E':
@@ -703,7 +684,7 @@ int main(int argc, char **argv)
                break;
 
             case 'f':
-               gForegroundFlag = 1;
+               foregroundflag = 1;
                break;
 #ifdef R__GLBS
             case 'G':
@@ -714,11 +695,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal,-1,"-G requires a file name for the gridmap"
                                     " file");
                }
-               sprintf(GridMap, "%s", *++argv);
-               if (setenv("GRIDMAP",GridMap,1) ){
-                  Error(ErrFatal,-1,"%s while setting the GRIDMAP environment"
-                                    " variable");
-               }
+               gridmap = std::string(*++argv);
                break;
 #endif
             case 'i':
@@ -732,18 +709,40 @@ int main(int argc, char **argv)
                   Error(ErrFatal,-1,"-p requires a port number as argument");
                }
                char *p;
-               gPortA = strtol(*++argv, &p, 10);
+               port1 = strtol(*++argv, &p, 10);
                if (*p == '-')
-                  gPortB = strtol(++p, &p, 10);
+                  port2 = strtol(++p, &p, 10);
                else if (*p == '\0')
-                  gPortB = gPortA;
-               if (*p != '\0' || gPortB < gPortA || gPortB < 0) {
+                  port2 = port1;
+               if (*p != '\0' || port2 < port1 || port2 < 0) {
                   if (!gInetdFlag)
                      fprintf(stderr, "invalid port number or range: %s\n",
                                      *argv);
                   Error(ErrFatal,kErrFatal,"invalid port number or range: %s",
                                      *argv);
                }
+               break;
+
+            case 'P':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-P requires a file name for SRP password"
+                                    " file\n");
+                  Error(ErrFatal,kErrFatal,"-P requires a file name for SRP"
+                                    " password file");
+               }
+               altSRPpass = std::string(*++argv);
+               break;
+
+            case 'R':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-R requires a hex bit mask as"
+                                    " argument\n");
+                  Error(ErrFatal,kErrFatal,"-R requires a hex but mask as"
+                                    " argument");
+               }
+               reuseallow = strtol(*++argv, (char **)0, 16);
                break;
 
             case 's':
@@ -754,7 +753,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal,kErrFatal,"-s requires as argument a port"
                                     " number for the sshd daemon");
                }
-               gSshdPort = atoi(*++argv);
+               sshdport = atoi(*++argv);
                break;
 #ifdef R__KRB5
             case 'S':
@@ -763,10 +762,7 @@ int main(int argc, char **argv)
                      fprintf(stderr, "-S requires a path to your keytab\n");
                   Error(ErrFatal,-1,"-S requires a path to your keytab\n");
                }
-               kt_fname = *++argv;
-               if ((retval = krb5_kt_resolve(gKcontext, kt_fname, &gKeytab)))
-                  Error(ErrFatal, -1, "%s while resolving keytab file %s",
-                        error_message(retval), kt_fname);
+               RpdSetKeytabFile((const char *)(*++argv));
                break;
 #endif
             case 'T':
@@ -777,7 +773,7 @@ int main(int argc, char **argv)
                   Error(ErrFatal,kErrFatal,"-T requires a dir path for"
                                     " temporary files [/usr/tmp]");
                }
-               sprintf(gTmpDir, "%s", *++argv);
+               gTmpDir = std::string(*++argv);
                break;
 
             default:
@@ -787,89 +783,105 @@ int main(int argc, char **argv)
          }
 
    // dir for temporary files
-   if (strlen(gTmpDir) == 0) {
-      strcpy(gTmpDir, "/usr/tmp");
-      if (access(gTmpDir, W_OK) == -1) {
-         strcpy(gTmpDir, "/tmp");
-      }
-   }
-
-   // authentication tab file
-   sprintf(gRpdAuthTab, "%s/rpdauthtab", gTmpDir);
-
-   // Set auth tab flag in RPDUtil ...
-   RpdSetAuthTabFile(gRpdAuthTab);
+   if (!gTmpDir.length())
+      gTmpDir = "/usr/tmp";
+   if (access(gTmpDir.c_str(), W_OK) == -1)
+      gTmpDir = "/tmp";
 
    if (argc > 0) {
-      strncpy(gConfDir, *argv, kMAXPATHLEN-1);
-      gConfDir[kMAXPATHLEN-1] = 0;
-      sprintf(gExecDir, "%s/bin", gConfDir);
-      sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
+      gConfDir = std::string(*argv);
    } else {
       // try to guess the config directory...
 #ifndef ROOTPREFIX
       if (getenv("ROOTSYS")) {
-         strcpy(gConfDir, getenv("ROOTSYS"));
-         sprintf(gExecDir, "%s/bin", gConfDir);
-         sprintf(gSystemDaemonRc, "%s/etc/system%s", gConfDir, kDaemonRc);
+         gConfDir = getenv("ROOTSYS");
          if (gDebug > 0)
             ErrorInfo("main: no config directory specified using ROOTSYS (%s)",
-                      gConfDir);
+                      gConfDir.c_str());
       } else {
          if (!gInetdFlag)
             fprintf(stderr, "proofd: no config directory specified\n");
          Error(ErrFatal, -1, "main: no config directory specified");
       }
 #else
-      strcpy(gConfDir, ROOTPREFIX);
+      gConfDir = ROOTPREFIX;
 #endif
 #ifdef ROOTBINDIR
-      strcpy(gExecDir, ROOTBINDIR);
+      gRootBinDir= ROOTBINDIR;
 #endif
 #ifdef ROOTETCDIR
-      sprintf(gSystemDaemonRc, "%s/system%s", ROOTETCDIR, kDaemonRc);
+      rootetcdir= ROOTETCDIR;
 #endif
    }
 
-   // make sure needed files exist
-   char arg0[256];
-   sprintf(arg0, "%s/bin/proofserv", gConfDir);
-   if (access(arg0, X_OK) == -1) {
+   // Define gRootBinDir if not done already
+   if (!gRootBinDir.length())
+      gRootBinDir = std::string(gConfDir).append("/bin");
+
+   // make sure it contains the executable we want to run
+   std::string arg0 = std::string(gRootBinDir).append("/proofserv");
+   if (access(arg0.c_str(), X_OK) == -1) {
       if (!gInetdFlag)
          fprintf(stderr,"proofd: incorrect config directory specified (%s)\n",
-                        gConfDir);
+                        gConfDir.c_str());
       Error(ErrFatal,-1,"main: incorrect config directory specified (%s)",
-                        gConfDir);
+                        gConfDir.c_str());
+   }
+   // Make it available to all the session via env
+   if (gRootBinDir.length()) {
+      char *tmp = new char[15 + gRootBinDir.length()];
+      sprintf(tmp, "ROOTBINDIR=%s", gRootBinDir.c_str());
+      putenv(tmp);
    }
 
-   // Log to stderr if not started as daemon ...
-   if (gForegroundFlag) RpdSetRootLogFlag(1);
+   // Define rootetcdir if not done already
+   if (!rootetcdir.length())
+      rootetcdir = std::string(gConfDir).append("/etc");
+   // Make it available to all the session via env
+   if (rootetcdir.length()) {
+      char *tmp = new char[15 + rootetcdir.length()];
+      sprintf(tmp, "ROOTETCDIR=%s", rootetcdir.c_str());
+      putenv(tmp);
+   }
 
    // If specified, set the special daemonrc file to be used
-   char *daemonrc = 0;
-   if (strlen(gDaemonrc)) {
-      daemonrc = new char[15+strlen(gDaemonrc)];
-      sprintf(daemonrc, "ROOTDAEMONRC=%s", gDaemonrc);
-      putenv(daemonrc);
+   if (daemonrc.length()) {
+      char *tmp = new char[15+daemonrc.length()];
+      sprintf(tmp, "ROOTDAEMONRC=%s", daemonrc.c_str());
+      putenv(tmp);
    }
+#ifdef R__GLBS
+   // If specified, set the special gridmap file to be used
+   if (gridmap.length()) {
+      char *tmp = new char[15+gridmap.length()];
+      sprintf(tmp, "GRIDMAP=%s", gridmap.c_str());
+      putenv(tmp);
+   }
+   // If specified, set the special hostcert.conf file to be used
+   if (hostcertconf.length()) {
+      char *tmp = new char[15+hostcertconf.length()];
+      sprintf(tmp, "ROOTHOSTCERT=%s", hostcertconf.c_str());
+      putenv(tmp);
+   }
+#endif
 
    // Parent ID
+   int proofdparentid = -1;      // Parent process ID
    if (!gInetdFlag)
-     gProofdParentId = getpid(); // Identifies this family
+     proofdparentid = getpid(); // Identifies this family
    else
-     gProofdParentId = getppid(); // Identifies this family
+     proofdparentid = getppid(); // Identifies this family
 
-   // Set debug level, parent id and inclusive token flag in RPDUtil ...
-   RpdSetDebugFlag(gDebug);
-   RpdSetParentId(gProofdParentId);
-   RpdSetInclusiveToken(inclusivetoken);
+   // Set job options
+   int rootlog = (foregroundflag) ? 1 : 0;
+   RpdInit(gService, proofdparentid, gProtocol, inclusivetoken,
+           reuseallow, rootlog, sshdport,
+           gTmpDir.c_str(),altSRPpass.c_str());
 
-   if (gRSAInit == 0) {
-      // Generate Local RSA keys for the session
-      if (RpdGenRSAKeys(0)) {
-         fprintf(stderr, "proofd: unable to generate local RSA keys\n");
-         Error(Err, -1, "proofd: unable to generate local RSA keys");
-      }
+   // Generate Local RSA keys for the session
+   if (RpdGenRSAKeys(0)) {
+      fprintf(stderr, "proofd: unable to generate local RSA keys\n");
+      Error(Err, -1, "proofd: unable to generate local RSA keys");
    }
 
    if (!gInetdFlag) {
@@ -878,9 +890,10 @@ int main(int argc, char **argv)
       // Also initialize the network connection - create the socket
       // and bind our well-know address to it.
 
-      if (!gForegroundFlag) DaemonStart(1, 0, kPROOFD);
+      if (!foregroundflag) 
+         DaemonStart(1, 0, gService);
 
-      NetInit(gService, gPortA, gPortB, tcpwindowsize);
+      NetInit(gService, port1, port2, tcpwindowsize);
    }
 
    if (gDebug > 0)
@@ -892,10 +905,10 @@ int main(int argc, char **argv)
    // the parent from NetOpen() never returns.
 
    while (1) {
-      if (NetOpen(gInetdFlag, kPROOFD) == 0) {
+      if (NetOpen(gInetdFlag, gService) == 0) {
 
          // Init Session (get protocol, run authentication, login, ...)
-         gMaster = RpdInitSession(kPROOFD);
+         gMaster = RpdInitSession(gService, gUser, gRemPid);
 
          ProofdExec();     // child processes client's requests
          NetClose();       // then we are done
@@ -906,8 +919,4 @@ int main(int argc, char **argv)
 
    }
 
-#ifdef R__KRB5
-   // never called... needed?
-   krb5_free_context(gKcontext);
-#endif
 }

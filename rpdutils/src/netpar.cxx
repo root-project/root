@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: netpar.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: netpar.cxx,v 1.2 2004/02/20 09:52:14 rdm Exp $
 // Author: Fons Rademakers   06/02/2001
 
 /*************************************************************************
@@ -44,14 +44,15 @@
 #   define USE_SOCKLEN_T
 #endif
 
-#include "rootdp.h"
+#include "rpdp.h"
 
+extern int gDebug;
 
 namespace ROOT {
 
-int gParallel = 0;
+extern ErrorHandler_t gErrSys;
 
-extern int    gDebug;
+int gParallel = 0;
 
 static int    gMaxFd;
 static int   *gPSockFd;
@@ -60,7 +61,6 @@ static int   *gReadBytesLeft;
 static char **gWritePtr;
 static char **gReadPtr;
 static fd_set gFdSet;
-
 
 //______________________________________________________________________________
 static void InitSelect(int nsock)
@@ -203,7 +203,7 @@ int NetParOpen(int port, int size)
    int remlen = sizeof(remote_addr);
 #endif
 
-   if (!getpeername(gSockFd, (struct sockaddr *)&remote_addr, &remlen)) {
+   if (!getpeername(NetGetSockFd(), (struct sockaddr *)&remote_addr, &remlen)) {
       remote_addr.sin_family = AF_INET;
       remote_addr.sin_port   = htons(port);
 
@@ -256,6 +256,13 @@ void NetParClose()
    for (int i = 0; i < gParallel; i++)
       close(gPSockFd[i]);
 
+   if (gDebug > 0) {
+      std::string Host;
+      NetGetRemoteHost(Host);
+      ErrorInfo("NetParClose: closing %d-fold connection to host = %s",
+                gParallel, Host.data());
+   }
+
    delete [] gPSockFd;
    delete [] gWriteBytesLeft;
    delete [] gReadBytesLeft;
@@ -263,9 +270,6 @@ void NetParClose()
    delete [] gReadPtr;
 
    gParallel = 0;
-
-   if (gDebug > 0)
-      ErrorInfo("NetParClose: file = %s", gFile);
 }
 
 } // namespace ROOT

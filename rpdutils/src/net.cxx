@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.2 2003/11/07 03:29:42 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: net.cxx,v 1.3 2004/02/20 09:52:14 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -42,29 +42,69 @@
 #include "rpdp.h"
 #include "rpderr.h"
 
+extern int     gDebug;
 
 namespace ROOT {
 
-extern int     gDebug;
+extern std::string gServName[3];
 
-double  gBytesSent = 0;
-double  gBytesRecv = 0;
+extern ErrorHandler_t gErrSys;
+extern ErrorHandler_t gErrFatal;
 
-static char gOpenhost[256] = "????";
+static double  gBytesSent = 0;
+static double  gBytesRecv = 0;
+
+static std::string gOpenhost = "????";
 
 static int                tcp_srv_sock;
 static struct sockaddr_in tcp_srv_addr;
 static struct sockaddr_in tcp_cli_addr;
 
-int         gSockFd             = -1;
-char        gFile[kMAXPATHLEN]  = { 0 };
-SigPipe_t   gSigPipeHook        = 0;
+static int  gSockFd             = -1;
+static SigPipe_t   gSigPipeHook = 0;
 extern int  gParallel;
 
 //______________________________________________________________________________
-const char *NetRemoteHost()
+double NetGetBytesRecv()
 {
-   return gOpenhost;
+   // return received bytes
+   return gBytesRecv;
+}
+
+//______________________________________________________________________________
+double NetGetBytesSent()
+{
+   // return sent bytes
+   return gBytesSent;
+}
+
+//______________________________________________________________________________
+void NetGetRemoteHost(std::string &OpenHost)
+{
+   // Return name of connected host
+   OpenHost = gOpenhost;
+}
+
+//______________________________________________________________________________
+int NetGetSockFd()
+{
+   // return open socket descriptor
+   return gSockFd;
+}
+
+//______________________________________________________________________________
+void NetResetByteCount()
+{
+   // reset byte counts
+   gBytesRecv = 0;
+   gBytesSent = 0;
+}
+
+//______________________________________________________________________________
+void NetSetSigPipeHook(SigPipe_t Hook)
+{
+   // Set hook for SIGPIPE calls
+   gSigPipeHook = Hook;
 }
 
 //______________________________________________________________________________
@@ -314,16 +354,17 @@ int NetOpen(int inetdflag, EService service)
          struct hostent *hp;
          if ((hp = gethostbyaddr((const char *)&tcp_cli_addr.sin_addr,
                                  sizeof(tcp_cli_addr.sin_addr), AF_INET)))
-            strcpy(gOpenhost, hp->h_name);
+            gOpenhost = std::string(hp->h_name);
          else {
             struct in_addr *host_addr = (struct in_addr*)&tcp_cli_addr.sin_addr;
-            strcpy(gOpenhost, inet_ntoa(*host_addr));
+            gOpenhost = std::string(inet_ntoa(*host_addr));
          }
       }
 
       // Notify, if requested ...
       if (gDebug > 1)
-         ErrorInfo("NetOpen: fired by inetd: connection from host %s via socket %d", gOpenhost,gSockFd);
+         ErrorInfo("NetOpen: fired by inetd: connection from host %s"
+                   " via socket %d", gOpenhost.data(),gSockFd);
 
       // Set several general performance network options
       NetSetOptions(service,gSockFd, 65535);
@@ -345,16 +386,17 @@ again:
          ResetErrno();
          goto again;   // probably a SIGCLD that was caught
       }
-      Error(gErrSys,kErrFatal, "NetOpen: accept error (errno: %d) ... socket %d",GetErrno(),tcp_srv_sock);
+      Error(gErrSys,kErrFatal, "NetOpen: accept error (errno: %d) ... socket %d",
+                    GetErrno(),tcp_srv_sock);
    }
 
    struct hostent *hp;
    if ((hp = gethostbyaddr((const char *)&tcp_cli_addr.sin_addr,
                            sizeof(tcp_cli_addr.sin_addr), AF_INET)))
-      strcpy(gOpenhost, hp->h_name);
+      gOpenhost = std::string(hp->h_name);
    else {
       struct in_addr *host_addr = (struct in_addr*)&tcp_cli_addr.sin_addr;
-      strcpy(gOpenhost, inet_ntoa(*host_addr));
+      gOpenhost = std::string(inet_ntoa(*host_addr));
    }
 
    // Fork a child process to handle the client's request.
@@ -382,7 +424,8 @@ again:
 
    // Notify, if requested ...
    if (gDebug > 1)
-     ErrorInfo("NetOpen: concurrent server: connection from host %s via socket %d", gOpenhost, gSockFd);
+     ErrorInfo("NetOpen: concurrent server: connection from host %s"
+               " via socket %d", gOpenhost.data(), gSockFd);
 
    return 0;
 }
@@ -400,14 +443,14 @@ void NetClose()
 
       close(gSockFd);
       if (gDebug > 0)
-         ErrorInfo("NetClose: host = %s, fd = %d, file = %s", gOpenhost, gSockFd,
-                   gFile);
+         ErrorInfo("NetClose: host = %s, fd = %d",
+                   gOpenhost.data(), gSockFd);
       gSockFd = -1;
    }
 }
 
 //______________________________________________________________________________
-int NetInit(const char *service, int &port1, int port2, int tcpwindowsize)
+int NetInit(EService servtype, int port1, int port2, int tcpwindowsize)
 {
    // Initialize the network connection for the server, when it has *not*
    // been invoked by inetd. Used by rootd.
@@ -416,18 +459,22 @@ int NetInit(const char *service, int &port1, int port2, int tcpwindowsize)
    // We have to create a socket ourselves and bind our well-known
    // address to it.
 
+   std::string service = gServName[servtype];
+
    if (port1 <= 0) {
-      if (service) {
-         struct servent *sp;
-         if ((sp = getservbyname(service, "tcp")) == 0) {
-            fprintf(stderr,       "NetInit: unknown service: %s/tcp\n", service);
-            Error(gErrFatal, kErrFatal, "NetInit: unknown service: %s/tcp", service);
+      if (service.length()) {
+         struct servent *sp = getservbyname(service.data(), "tcp");
+         if (!sp) {
+            fprintf(stderr,"NetInit: unknown service: %s/tcp\n", service.data());
+            Error(gErrFatal, kErrFatal, 
+                           "NetInit: unknown service: %s/tcp", service.data());
          }
          port1 = ntohs(sp->s_port);
          port2 += port1;   // in this case, port2 is relative to service port
       } else {
          fprintf(stderr, "NetInit: must specify either service or port\n");
-         Error(gErrFatal,kErrFatal, "NetInit: must specify either service or port");
+         Error(gErrFatal,kErrFatal, 
+                         "NetInit: must specify either service or port");
       }
    }
 
@@ -484,69 +531,6 @@ int NetInit(const char *service, int &port1, int port2, int tcpwindowsize)
 }
 
 //______________________________________________________________________________
-void NetInit(const char *service, int port, int tcpwindowsize)
-{
-   // Initialize the network connection for the server, when it has *not*
-   // been invoked by inetd. Used by proofd.
-
-   // We weren't started by a master daemon.
-   // We have to create a socket ourselves and bind our well-known
-   // address to it.
-
-   memset(&tcp_srv_addr, 0, sizeof(tcp_srv_addr));
-   tcp_srv_addr.sin_family      = AF_INET;
-   tcp_srv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-   if (service) {
-
-      if (port > 0)
-         tcp_srv_addr.sin_port = htons(port);
-      else {
-         struct servent *sp;
-         if ((sp = getservbyname(service, "tcp")) == 0)
-            Error(gErrFatal,-1,"NetInit: unknown service: %s/tcp", service);
-         tcp_srv_addr.sin_port = sp->s_port;
-      }
-
-   } else {
-
-      if (port <= 0)
-         Error(gErrFatal,-1,"NetInit: must specify either service or port");
-      tcp_srv_addr.sin_port = htons(port);
-
-   }
-
-   // Create the socket and bind our local address so that any client can
-   // send to us.
-
-   if ((tcp_srv_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-      Error(gErrSys,-1,"NetInit: can't create socket");
-
-   int val = 1;
-   if (setsockopt(tcp_srv_sock, SOL_SOCKET, SO_REUSEADDR, (char*) &val,
-                  sizeof(val)) == -1)
-      Error(gErrSys,-1,"NetInit: can't set SO_REUSEADDR socket option");
-
-   // Set several general performance network options
-   NetSetOptions(kPROOFD,tcp_srv_sock, tcpwindowsize);
-
-   if (bind(tcp_srv_sock, (struct sockaddr *) &tcp_srv_addr,
-            sizeof(tcp_srv_addr)) < 0)
-      Error(gErrSys,-1,
-            "NetInit: can't bind local address (sock: %d) : errno: %d",
-             tcp_srv_sock,GetErrno());
-
-   // And set the listen parameter, telling the system that we're
-   // ready to accept incoming connection requests.
-
-   listen(tcp_srv_sock, 5);
-
-   if (gDebug > 0)
-      ErrorInfo("NetInit: socket %d listening on port %d", tcp_srv_sock,
-                ntohs(tcp_srv_addr.sin_port));
-}
-
-//______________________________________________________________________________
 void NetSetOptions(EService serv, int sock, int tcpwindowsize)
 {
    // Set some options for network socket.
@@ -554,22 +538,24 @@ void NetSetOptions(EService serv, int sock, int tcpwindowsize)
    int val = 1;
 
    if (serv == kROOTD) {
-      if (!setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(val))) {
-         if (gDebug > 0) ErrorInfo("NetSetOptions: set TCP_NODELAY");
-      }
-      if (!setsockopt(sock, SOL_SOCKET,  SO_KEEPALIVE, (char *)&val, sizeof(val))) {
-         if (gDebug > 0) ErrorInfo("NetSetOptions: set SO_KEEPALIVE");
-         if (gSigPipeHook != 0) signal(SIGPIPE, (*gSigPipeHook));   // handle SO_KEEPALIVE failure
+      if (!setsockopt(sock,IPPROTO_TCP,TCP_NODELAY,(char *)&val,sizeof(val)))
+         if (gDebug > 0) 
+            ErrorInfo("NetSetOptions: set TCP_NODELAY");
+      if (!setsockopt(sock,SOL_SOCKET,SO_KEEPALIVE,(char *)&val,sizeof(val))) {
+         if (gDebug > 0) 
+            ErrorInfo("NetSetOptions: set SO_KEEPALIVE");
+         if (gSigPipeHook != 0) 
+            signal(SIGPIPE, (*gSigPipeHook));   // handle SO_KEEPALIVE failure
       }
    }
 
    val = tcpwindowsize;
-   if (!setsockopt(sock, SOL_SOCKET,  SO_SNDBUF, (char *)&val, sizeof(val))) {
-      if (gDebug > 0) ErrorInfo("NetSetOptions: set SO_SNDBUF %d", val);
-   }
-   if (!setsockopt(sock, SOL_SOCKET,  SO_RCVBUF, (char *)&val, sizeof(val))) {
-      if (gDebug > 0) ErrorInfo("NetSetOptions: set SO_RCVBUF %d", val);
-   }
+   if (!setsockopt(sock,SOL_SOCKET,SO_SNDBUF,(char *)&val,sizeof(val)))
+      if (gDebug > 0) 
+         ErrorInfo("NetSetOptions: set SO_SNDBUF %d", val);
+   if (!setsockopt(sock,SOL_SOCKET,SO_RCVBUF,(char *)&val,sizeof(val)))
+      if (gDebug > 0) 
+         ErrorInfo("NetSetOptions: set SO_RCVBUF %d", val);
 
    if (gDebug > 0) {
 #if defined(USE_SIZE_T)
