@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.37 2003/04/10 20:29:59 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.38 2003/04/17 08:38:04 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -274,7 +274,7 @@ void TClonesArray::Clear(Option_t *option)
    // can delete objects or dynamic arrays allocated in the class.
    // This procedure is much faster than calling TClonesArray::Delete().
 
-   if (option[0] == 'C') {
+   if (option && option[0] == 'C') {
       Int_t n = GetEntriesFast();
       for (Int_t i = 0; i < n; i++) {
          TObject *obj = At(i);
