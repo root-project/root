@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.77 2001/05/24 17:24:09 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.78 2001/05/25 09:46:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1610,6 +1610,9 @@ Int_t TTree::Fill()
    Int_t nbytes = 0;
    Int_t nb = fBranches.GetEntriesFast();
    TBranch *branch;
+   
+   if (fDirectory) TStreamerInfo::SetCurrentFile(fDirectory->GetFile());
+   else            TStreamerInfo::SetCurrentFile(0);
 
     //case of one single super branch. Automatically update
     // all the branch addresses if a new object was created
