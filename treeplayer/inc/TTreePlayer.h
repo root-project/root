@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.25 2003/08/25 17:31:42 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.h,v 1.26 2003/10/07 11:10:36 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -43,20 +43,23 @@
 class TTreePlayer : public TVirtualTreePlayer {
 
 protected:
-    TTree         *fTree;           //!  Pointer to current Tree
-    Bool_t         fScanRedirect;   //  Switch to redirect TTree::Scan output to a file
-    const char    *fScanFileName;   //  Name of the file where Scan is redirected
-    Int_t          fDimension;      //  Dimension of the current expression
-    Int_t          fSelectedRows;   //  Number of selected entries
-    TH1           *fHistogram;      //! Pointer to histogram used for the projection
-    TSelectorDraw *fSelector;       //! Pointer to current selector
-    TList         *fInput;          //! input list to the selector
-    TList         *fFormulaList;    //! Pointer to a list of coordinated list TTreeFormula (used by Scan and Query)
+    TTree         *fTree;            //!  Pointer to current Tree
+    Bool_t         fScanRedirect;    //  Switch to redirect TTree::Scan output to a file
+    const char    *fScanFileName;    //  Name of the file where Scan is redirected
+    Int_t          fDimension;       //  Dimension of the current expression
+    Int_t          fSelectedRows;    //  Number of selected entries
+    TH1           *fHistogram;       //! Pointer to histogram used for the projection
+    TSelectorDraw *fSelector;        //! Pointer to current selector
+    TSelector     *fSelectorFromFile;//! Pointer to a user defined selector created by this TTreePlayer object 
+    TClass        *fSelectorClass;   //! Pointer to the actual class of the TSelectorFromFile
+    TList         *fInput;           //! input list to the selector
+    TList         *fFormulaList;     //! Pointer to a list of coordinated list TTreeFormula (used by Scan and Query)
     
 protected:
     const   char  *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);
     void           TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject *obj, Option_t *option);
     void           TakeEstimate(Int_t nfill, Int_t &npoints, Int_t action, TObject *obj, Option_t *option);
+    void           DeleteSelectorFromFile();
 
 public:
     TTreePlayer();

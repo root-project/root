@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.28 2003/10/24 16:48:08 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.29 2003/10/29 22:48:46 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -78,6 +78,7 @@ TProofPlayer::TProofPlayer()
    fInput         = new TList;
    fOutput        = 0;
    fSelector      = 0;
+   fSelectorClass = 0;
    fFeedbackTimer = 0;
    fEvIter        = 0;
 }
@@ -86,7 +87,7 @@ TProofPlayer::TProofPlayer()
 TProofPlayer::~TProofPlayer()
 {
    delete fInput;
-   delete fSelector;
+   if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
    delete fFeedbackTimer;
    delete fEvIter;
 }
@@ -172,13 +173,16 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 {
    PDB(kGlobal,1) Info("Process","Enter");
 
-   fOutput = 0; delete fSelector;
+   fOutput = 0; 
+   if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
    fSelector = TSelector::GetSelector(selector_file);
 
    if ( !fSelector ) {
+      fSelectorClass = 0;
       Error("Process", "Cannot load: %s", selector_file );
       return -1;
    }
+   fSelectorClass = fSelector->IsA();
 
    Int_t version = fSelector->Version();
 
@@ -385,9 +389,11 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          return -1;
       }
    } else {
-      delete fSelector;
+      if (fSelectorClass && fSelectorClass->IsLoaded()) delete fSelector;
+      fSelectorClass = 0;
       fSelector = TSelector::GetSelector(selector_file);
       if (fSelector == 0) return -1;
+      fSelectorClass = fSelector->IsA();
       fSelector->SetInputList(fInput);
       fSelector->Begin(0);
    }

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.142 2003/11/20 15:09:21 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.143 2003/11/22 22:02:02 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -285,8 +285,10 @@ TTreePlayer::TTreePlayer()
    fHistogram      = 0;
    fFormulaList    = new TList();
    fFormulaList->SetOwner(kTRUE);
-   fSelector       = new TSelectorDraw();
-   fInput          = new TList();
+   fSelector         = new TSelectorDraw();
+   fSelectorFromFile = 0;
+   fSelectorClass    = 0;
+   fInput            = new TList();
    fInput->Add(new TNamed("varexp",""));
    fInput->Add(new TNamed("selection",""));
    fSelector->SetInputList(fInput);
@@ -300,6 +302,7 @@ TTreePlayer::~TTreePlayer()
 
    delete fFormulaList;
    delete fSelector;
+   DeleteSelectorFromFile();
    fInput->Delete();
    delete fInput;
 }
@@ -383,6 +386,21 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Int_t nentries,
    }
    fFormulaList->Clear();
    return tree;
+}
+
+//______________________________________________________________________________
+void TTreePlayer::DeleteSelectorFromFile()
+{
+// Delete any selector created by this object.
+// The selector has been created using TSelector::GetSelector(file)
+
+   if (fSelectorFromFile && fSelectorClass) {
+      if (fSelectorClass->IsLoaded()) {
+         delete fSelectorFromFile;
+      }
+   }
+   fSelectorFromFile = 0;
+   fSelectorClass = 0;
 }
 
 //______________________________________________________________________________
@@ -1983,15 +2001,17 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries
 //     mytree.Process(selector,..);
 
 
-   //Get a pointer to the TSelector object
-   static TSelector *selector = 0;
-   delete selector; //delete previous selector if any
+   DeleteSelectorFromFile(); //delete previous selector if any
+
    // This might reloads the script and delete your option
    // string! so let copy it first:
    TString opt(option);
    TString file(filename);
-   selector = TSelector::GetSelector(file);
+   TSelector *selector = TSelector::GetSelector(file);
    if (!selector) return -1;
+
+   fSelectorFromFile = selector;
+   fSelectorClass    = selector->IsA();
 
    Int_t nsel = Process(selector,opt,nentries,firstentry);
    return nsel;
