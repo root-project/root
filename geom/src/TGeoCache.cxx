@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.25 2004/01/20 15:44:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.26 2004/02/10 08:56:20 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -33,7 +33,7 @@ const Int_t kN3 = 3*sizeof(Double_t);
 ClassImp(TGeoNodeCache)
 /*************************************************************************
  * TGeoNodeCache - special pool of reusable nodes
- *    
+ *
  *
  *************************************************************************/
 
@@ -135,7 +135,7 @@ TGeoNodeCache::TGeoNodeCache(Int_t /*size*/, Bool_t nodeid)
    fPath = "";
    fPath.Resize(400);
    fCurrentCache = gGeoManager->GetTopNode()->GetNdaughters();
-   if (fCurrentCache>fGeoCacheMaxDaughters) 
+   if (fCurrentCache>fGeoCacheMaxDaughters)
       fCurrentCache = fGeoCacheObjArrayInd;
    fBranch = new Int_t[fGeoCacheMaxLevels];
    memset(fBranch, 0, fGeoCacheMaxLevels*sizeof(Int_t));
@@ -174,7 +174,7 @@ TGeoNodeCache::~TGeoNodeCache()
    if (fStack) {
       fStack->Delete();
       delete fStack;
-   }   
+   }
    if (fNodeIdArray) delete [] fNodeIdArray;
 }
 
@@ -185,7 +185,7 @@ void TGeoNodeCache::BuildIdArray()
    Int_t nnodes = gGeoManager->GetNNodes();
    //if (nnodes>3E7) return;
    if (fNodeIdArray) delete [] fNodeIdArray;
-   printf("--- node ID tracking enabled, size=%i Bytes\n", (2*nnodes+1)*sizeof(Int_t));
+   printf("--- node ID tracking enabled, size=%lu Bytes\n", (2*nnodes+1)*sizeof(Int_t));
    fNodeIdArray = new Int_t[2*nnodes+1];
    fNodeIdArray[0] = 0;
    Int_t ifree  = 1;
@@ -200,7 +200,7 @@ Int_t TGeoNodeCache::GetCurrentNodeId() const
 // Returns a fixed ID for current physical node
    if (fNodeIdArray) return fNodeIdArray[fIndex];
    return GetNodeId();
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoNodeCache::Compact()
@@ -222,7 +222,7 @@ void TGeoNodeCache::DeleteCaches()
    if (!fCache) return;
    for (Int_t ic=0; ic<fGeoCacheMaxDaughters+1; ic++) {
       fCache[ic]->DeleteArray();
-      delete fCache[ic]; 
+      delete fCache[ic];
    }
    delete fCache[fGeoCacheObjArrayInd];
    delete [] fCache;
@@ -239,7 +239,7 @@ Int_t TGeoNodeCache::AddNode(TGeoNode *node)
 }
 
 //_____________________________________________________________________________
-//Int_t TGeoNodeCache::CacheId(Int_t nindex) 
+//Int_t TGeoNodeCache::CacheId(Int_t nindex)
 //{
 //   Int_t id = (nindex>>24) & 0xFF;
 //   return (id>fGeoCacheMaxDaughters)?fGeoCacheObjArrayInd:id;
@@ -252,13 +252,13 @@ void TGeoNodeCache::CdNode(Int_t nodeid) {
    if (!fNodeIdArray) {
       printf("WARNING:CdNode() disabled - too many nodes\n");
       return;
-   }   
+   }
    Int_t *arr = fNodeIdArray;
    if (nodeid == arr[fIndex]) return;
    while (fLevel>0) {
       gGeoManager->CdUp();
       if (nodeid == arr[fIndex]) return;
-   }   
+   }
    gGeoManager->CdTop();
    Int_t currentID = 0;
    Int_t nd = GetNode()->GetNdaughters();
@@ -283,10 +283,10 @@ void TGeoNodeCache::CdNode(Int_t nodeid) {
       gGeoManager->CdDown(nbelow-1);
       currentID = arr[fIndex];
 //      printf("current=%d\n", currentID);
-      nd = GetNode()->GetNdaughters();   
+      nd = GetNode()->GetNdaughters();
    }
-}   
- 
+}
+
 //_____________________________________________________________________________
 Bool_t TGeoNodeCache::CdDown(Int_t index, Bool_t make)
 {
@@ -309,12 +309,12 @@ Bool_t TGeoNodeCache::CdDown(Int_t index, Bool_t make)
 //      check_mat = kFALSE;
       if (fLevel < fGeoCacheDefaultLevel) persistent=kTRUE;
    }
-   // make daughter current 
+   // make daughter current
    fBranch[++fLevel] = nind_d;
    if (fNodeIdArray) {
       fIndex = fNodeIdArray[fIndex+index+1];
       fIdBranch[fLevel] = fIndex;
-   }   
+   }
    fCurrentNode = nind_d;
    fCurrentCache = CacheId(nind_d);
    fCurrentIndex = Index(nind_d);
@@ -322,10 +322,10 @@ Bool_t TGeoNodeCache::CdDown(Int_t index, Bool_t make)
    if (!make) return kTRUE;
    // set persistency
    if (persistent) fCache[fCurrentCache]->SetPersistency();
-   // check if its global matrix is computed   
+   // check if its global matrix is computed
    fMatrices[fLevel] = fCache[fCurrentCache]->GetMatrixInd();
    if (fMatrices[fLevel]) {
-      fMatrixPool->cd(fMatrices[fLevel]); 
+      fMatrixPool->cd(fMatrices[fLevel]);
       return kTRUE;
    }
    // compute matrix and add it to cache
@@ -344,7 +344,7 @@ Bool_t TGeoNodeCache::CdDown(Int_t index, Bool_t make)
    // store it in cache and bookkeep its location
    fMatrices[fLevel] = fCache[fCurrentCache]->AddMatrix(fGlobalMatrix);
    return kTRUE;
-}  
+}
 
 //_____________________________________________________________________________
 void TGeoNodeCache::CdUp()
@@ -517,42 +517,42 @@ Int_t TGeoNodeCache::PushState(Bool_t ovlp, Int_t startlevel, Double_t *point)
 {
    if (fStackLevel>=fGeoCacheStackSize) {
       printf("ERROR TGeoNodeCach::PushSate() : stack of states full\n");
-      return 0; 
-   }   
+      return 0;
+   }
    ((TGeoCacheState*)fStack->At(fStackLevel))->SetState(fLevel,startlevel,ovlp,point);
-   return ++fStackLevel;   
-}   
+   return ++fStackLevel;
+}
 
 //_____________________________________________________________________________
-void TGeoNodeCache::Refresh() 
+void TGeoNodeCache::Refresh()
 {
    if (fLevel<0) {
       gGeoManager->SetOutside();
       fLevel = 0;
-   }   
-   fCurrentNode=fBranch[fLevel]; 
+   }
+   fCurrentNode=fBranch[fLevel];
    fCurrentCache=CacheId(fCurrentNode);
-   fCurrentIndex=Index(fCurrentNode); 
+   fCurrentIndex=Index(fCurrentNode);
    fCache[fCurrentCache]->cd(fCurrentIndex);
    fMatrixPool->cd(fMatrices[fLevel]);
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoNodeCache::PopState(Double_t *point) 
+Bool_t TGeoNodeCache::PopState(Double_t *point)
 {
    if (!fStackLevel) return 0;
    Bool_t ovlp = ((TGeoCacheState*)fStack->At(--fStackLevel))->GetState(fLevel,point);
-   Refresh(); 
+   Refresh();
 //   return (fStackLevel+1);
    return ovlp;
 }
 
 //_____________________________________________________________________________
-Bool_t TGeoNodeCache::PopState(Int_t level, Double_t *point) 
+Bool_t TGeoNodeCache::PopState(Int_t level, Double_t *point)
 {
    if (level<=0) return 0;
    ((TGeoCacheState*)fStack->At(level-1))->GetState(fLevel,point);
-   Refresh(); 
+   Refresh();
    return level;
 }
 
@@ -581,7 +581,7 @@ void TGeoNodeCache::Status() const
 
 /*************************************************************************
  * TGeoCacheDummy - a dummy cache for physical nodes
- *    
+ *
  *
  *************************************************************************/
 ClassImp(TGeoCacheDummy)
@@ -594,7 +594,7 @@ TGeoCacheDummy::TGeoCacheDummy()
    fNodeBranch = 0;
    fMatrixBranch = 0;
    fMPB = 0;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoCacheDummy::TGeoCacheDummy(TGeoNode *top, Bool_t nodeid)
@@ -609,13 +609,13 @@ TGeoCacheDummy::TGeoCacheDummy(TGeoNode *top, Bool_t nodeid)
    for (Int_t i=0; i<fGeoCacheMaxLevels; i++) {
       fMPB[i] = new TGeoHMatrix("global");
       fMatrixBranch[i] = 0;
-   }   
+   }
    fMatrix = fMatrixBranch[0] = fMPB[0];
    fStack = new TObjArray(fGeoCacheStackSize);
    for (Int_t ist=0; ist<fGeoCacheStackSize; ist++)
       fStack->Add(new TGeoCacheStateDummy(100)); // !obsolete 100
    fMatrixPool = 0;
-}   
+}
 
 //_____________________________________________________________________________
 TGeoCacheDummy::~TGeoCacheDummy()
@@ -625,8 +625,8 @@ TGeoCacheDummy::~TGeoCacheDummy()
       for (Int_t i=0; i<fGeoCacheMaxLevels; i++)
          delete fMPB[i];
       delete [] fMPB;
-   }   
-}   
+   }
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoCacheDummy::CdDown(Int_t index, Bool_t /*make*/)
@@ -637,7 +637,7 @@ Bool_t TGeoCacheDummy::CdDown(Int_t index, Bool_t /*make*/)
    if (fNodeIdArray) {
       fIndex = fNodeIdArray[fIndex+index+1];
       fIdBranch[fLevel] = fIndex;
-   }   
+   }
    fNode = newnode;
    fNodeBranch[fLevel] = fNode;
    TGeoMatrix  *local = newnode->GetMatrix();
@@ -646,7 +646,7 @@ Bool_t TGeoCacheDummy::CdDown(Int_t index, Bool_t /*make*/)
       *newmat = fMatrix;
       newmat->Multiply(local);
       fMatrix = newmat;
-   }   
+   }
    fMatrixBranch[fLevel] = fMatrix;
    return kTRUE;
 }
@@ -711,7 +711,7 @@ const char *TGeoCacheDummy::GetPath()
    for (Int_t level=0;level<fLevel+1; level++) {
       fPath += "/";
       fPath += fNodeBranch[level]->GetName();
-   }   
+   }
    return fPath.Data();
 }
 
@@ -740,7 +740,7 @@ void TGeoCacheDummy::MasterToLocal(const Double_t *master, Double_t *local) cons
   if (fMatrix->IsIdentity()) {
      memcpy(local, master, kN3);
      return;
-  }   
+  }
   const Double_t *tr  = fMatrix->GetTranslation();
   const Double_t *rot = fMatrix->GetRotationMatrix();
   Double_t mt0  = master[0]-tr[0];
@@ -758,7 +758,7 @@ void TGeoCacheDummy::MasterToLocalVect(const Double_t *master, Double_t *local) 
   if (fMatrix->IsIdentity()) {
      memcpy(local, master, kN3);
      return;
-  }   
+  }
   const Double_t *rot = fMatrix->GetRotationMatrix();
   for (Int_t i=0; i<3; i++) {
      local[i] =  master[0]*rot[i]
@@ -785,13 +785,13 @@ const Int_t TGeoNodeArray::kGeoReleasedSpace = 1000;
  *      ->offset+0   - pointer to physical node : fNode-gSystem
  *
  *                            |bit7 | b6  | b5 | b4  | b3 | b2  | b1 | b0 |
- *      ->offset+1   - Byte0= |scale|rot  | Z  | Y   | X  |matrix cache id| 
+ *      ->offset+1   - Byte0= |scale|rot  | Z  | Y   | X  |matrix cache id|
  *                     | B3 | B2 | B1 | - matrix index in cache
  *      ->offset+2   - B0|b7 = node persistency ; b6 = has daughters
  *                     B3|B2|B1|B0 - usage count
- *      ->offset+3+i - Byte0=daughter array index, 
- *                   |B3|B2|B1| - index of daughter i 
- *      Total length : nodesize = (3+fNdaughters)*sizeof(Int_t) 
+ *      ->offset+3+i - Byte0=daughter array index,
+ *                   |B3|B2|B1| - index of daughter i
+ *      Total length : nodesize = (3+fNdaughters)*sizeof(Int_t)
  *
  *************************************************************************/
 
@@ -856,7 +856,7 @@ Int_t TGeoNodeArray::AddMatrix(TGeoMatrix *global)
 {
 // Adds a global matrix to the current node in this array
    return (fOffset[1]=gGeoManager->GetCache()->GetMatrixPool()->AddMatrix(global));
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoNodeArray::Compact()
@@ -924,7 +924,7 @@ void TGeoNodeArray::ClearMatrix()
    Int_t ind_mat = fOffset[1];
    if (ind_mat && !(GetNode()->GetMatrix()->IsIdentity()))
       gGeoManager->GetCache()->GetMatrixPool()->ClearMatrix(ind_mat);
-}  
+}
 
 //_____________________________________________________________________________
 void TGeoNodeArray::ClearNode()
@@ -958,7 +958,7 @@ Bool_t TGeoNodeArray::HasDaughters() const
 void TGeoNodeArray::IncreaseArray()
 {
 // Doubles the array size unless maximum cache limit is reached or
-// global cache limit is reached. In this case forces the cache 
+// global cache limit is reached. In this case forces the cache
 // manager to do the garbage collection.
 //   printf("Increasing array %i\n", fNdaughters);
    Int_t new_size = 2*fSize;
@@ -971,7 +971,7 @@ void TGeoNodeArray::IncreaseArray()
 //   new_size = (new_size>kGeoArrayMaxSize)?kGeoArrayMaxSize:new_size;
 /*
    if ((gGeoManager->GetCache()->GetSize()+new_size-fSize) > TGeoNodeCache::kGeoCacheMaxSize) {
-      gGeoManager->GetCache()->CleanCache();   
+      gGeoManager->GetCache()->CleanCache();
       IncreaseArray();
       return;
    }
@@ -1004,7 +1004,7 @@ void TGeoNodeArray::SetPersistency(Bool_t flag)
 
 /*************************************************************************
  * TGeoNodeObjArray - container class for nodes with more than 254
- *     daughters. 
+ *     daughters.
  *
  *************************************************************************/
 
@@ -1040,7 +1040,7 @@ TGeoNodeObjArray::~TGeoNodeObjArray()
    if (!fObjArray) return;
    fObjArray->Delete();
    delete fObjArray;
-}   
+}
 
 //_____________________________________________________________________________
 Int_t TGeoNodeObjArray::AddDaughter(TGeoNode *node, Int_t i)
@@ -1053,7 +1053,7 @@ Int_t TGeoNodeObjArray::AddDaughter(TGeoNode *node, Int_t i)
 //_____________________________________________________________________________
 Int_t TGeoNodeObjArray::AddNode(TGeoNode *node)
 {
-// Add node in the node array. 
+// Add node in the node array.
    // first map the node to the first free location which becomes current
    Int_t index = fFirstFree;
    Int_t oldindex = fIndex;
@@ -1104,7 +1104,7 @@ void TGeoNodeObjArray::ClearMatrix()
    Int_t ind_mat = fCurrent->GetMatrixInd();
    if (ind_mat && !fCurrent->GetNode()->GetMatrix()->IsIdentity())
       gGeoManager->GetCache()->GetMatrixPool()->ClearMatrix(ind_mat);
-}  
+}
 
 //_____________________________________________________________________________
 void TGeoNodeObjArray::ClearNode()
@@ -1129,9 +1129,9 @@ void TGeoNodeObjArray::ClearNode()
 void TGeoNodeObjArray::IncreaseArray()
 {
 // Doubles the array size unless maximum cache limit is reached or
-// global cache limit is reached. In this case forces the cache 
+// global cache limit is reached. In this case forces the cache
 // manager to do the garbage collection.
-   
+
 //   printf("Increasing ARRAY\n");
    Int_t new_size = 2*fSize;
    Int_t free_space = gGeoManager->GetCache()->GetFreeSpace();
@@ -1153,7 +1153,7 @@ void TGeoNodeObjArray::IncreaseArray()
 
 /*************************************************************************
  * TGeoNodePos - the physical geometry node with links to mother and
- *   daughters. 
+ *   daughters.
  *
  *************************************************************************/
 
@@ -1170,7 +1170,7 @@ TGeoNodePos::TGeoNodePos()
    fNdaughters = 0;
    fDaughters = 0;
    fMatrix = 0;
-   fCount = 0;  
+   fCount = 0;
    fNode = 0;
 }
 
@@ -1187,15 +1187,15 @@ TGeoNodePos::TGeoNodePos(Int_t ndaughters)
       fDaughters = 0;
    }
    fMatrix = 0;
-   fCount = 0;  
-   fNode = 0;  
+   fCount = 0;
+   fNode = 0;
 }
 
 //_____________________________________________________________________________
 TGeoNodePos::~TGeoNodePos()
 {
-// destructor. It deletes the daughters also. 
-   // delete daughters 
+// destructor. It deletes the daughters also.
+   // delete daughters
    if (fDaughters) delete [] fDaughters;
 }
 
@@ -1204,7 +1204,7 @@ Int_t TGeoNodePos::AddMatrix(TGeoMatrix *global)
 {
 // cache the global matrix
    return (fMatrix=gGeoManager->GetCache()->GetMatrixPool()->AddMatrix(global));
-}   
+}
 
 //_____________________________________________________________________________
 void TGeoNodePos::ClearMatrix()
@@ -1264,7 +1264,7 @@ void TGeoNodePos::SetPersistency(Bool_t flag)
 
 /*************************************************************************
  * TGeoMatrixCache - cache of global matrices
- *    
+ *
  *
  *************************************************************************/
 
@@ -1356,7 +1356,7 @@ Int_t TGeoMatrixCache::AddMatrix(TGeoMatrix *matrix)
 {
 // add a global matrix to the first free array of corresponding type
    if (matrix->IsIdentity()) {fHandler=13; return (fMatrix=0);}
-   
+
    const Double_t *translation = matrix->GetTranslation();
 
    UChar_t type = 0;
@@ -1376,9 +1376,9 @@ Int_t TGeoMatrixCache::AddMatrix(TGeoMatrix *matrix)
    const Int_t handler_id[32] = {
       0, 0, 1, 3, 2, 4, 5, 6, 7, 8, 8, 8, 8, 8, 8, 8,
       9,10,10,10,10,10,10,10,11,12,12,12,12,12,12,12};
-                
-   fCacheId = cache_id[type];         
-   fLength = cache_len[type];         
+
+   fCacheId = cache_id[type];
+   fLength = cache_len[type];
    fHandler = handler_id[type];
    UInt_t current_free = fFree[fCacheId];
    Double_t *location = fCache[fCacheId]+fLength*current_free;
@@ -1388,7 +1388,7 @@ Int_t TGeoMatrixCache::AddMatrix(TGeoMatrix *matrix)
 //   printf("type=%x cache_id=%i length=%i handler:%i\n", type, index, data_len, h);
 
    fBitsArray[fCacheId]->SetBitNumber(current_free);
-   fFree[fCacheId] = fBitsArray[fCacheId]->FirstNullBit(current_free); 
+   fFree[fCacheId] = fBitsArray[fCacheId]->FirstNullBit(current_free);
    if (fFree[fCacheId] >= fSize[fCacheId]-1) {
       IncreaseCache();
       location = fCache[fCacheId]+fLength*current_free;
@@ -1398,7 +1398,7 @@ Int_t TGeoMatrixCache::AddMatrix(TGeoMatrix *matrix)
    UChar_t *type_loc = (UChar_t*)&fMatrix+3;
    *type_loc = type;
    return fMatrix;
-}      
+}
 
 //_____________________________________________________________________________
 void TGeoMatrixCache::cd(Int_t mindex)
@@ -1407,7 +1407,7 @@ void TGeoMatrixCache::cd(Int_t mindex)
    if (!fMatrix) {
       fHandler = 13;
       return;
-   }   
+   }
 //   printf("%i\n", mindex);
    const Int_t cache_id[32] = {
       0, 0, 0, 1, 0, 1, 1, 2, 4, 5, 5, 5, 5, 5, 5, 5,
@@ -1418,7 +1418,7 @@ void TGeoMatrixCache::cd(Int_t mindex)
    const Int_t handler_id[32] = {
       0, 0, 1, 3, 2, 4, 5, 6, 7, 8, 8, 8, 8, 8, 8, 8,
       9,10,10,10,10,10,10,10,11,12,12,12,12,12,12,12};
-   UChar_t *type = (UChar_t*)&mindex+3;   
+   UChar_t *type = (UChar_t*)&mindex+3;
    fHandler = handler_id[*type];
    fCacheId = cache_id[*type];
    fLength = cache_len[*type];
@@ -1474,7 +1474,7 @@ void TGeoMatrixCache::Status() const
 // print current status of matrix cache
    Int_t ntot, ntotc,ntotused, nused, nfree, length;
    printf("Matrix cache status :   total    used    free\n");
-   ntot = 0; 
+   ntot = 0;
    ntotused = 0;
    for (Int_t i=0; i<7; i++) {
       length = 3*(i-1);
@@ -1494,7 +1494,7 @@ ClassImp(TGeoCacheState)
 
 /*************************************************************************
 * TGeoCacheState - class storing the state of the cache at a given moment
-*    
+*
 *
 *************************************************************************/
 
@@ -1537,7 +1537,7 @@ void TGeoCacheState::SetState(Int_t level, Int_t startlevel, Bool_t ovlp, Double
    if (gGeoManager->IsOutside()) {
       fLevel = -1;
       return;
-   }   
+   }
    TGeoNodeCache *cache = gGeoManager->GetCache();
    Int_t *branch = (Int_t*)cache->GetBranch();
    Int_t *matrices = (Int_t*)cache->GetMatrices();
@@ -1546,7 +1546,7 @@ void TGeoCacheState::SetState(Int_t level, Int_t startlevel, Bool_t ovlp, Double
    memcpy(fMatrices, matrices+fStart, (level+1-fStart)*sizeof(Int_t));
    fOverlapping = ovlp;
    if (point) memcpy(fPoint, point, 3*sizeof(Double_t));
-}   
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoCacheState::GetState(Int_t &level, Double_t *point) const
@@ -1555,7 +1555,7 @@ Bool_t TGeoCacheState::GetState(Int_t &level, Double_t *point) const
    if (fLevel<0) {
       level = 0;
       return kFALSE;
-   }   
+   }
    TGeoNodeCache *cache = gGeoManager->GetCache();
    if (cache->HasIdArray()) cache->FillIdBranch(fIdBranch, fStart);
    Int_t *branch = (Int_t*)cache->GetBranch();
@@ -1564,7 +1564,7 @@ Bool_t TGeoCacheState::GetState(Int_t &level, Double_t *point) const
    memcpy(matrices+fStart, fMatrices, (level+1-fStart)*sizeof(Int_t));
    if (point) memcpy(point, fPoint, 3*sizeof(Double_t));
    return fOverlapping;
-}   
+}
 
 
 
@@ -1572,7 +1572,7 @@ ClassImp(TGeoCacheStateDummy)
 
 /*************************************************************************
 * TGeoCacheStateDummy - class storing the state of modeler at a given moment
-*    
+*
 *
 *************************************************************************/
 
@@ -1623,7 +1623,7 @@ void TGeoCacheStateDummy::SetState(Int_t level, Int_t startlevel, Bool_t ovlp, D
       *fMatrixBranch[i] = mat_branch[i+fStart];
    fOverlapping = ovlp;
    if (point) memcpy(fPoint, point, 3*sizeof(Double_t));
-}   
+}
 
 //_____________________________________________________________________________
 Bool_t TGeoCacheStateDummy::GetState(Int_t &level, Double_t *point) const
@@ -1639,7 +1639,7 @@ Bool_t TGeoCacheStateDummy::GetState(Int_t &level, Double_t *point) const
       *mat_branch[i+fStart] = fMatrixBranch[i];
    if (point) memcpy(point, fPoint, 3*sizeof(Double_t));
    return fOverlapping;
-}   
+}
 
 
 ClassImp(TGeoMatHandler)
@@ -2095,7 +2095,7 @@ void TGeoMatHandlerRot::MasterToLocal(const Double_t *master, Double_t *local) c
 {
    local[0] = master[0]*fLocation[0]+master[1]*fLocation[3]+master[2]*fLocation[6];
    local[1] = master[0]*fLocation[1]+master[1]*fLocation[4]+master[2]*fLocation[7];
-   local[2] = master[0]*fLocation[2]+master[1]*fLocation[5]+master[2]*fLocation[8];   
+   local[2] = master[0]*fLocation[2]+master[1]*fLocation[5]+master[2]*fLocation[8];
 }
 
 ClassImp(TGeoMatHandlerRotTr)
@@ -2148,7 +2148,7 @@ void TGeoMatHandlerRotTr::MasterToLocal(const Double_t *master, Double_t *local)
               (master[2]-fLocation[11])*fLocation[7];
    local[2] = (master[0]-fLocation[9])*fLocation[2] +
               (master[1]-fLocation[10])*fLocation[5]+
-              (master[2]-fLocation[11])*fLocation[8];   
+              (master[2]-fLocation[11])*fLocation[8];
 }
 
 //_____________________________________________________________________________
@@ -2156,7 +2156,7 @@ void TGeoMatHandlerRotTr::MasterToLocalVect(const Double_t *master, Double_t *lo
 {
    local[0] = master[0]*fLocation[0]+master[1]*fLocation[3]+master[2]*fLocation[6];
    local[1] = master[0]*fLocation[1]+master[1]*fLocation[4]+master[2]*fLocation[7];
-   local[2] = master[0]*fLocation[2]+master[1]*fLocation[5]+master[2]*fLocation[8];   
+   local[2] = master[0]*fLocation[2]+master[1]*fLocation[5]+master[2]*fLocation[8];
 }
 
 //_____________________________________________________________________________
@@ -2185,7 +2185,7 @@ void TGeoMatHandlerRotTr::MasterToLocalBomb(const Double_t *master, Double_t *lo
               (master[2]-bombtr[2])*fLocation[7];
    local[2] = (master[0]-bombtr[0])*fLocation[2] +
               (master[1]-bombtr[1])*fLocation[5]+
-              (master[2]-bombtr[2])*fLocation[8];   
+              (master[2]-bombtr[2])*fLocation[8];
 }
 
 ClassImp(TGeoMatHandlerScl)
