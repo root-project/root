@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.2 2000/07/03 18:45:01 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.3 2000/07/06 16:49:39 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -330,7 +330,8 @@ public:
                                    UInt_t evmask, Window_t confine, Cursor_t cursor,
                                    Bool_t grab = kTRUE);
    virtual void         GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
-                                    Cursor_t cursor, Bool_t grab = kTRUE);
+                                    Cursor_t cursor, Bool_t grab = kTRUE,
+                                    Bool_t owner_events = kTRUE);
    virtual void         SetWindowName(Window_t id, char *name);
    virtual void         SetIconName(Window_t id, char *name);
    virtual void         SetClassHints(Window_t id, char *className, char *resourceName);

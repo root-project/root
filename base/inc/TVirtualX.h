@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.2 2000/07/03 18:45:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.3 2000/07/06 16:49:39 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -217,7 +217,8 @@ public:
                                    UInt_t evmask, Window_t confine, Cursor_t cursor,
                                    Bool_t grab = kTRUE);
    virtual void         GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
-                                    Cursor_t cursor, Bool_t grab = kTRUE);
+                                    Cursor_t cursor, Bool_t grab = kTRUE,
+                                    Bool_t owner_events = kTRUE);
    virtual void         SetWindowName(Window_t id, char *name);
    virtual void         SetIconName(Window_t id, char *name);
    virtual void         SetIconPixmap(Window_t id, Pixmap_t pix);
@@ -383,7 +384,7 @@ inline void         TVirtualX::GrabKey(Window_t, Int_t, UInt_t, Bool_t) { }
 inline void         TVirtualX::GrabButton(Window_t, EMouseButton, UInt_t,
                                      UInt_t, Window_t, Cursor_t, Bool_t) { }
 inline void         TVirtualX::GrabPointer(Window_t, UInt_t, Window_t,
-                                      Cursor_t, Bool_t) { }
+                                      Cursor_t, Bool_t, Bool_t) { }
 inline void         TVirtualX::SetWindowName(Window_t, char *) { }
 inline void         TVirtualX::SetIconName(Window_t, char *) { }
 inline void         TVirtualX::SetIconPixmap(Window_t, Pixmap_t) { }

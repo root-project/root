@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: GWin32GUI.cxx,v 1.2 2000/07/03 18:45:01 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: GWin32GUI.cxx,v 1.3 2000/07/06 16:49:39 rdm Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   09/02/99
 #include "TGWin32.h"
 
@@ -389,7 +389,7 @@ void TGWin32::Bell(Int_t percent)
                                      UInt_t, Window_t, Cursor_t, Bool_t) { }
 //______________________________________________________________________________
  void         TGWin32::GrabPointer(Window_t, UInt_t, Window_t,
-                                      Cursor_t, Bool_t) { }
+                                      Cursor_t, Bool_t, Bool_t) { }
 //______________________________________________________________________________
  void         TGWin32::SetWindowName(Window_t, char *) { }
 //______________________________________________________________________________

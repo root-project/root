@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.4 2000/07/06 16:49:39 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.5 2000/08/21 10:33:57 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -1597,7 +1597,7 @@ void TGX11::GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
 
 //______________________________________________________________________________
 void TGX11::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
-                        Cursor_t cursor, Bool_t grab)
+                        Cursor_t cursor, Bool_t grab, Bool_t owner_events)
 {
    // Establish an active pointer grab. While an active pointer grab is in
    // effect, further pointer events are only reported to the grabbing
@@ -1607,7 +1607,7 @@ void TGX11::GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
       UInt_t xevmask;
       MapEventMask(evmask, xevmask);
 
-      XGrabPointer(fDisplay, (Window) id, True,
+      XGrabPointer(fDisplay, (Window) id, (Bool) owner_events,
                    xevmask, GrabModeAsync, GrabModeAsync, (Window) confine,
                    (Cursor) cursor, CurrentTime);
    } else

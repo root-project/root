@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.2 2000/07/03 18:45:01 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.h,v 1.3 2000/07/06 16:49:39 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -274,7 +274,8 @@ public:
                            UInt_t evmask, Window_t confine, Cursor_t cursor,
                            Bool_t grab = kTRUE);
    void         GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
-                            Cursor_t cursor, Bool_t grab = kTRUE);
+                            Cursor_t cursor, Bool_t grab = kTRUE,
+                            Bool_t owner_events = kTRUE);
    void         SetWindowName(Window_t id, char *name);
    void         SetIconName(Window_t id, char *name);
    void         SetIconPixmap(Window_t id, Pixmap_t pic);
