@@ -21,6 +21,7 @@ noact="no"
 
 enable_afs=no
 enable_alien=yes
+enable_asimage=yes
 enable_cern=yes
 enable_dcache=yes
 enable_krb5=yes
@@ -48,7 +49,8 @@ options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
          enable_pythia enable_pythia6 enable_rfio enable_dcache enable_rpath \
          enable_sapdb enable_shadowpw enable_shared enable_soversion \
          enable_srp enable_table enable_thread enable_ttf enable_venus \
-         enable_krb5 enable_exceptions enable_openiv enable_alien"
+         enable_krb5 enable_exceptions enable_openiv enable_alien \
+         enable_asimage"
 
 
 ######################################################################
@@ -305,6 +307,7 @@ Usage:     $0 <architecture> [flag=value]
 enable/disable options, prefix with either --enable- or --disable-
    afs             AFS support, requires AFS libs and objects
    alien           AliEn support, requires libAliEn from ALICE
+   asimage         Image processing support, requires libAfterImage
    cern            CERNLIB usage, build h2root and g2root
    dcache          dCache support, requires libdcap from DESY
    krb5            Kerberos5 support, requires Kerberos libs
@@ -329,6 +332,8 @@ with options, prefix with --with-, enables corresponding support
    afs             AFS support, location of AFS distribution
    alien-incdir    AliEn support, location of AliEn.h
    alien-libdir    AliEn support, location of libAliEn
+   asimage-incdir  Image processing support, location of afterimage.h
+   asimage-libdir  Image processing support, location of libAfterImage
    cern-libdir     HBOOK converter, location of CERNLIB libraries
    dcap-incdir     dCache support, location of dcap.h
    dcap-libdir     dCache support, location of libdcap
@@ -420,6 +425,8 @@ if test $# -gt 0 ; then
       --with-afs=*)            afsdir=$optarg        ; enable_afs="yes"     ;;
       --with-alien-incdir=*)   alienincdir=$optarg   ; enable_alien="yes"   ;;
       --with-alien-libdir=*)   alienlibdir=$optarg   ; enable_alien="yes"   ;;
+      --with-asimage-incdir=*) asimageincdir=$optarg ; enable_asimage="yes" ;;
+      --with-asimage-libdir=*) asimagelibdir=$optarg ; enable_asimage="yes" ;;
       --with-cern-libdir=*)    cernlibdir=$optarg    ; enable_cern="yes"    ;;
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
@@ -1026,6 +1033,31 @@ fi
 
 ######################################################################
 #
+### echo %%% AfterImage Support - Third party libraries
+#
+# (See http://afterstep.sourceforge.net/afterimage/)
+#
+# Check for libAfterImage
+#
+if test ! "x$enable_asimage" = "xno" ; then
+    check_header "afterimage.h" "$asimageincdir" $ASIMAGE $ASIMAGE/include \
+	/usr/local/include /usr/local/libAfterImage /usr/include \
+	/usr/include/libAfterImage /opt/libAfterImage
+    asimageincdir=$found_dir
+
+    check_library "libAfterImage" "$enable_shared" "$asimagelibdir" \
+	$ASIMAGE $ASIMAGE/lib /usr/local/lib /usr/local/libAfterImage \
+	/usr/lib /opt/libAfterImage
+    asimagelib=$found_lib
+    asimagelibdir=$found_dir
+
+    if test "x$asimageincdir" = "x" || test "x$asimagelib" = "x"; then
+        enable_asimage="no"
+    fi
+fi
+
+######################################################################
+#
 ### echo %%% SRP Support - Third party libraries
 #
 # (see  http://srp.stanford.edu/srp)
@@ -1425,6 +1457,9 @@ sed \
     -e "s|@alienlib@|$alienlib|"            \
     -e "s|@alienlibdir@|$alienlibdir|"      \
     -e "s|@architecture@|$arch|"            \
+    -e "s|@asimageincdir@|$asimageincdir|"  \
+    -e "s|@asimagelib@|$asimagelib|"        \
+    -e "s|@asimagelibdir@|$asimagelibdir|"  \
     -e "s|@bindir@|$bindir|"                \
     -e "s|@cernlibdir@|$cernlibdir|"        \
     -e "s|@cernlibs@|$cernlib|"             \

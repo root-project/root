@@ -77,6 +77,10 @@ ALIENLIBDIR    := @alienlibdir@
 ALIENCLILIB    := @alienlib@
 ALIENINCDIR    := @alienincdir@
 
+ASTEPLIBDIR    := @asimagelibdir@
+ASTEPLIB       := @asimagelib@
+ASTEPINCDIR    := @asimageincdir@
+
 FPYTHIALIBDIR  := @pythialibdir@
 FPYTHIALIB     := @pythialib@
 

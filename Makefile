@@ -87,6 +87,11 @@ ifneq ($(ALIENCLILIB),)
 MODULES      += alien
 endif
 endif
+ifneq ($(ASTEPINCDIR),)
+ifneq ($(ASTEPLIB),)
+MODULES      += asimage
+endif
+endif
 ifneq ($(OSTHREADLIB),)
 MODULES      += thread
 endif
@@ -115,7 +120,7 @@ endif
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
 MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
                 pythia6 venus table mysql pgsql sapdb srputils x3d rootx \
-                rootd proofd dcache hbook alien
+                rootd proofd dcache hbook alien asimage
 MODULES      := $(sort $(MODULES))  # removes duplicates
 endif
 
