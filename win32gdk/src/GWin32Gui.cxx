@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.11 2002/11/01 21:37:02 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.12 2002/11/15 20:14:52 rdm Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -185,6 +185,10 @@ inline void SplitLong(Long_t ll, Long_t & i1, Long_t & i2)
       Long_t l;
       Int_t i[2];
    } conv;
+
+   conv.l    = 0L;
+   conv.i[0] = 0;
+   conv.i[1] = 0;
 
    conv.l = ll;
    i1 = conv.i[0];
