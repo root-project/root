@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.cxx,v 1.2 2000/11/21 20:44:24 brun Exp $
 // Author: Pasha Murat   12/02/99
 //------------------------------------------------------------------------------
 // Copyright(c) 1995-1997, P.Murat (CDF collaboration, FNAL)
@@ -12,8 +12,12 @@
 // It is provided "as is" without express or implied warranty.
 //------------------------------------------------------------------------------
 
+#include "TROOT.h"
 #include "TVector2.h"
 #include "TClass.h"
+
+Double_t const  kPI        = TMath::Pi();
+Double_t const  kTWOPI     = 2.*kPI;
 
 ClassImp(TVector2)
 
@@ -41,6 +45,31 @@ TVector2::TVector2(Double_t x0, Double_t y0)
 //______________________________________________________________________________
 TVector2::~TVector2()
 {
+}
+
+
+//______________________________________________________________________________
+Double_t TVector2::Phi_0_2pi(Double_t x) {
+   // (static function) returns phi angle in the interval [0,2*PI)
+  if(TMath::IsNaN(x)){
+     gROOT->Error("TVector2::Phi_0_2pi","function called with NaN");
+     return x; 
+  }  
+  while (x >= kTWOPI) x -= kTWOPI;
+  while (x <     0.)  x += kTWOPI;
+  return x;
+}
+
+//______________________________________________________________________________
+Double_t TVector2::Phi_mpi_pi(Double_t x) {
+   // (static function) returns phi angle in the interval [-PI,PI)
+  if(TMath::IsNaN(x)){
+     gROOT->Error("TVector2::Phi_mpi_pi","function called with NaN");
+     return x; 
+  }  
+  while (x >= kPI) x -= kTWOPI;
+  while (x < -kPI) x += kTWOPI;
+  return x;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.7 2002/07/13 06:59:20 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TVector2.h,v 1.8 2002/08/02 20:56:10 brun Exp $
 // Author: Pasha Murat   12/02/99
 
 /*************************************************************************
@@ -24,14 +24,12 @@
 #define ROOT_TVector2
 
 #ifndef __CINT__
-#include <limits.h>
+//#include <limits.h>
 #endif
 
 #include "TMath.h"
 #include "TObject.h"
 
-Double_t const  kPI        = 3.14159265358979323846;
-Double_t const  kTWOPI     = 2.*kPI;
 
 class TVector2 : public TObject {
 //------------------------------------------------------------------------------
@@ -89,7 +87,7 @@ public:
 
                                         // phi() is defined in [0,TWOPI]
 
-  Double_t Phi           () const { return kPI+TMath::ATan2(-fY,-fX); };
+  Double_t Phi           () const { return TMath::Pi()+TMath::ATan2(-fY,-fX); };
   Double_t DeltaPhi(const TVector2& v) const;
   void     SetMagPhi(Double_t mag, Double_t phi);
 
@@ -110,11 +108,10 @@ public:
                                         // rotates 2-vector by phi radians
   TVector2 Rotate (Double_t phi);
 
-                                        // returns phi angle in the interval
-                                        // [0,2*PI)
-  static inline Double_t Phi_0_2pi(Double_t x);                                                                               // returns phi angle in the interval
-                                        // [-PI,PI)
-  static inline Double_t Phi_mpi_pi(Double_t x);
+                                        // returns phi angle in the interval [0,2*PI)
+  static Double_t Phi_0_2pi(Double_t x);                                                                               // returns phi angle in the interval
+                                        // returns phi angle in the interval [-PI,PI)
+  static Double_t Phi_mpi_pi(Double_t x);
 
 
 
@@ -199,21 +196,5 @@ inline void TVector2::SetMagPhi(Double_t mag, Double_t phi) {
      fX = amag * TMath::Cos(phi);
      fY = amag * TMath::Sin(phi);
 }
-
-                                        // returns phi angle in the interval
-                                        // [0,2*PI)
-inline Double_t TVector2::Phi_0_2pi(Double_t x) {
-  while (x >= kTWOPI) x -= kTWOPI;
-  while (x <     0.)  x += kTWOPI;
-  return x;
-}
-                                        // returns phi angle in the interval
-                                        // [-PI,PI)
-inline Double_t TVector2::Phi_mpi_pi(Double_t x) {
-  while (x >= kPI) x -= kTWOPI;
-  while (x < -kPI) x += kTWOPI;
-  return x;
-}
-
 
 #endif
