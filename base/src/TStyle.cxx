@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.9 2001/06/05 11:29:42 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStyle.cxx,v 1.10 2001/10/02 08:03:50 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -51,7 +51,43 @@ TStyle::TStyle() :TNamed()
 //______________________________________________________________________________
 TStyle::TStyle(const char *name, const char *title) : TNamed(name,title)
 {
-   
+// Create a new TStyle.
+// The following names are reserved to create special styles
+//   -Default: the default style set in TStyle::Reset
+//   -Plain: a black&white oriented style
+//   -Bold: 
+//   -Video;
+//   -Pub:
+//     (see the definition of these styles below).
+//
+// Note a side-effect of calling gStyle->SetFillColor(0). This is nearly
+// equivalent of selecting the "Plain" style.
+//
+// Many graphics attributes may be set via the TStyle, see in particular
+//  - TStyle::SetNdivisions
+//  - TStyle::SetAxisColor
+//  - TStyle::SetHeaderPS
+//  - TStyle::SetLabelColor
+//  - TStyle::SetLabelFont
+//  - TStyle::SetLabelOffset
+//  - TStyle::SetLabelSize
+//  - TStyle::SetOptDate
+//  - TStyle::SetLineStyleString
+//  - TStyle::SetOptFit
+//  - TStyle::SetOptStat
+//  - TStyle::SetPaperSize
+//  - TStyle::SetTickLength
+//  - TStyle::SetTitleOffset
+//  - TStyle::SetTitleSize
+//  - TStyle::SetPalette
+//  - TStyle::SetTimeOffset
+//
+//  The current style is pointed by gStyle.
+//  When calling myStyle->cd(), gStyle is set to myStyle.
+//  One can also use gROOT to change the current style, eg
+//    gROOT->SetStyle("Plain") will change the current style gStyle to the "Plain" style
+//  See also TROOT::ForceStyle and TROOT::UseCurrentStyle     
+          
    Reset();
    
    gROOT->GetListOfStyles()->Add(this);
