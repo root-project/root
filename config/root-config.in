@@ -22,7 +22,7 @@ fi
 
 newlib="-lNew"
 rootlibs="-lCore -lCint -lHist -lGraf -lGraf3d -lGpad -lTree -lRint \
-          -lPostscript -lMatrix -lQuadp -lPhysics"
+          -lPostscript -lMatrix -lPhysics"
 rootglibs="-lGui"
 rootulibs="-u _G__cpp_setupG__Hist       \
            -u _G__cpp_setupG__Graf1      \
@@ -32,7 +32,6 @@ rootulibs="-u _G__cpp_setupG__Hist       \
            -u _G__cpp_setupG__Rint       \
            -u _G__cpp_setupG__PostScript \
            -u _G__cpp_setupG__Matrix     \
-           -u _G__cpp_setupG__Quadp      \
            -u _G__cpp_setupG__Physics"
 rootuglibs="-u _G__cpp_setupG__Gui1"
 if test "$platform" = "win32"; then
@@ -44,7 +43,6 @@ if test "$platform" = "win32"; then
               -include:_G__cpp_setupG__Rint       \
               -include:_G__cpp_setupG__PostScript \
               -include:_G__cpp_setupG__Matrix     \
-              -include:_G__cpp_setupG__Quadp      \
               -include:_G__cpp_setupG__Physics"
    rootuglibs="-include:_G__cpp_setupG__Gui1"
 fi
