@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.39 2001/05/20 13:56:07 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.40 2001/05/21 11:10:59 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -810,7 +810,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
   if (fType == 4) {           // STL vector/list of objects
      //printf ("STL split mode not yet implemented\n");
   } else if (fType == 41) {    // sub branch of an STL class
-    //char **ppointer = (char**)fAddress;
+    //char **ppointer = (char**)fAddress; 
   } else if (fType == 3) {    //top level branch of a TClonesArray
     Int_t n;
     b >> n;
@@ -997,7 +997,7 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
 
    if (cl == TObject::Class() && cltop->CanIgnoreTObjectStreamer()) return 0;
    if (splitlevel > 0) TStreamerInfo::Optimize(kFALSE);
-   TStreamerInfo *info = cl->GetStreamerInfo();
+   TStreamerInfo *info = fTree->BuildStreamerInfo(cl);
    TStreamerInfo::Optimize(kTRUE);
    if (!info) return 0;
    Int_t ndata = info->GetNdata();
