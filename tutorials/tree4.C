@@ -3,6 +3,8 @@
 #include "TBrowser.h"
 #include "TH2.h"
 #include "TRandom.h"
+#include "TClassTable.h"
+#include "TSystem.h"
 
 // This example writes a tree with objects of the class Event. 
 // It is a simplified version of $ROOTSYS/test/MainEvent.cxx to 
@@ -30,8 +32,7 @@
 
 // This example can be run in many different ways:
 //  way1:  .x tree4.C    using the CINT interpreter
-//  way2:  .x tree4.C++  using the automatic compiler interface
-//  way3:  .L tree4.C  or .L tree4.C++
+//  way2:  .L tree4.C
 //          tree4()
 // One can also run the write and read parts in two separate sessions.
 // For example following one of the sessions above, one can start the session:
