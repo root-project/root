@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.4 2004/09/20 19:07:23 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.5 2004/09/20 21:00:40 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -655,9 +655,7 @@ Bool_t TGuiBuilder::HandleKey(Event_t *event)
 {
    //
 
-   TGWindow *root = (TGWindow*)fClient->GetRoot();
    fEditable = FindEditableMdiFrame(fClient->GetRoot());
-
 
    if ((event->fType == kGKeyPress) && (event->fState & kKeyControlMask)) {
       UInt_t keysym;
@@ -925,7 +923,7 @@ void TGuiBuilder::UpdateStatusBar()
    if (!fStatusBar) return;
 
    TObject *o = (TObject *)gTQSender;
-   const char *text;
+   const char *text = 0;
 
    if (o && o->InheritsFrom(TGToolTip::Class())) {
       TGToolTip *tip = (TGToolTip*)o;
