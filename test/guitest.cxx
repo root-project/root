@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.18 2001/08/01 17:35:58 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.19 2001/09/18 10:59:53 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -45,6 +45,8 @@ enum ETestCommandIdentifiers {
    M_FILE_OPEN,
    M_FILE_SAVE,
    M_FILE_SAVEAS,
+   M_FILE_PRINT,
+   M_FILE_PRINTSETUP,
    M_FILE_EXIT,
 
    M_TEST_DLG,
@@ -53,6 +55,7 @@ enum ETestCommandIdentifiers {
    M_TEST_SHUTTER,
    M_TEST_PROGRESS,
    M_TEST_NUMBERENTRY,
+   M_TEST_NEWMENU,
 
    M_HELP_CONTENTS,
    M_HELP_SEARCH,
@@ -61,6 +64,8 @@ enum ETestCommandIdentifiers {
    M_CASCADE_1,
    M_CASCADE_2,
    M_CASCADE_3,
+
+   M_NEW_REMOVEMENU,
 
    VId1,
    HId1,
@@ -200,6 +205,7 @@ private:
    TGMenuBar          *fMenuBar;
    TGPopupMenu        *fMenuFile, *fMenuTest, *fMenuHelp;
    TGPopupMenu        *fCascadeMenu, *fCascade1Menu, *fCascade2Menu;
+   TGPopupMenu        *fMenuNew1, *fMenuNew2;
    TGLayoutHints      *fMenuBarLayout, *fMenuBarItemLayout, *fMenuBarHelpLayout;
 
 public:
@@ -462,12 +468,13 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuFile->AddEntry("S&ave as...", M_FILE_SAVEAS);
    fMenuFile->AddEntry("&Close", -1);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry("&Print", -1);
-   fMenuFile->AddEntry("P&rint setup...", -1);
+   fMenuFile->AddEntry("&Print", M_FILE_PRINT);
+   fMenuFile->AddEntry("P&rint setup...", M_FILE_PRINTSETUP);
    fMenuFile->AddSeparator();
    fMenuFile->AddEntry("E&xit", M_FILE_EXIT);
 
    fMenuFile->DisableEntry(M_FILE_SAVEAS);
+   fMenuFile->HideEntry(M_FILE_PRINT);
 
    fCascade2Menu = new TGPopupMenu(fClient->GetRoot());
    fCascade2Menu->AddEntry("ID = 2&1", M_CASCADE_1);
@@ -499,6 +506,8 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuTest->AddEntry("&Progress...", M_TEST_PROGRESS);
    fMenuTest->AddEntry("&Number Entry...", M_TEST_NUMBERENTRY);
    fMenuTest->AddSeparator();
+   fMenuTest->AddEntry("Add New Menus", M_TEST_NEWMENU);
+   fMenuTest->AddSeparator();
    fMenuTest->AddPopup("&Cascaded menus", fCascadeMenu);
 
    fMenuHelp = new TGPopupMenu(fClient->GetRoot());
@@ -506,6 +515,12 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuHelp->AddEntry("&Search...", M_HELP_SEARCH);
    fMenuHelp->AddSeparator();
    fMenuHelp->AddEntry("&About", M_HELP_ABOUT);
+
+   fMenuNew1 = new TGPopupMenu();
+   fMenuNew1->AddEntry("Remove New Menus", M_NEW_REMOVEMENU);
+
+   fMenuNew2 = new TGPopupMenu();
+   fMenuNew2->AddEntry("Remove New Menus", M_NEW_REMOVEMENU);
 
    // Menu button messages are handled by the main frame (i.e. "this")
    // ProcessMessage() method.
@@ -515,6 +530,8 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fCascadeMenu->Associate(this);
    fCascade1Menu->Associate(this);
    fCascade2Menu->Associate(this);
+   fMenuNew1->Associate(this);
+   fMenuNew2->Associate(this);
 
    fMenuBar = new TGMenuBar(this, 1, 1, kHorizontalFrame);
    fMenuBar->AddPopup("&File", fMenuFile, fMenuBarItemLayout);
@@ -592,6 +609,8 @@ TestMainFrame::~TestMainFrame()
    delete fCascadeMenu;
    delete fCascade1Menu;
    delete fCascade2Menu;
+   delete fMenuNew1;
+   delete fMenuNew2;
 }
 
 void TestMainFrame::CloseWindow()
@@ -642,16 +661,28 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      }
                      break;
 
-                  case M_TEST_DLG:
-                     new TestDialog(fClient->GetRoot(), this, 400, 200);
-                     break;
-
                   case M_FILE_SAVE:
                      printf("M_FILE_SAVE\n");
                      break;
 
+                  case M_FILE_PRINT:
+                     printf("M_FILE_PRINT\n");
+                     printf("Hiding itself, select \"Print Setup...\" to enable again\n");
+                     fMenuFile->HideEntry(M_FILE_PRINT);
+                     break;
+
+                  case M_FILE_PRINTSETUP:
+                     printf("M_FILE_PRINTSETUP\n");
+                     printf("Enabling \"Print\"\n");
+                     fMenuFile->EnableEntry(M_FILE_PRINT);
+                     break;
+
                   case M_FILE_EXIT:
                      CloseWindow();   // this also terminates theApp
+                     break;
+
+                  case M_TEST_DLG:
+                     new TestDialog(fClient->GetRoot(), this, 400, 200);
                      break;
 
                   case M_TEST_MSGBOX:
@@ -672,6 +703,36 @@ Bool_t TestMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   case M_TEST_NUMBERENTRY:
                      new EntryTestDlg(fClient->GetRoot(), this);
+                     break;
+
+                  case M_TEST_NEWMENU:
+                     {
+                        if (fMenuTest->IsEntryChecked(M_TEST_NEWMENU)) {
+                           ProcessMessage(MK_MSG(kC_COMMAND, kCM_MENU),
+                                          M_NEW_REMOVEMENU, 0);
+                           return kTRUE;
+                        }
+                        fMenuTest->CheckEntry(M_TEST_NEWMENU);
+                        TGPopupMenu *p = fMenuBar->GetPopup("Test");
+                        fMenuBar->AddPopup("New 1", fMenuNew1, fMenuBarItemLayout, p);
+                        p = fMenuBar->GetPopup("Help");
+                        fMenuBar->AddPopup("New 2", fMenuNew2, fMenuBarItemLayout, p);
+                        fMenuBar->MapSubwindows();
+                        fMenuBar->Layout();
+
+                        TGMenuEntry *e = fMenuTest->GetEntry("Add New Menus");
+                        fMenuTest->AddEntry("Remove New Menus", M_NEW_REMOVEMENU, 0, 0, e);
+                     }
+                     break;
+
+                  case M_NEW_REMOVEMENU:
+                     {
+                        fMenuBar->RemovePopup("New 1");
+                        fMenuBar->RemovePopup("New 2");
+                        fMenuBar->Layout();
+                        fMenuTest->DeleteEntry(M_NEW_REMOVEMENU);
+                        fMenuTest->UnCheckEntry(M_TEST_NEWMENU);
+                     }
                      break;
 
                   default:
