@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.110 2004/01/27 19:52:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.111 2004/01/29 23:08:16 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -849,23 +849,14 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    if (!name || !strlen(name)) return 0;
    if (!GetListOfClasses())    return 0;
 
-   TString resolvedName;
-
    TClass *cl = (TClass*)GetListOfClasses()->FindObject(name);
 
-   if (!cl) {
-      resolvedName = TClassEdit::ResolveTypedef(name,kTRUE).c_str();
-      cl = (TClass*)GetListOfClasses()->FindObject(resolvedName);
-   }
-
    if (cl) {
-
       if (cl->IsLoaded()) return cl;
       //we may pass here in case of a dummy class created by TStreamerInfo
       load = kTRUE;
 
       if (TClassEdit::IsSTLCont(name)) {
- 
          const char *altname = gInterpreter->GetInterpreterTypeName(name);
          if (altname && strcmp(altname,name)!=0) {
 
@@ -879,11 +870,9 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
             return newcl;    
          }
       }
-
    } else {
 
       if (!TClassEdit::IsSTLCont(name)) {
-
          // If the name is actually an STL container we prefer the 
          // short name rather than the true name (at least) in 
          // a first try!
@@ -896,7 +885,6 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
                return cl;
             }
          }
-
       } else {
             
          cl = FindSTLClass(name,kFALSE);
@@ -914,10 +902,7 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
 
    if (!load) return 0;
 
-   TClass *loadedcl = 0;
-   if (cl) loadedcl = LoadClass(cl->GetName());
-   else    loadedcl = LoadClass(name);
-
+   TClass *loadedcl = LoadClass(name);
    if (loadedcl) return loadedcl;
 
    if (cl) return cl;  // If we found the class but we already have a dummy class use it.

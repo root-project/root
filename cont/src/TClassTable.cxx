@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.23 2004/01/10 10:52:29 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.24 2004/01/29 23:08:16 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -508,7 +508,7 @@ void ROOT::RemoveClass(const char *cname)
      // We still keep the TClass object around because TFile needs to
      // get to the TStreamerInfo.
      if (gROOT && gROOT->GetListOfClasses()) {
-        TClass *cl = dynamic_cast<TClass*>(gROOT->GetListOfClasses()->FindObject(cname));
+        TClass *cl = gROOT->GetClass(cname, kFALSE);
         if (cl) cl->SetUnloaded();
      }
      TClassTable::Remove(cname);

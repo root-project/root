@@ -402,8 +402,8 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char **arr, Int_t first,
             }
          
          case kObject:   // Class      derived from TObject
-         case kAny:   // Class  NOT derived from TObject
          case kOffsetL + kObject: 
+         case kAny:   // Class  NOT derived from TObject
          case kAny     + kOffsetL: {
             TClass *cl                 = fComp[i].fClass;
             TMemberStreamer *pstreamer = fComp[i].fStreamer;
@@ -412,19 +412,6 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char **arr, Int_t first,
             continue;
          }
             
-         case kOffsetL + kTString:
-         case kOffsetL + kTObject:
-         case kOffsetL + kTNamed:
-         {
-            TMemberStreamer *pstreamer = fComp[i].fStreamer;
-            TClass *cl                 = fComp[i].fClass;
-
-            UInt_t pos = b.WriteVersion(IsA(),kTRUE);
-            DOLOOP {b.WriteFastArray((void*)(arr[k]+ioffset),cl,fLength[i],pstreamer);}
-            b.SetByteCount(pos,kTRUE);
-            continue;
-         }
-
             // Base Class
          case kBase:    
             if (!(arrayMode&1)) {
@@ -443,6 +430,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, char **arr, Int_t first,
             }
             continue;
             
+         case kOffsetL + kTString:
+         case kOffsetL + kTObject:
+         case kOffsetL + kTNamed:
          case kStreamer: 
          {
             TMemberStreamer *pstreamer = fComp[i].fStreamer;

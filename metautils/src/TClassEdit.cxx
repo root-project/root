@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.4 2004/01/29 23:08:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.5 2004/01/30 02:28:40 rdm Exp $
 // Author: Victor Perev   04/10/2003
 
 
@@ -7,10 +7,6 @@
 #include <assert.h>
 #include "TClassEdit.h"
 #include <ctype.h>
-#include "Rstrstream.h"
-
-// CINT's API.
-#include "Api.h"
 
 namespace std {} using namespace std;
 
@@ -21,7 +17,7 @@ int   TClassEdit::STLKind(const char *type)
 
    static const char *stls[] =                  //container names
    {"any","vector","list","deque","map","multimap","set","multiset",0};
-
+   
 //              kind of stl container
    for(int k=1;stls[k];k++) {if (strcmp(type,stls[k])==0) return k;}
    return 0;
@@ -34,7 +30,7 @@ int   TClassEdit::STLArgs(int kind)
 
    static const char  stln[] =// min number of container arguments
    {    1,       1,     1,      1,    3,         3,    2,        2 };
-
+   
    return stln[kind];
 }
 
@@ -55,13 +51,13 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
 
    ts = "allocator<"; ts += k; ts+=" >";
    if (a==ts) return true;
-
+   
    return false;
 }
 
 //______________________________________________________________________________
-bool TClassEdit::IsDefAlloc(const char *allocname,
-                            const char *keyclassname,
+bool TClassEdit::IsDefAlloc(const char *allocname, 
+                            const char *keyclassname, 
                             const char *valueclassname)
 {
    // return whether or not 'allocname' is the STL default allocator for a key
@@ -74,8 +70,8 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
    string k = CleanType(keyclassname);
    string v = CleanType(valueclassname);
 
-   string stem("allocator<pair<");
-   stem += k;
+   string stem("allocator<pair<"); 
+   stem += k; 
    stem += ",";
    stem += v;
 
@@ -83,14 +79,14 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
    ts += "> >";
 
    if (a==ts) return true;
-
+   
    ts = stem;
    ts += " > >";
 
    if (a==ts) return true;
 
    stem = "allocator<pair<const ";
-   stem += k;
+   stem += k; 
    stem += ",";
    stem += v;
 
@@ -98,7 +94,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
    ts += "> >";
 
    if (a==ts) return true;
-
+   
    ts = stem;
    ts += " > >";
 
@@ -106,40 +102,40 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
 
    if ( keyclassname[strlen(keyclassname)-1] == '*' ) {
 
-      stem = "allocator<pair<";
-      stem += k;
+      stem = "allocator<pair<"; 
+      stem += k; 
       stem += "const";
       stem += ",";
       stem += v;
-
+      
       string ts(stem);
       ts += "> >";
-
+      
       if (a==ts) return true;
-
+      
       ts = stem;
       ts += " > >";
-
+      
       if (a==ts) return true;
 
-      stem = "allocator<pair<const ";
-      stem += k;
+      stem = "allocator<pair<const "; 
+      stem += k; 
       stem += "const";
       stem += ",";
       stem += v;
-
+      
       ts = stem;
       ts += "> >";
-
+      
       if (a==ts) return true;
-
+      
       ts = stem;
       ts += " > >";
-
+      
       if (a==ts) return true;
 
    }
-
+   
    return false;
 }
 
@@ -164,7 +160,7 @@ bool TClassEdit::IsDefComp(const char *compname, const char *classname)
 
    stdless.insert(0,"std::");
    if (stdless == c) return true;
-
+ 
    return false;
 }
 
@@ -174,10 +170,10 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output)
    ///////////////////////////////////////////////////////////////////////////
    //  Stores in output (after emptying it) the splited type.
    //  Return the number of elements stored.
-   //
-   //  First in list is the template name or is empty
+   //   
+   //  First in list is the template name or is empty 
    //         "vector<list<int>,alloc>**" to "vector" "list<int>" "alloc" "**"
-   //   or    "TNamed*" to "" "TNamed" "*"
+   //   or    "TNamed*" to "" "TNamed" "*"  
    ///////////////////////////////////////////////////////////////////////////
 
    int keepConst = 0;
@@ -189,7 +185,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output)
    string full = CleanType(type, keepInnerConst );
    const char *t = full.c_str();
    const char *c = strchr(t,'<');
-
+   
    string stars;
    const char *starloc = t+strlen(t)-1;
    if ( (*starloc)=='*' ) {
@@ -197,7 +193,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output)
       stars = starloc;
       full.replace(strlen(t)-strlen(starloc),strlen(starloc),1,'\0');
    }
-
+   
    if (c) {
       //we have 'something<'
       output.push_back(string(full,0,c-t));
@@ -205,22 +201,22 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output)
       //empty
       output.push_back(string()); c=t-1;
    }
-   do {
+   do { 
       output.push_back(CleanType(c+1,keepConst,&c));
    } while(*c!='>' && *c);
 
    if (stars.length()) output.push_back(stars);
    return output.size();
 }
-
+     
 
 //______________________________________________________________________________
 string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 {
    ///////////////////////////////////////////////////////////////////////////
-   //      Cleanup type description, redundant blanks removed
+   //      Cleanup type description, redundant blanks removed 
    //      and redundant tail ignored
-   //      return *tail = pointer to last used character
+   //      return *tail = pointer to last used character 
    //      if (mode==0) keep keywords
    //      if (mode==1) remove keywords outside the template params
    //      if (mode>=2) remove the keywords everywhere.
@@ -228,22 +224,22 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
    //
    //      The keywords currently are: "const" , "volatile" removed
    //
-   //
-   //      CleanType(" A<B, C< D, E> > *,F,G>") returns "A<B,C<D,E> >*"
+   //      
+   //      CleanType(" A<B, C< D, E> > *,F,G>") returns "A<B,C<D,E> >*" 
    ///////////////////////////////////////////////////////////////////////////
 
    static const char* remove[] = {"class","const","volatile",0};
 
 
    string result;
-   int lev=0,kbl=1;
+   int lev=0,kbl=1; 
    const char* c;
 
    for(c=typeDesc;*c;c++) {
       if (c[0]==' ') {
          if (kbl)       continue;
          if (!isalnum(c[ 1]) && c[ 1] !='_')    continue;
-      }
+      } 
       if (kbl && (mode>=2 || lev==0)) { //remove "const' etc...
          int done = 0;
          int n = (mode) ? 999 : 1;
@@ -256,13 +252,13 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
            if (strncmp(remove[k],c,rlen)) continue;
 
            // make sure that the 'keyword' is not part of a longer indentifier
-           if (isalnum(c[rlen]) || c[rlen]=='_' ||  c[rlen]=='$') continue;
+           if (isalnum(c[rlen]) || c[rlen]=='_' ||  c[rlen]=='$') continue; 
 
            c+=rlen-1; done = 1; break;
          }
          if (done) continue;
       }
-
+   
       kbl = (!isalnum(c[ 0]) && c[ 0]!='_' && c[ 0]!='$');
 
       if (*c == '<')   lev++;
@@ -301,7 +297,7 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
 
    // get list of all arguments
    vector<string> arglist;
-   int narg = GetSplit(full.c_str(),arglist);
+   int narg = GetSplit(full.c_str(),arglist); 
 
    if (narg==0) return typeDesc;
 
@@ -327,10 +323,10 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
       if (!arglist[0].empty() && tailLoc) {
          tailLoc = 0;
       }
-      arglist[0].erase(0,999);
+      arglist[0].erase(0,999); 
       mode&=(~8);
    }
-
+ 
    if (mode & kDropStlDefault) mode |= kDropDefaultAlloc;
 
    if (kind) {
@@ -338,7 +334,7 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
 
       if ( mode & (kDropDefaultAlloc|kDropAlloc) ) {
          // remove allocators
-
+         
 
          if (narg-1 == iall+1) {
             // has an allocator specified
@@ -359,11 +355,11 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
                   case kMap:
                   case kMultiMap:
                      dropAlloc = IsDefAlloc(arglist[iall+1].c_str(),arglist[1].c_str(),arglist[2].c_str());
-                     break;
+                     break;                    
                   default:
                      dropAlloc = false;
                }
-
+               
             }
             if (dropAlloc) {
                narg--;
@@ -380,7 +376,7 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
             narg--;
          }
       } else if ( mode & kDropComparator ) {
-
+         
          switch (kind) {
             case kVector:
             case kList:
@@ -403,7 +399,7 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
    }
 
    //   do the same for all inside
-   for (int i=1;i<narg; i++) {
+   for (int i=1;i<narg; i++) { 
       if (strchr(arglist[i].c_str(),'<')==0) continue;
       arglist[i] = ShortType(arglist[i].c_str(),mode);
    }
@@ -412,13 +408,13 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
    { for (int i=1;i<narg-1; i++) { answ += arglist[i]; answ+=",";} }
    if (narg>1) { answ += arglist[narg-1]; }
 
-   if (!arglist[0].empty()) {
+   if (!arglist[0].empty()) { 
       if ( answ.at(answ.size()-1) == '>') {
-         answ += " >";
+         answ += " >"; 
       } else {
-         answ += '>';
+         answ += '>'; 
       }
-   }
+   }  
    if (tailLoc) answ += arglist[tailLoc];
 
 //     fprintf(stderr,"2. mode %d reduce \"%s\" into \"%s\"\n",
@@ -440,8 +436,6 @@ int TClassEdit::IsSTLCont(const char *ty,int testAlloc)
    //             like vector<deque<int>> has answer -1
    ////////////////////////////////////////////////////////////////////////////////
 
-   if (!strchr(ty,'<')) return 0;
-
    int k = (testAlloc) ? 2:0;
    string full = ShortType(ty,k);
 
@@ -456,7 +450,7 @@ int TClassEdit::IsSTLCont(const char *ty,int testAlloc)
 
       if (testAlloc && numb-1 > STLArgs(kind)) {
 
-         kind = -kind;
+         kind = -kind; 
 
       } else {
 
@@ -465,13 +459,13 @@ int TClassEdit::IsSTLCont(const char *ty,int testAlloc)
 
       }
    }
-
+ 
    if(kind>2) kind = - kind;
    return kind;
 }
 
 //______________________________________________________________________________
-bool TClassEdit::IsStdClass(const char *classname)
+bool TClassEdit::IsStdClass(const char *classname) 
 {
   // return true if the class belond to the std namespace
 
@@ -479,13 +473,12 @@ bool TClassEdit::IsStdClass(const char *classname)
   if ( strncmp(classname,"pair<",strlen("pair<"))==0) return true;
   if ( strcmp(classname,"allocator")==0) return true;
   if ( strncmp(classname,"allocator<",strlen("allocator<"))==0) return true;
-
+ 
   return IsSTLCont(classname) != 0;
-
+  
 }
 
 
-//______________________________________________________________________________
 bool TClassEdit::IsVectorBool(const char *name) {
    vector<string> splitName;
    TClassEdit::GetSplit(name,splitName);
@@ -493,86 +486,3 @@ bool TClassEdit::IsVectorBool(const char *name) {
    return ( TClassEdit::STLKind( splitName[0].c_str() ) == TClassEdit::kVector)
       && ( splitName[1] == "bool" || splitName[1]=="Bool_t");
 };
-
-//______________________________________________________________________________
-namespace {
-   static bool ShouldReplace(const char *name)
-   {
-      // This helper function indicates whether we really want to replace
-      // a type.
-
-      const char *excludelist [] = {"Char_t","Short_t","Int_t","Long_t","Float_t",
-                                    "Int_t","Double_t","Double32_t",
-                                    "UChar_t","UShort_t","UInt_t","ULong_t","UInt_t",
-                                    "Long64_t","ULong64_t"};
-
-      for (unsigned int i=0; i < sizeof(excludelist)/sizeof(excludelist[0]); ++i) {
-         if (strcmp(name,excludelist[i])==0) return false;
-      }
-
-      return true;
-   }
-}
-
-//______________________________________________________________________________
-string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
-{
-
-   // Return the name of type 'tname' with all its typedef components replaced
-   // by the actual type its points to
-   // For example for "typedef MyObj MyObjTypedef;"
-   //    vector<MyObjTypedef> return vector<MyObjTypedef>
-   //
-
-   if ( ! strchr(tname,'<') && (tname[strlen(tname)-1]!='*') ) {
-
-      // We have a very simple type
-
-      if (resolveAll || ShouldReplace(tname)) {
-         G__TypedefInfo t;
-         t.Init(tname);
-         if (t.IsValid()) return t.TrueName();
-      }
-      return tname;
-   }
-
-   int len = strlen(tname);
-   string input(tname);
- #ifdef R__SSTREAM
-   stringstream answ;
-#else
-   strstream answ;
-#endif
-
-   int prev = 0;
-   for (int i=0; i<len; ++i) {
-      switch (tname[i]) {
-         case '<':
-         case '>':
-         case '*':
-         case ' ':
-         case '&':
-         case ',':
-         {
-            char keep = input[i];
-            string temp( input, prev,i-prev );
-
-            if (resolveAll || ShouldReplace(temp.c_str())) {
-               answ << ResolveTypedef( temp.c_str(), resolveAll);
-            } else {
-               answ << temp;
-            }
-            answ << keep;
-            prev = i+1;
-         }
-      }
-   }
-   const char *last = &(input.c_str()[prev]);
-   if (resolveAll || ShouldReplace(last)) {
-      answ << ResolveTypedef( last, resolveAll);
-   } else {
-      answ << last;
-   }
-   return answ.str();
-
-}

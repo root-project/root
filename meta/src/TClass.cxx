@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.135 2004/01/29 23:08:16 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.136 2004/01/30 07:07:33 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -510,7 +510,6 @@ void TClass::Init(const char *name, Version_t cversion,
    //from the old dummy class.
    TStreamerInfo *info;
    if (oldcl) {
-
       if (oldcl->CanIgnoreTObjectStreamer()) {
          IgnoreTObjectStreamer();
       }
@@ -521,42 +520,11 @@ void TClass::Init(const char *name, Version_t cversion,
          fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
       }
       oldcl->GetStreamerInfos()->Clear();
+   }
 
+   if (oldcl) {
       oldcl->ReplaceWith(this);
       delete oldcl;
-
-   } else if (strchr(name,'<')) {
-
-      // Check for existing equivalent.
-
-      TIter next( gROOT->GetListOfClasses() );
-
-      TString resolvedThis = TClassEdit::ResolveTypedef(name,kTRUE);
-      TString resolved;
-      while ( (oldcl = (TClass*)next()) ) {
-         resolved = TClassEdit::ResolveTypedef(oldcl->GetName(),kTRUE);
-         if (oldcl!=this && resolved==resolvedThis) {
-            // we found at least one equivalent.
-            // let's force a reload
-            
-            gROOT->RemoveClass(oldcl);
-            
-            if (oldcl->CanIgnoreTObjectStreamer()) {
-               IgnoreTObjectStreamer();
-            }
-            
-            TIter next(oldcl->GetStreamerInfos());
-            while ((info = (TStreamerInfo*)next())) {
-               info->SetClass(this);
-               fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
-            }
-            oldcl->GetStreamerInfos()->Clear();
-            
-            oldcl->ReplaceWith(this);
-            delete oldcl;
-            
-         }
-      }     
    }
    if (fClassInfo) SetTitle(fClassInfo->Title());
 
@@ -1413,27 +1381,20 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
    TStreamerInfo *info;
    TList tobedeleted;
    
-   TString corename( TClassEdit::ResolveTypedef(newcl->GetName()) );
-
-   if ( strchr( corename.Data(), '<' ) == 0 ) {
-      // not a template, let's skip
-      recurse = kFALSE;
-   }
+   const char *corename = gInterpreter->GetInterpreterTypeName(newcl->GetName());
+   if (corename==0) corename = newcl->GetName();
 
    while ((acl = (TClass*)nextClass())) {
       if (recurse && acl!=newcl && acl!=this) {
-
-         TString aclCorename( TClassEdit::ResolveTypedef(acl->GetName()) );
-
-         if (aclCorename == corename) {
-
-            // 'acl' represents the same class as 'newcl' (and this object)
-
+         // This does not always work.  In some cases the interpreter is disable
+         // or not fully updated yet.  We still need to improve on this check.
+         const char *aclCorename = gInterpreter->GetInterpreterTypeName(acl->GetName());
+         if (aclCorename && strcmp(corename,aclCorename)==0) {
+            // This IS the same class.
             acl->ReplaceWith(newcl, kFALSE);
             tobedeleted.Add(acl);
          }
       }
-
       TIter nextInfo(acl->GetStreamerInfos());
       while ((info = (TStreamerInfo*)nextInfo())) {
 
