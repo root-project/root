@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.4 2000/09/30 11:24:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.5 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -165,6 +165,7 @@ public:
    virtual Bool_t HandleSelection(Event_t *) { return kFALSE; }
    virtual Bool_t HandleSelectionRequest(Event_t *) { return kFALSE; }
    virtual Bool_t HandleSelectionClear(Event_t *) { return kFALSE; }
+   virtual Bool_t HandleColormapChange(Event_t *) { return kFALSE; }
 
    virtual void SendMessage(const TGWindow *w, Long_t msg, Long_t parm1, Long_t parm2);
    virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t) { return kFALSE; }

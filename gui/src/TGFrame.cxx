@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.3 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.4 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -338,6 +338,10 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
 
       case kSelectionClear:
          HandleSelectionClear(event);
+         break;
+
+      case kColormapNotify:
+         HandleColormapChange(event);
          break;
 
       default:
