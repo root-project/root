@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAcceptReject.cc,v 1.18 2001/11/05 18:50:48 verkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.19 2001/11/06 18:32:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -31,7 +31,7 @@ ClassImp(RooAcceptReject)
   ;
 
 static const char rcsid[] =
-"$Id: RooAcceptReject.cc,v 1.18 2001/11/05 18:50:48 verkerke Exp $";
+"$Id: RooAcceptReject.cc,v 1.19 2001/11/06 18:32:59 verkerke Exp $";
 
 RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooAbsReal* maxFuncVal, Bool_t verbose) :
   TNamed(func), _cloneSet(0), _funcClone(0), _verbose(verbose), _funcMaxVal(maxFuncVal)
@@ -216,7 +216,16 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) {
 
     // first generate enough events to get reasonable estimates for the integral and
     // maximum function value
-    while(_totalEvents < _minTrials) addEventToCache();
+    while(_totalEvents < _minTrials) {
+      addEventToCache();
+
+      // Limit cache size to 1M events
+      if (_cache->numEntries()>1000000) {
+	cout << "RooAcceptReject::generateEvent: resetting event cache" << endl ;
+	_cache->reset() ;
+	_eventsUsed = 0 ;
+      }
+    }
     
     event= 0;
     while(0 == event) {
@@ -261,12 +270,6 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining) {
     while(0==event) {
       addEventToCache() ;
       event = nextAcceptedEvent() ;
-    }
-
-    // Reset cache every 100K events
-    if (_eventsUsed>100000) {
-      _cache->reset() ;
-      _eventsUsed = 0 ;
     }
 
   }

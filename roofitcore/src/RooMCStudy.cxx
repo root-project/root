@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooMCStudy.cc,v 1.1 2001/10/11 01:28:50 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -70,7 +70,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   genOpt.ToLower() ;
   Bool_t verboseGen = genOpt.Contains("v") ;
 
-  _genContext = new RooGenContext(genModel,dependents,genProtoData,verboseGen) ;
+  _genContext = genModel.genContext(dependents,genProtoData,verboseGen) ;
   RooArgSet* tmp = genModel.getParameters(&dependents) ;
   _genParams = (RooArgSet*) tmp->snapshot(kFALSE) ;
   delete tmp ;

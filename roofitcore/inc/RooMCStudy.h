@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.rdl,v 1.1 2001/10/11 01:28:50 verkerke Exp $
+ *    File: $Id: RooMCStudy.rdl,v 1.2 2001/10/13 21:53:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -17,7 +17,7 @@
 #include "RooFitCore/RooArgSet.hh"
 class RooAbsPdf;
 class RooDataSet ;
-class RooGenContext ;
+class RooAbsGenContext ;
 class RooFitResult ;
 class RooPlot ;
 class RooRealVar ;
@@ -54,9 +54,9 @@ protected:
   Bool_t fitSample(RooDataSet* genSample) ;
   void calcPulls() ;
     
-  RooAbsPdf*     _genModel ;    // Generator model 
-  RooGenContext* _genContext ;  // Generator context 
-  RooArgSet*     _genParams ;   // List of fit parameters
+  RooAbsPdf*        _genModel ;    // Generator model 
+  RooAbsGenContext* _genContext ;  // Generator context 
+  RooArgSet*        _genParams ;   // List of fit parameters
   const RooDataSet* _genProtoData ;// Generator prototype data set
 
   RooArgSet    _dependents ;    // List of dependents 
