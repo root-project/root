@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.5 2002/11/11 11:21:16 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TSPHE.cxx,v 1.6 2003/03/21 20:57:05 brun Exp $
 // Author: Rene Brun   13/06/97
 
 /*************************************************************************
@@ -100,6 +100,7 @@ TSPHE::TSPHE(const char *name, const char *title, const char *material, Float_t 
     fSiTab      = 0;
     fCoTab      = 0;
     fCoThetaTab = 0;
+    fNdiv       = 0;
 
     fAspectRatio=1.0;
     faX = faY = faZ = 1.0;      // Coeff along Ox
