@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.44 2003/12/05 23:43:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.45 2003/12/11 11:22:42 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -226,6 +226,7 @@ void TProfile::BuildOptions(Double_t ymin, Double_t ymax, Option_t *option)
    fYmin = ymin;
    fYmax = ymax;
    fScaling = kFALSE;
+   fTsumwy = fTsumwy2 = 0;
 }
 
 //______________________________________________________________________________
@@ -274,6 +275,8 @@ void TProfile::Add(const TH1 *h1, Double_t c1)
    fTsumw2  += ac1*p1->fTsumw2;
    fTsumwx  += ac1*p1->fTsumwx;
    fTsumwx2 += ac1*p1->fTsumwx2;
+   fTsumwy  += ac1*p1->fTsumwy;
+   fTsumwy2 += ac1*p1->fTsumwy2;
 
 //*-*- Loop on bins (including underflows/overflows)
    Int_t bin;
@@ -326,6 +329,8 @@ void TProfile::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    fTsumw2  = ac1*p1->fTsumw2      + ac2*p2->fTsumw2;
    fTsumwx  = ac1*p1->fTsumwx      + ac2*p2->fTsumwx;
    fTsumwx2 = ac1*p1->fTsumwx2     + ac2*p2->fTsumwx2;
+   fTsumwy  = ac1*p1->fTsumwy      + ac2*p2->fTsumwy;
+   fTsumwy2 = ac1*p1->fTsumwy2     + ac2*p2->fTsumwy2;
 
 //*-*- Loop on bins (including underflows/overflows)
    Int_t bin;
@@ -426,6 +431,8 @@ void TProfile::Copy(TObject &obj) const
    ((TProfile&)obj).fYmin = fYmin;
    ((TProfile&)obj).fYmax = fYmax;
    ((TProfile&)obj).fErrorMode = fErrorMode;
+   ((TProfile&)obj).fTsumwy      = fTsumwy;
+   ((TProfile&)obj).fTsumwy2     = fTsumwy2;
 }
 
 
@@ -466,7 +473,7 @@ void TProfile::Divide(const TH1 *h1)
    }
 
 //*-*- Reset statistics
-   fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
+   fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = fTsumwy = fTsumwy2 = 0;
 
 //*-*- Loop on bins (including underflows/overflows)
    Int_t bin;
@@ -492,6 +499,8 @@ void TProfile::Divide(const TH1 *h1)
       fTsumw2  += z*z;
       fTsumwx  += z*x;
       fTsumwx2 += z*x*x;
+      fTsumwy  += z*c1;
+      fTsumwx2 += z*c1*c1;
       e0 = fSumw2.fArray[bin];
       if (er1) e1 = er1[bin];
       else     e1 = h1->GetBinError(bin);
@@ -578,6 +587,8 @@ void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Op
       fTsumw2  += z*z;
       fTsumwx  += z*x;
       fTsumwx2 += z*x*x;
+      //fTsumwy  += z*x;
+      //fTsumwy2 += z*x*x;
       Double_t e1 = er1[bin];
       Double_t e2 = er2[bin];
       Double_t b22= b2*b2*d2;
@@ -632,6 +643,8 @@ Int_t TProfile::Fill(Axis_t x, Axis_t y)
    fTsumw2++;
    fTsumwx  += x;
    fTsumwx2 += x*x;
+   fTsumwy  += y;
+   fTsumwy2 += y*y;
    return bin;
 }
 
@@ -658,6 +671,8 @@ Int_t TProfile::Fill(const char *namex, Axis_t y)
    fTsumw2++;
    fTsumwx  += x;
    fTsumwx2 += x*x;
+   fTsumwy  += y;
+   fTsumwy2 += y*y;
    return bin;
 }
 
@@ -687,6 +702,8 @@ Int_t TProfile::Fill(Axis_t x, Axis_t y, Stat_t w)
    fTsumw2  += z*z;
    fTsumwx  += z*x;
    fTsumwx2 += z*x*x;
+   fTsumwy  += z*y;
+   fTsumwy2 += z*y*y;
    return bin;
 }
 
@@ -715,6 +732,8 @@ Int_t TProfile::Fill(const char *namex, Axis_t y, Stat_t w)
    fTsumw2  += z*z;
    fTsumwx  += z*x;
    fTsumwx2 += z*x*x;
+   fTsumwy  += z*y;
+   fTsumwy2 += z*y*y;
    return bin;
 }
 
@@ -741,6 +760,8 @@ void TProfile::FillN(Int_t ntimes, const Axis_t *x, const Axis_t *y, const Stat_
       fTsumw2  += z*z;
       fTsumwx  += z*x[i];
       fTsumwx2 += z*x[i]*x[i];
+      fTsumwy  += z*y[i];
+      fTsumwy2 += z*y[i]*y[i];
    }
 }
 
@@ -1167,6 +1188,7 @@ Int_t TProfile::Merge(TCollection *list)
       fTsumw2  += h->fTsumw2;
       fTsumwx  += h->fTsumwx;
       fTsumwx2 += h->fTsumwx2;
+      fTsumwy  += h->fTsumwy;
    }
 
    return nentries;
@@ -1375,6 +1397,8 @@ void TProfile::Reset(Option_t *option)
 //*-*                =====================================
   TH1D::Reset(option);
   fBinEntries.Reset();
+  fTsumwy  = 0;
+  fTsumwy2 = 0;
 }
 
 //______________________________________________________________________________

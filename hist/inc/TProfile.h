@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.23 2003/06/22 13:34:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.24 2003/12/11 11:22:42 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -37,6 +37,8 @@ protected:
     Double_t    fYmin;            //Lower limit in Y (if set)
     Double_t    fYmax;            //Upper limit in Y (if set)
     Bool_t      fScaling;         //!True when TProfile::Scale is called
+    Stat_t      fTsumwy;          //Total Sum of weight*Y
+    Stat_t      fTsumwy2;         //Total Sum of weight*Y*Y
 static Bool_t   fgApproximate;    //bin error approximation option
 
    virtual Int_t    BufferFill(Axis_t, Stat_t) {return -2;} //may not use
@@ -106,7 +108,7 @@ public:
     virtual void    SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void    SetErrorOption(Option_t *option=""); // *MENU*
 
-    ClassDef(TProfile,3)  //Profile histogram class
+    ClassDef(TProfile,4)  //Profile histogram class
 };
 
 #endif
