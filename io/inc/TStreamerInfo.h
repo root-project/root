@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.49 2004/05/07 09:11:03 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.50 2004/06/09 16:22:31 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -187,7 +187,7 @@ public:
 
    Int_t             WriteBufferAux      (TBuffer &b, char **arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
 
-   ClassDef(TStreamerInfo,3)  //Streamer information for one class version
+   ClassDef(TStreamerInfo,4)  //Streamer information for one class version
 };
 
 

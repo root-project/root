@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.167 2004/06/17 14:47:29 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.168 2004/06/17 17:32:33 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -421,7 +421,27 @@ string R__tmpnam()
       else tmpdir = ".";
       tmpdir += '/';
    }
+#if 0 && defined(R__USE_MKSTEMP)
+   else {
+      tmpdir  = P_tmpdir;
+      tmpdir += '/';
+   }
 
+   static char pattern[L_tmpnam+2];
+   const char *radix = "XXXXXX";
+   const char *appendix = "_rootcint";
+   if (tmpdir.length() + strlen(radix) + strlen(appendix) + 2) {
+      // too long
+
+   }
+   sprintf(pattern,"%s%s",tmpdir.c_str(),radix);
+   strcpy(filename,pattern);
+   close(mkstemp(filename));/*mkstemp not only generate file name but also opens the file*/
+   remove(filename);
+   fprintf(stderr,"pattern is %s filename is %s\n",pattern,filename);
+   return filename;
+
+#else
    tmpnam(filename);
 
    string result(tmpdir);
@@ -429,6 +449,7 @@ string R__tmpnam()
    result += "_rootcint";
 
    return result;
+#endif
 }
 
 //______________________________________________________________________________
@@ -1009,7 +1030,7 @@ int IsSTLContainer(G__DataMemberInfo &m)
 
    string type(s);
    int k = TClassEdit::IsSTLCont(type.c_str(),1);
-   
+
 //    if (k) printf(" %s==%d\n",type.c_str(),k);
 
    return k;
@@ -1305,7 +1326,13 @@ int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=
 
          case R__BIT_HASSTREAMER|G__BIT_ISPOINTER:
             if (!R__t)  return 1;
-            fprintf(fp, "            %s = (%s)R__b.ReadObjectAny(%s);\n",R__t,tiName,tcl);
+            //fprintf(fp, "            fprintf(stderr,\"info is %%p %%d\\n\",R__b.GetInfo(),R__b.GetInfo()?R__b.GetInfo()->GetOldVersion():-1);\n");
+            fprintf(fp, "            if (R__b.GetInfo() && R__b.GetInfo()->GetOldVersion()<=3) {\n");
+            fprintf(fp, "               %s = new %s;\n",R__t,objType);
+            fprintf(fp, "               %s->Streamer(R__b);\n",R__t);
+            fprintf(fp, "            } else {\n");
+            fprintf(fp, "               %s = (%s)R__b.ReadObjectAny(%s);\n",R__t,tiName,tcl);
+            fprintf(fp, "            }\n");
             break;
 
          case R__BIT_ISSTRING:
@@ -2007,7 +2034,7 @@ void WriteClassInit(G__ClassInfo &cl)
       fprintf(fp, "%s::Class_Version(), ",classname.c_str());
    } else if (stl) {
 
-      fprintf(fp, "GetROOT()->GetVersionInt() / 100, ");
+      fprintf(fp, "GetROOT()->GetClass(\"TStreamerInfo\")->GetClassVersion(), ");
 
    } else { // if (cl.RootFlag() & G__USEBYTECOUNT ) {
 
@@ -4021,6 +4048,7 @@ int main(int argc, char **argv)
 
    fprintf(fp, "#include \"TClass.h\"\n");
    fprintf(fp, "#include \"TBuffer.h\"\n");
+   fprintf(fp, "#include \"TStreamerInfo.h\"\n");
    fprintf(fp, "#include \"TMemberInspector.h\"\n");
    fprintf(fp, "#include \"TError.h\"\n\n");
    fprintf(fp, "#ifndef G__ROOT\n");
