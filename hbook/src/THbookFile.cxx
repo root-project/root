@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.12 2002/10/25 21:19:25 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.13 2002/11/02 09:41:17 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -289,8 +289,8 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
   hropen(fLun,PASSCHAR(topdir),PASSCHAR(fname),PASSCHAR("p"),lrecl,ier);
 #endif
   fLrecl = lrecl;
-  sprintf(topdir,"//lun%d",fLun);
   SetTitle(topdir);
+  sprintf(topdir,"//lun%d",fLun);
   fCurDir = topdir;
   
   if (ier) printf (" Error on hropen was %d \n", ier);
