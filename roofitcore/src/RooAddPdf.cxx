@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.14 2001/09/26 18:29:33 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.15 2001/09/27 18:22:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,6 +33,8 @@
 #include "TList.h"
 #include "RooFitCore/RooAddPdf.hh"
 #include "RooFitCore/RooRealProxy.hh"
+#include "RooFitCore/RooPlot.hh"
+#include "RooFitCore/RooRealVar.hh"
 
 ClassImp(RooAddPdf)
 ;
@@ -160,10 +162,14 @@ Double_t RooAddPdf::evaluate() const
   if (_haveLastCoef) {
 
     // N pdfs, N coefficients (use extended likelihood)
+    Double_t coefSum(0) ;
     while(coef=(RooAbsReal*)_coefIter->Next()) {
       pdf = (RooAbsReal*)_pdfIter->Next() ;
-      value += pdf->getVal(nset)*coef->getVal(nset) ;
+      Double_t coefVal = coef->getVal(nset) ;
+      value += pdf->getVal(nset)*coefVal ;
+      coefSum += coefVal ;
     }
+    value /= coefSum ;    
 
   } else {
 
@@ -360,21 +366,67 @@ Double_t RooAddPdf::expectedEvents() const
 
 
 
-Double_t RooAddPdf::extendedTerm(UInt_t observed) const 
+RooPlot* RooAddPdf::plotCompOn(RooPlot *frame, const RooArgSet& compSet, Option_t* drawOptions,
+			       Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const 
 {
-  // check if this PDF supports extended maximum likelihood fits
-  if(!canBeExtended()) {
-    cout << fName << ": this PDF does not support extended maximum likelihood"
-         << endl;
-    return 0;
-  }
+  // Plot selected components 
 
-  Double_t expected= expectedEvents();
-  if(expected < 0) {
-    cout << fName << ": calculated negative expected events: " << expected
-         << endl;
-    return 0;
-  }
+  // Sanity checks
+  if (plotSanityChecks(frame)) return frame ;
+  
+  // Build a temporary consisting only of the components to be plotted
+  TString newName(GetName()) ;
+  TString newTitle("Components ") ;
+  newName.Append("[") ;
 
-  return expected ;
+  RooArgList plotPdfList ;
+  RooArgList plotCoefList ;
+  RooAbsPdf* pdf ;
+  RooAbsReal* coef ;
+  RooRealVar* lastCoefVar(0) ;
+  Double_t lastCoef(1-expectedEvents()) ;
+  Double_t coefPartSum(0) ;
+  Double_t coefSum(0) ;
+  Bool_t first(kTRUE) ;
+  _pdfIter->Reset() ;
+  _coefIter->Reset() ;
+  while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
+
+    coef = (RooAbsReal*) _coefIter->Next() ;
+    if (!coef) {
+      lastCoefVar = new RooRealVar("lastCoef","lastCoef",lastCoef) ;
+      coef = lastCoefVar ;
+    }
+    if (compSet.find(pdf->GetName())) {
+      coefPartSum += coef->getVal() ;
+      plotPdfList.add(*pdf) ;
+      plotCoefList.add(*coef) ;
+
+      // Append name of component to name of pdf subset
+      if (first) {
+	first=kFALSE ;
+      } else {
+	newName.Append(",") ;
+	newTitle.Append(",") ;
+      }
+      newName.Append(pdf->GetName()) ;
+      newTitle.Append(pdf->GetName()) ;
+    }
+    coefSum += coef->getVal() ;
+  } 
+  newName.Append("]") ;
+  newTitle.Append(" of ") ;
+  newTitle.Append(GetTitle()) ;
+  
+  RooAddPdf* plotVar = new RooAddPdf(newName.Data(),newTitle.Data(),plotPdfList,plotCoefList) ;
+
+  // Plot temporary function
+  cout << "RooAddPdf::plotCompOn(" << GetName() << ") plotting components " ; plotPdfList.Print("1") ;
+  RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor*coefPartSum/coefSum,stype,projSet) ;
+
+  // Cleanup
+  delete plotVar ;
+  if (lastCoefVar) delete lastCoefVar ;
+
+  return frame2 ;
 }

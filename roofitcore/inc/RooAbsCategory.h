@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.23 2001/08/17 01:18:43 verkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.24 2001/09/27 18:22:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -45,6 +45,7 @@ public:
   const RooCatType* lookupType(const RooCatType& type, Bool_t printError=kFALSE) const ;
   TIterator* typeIterator() const ;
   Int_t numTypes() const { return _types.GetEntries() ; }
+  Bool_t isSignType(Bool_t mustHaveZero=kFALSE) const ;
 
   Roo1DTable *createTable(const char *label) const ;
 

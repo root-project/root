@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.rdl,v 1.6 2001/09/12 01:25:43 verkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.7 2001/09/24 23:05:57 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -69,6 +69,8 @@ public:
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const = 0;
   virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const = 0 ;
   virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar *cutVar, Option_t* drawOptions="P") const = 0 ;
+  virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, 
+			      const char* cut="", Option_t* drawOptions="P") const = 0 ;
  
   // Printing interface (human readable)
   inline virtual void Print(Option_t *options= 0) const {

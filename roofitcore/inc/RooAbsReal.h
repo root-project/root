@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.33 2001/09/25 01:15:58 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.34 2001/09/27 18:22:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,6 +25,7 @@ class RooRealVar;
 class RooRealFunc1D;
 class RooAbsFunc;
 class RooRealFixedBinIter ;
+class RooAbsCategoryLValue ;
 
 class TH1;
 class TH1F;
@@ -73,9 +74,18 @@ public:
   virtual Bool_t inPlotRange(Double_t value) const;
 
   // Build 1-dimensional plots
+
+public:
+
   RooPlot *frame() const;
-  enum ScaleType { Relative, Absolute, NumEvent } ;
-  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, ScaleType stype=Relative) const;
+
+  enum ScaleType { Raw, Relative, NumEvent } ;
+  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor=1.0, 
+			  ScaleType stype=Relative, const RooArgSet* projSet=0) const;
+  virtual RooPlot *plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions="L", 
+			       Double_t scaleFactor=1.0, ScaleType stype=Relative) const;
+  virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, Option_t* drawOptions="L", 
+			      Double_t scaleFactor=1.0, const RooArgSet* projSet=0) const;
 
   // Create empty 1D and 2D histograms
   TH1F *createHistogram(const char *name, const char *yAxisLabel= 0, Int_t bins= 0) const;
@@ -98,6 +108,12 @@ public:
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
 protected:
+
+  // Helper functions for plotting
+  Bool_t plotSanityChecks(RooPlot* frame) const ;
+  void makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* allVars, 
+			 RooArgSet& projectedVars, Bool_t silent) const ;
+
   const RooAbsReal *createProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
 				     RooArgSet *&cloneSet) const;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPdfCustomizer.cc,v 1.8 2001/09/19 00:26:01 verkerke Exp $
+ *    File: $Id: RooPdfCustomizer.cc,v 1.9 2001/09/20 01:40:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -25,8 +25,8 @@ ClassImp(RooPdfCustomizer)
 ;
 
 
-RooPdfCustomizer::RooPdfCustomizer(const RooAbsPdf& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs) :
-  _masterPdf((RooAbsPdf*)&pdf), _masterCat((RooAbsCategoryLValue*)&masterCat), _cloneLeafList(&splitLeafs),
+RooPdfCustomizer::RooPdfCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs) :
+  _masterPdf((RooAbsArg*)&pdf), _masterCat((RooAbsCategoryLValue*)&masterCat), _cloneLeafList(&splitLeafs),
   _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), _masterUnsplitLeafList("masterUnsplitLeafList"), 
   _cloneBranchList("cloneBranchList"), _sterile(kFALSE)
 {
@@ -35,8 +35,8 @@ RooPdfCustomizer::RooPdfCustomizer(const RooAbsPdf& pdf, const RooAbsCategoryLVa
 
 
 
-RooPdfCustomizer::RooPdfCustomizer(const RooAbsPdf& pdf, const char* name) :
-  _masterPdf((RooAbsPdf*)&pdf), _masterCat(0), _cloneLeafList(0),
+RooPdfCustomizer::RooPdfCustomizer(const RooAbsArg& pdf, const char* name) :
+  _masterPdf((RooAbsArg*)&pdf), _masterCat(0), _cloneLeafList(0),
   _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), _masterUnsplitLeafList("masterUnsplitLeafList"), 
   _cloneBranchList("cloneBranchList"), _sterile(kTRUE), _name(name)
 {
@@ -130,14 +130,14 @@ RooArgSet* RooPdfCustomizer::fullParamList(const RooArgSet* depList) const
 
 
 
-RooAbsPdf* RooPdfCustomizer::build(Bool_t verbose) 
+RooAbsArg* RooPdfCustomizer::build(Bool_t verbose) 
 {
   return doBuild(_name,verbose) ;
 }
 
 
 
-RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose) 
+RooAbsArg* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose) 
 {
   if (_sterile) {
     cout << "RooPdfCustomizer::build(" << _name 
@@ -155,7 +155,7 @@ RooAbsPdf* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
 }
 
 
-RooAbsPdf* RooPdfCustomizer::doBuild(const char* masterCatState, Bool_t verbose) 
+RooAbsArg* RooPdfCustomizer::doBuild(const char* masterCatState, Bool_t verbose) 
 {
   // Set masterCat to given state
 
@@ -253,7 +253,7 @@ RooAbsPdf* RooPdfCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   }
 
   // Clone branches, changes their names 
-  RooAbsPdf* cloneTopPdf(0) ;
+  RooAbsArg* cloneTopPdf(0) ;
   RooArgSet clonedMasterBranches("clonedMasterBranches") ;
   TIterator* iter = masterBranchesToBeCloned.createIterator() ;
   while(branch=(RooAbsArg*)iter->Next()) {
@@ -270,7 +270,7 @@ RooAbsPdf* RooPdfCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
     clonedMasterBranches.add(*clone) ;      
 
     // Save pointer to clone of top-level pdf
-    if (branch==_masterPdf) cloneTopPdf=(RooAbsPdf*)clone ;
+    if (branch==_masterPdf) cloneTopPdf=(RooAbsArg*)clone ;
   }
   delete iter ;
   _cloneBranchList.add(clonedMasterBranches) ;

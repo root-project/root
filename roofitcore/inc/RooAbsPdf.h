@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.29 2001/09/24 16:23:12 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.30 2001/09/27 18:22:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,6 +43,9 @@ public:
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents = 0, Bool_t verbose=kFALSE) const;
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype, Bool_t verbose=kFALSE) const;
 
+  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, 
+			  ScaleType stype=Relative, const RooArgSet* projSet=0) const;
+
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
 
   // Built-in generator support
@@ -57,16 +60,6 @@ public:
   TPaveText *Parameters(const char *label= "", Int_t sigDigits = 2,
 			Option_t *options = "NELU", Double_t xmin=0.65,
                         Double_t xmax= 0.99,Double_t ymax=0.95) { return 0 ; } 
-
-  //plot the pdf for variables varX and varY
-  //match the binning of another histogram if one is given
-//    TH2F * plot(TH2F & hist, RooAbsReal & varX, RooAbsReal & varY, const char * name="");
-//    TH2F * plot(TH2F * hist, RooAbsReal * varX, RooAbsReal * varY, const char * name="");
-//    TH2F * plot(RooAbsReal & var1, RooAbsReal & var2, const char * name="", const Double_t newIntegral=1);
-//    TH2F * plot(RooAbsReal * var1, RooAbsReal * var2, const char * name="", const Double_t newIntegral=1);
-//    TH2F * plot(RooAbsReal & varX, RooAbsReal & varY, const Double_t newIntegral, int nX, int nY);
-//    TH2F * plot(const char * name1, const char * name2, const RooArgSet& nset, const char * name="", const Double_t newIntegral=1);
-//    TH2F * plot(const char * name1, const char * name2, const RooArgSet* nset, const char * name="", const Double_t newIntegral=1);
 
   // Interactions with a dataset  
   virtual const RooFitResult* fitTo(RooAbsData& data, Option_t *fitOpt = "", Option_t *optOpt = "cpds" ) ;

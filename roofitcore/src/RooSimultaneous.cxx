@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.cc,v 1.13 2001/09/25 01:15:59 verkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.14 2001/09/27 18:22:30 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -202,78 +202,124 @@ Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* norm
 }
 
 
-RooPlot *RooSimultaneous::plotOn(RooPlot* frame, RooAbsData* wdata, Option_t* drawOptions, Double_t scaleFactor, ScaleType stype) const {
-  // Plot a smooth curve of this object's value on the specified frame.
 
-  // check that we are passed a valid plot frame to use
-  if(0 == frame) {
-    cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
-    return 0;
+
+RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor, 
+				 ScaleType stype, const RooArgSet* projSet) const 
+{
+  // We need a dataset for plotting...
+  cout << "RooSimultaneous::plotOn(" << GetName() << ") Cannot plot simultaneous PDF without data set" << endl
+       << "to determine relative fractions of PDF components." << endl
+       << "Please use RooSimultaneous::plot(RooPlot*,RooAbsData*,...)" << endl ;
+  return frame ;
+}
+
+
+
+RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooAbsData* wdata, Option_t* drawOptions, Double_t scaleFactor, 
+				 ScaleType stype, const RooArgSet* projSet) const
+{
+  RooArgSet allComponents ;
+  TIterator *iter = _pdfProxyList.MakeIterator() ;
+  RooRealProxy* proxy ;
+  while(proxy=(RooRealProxy*)iter->Next()) {
+    allComponents.add(proxy->arg()) ;
+  }
+  delete iter ;
+  return plotCompOn(frame,wdata,allComponents,drawOptions,scaleFactor,stype,projSet) ;
+}
+
+
+
+
+RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const char* indexLabelList, Option_t* drawOptions,
+				     Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const
+{
+  RooArgSet allComponents ;
+
+  // Process comma separated index label list
+  char labelList[1024] ;
+  strcpy(labelList,indexLabelList) ;  
+  char* label  = strtok(labelList,",") ;
+  while(label) {
+    // Look for a pdf proxy with this labels name
+    RooRealProxy* proxy =  (RooRealProxy*) _pdfProxyList.FindObject(label) ;
+
+    // Add to list if found, ignore with warning otherwise
+    if (proxy) {
+      allComponents.add(proxy->arg()) ;
+    } else {
+      cout << "RooSimultaneous::plotCompOn(" << GetName() 
+	   << ") WARNING: There is no component PDF associated with index label " 
+	   << label << ", ignoring" << endl ;
+    }
+    label = strtok(0,",") ;
   }
 
-  // check that this frame knows what variable to plot
-  RooAbsReal *var= frame->getPlotVar();
-  if(0 == var) {
-    cout << ClassName() << "::" << GetName()
-	 << ":plotOn: frame does not specify a plot variable" << endl;
-    return 0;
-  }
+  return plotCompOn(frame,wdata,allComponents,drawOptions,scaleFactor,stype,projSet) ;
+}
 
-  // check that the plot variable is not derived
-  RooRealVar* realVar= dynamic_cast<RooRealVar*>(var);
-  if(0 == realVar) {
-    cout << ClassName() << "::" << GetName()
-	 << ":plotOn: cannot plot derived variable \"" << var->GetName() << "\"" << endl;
-    return 0;
-  }
 
-  // check if we actually depend on the plot variable
-  if(!this->dependsOn(*realVar)) {
-    cout << GetName() << "::plotOn:WARNING: variable is not an explicit dependent: "
-	 << realVar->GetName() << endl;
-  }
 
-  // deep-clone ourselves so that the plotting process will not disturb
-  // our original expression tree
-  RooArgSet *cloneList = (RooArgSet*) RooArgSet(*this).snapshot() ;
-  RooSimultaneous *clone= (RooSimultaneous*) cloneList->find(GetName()) ;
+RooPlot* RooSimultaneous::plotCompOn(RooPlot *frame, RooAbsData* wdata, const RooArgSet& compSet, Option_t* drawOptions,
+				     Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const
+{
+  // Sanity checks
+  if (plotSanityChecks(frame)) return frame ;
 
-  // redirect our clone to use the plot variable
-  RooArgSet plotSet(*realVar);
-  clone->recursiveRedirectServers(plotSet);
+  // Calculate relative weight fractions of components
+  Roo1DTable* wTable = wdata->table(_indexCat.arg()) ;
 
-  // Make a new expression that is the weighted sum of the RooSimultaneous components
+  // Make a new expression that is the weighted sum of requested components
   RooArgList pdfCompList ;
   RooArgList wgtCompList ;
-  TIterator* pIter = clone->_pdfProxyList.MakeIterator() ;
-  RooRealProxy *proxy ;
-  Roo1DTable* wTable = wdata->table(clone->_indexCat.arg()) ;
-  Int_t n = _pdfProxyList.GetSize() ;
-  while(proxy=(RooRealProxy*)pIter->Next()) {
-    pdfCompList.add(proxy->arg()) ;
-    if (--n) wgtCompList.addOwned(*(new RooRealVar(proxy->name(),
-				    "coef",wTable->getFrac(proxy->name())))) ;
+  RooAbsPdf* pdf ;
+  RooRealProxy* proxy ;
+  TIterator* cIter = compSet.createIterator() ;
+  TIterator* pIter = _pdfProxyList.MakeIterator() ;
+  Double_t plotFrac(0) ;
+  while(pdf=(RooAbsPdf*)cIter->Next()) {
+
+    // Check if listed component is indeed contained in this PDF
+    if (!dependsOn(*pdf)) {
+      cout << "RooSimultaneous::plotCompOn(" << GetName() << ") WARNING " 
+	   << pdf->GetName() << " is not a component of this pdf, ignoring" << endl ;
+      continue ;
+    }
+    
+    // Find proxy for this pdf (we need the proxy name to look up the weight table
+    pIter->Reset() ;
+    while(proxy=(RooRealProxy*)pIter->Next()) {
+      if (!TString(proxy->arg().GetName()).CompareTo(pdf->GetName())) break ;
+    }
+    
+    // Add pdf to plot list
+    pdfCompList.add(*pdf) ;
+
+    // Instantiate a RRV holding this pdfs weight fraction
+    RooRealVar *wgtVar = new RooRealVar(proxy->name(),"coef",wTable->getFrac(proxy->name())) ;
+    plotFrac += wgtVar->getVal() ;
+    wgtCompList.addOwned(*wgtVar) ;
   }
   delete pIter ;
+  delete cIter ;
   delete wTable ;
-  RooAddPdf *plotSumVar = new RooAddPdf("plotSumVar","weighted sum of RS components",pdfCompList,wgtCompList) ;
 
-
-  // normalize ourself to any previous contents in the frame
-  if (frame->getFitRangeNEvt() > 0 && stype != Absolute) {
-    if (stype==Relative) scaleFactor *= frame->getFitRangeNEvt() ;
-    scaleFactor*= frame->getFitRangeBinW() ;
+  // Did we select anything
+  if (plotFrac==0) {
+    cout << "RooSimultaneous::plotCompOn(" << GetName() << ") no components selected, plotting aborted" << endl ;
+    return frame ;
   }
 
-  // create a new curve of our function using the clone to do the evaluations
-  RooCurve* curve= new RooCurve(*plotSumVar,*realVar,scaleFactor,frame->getNormVars());
+  RooAddPdf *plotVar = new RooAddPdf("plotVar","weighted sum of RS components",pdfCompList,wgtCompList) ;
 
-  // add this new curve to the specified plot frame
-  frame->addPlotable(curve, drawOptions);
+  // Plot temporary function
+  cout << "RooSimultaneous::plotCompOn(" << GetName() << ") plotting components " ; pdfCompList.Print("1") ;
+  RooPlot* frame2 = plotVar->plotOn(frame,drawOptions,scaleFactor*plotFrac,stype,projSet) ;
 
-  // cleanup 
-  delete plotSumVar ;
-  delete cloneList;
+  // Cleanup
+  delete plotVar ;
 
-  return frame;
+  return frame2 ;
+  
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.25 2001/08/23 01:21:44 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.26 2001/09/27 18:22:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -402,3 +402,20 @@ RooAbsArg *RooAbsCategory::createFundamental() const
 }
 
 
+Bool_t RooAbsCategory::isSignType(Bool_t mustHaveZero) const 
+{
+  // Determine if category has 2 or 3 states with index values -1,0,1
+
+  if (numTypes()>3||numTypes()<2) return kFALSE ;
+  if (mustHaveZero&&numTypes()!=3) return kFALSE ;
+
+  Bool_t ret(kTRUE) ;
+  TIterator* tIter = typeIterator() ;
+  RooCatType* type ;
+  while(type=(RooCatType*)tIter->Next()) {
+    if (abs(type->getVal())>1) ret=kFALSE ;
+  }
+  
+  delete tIter ;
+  return ret ;
+}

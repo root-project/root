@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.44 2001/09/25 01:15:58 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.45 2001/09/27 18:22:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,6 +32,8 @@
 #include "RooFitCore/RooRealFixedBinIter.hh"
 #include "RooFitCore/RooRealBinding.hh"
 #include "RooFitCore/RooRealIntegral.hh"
+#include "RooFitCore/RooAbsCategoryLValue.hh"
+#include "RooFitCore/RooPdfCustomizer.hh"
 
 #include <iostream.h>
 
@@ -41,6 +43,7 @@
 #include "TH2.h"
 #include "TBranch.h"
 #include "TLeaf.h"
+#include "TAttLine.h"
 
 ClassImp(RooAbsReal)
 ;
@@ -452,7 +455,7 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   }
 
   // Remove the projected variables from the list of leaf nodes, if necessary.
-  if(0 != projectedVars) leafNodes.remove(*projectedVars);
+  if(0 != projectedVars) leafNodes.remove(*projectedVars,kTRUE);
 
   // Make a deep-clone of ourself so later operations do not disturb our original state
   cloneSet= (RooArgSet*)RooArgSet(*this).snapshot();
@@ -476,6 +479,7 @@ const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, c
   TString name(GetName()),title(GetTitle());
   name.Append("Projected");
   title.Prepend("Projection of ");
+
   RooRealIntegral *projected= new RooRealIntegral(name.Data(),title.Data(),*clone,*projectedVars,&normSet);
   if(0 == projected || !projected->isValid()) {
     cout << ClassName() << "::" << GetName() << ":createProjection: cannot integrate out ";
@@ -613,65 +617,265 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
   return hist;
 }
 
-RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scaleFactor, ScaleType stype) const {
-  // Plot a smooth curve of this object's value on the specified frame.
 
-  // check that we are passed a valid plot frame to use
-  if(0 == frame) {
-    cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
-    return 0;
+
+
+
+RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions, 
+			    Double_t scaleFactor, ScaleType stype, const RooArgSet* projSet) const
+{
+  // Plot ourselves on given frame with optional scale factor and an explicit list of dependents to project
+
+  // Sanity checks
+  if (plotSanityChecks(frame)) return frame ;
+  
+  // Make list of variables to be projected
+  RooArgSet projectedVars ;
+  if (projSet) {
+    makeProjectionSet(frame->getPlotVar(),projSet,projectedVars,kFALSE) ;
+
+    // Print list of non-projected variables
+    if (frame->getNormVars()) {
+      RooArgSet sliceSet(*frame->getNormVars()) ;
+      sliceSet.remove(projectedVars,kTRUE) ;
+      sliceSet.remove(*sliceSet.find(frame->getPlotVar()->GetName())) ;
+      if (sliceSet.getSize()) {
+	cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " 
+	     << frame->getPlotVar()->GetName() << " represents a slice in " ;
+	sliceSet.Print("1") ;
+      }
+    }
+  } else {
+    makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
   }
 
-  // check that this frame knows what variable to plot
-  RooAbsReal *var= frame->getPlotVar();
-  if(0 == var) {
-    cout << ClassName() << "::" << GetName()
-	 << ":plotOn: frame does not specify a plot variable" << endl;
-    return 0;
-  }
+  // Clone the plot variable
+  RooAbsReal* realVar = (RooRealVar*) frame->getPlotVar() ;
+  RooRealVar* plotVar = (RooRealVar*) realVar->Clone() ;
 
-  // check that the plot variable is not derived
-  RooRealVar* realVar= dynamic_cast<RooRealVar*>(var);
-  if(0 == realVar) {
-     cout << ClassName() << "::" << GetName() << ":plotOn: cannot plot variable \""
-	  << var->GetName() << "\" of type " << var->ClassName() << endl;
-    return 0;
-  }
+  // Inform user about projections
+  if (projectedVars.getSize()) {
+    cout << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName() 
+	 << " projects variables " ; projectedVars.Print("1") ;
+  }  
 
-  // check if we actually depend on the plot variable
-  if(!this->dependsOn(*realVar)) {
-    cout << ClassName() << "::" << GetName() << ":plotOn: WARNING: variable is not an explicit dependent: "
-	 << realVar->GetName() << endl;
-  }
+  // Create projection integral
+  RooArgSet* projectionCompList ;
+  const RooAbsReal *projection = createProjection(RooArgSet(*plotVar), &projectedVars, projectionCompList) ;
 
-  // deep-clone ourselves so that the plotting process will not disturb
-  // our original expression tree
-  RooArgSet *cloneList = (RooArgSet*) RooArgSet(*this).snapshot() ;
-  RooAbsReal *clone= (RooAbsReal*) cloneList->find(GetName()) ;
-
-  // redirect our clone to use the plot variable
-  RooArgSet plotSet(*realVar);
-  clone->recursiveRedirectServers(plotSet);
-
-  // normalize ourself to any previous contents in the frame
-  if (frame->getFitRangeNEvt() > 0 && stype != Absolute && dynamic_cast<const RooAbsPdf*>(this)) {    
-    if (stype==Relative) scaleFactor *= frame->getFitRangeNEvt() ;
-    scaleFactor*= frame->getFitRangeBinW() ;
-  }
-
-  frame->updateNormVars(plotSet);
-
+  // Reset name of projection to name of PDF to get appropriate curve name
+  ((RooAbsArg*)projection)->SetName(GetName()) ;
+  
   // create a new curve of our function using the clone to do the evaluations
-  RooCurve* curve= new RooCurve(*clone,*realVar,scaleFactor,frame->getNormVars());
+  RooCurve* curve= new RooCurve(*projection,*plotVar,scaleFactor);
 
   // add this new curve to the specified plot frame
   frame->addPlotable(curve, drawOptions);
 
-  // cleanup 
-  delete cloneList;
+  delete projectionCompList ;
+  return frame;
+}
+
+
+
+
+RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions, 
+				 Double_t scaleFactor, ScaleType stype) const
+{
+  // Make default set of projected variables
+  RooArgSet projectedVars ;
+  makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
+  
+  // Take out the sliced variables
+  TIterator* iter = sliceSet.createIterator() ;
+  RooAbsArg* sliceArg ;
+  while(sliceArg=(RooAbsArg*)iter->Next()) {
+    RooAbsArg* arg = projectedVars.find(sliceArg->GetName()) ;
+    if (arg) {
+      projectedVars.remove(*arg) ;
+    } else {
+      cout << "RooAbsReal::plotSliceOn(" << GetName() << ") slice variable " 
+	   << sliceArg->GetName() << " was not projected anyway" << endl ;
+    }
+  }
+  delete iter ;
+
+  return plotOn(frame,drawOptions,scaleFactor,stype,&projectedVars) ;
+}
+
+
+
+
+
+RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, Option_t* drawOptions, 
+				Double_t scaleFactor, const RooArgSet* projSet) const
+{
+  // Sanity checks
+  if (plotSanityChecks(frame)) return frame ;
+
+  // Must depend on asymCat
+  if (!dependsOn(asymCat)) {
+    cout << "RooAbsReal::plotAsymOn(" << GetName() 
+	 << ") function doesn't depend on asymmetry category " << asymCat.GetName() << endl ;
+    return frame ;
+  }
+
+  // asymCat must be a signCat
+  if (!asymCat.isSignType()) {
+    cout << "RooAbsReal::plotAsymOn(" << GetName()
+	 << ") asymmetry category must have 2 or 3 states with index values -1,0,1" << endl ;
+    return frame ;
+  }
+  
+  // Make list of variables to be projected
+  RooArgSet projectedVars ;
+  if (projSet) {
+    makeProjectionSet(frame->getPlotVar(),projSet,projectedVars,kFALSE) ;
+
+    // Print list of non-projected variables
+    if (frame->getNormVars()) {
+      RooArgSet sliceSet(*frame->getNormVars()) ;
+      sliceSet.remove(projectedVars,kTRUE) ;
+      sliceSet.remove(*sliceSet.find(frame->getPlotVar()->GetName())) ;
+      if (sliceSet.getSize()) {
+	cout << "RooAbsReal::plotAsymOn(" << GetName() << ") plot on " 
+	     << frame->getPlotVar()->GetName() << " represents a slice in " ;
+	sliceSet.Print("1") ;
+      }
+    }
+  } else {
+    makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
+  }
+
+  // Take out plotted asymmetry from projection
+  if (projectedVars.find(asymCat.GetName())) {
+    projectedVars.remove(*projectedVars.find(asymCat.GetName())) ;
+  }
+
+  // Clone the plot variable
+  RooAbsReal* realVar = (RooRealVar*) frame->getPlotVar() ;
+  RooRealVar* plotVar = (RooRealVar*) realVar->Clone() ;
+
+  // Inform user about projections
+  if (projectedVars.getSize()) {
+    cout << "RooAbsReal::plotAsymOn(" << GetName() << ") plot on " << plotVar->GetName() 
+	 << " projects variables " ; projectedVars.Print("1") ;
+  }  
+
+  // Create projection integral 
+  RooArgSet* projectionCompList ;
+  const RooAbsReal *projection = createProjection(RooArgSet(*plotVar), &projectedVars, projectionCompList) ;
+
+  // Customize two copies of projection with fixed negative and positive asymmetry
+  RooAbsCategoryLValue* asymPos = (RooAbsCategoryLValue*) asymCat.Clone("asym_pos") ;
+  RooAbsCategoryLValue* asymNeg = (RooAbsCategoryLValue*) asymCat.Clone("asym_neg") ;
+  asymPos->setIndex(1) ;
+  asymNeg->setIndex(-1) ;
+  RooPdfCustomizer custPos(*projection,"pos") ;
+  RooPdfCustomizer custNeg(*projection,"neg") ;
+  custPos.replaceArg(asymCat,*asymPos) ;
+  custNeg.replaceArg(asymCat,*asymNeg) ;
+  RooAbsReal* funcPos = (RooAbsReal*) custPos.build() ;
+  RooAbsReal* funcNeg = (RooAbsReal*) custNeg.build() ;
+
+  // Create a RooFormulaVar representing the asymmetry
+  TString asymName(GetName()) ;
+  asymName.Append("Asymmetry[") ;
+  asymName.Append(asymCat.GetName()) ;
+  asymName.Append("]") ;
+  TString asymTitle(asymCat.GetName()) ;
+  asymTitle.Append(" Asymmetry of ") ;
+  asymTitle.Append(projection->GetTitle()) ;
+  RooFormulaVar* funcAsym = new RooFormulaVar(asymName,asymTitle,"(@0-@1)/(@0+@1)",RooArgSet(*funcPos,*funcNeg)) ;
+
+  // create a new curve of our function using the clone to do the evaluations
+  RooCurve* curve= new RooCurve(*funcAsym,*plotVar,scaleFactor);
+  dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
+
+  // add this new curve to the specified plot frame
+  frame->addPlotable(curve, drawOptions);
+
+  // Cleanup
+  delete projectionCompList ;
+  delete asymPos ;
+  delete asymNeg ;
+  delete funcAsym ;
 
   return frame;
 }
+
+
+
+
+Bool_t RooAbsReal::plotSanityChecks(RooPlot* frame) const
+{
+  // check that we are passed a valid plot frame to use
+  if(0 == frame) {
+    cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
+    return kTRUE;
+  }
+
+  // check that this frame knows what variable to plot
+  RooAbsReal* var = frame->getPlotVar() ;
+  if(!var) {
+    cout << ClassName() << "::" << GetName()
+	 << ":plotOn: frame does not specify a plot variable" << endl;
+    return kTRUE;
+  }
+
+  // check that the plot variable is not derived
+  if(!dynamic_cast<RooRealVar*>(var)) {
+     cout << ClassName() << "::" << GetName() << ":plotOn: cannot plot variable \""
+	  << var->GetName() << "\" of type " << var->ClassName() << endl;
+    return kTRUE;
+  }
+
+  // check if we actually depend on the plot variable
+  if(!this->dependsOn(*var)) {
+    cout << ClassName() << "::" << GetName() << ":plotOn: WARNING: variable is not an explicit dependent: "
+	 << var->GetName() << endl;
+  }
+  
+  return kFALSE ;
+}
+
+
+
+
+void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* allVars, RooArgSet& projectedVars, Bool_t silent) const
+{
+  projectedVars.removeAll() ;
+  if (!allVars) return ;
+
+  // Start out with suggested list of variables  
+  projectedVars.add(*allVars) ;
+
+  // Take out plot variable
+  RooAbsArg *found= projectedVars.find(plotVar->GetName());
+  if(found) {
+    projectedVars.remove(*found);
+    if (!silent) {
+      cout << "RooAbsReal::plotOn(" << GetName() 
+	   << ") WARNING: cannot project out frame variable (" 
+	   << found->GetName() << "), ignoring" << endl ; 
+    }
+  }
+
+  // Take out all non-dependents of function
+  TIterator* iter = allVars->createIterator() ;
+  RooAbsArg* arg ;
+  while(arg=(RooAbsArg*)iter->Next()) {
+    if (!dependsOn(*arg)) projectedVars.remove(*arg,kTRUE) ;
+    if (!silent) {
+      cout << "RooAbsReal::plotOn(" << GetName() 
+	   << ") WARNING: function doesn't depend on projection variable " 
+	   << arg->GetName() << ", ignoring" << endl ;
+    }
+  }
+  delete iter ;
+}
+
+
 
 
 

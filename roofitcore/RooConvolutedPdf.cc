@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.cc,v 1.17 2001/09/24 23:05:58 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.cc,v 1.18 2001/09/25 01:15:59 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -209,7 +209,7 @@ Int_t RooConvolutedPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
   }
 
   // Register convolution dependents integrated as analytical
-  analVars.add(*intConvSet) ;
+  if (intConvSet) analVars.add(*intConvSet) ;
 
   // Store integration configuration in registry
   Int_t masterCode(0) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPdfCustomizer.rdl,v 1.2 2001/08/02 21:39:10 verkerke Exp $
+ *    File: $Id: RooPdfCustomizer.rdl,v 1.3 2001/09/19 00:26:01 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -27,15 +27,15 @@ class RooPdfCustomizer {
 public:
 
   // Constructors, assignment etc
-  RooPdfCustomizer(const RooAbsPdf& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafList) ;
-  RooPdfCustomizer(const RooAbsPdf& pdf, const char* name) ;
+  RooPdfCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafList) ;
+  RooPdfCustomizer(const RooAbsArg& pdf, const char* name) ;
   virtual ~RooPdfCustomizer() ;
   
   void splitArgs(const RooArgSet& argSet, const RooAbsCategory& splitCat) ;
   void splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat) ;
   void replaceArg(const RooAbsArg& orig, const RooAbsArg& subst) ;
-  RooAbsPdf* build(const char* masterCatState, Bool_t verbose=kFALSE) ;
-  RooAbsPdf* build(Bool_t verbose=kFALSE) ;
+  RooAbsArg* build(const char* masterCatState, Bool_t verbose=kFALSE) ;
+  RooAbsArg* build(Bool_t verbose=kFALSE) ;
 
   const RooArgSet& cloneBranchList() const { return _cloneBranchList ; }
   const RooArgSet& cloneLeafList() const { return *_cloneLeafList ; }
@@ -47,7 +47,7 @@ protected:
   RooPdfCustomizer(const RooPdfCustomizer&) ;
   void initialize() ;
   
-  RooAbsPdf* doBuild(const char* masterCatState, Bool_t verbose) ;
+  RooAbsArg* doBuild(const char* masterCatState, Bool_t verbose) ;
 
   Bool_t _sterile ;
   TString _name ;
@@ -59,7 +59,7 @@ protected:
   TList _replaceSubList ;
 
   // Master nodes are not owned
-  RooAbsPdf* _masterPdf ;
+  RooAbsArg* _masterPdf ;
   RooAbsCategoryLValue* _masterCat ;
 
   TIterator* _masterLeafListIter ;

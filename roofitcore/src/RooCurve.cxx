@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.19 2001/09/24 23:05:59 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.20 2001/09/27 18:22:29 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -40,7 +40,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.19 2001/09/24 23:05:59 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.20 2001/09/27 18:22:29 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -77,53 +77,8 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
   setYAxisLabel(title.Data());
 
   RooAbsFunc *funcPtr(0),*rawPtr(0);
-  RooRealIntegral *projected(0);
-  RooArgSet bindNormSet ;
-  if(0 != normVars) {
-    RooArgSet vars(*normVars);
-    bindNormSet.add(*normVars) ;
+  funcPtr= f.bindVars(x,normVars);
 
-    RooAbsArg *found= vars.find(x.GetName());
-    if(found) {
-      // remove x from the set of vars to be projected
-      vars.remove(*found);
-    }
-
-    // Remove args from vars that PDF doesn't depend on
-    TIterator* iter = vars.createIterator() ;
-    RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
-      if (!f.dependsOn(*arg)) {
-	vars.remove(*arg) ;
-      }
-    }
-    delete iter ;
-
-    // project out any remaining normalization variables
-    if(vars.getSize() > 0) {
-      TString name(f.GetName()) ;
-      name.Append("Projected") ;
-      TString title(f.GetTitle()) ;
-      title.Append(" (Projected)") ;
-      projected= new RooRealIntegral(name.Data(),title.Data(),f,vars,&bindNormSet);
-      cout << "RooCurve(" << f.GetName() << "): projecting function over " ; vars.Print("1") ; 
-      //projected->Print("v") ;
-      if(0 == projected || !projected->isValid()) {
-	cout << ClassName() << ": cannot integrate out ";
-	vars.Print();
-	// cleanup and exit
-	if(0 != projected) delete projected;
-	return;
-      }
-      funcPtr= projected->bindVars(x,&bindNormSet);
-    }
-  } else {
-    bindNormSet.add(x) ;
-  }
-
-  if(0 == funcPtr) {
-    funcPtr= f.bindVars(x,&bindNormSet);
-  }
   // apply a scale factor if necessary
   if(scaleFactor != 1) {
     rawPtr= funcPtr;
@@ -138,8 +93,9 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
   // cleanup
   delete funcPtr;
   if(rawPtr) delete rawPtr;
-  if(projected) delete projected;
 }
+
+
 
 RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 		   Double_t xlo, Double_t xhi, UInt_t minPoints, Double_t prec, Double_t resolution) {
@@ -149,10 +105,16 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
   initialize();
 }
 
-RooCurve::~RooCurve() {
+
+
+RooCurve::~RooCurve() 
+{
 }
 
-void RooCurve::initialize() {
+
+
+void RooCurve::initialize() 
+{
   // Perform initialization that is common to all constructors.
 
   // set default line width in pixels
@@ -160,6 +122,8 @@ void RooCurve::initialize() {
   // set default line color
   SetLineColor(kBlue);
 }
+
+
 
 void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 			 Int_t minPoints, Double_t prec, Double_t resolution) {

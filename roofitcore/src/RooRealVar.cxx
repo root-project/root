@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.25 2001/09/07 01:23:04 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.26 2001/09/27 18:22:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -90,7 +90,7 @@ void RooRealVar::setVal(Double_t value) {
 void RooRealVar::setFitMin(Double_t value) 
 {
   // Check if new limit is consistent
-  if (value > _fitMax) {
+  if (value >= _fitMax) {
     cout << "RooRealVar::setFitMin(" << GetName() 
 	 << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
     _fitMin = _fitMax ;

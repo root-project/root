@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.12 2001/08/23 01:21:46 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.13 2001/09/27 18:22:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -207,6 +207,9 @@ void RooAbsRealLValue::setFitBin(Int_t ibin)
 
 Int_t RooAbsRealLValue::getFitBin() const 
 {
+  if (getVal() >= getFitMax()) return numFitBins()-1 ;
+  if (getVal() < getFitMin()) return 0 ;
+
   return Int_t((getVal() - getFitMin())/ fitBinWidth()) ;
 }
 

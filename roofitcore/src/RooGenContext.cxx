@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.14 2001/09/17 18:48:14 verkerke Exp $
+ *    File: $Id: RooGenContext.cc,v 1.15 2001/09/18 02:03:45 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,7 +28,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.14 2001/09/17 18:48:14 verkerke Exp $";
+"$Id: RooGenContext.cc,v 1.15 2001/09/18 02:03:45 verkerke Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, Bool_t verbose) :
@@ -209,27 +209,27 @@ RooDataSet *RooGenContext::generate(Int_t nEvents) const {
   // WVE should this be here?
   return data;
 
-  // Attach the model to the new data set
-  _pdfClone->attachDataSet(*data);
+//   // Attach the model to the new data set
+//   _pdfClone->attachDataSet(*data);
 
-  // Reset the PDF's error counters
-  _pdfClone->resetErrorCounters();
+//   // Reset the PDF's error counters
+//   _pdfClone->resetErrorCounters();
 
-  // Loop over the events to generate
-  for(Int_t evt= 0; evt < nEvents; evt++) {
-    // load values from the prototype dataset if requested
-    if(_prototype) {
-      //...
-    }
-    // generate values of the variables that the model cannot generate itself
-    //acceptReject();
-    // use the model's generator
-    _pdfClone->generateEvent(_code);
-    // add this event to the dataset
-    data->fill();
-  }
+//   // Loop over the events to generate
+//   for(Int_t evt= 0; evt < nEvents; evt++) {
+//     // load values from the prototype dataset if requested
+//     if(_prototype) {
+//       //...
+//     }
+//     // generate values of the variables that the model cannot generate itself
+//     //acceptReject();
+//     // use the model's generator
+//     _pdfClone->generateEvent(_code);
+//     // add this event to the dataset
+//     data->fill();
+//   }
 
-  return data;
+//   return data;
 }
 
 void RooGenContext::printToStream(ostream &os, PrintOption opt, TString indent) const
