@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.72 2001/12/12 09:48:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.73 2001/12/14 20:29:16 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -289,7 +289,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
    fID           = 0;
    fStreamerType = -1;
    fType         = 0;
-   fClassVersion = 1;
+   fClassVersion = TClonesArray::Class()->GetClassVersion();
    fBranchCount  = 0;
    fBranchCount2 = 0;
    fObject       = 0;
@@ -601,6 +601,7 @@ TStreamerInfo *TBranchElement::GetInfo()
    TClass *cl = gROOT->GetClass(fClassName.Data());
    if (cl) {
       TStreamerInfo::Optimize(kFALSE);
+      if (cl == TClonesArray::Class()) fClassVersion = TClonesArray::Class()->GetClassVersion();
       fInfo = cl->GetStreamerInfo(fClassVersion);
       if (fInfo && !fInfo->GetOffsets()) {
          fInfo->Compile();
@@ -926,7 +927,7 @@ void TBranchElement::SetAddress(void *add)
 
    //build the StreamerInfo if first time for the class
    TClass *cl = gROOT->GetClass(fClassName.Data());
-   if (!fInfo ) GetInfo();
+   if (!fInfo ) GetInfo(); 
    Int_t nbranches = fBranches.GetEntriesFast();
    if (gDebug > 0) {
       printf("SetAddress, branch:%s, classname=%s, parent=%s, fID=%d, fType=%d, nbranches=%d, add=%lx, fInfo=%s, version=%d\n",GetName(),fClassName.Data(),fParentName.Data(),fID,fType,nbranches,(Long_t)add,fInfo->GetName(),fClassVersion);
