@@ -167,6 +167,10 @@ extern "C" {
 
 template<typename _StateT>
 class fpos {
+ public:
+  fpos();
+  fpos(const fpos&);
+  fpos(long);
 };
 typedef fpos<mbstate_t> 		streampos;
 
@@ -447,9 +451,9 @@ class basic_istream : virtual public basic_ios<charT, traits> {
     pos_type tellg();
     __istream_type& seekg(pos_type pos);
     int sync();
-#ifndef __CINT__
+//#ifndef __CINT__
     __istream_type& seekg(off_type, ios_base::seekdir);
-#endif
+//#endif
     __istream_type& putback(char_type c);
     __istream_type& unget();
     streamsize gcount() const;
@@ -613,6 +617,7 @@ ostream& operator<< ( ostream&, float );
 ostream& operator<< ( ostream&, double );
 //ostream& operator<< ( ostream&, long double );
 ostream& operator<< ( ostream&, bool );
+ostream& operator<< (ostream&,const streampos&);
 
 istream& operator>> ( istream&, char& );
 istream& operator>> ( istream&, unsigned char& );

@@ -521,7 +521,13 @@ G__value result3;
 	tagnum=G__newtype.tagnum[result3.typenum];
 	type=G__newtype.type[result3.typenum]+castflag;
 	if(tagnum != -1) {
-	  if(G__struct.type[result3.tagnum]=='e') {
+	  if(
+#ifndef G__OLDIMPLEMENTATION1787
+	     G__struct.type[tagnum]=='e'
+#else
+	     G__struct.type[result3.tagnum]=='e'
+#endif
+	     ) {
 	    type='i'+castflag;
 	  }
 	  else {

@@ -7,7 +7,7 @@
  * Description:
  *  Stub file for making ANSI C standard structs
  ************************************************************************
- * Copyright(c) 1991~1999,   Masaharu Goto (MXJ02154@niftyserve.or.jp)
+ * Copyright(c) 1991~2003,   Masaharu Goto (MXJ02154@niftyserve.or.jp)
  *
  ************************************************************************/
 
@@ -50,7 +50,7 @@ int feof(FILE *fp);
 int ferror(FILE *fp);
 int fflush(FILE *fp);
 int fgetc(FILE *fp);
-int fgetpos(FILE *fp,fpos_t *position);
+//int fgetpos(FILE *fp,fpos_t *position);
 char *fgets(char *string,int n,FILE *fp);
 double floor(double z);
 double fmod(double number,double divisor);
@@ -62,7 +62,7 @@ void free(void *ptr);
 FILE *freopen(const char *file,const char *mode,FILE *fp);
 double frexp(double real,int *exp1);
 int fseek(FILE *fp,long offset,int whence);
-int fsetpos(FILE *fp,fpos_t *position);
+//int fsetpos(FILE *fp,fpos_t *position);
 long ftell(FILE *fp);
 size_t fwrite(void *buffer,size_t size,size_t n,FILE *fp);
 int getc(FILE *fp);

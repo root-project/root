@@ -401,9 +401,9 @@ class basic_istream : virtual public basic_ios<charT, traits> {
     pos_type tellg();
     istream_type& seekg(pos_type pos);
     int sync();
-#ifndef __CINT__
+    //#ifndef __CINT__
     istream_type& seekg(off_type, ios_base::seekdir);
-#endif
+    //#endif
     istream_type& putback(char_type c);
     istream_type& unget();
     streamsize gcount() const;
@@ -567,6 +567,7 @@ ostream& operator<< ( ostream&, float );
 ostream& operator<< ( ostream&, double );
 //ostream& operator<< ( ostream&, long double );
 ostream& operator<< ( ostream&, bool );
+//not needed, ostream& operator<< (ostream&,const streampos&);
 
 istream& operator>> ( istream&, char& );
 istream& operator>> ( istream&, unsigned char& );

@@ -704,6 +704,9 @@ int type;
   char temp[G__LONGLINE];
   char atom_tagname[G__LONGLINE];
   /* int parent_tagnum; */
+#ifndef G__OLDIMPLEMENTATION1789
+  int envtagnum= -1;
+#endif
 #ifndef G__OLDIMPLEMENTATION1206
   int isstructdecl = isupper(type);
   type = tolower(type);
@@ -712,11 +715,31 @@ int type;
   /* Search for old tagname */
   i = G__defined_tagname(tagname,2);
 
+#ifndef G__OLDIMPLEMENTATION1789
+  p = G__strrstr(tagname,"::");
+  if(p
+#ifndef G__OLDIMPLEMENTATION1790
+     && !strchr(p,'>')
+#endif
+     ) {
+    strcpy(atom_tagname,tagname);
+    p=G__strrstr(atom_tagname,"::");
+    *p=0;
+    envtagnum = G__defined_tagname(atom_tagname,1);
+  }
+  else {
+    envtagnum = G__get_envtagnum();
+  }
+#endif
   
   /* if new tagname, initialize tag table */
   if(-1==i
 #ifndef G__OLDIMPLEMENTATION1206
+#ifndef G__OLDIMPLEMENTATION1789
+     || (envtagnum != G__struct.parent_tagnum[i] && isstructdecl)
+#else
      || (G__get_envtagnum() != G__struct.parent_tagnum[i] && isstructdecl)
+#endif
 #endif
      ) {
 

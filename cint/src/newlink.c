@@ -8639,6 +8639,9 @@ int link_stub;
 #else
     p = strchr(buf,'*');
 #endif
+#ifndef G__OLDIMPLEMENTATION1788
+    if(p && *(p+1)=='>') p=(char*)NULL;
+#endif
     if(p) {
 #if defined(G__REGEXP)
 #ifndef G__OLDIKMPLEMENTATION1583

@@ -173,8 +173,8 @@ extern long int sysconf(int name);
 #define G__GLIBC_ (__GLIBC__*100+__GLIBC_MINOR__)
 #endif
 
-// note: making everyting enclosed by #ifdef __MAkECINT__ can be a
-// good solution. Why I didn't do that at the first place???
+/* note: making everyting enclosed by #ifdef __MAKECINT__ can be a
+ * good solution. Why I didn't do that at the first place??? */
 #ifdef __MAKECINT__
 #if defined(__SUNPRO_C) || defined(G__SUNPRO_C) 
 extern int putenv(char *string);
