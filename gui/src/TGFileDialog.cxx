@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.11 2002/11/15 13:24:59 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.13 2002/11/22 11:24:30 brun Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -38,13 +38,7 @@
 #include "TGMsgBox.h"
 #include "TSystem.h"
 
-#ifndef WIN32
 #include <sys/stat.h>
-#endif
-
-#ifdef GDK_WIN32
-#include <sys/stat.h>
-#endif
 
 enum {
    kIDF_CDUP,
@@ -430,7 +424,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                if (parm1 == kButton1) {
                   if (fFc->NumSelected() == 1) {
                      f = (TGFileItem *) fFc->GetNextSelected(&p);
-#ifndef GDK_WIN32
+#ifndef WIN32
                      if (S_ISDIR(f->GetType())) {
 #else
                      if (f->GetType() & _S_IFDIR) {
