@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.2 2000/06/13 11:12:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.h,v 1.3 2000/06/13 13:23:10 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -55,7 +55,7 @@ public:
         void             SetOptFit(Int_t fit=1) {fOptFit = fit;}     // *MENU*
         void             SetOptStat(Int_t stat=1) {fOptStat = stat;} // *MENU*
 
-        ClassDef(TPaveStats,2)  //a special TPaveText to draw histogram statistics.
+        ClassDef(TPaveStats,3)  //a special TPaveText to draw histogram statistics.
 };
 
 #endif
