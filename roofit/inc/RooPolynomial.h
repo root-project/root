@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id$
+ *    File: $Id: RooPolynomial.rdl,v 1.1 2001/09/26 20:47:50 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -23,6 +23,7 @@ class RooPolynomial : public RooAbsPdf {
 public:
 
   RooPolynomial() ;
+  RooPolynomial(const char* name, const char* title, RooAbsReal& x) ;
   RooPolynomial(const char *name, const char *title,
 		RooAbsReal& _x, const RooArgList& _coefList, Int_t lowestOrder=1) ;
 
