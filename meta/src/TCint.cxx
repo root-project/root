@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.41 2001/12/19 07:15:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.42 2001/12/19 15:35:43 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -154,7 +154,7 @@ void TCint::ExecThreadCB(TWin32SendClass *command)
 #ifdef WIN32
 #ifndef GDK_WIN32
    char *line = (char *)(command->GetData(0));
-   EErrorCode *error = 0; // NOTE: need to do something like: (EErrorCode*)(command->GetData(...));
+   EErrorCode *error = (EErrorCode*)(command->GetData(1));
    Int_t iret = ProcessLine((const char *)line,error);
    delete [] line;
    if (LOWORD(command->GetCOP()) == kSendWaitClass)
@@ -240,13 +240,9 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode* error)
              G__free_tempobject();
              TCint::UpdateAllCanvases();
          } else {
-             if (error && *error!=TInterpreter::kProcessing) {
-                *error = TInterpreter::kNoError; 
-             }
-             ret = G__process_cmd((char *)line, fPrompt, &fMore, (int*)error, 0);
-             if (error && *error==TInterpreter::kProcessing) {
-                *error = TInterpreter::kNoError;
-             }
+             int local_error = 0;
+             ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, 0);
+             if (error) *error = (EErrorCode)local_error;
          }
          gROOT->SetLineHasBeenProcessed();
       } else
@@ -267,7 +263,7 @@ Int_t TCint::ProcessLineAsynch(const char *line, EErrorCode* error)
    if (error) *error = kProcessing;
    char *cmd = new char[strlen(line)+1];
    strcpy(cmd,line);
-   TWin32SendClass *code = new TWin32SendClass(this,(UInt_t)cmd,0,0,0);
+   TWin32SendClass *code = new TWin32SendClass(this,(UInt_t)cmd,(UInt_t)error,0,0);
    ExecCommandThread(code,kFALSE);
    return 0;
 #else
@@ -289,7 +285,7 @@ Int_t TCint::ProcessLineSynch(const char *line, EErrorCode* error)
    if (error) *error = kProcessing;
    char *cmd = new char[strlen(line)+1];
    strcpy(cmd,line);
-   TWin32SendWaitClass code(this,(UInt_t)cmd,0,0,0);
+   TWin32SendWaitClass code(this,(UInt_t)cmd,(UInt_t)error,0,0);
    ExecCommandThread(&code,kFALSE);
    code.Wait();
 #endif
