@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -563,6 +563,51 @@ Double_t TMath::Prob(Double_t chi2,Int_t ndf)
 
    // Evaluate the incomplete gamma function
    return (1-Gamma(0.5*ndf,0.5*chi2));
+}
+
+//______________________________________________________________________________
+Double_t TMath::KolmogorovProb(Double_t z)
+{
+   // Calculates the probability of exceeding the value z=dn*N**2 
+   // for the Kolmogorov test, where dn=maximum distance between
+   // cumulative distribution function and N experimental values.
+   // Function holds only for large N, but is accurate to 10**-11
+   // Theta function inversion formula is used for Z <= 1
+   // This function was translated by Rene Brun from PROBKL in CERNLIB
+   
+   // cons[j] = -0.5*(PI*2*j-1)/2(**2
+   const Double_t cons[3] = { -1.233700550136 , -11.10330496 , -30.84251376};
+   // jf2[j] = -2* j**2
+   const Double_t fj2[5]  = {-2. , -8. , -18. , -32. , -50.};
+   const Double_t sqr2pi = 2.50662827463;
+ 
+   Double_t p = 0;
+   Int_t j;
+   if (z < 0.2) return 1;
+   if (z > 1) {  // use series in exp(z**2)
+      Double_t c;
+      Double_t sig2 = -2;
+      Double_t z2 = z*z;
+      for (j=0;j<5;j++) {
+         sig2 = -sig2;
+         c = fj2[j] *z2;
+         if (c < -100) return p;
+         p += sig2*TMath::Exp(c);
+      }
+      return p;
+   }
+   // z< 1  use series in exp(1/z**2)
+   Double_t zinv = 1/z;
+   Double_t a = sqr2pi*zinv;
+   Double_t zinv2 = zinv*zinv;
+   Double_t arg;
+   for (j=0;j<3;j++) {
+      arg = cons[j]*zinv2;
+      if (arg < -30) continue;
+      p += TMath::Exp(arg);
+   }
+   p = 1 - a*p;
+   return p;
 }
 
 //______________________________________________________________________________
