@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToOut() implemented by Mihaela Gheata
 
@@ -72,6 +72,7 @@ TGeoSphere::TGeoSphere(const char *name, Double_t rmin, Double_t rmax, Double_t 
 }
 //-----------------------------------------------------------------------------
 TGeoSphere::TGeoSphere(Double_t *param, Int_t nparam)
+           :TGeoBBox(0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
 // param[0] = Rmin

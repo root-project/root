@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -75,6 +75,7 @@ TGeoTrd1::TGeoTrd1(const char *name, Double_t dx1, Double_t dx2, Double_t dy, Do
 }
 //-----------------------------------------------------------------------------
 TGeoTrd1::TGeoTrd1(Double_t *param)
+         :TGeoBBox(0,0,0)
 {
    // ctor with an array of parameters
    // param[0] = dx1

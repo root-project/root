@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.6 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.7 2002/10/03 13:19:09 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -47,7 +47,7 @@
 //        TGeoVolume   *vol = new TGeoVolume("shield", sph, mat);
 //   
 //   The volume is registering itself to the current TGeoManager and can be
-// retreived at any time with :
+// retrieved at any time with :
 //
 //        TGeoVolume *vol = gGeoManager->GetVolume("shield");
 //
@@ -98,7 +98,6 @@
 #include "TGeoManager.h"
 #include "TGeoNode.h"
 #include "TGeoMatrix.h"
-#include "TGeoFinder.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoVolume.h"
 
@@ -303,7 +302,7 @@ void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat,
    if (!fFinder) {
       AddNode(vol, copy_no, mat, option);
       TGeoNode *node = (TGeoNode*)fNodes->At(GetNdaughters()-1);
-      node->SetOverlaps(0, 1);
+      node->SetOverlapping();
       if (vol->GetMaterial()->GetMedia() == fMaterial->GetMedia())
          node->SetVirtual();
       return;   
@@ -662,6 +661,28 @@ void TGeoVolume::SortNodes()
    delete fNodes;
    fNodes = nodes;
 }
+//-----------------------------------------------------------------------------
+void TGeoVolume::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TGeoVolume.
+   if (R__b.IsReading()) {
+      TGeoVolume::Class()->ReadBuffer(R__b, this);
+   } else {
+      if (!fVoxels) {
+         TGeoVolume::Class()->WriteBuffer(R__b, this);
+      } else {
+         if (!gGeoManager->IsStreamingVoxels()) {
+            TGeoVoxelFinder *voxels = fVoxels;
+            fVoxels = 0;
+            TGeoVolume::Class()->WriteBuffer(R__b, this);
+            fVoxels = voxels;
+         } else {
+            TGeoVolume::Class()->WriteBuffer(R__b, this);
+         }
+      }
+   }
+}
+
 //-----------------------------------------------------------------------------
 void TGeoVolume::SetOption(const char *option)
 {

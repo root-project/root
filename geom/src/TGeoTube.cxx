@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.4 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.5 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -98,6 +98,7 @@ TGeoTube::TGeoTube(const char *name, Double_t rmin, Double_t rmax, Double_t dz)
 }
 //-----------------------------------------------------------------------------
 TGeoTube::TGeoTube(Double_t *param)
+         :TGeoBBox(0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
 // param[0] = Rmin
@@ -661,6 +662,7 @@ TGeoTubeSeg::TGeoTubeSeg(const char *name, Double_t rmin, Double_t rmax, Double_
 }
 //-----------------------------------------------------------------------------
 TGeoTubeSeg::TGeoTubeSeg(Double_t *param)
+            :TGeoTube(0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
 // param[0] = Rmin
@@ -1386,8 +1388,9 @@ ClassImp(TGeoCtub)
 TGeoCtub::TGeoCtub()
 {
 // default ctor
-   fNlow = 0;
-   fNhigh = 0;
+   fNlow[0] = fNlow[1] = fNhigh[0] = fNhigh[1] = 0.;
+   fNlow[2] = -1;
+   fNhigh[2] = 1;
 }
 //-----------------------------------------------------------------------------
 TGeoCtub::TGeoCtub(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,
@@ -1395,8 +1398,6 @@ TGeoCtub::TGeoCtub(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Dou
          :TGeoTubeSeg(rmin, rmax, dz, phi1, phi2)
 {         
 // ctor
-   fNlow = new Double_t[3];
-   fNhigh = new Double_t[3];
    fNlow[0] = lx;
    fNlow[1] = ly;
    fNlow[2] = lz;
@@ -1412,8 +1413,6 @@ TGeoCtub::TGeoCtub(const char *name, Double_t rmin, Double_t rmax, Double_t dz, 
          :TGeoTubeSeg(name, rmin, rmax, dz, phi1, phi2)
 {         
 // ctor
-   fNlow = new Double_t[3];
-   fNhigh = new Double_t[3];
    fNlow[0] = lx;
    fNlow[1] = ly;
    fNlow[2] = lz;
@@ -1425,10 +1424,9 @@ TGeoCtub::TGeoCtub(const char *name, Double_t rmin, Double_t rmax, Double_t dz, 
 }
 //-----------------------------------------------------------------------------
 TGeoCtub::TGeoCtub(Double_t *params)
+         :TGeoTubeSeg(0,0,0,0,0)
 {
 // ctor with parameters
-   fNlow = new Double_t[3];
-   fNhigh = new Double_t[3];
    SetCtubDimensions(params[0], params[1], params[2], params[3], params[4], params[5],
                      params[6], params[7], params[8], params[9], params[10]);
    SetBit(kGeoCtub);
@@ -1437,8 +1435,6 @@ TGeoCtub::TGeoCtub(Double_t *params)
 TGeoCtub::~TGeoCtub()
 {
 // dtor
-   if (fNlow) delete [] fNlow;
-   if (fNhigh) delete [] fNhigh;
 }   
 //-----------------------------------------------------------------------------
 void TGeoCtub::ComputeBBox()

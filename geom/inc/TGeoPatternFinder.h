@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.4 2002/10/03 13:19:09 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.h,v 1.5 2002/10/05 09:28:57 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -12,8 +12,8 @@
 #ifndef ROOT_TGeoPatternFinder
 #define ROOT_TGeoPatternFinder
 
-#ifndef ROOT_TGeoFinder
-#include "TGeoFinder.h"
+#ifndef ROOT_TObject
+#include "TObject.h"
 #endif
 
 #ifndef ROOT_TGeoMatrix
@@ -31,7 +31,7 @@
  *************************************************************************/
 
 
-class TGeoPatternFinder : public TGeoFinder
+class TGeoPatternFinder : public TObject
 {
 protected :
    Double_t            fStep;           // division length
@@ -42,6 +42,7 @@ protected :
    Int_t               fDivIndex;       // index of first div. node
    TGeoVolume         *fBasicCell;      // basic volume used for this pattern
    TGeoMatrix         *fMatrix;         // generic matrix
+   TGeoVolume         *fVolume;         // volume to which applies
 
 public:
    // constructors
@@ -52,14 +53,17 @@ public:
    // methods
    virtual void        cd(Int_t idiv) {}
    TGeoVolume         *GetBasicVolume() const;
+   virtual Int_t       GetByteCount() const {return 36;}
    Int_t               GetCurrent()  {return fCurrent;}
    Int_t               GetDivIndex() {return fDivIndex;}
    virtual TGeoMatrix *GetMatrix()   {return fMatrix;}
    Int_t               GetNdiv()     {return fNdivisions;}
    TGeoNode           *GetNodeOffset(Int_t idiv) {return fVolume->GetNode(fDivIndex+idiv);}  
+   TGeoVolume         *GetVolume() const {return fVolume;}
    virtual TGeoNode   *FindNode(Double_t *point) {return 0;} 
    virtual void        SetBasicVolume(TGeoVolume *vol) {fBasicCell = vol;}
    void                SetDivIndex(Int_t index) {fDivIndex = index;}
+   void                SetVolume(TGeoVolume *vol) {fVolume = vol;}
 
   ClassDef(TGeoPatternFinder, 1)              // patterns to divide volumes
 };

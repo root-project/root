@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.4 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -156,8 +156,8 @@ class TGeoCtub : public TGeoTubeSeg
 {
 protected:
    // data members
-   Double_t             *fNlow;  // normal to lower cut plane 
-   Double_t             *fNhigh; // normal to highet cut plane 
+   Double_t             fNlow[3];  // normal to lower cut plane 
+   Double_t             fNhigh[3]; // normal to highet cut plane 
     
 public:
    // constructors
@@ -182,8 +182,8 @@ public:
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Double_t step);
    virtual Int_t         GetByteCount() const {return 98;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
-   Double_t             *GetNlow() const {return fNlow;}
-   Double_t             *GetNhigh() const {return fNhigh;}
+   const Double_t       *GetNlow() const {return &fNlow[0];}
+   const Double_t       *GetNhigh() const {return &fNhigh[0];}
    Double_t              GetZcoord(Double_t xc, Double_t yc, Double_t zc) const;
    virtual void          InspectShape() const;
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;

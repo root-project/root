@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.14 2002/09/30 20:44:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.15 2002/10/03 13:19:09 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -422,7 +422,6 @@
 #include "TGeoTrd1.h"
 #include "TGeoTrd2.h"
 #include "TGeoCompositeShape.h"
-#include "TGeoFinder.h"
 #include "TVirtualGeoPainter.h"
 
 #include "TGeoManager.h"
@@ -457,6 +456,8 @@ void TGeoManager::Init()
 {
 // Initialize manager class.   
    gGeoManager = this;
+   fStreamVoxels = kFALSE;
+   fIsGeomReading = kFALSE;
    fSearchOverlaps = kFALSE;
    fLoopVolumes = kFALSE;
    fStartSafe = kTRUE;
@@ -507,20 +508,24 @@ void TGeoManager::Init()
 TGeoManager::~TGeoManager()
 {
 // Destructor
+   gROOT->GetListOfGeometries()->Remove(this);
+   gROOT->GetListOfBrowsables()->Remove(this);
+   TSeqCollection *brlist = gROOT->GetListOfBrowsers();
+   TIter next(brlist);
+   TBrowser *browser = 0;
+   while ((browser=(TBrowser*)next())) {
+      browser->RecursiveRemove(this);
+      browser->Refresh();
+   }   
    delete [] fBits;
-   printf("deleting cache...\n");
    if (fCache) delete fCache;
-   printf("deleting matrices...\n");
    if (fMatrices) {fMatrices->Delete(); delete fMatrices;}
    if (fNodes) delete fNodes;
-   printf("deleting materials...\n");
    if (fMaterials) {fMaterials->Delete(); delete fMaterials;}
-   printf("deleting shapes...\n");
    if (fShapes) {fShapes->Delete(); delete fShapes;}
-   printf("deleting volumes...\n");
    if (fVolumes) {fVolumes->Delete(); delete fVolumes;}
-   printf("cleaning garbage...\n");
    CleanGarbage();
+   if (fPainter) delete fPainter;
    delete [] fPoint;
    delete [] fDirection;
    delete [] fNormalChecked;
@@ -653,19 +658,16 @@ void TGeoManager::CloseGeometry()
 // with negative parameters (run-time shapes)building the cache manager, 
 // voxelizing all volumes, counting the total number of physical nodes and
 // registring the manager class to the browser.
-   Bool_t isreadgeom = kFALSE;
-   if (!gGeoIdentity) {
+   if (fIsGeomReading) {
+      printf("### Geometry loaded from file...\n");
       gGeoIdentity=(TGeoIdentity *)fMatrices->At(0);
-      isreadgeom = kTRUE;
-   }
-   if (isreadgeom) {
-      printf("Building caches for nodes and matrices...\n");
       if (!fTopNode) {
          if (!fMasterVolume) {
             Error("CloseGeometry", "Master volume not streamed");
             return;
          }
          SetTopVolume(fMasterVolume);
+         if (fStreamVoxels) printf("### Voxelization retrieved from file\n");
          Voxelize("ALL");
          if (!fCache) BuildCache();      
       } else {
@@ -836,7 +838,7 @@ void TGeoManager::TestOverlaps(const char* path)
 //-----------------------------------------------------------------------------
 void TGeoManager::GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const
 {
-// Retreive cartesian and radial bomb factors.
+// Retrieve cartesian and radial bomb factors.
    if (fPainter) {
       fPainter->GetBombFactors(bombx, bomby, bombz, bombr);
       return;
@@ -1655,13 +1657,19 @@ void TGeoManager::Voxelize(Option_t *option)
 {
 // Voxelize all non-divided volumes.
    TGeoVolume *vol;
-   printf("Voxelizing...\n");
+   TGeoVoxelFinder *vox = 0;
+   if (!fStreamVoxels) printf("Voxelizing...\n");
    Int_t nentries = fVolumes->GetSize();
    for (Int_t i=0; i<nentries; i++) {
       vol = (TGeoVolume*)fVolumes->At(i);
-      vol->SortNodes();
-      vol->Voxelize(option);
-      vol->FindOverlaps();
+      if (!fIsGeomReading) vol->SortNodes();
+      if (!fStreamVoxels) {
+         vol->Voxelize(option);
+      } else {
+         vox = vol->GetVoxels();
+         if (vox) vox->CreateCheckList();
+      }   
+      if (!fIsGeomReading) vol->FindOverlaps();
    }
 }
 //-----------------------------------------------------------------------------
@@ -2164,7 +2172,10 @@ void TGeoManager::Streamer(TBuffer &R__b)
 
    if (R__b.IsReading()) {
       TGeoManager::Class()->ReadBuffer(R__b, this);
+      fIsGeomReading = kTRUE;
       CloseGeometry();
+      fStreamVoxels = kFALSE;
+      fIsGeomReading = kFALSE;
    } else {
       TGeoManager::Class()->WriteBuffer(R__b, this);
    }
@@ -2182,8 +2193,14 @@ Int_t TGeoManager::Export(const char *filename, const char *name, Option_t *opti
    char keyname[256];
    if (name) strcpy(keyname,name);
    if (strlen(keyname) == 0) strcpy(keyname,GetName());
-   
+   if (strlen(option)) {
+      TString opt(option);
+      opt.ToLower();
+      if (opt=="v") fStreamVoxels = kTRUE;
+      else fStreamVoxels = kFALSE;
+   }   
    Int_t nbytes = Write(keyname);
+   fStreamVoxels = kFALSE;
    return nbytes;
 }
 
@@ -2200,6 +2217,7 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
    TFile f(filename);
    if (f.IsZombie()) return 0;
    if (gGeoManager) delete gGeoManager;
+   gGeoManager = 0;
    if (name && strlen(name) > 0) {
       gGeoManager = (TGeoManager*)f.Get(name);
       return gGeoManager;

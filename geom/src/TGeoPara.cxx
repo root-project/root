@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -97,6 +97,7 @@ TGeoPara::TGeoPara(const char *name, Double_t dx, Double_t dy, Double_t dz, Doub
 }
 //-----------------------------------------------------------------------------
 TGeoPara::TGeoPara(Double_t *param)
+           :TGeoBBox(0, 0, 0)
 {
 // Default constructor
 // param[0] = dx

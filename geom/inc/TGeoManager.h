@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.6 2002/09/30 20:44:35 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.7 2002/10/03 13:19:09 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -77,13 +77,15 @@ private :
    Bool_t                fIsOutside;        //! flag that current point is outside geometry
    Bool_t                fIsOnBoundary;     //! flag that current point is on some boundary
    Bool_t                fIsNullStep;       //! flag that last geometric step was null
+   Bool_t                fStreamVoxels;     // flag to allow voxelization I/O
+   Bool_t                fIsGeomReading;    //! flag set when reading geometry
    TGeoNodeCache        *fCache;            //! cache for physical nodes
    TVirtualGeoPainter   *fPainter;          //! current painter
    TList                *fMatrices;         //-> list of local transformations
    TList                *fShapes;           //-> list of shapes
    TList                *fVolumes;          //-> list of volumes
-   TList                *fGShapes;          //-> list of runtime shapes
-   TList                *fGVolumes;         //-> list of runtime volumes
+   TList                *fGShapes;          //! list of runtime shapes
+   TList                *fGVolumes;         //! list of runtime volumes
    TList                *fMaterials;        //-> list of materials
    TObjArray            *fNodes;            //-> current branch of nodes
    UChar_t              *fBits;             //! bits used for voxelization
@@ -252,6 +254,7 @@ public:
    //--- I/O
    virtual Int_t          Export(const char *filename, const char *name="", Option_t *option="");
    static TGeoManager    *Import(const char *filename, const char *name="", Option_t *option="");
+   Bool_t                 IsStreamingVoxels() const {return fStreamVoxels;}
    
    //--- list getters
    TList                 *GetListOfMatrices() const     {return fMatrices;}

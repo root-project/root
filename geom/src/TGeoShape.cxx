@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.4 2002/07/15 15:56:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.5 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -94,8 +94,8 @@ TGeoShape::TGeoShape()
       gGeoManager = new TGeoManager("Geometry", "default geometry");
       // gROOT->AddGeoManager(gGeoManager);
    }
-   fShapeId = gGeoManager->GetListOfShapes()->GetSize();
-   gGeoManager->AddShape(this);
+//   fShapeId = gGeoManager->GetListOfShapes()->GetSize();
+//   gGeoManager->AddShape(this);
 }
 //-----------------------------------------------------------------------------
 TGeoShape::TGeoShape(const char *name)

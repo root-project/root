@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.7 2002/09/27 16:16:05 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.8 2002/09/30 20:44:35 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -41,7 +41,6 @@ class TGeoVolume;
 class TGeoShape;
 class TGeoMaterial;
 class TGeoMatrix;
-class TGeoPatternFinder;
 
 /*************************************************************************
  * TGeoNode - base class for logical nodes. They represent volumes
@@ -53,15 +52,16 @@ class TGeoNode : public TNamed,
                  public TGeoAtt
 {
 protected:
-   Int_t             fNovlp;          //! number of overlaps
-   Int_t            *fOverlaps;       //![fNovlp] list of indices for overlapping brothers
    TGeoVolume       *fVolume;         // volume associated with this
    TGeoVolume       *fMother;         // mother volume
+   Int_t             fNovlp;          // number of overlaps
+   Int_t            *fOverlaps;       //[fNovlp] list of indices for overlapping brothers
 public:
    enum {
       kGeoNodeMatrix = BIT(10),
       kGeoNodeOffset = BIT(11),
-      kGeoNodeVC     = BIT(12)
+      kGeoNodeVC     = BIT(12),
+      kGeoNodeOverlap = BIT(13)
    };
 
    // constructors
@@ -95,7 +95,7 @@ public:
    virtual Bool_t    IsFolder() const {return kTRUE;}
    Bool_t            IsOffset() const {return TObject::TestBit(kGeoNodeOffset);}
    Bool_t            IsOnScreen() const; // *MENU*
-   Bool_t            IsOverlapping() const {return (fNovlp>0)?kTRUE:kFALSE;}
+   Bool_t            IsOverlapping() const {return TObject::TestBit(kGeoNodeOverlap);}
    Bool_t            IsVirtual() const {return TObject::TestBit(kGeoNodeVC);}
    Bool_t            IsVisible() const {return fVolume->IsVisible();}
 
@@ -103,6 +103,7 @@ public:
    void              SaveAttributes(ofstream &out) const;
    void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}// *MENU*
    void              SetVolume(TGeoVolume *volume)       {fVolume = volume;}
+   void              SetOverlapping()                    {TObject::SetBit(kGeoNodeOverlap, kTRUE);}
    void              SetVirtual()                        {TObject::SetBit(kGeoNodeVC, kTRUE);}
    void              SetMotherVolume(TGeoVolume *mother) {fMother = mother;}
    void              SetOverlaps(Int_t *ovlp, Int_t novlp);

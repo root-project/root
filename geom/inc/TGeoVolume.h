@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.5 2002/07/17 13:27:58 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.6 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -73,10 +73,10 @@ protected :
    TObjArray        *fNodes;          // array of nodes inside this volume
    TGeoShape        *fShape;          // shape
    TGeoMaterial     *fMaterial;       // material
-   TGeoVoxelFinder  *fVoxels;         //! finder object for bounding boxes
    TGeoPatternFinder *fFinder;        // finder object for divisions
+   TGeoVoxelFinder  *fVoxels;         // finder object for bounding boxes
 
-   TObject          *fField;          // just a hook for now
+   TObject          *fField;          //! just a hook for now
    TString           fOption;         //! option - if any
 // methods
 public:

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.3 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPatternFinder.cxx,v 1.4 2002/10/03 13:19:09 brun Exp $
 // Author: Andrei Gheata   30/10/01
 
 /*************************************************************************
@@ -16,6 +16,19 @@
 #include "TGeoPatternFinder.h"
 
 ClassImp(TGeoPatternFinder)
+ClassImp(TGeoPatternX)
+ClassImp(TGeoPatternY)
+ClassImp(TGeoPatternZ)
+ClassImp(TGeoPatternParaX)
+ClassImp(TGeoPatternParaY)
+ClassImp(TGeoPatternParaZ)
+ClassImp(TGeoPatternTrapZ)
+ClassImp(TGeoPatternCylR)
+ClassImp(TGeoPatternCylPhi)
+ClassImp(TGeoPatternSphR)
+ClassImp(TGeoPatternSphTheta)
+ClassImp(TGeoPatternSphPhi)
+ClassImp(TGeoPatternHoneycomb)
    
 
 //-----------------------------------------------------------------------------
@@ -30,12 +43,13 @@ TGeoPatternFinder::TGeoPatternFinder()
    fStep       = 0;
    fStart      = 0;
    fEnd        = 0;
+   fVolume     = 0;
 }
 //-----------------------------------------------------------------------------
 TGeoPatternFinder::TGeoPatternFinder(TGeoVolume *vol, Int_t ndiv)
-                  :TGeoFinder(vol)
 {
 // Default constructor
+   fVolume     = vol;
    fBasicCell  = 0;
    fMatrix     = 0;
    fCurrent    = -1;
@@ -49,7 +63,6 @@ TGeoPatternFinder::TGeoPatternFinder(TGeoVolume *vol, Int_t ndiv)
 TGeoPatternFinder::~TGeoPatternFinder()
 {
 // Destructor
-//   if (fMatrix && (fMatrix!=gGeoIdentity)) delete fMatrix;
 }
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoPatternFinder::GetBasicVolume() const
@@ -62,7 +75,6 @@ TGeoVolume *TGeoPatternFinder::GetBasicVolume() const
  * TGeoPatternX - a X axis divison pattern
  *   
  *************************************************************************/
-ClassImp(TGeoPatternX)
 
 
 //-----------------------------------------------------------------------------
@@ -123,7 +135,6 @@ TGeoNode *TGeoPatternX::FindNode(Double_t *point)
  * TGeoPatternY - a Y axis divison pattern
  *   
  *************************************************************************/
-ClassImp(TGeoPatternY)
 
 
 //-----------------------------------------------------------------------------
@@ -184,7 +195,6 @@ TGeoNode *TGeoPatternY::FindNode(Double_t *point)
  * TGeoPatternZ - a Z axis divison pattern
  *   
  *************************************************************************/
-ClassImp(TGeoPatternZ)
 
 
 //-----------------------------------------------------------------------------
@@ -245,7 +255,6 @@ TGeoNode *TGeoPatternZ::FindNode(Double_t *point)
  * TGeoPatternParaX - a X axis divison pattern for PARA shape
  *   
  *************************************************************************/
-ClassImp(TGeoPatternParaX)
 
 
 //-----------------------------------------------------------------------------
@@ -310,7 +319,6 @@ TGeoNode *TGeoPatternParaX::FindNode(Double_t *point)
  * TGeoPatternParaY - a Y axis divison pattern for PARA shape
  *   
  *************************************************************************/
-ClassImp(TGeoPatternParaY)
 
 
 //-----------------------------------------------------------------------------
@@ -385,7 +393,6 @@ TGeoNode *TGeoPatternParaY::FindNode(Double_t *point)
  * TGeoPatternParaZ - a Z axis divison pattern for PARA shape
  *   
  *************************************************************************/
-ClassImp(TGeoPatternParaZ)
 
 
 //-----------------------------------------------------------------------------
@@ -465,7 +472,6 @@ TGeoNode *TGeoPatternParaZ::FindNode(Double_t *point)
  *   
  *************************************************************************/
 
-ClassImp(TGeoPatternTrapZ)
 
 //-----------------------------------------------------------------------------
 TGeoPatternTrapZ::TGeoPatternTrapZ()
@@ -551,7 +557,6 @@ TGeoNode *TGeoPatternTrapZ::FindNode(Double_t *point)
  *   
  *************************************************************************/
  
-ClassImp(TGeoPatternCylR)
 
 
 //-----------------------------------------------------------------------------
@@ -610,7 +615,6 @@ TGeoNode *TGeoPatternCylR::FindNode(Double_t *point)
  *   
  *************************************************************************/
  
-ClassImp(TGeoPatternCylPhi)
 
 
 //-----------------------------------------------------------------------------
@@ -664,8 +668,7 @@ TGeoPatternCylPhi::TGeoPatternCylPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
 TGeoPatternCylPhi::~TGeoPatternCylPhi()
 {
 // Destructor
-   if (fMatrix) delete fMatrix;
-   if (fSinCos) delete fSinCos;
+   if (fSinCos) delete [] fSinCos;
 }
 //-----------------------------------------------------------------------------
 void TGeoPatternCylPhi::cd(Int_t idiv)
@@ -705,7 +708,6 @@ TGeoNode *TGeoPatternCylPhi::FindNode(Double_t *point)
  *************************************************************************/
 
 
-ClassImp(TGeoPatternSphR)
 
 
 //-----------------------------------------------------------------------------
@@ -755,7 +757,6 @@ TGeoNode *TGeoPatternSphR::FindNode(Double_t *point)
  *************************************************************************/
 
 
-ClassImp(TGeoPatternSphTheta)
 
 
 //-----------------------------------------------------------------------------
@@ -805,7 +806,6 @@ TGeoNode *TGeoPatternSphTheta::FindNode(Double_t *point)
  *************************************************************************/
 
 
-ClassImp(TGeoPatternSphPhi)
 
 
 //-----------------------------------------------------------------------------
@@ -854,7 +854,6 @@ TGeoNode *TGeoPatternSphPhi::FindNode(Double_t *point)
  *   
  *************************************************************************/
 
-ClassImp(TGeoPatternHoneycomb)
    
 
 //-----------------------------------------------------------------------------

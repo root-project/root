@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.7 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.8 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -547,9 +547,14 @@ ClassImp(TGeoTrap)
 TGeoTrap::TGeoTrap()
 {
    // dummy ctor
+   fDz = 0;
+   fTheta = 0;
+   fPhi = 0;
+   fH1 = fH2 = fBl1 = fBl2 = fTl1 = fTl2 = fAlpha1 = fAlpha2 = 0;
 }
 //-----------------------------------------------------------------------------
 TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi)
+         :TGeoArb8("", 0, 0)
 {
    fDz = dz;
    fTheta = theta;
@@ -560,6 +565,7 @@ TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi)
 TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1,
               Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
               Double_t tl2, Double_t alpha2)
+         :TGeoArb8("", 0, 0)
 {
 // constructor.
    fDz = dz;
@@ -573,10 +579,6 @@ TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1,
    fTl2 = tl2;
    fAlpha1 = alpha1;
    fAlpha2 = alpha2;
-   for (Int_t i=0; i<8; i++) {
-      fXY[i][0] = 0.0;
-      fXY[i][1] = 0.0;
-   }   
    Double_t tx = TMath::Tan(theta*kDegRad)*TMath::Cos(phi*kDegRad);
    Double_t ty = TMath::Tan(theta*kDegRad)*TMath::Sin(phi*kDegRad);
    Double_t ta1 = TMath::Tan(alpha1*kDegRad);
@@ -600,6 +602,7 @@ TGeoTrap::TGeoTrap(Double_t dz, Double_t theta, Double_t phi, Double_t h1,
 TGeoTrap::TGeoTrap(const char *name, Double_t dz, Double_t theta, Double_t phi, Double_t h1,
               Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
               Double_t tl2, Double_t alpha2)
+         :TGeoArb8(name, 0, 0)
 {
 // constructor with name
    SetName(name);
@@ -746,6 +749,7 @@ TGeoGtra::TGeoGtra()
 TGeoGtra::TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
               Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
               Double_t tl2, Double_t alpha2)
+         :TGeoTrap(dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2)     
 {
 // constructor. 
    fTheta = theta;
@@ -800,6 +804,7 @@ TGeoGtra::TGeoGtra(Double_t dz, Double_t theta, Double_t phi, Double_t twist, Do
 TGeoGtra::TGeoGtra(const char *name, Double_t dz, Double_t theta, Double_t phi, Double_t twist, Double_t h1,
               Double_t bl1, Double_t tl1, Double_t alpha1, Double_t h2, Double_t bl2, 
               Double_t tl2, Double_t alpha2)
+         :TGeoTrap(name, dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2)     
 {
 // constructor. 
    SetName(name);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.7 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.cxx,v 1.8 2002/09/30 20:44:35 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -79,7 +79,6 @@
 #include "TGeoMatrix.h"
 #include "TGeoShape.h"
 #include "TGeoVolume.h"
-#include "TGeoFinder.h"
 #include "TVirtualGeoPainter.h"
 #include "TGeoNode.h"
 

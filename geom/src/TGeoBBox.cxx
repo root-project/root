@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -61,7 +61,7 @@ TGeoBBox::TGeoBBox()
 }   
 //-----------------------------------------------------------------------------
 TGeoBBox::TGeoBBox(Double_t dx, Double_t dy, Double_t dz, Double_t *origin)
-         :TGeoShape()
+         :TGeoShape("")
 {
 // Constructor
    SetBit(TGeoShape::kGeoBox);
@@ -77,7 +77,7 @@ TGeoBBox::TGeoBBox(const char *name, Double_t dx, Double_t dy, Double_t dz, Doub
 }
 //-----------------------------------------------------------------------------
 TGeoBBox::TGeoBBox(Double_t *param)
-         :TGeoShape()
+         :TGeoShape("")
 {
 // constructor based on the array of parameters
 // param[0] - half-length in x

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.3 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -85,6 +85,7 @@ TGeoCone::TGeoCone(const char *name, Double_t dz, Double_t rmin1, Double_t rmax1
 }
 //-----------------------------------------------------------------------------
 TGeoCone::TGeoCone(Double_t *param)
+         :TGeoBBox(0, 0, 0)
 {
 // Default constructor specifying minimum and maximum radius
 // param[0] = dz
@@ -801,6 +802,7 @@ TGeoConeSeg::TGeoConeSeg(const char *name, Double_t dz, Double_t rmin1, Double_t
 }
 //-----------------------------------------------------------------------------
 TGeoConeSeg::TGeoConeSeg(Double_t *param)
+            :TGeoCone(0,0,0,0,0)
 {
 // Default constructor specifying minimum and maximum radius
 // param[0] = dz
