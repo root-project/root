@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.39 2003/05/07 17:52:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.cxx,v 1.40 2003/07/08 10:02:50 brun Exp $
 // Author: Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -210,13 +210,22 @@ TMatrix::~TMatrix()
 {
    // TMatrix destructor.
 
-   if (IsValid()) {
-      if (fNcols > 1)
-         delete [] fIndex;
-      delete [] fElements;
-   }
-
+   Clear();
+   
    Invalidate();
+}
+
+//______________________________________________________________________________
+void TMatrix::Clear(Option_t *)
+{
+   // delete dynamic structures
+
+   if (IsValid()) {
+      if (fNcols > 1) {
+         delete [] fIndex; fIndex = 0;
+      }
+      delete [] fElements; fElements = 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -2418,23 +2427,21 @@ void TMatrix::Streamer(TBuffer &R__b)
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
+         Clear();
          TMatrix::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         if (fNcols <= 0) {
-            fNcols = 0;
-            fIndex = 0;
-            fElements = 0;
-         } else if (fNcols == 1) {
+         if (fNcols == 1) {          // Only one col - fIndex is dummy actually
             fIndex = &fElements;
-         } else {
-            if (fNcols <= 0) return;
-            fIndex = new Real_t*[fNcols];
-            if (fIndex)
-               memset(fIndex, 0, fNcols*sizeof(Real_t*));
-            Int_t i;
-            Real_t *col_p;
-            for (i = 0, col_p = &fElements[0]; i < fNcols; i++, col_p += fNrows)
-               fIndex[i] = col_p;
+            return;
          }
+
+         fIndex = new Float_t*[fNcols];
+         if (fIndex)
+             memset(fIndex, 0, fNcols*sizeof(Float_t*));
+
+         Int_t i;
+         Float_t *col_p;
+         for (i = 0, col_p = &fElements[0]; i < fNcols; i++, col_p += fNrows)
+            fIndex[i] = col_p;
          return;
       }
       //====process old versions before automatic schema evolution

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.21 2002/10/25 13:35:21 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrix.h,v 1.22 2002/10/25 15:29:50 rdm Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -124,6 +124,7 @@ public:
 
    virtual ~TMatrix();
 
+   void Clear(Option_t *option="");
    void Draw(Option_t *option="");  // *MENU*
    void ResizeTo(Int_t nrows, Int_t ncols);
    void ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb);
