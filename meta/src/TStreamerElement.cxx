@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.28 2001/05/20 14:14:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.29 2001/05/23 09:48:26 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -615,8 +615,8 @@ Int_t TStreamerBasicType::GetSize() const
 {
    //returns size of pointer to basictype in bytes
    
-   if (fArrayLength) return fArrayLength*sizeof(void *);
-   return sizeof(void *);
+   if (fArrayLength) return fArrayLength*fSize;
+   return fSize;
 }
 
 //______________________________________________________________________________
