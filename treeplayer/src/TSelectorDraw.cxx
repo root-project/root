@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.8 2003/03/07 15:47:58 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.9 2003/03/19 14:01:51 rdm Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -58,6 +58,19 @@ TSelectorDraw::TSelectorDraw()
    fObject         = 0;
    fOldHistogram   = 0;
    fObjEval        = kFALSE;
+   fVar1Multiple   = kFALSE;
+   fVar2Multiple   = kFALSE;
+   fVar3Multiple   = kFALSE;
+   fSelectMultiple = kFALSE;
+   fCleanElist     = kFALSE;
+   fTreeElist      = 0;
+   fAction         = 0;
+   fNfill          = 0;
+   fDimension      = 0;
+   fOldEstimate    = 0;
+   fForceRead      = 0;
+   fWeight         = 1;
+   for (Int_t i=0;i<4;i++) {fNbins[i]=0; fVmin[i] = fVmax[i]= 0;}
 }
 
 //______________________________________________________________________________
