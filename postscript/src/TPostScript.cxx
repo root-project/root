@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.15 2001/10/04 08:50:11 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.16 2001/11/04 17:29:34 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -1091,13 +1091,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.15 2001/10/04 08:50:11 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.16 2001/11/04 17:29:34 rdm Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.15 2001/10/04 08:50:11 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.16 2001/11/04 17:29:34 rdm Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1802,7 +1802,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.15 2001/10/04 08:50:11 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.16 2001/11/04 17:29:34 rdm Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from
@@ -2258,8 +2258,6 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
 
    const char *cflip = "`'\?^@#!~&";
    static const char *cflipc[] = {"120","47","77","136","100","43","41","176","46"};
-   Float_t psrap[15] = {0.920,1.000,0.920,0.910,0.920,0.920,0.925,1.000,1.000,
-                        1.000,1.000,0.920,1.000,0.964,1.0};
 
    static const char *psfont[] = {
     "/Times-Italic", "/Times-Bold", "/Times-BoldItalic",
@@ -2292,19 +2290,17 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Float_t tsize;
-   if (wh < hh)  tsize = fTextSize*wh;
-   else          tsize = fTextSize*hh;
+   Float_t fontrap = 1.09; //scale down compared to X11
+   if (wh < hh)  tsize = fTextSize*wh/fontrap;
+   else          tsize = fTextSize*hh/fontrap;
    Float_t ftsize;
 
    Int_t font     = abs(fTextFont)/10;
    if( font > 42 || font < 1) font = 1;
-   Float_t fontrap = 1.01;
-   if( font <= 14 && font >= 1) fontrap = fontrap*psrap[font-1];
    if (wh < hh) ftsize = fTextSize*fXsize*gPad->GetAbsWNDC();
    else         ftsize = fTextSize*fYsize*gPad->GetAbsHNDC();
 
-   Float_t rchh   = ftsize*fontrap;   //*-* rchh should be the text size in cm
-   Int_t fontsize = 4*CMtoPS(rchh);
+   Int_t fontsize = 4*CMtoPS(ftsize/fontrap);
    if( fontsize <= 0) return;
    Float_t tsizex = gPad->AbsPixeltoX(Int_t(tsize))-gPad->AbsPixeltoX(0);
    Float_t tsizey = gPad->AbsPixeltoY(0)-gPad->AbsPixeltoY(Int_t(tsize));
