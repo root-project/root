@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.1 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSparse.cxx,v 1.2 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Apr 2004
 
 /*************************************************************************
@@ -2592,7 +2592,8 @@ TDecompSparse &TDecompSparse::operator=(const TDecompSparse &source)
     fW          = source.fW;
     fIPessimism = source.fIPessimism;
     fRPessimism = source.fRPessimism;
-    fA.Use(*const_cast<TMatrixDSparse *>(&(source.fA)));
+    if (fA.IsValid())
+      fA.Use(*const_cast<TMatrixDSparse *>(&(source.fA)));
     fNrows      = source.fNrows;
     fNnonZeros  = source.fNnonZeros;
     fFact       = source.fFact;

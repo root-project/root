@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.8 2004/05/18 14:28:14 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.9 2004/05/18 20:04:46 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -340,34 +340,36 @@ void TMatrixDSparse::InsertRow(Int_t rown,Int_t coln,const Double_t *v,Int_t n)
 
   Int_t nslots = 0;
   Int_t lIndex = sIndex-1;
+  Int_t rIndex = sIndex-1;
   Int_t index;
   for (index = sIndex; index < eIndex; index++) {
     const Int_t icol = fColIndex[index];
+    rIndex++;
     if (icol >= acoln+nr) break;
     if (icol >= acoln) nslots++;
     else               lIndex++;
   }
-  const Int_t rIndex = lIndex+nr+1;
 
   const Int_t nelems_old = fNelems;
-  const Int_t nelems_new = fNelems+nr-nslots;
-  Int_t *oIp = fColIndex;
-  fColIndex = new Int_t[nelems_new];
-  Double_t *oDp = fElements;
-  fElements = new Double_t[nelems_new];
+  const Int_t    *colIndex_old = fColIndex;
+  const Double_t *elements_old = fElements;
 
   const Int_t ndiff = nr-nslots;
+  fNelems += ndiff;
+  fColIndex = new Int_t[fNelems];
+  fElements = new Double_t[fNelems];
+
   for (Int_t irow = arown+1; irow < fNrows+1; irow++)
     fRowIndex[irow] += ndiff;
 
   if (lIndex+1 > 0) {
-    memmove(fColIndex,oIp,(lIndex+1)*sizeof(Int_t));
-    memmove(fElements,oDp,(lIndex+1)*sizeof(Double_t));
+    memmove(fColIndex,colIndex_old,(lIndex+1)*sizeof(Int_t));
+    memmove(fElements,elements_old,(lIndex+1)*sizeof(Double_t));
   }
 
-  if (nelems_old-rIndex > 0) {
-    memmove(fColIndex+rIndex+ndiff,oIp+rIndex,(nelems_old-rIndex)*sizeof(Int_t));
-    memmove(fElements+rIndex+ndiff,oDp+rIndex,(nelems_old-rIndex)*sizeof(Double_t));
+  if (nelems_old > 0 && nelems_old-rIndex > 0) {
+    memmove(fColIndex+rIndex+ndiff,colIndex_old+rIndex,(nelems_old-rIndex)*sizeof(Int_t));
+    memmove(fElements+rIndex+ndiff,elements_old+rIndex,(nelems_old-rIndex)*sizeof(Double_t));
   }
 
   index = lIndex+1;
@@ -377,9 +379,10 @@ void TMatrixDSparse::InsertRow(Int_t rown,Int_t coln,const Double_t *v,Int_t n)
     index++;
   }
 
-  fNelems = nelems_new;
-  if (oIp) delete [] oIp;
-  if (oDp) delete [] oDp;
+  if (colIndex_old) delete [] (Int_t*)    colIndex_old;
+  if (elements_old) delete [] (Double_t*) elements_old;
+
+  Assert(fNelems == fRowIndex[fNrowIndex-1]);
 }
 
 //______________________________________________________________________________
@@ -1366,9 +1369,9 @@ void TMatrixDSparse::ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros)
       return;
     }
 
-    Double_t *elements_old = GetMatrixArray();
-    Int_t    *rowIndex_old = GetRowIndexArray();
-    Int_t    *colIndex_old = GetColIndexArray();
+    const Double_t *elements_old = GetMatrixArray();
+    const Int_t    *rowIndex_old = GetRowIndexArray();
+    const Int_t    *colIndex_old = GetColIndexArray();
 
     Int_t nrows_old     = fNrows;
     Int_t nrowIndex_old = fNrowIndex;
@@ -1419,9 +1422,9 @@ void TMatrixDSparse::ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros)
       }
     }
 
-    if (rowIndex_old) delete [] rowIndex_old;
-    if (colIndex_old) delete [] colIndex_old;
-    if (elements_old) delete [] elements_old;
+    if (rowIndex_old) delete [] (Int_t*)    rowIndex_old;
+    if (colIndex_old) delete [] (Int_t*)    colIndex_old;
+    if (elements_old) delete [] (Double_t*) elements_old;
 
     if (nrowIndex_old < fNrowIndex) {
       for (Int_t irow = nrowIndex_old; irow < fNrowIndex; irow++)
@@ -1463,9 +1466,9 @@ void TMatrixDSparse::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t co
       return;
     }
 
-    Int_t    *rowIndex_old = GetRowIndexArray();
-    Int_t    *colIndex_old = GetColIndexArray();
-    Double_t *elements_old = GetMatrixArray();
+    const Int_t    *rowIndex_old = GetRowIndexArray();
+    const Int_t    *colIndex_old = GetColIndexArray();
+    const Double_t *elements_old = GetMatrixArray();
 
     const Int_t  nrowIndex_old = fNrowIndex;
 
@@ -1521,9 +1524,9 @@ void TMatrixDSparse::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t co
       }
     }
 
-    if (rowIndex_old) delete [] rowIndex_old;
-    if (colIndex_old) delete [] colIndex_old;
-    if (elements_old) delete [] elements_old;
+    if (rowIndex_old) delete [] (Int_t*)    rowIndex_old;
+    if (colIndex_old) delete [] (Int_t*)    colIndex_old;
+    if (elements_old) delete [] (Double_t*) elements_old;
 
     if (nrowIndex_old < fNrowIndex) {
       for (Int_t irow = nrowIndex_old; irow < fNrowIndex; irow++)
@@ -1766,9 +1769,11 @@ void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &sour
     }
   }
 
-  if (rowIndex_old) delete [] (Int_t*)rowIndex_old;
-  if (colIndex_old) delete [] (Int_t*)colIndex_old;
-  if (elements_old) delete [] (Double_t*)elements_old;
+  Assert(fNelems == fRowIndex[fNrowIndex-1]);
+
+  if (rowIndex_old) delete [] (Int_t*)    rowIndex_old;
+  if (colIndex_old) delete [] (Int_t*)    colIndex_old;
+  if (elements_old) delete [] (Double_t*) elements_old;
 }
 
 //______________________________________________________________________________
@@ -1791,13 +1796,13 @@ TMatrixDSparse &TMatrixDSparse::Transpose(const TMatrixDSparse &source)
   if (nr_nonzeros <= 0)
     return *this;
 
-  Int_t    *pRowIndex_s = (Int_t *) source.GetRowIndexArray();
-  Int_t    *pColIndex_s = (Int_t *) source.GetColIndexArray();
-  Double_t *pData_s     = (Double_t *) source.GetMatrixArray();
+  const Int_t    * const pRowIndex_s = source.GetRowIndexArray();
+  const Int_t    * const pColIndex_s = source.GetColIndexArray();
+  const Double_t * const pData_s     = source.GetMatrixArray();
 
-  Int_t    *pColIndex_t = new Int_t[nr_nonzeros];
-  Int_t    *rownr       = new Int_t[nr_nonzeros];
-  Double_t *pData_t     = new Double_t[nr_nonzeros];
+  Int_t    *rownr   = new Int_t[nr_nonzeros];
+  Int_t    *colnr   = new Int_t[nr_nonzeros];
+  Double_t *pData_t = new Double_t[nr_nonzeros];
 
   Int_t ielem = 0;
   for (Int_t irow_s = 0; irow_s < source.GetNrows(); irow_s++) {
@@ -1805,8 +1810,8 @@ TMatrixDSparse &TMatrixDSparse::Transpose(const TMatrixDSparse &source)
     const Int_t eIndex = pRowIndex_s[irow_s+1];
     for (Int_t index = sIndex; index < eIndex; index++) {
       if (pData_s[index] != 0.0) {
-        rownr[ielem]       = pColIndex_s[index];
-        pColIndex_t[ielem] = irow_s;
+        rownr[ielem]       = pColIndex_s[index]+fRowLwb;
+        colnr[ielem]       = irow_s+fColLwb;
         pData_t[ielem]     = pData_s[index];
         ielem++;
       }
@@ -1815,32 +1820,14 @@ TMatrixDSparse &TMatrixDSparse::Transpose(const TMatrixDSparse &source)
 
   Assert(nr_nonzeros == ielem);
 
-  DoubleLexSort(nr_nonzeros,rownr,pColIndex_t,pData_t);
+  DoubleLexSort(nr_nonzeros,rownr,colnr,pData_t);
+  SetMatrixArray(nr_nonzeros,rownr,colnr,pData_t);
 
-  Int_t *pRowIndex_t = new Int_t[fNrows+1];
-  pRowIndex_t[0] = 0;
-  ielem = 0;
-  for (Int_t irow = 1; irow < fNrows+1; irow++) {
-    while (ielem < nr_nonzeros) {
-      ielem++;
-      if (ielem >= nr_nonzeros || rownr[ielem] != rownr[ielem-1])
-        break;
-    }
-    pRowIndex_t[irow] = ielem;
-  }
+  Assert(fNelems == fRowIndex[fNrowIndex-1]);
 
-  if (rownr)
-    delete [] rownr;
-
-  if (this == &source) {
-    if (pRowIndex_s) delete [] pRowIndex_s;
-    if (pColIndex_s) delete [] pColIndex_s;
-    if (pData_s)     delete [] pData_s;
-  }
-
-  fRowIndex = pRowIndex_t;
-  fColIndex = pColIndex_t;
-  fElements = pData_t;
+  if (pData_t) delete [] pData_t;
+  if (rownr)   delete [] rownr;
+  if (colnr)   delete [] colnr;
 
   return *this;
 }
@@ -2191,7 +2178,8 @@ void TMatrixDSparse::RandomizePD(Double_t alpha,Double_t beta,Double_t &seed)
 
   // length is the number of elements that can be stored, minus the number
   // of elements in the diagonal, which will always be in the matrix.
-  Int_t length = (fNelems-n)/2;
+//  Int_t length = (fNelems-n)/2;
+  Int_t length = fNelems-n;
   length = (length <= NN) ? length : NN;
 
   // chosen   : the number of elements that have already been chosen (now 0)

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.20 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.cxx,v 1.21 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -826,6 +826,12 @@ void TMatrixDSparseRow::operator=(const TVectorD &vec)
   const Int_t row = fRowInd+fMatrix->GetRowLwb();
   const Int_t col = fMatrix->GetColLwb();
   const_cast<TMatrixDBase *>(fMatrix)->InsertRow(row,col,vp,vec.GetNrows());
+
+  const Int_t sIndex = fMatrix->GetRowIndexArray()[fRowInd];
+  const Int_t eIndex = fMatrix->GetRowIndexArray()[fRowInd+1];
+  fNindex  = eIndex-sIndex;
+  fColPtr  = fMatrix->GetColIndexArray()+sIndex;
+  fDataPtr = fMatrix->GetMatrixArray()+sIndex;
 }
 
 //______________________________________________________________________________
@@ -851,6 +857,12 @@ void TMatrixDSparseRow::operator+=(const TMatrixDSparseRow_const &r)
   mt     ->ExtractRow(row2,col,v2.GetMatrixArray());
   v1 += v2;
   const_cast<TMatrixDBase *>(fMatrix)->InsertRow(row1,col,v1.GetMatrixArray());
+
+  const Int_t sIndex = fMatrix->GetRowIndexArray()[fRowInd];
+  const Int_t eIndex = fMatrix->GetRowIndexArray()[fRowInd+1];
+  fNindex  = eIndex-sIndex;
+  fColPtr  = fMatrix->GetColIndexArray()+sIndex;
+  fDataPtr = fMatrix->GetMatrixArray()+sIndex;
 }
 
 //______________________________________________________________________________
@@ -867,7 +879,7 @@ void TMatrixDSparseRow::operator*=(const TMatrixDSparseRow_const &r)
   }
 
   const Int_t ncols = fMatrix->GetNcols();
-  const Int_t row1  = fRowInd+fMatrix->GetRowLwb();
+  const Int_t row1  = r.GetRowIndex()+mt->GetRowLwb();
   const Int_t row2  = r.GetRowIndex()+mt->GetRowLwb();
   const Int_t col   = fMatrix->GetColLwb();
 
@@ -878,6 +890,12 @@ void TMatrixDSparseRow::operator*=(const TMatrixDSparseRow_const &r)
 
   ElementMult(v1,v2);
   const_cast<TMatrixDBase *>(fMatrix)->InsertRow(row1,col,v1.GetMatrixArray());
+
+  const Int_t sIndex = fMatrix->GetRowIndexArray()[fRowInd];
+  const Int_t eIndex = fMatrix->GetRowIndexArray()[fRowInd+1];
+  fNindex  = eIndex-sIndex;
+  fColPtr  = fMatrix->GetColIndexArray()+sIndex;
+  fDataPtr = fMatrix->GetMatrixArray()+sIndex;
 }
 
 //______________________________________________________________________________
@@ -910,7 +928,6 @@ Double_t &TMatrixDSparseDiag::operator()(Int_t i)
   TMatrixDBase *mt = const_cast<TMatrixDBase *>(fMatrix);
   const Int_t    *pR = mt->GetRowIndexArray();
   const Int_t    *pC = mt->GetColIndexArray();
-  const Double_t *pD = mt->GetMatrixArray();
   Int_t sIndex = pR[i];
   Int_t eIndex = pR[i+1];
   Int_t index = TMath::BinarySearch(eIndex-sIndex,pC+sIndex,i)+sIndex;
@@ -921,11 +938,11 @@ Double_t &TMatrixDSparseDiag::operator()(Int_t i)
     const Int_t col = i+mt->GetColLwb();
     Double_t val = 0.;
     mt->InsertRow(row,col,&val,1);
+    fDataPtr = mt->GetMatrixArray();
     pR = mt->GetRowIndexArray();
     pC = mt->GetColIndexArray();
-    pD = mt->GetMatrixArray();
-    sIndex = mt->GetRowIndexArray()[i];
-    eIndex = mt->GetRowIndexArray()[i+1];
+    sIndex = pR[i];
+    eIndex = pR[i+1];
     index = TMath::BinarySearch(eIndex-sIndex,pC+sIndex,i)+sIndex;
     if (index >= sIndex && pC[index] == i)
       return (const_cast<Double_t*>(fDataPtr))[index];
