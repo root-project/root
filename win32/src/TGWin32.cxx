@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.3 2001/06/29 06:40:29 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.cxx,v 1.4 2001/11/08 07:19:49 brun Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -1324,22 +1324,26 @@ void  TGWin32::MakePallete(HDC objectDC)
 {
   if (!flpPalette)
   {
+    int depth;
     HDC oDC = objectDC;
     if (oDC == 0) oDC =  CreateCompatibleDC(NULL);
 
     int iPalExist = GetDeviceCaps(oDC,RASTERCAPS) & RC_PALETTE ;
-
-    if (iPalExist)
-       fMaxCol = GetDeviceCaps(oDC,SIZEPALETTE);
-    else {
-       fMaxCol = GetDeviceCaps(oDC,NUMCOLORS);
-       fMaxCol = 256-20;
-       fhdCommonPalette = 0;
+    if (iPalExist) {
+        depth=GetDeviceCaps(oDC,COLORRES);
     }
-
-//*-*  At present ROOT will use 236 colors only ???
-
-      fMaxCol = TMath::Min(256-20,fMaxCol);
+    else{
+        int nPlanes=GetDeviceCaps(oDC,PLANES);
+        int nBitsPixel=GetDeviceCaps(oDC,BITSPIXEL);
+        depth = (nPlanes*nBitsPixel);
+    }
+    if(depth<=8){
+       fMaxCol = 256-20;
+    }
+    else {
+       if(depth > 24) depth = 24;
+       fMaxCol = 1 << depth;
+    }
 
 //*-*  Create palette
 
@@ -1347,7 +1351,8 @@ void  TGWin32::MakePallete(HDC objectDC)
                  (sizeof (PALETTEENTRY) * (fMaxCol))));
 
      if(!flpPalette){
-        MessageBox(NULL, "<WM_CREATE> Not enough memory for palette.", NULL, MB_OK | MB_ICONHAND);
+        MessageBox(NULL, "<WM_CREATE> Not enough memory for palette.", NULL,
+                   MB_OK | MB_ICONHAND);
         PostQuitMessage (0) ;
      }
 
