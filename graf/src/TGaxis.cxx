@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.7 2000/11/09 10:50:54 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.8 2000/11/21 20:24:37 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -485,7 +485,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t RWxmax = gPad->GetX2();
    Double_t RWymin = gPad->GetY1();
    Double_t RWymax = gPad->GetY2();
-
+   //if (GetLabelFont()%10 > 2) {padh = 1; padw = 1;}
+   
    if(strchr(chopt,'G')) OptionLog  = 1;  else OptionLog  = 0;
    if(strchr(chopt,'B')) OptionBlank= 1;  else OptionBlank= 0;
    if(strchr(chopt,'V')) OptionVert = 1;  else OptionVert = 0;
@@ -812,6 +813,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    textaxis->SetTextColor(GetLabelColor());
    textaxis->SetTextSize (charheight);
    textaxis->SetTextAngle(GetTextAngle());
+   if (GetLabelFont()%10 > 2) {
+      charheight /= padh;
+   }
    if (!OptionUp && !OptionDown && !OptionY) {
       if (OptionText && ymin == ymax) {
          NHILAB = 0;

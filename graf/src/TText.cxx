@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.5 2000/11/21 20:28:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.6 2000/12/13 15:13:50 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -93,6 +93,7 @@ Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
    const char *text = GetTitle();
    Int_t len    = strlen(text);
    Double_t fh  = (fTextSize*gPad->GetAbsHNDC())*Double_t(gPad->GetWh());
+   if (fTextFont%10 > 2) fh = fTextSize;
    Int_t h      = Int_t(fh/2);
    Int_t w      = h*len;
    Int_t err = 1;
