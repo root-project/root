@@ -43,7 +43,7 @@
 //   manipulations . It shows nicely some operations in the matrix package,
 //   but is otherwise a big "no no" .
 //
-//  5. Least-squares analyisis with Minuit
+//  5. Least-squares analysis with Minuit
 //   An objective function L is minimized by Minuit, where
 //    L = sum_i { (y - c_0 -c_1 * x / e)^2 }
 //   Minuit will calculate numerically the derivative of L wrt c_0 and c_1 .
