@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.3 2001/05/25 06:25:03 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.4 2001/10/25 06:20:29 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -76,7 +76,7 @@ public:
    virtual void     UpdateListOfGlobals() = 0;
    virtual void     UpdateListOfGlobalFunctions() = 0;
    virtual void     UpdateListOfTypes() = 0;
-   virtual void     SetClassInfo(TClass *cl) = 0;
+   virtual void     SetClassInfo(TClass *cl, Bool_t reload = kFALSE) = 0;
    virtual Bool_t   CheckClassInfo(const char *name) = 0;
    virtual Long_t   Calc(const char *line) = 0;
    virtual void     CreateListOfBaseClasses(TClass *cl) = 0;

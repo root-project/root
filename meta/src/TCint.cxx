@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.37 2001/11/09 20:29:00 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.38 2001/11/28 16:05:42 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -455,11 +455,11 @@ void TCint::UpdateListOfTypes()
 }
 
 //______________________________________________________________________________
-void TCint::SetClassInfo(TClass *cl)
+void TCint::SetClassInfo(TClass *cl, Bool_t reload)
 {
    // Set pointer to CINT's G__ClassInfo in TClass.
 
-   if (!cl->fClassInfo) {
+   if (!cl->fClassInfo || reload) {
       // In the case where the class is not loaded and belong to a namespace
       // or is nested, looking for the full class name is outputing a lots of
       // (expected) error messages.  Currently the only way to avoid this is to

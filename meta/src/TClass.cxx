@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.59 2001/10/18 09:16:08 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.60 2001/10/29 16:21:56 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1297,6 +1297,26 @@ Bool_t TClass::IsCallingNew()
    // This function cannot be inline (problems with NT linker).
 
    return fgCallingNew;
+}
+
+//______________________________________________________________________________
+Bool_t TClass::IsLoaded() const
+{
+   // Return true if the shared library of this class is currently in the a
+   // process's memory.  Return false, after the shared library has been 
+   // unloaded or if this is a 'fake' class created from a file's StreamerInfo.
+
+   return (GetImplFileLine()>=0 && !TestBit(kUnloaded));
+}
+
+//______________________________________________________________________________
+void TClass::SetUnloaded() 
+{
+   // Call this method to indicate that the shared library containing this 
+   // class's code has been removed (unloaded) from the process's memory
+  
+   gInterpreter->SetClassInfo(this,kTRUE);
+   SetBit(kUnloaded);
 }
 
 //______________________________________________________________________________

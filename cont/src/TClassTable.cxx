@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.9 2001/06/30 13:08:20 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.10 2001/11/21 07:38:19 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -338,7 +338,6 @@ void RemoveClass(const char *cname)
    // Global function called by the dtor of a class's init class
    // (see the ClassImp macro).
 
-#if 1
    // don't delete class information since it is needed by the I/O system
    // to write the StreamerInfo to file
    if (cname) { 
@@ -347,13 +346,10 @@ void RemoveClass(const char *cname)
      // pointer is now invalid ....
      // We still keep the TClass object around because TFile needs to 
      // get to the TStreamerInfo.
+     if (gROOT && gROOT->GetListOfClasses()) {
+        TClass *cl = gROOT->GetClass(cname, kFALSE);
+        if (cl) cl->SetUnloaded();
+     }
      TClassTable::Remove(cname);
    }
-#else
-   TClassTable::Remove(cname);
-   if (gROOT && gROOT->GetListOfClasses()) {
-      TClass *cl = gROOT->GetClass(cname, kFALSE);
-      delete cl;  // interesting, for delete to call TClass::~TClass
-   }              // TClass.h needs to be included
-#endif
 }
