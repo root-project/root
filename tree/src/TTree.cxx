@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.91 2001/09/22 10:06:55 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.92 2001/09/25 07:10:48 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1069,7 +1069,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    Int_t nch = strlen(name);
    Bool_t dotlast = kFALSE;
    if (nch && name[nch-1] == '.') dotlast = kTRUE;
-   TBranchElement *branch = new TBranchElement(name,sinfo,id,objadd,bufsize,0);
+   TBranchElement *branch = new TBranchElement(name,sinfo,id,objadd,bufsize,splitlevel);
    fBranches.Add(branch);
    if (splitlevel > 0) {
 

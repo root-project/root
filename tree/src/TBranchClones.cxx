@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.11 2001/01/20 21:15:46 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.12 2001/06/30 07:11:21 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -73,6 +73,8 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
    gTree->BuildStreamerInfo(cl);
 
    fClassName = cl->GetName();
+   
+   fSplitLevel = splitlevel;
 
 //*-*- Create a branch to store the array count
    if (basketsize < 100) basketsize = 100;

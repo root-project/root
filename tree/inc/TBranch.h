@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.10 2001/04/23 13:53:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.11 2001/08/13 17:23:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -66,6 +66,7 @@ protected:
     Int_t       fEntryNumber;     //  Current entry number (last one filled in this branch)
     Int_t       fOffset;          //  Offset of this branch
     Int_t       fMaxBaskets;      //  Maximum number of Baskets so far
+    Int_t       fSplitLevel;      //  Branch split level
     Int_t       fNleaves;         //! Number of leaves
     Int_t       fReadBasket;      //! Current basket number when reading
     Int_t       fReadEntry;       //! Current entry number when reading
@@ -125,6 +126,7 @@ public:
           TObjArray *GetListOfLeaves()   {return &fLeaves;}
             Int_t    GetMaxBaskets() const  {return fMaxBaskets;}
             Int_t    GetNleaves() const {return fNleaves;}
+            Int_t    GetSplitLevel() const {return fSplitLevel;}
             Stat_t   GetEntries() const {return fEntries;}
             TTree   *GetTree() const {return fTree;}
     virtual Int_t    GetRow(Int_t row);
@@ -149,7 +151,7 @@ public:
     
     static  void     ResetCount() {fgCount = 0;}
 
-    ClassDef(TBranch,6)  //Branch descriptor
+    ClassDef(TBranch,7)  //Branch descriptor
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.26 2001/10/12 20:37:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.27 2001/10/14 15:47:55 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -71,6 +71,7 @@ TBranch::TBranch(): TNamed()
    fEntries        = 0;
    fTotBytes       = 0;
    fZipBytes       = 0;
+   fSplitLevel     = 0;
    fNBasketRAM     = kMaxRAM+1;
    fBasketRAM      = new Int_t[kMaxRAM]; for (Int_t i=0;i<kMaxRAM;i++) fBasketRAM[i] = -1;
    fBasketEntry    = 0;
@@ -150,6 +151,7 @@ TBranch::TBranch(const char *name, void *address, const char *leaflist, Int_t ba
    fEntries        = 0;
    fTotBytes       = 0;
    fZipBytes       = 0;
+   fSplitLevel     = 0;
    fOffset         = 0;
    fNleaves        = 0;
    fAddress        = (char*)address;
@@ -1031,8 +1033,9 @@ void TBranch::Streamer(TBuffer &b)
             leaf->SetBranch(this);
          }
          fDirectory = gDirectory;
-         fNleaves = fLeaves.GetEntriesFast();
          if (fFileName.Length() != 0) fDirectory = 0;
+         fNleaves = fLeaves.GetEntriesFast();
+         if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
          gROOT->SetReadingObject(kFALSE);
          return;
       }
@@ -1077,6 +1080,7 @@ void TBranch::Streamer(TBuffer &b)
          if (fFileName.Length() != 0) fDirectory = 0;
       }
       if (v < 4) SetAutoDelete(kTRUE);
+      if (!fSplitLevel && fBranches.GetEntriesFast()) fSplitLevel = 1;
       gROOT->SetReadingObject(kFALSE);
       b.CheckByteCount(R__s, R__c, TBranch::IsA());
       //====end of old versions

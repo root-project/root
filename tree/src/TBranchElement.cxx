@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.63 2001/10/09 07:52:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.64 2001/10/14 15:48:57 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -70,6 +70,9 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    SetName(name);
    SetTitle(name);
 
+   fSplitLevel   = splitlevel;
+   if (id < 0)     splitlevel = 0;
+      
    TClass *cl    = sinfo->GetClass();
    fInfo         = sinfo;
    fID           = id;
@@ -270,6 +273,7 @@ TBranchElement::TBranchElement(const char *bname, TClonesArray *clones, Int_t ba
 
    char name[kMaxLen];
    strcpy(name,bname);
+   fSplitLevel   = splitlevel;
    fInfo         = TClonesArray::Class()->GetStreamerInfo();
    fID           = 0;
    fStreamerType = -1;
