@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.5 2001/04/23 08:04:48 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.6 2001/04/23 08:33:09 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -371,8 +371,9 @@ TString TEnvRec::ExpandValue(const char *value)
    // Replace all $(XXX) strings by the value defined in the shell
    // (obtained via TSystem::Getenv()).
 
-   const char *v = value;
    const char *vv;
+   char *v, *vorg = StrDup(value);
+   v = vorg;
 
    char *s1, *s2;
    int len = 0;
@@ -384,16 +385,18 @@ TString TEnvRec::ExpandValue(const char *value)
          break;
       }
       *s2 = 0;
-      vv =  gSystem->Getenv(s1);
+      vv = gSystem->Getenv(s1);
       if (vv) len += strlen(vv);
       *s2 = ')';
       v = s2 + 1;
    }
 
-   if (!len)
+   if (!len) {
+      delete [] vorg;
       return TString(value);
+   }
 
-   v = value;
+   v = vorg;
    char *nv = new char[strlen(v) + len];
    *nv = 0;
 
@@ -404,7 +407,7 @@ TString TEnvRec::ExpandValue(const char *value)
       s1 += 2;
       s2 = (char*)strchr(s1, ')');
       *s2 = 0;
-      vv =  gSystem->Getenv(s1);
+      vv = gSystem->Getenv(s1);
       if (vv) strcat(nv, vv);
       *s2 = ')';
       v = s2 + 1;
@@ -414,6 +417,7 @@ TString TEnvRec::ExpandValue(const char *value)
 
    TString val = nv;
    delete [] nv;
+   delete [] vorg;
 
    return val;
 }
