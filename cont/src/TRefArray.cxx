@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.17 2002/12/02 18:50:02 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.cxx,v 1.18 2003/07/11 09:04:12 brun Exp $
 // Author: Rene Brun  02/10/2001
 
 /*************************************************************************
@@ -129,7 +129,7 @@ void TRefArray::AddLast(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TRefArray::AddBefore(TObject *before, TObject *obj)
+void TRefArray::AddBefore(const TObject *before, TObject *obj)
 {
    // Add object in the slot before object before. If before=0 add object
    // in the first slot. Note that this will overwrite any object that
@@ -153,7 +153,7 @@ void TRefArray::AddBefore(TObject *before, TObject *obj)
 }
 
 //______________________________________________________________________________
-void TRefArray::AddAfter(TObject *after, TObject *obj)
+void TRefArray::AddAfter(const TObject *after, TObject *obj)
 {
    // Add object in the slot after object after. If after=0 add object in
    // the last empty slot. Note that this will overwrite any object that
@@ -227,7 +227,7 @@ Int_t  TRefArray::AddAtFree(TObject *obj)
 }
 
 //______________________________________________________________________________
-TObject *TRefArray::After(TObject *obj) const
+TObject *TRefArray::After(const TObject *obj) const
 {
    // Return the object after obj. Returns 0 if obj is last object.
 
@@ -240,7 +240,7 @@ TObject *TRefArray::After(TObject *obj) const
 }
 
 //______________________________________________________________________________
-TObject *TRefArray::Before(TObject *obj) const
+TObject *TRefArray::Before(const TObject *obj) const
 {
    // Return the object before obj. Returns 0 if obj is first object.
 

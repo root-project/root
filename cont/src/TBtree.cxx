@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.6 2002/05/18 08:43:30 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.cxx,v 1.7 2003/09/03 06:08:33 brun Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -228,7 +228,7 @@ void TBtree::Add(TObject *obj)
 }
 
 //______________________________________________________________________________
-TObject *TBtree::After(TObject *) const
+TObject *TBtree::After(const TObject *) const
 {
    // Cannot use this method since B-tree decides order.
 
@@ -237,7 +237,7 @@ TObject *TBtree::After(TObject *) const
 }
 
 //______________________________________________________________________________
-TObject *TBtree::Before(TObject *) const
+TObject *TBtree::Before(const TObject *) const
 {
    // May not use this method since B-tree decides order.
 

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.10 2002/11/15 13:26:29 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.cxx,v 1.11 2004/04/20 09:27:23 rdm Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -112,7 +112,7 @@ void TOrdCollection::AddLast(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TOrdCollection::AddBefore(TObject *before, TObject *obj)
+void TOrdCollection::AddBefore(const TObject *before, TObject *obj)
 {
    // Insert object before object before in the collection.
 
@@ -133,7 +133,7 @@ void TOrdCollection::AddBefore(TObject *before, TObject *obj)
 }
 
 //______________________________________________________________________________
-void TOrdCollection::AddAfter(TObject *after, TObject *obj)
+void TOrdCollection::AddAfter(const TObject *after, TObject *obj)
 {
    // Insert object after object after in the collection.
 
@@ -150,7 +150,7 @@ void TOrdCollection::AddAfter(TObject *after, TObject *obj)
 }
 
 //______________________________________________________________________________
-TObject *TOrdCollection::After(TObject *obj) const
+TObject *TOrdCollection::After(const TObject *obj) const
 {
    // Return the object after object obj. Returns 0 if obj is last
    // in collection.
@@ -173,7 +173,7 @@ TObject *TOrdCollection::At(Int_t idx) const
 }
 
 //______________________________________________________________________________
-TObject *TOrdCollection::Before(TObject *obj) const
+TObject *TOrdCollection::Before(const TObject *obj) const
 {
    // Returns the object before object obj. Returns 0 if obj is first
    // in collection.

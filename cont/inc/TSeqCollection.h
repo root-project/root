@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TSeqCollection.h,v 1.5 2001/01/09 18:33:59 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TSeqCollection.h,v 1.6 2003/09/01 12:19:20 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -41,8 +41,8 @@ public:
    virtual void      AddFirst(TObject *obj) = 0;
    virtual void      AddLast(TObject *obj) = 0;
    virtual void      AddAt(TObject *obj, Int_t idx) = 0;
-   virtual void      AddAfter(TObject *after, TObject *obj) = 0;
-   virtual void      AddBefore(TObject *before, TObject *obj) = 0;
+   virtual void      AddAfter(const TObject *after, TObject *obj) = 0;
+   virtual void      AddBefore(const TObject *before, TObject *obj) = 0;
    virtual void      RemoveFirst() { Remove(First()); }
    virtual void      RemoveLast() { Remove(Last()); }
    virtual TObject  *RemoveAt(Int_t idx) { return Remove(At(idx)); }
@@ -50,8 +50,8 @@ public:
    virtual void      RemoveBefore(TObject *before) { Remove(Before(before)); }
 
    virtual TObject  *At(Int_t idx) const = 0;
-   virtual TObject  *Before(TObject *obj) const = 0;
-   virtual TObject  *After(TObject *obj) const = 0;
+   virtual TObject  *Before(const TObject *obj) const = 0;
+   virtual TObject  *After(const TObject *obj) const = 0;
    virtual TObject  *First() const = 0;
    virtual TObject  *Last() const = 0;
    Int_t             LastIndex() const { return GetSize() - 1; }

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TOrdCollection.h,v 1.4 2001/03/29 11:25:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TOrdCollection.h,v 1.5 2002/07/29 09:22:28 rdm Exp $
 // Author: Fons Rademakers   13/09/95
 
 /*************************************************************************
@@ -60,15 +60,15 @@ public:
    void          AddFirst(TObject *obj);
    void          AddLast(TObject *obj);
    void          AddAt(TObject *obj, Int_t idx);
-   void          AddAfter(TObject *after, TObject *obj);
-   void          AddBefore(TObject *before, TObject *obj);
+   void          AddAfter(const TObject *after, TObject *obj);
+   void          AddBefore(const TObject *before, TObject *obj);
    void          PutAt(TObject *obj, Int_t idx);
    TObject      *RemoveAt(Int_t idx);
    TObject      *Remove(TObject *obj);
 
    TObject      *At(Int_t idx) const;
-   TObject      *Before(TObject *obj) const;
-   TObject      *After(TObject *obj) const;
+   TObject      *Before(const TObject *obj) const;
+   TObject      *After(const TObject *obj) const;
    TObject      *First() const;
    TObject      *Last() const;
 

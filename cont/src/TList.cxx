@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.13 2002/07/29 09:22:29 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.14 2004/10/11 22:59:39 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -146,7 +146,7 @@ void TList::AddLast(TObject *obj, Option_t *opt)
 }
 
 //______________________________________________________________________________
-void TList::AddBefore(TObject *before, TObject *obj)
+void TList::AddBefore(const TObject *before, TObject *obj)
 {
    // Insert object before object before in the list.
 
@@ -194,7 +194,7 @@ void TList::AddBefore(TObjLink *before, TObject *obj)
 }
 
 //______________________________________________________________________________
-void TList::AddAfter(TObject *after, TObject *obj)
+void TList::AddAfter(const TObject *after, TObject *obj)
 {
    // Insert object after object after in the list.
 
@@ -261,7 +261,7 @@ void TList::AddAt(TObject *obj, Int_t idx)
 }
 
 //______________________________________________________________________________
-TObject *TList::After(TObject *obj) const
+TObject *TList::After(const TObject *obj) const
 {
    // Returns the object after object obj. Obj is found using the
    // object's IsEqual() method.  Returns 0 if obj is last in list.
@@ -294,7 +294,7 @@ TObject *TList::At(Int_t idx) const
 }
 
 //______________________________________________________________________________
-TObject *TList::Before(TObject *obj) const
+TObject *TList::Before(const TObject *obj) const
 {
    // Returns the object before object obj. Obj is found using the
    // object's IsEqual() method.  Returns 0 if obj is first in list.

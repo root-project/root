@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.5 2001/03/07 11:51:34 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.cxx,v 1.6 2002/08/07 10:58:31 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -114,7 +114,7 @@ void THashList::AddLast(TObject *obj, Option_t *opt)
 }
 
 //______________________________________________________________________________
-void THashList::AddBefore(TObject *before, TObject *obj)
+void THashList::AddBefore(const TObject *before, TObject *obj)
 {
    // Insert object before object before in the list.
 
@@ -132,7 +132,7 @@ void THashList::AddBefore(TObjLink *before, TObject *obj)
 }
 
 //______________________________________________________________________________
-void THashList::AddAfter(TObject *after, TObject *obj)
+void THashList::AddAfter(const TObject *after, TObject *obj)
 {
    // Insert object after object after in the list.
 

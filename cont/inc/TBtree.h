@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.7 2002/07/29 09:22:28 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TBtree.h,v 1.8 2004/08/02 08:52:54 rdm Exp $
 // Author: Fons Rademakers   10/10/95
 
 /*************************************************************************
@@ -81,13 +81,13 @@ public:
    void        AddFirst(TObject *obj) { Add(obj); }
    void        AddLast(TObject *obj) { Add(obj); }
    void        AddAt(TObject *obj, Int_t) { Add(obj); }
-   void        AddAfter(TObject *, TObject *obj) { Add(obj); }
-   void        AddBefore(TObject *, TObject *obj) { Add(obj); }
+   void        AddAfter(const TObject *, TObject *obj) { Add(obj); }
+   void        AddBefore(const TObject *, TObject *obj) { Add(obj); }
    TObject    *Remove(TObject *obj);
 
    TObject    *At(Int_t idx) const;
-   TObject    *Before(TObject *obj) const;
-   TObject    *After(TObject *obj) const;
+   TObject    *Before(const TObject *obj) const;
+   TObject    *After(const TObject *obj) const;
    TObject    *First() const;
    TObject    *Last() const;
 

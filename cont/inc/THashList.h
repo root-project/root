@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashList.h,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: THashList.h,v 1.5 2002/08/07 10:58:31 brun Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -54,9 +54,9 @@ public:
    void       AddLast(TObject *obj);
    void       AddLast(TObject *obj, Option_t *opt);
    void       AddAt(TObject *obj, Int_t idx);
-   void       AddAfter(TObject *after, TObject *obj);
+   void       AddAfter(const TObject *after, TObject *obj);
    void       AddAfter(TObjLink *after, TObject *obj);
-   void       AddBefore(TObject *before, TObject *obj);
+   void       AddBefore(const TObject *before, TObject *obj);
    void       AddBefore(TObjLink *before, TObject *obj);
    void       RecursiveRemove(TObject *obj);
    void       Rehash(Int_t newCapacity);

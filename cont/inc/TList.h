@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.8 2001/03/29 11:25:00 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.h,v 1.9 2002/07/29 09:22:28 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -71,16 +71,16 @@ public:
    virtual void      AddLast(TObject *obj);
    virtual void      AddLast(TObject *obj, Option_t *opt);
    virtual void      AddAt(TObject *obj, Int_t idx);
-   virtual void      AddAfter(TObject *after, TObject *obj);
+   virtual void      AddAfter(const TObject *after, TObject *obj);
    virtual void      AddAfter(TObjLink *after, TObject *obj);
-   virtual void      AddBefore(TObject *before, TObject *obj);
+   virtual void      AddBefore(const TObject *before, TObject *obj);
    virtual void      AddBefore(TObjLink *before, TObject *obj);
    virtual TObject  *Remove(TObject *obj);
    virtual TObject  *Remove(TObjLink *lnk);
 
    virtual TObject  *At(Int_t idx) const;
-   virtual TObject  *After(TObject *obj) const;
-   virtual TObject  *Before(TObject *obj) const;
+   virtual TObject  *After(const TObject *obj) const;
+   virtual TObject  *Before(const TObject *obj) const;
    virtual TObject  *First() const;
    virtual TObjLink *FirstLink() const { return fFirst; }
    virtual TObject **GetObjectRef(const TObject *obj) const;

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.20 2002/11/28 18:39:36 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.21 2003/03/17 14:30:11 rdm Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -99,7 +99,7 @@ void TObjArray::AddLast(TObject *obj)
 }
 
 //______________________________________________________________________________
-void TObjArray::AddBefore(TObject *before, TObject *obj)
+void TObjArray::AddBefore(const TObject *before, TObject *obj)
 {
    // Add object in the slot before object before. If before=0 add object
    // in the first slot. Note that this will overwrite any object that
@@ -123,7 +123,7 @@ void TObjArray::AddBefore(TObject *before, TObject *obj)
 }
 
 //______________________________________________________________________________
-void TObjArray::AddAfter(TObject *after, TObject *obj)
+void TObjArray::AddAfter(const TObject *after, TObject *obj)
 {
    // Add object in the slot after object after. If after=0 add object in
    // the last empty slot. Note that this will overwrite any object that
@@ -193,7 +193,7 @@ Int_t  TObjArray::AddAtFree(TObject *obj)
 }
 
 //______________________________________________________________________________
-TObject *TObjArray::After(TObject *obj) const
+TObject *TObjArray::After(const TObject *obj) const
 {
    // Return the object after obj. Returns 0 if obj is last object.
 
@@ -206,7 +206,7 @@ TObject *TObjArray::After(TObject *obj) const
 }
 
 //______________________________________________________________________________
-TObject *TObjArray::Before(TObject *obj) const
+TObject *TObjArray::Before(const TObject *obj) const
 {
    // Return the object before obj. Returns 0 if obj is first object.
 

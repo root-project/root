@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.9 2002/07/29 09:22:28 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.10 2002/08/20 15:17:36 brun Exp $
 // Author: Rene Brun    02/10/2001
 
 /*************************************************************************
@@ -75,14 +75,14 @@ public:
    virtual void     AddAt(TObject *obj, Int_t idx);
    virtual void     AddAtAndExpand(TObject *obj, Int_t idx);
    virtual Int_t    AddAtFree(TObject *obj);
-   virtual void     AddAfter(TObject *after, TObject *obj);
-   virtual void     AddBefore(TObject *before, TObject *obj);
+   virtual void     AddAfter(const TObject *after, TObject *obj);
+   virtual void     AddBefore(const TObject *before, TObject *obj);
    virtual TObject *RemoveAt(Int_t idx);
    virtual TObject *Remove(TObject *obj);
 
    TObject         *At(Int_t idx) const;
-   TObject         *Before(TObject *obj) const;
-   TObject         *After(TObject *obj) const;
+   TObject         *Before(const TObject *obj) const;
+   TObject         *After(const TObject *obj) const;
    TObject         *First() const;
    TObject         *Last() const;
    virtual TObject *operator[](Int_t i) const;
