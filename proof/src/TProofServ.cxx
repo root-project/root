@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.21 2002/03/20 18:54:57 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.22 2002/03/21 16:11:03 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -26,11 +26,20 @@
 #endif
 #include <errno.h>
 #include <time.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || defined(__APPLE__)
+#include <sys/file.h>
+#define lockf(fd, op, sz)   flock((fd), (op))
+#define F_LOCK             (LOCK_EX | LOCK_NB)
+#define F_ULOCK             LOCK_UN
+#endif
+
 #include "TProofServ.h"
 #include "TProof.h"
+#include "TProofLimitsFinder.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TSysEvtHandler.h"
@@ -47,7 +56,17 @@
 #include "TTree.h"
 #include "TProofPlayer.h"
 #include "TDSetProxy.h"
+#include "TTimeStamp.h"
 
+#ifndef R__WIN32
+const char* const kCP = "/bin/cp -f";
+const char* const kRM = "/bin/rm -rf";
+const char* const kLS = "/bin/ls -l";
+#else
+const char* const kCP = "copy";
+const char* const kRM = "delete";
+const char* const kLS = "dir";
+#endif
 
 
 TProofServ *gProofServ;
@@ -59,6 +78,9 @@ static void ProofServErrorHandler(int level, Bool_t abort, const char *location,
 {
    // The PROOF error handler function. It prints the message on stderr and
    // if abort is set it aborts the application.
+
+   if (!gProofServ)
+      return;
 
    if (level < gErrorIgnoreLevel)
       return;
@@ -234,6 +256,8 @@ TProofServ::TProofServ(int *argc, char **argv)
          SendLogFile(-99);
          Terminate(0);
       }
+   } else {
+      THLimitsFinder::SetLimitsFinder(new TProofLimitsFinder);
    }
 
    // Everybody expects iostream to be available, so load it...
@@ -473,7 +497,7 @@ void TProofServ::HandleSocketInput()
             fProof->SendCommand(str);
          } else {
             if (fLogLevel > 1)
-               Info("HandleSocketInput", "processing: %s...", str);
+               Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
             ProcessLine(str);
          }
          SendLogFile();
@@ -542,9 +566,9 @@ void TProofServ::HandleSocketInput()
             TDSet *dset;
             TString filename;
             TList *input;
-            Int_t nentries, first;
+            Long64_t nentries, first;
 
-Info("TProofServ::HandleSocketInput", "### kPROOF_PROCESS:");
+Info("HandleSocketInput", "### kPROOF_PROCESS:");
 
             (*mess) >> dset >> filename >> input >> nentries >> first;
 
@@ -589,17 +613,49 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
             TString filenam;
             TMD5    md5;
             (*mess) >> filenam >> md5;
-            TMD5 *md5local = TMD5::FileChecksum(filenam);
-            if (md5local && md5 == (*md5local)) {
-               fSocket->Send(kPROOF_CHECKFILE);
-               if (fLogLevel > 1)
-                  Info("HandleSocketInput", "file %s already on node", filenam.Data());
-            } else {
-               fSocket->Send(kPROOF_FATAL);
-               if (fLogLevel > 1)
-                  Info("HandleSocketInput", "file %s not yet on node", filenam.Data());
+            if (filenam.BeginsWith("-")) {
+               // install package
+               //...
+               UnlockPackage();
+               break;
             }
-            delete md5local;
+            if (filenam.BeginsWith("+")) {
+               // check file in package directory
+               filenam = filenam.Strip(TString::kLeading, '+');
+               TString packf = fPackageDir + "/" + filenam;
+               LockPackage();
+               TMD5 *md5local = TMD5::FileChecksum(packf);
+               if (md5local && md5 == (*md5local)) {
+                  // package already on server, unlock directory
+                  UnlockPackage();
+                  fSocket->Send(kPROOF_CHECKFILE);
+                  if (fLogLevel > 1)
+                     Info("HandleSocketInput:kPROOF_CHECKFILE", "package %s already on node", filenam.Data());
+               } else {
+                  fSocket->Send(kPROOF_FATAL);
+                  if (fLogLevel > 1)
+                     Info("HandleSocketInput:kPROOF_CHECKFILE", "package %s not yet on node", filenam.Data());
+               }
+               delete md5local;
+            } else {
+               // check file in cache directory
+               TString cachef = fCacheDir + "/" + filenam;
+               LockCache();
+               TMD5 *md5local = TMD5::FileChecksum(cachef);
+               if (md5local && md5 == (*md5local)) {
+                  // copy file from cache to working directory
+                  gSystem->Exec(Form("%s %s .", kCP, cachef.Data()));
+                  fSocket->Send(kPROOF_CHECKFILE);
+                  if (fLogLevel > 1)
+                     Info("HandleSocketInput:kPROOF_CHECKFILE", "file %s already on node", filenam.Data());
+               } else {
+                  fSocket->Send(kPROOF_FATAL);
+                  if (fLogLevel > 1)
+                     Info("HandleSocketInput:kPROOF_CHECKFILE", "file %s not yet on node", filenam.Data());
+               }
+               delete md5local;
+               UnlockCache();
+            }
          }
          break;
 
@@ -611,6 +667,10 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
             char  name[1024];
             sscanf(str, "%s %d %ld", name, &bin, &size);
             ReceiveFile(name, bin ? kTRUE : kFALSE, size);
+            // copy file to cache
+            LockCache();
+            gSystem->Exec(Form("%s %s %s", kCP, name, fCacheDir.Data()));
+            UnlockCache();
             if (IsMaster())
                fProof->SendFile(name, bin);
          }
@@ -653,6 +713,66 @@ Info("HandleSocketInput","### kPROOF_PROCESS: Done");
             Int_t nodes;
             (*mess) >> nodes;
             fProof->SetParallel(nodes);
+            SendLogFile();
+         }
+         break;
+
+      case kPROOF_CACHE:
+         {
+            // handle here all cache and package requests:
+            // type: 1 = ShowCache, 2 = ClearCache, 3 = ShowPackages,
+            // 4 = ClearPackages, 5 = ClearPackage, 6 = EnablePackage,
+            // 7 = ShowEnabledPackages
+            Int_t  type;
+            Bool_t all;  //build;
+            TString package;
+            (*mess) >> type;
+            switch (type) {
+               case 1:
+                  (*mess) >> all;
+                  printf("*** File cache %s:%s ***\n", gSystem->HostName(),
+                         fCacheDir.Data());
+                  fflush(stdout);
+                  gSystem->Exec(Form("%s %s", kLS, fCacheDir.Data()));
+                  if (IsMaster() && all)
+                     fProof->ShowCache(all);
+                  break;
+               case 2:
+                  LockCache();
+                  gSystem->Exec(Form("%s %s/*", kRM, fCacheDir.Data()));
+                  UnlockCache();
+                  if (IsMaster())
+                     fProof->ClearCache();
+                  break;
+               case 3:
+                  (*mess) >> all;
+                  printf("*** Package cache %s:%s ***\n", gSystem->HostName(),
+                         fPackageDir.Data());
+                  fflush(stdout);
+                  gSystem->Exec(Form("%s %s", kLS, fPackageDir.Data()));
+                  if (IsMaster() && all)
+                     fProof->ShowPackages(all);
+                  break;
+               case 4:
+                  LockPackage();
+                  gSystem->Exec(Form("%s %s/*", kRM, fPackageDir.Data()));
+                  UnlockPackage();
+                  if (IsMaster())
+                     fProof->ClearPackages();
+                  break;
+               case 5:
+                  (*mess) >> package;
+                  LockPackage();
+                  gSystem->Exec(Form("%s %s/%s", kRM, fPackageDir.Data(),
+                                package.Data()));
+                  UnlockPackage();
+                  if (IsMaster())
+                     fProof->ClearPackage(package);
+                  break;
+               default:
+                  Error("HandleSocketInput:kPROOF_CACHE", "unknown type %d", type);
+                  break;
+            }
             SendLogFile();
          }
          break;
@@ -826,6 +946,84 @@ Bool_t TProofServ::IsParallel() const
 }
 
 //______________________________________________________________________________
+Int_t TProofServ::LockDir(const TString &lock)
+{
+   // Lock a directory. Waits if lock is hold by an other process.
+   // Returns 0 on success, -1 in case of error.
+
+   Int_t *fid;
+   if (lock == fCacheLock)
+      fid = &fCacheLockId;
+   else if (lock == fPackageLock)
+      fid = &fPackageLockId;
+   else {
+      Error("LockDir", "unknown lock file specified %s", lock.Data());
+      return -1;
+   }
+
+   const char *lfile = lock;
+
+   if (access(lfile, F_OK) == -1)
+      *fid = open(lfile, O_CREAT|O_RDWR, 0644);
+   else
+      *fid = open(lfile, O_RDWR);
+
+   if (*fid == -1) {
+      SysError("LockDir", "cannot open lock file %s", lfile);
+      return -1;
+   }
+
+   // lock the file
+   if (lockf(*fid, F_LOCK, (off_t)1) == -1) {
+      SysError("LockDir", "error locking %s", lfile);
+      close(*fid);
+      *fid = -1;
+      return -1;
+   }
+
+   if (fLogLevel > 2)
+      Info("LockDir", "file %s locked", lfile);
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TProofServ::UnlockDir(const TString &lock)
+{
+   // Unlock a directory. Returns 0 in case of success,
+   // -1 in case of error.
+
+   Int_t *fid;
+   if (lock == fCacheLock)
+      fid = &fCacheLockId;
+   else if (lock == fPackageLock)
+      fid = &fPackageLockId;
+   else {
+      Error("UnlockDir", "unknown lock file specified %s", lock.Data());
+      return -1;
+   }
+
+   if (*fid == -1) return 0;
+
+   // unlock the file
+   lseek(*fid, 0, SEEK_SET);
+   if (lockf(*fid, F_ULOCK, (off_t)1) == -1) {
+      SysError("UnlockDir", "error unlocking %s", lock.Data());
+      close(*fid);
+      *fid = -1;
+      return -1;
+   }
+
+   if (fLogLevel > 2)
+      Info("UnlockDir", "file %s unlocked", lock.Data());
+
+   close(*fid);
+   *fid = -1;
+
+   return 0;
+}
+
+//______________________________________________________________________________
 void TProofServ::Print(Option_t *) const
 {
    // Print status of slave server.
@@ -853,12 +1051,9 @@ void TProofServ::RedirectOutput()
    char logfile[512];
 
    if (IsMaster()) {
-      gSystem->Exec(Form("/bin/rm -f %s/proof_*.log", fLogDir.Data()));
-      sprintf(logfile, "%s/proof_%d.log", fLogDir.Data(), gSystem->GetPid());
+      sprintf(logfile, "%s/proof_%d.log", fSessionDir.Data(), gSystem->GetPid());
    } else {
-      gSystem->Exec(Form("/bin/rm -f %s/proofs%d_*.log", fLogDir.Data(),
-                    fOrdinal));
-      sprintf(logfile, "%s/proofs%d_%d.log", fLogDir.Data(), fOrdinal,
+      sprintf(logfile, "%s/proofs%d_%d.log", fSessionDir.Data(), fOrdinal,
               gSystem->GetPid());
    }
 
@@ -1096,26 +1291,60 @@ void TProofServ::Setup()
    gSystem->Setenv("PATH", bindir);
 #endif
 
-   // set the working directory to ~/proof
+   // goto to the "~/proof" main PROOF working directory
    char *workdir = gSystem->ExpandPathName(kPROOF_WorkDir);
 
    if (gSystem->AccessPathName(workdir)) {
       gSystem->MakeDirectory(workdir);
       if (!gSystem->ChangeDirectory(workdir)) {
-         SysError("Setup", "can not change working directory");
+         SysError("Setup", "can not change to PROOF directory %s",
+                  workdir);
       }
    } else {
       if (!gSystem->ChangeDirectory(workdir)) {
          gSystem->Unlink(workdir);
          gSystem->MakeDirectory(workdir);
          if (!gSystem->ChangeDirectory(workdir)) {
-            SysError("Setup", "can not change working directory");
+            SysError("Setup", "can not change to PROOF directory %s",
+                     workdir);
          }
       }
    }
 
-   // log directory is same as initial work directory
-   fLogDir = workdir;
+   // check and make sure "cache" directory exists
+   fCacheDir = workdir;
+   fCacheDir += TString("/") + kPROOF_CacheDir;
+   if (gSystem->AccessPathName(fCacheDir))
+      gSystem->MakeDirectory(fCacheDir);
+
+   fCacheLock = fCacheDir + "/" + kPROOF_LockFile;
+
+   // check and make sure "packages" directory exists
+   fPackageDir = workdir;
+   fPackageDir += TString("/") + kPROOF_PackDir;
+   if (gSystem->AccessPathName(fPackageDir))
+      gSystem->MakeDirectory(fPackageDir);
+
+   fPackageLock = fPackageDir + "/" + kPROOF_LockFile;
+
+   // create session directory and make it the working directory
+   fSessionDir = workdir;
+   if (IsMaster())
+      fSessionDir += "/master-";
+   else
+      fSessionDir += "/slave-";
+   fSessionDir += TTimeStamp().GetSec();
+   fSessionDir += "-";
+   fSessionDir += gSystem->GetPid();
+
+   if (gSystem->AccessPathName(fSessionDir)) {
+      gSystem->MakeDirectory(fSessionDir);
+      if (!gSystem->ChangeDirectory(fSessionDir)) {
+         SysError("Setup", "can not change to working directory %s",
+                  fSessionDir.Data());
+      }
+   }
+
    delete [] workdir;
 
    // Incoming OOB should generate a SIGURG
@@ -1135,6 +1364,10 @@ void TProofServ::Setup()
 void TProofServ::Terminate(int status)
 {
    // Terminate the proof server.
+
+   // Cleanup session directory
+   if (status == 0)
+      gSystem->Exec(Form("%s %s", kRM, fSessionDir.Data()));
 
    gSystem->Exit(status);
 }

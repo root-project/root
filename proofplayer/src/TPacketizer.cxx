@@ -1,4 +1,3 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.1 2002/03/21 16:11:03 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -31,7 +30,9 @@
 #include "TDSet.h"
 #include "TUrl.h"
 #include "TError.h"
-
+#include "TFile.h"
+#include "TTree.h"
+#include "TKey.h"
 
 ClassImp(TPacketizer)
 
@@ -59,19 +60,27 @@ friend class TPacketizer;
 
 private:
    TString        fNodeName;     // FQDN of the node
-   TList         *fFiles;        // TDSetElements stored on this node
-   TIter         *fNextFile;     // iterator on fFiles
-   Int_t          fActiveFiles;  // number of files with work remaining
+   TList         *fFiles;        // TDSetElements (files) stored on this node
+   TIter         *fFileIter;     // iterator on fFiles
+   TList         *fActive;       // files with work remaining
+   TObject       *fActiveNext;      // cursor in fActive
 
 public:
 
    TFileNode(const char *name)
-      : fNodeName(name), fFiles(new TList), fNextFile(0), fActiveFiles(0) { }
-  ~TFileNode() { delete fFiles; delete fNextFile; }
+      : fNodeName(name), fFiles(new TList), fFileIter(0), fActive(new TList), fActiveNext(0)
+   {
+      fActive->SetOwner(kFALSE);
+   }
+  ~TFileNode() { delete fFiles; delete fFileIter; delete fActive; }
 
    const char *GetName() const { return fNodeName.Data(); }
    void Add(TDSetElement *elem)
-      { fFiles->Add( new TFileStat(this,elem) ); ++fActiveFiles; }
+   {
+      TFileStat *f = new TFileStat(this,elem);
+      fFiles->Add(f);
+      fActive->Add(f);
+   }
 
 };
 
@@ -99,15 +108,105 @@ public:
 };
 
 
-//______________________________________________________________________________
-TPacketizer::TPacketizer(TDSet *dset, TList *slaves)
+Long64_t TPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
 {
+   Long64_t entries;
+      TFile *file = TFile::Open(e->GetFileName());
+
+      if ( file->IsZombie() ) {
+         Error("GetEntries","Cannot open file: %s (%s)",
+            e->GetFileName(), strerror(file->GetErrno()) );
+         return -1;
+      }
+
+      TDirectory *dirsave = gDirectory;
+      if ( ! file->cd(e->GetDirectory()) ) {
+         Error("GetEntries","Cannot cd to: %s",
+            e->GetDirectory() );
+         delete file;
+         return -1;
+      }
+      TDirectory *dir = gDirectory;
+      dirsave->cd();
+
+      if ( tree ) {
+         TKey *key = dir->GetKey(e->GetObjName());
+         if ( key == 0 ) {
+            Error("GetEntries","Cannot find tree \"%s\" in %s",
+                  e->GetObjName(), e->GetFileName() );
+            delete file;
+            return -1;
+         }
+         TTree *tree = (TTree *) key->ReadObj();
+         if ( tree == 0 ) {
+            // Error always reported?
+            delete file;
+            return -1;
+         }
+         entries = (Long64_t) tree->GetEntries();
+         delete tree;
+
+      } else {
+         TList *keys = dir->GetListOfKeys();
+         entries = keys->GetSize();
+      }
+
+      delete file;
+
+      return entries;
+}
+
+
+//______________________________________________________________________________
+TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num)
+{
+   fValid = kTRUE;
+
    fFileNodes = new TList;
    fFileNodes->SetOwner();
+   fTotalEntries = 0;
+   Int_t files = 0;
 
    dset->Reset();
-   for( TDSetElement *e = (TDSetElement*) dset->Next(); e ; e = (TDSetElement*) dset->Next() ) {
+   Long64_t cur = 0;
+   for( TDSetElement *e = (TDSetElement*)dset->Next(); e != 0 ; e = (TDSetElement*)dset->Next() ) {
       TUrl url = e->GetFileName();
+
+      Long64_t n = GetEntries(dset->IsTree(), e);
+
+      if ( n == -1 ) {
+         fValid = kFALSE;
+         return;
+      }
+
+      if ( e->GetFirst() > n ) {
+         Error("TPacketizer","First (%d) higher then number of entries (%d) in %d",
+               e->GetFirst(), n, e->GetFileName() );
+         fValid = kFALSE;
+         break;
+      }
+
+      if ( e->GetNum() == -1 ) {
+         e->SetNum( n - e->GetFirst() );
+      } else if ( e->GetFirst() + e->GetNum() > n ) {
+         Error("TPacketizer","Num (%d) + First (%d) larger then number of keys (%d) in %s",
+            e->GetNum(), e->GetFirst(), n, e->GetFileName() );
+         e->SetNum( n - e->GetFirst() );
+      }
+
+      if ( cur + e->GetNum() < first ) {
+         cur += e->GetNum();
+         continue;
+      }
+
+      if ( cur < first ) {
+         e->SetFirst( e->GetFirst() + (first - cur) );
+         e->SetNum( e->GetNum() - (first + cur) );
+      }
+
+      if ( num != -1 && ( first+num < cur + e->GetNum() ) ) {
+         e->SetNum( first + num - cur );
+      }
 
       // TODO: Names must be in rootd URL format, check where?
       Assert( url.IsValid() && strncmp(url.GetProtocol(),"root", 4) == 0 );
@@ -119,14 +218,17 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves)
          fFileNodes->Add( node );
       }
 
-      // Get number of entries and adjust element
-      // TODO: e->GetEntries ???
-
+      ++files;
+      fTotalEntries += e->GetNum();
       node->Add( e );
    }
 
+   Info("TPacketizer","Processing %ld entries in %d files on %d hosts",
+         fTotalEntries, files, fFileNodes->GetSize() );
+
    // Is there an easier way to do shallow copy ?
    TIter nodes(fFileNodes);
+
    fUnAllocated = new TList;
    TObject *o;
    for( o = nodes(); o != 0 ; o = nodes() ) { fUnAllocated->Add(o); }
@@ -134,16 +236,18 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves)
    fUnAllocNext = fUnAllocated->First();
 
    nodes.Reset();
+
    fActive = new TList;
    for( o = nodes(); o != 0 ; o = nodes() ) { fActive->Add(o); }
    fActive->SetOwner(kFALSE);
    fActiveNext = fActive->First();
 
    nodes.Reset();
+
    TFileNode *node;
    while ( (node = (TFileNode*) nodes.Next()) != 0 ) {
-         node->fNextFile = new TIter(node->fFiles);
-         node->fActiveFiles = node->fFiles->GetSize();
+         node->fFileIter = new TIter(node->fFiles);
+         node->fActiveNext = node->fActive->First();
    }
 
    fSlaves = new TList;
@@ -169,7 +273,7 @@ TPacketizer::~TPacketizer()
 
 
 //______________________________________________________________________________
-Int_t TPacketizer::GetEntriesProcessed(TSlave *sl) const
+Long64_t TPacketizer::GetEntriesProcessed(TSlave *sl) const
 {
    if ( fSlaves == 0 ) return 0;
 
@@ -209,7 +313,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl)
 
       // Try its own node first
       if ( (node = slave->GetFileNode()) != 0 ) {
-         file = (TFileStat*) node->fNextFile->Next();
+         file = (TFileStat*) node->fFileIter->Next();
          if ( file == 0 ) {
             slave->SetFileNode(0);
             if ( fUnAllocNext == node ) {
@@ -224,7 +328,7 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl)
 
       while ( fUnAllocNext != 0 && file == 0 ) {
          node = (TFileNode*) fUnAllocNext;
-         file = (TFileStat*) node->fNextFile->Next();
+         file = (TFileStat*) node->fFileIter->Next();
          if ( file == 0 ) {
             fUnAllocNext = fUnAllocated->After(node);
             fUnAllocated->Remove( node );
@@ -234,7 +338,18 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl)
          }
       }
 
-      // TODO: look for files with remaining work
+      while ( fActiveNext != 0 && file == 0 ) {
+         node = (TFileNode*) fActiveNext;
+         file = (TFileStat*) node->fActiveNext;
+         if ( file == 0 ) {
+            fActiveNext = fActive->After(node);
+            fActive->Remove( node );
+            if ( fActiveNext == 0 ) fActiveNext = fActive->First();
+         } else {
+            slave->fCurFile = file;
+         }
+      }
+
       if ( file == 0 ) return 0;
    }
 
@@ -243,13 +358,20 @@ TDSetElement *TPacketizer::GetNextPacket(TSlave *sl)
    TDSetElement *base = file->fElement;
    Int_t last = base->GetFirst() + base->GetNum();
    Int_t first;
-   Int_t num = 500;  // target packet size TODO: variable packet size
+   Int_t num = 10;  // target packet size TODO: variable packet size
 
    if ( file->fNextEntry + num >= last ) {
       num = last - file->fNextEntry;
       first = file->fNextEntry;
       file->fNextEntry = -1;
-      --file->fNode->fActiveFiles;
+
+      TFileNode *node = file->fNode;
+      if ( node->fActiveNext == file )
+            node->fActiveNext = node->fActive->After(file);
+      node->fActive->Remove(file);
+      if ( node->fActiveNext == 0 )
+            node->fActive->First();
+
    } else {
       first = file->fNextEntry;
       file->fNextEntry += num;

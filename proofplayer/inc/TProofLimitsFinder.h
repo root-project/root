@@ -1,5 +1,5 @@
-// @(#)root/hist:$Name:  $:$Id: THLimitsFinder.h,v 1.2 2002/02/23 15:45:56 rdm Exp $
-// Author: Rene Brun   30/08/99
+// @(#)root/proof:$Name:  $:$Id: $
+// Author: Maarten Ballintijn   19/04/2002
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -8,48 +8,34 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+#ifndef ROOT_TProofLimitsFinder
+#define ROOT_TProofLimitsFinder
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TProofLimitsFinder                                                   //
+//                                                                      //
+// Class to find nice axis limits and synchonize them between slaves    //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 #ifndef ROOT_THLimitsFinder
-#define ROOT_THLimitsFinder
-
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THLimitsFinder                                                       //
-//                                                                      //
-// class to find nice axis limits                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ROOT_TObject
-#include "TObject.h"
-#endif
-
-#ifndef ROOT_Htypes
-#include "Htypes.h"
+#include "THLimitsFinder.h"
 #endif
 
 class TH1;
 
-class THLimitsFinder : public TObject {
-
-protected:
-    static THLimitsFinder *fgLimitsFinder;   //!Pointer to hist limits finder
+class TProofLimitsFinder : public THLimitsFinder {
 
 public:
-    THLimitsFinder();
-    virtual ~THLimitsFinder();
+    TProofLimitsFinder();
+    virtual ~TProofLimitsFinder();
     virtual Int_t      FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax);
     virtual Int_t      FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax);
     virtual Int_t      FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax, Axis_t zmin, Axis_t zmax);
 
-    static  void       Optimize(Double_t A1,  Double_t A2,  Int_t nold
-                       ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BWID, Option_t *option="");
-    static void        OptimizeLimits(Int_t nbins, Int_t &newbins, Axis_t &xmin, Axis_t &xmax, Bool_t isInteger);
-    static THLimitsFinder *GetLimitsFinder();
-    static  void       SetLimitsFinder(THLimitsFinder *finder);
-
-    ClassDef(THLimitsFinder,0)  //Class to find best axis limits
+    ClassDef(TProofLimitsFinder,0)  //Find and communicate best axis limits
 };
 
 #endif

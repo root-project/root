@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.4 2002/01/15 00:45:21 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.5 2002/01/18 14:24:09 rdm Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -29,6 +29,7 @@ TSelectorCint::TSelectorCint() : TSelector()
 {
    // Default constructor for a Selector.
 
+   fFuncInit    = 0;
    fFuncBegin   = 0;
    fFuncNotif   = 0;
    fFuncTerm    = 0;
@@ -48,6 +49,7 @@ TSelectorCint::~TSelectorCint()
 {
    // destructor for a Selector.
 
+   delete fFuncInit;
    delete fFuncBegin;
    delete fFuncNotif;
    delete fFuncTerm;
@@ -60,12 +62,31 @@ TSelectorCint::~TSelectorCint()
    delete fFuncOut;
 }
 
+
+
+//______________________________________________________________________________
+void TSelectorCint::SetFuncProto(G__CallFunc *cf, G__ClassInfo* cl, const char* fname, const char* argtype)
+{
+   Long_t offset = 0;
+
+   cf->SetFuncProto(cl,fname,argtype,&offset);
+
+   if ( gDebug > 2 )
+      Info("SetFuncProto","Set %s(%s)  offset = %ld",fname,argtype,offset);
+
+   // TODO: this condition seems inverted ???
+   if ( cf->IsValid() )
+      Error("SetFuncProto","Cannot Set %s(%s)",fname,argtype);
+}
+
+
 //______________________________________________________________________________
 void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
 {
    // Initialize the CallFunc objects when selector is interpreted
 
    fIntSelector = iselector;
+   fFuncInit    = new G__CallFunc();
    fFuncBegin   = new G__CallFunc();
    fFuncNotif   = new G__CallFunc();
    fFuncTerm    = new G__CallFunc();
@@ -76,17 +97,32 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
    fFuncObj     = new G__CallFunc();
    fFuncInp     = new G__CallFunc();
    fFuncOut     = new G__CallFunc();
-   Long_t offset = 0;
-   fFuncBegin->SetFuncProto(cl,"Begin","TTree*",&offset);
-   fFuncNotif->SetFuncProto(cl,"Notify","",&offset);
-   fFuncTerm->SetFuncProto (cl,"Terminate","",&offset);
-   fFuncCut->SetFuncProto  (cl,"ProcessCut","int",&offset);
-   fFuncFill->SetFuncProto (cl,"ProcessFill","int",&offset);
-   fFuncProc->SetFuncProto (cl,"Process","",&offset);
-   fFuncOption->SetFuncProto (cl,"SetOption","const char*",&offset);
-   fFuncObj->SetFuncProto (cl,"SetObject","TObject *",&offset);
-   fFuncInp->SetFuncProto (cl,"SetInputList","TList *",&offset);
-   fFuncOut->SetFuncProto (cl,"GetOutputList","",&offset);
+
+   SetFuncProto(fFuncInit,cl,"Init","TTree*");
+   SetFuncProto(fFuncBegin,cl,"Begin","TTree*");
+   SetFuncProto(fFuncNotif,cl,"Notify","");
+   SetFuncProto(fFuncTerm,cl,"Terminate","");
+   SetFuncProto(fFuncCut,cl,"ProcessCut","int");
+   SetFuncProto(fFuncFill,cl,"ProcessFill","int");
+   SetFuncProto(fFuncProc,cl,"Process","int");
+   SetFuncProto(fFuncOption,cl,"SetOption","const char*");
+   SetFuncProto(fFuncObj,cl,"SetObject","TObject*");
+   SetFuncProto(fFuncInp,cl,"SetInputList","TList*");
+   SetFuncProto(fFuncOut,cl,"GetOutputList","");
+}
+
+
+//______________________________________________________________________________
+void TSelectorCint::Init(TTree *tree)
+{
+   // Invoke the Init function via the interpreter
+
+   if ( gDebug > 2 )
+      Info("Init","Call Init tree = %p", tree);
+
+   fFuncInit->ResetArg();
+   fFuncInit->SetArg((Long_t)tree);
+   fFuncInit->Exec(fIntSelector);
 }
 
 
@@ -94,7 +130,9 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
 void TSelectorCint::Begin(TTree *tree)
 {
    // Invoke the Begin function via the interpreter
-
+   if ( gDebug > 2 )
+      Info("Begin","Call Begin tree = %p", tree);
+   fFuncBegin->ResetArg();
    fFuncBegin->SetArg((Long_t)tree);
    fFuncBegin->ExecInt(fIntSelector);
 }
@@ -104,7 +142,8 @@ void TSelectorCint::Begin(TTree *tree)
 Bool_t TSelectorCint::Notify()
 {
    // Invoke the Notify function via the interpreter
-
+   if ( gDebug > 2 )
+      Info("Notify","Call Notify");
    Int_t sel = fFuncNotif->ExecInt(fIntSelector);
    return (Bool_t)sel;
 }
@@ -114,8 +153,10 @@ Bool_t TSelectorCint::Notify()
 Bool_t TSelectorCint::ProcessCut(Int_t entry)
 {
    // Invoke the ProcessCut function via the interpreter
-
-   fFuncCut->SetArgArray((Long_t*)&entry);
+   if ( gDebug > 3 )
+      Info("ProcessCut","Call ProcessCut entry = %d", entry);
+   fFuncCut->ResetArg();
+   fFuncCut->SetArg((Long_t)entry);
    Int_t sel = fFuncCut->ExecInt(fIntSelector);
    return (Bool_t)sel;
 }
@@ -125,17 +166,22 @@ Bool_t TSelectorCint::ProcessCut(Int_t entry)
 void TSelectorCint::ProcessFill(Int_t entry)
 {
    // Invoke the ProcessFill function via the interpreter
-
-   fFuncFill->SetArgArray((Long_t*)&entry);
+   if ( gDebug > 3 )
+      Info("ProcessFill","Call ProcessFill entry = %d", entry);
+   fFuncFill->ResetArg();
+   fFuncFill->SetArg((Long_t)entry);
    fFuncFill->Exec(fIntSelector);
 }
 
 
 //______________________________________________________________________________
-Bool_t TSelectorCint::Process()
+Bool_t TSelectorCint::Process(Int_t entry)
 {
    // Invoke the ProcessCut function via the interpreter
-
+   if ( gDebug > 3 )
+      Info("Process","Call Process entry = %d", entry);
+   fFuncProc->ResetArg();
+   fFuncProc->SetArg((Long_t)entry);
    Int_t sel = fFuncProc->ExecInt(fIntSelector);
    return (Bool_t)sel;
 }
@@ -145,7 +191,9 @@ Bool_t TSelectorCint::Process()
 void TSelectorCint::SetOption(const char *option)
 {
    // Set the selector option
-
+   if ( gDebug > 2 )
+      Info("SetOption","Option = %s", option);
+   fFuncOption->ResetArg();
    fFuncOption->SetArg((Long_t)option);
    fFuncOption->Exec(fIntSelector);
 }
@@ -155,7 +203,9 @@ void TSelectorCint::SetOption(const char *option)
 void TSelectorCint::SetObject(TObject *obj)
 {
    // Set the current object
-
+   if ( gDebug > 3 )
+      Info("SetObject","Object = %p", obj);
+   fFuncObj->ResetArg();
    fFuncObj->SetArg((Long_t)obj);
    fFuncObj->Exec(fIntSelector);
 }
@@ -164,6 +214,10 @@ void TSelectorCint::SetObject(TObject *obj)
 //______________________________________________________________________________
 void TSelectorCint::SetInputList(TList *input)
 {
+   // Set the selector list of input objects
+   if ( gDebug > 2 )
+      Info("SetInputList","Object = %p", input);
+   fFuncInp->ResetArg();
    fFuncInp->SetArg((Long_t)input);
    fFuncInp->Exec(fIntSelector);
 }
@@ -172,7 +226,14 @@ void TSelectorCint::SetInputList(TList *input)
 //______________________________________________________________________________
 TList *TSelectorCint::GetOutputList() const
 {
-   return (TList *) fFuncOut->ExecInt(fIntSelector);
+   // Return the list of output object
+
+   TList *out = (TList *) fFuncOut->ExecInt(fIntSelector);
+
+   if ( gDebug > 2 )
+      Info("GetOutputList","List = %p", out);
+
+   return out;
 }
 
 
@@ -180,6 +241,7 @@ TList *TSelectorCint::GetOutputList() const
 void TSelectorCint::Terminate()
 {
    // Invoke the Terminate function via the interpreter
-
+   if ( gDebug > 2 )
+      Info("Terminate","Call Terminate");
    fFuncTerm->Exec(fIntSelector);
 }
