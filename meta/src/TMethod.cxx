@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.4 2003/06/13 16:21:21 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.5 2004/03/12 00:25:59 rdm Exp $
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -50,7 +50,7 @@ TMethod::TMethod(G__MethodInfo *info, TClass *cl) : TFunction(info)
 
       if (t && strstr(t, "*TOGGLE")) {
          fMenuItem = kMenuToggle;
-         char *s;
+         const char *s;
          if ((s = strstr(t, "*GETTER="))) {
             fGetter = s+8;
             fGetter = fGetter.Strip(TString::kBoth);
