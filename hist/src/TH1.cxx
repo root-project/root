@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.127 2003/02/19 10:12:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.128 2003/02/24 10:33:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -640,7 +640,9 @@ void TH1::Add(TF1 *f1, Double_t c1)
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = 0;}
    PutStats(s1);
-
+   SetMinimum();
+   SetMaximum();
+   
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
    Double_t cu;
@@ -718,6 +720,9 @@ void TH1::Add(const TH1 *h1, Double_t c1)
    h1->GetStats(s2);
    for (i=0;i<10;i++) s1[i] += c1*s2[i];
    PutStats(s1);
+   
+   SetMinimum();
+   SetMaximum();
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -799,6 +804,10 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    h2->GetStats(s2);
    for (i=0;i<10;i++) s3[i] = c1*s1[i] + c2*s2[i];
    PutStats(s3);
+   
+   SetMinimum();
+   SetMaximum();
+
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -1042,6 +1051,10 @@ void TH1::Divide(TF1 *f1, Double_t c1)
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = 0;}
    PutStats(s1);
+   
+   SetMinimum();
+   SetMaximum();
+
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -1217,6 +1230,9 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
 
 //   - Reset statistics
    fEntries = fTsumw = 0;
+   
+   SetMinimum();
+   SetMaximum();
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -3369,6 +3385,9 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = 0;}
    PutStats(s1);
+   
+   SetMinimum();
+   SetMaximum();
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -3445,6 +3464,9 @@ void TH1::Multiply(const TH1 *h1)
 
 //   - Reset statistics
    fEntries = fTsumw = 0;
+   
+   SetMinimum();
+   SetMaximum();
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
@@ -3531,6 +3553,8 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
 
 //   - Reset statistics
    fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
+   SetMinimum();
+   SetMaximum();
 
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
