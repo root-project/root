@@ -1207,10 +1207,8 @@ void TView::PadRange(Int_t rback)
         r1 = -1;
         r2 = -1;
         r3 = -1;
-        xgraf[0] = -smax[0];
         xgraf[1] = -smax[0];
         xgraf[2] = -smax[0];
-        xgraf[3] = -smax[0];
         xgraf[4] =  smax[0];
         xgraf[5] =  smax[0];
         ygraf[0] = -smax[1];
@@ -1238,7 +1236,6 @@ void TView::PadRange(Int_t rback)
             r1 = -r1;
             if (i % 2 == 0) r2 = -r2;
             if (i >= 4)     r3 = 1;
-            
         }
         gPad->PaintFillArea(6, xgraf, ygraf);
     }
@@ -1670,9 +1667,11 @@ void TView::ZoomView(TVirtualPad *pad,Double_t zoomFactor)
   AdjustPad(pad);
 }
 //_______________________________________________________________________________________
-void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_t nsteps)
+void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_t nsteps, 
+                      Double_t dlong, Double_t dlat, Double_t dpsi)
 {
-// Move focus to a different box position and extent in nsteps.
+// Move focus to a different box position and extent in nsteps. Perform rotation
+// with dlat,dlong,dpsi at each step.
    if (!IsPerspective()) return;
    if (nsteps<1) return;
    Double_t fc = 1./Double_t(nsteps);
@@ -1708,9 +1707,12 @@ void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_
       od[2]  += doz;
       for (j=0; j<3; j++) {
          fRmin[j] = oc[j]-od[j];
-	 fRmax[j] = oc[j]+od[j];
+	      fRmax[j] = oc[j]+od[j];
       }
       SetDefaultWindow();
+      fLatitude += dlat;
+      fLongitude += dlong;
+      fPsi += dpsi;
       DefinePerspectiveView();
       if (gPad) {
          gPad->Modified();

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.10 2002/11/28 08:11:02 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.11 2003/01/31 22:24:00 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -134,7 +134,8 @@ Bool_t           IsPerspective() const {return TestBit(kPerspective);}
    virtual void  WCtoNDC(const Double_t *pw, Double_t *pn);
 
 //--
-    void         MoveFocus(Double_t *center, Double_t dx, Double_t dy, Double_t dz, Int_t nsteps=10);
+    void         MoveFocus(Double_t *center, Double_t dx, Double_t dy, Double_t dz, Int_t nsteps=10,
+                            Double_t dlong=0, Double_t dlat=0, Double_t dpsi=0);
     virtual void MoveViewCommand(Char_t chCode, Int_t count=1);
     void         MoveWindow(Char_t option);
 
