@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.18 2004/08/03 16:01:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.19 2004/09/06 16:42:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -314,10 +314,12 @@ void TGeoShape::SetShapeBit(UInt_t f, Bool_t set)
 void TGeoShape::TransformPoints(TBuffer3D *buff) const
 {
    // Tranform a buffer (LocalToMaster)
-   // Set reflection flag
+   // Set reflection flag and transparency
    if (gGeoManager) {
       Bool_t isReflection = gGeoManager->IsMatrixReflection();
       if (isReflection) buff->SetBit(TBuffer3D::kIsReflection);
+      TGeoVolume *vol = gGeoManager->GetPaintVolume();
+      buff->fTransparency = (vol==0)?0:vol->GetTransparency();
       Double_t dlocal[3];
       Double_t dmaster[3];
       Bool_t bomb = (gGeoManager->GetBombMode()==0)?kFALSE:kTRUE;

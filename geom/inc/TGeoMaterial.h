@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.12 2004/07/01 15:14:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.13 2004/09/06 16:42:32 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -90,7 +90,7 @@ public:
    virtual void             SetCerenkovProperties(TObject* cerenkov) {fCerenkov = cerenkov;}
    void                     SetRadLen(Double_t radlen, Double_t intlen=0.);
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kMatUsed, flag);}
-   void                     SetTransparency(Char_t transparency) {fFillStyle = 3000+transparency;}
+   void                     SetTransparency(Char_t transparency=0) {fFillStyle = 3000+transparency;}
    static  Double_t         ScreenFactor(Double_t z);
 
    

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.31 2004/01/18 12:31:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.32 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -45,7 +45,6 @@
 // forward declarations
 class TH2F;
 class TGeoNode;
-class TGeoMaterial;
 class TGeoMatrix;
 class TGeoVoxelFinder;
 class TGeoPatternFinder;
@@ -148,6 +147,7 @@ public:
    virtual char   *GetObjectInfo(Int_t px, Int_t py) const;
    Bool_t          GetOptimalVoxels() const;
    Option_t       *GetOption() const { return fOption.Data(); }
+   Char_t          GetTransparency() const {return (fMedium==0)?0:(fMedium->GetMaterial()->GetTransparency());}
    TGeoShape      *GetShape() const                  {return fShape;}
    void            GrabFocus(); // *MENU*
    void            Gsord(Int_t /*iaxis*/)                {;}
@@ -166,6 +166,7 @@ public:
    void            SetCylVoxels(Bool_t flag=kTRUE) {TObject::SetBit(kVoxelsCyl, flag); TObject::SetBit(kVoxelsXYZ, !flag);}
    void            SetNodes(TObjArray *nodes) {fNodes = nodes; TObject::SetBit(kVolumeImportNodes);}
    void            SetShape(const TGeoShape *shape);
+   void            SetTransparency(Char_t transparency=0) {if (fMedium) fMedium->GetMaterial()->SetTransparency(transparency);} // *MENU*
    void            SetField(const TObject *field)          {fField = (TObject*)field;}
    void            SetOption(const char *option);
    virtual void    SetVisibility(Bool_t vis=kTRUE); // *TOGGLE* *GETTER=IsVisible
