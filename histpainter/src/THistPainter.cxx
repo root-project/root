@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.126 2003/03/07 10:13:12 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.127 2003/03/17 13:02:21 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1905,7 +1905,7 @@ void THistPainter::PaintColorLevels(Option_t *)
             if (z > 0) z = TMath::Log10(z);
             else       z = zmin;
          }
-         if (z <= zmin) continue;
+         if (z < zmin) continue;
          xup  = xk + xstep;
          xlow = xk;
          if (Hoption.Logx) {
