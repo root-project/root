@@ -1,3 +1,4 @@
+// @(#)root/net:$Name:  $:$Id: rpddefs.h,v 1.1 2004/10/11 12:34:34 rdm Exp $
 // Author: Gerri Ganis  19/1/2004
 
 /*************************************************************************
@@ -28,10 +29,10 @@
 
 #include "rpddefs.h"
 
-extern Int_t SrvAuthImpl(TSocket *socket, const char *, const char *, 
+extern Int_t SrvAuthImpl(TSocket *socket, const char *, const char *,
                          std::string &user, Int_t &meth,
                          Int_t &type, std::string &ctoken);
-extern Int_t SrvClupImpl(const char *); 
+extern Int_t SrvClupImpl(const char *);
 
 typedef void (*ErrorHandler_t)(int level, const char *msg);
 
@@ -57,8 +58,8 @@ void RpdSetErrorHandler(ErrorHandler_t Err, ErrorHandler_t Sys,
                         ErrorHandler_t Fatal);
 void RpdSetMethInitFlag(int methinit);
 int  RpdInitSession(int, std::string &, int &, int &, int &, std::string &);
-void RpdInit(EService serv, int pid, int sproto, 
-             unsigned int opts, int rumsk, int sshp, 
+void RpdInit(EService serv, int pid, int sproto,
+             unsigned int opts, int rumsk, int sshp,
              const char *tmpd, const char *asrpp);
 
 void SrvSetSocket(TSocket *socket);

@@ -1,3 +1,4 @@
+// @(#)root/net:$Name:  $:$Id: rpddefs.h,v 1.1 2004/10/11 12:34:34 rdm Exp $
 // Author: Gerri Ganis   19/1/2004
 
 /*************************************************************************
@@ -65,7 +66,7 @@
 // --- Globals --------------------------------------------------------
 static TSocket *gSocket;
 
-// This is to be changed whenever something is changed 
+// This is to be changed whenever something is changed
 // in non-backward compatible way
 static Int_t fgSrvProtocol = 0;
 static EService fgService = kSOCKD;
@@ -249,8 +250,8 @@ Int_t SrvAuthImpl(TSocket *socket, const char *confdir, const char *tmpdir,
    SrvSetSocket(socket);
 
    // Init Session (get protocol, run authentication, ...)
-   // type of authentication: 
-   //    0 (new), 1 (existing), 2 (updated offset) 
+   // type of authentication:
+   //    0 (new), 1 (existing), 2 (updated offset)
    int clientprotocol = 0;
    rc = RpdInitSession(fgService, user, clientprotocol, meth, type, ctoken);
 
@@ -284,7 +285,7 @@ static int Recvn(int sock, void *buffer, int length)
    char *buf = (char *)buffer;
 
    for (n = 0; n < length; n += nrecv) {
-      while ((nrecv = recv(sock, buf+n, length-n, 0)) == -1 
+      while ((nrecv = recv(sock, buf+n, length-n, 0)) == -1
                                      && GetErrno() == EINTR)
          ResetErrno();   // probably a SIGCLD that was caught
       if (nrecv < 0) {
@@ -300,7 +301,7 @@ static int Recvn(int sock, void *buffer, int length)
 
 
 //________________________________________________________________________
-void NetClose() 
+void NetClose()
 {
    // Empty call, for consistency
    return;
@@ -501,7 +502,7 @@ void ErrorInfo(const char *va_(fmt), ...)
    // Formats a string in a circular formatting buffer and prints the string.
    // Appends a newline.
    // Cut & Paste from Printf in base/src/TString.cxx
- 
+
    char    buf[1024];
    va_list ap;
    va_start(ap,va_(fmt));

@@ -1,3 +1,4 @@
+// @(#)root/net:$Name:  $:$Id: rpddefs.h,v 1.1 2004/10/11 12:34:34 rdm Exp $
 // Author: Gerardo Ganis   3/12/2003
 
 /*************************************************************************
@@ -11,7 +12,6 @@
 #ifndef ROOT_AuthConst
 #define ROOT_AuthConst
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // AuthConst                                                            //
@@ -21,7 +21,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 // Number of security levels and masks
-// (should be the same as in rpdutils/inc/rpdp.h)
 const Int_t       kMAXSEC         = 6;
 const Int_t       kMAXSECBUF      = 2048;
 const Int_t       kAUTH_REUSE_MSK = 0x1;
