@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.14 2001/01/23 12:28:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.15 2001/02/03 17:11:20 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -71,6 +71,9 @@ TChain::TChain(const char *name, const char *title)
 //    the first parameter "name" is the name of the TTree object
 //    in the files added with Add.
 //   Use TChain::Add to add a new element to this chain.
+//
+//   In case the Tree is in a subdirectory, do, eg:
+//     TChain ch("subdir/treename");
 //
 //    Example:
 //  Suppose we have 3 files f1.root, f2.root and f3.root. Each file
@@ -265,11 +268,6 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
 
    //Check that tree with the right name exists in the file
       TObject *obj = file->Get(treename);
-      if (obj && !obj->InheritsFrom("TTree") ) {
-         strcat(treename,"/");
-         strcat(treename,(char*)GetName());
-         obj = file->Get(treename);
-      }
       if (!obj || !obj->InheritsFrom("TTree") ) {
          Error("AddFile","cannot find tree with name %s in file %s", treename,filename);
          delete file;
