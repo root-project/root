@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.8 2004/01/14 11:42:21 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.9 2004/01/14 21:30:50 brun Exp $
 // Author: Bertrand Bellenot   30/07/02
 
 /*************************************************************************
@@ -563,15 +563,23 @@ void CreateSplash(DWORD time, BOOL extended)
    CreateSplashScreen(0);
 
    // Main message loop:
-   while (gStayUp) {
-      if(PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
-         PreTranslateMessage(&msg);
-         TranslateMessage(&msg);
-         DispatchMessage(&msg);
-      }
-      ScrollCredits(extended);
-   }
-
+   while (gStayUp) { 
+      if(PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) { 
+         PreTranslateMessage(&msg); 
+         TranslateMessage(&msg); 
+         DispatchMessage(&msg); 
+      } 
+      if(gShow) { 
+         if(extended) { 
+            ScrollCredits(extended); 
+         } 
+         else { 
+            ScrollCredits(extended); 
+            gShow = false; 
+         } 
+      } 
+   } 
+   
    DestroySplashScreen();
 }
 
