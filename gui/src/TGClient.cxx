@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.6 2000/10/09 19:15:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.7 2000/10/10 10:20:10 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -688,7 +688,7 @@ TGClient::~TGClient()
 {
    // Closing down client: cleanup and close X connection.
 
-   if (fWlist) fWlist->Delete();
+   if (fWlist) fWlist->Delete("slow");
    delete fWlist;
    delete fPicturePool;
    delete fMimeTypeList;
