@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.9 2003/12/11 10:34:33 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.10 2004/04/13 07:04:42 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -45,6 +45,26 @@ TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
       return;
    }
 }
+
+//-----------------------------------------------------------------------------
+TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, TGeoMatrix *rmat)
+{
+   fLeft = left;
+   if (!fLeft) {
+      Error("ctor", "left shape is NULL");
+      return;
+   }   
+   fRight = right;
+   if (!fRight) {
+      Error("ctor", "right shape is NULL");
+      return;
+   }   
+   fLeftMat = lmat;
+   if (!fLeftMat) fLeftMat = gGeoIdentity;
+   fRightMat = rmat;
+   if (!fRightMat) fRightMat = gGeoIdentity;
+}
+
 //-----------------------------------------------------------------------------
 TGeoBoolNode::~TGeoBoolNode()
 {
@@ -149,6 +169,14 @@ TGeoUnion::TGeoUnion(const char *expr1, const char *expr2)
 {
 // Constructor
 }
+
+//-----------------------------------------------------------------------------
+TGeoUnion::TGeoUnion(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, TGeoMatrix *rmat)
+          :TGeoBoolNode(left,right,lmat,rmat)
+{
+// Constructor providing pointers to components
+}
+
 //-----------------------------------------------------------------------------
 TGeoUnion::~TGeoUnion()
 {
@@ -364,18 +392,28 @@ TGeoSubtraction::TGeoSubtraction()
 {
 // Default constructor
 }
+
 //-----------------------------------------------------------------------------
 TGeoSubtraction::TGeoSubtraction(const char *expr1, const char *expr2)
           :TGeoBoolNode(expr1, expr2)
 {
 // Constructor
 }
+
+//-----------------------------------------------------------------------------
+TGeoSubtraction::TGeoSubtraction(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, TGeoMatrix *rmat)
+                :TGeoBoolNode(left,right,lmat,rmat)
+{
+// Constructor providing pointers to components
+}
+
 //-----------------------------------------------------------------------------
 TGeoSubtraction::~TGeoSubtraction()
 {
 // Destructor
 // --- deletion of components handled by TGeoManager class.
 }
+
 //-----------------------------------------------------------------------------
 void TGeoSubtraction::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin)
 {
@@ -578,18 +616,28 @@ TGeoIntersection::TGeoIntersection()
 {
 // Default constructor
 }
+
 //-----------------------------------------------------------------------------
 TGeoIntersection::TGeoIntersection(const char *expr1, const char *expr2)
           :TGeoBoolNode(expr1, expr2)
 {
 // Constructor
 }
+
+//-----------------------------------------------------------------------------
+TGeoIntersection::TGeoIntersection(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, TGeoMatrix *rmat)
+                 :TGeoBoolNode(left,right,lmat,rmat)
+{
+// Constructor providing pointers to components
+}
+
 //-----------------------------------------------------------------------------
 TGeoIntersection::~TGeoIntersection()
 {
 // Destructor
 // --- deletion of components handled by TGeoManager class.
 }
+
 //-----------------------------------------------------------------------------
 void TGeoIntersection::ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin)
 {

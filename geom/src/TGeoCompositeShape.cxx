@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.18 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.19 2004/04/22 14:07:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -171,7 +171,7 @@ TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
    fNode  = 0;
    MakeNode(expression);
    if (!fNode) {
-      Error("ctor", "cannot parse expression: %s", expression);
+      Error("ctor", "Composite %s: cannot parse expression: %s", name, expression);
       return;
    }
    ComputeBBox();
@@ -187,12 +187,26 @@ TGeoCompositeShape::TGeoCompositeShape(const char *expression)
    MakeNode(expression);
    if (!fNode) {
       char message[256];
-      sprintf(message, "could not parse expression %s", expression);
+      sprintf(message, "Composite (no name) could not parse expression %s", expression);
       Error("ctor", message);
       return;
    }
    ComputeBBox();
 }  
+
+//_____________________________________________________________________________
+TGeoCompositeShape::TGeoCompositeShape(const char *name, TGeoBoolNode *node)
+                   :TGeoBBox(0,0,0)
+{
+// Constructor with a Boolean node
+   SetName(name);
+   fNode = node;
+   if (!fNode) {
+      Error("ctor", "Composite shape %s has null node", name);
+      return;
+   }
+   ComputeBBox();
+}
 
 //_____________________________________________________________________________
 TGeoCompositeShape::~TGeoCompositeShape()

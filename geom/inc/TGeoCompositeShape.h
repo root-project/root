@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.12 2003/12/11 10:34:33 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.h,v 1.13 2004/04/22 14:07:14 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -37,6 +37,7 @@ public:
    TGeoCompositeShape();
    TGeoCompositeShape(const char *name, const char *expression);
    TGeoCompositeShape(const char *expression);
+   TGeoCompositeShape(const char *name, TGeoBoolNode *node);
    // destructor
    virtual ~TGeoCompositeShape();
    // methods

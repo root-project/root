@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.4 2003/08/28 12:45:10 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.5 2003/09/04 12:38:22 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -49,6 +49,7 @@ public:
    // constructors
    TGeoBoolNode();
    TGeoBoolNode(const char *expr1, const char *expr2);
+   TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat=0, TGeoMatrix *rmat=0);
 
    // destructor
    virtual ~TGeoBoolNode();
@@ -89,6 +90,7 @@ public:
    // constructors
    TGeoUnion();
    TGeoUnion(const char *expr1, const char *expr2);
+   TGeoUnion(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat=0, TGeoMatrix *rmat=0);
 
    // destructor
    virtual ~TGeoUnion();
@@ -123,6 +125,7 @@ public:
    // constructors
    TGeoIntersection();
    TGeoIntersection(const char *expr1, const char *expr2);
+   TGeoIntersection(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat=0, TGeoMatrix *rmat=0);
 
    // destructor
    virtual ~TGeoIntersection();
@@ -157,6 +160,7 @@ public:
    // constructors
    TGeoSubtraction();
    TGeoSubtraction(const char *expr1, const char *expr2);
+   TGeoSubtraction(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat=0, TGeoMatrix *rmat=0);
 
    // destructor
    virtual ~TGeoSubtraction();
