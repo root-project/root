@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.75 2002/04/08 10:46:31 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.76 2002/04/30 14:43:09 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2370,7 +2370,15 @@ TFrame *TPad::GetFrame()
 //______________________________________________________________________________
 TObject *TPad::GetPrimitive(const char *name) const
 {
-   if (fPrimitives) return fPrimitives->FindObject(name);
+   if (!fPrimitives) return 0;
+   TIter next(fPrimitives);
+   TObject *found, *obj;
+   while ((obj=next())) {
+      if (!strcmp(name, obj->GetName())) return obj;
+      if (obj->InheritsFrom(TPad::Class())) continue;
+      found = obj->FindObject(name);
+      if (found) return found;
+   }
    return 0;
 }
 
