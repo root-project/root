@@ -58,15 +58,6 @@ extern void G__set_cpp_environmentlongif();
 namespace std {} using namespace std;
 #endif
 #endif
-extern "C" {
-#ifdef __WIN32
-__int64 G__strtoll(const char*, char**, int);
-unsigned __int64 G__strtoull(const char*, char**, int);
-#else
-long long G__strtoll(const char*, char**, int);
-unsigned long long G__strtoull(const char*, char**, int);
-#endif
-}
 
 /**************************************************************************
 * makecint
@@ -124,6 +115,10 @@ typedef unsigned long long G__uint64;
 
 #endif
 
+extern "C" {
+G__int64 G__strtoll(const char*, char**, int);
+G__uint64 G__strtoull(const char*, char**, int);
+}
 
 /************************************************************************
 * long long definition
@@ -506,11 +501,11 @@ inline istream& operator>>(istream& ist,G__ulonglong& a) {
 
 #include <stdio.h>
 void G__printformatll(char* out,const char* fmt,void *p) {
-  long long *pll = (long long*)p;
+  G__int64 *pll = (G__int64*)p;
   sprintf(out,fmt,*pll);
 }
 void G__printformatull(char* out,const char* fmt,void *p) {
-  unsigned long long *pll = (unsigned long long*)p;
+  G__uint64 *pll = (G__uint64*)p;
   sprintf(out,fmt,*pll);
 }
 
