@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.196 2004/06/22 06:18:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.197 2004/06/25 18:42:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -299,6 +299,7 @@
 #include "TFriendElement.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualFitter.h"
+#include "TVirtualIndex.h"
 #include "TCut.h"
 #include "Api.h"
 
@@ -344,6 +345,7 @@ TTree::TTree(): TNamed()
    fFileNumber     = 0;
    fClones         = 0;
    fUserInfo       = 0;
+   fTreeIndex      = 0;
 }
 
 //______________________________________________________________________________
@@ -389,7 +391,8 @@ TTree::TTree(const char *name,const char *title, Int_t splitlevel)
    fFileNumber     = 0;
    fClones         = 0;
    fUserInfo       = 0;
-
+   fTreeIndex      = 0;
+   
    SetFillColor(gStyle->GetHistFillColor());
    SetFillStyle(gStyle->GetHistFillStyle());
    SetLineColor(gStyle->GetHistLineColor());
@@ -450,6 +453,9 @@ TTree::~TTree()
       // delete the array but NOT its content
       delete fClones;
    }
+   
+   delete fTreeIndex;
+   
    fDirectory  = 0; //must be done after the destruction of friends
 }
 
@@ -1404,73 +1410,14 @@ void TTree::Browse(TBrowser *b)
 //______________________________________________________________________________
 Int_t TTree::BuildIndex(const char *majorname, const char *minorname)
 {
-   // Build an index table using the leaves with name: major & minor name
-   // The index is built in the following way:
-   //    A pass on all entries is made using TTree::Draw
-   //    var1 = majorname
-   //    var2 = minorname
-   //    sel  = majorname +minorname*1e-9
-   //    The standard result from TTree::Draw is stored in fV1, fV2 and fW
-   //    The array fW is sorted into fIndex
-   //  Once the index is computed, one can retrieve one entry via
-   //    TTree:GetEntryWithIndex(majornumber, minornumber)
-   // Example:
-   //  tree.BuildIndex("Run","Event"); //creates an index using leaves Run and Event
-   //  tree.GetEntryWithIndex(1234,56789); //reads entry corresponding to
-   //                                        Run=1234 and Event=56789
-   //
-   // Note that majorname and minorname may be expressions using original
-   // Tree variables eg: "run-90000", "event +3*xx"
-   // In case an expression is specified, the equivalent expression must be computed
-   // when calling GetEntryWithIndex.
-   //
-   // To build an index with only majorname, specify minorname="0" (default)
-   //
-   // Note that once the index is built, it can be saved with the TTree object
-   // with tree.Write(); //if the file has been open in "update" mode.
-   //
-   // The most convenient place to create the index is at the end of
-   // the filling process just before saving the Tree header.
-   // If a previous index was computed, it is redefined by this new call.
-   //
-   // Note that this function can also be applied to a TChain.
+   // Build a Tree Index (default is TtreeIndex).
+   // see a description of teh parameters and functionality in
+   //  TTreeIndex::TTreeIndex
    //
    // The return value is the number of entries in the Index (< 0 indicates failure)
 
-   Int_t nch = strlen(majorname) + strlen(minorname) + 10;
-   char *varexp = new char[nch];
-   sprintf(varexp,"%s+%s*1e-9",majorname,minorname);
-
-   Int_t oldEstimate = fEstimate;
-   Int_t n = (Int_t)GetEntries(); //must use GetEntries instead of fEntries in case of a chain
-   if (n <= 0) return 0;
-
-   if (n > fEstimate) SetEstimate(n);
-
-   Int_t res = Draw(varexp,"","goff");
-   if (res!=n) {
-      Error("BuildIndex",
-            Form("Badly formed index because the expression %s has %d values while the tree has %d entries\n",
-                 varexp,res,n));
-      return -1;
-   }
-
-   // Sort array fV1 (contains  majorname +minorname*1e-9) into fIndex
-   Double_t *w = GetPlayer()->GetV1();
-   Int_t *ind = new Int_t[n];
-   TMath::Sort(n,w,ind,0);
-   fIndexValues.Set(n);
-   fIndex.Set(n);
-   for (Int_t i=0;i<n;i++) {
-      fIndexValues.fArray[i] = w[ind[i]];
-      fIndex.fArray[i] = ind[i];
-   }
-   if (n > oldEstimate) SetEstimate(oldEstimate);
-
-   // clean up
-   delete [] ind;
-   delete [] varexp;
-   return n;
+   fTreeIndex = GetPlayer()->BuildIndex(this,majorname,minorname);
+   return fTreeIndex->GetN();
 }
 
 //______________________________________________________________________________
@@ -1659,7 +1606,8 @@ TTree *TTree::CloneTree(Int_t nentries, Option_t *)
    newtree->Reset();
 
   // delete non active branches from the clone
-   Int_t i,j,k,l,nb1,nb2;
+   Int_t j,k,l,nb1,nb2;
+   Int_t i;
    TObjArray *lb, *lb1;
    TBranch *branch, *b1, *b2;
    TObjArray *leaves = newtree->GetListOfLeaves();
@@ -2711,7 +2659,7 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
    TBranch *branch;
 
    Int_t nbranches = fBranches.GetEntriesFast();
-   Int_t nb;
+   Int_t nb=0;
    for (i=0;i<nbranches;i++)  {
       branch = (TBranch*)fBranches.UncheckedAt(i);
       nb = branch->GetEntry(entry, getall);
@@ -2726,7 +2674,12 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
    while ((fe = (TFriendElement*)nextf())) {
       TTree *t = fe->GetTree();
       if (t) {
-         nb = t->GetEntry(entry, getall);
+         TVirtualIndex *index = t->GetTreeIndex();
+         if (index) {
+            Int_t jentry = index->GetEntryNumberFriend(this); 
+            nb = t->GetEntry(jentry,getall);
+         }
+         else t->GetEntry(entry,getall);
          if (nb < 0) return nb;
          nbytes += nb;
       }
@@ -2766,11 +2719,8 @@ Int_t TTree::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
 //
 // See also GetEntryNumberWithIndex
 
-   if (fIndex.fN == 0) return -1;
-   Double_t value = major + minor*1e-9;
-   Int_t i = TMath::BinarySearch(Int_t(fEntries), fIndexValues.fArray, value);
-   if (i < 0) return -1;
-   return fIndex.fArray[i];
+   if (!fTreeIndex) return -1;
+   return fTreeIndex->GetEntryNumberWithBestIndex(major,minor);
 }
 
 
@@ -2788,12 +2738,8 @@ Int_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
 //
 // See also GetEntryNumberWithBestIndex
 
-   if (fIndex.fN == 0) return -1;
-   Double_t value = major + minor*1e-9;
-   Int_t i = TMath::BinarySearch(Int_t(fEntries), fIndexValues.fArray, value);
-   if (i < 0) return -1;
-   if (TMath::Abs(fIndexValues.fArray[i] - value) > 1.e-10) return -1;
-   return fIndex.fArray[i];
+   if (!fTreeIndex) return -1;
+   return fTreeIndex->GetEntryNumberWithIndex(major,minor);
 }
 
 
@@ -2838,7 +2784,7 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
       if (t) {
          serial = t->GetEntryNumberWithIndex(major,minor);
          if (serial <0) return -nbytes;
-         nb = t->GetEntryNumberWithIndex(major,minor);
+         nb = t->GetEntry(serial);
          if (nb < 0) return nb;
          nbytes += nb;
       }
@@ -3083,7 +3029,7 @@ Int_t TTree::LoadTree(Int_t entry)
          if (t->IsA()!=TTree::Class()) {
             Int_t oldNumber = t->GetTreeNumber();
 
-            friendHasEntry|=(t->LoadTree(entry)>=0);
+            friendHasEntry|=(t->LoadTreeFriend(entry,this)>=0);
 
             Int_t newNumber = t->GetTreeNumber();
             if (oldNumber!=newNumber) {
@@ -3095,7 +3041,7 @@ Int_t TTree::LoadTree(Int_t entry)
             }
          } else {
             // we assume it is a simple tree so we have nothing to do.
-            friendHasEntry|=(t->LoadTree(entry)>=0);
+            friendHasEntry|=(t->LoadTreeFriend(entry,this)>=0);
          }
       } // for each friend
 
@@ -3110,6 +3056,20 @@ Int_t TTree::LoadTree(Int_t entry)
    if (fReadEntry>=fEntries && !friendHasEntry) return -2;
    return fReadEntry;
 
+}
+
+//______________________________________________________________________________
+Int_t TTree::LoadTreeFriend(Int_t entry, TTree *T)
+{
+  // called by TTree::LoadTree when TTree *T looks for the entry
+  // number in a friend Tree (this) corresponding to the entry number in T.
+  // If the friend Tree has no TTreeIndex, entry in the friend and entry
+  // in T are the same.
+  // If the friend Tree has an index, one must find the value pair major,minor
+  // in T to locate the corresponding entry in the friend Tree.
+   
+   if (!fTreeIndex) return LoadTree(entry);
+   return fReadEntry = fTreeIndex->GetEntryNumberFriend(T);
 }
 
 //______________________________________________________________________________
@@ -4140,6 +4100,12 @@ void TTree::Streamer(TBuffer &b)
       if (R__v > 4) {
          fDirectory = gDirectory;
          TTree::Class()->ReadBuffer(b, this, R__v, R__s, R__c);
+         if (fTreeIndex) fTreeIndex->SetTree(this);
+         if (fIndex.fN) {
+            Warning("Streamer","Old style index in this tree is deleted. Rebuild the index via TTree::BuildIndex");
+            fIndex.Set(0);
+            fIndexValues.Set(0);
+         }
          if (fEstimate <= 10000) fEstimate = 1000000;
          fSavedBytes = fTotBytes;
          gDirectory->Append(this);
