@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.133 2002/08/17 21:38:19 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.134 2002/09/05 19:55:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2598,8 +2598,10 @@ Double_t TTree::GetMaximum(const char *columname)
    Double_t cmax = -FLT_MAX; //in float.h
    for (Int_t i=0;i<fEntries;i++) {
       branch->GetEntry(i);
-      Double_t val = leaf->GetValue();
-      if (val > cmax) cmax = val;
+      for (Int_t j=0;j<leaf->GetLen();j++) {
+         Double_t val = leaf->GetValue(j);
+         if (val > cmax) cmax = val;
+      }
    }
    return cmax;
 }
@@ -2626,8 +2628,10 @@ Double_t TTree::GetMinimum(const char *columname)
    Double_t cmin = FLT_MAX; //in float.h
    for (Int_t i=0;i<fEntries;i++) {
       branch->GetEntry(i);
-      Double_t val = leaf->GetValue();
-      if (val < cmin) cmin = val;
+      for (Int_t j=0;j<leaf->GetLen();j++) {
+         Double_t val = leaf->GetValue(j);
+         if (val < cmin) cmin = val;
+      }
    }
    return cmin;
 }
