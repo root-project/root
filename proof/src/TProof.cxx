@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.52 2003/09/07 18:25:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.53 2003/09/11 23:12:18 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -376,7 +376,8 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                   }
 
                   // Check if a HostAuth object for this (host,user) pair already exists
-                  THostAuth *hostAuth = TAuthenticate::GetHostAuth((char *)SlaveFqdn.Data(),(char *)fUser.Data());
+                  THostAuth *hostAuth =
+                     TAuthenticate::GetHostAuth(SlaveFqdn, fUser);
 
                   if (hostAuth == 0) {
                      // Create HostAuth object ...
@@ -414,6 +415,20 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                      lSecurity=(int)TAuthenticate::kSRP;
                   if (nSecs == 1 && fSecs[0] == (int)TAuthenticate::kKrb5)
                      lSecurity=(int)TAuthenticate::kKrb5;
+
+                  // If 'host' is ourselves, then use rfio (to setup things correctly)
+                  // Check and save the host FQDN ...
+                  static TString LocalFqdn;
+                  if (LocalFqdn == "") {
+                     TInetAddress addr = gSystem->GetHostByName(gSystem->HostName());
+                     if (addr.IsValid()) {
+                        LocalFqdn = addr.GetHostName();
+                        if (LocalFqdn == "UnNamedHost")
+                           LocalFqdn = addr.GetHostAddress();
+                     }
+                  }
+                  if (SlaveFqdn == LocalFqdn)
+                     hostAuth->SetFirst((int)TAuthenticate::kRfio);
 
                   // CleanUp memory
                   int ks;

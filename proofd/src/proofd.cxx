@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.39 2003/09/07 18:25:46 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.40 2003/09/11 23:12:18 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -477,11 +477,7 @@ void ProofdGlobusAuth(const char *sstr)
 //______________________________________________________________________________
 void CheckGlobus(char *rcfile)
 {
-   // Create a resource table and read the (possibly) three resource files, i.e
-   // $ROOTSYS/system<name> (or ROOTETCDIR/system<name>), $HOME/<name> and
-   // ./<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
-   // read additional user defined resource files by creating addtional TEnv
-   // object.
+   // Check for Globus authentication parameters in the rootrc resource files.
 
    char line[kMAXPATHLEN];
    int  sGlobus =-1, uGlobus =-1, lGlobus =-1, pGlobus=-1;
@@ -536,7 +532,7 @@ void CheckGlobus(char *rcfile)
       sprintf(s, "%s/%s", getenv("HOME"), rcfile);
       if (gDebug > 2) ErrorInfo("CheckGlobus: checking user: %s", s);
       if (!access(s, F_OK) && !access(s, R_OK)) {
-         FILE *fs= fopen(s, "r");
+         FILE *fs = fopen(s, "r");
          while (fgets(line, sizeof(line), fs)) {
             if (line[0] == '#') continue;   // skip comment lines
             sscanf(line, "%s %s %s", namenv, valenv, dummy);
@@ -1270,7 +1266,7 @@ int main(int argc, char **argv)
    // the parent from NetOpen() never returns.
 
    while (1) {
-      if (NetOpen(gInetdFlag,kPROOFD) == 0) {
+      if (NetOpen(gInetdFlag, kPROOFD) == 0) {
          ProofdExec();     // child processes client's requests
          NetClose();       // then we are done
          exit(0);

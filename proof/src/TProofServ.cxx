@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.46 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.47 2003/09/11 23:12:18 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -471,10 +471,15 @@ TDSetElement *TProofServ::GetNextPacket()
 }
 
 //______________________________________________________________________________
-void TProofServ::GetOptions(int * /*argc*/, char **argv)
+void TProofServ::GetOptions(int *argc, char **argv)
 {
    // Get and handle command line options. Fixed format:
    // "proofserv"|"proofslave" <confdir>
+
+   if (*argc <= 1) {
+      fprintf(stderr, "proofserv: needs to be started from proofd with arguments\n");
+      exit(1);
+   }
 
    if (!strcmp(argv[1], "proofserv") || !strcmp(argv[1], "proofslave")) {
       fService = argv[1];
@@ -1464,15 +1469,20 @@ void TProofServ::Setup()
    TString PubKey;
    (*pubkey) >> PubKey;
 
-   TAuthenticate::SetRSAPublic(PubKey.Data());
+   if (PubKey != "None") {
+
+      // We got a key to decode the passwd ...
+
+      TAuthenticate::SetRSAPublic(PubKey);
+
+      // Receive passwd
+      char *Passwd = 0;
+      TAuthenticate::SecureRecv(fSocket, 2, &Passwd);
+      fPasswd = Passwd;
+      delete [] Passwd;
+   }
 
    delete pubkey;
-
-   // Receive passwd
-   char *Passwd = 0;
-   TAuthenticate::SecureRecv(fSocket, 2, &Passwd);
-   fPasswd = Passwd;
-   delete[] Passwd;
 
    // Receive user and passwd information
    TMessage *mess;
@@ -1606,7 +1616,7 @@ void TProofServ::Terminate(Int_t status)
    // Cleanup auth tab
    TApplication *lApp = gROOT->GetApplication();
    if (lApp) {
-      if (strstr(lApp->Argv()[1],"proof") != 0 && lApp->Argc() > 5) {
+      if (lApp->Argc() > 5) {
          // Prepare the call
          char *Host = StrDup(lApp->Argv()[4]);
          int   rPid;
@@ -1688,7 +1698,7 @@ void TProofServ::ReadProofAuth()
    // Check if we got a file name from the calling process
    TApplication *lApp = gROOT->GetApplication();
    if (lApp) {
-      if (strstr(lApp->Argv()[1],"proof") != 0 && strlen(lApp->Argv()[3]) > 0) {
+      if (strlen(lApp->Argv()[3]) > 0) {
          // We got a file name ...
          char *FilePA = StrDup(lApp->Argv()[3]);
          PDB(kGlobal,3) Info("ReadProofAuth","filename is: %s", FilePA);

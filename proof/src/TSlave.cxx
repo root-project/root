@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.15 2003/09/07 18:25:46 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.16 2003/09/11 23:12:18 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -223,28 +223,37 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          fSocket->Send(mess);
 
 #else
-
-         TMessage mess, pubkey;
-
-         // Send public part of RSA key to ProofServ
-         TString PubKey = TAuthenticate::GetRSAPubExport();
-         pubkey << PubKey;
-         fSocket->Send(pubkey);
-
          // send user name to remote host
          // for UsrPwd and SRP methods send also passwd, rsa encoded
+         TMessage pubkey;
          TString passwd = "";
          Bool_t  pwhash = kFALSE;
          if (fSecurity == TAuthenticate::kClear || fSecurity == TAuthenticate::kSRP) {
+
+            // Send public part of RSA key to ProofServ
+            TString PubKey = TAuthenticate::GetRSAPubExport();
+            pubkey << PubKey;
+            fSocket->Send(pubkey);
+
             passwd = fProof->fPasswd;
             pwhash = fProof->fPwHash;
+
+            // Password should be encoded before sending
+            if (TAuthenticate::SecureSend(fSocket, 1, passwd) == -1) {
+              Warning("TSlave",
+                      "problems secure-sending pass hash - may result in failures");
+            }
+
+         } else {
+
+            // Send notification of no key to be sent ...
+            TString PubKey = "None";
+            pubkey << PubKey;
+            fSocket->Send(pubkey);
+
          }
 
-         // Password should be encoded before sending
-         if (TAuthenticate::SecureSend(fSocket, 1, (char *)passwd.Data()) == -1) {
-            Warning("TSlave",
-                    "problems secure-sending pass hash - may result in failures");
-         }
+         TMessage mess;
 
          if (!fProof->IsMaster())
             mess << fProof->fUser << pwhash << fProof->fConfFile;
@@ -254,7 +263,6 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          fSocket->Send(mess);
 
 #endif
-
          // set some socket options
          fSocket->SetOption(kNoDelay, 1);
       }

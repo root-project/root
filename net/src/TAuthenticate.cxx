@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.17 2003/09/09 12:37:25 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.18 2003/09/11 23:12:18 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -703,7 +703,7 @@ Bool_t TAuthenticate::GetUserPasswd(TString & user, TString & passwd, Bool_t & p
 }
 
 //______________________________________________________________________________
-Bool_t TAuthenticate::CheckNetrc(TString & user, TString & passwd, Bool_t & pwhash)
+Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd, Bool_t &pwhash)
 {
    // Try to get user name and passwd from the ~/.rootnetrc or
    // ~/.netrc files. First ~/.rootnetrc is tried, after that ~/.netrc.
@@ -779,9 +779,16 @@ Bool_t TAuthenticate::CheckNetrc(TString & user, TString & passwd, Bool_t & pwha
                strcmp(word[4], "password") && strcmp(word[4], "password-hash"))
                continue;
 
-            if (!strcmp(word[1], remote)) {
-               // Possible solution to Fons wish ... (10/9/2003)
-              // if (!strstr(remote,word[1]) {
+            // Determine FQDN of the host name found in the file ...
+            TString host_tmp = word[1];
+            TInetAddress addr = gSystem->GetHostByName(word[1]);
+            if (addr.IsValid()) {
+               host_tmp = addr.GetHostName();
+               if (host_tmp == "UnNamedHost")
+                  host_tmp = addr.GetHostAddress();
+            }
+
+            if (host_tmp == remote) {
                if (user == "") {
                   user = word[3];
                   passwd = word[5];
@@ -3383,11 +3390,11 @@ char *TAuthenticate::GetRandString(Int_t Opt, Int_t Len)
 }
 
 //______________________________________________________________________________
-Int_t TAuthenticate::SecureSend(TSocket *Socket, Int_t Key, char *Str)
+Int_t TAuthenticate::SecureSend(TSocket *Socket, Int_t Key, const char *Str)
 {
    // Encode null terminated Str using the session private key indcated by Key
    // and sends it over the network
-   // Returns number of bytes sent.or -1 in case of error.
+   // Returns number of bytes sent, or -1 in case of error.
    // Key = 1 for private encoding, Key = 2 for public encoding
 
    char BufTmp[kMAXSECBUF];

@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.6 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.7 2003/09/11 23:12:19 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -166,7 +166,6 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
    }
 
    t_clientpasswd(tc, psswd);
-         if (gDebug>0) ::Info("SRPAuthenticate", "password: '%s'",psswd);
 
    // receive B from server
    sock->Recv(hexbuf, MAXHEXPARAMLEN, kind);

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.9 2003/09/07 18:25:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.10 2003/09/11 23:12:18 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -161,7 +161,7 @@ public:
    static void        SetRSAInit();
 
    static void        AuthError(const char *where, Int_t error);
-   static Int_t       SecureSend(TSocket *Socket, Int_t KeyType, char *In);
+   static Int_t       SecureSend(TSocket *Socket, Int_t KeyType, const char *In);
    static Int_t       SecureRecv(TSocket *Socket, Int_t KeyType, char **Out);
 
    static Int_t       AuthExists(TAuthenticate *auth, Int_t method, TString &details,
