@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.71 2004/12/09 07:14:03 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.72 2005/03/05 22:15:52 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -65,7 +65,7 @@ static inline ULong_t Void_Hash(const void *ptr)
 
 
 //______________________________________________________________________________
-TBuffer::TBuffer(EMode mode) : 
+TBuffer::TBuffer(EMode mode) :
    fInfo(0), fInfos(10)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
@@ -91,7 +91,7 @@ TBuffer::TBuffer(EMode mode) :
 }
 
 //______________________________________________________________________________
-TBuffer::TBuffer(EMode mode, Int_t bufsiz) : 
+TBuffer::TBuffer(EMode mode, Int_t bufsiz) :
    fInfo(0), fInfos(10)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
@@ -117,7 +117,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz) :
 }
 
 //______________________________________________________________________________
-TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt) : 
+TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt) :
    fInfo(0), fInfos(10)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
@@ -324,6 +324,43 @@ UInt_t TBuffer::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
 }
 
 //______________________________________________________________________________
+Bool_t TBuffer::CheckObject(const TObject *obj)
+{
+   // Check if the specified object is already in the buffer.
+   // Returns kTRUE if object already in the buffer, kFALSE otherwise
+   // (also if obj is 0 or TBuffer not in writing mode).
+
+   return CheckObject(obj, TObject::Class());
+}
+
+//______________________________________________________________________________
+Bool_t TBuffer::CheckObject(const void *obj, const TClass *ptrClass)
+{
+   // Check if the specified object of the specified class is already in
+   // the buffer. Returns kTRUE if object already in the buffer,
+   // kFALSE otherwise (also if obj is 0 or TBuffer not in writing mode).
+
+   if (!obj || !IsWriting())
+      return kFALSE;
+
+   TClass *clActual = ptrClass->GetActualClass(obj);
+
+   ULong_t idx;
+
+   if (clActual) {
+      const char *temp = (const char*) obj;
+      Int_t offset = (ptrClass != clActual) ?
+                     clActual->GetBaseClassOffset(ptrClass) : 0;
+      temp -= offset;
+      idx = (ULong_t)fMap->GetValue(Void_Hash(temp), (Long_t)temp);
+   } else {
+      idx = (ULong_t)fMap->GetValue(Void_Hash(obj), (Long_t)obj);
+   }
+
+   return idx ? kTRUE : kFALSE;
+}
+
+//______________________________________________________________________________
 void TBuffer::Expand(Int_t newsize)
 {
    // Expand the I/O buffer to newsize bytes.
@@ -356,7 +393,7 @@ void TBuffer::SetParent(TObject *parent)
 void TBuffer::GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const
 {
    // Retrieve the object stored in the buffer's object map at 'tag'
-   // Set ptr and ClassPtr respectively to the address of the object and 
+   // Set ptr and ClassPtr respectively to the address of the object and
    // a pointer to its TClass.
 
    if (tag > (UInt_t)fMap->GetSize()) {
@@ -1938,8 +1975,8 @@ TObject *TBuffer::ReadObject(const TClass * /*clReq*/)
 void TBuffer::SkipObjectAny()
 {
    // Skip any kind of object from buffer
-   
-   UInt_t start, count; 
+
+   UInt_t start, count;
    ReadVersion(&start, &count);
    SetBufferOffset(start+count+sizeof(UInt_t));
 }

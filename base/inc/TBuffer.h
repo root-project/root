@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.45 2005/03/05 22:59:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.46 2005/03/06 07:29:05 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -74,7 +74,7 @@ protected:
    void   CheckCount(UInt_t offset);
    UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
 
-   void Expand(Int_t newsize);  //Expand buffer to newsize
+   void Expand(Int_t newsize);  // expand buffer to newsize
 
    Int_t Read(const char *name) { return TObject::Read(name); }
    Int_t Write(const char *name, Int_t opt, Int_t bufs)
@@ -88,9 +88,9 @@ public:
    enum EMode { kRead = 0, kWrite = 1 };
    enum { kInitialSize = 1024, kMinimalSize = 128 };
    enum { kMapSize = 503 };
-   enum { kStreamedMemberWise = BIT(14) }; //Added to version number to know if a collection has been stored member-wise.
+   enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
    enum { kNotDecompressed = BIT(15) }; //indicates a weird buffer, used by TBasket
-   enum { kIsOwner = BIT(16) };  //If set TBuffer owns fBuffer
+   enum { kIsOwner = BIT(16) };  //if set TBuffer owns fBuffer
    enum { kUser1 = BIT(21), kUser2 = BIT(22), kUser3 = BIT(23)}; //free for user
 
    TBuffer(EMode mode);
@@ -119,6 +119,9 @@ public:
    void     DetachBuffer() { fBuffer = 0; }
    Int_t    Length() const { return (Int_t)(fBufCur - fBuffer); }
 
+   Bool_t   CheckObject(const TObject *obj);
+   Bool_t   CheckObject(const void *obj, const TClass *ptrClass);
+
    virtual   Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
    virtual   Int_t    CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
    virtual   void     SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);
@@ -143,7 +146,6 @@ public:
 
    char    *ReadString(char *s, Int_t max);
    void     WriteString(const char *s);
-
 
    virtual TClass  *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0);
    virtual void     WriteClass(const TClass *cl);
@@ -505,8 +507,7 @@ inline TBuffer &TBuffer::operator>>(ULong64_t &ll)
 template <>
 #endif
 inline TBuffer &operator<<(TBuffer &buf, const TObject *obj)
-   { buf.WriteObjectAny(obj,TObject::Class());
-     return buf; }
+   { buf.WriteObjectAny(obj, TObject::Class()); return buf; }
 //______________________________________________________________________________
 //inline TBuffer &operator>>(TBuffer &buf, TObject *&obj)
 //   { obj = buf.ReadObject(0); return buf; }
