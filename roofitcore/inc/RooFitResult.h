@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.rdl,v 1.7 2002/02/09 02:01:23 davidk Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.8 2002/03/27 19:25:39 davidk Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -31,6 +31,8 @@ public:
   // Constructors, assignment etc.
   RooFitResult(const char* name=0, const char* title=0) ;
   virtual ~RooFitResult() ;
+
+  static RooFitResult* lastMinuitFit() ;
 
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.11 2002/03/27 19:25:39 davidk Exp $
+ *    File: $Id: RooFitResult.cc,v 1.12 2002/04/03 23:37:25 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -456,3 +456,48 @@ void RooFitResult::fillCorrMatrix()
 
   delete gcIter ;
 } 
+
+
+
+
+RooFitResult* RooFitResult::lastMinuitFit() 
+{
+  RooFitResult* r = new RooFitResult("lastMinuitFit","Last MINUIT fit") ;
+
+  // Extract names of fit parameters from MINUIT 
+  // and construct corresponding RooRealVars
+  RooArgList constPars("constPars") ;
+  RooArgList floatPars("floatPars") ;
+
+  Int_t i ;
+  for (i = 1; i <= gMinuit->fNu; ++i) {
+    if (gMinuit->fNvarl[i-1] < 0) continue;
+    Int_t l = gMinuit->fNiofex[i-1];
+    TString varName(gMinuit->fCpnam[i-1]) ;
+    Bool_t isConst(l==0) ;
+    
+    Double_t xlo = gMinuit->fAlim[i-1];
+    Double_t xhi = gMinuit->fBlim[i-1];
+    Double_t xerr = gMinuit->fWerr[l-1];
+    Double_t xval = gMinuit->fU[i-1] ;
+
+    if (isConst) {
+      RooRealVar* var = new RooRealVar(varName,varName,xval) ;
+      constPars.addOwned(*var) ;
+    } else {
+      RooRealVar* var = new RooRealVar(varName,varName,xval,xlo,xhi) ;
+      var->setError(xerr) ;
+      floatPars.addOwned(*var) ;
+    }
+  }
+  
+  r->setConstParList(constPars) ;
+  r->setInitParList(floatPars) ;
+  r->setFinalParList(floatPars) ;
+  r->setMinNLL(gMinuit->fAmin) ;
+  r->setEDM(gMinuit->fEDM) ; 
+  r->setStatus(gMinuit->fStatus) ;
+  r->fillCorrMatrix() ;
+
+  return r ;
+}
