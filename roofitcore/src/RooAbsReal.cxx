@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.31 2001/08/03 21:44:56 david Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.32 2001/08/17 00:35:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -114,7 +114,7 @@ Double_t RooAbsReal::traceEval(const RooArgSet* nset) const
 
 Int_t RooAbsReal::getAnalyticalIntegral(RooArgSet& allDeps, RooArgSet& analDeps) const
 {
-  // By default we do supply any analytical integrals
+  // By default we do not supply any analytical integrals
   return 0 ;
 }
 
@@ -124,9 +124,6 @@ Double_t RooAbsReal::analyticalIntegral(Int_t code) const
   // By default no analytical integrals are implemented
   return getVal() ;
 }
-
-
-
 
 
 const char *RooAbsReal::getPlotLabel() const {

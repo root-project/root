@@ -31,6 +31,7 @@
 #include "RooFitCore/RooMultiCatIter.hh"
 #include "RooFitCore/RooIntegrator1D.hh"
 #include "RooFitCore/RooImproperIntegrator1D.hh"
+#include "RooFitCore/RooMCIntegrator.hh"
 #include "RooFitCore/RooRealBinding.hh"
 #include "RooFitCore/RooRealAnalytic.hh"
 #include "RooFitCore/RooInvTransform.hh"
@@ -52,7 +53,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE)
 {
   // Constructor
-  RooArgSet intDepList("intDepList") ;
+  RooArgSet intDepList ;
   RooAbsArg *arg ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -79,7 +80,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //      analytically iself                                       *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  RooArgSet anIntOKDepList("anIntOKDepList") ;
+  RooArgSet anIntOKDepList ;
   depIter = depList.MakeIterator() ;
   while(arg=(RooAbsArg*)depIter->Next()) {
     if (function.forceAnalyticalInt(*arg)) anIntOKDepList.add(*arg) ;
@@ -104,7 +105,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     } else {
 
       // Add final dependents of arg as shape servers
-      RooArgSet argLeafServers("argLeafServers") ;
+      RooArgSet argLeafServers ;
       arg->leafNodeServerList(&argLeafServers) ;
 
       TIterator* lIter = argLeafServers.MakeIterator() ;
@@ -160,7 +161,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * B) interact with function to make list of objects actually integrated analytically  *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  RooArgSet anIntDepList("anIntDepList") ;
+  RooArgSet anIntDepList ;
   _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegral(anIntOKDepList,_anaList) ;    
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -170,7 +171,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // *    Make Jacobian list with analytically integrated RealLValues            *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  RooArgSet numIntDepList("numIntDepList") ;
+  RooArgSet numIntDepList ;
 
   // Loop over actually analytically integrated dependents
   TIterator* aiIter = _anaList.MakeIterator() ;
@@ -219,7 +220,6 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       delete argDeps ; 
     }
   }
-  delete sIter ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * D) Split numeric list in integration list and summation list  *
@@ -253,7 +253,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
 Bool_t RooRealIntegral::initNumIntegrator() const
 {
-  // (Re)Initialize numerical integration engine
+  // (Re)Initialize numerical integration engine if necessary
 
   if (0 != _numIntEngine) {
     delete _numIntEngine ;
@@ -291,8 +291,8 @@ Bool_t RooRealIntegral::initNumIntegrator() const
     }
   }
   else {
-    cout << ClassName() << "::" << GetName() << ": numerical integration of >1 dimensions not supported"
-	 << endl;
+    // let the constructor check that the domain is finite
+    _numIntEngine= new RooMCIntegrator(*_numIntegrand);
   }
   if(0 == _numIntEngine || !_numIntEngine->isValid()) {
     cout << ClassName() << "::" << GetName() << ": failed to create valid integrator." << endl;
@@ -382,7 +382,6 @@ Double_t RooRealIntegral::evaluate(const RooArgSet* nset) const
       retVal *= argLV->numTypes() ;
     }    
   }
-  delete fIter ;
   
 
   if (RooAbsPdf::_verboseEval>0)
