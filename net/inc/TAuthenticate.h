@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.18 2004/02/20 18:14:40 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.19 2004/02/20 18:22:40 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 
 class TAuthenticate;
 class THostAuth;
+class TProofServ;
 class TSocket;
 class TSecContext;
 
@@ -54,6 +55,7 @@ typedef Int_t (*SecureAuth_t)(TAuthenticate *auth, const char *user, const char 
 
 class TAuthenticate : public TObject {
 
+friend class TProofServ;
 friend class TSecContext;
 friend class TSocket;
 
@@ -101,11 +103,11 @@ private:
    static GlobusAuth_t   fgGlobusAuthHook;
    static Krb5Auth_t     fgKrb5AuthHook;
    static TDatime        fgLastAuthrc;    // Time of last reading of fgRootAuthrc
-   static TString        fgOptAuthrc;    // Last option used to parse fgRootAuthrc
    static TString        fgPasswd;
    static Bool_t         fgPromptUser;   // kTRUE if user prompt required
    static TList         *fgProofAuthInfo;  // Specific lists of THostAuth fro proof
    static Bool_t         fgPwHash;      // kTRUE if fgPasswd is a passwd hash
+   static Bool_t         fgReadHomeAuthrc; // kTRUE to look for $HOME/.rootauthrc 
    static TString        fgRootAuthrc;    // Path to last rootauthrc-like file read
    static Int_t          fgRSAInit;
    static rsa_KEY        fgRSAPriKey;
@@ -120,6 +122,9 @@ private:
    static Bool_t         CleanupSecContext(TSecContext *ctx, Bool_t all);
    static void           FileExpand(const char *fin, FILE *ftmp);
    static void           RemoveSecContext(TSecContext *ctx);
+
+protected:
+   static void           SetReadHomeAuthrc(Bool_t readhomeauthrc); // for TProofServ
 
 public:
    TAuthenticate(TSocket *sock, const char *remote, const char *proto,
@@ -160,7 +165,8 @@ public:
    static TList      *GetProofAuthInfo();
    static Int_t       GetRSAInit();
    static const char *GetRSAPubExport();
-   static THostAuth  *HasHostAuth(const char *host, const char *user, Option_t *opt = "R");
+   static THostAuth  *HasHostAuth(const char *host, const char *user,
+                                  Option_t *opt = "R");
    static void        MergeHostAuthList(TList *Std, TList *New, Option_t *Opt = "");
    static char       *PromptPasswd(const char *prompt = "Password: ");
    static char       *PromptUser(const char *remote);

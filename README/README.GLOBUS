@@ -194,8 +194,12 @@ Applying experimental patch to globus_gsi_credential.c
 	    
             < bof >
             # This is an example of hostcert.conf ...
-            /etc/grid-security/certificates /etc/grid-security/hostcert.pem /etc/grid-security/hostkey.pem /etc/grid-security/grid-mapfile
+            /etc/grid-security/certificates /etc/grid-security/hostcert.pem 
+                /etc/grid-security/hostkey.pem /etc/grid-security/grid-mapfile
             < eof >
+
+	    (nb: all the 4 records should be on the same line: here they are split
+                 to make it more readable).
 	    
             There may be as many line as there are valid certificate settings
             (corresponding to  different Certificates Authorities and potentially
@@ -237,6 +241,28 @@ Applying experimental patch to globus_gsi_credential.c
 
             machine:~> rootd -d 3 -p 5151 -C $HOME/root/hostcert.conf -f $ROOTSYS
 
+        .2.1) Using user proxies when running as 'root' (or with su privileges)
+
+            If a valid host certificate is not available, the server administrator 
+            can still decide to run as 'root' and use the valid proxies of a user
+            registered on the machine to authenticate a client. 
+            To activate this, the user certificate and key location should be
+            specified in the relevant hostcert.conf file, e.g.
+
+            < bof >
+            # This is an example of hostcert.conf ...
+            /etc/grid-security/certificates /home/<user>/.globus/usercert.pem 
+            /home/<user>/.globus/userkey.pem /etc/grid-security/grid-mapfile
+            < eof >
+	    
+            (nb: all the 4 records should be on the same line: here they are split
+                 to make it more readable).
+
+            The program will then look for the proxy file associated with the owner
+            of the certificate and key files and use that to acquire the credentials
+            needed for authentication; as at point .2), the proxies must be 
+            initialized before the relevant software tries to use them, i.e.
+            there is no prompt for proxy initialization.
 
 4) Trying out
 

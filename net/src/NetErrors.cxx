@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: NetErrors.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: NetErrors.cxx,v 1.2 2004/02/19 00:11:18 rdm Exp $
 // Author: Fons Rademakers   28/08/2003
 
 /*************************************************************************
@@ -47,5 +47,6 @@ const char *gRootdErrStr[] = {
    "server does not accept the requested authentication method from this host or from user@host",
    "server does not accept connection from this host: contact server administrator",
    "authentication attempt unsuccessful",
-   "failure: authenticated user not the same as requested login username"
+   "failure: authenticated user not the same as requested login username",
+   "remote host cannot create file to store internal socket address"
 };

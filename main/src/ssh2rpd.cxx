@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.2 2003/08/29 17:23:31 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: ssh2rpd.cxx,v 1.3 2004/02/19 00:11:18 rdm Exp $
 // Author: Gerardo Ganis    1/7/2003
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/stat.h>
 #include "Varargs.h"
 #include <netinet/in.h>
 
@@ -35,12 +36,14 @@
 char *gFileLog       = 0;
 int   gDebug         = 0;
 
+#define kMAXPATHLEN 2048
+
 //______________________________________________________________________________
 void Info(const char *va_(fmt), ...)
 {
    // Write info message to syslog.
 
-   char    buf[1024];
+   char    buf[kMAXPATHLEN];
    va_list ap;
 
    va_start(ap,va_(fmt));
@@ -59,7 +62,11 @@ void Info(const char *va_(fmt), ...)
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
-   char *Pipe = 0; int ProId=-1, RemId=-1;
+   // Small program to communicate successful result of sshd auth to the
+   // relevant root server daemons.
+
+   char *PipeId = 0;
+   char *TmpDir = 0;
 
    if (argc < 2) {
       Info("ssh2rpd: argc=%d : %s",
@@ -70,14 +77,48 @@ int main(int argc, char **argv)
 
    // Parse Arguments
    gDebug = atoi(argv[1]);
-   if (argc > 2) Pipe     = strdup(argv[2]);
-   if (argc > 3) ProId    = atoi(argv[3]);
-   if (argc > 4) RemId    = atoi(argv[4]);
-   if (argc > 5) gFileLog = strdup(argv[5]);
+   if (argc > 2) PipeId   = strdup(argv[2]);
+   if (argc == 4) {
+      gFileLog = strdup(argv[3]);
+      struct stat st;
+      if (stat(gFileLog, &st) == 0) {
+         if (S_ISDIR(st.st_mode)) {
+            TmpDir = gFileLog;
+            gFileLog = 0;
+         }
+      } else
+         if (gFileLog) delete[] gFileLog;
+   } else if (argc > 4)
+      TmpDir = strdup(argv[4]);
 
    if (gDebug > 0)
-      Info("ssh2rpd: forked with args: %d %s %d %d '%s'\n",
-            gDebug,Pipe,ProId,RemId,gFileLog);
+      Info("ssh2rpd: forked with args: %d %s '%s' '%s'\n",
+            gDebug,PipeId,gFileLog,TmpDir);
+
+   // Get logged username
+   struct passwd *pw = getpwuid(getuid());
+
+   char PipeFile[kMAXPATHLEN];
+   if (!TmpDir) 
+      sprintf(PipeFile, "%s/RootSshPipe.%s", pw->pw_dir, PipeId);
+   else
+      sprintf(PipeFile, "%s/RootSshPipe.%s", TmpDir, PipeId);
+
+   FILE *fpipe = fopen(PipeFile, "r");
+   char Pipe[kMAXPATHLEN];
+   if (fpipe) {
+      while (fgets(Pipe, sizeof(Pipe), fpipe)) {
+         if (Pipe[strlen(Pipe)-1] == '\n') 
+            Pipe[strlen(Pipe)-1] = 0;
+      }
+      fclose(fpipe);
+      // Remove the temporary file
+      unlink(PipeFile);
+   } else {
+      Info("ssh2rpd: cannot open file with pipe info: exiting"
+           " (errno= %d)",errno);
+      exit(1);
+   }
 
    // Preparing socket connection
    struct sockaddr_un servAddr;
@@ -95,9 +136,6 @@ int main(int argc, char **argv)
       exit(1);
    }
 
-   // Get logged username
-   struct passwd *pw = getpwuid(getuid());
-
    // Sending 'OK <username>'
    char okbuf[256];
    sprintf(okbuf,"OK %s",pw->pw_name);
@@ -112,8 +150,8 @@ int main(int argc, char **argv)
       Info("ssh2rpd: sending might have been unsuccessful (bytes send: %d)",rc);
    }
 
-   if (Pipe)     free(Pipe);
    if (gFileLog) free(gFileLog);
+   if (TmpDir) free(TmpDir);
 
    exit(0);
 }

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.2 2003/09/07 18:25:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.1 2004/02/19 00:11:18 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -151,8 +151,10 @@ void TSecContext::DeActivate(Option_t *Opt)
    // Cleanup TPwdCtx object fro UsrPwd and SRP
    if (fMethod == TAuthenticate::kClear || 
        fMethod == TAuthenticate::kSRP)
-      if (fContext)
+      if (fContext) {
          delete (TPwdCtx *)fContext;
+         fContext = 0;
+      }
 
    // Cleanup globus security context if needed
    if (fMethod == TAuthenticate::kGlobus && fContext) {

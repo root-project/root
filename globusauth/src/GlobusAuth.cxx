@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.8 2003/11/26 10:33:08 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.9 2004/02/19 00:11:18 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -500,7 +500,7 @@ int GlobusGetLocalEnv(int *LocalEnv, TString protocol)
 
    *LocalEnv = 0;
    if (lApp != 0) {
-      if (lApp->Argc() > 10 && gROOT->IsProofServ()) {
+      if (lApp->Argc() > 11 && gROOT->IsProofServ()) {
          // This is PROOF ... either Master or Slave ...
          if (gDebug > 3) {
             Info("GlobusGetLocalEnv",
@@ -510,10 +510,10 @@ int GlobusGetLocalEnv(int *LocalEnv, TString protocol)
                  GlbDelCredHandle);
          }
          *LocalEnv = 2;
-         gShmIdCred = atoi(lApp->Argv()[7]);
-         gSystem->Setenv("X509_CERT_DIR", lApp->Argv()[8]);
-         gSystem->Setenv("X509_USER_CERT", lApp->Argv()[9]);
-         gSystem->Setenv("X509_USER_KEY", lApp->Argv()[10]);
+         gShmIdCred = atoi(lApp->Argv()[8]);
+         gSystem->Setenv("X509_CERT_DIR", lApp->Argv()[9]);
+         gSystem->Setenv("X509_USER_CERT", lApp->Argv()[10]);
+         gSystem->Setenv("X509_USER_KEY", lApp->Argv()[11]);
          if (gShmIdCred <= 0) {
             Info("GlobusGetLocalEnv",
                     " Delegate credentials undefined");
@@ -765,18 +765,24 @@ int GlobusGetCredHandle(Int_t LocalEnv, Int_t NeedProxy, gss_cred_id_t * CredHan
                goto exit;
             }
             // First check if there are special requests for proxy duration ...
-            TString InitDur(Form("-hours %s",
-               gEnv->GetValue("Globus.ProxyDuration", "default")));
-            if (gDebug > 3)
-               Info("GlobusAuthenticate", "InitDur: %s (%s)", InitDur.Data(),
-                    gEnv->GetValue("Globus.ProxyDuration", "default"));
+            TString InitDur(gEnv->GetValue("Globus.ProxyDuration", "default"));
+            if (!InitDur.Contains("default")) {
+               InitDur.Insert(0,"-hours ");
+               if (gDebug > 2)
+                  Info("GlobusAuthenticate", "InitDur: %s (%s)", InitDur.Data(),
+                      gEnv->GetValue("Globus.ProxyDuration", "default"));
+            } else
+               InitDur = TString("");
 
             // ... and for number of bits in key ...
-            TString InitBit(Form("-bits %s",
-               gEnv->GetValue("Globus.ProxyKeyBits", "default")));
-            if (gDebug > 3)
-               Info("GlobusAuthenticate", "InitBit: %s (%s)", InitBit.Data(),
-                    gEnv->GetValue("Globus.ProxyKeyBits", "default"));
+            TString InitBit(gEnv->GetValue("Globus.ProxyKeyBits", "default"));
+            if (!InitBit.Contains("default")) {
+               InitBit.Insert(0,"-bits ");
+               if (gDebug > 2)
+                  Info("GlobusAuthenticate", "InitBit: %s (%s)", InitBit.Data(),
+                      gEnv->GetValue("Globus.ProxyKeyBits", "default"));
+            } else
+               InitBit = TString("");
 
             // ... and the proxy ...
             TString InitPxy(Form("-out %s", gSystem->Getenv("X509_USER_PROXY")));
@@ -1034,11 +1040,11 @@ void GlobusCleanupShm()
    TApplication *lApp = gROOT->GetApplication();
 
    if (lApp != 0) {
-      if (lApp->Argc() > 7 && gROOT->IsProofServ()) {
+      if (lApp->Argc() > 11 && gROOT->IsProofServ()) {
          struct shmid_ds shm_ds;
          int rc;
          // Delegated Credentials
-         gShmIdCred = atoi(lApp->Argv()[7]);
+         gShmIdCred = atoi(lApp->Argv()[8]);
          if (gShmIdCred != -1) {
             if ((rc = shmctl(gShmIdCred, IPC_RMID, &shm_ds)) != 0) {
                if ((rc == EINVAL) || (rc == EIDRM)) {

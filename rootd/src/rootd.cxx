@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.81 2004/02/26 20:42:20 brun Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.82 2004/03/09 11:35:27 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -89,40 +89,48 @@
 // ROOTD_PID=14433                                                      //
 //                                                                      //
 // Rootd arguments:                                                     //
-//   -i                says we were started by inetd                    //
-//   -p port#          specifies a different port to listen on.         //
-//                     Use port1-port2 to find first available port in  //
-//                     range. Use 0-N for range relative to service     //
-//                     port.                                            //
 //   -b tcpwindowsize  specifies the tcp window size in bytes (e.g. see //
 //                     http://www.psc.edu/networking/perf_tune.html)    //
 //                     Default is 65535. Only change default for pipes  //
 //                     with a high bandwidth*delay product.             //
+//   -C hostcertfile   defines a file where to find information for the //
+//                     local host Globus information (see GLOBUS.README //
+//                     for details)                                     //
 //   -d level          level of debug info written to syslog            //
 //                     0 = no debug (default)                           //
 //                     1 = minimum                                      //
 //                     2 = medium                                       //
 //                     3 = maximum                                      //
-//   -r                files can only be opened in read-only mode       //
+//   -D rootdaemonrc   read access rules from file <rootdaemonrc>.      //
+//                     By default <root_etc_dir>/system.rootdaemonrc is //
+//                     used for access rules; for privately started     //
+//                     daemons $HOME/.rootdaemonrc (if present) takes   //
+//                     highest priority.                                //
+//   -E                created tokens are exclusive to this process and //
+//                     its childs (by default tokens can be used by     //
+//                     another daemon with the right privilegies)       //
 //   -f                do not run as daemon, run in the foreground      //
+//   -G gridmapfile    defines the gridmap file to be used for globus   //
+//                     authentication if different from globus default  //
+//                     (/etc/grid-security/gridmap); (re)defines the    //
+//                     GRIDMAP environment variable.                    //
+//   -i                says we were started by inetd                    //
+//   -p port#          specifies a different port to listen on.         //
+//                     Use port1-port2 to find first available port in  //
+//                     range. Use 0-N for range relative to service     //
+//                     port.                                            //
 //   -P file           use this password file, instead of .srootdpass   //
+//   -r                files can only be opened in read-only mode       //
 //   -R bitmask        bit mask specifies which methods will allow      //
 //                     authentication to be re-used                     //
+//   -s <sshd_port>    specifies the port number for the sshd daemon    //
+//                     (default is 22)                                  //
 //   -S keytabfile     use this keytab file, instead of the default     //
 //                     (option only supported when compiled with        //
 //                     Kerberos5 support)                               //
 //   -T <tmpdir>       specifies the directory path to be used to place //
 //                     temporary files; default is /usr/tmp.            //
 //                     Useful if not running as root.                   //
-//   -G gridmapfile    defines the gridmap file to be used for globus   //
-//                     authentication if different from globus default  //
-//                     (/etc/grid-security/gridmap); (re)defines the    //
-//                     GRIDMAP environment variable.                    //
-//   -C hostcertfile   defines a file where to find information for the //
-//                     local host Globus information (see GLOBUS.README //
-//                     for details)                                     //
-//   -s <sshd_port>    specifies the port number for the sshd daemon    //
-//                     (default is 22)                                  //
 //   rootsys_dir       directory containing the ROOT etc and bin        //
 //                     directories. Superseeds ROOTSYS or built-in      //
 //                     (as specified to ./configure).                   //
@@ -297,10 +305,14 @@ static int fcntl_lockf(int fd, int op, off_t off)
 #include <grp.h>
 #include <sys/types.h>
 #include <signal.h>
+#define ROOT_SIGNAL_INCLUDED
 #endif
 
 #if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__)
 extern "C" int initgroups(const char *name, int basegid);
+#ifndef ROOT_SIGNAL_INCLUDED
+#include <signal.h>
+#endif
 #endif
 
 #if defined(__sgi) && !defined(__GNUG__) && (SGI_REL<62)
@@ -327,6 +339,10 @@ namespace ROOT {
    extern krb5_context gKcontext;
 }
 #endif
+extern "C" {
+   #include "rsadef.h"
+   #include "rsalib.h"
+}
 
 //--- Globals ------------------------------------------------------------------
 
@@ -335,6 +351,7 @@ enum { kBinary, kAscii };
 double  gBytesRead               = 0;
 double  gBytesWritten            = 0;
 char    gConfDir[kMAXPATHLEN]    = { 0 };  // Needed to localize root stuff
+char    gDaemonrc[kMAXPATHLEN]   = { 0 };
 int     gDebug                   = 0;
 int     gDownloaded              = 0;
 int     gFd                      = -1;
@@ -351,6 +368,14 @@ char    gRootdTab[kMAXPATHLEN]   = { 0 };   // keeps track of open files
 int     gUploaded                = 0;
 int     gWritable                = 0;
 int     gReadOnly                = 0;
+int     gRootdParentId           = -1;      // Parent process ID
+
+namespace ROOT {
+int     gRSAInit = 0;
+rsa_KEY gRSAPriKey;
+rsa_KEY gRSAPubKey;
+rsa_KEY_export gRSAPubExport;
+}
 
 using namespace ROOT;
 
@@ -1794,13 +1819,17 @@ void RootdChmod(const char *msg)
 //______________________________________________________________________________
 static void RootdTerm(int)
 {
-   // Termination upon receipt of a SIGTERM.
+   // Termination upon receipt of a SIGTERM or SIGINT.
 
-   ErrorInfo("RootdTerm: rootd.cxx: got a SIGTERM");
+   ErrorInfo("RootdTerm: rootd.cxx: got a SIGTERM/SIGINT");
    // Terminate properly
    RpdAuthCleanup(0,0);
    // Trim Auth Table
    RpdUpdateAuthTab(0,0,0);
+   // Close network connection
+   NetClose();
+   // exit
+   exit(0);
 }
 
 //______________________________________________________________________________
@@ -1901,6 +1930,7 @@ int main(int argc, char **argv)
 {
    char *s;
    int   tcpwindowsize = 65535;
+   int   inclusivetoken = 1;
 
    // Error handlers
    gErrSys   = ErrSys;
@@ -1915,6 +1945,7 @@ int main(int argc, char **argv)
 
    // To terminate correctly ... maybe not needed
    signal(SIGTERM, RootdTerm);
+   signal(SIGINT, RootdTerm);
 
 #ifdef R__KRB5
    const char *kt_fname;
@@ -1923,7 +1954,7 @@ int main(int argc, char **argv)
    if (retval) {
       fprintf(stderr, "%s while initializing krb5\n",
             error_message(retval));
-      Error(ErrFatal, kErrFatal, "%s while initializing krb5",
+      Error(Err, -1, "%s while initializing krb5",
             error_message(retval));
    }
 #endif
@@ -1960,12 +1991,75 @@ int main(int argc, char **argv)
    while (--argc > 0 && (*++argv)[0] == '-')
       for (s = argv[0]+1; *s != 0; s++)
          switch (*s) {
-            case 'i':
-               gInetdFlag = 1;
+
+            case 'b':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-b requires a buffersize in bytes as"
+                                    " argument\n");
+                  Error(ErrFatal,kErrFatal,"-b requires a buffersize in bytes"
+                                    " as argument");
+               }
+               tcpwindowsize = atoi(*++argv);
+               break;
+#ifdef R__GLBS
+            case 'C':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-C requires a file name for the"
+                                    " host certificates file location\n");
+                  Error(ErrFatal, kErrFatal,"-C requires a file name for"
+                                    " the host certificates file location");
+               }
+               sprintf(gHostCertConf, "%s", *++argv);
+               break;
+#endif
+            case 'd':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-d requires a debug level as argument\n");
+                  Error(ErrFatal,kErrFatal,"-d requires a debug level as"
+                                    " argument");
+               }
+               gDebug = atoi(*++argv);
                break;
 
-            case 'r':
-               gReadOnly = 1;
+            case 'D':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-D requires a file path name for the"
+                                    " file defining access rules\n");
+                  Error(ErrFatal, kErrFatal,"-D requires a file path name"
+                                    "  for the file defining access rules");
+               }
+               sprintf(gDaemonrc, "%s", *++argv);
+               break;
+
+            case 'E':
+               inclusivetoken = 0;
+               break;
+
+            case 'f':
+               gForegroundFlag = 1;
+               break;
+#ifdef R__GLBS
+            case 'G':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-G requires a file name for the"
+                                    " gridmap file\n");
+                  Error(ErrFatal,kErrFatal,"-G requires a file name for"
+                                    " the gridmap file");
+               }
+               sprintf(GridMap, "%s", *++argv);
+               if (setenv("GRIDMAP",GridMap,1) ) {
+                  Error(ErrFatal,kErrFatal,"while setting the GRIDMAP"
+                                    " environment variable");
+               }
+               break;
+#endif
+            case 'i':
+               gInetdFlag = 1;
                break;
 
             case 'p':
@@ -1990,31 +2084,6 @@ int main(int argc, char **argv)
                }
                break;
 
-            case 'd':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-d requires a debug level as argument\n");
-                  Error(ErrFatal,kErrFatal,"-d requires a debug level as"
-                                    " argument");
-               }
-               gDebug = atoi(*++argv);
-               break;
-
-            case 'b':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-b requires a buffersize in bytes as"
-                                    " argument\n");
-                  Error(ErrFatal,kErrFatal,"-b requires a buffersize in bytes"
-                                    " as argument");
-               }
-               tcpwindowsize = atoi(*++argv);
-               break;
-
-            case 'f':
-               gForegroundFlag = 1;
-               break;
-
             case 'P':
                if (--argc <= 0) {
                   if (!gInetdFlag)
@@ -2025,6 +2094,10 @@ int main(int argc, char **argv)
                }
                gAltSRP = 1;
                sprintf(gAltSRPPass, "%s", *++argv);
+               break;
+
+            case 'r':
+               gReadOnly = 1;
                break;
 
             case 'R':
@@ -2038,17 +2111,6 @@ int main(int argc, char **argv)
                gReUseAllow = strtol(*++argv, (char **)0, 16);
                break;
 
-            case 'T':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-T requires a dir path for temporary"
-                                    " files [/usr/tmp]\n");
-                  Error(ErrFatal, kErrFatal,"-T requires a dir path for"
-                                    " temporary files [/usr/tmp]");
-               }
-               sprintf(gTmpDir, "%s", *++argv);
-               break;
-
             case 's':
                if (--argc <= 0) {
                   if (!gInetdFlag)
@@ -2059,7 +2121,6 @@ int main(int argc, char **argv)
                }
                gSshdPort = atoi(*++argv);
                break;
-
 #ifdef R__KRB5
             case 'S':
                if (--argc <= 0) {
@@ -2074,34 +2135,16 @@ int main(int argc, char **argv)
                         error_message(retval), kt_fname);
                break;
 #endif
-
-#ifdef R__GLBS
-            case 'G':
+            case 'T':
                if (--argc <= 0) {
                   if (!gInetdFlag)
-                     fprintf(stderr,"-G requires a file name for the"
-                                    " gridmap file\n");
-                  Error(ErrFatal,kErrFatal,"-G requires a file name for"
-                                    " the gridmap file");
+                     fprintf(stderr,"-T requires a dir path for temporary"
+                                    " files [/usr/tmp]\n");
+                  Error(ErrFatal, kErrFatal,"-T requires a dir path for"
+                                    " temporary files [/usr/tmp]");
                }
-               sprintf(GridMap, "%s", *++argv);
-               if (setenv("GRIDMAP",GridMap,1) ) {
-                  Error(ErrFatal,kErrFatal,"while setting the GRIDMAP"
-                                    " environment variable");
-               }
+               sprintf(gTmpDir, "%s", *++argv);
                break;
-
-            case 'C':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-C requires a file name for the"
-                                    " host certificates file location\n");
-                  Error(ErrFatal, kErrFatal,"-C requires a file name for"
-                                    " the host certificates file location");
-               }
-               sprintf(gHostCertConf, "%s", *++argv);
-               break;
-#endif
 
             default:
                if (!gInetdFlag)
@@ -2164,6 +2207,33 @@ int main(int argc, char **argv)
 #endif
    }
 
+   // If specified, set the special daemonrc file to be used
+   char *daemonrc = 0;
+   if (strlen(gDaemonrc)) {
+      daemonrc = new char[15+strlen(gDaemonrc)];
+      sprintf(daemonrc, "ROOTDAEMONRC=%s", gDaemonrc);
+      putenv(daemonrc);
+   }
+
+   // Parent ID
+   if (!gInetdFlag)
+     gRootdParentId = getpid(); // Identifies this family
+   else
+     gRootdParentId = getppid(); // Identifies this family
+
+   // Set debug level, parent id and inclusive token flag in RPDUtil ...
+   RpdSetDebugFlag(gDebug);
+   RpdSetParentId(gRootdParentId);
+   RpdSetInclusiveToken(inclusivetoken);
+
+   if (gRSAInit == 0) {
+      // Generate Local RSA keys for the session
+      if (RpdGenRSAKeys(0)) {
+         fprintf(stderr, "rootd: unable to generate local RSA keys\n");
+         Error(Err, -1, "rootd: unable to generate local RSA keys");
+      }
+   }
+
    if (!gInetdFlag) {
 
       // Start rootd up as a daemon process (in the background).
@@ -2189,7 +2259,9 @@ int main(int argc, char **argv)
       if (NetOpen(gInetdFlag, kROOTD) == 0) {
 
          // Init Session (get protocol, run authentication, login, ...)
-         RpdInitSession(gDebug,kROOTD);
+         RpdInitSession(kROOTD);
+
+         ErrorInfo("main: gRootdParentId = %d (%d)", gRootdParentId, getppid());
 
          // RootdParallel is called after authentication in RootdLogin
          RootdLoop();      // child processes client's requests

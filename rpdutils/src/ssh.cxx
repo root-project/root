@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.6 2004/02/19 00:11:19 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.7 2004/02/20 09:52:14 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -127,7 +127,7 @@ tryagain:
       return -1;
    }
 
-   // Change ownerships and try to change them if needed
+   // Change ownerships:
    // This operaton is possible only as root ... but not always is needed
    // so, do not stop in case of failure.
    struct stat sst;
@@ -137,13 +137,11 @@ tryagain:
    if ((unsigned int)sst.st_uid != Uid || (unsigned int)sst.st_gid != Gid) {
       if (fchown(sd, Uid, Gid)) {
          if (gDebug > 0) {
-            ErrorInfo
-                ("SshToolAllocateSocket: fchown: could not change socket %d ownership (errno= %d) ",
-                 sd, errno);
+            ErrorInfo("SshToolAllocateSocket: fchown: could not change socket"
+                      " %d ownership (errno= %d) ",sd, errno);
             ErrorInfo("SshToolAllocateSocket: socket (uid,gid) are: %d %d",
                       sst.st_uid, sst.st_gid);
-            ErrorInfo
-                ("SshToolAllocateSocket: may follow authentication problems");
+            ErrorInfo("SshToolAllocateSocket: may follow authentication problems");
          }
       }
    }
@@ -152,16 +150,30 @@ tryagain:
    if ((unsigned int)sst.st_uid != Uid || (unsigned int)sst.st_gid != Gid) {
       if (chown(fsun, Uid, Gid)) {
          if (gDebug > 0) {
-            ErrorInfo
-                ("SshToolAllocateSocket: chown: could not change path '%s' ownership (errno= %d)",
-                 fsun, errno);
+            ErrorInfo("SshToolAllocateSocket: chown: could not change path"
+                      " '%s' ownership (errno= %d)",fsun, errno);
             ErrorInfo("SshToolAllocateSocket: path (uid,gid) are: %d %d",
                       sst.st_uid, sst.st_gid);
-            ErrorInfo
-                ("SshToolAllocateSocket: may follow authentication problems");
+            ErrorInfo("SshToolAllocateSocket: may follow authentication problems");
          }
       }
    }
+
+
+   // Change permissions to access pipe to avoid hacking from a different
+   // user account.
+   // This is essential for security, so stop if you can't do it
+   if (chmod(fsun, 0600)) {
+      if (gDebug > 0) {
+         ErrorInfo("SshToolAllocateSocket: chmod: could not change"
+                   " '%s' permission (errno= %d)",fsun, errno);
+         ErrorInfo("SshToolAllocateSocket: path (uid,gid) are: %d %d",
+                   sst.st_uid, sst.st_gid);
+         SshToolDiscardSocket(fsun,sd);
+         return -1;
+      }
+   }
+
    // Fill output
    strcpy(*pipe, fsun);
 

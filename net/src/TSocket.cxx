@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.11 2004/02/19 00:11:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.12 2004/02/19 09:00:01 brun Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -205,7 +205,7 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
 
    fSecContext = 0;
    fRemoteProtocol= 0;
-   fService = (char*)kSOCKD;
+   fService = (char *)kSOCKD;
    fBytesSent = 0;
    fBytesRecv = 0;
  
@@ -706,7 +706,8 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    // where  proto = "sockd", "rootd", "proofd"
    //                indicates the type of remote server 
    //                ("sockd" not operational yet)
-   //          [p] = for parallel sockets
+   //          [p] = for parallel sockets (forced internally for
+   //                rootd)
    //       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd, 
    //                SRP, Krb5, Globus, SSH or UidGid authentication
    //       [port] = is the remote port number
@@ -719,13 +720,13 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    //
    // Example:
    //
-   //   TSocket::CreateAuthSocket("rootdps://qwerty@machine.fq.dn:5051")
+   //   TSocket::CreateAuthSocket("rootds://qwerty@machine.fq.dn:5051")
    //
    //   creates an authenticated socket to a rootd server running
-   //   on remote machine machine.fq.dn on port 5051; socket needs to
-   //   be declared as parallel because rootd expects parallel sockets;
-   //   however a simple socket will be created because the size is 0
-   //   (the default). 
+   //   on remote machine machine.fq.dn on port 5051; "parallel" sockets
+   //   are forced internally because rootd expects 
+   //   parallel sockets; however a simple socket will be created 
+   //   in this case because the size is 0 (the default). 
    //
    // Returns pointer to an authenticated socket or 0 if creation or 
    // authentication is unsuccessful
@@ -820,7 +821,8 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
    // where  proto = "sockd", "rootd", "proofd"
    //                indicates the type of remote server 
    //                ("sockd" not operational yet)
-   //          [p] = for parallel sockets
+   //          [p] = for parallel sockets (forced internally for
+   //                rootd)
    //       [auth] = "up", "s", "k", "g", "h", "ug" to force UsrPwd, 
    //                SRP, Krb5, Globus, SSH or UidGid authentication
    //    [options] = "m" or "s", when proto=proofd indicates whether
@@ -832,9 +834,9 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
    //
    //   creates an authenticated socket to a rootd server running
    //   on remote machine machine.fq.dn on port 5051, authenticating 
-   //   as 'qwerty'; socket needs to be declared as parallel because 
-   //   rootd expects parallel sockets; however, a simple socket will 
-   //   be created because the size is 0 (the default). 
+   //   as 'qwerty'; "parallel" sockets are forced internally because
+   //   rootd expects parallel sockets; however a simple socket will
+   //   be created in this case because the size is 0 (the default). 
    //
    // Returns pointer to an authenticated socket or 0 if creation or 
    // authentication is unsuccessful

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.58 2004/02/19 00:11:19 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.59 2004/02/20 09:52:14 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -88,37 +88,55 @@
 // Notice: no & is needed. Proofd will go in background by itself.      //
 //                                                                      //
 // Proofd arguments:                                                    //
-//   -i                says we were started by inetd                    //
-//   -p port#          specifies a different port to listen on          //
+//   -A [<rootauthrc>] Tells proofserv to read user's $HOME/.rootauthrc,//
+//                     if any; by default such private file is ignored  //
+//                     to allow complete control on the authentication  //
+//                     directives to the cluster administrator, via the //
+//                     system.rootauthrc file; if the optional argument //
+//                     <rootauthrc> is given and points to a valid file,// 
+//                     this file takes the highest priority (private    //
+//                     user's file being still read with next-to-highest//
+//                     priority) providing a mean to use non-standard   //
+//                     file names for authentication directives.        // 
 //   -b tcpwindowsize  specifies the tcp window size in bytes (e.g. see //
 //                     http://www.psc.edu/networking/perf_tune.html)    //
 //                     Default is 65535. Only change default for pipes  //
 //                     with a high bandwidth*delay product.             //
+//   -C hostcertfile   defines a file where to find information for the //
+//                     local host Globus information (see GLOBUS.README //
+//                     for details)                                     //
 //   -d level          level of debug info written to syslog            //
 //                     0 = no debug (default)                           //
 //                     1 = minimum                                      //
 //                     2 = medium                                       //
 //                     3 = maximum                                      //
+//   -D rootdaemonrc   read access rules from file <rootdaemonrc>.      //
+//                     By default <root_etc_dir>/system.rootdaemonrc is //
+//                     used for access rules; for privately started     //
+//                     daemons $HOME/.rootdaemonrc (if present) takes   //
+//                     highest priority.                                //
+//   -E                created tokens are exclusive to this process and //
+//                     its childs (by default tokens can be used by     //
+//                     another daemon with the right privilegies)       //
 //   -f                do not run as daemon, run in the foreground      //
+//   -G gridmapfile    defines the gridmap file to be used for globus   //
+//                     authentication if different from globus default  //
+//                     (/etc/grid-security/gridmap); (re)defines the    //
+//                     GRIDMAP environment variable.                    //
+//   -i                says we were started by inetd                    //
+//   -p port#          specifies a different port to listen on          //
+//   -s <sshd_port>    specifies the port number for the sshd daemon    //
+//                     (deafult is 22)                                  //
 //   -S keytabfile     use this keytab file, instead of the default     //
 //                     (option only supported when compiled with        //
 //                     Kerberos5 support)                               //
 //   -T <tmpdir>       specifies the directory path to be used to place //
 //                     temporary files; default is /usr/tmp.            //
 //                     Useful if not running as root.                   //
-//   -G gridmapfile    defines the gridmap file to be used for globus   //
-//                     authentication if different from globus default  //
-//                     (/etc/grid-security/gridmap); (re)defines the    //
-//                     GRIDMAP environment variable.                    //
-//   -C hostcertfile   defines a file where to find information for the //
-//                     local host Globus information (see GLOBUS.README //
-//                     for details)                                     //
-//   -s <sshd_port>    specifies the port number for the sshd daemon    //
-//                     (deafult is 22)                                  //
 //   rootsys_dir       directory which must contain bin/proofserv and   //
 //                     proof/etc/proof.conf. If not specified ROOTSYS   //
 //                     or built-in (as specified to ./configure) is     //
-//                     tried.                                           //
+//                     tried. (*MUST* be the last argument).            //
 //                                                                      //
 //  When your system uses shadow passwords you have to compile proofd   //
 //  with -DR__SHADOWPW. Since shadow passwords can only be accessed     //
@@ -180,10 +198,14 @@
 #include <grp.h>
 #include <sys/types.h>
 #include <signal.h>
+#define ROOT_SIGNAL_INCLUDED
 #endif
 
 #if defined(__alpha) && !defined(linux) && !defined(__FreeBSD__)
 extern "C" int initgroups(const char *name, int basegid);
+#ifndef ROOT_SIGNAL_INCLUDED
+#include <signal.h>
+#endif
 #endif
 
 #if defined(__sgi) && !defined(__GNUG__) && (SGI_REL<62)
@@ -210,6 +232,10 @@ extern "C" int gethostname(char *, int);
 #endif
 
 #include "proofdp.h"
+extern "C" {
+   #include "rsadef.h"
+   #include "rsalib.h"
+}
 
 #ifdef R__KRB5
 #include "Krb5Auth.h"
@@ -231,15 +257,26 @@ const int kMaxSlaves             = 32;
 
 char    gFilePA[40]              = { 0 };
 
+char    gAuthrc[kMAXPATHLEN]     = { 0 };
 char    gConfDir[kMAXPATHLEN]    = { 0 };
+char    gDaemonrc[kMAXPATHLEN]   = { 0 };
 int     gDebug                   = 0;
 int     gForegroundFlag          = 0;
+char    gReadHomeAuthrc[2]       = {"0"};
 int     gInetdFlag               = 0;
 int     gMaster                  =-1;
 int     gProtocol                = 9;       // increase when protocol changes
 char    gRcFile[kMAXPATHLEN]     = { 0 };
 int     gRootLog                 = 0;
 char    gRpdAuthTab[kMAXPATHLEN] = { 0 };   // keeps track of authentication info
+int     gProofdParentId          = -1;      // Parent process ID
+
+namespace ROOT {
+int     gRSAInit = 0;
+rsa_KEY gRSAPriKey;
+rsa_KEY gRSAPubKey;
+rsa_KEY_export gRSAPubExport;
+}
 
 using namespace ROOT;
 
@@ -293,6 +330,22 @@ void ErrSys(int level, const char *msg)
 }
 
 //--- Proofd routines ----------------------------------------------------------
+
+//______________________________________________________________________________
+static void ProofdTerm(int)
+{
+   // Termination upon receipt of a SIGTERM or SIGINT.
+
+   ErrorInfo("ProofdTerm: rootd.cxx: got a SIGTERM/SIGINT");
+   // Terminate properly
+   RpdAuthCleanup(0,0);
+   // Trim Auth Table
+   RpdUpdateAuthTab(0,0,0);
+   // Close network connection
+   NetClose();
+   // exit
+   exit(0);
+}
 
 //______________________________________________________________________________
 const char *RerouteUser()
@@ -392,9 +445,9 @@ void ProofdExec()
    // gConfdir is the location where the PROOF config files and binaries live.
 
 #ifdef R__GLBS
-   char *argvv[12];
+   char *argvv[13];
 #else
-   char *argvv[8];
+   char *argvv[9];
 #endif
    char  arg0[256];
    char  msg[80];
@@ -411,10 +464,6 @@ void ProofdExec()
 
    if (gDebug > 0)
       ErrorInfo("ProofdExec: gConfDir = %s", gConfDir);
-#if 0
-   // Login
-   ProofdLogin();
-#endif
 
    // only reroute in case of master server
    const char *node_name;
@@ -473,17 +522,18 @@ void ProofdExec()
    sprintf(rpid, "%d", gRemPid);
    argvv[5] = rpid;
    argvv[6] = gUser;
+   argvv[7] = gReadHomeAuthrc;
 #ifdef R__GLBS
-   argvv[7] = cShmIdCred;
-   argvv[8] = 0;
+   argvv[8] = cShmIdCred;
    argvv[9] = 0;
    argvv[10] = 0;
-   if (getenv("X509_CERT_DIR"))  argvv[8] = strdup(getenv("X509_CERT_DIR"));
-   if (getenv("X509_USER_CERT")) argvv[9] = strdup(getenv("X509_USER_CERT"));
-   if (getenv("X509_USER_KEY"))  argvv[10] = strdup(getenv("X509_USER_KEY"));
    argvv[11] = 0;
+   if (getenv("X509_CERT_DIR"))  argvv[9] = strdup(getenv("X509_CERT_DIR"));
+   if (getenv("X509_USER_CERT")) argvv[10] = strdup(getenv("X509_USER_CERT"));
+   if (getenv("X509_USER_KEY"))  argvv[11] = strdup(getenv("X509_USER_KEY"));
+   argvv[12] = 0;
 #else
-   argvv[7] = 0;
+   argvv[8] = 0;
 #endif
 
 #ifndef ROOTPREFIX
@@ -521,15 +571,29 @@ void ProofdExec()
    putenv(ldpath);
 #endif
 
+   // Check if a special file for authentication directives 
+   // has been given for later use in TAuthenticate; if yes,
+   // set the corresponding environment variable
+   char *authrc = 0;
+   if (strlen(gAuthrc)) {
+      if (gDebug > 0)
+         ErrorInfo("ProofdExec: seetting ROOTAUTHRC to %s",gAuthrc);
+      authrc = new char[15+strlen(gAuthrc)];
+      sprintf(authrc, "ROOTAUTHRC=%s", gAuthrc);
+      putenv(authrc);
+   }
+
    if (gDebug > 0)
 #ifdef R__GLBS
-      ErrorInfo("ProofdExec: execv(%s, %s, %s, %s,\n %s, %s, %s, %s, %s, %s, %s)",
+      ErrorInfo("ProofdExec: execv(%s, %s, %s, %s, %s, %s, %s,"
+                " %s, %s, %s, %s, %s)",
                 argvv[0], argvv[1], argvv[2], argvv[3], argvv[4],
-                argvv[5], argvv[6], argvv[7], argvv[8], argvv[9], argvv[10]);
+                argvv[5], argvv[6], argvv[7], argvv[8], argvv[9], 
+                argvv[10], argvv[11]);
 #else
-      ErrorInfo("ProofdExec: execv(%s, %s, %s, %s, %s, %s, %s)",
+      ErrorInfo("ProofdExec: execv(%s, %s, %s, %s, %s, %s, %s, %s)",
                 argvv[0], argvv[1], argvv[2], argvv[3],
-                argvv[4], argvv[5], argvv[6]);
+                argvv[4], argvv[5], argvv[6], argvv[7]);
 #endif
 
    if (!gInetdFlag) {
@@ -554,6 +618,7 @@ int main(int argc, char **argv)
 {
    char *s;
    int   tcpwindowsize = 65535;
+   int   inclusivetoken = 1;
 
    // Error Handlers
    gErrSys   = ErrSys;
@@ -562,6 +627,10 @@ int main(int argc, char **argv)
 
    ErrorInit(argv[0]);
 
+   // To terminate correctly ... maybe not needed
+   signal(SIGTERM, ProofdTerm);
+   signal(SIGINT, ProofdTerm);
+
 #ifdef R__KRB5
    const char *kt_fname;
 
@@ -569,7 +638,7 @@ int main(int argc, char **argv)
    if (retval) {
       fprintf(stderr, "%s while initializing krb5\n",
             error_message(retval));
-      Error(ErrFatal, -1, "%s while initializing krb5",
+      Error(Err, -1, "%s while initializing krb5",
             error_message(retval));
    }
 #endif
@@ -587,12 +656,92 @@ int main(int argc, char **argv)
    while (--argc > 0 && (*++argv)[0] == '-')
       for (s = argv[0]+1; *s != 0; s++)
          switch (*s) {
-            case 'i':
-               gInetdFlag = 1;
+
+            case 'A':
+               strcpy(gReadHomeAuthrc,"1");
+               // Next argument may be the name of a file with the 
+               // authentication directives to be used 
+               if((*(argv+1)) && (*(argv+1))[0] != '-') {
+                  sprintf(gAuthrc, "%s", *(argv+1));
+                  struct stat st;
+                  if (stat(gAuthrc,&st) == -1 || !S_ISREG(st.st_mode)) {
+                     // Not a regular file: discard it
+                     gAuthrc[0] = 0;
+                  } else {
+                     // Got a regular file as argument: go to next
+                     argc--;
+                     argv++;
+                  }
+               }
+               break;
+
+            case 'b':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-b requires a buffersize in bytes as"
+                                    " argument\n");
+                  Error(ErrFatal,-1,"-b requires a buffersize in bytes as"
+                                    " argument");
+               }
+               tcpwindowsize = atoi(*++argv);
+               break;
+#ifdef R__GLBS
+            case 'C':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-C requires a file name for the host"
+                                    " certificates file location\n");
+                  Error(ErrFatal,-1,"-C requires a file name for the host"
+                                    " certificates file location");
+               }
+               sprintf(gHostCertConf, "%s", *++argv);
+               break;
+#endif
+            case 'd':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-d requires a debug level as argument\n");
+                  Error(ErrFatal,-1,"-d requires a debug level as argument");
+               }
+               gDebug = atoi(*++argv);
+               break;
+
+            case 'D':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-D requires a file path name for the"
+                                    " file defining access rules\n");
+                  Error(ErrFatal, kErrFatal,"-D requires a file path name"
+                                    "  for the file defining access rules");
+               }
+               sprintf(gDaemonrc, "%s", *++argv);
+               break;
+
+            case 'E':
+               inclusivetoken = 0;
                break;
 
             case 'f':
                gForegroundFlag = 1;
+               break;
+#ifdef R__GLBS
+            case 'G':
+               if (--argc <= 0) {
+                  if (!gInetdFlag)
+                     fprintf(stderr,"-G requires a file name for the gridmap"
+                                    " file\n");
+                  Error(ErrFatal,-1,"-G requires a file name for the gridmap"
+                                    " file");
+               }
+               sprintf(GridMap, "%s", *++argv);
+               if (setenv("GRIDMAP",GridMap,1) ){
+                  Error(ErrFatal,-1,"%s while setting the GRIDMAP environment"
+                                    " variable");
+               }
+               break;
+#endif
+            case 'i':
+               gInetdFlag = 1;
                break;
 
             case 'p':
@@ -616,37 +765,6 @@ int main(int argc, char **argv)
                }
                break;
 
-            case 'd':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-d requires a debug level as argument\n");
-                  Error(ErrFatal,-1,"-d requires a debug level as argument");
-               }
-               gDebug = atoi(*++argv);
-               break;
-
-            case 'b':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-b requires a buffersize in bytes as"
-                                    " argument\n");
-                  Error(ErrFatal,-1,"-b requires a buffersize in bytes as"
-                                    " argument");
-               }
-               tcpwindowsize = atoi(*++argv);
-               break;
-
-            case 'T':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-T requires a dir path for temporary"
-                                    " files [/usr/tmp]\n");
-                  Error(ErrFatal,kErrFatal,"-T requires a dir path for"
-                                    " temporary files [/usr/tmp]");
-               }
-               sprintf(gTmpDir, "%s", *++argv);
-               break;
-
             case 's':
                if (--argc <= 0) {
                   if (!gInetdFlag)
@@ -657,7 +775,6 @@ int main(int argc, char **argv)
                }
                gSshdPort = atoi(*++argv);
                break;
-
 #ifdef R__KRB5
             case 'S':
                if (--argc <= 0) {
@@ -671,34 +788,17 @@ int main(int argc, char **argv)
                         error_message(retval), kt_fname);
                break;
 #endif
-
-#ifdef R__GLBS
-            case 'G':
+            case 'T':
                if (--argc <= 0) {
                   if (!gInetdFlag)
-                     fprintf(stderr,"-G requires a file name for the gridmap"
-                                    " file\n");
-                  Error(ErrFatal,-1,"-G requires a file name for the gridmap"
-                                    " file");
+                     fprintf(stderr,"-T requires a dir path for temporary"
+                                    " files [/usr/tmp]\n");
+                  Error(ErrFatal,kErrFatal,"-T requires a dir path for"
+                                    " temporary files [/usr/tmp]");
                }
-               sprintf(GridMap, "%s", *++argv);
-               if (setenv("GRIDMAP",GridMap,1) ){
-                  Error(ErrFatal,-1,"%s while setting the GRIDMAP environment"
-                                    " variable");
-               }
+               sprintf(gTmpDir, "%s", *++argv);
                break;
 
-            case 'C':
-               if (--argc <= 0) {
-                  if (!gInetdFlag)
-                     fprintf(stderr,"-C requires a file name for the host"
-                                    " certificates file location\n");
-                  Error(ErrFatal,-1,"-C requires a file name for the host"
-                                    " certificates file location");
-               }
-               sprintf(gHostCertConf, "%s", *++argv);
-               break;
-#endif
             default:
                if (!gInetdFlag)
                   fprintf(stderr, "unknown command line option: %c\n", *s);
@@ -764,6 +864,33 @@ int main(int argc, char **argv)
    // Log to stderr if not started as daemon ...
    if (gForegroundFlag) RpdSetRootLogFlag(1);
 
+   // If specified, set the special daemonrc file to be used
+   char *daemonrc = 0;
+   if (strlen(gDaemonrc)) {
+      daemonrc = new char[15+strlen(gDaemonrc)];
+      sprintf(daemonrc, "ROOTDAEMONRC=%s", gDaemonrc);
+      putenv(daemonrc);
+   }
+
+   // Parent ID
+   if (!gInetdFlag)
+     gProofdParentId = getpid(); // Identifies this family
+   else
+     gProofdParentId = getppid(); // Identifies this family
+
+   // Set debug level, parent id and inclusive token flag in RPDUtil ...
+   RpdSetDebugFlag(gDebug);
+   RpdSetParentId(gProofdParentId);
+   RpdSetInclusiveToken(inclusivetoken);
+
+   if (gRSAInit == 0) {
+      // Generate Local RSA keys for the session
+      if (RpdGenRSAKeys(0)) {
+         fprintf(stderr, "proofd: unable to generate local RSA keys\n");
+         Error(Err, -1, "proofd: unable to generate local RSA keys");
+      }
+   }
+
    if (!gInetdFlag) {
 
       // Start proofd up as a daemon process (in the background).
@@ -787,7 +914,7 @@ int main(int argc, char **argv)
       if (NetOpen(gInetdFlag, kPROOFD) == 0) {
 
          // Init Session (get protocol, run authentication, login, ...)
-         gMaster = RpdInitSession(gDebug,kPROOFD);
+         gMaster = RpdInitSession(kPROOFD);
 
          ProofdExec();     // child processes client's requests
          NetClose();       // then we are done

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.11 2004/01/08 23:10:29 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.12 2004/02/19 00:11:19 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -158,8 +158,9 @@ int  RpdCheckHost(const char *Host, const char *host);
 char *RpdGetIP(const char *host);
 void RpdSendAuthList();
 void RpdInitAuth();
-int RpdInitSession(int,int);
+int RpdInitSession(int);
 void RpdLogin(int);
+void RpdSetUid(int uid);
 
 void RpdUser(const char *sstr);
 void RpdSshAuth(const char *sstr);
@@ -180,10 +181,12 @@ bool RpdCheckToken(char *tknin, char *tknref);
 
 void RpdSetAuthTabFile(char *AuthTabFile);
 void RpdSetDebugFlag(int Debug);
+void RpdSetInclusiveToken(int InclusiveToken);
+void RpdSetParentId(int ParentId);
 void RpdSetRootLogFlag(int RootLog);
 
 void RpdInitRand();
-int  RpdGenRSAKeys();
+int  RpdGenRSAKeys(int);
 int  RpdGetRSAKeys(char *PubKey, int Opt);
 int  RpdRecvClientRSAKey();
 void RpdSavePubKey(char *PubKey, int OffSet, char *User);

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.8 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.cxx,v 1.9 2004/02/19 08:55:17 brun Exp $
 // Author: Fons Rademakers   22/1/2001
 
 /*************************************************************************
@@ -116,7 +116,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
 
    // Check if we are calle from CreateAuthSocket
    Bool_t authreq = kFALSE;
-   char *pauth = (char*)strstr(host,"?A"); 
+   char *pauth = (char *)strstr(host,"?A"); 
    if (pauth) {
       authreq = kTRUE;
       fRemoteProtocol= atoi(pauth+2);
@@ -292,7 +292,6 @@ void TPSocket::Init(Int_t tcpwindowsize)
       
       // Close original socket
       gSystem->CloseConnection(fSocket, kFALSE);
-      gROOT->GetListOfSockets()->Remove(this);
       fSocket = -1;
    }
 
@@ -309,8 +308,6 @@ void TPSocket::Init(Int_t tcpwindowsize)
    }
    fWriteMonitor->DeActivateAll();
    fReadMonitor->DeActivateAll();
-   
-   gROOT->GetListOfSockets()->Add(this);
 }
 
 //______________________________________________________________________________

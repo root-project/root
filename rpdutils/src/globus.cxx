@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.5 2003/11/26 10:33:08 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: globus.cxx,v 1.6 2004/02/19 00:11:19 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -82,7 +82,8 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
       ErrorInfo("GlbsToolCheckCert: enter: %s", ClientIssuerName);
 
    if (gHostCertConf != 0) {
-      // The user/administrator provided a file ... check if it exists and can be read
+      // The user/administrator provided a file ... check if it exists
+      // and can be read
       FILE *fconf = 0;
       if (!access(gHostCertConf, R_OK) &&
           (fconf = fopen(gHostCertConf, "r")) != 0) {
@@ -95,21 +96,46 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
          while (fgets(line, sizeof(line), fconf)) {
             if (line[0] == '#')
                continue;        // skip comment lines
-            int nw =
-                sscanf(line, "%s %s %s %s", dir_def, cert_def, key_def,
-                       map_def);
+            int nw = sscanf(line, "%s %s %s %s", dir_def, cert_def,
+                                                 key_def, map_def);
 
-            // allow for imcomplete lines ... completion with defaults ...
+            if (nw < 1)
+               continue;        // skip empty lines
+
+            // allow for incomplete lines ... completion with defaults ...
+            // check also if default entries have been given ('*')
             if (nw == 1) {
+               if (dir_def[0] == '*')
+                  strcpy(dir_def, certdir_default);
                strcpy(cert_def, hostcert_default);
                strcpy(key_def, hostkey_default);
                strcpy(map_def, gridmap_default);
             } else if (nw == 2) {
+               if (dir_def[0] == '*')
+                  strcpy(dir_def, certdir_default);
+               if (cert_def[0] == '*')
+                  strcpy(cert_def, hostcert_default);
                strcpy(key_def, hostkey_default);
                strcpy(map_def, gridmap_default);
             } else if (nw == 3) {
+               if (dir_def[0] == '*')
+                  strcpy(dir_def, certdir_default);
+               if (cert_def[0] == '*')
+                  strcpy(cert_def, hostcert_default);
+               if (key_def[0] == '*')
+                  strcpy(key_def, hostkey_default);
                strcpy(map_def, gridmap_default);
+            } else if (nw == 4) {
+               if (dir_def[0] == '*')
+                  strcpy(dir_def, certdir_default);
+               if (cert_def[0] == '*')
+                  strcpy(cert_def, hostcert_default);
+               if (key_def[0] == '*')
+                  strcpy(key_def, hostkey_default);
+               if (map_def[0] == '*')
+                  strcpy(map_def, gridmap_default);
             }
+
             // Expand for test if needed
             dir_tmp  = GlbsToolExpand(dir_def);
             cert_tmp = GlbsToolExpand(cert_def);
@@ -181,9 +207,8 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
 
       } else {
          if (gDebug > 2)
-            ErrorInfo
-                ("GlbsToolCheckCert: host cert conf not existing or not readable (%s)",
-                 gHostCertConf);
+            ErrorInfo("GlbsToolCheckCert: host cert conf not existing or"
+                      " not readable (%s)",gHostCertConf);
       }
    } else if (gDebug > 2)
       ErrorInfo("GlbsToolCheckCert: HOSTCERTCONF undefined");
@@ -221,9 +246,8 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
             // Load certificate
             fcert = fopen(cert_tmp, "r");
             if (!PEM_read_X509(fcert, &xcert, 0, 0)) {
-               ErrorInfo
-                   ("GlbsToolCheckCert: unable to load host certificate (%s)",
-                    cert_tmp);
+               ErrorInfo("GlbsToolCheckCert: unable to load host"
+                         " certificate (%s)",cert_tmp);
                goto goout;
             }
             // Get the issuer name
@@ -238,21 +262,18 @@ int GlbsToolCheckCert(char *ClientIssuerName, char **SubjName)
                goto found;
             }
          } else {
-            ErrorInfo
-                 ("GlbsToolCheckCert: default hostkey file not existing or not readable (%s)",
-                   key_tmp);
+            ErrorInfo("GlbsToolCheckCert: default hostkey file not"
+                      " existing or not readable (%s)", key_tmp);
             goto goout;
          }
       } else {
-         ErrorInfo
-              ("GlbsToolCheckCert: default hostcert file not existing or not readable (%s)",
-                cert_tmp);
+         ErrorInfo("GlbsToolCheckCert: default hostcert file not"
+                   " existing or not readable (%s)",cert_tmp);
          goto goout;
       }
    } else {
-      ErrorInfo
-          ("GlbsToolCheckCert: default cert dirrectory not existing or not readable (%s)",
-           dir_tmp);
+      ErrorInfo("GlbsToolCheckCert: default cert directory not"
+                " existing or not readable (%s)",dir_tmp);
       goto goout;
    }
 
@@ -460,7 +481,8 @@ int GlbsToolStoreContext(gss_ctx_id_t context_handle, char *user)
        (void *) ((char *) databuf + sizeof(size_t) + sizeof(void *));
    memmove(databuf->value, SecContExp->value, SecContExp->length);
 
-   // Now we can detach from the shared memory segment ... and release memory we don't anylonger
+   // Now we can detach from the shared memory segment ... 
+   // and release memory we don't anylonger
    int rc = 0;
    if ((rc = shmdt((const void *) databuf)) != 0) {
       ErrorInfo
@@ -586,9 +608,8 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
 
    char *certdir_default  = "/etc/grid-security/certificates";
    char *gridmap_default  = "/etc/grid-security/grid-mapfile";
-   char dir_def[kMAXPATHLEN] = { 0 }, map_def[kMAXPATHLEN]  = { 0 },
-        dum1[kMAXPATHLEN], dum2[kMAXPATHLEN];
-   char *dir_tmp = 0, *map_tmp = 0;
+   char dir_def[kMAXPATHLEN] = {0}, map_def[kMAXPATHLEN] = {0},
+        cer_def[kMAXPATHLEN] = {0}, key_def[kMAXPATHLEN] = {0};
 
    if (gDebug > 2)
       ErrorInfo("GlbsToolCheckProxy: enter: %s", ClientIssuerName);
@@ -609,14 +630,23 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
             if (line[0] == '#')
                continue;        // skip comment lines
             int nw =
-                sscanf(line, "%s %s %s %s", dir_def, dum1, dum2,
+                sscanf(line, "%s %s %s %s", dir_def, cer_def, key_def,
                        map_def);
-            if (nw == 0)
+            if (nw < 1)
                continue;
 
-            // allow for imcomplete lines ... completion with defaults ...
-            if (nw < 4)
+            // allow for incomplete lines ... completion with defaults ...
+            // and wild card
+            if (nw < 4) {
+               if (dir_def[0] == '*')
+                  strcpy(dir_def, certdir_default);
                strcpy(map_def, gridmap_default);
+            } else if (nw == 4) {
+               if (dir_def[0] == '*')
+                  strcpy(dir_def, certdir_default);
+               if (map_def[0] == '*')
+                  strcpy(map_def, gridmap_default);
+            }
          }
          fclose(fconf);
 
@@ -645,8 +675,8 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
    }
 
    // Now expand to full paths
-   dir_tmp  = GlbsToolExpand(dir_def);
-   map_tmp  = GlbsToolExpand(map_def);
+   char *dir_tmp  = GlbsToolExpand(dir_def);
+   char *map_tmp  = GlbsToolExpand(map_def);
 
    // ... and check the accessibility of the files
    // and set corresponding variables
@@ -676,12 +706,56 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
    }
    if (map_tmp) delete[] map_tmp;
 
-   // Needs to set this for consistency
-   if (setenv("X509_USER_CERT", "/etc/grid-security/hostcert.pem", 1)) {
-      ErrorInfo("GlbsToolCheckProxy: unable to set X509_USER_CERT ");
-   }
-   if (setenv("X509_USER_KEY", "/etc/grid-security/hostkey.pem", 1)) {
-      ErrorInfo("GlbsToolCheckProxy: unable to set X509_USER_KEY ");
+   // If superuser check if cert and key files were specified;
+   // if yes, check that their owner matches and determine its name
+   // and user-id, to be used later for the proxy file name
+   if (getuid() == 0) {
+ 
+      char *cer_tmp  = 0;
+      if (strlen(cer_def) && cer_def[0] != '*')
+         cer_tmp = GlbsToolExpand(cer_def);
+      char *key_tmp  = 0;
+      if (strlen(key_def) && key_def[0] != '*')
+         key_tmp =  GlbsToolExpand(key_def);
+
+      if (cer_tmp && key_tmp) {
+
+         struct stat stc, stk;
+         if (stat(cer_tmp,&stc) == -1) {
+            ErrorInfo("GlbsToolCheckProxy: stat error:" 
+                      " file %s (errno: %d) ",cer_tmp,errno);
+         } else {
+            if (stat(key_tmp,&stk) == -1) {
+               ErrorInfo("GlbsToolCheckProxy: stat error:" 
+                         " file %s (errno: %d) ",key_tmp,errno);
+            } else {
+               if (stc.st_uid == stk.st_uid) {
+
+                  // Set cert and key files
+                  if (gDebug > 2)
+                     ErrorInfo("GlbsToolCheckProxy: setting cert: %s ",cer_tmp);
+                  if (setenv("X509_USER_CERT", cer_tmp, 1))
+                     ErrorInfo("GlbsToolCheckProxy: unable to set X509_USER_CERT ");
+                  if (gDebug > 2)
+                     ErrorInfo("GlbsToolCheckProxy: setting key: %s ",key_tmp);
+                  if (setenv("X509_USER_KEY", key_tmp, 1))
+                     ErrorInfo("GlbsToolCheckProxy: unable to set X509_USER_KEY ");
+                  // Change effective uid/gid of the current process to the
+                  // ones of the certificate file owner
+                  RpdSetUid(stc.st_uid);
+               }
+            }
+         }
+      }
+      if (cer_tmp) delete[] cer_tmp;
+      if (key_tmp) delete[] key_tmp;
+
+   } else {
+      // Needs to set this for consistency
+      if (setenv("X509_USER_CERT", "/etc/grid-security/hostcert.pem", 1))
+         ErrorInfo("GlbsToolCheckProxy: unable to set X509_USER_CERT ");
+      if (setenv("X509_USER_KEY", "/etc/grid-security/hostkey.pem", 1))
+         ErrorInfo("GlbsToolCheckProxy: unable to set X509_USER_KEY ");
    }
 
    // Now check if there is a proxy file associated with this user
@@ -692,7 +766,14 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
       ErrorInfo("GlbsToolCheckProxy: testing Proxy file: %s",
                 proxy_file);
 
+   if (gDebug > 2)
+      ErrorInfo("GlbsToolCheckProxy: uid:%d euid:%d gid:%d egid:%d",
+                getuid(), geteuid(), getgid(), getegid());
+
    if (!access(proxy_file, R_OK)) {
+
+      if (setenv("X509_USER_PROXY", proxy_file, 1))
+         ErrorInfo("GlbsToolCheckProxy: unable to set X509_USER_PROXY ");
 
 #ifdef R__GLBS22
       globus_gsi_cred_handle_t proxy_cred = NULL;
@@ -710,6 +791,7 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
           != GLOBUS_SUCCESS) {
           ErrorInfo("GlbsToolCheckProxy: %s %s",
                     "couldn't read proxy from:", proxy_file);
+          globus_gsi_cred_handle_destroy(proxy_cred);
           return 1;
       }
 
@@ -719,8 +801,10 @@ int GlbsToolCheckProxy(char *ClientIssuerName, char **SubjName)
           != GLOBUS_SUCCESS) {
           ErrorInfo("GlbsToolCheckProxy: %s %s",
                     "couldn't get proxy remaining lifetime");
+          globus_gsi_cred_handle_destroy(proxy_cred);
           return 1;
       }
+      globus_gsi_cred_handle_destroy(proxy_cred);
 
       if (lifetime > 0) {
 

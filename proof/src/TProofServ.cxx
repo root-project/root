@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.67 2004/02/19 00:11:19 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.68 2004/03/11 11:02:55 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -1473,11 +1473,11 @@ void TProofServ::Setup()
    int retval, kind;
    fSocket->Recv(retval,kind);
 
+   TApplication *lApp = gROOT->GetApplication();
    if (kind == kROOTD_RSAKEY) {
 
       if (retval > -1) {
 
-         TApplication *lApp = gROOT->GetApplication();
          if (lApp && lApp->Argc() > 3 && strlen(lApp->Argv()[3]) > 0 &&
              gROOT->IsProofServ()) {
             // We got a file name ... extract the tmp directory path
@@ -1533,6 +1533,10 @@ void TProofServ::Setup()
    TAuthenticate::SetGlobalPasswd(fPasswd);
    TAuthenticate::SetGlobalPwHash(fPwHash);
    TAuthenticate::SetGlobalSRPPwd(fSRPPwd);
+   if (lApp && lApp->Argc() > 7 && strlen(lApp->Argv()[7]) > 0) {
+      Bool_t rha = (Bool_t)atoi(lApp->Argv()[7]);
+      TAuthenticate::SetReadHomeAuthrc(rha);
+   }
 
    // Read user or system authentication directives and
    // receive auth info transmitted from the client
