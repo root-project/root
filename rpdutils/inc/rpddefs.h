@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.21 2004/09/13 22:49:10 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpddefs.h,v 1.1 2004/10/11 12:34:34 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -19,21 +19,23 @@
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_AuthConst
+#include "AuthConst.h"
+#endif
+
 //
 // Typedefs
 typedef void (*SigPipe_t)(int);
 
 //
 // Global consts
-#include "AuthConst.h"
 const int  kMAXRECVBUF       = 1024;
-const int  kMAXPATHLEN       = kMAXSECBUF;
 const int  kMAXUSERLEN       = 128;
 
 // Masks for initialization options
 const unsigned int kDMN_RQAUTH = 0x1;  // Require authentication
-const unsigned int kDMN_HOSTEQ = 0x2;  // Allow host equivalence 
-const unsigned int kDMN_SYSLOG = 0x4;  // Log messages to syslog i.o. stderr 
+const unsigned int kDMN_HOSTEQ = 0x2;  // Allow host equivalence
+const unsigned int kDMN_SYSLOG = 0x4;  // Log messages to syslog i.o. stderr
 
 //
 // type of service

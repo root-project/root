@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.21 2004/09/13 22:49:10 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.22 2004/10/11 12:34:34 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -45,6 +45,8 @@ namespace std { using ::string; }
 #ifndef ROOT_rpddefs
 #include "rpddefs.h"
 #endif
+
+const int  kMAXPATHLEN = kMAXSECBUF;
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -98,8 +100,8 @@ int  RpdGetShmIdCred();
 int  RpdInitSession(int, std::string &, int &);
 int  RpdInitSession(int, std::string &, int &, int &, std::string &);
 int  RpdInitSession(int, std::string &, int &, int &, int &, std::string &);
-void RpdInit(EService serv, int pid, int sproto, 
-             unsigned int opts, int rumsk, int sshp, 
+void RpdInit(EService serv, int pid, int sproto,
+             unsigned int opts, int rumsk, int sshp,
              const char *tmpd, const char *asrpp);
 void RpdSetErrorHandler(ErrorHandler_t Err, ErrorHandler_t Sys,
                         ErrorHandler_t Fatal);
@@ -121,7 +123,7 @@ int  RpdUpdateAuthTab(int opt, const char *line, char **token, int ilck = 0);
 
 //
 // type of authentication method
-enum  ESecurity { kClear, kSRP, kKrb5, kGlobus, kSSH, kRfio };
+enum ESecurity { kClear, kSRP, kKrb5, kGlobus, kSSH, kRfio };
 
 //
 // Prototypes
@@ -134,10 +136,10 @@ char *ItoA(int i);
 
 //
 // net.cxx
-int NetRecv(char *msg, int max);
-int NetRecvRaw(int sock, void *buf, int len);
-int NetSend(const void *buf, int len, EMessageTypes kind);
-int NetSendAck();
+int  NetRecv(char *msg, int max);
+int  NetRecvRaw(int sock, void *buf, int len);
+int  NetSend(const void *buf, int len, EMessageTypes kind);
+int  NetSendAck();
 void NetSetOptions(EService service, int sock, int tcpwindowsize);
 
 //
@@ -168,27 +170,27 @@ int  RpdGetAuthMethod(int kind);
 char *RpdGetIP(const char *host);
 char *RpdGetRandString(int Opt, int Len);
 int  RpdGetRSAKeys(const char *PubKey, int Opt);
-int RpdGlobusAuth(const char *sstr);
+int  RpdGlobusAuth(const char *sstr);
 int  RpdGuessClientProt(const char *buf, EMessageTypes kind);
 void RpdInitAuth();
 void RpdInitRand();
-int RpdKrb5Auth(const char *sstr);
-int RpdLogin(int,int);
-int RpdNoAuth(int);
-int RpdPass(const char *pass);
-int RpdProtocol(int);
+int  RpdKrb5Auth(const char *sstr);
+int  RpdLogin(int,int);
+int  RpdNoAuth(int);
+int  RpdPass(const char *pass);
+int  RpdProtocol(int);
 int  RpdRecvClientRSAKey();
 int  RpdRenameKeyFile(int oofs, int nofs);
-int RpdReUseAuth(const char *sstr, int kind);
-int RpdRfioAuth(const char *sstr);
+int  RpdReUseAuth(const char *sstr, int kind);
+int  RpdRfioAuth(const char *sstr);
 int  RpdSavePubKey(const char *PubKey, int OffSet, char *User);
 int  RpdSecureRecv(char **Str);
 int  RpdSecureSend(char *Str);
 void RpdSendAuthList();
-int RpdSetUid(int uid);
-int RpdSRPUser(const char *user);
-int RpdSshAuth(const char *sstr);
-int RpdUser(const char *sstr);
+int  RpdSetUid(int uid);
+int  RpdSRPUser(const char *user);
+int  RpdSshAuth(const char *sstr);
+int  RpdUser(const char *sstr);
 
 //
 // Ssh Utility Function prototypes ...
