@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.54 2004/08/20 10:00:33 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.55 2004/09/24 18:18:42 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -362,7 +362,7 @@ namespace TMath {
    Double_t Student(Double_t T, Double_t ndf);
    Double_t StudentI(Double_t T, Double_t ndf);
 
-};
+}
 
 
 //---- Even/odd ----------------------------------------------------------------
