@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.8 2002/04/04 11:03:18 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.h,v 1.9 2002/04/19 16:43:14 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -59,8 +59,8 @@ public:
    void             AddAt(TObject *, Int_t) { MayNotUse("AddAt"); }
    void             AddAtAndExpand(TObject *, Int_t) { MayNotUse("AddAtAndExpand"); }
    Int_t            AddAtFree(TObject *) { MayNotUse("AddAtFree"); return 0; }
-   void             AddAfter(TObject *, TObject *) { MayNotUse("AddAfter"); }
-   void             AddBefore(TObject *, TObject *) { MayNotUse("AddBefore"); }
+   void             AddAfter(const TObject *, TObject *) { MayNotUse("AddAfter"); }
+   void             AddBefore(const TObject *, TObject *) { MayNotUse("AddBefore"); }
    void             BypassStreamer(Bool_t bypass=kTRUE);
    Bool_t           CanBypassStreamer() const { return TestBit(kBypassStreamer); }
 
