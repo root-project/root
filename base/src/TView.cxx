@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.4 2000/08/18 13:44:34 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.5 2000/08/21 06:09:31 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1313,6 +1313,7 @@ void TView::ToggleZoom(TVirtualPad *pad)
 
   AdjustPad(pad);
 }
+
 //_______________________________________________________________________________________
 void TView::Centered3DImages(TVirtualPad *pad)
 {
@@ -1393,7 +1394,7 @@ void TView::Streamer(TBuffer &R__b)
       //unfortunately we forgot to increment the TView version number
       //when the class was upgraded to double precision in version 2.25.
       //we are forced to use the file version number to recognize old files.
-      if (gFile->GetVersion() < 22500) { //old version in single precision
+      if (gFile && gFile->GetVersion() < 22500) { //old version in single precision
          TObject::Streamer(R__b);
          TAttLine::Streamer(R__b);
          Float_t single, sa[12];
