@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.29 2003/08/21 14:31:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.30 2003/09/23 08:54:49 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -280,7 +280,7 @@ public:
    Bool_t                  cd(const char *path) { return ChangeDirectory(path); }
    const char             *pwd() { return WorkingDirectory(); }
    virtual const char     *TempDirectory() const;
-   virtual FILE           *TempFilename(TString &base, const char *dir = 0);
+   virtual FILE           *TempFileName(TString &base, const char *dir = 0);
 
    //---- Paths & Files
    virtual const char     *BaseName(const char *pathname);

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.17 2003/06/18 11:28:57 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.h,v 1.18 2003/06/25 05:49:28 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -178,6 +178,8 @@ public:
    const char       *WorkingDirectory();                  // The working directory for the default drive
    const char       *HomeDirectory(const char *userName=0);
    char             *ConcatFileName(const char *dir, const char *name);
+   const char       *TempDirectory() const;
+   FILE             *TempFileName(TString &base, const char *dir = 0);
 
    //---- Paths & Files ----------------------------------------
    const char        DriveName(const char *pathname="/");

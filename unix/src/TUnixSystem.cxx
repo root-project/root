@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.70 2003/09/04 23:19:31 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.71 2003/09/09 01:11:12 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -916,6 +916,47 @@ const char *TUnixSystem::HomeDirectory(const char *userName)
 }
 
 //______________________________________________________________________________
+const char *TUnixSystem::TempDirectory() const
+{
+   // Return a user configured or systemwide directory to create
+   // temporary files in.
+
+   const char *dir =  gSystem->Getenv("TMPDIR");
+   if (!dir) dir = "/tmp";
+
+   return dir;
+}
+
+//______________________________________________________________________________
+FILE *TUnixSystem::TempFileName(TString &base, const char *dir)
+{
+   // Create a secure temporary file by appending a unique
+   // 6 letter string to base. The file will be created in
+   // a standard (system) directory or in the directory
+   // provided in dir. The full filename is returned in base
+   // and a filepointer is returned for safely writing to the file
+   // (this avoids certain security problems). Returns 0 in case
+   // of error.
+
+   base = ConcatFileName(dir ? dir : TempDirectory(), base);
+   base += "XXXXXX";
+
+   char *arg = StrDup(base);
+   int fd = mkstemp(arg);
+   base = arg;
+   delete [] arg;
+
+   if (fd == -1) {
+      SysError("TempFileName", "%s", base.Data() );
+      return 0;
+   } else {
+      FILE *fp = fdopen(fd, "w");
+      if (fp == 0) SysError("TempFileName", "converting filedescriptor (%d)", fd);
+      return fp;
+   }
+}
+
+//______________________________________________________________________________
 char *TUnixSystem::ConcatFileName(const char *dir, const char *name)
 {
    // Concatenate a directory and a file name. Returned string must be
@@ -924,7 +965,7 @@ char *TUnixSystem::ConcatFileName(const char *dir, const char *name)
    if (name == 0 || strlen(name) <= 0 || strcmp(name, ".") == 0)
       return StrDup(dir);
 
-   TString buf; 
+   TString buf;
    if (dir && (strcmp(dir, "/") != 0)) {
       buf = dir;
       if (dir[strlen(dir)-1] == '/')
@@ -1119,7 +1160,7 @@ Bool_t TUnixSystem::ExpandPathName(TString &patbuf0)
 
    const char *patbuf = (const char *)patbuf0;
    const char *hd, *p;
-   //   char   cmd[kMAXPATHLEN], 
+   //   char   cmd[kMAXPATHLEN],
    char stuffedPat[kMAXPATHLEN], name[70];
    char  *q;
    FILE  *pf;
@@ -1145,7 +1186,7 @@ needshell:
    EscChar(patbuf, stuffedPat, sizeof(stuffedPat), (char*)shellStuff, shellEscape);
 
 #ifdef R__HPUX
-   TString cmd("/bin/echo "); 
+   TString cmd("/bin/echo ");
 #else
    TString cmd("echo ");
 #endif
@@ -1159,10 +1200,10 @@ needshell:
          *q = '\0';
          hd = UnixHomedirectory(name);
          if (hd == 0)
-            cmd += stuffedPat; 
+            cmd += stuffedPat;
          else {
             cmd += hd;
-            cmd += p; 
+            cmd += p;
          }
       } else {
          hd = UnixHomedirectory(0);
@@ -1170,7 +1211,7 @@ needshell:
             fLastErrorString = GetError();
             return kTRUE;
          }
-         cmd += hd; 
+         cmd += hd;
          cmd += &stuffedPat[1];
       }
    } else

@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.47 2003/07/03 13:00:16 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.48 2003/08/20 14:14:22 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1092,6 +1092,47 @@ const char *TWinNTSystem::HomeDirectory(const char *userName)
    // Return the user's home directory.
 
    return WinNTHomedirectory(userName);
+}
+
+//______________________________________________________________________________
+const char *TWinNTSystem::TempDirectory() const
+{
+   // Return a user configured or systemwide directory to create
+   // temporary files in.
+
+   const char *dir =  gSystem->Getenv("TEMP");
+   if (!dir)   dir =  gSystem->Getenv("TEMPDIR");
+   if (!dir)   dir =  gSystem->Getenv("TEMP_DIR");
+   if (!dir)   dir =  gSystem->Getenv("TMP");
+   if (!dir)   dir =  gSystem->Getenv("TMPDIR");
+   if (!dir)   dir =  gSystem->Getenv("TMP_DIR");
+   if (!dir) dir = "c:\\";
+
+   return dir;
+}
+
+//______________________________________________________________________________
+FILE *TWinNTSystem::TempFileName(TString &base, const char *dir)
+{
+   // Create a secure temporary file by appending a unique
+   // 6 letter string to base. The file will be created in
+   // a standard (system) directory or in the directory
+   // provided in dir. The full filename is returned in base
+   // and a filepointer is returned for safely writing to the file
+   // (this avoids certain security problems). Returns 0 in case
+   // of error.
+
+   char tmpName[MAX_PATH];
+
+   GetTempFileName(dir ? dir : TempDirectory(), base.Data(), 0, tmpName);
+
+   base = tmpName;
+
+   FILE *fp = fopen(tmpName, "w");
+
+   if (!fp) SysError("TempFileName", "error opening %s", tmpName);
+
+   return fp;
 }
 
 //---- Paths & Files -----------------------------------------------------------

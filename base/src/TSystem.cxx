@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.71 2003/09/23 08:54:50 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.72 2003/09/23 10:03:03 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -937,53 +937,25 @@ int TSystem::GetFsInfo(const char*, Long_t*, Long_t*, Long_t*, Long_t*)
 const char *TSystem::TempDirectory() const
 {
    // Return a user configured or systemwide directory to create
-   // temporary files in
+   // temporary files in.
 
-   const char *dir =  gSystem->Getenv("TEMP");
-   if (!dir)   dir =  gSystem->Getenv("TEMPDIR");
-   if (!dir)   dir =  gSystem->Getenv("TEMP_DIR");
-   if (!dir)   dir =  gSystem->Getenv("TMP");
-   if (!dir)   dir =  gSystem->Getenv("TMPDIR");
-   if (!dir)   dir =  gSystem->Getenv("TMP_DIR");
-#ifdef R__WIN32
-   if (!dir) dir = "c:\\";
-#else
-   if (!dir) dir = "/tmp";
-#endif
-
-   return dir;
+   AbstractMethod("TempDirectory");
+   return 0;
 }
 
 //______________________________________________________________________________
-FILE *TSystem::TempFilename(TString &base, const char *dir)
+FILE *TSystem::TempFileName(TString &, const char *)
 {
    // Create a secure temporary file by appending a unique
    // 6 letter string to base. The file will be created in
    // a standard (system) directory or in the directory
    // provided in dir. The full filename is returned in base
    // and a filepointer is returned for safely writing to the file
-   // (this avoids certain security problems).
+   // (this avoids certain security problems). Returns 0 in case
+   // of error.
 
-   base = ConcatFileName(dir ? dir : TempDirectory(), base);
-   base += "XXXXXX";
-
-   char *arg = StrDup(base);
-#ifdef R__WIN32
-   int fd = -1;
-#else
-   int fd = mkstemp(arg);
-#endif
-   base = arg;
-   delete [] arg;
-
-   if (fd == -1) {
-      SysError("TempFilename", "%s", base.Data() );
-      return 0;
-   } else {
-      FILE *fp = fdopen(fd, "w");
-      if (fp == 0) SysError("TempFilename","converting filedescriptor (%d)", fd);
-      return fp;
-   }
+   AbstractMethod("TempFileName");
+   return 0;
 }
 
 //______________________________________________________________________________
