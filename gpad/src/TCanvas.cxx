@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.83 2004/12/07 16:55:36 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.84 2005/01/27 20:34:02 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1824,7 +1824,6 @@ void TCanvas::Update()
    // Update canvas pad buffers
 
    if (fUpdating) return;
-   fUpdating = kTRUE;
 
    if (gThreadXAR) {
       void *arr[2];
@@ -1836,6 +1835,7 @@ void TCanvas::Update()
       gInterpreter->Execute(this, IsA(), "Update", "");
       return;
    }
+   fUpdating = kTRUE;
 
    if (!IsBatch()) FeedbackMode(kFALSE);      // Goto double buffer mode
 
