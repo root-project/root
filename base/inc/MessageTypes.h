@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: MessageTypes.h,v 1.2 2000/11/21 12:25:38 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -39,8 +39,8 @@ enum EMessageTypes {
    kPROOF_STOP,                          //stop proof server
    kPROOF_FATAL,                         //server got fatal error and died
    kPROOF_LOGLEVEL,                      //loglevel follows
-   kPROOF_LOGFILE,                       //log file follows
-   kPROOF_LOGDONE,                       //log file received
+   kPROOF_LOGFILE,                       //log file length and content follows
+   kPROOF_LOGDONE,                       //log file received, status follows
    kPROOF_STATUS,                        //print status of slave
    kPROOF_PING,                          //ping slave
    kPROOF_PRINT,                         //ask master to print config
@@ -49,7 +49,8 @@ enum EMessageTypes {
    kPROOF_TREEDRAW,                      //tree draw command follows
    kPROOF_GETPACKET,                     //ask for next packet
    kPROOF_LIMITS,                        //ask for histogram limits
-   kPROOF_SENDFILE,                      //file follows
+   kPROOF_SENDFILE,                      //filename, length and file follows
+   kPROOF_PARALLEL,                      //number of parallel slaves follows
 
    //---- ROOTD message opcodes (2000 - 2099)
    kROOTD_USER             = 2000,       //user id follows
