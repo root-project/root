@@ -22,10 +22,6 @@ MODULES       = build cint utils base cont meta net zip clib matrix new \
                 hist tree graf g3d gpad gui minuit histpainter proof \
                 treeplayer treeviewer physics postscript rint html eg
 
-# no Fortran for MaxOS X yet
-ifeq ($(ARCH),macosx)
-MODULES      := $(filter-out eg,$(MODULES))
-endif
 ifneq ($(ARCH),win32)
 MODULES      += unix x11 x3d rootx rootd proofd
 SYSTEMO       = $(UNIXO)
