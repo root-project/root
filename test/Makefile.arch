@@ -278,11 +278,20 @@ endif
 
 ifeq ($(ARCH),linuxicc)
 # Linux with Intel icc compiler
+ICC_MAJOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f1)
+ICC_MINOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f2)
 CXX           = icc
-CXXFLAGS      = -O -wd1476
-LD            = icc
+CXXFLAGS      = -O -fPIC -wd1476
+LD            = icpc
 LDFLAGS       = -O
 SOFLAGS       = -shared
+ifeq ($(ICC_MAJOR),8)
+ifneq ($(ICC_MINOR),0)
+CXXFLAGS     += -wd1572
+endif
+endif
 endif
 
 ifeq ($(ARCH),linuxppcegcs)
@@ -314,22 +323,20 @@ endif
 
 ifeq ($(ARCH),linuxia64ecc)
 # Itanium Linux with Intel icc (was ecc)
-ICC_MAJOR    := $(shell ecc -quiet -V 2>&1 | awk '{ if (NR==2) print $$2 }' | \
+ICC_MAJOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
                 cut -d'.' -f1)
-ICC_MINOR    := $(shell ecc -quiet -V 2>&1 | awk '{ if (NR==2) print $$2 }' | \
-                cut -d'.' -f2 | cut -d',' -f1)
-ifeq ($(ICC_MAJOR),8)
-ICC           = icc
-IFORT         = ifort
-else
-ICC           = ecc
-IFORT         = efc
-endif
-CXX           = $(ICC)
+ICC_MINOR    := $(shell icc -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
+                cut -d'.' -f2)
+CXX           = icc
 CXXFLAGS      = -O -fPIC -wd1476
-LD            = $(ICC)
+LD            = icpc
 LDFLAGS       = -O
 SOFLAGS       = -shared
+ifeq ($(ICC_MAJOR),8)
+ifneq ($(ICC_MINOR),0)
+CXXFLAGS     += -wd1572
+endif
+endif
 endif
 
 ifeq ($(ARCH),linuxx8664gcc)

@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for AMD Opteron and Intel EM64T (64 bit mode) Linux with icc
+# Makefile of ROOT for AMD Opteron and Intel EM64T for Linux with icc v8
 
 PLATFORM      = linux
 
@@ -45,25 +45,15 @@ CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:
-ifeq ($(ICC_MAJOR),8)
 F77           = ifort
-else
-F77           = ifc
-endif
 F77FLAGS      =
 # check path for libg2c and libfrtbegin
 LIBG2C       := $(shell gcc -print-file-name=libg2c.a | \
                   awk '{ if ($$1 != "libg2c.a") print $$1}')
 LIBFRTBEGIN  := $(shell gcc -print-file-name=libfrtbegin.a | \
                   awk '{ if ($$1 != "libfrtbegin.a") print $$1}')
-ifeq ($(ICC_MAJOR),8)
 F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
                 -L$(shell which ifort | sed -e 's|bin/ifort|lib|') \
                 -lifcore
-else
-F77LIBS       = $(LIBFRTBEGIN) $(LIBG2C) \
-                -L$(shell which ifc | sed -e 's|bin/ifc|lib|') \
-                -lF90 -lCEPCF90 -lintrins
-endif
 
 # Extras

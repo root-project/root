@@ -137,7 +137,7 @@ ifeq ($(CXXCMD),icc)
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
 ifeq ($(ICC_MAJOR),8)
-ifeq ($(ICC_MINOR),1)
+ifneq ($(ICC_MINOR),0)
 CINTS2       += $(MODDIRS)/gcc3strm.cxx
 else
 CINTS2       += $(MODDIRS)/iccstrm.cxx
@@ -145,12 +145,6 @@ endif
 else
 CINTS2       += $(MODDIRS)/iccstrm.cxx
 endif
-CINTS2       += $(MODDIRS)/longif3.cxx
-endif
-ifeq ($(CXXCMD),ecc)
-CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
-CINTS2       := $(filter-out $(MODDIRS)/longif.%,$(CINTS2))
-CINTS2       += $(MODDIRS)/iccstrm.cxx
 CINTS2       += $(MODDIRS)/longif3.cxx
 endif
 ifeq ($(GCC_MAJOR),3)
@@ -288,8 +282,3 @@ $(CINTDIRS)/loadfile_tmp.d: $(CINTDIRS)/loadfile.c $(RMKDEP)
 	@cp $(CINTDIRS)/loadfile.c $(CINTDIRS)/loadfile_tmp.c
 	$(MAKEDEP) $@ "$(CFLAGS)" $(CINTDIRS)/loadfile_tmp.c > $@
 	@rm -f $(CINTDIRS)/loadfile_tmp.c
-
-ifeq ($(ICC_MAJOR),6)
-$(CINTDIRS)/struct.o: $(CINTDIRS)/struct.c
-	$(CC) $(NOOPT) $(CINTCFLAGS) -o $@ -c $<
-endif
