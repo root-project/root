@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.1 2002/09/06 19:58:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.2 2002/09/06 20:24:18 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -27,7 +27,7 @@
 #include "TIterator.h"
 #include "TObjString.h"
 #include "TClassTable.h"
-#include <iostream>
+#include "Riostream.h"
 
 ClassImp(TLimit)
 
