@@ -1,4 +1,4 @@
-// @(#)root/base:$Name$:$Id$
+// @(#)root/base:$Name:  $:$Id: TMemberInspector.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
 // Author: Fons Rademakers   15/07/96
 
 /*************************************************************************
@@ -36,7 +36,7 @@ public:
    TMemberInspector() { }
    virtual ~TMemberInspector() { }
 
-   virtual void Inspect(TClass *cl, const char *parent, const char *name, void *addr) = 0;
+   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr) = 0;
 
    ClassDef(TMemberInspector,0)  //ABC for inspecting class data members
 };

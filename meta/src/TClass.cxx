@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.60 2001/10/29 16:21:56 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.61 2001/12/02 16:50:08 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -64,11 +64,11 @@ private:
 public:
    TBuildRealData(TObject *obj, TClass *cl)
       { fRealDataObject = obj; fRealDataClass = cl; }
-   void Inspect(TClass *cl, const char *parent, const char *name, void *addr);
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
 };
 
 //______________________________________________________________________________
-void TBuildRealData::Inspect(TClass *cl, const char *pname, const char *mname, void *add)
+void TBuildRealData::Inspect(TClass *cl, const char *pname, const char *mname, const void *add)
 {
    // This method is called from ShowMembers() via BuildRealdata().
 
@@ -107,12 +107,12 @@ public:
 
    TAutoInspector(TBrowser *b) { fBrowser = b; fCount = 0; }
    virtual ~TAutoInspector() { }
-   virtual void Inspect(TClass *cl, const char *parent, const char *name, void *addr);
+   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
 };
 
 //______________________________________________________________________________
 void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
-                             void *addr)
+                             const void *addr)
 {
    // This method is called from ShowMembers() via AutoBrowse().
 

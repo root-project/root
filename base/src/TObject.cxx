@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.27 2001/11/28 15:58:13 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.28 2001/12/02 15:16:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -63,11 +63,11 @@ class TDumpMembers : public TMemberInspector {
 
 public:
    TDumpMembers() { }
-   void Inspect(TClass *cl, const char *parent, const char *name, void *addr);
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
 };
 
 //______________________________________________________________________________
-void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, void *add)
+void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, const void *add)
 {
    // Print value of member mname.
    //
