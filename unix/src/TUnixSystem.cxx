@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.3 2000/06/19 16:31:45 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.4 2000/06/28 15:30:44 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -58,7 +58,9 @@
 #   include <sys/select.h>
 #endif
 #if defined(R__LINUX) && !defined(R__MKLINUX) && !defined(__alpha)
-#   define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
+#   ifndef SIGSYS
+#      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
+#   endif
 #   include <dlfcn.h>
 #endif
 #include <syslog.h>
