@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.109 2003/04/10 12:58:34 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.110 2003/04/18 16:42:31 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1654,7 +1654,8 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
                fBranches.Add(branch);
             }
          } else {
-            if (elem->GetClassPointer() == TClonesArray::Class()) {
+            //fBranchPointer may be null in case of a TClonesArray inside another TClonesArray
+            if (fBranchPointer && elem->GetClassPointer() == TClonesArray::Class()) {
                //process case of a TClonesArray in a derived class
                char *pointer = fBranchPointer + offset;
                branch = new TBranchElement(branchname,info,jd,pointer,basketsize,splitlevel-1,btype);
