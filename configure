@@ -444,6 +444,9 @@ if [ "x$enable_ttf" != "xno" -a "$arch" != "win32" ]; then
             ttflib=`echo $ttflib | sed 's|lib\(.*\)\..*|-l\1|'`
             ttflibdir=-L${ttflibdir}
         fi
+        if [ "x$ttfincdir" = "x/usr/include" ]; then
+            ttfincdir="include"
+        fi
     fi
 fi
 
@@ -552,6 +555,9 @@ if [ "x$enable_opengl" != "xno" -a "$arch" != "win32" ]; then
             openglulib=`echo $openglulib | sed 's|lib\(.*\)\..*|-l\1|'`
             opengllibdir=-L${opengllibdir}
         fi
+        if [ "x$openglincdir" = "x/usr/include" ]; then
+            openglincdir="include"
+        fi
     fi
 fi
 
@@ -562,8 +568,8 @@ fi
 # On win32 we always have OpenGL available (is this true?)
 #
 if [ "$arch" = "win32" ]; then
-   enable_opengl=yes
-   openglincdir=include
+   enable_opengl="yes"
+   openglincdir="include"
 fi
 
 
@@ -654,6 +660,9 @@ if [ "x$enable_mysql" != "xno" ]; then
             mysqllib=`echo $mysqllib | sed 's|lib\(.*\)\..*|-l\1|'`
             mysqllibdir=-L${mysqllibdir}
         fi
+        if [ "x$mysqlincdir" = "x/usr/include" ]; then
+            mysqlincdir="include"
+        fi
     fi
 fi
 
@@ -743,6 +752,9 @@ if [ "x$enable_pgsql" != "xno" ]; then
         else
             pgsqllib=`echo $pgsqllib | sed 's|lib\(.*\)\..*|-l\1|'`
             pgsqllibdir=-L${pgsqllibdir}
+        fi
+        if [ "x$pgsqlincdir" = "x/usr/include" ]; then
+            pgsqlincdir="include"
         fi
     fi
 fi

@@ -41,7 +41,7 @@ SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 endif
 ifneq ($(TTFINCDIR),)
-ifneq ($(TTFLIBDIR),)
+ifneq ($(TTFLIB),)
 MODULES      += x11ttf
 endif
 endif
@@ -53,12 +53,12 @@ endif
 endif
 endif
 ifneq ($(MYSQLINCDIR),)
-ifneq ($(MYSQLLIBDIR),)
+ifneq ($(MYSQLCLILIB),)
 MODULES      += mysql
 endif
 endif
 ifneq ($(PGSQLINCDIR),)
-ifneq ($(PGSQLLIBDIR),)
+ifneq ($(PGSQLCLILIB),)
 MODULES      += pgsql
 endif
 endif
