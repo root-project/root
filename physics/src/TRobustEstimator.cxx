@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.2 2004/10/08 09:10:34 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.cxx,v 1.3 2004/10/08 15:17:11 brun Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 /*************************************************************************
@@ -99,8 +99,12 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include "TRobustEstimator.h"
+//#include "/scratch/akrechtc/script/TRobustEstimator2.h"
 #include "TRandom.h"
 #include "TMath.h"
+#include "TH1D.h"
+#include "TPaveLabel.h"
+#include "TDecompChol.h"
 
 ClassImp(TRobustEstimator)
 
@@ -131,7 +135,7 @@ TRobustEstimator::TRobustEstimator(){
 TRobustEstimator::TRobustEstimator(Int_t nvectors, Int_t nvariables, Int_t hh)
   :fMean(nvariables),
    fCovariance(nvariables),
-   fInvcovariance(nvariables, nvariables),
+   fInvcovariance(nvariables),
    fCorrelation(nvariables),
    fRd(nvectors),
    fSd(nvectors),
@@ -159,7 +163,7 @@ TRobustEstimator::TRobustEstimator(Int_t nvectors, Int_t nvariables, Int_t hh)
   
   fVarTemp=0;
   fVecTemp=0;
-  fExact=kFALSE;
+  fExact=0;
 }
 
 //_____________________________________________________________________________
@@ -227,6 +231,8 @@ void TRobustEstimator::Evaluate()
   for (i=0; i<nbest; i++)
     deti[i]=1e16;
 
+  for (i=0; i<fN; i++)
+    fRd(i)=0;
   ////////////////////////////
   //for small n
   ////////////////////////////
@@ -248,8 +254,7 @@ void TRobustEstimator::Evaluate()
       Covar(sscp, fMean, fCovariance, fSd, fH);
       det = fCovariance.Determinant();
       if (det < kEps) {
-	Exact(ndist);
-	fExact = kTRUE;
+	fExact = Exact(ndist);
 	delete [] index;
 	delete [] ndist;
 	delete [] deti;
@@ -258,8 +263,7 @@ void TRobustEstimator::Evaluate()
       //make 2 CSteps
       det = CStep(fN, fH, index, fData, sscp, ndist);
       if (det < kEps) {
-	Exact(ndist);
-	fExact = kTRUE;
+	fExact = Exact(ndist);
 	delete [] index;
 	delete [] ndist;
 	delete [] deti;
@@ -267,9 +271,7 @@ void TRobustEstimator::Evaluate()
       }
       det = CStep(fN, fH, index, fData, sscp, ndist);
       if (det < kEps) {
-	Exact(ndist);
-	fExact = kTRUE;
-
+	fExact = Exact(ndist);
 	delete [] index;
 	delete [] ndist;
 	delete [] deti;
@@ -325,8 +327,6 @@ void TRobustEstimator::Evaluate()
 
     if (deti[detind]!=0) {
       //calculate robust distances and throw out the bad points
-      fInvcovariance=fCovariance;
-      fInvcovariance.Invert();
       Int_t nout = RDist(sscp);
       Double_t cutoff=kChiQuant[fNvar-1];
 
@@ -341,8 +341,7 @@ void TRobustEstimator::Evaluate()
       }
 
     } else {
-      Exact(ndist);
-      fExact=kTRUE;
+      fExact=Exact(ndist);
     }
     delete [] index;
     delete [] ndist;
@@ -514,7 +513,7 @@ void TRobustEstimator::Evaluate()
     if (det<kEps) {
       nh= Exact(ndist);
       if (nh>=fH) {
-	fExact = kTRUE;
+	fExact = nh;
 
 	delete [] detibig;
 	delete [] deti;
@@ -531,7 +530,7 @@ void TRobustEstimator::Evaluate()
     if (det<kEps) {
       nh=Exact(ndist);
 	if (nh>=fH) {
-	  fExact = kTRUE;
+	  fExact = nh;
 	  delete [] detibig;
 	  delete [] deti;
 	  delete [] subdat;
@@ -597,7 +596,7 @@ void TRobustEstimator::Evaluate()
 }
 
 //___________________________________________________________________________________________
-void TRobustEstimator::EvaluateUni(Int_t nvectors, Double_t *data, Int_t hh, Double_t &mean, Double_t &sigma)
+void TRobustEstimator::EvaluateUni(Int_t nvectors, Double_t *data, Double_t &mean, Double_t &sigma, Int_t hh)
 {
   //for the univariate case
   //estimates of location and scatter are returned in mean and sigma parameters
@@ -605,6 +604,8 @@ void TRobustEstimator::EvaluateUni(Int_t nvectors, Double_t *data, Int_t hh, Dou
   //it finds a subset of size hh with smallest sigma, and then returns mean and
   //sigma of this subset
 
+  if (hh==0)
+    hh=(nvectors+2)/2;
   Double_t faclts[]={2.6477,2.5092,2.3826,2.2662,2.1587,2.0589,1.9660,1.879,1.7973,1.7203,1.6473};
   Int_t *index=new Int_t[nvectors];
   TMath::Sort(nvectors, data, index, kFALSE);
@@ -696,8 +697,8 @@ void TRobustEstimator::GetCorrelation(TMatrixDSym &matr)
 //____________________________________________________________________
 const TVectorD* TRobustEstimator::GetHyperplane() const
 {
-  if (fExact==kFALSE) {
-     Error("GetHyperPlane","the data doesn't lie on a hyperplane!\n");
+  if (fExact==0) {
+     Error("GetHyperplane","the data doesn't lie on a hyperplane!\n");
      return 0;
   } else {
      return &fHyperplane;
@@ -707,6 +708,10 @@ const TVectorD* TRobustEstimator::GetHyperplane() const
 //______________________________________________________________________
 void TRobustEstimator::GetHyperplane(TVectorD &vec)
 {
+  if (fExact==0){
+     Error("GetHyperplane","the data doesn't lie on a hyperplane!\n");
+     return;
+  }
   if (vec.GetNoElements()!=fNvar) {
      Warning("GetHyperPlane","provided vector is of the wrong size, it will be resized");
      vec.ResizeTo(fNvar);
@@ -732,6 +737,30 @@ void TRobustEstimator::GetRDistances(TVectorD &rdist)
      rdist.ResizeTo(fN);
   }
   rdist=fRd;
+}
+
+//_________________________________________________________________________
+TH1D* TRobustEstimator::GetRDistHisto()
+{
+  Double_t mb=4*kChiQuant[fNvar-1];
+  TH1D *histo=new TH1D("RDist", "RDist", 100, 0, mb);
+  for (Int_t i=0; i<fN; i++)
+    histo->Fill(fRd(i));
+
+  Char_t buffer[30];
+  sprintf(buffer, "cutoff = %f", kChiQuant[fNvar-1]);
+  TPaveLabel *pl=new TPaveLabel(0.7, 0.77, 0.98, 0.82, buffer, "brNDC");
+  pl->SetTextFont(62);
+  pl->SetTextSize(0.5);
+  histo->GetListOfFunctions()->Add(pl);
+
+  return histo;
+}
+
+//__________________________________________________________________________
+Int_t TRobustEstimator::GetNOut()
+{
+  return fOut.GetSize();
 }
 
 //_________________________________________________________________________
@@ -900,8 +929,9 @@ void TRobustEstimator::CreateSubset(Int_t ntotal, Int_t htotal, Int_t p, Int_t *
   }
 
   if(nindex!=htotal) {
-    fInvcovariance = fCovariance;
-    fInvcovariance.Invert();
+    TDecompChol chol(fCovariance);
+    fInvcovariance = chol.Invert();
+
     TVectorD temp(fNvar);
     for(j=0; j<ntotal; j++) {
       ndist[j]=0;
@@ -959,9 +989,8 @@ Double_t TRobustEstimator::CStep(Int_t ntotal, Int_t htotal, Int_t *index, TMatr
   TVectorD vec(fNvar);
   Double_t det;
 
-  fInvcovariance=fCovariance;
-  fInvcovariance.Invert();
-
+  TDecompChol chol(fCovariance);
+  fInvcovariance = chol.Invert();
 
   TVectorD temp(fNvar);
   for(j=0; j<ntotal; j++) {
@@ -1047,7 +1076,7 @@ Int_t TRobustEstimator::Exact2(TMatrixD &mstockbig, TMatrixD &cstockbig, TMatrix
     }
     Covar(sscp, fMean, fCovariance, fSd, nh);
 
-    fExact=kTRUE;
+    fExact=nh;
     return nbest+1;
 
   } else {
@@ -1134,9 +1163,9 @@ Int_t TRobustEstimator::RDist(TMatrixD &sscp)
  Int_t nout=0;
 
  TVectorD temp(fNvar);
+ TDecompChol chol(fCovariance);
+ fInvcovariance = chol.Invert();
 
- fInvcovariance=fCovariance;
- fInvcovariance.Invert();
 
  for (i=0; i<fN; i++) {
    fRd[i]=0;
@@ -1155,8 +1184,9 @@ Int_t TRobustEstimator::RDist(TMatrixD &sscp)
  med=TMath::Median(fN, fRd.GetMatrixArray());
  med/=chi;
  fCovariance*=med;
- fInvcovariance=fCovariance;
- fInvcovariance.Invert();
+ TDecompChol chol2(fCovariance);
+ fInvcovariance = chol2.Invert();
+
  for (i=0; i<fN; i++) {
    fRd[i]=0;
    for(j=0; j<fNvar; j++) {

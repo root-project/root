@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.h,v 1.5 2004/09/10 17:00:34 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRobustEstimator.h,v 1.1 2004/10/08 09:07:10 brun Exp $
 // Author: Anna Kreshuk  08/10/2004
 
 
@@ -16,6 +16,7 @@
 #include "TArrayI.h"
 #include "TMatrixDSym.h"
 #include "TMatrixDSymEigen.h"
+#include "TH1D.h"
 
 class TRobustEstimator : public TObject {
 
@@ -28,11 +29,11 @@ protected:
   Int_t        fVarTemp;       //number of variables already added to the data matrix
   Int_t        fVecTemp;       //number of observations already added to the data matrix
 
-  Bool_t       fExact;         //informs if there was an exact fit 
+  Int_t        fExact;         //if there was an exact fit, stores the number of points on a hyperplane 
 
   TVectorD     fMean;          //location estimate (mean values)
   TMatrixDSym  fCovariance;    //covariance matrix estimate
-  TMatrixD     fInvcovariance; //iverse of the covariance matrix
+  TMatrixDSym  fInvcovariance; //inverse of the covariance matrix
   TMatrixDSym  fCorrelation;   //correlation matrix
   TVectorD     fRd;            //array of robust distances, size n
   TVectorD     fSd;            //array of standard deviations
@@ -78,7 +79,7 @@ public:
   void    AddRow(Double_t *row);            //adds a row to the data matrix
 
   void    Evaluate();
-  void    EvaluateUni(Int_t nvectors, Double_t *data, Int_t hh, Double_t &mean, Double_t &sigma);
+  void    EvaluateUni(Int_t nvectors, Double_t *data, Double_t &mean, Double_t &sigma, Int_t hh=0);
 
   Int_t   GetBDPoint();                     //returns the breakdown point of the algorithm
 
@@ -88,12 +89,16 @@ public:
   const   TMatrixDSym* GetCorrelation() const{return &fCorrelation;}
   void    GetHyperplane(TVectorD &vec);      //if the data lies on a hyperplane, returns this hyperplane
   const   TVectorD* GetHyperplane() const;   //if the data lies on a hyperplane, returns this hyperplane
+  Int_t   GetNHyp() {return fExact;}         //returns the number of points on a hyperplane
   void    GetMean(TVectorD &means);                        //returns robust mean vector estimate
   const   TVectorD* GetMean() const {return &fMean;}       //returns robust mean vector estimate
   void    GetRDistances(TVectorD &rdist);                  //returns robust distances of all observations
   const   TVectorD* GetRDistances() const {return &fRd;}   //returns robust distances of all observations
+  TH1D*   GetRDistHisto();  
   const   TArrayI* GetOuliers() const{return &fOut;}       //returns an array of outlier indexes
-
+  Int_t   GetNOut(); //returns the number of points outside the tolerance ellipsoid.
+                     //ONLY those with robust distances significantly larger than the
+                     //cutoff value, should be considered outliers!
   
   ClassDef(TRobustEstimator,1)  //Minimum Covariance Determinant Estimator
  
