@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.26 2001/03/05 22:32:06 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.27 2001/04/09 08:33:50 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -92,7 +92,8 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
    SetName(name);
    for (i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) continue;
-      TLeaf *leaf = GetLeaf(i);
+      //TLeaf *leaf = GetLeaf(i);
+      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       if (leaf->InheritsFrom("TLeafC") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
       if (leaf->InheritsFrom("TLeafB") && !leaf->IsUnsigned()) SetBit(kIsCharacter);
       
@@ -334,7 +335,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             if (!leaf) leaf = fTree->FindLeaf(first); 
             
             if (leaf || branch) {
-               if (leaf && !leaf->IsOnTerminalBranch() ) {
+               if (leaf && leaf->IsOnTerminalBranch() ) {
                   // This is a non-object leaf, it should NOT be specified more except for
                   // dimensions. 
                   final = kTRUE;
@@ -358,7 +359,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                tmp_leaf = branch->FindLeaf(work);
                if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
             }
-            if (tmp_leaf && !tmp_leaf->IsOnTerminalBranch() ) {
+            if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
                // This is a non-object leaf, it should NOT be specified more except for
                // dimensions. 
                final = kTRUE;
@@ -590,7 +591,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance) const
          Double_t ycut = fy->EvalInstance(instance);
          return gcut->IsInside(xcut,ycut);
       }
-      TLeaf *leaf = GetLeaf(0);
+      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
       
       // Now let calculate what physical instance we really need.
       // Some redundant code is used to speed up the cases where
@@ -655,7 +656,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance) const
          Double_t ycut = fy->EvalInstance(instance);
          param[i] = gcut->IsInside(xcut,ycut);
       } else {
-         TLeaf *leaf = GetLeaf(i);
+         TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
          
          // Now let calculate what physical instance we really need.
          // Some redundant code is used to speed up the cases where
@@ -715,7 +716,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance) const
       Int_t action = fOper[i];
 //*-*- a tree string
       if (action >= 105000) {
-         TLeaf *leafc = GetLeaf(action-105000);
+         TLeaf *leafc = (TLeaf*)fLeaves.UncheckedAt(action-105000);
          leafc->GetBranch()->GetEntry(fTree->GetReadEntry());
          pos2++; tab2[pos2-1] = (char*)leafc->GetValuePointer();
          continue;
@@ -896,7 +897,7 @@ Int_t TTreeFormula::GetNdata()
       // variable (expected for the first one) can NOT be done via negative values of
       // fCumulSizes.
       
-      TLeaf *leaf = GetLeaf(i);
+      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       if (leaf->GetLeafCount()) {
          TBranch *branch = leaf->GetLeafCount()->GetBranch();
          branch->GetEntry(fTree->GetReadEntry());
@@ -1028,7 +1029,7 @@ char *TTreeFormula::PrintValue(Int_t mode) const
 
    if (TestBit(kIsCharacter)) {
       if (mode == 0) {
-         TLeaf *leaf = GetLeaf(0);
+         TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
          leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
          strncpy(value, (char*)leaf->GetValuePointer(), kMAXLENGTH-1);
          value[kMAXLENGTH-1] = 0;
