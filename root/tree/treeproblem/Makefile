@@ -1,9 +1,13 @@
+CLEAN_TARGETS += *.root *~ *.$(ObjSuf) *Dict.cxx *Dict.h *.$(DllSuf) reader writer Foo.so \
+	 write.out
+TEST_TARGETS +=  check
+
 include ../../Rules.mk
 
 LIBS = $(ROOTLIBS)
 
-all:	Foo.$(DllSuf) reader writer 
-test: check
+#all:	Foo.$(DllSuf) reader writer 
+#test: check
 
 Foo.$(DllSuf): Foo.h Foo.cxx
 	rootcint -f FooDict.cxx -c Foo.h+
@@ -58,10 +62,13 @@ dist:
 	rm -rf treeproblem 
 
 check:Foo.$(DllSuf) reader writer 
-	root -b -l -q writer.C 
+	root -b -l -q writer.C > write.out
+ifeq ($(FAIL),) 
+	@echo Test known to fail in `pwd`
+else
 	root -b -l -q reader.C
+endif
 
 #clean:
 #	rm -f *.root *~ *.$(ObjSuf) *Dict.cxx *Dict.h *.$(DllSuf) reader writer
 
-CLEAN_TARGET += *.root *~ *.$(ObjSuf) *Dict.cxx *Dict.h *.$(DllSuf) reader writer

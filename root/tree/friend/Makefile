@@ -4,7 +4,7 @@ test: tests ChainFriend
 
 override SUBDIRS =  
 
-CLEAN_TARGET += main *Dict* Event.root *~ createfile.out run.out 
+CLEAN_TARGET += main *Dict* *~ createfile.out run.out 
 TEST_TARGETS = ChainFriend
 
 include ../../Rules.mk

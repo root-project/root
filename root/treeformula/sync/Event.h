@@ -42,9 +42,11 @@ private:
    Short_t      fValid;        //Validity criterion
    Int_t        fNsp;          //Number of points for this track with a special value
    Float_t*     fPointValue;   //[fNsp] a special quantity for some point.
+   TBits        fTriggerBits;  //Bits triggered by this track.
 
 public:
    Track() { fPointValue = 0; }
+   Track(const Track& orig);
    Track(Float_t random);
    virtual ~Track() {Clear();}
    void          Clear(Option_t *option="") { delete [] fPointValue; fPointValue=0; }
@@ -66,6 +68,7 @@ public:
    Float_t       GetCharge() const { return fCharge; }
    Float_t       GetVertex(Int_t i=0) {return (i<3)?fVertex[i]:0;}
    Int_t         GetNpoint() const { return fNpoint; }
+   TBits&        GetTriggerBits() { return fTriggerBits; }
    Short_t       GetValid()  const { return fValid; }
    virtual void  SetValid(Int_t valid=1) { fValid = valid; }
    Int_t         GetN() const { return fNsp; }
@@ -113,6 +116,7 @@ private:
    TRef           fLastTrack;         //reference pointer to last track
    TRef           fWebHistogram;      //EXEC:GetWebHistogram reference to an histogram in a TWebFile
    TH1F          *fH;                 //->
+   TBits          fTriggerBits;       //Bits triggered by this event.
 
    static TClonesArray *fgTracks;
    static TH1F         *fgHist;
@@ -152,6 +156,7 @@ public:
    TH1          *GetWebHistogram()  const {return (TH1*)fWebHistogram.GetObject();}
    Int_t         GetMeasure(UChar_t which) { return (which<10)?fMeasures[which]:0; }
    Float_t       GetMatrix(UChar_t x, UChar_t y) { return (x<4&&y<4)?fMatrix[x][y]:0; }
+   TBits&        GetTriggerBits() { return fTriggerBits; }
 
    ClassDef(Event,1)  //Event structure
 };
