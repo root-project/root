@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.8 2001/01/15 01:28:08 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.9 2001/02/09 10:24:46 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
       bufsize = 64000;
       if (split)  bufsize /= 4;
       event = new Event();
-      TBranch *branch = tree->Bronch("event", "Event", &event, bufsize,split);
+      TBranch *branch = tree->Branch("event", "Event", &event, bufsize,split);
       branch->SetAutoDelete(kFALSE);
       char etype[20];
 
