@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.3 2000/06/27 15:51:15 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TList.cxx,v 1.4 2000/09/08 16:11:03 rdm Exp $
 // Author: Fons Rademakers   10/08/95
 
 /*************************************************************************
@@ -82,6 +82,7 @@ void TList::AddFirst(TObject *obj)
       fFirst = t;
    }
    fSize++;
+   Changed();
 }
 
 //______________________________________________________________________________
@@ -105,6 +106,7 @@ void TList::AddFirst(TObject *obj, Option_t *opt)
       fFirst = t;
    }
    fSize++;
+   Changed();
 }
 
 //______________________________________________________________________________
@@ -120,6 +122,7 @@ void TList::AddLast(TObject *obj)
    } else
       fLast = NewLink(obj, fLast);
    fSize++;
+   Changed();
 }
 
 //______________________________________________________________________________
@@ -139,6 +142,7 @@ void TList::AddLast(TObject *obj, Option_t *opt)
    } else
       fLast = NewOptLink(obj, opt, fLast);
    fSize++;
+   Changed();
 }
 
 //______________________________________________________________________________
@@ -162,6 +166,7 @@ void TList::AddBefore(TObject *before, TObject *obj)
       else {
          NewLink(obj, t->Prev());
          fSize++;
+         Changed();
       }
    }
 }
@@ -183,6 +188,7 @@ void TList::AddBefore(TObjLink *before, TObject *obj)
       else {
          NewLink(obj, before->Prev());
          fSize++;
+         Changed();
       }
    }
 }
@@ -208,6 +214,7 @@ void TList::AddAfter(TObject *after, TObject *obj)
       else {
          NewLink(obj, t);
          fSize++;
+         Changed();
       }
    }
 }
@@ -229,6 +236,7 @@ void TList::AddAfter(TObjLink *after, TObject *obj)
       else {
          NewLink(obj, after);
          fSize++;
+         Changed();
       }
    }
 }
@@ -248,6 +256,7 @@ void TList::AddAt(TObject *obj, Int_t idx)
    else {
       NewLink(obj, lnk->Prev());
       fSize++;
+      Changed();
    }
 }
 
@@ -335,6 +344,7 @@ void TList::Clear(Option_t *option)
    }
    fFirst = fLast = fCache = 0;
    fSize  = 0;
+   Changed();
 }
 
 //______________________________________________________________________________
@@ -378,6 +388,7 @@ void TList::Delete(Option_t *option)
          delete tlk;
       }
    }
+   Changed();
 }
 
 //______________________________________________________________________________
@@ -546,6 +557,7 @@ TObject *TList::Remove(TObject *obj)
    }
    fSize--;
    fCache = 0;
+   Changed();
 
    return ob;
 }
@@ -576,6 +588,7 @@ TObject *TList::Remove(TObjLink *lnk)
    }
    fSize--;
    fCache = 0;
+   Changed();
 
    return obj;
 }
@@ -610,6 +623,7 @@ void TList::Sort(Bool_t order)
       else
          fLast = ol;
    }
+   fSorted = kTRUE;
 }
 
 //______________________________________________________________________________

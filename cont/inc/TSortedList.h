@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TSortedList.h,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   14/09/95
 
 /*************************************************************************
@@ -34,6 +34,8 @@ public:
 
    void      Add(TObject *obj);
    void      Add(TObject *obj, Option_t *opt);
+
+   Bool_t    IsSorted() const { return kTRUE; }
 
    //---- the following methods are overridden to preserve sorting order
    void      AddFirst(TObject *obj) { Add(obj); }
