@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.45 2002/07/04 16:47:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.46 2002/07/09 10:23:21 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -426,7 +426,7 @@ Int_t TBranch::Fill()
       fBasketBytes[fWriteBasket]  = basket->GetNbytes();
       fBasketSeek[fWriteBasket]   = basket->GetSeekKey();
       Int_t addbytes = basket->GetObjlen() + basket->GetKeylen() ;
-      if (fDirectory != gROOT && fDirectory->IsWritable()) {
+      if (fDirectory != 0 && fDirectory != gROOT && fDirectory->IsWritable()) {
          delete basket;
          fBaskets[fWriteBasket] = 0;
       }
@@ -753,6 +753,8 @@ TFile *TBranch::GetFile(Int_t mode)
       return file;
    }
 
+   if (fFileName.Length() == 0) return 0;
+   
    TString bFileName = fFileName;
 
    // check if branch file name is absolute or a URL (e.g. /castor/...,
