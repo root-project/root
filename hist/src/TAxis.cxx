@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.2 2000/05/18 17:01:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.3 2000/05/19 08:33:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -493,6 +493,18 @@ void TAxis::GetLabel(char *)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
+}
+
+//___________________________________________________________________________
+void TAxis::RotateTitle(Bool_t rotate)
+{
+//    rotate title by 180 degrees
+//    by default the title is drawn right adjusted.
+//    if rotate is TRUE, the title is left adjusted at the end of the axis
+//    and rotated by 180 degrees
+
+   if (rotate) SetBit(kRotateTitle);
+   else        ResetBit(kRotateTitle);
 }
 
 //______________________________________________________________________________
