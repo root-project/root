@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.25 2001/09/25 07:10:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.26 2001/10/12 20:37:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -895,11 +895,8 @@ void TBranch::Reset(Option_t *)
 //    Entries, max and min are reset
 //
 
+   Int_t nbaskets = fBaskets.GetEntries();
    fBaskets.Delete();
-   if (fBasketEntry) delete [] fBasketEntry;
-   if (fBasketBytes) delete [] fBasketBytes;
-   if (fBasketSeek)  delete [] fBasketSeek;
-   fBasketEntry    = 0;
    fReadBasket     = 0;
    fReadEntry      = -1;
    fWriteBasket    = 0;
@@ -907,17 +904,15 @@ void TBranch::Reset(Option_t *)
    fTotBytes       = 0;
    fZipBytes       = 0;
    fEntryNumber    = 0;
-   fBasketEntry    = new Int_t[fMaxBaskets];
-   fBasketBytes    = new Int_t[fMaxBaskets];
-   fBasketSeek     = new Seek_t[fMaxBaskets];
-   fBasketEntry[0] = fEntryNumber;
    for (Int_t i=0;i<fMaxBaskets;i++) {
-      fBasketBytes[i] = 0;
-      fBasketEntry[i] = 0;
-      fBasketSeek[i]  = 0;
+      if (fBasketBytes) fBasketBytes[i] = 0;
+      if (fBasketEntry) fBasketEntry[i] = 0;
+      if (fBasketSeek)  fBasketSeek[i]  = 0;
    }
-   TBasket *basket = new TBasket(GetName(),fTree->GetName(),this);
-   fBaskets.AddAt(basket,0);
+   if (nbaskets) {
+      TBasket *basket = new TBasket(GetName(),fTree->GetName(),this);
+      fBaskets.AddAt(basket,0);
+   }
 }
 
 //______________________________________________________________________________
