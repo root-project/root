@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.138 2003/05/13 14:59:36 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.139 2003/05/17 08:44:46 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4756,6 +4756,7 @@ void THistPainter::PaintTitle()
    while ((obj = next())) {
       if (!obj->InheritsFrom(TPaveText::Class())) continue;
       title = (TPaveText*)obj;
+      if (strcmp(title->GetName(),"title")) {title = 0; continue;}
       break;
    }
    if (nt == 0 || gStyle->GetOptTitle() <= 0) {
