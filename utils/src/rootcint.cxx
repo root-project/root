@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.113 2002/12/05 17:55:36 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.114 2002/12/08 09:18:55 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -418,7 +418,7 @@ bool CheckInputOperator(G__ClassInfo &cl)
 }
 
 //______________________________________________________________________________
-bool CheckClassDef(G__ClassInfo &cl) 
+bool CheckClassDef(G__ClassInfo &cl)
 {
    // Return false if the class does not have ClassDef even-though it should.
 
@@ -426,18 +426,18 @@ bool CheckClassDef(G__ClassInfo &cl)
    // Detect if the class has a ClassDef
    bool hasClassDef = cl.HasMethod("Class_Version");
 
-   /* 
+   /*
       The following could be use to detect whether one of the
-      class' parent class has a ClassDef 
+      class' parent class has a ClassDef
 
    long offset;
    const char *proto = "";
    const char *name = "IsA";
-   
+
    G__MethodInfo methodinfo = cl.GetMethod(name,proto,&offset);
    bool parentHasClassDef = methodinfo.IsValid() && (methodinfo.Property() & G__BIT_ISPUBLIC);
    */
-   
+
    bool inheritsFromTObject = cl.IsBase("TObject");
    bool inheritsFromTSelector = cl.IsBase("TSelector");
 
@@ -504,7 +504,7 @@ string GetNonConstMemberName(G__DataMemberInfo &m, const string &prefix = "")
 {
    // Return the name of the data member so that it can be used
    // by non-const operation (so it includes a const_cast if necessary).
-   
+
    if (m.Property() & (G__BIT_ISCONSTANT|G__BIT_ISPCONSTANT)) {
       string ret = "const_cast< ";
       ret += GetNonConstTypeName(m);
@@ -574,7 +574,7 @@ bool NeedConstructor(G__ClassInfo& cl);
 bool HasCustomOperatorNew(G__ClassInfo& cl)
 {
    // return true if we can find a custom operator new
- 
+
    // Look for a custom operator new
    bool custom = false;
    G__ClassInfo gcl;
@@ -595,7 +595,7 @@ bool HasCustomOperatorNew(G__ClassInfo& cl)
       custom = true;
    }
 
-   // in class 
+   // in class
    methodinfo = cl.GetMethod(name,proto,&offset);
    if  (methodinfo.IsValid()) {
       custom = true;
@@ -608,7 +608,7 @@ bool HasCustomOperatorNew(G__ClassInfo& cl)
 bool HasCustomOperatorNewPlacement(G__ClassInfo& cl)
 {
    // return true if we can find a custom operator new
- 
+
    // Look for a custom operator new
    bool custom = false;
    G__ClassInfo gcl;
@@ -633,14 +633,14 @@ bool HasCustomOperatorNewPlacement(G__ClassInfo& cl)
       custom = true;
    }
 
-   // in class 
+   // in class
    methodinfo = cl.GetMethod(name,proto,&offset);
    methodinfoPlacement = cl.GetMethod(name,protoPlacement,&offset);
    if  (methodinfoPlacement.IsValid()) {
       // We have a custom operator new with placement in the class
-      // hierarchy.  We still need to check that it has not been 
+      // hierarchy.  We still need to check that it has not been
       // overloaded by a simple operator new.
-      
+
       G__ClassInfo clNew(methodinfo.ifunc()->tagnum);
       G__ClassInfo clPlacement(methodinfoPlacement.ifunc()->tagnum);
 
@@ -699,7 +699,7 @@ bool HasDefaultConstructor(G__ClassInfo& cl)
    if  (methodinfo.IsValid() && !(methodinfo.Property() & G__BIT_ISPUBLIC) ) {
       result = false;
    }
-   
+
    return result && !(cl.Property() & G__BIT_ISABSTRACT);
 }
 
@@ -708,7 +708,7 @@ bool NeedConstructor(G__ClassInfo& cl)
 {
    bool res= ((GetClassVersion(cl)>0
                || (!cl.HasMethod("ShowMembers") && (cl.RootFlag() & G__USEBYTECOUNT)
-                  && strncmp(cl.FileName(),"prec_stl",8)!=0 ) 
+                  && strncmp(cl.FileName(),"prec_stl",8)!=0 )
                ) && !(cl.Property() & G__BIT_ISABSTRACT));
    return res;
 }
@@ -716,8 +716,8 @@ bool NeedConstructor(G__ClassInfo& cl)
 //______________________________________________________________________________
 bool CheckConstructor(G__ClassInfo& cl)
 {
-   // Return false if the constructor configuration is invalid 
-  
+   // Return false if the constructor configuration is invalid
+
    bool result = true;
    if (NeedConstructor(cl)) {
 
@@ -727,13 +727,13 @@ bool CheckConstructor(G__ClassInfo& cl)
       }
       // if (custom) fprintf(stderr,"%s has custom operator new\n",cl.Name());
 
-      result = !HasDefaultConstructor(cl);      
+      result = !HasDefaultConstructor(cl);
    }
 
    // For now we never issue a warning at rootcint time.
    // There will be a warning at run-time.
    result = true;
-   
+
    if (!result) {
       //Error(cl.Fullname(), "I/O has been requested but there is no constructor calleable without arguments\n"
       //      "\tand a custom operator new has been defined.\n"
@@ -748,14 +748,14 @@ bool CheckConstructor(G__ClassInfo& cl)
 //______________________________________________________________________________
 bool NeedDestructor(G__ClassInfo& cl)
 {
-  
+
   long offset;
   const char *proto = "";
   string name = "~";
   name += cl.TmpltName();
 
   G__MethodInfo methodinfo = cl.GetMethod(name.c_str(),proto,&offset);
-  
+
   // fprintf(stderr,"testing %s and has %d",name.c_str(),methodinfo.IsValid());
   if (methodinfo.IsValid() && !(methodinfo.Property() & G__BIT_ISPUBLIC) ) {
      return false;
@@ -857,7 +857,7 @@ int IsStreamable(G__DataMemberInfo &m)
          strcmp(m.Name(), "G__virtualinfo") == 0) return 0;
    if (((m.Type())->Property() & G__BIT_ISFUNDAMENTAL) ||
        ((m.Type())->Property() & G__BIT_ISENUM)) return 0;
-   
+
    if (m.Property() & G__BIT_ISREFERENCE) return 0;
    if (IsSTLContainer(m)) return 1;
    if (!strcmp(mTypeName, "string")) return 1;
@@ -948,7 +948,7 @@ G__TypeInfo &TemplateArg(G__BaseClassInfo &m, int count = 0)
 }
 
 //______________________________________________________________________________
-void WriteAuxFunctions(G__ClassInfo &cl) 
+void WriteAuxFunctions(G__ClassInfo &cl)
 {
    // Write the functions that are need for the TGenericClassInfo.
    // This includes
@@ -959,7 +959,7 @@ void WriteAuxFunctions(G__ClassInfo &cl)
    //    operator delete[]
 
    fprintf(fp, "namespace ROOT {\n");
-   
+
    fprintf(fp, "   // Return the actual TClass for the object argument\n");
    fprintf(fp, "   TClass *%s_IsA(const void *obj) {\n",G__map_cpp_name((char *)cl.Fullname()));
    if (!cl.HasMethod("IsA")) {
@@ -981,7 +981,7 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       }
       fprintf(fp, "new ::%s;\n",cl.Fullname());
       fprintf(fp, "   }\n");
-      
+
       fprintf(fp, "   void *newArray_%s(Long_t size) {\n",G__map_cpp_name((char *)cl.Fullname()));
       fprintf(fp, "      return new ::%s[size];\n",cl.Fullname());
       fprintf(fp, "   }\n");
@@ -992,7 +992,7 @@ void WriteAuxFunctions(G__ClassInfo &cl)
       fprintf(fp, "   void delete_%s(void *p) {\n",G__map_cpp_name((char *)cl.Fullname()));
       fprintf(fp, "      delete ((::%s*)p);\n",cl.Fullname());
       fprintf(fp, "   }\n");
-      
+
       fprintf(fp, "   void deleteArray_%s(void *p) {\n",G__map_cpp_name((char *)cl.Fullname()));
       fprintf(fp, "      delete [] ((::%s*)p);\n",cl.Fullname());
       fprintf(fp, "   }\n");
@@ -1579,7 +1579,6 @@ int PointerToPointer(G__DataMemberInfo &m)
    return 0;
 }
 
-
 //______________________________________________________________________________
 void WriteArrayDimensions(int dim)
 {
@@ -1624,9 +1623,8 @@ void WriteInputOperator(G__ClassInfo &cl)
    fprintf(fp, "   return buf;\n}\n\n");
 }
 
-
 //______________________________________________________________________________
-void WriteClassFunctions(G__ClassInfo &cl, int tmplt = 0)
+void WriteClassFunctions(G__ClassInfo &cl, int /*tmplt*/ = 0)
 {
    // Write the code to set the class name and the initialization object.
 
@@ -1693,12 +1691,12 @@ void WriteClassInit(G__ClassInfo &cl)
 
    fprintf(fp, "   TClass *%s_IsA(const void*);\n",G__map_cpp_name((char *)cl.Fullname()));
    if (HasDefaultConstructor(cl)) {
-      fprintf(fp, "   void *new_%s(void *p = 0);\n",G__map_cpp_name((char *)cl.Fullname()));     
+      fprintf(fp, "   void *new_%s(void *p = 0);\n",G__map_cpp_name((char *)cl.Fullname()));
       fprintf(fp, "   void *newArray_%s(Long_t size);\n",G__map_cpp_name((char *)cl.Fullname()));
    }
    if (NeedDestructor(cl)) {
       fprintf(fp, "   void delete_%s(void *p);\n",G__map_cpp_name((char *)cl.Fullname()));
-      fprintf(fp, "   void deleteArray_%s(void *p);\n",G__map_cpp_name((char *)cl.Fullname()));     
+      fprintf(fp, "   void deleteArray_%s(void *p);\n",G__map_cpp_name((char *)cl.Fullname()));
       fprintf(fp, "   void destruct_%s(void *p);\n",G__map_cpp_name((char *)cl.Fullname()));
    }
    fprintf(fp, "\n");
@@ -2500,7 +2498,7 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
                if (clflag && IsStreamable(m)) fprintf(fp, "      R__cl->SetStreamer(\"%s\",R__%s_%s);\n", cvar, clName, m.Name());
             } else if (m.Property() & G__BIT_ISREFERENCE) {
                // For reference we do not know what do not ... let's do nothing (hopefully the referenced objects is saved somewhere else!
-               
+
             } else {
                if ((m.Type())->HasMethod("ShowMembers")) {
                   fprintf(fp, "      R__insp.Inspect(R__cl, R__parent, \"%s\", &%s%s);\n",
