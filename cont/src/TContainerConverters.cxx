@@ -1,4 +1,4 @@
-// @(#)root/cony:$Name:  $:$Id: Exp $
+// @(#)root/cony:$Name:  $:$Id: TContainerConverters.cxx,v 1.1 2004/11/17 06:29:22 brun Exp $
 // Author: Philippe Canal  11/11/2004
 
 /*************************************************************************
@@ -106,7 +106,7 @@ void TConvertClonesArrayToProxy::operator()(TBuffer &b, void *pmember, Int_t siz
 
                // No object found at this location in map. It might have been skipped
                // as part of a skipped object. Try to explicitely read the object.
-               b.MapObject(*(void**)addr, fProxy->GetCollectionClass(), -1);
+               b.MapObject(*(void**)addr, fProxy->GetCollectionClass(), 0);
                Int_t currentpos = b.Length();
                b.SetBufferOffset( tag - kMapOffset );
 
