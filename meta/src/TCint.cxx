@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.10 2000/09/08 16:05:22 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.11 2000/10/13 19:06:08 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -575,7 +575,7 @@ void TCint::Execute(const char *function, const char *params)
    G__ClassInfo cl;
 
    // set pointer to interface method and arguments
-   func.SetFunc(&cl, (char*)function, (char*)params, &offset);
+   func.SetFunc(&cl, function, params, &offset);
 
    // call function
    func.Exec(0);
@@ -591,7 +591,7 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method, const char *pa
    G__CallFunc func;
 
    // set pointer to interface method and arguments
-   func.SetFunc(cl->GetClassInfo(), (char*)method, (char*)params, &offset);
+   func.SetFunc(cl->GetClassInfo(), method, params, &offset);
 
    // call function
    address = (void*)((Long_t)obj + offset);
