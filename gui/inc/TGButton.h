@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.26 2004/09/10 19:02:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.27 2004/09/11 16:27:08 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -164,6 +164,7 @@ public:
 
    virtual Bool_t     HandleKey(Event_t *event);
    const TGHotString *GetText() const { return fLabel; }
+   virtual const char *GetTitle() const { return fLabel->Data(); }
    TString            GetString() const { return TString(fLabel->GetString()); }
    void               SetTextJustify(Int_t tmode) { fTMode = tmode; }
    virtual void       SetText(TGHotString *new_label);

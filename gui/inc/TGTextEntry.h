@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.17 2004/09/10 19:02:07 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.18 2004/09/11 16:27:08 brun Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -129,6 +129,7 @@ public:
             TString     GetMarkedText() const;
             Int_t       GetMaxLength() const    { return fMaxLen; }
    const    char       *GetText() const { return fText->GetString(); }
+   virtual const char  *GetTitle() const { return GetText(); }
             Bool_t      HasMarkedText() const  { return fSelectionOn && (fStartIX != fEndIX); }
             void        Home(Bool_t mark = kFALSE);
    virtual  void        Insert(const char *);
