@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooTrace.rdl,v 1.1 2001/08/02 21:39:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,23 +30,19 @@ public:
     _prev = prev ;
     _next = next ;
     
-    Int_t i ;
-    for(i=0 ; i<1000 ; i++) {
-      _pad1[i]=0 ;
-      _pad2[i]=0 ;
-    }
-    
+    memset(_pad1,0,1000) ;
+    memset(_pad2,0,1000) ;
     //cout << "RooTraceObj::ctor obj=" << obj << " prev=" << _prev << " next=" << _next << endl ;
   }
 
   inline checkPad() {
     Int_t i ;
     for(i=0 ; i<1000 ; i++) {
-      if (_pad1[i]!=0) cout << "RooTraceObj pad1[" << i << "] = (" << (void*)(_pad1+i) << ") = " << (char) _pad1[i] << endl ;
+      if (_pad1[i]!=0) cout << "RooTraceObj(" << _obj << ") pad1[" << i << "] = (" << (void*)(_pad1+i) << ") = " << (char) _pad1[i] << endl ;
     }
 
     for(i=0 ; i<1000 ; i++) {
-      if (_pad2[i]!=0) cout << "RooTraceObj pad2[" << i << "] = (" << (void*)(_pad2+1) << ") = " << (char) _pad2[i] << endl ;
+      if (_pad2[i]!=0) cout << "RooTraceObj(" << _obj << ") pad2[" << i << "] = (" << (void*)(_pad2+1) << ") = " << (char) _pad2[i] << endl ;
     }
 
   }
@@ -72,13 +68,15 @@ protected:
 
 class RooTrace {
 public:
+
+  inline static void create(const TObject* obj) { if (_active) create2(obj) ; }
+  inline static void destroy(const TObject* obj) { if (_active) destroy2(obj) ; }
+  static void create2(const TObject* obj) ;
+  static void destroy2(const TObject* obj) ;
   
-  static void create(const TObject* obj) ;
-  static void destroy(const TObject* obj) ;
-  
-  inline static void level(Int_t level) { 
-    _traceLevel = level ; 
-  }
+  inline static void active(Bool_t flag) { _active = flag ; }
+  inline static void verbose(Bool_t flag) { _verbose = flag ; }
+  inline static void pad(Bool_t flag) { _pad = flag ; }
   
 
   static void checkPad()  ;
@@ -97,21 +95,29 @@ public:
   
   static const TObject* removeFromList(const TObject* obj) {
     RooTraceObj* link(_traceList) ;
+    RooTraceObj* link2(0) ;
     while(link) {      
       link->checkPad() ;
       if (link->obj() == obj) {
-	delete link ;
-	return obj ;
+	link2 = link ;
       }
       link = link->next() ;
     }
   
+    if (link2) {
+      delete link2 ;
+      return obj ;
+    }
+
     return 0 ;
   }
 
 
   static void dump(ostream& os=cout) ;
-  static Int_t _traceLevel ;
+
+  static Bool_t _active ;
+  static Bool_t _verbose ;
+  static Bool_t _pad ;
   static RooTraceObj* _traceList ;
 
 protected:

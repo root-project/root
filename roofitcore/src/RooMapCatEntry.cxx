@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMapCatEntry.cc,v 1.1 2001/05/10 00:16:07 verkerke Exp $
+ *    File: $Id: RooMapCatEntry.cc,v 1.2 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,7 +23,7 @@ ClassImp(RooMapCatEntry)
 ;
 
 RooMapCatEntry::RooMapCatEntry(const char* exp, const RooCatType* cat) : 
-  TNamed(exp,exp), _regexp(exp,kTRUE), _cat((RooCatType*)cat) 
+  TNamed(exp,exp), _regexp(exp,kTRUE), _cat(*cat) 
 {
 }
 

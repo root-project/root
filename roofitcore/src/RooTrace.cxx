@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooTrace.cc,v 1.1 2001/08/02 21:39:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,7 +20,9 @@ ClassImp(RooTrace)
 
 
 RooTraceObj* RooTrace::_traceList(0) ;
-Int_t RooTrace::_traceLevel(0) ;
+Bool_t RooTrace::_active(kFALSE) ;
+Bool_t RooTrace::_verbose(kFALSE) ;
+Bool_t RooTrace::_pad(kFALSE) ;
 
 void RooTrace::checkPad() 
 {
@@ -37,32 +39,29 @@ void RTcheckPad() {
 }
 
 
-void RooTrace::create(const TObject* obj) {
-  if (_traceLevel>0) {
-    if (_traceLevel>3) checkPad() ;
-    addToList(obj) ;
-    if (_traceLevel>1) {
-      cout << "RooTrace::create: object " << obj << " of type " << obj->ClassName() 
-	   << " created " << endl ;
-    }
+void RooTrace::create2(const TObject* obj) {
+  if (_pad) checkPad() ;
+
+  addToList(obj) ;
+  if (_verbose) {
+    cout << "RooTrace::create: object " << obj << " of type " << obj->ClassName() 
+	 << " created " << endl ;
   }
 }
 
 
   
-void RooTrace::destroy(const TObject* obj) {
-  if (_traceLevel>0) {
+void RooTrace::destroy2(const TObject* obj) {
 
-    if (_traceLevel>2) checkPad() ;
-
-    if (!removeFromList(obj)) {
-      cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName() 
-	   << " already deleted, or created before trace activation[" << obj->GetTitle() << "]" << endl ;
-      if (_traceLevel>2) assert(0) ;
-    } else if (_traceLevel>1) {
-      cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName() 
-	   << " destroyed [" << obj->GetTitle() << "]" << endl ;
-    }
+  if (_pad) checkPad() ;
+  
+  if (!removeFromList(obj)) {
+    cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName() 
+	 << " already deleted, or created before trace activation[" << obj->GetTitle() << "]" << endl ;
+    assert(0) ;
+  } else if (_verbose) {
+    cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName() 
+	 << " destroyed [" << obj->GetTitle() << "]" << endl ;
   }
 }
 

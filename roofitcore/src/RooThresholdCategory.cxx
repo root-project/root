@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooThresholdCategory.cc,v 1.1 2001/07/31 05:54:22 verkerke Exp $
+ *    File: $Id: RooThresholdCategory.cc,v 1.2 2001/08/02 21:39:13 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -37,8 +37,10 @@ RooThresholdCategory::RooThresholdCategory(const char *name, const char *title, 
 
 
 RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, const char *name) :
-  RooAbsCategory(other,name), _defCat(other._defCat), _inputVar("inputVar",this,other._inputVar)
+  RooAbsCategory(other,name), _inputVar("inputVar",this,other._inputVar)
 {
+  _defCat = (RooCatType*) lookupType(other._defCat->GetName()) ;
+
   // Copy constructor
   other._threshIter->Reset() ;
   RooThreshEntry* te ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.cc,v 1.12 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.13 2001/07/31 05:54:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -39,8 +39,10 @@ RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbs
 
 
 RooMappedCategory::RooMappedCategory(const RooMappedCategory& other, const char *name) :
-  RooAbsCategory(other,name), _defCat(other._defCat), _inputCat("inputCat",this,other._inputCat)
+  RooAbsCategory(other,name), _inputCat("inputCat",this,other._inputCat)
 {
+  _defCat = (RooCatType*) lookupType(other._defCat->GetName()) ;
+
   // Copy constructor
   int i ;
   for (i=0 ; i<other._mapArray.GetEntries() ; i++) {
@@ -105,7 +107,7 @@ RooMappedCategory::evaluate() const
   for (int i=0 ; i<_mapArray.GetEntries() ; i++) {
     RooMapCatEntry* map = (RooMapCatEntry*)_mapArray.At(i) ;
     if (map->match(inKey)) {
-      return *map->outCat() ;
+      return map->outCat() ;
     }
   }
 
@@ -137,7 +139,7 @@ void RooMappedCategory::printToStream(ostream& os, PrintOption opt, TString inde
      Int_t n= _mapArray.GetEntries();
      for(Int_t i= 0 ; i< n; i++) {
        RooMapCatEntry* map = (RooMapCatEntry*)_mapArray.At(i) ;
-       os << indent << "  " << map->GetName() << " -> " << map->outCat()->GetName() << endl ;
+       os << indent << "  " << map->GetName() << " -> " << map->outCat().GetName() << endl ;
      }
    }
 }
@@ -208,16 +210,16 @@ void RooMappedCategory::writeToStream(ostream& os, Bool_t compact) const
     // Write mapping expression
 
     // Scan array of regexps
-    RooCatType* prevOutCat=0 ;
+    RooCatType prevOutCat ;
     Bool_t first(kTRUE) ;
     for (int i=0 ; i<_mapArray.GetEntries() ; i++) {
       RooMapCatEntry* map = (RooMapCatEntry*)_mapArray.At(i) ;
-      if (map->outCat()!=prevOutCat) {
+      if (map->outCat().getVal()!=prevOutCat.getVal()) {
 	if (!first) { os << " " ; }
 	first=kFALSE ;
 
-	os << map->outCat()->GetName() << ":" << map->GetName() ;
-	prevOutCat=(RooCatType*)map->outCat() ;
+	os << map->outCat().GetName() << ":" << map->GetName() ;
+	prevOutCat=map->outCat() ;
       } else {
 	os << "," << map->GetName() ;
       }
