@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooNonCPEigenDecay.cc,v 1.2 2002/03/13 04:55:01 stark Exp $
+ *    File: $Id: RooNonCPEigenDecay.cc,v 1.3 2002/04/09 00:15:06 hoecker Exp $
  * Authors:
  *   AH, Andreas Hoecker, Orsay, hoecker@slac.stanford.edu
  *   SL, Sandrine Laplace, Orsay, laplace@slac.stanford.edu
@@ -334,17 +334,16 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
 
 void RooNonCPEigenDecay::generateEvent( Int_t code )
 {
-  // Generate charge dependent
-  if (code == 3 || code == 4) {
-    Double_t rand2 = RooRandom::uniform();
-    _rhoQ = (rand2<=_genRhoPlusFrac) ? 1 : -1;
-  }
-
+  // maximum probability density 
+  Double_t maxAcceptProb = (1 + fabs(_acp)) * fmax( 1 + sqrt(pow(_a_cos_m, 2) + pow(_a_sin_m, 2)), 
+						    1 + sqrt(pow(_a_cos_p, 2) + pow(_a_sin_p, 2)) );
+    
   // Generate delta-t dependent
   while (kTRUE) {
 
-    // B flavor
-    _tag = (RooRandom::uniform()<=0.5) ? 1 : -1;
+    // B flavor and rho charge (we do not use the integrated weights)
+    _tag  = (RooRandom::uniform()<=0.5) ? 1 : -1;
+    _rhoQ = (RooRandom::uniform()<=0.5) ? 1 : -1;
 
     // opposite charge?
     Int_t rhoQc = _rhoQ*int(_correctQ);
@@ -367,22 +366,13 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
       break;
     }
 
-    // accept event if T is in generated range
-    Double_t basisC  = (1 + rhoQc*_acp*(1 - 2*_wQ))*(1 + 0.5*_tag*(-2.*_delW));
-
-    Double_t sineC   = (rhoQc == -1) ? 
-      + ((1 - _acp)*_a_sin_m*(1 - _wQ) + (1 + _acp)*_a_sin_p*_wQ)*(1 - 2*_avgW)*_tag :
-      + ((1 + _acp)*_a_sin_p*(1 - _wQ) + (1 - _acp)*_a_sin_m*_wQ)*(1 - 2*_avgW)*_tag;
-
-    Double_t cosineC = (rhoQc == -1) ? 
-      - ((1 - _acp)*_a_cos_m*(1 - _wQ) + (1 + _acp)*_a_cos_p*_wQ)*(1 - 2*_avgW)*_tag :
-      - ((1 + _acp)*_a_cos_p*(1 - _wQ) + (1 - _acp)*_a_cos_m*_wQ)*(1 - 2*_avgW)*_tag;
-
-    // maximum probability density
-    Double_t maxAcceptProb = basisC + fabs(sineC) + fabs(cosineC);
+    // get coefficients
+    Double_t expC = coefficient( _basisExp );
+    Double_t sinC = coefficient( _basisSin );
+    Double_t cosC = coefficient( _basisCos );
     
-    // current probability density
-    Double_t acceptProb    = basisC + sineC*sin(_dm*tval) + cosineC*cos(_dm*tval);
+    // probability density
+    Double_t acceptProb  = expC + sinC*sin(_dm*tval) + cosC*cos(_dm*tval);
 
     // sanity check...
     assert( acceptProb <= maxAcceptProb );
