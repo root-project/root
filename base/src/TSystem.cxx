@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.87 2004/05/17 19:33:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.88 2004/06/04 16:47:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1336,9 +1336,21 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
       if (!libs.IsNull()) libs.Append(" ");
 #ifndef WIN32
       const char *linked;
-      if ((linked = GetLinkedLibraries()))
-         libs.Append(linked);
-      else
+      if ((linked = GetLinkedLibraries())) {
+         if (fLinkedLibs != LINKEDLIBS) {
+            // This is not the default value, we need to keep the custom part.
+            TString custom = fLinkedLibs;
+            custom.ReplaceAll(LINKEDLIBS,linked);
+            if (custom == fLinkedLibs) {
+               // no replacement done, let's happen linked
+               libs.Append(linked);
+               libs.Append(" ");
+            }
+            libs.Append(custom);
+         } else {
+            libs.Append(linked);
+         }
+      } else
 #endif
          libs.Append(fLinkedLibs);
    }
