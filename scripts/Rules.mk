@@ -105,6 +105,10 @@ endif
 
 ObjSuf   = o
 
+ifeq ($(HAS_PYTHON),)
+   export HAS_PYTHON = $(shell root-config --cflags)
+endif
+
 ifeq ($(PLATFORM),win32)
 
 ROOTTEST_HOME := $(shell cygpath -m $(ROOTTEST_HOME))
@@ -250,6 +254,11 @@ utils:  $(UTILS_LIBS) $(ROOTMAP)
 
 %.log : run%.C $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
+
+ifeq ($(HAS_PYTHON),yes))
+%.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) python $< > $@ 2>&1
+endif
 
 .PRECIOUS: %_C.$(DllSuf) 
 
