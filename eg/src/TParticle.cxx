@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.4 2001/03/05 09:09:42 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.5 2001/03/23 18:04:50 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -72,25 +72,7 @@ TParticle::TParticle(const TParticle &p)
 {
     // copy constructor
 
-  fPdgCode     = p.fPdgCode;
-  fStatusCode  = p.fStatusCode;
-  fMother[0]   = p.fMother[0];
-  fMother[1]   = p.fMother[1];
-  fDaughter[0] = p.fDaughter[0];
-  fDaughter[1] = p.fDaughter[1];
-  fWeight      = p.fWeight;
-  fCalcMass    = p.fCalcMass;
-  fPx          = p.fPx;
-  fPy          = p.fPy;
-  fPz          = p.fPz;
-  fE           = p.fE;
-  fVx          = p.fVx;
-  fVy          = p.fVy;
-  fVz          = p.fVz;
-  fVt          = p.fVt;
-  fPolarTheta  = p.fPolarTheta;
-  fPolarPhi    = p.fPolarPhi;
-  fParticlePDG = p.fParticlePDG;
+   *this = p;
 }
 
 //______________________________________________________________________________
