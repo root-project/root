@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.1 2004/08/20 14:54:53 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.2 2004/08/20 21:24:49 brun Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************
@@ -36,7 +36,7 @@ TBranchRef::TBranchRef(TTree *tree)
     :TBranch()
 {
    // main constructor called by TTree::BranchRef
-   
+
    if (!tree) return;
    TDirectory *dir = tree->GetDirectory();
    if (!dir) return;
@@ -46,7 +46,7 @@ TBranchRef::TBranchRef(TTree *tree)
    SetTitle("List of branch numbers with referenced objects");
    fRefTable = new TRefTable(100);
    file->SetRefTable(fRefTable);
-   
+
    fCompress       = 1;
    fBasketSize     = 32000;
    fAddress        = 0;
@@ -74,14 +74,15 @@ TBranchRef::TBranchRef(TTree *tree)
 TBranchRef::~TBranchRef()
 {
    delete fRefTable;
-   GetFile()->SetRefTable(0);
+   TFile *f = GetFile();
+   if (f) f->SetRefTable(0);
 }
 
 //______________________________________________________________________________
 void TBranchRef::Clear(Option_t *option)
 {
   // clear entries in the TRefTable
-   
+
    fRefTable->Clear(option);
 }
 
@@ -89,7 +90,7 @@ void TBranchRef::Clear(Option_t *option)
 Int_t TBranchRef::Fill()
 {
   // fill the branch basket with the referenced objects parent numbers
-   
+
    Int_t nbytes = TBranch::Fill();
    return nbytes;
 }
@@ -98,7 +99,7 @@ Int_t TBranchRef::Fill()
 void TBranchRef::FillLeaves(TBuffer &b)
 {
    // This function called by TBranch::Fill overloads TBranch::FillLeaves
-   
+
     fRefTable->FillBuffer(b);
 }
 
@@ -114,7 +115,7 @@ void TBranchRef::Print(Option_t *option) const
 void TBranchRef::ReadLeaves(TBuffer &b)
 {
    // This function called by TBranch::GetEntry overloads TBranch::ReadLeaves
-   
+
   fRefTable->ReadBuffer(b);
 }
 
@@ -134,6 +135,6 @@ void TBranchRef::SetParent(const TObject *object)
 {
    // this function is called by TBranchElement::Fill when filling
    // branches that may contain referenced objects
-   
+
    fRefTable->SetParent(object);
 }
