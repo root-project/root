@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.21 2004/04/20 15:17:02 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.22 2004/05/18 11:56:38 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -147,7 +147,7 @@ public:
 
    static void        AuthError(const char *where, Int_t error);
    static Bool_t      CheckProofAuth(Int_t cSec, TString &det);
-   static void        CleanupSecContextAll();
+   static void        CleanupSecContextAll(Option_t *opt = "k");
    static void        DecodeRSAPublic(const char *rsapubexport, rsa_NUMBER &n, rsa_NUMBER &d);
    static TList      *GetAuthInfo();
    static const char *GetAuthMethod(Int_t idx);

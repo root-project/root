@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.54 2004/05/18 15:54:18 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.55 2004/05/27 08:36:05 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -2934,7 +2934,8 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
                return -2;
          }
       } else {
-         Info("AuthExists","OffSet not OK - rerun authentication");
+         if (gDebug > 0)
+            Info("AuthExists","OffSet not OK - rerun authentication");
          // If the sec context was not valid, deactivate it ...
          if (SecCtx)
             SecCtx->DeActivate("");
@@ -3513,7 +3514,7 @@ Int_t TAuthenticate::GetClientProtocol()
 }
 
 //______________________________________________________________________________
-void TAuthenticate::CleanupSecContextAll()
+void TAuthenticate::CleanupSecContextAll(Option_t *opt)
 {
    // Ask remote client to cleanup all active security context
    // Static method called in TROOT for final cleanup
@@ -3540,10 +3541,12 @@ void TAuthenticate::CleanupSecContextAll()
    // Clear the list
    gROOT->GetListOfSecContexts()->Clear();
 
-   // We are quitting, so cleanup memory also memory
-   if (fgRSAPubExport.keys)
-      delete[] fgRSAPubExport.keys;
-   fgRSAPubExport.len = 0;
+   if (opt && !strncasecmp(opt,"k",1)) {
+      // We are quitting, so cleanup memory also memory
+      if (fgRSAPubExport.keys)
+         delete[] fgRSAPubExport.keys;
+      fgRSAPubExport.len = 0;
+   }
 }
 //______________________________________________________________________________
 Bool_t TAuthenticate::CleanupSecContext(TSecContext *ctx, Bool_t all)
