@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.116 2002/03/19 17:05:49 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.117 2002/03/20 10:45:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1391,10 +1391,11 @@ void TTree::CopyAddresses(TTree *tree)
    Int_t nleaves = tleaves->GetEntriesFast();
    for (i=0;i<nleaves;i++) {
       TLeaf *leaf2 = (TLeaf*)tleaves->UncheckedAt(i);
-      TLeaf *leaf  = GetLeaf(leaf2->GetName());
-      if (!leaf) continue;
-      TBranch *branch  = leaf->GetBranch();
+      TBranch *branch2 = leaf2->GetBranch();
+      TBranch *branch = GetBranch(branch2->GetName());
       if (!branch) continue;
+      TLeaf *leaf  = branch->GetLeaf(leaf2->GetName());
+      if (!leaf) continue;
       if (branch->TestBit(kDoNotProcess)) continue;
       if (branch->GetAddress()) {
          tree->SetBranchAddress(branch->GetName(),branch->GetAddress());
