@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.44 2003/01/17 10:35:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.45 2003/02/04 22:04:17 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -295,9 +295,9 @@ UInt_t TBuffer::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
             // mark object as really not available
             fMap->Remove(offset);
             fMap->Add(offset, -1);
+            Warning("CheckObject", "reference to object of unavailable class %s, offset=%d"
+                    " pointer will be 0", cl ? cl->GetName() : "TObject",offset);
             offset = 0;
-            Warning("CheckObject", "reference to object of unavailable class %s,"
-                    " pointer will be 0", cl ? cl->GetName() : "TObject");
          }
 
          fBufCur = bufsav;
@@ -537,8 +537,6 @@ Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
             Warning("CheckByteCount","%s::Streamer() not in sync with data on file, fix Streamer()",
                     clss->GetName());
       }
-      //gROOT->Message(1005, this);
-
       fBufCur = (char *) endpos;
    }
    return offset;
@@ -1533,6 +1531,7 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
 
    // unknown class, skip to next object and return 0 obj
    if (clRef == (TClass*) -1) {
+      if (fBufCur >= fBufMax) return 0;
       if (fVersion > 0)
          MapObject((TObject*) -1, startpos+kMapOffset);
       else
@@ -1710,6 +1709,12 @@ TClass *TBuffer::ReadClass(const TClass *clReq, UInt_t *objTag)
    Assert(IsReading());
 
    // read byte count and/or tag (older files don't have byte count)
+   TClass *cl;
+   if (fBufCur < fBuffer || fBufCur > fBufMax) {
+      fBufCur = fBufMax;
+      cl = (TClass*)-1;
+      return cl;
+   }
    UInt_t bcnt, tag, startpos = 0;
    *this >> bcnt;
    if (!(bcnt & kByteCountMask) || bcnt == kNewClassTag) {
@@ -1727,7 +1732,6 @@ TClass *TBuffer::ReadClass(const TClass *clReq, UInt_t *objTag)
       return 0;
    }
 
-   TClass *cl;
    if (tag == kNewClassTag) {
 
       // got a new class description followed by a new object
