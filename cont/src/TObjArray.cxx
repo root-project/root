@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.8 2001/03/30 10:13:44 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TObjArray.cxx,v 1.9 2001/04/04 14:07:26 brun Exp $
 // Author: Fons Rademakers   11/09/95
 
 /*************************************************************************
@@ -489,7 +489,7 @@ TObject *TObjArray::RemoveAt(Int_t idx)
       fCont[i] = 0;
       // recalculate array size
       if (i == fLast)
-         do { fLast--; } while (fCont[fLast] == 0 && fLast >= 0);
+         do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
       Changed();
    }
    return obj;
@@ -510,7 +510,7 @@ TObject *TObjArray::Remove(TObject *obj)
    fCont[idx] = 0;
    // recalculate array size
    if (idx == fLast)
-      do { fLast--; } while (fCont[fLast] == 0 && fLast >= 0);
+      do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
    Changed();
    return ob;
 }

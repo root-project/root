@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.11 2001/03/11 23:10:01 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.12 2001/03/29 10:58:27 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -101,7 +101,7 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
    char name[100];
    sprintf(name,"%ss",classname);
    SetName(name);
-   
+
    fKeep = new TObjArray(s);
 
    BypassStreamer(kTRUE);
@@ -315,7 +315,7 @@ TObject *TClonesArray::RemoveAt(Int_t idx)
       fCont[i] = 0;
       // recalculate array size
       if (i == fLast)
-         do { fLast--; } while (fCont[fLast] == 0 && fLast >= 0);
+         do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
       Changed();
    }
 
@@ -344,7 +344,7 @@ TObject *TClonesArray::Remove(TObject *obj)
    fCont[i] = 0;
    // recalculate array size
    if (i == fLast)
-      do { fLast--; } while (fCont[fLast] == 0 && fLast >= 0);
+      do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
    Changed();
    return obj;
 }
