@@ -74,9 +74,8 @@ GEOMPAINTERLIBEXTRA = lib/libGeom.lib lib/libTree.lib lib/libGraf3d.lib \
                       lib/libHist.lib
 QTROOTLIBDEP        = $(GUILIB) $(GQTLIB)
 QTROOTLIBEXTRA      = lib/libGui.lib lib/libGQt.lib
-QTSYSTEMLIB         = $(QTLIB)
 GQTLIBDEP           = $(GPADLIB) $(RINTLIB)
-GQTLIBEXTRA         = $(QTSYSTEMLIB) lib/libGpad.lib lib/libRint.lib
+GQTLIBEXTRA         = lib/libGpad.lib lib/libRint.lib
 RUBYLIBDEP          = $(HISTLIB)
 RUBYLIBEXTRA        = lib/libHist.lib
 
@@ -146,9 +145,8 @@ MLPLIBDEP           = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
 MLPLIBEXTRA         = -Llib -lHist -lMatrix -lTree -lGraf -lGpad -lTreePlayer
 QTROOTLIBDEP        = $(GUILIB) $(GQTLIB)
 QTROOTLIBEXTRA      = -Llib -lGui -lGQt
-QTSYSTEMLIB         = $(QTLIBDIR) $(QTLIB)
 GQTLIBDEP           = $(GPADLIB) $(RINTLIB)
-GQTLIBEXTRA         = -Llib -lGpad -lRint $(QTSYSTEMLIB)
+GQTLIBEXTRA         = -Llib -lGpad -lRint
 QUADPLIBDEP         = $(MATRIXLIB)
 QUADPLIBEXTRA       = -Llib -lMatrix
 RUBYLIBDEP          = $(HISTLIB)
