@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.6 2003/08/08 09:18:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.7 2003/08/08 17:28:28 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -49,6 +49,7 @@ protected:
    static TVirtualFitter *fgFitter;    //Current fitter (default TFitter)
    static Int_t           fgMaxpar;    //Maximum number of fit parameters for current fitter
    static Int_t           fgMaxiter;   //Maximum number of iterations
+   static Double_t        fgErrorDef;  //Error definition (default=1)
    static Double_t        fgPrecision; //maximum precision
    static TString         fgDefault;   //name of the default fitter ("Minuit","Fumili",etc)
    
@@ -97,10 +98,12 @@ public:
    static  TVirtualFitter *Fitter(TObject *obj, Int_t maxpar = 25);
    static const char *GetDefaultFitter();
    static Int_t     GetMaxIterations();
+   static Double_t  GetErrorDef();
    static Double_t  GetPrecision();
    static void      SetDefaultFitter(const char* name = "");
    static void      SetFitter(TVirtualFitter *fitter, Int_t maxpar = 25);
    static void      SetMaxIterations(Int_t niter=5000);
+   static void      SetErrorDef(Double_t errdef=1);
    static void      SetPrecision(Double_t prec=1e-6);
 
    ClassDef(TVirtualFitter,0)  //Abstract interface for fitting

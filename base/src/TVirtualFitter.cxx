@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.4 2003/05/06 09:24:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.cxx,v 1.5 2003/05/08 09:08:19 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -19,6 +19,7 @@ TVirtualFitter *TVirtualFitter::fgFitter    = 0;
 Int_t           TVirtualFitter::fgMaxpar    = 0;
 Int_t           TVirtualFitter::fgMaxiter   = 5000;
 Double_t        TVirtualFitter::fgPrecision = 1e-6;
+Double_t        TVirtualFitter::fgErrorDef  = 1;
 TString         TVirtualFitter::fgDefault   = "";
 
 ClassImp(TVirtualFitter)
@@ -71,7 +72,7 @@ TVirtualFitter *TVirtualFitter::Fitter(TObject *obj, Int_t maxpar)
 //______________________________________________________________________________
 const char *TVirtualFitter::GetDefaultFitter()
 {
-   // return the name of the default fitter
+   // static: return the name of the default fitter
    
    return fgDefault.Data();
 }
@@ -79,22 +80,30 @@ const char *TVirtualFitter::GetDefaultFitter()
 //______________________________________________________________________________
 TVirtualFitter *TVirtualFitter::GetFitter()
 {
-   // return the current Fitter
+   // static: return the current Fitter
    return fgFitter;
 }
 
 //______________________________________________________________________________
 Int_t TVirtualFitter::GetMaxIterations()
 {
-   // Return the maximum number of iterations
+   // static: Return the maximum number of iterations
 
    return fgMaxiter;
 }
 
 //______________________________________________________________________________
+Double_t TVirtualFitter::GetErrorDef()
+{
+   // static: Return the Error Definition
+
+   return fgErrorDef;
+}
+
+//______________________________________________________________________________
 Double_t TVirtualFitter::GetPrecision()
 {
-   // Return the fit relative precision
+   // static: Return the fit relative precision
 
    return fgPrecision;
 }
@@ -102,7 +111,7 @@ Double_t TVirtualFitter::GetPrecision()
 //______________________________________________________________________________
 void TVirtualFitter::SetDefaultFitter(const char *name)
 {
-   // set name of default fitter
+   // static: set name of default fitter
    
    if (fgDefault == name) return;
    delete fgFitter;
@@ -168,15 +177,23 @@ void TVirtualFitter::SetFCN(void *fcn)
 //______________________________________________________________________________
 void TVirtualFitter::SetMaxIterations(Int_t niter)
 {
-   // Set the maximum number of iterations
+   // static: Set the maximum number of iterations
 
    fgMaxiter  = niter;
 }
 
 //______________________________________________________________________________
+void TVirtualFitter::SetErrorDef(Double_t errdef)
+{
+   // static: Set the Error Definition (default=1)
+
+   fgErrorDef = errdef;
+}
+
+//______________________________________________________________________________
 void TVirtualFitter::SetPrecision(Double_t prec)
 {
-   // Set the fit relative precision
+   // static: Set the fit relative precision
 
    fgPrecision = prec;
 }
