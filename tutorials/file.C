@@ -81,7 +81,7 @@
    header.SetFillColor(44);
    header.Draw();
    TText *fh=header.AddText("File Header");
-   fh->SetTextAlign(23);
+   fh->SetTextAlign(22);
    fh->SetTextSize(0.04);
    header.SetTextSize(0.027);
    header.SetTextAlign(12);
@@ -103,7 +103,7 @@
    lrecord.SetFillColor(33);
    lrecord.Draw();
    TText *tlrh=lrecord.AddText("Logical Record Header (TKEY)");
-   tlrh->SetTextAlign(23);
+   tlrh->SetTextAlign(22);
    tlrh->SetTextSize(0.04);
    lrecord.SetTextSize(0.027);
    lrecord.SetTextAlign(12);
