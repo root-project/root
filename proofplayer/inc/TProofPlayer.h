@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.7 2002/10/07 10:43:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.8 2002/10/25 01:23:38 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -42,6 +42,7 @@ class TProof;
 class TSocket;
 class TVirtualPacketizer;
 class TMessage;
+class TSlave;
 
 
 //------------------------------------------------------------------------
@@ -52,11 +53,15 @@ private:
    TList      *fAutoBins;  // Map of min/max values by name for slaves
 
 protected:
-   TList      *fInput;     //-> list with input objects
-   TList      *fOutput;    //   list with output objects
-   TSelector  *fSelector;  //!  The latest selector
+   TList      *fInput;         //-> list with input objects
+   TList      *fOutput;        //   list with output objects
+   TSelector  *fSelector;      //!  the latest selector
+   TTimer     *fFeedbackTimer; //!  timer for sending intermediate results
 
    void       *GetSender() { return this; }  //used to set gTQSender
+
+   virtual void SetupFeedback();  // specialized setup
+   virtual void StopFeedback();   // specialized teardown
 
 public:
    TProofPlayer();
@@ -72,6 +77,7 @@ public:
    virtual TObject  *GetOutput(const char *name) const;
    virtual TList    *GetOutputList() const;
    virtual void      StoreOutput(TList *out);   // Adopts the list
+   virtual void      StoreFeedback(TSlave *slave, TList *out); // Adopts the list
    virtual void      Progress(Long64_t total, Long64_t processed); //*SIGNAL*
 
    virtual TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
@@ -101,21 +107,30 @@ public:
 class TProofPlayerRemote : public TProofPlayer {
 
 private:
-   TProof             *fProof;       // Link to associated PROOF session
-   TList              *fOutputLists; // Results returned by slaves
-   TVirtualPacketizer *fPacketizer;  // Transform TDSet into packets for slaves
+   TProof             *fProof;         // Link to associated PROOF session
+   TList              *fOutputLists;   // Results returned by slaves
+   TList              *fFeedbackLists; // Intermediate results
+   TVirtualPacketizer *fPacketizer;    // Transform TDSet into packets for slaves
+
+   virtual Bool_t      HandleTimer(TTimer *timer);
+   TList   *MergeFeedback();
+
+protected:
+   virtual void SetupFeedback();  // specialized setup
+   virtual void StopFeedback();   // specialized teardown
 
 public:
    TProofPlayerRemote() { fProof = 0; fOutputLists = 0; }
    TProofPlayerRemote(TProof *proof);
    ~TProofPlayerRemote();   // Owns the fOutput list
 
-   Int_t Process(TDSet *set,
+   Int_t    Process(TDSet *set,
                  const char *selector,
                  Long64_t nentries = -1, Long64_t first = 0,
                  TEventList *evl = 0);
-   void  StoreOutput(TList *out);   // Adopts the list
-   void  MergeOutput();
+   void     StoreOutput(TList *out);   // Adopts the list
+   void     StoreFeedback(TSlave *slave, TList *out); // Adopts the list
+   void     MergeOutput();
 
    TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
 
@@ -128,6 +143,13 @@ public:
 class TProofPlayerSlave : public TProofPlayer {
 private:
    TSocket *fSocket;
+   TList   *fFeedback;  // List of objects to send updates of
+
+   virtual Bool_t      HandleTimer(TTimer *timer);
+
+protected:
+   void SetupFeedback();
+   void StopFeedback();
 
 public:
    TProofPlayerSlave();

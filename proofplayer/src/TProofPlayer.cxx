@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.12 2002/10/07 10:43:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.13 2002/10/25 01:23:38 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -23,6 +23,8 @@
 #include "TPacketizer.h"
 #include "TPacketizer2.h"
 #include "TSelector.h"
+#include "TSocket.h"
+#include "TProofServ.h"
 #include "TProof.h"
 #include "TSlave.h"
 #include "TROOT.h"
@@ -34,6 +36,8 @@
 #include "TSystem.h"
 #include "TFile.h"
 #include "TProofDebug.h"
+#include "TTimer.h"
+#include "TMap.h"
 
 #include "Api.h"
 
@@ -74,6 +78,7 @@ TProofPlayer::TProofPlayer()
    fInput    = new TList;
    fOutput   = 0;
    fSelector = 0;
+   fFeedbackTimer = 0;
 }
 
 //______________________________________________________________________________
@@ -81,6 +86,7 @@ TProofPlayer::~TProofPlayer()
 {
    delete fInput;
    delete fSelector;
+   delete fFeedbackTimer;
 }
 
 //______________________________________________________________________________
@@ -119,9 +125,16 @@ void TProofPlayer::StoreOutput(TList *out)
 
 
 //______________________________________________________________________________
+void TProofPlayer::StoreFeedback(TSlave *slave, TList *out)
+{
+   MayNotUse("StoreFeedback");
+}
+
+
+//______________________________________________________________________________
 void TProofPlayer::Progress(Long64_t total, Long64_t processed)
 {
-   Info("Progress","%2f (%ld/%ld)", 100.*processed/total, processed, total);
+   PDB(kGlobal,1) Info("Progress","%2f (%ld/%ld)", 100.*processed/total, processed, total);
 
    Long_t parm[2];
    parm[0] = total;
@@ -145,6 +158,8 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       return -1;
    }
 
+   SetupFeedback();
+
    fSelector->SetInputList(fInput);
 
    dset->Reset();
@@ -166,8 +181,12 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
       Bool_t stop = fSelector->Process(entry);
       if (stop) {}  // remove unused warning
 
+      gSystem->DispatchOneEvent(kTRUE);
+
       if (gROOT->IsInterrupted()) break;
    }
+
+   StopFeedback();
 
    // Finalize
    PDB(kLoop,1) Info("Process","Call Terminate");
@@ -178,7 +197,6 @@ Int_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    return 0;
 }
-
 
 //______________________________________________________________________________
 void TProofPlayer::UpdateAutoBin(const char *name, Double_t& xmin, Double_t& xmax,
@@ -205,6 +223,18 @@ TDSetElement *TProofPlayer::GetNextPacket(TSlave *slave, TMessage *r)
    return 0;
 }
 
+//______________________________________________________________________________
+void TProofPlayer::SetupFeedback()
+{
+   MayNotUse("SetupFeedback");
+}
+
+//______________________________________________________________________________
+void TProofPlayer::StopFeedback()
+{
+   MayNotUse("StopFeedback");
+}
+
 
 //------------------------------------------------------------------------------
 
@@ -222,16 +252,23 @@ TProofPlayerRemote::TProofPlayerRemote(TProof *proof)
    fProof         = proof;
    fOutputLists   = 0;
    fPacketizer    = 0;
+   fFeedbackLists = 0;
 }
-
 
 //______________________________________________________________________________
 TProofPlayerRemote::~TProofPlayerRemote()
 {
    delete fOutput;      // owns the output list
    delete fOutputLists;
-}
 
+   if (fFeedbackLists != 0) {
+      TIter next(fFeedbackLists);
+      while (TMap *m = (TMap*) next()) {
+         m->DeleteValues();
+      }
+   }
+   delete fFeedbackLists;
+}
 
 //______________________________________________________________________________
 Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
@@ -279,6 +316,8 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       }
    }
 
+   SetupFeedback();
+
    mesg << set << fn << fInput << nentries << first; // no evl yet
 
    PDB(kGlobal,1) Info("Process","Calling Broadcast");
@@ -288,12 +327,13 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    fProof->SetPlayer(this);  // Fix SetPlayer to release current player
    fProof->Collect();
 
+   StopFeedback();
+
    PDB(kGlobal,1) Info("Process","Calling Merge Output");
    MergeOutput();
 
    return 0;
 }
-
 
 //______________________________________________________________________________
 void TProofPlayerRemote::MergeOutput()
@@ -340,7 +380,6 @@ void TProofPlayerRemote::MergeOutput()
    PDB(kOutput,1) Info("MergeOutput","Leave (%d object(s))", fOutput->GetSize());
 }
 
-
 //______________________________________________________________________________
 void TProofPlayerRemote::StoreOutput(TList *out)
 {
@@ -379,6 +418,163 @@ void TProofPlayerRemote::StoreOutput(TList *out)
    PDB(kOutput,1) Info("StoreOutput","Leave");
 }
 
+//______________________________________________________________________________
+TList *TProofPlayerRemote::MergeFeedback()
+{
+   PDB(kFeedback,1) Info("MergeFeedback","Enter");
+
+   if ( fFeedbackLists == 0 ) {
+      PDB(kFeedback,1) Info("MergeFeedback","Leave (no output)");
+      return 0;
+   }
+
+   TList *fb = new TList;   // collection of feedback object
+
+   TIter next(fFeedbackLists);
+
+   TMap *map;
+   while ( (map = (TMap*) next()) ) {
+      Long_t offset = 0;
+
+      // turn map into list ...
+
+      TList *list = new TList;
+      TIter keys(map);
+
+      while ( TObject *key = keys() ) {
+         list->Add(map->GetValue(key));
+      }
+
+      // clone first object, remove from list
+
+      TObject *obj = list->First();
+      list->Remove(obj);
+      obj = obj->Clone();
+      fb->Add(obj);
+
+      if ( list->IsEmpty() ) {
+         delete list;
+         continue;
+      }
+
+      // merge list with clone
+      // direct CINT, also possible via TInterpreter?
+      G__ClassInfo ci(obj->ClassName());
+      G__CallFunc cf;
+
+      if ( ci.IsValid() )
+         cf.SetFuncProto( &ci, "Merge", "TCollection*", &offset);
+
+      if ( cf.IsValid() ) {
+         cf.SetArg((Long_t)list);
+         cf.Exec(obj);
+      } else {
+         // No Merge interface, return individual objects
+         while ( (obj = list->First()) ) {
+            fb->Add(obj);
+            list->Remove(obj);
+         }
+      }
+
+      delete list;
+   }
+
+   PDB(kFeedback,1) Info("MergeFeedback","Leave (%d object(s))", fb->GetSize());
+
+   return fb;
+}
+
+//______________________________________________________________________________
+void TProofPlayerRemote::StoreFeedback(TSlave *slave, TList *out)
+{
+   PDB(kOutput,1) Info("StoreFeedback","Enter");
+
+   if ( out == 0 ) {
+      PDB(kOutput,1) Info("StoreFeedback","Leave (empty)");
+      return;
+   }
+
+   TIter next(out);
+
+   if (fFeedbackLists == 0) {
+      PDB(kOutput,2) Info("StoreFeedback","Create fFeedbackLists");
+      fFeedbackLists = new TList;
+      fFeedbackLists->SetOwner();
+   }
+
+   TObject *obj;
+   while( (obj = next()) ) {
+      PDB(kOutput,2) Info("StoreFeedback","Find '%s'", obj->GetName() );
+
+      TMap *map = (TMap*) fFeedbackLists->FindObject(obj->GetName());
+      if ( map == 0 ) {
+         PDB(kOutput,2) Info("StoreFeedback","Map not Found (creating)", obj->GetName() );
+         map = new TMap;
+         map->SetName( obj->GetName() );
+         // TODO: needed? allowed? map->SetOwner();
+         fFeedbackLists->Add(map);
+      }
+
+      map->Remove(slave);
+      map->Add(slave, obj);
+   }
+
+   out->SetOwner(kFALSE);  // Needed??
+   delete out;
+   PDB(kOutput,1) Info("StoreFeedback","Leave");
+}
+
+//______________________________________________________________________________
+void TProofPlayerRemote::SetupFeedback()
+{
+   if (!gProof->IsMaster()) return; // Client does not need timer
+
+   TList *fb = (TList*) fInput->FindObject("FeedbackList");
+
+   PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sFound",
+      fb == 0 ? "NOT ":"");
+
+   if (fb == 0) return;
+
+   // OK, feedback was requested, setup the timer
+
+   fFeedbackTimer = new TTimer;
+   fFeedbackTimer->SetObject(this);
+   fFeedbackTimer->Start(500,kFALSE);
+}
+
+//______________________________________________________________________________
+void TProofPlayerRemote::StopFeedback()
+{
+   if (fFeedbackTimer == 0) return;
+
+   PDB(kFeedback,1) Info("StopFeedback","Stop Timer");
+
+   fFeedbackTimer->Stop();
+   delete fFeedbackTimer;
+}
+
+//______________________________________________________________________________
+Bool_t TProofPlayerRemote::HandleTimer(TTimer *timer)
+{
+   PDB(kFeedback,2) Info("HandleTimer","Entry");
+
+   if ( fFeedbackLists == 0 ) return kFALSE;
+
+   TList *fb = MergeFeedback();
+
+
+   PDB(kFeedback,2) Info("HandleTimer","Sending %d objects", fb->GetSize());
+
+   TMessage m(kPROOF_FEEDBACK);
+   m << fb;
+
+   // send message to client;
+   gProofServ->GetSocket()->Send(m);
+
+   delete fb;
+   return kFALSE; // ignored?
+}
 
 //______________________________________________________________________________
 TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
@@ -416,3 +612,70 @@ TProofPlayerSlave::TProofPlayerSlave(TSocket *socket)
       fSocket = socket;
 }
 
+
+//______________________________________________________________________________
+void TProofPlayerSlave::SetupFeedback()
+{
+   //
+   TList *fb = (TList*) fInput->FindObject("FeedbackList");
+
+   PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sFound",
+      fb == 0 ? "NOT ":"");
+
+   if (fb == 0) return;
+
+   // OK, feedback was requested, setup the timer
+
+   fFeedbackTimer = new TTimer;
+   fFeedbackTimer->SetObject(this);
+   fFeedbackTimer->Start(500,kFALSE);
+
+   fFeedback = fb;
+}
+
+//______________________________________________________________________________
+void TProofPlayerSlave::StopFeedback()
+{
+   if (fFeedbackTimer == 0) return;
+
+   PDB(kFeedback,1) Info("StopFeedback","Stop Timer");
+
+   fFeedbackTimer->Stop();
+   delete fFeedbackTimer;
+   fFeedback = 0;
+}
+
+//______________________________________________________________________________
+Bool_t TProofPlayerSlave::HandleTimer(TTimer *timer)
+{
+   PDB(kFeedback,2) Info("HandleTimer","Entry");
+
+   if ( fFeedback == 0 ) return kFALSE;
+
+   TList *fb = new TList;
+   fb->SetOwner(kFALSE);
+
+   if (fOutput == 0) {
+      fOutput = fSelector->GetOutputList();
+   }
+
+   if (fOutput) {
+      TIter next(fFeedback);
+      while( TObjString *name = (TObjString*) next() ) {
+         // TODO: find object in memory ... maybe allow only in fOutput ?
+         TObject *o = fOutput->FindObject(name->GetName());
+         if (o != 0) fb->Add(o);
+      }
+   }
+
+   PDB(kFeedback,2) Info("HandleTimer","Sending %d objects", fb->GetSize());
+
+   TMessage m(kPROOF_FEEDBACK);
+   m << fb;
+
+   // send message to client;
+   gProofServ->GetSocket()->Send(m);
+
+   delete fb;
+   return kFALSE; // ignored?
+}

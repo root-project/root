@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.31 2002/10/25 01:23:38 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.32 2002/11/15 18:14:40 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -965,6 +965,15 @@ Int_t TProof::Collect(TMonitor *mon)
                PDB(kGlobal,2) Info("Collect","Got kPROOF_OUTPUTLIST");
                TList *out = (TList *) mess->ReadObject(TList::Class());
                fPlayer->StoreOutput(out); // Adopts the list
+            }
+            break;
+
+         case kPROOF_FEEDBACK:
+            {
+               PDB(kGlobal,2) Info("Collect","Got kPROOF_FEEDBACK");
+               TList *out = (TList *) mess->ReadObject(TList::Class());
+               sl = FindSlave(s);
+               fPlayer->StoreFeedback(sl, out); // Adopts the list
             }
             break;
 
