@@ -83,8 +83,20 @@ void zmumuSelDraw(TTree* t0){
 
    
    zfriendtree->AddFriend(t0);
+   zfriendtree->SetScanField(-1);
    // this used to crash;
    zfriendtree->Scan("nneu:neumomcm[0]:neumomcm[1]:neumomcm[2]:neumomcm[3]:neumomcmtot");
+   zfriendtree->Scan("nneu:neumomcm:neumomcmtot","","",8,0);
+   zfriendtree->Scan("nneu:npi0:neumomcm:pi0thecm","","",8,0);
+   zfriendtree->Scan("nneu:npi0:neumomcm:pi0thecm","neumomcm[0]>0","",8,0);
+   zfriendtree->Scan("nneu:npi0:neumomcm:pi0thecm","neumomcm>0","",8,0);
+
+   zfriendtree->Scan("nneu:neumomcmtot-(Alt$(neumomcm[0],0)+Alt$(neumomcm[1],0)+Alt$(neumomcm[2],0)+Alt$(neumomcm[3],0))");
+   zfriendtree->Scan("nneu:neumomcmtot-(Alt$(neumomcm[0],0)+Alt$(neumomcm[1],0)+Alt$(neumomcm[2],0)+Alt$(neumomcm[3],0))","nneu==0");
+   zfriendtree->Scan("nneu:neumomcmtot-(Alt$(neumomcm[0],0)+Alt$(neumomcm[1],0)+Alt$(neumomcm[2],0)+Alt$(neumomcm[3],0))","nneu==1");
+
+   zfriendtree->Scan("nneu:neumomcm[0]:neumomcm[1]:neumomcm[2]:neumomcm[3]:neumomcmtot:neumomcmtot-(Alt$(neumomcm[0],0)+Alt$(neumomcm[1],0)+Alt$(neumomcm[2],0)+Alt$(neumomcm[3],0))","nneu>1&&nneu<=4");
+   zfriendtree->Scan("nneu:neumomcmtot-(Alt$(neumomcm[0],0)+Alt$(neumomcm[1],0)+Alt$(neumomcm[2],0)+Alt$(neumomcm[3],0))","nneu>4");
    
    zfriendtree->RemoveFriend(t0);
     
