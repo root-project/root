@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.93 2002/11/25 16:27:50 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.94 2002/12/03 11:20:10 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4896,6 +4896,9 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    // Examples:
    //   c1.WaitPrimitive();      // Return the first created primitive
    //                            // whatever it is.
+   //                            // If a double-click with the mouse is executed
+   //                            // in the pad or any key pressed, the function
+   //                            // returns 0.
    //   c1.WaitPrimitive("ggg"); // Set the editor in mode "PolyLine/Graph"
    //                            // Create a polyline, then using the context
    //                            // menu item "SetName", change the name
@@ -4934,7 +4937,10 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
       if (testlast) {
          obj = gPad->GetListOfPrimitives()->Last();
          if (obj != oldlast) return obj;
+         Int_t event = GetEvent();
+         if (event == kButton1Double || event == kKeyPress) return 0;
       }
+      gSystem->Sleep(10);
    }
    return 0;
 }
