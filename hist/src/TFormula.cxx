@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.71 2004/02/11 22:06:44 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.72 2004/02/27 14:30:28 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2235,16 +2235,16 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
    pos  = 0;
    pos2 = 0;
 
-  for (i=0; i<fNoper; ++i) {
+   for (i=0; i<fNoper; ++i) {
 
      const int oper = fOper[i];
 
      switch((oper >> kTFOperShift)) {
 
-        case kParameter:    { pos++; tab[pos-1] = fParams[ oper & kTFOperMask ]; continue; }
-        case kConstant:  { pos++; tab[pos-1] = fConst[ oper & kTFOperMask ]; continue; }
-        case kVariable:  { pos++; tab[pos-1] = x[ oper & kTFOperMask ]; continue; }
-        case kStringConst:  { pos2++;tab2[pos2-1] = (char*)fExpr[i].Data(); continue; }
+        case kParameter  : { pos++; tab[pos-1] = fParams[ oper & kTFOperMask ]; continue; }
+        case kConstant   : { pos++; tab[pos-1] = fConst[ oper & kTFOperMask ]; continue; }
+        case kVariable   : { pos++; tab[pos-1] = x[ oper & kTFOperMask ]; continue; }
+        case kStringConst: { pos2++;tab2[pos2-1] = (char*)fExpr[i].Data(); pos++; tab[pos-1] = 0; continue; }
 
         case kAdd        : pos--; tab[pos-1] += tab[pos]; continue;
         case kSubstract  : pos--; tab[pos-1] -= tab[pos]; continue;
@@ -2284,8 +2284,9 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
         case ksq   : tab[pos-1] = tab[pos-1]*tab[pos-1]; continue;
         case ksqrt : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); continue;
 
-        case kstrstr : pos2 -= 2; pos++;if (strstr(tab2[pos2],tab2[pos2+1])) tab[pos-1]=1;
-                                        else tab[pos-1]=0; continue;
+        case kstrstr : pos2 -= 2; pos-=2; pos++; 
+                       if (strstr(tab2[pos2],tab2[pos2+1])) tab[pos-1]=1;
+                       else tab[pos-1]=0; continue;
 
         case kmin : pos--; tab[pos-1] = TMath::Min(tab[pos-1],tab[pos]); continue;
         case kmax : pos--; tab[pos-1] = TMath::Max(tab[pos-1],tab[pos]); continue;
@@ -2330,10 +2331,12 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
                                   else tab[pos-1]=0; continue;
         case kNot : if (tab[pos-1]!=0) tab[pos-1] = 0; else tab[pos-1] = 1; continue;
 
-        case kStringEqual : pos2 -= 2; pos++; if (!strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
-                                              else tab[pos-1]=0; continue;
-        case kStringNotEqual: pos2 -= 2; pos++;if (strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
-                                               else tab[pos-1]=0; continue;
+        case kStringEqual : pos2 -= 2; pos -=2 ; pos++; 
+                            if (!strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
+                            else tab[pos-1]=0; continue;
+        case kStringNotEqual: pos2 -= 2; pos -= 2; pos++; 
+                              if (strcmp(tab2[pos2+1],tab2[pos2])) tab[pos-1]=1;
+                              else tab[pos-1]=0; continue;
 
         case kBitAnd : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) & ((Int_t) tab[pos]); continue;
         case kBitOr  : pos--; tab[pos-1]= ((Int_t) tab[pos-1]) | ((Int_t) tab[pos]); continue;
@@ -2473,6 +2476,7 @@ Double_t TFormula::EvalPar(const Double_t *x, const Double_t *params)
               for (j=0;j<fNstring;j++) string_calc[j]=DefinedString(j);
            }
            pos2++; tab2[pos2-1] = string_calc[param];
+           pos++; tab[pos-1] = 0;
            continue;
         }
 
