@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.99 2004/05/17 12:13:40 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.100 2004/05/17 15:06:37 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2126,13 +2126,21 @@ const char *TUnixSystem::GetLinkedLibraries()
    while (ldd.Gets(p)) {
       TString delim(" \t");
       TObjArray *tok = ldd.Tokenize(delim);
-      TString solib = ((TObjString*)tok->At(2))->String();
-      if (solib.EndsWith(".so")) {
-         if (!linkedLibs.IsNull())
-            linkedLibs += " ";
-         linkedLibs += solib;
+
+      TObjString *solibName = (TObjString*)tok->At(2);
+      if (solibName==0) {
+         // Case where there is only one name of the list.
+         solibName = (TObjString*)tok->At(0);
       }
-      delete tok;
+      if ( solibName ) {
+         TString solib = solibName->String();
+         if (solib.EndsWith(".so")) {
+            if (!linkedLibs.IsNull())
+               linkedLibs += " ";
+            linkedLibs += solib;
+         }
+      }
+      delete tok;        
    }
    ClosePipe(p);
 #endif
