@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.44 2001/08/24 06:33:11 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.45 2001/08/28 16:33:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3743,6 +3743,12 @@ void TPad::ResizePad(Option_t *option)
       if (fPixmapID) {
          int w = TMath::Abs(XtoPixel(fX2) - XtoPixel(fX1));
          int h = TMath::Abs(YtoPixel(fY2) - YtoPixel(fY1));
+         //protection in case of wrong pad parameters.
+         //without this protection, the OpenPixmap or ResizePixmap crashes with
+         //the message "Error in <RootX11ErrorHandler>: BadValue (integer parameter out of range for operation)"
+         //resulting in a frozen xterm
+         if (w <= 0 || w > 10000) {printf("pad:%s width  changed from %d to %d\n",GetName(),w,10); w = 10;}
+         if (h <= 0 || h > 10000) {printf("pad:%s height changed from %d to %d\n",GetName(),h,10); h = 10;}
          if (fPixmapID == -1)       // this case is handled via the ctor
             fPixmapID = gVirtualX->OpenPixmap(w, h);
          else
