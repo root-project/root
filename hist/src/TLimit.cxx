@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.34 2002/08/16 21:16:00 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.1 2002/09/06 19:58:00 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -40,6 +40,30 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
                                                              Double_t,
                                                              Double_t))
 {
+   // class TLimit
+   // ------------ 
+   //  
+   // Algorithm to compute 95% C.L. limits using the Likelihood ratio
+   // semi-bayesian method.
+   // It takes signal, background and data histograms wrapped in a
+   // TLimitDataSource as input and runs a set of Monte Carlo experiments in
+   // order to compute the limits. If needed, inputs are fluctuated according
+   // to systematics. The output is a TConfidenceLevel.
+   //  
+   // class TLimitDataSource 
+   // ----------------------
+   //  
+   // Takes the signal, background and data histograms as well as different
+   // systematics sources to form the TLimit input. 
+   //  
+   //  class TConfidenceLevel 
+   //  ----------------------
+   //  
+   // Final result of the TLimit algorithm. It is created just after the
+   // time-consuming part and can be stored in a TFile for further processing.
+   // It contains light methods to return CLs, CLb and other interesting
+   // quantities.  
+   //        
    // The actual algorithm...
    // From an input (TLimitDataSource) it produces an output TConfidenceLevel.
    // For this, nmc Monte Carlo experiments are performed.
