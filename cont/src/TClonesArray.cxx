@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.2 2000/09/08 16:11:02 rdm Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -156,7 +156,7 @@ void TClonesArray::Clear(Option_t *)
    // Clear the clones array. Only use this routine when your objects don't
    // allocate memory since it will not call the object dtors.
 
-   // Protect against erroneously setting of owne bit.
+   // Protect against erroneously setting of owner bit
    SetOwner(kFALSE);
 
    TObjArray::Clear();
