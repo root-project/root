@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.16 2004/10/08 10:10:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.17 2004/10/18 09:10:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -64,7 +64,7 @@ private:
    TGLayoutHints     *fCanvasLayout;
 
    TGMenuBar         *fMenuBar;
-   TGPopupMenu       *fFileMenu, *fModeMenu, *fViewMenu, *fHelpMenu;
+   TGPopupMenu       *fFileMenu, *fViewMenu, *fHelpMenu;
 
    TGLayoutHints     *fMenuBarLayout;
    TGLayoutHints     *fMenuBarItemLayout;
@@ -87,14 +87,13 @@ private:
    TGLRender         fRender;
    TPoint            fLastPos;
 
-   enum EMode{kNav, kPick};
    enum EViews{kXOY, kXOZ, kYOZ, kPERSP};
-
    EViews            fConf;
-   EMode             fMode;
 
    TContextMenu      *fContextMenu;
    TGLSceneObject    *fSelectedObj;
+   enum EAction{kNoAction, kRotating, kPicking};
+   EAction fAction;
 
 public:
    TViewerOpenGL(TVirtualPad * pad);

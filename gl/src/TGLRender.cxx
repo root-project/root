@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.8 2004/10/08 10:10:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.9 2004/10/18 09:10:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -63,7 +63,7 @@ TGLRender::TGLRender()
    fSelectedObj = 0;
    fSelectionBox = 0;
    fPxs = kFALSE;
-   fAxes = kTRUE;
+   fAxes = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -310,7 +310,6 @@ void TGLRender::DrawAxes()
                                     {0., 0., 1.}};
    //white axes
    glDisable(GL_LIGHTING);
-//   glEnable(GL_COLOR_MATERIAL);
    glColor3dv(axeColors[3]);
 
    glBegin(GL_LINES);
@@ -343,7 +342,18 @@ void TGLRender::DrawAxes()
    PrintNumber(fAxeD[0].first, fAxeD[1].first, fAxeD[2].second, fAxeD[2].second, 9.);
    PrintNumber(fAxeD[0].first, fAxeD[1].first, fAxeD[2].first, fAxeD[2].first, -9.);
 
- //  glDisable(GL_COLOR_MATERIAL);
    glEnable(GL_LIGHTING);
    glPopAttrib();
+}
+
+void TGLRender::SetFamilyColor(const Float_t *newColor)
+{
+   if (TObject *ro = fSelectedObj->GetRealObject()) {
+      TString famName = ro->GetName();
+      for (Int_t i = 0, e = fGLObjects.GetEntriesFast(); i < e; ++i) {
+         TObject *obj = ((TGLSceneObject *)fGLObjects[i])->GetRealObject();
+         if (obj && obj->GetName() == famName)
+            ((TGLSceneObject *)fGLObjects[i])->SetColor(newColor);
+      }
+   } else fSelectedObj->SetColor(newColor);
 }

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.28 2004/10/08 10:10:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.29 2004/10/18 09:10:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -45,18 +45,14 @@ const char gHelpViewerOpenGL[] = "\
      \tr\t--- filled polygons mode\n\
      \tj\t--- zoom in\n\
      \tk\t--- zoom out\n\n\
-     MODE\n\n\
-     You can select \"Navigation\" or \"Picking\" mode\n\
-     using \"Mode\" menu.\n\
-     In NAVIGATION mode you can ROTATE\n\
-     scene by holding left mouse button and moving mouse or\n\
+     You can ROTATE the scene by holding the left \n\
+     mouse button and moving the mouse or\n\
      SELECT an object with right mouse button click.\n\
-     In PICKING mode you can select an object by left\n\
-     mouse click and move it with button pressed \n\
-     (light source are pickable too).\n\n\
-     VIEW\n\n\
-     You can select different plane projections\n\
-     in \"View\" menu.\n\n\
+     You can select and move an object with the middle\n\
+     mouse button (light sources are pickable too).\n\n\
+     PROJECTIONS\n\n\
+     You can select the different plane projections\n\
+     in \"Projections\" menu.\n\n\
      COLOR\n\n\
      After you selected an object or a light source,\n\
      you can modify object's material and light\n\
@@ -115,8 +111,6 @@ const Double_t gIdentity[] = {1., 0., 0., 0., 0., 1., 0., 0.,
 enum EGLViewerCommands {
    kGLHelpAbout,
    kGLHelpOnViewer,
-   kGLNavMode,
-   kGLPickMode,
    kGLXOY,
    kGLXOZ,
    kGLYOZ,
@@ -129,7 +123,7 @@ ClassImp(TViewerOpenGL)
 const Int_t TViewerOpenGL::fgInitX = 0;
 const Int_t TViewerOpenGL::fgInitY = 0;
 const Int_t TViewerOpenGL::fgInitW = 750;
-const Int_t TViewerOpenGL::fgInitH = 600;
+const Int_t TViewerOpenGL::fgInitH = 640;
 
 //______________________________________________________________________________
 TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
@@ -152,15 +146,15 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    fL1 = fL2 = fL3 = fL4 = 0;
    fCanvasLayout = 0;
    fMenuBar = 0;
-   fFileMenu = fModeMenu = fViewMenu = fHelpMenu = 0;
+   fFileMenu = fViewMenu = fHelpMenu = 0;
    fMenuBarLayout = fMenuBarItemLayout = fMenuBarHelpLayout = 0;
    fXc = fYc = fZc = fRad = 0.;
    fPressed = kFALSE;
    fNbShapes = 0;
    fConf = kPERSP;
-   fMode = kNav;
    fContextMenu = 0;
    fSelectedObj = 0;
+   fAction = kNoAction;
 
    static struct Init {
       Init()
@@ -186,11 +180,6 @@ void TViewerOpenGL::CreateViewer()
    fFileMenu->AddEntry("&Exit", kGLExit);
    fFileMenu->Associate(this);
 
-   fModeMenu = new TGPopupMenu(fClient->GetRoot());
-   fModeMenu->AddEntry("&Navigation", kGLNavMode);
-   fModeMenu->AddEntry("P&icking", kGLPickMode);
-   fModeMenu->Associate(this);
-
    fViewMenu = new TGPopupMenu(fClient->GetRoot());
    fViewMenu->AddEntry("&XOY plane", kGLXOY);
    fViewMenu->AddEntry("XO&Z plane", kGLXOZ);
@@ -212,8 +201,7 @@ void TViewerOpenGL::CreateViewer()
    // Create menubar
    fMenuBar = new TGMenuBar(this, 1, 1, kHorizontalFrame | kRaisedFrame);
    fMenuBar->AddPopup("&File", fFileMenu, fMenuBarItemLayout);
-   fMenuBar->AddPopup("&Mode", fModeMenu, fMenuBarItemLayout);
-   fMenuBar->AddPopup("&View", fViewMenu, fMenuBarItemLayout);
+   fMenuBar->AddPopup("&Projections", fViewMenu, fMenuBarItemLayout);
    fMenuBar->AddPopup("&Help",    fHelpMenu,    fMenuBarHelpLayout);
    AddFrame(fMenuBar, fMenuBarLayout);
 
@@ -277,7 +265,6 @@ void TViewerOpenGL::CreateViewer()
 TViewerOpenGL::~TViewerOpenGL()
 {
    delete fFileMenu;
-   delete fModeMenu;
    delete fViewMenu;
    delete fHelpMenu;
    delete fMenuBar;
@@ -315,7 +302,6 @@ void TViewerOpenGL::SwapBuffers()const
 Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
 {
    // Handle mouse button events.
-
    // Buttons 4 and 5 are from the mouse scroll wheel
    if (event->fCode == kButton4) {
       // zoom out
@@ -331,47 +317,39 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
       DrawObjects();
       return kTRUE;
    }
-
-   if (event->fType == kButtonPress && event->fCode == kButton1) {
-      if(fMode == kNav) {
+   if (event->fType == kButtonPress) {
+      if(event->fCode == kButton1 && fConf == kPERSP) {
          TPoint pnt(event->fX, event->fY);
          fArcBall->Click(pnt);
          fPressed = kTRUE;
+         fAction = kRotating;
       } else {
          if ((fSelectedObj = TestSelection(event))) {
             fColorEditor->SetRGBA(fSelectedObj->GetColor());
             fGeomEditor->SetCenter(fSelectedObj->GetObjectCenter());
-            fPressed = kTRUE;
-            fLastPos.fX = event->fX;
-            fLastPos.fY = event->fY;
+            if (event->fCode == kButton2) {
+               fPressed = kTRUE;
+               fLastPos.fX = event->fX;
+               fLastPos.fY = event->fY;
+               fAction = kPicking;
+            } else if (TObject *ro = fSelectedObj->GetRealObject()){
+               if (!fContextMenu) fContextMenu = new TContextMenu("glcm", "glcm");
+               fContextMenu->Popup(event->fXRoot, event->fYRoot, ro);
+            }
          } else {
             fColorEditor->Disable();
             fGeomEditor->Disable();
          }
       }
-   } else if (event->fType == kButtonPress && event->fCode == kButton3 && fMode == kNav) {
-      if ((fSelectedObj = TestSelection(event))) {
-         fColorEditor->SetRGBA(fSelectedObj->GetColor());
-         fGeomEditor->SetCenter(fSelectedObj->GetObjectCenter());
-         if (TObject *ro = fSelectedObj->GetRealObject()) {
-            if (!fContextMenu) fContextMenu = new TContextMenu("glcm", "glcm");
-            fContextMenu->Popup(event->fXRoot, event->fYRoot, ro);
-         }
-      } else {
-         fColorEditor->Disable();
-         fGeomEditor->Disable();
-      }
    } else if (event->fType == kButtonRelease) {
-      if (event->fCode == kButton1) {
-         fPressed = kFALSE;
-         if (fMode == kPick) {
-            MakeCurrent();
-            gVirtualGL->EndMovement(&fRender);
-            DrawObjects();
-            if (fSelectedObj)
-               fGeomEditor->SetCenter(fSelectedObj->GetObjectCenter());
-         }
+      if (event->fCode == kButton2) {
+         MakeCurrent();
+         gVirtualGL->EndMovement(&fRender);
+         DrawObjects();
+         if (fSelectedObj)fGeomEditor->SetCenter(fSelectedObj->GetObjectCenter());
+         fAction = kNoAction;
       }
+      fPressed = kFALSE;
    }
 
    return kTRUE;
@@ -433,11 +411,11 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
 Bool_t TViewerOpenGL::HandleContainerMotion(Event_t *event)
 {
    if (fPressed) {
-      if (fMode == kNav) {
+      if (fAction == kRotating) {
          TPoint pnt(event->fX, event->fY);
          fArcBall->Drag(pnt);
          DrawObjects();
-      } else if (fMode == kPick) {
+      } else if (fAction == kPicking) {
          TGLWindow *glWin = fCanvasContainer->GetGLWindow();
          Double_t xshift = (event->fX - fLastPos.fX) / Double_t(glWin->GetWidth());
          Double_t yshift = (event->fY - fLastPos.fY) / Double_t(glWin->GetHeight());
@@ -600,7 +578,6 @@ void TViewerOpenGL::Show()
 void TViewerOpenGL::CloseWindow()
 {
    fPad->SetViewer3D(0);
-
    //DeleteWindow();
    TTimer::SingleShot(50, IsA()->GetName(), this, "ReallyDelete()");
 }
@@ -674,19 +651,7 @@ Bool_t TViewerOpenGL::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
             hd->Popup();
             break;
          }
-         case kGLNavMode:
-            fMode = kNav;
-            if (fConf != kPERSP) {
-               fConf = kPERSP;
-               fRender.SetActive(fConf);
-               DrawObjects();
-            }
-            break;
-         case kGLPickMode:
-            fMode = kPick;
-            break;
          case kGLXOY:
-
             if (fConf != kXOY) {
             //set active camera
                fConf = kXOY;
@@ -813,6 +778,9 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
    case kTBa:
       fSelectedObj->SetColor(fColorEditor->GetRGBA());
       break;
+   case kTBaf:
+      fRender.SetFamilyColor(fColorEditor->GetRGBA());
+      break;
    case kTBa1:
       {
          Double_t c[3] = {0.};
@@ -837,7 +805,7 @@ void TViewerOpenGL::ModifyScene(Int_t wid)
       }
    }
    
-   if (wid == kTBa || wid == kTBa1) {
+   if (wid == kTBa || wid == kTBa1 || wid == kTBaf) {
       gVirtualGL->Invalidate(&fRender);
    }
    

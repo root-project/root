@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.5 2004/10/08 10:10:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.h,v 1.6 2004/10/18 09:10:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -37,6 +37,7 @@ enum EApplyButtonIds {
    kTBcpm,
    kTBda,
    kTBa,
+   kTBaf,
    kTBa1
 };
 
@@ -58,6 +59,7 @@ private:
    TGHSlider     *fShineSlider;
 
    TGButton      *fApplyButton;
+   TGButton      *fApplyFamily;
    Bool_t        fIsActive;
    Bool_t        fIsLight;   
    Float_t       fRGBA[17];

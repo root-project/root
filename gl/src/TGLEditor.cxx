@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.8 2004/10/08 10:10:42 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLEditor.cxx,v 1.9 2004/10/18 09:10:55 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -55,7 +55,7 @@ Bool_t TGLMatView::HandleExpose(Event_t *event)
 }
 
 enum EGLEditorIdent {
-   kCPa = kTBa + 1,
+   kCPa = kTBa1 + 1,
    kCPd, kCPs, kCPe,
    kHSr, kHSg, kHSb,
    kHSa, kHSs, kHSe,
@@ -104,6 +104,12 @@ TGLColorEditor::TGLColorEditor(const TGWindow *parent, TViewerOpenGL *v)
    AddFrame(fApplyButton, widLayout);
    fApplyButton->SetState(kButtonDisabled);
    fApplyButton->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
+   
+   fApplyFamily = new TGTextButton(this, "Apply to family", kTBaf);
+   fTrash.Add(fApplyFamily);
+   AddFrame(fApplyFamily, widLayout);
+   fApplyFamily->SetState(kButtonDisabled);
+   fApplyFamily->Connect("Pressed()", "TGLColorEditor", this, "DoButton()");
 
    MakeCurrent();
    gVirtualGL->NewPRGL();
@@ -126,7 +132,10 @@ TGLColorEditor::~TGLColorEditor()
 void TGLColorEditor::SetRGBA(const Float_t *rgba)
 {
    fApplyButton->SetState(kButtonDisabled);
+   fApplyFamily->SetState(kButtonDisabled);
+
    fIsActive = kTRUE;
+
    for (Int_t i = 0; i < 17; ++i) fRGBA[i] = rgba[i];
 
    if (rgba[16] < 0.f) {
@@ -176,8 +185,12 @@ void TGLColorEditor::DoSlider(Int_t val)
          if (!fIsLight) fRGBA[16] = val;
          break;
       }
+
       if (!fIsLight || (wid != kHSa && wid != kHSs)) {
-         if (fIsActive) fApplyButton->SetState(kButtonUp);
+         if (fIsActive) {
+            fApplyButton->SetState(kButtonUp);
+            if (!fIsLight) fApplyFamily->SetState(kButtonUp);
+         }
          DrawSphere();
       }
    }
@@ -211,8 +224,10 @@ void TGLColorEditor::DoButton()
       SetSlidersPos();
       break;
    case kTBa:
+   case kTBaf:
       fApplyButton->SetState(kButtonDisabled);
-      fViewer->ModifyScene(kTBa);
+      fApplyFamily->SetState(kButtonDisabled);
+      fViewer->ModifyScene(id);
       break;
    }
    DrawSphere();
@@ -221,6 +236,7 @@ void TGLColorEditor::DoButton()
 //______________________________________________________________________________
 void TGLColorEditor::Disable()
 {
+   fApplyButton->SetState(kButtonDisabled);
    fApplyButton->SetState(kButtonDisabled);
    fIsActive = kFALSE;
    fIsLight = kFALSE;
@@ -540,7 +556,6 @@ TGLSceneEditor::TGLSceneEditor(const TGWindow *parent, TViewerOpenGL *v)
    fTrash.AddLast(fAxesCheck);
    AddFrame(fAxesCheck, fL1);
    fAxesCheck->Connect("Clicked()", "TGLSceneEditor", this, "DoButton()");
-   fAxesCheck->SetState(kButtonDown);
 }
 
 //______________________________________________________________________________
