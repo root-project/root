@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.38 2003/03/05 23:31:06 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.39 2003/04/11 11:48:11 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -99,6 +99,7 @@ public:
    Int_t               GetNumber()  const {return fNumber;}
    Int_t              *GetLengths() const {return fLength;}
    ULong_t            *GetMethods() const {return fMethod;}
+   Int_t               GetOffset(const char *) const;
    Int_t              *GetOffsets() const {return fOffset;}
    Int_t               GetSize()    const;
    Int_t               GetSizeElements()    const;

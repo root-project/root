@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.167 2003/04/14 14:13:19 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.168 2003/04/15 17:54:35 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1045,11 +1045,24 @@ TStreamerBasicType *TStreamerInfo::GetElementCounter(const char *countName, TCla
    return 0;
 }
 
+//______________________________________________________________________________
+Int_t TStreamerInfo::GetOffset(const char *elementName) const
+{
+   // return the offset of the data member as indicated by this StreamerInfo
+
+   if (elementName==0) return 0;
+
+   Int_t offset = 0;
+   TStreamerElement *elem = (TStreamerElement*)fElements->FindObject(elementName);
+   if (elem) offset = elem->GetOffset();
+
+   return offset;
+}
 
 //______________________________________________________________________________
 Int_t TStreamerInfo::GetSize() const
 {
-//  return total size of all persistent elements of the class (with offsets)
+   //  return total size of all persistent elements of the class (with offsets)
 
    return fSize;
 }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.108 2003/04/06 22:03:05 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.109 2003/04/10 12:58:34 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1408,9 +1408,9 @@ void TBranchElement::SetAddress(void *add)
    if (fType ==3) {
       TClass *clm = gROOT->GetClass(fClonesName.Data());
       if (clm) {
-			clm->BuildRealData(); //just in case clm derives from an abstract class
-			clm->GetStreamerInfo();
-		}
+         clm->BuildRealData(); //just in case clm derives from an abstract class
+         clm->GetStreamerInfo();
+      }
       if (fAddress) {
          if (fStreamerType==61) {
             // Case of an embedded ClonesArray
@@ -1429,9 +1429,12 @@ void TBranchElement::SetAddress(void *add)
       }
    }
 
-   TClass *clparent = gROOT->GetClass(GetParentName());
+   const char *ename = 0;
+   if (fID>=0) ename = ((TStreamerElement*)fInfo->GetElements()->At(fID))->GetName();
+   TClass *clparent = gROOT->GetClass(GetParentName()); 
    TClass *clm = gROOT->GetClass(GetClassName());
-   Int_t *offsets = clm->GetStreamerInfo()->GetOffsets();
+   Int_t lOffset; // offset in the local streamerInfo.
+   lOffset = clm->GetStreamerInfo()->GetOffset(ename);
    if (fType == 31) {
       if (fClassName != fParentName) {
          if (clparent != clm) {
@@ -1441,7 +1444,7 @@ void TBranchElement::SetAddress(void *add)
             if (clast) {
                if (!clparent || !clm) return;
                Int_t mOffset  = GetDataMemberOffset(clparent,clast+1);
-               if (mOffset > 0) fOffset = mOffset -offsets[fID];
+               if (mOffset > 0) fOffset = mOffset - lOffset;
                else             fOffset = -mOffset;
             }
          }
@@ -1453,10 +1456,10 @@ void TBranchElement::SetAddress(void *add)
          if (clparent != clm) {
             const char *clast = strstr(GetName(),Form("%s.",fParentName.Data()));
             if (clast) {
-               fObject += clparent->GetDataMemberOffset(clast+1) -offsets[fID];
+               fObject += clparent->GetDataMemberOffset(clast+1) - lOffset;
             } else {
                Int_t mOffset  = GetDataMemberOffset(clparent,GetName());
-               if (mOffset > 0) fObject += mOffset -offsets[fID];
+               if (mOffset > 0) fObject += mOffset - lOffset;
                else             fObject -= mOffset;
             }
          }
