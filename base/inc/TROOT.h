@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.2 2000/08/18 13:18:36 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -180,7 +180,7 @@ public:
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }
    void              SetBatch(Bool_t batch=kTRUE) { fBatch = batch; }
-   void              SetCutClassName(const char *name="TCutG") {fCutClassName = name;}
+   void              SetCutClassName(const char *name="TCutG");
    void              SetDefCanvasName(const char *name="c1") {fDefCanvasName = name;}
    void              SetEditHistograms(Bool_t flag=kTRUE) {fEditHistograms=flag;}
    void              SetEditorMode(const char *mode="");

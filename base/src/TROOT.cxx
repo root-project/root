@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.5 2000/08/17 09:25:00 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.6 2000/08/18 13:18:36 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1117,6 +1117,30 @@ void TROOT::SaveContext()
 
    if (fInterpreter)
       fInterpreter->SaveGlobalsContext();
+}
+
+//______________________________________________________________________________
+void TROOT::SetCutClassName(const char *name)
+{
+   // Set the default graphical cut class name for the graphics editor
+   // By default the graphics editor creates an instance of a class TCutG.
+   // This function may be called to specify a different class that MUST
+   // derive from TCutG
+   
+   if (!name) {
+      Error("SetCutClassName","Invalid class name");
+      return;
+   }
+   TClass *cl = gROOT->GetClass(name);
+   if (!cl) {
+      Error("SetCutClassName","Unknown class:%s",name);
+      return;
+   }
+   if (!cl->InheritsFrom("TCutG")) {
+      Error("SetCutClassName","Class:%s does not derive from TCutG",name);
+      return;
+   }
+   fCutClassName = name;
 }
 
 //______________________________________________________________________________
