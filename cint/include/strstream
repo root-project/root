@@ -1,3 +1,4 @@
 namespace std {
-#include <strstream.h>
+#include <iostream.h>
+//#include <strstream.h>
 }

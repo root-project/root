@@ -2,7 +2,13 @@
 
 #include <map>
 #include <algorithm>
+#ifndef G__OLDIMPLEMENTATION2023
 #include <string>
+#else // 2023
+#if !defined(G__SUNPRO_C) && !defined(__SUNPRO_CC)
+#include <string>
+#endif
+#endif // 2023
 #ifndef __hpux
 using namespace std;
 #endif

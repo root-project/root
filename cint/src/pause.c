@@ -387,8 +387,10 @@ void G__init_undo()
   int i;
   undoindex=0;
   for(i=0;i<G__MAXUNDO;i++) {
-     undodictpos[i].var=(struct G__var_array*)NULL;
-     undodictpos[i].ptype = 0;   
+    undodictpos[i].var=(struct G__var_array*)NULL;
+#ifndef G__OLDIMPLEMENTATION2024
+    undodictpos[i].ptype=(char*)NULL;
+#endif
   }
 }
 
@@ -417,6 +419,13 @@ void G__cancel_undo_position()
 {
   G__decrement_undo_index(&undoindex);
   undodictpos[undoindex].var=(struct G__var_array*)NULL;
+#ifndef G__OLDIMPLEMENTATION2024
+  if(undodictpos[undoindex].ptype && 
+     undodictpos[undoindex].ptype!=(char*)G__PVOID) {
+    free((void*)undodictpos[undoindex].ptype);
+    undodictpos[undoindex].ptype = (char*)NULL;
+  }
+#endif
 }
 
 /******************************************************************

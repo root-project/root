@@ -270,6 +270,10 @@ struct G__ifunc_table *ifunc;
 	    G__ASSERT(ifunc->pentry[i]->bytecodestatus==G__BYTECODE_SUCCESS);
 #endif
 	  }
+#ifndef G__OLDIMPLEMENTATIN2021
+	  else if(ifunc->pentry[i]->size<0) {
+	  }
+#endif
 	  else {
 	    G__ASSERT(ifunc->pentry[i]->bytecodestatus==G__BYTECODE_FAILURE||
 		      ifunc->pentry[i]->bytecodestatus==G__BYTECODE_NOTYET);

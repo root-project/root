@@ -6783,7 +6783,7 @@ int parameter00;
 	for(ix=4;ix>=0;ix--) 
 	  G__asm_inst[G__asm_cp+ix+3] = G__asm_inst[G__asm_cp+ix];
 #ifdef G__ASM_DBG
-	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: LD_CTOR_SETGVP %s index=%d paran=%d\n"
+	if(G__asm_dbg) G__fprinterr(G__serr,"%3x: CTOR_SETGVP %s index=%d paran=%d\n"
 			       ,G__asm_cp,item,ig15,paran);
 #endif
 	G__asm_inst[G__asm_cp]=G__CTOR_SETGVP;

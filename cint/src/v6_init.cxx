@@ -615,7 +615,6 @@ char *argv[] ;
   char *icom=(char*)NULL;
 #endif
 
-  stubbegin.ptype = 0;
 
   /*****************************************************************
   * Setting STDIOs.  May need to modify here.
@@ -1347,6 +1346,9 @@ char *argv[] ;
     }
 #endif
     else if(strcmp(sourcefile,"+STUB")==0) {
+#ifndef G__OLDIMPLEMENTATION2024
+      stubbegin.ptype = (char*)G__PVOID;
+#endif
       G__store_dictposition(&stubbegin);
       continue;
     }

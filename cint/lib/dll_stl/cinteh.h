@@ -4,6 +4,11 @@
 #ifndef __hpux
 using namespace std;
 #endif
+#ifdef G__OLDIMPLEMENTATION2023
+#ifdef __SUNPRO_CC
+#define exception std::exception
+#endif
+#endif
 
 #include <string>
 class G__exception : public std::exception {
@@ -21,8 +26,10 @@ class G__exception : public std::exception {
   virtual ~G__exception() throw() { }
 };
 
+#ifndef G__OLDIMPLEMENTATION2023
 #if !defined(__CINT__) && defined(__SUNPRO_CC)
 #define exception std::exception
+#endif
 #endif
 
 #ifdef __MAKECINT__

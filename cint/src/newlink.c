@@ -6450,7 +6450,11 @@ FILE *fp;
 					,ifunc->para_reftype[j][k]
 					,ifunc->para_isconst[j][k]));
 	      }
+#ifndef G__OLDIMPLEMENTATION2022
 	      fprintf(fp,"))(&%s::%s)"
+#else
+	      fprintf(fp,"))(%s::%s)"
+#endif
 		      ,G__fulltagname(ifunc->tagnum,1),ifunc->funcname[j]);
 #else
 	      fprintf(fp,",(void*)%s::%s"

@@ -91,12 +91,15 @@ struct G__dictposition *dictpos;
     dictpos->definedtemplatefunc=dictpos->definedtemplatefunc->next;
 
 #ifndef G__OLDIMPLEMENTATION2014
+#ifndef G__OLDIMPLEMENTATION2024
+  if(0!=dictpos->ptype && (char*)G__PVOID!=dictpos->ptype) {
+    free((void*)dictpos->ptype);
+    dictpos->ptype = (char*)NULL;
+  }
+#endif
   if(0==dictpos->ptype) {
     int i;
-    dictpos->ptype = (char*)malloc(G__MAXSTRUCT);
-    for(i=0;i<G__struct.alltag;i++) dictpos->ptype[i] = G__struct.type[i];
-  } else if ((char*)G__PVOID!=dictpos->ptype) {
-    int i;
+    dictpos->ptype = (char*)malloc(G__struct.alltag+1);
     for(i=0;i<G__struct.alltag;i++) dictpos->ptype[i] = G__struct.type[i];
   }
 #endif
@@ -232,10 +235,10 @@ struct G__dictposition *dictpos;
   G__freetemplatefunc(dictpos->definedtemplatefunc);
 #endif
 
-#ifndef G__OLDIMPLEMENTATION2014
+#ifndef G__OLDIMPLEMENTATION2026
   if(dictpos->ptype && (char*)G__PVOID!=dictpos->ptype ) {
     int i;
-    for(i=0;i<G__struct.alltag && i<dictpos->tagnum;i++) G__struct.type[i] = dictpos->ptype[i];
+    for(i=0; i<G__struct.alltag; i++) G__struct.type[i] = dictpos->ptype[i];
     free((void*)dictpos->ptype);
     dictpos->ptype = (char*)NULL;
   }
@@ -766,13 +769,12 @@ int ig15;
 	  }
 	  else {
 	    G__store_struct_offset = var->p[itemp];
-	    if((i=var->varlabel[itemp][1])>0 
-#ifndef G__OLDIMPLEMENTATION2011
+	    if((i=var->varlabel[itemp][1])>0
+#ifndef G__OLDIMPLEMENTATION2025
 	       || var->paran[itemp]
 #endif
-	       ) { 
-	       G__cpp_aryconstruct=i+1;
-	    }
+	       ) 
+	      G__cpp_aryconstruct=i+1;
 	    G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
 	    G__cpp_aryconstruct=0;
 	  }

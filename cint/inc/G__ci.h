@@ -21,8 +21,8 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150127
-#define G__CINTVERSIONSTR  "5.15.127, Mar 10 2004"
+#define G__CINTVERSION      50150128
+#define G__CINTVERSIONSTR  "5.15.128, Mar 16 2004"
 
 #define G__ALWAYS
 /* #define G__NEVER */
@@ -831,11 +831,15 @@ typedef struct {
 #define G__USERHEADER 1
 #define G__SYSHEADER  2
 
-#if (__GNUC__ >= 3)
+
+#ifndef G__OLDIMPLEMENTATION2021
 #ifndef G__ANSI
+#if (__GNUC__>=3)  // ||defined(__SUNPRO_CC)||defined(__SUNPRO_C)
 #define G__ANSI
 #endif
 #endif
+#endif
+/* #define G__ANSI */
 
 #ifdef __cplusplus
 
