@@ -1472,11 +1472,8 @@ void composite()
 
    // define shape components with names
    TGeoPgon *pgon = new TGeoPgon("pg",0.,360.,6,2); 
-//   TGeoPgon *pgon = new TGeoBBox("pg",20.,20.,20.); 
    pgon->DefineSection(0,0,0,20);
    pgon->DefineSection(1, 30,0,20);
-
-//   TGeoPgon *pgon = new TGeoBBox("pg",20.,20.,20.); 
 
    TGeoSphere *sph = new TGeoSphere("sph", 40., 45.);
    // define named geometrical transformations with names
@@ -1485,7 +1482,7 @@ void composite()
    // register all used transformations
    tr->RegisterYourself();
    // create the composite shape based on a Boolean expression
-   TGeoCompositeShape *cs = new TGeoCompositeShape("mir", "sph:tr+pg");
+   TGeoCompositeShape *cs = new TGeoCompositeShape("mir", "sph:tr*pg");
 
    TGeoVolume *vol = new TGeoVolume("COMP",cs);
    vol->SetLineColor(randomColor());

@@ -10,8 +10,7 @@ void csgdemo ()
    bar->AddButton("Intersection ", "s_intersection()","A * B ");
    bar->AddButton("Difference ", "s_difference()","A - B ");
 	//These two buttons are disabled cause of bugs
-	//bar->AddButton("Complex1 ", "complex_1()","(A * B) - C");
-	//bar->AddButton("RAY-TRACE ON/OFF","raytrace()","Toggle ray-tracing mode");
+	bar->AddButton("Complex composite", "complex_1()","(A * B) + (C - D)");
    bar->Show();
 
    gROOT->SaveContext();
@@ -249,7 +248,7 @@ void complex_1()
    pt->SetLineColor(1);
    TText *text = pt->AddText("TGeoCompositeShape - composite shape class");
    text->SetTextColor(2);
-   pt->AddText("----- Sphere * box - torus");
+   pt->AddText("----- (sphere * box) + (sphere - box) ");
 
    pt->AddText(" ");
    pt->SetAllWith("-----","color",4);
