@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -57,7 +57,7 @@ ClassImp(TGFileDialog)
 //______________________________________________________________________________
 TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
                            EFileDialogMode dlg_type, TGFileInfo *file_info) :
-   TGTransientFrame(p, main, 10, 10, kMainFrame | kVerticalFrame)
+   TGTransientFrame(p, main, 10, 10, kVerticalFrame)
 {
    // Create a file selection dialog. Depending on the dlg_type it can be
    // used for opening or saving a file.

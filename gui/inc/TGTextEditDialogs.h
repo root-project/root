@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.1 2000/07/11 09:26:37 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEditDialogs.h,v 1.2 2000/07/13 15:09:39 rdm Exp $
 // Author: Fons Rademakers   10/7/2000
 
 /*************************************************************************
@@ -67,7 +67,7 @@ protected:
 public:
    TGSearchDialog(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
                   TGSearchType *sstruct, Int_t *ret_code,
-                  UInt_t options = kMainFrame | kVerticalFrame);
+                  UInt_t options = kVerticalFrame);
    virtual ~TGSearchDialog();
 
    virtual void   CloseWindow();
@@ -97,7 +97,7 @@ protected:
 public:
    TGPrintDialog(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
                  char **printerName, char **printProg, Int_t *ret_code,
-                 UInt_t options = kMainFrame | kVerticalFrame);
+                 UInt_t options = kVerticalFrame);
    virtual ~TGPrintDialog();
 
    virtual void   CloseWindow();
@@ -121,7 +121,7 @@ protected:
 
 public:
    TGGotoDialog(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
-                Long_t *ret_code, UInt_t options = kMainFrame | kVerticalFrame);
+                Long_t *ret_code, UInt_t options = kVerticalFrame);
    virtual ~TGGotoDialog();
 
    virtual void   CloseWindow();

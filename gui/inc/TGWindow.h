@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -53,7 +53,8 @@ public:
             Int_t depth = 0,
             UInt_t clss = 0,
             void *visual = 0,
-            SetWindowAttributes_t *attr = 0);
+            SetWindowAttributes_t *attr = 0,
+            UInt_t wtype = 0);
    TGWindow(TGClient *c, Window_t id, const TGWindow *parent = 0);
 
    virtual ~TGWindow();

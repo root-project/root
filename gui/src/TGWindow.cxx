@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name$:$Id$
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -37,7 +37,7 @@ ClassImp(TGWindow)
 //______________________________________________________________________________
 TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
                    UInt_t border, Int_t depth, UInt_t clss, void *visual,
-                   SetWindowAttributes_t *attr)
+                   SetWindowAttributes_t *attr, UInt_t wtype)
 {
    // Create a new window. Parent p must exist. No specified arguments
    // result in values from parent to be taken (or defaults).
@@ -46,9 +46,9 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
       fClient = p->fClient;
       fParent = p;
       fId = gVirtualX->CreateWindow(fParent->fId, x, y,
-                               TMath::Max(w, (UInt_t) 1),
-                               TMath::Max(h, (UInt_t) 1), border,
-    			       depth, clss, visual, attr);
+                                    TMath::Max(w, (UInt_t) 1),
+                                    TMath::Max(h, (UInt_t) 1), border,
+    			            depth, clss, visual, attr, wtype);
       fClient->RegisterWindow(this);
       fNeedRedraw = kFALSE;
    } else {

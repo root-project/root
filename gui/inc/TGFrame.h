@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.11 2001/01/04 14:28:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.12 2001/01/08 14:34:53 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -67,7 +67,9 @@ enum EFrameType {
    kFitHeight       = BIT(8),
    kFixedHeight     = BIT(9),
    kFixedSize       = (kFixedWidth | kFixedHeight),
-   kOwnBackground   = BIT(10)
+   kOwnBackground   = BIT(10),
+   kTransientFrame  = BIT(11),
+   kTempFrame       = BIT(12)
 };
 
 //---- MWM Hints stuff
@@ -328,7 +330,7 @@ protected:
 
 public:
    TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
-               UInt_t options = kMainFrame | kVerticalFrame);
+               UInt_t options = kVerticalFrame);
    virtual ~TGMainFrame();
 
    virtual Bool_t HandleKey(Event_t *event);
@@ -371,7 +373,7 @@ protected:
 
 public:
    TGTransientFrame(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
-                    UInt_t options = kMainFrame | kVerticalFrame);
+                    UInt_t options = kVerticalFrame);
 
    const TGWindow *GetMain() const { return fMain; }
 
