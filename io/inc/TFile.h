@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.16 2002/02/01 07:14:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.17 2002/03/26 14:09:07 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -55,7 +55,7 @@ protected:
    TArrayC    *fClassIndex;       //!Index of TStreamerInfo classes written to this file
    TCache     *fCache;            //!Page cache used to reduce number of small I/O's
    TObjArray  *fProcessIDs;       //!Array of pointers to TProcessIDs
-   
+
    static Double_t fgBytesWrite;    //Number of bytes written by all TFile objects
    static Double_t fgBytesRead;     //Number of bytes read by all TFile objects
 
@@ -109,7 +109,7 @@ public:
    Double_t          GetBytesWritten() const { return fBytesWrite; }
    Int_t             GetVersion() const { return fVersion; }
    Int_t             GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
-   Seek_t            GetSize() const;
+   virtual Seek_t    GetSize() const;
    TList            *GetStreamerInfoList();
    virtual Bool_t    IsOpen() const;
    virtual void      ls(Option_t *option="") const;
