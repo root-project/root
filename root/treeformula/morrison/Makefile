@@ -11,12 +11,12 @@ include ../../Rules.mk
 #	@echo built
 
 ArraySyntax: main$(ExeSuf) $(ROOTSYS)/lib/libTreePlayer.$(DllSuf)
-	./main
+	$(CMDECHO) ./main
 
 main$(ExeSuf): main.C fooDict.C barDict.C foo.C bar.C
-	$(CXX) -o$@ $(CXXFLAGS) $^ -I. $(LDSTARTOPT) $(shell eval root-config --libs)
+	$(CMDECHO) $(CXX) -o$@ $(CXXFLAGS) $^ -I. $(LDSTARTOPT) $(shell eval root-config --libs)
 
 %Dict.C: %.h
-	rootcint -f $@ -c $^
+	$(CMDECHO) rootcint -f $@ -c $^
 
 

@@ -10,29 +10,29 @@ LIBS = $(ROOTLIBS)
 #test: check
 
 Foo.$(DllSuf): Foo.h Foo.cxx
-	rootcint -f FooDict.cxx -c Foo.h+
-	$(CXX) $(CXXFLAGS) -c Foo.cxx 
-	$(CXX) $(CXXFLAGS) -c FooDict.cxx 
+	$(CMDECHO) rootcint -f FooDict.cxx -c Foo.h+
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c Foo.cxx 
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c FooDict.cxx 
 ifeq ($(ARCH),aix)
-                /usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+                $(CMDECHO) /usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),aix5)
-                /usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
+                $(CMDECHO) /usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
-                $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-                $(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+                $(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
+                $(CMDECHO) $(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
                    $(OutPutOpt) $(subst .$(DllSuf),.so,$@)
 else
 ifeq ($(PLATFORM),win32)
-	bindexplib Foo Foo.$(ObjSuf) FooDict.$(ObjSuf) > Foo.def
-	lib -nologo -MACHINE:IX86  Foo.$(ObjSuf) FooDict.$(ObjSuf) -def:Foo.def \
+	$(CMDECHO) bindexplib Foo Foo.$(ObjSuf) FooDict.$(ObjSuf) > Foo.def
+	$(CMDECHO) lib -nologo -MACHINE:IX86  Foo.$(ObjSuf) FooDict.$(ObjSuf) -def:Foo.def \
                    $(OutPutOpt)$(subst dll,lib,$@)
-	$(LD) $(SOFLAGS) $(LDFLAGS) Foo.$(ObjSuf) FooDict.$(ObjSuf) Foo.exp $(LIBS) \
+	$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) Foo.$(ObjSuf) FooDict.$(ObjSuf) Foo.exp $(LIBS) \
                    $(OutPutOpt)$@
 else
-	$(LD) $(SOFLAGS) $(LDFLAGS) $(LIBSFORLINK) Foo.$(ObjSuf) FooDict.$(ObjSuf) $(OutPutOpt) $@
+	$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $(LIBSFORLINK) Foo.$(ObjSuf) FooDict.$(ObjSuf) $(OutPutOpt) $@
 endif
 endif
 endif
@@ -41,18 +41,20 @@ endif
 #	g++ -shared -Wl,-soname,Foo.$(DllSuf) -o Foo.$(DllSuf) Foo.$(ObjSuf) FooDict.$(ObjSuf)
 
 reader$(ExeSuf) :reader.C
-	$(CXX) $(CXXFLAGS) -c $<  
-	$(LD) reader.$(ObjSuf) $(LDFLAGS) $(LIBS) $(OutPutOpt)$@
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<  
+	$(CMDECHO) $(LD) reader.$(ObjSuf) $(LDFLAGS) $(LIBS) $(OutPutOpt)$@
 
-	#g++ -o $@ reader.$(ObjSuf) `root-config --libs` \
-	#	-Wl,-rpath,`root-config --libdir`
+
+
+#g++ -o $@ reader.$(ObjSuf) `root-config --libs` \
+#	-Wl,-rpath,`root-config --libdir`
 
 writer$(ExeSuf):writer.C Foo.$(DllSuf) 
-	$(CXX) $(CXXFLAGS) -c $< 
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< 
 ifeq ($(PLATFORM),win32)
-	$(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.lib $(OutPutOpt)$@
+	$(CMDECHO) $(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.lib $(OutPutOpt)$@
 else
-	$(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.so $(OutPutOpt)$@
+	$(CMDECHO) $(LD) writer.$(ObjSuf) $(LDFLAGS) $(LIBS) Foo.so $(OutPutOpt)$@
 endif
 
 #	g++ -o $@ writer.$(ObjSuf) Foo.$(DllSuf) `root-config --libs` \
@@ -66,7 +68,7 @@ dist:
 	rm -rf treeproblem 
 
 check:Foo.$(DllSuf) reader$(ExeSuf) writer$(ExeSuf) 
-	root -b -l -q writer.C > write.out
+	$(CMDECHO) root -b -l -q writer.C > write.out
 ifeq ($(FAIL),) 
 	@echo Test known to fail in `pwd`
 else

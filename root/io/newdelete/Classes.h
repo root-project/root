@@ -44,6 +44,7 @@ public:
   int a;
   OpNewPlacement() : a(0) {};
   void *operator new(size_t sz, void *p) { return TStorage::ObjectAlloc(sz,p); }
+  void     operator delete(void *ptr, void *vp);
 };
 
 class OpNewBoth {
@@ -52,6 +53,8 @@ public:
   OpNewBoth() : a(0) {};
   void *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
   void *operator new(size_t sz, void *p) { return TStorage::ObjectAlloc(sz,p); }
+/*   void     operator delete(void *ptr, void *vp); */
+/*   void     operator delete[](void *ptr, void *vp); */
 };
 
 class Default {

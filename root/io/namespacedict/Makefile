@@ -5,14 +5,10 @@ tests: dicto
 CLEAN_TARGET += 
 
 MyClassDict.C: Header.h Linkdef.h $(ROOTSYS)/bin/rootcint
-	rootcint -f MyClassDict.C -c Header.h Linkdef.h
+	$(CMDECHO) rootcint -f MyClassDict.C -c Header.h Linkdef.h
 
 TeleDict.C: Tele.h TeleLinkdef.h $(ROOTSYS)/bin/rootcint
-	test ! `rootcint -f TeleDict.C -c Tele.h TeleLinkdef.h` && touch TeleDict.C
-
-
+	$(CMDECHO) test ! `(rootcint -f TeleDict.C -c Tele.h TeleLinkdef.h >TeleDict.log 2>&1 )`  && touch TeleDict.C 
 
 dicto : MyClassDict.o TeleDict.o
-
-%.o: %.C
-	$(CXX) $(CXXFLAGS) -c $^
+	$(CMDECHO) diff -b  dicto.ref TeleDict.log 

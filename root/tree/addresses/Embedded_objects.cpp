@@ -29,8 +29,8 @@ void Embedded_objects::initData(int i) {
   o.m_emb2.d                     = double(100*i);
   o.m_emb3.m_embed2.m_embed1.i   = 1000*i;
   o.m_emb3.m_embed2.d            = double(10000*i);
-  fprintf(stderr,"location of o.m_emb3 and o.m_emb3.f %p %p\n",
-          &o.m_emb3,&o.m_emb3.f);
+//   fprintf(stderr,"location of o.m_emb3 and o.m_emb3.f %p %p\n",
+//           &o.m_emb3,&o.m_emb3.f);
   o.m_emb3.f                     = float( 100000*i);
 
   m_embedded.m_pemb1 = new EmbeddedClasses::Embedded1;

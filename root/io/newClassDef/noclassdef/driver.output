@@ -451,6 +451,6 @@ obj 	102
 Reading multiple inherited objects with newer methods
 Check the base class offset in the case of private (and protected) inheritance
 OBJ: TClass	RootPrivPCobject	inherits privately from RootPCellID then publicly from TObject
-base class offset for RootPrivPCobject's TObject is: 12
+base class offset for RootPrivPCobject's TObject is: 16
 OBJ: TClass	RootPrivPCobject2	inherits publicly from TObject then privately from RootPCellID
 base class offset for RootPrivPCobject2's TObject is: 0

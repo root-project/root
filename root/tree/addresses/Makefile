@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS +=  *.log *.$(DllSuf) *.d
+CLEAN_TARGETS +=  *.log $(ALL_LIBRARIES) *.d
 
 #Set the list of target to make while testing
 TEST_TARGETS += headerTest clonesATest EmbeddedTest inheritTest
@@ -10,7 +10,7 @@ TEST_TARGETS += headerTest clonesATest EmbeddedTest inheritTest
 include ../../Rules.mk
 
 inherit_C.$(DllSuf): inherit.C buildInherit.C
-	$(CMDECHO) root.exe -q -b -l buildInherit.C
+	$(CMDECHO) root.exe -q -b -l buildInherit.C > buildInherit.log
 
 inheritTest.log: runInherit.C inherit_C.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l runInherit.C > inheritTest.log 2>&1
@@ -19,7 +19,7 @@ inheritTest: inheritTest.log
 	$(CMDECHO) diff -b inheritTest.log inheritTest.ref
 
 header_h.$(DllSuf): header.h buildHeader.C
-	$(CMDECHO) root.exe -q -b -l buildHeader.C
+	$(CMDECHO) root.exe -q -b -l buildHeader.C > buildHeader.log
 
 headerTest.log: runHeader.C header_h.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l runHeader.C > headerTest.log 2>&1

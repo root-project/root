@@ -1,9 +1,10 @@
 all: tests
 test: tests
 
-SUBDIRS = arrayobject bigevent newClassDef namespacedict newdelete \
+SUBDIRS = arrayobject bigevent namespacedict newdelete \
 	multipleInherit evolution references fakeClass tree treeForeign \
-	longlong const
+	longlong const newClassDef
+
 
 include ../Rules.mk
 

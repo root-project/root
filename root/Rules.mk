@@ -47,6 +47,8 @@ CXXFLAGS = $(shell root-config --cflags)
 ROOTLIBS     := $(shell root-config --nonew --libs)
 ROOTGLIBS    := $(shell root-config --nonew --glibs)
 
+ObjSuf   = o
+
 ifeq ($(PLATFORM),win32)
 # Windows with the VC++ compiler
 ObjSuf        = obj
@@ -90,14 +92,14 @@ ifeq ($(ARCH),linuxicc)
 CXX = icc
 LD  = icc
 ifeq ($(ROOTBUILD),debug)
-CXXFLAGS += -g
+CXXFLAGS += -g -wd191 
 else
-CXXFLAGS += -O
+CXXFLAGS += -O -wd191 
 endif
 SOFLAGS  = -shared 
 DllSuf   = so
 ExeSuf   = 
-OutPutOpt     = -o 
+OutPutOpt= -o 
 endif
 
 
@@ -115,10 +117,13 @@ endif
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
 
 %_cpp.$(DllSuf) : %.cpp
-	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\)
+	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\) > $*_cpp.build.log
 
 %_C.$(DllSuf) : %.C
-	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\)
+	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\) > $*_C.build.log
+
+%_cxx.$(DllSuf) : %.cxx
+	$(CMDECHO) root.exe -q -l -b ../../build.C\(\"$<\"\) > $*_cxx.build.log
 
 define WarnFailTest
 	@echo Warning $@ has some known skipped failures "(in `pwd`)"

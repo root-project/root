@@ -9,9 +9,9 @@
 //l->Print();
    int last = l->LastIndex();
    for(int i=0; i<=last; i++) {
-     fprintf(stderr,"Obj#%d %p ",i,l->At(i));
-     fprintf(stderr,"class %p ",l->At(i)->IsA());
-     fprintf(stderr,"name %s\n",l->At(i)->IsA()->GetName());
+     fprintf(stdout,"Obj#%d %p ",i,l->At(i));
+     fprintf(stdout,"class %p ",l->At(i)->IsA());
+     fprintf(stdout,"name %s\n",l->At(i)->IsA()->GetName());
 
    };
 }

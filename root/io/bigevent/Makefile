@@ -1,30 +1,30 @@
 CLEAN_TARGETS += $(local_clean)
-TEST_TARGESTS += bigeventTest
+TEST_TARGETS += bigeventTest
 
 include ../../Rules.mk
 
-.SUFFIXES: .cxx .o .so
+#.SUFFIXES: .cxx .o .so
 
 
-all: bigeventTest
+#all: bigeventTest
 
 bigeventTest: ./Event ./libEvent.$(DllSuf)
-	./Event 10 1 1 1
-	./Event 10 1 1 20
+	./Event 10 1 1 1 > Event.write.log
+	./Event 10 1 1 20 > Event.read.log
 
 Event : MainEvent.o Event.o EventDict.o
-	$(CXX) $(OutPutOpt)Event MainEvent.o Event.o EventDict.o -L$(ROOTSYS)/lib \
+	$(CMDECHO) $(CXX) $(OutPutOpt)Event MainEvent.o Event.o EventDict.o -L$(ROOTSYS)/lib \
     -lCore -lCint -lTree -lHist -lMatrix -lPhysics -lGraf -lm -ldl 
 
 libEvent.$(DllSuf) :  Event.o EventDict.o
-	$(CXX) $(SOFLAGS) Event.o EventDict.o $(OutPutOpt)libEvent.$(DllSuf)
+	$(CMDECHO) $(CXX) $(SOFLAGS) Event.o EventDict.o $(OutPutOpt)libEvent.$(DllSuf)
 
 EventDict.cxx: Event.h EventLinkDef.h $(ROOTSYS)/bin/rootcint $(ROOTSYS)/lib/libCint.$(DllSuf)
-	rootcint -f EventDict.cxx -c Event.h EventLinkDef.h
+	$(CMDECHO) rootcint -f EventDict.cxx -c Event.h EventLinkDef.h
 
 .cxx.o:
-	$(CXX) $(CXXFLAGS) -I$(ROOTSYS)/include -c $<
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I$(ROOTSYS)/include -c $<
 
-local_clean = Event libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~
+local_clean = Event libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log
 
 

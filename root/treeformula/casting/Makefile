@@ -1,6 +1,6 @@
 SUBDIRS =  
 TEST_TARGETS = Simple 
-CLEAN_TARGETS += main *Dict* Event.root *~ *.$(DllSuf) *.exp *.pdb *.d
+CLEAN_TARGETS += main *Dict* Event.root *~ $(ALL_LIBRARIES) *.log
 
 include ../../Rules.mk
 
@@ -8,15 +8,14 @@ $(ROOTSYS)/test/Event:
 	(cd $ROOTSYS/test; gmake Event)
 
 Event: $(ROOTSYS)/test/Event
-	cp $(ROOTSYS)/test/Event $(ROOTSYS)/test/libEvent.so $(ROOTSYS)/test/Event.h .
+	$(CMDECHO) cp $(ROOTSYS)/test/Event $(ROOTSYS)/test/libEvent.so $(ROOTSYS)/test/Event.h .
 
 Event.root:
-	./Event 20 1 9 1
+	$(CMDECHO) ./Event 20 1 9 1
 
-Simple_cxx.$(DllSuf) : Simple.h Simple.cxx
-	$(CMDECHO) root.exe -l -b -q ../../build.C\(\"Simple.cxx\"\)
+Simple.log: Simple_cxx.$(DllSuf)
+	$(CMDECHO) root.exe -l -b -q Run.C > Simple.log
 
-Simple: Simple_cxx.$(DllSuf)
-	$(CMDECHO) root.exe -l -b -q Run.C
-
+Simple: Simple.log
+	$(CMDECHO) diff -u Simple.log Simple.ref
 

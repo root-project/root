@@ -4,15 +4,15 @@ CLEAN_TARGETS = na_cxx.$(DllSuf) hout.root
 include ../../Rules.mk
 
 multipleInheritTest: na_cxx.$(DllSuf) hout.root
-	@root.exe -q -l -b re.C
+	$(CMDECHO) root.exe -q -l -b re.C > run.C 
 
 na_cxx.$(DllSuf) : na.cxx na.h
-	@echo '{gSystem->Exit(!gSystem->CompileMacro("na.cxx","kf"));}' > build.C && \
+	$(CMDECHO) echo '{gSystem->Exit(!gSystem->CompileMacro("na.cxx","kf"));}' > build.C && \
 	root.exe -q -l -b build.C && \
-	rm build.C 
+	rm build.C > build.log
 
 hout.root: wr.C na_cxx.$(DllSuf)
-	@root.exe -q -l -b wr.C>& /dev/null
+	$(CMDECHO) root.exe -q -l -b wr.C>& /dev/null
 
 
 

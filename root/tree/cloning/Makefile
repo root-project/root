@@ -9,6 +9,10 @@ TEST_TARGETS += treeCloneTest
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
 
+
+$(ROOTSYS)/test/Event.new.split0.root:
+	$(CMDECHO) (cd $(ROOTSYS)/test; gmake -f dt_Makefile files)
+
 hsimple1.root: hsimple.C
 	$(CMDECHO) root.exe -q -l -b hsimple.C > hsimple.out
 	$(CMDECHO) mv hsimple.root hsimple1.root

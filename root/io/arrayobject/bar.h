@@ -1,3 +1,6 @@
+#ifndef BAR_H
+#define BAR_H
+
 #include "TROOT.h"
 #include "TClonesArray.h"
 #include "foo.h"
@@ -51,3 +54,4 @@ public:
 
   ClassDef(bar,2)
 };
+#endif

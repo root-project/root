@@ -34,12 +34,10 @@ bool runHisto(TTree *tree, const char *what, const char* where, double mean) {
 
 }
 
-int
-main()
-{
+
+int run() {
   bool result = true;
 
-  TROOT s("simple", "Example of creation of a tree");
   TFile *h = new TFile("Event.root", "RECREATE", "ROOT file");
 
   bar *b = new bar();
@@ -112,5 +110,14 @@ main()
 
   h->Close();
 
-  return !result;
+  return result;
+
 }
+
+#ifndef __CINT__
+int
+main()
+{
+   return !run();
+}
+#endif

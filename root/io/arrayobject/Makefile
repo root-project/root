@@ -1,34 +1,30 @@
-all: tests
-test: tests
+CLEAN_TARGETS += main *Dict* Event.root *~  *.log $(ALL_LIBRARIES)
+TEST_TARGETS += ArraySave
 
-SUBDIRS =  
+include ../../Rules.mk
 
-TEST_TARGETS = $(SUBDIRS:%=%.test) 
-
-tests: $(TEST_TARGETS) ArraySave
-	@echo "All test succeeded in `pwd`"
-
-$(TEST_TARGETS): %.test:
-	@(cd $*; gmake test)
-
-#ArraySyntax: Event.root
-#	@echo built
+ifneq ($(FAIL),)
+ArraySave: RealArraySave
+endif
 
 # we expect the test to fail!
-ArraySave: main $(ROOTSYS)/lib/libTreePlayer.so
+ArraySave: 
+ifeq ($(FAIL),)
 	@echo WARNING `pwd` has failing test, run gmake RealArraySave to see it.
+endif
 
-RealArraySave: main $(ROOTSYS)/lib/libTreePlayer.so
-	./main
+RealArraySave: RealArraySave.log
+	$(CMDECHO) diff -u  RealArraySave.log  RealArraySave.ref
 
-main: main.C fooDict.C barDict.C foo.C bar.C
-	g++ -g -o $@ $^ -I. `root-config --cflags --libs` -lTreePlayer -lProof
+RealArraySave.log: foo_C.$(DllSuf) bar_C.$(DllSuf) main_C.$(DllSuf) $(ROOTSYS)/lib/libTreePlayer.so
+	$(CMDECHO) root.exe -q -b -l RealArraySave.C > RealArraySave.log
 
-libFoo.so: main.C fooDict.C barDict.C foo.C bar.C
-	g++ -g -shared -o $@ $^ -I. `root-config --cflags --libs`
+#main: main.C fooDict.C barDict.C foo.C bar.C
+#	g++ -g -o $@ $^ -I. `root-config --cflags --libs` -lTreePlayer -lProof
+
+#libFoo.so: main.C fooDict.C barDict.C foo.C bar.C
+#	g++ -g -shared -o $@ $^ -I. `root-config --cflags --libs`
 
 %Dict.C: %.h %Linkdef.h
-	rootcint -f $@ -c $^
+	$(CMDECHO) rootcint -f $@ -c $^
 
-clean:
-	rm -f main *Dict* Event.root *~

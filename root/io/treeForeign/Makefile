@@ -13,7 +13,7 @@ test.root: def.C def.h
 	$(CMDECHO) root.exe -b -l -q def.C+ > create.out
 
 output: Run.C test.root
-	$(CMDECHO) root.exe -b -l -q Run.C >| output 2>&1
+	$(CMDECHO) root.exe -b -l -q Run.C 2>&1 | tee fulloutput.log | grep -v 'Total =' > output
 
 testForeignDraw: output
 	$(CMDECHO) diff -u output good.output

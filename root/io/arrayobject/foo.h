@@ -1,3 +1,6 @@
+#ifndef FOO_H
+#define FOO_H
+
 #include "TROOT.h"
 #include "TClass.h"
 
@@ -43,3 +46,5 @@ inline TBuffer &operator<<(TBuffer &buf, foo *&obj)
    obj->IsA()->WriteBuffer(buf,(void*)obj);
    return buf;
 }
+
+#endif

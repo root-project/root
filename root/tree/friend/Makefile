@@ -4,8 +4,8 @@ test: tests ChainFriend ChainFriendStatus
 
 override SUBDIRS =  
 
-CLEAN_TARGETS += main *Dict* *~ createfile.out run.out unevenFriend.out treeChainFriend.log 
-TEST_TARGETS += ChainFriend unevenFriend treeChainFriend
+CLEAN_TARGETS += main *Dict* *~ createfile.out run.out unevenFriend.out treeChainFriend.log $(ALL_LIBRARIES)
+TEST_TARGETS += ChainFriend unevenFriend treeChainFriend ChainFriendStatus
 
 include ../../Rules.mk
 
@@ -50,16 +50,4 @@ ChainFriend: Run.C  $(ROOTSYS)/lib/libTreePlayer.$(DllSuf) files
 
 ChainFriendStatus: testFriend4.cc
 	$(CMDECHO) root.exe -q -b -l testFriend4.cc > ChainFriendStatus.log 
-
-main: main.C fooDict.C barDict.C foo.C bar.C
-	$(CMDECHO) g++ -g -o $@ $^ -I. `root-config --cflags --libs` -lTreePlayer -lProof
-
-libFoo.so: main.C fooDict.C barDict.C foo.C bar.C
-	$(CMDECHO) g++ -g -shared -o $@ $^ -I. `root-config --cflags --libs`
-
-%Dict.C: %.h %Linkdef.h
-	$(CMDECHO) rootcint -f $@ -c $^
-
-#clean:
-#	rm -f main *Dict* Event.root *~
 
