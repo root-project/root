@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TInetAddress.h,v 1.4 2001/10/01 09:46:32 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthDetails.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -105,18 +105,18 @@ void TAuthDetails::Print(Option_t *opt) const
    // Print object content. If option is "e" print "established details.
 
    // Method names
-   const char *AuthMeth[kMAXSEC]= {"UsrPwd","SRP","Krb5","Globus","SSH","UidGid"};
    const char *Service[3]= {" ","rootd","proofd"};
 
    Int_t srv = (GetService() > 0 && GetService() < 3) ? GetService() : 0;
 
    if (opt[0] == 'e') {
       Info("PrintEstblshd","+ Method:%d (%s) OffSet:%d Login:%s ReUse:%d Port:%d Service:%s",
-          fMethod,AuthMeth[fMethod],fRemoteOffSet,fRemoteLogin.Data(),fReUse,GetPort(),Service[srv]);
+           fMethod,TAuthenticate::GetAuthMethod(fMethod),fRemoteOffSet,fRemoteLogin.Data(),
+           fReUse,GetPort(),Service[srv]);
       Info("PrintEstblshd","+   Details:%s",fDetails.Data());
    } else {
       Info("Print","+ Host:%s Port:%d Service:%s Method:%d (%s) OffSet:%d Login:%s ReUse:%d Details:%s",
-           GetHost(),GetPort(),Service[srv],fMethod,AuthMeth[fMethod],fRemoteOffSet,fRemoteLogin.Data(),
-           fReUse,fDetails.Data());
+           GetHost(),GetPort(),Service[srv],fMethod,TAuthenticate::GetAuthMethod(fMethod),
+           fRemoteOffSet,fRemoteLogin.Data(),fReUse,fDetails.Data());
    }
 }

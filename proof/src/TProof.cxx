@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.50 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.51 2003/09/02 15:10:17 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -1317,14 +1317,13 @@ void TProof::Print(Option_t *option) const
 {
    // Print status of PROOF cluster.
 
-   char *AuthMeth[kMAXSEC]= { "UsrPwd","SRP","Krb5","Globus","SSH","UidGid" };
-
    if (!IsMaster()) {
       Printf("Connected to:             %s (%s)", GetMaster(),
                                              IsValid() ? "valid" : "invalid");
       Printf("Port number:              %d", GetPort());
       Printf("User:                     %s", GetUser());
-      Printf("Authentication method:    %d (%s)", GetSecurity(), AuthMeth[GetSecurity()] );
+      Printf("Authentication method:    %d (%s)", GetSecurity(),
+                                             TAuthenticate::GetAuthMethod(GetSecurity()));
       Printf("Client protocol version:  %d", GetClientProtocol());
       Printf("Remote protocol version:  %d", GetRemoteProtocol());
       Printf("Log level:                %d", GetLogLevel());

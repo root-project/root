@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.34 2003/08/23 00:08:13 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.35 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -425,7 +425,6 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
    // Connect to remote rootd server.
 
    TAuthenticate *auth;
-   const char *AuthMeth[kMAXSEC]= {"UsrPwd","SRP","Krb5","Globus","SSH","UidGid"};
 
    if (netopt < -1) {
       fSocket = new TPSocket(fUrl.GetHost(), fUrl.GetPort(), -netopt,
@@ -484,7 +483,8 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
    }
    // Attempt authentication
    if (!auth->Authenticate()) {
-      Error("TNetFile", "%s authentication failed for host %s",AuthMeth[auth->GetSecurity()],fUrl.GetHost());
+      Error("TNetFile", "%s authentication failed for host %s",
+            TAuthenticate::GetAuthMethod(auth->GetSecurity()), fUrl.GetHost());
       delete auth;
       goto zombie;
    }

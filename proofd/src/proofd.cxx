@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.37 2003/09/02 16:14:52 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.38 2003/09/07 16:25:53 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -225,7 +225,6 @@ extern krb5_context gKcontext;
 //--- Globals ------------------------------------------------------------------
 
 const int   kMaxSlaves         = 32;
-const char *gAuthMeth[kMAXSEC] = {"UsrPwdClear","SRP","Krb5","Globus","SSH","UidGidClear"};
 
 char    gFilePA[40]              = { 0 };
 
@@ -243,7 +242,7 @@ int     gRootLog                 = 0;
 char    gRpdAuthTab[kMAXPATHLEN] = { 0 };   // keeps track of authentication info
 
 #ifdef R__GLBS
-  int          gShmIdCred        = -1;     // global, to pass the shm ID to proofserv
+extern int gShmIdCred;  // global, to pass the shm ID to proofserv
 #endif
 
 using namespace ROOT;
@@ -704,7 +703,8 @@ void Authenticate()
          if (RpdCheckAuthAllow(Meth, gOpenHost)) {
             if (gNumAllow>0) {
                if (gAuthListSent == 0) {
-                  if (gDebug > 0) ErrorInfo("Authenticate: %s method not accepted from host: %s", gAuthMeth[Meth], gOpenHost);
+                  if (gDebug > 0) ErrorInfo("Authenticate: %s method not accepted from host: %s",
+                                            kAuthMeth[Meth], gOpenHost);
                   NetSend(kErrNotAllowed, kROOTD_ERR);
                   RpdSendAuthList();
                   gAuthListSent = 1;

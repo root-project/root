@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: THostAuth.cxx,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: THostAuth.cxx,v 1.2 2003/08/29 17:23:31 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -238,14 +238,13 @@ void THostAuth::Print(Option_t *) const
 {
    // Print object content.
 
-   // Method names
-   const char *AuthMeth[kMAXSEC] = { "UsrPwd","SRP","Krb5","Globus","SSH","UidGid" };
-
    Info("Print","+------------------------------------------------------------------+");
-   Info("Print","+ Host:%s - User:%s - # of available methods:%d",fHost.Data(),fUser.Data(),fNumMethods);
+   Info("Print","+ Host:%s - User:%s - # of available methods:%d",
+         fHost.Data(), fUser.Data(), fNumMethods);
    int i = 0;
    for (i = 0; i < fNumMethods; i++) {
-      Info("Print","+ Method: %d (%s)  Details:%s",fMethods[i],AuthMeth[fMethods[i]],fDetails[i].Data());
+      Info("Print","+ Method: %d (%s)  Details:%s",fMethods[i],
+           TAuthenticate::GetAuthMethod(fMethods[i]), fDetails[i].Data());
    }
    Info("Print","+------------------------------------------------------------------+");
 }
@@ -255,14 +254,13 @@ void THostAuth::Print(const char *proc)
 {
    // Print object content.
 
-   // Method names
-   const char *AuthMeth[kMAXSEC] = {"UsrPwd","SRP","Krb5","Globus","SSH","UidGid"};
-
    Info("Print","%s +------------------------------------------------------------------+",proc);
-   Info("Print","%s + Host:%s - User:%s - # of available methods:%d",proc,fHost.Data(),fUser.Data(),fNumMethods);
+   Info("Print","%s + Host:%s - User:%s - # of available methods:%d",
+         proc, fHost.Data(), fUser.Data(), fNumMethods);
    int i = 0;
    for (i = 0; i < fNumMethods; i++){
-      Info("Print","%s + Method: %d (%s)  Details:%s",proc,fMethods[i],AuthMeth[fMethods[i]],fDetails[i].Data());
+      Info("Print","%s + Method: %d (%s)  Details:%s", proc, fMethods[i],
+           TAuthenticate::GetAuthMethod(fMethods[i]), fDetails[i].Data());
    }
    Info("Print","%s +------------------------------------------------------------------+",proc);
 }
@@ -273,7 +271,8 @@ void THostAuth::PrintEstablished()
    // Print info about estalished authentication vis-a-vis of this Host.
 
    Info("PrintEstablished","+------------------------------------------------------------------------------+");
-   Info("PrintEstablished","+ Host:%s - Number of Established Authentications: %d",fHost.Data(),fEstablished->GetSize());
+   Info("PrintEstablished","+ Host:%s - Number of Established Authentications: %d",
+         fHost.Data(), fEstablished->GetSize());
 
    // Check list
    if (fEstablished->GetSize()>0) {

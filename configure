@@ -1414,7 +1414,7 @@ if test ! "x$enable_globus" = "xno"; then
     searchincdir=$globusdir/include
 
     for i in "openssl/x509.h" "openssl/pem.h" "globus_gss_assist.h" ; do
-        check_header $i "" "$searchincdir/$flavour $searchincdir/$flavour$pthr"
+        check_header $i "" "$searchincdir/$flavour"
         if test "x$found_hdr" = "x" ; then
             globusinc=""
             globusincdir=""
@@ -1574,11 +1574,12 @@ if test ! "x$enable_srp" = "xno" ; then
 
     srputillib=""
     srputillibdir=""
-    srplibdirs="$SRP/base/libmisc $SRP/base/lib
+    srplibdirs="$srpdir/base/libmisc $srpdir/base/lib \
+        $SRP/base/libmisc $SRP/base/lib \
         /usr/local/srp/lib /usr/local/lib/srp /usr/srp/lib /usr/lib/srp \
         /usr/local/lib /usr/lib"
     for i in libmisc libshadow ; do
-	check_library "$i" "no" "$srpdir" $srplibdirs
+	check_library "$i" "no" "" $srplibdirs
 	if test "x$found_lib" = "x" ; then
 	    srputillib=""
 	    srputillibdir=""

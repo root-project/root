@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.7 2003/08/29 17:23:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.8 2003/09/03 07:46:49 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -74,6 +74,7 @@ private:
 
    static TString        fgUser;
    static TString        fgPasswd;
+   static TString        fgAuthMeth[kMAXSEC];
    static SecureAuth_t   fgSecAuthHook;
    static Krb5Auth_t     fgKrb5AuthHook;
    static GlobusAuth_t   fgGlobusAuthHook;
@@ -142,6 +143,8 @@ public:
    static char       *PromptUser(const char *remote);
    static char       *PromptPasswd(const char *prompt = "Password: ");
 
+   static const char *GetAuthMethod(Int_t idx);
+   static Int_t       GetAuthMethodIdx(const char *meth);
    static void        SetSecureAuthHook(SecureAuth_t func);
    static void        SetKrb5AuthHook(Krb5Auth_t func);
    static void        SetGlobusAuthHook(GlobusAuth_t func);

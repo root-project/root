@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.56 2003/09/02 16:14:52 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.57 2003/09/07 16:25:53 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -326,8 +326,6 @@ extern "C" {
 //--- Globals ------------------------------------------------------------------
 
 enum { kBinary, kAscii };
-
-const char *gAuthMeth[kMAXSEC]= {"UsrPwdClear","SRP","Krb5","Globus","SSH","UidGidClear"};
 
 int     gAuthListSent            = 0;
 double  gBytesRead               = 0;
@@ -2022,7 +2020,8 @@ void RootdLoop()
                if (gNumAllow > 0) {
                   if (gAuthListSent == 0) {
                      if (gDebug > 0)
-                        ErrorInfo("RootdLoop: %s method not accepted from host: %s",gAuthMeth[Meth], gOpenHost);
+                        ErrorInfo("RootdLoop: %s method not accepted from host: %s",
+                                  kAuthMeth[Meth], gOpenHost);
                      NetSend(kErrNotAllowed, kROOTD_ERR);
                      RpdSendAuthList();
                      gAuthListSent = 1;

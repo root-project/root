@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.5 2003/09/02 16:14:52 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.6 2003/09/04 10:46:27 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -148,25 +148,18 @@ extern "C" {
    #include "rsalib.h"
 }
 
-namespace ROOT {//--- Globals ------------------------------------------------------------------
+namespace ROOT {
+//--- Globals ------------------------------------------------------------------
+const char *kAuthMeth[kMAXSEC] = { "UsrPwd", "SRP", "Krb5", "Globus", "SSH", "UidGid" };
+const char kMethods[]    = "usrpwd srp    krb5   globus ssh    uidgid";
 const char kRootdPass[]  = ".rootdpass";
 const char kSRootdPass[] = ".srootdpass";
-const char kMethods[]    = "usrpwd srp    krb5   globus ssh    uidgid";
-
-// Statics
-int gDebug = 0;
-static int gAllowMeth[kMAXSEC];
-static int gTriedMeth[kMAXSEC];
-static int gHaveMeth[kMAXSEC];
-int gRootLog = 0;
-static char gRpdAuthTab[kMAXPATHLEN] = { 0 };  // keeps track of authentication info
 
 // To control user access
 char *gUserAllow[kMAXSEC] = { 0 };
 char *gUserIgnore[kMAXSEC] = { 0 };
 unsigned int gUserAlwLen[kMAXSEC] = { 0 };
 unsigned int gUserIgnLen[kMAXSEC] = { 0 };
-
 
 char gAltSRPPass[kMAXPATHLEN] = { 0 };
 char gAnonUser[64] = "rootd";
@@ -175,6 +168,7 @@ char gExecDir[kMAXPATHLEN] = { 0 }; // needed to localize ssh2rpd
 char gFileLog[kMAXPATHLEN] = { 0 };
 char gOpenHost[256] = "????";       // same length as in net.cxx ...
 char gPasswd[64] = { 0 };
+char gRpdAuthTab[kMAXPATHLEN] = { 0 };  // keeps track of authentication info
 char gService[10] = "????";         // "rootd" or "proofd", defined in proofd/rootd.cxx ...
 char gTmpDir[kMAXPATHLEN] = { 0 };  // RW dir for temporary files
 char gUser[64] = { 0 };
@@ -183,23 +177,28 @@ int gAltSRP = 0;
 int gAnon = 0;
 int gAuth = 0;
 int gClientProtocol = 0;
+int gDebug = 0;
 int gGlobus = -1;
 int gNumAllow = -1;
 int gNumLeft = -1;
 int gOffSet = -1;
 int gRemPid = -1;
 int gReUseAllow = 0x1F;  // define methods for which previous auth can be reused
+int gRootLog = 0;
 int gSshdPort = 22;
 
 // Globals of internal linkage
-int  gSec = -1;
+int  gAllowMeth[kMAXSEC];
+int  gCryptRequired = -1;
+int  gHaveMeth[kMAXSEC];
+int  gMethInit = 0;
+char gPubKey[kMAXPATHLEN] = { 0 };
+int  gReUseRequired = -1;
 int  gRSAKey = 0;
 rsa_NUMBER gRSA_n;
 rsa_NUMBER gRSA_d;
-char gPubKey[kMAXPATHLEN] = { 0 };
-int  gMethInit = 0;
-int  gCryptRequired = -1;
-int  gReUseRequired = -1;
+int  gSec = -1;
+int  gTriedMeth[kMAXSEC];
 
 } //namespace ROOT
 
@@ -1131,9 +1130,7 @@ int RpdCheckAuthAllow(int Sec, char *Host)
                if (pmet != 0) {
                   tmet = ((int) (pmet - kMethods)) / 7;
                } else {
-                  ErrorInfo
-                      ("RpdCheckAuthAllow: unknown methods %s - ignore",
-                       tmp);
+                  ErrorInfo("RpdCheckAuthAllow: unknown methods %s - ignore", tmp);
                   goto nexti;
                }
             } else {
@@ -1650,6 +1647,10 @@ void RpdKrb5Auth(const char *sstr)
    krb5_ticket *ticket;
    char proto_version[100] = "krootd_v_1";
    int sock = gSockFd;
+
+   if (gDebug > 2)
+      ErrorInfo("RpdKrb5Auth: recvauth ... ");
+
    if ((retval = krb5_recvauth(gKcontext, &auth_context,
                                (krb5_pointer) &sock, proto_version, server,
                                0, gKeytab,   // default gKeytab is 0

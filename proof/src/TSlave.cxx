@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.13 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.14 2003/08/30 18:24:52 rdm Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -28,11 +28,6 @@
 #include "TAuthenticate.h"
 #include "TMessage.h"
 #include "THostAuth.h"
-
-// For fast name-to-number translation for authentication methods
-const char  kMethods[]= "usrpwd srp    krb5   globus ssh    uidgid";
-const char *gAuthMeth[kMAXSEC]= {"UsrPwd","SRP","Krb5","Globus","SSH","UidGid"};
-
 
 ClassImp(TSlave)
 
@@ -94,7 +89,8 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          if (!auth->Authenticate()) {
             int sec = auth->GetSecurity();
             if (sec >= 0 && sec <= kMAXSEC) {
-               Error("TSlave", "%s authentication failed for host %s", gAuthMeth[sec], host);
+               Error("TSlave", "%s authentication failed for host %s",
+                     TAuthenticate::GetAuthMethod(sec), host);
             } else {
                Error("TSlave", "authentication failed for host %s (method: %d - unknown)", host, sec);
             }
@@ -136,7 +132,8 @@ TSlave::TSlave(const char *host, Int_t port, Int_t ord, Int_t perf,
          if (!auth->Authenticate()) {
             int sec = auth->GetSecurity();
             if (sec >= 0 && sec <= kMAXSEC) {
-               Error("TSlave", "%s authentication failed for host %s", gAuthMeth[sec], host);
+               Error("TSlave", "%s authentication failed for host %s",
+                      TAuthenticate::GetAuthMethod(sec), host);
             } else {
                Error("TSlave", "authentication failed for host %s (method: %d - unknown)", host, sec);
             }
@@ -251,7 +248,8 @@ void TSlave::Print(Option_t *) const
    Printf("    Host name:               %s", GetName());
    Printf("    Port number:             %d", GetPort());
    Printf("    User:                    %s", GetUser());
-   Printf("    Authentication method:   %d (%s)", GetSecurity(), gAuthMeth[GetSecurity()] );
+   Printf("    Authentication method:   %d (%s)", GetSecurity(),
+                                             TAuthenticate::GetAuthMethod(GetSecurity()));
    Printf("    Slave protocol version:  %d", GetProtocol());
    Printf("    Image name:              %s", GetImage());
    Printf("    Working directory:       %s", GetWorkDir());
@@ -345,16 +343,11 @@ Int_t TSlave::SendHostAuth(TSlave *sl, Int_t opt)
                if (pd1 != 0) pd2 = strchr(pd1+1, ':');
                if (pd2 != 0) {
                   strcpy(meth, pd2+1);
-
                   if (strlen(meth) > 1) {
                      // Method passed as string: translate it to number
-                     const char *pmet = strstr(kMethods, meth);
-                     if (pmet) {
-                        met = ((int)(pmet-kMethods))/7;
-                     } else {
+                     met = TAuthenticate::GetAuthMethodIdx(meth);
+                     if (met == -1)
                         PDB(kGlobal,2) Info("SendHostAuth", "unrecognized method (%s): ", meth);
-                        met = -1;
-                     }
                   } else {
                      met = atoi(meth);
                   }

@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdp.h,v 1.2 2003/08/29 17:23:32 rdm Exp $
 // Author: Gerardo Ganis   7/4/2003
 
 /*************************************************************************
@@ -77,7 +77,9 @@ extern char gService[10];                 // "rootd" or "proofd", defined in pro
 extern char gTmpDir[kMAXPATHLEN];         // directory for temporary files (RW)
 
 extern char gUser[64];
-extern char gPasswd[64];                     // only used for anonymous access
+extern char gPasswd[64];                  // only used for anonymous access
+
+extern const char *kAuthMeth[kMAXSEC];    // authentication method list
 
 extern SigPipe_t gSigPipeHook;
 

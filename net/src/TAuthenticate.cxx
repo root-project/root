@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.13 2003/09/03 07:46:49 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.14 2003/09/03 15:28:51 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -62,9 +62,8 @@ GlobusAuth_t TAuthenticate::fgGlobusAuthHook;
 
 TList *TAuthenticate::fgAuthInfo = 0;
 
+TString TAuthenticate::fgAuthMeth[] = { "UsrPwd", "SRP", "Krb5", "Globus", "SSH", "UidGid" };
 
-// For fast name-to-number translation for authentication methods
-static const char kMethods[] = "usrpwd srp    krb5   globus ssh    uidgid";
 
 ClassImp(TAuthenticate)
 
@@ -804,6 +803,34 @@ const char *TAuthenticate::GetGlobalPasswd()
 }
 
 //______________________________________________________________________________
+const char *TAuthenticate::GetAuthMethod(Int_t idx)
+{
+   // Static method returning the method corresponding to idx.
+
+   if (idx < 0 || idx > kMAXSEC-1) {
+      ::Error("Authenticate::GetAuthMethod", "idx out of bounds (%d)", idx);
+      idx = 0;
+   }
+   return fgAuthMeth[idx];
+}
+
+//______________________________________________________________________________
+Int_t TAuthenticate::GetAuthMethodIdx(const char *meth)
+{
+   // Static method returning the method index (which can be used to find
+   // the method in GetAuthMethod()). Returns -1 in case meth is not found.
+
+   if (meth && meth[0]) {
+      for (Int_t i = 0; i < kMAXSEC; i++) {
+         if (!fgAuthMeth[i].CompareTo(meth, TString::kIgnoreCase))
+            return i;
+      }
+   }
+
+   return -1;
+}
+
+//______________________________________________________________________________
 char *TAuthenticate::PromptUser(const char *remote)
 {
    // Static method to prompt for the user name to be used for authentication
@@ -824,7 +851,7 @@ char *TAuthenticate::PromptUser(const char *remote)
       user = gSystem->Getenv("USERNAME");
 #endif
    if (strstr(lApp->Argv()[1], "proof") != 0) {
-      ::Warning("PromptUser",
+      ::Warning("TAuthenticate::PromptUser",
                 "proofserv: cannot prompt for user: returning default");
       if (strlen(user))
          return StrDup(user);
@@ -853,7 +880,7 @@ char *TAuthenticate::PromptPasswd(const char *prompt)
 
    TApplication *lApp = gROOT->GetApplication();
    if (strstr(lApp->Argv()[1], "proof") != 0) {
-      ::Warning("PromptPasswd",
+      ::Warning("TAuthenticate::PromptPasswd",
                 "proofserv: cannot prompt for passwd: returning -1");
       return StrDup("-1");
    }
@@ -1401,6 +1428,8 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
 
    // Check if file can be read ...
    if (gSystem->AccessPathName(net, kReadPermission)) {
+      ::Info("TAuthenticate::CheckRootAuthrc",
+             "file %s cannot be read (errno: %d)", net, errno);
       return 0;
    }
    // Variables for scan ...
@@ -1632,15 +1661,10 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
             int met = -1;
             if (strlen(cmth[i]) > 1) {
                // Method passed as string: translate it to number
-               const char *pmet = strstr(kMethods, cmth[i]);
-               if (pmet != 0) {
-                  met = ((int) (pmet - kMethods)) / 7;
-               } else {
-                  if (gDebug > 2)
-                     ::Info("CheckRootAuthrc",
-                            "unrecognized method (%s): ", cmth[i]);
-                  met = -1;
-               }
+               met = GetAuthMethodIdx(cmth[i]);
+               if (met == -1 && gDebug > 2)
+                  ::Info("CheckRootAuthrc",
+                         "unrecognized method (%s): ", cmth[i]);
             } else {
                met = atoi(cmth[i]);
             }
@@ -1703,15 +1727,10 @@ Int_t TAuthenticate::CheckRootAuthrc(const char *Host, char ***user,
             meth = -1;
             if (strlen(cmeth) > 1) {
                // Method passed as string: translate it to number
-               const char *pmet = strstr(kMethods, cmeth);
-               if (pmet != 0) {
-                  meth = ((int) (pmet - kMethods)) / 7;
-               } else {
-                  if (gDebug > 2)
-                     ::Info("CheckRootAuthrc",
-                            "unrecognized method (%s): ", cmeth);
-                  meth = -1;
-               }
+               meth = GetAuthMethodIdx(cmeth);
+               if (meth == -1 && gDebug > 2)
+                  ::Info("CheckRootAuthrc",
+                         "unrecognized method (%s): ", cmeth);
             } else {
                meth = atoi(cmeth);
             }
@@ -2692,6 +2711,15 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user)
    int ulen = strlen(user);
    THostAuth *rHA = 0;
 
+   // Check and save the host FQDN ...
+   TString lHost = host;
+   TInetAddress addr = gSystem->GetHostByName(lHost);
+   if (addr.IsValid()) {
+      lHost = addr.GetHostName();
+      if (lHost == "UnNamedHost")
+         lHost = addr.GetHostAddress();
+   }
+
    // Check list of auth info for already loaded info about this host
    TIter next(GetAuthInfo());
    THostAuth *ai;
@@ -2700,12 +2728,12 @@ THostAuth *TAuthenticate::GetHostAuth(const char *host, const char *user)
          ai->Print("Authenticate:GetHostAuth");
 
       if (ulen > 0) {
-         if (!strcmp(host, ai->GetHost()) && !strcmp(user, ai->GetUser())) {
+         if (lHost == ai->GetHost() && !strcmp(user, ai->GetUser())) {
             rHA = ai;
             break;
          }
       } else {
-         if (!strcmp(host, ai->GetHost())) {
+         if (lHost == ai->GetHost()) {
             rHA = ai;
             break;
          }
