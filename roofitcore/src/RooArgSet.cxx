@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.16 2001/05/03 02:15:54 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.17 2001/05/10 18:58:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,71 +32,80 @@ RooArgSet::RooArgSet(const char *name) :
 {
 }
 
-RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1) :
+RooArgSet::RooArgSet(const RooAbsArg& var1,
+		     const char *name) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1);
 }
 
-RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
-		       const RooAbsArg& var2) :
+RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
+		     const char *name) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2);
 }
 
-RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
-		       const RooAbsArg& var2, const RooAbsArg& var3) :
+RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
+		     const RooAbsArg& var3,
+		     const char *name) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3);
 }
 
-RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
-		       const RooAbsArg& var2, const RooAbsArg& var3,
-		       const RooAbsArg& var4) :
+RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
+		     const RooAbsArg& var3, const RooAbsArg& var4,
+		     const char *name) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4);
 }
 
-RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
-		       const RooAbsArg& var2, const RooAbsArg& var3,
-		       const RooAbsArg& var4, const RooAbsArg& var5) :
+RooArgSet::RooArgSet(const RooAbsArg& var1,
+		     const RooAbsArg& var2, const RooAbsArg& var3,
+		     const RooAbsArg& var4, const RooAbsArg& var5,
+		     const char *name) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5);
 }
 
-RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
-		       const RooAbsArg& var2, const RooAbsArg& var3,
-		       const RooAbsArg& var4, const RooAbsArg& var5, const RooAbsArg& var6) :
+RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
+		     const RooAbsArg& var3, const RooAbsArg& var4, 
+		     const RooAbsArg& var5, const RooAbsArg& var6,
+		     const char *name) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
 }
 
-RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
-		       const RooAbsArg& var2, const RooAbsArg& var3,
-		       const RooAbsArg& var4, const RooAbsArg& var5, 
-                       const RooAbsArg& var6, const RooAbsArg& var7) :
+RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
+		     const RooAbsArg& var3, const RooAbsArg& var4, 
+		     const RooAbsArg& var5, const RooAbsArg& var6, 
+		     const RooAbsArg& var7,
+		     const char *name) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
 }
 
-RooArgSet::RooArgSet(const char *name, const RooAbsArg& var1,
-		       const RooAbsArg& var2, const RooAbsArg& var3,
-		       const RooAbsArg& var4, const RooAbsArg& var5, 
-                       const RooAbsArg& var6, const RooAbsArg& var7, const RooAbsArg& var8) :
+RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
+		     const RooAbsArg& var3, const RooAbsArg& var4, 
+		     const RooAbsArg& var5, const RooAbsArg& var6, 
+		     const RooAbsArg& var7, const RooAbsArg& var8,
+		     const char *name) :
   _name(name), THashList(), _isCopy(kFALSE)
 {
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ;
 }
 
-RooArgSet::RooArgSet(const char *name, const RooArgSet& other) :
+
+RooArgSet::RooArgSet(const RooArgSet& other, const char *name) :
   _name(name), THashList(), _isCopy(kTRUE)
 {
+  if (!name) SetName(other.GetName()) ;
+
   TIterator *iterator= other.MakeIterator();
   RooAbsArg *orig(0);
   while(0 != (orig= (RooAbsArg*)iterator->Next())) {
@@ -123,7 +132,7 @@ RooArgSet* RooArgSet::snapshot() {
   // all its external dependents
 
   // First clone current list and contents
-  RooArgSet* snapshot = new RooArgSet(TString("Snapshot of ").Append(GetName()),*this) ;
+  RooArgSet* snapshot = new RooArgSet(*this,TString("Snapshot of ").Append(GetName())) ;
 
   // Add external dependents
   TIterator* vIter = snapshot->MakeIterator() ;

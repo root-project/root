@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.22 2001/05/10 00:16:05 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.23 2001/05/10 18:58:46 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -401,7 +401,7 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& testArg) const
 
 Bool_t RooAbsArg::overlaps(const RooAbsArg& testArg) const 
 {
-  RooArgSet list("list") ;
+  RooArgSet list("treeNodeList") ;
   treeNodeServerList(&list) ;
 
   return testArg.dependsOn(list) ;

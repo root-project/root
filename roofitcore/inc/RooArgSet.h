@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.rdl,v 1.9 2001/04/20 01:51:38 verkerke Exp $
+ *    File: $Id: RooArgSet.rdl,v 1.10 2001/05/03 02:15:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,29 +25,41 @@ public:
   // Constructors, assignment etc.
   RooArgSet();
   RooArgSet(const char *name);
-  RooArgSet(const char *name, const RooAbsArg& var1);
-  RooArgSet(const char *name, const RooAbsArg& var1, const RooAbsArg& var2);
-  RooArgSet(const char *name, const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3);
-  RooArgSet(const char *name, const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3, const RooAbsArg& var4);
-  RooArgSet(const char *name, const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3, const RooAbsArg& var4, const RooAbsArg& var5);
-  RooArgSet(const char *name, const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3, const RooAbsArg& var4, const RooAbsArg& var5,
-	     const RooAbsArg& var6);
-  RooArgSet(const char *name, const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3, const RooAbsArg& var4, const RooAbsArg& var5,
-	     const RooAbsArg& var6, const RooAbsArg& var7);
-  RooArgSet(const char *name, const RooAbsArg& var1, const RooAbsArg& var2,
-	     const RooAbsArg& var3, const RooAbsArg& var4, const RooAbsArg& var5,
-	     const RooAbsArg& var6, const RooAbsArg& var7, const RooAbsArg& var8);
+  RooArgSet(const RooAbsArg& var1, 
+	    const char *name="");
+  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2, 
+	    const char *name="");
+  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
+	    const RooAbsArg& var3, 
+	    const char *name="");
+  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
+	    const RooAbsArg& var3, const RooAbsArg& var4, 
+	    const char *name="");
+  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
+	    const RooAbsArg& var3, const RooAbsArg& var4, 
+	    const RooAbsArg& var5, 
+	    const char *name="");
+  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
+	    const RooAbsArg& var3, const RooAbsArg& var4, 
+	    const RooAbsArg& var5, const RooAbsArg& var6, 
+	    const char *name="");
+  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
+            const RooAbsArg& var3, const RooAbsArg& var4, 
+	    const RooAbsArg& var5, const RooAbsArg& var6, 
+	    const RooAbsArg& var7, 
+	    const char *name="");
+  RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
+            const RooAbsArg& var3, const RooAbsArg& var4, 
+	    const RooAbsArg& var5, const RooAbsArg& var6, 
+	    const RooAbsArg& var7, const RooAbsArg& var8, 
+	    const char *name="");
+
   virtual ~RooArgSet();
   // Create a copy of an existing list. New variables cannot be added
   // to a copied list. The variables in the copied list are independent
   // of the original variables.
-  RooArgSet(const char *name, const RooArgSet& other);
-  virtual TObject* Clone(const char* newname=0) const { return new RooArgSet(GetName(),*this); }
+  RooArgSet(const RooArgSet& other, const char *name="");
+  virtual TObject* Clone(const char* newname=0) const { return new RooArgSet(*this,newname); }
   RooArgSet& operator=(const RooArgSet& other);
   // Deep copy operator (copies all extern dependents into list)
   RooArgSet *snapshot() ;

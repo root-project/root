@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.20 2001/05/10 00:16:07 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.21 2001/05/10 18:58:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -127,7 +127,7 @@ void RooDataSet::loadValues(const TTree *t, const char *cuts)
   TTree* tClone = (TTree*) t->Clone() ;
   
   // Clone list of variables
-  RooArgSet sourceArgSet("sourceArgSet",_vars) ;
+  RooArgSet sourceArgSet(_vars,"sourceArgSet") ;
   
   // Attach args in cloned list to cloned source tree
   TIterator* sourceIter =  sourceArgSet.MakeIterator() ;
