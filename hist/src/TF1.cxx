@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.24 2001/10/25 17:00:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.25 2001/10/27 10:38:12 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -723,7 +723,6 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 //   InitArgs should be called everytime these addresses change.
 //
 
-   if (!IsInside(x)) return 0;
    if (fType == 0) return TFormula::EvalPar(x,params);
    Double_t result = 0;
    if (fType == 1)  {
