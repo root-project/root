@@ -2664,9 +2664,7 @@ int parent_tagnum;
           c2=c;
           SET_READINGFILE; /* ON777 */
           while(isspace(c=G__fgetc())){
-             if (c=='\n') {
-                strcat(symbol,"\n");
-             }
+             if (c=='\n') c2='\n';
           };
           if('<'!=c) {
             fseek(G__ifile.fp,-1,SEEK_CUR);
