@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.4 2000/10/30 11:00:41 rdm Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.5 2000/12/22 12:36:00 rdm Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -68,6 +68,7 @@ extern "C" {
   int      x3d_dispatch_event(Handle_t event);
   void     x3d_update();
   void     x3d_get_position(Float_t *longitude, Float_t *latitude, Float_t *psi);
+  int      x3d_exec_command(int px, int py, char command);
   void     x3d_terminate();
 }
 
@@ -282,7 +283,7 @@ void TViewerX3D::CreateViewer(const char *name)
 
    // Misc
 
-   SetWindowName(name);
+   SetWindowName(name); 
    SetIconName(name);
    SetClassHints("X3DViewer", "X3DViewer");
 
@@ -294,6 +295,62 @@ void TViewerX3D::CreateViewer(const char *name)
    Resize(GetDefaultSize());
 
    Show();
+}
+
+//______________________________________________________________________________
+Int_t TViewerX3D::ExecCommand(Int_t px, Int_t py, char command)
+{
+// This function may be called from a script to animate an X3D picture
+// px, py  mouse position
+//command = 0       --- move to px,py
+//        = w       --- wireframe mode   
+//        = e       --- hidden line mode   
+//        = r       --- hidden surface mode   
+//        = u       --- move object down   
+//        = i       --- move object up   
+//        = o       --- toggle controls style   
+//        = s       --- toggle stereo display   
+//        = d       --- toggle blue stereo view   
+//        = f       --- toggle double buffer   
+//        = h       --- move object right   
+//        = j       --- move object forward   
+//        = k       --- move object backward   
+//        = l       --- move object left   
+//        = x a     --- rotate about x   
+//        = y b     --- rotate about y   
+//        = z c     --- rotate about z   
+//        = 1 2 3   --- autorotate about x   
+//        = 4 5 6   --- autorotate about y   
+//        = 7 8 9   --- autorotate about z   
+//        = [ ] { } --- adjust focus 
+// Example:
+/*
+{
+   gSystem->Load("libX3d");
+   TCanvas *c1 = new TCanvas("c1");
+   TFile *f = new TFile("hsimple.root");
+   TTree *ntuple = (TTree*)f->Get("ntuple");
+   ntuple->SetMarkerColor(kYellow);
+   ntuple->Draw("px:py:pz");
+   TViewerX3D *x3d = new TViewerX3D(c1,"");
+   for (Int_t i=0;i<500;i++) {
+      Int_t px = i%500;
+      Int_t py = (2*i)%200;
+      x3d->ExecCommand(px,py,0);  //rotate
+      if (i%20 >10) x3d->ExecCommand(px,py,'j'); //zoom
+      if (i%20 <10) x3d->ExecCommand(px,py,'k'); //unzoom
+   }
+}
+*/
+       
+   return x3d_exec_command(px,py,command);
+}
+
+//______________________________________________________________________________
+void TViewerX3D::GetPosition(Float_t &longitude, Float_t &latitude, Float_t &psi)
+{
+
+   x3d_get_position(&longitude, &latitude, &psi);
 }
 
 //______________________________________________________________________________
