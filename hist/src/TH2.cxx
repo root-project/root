@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.25 2002/02/15 10:43:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.26 2002/02/18 23:09:21 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1550,6 +1550,17 @@ void TH2C::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TH2C::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
+   fNcells = n;
+   TArrayC::Set(n);
+}
+
+//______________________________________________________________________________
 void TH2C::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH2C.
@@ -1758,6 +1769,17 @@ void TH2S::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TH2S::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
+   fNcells = n;
+   TArrayS::Set(n);
+}
+
+//______________________________________________________________________________
 void TH2S::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH2S.
@@ -1959,6 +1981,17 @@ void TH2F::Reset(Option_t *option)
 
    TH2::Reset(option);
    TArrayF::Reset();
+}
+
+//______________________________________________________________________________
+void TH2F::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
+   fNcells = n;
+   TArrayF::Set(n);
 }
 
 //______________________________________________________________________________
@@ -2171,6 +2204,17 @@ void TH2D::Reset(Option_t *option)
 
    TH2::Reset(option);
    TArrayD::Reset();
+}
+
+//______________________________________________________________________________
+void TH2D::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
+   fNcells = n;
+   TArrayD::Set(n);
 }
 
 //______________________________________________________________________________

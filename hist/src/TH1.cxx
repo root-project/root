@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.87 2002/02/14 09:35:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.88 2002/02/18 23:08:57 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3947,6 +3947,17 @@ void TH1::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
+void TH1::Rebuild(Option_t *)
+{
+// Using the current bin info, recompute the arrays for contents and errors
+   
+   SetBinsLength();
+   if (fSumw2.fN) {
+      fSumw2.Set(fNcells);
+   }
+}
+   
+//______________________________________________________________________________
 void TH1::Reset(Option_t *option)
 {
 //   -*-*-*-*-*-*Reset this histogram: contents, errors, etc*-*-*-*-*-*-*-*
@@ -5136,6 +5147,17 @@ void TH1C::SetBinContent(Int_t bin, Stat_t content)
 }
 
 //______________________________________________________________________________
+void TH1C::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = fXaxis.GetNbins();
+   fNcells = n;
+   TArrayC::Set(n);
+}
+
+//______________________________________________________________________________
 TH1C& TH1C::operator=(const TH1C &h1)
 {
    if (this != &h1)  ((TH1C&)h1).Copy(*this);
@@ -5329,6 +5351,17 @@ void TH1S::SetBinContent(Int_t bin, Stat_t content)
 }
 
 //______________________________________________________________________________
+void TH1S::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = fXaxis.GetNbins();
+   fNcells = n;
+   TArrayS::Set(n);
+}
+
+//______________________________________________________________________________
 TH1S& TH1S::operator=(const TH1S &h1)
 {
    if (this != &h1)  ((TH1S&)h1).Copy(*this);
@@ -5512,6 +5545,17 @@ void TH1F::SetBinContent(Int_t bin, Stat_t content)
       while (bin > fNcells-1)  LabelsInflate();
    }
    fArray[bin] = Float_t (content);
+}
+
+//______________________________________________________________________________
+void TH1F::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = fXaxis.GetNbins();
+   fNcells = n;
+   TArrayF::Set(n);
 }
 
 //______________________________________________________________________________
@@ -5699,6 +5743,17 @@ void TH1D::SetBinContent(Int_t bin, Stat_t content)
       while (bin > fNcells-1)  LabelsInflate();
    }
    fArray[bin] = content;
+}
+
+//______________________________________________________________________________
+void TH1D::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = fXaxis.GetNbins();
+   fNcells = n;
+   TArrayD::Set(n);
 }
 
 //______________________________________________________________________________

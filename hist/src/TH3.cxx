@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.18 2002/02/02 11:56:14 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.19 2002/02/18 23:09:41 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1578,6 +1578,17 @@ void TH3C::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TH3C::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
+   fNcells = n;
+   TArrayC::Set(n);
+}
+
+//______________________________________________________________________________
 void TH3C::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH3C.
@@ -1780,6 +1791,17 @@ void TH3S::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TH3S::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
+   fNcells = n;
+   TArrayS::Set(n);
+}
+
+//______________________________________________________________________________
 void TH3S::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH3S.
@@ -1961,6 +1983,17 @@ void TH3F::Reset(Option_t *option)
 }
 
 //______________________________________________________________________________
+void TH3F::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
+   fNcells = n;
+   TArrayF::Set(n);
+}
+
+//______________________________________________________________________________
 void TH3F::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TH3F.
@@ -2139,6 +2172,17 @@ void TH3D::Reset(Option_t *option)
    TH3::Reset(option);
    TArrayD::Reset();
    // should also reset statistics once statistics are implemented for TH3
+}
+
+//______________________________________________________________________________
+void TH3D::SetBinsLength(Int_t n)
+{
+// Set total number of bins including under/overflow
+// Reallocate bin contents array
+   
+   if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2)*(fZaxis.GetNbins()+2);
+   fNcells = n;
+   TArrayD::Set(n);
 }
 
 //______________________________________________________________________________

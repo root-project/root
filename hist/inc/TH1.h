@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.29 2002/01/20 10:21:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.30 2002/02/18 23:08:57 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -229,6 +229,7 @@ public:
     virtual void     PutStats(Stat_t *stats);
     virtual TH1     *Rebin(Int_t ngroup=2, const char*newname="");  // *MENU*
     virtual void     RebinAxis(Axis_t x, Option_t *axis="X");
+    virtual void     Rebuild(Option_t *option="");
     virtual void     Reset(Option_t *option="");
     virtual void     SavePrimitive(ofstream &out, Option_t *option);
     virtual void     Scale(Double_t c1=1);
@@ -246,7 +247,7 @@ public:
     virtual void     SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax);
     virtual void     SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax,
                              Int_t nz, Axis_t zmin, Axis_t zmax);
-    virtual void     SetBinsLength(Int_t) {;} //refefined in derived classes
+    virtual void     SetBinsLength(Int_t n=-1) {;} //refefined in derived classes
     virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void     SetCellContent(Int_t binx, Int_t biny, Stat_t content);
     virtual void     SetCellError(Int_t binx, Int_t biny, Stat_t content);
@@ -308,7 +309,7 @@ public:
     virtual void    SetBinContent(Int_t bin, Stat_t content);
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
-    virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayC::Set(nx);}
+    virtual void    SetBinsLength(Int_t n=-1);
             TH1C&   operator=(const TH1C &h1);
     friend  TH1C    operator*(Double_t c1, TH1C &h1);
     friend  TH1C    operator*(TH1C &h1, Double_t c1) {return operator*(c1,h1);}
@@ -343,7 +344,7 @@ public:
     virtual void    SetBinContent(Int_t bin, Stat_t content);
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
-    virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayS::Set(nx);}
+    virtual void    SetBinsLength(Int_t n=-1);
             TH1S&   operator=(const TH1S &h1);
     friend  TH1S    operator*(Double_t c1, TH1S &h1);
     friend  TH1S    operator*(TH1S &h1, Double_t c1) {return operator*(c1,h1);}
@@ -380,7 +381,7 @@ public:
     virtual void    SetBinContent(Int_t bin, Stat_t content);
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
-    virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayF::Set(nx);}
+    virtual void    SetBinsLength(Int_t n=-1);
             TH1F&   operator=(const TH1F &h1);
     friend  TH1F    operator*(Double_t c1, TH1F &h1);
     friend  TH1F    operator*(TH1F &h1, Double_t c1) {return operator*(c1,h1);}
@@ -417,7 +418,7 @@ public:
     virtual void    SetBinContent(Int_t bin, Stat_t content);
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
-    virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayD::Set(nx);}
+    virtual void    SetBinsLength(Int_t n=-1);
             TH1D&   operator=(const TH1D &h1);
     friend  TH1D    operator*(Double_t c1, TH1D &h1);
     friend  TH1D    operator*(TH1D &h1, Double_t c1) {return operator*(c1,h1);}
