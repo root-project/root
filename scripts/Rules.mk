@@ -121,15 +121,22 @@ endif
 
 ##### utilities #####
 
-MAKELIB       = $(ROOTSYS)/build/unix/makelib.sh $(MKLIBOPTIONS)
 ifeq ($(PLATFORM),win32)
-MAKELIB       = $(ROOTSYS)/build/win/makelib.sh
+MAKELIB       = $(ROOTTEST_HOME)/scripts/winmakelib.sh
+else
+MAKELIB       = $(ROOTSYS)/build/unix/makelib.sh $(MKLIBOPTIONS)
 endif
 
 %.o: %.C
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
 
 %.o: %.cxx
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
+
+%.obj: %.C
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
+
+%.obj: %.cxx
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $<
 
 %_cpp.$(DllSuf) : %.cpp

@@ -1,5 +1,8 @@
 TEST_TARGETS += new
 CLEAN_TARGETS += local_clean
+
+#include $(ROOTSYS)/test/Makefile.arch
+
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
 endif
@@ -7,8 +10,6 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 local_all: main
 .PHONY: main
-
-include $(ROOTSYS)/test/Makefile.arch
 
 
 #ifeq ($(PLATFORM),win32)
@@ -48,7 +49,8 @@ $(DICTS) : %dict.C : %.h %linkdef.h
 
 $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
 	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" "" $@ $^ > $*.build.log
+		   "$(SOFLAGS)" $@ $@ "$^" "$(ROOTLIBS)" > $*.build.log
+
 #ifeq ($(ARCH),aix)
 #		@/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 #else
@@ -64,8 +66,8 @@ $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
 #ifeq ($(PLATFORM),win32)
 #		@bindexplib $* $^ > $*.def
 #		@lib -nologo -MACHINE:IX86 $^ -def:$*.def \
-	#	   $(OutPutOpt)$(subst dll,lib,$@)
-	#	@$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
+#	#	   $(OutPutOpt)$(subst dll,lib,$@)
+#	#	@$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
 #		   $(OutPutOpt)$@
 #else
 #		@$(LD) $(SOFLAGS) $(LDFLAGS) $(LIBSFORLINK) $^ $(OutPutOpt) $@
