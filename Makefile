@@ -385,9 +385,10 @@ install:
 	   $(INSTALL) $(ALLEXECS)               $(DESTDIR)$(BINDIR); \
 	   echo "Installing libraries in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR); \
-	   chmod u+w                            $(DESTDIR)$(LIBDIR)/*; \
-	   echo "[possible error from chmod is ok]"; \
+	   vers=`sed 's|\(.*\)\..*/.*|\1|' < build/version_number` ; \
 	   for lib in $(ALLLIBS) $(CINTLIB); do \
+	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib` ; \
+	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`.$$vers ; \
 	      $(INSTALL) $$lib*                 $(DESTDIR)$(LIBDIR); \
 	   done ; \
 	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
@@ -402,6 +403,9 @@ install:
 	   $(INSTALLDATA) cint/include          $(DESTDIR)$(CINTINCDIR); \
 	   $(INSTALLDATA) cint/lib              $(DESTDIR)$(CINTINCDIR); \
 	   $(INSTALLDATA) cint/stl              $(DESTDIR)$(CINTINCDIR); \
+	   rm -rf $(DESTDIR)$(CINTINCDIR)/include/CVS; \
+	   rm -rf $(DESTDIR)$(CINTINCDIR)/lib/CVS; \
+	   rm -rf $(DESTDIR)$(CINTINCDIR)/stl/CVS; \
 	   echo "Installing PROOF files in $(DESTDIR)$(PROOFDATADIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(PROOFDATADIR); \
 	   $(INSTALLDATA) proof/etc             $(DESTDIR)$(PROOFDATADIR); \
@@ -421,21 +425,101 @@ install:
 	   echo "Installing tutorials in $(DESTDIR)$(TUTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TUTDIR); \
 	   $(INSTALLDATA) tutorials/*           $(DESTDIR)$(TUTDIR); \
+	   rm -rf $(DESTDIR)$(TUTDIR)/CVS; \
 	   echo "Installing tests in $(DESTDIR)$(TESTDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(TESTDIR); \
 	   $(INSTALLDATA) test/*                $(DESTDIR)$(TESTDIR); \
+	   rm -rf $(DESTDIR)$(TESTDIR)/CVS; \
 	   echo "Installing macros in $(DESTDIR)$(MACRODIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MACRODIR); \
 	   $(INSTALLDATA) macros/*              $(DESTDIR)$(MACRODIR); \
+	   rm -rf $(DESTDIR)$(MACRODIR)/CVS; \
 	   echo "Installing man(1) pages in $(DESTDIR)$(MANDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(MANDIR); \
 	   $(INSTALLDATA) man/*                 $(DESTDIR)$(MANDIR); \
+	   rm -rf $(DESTDIR)$(MANDIR)/CVS; \
 	   echo "Installing config files in $(DESTDIR)$(ETCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ETCDIR); \
 	   $(INSTALLDATA) etc/*                 $(DESTDIR)$(ETCDIR); \
+	   rm -rf $(DESTDIR)$(ETCDIR)/CVS; \
 	   echo "Installing utils in $(DESTDIR)$(DATADIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(DATADIR); \
 	   $(INSTALLDATA) build/misc/*          $(DESTDIR)$(DATADIR); \
+	   rm -rf $(DESTDIR)$(DATADIR)/CVS; \
+	fi
+
+uninstall:
+	@if [ -d $(BINDIR) ]; then \
+	   inode1=`ls -id $(BINDIR) | awk '{ print $$1 }'`; \
+	fi; \
+	inode2=`ls -id $$PWD/bin | awk '{ print $$1 }'`; \
+	if [ -d $(BINDIR) ] && [ $$inode1 -eq $$inode2 ]; then \
+	   $(MAKE) distclean ; \
+	else \
+	   rm -f $(DESTDIR)$(BINDIR)/`basename $(CINT)`; \
+	   rm -f $(DESTDIR)$(BINDIR)/`basename $(MAKECINT)`; \
+	   rm -f $(DESTDIR)$(BINDIR)/`basename $(ROOTCINT)`; \
+	   rm -f $(DESTDIR)$(BINDIR)/`basename $(RMKDEP)`; \
+	   if [ "x$(BINDEXP)" != "x" ] ; then \
+	      rm -f $(DESTDIR)$(BINDIR)/`basename $(BINDEXP)`; \
+	   fi; \
+	   rm -f $(DESTDIR)$(BINDIR)/root-config; \
+	   for i in $(ALLEXECS) ; do \
+	      rm -f $(DESTDIR)$(BINDIR)/`basename $$i`; \
+	   done; \
+	   if test -d $(DESTDIR)$(BINDIR) && \
+	      test "x`ls $(DESTDIR)$(BINDIR)`" = "x" ; then \
+	      rm -rf $(DESTDIR)$(BINDIR); \
+	   fi ; \
+	   for lib in $(ALLLIBS) $(CINTLIB); do \
+	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`* ; \
+	   done ; \
+	   if test -d $(DESTDIR)$(LIBDIR) && \
+	      test "x`ls $(DESTDIR)$(LIBDIR)`" = "x" ; then \
+	      rm -rf $(DESTDIR)$(LIBDIR); \
+	   fi ; \
+	   for i in include/*.h ; do \
+	      rm -f $(DESTDIR)$(INCDIR)/`basename $$i`; \
+	   done ; \
+	   if test -d $(DESTDIR)$(INCDIR) && \
+	      test "x`ls $(DESTDIR)$(INCDIR)`" = "x" ; then \
+	      rm -rf $(DESTDIR)$(INCDIR); \
+	   fi ; \
+	   rm -f $(DESTDIR)$(INCDIR)/rmain.cxx; \
+	   rm -rf $(DESTDIR)$(CINTINCDIR); \
+	   rm -rf $(DESTDIR)$(PROOFDATADIR); \
+	   for i in icons/*.xpm ; do \
+	      rm -fr $(DESTDIR)$(ICONPATH)/`basename $$i`; \
+	   done; \
+	   if test -d $(DESTDIR)$(ICONPATH) && \
+	      test "x`ls $(DESTDIR)$(ICONPATH)`" = "x" ; then \
+	      rm -rf $(DESTDIR)$(ICONPATH); \
+	   fi ; \
+	   rm -rf $(DESTDIR)$(TUTDIR); \
+	   rm -rf $(DESTDIR)$(TESTDIR); \
+	   rm -rf $(DESTDIR)$(DOCDIR); \
+	   rm -rf $(DESTDIR)$(MACRODIR); \
+	   for i in man/* ; do \
+	      rm -fr $(DESTDIR)$(MANDIR)/`basename $$i`; \
+	   done; \
+	   if test -d $(DESTDIR)$(MANDIR) && \
+	      test "x`ls $(DESTDIR)$(MANDIR)`" = "x" ; then \
+	      rm -rf $(DESTDIR)$(MANDIR); \
+	   fi ; \
+	   for i in etc/* ; do \
+	      rm -fr $(DESTDIR)$(ETCDIR)/`basename $$i`; \
+	   done; \
+	   if test -d $(DESTDIR)$(ETCDIR) && \
+	      test "x`ls $(DESTDIR)$(ETCDIR)`" = "x" ; then \
+	      rm -rf $(DESTDIR)$(ETCDIR); \
+	   fi ; \
+	   for i in build/misc/* ; do \
+	      rm -fr $(DESTDIR)$(DATADIR)/`basename $$i`; \
+	   done; \
+	   if test -d $(DESTDIR)$(DATADIR) && \
+	      test "x`ls $(DESTDIR)$(DATADIR)`" = "x" ; then \
+	      rm -rf $(DESTDIR)$(DATADIR); \
+	   fi ; \
 	fi
 
 showbuild:
