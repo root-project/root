@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.8 2000/12/13 15:13:53 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.9 2000/12/19 14:34:31 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -214,7 +214,6 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                int sport    = fPort;
                int security = TAuthenticate::kNormal;
                const char *image = word[1];
-               const char *user  = fUser;
                for (int i = 2; i < nword; i++) {
                   if (!strncmp(word[i], "perf=", 5))
                      perfidx = atoi(word[i]+5);
@@ -222,8 +221,6 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                      image = word[i]+6;
                   if (!strncmp(word[i], "port=", 5))
                      sport = atoi(word[i]+5);
-                  if (!strncmp(word[i], "user=", 5))  // field not used
-                     user = word[i]+5;
                   if (!strncmp(word[i], "srp", 3))
                      security = TAuthenticate::kSRP;
                }
