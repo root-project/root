@@ -5483,6 +5483,7 @@ int isrecursive;
 #ifndef G__OLDIMPLEMENTATION1727
   char *pexplicitarg;
 #endif
+  int templatedConstructor = 0;
 
   funcname = (char*)malloc(strlen(funcnamein)+1);
   strcpy(funcname,funcnamein);
@@ -5499,20 +5500,27 @@ int isrecursive;
 #ifndef G__OLDIMPLEMENTATION1560
   ptmplt = strchr(funcname,'<');
   if(ptmplt) {
-    int tmp;
-    *ptmplt = 0; 
-    if(G__defined_templatefunc(funcname)) {
-      G__hash(funcname,hash,tmp);
-    }
-    else {
-      *ptmplt = '<';
-      ptmplt = (char*)0;
-    }
+     if ((-1!=env_tagnum) && strcmp(funcname,G__struct.name[env_tagnum])==0) {
+        /* this is probably a template constructor of a class template */
+        templatedConstructor = 1;
+        ptmplt = (char*)0;
+        pexplicitarg = 0;
+     } else {
+        int tmp;
+        *ptmplt = 0; 
+        if(G__defined_templatefunc(funcname)) {
+           G__hash(funcname,hash,tmp);
+        }
+        else {
+           *ptmplt = '<';
+           ptmplt = (char*)0;
+        }
+     }
   }
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1727
-  if((pexplicitarg=strchr(funcname,'<'))) {
+  if(!templatedConstructor && (pexplicitarg=strchr(funcname,'<'))) {
     /* funcname="f<int>" ->  funcname="f" , pexplicitarg="int>" */
     int tmp=0;
     *pexplicitarg = 0;

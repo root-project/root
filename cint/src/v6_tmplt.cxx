@@ -1541,10 +1541,19 @@ void G__declare_template()
      *5 template<class T> A<T> f()
      *6 template<class T> A<T> A<T>::v;
      *7 template<class T> A<T> { }  constructor
+     *  also the return value could be a pointer or reference or const 
+     *  or any combination of the 3
      *                      ^>^            */
 #ifndef G__OLDIMPLEMENTATION1275
     c = G__fgetstream_template(temp3,">");
-    c = G__fgetname_template(temp2,"(;");
+    
+    c = G__fgetname_template(temp2,"*&(;");
+    while (c=='&'||c=='*') {
+       /* we skip all the & and * we see and what's in between.
+          This should remove from the name of the function (what we are looking for)
+          anything preceding combinations of *,& and const. */
+       c = G__fgetname_template(temp2,"*&(;");
+    }
     if(0==temp2[0]) { /* constructor template in class definition */
       strcat(temp,"<");
       strcat(temp,temp3);
@@ -1556,15 +1565,15 @@ void G__declare_template()
 #endif
     if(isspace(c)) {
       if(strcmp(temp2,"::~")==0)
-	c = G__fgetname_template(temp2+3,"(;");
+         c = G__fgetname_template(temp2+3,"(;");
       else if(strcmp(temp2,"::")==0)
-	c = G__fgetname_template(temp2+2,"(;");
+         c = G__fgetname_template(temp2+2,"(;");
       else if((p=strstr(temp2,"::"))&&strcmp(p,"::operator")==0) {
-	/* A<T> A<T>::operator T () { } */
-	c='<'; /* this is a flag indicating this is a member function tmplt */
+         /* A<T> A<T>::operator T () { } */
+         c='<'; /* this is a flag indicating this is a member function tmplt */
       }
       else if(strcmp(temp2,"operator")==0) {
-	c = G__fgetstream(temp2+8,"(");
+         c = G__fgetstream(temp2+8,"(");
       }
     }
     if(';'==c) ismemvar=1;
@@ -1576,20 +1585,20 @@ void G__declare_template()
        *5 template<class T> A<T> f()            f        */
       p=strchr(temp2,':');
       if(p) {
-	c='<';
-	if(p!=temp2) {
-	  p=strchr(temp2,'<');
-	  *p='\0';  /* non constructor/destructor member function */
-	  strcpy(temp,temp2);
-	}
+         c='<';
+         if(p!=temp2) {
+            p=strchr(temp2,'<');
+            *p='\0';  /* non constructor/destructor member function */
+            strcpy(temp,temp2);
+         }
       }
       else {
 #ifndef G__OLDIMPLEMENTATION1275
-	if(temp2[0]) strcpy(temp,temp2);
+         if(temp2[0]) strcpy(temp,temp2);
 #else
-	strcpy(temp,temp2);
+         strcpy(temp,temp2);
 #endif
-     }
+      }
     }
     else if('<'==c) {
       /* Do nothing */
@@ -1610,14 +1619,14 @@ void G__declare_template()
       c=G__fgetname(temp,"*(;<");
 #endif
       if(0==strcmp(temp,"const")) {
-	G__constvar = G__CONSTVAR;
-	if(G__dispsource) G__fprinterr(G__serr,"%s",temp);
-	if(!isspace(c)) fseek(G__ifile.fp,-1,SEEK_CUR);
+         G__constvar = G__CONSTVAR;
+         if(G__dispsource) G__fprinterr(G__serr,"%s",temp);
+         if(!isspace(c)) fseek(G__ifile.fp,-1,SEEK_CUR);
       }
       else {
-	G__disp_mask = 0;
-	fsetpos(G__ifile.fp,&posx);
-	G__ifile.line_number = linex;
+         G__disp_mask = 0;
+         fsetpos(G__ifile.fp,&posx);
+         G__ifile.line_number = linex;
       }
 #endif
       c=G__fgetstream(temp,"(;<");
@@ -1627,7 +1636,7 @@ void G__declare_template()
     else {
       p=strchr(temp2,'<');
       if(p) {
-	*p = '\0';
+      *p = '\0';
 	strcpy(temp,temp2);
 	c='<';
       }
@@ -1676,8 +1685,8 @@ void G__declare_template()
       c=G__fgetname_template(temp,"(<");
 #endif
       if(isspace(c) && strcmp(temp,"operator")==0) {
-	c=G__fgetstream(temp+8,"(");
-	if('('==c&&0==strcmp(temp,"operator(")) c=G__fgetname(temp+9,"(");
+         c=G__fgetstream(temp+8,"(");
+         if('('==c&&0==strcmp(temp,"operator(")) c=G__fgetname(temp+9,"(");
       }
 #else
       c=G__fgetname_template(temp,"(<");
@@ -1689,44 +1698,44 @@ void G__declare_template()
    * template<..> type f(T a,S b) { ... }
    *                     ^                   */
   if('<'==c && strcmp(temp,"operator")!=0) {
-    /* member function template */
-    fsetpos(G__ifile.fp,&pos);
-    G__ifile.line_number = store_line_number;
-    if(G__dispsource) G__disp_mask=0;
-    G__createtemplatememfunc(temp);
-    /* skip body of member function template */
-    c = G__fignorestream("{;");
-    if(';'!=c) c = G__fignorestream("}");
-    G__freetemplatearg(targ);
+     /* member function template */
+     fsetpos(G__ifile.fp,&pos);
+     G__ifile.line_number = store_line_number;
+     if(G__dispsource) G__disp_mask=0;
+     G__createtemplatememfunc(temp);
+     /* skip body of member function template */
+     c = G__fignorestream("{;");
+     if(';'!=c) c = G__fignorestream("}");
+     G__freetemplatearg(targ);
   }
   else {
-    if(G__dispsource) G__disp_mask=0;
-    /* global function template */
-    if(strcmp(temp,"operator")==0) {
+     if(G__dispsource) G__disp_mask=0;
+     /* global function template */
+     if(strcmp(temp,"operator")==0) {
 #ifdef G__OLDIMPLEMENTATION1461
 #ifndef G__OLDIMPLEMENTATION1117
-      if('('==c) {
-	G__genericerror("Error: operator() overloading syntax error");
-	return;
-      }
+        if('('==c) {
+           G__genericerror("Error: operator() overloading syntax error");
+           return;
+        }
 #endif
 #endif
-      /* in case of operator< operator<= operator<< */
-      temp[8]=c; /* operator< */
-      c=G__fgetstream(temp+9,"(");
+        /* in case of operator< operator<= operator<< */
+        temp[8]=c; /* operator< */
+        c=G__fgetstream(temp+9,"(");
 #ifndef G__OLDIMPLEMENTATION1461
-      if (temp[8] == '(') {
-        if (c == ')') {
-          temp[9] = c;
-          c=G__fgetstream(temp+10,"(");
+        if (temp[8] == '(') {
+           if (c == ')') {
+              temp[9] = c;
+              c=G__fgetstream(temp+10,"(");
+           }
+           else {
+              G__genericerror("Error: operator() overloading syntax error");
+              return;
+           }
         }
-        else {
-          G__genericerror("Error: operator() overloading syntax error");
-          return;
-        }
-      }
 #endif
-    }
+     }
     G__createtemplatefunc(temp,targ,store_line_number,&pos);
   }
 }

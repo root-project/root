@@ -119,7 +119,7 @@ char *new_name;
   int store_def_struct_member,store_tagdefining;
 
 #ifndef G__PHILIPPE12
-  cin=G__fgetvarname(new_name,"&,;=():}");
+  cin=G__fgetvarname(new_name,"*&,;=():}");
   if (cin=='&') {
 #ifndef G__OLDIMPLEMENTATION1353
     if(0==strcmp(new_name,"operator")) {
@@ -134,6 +134,15 @@ char *new_name;
     strcat(new_name,"&");
     cin = ' ';
 #endif
+  } else if (cin=='*') {
+    if(0==strcmp(new_name,"operator")) {
+      new_name[8] = cin;
+      cin=G__fgetvarname(new_name+9,",;=():}");
+    }
+    else {
+      strcat(new_name,"*");
+      cin = ' ';
+    }
   }
 #else
   cin=G__fgetvarname(new_name,",;=():}");
