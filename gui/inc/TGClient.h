@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.3 2001/05/15 14:17:48 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.4 2001/10/03 20:59:59 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -60,6 +60,7 @@ protected:
    Bool_t         fGlobalNeedRedraw; // true if at least one window needs to be redrawn
    Bool_t         fForceRedraw;      // redraw widgets as soon as possible
    THashList     *fWlist;            // list of frames
+   TList         *fPlist;            // list of popup windows used in HandleMaskEvent()
    TList         *fUWHandlers;       // list of event handlers for unknown windows
    EGEventType    fWaitForEvent;     // event to wait for
    Window_t       fWaitForWindow;    // window in which to wait for event
@@ -84,6 +85,8 @@ public:
    void    NeedRedraw(TGWindow *w);
    void    RegisterWindow(TGWindow *w);
    void    UnregisterWindow(TGWindow *w);
+   void    RegisterPopup(TGWindow *w);
+   void    UnregisterPopup(TGWindow *w);
    void    AddUnknownWindowHandler(TGUnknownWindowHandler *h);
    void    RemoveUnknownWindowHandler(TGUnknownWindowHandler *h);
    Bool_t  HandleInput();

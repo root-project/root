@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.5 2001/11/18 17:25:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.6 2002/01/23 15:48:05 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -685,6 +685,8 @@ void TGPopupMenu::PlaceMenu(Int_t x, Int_t y, Bool_t stick_mode, Bool_t grab_poi
    } else {
       fHasGrab = kFALSE;
    }
+
+   gClient->RegisterPopup(this);
 }
 
 //______________________________________________________________________________
@@ -725,6 +727,8 @@ Int_t TGPopupMenu::EndMenu(void *&userData)
 
    // then unmap itself
    UnmapWindow();
+
+   gClient->UnregisterPopup(this);
 
    return id;
 }
