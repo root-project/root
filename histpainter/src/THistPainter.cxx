@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.84 2002/06/15 09:38:51 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.85 2002/07/03 20:25:04 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1831,6 +1831,7 @@ void THistPainter::PaintColorLevels(Option_t *)
 
    Style_t fillsav   = fH->GetFillStyle();
    Style_t colsav    = fH->GetFillColor();
+   fH->SetFillStyle(1);
    fH->TAttFill::Modify();
 
 //                  Initialize the levels on the Z axis
@@ -2175,7 +2176,7 @@ void THistPainter::PaintContour(Option_t *option)
             }
             if (nadd == 0) break;
          }
-         theColor = Int_t((ipoly+1.99)*Float_t(ncolors)/Float_t(ndivz));
+         theColor = Int_t((ipoly+0.99)*Float_t(ncolors)/Float_t(ndivz));
          icol = gStyle->GetColorPalette(theColor);
          if (ndivz > 1) fH->SetFillColor(icol);
          fH->TAttFill::Modify();
@@ -3773,16 +3774,15 @@ void THistPainter::PaintPalette()
    Double_t y1,y2;
    static char chopt[5] = "";
    if (Hoption.Logz) {
-      wlmin = Hparam.zmin;
-      if (wmax > 0) wlmax = TMath::Log10(wmax);
-      else          wlmax = Hparam.zmax;
+      wlmin = TMath::Log10(wmin);
+      wlmax = TMath::Log10(wmax);
    }
    Double_t ws    = wlmax-wlmin;
    if (xmax > x2) xmax = x2-0.01*xr;
    Int_t ncolors = gStyle->GetNumberOfColors();
    Int_t ndivz = TMath::Abs(fH->GetContour());
    Int_t theColor,color;
-   Double_t scale = ndivz/(Hparam.zmax - Hparam.zmin);
+   Double_t scale = ndivz/(wlmax - wlmin);
    for (Int_t i=0;i<ndivz;i++) {
       Double_t w1 = fH->GetContourLevel(i);
       if (w1 < wlmin) w1 = wlmin;
@@ -3791,7 +3791,7 @@ void THistPainter::PaintPalette()
       if (w2 <= wlmin) continue;
       y1 = ymin + (w1-wlmin)*(ymax-ymin)/ws;
       y2 = ymin + (w2-wlmin)*(ymax-ymin)/ws;
-      color = Int_t(0.01+(w1-Hparam.zmin)*scale);
+      color = Int_t(0.01+(w1-wlmin)*scale);
       theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
       box.SetFillColor(gStyle->GetColorPalette(theColor));
       box.TAttFill::Modify();
@@ -4510,7 +4510,7 @@ void THistPainter::DefineColorLevels(Int_t ndivz)
    Int_t ncolors = gStyle->GetNumberOfColors();
    for (i = 0; i < ndivz; ++i) {
       funlevel[i]   = fH->GetContourLevel(i);
-      theColor = Int_t(i*Float_t(ncolors)/Float_t(ndivz));
+      theColor = Int_t((i+0.99)*Float_t(ncolors)/Float_t(ndivz));
       colorlevel[i] = gStyle->GetColorPalette(theColor);
    }
    colorlevel[ndivz] = gStyle->GetColorPalette(ncolors-1);
