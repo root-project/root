@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.88 2004/06/04 16:47:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.89 2004/06/05 05:22:22 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1334,7 +1334,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
 
    if ((opt.Length()==0) || (opt.First('S')!=kNPOS)) {
       if (!libs.IsNull()) libs.Append(" ");
-#ifndef WIN32
+//#ifndef WIN32
       const char *linked;
       if ((linked = GetLinkedLibraries())) {
          if (fLinkedLibs != LINKEDLIBS) {
@@ -1351,7 +1351,7 @@ const char *TSystem::GetLibraries(const char *regexp, const char *options,
             libs.Append(linked);
          }
       } else
-#endif
+//#endif
          libs.Append(fLinkedLibs);
    }
 

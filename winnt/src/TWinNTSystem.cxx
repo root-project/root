@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.91 2004/05/28 20:21:38 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.92 2004/06/03 13:29:09 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2806,6 +2806,11 @@ const char *TWinNTSystem::GetLinkedLibraries()
 {
    // Get list of shared libraries loaded at the start of the executable.
    // Returns 0 in case list cannot be obtained or in case of error.
+   char winPath[256];
+   char winDrive[256];
+   char winDir[256];
+   char winName[256];
+   char winExt[256];
 
    if (!gApplication) return 0;
 
@@ -2902,9 +2907,14 @@ const char *TWinNTSystem::GetLinkedLibraries()
                   if (dll.EndsWith(".dll")) {
                      char *dllPath = DynamicPathName(dll, kTRUE);
                      if (dllPath) {
-                        if (!linkedLibs.IsNull())
-                           linkedLibs += " ";
-                        linkedLibs += dllPath;
+                        char *winPath = getenv("windir");
+                        _splitpath(winPath,winDrive,winDir,winName,winExt);
+                        if(!strstr(dllPath, winDir)) {
+                           if (!linkedLibs.IsNull())
+                              linkedLibs += " ";
+                           linkedLibs += dllPath;
+                        }
+                        delete [] winPath;
                      }
                      delete [] dllPath;
                   }
