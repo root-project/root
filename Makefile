@@ -33,7 +33,6 @@ ifeq ($(EXPLICITLINK),yes)
 include config/Makefile.depend
 endif
 ifneq ($(findstring map, $(MAKECMDGOALS)),)
-#ifeq ($(MAKECMDGOALS), map-pythia)
 include config/Makefile.depend
 endif
 
@@ -404,6 +403,8 @@ map::   $(RLIBMAP)
 	$(RLIBMAP) -r $(ROOTMAP) -l $(CORELIB) -d $(CORELIBDEP) -c $(COREL)
 
 dist:
+	@rm -f $(ROOTMAP)
+	@$(MAKE) map
 	@$(MAKEDIST)
 
 distsrc:
