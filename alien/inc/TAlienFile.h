@@ -1,4 +1,4 @@
-// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.1 2003/11/13 15:15:11 rdm Exp $
+// @(#)root/alien:$Name:  $:$Id: TAlienFile.h,v 1.2 2003/12/30 13:16:50 brun Exp $
 // Author: Andreas Peters 11/09/2003
 
 /*************************************************************************
@@ -53,7 +53,7 @@ private:
    Int_t    SysRead(Int_t fd, void *buf, Int_t len);
    Int_t    SysWrite(Int_t fd, const void *buf, Int_t len);
    Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence);
-   Int_t    SysStat(Int_t fd, Long_t *id, Long_t *size, Long_t *flags,
+   Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags,
                     Long_t *modtime);
    Int_t    SysSync(Int_t);
 
@@ -86,7 +86,7 @@ public:
    void       *OpenDirectory(const char *name);
    void        FreeDirectory(void *dirp);
    const char *GetDirEntry(void *dirp);
-   Int_t       GetPathInfo(const char *path, Long_t *id, Long_t *size,
+   Int_t       GetPathInfo(const char *path, Long_t *id, Long64_t *size,
                            Long_t *flags, Long_t *modtime);
    Bool_t      AccessPathName(const char *path, EAccessMode mode);
 
