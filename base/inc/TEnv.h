@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.3 2000/06/16 17:08:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.h,v 1.4 2000/12/13 15:13:45 brun Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -45,6 +45,7 @@
 //    Root.MemStat              (int)          (*)                      //
 //    Root.MemStat.size         (int)          (*)                      //
 //    Root.MemStat.cnt          (int)          (*)                      //
+//    Root.MemCheck             (bool)         (*)                      //
 //    Root.DynamicPath          (string)                                //
 //    Rint.Logon                (string)                                //
 //    Rint.Logoff               (string)                                //

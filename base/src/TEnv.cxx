@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.6 2001/04/23 08:33:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.7 2001/08/31 17:47:12 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 //    Root.MemStat              (bool)         (*)                      //
 //    Root.MemStat.size         (int)          (*)                      //
 //    Root.MemStat.cnt          (int)          (*)                      //
+//    Root.MemCheck             (bool)         (*)                      //
 //    Root.ObjectStat           (bool)         (*)                      //
 //    Root.MacroPath            (string)                                //
 //    Root.DynamicPath          (string)                                //
