@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.56 2001/10/02 07:30:37 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.57 2001/10/15 07:01:11 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1151,11 +1151,14 @@ void *TClass::New(Bool_t defConstructor)
 
    if (!fClassInfo) {
       // We only have a fake class. Use TStreamerInfo service.
+      Bool_t statsave = GetObjectStat();
+      SetObjectStat(kFALSE);
       TStreamerInfo *sinfo = GetStreamerInfo();
       Int_t l = sinfo->GetSize();
       char *pp = new char[l];
       memset(pp, 0, l);
       sinfo->New(pp);
+      SetObjectStat(statsave);
       return pp;
    }
 
