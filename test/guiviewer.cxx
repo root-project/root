@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.4 2001/05/28 14:10:30 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guiviewer.cxx,v 1.5 2001/05/28 16:24:06 brun Exp $
 // Author: Brett Viren   04/15/2001
 
 // guiviewer.cxx: GUI test program showing TGTableLayout widget manager,
@@ -27,9 +27,10 @@
 #include <iostream.h>
 
 
-
 Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)
 {
+   const UInt_t max_size = 300;
+
    // Memory management isn't the best in this class, but make a half
    // hearted attempts not to gush too much....
    fCleanup = new TList;
@@ -47,7 +48,7 @@ Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)
 
    // The Canvas
    TRootEmbeddedCanvas* recanvas =
-       new TRootEmbeddedCanvas("Shapes",table,300,300);
+       new TRootEmbeddedCanvas("Shapes",table,max_size,max_size);
    tloh = new TGTableLayoutHints(2,5,2,6,
                                  kLHintsExpandX|kLHintsExpandY |
                                  kLHintsShrinkX|kLHintsShrinkY |
@@ -57,13 +58,17 @@ Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)
    fCanvas = recanvas->GetCanvas();
 
    // The sliders
-   fHSlider = new TGDoubleHSlider(table,300,kDoubleScaleBoth,100);
+   fHSlider = new TGDoubleHSlider(table,max_size,kDoubleScaleBoth,100,
+                                  kHorizontalFrame,GetDefaultFrameBackground(),
+                                  kFALSE, kTRUE);
    tloh = new TGTableLayoutHints(2,5,0,1,
                                  kLHintsExpandX|kLHintsShrinkX|kLHintsFillX);
    table->AddFrame(fHSlider,tloh);
    fHSlider->Connect("PositionChanged()","Viewer",this,"DoSlider()");
 
-   fVSlider = new TGDoubleVSlider(table,300,kDoubleScaleBoth,200);
+   fVSlider = new TGDoubleVSlider(table,max_size,kDoubleScaleBoth,200,
+                                  kVerticalFrame,GetDefaultFrameBackground(),
+                                  kTRUE,kTRUE);
    tloh = new TGTableLayoutHints(0,1,2,6,
                                  kLHintsExpandY|kLHintsShrinkY|kLHintsFillY);
    table->AddFrame(fVSlider,tloh);
@@ -71,28 +76,28 @@ Viewer::Viewer(const TGWindow *win) : TGMainFrame(win,500,500)
 
    // The scales
    fHScaleCanvas =
-       new TRootEmbeddedCanvas("H Scale",table,300,50);
+       new TRootEmbeddedCanvas("H Scale",table,max_size,50);
    tloh = new TGTableLayoutHints(2,5,1,2,
                                  kLHintsExpandX|kLHintsShrinkX|kLHintsFillX);
    table->AddFrame(fHScaleCanvas,tloh);
    fHScaleCanvas->GetCanvas()->cd();
+
    fHScaleCanvas->GetCanvas()->Range(0,0,1,1);
    fHScale = new TGaxis(0.0,0.5, 1.0,0.5, 0.0,100.0, 510, "-");
-   //fHScale->SetLabelOffset(0.4);
    fHScale->SetLabelSize(0.4);
    fHScale->SetName("X Scale");
    fHScale->Draw();
    fHScaleCanvas->GetCanvas()->SetEditable(kFALSE);
 
    fVScaleCanvas =
-       new TRootEmbeddedCanvas("V Scale",table,50,300);
+       new TRootEmbeddedCanvas("V Scale",table,50,max_size);
    tloh = new TGTableLayoutHints(1,2,2,6,
                                  kLHintsExpandY|kLHintsShrinkY|kLHintsFillY);
    table->AddFrame(fVScaleCanvas,tloh);
    fVScaleCanvas->GetCanvas()->cd();
+
    fVScaleCanvas->GetCanvas()->Range(0,0,1,1);
    fVScale = new TGaxis(0.5,0.0, 0.50001,1.0, 0.0,100.0, 510, "-");
-   //fVScale->SetLabelOffset(0.4);
    fVScale->SetLabelSize(0.4);
    fVScale->SetName("Y Scale");
    fVScale->Draw();
