@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.59 2002/04/01 17:12:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.60 2002/05/01 17:48:49 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -430,6 +430,9 @@ void TFile::Init(Bool_t create)
          TDirectory::ReadKeys();
          gDirectory = this;
          if (!GetNkeys()) Recover();
+      } else if (fBEGIN+nbytes == fEND) {
+         Warning("TFile","Opening a file with no keys");
+         gDirectory = this;         
       } else {
          if (fEND > size) {
             Error("TFile","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
@@ -1569,7 +1572,7 @@ void TFile::ReadStreamerInfo()
 
    if (list == 0) return;
    if (gDebug > 0) printf("Calling ReadStreamerInfo for file: %s\n",GetName());
-//list->Dump();
+
    // loop on all TStreamerInfo classes
    TStreamerInfo *info;
    TIter next(list);
