@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.22 2004/09/17 08:46:25 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.23 2004/10/07 14:08:18 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -166,14 +166,17 @@ TGComboBox::~TGComboBox()
 {
    // Delete a combo box widget.
 
-   delete fDDButton;
-   delete fSelEntry;
-   delete fTextEntry;
+   if (!MustCleanup()) {
+      delete fDDButton;
+      delete fSelEntry;
+      delete fTextEntry;
+      delete fLhs;
+      delete fLhb;
+   }
+
+   delete fLhdd;
    delete fListBox;
    delete fComboFrame;
-   delete fLhs;
-   delete fLhb;
-   delete fLhdd;
 }
 
 //______________________________________________________________________________

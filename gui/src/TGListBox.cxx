@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.24 2004/09/06 14:12:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.25 2004/10/21 12:07:54 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -358,7 +358,7 @@ void TGLBContainer::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t aft
    if (!el && afterID != -1)
       AddFrame(lbe, lhints);
    else {
-      nw = new TGFrameElement;
+      nw = new TGFrameElement(lbe, lhints);
       nw->fFrame  = lbe;
       nw->fLayout = lhints;
       nw->fState  = 1;
@@ -390,7 +390,7 @@ void TGLBContainer::AddEntrySort(TGLBEntry *lbe, TGLayoutHints *lhints)
    if (!el)
       AddFrame(lbe, lhints);
    else {
-      nw = new TGFrameElement;
+      nw = new TGFrameElement(lbe, lhints);
       nw->fFrame  = lbe;
       nw->fLayout = lhints;
       nw->fState  = 1;
@@ -712,9 +712,11 @@ TGListBox::~TGListBox()
 {
    // Delete a listbox widget.
 
-   delete fVScrollbar;
+   if (!MustCleanup()) {
+      delete fVScrollbar;
+      delete fVport;
+   }
    delete fLbc;
-   delete fVport;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.10 2001/08/21 17:34:27 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGView.cxx,v 1.11 2003/05/28 11:55:32 rdm Exp $
 // Author: Fons Rademakers   30/6/2000
 
 /*************************************************************************
@@ -139,9 +139,12 @@ TGView::~TGView()
    // Delete view.
 
    delete fScrollTimer;
-   delete fCanvas;
-   delete fHsb;
-   delete fVsb;
+
+   if (!MustCleanup()) {
+      delete fCanvas;
+      delete fHsb;
+      delete fVsb;
+   }
 }
 
 //______________________________________________________________________________

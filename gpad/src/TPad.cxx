@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.145 2004/09/13 16:39:12 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.146 2004/10/19 17:13:27 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3670,8 +3670,13 @@ void TPad::Print(const char *filenam, Option_t *option)
          return;
       }
       Update();
+
+      Int_t saver = gErrorIgnoreLevel;
+      gErrorIgnoreLevel = kFatal;
       TImage* img = TImage::Create();
-      if (!img && (gtype == TImage::kGif)) {
+      gErrorIgnoreLevel = saver;
+
+      if (!img || (gtype == TImage::kGif)) {
          Int_t wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
 
          gVirtualX->SelectWindow(wid);

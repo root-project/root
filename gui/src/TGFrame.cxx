@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.98 2004/10/15 15:36:41 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.99 2004/10/21 12:07:54 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -787,7 +787,6 @@ TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *par
    fMustCleanup   = kNoCleanup;
 
    SetLayoutManager(new TGVerticalLayout(this));
-
    SetWindowName();
 }
 
@@ -799,7 +798,7 @@ TGCompositeFrame::~TGCompositeFrame()
    if (fMustCleanup != kNoCleanup) {
       Cleanup();
    } else {
-      TGFrameElement *el;
+      TGFrameElement *el = 0;
       TIter next(fList);
 
       while ((el = (TGFrameElement *) next())) {
@@ -810,12 +809,15 @@ TGCompositeFrame::~TGCompositeFrame()
          if (el->fLayout) {
             el->fLayout->fFE = 0;
          }
+         fList->Remove(el);
          delete el;
       }
    }
 
    delete fList;
    delete fLayoutManager;
+   fList = 0;
+   fLayoutManager = 0;
 }
 
 //______________________________________________________________________________
@@ -879,6 +881,7 @@ void TGCompositeFrame::Cleanup()
             delete el->fLayout;
          }
       }
+      fList->Remove(el);
       delete el;
    }
 }
