@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.32 2002/08/05 18:13:15 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.33 2002/10/31 07:27:36 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -305,7 +305,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
    TFormula *oldformula;
    Int_t modulo,plus,puiss10,puiss10bis,moins,multi,divi,puiss,et,ou,petit,grand,egal,diff,peteg,grdeg,etx,oux,rshift,lshift;
    char t;
-
+   TString slash("/"), escapedSlash("\\/");
   Int_t inter2 = 0;
   SetNumber(0);
 
@@ -326,7 +326,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
         if (chaine(i-1,1) == "]") compt2--;
         if (chaine(i-1,1) == "(") compt++;
         if (chaine(i-1,1) == ")") compt--;
-        if (compt < 0) err = 40; // more open parenthesis than close paraenthesis
+        if (compt < 0) err = 40; // more open parentheses than close parentheses
         if (compt2< 0) err = 42; // more ] than [
         if (compt==0 && (i!=lchain || lchain==1)) parenthese = kFALSE;
         // if (lchain<3 && chaine(0,1)!="(" && chaine(lchain-1,1)!=")") parenthese = kFALSE;
@@ -392,7 +392,11 @@ if (err==0) {
        && chaine(j-2,1)!="^" && compt3==0 && compt4==0 && moins==0 && puiss10bis==0) moins=j;
     if (chaine(i-1,1)=="%" && compt==0 && compt2==0 && modulo==0) {puiss10=0; modulo=i;}
     if (chaine(i-1,1)=="*" && compt==0 && compt2==0 && multi==0)  {puiss10=0; multi=i;}
-    if (chaine(j-1,1)=="/" && compt4==0 && compt3==0 && divi==0)  {puiss10=0; divi=j;}
+    if (chaine(j-1,1)=="/" && chaine(j-2,1)!="\\"
+	&& compt4==0 && compt3==0 && divi==0)  
+      {
+	puiss10=0; divi=j;
+      }
     if (chaine(j-1,1)=="^" && compt4==0 && compt3==0 && puiss==0) {puiss10=0; puiss=j;}
     j--;
   }
@@ -690,14 +694,16 @@ if (err==0) {
           if (find == 0) {
 //*-*- Check if chaine is a defined variable.
 //*-*- Note that DefinedVariable can be overloaded
-               k = DefinedVariable(chaine);
+  	       ctemp = chaine;
+	       ctemp.ReplaceAll(escapedSlash, slash);
+               k = DefinedVariable(ctemp);
                if (k >= 5000 && k < 10000) {
-                  fExpr[fNoper] = chaine;
+                  fExpr[fNoper] = ctemp;
                   fOper[fNoper] = 100000 + k;
                   fNstring++;
                   fNoper++;
                } else if ( k >= 0 ) {
-                  fExpr[fNoper] = chaine;
+                  fExpr[fNoper] = ctemp;
                   fOper[fNoper] = 100000 + k;
                   if (k <kMAXFOUND && !fAlreadyFound.TestBitNumber(k)) {
                      fAlreadyFound.SetBitNumber(k);
