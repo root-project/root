@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.5 2000/12/22 12:36:00 rdm Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.cxx,v 1.6 2002/01/16 13:53:53 brun Exp $
 // Author: Rene Brun   05/09/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -283,7 +283,7 @@ void TViewerX3D::CreateViewer(const char *name)
 
    // Misc
 
-   SetWindowName(name); 
+   SetWindowName(name);
    SetIconName(name);
    SetClassHints("X3DViewer", "X3DViewer");
 
@@ -303,26 +303,26 @@ Int_t TViewerX3D::ExecCommand(Int_t px, Int_t py, char command)
 // This function may be called from a script to animate an X3D picture
 // px, py  mouse position
 //command = 0       --- move to px,py
-//        = w       --- wireframe mode   
-//        = e       --- hidden line mode   
-//        = r       --- hidden surface mode   
-//        = u       --- move object down   
-//        = i       --- move object up   
-//        = o       --- toggle controls style   
-//        = s       --- toggle stereo display   
-//        = d       --- toggle blue stereo view   
-//        = f       --- toggle double buffer   
-//        = h       --- move object right   
-//        = j       --- move object forward   
-//        = k       --- move object backward   
-//        = l       --- move object left   
-//        = x a     --- rotate about x   
-//        = y b     --- rotate about y   
-//        = z c     --- rotate about z   
-//        = 1 2 3   --- autorotate about x   
-//        = 4 5 6   --- autorotate about y   
-//        = 7 8 9   --- autorotate about z   
-//        = [ ] { } --- adjust focus 
+//        = w       --- wireframe mode
+//        = e       --- hidden line mode
+//        = r       --- hidden surface mode
+//        = u       --- move object down
+//        = i       --- move object up
+//        = o       --- toggle controls style
+//        = s       --- toggle stereo display
+//        = d       --- toggle blue stereo view
+//        = f       --- toggle double buffer
+//        = h       --- move object right
+//        = j       --- move object forward
+//        = k       --- move object backward
+//        = l       --- move object left
+//        = x a     --- rotate about x
+//        = y b     --- rotate about y
+//        = z c     --- rotate about z
+//        = 1 2 3   --- autorotate about x
+//        = 4 5 6   --- autorotate about y
+//        = 7 8 9   --- autorotate about z
+//        = [ ] { } --- adjust focus
 // Example:
 /*
 {
@@ -342,7 +342,7 @@ Int_t TViewerX3D::ExecCommand(Int_t px, Int_t py, char command)
    }
 }
 */
-       
+
    return x3d_exec_command(px,py,command);
 }
 
@@ -375,11 +375,7 @@ void TViewerX3D::InitX3DWindow()
    while (lnk) {
       obj = lnk->GetObject();
       TAtt3D *att;
-#ifdef R__RTTI
       if ((att = dynamic_cast<TAtt3D*>(obj)))
-#else
-      if ((att = (TAtt3D*)obj->IsA()->DynamicCast(TAtt3D::Class(), obj)))
-#endif
          att->Sizeof3D();
       lnk = lnk->Next();
    }
