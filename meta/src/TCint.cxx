@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.33 2001/10/03 18:56:44 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.34 2001/10/25 06:20:29 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -58,6 +58,7 @@ extern "C" int G__const_setnoerror();
 extern "C" int G__const_resetnoerror();
 
 extern "C" void G__clearfilebusy(int);
+extern "C" void G__clearstack();
 
 extern "C" int ScriptCompiler(const char* filename, const char* opt) {
    return gSystem->CompileMacro(filename, opt);
@@ -126,14 +127,7 @@ void TCint::ClearStack()
 {
    // Delete existing temporary values
 
-   ++G__templevel;      // Destroy only the temporary below the current level
-   int store_command_eval = G__command_eval;
-   G__command_eval = 0; // Force the deletion
-
-   G__free_tempobject();
-
-   G__command_eval = store_command_eval;
-   --G__templevel;
+   G__clearstack();
 }
 
 //______________________________________________________________________________

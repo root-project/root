@@ -4719,7 +4719,24 @@ int *pmparen;
   return(0);
 }
 
+void G__settemplevel(int val)
+{
+   G__templevel += val;
+}
 
+void G__clearstack()
+{
+
+   int store_command_eval = G__command_eval;
+   ++G__templevel;
+   G__command_eval = 0;
+
+   G__free_tempobject();
+
+   G__command_eval = store_command_eval;
+   --G__templevel;
+}
+   
 
 /*
  * Local Variables:
