@@ -31,11 +31,6 @@ N: Federico Carminati
 E: Federico.Carminati@cern.ch
 D: updates in PDG codes and eventgenerator interface classes
 
-N: Christian Holm Cristensen
-E: cholm@nbi.dk
-D: contributions to the build system (configure, Makefile.in, config.in) 
-D: implementation of the principal component analysis class TPrincipal
-
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
 D: TLegend class
@@ -61,13 +56,18 @@ E: holeczek@us.edu.pl
 D: dynamic linker interface for IBM/AIX, contributions to MakeTree code
 D: generator
 
+N: Christian Holm Cristensen
+E: cholm@nbi.dk
+D: contributions to the build system (configure, Makefile.in, config.in) 
+D: implementation of the principal component analysis class TPrincipal
+
 N: Stephan Kluth
 E: skluth@mh1.lbl.gov
 D: changes in rootcint to handle templates
 
 N: Christian Lacunza
 E: lacunza@cdfsg5.lbl.gov
-D: TTabCom [TAB] command line extension class, #1 bug reporter
+D: TTabCom [TAB] command line expansion class, #1 bug reporter
 
 N: Dave Morrison
 E: dave@bnl.gov
