@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.7 2002/08/13 21:17:59 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.8 2003/01/20 10:25:58 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -918,8 +918,8 @@ void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
 
 //*-*-          F I N D   A N D   D R A W   S U B P O L Y G O N S
 
-    f2 = funmin;
-    for (ilev = 1; ilev <= nl+1; ++ilev) {
+    f2 = fFunLevel[0];
+    for (ilev = 2; ilev <= nl+1; ++ilev) {
 //*-*-         S E T   L E V E L   L I M I T S
 	f1 = f2;
 	if (ilev == nl + 1) f2 = funmax;
@@ -940,7 +940,7 @@ void TPainter3dAlgorithms::FillPolygon(Int_t n, Double_t *p, Double_t *f)
 	    x[i - 1] = p3[i*3 - 3];
 	    y[i - 1] = p3[i*3 - 2];
 	}
-	icol = fColorLevel[ilev - 1];
+	icol = fColorLevel[ilev - 2];
 	SetFillColor(icol);
 	SetFillStyle(1001);
         TAttFill::Modify();
