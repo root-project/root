@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.55 2003/12/30 13:16:51 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.56 2003/12/30 13:39:27 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1025,9 +1025,9 @@ void *TWinNTSystem::OpenDirectory(const char *dir)
    if (helper)
       return helper->OpenDirectory(dir);
 
-   struct stat finfo;
+   struct _stati64 finfo;
 
-   if (stat(dir, &finfo) < 0)
+   if (_stati64(dir, &finfo) < 0)
       return 0;
 
    if (finfo.st_mode & S_IFDIR) {
@@ -1388,9 +1388,9 @@ int TWinNTSystem::Unlink(const char *name)
 {
    // Unlink, i.e. remove, a file or directory.
 
-   struct stat finfo;
+   struct _stati64 finfo;
 
-   if (stat(name, &finfo) < 0)
+   if (_stati64(name, &finfo) < 0)
       return -1;
 
 //#ifdef __SC__
@@ -2737,12 +2737,12 @@ int TWinNTSystem::WinNTFilestat(const char *path, Long_t *id, Long64_t *size,
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
 
-   struct stat statbuf;
+   struct _stati64 statbuf;
    if (id)      *id = 0;
    if (size)    *size = 0;
    if (flags)   *flags = 0;
    if (modtime) *modtime = 0;
-   if (path != 0 && stat(path, &statbuf) >= 0) {
+   if (path != 0 && _stati64(path, &statbuf) >= 0) {
       if (id)
          *id = (statbuf.st_dev << 24) + statbuf.st_ino;
       if (size)

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.106 2003/12/30 14:20:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.107 2003/12/30 20:43:46 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -2034,7 +2034,11 @@ Long64_t TFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 #if defined (R__SEEK64)
    return ::lseek64(fd, offset, whence);
 #else
+#ifdef WIN32
+   return ::_lseeki64(fd, offset, whence);
+#else
    return ::lseek(fd, offset, whence);
+#endif
 #endif
 }
 
