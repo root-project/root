@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.16 2004/03/11 11:02:55 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.17 2004/03/11 18:47:00 brun Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -46,7 +46,6 @@ class TMessage;
 class TSlave;
 class TEventIter;
 
-#include "TSystem.h"
 
 //------------------------------------------------------------------------
 
@@ -66,14 +65,16 @@ protected:
    void       *GetSender() { return this; }  //used to set gTQSender
 
    virtual void SetupFeedback();  // specialized setup
+public:   // fix for broken compilers so TCleanup can call StopFeedback()
    virtual void StopFeedback();   // specialized teardown
 
+protected:
    class TCleanup {
    private:
       TProofPlayer *fPlayer;
    public:
-      TCleanup(TProofPlayer *p) : fPlayer(p) {}
-      ~TCleanup() {gSystem->Syslog(kLogErr, "!!!cleanup!!!"); fPlayer->StopFeedback();}
+      TCleanup(TProofPlayer *p) : fPlayer(p) { }
+      ~TCleanup() { gSystem->Syslog(kLogErr, "!!!cleanup!!!"); fPlayer->StopFeedback(); }
    };
 
 public:
@@ -158,7 +159,7 @@ public:
 };
 
 
-// -------------------------------------------------------------------
+//------------------------------------------------------------------------
 
 class TProofPlayerSlave : public TProofPlayer {
 private:
