@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.158 2003/10/02 20:28:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.159 2003/11/05 14:05:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -567,9 +567,11 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 }
 
 //______________________________________________________________________________
-TH1::TH1(const TH1 &) : TNamed(), TAttLine(), TAttFill(), TAttMarker()
+TH1::TH1(const TH1 &h) : TNamed(), TAttLine(), TAttFill(), TAttMarker()
 {
-   // Intentionally not implemented
+   // Copy constructor.
+   // The list of functions is not copied. (Use Clone if needed)
+   Copy((TObject&)h);
 }
 
 //______________________________________________________________________________

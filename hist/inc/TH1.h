@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.48 2003/07/08 16:21:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.49 2003/08/11 08:27:12 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -100,7 +100,6 @@ private:
     Int_t   AxisChoice(Option_t *axis) const;
     void    Build();
     Int_t   FitOptionsMake(Option_t *option, Foption_t &Foption);
-    TH1(const TH1&); // Intentionally not implemented
 
 protected:
     TH1();
@@ -121,6 +120,7 @@ public:
        kNoTitle     = BIT(17)  // don't draw the histogram title
     };
 
+    TH1(const TH1&);
     virtual ~TH1();
 
     virtual void     Add(TF1 *h1, Double_t c1=1);

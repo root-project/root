@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.25 2003/07/02 21:18:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.26 2003/11/05 14:05:59 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -30,9 +30,6 @@ class TMatrix;
 class TMatrixD;
 
 class TH2 : public TH1 {
-
-private:
-    TH2(const TH2&); // Intentionally not implemented
    
 protected:
    Stat_t     fScalefactor;     //Scale factor
@@ -55,6 +52,7 @@ public:
                                          ,Int_t nbinsy,const Double_t *ybins);
    TH2(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins
                                          ,Int_t nbinsy,const Float_t  *ybins);
+   TH2(const TH2&);
    virtual ~TH2();
    virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
    virtual void    Copy(TObject &hnew) const;

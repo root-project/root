@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.41 2003/09/17 08:41:53 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.42 2003/11/05 14:05:59 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -101,9 +101,11 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 }
 
 //______________________________________________________________________________
-TH3::TH3(const TH3 &) : TH1(), TAtt3D()
+TH3::TH3(const TH3 &h) : TH1(), TAtt3D()
 {
-   // Intentionally not implemented
+   // Copy constructor.
+   // The list of functions is not copied. (Use Clone if needed)
+   Copy((TObject&)h);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.25 2003/07/02 21:18:21 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.h,v 1.26 2003/11/05 14:05:59 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -32,9 +32,6 @@
 
 class TH3 : public TH1, public TAtt3D {
 
-private:
-    TH3(const TH3&); // Intentionally not implemented
-
 protected:
 
    virtual Int_t    BufferFill(Axis_t, Stat_t) {return -2;} //may not use
@@ -52,6 +49,7 @@ public:
    TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                          ,Int_t nbinsy,const Double_t *ybins
                                          ,Int_t nbinsz,const Double_t *zbins);
+   TH3(const TH3&);
    virtual ~TH3();
    virtual Int_t   BufferEmpty(Bool_t deleteBuffer=kFALSE);
    virtual void    Copy(TObject &hnew) const;
