@@ -48,19 +48,17 @@ int authclient(const char *host = "up://localhost:3000", int sz = 0)
    newurl += ":";
    newurl += TUrl(host).GetPort();
 
-   char buf[256];
-   sprintf(buf,"authclient: starting a (parallel) authenticated socket at %s"
-               " (size: %d)",newurl.Data(),sz);
-   cout << buf << endl;
+   cout << "authclient: starting a (parallel) authenticated socket at "
+        << newurl.Data() << " (size: " << sz << ")" << endl;
 
    TSocket *s = TSocket::CreateAuthSocket(newurl.Data(),sz);
 
    // Print out;
    if (s) 
       if (s->IsAuthenticated()) 
-         Printf("authclient: auth socket: OK");
+         cout << "authclient: auth socket: OK" << endl;
       else
-         Printf("authclient: auth socket: failed");
+         cout << "authclient: auth socket: failed" << endl;
 
    // Cleanup
    if (s) {

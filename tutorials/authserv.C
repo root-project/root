@@ -26,10 +26,8 @@ int authserv(int po = 3000)
    TServerSocket *ss = 0;
    TSocket *s = 0;
 
-   char buf[256];
-   sprintf(buf,"authserv: starting a (parallel) server socket"
-               " on port %d with authentication",po);
-   cout << buf << endl;
+   cout << "authserv: starting a (parallel) server socket on port "
+        << po << " with authentication" << endl;
  
    ss = new TPServerSocket(po);
 
@@ -39,9 +37,9 @@ int authserv(int po = 3000)
    // Print out;
    if (s) 
       if (s->IsAuthenticated()) 
-         Printf("authserv: srv auth socket: OK");
+         cout << "authserv: srv auth socket: OK" << endl;
       else
-         Printf("authserv: srv auth socket: failed");
+         cout << "authserv: srv auth socket: failed" << endl;
 
    // Cleanup
    if (s) delete s;
