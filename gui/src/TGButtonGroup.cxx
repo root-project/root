@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.10 2002/11/27 15:23:03 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.11 2002/12/05 15:55:34 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -316,12 +316,8 @@ void TGButtonGroup::ButtonPressed()
    // the TGButton proper.
 
    // This is needed since gTQSender points to TQObject part of TGButton
-#ifdef R__RTTI
    TGButton *btn = dynamic_cast<TGButton*>((TQObject*)gTQSender);
-#else
-   TQObject *oq = (TQObject*)gTQSender;
-   TGButton *btn = (TGButton*)oq->IsA()->DynamicCast(TQObject::Class(), oq, kFALSE);
-#endif
+
    if (!btn) {
       Error("ButtonPressed", "gTQSender not a TGButton");
       return;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.3 2001/05/07 18:44:16 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTableLayout.cxx,v 1.4 2001/12/29 13:58:24 rdm Exp $
 // Author: Brett Viren   04/15/2001
 
 /*************************************************************************
@@ -125,14 +125,9 @@ void TGTableLayout::FindRowColSizesSinglyAttached()
    TGFrameElement *ptr;
 
    while ((ptr = (TGFrameElement *) next())) {
-#ifdef R__RTTI
       TGTableLayoutHints *layout =
             dynamic_cast<TGTableLayoutHints*>(ptr->fLayout);
-        if (!layout) {
-#else
-      TGTableLayoutHints *layout = (TGTableLayoutHints*) ptr->fLayout;
-      if (layout->IsA() != TGTableLayoutHints::Class()) {
-#endif
+      if (!layout) {
          Error("FindRowColSizesSinglyAttached", "didn't get TGTableLayoutHints from %s, layout = 0x%lx",
                ptr->fFrame->GetName(), ptr->fLayout);
          return;
@@ -184,14 +179,9 @@ void TGTableLayout::FindRowColSizesMultiplyAttached()
    TGFrameElement *ptr;
 
    while ((ptr = (TGFrameElement *) next())) {
-#ifdef R__RTTI
       TGTableLayoutHints *layout =
             dynamic_cast<TGTableLayoutHints*>(ptr->fLayout);
       if (!layout) {
-#else
-      TGTableLayoutHints *layout = (TGTableLayoutHints*) ptr->fLayout;
-      if (layout->IsA() != TGTableLayoutHints::Class()) {
-#endif
          Error("FindRowColSizesMultiplyAttached", "didn't get TGTableLayoutHints");
          return;
       }
@@ -349,14 +339,9 @@ void TGTableLayout::SetRowColSizesInit()
    TIter next(fList);
    TGFrameElement *ptr;
    while ((ptr = (TGFrameElement*) next())) {
-#ifdef R__RTTI
       TGTableLayoutHints *layout =
             dynamic_cast<TGTableLayoutHints*>(ptr->fLayout);
       if (!layout) {
-#else
-      TGTableLayoutHints *layout = (TGTableLayoutHints*) ptr->fLayout;
-      if (layout->IsA() != TGTableLayoutHints::Class()) {
-#endif
          Error("SetRowColSizesInit", "didn't get TGTableLayoutHints");
          return;
       }
@@ -383,14 +368,9 @@ void TGTableLayout::SetRowColSizesInit()
    // Do same for children of spanning multiple col/rows
    next.Reset();
    while ((ptr = (TGFrameElement*) next())) {
-#ifdef R__RTTI
       TGTableLayoutHints *layout =
             dynamic_cast<TGTableLayoutHints*>(ptr->fLayout);
       if (!layout) {
-#else
-      TGTableLayoutHints *layout = (TGTableLayoutHints*) ptr->fLayout;
-      if (layout->IsA() != TGTableLayoutHints::Class()) {
-#endif
          Error("SetRowColSizesInit", "didn't get TGTableLayoutHints");
          return;
       }
@@ -471,14 +451,9 @@ void TGTableLayout::CheckSanity()
    TGFrameElement *ptr;
    UInt_t nerrors = 0;
    while ((ptr = (TGFrameElement*) next())) {
-#ifdef R__RTTI
       TGTableLayoutHints *layout =
             dynamic_cast<TGTableLayoutHints*>(ptr->fLayout);
       if (!layout) {
-#else
-      TGTableLayoutHints *layout = (TGTableLayoutHints*) ptr->fLayout;
-      if (layout->IsA() != TGTableLayoutHints::Class()) {
-#endif
          Error("CheckSanity", "didn't get TGTableLayoutHints");
          return;
       }

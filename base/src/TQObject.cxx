@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.28 2002/10/31 13:23:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.29 2002/12/03 11:20:09 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -538,12 +538,9 @@ TList *TQObject::GetListOfClassSignals() const
    // Returns pointer to list of signals of this class.
 
    TQClass *qcl = 0;
-#ifdef R__RTTI
+
    qcl = dynamic_cast<TQClass*>(IsA());
-#else
-   if (IsA()->IsA() == TQClass::Class())
-      qcl = (TQClass*) IsA();
-#endif
+
    return qcl ? qcl->fListOfSignals : 0; //!!
 }
 
