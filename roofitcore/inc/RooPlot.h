@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.4 2001/04/14 00:43:20 davidk Exp $
+ *    File: $Id: RooPlot.rdl,v 1.5 2001/04/21 01:13:11 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -21,6 +21,7 @@ class RooHist;
 class TAttLine;
 class TAttFill;
 class TAttMarker;
+class TAttText;
 
 class RooPlot : public TH1, public RooPrintable {
 public:
@@ -38,22 +39,25 @@ public:
   virtual void Draw(Option_t *options= 0);
   inline RooAbsReal *getPlotVar() const { return _plotVarClone; }
 
+  TObject *findObject(const char *name) const;
+
   inline Double_t getPadFactor() const { return _padFactor; }
   inline void setPadFactor(Double_t factor) { if(factor > 0) _padFactor= factor; }
 
   TAttLine *getAttLine(const char *name) const;
   TAttFill *getAttFill(const char *name) const;
   TAttMarker *getAttMarker(const char *name) const;
+  TAttText *getAttText(const char *name) const;
 
-  Bool_t drawBefore(const char *beforeName, const char *objName);
-  Bool_t drawAfter(const char *beforeName, const char *objName);
+  Bool_t drawBefore(const char *before, const char *target);
+  Bool_t drawAfter(const char *afger, const char *target);
 
   TString getDrawOptions(const char *name) const;
   Bool_t setDrawOptions(const char *name, TString options);
 
 protected:
   void initialize();
-  TObject *findObject(const char *name) const;
+  TString caller(const char *method) const;
   Double_t _padFactor; // Scale our y-axis to _padFactor of our maximum contents.
   RooList _items;    // A list of the items we contain.
   RooAbsReal *_plotVarClone; // A clone of the variable we are plotting.

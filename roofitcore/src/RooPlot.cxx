@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.4 2001/04/14 00:43:19 davidk Exp $
+ *    File: $Id: RooPlot.cc,v 1.5 2001/04/21 01:13:11 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -29,6 +29,7 @@
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
+#include "TAttText.h"
 
 #include <iostream.h>
 #include <string.h>
@@ -37,7 +38,7 @@
 ClassImp(RooPlot)
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.4 2001/04/14 00:43:19 davidk Exp $";
+"$Id: RooPlot.cc,v 1.5 2001/04/21 01:13:11 david Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1("frame","RooPlotFrame",0,xmin,xmax), _plotVarClone(0), _items()
@@ -155,6 +156,10 @@ RooHist *RooPlot::addHistogram(const TH1 *data, Option_t *drawOptions) {
   Float_t ymax= getPadFactor()*graph->getPlotMax();
   if(GetMaximum() < ymax) SetMaximum(ymax);
 
+  // use this histogram's y-axis title if we don't have one already
+  if(0 == strlen(GetYaxis()->GetTitle())) SetYTitle(graph->getYAxisLabel());
+  cout << "title is now " << GetYaxis()->GetTitle() << endl;
+
   // add this element to our list and remember its drawing option
   _items.Add(graph,drawOptions);
 
@@ -220,102 +225,84 @@ TAttLine *RooPlot::getAttLine(const char *name) const {
   // Return a pointer to the line attributes of the named object in this plot,
   // or zero if the named object does not exist or does not have line attributes.
 
-  return dynamic_cast<TAttLine*>(_items.FindObject(name));
+  return dynamic_cast<TAttLine*>(findObject(name));
 }
 
 TAttFill *RooPlot::getAttFill(const char *name) const {
   // Return a pointer to the fill attributes of the named object in this plot,
   // or zero if the named object does not exist or does not have fill attributes.
 
-  return dynamic_cast<TAttFill*>(_items.FindObject(name));
+  return dynamic_cast<TAttFill*>(findObject(name));
 }
 
 TAttMarker *RooPlot::getAttMarker(const char *name) const {
   // Return a pointer to the marker attributes of the named object in this plot,
   // or zero if the named object does not exist or does not have marker attributes.
 
-  return dynamic_cast<TAttMarker*>(_items.FindObject(name));
+  return dynamic_cast<TAttMarker*>(findObject(name));
 }
 
-Bool_t RooPlot::drawBefore(const char *beforeName, const char *objName) {
-  // Change the order in which our contained objects are drawn so that
-  // the object named objName is drawn just before the object named beforeName.
-  // Returns kFALSE if either object does not exist.
+TAttText *RooPlot::getAttText(const char *name) const {
+  // Return a pointer to the text attributes of the named object in this plot,
+  // or zero if the named object does not exist or does not have text attributes.
 
-  // lookup the named objects
-  TObject *before= findObject(beforeName);
-  if(0 == before) return kFALSE;
-  TObject *obj= findObject(objName);
-  if(0 == obj) return kFALSE;
-
-  // lookup the target object's drawing options
-  TString options= getDrawOptions(objName);
-  // remove the target object
-  _items.Remove(obj);
-  // add it back in before the specified object
-  _items.AddBefore(before,obj);
-  // now restore the object's options
-  setDrawOptions(objName,options);
-
-  return kTRUE;
+  return dynamic_cast<TAttText*>(findObject(name));
 }
 
-Bool_t RooPlot::drawAfter(const char *afterName, const char *objName) {
+Bool_t RooPlot::drawBefore(const char *before, const char *target) {
   // Change the order in which our contained objects are drawn so that
-  // the object named objName is drawn just after the object named afterName.
+  // the target object is drawn just before the specified object.
   // Returns kFALSE if either object does not exist.
 
-  // lookup the named objects
-  TObject *after= findObject(afterName);
-  if(0 == after) return kFALSE;
-  TObject *obj= findObject(objName);
-  if(0 == obj) return kFALSE;
+  return _items.moveBefore(before, target, caller("drawBefore"));
+}
 
-  // lookup the target object's drawing options
-  TString options= getDrawOptions(objName);
-  // remove the target object
-  _items.Remove(obj);
-  // add it back in before the specified object
-  _items.AddAfter(after,obj);
-  // now restore the object's options
-  setDrawOptions(objName,options);
+Bool_t RooPlot::drawAfter(const char *after, const char *target) {
+  // Change the order in which our contained objects are drawn so that
+  // the target object is drawn just after the specified object.
+  // Returns kFALSE if either object does not exist.
 
-  return kTRUE;
+  return _items.moveAfter(after, target, caller("drawAfter"));
 }
 
 TObject *RooPlot::findObject(const char *name) const {
   // Find the named object in our list of items and return a pointer
   // to it. Return zero and print a warning message if the named
-  // object cannot be found. After finding the object, our protected
-  // _iterator will point to the found object (which can be useful
-  // for accessing its drawing options).
+  // object cannot be found. Note that the returned pointer is to a
+  // TObject and so will generally need casting. Use the getAtt...()
+  // methods to change the drawing style attributes of a contained
+  // object directly.
 
-  TObject *obj(0);
-  _iterator->Reset();
-  while(obj= _iterator->Next()) {
-    if (obj->GetName() && !strcmp(name, obj->GetName())) return obj;
+  TObject *obj= _items.FindObject(name);
+  if(0 == obj) {
+    cout << fName << "::findObject: cannot find object named \"" << name << "\"" << endl;
   }
-  cout << fName << "::findObject: cannot find object named \"" << name << "\"" << endl;
-  return 0;
+  return obj;
 }
 
 TString RooPlot::getDrawOptions(const char *name) const {
   // Return the Draw() options registered for the named object. Return
   // an empty string if the named object cannot be found.
 
-  TObject *obj= findObject(name);
-  return TString(0 == obj ? "" : _iterator->GetOption());
+  TObjOptLink *link= _items.findLink(name,caller("getDrawOptions"));
+  return TString(0 == link ? "" : link->GetOption());
 }
 
 Bool_t RooPlot::setDrawOptions(const char *name, TString options) {
   // Register the specified drawing options for the named object.
   // Return kFALSE if the named object cannot be found.
 
-  TObject *obj= findObject(name);
-  if(0 == obj) return kFALSE;
-
-  TListIter *listIter= dynamic_cast<TListIter*>(_iterator);
-  listIter->SetOption(options.Data());
-
+  TObjOptLink *link= _items.findLink(name,caller("setDrawOptions"));
+  if(0 == link) return kFALSE;
+  link->SetOption(options.Data());
   return kTRUE;
+}
+
+TString RooPlot::caller(const char *method) const {
+  TString name(fName);
+  if(strlen(method)) {
+    name.Append("::");
+    name.Append(method);
+  }
+  return name;
 }

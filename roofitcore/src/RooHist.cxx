@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.1 2001/04/11 00:57:09 davidk Exp $
+ *    File: $Id: RooHist.cc,v 1.2 2001/04/21 01:13:11 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -25,7 +25,7 @@
 ClassImp(RooHist)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.1 2001/04/11 00:57:09 davidk Exp $";
+"$Id: RooHist.cc,v 1.2 2001/04/21 01:13:11 david Exp $";
 
 RooHist::RooHist(Double_t nSigma) :
   TGraphAsymmErrors(), _nSigma(nSigma)
@@ -51,6 +51,8 @@ RooHist::RooHist(const TH1 &data, Double_t nSigma) :
   // copy the input histogram's name and title
   SetName(data.GetName());
   SetTitle(data.GetTitle());
+  // TH1::GetYaxis() is not const (why!?)
+  setYAxisLabel(const_cast<TH1&>(data).GetYaxis()->GetTitle());
   // initialize our contents from the input histogram's contents
   Int_t nbin= data.GetNbinsX();
   for(Int_t bin= 1; bin <= nbin; bin++) {

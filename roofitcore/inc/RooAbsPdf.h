@@ -1,3 +1,5 @@
+#ifdef NO
+
 class RooAbsPdf : public RooNormFunction {
 public:
 
@@ -69,3 +71,5 @@ private:
 
   ClassDef(RooAbsPdf,1) // a PDF abstract base class
 };
+
+#endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.rdl,v 1.1 2001/04/11 00:57:09 davidk Exp $
+ *    File: $Id: RooHist.rdl,v 1.2 2001/04/21 01:13:11 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -32,10 +32,13 @@ public:
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
+  inline const char* getYAxisLabel() const { return _yAxisLabel.Data(); }
+  inline setYAxisLabel(const char *label) { _yAxisLabel= label; }
 protected:
   void initialize();
   Int_t roundBin(Stat_t y);
 private:
+  TString _yAxisLabel;
   Double_t _nSigma,_ymax;
   ClassDef(RooHist,1) // a plot with error bars
 };
