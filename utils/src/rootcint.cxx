@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.43 2001/06/08 07:40:15 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.44 2001/06/22 16:10:23 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -688,7 +688,7 @@ void WriteInputOperator(G__ClassInfo &cl)
    fprintf(fp, "//_______________________________________");
    fprintf(fp, "_______________________________________\n");
 
-   G__ClassInfo space = cl.EnclosingClass();
+   G__ClassInfo space = cl.EnclosingSpace();
    char space_prefix[256] = "";
    if (space.Property() & G__BIT_ISNAMESPACE)
       sprintf(space_prefix,"%s::",space.Fullname());
