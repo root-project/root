@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.2 2004/05/12 13:50:41 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.3 2004/05/12 13:56:37 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -1126,7 +1126,7 @@ void TMatrixDSparse::SetMatrixArray(Int_t *row,Int_t *col,Double_t *data)
           nr_nonzeros++;
         }
         ielem++;
-        if (row[ielem] != row[ielem-1])
+        if (ielem >= nr || row[ielem] != row[ielem-1])
           break;
       }
     }
@@ -1645,7 +1645,7 @@ TMatrixDSparse &TMatrixDSparse::Transpose(const TMatrixDSparse &source)
   for (Int_t irow = 1; irow < fNrows+1; irow++) {
     while (ielem < nr_nonzeros) {
       ielem++;
-      if (rownr[ielem] != rownr[ielem-1])
+      if (ielem >= nr_nonzeros || rownr[ielem] != rownr[ielem-1])
         break;
     }
     pRowIndex_t[irow] = ielem;

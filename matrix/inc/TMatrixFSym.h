@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.8 2004/05/12 11:35:26 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.9 2004/05/12 13:27:03 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -70,16 +70,21 @@ public:
 
   virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); fNelems = 0; }
 
-  void        Use           (Int_t nrows,Float_t *data);
-  void        Use           (Int_t row_lwb,Int_t row_upb,Float_t *data);
-  TMatrixFSym GetSub        (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
-  void        SetSub        (Int_t row_lwb,const TMatrixFSym &source);
+  void         Use           (Int_t nrows,Float_t *data);
+  void         Use           (Int_t row_lwb,Int_t row_upb,Float_t *data);
+  void         Use           (TMatrixFSym &a);
+  TMatrixFSym  GetSub        (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
+  void         SetSub        (Int_t row_lwb,const TMatrixFSym &source);
+  void         SetSub        (Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source);
 
-  virtual void     SetMatrixArray(const Float_t *data, Option_t *option="");
+  virtual void SetMatrixArray(const Float_t *data, Option_t *option="");
 
-  virtual void     Shift         (Int_t row_shift,Int_t col_shift);
-  virtual void     ResizeTo      (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
-  virtual void     ResizeTo      (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
+  virtual void Shift         (Int_t row_shift,Int_t col_shift);
+  virtual void ResizeTo      (Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
+  virtual void ResizeTo      (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
+  inline  void ResizeTo      (const TMatrixFSym &m) {
+    ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
+  }
 
   virtual Double_t Determinant   () const;
   virtual void     Determinant   (Double_t &d1,Double_t &d2) const;
@@ -116,8 +121,9 @@ public:
   ClassDef(TMatrixFSym,1) // Symmetric Matrix class (single precision)
 };
 
-inline const Float_t  *TMatrixFSym::GetMatrixArray  () const { return fElements; }
-inline       Float_t  *TMatrixFSym::GetMatrixArray  ()       { return fElements; }
+inline const Float_t  *TMatrixFSym::GetMatrixArray() const { return fElements; }
+inline       Float_t  *TMatrixFSym::GetMatrixArray()       { return fElements; }
+inline       void      TMatrixFSym::Use           (TMatrixFSym &a) { Use(a.GetRowLwb(),a.GetRowUpb(),a.GetMatrixArray()); }
 
 inline Float_t TMatrixFSym::operator()(Int_t rown,Int_t coln) const {
   Assert(IsValid());

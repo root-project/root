@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.10 2004/05/12 13:30:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.cxx,v 1.11 2004/05/12 13:50:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -828,6 +828,16 @@ const TMatrixD TMatrixDSym::EigenVectors(TVectorD &eigenValues) const
   eigenValues = eigen.GetEigenValues();
   return eigen.GetEigenVectors();
 } 
+
+//______________________________________________________________________________
+Bool_t operator==(const TMatrixDSym &m1,const TMatrixDSym &m2)
+{
+  // Check to see if two matrices are identical.
+
+  if (!AreCompatible(m1,m2)) return kFALSE;
+  return (memcmp(m1.GetMatrixArray(),m2.GetMatrixArray(),               
+                 m1.GetNoElements()*sizeof(Double_t)) == 0);
+}
 
 //______________________________________________________________________________
 TMatrixDSym operator+(const TMatrixDSym &source1,const TMatrixDSym &source2)

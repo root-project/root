@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.7 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.cxx,v 1.8 2004/05/12 13:30:27 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -388,6 +388,60 @@ void TMatrixFSym::SetSub(Int_t row_lwb,const TMatrixFSym &source)
 }
 
 //______________________________________________________________________________
+void TMatrixFSym::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixFBase &source)
+{
+  // Insert matrix source starting at [row_lwb][col_lwb] in a symmetric fashion, thereby overwriting the part
+  // [row_lwb..row_lwb+nrows_source][row_lwb..row_lwb+nrows_source];
+
+  Assert(IsValid());
+  Assert(source.IsValid());
+
+  if (row_lwb < fRowLwb || row_lwb > fRowLwb+fNrows-1) {
+    Error("SetSub","row_lwb out of bounds");
+    return;
+  }
+  if (col_lwb < fColLwb || col_lwb > fColLwb+fNcols-1) {
+    Error("SetSub","col_lwb out of bounds");
+    return;
+  }
+  const Int_t nRows_source = source.GetNrows();
+  const Int_t nCols_source = source.GetNcols();
+
+  if (row_lwb+nRows_source > fRowLwb+fNrows || col_lwb+nCols_source > fRowLwb+fNrows) {
+    Error("SetSub","source matrix too large");
+    return;
+  }
+  if (col_lwb+nCols_source > fRowLwb+fNrows || row_lwb+nRows_source > fRowLwb+fNrows) {
+    Error("SetSub","source matrix too large");
+    return;
+  }
+
+  const Int_t rowlwb_s = source.GetRowLwb();
+  const Int_t collwb_s = source.GetColLwb();
+  if (row_lwb >= col_lwb) {
+    // lower triangle
+    Int_t irow;
+    for (irow = 0; irow < nRows_source; irow++) {
+      for (Int_t icol = 0; col_lwb+icol <= row_lwb+irow &&
+                             icol < nCols_source; icol++) {
+        (*this)(row_lwb+irow-fRowLwb,col_lwb+icol-fRowLwb) = source(irow+rowlwb_s,icol+collwb_s);
+      }
+    }
+
+    // upper triangle
+    for (irow = 0; irow < nCols_source; irow++) {
+      for (Int_t icol = nRows_source-1; row_lwb+icol > irow+col_lwb &&
+                              icol >= 0; icol--) {
+        (*this)(col_lwb+irow-fRowLwb,row_lwb+icol-fRowLwb) = source(icol+rowlwb_s,irow+collwb_s);
+      }
+    }
+  } else {
+
+  }
+
+}
+
+//______________________________________________________________________________
 void TMatrixFSym::SetMatrixArray(const Float_t *data,Option_t *option)
 {
   TMatrixFBase::SetMatrixArray(data,option);
@@ -745,6 +799,16 @@ const TMatrixF TMatrixFSym::EigenVectors(TVectorF &eigenValues) const
   TMatrixDSymEigen eigen(*this);
   eigenValues = eigen.GetEigenValues();
   return eigen.GetEigenVectors();
+}
+
+//______________________________________________________________________________
+Bool_t operator==(const TMatrixFSym &m1,const TMatrixFSym &m2)
+{
+  // Check to see if two matrices are identical.
+
+  if (!AreCompatible(m1,m2)) return kFALSE;
+  return (memcmp(m1.GetMatrixArray(),m2.GetMatrixArray(),               
+                 m1.GetNoElements()*sizeof(Float_t)) == 0);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.h,v 1.2 2004/05/12 11:35:26 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.h,v 1.3 2004/05/12 13:50:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -131,8 +131,8 @@ public:
                                     { MayNotUse("NormByDiag"); return *this; }
 
   // Either access a_ij as a(i,j)
-  inline Double_t                 operator()(Int_t rown,Int_t coln) const;
-  inline Double_t                &operator()(Int_t rown,Int_t coln);
+  inline       Double_t                 operator()(Int_t rown,Int_t coln) const;
+  inline       Double_t                &operator()(Int_t rown,Int_t coln);
 
   // or as a[i][j]
   inline const TMatrixDSparseRow_const  operator[](Int_t rown) const { return TMatrixDSparseRow_const(*this,rown); }

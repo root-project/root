@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.33 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.34 2004/05/12 11:35:26 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -104,8 +104,8 @@ public:
   inline void Mult(const TMatrixDSym &a,const TMatrixD    &b) { AMultB(a,b,0); }
 
   // Either access a_ij as a(i,j)
-  inline Double_t           operator()(Int_t rown,Int_t coln) const;
-  inline Double_t          &operator()(Int_t rown,Int_t coln);
+  inline       Double_t           operator()(Int_t rown,Int_t coln) const;
+  inline       Double_t          &operator()(Int_t rown,Int_t coln);
 
   // or as a[i][j]
   inline const TMatrixDRow_const  operator[](Int_t rown) const { return TMatrixDRow_const(*this,rown); }

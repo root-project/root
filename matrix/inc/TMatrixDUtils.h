@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.23 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDUtils.h,v 1.24 2004/05/12 11:35:26 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -363,10 +363,10 @@ public:
   inline       Int_t         GetNindex () const { return fNindex; }
 
   inline Double_t operator ()(Int_t i) const { const Int_t acoln = i-fMatrix->GetColLwb();
-                                                     Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
-                                                     const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
-                                                     if (index < 0) return 0.0;
-                                                     else           return fDataPtr[index]; }
+                                               Assert(acoln < fMatrix->GetNcols() && acoln >= 0);
+                                               const Int_t index = TMath::BinarySearch(fNindex,fColPtr,acoln);
+                                               if (index < 0) return 0.0;
+                                               else           return fDataPtr[index]; }
   inline Double_t operator [](Int_t i) const { return (*(const TMatrixDSparseRow_const *)this)(i); }
 
   ClassDef(TMatrixDSparseRow_const,0)  // One row of a sparse matrix (double precision)

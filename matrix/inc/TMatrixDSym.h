@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.9 2004/05/12 11:35:26 rdm Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSym.h,v 1.10 2004/05/12 13:27:03 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -73,12 +73,12 @@ public:
   virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements);
                                                   else fElements = 0;  fNelems = 0; }
 
-  void        Use            (Int_t nrows,Double_t *data);
-  void        Use            (Int_t row_lwb,Int_t row_upb,Double_t *data);
-  void        Use            (TMatrixDSym &a);
-  TMatrixDSym GetSub         (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
-  void        SetSub         (Int_t row_lwb,const TMatrixDSym &source);
-  void        SetSub         (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
+  void         Use           (Int_t nrows,Double_t *data);
+  void         Use           (Int_t row_lwb,Int_t row_upb,Double_t *data);
+  void         Use           (TMatrixDSym &a);
+  TMatrixDSym  GetSub        (Int_t row_lwb,Int_t row_upb,Option_t *option="S") const;
+  void         SetSub        (Int_t row_lwb,const TMatrixDSym &source);
+  void         SetSub        (Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &source);
 
   virtual void SetMatrixArray(const Double_t *data, Option_t *option="");
 
@@ -96,8 +96,8 @@ public:
   inline  TMatrixDSym &T         () { return this->Transpose(*this); }
 
   // Either access a_ij as a(i,j)
-  inline Double_t           operator()(Int_t rown,Int_t coln) const;
-  inline Double_t          &operator()(Int_t rown,Int_t coln);
+  inline       Double_t           operator()(Int_t rown,Int_t coln) const;
+  inline       Double_t          &operator()(Int_t rown,Int_t coln);
 
   // or as a[i][j]
   inline const TMatrixDRow_const  operator[](Int_t rown) const { return TMatrixDRow_const(*this,rown); }
@@ -147,6 +147,7 @@ inline Double_t &TMatrixDSym::operator()(Int_t rown,Int_t coln) {
   return (fElements[arown*fNcols+acoln]);
 }
 
+Bool_t       operator== (const TMatrixDSym &m1,     const TMatrixDSym  &m2);
 TMatrixDSym  operator+  (const TMatrixDSym &source1,const TMatrixDSym  &source2);
 TMatrixDSym  operator-  (const TMatrixDSym &source1,const TMatrixDSym  &source2);
 TMatrixDSym  operator*  (      Double_t     val,    const TMatrixDSym  &source );
