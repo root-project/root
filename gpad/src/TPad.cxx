@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.35 2001/05/28 15:48:03 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.36 2001/05/31 13:24:52 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1191,6 +1191,14 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 
    if (!IsEditable()) return;
    
+ 
+   if (gThreadXAR) {
+      void *arr[7];
+      arr[1] = this; arr[2] = (void*)&nx;arr[3] = (void*)& ny;
+      arr[4] = (void*)&xmargin; arr[5] = (void *)& ymargin; arr[6] = (void *)&color;
+      if ((*gThreadXAR)("PDCD", 7, arr, NULL)) return;
+   }
+
    TPad *padsav = (TPad*)gPad;
    cd();
    if (nx <= 0) nx = 1;
