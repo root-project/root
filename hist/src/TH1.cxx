@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.167 2004/02/07 22:34:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.168 2004/02/16 09:24:39 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5119,7 +5119,7 @@ Double_t TH1::GetMinimum(Double_t minval) const
         for (binx=xfirst;binx<=xlast;binx++) {
            bin = GetBin(binx,biny,binz);
            value = GetBinContent(bin);
-           if (value < minimum and value > minval) minimum = value;
+           if (value < minimum && value > minval) minimum = value;
         }
      }
   }
