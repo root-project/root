@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.8 2003/01/06 17:05:44 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.9 2003/01/13 22:06:35 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -459,27 +459,22 @@ Double_t TGeoSphere::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Doubl
    if (iact<3 && safe) {
       saf[0]=(fRmin==0)?kBig:r-fRmin;
       saf[1]=fRmax-r;
-      if (!TestBit(kGeoThetaSeg)) {
-         saf[2]=saf[3]=kBig;
-      } else {
+      saf[2]=saf[3]=saf[4]=saf[5]= kBig;
+      if (TestBit(kGeoThetaSeg)) {
          if (fTheta1>0) {
             saf[2] = r*TMath::Sin((th-fTheta1)*kDegRad);
          }
-	       if (fTheta2<180) {
+	 if (fTheta2<180) {
             saf[3] = r*TMath::Sin((fTheta2-th)*kDegRad);
-	       }    
+	 }    
       }
-      if (!TestBit(kGeoPhiSeg)) {
-         saf[4]=saf[5]=kBig;
-      } else {
+      if (TestBit(kGeoPhiSeg)) {
          Double_t dph1=phi-fPhi1;
-	       if (dph1<0) dph1+=360.;
-         if (dph1>90.) saf[4]=kBig;            
-         else saf[4]=rxy*TMath::Sin(dph1*kDegRad);
+	 if (dph1<0) dph1+=360.;
+         if (dph1<=90.) saf[4]=rxy*TMath::Sin(dph1*kDegRad);
          Double_t dph2=fPhi2-phi;
-	       if (dph2<0) dph2+=360.;
-         if (dph2>90.) saf[5]=kBig;            
-         else saf[5]=rxy*TMath::Sin(dph2*kDegRad);
+	 if (dph2<0) dph2+=360.;
+         if (dph2<=90.) saf[5]=rxy*TMath::Sin(dph2*kDegRad);
       }
       *safe = saf[TMath::LocMin(6, &saf[0])];
       if (iact==0) return kBig;
@@ -744,10 +739,9 @@ void TGeoSphere::SetPoints(Double_t *buff) const
         {
             theta = (fTheta1+i*dtheta)*kDegRad;
             z = fRmin * TMath::Cos(theta); // fSinPhiTab[i];
-            Float_t zi = fRmin*TMath::Sin(theta);
+            Double_t zi = fRmin*TMath::Sin(theta);
 //            printf("plane %i nseg=%i z=%f:\n", i,n,z);
-            for (j = 0; j < n; j++)
-            {
+            for (j = 0; j < n; j++) {
                 phi = (fPhi1+j*dphi)*kDegRad;
                 cphi = TMath::Cos(phi);
                 sphi = TMath::Sin(phi);
@@ -759,8 +753,7 @@ void TGeoSphere::SetPoints(Double_t *buff) const
             z = fRmax * TMath::Cos(theta);
             zi = fRmax* TMath::Sin(theta);
 //            printf("outer points for plane %i:\n", i);
-            for (j = 0; j < n; j++)
-            {
+            for (j = 0; j < n; j++) {
                 phi = (fPhi1+j*dphi)*kDegRad;
                 cphi = TMath::Cos(phi);
                 sphi = TMath::Sin(phi);
@@ -791,7 +784,7 @@ void TGeoSphere::SetPoints(Float_t *buff) const
         {
             theta = (fTheta1+i*dtheta)*kDegRad;
             z = fRmin * TMath::Cos(theta); // fSinPhiTab[i];
-            Float_t zi = fRmin*TMath::Sin(theta);
+            Double_t zi = fRmin*TMath::Sin(theta);
 //            printf("plane %i nseg=%i z=%f:\n", i,n,z);
             for (j = 0; j < n; j++)
             {
