@@ -43,6 +43,7 @@ MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion:[[:blank:]]*[0-9]*.\(
 LD            = g++
 LDFLAGS       = $(OPT) -bind_at_load -flat_namespace
 ifeq ($(MACOSX_MINOR),3)
+MACOSXTARGET  = MACOSX_DEPLOYMENT_TARGET=10.3
 SOFLAGS       = $(OPT) -dynamiclib -single_module -flat_namespace \
                 -undefined dynamic_lookup -install_name $(LIBDIR)/
 else

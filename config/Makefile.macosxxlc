@@ -41,6 +41,7 @@ MACOSX_MINOR := $(shell sw_vers | sed -n 's/ProductVersion:[[:blank:]]*[0-9]*.\(
 LD            = xlC
 LDFLAGS       = $(OPT) -Wl,-bind_at_load -Wl,-flat_namespace
 ifeq ($(MACOSX_MINOR),3)
+MACOSXTARGET  = MACOSX_DEPLOYMENT_TARGET=10.3
 SOFLAGS       = $(OPT) -qmkshrobj -flat_namespace -undefined dynamic_lookup \
                 -single_module -Wl,-install_name -Wl,$(LIBDIR)/
 else

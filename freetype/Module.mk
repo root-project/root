@@ -28,7 +28,8 @@ endif
 ##### local rules #####
 $(FREETYPELIB): $(FREETYPELIBA)
 ifeq ($(PLATFORM),macosx)
-		$(CC) $(SOFLAGS)libfreetype.dylib -o $@ -all_load $<
+		$(MACOSXTARGET) $(CC) $(SOFLAGS)libfreetype.dylib -o $@ \
+		   -all_load $<
 else
 		cp $< $@
 endif
