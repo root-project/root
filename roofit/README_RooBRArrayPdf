@@ -1,6 +1,0 @@
-  10/22/01 - Wouter 
-
-  RooBRArrayPdf has been deprecated because its functionality is now
-  absorbed in RooAddPdf. To construct the RooBRArrayPdf style PDF,
-  simply supply a PDF and coefficient list of equal length to RooAddPdf.
-
