@@ -899,10 +899,10 @@ fi
 #
 if test ! "x$enable_cern" = "xno"; then
     cernlibdirs="$CERNLIB $CERNLIB/lib ${CERN}/${CERN_LEVEL}/lib  \
-	/cern/pro/lib /cern/new/lib /cern/new/lib /opt/cern/pro/lib \
-	/opt/cern/new/lib /opt/cern/new/lib /usr/local/cern/pro/lib \
+	/cern/pro/lib /cern/new/lib /cern/old/lib /opt/cern/pro/lib \
+	/opt/cern/new/lib /opt/cern/old/lib /usr/local/cern/pro/lib \
 	/usr/local/cern/new/lib /usr/local/cern/old/lib /usr/lib \
-	/usr/lib/cern"
+	/usr/lib/cern /usr/local/lib /usr/local/lib/cern"
     check_library "libpacklib packlib" "$enable_shared" "${cernlibdir}" \
 	$cernlibdirs
     packlib=$found_lib
