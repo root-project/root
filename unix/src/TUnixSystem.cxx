@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.7 2000/09/13 07:03:01 brun Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.8 2000/09/13 10:40:30 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1178,6 +1178,7 @@ Func_t TUnixSystem::DynFindSymbol(const char *module, const char *entry)
 #ifdef NOCINT
    return UnixDynFindSymbol(module,entry);
 #else
+   if (module) { }   // silence compiler about not using module
    return TSystem::DynFindSymbol("*", entry);
 #endif
 }
