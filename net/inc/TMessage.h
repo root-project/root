@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.3 2000/12/12 18:20:02 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMessage.h,v 1.4 2001/01/29 00:04:28 rdm Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************
@@ -56,8 +56,6 @@ public:
    void     Reset(UInt_t what) { SetWhat(what); Reset(); }
    UInt_t   What() const { return fWhat; }
    void     SetWhat(UInt_t what);
-
-   void     WriteObject(const TObject *obj);
 
    ClassDef(TMessage,0)  // Message buffer class
 };

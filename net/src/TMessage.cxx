@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMessage.cxx,v 1.2 2000/08/21 10:37:30 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMessage.cxx,v 1.3 2000/12/12 18:20:02 rdm Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************
@@ -107,18 +107,4 @@ void TMessage::SetWhat(UInt_t what)
    buf += sizeof(UInt_t);   // skip reserved length space
    tobuf(buf, what);
    fWhat = what;
-}
-
-//______________________________________________________________________________
-void TMessage::WriteObject(const TObject *obj)
-{
-   // Write object to I/O buffer. Just make sure that the TStreamerInfo object
-   // is not added to the currently open file.
-
-   TFile *filsav = gFile;
-   gFile = 0;
-
-   TBuffer::WriteObject(obj);
-
-   gFile = filsav;
 }
