@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TTF.h,v 1.2 2001/02/17 11:42:23 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TTF.h,v 1.1 2003/01/22 11:07:26 rdm Exp $
 // Author: Olivier Couet     01/10/02
 // Author: Fons Rademakers   21/11/98
 
@@ -34,14 +34,15 @@
 #  include FT_FREETYPE_H
 #  include FT_GLYPH_H
 #else
-   struct FT_Library;
-   struct FT_Face;
-   struct FT_CharMap;
+   typedef void* FT_Library;
+   typedef void* FT_Face;
+   typedef void* FT_CharMap;
+   typedef void* FT_Glyph;
+   typedef signed long FT_Pos;
+   struct FT_Vector { FT_Pos x, y; };
+   struct FT_BBox { FT_Pos xMin, yMin, xMax, yMax; };
    struct FT_Matrix;
    struct FT_Bitmap;
-   struct FT_Vector;
-   struct FT_BBox;
-   struct FT_Glyph;
 #endif
 
 
