@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.24 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.25 2004/10/28 17:12:44 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "Bytes.h"
 #include "TROOT.h"
 #include "TError.h"
+#include "TSystem.h"
 
 ULong64_t TSocket::fgBytesSent = 0;
 ULong64_t TSocket::fgBytesRecv = 0;
@@ -299,6 +300,29 @@ Int_t TSocket::GetLocalPort()
       return fLocalAddress.GetPort();
    }
    return -1;
+}
+
+//______________________________________________________________________________
+Int_t TSocket::Select(Int_t interest, Long_t timeout)
+{
+   // Waits for this socket to change status. If interest=kRead,
+   // the socket will be watched to see if characters become available for
+   // reading; if interest=kWrite the socket will be watched to
+   // see if a write will not block.
+   // The argument 'timeout' specifies a maximum time to wait in millisec.
+   // Default no timeout.
+   // Returns 1 if a change of status of interest has been detected within
+   // timeout; 0 in case of timeout; < 0 if an error occured.
+
+   Int_t rc = 1;
+
+   // Associate a TFileHandler to this socket
+   TFileHandler fh(fSocket, interest);
+
+   // Wait for an event now
+   rc = gSystem->Select(&fh, timeout);
+
+   return rc;
 }
 
 //______________________________________________________________________________
@@ -739,8 +763,10 @@ Bool_t TSocket::Authenticate(const char *user)
    // Warning: for backward compatibility reasons here we have to
    // send exactly 4 bytes: for fgClientClientProtocol > 99
    // the space in the format must be dropped
-   Send(Form(" %d", TAuthenticate::GetClientProtocol()), kROOTD_PROTOCOL);
-   Recv(fRemoteProtocol, kind);
+   if (fRemoteProtocol == -1) {
+      Send(Form(" %d", TAuthenticate::GetClientProtocol()), kROOTD_PROTOCOL);
+      Recv(fRemoteProtocol, kind);
+   }
 
    // If we are talking to an old rootd server we get a fatal
    // error here and we need to reopen the connection,
@@ -860,8 +886,8 @@ Bool_t TSocket::Authenticate(const char *user)
 }
 
 //______________________________________________________________________________
-TSocket *TSocket::CreateAuthSocket(const char *url,
-                                   Int_t size, Int_t tcpwindowsize)
+TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size,
+                                   Int_t tcpwindowsize, TSocket *opensock)
 {
    // Creates a socket or a parallel socket and authenticates to the
    // remote server.
@@ -883,6 +909,9 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    //     options  = "m" or "s", when proto=proofd indicates whether
    //                we are master or slave (used internally by
    //                TSlave)
+   //
+   // An already opened connection can be used by passing its socket
+   // in opensock.
    //
    // Example:
    //
@@ -942,7 +971,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    if (!proto.BeginsWith("sock") && !proto.BeginsWith("proof") &&
        !proto.BeginsWith("root"))
       proto = "sockd";
- 
+
    // Substitute this for original proto in eurl
    protosave += "://";
    proto += asfx;
@@ -955,7 +984,10 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
    if (!parallel) {
 
       // Simple socket
-      sock = new TSocket(eurl, TUrl(url).GetPort(), tcpwindowsize);
+      if (opensock && opensock->IsValid())
+         sock = opensock;
+      else
+         sock = new TSocket(eurl, TUrl(url).GetPort(), tcpwindowsize);
 
       // Authenticate now
       if (sock && sock->IsValid()) {
@@ -976,7 +1008,10 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
       eurl += "?A";
 
       // Parallel socket
-      sock = new TPSocket(eurl, TUrl(url).GetPort(), size, tcpwindowsize);
+      if (opensock && opensock->IsValid())
+         sock = new TPSocket(eurl, TUrl(url).GetPort(), size, opensock);
+      else
+         sock = new TPSocket(eurl, TUrl(url).GetPort(), size, tcpwindowsize);
 
       // Cleanup if failure ...
       if (sock && !sock->IsAuthenticated()) {
@@ -995,7 +1030,8 @@ TSocket *TSocket::CreateAuthSocket(const char *url,
 
 //______________________________________________________________________________
 TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
-                                   Int_t port, Int_t size, Int_t tcpwindowsize)
+                                   Int_t port, Int_t size, Int_t tcpwindowsize,
+                                   TSocket *opensock)
 {
    // Creates a socket or a parallel socket and authenticates to the
    // remote server specified in 'url' on remote 'port' as 'user'.
@@ -1012,6 +1048,9 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
    //                SRP, Krb5, Globus, SSH or UidGid authentication
    //    [options] = "m" or "s", when proto=proofd indicates whether
    //                we are master or slave (used internally by TSlave)
+   //
+   // An already opened connection can be used by passing its socket
+   // in opensock.
    //
    // Example:
    //
@@ -1062,7 +1101,7 @@ TSocket *TSocket::CreateAuthSocket(const char *user, const char *url,
    }
 
    // Create the socket and return it
-   return TSocket::CreateAuthSocket(eurl,size,tcpwindowsize);
+   return TSocket::CreateAuthSocket(eurl,size,tcpwindowsize,opensock);
 }
 
 //______________________________________________________________________________

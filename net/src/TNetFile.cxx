@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.56 2004/11/05 13:51:48 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.57 2004/12/02 11:52:28 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -88,6 +88,7 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
    // for a description of the options and other arguments see Create().
    // Normally a TNetFile is created via TFile::Open().
 
+   fSocket = 0;
    Create(url, option, netopt);
 }
 //______________________________________________________________________________
@@ -454,8 +455,8 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
       url = "rootdp";
    }
    url += TString(Form("://%s@%s:%d",
-                        fUrl.GetUser(), fUrl.GetHost(), fUrl.GetPort()));
-   fSocket = TSocket::CreateAuthSocket(url, sSize, tcpwindowsize);
+                       fUrl.GetUser(), fUrl.GetHost(), fUrl.GetPort()));
+   fSocket = TSocket::CreateAuthSocket(url, sSize, tcpwindowsize, fSocket);
    if (!fSocket || !fSocket->IsAuthenticated()) {
       if (sSize > 1)
          Error("TNetFile", "can't open %d-stream connection to rootd on "
@@ -531,7 +532,6 @@ void TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
 
    Int_t tcpwindowsize = 65535;
 
-   fSocket    = 0;
    fErrorCode = -1;
 
    fOption = option;
@@ -611,6 +611,23 @@ zombie:
    MakeZombie();
    SafeDelete(fSocket);
    gDirectory = gROOT;
+}
+
+//______________________________________________________________________________
+void TNetFile::Create(TSocket *s, Option_t *option, Int_t netopt)
+{
+   // Create a NetFile object using an existing connection (socket s).
+   // Provided for use in TXNetFile.
+   // See
+   //  TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
+   // for details about the arguments.
+
+   // Import socket
+   fSocket = s;
+
+   // Create the connection
+   Create(s->GetUrl(),option,netopt);
+
 }
 
 //

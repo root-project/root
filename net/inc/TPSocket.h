@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TPSocket.h,v 1.6 2001/02/07 16:38:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TPSocket.h,v 1.7 2004/02/19 00:11:18 rdm Exp $
 // Author: Fons Rademakers   20/1/2001
 
 /*************************************************************************
@@ -49,14 +49,18 @@ private:
    TPSocket(TSocket *pSockets[], Int_t size);
    TPSocket(const TPSocket &);        // not implemented
    void operator=(const TPSocket &);  // idem
-   void Init(Int_t tcpwindowsize);
+   void Init(Int_t tcpwindowsize, TSocket *sock = 0);
    Option_t *GetOption() const { return TObject::GetOption(); }
 
 public:
-   TPSocket(TInetAddress address, const char *service, Int_t size, Int_t tcpwindowsize = -1);
-   TPSocket(TInetAddress address, Int_t port, Int_t size, Int_t tcpwindowsize = -1);
-   TPSocket(const char *host, const char *service, Int_t size, Int_t tcpwindowsize = -1);
+   TPSocket(TInetAddress address, const char *service, Int_t size,
+            Int_t tcpwindowsize = -1);
+   TPSocket(TInetAddress address, Int_t port, Int_t size,
+            Int_t tcpwindowsize = -1);
+   TPSocket(const char *host, const char *service, Int_t size,
+            Int_t tcpwindowsize = -1);
    TPSocket(const char *host, Int_t port, Int_t size, Int_t tcpwindowsize = -1);
+   TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock);
    virtual ~TPSocket();
 
    void          Close(Option_t *opt="");

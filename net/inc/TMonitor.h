@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.5 2002/10/03 17:59:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.h,v 1.6 2004/10/18 14:03:39 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -46,6 +46,8 @@ private:
    TList    *fActive;     //list of sockets to monitor
    TList    *fDeActive;   //list of (temporary) disabled sockets
    TSocket  *fReady;      //socket which is ready to be read or written
+   Bool_t    fMainLoop;   //true if monitoring sockets within the main
+                          //event loop
 
    void  SetReady(TSocket *sock);
    void *GetSender() { return this; }  // used to get gTQSender
@@ -53,10 +55,11 @@ private:
 public:
    enum EInterest { kRead = 1, kWrite = 2 };
 
-   TMonitor();
+   TMonitor(Bool_t mainloop = kTRUE);
    virtual ~TMonitor();
 
-   virtual void Add(TSocket *sock, EInterest interest = kRead);
+   virtual void Add(TSocket *sock, Int_t interest = kRead);
+   virtual void SetInterest(TSocket *sock, Int_t interest = kRead);
    virtual void Remove(TSocket *sock);
    virtual void RemoveAll();
 
@@ -68,6 +71,7 @@ public:
 
    TSocket *Select();
    TSocket *Select(Long_t timeout);
+   Int_t    Select(TList *rdready, TList *wrready, Long_t timeout);
 
    Int_t  GetActive() const;
    Int_t  GetDeActive() const;

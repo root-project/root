@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.5 2002/10/03 17:59:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TMonitor.cxx,v 1.6 2004/10/18 14:03:39 rdm Exp $
 // Author: Fons Rademakers   09/01/97
 
 /*************************************************************************
@@ -42,20 +42,22 @@ private:
    TSocket   *fSocket;    //socket being handled
 
 public:
-   TSocketHandler(TMonitor *m, TSocket *s, Int_t interest);
+   TSocketHandler(TMonitor *m, TSocket *s, Int_t interest, Bool_t mainloop = kTRUE);
    Bool_t   Notify();
    Bool_t   ReadNotify() { return Notify(); }
    Bool_t   WriteNotify() { return Notify(); }
    TSocket *GetSocket() const { return fSocket; }
 };
 
-TSocketHandler::TSocketHandler(TMonitor *m, TSocket *s, Int_t interest)
+TSocketHandler::TSocketHandler(TMonitor *m, TSocket *s,
+                               Int_t interest, Bool_t mainloop)
                : TFileHandler(s->GetDescriptor(), interest)
 {
    fMonitor = m;
    fSocket  = s;
 
-   Add();
+   if (mainloop)
+      Add();
 }
 
 Bool_t TSocketHandler::Notify()
@@ -97,14 +99,16 @@ Bool_t TTimeOutTimer::Notify()
 ClassImp(TMonitor)
 
 //______________________________________________________________________________
-TMonitor::TMonitor()
+TMonitor::TMonitor(Bool_t mainloop)
 {
-   // Create a monitor object.
+   // Create a monitor object. If mainloop is true the monitoring will be
+   // done in the main event loop.
 
    Assert(gSystem);
 
    fActive   = new TList;
    fDeActive = new TList;
+   fMainLoop = mainloop;
 }
 
 //______________________________________________________________________________
@@ -120,14 +124,51 @@ TMonitor::~TMonitor()
 }
 
 //______________________________________________________________________________
-void TMonitor::Add(TSocket *sock, EInterest interest)
+void TMonitor::Add(TSocket *sock, Int_t interest)
 {
    // Add socket to the monitor's active list. If interest=kRead then we
    // want to monitor the socket for read readiness, if interest=kWrite
    // then we monitor the socket for write readiness, if interest=kRead|kWrite
    // then we monitor both read and write readiness.
 
-   fActive->Add(new TSocketHandler(this, sock, (Int_t)interest));
+   fActive->Add(new TSocketHandler(this, sock, interest, fMainLoop));
+}
+//______________________________________________________________________________
+void TMonitor::SetInterest(TSocket *sock, Int_t interest)
+{
+   // Set interest mask for socket sock to interest. If the socket is not
+   // in the active list move it or add it there.
+   // If interest=kRead then we want to monitor the socket for read readiness,
+   // if interest=kWrite then we monitor the socket for write readiness,
+   // if interest=kRead|kWrite then we monitor both read and write readiness.
+
+   TSocketHandler *s = 0;
+
+   if (!interest)
+      interest = kRead;
+
+   // Check first the activated list ...
+   TIter next(fActive);
+   while ((s = (TSocketHandler *) next())) {
+      if (sock == s->GetSocket()) {
+         s->SetInterest(interest);
+         return;
+      }
+   }
+
+   // Check now the deactivated list ...
+   TIter next1(fDeActive);
+   while ((s = (TSocketHandler *) next1())) {
+      if (sock == s->GetSocket()) {
+         fDeActive->Remove(s);
+         fActive->Add(s);
+         s->SetInterest(interest);
+         return;
+      }
+   }
+
+   // The socket is not in our lists: just add it
+   fActive->Add(new TSocketHandler(this, sock, interest, fMainLoop));
 }
 
 //______________________________________________________________________________
@@ -236,6 +277,7 @@ void TMonitor::DeActivateAll()
 TSocket *TMonitor::Select()
 {
    // Return pointer to socket for which an event is waiting.
+   // Return 0 in case of error.
 
    fReady = 0;
 
@@ -248,9 +290,10 @@ TSocket *TMonitor::Select()
 //______________________________________________________________________________
 TSocket *TMonitor::Select(Long_t timeout)
 {
-   // Return pointer to socket for which an event is waiting. Wait a maximum
-   // of timeout milliseconds. If return is due to timeout it returns
-   // (TSocket *)-1.
+   // Return pointer to socket for which an event is waiting.
+   // Wait a maximum of timeout milliseconds.
+   // If return is due to timeout it returns (TSocket *)-1.
+   // Return 0 in case of any other error situation.
 
    fReady = 0;
 
@@ -263,12 +306,59 @@ TSocket *TMonitor::Select(Long_t timeout)
 }
 
 //______________________________________________________________________________
+Int_t TMonitor::Select(TList *rdready, TList *wrready, Long_t timeout)
+{
+   // Return numbers of sockets that are ready for reading or writing.
+   // Wait a maximum of timeout milliseconds.
+   // Return 0 if timed-out. Return < 0 in case of error.
+   // If rdready and/or wrready are not 0, the lists of sockets with
+   // something to read and/or write are also returned.
+
+   Int_t nr = -2;
+
+   TSocketHandler *h = 0;
+   Int_t ns = fActive->GetSize();
+   if (ns == 1) {
+      // Avoid additional loops inside
+      h = (TSocketHandler *)fActive->First();
+      nr = gSystem->Select((TFileHandler *)h, timeout);
+   } else if (ns > 1) {
+      nr = gSystem->Select(fActive, timeout);
+   }
+
+   if (nr > 0 && (rdready || wrready)) {
+      // Clear the lists
+      if (rdready)
+         rdready->Clear();
+      if (wrready)
+         wrready->Clear();
+      // Got a file descriptor
+      if (!h) {
+         TIter next(fActive);
+         while ((h = (TSocketHandler *)next())) {
+            if (rdready && h->IsReadReady())
+               rdready->Add(h->GetSocket());
+            if (wrready && h->IsWriteReady())
+               wrready->Add(h->GetSocket());
+         }
+      } else {
+         if (rdready && h->IsReadReady())
+            rdready->Add(h->GetSocket());
+         if (wrready && h->IsWriteReady())
+            wrready->Add(h->GetSocket());
+      }
+   }
+
+   return nr;
+}
+
+//______________________________________________________________________________
 void TMonitor::SetReady(TSocket *sock)
 {
    // Called by TSocketHandler::Notify() to signal which socket is ready
-   // to be read. User should not call this routine. The ready socket will
-   // be returned via the Select() user function.
-   // Ready(TSocket * sock) signal is emitted
+   // to be read or written. User should not call this routine. The ready
+   // socket will be returned via the Select() user function.
+   // Ready(TSocket *sock) signal is emitted.
 
    fReady = sock;
    Ready(fReady);
@@ -327,7 +417,7 @@ TList *TMonitor::GetListOfDeActives() const
 //______________________________________________________________________________
 void TMonitor::Ready(TSocket *sock)
 {
-   // emit signal when some socket is ready
+   // Emit signal when some socket is ready
 
    Emit("Ready(TSocket*)", (Long_t)sock);
 }

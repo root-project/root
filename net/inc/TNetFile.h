@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.17 2004/10/15 16:55:07 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -55,6 +55,7 @@ protected:
                               Int_t tcpwindowsize, Bool_t forceOpen,
                               Bool_t forceRead);
    virtual void Create(const char *url, Option_t *option, Int_t netopt);
+   virtual void Create(TSocket *s, Option_t *option, Int_t netopt);
    void         Init(Bool_t create);
    void         Print(Option_t *option) const;
    void         PrintError(const char *where, Int_t err);
