@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.48 2001/12/01 08:12:46 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.49 2001/12/02 08:13:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -140,6 +140,7 @@ protected:
 
   friend class RooRealIntegral ;
   friend class RooFitContext ;
+  friend class RooNLLBinding ;
   static Int_t _verboseEval ;
 
   virtual void syncNormalization(const RooArgSet* dset) const ;

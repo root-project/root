@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooNLLBinding.cc,v 1.1 2001/10/06 06:19:53 verkerke Exp $
+ *    File: $Id: RooNLLBinding.cc,v 1.2 2001/10/08 05:20:18 verkerke Exp $
  * Authors:
  *   DK, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -25,16 +25,25 @@ ClassImp(RooNLLBinding)
 
 
 RooNLLBinding::RooNLLBinding(const RooAbsPdf &pdf, const RooAbsData& data, const RooArgSet &vars) :
-  RooRealBinding(pdf,vars,0), _context(&data,&pdf,kFALSE,kFALSE)
+  RooRealBinding(pdf,vars,0)
 {  
+  // Constructor
+  _context = pdf.fitContext(data) ;
 }
 
 
 
-Double_t RooNLLBinding::operator()(const Double_t xvector[]) const {
-  // Evaluate our analytic integral at the specified values of the dependents.
+RooNLLBinding::~RooNLLBinding()
+{
+  // Destructor
+  delete _context ;
+}
 
+
+
+Double_t RooNLLBinding::operator()(const Double_t xvector[]) const 
+{
   assert(isValid());
   loadValues(xvector);    
-  return _context.nLogLikelihood() ;
+  return _context->nLogLikelihood() ;
 }
