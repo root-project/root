@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.43 2004/09/06 08:21:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.44 2004/09/06 09:17:14 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -132,6 +132,7 @@ protected:
    UInt_t   fOptions;       // frame options
    Pixel_t  fBackground;    // frame background color
    UInt_t   fEventMask;     // currenty active event mask
+   TGFrameElement *fFE;     // pointer to frame element
 
    static Bool_t      fgInit;
    static Pixel_t     fgDefaultFrameBackground;
@@ -180,7 +181,7 @@ public:
    TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
            UInt_t options = 0, Pixel_t back = GetDefaultFrameBackground());
    TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
-   virtual ~TGFrame() { }
+   virtual ~TGFrame();
    virtual void DeleteWindow();
    virtual void ReallyDelete() { delete this; }
 
@@ -224,6 +225,10 @@ public:
                                         // Redefine this in TGCompositeFrame!
    virtual void    ReparentWindow(const TGWindow *p, Int_t x = 0, Int_t y = 0) 
                             { TGWindow::ReparentWindow(p, x, y); fX = x; fY = y; }
+   virtual void    MapWindow() { TGWindow::MapWindow(); if (fFE) fFE->fState |= kIsVisible; }
+   virtual void    MapRaised() { TGWindow::MapRaised(); if (fFE) fFE->fState |= kIsVisible; }
+   virtual void    UnmapWindow() { TGWindow::UnmapWindow(); if (fFE) fFE->fState &= ~kIsVisible; }
+
    virtual void    DrawBorder();
    virtual void    DrawCopy(Handle_t /*id*/, Int_t /*x*/, Int_t /*y*/) { }
    virtual void    Activate(Bool_t) { }
@@ -238,15 +243,21 @@ public:
    Int_t  GetX() const { return fX; }
    Int_t  GetY() const { return fY; }
    Int_t  GetBorderWidth() const { return fBorderWidth; }
+
+   TGFrameElement *GetFrameElement() const { return fFE; }
+   void SetFrameElement(TGFrameElement *fe) { fFE = fe; }
+
    Bool_t Contains(Int_t x, Int_t y) const
       { return ((x >= 0) && (x < (Int_t)fWidth) && (y >= 0) && (y < (Int_t)fHeight)); }
    virtual TGFrame *GetFrameFromPoint(Int_t x, Int_t y)
       { return (Contains(x, y) ? this : 0); }
 
    // Modifiers (without graphic update)
-   void SetWidth(UInt_t w) { fWidth = w; }
-   void SetHeight(UInt_t h) { fHeight = h; }
-   void SetSize(const TGDimension &s) { fWidth = s.fWidth; fHeight = s.fHeight; }
+   virtual void SetX(Int_t x) { fX = x; }
+   virtual void SetY(Int_t y) { fY = y; }
+   virtual void SetWidth(UInt_t w) { fWidth = w; }
+   virtual void SetHeight(UInt_t h) { fHeight = h; }
+   virtual void SetSize(const TGDimension &s) { fWidth = s.fWidth; fHeight = s.fHeight; }
 
    // Printing and saving
    virtual void Print(Option_t *option="") const;

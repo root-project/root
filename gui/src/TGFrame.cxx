@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.63 2004/09/06 08:39:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.64 2004/09/06 09:17:14 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -109,6 +109,8 @@ static const char *gSaveMacroTypes[] = { "Macro files", "*.C",
                                          "All files",   "*",
                                           0,             0 };
 
+TList *gListOfHiddenFrames = new TList();
+
 ClassImp(TGFrame)
 ClassImp(TGCompositeFrame)
 ClassImp(TGVerticalFrame)
@@ -161,6 +163,7 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
       //   SetBackgroundPixmap(kParentRelative);
    }
    fEventMask = (UInt_t) wattr.fEventMask;
+   fFE        = 0;
 }
 
 //______________________________________________________________________________
@@ -196,6 +199,15 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fEventMask   = (UInt_t) attributes.fYourEventMask;
    fBackground  = 0;
    fOptions     = 0;
+   fFE          = 0;
+}
+
+//______________________________________________________________________________
+TGFrame::~TGFrame()
+{
+   // destructor
+
+   if (fFE) fFE->fFrame = 0;
 }
 
 //______________________________________________________________________________
@@ -857,6 +869,7 @@ void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
 
    nw = new TGFrameElement;
    nw->fFrame  = f;
+   f->SetFrameElement(nw);
    nw->fLayout = l ? l : fgDefaultHints;
    nw->fState  = 1;
    fList->Add(nw);
@@ -875,6 +888,7 @@ void TGCompositeFrame::RemoveFrame(TGFrame *f)
    while ((el = (TGFrameElement *) next()))
       if (el->fFrame == f) {
          fList->Remove(el);
+         f->SetFrameElement(0);
          delete el;
          break;
       }
@@ -1805,6 +1819,10 @@ void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
          out << el->fFrame->GetWidth() << ","  << el->fFrame->GetHeight();
          out << ");" << endl;
       }
+
+      if (!el->fFrame->IsMapped() || !(el->fState & kIsVisible)) {
+         gListOfHiddenFrames->Add(el->fFrame);
+      }
    }
    out << endl;
 }
@@ -1985,6 +2003,7 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    out <<"{"<< endl;
 
+   gListOfHiddenFrames->Clear();
    TGMainFrame::SavePrimitive(out, option);
 
    GetClassHints((const char *&)fClassName, (const char *&)fResourceName);
@@ -2023,6 +2042,15 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    }
 
    out << "   " <<GetName()<< "->MapSubwindows();" << endl;
+
+   TIter nexth(gListOfHiddenFrames);
+   TGFrame *fhidden;
+   while ((fhidden = (TGFrame*)nexth())) {
+      out << "   " <<fhidden->GetName()<< "->UnmapWindow();" << endl;
+   }
+   out << endl;
+   gListOfHiddenFrames->Clear();
+
    out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
    out << "   " <<GetName()<< "->MapWindow();" <<endl;
 
@@ -2375,6 +2403,8 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    //  Save GUI widgets as a C++ macro in a file
    out <<"{"<< endl;
+
+   gListOfHiddenFrames->Clear();
    TGTransientFrame::SavePrimitive(out, option);
 
 
@@ -2421,6 +2451,15 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    }
 
    out << "   " <<GetName()<< "->MapSubwindows();" << endl;
+
+   TIter nexth(gListOfHiddenFrames);
+   TGFrame *fhidden;
+   while ((fhidden = (TGFrame*)nexth())) {
+      out << "   " <<fhidden->GetName()<< "->UnmapWindow();" << endl;
+   }
+   out << endl;
+   gListOfHiddenFrames->Clear();
+
    out << "   " <<GetName()<< "->Resize("<< GetName()<< "->GetDefaultSize());" << endl;
    out << "   " <<GetName()<< "->MapWindow();" <<endl;
    out << "   " <<GetName()<< "->Resize();" << endl;
