@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.57 2001/04/09 08:21:55 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.58 2001/04/10 16:33:13 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1600,7 +1600,27 @@ TBranch *TTree::FindBranch(const char* branchname)
    }
    
    //search in list of friends
-   if (fFriends) return GetBranch(branchname);
+   if (!fFriends) return 0;
+   TIter nextf(fFriends);
+   TFriendElement *fe;
+   while ((fe = (TFriendElement*)nextf())) {
+      TTree *t = fe->GetTree();
+      // If the alias is present replace it with the real name.
+      char *subbranch = (char*)strstr(branchname,fe->GetName());
+      if (subbranch!=branchname) subbranch = 0;
+      if (subbranch) {
+         subbranch += strlen(fe->GetName());
+         if ( *subbranch != '.' ) subbranch = 0;
+         else subbranch ++;
+      }
+      if (subbranch) {
+         sprintf(name,"%s.%s",t->GetName(),subbranch);
+      } else {
+         strcpy(name,branchname);
+      }
+      branch = t->FindBranch(name);
+      if (branch) return branch;
+   }
    return 0;
 }
 
@@ -1657,7 +1677,27 @@ TLeaf *TTree::FindLeaf(const char* searchname)
    }
    
    //search in list of friends
-   if (fFriends) return GetLeaf(searchname);
+   if (!fFriends) return 0;
+   TIter nextf(fFriends);
+   TFriendElement *fe;
+   while ((fe = (TFriendElement*)nextf())) {
+      TTree *t = fe->GetTree();
+      // If the alias is present replace it with the real name.
+      char *subsearchname = (char*)strstr(searchname,fe->GetName());
+      if (subsearchname!=searchname) subsearchname = 0;
+      if (subsearchname) {
+         subsearchname += strlen(fe->GetName());
+         if ( *subsearchname != '.' ) subsearchname = 0;
+         else subsearchname ++;
+      }
+      if (subsearchname) {
+         sprintf(leafname,"%s.%s",t->GetName(),subsearchname);
+      } else {
+         strcpy(leafname,searchname);
+      }
+      leaf = t->FindLeaf(leafname);
+      if (leaf) return leaf;
+   }
    return 0;
 }
 
