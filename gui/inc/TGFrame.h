@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.10 2001/01/04 13:22:55 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.11 2001/01/04 14:28:10 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -397,6 +397,8 @@ protected:
    TGString      *fText;
    FontStruct_t   fFontStruct;
    GContext_t     fNormGC;
+
+   virtual void DoRedraw();
 
    static FontStruct_t  fgDefaultFontStruct;
 #ifdef R__SUNCCBUG

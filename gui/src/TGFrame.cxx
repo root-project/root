@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.9 2000/12/22 12:36:00 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.10 2001/01/04 13:22:55 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -971,6 +971,17 @@ TGGroupFrame::~TGGroupFrame()
    // Delete a group frame.
 
    delete fText;
+}
+
+//______________________________________________________________________________
+void TGGroupFrame::DoRedraw()
+{
+   // Redraw the group frame. Need special DoRedraw() since we need to
+   // redraw with fBorderWidth=0.
+
+   gVirtualX->ClearArea(fId, 0, 0, fWidth, fHeight);
+
+   DrawBorder();
 }
 
 //______________________________________________________________________________
