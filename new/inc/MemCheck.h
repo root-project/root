@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.h,v 1.3 2001/09/26 09:58:02 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: MemCheck.h,v 1.4 2001/09/26 13:22:36 rdm Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -54,8 +54,6 @@
 //
 //****************************************************************************//
 
-#include <stdlib.h>
-#include <iostream.h>
 #include "TROOT.h"
 
 

@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.5 2001/03/30 15:19:36 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: NewDelete.cxx,v 1.6 2001/09/25 16:17:36 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -59,7 +59,6 @@
 
 #include <stdlib.h>
 
-#include "TROOT.h"
 #include "MemCheck.h"
 #include "TObjectTable.h"
 #include "TError.h"
