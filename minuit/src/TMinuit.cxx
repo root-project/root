@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.11 2001/08/07 12:27:51 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.12 2001/08/07 14:03:36 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -373,7 +373,7 @@ void TMinuit::BuildArrays(Int_t maxpar)
    fVhmat  = new Double_t[mnihl];
    fVthmat = new Double_t[mnihl];
    fP      = new Double_t[mni*(mni+1)];
-   fPstar  = new Double_t[mni];
+   fPstar  = new Double_t[2*mni];
    fPstst  = new Double_t[mni];
    fPbar   = new Double_t[mni];
    fPrho   = new Double_t[mni];
