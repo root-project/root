@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.37 2004/07/05 06:55:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.38 2004/07/06 07:11:26 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -287,6 +287,10 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 // FNAL/CD
 //
 // The input histograms must be filled with weights of 1.
+// By default the function does not check this assertion.
+// if option "w" is specified, the function will fail if the histograms
+// have been filled with weights not equal to 1.
+//
 // The assumption is that the entries in "pass" are a 
 // subset of those in "total". That is, we create an "efficiency" 
 // graph, where each entry is between 0 and 1, inclusive. 
@@ -328,17 +332,19 @@ void TGraphAsymmErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 		return;
 	}
 
-	Double_t stats[10];
-	//compare sum of weights with sum of squares of weights
-	pass->GetStats(stats);
-	if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
+	if (opt.Contains("w")) {
+	   //compare sum of weights with sum of squares of weights
+           Double_t stats[10];
+	   pass->GetStats(stats);
+	   if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
 		Error("BayesDivide","Pass histogram has not been filled with weights = 1");
 		return;
-	}
-	total->GetStats(stats);
-	if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
+	   }
+	   total->GetStats(stats);
+	   if (TMath::Abs(stats[0] -stats[1]) > 1e-6) {
 		Error("BayesDivide","Total histogram has not been filled with weights = 1");
 		return;
+	   }
 	}
 
 	//Set the graph to have a number of points equal to the number of histogram bins
