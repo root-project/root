@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.12 2002/01/08 22:13:00 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.13 2002/01/09 15:18:05 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1307,12 +1307,15 @@ Bool_t TString::IsAscii() const
 }
 
 //______________________________________________________________________________
-Bool_t TString::EndsWith(const char* s, ECaseCompare cmp) const
+Bool_t TString::EndsWith(const char *s, ECaseCompare cmp) const
 {
    Ssiz_t l = strlen(s);
-   Ssiz_t i = Index(s, l, (Ssiz_t)0, cmp);
-   if (i == kNPOS) return kFALSE;
-   return i == Length() - l;
+   if (l > Length()) return kFALSE;
+   const char *s2 = Data() + Length() - l;
+
+   if (cmp == kExact)
+      return strcmp(s, s2) == 0;
+   return strcasecmp(s, s2) == 0;
 }
 
 
