@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.12 2002/05/21 13:19:25 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.13 2002/05/29 18:39:44 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -34,7 +34,6 @@
 
 class TGaxis;
 class TPainter3dAlgorithms;
-class TPaveStats;
 const Int_t kMaxCuts = 16;
 
 class THistPainter : public TVirtualHistPainter {
@@ -52,7 +51,6 @@ protected:
     Int_t                 fCutsOpt[kMaxCuts]; //sign of each cut
     TCutG                *fCuts[kMaxCuts];    //Pointers to graphical cuts
     TObjArray            *fStack;             //Pointer to stack of histograms (if any)
-    TPaveStats           *fStats;             //Pointer to the current stats pave (if any)
 
 public:
     THistPainter();
@@ -64,7 +62,6 @@ public:
     virtual void       FitPanel();
     virtual char      *GetObjectInfo(Int_t px, Int_t py) const;
     virtual TObjArray *GetStack() const {return fStack;}
-    virtual TPaveStats*GetStats() const {return fStats;}
     virtual Bool_t     IsInside(Int_t x, Int_t y);
     virtual Bool_t     IsInside(Double_t x, Double_t y);
     virtual Int_t      MakeChopt(Option_t *option);
@@ -100,7 +97,7 @@ public:
     virtual void       PaintTitle();
     virtual void       PaintTF3();
     virtual void       RecalculateRange();
-    virtual void       RecursiveRemove(TObject *);
+    virtual void       RecursiveRemove(TObject *) {;}
     virtual void       SetHistogram(TH1 *h);
     virtual void       SetStack(TObjArray *stack) {fStack = stack;}
     virtual Int_t      TableInit();
