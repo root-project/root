@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.cxx,v 1.2 2004/04/28 18:54:21 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ObjectHolder.cxx,v 1.3 2004/05/07 20:47:20 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -12,7 +12,6 @@
 
 // Standard
 #include <stdio.h>
-#include <iostream>
 
 
 //- private helpers ------------------------------------------------------------
@@ -33,6 +32,7 @@ inline void PyROOT::ObjectHolder::destroy_() const {
       *m_ref -= 1;
       if ( *m_ref <= 0 && m_class && m_object ) {
          m_class->Destructor( m_object );
+         delete m_ref;
       }
    }
 }
@@ -61,6 +61,12 @@ PyROOT::ObjectHolder::~ObjectHolder() {
 
 
 //- public members -------------------------------------------------------------
+void PyROOT::ObjectHolder::release() {
+   if ( m_ref && --*m_ref <= 0 )
+      delete m_ref;
+   m_ref = 0;
+}
+
 std::string PyROOT::ObjectHolder::repr() const {
    char buf[256];
    sprintf( buf, "Instance of type %s at address %p", m_class->GetName(), (void*)m_object );

@@ -143,8 +143,10 @@ namespace {
          return 0;
       }
 
-      return PyInt_FromLong(
-         PyObject_IsTrue( PyObject_CallMethod( self, "FindObject", "O", obj ) ) );
+      PyObject* found = PyObject_CallMethod( self, "FindObject", "O", obj );
+      PyObject* result = PyInt_FromLong( PyObject_IsTrue( found ) );
+      Py_DECREF( found );
+      return result;
    }
 
 
@@ -162,7 +164,7 @@ namespace {
 
       for ( int i = 0; i < PySequence_Size( obj ); ++i ) {
          PyObject* item = PySequence_GetItem( obj, i );
-         PyObject_CallMethod( self, "Add", "O", item );
+         Py_DECREF( PyObject_CallMethod( self, "Add", "O", item ) );
          Py_DECREF( item );
       }
 
@@ -174,13 +176,15 @@ namespace {
       PyObject* result = callSelfTObject( aTuple, "Remove", "remove" );
 
       if ( ! result )
-         return result;
+         return 0;
 
       if ( ! PyObject_IsTrue( result ) ) {
+         Py_DECREF( result );
          PyErr_SetString( PyExc_ValueError, "list.remove(x): x not in list" );
          return 0;
       }
 
+      Py_DECREF( result );
       Py_INCREF( Py_None );
       return Py_None;
    }
@@ -197,8 +201,10 @@ namespace {
          return 0;
 
       PyObject* result = PyObject_CallMethod( l, "extend", "O", other );
-      if ( ! result )
+      if ( ! result ) {
+         Py_DECREF( l );
          return 0;
+      }
 
       return l;
    }
@@ -217,10 +223,10 @@ namespace {
       }
 
       PyObject* nseq = bindRootObject(
-         new ObjectHolder( obh->objectIsA()->New(), obh->objectIsA(), true ) );
+         new ObjectHolder( obh->objectIsA()->New(), obh->objectIsA() ) );
 
       for ( int i = 0; i < (int) PyLong_AsLong( imul ); ++i ) {
-         PyObject_CallMethod( nseq, "extend", "O", self );
+         Py_DECREF( PyObject_CallMethod( nseq, "extend", "O", self ) );
       }
 
       return nseq;
@@ -253,8 +259,10 @@ namespace {
       int count = 0;
       for ( int i = 0; i < PySequence_Size( self ); ++i ) {
          PyObject* item = PySequence_GetItem( self, i );
-         if ( PyObject_IsTrue( PyObject_CallMethod( item, "IsEqual", "O", obj ) ) )
+         PyObject* found = PyObject_CallMethod( item, "IsEqual", "O", obj );
+         if ( PyObject_IsTrue( found ) )
             count += 1;
+         Py_DECREF( found );
          Py_DECREF( item );
       }
 
@@ -275,7 +283,7 @@ namespace {
       TCollection* col =
          (TCollection*) obh->objectIsA()->DynamicCast( TCollection::Class(), obh->getObject() );
 
-      ObjectHolder* b = new ObjectHolder( (void*) new TIter( col ), TIter::Class(), true );
+      ObjectHolder* b = new ObjectHolder( (void*) new TIter( col ), TIter::Class() );
 
       return bindRootObject( b );
    }
@@ -305,7 +313,7 @@ namespace {
             nseq->Add( oseq->At( i ) );
          }
 
-         return bindRootObject( new ObjectHolder( nseq, clseq, true ) );
+         return bindRootObject( new ObjectHolder( (void*) nseq, clseq ) );
       }
 
       return callSelfIndex( aTuple, "At" );
@@ -356,6 +364,7 @@ namespace {
          return 0;
       }
 
+      Py_DECREF( result );
       result = PyObject_CallMethod( self, "AddAt", "OO", obj, pyindex );
       Py_DECREF( pyindex );
       return result;
@@ -390,6 +399,7 @@ namespace {
       if ( ! result )
          return 0;
 
+      Py_DECREF( result );
       Py_INCREF( Py_None );
       return Py_None;
    }
@@ -437,10 +447,10 @@ namespace {
       if ( ! tup )
          return 0;
 
-      PyObject_CallMethod( self, "Clear", "" );
+      Py_DECREF( PyObject_CallMethod( self, "Clear", "" ) );
 
       for ( int i = 0; i < PySequence_Size( tup ); ++i ) {
-         PyObject_CallMethod( self, "AddAt", "Oi", PyTuple_GET_ITEM( tup, i ), 0 );
+         Py_DECREF( PyObject_CallMethod( self, "AddAt", "Oi", PyTuple_GET_ITEM( tup, i ), 0 ) );
       }
 
       Py_INCREF( Py_None );
@@ -457,14 +467,14 @@ namespace {
       else {
       // sort in a python list copy
          PyObject* l = PySequence_List( self );
-         PyObject_CallMethod( l, "sort", "O", PyTuple_GET_ITEM( aTuple, 1 ) );
+         Py_DECREF( PyObject_CallMethod( l, "sort", "O", PyTuple_GET_ITEM( aTuple, 1 ) ) );
          if ( PyErr_Occurred() ) {
             Py_DECREF( l );
             return 0;
          }
 
-         PyObject_CallMethod( self, "Clear", "" );
-         PyObject_CallMethod( self, "extend", "O", l );
+         Py_DECREF( PyObject_CallMethod( self, "Clear", "" ) );
+         Py_DECREF( PyObject_CallMethod( self, "extend", "O", l ) );
          Py_DECREF( l );
 
          Py_INCREF( Py_None );
@@ -533,16 +543,19 @@ namespace {
 
 //- TIter behaviour ------------------------------------------------------------
    PyObject* iterIter( PyObject* /* None */, PyObject* aTuple ) {
-      return PyTuple_GET_ITEM( aTuple, 0 );
+      PyObject* iter = PyTuple_GET_ITEM( aTuple, 0 );
+      Py_INCREF( iter );
+      return iter;
    }
 
    PyObject* iterNext( PyObject* /* None */, PyObject* aTuple ) {
       PyObject* next = callSelf( aTuple, "Next", "next" );
 
       if ( ! next )
-         return next;
+         return 0;
 
       if ( ! PyObject_IsTrue( next ) ) {
+         Py_DECREF( next );
          PyErr_SetString( PyExc_StopIteration, "" );
          return 0;
       }

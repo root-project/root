@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: ConstructorDispatcher.cxx,v 1.1 2004/04/27 06:28:48 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: ConstructorDispatcher.cxx,v 1.2 2004/05/07 20:47:20 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -49,12 +49,17 @@ PyObject* PyROOT::ConstructorDispatcher::operator()( PyObject* aTuple, PyObject*
       PyObject* self = PyTuple_GetItem( aTuple, 0 );
       Py_INCREF( self );
 
-   // Note "false" for ROOT object deletion from the python side!
+   // special case when destroying TObjects
+      TObject* tobj = (TObject*) cls->DynamicCast( TObject::Class(), (void*)address );
+      if ( tobj )
+         tobj->SetBit( kMustCleanup );
+
+   // Note "false" (== default) for ROOT object deletion from the python side!
    // The reason for this is that ROOT does not share in python's reference counting
    // and scopes between C++ and python are different. Thus, ROOT could hold on to
    // objects internally, even though objects have phased out on the python side.
       PyObject* cobj = PyCObject_FromVoidPtr(
-         new ObjectHolder( (void*)address, cls, false ), NULL ); //destroyObjectHolder );
+         new ObjectHolder( (void*)address, cls ), destroyObjectHolder );
       PyObject_SetAttr( self, Utility::theObjectString_, cobj );
 
    // allow lookup upon destruction on the ROOT/CINT side
@@ -62,6 +67,8 @@ PyObject* PyROOT::ConstructorDispatcher::operator()( PyObject* aTuple, PyObject*
 
    // done with this object
       Py_DECREF( cobj );
+
+   // done with self
       Py_DECREF( self );
 
       Py_INCREF( Py_None );

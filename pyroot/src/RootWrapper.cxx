@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.7 2004/06/17 21:12:26 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.8 2004/07/27 12:27:04 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -38,8 +38,6 @@
 #if defined(linux) || defined(sun)
   #include "dlfcn.h"
 #endif
-
-#include <iostream>
 
 
 //- data _______________________________________________________________________
@@ -367,7 +365,12 @@ PyObject* PyROOT::bindRootObject( ObjectHolder* obj ) {
       Py_DECREF( args );
 
       if ( pyclass ) {
-      // instantiate an object of this class, with the holder added to it
+      // use the old reference if the object already exists
+         PyObject* oldObject = MemoryRegulator::RetrieveObject( obj->getObject() );
+         if ( oldObject )
+            return oldObject;
+
+      // if not: instantiate an object of this class, with the holder added to it
          PyObject* newObject = PyType_GenericNew( (PyTypeObject*)pyclass, NULL, NULL );
          Py_DECREF( pyclass );
 
@@ -379,7 +382,8 @@ PyObject* PyROOT::bindRootObject( ObjectHolder* obj ) {
             Py_DECREF( cobj );
 
          // memory management
-            MemoryRegulator::RegisterObject( newObject, obj->getObject() );
+            if ( obj->getObject() )
+               MemoryRegulator::RegisterObject( newObject, obj->getObject() );
 
          // successful completion
             return newObject;
