@@ -249,7 +249,7 @@ config config/Makefile.:
 	   exit 1; \
 	fi)
 
-$(COMPILEDATA): config/Makefile.$(ARCH)
+$(COMPILEDATA): config/Makefile.$(ARCH) $(MAKECOMPDATA)
 	@$(MAKECOMPDATA) $(COMPILEDATA) $(CXX) "$(OPT)" "$(CXXFLAGS)" \
 	   "$(SOFLAGS)" "$(LDFLAGS)" "$(SOEXT)" "$(SYSLIBS)" "$(LIBDIR)" \
 	   "$(ROOTLIBS)" "$(RINTLIBS)" "$(INCDIR)" "$(MAKESHAREDLIB)" \

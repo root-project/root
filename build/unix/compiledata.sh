@@ -43,7 +43,7 @@ if [ "x`echo $SOFLAGS | grep -- '-soname,$' `" != "x" ]; then
 fi
 rm -f __compiledata
 
-echo "Running $COMPILEDATA"
+echo "Running $0"
 echo "/* This is file is automatically generated */" > __compiledata
 echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
@@ -70,7 +70,7 @@ if [ -r $COMPILEDATA ]; then
       echo "Changing $COMPILEDATA"
       mv __compiledata $COMPILEDATA;
    else
-      rm -f __compiledata; fi;
+      rm -f __compiledata; fi
 else
    echo "Making $COMPILEDATA"
    mv __compiledata $COMPILEDATA; fi
