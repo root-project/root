@@ -113,8 +113,8 @@ Rint.Logoff:             rootlogoff.C
 Rint.History:            $(HOME)/.root_hist
 
 # ACLiC customization.
-# ACLiC.Linkdef will be used to located extra linkdef information to be
-# used by ACLiC when generating a script's dictionary.
+# ACLiC.Linkdef specifies the suffix that will be added to the script name to
+# try to locate a custom linkdef file when generating the dictionary.
 ACLiC.Linkdef:          _linkdef
 
 # Plugin library handlers
