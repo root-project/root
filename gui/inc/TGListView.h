@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.9 2002/06/12 16:46:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.10 2002/06/12 17:56:25 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -90,10 +90,10 @@ public:
 
    virtual void SetViewMode(EListViewMode ViewMode);
 
-   virtual void   Activate(Bool_t a);
-   Bool_t IsActive() const { return fActive; }
-   TGString  *GetItemName() const { return fName; }
-   void SetItemName(const char *name) { *fName = name; }
+   virtual void     Activate(Bool_t a);
+   Bool_t           IsActive() const { return fActive; }
+   TGString        *GetItemName() const { return fName; }
+   void             SetItemName(const char *name) { *fName = name; }
    const TGPicture *GetPicture() const { return fCurrent; }
    void             SetUserData(void *userData) { fUserData = userData; }
    void            *GetUserData() const { return fUserData; }
@@ -138,7 +138,7 @@ public:
    virtual void SetListView(TGListView *lv) { fListView = lv; }
    virtual void RemoveItemWithData(void *userData);
    virtual void SetViewMode(EListViewMode ViewMode);
-   Int_t GetViewMode() const { return fViewMode; }
+   Int_t        GetViewMode() const { return fViewMode; }
    virtual void SetColumns(Int_t *cpos, Int_t *jmode);
 
    virtual TGDimension GetMaxItemSize() const;

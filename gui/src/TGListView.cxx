@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.9 2002/06/12 16:46:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.10 2002/06/12 17:56:25 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -266,7 +266,8 @@ TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
    // all the list items. It will be shown through a TGViewPort (which is
    // created by the TGCanvas derived TGListView).
 
-   fListView   = 0;
+   fListView = 0;
+   fLastActive = 0;
    fCpos = fJmode = 0;
 
    fViewMode = kLVLargeIcons;

@@ -1,9 +1,9 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.7 2002/06/12 17:56:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.8 2002/06/20 15:07:34 brun Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
+ * All rights reserved.                                        f          *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
@@ -51,7 +51,7 @@ protected:
    TGViewPort        *fViewPort;      // container viewport
    TGCanvas          *fCanvas;        // pointer to canvas
    const TGWindow    *fMsgWindow;     // window handling container messages
-   TGFrameElement    *fLastActiveEl;  // last active  item
+   TGFrameElement    *fLastActiveEl;  // last active item
    Int_t              fXp, fYp;       // previous pointer position
    Int_t              fX0, fY0;       // corner of rubber band box
    Int_t              fXf, fYf;       // other corner of rubber band box
@@ -115,8 +115,8 @@ public:
    TGDimension       GetPageDimension() const;
 
    virtual Bool_t IsMapSubwindows() const { return fMapSubwindows; }
-   virtual Int_t NumSelected() const { return fSelected; }
-   virtual Int_t NumItems() const { return fTotal; }
+   virtual Int_t  NumSelected() const { return fSelected; }
+   virtual Int_t  NumItems() const { return fTotal; }
    virtual TGFrameElement *FindFrame(Int_t x,Int_t y,Bool_t exclude=kTRUE);
 
    virtual const TGFrame *GetNextSelected(void **current);
@@ -141,7 +141,7 @@ public:
    virtual void DoubleClicked(TGFrame *f, Int_t btn, Int_t x, Int_t y); //*SIGNAL*
    virtual void Clicked(TGFrame *f, Int_t btn, Int_t x, Int_t y);       //*SIGNAL*
 
-   ClassDef(TGContainer,0)  // canvas container
+   ClassDef(TGContainer,0)  // Canvas container
 };
 
 
@@ -149,7 +149,7 @@ class TGViewPort : public TGCompositeFrame {
 
 protected:
    Int_t       fX0, fY0;     // position of container frame in viewport
-   TGFrame         *fContainer;       // container frame
+   TGFrame    *fContainer;   // container frame
 
 public:
    TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
