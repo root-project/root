@@ -1,4 +1,4 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.17 2005/03/04 07:44:11 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.18 2005/03/16 06:15:06 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
 # Last: 01/04/05
@@ -29,9 +29,10 @@ try:
 except:
   pass
 
-## load PyROOT C++ extension module, special case for linux
-isLinux = 0 <= pystring.find( sys.platform, 'linux' )
-if isLinux:
+## load PyROOT C++ extension module, special case for linux and Sun
+needsGlobal =  ( 0 <= pystring.find( sys.platform, 'linux' ) ) or\
+               ( 0 <= pystring.find( sys.platform, 'sunos' ) )
+if needsGlobal:
  # change dl flags to load dictionaries from pre-linked .so's
    dlflags = sys.getdlopenflags()
    sys.setdlopenflags( 0x100 | 0x2 )    # RTLD_GLOBAL | RTLD_NOW
@@ -39,9 +40,9 @@ if isLinux:
 from libPyROOT import *
 
 # reset dl flags if needed
-if isLinux:
+if needsGlobal:
    sys.setdlopenflags( dlflags )
-
+del needsGlobal
 
 ## 2.2 has 10 instructions as default, 2.3 has 100 ... make same
 sys.setcheckinterval( 100 )
