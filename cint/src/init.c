@@ -2073,6 +2073,9 @@ void G__platformMacro()
 #ifdef __KCC        /* KCC  C++ compiler */
   sprintf(temp,"G__KCC=%ld",(long)__KCC); G__add_macro(temp);
 #endif
+#ifdef __INTEL_COMPILER /* icc and ecc C++ compilers */
+  sprintf(temp,"G__INTEL_COMPILER=%ld",(long)__INTEL_COMPILER); G__add_macro(temp);
+#endif
   /***********************************************************************
    * micro processor
    ***********************************************************************/
@@ -2087,6 +2090,9 @@ void G__platformMacro()
 #endif
 #ifdef __i960__ /* Intel 960 */
   sprintf(temp,"G__i860=%ld",(long)__i960__); G__add_macro(temp);
+#endif
+#ifdef __ia64__ /* Intel Itanium */
+  sprintf(temp,"G__ia64=%ld",(long)__ia64__); G__add_macro(temp);
 #endif
 #ifdef __m88k__ /* Motorola 88000 */
   sprintf(temp,"G__m88k=%ld",(long)__m88k__); G__add_macro(temp);
