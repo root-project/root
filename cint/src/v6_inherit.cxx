@@ -45,7 +45,12 @@ char baseaccess;
   if(G__NOLINK==G__globalcomp && 
      G__CPPLINK==G__struct.iscpplink[from_tagnum] &&
      G__CPPLINK!=G__struct.iscpplink[to_tagnum]) {
-    if(G__dispmsg>=G__DISPWARN) {
+    int warn = 1;
+#ifdef G__ROOT
+    if (!strcmp(G__fulltagname(from_tagnum,1), "TSelector")) 
+      warn = 0;
+#endif
+    if(G__dispmsg>=G__DISPWARN && warn) {
 #ifndef G__OLDIMPLEMENTATION1368
       G__fprinterr(G__serr,
 		   "Warning: Interpreted class %s derived from"
