@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.31 2003/02/05 15:11:12 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.1 2003/09/21 21:38:31 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand  17/09/2003
 
 /*************************************************************************
@@ -26,8 +26,12 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#ifdef _WIN32
+#include <WinDef.h>
+#include <WinSock2.h>
+#endif
+
 #define RFIO_KERNEL           // Get access to extra symbols in the headers
-#include <serrno.h>           // Access to serrno and sstrerror(serrno)
 #include <stage_api.h>        // Dial with CASTOR stager
 #include <rfio_api.h>         // Util routines from rfio
 #include <Cns_api.h>          // Dial with CASTOR Name Server

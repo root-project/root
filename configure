@@ -283,6 +283,15 @@ check_header()  {
 	found_dir="include"
     fi
 
+    if test "x$platform" = "xwin32"; then
+        if test ! "x$found_hdr" = "x" ; then
+           found_hdr=`cygpath -m $found_hdr`
+        fi
+        if test ! "x$found_dir" = "x" ; then
+           found_dir=`cygpath -m $found_dir`
+        fi
+    fi
+
     unset hdrs
     unset hdrdirs
     unset hdrdir
@@ -1106,8 +1115,9 @@ if test ! "x$enable_rfio" = "xno" ; then
         enable_rfio="no"
     else
         case $platform in
-           linux*) shiftlib="$shiftlib -lnsl" ;;
+           linux*)     shiftlib="$shiftlib -lnsl" ;;
            solarisCC5) shiftlib="$shiftlib -lposix4" ;;
+           win32)      shiftincdir="$shiftincdir -I$shiftincdir/../win32" ;;
         esac
     fi
 fi
