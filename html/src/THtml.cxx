@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.53 2004/01/29 07:37:34 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.54 2004/01/29 16:06:23 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2270,7 +2270,8 @@ void THtml::CreateHierarchy(const char **classNames, Int_t numberOfClasses)
         TClass *basePtr = GetClass((const char *) classNames[i]);
         
         // Find basic base classes
-	if ((basePtr->GetListOfBases())->IsEmpty()){
+	TList *bases = basePtr->GetListOfBases();
+        if (bases && bases->IsEmpty()){
 
           out << "<hr>" << endl;
                 
