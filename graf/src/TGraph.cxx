@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.65 2002/04/26 10:20:01 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.66 2002/04/27 07:49:00 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2040,7 +2040,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
 
    const char *where = "PaintGraphHist";
 
-   const Int_t NPMXFA= 99;
    Int_t OptionLine , OptionAxis , OptionCurve, OptionStar , OptionMark;
    Int_t OptionBar  , OptionRot  , OptionOne;
    Int_t OptionFill , OptionZ;
@@ -2223,20 +2222,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               }
               continue;
            }
-           if (npt >= NPMXFA) {
-              gxwork[npt-1] = gxwork[npt-2];
-              gywork[npt-1] = gywork[0];
-              ComputeLogs(npt, OptionZ);
-              gPad->PaintFillArea(npt,gxworkl,gyworkl);
-              if (drawborder) {
-                 if (!fillarea) gyworkl[0] = ylast;
-                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl);
-                 fillarea = kFALSE;
-              }
-              ylast    = gyworkl[npt-1];
-              gxwork[0] = gxwork[npt-1];
-              npt      = 2;
-           }
         }  //endfor (j=first; j<=last;j++) {
      }
      else {
@@ -2270,20 +2255,6 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
                  gPad->PaintPolyLine(npt-1,gxworkl,gyworkl);
               }
               continue;
-           }
-           if (npt >= NPMXFA) {
-              gywork[npt-1] = gywork[npt-2];
-              gxwork[npt-1] = gxwork[0];
-              ComputeLogs(npt, OptionZ);
-              gPad->PaintFillArea(npt,gxworkl,gyworkl);
-              if (drawborder) {
-                 if (!fillarea) gyworkl[0] = ylast;
-                 gPad->PaintPolyLine(npt-1,gxworkl,gyworkl);
-                 fillarea = kFALSE;
-              }
-              ylast    = gyworkl[npt-1];
-              gywork[0] = gywork[npt-1];
-              npt      = 2;
            }
         }  //endfor (j=first; j<=last;j++)
      }
