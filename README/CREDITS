@@ -92,6 +92,8 @@ D: Lorentz vector classes, PDG interface
 N: Valeriy Onuchin
 E: onuchin@sirius.ihep.su
 D: various contributions to GUI classes (scrolled text in TGTextEntry)
+D: implementation of Qt like signals and slots mechanism (TQObject,
+D: TQConnection, etc.)
 
 N: Suzanne Panacek
 E: spanacek@fnal.gov
