@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$                                                             *
+ *    File: $Id: RooAddModel.cc,v 1.29 2002/09/04 21:06:54 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -411,6 +411,9 @@ void RooAddModel::normLeafServerList(RooArgSet& list) const
   RooResolutionModel* model ;
   while(proxy = (RooRealProxy*) pIter->Next()) {
     model = (RooResolutionModel*) proxy->absArg() ;
+    if (model->_norm==0) {
+      model->syncNormalization(proxy->nset()) ;
+    }
     model->_norm->leafNodeServerList(&list) ;
   }
   delete pIter ;
