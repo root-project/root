@@ -112,6 +112,11 @@ Rint.Logoff:             rootlogoff.C
 # Record session commands, set to "-" to turn off command recording
 Rint.History:            $(HOME)/.root_hist
 
+# ACLiC customization.
+# ACLiC.Linkdef will be used to located extra linkdef information to be
+# used by ACLiC when generating a script's dictionary.
+ACLiC.Linkdef:          _linkdef
+
 # Plugin library handlers
 +Plugin.TFile:       ^rfio:    TRFIOFile     RFIO
 +Plugin.TFile:       ^dcache:  TDCacheFile   DCache
@@ -124,4 +129,3 @@ Rint.History:            $(HOME)/.root_hist
 # This overrides the default specified above for a generic application.
 # Color 5 is yellow.
 Rint.Canvas.HighLightColor:      5
-
