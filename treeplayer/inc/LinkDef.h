@@ -1,4 +1,4 @@
-/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.11 2003/01/17 17:48:56 brun Exp $ */
+/* @(#)root/treeplayer:$Name:  $:$Id: LinkDef.h,v 1.12 2004/06/25 18:42:19 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
