@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.6 2000/08/18 13:18:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.7 2000/08/18 13:43:46 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -268,7 +268,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gRandom        = new TRandom;
 
    //set name of graphical cut class for the graphics editor
-   SetCutClassName("TCutG");
+   //cannot call SetCutClassName at this point because the TClass of TCutG 
+   //is not yet build
+   fCutClassName = "TCutG";
    
    // Create a default MessageHandler
    new TMessageHandler((TClass*)0);
