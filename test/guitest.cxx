@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.47 2005/01/18 21:07:27 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.48 2005/01/21 15:19:02 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -535,9 +535,9 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuFile->HideEntry(M_FILE_PRINT);
 
    fCascade2Menu = new TGPopupMenu(fClient->GetRoot());
-   fCascade2Menu->AddEntry("ID = 1&6", M_CASCADE_1);
-   fCascade2Menu->AddEntry("ID = 1&7", M_CASCADE_2);
-   fCascade2Menu->AddEntry("ID = 1&8", M_CASCADE_3);
+   fCascade2Menu->AddEntry("ID = 2&3", M_CASCADE_1);
+   fCascade2Menu->AddEntry("ID = 2&4", M_CASCADE_2);
+   fCascade2Menu->AddEntry("ID = 2&5", M_CASCADE_3);
 
    fCascade1Menu = new TGPopupMenu(fClient->GetRoot());
    fCascade1Menu->AddEntry("ID = 4&1", 41);

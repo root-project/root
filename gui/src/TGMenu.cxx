@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.46 2004/10/21 14:25:30 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.47 2005/01/18 21:07:26 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -1018,7 +1018,7 @@ Bool_t TGPopupMenu::HandleButton(Event_t *event)
          fCurrent->fStatus &= ~kMenuActiveMask;
          if (fCurrent->fStatus & kMenuEnableMask) {
             SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_MENU), id,
-                        (Long_t)fCurrent->fUserData);
+                        (Long_t)ud);
             Activated(id);
          }
       }

@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.49 2005/01/18 21:07:27 brun Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.50 2005/01/21 15:19:02 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -605,9 +605,9 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    fMenuFile->HideEntry(M_FILE_PRINT);
 
    fCascade2Menu = new TGPopupMenu(gClient->GetRoot());
-   fCascade2Menu->AddEntry("ID = 1&6", M_CASCADE_1);
-   fCascade2Menu->AddEntry("ID = 1&7", M_CASCADE_2);
-   fCascade2Menu->AddEntry("ID = 1&8", M_CASCADE_3);
+   fCascade2Menu->AddEntry("ID = 2&3", M_CASCADE_1);
+   fCascade2Menu->AddEntry("ID = 2&4", M_CASCADE_2);
+   fCascade2Menu->AddEntry("ID = 2&5", M_CASCADE_3);
 
    fCascade1Menu = new TGPopupMenu(gClient->GetRoot());
    fCascade1Menu->AddEntry("ID = 4&1", 41);
@@ -772,7 +772,7 @@ void TestMainFrame::CloseWindow()
 {
    // Got close message for this MainFrame. Terminates the application.
 
-   delete this;
+   gApplication->Terminate();
 }
 
 void TestMainFrame::DoButton()
