@@ -33,15 +33,15 @@ ICC_MINOR    := $(shell $(CXX) -v 2>&1 | awk '{ if (NR==1) print $$2 }' | \
                 cut -d'.' -f2)
 
 # Linker:
-LD            = icc
+LD            = icpc
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lstdc++ -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) -rdynamic
-XLIBS         = -lstdc++ $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
-CILIBS        = -lstdc++ -lm -ldl -rdynamic
+SYSLIBS       = -lm -ldl $(OSTHREADLIBDIR) $(OSTHREADLIB) -rdynamic
+XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lX11
+CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
 
 # Fortran:

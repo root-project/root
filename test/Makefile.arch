@@ -345,8 +345,8 @@ ifeq ($(ARCH),linuxx8664icc)
 # AMD Opteron and Intel EM64T (64 bit mode) Linux with Intel icc compiler
 CXX           = icc
 CXXFLAGS      = -O -fPIC -wd1476 -wd1572
-LD            = icc
-LDFLAGS       = -O -lstdc++
+LD            = icpc
+LDFLAGS       = -O
 SOFLAGS       = -shared
 endif
 
