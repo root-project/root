@@ -1,14 +1,14 @@
-// @(#)root/qt:$Name:$:$Id:$
 // Author: Valeri Fine   21/01/2002
-
-/*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
- * Copyright (C) 2002 by Valeri Fine.                                    *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+/****************************************************************************
+** $Id: GQtGUIThread.cxx,v 1.16 2004/07/30 14:12:07 fine Exp $
+**
+** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
+**
+** This file may be distributed under the terms of the Q Public License
+** as defined by Trolltech AS of Norway and appearing in the file
+** LICENSE.QPL included in the packaging of this file.
+**
+*****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -63,6 +63,8 @@
 //______________________________________________________________________________
    SENDACTION3(ResizeWindow,Window_t, id, UInt_t,w, UInt_t,h);
 //______________________________________________________________________________
+   SENDACTION1(IconifyWindow,Window_t, id);
+ //______________________________________________________________________________
    SENDACTION2(SetWindowBackground,Window_t, id, ULong_t,color);
 //______________________________________________________________________________
    SENDACTION2(SetWindowBackgroundPixmap,Window_t, id, Pixmap_t,pxm);
@@ -77,11 +79,24 @@
 //______________________________________________________________________________
   SENDACTION0(CloseDisplay);
 //______________________________________________________________________________
+   Display_t  TQtThread::GetDisplay()  const { return TGQt::GetDisplay(); }
+//______________________________________________________________________________
+   Visual_t   TQtThread::GetVisual()   const { return TGQt::GetVisual();  }
+//______________________________________________________________________________
+   Int_t      TQtThread::GetScreen()   const { return TGQt::GetScreen();  }
+//______________________________________________________________________________
+   Int_t      TQtThread::GetDepth()    const { return TGQt::GetDepth();   }
+//______________________________________________________________________________
+   Colormap_t TQtThread::GetColormap() const { return TGQt::GetColormap();} 
+
+//______________________________________________________________________________
   RETURNACTION2(Atom_t,InternAtom,const char *,atom_name, Bool_t, only_if_exist);
 //______________________________________________________________________________
 //  RETURNACTION1(Window_t,GetParent,Window_t, id);
 //______________________________________________________________________________
-Window_t TQtThread::GetParent(Window_t /*id*/ ) const {return 0;}
+ Window_t TQtThread::GetParent(Window_t /*id*/ ) const {return 0;}
+//______________________________________________________________________________
+ Window_t TQtThread::GetDefaultRootWindow() const { return TGQt::GetDefaultRootWindow();}
 //______________________________________________________________________________
   RETURNACTION1(FontStruct_t, LoadQueryFont,const char *,font_name);
 //______________________________________________________________________________
@@ -123,10 +138,7 @@ Window_t TQtThread::GetParent(Window_t /*id*/ ) const {return 0;}
 #endif
 //______________________________________________________________________________
   RETURNACTION2(Bool_t,ReadPictureDataFromFile,const char *,filename, char ***,ret_data);
-#if BUG2DEBUG
-//______________________________________________________________________________
-  SENDACTION1(DeletePictureData,void *,data);
-#endif
+
 //______________________________________________________________________________
   SENDACTION4(SetDashes,GContext_t,gc, Int_t,offset, const char *,dash_list,
                                   Int_t,n);
@@ -249,3 +261,13 @@ Window_t TQtThread::GetParent(Window_t /*id*/ ) const {return 0;}
   VOIDACTION5(SetClipRectangles,GContext_t,gc, Int_t,x, Int_t,y, Rectangle_t *,recs, Int_t,n);
 //______________________________________________________________________________
   SENDACTION1(Update,Int_t,mode);
+
+  
+//______________________________________________________________________________
+Bool_t  TQtThread::CreatePictureFromFile(Drawable_t id, const char *filename,
+                                              Pixmap_t &pict, Pixmap_t &pict_mask,
+                                              PictureAttributes_t &attr)
+{ return    TGQt::CreatePictureFromFile(id,filename,pict,pict_mask,attr); }
+
+//______________________________________________________________________________
+void TQtThread::DeletePictureData(void *data) { TGQt::DeletePictureData(data);}

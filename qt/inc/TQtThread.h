@@ -1,14 +1,13 @@
-// @(#)root/qt:$Name:$:$Id:$
 // Author: Valeri Fine   21/01/2002
-
-/*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
- * Copyright (C) 2002 by Valeri Fine.                                    *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+/****************************************************************************
+** $Id: TQtThread.h,v 1.20 2004/07/30 17:08:01 fine Exp $
+**
+** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
+**
+** This file may be distributed under the terms of the Q Public License
+** as defined by Trolltech AS of Norway and appearing in the file
+** LICENSE.QPL included in the packaging of this file.
+*****************************************************************************/
 
 #ifndef ROOT_TQtThread
 #define ROOT_TQtThread
@@ -21,7 +20,6 @@
 // Qt graphics, pixmap, text and font handling routines.                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-
 #ifndef __CINT__
 #include "qobject.h"
 #endif
@@ -30,7 +28,7 @@
 
 class TQtThread :
 #ifndef __CINT__
-  public QObject,
+  public QObject, 
 #endif
   public TGQt {
 #ifndef __CINT__
@@ -42,7 +40,7 @@ private:
 public:
 
    TQtThread();
-   TQtThread(const TQtThread &) :
+   TQtThread(const TQtThread &) : 
 #ifndef __CINT__
       QObject(),
 #endif
@@ -51,6 +49,7 @@ public:
     TQtThread(const Text_t *name, const Text_t *title);
     virtual ~TQtThread();
 #ifndef __CINT__
+#ifndef NEWINTERFACE
     Bool_t    Init(void *display=0);
     void      ClearWindow();
     void      ClosePixmap();
@@ -65,15 +64,23 @@ public:
     void      DrawPolyLine(Int_t n, TPoint *xy);
     void      DrawPolyMarker(Int_t n, TPoint *xy);
     void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, TVirtualX::ETextMode mode);
+    UInt_t    ExecCommand(TGWin32Command *code);
     void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
     Int_t     GetDoubleBuffer(Int_t wid);
+    void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
+    const char *DisplayName(const char * = 0);
+    Handle_t  GetNativeEvent() const;
     ULong_t   GetPixel(Color_t cindex);
+    void      GetPlanes(Int_t &nplanes);
+    void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
     void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
+    Float_t   GetTextMagnitude();
     Int_t     InitWindow(ULong_t window=0);
+    Bool_t    HasTTFonts() const;
     void      MoveWindow(Int_t wid, Int_t x, Int_t y);
     Int_t     OpenPixmap(UInt_t w, UInt_t h);
     void      PutByte(Byte_t b);
-    void      QueryPointer(Int_t &ix, Int_t &iy) {TGQt::QueryPointer(ix, iy);} // empty impl.
+    void      QueryPointer(Int_t &ix, Int_t &iy);
     Pixmap_t  ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t id=0);
     Int_t     RequestLocator(Int_t mode, Int_t ctyp, Int_t &x, Int_t &y);
     Int_t     RequestString(Int_t x, Int_t y, char *text);
@@ -86,6 +93,8 @@ public:
     void      SetClipRegion(Int_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
     void      SetCursor(Int_t win, ECursor cursor);
     void      SetDoubleBuffer(Int_t wid, Int_t mode);
+    void      SetDoubleBufferOFF();
+    void      SetDoubleBufferON();
     void      SetDrawMode(TVirtualX::EDrawMode mode);
     void      SetFillColor(Color_t cindex);
     void      SetFillStyle(Style_t style);
@@ -237,6 +246,31 @@ public:
    virtual void         SetForeground(GContext_t gc, ULong_t foreground);
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    virtual void         Update(Int_t mode = 0);
+   
+   virtual void         SelectPixmap(Int_t qpixid);
+   virtual Int_t        AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
+   virtual void         RemoveWindow(ULong_t qwid);
+   virtual void         IconifyWindow(Window_t id);
+   virtual Display_t    GetDisplay() const;
+   virtual Visual_t     GetVisual() const;
+   virtual Int_t        GetScreen() const;
+   virtual Int_t        GetDepth() const;
+   virtual Colormap_t   GetColormap() const;
+   virtual Window_t     GetDefaultRootWindow() const;
+   virtual Bool_t       CreatePictureFromFile(Drawable_t id, const char *filename,
+                                              Pixmap_t &pict, Pixmap_t &pict_mask,
+                                              PictureAttributes_t &attr);
+  virtual void         DeletePictureData(void *data);    
+
+   
+   #else
+   // Include the base TVirtualX class interface 
+#include "TVirtualX.interface.h"
+    void      PutByte(Byte_t b);
+    void      SetFillStyleIndex( Int_t style, Int_t fasi);
+    void      TQtThread::SetMarkerType(int, int, TPoint*);
+    void      TQtThread::SetTitle(const char*);
+#endif   
 
            bool event(QEvent *e);
 #endif

@@ -1,14 +1,13 @@
-// @(#)root/qt:$Name:$:$Id:$
 // Author: Valeri Fine   21/01/2002
-
-/*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
- * Copyright (C) 2002 by Valeri Fine.                                    *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+/****************************************************************************
+** $Id: TQtThread.cxx,v 1.12 2004/07/30 14:12:07 fine Exp $
+**
+** Copyright (C) 2002 by Valeri Fine.  All rights reserved.
+**
+** This file may be distributed under the terms of the Q Public License
+** as defined by Trolltech AS of Norway and appearing in the file
+** LICENSE.QPL included in the packaging of this file.
+*****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -58,29 +57,48 @@ TQtThread::~TQtThread(){;}
 //______________________________________________________________________________
     SENDACTION1(DeleteOpenGLContext,Int_t,wid);    // Create OpenGL context for win windows (for "selected" Window by default)
 //______________________________________________________________________________
-   VOIDACTION5(DrawBox,Int_t, x1, Int_t, y1, Int_t, x2, Int_t, y2, TVirtualX::EBoxMode, mode);
+    VOIDACTION5(DrawBox,Int_t, x1, Int_t, y1, Int_t, x2, Int_t, y2, TVirtualX::EBoxMode, mode);
 //______________________________________________________________________________
     VOIDACTION7(DrawCellArray,Int_t,x1, Int_t,y1, Int_t,x2, Int_t,y2, Int_t,nx, Int_t,ny, Int_t*,ic);
 //______________________________________________________________________________
-     VOIDACTION2(DrawFillArea,Int_t,n, TPoint *,xy);
+    VOIDACTION2(DrawFillArea,Int_t,n, TPoint *,xy);
 //______________________________________________________________________________
-     VOIDACTION4(DrawLine,Int_t,x1, Int_t,y1, Int_t,x2, Int_t,y2);
+    VOIDACTION4(DrawLine,Int_t,x1, Int_t,y1, Int_t,x2, Int_t,y2);
 //______________________________________________________________________________
-     VOIDACTION2(DrawPolyLine,Int_t,n, TPoint *,xy);
+    VOIDACTION2(DrawPolyLine,Int_t,n, TPoint *,xy);
 //______________________________________________________________________________
-     VOIDACTION2(DrawPolyMarker,Int_t,n, TPoint *,xy);
+    VOIDACTION2(DrawPolyMarker,Int_t,n, TPoint *,xy);
 //______________________________________________________________________________
-     VOIDACTION6(DrawText,Int_t,x, Int_t,y, Float_t, angle, Float_t, mgn, const char *,text, TVirtualX::ETextMode, mode);
+    VOIDACTION6(DrawText,Int_t,x, Int_t,y, Float_t, angle, Float_t, mgn, const char *,text, TVirtualX::ETextMode, mode);
 //______________________________________________________________________________
-     VOIDACTION2(GetCharacterUp,Float_t &,chupx, Float_t &,chupy);
+    VOIDACTION2(GetCharacterUp,Float_t &,chupx, Float_t &,chupy);
 //______________________________________________________________________________
-     RETURNACTION1(Int_t,GetDoubleBuffer,Int_t,wid);
+    RETURNACTION1(Int_t,GetDoubleBuffer,Int_t,wid);
 //______________________________________________________________________________
-     RETURNACTION1(ULong_t,GetPixel,Color_t,cindex);
+    VOIDACTION5(GetGeometry,Int_t, wid, Int_t &,x, Int_t &,y, UInt_t &,w, UInt_t &,h);
 //______________________________________________________________________________
-     VOIDACTION3(GetTextExtent,UInt_t&,w, UInt_t&,h, char *,mess);
+    const char *TQtThread::DisplayName(const char *n) { return TGQt::DisplayName(n); }
+//______________________________________________________________________________
+    Handle_t  TQtThread::GetNativeEvent() const { return  TGQt::GetNativeEvent();}
+//______________________________________________________________________________
+    RETURNACTION1(ULong_t,GetPixel,Color_t,cindex);
+//______________________________________________________________________________
+    void TQtThread::GetPlanes(Int_t &nplanes){ TGQt::GetPlanes(nplanes);}
+//______________________________________________________________________________
+    void TQtThread::GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b)
+    { TGQt::GetRGB(index,r,g,b); }
+//______________________________________________________________________________
+    VOIDACTION3(GetTextExtent,UInt_t&,w, UInt_t&,h, char *,mess);
+//______________________________________________________________________________
+    Float_t TQtThread::GetTextMagnitude(){ return TGQt::GetTextMagnitude() ;} 
+//______________________________________________________________________________
+    Bool_t  TQtThread::HasTTFonts() const { return HasTTFonts() ;}
 //______________________________________________________________________________
     RETURNACTION1(Int_t,InitWindow,ULong_t, window);
+//______________________________________________________________________________
+    RETURNACTION3(Int_t,AddWindow,ULong_t, qwid, UInt_t, w, UInt_t, h);
+//______________________________________________________________________________
+    VOIDACTION1(RemoveWindow,ULong_t, qwid);
 //______________________________________________________________________________
     VOIDACTION3(MoveWindow,Int_t,wid, Int_t,x, Int_t,y);
 //______________________________________________________________________________
@@ -88,7 +106,7 @@ TQtThread::~TQtThread(){;}
 //______________________________________________________________________________
     VOIDACTION1(PutByte,Byte_t,b);
 //______________________________________________________________________________
-//    VOIDACTION2(QueryPointer,Int_t&,ix, Int_t&,iy);
+    VOIDACTION2(QueryPointer,Int_t&,ix, Int_t&,iy);
 //______________________________________________________________________________
     RETURNACTION4(Pixmap_t,ReadGIF,Int_t, x0, Int_t, y0, const char *,file, Window_t, id);
 //______________________________________________________________________________
@@ -104,6 +122,8 @@ TQtThread::~TQtThread(){;}
 //______________________________________________________________________________
     VOIDACTION1(SelectWindow,Int_t,wid);
 //______________________________________________________________________________
+    void  TQtThread::SelectPixmap(Int_t qpixid){ TGQt::SelectPixmap(qpixid );}
+//______________________________________________________________________________
     VOIDACTION2(SetCharacterUp,Float_t, chupx, Float_t, chupy);
 //______________________________________________________________________________
     VOIDACTION1(SetClipOFF,Int_t,wid);
@@ -113,6 +133,11 @@ TQtThread::~TQtThread(){;}
     SENDACTION2(SetCursor,Int_t,win, ECursor, cursor);
 //______________________________________________________________________________
     VOIDACTION2(SetDoubleBuffer,Int_t,wid, Int_t,mode);
+//______________________________________________________________________________
+    void  TQtThread::SetDoubleBufferOFF(){ TGQt::SetDoubleBufferOFF(); }
+//_____________________________________________________________________________
+    void  TQtThread::SetDoubleBufferON() { TGQt::SetDoubleBufferON();  }
+
 //______________________________________________________________________________
     VOIDACTION1(SetDrawMode,TVirtualX::EDrawMode,mode);
 //______________________________________________________________________________
@@ -156,7 +181,7 @@ TQtThread::~TQtThread(){;}
 //______________________________________________________________________________
     VOIDACTION1(UpdateWindow,Int_t,mode);
 //______________________________________________________________________________
-    VOIDACTION3(Warp,Int_t,ix,Int_t,iy,Window_t,id);
+    VOIDACTION3(Warp,Int_t,ix, Int_t,iy, Window_t,id);
 //______________________________________________________________________________
     RETURNACTION1(Int_t,WriteGIF,char *,name);
 //______________________________________________________________________________
@@ -164,6 +189,10 @@ TQtThread::~TQtThread(){;}
 
 //______________________________________________________________________________
     RETURNACTION1(Int_t,LoadQt, const char *,shareLibFileName);
+//______________________________________________________________________________
+UInt_t   TQtThread::ExecCommand(TGWin32Command *code)
+ { return TGQt::ExecCommand(code); }
+
 //______________________________________________________________________________
 bool TQtThread::event(QEvent *e)
 {

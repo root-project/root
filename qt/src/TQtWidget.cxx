@@ -1,14 +1,15 @@
-// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.5 2004/07/30 01:13:51 rdm Exp $
-// Author: Valeri Fine   21/01/2002
-
-/*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
- * Copyright (C) 2002 by Valeri Fine.                                    *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+// Author: Valery Fine   21/01/2002
+/****************************************************************************
+** $Id: TQtWidget.cxx,v 1.39 2004/07/28 20:26:39 fine Exp $
+**
+** Copyright (C) 2002 by Valeri Fine. Brookhaven National Laboratory.
+**                                    All rights reserved.
+**
+** This file may be distributed under the terms of the Q Public License
+** as defined by Trolltech AS of Norway and appearing in the file
+** LICENSE.QPL included in the packaging of this file.
+**
+*****************************************************************************/
 
 // Definition of TQtWidget class
 // "double-buffere widget
@@ -20,9 +21,10 @@
 #include "TGQt.h"
 #include "TCanvas.h"
 #include "Buttons.h"
-#include "qevent.h"
-#include "qpainter.h"
-#include "qpixmap.h"
+#include <qevent.h>
+#include <qpainter.h>
+#include <qpixmap.h>
+#include <qfileinfo.h> 
 
 #ifdef R__QTWIN32
 // #include "Windows4Root.h"
@@ -32,7 +34,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  TQtWidget is QWidget with QPixmap double buffer
+//  TQtClientWidget is QWidget with QPixmap double buffer
 //  It designed to back the ROOT TCanvasImp class interface  and it can be used
 //  as a regular Qt Widget to create Qt-based GUI with embedded TCanvas objects
 //
@@ -43,7 +45,7 @@
 //_____________________________________________________________________________
 TCanvas  *TQtWidget::Canvas()
 {
-#ifdef R__QTGUITHREAD
+#ifdef R__QTGUITHREAD   
    if (qApp->tryLock() ) {
       TCanvas  *c = 0;
       if (fCanvas)
@@ -54,13 +56,13 @@ TCanvas  *TQtWidget::Canvas()
    return 0;
 #else
    return GetCanvas();
-#endif
+#endif   
 };
 
 //_____________________________________________________________________________
 TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):QWidget(parent,name,f)
           ,fCanvas(0),fPixmapID(this),fPaint(TRUE),fSizeChanged(FALSE)
-          ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0)
+          ,fDoubleBufferOn(FALSE),fEmbedded(embedded),fWrapper(0),fSaveFormat("PNG")
 {
   setFocusPolicy(QWidget::WheelFocus);
   setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
@@ -69,7 +71,7 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
     Bool_t batch = gROOT->IsBatch();
     if (!batch) gROOT->SetBatch(kTRUE); // to avoid the recursion within TCanvas ctor
     fCanvas = new TCanvas(name, 4, 4, TGQt::iwid(this));
-    // fprintf(stderr,"TQtWidget::TQtWidget fEditable %d\n", fCanvas->IsEditable());
+    // fprintf(stderr,"TQtWidget::TQtWidget fEditable %d\n", fCanvas->IsEditable()); 
     gROOT->SetBatch(batch);
     connect(this, SIGNAL(destroyed()),SLOT(Disconnect()));
   }
@@ -98,11 +100,11 @@ TQtWidget::~TQtWidget()
 }
 
 //_____________________________________________________________________________
-void TQtWidget::adjustSize()
+void TQtWidget::adjustSize() 
 {
-  // Adjusts the size of the widget to fit the contents.
+  // Adjusts the size of the widget to fit the contents. 
   // Adjust the size of the double buffer to the
-  // current Widget size
+  // current Widget size 
   QWidget::adjustSize ();
   AdjustBufferSize();
   update();
@@ -110,37 +112,35 @@ void TQtWidget::adjustSize()
 //_____________________________________________________________________________
 void TQtWidget::erase ()
 {
-  // Erases the specified area (x, y, w, h) in the widget
-  // without generating a paint event.
+  // Erases the specified area (x, y, w, h) in the widget 
+  // without generating a paint event. 
   QWidget::erase();
   fPixmapID.fill();
 }
 //_____________________________________________________________________________
-TVirtualPad *TQtWidget::cd()
+void TQtWidget::cd()
 {
-   // [slot] to make this embedded canvas the current one
-   return cd(0);
+ // [slot] to make this embedded canvas the current one
+  cd(0);
 }
-//______________________________________________________________________________
-TVirtualPad *TQtWidget::cd(int subpadnumber)
+ //______________________________________________________________________________
+void TQtWidget::cd(int subpadnumber)
 {
-   // [slot] to make this embedded canvas / pad the current one
-   qApp->lock();
-   TCanvas *c = fCanvas;
-   TVirtualPad *result = 0;
-   if (c) result = c->cd(subpadnumber);
-   qApp->unlock();
-   return result;
+ // [slot] to make this embedded canvas / pad the current one
+  qApp->lock();
+  TCanvas *c = fCanvas; 
+  if (c) c->cd(subpadnumber);
+  qApp->unlock();
 }
 //______________________________________________________________________________
 void TQtWidget::Disconnect()
 {
    // Disconnect the Qt widget from CTanvas object before deleting
    // to avoid the dead lock
-   qApp->lock();
-   // one has to set CanvasID = 0 to disconnect things properly.
-   TCanvas *c = fCanvas; fCanvas = 0; delete c;
-   qApp->unlock();
+  qApp->lock();
+ // one has to set CanvasID = 0 to disconnect things properly.
+  TCanvas *c = fCanvas; fCanvas = 0; delete c;
+  qApp->unlock();
 }
 //_____________________________________________________________________________
 void TQtWidget::Refresh()
@@ -172,22 +172,22 @@ void TQtWidget::customEvent(QCustomEvent *e)
    // These events are not present with X11 systems
    switch (e->type() - QEvent::User) {
    case kEXITSIZEMOVE:
-   { // WM_EXITSIZEMOVE
-      fPaint = TRUE;
-      setUpdatesEnabled( TRUE );
-      exitSizeEvent();
+      { // WM_EXITSIZEMOVE
+         fPaint = TRUE;
+         setUpdatesEnabled( TRUE );
+         exitSizeEvent();
          break;
-   }
+      }
    case kENTERSIZEMOVE:
-   {
-      //  WM_ENTERSIZEMOVE
-      fSizeChanged=FALSE;
-      fPaint = FALSE;
-      setUpdatesEnabled( FALSE );
-   }
+      {
+         //  WM_ENTERSIZEMOVE
+         fSizeChanged=FALSE;
+         fPaint = FALSE;
+         setUpdatesEnabled( FALSE );
+      }
    case kFORCESIZE:
    default:
-      {
+      { 
          // Force resize
          fPaint       = TRUE;
          fSizeChanged = TRUE;
@@ -219,13 +219,13 @@ void TQtWidget::focusOutEvent ( QFocusEvent *e )
    }
    if ( autoMask() ) updateMask();
 }
-
+ 
 //_____________________________________________________________________________
 void TQtWidget::mousePressEvent (QMouseEvent *e)
 {
    // Map the Qt mouse press button event to the ROOT TCanvas events
    // Mouse events occur when a mouse button is pressed or released inside
-   // a widget or when the mouse cursor is moved.
+   // a widget or when the mouse cursor is moved. 
 
    //    kButton1Down   =  1, kButton2Down   =  2, kButton3Down   =  3,
    EEventType rootButton = kNoEvent;
@@ -288,7 +288,7 @@ void TQtWidget::mouseReleaseEvent(QMouseEvent * e)
 
 //_____________________________________________________________________________
 void TQtWidget::mouseDoubleClickEvent(QMouseEvent * e)
-{
+{  
    //  Map the Qt mouse double click button event to the ROOT TCanvas events
    //  kButton1Double = 61, kButton2Double = 62, kButton3Double = 63
    EEventType rootButton = kNoEvent;
@@ -351,7 +351,7 @@ void TQtWidget::leaveEvent (QEvent *e)
 //_____________________________________________________________________________
 void TQtWidget::resizeEvent(QResizeEvent *e)
 {
-   // The widget will be erased and receive a paint event immediately after
+   // The widget will be erased and receive a paint event immediately after 
    // processing the resize event.
    // No drawing need be (or should be) done inside this handler.
    if (!e) return;
@@ -377,8 +377,75 @@ void TQtWidget::resizeEvent(QResizeEvent *e)
    if ( autoMask() )
       updateMask();
 }
+//____________________________________________________________________________
+void TQtWidget::SetSaveFormat(const char *format)
+{
+     // Set the default save format for the widget
+   fSaveFormat = TGQt::QtFileFormat(format);
+}
+//____________________________________________________________________________
+bool TQtWidget::Save(const char *fileName) const
+{
+   //
+   //  TQtWidget::Save(const QString &fileName) is a public Qt slot.
+   //  it saves the double buffer of this object using the default save 
+   //  format  defined the file extension
+   //  If the "fileName" has no extension the "default" format is to be used instead
+   //  The deafult format is "PNG".
+   //  It can be changed with the TQtWidget::SetSaveFormat method
+   //  
+    return Save(QString(fileName));
+}
+//____________________________________________________________________________
+bool TQtWidget::Save(const QString &fileName) const
+{   
+   //
+   //  TQtWidget::Save(const QString &fileName) is a public Qt slot.
+   //  it saves the double buffer of this object using the default save 
+   //  format  defined the file extension
+   //  If the "fileName" has no extension the "default" format is to be used instead
+   //  The deafult format is "PNG".
+   //  It can be changed with the TQtWidget::SetSaveFormat method
+   //  
+   QString fileNameExtension = QFileInfo(fileName).extension(FALSE).upper();
+   QString saveFormat;
+   if (fileNameExtension.isEmpty() ) {
+      saveFormat = fSaveFormat; // this is default
+   } else { 
+      saveFormat = TGQt::QtFileFormat(fileNameExtension);
+   }
+   return Save(fileName,saveFormat);
+}
+
+//____________________________________________________________________________
+bool TQtWidget::Save(const char *fileName,const char *format,int quality)const
+{   
+   return Save(QString(fileName),format,quality);
+}
+//____________________________________________________________________________
+bool TQtWidget::Save(const QString &fileName,const char *format,int quality)const
+{   
+   //  TQtWidget::save is a public Qt slot.
+   //  it saves the double buffer of this object using QPixmap facility
+   bool Ok = false;
+   bool rootFormatFound=kTRUE;
+   QString saveType =  TGQt::RootFileFormat(format);
+   if (saveType.isEmpty() )  {
+      rootFormatFound = false;
+      saveType = TGQt::QtFileFormat(format);
+   }
+   TCanvas *c = GetCanvas();
+   if (rootFormatFound && c) {
+      c->Print((const char *)fileName,(const char *)saveType);
+      Ok = true;
+   } else {
+      Ok = GetBuffer().save(fileName,saveType,quality);   
+   }
+   emit ((TQtWidget *)this)->Saved(Ok);
+   return Ok;
+}
 //_____________________________________________________________________________
-void TQtWidget::stretchWidget(QResizeEvent * /*s*/)
+void TQtWidget::stretchWidget(QResizeEvent * /*s*/) 
 {
    // Stretch the widget during sizing
 
@@ -397,7 +464,7 @@ void TQtWidget::stretchWidget(QResizeEvent * /*s*/)
          GetBuffer().width(),  // width of source rectangle
          GetBuffer().height(), // height of source rectangle
          SRCCOPY      // raster operation code
-         )) {
+         )) {  
             qSystemWarning("StretchBlt failed!" );
             printf("last error %d\n",GetLastError());
          }
@@ -418,7 +485,7 @@ void TQtWidget::exitSizeEvent ()
 
 //____________________________________________________________________________
 bool TQtWidget::paintFlag(bool mode)
-{
+{  
    //  Set new fPaint flag
    //  Returns: the previous version of the flag
    bool flag = fPaint;
@@ -429,11 +496,11 @@ bool TQtWidget::paintFlag(bool mode)
 void TQtWidget::showEvent ( QShowEvent *)
 {
    // Custom handler of the Qt show event
-   // Non-spontaneous show events are sent to widgets immediately before
-   // they are shown.
-   // The spontaneous show events of top-level widgets are delivered afterwards.
-
-   if ( fPixmapID.size() != size() )
+   // Non-spontaneous show events are sent to widgets immediately before 
+   // they are shown. 
+   // The spontaneous show events of top-level widgets are delivered afterwards.    
+   
+   if ( fPixmapID.size() != size() ) 
    {
       fSizeChanged = kTRUE;
       exitSizeEvent();
@@ -444,12 +511,12 @@ void TQtWidget::showEvent ( QShowEvent *)
 void TQtWidget::paintEvent (QPaintEvent *e)
 {
    // Custom handler of the Qt paint event
-   // A paint event is a request to repaint all or part of the widget.
-   // It can happen as a result of repaint() or update(), or because the widget
-   // was obscured and has now been uncovered, or for many other reasons.
+   // A paint event is a request to repaint all or part of the widget. 
+   // It can happen as a result of repaint() or update(), or because the widget 
+   // was obscured and has now been uncovered, or for many other reasons. 
 
 #ifdef R__QTWIN32
-   if ( fEmbedded && fPixmapID.size() != size() )
+   if ( fEmbedded && fPixmapID.size() != size() ) 
    {
       fSizeChanged = kTRUE;
       exitSizeEvent();
@@ -468,18 +535,18 @@ void TQtWidget::paintEvent (QPaintEvent *e)
 //  Layout methods:
 //____________________________________________________________________________
 void TQtWidget::SetSizeHint (const QSize &size) {
-   //  sets the preferred size of the widget.
+   //  sets the preferred size of the widget. 
    fSizeHint = size;
 }
 
 //____________________________________________________________________________
 QSize TQtWidget::sizeHint () const{
-   //  returns the preferred size of the widget.
+   //  returns the preferred size of the widget. 
    return QWidget::sizeHint();
 }
 //____________________________________________________________________________
-QSize TQtWidget::minimumSizeHint () const{
-   // returns the smallest size the widget can have.
+QSize TQtWidget::minimumSizeHint () const{ 
+   // returns the smallest size the widget can have. 
    return QWidget::minimumSizeHint ();
 }
 //____________________________________________________________________________
