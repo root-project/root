@@ -5,17 +5,17 @@
    gROOT->Reset();
 
    struct staff_t {
-                Float_t cat;
-                Float_t division;
-                Float_t flag;
-                Float_t age;
-                Float_t service;
-                Float_t children;
-                Float_t grade;
-                Float_t step;
-                Float_t nation;
-                Float_t hrweek;
-                Float_t cost;
+                Int_t cat;
+                Int_t division;
+                Int_t flag;
+                Int_t age;
+                Int_t service;
+                Int_t children;
+                Int_t grade;
+                Int_t step;
+                Int_t nation;
+                Int_t hrweek;
+                Int_t cost;
     };
 
    staff_t staff;
@@ -25,16 +25,16 @@
    char line[81];
 
    TFile *f = new TFile("staff.root","RECREATE");
-   TNtuple *ntuple = new TNtuple("ntuple","staff data from ascii file",
-        "cat:division:flag:age:service:children:grade:step:nation:hrweek:cost");
+   TTree *tree = new TTree("tree","staff data from ascii file");
+   tree->Branch("staff",&staff.cat,"cat/I:division:flag:age:service:children:grade:step:nation:hrweek:cost");
 
    while (fgets(&line,80,fp)) {
-      sscanf(&line[0] ,"%f%f%f%f", &staff.cat,&staff.division,&staff.flag,&staff.age);
-      sscanf(&line[17],"%f%f%f%f", &staff.service,&staff.children,&staff.grade,&staff.step);
-      sscanf(&line[33],"%f%f%f",   &staff.nation,&staff.hrweek,&staff.cost);
-      ntuple->Fill(&staff.cat);
+      sscanf(&line[0] ,"%d%d%d%d", &staff.cat,&staff.division,&staff.flag,&staff.age);
+      sscanf(&line[13],"%d%d%d%d", &staff.service,&staff.children,&staff.grade,&staff.step);
+      sscanf(&line[24],"%d%d%d",   &staff.nation,&staff.hrweek,&staff.cost);
+      tree->Fill();
    }
-   ntuple->Print();
+   tree->Print();
 
    fclose(fp);
    f->Write();
