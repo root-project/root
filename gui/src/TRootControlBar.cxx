@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.6 2003/09/29 07:26:13 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootControlBar.cxx,v 1.7 2003/10/07 13:41:33 brun Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -133,8 +133,8 @@ Bool_t TRootControlBar::ProcessMessage(Long_t, Long_t, Long_t parm2)
    TControlBarButton *button = (TControlBarButton *) parm2;
 
    if (button) {
-      button->Action();
       fClicked = button;
+      button->Action();
    }
    return kTRUE;
 }
