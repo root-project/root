@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.16 2004/10/15 17:08:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.17 2004/12/01 17:25:06 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -82,6 +82,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
          delete [] fFileInfo->fFilename;
          fFileInfo->fFilename = 0;
       }
+      fFileInfo->fFileTypeIdx = 0;
    } else
       fFileInfo = file_info;
 
@@ -156,7 +157,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    fFv->SetContainer(fFc);
    fFv->SetViewMode(kLVList);
 
-   fFc->SetFilter(fFileInfo->fFileTypes[1]);
+   fFc->SetFilter(fFileInfo->fFileTypes[fFileInfo->fFileTypeIdx+1]);
    fFc->Sort(kSortByType);
    fFc->ChangeDirectory(fFileInfo->fIniDir);
    fTreeLB->Update(fFc->GetDirectory());
@@ -199,10 +200,10 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
       sprintf(s, "%s (%s)", fFileInfo->fFileTypes[i], fFileInfo->fFileTypes[i+1]);
       fTypes->AddEntry(s, i);
    }
-   fTypes->Select(0);
+   fTypes->Select(fFileInfo->fFileTypeIdx);
 
    fTbfname->Clear();
-   //fTbfname->AddText(0, fFileInfo->fFileTypes[1]);
+   //fTbfname->AddText(0, fFileInfo->fFileTypes[fFileInfo->fFileTypeIdx+1]);
 
    fHftype->AddFrame(fLftypes, fLhl);
    fHftype->AddFrame(fTypes, fLht1);
@@ -392,7 +393,8 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      if (te) {
                         //fTbfname->Clear();
                         //fTbfname->AddText(0, fFileInfo->fFileTypes[te->EntryId()+1]);
-                        fFc->SetFilter(fFileInfo->fFileTypes[te->EntryId()+1]);
+                        fFileInfo->fFileTypeIdx = te->EntryId();
+                        fFc->SetFilter(fFileInfo->fFileTypes[fFileInfo->fFileTypeIdx+1]);
                         fFc->DisplayDirectory();
                         fClient->NeedRedraw(fName);
                      }

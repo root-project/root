@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.3 2001/06/27 16:43:55 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.4 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -58,7 +58,8 @@ public:
    char        *fFilename;    // selected file name
    char        *fIniDir;      // on input: initial directory, on output: new directory
    const char **fFileTypes;   // file types used to filter selectable files
-   TGFileInfo() : fFilename(0), fIniDir(0), fFileTypes(0) { }
+   Int_t        fFileTypeIdx; // selected file type, index in fFileTypes
+   TGFileInfo() : fFilename(0), fIniDir(0), fFileTypes(0), fFileTypeIdx(0) { }
    ~TGFileInfo() { delete [] fFilename; delete [] fIniDir; }
 };
 
