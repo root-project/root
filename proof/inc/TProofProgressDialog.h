@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.2 2003/04/11 11:48:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofProgressDialog.h,v 1.3 2004/05/13 11:38:51 rdm Exp $
 // Author: Fons Rademakers   21/03/03
 
 /*************************************************************************
@@ -58,7 +58,7 @@ private:
 public:
    TProofProgressDialog(TVirtualProof *proof, const char *selector,
                         Int_t files, Long64_t first, Long64_t entries);
-   ~TProofProgressDialog();
+   virtual ~TProofProgressDialog();
    void Progress(Long64_t total, Long64_t processed);
 
    void CloseWindow();
