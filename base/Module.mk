@@ -45,7 +45,7 @@ BASEH3       := $(patsubst %,$(MODDIRI)/%,$(BASEH3))
 BASEH1       := $(filter-out $(BASEH3),$(BASEH1))
 BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 ifeq ($(PLATFORM),win32)
-BASES        := $(filter-out $(MODDIRS)/ManualBase4.cxx,$(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
+BASES        := $(filter-out $(BASEDS4),$(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
 else
 BASES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 endif
@@ -100,7 +100,9 @@ clean-base:
 clean::         clean-base
 
 distclean-base: clean-base
-		@rm -f $(BASEDEP) $(BASEDS) $(BASEDH)
+		@rm -f $(BASEDEP) \
+		   $(filter-out $(BASEDIRS)/ManualBase4.cxx, $(BASEDS)) \
+		   $(filter-out $(BASEDIRS)/ManualBase4.h, $(BASEDH))
 
 distclean::     distclean-base
 
