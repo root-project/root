@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.34 2002/10/29 08:25:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.35 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -550,7 +550,6 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
       if (f1 == 0) f1 = new TF1("gaus","gaus",fXaxis.GetXmin(),fXaxis.GetXmax());
       else         f1->SetRange(fXaxis.GetXmin(),fXaxis.GetXmax());
    }
-   const char *fname = f1->GetName();
    Int_t npar = f1->GetNpar();
    Double_t *parsave = new Double_t[npar];
    f1->GetParameters(parsave);
@@ -583,7 +582,7 @@ void TH2::FitSlicesX(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
       nentries = Int_t(hpx->GetEntries());
       if (nentries == 0 || nentries < cut) {delete hpx; continue;}
       f1->SetParameters(parsave);
-      hpx->Fit(fname,option);
+      hpx->Fit(f1,option);
       Int_t npfits = f1->GetNumberFitPoints();
       if (npfits > npar && npfits >= cut) {
          for (ipar=0;ipar<npar;ipar++) {
@@ -650,7 +649,6 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
       if (f1 == 0) f1 = new TF1("gaus","gaus",fYaxis.GetXmin(),fYaxis.GetXmax());
       else         f1->SetRange(fYaxis.GetXmin(),fYaxis.GetXmax());
    }
-   const char *fname = f1->GetName();
    Int_t npar = f1->GetNpar();
    Double_t *parsave = new Double_t[npar];
    f1->GetParameters(parsave);
@@ -683,7 +681,7 @@ void TH2::FitSlicesY(TF1 *f1, Int_t binmin, Int_t binmax, Int_t cut, Option_t *o
       nentries = Int_t(hpy->GetEntries());
       if (nentries == 0 || nentries < cut) {delete hpy; continue;}
       f1->SetParameters(parsave);
-      hpy->Fit(fname,option);
+      hpy->Fit(f1,option);
       Int_t npfits = f1->GetNumberFitPoints();
       if (npfits > npar && npfits >= cut) {
          for (ipar=0;ipar<npar;ipar++) {
