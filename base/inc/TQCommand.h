@@ -1,4 +1,4 @@
-// $Id$
+// @(#)root/base:$Name:$:$Id:$
 // Author: Valeriy Onuchin   04/27/2004
 
 /*************************************************************************
@@ -38,7 +38,7 @@ protected:
    Int_t          fNUargs;    // number of undo arguments
    Int_t          fState;     // -1 undoing on, 1 redoing on, 0 nothing in progress
    Int_t          fStatus;    // fStatus++ after Redo(), fStatus-- after Undo()
-   Bool_t         fNewDelete; // kTRUE if Redo/Undo methods are new/delete 
+   Bool_t         fNewDelete; // kTRUE if Redo/Undo methods are new/delete
    TString        fName;      // command name. Default is "ClassName::RedoName(args)"
    TString        fTitle;     // command description
    void          *fObject;    // object to which undo/redo actions applied
@@ -112,7 +112,7 @@ public:
    virtual void   Add(TObject *obj) { Add(obj, 0); }
    virtual void   Redo(Option_t *option="");
    virtual void   Undo(Option_t *option="");
-   virtual Bool_t CanRedo() const; 
+   virtual Bool_t CanRedo() const;
    virtual Bool_t CanUndo() const;
    virtual void   SetLogging(Bool_t on = kTRUE);
    Bool_t         IsLogging() const;

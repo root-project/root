@@ -1,4 +1,4 @@
-// $Id: TQCommand.cxx,v 1.1 2004/04/26 16:45:38 brun Exp $
+// @(#)root/base:$Name:$:$Id:$
 // Author: Valeriy Onuchin 04/27/2004
 
 /*************************************************************************
@@ -99,7 +99,7 @@
 // Redo method.                                                         //
 //                                                                      //
 // Use TQUndoManager::Undo to undo commands in  history list.           //
-// Redo is Undo for undo action. Use TQUndoManager::Redo method for that// 
+// Redo is Undo for undo action. Use TQUndoManager::Redo method for that//
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -357,7 +357,7 @@ TQCommand *TQCommand::gCommand()
    // during execution of Redo function.
    //
    // Example:
-   //    For redo actions like TGTextEdit::DelChar() it is not possible to 
+   //    For redo actions like TGTextEdit::DelChar() it is not possible to
    //    know ahead what character will be deleted.
    //    To set arguments for undo action ( e.g. TGTextEdit::InsChar(char)),
    //    one needs to call TQCommand::SetUndoArgs(1, character) from
@@ -396,7 +396,7 @@ void TQCommand::Delete(Option_t *opt)
 //______________________________________________________________________________
 Bool_t TQCommand::CanMerge(TQCommand *) const
 {
-   // Two commands can be merged if they can be composed into 
+   // Two commands can be merged if they can be composed into
    // a single command (Macro command).
    //
    // To allow merging commands user might override this function.
@@ -464,8 +464,8 @@ void TQCommand::Compress(TQCommand *c)
 {
    // Compress command. Compression is analogous to arithmetic "addition operation".
    //
-   // Note: 
-   //    - The compressed command will be deleted. 
+   // Note:
+   //    - The compressed command will be deleted.
    //    - Execution Compress method invokes Redo action with new redo arguments
    //      inheritied from compressed command.
    //
@@ -514,7 +514,7 @@ Bool_t TQCommand::IsSetter() const
 
    if (!redo || !undo || (redo != undo)) return kFALSE;
 
-   return (redo.BeginsWith("Set") || 
+   return (redo.BeginsWith("Set") ||
            redo.BeginsWith("set") ||
            redo.BeginsWith("Move") ||
            redo.BeginsWith("move") ||
@@ -639,7 +639,7 @@ Bool_t TQCommand::CanRedo() const
 
 //______________________________________________________________________________
 Bool_t TQCommand::CanUndo() const
-{ 
+{
    // Returns kTRUE if Undo action is possible, kFALSE if it's not.
    // By default, only single tial undo action is possible.
 
@@ -687,7 +687,7 @@ void TQCommand::Redo(Option_t *)
 void TQCommand::Undo(Option_t *)
 {
    // Unexecute all merged commands and the command.
-   // Merged commands are executed in reverse order. 
+   // Merged commands are executed in reverse order.
 
    Bool_t done = kFALSE;
    fState = -1;
@@ -742,7 +742,7 @@ const char *TQCommand::GetName() const
    if (fRedo) {
       if (fRedo->GetClassName()) {
          name = fRedo->GetClassName();
-      }      
+      }
       name += "::";
       name += fRedo->GetName();
    }
@@ -856,7 +856,7 @@ Bool_t TQCommand::IsMacro() const
 
 //______________________________________________________________________________
 Bool_t TQCommand::IsUndoing() const
-{ 
+{
    // Undo action is in progress
 
    return (fState < 0);
@@ -946,7 +946,7 @@ TQUndoManager::~TQUndoManager()
 //______________________________________________________________________________
 void TQUndoManager::ls(Option_t *option) const
 {
-   // Lists all commands in stack 
+   // Lists all commands in stack
 
    if (!IsEmpty()) {
       TObjLink *lnk = fFirst;
@@ -1005,7 +1005,7 @@ void TQUndoManager::Add(TObject *obj, Option_t *opt)
    Bool_t onredo = fCursor && fCursor->Next();
    TString ostr = onredo ? "1radd" : "0radd"; // execute redo on add
    if (opt) ostr += opt;
- 
+
    if (fState) { // undo/redo in progress
       c = fCurrent;
       if (c) {
