@@ -6,7 +6,8 @@ ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g
 NOOPT         =
 else
-OPT           = -O
+# 32MB is not enough memory to compile with -O
+OPT           =
 NOOPT         =
 endif
 
