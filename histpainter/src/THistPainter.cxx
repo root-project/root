@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.14 2000/08/27 20:05:05 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.15 2000/09/08 07:41:00 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -340,14 +340,8 @@ void THistPainter::FitPanel()
 
    gCurrentHist = fH;
    if (gPad) {
-      //TObject *pr = gPad->GetSelected();
-      TObject *pr = 0;
-      if (!pr) pr = fH;
-      //TVirtualPad *pad = gPad->GetSelectedPad();
-      TVirtualPad *pad = 0;
-      if (!pad) pad = gPad;
-      gROOT->SetSelectedPrimitive(pr);
-      gROOT->SetSelectedPad(pad);
+      gROOT->SetSelectedPrimitive(fH);
+      gROOT->SetSelectedPad(gPad);
    } else {
       Error("FitPanel", "need to draw histogram first");
       return;

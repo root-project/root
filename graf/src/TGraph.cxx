@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.13 2000/09/08 07:41:00 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.14 2000/09/08 16:05:21 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -758,8 +758,11 @@ void TGraph::FitPanel()
 //   See class TFitPanel for example
 
    if (gPad) {
-      gROOT->SetSelectedPrimitive(gPad->GetSelected());
-      gROOT->SetSelectedPad(gPad->GetSelectedPad());
+      gROOT->SetSelectedPrimitive(this);
+      gROOT->SetSelectedPad(gPad);
+   } else {
+      Error("FitPanelGraph", "need to draw graph first");
+      return;
    }
    TList *lc = (TList*)gROOT->GetListOfCanvases();
    if (!lc->FindObject("R__fitpanelgraph")) {
