@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.1 2004/02/18 20:13:42 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedMarkerSelect.cxx,v 1.2 2004/02/19 15:36:45 brun Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 // ****It needs more fixes*****
 /*************************************************************************
@@ -40,8 +40,8 @@ ClassImp(TGedMarkerSelect)
 ClassImp(TGedMarkerPopup)
 
 struct markerDescription_t {
-   char* filename;
-   char* name;
+   const char* filename;
+   const char* name;
    int number;
 };
 
