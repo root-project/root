@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.224 2005/02/28 14:16:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.225 2005/03/03 08:19:06 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1044,14 +1044,7 @@ Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
   //algorithm taken from "Numerical Recipes in C++"
   // implementation by Anna Kreshuk
   
-  Int_t df;
-  Double_t chsq = 0;
-  Double_t prob;
-  Double_t temp;
-  Double_t koef1,koef2;
-  Double_t nen1, nen2;
-  Double_t bin1, bin2;
-  Int_t i_start, i_end;
+  Int_t i, i_start, i_end;
 
   TString opt = option;
   opt.ToUpper();
@@ -1067,25 +1060,9 @@ Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
      Error("Chi2Test","for 1-d only");
      return 0;
   }
-  //check that the histograms are not empty
-  nen1 = this->GetEntries();
-  nen2 = h->GetEntries();
-  if((nen1==0)||(nen2==0)){
-     Error("Chi2Test", "one of the histograms is empty\n");
-     return 0;
-  }
   //check number of channels
   if (nbins1 != nbins2){
      Error("Chi2Test","different number of channels");
-     return 0;
-  }
-
-  //check binning
-  Double_t diffprec = 1e-5;
-  Double_t diff1 = TMath::Abs(axis1->GetXmin() - axis2->GetXmin());
-  Double_t diff2 = TMath::Abs(axis1->GetXmax() - axis2->GetXmax());
-  if ((diff1 > diffprec)||(diff2>diffprec)){
-     Error("Chi2Test","different binning");
      return 0;
   }
 
@@ -1093,42 +1070,45 @@ Double_t TH1::Chi2Test(TH1 *h, Option_t *option, Int_t constraint)
 
   i_start = 1;
   i_end = nbins1;
-  df=nbins1-constraint;
+  Int_t ndf = nbins1-constraint;
 
   if(opt.Contains("O")) {
      i_end = nbins1+1;
-     df++;
+     ndf++;
   }
   if(opt.Contains("U")) {
      i_start = 0;
-     df++;
+     ndf++;
   }
 
-   //the test
-  if (TMath::Abs(nen1-nen2) > diffprec){
-    koef1 = TMath::Sqrt(nen2/nen1);
-    koef2 = TMath::Sqrt(nen1/nen2);
-  } else{
-    koef1 = 1;
-    koef2 = 1;
+  //Compute the normalisation factor
+  Double_t sum1=0, sum2=0;
+  for (i=i_start; i<=i_end; i++){
+     sum1 += this->GetBinContent(i);
+     sum2 += h->GetBinContent(i);
+  }
+  //check that the histograms are not empty
+  if (sum1 == 0 || sum2 == 0){
+     Error("Chi2Test","one of the histograms is empty");
+     return 0;
   }
 
-  for (Int_t i=i_start; i<=i_end; i++){
-     bin1 = this->GetBinContent(i);
-     bin2 = h->GetBinContent(i);
+  Double_t chsq = 0;
+  for (i=i_start; i<=i_end; i++){
+     Double_t bin1 = this->GetBinContent(i)/sum1;
+     Double_t bin2 = h->GetBinContent(i)/sum2;
      if (bin1 ==0 && bin2==0){
-        --df; //no data means one less degree of freedom
+        --ndf; //no data means one less degree of freedom
      } else {
-        temp  = koef1*bin1-koef2*bin2;
+        Double_t temp  = bin1-bin2;
         chsq += temp*temp/(bin1+bin2);
      }
   }
   
-  prob = TMath::Prob(0.5*chsq, Int_t(0.5*df));
+  Double_t prob = TMath::Prob(0.5*chsq, Int_t(0.5*ndf));
   
   if (opt.Contains("P")){
-     Printf("the value of chi2 = %f\n", chsq);
-     Printf("the number of degrees of freedom = %d\n", df);
+     Printf("Chi2 = %f, Prob = %g, NDF = %d\n", chsq,prob,ndf);
   }
 
   return prob;
