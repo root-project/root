@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.h,v 1.2 2000/11/21 16:20:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.h,v 1.3 2000/11/22 08:35:44 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 /*************************************************************************
@@ -36,6 +36,8 @@ public:
    TRandom3(UInt_t seed=65539);
    virtual ~TRandom3();
    virtual  Double_t  Rndm(Int_t i=0);
+   virtual  void      RndmArray(Int_t n, Float_t *array);
+   virtual  void      RndmArray(Int_t n, Double_t *array);
    virtual  void      SetSeed(UInt_t seed=0);
 
    ClassDef(TRandom3,2)  //Random number generator: Mersenne Twistor

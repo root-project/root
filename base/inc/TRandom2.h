@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom2.h,v 1.2 2000/11/22 08:35:44 brun Exp $
 // Author: Rene Brun   04/03/99
 
 /*************************************************************************
@@ -37,6 +37,8 @@ public:
    virtual ~TRandom2();
    virtual  void     GetSeed2(UInt_t &seed1, UInt_t &seed2);
    virtual  Double_t Rndm(Int_t i=0);
+   virtual  void     RndmArray(Int_t n, Float_t *array);
+   virtual  void     RndmArray(Int_t n, Double_t *array);
    virtual  void     SetSeed(UInt_t seed=0);
    virtual  void     SetSeed2(UInt_t seed1, UInt_t seed2);
 

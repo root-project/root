@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.2 2000/11/22 08:35:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom2.cxx,v 1.3 2002/11/17 17:04:36 brun Exp $
 // Author: Rene Brun   04/03/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -63,6 +63,22 @@ Double_t TRandom2::Rndm(Int_t)
    if (iz <= 0) iz += 2147483562;
    Double_t r = iz*4.6566128e-10;
    return r;
+}
+
+//______________________________________________________________________________
+void TRandom2::RndmArray(Int_t n, Float_t *array)
+{
+  // Return an array of n random numbers uniformly distributed in ]0,1]
+   
+  for(Int_t i=0; i<n; i++) array[i]=(Float_t)Rndm();
+}
+
+//______________________________________________________________________________
+void TRandom2::RndmArray(Int_t n, Double_t *array)
+{
+  // Return an array of n random numbers uniformly distributed in ]0,1]
+   
+  for(Int_t i=0; i<n; i++) array[i]=Rndm();
 }
 
 //______________________________________________________________________________

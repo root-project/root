@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.13 2002/10/25 12:41:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom.cxx,v 1.14 2002/11/17 17:04:36 brun Exp $
 // Author: Rene Brun   15/12/95
 
 /*************************************************************************
@@ -585,7 +585,41 @@ void TRandom::RndmArray(Int_t n, Double_t *array)
 {
   // Return an array of n random numbers uniformly distributed in ]0,1]
    
-  for(Int_t i=0; i<n; i++) array[i]=Rndm();
+   const Float_t kCONS = 4.6566128730774E-10;
+   const Int_t kMASK31 = 2147483647;
+   const Int_t kMASK24 = 2147483392;
+   
+   Int_t i=0;
+   while (i<n) {
+      fSeed *= 69069;      
+      fSeed &= kMASK31;            // keep only lower 31 bits      
+      UInt_t jy = (fSeed&kMASK24); // Set lower 8 bits to zero to assure exact float
+      if (jy) {
+         array[i] = Double_t(kCONS*jy);
+         i++;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TRandom::RndmArray(Int_t n, Float_t *array)
+{
+  // Return an array of n random numbers uniformly distributed in ]0,1]
+   
+   const Float_t kCONS = 4.6566128730774E-10;
+   const Int_t kMASK31 = 2147483647;
+   const Int_t kMASK24 = 2147483392;
+   
+   Int_t i=0;
+   while (i<n) {
+      fSeed *= 69069;      
+      fSeed &= kMASK31;            // keep only lower 31 bits      
+      UInt_t jy = (fSeed&kMASK24); // Set lower 8 bits to zero to assure exact float
+      if (jy) {
+         array[i] = Float_t(kCONS*jy);
+         i++;
+      }
+   }
 }
    
 //______________________________________________________________________________

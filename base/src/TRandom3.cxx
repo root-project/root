@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.3 2000/11/22 08:35:44 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TRandom3.cxx,v 1.4 2002/11/17 17:04:36 brun Exp $
 // Author: Peter Malzacher   31/08/99
 
 //////////////////////////////////////////////////////////////////////////
@@ -111,6 +111,22 @@ Double_t TRandom3::Rndm(Int_t)
 
     if (y) return ( (Double_t) y * 2.3283064365386963e-10); // * Power(2,-32)
     return Rndm();
+}
+
+//______________________________________________________________________________
+void TRandom3::RndmArray(Int_t n, Float_t *array)
+{
+  // Return an array of n random numbers uniformly distributed in ]0,1]
+   
+  for(Int_t i=0; i<n; i++) array[i]=(Float_t)Rndm();
+}
+
+//______________________________________________________________________________
+void TRandom3::RndmArray(Int_t n, Double_t *array)
+{
+  // Return an array of n random numbers uniformly distributed in ]0,1]
+   
+  for(Int_t i=0; i<n; i++) array[i]=Rndm();
 }
 
 //______________________________________________________________________________
