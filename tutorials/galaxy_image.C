@@ -1,7 +1,11 @@
 void galaxy_image()
 {
-   TCanvas *canv = new TCanvas("image", "n4254", 40, 40, 800, 700);
+   TCanvas *canv = new TCanvas("image", "n4254", 40, 40, 812, 700);
    canv->ToggleEventStatus();
+   canv->SetRightMargin(0.2);
+   canv->SetLeftMargin(0.01);
+   canv->SetTopMargin(0.01);
+   canv->SetBottomMargin(0.01);
 
    // read the pixel data from file "galaxy.root"
    // the size of the image is 401 X 401 pixels
