@@ -67,9 +67,9 @@
   gSystem->Exec("rm -f hsum*.gif");
   
   //You can view the animated file anim.gif with Netscape/IE
-  //or with gifview as shown below (finish by tping "q" in the window)
+  //or with gifview as shown below (finish by typing "q" in the window)
   //for more info about gifsicle, gifview, see above url or do
-  // gisicle --help     gifview --help
+  // gifsicle --help     gifview --help
   gSystem->Exec("gifview -a anim.gif");
   
   gBenchmark->Show("hsum");
