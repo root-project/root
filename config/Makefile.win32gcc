@@ -50,6 +50,6 @@ CRYPTLIBS     = -lcrypt
 # Fortran:
 F77           = g77
 F77FLAGS      =
-F77LIBS       = -lg2c -lnsl
+F77LIBS       = -lg2c
 
 # Extras
