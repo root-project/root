@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.45 2004/10/26 08:51:52 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.46 2004/11/24 15:50:27 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -9,15 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdio.h>
-
 #include "Riostream.h"
-#include "TROOT.h"
 #include "TLatex.h"
-#include "TTF.h"
 #include "TVirtualPad.h"
 #include "TVirtualPS.h"
-#include "TArc.h"
 
 #ifdef R__SUNCCBUG
 const Double_t kPI = 3.14159265358979323846;
