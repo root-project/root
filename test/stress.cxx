@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.18 2001/03/12 07:34:19 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.19 2001/04/12 15:08:09 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -92,7 +92,7 @@
 #include <TClassTable.h>
 #include "Event.h"
 
-   void stress(Int_t nevent);
+   void stress(Int_t nevent, Int_t style);
    void stress1();
    void stress2();
    void stress3();
@@ -120,7 +120,9 @@ int main(int argc, char **argv)
    gBenchmark = new TBenchmark();
    Int_t nevent = 1000;      // by default create 1000 events
    if (argc > 1)  nevent = atoi(argv[1]);
-   stress(nevent);
+   Int_t style  = 1;        // by default the new branch style
+   if (argc > 2)  style  = atoi(argv[2]);
+   stress(nevent, style);
    return 0;
 }
 
@@ -133,7 +135,7 @@ class TTree;
 
 Double_t ntotin=0, ntotout=0;
 
-void stress(Int_t nevent)
+void stress(Int_t nevent, Int_t style)
 {
    //Main control function invoking all test programs
 
@@ -146,8 +148,7 @@ void stress(Int_t nevent)
    printf("*  Starting  R O O T - S T R E S S test suite with %d events\n",nevent);
    printf("******************************************************************\n");
    // select the branch style
-   TTree::SetBranchStyle(0); //use old style branch
-   //TTree::SetBranchStyle(1); //use new style branch
+   TTree::SetBranchStyle(style);
    
    //Run the standard test suite
    gBenchmark->Start("stress");
