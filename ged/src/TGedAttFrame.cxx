@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.4 2004/02/20 17:09:33 brun Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedAttFrame.cxx,v 1.5 2004/02/27 01:03:58 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 // ****It needs more fixes*****
 /*************************************************************************
@@ -124,6 +124,8 @@ void TGedAttFrame::SetActive(Bool_t active)
       ((TGCompositeFrame*)GetParent())->ShowFrame(this);
    else
       ((TGCompositeFrame*)GetParent())->HideFrame(this);
+
+   ((TGMainFrame*)GetMainFrame())->Layout();
 }
 
 //______________________________________________________________________________
