@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.11 2001/06/05 10:27:31 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.12 2001/08/29 10:35:39 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -712,6 +712,16 @@ void TNode::SetParent(TNode *parent)
 {
    // set the pointer to the parent, keep parents informed about who they have
 
+   TNode *pp = parent;
+   while(pp) {
+     if (pp == this) {
+       printf("Error: Cannot set parent node to be a child node:%s\n",GetName());
+       printf("       Operation not performed!\n");
+       return;
+     }
+     pp = pp->GetParent();
+   }
+  
    if (fParent)   fParent->GetListOfNodes()->Remove(this);
    else         gGeometry->GetListOfNodes()->Remove(this);
 
