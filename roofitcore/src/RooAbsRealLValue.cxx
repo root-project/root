@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.22 2001/12/13 23:08:44 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.23 2002/02/09 02:01:23 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -581,7 +581,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     TString axisTitle(tAxisLabel);
     axisTitle.Append(" / ( ");
     for(Int_t index= 0; index < dim; index++) {
-      Double_t delta= (xyz[index]->getFitMax() - xyz[index]->getFitMin())/xyz[index]->getFitBins();
+      Double_t delta= (xyz[index]->getFitMax() - xyz[index]->getFitMin())/nBins[index] ; // xyz[index]->getFitBins();
       if(index > 0) axisTitle.Append(" x ");
       axisTitle.Append(Form("%g",delta));
       if(strlen(xyz[index]->getUnit())) {
