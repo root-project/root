@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.25 2003/09/05 09:21:54 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.h,v 1.1 2004/01/25 20:33:32 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Dec 2003
 
 /*************************************************************************
@@ -36,7 +36,6 @@ public :
 
   TDecompLU() {fSign = 0; fIndex = 0; fNIndex = 0;}
   TDecompLU(const TMatrixD &m,Double_t tol = 0.0);
-  TDecompLU(      TMatrixD &m,Double_t tol = 0.0);
   TDecompLU(const TDecompLU &another);
   virtual ~TDecompLU() {if (fIndex) delete [] fIndex; fIndex = 0; }
 

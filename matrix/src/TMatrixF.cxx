@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.4 2004/01/26 21:15:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.5 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -20,7 +20,6 @@
 #include "TMatrixF.h"
 #include "TMatrixFCramerInv.h"
 #include "TDecompLU.h"
-#include "TDecompChol.h"
 
 ClassImp(TMatrixF)
 
@@ -212,12 +211,10 @@ TMatrixF::TMatrixF(const TMatrixFSym &a,EMatrixCreatorsOp2 op,const TMatrixF &b)
 
     case kInvMult:
     {
-      TMatrixDSym tmp(a);
-      TDecompChol chol(tmp,(Double_t)fTol);
       Allocate(a.GetNrows(),a.GetNcols(),
                a.GetRowLwb(),a.GetColLwb(),1);
-      chol.Invert(tmp);
-      *this = tmp;
+      *this = a;
+      this->Invert();
       *this *= b;
       break;
     }
@@ -246,12 +243,10 @@ TMatrixF::TMatrixF(const TMatrixFSym &a,EMatrixCreatorsOp2 op,const TMatrixFSym 
 
     case kInvMult:
     {
-      TMatrixDSym tmp(a);
-      TDecompChol chol(tmp,(Double_t)fTol);
       Allocate(a.GetNrows(),a.GetNcols(),
                a.GetRowLwb(),a.GetColLwb(),1);
-      chol.Invert(tmp);
-      *this = tmp;
+      *this = a;
+      this->Invert();
       *this *= b;
       break;
     }

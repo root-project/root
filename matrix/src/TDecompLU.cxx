@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompLU.cxx,v 1.2 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -53,25 +53,6 @@ TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol)
   
   fLU.ResizeTo(a);
   fLU = a;
-  Decompose(a);
-}
-
-//______________________________________________________________________________
-TDecompLU::TDecompLU(TMatrixD &a,Double_t tol)
-{
-  Assert(a.IsValid());
-
-  if (a.GetNrows() != a.GetNcols() || a.GetRowLwb() != a.GetColLwb()) {
-    Error("TDecompLU(const TMatrixD &","matrix should be square");
-    return;
-  }
-
-  fCondition = -1.0;
-  fTol = a.GetTol();
-  if (tol > 0)
-    fTol = tol;
-
-  fLU.Adopt(a);
   Decompose(a);
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.52 2004/01/26 21:15:50 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.53 2004/01/27 08:12:26 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -20,7 +20,6 @@
 #include "TMatrixD.h"
 #include "TMatrixDCramerInv.h"
 #include "TDecompLU.h"
-#include "TDecompChol.h"
 
 ClassImp(TMatrixD)
 
@@ -212,10 +211,10 @@ TMatrixD::TMatrixD(const TMatrixDSym &a,EMatrixCreatorsOp2 op,const TMatrixD &b)
 
     case kInvMult:
     {
-      TDecompChol chol(a,fTol);
       Allocate(a.GetNrows(),a.GetNcols(),
                a.GetRowLwb(),a.GetColLwb(),1);
-      chol.Invert(*this);
+      *this = a;
+      this->Invert();
       *this *= b;
       break;
     }
@@ -244,10 +243,10 @@ TMatrixD::TMatrixD(const TMatrixDSym &a,EMatrixCreatorsOp2 op,const TMatrixDSym 
 
     case kInvMult:
     {
-      TDecompChol chol(a,fTol);
       Allocate(a.GetNrows(),a.GetNcols(),
                a.GetRowLwb(),a.GetColLwb(),1);
-      chol.Invert(*this);
+      *this = a;
+      this->Invert();
       *this *= b;
       break;
     }
