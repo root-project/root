@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.3 2000/09/05 09:21:22 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.4 2000/12/13 15:13:48 brun Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -66,6 +66,7 @@ TPolyLine3D::TPolyLine3D()
 //*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine default constructor*-*-*-*-*-*-*-*-*-*-*
 //*-*                      ================================
 
+   fN = 0;
    fP = 0;
    fLastPoint = -1;
 }
