@@ -6,7 +6,7 @@ ROOTVERS=`cat build/version_number | sed -e 's/\//\./'`
 MACHINE=`uname`
 OSREL=`uname -r`
 TYPE=source
-TARFILE=root_$ROOTVERS.$TYPE.tar
+TARFILE=root_v$ROOTVERS.$TYPE.tar
 
 rm -rf $EXPDIR
 mkdir $EXPDIR

@@ -10,7 +10,7 @@ MACHINE=`uname`
 OSREL=`uname -r`
 #TYPE=$MACHINE.$OSREL
 TYPE=win32
-TARFILE=root_$ROOTVERS.$TYPE.tar
+TARFILE=root_v$ROOTVERS.$TYPE.tar
 
 TAR=/bin/tar
 dum=`echo $TAR | grep "no gtar"`
