@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.200 2004/11/25 12:12:39 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.201 2004/12/03 15:18:32 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -43,6 +43,7 @@
 #include "Hparam.h"
 #include "TPluginManager.h"
 #include "TPaletteAxis.h"
+#include "TCrown.h"
 #include "TVirtualUtilPad.h"
 
 //______________________________________________________________________________
@@ -2063,6 +2064,7 @@ void THistPainter::PaintColorLevels(Option_t *)
    for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
       yk    = fYaxis->GetBinLowEdge(j);
       ystep = fYaxis->GetBinWidth(j);
+      if (Hoption.System == kPOLAR && yk<0) yk= 2*TMath::Pi()+yk;
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
          Int_t bin  = j*(fXaxis->GetNbins()+2) + i;
          xk    = fXaxis->GetBinLowEdge(i);
@@ -2085,16 +2087,18 @@ void THistPainter::PaintColorLevels(Option_t *)
          }
          yup  = yk + ystep;
          ylow = yk;
-         if (Hoption.Logy) {
-            if (yup > 0)  yup  = TMath::Log10(yup);
-            else continue;
-            if (ylow > 0) ylow = TMath::Log10(ylow);
-            else continue;
+         if (Hoption.System != kPOLAR) {
+            if (Hoption.Logy) {
+               if (yup > 0)  yup  = TMath::Log10(yup);
+               else continue;
+               if (ylow > 0) ylow = TMath::Log10(ylow);
+               else continue;
+            }
+            if (xlow < gPad->GetUxmin()) xlow = gPad->GetUxmin();
+            if (ylow < gPad->GetUymin()) ylow = gPad->GetUymin();
+            if (xup  > gPad->GetUxmax()) xup  = gPad->GetUxmax();
+            if (yup  > gPad->GetUymax()) yup  = gPad->GetUymax();
          }
-         if (xlow < gPad->GetUxmin()) xlow = gPad->GetUxmin();
-         if (ylow < gPad->GetUymin()) ylow = gPad->GetUymin();
-         if (xup  > gPad->GetUxmax()) xup  = gPad->GetUxmax();
-         if (yup  > gPad->GetUymax()) yup  = gPad->GetUymax();
 
          if (fH->TestBit(TH1::kUserContour)) {
             zc = fH->GetContourLevelPad(0);
@@ -2116,7 +2120,13 @@ void THistPainter::PaintColorLevels(Option_t *)
          if (theColor > ncolors-1) theColor = ncolors-1;
          fH->SetFillColor(gStyle->GetColorPalette(theColor));
          fH->TAttFill::Modify();
-         gPad->PaintBox(xlow, ylow, xup, yup);
+         if (Hoption.System != kPOLAR) {
+            gPad->PaintBox(xlow, ylow, xup, yup);
+         } else  {
+            TCrown crown(0,0,xlow,xup,ylow*TMath::RadToDeg(),yup*TMath::RadToDeg());
+            crown.SetFillColor(gStyle->GetColorPalette(theColor));
+            crown.Paint();
+         }
       }
    }
 
