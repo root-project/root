@@ -1531,6 +1531,10 @@ char *argv[] ;
 int G__init_globals()
 {
   int i;
+  static int init = 0; /* Run just once. */
+  if (init) return 1;
+  init = 1;
+
   /* G__p_ifunc = &G__ifunc ; */
 
   G__exec_memberfunc = 0;
