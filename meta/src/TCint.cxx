@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.30 2001/07/05 14:49:15 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.31 2001/07/05 20:17:28 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -325,7 +325,7 @@ void TCint::ResetAll()
 {
    // Reset the CINT state to its initial state.
 
-   G__init_cint("cint");
+   G__init_cint("cint +V");
    G__init_process_cmd();
 }
 
