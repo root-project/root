@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.5 2001/01/10 14:37:29 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.h,v 1.6 2001/05/02 11:45:46 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -61,9 +61,9 @@ public:
 
    virtual ~TGButtonGroup();
 
-   void Pressed(Int_t id)  { Emit("Pressed(Int_t)",id); }     //*SIGNAL*
-   void Released(Int_t id) { Emit("Released(Int_t)",id);}     //*SIGNAL*
-   void Clicked(Int_t id)  { Emit("Clicked(Int_t)",id); }     //*SIGNAL*
+   virtual void Pressed(Int_t id)  { Emit("Pressed(Int_t)",id); }   //*SIGNAL*
+   virtual void Released(Int_t id) { Emit("Released(Int_t)",id);}   //*SIGNAL*
+   virtual void Clicked(Int_t id)  { Emit("Clicked(Int_t)",id); }   //*SIGNAL*
 
    void ButtonPressed();
    void ButtonReleased();
