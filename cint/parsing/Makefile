@@ -33,7 +33,8 @@ else
 	$(TestDiff)
 endif
 
-operatorLessThanTemplate.log: operatorLessThanTemplate_C.$(DllSuf)
+operatorLessThanTemplate.log: runoperatorLessThanTemplate.C operatorLessThanTemplate_C.$(DllSuf)
+	$(CMDECHO) root.exe -q -l -b  runoperatorLessThanTemplate.C | grep -v tagnum > $@ 2>&1
 
 operatorLessThanTemplate:  operatorLessThanTemplate.log
 	$(TestDiff)

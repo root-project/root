@@ -34,6 +34,9 @@ template<class T>
        ostream & operator << (ostream & stream, const RegistryItem<T> & rec)
 { return stream; };
 
+template<class T> bool operator< (const RegistryItem<T> & lhs, const RegistryItem<T> & rhs) 
+{ return false; };
+
 template<class T> class RegistryItem : public RegistryItemI {
 
 public:
@@ -48,6 +51,7 @@ public:
   void Print(ostream& stream) const {};
 
   friend ostream & operator<< <T>(ostream & stream, const RegistryItem<T> & rec); 
+  friend bool operator< <T>(const RegistryItem<T> & lhs, const RegistryItem<T> & rhs); 
 
 private:
 
