@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.30 2004/01/27 16:28:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.31 2004/02/06 14:30:55 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -134,8 +134,9 @@ public:
    static Double_t Sqrt(Double_t x);
    static Double_t Ceil(Double_t x);
    static Double_t Floor(Double_t x);
-   static Double_t Exp(Double_t);
-   static Double_t Factorial(Int_t);
+   static Double_t Exp(Double_t x);
+   static Double_t Ldexp(Double_t x, Int_t exp);
+   static Double_t Factorial(Int_t i);
    static Double_t Power(Double_t x, Double_t y);
    static Double_t Log(Double_t x);
    static Double_t Log2(Double_t x);
@@ -171,28 +172,28 @@ public:
    static Double_t Sign(Double_t a, Double_t b);
 
    // Min
-   static Short_t  Min(Short_t a, Short_t b);
-   static UShort_t Min(UShort_t a, UShort_t b);
-   static Int_t    Min(Int_t a, Int_t b);
-   static UInt_t   Min(UInt_t a, UInt_t b);
-   static Long_t   Min(Long_t a, Long_t b);
-   static ULong_t  Min(ULong_t a, ULong_t b);
-   static Long64_t Min(Long64_t a, Long64_t b);
+   static Short_t   Min(Short_t a, Short_t b);
+   static UShort_t  Min(UShort_t a, UShort_t b);
+   static Int_t     Min(Int_t a, Int_t b);
+   static UInt_t    Min(UInt_t a, UInt_t b);
+   static Long_t    Min(Long_t a, Long_t b);
+   static ULong_t   Min(ULong_t a, ULong_t b);
+   static Long64_t  Min(Long64_t a, Long64_t b);
    static ULong64_t Min(ULong64_t a, ULong64_t b);
-   static Float_t  Min(Float_t a, Float_t b);
-   static Double_t Min(Double_t a, Double_t b);
+   static Float_t   Min(Float_t a, Float_t b);
+   static Double_t  Min(Double_t a, Double_t b);
 
    // Max
-   static Short_t  Max(Short_t a, Short_t b);
-   static UShort_t Max(UShort_t a, UShort_t b);
-   static Int_t    Max(Int_t a, Int_t b);
-   static UInt_t   Max(UInt_t a, UInt_t b);
-   static Long_t   Max(Long_t a, Long_t b);
-   static ULong_t  Max(ULong_t a, ULong_t b);
-   static Long64_t Max(Long64_t a, Long64_t b);
+   static Short_t   Max(Short_t a, Short_t b);
+   static UShort_t  Max(UShort_t a, UShort_t b);
+   static Int_t     Max(Int_t a, Int_t b);
+   static UInt_t    Max(UInt_t a, UInt_t b);
+   static Long_t    Max(Long_t a, Long_t b);
+   static ULong_t   Max(ULong_t a, ULong_t b);
+   static Long64_t  Max(Long64_t a, Long64_t b);
    static ULong64_t Max(ULong64_t a, ULong64_t b);
-   static Float_t  Max(Float_t a, Float_t b);
-   static Double_t Max(Double_t a, Double_t b);
+   static Float_t   Max(Float_t a, Float_t b);
+   static Double_t  Max(Double_t a, Double_t b);
 
    // Locate Min, Max
    static Int_t  LocMin(Int_t n, const Short_t *a);
@@ -464,6 +465,7 @@ extern "C" {
    extern double atan2(double, double);
    extern double sqrt(double);
    extern double exp(double);
+   extern double ldexp(double, int);
    extern double pow(double, double);
    extern double log(double);
    extern double log10(double);
@@ -513,6 +515,9 @@ inline Double_t TMath::Sqrt(Double_t x)
 
 inline Double_t TMath::Exp(Double_t x)
    { return exp(x); }
+
+inline Double_t TMath::Ldexp(Double_t x, Int_t exp)
+   { return ldexp(x, exp); }
 
 inline Double_t TMath::Power(Double_t x, Double_t y)
    { return pow(x, y); }
