@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.25 2001/02/21 07:28:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.26 2001/03/05 22:32:06 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -28,6 +28,7 @@
 
 const Int_t kMETHOD   = 1000;
 const Int_t kDATAMEMBER = 1000;
+const Int_t kMaxLen     = 512;
 
 ClassImp(TTreeFormula)
 
@@ -101,7 +102,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       //   1: loop over the elements of a variable length array
       //   2: loop over elements of fixed length array (nData is the same for all entry)
       
-      if (leaf->GetLeafCount()) {
+         if (leaf->GetLeafCount()) {
          // We assume only one possible variable length dimension (the left most)
          fMultiplicity = 1;
       } else {
@@ -160,6 +161,7 @@ TTreeFormula::~TTreeFormula()
 //*-*-*-*-*-*-*-*-*-*-*Tree Formula default destructor*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================
 
+   fNames.Delete();
    if (fIndex) delete [] fIndex;
    for (int j=0; j<fNcodes; j++) {
       for (int k = 0; k<fNdimensions[j]; k++) {
@@ -238,65 +240,6 @@ void TTreeFormula::DefineDimensions(const char *info, Int_t code, Int_t& virt_di
    
 }
 
-// Helper functions
-
-#define MAXBUF 128
-
-//______________________________________________________________________________
-static TBranch* FindBranch(const TObjArray * list, const char* branchname) {
-   Int_t n = list->GetEntriesFast();
-   Int_t i;
-   char name[MAXBUF];
-   
-   for(i=0; i<n; i++) {
-      TBranch *branch = (TBranch*)list->UncheckedAt(i);
-      strcpy(name,branch->GetName());
-      char *dim = (char*)strstr(name,"[");
-      if (dim) dim[0]='\0';
-      if (!strcmp(branchname,name)) return branch;
-   }
-   return 0;
-}
-
-
-//______________________________________________________________________________
-static TLeaf* FindLeaf(const TObjArray * list, const char* searchname) {
-   Int_t n = list->GetEntriesFast();
-   Int_t i;
-   char leafname[MAXBUF];
-   char longname[MAXBUF];
-   
-   // For leaves we allow for one level up to be prefixed to the
-   // name
-   
-   for(i=0; i<n; i++) {
-      TLeaf *leaf = (TLeaf*)list->UncheckedAt(i);
-      strcpy(leafname,leaf->GetName());
-      char *dim = (char*)strstr(leafname,"[");
-      if (dim) dim[0]='\0';
-      
-      if (!strcmp(searchname,leafname)) return leaf;
-      
-      TBranch * branch = leaf->GetBranch();
-      if (branch) {
-         sprintf(longname,"%s.%s",branch->GetName(),leafname);
-         char *dim = (char*)strstr(longname,"[");
-         if (dim) dim[0]='\0';
-         if (!strcmp(searchname,longname)) return leaf;
-
-         // The following is for the case where the branch is only
-         // a sub-branch.  Since we do not see it through
-         // TTree::GetListOfBranches, we need to see it indirectly.
-         // This is the less sturdy part of this search ... it may
-         // need refining ... 
-         if (strstr(searchname,".")
-             && !strcmp(searchname,branch->GetName())) return leaf;            
-      }
-   }
-   return 0;
-}
-
-
 //______________________________________________________________________________
 Int_t TTreeFormula::DefinedVariable(TString &name)
 {
@@ -331,17 +274,17 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
    if (!fTree) return -1;
    fNpar = 0;
    Int_t nchname = name.Length();
-   if (nchname > MAXBUF) return -1;
+   if (nchname > kMaxLen) return -1;
    Int_t i;
 
    const char *cname = name.Data();
 
-   char   first[MAXBUF];  first[0] = '\0';
-   char  second[MAXBUF]; second[0] = '\0';
-   char   right[MAXBUF];  right[0] = '\0';
-   char    dims[MAXBUF];   dims[0] = '\0';
-   char    work[MAXBUF];   work[0] = '\0';
-   char scratch[MAXBUF];
+   char   first[kMaxLen];  first[0] = '\0';
+   char  second[kMaxLen]; second[0] = '\0';
+   char   right[kMaxLen];  right[0] = '\0';
+   char    dims[kMaxLen];   dims[0] = '\0';
+   char    work[kMaxLen];   work[0] = '\0';
+   char scratch[kMaxLen];
    char *current;
 
    TLeaf *leaf=0, *tmp_leaf=0;
@@ -381,17 +324,17 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             // So far, we have not found a matching leaf or branch. 
             strcpy(first,work);
             
-            branch = FindBranch(fTree->GetListOfBranches(), first);
-            leaf = FindLeaf(fTree->GetListOfLeaves(), first);
+            branch = fTree->FindBranch(first);
+            leaf = fTree->FindLeaf(first);
             
             // Look with the delimiter removed (we look with it first
             // because a dot is allowed at the end of some branches).
             if (cname[i]) first[strlen(first)-1]='\0'; 
-            if (!branch) branch = FindBranch(fTree->GetListOfBranches(), first);
-            if (!leaf) leaf = FindLeaf(fTree->GetListOfLeaves(), first); 
+            if (!branch) branch = fTree->FindBranch(first);
+            if (!leaf) leaf = fTree->FindLeaf(first); 
             
             if (leaf || branch) {
-               if (leaf && !leaf->InheritsFrom("TLeafObject") ) {
+               if (leaf && !leaf->IsOnTerminalBranch() ) {
                   // This is a non-object leaf, it should NOT be specified more except for
                   // dimensions. 
                   final = kTRUE;
@@ -402,7 +345,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
          } else {
             if (final) {
                Error("TTreeFormula::DefinedVariable",
-                     "Unexpected of control flow!");
+                     "Unexpected control flow!");
                return -1;
             }
             
@@ -411,25 +354,29 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
             if (cname[i]) work[strlen(work)-1] = '\0';
             sprintf(scratch,"%s.%s",first,work);
             
-            tmp_leaf = FindLeaf( branch->GetListOfLeaves(), work);
-            if (!tmp_leaf)  tmp_leaf = FindLeaf( branch->GetListOfLeaves(), scratch);
-            if (tmp_leaf && !tmp_leaf->InheritsFrom("TLeafObject") ) {
+            if (branch) {
+               tmp_leaf = branch->FindLeaf(work);
+               if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
+            }
+            if (tmp_leaf && !tmp_leaf->IsOnTerminalBranch() ) {
                // This is a non-object leaf, it should NOT be specified more except for
                // dimensions. 
                final = kTRUE;
                leaf = tmp_leaf;
             } 
             
-            tmp_branch = FindBranch(branch->GetListOfBranches(), work);
-            if (!tmp_branch) tmp_branch = FindBranch(branch->GetListOfBranches(), scratch);
+            if (branch) {
+               tmp_branch = branch->FindBranch(work);
+               if (!tmp_branch) tmp_branch = branch->FindBranch(scratch);
+            }
             if (tmp_branch) {
                branch=tmp_branch;
                
                // NOTE: Should we look for a leaf within here?
                if (!final) {
-                  tmp_leaf = FindLeaf( branch->GetListOfLeaves(), work);
-                  if (!tmp_leaf)  tmp_leaf = FindLeaf( branch->GetListOfLeaves(), scratch);
-                  if (tmp_leaf && !tmp_leaf->InheritsFrom("TLeafObject") ) {
+                  tmp_leaf = branch->FindLeaf(work);
+                  if (!tmp_leaf)  tmp_leaf = branch->FindLeaf(scratch);
+                  if (tmp_leaf && tmp_leaf->IsOnTerminalBranch() ) {
                      // This is a non-object leaf, it should NOT be specified more except for
                      // dimensions. 
                      final = kTRUE;
@@ -474,7 +421,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
    
    if (!final && branch) { // NOTE: should we add && !leaf ???
       leaf = (TLeaf*)branch->GetListOfLeaves()->UncheckedAt(0);
-      final = ! leaf->InheritsFrom("TLeafObject");
+      final = leaf->IsOnTerminalBranch();
    }
 
    
@@ -486,7 +433,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       if (dims[0]) {
          current = &( dims[0] );
          Int_t dim = 0;
-         char varindex[MAXBUF];
+         char varindex[kMaxLen];
          Int_t index;
          Int_t scanindex ;
          while (current) {
@@ -529,8 +476,12 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       // change from tree to tree!.
       // This actually could be wrong if the trees of the chain have a different
       // structure.
-      fCodes[code] = fTree->GetListOfLeaves()->IndexOf(leaf);
-      
+      //fCodes[code] = fTree->GetListOfLeaves()->IndexOf(leaf);
+      TTree *tleaf = leaf->GetBranch()->GetTree();
+      fCodes[code] = tleaf->GetListOfLeaves()->IndexOf(leaf);
+      TNamed *named = new TNamed(leaf->GetName(),tleaf->GetName());
+      fNames.AddAt(named,code);
+      fLeaves.AddAt(leaf,code);
       
       // Analyze the content of 'right'
       
@@ -893,7 +844,8 @@ TLeaf *TTreeFormula::GetLeaf(Int_t n) const
 //*-*            ============================================
 //
 
-   return (TLeaf*)fTree->GetListOfLeaves()->UncheckedAt(fCodes[n]);
+   //return (TLeaf*)fTree->GetListOfLeaves()->UncheckedAt(fCodes[n]);
+   return (TLeaf*)fLeaves.UncheckedAt(n);
 }
 
 //______________________________________________________________________________
@@ -933,15 +885,15 @@ Int_t TTreeFormula::GetNdata()
    for (Int_t i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) continue;
       
-      // NOTE: Currently only the leafcount can indicates a dimensions that
+      // NOTE: Currently only the leafcount can indicates a dimension that
       // is physically variable.  So only the left-most dimension is variable.
-      // When an API is introduced to be able to determine a varible inside dimensions
+      // When an API is introduced to be able to determine a variable inside dimensions
       // one would need to add a way to recalculate the values of fCumulSizes for this
-      // this leaf.  This would probably requires the addition of a new data member
+      // leaf.  This would probably require the addition of a new data member
       // fSizes[kMAXCODES][kMAXFORMDIM];
       // Also note that EvalInstance expect all the values (but the very first one)
       // of fCumulSizes to be positive.  So indicating that a physical dimension is 
-      // variable (expect for the first one) can NOT be done via negative values of
+      // variable (expected for the first one) can NOT be done via negative values of
       // fCumulSizes.
       
       TLeaf *leaf = GetLeaf(i);
@@ -949,7 +901,6 @@ Int_t TTreeFormula::GetNdata()
          TBranch *branch = leaf->GetLeafCount()->GetBranch();
          branch->GetEntry(fTree->GetReadEntry());
          index = leaf->GetLen() / leaf->GetLenStatic();
-         
          if (fIndexes[i][0]==-1) {
             // Case where the index is not specified AND the 1st dimension has a variable
             // size.
@@ -962,7 +913,7 @@ Int_t TTreeFormula::GetNdata()
          
       } 
       
-      // However we allow several dimensions that virtually varies via the size of their
+      // However we allow several dimensions that virtually vary via the size of their
       // index variables.  So we have code to recalculate fCumulUsedSizes.
       for(Int_t k=0, virt_dim=0; k < fNdimensions[i]; k++) {        
          if (fIndexes[i][k]<0) {
@@ -985,7 +936,7 @@ Int_t TTreeFormula::GetNdata()
          overall *= fUsedSizes[k];
          fCumulUsedSizes[k] = overall;
       } else {
-         Error("TTreeFormula::GetNdata","GetNdata: a dimension is still negatibe!");
+         Error("TTreeFormula::GetNdata","GetNdata: a dimension is still negative!");
       }
    }
    return overall;
@@ -1104,7 +1055,13 @@ void TTreeFormula::Streamer(TBuffer &R__b)
    // Stream an object of class TTreeFormula.
 
    if (R__b.IsReading()) {
-      R__b.ReadVersion();  //Version_t R__v = R__b.ReadVersion();
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 2) {
+         TTreeFormula::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       TFormula::Streamer(R__b);
       R__b >> fTree;
       R__b >> fNcodes;
@@ -1117,16 +1074,25 @@ void TTreeFormula::Streamer(TBuffer &R__b)
          R__b.ReadFastArray(fIndex, fNindex);
       }
       fMethods.Streamer(R__b);
+      //====end of old versions
+      
    } else {
-      R__b.WriteVersion(TTreeFormula::IsA());
-      TFormula::Streamer(R__b);
-      R__b << fTree;
-      R__b << fNcodes;
-      R__b.WriteFastArray(fCodes, fNcodes);
-      R__b << fMultiplicity;
-      R__b << fInstance;
-      R__b << fNindex;
-      if (fNindex) R__b.WriteFastArray(fIndex, fNindex);
-      fMethods.Streamer(R__b);
+      TTreeFormula::Class()->WriteBuffer(R__b,this);
    }
+}
+
+//______________________________________________________________________________
+void TTreeFormula::UpdateFormulaLeaves()
+{
+   // this function is called TTreePlayer::UpdateFormulaLeaves, itself
+   // called by TChain::LoadTree when a new Tree is loaded.
+   // Because Trees in a TChain may have a different list of leaves, one
+   // must update the leaves numbers in the TTreeFormula used by the TreePlayer.
+
+   Int_t nleaves = fNames.GetEntriesFast();
+   for (Int_t i=0;i<nleaves;i++) {
+      TLeaf *leaf = fTree->GetLeaf(fNames[i]->GetName());
+      fLeaves[i] = leaf;
+   }
+      
 }

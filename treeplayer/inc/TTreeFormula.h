@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.7 2000/12/13 15:13:57 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.8 2001/02/09 16:47:51 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -54,10 +54,11 @@ protected:
    Int_t       fMultiplicity;     //  Number of array elements in leaves in case of a TClonesArray
    Int_t       fInstance;         //  Instance number for GetValue
    Int_t       fNindex;           //  Size of fIndex
-   Int_t       *fIndex;           //[fNindex]array of instances numbers
-   TObjArray   fLeaves;           //  List of leaf used in this formula.
-   TObjArray   fDataMembers;      //  List of leaf data members
-   TObjArray   fMethods;          //  List of leaf method calls
+   Int_t      *fIndex;            //[fNindex]array of instances numbers
+   TObjArray   fLeaves;           //!  List of leaf used in this formula.
+   TObjArray   fDataMembers;      //!  List of leaf data members
+   TObjArray   fMethods;          //!  List of leaf method calls
+   TObjArray   fNames;            //  List of TNamed describing leaves
    
    Int_t         fNdimensions[kMAXCODES];             //Number of array dimensions in each leaf
    Int_t         fCumulSizes[kMAXCODES][kMAXFORMDIM]; //Accumulated size of lower dimensions for each leaf
@@ -90,8 +91,9 @@ public:
    virtual Double_t   GetValueLeafObject(Int_t i, TLeafObject *leaf) const;
    virtual char      *PrintValue(Int_t mode=0) const;
    virtual void       SetTree(TTree *tree) {fTree = tree;}
+   virtual void       UpdateFormulaLeaves();
 
-   ClassDef(TTreeFormula,2)  //The Tree formula
+   ClassDef(TTreeFormula,3)  //The Tree formula
 };
 
 #endif
