@@ -474,20 +474,20 @@ install:
 	   $(INSTALL) $(ALLEXECS)               $(DESTDIR)$(BINDIR); \
 	   echo "Installing libraries in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR); \
-	   vers=`sed 's|\(.*\)\..*/.*|\1|' < build/version_number` ; \
-	   for lib in $(ALLLIBS) $(CINTLIB); do \
-	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib` ; \
-	      rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`.$$vers ; \
-	      if [ x"$(ARCH)" = x"win32gcc" ]; then \
-		bindll=`echo $$lib | sed 's,lib,bin,'`; \
-		baselib=`basename $$lib`; \
-		$(INSTALL) $$bindll $(DESTDIR)$(BINDIR); \
-		ln -s $(DESTDIR)$(BINDIR)/$$baselib $(DESTDIR)$(LIBDIR)/$$baselib ; \
-		ln -s $(DESTDIR)$(BINDIR)/$$baselib $(DESTDIR)$(LIBDIR)/$$baselib.$$vers ; \
-	      else \
-	        $(INSTALL) $$lib*                 $(DESTDIR)$(LIBDIR); \
-	      fi; \
-	   done ; \
+	   if [ x"$(ARCH)" = x"win32gcc" ]; then \
+	      vers=`sed 's|\(.*\)\..*/.*|\1|' < build/version_number` ; \
+	      for lib in $(ALLLIBS) $(CINTLIB); do \
+		 rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib` ; \
+		 rm -f $(DESTDIR)$(LIBDIR)/`basename $$lib`.$$vers ; \
+		 bindll=`echo $$lib | sed 's,lib,bin,'`; \
+		 baselib=`basename $$lib`; \
+		 $(INSTALL) $$bindll $(DESTDIR)$(BINDIR); \
+		 ln -s $(DESTDIR)$(BINDIR)/$$baselib $(DESTDIR)$(LIBDIR)/$$baselib ; \
+		 ln -s $(DESTDIR)$(BINDIR)/$$baselib $(DESTDIR)$(LIBDIR)/$$baselib.$$vers ; \
+	      done; \
+	   else \
+	      $(INSTALLDATA) lib/*              $(DESTDIR)$(LIBDIR); \
+	   fi; \
 	   echo "Installing headers in $(DESTDIR)$(INCDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(INCDIR); \
 	   $(INSTALLDATA) include/*.h           $(DESTDIR)$(INCDIR); \
