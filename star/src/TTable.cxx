@@ -1,7 +1,7 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.16 2001/05/11 16:13:56 fisyak Exp $
-// Author: Valery Fine(fine@mail.cern.ch)   03/07/98
-// Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
-//
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.19 2001/05/29 16:07:51 fine Exp $
+// Author: Valery Fine(fine@bnl.gov)   03/07/98
+// Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
+
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TTable                                                                 //
@@ -93,8 +93,21 @@
 //  St_dst_track_Table.cxx:                                               //
 //  -----------------------                                               //
 //       #include "St_dst_track_Table.h"                                  //
-//       TableClassImpl(St_dst_track, dst_track_st)                       //                      //
+//       TableClassImpl(St_dst_track, dst_track_st)                       //
 //  -----------------------                                               //
+//                                                                        //
+// $Log: TTable.cxx,v $
+// Revision 1.19  2001/05/29 16:07:51  fine
+//  comments make up
+//                                                   //
+// Revision 1.18  2001/05/27 02:39:02  fine                               //
+// meta-variables i$ and n$ introduced                                    //
+// where "i$" stands for the current row index                            //
+//       "n$" stands for the total number of rows                         //
+// meta-variable can be used along the normal                             //
+// table column names in the expressions (see for example                 //
+// method TTable::Draw                                                    //
+//                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
 #include <iostream.h>
@@ -321,12 +334,19 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
 //
 //  varexp is an expression of the general form e1:e2:e3
 //    where e1,etc is a C++ expression referencing a combination of the TTable columns
+//          One can use two extra meta variable "i$" and "n$" along with the table
+//          column names.
+//          i$ is to involve the current row number
+//          n$ refers the total num,ber of rows of this table provided by TTable::GetNRows()
+//
 //  Example:
 //     varexp = x     simplest case: draw a 1-Dim distribution of column named x
 //            = sqrt(x)            : draw distribution of sqrt(x)
 //            = x*y/z
 //            = y:sqrt(x) 2-Dim dsitribution of y versus sqrt(x)
+//            = i$:sqrt(x) 2-Dim dsitribution of i versus sqrt(x[i])
 //            = phep[0]:sqrt(phep[3]) 2-Dim dsitribution of phep[0] versus sqrt(phep[3])
+//
 //  Note that the variables e1, e2 or e3 may contain a boolean expression as well.
 //  example, if e1= x*(y<0), the value histogrammed will be x if y<0
 //  and will be 0 otherwise.
@@ -337,11 +357,13 @@ TH1 *TTable::Draw(const Text_t *varexp00, const Text_t *selection, Option_t *opt
 //  If the expression includes only boolean operations, the result
 //  is 0 or 1. If the result is 0, the histogram is not filled.
 //  In general, the expression may be of the form:
+//
 //      value*(boolean expression)
+//
 //  if boolean expression is true, the histogram is filled with
 //  a weight = value.
 //  Examples:
-//      selection1 = "x<y && sqrt(z)>3.2"
+//      selection1 = "x<y && sqrt(z)>3.2 && 6 < i$ && i$ < n$"
 //      selection2 = "(x+y)*(sqrt(z)>3.2"
 //      selection3 = "signal*(log(signal)>1.2)"
 //  selection1 returns a weigth = 0 or 1
@@ -722,11 +744,13 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
     return kFALSE; // can not load file
   }
 
-  // Float_t  Selection(Float_t *results[], void *address[])
+  // Float_t  Selection(Float_t *results[], void *address[], int& i$, int n$)
+  //   where  i$ - meta variable to set current row index
+  //          n$ - meta variable to set the total table size
   const Char_t *funcName = "SelectionQWERTY";
 #define BYTECODE
 #ifdef BYTECODE
-  const Char_t *argtypes = "Float_t *,float **";
+  const Char_t *argtypes = "Float_t *,float **, int &, int &";
   long offset;
   G__ClassInfo globals;
   G__MethodInfo func = globals.GetMethod(funcName,argtypes,&offset);
@@ -741,7 +765,8 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
 #endif
   // Prepare callfunc object
   int i;
-  TTableDescriptor  *tabsDsc   = GetRowDescriptors();
+  int nRows =  GetNRows();
+  TTableDescriptor    *tabsDsc   = GetRowDescriptors();
   tableDescriptor_st  *descTable = tabsDsc->GetTable();
   Float_t  results[]    = {1,1,1,1,1};
   Char_t **addressArray = (Char_t **)new ULong_t[tabsDsc->GetNRows()];
@@ -750,11 +775,15 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
   G__CallFunc callfunc;
   callfunc.SetBytecode(pbc);
 
-  callfunc.SetArg((long)(&results[0]));   // give 'Float_t *results[5]' as 1st argument
+  callfunc.SetArg((long)(&results[0]));   // give 'Float_t *results[5]'     as 1st argument
   callfunc.SetArg((long)(addressArray));  // give 'void    *addressArray[]' as 2nd argument
+  callfunc.SetArg((long)(&i));            // give 'int& i$'                 as 3nd argument
+  callfunc.SetArg((long)(&nRows));        // give 'int& n$= nRows           as 4th argument
 #else
   char buf[200];
-  sprintf(buf,"%s((Float_t*)(%ld),(void**)(%ld))",funcName,(long int)results,(long int)addressArray);
+  sprintf(buf,"%s((Float_t*)(%ld),(void**)(%ld),*(int*)(%ld),*(int*)(%ld))"
+             ,funcName
+             ,(long int)results,(long int)addressArray,(long int)(&i),(long int)(&nRows));
 #endif
 
   // Call bytecode in loop
@@ -775,10 +804,10 @@ Bool_t TTable::EntryLoop(const Char_t *exprFileName,Int_t &action, TObject *obj
 #define TAKEACTION_END  for (int j=0; j < tabsDsc->GetNRows(); j++ ) addressArray[j] += rSize;}
 
 
-  if (firstentry < GetNRows() ) {
+  if (firstentry < nRows ) {
       Long_t rSize         = GetRowSize();
       Char_t *addressEntry = thisTable + rSize*firstentry;
-      Int_t lastEntry = TMath::Min(UInt_t(firstentry+nentries),UInt_t(GetNRows()));
+      Int_t lastEntry = TMath::Min(UInt_t(firstentry+nentries),UInt_t(nRows));
       if (action < 0) {
         fVmin[0] = fVmin[1] = fVmin[2] = 1e30;
         fVmax[0] = fVmax[1] = fVmax[2] = -fVmin[0];
@@ -1873,7 +1902,14 @@ static Char_t *GetExpressionFileName()
 //______________________________________________________________________________
 Char_t *TTable::MakeExpression(const Char_t *expressions[],Int_t nExpressions)
 {
+  // Create CINT macro to evaluate the user-provided expresssion
+  // Expression may contains:
+  //   -  the table columen names
+  //   - 2 meta names: i$ - the current column index, 
+  //                   n$ - the total table size provided by TTable::GetNRows() method
+  //
   // return the name of temporary file with the current expressions
+  //
    const Char_t *typeNames[] = {"NAN","float", "int",  "long",  "short",         "double"
                                 ,"unsigned int","unsigned long", "unsigned short","unsigned char"
                                 ,"char"};
@@ -1881,7 +1917,7 @@ Char_t *TTable::MakeExpression(const Char_t *expressions[],Int_t nExpressions)
    const char *addressID = "address";
    Char_t *fileName = GetExpressionFileName();
    if (!fileName) {
-       Error("MakeExpression","Can not create a temoprary file");
+       Error("MakeExpression","Can not create a temporary file");
        return 0;
    }
 
@@ -1896,7 +1932,7 @@ Char_t *TTable::MakeExpression(const Char_t *expressions[],Int_t nExpressions)
    TTableDescriptor *dsc = GetRowDescriptors();
    const tableDescriptor_st *descTable  = dsc->GetTable();
    // Create function
-   str << "void SelectionQWERTY(float *"<<resID<<", float **"<<addressID<<")"   << endl;
+   str << "void SelectionQWERTY(float *"<<resID<<", float **"<<addressID<< ", int& i$, int& n$ )"   << endl;
    str << "{"                                                        << endl;
    int i = 0;
    for (i=0; i < dsc->GetNRows(); i++,descTable++ ) {

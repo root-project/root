@@ -1,4 +1,4 @@
-// @(#)root/star:$Name$:$Id$
+// @(#)root/star:$Name:  $:$Id: TCL.h,v 1.2 2001/05/27 02:38:10 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 
 /*************************************************************************
@@ -14,8 +14,17 @@
 // The set of methods to work with the plain matrix / vector
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
 //
-// $Id: TCL.h,v 1.9 1999/12/17 23:28:39 fine Exp $
+// $Id: TCL.h,v 1.2 2001/05/27 02:38:10 fine Exp $
 // $Log: TCL.h,v $
+// Revision 1.2  2001/05/27 02:38:10  fine
+// New method trsedu to solev Ax=B from Victor
+//
+// Revision 1.1.1.1  2000/11/27 22:57:13  fisyak
+//
+//
+// Revision 1.1.1.1  2000/05/16 17:00:49  rdm
+// Initial import of ROOT into CVS
+//
 
 #include "Rtypes.h"
 #include <string.h>
@@ -35,8 +44,11 @@
 //                                                                                   //
 ///////////////////////////////////////////////////////////////////////////////////////
 
+class TArrayD;
+
 class TCL  {
   public:
+ 
     static int    *ucopy(const int    *a, int    *b, int n);
     static float  *ucopy(const float  *a, float  *b, int n);
     static double *ucopy(const float  *a, double *b, int n);
@@ -62,6 +74,18 @@ class TCL  {
 
     static float  *vcopyn(const float *a,  float *x, int n);
     static double *vcopyn(const double *a, double *x, int n);
+
+    static float  *vscale(const float  *a, float  scale, float  *b, int n);
+    static double *vscale(const double *a, double scale, double *b, int n);
+
+    static float  *vlinco(const float  *a, float  fa, const float  *b, float  fb,float  *x, int n);
+    static double *vlinco(const double *a, double fa, const double *b, double fb,double *x, int n);
+
+    static float  *vmatl(const float  *g, const float  *c, float  *x, int n=3,int m=3);
+    static double *vmatl(const double *g, const double *c, double *x, int n=3,int m=3);
+
+    static float  *vmatr(const float  *c, const float  *g, float  *x, int n=3,int m=3);
+    static double *vmatr(const double *c, const double *g, double *x, int n=3,int m=3);
 
     static float *mxmad_0_(int n, const float *a, const float *b, float *c, int i, int j, int k);
 
@@ -104,53 +128,59 @@ class TCL  {
     static double *mxtrp(const double *a, double *b, int i, int j);
 
 // * TR pack
+  
+    static float *traat(float *a, float *s, int m, int n);
+    static float *tral(float *a, float *u, float *b, int m, int n);
+    static float *tralt(float *a, float *u, float *b, int m, int n);
+    static float *tras(float *a, float *s, float *b, int m, int n);
+    static float *trasat(float *a, float *s, float *r__, int m, int n);
+    static float *trasat(double *a, float *s, float *r__, int m, int n);
+    static float *trata(float *a, float *r__, int m, int n);
+    static float *trats(float *a, float *s, float *b, int m, int n);
+    static float *tratsa(float *a, float *s, float *r__, int m, int n);
+    static float *trchlu(float *a, float *b, int n);
+    static float *trchul(float *a, float *b, int n);
+    static float *trinv(float *t, float *s, int n);
+    static float *trla(float *u, float *a, float *b, int m, int n);
+    static float *trlta(float *u, float *a, float *b, int m, int n);
+    static float *trpck(float *s, float *u, int n);
+    static float *trqsq(float *q, float *s, float *r__, int m);
+    static float *trsa(float *s, float *a, float *b, int m, int n);
+    static float *trsinv(float *g, float *gi, int n);
+    static float *trsmlu(float *u, float *s, int n);
+    static float *trsmul(float *g, float *gi, int n);
+    static float *trupck(float *u, float *s, int m);
+    static float *trsat(float *s, float *a, float *b, int m, int n);
 
-       static float *traat(float *a, float *s, int m, int n);
-       static float *tral(float *a, float *u, float *b, int m, int n);
-       static float *tralt(float *a, float *u, float *b, int m, int n);
-       static float *tras(float *a, float *s, float *b, int m, int n);
-       static float *trasat(float *a, float *s, float *r__, int m, int n);
-       static float *trasat(double *a, float *s, float *r__, int m, int n);
-       static float *trata(float *a, float *r__, int m, int n);
-       static float *trats(float *a, float *s, float *b, int m, int n);
-       static float *tratsa(float *a, float *s, float *r__, int m, int n);
-       static float *trchlu(float *a, float *b, int n);
-       static float *trchul(float *a, float *b, int n);
-       static float *trinv(float *t, float *s, int n);
-       static float *trla(float *u, float *a, float *b, int m, int n);
-       static float *trlta(float *u, float *a, float *b, int m, int n);
-       static float *trpck(float *s, float *u, int n);
-       static float *trqsq(float *q, float *s, float *r__, int m);
-       static float *trsa(float *s, float *a, float *b, int m, int n);
-       static float *trsinv(float *g, float *gi, int n);
-       static float *trsmlu(float *u, float *s, int n);
-       static float *trsmul(float *g, float *gi, int n);
-       static float *trupck(float *u, float *s, int m);
-       static float *trsat(float *s, float *a, float *b, int m, int n);
+// Victor Perevoztchikov's addition:
+    static float *trsequ(float *smx, int m=3, float *b=0, int n=1);
 
 // ---   double version
 
-       static double *traat (double *a, double *s, int m, int n);
-       static double *tral  (double *a, double *u, double *b, int m, int n);
-       static double *tralt (double *a, double *u, double *b, int m, int n);
-       static double *tras  (double *a, double *s, double *b, int m, int n);
-       static double *trasat(double *a, double *s, double *r__, int m, int n);
-       static double *trata (double *a, double *r__, int m, int n);
-       static double *trats (double *a, double *s, double *b, int m, int n);
-       static double *tratsa(double *a, double *s, double *r__, int m, int n);
-       static double *trchlu(double *a, double *b, int n);
-       static double *trchul(double *a, double *b, int n);
-       static double *trinv (double *t, double *s, int n);
-       static double *trla  (double *u, double *a, double *b, int m, int n);
-       static double *trlta (double *u, double *a, double *b, int m, int n);
-       static double *trpck (double *s, double *u, int n);
-       static double *trqsq (double *q, double *s, double *r__, int m);
-       static double *trsa  (double *s, double *a, double *b, int m, int n);
-       static double *trsinv(double *g, double *gi, int n);
-       static double *trsmlu(double *u, double *s, int n);
-       static double *trsmul(double *g, double *gi, int n);
-       static double *trupck(double *u, double *s, int m);
-       static double *trsat (double *s, double *a, double *b, int m, int n);
+    static double *traat (double *a, double *s, int m, int n);
+    static double *tral  (double *a, double *u, double *b, int m, int n);
+    static double *tralt (double *a, double *u, double *b, int m, int n);
+    static double *tras  (double *a, double *s, double *b, int m, int n);
+    static double *trasat(double *a, double *s, double *r__, int m, int n);
+    static double *trata (double *a, double *r__, int m, int n);
+    static double *trats (double *a, double *s, double *b, int m, int n);
+    static double *tratsa(double *a, double *s, double *r__, int m, int n);
+    static double *trchlu(double *a, double *b, int n);
+    static double *trchul(double *a, double *b, int n);
+    static double *trinv (double *t, double *s, int n);
+    static double *trla  (double *u, double *a, double *b, int m, int n);
+    static double *trlta (double *u, double *a, double *b, int m, int n);
+    static double *trpck (double *s, double *u, int n);
+    static double *trqsq (double *q, double *s, double *r__, int m);
+    static double *trsa  (double *s, double *a, double *b, int m, int n);
+    static double *trsinv(double *g, double *gi, int n);
+    static double *trsmlu(double *u, double *s, int n);
+    static double *trsmul(double *g, double *gi, int n);
+    static double *trupck(double *u, double *s, int m);
+    static double *trsat (double *s, double *a, double *b, int m, int n);
+
+//  Victor Perevoztchikov's addition:
+    static double *trsequ(double *smx, int m=3, double *b=0, int n=1);
 
     ClassDef(TCL,0)  //C++ replacement for CERNLIB matrix / triangle matrix packages: F110 and F112
 
@@ -461,4 +491,79 @@ inline void **TCL::vzero(void **a, int n1)
   if (n1 <= 0) return 0;
   return (void **)memset(a,0,n1*sizeof(void *));
 }
+
+//________________________________________________________
+inline float *TCL::vscale(const float *a, float scale, float *b, int n)
+{ 
+  for (int i=0;i<n;i++) b[i]=scale*a[i]; 
+  return b;
+}
+
+//________________________________________________________
+inline double *TCL::vscale(const double *a, double scale, double *b, int n)
+{ 
+  for (int i=0;i<n;i++) b[i]=scale*a[i]; 
+  return b;
+}
+
+//________________________________________________________
+inline float *TCL::vlinco(const float *a, float fa, const float *b, float fb, float *x, int n)
+{ 
+  for (int i=0;i<n;i++){x[i]=a[i]*fa+b[i]*fb;}; 
+  return x;
+}
+
+//________________________________________________________
+inline double *TCL::vlinco(const double *a, double fa, const double *b, double fb,double *x, int n)
+{ 
+  for (int i=0;i<n;i++) x[i]=a[i]*fa+b[i]*fb; 
+  return x;
+}
+
+//_____________________________________________________________________________
+inline float *TCL::vmatl(const float *G, const float *c, float *x, int n,int m)
+{
+  //  x = G*c                                                
+  for (int i=0; i<n; i++) {
+    double sum = 0;
+    for (int j=0; j<m; j++) sum += G[j + m*i]*c[j];
+    x[i] = sum; }  
+  return x;
+}      
+
+//_____________________________________________________________________________
+inline double *TCL::vmatl(const double *G, const double *c, double *x, int n,int m)
+{
+  //  x = G*c                                                
+  for (int i=0; i<n; i++) 
+  {
+    double sum = 0;
+    for (int j=0; j<m; j++) sum += G[j + m*i]*c[j];
+    x[i] = sum; 
+  }  
+  return x;
+}      
+
+//_____________________________________________________________________________
+inline float *TCL::vmatr(const float *c, const float *G, float *x, int n,int m)
+{
+  //  x = c*G                                                
+  for (int j=0; j<m; j++) {
+    double sum = 0;
+    for (int i=0; i<n; i++) sum += G[j + n*i]*c[i];
+    x[j] = sum; }  
+  return x;
+}     
+
+//_____________________________________________________________________________
+inline double *TCL::vmatr(const double *c, const double *G, double *x, int n,int m)
+{
+  //  x = c*G                                                
+  for (int j=0; j<m; j++) {
+    double sum = 0;
+    for (int i=0; i<n; i++) sum += G[j + n*i]*c[i];
+    x[j] = sum; }  
+  return x;
+}     
+
 #endif
