@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.26 2004/06/17 19:57:16 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.27 2004/06/25 17:27:09 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -435,8 +435,9 @@ TPacketizer2::TFileNode *TPacketizer2::NextUnAllocNode()
    }
 
    TFileNode *fn = (TFileNode*) fUnAllocated->First();
-   if (fn != 0 && fn->GetSlaveCnt() > fMaxSlaveCnt) {
-      PDB(kPacketizer,1) Info("NextUnAllocNode","Reached Slaves per Node Limit (%d)", fMaxSlaveCnt);
+   if (fn != 0 && fn->GetSlaveCnt() >= fMaxSlaveCnt) {
+      PDB(kPacketizer,1) Info("NextUnAllocNode","Reached Slaves per Node Limit (%d)",
+                              fMaxSlaveCnt);
       fn = 0;
    }
 
