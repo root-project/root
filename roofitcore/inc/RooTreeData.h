@@ -1,12 +1,12 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.28 2003/04/09 01:33:59 wverkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.29 2003/10/06 18:32:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *                                                                           *
- * Copyright (c) 2000-2002, Regents of the University of California          *
+ * Copyright (c) 2000-2004, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *

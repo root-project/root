@@ -1,12 +1,12 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenProdProj.cc,v 1.4 2003/07/30 02:58:50 wverkerke Exp $
+ *    File: $Id: RooGenProdProj.cc,v 1.5 2004/03/19 06:09:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *                                                                           *
- * Copyright (c) 2000-2002, Regents of the University of California          *
+ * Copyright (c) 2000-2004, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *

@@ -1,12 +1,12 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.83 2003/07/18 15:33:47 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.84 2004/03/19 06:09:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *                                                                           *
- * Copyright (c) 2000-2002, Regents of the University of California          *
+ * Copyright (c) 2000-2004, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *

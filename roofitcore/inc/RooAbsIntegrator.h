@@ -1,12 +1,12 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsIntegrator.rdl,v 1.12 2002/09/05 04:33:06 verkerke Exp $
+ *    File: $Id: RooAbsIntegrator.rdl,v 1.13 2003/05/09 20:48:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *                                                                           *
- * Copyright (c) 2000-2002, Regents of the University of California          *
+ * Copyright (c) 2000-2004, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *

@@ -1,12 +1,12 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.72 2004/03/30 23:18:07 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.73 2004/03/31 02:54:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *                                                                           *
- * Copyright (c) 2000-2002, Regents of the University of California          *
+ * Copyright (c) 2000-2004, Regents of the University of California          *
  *                          and Stanford University. All rights reserved.    *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
