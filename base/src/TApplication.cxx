@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.64 2005/01/01 11:29:21 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.65 2005/02/05 01:33:07 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -357,7 +357,11 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                fFiles->Add(new TObjString(argv[i]));
                argv[i] = 0;
                delete [] mac;
-            }
+            } else 
+               // only warn if we're plain root, 
+               // other progs might have their own params
+               if (!strcmp(GetName(),"Rint"))
+                  Warning("GetOptions", "Macro %s not found.", s);
          }
          delete [] dir;
       }
