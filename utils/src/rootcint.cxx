@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.13 2000/11/22 20:57:27 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.14 2000/11/23 16:32:02 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -971,7 +971,6 @@ void WritePointersSTL(G__ClassInfo &cl)
          continue;
       }
       
-      //member is STL container
       if (!IsStreamable(m)) continue;
          fprintf(fp, "//_______________________________________");
          fprintf(fp, "_______________________________________\n");
@@ -981,7 +980,7 @@ void WritePointersSTL(G__ClassInfo &cl)
             fprintf(fp, "   %s* %s = (%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
          } else {
             if (m.Property() & G__BIT_ISPOINTER) {
-               fprintf(fp, "   %s %s = (%s)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+               fprintf(fp, "   %s %s = *(%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
             } else {
                fprintf(fp, "   %s &%s = *(%s *)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
             }
@@ -1121,7 +1120,7 @@ void WriteShowMembers(G__ClassInfo &cl)
                }
                fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"%s\", &%s);\n", cvar,
                        m.Name());
-               if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(char*)&R__%s_%s);\n",m.Name(),cl.Name(),m.Name());
+               if (clflag && IsStreamable(m)) fprintf(fp,"   R__cl->SetStreamer(\"%s\",(char*)&R__%s_%s);\n",cvar,cl.Name(),m.Name());
             } else if (m.Property() & G__BIT_ISPOINTER) {
                fprintf(fp, "   R__insp.Inspect(R__cl, R__parent, \"*%s\", &%s);\n",
                        m.Name(), m.Name());
