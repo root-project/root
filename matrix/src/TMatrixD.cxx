@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.65 2004/06/21 15:53:12 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.cxx,v 1.66 2004/06/22 19:57:01 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -2056,6 +2056,10 @@ void TMatrixD::Streamer(TBuffer &R__b)
     } else { //====process old versions before automatic schema evolution
       TObject::Streamer(R__b);
       MakeValid();
+      R__b >> fNrows;
+      R__b >> fNcols;
+      R__b >> fRowLwb;
+      R__b >> fColLwb;
       fNelems = R__b.ReadArray(fElements);
       R__b.CheckByteCount(R__s,R__c,TMatrixD::IsA());
     }
