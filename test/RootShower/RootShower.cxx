@@ -243,7 +243,7 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     // CREATE MAIN FRAME
     fMainFrame = new TGCompositeFrame(this, 100, 100, kHorizontalFrame | kRaisedFrame);
 
-    TGVerticalFrame *fV1 = new TGVerticalFrame(fMainFrame, 10, 10, kSunkenFrame);
+    TGVerticalFrame *fV1 = new TGVerticalFrame(fMainFrame, 150, 10, kSunkenFrame | kFixedWidth);
     TGVerticalFrame *fV2 = new TGVerticalFrame(fMainFrame, 10, 10, kSunkenFrame);
 
     TGLayoutHints *lo;
@@ -821,7 +821,11 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                     case M_SHOW_3D:
                         if(fIsRunning) break;
+#ifdef R__WIN32
                         cA->x3d("OpenGL");
+#else
+                        cA->x3d();
+#endif
                         break;
 
                     case M_SHOW_TRACK:
