@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.36 2004/08/12 08:40:27 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.37 2004/08/12 10:52:12 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -320,7 +320,7 @@ void TSelectorDraw::Begin(TTree *tree)
          }
 
          TObject *oldObject = gDirectory->Get(hname);  // if hname contains '(...)' the return values is NULL, which is what we want
-         fOldHistogram = dynamic_cast<TH1*>(oldObject);
+         fOldHistogram = oldObject?dynamic_cast<TH1*>(oldObject):0;
 
          if (fOldHistogram==0 && oldObject &&  !oldObject->InheritsFrom(TH1::Class())) {
             Error("Begin","An object of type '%s' has the same name as the requested histo (%s)",oldObject->IsA()->GetName(),hname);

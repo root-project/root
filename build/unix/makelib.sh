@@ -111,7 +111,8 @@ elif [ $PLATFORM = "macosx" ]; then
       opt=-O
    fi
    if [ $macosx_minor -ge 3 ]; then
-      cmd="$LD $opt -bundle -flat_namespace -undefined dynamic_lookup -o \
+#      cmd="$LD $opt -bundle -flat_namespace -undefined dynamic_lookup -o 
+      cmd="$LD $opt -bundle -undefined dynamic_lookup -o \
           $BUNDLE $OBJS `[ -d ${FINKDIR}/lib ] && echo -L${FINKDIR}/lib` \
           -ldl $EXTRA $EXPLLNKCORE"
       echo $cmd
