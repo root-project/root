@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.8 2001/11/12 14:17:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.9 2002/06/12 16:46:11 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -130,7 +130,7 @@ public:
                  ULong_t back = GetDefaultFrameBackground());
    virtual ~TGLVContainer();
 
-   TGListView* GetListView() const { return fListView; }
+   TGListView  *GetListView() const { return fListView; }
 
    virtual void AddItem(TGLVEntry *item)
               { AddFrame(item, fItemLayout); item->SetColumns(fCpos, fJmode); }
@@ -140,7 +140,6 @@ public:
    virtual void SetViewMode(EListViewMode ViewMode);
    Int_t GetViewMode() const { return fViewMode; }
    virtual void SetColumns(Int_t *cpos, Int_t *jmode);
-   virtual const TGLVEntry *GetNextSelected(void **current) { return (TGLVEntry*)TGContainer::GetNextSelected(current);  }
 
    virtual TGDimension GetMaxItemSize() const;
    virtual Int_t       GetMaxSubnameWidth(Int_t idx) const;

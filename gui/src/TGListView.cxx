@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.8 2002/01/15 00:57:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.9 2002/06/12 16:46:12 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -627,7 +627,7 @@ Bool_t TGListView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    const TGLVEntry *entry;
    void *p = 0;
 
-   entry = cnt->GetNextSelected(&p);
+   entry = (TGLVEntry *) cnt->GetNextSelected(&p);
 
    switch (GET_SUBMSG(msg)) {
       case kCT_ITEMCLICK:
