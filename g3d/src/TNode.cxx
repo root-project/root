@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.17 2003/01/20 08:44:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TNode.cxx,v 1.18 2003/04/03 13:46:50 brun Exp $
 // Author: Rene Brun   14/09/95
 
 /*************************************************************************
@@ -556,9 +556,9 @@ void TNode::Master2Local(const Double_t *master, Double_t *local)
    Double_t yms = master[1] - bomb*translation[1];
    Double_t zms = master[2] - bomb*translation[2];
 
-   x = xms*matrix[0] + yms*matrix[3] + zms*matrix[6];
-   y = xms*matrix[1] + yms*matrix[4] + zms*matrix[7];
-   z = xms*matrix[2] + yms*matrix[5] + zms*matrix[8];
+   x = xms*matrix[0] + yms*matrix[1] + zms*matrix[2];
+   y = xms*matrix[3] + yms*matrix[4] + zms*matrix[5];
+   z = xms*matrix[6] + yms*matrix[7] + zms*matrix[8];
 
    local[0] = x; local[1] = y; local[2] = z;
 }
@@ -584,9 +584,9 @@ void TNode::Master2Local(const Float_t *master, Float_t *local)
    Double_t yms = master[1] - bomb*translation[1];
    Double_t zms = master[2] - bomb*translation[2];
 
-   x = xms*matrix[0] + yms*matrix[3] + zms*matrix[6];
-   y = xms*matrix[1] + yms*matrix[4] + zms*matrix[7];
-   z = xms*matrix[2] + yms*matrix[5] + zms*matrix[8];
+   x = xms*matrix[0] + yms*matrix[1] + zms*matrix[2];
+   y = xms*matrix[3] + yms*matrix[4] + zms*matrix[5];
+   z = xms*matrix[6] + yms*matrix[7] + zms*matrix[8];
 
    local[0] = x; local[1] = y; local[2] = z;
 }
