@@ -133,8 +133,8 @@ void G__CallFunc::SetArgArray(long *p)
         para.para[i].tagnum = -1;
         para.para[i].typenum = -1;
         para.paran=i+1;
-        break;
-      }
+      } else
+         break;
     }
   }
   else {
