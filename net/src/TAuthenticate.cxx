@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.56 2004/05/30 16:15:00 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.57 2004/06/25 16:49:09 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -177,6 +177,7 @@ TAuthenticate::TAuthenticate(TSocket *sock, const char *remote,
                  rproto, fVersion);
       }
       fProtocol = sproto;
+      delete [] sproto;
    }
 
    // Check or get user name
@@ -3909,6 +3910,7 @@ Int_t TAuthenticate::ReadRootAuthrc(const char *proofconf)
       if (authrc && gDebug > 1)
          ::Info("TAuthenticate::ReadRootAuthrc",
                 "file %s cannot be read (errno: %d)", authrc, errno);
+      delete [] authrc;
 #ifdef ROOTETCDIR
       authrc = gSystem->ConcatFileName(ROOTETCDIR,"system.rootauthrc");
 #else
@@ -3926,19 +3928,21 @@ Int_t TAuthenticate::ReadRootAuthrc(const char *proofconf)
          if (gDebug > 1)
             ::Info("TAuthenticate::ReadRootAuthrc",
                    "file %s cannot be read (errno: %d)", authrc, errno);
+         delete [] authrc;
          return 0;
       }
    }
 
    // Check if file has changed since last read
-   TString tRootAuthrc((const char *)authrc);
+   TString tRootAuthrc = authrc;
    if (tRootAuthrc == fgRootAuthrc) {
       struct stat si;
-      stat(tRootAuthrc.Data(),&si);
+      stat(tRootAuthrc, &si);
       if ((UInt_t)si.st_mtime < fgLastAuthrc.Convert()) {
          if (gDebug > 1)
             ::Info("TAuthenticate::ReadRootAuthrc",
                    "file %s already read", authrc);
+         delete [] authrc;
          return 0;
       }
    }
@@ -3974,6 +3978,7 @@ Int_t TAuthenticate::ReadRootAuthrc(const char *proofconf)
          if (gDebug > 2)
             ::Info("TAuthenticate::ReadRootAuthrc",
                    "file %s cannot be open (errno: %d)", authrc, errno);
+         delete [] authrc;
          return 0;
       }
    }
@@ -4023,7 +4028,7 @@ Int_t TAuthenticate::ReadRootAuthrc(const char *proofconf)
 
       } else {
 
-         TString hostsrv((const char *)nxt);
+         TString hostsrv = nxt;
          TString host   = hostsrv;
          TString server = "";
          if (hostsrv.Contains(":")) {
@@ -4048,7 +4053,7 @@ Int_t TAuthenticate::ReadRootAuthrc(const char *proofconf)
          if (!strncmp(nxt,"user",4)) {
             nxt = strtok(0," ");
             if (strncmp(nxt,"list",4) && strncmp(nxt,"method",6)) {
-               user = TString((const char *)nxt);
+               user = TString(nxt);
                nxt = strtok(0," ");
             }
          }

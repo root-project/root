@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.103 2004/06/14 16:18:50 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.104 2004/06/15 14:16:50 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1023,8 +1023,10 @@ FILE *TUnixSystem::TempFileName(TString &base, const char *dir)
    // (this avoids certain security problems). Returns 0 in case
    // of error.
 
-   base = ConcatFileName(dir ? dir : TempDirectory(), base);
+   char *b = ConcatFileName(dir ? dir : TempDirectory(), base);
+   base = b;
    base += "XXXXXX";
+   delete [] b;
 
    char *arg = StrDup(base);
    int fd = mkstemp(arg);
