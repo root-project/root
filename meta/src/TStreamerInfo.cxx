@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.38 2001/02/07 21:08:36 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.39 2001/02/08 08:51:52 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -122,7 +122,33 @@ void TStreamerInfo::Build()
    //iterate on list of base classes
    while((base = (TBaseClass*)nextb())) {
       clm = gROOT->GetClass(base->GetName());
-      if (!clm) continue;
+      if (!clm) {
+#ifdef MAYBEINFUTURE
+         // support sor STL collections as base class cannot be implemented
+         // It requires access to the base class offset in the class
+         // try STL container or string
+         Streamer_t streamer = 0;
+         offset = GetDataMemberOffset(dm,streamer);
+         if (offset == kMissing) continue;
+         if (strcmp(base->GetName(),"string") == 0) {
+            TStreamerSTLstring *stls = new TStreamerSTLstring(base->GetName(),base->GetTitle(),offset,base->GetName());
+            fElements->Add(stls);
+            stls->SetStreamer(streamer);
+            continue;
+         }
+         if (strchr(base->GetName(),'<') && strchr(base->GetName(),'>')) {
+            TStreamerSTL *stl = new TStreamerSTL(base->GetName(),base->GetTitle(),offset,base->GetName(),0);
+            if (stl->GetSTLtype()) {
+               fElements->Add(stl);
+               stl->SetStreamer(streamer);
+            }
+            else delete stl;
+            continue;
+         }
+         Error("Build","%s, unknow type: %s %s\n",GetName(),base->GetName(),base->GetTitle());
+#endif
+         continue;
+      }
       clm->GetStreamerInfo();
       offset = fClass->GetBaseClassOffset(clm);
       element = new TStreamerBase(base->GetName(),base->GetTitle(),offset);
@@ -216,7 +242,7 @@ void TStreamerInfo::Build()
                stls->SetStreamer(streamer);
                continue;
             }
-            if (strchr(dm->GetTypeName(),'<') && strchr(dm->GetTypeName(),'<')) {
+            if (strchr(dm->GetTypeName(),'<') && strchr(dm->GetTypeName(),'>')) {
                TStreamerSTL *stl = new TStreamerSTL(dm->GetName(),dm->GetTitle(),offset,dm->GetFullTypeName(),dm->IsaPointer());
                if (stl->GetSTLtype()) {
                   fElements->Add(stl);
