@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.00 2003/08/27 13:52:36 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.1 2003/08/27 15:31:13 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -281,8 +281,7 @@ void TMultiLayerPerceptron::SetEventWeight(TString branch)
    if (fData)
       fData->SetBranchAddress(branch.Data(), &fEventWeight);
    else
-      std::cerr << "TMultiLayerPerceptron::SetEventWeight ERROR: "
-                << "no data set. Cannot set the weights" << std::endl;
+      Error("SetEventWeight","no data set. Cannot set the weights");
 }
 
 //______________________________________________________________________________
@@ -411,14 +410,12 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    TGraph *train_residual_plot = NULL;
    TGraph *test_residual_plot = NULL;
    if ((!fData) || (!fTraining) || (!fTest)) {
-      std::cerr << "TMultiLayerPerceptron::Train() ERROR: "
-                << "Training/Test samples still not defined." << std::endl;
-      std::cerr << "Cannot train the neural network. " << std::endl;
+      Error("Train","Training/Test samples still not defined. Cannot train the neural network");
       return;
    }
    // Text and Graph outputs
    if (verbosity % 2)
-      std::cout << "Training the Neural Network" << std::endl;
+      cout << "Training the Neural Network" << endl;
    if (verbosity / 2) {
       residual_plot = new TMultiGraph;
       canvas = new TCanvas("NNtraining", "Neural Net training");
@@ -562,7 +559,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
                BFGSH.UnitMatrix();
                SteepestDir(dir);
                if (LineSearch(dir, buffer)) {
-                  std::cout << "Line search fail" << std::endl;
+                  cout << "Line search fail" << endl;
                   iepoch = nEpoch;
                }
             }
@@ -573,7 +570,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       // the learning should stop now.
       if (isnan(GetError(TMultiLayerPerceptron::kTraining))
           || isinf(GetError(TMultiLayerPerceptron::kTraining))) {
-         std::cerr << "Training Error. Stop." << std::endl;
+         cout << "Training Error. Stop." <<endl;
          iepoch = nEpoch;
       }
       // Process other ROOT events.  Time penalty is less than 
@@ -582,14 +579,14 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
       // Intermediate graph and text output
       if ((verbosity % 2) && ((!(iepoch % DisplayStepping)) 
           || (iepoch == nEpoch - 1)))
-         std::cout << "Epoch: " << iepoch 
+         cout << "Epoch: " << iepoch 
 		   << " learn=" 
                    << TMath::Sqrt(GetError(TMultiLayerPerceptron::kTraining) 
                       / fTraining->GetN())
                    << " test=" 
 		   << TMath::Sqrt(GetError(TMultiLayerPerceptron::kTest) 
                       / fTest->GetN())
-                   << std::endl;
+                   << endl;
       if (verbosity / 2) {
          train_residual_plot->SetPoint(iepoch, iepoch,
            TMath::Sqrt(GetError(TMultiLayerPerceptron::kTraining) 
@@ -617,7 +614,7 @@ void TMultiLayerPerceptron::Train(Int_t nEpoch, Option_t * option)
    delete[]dir;
    // Final Text and Graph outputs
    if (verbosity % 2)
-      std::cout << "Training done." << std::endl;
+      cout << "Training done." << endl;
    if (verbosity / 2) {
       TLegend *legend = new TLegend(.75, .80, .95, .95);
       legend->AddEntry(residual_plot->GetListOfGraphs()->At(0),
@@ -772,15 +769,11 @@ void TMultiLayerPerceptron::BuildNetwork()
            hidden(hidden.Last(':') + 1,
                   hidden.Length() - (hidden.Last(':') + 1))).Data());
    if (input.Length() == 0) {
-      std::cerr << "TMultiLayerPerceptron::BuildNetwork() ERROR: "
-                << "malformed structure." << std::endl;
-      std::cerr << "No input layer" << std::endl;
+      Error("BuildNetwork()","malformed structure. No input layer");
       return;
    }
    if (output.Length() == 0) {
-      std::cerr << "TMultiLayerPerceptron::BuildNetwork() ERROR: "
-                << "malformed structure." << std::endl;
-      std::cerr << "No output layer" << std::endl;
+      Error("BuildNetwork()","malformed structure. No output layer");
       return;
    }
    BuildFirstLayer(input);
@@ -810,9 +803,7 @@ void TMultiLayerPerceptron::BuildFirstLayer(TString & input)
          brType = 'D';
       neuron = new TNeuron(TNeuron::kOff);
       if (!fData->GetBranch(brName.Data())) {
-         std::cerr << "TMultiLayerPerceptron::BuildNetwork() ERROR: "
-                   << "malformed structure" << std::endl;
-         std::cerr << "Unknown Branch " << brName.Data() << std::endl;
+         Error("BuildNetwork()","malformed structure. Unknown Branch",brName.Data());
       }
       neuron->UseBranch(fData->GetBranch(brName.Data()), brType);
       fFirstLayer.AddLast(neuron);
@@ -829,9 +820,7 @@ void TMultiLayerPerceptron::BuildFirstLayer(TString & input)
       brType = 'D';
    neuron = new TNeuron(TNeuron::kOff);
    if (!fData->GetBranch(brName.Data())) {
-      std::cerr << "TMultiLayerPerceptron::BuildNetwork() ERROR: "
-                << "malformed structure." << std::endl;
-      std::cerr << "Unknown Branch " << brName.Data() << std::endl;
+      Error("BuildNetwork()","malformed structure. Unknown Branch %s",brName.Data());
    }
    neuron->UseBranch(fData->GetBranch(brName.Data()), brType);
    fFirstLayer.AddLast(neuron);
@@ -901,9 +890,7 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
          brType = 'D';
       neuron = new TNeuron(TNeuron::kLinear);
       if (!fData->GetBranch(brName.Data())) {
-         std::cerr << "TMultiLayerPerceptron::BuildNetwork() ERROR: "
-                   << "malformed structure." << std::endl;
-         std::cerr << "Unknown Branch " << brName.Data() << std::endl;
+         Error("BuildNetwork()","malformed structure. Unknown Branch %s",brName.Data());
       }
       neuron->UseBranch(fData->GetBranch(brName.Data()), brType);
       neuron->SetNormalisation(0., 1.);	// no normalisation of the output layer
@@ -925,9 +912,7 @@ void TMultiLayerPerceptron::BuildLastLayer(TString & output, Int_t prev)
       brType = 'D';
    neuron = new TNeuron(TNeuron::kLinear);
    if (!fData->GetBranch(brName.Data())) {
-      std::cerr << "TMultiLayerPerceptron::BuildNetwork() ERROR: "
-                << "malformed structure" << std::endl;
-      std::cerr << "Unknown Branch " << brName.Data() << std::endl;
+      Error("BuildNetwork()","malformed structure. Unknown Branch %s",brName.Data());
    }
    neuron->UseBranch(fData->GetBranch(brName.Data()), brType);
    neuron->SetNormalisation(0., 1.);	// no normalisation of the output layer
@@ -953,8 +938,7 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option)
    opt.ToLower();
    TNeuron *out = (TNeuron *) (fLastLayer.At(index));
    if (!out) {
-      std::cerr << "TMultiLayerPerceptron::DrawResult() ERROR: "
-                << "no such output." << std::endl;
+      Error("DrawResult()","no such output.");
       return;
    }
    //TCanvas *canvas = new TCanvas("NNresult", "Neural Net output");
@@ -970,8 +954,7 @@ void TMultiLayerPerceptron::DrawResult(Int_t index, Option_t * option)
       setname = "test";
    }
    if ((!fData) || (!events)) {
-      std::cerr << "TMultiLayerPerceptron::DrawResult() ERROR: "
-                << "no dataset." << std::endl;
+      Error("DrawResult()","no dataset.");
       return;
    }
    if (opt.Contains("comp")) {
@@ -1023,27 +1006,27 @@ void TMultiLayerPerceptron::DumpWeights(Option_t * filename)
    // Dumps the weights to a text file.
    // Set filename to "-" (default) to dump to the standard output
    TString filen = filename;
-   std::ostream * output;
+   ostream * output;
    if (filen == "")
       return;
    if (filen == "-")
-      output = &std::cout;
+      output = &cout;
    else
-      output = new std::ofstream(filen.Data());
-   *output << "#neurons weights" << std::endl;
+      output = new ofstream(filen.Data());
+   *output << "#neurons weights" << endl;
    TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
    TNeuron *neuron = NULL;
    while ((neuron = (TNeuron *) it->Next()))
-      *output << neuron->GetWeight() << std::endl;
+      *output << neuron->GetWeight() << endl;
    delete it;
    it = (TObjArrayIter *) fSynapses.MakeIterator();
    TSynapse *synapse = NULL;
-   *output << "#synapses weights" << std::endl;
+   *output << "#synapses weights" << endl;
    while ((synapse = (TSynapse *) it->Next()))
-      *output << synapse->GetWeight() << std::endl;
+      *output << synapse->GetWeight() << endl;
    delete it;
    if (filen != "-") {
-      ((std::ofstream *) output)->close();
+      ((ofstream *) output)->close();
       delete output;
    }
 }
@@ -1058,7 +1041,7 @@ void TMultiLayerPerceptron::LoadWeights(Option_t * filename)
    Double_t w;
    if (filen == "")
       return;
-   std::ifstream input(filen.Data());
+   ifstream input(filen.Data());
    input.getline(buff, 100);
    TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
    TNeuron *neuron = NULL;
@@ -1121,82 +1104,82 @@ void TMultiLayerPerceptron::Export(Option_t * filename, Option_t * language)
       source += ".cxx";
       ofstream headerfile(header);
       ofstream sourcefile(source);
-      headerfile << "#ifndef NN" << filename << std::endl;
-      headerfile << "#define NN" << filename << std::endl << std::endl;
-      headerfile << "class " << classname << " { " << std::endl;
-      headerfile << "public:" << std::endl;
-      headerfile << "   " << classname << "() {}" << std::endl;
-      headerfile << "   ~" << classname << "() {}" << std::endl;
-      sourcefile << "#include \"" << header << "\"" << std::endl;
-      sourcefile << "#include \"math.h\"" << std::endl << std::endl;
+      headerfile << "#ifndef NN" << filename << endl;
+      headerfile << "#define NN" << filename << endl << endl;
+      headerfile << "class " << classname << " { " << endl;
+      headerfile << "public:" << endl;
+      headerfile << "   " << classname << "() {}" << endl;
+      headerfile << "   ~" << classname << "() {}" << endl;
+      sourcefile << "#include \"" << header << "\"" << endl;
+      sourcefile << "#include \"math.h\"" << endl << endl;
       headerfile << "   double value(int index";
       sourcefile << "double " << classname << "::value(int index";
       for (Int_t i = 0; i < fFirstLayer.GetEntriesFast(); i++) {
          headerfile << ",double in" << i;
          sourcefile << ",double in" << i;
       }
-      headerfile << ");" << std::endl;
-      sourcefile << ") {" << std::endl;
+      headerfile << ");" << endl;
+      sourcefile << ") {" << endl;
       for (Int_t i = 0; i < fFirstLayer.GetEntriesFast(); i++)
          sourcefile << "   input" << i << " = (in" << i << " - "
              << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[1] << ")/"
              << ((TNeuron *) fFirstLayer[i])->GetNormalisation()[0] << ";" 
-             << std::endl;
-      sourcefile << "   switch(index) {" << std::endl;
+             << endl;
+      sourcefile << "   switch(index) {" << endl;
       TNeuron *neuron;
       TObjArrayIter *it = (TObjArrayIter *) fLastLayer.MakeIterator();
       Int_t idx = 0;
       while ((neuron = (TNeuron *) it->Next()))
-         sourcefile << "     case " << idx++ << ":" << std::endl 
+         sourcefile << "     case " << idx++ << ":" << endl 
                     << "         return neuron" << neuron << "();" 
-                    << std::endl;
-      sourcefile << "     default:" << std::endl 
-                 << "         return 0.;" << std::endl << "   }" 
-                 << std::endl;
-      sourcefile << "}" << std::endl << std::endl;
-      headerfile << "private:" << std::endl;
+                    << endl;
+      sourcefile << "     default:" << endl 
+                 << "         return 0.;" << endl << "   }" 
+                 << endl;
+      sourcefile << "}" << endl << endl;
+      headerfile << "private:" << endl;
       for (Int_t i = 0; i < fFirstLayer.GetEntriesFast(); i++)
-         headerfile << "   double input" << i << ";" << std::endl;
+         headerfile << "   double input" << i << ";" << endl;
       it = (TObjArrayIter *) fNetwork.MakeIterator();
       idx = 0;
       while ((neuron = (TNeuron *) it->Next())) {
-         headerfile << "   double neuron" << neuron << "();" << std::endl;
+         headerfile << "   double neuron" << neuron << "();" << endl;
          sourcefile << "double " << classname << "::neuron" << neuron 
-                    << "() {" << std::endl;
+                    << "() {" << endl;
          if (!neuron->GetPre(0))
-            sourcefile << "   return input" << idx++ << ";" << std::endl;
+            sourcefile << "   return input" << idx++ << ";" << endl;
          else {
             sourcefile << "   double input = " << neuron->GetWeight() 
-                       << ";" << std::endl;
+                       << ";" << endl;
             TSynapse *syn;
             Int_t n = 0;
             while ((syn = neuron->GetPre(n++)))
                sourcefile << "   input += synapse" << syn << "();" 
-                          << std::endl;
+                          << endl;
             if (!neuron->GetPost(0))
-               sourcefile << "   return input;" << std::endl;
+               sourcefile << "   return input;" << endl;
             else
-               sourcefile << "   return (1/(1+exp(-input)));" << std::endl;
+               sourcefile << "   return (1/(1+exp(-input)));" << endl;
          }
-         sourcefile << "}" << std::endl << std::endl;
+         sourcefile << "}" << endl << endl;
       }
       delete it;
       TSynapse *synapse = NULL;
       it = (TObjArrayIter *) fSynapses.MakeIterator();
       while ((synapse = (TSynapse *) it->Next())) {
-         headerfile << "   double synapse" << synapse << "();" << std::endl;
+         headerfile << "   double synapse" << synapse << "();" << endl;
          sourcefile << "double " << classname << "::synapse" 
-                    << synapse << "() {" << std::endl;
+                    << synapse << "() {" << endl;
          sourcefile << "   return (neuron" << synapse->GetPre() 
-                    << "()*" << synapse->GetWeight() << ");" << std::endl;
-         sourcefile << "}" << std::endl << std::endl;
+                    << "()*" << synapse->GetWeight() << ");" << endl;
+         sourcefile << "}" << endl << endl;
       }
       delete it;
-      headerfile << "};" << std::endl << std::endl;
-      headerfile << "#endif" << std::endl << std::endl;
+      headerfile << "};" << endl << endl;
+      headerfile << "#endif" << endl << endl;
       headerfile.close();
       sourcefile.close();
-      std::cout << header << " and " << source << " created." << std::endl;
+      cout << header << " and " << source << " created." << endl;
    }
 }
 

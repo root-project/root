@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.00 2003/08/27 13:52:36 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TNeuron.cxx,v 1.1 2003/08/27 15:31:14 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -788,7 +788,7 @@ Double_t TNeuron::DSigmoid(Double_t x)
    //if (x>2.1972246) return x/(1+TMath::Exp(x));
    //Double_t a = Sigmoid(x);
    //return a-a*a;
-   if (fabs(x) > 5)
+   if (TMath::Abs(x) > 5)
       return TMath::Exp(-fabs(x));
    Double_t expmx = TMath::Exp(-x);
    return expmx / ((1 + expmx) * (1 + expmx));
@@ -856,9 +856,7 @@ Double_t TNeuron::GetBranch()
       }
    default:
       {
-         std::cerr << "TNeuron::GetBranch() Error." << std::endl;
-         std::cerr << "Branch type " << fBType 
-                   << " not handled. Try I,i,F,D."  << std::endl;
+         Error("GetBranch","Branch type %d not handled. Try I,i,F,D.",fBType); 
       }
    }
    if (isnan(branch))
@@ -992,9 +990,7 @@ void TNeuron::ForceExternalValue(Double_t value)
       }
    default:
       {
-         std::cerr << "TNeuron::ForceExternalValue() Error." << std::endl;
-         std::cerr << "Branch type " << fBType 
-                   << " not handled. Try I,i,F,D."  << std::endl;
+         Error("ForceExternalValue", "Branch type %d not handled. Try I,i,F,D.",fBType);
       }
    }
 }

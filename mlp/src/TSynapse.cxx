@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TSynapse.cxx,v 1.00 2003/08/27 13:52:36 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TSynapse.cxx,v 1.1 2003/08/27 15:31:14 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -43,9 +43,7 @@ void TSynapse::SetPre(TNeuron * pre)
 {
    // Sets the pre-neuron
    if (pre) {
-      std::cerr << "TSynapse::SetPre ERROR: "
-                << "this synapse is already assigned to a pre-neuron."
-                << std::endl;
+      Error("SetPre","this synapse is already assigned to a pre-neuron.");
       return;
    }
    fpre = pre;
@@ -57,9 +55,7 @@ void TSynapse::SetPost(TNeuron * post)
 {
    // Sets the post-neuron
    if (post) {
-      std::cerr << "TSynapse::SetPost ERROR: "
-                << "this synapse is already assigned to a post-neuron."
-                << std::endl;
+      Error("SetPost","this synapse is already assigned to a post-neuron.");
       return;
    }
    fpost = post;
