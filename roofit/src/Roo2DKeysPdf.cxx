@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: Roo2DKeysPdf.cc,v 1.2 2001/08/29 20:21:56 bevan Exp $
+ *    File: $Id: Roo2DKeysPdf.cc,v 1.3 2001/09/08 02:29:49 bevan Exp $
  * Authors:
  *   AB, Adrian Bevan, Liverpool University, bevan@slac.stanford.edu
  *
@@ -94,7 +94,7 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
 {
   _2pi       = 2.0*M_PI;   //use pi from math.h
   _sqrt2pi   = sqrt(_2pi);
-  _nEvents   = (Int_t)data.GetEntries();
+  _nEvents   = (Int_t)data.numEntries();
   _n16       =  pow (_nEvents, -0.166666666); // = (4/[n(dim(R) + 2)])^1/(dim(R)+4); dim(R) = 2
 
   _lox       = x.min();

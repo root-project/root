@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooVoigtian.cc,v 1.1 2001/08/29 20:33:44 schieti Exp $
+ *    File: $Id: RooVoigtian.cc,v 1.2 2001/09/06 22:49:28 schieti Exp $
  * Authors:
  *   TS, Thomas Schietinger, SLAC, schieti@slac.stanford.edu
  * History:
@@ -37,7 +37,7 @@ ClassImp(RooVoigtian)
 RooVoigtian::RooVoigtian(const char *name, const char *title,
 			 RooAbsReal& _x, RooAbsReal& _mean,
 			 RooAbsReal& _width, RooAbsReal& _sigma,
-    			 Bool_t doFast = kFALSE) :
+    			 Bool_t doFast) :
   RooAbsPdf(name,title),
   x("x","Dependent",this,_x),
   mean("mean","Mean",this,_mean),
