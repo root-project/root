@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.rdl,v 1.7 2001/11/07 02:54:41 verkerke Exp $
+ *    File: $Id: RooLinearVar.rdl,v 1.8 2002/02/13 02:50:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,13 +20,13 @@
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooFormula.hh"
+#include "RooFitCore/RooLinTransBinning.hh"
 
 class RooArgSet ;
 
 class RooLinearVar : public RooAbsRealLValue {
 public:
   // Constructors, assignment etc.
-  inline RooLinearVar() { }
   RooLinearVar(const char *name, const char *title, RooAbsRealLValue& variable, const RooAbsReal& slope, const RooAbsReal& offset, const char *unit= "") ;
   RooLinearVar(const RooLinearVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooLinearVar(*this,newname); }
@@ -36,9 +36,15 @@ public:
   virtual void setVal(Double_t value) ;
 
   // Jacobian and limits
-  virtual Double_t getFitMin() const ;
-  virtual Double_t getFitMax() const ;
-  virtual Int_t getFitBins() const ;
+//   virtual Double_t getFitMin() const ;
+//   virtual Double_t getFitMax() const ;
+//   virtual Double_t fitBinCenter(Int_t i) const ;
+//   virtual Double_t fitBinLow(Int_t i) const ;
+//   virtual Double_t fitBinHigh(Int_t i) const ;
+//   virtual Double_t fitBinWidth(Int_t i) const ;
+//   virtual Int_t getFitBins() const ;
+  virtual const RooAbsBinning& getBinning() const ;
+
   virtual Double_t jacobian() const ;
   virtual Bool_t isJacobianOK(const RooArgSet& depList) const ;
 
@@ -52,7 +58,8 @@ public:
 protected:
 
   virtual Double_t evaluate() const ;
-  
+
+  mutable RooLinTransBinning _binning ;
   RooRealProxy _var ;  
   RooRealProxy _slope ;
   RooRealProxy _offset ;

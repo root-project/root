@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.49 2002/02/12 20:02:00 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.50 2002/02/13 02:03:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -883,7 +883,7 @@ void RooFitGlue(Int_t &np, Double_t *gin,
   }
 
   // Calculate the negative log-likelihood for these parameters
-  f= context->nLogLikelihood(context->_extendedMode);
+  f= context->nLogLikelihood(context->_extendedMode,-1);
   if (f==0) {
     // if any event has a prob <=0 return a flat likelihood 
     // at the max value we have seen so far

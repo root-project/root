@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimPdfBuilder.cc,v 1.12 2002/02/01 19:50:56 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.13 2002/02/13 18:57:31 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -474,6 +474,12 @@ RooArgSet* RooSimPdfBuilder::createProtoBuildConfig()
 
 
 
+void RooSimPdfBuilder::addSpecializations(const RooArgSet& specSet) 
+{
+  _splitNodeList.addOwned(specSet) ;
+}
+
+
 
 const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet,
 					    const RooArgSet* auxSplitCats, Bool_t verbose)
@@ -661,7 +667,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   while(physModel=(RooAbsPdf*)physIter->Next()) {
     cout << "RooSimPdfBuilder::buildPdf: processing physics model " << physModel->GetName() << endl ;
 
-    RooCustomizer* physCustomizer = new RooCustomizer(*physModel,masterSplitCat,_splitLeafList) ;
+    RooCustomizer* physCustomizer = new RooCustomizer(*physModel,masterSplitCat,_splitNodeList) ;
     customizerList.Add(physCustomizer) ;
 
     // Parse the splitting rules for this physics model
@@ -757,6 +763,10 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	    // Verify the validity of the parameter list and build the corresponding argset
 	    RooArgSet splitParamList ;
 	    RooArgSet* paramList = physModel->getParameters(dataVars) ;
+
+	    // wve -- add nodes to parameter list
+	    RooArgSet* compList = physModel->getComponents() ;
+	    paramList->add(*compList) ;
 
 	    char *tokptr(0) ;
 	    Bool_t lastCharIsComma = (token[strlen(token)-1]==',') ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.15 2001/11/28 02:09:06 verkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.16 2001/11/29 07:24:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -26,7 +26,7 @@
 ClassImp(RooHist)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.15 2001/11/28 02:09:06 verkerke Exp $";
+"$Id: RooHist.cc,v 1.16 2001/11/29 07:24:11 verkerke Exp $";
 
 RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
@@ -65,6 +65,7 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma) :
   }
   // TH1::GetYaxis() is not const (why!?)
   setYAxisLabel(const_cast<TH1&>(data).GetYaxis()->GetTitle());
+  
   // initialize our contents from the input histogram's contents
   Int_t nbin= data.GetNbinsX();
   for(Int_t bin= 1; bin <= nbin; bin++) {
@@ -128,7 +129,7 @@ void RooHist::initialize() {
 }
 
 Double_t RooHist::getFitRangeNEvt() const {
-  return _rawEntries==-1 ? _entries : _rawEntries ;
+  return (_rawEntries==-1 ? _entries : _rawEntries) ;
 }
 
 Double_t RooHist::getFitRangeBinW() const {
@@ -146,7 +147,7 @@ Int_t RooHist::roundBin(Stat_t y) {
   }
   Int_t n= (Int_t)(y+0.5);
   if(fabs(y-n)>1e-6) {
-    cout << fName << "::roundBin: rounding non-integer bin contents: " << y << endl;
+    //cout << fName << "::roundBin: rounding non-integer bin contents: " << y << endl;
   }
   return n;
 }
@@ -157,7 +158,9 @@ void RooHist::addBin(Axis_t binCenter, Int_t n, Double_t binWidth) {
   // is used to set the relative scale of bins with different widths.
 
   Double_t scale= 1;
-  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
+  if(binWidth > 0) {
+    scale= _nominalBinWidth/binWidth;
+  }  
   _entries+= n;
   Int_t index= GetN();
 
@@ -168,11 +171,12 @@ void RooHist::addBin(Axis_t binCenter, Int_t n, Double_t binWidth) {
     return;
   }
 
-  SetPoint(index,binCenter,n);
+  SetPoint(index,binCenter,n*scale);
   SetPointError(index,dx,dx,scale*(n-ym),scale*(yp-n));
   updateYAxisLimits(scale*yp);
   updateYAxisLimits(scale*ym);
 }
+
 
 void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t binWidth) {
   // Add a bin to this histogram with the value (n1-n2)/(n1+n2)
@@ -194,6 +198,7 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t bin
   updateYAxisLimits(scale*yp);
   updateYAxisLimits(scale*ym);
 }
+
 
 RooHist::~RooHist() { }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.11 2001/10/08 05:20:10 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.12 2001/11/19 07:23:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,7 +30,6 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooRandom.hh"
-#include "RooFitCore/RooCatBinIter.hh"
 
 ClassImp(RooAbsCategoryLValue) 
 ;
@@ -170,12 +169,4 @@ Int_t RooAbsCategoryLValue::numFitBins() const
 {
   // Returm the number of fit bins ( = number of types )
   return numTypes() ;
-}
-
-
-
-RooAbsBinIter* RooAbsCategoryLValue::createFitBinIterator() const 
-{
-  // Create an iterator over the plot bins of category
-  return new RooCatBinIter(*this) ;
 }

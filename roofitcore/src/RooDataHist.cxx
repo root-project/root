@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.15 2002/01/08 02:18:04 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.16 2002/02/07 02:21:36 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -23,7 +23,7 @@
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooMath.hh"
-
+#include "RooFitCore/RooBinning.hh"
 
 ClassImp(RooDataHist) 
 ;
@@ -41,7 +41,7 @@ RooDataHist::RooDataHist()
 
 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars) : 
-  RooTreeData(name,title,vars), _curWeight(0) 
+  RooTreeData(name,title,vars), _curWeight(0), _curVolume(1)
 {
   // Constructor of an empty data hist from a RooArgSet defining the dimensions
   // of the data space. The range and number of bins in each dimensions are taken
@@ -65,7 +65,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
 
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t weight) :
-  RooTreeData(name,title,vars), _curWeight(0)
+  RooTreeData(name,title,vars), _curWeight(0), _curVolume(1)
 {
   // Constructor of a data hist from an existing data collection (binned or unbinned)
   // The RooArgSet 'vars' defines the dimensions of the histogram. 
@@ -93,9 +93,9 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 }
 
 
-
+// wve --- adjust for variable bin size histograms
 RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t weight) :
-  RooTreeData(name,title,vars), _curWeight(0)
+  RooTreeData(name,title,vars), _curWeight(0), _curVolume(1)
 {
   // Constructor of a data hist from an TH1,TH2 or TH3
   // The RooArgSet 'vars' defines the dimensions of the histogram. The ranges
@@ -119,9 +119,10 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
     cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << xvar->GetName() << " must be real" << endl ;
     assert(0) ;
   }
-  xvar->setFitBins(histo->GetNbinsX()) ;
-  ((RooRealVar*)vars.at(0))->setFitBins(histo->GetNbinsX()) ;
-  xvar->setFitRange(histo->GetXaxis()->GetXmin(),histo->GetXaxis()->GetXmax()) ;
+
+  RooBinning xbins(histo->GetNbinsX(),histo->GetXaxis()->GetXbins()->GetArray()) ;
+  xvar->setBinning(xbins) ;
+  ((RooRealVar*)vars.at(0))->setBinning(xbins) ;
 
   // Y
   RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(vars.at(1)->GetName()) : 0 ) ;
@@ -130,9 +131,10 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << yvar->GetName() << " must be real" << endl ;
       assert(0) ;
     }
-    yvar->setFitBins(histo->GetNbinsY()) ;
-    ((RooRealVar*)vars.at(1))->setFitBins(histo->GetNbinsY()) ;
-    yvar->setFitRange(histo->GetYaxis()->GetXmin(),histo->GetYaxis()->GetXmax()) ;
+
+    RooBinning ybins(histo->GetNbinsY(),histo->GetYaxis()->GetXbins()->GetArray()) ;
+    yvar->setBinning(ybins) ;
+    ((RooRealVar*)vars.at(1))->setBinning(ybins) ;
   }
   
   // Z
@@ -142,9 +144,10 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << zvar->GetName() << " must be real" << endl ;
       assert(0) ;
     }
-    zvar->setFitBins(histo->GetNbinsZ()) ;
-    ((RooRealVar*)vars.at(2))->setFitBins(histo->GetNbinsZ()) ;
-    zvar->setFitRange(histo->GetZaxis()->GetXmin(),histo->GetZaxis()->GetXmax()) ;
+
+    RooBinning zbins(histo->GetNbinsZ(),histo->GetZaxis()->GetXbins()->GetArray()) ;
+    zvar->setBinning(zbins) ;
+    ((RooRealVar*)vars.at(2))->setBinning(zbins) ;
   }
   
 
@@ -207,6 +210,7 @@ void RooDataHist::initialize()
 
   // Allocate and initialize weight array 
   _wgt = new Double_t[_arrSize] ;
+  _binv = new Double_t[_arrSize] ;
   for (i=0 ; i<_arrSize ; i++) _wgt[i] = 0 ;
 
 
@@ -217,12 +221,15 @@ void RooDataHist::initialize()
     _iterator->Reset() ;
     RooAbsLValue* arg ;
     Int_t i(0), idx(0), tmp(ibin) ;
+    Double_t binVolume(1) ;
     while(arg=dynamic_cast<RooAbsLValue*>(_iterator->Next())) {
       idx  = tmp / _idxMult[i] ;
       tmp -= idx*_idxMult[i++] ;
       RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(arg) ;
       arglv->setFitBin(idx) ;
+      binVolume *= arglv->getFitBinWidth(idx) ;
     }
+    _binv[ibin] = binVolume ;
     Fill() ;
   }
 
@@ -238,7 +245,7 @@ void RooDataHist::initialize()
 
 
 RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
-  RooTreeData(other,newname), _curWeight(0) 
+  RooTreeData(other,newname), _curWeight(0), _curVolume(1)
 {
   // Copy constructor
 
@@ -253,8 +260,10 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
   // Allocate and initialize weight array 
   _arrSize = other._arrSize ;
   _wgt = new Double_t[_arrSize] ;
+  _binv = new Double_t[_arrSize] ;
   for (i=0 ; i<_arrSize ; i++) {
     _wgt[i] = other._wgt[i] ;
+    _binv[i] = other._binv[i] ;
   }  
 
   // Save real dimensions of dataset separately
@@ -271,7 +280,7 @@ RooDataHist::RooDataHist(const RooDataHist& other, const char* newname) :
 
 RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 			 const RooFormulaVar* cutVar, Bool_t copyCache) :
-  RooTreeData(name,title,h,varSubset,cutVar, copyCache)
+  RooTreeData(name,title,h,varSubset,cutVar, copyCache), _curWeight(0), _curVolume(1)
 {
   // Constructor of a data hist from (part of) an existing data hist. The dimensions
   // of the data set are defined by the 'vars' RooArgSet, which can be identical
@@ -304,6 +313,7 @@ RooDataHist::~RooDataHist()
   // Destructor
 
   if (_wgt) delete[] _wgt ;
+  if (_binv) delete[] _binv ;
   if (_idxMult) delete[] _idxMult ;
   delete _realIter ;
 
@@ -331,12 +341,12 @@ void RooDataHist::dump2()
   // Debug stuff, should go...
   Int_t i ;
   for (i=0 ; i<_arrSize ; i++) {
-    cout << "wgt[" << i << "] = " << _wgt[i] << endl ;
+    cout << "wgt[" << i << "] = " << _wgt[i] << " vol[" << i << "] = " << _binv[i] << endl ;
   }
 }
 
 
-Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder) 
+Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize) 
 {
   // Return the weight at given coordinates with optional
   // interpolation. If intOrder is zero, the weight
@@ -355,7 +365,12 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder)
   // Handle no-interpolation case
   if (intOrder==0) {
     _vars = bin ;
-    return _wgt[calcTreeIndex()] ;
+    Int_t idx = calcTreeIndex() ;
+    if (correctForBinSize) {
+      return _wgt[idx] / _binv[idx] ;
+    } else {
+      return _wgt[idx] ;
+    }
   }
 
   // Handle all interpolation cases
@@ -365,34 +380,41 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder)
   if (_realVars.getSize()==1) {
 
     // 1-dimensional interpolation
+    _realIter->Reset() ;
     RooRealVar* real=(RooRealVar*)_realIter->Next() ;
-    wInt = interpolateDim(*real,((RooAbsReal*)bin.find(real->GetName()))->getVal(), intOrder) ;
+    wInt = interpolateDim(*real,((RooAbsReal*)bin.find(real->GetName()))->getVal(), intOrder, correctForBinSize) ;
 
   } else if (_realVars.getSize()==2) {
 
     // 2-dimensional interpolation
+    _realIter->Reset() ;
     RooRealVar* realX=(RooRealVar*)_realIter->Next() ;
     RooRealVar* realY=(RooRealVar*)_realIter->Next() ;
     Double_t xval = ((RooAbsReal*)bin.find(realX->GetName()))->getVal() ;
     Double_t yval = ((RooAbsReal*)bin.find(realY->GetName()))->getVal() ;
     
     Int_t ybinC = realY->getFitBin() ;
-    Int_t ybinLo = ybinC-intOrder/2 - ((yval<realY->fitBinCenter(ybinC))?1:0) ;
+    Int_t ybinLo = ybinC-intOrder/2 - ((yval<realY->getBinning().binCenter(ybinC))?1:0) ;
     Int_t ybinM = realY->numFitBins() ;
     
     Int_t i ;
     Double_t yarr[10] ;
+    Double_t xarr[10] ;
     for (i=ybinLo ; i<=intOrder+ybinLo ; i++) {
       if (i>=0 && i<ybinM) {
 	realY->setFitBin(i) ;
-	yarr[i-ybinLo] = interpolateDim(*realX,xval,intOrder) ;
+	yarr[i-ybinLo] = interpolateDim(*realX,xval,intOrder,correctForBinSize) ;	
+	xarr[i-ybinLo] = realY->getVal() ;
       } else {
 	yarr[i-ybinLo] = 0. ;
+	if (i>=ybinM) {
+	  xarr[i-ybinLo] = realY->getFitMax() + (i-ybinM+1)*realY->getBinning().averageBinWidth() ;
+	} else {
+	  xarr[i-ybinLo] = realY->getFitMin() + i*realY->getBinning().averageBinWidth() ;
+	}
       }
     }
-    realY->setFitBin(ybinC) ;
-    Double_t x = (yval - realY->fitBinCenter(ybinC))/realY->fitBinWidth() + (ybinC-ybinLo) ;
-    wInt = RooMath::interpolate(yarr,intOrder+1,x) ;
+    wInt = RooMath::interpolate(yarr,xarr,intOrder+1,yval) ;
 
   } else {
 
@@ -411,29 +433,39 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder)
 
 
 
-Double_t RooDataHist::interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder) 
+// wve adjust for variable bin sizes
+Double_t RooDataHist::interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder, Bool_t correctForBinSize) 
 {
   // Perform boundary safe 'intOrder'-th interpolation of weights in dimension 'dim'
   // at current value 'xval'
 
   // Fill workspace arrays spanning interpolation area
   Int_t fbinC = dim.getFitBin() ;
-  Int_t fbinLo = fbinC-intOrder/2 - ((xval<dim.fitBinCenter(fbinC))?1:0) ;
+  Int_t fbinLo = fbinC-intOrder/2 - ((xval<dim.getBinning().binCenter(fbinC))?1:0) ;
   Int_t fbinM = dim.numFitBins() ;
-  
+
   Int_t i ;
   Double_t yarr[10] ;
+  Double_t xarr[10] ;
   for (i=fbinLo ; i<=intOrder+fbinLo ; i++) {
     if (i>=0 && i<fbinM) {
       dim.setFitBin(i) ;
-      yarr[i-fbinLo] = _wgt[calcTreeIndex()] ;
+      Int_t idx = calcTreeIndex() ;      
+      yarr[i-fbinLo] = _wgt[idx] ; 
+      if (correctForBinSize) yarr[i-fbinLo] /=  _binv[idx] ;
+      xarr[i-fbinLo] = dim.getVal() ;
     } else {
       yarr[i-fbinLo] = 0. ;
-    }
+      if (i>=fbinM) {
+	xarr[i-fbinLo] = dim.getFitMax() + (i-fbinM+1)*dim.getBinning().averageBinWidth() ;
+      } else {
+	xarr[i-fbinLo] = dim.getFitMin() + i*dim.getBinning().averageBinWidth() ;
+      }
+    }    
   }
   dim.setFitBin(fbinC) ;
-  Double_t x = (xval - dim.fitBinCenter(fbinC))/dim.fitBinWidth() + (fbinC-fbinLo) ;
-  return RooMath::interpolate(yarr,intOrder+1,x) ;
+  Double_t ret =  RooMath::interpolate(xarr,yarr,intOrder+1,xval) ;
+  return ret ;
 }
 
 
@@ -503,29 +535,21 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize) const
   // making the return value the integral over the function
   // represented by this histogram
 
-  Double_t binVolume(1) ;
-  
-  if (correctForBinSize) {
-    _iterator->Reset() ;
-    RooAbsLValue* arg ;
-    while(arg=dynamic_cast<RooAbsLValue*>(_iterator->Next())) {
-      if (!dynamic_cast<RooAbsReal*>(arg)) continue ;
-      binVolume *= arg->getFitBinWidth() ;
-    }
-  }
-
   Int_t i ;
   Double_t total(0) ;
   for (i=0 ; i<_arrSize ; i++) {
-    total += _wgt[i] ;
+    
+    Double_t binVolume = correctForBinSize ? _binv[i] : 1.0 ;
+    total += _wgt[i]*binVolume ;
   }
 
-  return total*binVolume ;
+  return total ;
 }
 
 
 
 
+// wve -- correct for individual bin sizes
 Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize)
 {
   // Return the sum of the weights of a multi-dimensional slice of the histogram
@@ -540,17 +564,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
 
   _vars = sliceSet ;
 
-  Double_t binVolume(1) ;
   TIterator* ssIter = sumSet.createIterator() ;
-  
-  // Calculate binVolume if correction for that is requested
-  RooAbsLValue* rArg ;
-  if (correctForBinSize) {
-    while(rArg=dynamic_cast<RooAbsLValue*>(ssIter->Next())) {
-      if (!dynamic_cast<RooAbsReal*>(rArg)) continue ;
-      binVolume *= rArg->getFitBinWidth() ;
-    }
-  }
   
   // Calculate mask and refence plot bins for non-iterating variables
   RooAbsArg* arg ;
@@ -585,11 +599,14 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
       ivar++ ;
     }
     
-    if (!skip) total += _wgt[ibin] ;
+    if (!skip) {
+      Double_t binVolume = correctForBinSize ? _binv[ibin] : 1.0 ;
+      total += _wgt[ibin]*binVolume ;
+    }
   }
   delete ssIter ;
 
-  return total*binVolume ;
+  return total ;
 }
 
 
@@ -622,6 +639,7 @@ void RooDataHist::reset()
     _wgt[i] = 0. ;
   }
   _curWeight = 0 ;
+  _curVolume = 1 ;
 
 }
 
@@ -632,6 +650,7 @@ const RooArgSet* RooDataHist::get(Int_t masterIdx) const
   // bin sequential number 'masterIdx'. For iterative use.
 
   _curWeight = _wgt[masterIdx] ;
+  _curVolume = _binv[masterIdx] ; 
   return RooTreeData::get(masterIdx) ;  
 }
 
@@ -640,6 +659,14 @@ const RooArgSet* RooDataHist::get(const RooArgSet& coord) const
 {
   ((RooDataHist*)this)->_vars = coord ;
   return get(calcTreeIndex()) ;
+}
+
+
+
+Double_t RooDataHist::binVolume(const RooArgSet& coord) 
+{
+  ((RooDataHist*)this)->_vars = coord ;
+  return _binv[calcTreeIndex()] ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.rdl,v 1.18 2002/02/20 22:19:46 verkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.19 2002/02/23 02:14:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -65,10 +65,10 @@ public:
   virtual void reset() { Reset() ; }
 
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
-  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const;
-  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P") const;
+  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const;
+  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P", const RooAbsBinning* bins=0) const;
   virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, 
-			      const char* cut="", Option_t* drawOptions="P") const ;
+			      const char* cut="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const ;
   virtual RooPlot* statOn(RooPlot* frame, const char *what, 
 			  const char *label= "", Int_t sigDigits= 2,
 			  Option_t *options= "NELU", Double_t xmin=0.15, 

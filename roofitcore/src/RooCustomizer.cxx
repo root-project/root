@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCustomizer.cc,v 1.5 2001/11/01 22:52:21 verkerke Exp $
+ *    File: $Id: RooCustomizer.cc,v 1.6 2001/12/13 23:37:31 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -114,8 +114,8 @@ ClassImp(RooCustomizer)
 
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs) :
   TNamed(pdf.GetName(),pdf.GetTitle()),
-  _masterPdf((RooAbsArg*)&pdf), _masterCat((RooAbsCategoryLValue*)&masterCat), _cloneLeafList(&splitLeafs),
-  _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), _masterUnsplitLeafList("masterUnsplitLeafList"), 
+  _masterPdf((RooAbsArg*)&pdf), _masterCat((RooAbsCategoryLValue*)&masterCat), _cloneNodeList(&splitLeafs),
+  _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), 
   _cloneBranchList("cloneBranchList"), _sterile(kFALSE)
 {
   // Constructor with masterCat state. Customizers created by this constructor offer the full functionality
@@ -126,8 +126,8 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
 
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
   TNamed(pdf.GetName(),pdf.GetTitle()),
-  _masterPdf((RooAbsArg*)&pdf), _masterCat(0), _cloneLeafList(0),
-  _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), _masterUnsplitLeafList("masterUnsplitLeafList"), 
+  _masterPdf((RooAbsArg*)&pdf), _masterCat(0), _cloneNodeList(0),
+  _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), 
   _cloneBranchList("cloneBranchList"), _sterile(kTRUE), _name(name)
 {
   // Sterile Constructor. Customizers created by this constructor offer only the replace() method. The supplied
@@ -142,7 +142,6 @@ void RooCustomizer::initialize()
 {
   // Initialization function
   _masterPdf->leafNodeServerList(&_masterLeafList) ;
-  _masterPdf->leafNodeServerList(&_masterUnsplitLeafList) ;
   _masterPdf->branchNodeServerList(&_masterBranchList) ;
 
   _masterLeafListIter = _masterLeafList.createIterator() ;
@@ -222,34 +221,6 @@ void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst)
 }
 
 
-RooArgSet* RooCustomizer::fullParamList(const RooArgSet* depList) const 
-{
-  // Return the complete list of parameters (as defined by given list of dependents)
-  // for all clones built sofar. The caller takes ownership of the returned list.
-
-  TString listName("Variable list for ") ;
-  listName.Append(_masterPdf->GetName()) ;
-  listName.Append(" clones") ;
-  RooArgList list(listName) ;
-
-  list.add(_masterUnsplitLeafList) ;
-  list.add(*_cloneLeafList) ;
-
-  TIterator* iter = depList->createIterator() ;
-  RooAbsArg* dep ;
-  while (dep=(RooAbsArg*)iter->Next()) {
-    RooAbsArg* dep2 = list.find(dep->GetName()) ;
-    if (dep2) list.remove(*dep2) ;
-  }
-  delete iter ;
-  
-  list.sort() ;
-  return new RooArgSet(list) ;
-}
-
-
-
-
 
 RooAbsArg* RooCustomizer::build(Bool_t verbose) 
 {
@@ -290,86 +261,94 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 {
   // Protected build engine
 
-  // Find leafs that must be split according to provided description, Clone leafs, change their names
-  RooArgSet masterLeafsToBeSplit("masterLeafsToBeSplit") ;
-  RooArgSet masterLeafsToBeReplaced("masterLeafsToBeReplaced") ;
-  RooArgSet masterReplacementLeafs("masterReplacementLeafs") ;
-  RooArgSet clonedMasterLeafs("clonedMasterLeafs") ;
+  // Find nodes that must be split according to provided description, Clone nodes, change their names
+  RooArgSet masterNodesToBeSplit("masterNodesToBeSplit") ;
+  RooArgSet masterNodesToBeReplaced("masterNodesToBeReplaced") ;
+  RooArgSet masterReplacementNodes("masterReplacementNodes") ;
+  RooArgSet clonedMasterNodes("clonedMasterNodes") ;
   _masterLeafListIter->Reset() ;
-  RooAbsArg* leaf ;
-  while(leaf=(RooAbsArg*)_masterLeafListIter->Next()) {
-    RooAbsArg* splitArg = !_sterile?(RooAbsArg*) _splitArgList.FindObject(leaf->GetName()):0 ;
+  RooAbsArg* node ;
+
+  RooArgSet nodeList(_masterLeafList) ;
+  nodeList.add(_masterBranchList) ;
+  TIterator* nIter = nodeList.createIterator() ;
+
+  while(node=(RooAbsArg*)nIter->Next()) {
+    RooAbsArg* splitArg = !_sterile?(RooAbsArg*) _splitArgList.FindObject(node->GetName()):0 ;
     if (splitArg) {
       RooAbsCategory* splitCat = (RooAbsCategory*) _splitCatList.At(_splitArgList.IndexOf(splitArg)) ;
       if (verbose) {
 	cout << "RooCustomizer::build(" << _masterPdf->GetName() 
-	     << "): PDF parameter " << leaf->GetName() << " is split by category " << splitCat->GetName() << endl ;
+	     << "): tree node " << node->GetName() << " is split by category " << splitCat->GetName() << endl ;
       }
-
-      // Take this leaf out of the unsplit list
-      _masterUnsplitLeafList.remove(*leaf,kTRUE) ;
       
-      TString newName(leaf->GetName()) ;
+      TString newName(node->GetName()) ;
       newName.Append("_") ;
       newName.Append(splitCat->getLabel()) ;	
 
-      // Check if this leaf instance already exists
-      if (_cloneLeafList->find(newName)) {
+      // Check if this node instance already exists
+      if (_cloneNodeList->find(newName)) {
 
 	// Copy instance to one-time use list for this build
-	RooAbsArg* specLeaf = _cloneLeafList->find(newName) ;
-	clonedMasterLeafs.add(*specLeaf) ;
+	RooAbsArg* specNode = _cloneNodeList->find(newName) ;
+	clonedMasterNodes.add(*specNode) ;
 	if (verbose) {
-	  cout << "Adding existing leaf specialization " << newName << " to clonedMasterLeafs" << endl ;
+	  cout << "RooCustomizer::build(" << _masterPdf->GetName() 
+	       << ") Adding existing node specialization " << newName << " to clonedMasterNodes" << endl ;
 	}
 
 	// Affix attribute with old name to clone to support name changing server redirect
 	TString nameAttrib("ORIGNAME:") ;
-	nameAttrib.Append(leaf->GetName()) ;
-	specLeaf->setAttribute(nameAttrib) ;
+	nameAttrib.Append(node->GetName()) ;
+	specNode->setAttribute(nameAttrib) ;
 
       } else {
 
-	TString newTitle(leaf->GetTitle()) ;
+	if (node->isDerived()) {
+	  cout << "RooCustomizer::build(" << _masterPdf->GetName() 
+	       << "): WARNING: branch node " << node->GetName() << " is split but has no pre-defined specializations" << endl ;
+	}
+
+	TString newTitle(node->GetTitle()) ;
 	newTitle.Append(" (") ;
 	newTitle.Append(splitCat->getLabel()) ;
 	newTitle.Append(")") ;
       
 	// Create a new clone
-	RooAbsArg* clone = (RooAbsArg*) leaf->Clone(newName.Data()) ;
+	RooAbsArg* clone = (RooAbsArg*) node->Clone(newName.Data()) ;
 	clone->SetTitle(newTitle) ;
 
 	// Affix attribute with old name to clone to support name changing server redirect
 	TString nameAttrib("ORIGNAME:") ;
-	nameAttrib.Append(leaf->GetName()) ;
+	nameAttrib.Append(node->GetName()) ;
 	clone->setAttribute(nameAttrib) ;
 
 	// Add to one-time use list and life-time use list
-	clonedMasterLeafs.add(*clone) ;
-	_cloneLeafList->addOwned(*clone) ;	
+	clonedMasterNodes.add(*clone) ;
+	_cloneNodeList->addOwned(*clone) ;	
       }
-      masterLeafsToBeSplit.add(*leaf) ;     
+      masterNodesToBeSplit.add(*node) ;     
     }
 
-    RooAbsArg* replaceArg = (RooAbsArg*) _replaceArgList.FindObject(leaf->GetName()) ;
+    RooAbsArg* replaceArg = (RooAbsArg*) _replaceArgList.FindObject(node->GetName()) ;
     if (replaceArg) {
       RooAbsArg* substArg = (RooAbsArg*) _replaceSubList.At(_replaceArgList.IndexOf(replaceArg)) ;
       if (verbose) {
 	cout << "RooCustomizer::build(" << _masterPdf->GetName() 
-	     << "): PDF leaf " << leaf->GetName() << " will be replaced by " << substArg->GetName() << endl ;
+	     << "): tree node " << node->GetName() << " will be replaced by " << substArg->GetName() << endl ;
       }
 
       // Affix attribute with old name to support name changing server redirect
       TString nameAttrib("ORIGNAME:") ;
-      nameAttrib.Append(leaf->GetName()) ;
+      nameAttrib.Append(node->GetName()) ;
       substArg->setAttribute(nameAttrib) ;
 
       // Add to list
-      masterLeafsToBeReplaced.add(*leaf) ;
-      masterReplacementLeafs.add(*substArg) ;
+      masterNodesToBeReplaced.add(*node) ;
+      masterReplacementNodes.add(*substArg) ;
     }
   }
-  if (!_sterile) _cloneLeafList->addOwned(clonedMasterLeafs) ;
+  if (!_sterile) _cloneNodeList->addOwned(clonedMasterNodes) ;
 
 
   // Find branches that are affected by splitting and must be cloned
@@ -377,15 +356,30 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   _masterBranchListIter->Reset() ;
   RooAbsArg* branch ;
   while(branch=(RooAbsArg*)_masterBranchListIter->Next()) {
-    if (branch->dependsOn(masterLeafsToBeSplit)) {
+    
+    // If branch is split itself, don't handle here
+    if (masterNodesToBeSplit.find(branch->GetName())) {
       if (verbose) {
-	cout << "RooCustomizer::build(" << _masterPdf->GetName() << ") Component PDF " 
+	cout << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node " << branch->GetName() << " is already split" << endl ;
+      }
+      continue ;
+    }
+    if (masterNodesToBeReplaced.find(branch->GetName())) {
+      if (verbose) {
+	cout << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node " << branch->GetName() << " is already replaced" << endl ;
+      }
+      continue ;
+    }
+
+    if (branch->dependsOn(masterNodesToBeSplit)) {
+      if (verbose) {
+	cout << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node " 
 	     << branch->IsA()->GetName() << "::" << branch->GetName() << " cloned: depends on a split parameter" << endl ;
       }
       masterBranchesToBeCloned.add(*branch) ;
-    } else if (branch->dependsOn(masterLeafsToBeReplaced)) {
+    } else if (branch->dependsOn(masterNodesToBeReplaced)) {
       if (verbose) {
-	cout << "RooCustomizer::build(" << _masterPdf->GetName() << ") Component PDF " 
+	cout << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node " 
 	     << branch->IsA()->GetName() << "::" << branch->GetName() << " cloned: depends on a replaced parameter" << endl ;
       }
       masterBranchesToBeCloned.add(*branch) ;
@@ -416,12 +410,12 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   _cloneBranchList.addOwned(clonedMasterBranches) ;
 
 
-  // Reconnect cloned branches to each other and to cloned leafs
+  // Reconnect cloned branches to each other and to cloned nodess
   iter = clonedMasterBranches.createIterator() ;
   while(branch=(RooAbsArg*)iter->Next()) {
     branch->redirectServers(clonedMasterBranches,kFALSE,kTRUE) ;
-    branch->redirectServers(clonedMasterLeafs,kFALSE,kTRUE) ;
-    branch->redirectServers(masterReplacementLeafs,kFALSE,kTRUE) ;
+    branch->redirectServers(clonedMasterNodes,kFALSE,kTRUE) ;
+    branch->redirectServers(masterReplacementNodes,kFALSE,kTRUE) ;
   }
   delete iter ;  
 

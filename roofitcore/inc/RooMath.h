@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMath.rdl,v 1.5 2001/10/08 05:20:18 verkerke Exp $
+ *    File: $Id: RooMath.rdl,v 1.6 2001/10/11 01:28:50 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -52,8 +52,9 @@ public:
   // Switch to use file cache for CERF lookup table
   static void cacheCERF(Bool_t flag=kTRUE) { _cacheTable = flag ; }
 
-  // 1-D nth order polynomial interpolation routine
+  // 1-D nth order polynomial interpolation routines
   static Double_t interpolate(Double_t yArr[],Int_t nOrder, Double_t x) ;
+  static Double_t interpolate(Double_t xa[], Double_t ya[], Int_t n, Double_t x) ;
 
 private:
 

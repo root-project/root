@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.32 2001/11/19 07:23:59 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.33 2001/12/01 08:12:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -19,6 +19,7 @@
 #include "TString.h"
 
 #include "RooFitCore/RooAbsRealLValue.hh"
+#include "RooFitCore/RooUniformBinning.hh"
 #include "RooFitCore/RooNumber.hh"
 
 class RooArgSet ;
@@ -56,16 +57,17 @@ public:
   void setFitMin(Double_t value) ;
   void setFitMax(Double_t value) ;
   void setFitRange(Double_t min, Double_t max) ;
-  void setFitBins(Int_t nBins) { _fitBins = nBins ; }
-  virtual Double_t getFitMin() const { return _fitMin ; }
-  virtual Double_t getFitMax() const { return _fitMax ; }
-  virtual Int_t getFitBins() const { return _fitBins ; }
+  void setFitBins(Int_t nBins) { setBinning(RooUniformBinning(getFitMin(),getFitMax(),nBins)) ; } 
+  void setBinning(const RooAbsBinning& binning) ;
+
+  // RooAbsRealLValue implementation
+  const RooAbsBinning& getBinning() const { return *_binning ; }
 
   // Set infinite fit range limits
-  inline void removeFitMin() { _fitMin= -RooNumber::infinity; }
-  inline void removeFitMax() { _fitMax= +RooNumber::infinity; }
-  inline void removeFitRange() { _fitMin= -RooNumber::infinity; _fitMax= +RooNumber::infinity; }
-
+  inline void removeFitMin() { _binning->setMin(-RooNumber::infinity) ; }
+  inline void removeFitMax() { _binning->setMax(RooNumber::infinity) ; }
+  inline void removeFitRange() { _binning->setRange(-RooNumber::infinity,RooNumber::infinity) ; }
+ 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
@@ -92,12 +94,13 @@ protected:
 
   Double_t chopAt(Double_t what, Int_t where) const ;
 
-  Double_t _fitMin ;    // Minimum of fit range
-  Double_t _fitMax ;    // Maximum of fit range
-  Int_t    _fitBins ;   // Number of bins in fit range for binned fits
+//   Double_t _fitMin ;    // Minimum of fit range
+//   Double_t _fitMax ;    // Maximum of fit range
+  //Int_t    _fitBins ;   // Number of bins in fit range for binned fits
   Double_t _error;      // Symmetric error associated with current value
   Double_t _asymErrLo ; // Low side of asymmetric error associated with current value
   Double_t _asymErrHi ; // High side of asymmetric error associated with current value
+  RooAbsBinning* _binning ; //!
 
   ClassDef(RooRealVar,1) // Real-valued variable 
 };

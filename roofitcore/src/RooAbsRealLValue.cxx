@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.23 2002/02/09 02:01:23 davidk Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.24 2002/02/21 01:40:28 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -35,9 +35,10 @@
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooRandom.hh"
-#include "RooFitCore/RooRealFixedBinIter.hh"
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooArgList.hh"
+#include "RooFitCore/RooAbsBinning.hh"
+#include "RooFitCore/RooBinning.hh"
 
 ClassImp(RooAbsRealLValue)
 
@@ -269,73 +270,7 @@ void RooAbsRealLValue::setFitBin(Int_t ibin)
   }
  
   // Set value to center of requested bin
-  setVal(fitBinCenter(ibin)) ;
-}
-
-
-Int_t RooAbsRealLValue::getFitBin() const 
-{
-  // Return the fit bin index for the current value
-  if (getVal() >= getFitMax()) return numFitBins()-1 ;
-  if (getVal() < getFitMin()) return 0 ;
-
-  return Int_t((getVal() - getFitMin())/ fitBinWidth()) ;
-}
-
-
-
-RooAbsBinIter* RooAbsRealLValue::createFitBinIterator() const 
-{
-  // Return an iterator over the fit bins of this object
-  return new RooRealFixedBinIter(*this) ;
-}
-
-
-
-
-Double_t RooAbsRealLValue::fitBinCenter(Int_t i) const 
-{
-  // Return the central value of the 'i'-th fit bin
-  if (i<0 || i>=numFitBins()) {
-    cout << "RooAbsRealLValue::fitBinCenter(" << GetName() << ") ERROR: bin index " << i 
-	 << " is out of range (0," << getFitBins()-1 << ")" << endl ;
-    return 0 ;
-  }
-
-  return getFitMin() + (i + 0.5)*fitBinWidth() ;
-}
-
-
-Double_t RooAbsRealLValue::fitBinLow(Int_t i) const 
-{
-  // Return the low edge of the 'i'-th fit bin
-  if (i<0 || i>=numFitBins()) {
-    cout << "RooAbsRealLValue::fitBinLow(" << GetName() << ") ERROR: bin index " << i 
-	 << " is out of range (0," << getFitBins()-1 << ")" << endl ;
-    return 0 ;
-  }
-
-  return getFitMin() + i*fitBinWidth() ;
-}
-
-
-Double_t RooAbsRealLValue::fitBinHigh(Int_t i) const 
-{
-  // Return the high edge of the 'i'-th fit bin
-  if (i<0 || i>=numFitBins()) {
-    cout << "RooAbsRealLValue::fitBinHigh(" << GetName() << ") ERROR: bin index " << i 
-	 << " is out of range (0," << getFitBins()-1 << ")" << endl ;
-    return 0 ;
-  }
-
-  return getFitMin() + (i + 1)*fitBinWidth() ;
-}
-
-
-Double_t RooAbsRealLValue::fitBinWidth() const 
-{
-  // Return the low edge of the fit bins
-  return (getFitMax()-getFitMin())/getFitBins() ;
+  setVal(getBinning().binCenter(ibin)) ;
 }
 
 
@@ -379,6 +314,13 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
 
   RooArgList list(*this) ;
   return (TH1F*)createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nBins);
+}
+
+TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel, const RooAbsBinning& bins) const {
+  // Create an empty 1D-histogram with appropriate scale and labels for this variable.
+
+  RooArgList list(*this) ;
+  return (TH1F*)createHistogram(name, list, yAxisLabel, &bins);
 }
 
 TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const char *zAxisLabel, 
@@ -434,6 +376,14 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 
   RooArgList list(*this,yvar) ;
   return (TH2F*)createHistogram(name, list, zAxisLabel, xlo2, xhi2, nBins2);
+}
+
+TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const char *zAxisLabel, const RooAbsBinning* bins) const {
+  // Create an empty 2D-histogram with appropriate scale and labels for this variable (x)
+  // and the specified y variable. 
+
+  RooArgList list(*this,yvar) ;
+  return (TH2F*)createHistogram(name, list, zAxisLabel, bins);
 }
 
 TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const RooAbsRealLValue &zvar,
@@ -498,7 +448,30 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   return (TH3F*)createHistogram(name, list, tAxisLabel, xlo2, xhi2, nBins2);
 }
 
+
+TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue &yvar, const RooAbsRealLValue &zvar, 
+					const char* tAxisLabel, const RooAbsBinning* bins) const {
+  // Create an empty 3D-histogram with appropriate scale and labels for this variable (x)
+  // and the specified y,z variables. 
+
+  RooArgList list(*this,yvar,zvar) ;
+  return (TH3F*)createHistogram(name, list, tAxisLabel, bins);
+}
+
+
 TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, Double_t* xlo, Double_t* xhi, Int_t* nBins)
+{
+  RooBinning bin[3] ;
+  Int_t ndim = vars.getSize() ;
+  bin[0].addUniform(nBins[0],xlo[0],xhi[0]) ;
+  if (ndim>1) bin[1].addUniform(nBins[1],xlo[1],xhi[1]) ;
+  if (ndim>2) bin[2].addUniform(nBins[2],xlo[2],xhi[2]) ;
+
+  return createHistogram(name,vars,tAxisLabel,bin) ;
+}
+
+
+TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, const RooAbsBinning* bins) 
 {
   // Create a 1,2, or 3D-histogram with appropriate scale and labels.
   // Binning and ranges are taken from the variables themselves and can be changed by
@@ -535,18 +508,18 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   switch(dim) {
   case 1:
     histogram= new TH1F(histName.Data(), histTitle.Data(),
-			nBins[0], xlo[0], xhi[0]);
+			bins[0].numBins(),bins[0].array());
     break;
   case 2:
     histogram= new TH2F(histName.Data(), histTitle.Data(),
-			nBins[0], xlo[0], xhi[0],
-			nBins[1], xlo[1], xhi[1]) ;
+			bins[0].numBins(),bins[0].array(),
+			bins[1].numBins(),bins[1].array());
     break;
   case 3:
     histogram= new TH3F(histName.Data(), histTitle.Data(),
-			nBins[0], xlo[0], xhi[0],
-			nBins[1], xlo[1], xhi[1],
-			nBins[2], xlo[2], xhi[2]) ;			
+			bins[0].numBins(),bins[0].array(),
+			bins[1].numBins(),bins[1].array(),
+			bins[2].numBins(),bins[2].array());
     break;
   default:
     assert(0);
@@ -581,7 +554,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     TString axisTitle(tAxisLabel);
     axisTitle.Append(" / ( ");
     for(Int_t index= 0; index < dim; index++) {
-      Double_t delta= (xyz[index]->getFitMax() - xyz[index]->getFitMin())/nBins[index] ; // xyz[index]->getFitBins();
+      Double_t delta= bins[index].averageBinWidth() ; // xyz[index]->getFitBins();
       if(index > 0) axisTitle.Append(" x ");
       axisTitle.Append(Form("%g",delta));
       if(strlen(xyz[index]->getUnit())) {

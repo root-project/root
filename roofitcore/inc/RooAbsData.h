@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.rdl,v 1.14 2002/02/20 19:46:21 verkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.15 2002/02/23 02:14:55 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -26,6 +26,7 @@ class RooPlot;
 class RooFitContext ;
 class RooArgList;
 class TH1;
+class RooAbsBinning ;
 
 class RooAbsData : public TNamed, public RooPrintable {
 public:
@@ -57,10 +58,10 @@ public:
 
   // Plot the distribution of a real valued arg
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const = 0;
-  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const = 0 ;
-  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar *cutVar, Option_t* drawOptions="P") const = 0 ;
+  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const = 0 ;
+  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar *cutVar, Option_t* drawOptions="P", const RooAbsBinning* bins=0) const = 0 ;
   virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, 
-			      const char* cut="", Option_t* drawOptions="P") const = 0 ;
+			      const char* cut="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const = 0 ;
 
   // Split a dataset by a category
   virtual TList* split(const RooAbsCategory& splitCat) const = 0 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.cc,v 1.15 2001/11/19 07:23:56 verkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.16 2002/02/13 02:50:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,6 +43,7 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooNumber.hh"
+#include "RooFitCore/RooBinning.hh"
 
 ClassImp(RooLinearVar)
 
@@ -51,7 +52,8 @@ RooLinearVar::RooLinearVar(const char *name, const char *title, RooAbsRealLValue
   RooAbsRealLValue(name, title, unit), 
   _var("var","variable",this,variable,kTRUE,kTRUE),
   _slope("slope","slope",this,(RooAbsReal&)slope),
-  _offset("offset","offset",this,(RooAbsReal&)offset)
+  _offset("offset","offset",this,(RooAbsReal&)offset),
+  _binning(variable.getBinning(),slope.getVal(),offset.getVal())
 {
   // Constructor with RooRealVar variable and RooAbsReal slope and offset
 
@@ -76,7 +78,8 @@ RooLinearVar::RooLinearVar(const RooLinearVar& other, const char* name) :
   RooAbsRealLValue(other,name),
   _var("var",this,other._var),
   _slope("slope",this,other._slope),
-  _offset("offset",this,other._offset)
+  _offset("offset",this,other._offset),
+  _binning(other._binning) 
 {
   // Copy constructor
 }
@@ -112,46 +115,6 @@ void RooLinearVar::setVal(Double_t value)
 }
 
 
-Double_t RooLinearVar::getFitMin() const 
-{
-  // Return low end of fit range 
-  RooRealVar& var = (RooRealVar&) _var.arg() ;
-
-  if (var.hasFitMin()) {
-    if (_slope>0) {
-      return _offset + var.getFitMin() * _slope ;
-    } else {
-      return _offset + var.getFitMax() * _slope ;
-    }
-  } 
-  return -RooNumber::infinity;
-}
-
-
-
-Double_t RooLinearVar::getFitMax() const 
-{
-  // Return low end of fit range 
-  RooRealVar& var = (RooRealVar&) _var.arg() ;
-
-  if (var.hasFitMax()) {
-    if (_slope>0) {
-      return _offset + var.getFitMax() * _slope ;
-    } else {
-      return _offset + var.getFitMin() * _slope ;
-    }
-  } 
-  return +RooNumber::infinity;
-}
-
-
-
-Int_t RooLinearVar::getFitBins() const 
-{
-  return ((RooRealVar&)_var.arg()).getFitBins() ;
-}
-
-
 
 Bool_t RooLinearVar::isJacobianOK(const RooArgSet& depList) const
 {
@@ -178,6 +141,7 @@ Double_t RooLinearVar::jacobian() const
 {
   return _slope*((RooAbsRealLValue&)_var.arg()).jacobian() ;
 }
+
 
 
 Bool_t RooLinearVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
@@ -207,3 +171,9 @@ void RooLinearVar::printToStream(ostream& os, PrintOption opt, TString indent) c
   }
 }
 
+
+const RooAbsBinning& RooLinearVar::getBinning() const 
+{
+  _binning.updateInput(((RooAbsRealLValue&)_var.arg()).getBinning(),_slope,_offset) ;
+  return _binning ;
+}

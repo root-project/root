@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.rdl,v 1.17 2001/11/28 00:29:13 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.18 2002/01/30 18:27:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,6 +21,7 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooNumber.hh"
 #include "RooFitCore/RooAbsLValue.hh"
+#include "RooFitCore/RooAbsBinning.hh"
 
 class RooArgSet ;
 
@@ -40,22 +41,17 @@ public:
   virtual RooAbsArg& operator=(const char* cval) { return RooAbsArg::operator=(cval) ; }
   virtual void randomize();
 
-  // Binned fit interface
+  // Implementation of RooAbsLValue
   virtual void setFitBin(Int_t ibin) ;
-  virtual Int_t getFitBin() const ;
+  virtual Int_t getFitBin() const { return getBinning().binNumber(getVal()) ; }
   virtual Int_t numFitBins() const { return getFitBins() ; }
-  virtual Double_t getFitBinWidth() const { return fitBinWidth() ; }
-  virtual RooAbsBinIter* createFitBinIterator() const ;
-
-  virtual Double_t fitBinCenter(Int_t i) const ;
-  virtual Double_t fitBinLow(Int_t i) const ;
-  virtual Double_t fitBinHigh(Int_t i) const ;
-  virtual Double_t fitBinWidth() const ;
-
+  virtual Double_t getFitBinWidth(Int_t i) const { return getBinning().binWidth(i) ; }
+  
   // Get fit range limits
-  virtual Double_t getFitMin() const = 0 ;
-  virtual Double_t getFitMax() const = 0 ;
-  virtual Int_t getFitBins() const = 0 ;
+  virtual const RooAbsBinning& getBinning() const = 0 ;
+  virtual Double_t getFitMin() const { return getBinning().lowBound() ; }
+  virtual Double_t getFitMax() const { return getBinning().highBound() ; }
+  virtual Int_t getFitBins() const { return getBinning().numBins() ; }
   inline Bool_t hasFitMin() const { return !RooNumber::isInfinite(getFitMin()); }
   inline Bool_t hasFitMax() const { return !RooNumber::isInfinite(getFitMax()); }
 
@@ -87,13 +83,19 @@ public:
   // Create empty 1,2, and 3D histograms from a list of 1-3 RooAbsReals
   TH1F *createHistogram(const char *name, const char *yAxisLabel) const ;
   TH1F *createHistogram(const char *name, const char *yAxisLabel, Double_t xlo, Double_t xhi, Int_t nBins) const ;
+  TH1F *createHistogram(const char *name, const char *yAxisLabel, const RooAbsBinning& bins) const ;
+
   TH2F *createHistogram(const char *name, const RooAbsRealLValue &yvar, const char *zAxisLabel=0, 
 			Double_t* xlo=0, Double_t* xhi=0, Int_t* nBins=0) const ;
+  TH2F *createHistogram(const char *name, const RooAbsRealLValue &yvar, const char *zAxisLabel, const RooAbsBinning* bins) const ;
   
+
   TH3F *createHistogram(const char *name, const RooAbsRealLValue &yvar, const RooAbsRealLValue &zvar,
 			const char *tAxisLabel, Double_t* xlo=0, Double_t* xhi=0, Int_t* nBins=0) const ;
+  TH3F *createHistogram(const char *name, const RooAbsRealLValue &yvar, const RooAbsRealLValue &zvar, const char* tAxisLabel, const RooAbsBinning* bins) const ;
   
   static TH1* createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, Double_t* xlo, Double_t* xhi, Int_t* nBins) ;
+  static TH1* createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, const RooAbsBinning* bins) ;
 
 protected:
 

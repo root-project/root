@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.31 2001/12/04 23:16:02 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.32 2002/01/10 00:08:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,7 +29,6 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/Roo1DTable.hh"
 #include "RooFitCore/RooCategory.hh"
-#include "RooFitCore/RooCatBinIter.hh"
 
 ClassImp(RooAbsCategory) 
 ;

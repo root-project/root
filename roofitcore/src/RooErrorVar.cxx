@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooErrorVar.cc,v 1.1 2001/10/11 01:28:50 verkerke Exp $
+ *    File: $Id: RooErrorVar.cc,v 1.2 2001/11/19 07:23:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,6 +20,7 @@
 //
 
 #include "RooFitCore/RooErrorVar.hh"
+#include "RooFitCore/RooAbsBinning.hh"
 
 ClassImp(RooErrorVar)
 ;
@@ -29,6 +30,7 @@ RooErrorVar::RooErrorVar(const char *name, const char *title, const RooRealVar& 
   RooAbsRealLValue(name,title),
   _realVar("realVar","RooRealVar with error",this,(RooAbsReal&)input)
 {
+  _binning = new RooUniformBinning(-1,1,100) ;
   // Constuctor
 }
 
@@ -37,8 +39,27 @@ RooErrorVar::RooErrorVar(const RooErrorVar& other, const char* name) :
   RooAbsRealLValue(other,name),
   _realVar("realVar",this,other._realVar)
 {
+  _binning = other._binning->clone() ;
+
   // Copy constructor
 }
+
+
+
+RooErrorVar::~RooErrorVar()
+{
+  // Destructor 
+  delete _binning ;
+}
+
+
+
+void RooErrorVar::setBinning(const RooAbsBinning& binning) 
+{
+  if (_binning) delete _binning ;
+  _binning = binning.clone() ;
+}
+
 
 
 void RooErrorVar::setFitMin(Double_t value) 
@@ -46,12 +67,12 @@ void RooErrorVar::setFitMin(Double_t value)
   // Set new minimum of fit range 
 
   // Check if new limit is consistent
-  if (value >= _fitMax) {
+  if (value >= getFitMax()) {
     cout << "RooRealVar::setFitMin(" << GetName() 
 	 << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
-    _fitMin = _fitMax ;
+    _binning->setMin(getFitMin()) ;
   } else {
-    _fitMin = value ;
+    _binning->setMin(value) ;
   }
 
   // Clip current value in window if it fell out
@@ -68,12 +89,12 @@ void RooErrorVar::setFitMax(Double_t value)
   // Set new maximum of fit range 
 
   // Check if new limit is consistent
-  if (value < _fitMin) {
+  if (value < getFitMin()) {
     cout << "RooRealVar::setFitMax(" << GetName() 
 	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
-    _fitMax = _fitMin ;
+    _binning->setMax(getFitMin()) ;
   } else {
-    _fitMax = value ;
+    _binning->setMax(value) ;
   }
 
   // Clip current value in window if it fell out
@@ -94,12 +115,11 @@ void RooErrorVar::setFitRange(Double_t min, Double_t max)
   if (min>max) {
     cout << "RooRealVar::setFitRange(" << GetName() 
 	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
-    _fitMin = min ;
-    _fitMax = min ;
+    _binning->setRange(min,min) ;
   } else {
-    _fitMin = min ;
-    _fitMax = max ;
+    _binning->setRange(min,max) ;
   }
 
   setShapeDirty() ;  
 }
+

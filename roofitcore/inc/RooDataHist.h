@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.rdl,v 1.10 2002/02/07 02:21:36 verkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.11 2002/02/20 19:46:20 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -55,7 +55,9 @@ public:
   Double_t sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bool_t correctForBinSize) ;
 
   virtual Double_t weight() const { return _curWeight ; }
-  Double_t weight(const RooArgSet& bin, Int_t intOrder=1) ; 
+  Double_t weight(const RooArgSet& bin, Int_t intOrder=1, Bool_t correctForBinSize=kFALSE) ; 
+  Double_t binVolume() const { return _curVolume ; }
+  Double_t binVolume(const RooArgSet& bin) ; 
 
   virtual void reset() ;
   void dump2() ;
@@ -66,18 +68,20 @@ protected:
   RooDataHist(const char* name, const char* title, RooDataHist* h, const RooArgSet& varSubset, 
 	      const RooFormulaVar* cutVar, Bool_t copyCache) ;
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, Bool_t copyCache=kTRUE) ;
-  Double_t interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder) ;
+  Double_t interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOrder, Bool_t correctForBinSize) ;
 
 
   Int_t calcTreeIndex() const ;
 
   Int_t       _arrSize ; //  Size of the weight array
   Int_t*      _idxMult ; //! Multiplier jump table for index calculation
-  Double_t*       _wgt ; //[_arrSize]  Weight array
+  Double_t*       _wgt ; //[_arrSize] Weight array
+  Double_t*      _binv ; //[_arrSize] Bin volume array
   RooArgSet  _realVars ; // Real dimensions of the dataset 
   TIterator* _realIter ; //! Iterator over realVars
 
   mutable Double_t _curWeight ; // Weight associated with the current coordinate
+  mutable Double_t _curVolume ; // Volume of bin enclosing current coordinate
 
 private:
 

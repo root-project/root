@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.33 2001/12/01 08:12:47 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.34 2002/01/08 02:18:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -37,9 +37,10 @@ Int_t  RooRealVar::_printSigDigits(5) ;
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _fitBins(100)
+  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1) //, _fitBins(100)
 {
   // Constructor with value and unit
+  _binning = new RooUniformBinning(-1,1,100) ;
   _value = value ;
   removeFitRange();
   setConstant(kTRUE) ;
@@ -48,9 +49,11 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t minValue, Double_t maxValue,
 		       const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _fitBins(100)
+  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1) // , _fitBins(100)
 {
   // Constructor with range and unit. Value is set to middle of range
+
+  _binning = new RooUniformBinning(minValue,maxValue,100) ;
 
   _value= 0.5*(minValue + maxValue);
 
@@ -61,11 +64,12 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, Double_t minValue, Double_t maxValue,
 		       const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _fitBins(100)
+  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1)  //, _fitBins(100)
 {
   // Constructor with value, range and unit
   _value = value ;
-//   setPlotRange(minValue,maxValue) ;
+
+  _binning = new RooUniformBinning(minValue,maxValue,100) ;
   setFitRange(minValue,maxValue) ;
 }  
 
@@ -73,18 +77,17 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
   RooAbsRealLValue(other,name), 
   _error(other._error),
   _asymErrLo(other._asymErrLo),
-  _asymErrHi(other._asymErrHi),
-  _fitMin(other._fitMin),
-  _fitMax(other._fitMax),
-  _fitBins(other._fitBins)
+  _asymErrHi(other._asymErrHi)
 {
   // Copy Constructor
+  _binning = other._binning->clone() ;
 }
 
 
 RooRealVar::~RooRealVar() 
 {
   // Destructor
+  delete _binning ;
 }
 
 void RooRealVar::setVal(Double_t value) {
@@ -106,17 +109,24 @@ RooErrorVar* RooRealVar::errorVar() const
 }
 
 
+void RooRealVar::setBinning(const RooAbsBinning& binning) 
+{
+  if (_binning) delete _binning ;
+  _binning = binning.clone() ;
+}
+
+
 void RooRealVar::setFitMin(Double_t value) 
 {
   // Set new minimum of fit range 
 
   // Check if new limit is consistent
-  if (value >= _fitMax) {
+  if (value >= getFitMax()) {
     cout << "RooRealVar::setFitMin(" << GetName() 
 	 << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
-    _fitMin = _fitMax ;
+    _binning->setMin(getFitMax()) ;
   } else {
-    _fitMin = value ;
+    _binning->setMin(value) ;
   }
 
   // Clip current value in window if it fell out
@@ -133,12 +143,12 @@ void RooRealVar::setFitMax(Double_t value)
   // Set new maximum of fit range 
 
   // Check if new limit is consistent
-  if (value < _fitMin) {
+  if (value < getFitMin()) {
     cout << "RooRealVar::setFitMax(" << GetName() 
 	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
-    _fitMax = _fitMin ;
+    _binning->setMax(getFitMin()) ;
   } else {
-    _fitMax = value ;
+    _binning->setMax(value) ;
   }
 
   // Clip current value in window if it fell out
@@ -158,11 +168,9 @@ void RooRealVar::setFitRange(Double_t min, Double_t max)
   if (min>max) {
     cout << "RooRealVar::setFitRange(" << GetName() 
 	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
-    _fitMin = min ;
-    _fitMax = min ;
+    _binning->setRange(min,min) ;
   } else {
-    _fitMin = min ;
-    _fitMax = max ;
+    _binning->setRange(min,max) ;
   }
 
   setShapeDirty() ;  
@@ -559,7 +567,7 @@ void RooRealVar::copyCache(const RooAbsArg* source)
   // Warning: This function copies the cached values of source,
   //          it is the callers responsibility to make sure the cache is clean
 
-  // Follow usual procedure for value
+  // Follow usual procedure for valueklog
   RooAbsReal::copyCache(source) ;
 
   // Copy error too, if source has one
@@ -571,6 +579,4 @@ void RooRealVar::copyCache(const RooAbsArg* source)
     _asymErrHi = other->_asymErrHi ;
   }
 }
-
-
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMCStudy.cc,v 1.6 2002/02/02 02:24:24 verkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.7 2002/02/04 18:10:13 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -361,7 +361,7 @@ const RooArgSet* RooMCStudy::fitParams(Int_t sampleNum) const
   //     be out of synch with genData() and fitResult()
 
   // Check if sampleNum is in range
-  if (sampleNum<0 || sampleNum>=_genDataList.GetSize()) {
+  if (sampleNum<0 || sampleNum>=_fitParData->numEntries()) {
     cout << "RooMCStudy::fitParams: ERROR, invalid sample number: " << sampleNum << endl ;    
     return 0 ;
   }
@@ -376,7 +376,7 @@ const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
   // Return the fit result object of the fit to given sample
 
   // Check if sampleNum is in range
-  if (sampleNum<0 || sampleNum>=_genDataList.GetSize()) {
+  if (sampleNum<0 || sampleNum>=_fitResList.GetSize()) {
     cout << "RooMCStudy::fitResult: ERROR, invalid sample number: " << sampleNum << endl ;    
     return 0 ;
   }
@@ -475,8 +475,8 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, Double_t lo, Double_t hi,
   _fitParData->plotOn(frame) ;
 
   if (fitGauss) {
-    RooRealVar pullMean("mean","Mean of pull",0,lo,hi) ;
-    RooRealVar pullSigma("sigma","Width of pull",1,0,5) ;
+    RooRealVar pullMean("pullMean","Mean of pull",0,lo,hi) ;
+    RooRealVar pullSigma("pullSigma","Width of pull",1,0,5) ;
     RooGenericPdf pullGauss("pullGauss","Gaussian of pull",
 			    "exp(-0.5*(@0-@1)*(@0-@1)/(@2*@2))",
 			    RooArgSet(pvar,pullMean,pullSigma)) ;

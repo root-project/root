@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimFitContext.rdl,v 1.5 2001/11/27 23:19:05 verkerke Exp $
+ *    File: $Id: RooSimFitContext.rdl,v 1.6 2002/02/26 01:32:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,10 +33,8 @@ public:
   RooSimFitContext(const RooAbsData* data, const RooSimultaneous* pdf, const RooArgSet* projDeps=0) ;
   virtual ~RooSimFitContext() ;
 
-  virtual Double_t nLogLikelihood(Bool_t dummy, Int_t nObserved) const ;  
   virtual Bool_t optimize(Bool_t doPdf=kTRUE,Bool_t doData=kTRUE, Bool_t doCache=kTRUE) ;
   virtual RooFitResult* fit(Option_t *fitOpt="", Option_t *optOpt="") ;
-  virtual void syncParams() const ;
 
   Int_t          _nCtx        ; // Number of sub-contexts 
   Int_t          _nCtxFilled  ;
@@ -50,7 +48,9 @@ public:
 
 protected:
 
+  virtual Double_t nLogLikelihood(Bool_t dummy, Int_t nObserved) const ;  
   virtual Bool_t setPdfParamVal(Int_t index, Double_t value, Bool_t verbose=kFALSE) ;
+  virtual void syncParams() const ;
 
   ClassDef(RooSimFitContext,0) // Transient fit context, combining a dataset and a PDF
 } ;

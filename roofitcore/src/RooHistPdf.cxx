@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooHistPdf.cc,v 1.3 2001/10/12 01:48:45 verkerke Exp $
+ *    File: $Id: RooHistPdf.cc,v 1.4 2001/11/19 07:23:56 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -73,7 +73,7 @@ Double_t RooHistPdf::evaluate() const
 {
   // Return the current value: The value of the bin enclosing the current coordinates
   // of the dependents, normalized by the histograms contents
-  return _dataHist->weight(_depList,_intOrder) ;
+  return _dataHist->weight(_depList,_intOrder,kTRUE) ;
 }
 
 
@@ -120,13 +120,13 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code) const
   // or complete summation over the histograms contents
 
   // Simplest scenario, integration over all dependents
-  if (code==1000) return _dataHist->sum(kTRUE) ;
+  if (code==1000) return _dataHist->sum(kFALSE) ;
 
   // Partial integration scenario, retrieve set of variables, calculate partial sum
   RooArgSet* intSet(0) ;
   _codeReg.retrieve(code-1,intSet) ;
   
-  return _dataHist->sum(*intSet,_depList,kTRUE) ;
+  return _dataHist->sum(*intSet,_depList,kFALSE) ;
 }
 
 

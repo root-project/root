@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.46 2001/12/19 20:06:58 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.47 2002/02/09 02:01:23 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,7 +23,6 @@ class RooDataSet ;
 class RooPlot;
 class RooRealVar;
 class RooAbsFunc;
-class RooRealFixedBinIter ;
 class RooAbsCategoryLValue ;
 
 class TH1;
@@ -143,8 +142,6 @@ protected:
   virtual void fillTreeBranch(TTree& t) ;
   TString cleanBranchName() const ;
   UInt_t crc32(const char* data) const ;
-
-  friend class RooRealFixedBinIter ;
 
   Double_t _plotMin ;       // Minimum of plot range
   Double_t _plotMax ;       // Maximum of plot range

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsLValue.rdl,v 1.2 2001/09/27 18:22:27 verkerke Exp $
+ *    File: $Id: RooAbsLValue.rdl,v 1.3 2002/01/30 18:27:40 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -15,7 +15,6 @@
 
 #include <iostream.h>
 #include "Rtypes.h"
-class RooAbsBinIter ;
 
 
 class RooAbsLValue {
@@ -28,8 +27,7 @@ public:
   virtual void setFitBin(Int_t ibin) = 0 ;
   virtual Int_t getFitBin() const = 0 ;
   virtual Int_t numFitBins() const = 0 ;
-  virtual Double_t getFitBinWidth() const = 0 ;
-  virtual RooAbsBinIter* createFitBinIterator() const = 0 ;
+  virtual Double_t getFitBinWidth(Int_t i) const = 0 ;
 
   virtual void randomize() = 0 ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCustomizer.rdl,v 1.1 2001/10/09 01:41:19 verkerke Exp $
+ *    File: $Id: RooCustomizer.rdl,v 1.2 2001/10/19 06:56:52 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -40,9 +40,7 @@ public:
   RooAbsArg* build(Bool_t verbose=kFALSE) ;
 
   const RooArgSet& cloneBranchList() const { return _cloneBranchList ; }
-  const RooArgSet& cloneLeafList() const { return *_cloneLeafList ; }
-
-  RooArgSet* fullParamList(const RooArgSet* depList) const ;
+  const RooArgSet& cloneLeafList() const { return *_cloneNodeList ; }
 
   // Printing interface 
   virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
@@ -75,13 +73,12 @@ protected:
 
   RooArgSet  _masterBranchList ;
   RooArgSet  _masterLeafList ;
-  RooArgSet  _masterUnsplitLeafList ;
 
   // Cloned nodes are owned by the customizer
   RooArgSet _cloneBranchList ;
 
   // Cloned leafs are owned by the user supplied list in the ctor
-  RooArgSet* _cloneLeafList ;
+  RooArgSet* _cloneNodeList ;
 
   ClassDef(RooCustomizer,0) // PDF customizer 
 } ;

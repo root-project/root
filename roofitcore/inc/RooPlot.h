@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.20 2001/11/19 18:50:27 verkerke Exp $
+ *    File: $Id: RooPlot.rdl,v 1.21 2002/02/09 02:01:24 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -86,7 +86,6 @@ public:
 
   Double_t chiSquare(const char* pdfname=0, const char* histname=0) const ;
 
-protected:
   void initialize();
   TString histName() const ; 
   TString caller(const char *method) const;
@@ -107,6 +106,7 @@ protected:
   Double_t _defYmin ;        // Default minimum for Yaxis (as calculated from contents)
   Double_t _defYmax ;        // Default maximum for Yaxis (as calculated from contents)
 
+protected:
   RooPlot(const RooPlot& other); // object cannot be copied
 
   ClassDef(RooPlot,1)        // Plot frame and container for graphics objects

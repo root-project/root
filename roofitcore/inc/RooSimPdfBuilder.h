@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooSimPdfBuilder.rdl,v 1.4 2001/12/02 23:47:43 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.rdl,v 1.5 2002/01/17 01:32:18 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -33,14 +33,16 @@ public:
   const RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
 				  const RooArgSet* auxSplitCats=0, Bool_t verbose=kFALSE) ;
   
-  const RooArgSet& splitLeafList() { return _splitLeafList; }
+  const RooArgSet& splitLeafList() { return _splitNodeList; }
+
+  void addSpecializations(const RooArgSet& specSet) ;
  
 protected:
 
   RooArgSet _protoPdfSet ;       // Set of prototype PDFS
 
   RooArgSet _compSplitCatSet ;   // List of owned composite splitting categories
-  RooArgSet _splitLeafList ;     // List of owned split leafs
+  RooArgSet _splitNodeList ;     // List of owned split nodes
   TList     _retiredCustomizerList ; // Retired customizer from previous builds (own their PDF branch nodes)
 
 private:

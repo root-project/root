@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.17 2002/02/14 23:12:57 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.18 2002/03/05 19:20:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -201,16 +201,4 @@ RooAbsArg *RooAbsString::createFundamental(const char* newname) const {
 
   RooStringVar *fund= new RooStringVar(newname?newname:GetName(),GetTitle(),"") ; 
   return fund;
-}
-
-
-Int_t RooAbsString::getPlotBin() const 
-{
-  return 0 ;
-}
-
-
-RooAbsBinIter* RooAbsString::createPlotBinIterator() const 
-{
-  return 0 ;
 }

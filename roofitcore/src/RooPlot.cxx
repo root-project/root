@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.25 2001/11/19 07:23:57 verkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.26 2002/02/09 02:01:24 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -45,7 +45,7 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.25 2001/11/19 07:23:57 verkerke Exp $";
+"$Id: RooPlot.cc,v 1.26 2002/02/09 02:01:24 davidk Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
@@ -275,8 +275,16 @@ void RooPlot::updateFitRangeNorm(const TH1* hist) {
 void RooPlot::updateFitRangeNorm(const RooPlotable* rp) {
   // Update our plot normalization over our plot variable's fit range,
   // which will be determined by the first suitable object added to our plot.
-  if(_normNumEvts == 0) _normNumEvts = rp->getFitRangeNEvt() ;
-  if(_normBinWidth == 0) _normBinWidth = rp->getFitRangeBinW() ;
+  if(_normNumEvts == 0) {
+    Double_t corFac = _normBinWidth/rp->getFitRangeBinW() ;
+    _normNumEvts = rp->getFitRangeNEvt()/corFac ;
+//     cout << "correction factor = " << _normBinWidth << "/" << rp->getFitRangeBinW() << endl ;
+//     cout << "updating numevts to " << _normNumEvts << endl ;
+  }
+  if(_normBinWidth == 0) {
+    _normBinWidth = rp->getFitRangeBinW() ;
+//     cout << "updating binw to " << _normBinWidth << endl ;
+  }
 }
 
 void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label) {

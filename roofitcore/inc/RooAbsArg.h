@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.62 2001/11/21 21:35:05 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.63 2001/12/02 23:25:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,7 +30,6 @@ class RooAbsProxy ;
 class RooArgProxy ;
 class RooSetProxy ;
 class RooListProxy ;
-class RooAbsBinIter ;
 
 class RooAbsArg : public TNamed, public RooPrintable {
 public:
@@ -83,6 +82,7 @@ public:
   inline virtual Bool_t isLValue() const { return kFALSE; }
 
   // Parameter & dependents interpretation of servers
+  friend class RooProdPdf ;
   RooArgSet* getParameters(const RooAbsData* set) const ;
   RooArgSet* getParameters(const RooArgSet& set) const { return getParameters(&set) ; }
   virtual RooArgSet* getParameters(const RooArgSet* depList) const ;

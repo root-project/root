@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.74 2002/02/09 02:01:23 davidk Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.75 2002/02/15 01:47:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,7 +29,6 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooArgProxy.hh"
 #include "RooFitCore/RooFormulaVar.hh"
-#include "RooFitCore/RooRealFixedBinIter.hh"
 #include "RooFitCore/RooRealBinding.hh"
 #include "RooFitCore/RooRealIntegral.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"

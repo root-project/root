@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.35 2002/02/20 22:19:45 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.36 2002/02/23 02:14:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -50,6 +50,7 @@
 #include "RooFitCore/RooHist.hh"
 #include "RooFitCore/RooFormulaVar.hh"
 #include "RooFitCore/RooTrace.hh"
+#include "RooFitCore/RooAbsBinning.hh" 
 
 ClassImp(RooTreeData)
 ;
@@ -718,7 +719,7 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
 
 
 
-RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions) const 
+RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions, const RooAbsBinning* bins) const 
 {
   // Implementation pending...
   return 0 ;
@@ -726,7 +727,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option
 
 
 
-RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions) const 
+RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions, const RooAbsBinning* bins) const 
 {
   // Create and fill a histogram of the frame's variable and append it to the frame.
   // The frame variable must be one of the data sets dimensions.
@@ -753,8 +754,13 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
   // create and fill a temporary histogram of this variable
   TString histName(GetName());
   histName.Append("_plot");
-  TH1F *hist= var->createHistogram(histName.Data(), "Events", 
-				   frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(), frame->GetNbinsX());
+  TH1F *hist ;
+  if (bins) {
+    hist= var->createHistogram(histName.Data(), "Events", *bins) ;
+  } else {
+    hist= var->createHistogram(histName.Data(), "Events", 
+			       frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(), frame->GetNbinsX());
+  }
   if(0 == fillHistogram(hist,RooArgList(*var),cuts)) {
     cout << ClassName() << "::" << GetName()
 	 << ":plotOn: createHistogram() failed" << endl;
@@ -789,7 +795,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
 
 
 RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat,
-				 const char* cuts, Option_t* drawOptions) const 
+				 const char* cuts, Option_t* drawOptions, const RooAbsBinning* bins) const 
 {
   // Create and fill a histogram with the asymmetry N[+] - N[-] / ( N[+] + N[-] ),
   // where N(+/-) is the number of data points with asymCat=+1 and asymCat=-1 
@@ -818,13 +824,21 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   // create and fill temporary histograms of this variable for each state
   TString hist1Name(GetName()),hist2Name(GetName());
   hist1Name.Append("_plot1");
-  TH1F *hist1= var->createHistogram(hist1Name.Data(), "Events", 
-				   frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
-				   frame->GetNbinsX());
+  TH1F *hist1, *hist2 ;
   hist2Name.Append("_plot2");
-  TH1F *hist2= var->createHistogram(hist2Name.Data(), "Events", 
-				   frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
-				   frame->GetNbinsX());
+
+  if (bins) {
+    hist1= var->createHistogram(hist1Name.Data(), "Events", *bins) ;
+    hist2= var->createHistogram(hist2Name.Data(), "Events", *bins) ;
+  } else {
+    hist1= var->createHistogram(hist1Name.Data(), "Events", 
+				frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
+				frame->GetNbinsX());
+    hist2= var->createHistogram(hist2Name.Data(), "Events", 
+				frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
+				frame->GetNbinsX());
+  }
+
   assert(0 != hist1 && 0 != hist2);
 
   TString cuts1,cuts2 ;
