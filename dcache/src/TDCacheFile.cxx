@@ -1,4 +1,4 @@
-// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.5 2003/01/09 16:52:11 rdm Exp $
+// @(#)root/dcache:$Name:  $:$Id: TDCacheFile.cxx,v 1.6 2003/04/28 10:18:38 rdm Exp $
 // Author: Grzegorz Mazur   20/01/2002
 
 /*************************************************************************
@@ -186,7 +186,7 @@ Bool_t TDCacheFile::ReadBuffer(char *buf, Int_t len)
       }
       if (st > 0) {
          // fOffset might have been changed via TCache::ReadBuffer(), reset it
-         fOffset = off + len;
+         Seek(off + len);
          return kFALSE;
       }
    }
@@ -211,7 +211,7 @@ Bool_t TDCacheFile::WriteBuffer(const char *buf, Int_t len)
       }
       if (st > 0) {
          // fOffset might have been changed via TCache::WriteBuffer(), reset it
-         fOffset = off + len;
+         Seek(off + len);
          return kFALSE;
       }
    }
@@ -375,31 +375,19 @@ Int_t TDCacheFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 //______________________________________________________________________________
 Seek_t TDCacheFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 {
-   switch (whence) {
-   case SEEK_SET:
-      if (offset == fOffset)
-         return offset;
-      else
-         fOffset = offset;
-      break;
-   case SEEK_CUR:
-      fOffset += offset;
-      break;
-   case SEEK_END:
-      fOffset = fEND + offset;
-      break;
-   }
+   if (whence == SEEK_SET && offset == fOffset) return offset;
 
    dc_errno = 0;
 
-   Int_t rc = dc_lseek(fd, offset, whence);
+   Seek_t rc = dc_lseek(fd, offset, whence);
 
    if (rc < 0) {
       if (dc_errno != 0)
          gSystem->SetErrorStr(dc_strerror(dc_errno));
       else
          gSystem->SetErrorStr(strerror(errno));
-   }
+   } else
+      fOffset = rc;
 
    return rc;
 }

@@ -136,7 +136,7 @@ Bool_t TChirpFile::ReadBuffer(char *buf, Int_t len)
       }
       if (st > 0) {
          // fOffset might have been changed via TCache::ReadBuffer(), reset it
-         fOffset = off + len;
+         Seek(off + len);
          return kFALSE;
       }
    }
@@ -161,7 +161,7 @@ Bool_t TChirpFile::WriteBuffer(const char *buf, Int_t len)
       }
       if (st > 0) {
          // fOffset might have been changed via TCache::WriteBuffer(), reset it
-         fOffset = off + len;
+         Seek(off + len);
          return kFALSE;
       }
    }
@@ -269,9 +269,9 @@ Int_t TChirpFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 //______________________________________________________________________________
 Seek_t TChirpFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
 {
-   if(whence == SEEK_SET && offset == fOffset) return offset;
+   if (whence == SEEK_SET && offset == fOffset) return offset;
 
-   Int_t rc = chirp_client_lseek(chirp_client, fd, offset, whence);
+   Seek_t rc = chirp_client_lseek(chirp_client, fd, offset, whence);
 
    if (rc < 0) {
       gSystem->SetErrorStr(strerror(errno));

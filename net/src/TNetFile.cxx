@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.30 2003/01/17 10:35:39 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.31 2003/02/05 15:11:12 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -454,7 +454,7 @@ Bool_t TNetFile::ReadBuffer(char *buf, Int_t len)
       }
       if (st > 0) {
          // fOffset might have been changed via TCache::ReadBuffer(), reset it
-         fOffset = off + len;
+         Seek(off + len);
          return result;
       }
    }
@@ -522,7 +522,7 @@ Bool_t TNetFile::WriteBuffer(const char *buf, Int_t len)
       }
       if (st > 0) {
          // fOffset might have been changed via TCache::WriteBuffer(), reset it
-         fOffset = off + len;
+         Seek(off + len);
          return result;
       }
    }

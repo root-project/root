@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.22 2003/01/13 15:05:29 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.23 2003/04/28 10:18:38 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -285,24 +285,15 @@ Seek_t TRFIOFile::SysSeek(Int_t fd, Seek_t offset, Int_t whence)
    // except that the offset and return value are Long_t to be able to
    // handle 64 bit file systems.
 
-   switch (whence) {
-   case SEEK_SET:
-      if (offset == fOffset)
-         return offset;
-      else
-         fOffset = offset;
-      break;
-   case SEEK_CUR:
-      fOffset += offset;
-      break;
-   case SEEK_END:
-      fOffset = fEND + offset;
-      break;
-   }
+   if (whence == SEEK_SET && offset == fOffset) return offset;
 
    Seek_t ret = ::rfio_lseek(fd, offset, whence);
+
    if (ret < 0)
       gSystem->SetErrorStr(::rfio_serror());
+   else
+      fOffset = ret;
+
    return ret;
 }
 
@@ -358,7 +349,7 @@ Bool_t TRFIOFile::ReadBuffer(char *buf, Int_t len)
       }
       if (st > 0) {
          // fOffset might have been changed via TCache::ReadBuffer(), reset it
-         fOffset = off + len;
+         Seek(off + len);
          return kFALSE;
       }
    }
@@ -383,7 +374,7 @@ Bool_t TRFIOFile::WriteBuffer(const char *buf, Int_t len)
       }
       if (st > 0) {
          // fOffset might have been changed via TCache::WriteBuffer(), reset it
-         fOffset = off + len;
+         Seek(off + len);
          return kFALSE;
       }
    }
