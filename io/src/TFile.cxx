@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.5 2000/09/05 09:21:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.6 2000/09/08 16:05:20 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -443,8 +443,10 @@ void TFile::Close(Option_t *)
    TDirectory::Close();
    cd();      // Close() sets gFile = 0
 
+   TCollection::EmptyGarbageCollection();
+
    if (IsWritable()) {
-      TFree *f1      = (TFree*) GetListOfFree()->First();
+      TFree *f1 = (TFree*) GetListOfFree()->First();
       if (f1) {
          WriteFree();       //*-*- Write free segments linked list
          WriteHeader();     //*-*- Now write file header
@@ -477,8 +479,6 @@ void TFile::Close(Option_t *)
          gROOT->ProcessLineFast(Form("TProof::This()->DisConnectFile((TFile *)0x%lx);",
                                 (Long_t)this));
    }
-
-   TCollection::EmptyGarbageCollection();
 }
 
 //______________________________________________________________________________
