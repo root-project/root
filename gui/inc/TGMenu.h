@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.20 2003/12/11 16:26:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.21 2004/01/19 14:00:47 brun Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -141,7 +141,6 @@ protected:
    void DrawTrianglePattern(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
    void DrawCheckMark(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
    void DrawRCheckMark(GContext_t gc, Int_t l, Int_t t, Int_t r, Int_t b);
-   virtual void Activate(TGMenuEntry *entry);
    virtual void DoRedraw();
    virtual void DrawEntry(TGMenuEntry *entry);
    virtual void Reposition();
@@ -187,6 +186,7 @@ public:
    virtual void   DeleteEntry(Int_t id);
    virtual void   DeleteEntry(TGMenuEntry *entry);
    virtual TGMenuEntry *GetEntry(Int_t id);
+   virtual TGMenuEntry *GetCurrent() const { return fCurrent; }
    virtual TGMenuEntry *GetEntry(const char *s);
    const TList    *GetListOfEntries() const { return fEntryList; }
    virtual void    DrawBorder();
@@ -201,6 +201,7 @@ public:
    virtual void Highlighted(Int_t id) { Emit("Highlighted(Int_t)", id); }  //*SIGNAL*
    virtual void Activated(Int_t id) { Emit("Activated(Int_t)", id); }  //*SIGNAL*
    virtual void Activate(Bool_t) { }
+   virtual void Activate(TGMenuEntry *entry);
    virtual void SavePrimitive(ofstream &out, Option_t *option);
 
    ClassDef(TGPopupMenu,0)  // Popup menu
@@ -274,6 +275,7 @@ protected:
    Cursor_t      fDefaultCursor; // right pointing cursor
    Bool_t        fStick;         // stick mode (popup menu stays sticked on screen)
    TList        *fTrash;         // garbage
+   Bool_t        fKeyNavigate;   // kTRUE if arrow key navigation is on  
 
    virtual void AddFrameBefore(TGFrame *f, TGLayoutHints *l = 0,
                                TGPopupMenu *before = 0);
