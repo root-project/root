@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.99 2003/08/22 14:25:32 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.100 2003/09/12 12:41:36 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -541,12 +541,12 @@ void TFile::Close(Option_t *option)
 // of files having TRef, writing some of the referenced objects or TRef
 // to a new file. If the TRef or referenced objects of the file being closed
 // will not be referenced again, it is possible to minimize the size
-// of the TProcessID data structures in memory by forcing a delete of 
+// of the TProcessID data structures in memory by forcing a delete of
 // the unused TProcessID.
-   
+
    TString opt = option;
    opt.ToLower();
-   
+
    if (!IsOpen()) return;
 
    if (IsWritable()) {
@@ -1958,7 +1958,11 @@ TFile *TFile::Open(const char *name, Option_t *option, const char *ftitle,
    } else if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name))) {
       if (h->LoadPlugin() == -1)
          return 0;
-      f = (TFile*) h->ExecPlugin(4, name, option, ftitle, compress);
+      TClass *cl = gROOT->GetClass(h->GetClass());
+      if (cl && cl->InheritsFrom("TNetFile"))
+         f = (TFile*) h->ExecPlugin(5, name, option, ftitle, compress, netopt);
+      else
+         f = (TFile*) h->ExecPlugin(4, name, option, ftitle, compress);
    } else
       f = new TFile(name, option, ftitle, compress);
 

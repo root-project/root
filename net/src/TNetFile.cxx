@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.35 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.cxx,v 1.36 2003/09/07 18:25:46 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -87,8 +87,8 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
                    Int_t compress, Int_t netopt)
          : TFile(url, "NET", ftitle, compress), fUrl(url)
 {
-   // Create a NetFile object. This is actually done inside Start(), so
-   // for a description of the options and other arguments see Start().
+   // Create a TNetFile object. This is actually done inside Create(), so
+   // for a description of the options and other arguments see Create().
    // Normally a TNetFile is created via TFile::Open().
 
    Create(url, option, netopt);
@@ -97,7 +97,9 @@ TNetFile::TNetFile(const char *url, Option_t *option, const char *ftitle,
 TNetFile::TNetFile(const char *url, const char *ftitle, Int_t compress, Bool_t)
          : TFile(url, "NET", ftitle, compress), fUrl(url)
 {
-   //  Create a TNetFile object.
+   // Create a TNetFile object. To be used by derived classes, that need
+   // to initialize the TFile base class but not open a connection at this
+   // moment.
 
    fSocket = 0;
 }
@@ -417,6 +419,7 @@ void TNetFile::Seek(Seek_t offset, ERelativeTo pos)
       break;
    }
 }
+
 //______________________________________________________________________________
 void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
                              Int_t tcpwindowsize, Bool_t forceOpen,
@@ -470,7 +473,7 @@ void TNetFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
    }
 
    // Authenticate remotely
-   if (gDebug > 2) Info("Authenticate", "User from Url: %s",fUrl.GetUser());
+   if (gDebug > 2) Info("Authenticate", "User from Url: %s", fUrl.GetUser());
    if (!strcmp(fUrl.GetProtocol(), "roots")) {
       auth = new TAuthenticate(fSocket, fUrl.GetHost(),
                                Form("roots:%d", fProtocol), fUrl.GetUser());
@@ -542,7 +545,6 @@ void TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
    // For a description of the option and other arguments see the TFile ctor.
    // The preferred interface to this constructor is via TFile::Open().
 
-   EMessageTypes kind;
    Int_t tcpwindowsize = 65535;
 
    fSocket    = 0;
@@ -591,6 +593,7 @@ void TNetFile::Create(const char *url, Option_t *option, Int_t netopt)
       tcpwindowsize = netopt;
 
    // Open connection to remote rootd server
+   EMessageTypes kind;
    Int_t stat;
    ConnectServer(&stat, &kind, netopt, tcpwindowsize, forceOpen, forceRead);
    if (gDebug > 2) Info("TNetFile", "TNetFile: got from host %d %d", stat, kind);

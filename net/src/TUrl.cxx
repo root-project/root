@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.10 2003/02/25 17:21:42 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.11 2003/07/04 13:26:34 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -33,7 +33,7 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    //
    // url: [proto://][user[:passwd]@]host[:port]/file.ext[#anchor][?options]
    //
-   // Known protocols: http, root, proof, ftp, news, file, rfio, hpss
+   // Known protocols: http, root, proof, ftp, news, file, rfio, hpss, castor.
    // The default protocol is http, unless defaultIsFile is true in which
    // case the url is assumed to be of type file.
    // If a passwd contains a @ it must be escaped by a \\, e.g.
@@ -82,6 +82,14 @@ TUrl::TUrl(const char *url, Bool_t defaultIsFile)
    if (!strncmp(url, "hpss:", 5)) {
       fProtocol = "hpss";
       fFile = url+5;
+      fPort = 0;
+      return;
+   }
+
+   // Special case for "castor:"
+   if (!strncmp(url, "castor:", 7)) {
+      fProtocol = "castor";
+      fFile = url+7;
       fPort = 0;
       return;
    }
@@ -275,7 +283,8 @@ const char *TUrl::GetUrl()
    // Return full URL.
 
    if (IsValid() && fUrl == "") {
-      if (fProtocol == "file" || fProtocol == "rfio" || fProtocol == "hpss") {
+      if (fProtocol == "file" || fProtocol == "rfio" ||
+          fProtocol == "hpss" || fProtocol == "castor") {
          fUrl = fProtocol + ":" + fFile;
          return fUrl;
       }

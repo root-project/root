@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.10 2002/12/10 02:19:46 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TNetFile.h,v 1.11 2003/08/29 10:41:28 rdm Exp $
 // Author: Fons Rademakers   14/08/97
 
 /*************************************************************************
@@ -47,10 +47,11 @@ protected:
 
    static Int_t fgClientProtocol;  //client protocol level
 
+   TNetFile(const char *url, const char *ftitle, Int_t comp, Bool_t);
    virtual void ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
                               Int_t tcpwindowsize, Bool_t forceOpen,
                               Bool_t forceRead);
-   void   Create(const char *url, Option_t *option, Int_t netopt);
+   virtual void Create(const char *url, Option_t *option, Int_t netopt);
    void   Init(Bool_t create);
    void   Print(Option_t *option) const;
    void   PrintError(const char *where, Int_t err);
@@ -62,11 +63,10 @@ protected:
 public:
    TNetFile(const char *url, Option_t *option = "", const char *ftitle = "",
             Int_t compress = 1, Int_t netopt = 0);
-   TNetFile(const char *url, const char *ftitle, Int_t comp, Bool_t);
    TNetFile() : fUrl("dummy") { fSocket = 0; }
    virtual ~TNetFile();
 
-   void    Close(Option_t *option=""); // *MENU*
+   void    Close(Option_t *option="");  //*MENU*
    void    Flush();
    Int_t   GetErrorCode() const { return fErrorCode; }
    Bool_t  IsOpen() const;

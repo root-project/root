@@ -75,6 +75,7 @@ QTLIBDIR       := @qtlibdir@
 QTLIB          := @qtlib@
 QTINCDIR       := @qtincdir@
 
+SHIFTINCDIR    := @shiftincdir@
 SHIFTLIBDIR    := @shiftlibdir@
 SHIFTLIB       := @shiftlib@
 

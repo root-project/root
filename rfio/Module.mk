@@ -59,3 +59,7 @@ distclean-rfio: clean-rfio
 		@rm -f $(RFIODEP) $(RFIODS) $(RFIODH) $(RFIOLIB)
 
 distclean::     distclean-rfio
+
+##### extra rules ######
+$(RFIOO): %.o: %.cxx
+	$(CXX) $(OPT) $(CXXFLAGS) -I$(SHIFTINCDIR) -o $@ -c $<
