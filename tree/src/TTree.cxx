@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.223 2005/01/12 18:06:26 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.224 2005/01/12 18:56:20 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4031,7 +4031,7 @@ Bool_t TTree::SetAlias(const char *aliasName, const char *aliasFormula)
    if (branch) {
 
       CheckBranchAddressType(branch,realClass,datatype,ptr);
-      return SetBranchAddress(bname,add);
+      SetBranchAddress(bname,add);
 
    } else {
       Error("SetBranchAddress", "unknown branch -> %s", bname);
