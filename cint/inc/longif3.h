@@ -56,7 +56,7 @@ extern void G__set_cpp_environmentlongif();
 #else
 #include <iostream.h>
 #endif
-#if !defined(__hpux) && !(_MSC_VER<1200)
+#if !defined(__hpux) && !(defined(_MSC_VER) && (_MSC_VER<1200))
 namespace std {} using namespace std;
 #endif
 #endif
@@ -903,7 +903,7 @@ inline istream& operator>>(istream& ist,G__longdouble& a) {
 
 inline int G__ateval(const G__longdouble& a) {
 #ifdef IOS
-  std::cout << "(long double)" << a.dat << std::endl;
+  cout << "(long double)" << a.dat << endl;
 #else
   fprintf(stdout,"(long double)%g\n",a.dat);
 #endif
