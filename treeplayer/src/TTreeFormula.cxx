@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.55 2001/07/12 17:21:45 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.56 2001/07/13 14:57:01 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2179,7 +2179,7 @@ Bool_t TTreeFormula::IsInteger(Int_t code) const
    if (!strcmp(leaf->GetTypeName(),"Short_t"))  return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"UInt_t"))   return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"UShort_t")) return kTRUE;
-   return kFALSE;
+   return kFALSE; 
 }
 
 //______________________________________________________________________________
@@ -2198,6 +2198,8 @@ Bool_t TTreeFormula::IsString(Int_t code) const
         return kTRUE;
      } else if (leaf->InheritsFrom("TLeafElement")) {
         TBranchElement * br = (TBranchElement*)leaf->GetBranch();
+        Int_t bid = br->GetID();
+        if (bid < 0) return kFALSE;
         TStreamerElement * elem = (TStreamerElement*)
           br->GetInfo()->GetElements()->At(br->GetID());
         if(elem->GetType()==kChar_t
@@ -2420,7 +2422,11 @@ char *TTreeFormula::PrintValue(Int_t mode) const
       if (mode == 0) {
          TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
          leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
-         strncpy(value, (char*)leaf->GetValuePointer(), kMAXLENGTH-1);
+         if (leaf->GetValuePointer()) {
+            strncpy(value, (char*)leaf->GetValuePointer(), kMAXLENGTH-1);
+         } else {
+            //strncpy(value, " ", kMAXLENGTH-1);
+         }
          value[kMAXLENGTH-1] = 0;
       }
    } else {
@@ -2487,6 +2493,7 @@ void TTreeFormula::UpdateFormulaLeaves()
    // currently compile HAS TO be called from the constructor!
    Int_t nleaves = fNames.GetEntriesFast();
    for (Int_t i=0;i<nleaves;i++) {
+      if (!fTree) continue;
       TLeaf *leaf = fTree->GetLeaf(fNames[i]->GetName());
       fLeaves[i] = leaf;
    }
