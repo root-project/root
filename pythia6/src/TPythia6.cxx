@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.14 2004/07/27 16:30:38 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.15 2005/03/05 14:20:05 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -6,6 +6,10 @@
 // TPythia6                                                                   //
 //                                                                            //
 // TPythia is an interface class to F77 version of Pythia 6.2                 //
+// To use this class you must install a version of pythia6.                   //
+//   see the installation instructions at                                     //
+//       http://root.cern.ch/root/Install.html                                //
+//                                                                            // 
 // CERNLIB event generators, written by T.Sjostrand.                          //
 // For the details about these generators look at Pythia/Jetset manual:       //
 //                                                                            //
@@ -80,7 +84,6 @@ TPythia6*  TPythia6::fgInstance = 0;
 # define pystat pystat_
 # define pytest pytest_
 # define pyupda pyupda_
-# define pythia6_common_block_address pythia6_common_block_address_
 # define tpythia6_open_fortran_file tpythia6_open_fortran_file_
 # define tpythia6_close_fortran_file tpythia6_close_fortran_file_
 # define type_of_call
@@ -101,7 +104,6 @@ TPythia6*  TPythia6::fgInstance = 0;
 # define pystat PYSTAT
 # define pytest PYTEST
 # define pyupda PYUPDA
-# define pythia6_common_block_address PYTHIA6_COMMON_BLOCK_ADDRESS
 # define tpythia6_open_fortran_file TPYTHIA6_OPEN_FORTRAN_FILE
 # define tpythia6_close_fortran_file TPYTHIA6_CLOSE_FORTRAN_FILE
 # define type_of_call _stdcall
@@ -172,7 +174,9 @@ TPythia6::TPythia6() : TGenerator("TPythia6","TPythia6") {
   fParticles = new TClonesArray("TMCParticle",50);
 
   // initialize common-blocks
-
+  // the functions/subroutines referenced by TPythia6 can be found
+  // at ftp://root.cern.ch/root/pythia6.tar.gz
+  
   fPyjets = (Pyjets_t*) pythia6_common_address("PYJETS");
   fPydat1 = (Pydat1_t*) pythia6_common_address("PYDAT1");
   fPydat2 = (Pydat2_t*) pythia6_common_address("PYDAT2");
