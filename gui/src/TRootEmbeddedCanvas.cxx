@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.4 2001/04/04 13:38:38 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.5 2001/08/15 13:51:19 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -105,7 +105,7 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
    SetContainer(fCanvasContainer);
 
    if (name)
-      fCanvas = new TCanvas(name, 10, 10, fCWinId);
+      fCanvas = new TCanvas(name, w, h, fCWinId);
 }
 
 //______________________________________________________________________________
