@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.86 2004/08/02 13:17:56 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.87 2004/08/11 07:59:20 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1872,7 +1872,7 @@ Double_t TF1::IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Doub
 }
 
 //______________________________________________________________________________
-Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t eps, Double_t &relerr)
+Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Double_t eps, Double_t &relerr, Int_t maxpts)
 {
 //  Adaptive Quadrature for Multiple Integrals over N-Dimensional
 //  Rectangular Regions
@@ -1892,13 +1892,21 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
 // This function computes, to an attempted specified accuracy, the value of
 // the integral over an n-dimensional rectangular region.
 //
-// N Number of dimensions.
-// A,B One-dimensional arrays of length >= N . On entry A[i],  and  B[i],
-//     contain the lower and upper limits of integration, respectively.
-// EPS    Specified relative accuracy.
-// RELERR Contains, on exit, an estimation of the relative accuray of RESULT.
+// input parameters
+// ================
+// n :     Number of dimensions.
+// a,b :   One-dimensional arrays of length >= N . On entry A[i],  and  B[i],
+//         contain the lower and upper limits of integration, respectively.
+// eps   : Specified relative accuracy.
+// maxpts: Maximum number of function evaluations to be allowed.
+//         if maxpts<1000, maxpts is set to 1000 (default is 0)
+//
+// output parameter
+// ================
+// relerr : Contains, on exit, an estimation of the relative accuray of RESULT.
 //
 // Method:
+// =======
 //
 // An integration rule of degree seven is used together with a certain
 // strategy of subdivision.
@@ -1976,10 +1984,8 @@ Double_t TF1::IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Do
    Int_t isbrgn = irgnst;
    Int_t isbrgs = irgnst;
 
-// The original algorithm expected a parameter MAXPTS
-//   where MAXPTS = Maximum number of function evaluations to be allowed.
-//   Here we set MAXPTS to 1000*(the lowest possible value)
-   Int_t maxpts = 1000*irlcls;
+//   Here we set maxpts to 1000*(the lowest possible value) , if maxpts <1000
+   if (maxpts < 1000) maxpts = 1000*irlcls;
    Int_t minpts = 1;
 
 // The original agorithm expected a working space array WK of length IWK
