@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.11 2001/12/19 14:30:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.12 2002/01/16 11:00:19 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -311,7 +311,7 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 #   define isnan  __isnan
 #endif
 #if defined(R__AIX) || defined(R__MAC) || defined(R__SOLARIS_CC50) || \
-    defined(R__USESTHROW)
+    defined(R__HPUX11) || defined(R__USESTHROW)
 // math functions are defined inline so we have to include them here
 #   include <math.h>
 #   ifdef R__SOLARIS_CC50
@@ -392,7 +392,11 @@ inline Double_t TMath::Log10(Double_t x)
    { return log10(x); }
 
 inline Int_t TMath::Finite(Double_t x)
+#ifdef R__HPUX11
+   { return isfinite(x); }
+#else
    { return finite(x); }
+#endif
 
 inline Int_t TMath::IsNaN(Double_t x)
    { return isnan(x); }

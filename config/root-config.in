@@ -32,7 +32,7 @@ hpux)
    auxlibs="-lm -ldld"
    auxglibs=${auxlibs}
    ;;
-hpuxacc)
+hpuxacc | hpuxia64acc)
    # HP-UX 10.x with aCC
    auxcflags="+W823"
    auxlibs="-lm -ldld"
@@ -44,7 +44,7 @@ hpuxegcs)
    auxlibs="-lm -ldld"
    auxglibs=${auxlibs}
    ;;
-aix|aix5)
+aix | aix5)
    # IBM AIX
    auxcflags="-qnoro -qnoroconst -qmaxmem=-1"
    auxlibs=
@@ -147,7 +147,7 @@ alphacxx)
    auxlibs="-lm"
    auxglibs=${auxlibs}
    ;;
-linuxrh42|linuxrh51)
+linuxrh42 | linuxrh51)
    # Linux with gcc 2.7.2.x
    auxcflags=
    auxlibs="-lg++ -lm -ldl -rdynamic"
@@ -159,7 +159,7 @@ linux)
    auxlibs="-lm -ldl -lpthread -rdynamic"
    auxglibs=${auxlibs}
    ;;
-linuxdeb|linuxsuse6)
+linuxdeb | linuxsuse6)
    # Linux with egcs on Debian and SuSE
    auxcflags=
    auxlibs="-lm -ldl -rdynamic"

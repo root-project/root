@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.25 2001/10/04 16:48:06 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.26 2001/12/07 11:09:45 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -27,10 +27,18 @@
 /*---- machines --------------------------------------------------------------*/
 
 #ifdef __hpux
+#   ifdef __ia64
+#      define R__HPUX11    /* find a better test for HP-UX 11 */
+#   endif
 #   define R__HPUX
 #   define R__UNIX
 #   define ANSICPP
-#   define NEED_SNPRINTF
+#   ifdef __ia64
+#      define R__B64
+#   endif
+#   ifndef R__HPUX11
+#      define NEED_SNPRINTF
+#   endif
 #endif
 
 #ifdef _AIX
@@ -233,6 +241,7 @@
 #   define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
+#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   define ANSICPP
 #endif
 
@@ -246,6 +255,13 @@
 
 #ifdef R__ACC
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
+#   if __HP_aCC >= 53000
+#      define R__PLACEMENTDELETE /* supports overloading placement delete */
+#      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
+#      define R__THROWNEWDELETE  /* new/delete throw exceptions */
+#      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
+#      define R__TMPLTSTREAM     /* iostream implemented with templates */
+#   endif
 #endif
 
 #ifdef _WIN32

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.11 2001/06/30 13:09:14 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.12 2001/12/11 14:22:09 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -42,7 +42,11 @@
 #endif
 
 #if defined(R__ANSISTREAM)
-#include <iosfwd>
+#   if defined(R__TMPLTSTREAM)
+#      include <iostream>
+#   else
+#      include <iosfwd>
+#   endif
 using namespace std;
 #elif R__MWERKS
 template <class charT> class ios_traits;

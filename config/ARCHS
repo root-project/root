@@ -22,6 +22,7 @@ freebsd4             for FreeBSD 4.x
 hpux                 for HP-UX 10.20 CC
 hpuxacc              for HP-UX 10.20 aCC
 hpuxegcs             for HP-UX 10.20 egcs 1.1.x
+hpuxia64acc          for HP-UX 11i v1.5 (IA-64) aCC
 alphacxx6            for DEC Unix cxx6
 alphaegcs            for DEC Unix egcs 1.1.x
 alphakcc             for DEC Unix KCC

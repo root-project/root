@@ -45,6 +45,15 @@ LDFLAGS       = -O -z
 SOFLAGS       = -b
 endif
 
+ifeq ($(ARCH),hpuxia64acc)
+# HP-UX 11i 1.5 (IA-64) with aCC
+CXX           = aCC
+CXXFLAGS      = -O +Z
+LD            = aCC
+LDFLAGS       = -O -z
+SOFLAGS       = -b
+endif
+
 ifeq ($(ARCH),hpuxegcs)
 # HP-UX 10.x with g++
 CXXFLAGS      = -O -fPIC

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.12 2001/11/26 13:33:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.13 2001/12/07 21:55:14 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -43,9 +43,9 @@ Long_t TMath::Sqrt(Long_t x)
 }
 
 //______________________________________________________________________________
-Long_t TMath::Hypot(Long_t x, Long_t y)     // return sqrt(px*px + py*py);
+Long_t TMath::Hypot(Long_t x, Long_t y)
 {
-   return (Long_t) (hypot(x, y) + 0.5);
+   return (Long_t) (hypot((Double_t)x, (Double_t)y) + 0.5);
 }
 
 //______________________________________________________________________________
@@ -194,7 +194,7 @@ Double_t TMath::Erf(Double_t x)
 {
    // Computation of the error function erf(x).
    // Erf(x) = (2/sqrt(pi)) Integral(exp(-t^2))dt between 0 and x
-   
+
    //--- NvE 14-nov-1998 UU-SAP Utrecht
 
    return (1-Erfc(x));
@@ -241,7 +241,7 @@ Double_t TMath::Freq(Double_t x)
    // Freq(x) = (1/sqrt(2pi)) Integral(exp(-t^2/2))dt between -infinity and x
    //
    // translated from CERNLIB C300 by Rene Brun
-   
+
    const Double_t C1 = 0.56418958354775629;
    const Double_t W2 = 1.41421356237309505;
 
@@ -316,7 +316,7 @@ Double_t TMath::Freq(Double_t x)
    }
    if (x > 0) return 0.5 +0.5*h;
    else return 0.5*hc;
-}  
+}
 
 //______________________________________________________________________________
 Double_t TMath::Gamma(Double_t z)
