@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.10 2001/06/24 17:04:38 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.11 2001/06/27 08:12:27 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -234,7 +234,7 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    // systematic errors on top of a graph with statistical errors.
 
    const Int_t BASEMARKER=8;
-   Double_t s2x, s2y, symbolsize;
+   Double_t s2x, s2y, symbolsize, sbase;
    Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    static Float_t cxx[11] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6};
    static Float_t cyy[11] = {1,1,1,1,1,1,1,1,1,0.5,0.6};
@@ -262,6 +262,7 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    arrow.SetFillColor(GetFillColor());
 
    symbolsize  = GetMarkerSize();
+   sbase       = symbolsize*BASEMARKER*TMath::Max(gPad->GetWh(), gPad->GetWw())/600.;
    Int_t mark  = GetMarkerStyle();
    Double_t cx  = 0;
    Double_t cy  = 0;
@@ -271,8 +272,8 @@ void TGraphAsymmErrors::Paint(Option_t *option)
    }
 
 //*-*-      define the offset of the error bars due to the symbol size
-   s2x  = gPad->PixeltoX(Int_t(0.5*symbolsize*BASEMARKER)) - gPad->PixeltoX(0);
-   s2y  =-gPad->PixeltoY(Int_t(0.5*symbolsize*BASEMARKER)) + gPad->PixeltoY(0);
+   s2x  = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
+   s2y  =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
    tx   = 0.50*s2x;
    ty   = 0.50*s2y;
    Float_t asize = 0.6*symbolsize*BASEMARKER/gPad->GetWh();

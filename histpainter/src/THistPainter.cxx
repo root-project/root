@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.43 2001/07/17 09:07:43 rdm Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.44 2001/07/20 13:49:53 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2006,7 +2006,7 @@ void THistPainter::PaintErrors()
    const Int_t BASEMARKER=8;
    Double_t xp, yp, ex1, ex2, ey1, ey2;
    Double_t delta;
-   Double_t s2x, s2y, bxsize, bysize, symbolsize, xerror;
+   Double_t s2x, s2y, bxsize, bysize, symbolsize, xerror, sbase;
    Double_t xi1, xi2, xi3, xi4, yi1, yi2, yi3, yi4;
    Double_t xmin, xmax, ymin, ymax;
    Double_t logxmin = 0;
@@ -2034,7 +2034,7 @@ void THistPainter::PaintErrors()
    errormarker = fH->GetMarkerStyle();
    xerror      = gStyle->GetErrorX();
    symbolsize  = fH->GetMarkerSize();
-
+   sbase       = symbolsize*BASEMARKER*TMath::Max(gPad->GetWh(), gPad->GetWw())/600.;
 //*-*-      set the graphics attributes
 
    fH->TAttLine::Modify();
@@ -2071,8 +2071,8 @@ void THistPainter::PaintErrors()
 
 //*-*-      define the offset of the error bars due to the symbol size
 
-   s2x    = gPad->PixeltoX(Int_t(0.5*symbolsize*BASEMARKER)) - gPad->PixeltoX(0);
-   s2y    =-gPad->PixeltoY(Int_t(0.5*symbolsize*BASEMARKER)) + gPad->PixeltoY(0);
+   s2x    = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
+   s2y    =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
    bxsize = 0.5*s2x;
    bysize = 0.5*s2y;
 
