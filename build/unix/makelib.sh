@@ -68,8 +68,8 @@ elif [ $PLATFORM = "macosx" ]; then
    else
       opt=-O
    fi
-   echo $LD $opt -bundle -flat_namespace -undefined suppress -install_name $BUNDLE -o $BUNDLE -ldl $OBJS $EXTRA
-   $LD $opt -bundle -flat_namespace -undefined suppress -install_name $BUNDLE \
+   echo $LD $opt -bundle -flat_namespace -undefined suppress  $LIB -o $BUNDLE -ldl $OBJS $EXTRA
+   $LD $opt -bundle -flat_namespace -undefined suppress $LIB \
       -o $BUNDLE -ldl $OBJS $EXTRA
 elif [ $LD = "KCC" ]; then
    echo $LD $LDFLAGS -o $LIB $OBJS $EXTRA
