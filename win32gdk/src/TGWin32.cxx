@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.76 2004/06/14 18:52:15 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.77 2004/06/15 07:56:51 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -4386,6 +4386,11 @@ void TGWin32::MapWindow(Window_t id)
    // Map window on screen.
 
    gdk_window_show((GdkWindow *)id);
+
+   if (GetParent(id) == GetDefaultRootWindow()) {
+      HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
+      ::SetForegroundWindow(window);
+   }
 }
 
 //______________________________________________________________________________
@@ -4405,9 +4410,7 @@ void TGWin32::MapRaised(Window_t id)
 
    HWND hwnd = ::GetForegroundWindow();
    HWND window = (HWND)GDK_DRAWABLE_XID((GdkWindow *)id);
-   ::ShowWindow(window, SW_SHOWNORMAL);
-   ::ShowWindow(window, SW_RESTORE);
-   ::BringWindowToTop(window);
+   gdk_window_show((GdkWindow *)id);
    ::SetForegroundWindow(window);
 
    if (hwnd == gConsoleWindow) {
