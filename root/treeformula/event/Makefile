@@ -15,8 +15,14 @@ LOPT:=-g3
 #all: bigeventTest
 
 bigeventTest: ./Event ./libEvent.$(DllSuf)
-	./Event 10 1 1 1 > Event.write.log
-	./Event 10 1 1 20 > Event.read.log
+	$(CMDECHO)./Event 10 1 1 1 > Event.write.log
+	$(CMDECHO)./Event 10 1 1 20 > Event.read.log
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+	@echo This is due to the problem with loading libraries with stl containers after opening a file
+else
+	.$(CMDECHO)/DrawTest.sh
+endif
 
 Event : MainEvent.o Event.o EventDict.o
 	$(CMDECHO) $(CXX) $(OPT) $(OutPutOpt)Event MainEvent.o Event.o EventDict.o -L$(ROOTSYS)/lib \
@@ -28,6 +34,6 @@ libEvent.$(DllSuf) :  Event.o EventDict.o
 EventDict.cxx: Event.h EventLinkDef.h $(ROOTSYS)/bin/rootcint $(ROOTSYS)/lib/libCint.$(DllSuf)
 	$(CMDECHO) rootcint -f EventDict.cxx -c Event.h EventLinkDef.h
 
-local_clean = Event$(ExeSuf) libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log
+local_clean = Event$(ExeSuf) libEvent.$(DllSuf) *.o EventDict.cxx EventDict.h *~ *.log *.$(DllSuf) *.root
 
 
