@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.h,v 1.14 2004/02/22 11:31:17 brun Exp $
+// @(#)root/graf:$Name: v4-00-08-patches $:$Id: TGraphErrors.h,v 1.15 2004/05/06 09:40:30 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -31,7 +31,12 @@ protected:
     Double_t    *fEX;        //[fNpoints] array of X errors
     Double_t    *fEY;        //[fNpoints] array of Y errors
 
-    virtual void     SwapPoints(Int_t pos1, Int_t pos2);
+    virtual Double_t** Allocate(Double_t **newarrays, Int_t size);
+    virtual void       CopyAndRelease(Double_t **newarrays,
+                                Int_t ibegin, Int_t iend, Int_t obegin);
+    virtual Bool_t     CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
+                              Int_t obegin);
+    virtual void       SwapPoints(Int_t pos1, Int_t pos2);
 
 public:
         TGraphErrors();
@@ -43,6 +48,7 @@ public:
         TGraphErrors(const char *filename, const char *format="%lg %lg %lg %lg", Option_t *option="");
         virtual ~TGraphErrors();
         virtual void    Apply(TF1 *f);
+        static Int_t    CalculateScanfFields(const char *fmt);
         virtual void    ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
         Double_t        GetErrorX(Int_t bin) const;
         Double_t        GetErrorY(Int_t bin) const;
@@ -51,8 +57,6 @@ public:
         virtual Int_t   InsertPoint(); // *MENU*
         virtual void    Paint(Option_t *chopt="");
         virtual void    Print(Option_t *chopt="") const;
-        virtual Int_t   RemovePoint(); // *MENU*
-        virtual Int_t   RemovePoint(Int_t ipoint);
         virtual void    SavePrimitive(ofstream &out, Option_t *option);
         virtual void    Set(Int_t n);
         virtual void    SetPoint(Int_t i, Double_t x, Double_t y);

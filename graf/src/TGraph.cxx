@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.136 2004/09/02 13:57:37 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.137 2004/09/06 06:54:55 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -466,8 +466,10 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *)
    char line[80];
    Int_t np = 0;
    while (fgets(line,80,fp)) {
-      sscanf(&line[0],format,&x, &y);
-      if (np >= fNpoints) Set(2*fNpoints);
+      if( 2 != sscanf(&line[0],format,&x, &y)) {
+         // skip empty and ill-formed lines 
+         continue;
+      }
       SetPoint(np,x,y);
       np++;
    }
@@ -500,6 +502,27 @@ TGraph::~TGraph()
    fFunctions = 0;
    delete fHistogram;
    fHistogram = 0;
+}
+
+//______________________________________________________________________________
+Double_t** TGraph::Allocate(Double_t **newarrays, Int_t size)
+{
+// allocate new arrays of size n.
+// For zero newarrays allocate newarrays[2],
+// assign pointers to newarrays[0] for x and newarrays[1] for y.
+// Return newarrays (argument or allocated one)
+   if (size < 0) { size = 0; }
+   if (!newarrays) {
+      newarrays = new Double_t*[2];
+   }
+   if (!size) {
+      newarrays[0] = newarrays[1] = 0;
+   } else {
+      newarrays[0] = new Double_t[size];
+      newarrays[1] = new Double_t[size];
+   }
+   fMaxSize = size;
+   return newarrays;
 }
 
 //______________________________________________________________________________
@@ -551,6 +574,48 @@ Bool_t TGraph::CompareRadius(const TGraph* gr, Int_t left, Int_t right) {
 void TGraph::ComputeRange(Double_t &, Double_t &, Double_t &, Double_t &) const
 {
 // this function is dummy in TGraph, but redefined by TGraphErrors
+}
+
+//______________________________________________________________________________
+void TGraph::CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend,
+                           Int_t obegin)
+{
+// Copy points from fX and fY to arrays[0] and arrays[1]
+// or to fX and fY if arrays == 0 and ibegin != iend.
+// If newarrays is non null, replace fX, fY with pointers from newarrays[0,1].
+// Delete newarrays, old fX and fY
+   CopyPoints(newarrays, ibegin, iend, obegin);
+   if (newarrays) {
+      delete[] fX;
+      fX = newarrays[0];
+      delete[] fY;
+      fY = newarrays[1];
+      delete[] newarrays;
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGraph::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
+                        Int_t obegin)
+{
+// Copy points from fX and fY to arrays[0] and arrays[1]
+// or to fX and fY if arrays == 0 and ibegin != iend.
+   if (ibegin < 0 || iend <= ibegin || obegin < 0) { // Error;
+      return kFALSE;
+   }
+   if (!arrays && ibegin == obegin) { // No copying is needed
+      return kFALSE;
+   }
+   if (arrays) {
+      memmove(&arrays[0][obegin], &fX[ibegin],
+              (iend - ibegin)*sizeof(Double_t));
+      memmove(&arrays[1][obegin], &fY[ibegin], 
+              (iend - ibegin)*sizeof(Double_t));
+   } else {
+      memmove(&fX[obegin], &fX[ibegin], (iend - ibegin)*sizeof(Double_t));
+      memmove(&fY[obegin], &fY[ibegin], (iend - ibegin)*sizeof(Double_t));
+   }
+   return kTRUE;
 }
 
 //______________________________________________________________________________
@@ -951,6 +1016,39 @@ void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 }
 
+//______________________________________________________________________________
+void TGraph::Expand(Int_t newsize)
+{
+// if array sizes <= newsize, expand storage to 2*newsize.
+  Double_t **ps = ExpandAndCopy(0, newsize, fNpoints);
+  CopyAndRelease(ps, 0, 0, 0);
+}
+
+//______________________________________________________________________________
+void TGraph::Expand(Int_t newsize, Int_t step)
+{
+// If graph capacity is less than newsize points then make array sizes
+// equal to least multiple of step to contain newsize points.
+// Returns kTRUE if size was altered
+   if (newsize <= fMaxSize) {
+      return;
+   }
+   Double_t **ps = Allocate(0, (newsize/step + (newsize%step?1:0))*step);
+   CopyAndRelease(ps, 0, fNpoints, 0);
+} 
+
+//______________________________________________________________________________
+Double_t **TGraph::ExpandAndCopy(Double_t **newarrays, Int_t size, Int_t iend)
+{
+// if size > fMaxSize allocate new arrays of 2*size points
+//  and copy oend first points.
+// Return pointer to new arrays.
+   if (size <= fMaxSize) { return newarrays; }
+   newarrays = Allocate(newarrays, 2*size);
+   CopyPoints(newarrays, 0, iend, 0);
+   return newarrays;
+}
+   
 //______________________________________________________________________________
 TObject *TGraph::FindObject(const char *name) const
 {
@@ -1673,24 +1771,10 @@ Int_t TGraph::InsertPoint()
       if (dpx*dpx+dpy*dpy < 25) ipoint = 0;
       else                      ipoint = fNpoints;
    }
-   fNpoints++;
-   fMaxSize   = fNpoints;
-   Double_t *newX = new Double_t[fNpoints];
-   Double_t *newY = new Double_t[fNpoints];
-   for (i=0;i<ipoint;i++) {
-      newX[i] = fX[i];
-      newY[i] = fY[i];
-   }
-   newX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(px));
-   newY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(py));
-   for (i=ipoint+1;i<fNpoints;i++) {
-      newX[i] = fX[i-1];
-      newY[i] = fY[i-1];
-   }
-   delete [] fX;
-   delete [] fY;
-   fX = newX;
-   fY = newY;
+   Double_t **ps = ExpandAndCopy(0, fNpoints + 1, ipoint);
+   CopyAndRelease(ps, ipoint, fNpoints++, ipoint + 1);
+   fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   fY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(py));
    gPad->Modified();
    return ipoint;
 }
@@ -3291,24 +3375,7 @@ Int_t TGraph::RemovePoint()
       Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
       if (dpx*dpx+dpy*dpy < 25) {ipoint = i; break;}
    }
-   if (ipoint == -2) return -1;
-   fNpoints--;
-   fMaxSize   = fNpoints;
-   Double_t *newX = new Double_t[fNpoints];
-   Double_t *newY = new Double_t[fNpoints];
-   Int_t j = -1;
-   for (i=0;i<fNpoints+1;i++) {
-      if (i == ipoint) continue;
-      j++;
-      newX[j] = fX[i];
-      newY[j] = fY[i];
-   }
-   delete [] fX;
-   delete [] fY;
-   fX = newX;
-   fY = newY;
-   gPad->Modified();
-   return ipoint;
+   return RemovePoint(ipoint);
 }
 
 //______________________________________________________________________________
@@ -3319,21 +3386,8 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
    if (ipoint < 0) return -1;
    if (ipoint >= fNpoints) return -1;
 
-   fNpoints--;
-   fMaxSize   = fNpoints;
-   Double_t *newX = new Double_t[fNpoints];
-   Double_t *newY = new Double_t[fNpoints];
-   Int_t j = -1;
-   for (Int_t i=0;i<fNpoints+1;i++) {
-      if (i == ipoint) continue;
-      j++;
-      newX[j] = fX[i];
-      newY[j] = fY[i];
-   }
-   delete [] fX;
-   delete [] fY;
-   fX = newX;
-   fY = newY;
+   Double_t **ps = ShrinkAndCopy(0, fNpoints - 1, ipoint);
+   CopyAndRelease(ps, ipoint+1, fNpoints--, ipoint);
    if (gPad) gPad->Modified();
    return ipoint;
 }
@@ -3402,26 +3456,13 @@ void TGraph::Set(Int_t n)
 
    if (n < 0) n = 0;
    if (n == fNpoints) return;
-   Double_t *xx=0, *yy=0;
-   if (n > 0) {
-      xx = new Double_t[n];
-      yy = new Double_t[n];
+   Double_t **ps = Allocate(0, n);
+   CopyAndRelease(ps, 0, TMath::Min(fNpoints,n), 0);
+   if (n > fNpoints) {
+      memset(&fX[fNpoints], 0, (n - fNpoints)*sizeof(Double_t));
+      memset(&fY[fNpoints], 0, (n - fNpoints)*sizeof(Double_t));
    }
-   Int_t i;
-   for (i=0; i<fNpoints && i<n;i++) {
-      if (fX) xx[i] = fX[i];
-      if (fY) yy[i] = fY[i];
-   }
-   for (i=fNpoints; i<n;i++) {
-      xx[i] = 0;
-      yy[i] = 0;
-   }
-   delete [] fX;
-   delete [] fY;
    fNpoints = n;
-   fMaxSize = n;
-   fX = xx;
-   fY = yy;
 }
 
 //______________________________________________________________________________
@@ -3464,22 +3505,15 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
 
    if (i < 0) return;
    if (i >= fMaxSize) {
-   // re-allocate the object
-      fMaxSize = 2*i;
-      Double_t *savex = new Double_t[fMaxSize];
-      Double_t *savey = new Double_t[fMaxSize];
-      if (fNpoints > 0) {
-         memcpy(savex,fX,fNpoints*sizeof(Double_t));
-         memcpy(savey,fY,fNpoints*sizeof(Double_t));
-      }
-      memset(&savex[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
-      memset(&savey[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
-      if (fX) delete [] fX;
-      if (fY) delete [] fY;
-      fX = savex;
-      fY = savey;
+      Double_t **ps = ExpandAndCopy(0, i+1, fNpoints);
+      CopyAndRelease(ps, 0,0,0);
    }
-   if (i >= fNpoints) fNpoints = i+1;
+   if (i >= fNpoints) {
+      // points above i can be not initialized
+      memset(&fX[fNpoints],0,(i-fNpoints)*sizeof(Double_t));
+      memset(&fY[fNpoints],0,(i-fNpoints)*sizeof(Double_t));
+      fNpoints = i+1;
+   }
    fX[i] = x;
    fY[i] = y;
    if (fHistogram) {
@@ -3493,6 +3527,22 @@ void TGraph::SetTitle(const char* title)
 {
   fTitle = title;
   if (fHistogram) fHistogram->SetTitle(title);
+}
+
+//______________________________________________________________________________
+Double_t **TGraph::ShrinkAndCopy(Double_t **newarrays, Int_t size,
+                                 Int_t oend)
+{
+// if size*2 <= fMaxSize allocate new arrays of size points,
+// copy points [0,oend).
+// Return newarray (passed or new instance if it was zero
+// and allocations are needed)
+   if (size*2 > fMaxSize || !fMaxSize) {
+      return 0;
+   }
+   newarrays = Allocate(newarrays, size);
+   CopyPoints(newarrays, 0, oend, 0);
+   return newarrays;
 }
 
 //______________________________________________________________________________

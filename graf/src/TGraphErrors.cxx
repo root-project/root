@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.38 2004/08/23 09:28:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.39 2004/09/02 14:22:20 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -198,21 +198,23 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *)
       return;
    }
    // count number of columns in format
-   Int_t ncol = 0;
-   char *s = (char*)format;
-   while((s=(char*)strstr(s,"%"))) {ncol++; s++;}
+   Int_t ncol = CalculateScanfFields(format);
    char line[80];
    Int_t np = 0;
    
    while (fgets(line,80,fp)) {
+      ex=ey=0;
+      Int_t res;
       if (ncol < 3) {
-         ex=ey=0;
-         sscanf(&line[0],format,&x, &y);
+         res = sscanf(&line[0],format,&x, &y);
       } else if(ncol <4) {
-         ex=0;
-         sscanf(&line[0],format,&x, &y, &ey);
+         res = sscanf(&line[0],format,&x, &y, &ey);
       } else {
-         sscanf(&line[0],format,&x, &y, &ex, &ey);
+         res = sscanf(&line[0],format,&x, &y, &ex, &ey);
+      }
+      if (res < 2) {
+         // not a data line
+         continue;
       }
       if (np >= fNpoints) Set(2*fNpoints);
       SetPoint(np,x,y);
@@ -232,6 +234,28 @@ TGraphErrors::~TGraphErrors()
 
    delete [] fEX;
    delete [] fEY;
+}
+
+//______________________________________________________________________________
+Double_t** TGraphErrors::Allocate(Double_t **newarrays, Int_t size)
+{
+// allocate new arrays of size n.
+// For zero newarrays allocate newarrays[4],
+// assign pointers to newarrays[0] for ex and newarrays[1] for ey,
+// newarrays[2] for x and newarrays[3] for y
+// Return newarrays (argument or allocated one)
+   if (size < 0) { size = 0; }
+   if (!newarrays) {
+      newarrays = new Double_t*[4];
+   }
+   if (!size) {
+      newarrays[0] = newarrays[1] = 0;
+   } else {
+      newarrays[0] = new Double_t[size];
+      newarrays[1] = new Double_t[size];
+   }
+   TGraph::Allocate(newarrays + 2, size);
+   return newarrays;
 }
 
 //______________________________________________________________________________
@@ -262,6 +286,34 @@ void TGraphErrors::Apply(TF1 *f)
 }
 
 //______________________________________________________________________________
+Int_t TGraphErrors::CalculateScanfFields(const char *fmt)
+{
+   Int_t fields = 0;
+   while ((fmt = strchr(fmt, '%'))) {
+      Bool_t skip = kFALSE;
+      while (*(++fmt)) {
+         if ('[' == *fmt) {
+            if (*++fmt && '^' == *fmt) ++fmt; // "%[^]a]" 
+            if (*++fmt && ']' == *fmt) ++fmt; // "%[]a]" or "%[^]a]"
+            while (*fmt && *fmt != ']')
+               ++fmt;
+            if (!skip) ++fields;
+            break;
+         }
+         if ('%' == *fmt) break; // %% literal %
+         if ('*' == *fmt) {
+            skip = kTRUE; // %*d -- skip a number
+         } else if (strchr("dDiouxXxfegEscpn", *fmt)) {
+            if (!skip) ++fields;
+            break;
+         }
+         // skip modifiers & field width 
+      }
+   }
+   return fields;
+}
+
+//______________________________________________________________________________
 void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const
 {
   for (Int_t i=0;i<fNpoints;i++) {
@@ -285,6 +337,52 @@ void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, 
      if (fY[i] +fEY[i] > ymax) ymax = fY[i]+fEY[i];
   }
 }
+
+//______________________________________________________________________________
+void TGraphErrors::CopyAndRelease(Double_t **newarrays,
+                                  Int_t ibegin, Int_t iend, Int_t obegin)
+{
+// Copy points from fX and fY to arrays[3] and arrays[1],
+// errors from arrays[0] and arrays[1];
+// or to fX and fY if arrays == 0 and ibegin != iend.
+// If newarrays is non null, replace fX, fY with pointers from newarrays[0,1].
+// Delete newarrays, old fX and fY
+   CopyPoints(newarrays, ibegin, iend, obegin);
+   if (newarrays) {
+      delete[] fX;
+      fX = newarrays[2];
+      delete[] fY;
+      fY = newarrays[3];
+      delete[] fEX;
+      fEX = newarrays[0];
+      delete[] fEY;
+      fEY = newarrays[1];
+      delete[] newarrays;
+   }
+}
+
+//______________________________________________________________________________
+Bool_t TGraphErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
+                                Int_t obegin)
+{
+// Copy errors from fEX and fEY to arrays[0] and arrays[1]
+// or to fX and fY. Copy points.
+   if (TGraph::CopyPoints(arrays ? arrays+2 : 0, ibegin, iend, obegin)) {
+      if (arrays) {
+         memmove(&arrays[0][obegin], &fEX[ibegin],
+                 (iend - ibegin)*sizeof(Double_t));
+         memmove(&arrays[1][obegin], &fEY[ibegin], 
+                 (iend - ibegin)*sizeof(Double_t));
+      } else {
+         memmove(&fEX[obegin], &fEX[ibegin], (iend - ibegin)*sizeof(Double_t));
+         memmove(&fEY[obegin], &fEY[ibegin], (iend - ibegin)*sizeof(Double_t));
+      }
+      return kTRUE;
+   } else {
+      return kFALSE;
+   }
+}
+
 
 //______________________________________________________________________________
 Double_t TGraphErrors::GetErrorX(Int_t i) const
@@ -314,24 +412,10 @@ Int_t TGraphErrors::InsertPoint()
 // Insert a new point at the mouse position
 
    Int_t ipoint = TGraph::InsertPoint();
-
-   Double_t *newEX = new Double_t[fNpoints];
-   Double_t *newEY = new Double_t[fNpoints];
-   Int_t i;
-   for (i=0;i<ipoint;i++) {
-      newEX[i] = fEX[i];
-      newEY[i] = fEY[i];
+   if (ipoint >= 0) {
+      fEX[ipoint] = 0;
+      fEY[ipoint] = 0;
    }
-   newEX[ipoint] = 0;
-   newEY[ipoint] = 0;
-   for (i=ipoint+1;i<fNpoints;i++) {
-      newEX[i] = fEX[i-1];
-      newEY[i] = fEY[i-1];
-   }
-   delete [] fEX;
-   delete [] fEY;
-   fEX = newEX;
-   fEY = newEY;
    return ipoint;
 }
 
@@ -546,54 +630,6 @@ void TGraphErrors::Print(Option_t *) const
 }
 
 //______________________________________________________________________________
-Int_t TGraphErrors::RemovePoint()
-{
-// Delete point close to the mouse position
-
-   Int_t ipoint = TGraph::RemovePoint();
-   if (ipoint < 0) return ipoint;
-
-   Double_t *newEX = new Double_t[fNpoints];
-   Double_t *newEY = new Double_t[fNpoints];
-   Int_t i, j = -1;
-   for (i=0;i<fNpoints+1;i++) {
-      if (i == ipoint) continue;
-      j++;
-      newEX[j] = fEX[i];
-      newEY[j] = fEY[i];
-   }
-   delete [] fEX;
-   delete [] fEY;
-   fEX = newEX;
-   fEY = newEY;
-   return ipoint;
-}
-
-//______________________________________________________________________________
-Int_t TGraphErrors::RemovePoint(Int_t ipnt)
-{
-// Delete point number ipnt
-
-   Int_t ipoint = TGraph::RemovePoint(ipnt);
-   if (ipoint < 0) return ipoint;
-
-   Double_t *newEX = new Double_t[fNpoints];
-   Double_t *newEY = new Double_t[fNpoints];
-   Int_t i, j = -1;
-   for (i=0;i<fNpoints+1;i++) {
-      if (i == ipoint) continue;
-      j++;
-      newEX[j] = fEX[i];
-      newEY[j] = fEY[i];
-   }
-   delete [] fEX;
-   delete [] fEY;
-   fEX = newEX;
-   fEY = newEY;
-   return ipoint;
-}
-
-//______________________________________________________________________________
 void TGraphErrors::SavePrimitive(ofstream &out, Option_t *option)
 {
     // Save primitive as a C++ statement(s) on output stream out
@@ -655,39 +691,12 @@ void TGraphErrors::Set(Int_t n)
 // Existing coordinates are preserved
 // New coordinates and errors above fNpoints are preset to 0.
 
-   if (n < 0) n = 0;
-   if (n == fNpoints) return;
-   Double_t *x=0, *y=0, *ex=0, *ey=0;
-   if (n > 0) {
-      x  = new Double_t[n];
-      y  = new Double_t[n];
-      ex = new Double_t[n];
-      ey = new Double_t[n];
+   Int_t saveNpoints = fNpoints;
+   TGraph::Set(n);
+   if (fNpoints > saveNpoints) {
+      memset(&fEX[saveNpoints], 0, (fNpoints - saveNpoints)*sizeof(Double_t));
+      memset(&fEY[saveNpoints], 0, (fNpoints - saveNpoints)*sizeof(Double_t));
    }
-   Int_t i;
-   for (i=0; i<fNpoints && i<n;i++) {
-      if (fX)   x[i] = fX[i];
-      if (fY)   y[i] = fY[i];
-      if (fEX) ex[i] = fEX[i];
-      if (fEY) ey[i] = fEY[i];
-   }
-   for (i=fNpoints; i<n;i++) {
-      x[i]  = 0;
-      y[i]  = 0;
-      ex[i] = 0;
-      ey[i] = 0;
-   }
-   delete [] fX;
-   delete [] fY;
-   delete [] fEX;
-   delete [] fEY;
-   fNpoints = n;
-   fMaxSize = n;
-   
-   fX  = x;
-   fY  = y;
-   fEX = ex;
-   fEY = ey;
 }
 
 //______________________________________________________________________________
@@ -695,40 +704,11 @@ void TGraphErrors::SetPoint(Int_t i, Double_t x, Double_t y)
 {
 //*-*-*-*-*-*-*-*-*-*-*Set x and y values for point number i*-*-*-*-*-*-*-*-*
 //*-*                  =====================================
-
-   if (i < 0) return;
-   if (i >= fMaxSize) {
-   // re-allocate the object
-      fMaxSize = 2*i;
-      Double_t *savex  = new Double_t[fMaxSize];
-      Double_t *savey  = new Double_t[fMaxSize];
-      Double_t *saveex = new Double_t[fMaxSize];
-      Double_t *saveey = new Double_t[fMaxSize];
-      if (fNpoints > 0) {
-         memcpy(savex, fX, fNpoints*sizeof(Double_t));
-         memcpy(savey, fY, fNpoints*sizeof(Double_t));
-         memcpy(saveex,fEX,fNpoints*sizeof(Double_t));
-         memcpy(saveey,fEY,fNpoints*sizeof(Double_t));
-      }
-      memset(&savex[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
-      memset(&savey[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
-      memset(&saveex[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
-      memset(&saveey[fNpoints],0,(fMaxSize-fNpoints)*sizeof(Double_t));
-      if (fX)  delete [] fX;
-      if (fY)  delete [] fY;
-      if (fEX) delete [] fEX;
-      if (fEY) delete [] fEY;
-      fX  = savex;
-      fY  = savey;
-      fEX = saveex;
-      fEY = saveey;
-   }
-   if (i >= fNpoints) fNpoints = i+1;
-   fX[i] = x;
-   fY[i] = y;
-   if (fHistogram) {
-      delete fHistogram;
-      fHistogram = 0;
+   Int_t saveNpoints = fNpoints;
+   TGraph::SetPoint(i, x, y);
+   if (fNpoints > saveNpoints) {
+      memset(fEX + fNpoints, 0, (fNpoints - saveNpoints + 1)*sizeof(Double_t));
+      memset(fEY + fNpoints, 0, (fNpoints - saveNpoints + 1)*sizeof(Double_t));
    }
 }
 
