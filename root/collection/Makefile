@@ -63,5 +63,7 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 
-TExMap: TExMap.log
+TExMap.clog: runTExMap_C.$(DllSuf)
+
+TExMap: TExMap.clog
 	$(TestDiff)

@@ -6,6 +6,95 @@
 #endif
 
 
+
+Bool_t TestUpdate()
+{
+   return kTRUE;
+}
+
+
+
+typedef ULong_t (*hashfun_t)(Long_t);
+
+ULong_t hash_min(Long_t /* k */ ) { return 0; }
+ULong_t hash_max(Long_t /* k */ ) { return ~0; }
+ULong_t hash_identity(Long_t k) { return k; }
+ULong_t hash_div4(Long_t k) { return k / 4; }
+
+
+Bool_t TestRange(hashfun_t hfunc)
+{
+   TExMap *m = new TExMap;
+
+   for( int i=0; i < 1000; i++ ) {
+      m->Add(hfunc(i), i, i);
+
+      if (m->GetSize() != i+1) {
+         cout << "TestRange: Insert: GetSize() != " << i+1 << endl;
+         delete m;
+         return kFALSE;
+      }
+   }
+
+   for( int i=0; i < 1000; i++ ) {
+      Long_t v = m->GetValue(hfunc(i), i);
+      if (v != i) {
+         cout << "TestRange: GetValue: key " << i << " val " << v << endl;
+         delete m;
+         return kFALSE;
+      }
+   }
+
+   for( int i=0; i < 1000; i++ ) {
+      m->Remove(hfunc(i), i);
+
+      if (m->GetSize() != (1000-1-i)) {
+         cout << "TestRange: Remove(" << i << "): GetSize() != " << 1000-1-i << endl;
+         delete m;
+         return kFALSE;
+      }
+   }
+
+   return kTRUE;
+}
+
+
+Bool_t TestDoubleAdd(hashfun_t hfunc, Long_t k)
+{
+   TExMap *m = new TExMap;
+
+   m->Add(hfunc(k), k, k);
+
+   cout << "(Expect Error) " << flush;
+
+   m->Add(hfunc(k), k, k);
+
+   if (m->GetSize() != 1) {
+      cout << "TestDoubleAdd: GetSize() != 1" << endl;
+      delete m;
+      return kFALSE;
+   }
+
+   Long_t v = m->GetValue(hfunc(k), k);
+   if (v != k) {
+      cout << "TestDoubleAdd: GetValue: key " << k << " val " << v << endl;
+      delete m;
+      return kFALSE;
+   }
+
+   m->Remove(hfunc(k), k);
+
+   if (m->GetSize() != 0) {
+      cout << "TestDoubleAdd: GetSize() != 0" << endl;
+      delete m;
+      return kFALSE;
+   }
+
+   delete m;
+   return kTRUE;
+}
+
+
 Bool_t TestOne(ULong_t h, Long_t k, Long_t v)
 {
    cout << "TestOne: " << h << ", " << k << ", "<< v << endl << endl;
@@ -100,6 +189,35 @@ void runTExMap()
             if ( !TestOne(ulv[i], lv[j], lv[k]) ) return;
          }
       }
+   }
+
+   cout << endl << "TestRange(hash_identity)" << endl << endl;
+   if ( !TestRange(hash_identity) ) return;
+
+   cout << endl << "TestRange(hash_min)" << endl << endl;
+   if ( !TestRange(hash_min) ) return;
+
+   cout << endl << "TestRange(hash_max)" << endl << endl;
+   if ( !TestRange(hash_max) ) return;
+
+   cout << endl << "TestRange(hash_div4)" << endl << endl;
+   if ( !TestRange(hash_div4) ) return;
+
+
+   int i;
+   for(i=0; i < kNLv; i++) {
+
+      cout << endl << "TestDoubleAdd(hash_identity, " << lv[i]<< ")" << endl << endl;
+      if ( !TestDoubleAdd(hash_identity, lv[i]) ) return;
+
+      cout << endl << "TestDoubleAdd(hash_min, " << lv[i]<< ")" << endl << endl;
+      if ( !TestDoubleAdd(hash_min, lv[i]) ) return;
+
+      cout << endl << "TestDoubleAdd(hash_max, " << lv[i]<< ")" << endl << endl;
+      if ( !TestDoubleAdd(hash_max, lv[i]) ) return;
+
+      cout << endl << "TestDoubleAdd(hash_div4, " << lv[i]<< ")" << endl << endl;
+      if ( !TestDoubleAdd(hash_div4, lv[i]) ) return;
    }
 
    cout << endl << "TExMap Basic Tests End" << endl << endl;
