@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.8 2000/06/14 09:06:44 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.9 2000/06/14 09:23:45 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -99,7 +99,7 @@ TTreeFormula::TTreeFormula(const char *name,const char *expression, TTree *tree)
       if (fIndex[i] == -1 ) fIndex[i] = 0;
 
       // Add up the cumulative size
-      for (k = fNdimensions[i]; (k > 0) && (fCumulSize[k-1]>=0); k--) {
+      for (k = fNdimensions[i]; (k > 0) && (fCumulSize[i][k-1]>=0); k--) {
          if ( (fCumulSize[i][k-1]>=0) && (fIndexes[i][k-1] >= fCumulSize[i][k-1]) ) {
             // unreacheable element requested:
             fCumulUsedSize[k-1] = 0;
