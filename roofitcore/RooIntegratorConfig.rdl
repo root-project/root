@@ -1,0 +1,76 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitCore
+ *    File: $Id$
+ * Authors:
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ *   DK, David Kirkby, UC Irvine, davidk@slac.stanford.edu
+ * History:
+ *   18-Mar-2002 WV Created initial version
+ *
+ * Copyright (C) 2002 University of California
+ *****************************************************************************/
+#ifndef ROO_INTEGRATOR_CONFIG
+#define ROO_INTEGRATOR_CONFIG
+
+#include "TObject.h"
+#include "RooFitCore/RooIntegrator1D.hh"
+#include "RooFitCore/RooMCIntegrator.hh"
+
+class RooIntegratorConfig : public TObject {
+public:
+
+  RooIntegratorConfig();
+  RooIntegratorConfig(const RooIntegratorConfig& other) ;
+  virtual ~RooIntegratorConfig();
+
+  // 1D accessors
+  RooIntegrator1D::SummationRule summationRule1D() const { return _rule ; }
+  Int_t maxSteps1D() const { return _maxSteps ; }
+  Double_t epsilon1D() const { return _eps ; }
+  
+  // MC accessors
+  RooMCIntegrator::SamplingMode samplingModeMC() const { return _mode ; }
+  RooMCIntegrator::GeneratorType generatorTypeMC() const { return _genType ; }
+  Bool_t verboseMC() const { return _verboseMC ; }
+  Double_t alphaMC() const { return _alpha ; }
+  Int_t nRefineIterMC() const { return _nRefineIter ; }
+  Int_t nRefinePerDimMC() const { return _nRefinePerDim ; }
+  Int_t nIntegratePerDimMC() const { return _nIntegratePerDim ; }
+
+  // 1D modifiers
+  void setSummationRule1D(RooIntegrator1D::SummationRule rule) { _rule = rule ; }
+  void setMaxSteps1D(Int_t maxSteps) { _maxSteps = maxSteps ; }
+  void setEpsilon1D(Double_t eps) { _eps = eps ; }
+
+  // MC modifiers
+  void setSamplingModeMC(RooMCIntegrator::SamplingMode mode) { _mode = mode ; }
+  void setGeneratorTypeMC(RooMCIntegrator::GeneratorType genType) { _genType = genType ; }
+  void setVerboseMC(Bool_t flag) { _verboseMC = flag ; }
+  void setAlphaMC(Double_t alpha) { _alpha = alpha ; }
+  void setNRefineIterMC(Int_t n) { _nRefineIter = n ; }
+  void setNRefinePerDimMC(Int_t n) { _nRefinePerDim = n ; }
+  void setNIntegratePerDimMC(Int_t n) { _nIntegratePerDim = n ; }
+  
+protected:
+
+  // 1D integrator
+  RooIntegrator1D::SummationRule _rule ;
+  Int_t _maxSteps ;
+  Double_t _eps ;
+
+  // MC Integrator
+  RooMCIntegrator::SamplingMode _mode ;
+  RooMCIntegrator::GeneratorType _genType ;
+  Bool_t _verboseMC ;
+  Double_t _alpha ;
+  Int_t _nRefineIter ;
+  Int_t _nRefinePerDim ;
+  Int_t _nIntegratePerDim ;
+  
+  ClassDef(RooIntegratorConfig,1) // Integrator configuration data
+};
+
+#endif
+
+
