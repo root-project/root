@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.22 2001/05/10 14:31:48 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.23 2001/05/31 13:45:58 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -166,7 +166,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    // which is placed in a TGFrame. This ctor is only called via the
    // TRootEmbeddedCanvas class.
 
-   fCanvas       = 0;
+   fSelected     = 0;
    fCanvasID     = winid;
    fWindowTopX   = 0;
    fWindowTopY   = 0;
@@ -224,6 +224,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    if (!gApplication)
       TApplication::CreateApplication();
 
+   fSelected     = 0;
    fMenuBar = kTRUE;
    if (form < 0) {
       form     = -form;
@@ -294,6 +295,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    if (!gApplication)
       TApplication::CreateApplication();
 
+   fSelected     = 0;
    fMenuBar = kTRUE;
    if (ww < 0) {
       ww       = -ww;
@@ -358,6 +360,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
    if (!gApplication)
       TApplication::CreateApplication();
 
+   fSelected     = 0;
    fMenuBar = kTRUE;
    if (wtopx < 0) {
       wtopx    = -wtopx;
@@ -414,30 +417,6 @@ void TCanvas::Build()
 #endif
 
    fContextMenu = 0;
-   if (!IsBatch()) {    //normal mode with a screen window
-      // Set default physical canvas attributes
-      gVirtualX->SelectWindow(fCanvasID);
-      gVirtualX->SetFillColor(1);         //Set color index for fill area
-      gVirtualX->SetLineColor(1);         //Set color index for lines
-      gVirtualX->SetMarkerColor(1);       //Set color index for markers
-      gVirtualX->SetTextColor(1);         //Set color index for text
-
-      // Clear workstation
-      gVirtualX->ClearWindow();
-
-      // Set Double Buffer on by default
-      SetDoubleBuffer(1);
-
-      // Get effective window parameters (with borders and menubar)
-      fCanvasImp->GetWindowGeometry(fWindowTopX, fWindowTopY,
-                                    fWindowWidth, fWindowHeight);
-
-      // Get effective canvas parameters without borders
-      Int_t dum1, dum2;
-      gVirtualX->GetGeometry(fCanvasID, dum1, dum2, fCw, fCh);
-
-      fContextMenu = new TContextMenu( "ContextMenu" );
-   }
    // Fill canvas ROOT data structure
    fXsizeUser = 0;
    fYsizeUser = 0;
@@ -465,6 +444,30 @@ void TCanvas::Build()
    fEvent           = -1;
    fEventX          = -1;
    fEventY          = -1;
+   if (!IsBatch()) {    //normal mode with a screen window
+      // Set default physical canvas attributes
+      gVirtualX->SelectWindow(fCanvasID);
+      gVirtualX->SetFillColor(1);         //Set color index for fill area
+      gVirtualX->SetLineColor(1);         //Set color index for lines
+      gVirtualX->SetMarkerColor(1);       //Set color index for markers
+      gVirtualX->SetTextColor(1);         //Set color index for text
+
+      // Clear workstation
+      gVirtualX->ClearWindow();
+
+      // Set Double Buffer on by default
+      SetDoubleBuffer(1);
+
+      // Get effective window parameters (with borders and menubar)
+      fCanvasImp->GetWindowGeometry(fWindowTopX, fWindowTopY,
+                                    fWindowWidth, fWindowHeight);
+
+      // Get effective canvas parameters without borders
+      Int_t dum1, dum2;
+      gVirtualX->GetGeometry(fCanvasID, dum1, dum2, fCw, fCh);
+
+      fContextMenu = new TContextMenu( "ContextMenu" );
+   }
    gROOT->GetListOfCanvases()->Add(this);
 
    // Set Pad parameters
