@@ -1660,27 +1660,41 @@ fi
 #
 ### echo %%% Check for xrootd support
 #
+message "Checking whether to build xrootd"
 case $arch in
 # The server builds on Linux, Solaris and MacOS X only
 # (for the time being)
-# linux* | solaris* | macos*)
-linux* | solaris*)
-# linux*)
+linux*)
     if test "x$enable_xrootd" = "x"; then
         enable_xrootd="yes"
+        echo "yes"
+    fi
+    ;;
+solaris*)
+    if test "x$enable_thread" = "xyes"; then 
+       if test ! "x$enable_xrootd" = "xno"; then
+          enable_xrootd="yes"
+          echo "yes"
+       else
+          echo "no"
+       fi
+    else
+       if test "x$enable_xrootd" = "xyes"; then
+          echo "no, needs thread support (rerun with --enable-thread)"
+       else
+          echo "no"
+       fi
+       enable_xrootd="no"
     fi
     ;;
 esac
 #
-message "Checking whether to build xrootd"
 if test "x$enable_xrootd" = "xyes"; then
     buildxrd="yes"
     hasnetx=""
-    echo "yes"
 else
     buildxrd="no"
     hasnetx="#"
-    echo "no"
 fi
 
 ######################################################################
