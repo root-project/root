@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.51 2001/06/22 09:49:23 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.52 2001/06/24 16:53:10 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1551,6 +1551,13 @@ void TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_t
 //*-*    Double_t chi2 = myfunc->GetChisquare();
 //*-*    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
 //*-*    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
+//*-*
+//*-*   Changing the maximum number of parameters
+//*-*   =========================================
+//*-*  By default, the fitter TMinuit is initialized with a maximum of 25 parameters.
+//*-*  You can redefine this default value by calling :
+//*-*    TVirtualFitter::Fitter(0,150); //to get a maximum of 150 parameters
+//*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Int_t i, npar,nvpar,nparx;
