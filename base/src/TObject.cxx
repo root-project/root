@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.47 2002/10/25 00:50:49 rdm Exp $
+;// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.48 2002/10/31 07:27:34 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -292,7 +292,7 @@ TObject *TObject::Clone(const char *) const
    // Make a clone of an object using the Streamer facility.
    // If the object derives from TNamed, this function is called
    // by TNamed::Clone. TNamed::Clone uses the optional argument to set
-   // a new name to the new created object.
+   // a new name to the newly created object.
 
    // if no default ctor return immediately (error issued by New())
    TObject *newobj = (TObject *)IsA()->New();
