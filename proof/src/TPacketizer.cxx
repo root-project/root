@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.16 2004/12/06 16:46:01 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.17 2004/12/28 20:51:25 brun Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -296,6 +296,7 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    fUnAllocated->Clear();  // avoid dangling pointers
    fActive->Clear();
    fFileNodes->Clear();    // then delete all objects
+   PDB(kPacketizer,2) Info("","Processing Range: First %lld, Num %lld", first, num);
 
    dset->Reset();
    Long64_t cur = 0;
@@ -303,24 +304,27 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       TUrl url = e->GetFileName();
       Long64_t eFirst = e->GetFirst();
       Long64_t eNum = e->GetNum();
-
+      PDB(kPacketizer,2) Info("","Processing element: First %lld, Num %lld (cur %lld)", eFirst, eNum, cur);
 
       // this element is before the start of the global range, skip it
       if (cur + eNum < first) {
          cur += eNum;
+         PDB(kPacketizer,2) Info("","Processing element: skip element cur %lld", cur);
          continue;
       }
 
       // this element is after the end of the global range, skip it
-      if (first+num <= cur) {
+      if (num != -1 && first+num <= cur) {
          cur += eNum;
+         PDB(kPacketizer,2) Info("","Processing element: drop element cur %lld", cur);
          continue; // break ??
       }
 
       // If this element contains the end of the global range
       // adjust its number of entries
-      if (first+num < cur+eNum) {
+      if (num != -1 && (first+num < cur+eNum)) {
          e->SetNum( first + num - cur );
+         PDB(kPacketizer,2) Info("","Processing element: Adjust end %lld", first + num - cur);
       }
 
       // If this element contains the start of the global range
@@ -328,9 +332,11 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
       if (cur < first) {
          e->SetFirst( eFirst + (first - cur) );
          e->SetNum( e->GetNum() - (first - cur) );
+         PDB(kPacketizer,2) Info("","Processing element: Adjust start %lld and end %lld", eFirst + (first - cur), first + num - cur);
       }
 
       cur += eNum;
+      PDB(kPacketizer,2) Info("","Processing element: next cur %lld", cur);
 
       // Map non URL filenames to dummy host
       TString host;
