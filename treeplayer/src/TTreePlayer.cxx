@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.94 2002/04/12 19:19:53 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.95 2002/04/13 09:42:14 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1779,8 +1779,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
            char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
          }
       } else {
-         if (leafcount) strcpy(branchname,branch->GetName());
-         else           strcpy(branchname,leaf->GetTitle());
+         strcpy(branchname,branch->GetName());
       }
       char *twodim = (char*)strstr(leaf->GetTitle(),"][");
       bname = branchname;
@@ -1853,7 +1852,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          //else                     sprintf(blen,"%d",len);
 
          const char *stars = " ";
-         if (bre->GetBranchCount2()) {
+         if (bre && bre->GetBranchCount2()) {
             stars = "*";
          }
 	 // Dimensions can be in the branchname for a split Object with a fix length C array.
@@ -1873,7 +1872,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
 	 }
          const char* leafcountName = leafcount->GetName();
          char b2len[128];
-         if (bre->GetBranchCount2()) {
+         if (bre && bre->GetBranchCount2()) {
             TLeaf * l2 = (TLeaf*)bre->GetBranchCount2()->GetListOfLeaves()->At(0);
             strcpy(b2len,l2->GetName());
             bname = &b2len[0];
@@ -1910,11 +1909,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       leafcount =leaf->GetLeafCount();
       TBranch *branch = leaf->GetBranch();
       strcpy(branchname,branch->GetName());
-      if ( branch->GetNleaves() <= 1 ) {
-         if (branch->IsA() != TBranchObject::Class()) {
-            if (!leafcount) strcpy(branchname,leaf->GetTitle());
-         }
-      }
+      //if ( branch->GetNleaves() <= 1 ) {
+      //   if (branch->IsA() != TBranchObject::Class()) {
+      //      if (!leafcount) strcpy(branchname,leaf->GetTitle()); //<========
+      //   }
+      //}
       bname = branchname;
       char *twodim = (char*)strstr(bname,"[");
       if (twodim) *twodim = 0;
@@ -2071,8 +2070,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
            char *dim =  (char*)strstr(branchname,"["); if (dim) dim[0] = 0;
          }
       } else {
-         if (leafcount) strcpy(branchname,branch->GetName());
-         else           strcpy(branchname,leaf->GetTitle());
+         strcpy(branchname,branch->GetName());
       }
       bname = branchname;
       char *brak = strstr(branchname,"[");     if (brak) *brak = 0;
