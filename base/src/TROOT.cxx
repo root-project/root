@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.129 2004/07/30 14:19:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.130 2004/08/02 08:52:53 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1374,15 +1374,18 @@ TClass *TROOT::LoadClass(const char *classname) const
    // list of load classes or in the typedef.
 
    VoidFuncPtr_t dict = TClassTable::GetDict(classname);
+
+   if (!dict) {
+      if (gInterpreter->AutoLoad(classname)) {
+         dict = TClassTable::GetDict(classname);
+      }
+   }
+
    if (dict) {
       // The dictionary generation might change/delete classname
       TString clname(classname);
       (dict)();
       return GetClass(clname.Data(),kFALSE);
-   }
-
-   if (gInterpreter->AutoLoad(classname)) {
-      return GetClass(classname,kFALSE);
    }
 
    TIter next(fClassGenerators);
