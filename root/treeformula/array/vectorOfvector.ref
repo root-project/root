@@ -1,14 +1,14 @@
 
 Processing runvectorOfvector.C+...
-<TCanvas::MakeDefCanvas>: created default TCanvas with name c1
 Total created 10
+<TCanvas::MakeDefCanvas>: created default TCanvas with name c1
 Total created 165
 Error in <TTree::Branch>: The pointer specified for vec is not of a class known to ROOT
+Total created 165
 
 *ERROR 30 : 
  Bad numerical expression : "vec"
 Total created 165
-Total created 165
 Total created 825
 Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<One>
 Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector<int> >
@@ -20,5 +20,5 @@ Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<One>
 Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector<int> >
 Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector<int> >
 Warning in <TSelectorDraw::ProcessFillObject>: Not implemented for vector<vector<int> >
+Total created 165
 (bool)0
-Total created 165

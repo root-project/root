@@ -57,7 +57,7 @@ TTree* generateTree_1(int sub = 10) {
    }
    t->Fill();
    t->ResetBranchAddresses();
-   fprintf(stderr,"Total created %d\n",total);
+   fprintf(stdout,"Total created %d\n",total);
    return t;
 }
 
@@ -82,7 +82,7 @@ TTree* generateTree_3(int sub = 10) {
    p->push_back(c);
    t->Fill();
    t->ResetBranchAddresses();
-   fprintf(stderr,"Total created %d\n",total);
+   fprintf(stdout,"Total created %d\n",total);
    return t;
 }
 
@@ -106,7 +106,7 @@ TTree* generateTree_4(int sub = 10) {
    }
    t->Fill();
    t->ResetBranchAddresses();
-   fprintf(stderr,"Total created %d\n",p->fN);
+   fprintf(stdout,"Total created %d\n",p->fN);
    return t;
 }
 
@@ -137,7 +137,7 @@ TTree* generateTree_5(int sub = 10) {
    p->push_back(two);
    t->Fill();
    t->ResetBranchAddresses();
-   fprintf(stderr,"Total created %d\n",one.fN*(2+3));
+   fprintf(stdout,"Total created %d\n",one.fN*(2+3));
    return t;
 }
 
@@ -161,7 +161,7 @@ TTree* generateTree_6(int sub = 10) {
    }
    t->Fill();
    t->ResetBranchAddresses();
-   fprintf(stderr,"Total created %d\n",p->fN);
+   fprintf(stdout,"Total created %d\n",p->fN);
    return t;
 }
 
@@ -192,7 +192,7 @@ TTree* generateTree_7(int sub = 10) {
    p->push_back(two);
    t->Fill();
    t->ResetBranchAddresses();
-   fprintf(stderr,"Total created %d\n",one.fN*(2+3));
+   fprintf(stdout,"Total created %d\n",one.fN*(2+3));
    return t;
 }
 
@@ -216,7 +216,7 @@ TTree* generateTree_8(int sub = 10) {
    }
    t->Fill();
    t->ResetBranchAddresses();
-   fprintf(stderr,"Total created %d\n",p->fN);
+   fprintf(stdout,"Total created %d\n",p->fN);
    return t;
 }
 
@@ -248,7 +248,7 @@ TTree* generateTree(int sub = 10, int level = 2) {
    }
    t->Fill();
    t->ResetBranchAddresses();
-   fprintf(stderr,"Total created %d\n",total);
+   fprintf(stdout,"Total created %d\n",total);
    return t;
 }
 
@@ -256,7 +256,7 @@ bool testing(TTree *t, const char *what, Int_t expect)
 {
    Int_t res = t->Draw(what,"","");
    if (res!=expect) {
-      fprintf(stderr,"Error: %s t->Draw(\"%s\") drew %d instead of %d values\n",
+      fprintf(stdout,"Error: %s t->Draw(\"%s\") drew %d instead of %d values\n",
               t->GetName(), what,res,expect);
       return false;
    }
@@ -264,6 +264,7 @@ bool testing(TTree *t, const char *what, Int_t expect)
 }
 
 bool runvectorOfvector() {
+   gROOT->ProcessLine("SetROOTMessageToStdout();");
    gROOT->ProcessLine("#include <vector>");
 
    bool success = true;
