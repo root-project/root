@@ -1,4 +1,4 @@
-// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.2 2001/08/24 16:34:18 rdm Exp $
+// @(#)root/mysql:$Name:  $:$Id: TMySQLServer.cxx,v 1.3 2002/11/05 17:01:38 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -198,7 +198,7 @@ Int_t TMySQLServer::CreateDataBase(const char *dbname)
       Error("CreateDataBase", "not connected");
       return -1;
    }
-   return mysql_create_db(fMySQL, dbname);
+   return mysql_query(fMySQL, Form("CREATE DATABASE %s",dbname));
 }
 
 //______________________________________________________________________________
@@ -211,7 +211,7 @@ Int_t TMySQLServer::DropDataBase(const char *dbname)
       Error("DropDataBase", "not connected");
       return -1;
    }
-   return mysql_drop_db(fMySQL, dbname);
+   return mysql_query(fMySQL, Form("DROP DATABASE %s",dbname));
 }
 
 //______________________________________________________________________________
