@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.4 2000/08/12 17:47:05 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.5 2000/09/01 06:23:14 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1123,20 +1123,20 @@ int main(int argc, char **argv)
    // all the files into one so that cint consider then one compilation
    // unit and so that each file that contains code guard is really
    // included only once.
-   for (i = 1; i < argc; i++) {
-     if (strcmp(argv[i],"-p")==0) use_preprocessor = 1;
-   }
+   for (i = 1; i < argc; i++)
+      if (strcmp(argv[i], "-p") == 0) use_preprocessor = 1;
+
    char bundlename[L_tmpnam];
    FILE *bundle = 0;
    if (use_preprocessor) {
-     tmpnam(bundlename);
-     if (strlen(bundlename)<(L_tmpnam-3)) strcat(bundlename,".C");
-     bundle = fopen(bundlename, "w");
-     if (bundle==0) {
-       fprintf(stderr,"Failed to open %s; Usage of external preprocessor by cint is not fully efficient.\n",
-	       bundlename);
-       use_preprocessor = 0;
-     }
+      tmpnam(bundlename);
+      if (strlen(bundlename) < (L_tmpnam-3)) strcat(bundlename,".C");
+      bundle = fopen(bundlename, "w");
+      if (bundle==0) {
+         fprintf(stderr,"%s: failed to open %s, usage of external preprocessor by CINT is not optimal\n",
+                 argv[0], bundlename);
+         use_preprocessor = 0;
+      }
    }
    for (i = ic; i < argc; i++) {
       if (!iv && *argv[i] != '-' && *argv[i] != '+') {
@@ -1151,27 +1151,27 @@ int main(int argc, char **argv)
            strstr(argv[i],"linkdef")) && strstr(argv[i],".h")) {
          il = i;
          if (i != argc-1) {
-            fprintf(stderr, "%s; %s must be last file on command line\n", argv[0], argv[i]);
+            fprintf(stderr, "%s: %s must be last file on command line\n", argv[0], argv[i]);
             return 1;
          }
-	 if (use_preprocessor) argvv[argcc++] = bundlename;
+         if (use_preprocessor) argvv[argcc++] = bundlename;
       }
       if (!strcmp(argv[i], "-c")) {
-         fprintf(stderr, "%s; option -c must come directly after the output file\n", argv[0]);
+         fprintf(stderr, "%s: option -c must come directly after the output file\n", argv[0]);
          return 1;
       }
-      if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+' && (il==0)) {
-	fprintf(bundle,"#include \"%s\"\n",argv[i]);
-      } else
-	argvv[argcc++] = argv[i];
+      if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+' && (il==0))
+         fprintf(bundle,"#include \"%s\"\n", argv[i]);
+      else
+         argvv[argcc++] = argv[i];
    }
    if (use_preprocessor) {
-     // Since we have not seen a linkdef file, we have not yet added the
-     // bundle file to the command line!
-     if (!il) argvv[argcc++] = bundlename;
-     fclose(bundle);
+      // Since we have not seen a linkdef file, we have not yet added the
+      // bundle file to the command line!
+      if (!il) argvv[argcc++] = bundlename;
+      fclose(bundle);
    }
- 
+
    if (!il)
       GenerateLinkdef(&argcc, argvv, iv);
 
