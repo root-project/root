@@ -1,4 +1,4 @@
-// @(#)root/sapdb:$Name:  $:$Id: TSapDBRow.cxx,v 1.1 2001/08/24 16:41:19 rdm Exp $
+// @(#)root/sapdb:$Name:  $:$Id: TSapDBRow.cxx,v 1.2 2001/10/04 16:53:21 rdm Exp $
 // Author: Mark Hemberger & Fons Rademakers   03/08/2001
 
 /*************************************************************************
@@ -130,7 +130,12 @@ const char *TSapDBRow::GetField(Int_t field)
    if (rc != SQL_SUCCESS) {
       Error("TSapDBRow", "error in getting description");
       return 0;
-    }
+   }
+
+   if (columnSize > 4000) {
+      Error("TSapDBRow", "column size too large for current implementation.");
+      return 0;
+   }
 
    SQLINTEGER strLenOrIndPtr;
    SQLPOINTER targetValuePtr[4000];
