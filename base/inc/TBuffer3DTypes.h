@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer3DTypes.h,v 1.2 2005/03/10 14:06:44 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer3DTypes.h,v 1.3 2005/03/18 08:03:27 brun Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
@@ -22,12 +22,13 @@ public:
                             // Buffer class        Producer class
                             //                     g3d              geom
    enum EType { kGeneric,   // TBuffer3D           Rest             Rest
+                kComposite, // TBuffer3D                            TGetCompositeShape
                 kLine,      // TBuffer3D           TPolyLine3D
                 kMarker,    // TBuffer3D           TPolyMarker3D
                 kSphere,    // TBuffer3DSphere     TSPHE            TGeoSphere
                 kTube,      // TBuffer3DTube                        TGeoTube
                 kTubeSeg,   // TBuffer3DTubeSeg                     TGeoTubeSeg
-                kCutTube }; // TBuffer3DTubeSeg    T                TGeoCtub
+                kCutTube }; // TBuffer3DCutTube                     TGeoCtub
 };
 
 #endif

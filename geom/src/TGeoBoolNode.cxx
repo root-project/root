@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.15 2004/11/08 09:56:24 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.cxx,v 1.16 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // TGeoBoolNode::Contains and parser implemented by Mihaela Gheata
 
@@ -16,6 +16,11 @@
 #include "TGeoManager.h"
 
 #include "TGeoBoolNode.h"
+
+#include "TVirtualPad.h"
+#include "TVirtualViewer3D.h"
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 
 // statics and globals
 
@@ -141,16 +146,36 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
    return kTRUE;                  
 }
 //-----------------------------------------------------------------------------
-void TGeoBoolNode::Paint(Option_t *option)
+void TGeoBoolNode::Paint(Option_t * /*option*/ )
 {
+   TVirtualViewer3D * viewer = gPad->GetViewer3D();
+   if (!viewer) return;
+
+   Bool_t localFrame = viewer->PreferLocalFrame();
+
    TGeoHMatrix *glmat = gGeoManager->GetGLMatrix();
    TGeoHMatrix mat;
    mat = glmat; // keep a copy
+
+   // TODO: Timur - Add the operation here?
+
+   // Now perform fetch and add of the two components buffers.
+   // Note we assume that composite shapes are always completely added
+   // so don't bother to get addDaughters flag from viewer->AddObject()
+
+   // Setup matrix and fetch/add the left component buffer
    glmat->Multiply(fLeftMat);
-   fLeft->Paint(option);
+   //fLeft->Paint(option);
+   const TBuffer3D & leftBuffer = fLeft->GetBuffer3D(TBuffer3D::kAll, localFrame);
+   viewer->AddObject(leftBuffer);
+
+   // Setup matrix and fetch/add the right component buffer
    *glmat = &mat;
    glmat->Multiply(fRightMat);
-   fRight->Paint(option);
+   //fRight->Paint(option);
+   const TBuffer3D & rightBuffer = fRight->GetBuffer3D(TBuffer3D::kAll, localFrame);
+   viewer->AddObject(rightBuffer);
+
    *glmat = &mat;   
 }
 //-----------------------------------------------------------------------------
@@ -161,6 +186,21 @@ void TGeoBoolNode::Sizeof3D() const
    fRight->Sizeof3D();
 }
 ClassImp(TGeoUnion)
+
+//-----------------------------------------------------------------------------
+void TGeoUnion::Paint(Option_t *option)
+{
+   TVirtualViewer3D *viewer = gPad->GetViewer3D();
+
+   if (!viewer) {
+      Error("Paint", "gPad->GetViewer3D() returned 0, cannot work with composite!\n");
+      return;
+   }
+
+   viewer->AddCompositeOp(TBuffer3D::kCSUnion);
+
+   TGeoBoolNode::Paint(option);
+}
 
 //-----------------------------------------------------------------------------
 TGeoUnion::TGeoUnion()
@@ -388,6 +428,21 @@ void TGeoUnion::Sizeof3D() const
 ClassImp(TGeoSubtraction)
 
 //-----------------------------------------------------------------------------
+void TGeoSubtraction::Paint(Option_t *option)
+{
+   TVirtualViewer3D *viewer = gPad->GetViewer3D();
+
+   if (!viewer) {
+      Error("Paint", "gPad->GetViewer3D() returned 0, cannot work with composite!\n");
+      return;
+   }
+
+   viewer->AddCompositeOp(TBuffer3D::kCSDifference);
+
+   TGeoBoolNode::Paint(option);
+}
+
+//-----------------------------------------------------------------------------
 TGeoSubtraction::TGeoSubtraction()
 {
 // Default constructor
@@ -613,6 +668,21 @@ void TGeoSubtraction::Sizeof3D() const
 
 
 ClassImp(TGeoIntersection)
+
+//-----------------------------------------------------------------------------
+void TGeoIntersection::Paint(Option_t *option)
+{
+   TVirtualViewer3D *viewer = gPad->GetViewer3D();
+
+   if (!viewer) {
+      Error("Paint", "gPad->GetViewer3D() returned 0, cannot work with composite!\n");
+      return;
+   }
+
+   viewer->AddCompositeOp(TBuffer3D::kCSIntersection);
+
+   TGeoBoolNode::Paint(option);
+}
 
 //-----------------------------------------------------------------------------
 TGeoIntersection::TGeoIntersection()

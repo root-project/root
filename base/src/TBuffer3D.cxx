@@ -201,3 +201,23 @@ TBuffer3DCutTube::TBuffer3DCutTube(UInt_t reqPnts, UInt_t reqPntsCapacity,
    fHighPlaneNorm[0] = 0.0; fHighPlaneNorm[0] = 0.0; fHighPlaneNorm[0] = 1.0;
 }
 
+//CS specific
+UInt_t TBuffer3D::fCSLevel = 0;
+
+//______________________________________________________________________________
+UInt_t TBuffer3D::GetCSLevel()
+{
+   return fCSLevel;
+}
+
+//______________________________________________________________________________
+void TBuffer3D::IncCSLevel()
+{
+   ++fCSLevel;
+}
+
+//______________________________________________________________________________
+UInt_t TBuffer3D::DecCSLevel()
+{
+   return --fCSLevel;
+}

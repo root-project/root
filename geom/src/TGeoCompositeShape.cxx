@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.27 2005/02/09 13:30:27 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.28 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -148,6 +148,11 @@
 #include "TGeoManager.h"
 #include "TGeoBoolNode.h"
 #include "TVirtualGeoPainter.h"
+
+#include "TVirtualPad.h"
+#include "TVirtualViewer3D.h"
+#include "TBuffer3D.h"
+#include "TBuffer3DTypes.h"
 
 #include "TGeoCompositeShape.h"
 ClassImp(TGeoCompositeShape)
@@ -308,12 +313,40 @@ void TGeoCompositeShape::MakeNode(const char *expression)
 }               
 
 //_____________________________________________________________________________
-void TGeoCompositeShape::Paint(Option_t *option)
+Bool_t TGeoCompositeShape::PaintComposite(Option_t *option) const
 {
-// paint this shape according to option
+   // Paint this composite shape into the current 3D viewer
+   // Returns bool flag indicating if the caller should continue to
+   // paint child objects
+
+   Bool_t addChildren = kFALSE;
+
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   if (fNode) fNode->Paint(option);
+   TVirtualViewer3D * viewer = gPad->GetViewer3D();
+   if (!painter || !viewer) return addChildren;
+
+   if (fNode) {
+      // Fill out the buffer for the composite shape - nothing extra
+      // over TGeoBBox
+      static TBuffer3D buffer(TBuffer3DTypes::kComposite);
+      FillBuffer3D(buffer, TBuffer3D::kCore|TBuffer3D::kBoundingBox,
+                   viewer->PreferLocalFrame());
+
+      // Start a composite shape, identified by this buffer
+      if (!TBuffer3D::GetCSLevel())
+         viewer->OpenComposite(buffer, &addChildren);
+
+      TBuffer3D::IncCSLevel();
+
+      // Paint the boolean node - will add more buffers to viewer
+      fNode->Paint(option);
+
+      // Close the composite shape
+      if (!TBuffer3D::DecCSLevel())
+         viewer->CloseComposite();
+   }
+
+   return addChildren;
 }
 
 //_____________________________________________________________________________

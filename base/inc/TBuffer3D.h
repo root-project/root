@@ -45,7 +45,17 @@ private:
    TBuffer3D(const TBuffer3D &);
    const TBuffer3D & operator=(const TBuffer3D &);
 
+   //CS specific
+   static UInt_t fCSLevel;
+   ///////////////////////////////
 public:
+   //CS specific
+   enum EBoolOpCode {kCSUnion, kCSIntersection, kCSDifference, kCSNoOp};
+
+   static UInt_t GetCSLevel();
+   static void IncCSLevel();
+   static UInt_t DecCSLevel();
+   ///////////////////////////////
 
    enum ESection { kNone            = BIT(0),
                    kCore            = BIT(1),

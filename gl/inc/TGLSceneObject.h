@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.21 2005/01/19 13:19:34 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.22 2005/03/09 18:19:26 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -19,6 +19,9 @@
 #endif
 #ifndef ROOT_Gtypes
 #include "Gtypes.h"
+#endif
+#ifndef ROOT_CsgOps
+#include "CsgOps.h"
 #endif
 
 class TGLFrustum;
@@ -71,6 +74,7 @@ public:
                   const Float_t *color = 0, UInt_t glName = 0, TObject *realObj = 0);
    TGLSceneObject(const TBuffer3D &buffer,
                   const Float_t *color = 0, UInt_t glName = 0, TObject *realObj = 0);
+	TGLSceneObject(UInt_t glName, const Float_t *color, TObject *realObj);
 
    virtual Bool_t IsTransparent()const;
 
@@ -93,6 +97,7 @@ public:
 
    void Select(Bool_t select = kTRUE){fIsSelected = select;}
 
+   void SetBBox();
 private:
    TGLSceneObject(const TGLSceneObject &);
    TGLSceneObject & operator = (const TGLSceneObject &);
@@ -112,6 +117,7 @@ private:
 public:
    TGLFaceSet(const TBuffer3D &buff, const Float_t *color,
               UInt_t glName, TObject *realObj);
+   TGLFaceSet(const RootCsg::BaseMesh *m, const Float_t *c, UInt_t n, TObject *r);
 
    void GLDraw(const TGLFrustum *fr)const;
    void GLDrawPolys()const;

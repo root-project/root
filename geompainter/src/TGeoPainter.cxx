@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.58 2005/03/16 17:18:12 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.59 2005/03/18 08:46:20 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -33,6 +33,7 @@
 #include "TGeoOverlap.h"
 #include "TGeoChecker.h"
 #include "TGeoPhysicalNode.h"
+#include "TGeoCompositeShape.h"
 #include "TGeoPainter.h"
 
 #include "X3DBuffer.h"
@@ -1009,7 +1010,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
 } 
 
 //______________________________________________________________________________
-Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t * /* option */ ) const
+Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t *  option ) const
 {
 	// Paint the supplied shape into the current 3D viewer
    Bool_t addDaughters = kTRUE;
@@ -1020,14 +1021,35 @@ Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t * /* option */ 
       return addDaughters;
    }
 
-   Bool_t localFrame = viewer->PreferLocalFrame();
-   const TBuffer3D & buffer = 
-      shape.GetBuffer3D(TBuffer3D::kCore|TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific, localFrame);
+   // For non-composite shapes we are the main paint method & perform the negotation 
+   // with the viewer here
+   if (shape.IsA() != TGeoCompositeShape::Class()) {
+      // Does viewer prefer local frame positions?
+      Bool_t localFrame = viewer->PreferLocalFrame();
 
-   Int_t reqSections = viewer->AddObject(buffer, &addDaughters);
-   if (reqSections != TBuffer3D::kNone) {
-      shape.GetBuffer3D(reqSections, localFrame);
-      viewer->AddObject(buffer);
+      // Perform first fetch of buffer from the shape and try adding it
+      // to the viewer
+      const TBuffer3D & buffer = 
+         shape.GetBuffer3D(TBuffer3D::kCore|TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific, localFrame);
+      Int_t reqSections = viewer->AddObject(buffer, &addDaughters);
+
+      // If the viewer requires additional sections fetch from the shape (if possible)
+      // and add again
+      if (reqSections != TBuffer3D::kNone) {
+         shape.GetBuffer3D(reqSections, localFrame);
+         viewer->AddObject(buffer);
+      }
+   }
+   // Composite shapes have their own internal hierarchy of shapes, each
+   // of which generate a filled TBuffer3D. Therefore we can't pass up a 
+   // single buffer to here. So as a special case the TGeoCompositeShape
+   // performs it's own painting & negotiation with the viewer.
+   else {
+      const TGeoCompositeShape * composite = dynamic_cast<const TGeoCompositeShape *>(&shape);
+
+      // We need the addDaughters flag returned from the viewer from paint
+      // so can't use the normal TObject::Paint()
+      addDaughters = composite->PaintComposite(option);
    }
 
    return addDaughters;

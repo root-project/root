@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.31 2005/03/11 08:39:17 rdm Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.32 2005/03/18 08:03:27 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -211,6 +211,18 @@ TGLSceneObject::TGLSceneObject(const TBuffer3D &buffer, Int_t verticesReserve,
 }
 
 //______________________________________________________________________________
+TGLSceneObject::TGLSceneObject(UInt_t glName, const Float_t *color, TObject *obj)
+							: fColor(),
+							  fIsSelected(kFALSE),
+							  fGLName(glName),
+							  fNextT(0),
+							  fRealObject(obj)
+{
+   SetColor(color, kTRUE);
+   fColor[3] = 1.f;
+}
+
+//______________________________________________________________________________
 Bool_t TGLSceneObject::IsTransparent()const
 {
    return fColor[3] < 1.f;
@@ -258,7 +270,10 @@ void TGLSceneObject::SetColor(const Float_t *color, Bool_t fromCtor)
          fColor[1] = color[1];
          fColor[2] = color[2];
       } else {
-         for (Int_t i = 0; i < 12; ++i) fColor[i] = 1.f;
+         //for (Int_t i = 0; i < 12; ++i) fColor[i] = 1.f;
+			fColor[0] = 1.f;
+			fColor[1] = .3f;
+			fColor[2] = .0f;
       }
       //ambient
       fColor[4] = fColor[5] = fColor[6] = 0.f;
@@ -269,7 +284,8 @@ void TGLSceneObject::SetColor(const Float_t *color, Bool_t fromCtor)
       //alpha
       fColor[3] = fColor[7] = fColor[11] = fColor[15] = 1.f;
       //shininess
-      fColor[16] = 60.f;
+      if (color) fColor[16] = 60.f;
+		else fColor[16] = 10.f;
    }
 }
 
@@ -299,6 +315,28 @@ void TGLSceneObject::SetBBox(const TBuffer3D & buffer)
 
       fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
    }
+}
+
+//______________________________________________________________________________
+void TGLSceneObject::SetBBox()
+{
+   // Use the buffer bounding box if provided
+   if (fVertices.size() >= 3) {
+		Double_t xmin = fVertices[0], xmax = xmin;
+		Double_t ymin = fVertices[1], ymax = ymin;
+		Double_t zmin = fVertices[2], zmax = zmin;
+
+		for (UInt_t nv = 3; nv < fVertices.size(); nv += 3) {
+			xmin = TMath::Min(xmin, fVertices[nv]);
+			xmax = TMath::Max(xmax, fVertices[nv]);
+			ymin = TMath::Min(ymin, fVertices[nv + 1]);
+			ymax = TMath::Max(ymax, fVertices[nv + 1]);
+			zmin = TMath::Min(zmin, fVertices[nv + 2]);
+			zmax = TMath::Max(zmax, fVertices[nv + 2]);
+		}
+		
+		fSelectionBox.SetBBox(xmin, xmax, ymin, ymax, zmin, zmax);
+	}
 }
 
 //______________________________________________________________________________
@@ -371,6 +409,39 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glna
 }
 
 //______________________________________________________________________________
+TGLFaceSet::TGLFaceSet(const RootCsg::BaseMesh *m, const Float_t *c, UInt_t n, TObject *r)
+					:TGLSceneObject(n, c, r)
+{
+	UInt_t nv = m->NumberOfVertices();
+	fVertices.reserve(3 * nv);
+	fNormals.resize(m->NumberOfPolys() * 3);
+	
+	for (UInt_t i = 0; i < nv; ++i) {
+		const Double_t *v = m->GetVertex(i);
+		fVertices.insert(fVertices.end(), v, v + 3);
+	}
+	
+	fNbPols = m->NumberOfPolys();
+
+   UInt_t descSize = 0;
+
+   for (UInt_t i = 0; i < fNbPols; ++i) descSize += m->SizeOfPoly(i) + 1;
+
+   fPolyDesc.reserve(descSize);
+
+   for (UInt_t polyIndex = 0; polyIndex < fNbPols; ++polyIndex) {
+		UInt_t polySize = m->SizeOfPoly(polyIndex);
+
+		fPolyDesc.push_back(polySize);
+
+		for(UInt_t i = 0; i < polySize; ++i) fPolyDesc.push_back(m->GetVertexIndex(polyIndex, i));
+   }
+
+   CalculateNormals();
+   SetBBox();
+}
+
+//______________________________________________________________________________
 void TGLFaceSet::GLDraw(const TGLFrustum *fr)const
 {
    if (fr) {
@@ -388,7 +459,10 @@ void TGLFaceSet::GLDraw(const TGLFrustum *fr)const
       glDepthMask(GL_FALSE);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    }
-
+/*
+   glDisable(GL_CULL_FACE);
+   glDisable(GL_LIGHTING);
+   glColor3d(1., 1., 1.);*/
    glLoadName(GetGLName());
    GLDrawPolys();
 

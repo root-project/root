@@ -1,4 +1,4 @@
-// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.6 2004/08/03 16:01:19 brun Exp $
+// @(#)root/x3d:$Name:  $:$Id: TViewerX3D.h,v 1.7 2005/03/09 18:19:27 brun Exp $
 // Author: Rene Brun   05/09/99
 
 /*************************************************************************
@@ -94,6 +94,12 @@ public:
    virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0);   
    virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = 0);
    
+   // Composite shapes not supported on this viewer currently - ignore.
+   // Will result in a set of component shapes
+   virtual void   OpenComposite(const TBuffer3D & /*buffer*/, Bool_t *x=0) {};
+   virtual void   CloseComposite() {};
+   virtual void   AddCompositeOp(UInt_t /*operation*/) {};
+
    // overridden from TGMainFrame
    void     CloseWindow();
    Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.24 2005/01/20 17:28:14 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.25 2005/03/09 18:19:26 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -13,6 +13,7 @@
 #define ROOT_TViewerOpenGL
 
 #include <utility>
+#include <vector>
 
 #ifndef ROOT_TVirtualViewer3D
 #include "TVirtualViewer3D.h"
@@ -28,6 +29,9 @@
 #endif
 #ifndef ROOT_TGLRender
 #include "TGLRender.h"
+#endif
+#ifndef ROOT_CsgOps
+#include "CsgOps.h"
 #endif
 
 class TGLGeometryEditor;
@@ -100,6 +104,16 @@ private:
    TVirtualPad      *fPad;
    Bool_t            fFirstScene;
 
+   //CS specific
+   typedef std::pair<UInt_t, RootCsg::BaseMesh *> CSPART_t;
+
+   Bool_t                  fInsideComposite;
+   UInt_t                  fCSLevel;
+   std::vector<CSPART_t>   fCSTokens;
+   TObject                 *fComposite;
+
+   RootCsg::BaseMesh *BuildComposite();
+
 public:
    TViewerOpenGL(TVirtualPad * pad);
    ~TViewerOpenGL();
@@ -111,6 +125,9 @@ public:
    virtual void   EndScene();
    virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0);
    virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = 0);
+   virtual void   OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0);
+   virtual void   CloseComposite();
+   virtual void   AddCompositeOp(UInt_t operation);
 
    Bool_t HandleContainerButton(Event_t *ev);
    Bool_t HandleContainerConfigure(Event_t *ev);

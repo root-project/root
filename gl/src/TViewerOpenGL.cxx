@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.52 2005/03/16 17:18:12 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.53 2005/03/18 08:03:27 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -145,7 +145,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * pad) :
                    TGMainFrame(gClient->GetDefaultRoot(), fgInitW, fgInitH),
                    fCamera(), fViewVolume(), fZoom(),
                    fActiveViewport(), fBuildingScene(kFALSE),
-                   fPad(pad), fFirstScene(kTRUE)
+                   fPad(pad), fFirstScene(kTRUE), fInsideComposite(kFALSE)
 {
    // Create OpenGL viewer.
 
@@ -172,6 +172,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * pad) :
    fContextMenu = 0;
    fSelectedObj = 0;
    fAction = kNoAction;
+   fComposite = 0;
 
    static Bool_t init = kFALSE;
    if (!init) {
@@ -967,7 +968,11 @@ Int_t TViewerOpenGL::AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t
       }
    }
    // 3. kBoundingBox/kShapeSpecific were not filled for some reason
-   if (!buffer.SectionsValid(TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific)) {
+   else if (!buffer.SectionsValid(TBuffer3D::kBoundingBox|TBuffer3D::kShapeSpecific)) {
+      needRaw = kTRUE;
+   }
+   // 4. We are inside a composite shape addition
+   else if (fInsideComposite) {
       needRaw = kTRUE;
    }
 
@@ -984,6 +989,12 @@ Int_t TViewerOpenGL::AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t
 void TViewerOpenGL::AddValidatedObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren)
 {
    // Accept any children producer is willing to pass at present
+   if (fInsideComposite) {
+      RootCsg::BaseMesh *newMesh = RootCsg::ConvertToMesh(buffer);
+      fCSTokens.push_back(std::make_pair(TBuffer3D::kCSNoOp, newMesh));
+      return;
+   }
+
    if (addChildren) {
       *addChildren = kTRUE;
    }
@@ -1001,8 +1012,6 @@ void TViewerOpenGL::AddValidatedObject(UInt_t placedID, const TBuffer3D & buffer
 
    TGLSceneObject *addObj = 0;
 
-   //TODO: We could cast refs - but need exception catching to be
-   // fully safe - do we use exceptions in ROOT?
    switch (buffer.Type()) {
    case TBuffer3DTypes::kLine:
       addObj = new TGLPolyLine(buffer, colorRGB, placedID, buffer.fID);
@@ -1055,3 +1064,58 @@ void TViewerOpenGL::AddValidatedObject(UInt_t placedID, const TBuffer3D & buffer
    }
 }
 
+void TViewerOpenGL::OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren)
+{
+   if (addChildren) {
+      *addChildren = kTRUE;
+   }
+
+   fInsideComposite = kTRUE;
+   fComposite = buffer.fID;
+}
+
+void TViewerOpenGL::CloseComposite()
+{
+   fInsideComposite = kFALSE;
+   fCSLevel = 0;
+
+   RootCsg::BaseMesh *resultMesh = BuildComposite();
+   TGLFaceSet *addObj = new TGLFaceSet(resultMesh, 0, fNbShapes++, fComposite);
+
+   UpdateRange(addObj->GetBBox());
+   fRender->AddNewObject(addObj);
+
+   delete resultMesh;
+   for (UInt_t i = 0; i < fCSTokens.size(); ++i) delete fCSTokens[i].second;
+   fCSTokens.clear();
+   fComposite = 0;
+}
+
+void TViewerOpenGL::AddCompositeOp(UInt_t operation)
+{
+   fCSTokens.push_back(std::make_pair(operation, (RootCsg::BaseMesh *)0));
+}
+
+RootCsg::BaseMesh *TViewerOpenGL::BuildComposite()
+{
+   const CSPART_t &currToken = fCSTokens[fCSLevel];
+   UInt_t opCode = currToken.first;
+
+   if (opCode != TBuffer3D::kCSNoOp) {
+      ++fCSLevel;
+      RootCsg::BaseMesh *left = BuildComposite();
+      RootCsg::BaseMesh *right = BuildComposite();
+      //RootCsg::BaseMesh *result = 0;
+      switch (opCode) {
+      case TBuffer3D::kCSUnion:
+         return RootCsg::BuildUnion(left, right);
+      case TBuffer3D::kCSIntersection:
+         return RootCsg::BuildIntersection(left, right);
+      case TBuffer3D::kCSDifference:
+         return RootCsg::BuildDifference(left, right);
+      default:
+         Error("BuildComposite", "Wrong operation code %d\n", opCode);
+         return 0;
+      }
+   } else return fCSTokens[fCSLevel++].second;
+}

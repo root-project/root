@@ -1,4 +1,4 @@
-// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.8 2004/11/08 09:56:23 brun Exp $
+// @(#):$Name:  $:$Id: TGeoBoolNode.h,v 1.9 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -109,6 +109,10 @@ public:
    virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
 
+   //CS specific
+   virtual void      Paint(Option_t *option);
+   ///////////////////////////////////////////
+
   ClassDef(TGeoUnion, 1)              // union node
 };
 
@@ -144,6 +148,11 @@ public:
    virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
 
+   //CS specific
+   virtual void      Paint(Option_t *option);
+   ///////////////////////////////////////////
+
+
   ClassDef(TGeoIntersection, 1)              // intersection node
 };
 
@@ -178,6 +187,11 @@ public:
    virtual void      SetPoints(Double_t *points) const;
    virtual void      SetPoints(Float_t *points)  const;
    virtual void      Sizeof3D() const;
+
+   //CS specific
+   virtual void      Paint(Option_t *option);
+   ///////////////////////////////////////////
+
 
   ClassDef(TGeoSubtraction, 1)              // subtraction node
 };

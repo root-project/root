@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.15 2004/01/18 12:31:54 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoNode.h,v 1.16 2005/03/09 18:19:26 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -123,6 +123,7 @@ public:
    virtual void      LocalToMasterVect(const Double_t *local, Double_t *master) const;
 
    virtual void      ls(Option_t *option = "") const;
+   virtual void      Paint(Option_t *option = ""); 	 
    void              PrintCandidates() const; // *MENU*
    void              PrintOverlaps() const; // *MENU*
    void              VisibleDaughters(Bool_t vis=kTRUE); // *MENU*

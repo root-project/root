@@ -1472,23 +1472,26 @@ void composite()
 
    // define shape components with names
    TGeoPgon *pgon = new TGeoPgon("pg",0.,360.,6,2); 
+//   TGeoPgon *pgon = new TGeoBBox("pg",20.,20.,20.); 
    pgon->DefineSection(0,0,0,20);
    pgon->DefineSection(1, 30,0,20);
 
-   TGeoSphere *sph = new TGeoSphere("sph", 40,45);
+//   TGeoPgon *pgon = new TGeoBBox("pg",20.,20.,20.); 
+
+   TGeoSphere *sph = new TGeoSphere("sph", 40., 45.);
    // define named geometrical transformations with names
-   TGeoTranslation *tr = new TGeoTranslation(0,0,45);
+   TGeoTranslation *tr = new TGeoTranslation(0., 0., 45.);
    tr->SetName("tr");
    // register all used transformations
    tr->RegisterYourself();
    // create the composite shape based on a Boolean expression
-   TGeoCompositeShape *cs = new TGeoCompositeShape("mir", "pg*sph:tr");
+   TGeoCompositeShape *cs = new TGeoCompositeShape("mir", "sph:tr+pg");
 
    TGeoVolume *vol = new TGeoVolume("COMP",cs);
    vol->SetLineColor(randomColor());
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
-   gGeoManager->SetNsegments(80);
+   gGeoManager->SetNsegments(100);
    top->Draw();
    MakePicture();
    if (!comments) return;

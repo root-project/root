@@ -54,6 +54,10 @@ public:
    // shapes. In this case buffer describes template shape (aside from kCore). 
    virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
    
+   virtual void   OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
+   virtual void   CloseComposite() = 0;
+   virtual void   AddCompositeOp(UInt_t operation) = 0;
+
    static  TVirtualViewer3D *Viewer3D(TVirtualPad *pad = 0, Option_t *type = "");
 
    ClassDef(TVirtualViewer3D,0) // Abstract interface to 3D viewers

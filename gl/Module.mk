@@ -23,7 +23,8 @@ GLH1         := $(MODDIRI)/TViewerOpenGL.h $(MODDIRI)/TGLRenderArea.h \
                 $(MODDIRI)/TGLCamera.h $(MODDIRI)/TGLSceneObject.h
 GLS          := TGLKernel.cxx TViewerOpenGL.cxx TArcBall.cxx TGLRenderArea.cxx \
                 TGLSceneObject.cxx TGLRender.cxx TGLCamera.cxx TGLEditor.cxx \
-                TGLFrustum.cxx
+                TGLFrustum.cxx CsgOps.cxx
+
 GLS1         := $(wildcard $(MODDIRS)/*.c)
 ifneq ($(ARCH),win32)
 GLS          += TX11GL.cxx
