@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.12 2001/03/15 18:41:08 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.13 2001/04/09 14:20:55 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -454,8 +454,7 @@ Bool_t TCint::CheckClassInfo(const char *name)
    // Returns kFALSE is class is not defined.
 
    Int_t tagnum = G__defined_tagname(name, 1);
-   if (tagnum >= 0 && tagnum < G__struct.alltag)
-      return kTRUE;
+   if (tagnum >= 0) return kTRUE;
    return kFALSE;
 }
 
