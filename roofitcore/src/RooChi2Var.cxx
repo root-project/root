@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooChi2Var.cc,v 1.3 2002/09/05 04:33:17 verkerke Exp $
+ *    File: $Id: RooChi2Var.cc,v 1.4 2003/04/07 21:39:14 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -117,6 +117,17 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
     Double_t eIntLo,eIntHi ;
     data->weightError(eIntLo,eIntHi,_etype) ;
     Double_t eInt = (eExt>0) ? eIntHi : eIntLo ;
+    
+    // Skip cases where pdf=0 and there is no data
+    if (eInt==0. && nData==0. && nPdf==0) continue ;
+
+    // Return 0 if eInt=0, special handling in MINUIT will follow
+    if (eInt==0.) {
+      cout << "RooChi2Var::RooChi2Var(" << GetName() << ") INFINITY ERROR: bin " << i 
+	   << " has zero error, but function is not zero (" << nPdf << ")" << endl ;
+      return 0 ;
+    }
+
     result += eExt*eExt/(eInt*eInt) ;
   }
   
