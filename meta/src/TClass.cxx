@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.16 2000/12/02 16:26:49 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.17 2000/12/04 16:43:53 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -791,8 +791,14 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignore)
 //  This option saves the TObject space overhead on the file.
 //  However, the information (fBits, fUniqueID) of TObject is lost.
    
-   if (ignore) SetBit(kIgnoreTObjectStreamer);
-   else        ResetBit(kIgnoreTObjectStreamer);
+   ResetBit(kIgnoreTObjectStreamer);
+   if (!ignore) return;
+   TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->UncheckedAt(fClassVersion);
+   if (sinfo) {
+      Error("IgnoreTObjectStreamer","Must be called before the creation of StreamerInfo");
+      return;
+   }
+   SetBit(kIgnoreTObjectStreamer);
 }
 
 //______________________________________________________________________________
