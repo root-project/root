@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TMessage.cxx,v 1.4 2002/03/19 10:57:25 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TMessage.cxx,v 1.5 2004/05/05 14:43:34 rdm Exp $
 // Author: Fons Rademakers   19/12/96
 
 /*************************************************************************
@@ -222,7 +222,7 @@ Int_t TMessage::Compress()
       fCompPos    = 0;
    }
 
-   if (Length() <= 256 + 2*sizeof(UInt_t)) {
+   if (Length() <= (Int_t)(256 + 2*sizeof(UInt_t))) {
       // this message is too small to be compressed
       return 0;
    }
