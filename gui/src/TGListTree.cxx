@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.2 2000/08/04 13:14:45 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.3 2000/09/05 10:56:50 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -336,7 +336,7 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
          // must derive from TObject (in principle user can put pointer
          // to anything in user data field). Add check.
          TObject *obj = (TObject *)item->GetUserData();
-         if (obj->InheritsFrom(TNamed::Class())) {
+         if (obj->InheritsFrom(TObject::Class())) {
             UInt_t width = FontTextWidth(fFont, item->fText.Data());
             SetToolTipText(obj->GetTitle(), item->fXtext+width,
                            item->fY+item->fHeight-4, 1000);
