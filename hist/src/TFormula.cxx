@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.88 2005/03/04 09:29:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.89 2005/03/04 09:32:19 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -1939,6 +1939,7 @@ Int_t TFormula::Compile(const char *expression)
 	ProcessLinear(chaine);  
   }
 
+
   MAXOP   = 1000;
   MAXPAR  = 100;
   MAXCONST= 100;
@@ -2797,18 +2798,19 @@ void TFormula::ProcessLinear(TString &formula)
    //replace "++" with "+[i]*"
    pch= (char*)strstr(formula.Data(), "++");
    if (pch) 
-      formula.Insert(0, "[0]*");
+      formula.Insert(0, "[0]*(");
    pch= (char*)strstr(formula.Data(), "++");
    if (pch){ 
       //if there are "++", replaces them with +[i]*
       nf = 1;
       while (pch){
-	 sprintf(repl, "+[%d]*", nf);
+	 sprintf(repl, ")+[%d]*(", nf);
 	 Int_t offset = pch-formula.Data();
-	 formula.Replace(pch-formula.Data(), 2, repl, (nf)/10+5);
+	 formula.Replace(pch-formula.Data(), 2, repl, (nf)/10+7);
 	 pch = (char*)strstr(formula.Data()+offset, "++");   
 	 nf++;
       }
+      formula.Append(')', 1);
    } else {
       //if there are no ++, create a new string with ++ instead of +[i]*
       formula2=formula2(4, formula2.Length()-4);
@@ -2829,37 +2831,26 @@ void TFormula::ProcessLinear(TString &formula)
    char *fstring;
 
    TString replaceformula;
-   char *pattern=new char[5];
-   char *replacement=new char[6];
    TString sstring(formula2, len + 50);
-   //pattern="x";
-   //replacement="[0]";
-   //replaceformula=sstring.ReplaceAll(pattern, 1, replacement, 3);
-   pattern = "x0";
-   replacement = "[0]";
-   sstring = sstring.ReplaceAll(pattern, 2, replacement, 3);
-   pattern = "y";
-   replacement = "[1]";
-   sstring = sstring.ReplaceAll(pattern, 1, replacement, 3);
-   pattern = "x1";
-   replacement = "[1]";
-   sstring = sstring.ReplaceAll(pattern, 2, replacement, 3);
-   pattern = "z";
-   replacement = "[2]";
-   sstring = sstring.ReplaceAll(pattern, 1, replacement, 3);
-   pattern = "x2";
-   replacement = "[2]";
-   sstring = sstring.ReplaceAll(pattern, 2, replacement, 3);
-   pattern = "x3";
-   replacement = "[3]";
-   sstring = sstring.ReplaceAll(pattern, 2, replacement, 3);
+
+   sstring = sstring.ReplaceAll("x0",2,"[0]",3);
+
+   sstring = sstring.ReplaceAll("y", 1,"[1]",3);
+
+   sstring = sstring.ReplaceAll("x1",2, "[1]",3);
+
+   sstring = sstring.ReplaceAll("z", 1,"[2]",3);
+
+   sstring = sstring.ReplaceAll("x2",2,"[2]", 3);
+
+   sstring = sstring.ReplaceAll("x3",2,"[3]", 3);
    //careful not to replace the "x" in "exp"
    fstring= (char*)strchr(sstring.Data(), 'x');
    while (fstring){
-      replacement="[0]";
+     //replacement="[0]";
       Int_t offset = fstring - sstring.Data();
       if (*(fstring-1)!='e' && *(fstring+1)!='p')
-	 sstring.Replace(fstring-sstring.Data(), 1, replacement,3);
+	 sstring.Replace(fstring-sstring.Data(), 1,"[0]",3);
       else
 	 offset++;
       fstring = (char*)strchr(sstring.Data()+offset, 'x');   
