@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.25 2001/06/07 10:51:26 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.26 2001/06/29 17:03:25 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -167,6 +167,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    // TRootEmbeddedCanvas class.
 
    fSelected     = 0;
+   fSelectedPad  = 0;
    fCanvasID     = winid;
    fWindowTopX   = 0;
    fWindowTopY   = 0;
@@ -225,6 +226,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       TApplication::CreateApplication();
 
    fSelected     = 0;
+   fSelectedPad  = 0;
    fMenuBar = kTRUE;
    if (form < 0) {
       form     = -form;
@@ -298,6 +300,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
       TApplication::CreateApplication();
 
    fSelected     = 0;
+   fSelectedPad  = 0;
    fMenuBar = kTRUE;
    if (ww < 0) {
       ww       = -ww;
@@ -365,6 +368,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       TApplication::CreateApplication();
 
    fSelected     = 0;
+   fSelectedPad  = 0;
    fMenuBar = kTRUE;
    if (wtopx < 0) {
       wtopx    = -wtopx;
