@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.40 2001/07/31 05:54:16 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.41 2001/08/02 21:39:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -135,6 +135,7 @@ RooAbsArg::~RooAbsArg()
 	   << client->GetName() << "\" should have been deleted first" << endl ;
     }
   }
+  delete clientIter ;
 
   _attribList.Delete() ;
 

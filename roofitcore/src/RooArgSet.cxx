@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.25 2001/08/01 21:30:15 david Exp $
+ *    File: $Id: RooArgSet.cc,v 1.26 2001/08/02 21:39:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -462,6 +462,8 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
       if (!next->getAttribute("Dynamic")) {
 	if (next->readFromStream(is,kTRUE,verbose)) {
 	  parser.zapToEnd() ;
+
+	  delete iterator ;
 	  return kTRUE ;
 	}	
       } else {
