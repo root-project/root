@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.8 2004/04/23 06:37:09 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGPicture.cxx,v 1.9 2004/07/09 12:34:45 rdm Exp $
 // Author: Fons Rademakers   01/01/98
 
 /*************************************************************************
@@ -137,7 +137,7 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       return 0;
    }
 
-   Bool_t retc;
+   Bool_t retc = kFALSE;
    if (!gVirtualX->InheritsFrom("TGX11")) {
       // case of win32gdk and qt drivers
       retc = gVirtualX->CreatePictureFromFile(fClient->GetDefaultRoot()->GetId(),
@@ -157,7 +157,6 @@ const TGPicture *TGPicturePool::GetPicture(const char *name,
       Int_t    colors, chars, headersize, totalheight;
       UInt_t   width, height;
       Double_t xscale, yscale;
-      Bool_t   retc;
 
       sscanf(data[0], "%u %u %d %d", &width, &height, &colors, &chars);
       headersize = colors + 1;
