@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.85 2004/05/03 19:17:33 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.86 2004/05/04 15:24:55 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -402,9 +402,9 @@ static BOOL ConsoleSigHandler(DWORD sig)
    switch (sig) {
    case CTRL_C_EVENT:
    if (!G__get_security_error()) {
-      G__genericerror("\n *** Break *** keyboard interrupt\n");
+      G__genericerror("\n *** Break *** keyboard interrupt");
    } else {
-      Break("TInterruptHandler::Notify", "keyboard interrupt\n");
+      Break("TInterruptHandler::Notify", "keyboard interrupt");
       if (TROOT::Initialized()) {
          gInterpreter->RewindDictionary();
       }
