@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.8 2003/05/15 14:26:01 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.9 2003/07/09 06:55:58 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -29,6 +29,7 @@ TFitter::TFitter(Int_t maxpar)
    fMinuit = new TMinuit(maxpar);
    fNlog = 0;
    fSumLog = 0;
+   fCovar = 0;
    SetName("MinuitFitter");
 }
 
@@ -38,6 +39,7 @@ TFitter::~TFitter()
 //*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==================
 
+   if (fCovar)  delete [] fCovar;
    if (fSumLog) delete [] fSumLog;
 }
 
@@ -81,6 +83,18 @@ void TFitter::FixParameter(Int_t ipar)
 }
 
 //______________________________________________________________________________
+Double_t *TFitter::GetCovarianceMatrix()
+{
+   // return a pointer to the covariance matrix 
+
+   delete [] fCovar;
+   Int_t npars = fMinuit->GetNumPars();
+   fCovar = new Double_t[npars*npars];
+   fMinuit->mnemat(fCovar,npars);
+   return fCovar;
+}
+
+//______________________________________________________________________________
 Int_t TFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc)
 {
    // return current errors for a parameter
@@ -94,6 +108,19 @@ Int_t TFitter::GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t 
    Int_t ierr = 0;
    fMinuit->mnerrs(ipar, eplus,eminus,eparab,globcc);
    return ierr;
+}
+
+//______________________________________________________________________________
+Double_t TFitter::GetParameter(Int_t ipar)
+{
+   // return current value of parameter ipar
+
+   Int_t ierr = 0;
+   TString pname;
+   Double_t value,verr,vlow,vhigh;
+
+   fMinuit->mnpout(ipar, pname,value,verr,vlow,vhigh,ierr);
+   return value;
 }
    
 //______________________________________________________________________________

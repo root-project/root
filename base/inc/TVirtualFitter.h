@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.4 2003/05/05 16:38:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.5 2003/05/07 10:34:59 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -60,10 +60,12 @@ public:
    virtual void      Clear(Option_t *option="") = 0;
    virtual Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs) = 0;
    virtual void      FixParameter(Int_t ipar) = 0;
+   virtual Double_t *GetCovarianceMatrix() = 0;
    virtual Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) = 0;
    virtual Foption_t GetFitOption() const {return fOption;}
    TMethodCall      *GetMethodCall() const {return fMethodCall;}
    virtual TObject  *GetObjectFit() const {return fObjectFit;}
+   virtual Double_t  GetParameter(Int_t ipar) = 0;
    virtual Int_t     GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) = 0;
    virtual Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) = 0;
    virtual Double_t  GetSumLog(Int_t i) = 0;

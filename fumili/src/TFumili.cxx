@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.9 2003/05/07 13:46:18 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.10 2003/07/05 20:41:18 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //______________________________________________________________________________
@@ -772,6 +772,25 @@ void TFumili::FixParameter(Int_t ipar) {
     fLastFixed = ipar;
   }
 }
+
+//______________________________________________________________________________
+Double_t *TFumili::GetCovarianceMatrix()
+{
+   // return a pointer to the covariance matrix
+
+   return fZ;
+
+}
+
+//______________________________________________________________________________
+Double_t TFumili::GetParameter(Int_t ipar)
+{
+   // return current value of parameter ipar
+
+   if (ipar<0 || ipar>=fNpar) return 0;
+   else return fA[ipar];
+}
+
 
 //______________________________________________________________________________
 Int_t TFumili::GetParameter(Int_t ipar,char *cname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) {
