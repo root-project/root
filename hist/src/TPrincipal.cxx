@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.16 2001/10/12 06:46:56 brun Exp $
-// $Date: 2001/10/12 06:46:56 $
+// $Id: TPrincipal.cxx,v 1.17 2001/10/15 15:49:50 brun Exp $
+// $Date: 2001/10/15 15:49:50 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -693,13 +693,13 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
     fCovarianceMatrix(1,nVariables, 1,nVariables),
     fEigenVectors(1,nVariables,1,nVariables),
     fEigenValues(1,nVariables),
-    fOffDiagonal(1,nVariables),
-    fUserData(nVariables*1000)
+    fOffDiagonal(1,nVariables), 
+    fStoreData(kFALSE)
 {
   // Ctor. Argument is number of variables in the sample of data
   // Options are:
   //   N       Normalize the covariance matrix (default)
-  //   <empty> Do not Normalize the covariance matrix
+  //   D       Store input data (default)
   //
   // The created object is  named "principal" by default.
    if (nVariables <= 1) {
@@ -715,8 +715,13 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
   fNumberOfVariables  = nVariables;
   while (strlen(opt) > 0) {
     switch(*opt++) {
-    case 'N':
+    case 'N': 
+    case 'n': 
       fIsNormalised = kTRUE;
+      break;
+    case 'D':
+    case 'd':
+      fStoreData    = kTRUE;
       break;
     default:
       break;
@@ -735,8 +740,12 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
     Error("TPrincipal","Couldn't create eigenvalue vector");
   if (!fOffDiagonal.IsValid())
     Error("TPrincipal","Couldn't create offdiagonal vector");
-  if (!fUserData.IsValid())
-    Error("TPrincipal","Couldn't create user data vector");
+  if (fStoreData) {
+    fUserData.ResizeTo(nVariables*1000);
+    fUserData.Zero();
+    if (!fUserData.IsValid())
+      Error("TPrincipal","Couldn't create user data vector");
+  }
 }
 
 //____________________________________________________________________
@@ -909,6 +918,8 @@ With <IMG
   // Store data point in internal vector
   // If the vector isn't big enough to hold the new data, then
   // expand the vector by half it's size.
+  if (!fStoreData) 
+    return; 
   Int_t size = fUserData.GetNrows();
   if (fNumberOfDataPoints * fNumberOfVariables > size)
     fUserData.ResizeTo(size + size/2);
@@ -931,7 +942,8 @@ void TPrincipal::Browse(TBrowser *b)
       b->Add(h,h->GetName());
   }
 
-  b->Add(&fUserData,"User Data");
+  if (fStoreData)
+    b->Add(&fUserData,"User Data");
   b->Add(&fCovarianceMatrix,"Covariance Matrix");
   b->Add(&fMeanValues,"Mean value vector");
   b->Add(&fSigmas,"Sigma value vector");
@@ -958,8 +970,10 @@ void TPrincipal::Clear(Option_t *opt)
   fSigmas.Zero();
   fOffDiagonal.Zero();
 
-  fUserData.ResizeTo(fNumberOfVariables * 1000);
-  fUserData.Zero();
+  if (fStoreData) {
+    fUserData.ResizeTo(fNumberOfVariables * 1000);
+    fUserData.Zero();
+  }
 }
 
 //____________________________________________________________________
@@ -970,6 +984,9 @@ const Double_t *TPrincipal::GetRow(Int_t row)
   // It's up to the user to delete the returned array.
   // Row 0 is the first row;
   if (row >= fNumberOfDataPoints)
+    return 0;
+
+  if (!fStoreData) 
     return 0;
 
   Int_t index   = row  * fNumberOfVariables;
@@ -1264,15 +1281,18 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
     switch (opt[i]) {
     case 'X':
     case 'x':
-      makeX = kTRUE;
+      if (fStoreData)
+	makeX = kTRUE;
       break;
     case 'd':
     case 'D':
-      makeD = kTRUE;
+      if (fStoreData)
+	makeD = kTRUE;
       break;
     case 'P':
     case 'p':
-      makeP = kTRUE;
+      if (fStoreData)
+	makeP = kTRUE;
       break;
     case 'E':
     case 'e':
@@ -1280,7 +1300,8 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       break;
     case 's':
     case 'S':
-      makeS = kTRUE;
+      if (fStoreData)
+	makeS = kTRUE;
       break;
     default:
       Warning("MakeHistograms","Unknown option: %c",opt[i]);
@@ -1296,11 +1317,11 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
     fHistograms = new TList;
 
   // Don't create the histograms if they are already in the TList.
-  if (makeX && fHistograms->FindObject(Form("%s_x0",name)))
+  if (makeX && fHistograms->FindObject(Form("%s_x000",name)))
     makeX = kFALSE;
-  if (makeD && fHistograms->FindObject(Form("%s_d0",name)))
+  if (makeD && fHistograms->FindObject(Form("%s_d000",name)))
     makeD = kFALSE;
-  if (makeP && fHistograms->FindObject(Form("%s_p0",name)))
+  if (makeP && fHistograms->FindObject(Form("%s_p000",name)))
     makeP = kFALSE;
   if (makeE && fHistograms->FindObject(Form("%s_e",name)))
     makeE = kFALSE;
@@ -1346,7 +1367,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       Double_t xlowb  = fMeanValues(i+1) - 4 * fSigmas(i+1);
       Double_t xhighb = fMeanValues(i+1) + 4 * fSigmas(i+1);
       Int_t    xbins  = fNumberOfDataPoints/100;
-      hX[i]           = new TH1F(Form("%s_x%d", name, i),
+      hX[i]           = new TH1F(Form("%s_x%03d", name, i),
 				 Form("Pattern space, variable %d", i),
 				 xbins,xlowb,xhighb);
       hX[i]->SetXTitle(Form("x_{%d}",i));
@@ -1358,7 +1379,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       Double_t dlowb  = 0;
       Double_t dhighb = 20;
       Int_t    dbins  = fNumberOfDataPoints/100;
-      hD[i]           = new TH2F(Form("%s_d%d", name, i),
+      hD[i]           = new TH2F(Form("%s_d%03d", name, i),
 				 Form("Distance from pattern to "
 				      "feature space, variable %d", i),
 				 dbins,dlowb,dhighb,
@@ -1377,7 +1398,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       Double_t plowb   = -10 * TMath::Sqrt(fEigenValues(i+1) * fTrace);
       Double_t phighb  = -plowb;
       Int_t    pbins   = 100;
-      hP[i]            = new TH1F(Form("%s_p%d", name, i),
+      hP[i]            = new TH1F(Form("%s_p%03d", name, i),
 				  Form("Feature space, variable %d", i),
 				  pbins,plowb,phighb);
       hX[i]->SetXTitle(Form("p_{%d}",i));
@@ -1389,14 +1410,20 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
       hE->Fill(i,fEigenValues(i+1));
 
   }
-  for (i = 0; i < fNumberOfDataPoints; i++) {
-    Double_t *x = 0;
-    Double_t *p = new Double_t[fNumberOfVariables];
-    Double_t *d = new Double_t[fNumberOfVariables];
+  if (!makeX && !makeP && !makeD && !makeS)
+    return;
 
-    if (makeX||makeP||makeD||makeS)
-      // update the original data histogram
-      x  = (Double_t*)(GetRow(i));
+  Double_t *x = 0;
+  Double_t *p = new Double_t[fNumberOfVariables];
+  Double_t *d = new Double_t[fNumberOfVariables];
+  for (i = 0; i < fNumberOfDataPoints; i++) {
+
+    // Zero arrays 
+    for (j = 0; j < fNumberOfVariables; j++) 
+      p[j] = d[j] = 0;
+
+    // update the original data histogram
+    x  = (Double_t*)(GetRow(i));
 
     if (makeP||makeD||makeS)
       // calculate the corresponding principal component
@@ -1435,13 +1462,12 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
 	  (hP[j])->Fill(p[j]);
       }
     }
-
-    // Clean up
-    if (d)
-      delete [] d;
-    if (p)
-      delete [] p;
   }
+  // Clean up
+  if (d)
+    delete [] d;
+  if (p)
+    delete [] p;
 
   // Normalize the residues
   if (makeS)
@@ -2090,6 +2116,9 @@ void TPrincipal::Test(Option_t *opt)
   // Test the PCA, bye calculating the sum square of residuals
   // (see method SumOfSquareResiduals), and display the histogram
   MakeHistograms("pca","S");
+
+  if (!fStoreData)
+    return;
 
   TH1 *pca_s = 0;
   if (fHistograms) pca_s = (TH1*)fHistograms->FindObject("pca_s");

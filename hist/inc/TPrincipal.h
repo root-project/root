@@ -1,8 +1,8 @@
 // -*- mode: c++ -*-
 //
-// $Id: TPrincipal.h,v 1.5 2000/12/13 15:13:51 brun Exp $
+// $Id: TPrincipal.h,v 1.6 2001/02/28 11:04:06 brun Exp $
 // $Author: brun $
-// $Date: 2000/12/13 15:13:51 $
+// $Date: 2001/02/28 11:04:06 $
 //
 #ifndef ROOT_TPrincipal
 #define ROOT_TPrincipal
@@ -42,6 +42,7 @@ protected:
   TList     *fHistograms;           // List of histograms
 
   Bool_t     fIsNormalised;         // Normalize matrix?
+  Bool_t     fStoreData;            // Should we store input data? 
 
   void       MakeNormalised();
   void       MakeTridiagonal();
@@ -52,7 +53,7 @@ protected:
 public:
   TPrincipal();
   virtual ~TPrincipal();
-  TPrincipal(Int_t nVariables, Option_t *opt="N");
+  TPrincipal(Int_t nVariables, Option_t *opt="ND");
   
   virtual void    AddRow(const Double_t *x);
   virtual void    Browse(TBrowser *b);
@@ -76,7 +77,7 @@ public:
   void            Test(Option_t *option="");       // *MENU*
   virtual void    X2P(const Double_t *x, Double_t *p);
 
-  ClassDef(TPrincipal,1) // Principal Components Analysis
+  ClassDef(TPrincipal,2) // Principal Components Analysis
 }
 ;
 
