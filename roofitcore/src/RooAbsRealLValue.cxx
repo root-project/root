@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.15 2001/10/08 05:20:12 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.16 2001/11/19 07:23:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,11 +29,15 @@
 #include <ctype.h>
 #include "TObjString.h"
 #include "TTree.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TH3.h"
 #include "RooFitCore/RooAbsRealLValue.hh"
 #include "RooFitCore/RooStreamParser.hh"
 #include "RooFitCore/RooRandom.hh"
 #include "RooFitCore/RooRealFixedBinIter.hh"
 #include "RooFitCore/RooPlot.hh"
+#include "RooFitCore/RooArgList.hh"
 
 ClassImp(RooAbsRealLValue)
 
@@ -302,4 +306,154 @@ Double_t RooAbsRealLValue::fitBinWidth() const
   return (getFitMax()-getFitMin())/getFitBins() ;
 }
 
+
+TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel) const {
+  // Create an empty 1D-histogram with appropriate scale and labels for this variable.
+  // This method uses the default plot range which can be changed using the
+  // setPlotMin(),setPlotMax() methods, and the default binning which can be
+  // changed with setPlotBins(). The caller takes ownership of the returned
+  // object and is responsible for deleting it.
+
+  RooArgList list(*this) ;
+  return (TH1F*)createHistogram(name, list, yAxisLabel);
+}
+
+TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsReal &yvar, const char *zAxisLabel) const {
+  // Create an empty 2D-histogram with appropriate scale and labels for this variable (x)
+  // and the specified y variable. This method uses the default plot ranges for x and y which
+  // can be changed using the setPlotMin(),setPlotMax() methods, and the default binning which
+  // can be changed with setPlotBins(). The caller takes ownership of the returned object
+  // and is responsible for deleting it.
+
+  RooArgList list(*this,yvar) ;
+  return (TH2F*)createHistogram(name, list, zAxisLabel);
+}
+
+TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsReal &yvar, const RooAbsReal &zvar,
+				  const char *tAxisLabel) const {
+  // Create an empty 3D-histogram with appropriate scale and labels for this variable (x)
+  // and the specified y,z variables. This method uses the default plot ranges for x,y,z which
+  // can be changed using the setPlotMin(),setPlotMax() methods, and the default binning which
+  // can be changed with setPlotBins(). The caller takes ownership of the returned object
+  // and is responsible for deleting it.
+
+  RooArgList list(*this,yvar,zvar) ;
+  return (TH3F*)createHistogram(name, list, tAxisLabel);
+}
+
+TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel)
+{
+  // Create a 1,2, or 3D-histogram with appropriate scale and labels.
+  // Binning and ranges are taken from the variables themselves and can be changed by
+  // calling their setPlotMin/Max() and setPlotBins() methods. A histogram can be filled
+  // using RooAbsReal::fillHistogram() or RooTreeData::fillHistogram().
+  // The caller takes ownership of the returned object and is responsible for deleting it.
+
+  // Check that we have 1-3 vars
+  Int_t dim= vars.getSize();
+  if(dim < 1 || dim > 3) {
+    cout << "RooAbsReal::createHistogram: dimension not supported: " << dim << endl;
+    return 0;
+  }
+
+  // Check that all variables are AbsReals and prepare a name of the form <name>_<var1>_...
+  TString histName(name);
+  histName.Append("_");
+  const RooAbsRealLValue *xyz[3];
+  for(Int_t index= 0; index < dim; index++) {
+    const RooAbsArg *arg= vars.at(index);
+    xyz[index]= dynamic_cast<const RooAbsRealLValue*>(arg);
+    if(!xyz[index]) {
+      cout << "RooAbsRealLValue::createHistogram: variable is not real lvalue: " << arg->GetName() << endl;
+      return 0;
+    }
+    histName.Append("_");
+    histName.Append(arg->GetName());
+  }
+  TString histTitle(histName);
+  histTitle.Prepend("Histogram of ");
+
+  // Create the histogram
+  TH1 *histogram(0);
+  switch(dim) {
+  case 1:
+    histogram= new TH1F(histName.Data(), histTitle.Data(),
+			xyz[0]->getFitBins(), xyz[0]->getFitMin(), xyz[0]->getFitMax());
+    break;
+  case 2:
+    histogram= new TH2F(histName.Data(), histTitle.Data(),
+			xyz[0]->getFitBins(), xyz[0]->getFitMin(), xyz[0]->getFitMax(),
+			xyz[1]->getFitBins(), xyz[1]->getFitMin(), xyz[1]->getFitMax());
+    break;
+  case 3:
+    histogram= new TH3F(histName.Data(), histTitle.Data(),
+			xyz[0]->getFitBins(), xyz[0]->getFitMin(), xyz[0]->getFitMax(),
+			xyz[1]->getFitBins(), xyz[1]->getFitMin(), xyz[1]->getFitMax(),
+			xyz[2]->getFitBins(), xyz[2]->getFitMin(), xyz[2]->getFitMax());
+    break;
+  default:
+    assert(0);
+    break;
+  }
+  if(!histogram) {
+    cout << "RooAbsReal::createHistogram: unable to create a new histogram" << endl;
+    return 0;
+  }
+
+  // Set the histogram coordinate axis labels from the titles of each variable, adding units if necessary.
+  for(Int_t index= 0; index < dim; index++) {
+    TString axisTitle(xyz[index]->GetTitle());
+    if(strlen(xyz[index]->getUnit())) {
+      axisTitle.Append(" (");
+      axisTitle.Append(xyz[index]->getUnit());
+      axisTitle.Append(")");
+    }
+    switch(index) {
+    case 0:
+      histogram->SetXTitle(axisTitle.Data());
+      break;
+    case 1:
+      histogram->SetYTitle(axisTitle.Data());
+      break;
+    case 2:
+      histogram->SetZTitle(axisTitle.Data());
+      break;
+    default:
+      assert(0);
+      break;
+    }
+  }
+
+  // Set the t-axis title if given one
+  if((0 != tAxisLabel) && (0 != strlen(tAxisLabel))) {
+    TString axisTitle(tAxisLabel);
+    axisTitle.Append(" / ( ");
+    for(Int_t index= 0; index < dim; index++) {
+      Double_t delta= (xyz[index]->getFitMax() - xyz[index]->getFitMin())/xyz[index]->getFitBins();
+      if(index > 0) axisTitle.Append(" x ");
+      axisTitle.Append(Form("%g",delta));
+      if(strlen(xyz[index]->getUnit())) {
+	axisTitle.Append(" ");
+	axisTitle.Append(xyz[index]->getUnit());
+      }
+    }
+    axisTitle.Append(" )");
+    switch(dim) {
+    case 1:
+      histogram->SetYTitle(axisTitle.Data());
+      break;
+    case 2:
+      histogram->SetZTitle(axisTitle.Data());
+      break;
+    case 3:
+      // not supported in TH1
+      break;
+    default:
+      assert(0);
+      break;
+    }
+  }
+
+  return histogram;
+}
 

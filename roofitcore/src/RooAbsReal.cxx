@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.61 2001/11/15 08:46:30 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.62 2001/11/19 07:23:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -287,156 +287,6 @@ Bool_t RooAbsReal::isValidReal(Double_t value, Bool_t printError) const
 }
 
 
-
-TH1F *RooAbsReal::createHistogram(const char *name, const char *yAxisLabel) const {
-  // Create an empty 1D-histogram with appropriate scale and labels for this variable.
-  // This method uses the default plot range which can be changed using the
-  // setPlotMin(),setPlotMax() methods, and the default binning which can be
-  // changed with setPlotBins(). The caller takes ownership of the returned
-  // object and is responsible for deleting it.
-
-  RooArgList list(*this) ;
-  return (TH1F*)createHistogram(name, list, yAxisLabel);
-}
-
-TH2F *RooAbsReal::createHistogram(const char *name, const RooAbsReal &yvar, const char *zAxisLabel) const {
-  // Create an empty 2D-histogram with appropriate scale and labels for this variable (x)
-  // and the specified y variable. This method uses the default plot ranges for x and y which
-  // can be changed using the setPlotMin(),setPlotMax() methods, and the default binning which
-  // can be changed with setPlotBins(). The caller takes ownership of the returned object
-  // and is responsible for deleting it.
-
-  RooArgList list(*this,yvar) ;
-  return (TH2F*)createHistogram(name, list, zAxisLabel);
-}
-
-TH3F *RooAbsReal::createHistogram(const char *name, const RooAbsReal &yvar, const RooAbsReal &zvar,
-				  const char *tAxisLabel) const {
-  // Create an empty 3D-histogram with appropriate scale and labels for this variable (x)
-  // and the specified y,z variables. This method uses the default plot ranges for x,y,z which
-  // can be changed using the setPlotMin(),setPlotMax() methods, and the default binning which
-  // can be changed with setPlotBins(). The caller takes ownership of the returned object
-  // and is responsible for deleting it.
-
-  RooArgList list(*this,yvar,zvar) ;
-  return (TH3F*)createHistogram(name, list, tAxisLabel);
-}
-
-TH1 *RooAbsReal::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel)
-{
-  // Create a 1,2, or 3D-histogram with appropriate scale and labels.
-  // Binning and ranges are taken from the variables themselves and can be changed by
-  // calling their setPlotMin/Max() and setPlotBins() methods. A histogram can be filled
-  // using RooAbsReal::fillHistogram() or RooTreeData::fillHistogram().
-  // The caller takes ownership of the returned object and is responsible for deleting it.
-
-  // Check that we have 1-3 vars
-  Int_t dim= vars.getSize();
-  if(dim < 1 || dim > 3) {
-    cout << "RooAbsReal::createHistogram: dimension not supported: " << dim << endl;
-    return 0;
-  }
-
-  // Check that all variables are AbsReals and prepare a name of the form <name>_<var1>_...
-  TString histName(name);
-  histName.Append("_");
-  const RooAbsReal *xyz[3];
-  for(Int_t index= 0; index < dim; index++) {
-    const RooAbsArg *arg= vars.at(index);
-    xyz[index]= dynamic_cast<const RooAbsReal*>(arg);
-    if(!xyz[index]) {
-      cout << "RooAbsReal::createHistogram: variable is not real: " << arg->GetName() << endl;
-      return 0;
-    }
-    histName.Append("_");
-    histName.Append(arg->GetName());
-  }
-  TString histTitle(histName);
-  histTitle.Prepend("Histogram of ");
-
-  // Create the histogram
-  TH1 *histogram(0);
-  switch(dim) {
-  case 1:
-    histogram= new TH1F(histName.Data(), histTitle.Data(),
-			xyz[0]->getPlotBins(), xyz[0]->getPlotMin(), xyz[0]->getPlotMax());
-    break;
-  case 2:
-    histogram= new TH2F(histName.Data(), histTitle.Data(),
-			xyz[0]->getPlotBins(), xyz[0]->getPlotMin(), xyz[0]->getPlotMax(),
-			xyz[1]->getPlotBins(), xyz[1]->getPlotMin(), xyz[1]->getPlotMax());
-    break;
-  case 3:
-    histogram= new TH3F(histName.Data(), histTitle.Data(),
-			xyz[0]->getPlotBins(), xyz[0]->getPlotMin(), xyz[0]->getPlotMax(),
-			xyz[1]->getPlotBins(), xyz[1]->getPlotMin(), xyz[1]->getPlotMax(),
-			xyz[2]->getPlotBins(), xyz[2]->getPlotMin(), xyz[2]->getPlotMax());
-    break;
-  default:
-    assert(0);
-    break;
-  }
-  if(!histogram) {
-    cout << "RooAbsReal::createHistogram: unable to create a new histogram" << endl;
-    return 0;
-  }
-
-  // Set the histogram coordinate axis labels from the titles of each variable, adding units if necessary.
-  for(Int_t index= 0; index < dim; index++) {
-    TString axisTitle(xyz[index]->GetTitle());
-    if(strlen(xyz[index]->getUnit())) {
-      axisTitle.Append(" (");
-      axisTitle.Append(xyz[index]->getUnit());
-      axisTitle.Append(")");
-    }
-    switch(index) {
-    case 0:
-      histogram->SetXTitle(axisTitle.Data());
-      break;
-    case 1:
-      histogram->SetYTitle(axisTitle.Data());
-      break;
-    case 2:
-      histogram->SetZTitle(axisTitle.Data());
-      break;
-    default:
-      assert(0);
-      break;
-    }
-  }
-
-  // Set the t-axis title if given one
-  if((0 != tAxisLabel) && (0 != strlen(tAxisLabel))) {
-    TString axisTitle(tAxisLabel);
-    axisTitle.Append(" / ( ");
-    for(Int_t index= 0; index < dim; index++) {
-      Double_t delta= (xyz[index]->getPlotMax() - xyz[index]->getPlotMin())/xyz[index]->getPlotBins();
-      if(index > 0) axisTitle.Append(" x ");
-      axisTitle.Append(Form("%g",delta));
-      if(strlen(xyz[index]->getUnit())) {
-	axisTitle.Append(" ");
-	axisTitle.Append(xyz[index]->getUnit());
-      }
-    }
-    axisTitle.Append(" )");
-    switch(dim) {
-    case 1:
-      histogram->SetYTitle(axisTitle.Data());
-      break;
-    case 2:
-      histogram->SetZTitle(axisTitle.Data());
-      break;
-    case 3:
-      // not supported in TH1
-      break;
-    default:
-      assert(0);
-      break;
-    }
-  }
-
-  return histogram;
-}
 
 const RooAbsReal *RooAbsReal::createProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
 					       RooArgSet *&cloneSet) const {
@@ -809,7 +659,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
   } else {
     
     // create a new curve of our function using the clone to do the evaluations
-    RooCurve *curve = new RooCurve(*projection,*plotVar,scaleFactor);
+    RooCurve *curve = new RooCurve(*projection,*plotVar,frame->GetXaxis()->GetXmin(),
+				   frame->GetXaxis()->GetXmax(),frame->GetNbinsX(), scaleFactor);
 
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, drawOptions);
@@ -966,7 +817,8 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
        
   } else {
 
-    RooCurve* curve= new RooCurve(*funcAsym,*plotVar,scaleFactor);
+    RooCurve* curve= new RooCurve(*funcAsym,*plotVar,frame->GetXaxis()->GetXmin(),
+				  frame->GetXaxis()->GetXmax(),frame->GetNbinsX(),scaleFactor);
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
     
     // add this new curve to the specified plot frame

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.25 2001/10/27 22:28:20 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.26 2001/11/09 03:12:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -41,14 +41,14 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.25 2001/10/27 22:28:20 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.26 2001/11/09 03:12:08 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
 }
 
-RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t scaleFactor,
-		   const RooArgSet *normVars, Double_t prec, Double_t resolution,
+RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xlo, Double_t xhi, Int_t xbins,
+		   Double_t scaleFactor, const RooArgSet *normVars, Double_t prec, Double_t resolution,
 		   Bool_t shiftToZero) {
   // Create a 1-dim curve of the value of the specified real-valued expression
   // as a function of x. Use the optional precision parameter to control
@@ -92,7 +92,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t scaleFacto
 
   // calculate the points to add to our curve
   Double_t prevYMax = getYAxisMax() ;
-  addPoints(*funcPtr,x.getPlotMin(),x.getPlotMax(),x.getPlotBins()+1,prec,resolution);
+  addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution);
   initialize();
 
   // cleanup

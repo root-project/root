@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.43 2001/11/14 18:42:36 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.44 2001/11/19 07:23:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -85,13 +85,6 @@ public:
 			       Double_t scaleFactor=1.0, ScaleType stype=Relative, const RooAbsData* projData=0) const;
   virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, Option_t* drawOptions="L", 
 			      Double_t scaleFactor=1.0, const RooAbsData* projData=0, const RooArgSet* projSet=0) const;
-
-  // Create empty 1,2, and 3D histograms from a list of 1-3 RooAbsReals
-  TH1F *createHistogram(const char *name, const char *yAxisLabel= 0) const;
-  TH2F *createHistogram(const char *name, const RooAbsReal &yvar, const char *zAxisLabel= 0) const;
-  TH3F *createHistogram(const char *name, const RooAbsReal &yvar, const RooAbsReal &zvar,
-			const char *tAxisLabel= 0) const;
-  static TH1* createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel= 0);
 
   // Fill an existing histogram
   TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars,

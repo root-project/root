@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.20 2001/10/31 07:19:31 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.21 2001/11/01 17:57:55 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -686,7 +686,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
     cout << ClassName() << "::" << GetName() << ":plot: frame is null" << endl;
     return 0;
   }
-  RooAbsReal *var= frame->getPlotVar();
+  RooAbsRealLValue *var= (RooAbsRealLValue*) frame->getPlotVar();
   if(0 == var) {
     cout << ClassName() << "::" << GetName()
 	 << ":plotOn: frame does not specify a plot variable" << endl;
