@@ -2294,7 +2294,7 @@ int func_now;
 	    }
 #endif
 	    if('='==c) {
-	      c=G__fgetstream(paraname,",)");
+         c=G__fgetstream_template(paraname,",)");
 	      isdefault=1;
 	    }
 	  }
