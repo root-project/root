@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph2DErrors.h,v 1.00
+// @(#)root/hist:$Name:  $:$Id: TGraph2DErrors.h,v 1.00
 // Author: Olivier Couet 26/11/2003
 
 /*************************************************************************

@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.3 2002/08/09 08:29:07 brun Exp $ */
+/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.4 2003/04/14 16:54:31 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -50,6 +50,7 @@ typedef struct Hoption_t {
    int Scat;        // "SCAT"  Draw 2D plot a Scatter plot.
    int Surf;        // "SURF"  Draw as a Surface (SURF,Surf=1, SURF1,Surf=11, SURF2,Surf=12)
    int Text;        // "TEXT"  Draw 2D plot with the content of each cell.
+   int Tri;         // "TRI"   Draw 2D plot with Delaunay triangles.
    int System;      // "type of coordinate system(1=car,2=pol,3=cyl,4=sph,5=psr)
    int Zscale;      // "Z"   to display the Z scale (color palette)
    int FrontBox;    // " = 0 to suppress the front box

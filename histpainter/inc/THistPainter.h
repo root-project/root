@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.18 2003/09/15 17:19:02 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.19 2003/11/13 17:08:24 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -34,6 +34,7 @@
 
 class TGaxis;
 class TPainter3dAlgorithms;
+class TGraphPainter;
 const Int_t kMaxCuts = 16;
 
 class THistPainter : public TVirtualHistPainter {
@@ -45,6 +46,7 @@ protected:
     TAxis                *fZaxis;             //pointer to Z axis
     TList                *fFunctions;         //pointer to histogram list of functions
     TPainter3dAlgorithms *fLego;              //pointer to a TPainter3dAlgorithms object
+    TGraphPainter        *fGraphPainter;      //pointer to a fGraphPainter object
     Double_t             *fXbuf;              //X buffer coordinates
     Double_t             *fYbuf;              //Y buffer coordinates
     Int_t                 fNcuts;             //Number of graphical cuts
@@ -69,7 +71,6 @@ public:
     virtual void       Paint(Option_t *option="");
     virtual void       PaintArrows(Option_t *option);
     virtual void       PaintAxis(Bool_t drawGridOnly=kFALSE);
-    virtual void       PaintAxis3D(Option_t *option);
     virtual void       PaintBar(Option_t *option);
     virtual void       PaintBarH(Option_t *option);
     virtual void       PaintBoxes(Option_t *option);
@@ -93,6 +94,7 @@ public:
     virtual void       PaintStat(Int_t dostat, TF1 *fit);
     virtual void       PaintStat2(Int_t dostat, TF1 *fit);
     virtual void       PaintSurface(Option_t *option);
+    virtual void       PaintTriangles(Option_t *option);
     virtual void       PaintTable(Option_t *option);
     virtual void       PaintText(Option_t *option);
     virtual void       PaintTitle();
