@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.7 2004/02/02 15:37:28 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFractionFitter.cxx,v 1.8 2004/02/11 14:08:27 brun Exp $
 // Author: Frank Filthaut filthaut@hef.kun.nl  20/05/2002
 // with additions by Bran Wijngaarden <dwijngaa@hef.kun.nl>
 
@@ -606,7 +606,6 @@ void TFractionFitter::ComputeFCN(Int_t& /*npar*/, Double_t* /*gin*/,
      fPlot = (TH1*) fData->Clone(ts.Data());
      fPlot->Reset();
   }
-
   // likelihood computation
   Double_t result = 0;
   for (z = minZ; z <= maxZ; ++z) {
@@ -678,6 +677,7 @@ void TFractionFitter::FindPrediction(int bin, Double_t *fractions, Double_t &Ti,
   if (TMath::Nint(fData->GetBinContent(bin)) == 0) {
      Ti = 1;
      k0 = -1;
+     Aki=0;
      return;
   }
 
@@ -720,7 +720,7 @@ void TFractionFitter::FindPrediction(int bin, Double_t *fractions, Double_t &Ti,
         }
      }
      if (Aki > 0) {
-        Aki /= nMax;
+        if (nMax) Aki /= nMax;
         Ti = Tmin;
         return;
      }
