@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TCL.h,v 1.2 2003/01/14 14:26:13 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TCL.h,v 1.2 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 
 /*************************************************************************
@@ -14,8 +14,12 @@
 // The set of methods to work with the plain matrix / vector
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
 //
-// $Id: TCL.h,v 1.2 2003/01/14 14:26:13 fisyak Exp $
+// $Id: TCL.h,v 1.2 2003/01/27 20:41:36 brun Exp $
 // $Log: TCL.h,v $
+// Revision 1.2  2003/01/27 20:41:36  brun
+// New version of the Table package by Valeri Fine.
+// New classes TIndexTable TResponseIterator TResponseTable TTableMap
+//
 // Revision 1.2  2003/01/14 14:26:13  fisyak
 // Valeri's corrections
 //
@@ -471,7 +475,7 @@ inline double *TCL::vsub(const double *a, const double *b, double *x, int n)
   return x;
 }
 //________________________________________________________
-inline float  *TCL::vsub(const float *b, const double *c,  float *a, const int n)
+inline float  *TCL::vsub(const float *b, const double *c,  float *a, int n)
 {
    if (n <= 0)  return 0;
    for (int i=0;i<n;i++) a[i] = b[i] - c[i];
@@ -479,7 +483,7 @@ inline float  *TCL::vsub(const float *b, const double *c,  float *a, const int n
 }
 
 //________________________________________________________
-inline double *TCL::vsub(const double *b, const float *c,  double *a, const int n)
+inline double *TCL::vsub(const double *b, const float *c,  double *a, int n)
 {
    if (n <= 0)  return 0;
    for (int i=0;i<n;i++) a[i] = b[i] - c[i];

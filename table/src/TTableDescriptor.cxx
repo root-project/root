@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.4 2003/01/03 15:03:14 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.5 2003/01/27 20:41:37 brun Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.4 2003/01/03 15:03:14 fisyak Exp $
+// $Id: TTableDescriptor.cxx,v 1.5 2003/01/27 20:41:37 brun Exp $
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -69,7 +69,7 @@ Int_t TTableDescriptor::AddAt(const void *c)
 { 
    if (!c) return -1;
    TDataSet *cmnt = MakeCommentField();
-   assert(cmnt);
+   assert(cmnt!=0);
    tableDescriptor_st *element = (tableDescriptor_st *)c;
    TDataSet *comment = new TDataSet(element->fColumnName);comment->SetTitle("N/A");
    cmnt->AddAt(comment,(Int_t)GetNRows());
@@ -93,7 +93,7 @@ void TTableDescriptor::AddAt(const tableDescriptor_st &element,const char *comme
 
    TTable::AddAt(&element,indx);
    TDataSet *cmnt = MakeCommentField();
-   assert(cmnt);
+   assert(cmnt!=0);
    TDataSet *comment = new TDataSet(element.fColumnName);
    comment->SetTitle(commentText);
    cmnt->AddAt(comment,indx);
@@ -217,7 +217,7 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
          elementDescriptor.fType = TTable::GetTypeId(typeName);
       } else {
          TDataType *memberType = member->GetDataType();
-         assert(memberType);
+         assert(memberType!=0);
          elementDescriptor.fTypeSize = memberType->Size();
          elementDescriptor.fType = TTable::GetTypeId(memberType->GetTypeName());
       }
@@ -263,7 +263,7 @@ TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
 	TTableDescriptor *dsc = 0;
       TClass *cl = gROOT->GetClass(structName, kTRUE);
 //    TClass *cl = new TClass(structName,1,0,0);
-	assert(cl);
+	assert(cl!=0);
 	dsc = new TTableDescriptor(cl);
 	return dsc;
 }

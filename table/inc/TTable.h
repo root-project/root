@@ -1,4 +1,4 @@
-// @(#)root/star:$Name: v3-04-02qt $:$Id: TTable.h,v 1.8 2003/01/17 16:10:48 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.4 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
  
 /*************************************************************************
@@ -36,6 +36,10 @@
 # ifndef ROOT_Riosfwd
 #  include "Riosfwd.h"
 # endif
+#if defined(R__ANSISTREAM)
+    using namespace std;
+#endif 
+
 // #endif
 
 
@@ -185,19 +189,19 @@ public:
       private:
 	       Long_t        fRowSize;
          const TTable *fThisTable;
-		     std::vector<Long_t>::iterator fCurrentRow;
+		     vector<Long_t>::iterator fCurrentRow;
       public:
-	      iterator(): fRowSize(0), fThisTable(0) {;}
-        iterator(const TTable &table,std::vector<Long_t>::iterator rowPtr) : fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(rowPtr) {;}
-        iterator(const TTable &table,std::vector<Long_t>::const_iterator rowPtr) : fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(*(std::vector<Long_t>::iterator *)(void *)&rowPtr) {;}
+	     iterator(): fRowSize(0), fThisTable(0) {;}
+        iterator(const TTable &table,vector<Long_t>::iterator &rowPtr) : fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(rowPtr) {;}
+        iterator(const TTable &table,vector<Long_t>::const_iterator &rowPtr) : fRowSize(table.GetRowSize()), fThisTable(&table), fCurrentRow(*(vector<Long_t>::iterator *)(void *)&rowPtr) {;}
         iterator(const iterator& iter) : fRowSize (iter.fRowSize), fThisTable(iter.fThisTable),fCurrentRow(iter.fCurrentRow){}
         void operator=(const iterator& iter)   { fRowSize = iter.fRowSize; fThisTable = iter.fThisTable; fCurrentRow=iter.fCurrentRow; }
         void operator++()    { ++fCurrentRow;   }
         void operator++(int) {   fCurrentRow++; }
         void operator--()    { --fCurrentRow;   }
         void operator--(int) {   fCurrentRow--; }
-        iterator operator+(Int_t idx)   { return  iterator(*fThisTable,fCurrentRow+idx); }
-        iterator operator-(Int_t idx)   { return  iterator(*fThisTable,fCurrentRow-idx); }
+        iterator operator+(Int_t idx)   { vector<Long_t>::iterator addition   = fCurrentRow+idx; return  iterator(*fThisTable,addition); }
+        iterator operator-(Int_t idx)   { vector<Long_t>::iterator subtraction = fCurrentRow-idx; return  iterator(*fThisTable,subtraction); }
         void operator+=(Int_t idx)  {  fCurrentRow+=idx; }
         void operator-=(Int_t idx)  {  fCurrentRow-=idx; }
         void *rowPtr() const { return  (void *)(((const char *)fThisTable->GetArray()) + (*fCurrentRow)*fRowSize ); }
@@ -209,7 +213,9 @@ public:
 
         const TTable &Table()   const { return *fThisTable;}
         const Long_t &RowSize() const { return fRowSize;}
-        const std::vector<Long_t>::iterator &Row() const { return fCurrentRow;}
+#ifndef __CINT__
+        const vector<Long_t>::iterator &Row() const { return fCurrentRow;}
+#endif
     };                
 
 #ifndef __CINT__
@@ -221,7 +227,7 @@ public:
     
     class piterator {
       private:
-		std::vector<ULong_t>  fPtrs;
+		vector<ULong_t>  fPtrs;
         UInt_t           fCurrentRowIndex;
         UInt_t           fCurrentColIndex;
         UInt_t           fRowSize;
