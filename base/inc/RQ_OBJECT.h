@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.7 2002/09/14 00:28:53 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.8 2003/05/15 18:01:56 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -67,6 +67,9 @@
 private: \
    TQObjSender fQObject; \
 public: \
+   TList   *GetListOfSignals() const { \
+      return fQObject.GetListOfSignals(); \
+   } \
    Bool_t Connect(const char *sig, const char *cl, \
                   void *rcvr, const char *slt) \
    { \
