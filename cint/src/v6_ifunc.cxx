@@ -4380,7 +4380,7 @@ int recursive;
     if(0==recursive && G__NOMATCH==funclist->p_rate[i]) {
       if(param_type=='u' && -1!=param_tagnum) {
 	struct G__ifunc_table *ifunc2;
-	int ifn2;
+	int ifn2 = -1;
 	int hash2;
 	char funcname2[G__ONELINE];
 	struct G__param para;
@@ -5829,7 +5829,7 @@ int isrecursive;
   /* convert parameter */
 #ifndef G__OLDIMPLEMENTATION1365
   if(G__convert_param(libp,p_ifunc,*pifn,match))
-    return((struct G__ifunc_table*)0);
+    return((struct G__ifunc_table*)NULL);
 #else
   G__convert_param(libp,p_ifunc,*pifn,match);
 #endif

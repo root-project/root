@@ -135,6 +135,9 @@ char *expression;
   if(arrayindex) {
     pinc=G__getarrayindex(arrayindex);
     *arrayindex='\0';
+#ifndef G__OLDIMPLEMENTATION1125
+    if(-1==tagnum)  tagnum = G__defined_tagname(basictype,1);
+#endif
 #ifndef G__OLDIMPLEMENTATION1052
     if(-1!=tagnum) sprintf(construct,"%s()",G__struct.name[tagnum]);
 #ifndef G__OLDIMPLEMENTATION1246
@@ -142,9 +145,9 @@ char *expression;
 #else
     else sprintf(construct,"%s()",type);
 #endif
-#else
+#else /* 1052 */
     sprintf(construct,"%s()",type);
-#endif
+#endif /* 1052 */
 #ifndef G__OLDIMPLEMENTATION911
     if(G__asm_wholefunction) G__abortbytecode(); 
 #endif

@@ -158,7 +158,8 @@ int fentry;
       G__genericerror("Internal error: can not open tmpfile.");
       return;
     }
-    strcpy(prepname,"(tmpfile)");
+    /*strcpy(prepname,"(tmpfile)");*/
+    sprintf(prepname,"(tmp%d)",fentry);
     G__copyfile(fpout,pifile->fp);
     fseek(fpout,0L,SEEK_SET);
     G__srcfile[fentry].prepname = (char*)malloc(strlen(prepname)+1);
@@ -1114,6 +1115,7 @@ FILE *fp;
   int store_asm_exec;
   int store_return;
   long store_struct_offset;
+  int hash,temp;
 #ifndef G__OLDIMPLEMENTATION1536
   char hdrprop = G__NONCINTHDR;
 #endif
@@ -1158,9 +1160,11 @@ FILE *fp;
   **********************************************/
   G__ifile.line_number = 1;
   G__ifile.fp = fp;
-  strcpy(G__ifile.name,"(tmpfile)");
   G__ifile.filenum = G__nfile ;
-  fentry = G__nfile++;
+  fentry = G__nfile;
+  /* strcpy(G__ifile.name,"(tmpfile)"); */
+  sprintf(G__ifile.name,"(tmp%d)",fentry);
+  G__hash(G__ifile.name,hash,temp);
 
   G__srcfile[fentry].dictpos
     = (struct G__dictposition*)malloc(sizeof(struct G__dictposition));
@@ -1172,6 +1176,7 @@ FILE *fp;
   G__srcfile[fentry].security = G__security;
 
   G__srcfile[fentry].prepname = (char*)NULL;
+  G__srcfile[fentry].hash = hash;
   G__srcfile[fentry].filename = (char*)malloc(strlen(G__ifile.name)+1);
   strcpy(G__srcfile[fentry].filename,G__ifile.name);
   G__srcfile[fentry].fp=G__ifile.fp;
@@ -1183,6 +1188,8 @@ FILE *fp;
   G__srcfile[fentry].hasonlyfunc = (struct G__dictposition*)NULL;
   G__srcfile[fentry].parent_tagnum = G__get_envtagnum();
   G__srcfile[fentry].slindex = -1;
+
+  ++G__nfile;
 
   if(G__debugtrace) {
     G__fprinterr(G__serr,"LOADING tmpfile\n");
@@ -1308,7 +1315,11 @@ FILE *fp;
 #ifndef G__OLDIMPLEMENTATION1345
   G__UnlockCriticalSection();
 #endif
+#ifndef G__OLDIMPLEMENTATION1920
+  return(fentry+2);
+#else
   return(G__LOADFILE_SUCCESS);
+#endif
 }
 #endif
 

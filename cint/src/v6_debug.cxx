@@ -846,6 +846,7 @@ char* G__load_text(namedmacro)
 char *namedmacro;
 {
 #ifndef G__OLDIMPLEMENTATION1919
+  int fentry;
   char* result = (char*)NULL;
   FILE *fp;
 
@@ -855,7 +856,7 @@ char *namedmacro;
   fprintf(fp,"\n");
 
   fseek(fp,0L,SEEK_SET);
-  switch(G__loadfile_tmpfile(fp)) {
+  switch((fentry=G__loadfile_tmpfile(fp))) {
   case G__LOADFILE_SUCCESS:
     result = "(tmpfile)";
     break;
@@ -864,6 +865,9 @@ char *namedmacro;
   case G__LOADFILE_FATAL:
     fclose(fp);
     result = (char*)NULL;
+    break;
+  default:
+    result = G__srcfile[fentry-2].filename;
     break;
   }
   return(result);

@@ -22,7 +22,7 @@
 #define G__CI_H
 
 #define G__CINTVERSION      50150105
-#define G__CINTVERSIONSTR  "5.15.105 preview, Sep 28 2003"
+#define G__CINTVERSIONSTR  "5.15.105, Sep 28 2003"
 
 
 /**********************************************************************
