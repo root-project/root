@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.20 2003/11/17 17:18:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLegend.cxx,v 1.21 2004/08/18 08:47:07 brun Exp $
 // Author: Matthew.Adam.Dobbs   06/09/99
 
 /*************************************************************************
@@ -552,8 +552,8 @@ void TLegend::SavePrimitive( ofstream &out, Option_t* )
       <<GetX2NDC()<<","<<GetY2NDC()<<","
       << "NULL" << "," <<quote<< fOption <<quote<<");" << endl;
   SaveTextAttributes(out,"leg",12,0,1,42,0);
-  SaveLineAttributes(out,"leg",0,0,0);
-  SaveFillAttributes(out,"leg",0,0);
+  SaveLineAttributes(out,"leg",-1,-1,-1);
+  SaveFillAttributes(out,"leg",-1,-1);
   if ( fPrimitives ) {
     TIter next(fPrimitives);
     TLegendEntry *entry;
