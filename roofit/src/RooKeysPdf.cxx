@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooKeysPdf.cc,v 1.6 2002/02/26 03:39:44 verkerke Exp $
+ *    File: $Id: RooKeysPdf.cc,v 1.7 2002/04/04 00:18:00 verkerke Exp $
  * Authors:
  *   GR, Gerhard Raven, UC, San Diego , Gerhard.Raven@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -88,6 +88,9 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
 
   // make new arrays for data and weights to fill
   _nEvents= (Int_t)data.numEntries();
+  if (_mirrorLeft) _nEvents += data.numEntries();
+  if (_mirrorRight) _nEvents += data.numEntries();
+
   _dataPts = new Double_t[_nEvents];
   _weights = new Double_t[_nEvents];
 
@@ -95,12 +98,26 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
   Double_t x1(0);
   Double_t x2(0);
 
-  Int_t i;
-  for (i=0; i<_nEvents; i++) {
+  Int_t i, idata=0;
+  for (i=0; i<data.numEntries(); i++) {
     const RooArgSet *values= data.get(i);
     RooRealVar real= (RooRealVar&)(values->operator[](_varName));
-    _dataPts[i]= real.getVal();
-    x0++; x1+=_dataPts[i]; x2+=_dataPts[i]*_dataPts[i];
+
+    _dataPts[idata]= real.getVal();
+    x0++; x1+=_dataPts[idata]; x2+=_dataPts[idata]*_dataPts[idata];
+    idata++;
+
+    if (_mirrorLeft) {
+      _dataPts[idata]= 2*_lo - real.getVal();
+      x0++; x1+=_dataPts[idata]; x2+=_dataPts[idata]*_dataPts[idata];
+      idata++;
+    }
+
+    if (_mirrorRight) {
+      _dataPts[idata]= 2*_hi - real.getVal();
+      x0++; x1+=_dataPts[idata]; x2+=_dataPts[idata]*_dataPts[idata];
+      idata++;
+    }
   }
 
   Double_t mean=x1/x0;
@@ -151,20 +168,20 @@ Double_t RooKeysPdf::evaluateFull( Double_t x ) const {
     y+=exp(-0.5*chi*chi)/_weights[i];
 
     // if mirroring the distribution across either edge of
-    // the range ("Boundary Kernals"), pick up the additional
+    // the range ("Boundary Kernels"), pick up the additional
     // contributions
-    if (_mirrorLeft) {
-      chi=(x-(2*_lo-_dataPts[i]))/_weights[i];
-      y+=exp(-0.5*chi*chi)/_weights[i];
-    }
+//      if (_mirrorLeft) {
+//        chi=(x-(2*_lo-_dataPts[i]))/_weights[i];
+//        y+=exp(-0.5*chi*chi)/_weights[i];
+//      }
     if (_asymLeft) {
       chi=(x-(2*_lo-_dataPts[i]))/_weights[i];
       y-=exp(-0.5*chi*chi)/_weights[i];
     }
-    if (_mirrorRight) {
-      chi=(x-(2*_hi-_dataPts[i]))/_weights[i];
-      y+=exp(-0.5*chi*chi)/_weights[i];
-    }
+//      if (_mirrorRight) {
+//        chi=(x-(2*_hi-_dataPts[i]))/_weights[i];
+//        y+=exp(-0.5*chi*chi)/_weights[i];
+//      }
     if (_asymRight) {
       chi=(x-(2*_hi-_dataPts[i]))/_weights[i];
       y-=exp(-0.5*chi*chi)/_weights[i];
