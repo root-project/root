@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TNetFile.h,v 1.16 2004/08/09 17:43:07 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXNetConn.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -44,7 +44,7 @@
 #include "TUrl.h"
 #endif
 
-class TXNetConn : public TObject {
+class TXNetConn {
 
 public:
    enum ServerType {
@@ -73,7 +73,7 @@ public:
 
 
    TXNetConn();
-   ~TXNetConn();
+   virtual ~TXNetConn();
 
    Bool_t           CheckHostDomain(TString hostToCheck, TString allow,
                                                          TString deny);
@@ -153,7 +153,7 @@ private:
    XReqErrorType       WriteToServer(ClientRequest *, ClientRequest *,
                                          const void*, Short_t);
 
-   ClassDef(TXNetConn, 1); //A high level connection class for TXNetAdmin.
+   ClassDef(TXNetConn, 0); //A high level connection class for TXNetAdmin.
 };
 
 

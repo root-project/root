@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.h,v 1.3 2004/08/20 23:26:05 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -56,7 +56,7 @@ enum ERemoteServer {
    kUnknown = 102
 };
 
-class TXPhyConnection: public TXUnsolicitedMsgSender, public TObject {
+class TXPhyConnection: public TXUnsolicitedMsgSender {
 private:
    time_t              fLastUseTimestamp;
    enum ELoginState    fLogged;       // only 1 login/auth is needed for physical
@@ -82,7 +82,7 @@ public:
    Long_t              fTTLsec;
 
    TXPhyConnection(TXAbsUnsolicitedMsgHandler *h);
-   ~TXPhyConnection();
+   virtual ~TXPhyConnection();
 
    TXMessage     *BuildXMessage(ESendRecvOptions opt, Bool_t IgnoreTimeouts,
                                 Bool_t Enqueue);
@@ -111,7 +111,7 @@ public:
    Int_t          WriteRaw(const void *buffer, Int_t BufferLength,
                            ESendRecvOptions opt = kDefault);
 
-   ClassDef(TXPhyConnection, 1);
+   ClassDef(TXPhyConnection, 0);
 };
 
 #endif

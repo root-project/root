@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXSocket.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXSocket.h,v 1.3 2004/09/08 10:21:40 brun Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -85,7 +85,7 @@ private:
 
 public:
    TXSocket(TString host, Int_t port, Int_t tcpwindowsize = -1);
-   ~TXSocket();
+   virtual ~TXSocket();
 
    static void    CatchTimeOut();
 
@@ -96,7 +96,7 @@ public:
                                         ESendRecvOptions opt = kDefault);
    void           TryConnect();
 
-   ClassDef(TXSocket, 1); // An extension of TSocket with read/write/connect
+   ClassDef(TXSocket, 0); // An extension of TSocket with read/write/connect
                           // timeouts and threads
 };
 

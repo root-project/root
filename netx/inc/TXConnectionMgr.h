@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXConnectionMgr.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXConnectionMgr.h,v 1.3 2004/08/20 23:26:05 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -59,13 +59,13 @@ class TXConnectionMgr;
 
 // Maybe we don't want to start the garbage collector
 // But the default must be to start it
-#define DFLT_STARTGARBAGECOLLECTORTHREAD	1
+#define DFLT_STARTGARBAGECOLLECTORTHREAD	0
 
 // Ugly prototype to avoid warnings under solaris
 extern "C" void * GarbageCollectorThread(void * arg);
 
 class TXConnectionMgr: public TXAbsUnsolicitedMsgHandler,
-                       TXUnsolicitedMsgSender, public TObject {
+                       TXUnsolicitedMsgSender {
 private:
    vector <TXLogConnection*> fLogVec;
    vector <TXPhyConnection*> fPhyVec;
@@ -102,7 +102,7 @@ public:
    static TXConnectionMgr* Instance();
    static void             Reset();
 
-   ClassDef(TXConnectionMgr, 1); // The Connection Manager
+   ClassDef(TXConnectionMgr, 0); // The Connection Manager
 };
 
 

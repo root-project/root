@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXUrl.h,v 1.2 2004/08/20 22:16:33 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXUrl.h,v 1.3 2004/08/20 23:26:05 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -31,7 +31,7 @@ using namespace std;
 typedef vector<TUrl*> UrlArray;
 
 
-class TXUrl : public TObject {
+class TXUrl {
 
 private:
    UrlArray fUrlArray, fTmpUrlArray;
@@ -49,7 +49,7 @@ private:
 
  public:
    TXUrl(TString);
-   ~TXUrl();
+   virtual ~TXUrl();
 
    // Returns the final resolved list of servers
    TString GetServers() {
@@ -77,7 +77,7 @@ private:
 
    Bool_t IsValid(void) { return fIsValid; }    // Return kFALSE if the CTOR's argument is malformed
 
-   ClassDef(TXUrl, 1); //A container for multiple urls.
+   ClassDef(TXUrl, 0); //A container for multiple urls.
 };
 
 #endif
