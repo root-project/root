@@ -24,8 +24,13 @@ while [ "$1" != "" ]; do
    shift
 done
 
+ldversion=0`ld -V| head -n1 | sed 's/.* \([[:digit:]]*$\)/\1/' | egrep '[[:digit:]]+'`
+if [ $ldversion -lt 20030404 ]; then 
+    outimplib="-Wl,--out-implib,${dllname}.a"
+fi
+
 # 
-g++ -Wl,--out-implib,${dllname}.a $args \
+g++ $outimplib $args \
   && ( if [ "$isdll" != "0" ]; then \
           ln -sf ../bin/$dllbase $dllname; \
        fi )
