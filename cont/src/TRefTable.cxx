@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.25 2004/01/30 13:58:48 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.cxx,v 1.1 2004/08/20 14:46:36 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -24,6 +24,18 @@
 ClassImp(TRefTable)
 
 //______________________________________________________________________________
+TRefTable::TRefTable()
+{
+   // Default constructor for I/O
+
+   fSize = 0;
+   fN    = 0;
+   fParentID  = -1;
+   fParentIDs = 0;
+   fParents   = 0;
+}
+
+//______________________________________________________________________________
 TRefTable::TRefTable(Int_t size)
 {
    // Create a TRefTable with initial size
@@ -37,6 +49,13 @@ TRefTable::TRefTable(Int_t size)
       fParentIDs[i] = 0;
    }
    fParents = new TObjArray(1);
+}
+
+//______________________________________________________________________________
+TRefTable::~TRefTable()
+{
+	delete [] fParentIDs;
+	delete fParents;
 }
 
 //______________________________________________________________________________

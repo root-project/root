@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefTable.h,v 1.6 2002/03/25 20:21:05 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefTable.h,v 1.1 2004/08/20 14:46:36 brun Exp $
 // Author: Rene Brun   17/08/2004
 
 /*************************************************************************
@@ -42,8 +42,9 @@ protected:
 
 public:
 
-   TRefTable(Int_t size=100);
-   virtual ~TRefTable() {Clear();}
+   TRefTable();
+   TRefTable(Int_t size);
+   virtual ~TRefTable();
    virtual Int_t      Add(Int_t uid);
    virtual void       Clear(Option_t * /*option*/ ="");
    virtual Int_t      Expand(Int_t newsize);
