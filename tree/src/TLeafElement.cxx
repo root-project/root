@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.1 2001/01/15 07:25:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafElement.cxx,v 1.2 2001/01/16 16:24:39 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -62,8 +62,9 @@ void TLeafElement::FillBasket(TBuffer &b)
 //*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
 //*-*                  =========================================
 
-   char **apointer = (char**)fBranch->GetAddress();
-   char *pointer = (char*)(*apointer);
+   //char **apointer = (char**)fBranch->GetAddress();
+   //char *pointer = (char*)(*apointer);
+   char *pointer = fBranch->GetAddress();
    if (fID >= 0) {
       ((TBranchElement*)fBranch)->GetInfo()->WriteBuffer(b,pointer,fID);
    }
@@ -116,8 +117,9 @@ void TLeafElement::ReadBasket(TBuffer &b)
 //*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
 //*-*                  ===========================================
 
-   char **apointer = (char**)fBranch->GetAddress();
-   char *pointer = (char*)(*apointer);
+   //char **apointer = (char**)fBranch->GetAddress();
+   //char *pointer = (char*)(*apointer);
+   char *pointer = fBranch->GetAddress();
 //printf("ReadBasket, fID=%d, pointer=%ld\n",fID,(Long_t)pointer);
    if (fID >= 0) ((TBranchElement*)fBranch)->GetInfo()->ReadBuffer(b,pointer,fID);
 }
@@ -128,5 +130,5 @@ void TLeafElement::SetAddress(void *add)
 //*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
 //*-*                  ============================
 
-   fAbsAddress = add;
+   fAbsAddress = (char*)add;
 }
