@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.7 2002/12/06 16:45:03 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.8 2003/01/06 17:05:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -258,9 +258,8 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
    if (iact<3 && safe) {
       saf[0]=(r<fRmin)?fRmin-r:kBig;
       saf[1]=(r>fRmax)?(r-fRmax):kBig;
-      if (!TestBit(kGeoThetaSeg)) {
-         saf[2]=saf[3]=kBig;
-      } else {
+      saf[2]=saf[3]=saf[4]=saf[5]= kBig;
+      if (TestBit(kGeoThetaSeg)) {
          if (th < fTheta1) {
             saf[2] = r*TMath::Sin((fTheta1-th)*kDegRad);
           }    
@@ -268,17 +267,13 @@ Double_t TGeoSphere::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double
             saf[3] = r*TMath::Sin((th-fTheta2)*kDegRad);
          }
       }
-      if (!TestBit(kGeoPhiSeg)) {
-         saf[4]=saf[5]=kBig;
-      } else {
+      if (TestBit(kGeoPhiSeg)) {
          Double_t dph1=phi-fPhi1;
          if (dph1<0) dph1+=360.;
-         if (dph1>90.) saf[4]=kBig;            
-         else saf[4]=rxy*TMath::Sin(dph1*kDegRad);
+         if (dph1<=90.) saf[4]=rxy*TMath::Sin(dph1*kDegRad);
          Double_t dph2=fPhi2-phi;
-	       if (dph2<0) dph2+=360.;
-         if (dph2>90.) saf[5]=kBig;            
-         else saf[5]=rxy*TMath::Sin(dph2*kDegRad);
+	 if (dph2<0) dph2+=360.;
+         if (dph2>90.) saf[5]=rxy*TMath::Sin(dph2*kDegRad);
       }
       *safe = saf[TMath::LocMin(6, &saf[0])];
       if (iact==0) return kBig;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.9 2003/01/12 14:49:32 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.10 2003/01/13 14:53:49 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -1579,14 +1579,14 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    if (!tub) {
       if (phi2<phi1) phi2+=2.*TMath::Pi();
       //phim = 0.5*(phi1+phi2);
-      c1 = TMath::Cos(phi1);
-      c2 = TMath::Cos(phi2);
-      s1 = TMath::Sin(phi1);
-      s2 = TMath::Sin(phi2);
-      fio = 0.5*(phi1+phi2);
+      c1   = TMath::Cos(phi1);
+      c2   = TMath::Cos(phi2);
+      s1   = TMath::Sin(phi1);
+      s2   = TMath::Sin(phi2);
+      fio  = 0.5*(phi1+phi2);
       cfio = TMath::Cos(fio);
       sfio = TMath::Sin(fio);
-      dfi = 0.5*(phi2-phi1);
+      dfi  = 0.5*(phi2-phi1);
       cdfi = TMath::Cos(dfi);
    }
 
@@ -1595,6 +1595,7 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    if (iact<3 && safe) {
       saf[2] = fRmin-r;
       saf[3] = r-fRmax;
+      saf[4] = -kBig;
       if (!tub) {
          if (r>0) {
             cpsi = (point[0]*cfio+point[1]*sfio)/r;
@@ -1605,9 +1606,7 @@ Double_t TGeoCtub::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
                   saf[4]=TMath::Abs(point[0]*s2-point[1]*c2);
             }      
          }
-      } else {
-         saf[4]=-kBig;
-      }      
+      }
       *safe = saf[TMath::LocMax(5,&saf[0])];
       if (iact==0) return kBig;
       if ((iact==1) && (step<=*safe)) return kBig;
