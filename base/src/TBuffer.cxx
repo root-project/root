@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.46 2003/02/25 17:58:17 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.47 2003/03/11 14:27:15 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -537,7 +537,18 @@ Int_t TBuffer::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
             Warning("CheckByteCount","%s::Streamer() not in sync with data on file, fix Streamer()",
                     clss->GetName());
       }
-      fBufCur = (char *) endpos;
+      if ( ((char *)endpos) > fBufMax ) {
+         offset = fBufMax-fBufCur;
+         Error("CheckByteCount", 
+               "Byte count probably corrupted around buffer position %d:\n\t%d for a possible maximum of %d.",
+               startpos, bcnt, offset);
+         fBufCur = fBufMax;
+
+      } else {
+
+         fBufCur = (char *) endpos;
+         
+      }
    }
    return offset;
 }
