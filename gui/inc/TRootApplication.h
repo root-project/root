@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootApplication.h,v 1.3 2001/10/02 09:07:43 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootApplication.h,v 1.4 2004/05/10 12:09:45 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 // This class create the ROOT native GUI version of the ROOT            //
 // application environment. This in contrast the Win32 version.         //
 // Once the native widgets work on Win32 this class can be folded into  //
-// the TApplication class (since all graphic will go via TVirtualX).         //
+// the TApplication class (since all graphic will go via TVirtualX).    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -36,7 +36,7 @@ class TRootApplication : public TApplicationImp {
 
 private:
    TGClient    *fClient;        // pointer to the client environment
-   char        *fDisplay;       // display server to conntect to
+   char        *fDisplay;       // display server to connect to
 
    TRootApplication() { fClient = 0; fDisplay = 0; }
    void GetOptions(Int_t *argc, char **argv);

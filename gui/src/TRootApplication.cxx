@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootApplication.cxx,v 1.5 2003/10/22 17:20:50 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootApplication.cxx,v 1.6 2004/05/10 12:09:45 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -54,7 +54,7 @@ TRootApplication::~TRootApplication()
 {
    // Delete ROOT application environment.
 
-   delete fDisplay;
+   delete [] fDisplay;
    delete fClient;
 }
 
@@ -79,7 +79,7 @@ void TRootApplication::GetOptions(Int_t *argc, char **argv)
    for (i = 0; i < *argc; i++) {
       if (!strcmp(argv[i], "-display")) {
          if (argv[i+1] && strlen(argv[i+1]) && argv[i+1][0] != '-') {
-            fDisplay = StrDup(argv[i+1]);
+            fDisplay  = StrDup(argv[i+1]);
             argv[i]   = 0;
             argv[i+1] = 0;
             i++;
