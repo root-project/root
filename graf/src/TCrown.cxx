@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.2 2002/08/10 09:34:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TCrown.cxx,v 1.3 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   108/08/2002
 
 /*************************************************************************
@@ -216,6 +216,8 @@ void TCrown::SavePrimitive(ofstream &out, Option_t *)
 
    SaveFillAttributes(out,"crown",0,1001);
    SaveLineAttributes(out,"crown",1,1,1);
+
+   if (GetNoEdges()) out<<"   crown->SetNoEdges();"<<endl;
 
    out<<"   crown->Draw();"<<endl;
 }

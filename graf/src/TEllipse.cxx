@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.17 2004/03/22 15:56:27 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TEllipse.cxx,v 1.18 2004/11/04 12:09:25 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -514,6 +514,8 @@ void TEllipse::SavePrimitive(ofstream &out, Option_t *)
 
    SaveFillAttributes(out,"ellipse",0,1001);
    SaveLineAttributes(out,"ellipse",1,1,1);
+
+   if (GetNoEdges()) out<<"   ellipse->SetNoEdges();"<<endl;
 
    out<<"   ellipse->Draw();"<<endl;
 }

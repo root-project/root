@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.6 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArc.cxx,v 1.7 2002/10/31 07:27:35 brun Exp $
 // Author: Rene Brun   16/10/95
 
 /*************************************************************************
@@ -97,6 +97,8 @@ void TArc::SavePrimitive(ofstream &out, Option_t *)
 
    SaveFillAttributes(out,"arc",0,1001);
    SaveLineAttributes(out,"arc",1,1,1);
+
+   if (GetNoEdges()) out<<"   arc->SetNoEdges();"<<endl;
 
    out<<"   arc->Draw();"<<endl;
 }
