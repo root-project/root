@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.11 2004/07/02 21:51:29 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.1 2004/07/08 08:08:28 brun Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -25,14 +25,14 @@ TTreeIndex::TTreeIndex(): TVirtualIndex()
 {
 // Default constructor for TTreeIndex
 
-   fTree          = 0;
-   fN             = 0;
-   fIndexValues   = 0;
-   fIndex         = 0;
-   fMajorFormula  = 0;
-   fMinorFormula  = 0;
-   fMajorFormulaP = 0;
-   fMinorFormulaP = 0;
+   fTree               = 0;
+   fN                  = 0;
+   fIndexValues        = 0;
+   fIndex              = 0;
+   fMajorFormula       = 0;
+   fMinorFormula       = 0;
+   fMajorFormulaParent = 0;
+   fMinorFormulaParent = 0;
 }
 
 //______________________________________________________________________________
@@ -93,16 +93,16 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
    //
    // The return value is the number of entries in the Index (< 0 indicates failure)
 
-   fTree          = (TTree*)T;
-   fN             = 0;
-   fIndexValues   = 0;
-   fIndex         = 0;
-   fMajorFormula  = 0;
-   fMinorFormula  = 0;
-   fMajorFormulaP = 0;
-   fMinorFormulaP = 0;
-   fMajorName     = majorname;
-   fMinorName     = minorname;
+   fTree               = (TTree*)T;
+   fN                  = 0;
+   fIndexValues        = 0;
+   fIndex              = 0;
+   fMajorFormula       = 0;
+   fMinorFormula       = 0;
+   fMajorFormulaParent = 0;
+   fMinorFormulaParent = 0;
+   fMajorName          = majorname;
+   fMinorName          = minorname;
    if (!T) return;
    fN = (Long64_t)T->GetEntries();
    if (fN <= 0) {
@@ -141,12 +141,12 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
 //______________________________________________________________________________
 TTreeIndex::~TTreeIndex()
 {
-   delete [] fIndexValues; fIndexValues = 0;
-   delete [] fIndex;       fIndex = 0;
-   delete fMajorFormula;   fMajorFormula  = 0;
-   delete fMinorFormula;   fMinorFormula  = 0;
-   delete fMajorFormulaP;  fMajorFormulaP = 0;
-   delete fMinorFormulaP;  fMinorFormulaP = 0;
+   delete [] fIndexValues;      fIndexValues = 0;
+   delete [] fIndex;            fIndex = 0;
+   delete fMajorFormula;        fMajorFormula  = 0;
+   delete fMinorFormula;        fMinorFormula  = 0;
+   delete fMajorFormulaParent;  fMajorFormulaParent = 0;
+   delete fMinorFormulaParent;  fMinorFormulaParent = 0;
 }
    
 //______________________________________________________________________________
@@ -181,11 +181,11 @@ Int_t TTreeIndex::GetEntryNumberFriend(const TTree *T)
 // major and minor name, the entry serial number in the friend tree
 // and in the master Tree are assumed to be the same
    
-   GetMajorFormulaP(T);
-   GetMinorFormulaP(T);
-   if (!fMajorFormulaP || !fMinorFormulaP) return -1;
-   Double_t majord = fMajorFormulaP->EvalInstance();
-   Double_t minord = fMinorFormulaP->EvalInstance();
+   GetMajorFormulaParent(T);
+   GetMinorFormulaParent(T);
+   if (!fMajorFormulaParent || !fMinorFormulaParent) return -1;
+   Double_t majord = fMajorFormulaParent->EvalInstance();
+   Double_t minord = fMinorFormulaParent->EvalInstance();
    Long64_t majorv = (Long64_t)majord;
    Long64_t minorv = (Long64_t)minord;
    return fTree->GetEntryNumberWithIndex(majorv,minorv);
@@ -260,21 +260,21 @@ TTreeFormula *TTreeIndex::GetMinorFormula()
 }
       
 //______________________________________________________________________________
-TTreeFormula *TTreeIndex::GetMajorFormulaP(const TTree *T) 
+TTreeFormula *TTreeIndex::GetMajorFormulaParent(const TTree *T) 
 {
    // return a pointer to the TreeFormula corresponding to the majorname in parent tree T
    
-   if (!fMajorFormulaP) fMajorFormulaP = new TTreeFormula("MajorP",fMajorName.Data(),(TTree*)T);
-   return fMajorFormulaP;
+   if (!fMajorFormulaParent) fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),(TTree*)T);
+   return fMajorFormulaParent;
 }
       
 //______________________________________________________________________________
-TTreeFormula *TTreeIndex::GetMinorFormulaP(const TTree *T) 
+TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *T) 
 {
    // return a pointer to the TreeFormula corresponding to the minorname in parent tree T
    
-   if (!fMinorFormulaP) fMinorFormulaP = new TTreeFormula("MinorP",fMinorName.Data(),(TTree*)T);
-   return fMinorFormulaP;
+   if (!fMinorFormulaParent) fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),(TTree*)T);
+   return fMinorFormulaParent;
 }
 
 //______________________________________________________________________________
@@ -343,8 +343,8 @@ void TTreeIndex::SetTree(const TTree *T)
    // must update the leaves numbers in the TTreeFormula used by the TreeIndex.
    
    fTree = (TTree*)T;
-   if (fMajorFormula)  {fMajorFormula->SetTree(fTree);   fMajorFormula->UpdateFormulaLeaves();}
-   if (fMinorFormula)  {fMinorFormula->SetTree(fTree);   fMinorFormula->UpdateFormulaLeaves();}
-   if (fMajorFormulaP) {fMajorFormulaP->SetTree(fTree);  fMajorFormulaP->UpdateFormulaLeaves();}
-   if (fMinorFormulaP) {fMinorFormulaP->SetTree(fTree);  fMinorFormulaP->UpdateFormulaLeaves();}
+   if (fMajorFormula)       {fMajorFormula->SetTree(fTree);        fMajorFormula->UpdateFormulaLeaves();}
+   if (fMinorFormula)       {fMinorFormula->SetTree(fTree);        fMinorFormula->UpdateFormulaLeaves();}
+   if (fMajorFormulaParent) {fMajorFormulaParent->SetTree(fTree);  fMajorFormulaParent->UpdateFormulaLeaves();}
+   if (fMinorFormulaParent) {fMinorFormulaParent->SetTree(fTree);  fMinorFormulaParent->UpdateFormulaLeaves();}
 }   

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeIndex.h,v 1.8 2004/03/22 15:57:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeIndex.h,v 1.1 2004/07/08 08:08:28 brun Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -32,15 +32,15 @@
 class TTreeIndex : public TVirtualIndex {
 
 protected:
-  TString        fMajorName;      // Index major name
-  TString        fMinorName;      // Index minor name
-  Long64_t       fN;              // Number of entries
-  Long64_t      *fIndexValues;    //[fN] Sorted index values
-  Long64_t      *fIndex;          //[fN] Index of sorted values
-  TTreeFormula  *fMajorFormula;   //! Pointer to major TreeFormula
-  TTreeFormula  *fMinorFormula;   //! Pointer to minor TreeFormula
-  TTreeFormula  *fMajorFormulaP;  //! Pointer to major TreeFormula in Parent tree (if any)
-  TTreeFormula  *fMinorFormulaP;  //! Pointer to minor TreeFormula in Parent tree (if any)
+  TString        fMajorName;           // Index major name
+  TString        fMinorName;           // Index minor name
+  Long64_t       fN;                   // Number of entries
+  Long64_t      *fIndexValues;         //[fN] Sorted index values
+  Long64_t      *fIndex;               //[fN] Index of sorted values
+  TTreeFormula  *fMajorFormula;        //! Pointer to major TreeFormula
+  TTreeFormula  *fMinorFormula;        //! Pointer to minor TreeFormula
+  TTreeFormula  *fMajorFormulaParent;  //! Pointer to major TreeFormula in Parent tree (if any)
+  TTreeFormula  *fMinorFormulaParent;  //! Pointer to minor TreeFormula in Parent tree (if any)
 
 public:
   TTreeIndex();
@@ -57,8 +57,8 @@ public:
   virtual Long64_t       GetN()            const {return fN;}
   virtual TTreeFormula  *GetMajorFormula();
   virtual TTreeFormula  *GetMinorFormula();
-  virtual TTreeFormula  *GetMajorFormulaP(const TTree *T);
-  virtual TTreeFormula  *GetMinorFormulaP(const TTree *T);
+  virtual TTreeFormula  *GetMajorFormulaParent(const TTree *T);
+  virtual TTreeFormula  *GetMinorFormulaParent(const TTree *T);
   virtual void           Print(Option_t *option="") const;
   virtual void           SetTree(const TTree *T);
 
