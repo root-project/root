@@ -176,7 +176,7 @@ if [ $PLATFORM = "sgi" ]; then
    FAVOR_SYSINC=
 fi
 
-if [ "x$GCC_MAJOR" != "x" ] && [ $(($GCC_MAJOR >= 4)) = 1 ]; then
+if [ "x$GCC_MAJOR" != "x" ] && [ `expr $GCC_MAJOR \>= 4` = 1 ]; then
    INCDIRS="-iquote. -iquote$STLDIR"
 else
    INCDIRS="-I. -I$STLDIR $FAVOR_SYSINC"
