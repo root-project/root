@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.9 2001/06/25 12:54:33 rdm Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.10 2001/06/27 17:31:39 rdm Exp $
 // Author: Nenad Buncic   18/10/95
 
 /*************************************************************************
@@ -283,6 +283,7 @@ void THtml::Class2Html( TClass *classPtr, Bool_t force )
     char *tmp2 = gSystem->ConcatFileName( tmp1, classPtr->GetName() );
 
     char *filename = StrDup( tmp2, 6 );
+	NameSpace2FileName(filename);
     strcat( filename, ".html" );
 
     if( tmp1 ) delete [] tmp1;
@@ -314,13 +315,17 @@ void THtml::Class2Html( TClass *classPtr, Bool_t force )
                       << ":description>class description</a>";
 
             // make a link to the '.cxx' file
-            classFile << " - <a href=\"src/" << classPtr->GetName() << ".cxx.html\"";
+			char* cClassFileName=StrDup(classPtr->GetName());
+			NameSpace2FileName(cClassFileName);
+
+            classFile << " - <a href=\"src/" << cClassFileName << ".cxx.html\"";
             classFile << ">source file</a>";
 
             // make a link to the inheritance tree
-            classFile << " - <a href=\"" << classPtr->GetName() << "_Tree.ps\"";
+            classFile << " - <a href=\"" << cClassFileName << "_Tree.ps\"";
             classFile << ">inheritance tree</a>";
 
+			if (cClassFileName!=NULL) delete [] cClassFileName;
 
             classFile << "</em>" << endl;
             classFile << "<hr width=300>" << endl;
@@ -331,6 +336,7 @@ void THtml::Class2Html( TClass *classPtr, Bool_t force )
             classFile << "<h2>" << "class <a name=\"" << classPtr->GetName() << "\" href=\"";
             classFile << GetFileName( (const char * ) classPtr->GetDeclFileName() ) << "\"";
             classFile << ">" << classPtr->GetName() << "</a> ";
+
 
             // copy .h file to the Html output directory
             char *declf = GetSourceFileName(classPtr->GetDeclFileName());
@@ -691,6 +697,9 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
 
     // define pattern
     strcpy( pattern, classPtr->GetName() );
+	char* nameSpace=NULL;
+	if ((nameSpace=strstr(pattern,"::"))!=NULL) 
+		strcpy(pattern,&(classPtr->GetName()[nameSpace-pattern+2]));
     strcat( pattern, "::" );
     Int_t len = strlen( pattern );
 
@@ -749,6 +758,7 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
 
         tmp1 = gSystem->ConcatFileName( dirname, classPtr->GetName() );
         filename = StrDup( tmp1, 16 );
+		NameSpace2FileName(filename);
         strcat( filename, ".cxx.html" );
 
         ofstream tempFile;
@@ -947,13 +957,22 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
 
                         // try to get type
                         typeEnd = key-1;
-                        while( ( typeEnd > fLine ) && (isspace( *typeEnd ) || *typeEnd == '*') )
+                        while( ( typeEnd > fLine ) && (isspace( *typeEnd ) || *typeEnd == '*' ) )
                             typeEnd--;
                         typeEnd++;
                         c2 = *typeEnd;
                         *typeEnd = 0;
                         char *type = typeEnd - 1;
-                        while( IsName( *type ) && ( type > fLine ))
+						if (*type == '*' || *type == '&') {
+							type--; 
+							while (*type==' ' && ( type > fLine ))
+								type--;
+							if (type+1!=typeEnd-1) {
+								*(type+1)=*(typeEnd-1);
+								*(typeEnd-1)=' ';
+							}
+						}
+                        while( IsName( *type )  && ( type > fLine ))
                             type--;
                         if( !IsWord( *type )) type++;
 
@@ -1012,13 +1031,17 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
                                     }
                                     *nameEndPtr = 0;
 
+									char *cClassFileName = StrDup(classPtr->GetName());
+									NameSpace2FileName(cClassFileName);
                                     out << " <a name=\"" << classPtr->GetName() << ":";
                                     out << funcName << "\" href=\"src/";
-                                    out << classPtr->GetName() << ".cxx.html#" << classPtr->GetName() << ":";
+                                    out << cClassFileName << ".cxx.html#" << classPtr->GetName() << ":";
                                     ReplaceSpecialChars( out, funcName );
                                     out << "\">";
                                     ReplaceSpecialChars( out, funcName );
                                     out << "</a>";
+
+									if (cClassFileName!=NULL) delete [] cClassFileName;
 
                                     tempFile << "<a name=\"" << classPtr->GetName() << ":";
                                     ReplaceSpecialChars( tempFile, funcName );
@@ -1154,7 +1177,8 @@ void THtml::ClassDescription( ofstream &out, TClass *classPtr, Bool_t &flag )
 
 
     // write classFile footer
-    WriteHtmlFooter( out, "",  lastUpdate, author, copyright );
+    TDatime date;
+    WriteHtmlFooter( out, "",  (strlen(lastUpdate)==0?date.AsString():lastUpdate), author, copyright );
 
     // free memory
     if( nextLine )     delete [] nextLine;
@@ -1183,6 +1207,8 @@ void THtml::ClassTree( TVirtualPad *psCanvas, TClass *classPtr, Bool_t force )
     if( psCanvas && classPtr ) {
         char *tmp1 = gSystem->ConcatFileName( gSystem->ExpandPathName( fOutputDir ), classPtr->GetName() );
         char *filename = StrDup( tmp1 , 16 );
+
+		NameSpace2FileName(filename);
 
         strcat( filename, "_Tree.ps" );
 
@@ -1831,6 +1857,18 @@ void THtml::ExpandKeywords( ofstream &out, char *text, TClass *ptr2class,
         end = keyword;
         while( IsName( *end ) && *end ) end++;
 
+		// check wether we have a namespace::class here (2x if to make sure we don't end up in no man's land
+		if (*end==':' )	
+			if (*(end+1)==':') {
+				char* keywordTmp = StrDup(keyword);
+				char* endNameSpace=keywordTmp + (end-keyword) +2;
+				while (IsName(*endNameSpace) && *endNameSpace) endNameSpace++;
+				*endNameSpace=0;
+				if (GetClass( (const char * ) keywordTmp )!=NULL)
+					end=keyword+(endNameSpace-keywordTmp);
+				if (keywordTmp!=NULL) delete [] keywordTmp;
+			}
+
         // put '\0' at the end of the keyword
         c = *end;
         *end = 0;
@@ -2273,10 +2311,14 @@ char *THtml::GetHtmlFileName( TClass *classPtr )
         delete [] tmp;
 
         if( found ) {
-            char *tmp1 = gSystem->ConcatFileName( htmlFileName, classPtr->GetName() );
+			tmp=StrDup(classPtr->GetName());
+			NameSpace2FileName(tmp);
+            char *tmp1 = gSystem->ConcatFileName( htmlFileName, tmp );
             ret = StrDup( tmp1, 16 );
             strcat( ret, ".html" );
 
+            if( tmp ) delete [] tmp;
+            tmp = 0;
             if( tmp1 ) delete [] tmp1;
             tmp1 = 0;
         }
@@ -2344,6 +2386,7 @@ Bool_t THtml::IsModified( TClass *classPtr, const Int_t type )
 #endif
           strcat( filename, classPtr->GetName() );
           strcat( filename, ".cxx.html" );
+		  NameSpace2FileName(filename);
           break;
 
        case kInclude:
@@ -2360,6 +2403,7 @@ Bool_t THtml::IsModified( TClass *classPtr, const Int_t type )
           if (strPtr2) strcpy( sourceFile, strPtr2 );
           strPtr = gSystem->ConcatFileName( gSystem->ExpandPathName( fOutputDir ), GetFileName( classPtr->GetName() ));
           strcpy( filename, strPtr);
+		  NameSpace2FileName(filename);
           delete [] strPtr;
           delete [] strPtr2;
           strcat( filename, "_Tree.ps" );
@@ -2733,30 +2777,70 @@ void THtml::WriteHtmlHeader( ofstream &out, const char *title )
 // Input: out   - output file stream
 //        title - title for the HTML page
 //
+// evaluates the Root.Html.Header setting: 
+// * if not set, the standard header is written. (ROOT)
+// * if set, and ends with a "+", the standard header is written and this file included afterwards. (ROOT, USER)
+// * if set but doesn't end on "+" the file specified will be written instead of the standard header (USER)
+//
+// Any occurence of "%TITLE%" (without the quotation marks) in the user provided header file 
+// will be replaced by the value of this method's parameter "title" before written to the output file
+	
+	const char* addHeader = gEnv->GetValue( "Root.Html.Header", "");
+	// standard header output if Root.Html.Header is not set, or it's set and it ends with a "+".
+	if (addHeader && (strlen(addHeader)==0 || addHeader[strlen(addHeader)-1]=='+')) {
+		TDatime date;
 
-    TDatime date;
+		out << "<!DOCTYPE HTML PUBLIC \"-// IETF/DTD HTML 2.0// EN\">" << endl;
+		out << "<html>" << endl;
+		out << "<!--                                             -->" << endl;
+		out << "<!-- Author: ROOT team (rootdev@hpsalo.cern.ch)  -->" << endl;
+		out << "<!--                                             -->" << endl;
+		out << "<!--   Date: "<< date.AsString() << "            -->" << endl;
+		out << "<!--                                             -->" << endl;
+		out << "<head>" << endl;
+		out << "<title>";
+		ReplaceSpecialChars( out, title );
+		out << "</title>" << endl;
+		out << "<link rev=made href=\"mailto:rootdev@root.cern.ch\">" << endl;
+		out << "<meta name=\"rating\" content=\"General\">" << endl;
+		out << "<meta name=\"objecttype\" content=\"Manual\">" << endl;
+		out << "<meta name=\"keywords\" content=\"software development, oo, object oriented, ";
+		out << "unix, x11, windows, c++, html, rene brun, fons rademakers\">" << endl;
+		out << "<meta name=\"description\" content=\"ROOT - An Object Oriented Framework For Large Scale Data Analysis.\">" << endl;
+		out << "</head>" << endl;
 
-    out << "<!DOCTYPE HTML PUBLIC \"-// IETF/DTD HTML 2.0// EN\">" << endl;
-    out << "<html>" << endl;
-    out << "<!--                                             -->" << endl;
-    out << "<!-- Author: ROOT team (rootdev@hpsalo.cern.ch)  -->" << endl;
-    out << "<!--                                             -->" << endl;
-    out << "<!--   Date: "<< date.AsString() << "            -->" << endl;
-    out << "<!--                                             -->" << endl;
-    out << "<head>" << endl;
-    out << "<title>";
-    ReplaceSpecialChars( out, title );
-    out << "</title>" << endl;
-    out << "<link rev=made href=\"mailto:rootdev@root.cern.ch\">" << endl;
-    out << "<meta name=\"rating\" content=\"General\">" << endl;
-    out << "<meta name=\"objecttype\" content=\"Manual\">" << endl;
-    out << "<meta name=\"keywords\" content=\"software development, oo, object oriented, ";
-    out << "unix, x11, windows, c++, html, rene brun, fons rademakers\">" << endl;
-    out << "<meta name=\"description\" content=\"ROOT - An Object Oriented Framework For Large Scale Data Analysis.\">" << endl;
-    out << "</head>" << endl;
+		out << "<body BGCOLOR=\"#ffffff\" LINK=\"#0000ff\" VLINK=\"#551a8b\" ALINK=\"#ff0000\" TEXT=\"#000000\">" << endl;
+	};
+	// do we have an additional header?
+	if (addHeader && strlen(addHeader)>0) {
+		ifstream addHeaderFile;
+		char* addHeaderTmp = StrDup(addHeader);
+		if (addHeaderTmp[strlen(addHeaderTmp)-1]=='+') addHeaderTmp[strlen(addHeaderTmp)-1]=0;
+		addHeaderFile.open( addHeaderTmp, ios::in );
 
-    out << "<body BGCOLOR=\"#ffffff\" LINK=\"#0000ff\" VLINK=\"#551a8b\" ALINK=\"#ff0000\" TEXT=\"#000000\">" << endl;
-    out << "<a name=\"TopOfPage\"></a>" << endl;
+		if( addHeaderFile.good() ){
+            while( !addHeaderFile.eof() ) {
+
+                addHeaderFile.getline( fLine, fLen-1 );
+				fLine[fLen-1]=0; // just to make sure it ends
+                if( addHeaderFile.eof() ) break;
+
+                if (fLine) {
+					char * titlePos=strstr(fLine, "%TITLE%");
+					if (titlePos!=NULL) {
+						*titlePos=0;
+						out << fLine << title << titlePos+7 << endl;
+					} else
+					out << fLine << endl;
+				}
+			}
+		} else Warning("THtml::WriteHtmlHeader","Can't open user html header file %s\n", addHeaderTmp);
+
+
+		if (addHeaderTmp) delete [] addHeaderTmp;
+	}
+
+	out << "<a name=\"TopOfPage\"></a>" << endl;
 }
 
 
@@ -2775,112 +2859,194 @@ void THtml::WriteHtmlFooter( ofstream &out, const char *dir, const char *lastUpd
 //        author     - author's name
 //        copyright  - copyright note
 //
+// Allows optional user provided footer to be written. Root.Html.Footer holds the file name for this footer.
+// For details see THtml::WriteHtmlHeader (here, the "+" means the user's footer is written in front of Root's!)
+// Occurences of %AUTHOR%, %UPDATE% and %COPYRIGHT% in the user's file are replaced by their corresponding
+// values (author, lastUpdate and copyright) before written to out.
 
     out << endl;
 
-    if( *author || *lastUpdate || *copyright ) out << "<hr><br>" << endl;
+	const char* addFooter = gEnv->GetValue( "Root.Html.Footer", "");
+	// standard footer output if Root.Html.Footer is not set, or it's set and it ends with a "+".
+	// do we have an additional footer?
+	if (addFooter && strlen(addFooter)>0) {
+		ifstream addFooterFile;
+		char* addFooterTmp = StrDup(addFooter);
+		if (addFooterTmp[strlen(addFooterTmp)-1]=='+') addFooterTmp[strlen(addFooterTmp)-1]=0;
+		addFooterFile.open( addFooterTmp, ios::in );
 
-    out << "<!--SIGNATURE-->" << endl;
+		if( addFooterFile.good() ){
+            while( !addFooterFile.eof() ) {
 
-    // get the author( s )
-    if( *author )  {
+                addFooterFile.getline( fLine, fLen-1 );
+				fLine[fLen-1]=0; // just to make sure it ends
+                if( addFooterFile.eof() ) break;
 
-        out << "<em>Author: ";
+                if (fLine) {
+                                        char * updatePos=strstr(fLine, "%UPDATE%"); 
+					char * authorPos=strstr(fLine, "%AUTHOR%");
+					char * copyPos=strstr(fLine, "%COPYRIGHT%");
 
-        char *auth = StrDup(author);
+					char order[5]="0000";
+					int iNum=0;
+					if (updatePos!=NULL) { order[iNum++]='u'; *updatePos=0;}
+					if (authorPos!=NULL) { order[iNum++]='a'; *authorPos=0;}
+					if (copyPos!=NULL) { order[iNum++]='c'; *copyPos=0;}
 
-        char *name = strtok( auth, "," );
+					int i,j;
+					// in principle n*sqrt(n) is enough, but we're talking about one additional iteration here
+					for (j=0; j<iNum-1; j++) 
+						for (i=0; i<iNum-1; i++) {
+							switch (order[i]) {
+							case 'u': if (order[i+1]!='0') 
+										  if (order[i+1]=='a') {
+											  if (updatePos>authorPos) { order[i]='a'; order[i+1]='u';}
+										  } else if (updatePos>copyPos) { order[i]='c'; order[i+1]='u';};
+									  break;
+							case 'a': if (order[i+1]!='0') 
+										  if (order[i+1]=='u') {
+											  if (authorPos>updatePos) { order[i]='u'; order[i+1]='a';}
+										  } else if (authorPos>copyPos) { order[i]='c'; order[i+1]='a';};
+									  break;
+							case 'c': if (order[i+1]!='0') 
+										  if (order[i+1]=='u') {
+											  if (copyPos>updatePos) { order[i]='u'; order[i+1]='c';}
+										  } else if (copyPos>authorPos) { order[i]='a'; order[i+1]='c';};
+									  break;
+							}
+						};
 
-        Bool_t firstAuthor = kTRUE;
-
-        do {
-            char *ptr = name;
-            char c;
-
-            // remove leading spaces
-            while( *ptr && isspace( *ptr ) ) ptr++;
-
-            if( !firstAuthor ) out << ", ";
-
-            if( !strncmp( ptr, "Nicolas", 7 ) ) {
-                out << "<a href=http://pcbrun.cern.ch/nicolas/index.html";
-                ptr += 12;
-            } else {
-                out << "<a href="<<GetXwho();
-            }
-            while( *ptr ) {
-                // Valery's specific case
-                if( !strncmp( ptr, "Valery", 6 ) ) {
-                    out << "Valeri";
-                    ptr += 6;
-                }
-                else if( !strncmp( ptr, "Fine", 4 ) ) {
-                    out << "Faine";
-                    ptr += 4;
-                }
-                while( *ptr && !isspace( *ptr ) )
-                    out << *ptr++;
-
-                if( isspace( *ptr ) ) {
-                    while( *ptr && isspace( *ptr ) ) ptr++;
-                    if( isalpha( *ptr) ) out << '+';
-                    else break;
-                }
-                else break;
-            }
-            c = *ptr;
-            *ptr = 0;
-            out << ">" << name << "</a>";
-            *ptr = c;
-            out << ptr;
-
-            firstAuthor = kFALSE;
-
-        } while (( name = strtok( NULL, "," )));
-        out << "</em><br>" << endl;
-        delete [] auth;
-    }
-
-    if( *lastUpdate ) out << "<em>Last update: " << lastUpdate << "</em><br>" << endl;
-    if( *copyright )  out << "<em>Copyright " << copyright << "</em><br>" << endl;
+					out << fLine;
+					for (i=0; i<iNum; i++) {
+						switch (order[i]) {
+						case 'u': out << (lastUpdate==NULL?"":lastUpdate) << updatePos+8; break;
+						case 'a': out << (author==NULL?"":author) << authorPos+8; break;
+						case 'c': out << (copyright==NULL?"":copyright) << copyPos+11; break;
+						}
+					};
+					out << endl;
+				}
+			}
+		} else Warning("THtml::WriteHtmlFooter","Can't open user html footer file %s\n", addFooterTmp);
 
 
-    // this is a menu
-    out << "<br>" << endl;
-    out << "<address>" << endl;
-    out << "<hr>" << endl;
-    out << "<center>" << endl;
+		if (addFooterTmp) delete [] addFooterTmp;
+	}
 
-    // link to the ROOT home page
-    out << "<a href=\"http://root.cern.ch/root/Welcome.html\">ROOT page</a> - ";
+	if (addFooter && (strlen(addFooter)==0 || addFooter[strlen(addFooter)-1]=='+')) {
+		if( *author || *lastUpdate || *copyright ) out << "<hr><br>" << endl;
 
-    // link to the user home page( if exist )
-    const char *userHomePage = gEnv->GetValue( "Root.Html.HomePage", "" );
-    if( *userHomePage ) {
-        out << "<a href=\"";
-        if( *dir ) {
-            if( strncmp( userHomePage, "http://", 7 ))
-                out << dir;
-        }
-        out << userHomePage;
-        out << "\">Home page</a> - ";
-    }
+		out << "<!--SIGNATURE-->" << endl;
 
-    // link to the index file
-    out << "<a href=\"";
-    if( *dir ) out << dir;
-    out << "ClassIndex.html\">Class index</a> - ";
+		// get the author( s )
+		if( *author )  {
 
-    // link to the top of the page
-    out << "<a href=\"#TopOfPage\">Top of the page</a><br>" << endl;
+			out << "<em>Author: ";
 
-    out << "</center>" << endl;
+			char *auth = StrDup(author);
 
-    out << "<hr>This page has been automatically generated. If you have any comments or suggestions ";
-    out << "about the page layout send a mail to <a href=\"mailto:rootdev@root.cern.ch\">ROOT support</a>, or ";
-    out << "contact <a href=\"mailto:rootdev@root.cern.ch\">the developers</a> with any questions or problems regarding ROOT." << endl;
-    out << "</address>" << endl;
-    out << "</body>" << endl;
-    out << "</html>" << endl;
+			char *name = strtok( auth, "," );
+
+			Bool_t firstAuthor = kTRUE;
+
+			do {
+				char *ptr = name;
+				char c;
+
+				// remove leading spaces
+				while( *ptr && isspace( *ptr ) ) ptr++;
+
+				if( !firstAuthor ) out << ", ";
+
+				if( !strncmp( ptr, "Nicolas", 7 ) ) {
+					out << "<a href=http://pcbrun.cern.ch/nicolas/index.html";
+					ptr += 12;
+				} else {
+					out << "<a href="<<GetXwho();
+				}
+				while( *ptr ) {
+					// Valery's specific case
+					if( !strncmp( ptr, "Valery", 6 ) ) {
+						out << "Valeri";
+						ptr += 6;
+					}
+					else if( !strncmp( ptr, "Fine", 4 ) ) {
+						out << "Faine";
+						ptr += 4;
+					}
+					while( *ptr && !isspace( *ptr ) )
+						out << *ptr++;
+
+					if( isspace( *ptr ) ) {
+						while( *ptr && isspace( *ptr ) ) ptr++;
+						if( isalpha( *ptr) ) out << '+';
+						else break;
+					}
+					else break;
+				}
+				c = *ptr;
+				*ptr = 0;
+				out << ">" << name << "</a>";
+				*ptr = c;
+				out << ptr;
+
+				firstAuthor = kFALSE;
+
+			} while (( name = strtok( NULL, "," )));
+			out << "</em><br>" << endl;
+			delete [] auth;
+		}
+
+		if( *lastUpdate ) out << "<em>Last update: " << lastUpdate << "</em><br>" << endl;
+		if( *copyright )  out << "<em>Copyright " << copyright << "</em><br>" << endl;
+
+
+		// this is a menu
+		out << "<br>" << endl;
+		out << "<address>" << endl;
+		out << "<hr>" << endl;
+		out << "<center>" << endl;
+
+		// link to the ROOT home page
+		out << "<a href=\"http://root.cern.ch/root/Welcome.html\">ROOT page</a> - ";
+
+		// link to the user home page( if exist )
+		const char *userHomePage = gEnv->GetValue( "Root.Html.HomePage", "" );
+		if( *userHomePage ) {
+			out << "<a href=\"";
+			if( *dir ) {
+				if( strncmp( userHomePage, "http://", 7 ))
+					out << dir;
+			}
+			out << userHomePage;
+			out << "\">Home page</a> - ";
+		}
+
+		// link to the index file
+		out << "<a href=\"";
+		if( *dir ) out << dir;
+		out << "ClassIndex.html\">Class index</a> - ";
+
+		// link to the top of the page
+		out << "<a href=\"#TopOfPage\">Top of the page</a><br>" << endl;
+
+		out << "</center>" << endl;
+
+		out << "<hr>This page has been automatically generated. If you have any comments or suggestions ";
+		out << "about the page layout send a mail to <a href=\"mailto:rootdev@root.cern.ch\">ROOT support</a>, or ";
+		out << "contact <a href=\"mailto:rootdev@root.cern.ch\">the developers</a> with any questions or problems regarding ROOT." << endl;
+		out << "</address>" << endl;
+		out << "</body>" << endl;
+		out << "</html>" << endl;
+	}
+}
+
+//______________________________________________________________________________
+void THtml::NameSpace2FileName(char *name)
+{
+// Replace "::" in the namespace::classname string by "__" if necessary
+	char* namesp=NULL;
+	while ((namesp = strstr(name,"::"))!=NULL) 
+		*namesp=*(namesp+1)='_';
 }
 
