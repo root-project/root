@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.9 2001/06/26 10:21:14 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.10 2001/07/02 16:35:24 brun Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "TCanvas.h"
 #include "TError.h"
 #include "CallFunc.h"
+#include "TMethodCall.h"
 
 
 TThreadImp     *TThread::fgThreadImp = 0;
@@ -689,8 +690,8 @@ Int_t TThread::XARequest(const char *xact, Int_t nb, void **ar, Int_t *iret)
 //______________________________________________________________________________
 void TThread::XAction()
 {
-   char const acts[] = "PRTF CUPD CANV CDEL PDCD";
-   enum {kPRTF=0,kCUPD=5,kCANV=10,kCDEL=15,kPDCD=20};
+   char const acts[] = "PRTF CUPD CANV CDEL PDCD METH";
+   enum {kPRTF=0,kCUPD=5,kCANV=10,kCDEL=15,kPDCD=20,kMETH=25};
    int iact = strstr(acts,fgXAct) - acts;
 
    switch (iact) {
@@ -751,7 +752,11 @@ void TThread::XAction()
                                   *((Int_t*)(fgXArr[6])));
 
          break;
-      default:
+      case kMETH:
+      ((TMethodCall *) fgXArr[1])->Execute((void*)(fgXArr[2]),(const char*)(fgXArr[3]));
+         break;      
+         
+         default:
          fprintf(stderr,"TThread::XARequest. Wrong case\n");
    }
 
