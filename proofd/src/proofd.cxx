@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name$:$Id$
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -69,12 +69,6 @@ extern "C" {
    int seteuid(uid_t euid);
    int setegid(gid_t egid);
 }
-#endif
-
-#if (defined(__linux__) && defined(__powerpc__) && __GNUG__>=2)
-#  if (__GNUG__==2 && __GNUC_MINOR__ >=95)
-extern "C" int initgroups(char *name, int basegid);
-#  endif
 #endif
 
 #if defined(sun)
