@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.3 2004/08/22 01:51:22 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchRef.cxx,v 1.4 2004/08/24 10:41:58 brun Exp $
 // Author: Rene Brun   19/08/2004
 
 /*************************************************************************
@@ -20,6 +20,7 @@
 #include "TTree.h"
 #include "TBasket.h"
 #include "TFile.h"
+//#include "TObjLink.h"
 
 ClassImp(TBranchRef)
 
@@ -107,7 +108,26 @@ Bool_t TBranchRef::Notify()
    UInt_t uid = fRefTable->GetUID();
    GetEntry(fReadEntry);
    TBranch *branch = (TBranch*)fRefTable->GetParent(uid);
-   if (branch) branch->GetEntry(fReadEntry);
+   if (branch) {
+      branch->GetEntry(fReadEntry);
+   } else {
+      //scan the TRefTable of possible friend Trees
+      TList *friends = fTree->GetListOfFriends();
+      if (!friends) return kTRUE;
+      TObjLink *lnk = friends->FirstLink();
+      while (lnk) {
+         TTree *tree = (TTree*)lnk->GetObject();
+         TBranchRef *bref = tree->GetBranchRef();
+         if (!bref) continue;
+         bref->GetEntry(fReadEntry);
+         branch = (TBranch*)bref->GetRefTable()->GetParent(uid);
+         if (branch) {
+            branch->GetEntry(fReadEntry);
+            return kTRUE;
+         }
+         lnk = lnk->Next();
+      }
+   }
    return kTRUE;
 }
 
