@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.53 2004/04/24 05:59:20 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.54 2004/04/24 16:42:33 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2827,7 +2827,7 @@ Int_t TMath::Binomial(Int_t n,Int_t k)
 }
 
 //______________________________________________________________________________
-Bool_t TMath::Permute(Int_t n, Int_t *a, Int_t n)
+Bool_t TMath::Permute(Int_t n, Int_t *a)
 {
   //
   // simple recursive algorithm to find the permutations of
