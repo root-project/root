@@ -74,16 +74,16 @@ rename() {
 }
 
 cpdllwin32() {
-   cp -f bin/stdfunc.dll   $CINTDIRI
-   cp -f bin/vector.dll    $CINTDIRS
-   cp -f bin/multi*.dll    $CINTDIRS
-   cp -f bin/deque.dll     $CINTDIRS
-   cp -f bin/map*.dll      $CINTDIRS
-   cp -f bin/queue.dll     $CINTDIRS
-   cp -f bin/set.dll       $CINTDIRS
-   cp -f bin/stack.dll     $CINTDIRS
-   cp -f bin/exception.dll $CINTDIRS
-   cp -f bin/list.dll      $CINTDIRS
+   mv -f bin/stdfunc.dll   $CINTDIRI
+   mv -f bin/vector.dll    $CINTDIRS
+   mv -f bin/multi*.dll    $CINTDIRS
+   mv -f bin/deque.dll     $CINTDIRS
+   mv -f bin/map*.dll      $CINTDIRS
+   mv -f bin/queue.dll     $CINTDIRS
+   mv -f bin/set.dll       $CINTDIRS
+   mv -f bin/stack.dll     $CINTDIRS
+   mv -f bin/exception.dll $CINTDIRS
+   mv -f bin/list.dll      $CINTDIRS
 }
 
 ##### first delete old dll's #####
