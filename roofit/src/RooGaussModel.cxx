@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id$
+ *    File: $Id: RooGaussModel.cc,v 1.24 2002/09/10 02:01:32 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -120,6 +120,10 @@ Double_t RooGaussModel::evaluate() const
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
 
   Double_t tau = (_basisCode!=noBasis)?((RooAbsReal*)basis().getParameter(1))->getVal():0 ;
+  if (basisType == coshBasis && _basisCode!=noBasis ) {
+     Double_t dGamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+     if (dGamma==0) basisType = expBasis;
+  }
 
   if (basisType==none || ((basisType==expBasis || basisType==cosBasis) && tau==0.)) {
     Double_t xprime = (x-(mean*msf))/(sigma*ssf) ;
@@ -318,7 +322,10 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code) const
 
   // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
   Double_t tau = (_basisCode!=noBasis)?((RooAbsReal*)basis().getParameter(1))->getVal():0 ;
-
+  if (basisType == coshBasis && _basisCode!=noBasis ) {
+     Double_t dGamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+     if (dGamma==0) basisType = expBasis;
+  }
   if (basisType==none || ((basisType==expBasis || basisType==cosBasis) && tau==0.)) {
     Double_t xscale = root2*(sigma*ssf);
     if (_verboseEval>0) cout << "RooGaussModel::analyticalIntegral(" << GetName() << ") 1st form" << endl ;

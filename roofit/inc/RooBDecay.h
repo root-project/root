@@ -14,6 +14,7 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+
 #ifndef ROO_BDECAY
 #define ROO_BDECAY
 
@@ -31,6 +32,7 @@ public:
   inline RooBDecay() { }
   RooBDecay(const char *name, const char *title, RooRealVar& t,
 			RooAbsReal& tau, RooAbsReal& dgamma,
+			RooAbsReal& f0,
 			RooAbsReal& f1, RooAbsReal& f2, 
 			RooAbsReal& f3, RooAbsReal& dm, 
 			const RooResolutionModel& model,
@@ -52,6 +54,7 @@ protected:
   RooRealProxy _t;
   RooRealProxy _tau;
   RooRealProxy _dgamma;
+  RooRealProxy _f0;
   RooRealProxy _f1;
   RooRealProxy _f2;
   RooRealProxy _f3;

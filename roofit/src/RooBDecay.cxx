@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitModels                                                     *
- *    File: $Id: RooBDecay.cc,v 1.2 2002/09/10 02:01:31 verkerke Exp $
+ *    File: $Id: RooBDecay.cc,v 1.3 2002/10/23 00:47:43 wverkerke Exp $
  * Authors:                                                                  *
  *   PL, Parker C Lund,   UC Irvine                                          *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,6 +16,7 @@
  *****************************************************************************/
 
 
+
 #include <iostream.h>
 #include "RooFitModels/RooBDecay.hh"
 #include "RooFitCore/RooRealVar.hh"
@@ -25,15 +26,16 @@ ClassImp(RooBDecay);
 
 RooBDecay::RooBDecay(const char *name, const char* title, 
 	       RooRealVar& t, RooAbsReal& tau, RooAbsReal& dgamma,
-	       RooAbsReal& f1, RooAbsReal& f2, RooAbsReal& f3, 
+	       RooAbsReal& f0, RooAbsReal& f1, RooAbsReal& f2, RooAbsReal& f3, 
 	       RooAbsReal& dm, const RooResolutionModel& model, DecayType type) :
   RooConvolutedPdf(name, title, model, t),
   _t("t", "time", this, t),
   _tau("tau", "Average Decay Time", this, tau),
   _dgamma("dgamma", "Delta Gamma", this, dgamma),
-  _f1("f1", "Fraction One", this, f1),
-  _f2("f2", "Fraction Two", this, f2),
-  _f3("f3", "Fraction Three", this, f3),
+  _f0("f0", "Cosh Coefficient", this, f0),
+  _f1("f1", "Sinh Coefficient", this, f1),
+  _f2("f2", "Cos Coefficient", this, f2),
+  _f3("f3", "Sin Coefficient", this, f3),
   _dm("dm", "Delta Mass", this, dm),
   _type(type)
 
@@ -66,6 +68,7 @@ RooBDecay::RooBDecay(const RooBDecay& other, const char* name) :
   _t("t", this, other._t),
   _tau("tau", this, other._tau),
   _dgamma("dgamma", this, other._dgamma),
+  _f0("f0", this, other._f0),
   _f1("f1", this, other._f1),
   _f2("f2", this, other._f2),
   _f3("f3", this, other._f3),
@@ -89,7 +92,7 @@ Double_t RooBDecay::coefficient(Int_t basisIndex) const
 {
   if(basisIndex == _basisCosh)
     {  
-      return 1;
+      return _f0;
     }
   if(basisIndex == _basisSinh)
     {
@@ -126,6 +129,7 @@ void RooBDecay::generateEvent(Int_t code)
     Double_t f;
     Double_t w;
     Double_t gammamin = 1/_tau-fabs(_dgamma)/2;
+
  
     // used rejection method with comparison function: w = (1+sqrt(f2*f2+f3*f3))exp(-abs(t)*gammamin)
     // see Numerical Recipes in C for explanation of rejection method
@@ -133,37 +137,40 @@ void RooBDecay::generateEvent(Int_t code)
     switch(_type)
       {
       case SingleSided:
-	tval = -1/gammamin*log(1-rand*(1-exp(-_t.max()*gammamin)));
+	tval = -1/gammamin*log(rand);
 	break;
       case Flipped:
-	tval = 1/gammamin*log(1-rand*(1-exp(_t.min()*gammamin)));
+	tval = 1/gammamin*log(rand);
 	break;
       case DoubleSided:
 	if(rand3 > 0.5)
 	  {
-	    tval = -1/gammamin*log(1-rand*(1-exp(-_t.max()*gammamin)));
+	    tval = -1/gammamin*log(rand);
+	    break;
 	  }
 	
 	if (rand3 <= 0.5)
 	  {
-	    tval = 1/gammamin*log(1-rand*(1-exp(_t.min()*gammamin)));
+	    tval = 1/gammamin*log(rand);
+	    break;
 	  }
-	break;
       }
     Double_t dgt = _dgamma*tval/2;
     Double_t dmt = _dm*tval;
     Double_t ftval = fabs(tval);
     
-    w = (1.00001+sqrt(_f2*_f2+_f3*_f3))*exp(-ftval*gammamin);
+       w = (_f0+sqrt(_f2*_f2+_f3*_f3))*exp(-ftval*gammamin);
     y = w*rand2;
-    f = exp(-ftval/_tau)*(cosh(dgt)+_f1*sinh(dgt)+_f2*cos(dmt)+_f3*sin(dmt));
-    //f = exp(-ftval/_tau)*(cosh(dgt)+_f1*sinh(dgt));
-    //f = exp(-ftval/_tau)*(_f2*cos(dmt)+_f3*sin(dmt));
+    f = exp(-ftval/_tau)*(_f0*cosh(dgt)+_f1*sinh(dgt)+_f2*cos(dmt)+_f3*sin(dmt));
     if (tval<_t.max() && tval>_t.min())
-      {
+    {
 	if(w < f)
 	  {
 	    cout << "Error!!!! Comparison function less than f(x)" << endl;
+	if(f < 0)
+	  {
+	    cout << "Error!!!! PDF less than Zero" << endl;
+	  }
 	  }
 	if(w >= f)
 	  {
@@ -173,7 +180,7 @@ void RooBDecay::generateEvent(Int_t code)
 		break;
 	      }
 	  }
-      }
+    }
     
   }
 }
