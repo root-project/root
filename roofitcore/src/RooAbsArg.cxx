@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.6 2001/03/22 15:31:24 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.7 2001/03/27 01:20:18 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -13,12 +13,12 @@
 
 // -- CLASS DESCRIPTION --
 // RooAbsArg is the common abstract base class for objects that represent a
-// value (of arbitrary type) that in general depends on (is a client of)
+// value (of arbitrary type) and "shape" that in general depends on (is a client of)
 // other RooAbsArg subclasses. The only state information about a value that
 // is maintained in this base class consists of named attributes and flags
-// that track when either the value or the shape of this object changes (the
+// that track when either the value or the shape of this object changes. The
 // meaning of shape depends on the client implementation but could be, for
-// example, the allowed range of a value). The base class is also responsible
+// example, the allowed range of a value. The base class is also responsible
 // for managing client/server links and propagating value/shape changes
 // through an expression tree.
 //
@@ -37,18 +37,19 @@ Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 
 RooAbsArg::RooAbsArg() : TNamed(), _attribList()
 {
-  // Default constructor.
+  // Default constructor creates an unnamed object.
 }
 
-RooAbsArg::RooAbsArg(const char *name, const char *title) : 
-  TNamed(name,title), _valueDirty(kTRUE), _shapeDirty(kTRUE)
+RooAbsArg::RooAbsArg(const char *name, const char *title)
+  : TNamed(name,title), _valueDirty(kTRUE), _shapeDirty(kTRUE)
 {    
   // Create an object with the specified name and descriptive title.
   // The newly created object has no clients or servers and has its
   // dirty flags set.
 }
 
-RooAbsArg::RooAbsArg(const RooAbsArg& other) : TNamed(other)
+RooAbsArg::RooAbsArg(const RooAbsArg& other)
+  : TNamed(other)
 {
   // Copy constructor transfers attributes and servers from the original
   // object. The newly created object has no clients and has its dirty
@@ -176,6 +177,9 @@ Bool_t RooAbsArg::getAttribute(Text_t* name) const
 
 void RooAbsArg::addServer(RooAbsArg& server) 
 {
+  // Register another RooAbsArg as a server to us, ie, declare that
+  // we depend on its value and shape.
+
   // Add server link to given server
   if (!_serverList.FindObject(&server)) {
     _serverList.Add(&server) ;
@@ -196,6 +200,9 @@ void RooAbsArg::addServer(RooAbsArg& server)
 
 void RooAbsArg::removeServer(RooAbsArg& server) 
 {
+  // Unregister another RooAbsArg as a server to us, ie, declare that
+  // we no longer depend on its value and shape.
+
   // Remove server link to given server
   if (_serverList.FindObject(&server)) {
     _serverList.Remove(&server) ;
@@ -216,6 +223,9 @@ void RooAbsArg::removeServer(RooAbsArg& server)
 
 Bool_t RooAbsArg::dependsOn(RooArgSet& serverList) 
 {
+  // Test whether we depend on (ie, are served by) any object in the
+  // specified collection. Uses the dependsOn(RooAbsArg&) member function.
+
   TIterator* sIter = serverList.MakeIterator() ;
   RooAbsArg* server ;
   while (server=(RooAbsArg*)sIter->Next()) {
@@ -227,13 +237,19 @@ Bool_t RooAbsArg::dependsOn(RooArgSet& serverList)
 
 Bool_t RooAbsArg::dependsOn(RooAbsArg& server) 
 {
+  // Test whether we depend on (ie, are served by) the specified object.
+  // Note that RooAbsArg objects are considered equivalent if they have
+  // the same name.
+
   return _serverList.FindObject(server.GetName())?kTRUE:kFALSE ;
 }
 
 
 void RooAbsArg::setValueDirty(Bool_t flag, RooAbsArg* source) 
 { 
-  // Set 'dirty' value state for this object and propagate flag to all its clients
+  // Mark this object as having changed its value, and propagate this status
+  // change to all of our clients.
+
   if (source==0) {
     source=this ; 
   } else if (source==this) {
