@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.41 2002/02/07 08:42:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.42 2002/02/27 16:13:10 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -163,7 +163,7 @@ Int_t TChain::Add(const char *name, Int_t nentries)
 // starting with xxx in the current file system directory.
 // NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
 //
-//    A- if nentries <= 0, the file is connected and the tree header read 
+//    A- if nentries <= 0, the file is connected and the tree header read
 //       in memory to get the number of entries.
 //
 //    B- if (nentries > 0, the file is not connected, nentries is assumed to be
@@ -238,7 +238,7 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
 {
 //       Add a new file to this chain.
 //
-//    A- if nentries <= 0, the file is connected and the tree header read 
+//    A- if nentries <= 0, the file is connected and the tree header read
 //       in memory to get the number of entries.
 //
 //    B- if (nentries > 0, the file is not connected, nentries is assumed to be
@@ -259,7 +259,7 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
 //       a chain with this default, GetEntriesFast will return kBigNumber!
 //       TChain::GetEntries will force of the Tree headers in the chain to be
 //       read to read the number of entries in each Tree.
-   
+
    TDirectory *cursav = gDirectory;
    char *treename = (char*)GetName();
    char *dot = (char*)strstr(name,".root");
@@ -496,14 +496,14 @@ Int_t TChain::GetChainEntryNumber(Int_t entry) const
 }
 
 //______________________________________________________________________________
-Stat_t TChain::GetEntries() const
+Double_t TChain::GetEntries() const
 {
 // return the total number of entries in the chain.
 // In case the number of entries in each tree is not yet known,
 // the offset table is computed
-   
+
    if (fEntries >= (Stat_t)kBigNumber) {
-      ((TChain*)this)->LoadTree(fEntries-1);
+      ((TChain*)this)->LoadTree(Int_t(fEntries)-1);
    }
    return fEntries;
 }
@@ -623,9 +623,9 @@ Double_t TChain::GetWeight() const
 //  However, if the weight has been set in TChain::SetWeight with
 //  the option "global", each Tree will use the same weight stored
 //  in TChain::fWeight.
-   
+
    if (TestBit(kGlobalWeight)) return fWeight;
-   else                        return fTree->GetWeight();   
+   else                        return fTree->GetWeight();
 }
 
 //______________________________________________________________________________
@@ -670,23 +670,23 @@ Int_t TChain::LoadTree(Int_t entry)
    if (fFile->IsZombie()) {
       delete fFile; fFile = 0;
       return -3;
-   } 
+   }
    fTree = (TTree*)fFile->Get(element->GetName());
    fTreeNumber = t;
    fDirectory = fFile;
-   
+
    //check if fTreeOffset has really been set
    Int_t nentries = (Int_t)fTree->GetEntries();
    if (fTreeOffset[fTreeNumber+1] != fTreeOffset[fTreeNumber] + nentries) {
       fTreeOffset[fTreeNumber+1] = fTreeOffset[fTreeNumber] + nentries;
-      fEntries = fTreeOffset[fNtrees]; 
+      fEntries = fTreeOffset[fNtrees];
       if (entry > fTreeOffset[fTreeNumber+1]) {
          cursav->cd();
          if (fTreeNumber < fNtrees) return LoadTree(entry);
          else                       fReadEntry = -2;
       }
    }
-   
+
    //Set the branches status and address for the newly connected file
    fTree->SetMakeClass(fMakeClass);
    fTree->SetMaxVirtualSize(fMaxVirtualSize);
@@ -1095,7 +1095,7 @@ void TChain::SetWeight(Double_t w, Option_t *option)
 //  of each Tree in the TChain. However, one can force the individual
 //  weights to be ignored by specifying the option "global".
 //  In this case, the TChain global weight will be used for all Trees.
-   
+
    fWeight = w;
    TString opt = option;
    opt.ToLower();

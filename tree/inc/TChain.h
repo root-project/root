@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.21 2002/02/03 17:32:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.22 2002/02/27 16:13:10 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -28,7 +28,6 @@
 class TFile;
 class TBrowser;
 
-const Int_t kBigNumber = 1234567890;
 
 class TChain : public TTree {
 
@@ -44,9 +43,10 @@ protected:
   static Int_t   fgMaxMergeSize;    //  Maximum size of a merged file
 
 public:
-    // TChain status bits
+    // TChain constants
     enum {
-       kGlobalWeight   = BIT(15)
+       kGlobalWeight   = BIT(15),
+       kBigNumber      = 1234567890
     };
     TChain();
     TChain(const char *name, const char *title="");
@@ -68,7 +68,7 @@ public:
     virtual TBranch  *GetBranch(const char *name);
     virtual Int_t     GetChainEntryNumber(Int_t entry) const;
             Int_t     GetNtrees() const {return fNtrees;}
-    virtual Stat_t    GetEntries() const;
+    virtual Double_t  GetEntries() const;
     virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);
     TFile            *GetFile() const {return fFile;}
     TLeaf            *GetLeaf(const char *name);
