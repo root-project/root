@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.2 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.cxx,v 1.3 2004/06/12 05:35:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -21,6 +21,22 @@ PyObject* PyROOT::Utility::theObjectString_ =
 
 
 //- public functions ------------------------------------------------------------
+void PyROOT::Utility::addToClass(
+      const char* label, PyCFunction cfunc, PyObject* cls, int flags ) {
+   PyMethodDef* pdef = new PyMethodDef;
+   pdef->ml_name  = const_cast< char* >( label );
+   pdef->ml_meth  = cfunc;
+   pdef->ml_flags = flags;
+   pdef->ml_doc   = NULL;
+
+   PyObject* func = PyCFunction_New( pdef, NULL );
+   PyObject* method = PyMethod_New( func, NULL, cls );
+   PyObject_SetAttrString( cls, pdef->ml_name, method );
+   Py_DECREF( func );
+   Py_DECREF( method );
+}
+
+
 PyROOT::ObjectHolder* PyROOT::Utility::getObjectHolder( PyObject* self ) {
    if ( self !=  0  ) {
       PyObject* cobj = PyObject_GetAttr( self, theObjectString_ );

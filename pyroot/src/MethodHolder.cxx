@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.9 2004/06/12 05:35:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MethodHolder.cxx,v 1.10 2004/07/17 06:32:15 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -12,6 +12,8 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TObject.h"
+#include "TString.h"
+#include "TArray.h"
 #include "TGlobal.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
@@ -259,10 +261,12 @@ inline void PyROOT::MethodHolder::copy_( const MethodHolder& om ) {
    m_methodCall  = 0;
    m_offset      = 0;
    m_tagnum      = -1;
+   m_topbase     = om.m_topbase;
 
    m_argsConverters = om.m_argsConverters;
    m_callString     = om.m_callString;
    m_isInitialized  = om.m_isInitialized;
+   m_lastObject     = -2;
 
 // the new args buffer is clean
    m_argsBuffer.resize( om.m_argsBuffer.size() );
@@ -335,7 +339,27 @@ bool PyROOT::MethodHolder::initDispatch_() {
 
 
 void PyROOT::MethodHolder::calcOffset_( long obj ) {
-   long derivedtagnum = ((TObject*)obj)->IsA()->GetClassInfo()->Tagnum();
+// loop optimization
+   if ( obj == m_lastObject )
+      return;
+   m_lastObject = obj;
+
+// actual offset calculation, as needed
+   long derivedtagnum = 0;
+
+   switch( m_topbase ) {
+   case kETB_TString:
+   case kETB_TIter: {
+      m_offset = 0;
+      return;
+   }
+   default: {
+   // most objects have TObject memory layout
+      derivedtagnum = ((TObject*)obj)->IsA()->GetClassInfo()->Tagnum();
+      break;
+   }
+   }
+
    if ( derivedtagnum != m_tagnum ) {
       m_offset = G__isanybase( m_class->GetClassInfo()->Tagnum(), derivedtagnum, obj );
       m_tagnum = derivedtagnum;
@@ -345,12 +369,21 @@ void PyROOT::MethodHolder::calcOffset_( long obj ) {
 
 //- constructors and destructor ------------------------------------------------
 PyROOT::MethodHolder::MethodHolder( TClass* cls, TMethod* tm ) :
-      m_class( cls ), m_method( tm ), m_callString( "" ) {
+      m_class( cls ), m_method( tm ), m_topbase( kETB_Other ), m_callString( "" ) {
    m_methodCall = 0;
    m_offset = 0;
    m_tagnum = -1;
+   m_lastObject = -2;
    m_returnType = Utility::kOther;
    m_isInitialized = false;
+   if ( m_class->GetBaseClass( "TObject" ) )
+      m_topbase = kETB_TObject;
+   else if ( m_class->GetName() == "TArray" || m_class->GetBaseClass( "TArray" ) )
+      m_topbase = kETB_TArray;
+   else if ( m_class->GetName() == "TString" || m_class->GetBaseClass( "TString" ) )
+      m_topbase = kETB_TString;
+   else if ( m_class->GetName() == "TIter" || m_class->GetBaseClass( "TIter" ) )
+      m_topbase = kETB_TIter;
 }
 
 PyROOT::MethodHolder::MethodHolder( const MethodHolder& om ) {
@@ -576,21 +609,4 @@ PyObject* PyROOT::MethodHolder::operator()( PyObject* aTuple, PyObject* /* aDict
 // still here? confused ...
    PyErr_SetString( PyExc_TypeError, "return type in method not handled" );
    return 0;
-}
-
-
-//- nullness testing -----------------------------------------------------------
-PyObject* PyROOT::IsZero( PyObject* /* self */, PyObject* aTuple ) {
-// get a hold of the object and test it
-   void* obj = Utility::getObjectFromHolderFromArgs( aTuple );
-   long isZero = obj == 0 ? 1l /* yes, is zero */ : 0l;
-   return PyInt_FromLong( isZero );
-}
-
-
-PyObject* PyROOT::IsNotZero( PyObject* /* self */, PyObject* aTuple ) {
-// test for non-zero is opposite of test for zero
-   void* obj = Utility::getObjectFromHolderFromArgs( aTuple );
-   long isNotZero = obj != 0 ? 1l /* yes, is not zero */ : 0l;
-   return PyInt_FromLong( isNotZero );
 }

@@ -1,9 +1,10 @@
-// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.6 2004/06/12 05:35:10 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: RootWrapper.cxx,v 1.7 2004/06/17 21:12:26 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
 #include "PyROOT.h"
 #include "RootWrapper.h"
+#include "Pythonize.h"
 #include "ObjectHolder.h"
 #include "MethodDispatcher.h"
 #include "ConstructorDispatcher.h"
@@ -104,20 +105,6 @@ namespace {
          const_cast< char* >( label ),
          PyROOT::bindRootObject( new PyROOT::ObjectHolder( obj, cls, false ) )
       );
-   }
-
-   void addToClass( const char* label, PyCFunction cfunc, PyObject* cls ) {
-      PyMethodDef* pdef = new PyMethodDef;
-      pdef->ml_name  = const_cast< char* >( label );
-      pdef->ml_meth  = cfunc;
-      pdef->ml_flags = METH_VARARGS;
-      pdef->ml_doc   = NULL;
-
-      PyObject* func = PyCFunction_New( pdef, NULL );
-      PyObject* method = PyMethod_New( func, NULL, cls );
-      PyObject_SetAttrString( cls, pdef->ml_name, method );
-      Py_DECREF( func );
-      Py_DECREF( method );
    }
 
    void destroyObjectHolder( void* oh ) {
@@ -243,10 +230,6 @@ int PyROOT::buildRootClassDict( TClass* cls, PyObject* pyclass ) {
       PropertyHolder::addToClass( new PropertyHolder( mb ), pyclass );
    }
 
-// add null/non-null testing
-   addToClass( "__zero__", IsZero, pyclass );
-   addToClass( "__nonzero__", IsNotZero, pyclass );
-
 // all ok, done
    return 0;
 }
@@ -362,6 +345,13 @@ PyObject* PyROOT::makeRootClassFromString( const char* className ) {
       }
    }
 
+// add python-like features
+   if ( ! pythonize( pyclass, className ) ) {
+      Py_XDECREF( pyclass );
+      pyclass = 0;
+   }
+
+// all done
    return pyclass;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.2 2004/05/07 20:47:20 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: Utility.h,v 1.3 2004/06/12 05:35:10 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 #ifndef PYROOT_UTILITY_H
@@ -16,6 +16,9 @@ namespace PyROOT {
    namespace Utility {
 
    // convenience functions
+      void addToClass( const char* label, PyCFunction cfunc, PyObject* cls,
+                       int flags = METH_VARARGS );
+
       ObjectHolder* getObjectHolder( PyObject* self );
       void* getObjectFromHolderFromArgs( PyObject* argsTuple );
 

@@ -1,7 +1,7 @@
-# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.5 2004/06/12 05:35:10 brun Exp $
+# @(#)root/pyroot:$Name:  $:$Id: ROOT.py,v 1.6 2004/06/17 21:12:25 brun Exp $
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 06/16/04
+# Last: 07/22/04
 
 """Modify the exception hook to add ROOT classes as requested. Ideas stolen from
 LazyPython (Nathaniel Gray <n8gray@caltech.edu>)."""
@@ -10,11 +10,11 @@ LazyPython (Nathaniel Gray <n8gray@caltech.edu>)."""
 import sys, exceptions, inspect, string, re
 import thread, time
 
-## There's no version_info (nor inspect module) in 1.5.2.
+## there's no version_info (nor inspect module) in 1.5.2
 if sys.version[0:3] < '2.1':
     raise ImportError, 'Python Version 2.1 or above is required.'
 
-## readline support
+## readline support, if available
 try:
   import rlcompleter, readline
   readline.parse_and_bind( 'tab: complete' )
@@ -25,19 +25,24 @@ except:
 ## PyROOT C++ extension module
 from libPyROOT import * 
 
+
 ## 2.2 has 10 instructions as default, 2.3 has 100 ... make same
 sys.setcheckinterval( 100 )
 
 
 ### data ________________________________________________________________________
+__version__ = '2.0.0'
+__author__  = 'Wim Lavrijsen (WLavrijsen@lbl.gov)'
+
+__all__ = [ 'makeRootClass',
+            'gROOT', 'gSystem', 'gRandom', 'gInterpreter', 'gBenchmark', 'gStyle' ]
+
 _NAME = 'name'
 _NAMEREX = re.compile( r"named? '?(?P<%s>[\w\d]+)'?" % _NAME )
 
 _orig_ehook = sys.excepthook
 
 kWhite, kBlack, kRed, kGreen, kBlue, kYellow, kMagenta, kCyan = range( 0, 8 )
-
-gGeometry = gROOT.GetGlobal( 'gGeometry' )
 
 
 ### exeption hook replacement ---------------------------------------------------
@@ -131,10 +136,10 @@ _thismodule = sys.modules[ __name__ ]
 
 class ModuleFacade:
    def __init__( self ):
-    # allow "from ROOT import *"
-      self.__dict__[ 'makeRootClass' ] = makeRootClass
-      self.__dict__[ '__all__' ] = [ 'makeRootClass',
-          'gROOT', 'gSystem', 'gRandom', 'gInterpreter', 'gBenchmark', 'gStyle' ]
+    # allow "from ROOT import *" and name-completion
+      self.__dict__[ '__all__' ] = __all__
+      for name in __all__:
+         exec 'self.__dict__[ "%s" ] = %s' % (name,name)
 
    def __getattr__( self, name ):
       if not hasattr( _thismodule, name ):

@@ -24,18 +24,20 @@ PYROOTDEP    := $(PYROOTO:.o=.d) $(PYROOTDO:.o=.d)
 
 PYROOTLIB    := $(LPATH)/libPyROOT.$(SOEXT)
 
-ROOTPYS      := $(MODDIR)/ROOT.py
+ROOTPYS      := $(wildcard $(MODDIR)/*.py)
 ifeq ($(PLATFORM),win32)
-ROOTPY       := bin/ROOT.py
-ROOTPYC      := bin/ROOT.pyc
+ROOTPY       := $(subst $(MODDIR),bin,$(ROOTPYS))
+bin/%.py: $(MODDIR)/%.py; cp $< $@
 else
-ROOTPY       := $(LPATH)/ROOT.py
-ROOTPYC      := $(LPATH)/ROOT.pyc
+ROOTPY       := $(subst $(MODDIR),$(LPATH),$(ROOTPYS))
+$(LPATH)/%.py: $(MODDIR)/%.py; cp $< $@
 endif
+ROOTPYC      := $(ROOTPY:.py=.pyc)
+ROOTPYO      := $(ROOTPY:.py=.pyo)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
-ALLLIBS     += $(PYROOTLIB)
+ALLLIBS     += $(PYROOTLIB) $(ROOTPY) $(ROOTPYC) $(ROOTPYO)
 
 # include all dependency files
 INCLUDEFILES += $(PYROOTDEP)
@@ -44,10 +46,10 @@ INCLUDEFILES += $(PYROOTDEP)
 include/%.h:    $(PYROOTDIRI)/%.h
 		cp $< $@
 
-$(ROOTPY):      $(ROOTPYS)
-		cp $< $@
+%.pyc: %.py;    python -c 'import py_compile; py_compile.compile( "$<" )'
+%.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'
 
-$(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(MAINLIBS) $(ROOTPY)
+$(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		"$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
 		"$(PYROOTO) $(PYROOTDO)" "$(PYTHONLIBDIR) $(PYTHONLIB)" \
@@ -60,7 +62,7 @@ $(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMP)
 $(PYROOTDO):    $(PYROOTDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
 
-all-pyroot:     $(PYROOTLIB)
+all-pyroot:     $(PYROOTLIB) $(ROOTPYO)
 
 map-pyroot:     $(RLIBMAP)
 		$(RLIBMAP) -r $(ROOTMAP) -l $(PYROOTLIB) \
@@ -75,7 +77,7 @@ clean::         clean-pyroot
 
 distclean-pyroot: clean-pyroot
 		@rm -f $(PYROOTDEP) $(PYROOTDS) $(PYROOTDH) $(PYROOTLIB) \
-		   $(ROOTPY) $(ROOTPYC)
+		   $(ROOTPY) $(ROOTPYC) $(ROOTPYO)
 
 distclean::     distclean-pyroot
 
