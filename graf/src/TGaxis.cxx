@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.34 2002/02/04 23:31:02 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.35 2002/02/05 16:45:57 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -510,8 +510,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Double_t timed, wTimeIni;
    struct tm* utctis;
 
-   Double_t epsilon = 0.00001;
-   const Double_t kPI=3.141592;
+   Double_t epsilon   = 1e-5;
+   const Double_t kPI = TMath::Pi();
 //*-*-______________________________________
 
    Double_t rwmi = wmin;
@@ -630,7 +630,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       }
       if ((wmin-BinLow)  > epsilon) { BinLow  += BinWidth; nbins--; }
       if ((BinHigh-wmax) > epsilon) { BinHigh -= BinWidth; nbins--; }
-      if (TMath::Abs(xmax-xmin) <= epsilon) {
+      if (xmax == xmin) {
          rtyw  = (ymax-ymin)/(wmax-wmin);
          Xxmin = xmin;
          Xxmax = xmax;
