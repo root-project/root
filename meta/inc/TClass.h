@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.3 2000/09/05 09:21:23 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.4 2000/09/12 06:42:06 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -115,14 +115,14 @@ public:
    Bool_t        InheritsFrom(const char *cl) const;
    Bool_t        InheritsFrom(const TClass *cl) const;
    Bool_t        IsFolder() const {return kTRUE;}
-   void         *New();
+   void         *New(Bool_t defConstructor = kTRUE);
    void          Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    void          ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
    Int_t         Size() const;
    void          SetStreamerInfo(const char *info="");
    Long_t        Property() const;
 
-   static Bool_t IsCallingNew() {return fgCallingNew;}
+   static Bool_t IsCallingNew();
    static TClass *Load(TBuffer &b);
    void           Store(TBuffer &b) const;
 

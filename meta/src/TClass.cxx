@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.5 2000/09/08 16:05:22 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.6 2000/09/12 06:42:07 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -784,14 +784,14 @@ void *TClass::DynamicCast(const TClass *cl, void *obj)
 }
 
 //______________________________________________________________________________
-void *TClass::New()
+void *TClass::New(Bool_t defConstructor)
 {
    // Return a pointer to a newly allocated object of this class.
    // The class must have a default constructor.
 
    if (!fClassInfo) return 0;
 
-   fgCallingNew = kTRUE;
+   fgCallingNew = defConstructor;
    void *p = GetClassInfo()->New();
    fgCallingNew = kFALSE;
    if (!p) Error("New", "no default ctor for class %s", GetName());
@@ -1121,4 +1121,14 @@ void TClass::PrintStreamerInfoList(TList *list)
          }
       }
    }
+}
+
+//______________________________________________________________________________
+Bool_t TClass::IsCallingNew()
+{
+   //static function returning the CallingNew flag passed to TClass::New
+   //as argument.
+   //This function cannot be inline (problems with NT linker)
+   
+   return fgCallingNew;
 }
