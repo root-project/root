@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.16 2002/02/23 16:01:44 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TCollection.cxx,v 1.17 2002/05/30 19:43:06 brun Exp $
 // Author: Fons Rademakers   13/08/95
 
 /*************************************************************************
@@ -225,8 +225,8 @@ Bool_t  TCollection::IsArgNull(const char *where, const TObject *obj) const
 void TCollection::ls(Option_t *option) const
 {
    // List (ls) all objects in this collection.
-   // wildcarding supported, eg option="xxx*" lists only objects
-   // with names xxx*
+   // Wildcarding supported, eg option="xxx*" lists only objects
+   // with names xxx*.
 
    TRegexp re(option,kTRUE);
    TIter next(this);
@@ -237,7 +237,7 @@ void TCollection::ls(Option_t *option) const
    while ((object = next())) {
       if (star) {
          TString s = object->GetName();
-         if (strcmp(option,object->GetName()) && s.Index(re) == kNPOS) continue;
+         if (s != option && s.Index(re) == kNPOS) continue;
       }
       object->ls(option);
    }
@@ -256,17 +256,17 @@ void TCollection::Paint(Option_t *option)
 void TCollection::Print(Option_t *option) const
 {
    // Print all objects in this collection.
-   // wildcarding supported, eg option="xxx*" prints only objects
-   // with names xxx*
+   // Wildcarding supported, eg option="xxx*" prints only objects
+   // with names xxx*.
 
    TRegexp re(option,kTRUE);
+   Int_t nch = strlen(option);
    TIter next(this);
    TObject *object;
-   Int_t nch = strlen(option);
 
    while ((object = next())) {
       TString s = object->GetName();
-      if (nch && strcmp(option,object->GetName()) && s.Index(re) == kNPOS) continue;
+      if (nch && s != option && s.Index(re) == kNPOS) continue;
       object->Print(option);
    }
 }
