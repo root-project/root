@@ -964,6 +964,13 @@ void G__define_type()
 #endif
        ) {
       reftype = G__PARAP2P;
+#ifndef G__OLDIMPLEMENTATION919
+      while(typename[ix]=='*') {
+        if(G__PARANORMAL==reftype) reftype = G__PARAP2P;
+        else if(reftype>=G__PARAP2P) ++ reftype;
+        ++ix;
+      }
+#endif
     }
     else {
       type=toupper(type);
