@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.44 2004/02/07 22:32:08 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.45 2004/02/27 20:08:56 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1414,6 +1414,8 @@ TH1 *TH3::Project3D(Option_t *option) const
   nch = strlen(GetTitle()) +opt.Length() +2;
   char *title = new char[nch];
   sprintf(title,"%s_%s",GetTitle(),option);
+  TObject *h1obj = gROOT->FindObject(name);
+  if (h1obj && !h1obj->InheritsFrom("TH1")) h1obj = 0;
   const TArrayD *bins;
   const TArrayD *xbins;
   const TArrayD *ybins;
@@ -1421,6 +1423,11 @@ TH1 *TH3::Project3D(Option_t *option) const
   switch (pcase) {
      case 1:
         // "x"
+        if (h1obj && h1obj->InheritsFrom("TH1D")) {
+           h1 = (TH1D*)h1obj;
+           h1->Reset();
+           break;
+        }
         bins = fXaxis.GetXbins();
         if (bins->fN == 0) {
            h1 = new TH1D(name,title,nx,fXaxis.GetBinLowEdge(ixmin),fXaxis.GetBinUpEdge(ixmax));
@@ -1431,6 +1438,11 @@ TH1 *TH3::Project3D(Option_t *option) const
 
      case 2:
         // "y"
+        if (h1obj && h1obj->InheritsFrom("TH1D")) {
+           h1 = (TH1D*)h1obj;
+           h1->Reset();
+           break;
+        }
         bins = fYaxis.GetXbins();
         if (bins->fN == 0) {
            h1 = new TH1D(name,title,ny,fYaxis.GetBinLowEdge(iymin),fYaxis.GetBinUpEdge(iymax));
@@ -1441,6 +1453,11 @@ TH1 *TH3::Project3D(Option_t *option) const
 
      case 3:
         // "z"
+        if (h1obj && h1obj->InheritsFrom("TH1D")) {
+           h1 = (TH1D*)h1obj;
+           h1->Reset();
+           break;
+        }
         bins = fZaxis.GetXbins();
         if (bins->fN == 0) {
            h1 = new TH1D(name,title,nz,fZaxis.GetBinLowEdge(izmin),fZaxis.GetBinUpEdge(izmax));
@@ -1450,6 +1467,11 @@ TH1 *TH3::Project3D(Option_t *option) const
         break;
      case 4:
         // "xy"
+        if (h1obj && h1obj->InheritsFrom("TH2D")) {
+           h2 = (TH2D*)h1obj;
+           h2->Reset();
+           break;
+        }
         xbins = fXaxis.GetXbins();
         ybins = fYaxis.GetXbins();
         if (xbins->fN == 0 && ybins->fN == 0) {
@@ -1468,6 +1490,11 @@ TH1 *TH3::Project3D(Option_t *option) const
 
      case 5:
         // "yx"
+        if (h1obj && h1obj->InheritsFrom("TH2D")) {
+           h2 = (TH2D*)h1obj;
+           h2->Reset();
+           break;
+        }
         xbins = fXaxis.GetXbins();
         ybins = fYaxis.GetXbins();
         if (xbins->fN == 0 && ybins->fN == 0) {
@@ -1486,6 +1513,11 @@ TH1 *TH3::Project3D(Option_t *option) const
 
      case 6:
         // "xz"
+        if (h1obj && h1obj->InheritsFrom("TH2D")) {
+           h2 = (TH2D*)h1obj;
+           h2->Reset();
+           break;
+        }
         xbins = fXaxis.GetXbins();
         zbins = fZaxis.GetXbins();
         if (xbins->fN == 0 && zbins->fN == 0) {
@@ -1504,6 +1536,11 @@ TH1 *TH3::Project3D(Option_t *option) const
 
      case 7:
         // "zx"
+        if (h1obj && h1obj->InheritsFrom("TH2D")) {
+           h2 = (TH2D*)h1obj;
+           h2->Reset();
+           break;
+        }
         xbins = fXaxis.GetXbins();
         zbins = fZaxis.GetXbins();
         if (xbins->fN == 0 && zbins->fN == 0) {
@@ -1522,6 +1559,11 @@ TH1 *TH3::Project3D(Option_t *option) const
 
      case 8:
         // "yz"
+        if (h1obj && h1obj->InheritsFrom("TH2D")) {
+           h2 = (TH2D*)h1obj;
+           h2->Reset();
+           break;
+        }
         ybins = fYaxis.GetXbins();
         zbins = fZaxis.GetXbins();
         if (ybins->fN == 0 && zbins->fN == 0) {
@@ -1540,6 +1582,11 @@ TH1 *TH3::Project3D(Option_t *option) const
 
      case 9:
         // "zy"
+        if (h1obj && h1obj->InheritsFrom("TH2D")) {
+           h2 = (TH2D*)h1obj;
+           h2->Reset();
+           break;
+        }
         ybins = fYaxis.GetXbins();
         zbins = fZaxis.GetXbins();
         if (ybins->fN == 0 && zbins->fN == 0) {
