@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.58 2004/06/22 16:27:08 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.59 2004/06/25 17:15:23 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1487,8 +1487,11 @@ void TGGroupFrame::DrawBorder()
    l = 0;
    t = (max_ascent + max_descent + 2) >> 1;
    r = fWidth - 1;
-   b = fHeight - t;
-
+   // next three lines are for backward compatibility in case of horizontal layout
+   TGLayoutManager * lm = GetLayoutManager();
+   if (lm->InheritsFrom(TGHorizontalLayout::Class())) b = fHeight - 1;
+   else b = fHeight - t;
+   
    sep = 3;
    UInt_t rr = 5 + (sep << 1) + tw;
 
