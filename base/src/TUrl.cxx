@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.9 2002/10/25 06:04:53 brun Exp $
+// @(#)root/net:$Name:  $:$Id: TUrl.cxx,v 1.10 2003/02/25 17:21:42 rdm Exp $
 // Author: Fons Rademakers   17/01/97
 
 /*************************************************************************
@@ -280,17 +280,18 @@ const char *TUrl::GetUrl()
          return fUrl;
       }
 
-      Bool_t deflt = kTRUE;
-      if ((!fProtocol.CompareTo("http")   && fPort != 80)   ||
-          (!fProtocol.CompareTo("proof")  && fPort != 1093) ||
-          (!fProtocol.CompareTo("proofs") && fPort != 1093) ||
-          (!fProtocol.CompareTo("proofk") && fPort != 1093) ||
-          (!fProtocol.CompareTo("root")   && fPort != 1094) ||
-          (!fProtocol.CompareTo("roots")  && fPort != 1094) ||
-          (!fProtocol.CompareTo("rootk")  && fPort != 1094) ||
-          (!fProtocol.CompareTo("ftp")    && fPort != 20)   ||
-          (!fProtocol.CompareTo("news")   && fPort != 119))
-         deflt = kFALSE;
+      Bool_t deflt = kFALSE;
+      if ((!fProtocol.CompareTo("http")   && fPort == 80)   ||
+          (!fProtocol.CompareTo("proof")  && fPort == 1093) ||
+          (!fProtocol.CompareTo("proofs") && fPort == 1093) ||
+          (!fProtocol.CompareTo("proofk") && fPort == 1093) ||
+          (!fProtocol.CompareTo("root")   && fPort == 1094) ||
+          (!fProtocol.CompareTo("roots")  && fPort == 1094) ||
+          (!fProtocol.CompareTo("rootk")  && fPort == 1094) ||
+          (!fProtocol.CompareTo("ftp")    && fPort == 20)   ||
+          (!fProtocol.CompareTo("news")   && fPort == 119)  ||
+           fPort == 0)
+         deflt = kTRUE;
 
       fUrl = fProtocol + "://";
       if (fUser != "") {
