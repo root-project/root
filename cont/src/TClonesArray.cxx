@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.35 2002/11/28 23:26:05 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.36 2003/02/22 13:25:52 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -143,11 +143,13 @@ TClonesArray::TClonesArray(const TClass *cl, Int_t s, Bool_t) : TObjArray(s)
    fKeep  = 0;
    fClass = (TClass*)cl;
    if (!fClass) {
+      MakeZombie();
       Error("TClonesArray", "called with a null pointer");
       return;
    }
    const char *classname = fClass->GetName();
    if (!fClass->InheritsFrom(TObject::Class())) {
+      MakeZombie();
       Error("TClonesArray", "%s does not inherit from TObject", classname);
       return;
    }
