@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.59 2004/02/17 08:18:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.60 2004/03/14 09:12:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -153,7 +153,7 @@ public:
     virtual TBranch  *Bronch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual TBranch  *BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
     virtual void      Browse(TBrowser *b);
-    virtual Int_t     BuildIndex(const char *majorname, const char *minorname);
+    virtual Int_t     BuildIndex(const char *majorname, const char *minorname="0");
     TStreamerInfo    *BuildStreamerInfo(TClass *cl, void *pointer=0);
     virtual TTree    *CloneTree(Int_t nentries=-1, Option_t *option="");
     virtual void      CopyAddresses(TTree *tree);
@@ -190,9 +190,9 @@ public:
     virtual Int_t     GetEstimate() const { return fEstimate; }
     virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);
             Int_t     GetEvent(Int_t entry=0, Int_t getall=0) {return GetEntry(entry,getall);}
-    virtual Int_t     GetEntryWithIndex(Int_t major, Int_t minor);
-    virtual Int_t     GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const;
-    virtual Int_t     GetEntryNumberWithIndex(Int_t major, Int_t minor) const;
+    virtual Int_t     GetEntryWithIndex(Int_t major, Int_t minor=0);
+    virtual Int_t     GetEntryNumberWithBestIndex(Int_t major, Int_t minor=0) const;
+    virtual Int_t     GetEntryNumberWithIndex(Int_t major, Int_t minor=0) const;
     TEventList       *GetEventList() const {return fEventList;}
     virtual Int_t     GetEntryNumber(Int_t entry) const;
     virtual Int_t     GetFileNumber() const {return fFileNumber;}

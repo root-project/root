@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.182 2004/03/06 10:10:53 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.183 2004/03/14 09:12:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1409,7 +1409,7 @@ Int_t TTree::BuildIndex(const char *majorname, const char *minorname)
    // In case an expression is specified, the equivalent expression must be computed
    // when calling GetEntryWithIndex.
    //
-   // To build an index with only majorname, specify minorname="0"
+   // To build an index with only majorname, specify minorname="0" (default)
    //
    // Note that once the index is built, it can be saved with the TTree object
    // with tree.Write(); //if the file has been open in "update" mode.
@@ -2778,10 +2778,43 @@ Int_t TTree::GetEntryWithIndex(Int_t major, Int_t minor)
 //     Int_t serial= tree.GetEntryNumberWithIndex(run,event);
 //    now the variable serial is in the range [0,nentries] and one can do
 //    tree.GetEntry(serial);
-
+//
+//  If the Tree has friend trees, the corresponding entry with
+//  the index values (major,minor) is read. Note that the master Tree
+//  and its friend may have different entry serial numbers corresponding 
+//  to (major,minor).
+   
    Int_t serial = GetEntryNumberWithIndex(major, minor);
    if (serial < 0) return -1;
-   return GetEntry(serial);
+   Int_t i;
+   Int_t nbytes = 0;
+   fReadEntry = serial;
+   TBranch *branch;
+
+   Int_t nbranches = fBranches.GetEntriesFast();
+   Int_t nb;
+   for (i=0;i<nbranches;i++)  {
+      branch = (TBranch*)fBranches.UncheckedAt(i);
+      nb = branch->GetEntry(serial);
+      if (nb < 0) return nb;
+      nbytes += nb;
+   }
+
+   // GetEntry in list of friends
+   if (!fFriends) return nbytes;
+   TIter nextf(fFriends);
+   TFriendElement *fe;
+   while ((fe = (TFriendElement*)nextf())) {
+      TTree *t = fe->GetTree();
+      if (t) {
+         serial = t->GetEntryNumberWithIndex(major,minor);
+         if (serial <0) return -nbytes;
+         nb = t->GetEntryNumberWithIndex(major,minor);
+         if (nb < 0) return nb;
+         nbytes += nb;
+      }
+   }
+   return nbytes;
 }
 
 //______________________________________________________________________________
