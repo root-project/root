@@ -632,7 +632,7 @@ $(BENCH):       $(BENCHO) $(TBENCHSO)
 ifeq ($(ARCH),macosx)
 		$(LD) $(BENCHO) $(TBENCHSO) $(LIBS) $(OutPutOpt)$@
 else
-		$(LD) $(LDFLAGS) $(BENCHO) $(TBENCHSO) $(LIBS) $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $(BENCHO) $(TBENCHO) $(LIBS) $(OutPutOpt)$@
 endif
 		@echo "$@ done"
 
