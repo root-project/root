@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.0 2002/02/05 14:00:00 couet Exp $
+// @(#)root/postscript:$Name:  $:$Id: TSVG.cxx,v 1.1 2002/02/14 18:01:59 brun Exp $
 // Author: Olivier Couet
 
 /*************************************************************************
@@ -919,6 +919,24 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    // yy: y postion of the text
    // chars: text to be drawn
 
+   static const char *fontFamily[] = {
+   "Times", "Times", "Times",
+   "Helvetica", "Helvetica", "Helvetica", "Helvetica",
+   "Courier", "Courier", "Courier", "Courier",
+   "Symbol","Times", "ZapfDingbats"};
+
+   static const char *fontWeight[] = {
+   "normal", "bold", "bold",
+   "normal", "normal", "bold", "bold",
+   "normal", "normal", "bold", "bold",
+   "normal","normal", "normal"};
+
+   static const char *fontStyle[] = {
+   "italic", "normal", "italic",
+   "normal", "oblique", "normal", "oblique",
+   "normal", "oblique", "normal", "oblique",
+   "normal","normal", "normal"};
+
    Int_t ix    = XtoSVG(xx); 
    Int_t iy    = YtoSVG(yy);
    Int_t txalh = fTextAlign/10;
@@ -937,8 +955,9 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    }
    Float_t ftsize;
    
-   Int_t font     = abs(fTextFont)/10;
-   if( font > 42 || font < 1) font = 1;
+   Int_t font  = abs(fTextFont)/10;
+   Int_t ifont = font-1;
+   if (font > 42 || font < 1) font = 1;
    if (wh < hh) {
       ftsize = fTextSize*fXsize*gPad->GetAbsWNDC();
    } else {
@@ -947,7 +966,6 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
 				             
    Int_t fontsize = CMtoSVG(ftsize/fontrap);
    if( fontsize <= 0) return;
-
 
    if (txalv == 3) iy = iy+fontsize;
    if (txalv == 2) iy = iy+(fontsize/2);
@@ -976,8 +994,24 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    SetColor(Int_t(fTextColor));
    PrintFast(12," font-size=\"");
    WriteInteger(fontsize, 0);
+   PrintFast(15,"\" font-family=\"");
+   PrintStr(fontFamily[ifont]);
+   if (strcmp(fontWeight[ifont],"normal")) {
+      PrintFast(15,"\" font-weight=\"");
+      PrintStr(fontWeight[ifont]);
+   }
+   if (strcmp(fontStyle[ifont],"normal")) {
+      PrintFast(14,"\" font-style=\"");
+      PrintStr(fontStyle[ifont]);
+   }
    PrintFast(2,"\">");
-   PrintStr(chars);
+   if (font == 12 && chars[0] >= '\xA3' && chars[0] <= '\xF2') {
+      char str[8];
+      sprintf(str,"&#x%2.2x;", chars[0] & 255);
+      PrintStr(str);
+   } else {
+      PrintStr(chars);
+   }
    PrintFast(7,"</text>");
 
    if (fTextAngle != 0.) PrintFast(4,"</g>");
