@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.1.1.1 2000/05/16 17:00:44 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.2 2000/05/29 14:51:32 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -340,7 +340,7 @@ void TTreePlayer::CompileVariables(const char *varexp, const char *selection)
    if (strlen(selection)) {
       fSelect = new TTreeFormula("Selection",selection,fTree);
       if (!fSelect->GetNdim()) {delete fSelect; fSelect = 0; return; }
-      if (fSelect->GetMultiplicity() == 1) fMultiplicity = fSelect;
+      if (fSelect->GetMultiplicity() >= 1) fMultiplicity = fSelect;
       if (fSelect->GetMultiplicity() == -1) force = 4;
    }
 //*-*- if varexp is empty, take first column by default
@@ -358,19 +358,19 @@ void TTreePlayer::CompileVariables(const char *varexp, const char *selection)
    if (ncols >= 1) {
       fVar1 = new TTreeFormula("Var1",GetNameByIndex(title,index,0),fTree);
       if (!fVar1->GetNdim()) { ClearFormula(); return;}
-      if (!fMultiplicity && fVar1->GetMultiplicity() == 1) fMultiplicity = fVar1;
+      if (!fMultiplicity && fVar1->GetMultiplicity() >= 1) fMultiplicity = fVar1;
       if (!force && fVar1->GetMultiplicity() == -1) force = 1;
    }
    if (ncols >= 2) {
       fVar2 = new TTreeFormula("Var2",GetNameByIndex(title,index,1),fTree);
       if (!fVar2->GetNdim()) { ClearFormula(); return;}
-      if (!fMultiplicity && fVar2->GetMultiplicity() == 1) fMultiplicity = fVar2;
+      if (!fMultiplicity && fVar2->GetMultiplicity() >= 1) fMultiplicity = fVar2;
       if (!force && fVar2->GetMultiplicity() == -1) force = 2;
    }
    if (ncols >= 3) {
       fVar3 = new TTreeFormula("Var3",GetNameByIndex(title,index,2),fTree);
       if (!fVar3->GetNdim()) { ClearFormula(); return;}
-      if (!fMultiplicity && fVar3->GetMultiplicity()  == 1) fMultiplicity = fVar3;
+      if (!fMultiplicity && fVar3->GetMultiplicity()  >= 1) fMultiplicity = fVar3;
       if (!force && fVar3->GetMultiplicity() == -1) force = 3;
    }
    if (force) fTree->SetBit(TTree::kForceRead);
