@@ -94,6 +94,30 @@ void SetROOTMessageToStdout() {
    SetErrorHandler(StdoutErrorHandler);
 }
 
+Bool_t CompareLines(const char*left,const char*right,UInt_t maxlen) 
+{
+   // Compare two string, ignore the difference between MSDOS and linux style
+   // of line ending
+
+   UInt_t i = 0;
+   Bool_t result = true;
+   while (i<maxlen && left[i] && right[i]) {
+      if (left[i]!=right[i]) {
+         if (left[i]==0x0a && left[i+1]==0) {
+            if ((right[i]==0x0a&&right[i+1]==0) || right[i]==0) {
+               return kTRUE;
+            }
+         }
+         if (right[i]==0x0a && right[i+1]==0) {
+            if ((left[i]==0x0a&&left[i+1]==0) || left[i]==0) {
+               return kTRUE;
+            }
+         }
+     }
+     ++i;
+   }
+}
+
 Bool_t ComparePostscript(const char *from, const char *to)
 {
    FILE *left = fopen(from,"r");
@@ -117,7 +141,7 @@ Bool_t ComparePostscript(const char *from, const char *to)
          if (strstr(lvalue,"%%CreationDate")) {
             // skip the comment line with the time and date
          } else {
-            areEqual = areEqual && (0 == strncmp(lvalue,rvalue,sizeof(leftbuffer)));
+            areEqual = areEqual && (CompareLines(lvalue,rvalue,sizeof(leftbuffer)));
          }
       }
       if (lvalue&&!rvalue) areEqual = kFALSE;
