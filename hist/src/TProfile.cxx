@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.46 2004/02/07 21:17:40 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.47 2004/03/13 08:23:15 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -1421,18 +1421,7 @@ void TProfile::SavePrimitive(ofstream &out, Option_t *option)
                  <<","<<GetXaxis()->GetXmax()
                  <<","<<quote<<GetErrorOption()<<quote<<");"<<endl;
 
-   if (fMinimum != -1111) {
-      out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<endl;
-   }
-   if (fMaximum != -1111) {
-      out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<endl;
-   }
-   if (fNormFactor != 0) {
-      out<<"   "<<GetName()<<"->SetNormFactor("<<fNormFactor<<");"<<endl;
-   }
-   if (fEntries != 0) {
-      out<<"   "<<GetName()<<"->SetEntries("<<fEntries<<");"<<endl;
-   }
+   // save bin entries
    Int_t bin;
    for (bin=0;bin<fNcells;bin++) {
       Double_t bi = GetBinEntries(bin);
@@ -1440,12 +1429,14 @@ void TProfile::SavePrimitive(ofstream &out, Option_t *option)
          out<<"   "<<GetName()<<"->SetBinEntries("<<bin<<","<<bi<<");"<<endl;
       }
    }
+   //save bin contents
    for (bin=0;bin<fNcells;bin++) {
       Double_t bc = fArray[bin];
       if (bc) {
          out<<"   "<<GetName()<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
       }
    }
+   // save bin errors
    if (fSumw2.fN) {
       for (bin=0;bin<fNcells;bin++) {
          Double_t be = TMath::Sqrt(fSumw2.fArray[bin]);
@@ -1454,23 +1445,8 @@ void TProfile::SavePrimitive(ofstream &out, Option_t *option)
          }
       }
    }
-
-   // save list of functions
-   TIter next(fFunctions);
-   TObject *obj;
-   while ((obj=next())) {
-      obj->SavePrimitive(out,"nodraw");
-      out<<"   "<<GetName()<<"->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
-   }
-
-   SaveFillAttributes(out,GetName(),0,1001);
-   SaveLineAttributes(out,GetName(),1,1,1);
-   SaveMarkerAttributes(out,GetName(),1,1,1);
-   fXaxis.SaveAttributes(out,GetName(),"->GetXaxis()");
-   fYaxis.SaveAttributes(out,GetName(),"->GetYaxis()");
-   fZaxis.SaveAttributes(out,GetName(),"->GetZaxis()");
-   out<<"   "<<GetName()<<"->Draw("
-      <<quote<<option<<quote<<");"<<endl;
+   
+   TH1::SavePrimitiveHelp(out, option);
 }
 
 //______________________________________________________________________________
