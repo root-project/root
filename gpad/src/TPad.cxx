@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.130 2004/05/10 14:15:07 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.131 2004/05/11 07:04:04 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3777,7 +3777,6 @@ void TPad::Print(const char *filenam, Option_t *option)
    if (strstr(opt,"Landscape")) pstype = 112;
    if (strstr(opt,"eps"))       pstype = 113;
    if (strstr(opt,"Preview"))   pstype = 113;
-   if (strstr(opt,"pdf"))       pstype = 111;
    TPad *padsav = (TPad*)gPad;
    cd();
    TVirtualPS *psave = gVirtualPS;
