@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.72 2005/03/05 22:15:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.73 2005/03/07 16:18:15 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -340,7 +340,7 @@ Bool_t TBuffer::CheckObject(const void *obj, const TClass *ptrClass)
    // the buffer. Returns kTRUE if object already in the buffer,
    // kFALSE otherwise (also if obj is 0 or TBuffer not in writing mode).
 
-   if (!obj || !IsWriting())
+   if (!obj || !fMap || !ptrClass || !IsWriting())
       return kFALSE;
 
    TClass *clActual = ptrClass->GetActualClass(obj);
@@ -2182,13 +2182,18 @@ Int_t TBuffer::WriteObjectAny(const void *obj, const TClass *ptrClass)
    // a pointer to a "ptrClass". The actual type of the object pointed to
    // can be any class derived from "ptrClass".
    // Return:
-   //  0: failure (not used yet)
+   //  0: failure
    //  1: success
    //  2: truncated success (i.e actual class is missing. Only ptrClass saved.)
 
    if (!obj) {
       WriteObject(0, 0);
       return 1;
+   }
+
+   if (!ptrClass) {
+      Error("WriteObjectAny", "ptrClass argument may not be 0");
+      return 0;
    }
 
    TClass *clActual = ptrClass->GetActualClass(obj);
