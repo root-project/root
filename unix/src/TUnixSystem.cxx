@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.28 2001/06/22 16:10:23 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.29 2001/07/18 15:47:57 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1280,9 +1280,7 @@ void TUnixSystem::Unload(const char *module)
 #ifdef NOCINT
    UnixDynUnload(module);
 #else
-   if (module) { }
-   // should call CINT unload file here, but does not work for sl's yet.
-   Warning("Unload", "CINT does not support unloading shared libs");
+   if (module) { TSystem::Unload(module); }
 #endif
 }
 

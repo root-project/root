@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.22 2001/10/19 18:05:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.23 2001/10/22 14:54:01 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -944,11 +944,20 @@ Func_t TSystem::DynFindSymbol(const char * /*lib*/, const char *entry)
 }
 
 //______________________________________________________________________________
-void TSystem::Unload(const char *)
+void TSystem::Unload(const char *module)
 {
    // Unload a shared library.
 
+#ifdef NOCINT
    AbstractMethod("UnLoad");
+#else
+   char *path;
+   int i = -1;
+   if ((path = DynamicPathName(module))) {
+     i = G__unloadfile(path);
+     delete [] path;
+   }
+#endif
 }
 
 //______________________________________________________________________________
