@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.124 2003/02/24 10:33:06 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.125 2003/03/03 20:29:26 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -65,7 +65,7 @@ const Int_t kNMAX = 2000;
 
 const Double_t kHMAX = 1.05;
 const Int_t kMAXCONTOUR  = 104;
-const Int_t kCannotRotate = BIT(11);
+const UInt_t kCannotRotate = BIT(11);
 
 ClassImp(THistPainter)
 
