@@ -892,8 +892,32 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL: // array of pointers to Container with no virtual table (stl) and no comment
             {
                UInt_t start,count;
-               // Version_t v =
-               b.ReadVersion(&start, &count, cle);
+               Version_t vers = b.ReadVersion(&start, &count, cle);
+               if ( vers & TBuffer::kStreamedMemberWise ) {
+                  // Collection was saved member-wise
+
+                  vers &= ~( TBuffer::kStreamedMemberWise );
+                  TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
+                  TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
+                  DOLOOP {
+                     void **contp = (void**)(arr[k]+ioffset);
+                     int j;
+                     for(j=0;j<fLength[i];j++) {
+                        void *cont = contp[j];
+                        if (cont==0) {
+                           contp[j] = cle->New();
+                           cont = contp[j];
+                        }
+                        TVirtualCollectionProxy::TPushPop helper( proxy, cont );
+                        Int_t nobjects;
+                        b >> nobjects;
+                        proxy->Resize(nobjects,true);
+                        subinfo->ReadBufferSTL(b,proxy,nobjects,-1,0);
+                     }
+                  }
+                  b.CheckByteCount(start,count,aElement->GetFullName());
+                  continue;
+               }
                if (pstreamer == 0) {
                   DOLOOP {
                      void **contp = (void**)(arr[k]+ioffset);
@@ -922,8 +946,29 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          case TStreamerInfo::kSTL + TStreamerInfo::kOffsetL:     // array of Container with no virtual table (stl) and no comment
             {
                UInt_t start,count;
-               // Version_t v =
-               b.ReadVersion(&start, &count, cle);
+               Version_t vers = b.ReadVersion(&start, &count, cle);
+               if ( vers & TBuffer::kStreamedMemberWise ) {
+                  // Collection was saved member-wise
+
+                  vers &= ~( TBuffer::kStreamedMemberWise );
+                  TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
+                  TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
+                  DOLOOP {
+                     int objectSize = cle->Size();
+                     char *obj = arr[k]+ioffset;
+                     char *end = obj + fLength[i]*objectSize;
+
+                     for(; obj<end; obj+=objectSize) {
+                        TVirtualCollectionProxy::TPushPop helper( proxy, obj );
+                        Int_t nobjects;
+                        b >> nobjects;
+                        proxy->Resize(nobjects,true);
+                        subinfo->ReadBufferSTL(b,proxy,nobjects,-1,0);
+                     }
+                  }
+                  b.CheckByteCount(start,count,aElement->GetFullName());
+                  continue;
+               }
                if (fOldVersion<3){   // case of old TStreamerInfo
                   //  Backward compatibility. Some TStreamerElement's where without
                   //  Streamer but were not removed from element list

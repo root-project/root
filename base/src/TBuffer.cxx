@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.67 2004/05/26 08:57:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.68 2004/06/22 18:09:27 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -2345,6 +2345,39 @@ UInt_t TBuffer::WriteVersion(const TClass *cl, Bool_t useBcnt)
       *this << Version_t(0);
       *this << cl->GetCheckSum();
    } else {
+      *this <<version;
+   }
+
+   // return position where to store possible byte count
+   return cntpos;
+}
+
+//______________________________________________________________________________
+UInt_t TBuffer::WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt)
+{
+   // Write class version to I/O buffer after setting the kStreamedMemberWise
+   // bit in the version number.
+
+   UInt_t cntpos = 0;
+   if (useBcnt) {
+      // reserve space for leading byte count
+      cntpos   = UInt_t(fBufCur-fBuffer);
+      fBufCur += sizeof(UInt_t);
+   }
+
+   Version_t version = cl->GetClassVersion();
+   if (version > kMaxVersion) {
+      Error("WriteVersionMemberWise", "version number cannot be larger than %hd)",
+            kMaxVersion);
+      version = kMaxVersion;
+   }
+
+   if (cl->IsForeign() && version<=1) {
+      Error("WriteVersionMemberWise", "Member-wise streaming of foreign collection not yet implemented!");
+      *this << Version_t(0);
+      *this << cl->GetCheckSum();
+   } else {
+      version |= kStreamedMemberWise;
       *this <<version;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.56 2004/09/29 10:43:11 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.57 2004/10/06 13:07:56 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -62,34 +62,32 @@ public:
    };
 
 private:
-   UInt_t            fCheckSum;       //checksum of original class
-   Int_t             fClassVersion;   //Class version identifier
-   Int_t             fNumber;         //!Unique identifier
-   Int_t             fNdata;          //!number of optmized types
-   Int_t             fSize;           //!size of the persistent class
-   Int_t            *fType;           //![fNdata]
-   Int_t            *fNewType;        //![fNdata]
-   Int_t            *fOffset;         //![fNdata]
-   Int_t            *fLength;         //![fNdata]
-   ULong_t          *fElem;           //![fNdata]
-   ULong_t          *fMethod;         //![fNdata]
-   CompInfo         *fComp;           //![fNdata] additional info
-   Bool_t            fOptimized;      //! true if has been optimized
-   TClass           *fClass;          //!pointer to class
-   TObjArray        *fElements;       //Array of TStreamerElements
-   Version_t         fOldVersion;     //! Version of the TStreamerInfo object read from the file
-   Bool_t            fIsBuilt;        //! true if the TStreamerInfo has been 'built'
+   UInt_t            fCheckSum;          //checksum of original class
+   Int_t             fClassVersion;      //Class version identifier
+   Int_t             fNumber;            //!Unique identifier
+   Int_t             fNdata;             //!number of optmized types
+   Int_t             fSize;              //!size of the persistent class
+   Int_t            *fType;              //![fNdata]
+   Int_t            *fNewType;           //![fNdata]
+   Int_t            *fOffset;            //![fNdata]
+   Int_t            *fLength;            //![fNdata]
+   ULong_t          *fElem;              //![fNdata]
+   ULong_t          *fMethod;            //![fNdata]
+   CompInfo         *fComp;              //![fNdata] additional info
+   Bool_t            fOptimized;         //! true if has been optimized
+   TClass           *fClass;             //!pointer to class
+   TObjArray        *fElements;          //Array of TStreamerElements
+   Version_t         fOldVersion;        //! Version of the TStreamerInfo object read from the file
+   Bool_t            fIsBuilt;           //! true if the TStreamerInfo has been 'built'
 
-   static  Int_t     fgCount;         //Number of TStreamerInfo instances
-   static  Bool_t    fgCanDelete;     //True if ReadBuffer can delete object
-   static  Bool_t    fgOptimize;      //True if optimization on
-   static TStreamerElement *fgElement; //Pointer to current TStreamerElement
+   static  Int_t     fgCount;            //Number of TStreamerInfo instances
+   static  Bool_t    fgCanDelete;        //True if ReadBuffer can delete object
+   static  Bool_t    fgOptimize;         //True if optimization on
+   static  Bool_t    fgStreamMemberWise; //True if the collections are to be stream "member-wise" (when possible).
+   static TStreamerElement *fgElement;   //Pointer to current TStreamerElement
    void              BuildUserInfo(const char *info);
    static Double_t   GetValueAux(Int_t type, void *ladd, int k, Int_t len);
    static void       PrintValueAux(char *ladd, Int_t atype, TStreamerElement * aElement, Int_t aleng, Int_t *count);
-//VP   Int_t             ReadBufferAux       (TBuffer &b, char **arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
-//VP   Int_t             WriteBufferClonesAux      (TBuffer &b, char **arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
-//VP   Int_t             ReadBufferClonesAux       (TBuffer &b, char **arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
 public:
 
    //status bits
@@ -161,6 +159,7 @@ public:
    Int_t               GetSizeElements()    const;
    TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const;
    TStreamerElement   *GetStreamerElementReal(Int_t i, Int_t j) const;
+   static Bool_t       GetStreamMemberWise();
    Int_t              *GetTypes()   const {return fType;}
    Double_t            GetValue(char *pointer, Int_t i, Int_t j, Int_t len) const;
    Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
@@ -196,6 +195,7 @@ public:
    void                SetCheckSum(UInt_t checksum) {fCheckSum = checksum;}
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
+   static Bool_t       SetStreamMemberWise(Bool_t enable = kTRUE);
    void                TagFile(TFile *fFile);
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);

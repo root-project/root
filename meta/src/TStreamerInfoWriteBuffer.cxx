@@ -401,6 +401,26 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             {
                TClass *cl                 = fComp[i].fClass;
                TMemberStreamer *pstreamer = fComp[i].fStreamer;
+
+               if (fgStreamMemberWise && aElement->GetClassPointer()->CanSplit()) {
+                  // Let's save the collection member-wise.
+
+                  UInt_t pos = b.WriteVersionMemberWise(This->IsA(),kTRUE);
+                  TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
+                  TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
+                  DOLOOP {
+                     char **contp = (char**)(arr[k]+ioffset);
+                     for(int j=0;j<fLength[i];++j) {
+                        char *cont = contp[j];
+                        TVirtualCollectionProxy::TPushPop helper( proxy, cont );
+                        Int_t nobjects = proxy->Size();
+                        b << nobjects;
+                        subinfo->WriteBufferAux(b,*(proxy),-1,nobjects,0,1);
+                     }
+                   }
+                   b.SetByteCount(pos,kTRUE);
+                   continue;
+               }
                UInt_t pos = b.WriteVersion(This->IsA(),kTRUE);
                if (pstreamer == 0) {
                   DOLOOP {
@@ -422,6 +442,29 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             {
                TClass *cl                 = fComp[i].fClass;
                TMemberStreamer *pstreamer = fComp[i].fStreamer;
+               if (fgStreamMemberWise && aElement->GetClassPointer()->CanSplit()) {
+                  // Let's save the collection in member-wise order.
+
+                  UInt_t pos = b.WriteVersionMemberWise(This->IsA(),kTRUE);
+                  TVirtualCollectionProxy *proxy = aElement->GetClassPointer()->GetCollectionProxy();
+                  TStreamerInfo *subinfo = proxy->GetValueClass()->GetStreamerInfo();
+                  DOLOOP {
+                     char *obj = (char*)(arr[k]+ioffset);
+                     Int_t n = fLength[i];
+                     if (!n) n=1;
+                     int size = cl->Size();
+
+                     for(Int_t j=0; j<n; j++,obj+=size) {
+                        //((TClass*)cl)->Streamer(obj,b);
+                        TVirtualCollectionProxy::TPushPop helper( proxy, obj );
+                        Int_t nobjects = proxy->Size();
+                        b << nobjects;
+                        subinfo->WriteBufferAux(b,*(proxy),-1,nobjects,0,1);
+                     }
+                  }
+                  b.SetByteCount(pos,kTRUE);
+                  continue;
+               }
                UInt_t pos = b.WriteVersion(This->IsA(),kTRUE);
                if (pstreamer == 0) {
                   DOLOOP {

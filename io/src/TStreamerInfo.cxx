@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.203 2004/08/20 21:02:10 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.204 2004/09/01 07:07:03 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//#define IH_READ_BUFFER_CLONE
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -41,8 +40,9 @@
 #include "TInterpreter.h"
 
 Int_t   TStreamerInfo::fgCount = 0;
-Bool_t  TStreamerInfo::fgCanDelete = kTRUE;
-Bool_t  TStreamerInfo::fgOptimize  = kTRUE;
+Bool_t  TStreamerInfo::fgCanDelete        = kTRUE;
+Bool_t  TStreamerInfo::fgOptimize         = kTRUE;
+Bool_t  TStreamerInfo::fgStreamMemberWise = kFALSE;
 TStreamerElement *TStreamerInfo::fgElement = 0;
 
 const Int_t kRegrouped = TStreamerInfo::kOffsetL;
@@ -1383,6 +1383,21 @@ TStreamerElement* TStreamerInfo::GetStreamerElementReal(Int_t i, Int_t j) const
 }
 
 //______________________________________________________________________________
+Bool_t TStreamerInfo::GetStreamMemberWise()
+{
+   // Return whether the TStreamerInfos will save the collections in 
+   // "member-wise" order whenever possible.    The default is to store member-wise.
+   // kTRUE indicates member-wise storing
+   // kFALSE inddicates object-wise storing
+   // 
+   // A collection can be saved member wise when it contain is guaranteed to be
+   // homogeneous.  For example std::vector<THit> can be stored member wise, 
+   // while std::vector<THit*> can not (possible use of polymorphism).
+
+   return fgStreamMemberWise;
+}
+
+//______________________________________________________________________________
 Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
 {
    switch (type) {
@@ -1723,6 +1738,25 @@ void TStreamerInfo::SetCanDelete(Bool_t opt)
 
    fgCanDelete = opt;
 }
+
+//______________________________________________________________________________
+Bool_t TStreamerInfo::SetStreamMemberWise(Bool_t enable) 
+{
+   // Set whether the TStreamerInfos will save the collections in 
+   // "member-wise" order whenever possible.  The default is to store member-wise.
+   // kTRUE indicates member-wise storing
+   // kFALSE inddicates object-wise storing
+   // This function returns the previous value of fgStreamMemberWise.
+
+   // A collection can be saved member wise when it contain is guaranteed to be
+   // homogeneous.  For example std::vector<THit> can be stored member wise, 
+   // while std::vector<THit*> can not (possible use of polymorphism).
+   
+   Bool_t prev = fgStreamMemberWise;
+   fgStreamMemberWise = enable;
+   return prev;
+}
+
 
 //______________________________________________________________________________
 void TStreamerInfo::Streamer(TBuffer &R__b)

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.37 2004/06/22 18:09:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.38 2004/07/30 01:12:27 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -90,6 +90,7 @@ public:
    enum EMode { kRead = 0, kWrite = 1 };
    enum { kInitialSize = 1024, kMinimalSize = 128 };
    enum { kMapSize = 503 };
+   enum { kStreamedMemberWise = BIT(14) }; //Added to version number to know if a collection has been stored member-wise.
 
    TBuffer(EMode mode);
    TBuffer(EMode mode, Int_t bufsiz);
@@ -120,6 +121,7 @@ public:
 
    virtual Version_t  ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0);
    virtual UInt_t     WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
+   virtual UInt_t     WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt = kFALSE);
 
    virtual void      *ReadObjectAny(const TClass* cast);
 
