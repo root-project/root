@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.111 2002/10/18 09:45:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.112 2002/10/31 07:27:36 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1958,7 +1958,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    char parName[50];
    for (i=0;i<npar;i++) {
       hFitter->GetParameter(i,parName, par,we,al,bl);
-      if (Foption.Errors) werr = we;
+      if (!Foption.Errors) werr = we;
       else {
          hFitter->GetErrors(i,eplus,eminus,eparab,globcc);
          if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
@@ -2736,18 +2736,22 @@ void TH1::LabelsDeflate(Option_t *ax)
    while ((obj = next())) {
       if (obj->GetUniqueID()) nbins++;
    }
-   if (nbins < 2) nbins = 2;
+   if (nbins < 1) nbins = 1;
    TH1 *hold = (TH1*)Clone();
    hold->SetDirectory(0);
 
    Bool_t timedisp = axis->GetTimeDisplay();
    Double_t xmin = axis->GetXmin();
    Double_t xmax = axis->GetBinUpEdge(nbins);
+   if (xmax <= xmin) xmax = xmin +nbins;
    axis->SetRange(0,0);
    axis->Set(nbins,xmin,xmax);
-   Int_t  nbinsx = fXaxis.GetNbins();
-   Int_t  nbinsy = fYaxis.GetNbins();
-   Int_t  nbinsz = fZaxis.GetNbins();
+   //Int_t  nbinsx = fXaxis.GetNbins();
+   //Int_t  nbinsy = fYaxis.GetNbins();
+   //Int_t  nbinsz = fZaxis.GetNbins();
+   Int_t  nbinsx = hold->GetXaxis()->GetNbins();
+   Int_t  nbinsy = hold->GetYaxis()->GetNbins();
+   Int_t  nbinsz = hold->GetZaxis()->GetNbins();
    Int_t ncells = nbinsx+2;
    if (GetDimension() > 1) ncells *= nbinsy+2;
    if (GetDimension() > 2) ncells *= nbinsz+2;

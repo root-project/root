@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.84 2002/11/04 21:19:55 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.85 2002/11/16 15:17:47 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1135,7 +1135,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    char parName[50];
    for (i=0;i<npar;i++) {
       grFitter->GetParameter(i,parName, par,we,al,bl);
-      if (fitOption.Errors) werr = we;
+      if (!fitOption.Errors) werr = we;
       else {
          grFitter->GetErrors(i,eplus,eminus,eparab,globcc);
          if (eplus > 0 && eminus < 0) werr = 0.5*(eplus-eminus);
