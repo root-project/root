@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.9 2001/05/21 12:43:32 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.10 2001/05/28 12:40:01 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -850,6 +850,10 @@ void TGX11::GetGeometry(int wid, int &x, int &y, unsigned int &w, unsigned int &
       XTranslateCoordinates(fDisplay, gTws->window,
                             RootWindow( fDisplay, fScreenNumber),
                             0, 0, &x, &y, &junkwin);
+      if (width >= 65535)
+         width = 1;
+      if (height >= 65535)
+         height = 1;
       if (width > 0 && height > 0) {
          gTws->width  = width;
          gTws->height = height;
