@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.00 2003/08/27 13:52:36 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.1 2003/08/27 15:31:13 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 #ifndef ROOT_TMultiLayerPerceptron
@@ -78,7 +78,7 @@ class TMultiLayerPerceptron : public TObject {
    void DrawResult(Int_t index = 0, Option_t* option = "");
    void DumpWeights(Option_t* filename = "-");
    void LoadWeights(Option_t* filename = "");
-   Double_t Evaluate(Int_t index, ...);
+   Double_t Evaluate(Int_t index, Double_t* params);
    void Export(Option_t* filename = "NNfunction", Option_t* language = "C++");
    
  protected:

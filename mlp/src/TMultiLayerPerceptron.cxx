@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.9 2003/09/10 17:11:00 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.10 2003/09/11 13:30:30 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1117,24 +1117,23 @@ void TMultiLayerPerceptron::LoadWeights(Option_t * filename)
    delete[] buff;
 }
 
+
 //______________________________________________________________________________
-Double_t TMultiLayerPerceptron::Evaluate(Int_t index, ...)
+Double_t TMultiLayerPerceptron::Evaluate(Int_t index, Double_t *params)
 {
    // Returns the Neural Net for a given set of input parameters
-   // #parameters (in addidition to index) must equal #input neurons
+   // #parameters must equal #input neurons
    
-   va_list inputs;
-   va_start(inputs, index);
    TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
    TNeuron *neuron;
    while ((neuron = (TNeuron *) it->Next()))
       neuron->SetNewEvent();
    delete it;
    it = (TObjArrayIter *) fFirstLayer.MakeIterator();
+   Int_t i=0;
    while ((neuron = (TNeuron *) it->Next()))
-      neuron->ForceExternalValue(va_arg(inputs, Double_t));
+      neuron->ForceExternalValue(params[i++]);
    delete it;
-   va_end(inputs);
    TNeuron *out = (TNeuron *) (fLastLayer.At(index));
    if (out)
       return out->GetValue();
