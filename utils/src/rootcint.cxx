@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.28 2001/01/12 14:27:05 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.31 2001/01/16 12:34:35 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1092,7 +1092,8 @@ void WritePointersSTL(G__ClassInfo &cl)
                if (pCounter) {
                   fprintf(fp, "   %s* %s = (%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
                } else {
-                  fprintf(fp, "   %s %s = *(%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+                //fprintf(fp, "   %s %s = *(%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
+                  fprintf(fp, "   %s* %s = (%s*)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
                }
             } else {
                fprintf(fp, "   %s &%s = *(%s *)p;\n",m.Type()->Name(),m.Name(),m.Type()->Name());
@@ -1132,9 +1133,11 @@ void WritePointersSTL(G__ClassInfo &cl)
                      fprintf(fp, "         s[l].Streamer(R__b);\n");
                      fprintf(fp, "      }\n");
                   } else {
-                     if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
-                     else                                fprintf(fp, "      R__b >> %s;\n",m.Name());
-                  }
+                     //if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
+                     //else                                fprintf(fp, "      R__b >> %s;\n",m.Name());
+                      if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      (*%s)->Streamer(R__b);\n",m.Name());
+                     else                                fprintf(fp, "      R__b >> *%s;\n",m.Name());
+                 }
                } else {
                   fprintf(fp, "      %s.Streamer(R__b);\n",m.Name());
                }
@@ -1167,10 +1170,13 @@ void WritePointersSTL(G__ClassInfo &cl)
                      fprintf(fp, "         s[l].Streamer(R__b);\n");
                      fprintf(fp, "      }\n");
                   } else {
-                     if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
+                     //if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      %s->Streamer(R__b);\n",m.Name());
+                     if (strncmp(m.Title(),"->",2) == 0) fprintf(fp, "      (*%s)->Streamer(R__b);\n",m.Name());
                      else {
-                        if (m.Type()->IsBase("TObject")) fprintf(fp, "      R__b << (TObject*)%s;\n",m.Name());
-                        else                             fprintf(fp, "      R__b << %s;\n",m.Name());
+                        //if (m.Type()->IsBase("TObject")) fprintf(fp, "      R__b << (TObject*)%s;\n",m.Name());
+                        //else                             fprintf(fp, "      R__b << %s;\n",m.Name());
+                        if (m.Type()->IsBase("TObject")) fprintf(fp, "      R__b << (TObject*)*%s;\n",m.Name());
+                        else                             fprintf(fp, "      R__b << *%s;\n",m.Name());
                      }
                   }
                } else {
