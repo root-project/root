@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.7 2000/10/17 12:34:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.8 2001/10/16 17:28:35 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -512,7 +512,7 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
          while ((el = (TGFrameElement *) next())) {
             f = (TGLBEntry *) el->fFrame;
             if (f->GetId() == (Window_t)event->fUser[0]) {   // fUser[0] = child window
-               if (fChangeStatus != f->IsActive() ? 1 : 0) {
+               if (fChangeStatus != (f->IsActive() ? 1 : 0)) {
                   f->Toggle();
                   SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                               f->EntryId(), 0);
