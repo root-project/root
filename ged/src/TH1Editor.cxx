@@ -330,9 +330,9 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
 //   CreateFitTab();        // Fiting Tab
    
    // to avoid jumping from DoAddBar to DoAddB and vice versa
-   makeB=kTRUE;
+   fMakeB=kTRUE;
    // to avoid calling SetDrawoption after every change
-   make=kTRUE;
+   fMake=kTRUE;
 
    fBinHist = 0;     // variable to save a copy of the histogram (when not drawn from an ntuple)
    fBinOffsetSld->SetRange(0,100);
@@ -478,7 +478,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    const char *text = fHist->GetTitle();
    fTitle->SetText(text);
    
-   make=kFALSE;
+   fMake=kFALSE;
    TString str = GetDrawOption();
    str.ToUpper();
    Bool_t errorset = kFALSE;
@@ -723,7 +723,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    fTab->Layout();   
    
    if (fInit) ConnectSignals2Slots();
-   make=kTRUE;
+   fMake=kTRUE;
    fTab->SetEnabled(1, kTRUE);
    SetActive(kTRUE);
 }
@@ -766,7 +766,7 @@ void TH1Editor::DoAddMarker(Bool_t on)
       else if (str.Contains("HIST")) fAddSimple->SetState(kButtonDown);
       else fAddSimple->SetState(kButtonUp);
    }
-   if (make) SetDrawOption(str);
+   if (fMake) SetDrawOption(str);
    Update();
 }
 
@@ -778,8 +778,8 @@ void TH1Editor::DoAddB(Bool_t on)
    
    TString str = GetDrawOption();
    str.ToUpper();
-   if (makeB) {
-      makeB=kFALSE;
+   if (fMakeB) {
+      fMakeB=kFALSE;
       if (on) {
          if (!str.Contains("B")) str += "B";
          ShowFrame(f10);
@@ -797,11 +797,11 @@ void TH1Editor::DoAddB(Bool_t on)
          fAddBar->SetState(kButtonUp);
 	 if (fAddMarker->GetState()!=kButtonDown && !(str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE)) fAddSimple->SetState(kButtonUp);
       }
-      if (make) SetDrawOption(str);
+      if (fMake) SetDrawOption(str);
       Update(); 
       fTab->Layout();
       ((TGMainFrame*)GetMainFrame())->Layout();
-      makeB=kTRUE;
+      fMakeB=kTRUE;
    }
 }
 
@@ -814,8 +814,8 @@ void TH1Editor::DoAddBar(Bool_t on)
    Disconnect(fAddMarker);
    TString str = GetDrawOption();
    str.ToUpper();
-   if (makeB) {
-      makeB=kFALSE;
+   if (fMakeB) {
+      fMakeB=kFALSE;
       Int_t o = 0;
       if (str.Contains("HBAR")) o=1;
       if (str.Contains("BAR4")) str.Remove(strstr(str.Data(),"BAR4")-str.Data()-o,4+o);
@@ -872,11 +872,11 @@ void TH1Editor::DoAddBar(Bool_t on)
          if (fAddMarker->GetState()==kButtonDisabled) fAddMarker->SetState(kButtonUp);
 	 if (str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE || ((fAddMarker->GetState()==kButtonDown) && fErrorCombo->GetSelected()==kERRORS_NO)) fAddSimple->SetState(kButtonDisabled);
       }
-      if (make) SetDrawOption(str);
+      if (fMake) SetDrawOption(str);
       Update(); 
       fTab->Layout();      
       ((TGMainFrame*)GetMainFrame())->Layout();
-      makeB=kTRUE;
+      fMakeB=kTRUE;
    }
    fAddMarker->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddMarker(Bool_t)");
 }
@@ -890,23 +890,24 @@ void TH1Editor::DoAddSimple(Bool_t on)
    // in combination with some other drawoptions it draws an additional line on top of the bins
 
    Disconnect(fAddMarker);
-   Bool_t make=kFALSE;
+//   Bool_t make=kFALSE;
+   fMake = kFALSE;
    TString str = GetDrawOption();
    str.ToUpper();
    if (on) {
       if (!str.Contains("HIST")) {
          str += "HIST";
 	 fAddMarker->SetState(kButtonDisabled);
-	 make=kTRUE;
+	 fMake=kTRUE;
       }
    } else if (fAddSimple->GetState()==kButtonUp) {
       if (str.Contains("HIST")) {
          str.Remove(strstr(str.Data(),"HIST")-str.Data(),4);
          fAddMarker->SetState(kButtonUp);	 
-	 make=kTRUE;
+	 fMake=kTRUE;
       }
    }
-   if (make) SetDrawOption(str);
+   if (fMake) SetDrawOption(str);
    fAddMarker->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddMarker(Bool_t)");
    Update();   
 }    
@@ -919,7 +920,7 @@ void TH1Editor::DoHistSimple()
 
    if (fDim->GetState()==kButtonDown){
       TString str ="";
-      make=kFALSE;
+      fMake=kFALSE;
       TGListBox* lb;
       HideFrame(f3);
       HideFrame(f4);
@@ -985,7 +986,7 @@ void TH1Editor::DoHistSimple()
       Update();
       fTab->Layout();
       ((TGMainFrame*)GetMainFrame())->Layout();      
-      make=kTRUE;
+      fMake=kTRUE;
    }
 }
 
@@ -997,7 +998,7 @@ void TH1Editor::DoHistComplex()
 
    if (fDim0->GetState()==kButtonDown) {
       TString str ="";
-      make=kFALSE;
+      fMake=kFALSE;
       ShowFrame(f3);
       ShowFrame(f4);
       HideFrame(f6);
@@ -1032,7 +1033,7 @@ void TH1Editor::DoHistComplex()
       Update();
       ((TGMainFrame*)GetMainFrame())->Layout();            
       fTab->Layout();
-      make=kTRUE;
+      fMake=kTRUE;
    }
 }    
 
@@ -1043,7 +1044,7 @@ void TH1Editor::DoHistChanges()
    // Slot connected to the histogram type, the coordinate type, the error type
    // and the AddCombobox
    
-   makeB= kFALSE;
+   fMakeB= kFALSE;
    TGListBox* lb;
    if (GetHistTypeLabel().Contains("SURF")){ 
       if (fCoordsCombo->GetSelected()==kCOORDS_CAR || fCoordsCombo->GetSelected()==kCOORDS_SPH) fCoordsCombo->Select(kCOORDS_POL); 
@@ -1084,8 +1085,8 @@ void TH1Editor::DoHistChanges()
             HideFrame(f12);
          }	    
       } else {
-         Bool_t on = make;
-         make=kFALSE;
+         Bool_t on = fMake;
+         fMake=kFALSE;
          ShowFrame(f7);
          ShowFrame(f8);
          ShowFrame(f9);
@@ -1098,7 +1099,7 @@ void TH1Editor::DoHistChanges()
 	    lb = fAddCombo->GetListBox();
             lb->Resize(lb->GetWidth(),76);	
          }
-         make=on;
+         fMake=on;
       }
       if (fAddCombo->GetSelected()!=kADD_NONE) {
          fAddSimple->SetState(kButtonDisabled);
@@ -1117,7 +1118,7 @@ void TH1Editor::DoHistChanges()
          HideFrame(f12);
       }
    }        
-   if (make) {
+   if (fMake) {
       TString str = "";
       if (fDim->GetState()==kButtonDown) str = GetHistErrorLabel()+GetHistAddLabel();
       else if (fDim0->GetState()==kButtonDown) str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistErrorLabel();
@@ -1128,7 +1129,7 @@ void TH1Editor::DoHistChanges()
    }
    ((TGMainFrame*)GetMainFrame())->Layout();            
    fTab->Layout();
-   makeB=kTRUE;
+   fMakeB=kTRUE;
 }
 
 //______________________________________________________________________________
@@ -1177,7 +1178,7 @@ void TH1Editor::DoPercent()
       case (kPER_30):{ str += "BAR3"; break;} 
       case (kPER_40):{ str += "BAR4"; break;}                  
    }
-   if (make) SetDrawOption(str);
+   if (fMake) SetDrawOption(str);
    Update();
 }
 
@@ -1195,7 +1196,7 @@ void TH1Editor::DoHBar(Bool_t on)
    else if (fMakeHBar->GetState()==kButtonUp) {
       if(str.Contains("HBAR")) str.Remove(strstr(str.Data(),"BAR")-str.Data()-1,1);
    }
-   if (make) SetDrawOption(str);
+   if (fMake) SetDrawOption(str);
    Update();
 }
 

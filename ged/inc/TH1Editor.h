@@ -110,8 +110,8 @@ protected:
    virtual void ConnectSignals2Slots();   // connect the signals to the slots
 
 private:
-   Bool_t               make;             // Veto Variable
-   Bool_t               makeB;            // avoid execution of Bar Slots
+   Bool_t               fMake;            // Veto Variable
+   Bool_t               fMakeB;           // avoid execution of Bar Slots
    Int_t                fPx1old,          // save the coordinates of the "virtual box" in delay draw mode (2D Plot)
                         fPy1old,
 			fPx2old,
