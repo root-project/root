@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.90 2002/04/26 10:18:54 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.91 2002/04/29 17:11:22 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1218,7 +1218,8 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
                Double_t b22= b2*b2*d2;
                if (!b2) { fSumw2.fArray[bin] = 0; continue;}
                if (binomial) {
-                  fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));
+                  //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
+                  fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);
                } else {
                   fSumw2.fArray[bin] = d1*d2*(e1*e1*b2*b2 + e2*e2*b1*b1)/(b22*b22);
                }
