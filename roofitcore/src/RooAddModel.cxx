@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.17 2001/10/22 07:12:12 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.18 2001/10/27 22:28:19 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -505,7 +505,9 @@ Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVa
 
   Int_t n(0) ;
   // First iteration, determine what each component can integrate analytically
-  while(model=(RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg()) {
+  RooRealProxy* proxy ;
+  while(proxy=(RooRealProxy*)_modelProxyIter->Next()) {
+    model = (RooResolutionModel*) proxy->absArg() ;
     RooArgSet subAnalVars ;
     Int_t subCode = model->getAnalyticalIntegralWN(allVars,subAnalVars,normSet) ;
 //     cout << "RooAddModel::getAI(" << GetName() << ") ITER1 subCode(" << n << "," << model->GetName() << ") = " << subCode << endl ;
@@ -532,7 +534,8 @@ Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVa
   n=0 ;
   Int_t* subCode = new Int_t[_modelProxyList.GetSize()] ;
   Bool_t allOK(kTRUE) ;
-  while(model=(RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg()) {
+  while(proxy=(RooRealProxy*)_modelProxyIter->Next()) {
+    model = (RooResolutionModel*) proxy->absArg() ;
     RooArgSet subAnalVars ;
     subCode[n] = model->getAnalyticalIntegralWN(allAnalVars,subAnalVars,normSet) ;
 //     cout << "RooAddModel::getAI(" << GetName() << ") ITER2 subCode(" << n << "," << model->GetName() << ") = " << subCode[n] << endl ;
@@ -579,7 +582,9 @@ Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet)
     
   // N models, N-1 coefficients
   Double_t lastCoef(1) ;
-  while(coef=(RooAbsReal*)((RooRealProxy*)_coefProxyIter->Next())->absArg()) {
+  RooRealProxy* proxy ;
+  while(proxy=(RooRealProxy*)_coefProxyIter->Next()) {
+    coef  = (RooAbsReal*) proxy->absArg() ;
     model = (RooResolutionModel*)((RooRealProxy*)_modelProxyIter->Next())->absArg() ;
     Double_t coefVal = coef->getVal(normSet) ;
     value += model->analyticalIntegralWN(subCode[i],normSet)*coefVal ;
