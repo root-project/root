@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.4 2000/06/15 06:51:49 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.5 2000/06/28 14:35:29 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -661,13 +661,11 @@ Stat_t TH2::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2)
    Stat_t integral = 0;
 
 //*-*- Loop on bins in specified range
-   Int_t bin, binx, biny, binz;
-   for (binz=0;binz<=nbinsz+1;binz++) {
-      for (biny=biny1;biny<=biny2;biny++) {
-         for (binx=binx1;binx<=binx2;binx++) {
-            bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
-            integral += GetBinContent(bin);
-         }
+   Int_t bin, binx, biny;
+   for (biny=biny1;biny<=biny2;biny++) {
+      for (binx=binx1;binx<=binx2;binx++) {
+         bin = binx +(nbinsx+2)*biny;
+         integral += GetBinContent(bin);
       }
    }
    return integral;
