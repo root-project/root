@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.11 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveLabel.cxx,v 1.12 2002/08/05 17:36:36 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -200,7 +200,7 @@ void TPaveLabel::SavePrimitive(ofstream &out, Option_t *)
       out<<"pl = new TPaveLabel("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
          <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
    } else {
-      out<<"pl = new TPaveLabel("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
+      out<<"pl = new TPaveLabel("<<gPad->PadtoX(fX1)<<","<<gPad->PadtoY(fY1)<<","<<gPad->PadtoX(fX2)<<","<<gPad->PadtoY(fY2)
          <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<endl;
    }
    if (fBorderSize != 3) {

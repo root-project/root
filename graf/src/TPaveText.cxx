@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.16 2002/06/20 07:26:51 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.17 2002/08/05 21:12:12 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -799,7 +799,7 @@ void TPaveText::SavePrimitive(ofstream &out, Option_t *)
       out<<"pt = new "<<ClassName()<<"("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
       <<","<<quote<<fOption<<quote<<");"<<endl;
    } else {
-      out<<"pt = new "<<ClassName()<<"("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
+      out<<"pt = new "<<ClassName()<<"("<<gPad->PadtoX(fX1)<<","<<gPad->PadtoY(fY1)<<","<<gPad->PadtoX(fX2)<<","<<gPad->PadtoY(fY2)
       <<","<<quote<<fOption<<quote<<");"<<endl;
    }
    if (strcmp(GetName(),"TPave")) {
