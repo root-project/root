@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.105 2003/12/30 13:39:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.106 2003/12/30 14:20:07 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1992,12 +1992,8 @@ Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
    // although this is posix default it has to be set explicitly
    return ::open(pathname, flags | O_BINARY, mode);
 #else
-#if defined (R__LINUX) 
- # if( __GNUC__ >= 3)
-   return ::open(pathname, flags | O_LARGEFILE, mode);
- # else
-   return ::open(pathname, flags, mode);
- # endif
+#if defined (R__SEEK64) 
+   return ::open64(pathname, flags, mode);
 #else
    return ::open(pathname, flags, mode);
 #endif
@@ -2035,12 +2031,8 @@ Long64_t TFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
    // except that the offset and return value are of a type which will
    // be able to handle 64 bit file systems in the future.
 
-#if defined (R__LINUX)
- # if( __GNUC__ >= 3)
+#if defined (R__SEEK64)
    return ::lseek64(fd, offset, whence);
- #else
-   return ::lseek(fd, offset, whence);
- #endif
 #else
    return ::lseek(fd, offset, whence);
 #endif

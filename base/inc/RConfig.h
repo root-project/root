@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.57 2003/08/14 15:54:49 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.58 2003/12/04 07:12:36 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -49,6 +49,7 @@
 #   define R__AIX
 #   define R__UNIX
 #   define ANSICPP
+#   define R__SEEK64
 #   define NEED_STRCASECMP
 #endif
 
@@ -119,6 +120,7 @@
 #   define NEED_STRING
 #   define NEED_SIGJMP
 #   if __SUNPRO_CC > 0x420
+#      define R__SEEK64
 #      define R__SOLARIS_CC50
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
@@ -127,6 +129,7 @@
 #   endif
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90   /* modern egcs/gcc */
 #      define R__SUNGCC3
+#      define R__SEEK64
 #   endif
 #endif
 
@@ -136,6 +139,7 @@
 #   define ANSICPP
 #   define NEED_STRING
 #   define NEED_SIGJMP
+#   define R__SEEK64
 #   ifdef IRIX64
 #      define R__SGI64
 #   endif
@@ -165,6 +169,9 @@
 #      define __i486__       /* turn off if you really want to run on an i386 */
 #   endif
 #   define NEED_SIGJMP
+#   if __GNUC__ >=3
+#      define R__SEEK64
+#   endif
 #endif
 
 #if defined(linux) && defined(__ia64__)
