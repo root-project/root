@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.19 2004/09/22 12:34:10 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.20 2004/11/09 12:30:45 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -384,8 +384,9 @@ void TGButtonGroup::ReleaseButtons()
 
    while ((item = (TGButton*)next())) {    // loop over all buttons
       if (btn != item && item->IsToggleButton() && item->IsOn() &&
-          (fExclGroup || item->IsA()->InheritsFrom(TGRadioButton::Class())))
+          (fExclGroup || item->IsA()->InheritsFrom(TGRadioButton::Class()))) {
          item->SetOn(kFALSE);
+      }
    }
 }
 
@@ -395,8 +396,7 @@ void TGButtonGroup::Show()
    // Show group of buttons.
 
    MapSubwindows();
-   Layout();
-   Resize(GetLayoutManager()->GetDefaultSize());
+   Resize();
    MapRaised();
    fClient->NeedRedraw(this);
 }

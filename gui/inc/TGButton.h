@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.30 2004/09/22 12:34:10 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.31 2004/11/24 08:13:05 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -219,6 +219,7 @@ protected:
    void Init();
    void PSetState(EButtonState state, Bool_t emit);
    virtual void DoRedraw();
+   virtual void EmitSignals(Bool_t wasUp = kTRUE);
 
    static const TGFont *fgDefaultFont;
    static const TGGC   *fgDefaultGC;
@@ -265,6 +266,7 @@ protected:
    void Init();
    void PSetState(EButtonState state, Bool_t emit);
    virtual void DoRedraw();
+   virtual void EmitSignals(Bool_t wasUp = kTRUE);
 
    static const TGFont *fgDefaultFont;
    static const TGGC   *fgDefaultGC;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.39 2004/06/22 08:39:45 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.40 2004/10/13 15:46:37 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -680,7 +680,7 @@ void TQObject::Emit(const char *signal_name)
 
    TList *slist = GetListOfClassSignals();
 
-   if (!slist && !fListOfSignals)
+   if ((!slist && !fListOfSignals) || !signal_name)
       return;
 
    register TQConnectionList *clist  = 0;
@@ -735,7 +735,7 @@ void TQObject::Emit(const char *signal_name, Long_t param)
 
    TList *slist = GetListOfClassSignals();
 
-   if (!slist && !fListOfSignals)
+   if ((!slist && !fListOfSignals) || !signal_name)
       return;
 
    register TQConnectionList *clist  = 0;
@@ -788,7 +788,7 @@ void TQObject::Emit(const char *signal_name, Double_t param)
 
    TList *slist = GetListOfClassSignals();
 
-   if (!slist && !fListOfSignals)
+   if ((!slist && !fListOfSignals) || !signal_name)
       return;
 
    register TQConnectionList *clist  = 0;
@@ -844,7 +844,7 @@ void TQObject::Emit(const char *signal_name, const char *params)
 
    TList *slist = GetListOfClassSignals();
 
-   if (!slist && !fListOfSignals)
+   if ((!slist && !fListOfSignals) || !signal_name)
       return;
 
    register TQConnectionList *clist  = 0;
@@ -911,7 +911,7 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
 
    TList *slist = GetListOfClassSignals();
 
-   if (!slist && !fListOfSignals)
+   if ((!slist && !fListOfSignals) || !signal_name)
       return;
 
    register TQConnectionList *clist  = 0;

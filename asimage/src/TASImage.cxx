@@ -1,4 +1,4 @@
-// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.15 2005/01/05 09:27:15 brun Exp $
+// @(#)root/asimage:$Name:  $:$Id: TASImage.cxx,v 1.16 2005/01/25 16:00:37 brun Exp $
 // Author: Fons Rademakers, Reiner Rohlfs   28/11/2001
 
 /*************************************************************************
@@ -987,7 +987,6 @@ void TASImage::Paint(Option_t *option)
       axis.PaintAxis(pal_Xpos, gPad->AbsPixeltoY(pal_Ay + pal_h),
                      pal_Xpos, gPad->AbsPixeltoY(pal_Ay + 1),
                      min, max, ndiv, "+L");
-
    }
 
    // loop over pxmap and draw image to PostScript

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.48 2004/11/24 08:13:05 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.49 2005/01/28 15:07:01 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -147,7 +147,7 @@ void TGButton::SetState(EButtonState state, Bool_t emit)
       }
       fState = state;
       DoRedraw();
-      if (emit) EmitSignals(was);
+      if (emit || fGroup) EmitSignals(was);
    }
 }
 
@@ -794,7 +794,19 @@ TGCheckButton::~TGCheckButton()
 void TGCheckButton::SetState(EButtonState state, Bool_t emit)
 {
    // Set check button state.
+
    PSetState(fPrevState = state, emit);
+}
+
+//______________________________________________________________________________
+void TGCheckButton::EmitSignals(Bool_t /*wasUp*/)
+{
+   // emit signals
+
+   if (fState == kButtonUp)   Released();            // emit Released
+   if (fState == kButtonDown) Pressed();             // emit Pressed
+   Clicked();                                        // emit Clicked
+   Toggled(fState == kButtonDown);                   // emit Toggled
 }
 
 //______________________________________________________________________________
@@ -805,12 +817,9 @@ void TGCheckButton::PSetState(EButtonState state, Bool_t emit)
    if (state != fState) {
       fState = state;
 
-      if (emit) {
+      if (emit || fGroup) {
          // button signals
-         if (fState == kButtonUp)   Released();            // emit Released
-         if (fState == kButtonDown) Pressed();             // emit Pressed
-         Clicked();                                        // emit Clicked
-         Toggled(fState == kButtonDown);                   // emit Toggled
+         EmitSignals();
       }
       DoRedraw();
    }
@@ -827,17 +836,22 @@ Bool_t TGCheckButton::HandleButton(Event_t *event)
 
    if (fState == kButtonDisabled) return kTRUE;
 
+   Bool_t in = (event->fX >= 0) && (event->fY >= 0) &&
+               (event->fX <= (Int_t)fWidth) && (event->fY <= (Int_t)fHeight);
+
    // We don't need to check the button number as GrabButton will
    // only allow button1 events
    if (event->fType == kButtonPress) {
-      PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp, kTRUE);
       fgReleaseBtn = 0;
    } else { // ButtonRelease
-      click = (fState != fPrevState);
+      if (in) PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp, kFALSE);
+
+      click = (fState != fPrevState) && in;
       fPrevState = fState;
       fgReleaseBtn = fId;
    }
    if (click) {
+      EmitSignals();
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_CHECKBUTTON),
                   fWidgetId, (Long_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_CHECKBUTTON),
@@ -859,7 +873,8 @@ Bool_t TGCheckButton::HandleCrossing(Event_t *event)
          fTip->Hide();
    }
 
-   if ((fgDbw != event->fWindow) || (fgReleaseBtn == event->fWindow)) return kTRUE;
+   if ((fgDbw != event->fWindow) || (fgReleaseBtn == event->fWindow) ||
+       kButtonEngaged) return kTRUE;
 
    if (!(event->fState & (kButton1Mask | kButton2Mask | kButton3Mask)))
       return kTRUE;
@@ -867,9 +882,9 @@ Bool_t TGCheckButton::HandleCrossing(Event_t *event)
    if (fState == kButtonDisabled) return kTRUE;
 
    if (event->fType == kEnterNotify) {
-      PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp, kTRUE);
+      PSetState((fPrevState == kButtonUp) ? kButtonDown : kButtonUp, kFALSE);
    } else {
-      PSetState(fPrevState, kTRUE);
+      PSetState(fPrevState, kFALSE);
    }
    return kTRUE;
 }
@@ -1060,7 +1075,19 @@ TGRadioButton::~TGRadioButton()
 void TGRadioButton::SetState(EButtonState state, Bool_t emit)
 {
    // Set radio button state.
+
    PSetState(fPrevState = state, emit);
+}
+
+//______________________________________________________________________________
+void TGRadioButton::EmitSignals(Bool_t /*wasUp*/)
+{
+   // emit signals
+
+   if (fState == kButtonUp)   Released();            // emit Released
+   if (fState == kButtonDown) Pressed();             // emit Pressed
+   Clicked();                                        // emit Clicked
+   Toggled(fState == kButtonDown);                   // emit Toggled
 }
 
 //______________________________________________________________________________
@@ -1071,12 +1098,9 @@ void TGRadioButton::PSetState(EButtonState state, Bool_t emit)
    if (state != fState) {
       fPrevState = fState = state;
 
-      if (emit) {
+      if (emit || fGroup) {
          // button signals
-         if (fState == kButtonUp)   Released();          // emit Released
-         if (fState == kButtonDown) Pressed();           // emit Pressed
-         Clicked();                                      // emit Clicked
-         Toggled(fState == kButtonDown);                 // emit Toggled
+         EmitSignals();
       }
       DoRedraw();
    }
@@ -1091,18 +1115,22 @@ Bool_t TGRadioButton::HandleButton(Event_t *event)
 
    if (fState == kButtonDisabled) return kTRUE;
 
-   // We don't need to check the button number as GrabButton will
-   // only allow button1 events
-   if (event->fType == kButtonPress) {
-      fgReleaseBtn = 0;
-      PSetState(kButtonDown, kTRUE);
+   Bool_t in = (event->fX >= 0) && (event->fY >= 0) &&
+               (event->fX <= (Int_t)fWidth) && (event->fY <= (Int_t)fHeight);
+
+   if ((event->fType == kButtonRelease) && in) {
+      if (in) PSetState(kButtonDown, kFALSE);
+
+      fgReleaseBtn = fId;
+      fPrevState = fState;
+
+      EmitSignals();
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
                   fWidgetId, (Long_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
                            fWidgetId, (Long_t) fUserData);
-   } else { // ButtonRelease
-      fPrevState = fState;
-      fgReleaseBtn = fId;
+   } else { // 
+      fgReleaseBtn = 0;
    }
 
    return kTRUE;
@@ -1120,7 +1148,8 @@ Bool_t TGRadioButton::HandleCrossing(Event_t *event)
          fTip->Hide();
    }
 
-   if ((fgDbw != event->fWindow) || (fgReleaseBtn == event->fWindow)) return kTRUE;
+   if ((fgDbw != event->fWindow) || (fgReleaseBtn == event->fWindow) ||
+        kButtonEngaged) return kTRUE;
 
    if (!(event->fState & (kButton1Mask | kButton2Mask | kButton3Mask)))
       return kTRUE;
@@ -1128,9 +1157,9 @@ Bool_t TGRadioButton::HandleCrossing(Event_t *event)
    if (fState == kButtonDisabled) return kTRUE;
 
    if (event->fType == kEnterNotify) {
-      PSetState(kButtonDown, kTRUE);
+      PSetState(kButtonDown, kFALSE);
    } else {
-      PSetState(fPrevState, kTRUE);
+      PSetState(fPrevState, kFALSE);
    }
    return kTRUE;
 }
