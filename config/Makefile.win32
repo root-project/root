@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-# 
+#
 # Makefile of ROOT for Windows with MS Visual C++ compiler in Cygwin environment
 
 PLATFORM      = win32
@@ -98,3 +98,5 @@ HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(TREEPLAYERLIB)
 HBOOKLIBEXTRA       = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                       lib/libGraf.lib lib/libTreePlayer.lib
+GEOMPAINTERLIBDEP   = $(GEOMLIB)
+GEOMPAINTERLIBEXTRA = lib/libGeom.lib

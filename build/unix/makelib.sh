@@ -41,9 +41,6 @@ if [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
       elif [ $LIB = "lib/libCore.a" ]; then
          echo $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint
          $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint
-      elif [ $LIB = "lib/libGeomPainter.a" ]; then
-         echo $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint -lGeom
-         $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint -lGeom
       else
          echo $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCore -lCint
          $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCore -lCint

@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-# 
+#
 # Makefile of ROOT for AIX 4.x with xlC
 
 PLATFORM      = aix
@@ -80,3 +80,8 @@ TABLELIBEXTRA       = -lTree -lGpad -lGraf3d -lGraf -lHist
 GLLIBDEP            = $(GPADLIB) $(G3DLIB) $(GUILIB)
 GLLIBEXTRA          = -lGpad -lGraf3d -lGui $(OPENGLLIBDIR) $(OPENGLULIB) \
                       $(OPENGLLIB) -lX11 -lXext -lXmu -lXi
+HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
+                      $(TREEPLAYERLIB)
+HBOOKLIBEXTRA       = -lHist -lMatrix -lTree -lGraf -lTreePlayer
+GEOMPAINTERLIBDEP   = $(GEOMLIB)
+GEOMPAINTERLIBEXTRA = -lGeom
