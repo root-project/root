@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.64 2004/09/06 09:17:14 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.65 2004/09/06 11:58:04 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1800,8 +1800,8 @@ void TGCompositeFrame::SavePrimitiveSubframes(ofstream &out, Option_t *option)
 {
    // auxilary protected method  used to save subframes
 
-   out << "   " << GetName() << "->SetLayoutBroken(" << fLayoutBroken;
-   out << ");" << endl;
+   if (fLayoutBroken) 
+      out << "   " << GetName() << "->SetLayoutBroken(kTRUE);" << endl;
 
    if (!fList) return;
 
