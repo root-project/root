@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.20 2000/12/08 08:00:38 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.21 2000/12/13 15:13:57 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -657,7 +657,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance) const
           case  20 : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); break;
           case  21 : tab[pos-1] = tab[pos-1]*tab[pos-1]; break;
           case  22 : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); break;
-          case  23 : pos2 -= 2; pos++;if (strstr(tab2[pos2],tab2[pos2+1])) tab[pos-1]=1;
+          case  23 : pos2 -= 2; pos++;if (tab2[pos2] && strstr(tab2[pos2],tab2[pos2+1])) tab[pos-1]=1;
                             else tab[pos-1]=0; break;
           case  30 : if (tab[pos-1] > 0) tab[pos-1] = TMath::Log(tab[pos-1]);
                      else {tab[pos-1] = 0;} //{indetermination }
