@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.105 2003/07/17 07:38:05 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.106 2003/07/22 16:03:08 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2866,11 +2866,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
            }
            if (gxwork[npt-1] < uxmin || gxwork[npt-1] > uxmax) { npt--; continue;}
            if ((OptionMark != 10) && (OptionLine == 0)) {
-              if (gPad->GetLogy()) {
-                 if (y[i-1] <= rwymin)  {npt--; continue;}
-              } else {
-                 if (y[i-1] == 0)  {npt--; continue;}
-              }
+              if (y[i-1] <= rwymin)  {npt--; continue;}
            }
            gywork[npt-1] = y[i-1];
            gywork[npt]   = y[i-1]; //new
@@ -2897,6 +2893,7 @@ void TGraph::PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, 
               npt      = 1;
               continue;
            }
+
            if (npt >= 50) {
               if (OptionMarker) {
                  ComputeLogs(50, OptionZ);
