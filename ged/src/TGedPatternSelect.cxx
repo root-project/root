@@ -1,4 +1,4 @@
-// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.7 2004/04/06 21:06:13 rdm Exp $
+// @(#)root/ged:$Name:  $:$Id: TGedPatternSelect.cxx,v 1.8 2004/06/16 08:58:35 rdm Exp $
 // Author: Marek Biskup, Ilka Antcheva   22/07/03
 
 /*************************************************************************
@@ -537,7 +537,7 @@ TGedSelect::~TGedSelect()
 {
    if (fPopup)
       delete fPopup;
-   delete fDrawGC;
+   fClient->FreeGC(fDrawGC);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.22 2004/04/21 10:13:51 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.23 2004/07/07 15:02:25 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -230,7 +230,10 @@ void  TGLineLBEntry::Update(TGLBEntry *e)
    // Update line style listbox entry.
 
    TGTextLBEntry::Update(e);
+
+   fClient->FreeGC(fLineGC);
    fLineGC = ((TGLineLBEntry *)e)->GetLineGC();
+   fLineGC->AddReference();
 }
 
 //______________________________________________________________________________
