@@ -1837,7 +1837,7 @@ void TGraph2D::PaintLevels(Int_t *T,Double_t *x, Double_t *y,
    // grid = 0 : paint the color levels
    // grid = 1 : paint the grid
 
-   Int_t FC, ncolors, theColor0, theColor2;
+   Int_t i, FC, ncolors, theColor0, theColor2;
    
    Int_t P0=T[0]-1;
    Int_t P1=T[1]-1;
@@ -1974,7 +1974,7 @@ void TGraph2D::PaintLevels(Int_t *T,Double_t *x, Double_t *y,
          // Paint the grid levels
          SetLineStyle(3);
          TAttLine::Modify();
-         for(Int_t i=0; i<fNbLevels; i++){
+         for(i=0; i<fNbLevels; i++){
             Zl=fGridLevels[i];
             if(Zl >= Z0 && Zl <=Z2) {
                R21=(Zl-Z1)/(Z2-Z1);
