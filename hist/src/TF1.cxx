@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.4 2000/08/16 07:07:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.5 2000/08/17 07:53:46 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -361,7 +361,7 @@ TF1::TF1(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
       fType       = 1;
       fMethodCall = 0;
       fFunction   = fcn;
-   }   if (npar > 0 ) fNpar = npar;
+   }   
    if (npar > 0 ) fNpar = npar;
    if (fNpar) {
       fNames      = new TString[fNpar];
