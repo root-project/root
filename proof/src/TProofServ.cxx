@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.62 2003/12/02 08:37:41 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.63 2003/12/30 13:16:51 brun Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -252,13 +252,16 @@ TProofServ::TProofServ(int *argc, char **argv)
    fOrdinal         = -1;
    fGroupId         = -1;
    fGroupSize       = 0;
-   fLogLevel        = 0;
+   fLogLevel        = gEnv->GetValue("Proof.DebugLevel", 0);
    fRealTime        = 0.0;
    fCpuTime         = 0.0;
    fProof           = 0;
    fSocket          = new TSocket(0);
    fEnabledPackages = new TList;
    fEnabledPackages->SetOwner();
+
+   gProofDebugLevel = gEnv->GetValue("Proof.DebugLevel", 0);
+   gProofDebugMask = (TProofDebug::EProofDebugMask) gEnv->GetValue("Proof.DebugMask", ~0);
 
    GetOptions(argc, argv);
 
@@ -450,11 +453,16 @@ TDSetElement *TProofServ::GetNextPacket()
    req << fLatency.RealTime() << fCompute.RealTime() << fCompute.CpuTime();
 
    fLatency.Start();
-   fSocket->Send(req);
+   Int_t rc = fSocket->Send(req);
+   if (rc <= 0) {
+      Error("GetNextPacket","Send() failed, returned %d", rc);
+      return 0;
+   }
 
    TMessage *mess;
-   if (fSocket->Recv(mess) < 0) {
+   if ((rc = fSocket->Recv(mess)) <= 0) {
       fLatency.Stop();
+      Error("GetNextPacket","Recv) failed, returned %d", rc);
       return 0;
    }
 
@@ -941,6 +949,10 @@ void TProofServ::HandleSocketInput()
                   // add package to list of include directories to be searched
                   // by ACliC
                   gSystem->AddIncludePath(TString("-I") + package);
+
+                  // add package to list of include directories to be searched
+                  // by CINT
+                  gROOT->ProcessLine(TString(".include ") + package);
 
                   // if successful add to list and propagate to slaves
                   if (!status) {
