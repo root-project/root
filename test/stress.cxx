@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.37 2002/08/20 15:49:31 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.38 2003/01/11 18:19:35 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -197,15 +197,15 @@ void stress(Int_t nevent, Int_t style = 1)
    printf("stress    : Compr I/O =%7.1f Mbytes, I =%7.1f, O =%6.1f\n",mbtot1,mbin1,mbout1);
    gBenchmark->Print("stress");
 #ifndef __CINT__
-   Float_t rt_brun_30   = 11.88;  //Pentium IV 2.4 Ghz times with the native compiler
-   Float_t cp_brun_30   = 11.07;
-   Float_t rt_brun_1000 = 55.12;
-   Float_t cp_brun_1000 = 51.97;
+   Float_t rt_brun_30   = 11.54;  //Pentium IV 2.4 Ghz times with the native compiler
+   Float_t cp_brun_30   = 10.90;
+   Float_t rt_brun_1000 = 54.30;
+   Float_t cp_brun_1000 = 51.49;
 #else
    Float_t rt_brun_30   = 30.42;  //Pentium IV 2.4 Ghz times with CINT
-   Float_t cp_brun_30   = 29.64;  //The difference is essentially coming from stress16
-   Float_t rt_brun_1000 = 79.53;
-   Float_t cp_brun_1000 = 75.84;
+   Float_t cp_brun_30   = 29.24;  //The difference is essentially coming from stress16
+   Float_t rt_brun_1000 = 77.03;
+   Float_t cp_brun_1000 = 74.05;
 #endif
    Float_t cp_brun = cp_brun_1000 - (cp_brun_1000 - cp_brun_30)*(1000-nevent)/(1000-30);
    Float_t rt_brun = rt_brun_1000 - (rt_brun_1000 - rt_brun_30)*(1000-nevent)/(1000-30);

@@ -20,8 +20,8 @@
    Float_t hsimple_ct = gBenchmark->GetCpuTime("hsimple");
    if (hsimple_rt > 0) {
       if (batch) {
-         rtmark = norm*(0.28/hsimple_rt);
-         cpmark = norm*(0.28/hsimple_ct);
+         rtmark = norm*(0.27/hsimple_rt);
+         cpmark = norm*(0.27/hsimple_ct);
       } else {
          rtmark = norm*(0.8/hsimple_rt);
          cpmark = norm*(0.8/hsimple_ct);
@@ -33,8 +33,8 @@
    Float_t hsum_ct = gBenchmark->GetCpuTime("hsum");
    if (hsum_rt > 0) {
       if (batch) {
-         rtmark = norm*(0.12/hsum_rt);
-         cpmark = norm*(0.12/hsum_ct);
+         rtmark = norm*(0.15/hsum_rt);
+         cpmark = norm*(0.13/hsum_ct);
       } else {
          rtmark = norm*(1.25/hsum_rt);
          cpmark = norm*(0.75/hsum_ct);
@@ -46,8 +46,8 @@
    Float_t fillrandom_ct = gBenchmark->GetCpuTime("fillrandom");
    if (fillrandom_rt > 0) {
       if (batch) {
-         rtmark = norm*(0.03/fillrandom_rt);
-         cpmark = norm*(0.03/fillrandom_ct);
+         rtmark = norm*(0.01/fillrandom_rt);
+         cpmark = norm*(0.01/fillrandom_ct);
       } else {
          rtmark = norm*(0.21/fillrandom_rt);
          cpmark = norm*(0.06/fillrandom_ct);
@@ -84,16 +84,16 @@
    Float_t na49_rt = gBenchmark->GetRealTime("na49");
    Float_t na49_ct = gBenchmark->GetCpuTime("na49");
    if (na49_rt > 0) {
-      rtmark = norm*(1.36/na49_rt);
-      cpmark = norm*(1.36/na49_ct);
+      rtmark = norm*(1.31/na49_rt);
+      cpmark = norm*(1.31/na49_ct);
       printf("na49        = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
    Float_t geometry_rt = gBenchmark->GetRealTime("geometry");
    Float_t geometry_ct = gBenchmark->GetCpuTime("geometry");
    if (geometry_rt > 0) {
-      rtmark = norm*(0.20/geometry_rt);
-      cpmark = norm*(0.19/geometry_ct);
+      rtmark = norm*(0.18/geometry_rt);
+      cpmark = norm*(0.18/geometry_ct);
       printf("geometry    = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
@@ -114,8 +114,8 @@
    Float_t ntuple1_ct = gBenchmark->GetCpuTime("ntuple1");
    if (ntuple1_rt > 0) {
       if (batch) {
-         rtmark = norm*(0.24/ntuple1_rt);
-         cpmark = norm*(0.24/ntuple1_ct);
+         rtmark = norm*(0.23/ntuple1_rt);
+         cpmark = norm*(0.23/ntuple1_ct);
       } else {
          rtmark = norm*(1.18/ntuple1_rt);
          cpmark = norm*(0.88/ntuple1_ct);
@@ -126,8 +126,8 @@
    if (rtall) {
       Float_t rtbrun, cpbrun;
       if (batch) {
-         rtbrun    = 2.33;
-         cpbrun    = 2.29;
+         rtbrun    = 2.25;
+         cpbrun    = 2.23;
       } else {
          rtbrun    = 6.83;
          cpbrun    = 2.43;
