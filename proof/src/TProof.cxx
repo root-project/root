@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.82 2005/03/17 15:00:47 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.83 2005/03/18 22:41:27 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -2079,6 +2079,7 @@ Int_t TProof::GoParallel(Int_t nodes)
    TSlave *sl;
    while (cnt < nodes && (sl = (TSlave *)next())) {
       if (sl->IsValid()) {
+         if ( strcmp("IGNORE", sl->GetImage()) == 0 ) continue;
          Int_t slavenodes = 0;
          if (sl->GetSlaveType() == TSlave::kSlave) {
             fActiveSlaves->Add(sl);
@@ -3081,7 +3082,6 @@ Bool_t TProofCondor::StartSlaves()
                const char *workdir = 0;
 
                for (int i = 2; i < nword; i++) {
-
                   if (!strncmp(word[i], "perf=", 5))
                      perfidx = atoi(word[i]+5);
                   if (!strncmp(word[i], "image=", 6))
@@ -3199,8 +3199,9 @@ void TProofCondor::SetActive(Bool_t active)
       if (fCondor->GetState() == TCondor::kSuspended)
          fCondor->Resume();
    } else {
-      Int_t delay = 10000; // milli seconds
-      PDB(kCondor,1) Info("SetActive","-- Delayed Condor Suspend (%d msec) --", delay);
+      Int_t delay = 60000; // milli seconds
+      PDB(kCondor,1) Info("SetActive","-- Delayed Condor Suspend (%d msec / to %ld) --",
+                          delay, delay + long(gSystem->Now()));
       fTimer->Connect("Timeout()", "TCondor", fCondor, "Suspend()");
       fTimer->Start(10000, kTRUE); // single shot
    }
