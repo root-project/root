@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.9 2001/05/09 00:51:10 david Exp $
+ *    File: $Id: RooPlot.cc,v 1.10 2001/05/10 21:26:09 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -42,7 +42,7 @@
 ClassImp(RooPlot)
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.9 2001/05/09 00:51:10 david Exp $";
+"$Id: RooPlot.cc,v 1.10 2001/05/10 21:26:09 verkerke Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1(histName(),"A RooPlot",0,xmin,xmax), _plotVarClone(0), 
@@ -117,30 +117,56 @@ RooPlot::~RooPlot() {
 Stat_t RooPlot::GetBinContent(Int_t i) const {
   // A plot object is a frame without any bin contents of its own so this
   // method always returns zero.
+
   return 0;
 }
 
-TObject *RooPlot::addObject(const TObject *obj, Option_t *drawOptions) {
+void RooPlot::addObject(TObject *obj, Option_t *drawOptions) {
   // Add a generic object to this plot. The specified options will be
-  // used to Draw() this object later. Returns a pointer to a clone of
-  // the input object which belongs to this container object (ie, it
-  // will be deleted in our destructor). The caller still owns the
-  // input object. Returns zero in case of error.
+  // used to Draw() this object later. The caller transfers ownership
+  // of the object with this call, and the object will be deleted
+  // when its containing plot object is destroyed.
 
   if(0 == obj) {
     cout << fName << "::addObject: called with a null pointer" << endl;
-    return 0;
+    return;
   }
-  TObject *clone= obj->Clone();
-  // add option "SAME" for a TH1 object if necessary
+  _items.Add(obj,drawOptions);
+}
+
+void RooPlot::addTH1(TH1 *hist, Option_t *drawOptions) {
+  // Add a TH1 histogram object to this plot. The specified options
+  // will be used to Draw() this object later. "SAME" will be added to
+  // the options if they are not already present. Note that histograms
+  // should probably not be drawn with error bars since they will not
+  // be calculated correctly for bins with low statistics, and will
+  // not be accounted for in the automatic y-axis range adjustment. To
+  // histogram data in a RooDataSet without these problems, use
+  // RooDataSet::plotOn(). The caller transfers ownership of the
+  // object with this call, and the object will be deleted when its
+  // containing plot object is destroyed.
+
+  if(0 == hist) {
+    cout << fName << "::addTH1: called with a null pointer" << endl;
+    return;
+  }
+  // check that this histogram is really 1D
+  if(1 != hist->GetDimension()) {
+    cout << fName << "::addTH1: cannot plot histogram with "
+	 << hist->GetDimension() << " dimensions" << endl;
+    return;
+  }
+
+  // add option "SAME" if necessary
   TString options(drawOptions);
   options.ToUpper();
-  if(clone->IsA()->InheritsFrom(TH1::Class())) {
-    if(!options.Contains("SAME")) options.Append("SAME");
-  }
-  if(0 != clone) _items.Add(clone,options.Data());
+  if(!options.Contains("SAME")) options.Append("SAME");
 
-  return clone;
+  // update our y-axis label and limits
+  updateYAxis(hist->GetMinimum(),hist->GetMaximum(),hist->GetYaxis()->GetTitle());
+
+  // add the histogram to our list
+  addObject(hist,options.Data());
 }
 
 void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions) {
@@ -150,22 +176,8 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions) {
   // This call transfers ownership of the plotable object to this class.
   // The plotable object will be deleted when this plot object is deleted.
 
-  // get this object's y-axis limits w/o padding
-  Double_t ymin= plotable->getYAxisMin();
-  if(ymin > 0) ymin= 0;
-  Double_t ymax= plotable->getYAxisMax();
-
-  // calculate the padded values
-  Double_t ypad= getPadFactor()*(ymax-ymin);
-  ymax+= ypad;
-  if(ymin < 0) ymin-= ypad;
-
-  // update our limits if necessary
-  if(GetMaximum() < ymax) SetMaximum(ymax);
-  if(GetMinimum() > ymin) SetMinimum(ymin);
-
-  // use this object's y-axis title if we don't have one already
-  if(0 == strlen(GetYaxis()->GetTitle())) SetYTitle(plotable->getYAxisLabel());
+  // update our y-axis label and limits
+  updateYAxis(plotable->getYAxisMin(),plotable->getYAxisMax(),plotable->getYAxisLabel());
 
   // add this element to our list and remember its drawing option
   TObject *obj= plotable->crossCast();
@@ -177,39 +189,25 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions) {
   }
 }
 
-RooHist *RooPlot::addHistogram(const TH1 *data, Option_t *drawOptions) {
-  // Convert a one-dimensional TH1 into a RooHist object and add the
-  // new RooHist to this plot. Use the specified options provided to
-  // Draw() the RooHist later.  The upper limit of our frame's y-axis
-  // will be increased if necessary to fit this histogram. You can
-  // adjust the axis range by hand with the SetMaximum() method if
-  // necessary. The input histogram belongs to the caller, but the
-  // returned object belongs to this container object (ie, it will be
-  // deleted in our destructor). Returns zero in case of error.
-  //
-  // Use the addObject() method to add a TH1 object that should *not* be
-  // converted into a RooHist (eg, if Poisson errors are not appropriate).
-  // In this case, you are responsible for increasing the plot range, using
-  // SetMaximum(), if necessary.
+void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label) {
+  // Update our y-axis limits to accomodate an object whose spread
+  // in y is (ymin,ymax). Use the specified y-axis label if we don't
+  // have one assigned already.
 
-  // check for a valid input object
-  if(0 == data) {
-    cout << fName << "::addHistogram: called with a null pointer" << endl;
-    return 0;
-  }
-  if(data->GetDimension() != 1) {
-    cout << fName << "::addHistogram: cannot add TH1 with " << data->GetDimension()
-	 << " dimensions" << endl;
-    return 0;
-  }
+  // force an implicit lower limit of zero if appropriate
+  if(GetMinimum() == 0 && ymin > 0) ymin= 0;
 
-  // create a new histogram on the heap
-  RooHist *graph= new RooHist(*data);
-  if(0 == graph) return 0;
+  // calculate padded values
+  Double_t ypad= getPadFactor()*(ymax-ymin);
+  ymax+= ypad;
+  if(ymin < 0) ymin-= ypad;
 
-  addPlotable(graph,drawOptions);
+  // update our limits if necessary
+  if(GetMaximum() < ymax) SetMaximum(ymax);
+  if(GetMinimum() > ymin) SetMinimum(ymin);
 
-  return graph;
+  // use the specified y-axis label if we don't have one already
+  if(0 == strlen(GetYaxis()->GetTitle())) SetYTitle(label);
 }
 
 void RooPlot::Draw(Option_t *options) {

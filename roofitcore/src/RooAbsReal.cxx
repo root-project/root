@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.15 2001/05/10 18:58:46 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.16 2001/05/10 21:26:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -298,36 +298,29 @@ TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
   return histogram;
 }
 
-RooPlot *RooAbsReal::plot(const RooRealVar& var, Option_t* drawOptions) const {
-  // Create an empty frame for the specified variable and add to it a curve
-  // calculated for the specified variable.
-
-  return plot(new RooPlot(var), drawOptions);
-}
-
-RooPlot *RooAbsReal::plot(RooPlot* frame, Option_t* drawOptions) const {
+RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions) const {
   // check that we are passed a valid plot frame to use
   if(0 == frame) {
-    cout << ClassName() << "::" << GetName() << ":plot: frame is null" << endl;
+    cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
     return 0;
   }
   // check that this frame knows what variable to plot
   RooAbsReal *var= frame->getPlotVar();
   if(0 == var) {
     cout << ClassName() << "::" << GetName()
-	 << ":plot: frame does not specify a plot variable" << endl;
+	 << ":plotOn: frame does not specify a plot variable" << endl;
     return 0;
   }
   // check that the plot variable is not derived
   RooRealVar* realVar= dynamic_cast<RooRealVar*>(var);
   if(0 == realVar) {
     cout << ClassName() << "::" << GetName()
-	 << ":plot: cannot plot derived variable \"" << var->GetName() << "\"" << endl;
+	 << ":plotOn: cannot plot derived variable \"" << var->GetName() << "\"" << endl;
     return 0;
   }
   // check that we actually depend on the plot variable
   if(!this->dependsOn(*realVar)) {
-    cout << GetName() << "::plot: variable is not a dependent: " << realVar->GetName() << endl;
+    cout << GetName() << "::plotOn: variable is not a dependent: " << realVar->GetName() << endl;
     return 0;
   }
 
@@ -394,3 +387,11 @@ void RooAbsReal::postTreeLoadHook()
 // 	 << "): loaded cache, value " << _value << endl ;
 }
  
+RooPlot *RooAbsReal::frame() const {
+  // Create a new RooPlot on the heap with a drawing frame initialized for this
+  // object, but no plot contents. Use x.frame() as the first argument to a
+  // y.plotOn(...) method, for example. The caller is responsible for deleting
+  // the returned object.
+
+  return new RooPlot(*this);
+}

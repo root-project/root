@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.21 2001/05/10 18:58:47 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.22 2001/05/10 21:26:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -49,6 +49,7 @@
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooStringVar.hh"
+#include "RooFitCore/RooHist.hh"
 
 ClassImp(RooDataSet)
 
@@ -353,14 +354,7 @@ void RooDataSet::add(const RooArgSet& data) {
   Fill();
 }
 
-RooPlot *RooDataSet::plot(const RooAbsReal& var, const char* cuts, Option_t* drawOptions) const {
-  // Create an empty frame for the specified variable and add to it a histogram of
-  // the variable's distribution calculated with our dataset.
-
-  return plot(new RooPlot(var), cuts, drawOptions);
-}
-
-RooPlot *RooDataSet::plot(RooPlot *frame, const char* cuts, Option_t* drawOptions) const {
+RooPlot *RooDataSet::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions) const {
   if(0 == frame) {
     cout << ClassName() << "::" << GetName() << ":plot: frame is null" << endl;
     return 0;
@@ -368,13 +362,30 @@ RooPlot *RooDataSet::plot(RooPlot *frame, const char* cuts, Option_t* drawOption
   RooAbsReal *var= frame->getPlotVar();
   if(0 == var) {
     cout << ClassName() << "::" << GetName()
-	 << ":plot: frame does not specify a plot variable" << endl;
+	 << ":plotOn: frame does not specify a plot variable" << endl;
     return 0;
   }
+
   // create a temporary histogram of this variable
   TH1F *hist= createHistogram(*var, cuts, "plot");
-  // add it to our plot (converted to a RooHist object with Poisson errors)
-  frame->addHistogram(hist,drawOptions);
+  if(0 == hist) {
+    cout << ClassName() << "::" << GetName()
+	 << ":plotOn: createHistogram() failed" << endl;
+    return 0;
+  }
+
+  // convert this histogram to a RooHist object on the heap
+  RooHist *graph= new RooHist(*hist);
+  if(0 == graph) {
+    cout << ClassName() << "::" << GetName()
+	 << ":plotOn: unable to create a RooHist object" << endl;
+    delete hist;
+    return 0;
+  }
+
+  // add the RooHist to the specified plot
+  frame->addPlotable(graph,drawOptions);
+
   // cleanup
   delete hist;
 
