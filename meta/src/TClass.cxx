@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.112 2003/03/03 18:50:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.113 2003/03/05 23:36:17 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -203,7 +203,7 @@ ClassImp(TClass)
 
 //______________________________________________________________________________
 TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
-                   fDeleteArray(0), fDestructor(0), fVersionUsed(kFALSE), 
+                   fDeleteArray(0), fDestructor(0), fVersionUsed(kFALSE),
                    fOffsetStreamer(0)
 {
    // Default ctor.
@@ -231,7 +231,7 @@ TClass::TClass() : TDictionary(), fNew(0), fNewArray(0), fDelete(0),
 
 //______________________________________________________________________________
 TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
-                                   fDelete(0), fDeleteArray(0), fDestructor(0), 
+                                   fDelete(0), fDeleteArray(0), fDestructor(0),
                                    fVersionUsed(kFALSE), fOffsetStreamer(0)
 {
    // Create a TClass object. This object contains the full dictionary
@@ -289,7 +289,7 @@ TClass::TClass(const char *name) : TDictionary(), fNew(0), fNewArray(0),
 //______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
-   : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0), 
+   : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fVersionUsed(kFALSE), fOffsetStreamer(0)
 {
    // Create a TClass object. This object contains the full dictionary
@@ -304,7 +304,7 @@ TClass::TClass(const char *name, Version_t cversion,
                const type_info &info, IsAFunc_t isa,
                ShowMembersFunc_t showmembers,
                const char *dfil, const char *ifil, Int_t dl, Int_t il)
-   : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0), 
+   : TDictionary(), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fVersionUsed(kFALSE), fOffsetStreamer(0)
 {
    // Create a TClass object. This object contains the full dictionary
@@ -583,7 +583,7 @@ void TClass::BuildRealData(void *pointer)
          func.SetFunc(fClassInfo->GetMethod("ShowMembers",
                                             "TMemberInspector&,char*", &offset));
          if (!func.IsValid()) {
-            ::Error("BuildRealData","Can not find any ShowMembers function for %s!",GetName());
+            Error("BuildRealData","can not find any ShowMembers function for %s!",GetName());
          } else {
             func.SetArg((long)&brd);
             func.SetArg((long)parent);
@@ -977,7 +977,7 @@ TRealData *TClass::GetRealData(const char *name) const
    if (rd) return rd;
    rd = (TRealData*)fRealData->FindObject(Form("*%s",dot+1));
    if (rd) return rd;
-   
+
    //last attempt in case a member has been changed from a static array to a pointer
    //for example the member was arr[20] and is now *arr
    char *bracket = strchr(starname,'[');
