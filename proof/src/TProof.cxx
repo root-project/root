@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.66 2004/05/04 14:09:31 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.67 2004/06/22 14:25:39 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -148,7 +148,9 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    // Start the PROOF environment. Starting PROOF involves either connecting
    // to a master server, which in turn will start a set of slave servers, or
    // directly starting as master server (if master = ""). For a description
-   // of the arguments see the TProof ctor.
+   // of the arguments see the TProof ctor. Returns the number of started
+   // master or slave servers, returns 0 in case of error, in which case
+   // fValid remains false.
 
    Assert(gSystem);
 
@@ -201,19 +203,19 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
    // servers as specified in the config file
    if (IsMaster()) {
 
-      char fconf[256];
-      sprintf(fconf, "%s/.%s", gSystem->Getenv("HOME"), conffile);
-      PDB(kGlobal,2) Info("Init", "checking PROOF config file %s", fconf);
+      TString fconf;
+      fconf.Form("%s/.%s", gSystem->Getenv("HOME"), conffile);
+      PDB(kGlobal,2) Info("Init", "checking PROOF config file %s", fconf.Data());
       if (gSystem->AccessPathName(fconf, kReadPermission)) {
-         sprintf(fconf, "%s/proof/etc/%s", confdir, conffile);
-         PDB(kGlobal,2) Info("Init", "checking PROOF config file %s", fconf);
+         fconf.Form("%s/proof/etc/%s", confdir, conffile);
+         PDB(kGlobal,2) Info("Init", "checking PROOF config file %s", fconf.Data());
          if (gSystem->AccessPathName(fconf, kReadPermission)) {
             Error("Init", "no PROOF config file found");
             return 0;
          }
       }
 
-      PDB(kGlobal,1) Info("Init", "using PROOF config file: %s", fconf);
+      PDB(kGlobal,1) Info("Init", "using PROOF config file: %s", fconf.Data());
 
       Bool_t staticSlaves = gEnv->GetValue("Proofd.StaticSlaves", kTRUE);
       PDB(kGlobal,1) Info("Init", "using StaticSlaves: %s", staticSlaves ? "kTRUE" : "kFALSE");
@@ -225,19 +227,23 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
             fConfFile = fconf;
 
             // read the config file
-            char line[256];
+            char line[1024];
             TString host = gSystem->GetHostByName(gSystem->HostName()).GetHostName();
             int  ord = 0;
 
+            // check for valid master line
             while (fgets(line, sizeof(line), pconf)) {
-               char word[12][64];
+               char word[12][128];
                if (line[0] == '#') continue;   // skip comment lines
                int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
                    word[2], word[3], word[4], word[5], word[6],
                    word[7], word[8], word[9], word[10], word[11]);
 
-               // see if master may run on this node
-               if (nword >= 2 && !strcmp(word[0], "node") && !fImage.Length()) {
+               // see if master may run on this node, accept both old "node"
+               // and new "master" lines
+               if (nword >= 2 &&
+                   (!strcmp(word[0], "node") || !strcmp(word[0], "master")) &&
+                   !fImage.Length()) {
                   TInetAddress a = gSystem->GetHostByName(word[1]);
                   if (!host.CompareTo(a.GetHostName()) ||
                       !strcmp(word[1], "localhost")) {
@@ -247,9 +253,26 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
                      fImage = image;
                   }
                }
+            }
 
-               // find all slave servers
-               if (nword >= 2 && !strcmp(word[0], "slave")) {
+            if (fImage.Length() == 0) {
+               fclose(pconf);
+               Error("Init", "no appropriate master line found in %s", fconf.Data());
+               return 0;
+            }
+
+            // check for valid slave lines and start slaves
+            rewind(pconf);
+            while (fgets(line, sizeof(line), pconf)) {
+               char word[12][128];
+               if (line[0] == '#') continue;   // skip comment lines
+               int nword = sscanf(line, "%s %s %s %s %s %s %s %s %s %s %s %s", word[0], word[1],
+                   word[2], word[3], word[4], word[5], word[6],
+                   word[7], word[8], word[9], word[10], word[11]);
+
+               // find all slave servers, accept both "slave" and "worker" lines
+               if (nword >= 2 &&
+                   (!strcmp(word[0], "slave") || !strcmp(word[0], "worker"))) {
                   int perfidx  = 100;
                   int sport    = fPort;
 
@@ -293,11 +316,6 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
          }
          fclose(pconf);
 
-         if (fImage.Length() == 0) {
-            Error("Init", "no appropriate node line found in %s", fconf);
-            return 0;
-         }
-
       } else {
          // non static config
 
@@ -305,8 +323,8 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
 
          fImage = fCondor->GetImage(gSystem->HostName());
          if (fImage.Length() == 0) {
-            Error("Init", "no appropriate node line found in %s for system %s",
-                  fconf, gSystem->HostName());
+            Error("Init", "no appropriate master line found in %s for system %s",
+                  fconf.Data(), gSystem->HostName());
             return 0;
          }
 
@@ -360,6 +378,12 @@ Int_t TProof::Init(const char *masterurl, const char *conffile,
          Collect(slave);
          if (fStatus == -99) {
             Error("Init", "not allowed to connect to PROOF master server");
+            return 0;
+         }
+
+         if (!slave->IsValid()) {
+            delete slave;
+            Error("Init", "failed to setup connection with PROOF master server");
             return 0;
          }
 
@@ -883,6 +907,13 @@ Int_t TProof::Collect(TMonitor *mon)
 
       if (s->Recv(mess) < 0) {
          MarkBad(s);
+         continue;
+      }
+
+      if (!mess) {
+         // we get here in case the remote server died
+         MarkBad(s);
+         if (!mon->GetActive()) loop = 0;
          continue;
       }
 
