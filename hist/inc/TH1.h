@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.24 2001/12/10 13:50:50 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.25 2001/12/10 14:42:47 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -130,6 +130,7 @@ public:
     virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
     virtual Int_t    Fill(Axis_t x);
     virtual Int_t    Fill(Axis_t x, Stat_t w);
+    virtual Int_t    Fill(const char *name, Stat_t w);
     virtual void     FillN(Int_t ntimes, const Axis_t *x, const Double_t *w, Int_t stride=1);
     virtual void     FillN(Int_t, const Axis_t *, const Axis_t *, const Double_t *, Int_t) {;}
     virtual void     FillRandom(const char *fname, Int_t ntimes=5000);
@@ -206,6 +207,9 @@ public:
     virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="") {return 0;}
     virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="" ) {return 0;}
     virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
+    virtual void     LabelsDeflate(Option_t *axis="X");
+    virtual void     LabelsInflate(Option_t *axis="X");
+    virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");
     virtual void     Multiply(TF1 *h1, Double_t c1=1);
     virtual void     Multiply(TH1 *h1);
     virtual void     Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
@@ -293,7 +297,7 @@ public:
                                  {fArray[bin] = Char_t (content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
-    virtual void    SetBinsLength(Int_t nx) {TArrayC::Set(nx);}
+    virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayC::Set(nx);}
             TH1C&   operator=(const TH1C &h1);
     friend  TH1C    operator*(Double_t c1, TH1C &h1);
     friend  TH1C    operator*(TH1C &h1, Double_t c1) {return operator*(c1,h1);}
@@ -329,7 +333,7 @@ public:
                                  {fArray[bin] = Short_t (content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
-    virtual void    SetBinsLength(Int_t nx) {TArrayS::Set(nx);}
+    virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayS::Set(nx);}
             TH1S&   operator=(const TH1S &h1);
     friend  TH1S    operator*(Double_t c1, TH1S &h1);
     friend  TH1S    operator*(TH1S &h1, Double_t c1) {return operator*(c1,h1);}
@@ -367,7 +371,7 @@ public:
                                  {fArray[bin] = Float_t (content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
-    virtual void    SetBinsLength(Int_t nx) {TArrayF::Set(nx);}
+    virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayF::Set(nx);}
             TH1F&   operator=(const TH1F &h1);
     friend  TH1F    operator*(Double_t c1, TH1F &h1);
     friend  TH1F    operator*(TH1F &h1, Double_t c1) {return operator*(c1,h1);}
@@ -405,7 +409,7 @@ public:
                                  {fArray[bin] = Double_t (content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
-    virtual void    SetBinsLength(Int_t nx) {TArrayD::Set(nx);}
+    virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayD::Set(nx);}
             TH1D&   operator=(const TH1D &h1);
     friend  TH1D    operator*(Double_t c1, TH1D &h1);
     friend  TH1D    operator*(TH1D &h1, Double_t c1) {return operator*(c1,h1);}
