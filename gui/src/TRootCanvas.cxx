@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.14 2002/09/18 13:12:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.15 2003/02/03 00:58:25 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -131,8 +131,7 @@ private:
 public:
    TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *parent);
 
-   Bool_t  HandleButton(Event_t *ev)
-                { return fCanvas->HandleContainerButton(ev); }
+   Bool_t  HandleButton(Event_t *ev);
    Bool_t  HandleDoubleClick(Event_t *ev)
                 { return fCanvas->HandleContainerDoubleClick(ev); }
    Bool_t  HandleConfigureNotify(Event_t *ev)
@@ -164,7 +163,31 @@ TRootContainer::TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *p)
             kExposureMask | kStructureNotifyMask | kLeaveWindowMask);
 }
 
+//______________________________________________________________________________
+Bool_t TRootContainer::HandleButton(Event_t *event)
+{
+   //
 
+   TGViewPort *vp = (TGViewPort*)fParent;
+   Int_t y = vp->GetVPos();
+   UInt_t page = vp->GetHeight();
+   Int_t newpos;
+
+   if (event->fCode == kButton4) {
+      //scroll up
+      newpos = y - page;
+      if (newpos < 0) newpos = 0;
+      fCanvas->fCanvasWindow->SetVsbPosition(newpos);
+      return kTRUE;
+   }
+   if (event->fCode == kButton5) {
+      // scroll down
+      newpos = fCanvas->fCanvasWindow->GetVsbPosition() + page;
+      fCanvas->fCanvasWindow->SetVsbPosition(newpos);
+      return kTRUE;
+   }
+   return fCanvas->HandleContainerButton(event);
+}
 
 ClassImp(TRootCanvas)
 
