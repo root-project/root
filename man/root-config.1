@@ -1,11 +1,14 @@
 .\"
-.\" $Id$
+.\" $Id: root-config.1,v 1.1 2000/12/08 17:41:01 rdm Exp $
 .\"
 .TH ROOT-CONFIG 1 "Version 3" "ROOT"
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
 .\" other parms are allowed: see man(7), man(1)
 .SH NAME
 root-config \- ROOT utility for your Makefiles
+.SH SYNOPSIS
+.B root-config
+.I "[options]"
 .SH "DESCRIPTION"
 Put lines like 
 .RS 
@@ -62,7 +65,45 @@ AM_PROG_LIBTOOL
 .fi
 .RE
 along with any other macros you may need. 
- 
+
+.SH OPTIONS 
+.TP 
+.B --help
+Gives a short list of options avaliable, and exit
+.TP
+.B --version 
+Report the version number of installed \fBROOT\fR, and exit. 
+.TP
+.BI --prefix =<prefix>
+If no arguments is given, reports where \fBROOT\fR is installed. With
+an argument of =\fI<prefix>\fR, set the base of the subsequent options
+to \fI<prefix>\fR. If \fB--exec-prefix\fR is passedwith an argument,
+that argument overrides the argument given to \fB--prefix\fR for the
+library path. 
+.TP
+.BI --exec-prefix =<prefix>
+If no argument is given, report where the libraries are installed. If
+an argument is given, use that as the installation base directory for
+the libraries. This option does not affect the include path. 
+.TP
+.B --libs
+Output a line suitable for linking a program agains the \fBROOT\fR
+libraries. No graphics libraries are output. 
+.TP
+.B --glibs
+As above, but also output for the graphics libraries. 
+.TP
+.B --cflags
+Output a line suitable for compiling a source file againd the
+\fBROOT\fR header (class declararion) files. 
+.TP
+.B --new 
+Output a line suitable for linking against the \fBROOT\fR library
+.TP
+.B --nonew 
+Compatiblity option. Does nothing. 
+\fBlibNew\fR. This option \fImust\fR be given before options
+\fB--libs\fR and \fB--glibs\fR. 
 .SH "SEE ALSO"
 \fIroot\fR(1), \fIroot-cint\fR(1)
 .PP
@@ -108,5 +149,8 @@ This manual page was written by Christian Holm Christensen
 <cholm@nbi.dk>, for the Debian GNU/Linux system (but may be used by
 others). 
 .\"
-.\" $Log$
+.\" $Log: root-config.1,v $
+.\" Revision 1.1  2000/12/08 17:41:01  rdm
+.\" man pages of all ROOT executables provided by Christian Holm.
+.\"
 .\"

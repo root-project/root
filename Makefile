@@ -4,15 +4,24 @@
 # Author: Fons Rademakers, 29/2/2000
 
 
-##### include path/location macros (result of ./configure) #####
+##### Include path/location macros (result of ./configure) #####
+##### However, if we are building packages or cleaning,    #####
+##### config/Makefile.config isn't made yet - the package  #####
+##### scripts want's to make it them selves - so we don't  #####
 
+ifeq ($(findstring $(MAKECMDGOALS), maintainer-clean debian redhat),)
 include config/Makefile.config
+endif
 
-##### include machine dependent macros #####
+##### Include machine dependent macros                     #####
+##### However, if we are building packages or cleaning, we #####
+##### don't include this file since it may screw up things #####
 
+ifeq ($(findstring $(MAKECMDGOALS), maintainer-clean debian redhat),)
 include config/Makefile.$(ARCH)
+endif
 
-##### allow local macros #####
+##### Allow local macros #####
 
 -include MyConfig.mk
 
@@ -262,16 +271,41 @@ distsrc:
 	@$(MAKEDISTSRC)
 
 debian:
-	@if [ ! -f /usr/bin/debuild -o ! -f /usr/bin/dh_testdir ]; then \
+	@if [ ! -x `which debuild` ] || [ ! -x `which dh_testdir` ]; then \
 	   echo "You must have debuild and debhelper installed to"; \
 	   echo "make the Debian GNU/Linux package"; exit 1; fi
-	@echo "Nothing yet - sorry"
+	@echo "OK, you're on a Debian GNU/Linux system - cool"
+	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` ; \
+	  dirvers=`basename $$PWD | sed 's|root-\(.*\)|\1|'` ; \
+	  if [ "$$vers" != "$$dirvers" ] ; then \
+	    echo "Must have ROOT source tree in root-$$vers" ; \
+	    echo "Please rename this directory to `basename $$PWD` to"; \
+	    echo "root-$$vers and try again"; exit 1 ; fi
+	build/package/lib/makedebclean.sh
+	build/package/lib/makedebdir.sh
+	debuild -rfakeroot -us -uc -i"G__|^debian|\.d$$"
+	@echo "Debian GNU/Linux packages done. They are put in '../'"
 
 redhat:
-	@if [ ! -f /bin/rpm ]; then \
+	@if [ ! -x `which rpm` ]; then \
 	   echo "You must have rpm installed to make the Redhat package"; \
 	   exit 1; fi
-	@echo "Nothing yet - sorry"
+	@echo "OK, you have RPM on your system - good"
+	build/package/lib/makerpmclean.sh
+	build/package/lib/makerpmspec.sh
+	@echo "To build the packages, make a gzipped tar ball of the sources"
+	@vers=`sed 's|\(.*\)/\(.*\)|\1.\2|' < build/version_number` ; \
+	  echo "called root-v$$vers.source.tar.gz and put it in you RPM "
+	@echo "source directory (default /usr/src/rpm/SOURCES) and the "
+	@echo "spec-file ../root.spec in your RPM spec directory"
+	@echo "(default /usr/src/RPM/SPECS). If you want to build outside"
+	@echo "the regular tree, please refer to the RPM documentation."
+	@echo "After that, do"
+	@echo "   rpm -ba root.spec "
+	@echo "to actually build the packages. More details are given in"
+	@echo "README/INSTALL"
+#	rpm -bb --rcfile rpm/rpmrc --buildroot `pwd`/rpm/tmp rpm/root.spec
+#	@echo "Redhat Linux packages done. They are put in '../<arch>'"
 
 clean::
 	@rm -f __compiledata __makeinfo *~ core
@@ -286,19 +320,21 @@ clean::
 endif
 
 distclean:: clean
-	@mv -f include/config.h include/config.hh
+	-@mv -f include/config.h include/config.hh
 	@rm -f include/*.h $(MAKEINFO) $(CORELIB)
-	@mv -f include/config.hh include/config.h
+	-@mv -f include/config.hh include/config.h
 	@rm -f build/dummy.d bin/*.dll lib/*.def lib/*.exp lib/*.lib .def
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
 	@rm -f tutorials/pca.C tutorials/*.so
 	@rm -f $(CINTDIR)/include/*.dl* $(CINTDIR)/stl/*.dll README/ChangeLog
 	@rm -rf htmldoc
-	@cd test && $(MAKE) distclean
+	-@cd test && $(MAKE) distclean
 
 maintainer-clean:: distclean
+	-build/package/lib/makedebclean.sh
+	-build/package/lib/makerpmclean.sh
 	@rm -rf bin lib include system.rootrc config/Makefile.config \
-	   test/Makefile
+	   test/Makefile etc/system.rootrc
 
 version: $(CINTTMP)
 	@$(MAKEVERSION)

@@ -80,7 +80,9 @@ Before proceeding read the complete document.
 Choosing the installation method
 --------------------------------
 
-There are two main methods of installing ROOT from source.
+There are two main methods of installing ROOT from source.  As an
+alternative, you can build either a set of Debian GNU/Linux or Redhat 
+Linux packages. 
 
 1) You want to install in a generic directory, depending on
    environment variables ROOTSYS, LD_LIBRARY_PATH, and PATH.
@@ -142,6 +144,80 @@ There are two main methods of installing ROOT from source.
         rehash
         root
 
+Redhat packages:
+----------------
+Get the sources for a specific release from CVS or from a tar-ball, as
+outlined above and cd into the source directory. Then just do 
+
+	make redhat 
+
+This will create a RPM spec file in "../". To build the packages do: 
+
+1) 
+        cd ../ 
+	tar -czvf root_v<version>.source.tar.gz root 
+	
+  where <version>=<major>.<minor>.<revision> is the version number of
+  ROOT (see the file build/version_number). 
+
+2) 
+  A) If you have system privileges, you can now do 
+
+	cp root_v<version>.source.tar.gz /usr/src/redhat/SOURCES/
+
+     or where ever RPM looks for source archives. 
+
+  B) However, if you don't have system privileges, you should set up a 
+     build area by having the file ~/.rpmrc with a contents like 
+
+        %macros /usr/lib/rpm/macros:<your home dir>/.rpmmac 
+
+     and a file <your home dir>/.rpmmac with a contents like 
+
+        %_topdir: <some where you can write>/redhat 
+
+     Then you should make the appropiate directories: 
+
+        mkdir <some where you can write>/redhat 
+        mkdir <some where you can write>/redhat/SOURCES
+        mkdir <some where you can write>/redhat/BUILD
+        mkdir <some where you can write>/redhat/RPMS
+        mkdir <some where you can write>/redhat/SRPMS
+        mkdir <some where you can write>/redhat/SPECS
+
+     and finally copy the source tar-ball
+
+       cp root_v<version>.source.tar.gz \
+	  <some where you can write>/redhat/SOURCES
+
+3) Wether you have system privileges or not, you can now build the RPM 
+   packages by issuing
+
+       rpm -ba root.spec 
+
+Per default the binaries will be build in /tmp/rootrpm, but one may
+change that at build time by passing the option --buildroot too rpm. 
+
+Please refer to man-page rpm(1) and http://www.rpm.org for more
+infomation on RPM. 
+
+Please note, that it is assumed you have OpenGL (Mesa), SHIFT, MySQL,
+CERNLIB, and true type fonts installed. If that is not the case,
+please see if there are pre-build rpms at http://root.cern.ch, or if
+you feel lucky, read build/package/common/README thourougly! 
+
+Debian GNU/Linux packages:
+--------------------------
+Get the sources for a specific release from CVS or from a tar-ball, as
+outlined above and cd into the source directory. Then just do 
+
+	make debian
+
+The packages will be build in "../". Please note, that it is assumed you
+have OpenGL (Mesa), SHIFT, MySQL, CERNLIB, and true type fonts
+install. If that is not the case, please see if there are pre-build
+debs at http://root.cern.ch, or if you feel lucky, read
+build/package/common/README thourougly!  
 
 Installation Location
 =====================
