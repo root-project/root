@@ -638,16 +638,16 @@ typedef int (*G__IgnoreInclude)();
 * Other parameters can be changed while keeping DLL binary compatibility.
 *
 **************************************************************************/
-#ifdef G__LONGBUF
+#ifdef G__LONGBUF 
 #define G__LONGLINE    4096  /* Length of expression */
 #define G__ONELINE     4096  /* Length of subexpression,parameter,argument */
 #define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
 #define G__MAXNAME     4096  /* Variable name */
 #else
 #define G__LONGLINE    1024  /* Length of expression */
-#define G__ONELINE      256  /* Length of subexpression,parameter,argument */
+#define G__ONELINE     1024  /* was 256 Length of subexpression,parameter,argument */
 #define G__ONELINEDICT    8  /* Length of subexpression,parameter,argument */
-#define G__MAXNAME      256  /* Variable name */
+#define G__MAXNAME      512  /* was 256 Variable name */
 #endif
 #define G__LARGEBUF    6000  /* big temp buffer */
 #define G__MAXFILE     2000  /* Max interpreted source file */

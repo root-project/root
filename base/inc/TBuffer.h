@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.20 2002/07/23 11:11:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.21 2002/09/21 08:12:14 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -232,7 +232,9 @@ public:
 #if !defined(R__CONCRETE_INPUT_OPERATOR)
 #ifndef __CINT__
    
+#if defined(R__SOLARIS) && defined(R__GCC)
 #include <typeinfo>
+#endif
    
 template <class Tmpl> TBuffer &operator>>(TBuffer &buf, Tmpl *&obj)
 {
