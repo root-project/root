@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.6 2000/06/13 11:01:03 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.7 2000/06/13 12:55:07 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -273,12 +273,19 @@ const char *tab[] = { "alpha","beta","chi","delta","epsilon","phi","gamma","eta"
                 "varpi","Lambda","varpi","varpi","varpi","Pi","Theta","varpi","Sigma","varpi",
                 "Upsilon","varpi","Omega","Xi","Psi" };
 
-const char *tab2[] = { "leq","/","infty","/","/","/","/","/","leftrightarrow","leftarrow","uparrow","rightarrow",
-                 "downarrow","circ","pm","/","geq","/","propto","partial","bullet","/","neq","equiv","approx","/",
-                 "/","/","/","/","/","/","/","otimes","oplus","oslash","cap","cup","supset","supseteq","/","subset",
-                 "subseteq","in","/","/","nabla","/","/","/","prod","surd","/","/","wedge","vee","Leftrightarrow",
-                 "Leftarrow","Uparrow","Rightarrow","Downarrow","diamond","/","/","/","/","sum","/","/","/","/","/",
-                 "/","/","/","/","/","/","/","int" };
+const char *tab2[] = { "leq","/","infty","voidb","club","diamond","heart",
+                 "spade","leftrightarrow","leftarrow","uparrow","rightarrow",
+                 "downarrow","circ","pm","doublequote","geq","times","propto",
+                 "partial","bullet","divide","neq","equiv","approx","3dots",
+                 "cbar","topbar","downleftarrow","aleph","Jgothic","Rgothic","voidn",
+                 "otimes","oplus","oslash","cap","cup","supset","supseteq",
+                 "notsubset","subset","subseteq","in","notin","angle","nabla",
+                 "oright","ocopyright","trademark","prod","surd","upoint","corner","wedge",
+                 "vee","Leftrightarrow","Leftarrow","Uparrow","Rightarrow",
+                 "Downarrow","diamond","LT","void1","copyright","void3","sum",
+                 "arctop","lbar","arcbottom","topbar","void8", "bottombar","arcbar",
+                 "ltbar","void04","void05","void06","GT","int" };
+                 
 const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check"};
 
       if (fError != 0) return FormSize(0,0,0);
