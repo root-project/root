@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.12 2001/01/26 16:37:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.13 2001/10/01 10:36:41 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -79,6 +79,10 @@ private:
    void operator=(const TFile &);
 
 public:
+   // TFile status bits
+   enum {
+      kHasReferences   = BIT(11)
+   };
    enum ERelativeTo { kBeg = 0, kCur = 1, kEnd = 2 };
 
    TFile();
