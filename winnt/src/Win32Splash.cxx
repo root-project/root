@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:$:$Id:$
+// @(#)root/winnt:$Name:  $:$Id: Win32Splash.cxx,v 1.1 2002/07/31 20:04:39 rdm Exp $
 // Author: Bertrand Bellenot   30/07/02
 
 /*************************************************************************
@@ -167,6 +167,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    HWND nextwnd;
     PAINTSTRUCT ps;
     HDC hDC;
     HANDLE hfbm;
@@ -238,7 +239,7 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
                 // Center the splashscreen
                 xScreen = GetSystemMetrics(SM_CXFULLSCREEN);
                 yScreen = GetSystemMetrics(SM_CYFULLSCREEN);
-                SetWindowPos(hWnd, HWND_TOPMOST, (xScreen - bm.bmWidth)/2, 
+                SetWindowPos(hWnd, HWND_NOTOPMOST, (xScreen - bm.bmWidth)/2, 
                     (yScreen - bm.bmHeight)/2, bm.bmWidth, bm.bmHeight, 0 );
             } 
             break;
@@ -271,6 +272,8 @@ LRESULT CALLBACK SplashWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
             SelectObject(hImageDC, hOldBitmap);
 
             EndPaint(hWnd, &ps);
+            SetWindowPos(GetNextWindow(hWnd, GW_HWNDNEXT), HWND_NOTOPMOST, 
+                    0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE );
             break;
 
         default:
