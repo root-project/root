@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.28 2000/11/23 10:21:25 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.29 2000/12/04 16:45:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -362,11 +362,14 @@ void TTree::AutoSave()
    TDirectory *dirsav = gDirectory;
    fDirectory->cd();
    TKey *key = (TKey*)fDirectory->GetListOfKeys()->FindObject(GetName());
-   Write();
-   if (key) {
+   Int_t wOK = Write(); //wOK will be 0 if Write failed (disk space exceeded)
+   if (wOK && key) {
       key->Delete();
       delete key;
    }
+   // save StreamerInfo
+   TFile *file = fDirectory->GetFile();
+   if (file) file->WriteStreamerInfo();
    dirsav->cd();
 }
 
