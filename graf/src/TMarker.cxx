@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.4 2000/11/21 20:26:41 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.5 2000/12/13 15:13:50 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -218,7 +218,7 @@ void TMarker::PaintMarker(Double_t x, Double_t y)
 //*-*                  =====================================
 
    TAttMarker::Modify();  //Change line attributes only if necessary
-   gPad->PaintPolyMarker(1,&x,&y,"");
+   gPad->PaintPolyMarker(-1,&x,&y,"");
 }
 
 //______________________________________________________________________________
