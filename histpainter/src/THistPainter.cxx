@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.8 2000/06/22 13:28:37 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.9 2000/07/04 09:15:30 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -556,6 +556,14 @@ void THistPainter::Paint(Option_t *option)
    if (fH->GetDimension() > 2) {
       PaintH3(option);
       fH->SetMinimum(minsav);
+      if (Hoption.Func) {
+         Hoption_t hoptsave = Hoption;
+         Hparam_t  hparsave = Hparam;
+         PaintFunction();
+         SetHistogram(hsave);
+         Hoption = hoptsave;
+         Hparam  = hparsave;
+      }
       gCurrentHist = oldhist;
       return;
    }
@@ -569,6 +577,14 @@ void THistPainter::Paint(Option_t *option)
    if (fH->GetDimension() > 1 || Hoption.Lego || Hoption.Surf ) {
       PaintTable();
       fH->SetMinimum(minsav);
+      if (Hoption.Func) {
+         Hoption_t hoptsave = Hoption;
+         Hparam_t  hparsave = Hparam;
+         PaintFunction();
+         SetHistogram(hsave);
+         Hoption = hoptsave;
+         Hparam  = hparsave;
+      }
       gCurrentHist = oldhist;
       return;
    }
@@ -2446,11 +2462,13 @@ void THistPainter::PaintPalette()
    if (xmax > x2) xmax = x2-0.01*xr;
    Int_t ncolors = gStyle->GetNumberOfColors();
    Double_t dy = (ymax-ymin)/ncolors;
+   Color_t colorsav = fH->GetFillColor();
    for (Int_t i=0;i<ncolors;i++) {
       fH->SetFillColor(gStyle->GetColorPalette(i));
       fH->TAttFill::Modify();
       gPad->PaintBox(xmin,ymin+i*dy,xmax,ymin+(i+1)*dy);
    }
+   fH->SetFillColor(colorsav);
    TAxis *zaxis = fH->GetZaxis();
    //Draw the palette axis using the Z axis parameters
    TGaxis axis;
@@ -3002,7 +3020,7 @@ void THistPainter::PaintSurface()
 
 //*-*- Initialize colors for the lighting model
    Color_t colormain = fH->GetFillColor();
-   if (colormain == 1) colormain = 17; //avoid drawing with black
+//   if (colormain == 1) colormain = 17; //avoid drawing with black
    Color_t colordark = colormain + 100;
    fLego->SetColorMain(colormain,0);
    fLego->SetColorDark(colordark,0);
@@ -3022,15 +3040,14 @@ void THistPainter::PaintSurface()
    }
    Double_t *funlevel = new Double_t[ndivz+1];
    Int_t *colorlevel = new Int_t[ndivz+1];
-   Int_t lowcolor = fH->GetFillColor();
    Int_t theColor;
    Int_t ncolors = gStyle->GetNumberOfColors();
    for (i = 0; i < ndivz; ++i) {
       funlevel[i]   = fH->GetContourLevel(i);
-      theColor = lowcolor + Int_t(i*Float_t(ncolors)/Float_t(ndivz));
+      theColor = Int_t(i*Float_t(ncolors)/Float_t(ndivz));
       colorlevel[i] = gStyle->GetColorPalette(theColor);
    }
-   colorlevel[ndivz] = gStyle->GetColorPalette(lowcolor+ncolors-1);
+   colorlevel[ndivz] = gStyle->GetColorPalette(ncolors-1);
    fLego->ColorFunction(ndivz, funlevel, colorlevel, irep);
    delete [] colorlevel;
    delete [] funlevel;
@@ -3156,6 +3173,9 @@ void THistPainter::PaintSurface()
       if (Hoption.FrontBox) fLego->FrontBox(90);
    }
    if (!Hoption.Axis) PaintLegoAxis(axis, 90);
+
+   if (Hoption.Surf == 12 && Hoption.Zscale) PaintPalette();  // MOD MWH
+   
    fNIDS = 0;
    delete axis;
    delete fLego; fLego = 0;
