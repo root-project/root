@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.cxx,v 1.4 2001/01/12 08:27:47 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.cxx,v 1.5 2001/05/28 06:23:12 brun Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -38,6 +38,18 @@ TDialogCanvas::TDialogCanvas() : TCanvas()
 //_____________________________________________________________________________
 TDialogCanvas::TDialogCanvas(const char *name, const char *title, UInt_t ww, UInt_t wh)
              : TCanvas(name,title,-ww,wh)
+{
+//*-*-*-*-*-*-*-*-*-*-*-*DialogCanvas constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                    ========================
+
+   SetFillColor(36);
+   fRefObject = 0;
+   fRefPad    = 0;
+}
+
+//_____________________________________________________________________________
+TDialogCanvas::TDialogCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, UInt_t ww, UInt_t wh)
+             : TCanvas(name,title,wtopx,wtopy,-ww,wh)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*DialogCanvas constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                    ========================

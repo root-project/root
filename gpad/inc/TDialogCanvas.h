@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.h,v 1.3 2000/12/13 15:13:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TDialogCanvas.h,v 1.4 2001/01/12 08:27:47 brun Exp $
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -37,6 +37,7 @@ protected:
 public:
    TDialogCanvas();
    TDialogCanvas(const char *name, const char *title, UInt_t ww, UInt_t wh);
+   TDialogCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, UInt_t ww, UInt_t wh);
    virtual        ~TDialogCanvas();
    virtual void   Apply(const char *action="");
    virtual void   BuildStandardButtons();
