@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWin32Application.cxx,v 1.6 2001/10/02 09:07:43 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWin32Application.cxx,v 1.1 2002/08/18 22:52:10 fine Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -20,16 +20,11 @@
 #include <process.h>
 
 #include "TWin32Application.h"
+#include "TGWin32Command.h"
 #include "TApplication.h"
 #include "TROOT.h"
 
-#include "TException.h"
-#include "TWin32ContextMenuImp.h"
-#include "TGWin32Object.h"
-#include "TContextMenu.h"
 #include "TError.h"
-#include "TControlBarButton.h"
-#include "TWin32ControlBarImp.h"
 
 #include "TWin32HookViaThread.h"
 
@@ -37,11 +32,7 @@
 #undef GetWindow
 
 //______________________________________________________________________________
-#ifdef _SC_
-LPTHREAD_START_ROUTINE ROOT_CmdLoop(HANDLE ThrSem)
-#else
 unsigned int _stdcall ROOT_CmdLoop(HANDLE ThrSem)
-#endif
 //*-*-*-*-*-*-*-*-*-*-*-*-* ROOT_CmdLoop*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                       ============
 //*-*  Launch a separate thread to handle the ROOT command  messages
@@ -80,24 +71,25 @@ unsigned int _stdcall ROOT_CmdLoop(HANDLE ThrSem)
        DispatchMessage(&msg);
    }
 
-   printf(" Leaving thread \n");
+   // Delete GUI thread first
+   if (gVirtualX != gGXBatch) {
+     delete gVirtualX;
+   }
+
+   fprintf(stderr," Leaving thread \n");
    if (erret == -1)
    {
        erret = GetLastError();
        Error("CmdLoop", "Error in GetMessage");
        Printf(" %d \n", erret);
    }
-//   _endthreadex(0);
+//  _endthreadex(0);
    return 0;
 } /* ROOT_CmdLoop */
 
 
 //______________________________________________________________________________
-#ifdef _SC_
-LPTHREAD_START_ROUTINE ROOT_DlgLoop(HANDLE ThrSem)
-#else
 unsigned int ROOT_DlgLoop(HANDLE ThrSem)
-#endif
 //*-*-*-*-*-*-*-*-*-*-*-*-* ROOT_DlgLoop*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                       ============
 //*-*  Launch a separate thread to handle the ROOT command  messages
@@ -159,7 +151,7 @@ TWin32Application::TWin32Application(const char *appClassName, int *argc,
     if (fIDCmdThread) {
         PostThreadMessage(fIDCmdThread,WM_QUIT,0,0);
         if (WaitForSingleObject(fhdCmdThread,10000)==WAIT_FAILED)
-                               TerminateThread(fhdCmdThread, -1); ;
+                               TerminateThread(fhdCmdThread, -1);
         CloseHandle(fhdCmdThread);
     }
 }
