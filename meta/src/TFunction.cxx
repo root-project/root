@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.2 2000/12/13 15:13:52 brun Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -177,5 +177,14 @@ void *TFunction::InterfaceMethod() const
    // can find which TFunction belongs to a G__MethodInfo object.
    // Both need to have the same InterfaceMethod pointer.
 
-   return (void*)fInfo->InterfaceMethod();
+   G__InterfaceMethod pfunc = fInfo->InterfaceMethod();
+   if (!pfunc) {
+      struct G__bytecodefunc *bytecode = fInfo->GetBytecode();
+    
+      if(bytecode) pfunc = (G__InterfaceMethod)G__exec_bytecode;
+      else {
+        pfunc = (G__InterfaceMethod)NULL;
+      }
+   }
+   return pfunc;
 }

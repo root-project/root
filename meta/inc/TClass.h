@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.17 2001/07/05 20:17:28 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.18 2001/12/02 16:50:08 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -63,6 +63,7 @@ private:
    G__ClassInfo     *fClassInfo;       //pointer to CINT class info class
 
    TMethod          *GetClassMethod(Long_t faddr);
+   TMethod          *GetClassMethod(const char*name, const char* signature);
 
    static Bool_t     fgCallingNew;     //True when TClass:New is executing
    static Int_t      fgClassCount;     //provides unique id for a each class

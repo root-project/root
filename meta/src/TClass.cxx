@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.62 2001/12/03 09:04:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.63 2001/12/18 08:48:40 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -928,7 +928,18 @@ TMethod *TClass::GetMethod(const char *method, const char *params)
    // loop over all methods in this class (and its baseclasses) till
    // we find a TMethod with the same faddr
 
-   TMethod *m = GetClassMethod(faddr);
+   
+   TMethod *m;
+   
+   if (faddr == (Long_t)G__exec_bytecode) {
+      // the method is actually interpreted, its address is
+      // not a discriminant (it always point to the same
+      // function (G__exec_bytecode).
+      m = GetClassMethod(method,params);
+   } else {
+      m = GetClassMethod(faddr);
+   }
+
    if (m) return m;
 
    TBaseClass *base;
@@ -997,6 +1008,32 @@ TMethod *TClass::GetClassMethod(Long_t faddr)
    return 0;
 }
 
+//______________________________________________________________________________
+TMethod *TClass::GetClassMethod(const char *name, const char* params)
+{
+   // Look for a method in this class that has the name and
+   // signature 
+
+   if (!fClassInfo) return 0;
+
+   // Need to go through those loops to get the signature from
+   // the valued params (i.e. from "1.0,3" to "double,int")
+
+   G__CallFunc  func;
+   long         offset;
+   func.SetFunc(GetClassInfo(), name, params, &offset);
+   G__MethodInfo *info = new G__MethodInfo(func.GetMethodInfo());
+   TMethod request(info,this);
+
+   TMethod *m;
+   TIter    next(GetListOfMethods());
+   while ((m = (TMethod *) next())) {
+     if (!strcmp(name,m->GetName())
+         &&!strcmp(request.GetSignature(),m->GetSignature())) 
+       return m;
+   }
+   return 0;
+}
 //______________________________________________________________________________
 const char *TClass::GetTitle() const
 {
