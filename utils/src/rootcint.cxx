@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.83 2002/06/29 13:06:00 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.84 2002/06/29 22:29:31 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -21,11 +21,11 @@
 //                                                                      //
 // Rootcint can be used like:                                           //
 //                                                                      //
-//   rootcint TAttAxis.h[+][-][!] ... [LinkDef.h] > AxisDict.cxx        //
+//  rootcint TAttAxis.h[+][-][!] ... [LinkDef.h] > AxisDict.cxx         //
 //                                                                      //
 // or                                                                   //
 //                                                                      //
-//  rootcint [-v] [-f] axDict.cxx [-c] TAttAxis.h[+][-][!]..[LinkDef.h] //
+//  rootcint [-v][-v0-4] [-f] dict.C [-c] TAxis.h[+][-][!]..[LinkDef.h] //
 //                                                                      //
 // The difference between the two is that in the first case only the    //
 // Streamer() and ShowMembers() methods are generated while in the      //
@@ -41,6 +41,13 @@
 // Use the -f (force) option to overwite the output file. The output    //
 // file must have one of the following extensions: .cxx, .C, .cpp,      //
 // .cc, .cp.                                                            //
+// The verbose flags have the following meaning:                        //
+//      -v   Display all messages                                       //
+//      -v0  Display no messages at all.                                //
+//      -v1  Display only error messages (default).                     //
+//      -v2  Display error and warning messages.                        //
+//      -v3  Display error, warning and note messages.                  //
+//      -v4  Display all messages                                       //
 //                                                                      //
 // Before specifying the first header file one can also add include     //
 // file directories to be searched and preprocessor defines, like:      //
@@ -143,7 +150,7 @@ const char *help =
 "\n"
 "or\n"
 "\n"
-"  rootcint [-v] [-f] AxisDict.cxx [-c] TAttAxis.h[{+,-}][!] ... [LinkDef.h]\n"
+"  rootcint [-v][-v0-4] [-f] dict.C [-c] TAxis.h[+][-][!]..[LinkDef.h] \n"
 "\n"
 "The difference between the two is that in the first case only the\n"
 "Streamer() and ShowMembers() methods are generated while in the\n"
@@ -159,6 +166,14 @@ const char *help =
 "Use the -f (force) option to overwite the output file. The output\n"
 "file must have one of the following extensions: .cxx, .C, .cpp,\n"
 ".cc, .cp.\n"
+"\n"
+"The verbose flags have the following meaning:\n"
+"      -v   Display all messages\n"
+"      -v0  Display no messages at all.\n"
+"      -v1  Display only error messages (default).\n"
+"      -v2  Display error and warning messages.\n"
+"      -v3  Display error, warning and note messages.\n"
+"      -v4  Display all messages\n"
 "\n"
 "Before specifying the first header file one can also add include\n"
 "file directories to be searched and preprocessor defines, like:\n"
@@ -247,7 +262,8 @@ char *StrDup(const char *str);
 #ifndef ROOT_Varargs
 #include "Varargs.h"
 #endif
-const int kInfo     =   0;
+const int kInfo     =      0;
+const int kNote     =    500;
 const int kWarning  =   1000;
 const int kError    =   2000;
 const int kSysError =   3000;
@@ -265,6 +281,8 @@ void LevelPrint(bool prefix, int level, const char *location,
 
    if (level >= kInfo)
       type = "Info";
+   if (level >= kNote)
+      type = "Note";   
    if (level >= kWarning)
       type = "Warning";
    if (level >= kError)
@@ -2709,7 +2727,7 @@ int main(int argc, char **argv)
 
    if (argc < 2) {
       fprintf(stderr,
-      "Usage: %s [-v] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+      "Usage: %s [-v][-v0-4] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
               argv[0]);
       fprintf(stderr, "For more extensive help type: %s -h\n", argv[0]);
       return 1;
@@ -2726,12 +2744,36 @@ int main(int argc, char **argv)
    if (!strcmp(argv[ic], "-v")) {
       gErrorIgnoreLevel = kInfo; // The default is kError
       ic++;
-   }
-
+   } else if (!strcmp(argv[ic], "-v0")) {
+      gErrorIgnoreLevel = kFatal; // Explicitly remove all messages
+      ic++;
+   } else if (!strcmp(argv[ic], "-v1")) {
+      gErrorIgnoreLevel = kError; // Only error message (default)
+      ic++;
+   } else if (!strcmp(argv[ic], "-v2")) {
+      gErrorIgnoreLevel = kWarning; // error and warning message
+      ic++;
+   } else if (!strcmp(argv[ic], "-v3")) {
+      gErrorIgnoreLevel = kNote; // error, warning and note
+      ic++;
+   } else if (!strcmp(argv[ic], "-v4")) {
+      gErrorIgnoreLevel = kInfo; // Display all information (same as -v)
+      ic++;
+   } 
 
    if (!strcmp(argv[ic], "-f")) {
       force = 1;
       ic++;
+   } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
+      fprintf(stderr, "%s\n", help);
+      return 1;
+   } else if (!strncmp(argv[ic], "-",1)) {
+      fprintf(stderr,"Usage: %s [-v][-v0-4] [-f] [out.cxx] [-c] file1.h[+][-][!] file2.h[+][-][!]...[LinkDef.h]\n",
+              argv[0]);
+      fprintf(stderr,"Only one verbose flag is authorized (one of -v, -v0, -v1, -v2, -v3, -v4)\n"
+		     "and must be bofore the -f flags\n");
+      fprintf(stderr,"For more extensive help type: %s -h\n", argv[0]);
+      return 1;      
    } else {
       force = 0;
    }
@@ -2824,9 +2866,16 @@ int main(int argc, char **argv)
 #ifdef __hpux
          argvv[argcc++] = "-I/usr/include/X11R5";
 #endif
-         if (0 < gErrorIgnoreLevel) { // If verbose is NOT requested
-            argvv[argcc++] = "-J0";        // turn off CINT Note and Warnings
+         switch (gErrorIgnoreLevel) {
+	    case kInfo:     argvv[argcc++] = "-J4"; break;
+	    case kNote:     argvv[argcc++] = "-J3"; break;
+	    case kWarning:  argvv[argcc++] = "-J2"; break;
+	    case kError:    argvv[argcc++] = "-J1"; break;
+	    case kSysError: 
+	    case kFatal:    argvv[argcc++] = "-J0"; break;
+            default:        argvv[argcc++] = "-J1"; break;
          }
+
          argvv[argcc++] = "-DTRUE=1";
          argvv[argcc++] = "-DFALSE=0";
          argvv[argcc++] = "-Dexternalref=extern";
