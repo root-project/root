@@ -1,4 +1,4 @@
-/* @(#)root/thread:$Name:  $:$Id: PosixThreadInc.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $ */
+/* @(#)root/thread:$Name:  $:$Id: PosixThreadInc.h,v 1.2 2000/07/12 16:37:21 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#if defined(R__LINUX)
+#if defined(R__LINUX) || defined(R__SOLARIS_CC50)
 #define PthreadDraftVersion 10
 #elif defined(R__HPUX)
 #define PthreadDraftVersion 4
