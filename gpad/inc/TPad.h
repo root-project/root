@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.27 2004/08/03 16:01:18 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.28 2004/09/15 20:40:05 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -365,7 +365,7 @@ public:
    TVirtualViewer3D *GetViewer3D() {return fViewer3D;}
    void              SetViewer3D(TVirtualViewer3D *v) {fViewer3D = v;}
 
-   ClassDef(TPad,7)  //A Graphics pad
+   ClassDef(TPad,8)  //A Graphics pad
 };
 
 
