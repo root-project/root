@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHistError.cc,v 1.1 2001/05/02 18:09:00 david Exp $
+ *    File: $Id: RooHistError.cc,v 1.2 2001/10/08 05:20:16 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -16,13 +16,15 @@
 // a specified area of a Poisson or Binomail error distribution.
 
 #include "RooFitCore/RooHistError.hh"
+#include "RooFitCore/RooBrentRootFinder.hh"
 
 #include <iostream.h>
 
 ClassImp(RooHistError)
+  ;
 
 static const char rcsid[] =
-"$Id: RooHistError.cc,v 1.1 2001/05/02 18:09:00 david Exp $";
+"$Id: RooHistError.cc,v 1.2 2001/10/08 05:20:16 verkerke Exp $";
 
 const RooHistError &RooHistError::instance() {
   // Return a reference to a singleton object that is created the
@@ -38,3 +40,13 @@ RooHistError::RooHistError() {
 
   cout << "RooHistError: ctor" << endl;
 }
+
+Bool_t RooHistError::getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma) const
+{
+  // convert number of sigma into a confidence level
+  Double_t beta= 0;
+
+  // create a function object to use
+  PoissonSum sum(n);
+}
+
