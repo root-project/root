@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.40 2001/11/22 01:07:10 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.41 2002/02/01 00:52:22 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -63,6 +63,9 @@ public:
   void append(RooDataSet& data) ;
   Bool_t merge(RooDataSet* data1, RooDataSet* data2=0, RooDataSet* data3=0, 
 	       RooDataSet* data4=0, RooDataSet* data5=0, RooDataSet* data6=0) ;
+
+  virtual RooAbsArg* addColumn(RooAbsArg& var) ;
+  virtual RooArgSet* addColumns(const RooArgList& varList) ;
 
   // Plot the distribution of a real valued arg
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, const char* cuts="", 
