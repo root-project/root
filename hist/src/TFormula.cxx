@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.9 2000/11/24 10:23:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.10 2000/12/13 15:13:51 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -125,6 +125,10 @@ TFormula::TFormula(const char *name,const char *expression) :TNamed(name,express
   j = 0;
   for (i=0;i<nch;i++) {
      if (expression[i] == ' ') continue;
+     if (i > 0 && (expression[i] == '*') && (expression[i-1] == '*')) {
+        expr[j-1] = '^';
+        continue;
+     }
      expr[j] = expression[i]; j++;
    }
   expr[j] = 0;
