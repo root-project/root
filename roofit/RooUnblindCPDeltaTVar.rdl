@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.5 2001/06/30 01:34:18 verkerke Exp $
+ *    File: $Id: RooUnblindCPDeltaTVar.rdl,v 1.6 2001/07/31 05:58:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -40,7 +40,7 @@ public:
   virtual void setVal(Double_t value) ;
   virtual Double_t getFitMin() const ;
   virtual Double_t getFitMax() const ;
-  virtual Bool_t isIntegrationSafeLValue(const RooDataSet* set) const { return kTRUE ; }
+  virtual Bool_t isIntegrationSafeLValue(const RooArgSet* nset) const { return kTRUE ; }
 
 protected:
 
@@ -50,7 +50,7 @@ protected:
   friend class RooAbsPdf ;
   
   // Function evaluation
-  virtual Double_t evaluate(const RooDataSet* dset) const ;
+  virtual Double_t evaluate(const RooArgSet* nset) const ;
 
   virtual Bool_t isValid() const ;
   virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) const ;

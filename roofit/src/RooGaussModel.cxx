@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGaussModel.cc,v 1.4 2001/06/30 01:34:18 verkerke Exp $
+ *    File: $Id: RooGaussModel.cc,v 1.5 2001/07/31 05:58:11 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -63,7 +63,7 @@ Int_t RooGaussModel::basisCode(const char* name) const
 
 
 
-Double_t RooGaussModel::evaluate(const RooDataSet* dset) const 
+Double_t RooGaussModel::evaluate(const RooArgSet* nset) const 
 {  
   // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
   static Double_t root2(sqrt(2)) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCBShape.rdl,v 1.1 2001/06/19 18:36:49 jback Exp $
+ *    File: $Id: RooCBShape.rdl,v 1.2 2001/07/31 05:58:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -37,7 +37,7 @@ protected:
   RooRealProxy alpha;
   RooRealProxy n;
 
-  Double_t evaluate(const RooDataSet* dset) const;
+  Double_t evaluate(const RooArgSet* nset) const;
 
 private:
 

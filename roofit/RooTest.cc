@@ -30,6 +30,7 @@
 #include "RooFitCore/RooSuperCategory.hh"
 #include "RooFitCore/RooSimultaneous.hh"
 #include "RooFitCore/RooSimFitContext.hh"
+#include "RooFitCore/RooTrace.hh"
 
 main(int argc, char **argv) {
   TROOT root("root", "root"); // initialize ROOT
@@ -68,6 +69,7 @@ main(int argc, char **argv) {
   RooAbsPdf* k1 ;
   RooFitContext* ck1, *sig ;
   
+  RooTrace::level(4) ;
   
   //--- Constants ---
   zero  = new RooRealVar("zero","zero",0.0) ;
@@ -80,7 +82,7 @@ main(int argc, char **argv) {
   
   //--- Data set variables ---
   dtErr     = new RooRealVar("dtErr","Calculated Error on Reconstructed Delta(t)",0.1,5.0) ;
-  dtReco    = new RooRealVar("dtReco","Reconstructed Delta(t)",-20,20) ;
+  dtReco    = new RooRealVar("dtReco","Reconstructed Delta(t4",-40,20) ;
   mB        = new RooRealVar("mB","Reconstructed B0 mass",5.20,5.30,"GeV") ;
   pTagB0    = new RooRealVar("pTagB0","Tag side B0 flavour probability",0.,1.01) ;
   pRecB0    = new RooRealVar("pRecB0","Reco side B0 flavour probablity",0.,1.01) ;
@@ -115,7 +117,8 @@ main(int argc, char **argv) {
   runBlock_func->addThreshold(18000,"Run1") ;
 
   //--- Read data and precalculate derived categories as LValue objects ---
-  data = RooDataSet::read("breco2.dat",RooArgSet(*dtReco,*dtErr,*pTagB0,*tagCatRaw,*pRecB0,*mB,*runNumber),"q","") ;
+  RooArgSet dataVars(*dtReco,*dtErr,*pTagB0,*tagCatRaw,*pRecB0,*mB,*runNumber) ;
+  data = RooDataSet::read("breco2.dat",dataVars,"q","") ;
   mixState = (RooCategory*) data->addColumn(*mixState_func) ;
   tagCat   = (RooCategory*) data->addColumn(*tagCat_func) ;
   runBlock = (RooCategory*) data->addColumn(*runBlock_func) ;
@@ -202,8 +205,7 @@ main(int argc, char **argv) {
   mixCust = new RooPdfCustomizer(*mixProto,*fitCat,*splitPars) ;
   mixCust->splitArg(*sigC_bias,*fitCat) ;
   mixCust->splitArgs(RooArgSet(*sig_eta,*bgC_eta,*bgL_eta,*bgP_eta,*bgP_f,*mbMean,*mbWidth,*argPar,*sigfrac),*tagCat) ;
-  mixCust->splitArgs(RooArgSet(*sigC_scfa,*sigT_scfa,*sigT_bias,*sigC_frac,
-			       *sigO_frac,*bkgC_bias,*bkgC_scfa,*bkgC_frac),*runBlock) ;
+  mixCust->splitArgs(RooArgSet(*sigC_scfa,*sigT_bias,*sigC_frac,*sigO_frac,*bkgC_bias,*bkgC_scfa,*bkgC_frac),*runBlock) ;
 
   //--- Combined the individual fits into a simultaneous fit ---
   mbsModel = new RooSimultaneous("mixModel","Top level Mixing PDF",*fitCat) ;
@@ -229,11 +231,15 @@ main(int argc, char **argv) {
   mbsVars->Print("v") ;
   mbsVars->setAttribAll("Constant",kTRUE) ;
 
+  RooTrace::dump(cout) ;
+
   //--- Do BMixing fit ---
   mixModel->fitTo(*data,"mlth0ooo") ;
 
   //--- Print final results ---
   mixModel->getParameters(data)->Print("v") ;
+
+  RooTrace::dump(cout) ;
 
   return 0 ;
 }
