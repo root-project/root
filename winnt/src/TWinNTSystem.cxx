@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.31 2002/03/26 09:17:05 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.32 2002/06/16 01:21:25 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -39,10 +39,6 @@
 
 #include "Win32Constants.h"
 
-#ifndef WIN32
-# include <unistd.h>
-#endif
-
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/utime.h>
@@ -52,80 +48,31 @@
 
 #include <direct.h>
 #include <ctype.h>
-
-#if defined(R__SUN) || defined(R__SGI) || defined(R__HPUX)
-#   include <dirent.h>
-#else
-# if !defined(WIN32) || defined(_SC_)
-#   include <sys/dir.h>
-# endif
-#endif
-#if defined(ULTRIX) || defined(R__SUN)
-#include <sgtty.h>
-#endif
-#ifdef R__AIX
-#   include <sys/ioctl.h>
-#endif
 #include <sys/stat.h>
 #include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
-#ifndef WIN32
-#include <sys/param.h>
-#include <pwd.h>
-#endif
-
 #include <errno.h>
-
-#ifndef WIN32
-#include <sys/wait.h>
-#endif
-
-#if !defined(WIN32) || defined (_SC_)
- #include <sys/time.h>
-#endif
-
-#ifndef WIN32
-#include <sys/file.h>
-#endif
-
 #include <sys/types.h>
-
-#ifndef WIN32
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <sys/un.h>
-# include <netdb.h>
-#else
-# include <winsock.h>
-#endif
-
+#include <winsock.h>
 #include <fcntl.h>
-#ifdef R__HPUX
-#   include <dl.h>
-#   if defined(R__GNU)
-       extern "C" {
-          extern shl_t cxxshl_load(const char *path, int flags, long address);
-          extern int   cxxshl_unload(shl_t handle);
-       }
-#   else
-#      include <cxxdl.h>
-#   endif
-    // print stack trace (HP undocumented internal call)
-    extern "C" void U_STACK_TRACE();
-#endif
 
 const char *kProtocolName   = "tcp";
+
+HANDLE hThread2;
+unsigned thread2ID;
+extern void CreateSplash(DWORD time);
 
 // for testing purpose only !!!
 #ifdef GDK_WIN32
 HANDLE hEvent1;
-HANDLE hThread1,hThread2;
-unsigned thread1ID,thread2ID;
+HANDLE hThread1;
+unsigned thread1ID;
 #endif
 
 
 #ifdef GDK_WIN32
+
 struct  itimerval {
    struct  timeval it_interval;
    struct  timeval it_value;
@@ -301,6 +248,9 @@ TWinNTSystem::~TWinNTSystem()
 #ifdef GDK_WIN32
    if (hThread1) CloseHandle(hThread1);
 #endif
+
+   if (hThread2) CloseHandle(hThread2); // Splash Screen Thread Handle
+
    CloseHandle(fhTermInputEvent);
 }
 
@@ -318,6 +268,16 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
     return 0;
 }
 #endif
+
+//______________________________________________________________________________
+unsigned __stdcall HandleSplashThread(void *pArg )
+{
+   // Thread for handling Splash Screen.
+
+    CreateSplash(6);
+    _endthreadex( 0 );
+    return 0;
+}
 
 //______________________________________________________________________________
 Bool_t TWinNTSystem::Init()
@@ -380,7 +340,10 @@ Bool_t TWinNTSystem::Init()
         &thread1ID );
 #endif
 
-   return kFALSE;
+    // Create Thread for Non-Blocking Splash Screen
+    hThread2 = (HANDLE)_beginthreadex( NULL, 0, &HandleSplashThread, 0, 0, &thread2ID );
+
+    return kFALSE;
 }
 
 //---- Misc --------------------------------------------------------------------
@@ -508,7 +471,7 @@ void  TWinNTSystem::SetShellName(const char *name)
 
 //*-*         Value                      Platform
 //*-*  ----------------------------------------------------
-//*-*  VER_PLATFORM_WIN32s          Win32s on Windows 3.1
+//*-*  VER_PLATFORM_WIN32s              Win32s on Windows 3.1
 //*-*  VER_PLATFORM_WIN32_WINDOWS       Win32 on Windows 95
 //*-*  VER_PLATFORM_WIN32_NT            Windows NT
 //*-*
@@ -825,48 +788,9 @@ void TWinNTSystem::InnerLoop()
 //______________________________________________________________________________
 void TWinNTSystem::DispatchSignals(ESignals sig)
 {
-#ifndef WIN32
-   // Handle and dispatch signals.
-
-   switch (sig) {
-   case kSigAlarm:
-      //DispatchTimers();  rdm
-      break;
-   case kSigChild:
-      CheckChilds();
-      return;
-   case kSigBus:
-   case kSigSegmentationViolation:
-   case kSigIllegalInstruction:
-   case kSigFloatingException:
-      Printf("\n *** Break *** %s", WinNTSigname(sig));
-#ifdef R__HPUX
-      Printf("");
-      U_STACK_TRACE();
-      Printf("");
-#endif
-      if (TROOT::Initialized())
-         Throw(sig);
-      Abort(-1);
-      break;
-   case kSigSystem:
-   case kSigPipe:
-      Printf("\n *** Break *** %s", WinNTSigname(sig));
-      break;
-   default:
-      fSignals.Set(sig);
-      fSigcnt++;
-      break;
-   }
-
-   // check a-synchronous signals
-   if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
-      CheckSignals(kFALSE);
-#else
-      if (TROOT::Initialized())
-         Throw(sig);
-      Abort(-1);
-#endif
+   if (TROOT::Initialized())
+      Throw(sig);
+   Abort(-1);
 }
 
 //______________________________________________________________________________
@@ -1700,7 +1624,7 @@ void TWinNTSystem::AddTimer(TTimer *ti)
     if (ti)
     {
         TSystem::AddTimer(ti);
- //       if (ti->IsAsync())
+        // if (ti->IsAsync())
         {
           if (!fWin32Timer) fWin32Timer = new TWin32Timer;
           fWin32Timer->CreateTimer(ti);
@@ -1789,38 +1713,22 @@ Bool_t TWinNTSystem::DispatchSynchTimers()
 
 const Double_t gTicks = 1.0e-7;
 //______________________________________________________________________________
-Double_t TWinNTSystem::GetRealTime(){
-#if defined(R__MAC)
-   return(Double_t)clock() / gTicks;
-#elif defined(R__UNIX)
-   struct tms cpt;
-   return (Double_t)times(&cpt) / gTicks;
-#elif defined(R__VMS)
-  return(Double_t)clock()/gTicks;
-#elif defined(WIN32)
-  union     {FILETIME ftFileTime;
-             __int64  ftInt64;
-            } ftRealTime; // time the process has spent in kernel mode
-  SYSTEMTIME st;
-  GetSystemTime(&st);
-  SystemTimeToFileTime(&st,&ftRealTime.ftFileTime);
-  return (Double_t)ftRealTime.ftInt64 * gTicks;
-#endif
+Double_t TWinNTSystem::GetRealTime()
+{
+   union {
+      FILETIME ftFileTime;
+      __int64  ftInt64;
+   } ftRealTime; // time the process has spent in kernel mode
+   SYSTEMTIME st;
+   GetSystemTime(&st);
+   SystemTimeToFileTime(&st,&ftRealTime.ftFileTime);
+   return (Double_t)ftRealTime.ftInt64 * gTicks;
 }
 
 //______________________________________________________________________________
-Double_t TWinNTSystem::GetCPUTime(){
-#if defined(R__MAC)
-   return(Double_t)clock() / gTicks;
-#elif defined(R__UNIX)
-   struct tms cpt;
-   times(&cpt);
-   return (Double_t)(cpt.tms_utime+cpt.tms_stime) / gTicks;
-#elif defined(R__VMS)
-   return(Double_t)clock()/gTicks;
-#elif defined(WIN32)
-
-  OSVERSIONINFO OsVersionInfo;
+Double_t TWinNTSystem::GetCPUTime()
+{
+   OSVERSIONINFO OsVersionInfo;
 
 //*-*         Value                      Platform
 //*-*  ----------------------------------------------------
@@ -1828,45 +1736,44 @@ Double_t TWinNTSystem::GetCPUTime(){
 //*-*  VER_PLATFORM_WIN32_WINDOWS       Win32 on Windows 95
 //*-*  VER_PLATFORM_WIN32_NT            Windows NT
 //*-*
-  OsVersionInfo.dwOSVersionInfoSize=sizeof(OSVERSIONINFO);
-  GetVersionEx(&OsVersionInfo);
-  if (OsVersionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
-    DWORD       ret;
-    FILETIME    ftCreate,       // when the process was created
-                ftExit;         // when the process exited
+   OsVersionInfo.dwOSVersionInfoSize=sizeof(OSVERSIONINFO);
+   GetVersionEx(&OsVersionInfo);
+   if (OsVersionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+      DWORD       ret;
+      FILETIME    ftCreate,       // when the process was created
+                  ftExit;         // when the process exited
 
-    union     {FILETIME ftFileTime;
-               __int64  ftInt64;
-              } ftKernel; // time the process has spent in kernel mode
+      union {
+         FILETIME ftFileTime;
+         __int64  ftInt64;
+      } ftKernel; // time the process has spent in kernel mode
 
-    union     {FILETIME ftFileTime;
-               __int64  ftInt64;
-              } ftUser;   // time the process has spent in user mode
+      union {
+         FILETIME ftFileTime;
+         __int64  ftInt64;
+      } ftUser;   // time the process has spent in user mode
 
-    HANDLE hProcess = GetCurrentProcess();
-    ret = GetProcessTimes (hProcess, &ftCreate, &ftExit,
-                                     &ftKernel.ftFileTime,
-                                     &ftUser.ftFileTime);
-    if (ret != TRUE){
-      ret = GetLastError ();
-      ::Error ("GetCPUTime", " Error on GetProcessTimes 0x%lx", (int)ret);
-    }
+      HANDLE hProcess = GetCurrentProcess();
+      ret = GetProcessTimes (hProcess, &ftCreate, &ftExit,
+                                       &ftKernel.ftFileTime,
+                                       &ftUser.ftFileTime);
+      if (ret != TRUE){
+         ret = GetLastError ();
+         ::Error ("GetCPUTime", " Error on GetProcessTimes 0x%lx", (int)ret);
+      }
 
-    /*
-     * Process times are returned in a 64-bit structure, as the number of
-     * 100 nanosecond ticks since 1 January 1601.  User mode and kernel mode
-     * times for this process are in separate 64-bit structures.
-     * To convert to floating point seconds, we will:
-     *
-     *          Convert sum of high 32-bit quantities to 64-bit int
-     */
+      /*
+       * Process times are returned in a 64-bit structure, as the number of
+       * 100 nanosecond ticks since 1 January 1601.  User mode and kernel mode
+       * times for this process are in separate 64-bit structures.
+       * To convert to floating point seconds, we will:
+       *
+       *          Convert sum of high 32-bit quantities to 64-bit int
+       */
 
-      return (Double_t) (ftKernel.ftInt64 + ftUser.ftInt64) * gTicks;
-  }
-  else
+       return (Double_t) (ftKernel.ftInt64 + ftUser.ftInt64) * gTicks;
+   } else
       return GetRealTime();
-
-#endif
 }
 
 //______________________________________________________________________________
@@ -1875,33 +1782,7 @@ TTime TWinNTSystem::Now()
    // Return current time.
 
    return Long_t(GetRealTime()*1000.0);
- // WinNTNow();
 }
-
-#if 0 //rdm
-
-//______________________________________________________________________________
-void TWinNTSystem::AddTimer(TTimer *ti)
-{
-   // Add timer to list of system timers.
-
-   TSystem::AddTimer(ti);
-   if (!fInsideNotify)  // we are not inside notify
-      if (ti->IsAsync() && (ti == fAsyncTimers))
-         WinNTSetitimer(NextTimeout(fAsyncTimers));
-}
-
-//______________________________________________________________________________
-Bool_t TWinNTSystem::RemoveTimer(TTimer *ti)
-{
-   // Remove timer from list of system timers.
-
-   Bool_t rc = TSystem::RemoveTimer(ti);
-   if (ti->IsAsync() && fAsyncTimers == 0)
-      WinNTSetitimer(-1);
-   return rc;
-}
-#endif
 
 //______________________________________________________________________________
 void TWinNTSystem::Sleep(UInt_t milliSec)
@@ -2467,23 +2348,6 @@ void TWinNTSystem::WinNTSignal(ESignals sig, SigHandler_t handler)
 {
    // Set a signal handler for a signal.
 
-#ifndef WIN32
-if (signal_map[sig].handler != handler) {
-      struct sigaction sigact;
-
-      signal_map[sig].handler = handler;
-
-      sigact.sa_handler = sighandler;
-      sigemptyset(&sigact.sa_mask);
-#if defined(SA_INTERRUPT)       // SunOS
-      sigact.sa_flags = SA_INTERRUPT;
-#else
-      sigact.sa_flags = 0;
-#endif
-      if (sigaction(signal_map[sig].code, &sigact, NULL) < 0)
-         ::SysError("TWinNTSystem::WinNTSignal", "sigaction");
-   }
-#endif
 }
 
 //______________________________________________________________________________
@@ -2627,27 +2491,6 @@ const char *TWinNTSystem::WinNTHomedirectory(const char *name)
    // Returns the user's home directory.
 
    static char mydir[kMAXPATHLEN]="./";
-#ifndef WIN32
-   static char path[kMAXPATHLEN], mydir[kMAXPATHLEN];
-   struct passwd *pw;
-
-   if (name) {
-//      pw = getpwnam(name);
-//        LookupAccountName();
-//      if (pw) {
-//         strncpy(path, pw->pw_dir, kMAXPATHLEN);
-         return path;
-      }
-   } else {
-      if (mydir[0])
-         return mydir;
-      pw = getpwuid(getuid());
-      if (pw) {
-         strncpy(mydir, pw->pw_dir, kMAXPATHLEN);
-         return mydir;
-      }
-   }
-#endif
    const char *h = 0;
    if (!(h = ::getenv("home"))) h = ::getenv("HOME");
 
@@ -2775,17 +2618,7 @@ int TWinNTSystem::WinNTWaitchild()
 {
    // Wait till child is finished.
 
-#ifdef R__AIX
-   return -1;
-#elif !defined(WIN32)
-#  ifdef R__HPUX
-   int status;
-#  else
-   union wait status;
-#  endif
-   return (int) wait3(&status, WNOHANG, 0);
-#endif
-        return 0;
+   return 0;
 }
 
 //---- RPC -------------------------------------------------------------------
