@@ -18,10 +18,16 @@ public:
 
 #if VERSION==1
 class TopLevel {
-   TClonesArray fTracks;
+   TClonesArray  fTracks;
+   TClonesArray *fTracksPtr;
 public:
-   TopLevel() : fTracks("Track") {};
-   void AddTrack(int seed) { new (fTracks[fTracks.GetEntries()]) Track(seed); }
+   TopLevel() : fTracks("Track"),fTracksPtr(0) {};
+   ~TopLevel() { delete fTracksPtr; }
+   void AddTrack(int seed) { 
+      if (fTracksPtr==0) fTracksPtr = new TClonesArray("Track");
+      new (fTracks[fTracks.GetEntries()]) Track(seed); 
+      new ((*fTracksPtr)[fTracksPtr->GetEntries()]) Track(seed); 
+   }
    const Track &GetTrack(int which) { return *(Track*)fTracks.At(which); }
 
    ClassDef(TopLevel,VERSION);
@@ -30,10 +36,16 @@ public:
 #elif VERSION==2
 
 class TopLevel {
-   vector<Track> fTracks;
+   vector<Track>  fTracks;
+   vector<Track> *fTracksPtr;
 public:
-   TopLevel() {};
-   void AddTrack(int seed) { Track t(seed); fTracks.push_back(t); }
+   TopLevel() : fTracksPtr(0) {};
+   ~TopLevel() { delete fTracksPtr; }
+   void AddTrack(int seed) {
+      if (fTracksPtr==0) fTracksPtr = new vector<Track>;
+      Track t(seed); fTracks.push_back(t); 
+      fTracksPtr->push_back(t);
+   }
    const Track &GetTrack(int which) { return fTracks[which]; }
 
    ClassDef(TopLevel,VERSION);
@@ -42,10 +54,16 @@ public:
 #elif VERSION==3
 
 class TopLevel {
-   list<Track> fTracks;
+   list<Track>  fTracks;
+   list<Track> *fTracksPtr;
 public:
-   TopLevel() {};
-   void AddTrack(int seed) { Track t(seed); fTracks.push_back(t); }
+   TopLevel() : fTracksPtr(0) {};
+   ~TopLevel() { delete fTracksPtr; }
+   void AddTrack(int seed) { 
+      if (fTracksPtr==0) fTracksPtr = new list<Track>;
+      Track t(seed); fTracks.push_back(t); 
+      fTracksPtr->push_back(t);
+   }
    const Track &GetTrack(int which) { 
       list<Track>::iterator iter = fTracks.begin();
       for(int i=0;i<which && iter!=fTracks.end();++i,++iter) {}

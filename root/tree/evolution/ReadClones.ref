@@ -1,40 +1,84 @@
 
 Processing ReadClones.C...
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracks from type:list<Track> to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracksPtr from type:list<Track>* to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracks from type:list<Track> to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracksPtr from type:list<Track>* to type:TClonesArray, skip element
+Warning in <TTreeFormula::DefinedVariable>: TClonesArray object was not retrievable for fTracksPtr.fEnergy!
+*************************************************************
+*    Row   * Instance *                     fTracks.fEnergy *
+*************************************************************
+*        0 *        0 *                                  33 *
+*        0 *        1 *                                  77 *
+*************************************************************
+*************************************************************
+*    Row   * Instance *          TopSplit99.fTracks.fEnergy *
+*************************************************************
+*        0 *        0 *                                  33 *
+*        0 *        1 *                                  77 *
+*************************************************************
+*************************************************************
+*    Row   * Instance *                  fTracksPtr.fEnergy *
+*************************************************************
+*        0 *        0 *                                  33 *
+*        0 *        1 *                                  77 *
+*************************************************************
+*************************************************************
+*    Row   * Instance *       TopSplit99.fTracksPtr.fEnergy *
+*************************************************************
+*        0 *        0 *                                  33 *
+*        0 *        1 *                                  77 *
+*************************************************************
+*************************************************************
+*    Row   * Instance *                     fTracks.fEnergy *
+*************************************************************
+*        0 *        0 *                                     *
+*************************************************************
+*************************************************************
+*    Row   * Instance *          TopSplit99.fTracks.fEnergy *
+*************************************************************
+*        0 *        0 *                                  33 *
+*        0 *        1 *                                  77 *
+*************************************************************
+
+*ERROR 30 : 
+ Bad numerical expression : "fTracksPtr.fEnergy"
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracks from type:vector<Track> to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracksPtr from type:vector<Track>* to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracks from type:vector<Track> to type:TClonesArray, skip element
-***********************************
-*    Row   * Instance * fTracks.f *
-***********************************
-*        0 *        0 *        33 *
-*        0 *        1 *        77 *
-***********************************
-***********************************
-*    Row   * Instance * TopSplit9 *
-***********************************
-*        0 *        0 *        33 *
-*        0 *        1 *        77 *
-***********************************
-***********************************
-*    Row   * Instance * fTracks.f *
-***********************************
-*        0 *        0 *           *
-***********************************
-***********************************
-*    Row   * Instance * TopSplit9 *
-***********************************
-*        0 *        0 *        33 *
-*        0 *        1 *        77 *
-***********************************
-***********************************
-*    Row   * Instance * fTracks.f *
-***********************************
-*        0 *        0 *           *
-***********************************
-***********************************
-*    Row   * Instance * TopSplit9 *
-***********************************
-*        0 *        0 *        33 *
-*        0 *        1 *        77 *
-***********************************
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracksPtr from type:vector<Track>* to type:TClonesArray, skip element
+Warning in <TTreeFormula::DefinedVariable>: TClonesArray object was not retrievable for fTracksPtr.fEnergy!
+**************************************************
+*    Row   *                  fTracksPtr.fEnergy *
+**************************************************
+*        0 *                                     *
+**************************************************
+*************************************************************
+*    Row   * Instance *       TopSplit99.fTracksPtr.fEnergy *
+*************************************************************
+*        0 *        0 *                                     *
+*************************************************************
+*************************************************************
+*    Row   * Instance *                     fTracks.fEnergy *
+*************************************************************
+*        0 *        0 *                                     *
+*************************************************************
+*************************************************************
+*    Row   * Instance *          TopSplit99.fTracks.fEnergy *
+*************************************************************
+*        0 *        0 *                                  33 *
+*        0 *        1 *                                  77 *
+*************************************************************
+
+*ERROR 30 : 
+ Bad numerical expression : "fTracksPtr.fEnergy"
+**************************************************
+*    Row   *                  fTracksPtr.fEnergy *
+**************************************************
+*        0 *                                     *
+**************************************************
+*************************************************************
+*    Row   * Instance *       TopSplit99.fTracksPtr.fEnergy *
+*************************************************************
+*        0 *        0 *                                     *
+*************************************************************
