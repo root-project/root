@@ -1,9 +1,3 @@
-#include "TCanvas.h"
-#include "TStyle.h"
-#include "TH1.h"
-#include "TGaxis.h"
-#include "TRandom.h"
-   
 void twoscales()
 {
    //example of macro illustrating how to superimpose two histograms

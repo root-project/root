@@ -22,10 +22,6 @@
 #include "Api.h"
 #include "common.h"
 
-#ifndef G__OLDIMPLEMENTATION1586
-static char G__buf[G__ONELINE];
-#endif
-
 /*********************************************************************
 * class G__TypeInfo
 * 
@@ -99,13 +95,7 @@ int G__TypeInfo::operator!=(const G__TypeInfo& a)
 const char* G__TypeInfo::TrueName()
 {
 #ifndef G__OLDIMPLEMENTATION401
-#ifndef G__OLDIMPLEMENTATION1586
-  strcpy(G__buf,
-	 G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst));
-  return(G__buf);
-#else
   return(G__type2string((int)type,(int)tagnum,-1,(int)reftype,(int)isconst));
-#endif
 #else
   return(G__type2string((int)type,(int)tagnum,-1,(int)reftype));
 #endif
@@ -114,14 +104,8 @@ const char* G__TypeInfo::TrueName()
 const char* G__TypeInfo::Name()
 {
 #ifndef G__OLDIMPLEMENTATION401
-#ifndef G__OLDIMPLEMENTATION1586
-  strcpy(G__buf,G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
-			       ,(int)isconst));
-  return(G__buf);
-#else
   return(G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype
 	,(int)isconst));
-#endif
 #else
   return(G__type2string((int)type,(int)tagnum,(int)typenum,(int)reftype));
 #endif

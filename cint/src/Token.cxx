@@ -128,7 +128,7 @@ int G__TokenInfo::SearchLocalVariable(const char* name,G__MethodInfo& func_scope
 {
   if(localvar && func_scope.IsValid()) {
     if(&func_scope != &methodscope) {
-      G__fprinterr(G__serr,"Warning: G__TokenInfo::SearchLocalVariable() func scope changed without G__TokenInfo::MakeLocalTable()\n");
+      fprintf(G__serr,"Warning: G__TokenInfo::SearchLocalVariable() func scope changed without G__TokenInfo::MakeLocalTable()\n");
       return(0);
     }
     struct G__var_array *var;

@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.6 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TGenerator.cxx,v 1.3 2000/11/21 20:10:18 brun Exp $
 // Author: Ola Nordmann   21/09/95
 
 /*************************************************************************
@@ -37,8 +37,8 @@
 #include "TText.h"
 #include "TPaveText.h"
 #include "TClonesArray.h"
-#include "Riostream.h"
 
+#include <iostream.h>
 
 ClassImp(TGenerator)
 
@@ -51,9 +51,8 @@ TGenerator::TGenerator(const char *name,const char *title): TNamed(name,title)
 
 
   //  Initialize particles table
-   TDatabasePDG::Instance();
-   //TDatabasePDG *pdg = TDatabasePDG::Instance();
-   //if (!pdg->ParticleList()) pdg->Init();
+   TDatabasePDG *pdg = TDatabasePDG::Instance();
+   if (!pdg->ParticleList()) pdg->Init();
 
    fPtCut        = 0;
    fShowNeutrons = kTRUE;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.14 2001/05/02 11:45:46 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.11 2001/01/04 14:28:10 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -67,9 +67,7 @@ enum EFrameType {
    kFitHeight       = BIT(8),
    kFixedHeight     = BIT(9),
    kFixedSize       = (kFixedWidth | kFixedHeight),
-   kOwnBackground   = BIT(10),
-   kTransientFrame  = BIT(11),
-   kTempFrame       = BIT(12)
+   kOwnBackground   = BIT(10)
 };
 
 //---- MWM Hints stuff
@@ -145,23 +143,13 @@ protected:
 
    static Time_t      GetLastClick();
 
-   virtual void   DoRedraw();
+   virtual void DoRedraw();
+   virtual const TGWindow *GetMainFrame() const { return TGWindow::GetMainFrame(); }
    virtual void  *GetSender() { return this; }  //used to set gTQSender
 
 public:
-   // Default colors and graphics contexts
-   static ULong_t     GetDefaultFrameBackground();
-   static ULong_t     GetDefaultSelectedBackground();
-   static ULong_t     GetWhitePixel();
-   static ULong_t     GetBlackPixel();
-   static const TGGC &GetBlackGC();
-   static const TGGC &GetWhiteGC();
-   static const TGGC &GetHilightGC();
-   static const TGGC &GetShadowGC();
-   static const TGGC &GetBckgndGC();
-
    TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
-           UInt_t options = 0, ULong_t back = GetDefaultFrameBackground());
+           UInt_t options = 0, ULong_t back = fgDefaultFrameBackground);
    TGFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
    virtual ~TGFrame() { }
 
@@ -205,7 +193,6 @@ public:
    virtual void    MapSubwindows() { }  // Simple frames do not have subwindows
                                         // Redefine this in TGCompositeFrame!
    virtual void    DrawBorder();
-   virtual const TGWindow *GetMainFrame() const { return TGWindow::GetMainFrame(); }
 
    UInt_t GetWidth() const { return fWidth; }
    UInt_t GetHeight() const { return fHeight; }
@@ -218,6 +205,17 @@ public:
    void SetWidth(UInt_t w) { fWidth = w; }
    void SetHeight(UInt_t h) { fHeight = h; }
    void SetSize(const TGDimension &s) { fWidth = s.fWidth; fHeight = s.fHeight; }
+
+   // Default colors and graphics contexts
+   static ULong_t     GetDefaultFrameBackground();
+   static ULong_t     GetDefaultSelectedBackground();
+   static ULong_t     GetWhitePixel();
+   static ULong_t     GetBlackPixel();
+   static const TGGC &GetBlackGC();
+   static const TGGC &GetWhiteGC();
+   static const TGGC &GetHilightGC();
+   static const TGGC &GetShadowGC();
+   static const TGGC &GetBckgndGC();
 
    ClassDef(TGFrame,0)  // Base class for simple widgets (button, etc.)
 };
@@ -248,7 +246,7 @@ protected:
 public:
    TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
                     UInt_t options = 0,
-                    ULong_t back = GetDefaultFrameBackground());
+                    ULong_t back = fgDefaultFrameBackground);
    TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = 0);
    virtual ~TGCompositeFrame();
 
@@ -293,7 +291,7 @@ class TGVerticalFrame : public TGCompositeFrame {
 public:
    TGVerticalFrame(const TGWindow *p, UInt_t w, UInt_t h,
                    UInt_t options = kChildFrame,
-                   ULong_t back = GetDefaultFrameBackground()) :
+                   ULong_t back = fgDefaultFrameBackground) :
       TGCompositeFrame(p, w, h, options | kVerticalFrame, back) { }
 
    ClassDef(TGVerticalFrame,0)  // Composite frame with vertical child layout
@@ -303,7 +301,7 @@ class TGHorizontalFrame : public TGCompositeFrame {
 public:
    TGHorizontalFrame(const TGWindow *p, UInt_t w, UInt_t h,
                      UInt_t options = kChildFrame,
-                     ULong_t back = GetDefaultFrameBackground()) :
+                     ULong_t back = fgDefaultFrameBackground) :
       TGCompositeFrame(p, w, h, options | kHorizontalFrame, back) { }
 
    ClassDef(TGHorizontalFrame,0)  // Composite frame with horizontal child layout
@@ -326,9 +324,11 @@ protected:
 
    TList    *fBindList;    // list with key bindings
 
+   virtual const TGWindow *GetMainFrame() const { return this; }
+
 public:
    TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
-               UInt_t options = kVerticalFrame);
+               UInt_t options = kMainFrame | kVerticalFrame);
    virtual ~TGMainFrame();
 
    virtual Bool_t HandleKey(Event_t *event);
@@ -351,8 +351,6 @@ public:
    virtual Bool_t BindKey(const TGWindow *w, Int_t keycode, Int_t modifier) const;
    virtual void   RemoveBind(const TGWindow *w, Int_t keycode, Int_t modifier) const;
 
-   virtual const TGWindow *GetMainFrame() const { return this; }
-
    ClassDef(TGMainFrame,0)  // Top level window frame
 };
 
@@ -373,7 +371,7 @@ protected:
 
 public:
    TGTransientFrame(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
-                    UInt_t options = kVerticalFrame);
+                    UInt_t options = kMainFrame | kVerticalFrame);
 
    const TGWindow *GetMain() const { return fMain; }
 
@@ -403,27 +401,30 @@ protected:
    virtual void DoRedraw();
 
    static FontStruct_t  fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
    static TGGC          fgDefaultGC;
 
 public:
-   static FontStruct_t  GetDefaultFontStruct();
-   static const TGGC   &GetDefaultGC();
-
    TGGroupFrame(const TGWindow *p, TGString *title,
                 UInt_t options = kVerticalFrame,
-                GContext_t norm = GetDefaultGC()(),
-                FontStruct_t font = GetDefaultFontStruct(),
-                ULong_t back = GetDefaultFrameBackground());
+                GContext_t norm = fgDefaultGC(),
+                FontStruct_t font = fgDefaultFontStruct,
+                ULong_t back = fgDefaultFrameBackground);
    TGGroupFrame(const TGWindow *p, const char *title,
                 UInt_t options = kVerticalFrame,
-                GContext_t norm = GetDefaultGC()(),
-                FontStruct_t font = GetDefaultFontStruct(),
-                ULong_t back = GetDefaultFrameBackground());
+                GContext_t norm = fgDefaultGC(),
+                FontStruct_t font = fgDefaultFontStruct,
+                ULong_t back = fgDefaultFrameBackground);
    virtual ~TGGroupFrame();
 
    virtual void DrawBorder();
    virtual void SetTitle(TGString *title);
    virtual void SetTitle(const char *title);
+
+   static FontStruct_t  GetDefaultFontStruct();
+   static const TGGC   &GetDefaultGC();
 
    ClassDef(TGGroupFrame,0)  // A composite frame with border and title
 };

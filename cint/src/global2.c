@@ -451,34 +451,6 @@ struct G__ConstStringList* G__SystemIncludeDir=0;
 int G__command_eval=0 ;
 #endif
 
-#ifndef G__OLDIMPLEMENTATION1525
-#ifdef G__MULTITHREADLIBCINT
-int G__multithreadlibcint = 1;
-#else
-int G__multithreadlibcint = 0;
-#endif
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1548
-void (*G__emergencycallback)();
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1570
-int G__asm_clear_mask = 0;
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1593
-int G__boolflag;
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1599
-int G__init=0;
-#endif
-
-#ifndef G__OLDIMPLEMENTATION1600
-int G__last_error = 0;
-#endif
-
 /*
  * Local Variables:
  * c-tab-always-indent:nil

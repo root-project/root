@@ -17,17 +17,7 @@ GLS          := TGLKernel.cxx
 ifeq ($(ARCH),win32)
 GLS          += TWin32GLKernel.cxx TWin32GLViewerImp.cxx
 else
-ifeq ($(ARCH),win32gdk)
-GLS          += TRootGLKernel.cxx TRootWin32GLViewer.cxx
-else
 GLS          += TRootGLKernel.cxx TRootGLViewer.cxx
-ifneq ($(IVROOT),)
-GLS          += TRootOIViewer.cxx
-IVLIBDIR     := -L$(IVROOT)/usr/lib
-IVLIB        := -lInventor -lInventorXt -lXm -lXt -lXext -lX11
-IVINCDIR     := $(IVROOT)/usr/include
-endif
-endif
 endif
 GLS          := $(patsubst %,$(MODDIRS)/%,$(GLS))
 
@@ -48,16 +38,9 @@ INCLUDEFILES += $(GLDEP)
 include/%.h:    $(GLDIRI)/%.h
 		cp $< $@
 
-ifneq ($(IVROOT),)
-$(GLLIB):       $(GLO) $(MAINLIBS) $(GLLIBDEP)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO)" \
-		   "$(GLLIBEXTRA) $(IVLIBDIR) $(IVLIB)"
-else
 $(GLLIB):       $(GLO) $(MAINLIBS) $(GLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO)" "$(GLLIBEXTRA)"
-endif
 
 all-gl:         $(GLLIB)
 
@@ -72,19 +55,5 @@ distclean-gl:   clean-gl
 distclean::     distclean-gl
 
 ##### extra rules ######
-ifneq ($(IVROOT),)
-$(GLO): %.o: %.cxx
-	$(CXX) $(OPT) -DR__OPENINVENTOR $(CXXFLAGS) -I$(OPENGLINCDIR) \
-	   -I$(IVINCDIR) -o $@ -c $<
-else
-ifeq ($(ARCH),win32gdk)
-$(GLO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(OPENGLINCDIR) -I$(WIN32GDKDIR)/gdk/inc \
-	   -I$(WIN32GDKDIR)/gdk/inc/gdk -I$(WIN32GDKDIR)/gdk/inc/glib \
-	   -o $@ -c $<
-else
 $(GLO): %.o: %.cxx
 	$(CXX) $(OPT) $(CXXFLAGS) -I$(OPENGLINCDIR) -o $@ -c $<
-endif
-endif
-

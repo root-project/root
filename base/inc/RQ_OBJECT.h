@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.5 2001/04/21 17:20:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.2 2000/10/22 19:21:29 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -12,9 +12,9 @@
 #ifndef ROOT_RQ_OBJECT
 #define ROOT_RQ_OBJECT
 
-#ifndef __CINT__
-#include <TQObject.h>
-#endif
+// Forward declarations
+class TQObjSender;
+class TQObject;
 
 //---- RQ_OBJECT macro -----------------------------------------------
 //
@@ -24,7 +24,7 @@
 //    #include "RQ_OBJECT.h"
 //
 //    class A {
-//       RQ_OBJECT("A")
+//       RQ_OBJECT()
 //    private:
 //       Int_t fValue;
 //    public:
@@ -63,7 +63,7 @@
 // slot has been connected to it, so it disappears into hyperspace.
 //
 
-#define RQ_OBJECT(sender_class) \
+#define RQ_OBJECT() \
 private: \
    TQObjSender fQObject; \
 public: \
@@ -71,7 +71,6 @@ public: \
                   void *rcvr, const char *slt) \
    { \
       fQObject.SetSender(this); \
-      fQObject.SetSenderClassName(sender_class); \
       return fQObject.Connect(sig, cl, rcvr, slt); \
    } \
    Bool_t Disconnect(const char *sig = 0, \

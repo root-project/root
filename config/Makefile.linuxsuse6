@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Linux with glibc and egcs (SuSE v6.0)
 
 PLATFORM      = linux
@@ -37,7 +35,7 @@ CRYPTLIBS     = -lcrypt
 # Fortran:
 F77           = g77
 F77FLAGS      = $(OPT)
-F77LIBS       = -lg2c -lnsl
+F77LIBS       = -lg2c
 
 # Extras
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.2 2000/11/21 20:18:43 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TShape.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -189,9 +189,8 @@ void TShape::Streamer(TBuffer &R__b)
       TNamed::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      TFile *file = (TFile*)R__b.GetParent();
-      if (file) {
-         if (file->GetVersion() > 22300) TAtt3D::Streamer(R__b);
+      if (gFile) {
+         if (gFile->GetVersion() > 22300) TAtt3D::Streamer(R__b);
       } else {
          TAtt3D::Streamer(R__b);
       }

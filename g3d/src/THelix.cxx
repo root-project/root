@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.5 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/g3d:$Name:  $:$Id: THelix.cxx,v 1.2 2000/11/21 20:16:13 brun Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -62,7 +62,9 @@
 // range[0] = 0 and range[1] = 1
 //______________________________________________________________________________
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "THelix.h"
@@ -152,7 +154,6 @@ THelix::THelix(Double_t x,  Double_t y,  Double_t z,
    v[1] = vy;
    v[2] = vz;
    Double_t *range = 0;
-   fRotMat   = 0;
 
    SetHelix(p, v, w, range, kHelixZ);
    fOption = "";
@@ -173,7 +174,6 @@ THelix::THelix(Double_t * p, Double_t * v, Double_t w,
       r[0] = 0.0;        r[1] = 1.0;
    }
 
-   fRotMat   = 0;
    if ( axis ) {                        // specify axis
       SetHelix(p, v, w, r, rType, axis);
    } else {                             // default axis
@@ -641,7 +641,7 @@ void THelix::Streamer(TBuffer &R__b)
       R__b.ReadStaticArray(fRange);
       R__b.CheckByteCount(R__s, R__c, THelix::IsA());
       //====end of old versions
-
+      
    } else {
       THelix::Class()->WriteBuffer(R__b,this);
    }

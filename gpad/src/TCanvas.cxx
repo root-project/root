@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.38 2002/01/24 11:39:28 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.18 2000/10/26 15:32:04 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -11,8 +11,9 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TCanvas.h"
 #include "TClass.h"
@@ -25,6 +26,7 @@
 #include "TGuiFactory.h"
 #include "TEnv.h"
 #include "TError.h"
+//#include "TExec.h"
 #include "TContextMenu.h"
 #include "TControlBar.h"
 #include "TInterpreter.h"
@@ -41,6 +43,9 @@ public:
 };
 
 static TInitMakeDefCanvas makedefcanvas_init;
+
+
+
 
 //*-*x16 macros/layout_canvas
 
@@ -161,8 +166,11 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    // which is placed in a TGFrame. This ctor is only called via the
    // TRootEmbeddedCanvas class.
 
-   Init();
+   // Allow embedded canvas with same name.
+   //TCanvas *old = (TCanvas*)gROOT->FindObject(name);
+   //if (old && old->IsOnHeap()) delete old;
 
+   fCanvas       = 0;
    fCanvasID     = winid;
    fWindowTopX   = 0;
    fWindowTopY   = 0;
@@ -170,11 +178,14 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fWindowHeight = wh;
    fCw           = ww;
    fCh           = wh;
-   fMenuBar      = kFALSE;
-   fBatch        = kFALSE;
    fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
+   fBatch        = kFALSE;
 
-   SetName(name);
+   fMenuBar      = kFALSE;
+   fContextMenu  = 0;
+   fEditorBar    = 0;
+
+   SetName((char *)name);
    Build();
 }
 
@@ -206,14 +217,11 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    //  form = 5    500x500 at 50,50
 
    if (gThreadXAR) {
-      void *arr[6];
-      static Int_t ww = 500;
-      static Int_t wh = 500;
-      arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
-      if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
+      void *arr[5];
+      arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&form;
+      if ((*gThreadXAR)("CANV", 5, arr, NULL)) return;
    }
 
-   Init();
    fMenuBar = kTRUE;
    if (form < 0) {
       form     = -form;
@@ -224,12 +232,12 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
    if (old && old->IsOnHeap()) delete old;
    if (strlen(name) == 0 || gROOT->IsBatch()) {   //We are in Batch mode
       fWindowTopX   = fWindowTopY = 0;
-      fWindowWidth  = gStyle->GetCanvasDefW()-4;
-      fWindowHeight = gStyle->GetCanvasDefH()-28;
+      fWindowWidth  = 712;                // default size corresponds to A4
+      fWindowHeight = 950;
       fCw           = fWindowWidth;
       fCh           = fWindowHeight;
-      fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
-      fBatch        = kTRUE;
+      fCanvasImp  = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
+      fBatch      = kTRUE;
    } else {                  //normal mode with a screen window
       Float_t cx = gStyle->GetScreenFactor();
       if (form < 1 || form > 5) form = 1;
@@ -240,8 +248,6 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
          Int_t  uy = Int_t(cx*gStyle->GetCanvasDefY());
          fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, ux, uy, uw, uh);
       }
-      fCw = 500;
-      fCh = 500;
       if (form == 2) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 20, 20, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 3) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 30, 30, UInt_t(cx*500), UInt_t(cx*500));
       if (form == 4) fCanvasImp = gGuiFactory->CreateCanvasImp(this, name, 40, 40, UInt_t(cx*500), UInt_t(cx*500));
@@ -282,14 +288,11 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
        if ((*gThreadXAR)("CANV", 6, arr, NULL)) return;
    }
 
-   Init();
    fMenuBar = kTRUE;
    if (ww < 0) {
       ww       = -ww;
       fMenuBar = kFALSE;
    }
-   fCw       = ww;
-   fCh       = wh;
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
    if (old && old->IsOnHeap()) delete old;
@@ -345,14 +348,11 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       if ((*gThreadXAR)("CANV", 8, arr, NULL)) return;
    }
 
-   Init();
    fMenuBar = kTRUE;
    if (wtopx < 0) {
       wtopx    = -wtopx;
       fMenuBar = kFALSE;
    }
-   fCw       = ww;
-   fCh       = wh;
    fCanvasID = -1;
    TCanvas *old = (TCanvas*)gROOT->GetListOfCanvases()->FindObject(name);
    if (old && old->IsOnHeap()) delete old;
@@ -377,9 +377,9 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
 }
 
 //_____________________________________________________________________________
-void TCanvas::Init()
+void TCanvas::Build()
 {
-   // Initialize the TCanvas members. Called by all constructors.
+   // Build a canvas. Called by all constructors.
 
    // Make sure the application environment exists. It is need for graphics
    // (colors are initialized in the TApplication ctor).
@@ -393,52 +393,17 @@ void TCanvas::Init()
    fShowEventStatus = gEnv->GetValue("Canvas.ShowEventStatus", kFALSE);
    fAutoExec        = gEnv->GetValue("Canvas.AutoExec", kTRUE);
 
-   // Fill canvas ROOT data structure
-   fXsizeUser = 0;
-   fYsizeUser = 0;
-   fXsizeReal = kDefaultCanvasSize;
-   fYsizeReal = kDefaultCanvasSize;
-
-   fDISPLAY         = "$DISPLAY";
-   fRetained        = kTRUE;
-   fSelected        = 0;
-   fSelectedPad     = 0;
-   fPadSave         = 0;
-   fEditorBar       = 0;
-   fEvent           = -1;
-   fEventX          = -1;
-   fEventY          = -1;
-   fContextMenu     = 0;
-   SetBit(kMustCleanup);
-}
-
-//_____________________________________________________________________________
-void TCanvas::Build()
-{
-   // Build a canvas. Called by all constructors.
-
    // Get window identifier
    if (fCanvasID == -1)
       fCanvasID = fCanvasImp->InitWindow();
 #ifndef WIN32
    if (fCanvasID < 0) return;
 #else
-#ifndef GDK_WIN32
    // fCanvasID is in fact a pointer to the TGWin32 class
    if (fCanvasID  == -1) return;
-#else
-   if (fCanvasID < 0) return;
-#endif
 #endif
 
-   if (fCw < fCh) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
-   else           fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
-
-   // transient canvases have typically no menubar and should not get
-   // by default the event status bar (if set by default)
-   if (fShowEventStatus && fMenuBar && fCanvasImp)
-      fCanvasImp->ShowStatusBar(fShowEventStatus);
-
+   fContextMenu = 0;
    if (!IsBatch()) {    //normal mode with a screen window
       // Set default physical canvas attributes
       gVirtualX->SelectWindow(fCanvasID);
@@ -461,8 +426,35 @@ void TCanvas::Build()
       Int_t dum1, dum2;
       gVirtualX->GetGeometry(fCanvasID, dum1, dum2, fCw, fCh);
 
-      fContextMenu = new TContextMenu("ContextMenu");
+      fContextMenu = new TContextMenu( "ContextMenu" );
    }
+   // Fill canvas ROOT data structure
+   fXsizeUser = 0;
+   fYsizeUser = 0;
+   if ( fCw < fCh ) {
+      fYsizeReal = kDefaultCanvasSize;
+      fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
+   }
+   else {
+      fXsizeReal = kDefaultCanvasSize;
+      fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
+   }
+
+   fDISPLAY         = "$DISPLAY";
+   fRetained        = 1;
+
+   // transient canvases have typically no menubar and should not get
+   // by default the event status bar (if set by default)
+   if (fShowEventStatus && fMenuBar && fCanvasImp)
+      fCanvasImp->ShowStatusBar(fShowEventStatus);
+
+   fSelected        = 0;
+   fSelectedPad     = 0;
+   fPadSave         = 0;
+   fEditorBar       = 0;
+   fEvent           = -1;
+   fEventX          = -1;
+   fEventY          = -1;
    gROOT->GetListOfCanvases()->Add(this);
 
    // Set Pad parameters
@@ -489,11 +481,9 @@ void TCanvas::Build()
       Range(0, 0, 1, 1);   //Pad range is set by default to [0,1] in x and y
       PaintBorder(GetFillColor(), kTRUE);    //Paint background
    }
-
+   SetBit(kMustCleanup);
 #ifdef WIN32
-#ifndef GDK_WIN32
    gVirtualX->UpdateWindow(1);
-#endif
 #endif
 }
 
@@ -527,7 +517,7 @@ void TCanvas::Destructor()
 
    if (!TestBit(kNotDeleted)) return;
 
-   if (fContextMenu) { delete fContextMenu; fContextMenu = 0; }
+   if (fContextMenu) { delete fContextMenu; fContextMenu = 0;}
    if (!gPad) return;
 
    Close();
@@ -599,7 +589,9 @@ void TCanvas::Close(Option_t *option)
 
    if (!IsBatch()) {
       gVirtualX->SelectWindow(fCanvasID);    //select current canvas
-      fCanvasImp->Close();
+#ifndef WIN32
+      gVirtualX->CloseWindow();
+#endif
    }
    fCanvasID = -1;
    fBatch    = kTRUE;
@@ -658,7 +650,7 @@ void TCanvas::Draw(Option_t *)
 }
 
 //______________________________________________________________________________
-TObject *TCanvas::DrawClone(Option_t *option) const
+void TCanvas::DrawClone(Option_t *option) const
 {
    // Draw a clone of this canvas
    // A new canvas is created that is a clone of this canvas
@@ -677,12 +669,11 @@ TObject *TCanvas::DrawClone(Option_t *option) const
 
    newCanvas->Draw(option);
    newCanvas->Update();
-   return newCanvas;
 }
 
 
 //______________________________________________________________________________
-TObject *TCanvas::DrawClonePad()
+void TCanvas::DrawClonePad()
 {
    // Draw a clone of this canvas into the current pad
    // In an interactive session, select the destination/current pad
@@ -694,7 +685,8 @@ TObject *TCanvas::DrawClonePad()
   TPad *padsav = (TPad*)gPad;
   TPad *pad = (TPad*)gROOT->GetSelectedPad();
   if (fCanvasID < 0 || padsav == 0 || pad == this) {
-     return DrawClone();
+     DrawClone();
+     return;
   }
   this->cd();
   TObject *obj, *clone;
@@ -723,7 +715,6 @@ TObject *TCanvas::DrawClonePad()
   pad->Modified();
   pad->Update();
   padsav->cd();
-  return 0;
 }
 
 //______________________________________________________________________________
@@ -741,12 +732,23 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
 
    if (!fShowEventStatus || !selected) return;
 
+//#ifndef WIN32
+#if 0
+   static Int_t pxt, pyt;
+   gPad->SetDoubleBuffer(0);           // Turn off double buffer mode
+   gVirtualX->SetTextColor(1);
+   gVirtualX->SetTextAlign(11);
+
+   pxt = gPad->GetCanvas()->XtoAbsPixel(gPad->GetCanvas()->GetX1()) + 5;
+   pyt = gPad->GetCanvas()->YtoAbsPixel(gPad->GetCanvas()->GetY1()) - 5;
+
+   sprintf(atext,"%s / %s ", selected->GetName()
+                           , selected->GetObjectInfo(px,py));
+   for (Int_t i=strlen(atext);i<kTMAX-1;i++) atext[i] = ' ';
+   atext[kTMAX-1] = 0;
+   gVirtualX->DrawText(pxt, pyt, 0, 1, atext, TVirtualX::kOpaque);
+#else
    if (!fCanvasImp) return; //this may happen when closing a TAttCanvas
-
-   TVirtualPad* savepad;
-   savepad = gPad;
-   gPad = GetSelectedPad();
-
    fCanvasImp->SetStatusText(selected->GetTitle(),0);
    fCanvasImp->SetStatusText(selected->GetName(),1);
    if (event == kKeyPress)
@@ -755,7 +757,7 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
       sprintf(atext, "%d,%d", px, py);
    fCanvasImp->SetStatusText(atext,2);
    fCanvasImp->SetStatusText(selected->GetObjectInfo(px,py),3);
-   gPad = savepad;
+#endif
 }
 
 //______________________________________________________________________________
@@ -1089,8 +1091,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       pad = Pick(px, py, prevSelObj);
       if (!pad) return;
 
-      if (fContextMenu && !fSelected->TestBit(kNoContextMenu) &&
-          !pad->TestBit(kNoContextMenu) && !TestBit(kNoContextMenu))
+      if (fContextMenu)
           fContextMenu->Popup(px, py, fSelected, this, pad);
 
       break;
@@ -1353,24 +1354,15 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    ofstream out;
    Int_t lenfile = strlen(filename);
    char * fname;
-   char lcname[10];
-   const char *cname = GetName();
-   Bool_t invalid = kFALSE;
 //    if filename is given, open this file, otherwise create a file
 //    with a name equal to the canvasname.C
    if (lenfile) {
        fname = (char*)filename;
        out.open(fname, ios::out);
    } else {
-       Int_t nch = strlen(cname);
-       if (nch < 10) {
-          strcpy(lcname,cname);
-          for (Int_t k=1;k<=nch;k++) {if (lcname[nch-k] == ' ') lcname[nch-k] = 0;}
-          if (lcname[0] == 0) {invalid = kTRUE; strcpy(lcname,"c1"); nch = 2;}
-          cname = lcname;
-       }
+       Int_t nch = strlen(GetName());
        fname = new char[nch+3];
-       strcpy(fname,cname);
+       strcpy(fname,GetName());
        strcat(fname,".C");
        out.open(fname, ios::out);
    }
@@ -1393,11 +1385,11 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 //   Write canvas parameters (TDialogCanvas case)
    if (InheritsFrom(TDialogCanvas::Class())) {
-      out<<"   "<<ClassName()<<" *"<<cname<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<"   "<<ClassName()<<" *"<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
          <<quote<<","<<w<<","<<h<<");"<<endl;
    } else {
 //   Write canvas parameters (TCanvas case)
-      out<<"   TCanvas *"<<cname<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<"   TCanvas *"<<GetName()<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
          <<quote<<","<<GetWindowTopX()<<","<<GetWindowTopY()<<","<<w<<","<<h<<");"<<endl;
    }
 //   Write canvas options (in $TROOT or $TStyle)
@@ -1420,9 +1412,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 //   Now recursively scan all pads of this canvas
    cd();
-   if (invalid) SetName("c1");
    TPad::SavePrimitive(out,option);
-   if (invalid) SetName(" ");
 
    out <<"}"<<endl;
    out.close();
@@ -1485,35 +1475,8 @@ void TCanvas::SetDoubleBuffer(Int_t mode)
    if (fDoubleBuffer)
       gVirtualX->SelectWindow(fPixmapID);
    else
-#else
-#ifdef GDK_WIN32
-   if (fDoubleBuffer)
-      gVirtualX->SelectWindow(fPixmapID);
-   else
-#endif
 #endif
       gVirtualX->SelectWindow(fCanvasID);
-}
-
-//______________________________________________________________________________
-void TCanvas::SetFixedAspectRatio(Bool_t fixed)
-{
-   // Fix canvas aspect ratio to current value if fixed is true.
-
-   if (fixed) {
-      if (!fFixedAspectRatio) {
-         if (fCh != 0)
-            fAspectRatio = Double_t(fCw) / fCh;
-         else {
-            Error("SetAspectRatio", "cannot fix aspect ratio, height of canvas is 0");
-            return;
-         }
-         fFixedAspectRatio = kTRUE;
-      }
-   } else {
-      fFixedAspectRatio = kFALSE;
-      fAspectRatio = 0;
-   }
 }
 
 //______________________________________________________________________________

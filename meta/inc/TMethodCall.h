@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.5 2001/12/21 09:37:25 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.2 2000/10/31 11:18:25 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -42,7 +42,7 @@ class G__CallFunc;
 class TMethodCall : public TObject {
 
 public:
-   enum EReturnType { kLong, kDouble, kString, kOther };
+   enum EReturnType { kLong, kDouble, kOther };
 
 private:
    G__CallFunc   *fFunc;      //CINT method invocation environment
@@ -55,8 +55,8 @@ private:
    Bool_t         fDtorOnly;  //call only dtor and not delete when calling ~xxx
    EReturnType    fRetType;   //method return type
 
-   void Execute(const char *,  const char *, int * /*error*/ = 0) { }    // versions of TObject
-   void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
+   void Execute(const char *,  const char *) { }    // versions of TObject
+   void Execute(TMethod *, TObjArray *) { }
 
 public:
    TMethodCall();

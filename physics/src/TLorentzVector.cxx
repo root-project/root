@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.5 2002/01/19 13:18:38 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.cxx,v 1.2 2000/10/11 07:13:11 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()
@@ -216,11 +216,6 @@ and negative light-cone components:<TT></TT>
 
 <P><TT>&nbsp; Double_t pcone = v.Plus();</TT>
 <BR><TT>&nbsp; Double_t mcone = v.Minus();</TT>
-<P>CAVEAT: The values returned are T{+,-}Z. It is known that some authors
-find it easier to define these components as (T{+,-}Z)/sqrt(2). Thus
-check what definition is used in the physics you're working in and adapt
-your code accordingly.
-   
 <H5>
 Transformation by TLorentzRotation</H5>
 A general Lorentz transformation see class <TT>TLorentzRotation</TT> can
@@ -237,7 +232,6 @@ v *= l;&nbsp; // Attention v = l*v</TT>
 */
 //END_HTML
 
-#include "TClass.h"
 #include "TError.h"
 #include "TLorentzVector.h"
 #include "TLorentzRotation.h"
@@ -326,12 +320,7 @@ void TLorentzVector::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 3) {
-         TLorentzVector::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         return;
-      }
-      //====process old versions before automatic schema evolution
-      if (R__v != 2) TObject::Streamer(R__b);
+      if (R__v < 2) TObject::Streamer(R__b);
       R__b >> x;
       R__b >> y;
       R__b >> z;
@@ -339,6 +328,11 @@ void TLorentzVector::Streamer(TBuffer &R__b)
       R__b >> fE;
       R__b.CheckByteCount(R__s, R__c, TLorentzVector::IsA());
    } else {
-      TLorentzVector::Class()->WriteBuffer(R__b,this);
+      R__c = R__b.WriteVersion(TLorentzVector::IsA(), kTRUE);
+      R__b << fP.X();
+      R__b << fP.Y();
+      R__b << fP.Z();
+      R__b << fE;
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }

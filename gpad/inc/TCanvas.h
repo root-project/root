@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.11 2001/10/20 11:46:57 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.7 2000/11/21 20:20:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -102,7 +102,6 @@ protected:
            Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh);
    void Destructor();
    //-- used by friend TThread class
-   void Init();
 
 public:
    TCanvas(Bool_t build=kTRUE);
@@ -118,8 +117,8 @@ public:
    void              Clear(Option_t *option="");
    void              Close(Option_t *option="");
    virtual void      Draw(Option_t *option="");
-   virtual TObject  *DrawClone(Option_t *option="") const; // *MENU*
-   virtual TObject  *DrawClonePad(); // *MENU*
+   virtual void      DrawClone(Option_t *option="") const; // *MENU*
+   virtual void      DrawClonePad(); // *MENU*
    virtual void      EditorBar();
    void              EnterLeave(TPad *prevSelPad, TObject *prevSelObj);
    void              FeedbackMode(Bool_t set);
@@ -174,13 +173,11 @@ public:
    void              SaveSource(const char *filename="", Option_t *option="");
    virtual void      SetCursor(ECursor cursor);
    virtual void      SetDoubleBuffer(Int_t mode=1);
-   virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*
    void              SetWindowPosition(Int_t x, Int_t y) { fCanvasImp->SetWindowPosition(x, y); }
    void              SetWindowSize(UInt_t ww, UInt_t wh) { fCanvasImp->SetWindowSize(ww, wh); }
    void              SetCanvasSize(UInt_t ww, UInt_t wh); // *MENU*
    void              SetHighLightColor(Color_t col) { fHighLightColor = col; }
-   void              SetSelected(TObject *obj) { fSelected = obj; }
-   void              SetSelectedPad(TPad *pad) { fSelectedPad = pad; }
+   void              SetSelected(TObject *obj) {fSelected = obj;}
    void              Show() { fCanvasImp->Show(); }
    virtual void      Size(Float_t xsizeuser=0, Float_t ysizeuser=0);
    void              SetBatch(Bool_t batch=kTRUE);
@@ -196,3 +193,4 @@ public:
 };
 
 #endif
+

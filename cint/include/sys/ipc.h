@@ -11,9 +11,9 @@
 #endif
 
 #ifndef __MAKECINT__
-#pragma ifndef G__IPCDLL_H /* G__IPCDLL_H is defined in pthread.dll */
+#ifndef G__IPCDLL_H /* G__IPCDLL_H is defined in pthread.dll */
 #pragma message Note: ipc.dll is not found. Do 'sh setup' in $CINTSYSDIR/lib/ipc directory if you use UNIX.
-#pragma endif
+#endif
 #endif
 
 #endif

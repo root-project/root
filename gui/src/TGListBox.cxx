@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.7 2000/10/17 12:34:52 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.6 2000/10/15 13:46:40 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -187,8 +187,8 @@ TGLBContainer::TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
    // SetLayoutManager(new TGColumnLayout(this, 0));
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
-                         kButtonPressMask | kButtonReleaseMask |
-                         kButtonMotionMask, kNone, kNone);
+                    kButtonPressMask | kButtonReleaseMask |
+                    kPointerMotionMask, kNone, kNone);
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.7 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TMarker.cxx,v 1.4 2000/11/21 20:26:41 brun Exp $
 // Author: Rene Brun   12/05/95
 
 /*************************************************************************
@@ -10,8 +10,9 @@
  *************************************************************************/
 
 #include <stdlib.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TMarker.h"
@@ -217,7 +218,7 @@ void TMarker::PaintMarker(Double_t x, Double_t y)
 //*-*                  =====================================
 
    TAttMarker::Modify();  //Change line attributes only if necessary
-   gPad->PaintPolyMarker(-1,&x,&y,"");
+   gPad->PaintPolyMarker(1,&x,&y,"");
 }
 
 //______________________________________________________________________________
@@ -277,7 +278,7 @@ void TMarker::Streamer(TBuffer &R__b)
       R__b >> x;  fX = x;
       R__b >> y;  fY = y;
       //====end of old versions
-
+      
    } else {
       TMarker::Class()->WriteBuffer(R__b,this);
    }

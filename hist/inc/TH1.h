@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.28 2002/01/18 11:38:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.15 2001/01/12 08:27:11 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -82,23 +82,18 @@ protected:
     TArrayD       fSumw2;           //Array of sum of squares of weights
     TString       fOption;          //histogram options
     TList        *fFunctions;       //->Pointer to list of functions (fits and user)
-    Int_t         fBufferSize;      //fBuffer size
-    Double_t     *fBuffer;          //[fBufferSize] entry buffer
     TDirectory   *fDirectory;       //!Pointer to directory holding this histogram
     Int_t         fDimension;       //!Histogram dimension (1, 2 or 3 dim)
     Double_t     *fIntegral;        //!Integral of bins used by GetRandom
     TVirtualHistPainter *fPainter;  //!pointer to histogram painter
-    static Int_t  fgBufferSize;     //!default buffer size for automatic histograms
     static Bool_t fgAddDirectory;   //!flag to add histograms to the directory
-    
 private:
     Int_t   AxisChoice(Option_t *axis) const;
     void    Build();
     Int_t   FitOptionsMake(Option_t *option);
 
 protected:
-    virtual void     Copy(TObject &hnew);
-    virtual Int_t    BufferFill(Axis_t x, Stat_t w);
+    virtual void    Copy(TObject &hnew);
 
 public:
     // TH1 status bits
@@ -111,8 +106,8 @@ public:
 
     TH1();
     TH1(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins);
-    TH1(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
+    TH1(const char *name,const char *title,Int_t nbinsx,Float_t *xbins);
+    TH1(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
     virtual ~TH1();
 
     virtual void     Add(TF1 *h1, Double_t c1=1);
@@ -121,7 +116,6 @@ public:
     virtual void     AddBinContent(Int_t bin);
     virtual void     AddBinContent(Int_t bin, Stat_t w);
     static  void     AddDirectory(Bool_t add=kTRUE);
-    static  Bool_t   AddDirectoryStatus();
     virtual void     Browse(TBrowser *b);
     virtual Double_t ComputeIntegral();
     virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
@@ -131,24 +125,18 @@ public:
     virtual void     Draw(Option_t *option="");
     virtual TH1     *DrawCopy(Option_t *option="");
     virtual void     DrawPanel(); // *MENU*
-    virtual Int_t    BufferEmpty(Bool_t deleteBuffer=kFALSE);
     virtual void     Eval(TF1 *f1, Option_t *option="");
     virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
     virtual Int_t    Fill(Axis_t x);
     virtual Int_t    Fill(Axis_t x, Stat_t w);
-    virtual Int_t    Fill(const char *name, Stat_t w);
-    virtual void     FillN(Int_t ntimes, const Axis_t *x, const Double_t *w, Int_t stride=1);
-    virtual void     FillN(Int_t, const Axis_t *, const Axis_t *, const Double_t *, Int_t) {;}
+    virtual void     FillN(Int_t ntimes, Axis_t *x, Double_t *w, Int_t stride=1);
+    virtual void     FillN(Int_t, Axis_t *, Axis_t *, Double_t *, Int_t) {;}
     virtual void     FillRandom(const char *fname, Int_t ntimes=5000);
     virtual void     FillRandom(TH1 *h, Int_t ntimes=5000);
     virtual Int_t    FindBin(Axis_t x, Axis_t y=0, Axis_t z=0);
     virtual void     Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
     virtual void     Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0);
     virtual void     FitPanel(); // *MENU*
-    Int_t            GetBufferLength() const {return (Int_t)fBuffer[0];}
-    Int_t            GetBufferSize  () const {return fBufferSize;}
-    const   Double_t *GetBuffer() const {return fBuffer;}
-    static  Int_t    GetDefaultBufferSize();
     virtual Double_t *GetIntegral() {return fIntegral;}
 
     TList           *GetListOfFunctions() const { return fFunctions; }
@@ -181,7 +169,7 @@ public:
     virtual Stat_t   GetCellError(Int_t binx, Int_t biny) const;
     virtual void     GetCenter(Axis_t *center) {fXaxis.GetCenter(center);}
     TDirectory      *GetDirectory() const {return fDirectory;}
-    virtual Stat_t   GetEntries() const;
+    virtual Stat_t   GetEntries() const {return fEntries;}
     virtual TF1     *GetFunction(const char *name) const;
     virtual Int_t    GetDimension() const { return fDimension; }
     virtual void     GetLowEdge(Axis_t *edge) {fXaxis.GetLowEdge(edge);}
@@ -201,9 +189,8 @@ public:
     virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
     Option_t        *GetOption() const {return fOption.Data();}
 
-    TVirtualHistPainter *GetPainter();
+    TVirtualHistPainter *GetPainter() const {return fPainter;}
 
-    virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum=0);
     virtual Axis_t   GetRandom();
     virtual void     GetStats(Stat_t *stats) const;
     virtual Stat_t   GetSumOfWeights() const;
@@ -214,20 +201,16 @@ public:
     virtual TAxis   *GetZaxis() {return &fZaxis;}
     virtual Stat_t   Integral(Option_t *option="");
     virtual Stat_t   Integral(Int_t binx1, Int_t binx2, Option_t *option="");
-    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="") {return 0;}
-    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * /*option*/ ="" ) {return 0;}
+    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Option_t *option="") {return 0;}
+    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t *option="" ) {return 0;}
     virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="");
-    virtual void     LabelsDeflate(Option_t *axis="X");
-    virtual void     LabelsInflate(Option_t *axis="X");
-    virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");
-    virtual Int_t    Merge(TCollection *list);
     virtual void     Multiply(TF1 *h1, Double_t c1=1);
     virtual void     Multiply(TH1 *h1);
     virtual void     Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual void     Paint(Option_t *option="");
     virtual void     Print(Option_t *option="") const;
     virtual void     PutStats(Stat_t *stats);
-    virtual TH1     *Rebin(Int_t ngroup=2, const char*newname="");  // *MENU*
+    virtual TH1     *Rebin(Int_t ngroup=2, const char*newname="");
     virtual void     RebinAxis(Axis_t x, Option_t *axis="X");
     virtual void     Reset(Option_t *option="");
     virtual void     SavePrimitive(ofstream &out, Option_t *option);
@@ -247,16 +230,14 @@ public:
     virtual void     SetBins(Int_t nx, Axis_t xmin, Axis_t xmax, Int_t ny, Axis_t ymin, Axis_t ymax,
                              Int_t nz, Axis_t zmin, Axis_t zmax);
     virtual void     SetBinsLength(Int_t) {;} //refefined in derived classes
-    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
     virtual void     SetCellContent(Int_t binx, Int_t biny, Stat_t content);
     virtual void     SetCellError(Int_t binx, Int_t biny, Stat_t content);
-    virtual void     SetContent(const Stat_t *content);
-    virtual void     SetContour(Int_t nlevels, const Double_t *levels=0);
+    virtual void     SetContent(Stat_t *content);
+    virtual void     SetContour(Int_t nlevels, Double_t *levels=0);
     virtual void     SetContourLevel(Int_t level, Double_t value);
-    static  void     SetDefaultBufferSize(Int_t buffersize=1000);
     virtual void     SetDirectory(TDirectory *dir);
     virtual void     SetEntries(Stat_t n) {fEntries = n;};
-    virtual void     SetError(const Stat_t *error);
+    virtual void     SetError(Stat_t *error);
     virtual void     SetLabelColor(Color_t color=1, Option_t *axis="X");
     virtual void     SetLabelFont(Style_t font=62, Option_t *axis="X");
     virtual void     SetLabelOffset(Float_t offset=0.005, Option_t *axis="X");
@@ -279,10 +260,11 @@ public:
     virtual void     Smooth(Int_t ntimes=1); // *MENU*
     static  void     SmoothArray(Int_t NN, Double_t *XX, Int_t ntimes=1);
     static Double_t  SmoothMedian(Int_t n, Double_t *a);
+
     virtual void     Sumw2();
     void             UseCurrentStyle();
 
-    ClassDef(TH1,4)  //1-Dim histogram base class
+    ClassDef(TH1,3)  //1-Dim histogram base class
 };
 
 //________________________________________________________________________
@@ -292,8 +274,8 @@ class TH1C : public TH1, public TArrayC {
 public:
     TH1C();
     TH1C(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1C(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
-    TH1C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
+    TH1C(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins);
+    TH1C(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
     TH1C(const TH1C &h1c);
     virtual ~TH1C();
 
@@ -305,10 +287,11 @@ public:
     virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
     virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
     virtual void    Reset(Option_t *option="");
-    virtual void    SetBinContent(Int_t bin, Stat_t content);
+    virtual void    SetBinContent(Int_t bin, Stat_t content)
+                                 {fArray[bin] = Char_t (content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
-    virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayC::Set(nx);}
+    virtual void    SetBinsLength(Int_t nx) {TArrayC::Set(nx);}
             TH1C&   operator=(const TH1C &h1);
     friend  TH1C    operator*(Double_t c1, TH1C &h1);
     friend  TH1C    operator*(TH1C &h1, Double_t c1) {return operator*(c1,h1);}
@@ -327,8 +310,8 @@ class TH1S : public TH1, public TArrayS {
 public:
     TH1S();
     TH1S(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1S(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
-    TH1S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
+    TH1S(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins);
+    TH1S(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
     TH1S(const TH1S &h1s);
     virtual ~TH1S();
 
@@ -340,10 +323,11 @@ public:
     virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
     virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
     virtual void    Reset(Option_t *option="");
-    virtual void    SetBinContent(Int_t bin, Stat_t content);
+    virtual void    SetBinContent(Int_t bin, Stat_t content)
+                                 {fArray[bin] = Short_t (content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
-    virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayS::Set(nx);}
+    virtual void    SetBinsLength(Int_t nx) {TArrayS::Set(nx);}
             TH1S&   operator=(const TH1S &h1);
     friend  TH1S    operator*(Double_t c1, TH1S &h1);
     friend  TH1S    operator*(TH1S &h1, Double_t c1) {return operator*(c1,h1);}
@@ -362,8 +346,8 @@ class TH1F : public TH1, public TArrayF {
 public:
     TH1F();
     TH1F(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1F(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
-    TH1F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
+    TH1F(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins);
+    TH1F(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
     TH1F(const TVector &v);
     TH1F(const TH1F &h1f);
     virtual ~TH1F();
@@ -377,10 +361,11 @@ public:
     virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
     virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
     virtual void    Reset(Option_t *option="");
-    virtual void    SetBinContent(Int_t bin, Stat_t content);
+    virtual void    SetBinContent(Int_t bin, Stat_t content)
+                                 {fArray[bin] = Float_t (content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
-    virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayF::Set(nx);}
+    virtual void    SetBinsLength(Int_t nx) {TArrayF::Set(nx);}
             TH1F&   operator=(const TH1F &h1);
     friend  TH1F    operator*(Double_t c1, TH1F &h1);
     friend  TH1F    operator*(TH1F &h1, Double_t c1) {return operator*(c1,h1);}
@@ -399,8 +384,8 @@ class TH1D : public TH1, public TArrayD {
 public:
     TH1D();
     TH1D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup);
-    TH1D(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
-    TH1D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
+    TH1D(const char *name,const char *title,Int_t nbinsx,Float_t  *xbins);
+    TH1D(const char *name,const char *title,Int_t nbinsx,Double_t *xbins);
     TH1D(const TVectorD &v);
     TH1D(const TH1D &h1d);
     virtual ~TH1D();
@@ -414,10 +399,11 @@ public:
     virtual Stat_t  GetBinContent(Int_t bin, Int_t) const {return GetBinContent(bin);}
     virtual Stat_t  GetBinContent(Int_t bin, Int_t, Int_t) const {return GetBinContent(bin);}
     virtual void    Reset(Option_t *option="");
-    virtual void    SetBinContent(Int_t bin, Stat_t content);
+    virtual void    SetBinContent(Int_t bin, Stat_t content)
+                                 {fArray[bin] = Double_t (content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Stat_t content) {SetBinContent(bin,content);}
     virtual void    SetBinContent(Int_t bin, Int_t, Int_t, Stat_t content) {SetBinContent(bin,content);}
-    virtual void    SetBinsLength(Int_t nx) {fNcells=nx; TArrayD::Set(nx);}
+    virtual void    SetBinsLength(Int_t nx) {TArrayD::Set(nx);}
             TH1D&   operator=(const TH1D &h1);
     friend  TH1D    operator*(Double_t c1, TH1D &h1);
     friend  TH1D    operator*(TH1D &h1, Double_t c1) {return operator*(c1,h1);}

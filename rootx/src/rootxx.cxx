@@ -1,4 +1,4 @@
-// @(#)root/rootx:$Name:  $:$Id: rootxx.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/rootx:$Name$:$Id$
 // Author: Fons Rademakers   19/02/98
 
 //////////////////////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ static Pixmap GetRootLogo()
 #endif // defined(XpmColorKey)
 
       int ret = XpmCreatePixmapFromData(gDisplay, gLogoWindow,
-                                        (char **)rootlogo, &logo,
+                                        rootlogo, &logo,
                                         (Pixmap *)0, &attr);
       XpmFreeAttributes(&attr);
 

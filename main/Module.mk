@@ -18,7 +18,7 @@ ROOTEXEO     := $(ROOTEXES:.cxx=.o)
 ROOTEXEDEP   := $(ROOTEXEO:.o=.d)
 ROOTEXE      := bin/root.exe
 ROOTNEXE     := bin/rootn.exe
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 ROOTICON     := icons/RootIcon.obj
 endif
 
@@ -34,7 +34,7 @@ H2ROOTS2     := $(MODDIRS)/hntvar2.f
 H2ROOTS3     := $(wildcard $(MAINDIRW)/*.c)
 H2ROOTS4     := $(MAINDIRW)/tzvers.f
 H2ROOTO      := $(H2ROOTS1:.cxx=.o) $(H2ROOTS2:.f=.o)
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 H2ROOTO      += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
 endif
 H2ROOTDEP    := $(H2ROOTS1:.cxx=.d)
@@ -43,14 +43,14 @@ H2ROOT       := bin/h2root$(EXEEXT)
 ##### g2root #####
 G2ROOTS      := $(MODDIRS)/g2root.f
 G2ROOTO      := $(G2ROOTS:.f=.o)
-ifeq ($(PLATFORM),win32)
+ifeq ($(ARCH),win32)
 G2ROOTO      += $(H2ROOTS3:.c=.o) $(H2ROOTS4:.f=.o)
 endif
 G2ROOT       := bin/g2root$(EXEEXT)
 
 # used in the main Makefile
 ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV)
-ifneq ($(CERNLIBS),)
+ifneq ($(CERNLIBDIR),)
 ALLEXECS     += $(H2ROOT) $(G2ROOT)
 endif
 
@@ -84,7 +84,7 @@ $(G2ROOT):      $(G2ROOTO)
 		$(F77LD) $(F77LDFLAGS) -o $@ $(G2ROOTO) \
 		   $(CERNLIBDIR) $(CERNLIBS) $(F77LIBS) $(SYSLIBS)
 
-ifneq ($(CERNLIBS),)
+ifneq ($(CERNLIBDIR),)
 all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(H2ROOT) $(G2ROOT)
 else
 all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV)

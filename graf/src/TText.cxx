@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.11 2002/01/23 17:52:49 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.6 2000/12/13 15:13:50 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TText.h"
@@ -23,7 +25,7 @@ ClassImp(TText)
 //
 //   TText is the base class for several text objects.
 //   See TAttText for a list of text attributes or fonts,
-//   and also for a discussion on text speed and font quality.
+//   and also for a discussion on text spped and font quality.
 //
 //  By default, the text is drawn in the pad coordinates system.
 //  One can draw in NDC coordinates [0,1] if the function SetNDC
@@ -453,10 +455,7 @@ void TText::SavePrimitive(ofstream &out, Option_t *)
    } else {
        out<<"   TText *";
    }
-   TString s = GetTitle();
-   s.ReplaceAll("\"","\\\"");
-   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<endl;
-   if (TestBit(kTextNDC)) out<<"   text->SetNDC();"<<endl;
+   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<GetTitle()<<quote<<");"<<endl;
 
    SaveTextAttributes(out,"text",11,0,1,62,1);
 
@@ -490,7 +489,7 @@ void TText::Streamer(TBuffer &R__b)
       R__b >> x; fX = x;
       R__b >> y; fY = y;
       //====end of old versions
-
+      
    } else {
       TText::Class()->WriteBuffer(R__b,this);
    }

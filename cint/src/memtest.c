@@ -252,9 +252,9 @@ void *p;
 #endif
 #endif
 #ifndef G__FONS31
-    G__fprinterr(G__serr,"free(0x%lx) not allocated",(long)p);
+    fprintf(G__serr,"free(0x%lx) not allocated",(long)p);
 #else
-    G__fprinterr(G__serr,"free(0x%x) not allocated",p);
+    fprintf(G__serr,"free(0x%x) not allocated",p);
 #endif
     G__genericerror((char*)NULL);
   }
@@ -331,9 +331,9 @@ size_t size;
 #endif
 #endif
 #ifndef G__FONS31
-    G__fprinterr(G__serr,"realloc(0x%lx,%d) not allocated",(long)p,size);
+    fprintf(G__serr ,"realloc(0x%lx,%d) not allocated",(long)p,size);
 #else
-    G__fprinterr(G__serr,"realloc(0x%x,%d) not allocated",p,size);
+    fprintf(G__serr ,"realloc(0x%x,%d) not allocated",p,size);
 #endif
     G__genericerror((char*)NULL);
   }
@@ -381,10 +381,10 @@ int G__memresult()
 #endif
 #endif
 #ifndef G__FONS31
-      G__fprinterr(G__serr,"0x%lx\talive=%d\tuse=%d i=%d\tERROR %s\n"
+      fprintf(G__serr ,"0x%lx\talive=%d\tuse=%d i=%d\tERROR %s\n"
 	      ,(long)G__mem[i].p,G__mem[i].alive,G__mem[i].use,i ,G__mem[i].type);
 #else
-      G__fprinterr(G__serr,"0x%x\talive=%d\tuse=%d i=%d\tERROR %s\n"
+      fprintf(G__serr ,"0x%x\talive=%d\tuse=%d i=%d\tERROR %s\n"
 	      ,G__mem[i].p,G__mem[i].alive,G__mem[i].use,i ,G__mem[i].type);
 #endif
     }
@@ -521,7 +521,7 @@ FILE *p;
 	    ,p,G__ifile.name,G__ifile.line_number);
 #endif
 #endif
-    G__fprinterr(G__serr,"fclose(0x%lx) not opened",(long)p);
+    fprintf(G__serr,"fclose(0x%lx) not opened",(long)p);
     G__genericerror((char*)NULL);
   }
 #ifdef G__DUMPMEMHISTORY

@@ -7,8 +7,8 @@
 # for all ROOT applications for either Unix or Windows.
 Unix.*.Root.DynamicPath:    .:@libdir@
 Unix.*.Root.MacroPath:      .:@macrodir@
-WinNT.*.Root.DynamicPath:   .;@bindir@;$(PATH)
-WinNT.*.Root.MacroPath:     .;@macrodir@
+WinNT.*.Root.DynamicPath:   ./;@bindir@;$(PATH)
+WinNT.*.Root.MacroPath:     ./;@macrodir@
 
 # Path where to look for TrueType fonts
 Unix.*.Root.UseTTFonts:     true
@@ -26,11 +26,6 @@ Root.MemStat:            0
 Root.MemStat.size:      -1
 Root.MemStat.cnt:       -1
 Root.ObjectStat:         0
-
-# Activate memory leak checker (use in conjunction with $ROOTSYS/bin/memprobe)
-# Currently only works on Linux with gcc.
-Root.MemCheck:           0
-Root.MemCheckFile:       memcheck.out
 
 # Global debug mode. When >0 turns on progressively more details debugging.
 # When >4 X11 runs in synchronous mode.
@@ -58,40 +53,24 @@ Canvas.HighLightColor:      2
 Canvas.ShowEventStatus:     false
 Canvas.AutoExec:            true
 
-# Default histogram binnings for TTree::Draw()
-Hist.Binning.1D.x:          100
-
-Hist.Binning.2D.x:           40
-Hist.Binning.2D.y:           40
-Hist.Binning.2D.Prof:       100
-
-Hist.Binning.3D.x:           20
-Hist.Binning.3D.y:           20
-Hist.Binning.3D.z:           20
-Hist.Binning.3D.Profx:      100
-Hist.Binning.3D.Profy:      100
-
-# THtml specific settings (for more see doc of THtml class)
-Unix.*.Root.Html.SourceDir:  .:src:include
-WinNT.*.Root.Html.SourceDir: .;src;include
-#Root.Html.OutputDir:        htmldoc/
-#Root.Html.Homepage:
-#Root.Html.Header:
-#Root.Html.Footer:
-#Root.Html.Description:      //____________________
+# THtml specific settings.
+Root.Html.OutputDir:         htmldoc/
+Root.Html.SourcePrefix:
+Unix.*.Root.Html.SourceDir:  ./:src/:include/
+WinNT.*.Root.Html.SourceDir: ./:src/:include/
 #Root.Html.Author:           // Author:
-#Root.Html.LastUpdate:       // @(#)
+#Root.Html.Author:           Fons Rademakers
 #Root.Html.Copyright:        * Copyright
+#Root.Html.LastUpdate:       // @(#)
+#Root.Html.Description:      //____________________
+#Root.Html.Root:             http://root.cern.ch/root/html
+#Root.Html.SearchEngine:     ../Search.phtml
 
 # GUI specific settings
-Unix.*.Gui.NormalFont:      -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-Unix.*.Gui.BoldFont:        -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
-Unix.*.Gui.SmallFont:       -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
-Unix.*.Gui.ProportionalFont: -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.NormalFont:     -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.BoldFont:       -adobe-helvetica-bold-r-*-*-15-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.SmallFont:      -adobe-helvetica-medium-r-*-*-15-*-*-*-*-*-iso8859-1
-WinNT.*.Gui.ProportionalFont: -adobe-courier-medium-r-*-*-15-*-*-*-*-*-iso8859-1
+Gui.NormalFont:        -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.BoldFont:          -adobe-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
+Gui.SmallFont:         -adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1
+Gui.ProportionalFont:  -adobe-courier-medium-r-*-*-12-*-*-*-*-*-iso8859-1
 Gui.BackgroundColor:        #c0c0c0
 Gui.ForegroundColor:        black
 Gui.SelectForegroundColor:  white
@@ -99,7 +78,7 @@ Gui.SelectBackgroundColor:  #000080
 Gui.IconPath:               $(HOME)/icons:@iconpath@:.
 Gui.MimeTypeFile:           $(HOME)/.root.mimes
 # If above does not exists defaults to this:
-#Gui.MimeTypeFile:           @etcdir@/root.mimes
+#Gui.MimeTypeFile:           @iconpath@/root.mimes
 # Can be either small, big, list, details
 Browser.IconStyle:          small
 # Can be either name, type, size, date
@@ -111,14 +90,6 @@ Rint.Logon:              rootlogon.C
 Rint.Logoff:             rootlogoff.C
 # Record session commands, set to "-" to turn off command recording
 Rint.History:            $(HOME)/.root_hist
-
-# Plugin library handlers
-+Plugin.TFile:       ^rfio:    TRFIOFile     RFIO
-+Plugin.TFile:       ^dcache:  TDCacheFile   DCache
-+Plugin.TSQLServer:  ^mysql:   TMySQLServer  MySQL
-+Plugin.TSQLServer:  ^pgsql:   TPgSQLServer  PgSQL
-+Plugin.TSQLServer:  ^sapdb:   TSapDBServer  SapDB
-+Plugin.TSQLServer:  ^oracle:  TOracleServer Oracle
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.10 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.4 2000/10/19 17:28:31 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -9,7 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+
 #include "TROOT.h"
 #include "Strlen.h"
 #include "TAttText.h"
@@ -17,6 +18,9 @@
 #include "TStyle.h"
 #include "TVirtualX.h"
 #include "TError.h"
+
+static Float_t x11factor[13] ={1.000,1.000,1.010,0.910,0.920,0.920,0.925,1.204,
+                               1.204,1.168,1.166,1.007,1.026};
 
 ClassImp(TAttText)
 
@@ -61,7 +65,7 @@ ClassImp(TAttText)
 //*-*  are used. The fonts have a minimum (4)  and maximum (37) size in pixels.
 //*-*  These fonts are fast and are of good quality. Their size varies with
 //*-*  large steps and they cannot be rotated.
-//*-*  Precision 1 and 2 fonts have a different behaviour depending if the
+//*-*  Precision 1 and 2 fonts have a different behaviour depending if the 
 //*-*  True Type Fonts are used or not. If TTF are used, you always get
 //*-*  very good quality scalable and rotatable fonts. However TTF are slow.
 //*-*  Precision 1 and 2 fonts have a different behaviour for Postscript
@@ -111,10 +115,7 @@ TAttText::TAttText()
 //*-*                      ===========================
 //*-*  Default text attributes are taking from the current style
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   if (!gStyle) {
-      ResetAttText();
-      return;
-   }
+   if (!gStyle) return;
    fTextAlign = gStyle->GetTextAlign();
    fTextAngle = gStyle->GetTextAngle();
    fTextColor = gStyle->GetTextColor();
@@ -262,10 +263,10 @@ again:
          }
 
 //*-*-           ready to draw text
-         Float_t mgn = rsize/Float_t(ihh);
+         Float_t mgn = x11factor[ifpx11-1]*rsize/Float_t(ihh);
          if (mgn > 100) mgn = 100;
          if (mgn <0)    mgn = 1;
-         if (fTextFont%10 == 0 || fTextFont%10 > 2) mgn = 1;
+         if (fTextFont%10 == 0) mgn = 1;
          gVirtualX->SetTextMagnitude(mgn);
          gVirtualX->DrawText(0,0,0,-1.,0,TVirtualX::kClear);
          gVirtualX->SetTextFont(fTextFont);
@@ -346,9 +347,8 @@ void TAttText::SetTextSizePixels(Int_t npixels)
    if (fTextFont%10 > 2) {
       fTextSize = Float_t(npixels);
    } else {
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (!pad) return;
-      Float_t dy = pad->AbsPixeltoY(0) - pad->AbsPixeltoY(npixels);
-      fTextSize = dy/(pad->GetY2() - pad->GetY1());
+      if (!gPad) return;
+      Float_t dy = gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(npixels);
+      fTextSize = dy/(gPad->GetY2() - gPad->GetY1());
    }
 }

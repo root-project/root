@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.8 2002/01/23 17:52:51 rdm Exp $
+// @(#)root/test:$Name$:$Id$
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -9,13 +9,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <math.h>
-#include <float.h>
-
-#include "Riostream.h"
-#include "TApplication.h"
+#include "TROOT.h"
 #include "TFile.h"
 #include "TMatrix.h"
+#include <iostream.h>
+#include <math.h>
+#include <float.h>
 
 
 //
@@ -876,11 +875,11 @@ void test_matrix_io()
 //------------------------------------------------------------------------
 //                    Main module
 //
+
+TROOT mat("matrix","verify matrices");
+
 int main()
 {
-   // Make sure all registered dictionaries have been initialized
-   TApplication app("vmatrix", 0, 0);
-
    cout<< "\n\n" <<
           "----------------------------------------------------------------" <<
           "\n\t\tVerify Operations on Matrices" << endl;

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeViewIter.cxx,v 1.2 2001/05/29 20:55:29 fine Exp $
+// @(#)root/star:$Name$:$Id$
 // Author: Valery Fine(fine@bnl.gov)   25/01/99
 
 #include "TVolumeViewIter.h"
@@ -47,7 +47,7 @@ const TVolumePosition *TVolumeViewIter::GetPosition(Int_t level) const
 }
 
 //______________________________________________________________________________
-TVolumePosition *TVolumeViewIter::operator[](Int_t level)
+TVolumePosition *TVolumeViewIter::operator[](Int_t level) const
 {
   const TVolumePosition *pos = GetPosition(level);
   if (pos) return new TVolumePosition(*pos);

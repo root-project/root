@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.33 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.17 2001/02/13 07:52:25 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -29,8 +29,9 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <fstream.h>
+#include <iostream.h>
 
-#include "Riostream.h"
 #include "TObject.h"
 #include "TFile.h"
 #include "TDirectory.h"
@@ -50,7 +51,6 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TDatime.h"
-#include "TProcessID.h"
 #include "TMath.h"
 
 
@@ -62,11 +62,11 @@ class TDumpMembers : public TMemberInspector {
 
 public:
    TDumpMembers() { }
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+   void Inspect(TClass *cl, const char *parent, const char *name, void *addr);
 };
 
 //______________________________________________________________________________
-void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, const void *add)
+void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, void *add)
 {
    // Print value of member mname.
    //
@@ -78,8 +78,8 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
    //    mname is the data member name
    //    add   is the data member address
 
-   const Int_t kvalue = 30;
-   const Int_t ktitle = 42;
+   const Int_t kvalue = 25;
+   const Int_t ktitle = 37;
    const Int_t kline  = 1024;
    Int_t cdate = 0;
    Int_t ctime = 0;
@@ -185,8 +185,6 @@ TObject::TObject(const TObject &obj)
    else
       fBits &= ~kIsOnHeap;
 
-   fBits &= ~kIsReferenced;
-
    if (fgObjectStat) TObjectTable::AddObj(this);
 }
 
@@ -204,7 +202,6 @@ TObject& TObject::operator=(const TObject &rhs)
          fBits  = rhs.fBits;
          fBits &= ~kIsOnHeap;
       }
-      fBits &= ~kIsReferenced;
    }
    return *this;
 }
@@ -222,14 +219,13 @@ void TObject::Copy(TObject &obj)
       obj.fBits  = fBits;
       obj.fBits &= ~kIsOnHeap;
    }
-   obj.fBits &= ~kIsReferenced;
 }
 
 //______________________________________________________________________________
 TObject::~TObject()
 {
    // TObject destructor. Removes object from all canvases and object browsers
-   // if observer bit is on and remove from the global object table.
+   // iff observer bit is on and remove from the global object table.
 
    // if (!TestBit(kNotDeleted))
    //    Fatal("~TObject", "object deleted twice");
@@ -258,19 +254,17 @@ void TObject::AppendPad(Option_t *option)
       if (!gROOT->GetMakeDefCanvas()) return;
       (gROOT->GetMakeDefCanvas())();
    }
-   if (!gPad->IsEditable()) return;
    SetBit(kMustCleanup);
    gPad->GetListOfPrimitives()->Add(this,option);
    gPad->Modified(kTRUE);
 }
 
 //______________________________________________________________________________
-void TObject::Browse(TBrowser *b)
+void TObject::Browse(TBrowser *)
 {
-   // Browse object. May be overridden for  other default action
+   // Browse object (by default we inspect). May be overridden for  other default action
 
-   //Inspect();
-   TClass::AutoBrowse(this,b);
+   Inspect();
 }
 
 //______________________________________________________________________________
@@ -307,7 +301,6 @@ TObject *TObject::Clone(const char *) const
    buffer->SetBufferOffset(0);
    buffer->MapObject(newobj);  //register obj in map to handle self reference
    newobj->Streamer(*buffer);
-   newobj->ResetBit(kIsReferenced);
    gFile = filsav;
 
    delete buffer;
@@ -379,23 +372,22 @@ void TObject::DrawClass() const
 }
 
 //______________________________________________________________________________
-TObject *TObject::DrawClone(Option_t *option) const
+void TObject::DrawClone(Option_t *option) const
 {
    // Draw a clone of this object in the current pad
 
    TObject *newobj = Clone();
-   if (!newobj) return 0;
+   if (!newobj) return;
    TVirtualPad *pad = gROOT->GetSelectedPad();
    if (pad) {
       if (strlen(option)) pad->GetListOfPrimitives()->Add(newobj,option);
       else                pad->GetListOfPrimitives()->Add(newobj,GetDrawOption());
       pad->Modified(kTRUE);
       pad->Update();
-      return newobj;
+      return;
    }
    if (strlen(option))  newobj->Draw(option);
    else                 newobj->Draw(GetDrawOption());
-   return newobj;
 }
 
 //______________________________________________________________________________
@@ -429,20 +421,20 @@ void TObject::Dump() const
 }
 
 //______________________________________________________________________________
-void TObject::Execute(const char *method, const char *params, int* error)
+void TObject::Execute(const char *method, const char *params)
 {
    // Execute method on this object with the given parameter string, e.g.
    // "3.14,1,\"text\"".
 
    if (!IsA()) return;
 
-   gInterpreter->Execute(this, IsA(), method, params, error);
+   gInterpreter->Execute(this, IsA(), method, params);
 
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 //______________________________________________________________________________
-void TObject::Execute(TMethod *method, TObjArray *params, int* error)
+void TObject::Execute(TMethod *method, TObjArray *params)
 {
    // Execute method on this object with parameters stored in the TObjArray.
    // The TObjArray should contain an argv vector like:
@@ -451,7 +443,7 @@ void TObject::Execute(TMethod *method, TObjArray *params, int* error)
 
    if (!IsA()) return;
 
-   gInterpreter->Execute(this, IsA(), method, params, error);
+   gInterpreter->Execute(this, IsA(), method, params);
 
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
@@ -605,11 +597,7 @@ void TObject::Inspect() const
    //End_Html
 
 #ifdef WIN32
-#ifdef GDK_WIN32
-   gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject *)0x%lx);",(Long_t)this));
-#else
    gGuiFactory->CreateInspectorImp(this, 400, 200);
-#endif
 #else
    gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject *)0x%lx);",(Long_t)this));
 #endif
@@ -829,12 +817,7 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
    TKey *key;
    Int_t bsize = bufsize;
    if (!bsize) bsize = gFile->GetBestBuffer();
-
-   const char *oname;
-   if (name && *name)
-      oname = name;
-   else
-      oname = GetName();
+   const char *oname = name ? name : GetName();
 
    // Remove trailing blanks in object name
    Int_t nch = strlen(oname);
@@ -874,26 +857,15 @@ void TObject::Streamer(TBuffer &R__b)
    // Stream an object of class TObject.
 
    if (IsA()->CanIgnoreTObjectStreamer()) return;
-   UShort_t pidf;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       R__b >> fUniqueID;
       R__b >> fBits;
       fBits |= kIsOnHeap;  // by definition de-serialized object is on heap
-      //if the object is referenced, we must read its old address
-      //and store it in the ProcessID map in gROOT
-      if (!TestBit(kIsReferenced)) return;
-      R__b >> pidf;
-      TProcessID *pid = TProcessID::ReadProcessID(pidf,gFile);
-      if (pid) pid->PutObjectWithID(this);
    } else {
       R__b.WriteVersion(TObject::IsA());
       R__b << fUniqueID;
       R__b << fBits;
-      //if the object is referenced, we must save its address/file_pid
-      if (!TestBit(kIsReferenced)) return;
-      pidf = (UShort_t)TProcessID::WriteProcessID(0,gFile);
-      R__b << pidf;
    }
 }
 

@@ -263,18 +263,8 @@ int ifn;
 #ifdef G__MEMTEST
     fprintf(G__memhist,"func %s\n",ifunc->funcname[i]);
 #endif
-#ifndef G__OLDIMPLEMENTATION1543
-    if(ifunc->funcname[i]) {
-      free((void*)ifunc->funcname[i]);
-      ifunc->funcname[i] = (char*)NULL;
-    }
-#endif
 #ifdef G__ASM_WHOLEFUNC
-    if(
-#ifndef G__OLDIMPLEMENTATION1567
-       ifunc->pentry[i] && 
-#endif
-       ifunc->pentry[i]->bytecode) {
+    if(ifunc->pentry[i]->bytecode) {
       G__free_bytecode(ifunc->pentry[i]->bytecode);
       ifunc->pentry[i]->bytecode = (struct G__bytecodefunc*)NULL;
     }
@@ -396,13 +386,13 @@ int tagnum;
 	      G__tagnum=var->p_tagtable[i];
 	      if(G__dispsource)
 #ifndef G__FONS31
-	      G__fprinterr(G__serr,
-		      "!!!Destroy static member object 0x%lx %s::~%s()\n"
+	      fprintf(G__serr
+		      ,"!!!Destroy static member object 0x%lx %s::~%s()\n"
 		      ,var->p[i] ,G__struct.name[ialltag]
 		      ,G__struct.name[i]);
 #else
-	      G__fprinterr(G__serr,
-		      "!!!Destroy static member object 0x%x %s::~%s()\n"
+	      fprintf(G__serr
+		      ,"!!!Destroy static member object 0x%x %s::~%s()\n"
 		      ,var->p[i] ,G__struct.name[ialltag]
 		      ,G__struct.name[i]);
 #endif
@@ -417,12 +407,6 @@ int tagnum;
 	    }
 	    free((void*)var->p[i]);
 	  }
-#ifndef G__OLDIMPLEMENTATION1543
-	  if(var->varnamebuf[i]) {
-	    free((void*)var->varnamebuf[i]);
-	    var->varnamebuf[i] = (char*)NULL;
-	  }
-#endif
 	}
 	var=var->next;
       }
@@ -439,12 +423,6 @@ int tagnum;
 	     -1!=var->p_tagtable[i]&&'e'==G__struct.type[var->p_tagtable[i]]) {
 	    free((void*)var->p[i]);
 	  }
-#ifndef G__OLDIMPLEMENTATION1543
-	  if(var->varnamebuf[i]) {
-	    free((void*)var->varnamebuf[i]);
-	    var->varnamebuf[i] = (char*)NULL;
-	  }
-#endif
 	}
 	var=var->next;
       }
@@ -496,13 +474,13 @@ int tagnum;
 	      G__tagnum=var->p_tagtable[i];
 	      if(G__dispsource)
 #ifndef G__FONS31
-	      G__fprinterr(G__serr,
-		      "!!!Destroy static member object 0x%lx %s::~%s()\n"
+	      fprintf(G__serr
+		      ,"!!!Destroy static member object 0x%lx %s::~%s()\n"
 		      ,var->p[i] ,G__struct.name[G__struct.alltag]
 		      ,G__struct.name[i]);
 #else
-	      G__fprinterr(G__serr,
-		      "!!!Destroy static member object 0x%x %s::~%s()\n"
+	      fprintf(G__serr
+		      ,"!!!Destroy static member object 0x%x %s::~%s()\n"
 		      ,var->p[i] ,G__struct.name[G__struct.alltag]
 		      ,G__struct.name[i]);
 #endif
@@ -669,11 +647,11 @@ int ig15;
 	sprintf(temp,"~%s()",G__struct.name[G__tagnum]);
 	if(G__dispsource) {
 #ifndef G__FONS31
-	  G__fprinterr(G__serr,"\n!!!Calling destructor 0x%lx.%s for %s ary%d:link%d"
+	  fprintf(G__serr,"\n!!!Calling destructor 0x%lx.%s for %s ary%d:link%d"
 		  ,G__store_struct_offset ,temp ,var->varnamebuf[itemp]
 		  ,var->varlabel[itemp][1],G__struct.iscpplink[G__tagnum]);
 #else
-	  G__fprinterr(G__serr,"\n!!!Calling destructor 0x%x.%s for %s ary%d:link%d"
+	  fprintf(G__serr,"\n!!!Calling destructor 0x%x.%s for %s ary%d:link%d"
 		  ,G__store_struct_offset ,temp ,var->varnamebuf[itemp]
 		  ,var->varlabel[itemp][1],G__struct.iscpplink[G__tagnum]);
 #endif
@@ -685,32 +663,11 @@ int ig15;
 	/********************************************************
 	 * destruction of array 
 	 ********************************************************/
-	if(G__CPPLINK==G__struct.iscpplink[G__tagnum]) {
-#ifndef G__OLDIMPLEMENTATION1552
-	  if(G__AUTOARYDISCRETEOBJ==var->statictype[itemp]) {
-	    long store_globalvarpointer = G__globalvarpointer;
-	    size=G__struct.size[G__tagnum];
-	    for(i=var->varlabel[itemp][1];i>=0;--i) {
-	      G__store_struct_offset = var->p[itemp]+size*i;
-	      G__globalvarpointer = G__store_struct_offset;
-	      G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
-	      if(0==itemp1) break;
-	    }
-	    G__globalvarpointer = store_globalvarpointer;
-	    free((void*)var->p[itemp]);
-	  }
-	  else {
-	    G__store_struct_offset = var->p[itemp];
-	    if((i=var->varlabel[itemp][1])>0) G__cpp_aryconstruct=i+1;
-	    G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
-	    G__cpp_aryconstruct=0;
-	  }
-#else
+	if(-1==G__struct.iscpplink[G__tagnum]) {
 	  G__store_struct_offset = var->p[itemp];
 	  if((i=var->varlabel[itemp][1])>0) G__cpp_aryconstruct=i+1;
 	  G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
 	  G__cpp_aryconstruct=0;
-#endif
 	  cpplink=1;
 	}
 	else {
@@ -719,9 +676,9 @@ int ig15;
 	    G__store_struct_offset = var->p[itemp]+size*i;
 	    if(G__dispsource) {
 #ifndef G__FONS31
-	      G__fprinterr(G__serr,"\n0x%lx.%s",G__store_struct_offset,temp);
+	      fprintf(G__serr,"\n0x%lx.%s",G__store_struct_offset,temp);
 #else
-	      G__fprinterr(G__serr,"\n0x%x.%s",G__store_struct_offset,temp);
+	      fprintf(G__serr,"\n0x%x.%s",G__store_struct_offset,temp);
 #endif
 	    }
 	    G__getfunction(temp,&itemp1,G__TRYDESTRUCTOR); 
@@ -779,12 +736,6 @@ int ig15;
     for(itemp1=0;itemp1<G__MAXVARDIM;itemp1++) {
       var->varlabel[itemp][itemp1]=0;
     }
-#ifndef G__OLDIMPLEMENTATION1543
-    if(var->varnamebuf[itemp]) {
-      free((void*)var->varnamebuf[itemp]);
-      var->varnamebuf[itemp] = (char*)NULL;
-    }
-#endif
 
   }
   
@@ -857,14 +808,6 @@ int nfile;
       G__srcfile[G__nfile].prepname=(char*)NULL;
     }
     if(G__srcfile[G__nfile].filename) {
-#ifndef G__OLDIMPLEMENTATION1546
-      int len = strlen(G__srcfile[G__nfile].filename);
-      if(len>strlen(G__NAMEDMACROEXT2) && 
-	 strcmp(G__srcfile[G__nfile].filename+len-strlen(G__NAMEDMACROEXT2),
-		G__NAMEDMACROEXT2)==0) {
-	remove(G__srcfile[G__nfile].filename);
-      }
-#endif
       free((void*)G__srcfile[G__nfile].filename);
       G__srcfile[G__nfile].filename=(char*)NULL;
     }

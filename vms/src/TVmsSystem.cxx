@@ -1,4 +1,4 @@
-// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.9 2001/06/07 10:47:09 rdm Exp $
+// @(#)root/vms:$Name:  $:$Id: TVmsSystem.cxx,v 1.6 2001/02/03 14:46:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -584,12 +584,9 @@ int TVmsSystem::GetPathInfo(const char *path, unsigned short *id, Long_t *size,
    // Get info about a file: id, size, flags, modification time.
    // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
    // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
+   // Flags   is file type: bit 1 set executable, bit 2 set directory,
+   //                       bit 3 set regular file
    // Modtime is modification time
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
 
    return VmsFilestat(path, id,  size, flags, modtime);
 }
@@ -1177,7 +1174,7 @@ char *TVmsSystem::GetServiceByPort(int port)
 
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)) == 0) {
+   if ((sp = getservbyport(port, kProtocolName)) == 0) {
       //::Error("GetServiceByPort", "no service \"%d\" with protocol \"%s\"",
       //        port, kProtocolName);
       return Form("%d", port);
@@ -1199,14 +1196,20 @@ int TVmsSystem::ConnectService(const char *servername, int port,
 //______________________________________________________________________________
 int TVmsSystem::OpenConnection(const char *server, int port, int tcpwindowsize)
 {
-   // Open a connection to a service on a server. Returns -1 in case
-   // connection cannot be opened.
+   // Open a connection to a service on a server. Try 3 times with an
+   // interval of 1 second.
    // Use tcpwindowsize to specify the size of the receive buffer, it has
    // to be specified here to make sure the window scale option is set (for
    // tcpwindowsize > 65KB and for platforms supporting window scaling).
    // Is called via the TSocket constructor.
 
-   return ConnectService(server, port, tcpwindowsize);
+   for (int i = 0; i < 3; i++) {
+      int fd = ConnectService(server, port, tcpwindowsize);
+      if (fd >= 0)
+         return fd;
+      sleep(1);
+   }
+   return -1;
 }
 
 //______________________________________________________________________________
@@ -1867,9 +1870,8 @@ int TVmsSystem::VmsFilestat(const char *path, unsigned short *id, Long_t *size,
    // Get info about a file: id, size, flags, modification time.
    // Id      is (statbuf.st_dev << 24) + statbuf.st_ino
    // Size    is the file size
-   // Flags   is file type: 0 is regular file, bit 0 set executable,
-   //                       bit 1 set directory, bit 2 set special file
-   //                       (socket, fifo, pipe, etc.)
+   // Flags   is file type: bit 0 set executable, bit 1 set directory,
+   //                       bit 2 set regular file
    // Modtime is modification time
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
@@ -1925,7 +1927,7 @@ int TVmsSystem::VmsTcpConnect(const char *hostname, int port, int tcpwindowsize)
    short  sport;
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);
@@ -2019,7 +2021,7 @@ int TVmsSystem::VmsTcpService(int port, Bool_t reuse, int backlog,
       return -1;
    }
 
-   if ((sp = getservbyport(htons(port), kProtocolName)))
+   if ((sp = getservbyport(port, kProtocolName)))
       sport = sp->s_port;
    else
       sport = htons(port);

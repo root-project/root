@@ -1,4 +1,4 @@
-// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.4 2001/01/26 07:38:52 brun Exp $
+// @(#)root/pythia6:$Name:  $:$Id: TPythia6.cxx,v 1.3 2000/10/30 08:01:10 brun Exp $
 // Author: Rene Brun   19/10/99
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -224,7 +224,7 @@ Int_t TPythia6::ImportParticles(TClonesArray *particles, Option_t *option)
   Int_t numpart = fPyjets->N;
   if (!strcmp(option,"") || !strcmp(option,"Final")) {
     for (Int_t i = 0; i<numpart; i++) {
-      if (fPyjets->K[0][i] == 1) {
+      if (fPyjets->K[1][i] == 1) {
 //
 //  Use the common block values for the TParticle constructor
 //

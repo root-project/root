@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.7 2002/01/23 17:52:52 rdm Exp $
+// @(#)root/test:$Name$:$Id$
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -9,10 +9,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TApplication.h"
+#include "TROOT.h"
 #include "TFile.h"
 #include "TMatrix.h"
-#include "Riostream.h"
+#include <iostream.h>
 
 //
 //------------------------------------------------------------------------
@@ -553,11 +553,11 @@ void test_vector_io()
 //------------------------------------------------------------------------
 //                    Main module
 //
+
+TROOT vec("vector","verify vectors");
+
 int main()
 {
-   // Make sure all registered dictionaries have been initialized
-   TApplication app("vvector", 0, 0);
-
    cout<< "\n\n" <<
           "----------------------------------------------------------------" <<
           "\n\t\tVerify Operations on Vectors" << endl;

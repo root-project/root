@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TExec.cxx,v 1.4 2002/01/23 17:52:46 rdm Exp $
+// @(#)root/base:$Name$:$Id$
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
@@ -9,7 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
+#include <iostream.h>
+
 #include "TROOT.h"
 #include "TExec.h"
 
@@ -99,7 +101,6 @@ TExec::TExec(const char *name, const char *command) : TNamed(name,command)
 {
 //*-*-*-*-*-*-*-*-*-*-*Exec normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =======================
-
 }
 
 //______________________________________________________________________________
@@ -107,7 +108,6 @@ TExec::~TExec()
 {
 //*-*-*-*-*-*-*-*-*-*-*Exec default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =======================
-
 }
 
 //______________________________________________________________________________
@@ -124,23 +124,9 @@ void TExec::Exec(const char *command)
 //
 //  if command is given, this command is executed
 // otherwise the default command of the object is executed
-//
-// if the default command (in the exec title) is empty, an attemp is made
-// to execute the exec name if it contains a "." or a "(", otherwise
-// the command ".x execname.C" is executed.
-// The function returns the result of the user function/script.
 
-   if (command && (strlen(command) > 1))  gROOT->ProcessLine(command);
-   else  {
-      if (strlen(GetTitle()) > 0)         gROOT->ProcessLine(GetTitle());
-      else  {
-         if (strchr(GetName(),'('))      {gROOT->ProcessLine(GetName()); return;}
-         if (strchr(GetName(),'.'))      {gROOT->ProcessLine(GetName()); return;}
-         char action[512];
-         sprintf(action,".x %s.C",GetName());
-         gROOT->ProcessLine(action);
-      }
-   }
+   if (command && (strlen(command) > 1)) gROOT->ProcessLine(command);
+   else                                  gROOT->ProcessLine(GetTitle());
 }
 
 //______________________________________________________________________________

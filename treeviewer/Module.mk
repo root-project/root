@@ -24,8 +24,8 @@ TREEVIEWERL  := $(MODDIRI)/LinkDefWin32.h
 TREEVIEWERH  := TTreeViewerOld.h TPaveVar.h
 TREEVIEWERS  := TTreeViewerOld.cxx TPaveVar.cxx
 else
-TREEVIEWERH  := TTreeViewer.h TTVSession.h TTVLVContainer.h HelpTextTV.h
-TREEVIEWERS  := TTreeViewer.cxx TTVSession.cxx TTVLVContainer.cxx HelpTextTV.cxx
+TREEVIEWERH  := TTreeViewer.h TGTreeLVC.h HelpTextTV.h
+TREEVIEWERS  := TTreeViewer.cxx TGTreeLVC.cxx HelpTextTV.cxx
 endif
 TREEVIEWERH  := $(patsubst %,$(MODDIRI)/%,$(TREEVIEWERH))
 TREEVIEWERS  := $(patsubst %,$(MODDIRS)/%,$(TREEVIEWERS))

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.14 2002/01/15 00:53:48 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.5 2000/11/27 12:23:15 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 #include "TBuffer.h"
 #include "TError.h"
 #include "Bytes.h"
-#include "TClass.h"
+
 
 // Amount to shift hash values to avoid clustering
 
@@ -138,60 +138,13 @@ inline static void Mash(unsigned& hash, unsigned chars)
 }
 
 //______________________________________________________________________________
-unsigned Hash(const char *str)
-{
-   // Return a case-sensitive hash value.
-
-   unsigned len = strlen(str);
-   unsigned hv  = len; // Mix in the string length.
-   unsigned i   = hv*sizeof(char)/sizeof(unsigned);
-
-   if (((unsigned long)str)%sizeof(unsigned) == 0) {
-      // str is word aligned
-      const unsigned *p = (const unsigned*)str;
-
-      while (i--)
-         Mash(hv, *p++);                   // XOR in the characters.
-
-      // XOR in any remaining characters:
-      if ((i = len*sizeof(char)%sizeof(unsigned)) != 0) {
-         unsigned h = 0;
-         const char* c = (const char*)p;
-         while (i--)
-            h = ((h << kBitsPerByte*sizeof(char)) | *c++);
-         Mash(hv, h);
-      }
-   } else {
-      // str is not word aligned
-      unsigned h;
-      const unsigned char *p = (const unsigned char*)str;
-
-      while (i--) {
-         memcpy(&h, p, sizeof(unsigned));
-         Mash(hv, h);
-         p += sizeof(unsigned);
-      }
-
-      // XOR in any remaining characters:
-      if ((i = len*sizeof(char)%sizeof(unsigned)) != 0) {
-         h = 0;
-         const char* c = (const char*)p;
-         while (i--)
-            h = ((h << kBitsPerByte*sizeof(char)) | *c++);
-         Mash(hv, h);
-      }
-   }
-   return hv;
-}
-
-//______________________________________________________________________________
 unsigned TStringRef::Hash() const
 {
    // Return a case-sensitive hash value.
 
    unsigned hv       = (unsigned)Length(); // Mix in the string length.
    unsigned i        = hv*sizeof(char)/sizeof(unsigned);
-   const unsigned *p = (const unsigned*)Data();
+   const unsigned* p = (const unsigned*)Data();
    {
       while (i--)
          Mash(hv, *p++);                   // XOR in the characters.
@@ -214,7 +167,7 @@ unsigned TStringRef::HashFoldCase() const
 
    unsigned hv = (unsigned)Length();    // Mix in the string length.
    unsigned i  = hv;
-   const unsigned char *p = (const unsigned char*)Data();
+   const unsigned char* p = (const unsigned char*)Data();
    while (i--) {
       Mash(hv, toupper(*p));
       ++p;
@@ -777,49 +730,6 @@ void TString::ReadBuffer(char *&buffer)
 }
 
 //______________________________________________________________________________
-TString* TString::ReadString(TBuffer &b, const TClass *clReq)
-{
-   // Read TString object from buffer. Simplified version of
-   // TBuffer::ReadObject (does not keep track of multiple
-   // references to same string).  We need to have it here
-   // because TBuffer::ReadObject can only handle descendant
-   // of TObject
-
-   Assert(b.IsReading());
-
-   // Make sure ReadArray is initialized
-   b.InitMap();
-
-   // Before reading object save start position
-   UInt_t startpos = UInt_t(b.Length());
-
-   UInt_t tag;
-   TClass *clRef = b.ReadClass(clReq, &tag);
-
-   TString *a;
-   if (!clRef) {
-
-      a = 0;
-
-   } else {
-
-      a = (TString *) clRef->New();
-      if (!a) {
-         ::Error("TString::ReadObject", "could not create object of class %s",
-                 clRef->GetName());
-         // Exception
-      }
-
-      a->Streamer(b);
-
-      b.CheckByteCount(startpos, tag, clRef);
-   }
-
-   return a;
-
-}
-
-//______________________________________________________________________________
 Int_t TString::Sizeof() const
 {
    // Returns size string will occupy on I/O buffer.
@@ -860,40 +770,6 @@ void TString::Streamer(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
-void TString::WriteString(TBuffer &b, const TString *a)
-{
-   // Write TString object to buffer. Simplified version of
-   // TBuffer::WriteObject (does not keep track of multiple
-   // references to the same string).  We need to have it here
-   // because TBuffer::ReadObject can only handle descendant
-   // of TObject
-
-   Assert(b.IsWriting());
-
-   // Make sure WriteMap is initialized
-   b.InitMap();
-
-   if (!a) {
-
-      b << (UInt_t) 0;
-
-   } else {
-
-      // Reserve space for leading byte count
-      UInt_t cntpos = UInt_t(b.Length());
-      b.SetBufferOffset(Int_t(cntpos+sizeof(UInt_t)));
-
-      TClass *cl = a->IsA();
-      b.WriteClass(cl);
-
-      ((TString *)a)->Streamer(b);
-
-      // Write byte count
-      b.SetByteCount(cntpos);
-   }
-}
-
 //_______________________________________________________________________
 TBuffer &operator>>(TBuffer &buf, TString &s)
 {
@@ -909,24 +785,6 @@ TBuffer &operator<<(TBuffer &buf, const TString &s)
    // Write string to TBuffer.
 
    ((TString&)s).Streamer(buf);
-   return buf;
-}
-
-//_______________________________________________________________________
-TBuffer &operator>>(TBuffer &buf, TString *&s)
-{
-   // Read string from TBuffer. Function declared in ClassDef.
-
-   s = (TString *) TString::ReadString(buf, TString::Class());
-   return buf;
-}
-
-//_______________________________________________________________________
-TBuffer &operator<<(TBuffer &buf, const TString *s)
-{
-   // Write TString or derived to TBuffer.
-
-   TString::WriteString(buf, s);
    return buf;
 }
 
@@ -1308,15 +1166,12 @@ Bool_t TString::IsAscii() const
 }
 
 //______________________________________________________________________________
-Bool_t TString::EndsWith(const char *s, ECaseCompare cmp) const
+Bool_t TString::EndsWith(const char* s, ECaseCompare cmp) const
 {
    Ssiz_t l = strlen(s);
-   if (l > Length()) return kFALSE;
-   const char *s2 = Data() + Length() - l;
-
-   if (cmp == kExact)
-      return strcmp(s, s2) == 0;
-   return strcasecmp(s, s2) == 0;
+   Ssiz_t i = Index(s, l, (Ssiz_t)0, cmp);
+   if (i == kNPOS) return kFALSE;
+   return i == Length() - l;
 }
 
 

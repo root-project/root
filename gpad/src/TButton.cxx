@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.6 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <fstream.h>
 #include "TROOT.h"
 #include "TButton.h"
 #include "TCanvas.h"
@@ -102,7 +102,7 @@ TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1
 //
 //   Note that the button coordinates x1,y1,x2,y2 are always in the range [0,1]
 //
-   //SetEditable(kFALSE);
+   SetEditable(kFALSE);
    fFraming=0;
    SetBit(kCanDelete);
    fModified = kTRUE;
@@ -111,7 +111,6 @@ TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1
       TLatex *text = new TLatex(0.5*(fX1+fX2),0.5*(fY1+fY2),title);
       fPrimitives->Add(text);
    }
-   SetEditable(kFALSE);
 }
 
 //______________________________________________________________________________
@@ -202,18 +201,12 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 //      GetCanvas()->Modified();
       Update();
 #else
-#ifndef GDK_WIN32
       // The following instructions must be executed via the interpreter
       // Otherwise, we get a Thread problem under WindowsNT
       gROOT->ProcessLine(Form("((TButton*)0x%lx)->SetBorderMode(1);",(Long_t)this));
       gROOT->ProcessLine(Form("((TButton*)0x%lx)->Modified();",(Long_t)this));
       gROOT->ProcessLine(Form("((TButton*)0x%lx)->GetCanvas()->Modified();",(Long_t)this));
       gROOT->ProcessLine(Form("((TButton*)0x%lx)->Update();",(Long_t)this));
-#else
-      SetBorderMode(1);
-      Modified();
-      Update();
-#endif
 #endif
       SetCursor(kCross);
       break;
@@ -270,28 +263,13 @@ void TButton::SavePrimitive(ofstream &out, Option_t *)
    } else {
        out<<"   TButton *";
    }
-   char *cm = (char*)GetMethod();
-   Int_t nch = strlen(cm);
-   char *cmethod = new char[nch+10];
-   Int_t i = 0;
-   while(*cm) {
-      if (*cm == '"') {
-         cmethod[i] = '\\';
-         i++;
-      }
-      cmethod[i] = *cm;
-      i++;
-      cm++;
-   }
-   cmethod[i] = 0;
    out<<"button = new TButton("<<quote<<GetTitle()
-      <<quote<<","<<quote<<cmethod<<quote
+      <<quote<<","<<quote<<GetMethod()<<quote
       <<","<<fXlowNDC
       <<","<<fYlowNDC
       <<","<<fXlowNDC+fWNDC
       <<","<<fYlowNDC+fHNDC
       <<");"<<endl;
-   delete [] cmethod;
 
    SaveFillAttributes(out,"button",0,1001);
    SaveLineAttributes(out,"button",1,1,1);

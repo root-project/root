@@ -1,14 +1,19 @@
-// @(#)root/test:$Name:  $:$Id: hworld.cxx,v 1.3 2001/03/14 08:03:36 brun Exp $
+// @(#)root/test:$Name$:$Id$
 // Author: Fons Rademakers   04/04/97
 
 // This small demo shows the traditional "Hello World". Its main use is
 // to show how to use ROOT graphics and how to enter the eventloop to
 // be able to interact with the graphics.
 
+#include "TROOT.h"
 #include "TApplication.h"
 #include "TCanvas.h"
 #include "TLine.h"
 #include "TPaveLabel.h"
+
+
+TROOT root("hello","Hello World");
+
 
 int main(int argc, char **argv)
 {

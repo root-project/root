@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.7 2002/01/15 00:45:21 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.4 2000/07/17 10:26:41 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -25,37 +25,26 @@
 #ifndef ROOT_TObject
 #include "TObject.h"
 #endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
 
 class TTree;
 
 class TSelector : public TObject {
-protected:
+ protected:
    TString   fOption;  //option given to TTree::Process
-   TObject  *fObject;  //current oject if processing object (vs. TTree)
-   TList    *fInput;   //list of objects available during processing (on PROOF)
-   TList    *fOutput;  //list of objects created during processing (on PROOF)
-
+    
 public:
    TSelector();
    virtual            ~TSelector();
-   virtual void        Begin(TTree *) { }
-   virtual Bool_t      Notify() { return kTRUE; }
-   virtual const char *GetOption() const { return fOption; }
-   virtual Bool_t      ProcessCut(Int_t entry) { return kTRUE; }
-   virtual void        ProcessFill(Int_t entry) { }
-   virtual Bool_t      Process() { return kFALSE; }
-   virtual void        SetOption(const char *option) { fOption = option; }
-   virtual void        SetObject(TObject *obj) { fObject = obj; }
-   virtual void        SetInputList(TList *input) { fInput = input; }
-   virtual TList      *GetOutputList() const { return fOutput; }
-   virtual void        Terminate() { }
-
+   virtual void        Begin(TTree *) {;}
+   virtual Bool_t      Notify() {return kTRUE;}
+   virtual const char *GetOption() const {return fOption.Data();}
    static  TSelector  *GetSelector(const char *filename);
+   virtual Bool_t      ProcessCut(Int_t entry) {return kTRUE;}
+   virtual void        ProcessFill(Int_t entry) {;}
+   virtual void        SetOption(const char *option) {fOption=option;}
+   virtual void        Terminate() {;}
 
-   ClassDef(TSelector,0)  //A utility class for tree and object processing
+   ClassDef(TSelector,0)  //A utility class for Trees selections.
 };
 
 #endif

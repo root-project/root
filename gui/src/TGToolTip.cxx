@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.4 2001/04/03 10:36:21 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolTip.cxx,v 1.2 2000/09/04 17:51:31 rdm Exp $
 // Author: Fons Rademakers   22/02/98
 
 /*************************************************************************
@@ -60,8 +60,7 @@ Bool_t TTipDelayTimer::Notify()
 
 //______________________________________________________________________________
 TGToolTip::TGToolTip(const TGWindow *p, const TGFrame *f, const char *text,
-                     Long_t delayms)
-   : TGCompositeFrame(p, 10, 10, kTempFrame | kHorizontalFrame | kRaisedFrame)
+   Long_t delayms) : TGCompositeFrame(p, 10, 10, kHorizontalFrame | kRaisedFrame)
 {
    // Create a tool tip. P is the tool tips parent window (normally
    // fClient->GetRoot(), f is the frame to which the tool tip is associated,
@@ -93,8 +92,7 @@ TGToolTip::TGToolTip(const TGWindow *p, const TGFrame *f, const char *text,
 
 //______________________________________________________________________________
 TGToolTip::TGToolTip(const TGWindow *p, const TBox *box, const char *text,
-                     Long_t delayms)
-   : TGCompositeFrame(p, 10, 10, kTempFrame | kHorizontalFrame | kRaisedFrame)
+   Long_t delayms) : TGCompositeFrame(p, 10, 10, kHorizontalFrame | kRaisedFrame)
 {
    // Create a tool tip. P is the tool tips parent window (normally
    // fClient->GetRoot(), box is the area to which the tool tip is associated,
@@ -126,7 +124,7 @@ TGToolTip::TGToolTip(const TGWindow *p, const TBox *box, const char *text,
 
 //______________________________________________________________________________
 TGToolTip::TGToolTip(const TBox *box, const char *text,Long_t delayms)
-   : TGCompositeFrame(gClient->GetRoot(), 10, 10, kTempFrame | kHorizontalFrame | kRaisedFrame)
+          : TGCompositeFrame(gClient->GetRoot(), 10, 10, kHorizontalFrame | kRaisedFrame)
 {
    // Create a tool tip in the parent window gClient->GetRoot(),
    // box is the area to which the tool tip is associated,
@@ -184,9 +182,7 @@ void TGToolTip::Show(Int_t x, Int_t y)
 
    Move(x, y);
    MapWindow();
-#ifndef GDK_WIN32
    RaiseWindow();
-#endif
 }
 
 //______________________________________________________________________________

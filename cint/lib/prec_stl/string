@@ -79,7 +79,6 @@ class string {
   size_t length(void) const;
   void resize(size_t n,char c);
   void resize(size_t n);
-  int size();
   //size_t reserve(void) const;
   void reserve(size_t res_arg);
   size_t copy(char* s,size_t n,size_t pos=0) /* const */;

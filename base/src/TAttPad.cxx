@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.3 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttPad.cxx,v 1.2 2000/11/21 16:26:48 brun Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -88,7 +88,7 @@ void TAttPad::SetBottomMargin(Float_t margin)
 {
 //*-*-*-*-*-*-*-*-*Set Pad bottom margin in per cent of the pad height*-*-*-*
 //*-*              ===================================================
-   if (margin < 0 || margin >=1) margin = 0.1;
+   if (margin <= 0 || margin >=1) margin = 0.1;
    if (margin + fTopMargin >= 1) return;
    fBottomMargin = margin;
 }
@@ -98,7 +98,7 @@ void TAttPad::SetLeftMargin(Float_t margin)
 {
 //*-*-*-*-*-*-*-*-*Set Pad left margin in per cent of the pad width*-*-*-*-*
 //*-*              ================================================
-   if (margin < 0 || margin >=1) margin = 0.1;
+   if (margin <= 0 || margin >=1) margin = 0.1;
    if (margin + fRightMargin >= 1) return;
    fLeftMargin = margin;
 }
@@ -108,7 +108,7 @@ void TAttPad::SetRightMargin(Float_t margin)
 {
 //*-*-*-*-*-*-*-*-*Set Pad right margin in per cent of the pad width*-*-*-*-*
 //*-*              =================================================
-   if (margin < 0 || margin >=1) margin = 0.1;
+   if (margin <= 0 || margin >=1) margin = 0.1;
    if (margin + fLeftMargin >= 1) return;
    fRightMargin = margin;
 }
@@ -118,7 +118,7 @@ void TAttPad::SetTopMargin(Float_t margin)
 {
 //*-*-*-*-*-*-*-*-*Set Pad top margin in per cent of the pad height*-*-*-*-*
 //*-*              ================================================
-   if (margin < 0 || margin >=1) margin = 0.1;
+   if (margin <= 0 || margin >=1) margin = 0.1;
    if (margin + fBottomMargin >= 1) return;
    fTopMargin = margin;
 }

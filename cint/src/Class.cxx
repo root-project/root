@@ -22,10 +22,6 @@
 #include "Api.h"
 #include "common.h"
 
-#ifndef G__OLDIMPLEMENTATION1586
-static char G__buf[G__ONELINE];
-#endif
-
 /*********************************************************************
 * class G__ClassInfo
 *********************************************************************/
@@ -82,12 +78,7 @@ const char* G__ClassInfo::Name()
 const char* G__ClassInfo::Fullname()
 {
   if(IsValid()) {
-#ifndef G__OLDIMPLEMENTATION1586
-    strcpy(G__buf,G__fulltagname((int)tagnum,1));
-    return(G__buf);
-#else
     return(G__fulltagname((int)tagnum,1));
-#endif
   }
   else {
     return((char*)NULL);
@@ -236,22 +227,6 @@ G__ClassInfo G__ClassInfo::EnclosingClass()
   }
 }
 ///////////////////////////////////////////////////////////////////////////
-G__ClassInfo G__ClassInfo::EnclosingSpace()
-{
-  if(IsValid()) {
-    int enclosed_tag = G__struct.parent_tagnum[tagnum];
-    while (enclosed_tag>=0 && (G__struct.type[enclosed_tag]!='n')) {
-       enclosed_tag = G__struct.parent_tagnum[enclosed_tag];
-    }
-    G__ClassInfo enclosingclass(enclosed_tag);
-    return(enclosingclass);
-  }
-  else {
-    G__ClassInfo enclosingclass;
-    return(enclosingclass);
-  }
-}
-///////////////////////////////////////////////////////////////////////////
 void G__ClassInfo::SetGlobalcomp(int globalcomp)
 {
   if(IsValid()) {
@@ -279,17 +254,6 @@ int G__ClassInfo::IsValid()
   }
 }
 #endif
-///////////////////////////////////////////////////////////////////////////
-int G__ClassInfo::IsLoaded()
-{
-  if(IsValid() && 
-     (G__NOLINK!=G__struct.iscpplink[tagnum]||-1!=G__struct.filenum[tagnum])) {
-    return(1);
-  }
-  else {
-    return(0);
-  }
-}
 ///////////////////////////////////////////////////////////////////////////
 int G__ClassInfo::SetFilePos(const char *fname)
 {

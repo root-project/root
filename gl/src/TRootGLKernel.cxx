@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TRootGLKernel.cxx,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/gl:$Name$:$Id$
 // Author: Fons Rademakers   04/03/98
 
 /*************************************************************************
@@ -19,11 +19,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TRootGLKernel.h"
-#ifndef R__OPENINVENTOR
 #include "TRootGLViewer.h"
-#else
-#include "TRootOIViewer.h"
-#endif
 
 
 // Force creation of TRootGLKernel when shared library will be loaded.
@@ -34,9 +30,5 @@ static TRootGLKernel gGLKernelCreator;
 TGLViewerImp *TRootGLKernel::CreateGLViewerImp(TPadOpenGLView *p, const char *title,
                                                UInt_t width, UInt_t height)
 {
-#ifndef R__OPENINVENTOR
    return new TRootGLViewer(p, title, width, height);
-#else
-   return new TRootOIViewer(p, title, width, height);
-#endif
 }

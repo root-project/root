@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TAttLineCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
+// @(#)root/gpad:$Name$:$Id$
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
@@ -59,7 +59,6 @@ TAttLineCanvas::TAttLineCanvas(const char *name, const char *title, UInt_t ww, U
       ylow = 0.13 + i*hpad;
       sprintf(command,"SetLineStyle(%d)",i+1);
       test1 = new TGroupButton("Style","",command,xlow, ylow, xlow+wpad, ylow+0.8*hpad);
-      test1->SetEditable(kTRUE);
       if (i == 0) test1->SetBorderMode(-1);
       test1->SetBorderSize(1);
       test1->Draw();
@@ -68,7 +67,6 @@ TAttLineCanvas::TAttLineCanvas(const char *name, const char *title, UInt_t ww, U
       line->SetLineColor(1);
       line->SetLineStyle(i+1);
       line->Draw();
-      test1->SetEditable(kFALSE);
       cd();
    }
 
@@ -83,7 +81,6 @@ TAttLineCanvas::TAttLineCanvas(const char *name, const char *title, UInt_t ww, U
          xlow = 0.05 + i*wpad;
          sprintf(command,"SetLineWidth(%d)",number);
          test1 = new TGroupButton("Width","",command,xlow, ylow, xlow+0.9*wpad, ylow+0.9*hpad);
-         test1->SetEditable(kTRUE);
          if (number == 1) test1->SetBorderMode(-1);
          test1->SetFillColor(18);
          test1->SetBorderSize(2);
@@ -93,15 +90,14 @@ TAttLineCanvas::TAttLineCanvas(const char *name, const char *title, UInt_t ww, U
          line->SetLineColor(1);
          line->SetLineWidth(number);
          line->Draw();
-         test1->SetEditable(kFALSE);
          cd();
       }
    }
 
 //*-* draw colortable pads
    test1->DisplayColorTable("SetLineColor",0.05, 0.60, 0.90, 0.38);
+   Modified(kTRUE);
    Update();
-   SetEditable(kFALSE);
 
    padsav->cd();
 }

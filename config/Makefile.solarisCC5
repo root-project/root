@@ -1,5 +1,3 @@
-# -*- mode: makefile -*-
-# 
 # Makefile of ROOT for Solaris with CC 5.0
 
 PLATFORM      = solaris
@@ -49,10 +47,6 @@ CILIBS        = -lm -ltermcap -ldl
 #F77           = /opt/SUNWspro/bin/f77
 F77           = f77
 F77LIBS       = -lM77 -lF77 -lsunmath -lsocket -lnsl
-
-# Override default in Makefile.config
-INSTALL      := cp -pR
-INSTALLDATA  := cp -pR
 
 # Extras
 GLLIBEXTRA    = $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \

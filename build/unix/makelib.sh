@@ -27,36 +27,29 @@ EXTRA=$8
 rm -f $LIB
 
 if [ $PLATFORM = "aix" ]; then
-   makeshared="/usr/ibmcxx/bin/makeC++SharedLib"
-fi
-if [ $PLATFORM = "aix5" ]; then
-   makeshared="/usr/vacpp/bin/makeC++SharedLib"
-fi
-
-if [ $PLATFORM = "aix" ] || [ $PLATFORM = "aix5" ]; then
    if [ $LD = "xlC" ]; then
       if [ $LIB = "lib/libCint.a" ]; then
-         echo $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA
-         $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA
+         echo /usr/ibmcxx/bin/makeC++SharedLib -o $LIB -p 0 $OBJS -Llib $EXTRA
+         /usr/ibmcxx/bin/makeC++SharedLib -o $LIB -p 0 $OBJS -Llib $EXTRA
       elif [ $LIB = "lib/libCore.a" ]; then
-         echo $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint
-         $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint
+         echo /usr/ibmcxx/bin/makeC++SharedLib -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint
+         /usr/ibmcxx/bin/makeC++SharedLib -o $LIB -p 0 $OBJS -Llib $EXTRA -lCint
       else
-         echo $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCore -lCint
-         $makeshared -o $LIB -p 0 $OBJS -Llib $EXTRA -lCore -lCint
+         echo /usr/ibmcxx/bin/makeC++SharedLib -o $LIB -p 0 $OBJS -Llib $EXTRA -lCore -lCint
+         /usr/ibmcxx/bin/makeC++SharedLib -o $LIB -p 0 $OBJS -Llib $EXTRA -lCore -lCint
       fi
    fi
 elif [ $PLATFORM = "alpha" ] && [ $LD = "cxx" ]; then
    echo $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA
    if [ $LIB = "lib/libCore.so" ]; then
       #$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS hist/src/*.o graf/src/*.o \
-      #   g3d/src/*.o matrix/src/*.o $EXTRA
+      #   g3d/src/*.o $EXTRA
       ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
          -expect_unresolved "*" -g0 -O1 -msym -shared \
          /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-         -o $LIB $OBJS hist/src/*.o graf/src/*.o g3d/src/*.o matrix/src/*.o $EXTRA
-   elif [ $LIB = "lib/libHist.so" ]   || [ $LIB = "lib/libGraf.so" ] || \
-        [ $LIB = "lib/libGraf3d.so" ] || [ $LIB = "lib/libMatrix.so" ]; then
+         -o $LIB $OBJS hist/src/*.o graf/src/*.o g3d/src/*.o $EXTRA
+   elif [ $LIB = "lib/libHist.so" ] || [ $LIB = "lib/libGraf.so" ] || \
+        [ $LIB = "lib/libGraf3d.so" ]; then
       #$LD $SOFLAGS$SONAME $LDFLAGS -o $LIB /usr/lib/cmplrs/cc/crt0.o
       ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
          -expect_unresolved "*" -g0 -O1 -msym -shared \
@@ -68,18 +61,6 @@ elif [ $PLATFORM = "alpha" ] && [ $LD = "cxx" ]; then
          -expect_unresolved "*" -g0 -O1 -msym -shared \
          /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
          -o $LIB $OBJS $EXTRA
-   fi
-elif [ $PLATFORM = "alpha" ] && [ $LD = "KCC" ]; then
-   echo $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS $EXTRA
-   if [ $LIB = "lib/libCore.so" ]; then
-      KCC --COMPDO_ln_dy '-expect_unresolved *' $LDFLAGS -o $LIB $OBJS \
-         hist/src/*.o graf/src/*.o g3d/src/*.o matrix/src/*.o $EXTRA
-   elif [ $LIB = "lib/libHist.so" ]   || [ $LIB = "lib/libGraf.so" ] || \
-        [ $LIB = "lib/libGraf3d.so" ] || [ $LIB = "lib/libMatrix.so" ]; then
-      KCC --COMPDO_ln_dy '-expect_unresolved *' $LDFLAGS -o $LIB \
-         /usr/lib/cmplrs/cc/crt0.o
-   else
-      KCC --COMPDO_ln_dy '-expect_unresolved *' $LDFLAGS -o $LIB $OBJS $EXTRA
    fi
 elif [ $PLATFORM = "alphaegcs" ] || [ $PLATFORM = "hpux" ] || \
      [ $PLATFORM = "solaris" ]   || [ $PLATFORM = "sgi" ]; then
@@ -93,13 +74,6 @@ elif [ $PLATFORM = "fbsd" ]; then
    $LD $SOFLAGS $LDFLAGS -o $LIB `lorder $OBJS | tsort -q` $EXTRA
    # for elf:  echo $PLATFORM: $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB $OBJS
    # for elf:  $LD $SOFLAGS$SONAME $LDFLAGS -o $LIB `lorder $OBJS | tsort -q`
-elif [ $PLATFORM = "macosx" ]; then
-   # We need two library files: a .dylib to link to and a .so to load
-   BUNDLE=`echo $LIB | sed s/.dylib/.so/`
-   echo $LD $SOFLAGS $SONAME -o $LIB -ldl $OBJS $EXTRA
-   $LD $SOFLAGS $SONAME -o $LIB -ldl $OBJS $EXTRA
-   echo $LD -bundle -flat_namespace -undefined suppress -install_name $BUNDLE -o $BUNDLE -ldl $OBJS $EXTRA
-   $LD -bundle -flat_namespace -undefined suppress -install_name $BUNDLE -o $BUNDLE -ldl $OBJS $EXTRA
 elif [ $LD = "KCC" ]; then
    echo $LD $LDFLAGS -o $LIB $OBJS $EXTRA
    $LD $LDFLAGS -o $LIB $OBJS $EXTRA
