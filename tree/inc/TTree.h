@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.73 2004/11/24 14:11:38 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.74 2005/01/12 07:50:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -324,7 +324,7 @@ public:
     virtual void         SetCircular(Long64_t maxEntries);
     virtual void         SetDebug(Int_t level=1, Long64_t min=0, Long64_t max=9999999); // *MENU*
     virtual void         SetDirectory(TDirectory *dir);
-    virtual void         SetEntries(Long64_t n);
+    virtual Long64_t     SetEntries(Long64_t n=-1);
     virtual void         SetEstimate(Long64_t nentries=10000);
     virtual void         SetFileNumber(Int_t number=0);
     virtual void         SetEventList(TEventList *list) {fEventList = list;}

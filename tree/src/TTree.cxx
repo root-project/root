@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.219 2005/01/11 13:15:39 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.220 2005/01/12 07:50:03 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -4274,18 +4274,39 @@ void TTree::SetDirectory(TDirectory *dir)
 }
 
 //_______________________________________________________________________
-void TTree::SetEntries(Long64_t n)
+Long64_t TTree::SetEntries(Long64_t n)
 {
-  // Set number of entries in the Tree.
+  // if n >= 0 Set number of entries in the Tree = n.
+  //
+  // if (n < 0) Set number of entries in the Tree to match the 
+  // number of entries in each branch. (default for n is -1)
   // This function should be called only when one fills each branch
   // independently via TBranch::Fill without calling TTree::Fill
-  // Calling TTree::SetEntries make sense only if the number of existing entries
-  // is null. A Warning is issued otherwise
+  // Calling TTree::SetEntries() make sense only if the number of entries
+  // in each branch is identical.  A Warning is issued otherwise.
+  // The function returns the number of entries.
 
-   if (fEntries != 0) {
-      Warning("SetEntries","Tree has already %g entries",fEntries);
+   // case 1 : force number of entries to n
+   if (n >= 0) {
+      fEntries = n;
+      return n;
    }
-   fEntries = n;
+   
+   // case 2; compute the number of entries from the number of entries in the branches
+   TBranch * b;
+   Long64_t nMin = 99999999;
+   Long64_t nMax = 0;
+   TIter next(GetListOfBranches());
+   while((b = (TBranch*)next())){
+      Long64_t n = b->GetEntries();
+      if (n < nMin) nMin = n;
+      if (n > nMax) nMax = n;
+   }
+   if (nMin != nMax) {
+      Warning("SetEntries","Tree branches have different numbers of entries, with %lld maximum.",nMax);
+   }
+   fEntries = nMax;
+   return fEntries;
 }
 
 //_______________________________________________________________________
