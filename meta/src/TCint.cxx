@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.68 2004/01/10 10:52:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.69 2004/01/13 18:58:07 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -247,14 +247,19 @@ void TCint::LoadMacro(const char *filename, EErrorCode *error)
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
+Long_t TCint::ProcessLine(const char *line, EErrorCode *error)
 {
    // Let CINT process a command line.
+   // If the command is executed and the result of G__process_cmd is 0,
+   // the return value is the int value corresponding to the result of the command
+   // (float and double return values will be truncated).
 
    Int_t ret = 0;
    if (gApplication) {
       if (gApplication->IsCmdThread()) {
          gROOT->SetLineIsProcessing();
+
+         G__value local_res;
 
          // It checks whether the input line contains the "fantom" method
          // to synchronize user keyboard input and ROOT prompt line
@@ -263,7 +268,8 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
             TCint::UpdateAllCanvases();
          } else {
             int local_error = 0;
-            ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, 0);
+            
+            ret = G__process_cmd((char *)line, fPrompt, &fMore, &local_error, &local_res);
             if (local_error == 0 && G__get_return(&fExitCode) == G__RETURN_EXIT2) {
                ResetGlobals();
                gApplication->Terminate(fExitCode);
@@ -271,6 +277,8 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
             if (error)
                *error = (EErrorCode)local_error;
          }
+         
+         if (ret==0) ret = G__int(local_res);
 
          gROOT->SetLineHasBeenProcessed();
       } else
@@ -280,7 +288,7 @@ Int_t TCint::ProcessLine(const char *line, EErrorCode *error)
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLineAsynch(const char *line, EErrorCode *error)
+Long_t TCint::ProcessLineAsynch(const char *line, EErrorCode *error)
 {
    // Let CINT process a command line asynch.
 
@@ -301,7 +309,7 @@ Int_t TCint::ProcessLineAsynch(const char *line, EErrorCode *error)
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLineSynch(const char *line, EErrorCode *error)
+Long_t TCint::ProcessLineSynch(const char *line, EErrorCode *error)
 {
    // Let CINT process a command line synchronously, i.e we are waiting
    // it will be finished.

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.49 2003/11/24 19:54:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.50 2003/12/30 13:16:50 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -569,40 +569,41 @@ void TApplication::MakeBatch()
 }
 
 //______________________________________________________________________________
-void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
+Long_t TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
 {
    // Process a single command line, either a C++ statement or an interpreter
    // command starting with a ".".
+   // Return the return value of the command casted to a long.
 
    Int_t nch = strlen(line);
-   if (!nch) return;
+   if (!nch) return 0;
 
    if (!strncmp(line, ".exit", 4) || !strncmp(line, ".quit", 2)) {
       gInterpreter->ResetGlobals();
       Terminate(0);
-      return;
+      return 0;
    }
 
    if (!strncmp(line, "?", 1)) {
       Help(line);
-      return;
+      return 1;
    }
 
    if (!strncmp(line, ".pwd", 4)) {
-      if (gDirectory)
+      if (gDirectory) 
          Printf("Current directory: %s", gDirectory->GetPath());
       if (gPad)
          Printf("Current pad:       %s", gPad->GetName());
       if (gStyle)
          Printf("Current style:     %s", gStyle->GetName());
-      return;
+      return 1;
    }
 
    if (!strncmp(line, ".ls", 3)) {
       const char *opt = 0;
       if (line[3]) opt = &line[3];
       if (gDirectory) gDirectory->ls(opt);
-      return;
+      return 1;
    }
 
    if (!strncmp(line, ".which", 6)) {
@@ -615,7 +616,7 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
          Printf("%s", mac);
       delete [] fn;
       delete [] mac;
-      return;
+      return mac ? 1 : 0;
    }
 
    if (!strncmp(line, ".L", 2) || !strncmp(line, ".U", 2)) {
@@ -629,34 +630,34 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
          Warning("ProcessLine", "argument(s) \"%s\" ignored with .%c", arguments.Data(),
                  line[1],TROOT::GetMacroPath());
       }
+      Long_t retval = 0;
       if (!mac)
          Error("ProcessLine", "macro %s not found in path %s", fname.Data(),
                TROOT::GetMacroPath());
       else {
          char cmd = line[1];
          if (sync)
-           gInterpreter->ProcessLineSynch(Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data()),
-                                          (TInterpreter::EErrorCode*)err);
+           retval = gInterpreter->ProcessLineSynch(Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data()),
+                                                   (TInterpreter::EErrorCode*)err);
          else {
-           gInterpreter->ProcessLine(Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data()),
-                                     (TInterpreter::EErrorCode*)err);
+           retval = gInterpreter->ProcessLine(Form(".%c %s%s%s", cmd, mac, aclicMode.Data(),io.Data()),
+                                              (TInterpreter::EErrorCode*)err);
          }
       }
 
       delete [] mac;
 
-      return;
+      return retval;
    }
 
    if (!strncmp(line, ".X", 2) || !strncmp(line, ".x", 2)) {
-      ProcessFile(line+3, err);
-      return;
+      return ProcessFile(line+3, err);
    }
 
    if (!strcmp(line, ".reset")) {
       // Do nothing, .reset disabled in CINT because too many side effects
       Printf("*** .reset not allowed, please use gROOT->Reset() ***");
-      return;
+      return 0;
 
 #if 0
       // delete the ROOT dictionary since CINT will destroy all objects
@@ -667,20 +668,20 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
    }
 
    if (sync)
-      gInterpreter->ProcessLineSynch(line, (TInterpreter::EErrorCode*)err);
+      return gInterpreter->ProcessLineSynch(line, (TInterpreter::EErrorCode*)err);
    else
-      gInterpreter->ProcessLine(line, (TInterpreter::EErrorCode*)err);
+      return gInterpreter->ProcessLine(line, (TInterpreter::EErrorCode*)err);
 }
 
 //______________________________________________________________________________
-void TApplication::ProcessFile(const char *name, int *error)
+Long_t TApplication::ProcessFile(const char *name, int *error)
 {
    // Process a file containing a C++ macro.
 
    const Int_t kBufSize = 1024;
 
    Int_t nch = strlen(name);
-   if (nch == 0) return;
+   if (nch == 0) return 0;
 
    TString aclicMode;
    TString arguments;
@@ -692,14 +693,14 @@ void TApplication::ProcessFile(const char *name, int *error)
       Error("ProcessFile", "macro %s not found in path %s", fname.Data(),
             TROOT::GetMacroPath());
       delete [] exnam;
-      return;
+      return 0;
    }
 
    ::ifstream file(exnam,ios::in);
    if (!file.good()) {
       Error("ProcessFile", "%s no such file", exnam);
       delete [] exnam;
-      return;
+      return 0;
    }
 
    char currentline[kBufSize];
@@ -709,6 +710,7 @@ void TApplication::ProcessFile(const char *name, int *error)
    int ifdef    = 0;
    char *s      = 0;
    Bool_t execute = kFALSE;
+   Long_t retval = 0;
 
    while (1) {
       file.getline(currentline,kBufSize);
@@ -739,7 +741,7 @@ void TApplication::ProcessFile(const char *name, int *error)
       if (!*s || *s == '#' || ifndefc || !strncmp(s, "//", 2)) continue;
 
       if (!strncmp(s, ".X", 2) || !strncmp(s, ".x", 2)) {
-         ProcessFile(s+3);
+         retval = ProcessFile(s+3);
          execute = kTRUE;
          continue;
       }
@@ -762,14 +764,15 @@ void TApplication::ProcessFile(const char *name, int *error)
       exname += io;
 
       if (tempfile) {
-         gInterpreter->ProcessLineSynch(Form(".x %s", exname.Data()),
+         retval = gInterpreter->ProcessLineSynch(Form(".x %s", exname.Data()),
                                         (TInterpreter::EErrorCode*)error);
       } else
-         gInterpreter->ProcessLineSynch(Form(".X %s", exname.Data()),
+         retval = gInterpreter->ProcessLineSynch(Form(".X %s", exname.Data()),
                                         (TInterpreter::EErrorCode*)error);
    }
 
    delete [] exnam;
+   return retval;
 }
 
 //______________________________________________________________________________

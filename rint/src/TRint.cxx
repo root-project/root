@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.22 2003/11/18 00:00:31 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.23 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -198,8 +198,15 @@ void TRint::Run(Bool_t retrn)
    // line and then go into the main application event loop, unless the -q
    // command line option was specfied in which case the program terminates.
    // When retrun is true this method returns even when -q was specified.
+   //
+   // When QuitOpt is true and retrn is false, terminate the application with
+   // an error code equal to either the ProcessLine error (if any) or the
+   // return value of the command casted to a long.
 
    Getlinem(kInit, GetPrompt());
+
+   Long_t retval = 0;
+   Int_t  error = 0;
 
    // Process shell command line input files
    if (InputFiles()) {
@@ -222,13 +229,14 @@ void TRint::Run(Bool_t retrn)
             Getlinem(kCleanUp, 0);
             Gl_histadd(cmd);
             fNcmd++;
-            ProcessLine(cmd);
+            retval = ProcessLine(cmd,kFALSE,&error);
+            if (error!=0) break;
          }
       } ENDTRY;
 
       if (QuitOpt()) {
          if (retrn) return;
-         Terminate(0);
+         Terminate(error==0 ? retval : error);
       }
 
       ClearInputFiles();

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.13 2003/06/13 06:17:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.14 2003/11/24 10:51:55 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -73,8 +73,8 @@ public:
    virtual Bool_t   IsLoaded(const char *filename) const = 0;
    virtual Int_t    Load(const char *filenam, Bool_t system = kFALSE) = 0;
    virtual void     LoadMacro(const char *filename, EErrorCode *error = 0) = 0;
-   virtual Int_t    ProcessLine(const char *line, EErrorCode *error = 0) = 0;
-   virtual Int_t    ProcessLineSynch(const char *line, EErrorCode *error = 0) = 0;
+   virtual Long_t   ProcessLine(const char *line, EErrorCode *error = 0) = 0;
+   virtual Long_t   ProcessLineSynch(const char *line, EErrorCode *error = 0) = 0;
    virtual void     PrintIntro() = 0;
    virtual void     Reset() = 0;
    virtual void     ResetAll() = 0;

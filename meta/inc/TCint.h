@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.11 2003/04/04 00:39:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.12 2003/06/13 06:16:52 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -79,9 +79,9 @@ public:
    Bool_t  IsLoaded(const char *filename) const;
    Int_t   Load(const char *filenam, Bool_t system = kFALSE);
    void    LoadMacro(const char *filename, EErrorCode *error = 0);
-   Int_t   ProcessLine(const char *line, EErrorCode *error = 0);
-   Int_t   ProcessLineAsynch(const char *line, EErrorCode *error = 0);
-   Int_t   ProcessLineSynch(const char *line, EErrorCode *error = 0);
+   Long_t  ProcessLine(const char *line, EErrorCode *error = 0);
+   Long_t  ProcessLineAsynch(const char *line, EErrorCode *error = 0);
+   Long_t  ProcessLineSynch(const char *line, EErrorCode *error = 0);
    void    PrintIntro();
    void    Reset();
    void    ResetAll();
