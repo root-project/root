@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.15 2001/02/28 11:04:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.16 2001/04/20 06:17:51 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -169,7 +169,7 @@ TFormula::~TFormula()
 
 
 //______________________________________________________________________________
-void TFormula::Analyze(const char *schain, Int_t &err)
+void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 {
 //*-*-*-*-*-*-*-*-*Analyze a sub-expression in one formula*-*-*-*-*-*-*-*-*-*-*
 //*-*              =======================================
@@ -401,9 +401,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,ou-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        ctemp = chaine(ou+1,lchain-ou-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        fExpr[fNoper] = "||";
        fOper[fNoper] = 61;
        fNoper++;
@@ -415,9 +415,9 @@ if (err==0) {
       }
     else {
       ctemp = chaine(0,et-1);
-      Analyze(ctemp.Data(),err);
+      Analyze(ctemp.Data(),err,offset);
       ctemp = chaine(et+1,lchain-et-1);
-      Analyze(ctemp.Data(),err);
+      Analyze(ctemp.Data(),err,offset);
       fExpr[fNoper] = "&&";
       fOper[fNoper] = 60;
       fNoper++;
@@ -429,9 +429,9 @@ if (err==0) {
       }
     else {
       ctemp = chaine(0,oux-1);
-      Analyze(ctemp.Data(),err);
+      Analyze(ctemp.Data(),err,offset);
       ctemp = chaine(oux,lchain-oux);
-      Analyze(ctemp.Data(),err);
+      Analyze(ctemp.Data(),err,offset);
       fExpr[fNoper] = "|";
       fOper[fNoper] = 79;
       fNoper++;
@@ -443,9 +443,9 @@ if (err==0) {
       }
     else {
       ctemp = chaine(0,etx-1);
-      Analyze(ctemp.Data(),err);
+      Analyze(ctemp.Data(),err,offset);
       ctemp = chaine(etx,lchain-etx);
-      Analyze(ctemp.Data(),err);
+      Analyze(ctemp.Data(),err,offset);
       fExpr[fNoper] = "&";
       fOper[fNoper] = 78;
       fNoper++;
@@ -457,9 +457,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,petit-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        ctemp = chaine(petit,lchain-petit);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        fExpr[fNoper] = "<";
        fOper[fNoper] = 64;
        fNoper++;
@@ -471,9 +471,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,grand-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        ctemp = chaine(grand,lchain-grand);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        fExpr[fNoper] = ">";
        fOper[fNoper] = 65;
        fNoper++;
@@ -485,9 +485,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,peteg-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        ctemp = chaine(peteg+1,lchain-peteg-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        fExpr[fNoper] = "<=";
        fOper[fNoper] = 66;
        fNoper++;
@@ -499,9 +499,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,grdeg-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        ctemp = chaine(grdeg+1,lchain-grdeg-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        fExpr[fNoper] = "=>";
        fOper[fNoper] = 67;
        fNoper++;
@@ -513,9 +513,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,egal-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        ctemp = chaine(egal+1,lchain-egal-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        fExpr[fNoper] = "==";
        fOper[fNoper] = 62;
        fNoper++;
@@ -527,9 +527,9 @@ if (err==0) {
        }
     else {
        ctemp = chaine(0,diff-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        ctemp = chaine(diff+1,lchain-diff-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        fExpr[fNoper] = "!=";
        fOper[fNoper] = 63;
        fNoper++;
@@ -542,9 +542,9 @@ if (err==0) {
       }
     else {
        ctemp = chaine(0,plus-1);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        ctemp = chaine(plus,lchain-plus);
-       Analyze(ctemp.Data(),err);
+       Analyze(ctemp.Data(),err,offset);
        fExpr[fNoper] = "+";
        fOper[fNoper] = 1;
        fNoper++;
@@ -554,7 +554,7 @@ if (err==0) {
     if (moins != 0) {
       if (moins == 1) {
         ctemp = chaine(moins,lchain-moins);
-        Analyze(ctemp.Data(),err);
+        Analyze(ctemp.Data(),err,offset);
         fExpr[fNoper] = "-1";
         fOper[fNoper] = 0;
         fNoper++;
@@ -567,9 +567,9 @@ if (err==0) {
           chaine_error = "-";
         } else {
           ctemp = chaine(0,moins-1);
-          Analyze(ctemp.Data(),err);
+          Analyze(ctemp.Data(),err,offset);
           ctemp = chaine(moins,lchain-moins);
-          Analyze(ctemp.Data(),err);
+          Analyze(ctemp.Data(),err,offset);
           fExpr[fNoper] = "-";
           fOper[fNoper] = 2;
           fNoper++;
@@ -581,9 +581,9 @@ if (err==0) {
             chaine_error="%";
          } else {
            ctemp = chaine(0,modulo-1);
-           Analyze(ctemp.Data(),err);
+           Analyze(ctemp.Data(),err,offset);
            ctemp = chaine(modulo,lchain-modulo);
-           Analyze(ctemp.Data(),err);
+           Analyze(ctemp.Data(),err,offset);
            fExpr[fNoper] = "%";
            fOper[fNoper] = 5;
            fNoper++;
@@ -596,9 +596,9 @@ if (err==0) {
           }
         else {
           ctemp = chaine(0,multi-1);
-          Analyze(ctemp.Data(),err);
+          Analyze(ctemp.Data(),err,offset);
           ctemp = chaine(multi,lchain-multi);
-          Analyze(ctemp.Data(),err);
+          Analyze(ctemp.Data(),err,offset);
           fExpr[fNoper] = "*";
           fOper[fNoper] = 3;
           fNoper++;
@@ -611,9 +611,9 @@ if (err==0) {
              }
           else {
             ctemp = chaine(0,divi-1);
-            Analyze(ctemp.Data(),err);
+            Analyze(ctemp.Data(),err,offset);
             ctemp = chaine(divi,lchain-divi);
-            Analyze(ctemp.Data(),err);
+            Analyze(ctemp.Data(),err,offset);
             fExpr[fNoper] = "/";
             fOper[fNoper] = 4;
             fNoper++;
@@ -627,12 +627,12 @@ if (err==0) {
             else {
               if (chaine(lchain-2,2) == "^2") {
                  ctemp = "sq(" + chaine(0,lchain-2) + ")";
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
               } else {
                  ctemp = chaine(0,puiss-1);
                  Analyze(ctemp.Data(),err);
                  ctemp = chaine(puiss,lchain-puiss);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "^";
                  fOper[fNoper] = 20;
                  fNoper++;
@@ -643,7 +643,9 @@ if (err==0) {
               find=0;
               oldformula = (TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
                if (oldformula && !oldformula->GetNumber()) {
-                 Analyze(oldformula->GetTitle(),err);
+                 Int_t nprior = fNpar;
+                 Analyze(oldformula->GetTitle(),err,fNpar); // changes fNpar
+                 fNpar = nprior;
                  find=1;
                  if (!err) {
                     Int_t npold = oldformula->GetNpar();
@@ -672,121 +674,121 @@ if (err==0) {
                   fNoper++;
                } else if (chaine(0,1) == "!") {
                   ctemp = chaine(1,lchain-1);
-                  Analyze(ctemp.Data(),err);
+                  Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "!";
                   fOper[fNoper] = 68;
                   fNoper++;
                } else if (chaine(0,4) == "cos(") {
                   ctemp = chaine(3,lchain-3);
-                  Analyze(ctemp.Data(),err);
+                  Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "cos";
                   fOper[fNoper] = 10;
                   fNoper++;
                } else if (chaine(0,4) == "sin(") {
                  ctemp = chaine(3,lchain-3);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "sin";
                  fOper[fNoper] = 11;
                  fNoper++;
                } else if (chaine(0,4) == "tan(") {
                  ctemp = chaine(3,lchain-3);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "tan";
                  fOper[fNoper] = 12;
                  fNoper++;
                } else if (chaine(0,5) == "acos(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "acos";
                  fOper[fNoper] = 13;
                  fNoper++;
                } else if (chaine(0,5) == "asin(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "asin";
                  fOper[fNoper] = 14;
                  fNoper++;
                } else if (chaine(0,5) == "atan(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "atan";
                  fOper[fNoper] = 15;
                  fNoper++;
                 } else if (chaine(0,5) == "cosh(") {
                   ctemp = chaine(4,lchain-4);
-                  Analyze(ctemp.Data(),err);
+                  Analyze(ctemp.Data(),err,offset);
                   fExpr[fNoper] = "cosh";
                   fOper[fNoper] = 70;
                   fNoper++;
                } else if (chaine(0,5) == "sinh(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "sinh";
                  fOper[fNoper] = 71;
                  fNoper++;
                } else if (chaine(0,5) == "tanh(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "tanh";
                  fOper[fNoper] = 72;
                  fNoper++;
                } else if (chaine(0,6) == "acosh(") {
                  ctemp = chaine(5,lchain-5);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "acosh";
                  fOper[fNoper] = 73;
                  fNoper++;
                } else if (chaine(0,6) == "asinh(") {
                  ctemp = chaine(5,lchain-5);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "asinh";
                  fOper[fNoper] = 74;
                  fNoper++;
                } else if (chaine(0,6) == "atanh(") {
                  ctemp = chaine(5,lchain-5);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "atanh";
                  fOper[fNoper] = 75;
                  fNoper++;
                } else if (chaine(0,3) == "sq(") {
                  ctemp = chaine(2,lchain-2);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "sq";
                  fOper[fNoper] = 21;
                  fNoper++;
                } else if (chaine(0,4) == "log(") {
                  ctemp = chaine(3,lchain-3);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "log";
                  fOper[fNoper] = 30;
                  fNoper++;
                } else if (chaine(0,6) == "log10(") {
                  ctemp = chaine(5,lchain-5);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "log10";
                  fOper[fNoper] = 32;
                  fNoper++;
                } else if (chaine(0,4) == "exp(") {
                  ctemp = chaine(3,lchain-3);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "exp";
                  fOper[fNoper] = 31;
                  fNoper++;
                } else if (chaine(0,4) == "abs(") {
                  ctemp = chaine(3,lchain-3);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "abs";
                  fOper[fNoper] = 41;
                  fNoper++;
                } else if (chaine(0,5) == "sign(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "sign";
                  fOper[fNoper] = 42;
                  fNoper++;
                } else if (chaine(0,4) == "int(") {
                  ctemp = chaine(3,lchain-3);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "int";
                  fOper[fNoper] = 43;
                  fNoper++;
@@ -796,7 +798,7 @@ if (err==0) {
                  fNoper++;
                } else if (chaine(0,5) == "sqrt(") {
                  ctemp = chaine(4,lchain-4);
-                 Analyze(ctemp.Data(),err);
+                 Analyze(ctemp.Data(),err,offset);
                  fExpr[fNoper] = "sqrt";
                  fOper[fNoper] = 22;
                  fNoper++;
@@ -843,9 +845,9 @@ if (err==0) {
                 if (fNpar>=MAXPAR) err=7; // too many parameters
                 if (!err) {
                    fExpr[fNoper] = "E";
-                   fOper[fNoper] = 1001+100*inter2;
-                   if (inter2 == 5 && fNpar < 3) fNpar = 3;
-                   if (fNpar < 2) fNpar = 2;
+                   fOper[fNoper] = 1001+100*inter2+offset;
+                   if (inter2 == 5+offset && fNpar < 3+offset) fNpar = 3+offset;
+                   if (fNpar < 2+offset) fNpar = 2+offset;
                    if (fNpar>=MAXPAR) err=7; // too many parameters
                    if (!err) {
                       fNoper++;
@@ -866,6 +868,7 @@ if (err==0) {
                       if (err==0) {
                          sscanf(ctemp.Data(),"%d",&inter);
                          if (inter>=0) {
+                            inter += offset;
                             fOper[fNoper] = 1001+inter+100*inter2;
                             if (inter2 == 5) inter++;
                             if (inter+2>fNpar) fNpar = inter+2;
@@ -919,9 +922,9 @@ if (err==0) {
                 if (fNpar>=MAXPAR) err=7; // too many parameters
                 if (!err) {
                    fExpr[fNoper] = "G";
-                   fOper[fNoper] = 2001+100*inter2;
-                   if (inter2 == 5 && fNpar < 5) fNpar = 5;
-                   if (3>fNpar) fNpar = 3;
+                   fOper[fNoper] = 2001+100*inter2+offset;
+                   if (inter2 == 5+offset && fNpar < 5+offset) fNpar = 5+offset;
+                   if (3+offset>fNpar) fNpar = 3+offset;
                    if (fNpar>=MAXPAR) err=7; // too many parameters
                    if (!err) {
                       fNoper++;
@@ -942,6 +945,7 @@ if (err==0) {
                       if (err==0) {
                           sscanf(ctemp.Data(),"%d",&inter);
                           if (inter >= 0) {
+                             inter += offset;
                              fOper[fNoper] = 2001+inter+100*inter2;
                              if (inter2 == 5) inter += 2;
                              if (inter+3>fNpar) fNpar = inter+3;
@@ -995,9 +999,9 @@ if (err==0) {
                 if (fNpar>=MAXPAR) err=7; // too many parameters
                 if (!err) {
                    fExpr[fNoper] = "L";
-                   fOper[fNoper] = 4001+100*inter2;
-                   if (inter2 == 5 && fNpar < 5) fNpar = 5;
-                   if (3>fNpar) fNpar = 3;
+                   fOper[fNoper] = 4001+100*inter2+offset;
+                   if (inter2 == 5+offset && fNpar < 5+offset) fNpar = 5+offset;
+                   if (3+offset>fNpar) fNpar = 3+offset;
                    if (fNpar>=MAXPAR) err=7; // too many parameters
                    if (!err) {
                       fNoper++;
@@ -1018,6 +1022,7 @@ if (err==0) {
                       if (err==0) {
                           sscanf(ctemp.Data(),"%d",&inter);
                           if (inter >= 0) {
+                             inter += offset;
                              fOper[fNoper] = 4001+inter+100*inter2;
                              if (inter2 == 5) inter += 2;
                              if (inter+3>fNpar) fNpar = inter+3;
@@ -1108,9 +1113,9 @@ if (err==0) {
             if (nomb != 1) err = 22; // There are plus or minus than 2 arguments for pow
             else {
               ctemp = chaine(4,virgule-5);
-              Analyze(ctemp.Data(),err);
+              Analyze(ctemp.Data(),err,offset);
               ctemp = chaine(virgule,lchain-virgule-1);
-              Analyze(ctemp.Data(),err);
+              Analyze(ctemp.Data(),err,offset);
               fExpr[fNoper] = "";
               fOper[fNoper] = 20;
               fNoper++;
@@ -1125,9 +1130,9 @@ if (err==0) {
             if (nomb != 1) err = 28; // There are plus or minus than 2 arguments for strstr
             else {
               ctemp = chaine(7,virgule-8);
-              Analyze(ctemp.Data(),err);
+              Analyze(ctemp.Data(),err,offset);
               ctemp = chaine(virgule,lchain-virgule-1);
-              Analyze(ctemp.Data(),err);
+              Analyze(ctemp.Data(),err,offset);
               fExpr[fNoper] = "";
               fOper[fNoper] = 23;
               fNoper++;
@@ -1143,9 +1148,9 @@ if (err==0) {
             if (nomb != 1) err = 21;  //{ There are plus or minus than 2 arguments for atan2
             else {
               ctemp = chaine(6,virgule-7);
-              Analyze(ctemp.Data(),err);
+              Analyze(ctemp.Data(),err,offset);
               ctemp = chaine(virgule,lchain-virgule-1);
-              Analyze(ctemp.Data(),err);
+              Analyze(ctemp.Data(),err,offset);
               fExpr[fNoper] = "";
               fOper[fNoper] = 16;
               fNoper++;
@@ -1160,9 +1165,9 @@ if (err==0) {
             if (nomb != 1) err = 21;  //{ There are plus or minus than 2 arguments for atan2
             else {
               ctemp = chaine(5,virgule-6);
-              Analyze(ctemp.Data(),err);
+              Analyze(ctemp.Data(),err,offset);
               ctemp = chaine(virgule,lchain-virgule-1);
-              Analyze(ctemp.Data(),err);
+              Analyze(ctemp.Data(),err,offset);
               fExpr[fNoper] = "";
               fOper[fNoper] = 17;
               fNoper++;
@@ -1180,7 +1185,7 @@ if (err==0) {
             }
             if (!err) {
               sscanf(ctemp.Data(),"%d",&valeur);
-              fOper[fNoper-1] = valeur + 101;
+              fOper[fNoper-1] = valeur + 101 + offset;
             }
           } else if (chaine == "pi") {
             fExpr[fNoper] = "P";

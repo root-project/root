@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.10 2001/03/08 12:01:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.11 2001/03/08 13:47:36 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -55,7 +55,7 @@ public:
            TFormula(const char *name,const char *formula);
            TFormula(const TFormula &formula);
  virtual   ~TFormula();
- virtual void       Analyze(const char *schain, Int_t &err);
+ virtual void       Analyze(const char *schain, Int_t &err, Int_t offset=0);
  virtual Int_t      Compile(const char *expression="");
  virtual void       Copy(TObject &formula);
  virtual char       *DefinedString(Int_t code);
