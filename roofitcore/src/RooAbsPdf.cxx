@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.87 2004/11/29 12:22:10 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.88 2004/11/29 20:22:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -126,7 +126,9 @@
 #include "RooFitCore/RooNLLVar.hh"
 #include "RooFitCore/RooMinuit.hh"
 #include "RooFitCore/RooCategory.hh"
+#include "RooFitCore/RooNameReg.hh"
 #include "RooFitCore/RooCmdConfig.hh"
+#include "RooFitCore/RooGlobalFunc.hh"
 using std::cout;
 using std::endl;
 using std::ostream;
@@ -244,7 +246,7 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 }
 
 
-Double_t RooAbsPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const
+Double_t RooAbsPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
 {
   // Analytical integral with normalization (see RooAbsReal::analyticalIntegralWN() for further information)
   //
@@ -259,9 +261,9 @@ Double_t RooAbsPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
 
   if (code==0) return getVal(normSet) ;
   if (normSet) {
-    return analyticalIntegral(code) / getNorm(normSet) ;
+    return analyticalIntegral(code,rangeName) / getNorm(normSet) ;
   } else {
-    return analyticalIntegral(code) ;
+    return analyticalIntegral(code,rangeName) ;
   }
 }
 
@@ -297,10 +299,9 @@ Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
 {
   // Return the integral of this PDF over all elements of 'nset'. 
 
-
   if (!nset) return 1 ;
 
-  syncNormalization(nset) ;
+  syncNormalization(nset,kTRUE) ;
   if (_verboseEval>1) cout << IsA()->GetName() << "::getNorm(" << GetName() << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
 
   Double_t ret = _norm->getVal() ;
@@ -314,6 +315,25 @@ Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
 }
 
 
+const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const TNamed* rangeName) const 
+{
+  // Check normalization is already stored
+  RooAbsReal* norm = _normMgr.getNormalization(this,nset,0,rangeName) ;
+  if (norm) {
+    return norm ;
+  }
+
+  // If not create it now
+  RooArgSet* depList = getDependents(nset) ;
+  norm = createIntegral(*depList,*getIntegratorConfig(),RooNameReg::str(rangeName)) ;
+  delete depList ;
+
+  // Store it in the cache
+  _normMgr.setNormalization(this,nset,0,rangeName,norm) ;
+
+  // And return the newly created integral
+  return norm ;
+}
 
 
 Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies) const
@@ -331,11 +351,11 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
   // 
   // For functions that declare to be self-normalized by overloading the
   // selfNormalized() function, a unit normalization is always constructed
-
+  
   _normSet = (RooArgSet*) nset ;
 
   // Check if data sets are identical
-  RooAbsReal* norm = _normMgr.getNormalization(this,nset) ;
+  RooAbsReal* norm = _normMgr.getNormalization(this,nset,0) ;
   if (norm) {
     Bool_t nsetChanged = (_norm!=norm) ;
     _norm = norm ;
@@ -347,7 +367,7 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
   
     return nsetChanged ;
   }
-  
+    
   // Update dataset pointers of proxies
   if (adjustProxies) {
     ((RooAbsPdf*) this)->setProxyNormSet(nset) ;
@@ -355,26 +375,15 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
   
   // Allow optional post-processing
   Bool_t fullNorm = syncNormalizationPreHook(_norm,nset) ;
+
+
   RooArgSet* depList ;
   if (fullNorm) {
     depList = ((RooArgSet*)nset) ;
   } else {
     depList = getDependents(nset) ;
-
-    // Account for LValues in normalization here
-    RooArgSet bList ;
-    branchNodeServerList(&bList) ;
-    TIterator* dIter = nset->createIterator() ;
-    RooAbsArg* dep ;
-    while (dep=(RooAbsArg*)dIter->Next()) {
-      RooAbsArg* tmp = bList.find(dep->GetName()) ;
-      if (dynamic_cast<RooAbsLValue*>(tmp)) {
-	depList->add(*tmp) ;
-      }
-    }
-    delete dIter ;
-    
   }
+
 
   if (_verboseEval>0) {
     if (!selfNormalized()) {
@@ -388,36 +397,17 @@ Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies)
 
 
   // Destroy old normalization & create new
-    
-  TString nname(GetName()) ;
-  if (selfNormalized() || !dependsOn(*depList)) {
+  if (selfNormalized() || !dependsOn(*depList)) {    
     TString ntitle(GetTitle()) ; ntitle.Append(" Unit Normalization") ;
-    nname.Append("_UnitNorm") ;
+    TString nname(GetName()) ; nname.Append("_UnitNorm") ;
     _norm = new RooRealVar(nname.Data(),ntitle.Data(),1) ;
   } else {
-    TString ntitle(GetTitle()) ; ntitle.Append(" Integral") ;
 
-    nname.Append("_Norm[") ;
-
-    Bool_t first(kTRUE); 
-    TIterator* iter  = depList->createIterator() ;
-    RooAbsArg* arg ;
-    while(arg=(RooAbsArg*)iter->Next()) {
-      if (first) {
-	first=kFALSE ;
-      } else {
-	nname.Append(",") ;
-      }
-      nname.Append(arg->GetName()) ;
-    }
-    delete iter ;
-    nname.Append("]") ;
-
-    _norm = new RooRealIntegral(nname.Data(),ntitle.Data(),*this,*depList,0,getIntegratorConfig()) ;
+    _norm = createIntegral(*depList,*getIntegratorConfig()) ;
   }
 
   // Register new normalization with manager (takes ownership)
-  _normMgr.setNormalization(this,nset,0,_norm) ;
+  _normMgr.setNormalization(this,nset,0,0,_norm) ;
 
   // Allow optional post-processing
   syncNormalizationPostHook(_norm,nset) ;
@@ -531,7 +521,7 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
 
 
 
-Double_t RooAbsPdf::extendedTerm(UInt_t observed) const 
+Double_t RooAbsPdf::extendedTerm(UInt_t observed, const RooArgSet* nset) const 
 {
   // Returned the extended likelihood term (Nexpect - Nobserved*log(NExpected)
   // of this PDF for the given number of observed events
@@ -547,7 +537,7 @@ Double_t RooAbsPdf::extendedTerm(UInt_t observed) const
     return 0;
   }
 
-  Double_t expected= expectedEvents();
+  Double_t expected= expectedEvents(nset);
   if(expected < 0) {
     cout << fName << ": calculated negative expected events: " << expected
          << endl;
@@ -830,15 +820,6 @@ Double_t RooAbsPdf::maxVal(Int_t code)
 
 
 
-
-
-
-
-RooCmdArg Components(const RooArgSet& compSet) { return RooCmdArg("SelectCompSet",0,0,0,0,0,0,&compSet,0) ; }
-RooCmdArg Components(const char* compSpec) { return RooCmdArg("SelectCompSpec",0,0,0,0,compSpec,0,0,0) ; }
-RooCmdArg Normalization(Double_t scaleFactor, RooAbsPdf::ScaleType scaleType) 
-                         { return RooCmdArg("Normalization",scaleType,0,scaleFactor,0,0,0,0,0) ; }
-
 RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 {
   // New experimental plotOn() with varargs...
@@ -886,7 +867,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 	   << "): ERROR the 'Expected' scale option can only be used on extendable PDFs" << endl ;
       return frame ;
     }
-    nExpected = expectedEvents() ;
+    nExpected = expectedEvents(frame->getNormVars()) ;
   }
   
   if (stype != Raw) {    
@@ -1016,10 +997,7 @@ void RooAbsPdf::plotOnCompSelect(RooArgSet* selNodes) const
 
 
 
-RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor, 
-			  ScaleType stype, const RooAbsData* projData, const RooArgSet* projSet,
-			  Double_t precision, Bool_t shiftToZero, const RooArgSet* projDataSet,
-			  Double_t rangeLo, Double_t rangeHi, RooCurve::WingMode wmode) const
+RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
 {
   // Plot oneself on 'frame'. In addition to features detailed in  RooAbsReal::plotOn(),
   // the scale factor for a PDF can be interpreted in three different ways. The interpretation
@@ -1037,30 +1015,30 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scale
 
   // More sanity checks
   Double_t nExpected(1) ;
-  if (stype==RelativeExpected) {
+  if (o.stype==RelativeExpected) {
     if (!canBeExtended()) {
       cout << "RooAbsPdf::plotOn(" << GetName() 
 	   << "): ERROR the 'Expected' scale option can only be used on extendable PDFs" << endl ;
       return frame ;
     }
-    nExpected = expectedEvents() ;
+    nExpected = expectedEvents(frame->getNormVars()) ;
   }
 
   // Adjust normalization, if so requested
-  if (stype != Raw) {    
+  if (o.stype != Raw) {    
 
-    if (frame->getFitRangeNEvt() && stype==Relative) {
-      scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
-    } else if (stype==RelativeExpected) {
-      scaleFactor *= nExpected ;
-    } else if (stype==NumEvent) {
-      scaleFactor /= nExpected ;
+    if (frame->getFitRangeNEvt() && o.stype==Relative) {
+      o.scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
+    } else if (o.stype==RelativeExpected) {
+      o.scaleFactor *= nExpected ;
+    } else if (o.stype==NumEvent) {
+      o.scaleFactor /= nExpected ;
     }
-    scaleFactor *= frame->getFitRangeBinW() ;
+    o.scaleFactor *= frame->getFitRangeBinW() ;
   }
   frame->updateNormVars(*frame->getPlotVar()) ;
 
-  return RooAbsReal::plotOn(frame,drawOptions,scaleFactor,Raw,projData,projSet) ;
+  return RooAbsReal::plotOn(frame,o) ;
 }
 
 
@@ -1187,7 +1165,13 @@ RooPlot* RooAbsPdf::plotCompOnEngine(RooPlot *frame, RooArgSet* selNodes, Option
   }
  
   // Plot function in selected state
-  frame = plotOn(frame,drawOptions,scaleFactor,stype,projData,projSet) ;
+  PlotOpt o ;
+  o.drawOptions = drawOptions ;
+  o.scaleFactor = scaleFactor ;
+  o.stype = stype ;
+  o.projData = projData ;
+  o.projSet = projSet ;
+  frame = plotOn(frame,0) ;
 
   // Reset PDF selection bits to kTRUE
   iter->Reset() ;

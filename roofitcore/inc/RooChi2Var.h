@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooChi2Var.rdl,v 1.5 2003/05/13 23:27:16 wverkerke Exp $
+ *    File: $Id: RooChi2Var.rdl,v 1.6 2004/04/05 22:44:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -56,10 +56,6 @@ protected:
   
   ClassDef(RooChi2Var,1) // Abstract real-valued variable
 };
-
-RooCmdArg Extended() ;
-RooCmdArg DataError(RooDataHist::ErrorType) ;
-RooCmdArg NumCPU(Int_t nCPU) ;
 
 
 #endif

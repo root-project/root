@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.rdl,v 1.81 2004/08/09 00:00:52 bartoldu Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.81 2004/11/29 12:22:09 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -136,6 +136,10 @@ public:
 
   // Formatting control
   static void nameFieldLength(Int_t newLen) { _nameLength = newLen>0 ? newLen : 0 ; }
+
+  // Range management
+  virtual Bool_t inRange(const char* name) const { return kTRUE ; }
+
 
   enum ConstOpCode { Activate=0, DeActivate=1, ConfigChange=2, ValueChange=3 } ;
   

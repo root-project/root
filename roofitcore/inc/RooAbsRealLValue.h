@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.rdl,v 1.24 2004/11/29 12:22:12 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.25 2004/12/03 13:18:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -45,19 +45,20 @@ public:
   virtual void randomize();
 
   // Implementation of RooAbsLValue
-  virtual void setFitBin(Int_t ibin) ;
-  virtual Int_t getFitBin() const { return getBinning().binNumber(getVal()) ; }
-  virtual Int_t numFitBins() const { return getFitBins() ; }
-  virtual Double_t getFitBinWidth(Int_t i) const { return getBinning().binWidth(i) ; }
+  virtual void setBin(Int_t ibin) ;
+  virtual Int_t getBin() const { return getBinning().binNumber(getVal()) ; }
+  virtual Int_t numBins() const { return getBins() ; }
+  virtual Double_t getBinWidth(Int_t i) const { return getBinning().binWidth(i) ; }
   
   // Get fit range limits
   virtual const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const = 0 ;
   virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) = 0 ;
-  virtual Double_t getFitMin(const char* name=0) const { return getBinning(name).lowBound() ; }
-  virtual Double_t getFitMax(const char* name=0) const { return getBinning(name).highBound() ; }
-  virtual Int_t getFitBins(const char* name=0) const { return getBinning(name).numBins() ; }
-  inline Bool_t hasFitMin(const char* name=0) const { return !RooNumber::isInfinite(getFitMin(name)); }
-  inline Bool_t hasFitMax(const char* name=0) const { return !RooNumber::isInfinite(getFitMax(name)); }
+  virtual Double_t getMin(const char* name=0) const { return getBinning(name).lowBound() ; }
+  virtual Double_t getMax(const char* name=0) const { return getBinning(name).highBound() ; }
+  virtual Int_t getBins(const char* name=0) const { return getBinning(name).numBins() ; }
+  inline Bool_t hasMin(const char* name=0) const { return !RooNumber::isInfinite(getMin(name)); }
+  inline Bool_t hasMax(const char* name=0) const { return !RooNumber::isInfinite(getMax(name)); }
+  virtual Bool_t inRange(const char* name) const ;
 
   virtual Bool_t isJacobianOK(const RooArgSet& depList) const { return kTRUE ; }
   virtual Double_t jacobian() const { return 1 ; }
@@ -65,7 +66,7 @@ public:
   inline virtual Bool_t isLValue() const { return kTRUE; }
 
   // Test a value against our fit range
-  Bool_t inFitRange(Double_t value, Double_t* clippedValue=0) const;
+  Bool_t inRange(Double_t value, Double_t* clippedValue=0) const;
   virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ; 
 
   // Constant and Projected flags 

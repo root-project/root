@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.cc,v 1.38 2004/11/29 12:22:17 wverkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.39 2004/11/29 20:23:09 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -40,10 +40,14 @@
 #include <iomanip>
 #include <math.h>
 #include <assert.h>
+#include <deque>
+#include <algorithm>
+using std::deque ;
 using std::cout;
 using std::endl;
 using std::ostream;
 using std::setw;
+using std::sort ;
 
 ClassImp(RooCurve)
 
@@ -132,6 +136,45 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
     Double_t x,y ;
     GetPoint(i,x,y) ;
     updateYAxisLimits(y);
+  }
+}
+
+
+RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, Double_t scale1, Double_t scale2) 
+{
+  initialize() ;
+
+  // Make deque of points in X
+  deque<Double_t> pointList ;
+  Double_t x,y ;
+
+  // Add X points of C1
+  Int_t i1,n1 = c1.GetN() ;
+  for (i1=0 ; i1<n1 ; i1++) {
+    const_cast<RooCurve&>(c1).GetPoint(i1,x,y) ;
+    pointList.push_back(x) ;
+  }
+
+  // Add X points of C2
+  Int_t i2,n2 = c2.GetN() ;
+  for (i2=0 ; i2<n2 ; i2++) {
+    const_cast<RooCurve&>(c2).GetPoint(i2,x,y) ;
+    pointList.push_back(x) ;
+  }
+  
+  // Sort X points
+  sort(pointList.begin(),pointList.end()) ;
+
+  // Loop over X points
+  deque<double>::iterator iter ;
+  Double_t last(-RooNumber::infinity) ;
+  for (iter=pointList.begin() ; iter!=pointList.end() ; ++iter) {
+
+    if ((*iter-last)>1e-10) {      
+      // Add OR of points to new curve, skipping duplicate points within tolerance
+      addPoint(*iter,scale1*c1.interpolate(*iter)+scale2*c2.interpolate(*iter)) ;
+    }
+    last = *iter ;
   }
 }
 
@@ -384,4 +427,42 @@ Int_t RooCurve::findPoint(Double_t xvalue, Double_t tolerance) const
   }
 
   return (delta<tolerance)?ibest:-1 ;
+}
+
+Double_t RooCurve::interpolate(Double_t xvalue, Double_t tolerance) const
+{
+  // Find best point
+  int n = GetN() ;
+  int ibest = findPoint(xvalue,1e10) ;
+  
+  // Get position of best point
+  Double_t xbest, ybest ;
+  const_cast<RooCurve*>(this)->GetPoint(ibest,xbest,ybest) ;
+
+  // Handle trivial case of being dead on
+  if (fabs(xbest-xvalue)<tolerance) {
+    return ybest ;
+  }
+
+  // Get nearest point on other side w.r.t. xvalue
+  Double_t xother,yother ;
+  if (xbest<xvalue) {
+    if (ibest==n-1) {
+      // Value beyond end requested -- return value of last point
+      return ybest ;
+    }
+    const_cast<RooCurve*>(this)->GetPoint(ibest+1,xother,yother) ;        
+    return ybest + (yother-ybest)*(xvalue-xbest)/(xother-xbest) ; 
+
+  } else {
+    if (ibest==0) {
+      // Value before 1st point requested -- return value of 1st point
+      return ybest ;
+    }
+    const_cast<RooCurve*>(this)->GetPoint(ibest-1,xother,yother) ;    
+    return yother + (ybest-yother)*(xvalue-xother)/(xbest-xother) ;
+  }
+
+ 
+  return 0 ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.15 2004/11/29 12:22:10 wverkerke Exp $
+ *    File: $Id: RooAbsOptGoodnessOfFit.cc,v 1.16 2004/11/29 20:22:17 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -77,15 +77,15 @@ RooAbsOptGoodnessOfFit::RooAbsOptGoodnessOfFit(const char *name, const char *tit
     RooRealVar* datReal = dynamic_cast<RooRealVar*>(dataDepSet->find(pdfReal->GetName())) ;
     if (!datReal) continue ;
     
-    if (pdfReal->getFitMin()<(datReal->getFitMin()-1e-6)) {
+    if (pdfReal->getMin()<(datReal->getMin()-1e-6)) {
       cout << "RooAbsOptGoodnessOfFit: ERROR minimum of PDF variable " << arg->GetName() 
-	   << "(" << pdfReal->getFitMin() << ") is smaller than that of " 
-	   << arg->GetName() << " in the dataset (" << datReal->getFitMin() << ")" << endl ;
+	   << "(" << pdfReal->getMin() << ") is smaller than that of " 
+	   << arg->GetName() << " in the dataset (" << datReal->getMin() << ")" << endl ;
       RooErrorHandler::softAbort() ;
       return ;
     }
     
-    if (pdfReal->getFitMax()>(datReal->getFitMax()+1e-6)) {
+    if (pdfReal->getMax()>(datReal->getMax()+1e-6)) {
       cout << "RooAbsOptGoodnessOfFit: ERROR maximum of PDF variable " << arg->GetName() 
 	   << " is smaller than that of " << arg->GetName() << " in the dataset" << endl ;
       RooErrorHandler::softAbort() ;

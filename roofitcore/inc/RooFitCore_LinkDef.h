@@ -30,6 +30,20 @@
 #pragma link C++ function DataError ;
 #pragma link C++ function Full ;
 #pragma link C++ function Partial ;
+#pragma link C++ function ProjectionRange ;
+#pragma link C++ function CutRange ;
+#pragma link C++ function Name ;
+#pragma link C++ function Invisible ;
+#pragma link C++ function AddTo ;
+#pragma link C++ function XErrorSize ;
+#pragma link C++ function RefreshNorm ;
+#pragma link C++ function Columns ;
+#pragma link C++ function OutputFile ;
+#pragma link C++ function Format ;
+#pragma link C++ function Sibling ;
+#pragma link C++ function RooFitShortHand::C ;
+#pragma link C++ function RooFitShortHand::L ;
+#pragma link C++ function RooFitShortHand::S ;
 
 #pragma link C++ class RooLinkedList- ;
 #pragma link C++ class RooRealVar- ;

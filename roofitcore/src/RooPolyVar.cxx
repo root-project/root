@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPolyVar.cc,v 1.5 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooPolyVar.cc,v 1.6 2004/11/29 20:24:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -107,7 +107,7 @@ Double_t RooPolyVar::evaluate() const
 }
 
 
-Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
@@ -115,7 +115,7 @@ Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars)
 
 
 
-Double_t RooPolyVar::analyticalIntegral(Int_t code) const 
+Double_t RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   assert(code==1) ;
 
@@ -128,7 +128,7 @@ Double_t RooPolyVar::analyticalIntegral(Int_t code) const
 
   // Primitive = sum(k) coef_k * 1/(k+1) x^(k+1)
   while(coef=(RooAbsReal*)_coefIter->Next()) {
-    sum += coef->getVal(nset)*(pow(_x.max(),order+1)-pow(_x.min(),order+1))/(order+1) ; 
+    sum += coef->getVal(nset)*(pow(_x.max(rangeName),order+1)-pow(_x.min(rangeName),order+1))/(order+1) ; 
     order++ ;
   }
 

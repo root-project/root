@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator2D.cc,v 1.6 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooIntegrator2D.cc,v 1.7 2004/11/29 20:23:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,6 +20,7 @@
 
 
 #include "RooFitCore/RooIntegrator2D.hh"
+#include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooIntegratorBinding.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooNumber.hh"

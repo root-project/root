@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.rdl,v 1.19 2004/08/09 00:00:52 bartoldu Exp $
+ *    File: $Id: RooAbsCollection.rdl,v 1.19 2004/11/29 12:22:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,6 +22,7 @@
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooPrintable.hh"
 #include "RooFitCore/RooLinkedList.hh"
+#include "RooFitCore/RooCmdArg.hh"
 
 class RooAbsCollection : public TObject, public RooPrintable {
 public:
@@ -87,6 +88,14 @@ public:
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
+
+  // Latex printing methods
+  void printLatex(const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),	
+		  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),	
+		  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),	
+		  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
+  void printLatex(ostream& ofs, Int_t ncol, const char* option="NEYU", Int_t sigDigit=1, 
+                  const RooLinkedList& siblingLists=RooLinkedList()) const ;
 
   void setName(const char *name) { _name= name; }
   const char* GetName() const { return _name.Data() ; }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormManager.rdl,v 1.4 2002/09/30 00:57:29 verkerke Exp $
+ *    File: $Id: RooNormManager.rdl,v 1.5 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,8 +33,8 @@ public:
   RooNormManager(const RooNormManager& other) ;
   virtual ~RooNormManager() ;
   
-  RooAbsReal* getNormalization(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset=0) ;
-  void setNormalization(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, RooAbsReal* norm) ;  
+  RooAbsReal* getNormalization(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset=0, const TNamed* isetRangeName=0) ;
+  void setNormalization(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, const TNamed* isetRangeName, RooAbsReal* norm) ;  
 
   inline RooAbsReal* lastNorm() const { return _lastNorm ; } 
   inline RooArgSet* lastNormSet() const { return _lastNormSet ; } 
@@ -42,6 +42,8 @@ public:
 
   RooAbsArg* getNormByIndex(Int_t index) const ;
   Int_t cacheSize() const { return _size ; }
+
+  const RooNameSet* findNameSet(const RooArgSet* nset) const ;
 
 protected:
 

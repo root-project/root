@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenProdProj.cc,v 1.7 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooGenProdProj.cc,v 1.8 2004/11/29 20:23:42 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,7 +44,7 @@ RooGenProdProj::RooGenProdProj()
 }
 
 RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, 
-			       const RooArgSet& _intSet, const RooArgSet& _normSet) :
+			       const RooArgSet& _intSet, const RooArgSet& _normSet, const char* isetRangeName) :
   RooAbsReal(name, title),
   _compSetOwnedN(0), 
   _compSetOwnedD(0),
@@ -59,8 +59,8 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
   _compSetOwnedN = new RooArgSet ;
   _compSetOwnedD = new RooArgSet ;
 
-  RooAbsReal* numerator = makeIntegral("numerator",_prodSet,_intSet,*_compSetOwnedN) ;
-  RooAbsReal* denominator = makeIntegral("denominator",_prodSet,_normSet,*_compSetOwnedD) ;
+  RooAbsReal* numerator = makeIntegral("numerator",_prodSet,_intSet,*_compSetOwnedN,isetRangeName) ;
+  RooAbsReal* denominator = makeIntegral("denominator",_prodSet,_normSet,*_compSetOwnedD,0) ;
 
   // Copy all components in (non-owning) set proxy
   _compSetN.add(*_compSetOwnedN) ;
@@ -131,7 +131,7 @@ RooGenProdProj::~RooGenProdProj()
 
 
 
-RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, RooArgSet& saveSet) 
+RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, RooArgSet& saveSet, const char* isetRangeName) 
 {
   // Create integral of compSet over observables in intSet.
   RooArgSet anaIntSet, numIntSet ;
@@ -162,10 +162,10 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   while(pdf=(RooAbsPdf*)compIter->Next()) {
     if (pdf->dependsOn(anaIntSet)) {
       RooArgSet anaSet ;
-      Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet,anaSet,0) ;
+      Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet,anaSet,0,isetRangeName) ;
       if (code!=0) {
 	// Analytical integral, create integral object
-	RooAbsReal* pai = pdf->createIntegral(anaSet) ;
+	RooAbsReal* pai = pdf->createIntegral(anaSet,isetRangeName) ;
 	pai->setOperMode(_operMode) ;
 
 	// Add to integral to product
@@ -187,14 +187,20 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   }
 
   // Create product of (partial) analytical integrals
-  RooProduct* prod = new RooProduct(Form("%s_%s",GetName(),name),"product",prodSet) ;
+  TString prodName ;
+  if (isetRangeName) {
+    prodName = Form("%s_%s_Range_%s",GetName(),name,isetRangeName) ;
+  } else {
+    prodName = Form("%s_%s",GetName(),name) ;
+  }
+  RooProduct* prod = new RooProduct(prodName,"product",prodSet) ;
   prod->setOperMode(_operMode) ;
 
   // Declare owndership of product
   saveSet.addOwned(*prod) ;
 
   // Create integral performing remaining numeric integration over (partial) analytic product
-  RooAbsReal* ret = prod->createIntegral(numIntSet) ;
+  RooAbsReal* ret = prod->createIntegral(numIntSet,isetRangeName) ;
   ret->setOperMode(_operMode) ;
   saveSet.addOwned(*ret) ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsLValue.rdl,v 1.8 2004/08/09 00:00:52 bartoldu Exp $
+ *    File: $Id: RooAbsLValue.rdl,v 1.8 2004/11/29 12:22:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,10 +27,10 @@ public:
   RooAbsLValue() ;
   virtual ~RooAbsLValue();
 
-  virtual void setFitBin(Int_t ibin) = 0 ;
-  virtual Int_t getFitBin() const = 0 ;
-  virtual Int_t numFitBins() const = 0 ;
-  virtual Double_t getFitBinWidth(Int_t i) const = 0 ;
+  virtual void setBin(Int_t ibin) = 0 ;
+  virtual Int_t getBin() const = 0 ;
+  virtual Int_t numBins() const = 0 ;
+  virtual Double_t getBinWidth(Int_t i) const = 0 ;
 
   virtual void randomize() = 0 ;
 

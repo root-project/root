@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCIntegrator.cc,v 1.15 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.16 2004/11/29 20:23:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,6 +21,7 @@
 // based on a C version from the 0.9 beta release of the GNU scientific library.
 
 #include "RooFitCore/RooMCIntegrator.hh"
+#include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooNumber.hh"
 #include "RooFitCore/RooAbsArg.hh"
 #include "RooFitCore/RooNumIntFactory.hh"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooErrorVar.rdl,v 1.8 2004/11/29 12:22:18 wverkerke Exp $
+ *    File: $Id: RooErrorVar.rdl,v 1.9 2004/12/03 13:18:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -54,18 +54,22 @@ public:
   virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
 
   // Set/get finite fit range limits
-  void setFitMin(Double_t value, const char* name=0) ;
-  void setFitMax(Double_t value, const char* name=0) ;
-  void setFitRange(Double_t min, Double_t max, const char* name=0) ;
-  void setFitBins(Int_t nBins) { setBinning(RooUniformBinning(getFitMin(),getFitMax(),nBins)) ; }
+  inline void setMin(Double_t value) { setMin(0,value) ; }
+  inline void setMax(Double_t value) { setMax(0,value) ; }
+  inline void setRange(Double_t min, Double_t max) { setRange(0,min,max) ; }
+  void setMin(const char* name, Double_t value) ;
+  void setMax(const char* name, Double_t value) ;
+  void setRange(const char* name, Double_t min, Double_t max) ;
+
+  void setBins(Int_t nBins) { setBinning(RooUniformBinning(getMin(),getMax(),nBins)) ; }
   void setBinning(const RooAbsBinning& binning, const char* name=0) ;
   const RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) const ;
   RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE) ;
 
   // Set infinite fit range limits
-  inline void removeFitMin() { _binning->setMin(-RooNumber::infinity) ; }
-  inline void removeFitMax() { _binning->setMax(RooNumber::infinity) ; }
-  inline void removeFitRange() { _binning->setRange(-RooNumber::infinity,RooNumber::infinity) ; }
+  inline void removeMin(const char* name=0) { getBinning(name).setMin(-RooNumber::infinity) ; }
+  inline void removeMax(const char* name=0) { getBinning(name).setMax(RooNumber::infinity) ; }
+  inline void removeRange(const char* name=0) { getBinning(name).setRange(-RooNumber::infinity,RooNumber::infinity) ; }
 
 protected:
 

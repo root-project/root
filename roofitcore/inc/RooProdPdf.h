@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.rdl,v 1.35 2004/08/09 00:00:55 bartoldu Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.35 2004/11/29 12:22:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -49,12 +49,12 @@ public:
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;	
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet) const ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
   virtual ExtendMode extendMode() const ;
-  virtual Double_t expectedEvents() const ; 
+  virtual Double_t expectedEvents(const RooArgSet* nset=0) const ; 
 
   const RooArgList& pdfList() const { return _pdfList ; }
 
@@ -71,7 +71,7 @@ protected:
                         RooLinkedList& termList,   RooLinkedList& normList, 
                         RooLinkedList& impDepList, RooLinkedList& crossDepList,
                         RooLinkedList& intList) const;
-  const char* makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset) const ;
+  const char* makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset, const char* isetRangeName) const ;
   void groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outerIntDeps,
                          const RooLinkedList& terms, const RooLinkedList& norms, 
                          const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& cross) const ;
@@ -79,15 +79,16 @@ protected:
   Double_t calculate(const RooArgList* partIntList, const RooLinkedList* normSetList) const ;
 	
 	
-  void getPartIntList(const RooArgSet* nset, const RooArgSet* iset, pRooArgList& partList, pRooLinkedList& nsetList, Int_t& code) const ;
-  RooAbsReal* processProductTerm(const RooArgSet* nset, const RooArgSet* iset, 
+  void getPartIntList(const RooArgSet* nset, const RooArgSet* iset, pRooArgList& partList, pRooLinkedList& nsetList, 
+                      Int_t& code, const char* isetRangeName=0) const ;
+  RooAbsReal* processProductTerm(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName,
                                  const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet, 
                                  Bool_t& isOwned, Bool_t forceWrap=kFALSE) const ;
 
   void clearCache() ;  
   mutable RooNormListManager _partListMgr ; // Partial integral list manager
   mutable RooNormListManager _partOwnedListMgr ; // Partial integral list manager for owned components
-  mutable RooLinkedList _partNormListCache[10] ; // Cache of normalization listss
+  mutable RooLinkedList _partNormListCache[10] ; // Cache of normalization lists
   
   virtual void operModeHook() ;
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;

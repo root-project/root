@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTruthModel.cc,v 1.22 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooTruthModel.cc,v 1.23 2004/11/29 20:24:44 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -166,7 +166,7 @@ Double_t RooTruthModel::evaluate() const
 
 
 
-Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   switch(_basisCode) {
 
@@ -201,7 +201,7 @@ Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 }
 
 
-Double_t RooTruthModel::analyticalIntegral(Int_t code) const 
+Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   // Code must be 1
   assert(code==1) ;
@@ -220,8 +220,8 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
     {
       Double_t result(0) ;
       if (tau==0) return 1 ;
-      if (basisSign != Minus) result += tau*(1-exp(-x.max()/tau)) ;
-      if (basisSign != Plus) result += tau*(1-exp(x.min()/tau)) ;
+      if (basisSign != Minus) result += tau*(1-exp(-x.max(rangeName)/tau)) ;
+      if (basisSign != Plus) result += tau*(1-exp(x.min(rangeName)/tau)) ;
       return result ;
     }
   case sinBasis:
@@ -229,10 +229,10 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
       Double_t result(0) ;
       if (tau==0) return 0 ;
       Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      //if (basisSign != Minus) result += exp(-x.max()/tau)*(-1/tau*sin(dm*x.max()) - dm*cos(dm*x.max())) + 1/tau;
-      //if (basisSign != Plus)  result -= exp( x.min()/tau)*(-1/tau*sin(dm*(-x.min())) - dm*cos(dm*(-x.min()))) + 1/tau ;
-      if (basisSign != Minus) result += exp(-x.max()/tau)*(-1/tau*sin(dm*x.max()) - dm*cos(dm*x.max())) + dm;  // fixed FMV 08/29/03
-      if (basisSign != Plus)  result -= exp( x.min()/tau)*(-1/tau*sin(dm*(-x.min())) - dm*cos(dm*(-x.min()))) + dm ;  // fixed FMV 08/29/03
+      //if (basisSign != Minus) result += exp(-x.max(rangeName)/tau)*(-1/tau*sin(dm*x.max(rangeName)) - dm*cos(dm*x.max(rangeName))) + 1/tau;
+      //if (basisSign != Plus)  result -= exp( x.min(rangeName)/tau)*(-1/tau*sin(dm*(-x.min(rangeName))) - dm*cos(dm*(-x.min(rangeName)))) + 1/tau ;
+      if (basisSign != Minus) result += exp(-x.max(rangeName)/tau)*(-1/tau*sin(dm*x.max(rangeName)) - dm*cos(dm*x.max(rangeName))) + dm;  // fixed FMV 08/29/03
+      if (basisSign != Plus)  result -= exp( x.min(rangeName)/tau)*(-1/tau*sin(dm*(-x.min(rangeName))) - dm*cos(dm*(-x.min(rangeName)))) + dm ;  // fixed FMV 08/29/03
       return result / (1/(tau*tau) + dm*dm) ;
     }
   case cosBasis:
@@ -240,21 +240,21 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
       Double_t result(0) ;
       if (tau==0) return 1 ;
       Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-      if (basisSign != Minus) result += exp(-x.max()/tau)*(-1/tau*cos(dm*x.max()) + dm*sin(dm*x.max())) + 1/tau ;
-      //if (basisSign != Plus)  result += exp( x.min()/tau)*(-1/tau*cos(dm*(-x.min())) - dm*sin(dm*(-x.min()))) + 1/tau ;
-      if (basisSign != Plus)  result += exp( x.min()/tau)*(-1/tau*cos(dm*(-x.min())) + dm*sin(dm*(-x.min()))) + 1/tau ; // fixed FMV 08/29/03
+      if (basisSign != Minus) result += exp(-x.max(rangeName)/tau)*(-1/tau*cos(dm*x.max(rangeName)) + dm*sin(dm*x.max(rangeName))) + 1/tau ;
+      //if (basisSign != Plus)  result += exp( x.min(rangeName)/tau)*(-1/tau*cos(dm*(-x.min(rangeName))) - dm*sin(dm*(-x.min(rangeName)))) + 1/tau ;
+      if (basisSign != Plus)  result += exp( x.min(rangeName)/tau)*(-1/tau*cos(dm*(-x.min(rangeName))) + dm*sin(dm*(-x.min(rangeName)))) + 1/tau ; // fixed FMV 08/29/03
       return result / (1/(tau*tau) + dm*dm) ;
     }
   case linBasis:
     {
       if (tau==0) return 0 ;
-      Double_t t_max = x.max()/tau ;
+      Double_t t_max = x.max(rangeName)/tau ;
       return tau*( 1 - (1 + t_max)*exp(-t_max) ) ;
     }
   case quadBasis:
     {
       if (tau==0) return 0 ;
-      Double_t t_max = x.max()/tau ;
+      Double_t t_max = x.max(rangeName)/tau ;
       return tau*( 2 - (2 + (2 + t_max)*t_max)*exp(-t_max) ) ;
     }
   case sinhBasis:
@@ -264,8 +264,8 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
       Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
       Double_t taup = 2*tau/(2-tau*dg);
       Double_t taum = 2*tau/(2+tau*dg);
-      if (basisSign != Minus) result += 0.5*( taup*(1-exp(-x.max()/taup)) - taum*(1-exp(-x.max()/taum)) ) ;
-      if (basisSign != Plus)  result -= 0.5*( taup*(1-exp( x.min()/taup)) - taum*(1-exp( x.min()/taum)) ) ;
+      if (basisSign != Minus) result += 0.5*( taup*(1-exp(-x.max(rangeName)/taup)) - taum*(1-exp(-x.max(rangeName)/taum)) ) ;
+      if (basisSign != Plus)  result -= 0.5*( taup*(1-exp( x.min(rangeName)/taup)) - taum*(1-exp( x.min(rangeName)/taum)) ) ;
       return result ;
     }
   case coshBasis:
@@ -275,8 +275,8 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code) const
       Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
       Double_t taup = 2*tau/(2-tau*dg);
       Double_t taum = 2*tau/(2+tau*dg);
-      if (basisSign != Minus) result += 0.5*( taup*(1-exp(-x.max()/taup)) + taum*(1-exp(-x.max()/taum)) ) ;
-      if (basisSign != Plus)  result += 0.5*( taup*(1-exp( x.min()/taup)) + taum*(1-exp( x.min()/taum)) ) ;
+      if (basisSign != Minus) result += 0.5*( taup*(1-exp(-x.max(rangeName)/taup)) + taum*(1-exp(-x.max(rangeName)/taum)) ) ;
+      if (basisSign != Plus)  result += 0.5*( taup*(1-exp( x.min(rangeName)/taup)) + taum*(1-exp( x.min(rangeName)/taum)) ) ;
       return result ;
     }
   default:

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooChi2Var.cc,v 1.9 2004/11/29 12:22:17 wverkerke Exp $
+ *    File: $Id: RooChi2Var.cc,v 1.10 2004/11/29 20:23:05 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,11 +34,6 @@ using std::endl;
 
 ClassImp(RooChi2Var)
 ;
-
-
-RooCmdArg Extended() { return RooCmdArg("Extended",1,0,0,0,0,0,0,0) ; }
-RooCmdArg DataError(RooDataHist::ErrorType etype) { return RooCmdArg("DataError",(Int_t)etype,0,0,0,0,0,0,0) ; }
-RooCmdArg NumCPU(Int_t nCPU) { return RooCmdArg("NumCPU",nCPU,0,0,0,0,0,0,0) ; }
 
 
 RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooDataHist& data,
@@ -100,7 +95,7 @@ Double_t RooChi2Var::evaluatePartition(Int_t firstEvent, Int_t lastEvent) const
   // Determine total number of data events to be used for PDF normalization
   Double_t nDataTotal ;
   if (_extended) {
-    nDataTotal = _pdfClone->expectedEvents() ;
+    nDataTotal = _pdfClone->expectedEvents(_dataClone->get()) ;
   } else {
     nDataTotal = _dataClone->sumEntries() ;
   }

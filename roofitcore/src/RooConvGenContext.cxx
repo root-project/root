@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvGenContext.cc,v 1.13 2004/11/30 16:08:21 wverkerke Exp $
+ *    File: $Id: RooConvGenContext.cc,v 1.14 2004/12/02 14:10:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -55,7 +55,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   RooAbsAnaConvPdf* pdfClone = (RooAbsAnaConvPdf*) _pdfCloneSet->find(model.GetName()) ;
   RooTruthModel truthModel("truthModel","Truth resolution model",(RooRealVar&)*pdfClone->convVar()) ;
   pdfClone->changeModel(truthModel) ;
-  ((RooRealVar*)pdfClone->convVar())->removeFitRange() ;
+  ((RooRealVar*)pdfClone->convVar())->removeRange() ;
 
   // Create generator for physics X truth model
   _pdfVars = (RooArgSet*) pdfClone->getDependents(&vars) ;
@@ -71,7 +71,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
     _modelCloneSet->find(model._convSet.at(0)->GetName())->Clone("smearing") ;
   _modelCloneSet->addOwned(*modelClone) ;
   modelClone->changeBasis(0) ;
-  modelClone->convVar().removeFitRange() ;
+  modelClone->convVar().removeRange() ;
 
   // Create generator for resolution model as PDF
   _modelVars = (RooArgSet*) modelClone->getDependents(&vars) ;

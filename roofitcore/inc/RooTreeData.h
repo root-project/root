@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.31 2004/08/09 00:00:56 bartoldu Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.31 2004/11/29 12:22:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -66,17 +66,11 @@ public:
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
 
   virtual RooPlot* plotOn(RooPlot* frame, 
-			  const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
+			  const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
 			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
 			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
 			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
 
-  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", 
-			  const RooAbsBinning* bins=0, RooAbsData::ErrorType=RooAbsData::Poisson) const;
-  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P", 
-			  const RooAbsBinning* bins=0, RooAbsData::ErrorType=RooAbsData::Poisson) const;
-  virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, 
-			      const char* cut="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const ;
   virtual RooPlot* statOn(RooPlot* frame, const char *what, 
 			  const char *label= "", Int_t sigDigits= 2,
 			  Option_t *options= "NELU", Double_t xmin=0.15, 
@@ -88,7 +82,7 @@ public:
     return statOn(frame,"NMR",label,sigDigits,options,xmin,xmax,ymax) ;
   }
 
-  TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "") const;
+  TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "", const char* cutRange=0) const;
 
   Double_t moment(RooRealVar &var, Double_t order, Double_t offset=0) const ;
   RooRealVar* meanVar(RooRealVar &var) const ;
@@ -113,7 +107,7 @@ public:
   RooTreeData(const char *name, const char *title, RooTreeData *ntuple, 
 	     const RooArgSet& vars, const RooFormulaVar* cutVar, Bool_t copyCache);
 
-  //protected:
+protected:
 
   inline Int_t ScanCache(const char* varexp="", const char* selection="", Option_t* option="", 
 			 Int_t nentries = 1000000000, Int_t firstentry = 0) {
@@ -142,7 +136,26 @@ public:
   void setBranchBufferSize(Int_t size) { _defTreeBufSize = size ; }
   Int_t getBranchBufferSize() const { return _defTreeBufSize ; }
 
-protected:
+  // PlotOn implementation
+  struct PlotOpt {
+   PlotOpt() : cuts(""), drawOptions("P"), bins(0), etype(RooAbsData::Poisson), cutRange(0), histName(0), histInvisible(kFALSE),
+              addToHistName(0),addToWgtSelf(1.),addToWgtOther(1.),xErrorSize(1),refreshFrameNorm(kFALSE) {} ;
+   const char* cuts ;
+   Option_t* drawOptions ;
+   RooAbsBinning* bins ;
+   RooAbsData::ErrorType etype ;
+   const char* cutRange ;
+   const char* histName ;
+   Bool_t histInvisible ;
+   const char* addToHistName ;
+   Double_t addToWgtSelf ;
+   Double_t addToWgtOther ;
+   Double_t xErrorSize ;
+   Bool_t refreshFrameNorm ;
+  } ;
+	
+  virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;
+  virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const ;
 
   void checkInit() const {
     if (_defCtor) {
@@ -181,14 +194,6 @@ private:
 
   ClassDef(RooTreeData,1) // Abstract ttree based data collection
 };
-
-RooCmdArg Cut(const char* cutSpec) ;
-RooCmdArg Cut(const RooAbsReal& cutVar) ;
-RooCmdArg Binning(const RooAbsBinning& binning) ;
-RooCmdArg MarkerStyle(Style_t style) ;
-RooCmdArg MarkerSize(Size_t size) ;
-RooCmdArg MarkerColor(Color_t color) ;
-//RooCmdArg XErrorSize(Double_t width) ;
 
 
 #endif

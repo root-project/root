@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.48 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.49 2004/11/29 20:24:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -36,6 +36,7 @@
 #include "RooFitCore/RooProdGenContext.hh"
 #include "RooFitCore/RooGenProdProj.hh"
 #include "RooFitCore/RooProduct.hh"
+#include "RooFitCore/RooNameReg.hh"
 using std::cout;
 using std::endl;
 using std::ostream;
@@ -540,11 +541,12 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
 
 void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, 
-				pRooArgList& partList, pRooLinkedList& nsetList, Int_t& code) const 
+				pRooArgList& partList, pRooLinkedList& nsetList, 
+				Int_t& code, const char* isetRangeName) const 
 {
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  RooArgList* partIntList = _partListMgr.getNormList(this,nset,iset,&sterileIdx) ;
+  RooArgList* partIntList = _partListMgr.getNormList(this,nset,iset,&sterileIdx,RooNameReg::ptr(isetRangeName)) ;
   if (partIntList) {
     code = _partListMgr.lastIndex() ;
     
@@ -595,7 +597,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
       
       // Add prefab term to partIntList. 
       Bool_t isOwned ;
-      RooAbsReal* func = processProductTerm(nset,iset,term,termNSet,termISet,isOwned) ;
+      RooAbsReal* func = processProductTerm(nset,iset,isetRangeName,term,termNSet,termISet,isOwned) ;
       if (func) {
 	partIntList->add(*func) ;
 	if (isOwned) partIntOwnedList->addOwned(*func) ;
@@ -625,7 +627,7 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
 // 	cout << "termISet = " ; termISet.Print("1") ;
 
 	Bool_t isOwned ;
-	RooAbsReal* func = processProductTerm(nset,iset,term,termNSet,termISet,isOwned,kTRUE) ;
+	RooAbsReal* func = processProductTerm(nset,iset,isetRangeName,term,termNSet,termISet,isOwned,kTRUE) ;
 // 	cout << "created composite term component " << func->GetName() << endl ;
 	if (func) {
 	  compTermSet.add(*func) ;
@@ -644,11 +646,11 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
       //partIntOwnedList->addOwned(*func) ;
 
       // WVE but this does, so we'll keep it for the moment
-      const char* prodname = makeRGPPName("SPECPROD_",compTermSet,outerIntDeps,RooArgSet()) ;
+      const char* prodname = makeRGPPName("SPECPROD_",compTermSet,outerIntDeps,RooArgSet(),isetRangeName) ;
       RooProduct* prodtmp = new RooProduct(prodname,prodname,compTermSet) ;
       partIntOwnedList->addOwned(*prodtmp) ;
 
-      const char* intname = makeRGPPName("SPECINT_",compTermSet,outerIntDeps,RooArgSet()) ;
+      const char* intname = makeRGPPName("SPECINT_",compTermSet,outerIntDeps,RooArgSet(),isetRangeName) ;
       RooRealIntegral* inttmp = new RooRealIntegral(intname,intname,*prodtmp,outerIntDeps) ;
       partIntOwnedList->addOwned(*inttmp) ;
       partIntList->add(*inttmp);
@@ -661,8 +663,8 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
   delete gIter ;
 
   // Store the partial integral list and return the assigned code ;
-  code = _partListMgr.setNormList(this,nset,iset,partIntList) ;
-  _partOwnedListMgr.setNormList(this,nset,iset,partIntOwnedList) ;
+  code = _partListMgr.setNormList(this,nset,iset,partIntList,RooNameReg::ptr(isetRangeName)) ;
+  _partOwnedListMgr.setNormList(this,nset,iset,partIntOwnedList,RooNameReg::ptr(isetRangeName)) ;
 
   // Store the normalization set list in the cache using the index code of _partListMgr
   _partNormListCache[code].Delete() ;
@@ -670,19 +672,20 @@ void RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset,
   _partNormListCache[code] = *partIntNormList ;
 
 
-//     cout << "RooProdPdf::getPIL(" << GetName() << "," << this << ") creating new configuration with code " << code << endl
-//          << "    nset = " ; if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
-//     cout << "    iset = " ; if (iset) iset->Print("1") ; else cout << "<none>" << endl ;
-//     cout << "    Partial Integral List:" ;
-//     partIntList->Print("1") ;
-//     cout << "    Partial Owned Integral List:" ;
-//     partIntOwnedList->Print("1") ;
-//     cout << endl  ;
+  // WVE PRINT SECTION
+//       cout << "RooProdPdf::getPIL(" << GetName() << "," << this << ") creating new configuration with code " << code << endl
+//            << "    nset = " ; if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
+//       cout << "    iset" << (isetRangeName?(Form("[%s]",isetRangeName)):"") << " = " ; if (iset) iset->Print("1") ; else cout << "<none>" << endl ;
+//       cout << "    Partial Integral List:" ;
+//       partIntList->Print("1") ;
+//       cout << "    Partial Owned Integral List:" ;
+//       partIntOwnedList->Print("1") ;
+//       cout << "    Normalization list: " << endl ; partIntNormList->Print("1") ; 
+//       cout << endl  ;
   
   partList =  partIntList ;
   nsetList = _partNormListCache+code ;
 
-  //cout << "RooProdPdf::calculate(" << GetName() << ") caching product configuration with normalization " ; partIntNormList->Print("1") ; 
 
   // We own contents of all lists filled by factorizeProduct() 
   imp.Delete() ;
@@ -808,14 +811,14 @@ void RooProdPdf::groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outer
 
 
 
-RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSet* iset, 
+RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName,
 				           const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet,
 				           Bool_t& isOwned, Bool_t forceWrap) const
 {
   // CASE I: factorizing term: term is integrated over all normalizing observables
   // -----------------------------------------------------------------------------
   // Check if all observbales of this term are integrated. If so the term cancels
-  if (termNSet.getSize()>0 && termNSet.getSize()==termISet.getSize()) {
+  if (termNSet.getSize()>0 && termNSet.getSize()==termISet.getSize() && isetRangeName==0) {
 
     // Term factorizes    
     return 0 ;
@@ -839,7 +842,7 @@ RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSe
       RooAbsPdf* pdf = (RooAbsPdf*) pIter->Next() ;
       delete pIter ;
       
-      RooAbsReal* partInt = pdf->createIntegral(termISet,termNSet) ;
+      RooAbsReal* partInt = pdf->createIntegral(termISet,termNSet,isetRangeName) ;
       partInt->setOperMode(operMode()) ;
 
       isOwned=kTRUE ;
@@ -851,8 +854,8 @@ RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSe
       //---------------------------------------------------------------
       
       // Use auxiliary class RooGenProdProj to calculate this term
-      const char* name = makeRGPPName("GENPROJ_",*term,termISet,termNSet) ;
-      RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet) ;
+      const char* name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
+      RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet,isetRangeName) ;
       partInt->setOperMode(operMode()) ;
 
       isOwned=kTRUE ;
@@ -864,8 +867,8 @@ RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSe
   // -------------------------------------------------------
   if (nset && nset->getSize()>0 && term->getSize()>1) {
     // Composite term needs normalized integration
-    const char* name = makeRGPPName("GENPROJ_",*term,termISet,termNSet) ;
-    RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet) ;
+    const char* name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
+    RooAbsReal* partInt = new RooGenProdProj(name,name,*term,termISet,termNSet,isetRangeName) ;
     partInt->setOperMode(operMode()) ;
 
     isOwned=kTRUE ;
@@ -916,7 +919,7 @@ RooAbsReal* RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSe
 
 
 
-const char* RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset) const
+const char* RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset, const char* isetRangeName) const
 {
   // Make an appropriate name for a RooGenProdProj object in getPartIntList() 
 
@@ -952,6 +955,12 @@ const char* RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, con
       pname.Append(arg->GetName()) ;
     }
     delete iter ;
+
+    if (isetRangeName) {
+      pname.Append("|") ;
+      pname.Append(isetRangeName) ;
+    }
+
     pname.Append("]") ;
   }
 
@@ -982,7 +991,8 @@ Bool_t RooProdPdf::forceAnalyticalInt(const RooAbsArg& dep) const
 }
 
 
-Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
+					  const RooArgSet* normSet, const char* rangeName) const 
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code.
@@ -1007,7 +1017,7 @@ Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
   Int_t code ;
   RooArgList *plist ;
   RooLinkedList *nlist ;
-  getPartIntList(normSet,&allVars,plist,nlist,code) ;
+  getPartIntList(normSet,&allVars,plist,nlist,code,rangeName) ;
   
   return code+1 ;
 }
@@ -1015,7 +1025,7 @@ Int_t RooProdPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 
 
 
-Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
+Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const 
 {
   // Return analytical integral defined by given scenario code
 
@@ -1023,6 +1033,8 @@ Double_t RooProdPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) 
   if (code==0) {
     return getVal(normSet) ;
   }
+
+  // WVE needs adaptation for rangename feature
 
   // Partial integration scenarios
   RooArgList* partIntList = _partListMgr.getNormListByIndex(code-1) ;  
@@ -1083,10 +1095,10 @@ RooAbsPdf::ExtendMode RooProdPdf::extendMode() const
 
 
 
-Double_t RooProdPdf::expectedEvents() const 
+Double_t RooProdPdf::expectedEvents(const RooArgSet* nset) const 
 {
   assert(_extendedIndex>=0) ;
-  return ((RooAbsPdf*)_pdfList.at(_extendedIndex))->expectedEvents() ;
+  return ((RooAbsPdf*)_pdfList.at(_extendedIndex))->expectedEvents(nset) ;
 }
 
 

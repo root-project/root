@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.60 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.61 2004/11/29 20:24:42 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -840,14 +840,6 @@ TList* RooTreeData::split(const RooAbsCategory& splitCat) const
 }
 
 
-RooCmdArg Cut(const char* cutSpec)              { return RooCmdArg("CutSpec",0,0,0,0,cutSpec,0,0,0) ; }
-RooCmdArg Cut(const RooAbsReal& cutVar)         { return RooCmdArg("CutVar",0,0,0,0,0,0,&cutVar,0) ; }
-RooCmdArg Binning(const RooAbsBinning& binning) { return RooCmdArg("Binning",0,0,0,0,0,0,&binning,0) ;}
-RooCmdArg MarkerStyle(Style_t style)            { return RooCmdArg("MarkerStyle",style,0,0,0,0,0,0,0) ; }
-RooCmdArg MarkerSize(Size_t size)               { return RooCmdArg("MarkerSize",0,0,size,0,0,0,0,0) ; }
-RooCmdArg MarkerColor(Color_t color)            { return RooCmdArg("MarkerColor",color,0,0,0,0,0,0,0) ; }
-
-
 RooPlot* RooTreeData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
 			     const RooCmdArg& arg3, const RooCmdArg& arg4,
 			     const RooCmdArg& arg5, const RooCmdArg& arg6,
@@ -869,7 +861,9 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
   // Define configuration for this method
   RooCmdConfig pc(Form("RooTreeData::plotOn(%s)",GetName())) ;
   pc.defineString("drawOption","DrawOption",0,"P") ;
+  pc.defineString("cutRange","CutRange",0,"") ;
   pc.defineString("cutString","CutSpec",0,"") ;
+  pc.defineString("histName","Name",0,"") ;
   pc.defineObject("cutVar","CutVar",0) ;
   pc.defineObject("binning","Binning",0) ;
   pc.defineObject("asymCat","Asymmetry",0) ;
@@ -880,6 +874,12 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineInt("markerStyle","MarkerStyle",0,-999) ;
   pc.defineDouble("markerSize","MarkerSize",0,-999) ;
   pc.defineInt("errorType","DataError",0,(Int_t)RooAbsData::Poisson) ;
+  pc.defineInt("histInvisible","Invisible",0,0) ;
+  pc.defineInt("refreshFrameNorm","RefreshNorm",0,0) ;
+  pc.defineString("addToHistName","AddTo",0,"") ;
+  pc.defineDouble("addToWgtSelf","AddTo",0,1.) ;
+  pc.defineDouble("addToWgtOther","AddTo",1,1.) ;
+  pc.defineDouble("xErrorSize","XErrorSize",0,1.) ;
   pc.defineMutex("DataError","Asymmetry") ;
 
   // Process & check varargs 
@@ -888,19 +888,33 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
     return frame ;
   }
 
+  PlotOpt o ;
+
   // Extract values from named arguments
-  Option_t* drawOptions = pc.getString("drawOption") ;
-  const char* cutSpec = pc.getString("cutString") ;
-  //const RooAbsReal* cutVar = (const RooAbsReal*) pc.getObject("cutVar") ;
-  const RooAbsBinning* bins = (const RooAbsBinning*) pc.getObject("binning") ;
+  o.drawOptions = pc.getString("drawOption") ;
+  o.cuts = pc.getString("cutString") ;
+  o.bins = (RooAbsBinning*) pc.getObject("binning") ;
   const RooAbsCategoryLValue* asymCat = (const RooAbsCategoryLValue*) pc.getObject("asymCat") ;
-  RooAbsData::ErrorType etype = (RooAbsData::ErrorType) pc.getInt("errorType") ;
+  o.etype = (RooAbsData::ErrorType) pc.getInt("errorType") ;
+  o.histInvisible = pc.getInt("histInvisible") ;
+  o.xErrorSize = pc.getDouble("xErrorSize") ;
+  o.cutRange = pc.getString("cutRange",0,kTRUE) ;
+  o.histName = pc.getString("histName",0,kTRUE) ;
+  o.addToHistName = pc.getString("addToHistName",0,kTRUE) ;
+  o.addToWgtSelf = pc.getDouble("addToWgtSelf") ;
+  o.addToWgtOther = pc.getDouble("addToWgtOther") ;
+  o.refreshFrameNorm = pc.getInt("refreshFrameNorm") ;
   
+  if (o.addToHistName && !frame->findObject(o.addToHistName,RooHist::Class())) {
+    cout << "RooTreeData::plotOn(" << GetName() << ") cannot find existing histogram " << o.addToHistName << " to add to in RooPlot" << endl ;
+    return frame ;
+  }
+
   RooPlot* ret ;
   if (!asymCat) {
-    ret = plotOn(frame,cutSpec,drawOptions,bins,etype) ;
+    ret = plotOn(frame,o) ;
   } else {
-    ret = plotAsymOn(frame,*asymCat,cutSpec,drawOptions,bins) ;    
+    ret = plotAsymOn(frame,*asymCat,o) ;    
   }
 
   Int_t lineColor   = pc.getInt("lineColor") ;
@@ -920,17 +934,7 @@ RooPlot* RooTreeData::plotOn(RooPlot* frame, RooLinkedList& argList) const
 }
 
 
-RooPlot *RooTreeData::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions, 
-			     const RooAbsBinning* bins, RooAbsData::ErrorType etype) const 
-{
-  // Implementation pending...
-  return 0 ;
-}
-
-
-
-RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions, 
-			     const RooAbsBinning* bins, RooAbsData::ErrorType etype) const 
+RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const 
 {
   // Create and fill a histogram of the frame's variable and append it to the frame.
   // The frame variable must be one of the data sets dimensions.
@@ -958,8 +962,8 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
   TString histName(GetName());
   histName.Append("_plot");
   TH1F *hist ;
-  if (bins) {
-    hist= var->createHistogram(histName.Data(), "Events", *bins) ;
+  if (o.bins) {
+    hist= var->createHistogram(histName.Data(), "Events", *o.bins) ;
   } else {
     hist= var->createHistogram(histName.Data(), "Events", 
 			       frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(), frame->GetNbinsX());
@@ -968,39 +972,65 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
   // Keep track of sum-of-weights error
   hist->Sumw2() ;
 
-  if(0 == fillHistogram(hist,RooArgList(*var),cuts)) {
+  if(0 == fillHistogram(hist,RooArgList(*var),o.cuts,o.cutRange)) {
     cout << ClassName() << "::" << GetName()
 	 << ":plotOn: fillHistogram() failed" << endl;
     return 0;
   }
 
   // convert this histogram to a RooHist object on the heap
-  RooHist *graph= new RooHist(*hist,0,1,etype);
+  RooHist *graph= new RooHist(*hist,0,1,o.etype,o.xErrorSize);
   if(0 == graph) {
     cout << ClassName() << "::" << GetName()
 	 << ":plotOn: unable to create a RooHist object" << endl;
     delete hist;
     return 0;
-  }
+  }  
 
   // If the dataset variable has a wide range than the plot variable,
   // calculate the number of entries in the dataset in the plot variable fit range
   RooAbsRealLValue* dataVar = (RooAbsRealLValue*) _vars.find(var->GetName()) ;
   Double_t nEnt(sumEntries()) ;
-  if (dataVar->getFitMin()<var->getFitMin() || dataVar->getFitMax()>var->getFitMax()) {
+  if (dataVar->getMin()<var->getMin() || dataVar->getMax()>var->getMax()) {
     RooAbsData* tmp = ((RooTreeData*)this)->reduce(*var) ;
     nEnt = tmp->sumEntries() ;
     delete tmp ;
   }
 
   // Store the number of entries before the cut, if any was made
-  if (cuts && strlen(cuts)) graph->setRawEntries(nEnt) ;
+  if ((o.cuts && strlen(o.cuts)) || o.cutRange) {
+    cout << "RooTreeData::plotOn: plotting " << hist->GetSum() << " events out of " << nEnt << " total events" << endl ;
+    graph->setRawEntries(nEnt) ;
+  }
+
+  // Add self to other hist if requested
+  if (o.addToHistName) {
+    RooHist* otherGraph = static_cast<RooHist*>(frame->findObject(o.addToHistName,RooHist::Class())) ;
+
+    if (!graph->hasIdenticalBinning(*otherGraph)) {
+      cout << "RooTreeData::plotOn: ERROR Histogram to be added to, '" << o.addToHistName << "',has different binning" << endl ;
+      delete graph ;
+      return frame ;
+    }
+
+    RooHist* sumGraph = new RooHist(*graph,*otherGraph,o.addToWgtSelf,o.addToWgtOther,o.etype) ;
+    delete graph ;
+    graph = sumGraph ;
+  }  
+
+  // Rename graph if requested
+  if (o.histName) {
+    graph->SetName(o.histName) ;
+  }
 
   // initialize the frame's normalization setup, if necessary
   frame->updateNormVars(_vars);
 
+
   // add the RooHist to the specified plot
-  frame->addPlotable(graph,drawOptions);
+  frame->addPlotable(graph,o.drawOptions,o.histInvisible,o.refreshFrameNorm);
+
+
 
   // cleanup
   delete hist;
@@ -1011,8 +1041,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
 
 
 
-RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat,
-				 const char* cuts, Option_t* drawOptions, const RooAbsBinning* bins) const 
+RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const 
 {
   // Create and fill a histogram with the asymmetry N[+] - N[-] / ( N[+] + N[-] ),
   // where N(+/-) is the number of data points with asymCat=+1 and asymCat=-1 
@@ -1044,9 +1073,9 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   TH1F *hist1, *hist2 ;
   hist2Name.Append("_plot2");
 
-  if (bins) {
-    hist1= var->createHistogram(hist1Name.Data(), "Events", *bins) ;
-    hist2= var->createHistogram(hist2Name.Data(), "Events", *bins) ;
+  if (o.bins) {
+    hist1= var->createHistogram(hist1Name.Data(), "Events", *o.bins) ;
+    hist2= var->createHistogram(hist2Name.Data(), "Events", *o.bins) ;
   } else {
     hist1= var->createHistogram(hist1Name.Data(), "Events", 
 				frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
@@ -1059,9 +1088,9 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   assert(0 != hist1 && 0 != hist2);
 
   TString cuts1,cuts2 ;
-  if (cuts && strlen(cuts)) {
-    cuts1 = Form("(%s)&&(%s>0)",cuts,asymCat.GetName());
-    cuts2 = Form("(%s)&&(%s<0)",cuts,asymCat.GetName());
+  if (o.cuts && strlen(o.cuts)) {
+    cuts1 = Form("(%s)&&(%s>0)",o.cuts,asymCat.GetName());
+    cuts2 = Form("(%s)&&(%s<0)",o.cuts,asymCat.GetName());
   } else {
     cuts1 = Form("(%s>0)",asymCat.GetName());
     cuts2 = Form("(%s<0)",asymCat.GetName());
@@ -1075,7 +1104,7 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   }
 
   // convert this histogram to a RooHist object on the heap
-  RooHist *graph= new RooHist(*hist1,*hist2);
+  RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.xErrorSize);
   if(0 == graph) {
     cout << ClassName() << "::" << GetName()
 	 << ":plotOn: unable to create a RooHist object" << endl;
@@ -1087,8 +1116,13 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   // initialize the frame's normalization setup, if necessary
   frame->updateNormVars(_vars);
 
+  // Rename graph if requested
+  if (o.histName) {
+    graph->SetName(o.histName) ;
+  }
+
   // add the RooHist to the specified plot
-  frame->addPlotable(graph,drawOptions);
+  frame->addPlotable(graph,o.drawOptions);
 
   // cleanup
   delete hist1;
@@ -1097,7 +1131,9 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   return frame;  
 }
 
-TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts) const
+
+
+TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts, const char* cutRange) const
 {
   // Loop over columns of our tree data and fill the input histogram. Returns a pointer to the
   // input histogram, or zero in case of an error. The input histogram can be any TH1 subclass, and
@@ -1188,7 +1224,27 @@ TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const cha
     if (entryNumber<0) break;
     get(entryNumber);
 
+
+    // Apply expression based selection criteria
     if (select && select->eval()==0) {
+      continue ;
+    }
+
+    // Apply range based selection criteria
+    Bool_t select(kTRUE) ;
+    if (cutRange) {
+      _iterator->Reset() ;
+      RooAbsArg* arg ;
+      while(arg=(RooAbsArg*)_iterator->Next()) {
+	if (!arg->inRange(cutRange)) {
+	  select = kFALSE ;
+	  break ;
+	}
+      }
+    }
+
+    if (!select) {
+      // Go to next event in loop over events
       continue ;
     }
 

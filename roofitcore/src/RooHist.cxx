@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.cc,v 1.24 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.25 2004/11/29 20:23:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,7 +33,7 @@ using std::setw;
 
 ClassImp(RooHist)
 
-RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
+RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma, Double_t xErrorFrac) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   // Create an empty histogram that can be filled with the addBin()
@@ -46,7 +46,7 @@ RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
   initialize();
 }
 
-RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, RooAbsData::ErrorType etype) :
+RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, RooAbsData::ErrorType etype, Double_t xErrorFrac) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   // Create a histogram from the contents of the specified TH1 object
@@ -78,16 +78,18 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, Roo
     Stat_t y= data.GetBinContent(bin);
     Stat_t dy = data.GetBinError(bin) ;
     if (etype==RooAbsData::Poisson) {
-      addBin(x,roundBin(y),data.GetBinWidth(bin));
+      addBin(x,roundBin(y),data.GetBinWidth(bin),xErrorFrac);
     } else {
-      addBinWithError(x,y,dy,dy,data.GetBinWidth(bin));
+      addBinWithError(x,y,dy,dy,data.GetBinWidth(bin),xErrorFrac);
     }
   }
   // add over/underflow bins to our event count
   _entries+= data.GetBinContent(0) + data.GetBinContent(nbin+1);
 }
 
-RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, Double_t nSigma) :
+
+
+RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, Double_t nSigma, Double_t xErrorFrac) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   // Create a histogram from the asymmetry between the specified TH1 objects
@@ -125,10 +127,70 @@ RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, D
     }
     Stat_t y1= data1.GetBinContent(bin);
     Stat_t y2= data2.GetBinContent(bin);
-    addAsymmetryBin(x,roundBin(y1),roundBin(y2),data1.GetBinWidth(bin));
+    addAsymmetryBin(x,roundBin(y1),roundBin(y2),data1.GetBinWidth(bin),xErrorFrac);
   }
   // we do not have a meaningful number of entries
   _entries= -1;
+}
+
+
+RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Double_t wgt2, RooAbsData::ErrorType etype, Double_t xErrorFrac) : _rawEntries(-1){
+  // Create histogram as sum of two existing histograms. If Poisson errors are selected the histograms are
+  // added and Poisson confidence intervals are calculated for the summed content. If wgt1 and wgt2 are not
+  // 1 in this mode, a warning message is printed. If SumW2 errors are selectd the histograms are added
+  // and the histograms errors are added in quadrature, taking the weights into account.
+
+  // Initialize the histogram
+  initialize() ;
+     
+  // Copy all non-content properties from hist1
+  SetName(hist1.GetName()) ;
+  SetTitle(hist1.GetTitle()) ;  
+  _nominalBinWidth=hist1._nominalBinWidth ;
+  _nSigma=hist1._nSigma ;
+  setYAxisLabel(hist1.getYAxisLabel()) ;
+
+  if (!hist1.hasIdenticalBinning(hist2)) {
+    cout << "RooHist::RooHist input histograms have incompatible binning, combined histogram will remain empty" << endl ;
+    return ;
+  }
+
+  if (etype==RooAbsData::Poisson) {
+    // Add histograms with Poisson errors
+
+    // Issue warning if weights are not 1
+    if (wgt1!=1.0 || wgt2 != 1.0) {
+      cout << "RooHist::RooHist: WARNING: Poisson errors of weighted sum of two histograms is not well defined! " << endl
+	   << "                  Summed histogram bins will rounded to nearest integer for Poisson confidence interval calculation" << endl ;
+    }
+
+    // Add histograms, calculate Poisson confidence interval on sum value
+    Int_t i,n=hist1.GetN() ;
+    for(i=0 ; i<n ; i++) {
+      Double_t x1,y1,x2,y2,dx1 ;
+      hist1.GetPoint(i,x1,y1) ;
+      dx1 = hist1.GetErrorX(i) ;
+      hist2.GetPoint(i,x2,y2) ;
+      addBin(x1,roundBin(wgt1*y1+wgt2*y2),2*dx1/xErrorFrac,xErrorFrac) ;
+    }    
+
+  } else {
+    // Add histograms with SumW2 errors
+
+    // Add histograms, calculate combined sum-of-weights error
+    Int_t i,n=hist1.GetN() ;
+    for(i=0 ; i<n ; i++) {
+      Double_t x1,y1,x2,y2,dx1,dy1,dy2 ;
+      hist1.GetPoint(i,x1,y1) ;
+      dx1 = hist1.GetErrorX(i) ;
+      dy1 = hist1.GetErrorY(i) ;
+      dy2 = hist2.GetErrorY(i) ;
+      hist2.GetPoint(i,x2,y2) ;
+      Double_t dy = sqrt(wgt1*wgt1*dy1*dy1+wgt2*wgt2*dy2*dy2) ;
+      addBinWithError(x1,wgt1*y1+wgt2*y2,dy,dy,2*dx1/xErrorFrac,xErrorFrac) ;
+    }       
+  }
+
 }
 
 void RooHist::initialize() {
@@ -147,7 +209,7 @@ Double_t RooHist::getFitRangeBinW() const {
 }
 
 
-Int_t RooHist::roundBin(Stat_t y) {
+Int_t RooHist::roundBin(Double_t y) {
   // Return the nearest positive integer to the input value
   // and print a warning if an adjustment is required.
 
@@ -157,12 +219,12 @@ Int_t RooHist::roundBin(Stat_t y) {
   }
   Int_t n= (Int_t)(y+0.5);
   if(fabs(y-n)>1e-6) {
-    //cout << fName << "::roundBin: rounding non-integer bin contents: " << y << endl;
+    cout << fName << "::roundBin: rounding non-integer bin contents: " << y << endl;
   }
   return n;
 }
 
-void RooHist::addBin(Axis_t binCenter, Int_t n, Double_t binWidth) {
+void RooHist::addBin(Axis_t binCenter, Int_t n, Double_t binWidth, Double_t xErrorFrac) {
   // Add a bin to this histogram with the specified integer bin contents
   // and using an error bar calculated with Poisson statistics. The bin width
   // is used to set the relative scale of bins with different widths.
@@ -182,14 +244,14 @@ void RooHist::addBin(Axis_t binCenter, Int_t n, Double_t binWidth) {
   }
 
   SetPoint(index,binCenter,n*scale);
-  SetPointError(index,dx,dx,scale*(n-ym),scale*(yp-n));
+  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,scale*(n-ym),scale*(yp-n));
   updateYAxisLimits(scale*yp);
   updateYAxisLimits(scale*ym);
 }
 
 
 
-void RooHist::addBinWithError(Axis_t binCenter, Double_t n, Double_t elow, Double_t ehigh, Double_t binWidth) 
+void RooHist::addBinWithError(Axis_t binCenter, Double_t n, Double_t elow, Double_t ehigh, Double_t binWidth, Double_t xErrorFrac) 
 {
   // Add a bin to this histogram with the specified bin contents
   // and error. The bin width is used to set the relative scale of 
@@ -204,7 +266,7 @@ void RooHist::addBinWithError(Axis_t binCenter, Double_t n, Double_t elow, Doubl
 
   Double_t dx(0.5*binWidth) ;
   SetPoint(index,binCenter,n*scale);
-  SetPointError(index,dx,dx,elow*scale,ehigh*scale);
+  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,elow*scale,ehigh*scale);
   updateYAxisLimits(scale*(n-elow));
   updateYAxisLimits(scale*(n+ehigh));
 }
@@ -214,7 +276,7 @@ void RooHist::addBinWithError(Axis_t binCenter, Double_t n, Double_t elow, Doubl
 
 
 
-void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t binWidth) {
+void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t binWidth, Double_t xErrorFrac) {
   // Add a bin to this histogram with the value (n1-n2)/(n1+n2)
   // using an error bar calculated with Binomial statistics.
 
@@ -231,13 +293,39 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t bin
 
   Double_t a= (Double_t)(n1-n2)/(n1+n2);
   SetPoint(index,binCenter,a);
-  SetPointError(index,dx,dx,(a-ym),(yp-a));
+  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym),(yp-a));
   updateYAxisLimits(scale*yp);
   updateYAxisLimits(scale*ym);
 }
 
 
 RooHist::~RooHist() { }
+
+
+Bool_t RooHist::hasIdenticalBinning(const RooHist& other) const 
+{
+  // First check if number of bins is the same
+  if (GetN() != other.GetN()) {
+    return kFALSE ;
+  }
+
+  // Next require that all bin centers are the same
+  Int_t i ;
+  for (i=0 ; i<GetN() ; i++) {
+    Double_t x1,x2,y1,y2 ;
+    
+    GetPoint(i,x1,y1) ;
+    other.GetPoint(i,x2,y2) ;
+
+    if (fabs(x1-x2)>1e-10) {
+      return kFALSE ;
+    }
+
+  }
+
+  return kTRUE ;
+}
+
 
 void RooHist::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print info about this histogram to the specified output stream.

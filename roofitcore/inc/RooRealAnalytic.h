@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealAnalytic.rdl,v 1.4 2002/09/05 04:33:51 verkerke Exp $
+ *    File: $Id: RooRealAnalytic.rdl,v 1.5 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -20,8 +20,8 @@
 
 class RooRealAnalytic : public RooRealBinding {
 public:
-  inline RooRealAnalytic(const RooAbsReal &func, const RooArgSet &vars, Int_t code, const RooArgSet* normSet=0) :
-    RooRealBinding(func,vars,normSet), _code(code) { }
+  inline RooRealAnalytic(const RooAbsReal &func, const RooArgSet &vars, Int_t code, const RooArgSet* normSet=0, const TNamed* rangeName=0) :
+    RooRealBinding(func,vars,normSet,rangeName), _code(code) { }
   inline virtual ~RooRealAnalytic() { }
 
   virtual Double_t operator()(const Double_t xvector[]) const;

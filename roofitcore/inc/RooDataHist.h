@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.rdl,v 1.26 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.27 2004/04/21 23:14:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -77,19 +77,7 @@ public:
     return (lo+hi)/2 ;
   }
 
-  virtual RooPlot* plotOn(RooPlot* frame, 
-			  const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
-			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
-			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const
-  {
-    return RooTreeData::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
-  }
-
-  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", 
-			  const RooAbsBinning* bins=0, RooAbsData::ErrorType=RooAbsData::Poisson) const;
-  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions="P", 
-			  const RooAbsBinning* bins=0, RooAbsData::ErrorType=RooAbsData::Poisson) const;
+  virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;
   
   virtual void reset() ;
   void dump2() ;

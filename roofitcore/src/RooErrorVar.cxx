@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooErrorVar.cc,v 1.9 2004/11/29 20:23:35 wverkerke Exp $
+ *    File: $Id: RooErrorVar.cc,v 1.10 2004/12/03 13:18:28 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -89,7 +89,7 @@ RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose)
   }
 
   // Create a new RooRangeBinning with this name with default range
-  binning = new RooRangeBinning(getFitMin(),getFitMax(),name) ;
+  binning = new RooRangeBinning(getMin(),getMax(),name) ;
   if (verbose) {
     cout << "RooErrorVar::getBinning(" << GetName() << ") new range named '" 
 	 << name << "' created with default bounds" << endl ;
@@ -128,16 +128,16 @@ void RooErrorVar::setBinning(const RooAbsBinning& binning, const char* name)
 }
 
 
-void RooErrorVar::setFitMin(Double_t value, const char* name) 
+void RooErrorVar::setMin(const char* name, Double_t value) 
 {
   // Set new minimum of fit range 
   RooAbsBinning& binning = getBinning(name) ;
 
   // Check if new limit is consistent
-  if (value >= getFitMax()) {
-    cout << "RooErrorVar::setFitMin(" << GetName() 
+  if (value >= getMax()) {
+    cout << "RooErrorVar::setMin(" << GetName() 
 	 << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
-    binning.setMin(getFitMax()) ;
+    binning.setMin(getMax()) ;
   } else {
     binning.setMin(value) ;
   }
@@ -145,7 +145,7 @@ void RooErrorVar::setFitMin(Double_t value, const char* name)
   // Clip current value in window if it fell out
   if (!name) {
     Double_t clipValue ;
-    if (!inFitRange(_value,&clipValue)) {
+    if (!inRange(_value,&clipValue)) {
       setVal(clipValue) ;
     }
   }
@@ -153,16 +153,16 @@ void RooErrorVar::setFitMin(Double_t value, const char* name)
   setShapeDirty() ;
 }
 
-void RooErrorVar::setFitMax(Double_t value, const char* name)
+void RooErrorVar::setMax(const char* name, Double_t value)
 {
   // Set new maximum of fit range 
   RooAbsBinning& binning = getBinning(name) ;
 
   // Check if new limit is consistent
-  if (value < getFitMin()) {
-    cout << "RooErrorVar::setFitMax(" << GetName() 
+  if (value < getMin()) {
+    cout << "RooErrorVar::setMax(" << GetName() 
 	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
-    binning.setMax(getFitMin()) ;
+    binning.setMax(getMin()) ;
   } else {
     binning.setMax(value) ;
   }
@@ -170,7 +170,7 @@ void RooErrorVar::setFitMax(Double_t value, const char* name)
   // Clip current value in window if it fell out
   if (!name) {
     Double_t clipValue ;
-    if (!inFitRange(_value,&clipValue)) {
+    if (!inRange(_value,&clipValue)) {
       setVal(clipValue) ;
     }
   }
@@ -179,7 +179,7 @@ void RooErrorVar::setFitMax(Double_t value, const char* name)
 }
 
 
-void RooErrorVar::setFitRange(Double_t min, Double_t max, const char* name) 
+void RooErrorVar::setRange( const char* name, Double_t min, Double_t max) 
 {
   Bool_t exists = name ? (_altBinning.FindObject(name)?kTRUE:kFALSE) : kTRUE ;
 
@@ -188,7 +188,7 @@ void RooErrorVar::setFitRange(Double_t min, Double_t max, const char* name)
 
   // Check if new limit is consistent
   if (min>max) {
-    cout << "RooErrorVar::setFitRange(" << GetName() 
+    cout << "RooErrorVar::setRange(" << GetName() 
 	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
     binning.setRange(min,min) ;
   } else {
@@ -196,7 +196,7 @@ void RooErrorVar::setFitRange(Double_t min, Double_t max, const char* name)
   }
 
   if (!exists) {
-    cout << "RooErrorVar::setFitRange(" << GetName() 
+    cout << "RooErrorVar::setRange(" << GetName() 
 	 << ") new range named '" << name << "' created with bounds [" 
 	 << min << "," << max << "]" << endl ;
   }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealBinding.cc,v 1.12 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooRealBinding.cc,v 1.13 2004/11/29 20:24:17 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -23,6 +23,7 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsRealLValue.hh"
+#include "RooFitCore/RooNameReg.hh"
 
 #include <assert.h>
 using std::cout;
@@ -30,8 +31,8 @@ using std::cout;
 ClassImp(RooRealBinding)
 ;
 
-RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid) :
-  RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset), _clipInvalid(clipInvalid)
+RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid, const TNamed* rangeName) :
+  RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset), _clipInvalid(clipInvalid), _rangeName(rangeName)
 {
   // allocate memory
   _vars= new RooAbsRealLValue*[getDimension()];
@@ -79,10 +80,10 @@ Double_t RooRealBinding::operator()(const Double_t xvector[]) const {
 
 Double_t RooRealBinding::getMinLimit(UInt_t index) const {
   assert(isValid());
-  return _vars[index]->getFitMin();
+  return _vars[index]->getMin(RooNameReg::str(_rangeName));
 }
 
 Double_t RooRealBinding::getMaxLimit(UInt_t index) const {
   assert(isValid());
-  return _vars[index]->getFitMax();
+  return _vars[index]->getMax(RooNameReg::str(_rangeName));
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCStudy.cc,v 1.22 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooMCStudy.cc,v 1.23 2004/11/29 20:23:58 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -103,7 +103,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   _fitParams = fitModel.getParameters(&dependents) ;
   _fitInitParams = (RooArgSet*) _fitParams->snapshot(kTRUE) ;
 
-  _nExpGen = _extendedGen ? genModel.expectedEvents() : 0 ;
+  _nExpGen = _extendedGen ? genModel.expectedEvents(&dependents) : 0 ;
 
   // Place holder for NLL
   _nllVar = new RooRealVar("NLL","-log(Likelihood)",0) ;
@@ -590,7 +590,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, Double_t lo, Double_t hi,
   TString name(param.GetName()), title(param.GetTitle()) ;
   name.Append("pull") ; title.Append(" Pull") ;
   RooRealVar pvar(name,title,lo,hi) ;
-  pvar.setFitBins(nbins) ;
+  pvar.setBins(nbins) ;
 
   RooPlot* frame = pvar.frame() ;
   _fitParData->plotOn(frame) ;

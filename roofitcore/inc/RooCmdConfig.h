@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.rdl,v 1.5 2003/04/07 21:39:17 wverkerke Exp $
+ *    File: $Id: RooCmdConfig.rdl,v 1.6 2004/04/05 22:44:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,15 +44,18 @@ public:
   Bool_t defineInt(const char* name, const char* argName, Int_t intNum, Int_t defValue=0) ;
   Bool_t defineDouble(const char* name, const char* argName, Int_t doubleNum, Double_t defValue=0.) ;
   Bool_t defineString(const char* name, const char* argName, Int_t stringNum, const char* defValue="") ;
-  Bool_t defineObject(const char* name, const char* argName, Int_t setNum, const TObject* obj=0) ;
+  Bool_t defineObject(const char* name, const char* argName, Int_t setNum, const TObject* obj=0, Bool_t isArray=kFALSE) ;
 
   Bool_t process(const RooCmdArg& arg) ;
+  Bool_t process(const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
+                 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) ;
   Bool_t process(RooLinkedList& argList) ;
 
   Int_t getInt(const char* name, Int_t defaultValue=0) ;
   Double_t getDouble(const char* name, Double_t defaultValue=0) ;
-  const char* getString(const char* name, const char* defaultValue="") ;
+  const char* getString(const char* name, const char* defaultValue="",Bool_t convEmptyToNull=kFALSE) ;
   const TObject* getObject(const char* name, const TObject* obj=0) ;
+  const RooLinkedList& getObjectList(const char* name) ;
 
   Bool_t ok(Bool_t verbose) const ;
 

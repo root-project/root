@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.26 2004/11/29 12:31:44 wverkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.27 2004/11/29 20:23:35 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -609,7 +609,7 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
       var->setConstant(isConst) ;
       var->setVal(xval) ;
       if (xlo<xhi) {
-	var->setFitRange(xlo,xhi) ;
+	var->setRange(xlo,xhi) ;
       }
       if (varName.CompareTo(var->GetName())) {
 	cout << "RooFitResult::lastMinuitFit: fit parameter '" << varName 

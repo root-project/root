@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAdaptiveGaussKronrodIntegrator1D.cc,v 1.21 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooAdaptiveGaussKronrodIntegrator1D.cc,v 1.1 2004/11/29 20:22:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,6 +41,7 @@
 #include <assert.h>
 #include <iostream>
 #include "RooFitCore/RooAdaptiveGaussKronrodIntegrator1D.hh"
+#include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooNumber.hh"
 #include "RooFitCore/RooNumIntFactory.hh"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealVar.cc,v 1.47 2004/11/29 20:24:21 wverkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.48 2004/12/03 13:18:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -56,7 +56,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   // Constructor with value and unit
   _binning = new RooUniformBinning(-1,1,100) ;
   _value = value ;
-  removeFitRange();
+  removeRange();
   setConstant(kTRUE) ;
 }  
 
@@ -72,7 +72,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   _value= 0.5*(minValue + maxValue);
 
 //   setPlotRange(minValue,maxValue) ;
-  setFitRange(minValue,maxValue) ;
+  setRange(minValue,maxValue) ;
 }  
 
 RooRealVar::RooRealVar(const char *name, const char *title,
@@ -84,7 +84,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   _value = value ;
 
   _binning = new RooUniformBinning(minValue,maxValue,100) ;
-  setFitRange(minValue,maxValue) ;
+  setRange(minValue,maxValue) ;
 }  
 
 RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
@@ -115,7 +115,7 @@ RooRealVar::~RooRealVar()
 void RooRealVar::setVal(Double_t value) {
   // Set current value
   Double_t clipValue ;
-  inFitRange(value,&clipValue) ;
+  inRange(value,&clipValue) ;
 
   setValueDirty() ;
   _value = clipValue;
@@ -152,7 +152,7 @@ RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose)
   }
 
   // Create a new RooRangeBinning with this name with default range
-  binning = new RooRangeBinning(getFitMin(),getFitMax(),name) ;
+  binning = new RooRangeBinning(getMin(),getMax(),name) ;
   if (verbose) {
     cout << "RooRealVar::getBinning(" << GetName() << ") new range named '" 
 	 << name << "' created with default bounds" << endl ;
@@ -191,16 +191,16 @@ void RooRealVar::setBinning(const RooAbsBinning& binning, const char* name)
 }
 
 
-void RooRealVar::setFitMin(Double_t value, const char* name) 
+void RooRealVar::setMin(const char* name, Double_t value) 
 {
   // Set new minimum of fit range 
   RooAbsBinning& binning = getBinning(name) ;
 
   // Check if new limit is consistent
-  if (value >= getFitMax()) {
-    cout << "RooRealVar::setFitMin(" << GetName() 
+  if (value >= getMax()) {
+    cout << "RooRealVar::setMin(" << GetName() 
 	 << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
-    binning.setMin(getFitMax()) ;
+    binning.setMin(getMax()) ;
   } else {
     binning.setMin(value) ;
   }
@@ -208,7 +208,7 @@ void RooRealVar::setFitMin(Double_t value, const char* name)
   // Clip current value in window if it fell out
   if (!name) {
     Double_t clipValue ;
-    if (!inFitRange(_value,&clipValue)) {
+    if (!inRange(_value,&clipValue)) {
       setVal(clipValue) ;
     }
   }
@@ -216,16 +216,16 @@ void RooRealVar::setFitMin(Double_t value, const char* name)
   setShapeDirty() ;
 }
 
-void RooRealVar::setFitMax(Double_t value, const char* name)
+void RooRealVar::setMax(const char* name, Double_t value)
 {
   // Set new maximum of fit range 
   RooAbsBinning& binning = getBinning(name) ;
 
   // Check if new limit is consistent
-  if (value < getFitMin()) {
-    cout << "RooRealVar::setFitMax(" << GetName() 
+  if (value < getMin()) {
+    cout << "RooRealVar::setMax(" << GetName() 
 	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
-    binning.setMax(getFitMin()) ;
+    binning.setMax(getMin()) ;
   } else {
     binning.setMax(value) ;
   }
@@ -233,7 +233,7 @@ void RooRealVar::setFitMax(Double_t value, const char* name)
   // Clip current value in window if it fell out
   if (!name) {
     Double_t clipValue ;
-    if (!inFitRange(_value,&clipValue)) {
+    if (!inRange(_value,&clipValue)) {
       setVal(clipValue) ;
     }
   }
@@ -241,7 +241,7 @@ void RooRealVar::setFitMax(Double_t value, const char* name)
   setShapeDirty() ;
 }
 
-void RooRealVar::setFitRange(Double_t min, Double_t max, const char* name) 
+void RooRealVar::setRange(const char* name, Double_t min, Double_t max) 
 {
   Bool_t exists = name ? (_altBinning.FindObject(name)?kTRUE:kFALSE) : kTRUE ;
 
@@ -250,7 +250,7 @@ void RooRealVar::setFitRange(Double_t min, Double_t max, const char* name)
 
   // Check if new limit is consistent
   if (min>max) {
-    cout << "RooRealVar::setFitRange(" << GetName() 
+    cout << "RooRealVar::setRange(" << GetName() 
 	 << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
     binning.setRange(min,min) ;
   } else {
@@ -258,7 +258,7 @@ void RooRealVar::setFitRange(Double_t min, Double_t max, const char* name)
   }
 
   if (!exists) {
-    cout << "RooRealVar::setFitRange(" << GetName() 
+    cout << "RooRealVar::setRange(" << GetName() 
 	 << ") new range named '" << name << "' created with bounds [" 
 	 << min << "," << max << "]" << endl ;
   }
@@ -361,8 +361,8 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	    parser.expectToken(":",kTRUE) ||
 	    parser.readInteger(fitBins,kTRUE) ||
 	    parser.expectToken(")",kTRUE)) break ;
-	//setFitBins(fitBins) ;
-	//setFitRange(fitMin,fitMax) ;
+	//setBins(fitBins) ;
+	//setRange(fitMin,fitMax) ;
 	cout << "RooRealVar::readFromStream(" << GetName() 
 	     << ") WARNING: F(lo-hi:bins) token deprecated, use L(lo-hi) B(bins)" << endl ;	
 	if (!haveConstant) setConstant(kFALSE) ;
@@ -377,7 +377,7 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	    parser.expectToken("-",kTRUE) ||
 	    parser.readDouble(fitMax,kTRUE) ||
 	    parser.expectToken(")",kTRUE)) break ;
-	setFitRange(fitMin,fitMax) ;
+	setRange(fitMin,fitMax) ;
 	if (!haveConstant) setConstant(kFALSE) ;
 
       } else if (!token.CompareTo("B")) { 
@@ -387,7 +387,7 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 	if (parser.expectToken("(",kTRUE) ||
 	    parser.readInteger(fitBins,kTRUE) ||
 	    parser.expectToken(")",kTRUE)) break ;
-	setFitBins(fitBins) ;
+	setBins(fitBins) ;
 	
       } else {
 	// Token is value
@@ -439,16 +439,16 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
     }      
 
     // Append fit limits if not +Inf:-Inf
-    if (hasFitMin() || hasFitMax()) {
+    if (hasMin() || hasMax()) {
       os << "L(" ;
-      if(hasFitMin()) {
-	os << getFitMin();
+      if(hasMin()) {
+	os << getMin();
       }
       else {
 	os << "-INF";
       }
-      if(hasFitMax()) {
-	os << " - " << getFitMax() ;
+      if(hasMax()) {
+	os << " - " << getMax() ;
       }
       else {
 	os << " - +INF";
@@ -456,8 +456,8 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
       os << ") " ;
     }
 
-    if (getFitBins()!=100) {
-      os << "B(" << getFitBins() << ") " ;
+    if (getBins()!=100) {
+      os << "B(" << getBins() << ") " ;
     }
 
     // Add comment with unit, if unit exists
@@ -488,6 +488,23 @@ void RooRealVar::printToStream(ostream& os, PrintOption opt, TString indent) con
 
 TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
   // Format numeric value in a variety of ways
+  //
+  // What is shown?
+  // N = show name
+  // H = hide value
+  // E = show error
+  // A = show asymmetric error instead of parabolic error (if available)
+  // U = show unit
+  //
+  // How is it shown?
+  // L = TLatex mode
+  // X = Latex mode
+  // Y = Latex table mode ( '=' replaced by '&' )
+  // V = Make name \verbatim in Latex mode
+  // P = use error to control shown precision
+  // F = force fixed precision
+  //
+  
 
   // parse the options string
   TString opts(options);
@@ -498,11 +515,22 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
   Bool_t showUnit= opts.Contains("u");
   Bool_t tlatexMode= opts.Contains("l");
   Bool_t latexMode= opts.Contains("x");
+  Bool_t latexTableMode = opts.Contains("y") ;
+  Bool_t latexVerbatimName = opts.Contains("v") ;
+
+  if (latexTableMode) latexMode = kTRUE ;
   Bool_t asymError= opts.Contains("a") ;
-  Bool_t useErrorForPrecision= ((showError && !isConstant()) || opts.Contains("p")) && !opts.Contains("f") ;
+  Bool_t useErrorForPrecision= (((showError && !isConstant()) || opts.Contains("p")) && !opts.Contains("f")) ;
   // calculate the precision to use
   if(sigDigits < 1) sigDigits= 1;
-  Int_t leadingDigitVal= (Int_t)floor(log10(fabs(useErrorForPrecision?_error:_value)));
+  Int_t leadingDigitVal = 0;
+  if (useErrorForPrecision) {    
+    leadingDigitVal = (Int_t)floor(log10(fabs(_error+1e-10)));
+    if (_value==0&&_error==0) leadingDigitVal=0 ;
+  } else {
+    leadingDigitVal = (Int_t)floor(log10(fabs(_value+1e-10)));
+    if (_value==0) leadingDigitVal=0 ;
+  }
   Int_t leadingDigitErr= (Int_t)floor(log10(fabs(_error)));
   Int_t whereVal= leadingDigitVal - sigDigits + 1;
   Int_t whereErr= leadingDigitErr - sigDigits + 1;
@@ -515,8 +543,17 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
   if(latexMode) text->Append("$");
   // begin the string with "<name> = " if requested
   if(showName) {
+    if (latexTableMode && latexVerbatimName) {
+      text->Append("\\verb+") ;
+    }
     text->Append(getPlotLabel());
-    text->Append(" = ");
+    if (latexVerbatimName) text->Append("+") ;
+
+    if (!latexTableMode) {
+      text->Append(" = ");
+    } else {
+      text->Append(" $ & $ ");
+    }
   }
 
   // Add leading space if value is positive
@@ -530,7 +567,7 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
     text->Append(buffer);
   }
   // append our error if requested and this variable is not constant
-  if(hasError() && showError) {
+  if(hasError() && showError && !(asymError && hasAsymError())) {
     if(tlatexMode) {
       text->Append(" #pm ");
     }
@@ -545,13 +582,37 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
   }
   
   if (asymError && hasAsymError()) {
-    text->Append(" (") ;      
-    sprintf(buffer, fmtErr, getAsymErrorLo());
-    text->Append(buffer);
-    text->Append(", ") ;
-    sprintf(buffer, fmtErr, getAsymErrorHi());
-    text->Append(buffer);
-    text->Append(")") ;
+    if(tlatexMode) {
+      text->Append(" #pm ");
+      text->Append("_{") ;      
+      sprintf(buffer, fmtErr, getAsymErrorLo());
+      text->Append(buffer);
+      text->Append("}^{+") ;
+      sprintf(buffer, fmtErr, getAsymErrorHi());
+      text->Append(buffer);
+      text->Append("}") ;
+    }
+    else if(latexMode) {
+      text->Append("\\pm ");
+      text->Append("_{") ;      
+      sprintf(buffer, fmtErr, getAsymErrorLo());
+      text->Append(buffer);
+      text->Append("}^{+") ;
+      sprintf(buffer, fmtErr, getAsymErrorHi());
+      text->Append(buffer);
+      text->Append("}") ;
+    }
+    else {
+      text->Append(" +/- ");
+      text->Append(" (") ;      
+      sprintf(buffer, fmtErr, getAsymErrorLo());
+      text->Append(buffer);
+      text->Append(", ") ;
+      sprintf(buffer, fmtErr, getAsymErrorHi());
+      text->Append(buffer);
+      text->Append(")") ;
+    }
+
   }
 
   // append our units if requested
@@ -562,6 +623,7 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
   if(latexMode) text->Append("$");
   return text;
 }
+
 
 Double_t RooRealVar::chopAt(Double_t what, Int_t where) const {
   // What does this do?
@@ -705,4 +767,65 @@ void RooRealVar::Streamer(TBuffer &R__b)
       R__b << _binning;
       R__b.SetByteCount(R__c, kTRUE);
    }
+}
+
+
+void RooRealVar::setFitMin(Double_t value) 
+{
+  cout << "WARNING setFitMin() IS OBSOLETE, PLEASE USE setMin()" << endl ;
+  setMin(value) ;
+}
+
+void RooRealVar::setFitMax(Double_t value) 
+{
+  cout << "WARNING setFitMax() IS OBSOLETE, PLEASE USE setMin()" << endl ;
+  setMax(value) ;
+}
+
+void RooRealVar::setFitRange(Double_t min, Double_t max) 
+{
+  cout << "WARNING setFitRange() IS OBSOLETE, PLEASE USE setRange()" << endl ;
+  setRange(min,max) ;
+}
+
+void RooRealVar::removeFitMin() 
+{
+  cout << "WARNING removeFitMin() IS OBSOLETE, PLEASE USE removeMin()" << endl ;
+  removeMin() ;
+}
+
+void RooRealVar::removeFitMax() 
+{
+  cout << "WARNING removeFitMax() IS OBSOLETE, PLEASE USE removeMax()" << endl ;
+  removeMax() ;
+}
+
+void RooRealVar::removeFitRange() 
+{
+  cout << "WARNING removeFitRange() IS OBSOLETE, PLEASE USE removeRange()" << endl ;
+  removeRange() ;
+}
+
+Double_t RooRealVar::getFitMin() const 
+{
+  cout << "WARNING getFitMin() IS OBSOLETE, PLEASE USE getMax()" << endl ;
+  return getMin() ;
+}
+
+Double_t RooRealVar::getFitMax() const 
+{
+  cout << "WARNING getFitMax() IS OBSOLETE, PLEASE USE getMax()" << endl ;
+  return getMax() ;
+}
+
+Bool_t RooRealVar::hasFitMin() const 
+{
+  cout << "WARNING hasFitMin() IS OBSOLETE, PLEASE USE hasMin()" << endl ;
+  return hasMin() ;
+}
+
+Bool_t RooRealVar::hasFitMax() const 
+{
+  cout << "WARNING hasFitMax() IS OBSOLETE, PLEASE USE hasMax()" << endl ;
+  return hasMax() ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealSumPdf.cc,v 1.8 2004/11/29 12:22:23 wverkerke Exp $
+ *    File: $Id: RooRealSumPdf.cc,v 1.9 2004/11/29 20:24:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -260,7 +260,8 @@ Bool_t RooRealSumPdf::checkDependents(const RooArgSet* nset) const
 
 
 
-Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet2) const 
+Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
+					     const RooArgSet* normSet2, const char* rangeName) const 
 {
   // Handle trivial no-integration scenario
   if (allVars.getSize()==0) return 0 ;
@@ -288,12 +289,14 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
 
 
-Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet2) const 
+Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet2, const char* rangeName) const 
 {
   // Handle trivial passthrough scenario
   if (code==0) return getVal(normSet2) ;
 
 //   cout << "RooRealSumPdf::aiWN code = " << code << endl ;
+
+  // WVE needs adaptation for rangeName feature
 
   RooArgSet *allDeps, *normSet ;
   _codeReg.retrieve(code-1,allDeps,normSet) ;

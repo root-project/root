@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.cc,v 1.33 2004/11/29 12:22:12 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.34 2004/11/29 20:22:41 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -71,31 +71,31 @@ RooAbsRealLValue::~RooAbsRealLValue()
 
 
 
-Bool_t RooAbsRealLValue::inFitRange(Double_t value, Double_t* clippedValPtr) const
+Bool_t RooAbsRealLValue::inRange(Double_t value, Double_t* clippedValPtr) const
 {
   // Return kTRUE if the input value is within our fit range. Otherwise, return
   // kFALSE and write a clipped value into clippedValPtr if it is non-zero.
 
-  // Double_t range = getFitMax() - getFitMin() ; // ok for +/-INIFINITY
+  // Double_t range = getMax() - getMin() ; // ok for +/-INIFINITY
   Double_t clippedValue(value);
   Bool_t inRange(kTRUE) ;
 
   // test this value against our upper fit limit
-  if(hasFitMax() && value > (getFitMax()+1e-6)) {
+  if(hasMax() && value > (getMax()+1e-6)) {
     if (clippedValPtr) {
       cout << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
-	   << " rounded down to max limit " << getFitMax() << endl ;
+	   << " rounded down to max limit " << getMax() << endl ;
     }
-    clippedValue = getFitMax();
+    clippedValue = getMax();
     inRange = kFALSE ;
   }
   // test this value against our lower fit limit
-  if(hasFitMin() && value < getFitMin()-1e-6) {
+  if(hasMin() && value < getMin()-1e-6) {
     if (clippedValPtr) {
       cout << "RooAbsRealLValue::inFitRange(" << GetName() << "): value " << value
-	   << " rounded up to min limit " << getFitMin() << endl;
+	   << " rounded up to min limit " << getMin() << endl;
     }
-    clippedValue = getFitMin();
+    clippedValue = getMin();
     inRange = kFALSE ;
   } 
 
@@ -108,10 +108,10 @@ Bool_t RooAbsRealLValue::inFitRange(Double_t value, Double_t* clippedValPtr) con
 Bool_t RooAbsRealLValue::isValidReal(Double_t value, Bool_t verbose) const 
 {
   // Check if given value is valid
-  if (!inFitRange(value)) {
+  if (!inRange(value)) {
     if (verbose)
       cout << "RooRealVar::isValid(" << GetName() << "): value " << value
-           << " out of range (" << getFitMin() << " - " << getFitMax() << ")" << endl ;
+           << " out of range (" << getMin() << " - " << getMax() << ")" << endl ;
     return kFALSE ;
   }
   return kTRUE ;
@@ -136,7 +136,7 @@ RooAbsArg& RooAbsRealLValue::operator=(Double_t newValue)
 
   Double_t clipValue ;
   // Clip 
-  inFitRange(newValue,&clipValue) ;
+  inRange(newValue,&clipValue) ;
   setVal(clipValue) ;
 
   return *this ;
@@ -166,7 +166,7 @@ RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi) const {
   // y.plotOn(...) method, for example. The caller is responsible for deleting
   // the returned object.
 
-  return new RooPlot(*this,xlo,xhi,getFitBins());
+  return new RooPlot(*this,xlo,xhi,getBins());
 }
 
 
@@ -180,16 +180,16 @@ RooPlot *RooAbsRealLValue::frame(Int_t nbins) const {
   // The current fit range may not be open ended or empty.
 
   // Plot range of variable may not be infinite or empty
-  if (getFitMin()==getFitMax()) {
+  if (getMin()==getMax()) {
     cout << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << endl ;
     return 0 ;
   }
-  if (RooNumber::isInfinite(getFitMin())||RooNumber::isInfinite(getFitMax())) {
+  if (RooNumber::isInfinite(getMin())||RooNumber::isInfinite(getMax())) {
     cout << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << endl ;
     return 0 ;
   }
 
-  return new RooPlot(*this,getFitMin(),getFitMax(),nbins);
+  return new RooPlot(*this,getMin(),getMax(),nbins);
 }
 
 
@@ -203,16 +203,16 @@ RooPlot *RooAbsRealLValue::frame() const {
   // The current fit range may not be open ended or empty.
 
   // Plot range of variable may not be infinite or empty
-  if (getFitMin()==getFitMax()) {
+  if (getMin()==getMax()) {
     cout << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << endl ;
     return 0 ;
   }
-  if (RooNumber::isInfinite(getFitMin())||RooNumber::isInfinite(getFitMax())) {
+  if (RooNumber::isInfinite(getMin())||RooNumber::isInfinite(getMax())) {
     cout << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << endl ;
     return 0 ;
   }
 
-  return new RooPlot(*this,getFitMin(),getFitMax(),getFitBins());
+  return new RooPlot(*this,getMin(),getMax(),getBins());
 }
 
 
@@ -239,14 +239,14 @@ void RooAbsRealLValue::printToStream(ostream& os, PrintOption opt, TString inden
     TString unit(_unit);
     if(!unit.IsNull()) unit.Prepend(' ');
     os << indent << "  Fit range is [ ";
-    if(hasFitMin()) {
-      os << getFitMin() << unit << " , ";
+    if(hasMin()) {
+      os << getMin() << unit << " , ";
     }
     else {
       os << "-INF , ";
     }
-    if(hasFitMax()) {
-      os << getFitMax() << unit << " ]" << endl;
+    if(hasMax()) {
+      os << getMax() << unit << " ]" << endl;
     }
     else {
       os << "+INF ]" << endl;
@@ -258,9 +258,9 @@ void RooAbsRealLValue::randomize() {
   // Set a new value sampled from a uniform distribution over the fit range.
   // Prints a warning and does nothing if the fit range is not finite.
 
-  if(hasFitMin() && hasFitMax()) {
-    Double_t range= getFitMax()-getFitMin();
-    setVal(getFitMin() + RooRandom::uniform()*range);
+  if(hasMin() && hasMax()) {
+    Double_t range= getMax()-getMin();
+    setVal(getMin() + RooRandom::uniform()*range);
   }
   else {
     cout << fName << "::" << ClassName() << ":randomize: fails with unbounded fit range" << endl;
@@ -268,12 +268,12 @@ void RooAbsRealLValue::randomize() {
 }
 
 
-void RooAbsRealLValue::setFitBin(Int_t ibin) 
+void RooAbsRealLValue::setBin(Int_t ibin) 
 {
   // Check range of plot bin index
-  if (ibin<0 || ibin>=numFitBins()) {
-    cout << "RooAbsRealLValue::setFitBin(" << GetName() << ") ERROR: bin index " << ibin
-	 << " is out of range (0," << getFitBins()-1 << ")" << endl ;
+  if (ibin<0 || ibin>=numBins()) {
+    cout << "RooAbsRealLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
+	 << " is out of range (0," << getBins()-1 << ")" << endl ;
     return ;
   }
  
@@ -287,7 +287,14 @@ Bool_t RooAbsRealLValue::fitRangeOKForPlotting() const
 {
   // Check if fit range is usable as plot range, i.e. it is neither
   // open ended, nor empty
-  return (hasFitMin() && hasFitMax() && (getFitMin()!=getFitMax())) ;
+  return (hasMin() && hasMax() && (getMin()!=getMax())) ;
+}
+
+
+Bool_t RooAbsRealLValue::inRange(const char* name) const 
+{
+  // Check if current value is inside range with given name
+  return (getVal() >= getMin(name) && getVal() <= getMax(name)) ;
 }
 
 
@@ -307,9 +314,9 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   }
 
   RooArgList list(*this) ;
-  Double_t xlo = getFitMin() ;
-  Double_t xhi = getFitMax() ;
-  Int_t nbins = getFitBins() ;
+  Double_t xlo = getMin() ;
+  Double_t xhi = getMax() ;
+  Int_t nbins = getBins() ;
   return (TH1F*)createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nbins);
 }
 
@@ -367,19 +374,19 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
       return 0 ;
     }
 
-    xlo_fit[0] = getFitMin() ;
-    xhi_fit[0] = getFitMax() ;    
+    xlo_fit[0] = getMin() ;
+    xhi_fit[0] = getMax() ;    
 
-    xlo_fit[1] = yvar.getFitMin() ;
-    xhi_fit[1] = yvar.getFitMax() ;
+    xlo_fit[1] = yvar.getMin() ;
+    xhi_fit[1] = yvar.getMax() ;
 
     xlo2 = xlo_fit ;
     xhi2 = xhi_fit ;
   }
   
   if (!nBins2) {
-    nbins_fit[0] = getFitBins() ;
-    nbins_fit[1] = yvar.getFitBins() ;
+    nbins_fit[0] = getBins() ;
+    nbins_fit[1] = yvar.getBins() ;
     nBins2 = nbins_fit ;
   }
 
@@ -435,23 +442,23 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
       return 0 ;
     }
 
-    xlo_fit[0] = getFitMin() ;
-    xhi_fit[0] = getFitMax() ;    
+    xlo_fit[0] = getMin() ;
+    xhi_fit[0] = getMax() ;    
 
-    xlo_fit[1] = yvar.getFitMin() ;
-    xhi_fit[1] = yvar.getFitMax() ;
+    xlo_fit[1] = yvar.getMin() ;
+    xhi_fit[1] = yvar.getMax() ;
 
-    xlo_fit[2] = zvar.getFitMin() ;
-    xhi_fit[2] = zvar.getFitMax() ;
+    xlo_fit[2] = zvar.getMin() ;
+    xhi_fit[2] = zvar.getMax() ;
 
     xlo2 = xlo_fit ;
     xhi2 = xhi_fit ;
   }
   
   if (!nBins2) {
-    nbins_fit[0] = getFitBins() ;
-    nbins_fit[1] = yvar.getFitBins() ;
-    nbins_fit[2] = zvar.getFitBins() ;
+    nbins_fit[0] = getBins() ;
+    nbins_fit[1] = yvar.getBins() ;
+    nbins_fit[2] = zvar.getBins() ;
     nBins2 = nbins_fit ;
   }
 
@@ -572,7 +579,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     TString axisTitle(tAxisLabel);
     axisTitle.Append(" / ( ");
     for(Int_t index= 0; index < dim; index++) {
-      Double_t delta= bins[index]->averageBinWidth() ; // xyz[index]->getFitBins();
+      Double_t delta= bins[index]->averageBinWidth() ; // xyz[index]->getBins();
       if(index > 0) axisTitle.Append(" x ");
       axisTitle.Append(Form("%g",delta));
       if(strlen(xyz[index]->getUnit())) {

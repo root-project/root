@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTObjWrap.rdl,v 1.3 2002/09/05 04:34:01 verkerke Exp $
+ *    File: $Id: RooTObjWrap.rdl,v 1.4 2004/04/05 22:44:13 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -18,21 +18,30 @@
 
 #include "Rtypes.h"
 #include "TNamed.h"
+#include "RooFitCore/RooLinkedList.hh"
 
 class RooTObjWrap : public TNamed {
 public:
 
-  RooTObjWrap() {} ;
-  RooTObjWrap(TObject* obj) : TNamed(), _obj(obj) {} ;
-  RooTObjWrap(const RooTObjWrap& other) : TNamed(other), _obj(other._obj) {}
+  RooTObjWrap(Bool_t isArray=kFALSE) : _isArray(isArray) {} ;
+  RooTObjWrap(TObject* obj, Bool_t isArray=kFALSE) : TNamed(), _isArray(isArray) { _list.Add(obj) ; } 
+  RooTObjWrap(const RooTObjWrap& other) : TNamed(other), _list(other._list) {}
   virtual ~RooTObjWrap() {} ;
 
-  TObject* obj() const { return _obj ; }
-  void setObj(TObject* obj) { _obj = obj ; }
+  TObject* obj() const { return _list.At(0) ; }
+  const RooLinkedList& objList() const { return _list ; }
+
+  void setObj(TObject* obj) { 
+     if (!_isArray) {
+         _list.Clear() ;
+     }
+    _list.Add(obj) ; 
+   }
 
 protected:
 
-  TObject* _obj ;
+  Bool_t _isArray ;
+  RooLinkedList _list ;
   ClassDef(RooTObjWrap,1) // Container class for Int_t
 };
 

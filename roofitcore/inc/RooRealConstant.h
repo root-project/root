@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealConstant.rdl,v 1.6 2002/09/05 04:33:52 verkerke Exp $
+ *    File: $Id: RooRealConstant.rdl,v 1.7 2004/04/05 22:44:12 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -17,6 +17,7 @@
 #define ROO_REAL_CONSTANT
 
 #include "Rtypes.h"
+#include <iostream>
 
 class RooAbsReal ;
 class RooArgList ;
@@ -39,6 +40,7 @@ protected:
 };
 
 RooConstVar& RooConst(Double_t val) ; 
+
 
 #endif
 

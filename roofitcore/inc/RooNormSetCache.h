@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormSetCache.rdl,v 1.7 2004/08/09 00:00:55 bartoldu Exp $
+ *    File: $Id: RooNormSetCache.rdl,v 1.7 2004/11/29 12:22:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,7 +37,11 @@ public:
 
   void add(const RooArgSet* set1, const RooArgSet* set2=0) ;
 
-  inline Int_t index(const RooArgSet* set1, const RooArgSet* set2=0) {
+  inline Int_t index(const RooArgSet* set1, const RooArgSet* set2=0, const TNamed* set2RangeName=0) {
+
+    // Match range name first
+    if (set2RangeName != _set2RangeName) return -1 ;
+
     Int_t i ;
     for (i=0 ; i<_nreg ; i++) {
       if (_asArr[i]._set1 == set1 && _asArr[i]._set2 == set2) return i ;
@@ -45,9 +49,18 @@ public:
     return -1 ;
   }
 
-  inline Bool_t contains(const RooArgSet* set1, const RooArgSet* set2=0) {
+  inline Bool_t contains(const RooArgSet* set1, const RooArgSet* set2=0, const TNamed* set2RangeName=0) {
+    if (set2RangeName!=_set2RangeName) return kFALSE ;
     if (_htable) return (_htable->findSetPair(set1,set2)) ;
-    return (index(set1,set2)>=0) ;
+    return (index(set1,set2,set2RangeName)>=0) ;
+  }
+
+  inline Bool_t containsSet1(const RooArgSet* set1) {
+    Int_t i ;
+    for (i=0 ; i<_nreg ; i++) {
+      if (_asArr[i]._set1 == set1) return kTRUE ;
+    }
+    return kFALSE ;
   }
 
   const RooArgSet* lastSet1() const { return _nreg>0?_asArr[_nreg-1]._set1:0 ; }
@@ -55,9 +68,8 @@ public:
   const RooNameSet& nameSet1() const { return _name1 ; }
   const RooNameSet& nameSet2() const { return _name2 ; }
 
-  Bool_t autoCache(const RooAbsArg* self, const RooArgSet* set1, const RooArgSet* set2=0, Bool_t autoRefill=kTRUE) ;
-  
-  
+  Bool_t autoCache(const RooAbsArg* self, const RooArgSet* set1, const RooArgSet* set2=0, const TNamed* set2RangeName=0, Bool_t autoRefill=kTRUE) ;
+    
   void clear() ;
   Int_t entries() const { return _nreg ; }
 
@@ -73,8 +85,10 @@ protected:
   Int_t _regSize ;
   Int_t _nreg ;
   RooSetPair* _asArr ;  //! do not persist
+
   RooNameSet _name1 ;   //!
   RooNameSet _name2 ;   //!
+  TNamed*    _set2RangeName ; //!
 
   ClassDef(RooNormSetCache,1) // Manager class for a single PDF normalization integral
 } ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooConvIntegrandBinding.cc,v 1.1 2004/11/29 20:23:07 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -119,10 +119,10 @@ Double_t RooConvIntegrandBinding::operator()(const Double_t xvector[]) const {
 
 Double_t RooConvIntegrandBinding::getMinLimit(UInt_t index) const {
   assert(isValid());
-  return _vars[index]->getFitMin();
+  return _vars[index]->getMin();
 }
 
 Double_t RooConvIntegrandBinding::getMaxLimit(UInt_t index) const {
   assert(isValid());
-  return _vars[index]->getFitMax();
+  return _vars[index]->getMax();
 }

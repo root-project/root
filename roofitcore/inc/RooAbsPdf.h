@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.74 2004/11/29 20:22:23 wverkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.75 2004/11/30 16:08:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -52,7 +52,7 @@ public:
 		       Bool_t verbose=kFALSE) const;
 
   virtual RooPlot* plotOn(RooPlot* frame, 
-			  const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
+			  const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
 			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
 			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
 			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const {
@@ -60,11 +60,6 @@ public:
   }
 
   // Backward compatibility functions
-  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor=1.0, 
-			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0,
-			  Double_t precision=1e-3, Bool_t shiftToZero=kFALSE, const RooArgSet* projDataSet=0,
-			  Double_t rangeLo=0, Double_t rangeHi=0, RooCurve::WingMode wmode=RooCurve::Extended) const;
-  
   virtual RooPlot *plotCompOn(RooPlot *frame, const char* compNameList, Option_t* drawOptions="L",
 			      Double_t scaleFactor= 1.0, ScaleType stype=Relative, 
 			      const RooAbsData* projData=0, const RooArgSet* projSet=0) const ;
@@ -120,13 +115,15 @@ public:
   virtual Bool_t traceEvalHook(Double_t value) const ;  
   virtual Double_t getVal(const RooArgSet* set=0) const ;
   Double_t getLogVal(const RooArgSet* set=0) const ;
+
   Double_t getNorm(const RooArgSet& nset) const { return getNorm(&nset) ; }
-  virtual Double_t getNorm(const RooArgSet* set=0) const ;
+  Double_t getNorm(const RooArgSet* set=0) const ;
+
   virtual void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value, Bool_t allNodes=kFALSE) ;
   Bool_t traceEvalPdf(Double_t value) const ;
 
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
 
   virtual Bool_t selfNormalized() const { return kFALSE ; }
 
@@ -135,7 +132,7 @@ public:
   virtual ExtendMode extendMode() const { return CanNotBeExtended ; } 
   inline Bool_t canBeExtended() const { return (extendMode() != CanNotBeExtended) ; }
   inline Bool_t mustBeExtended() const { return (extendMode() == MustBeExtended) ; }
-  virtual Double_t expectedEvents() const { return 0 ; } 
+  virtual Double_t expectedEvents(const RooArgSet* nset=0) const { return 0 ; } 
 
   // Printing interface (human readable)
   virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
@@ -146,7 +143,7 @@ public:
 
   virtual void fixAddCoefNormalization(const RooArgSet& addNormSet=RooArgSet()) ;
 
-  virtual Double_t extendedTerm(UInt_t observedEvents) const ;
+  virtual Double_t extendedTerm(UInt_t observedEvents, const RooArgSet* nset=0) const ;
 
   static void clearEvalError() { _evalError = kFALSE ; }
   static Bool_t evalError() { return _evalError ; }
@@ -158,8 +155,12 @@ private:
 
 protected:
 
+  virtual const RooAbsReal* getNormObj(const RooArgSet* set, const TNamed* rangeName=0) const ;
+
   virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
   void plotOnCompSelect(RooArgSet* selNodes) const ;
+
+  virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;  
 
   friend class RooAddGenContext ;
   friend class RooProdGenContext ;
@@ -212,12 +213,6 @@ protected:
   
   ClassDef(RooAbsPdf,1) // Abstract PDF with normalization support
 };
-
-// Additional RooAbsPdf::plotOn arguments
-RooCmdArg Normalization(Double_t scaleFactor, RooAbsPdf::ScaleType scaleType) ;
-RooCmdArg Components(const RooArgSet& compSet) ;
-RooCmdArg Components(const char* compSpec) ;
-
 
 
 #endif

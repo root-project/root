@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.cc,v 1.8 2004/11/29 12:22:17 wverkerke Exp $
+ *    File: $Id: RooCmdConfig.cc,v 1.9 2004/11/29 20:23:05 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -259,14 +259,14 @@ Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t s
 
 
 
-Bool_t RooCmdConfig::defineObject(const char* name, const char* argName, Int_t setNum, const TObject* defVal) 
+Bool_t RooCmdConfig::defineObject(const char* name, const char* argName, Int_t setNum, const TObject* defVal, Bool_t isArray) 
 {
   if (_oList.FindObject(name)) {
     cout << "RooCmdConfig::defineObject: name '" << name << "' already defined" << endl ;
     return kTRUE ;
   }
 
-  RooTObjWrap* os = new RooTObjWrap((TObject*)defVal) ;
+  RooTObjWrap* os = new RooTObjWrap((TObject*)defVal,isArray) ;
   os->SetName(name) ;
   os->SetTitle(argName) ;
   os->SetUniqueID(setNum) ;
@@ -324,6 +324,21 @@ Bool_t RooCmdConfig::process(RooLinkedList& argList)
   }
   delete iter ;
   return ret ;
+}
+
+
+Bool_t RooCmdConfig::process(const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
+			     const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) 
+{
+  Bool_t ret(kFALSE) ;
+  ret |= process(arg1) ;
+  ret |= process(arg2) ;
+  ret |= process(arg3) ;
+  ret |= process(arg4) ;
+  ret |= process(arg5) ;
+  ret |= process(arg6) ;
+  ret |= process(arg7) ;
+  ret |= process(arg8) ;
 }
 
 
@@ -465,10 +480,10 @@ Double_t RooCmdConfig::getDouble(const char* name, Double_t defVal)
 
 
 
-const char* RooCmdConfig::getString(const char* name, const char* defVal) 
+const char* RooCmdConfig::getString(const char* name, const char* defVal, Bool_t convEmptyToNull) 
 {
   RooStringVar* rs = (RooStringVar*) _sList.FindObject(name) ;
-  return rs ? (const char*)rs->getVal() : defVal ;
+  return rs ? ((convEmptyToNull && strlen(rs->getVal())==0) ? 0 : ((const char*)rs->getVal()) ) : defVal ;
 }
 
 
@@ -477,6 +492,14 @@ const TObject* RooCmdConfig::getObject(const char* name, const TObject* defVal)
 {
   RooTObjWrap* ro = (RooTObjWrap*) _oList.FindObject(name) ;
   return ro ? ro->obj() : defVal ;
+}
+
+
+const RooLinkedList& RooCmdConfig::getObjectList(const char* name) 
+{
+  static RooLinkedList defaultDummy ;
+  RooTObjWrap* ro = (RooTObjWrap*) _oList.FindObject(name) ;
+  return ro ? ro->objList() : defaultDummy ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.rdl,v 1.36 2004/04/05 21:38:48 wverkerke Exp $
+ *    File: $Id: RooAddPdf.rdl,v 1.37 2004/04/05 22:44:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,17 +39,18 @@ public:
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;	
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kTRUE ; }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet) const ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
   virtual ExtendMode extendMode() const { return (_haveLastCoef || _allExtendable) ? MustBeExtended : CanNotBeExtended; }
-  virtual Double_t expectedEvents() const ;
+  virtual Double_t expectedEvents(const RooArgSet* nset=0) const ;
 
   const RooArgList& pdfList() const { return _pdfList ; }
   const RooArgList& coefList() const { return _coefList ; }
 
   void fixCoefNormalization(const RooArgSet& refCoefNorm) ;
+  void fixCoefRange(const char* rangeName) ;
   virtual void resetErrorCounters(Int_t resetValue=10) ;
 
 protected:
@@ -57,17 +58,18 @@ protected:
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
 
   mutable RooSetProxy _refCoefNorm ;
+  mutable TNamed* _refCoefRangeName ;
 
   Bool_t _projectCoefs ;
-  void syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset=0) const ;
+  void syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset=0, const char* rangeName=0) const ;
   mutable RooNormListManager _projListMgr ;
   mutable RooArgList* _pdfProjList ;
 
-  void syncSuppNormList(const RooArgSet* nset) const ;
+  void syncSuppNormList(const RooArgSet* nset, const char* rangeName) const ;
   mutable RooNormListManager _suppListMgr ;
   mutable RooArgSet* _lastSupNormSet ;
 
-  void updateCoefCache(const RooArgSet* nset) const ;
+  void updateCoefCache(const RooArgSet* nset, const char* rangeName) const ;
   mutable Double_t* _coefCache ;
   
   friend class RooAddGenContext ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealBinding.rdl,v 1.6 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,35 +13,56 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_REAL_BINDING
-#define ROO_REAL_BINDING
 
-#include "RooFitCore/RooAbsFunc.hh"
+// -- CLASS DESCRIPTION [MISC] --
+// RooNameReg is a registry for 'const char*' name. For each unique
+// name (which is not necessarily a unique pointer in the C++ standard)
+// a unique pointer to a TNamed object is return that can be used for
+// fast searches and comparisons.
 
-class RooAbsRealLValue;
-class RooAbsReal;
-class RooArgSet;
+#include "RooFitCore/RooNameReg.hh"
 
-class RooRealBinding : public RooAbsFunc {
-public:
-  RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset=0, Bool_t clipInvalid=kFALSE, const TNamed* rangeName=0);
-  virtual ~RooRealBinding();
+ClassImp(RooNameReg)
+;
 
-  virtual Double_t operator()(const Double_t xvector[]) const;
-  virtual Double_t getMinLimit(UInt_t dimension) const;
-  virtual Double_t getMaxLimit(UInt_t dimension) const;
+RooNameReg* RooNameReg::_instance = 0 ;
 
-protected:
-  void loadValues(const Double_t xvector[]) const;
-  const RooAbsReal *_func;
-  RooAbsRealLValue **_vars;
-  const RooArgSet *_nset;
-  mutable Bool_t _xvecValid;
-  Bool_t _clipInvalid ;
-  const TNamed* _rangeName ; //!
 
-  ClassDef(RooRealBinding,0) // RooAbsReal interface adaptor
-};
+RooNameReg::~RooNameReg()
+{
+}
 
-#endif
+RooNameReg::RooNameReg(const RooNameReg& other) 
+{
+}
 
+RooNameReg& RooNameReg::instance()
+{
+  if (_instance==0) {
+    _instance = new RooNameReg ;
+  }
+  return *_instance ;
+}
+
+const TNamed* RooNameReg::constPtr(const char* str) {
+
+  // Handle null pointer case explicitly
+  if (str==0) return 0 ;
+
+  // See if name is already registered ;
+  TNamed* t = (TNamed*) _htable.find(str) ;
+  if (t) return t ;
+
+  // If not, register now
+  t = new TNamed(str,str) ;
+  _htable.add(t) ;
+  
+  return t ;
+}
+
+
+const char* RooNameReg::constStr(const TNamed* namePtr) 
+{
+  if (namePtr) return namePtr->GetName() ;
+  return 0 ;  
+}

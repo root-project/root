@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvCoefVar.rdl,v 1.5 2004/11/29 12:22:17 wverkerke Exp $
+ *    File: $Id: RooConvCoefVar.rdl,v 1.6 2004/11/29 20:23:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,8 +38,8 @@ public:
   virtual Double_t getVal(const RooArgSet* nset=0) const { return evaluate() ; }
 
   virtual Double_t evaluate() const ;
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
-  virtual Double_t analyticalIntegral(Int_t code) const ;
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
 
 protected:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAcceptReject.cc,v 1.29 2004/11/29 12:22:13 wverkerke Exp $
+ *    File: $Id: RooAcceptReject.cc,v 1.30 2004/11/29 20:22:45 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -97,7 +97,7 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
       _catVars.add(*catVar);
     }
     else if(0 != realVar) {
-      if(realVar->hasFitMin() && realVar->hasFitMax()) {
+      if(realVar->hasMin() && realVar->hasMax()) {
 	_realVars.add(*realVar);
       }
       else {

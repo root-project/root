@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.rdl,v 1.27 2004/08/09 00:00:55 bartoldu Exp $
+ *    File: $Id: RooPlot.rdl,v 1.27 2004/11/29 12:22:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,11 +50,12 @@ public:
   // container management
   const char* nameOf(Int_t idx) const ;
   TObject *findObject(const char *name, const TClass* clas=0) const;
+  TObject* getObject(Int_t idx) const ;
   Stat_t numItems() const {return _items.GetSize();}
 
-  void addPlotable(RooPlotable *plotable, Option_t *drawOptions= "");
-  void addObject(TObject* obj, Option_t* drawOptions= "");
-  void addTH1(TH1 *hist, Option_t* drawOptions= "");
+  void addPlotable(RooPlotable *plotable, Option_t *drawOptions= "", Bool_t invisible=kFALSE, Bool_t refreshNorm=kFALSE);
+  void addObject(TObject* obj, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
+  void addTH1(TH1 *hist, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
 
   // ascii printing
   virtual void printToStream(std::ostream& os, PrintOption opt= Standard, TString indent= "") const;
@@ -84,18 +85,35 @@ public:
   // get/set drawing options for contained objects
   TString getDrawOptions(const char *name) const;
   Bool_t setDrawOptions(const char *name, TString options);
+
+  Bool_t getInvisible(const char* name) const ;
+  void setInvisible(const char* name, Bool_t flag=kTRUE) ; 
  
   virtual void SetMaximum(Double_t maximum = -1111) ;
   virtual void SetMinimum(Double_t minimum = -1111) ;
 
   Double_t chiSquare(const char* pdfname=0, const char* histname=0) const ;
 
+protected:
+
+  class DrawOpt {
+    public:
+
+    DrawOpt(const char* rawOpt=0) : invisible(kFALSE) { drawOptions[0] = 0 ; initialize(rawOpt) ; }
+    void initialize(const char* rawOpt) ;
+    const char* rawOpt() const ;
+
+    char drawOptions[128] ;
+    Bool_t invisible ;
+  } ;
+
+
   void initialize();
   TString histName() const ; 
   TString caller(const char *method) const;
   void updateYAxis(Double_t ymin, Double_t ymax, const char *label= "");
   void updateFitRangeNorm(const TH1* hist);
-  void updateFitRangeNorm(const RooPlotable* rp);
+  void updateFitRangeNorm(const RooPlotable* rp, Bool_t refeshNorm=kFALSE);
 
   RooList _items;            // A list of the items we contain.
   Double_t _padFactor;       // Scale our y-axis to _padFactor of our maximum contents.
@@ -104,13 +122,11 @@ public:
   RooArgSet *_normVars;      // Variables that PDF plots should be normalized over
   Double_t _normNumEvts;     // Number of events in histogram (for normalization)
   Double_t _normBinWidth;    // Histogram bin width (for normalization)
-  //Double_t _normValue;       // Fit-range normalization to use for plotting PDFs
   TIterator *_iterator;      //! non-persistent
 
   Double_t _defYmin ;        // Default minimum for Yaxis (as calculated from contents)
   Double_t _defYmax ;        // Default maximum for Yaxis (as calculated from contents)
 
-protected:
   RooPlot(const RooPlot& other); // object cannot be copied
 
   ClassDef(RooPlot,1)        // Plot frame and container for graphics objects

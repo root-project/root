@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealProxy.rdl,v 1.17 2004/08/09 00:00:56 bartoldu Exp $
+ *    File: $Id: RooRealProxy.rdl,v 1.17 2004/11/29 12:22:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -51,8 +51,8 @@ public:
 
   // LValue operations 
   RooRealProxy& operator=(const Double_t& value) { lvptr()->setVal(value) ; return *this ; }
-  Double_t min() const { return lvptr()->getFitMin() ; }
-  Double_t max() const { return lvptr()->getFitMax() ; }
+  Double_t min(const char* name=0) const { return lvptr()->getMin(name) ; }
+  Double_t max(const char* name=0) const { return lvptr()->getMax(name) ; }
 
 
   ClassDef(RooRealProxy,0) // Proxy for a RooAbsReal object

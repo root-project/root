@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormula.rdl,v 1.29 2004/08/09 00:00:54 bartoldu Exp $
+ *    File: $Id: RooFormula.rdl,v 1.29 2004/11/29 12:22:18 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -59,7 +59,8 @@ protected:
   void initCopy(const RooFormula& other) ;
 
   // Interface to TFormula engine
-  Int_t DefinedVariable(TString &name) ;
+  Int_t DefinedVariable(TString &name, int& action) ; // ROOT 4
+  Int_t DefinedVariable(TString &name) ; // ROOT 3
   Double_t DefinedValue(Int_t code) ;
 
   RooArgSet* _nset ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.rdl,v 1.64 2004/11/29 12:22:12 wverkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.65 2004/11/29 20:22:38 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -62,17 +62,22 @@ public:
   RooAbsArg *createFundamental(const char* newname=0) const;
 
   // Analytical integration support
-  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const ;
-  virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
-  virtual Double_t analyticalIntegral(Int_t code) const ;
+  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ;
+  virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
+  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const { return kFALSE ; }
   virtual void forceNumInt(Bool_t flag=kTRUE) { _forceNumInt = flag ; }
 
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset) const { return createIntegral(iset,&nset) ; }
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, RooNumIntConfig& cfg) const { return createIntegral(iset,&nset,&cfg) ; }
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg) const { return createIntegral(iset,0,&cfg) ; }
-  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0) const ;  
+  RooAbsReal* createIntegral(const RooArgSet& iset, const char* rangeName) const 
+              { return createIntegral(iset,0,0,rangeName) ; }
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, const char* rangeName=0) const 
+              { return createIntegral(iset,&nset,0,rangeName) ; }
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet& nset, RooNumIntConfig& cfg, const char* rangeName=0) const 
+              { return createIntegral(iset,&nset,&cfg,rangeName) ; }
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooNumIntConfig& cfg, const char* rangeName=0) const 
+              { return createIntegral(iset,0,&cfg,rangeName) ; }
+  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const ;  
 
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }
@@ -100,20 +105,10 @@ public:
   // User entry point for plotting
   enum ScaleType { Raw, Relative, NumEvent, RelativeExpected } ;
   virtual RooPlot* plotOn(RooPlot* frame, 
-			  const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
+			  const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
 			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
 			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
 			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
-
-  // Plot implementation functions
-  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor=1.0, 
-			  ScaleType stype=Relative, const RooAbsData* projData=0, const RooArgSet* projSet=0,
-			  Double_t precision=1e-3, Bool_t shiftToZero=kFALSE, const RooArgSet* projDataSet=0,
-			  Double_t rangeLo=0, Double_t rangeHi=0, RooCurve::WingMode wmode=RooCurve::Extended) const;
-  virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, Option_t* drawOptions="L", 
-			      Double_t scaleFactor=1.0, const RooAbsData* projData=0, const RooArgSet* projSet=0,
-			      Double_t precision=1e-3, const RooArgSet* projDataSet=0, 
-			      Double_t rangeLo=0, Double_t rangeHi=0, RooCurve::WingMode wmode=RooCurve::Extended) const;
 
   // Forwarder function for backward compatibility
   virtual RooPlot *plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions="L", 
@@ -149,7 +144,7 @@ protected:
 			 RooArgSet& projectedVars, Bool_t silent) const ;
 
   const RooAbsReal *createProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
-				     RooArgSet *&cloneSet) const;
+				     RooArgSet *&cloneSet, const char* rangeName=0) const;
 
   // Support interface for subclasses to advertise their analytic integration
   // and generator capabilities in their analticalIntegral() and generateEvent()
@@ -216,8 +211,32 @@ protected:
   void findRedundantCacheServers(RooAbsData* dset,RooArgSet& cacheList, RooArgSet& pruneList) ;
   Bool_t allClientsCached(RooAbsArg* var, RooArgSet& cacheList) ;
   
+  struct PlotOpt {
+   PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(0), projSet(0), precision(1e-3), shiftToZero(kFALSE),
+               projDataSet(0),rangeLo(0),rangeHi(0),wmode(RooCurve::Extended),projectionRangeName(0),curveInvisible(kFALSE),
+               curveName(0),addToCurveName(0),addToWgtSelf(1.),addToWgtOther(1.) {} ;
+   Option_t* drawOptions ;
+   Double_t scaleFactor ;	 
+   ScaleType stype ;
+   const RooAbsData* projData ;
+   const RooArgSet* projSet ;
+   Double_t precision ;
+   Bool_t shiftToZero ;
+   const RooArgSet* projDataSet ;
+   Double_t rangeLo ;
+   Double_t rangeHi ;
+   RooCurve::WingMode wmode ;
+   const char* projectionRangeName ;
+   Bool_t curveInvisible ;
+   const char* curveName ;
+   const char* addToCurveName ;
+   Double_t addToWgtSelf ;
+   Double_t addToWgtOther ;
+  } ;
 
-
+  // Plot implementation functions
+  virtual RooPlot *plotOn(RooPlot* frame, PlotOpt o) const;
+  virtual RooPlot *plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asymCat, PlotOpt o) const;
 
 private:
 
@@ -227,23 +246,5 @@ protected:
 
   ClassDef(RooAbsReal,1) // Abstract real-valued variable
 };
-
-// RooAbsReal::plotOn arguments
-RooCmdArg DrawOption(const char* opt) ;
-RooCmdArg Normalization(Double_t scaleFactor) ;
-RooCmdArg Slice(const RooArgSet& sliceSet) ;
-RooCmdArg Project(const RooArgSet& projSet) ;
-RooCmdArg ProjWData(const RooAbsData& projData) ;
-RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData) ;
-RooCmdArg Asymmetry(const RooCategory& cat) ;
-RooCmdArg Precision(Double_t prec) ;
-RooCmdArg ShiftToZero() ;
-RooCmdArg Range(Double_t lo, Double_t hi, Bool_t vlines=kFALSE) ;
-RooCmdArg LineColor(Color_t color) ;
-RooCmdArg LineStyle(Style_t style) ;
-RooCmdArg LineWidth(Width_t width) ;
-RooCmdArg FillColor(Color_t color) ;
-RooCmdArg FillStyle(Style_t style) ;
-
 
 #endif

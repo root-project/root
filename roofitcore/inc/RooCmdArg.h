@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdArg.rdl,v 1.4 2004/03/19 06:09:46 wverkerke Exp $
+ *    File: $Id: RooCmdArg.rdl,v 1.5 2004/04/05 22:44:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -19,7 +19,6 @@
 
 #include "TNamed.h"
 #include "TString.h"
-#include "RooFitCore/RooArgSet.hh"
 class RooAbsData ;
 
 

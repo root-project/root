@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsData.rdl,v 1.22 2004/04/05 22:43:55 wverkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.23 2004/07/02 07:39:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,18 +65,17 @@ public:
 
   // Plot the distribution of a real valued arg
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const = 0;
-  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P", 
-			  const RooAbsBinning* bins=0, RooAbsData::ErrorType=RooAbsData::Poisson) const = 0 ;
-  virtual RooPlot *plotOn(RooPlot *frame, const RooFormulaVar *cutVar, Option_t* drawOptions="P", 
-			  const RooAbsBinning* bins=0, RooAbsData::ErrorType=RooAbsData::Poisson) const = 0 ;
-  virtual RooPlot *plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, 
-			      const char* cut="", Option_t* drawOptions="P", const RooAbsBinning* bins=0) const = 0 ;
+  virtual RooPlot* plotOn(RooPlot* frame, 
+			  const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
+			  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
+			  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
+			  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const = 0 ;
 
   // Split a dataset by a category
   virtual TList* split(const RooAbsCategory& splitCat) const = 0 ;
  
   // Fill an existing histogram
-  virtual TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "") const = 0;
+  virtual TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "", const char* cutRange=0) const = 0;
 
   // Printing interface (human readable)
   inline virtual void Print(Option_t *options= 0) const {

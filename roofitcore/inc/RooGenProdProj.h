@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGenProdProj.rdl,v 1.3 2004/03/19 06:09:46 wverkerke Exp $
+ *    File: $Id: RooGenProdProj.rdl,v 1.4 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -27,7 +27,7 @@ class RooGenProdProj : public RooAbsReal {
 public:
 
   RooGenProdProj() ;
-  RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet, const RooArgSet& _normSet) ;
+  RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet, const RooArgSet& _normSet, const char* isetRangeName) ;
 
   RooGenProdProj(const RooGenProdProj& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooGenProdProj(*this, newname); }
@@ -35,7 +35,7 @@ public:
 
 protected:
 
-  RooAbsReal* makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, RooArgSet& saveSet) ;
+  RooAbsReal* makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, RooArgSet& saveSet, const char* isetRangeName) ;
 
   virtual void operModeHook() ;
 

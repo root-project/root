@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormListManager.rdl,v 1.4 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id: RooNormListManager.rdl,v 1.5 2004/07/02 07:39:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,8 +33,9 @@ public:
   RooNormListManager(const RooNormListManager& other, Bool_t sterileCopy=kFALSE) ;
   virtual ~RooNormListManager() ;
   
-  RooArgList* getNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset=0, Int_t* sterileIndex=0) ;
-  Int_t setNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, RooArgList* normColl) ;  
+  RooArgList* getNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset=0, 
+                          Int_t* sterileIndex=0, const TNamed* isetRangeName=0) ;
+  Int_t setNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, RooArgList* normColl, const TNamed* isetRangeName) ;  
   void reset() ;
   void sterilize() ;
 

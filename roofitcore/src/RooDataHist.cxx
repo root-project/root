@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.41 2004/11/29 12:22:17 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.42 2004/11/29 20:23:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -58,7 +58,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 {
   // Constructor of an empty data hist from a RooArgSet defining the dimensions
   // of the data space. The range and number of bins in each dimensions are taken
-  // from getFitMin()getFitMax(),getFitBins() of each RooAbsArg representing that
+  // from getMin()getMax(),getBins() of each RooAbsArg representing that
   // dimension.
   //
   // For real dimensions, the fit range and number of bins can be set independently
@@ -83,7 +83,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
   // Constructor of a data hist from an existing data collection (binned or unbinned)
   // The RooArgSet 'vars' defines the dimensions of the histogram. 
   // The range and number of bins in each dimensions are taken
-  // from getFitMin()getFitMax(),getFitBins() of each RooAbsArg representing that
+  // from getMin()getMax(),getBins() of each RooAbsArg representing that
   // dimension.
   //
   // For real dimensions, the fit range and number of bins can be set independently
@@ -132,8 +132,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
     assert(0) ;
   }
 
-  Double_t xlo = ((RooRealVar*)vars.at(0))->getFitMin() ;
-  Double_t xhi = ((RooRealVar*)vars.at(0))->getFitMax() ;
+  Double_t xlo = ((RooRealVar*)vars.at(0))->getMin() ;
+  Double_t xhi = ((RooRealVar*)vars.at(0))->getMax() ;
   Int_t xmin(0) ;
   if (histo->GetXaxis()->GetXbins()->GetArray()) {
 
@@ -160,7 +160,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
     Double_t xloAdj = xbins.binLow(xbins.binNumber(xlo+1e-6)) ;
     Double_t xhiAdj = xbins.binHigh(xbins.binNumber(xhi-1e-6)) ;
     xbins.setRange(xloAdj,xhiAdj) ;
-    ((RooRealVar*)vars.at(0))->setFitRange(xloAdj,xhiAdj) ;
+    ((RooRealVar*)vars.at(0))->setRange(xloAdj,xhiAdj) ;
     if (fabs(xloAdj-xlo)>1e-6||fabs(xhiAdj-xhi)) {
       cout << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << xvar->GetName() << " expanded to nearest bin boundaries: [" 
 	   << xlo << "," << xhi << "] --> [" << xloAdj << "," << xhiAdj << "]" << endl ;
@@ -177,8 +177,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   RooRealVar* yvar = (RooRealVar*) (vars.at(1) ? _vars.find(vars.at(1)->GetName()) : 0 ) ;
   Int_t ymin(0) ;
   if (yvar) {
-    Double_t ylo = ((RooRealVar*)vars.at(1))->getFitMin() ;
-    Double_t yhi = ((RooRealVar*)vars.at(1))->getFitMax() ;
+    Double_t ylo = ((RooRealVar*)vars.at(1))->getMin() ;
+    Double_t yhi = ((RooRealVar*)vars.at(1))->getMax() ;
 
     if (!dynamic_cast<RooRealVar*>(yvar)) {
       cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << yvar->GetName() << " must be real" << endl ;
@@ -211,7 +211,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       Double_t yloAdj = ybins.binLow(ybins.binNumber(ylo+1e-6)) ;
       Double_t yhiAdj = ybins.binHigh(ybins.binNumber(yhi-1e-6)) ;
       ybins.setRange(yloAdj,yhiAdj) ;
-      ((RooRealVar*)vars.at(1))->setFitRange(yloAdj,yhiAdj) ;
+      ((RooRealVar*)vars.at(1))->setRange(yloAdj,yhiAdj) ;
       if (fabs(yloAdj-ylo)>1e-6||fabs(yhiAdj-yhi)) {
 	cout << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << yvar->GetName() << " expanded to nearest bin boundaries: [" 
 	     << ylo << "," << yhi << "] --> [" << yloAdj << "," << yhiAdj << "]" << endl ;
@@ -227,8 +227,8 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   RooRealVar* zvar = (RooRealVar*) (vars.at(2) ? _vars.find(vars.at(2)->GetName()) : 0 ) ;
   Int_t zmin(0) ;
   if (zvar) {
-    Double_t zlo = ((RooRealVar*)vars.at(2))->getFitMin() ;
-    Double_t zhi = ((RooRealVar*)vars.at(2))->getFitMax() ;
+    Double_t zlo = ((RooRealVar*)vars.at(2))->getMin() ;
+    Double_t zhi = ((RooRealVar*)vars.at(2))->getMax() ;
 
     if (!dynamic_cast<RooRealVar*>(zvar)) {
       cout << "RooDataHist::ctor(" << GetName() << ") ERROR: dimension " << zvar->GetName() << " must be real" << endl ;
@@ -261,7 +261,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
       Double_t zloAdj = zbins.binLow(zbins.binNumber(zlo+1e-6)) ;
       Double_t zhiAdj = zbins.binHigh(zbins.binNumber(zhi-1e-6)) ;
       zbins.setRange(zloAdj,zhiAdj) ;
-      ((RooRealVar*)vars.at(0))->setFitRange(zloAdj,zhiAdj) ;
+      ((RooRealVar*)vars.at(0))->setRange(zloAdj,zhiAdj) ;
       if (fabs(zloAdj-zlo)>1e-6||fabs(zhiAdj-zhi)) {
 	cout << "RooDataHist::ctor(" << GetName() << "): fit range of variable " << zvar->GetName() << " expanded to nearest bin boundaries: [" 
 	     << zlo << "," << zhi << "] --> [" << zloAdj << "," << zhiAdj << "]" << endl ;
@@ -284,14 +284,14 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   if (zvar) set.add(*zvar) ;
 
   Int_t ix(0),iy(0),iz(0) ;
-  for (ix=0 ; ix < xvar->getFitBins() ; ix++) {
-    xvar->setFitBin(ix) ;
+  for (ix=0 ; ix < xvar->getBins() ; ix++) {
+    xvar->setBin(ix) ;
     if (yvar) {
-      for (iy=0 ; iy < yvar->getFitBins() ; iy++) {
-	yvar->setFitBin(iy) ;
+      for (iy=0 ; iy < yvar->getBins() ; iy++) {
+	yvar->setBin(iy) ;
 	if (zvar) {
-	  for (iz=0 ; iz < zvar->getFitBins() ; iz++) {
-	    zvar->setFitBin(iz) ;
+	  for (iz=0 ; iz < zvar->getBins() ; iz++) {
+	    zvar->setBin(iz) ;
 	    add(set,histo->GetBinContent(ix+1+xmin,iy+1+ymin,iz+1+zmin)*weight,pow(histo->GetBinError(ix+1+xmin,iy+1+ymin,iz+1+zmin)*weight,2)) ;
 	  }
 	} else {
@@ -324,12 +324,12 @@ void RooDataHist::initialize(Bool_t fillTree)
     
     // Calculate sub-index multipliers for master index
     for (i=0 ; i<n ; i++) {
-      _idxMult[i] *= arg->numFitBins() ;
+      _idxMult[i] *= arg->numBins() ;
     }
     _idxMult[n++] = 1 ;
 
     // Calculate dimension of weight array
-    _arrSize *= arg->numFitBins() ;
+    _arrSize *= arg->numBins() ;
   }  
 
   // Allocate and initialize weight array 
@@ -367,8 +367,8 @@ void RooDataHist::initialize(Bool_t fillTree)
       idx  = tmp / _idxMult[i] ;
       tmp -= idx*_idxMult[i++] ;
       RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(arg) ;
-      arglv->setFitBin(idx) ;
-      binVolume *= arglv->getFitBinWidth(idx) ;
+      arglv->setBin(idx) ;
+      binVolume *= arglv->getBinWidth(idx) ;
     }
     _binv[ibin] = binVolume ;
     Fill() ;
@@ -525,7 +525,7 @@ Int_t RooDataHist::calcTreeIndex() const
   RooAbsLValue* arg ;
   Int_t masterIdx(0), i(0) ;
   while(arg=dynamic_cast<RooAbsLValue*>(_iterator->Next())) {
-    masterIdx += _idxMult[i++]*arg->getFitBin() ;
+    masterIdx += _idxMult[i++]*arg->getBin() ;
   }
   return masterIdx ;
 }
@@ -544,9 +544,9 @@ void RooDataHist::dump2()
 
 
 
-RooPlot *RooDataHist::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions, const RooAbsBinning* bins, RooAbsData::ErrorType etype ) const 
+RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const 
 {
-  if (bins) return RooTreeData::plotOn(frame,cuts,drawOptions,bins,etype) ;
+  if (o.bins) return RooTreeData::plotOn(frame,0) ;
 
   if(0 == frame) {
     cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
@@ -566,16 +566,11 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
     return 0;
   }
 
-  return RooTreeData::plotOn(frame,cuts,drawOptions,&dataVar->getBinning(),etype) ;
+  o.bins = &dataVar->getBinning() ;
+  return RooTreeData::plotOn(frame,o) ;
 }
 
 
-
-RooPlot *RooDataHist::plotOn(RooPlot *frame, const RooFormulaVar* cutVar, Option_t* drawOptions, const RooAbsBinning* bins, RooAbsData::ErrorType etype) const 
-{
-  // Implementation pending...
-  return 0 ;
-}
 
 
 Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correctForBinSize) 
@@ -625,9 +620,9 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
     Double_t xval = ((RooAbsReal*)bin.find(realX->GetName()))->getVal() ;
     Double_t yval = ((RooAbsReal*)bin.find(realY->GetName()))->getVal() ;
     
-    Int_t ybinC = realY->getFitBin() ;
+    Int_t ybinC = realY->getBin() ;
     Int_t ybinLo = ybinC-intOrder/2 - ((yval<realY->getBinning().binCenter(ybinC))?1:0) ;
-    Int_t ybinM = realY->numFitBins() ;
+    Int_t ybinM = realY->numBins() ;
     
     Int_t i ;
     Double_t yarr[10] ;
@@ -637,18 +632,18 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
       if (i>=0 && i<ybinM) {
 	// In range
 	ibin = i ;
-	realY->setFitBin(ibin) ;
+	realY->setBin(ibin) ;
 	xarr[i-ybinLo] = realY->getVal() ;
       } else if (i>=ybinM) {
 	// Overflow: mirror
 	ibin = 2*ybinM-i-1 ;
-	realY->setFitBin(ibin) ;
-	xarr[i-ybinLo] = 2*realY->getFitMax()-realY->getVal() ;
+	realY->setBin(ibin) ;
+	xarr[i-ybinLo] = 2*realY->getMax()-realY->getVal() ;
       } else {
 	// Underflow: mirror
 	ibin = -i ;
-	realY->setFitBin(ibin) ;
-	xarr[i-ybinLo] = 2*realY->getFitMin()-realY->getVal() ;
+	realY->setBin(ibin) ;
+	xarr[i-ybinLo] = 2*realY->getMin()-realY->getVal() ;
       }
       yarr[i-ybinLo] = interpolateDim(*realX,xval,intOrder,correctForBinSize) ;	
     }
@@ -710,9 +705,9 @@ Double_t RooDataHist::interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOr
   // at current value 'xval'
 
   // Fill workspace arrays spanning interpolation area
-  Int_t fbinC = dim.getFitBin() ;
+  Int_t fbinC = dim.getBin() ;
   Int_t fbinLo = fbinC-intOrder/2 - ((xval<dim.getBinning().binCenter(fbinC))?1:0) ;
-  Int_t fbinM = dim.numFitBins() ;
+  Int_t fbinM = dim.numBins() ;
 
   Int_t i ;
   Double_t yarr[10] ;
@@ -722,24 +717,24 @@ Double_t RooDataHist::interpolateDim(RooRealVar& dim, Double_t xval, Int_t intOr
     if (i>=0 && i<fbinM) {
       // In range
       ibin = i ;
-      dim.setFitBin(ibin) ;
+      dim.setBin(ibin) ;
       xarr[i-fbinLo] = dim.getVal() ;
     } else if (i>=fbinM) {
       // Overflow: mirror
       ibin = 2*fbinM-i-1 ;
-      dim.setFitBin(ibin) ;
-      xarr[i-fbinLo] = 2*dim.getFitMax()-dim.getVal() ;
+      dim.setBin(ibin) ;
+      xarr[i-fbinLo] = 2*dim.getMax()-dim.getVal() ;
     } else {
       // Underflow: mirror
       ibin = -i ;
-      dim.setFitBin(ibin) ;
-      xarr[i-fbinLo] = 2*dim.getFitMin()-dim.getVal() ;
+      dim.setBin(ibin) ;
+      xarr[i-fbinLo] = 2*dim.getMin()-dim.getVal() ;
     }
     Int_t idx = calcTreeIndex() ;      
     yarr[i-fbinLo] = _wgt[idx] ; 
     if (correctForBinSize) yarr[i-fbinLo] /=  _binv[idx] ;
   }
-  dim.setFitBin(fbinC) ;
+  dim.setBin(fbinC) ;
   Double_t ret = RooMath::interpolate(xarr,yarr,intOrder+1,xval) ;
   return ret ;
 }
@@ -884,6 +879,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
   RooAbsArg* arg ;
   Bool_t* mask = new Bool_t[_vars.getSize()] ;
   Int_t*  refBin = new Int_t[_vars.getSize()] ;
+
   Int_t i(0) ;
   _iterator->Reset() ;
   while(arg=(RooAbsArg*)_iterator->Next()) {
@@ -891,7 +887,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
       mask[i] = kFALSE ;
     } else {
       mask[i] = kTRUE ;
-      refBin[i] = (dynamic_cast<RooAbsLValue*>(arg))->getFitBin() ;
+      refBin[i] = (dynamic_cast<RooAbsLValue*>(arg))->getBin() ;
     }
     i++ ;
   }
@@ -921,6 +917,9 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
     }
   }
   delete ssIter ;
+
+  delete[] mask ;
+  delete[] refBin ;
 
   return total ;
 }
@@ -960,7 +959,7 @@ void RooDataHist::calculatePartialBinVolume(const RooArgSet& dimSet) const
       tmp -= idx*_idxMult[i++] ;
       if (selDim[i-1]) {
 	RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(arg) ;
-	binVolume *= arglv->getFitBinWidth(idx) ;
+	binVolume *= arglv->getBinWidth(idx) ;
       }
     }
     _pbinv[ibin] = binVolume ;

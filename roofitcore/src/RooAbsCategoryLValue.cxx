@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.17 2004/11/29 12:22:09 wverkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.18 2004/11/29 20:21:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -139,14 +139,14 @@ void RooAbsCategoryLValue::randomize() {
 
 
 
-void RooAbsCategoryLValue::setFitBin(Int_t ibin) 
+void RooAbsCategoryLValue::setBin(Int_t ibin) 
 {
   // Set category to i-th fit bin, which is the i-th registered state.
 
   // Check validity of ibin
-  if (ibin<0 || ibin>=numFitBins()) {
-    cout << "RooAbsCategoryLValue::setFitBin(" << GetName() << ") ERROR: bin index " << ibin
-	 << " is out of range (0," << numFitBins()-1 << ")" << endl ;
+  if (ibin<0 || ibin>=numBins()) {
+    cout << "RooAbsCategoryLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
+	 << " is out of range (0," << numBins()-1 << ")" << endl ;
     return ;
   }
 
@@ -159,7 +159,7 @@ void RooAbsCategoryLValue::setFitBin(Int_t ibin)
 
 
 
-Int_t RooAbsCategoryLValue::getFitBin() const 
+Int_t RooAbsCategoryLValue::getBin() const 
 {
   // Get index of plot bin for current value this category.
 
@@ -172,7 +172,7 @@ Int_t RooAbsCategoryLValue::getFitBin() const
 
 
 
-Int_t RooAbsCategoryLValue::numFitBins() const 
+Int_t RooAbsCategoryLValue::numBins() const 
 {
   // Returm the number of fit bins ( = number of types )
   return numTypes() ;

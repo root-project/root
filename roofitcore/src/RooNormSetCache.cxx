@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormSetCache.cc,v 1.9 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooNormSetCache.cc,v 1.10 2004/11/29 20:24:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -22,7 +22,7 @@ ClassImp(RooNormSetCache)
 ;
 
 RooNormSetCache::RooNormSetCache(Int_t regSize) :
-   _htable(0), _regSize(regSize), _nreg(0), _asArr(0)
+  _htable(0), _regSize(regSize), _nreg(0), _asArr(0), _set2RangeName(0)
 {
   _htable = regSize>16 ? new RooHashTable(regSize,RooHashTable::Intrinsic) : 0 ;
 }
@@ -30,7 +30,7 @@ RooNormSetCache::RooNormSetCache(Int_t regSize) :
 
 
 RooNormSetCache::RooNormSetCache(const RooNormSetCache& other) :
-   _htable(0), _regSize(other._regSize), _nreg(0), _asArr(0)
+  _htable(0), _regSize(other._regSize), _nreg(0), _asArr(0), _set2RangeName(0)
 {
   _htable = _regSize>16 ? new RooHashTable(_regSize,RooHashTable::Intrinsic) : 0 ;
 }
@@ -66,6 +66,7 @@ void RooNormSetCache::initialize(const RooNormSetCache& other)
 
   _name1 = other._name1 ;
   _name2 = other._name2 ;
+  _set2RangeName = other._set2RangeName ;
 }
 
 
@@ -123,12 +124,12 @@ void RooNormSetCache::expand()
 }
 
 
-Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1, const RooArgSet* set2, Bool_t doRefill) 
+Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1, const RooArgSet* set2, const TNamed* set2RangeName, Bool_t doRefill) 
 {
   // Automated cache management function - Returns kTRUE if cache is invalidated
   
-  // A - Check if set1/2 are in cache
-  if (contains(set1,set2)) {
+  // A - Check if set1/2 are in cache and range name is identical
+  if (set2RangeName==_set2RangeName && contains(set1,set2)) {
     return kFALSE ;
   }
 
@@ -141,7 +142,7 @@ Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1, 
   nset1d.refill(*set1d) ;
   nset2d.refill(*set2d) ;
 
-  if (nset1d==_name1&&nset2d==_name2) {
+  if (nset1d==_name1&&nset2d==_name2&&_set2RangeName==set2RangeName) {
     // Compatible - Add current set1/2 to cache
     add(set1,set2) ;
 
@@ -156,6 +157,7 @@ Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1, 
     add(set1,set2) ;
     _name1.refill(*set1d) ;
     _name2.refill(*set2d) ;
+    _set2RangeName = (TNamed*) set2RangeName ;
   }
   
   delete set1d ;

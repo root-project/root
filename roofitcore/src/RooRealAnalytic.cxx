@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealAnalytic.cc,v 1.10 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooRealAnalytic.cc,v 1.11 2004/11/29 20:24:17 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,5 +32,5 @@ Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const {
   assert(isValid());
   loadValues(xvector);  
   _ncall++ ;
-  return _code?_func->analyticalIntegralWN(_code,_nset):_func->getVal(_nset) ;
+  return _code?_func->analyticalIntegralWN(_code,_nset,_rangeName?_rangeName->GetName():0):_func->getVal(_nset) ;
 }

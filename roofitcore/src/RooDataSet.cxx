@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.cc,v 1.83 2004/11/29 12:22:17 wverkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.84 2004/11/29 20:23:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -468,7 +468,7 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
   // dataset, or else be a function of the variables in this dataset.
   // The histogram will be created using RooAbsReal::createHistogram() with
   // the name provided (with our dataset name prepended).
-  return createHistogram(var1, var2, var1.getFitBins(), var2.getFitBins(), cuts, name);
+  return createHistogram(var1, var2, var1.getBins(), var2.getBins(), cuts, name);
 }
 
 
@@ -539,8 +539,8 @@ TH2F* RooDataSet::createHistogram(const RooAbsRealLValue& var1, const RooAbsReal
   histName.Append(Form("%08x",counter++)) ;
 
   // create the histogram
-  TH2F* histogram=new TH2F(histName.Data(), "Events", nx, var1.getFitMin(), var1.getFitMax(), 
-                                                      ny, var2.getFitMin(), var2.getFitMax());
+  TH2F* histogram=new TH2F(histName.Data(), "Events", nx, var1.getMin(), var1.getMax(), 
+                                                      ny, var2.getMin(), var2.getMax());
   if(!histogram) {
     cout << fName << "::createHistogram: unable to create a new histogram" << endl;
     return 0;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealBinding.rdl,v 1.6 2004/04/05 22:44:12 wverkerke Exp $
+ *    File: $Id: RooNumIntFactory.rdl,v 1.1 2004/11/29 20:24:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,35 +13,34 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_REAL_BINDING
-#define ROO_REAL_BINDING
+#ifndef ROO_NAME_REG
+#define ROO_NAME_REG
 
-#include "RooFitCore/RooAbsFunc.hh"
+#include "TNamed.h"
+#include "RooFitCore/RooHashTable.hh"
 
-class RooAbsRealLValue;
-class RooAbsReal;
-class RooArgSet;
-
-class RooRealBinding : public RooAbsFunc {
+class RooNameReg : public TNamed {
 public:
-  RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset=0, Bool_t clipInvalid=kFALSE, const TNamed* rangeName=0);
-  virtual ~RooRealBinding();
 
-  virtual Double_t operator()(const Double_t xvector[]) const;
-  virtual Double_t getMinLimit(UInt_t dimension) const;
-  virtual Double_t getMaxLimit(UInt_t dimension) const;
+  static RooNameReg& instance() ;
+  virtual ~RooNameReg();
+  const TNamed* constPtr(const char* stringPtr) ;
+  const char* constStr(const TNamed* namePtr) ; 
+  static const TNamed* ptr(const char* stringPtr) { return instance().constPtr(stringPtr) ; }
+  static const char* str(const TNamed* ptr) { return instance().constStr(ptr) ; }
 
 protected:
-  void loadValues(const Double_t xvector[]) const;
-  const RooAbsReal *_func;
-  RooAbsRealLValue **_vars;
-  const RooArgSet *_nset;
-  mutable Bool_t _xvecValid;
-  Bool_t _clipInvalid ;
-  const TNamed* _rangeName ; //!
 
-  ClassDef(RooRealBinding,0) // RooAbsReal interface adaptor
+  static RooNameReg* _instance ;
+
+  RooNameReg() : TNamed("RooNameReg","RooFit Name Registry"), _htable(31) {} 
+  RooNameReg(const RooNameReg& other) ;
+
+  RooHashTable _htable ; // Repository of registered names
+
+  ClassDef(RooNameReg,1) // String name registry
 };
 
 #endif
+
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSimultaneous.cc,v 1.53 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooSimultaneous.cc,v 1.54 2004/11/29 20:24:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -41,6 +41,8 @@
 #include "RooFitCore/RooSimGenContext.hh"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooCmdConfig.hh"
+#include "RooFitCore/RooNameReg.hh"
+#include "RooFitCore/RooGlobalFunc.hh"
 using std::cout;
 using std::endl;
 
@@ -203,7 +205,7 @@ Double_t RooSimultaneous::evaluate() const
 
 
 
-Double_t RooSimultaneous::expectedEvents() const 
+Double_t RooSimultaneous::expectedEvents(const RooArgSet* nset) const 
 {
   // Return the number of expected events:
   // the number of expected events of the PDF associated with the current index category state
@@ -214,12 +216,13 @@ Double_t RooSimultaneous::expectedEvents() const
   assert(proxy!=0) ;
 
   // Return the selected PDF value, normalized by the number of index states
-  return ((RooAbsPdf*)(proxy->absArg()))->expectedEvents() ;
+  return ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(nset) ;
 }
 
 
 
-Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
+					       const RooArgSet* normSet, const char* rangeName) const 
 {
   // Distributed integration implementation
   
@@ -230,7 +233,7 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
   Int_t code ;
 
   // Check if this configuration was created before
-  RooArgList* normList = _normListMgr.getNormList(this,normSet,&analVars) ;
+  RooArgList* normList = _normListMgr.getNormList(this,normSet,&analVars,0,RooNameReg::ptr(rangeName)) ;
   if (normList) {
     code = _normListMgr.lastIndex() ;
     return code+1 ;
@@ -241,19 +244,19 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
   normList = new RooArgList("normList") ;
   RooRealProxy* proxy ;
   while(proxy=(RooRealProxy*)iter->Next()) {
-    RooAbsReal* pdfInt = proxy->arg().createIntegral(analVars,normSet) ;
+    RooAbsReal* pdfInt = proxy->arg().createIntegral(analVars,normSet,0,rangeName) ;
     normList->addOwned(*pdfInt) ;
   }
   delete iter ;
 
   // Store the partial integral list and return the assigned code ;
-  code = _normListMgr.setNormList(this,normSet,&analVars,normList) ;
+  code = _normListMgr.setNormList(this,normSet,&analVars,normList,RooNameReg::ptr(rangeName)) ;
   
   return code+1 ;
 }
 
 
-Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
+Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const 
 {
   // Return analytical integral defined by given scenario code
 
@@ -262,7 +265,7 @@ Double_t RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* norm
     return getVal(normSet) ;
   }
 
-  // Partial integration scenarios
+  // Partial integration scenarios, rangeName already encoded in 'code'
   RooArgList* normIntList = _normListMgr.getNormListByIndex(code-1) ;
 
   RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject((const char*) _indexCat) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsAnaConvPdf.rdl,v 1.1 2004/11/29 20:21:53 wverkerke Exp $
+ *    File: $Id: RooAbsAnaConvPdf.rdl,v 1.2 2004/11/30 16:08:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -46,16 +46,16 @@ public:
   virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
   // Coefficient normalization access
-  inline Double_t getCoefNorm(Int_t coefIdx, const RooArgSet& nset) const { return getCoefNorm(coefIdx,&nset) ; }
-  Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset=0) const ;
+  inline Double_t getCoefNorm(Int_t coefIdx, const RooArgSet& nset, const char* rangeName) const { return getCoefNorm(coefIdx,&nset,rangeName) ; }
+  Double_t getCoefNorm(Int_t coefIdx, const RooArgSet* nset=0, const char* rangeName=0) const ;
 
   // Analytical integration support
-  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const ;
-  virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
+  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ;
+  virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
   
   // Coefficient Analytical integration support
   virtual Int_t getCoefAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
-  virtual Double_t coefAnalyticalIntegral(Int_t coef, Int_t code) const ;
+  virtual Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const ;
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ; 
   
   virtual Double_t coefficient(Int_t basisIndex) const = 0 ;

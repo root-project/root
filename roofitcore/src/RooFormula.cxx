@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFormula.cc,v 1.46 2004/11/29 12:22:18 wverkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.47 2004/11/29 20:23:36 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -236,10 +236,19 @@ RooFormula::DefinedValue(Int_t code) {
 
 
 Int_t 
-RooFormula::DefinedVariable(TString &name)
+RooFormula::DefinedVariable(TString &name, int& action)
 {
-  // Check if a variable with given name is available
+  Int_t ret = DefinedVariable(name) ;
+  if (ret>=0) {
+    action = kDefinedVariable ;
+  }
+  return ret ;
+}
 
+
+Int_t 
+RooFormula::DefinedVariable(TString &name) {
+  // Check if a variable with given name is available
   char argName[1024];
   strcpy(argName,name.Data()) ;
 
@@ -305,9 +314,9 @@ RooFormula::DefinedVariable(TString &name)
 
       if (lblMatch) {
 	// Label and variable name match, recycle entry
-// 	cout << "DefinedVariable " << arg->GetName() ;
-// 	if (labelName) cout << "::" << labelName ;
-// 	cout << " previously registered with code " << i << endl ;
+//  	cout << "DefinedVariable " << arg->GetName() ;
+//  	if (labelName) cout << "::" << labelName ;
+//  	cout << " previously registered with code " << i << endl ;
 	return i ;
       }
     }
@@ -321,11 +330,11 @@ RooFormula::DefinedVariable(TString &name)
     _labelList.Add(new TObjString(labelName)) ;
   }
 
-//   cout << "DefinedVariable " << arg->GetName() ;
-//   if (labelName) cout << "::" << labelName ;
-//   cout << " registered with code " << _useList.GetEntries()-1 << endl ;
+//    cout << "DefinedVariable " << arg->GetName() ;
+//    if (labelName) cout << "::" << labelName ;
+//    cout << " registered with code " << _useList.GetSize()-1 << endl ;
 
-  return (_useList.GetSize()-1) ;
+   return (_useList.GetSize()-1) ;
 }
 
 

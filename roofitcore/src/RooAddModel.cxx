@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddModel.cc,v 1.35 2004/11/29 12:22:14 wverkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.36 2004/11/29 20:22:46 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -462,7 +462,8 @@ Bool_t RooAddModel::forceAnalyticalInt(const RooAbsArg& dep) const
 }
 
 
-Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet) const 
+Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
+					   const RooArgSet* normSet, const char* rangeName) const 
 {
   // Determine which part (if any) of given integral can be performed analytically.
   // If any analytical integration is possible, return integration scenario code
@@ -539,9 +540,11 @@ Int_t RooAddModel::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVa
 }
 
 
-Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const 
+Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const 
 {
   // Return analytical integral defined by given scenario code
+
+  // WVE needs adaptation to handle new rangeName feature
 
   if (code==0) return getVal() ;
 

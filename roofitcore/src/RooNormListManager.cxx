@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNormListManager.cc,v 1.8 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooNormListManager.cc,v 1.9 2004/11/29 20:24:03 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -129,17 +129,17 @@ void RooNormListManager::sterilize()
   
 
 
-Int_t RooNormListManager::setNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, RooArgList* normList) 
+Int_t RooNormListManager::setNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, RooArgList* normList, const TNamed* isetRangeName) 
 {
   // Check if normalization is already registered
   Int_t sterileIdx(-1) ;
-  if (getNormList(self,nset,iset,&sterileIdx)) {
+  if (getNormList(self,nset,iset,&sterileIdx,isetRangeName)) {
     //cout << "RooNormListManager::setNormList(" << self->GetName() << "): normalization list already registered" << endl ;
     return lastIndex() ;
   } 
 
   if (sterileIdx>=0) {
-    // Found sterile slot that can should be recycled
+    // Found sterile slot that can should be recycled [ sterileIndex only set if isetRangeName matches ]
     //cout << "RooNormListManager::setNormList(" << self->GetName() << "): recycling sterile slot " << lastIndex() << endl ;
     _normList[sterileIdx] = normList ;
     return lastIndex() ;
@@ -150,7 +150,7 @@ Int_t RooNormListManager::setNormList(const RooAbsArg* self, const RooArgSet* ns
     return -1 ;
   }
 
-  _nsetCache[_size].autoCache(self,nset,iset,kTRUE) ;
+  _nsetCache[_size].autoCache(self,nset,iset,isetRangeName,kTRUE) ;
   if (_normList[_size]) {
     //cout << "RooNormListManager::setNormList(" << self->GetName() << "): deleting previous normalization list of slot " << _size << endl ;
     delete _normList[_size] ;
@@ -168,12 +168,13 @@ Int_t RooNormListManager::setNormList(const RooAbsArg* self, const RooArgSet* ns
 }
 
 
-RooArgList* RooNormListManager::getNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, Int_t* sterileIdx) 
+RooArgList* RooNormListManager::getNormList(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, 
+					    Int_t* sterileIdx, const TNamed* isetRangeName) 
 {
   Int_t i ;
 
   for (i=0 ; i<_size ; i++) {
-    if (_nsetCache[i].contains(nset,iset)==kTRUE) {      
+    if (_nsetCache[i].contains(nset,iset,isetRangeName)==kTRUE) {      
       _lastIndex = i ;
       if(_normList[i]==0 && sterileIdx) *sterileIdx=i ;
       return _normList[i] ;
@@ -181,7 +182,7 @@ RooArgList* RooNormListManager::getNormList(const RooAbsArg* self, const RooArgS
   }
 
   for (i=0 ; i<_size ; i++) {
-    if (_nsetCache[i].autoCache(self,nset,iset,kFALSE)==kFALSE) {
+    if (_nsetCache[i].autoCache(self,nset,iset,isetRangeName,kFALSE)==kFALSE) {
       _lastIndex = i ;
       if(_normList[i]==0 && sterileIdx) *sterileIdx=i ;
       return _normList[i] ;

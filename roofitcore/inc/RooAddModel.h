@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddModel.rdl,v 1.17 2002/09/05 04:33:12 verkerke Exp $
+ *    File: $Id: RooAddModel.rdl,v 1.18 2004/04/05 22:44:10 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,15 +30,15 @@ public:
   virtual ~RooAddModel() ;
 
   virtual Double_t evaluate() const ;
-  virtual Double_t getNorm(const RooArgSet* nset=0) const ;
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;	
   virtual Int_t basisCode(const char* name) const ;
 
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ;
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet) const ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
+  Double_t getNorm(const RooArgSet* nset=0) const ;
   virtual Bool_t syncNormalization(const RooArgSet* nset, Bool_t adjustProxies=kTRUE) const ;
   virtual void normLeafServerList(RooArgSet& list) const ;
 
@@ -49,6 +49,7 @@ public:
   virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ; 
 
 protected:
+
 
   mutable RooNormSetCache _nsetCache; // Normalization set cache
   mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes

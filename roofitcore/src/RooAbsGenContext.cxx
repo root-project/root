@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGenContext.cc,v 1.14 2004/11/29 12:22:10 wverkerke Exp $
+ *    File: $Id: RooAbsGenContext.cc,v 1.15 2004/11/29 20:22:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -71,7 +71,7 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
   // Remember the default number of events to generate when no prototype dataset is provided.
   _extendMode = model.extendMode() ;
   if (model.canBeExtended()) {
-    _expectedEvents= (Int_t)(model.expectedEvents() + 0.5);
+    _expectedEvents= (Int_t)(model.expectedEvents(_theEvent) + 0.5);
   } else {
     _expectedEvents= 0 ;
   }

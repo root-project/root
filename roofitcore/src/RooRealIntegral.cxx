@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooRealIntegral.cc,v 1.76 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.77 2004/11/29 20:24:17 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,6 +37,7 @@
 #include "RooFitCore/RooSuperCategory.hh"
 #include "RooFitCore/RooNumIntFactory.hh"
 #include "RooFitCore/RooNumIntConfig.hh"
+#include "RooFitCore/RooNameReg.hh"
 using std::cout;
 using std::endl;
 using std::ostream;
@@ -46,7 +47,8 @@ ClassImp(RooRealIntegral)
 
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
 				 const RooAbsReal& function, const RooArgSet& depList,
-				 const RooArgSet* funcNormSet, const RooNumIntConfig* config) :
+				 const RooArgSet* funcNormSet, const RooNumIntConfig* config,
+				 const char* rangeName) :
   RooAbsReal(name,title), 
   _valid(kTRUE), 
   _sumList("sumList","Categories to be summed numerically",this,kFALSE,kFALSE), 
@@ -63,7 +65,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _mode(0),
   _operMode(Hybrid), 
   _restartNumIntEngine(kFALSE),
-  _numIntEngine(0), _numIntegrand(0) 
+  _numIntEngine(0), 
+  _numIntegrand(0),
+  _rangeName((TNamed*)RooNameReg::ptr(rangeName))
 {
   // Constructor - Performs structural analysis of the integrand
 
@@ -88,6 +92,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   //   G) Split numeric list in integration list and summation list   
   //
 
+
+  //cout << "RooRealIntegral::ctor(" << GetName() << ") rangeName = " << (rangeName?rangeName:"<none>") << endl ;
 
   // Use objects integrator configuration if none is specified
   if (!_iconfig) _iconfig = (RooNumIntConfig*) function.getIntegratorConfig() ;
@@ -295,7 +301,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntDepList ;
-  _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegralWN(anIntOKDepList,_anaList,_funcNormSet) ;    
+  _mode = ((RooAbsReal&)_function.arg()).getAnalyticalIntegralWN(anIntOKDepList,_anaList,_funcNormSet,RooNameReg::str(_rangeName)) ;    
 
   // WVE kludge: synchronize dset for use in analyticalIntegral
   function.getVal(_funcNormSet) ;
@@ -486,10 +492,10 @@ Bool_t RooRealIntegral::initNumIntegrator() const
   // Bind the appropriate analytic integral (specified by _mode) of our RooRealVar object to
   // those of its arguments that will be integrated out numerically.
   if(_mode != 0) {
-    _numIntegrand= new RooRealAnalytic(_function.arg(),_intList,_mode,_funcNormSet);
+    _numIntegrand= new RooRealAnalytic(_function.arg(),_intList,_mode,_funcNormSet,_rangeName);
   }
   else {
-    _numIntegrand= new RooRealBinding(_function.arg(),_intList,_funcNormSet);
+    _numIntegrand= new RooRealBinding(_function.arg(),_intList,_funcNormSet,kFALSE,_rangeName);
   }
   if(0 == _numIntegrand || !_numIntegrand->isValid()) {
     cout << ClassName() << "::" << GetName() << ": failed to create valid integrand." << endl;
@@ -526,7 +532,9 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _mode(other._mode),
   _operMode(other._operMode), 
   _restartNumIntEngine(kFALSE),
-  _numIntEngine(0), _numIntegrand(0) 
+  _numIntEngine(0), 
+  _numIntegrand(0),
+  _rangeName(other._rangeName) 
 {
   // Copy constructor
  _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : 0 ;
@@ -591,7 +599,7 @@ Double_t RooRealIntegral::evaluate() const
     }
   case Analytic:
     {
-      retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet) / jacobianProduct() ;
+      retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet,RooNameReg::str(_rangeName)) / jacobianProduct() ;
       if (RooAbsPdf::_verboseEval>0)
 	cout << "RooRealIntegral::evaluate_analytic(" << GetName() 
 	     << ")func = " << _function.arg().IsA()->GetName() << "::" << _function.arg().GetName()
@@ -617,7 +625,7 @@ Double_t RooRealIntegral::evaluate() const
     // Multiply by fit range for 'real' dependents
     if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
       RooAbsRealLValue* argLV = (RooAbsRealLValue*)arg ;
-      retVal *= (argLV->getFitMax() - argLV->getFitMin()) ;
+      retVal *= (argLV->getMax() - argLV->getMin()) ;
     }
     // Multiply by number of states for category dependents
     if (arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
@@ -720,7 +728,7 @@ Double_t RooRealIntegral::integrate() const
 
   if (!_numIntEngine) {
     // Trivial case, fully analytical integration
-    return ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet) ;
+    return ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet,RooNameReg::str(_rangeName)) ;
   }
   else {
     // Partial or complete numerical integration

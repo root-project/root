@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistPdf.cc,v 1.15 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooHistPdf.cc,v 1.16 2004/11/29 20:23:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -82,7 +82,7 @@ Double_t RooHistPdf::evaluate() const
 }
 
 
-Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const 
+Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
 {
   // Determine integration scenario. RooHistPdf can perform all integrals over 
   // its dependents analytically via partial or complete summation of the input histogram.
@@ -123,11 +123,13 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars)
 
 
 
-Double_t RooHistPdf::analyticalIntegral(Int_t code) const 
+Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
   // Return integral identified by 'code'. The actual integration
   // is deferred to RooDataHist::sum() which implements partial
   // or complete summation over the histograms contents
+
+  // WVE needs adaptation for rangeName feature
 
   // Simplest scenario, integration over all dependents
   if (code==1000) return _dataHist->sum(kFALSE) ;

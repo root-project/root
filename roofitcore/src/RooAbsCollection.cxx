@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsCollection.cc,v 1.28 2004/11/29 12:22:09 wverkerke Exp $
+ *    File: $Id: RooAbsCollection.cc,v 1.29 2004/11/29 20:22:02 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -32,6 +32,8 @@
 #include "RooFitCore/RooTrace.hh"
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooLinkedListIter.hh"
+#include "RooFitCore/RooCmdConfig.hh"
+#include "RooFitCore/RooRealVar.hh"
 using std::cout;
 using std::endl;
 using std::fstream;
@@ -732,3 +734,125 @@ void RooAbsCollection::dump() const
   }
   delete iter ;
 }
+
+
+
+void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
+				  const RooCmdArg& arg3, const RooCmdArg& arg4,	
+				  const RooCmdArg& arg5, const RooCmdArg& arg6,	
+				  const RooCmdArg& arg7, const RooCmdArg& arg8) const
+{
+  // Define configuration for this method
+  RooCmdConfig pc("RooAbsCollection::printLatex()") ;
+  pc.defineInt("ncol","Columns",0,1) ;
+  pc.defineString("outputFile","OutputFile",0,"") ;
+  pc.defineString("format","Format",0,"NEYVU") ;
+  pc.defineInt("sigDigit","Format",0,1) ;
+  pc.defineObject("siblings","Sibling",0,0,kTRUE) ;
+ 
+  // Process & check varargs 
+  pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  if (!pc.ok(kTRUE)) {
+    return ;
+  }
+
+  const char* outFile = pc.getString("outputFile") ;
+  if (outFile && strlen(outFile)) {
+    ofstream ofs(outFile) ;
+    printLatex(ofs,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
+  } else {
+    printLatex(cout,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
+  }
+}
+
+
+void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, Int_t sigDigit, const RooLinkedList& siblingList) const 
+{
+  // Count number of rows to print
+  Int_t nrow = (Int_t) (getSize() / ncol + 0.99) ;
+  Int_t i,j,k ;
+
+  // Sibling list do not need to print their name as it is supposed to be the same
+  TString sibOption = option ;
+  sibOption.ReplaceAll("N","") ;
+
+  // Make list of lists ;
+  RooLinkedList listList ;
+  listList.Add((RooAbsArg*)this) ;
+  TIterator* sIter = siblingList.MakeIterator() ;
+  RooAbsCollection* col ;
+  while(col=(RooAbsCollection*)sIter->Next()) {
+    listList.Add(col) ;
+  }
+  delete sIter ;
+
+  RooLinkedList listListRRV ;
+
+  // Make list of RRV-only components
+  TIterator* lIter = listList.MakeIterator() ;
+  RooArgList* prevList = 0 ;
+  while(col=(RooAbsCollection*)lIter->Next()) {
+    RooArgList* list = new RooArgList ;
+    TIterator* iter = col->createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {    
+      
+      RooRealVar* rrv = dynamic_cast<RooRealVar*>(arg) ;
+      if (rrv) {
+	list->add(*rrv) ;
+      } else {
+	cout << "RooAbsCollection::printLatex: can only print RooRealVar in LateX, skipping non-RooRealVar object named "
+	     << arg->GetName() << endl ;      
+      }
+      if (prevList && TString(rrv->GetName()).CompareTo(prevList->at(list->getSize()-1)->GetName())) {
+	cout << "RooAbsCollection::printLatex: WARNING: naming and/or ordering of sibling list is different" << endl ;
+      }
+    }
+    delete iter ;
+    listListRRV.Add(list) ;
+    if (prevList && list->getSize() != prevList->getSize()) {
+      cout << "RooAbsCollection::printLatex: ERROR: sibling list(s) must have same length as self" << endl ;
+      delete list ;
+      listListRRV.Delete() ;
+      return ;
+    }
+    prevList = list ;
+  }
+
+  // Construct table header
+  Int_t nlist = listListRRV.GetSize() ;
+  TString subheader = "l" ;
+  for (k=0 ; k<nlist ; k++) subheader += "c" ;
+
+  TString header = "\\begin{tabular}{" ;
+  for (j=0 ; j<ncol ; j++) {
+    if (j>0) header += "|" ;
+    header += subheader ;
+  }
+  header += "}" ;
+  ofs << header << endl ;
+
+
+  // Print contents, delegating actual printing to RooRealVar::format()
+  for (i=0 ; i<nrow ; i++) {
+    for (j=0 ; j<ncol ; j++) {
+      for (k=0 ; k<nlist ; k++) {
+	RooRealVar* par = (RooRealVar*) ((RooArgList*)listListRRV.At(k))->at(i+j*nrow) ;
+	if (par) {
+	  ofs << *par->format(sigDigit,(k==0)?option:sibOption.Data()) ;
+	}
+	if (!(j==ncol-1 && k==nlist-1)) {
+	  ofs << " & " ;
+	}
+      }
+    }
+    ofs << "\\\\" << endl ;
+  }
+  
+  ofs << "\\end{tabular}" << endl ;
+  listListRRV.Delete() ;
+}
+
+
+
+

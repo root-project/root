@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.rdl,v 1.19 2004/08/09 00:00:54 bartoldu Exp $
+ *    File: $Id: RooCurve.rdl,v 1.19 2004/11/29 12:22:17 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -38,6 +38,8 @@ public:
 	   Bool_t shiftToZero=kFALSE, WingMode wmode=Extended);
   virtual ~RooCurve();
 
+  RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, Double_t scale1=1., Double_t scale2=1.) ;
+
   void addPoint(Double_t x, Double_t y);
 
   Double_t getFitRangeBinW() const;
@@ -49,6 +51,9 @@ public:
   }
 
   Double_t chiSquare(const RooHist& hist) const ;
+  Int_t findPoint(Double_t value, Double_t tolerance=1e-10) const ;
+  Double_t average(Double_t lo, Double_t hi) const ;
+  Double_t interpolate(Double_t x, Double_t tolerance=1e-10) const ;
 
 protected:
   void initialize();
@@ -58,8 +63,6 @@ protected:
 		Double_t y2, Double_t minDy, Double_t minDx);
 
   void shiftCurveToZero(Double_t prevYMax) ;
-  Int_t findPoint(Double_t value, Double_t tolerance=1e-10) const ;
-  Double_t average(Double_t lo, Double_t hi) const ;
 
   ClassDef(RooCurve,1) // 1-dimensional smooth curve
 };

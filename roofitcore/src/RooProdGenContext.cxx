@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.13 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.14 2004/11/29 20:24:06 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -118,7 +118,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	
 	// Composite term
 	if (termDeps->getSize()>0) {
-	  const char* name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet()) ;      
+	  const char* name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet(),0) ;      
 	  
 	  // Construct auxiliary PDF expressing product of composite terms, 
 	  // following Partial/Full component specification of input model
@@ -188,7 +188,7 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       trailerTermDeps.add(*termDeps) ;
     }
 
-    const char* name = model.makeRGPPName("PRODGEN_",trailerTerm,RooArgSet(),RooArgSet()) ;      
+    const char* name = model.makeRGPPName("PRODGEN_",trailerTerm,RooArgSet(),RooArgSet(),0) ;      
       
     // Construct auxiliary PDF expressing product of composite terms, 
     // following Partial/Full component specification of input model

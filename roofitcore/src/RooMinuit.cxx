@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMinuit.cc,v 1.12 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooMinuit.cc,v 1.13 2004/11/29 20:24:01 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -416,16 +416,16 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
       }
 
       // Set the limits, if not infinite
-      if (par->hasFitMin() && par->hasFitMax()) {
-	pmin = par->getFitMin();
-	pmax = par->getFitMax();
+      if (par->hasMin() && par->hasMax()) {
+	pmin = par->getMin();
+	pmax = par->getMax();
       }
       
       // Calculate step size
       pstep= par->getError();
       if(pstep <= 0) {
 	// Floating parameter without error estitimate
-	if (par->hasFitMin() && par->hasFitMax()) {
+	if (par->hasMin() && par->hasMax()) {
 	  pstep= 0.1*(pmax-pmin);
 	} else {
 	  pstep=1 ;
