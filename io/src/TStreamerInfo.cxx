@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.147 2002/12/05 10:02:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.148 2003/01/02 22:40:42 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -368,15 +368,20 @@ void TStreamerInfo::BuildCheck()
             //give a last chance. Due to a new CINT behaviour with enums
             //verify the checksum ignoring members of type enum
             if (fCheckSum != fClass->GetCheckSum(1)) {
-               printf("\nWARNING, the StreamerInfo of class %s read from file %s\n",GetName(),gDirectory->GetFile()->GetName());
-               printf("        has the same version (=%d) as the active class\n",fClassVersion);
-               printf("        but a different checksum.\n");
-               printf("        You should update the version to ClassDef(%s,%d).\n",GetName(),fClassVersion+1);
-               printf("        Do not try to write objects with the current class definition,\n");
-               printf("        the files will not be readable.\n\n");
+               Warning("BuildCheck","\n\
+        The StreamerInfo of class %s read from file %s\n\
+        has the same version (=%d) as the active class but a different checksum.\n\
+        You should update the version to ClassDef(%s,%d).\n\
+        Do not try to write objects with the current class definition,\n\
+        the files will not be readable.\n",GetName(),gDirectory->GetFile()->GetName()
+                  ,fClassVersion,GetName(),fClassVersion+1);
             }
       } else {
-         if (info) {printf("ERROR\n"); SetBit(kCanDelete); return;}
+         if (info) {
+            Error("BuildCheck","Wrong class info"); 
+            SetBit(kCanDelete); 
+            return;
+         }
       }
    } else {
       fClass = new TClass(GetName(),fClassVersion, 0, 0, -1, -1 );
