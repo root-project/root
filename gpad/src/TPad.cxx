@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.122 2004/02/27 01:03:58 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.123 2004/03/10 14:43:10 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2518,7 +2518,7 @@ void TPad::Paint(Option_t *option)
        fPadView3D->PaintScene(option);
    }
 
-   padsav->cd();
+   if (padsav) padsav->cd();
    fPadPaint = 0;
    Modified(kFALSE);
 }
