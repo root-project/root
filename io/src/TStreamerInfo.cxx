@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.195 2004/02/03 22:19:45 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.196 2004/02/03 23:15:25 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -361,8 +361,12 @@ void TStreamerInfo::BuildCheck()
    fClass = gROOT->GetClass(GetName());
    TObjArray *array;
    if (fClass) {
+
+      if (TClassEdit::IsSTLCont(fClass->GetName())) return;
+
       array = fClass->GetStreamerInfos();
       TStreamerInfo *info = 0;
+
       // if a foreign class, search info with same checksum
       if (fClass->IsForeign()) {
          Int_t ninfos = array->GetEntriesFast();

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.177 2004/01/10 10:52:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.178 2004/01/16 07:48:37 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1461,6 +1461,7 @@ TStreamerInfo *TTree::BuildStreamerInfo(TClass *cl, void *pointer)
    TBaseClass *base;
    TIter nextb(cl->GetListOfBases());
    while((base = (TBaseClass*)nextb())) {
+      if (base->IsSTLContainer()) continue;
       TClass *clm = gROOT->GetClass(base->GetName());
       BuildStreamerInfo(clm);
    }

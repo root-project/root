@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.36 2004/01/21 22:17:34 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.37 2004/01/27 19:52:47 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -224,7 +224,12 @@ public:
    void               AdoptStreamer(TClassStreamer *strm);
    void               AdoptMemberStreamer(const char *name, TMemberStreamer *strm);
    void               SetMemberStreamer(const char *name, MemberStreamerFunc_t strm);
-   
+
+   // Function to retrieve the TClass object and dictionary function
+   static TClass        *GetClass(const char *name, Bool_t load = kTRUE);
+   static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE);
+   static VoidFuncPtr_t  GetDict (const char *cname);
+   static VoidFuncPtr_t  GetDict (const type_info& info);
      
    static Int_t       AutoBrowse(TObject *obj,TBrowser *browser);
    static ENewType    IsCallingNew();
