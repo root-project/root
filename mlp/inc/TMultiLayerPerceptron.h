@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.3 2003/10/27 16:51:54 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.h,v 1.4 2003/12/16 14:09:38 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 #ifndef ROOT_TMultiLayerPerceptron
@@ -45,6 +45,8 @@ class TTreeFormulaManager;
 //____________________________________________________________________
 
 class TMultiLayerPerceptron : public TObject {
+ friend class TMLPAnalyzer;
+
  public:
    enum LearningMethod { kStochastic, kBatch, kSteepestDescent,
                          kRibierePolak, kFletcherReeves, kBFGS };
@@ -88,11 +90,13 @@ class TMultiLayerPerceptron : public TObject {
    inline Double_t GetEtaDecay() const { return fEtaDecay; }
    inline Double_t GetTau()      const { return fTau; }
    inline Int_t GetReset()       const { return fReset; }
+   inline TString GetStructure() const { return fStructure; }
    void DrawResult(Int_t index = 0, Option_t* option = "") const;
    void DumpWeights(Option_t* filename = "-") const;
    void LoadWeights(Option_t* filename = "");
    Double_t Evaluate(Int_t index, Double_t* params) const;
    void Export(Option_t* filename = "NNfunction", Option_t* language = "C++") const;
+   virtual void Draw(const Option_t*);
    
  protected:
    void BuildNetwork();

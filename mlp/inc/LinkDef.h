@@ -5,4 +5,5 @@
 #pragma link C++ class TNeuron+;
 #pragma link C++ class TSynapse+;
 #pragma link C++ class TMultiLayerPerceptron+;
+#pragma link C++ class TMLPAnalyzer+;
 #endif

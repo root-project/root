@@ -54,10 +54,31 @@ void mlpHiggs(Int_t ntrain=100) {
    // Build and train the NN ptsumf is used as a weight since we are primarly 
    // interested  by high pt events.
    // The datasets used here are the same as the default ones.
-   TMultiLayerPerceptron *mlp = new TMultiLayerPerceptron("msumf,ptsumf,acolin,acopl:8:type",
+   TMultiLayerPerceptron *mlp = new TMultiLayerPerceptron("msumf,ptsumf,acolin:5:3:type",
                                                           "ptsumf",simu,"Entry$%2","Entry$/2");
    mlp->Train(ntrain, "text,graph,update=10");
+   // Use TMLPAnalyzer to see what it looks for
+   TCanvas* mlpa_canvas = new TCanvas("mlpa_canvas","Network analysis");
+   mlpa_canvas->Divide(2,2);
+   TMLPAnalyzer ana(mlp);
+   // Initialisation
+   ana.GatherInformations();
+   // output to the console
+   ana.CheckNetwork();
+   mlpa_canvas->cd(1);
+   // shows how each variable influences the network
+   ana.DrawDInputs();
+   mlpa_canvas->cd(2);
+   // shows the network structure
+   mlp->Draw();
+   mlpa_canvas->cd(3);
+   // draws the resulting network
+   ana.DrawNetwork(0,"type==1","type==0");
+   mlpa_canvas->cd(4);
    // Use the NN to plot the results for each sample
+   // This will give approx. the same result as DrawNetwork.
+   // All entries are used, while DrawNetwork focuses on 
+   // the test sample. Also the xaxis range is manually set.
    TH1F *bg = new TH1F("bgh", "NN output", 50, -.5, 1.5);
    TH1F *sig = new TH1F("sigh", "NN output", 50, -.5, 1.5);
    bg->SetDirectory(0);
@@ -79,7 +100,6 @@ void mlpHiggs(Int_t ntrain=100) {
       params[3] = acopl;
       sig->Fill(mlp->Evaluate(0,params));
    }
-   TCanvas *cv = new TCanvas("NNout_cv", "Neural net output");
    bg->SetLineColor(kBlue);
    bg->SetFillStyle(3008);   bg->SetFillColor(kBlue);
    sig->SetLineColor(kRed);
@@ -92,4 +112,5 @@ void mlpHiggs(Int_t ntrain=100) {
    legend->AddEntry(bg, "Background (WW)");
    legend->AddEntry(sig, "Signal (Higgs)");
    legend->Draw();
+   mlpa_canvas->cd(0);
 }

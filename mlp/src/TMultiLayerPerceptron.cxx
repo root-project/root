@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.13 2003/12/16 14:09:38 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.14 2004/01/27 13:41:53 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 ///////////////////////////////////////////////////////////////////////////
@@ -239,6 +239,9 @@ In addition, the paw version of mlpfit had additional limitations on the number 
 #include "TMath.h"
 #include "TTreeFormula.h"
 #include "TTreeFormulaManager.h"
+#include "TMarker.h"
+#include "TLine.h"
+#include "TText.h"
 
 ClassImp(TMultiLayerPerceptron)
 
@@ -1875,3 +1878,133 @@ void TMultiLayerPerceptron::BFGSDir(TMatrixD & BFGSH, Double_t * dir)
    //direction.GetElements(dir,"F");
 }
 
+//______________________________________________________________________________
+void TMultiLayerPerceptron::Draw(const Option_t*)
+{
+  // Draws the network structure.
+  // Neurons are depicted by a blue disk, and synapses by
+  // lines connecting neurons.
+  // The line width is proportionnal to the weight.
+
+#define NeuronSize 2.5
+
+   Int_t nLayers = fStructure.CountChar(':')+1;
+   Float_t xStep = 1./(nLayers+1.);
+   for(Int_t layer=0; layer< nLayers-1; layer++) {
+      Float_t nNeurons_this = 0;
+      if(layer==0) {
+         TString input      = TString(fStructure(0, fStructure.First(':')));
+         nNeurons_this = input.CountChar(',')+1;
+      }
+      else {
+         Int_t cnt=0;
+         TString hidden = TString(fStructure(fStructure.First(':') + 1,fStructure.Last(':') - fStructure.First(':') - 1));
+         Int_t beg = 0;
+         Int_t end = hidden.Index(":", beg + 1);
+	 while (end != -1) {
+           Int_t num = atoi(TString(hidden(beg, end - beg)).Data());
+	   cnt++;
+           beg = end + 1;
+           end = hidden.Index(":", beg + 1);
+	   if(layer==cnt) nNeurons_this = num;
+         }
+	 Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
+	 cnt++;
+	 if(layer==cnt) nNeurons_this = num;
+      }
+      Float_t nNeurons_next = 0;
+      if(layer==nLayers-2) {
+         TString output = TString(fStructure(fStructure.Last(':') + 1,fStructure.Length() - fStructure.Last(':')));
+         nNeurons_next = output.CountChar(',')+1;
+      }
+      else {
+         Int_t cnt=0;
+         TString hidden = TString(fStructure(fStructure.First(':') + 1,fStructure.Last(':') - fStructure.First(':') - 1));
+         Int_t beg = 0;
+         Int_t end = hidden.Index(":", beg + 1);
+	 while (end != -1) {
+           Int_t num = atoi(TString(hidden(beg, end - beg)).Data());
+	   cnt++;
+           beg = end + 1;
+           end = hidden.Index(":", beg + 1);
+	   if(layer+1==cnt) nNeurons_next = num;
+         }
+	 Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
+	 cnt++;
+	 if(layer+1==cnt) nNeurons_next = num;
+      }
+      Float_t yStep_this = 1./(nNeurons_this+1.);
+      Float_t yStep_next = 1./(nNeurons_next+1.);
+      TObjArrayIter* it = (TObjArrayIter *) fSynapses.MakeIterator();
+      TSynapse *theSynapse = NULL;
+      Float_t maxWeight = 0;
+      while ((theSynapse = (TSynapse *) it->Next()))
+         maxWeight = maxWeight < theSynapse->GetWeight() ? theSynapse->GetWeight() : maxWeight;
+      delete it;
+      it = (TObjArrayIter *) fSynapses.MakeIterator();
+      for(Int_t neuron1=0; neuron1<nNeurons_this; neuron1++) {
+         for(Int_t neuron2=0; neuron2<nNeurons_next; neuron2++) {
+            TLine* synapse = new TLine(xStep*(layer+1),yStep_this*(neuron1+1),xStep*(layer+2),yStep_next*(neuron2+1));
+	    synapse->Draw();
+	    theSynapse = (TSynapse *) it->Next();
+	    synapse->SetLineWidth(Int_t((theSynapse->GetWeight()/maxWeight)*10.));
+	    synapse->SetLineStyle(1);
+	    if(((TMath::Abs(theSynapse->GetWeight())/maxWeight)*10.)<0.5) synapse->SetLineStyle(2);
+	    if(((TMath::Abs(theSynapse->GetWeight())/maxWeight)*10.)<0.25) synapse->SetLineStyle(3);
+         }
+      }
+      delete it;
+   }
+   for(Int_t layer=0; layer< nLayers; layer++) {
+      Float_t nNeurons = 0;
+      if(layer==0) {
+         TString input      = TString(fStructure(0, fStructure.First(':')));
+         nNeurons = input.CountChar(',')+1;
+      }
+      else if(layer==nLayers-1) {
+         TString output = TString(fStructure(fStructure.Last(':') + 1,fStructure.Length() - fStructure.Last(':')));
+         nNeurons = output.CountChar(',')+1;
+      }
+      else {
+         Int_t cnt=0;
+         TString hidden = TString(fStructure(fStructure.First(':') + 1,fStructure.Last(':') - fStructure.First(':') - 1));
+         Int_t beg = 0;
+         Int_t end = hidden.Index(":", beg + 1);
+	 while (end != -1) {
+           Int_t num = atoi(TString(hidden(beg, end - beg)).Data());
+	   cnt++;
+           beg = end + 1;
+           end = hidden.Index(":", beg + 1);
+	   if(layer==cnt) nNeurons = num;
+         }
+	 Int_t num = atoi(TString(hidden(beg, hidden.Length() - beg)).Data());
+	 cnt++;
+	 if(layer==cnt) nNeurons = num;
+      }
+      Float_t yStep = 1./(nNeurons+1.);
+      for(Int_t neuron=0; neuron<nNeurons; neuron++) {
+         TMarker* m = new TMarker(xStep*(layer+1),yStep*(neuron+1),20);
+         m->SetMarkerColor(4);
+         m->SetMarkerSize(NeuronSize);
+         m->Draw();
+      }
+   }
+   TString input      = TString(fStructure(0, fStructure.First(':')));
+   Int_t beg = 0;
+   Int_t end = input.Index(",", beg + 1);
+   TString brName;
+   Int_t cnt = 0;
+   Float_t yStep = 1./(input.CountChar(',')+2.);
+   while (end != -1) {
+      brName = TString(input(beg, end - beg));
+      beg = end + 1;
+      end = input.Index(",", beg + 1);
+      cnt++;
+      TText* label = new TText(0.5*xStep,yStep*cnt,brName.Data());
+      label->Draw();
+   }
+   brName = TString(input(beg, input.Length() - beg));
+   cnt++;
+   TText* label = new TText(0.5*xStep,yStep*cnt,brName.Data());
+   label->Draw();
+}
