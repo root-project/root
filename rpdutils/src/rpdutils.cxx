@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.72 2005/02/22 17:14:28 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.73 2005/02/24 10:35:51 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -3584,14 +3584,20 @@ int RpdPass(const char *pass, int errheq)
    int auth = 0;
    errheq = (errheq > -1 && errheq < 4) ? errheq : 0;
    if (!*gUser) {
-      NetSend(kUsrPwdErr[0][errheq], kROOTD_ERR);
+      if (gClientProtocol > 11) 
+         NetSend(kUsrPwdErr[0][errheq], kROOTD_ERR);
+      else
+         NetSend(kErrFatal, kROOTD_ERR);
       if (gDebug > 0)
          ErrorInfo("RpdPass: user needs to be specified first");
       return auth;
    }
 
    if (!pass) {
-      NetSend(kUsrPwdErr[0][errheq], kROOTD_ERR);
+      if (gClientProtocol > 11) 
+         NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
+      else
+         NetSend(kErrNoPasswd, kROOTD_ERR);
       if (gDebug > 0)
          ErrorInfo("RpdPass: no password specified");
       return auth;
@@ -3599,13 +3605,19 @@ int RpdPass(const char *pass, int errheq)
    int n = strlen(pass);
    // Passwd length should be in the correct range ...
    if (!n) {
-      NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
+      if (gClientProtocol > 11) 
+         NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
+      else
+         NetSend(kErrBadPasswd, kROOTD_ERR);
       if (gDebug > 0)
          ErrorInfo("RpdPass: null passwd not allowed");
       return auth;
    }
    if (n > (int) sizeof(passwd)) {
-      NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
+      if (gClientProtocol > 11) 
+         NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
+      else
+         NetSend(kErrBadPasswd, kROOTD_ERR);
       if (gDebug > 0)
          ErrorInfo("RpdPass: passwd too long");
       return auth;
@@ -3675,7 +3687,10 @@ int RpdPass(const char *pass, int errheq)
 #endif
       n = strlen(passw);
       if (strncmp(pass_crypt, passw, n + 1) != 0) {
-         NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
+         if (gClientProtocol > 11) 
+            NetSend(kUsrPwdErr[1][errheq], kROOTD_ERR);
+         else
+            NetSend(kErrBadPasswd, kROOTD_ERR);
          if (gDebug > 0)
             ErrorInfo("RpdPass: invalid password for user %s", gUser);
          return auth;
@@ -4560,7 +4575,10 @@ int RpdUser(const char *sstr)
 #endif
          // Check if successful
          if (strlen(passw) == 0 || !strcmp(passw, "x")) {
-            NetSend(kUsrPwdErr[errrdp][errheq], kROOTD_ERR);
+            if (gClientProtocol > 11) 
+               NetSend(kUsrPwdErr[errrdp][errheq], kROOTD_ERR);
+            else
+               NetSend(kErrNotAllowed, kROOTD_ERR);
             ErrorInfo("RpdUser: passwd hash not available for user %s", user);
             ErrorInfo
                 ("RpdUser: user %s cannot be authenticated with this method",
@@ -4695,7 +4713,10 @@ int RpdUser(const char *sstr)
              passwd[plen-1] == '#' && passwd[plen-10] == '#') {
             if (strncmp(ctag,&passwd[plen-10],10)) {
                // The tag does not match; failure
-               NetSend(kUsrPwdErr[2][errheq], kROOTD_ERR);
+               if (gClientProtocol > 11) 
+                  NetSend(kUsrPwdErr[2][errheq], kROOTD_ERR);
+               else
+                  NetSend(kErrBadPasswd, kROOTD_ERR);
                ErrorInfo("RpdUser: rndm tag mis-match"
                          " (%s vs %s) - Failure",&passwd[plen-10],ctag);
                if (passwd)
@@ -4709,7 +4730,10 @@ int RpdUser(const char *sstr)
 
          } else {
             // The tag is not there or incomplete; failure
-            NetSend(kUsrPwdErr[2][errheq], kROOTD_ERR);
+            if (gClientProtocol > 11) 
+               NetSend(kUsrPwdErr[2][errheq], kROOTD_ERR);
+            else
+               NetSend(kErrBadPasswd, kROOTD_ERR);
             ErrorInfo("RpdUser: rndm tag missing or incomplete"
                       " (pw length: %d) - Failure", plen);
             if (passwd)
