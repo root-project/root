@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.42 2004/09/12 10:55:26 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.43 2004/09/13 09:03:24 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -50,7 +50,7 @@
 
 
 // Global pointer to the TGClient object
-TGClient *gClient;
+TGClient *gClient = 0;
 
 // Initialize gClient in case libGui is loaded in batch mode
 class TGClientInit {
