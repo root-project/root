@@ -329,7 +329,7 @@ ifeq ($(ARCH),linuxia64ecc)
 CXX           = ecc
 CXXFLAGS      = -O -KPIC
 LD            = ecc
-LDFLAGS       = -O
+LDFLAGS       = -O -i_dynamic
 SOFLAGS       = -shared
 endif
 

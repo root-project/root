@@ -24,7 +24,7 @@ CINTCFLAGS    = -KPIC $(EXTRA_CFLAGS) \
 
 # Linker:
 LD            = ecc
-LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
+LDFLAGS       = -i_dynamic $(OPT) $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared -Qoption,ld,-soname,
 SOEXT         = so
 
