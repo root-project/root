@@ -26,7 +26,7 @@ Bool_t TestRange(hashfun_t hfunc)
 {
    TExMap *m = new TExMap;
 
-   for( int i=0; i < 1000; i++ ) {
+   {for( int i=0; i < 1000; i++ ) {
       m->Add(hfunc(i), i, i);
 
       if (m->GetSize() != i+1) {
@@ -34,18 +34,18 @@ Bool_t TestRange(hashfun_t hfunc)
          delete m;
          return kFALSE;
       }
-   }
+   }}
 
-   for( int i=0; i < 1000; i++ ) {
+   {for( int i=0; i < 1000; i++ ) {
       Long_t v = m->GetValue(hfunc(i), i);
       if (v != i) {
          cout << "TestRange: GetValue: key " << i << " val " << v << endl;
          delete m;
          return kFALSE;
       }
-   }
+   }}
 
-   for( int i=0; i < 1000; i++ ) {
+   {for( int i=0; i < 1000; i++ ) {
       m->Remove(hfunc(i), i);
 
       if (m->GetSize() != (1000-1-i)) {
@@ -53,7 +53,7 @@ Bool_t TestRange(hashfun_t hfunc)
          delete m;
          return kFALSE;
       }
-   }
+   }}
 
    return kTRUE;
 }
