@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.18 2002/10/05 09:27:45 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.19 2002/12/02 18:50:04 rdm Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -421,9 +421,25 @@ void THStack::Paint(Option_t *option)
       TAxis *yaxis = h->GetYaxis();
       if (h->GetDimension() > 1) {
          if (strlen(option) == 0) strcpy(loption,"lego1");
-         fHistogram = new TH2F(GetName(),GetTitle(),
-                               xaxis->GetNbins(),xmin, xmax,
-                               yaxis->GetNbins(),ymin, ymax);
+	    const TArrayD *xbins = xaxis->GetXbins();
+	    const TArrayD *ybins = yaxis->GetXbins();
+	    if (xbins->fN != 0 && ybins->fN != 0) {
+            fHistogram = new TH2F(GetName(),GetTitle(),
+                                  xaxis->GetNbins(), xbins->GetArray(),
+                                  yaxis->GetNbins(), ybins->GetArray());
+	    } else if (xbins->fN != 0 && ybins->fN == 0) {
+            fHistogram = new TH2F(GetName(),GetTitle(),
+                                  xaxis->GetNbins(), xbins->GetArray(),
+                                  yaxis->GetNbins(), ymin, ymax);
+	    } else if (xbins->fN == 0 && ybins->fN != 0) {
+            fHistogram = new TH2F(GetName(),GetTitle(),
+                                  xaxis->GetNbins(), xmin, xmax,
+                                  yaxis->GetNbins(), ybins->GetArray());
+	    } else {
+            fHistogram = new TH2F(GetName(),GetTitle(),
+                                  xaxis->GetNbins(), xmin, xmax,
+                                  yaxis->GetNbins(), ymin, ymax);
+         }
       } else {
          fHistogram = new TH1F(GetName(),GetTitle(),xaxis->GetNbins(),xmin, xmax);
       }
