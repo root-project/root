@@ -2,6 +2,8 @@
 @prefix@/lib/root/libEG.so*
 @prefix@/lib/root/libGX11.so*
 @prefix@/lib/root/libGX11TTF.so*
+@prefix@/lib/root/libGed.so*
+@prefix@/lib/root/libGedOld.so*
 @prefix@/lib/root/libGeom.so*
 @prefix@/lib/root/libGeomPainter.so*
 @prefix@/lib/root/libGpad.so*
