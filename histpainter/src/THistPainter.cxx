@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.35 2001/03/07 12:57:02 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.36 2001/03/13 10:41:32 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2589,8 +2589,16 @@ Int_t THistPainter::PaintInit()
          }
       }
       else {
-         ymax = ymin + 1;
-         ymin = ymin - 1;
+         if (ymin > 0) {
+            ymin = 0;
+            ymax *= 2;
+         } else if (ymin < 0) {
+            ymax = 0;
+            ymin *= 2;
+         } else {
+            ymin = -1;
+            ymax = 1;
+         }
       }
    }
 
