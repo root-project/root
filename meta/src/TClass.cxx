@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.140 2004/03/08 14:05:24 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.141 2004/03/11 06:17:43 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -1794,6 +1794,12 @@ TStreamerInfo *TClass::GetStreamerInfo(Int_t version)
       }
    }
    TStreamerInfo *sinfo = (TStreamerInfo*)fStreamerInfo->At(version);
+   if (!sinfo && version!=fClassVersion) {
+      // When the request version does not exist we return the current TStreamerInfo.
+      // However to be consistent we need to first check if that StreamerInfo already
+      // exist.
+      sinfo = (TStreamerInfo*)fStreamerInfo->At(fClassVersion);
+   }
    if (!sinfo) {
       sinfo = new TStreamerInfo(this,"");
       fStreamerInfo->AddAtAndExpand(sinfo,fClassVersion);
