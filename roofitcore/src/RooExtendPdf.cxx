@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooExtendPdf.cc,v 1.2 2001/10/10 17:59:01 verkerke Exp $
+ *    File: $Id: RooExtendPdf.cc,v 1.3 2001/11/19 07:23:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -188,23 +188,36 @@ Double_t RooExtendPdf::expectedEvents() const
   // of x over the cut range, xF is the integration of
   // x over the full range.
 
-  // Use current PDF normalization, if defined, use cut set otherwise
-  const RooArgSet* npset = ((RooAbsPdf&)_pdf.arg())._lastNormSet ;
-  const RooArgSet* nset = npset ? npset : (const RooArgSet*) &_origDepSet ;
+  RooAbsPdf& pdf = (RooAbsPdf&)_pdf.arg() ;
 
-  Double_t normInt = ((RooAbsPdf&)_pdf.arg()).getNorm(nset) ;
+  Double_t nExp = _n ;
 
-  // Update fraction integral
-  syncFracIntegral() ;
+  // Optionally multiply with fractional normalization
+  if (_useFrac) {
+    // Use current PDF normalization, if defined, use cut set otherwise
+    const RooArgSet* npset = pdf._lastNormSet ;
+    const RooArgSet* nset = npset ? npset : (const RooArgSet*) &_origDepSet ;
 
-  // Evaluate fraction integral and return normalized by full integral
-  Double_t fracInt = _fracIntegral->getVal() ;
-  if ( fracInt == 0. || normInt == 0. || _n == 0.) {
-    cout << "RooExtendPdf(" << GetName() << ") WARNING: nExpected = " << _n << " / ( " 
-	 << fracInt << " / " << normInt << " ), for nset = " ;
-    if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
+    Double_t normInt = pdf.getNorm(nset) ;
+    
+    // Update fraction integral
+    syncFracIntegral() ;
+    
+    // Evaluate fraction integral and return normalized by full integral
+    Double_t fracInt = _fracIntegral->getVal() ;
+    if ( fracInt == 0. || normInt == 0. || _n == 0.) {
+      cout << "RooExtendPdf(" << GetName() << ") WARNING: nExpected = " << _n << " / ( " 
+	   << fracInt << " / " << normInt << " ), for nset = " ;
+      if (nset) nset->Print("1") ; else cout << "<none>" << endl ;
+    }
+
+    nExp *= (fracInt / normInt) ;
   }
-  return  _n / ( fracInt / normInt ) ;
+
+  // Multiply with original Nexpected, if defined
+  if (pdf.canBeExtended()) nExp *= pdf.expectedEvents() ;
+
+  return nExp ;
 }
 
 
