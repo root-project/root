@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBranchProxyDirector.cxx,v 1.1 2004/02/20 19:23:30 cvsuser Exp $
+// @(#)root/base:$Name:  $:$Id: TBranchProxyDirector.cxx,v 1.1 2004/06/25 18:42:19 brun Exp $
 // Author: Philippe Canal  13/05/2003
 
 /*************************************************************************
@@ -25,6 +25,8 @@
 #include "TTree.h"
 
 #include <algorithm>
+
+namespace std {} using namespace std;
 
 namespace ROOT {
 
@@ -82,7 +84,7 @@ namespace ROOT {
       fEntry = -1;
       //if (fInitialized) fInitialized = setup();
       //fprintf(stderr,"calling SetTree for %p\n",this);
-      std::for_each(fDirected.begin(),fDirected.end(),Reset);
+      for_each(fDirected.begin(),fDirected.end(),Reset);
       return oldtree;
    }
 
