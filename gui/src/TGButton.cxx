@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.38 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.39 2004/09/12 10:43:49 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -196,7 +196,7 @@ Bool_t TGButton::HandleButton(Event_t *event)
       if (in) SetState(kButtonDown, kTRUE);
    } else { // ButtonRelease
       if (fState == kButtonEngaged) {
-         //if (in) SetState(kButtonUp, kTRUE);
+         if (in) SetState(kButtonUp, kTRUE);
          click = kTRUE;
       } else {
          click = (fState == kButtonDown) && in;
@@ -332,8 +332,9 @@ TGTextButton::TGTextButton(const TGWindow *p, const char *s, Int_t id,
 {
    // Create a text button widget.
 
-   fLabel = new TGHotString(!p && !s ? GetName() : s);
+   fLabel = new TGHotString(s);
    fFontStruct = font;
+   if (!p && !s) fLabel->SetString(GetName());
 
    Init();
 }

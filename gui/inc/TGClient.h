@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.19 2004/09/06 14:36:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.20 2004/09/06 16:05:30 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -90,6 +90,8 @@ public:
    const TGWindow *GetDefaultRoot() const;
    void            SetRoot(TGWindow *root = 0);
    Bool_t          IsEditable() const { return fRoot != fDefaultRoot; }
+   Bool_t          IsEditDisabled() const;
+   void            SetEditDisabled(Bool_t on = kTRUE);
    TGWindow       *GetWindowById(Window_t sw) const;
    TGWindow       *GetWindowByName(const char *name) const;
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.15 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.cxx,v 1.16 2004/09/11 16:27:09 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -73,7 +73,8 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
       fName = "frame";
       fName += fgCounter;
    }
-   fEditDisabled = kFALSE;
+   fEditDisabled = (fId != gVirtualX->GetDefaultRootWindow()) && fParent ?  
+                    fParent->fEditDisabled : kFALSE;
 
    SetWindowName();
 }
@@ -88,7 +89,8 @@ TGWindow::TGWindow(TGClient *c, Window_t id, const TGWindow *parent)
    fParent = parent;
    fClient->RegisterWindow(this);
    fNeedRedraw = kFALSE;
-   fEditDisabled = kFALSE;
+   fEditDisabled = (fId != gVirtualX->GetDefaultRootWindow()) && fParent ?  
+                    fParent->fEditDisabled : kFALSE;
 
    // name used in SavePrimitive methods
    fgCounter++;

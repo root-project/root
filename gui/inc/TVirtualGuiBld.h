@@ -1,4 +1,4 @@
-// $Id: TVirtualGuiBld.h,v 1.2 2004/09/08 17:34:19 rdm Exp $
+// $Id: TVirtualGuiBld.h,v 1.3 2004/09/11 19:29:47 brun Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -59,6 +59,8 @@ public:
    virtual void      SetAction(TGuiBldAction *act) { fAction = act; }
    TGuiBldAction    *GetAction() const { return fAction; }
    virtual Bool_t    IsExecutalble() const  { return fAction && !fAction->fAct.IsNull(); }
+
+   static  TVirtualGuiBld  *Instance();
 
    ClassDef(TVirtualGuiBld,0)  // ABC for gui builder
 };

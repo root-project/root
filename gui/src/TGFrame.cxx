@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.75 2004/09/11 16:27:09 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.76 2004/09/11 19:29:47 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -398,7 +398,8 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
    // Handle all frame events. Events are dispatched to the specific
    // event handlers.
 
-   if (gDragManager && gDragManager->HandleEvent(event)) return kTRUE;
+   if (gDragManager && !fClient->IsEditDisabled() &&
+       gDragManager->HandleEvent(event)) return kTRUE;
 
    switch (event->fType) {
 
@@ -440,7 +441,7 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
             fgDbw = event->fWindow;
 
             if (dbl_clk) {
-               if (event->fState & kKeyControlMask) {
+               if ((event->fState & kKeyControlMask) && !IsEditDisabled()) {
                   StartGuiBuilding(!IsEditable());
                   return kTRUE;
                }
@@ -844,7 +845,6 @@ void TGCompositeFrame::SetEditable(Bool_t on)
       fClient->SetRoot(this);
    } else {
       fClient->SetRoot(0);
-//      Resize();
    }
    if (gDragManager) gDragManager->SetEditable(on);
 }

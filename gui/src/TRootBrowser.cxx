@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.56 2004/07/07 15:02:25 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.57 2004/07/13 12:46:06 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -702,6 +702,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    // Create the actual canvas.
 
    fWidgets = new TList;
+   fEditDisabled = kTRUE;
 
    // Create menus
    fFileMenu = new TGPopupMenu(fClient->GetDefaultRoot());

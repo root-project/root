@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.40 2004/09/06 14:36:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.41 2004/09/06 16:05:30 brun Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -793,4 +793,20 @@ void TGClient::ProcessLine(TString cmd, Long_t msg, Long_t parm1, Long_t parm2)
    cmd.ReplaceAll("$PARM2", s);
 
    gROOT->ProcessLine(cmd.Data());
+}
+
+//______________________________________________________________________________
+Bool_t TGClient::IsEditDisabled() const 
+{
+   // returns kTRUE if edit/guibuilding is forbidden 
+
+   return fDefaultRoot->IsEditDisabled(); 
+}
+
+//______________________________________________________________________________
+void  TGClient::SetEditDisabled(Bool_t on) 
+{
+   // if on is kTRUE editting/guibuilding is forbidden
+
+   fDefaultRoot->SetEditDisabled(on);
 }

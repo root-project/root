@@ -17,7 +17,7 @@
 
 #include "TVirtualGuiBld.h"
 #include "TVirtualDragManager.h"
-
+#include "TPluginManager.h"
 
 ClassImp(TVirtualGuiBld)
 ClassImp(TGuiBldAction)
@@ -54,4 +54,28 @@ TVirtualGuiBld::~TVirtualGuiBld()
    // dtor
 
    gGuiBuilder = 0;
+}
+
+//______________________________________________________________________________
+TVirtualGuiBld *TVirtualGuiBld::Instance()
+{
+   // Load plugin and create gGuiBuilder object
+
+   if (gGuiBuilder) return gGuiBuilder;
+
+   static Bool_t loaded = kFALSE;
+   static TPluginHandler *h = 0;
+
+   // load plugin
+   if (!loaded) {
+      h = gROOT->GetPluginManager()->FindHandler("TGuiBuilder", "GuiBld");
+
+      if (h) {
+         if (h->LoadPlugin() == -1) return 0;
+         loaded = kTRUE;
+      }
+   }
+   if (loaded) gGuiBuilder = (TVirtualGuiBld*)h->ExecPlugin(0);
+
+   return gGuiBuilder;
 }
