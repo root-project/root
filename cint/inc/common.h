@@ -259,6 +259,7 @@
 #define G__PARAP2P2P        3
 
 #ifndef G__OLDIMPLEMENTATION1967
+#define G__PARAREF         100
 #define G__PARAREFP2P      102
 #define G__PARAREFP2P2P    103
 

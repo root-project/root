@@ -26,8 +26,13 @@ class allocator {
 public:
   typedef size_t     size_type;
   typedef ptrdiff_t  difference_type;
-  typedef typename _Tp* pointer;
-  typedef const typename _Tp* const_pointer;
+#ifndef G__OLDIMPLEMENTATION2032
+  typedef typename _Tp*      pointer;
+  typedef const typename  _Tp * const_pointer;
+#else
+  typedef _Tp*       pointer;
+  typedef const _Tp* const_pointer;
+#endif
   typedef _Tp&       reference;
   typedef const _Tp& const_reference;
   typedef _Tp        value_type;

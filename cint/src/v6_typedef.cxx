@@ -501,11 +501,24 @@ void G__define_type()
 	reftype=G__newtype.reftype[itemp];
 	break;
       case G__PARAREFERENCE:
+#ifndef G__OLDIMPLEMENTATION2033
+	switch(G__newtype.reftype[itemp]) {
+	case G__PARANORMAL:
+	case G__PARAREFERENCE:
+	  break;
+	default:
+	  if(G__newtype.reftype[itemp]<G__PARAREF) 
+	    reftype=G__newtype.reftype[itemp]+G__PARAREF;
+	  else reftype=G__newtype.reftype[itemp];
+	  break;
+	}
+#else
 	if(G__PARANORMAL!=G__newtype.reftype[itemp]) {
 	  G__fprinterr(G__serr,
 	 "Limitation: reference or pointer type not handled properly");
 	  G__printlinenum();
 	}
+#endif
 	break;
       default:
 	switch(G__newtype.reftype[itemp]) {
@@ -513,7 +526,7 @@ void G__define_type()
 	  break;
 	case G__PARAREFERENCE:
 	  G__fprinterr(G__serr,
-	  "Limitation: reference or pointer type not handled properly");
+	  "Limitation: reference or pointer type not handled properly (2)");
 	  G__printlinenum();
 	  break;
 	default:
@@ -974,8 +987,13 @@ void G__define_type()
 #ifndef G__OLDIMPLEMENTATION673
   /* typedef oldtype &newtype */
   if(typename[0]=='&') {
+#ifndef G__OLDIMPLEMENTATION2033
+    if(reftype>=G__PARAP2P) reftype += G__PARAREF;
+    else                    reftype = G__PARAREFERENCE;
+#else
     if(G__PARAP2P==reftype) G__fprinterr(stderr,"cint internal limitation in %s %d\n",__FILE__,__LINE__);
     reftype = G__PARAREFERENCE;
+#endif
     if(strlen(typename)>1) {
       strcpy(val,typename);
       strcpy(typename,val+1);
