@@ -32,7 +32,7 @@ else
 ABI           = -32 -mips2
 endif
 
-ifneq ($(ENABLETHREAD),yes)
+ifeq ($(ENABLETHREAD),yes)
 CXXOPT        += --thread_safe
 endif
 

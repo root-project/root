@@ -22,7 +22,7 @@ else
 EXCEPTION     = --no_exceptions
 endif
 
-ifneq ($(ENABLETHREAD),yes)
+ifeq ($(ENABLETHREAD),yes)
 CXXOPT        += --thread_safe
 endif
 
