@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.58 2004/06/16 08:23:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.59 2004/07/03 20:37:26 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -770,14 +770,7 @@ void TAxis::Set(Int_t nbins, Axis_t xlow, Axis_t xup)
    fNbins   = nbins;
    fXmin    = xlow;
    fXmax    = xup;
-   fFirst   = 0;
-   fLast    = 0;
-   fBits2   = 0;
-   char name[64];
-   sprintf(name,"%s%s",GetName(),"x");
-   TAttAxis::ResetAttAxis(name);
-   fTimeDisplay = 0;
-   SetTimeFormat();
+   SetDefaults();
 }
 
 //______________________________________________________________________________
@@ -795,14 +788,7 @@ void TAxis::Set(Int_t nbins, const Float_t *xbins)
          Error("TAxis::Set", "bins must be in increasing order");
    fXmin      = fXbins.fArray[0];
    fXmax      = fXbins.fArray[fNbins];
-   fFirst     = 0;
-   fLast      = 0;
-   fBits2     = 0;
-   char name[64];
-   sprintf(name,"%s%s","x",GetName());
-   TAttAxis::ResetAttAxis(name);
-   fTimeDisplay = 0;
-   SetTimeFormat();
+   SetDefaults();
 }
 
 //______________________________________________________________________________
@@ -820,11 +806,19 @@ void TAxis::Set(Int_t nbins, const Axis_t *xbins)
          Error("TAxis::Set", "bins must be in increasing order");
    fXmin      = fXbins.fArray[0];
    fXmax      = fXbins.fArray[fNbins];
-   fFirst     = 0;
-   fLast      = 0;
-   fBits2     = 0;
+   SetDefaults();
+}
+
+//______________________________________________________________________________
+void TAxis::SetDefaults()
+{
+// Set axis default values (from TStyle)
+   
+   fFirst   = 0;
+   fLast    = 0;
+   fBits2   = 0;
    char name[64];
-   sprintf(name,"%s%s","x",GetName());
+   sprintf(name,"%s%s",GetName(),"x");
    TAttAxis::ResetAttAxis(name);
    fTimeDisplay = 0;
    SetTimeFormat();

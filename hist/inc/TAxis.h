@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.30 2004/06/16 08:23:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.h,v 1.31 2004/07/03 20:37:26 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -118,6 +118,7 @@ public:
         virtual void     Set(Int_t nbins, const Float_t *xbins);
         virtual void     Set(Int_t nbins, const Axis_t *xbins);
         virtual void     SetBinLabel(Int_t bin, const char *label);
+        virtual void     SetDefaults();
         virtual void     SetDrawOption(Option_t * /*option*/ ="") { }
         virtual void     SetLimits(Axis_t xmin, Axis_t xmax);
         virtual void     SetMoreLogLabels(Bool_t more=kTRUE);  // *TOGGLE* *GETTER=GetMoreLogLabels
