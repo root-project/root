@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.62 2003/05/15 13:56:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.63 2003/05/21 20:13:09 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -1952,6 +1952,7 @@ void TF1::Paint(Option_t *option)
                Double_t hmax = fHistogram->GetMaximum();
                hmin -= 0.05*(hmax-hmin);
                if (hmin < 0) hmin = 0;
+               if (hmin <= 0 && gPad->GetLogy()) hmin = 0.001*hmax;
                minimum = hmin;
             }
          }
