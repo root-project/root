@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeResult.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeResult.cxx,v 1.2 2001/09/24 00:42:18 rdm Exp $
 // Author: Fons Rademakers   30/11/99
 
 /*************************************************************************
@@ -28,6 +28,18 @@
 
 
 ClassImp(TTreeResult)
+
+//______________________________________________________________________________
+TTreeResult::TTreeResult()
+{
+   // Create a query result object.
+
+   fColumnCount = 0;
+   fRowCount    = 0;
+   fFields      = 0;
+   fResult      = 0;
+   fNextRow     = 0;
+}
 
 //______________________________________________________________________________
 TTreeResult::TTreeResult(Int_t nfields)
