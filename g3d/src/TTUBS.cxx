@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TTUBS.cxx,v 1.4 2004/09/14 15:15:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TTUBS.cxx,v 1.5 2004/09/14 15:56:15 brun Exp $
 // Author: Nenad Buncic   18/09/95
 
 /*************************************************************************
@@ -140,7 +140,7 @@ void TTUBS::Paint(Option_t *option)
    TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
    if (!buff) return;
 
-   buff->fType = TBuffer3D::kTUBS;
+   buff->fType = TBuffer3D::kANY;
    buff->fId   = this;
 
    // Fill gPad->fBuffer3D. Points coordinates are in Master space
