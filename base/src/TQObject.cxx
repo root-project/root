@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.36 2003/05/15 18:01:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.37 2004/04/13 15:24:38 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -696,7 +696,7 @@ void TQObject::Emit(const char *signal_name)
 
       if (clist) {
          TIter nextcl(clist);
-         while ((connection = (TQConnection*)nextcl())) {
+         while (fListOfSignals && (connection = (TQConnection*)nextcl())) {
             gTQSender = GetSender();
             connection->ExecuteMethod();
          }
@@ -718,7 +718,7 @@ void TQObject::Emit(const char *signal_name)
    }
 
    TIter next(clist);
-   while ((connection = (TQConnection*)next())) {
+   while (fListOfSignals && (connection = (TQConnection*)next())) {
       gTQSender = GetSender();
       connection->ExecuteMethod();
    }
@@ -751,7 +751,7 @@ void TQObject::Emit(const char *signal_name, Long_t param)
 
       if (clist) {
          TIter nextcl(clist);
-         while ((connection = (TQConnection*)nextcl())) {
+         while (fListOfSignals && (connection = (TQConnection*)nextcl())) {
             gTQSender = GetSender();
             connection->ExecuteMethod(param);
          }
@@ -773,7 +773,7 @@ void TQObject::Emit(const char *signal_name, Long_t param)
    }
 
    TIter next(clist);
-   while ((connection = (TQConnection*)next())) {
+   while (fListOfSignals && (connection = (TQConnection*)next())) {
       gTQSender = GetSender();
       connection->ExecuteMethod(param);
    }
@@ -804,7 +804,7 @@ void TQObject::Emit(const char *signal_name, Double_t param)
 
       if (clist) {
          TIter nextcl(clist);
-         while ((connection = (TQConnection*)nextcl())) {
+         while (fListOfSignals && (connection = (TQConnection*)nextcl())) {
             gTQSender = GetSender();
             connection->ExecuteMethod(param);
          }
@@ -827,7 +827,7 @@ void TQObject::Emit(const char *signal_name, Double_t param)
    }
 
    TIter next(clist);
-   while ((connection = (TQConnection*)next())) {
+   while (fListOfSignals && (connection = (TQConnection*)next())) {
       gTQSender = GetSender();
       connection->ExecuteMethod(param);
    }
@@ -860,7 +860,7 @@ void TQObject::Emit(const char *signal_name, const char *params)
 
       if (clist) {
          TIter nextcl(clist);
-         while ((connection = (TQConnection*)nextcl())) {
+         while (fListOfSignals && (connection = (TQConnection*)nextcl())) {
             gTQSender = GetSender();
             connection->ExecuteMethod(params);
          }
@@ -882,7 +882,7 @@ void TQObject::Emit(const char *signal_name, const char *params)
    }
 
    TIter next(clist);
-   while ((connection = (TQConnection*)next())) {
+   while (fListOfSignals && (connection = (TQConnection*)next())) {
       gTQSender = GetSender();
       connection->ExecuteMethod(params);
    }
@@ -927,7 +927,7 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
 
       if (clist) {
          TIter nextcl(clist);
-         while ((connection = (TQConnection*)nextcl())) {
+         while (fListOfSignals && (connection = (TQConnection*)nextcl())) {
             gTQSender = GetSender();
             connection->ExecuteMethod(paramArr, clist->GetNargs());
          }
@@ -949,7 +949,7 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
    }
 
    TIter next(clist);
-   while ((connection = (TQConnection*)next())) {
+   while (fListOfSignals && (connection = (TQConnection*)next())) {
       gTQSender = GetSender();
       connection->ExecuteMethod(paramArr, clist->GetNargs());
    }
