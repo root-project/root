@@ -2,7 +2,7 @@ THE ROOT BUILD SYSTEM
 =====================
 
 The new ROOT development system is based on Open Source tools like
-cvs, configure and make.
+CVS, configure and make.
 
 
 The Makefile
@@ -79,7 +79,7 @@ importcint:                      import a new version of CINT into the cint
                                  manually update the CVS repository.
 
 html:                            generate the complete html documentation of
-                                 the full ROOT system. Also hyperize the
+                                 the full ROOT system. Also hyperizes the
                                  README/ChangeLog file.
 
 install:                         install the root binary distribution to the
