@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.13 2001/10/10 20:57:51 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.14 2001/11/22 15:12:25 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -22,6 +22,7 @@
 //        TRefArray     *fHighPt;            //array of High Pt tracks only
 //        TRefArray     *fMuons;             //array of Muon tracks only
 //        TRef           fLastTrack;         //pointer to last track
+//        TRef           fHistoWeb;          //EXEC:GetHistoWeb reference to an histogram in a TWebFile
 //        TH1F          *fH;
 //
 //   The EventHeader class has 3 data members (integers):
@@ -102,6 +103,7 @@ Event::Event()
    for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
    fClosestDistance = 0;
    fEventName = 0;
+   fWebHistogram.SetAction(this);
 }
 
 //______________________________________________________________________________
@@ -124,6 +126,8 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
   Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
   Float_t random = gRandom->Rndm(1);
 
+  //Save current Object count
+  Int_t ObjectNumber = TRef::GetObjectCount();
   Clear();
   fHighPt->Delete();
   fMuons->Delete();
@@ -153,6 +157,12 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
 
    //  Create and Fill the Track objects
   for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
+  
+  //Restore Object count 
+  //To save space in the table keeping track of all referenced objects
+  //we assume that our events do not address each other. We reset the 
+  //object count to what it was at the beginning of the event.
+  TRef::SetObjectCount(ObjectNumber);
 }  
 
 //______________________________________________________________________________
