@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.98 2002/05/07 09:05:36 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.99 2002/06/11 15:47:36 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -262,6 +262,7 @@
 #include "TVirtualFitter.h"
 #include "TEnv.h"
 #include "THLimitsFinder.h"
+#include "TPluginManager.h"
 
 R__EXTERN Foption_t Foption;
 R__EXTERN  TTree *gTree;
@@ -3127,17 +3128,18 @@ void TTreePlayer::StartViewer(Int_t ww, Int_t wh)
       return;
    }
 
+#if !defined(R__WIN32) || defined(GDK_WIN32)
+   if (ww || wh) { }   // use unused variables
+   TPluginHandler *h;
+   if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualTreeViewer"))) {
+      if (h->LoadPlugin() == -1)
+         return;
+      h->ExecPlugin(1,fTree->GetName());
+   }
+#else
+   //hoping to replace these two lines soon by the general case
    gROOT->LoadClass("TTreeViewer","TreeViewer");
-#ifdef R__WIN32
-#ifndef GDK_WIN32
    gROOT->ProcessLine(Form("new TTreeViewer(\"%s\",\"TreeViewer\",%d,%d);",fTree->GetName(),ww,wh));
-#else
-   if (ww || wh) { }   // use unused variables
-   gROOT->ProcessLine(Form("new TTreeViewer(\"%s\");",fTree->GetName()));
-#endif
-#else
-   if (ww || wh) { }   // use unused variables
-   gROOT->ProcessLine(Form("new TTreeViewer(\"%s\");",fTree->GetName()));
 #endif
 }
 
