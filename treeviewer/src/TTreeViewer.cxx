@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name$:$Id$
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   08/12/98
 
 /*************************************************************************
@@ -640,7 +640,7 @@ void TTreeViewer::SetTreeName(const char *treename)
    sprintf(&name[13],"%s : %s",fTree->GetName(),fTree->GetTitle());
    SetTitle(name);
    delete [] name;
-   fIsEditable = kFALSE;
+   fEditable = kFALSE;
 
    BuildInterface();
 }
