@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.37 2002/06/18 19:03:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.38 2002/06/26 17:24:09 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1448,7 +1448,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   dict.Prepend( build_loc + "/" );
   TString dicth = dict;
   TString dictObj = dict;
-  dict += extension;
+  dict += "cxx"; //no need to keep the extention of the original file, any
   dicth += "h";
   dictObj += fObjExt;
 
