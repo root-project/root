@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.29 2003/11/10 14:40:07 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.30 2003/11/18 19:28:25 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -286,7 +286,7 @@ Bool_t TAuthenticate::Authenticate()
    Int_t st = -1;
    if (fSecurity == kClear) {
 
-      // Clear Authentication
+      // UsrPwd Authentication
       user = fgDefaultUser;
       if (user != "")
          CheckNetrc(user, passwd, pwhash, (Bool_t &)kFALSE);
@@ -421,13 +421,13 @@ Bool_t TAuthenticate::Authenticate()
 
       if (fVersion > 1) {
 
-         // Rfio Authentication
+         // UidGid Authentication
          st = RfioAuth(fUser);
 
       } else {
          if (gDebug > 0)
             Info("Authenticate",
-                 "remote daemon does not support Rfio authentication");
+                 "remote daemon does not support UidGid authentication");
          if (strlen(NoSupport) > 0)
             sprintf(NoSupport, "%s/UidGid", NoSupport);
          else
@@ -446,17 +446,11 @@ Bool_t TAuthenticate::Authenticate()
          }
       }
       Int_t nmet = fHostAuth->NumMethods();
+      Int_t remloc = nmet - meth - 1;
       if (gDebug > 2)
          Info("Authenticate",
-              "got st=%d: still %d methods locally available", st,
-              nmet - meth - 1);
-      if ((nmet - meth - 1) < 1) {
-         if (strlen(NoSupport) > 0)
-            Info("Authenticate",
-                 "attempted methods %s are not supported by remote server version",
-                 NoSupport);
-         return kFALSE;
-      }
+              "got st=%d: still %d methods locally available",
+              st, remloc);
       if (st == -1) {
          if (gDebug > 2)
             Info("Authenticate",
@@ -505,11 +499,19 @@ Bool_t TAuthenticate::Authenticate()
                RemMeth =
                    sscanf(answer, "%d %d %d %d %d %d", &rMth[0], &rMth[1],
                           &rMth[2], &rMth[3], &rMth[4], &rMth[5]);
-               if (gDebug > 0)
+               if (gDebug > 0 && remloc > 0)
                   Info("Authenticate",
-                       "remotely allowed methods still to be tried: %s",
+                       "remotely allowed methods not yet tried: %s",
                        answer);
             } else if (stat == 0) {
+               if (strlen(NoSupport) > 0)
+                  Info("Authenticate",
+                       "attempted methods %s are not supported by remote server version",
+                       NoSupport);
+               return kFALSE;
+            }
+            // If no more local methods, exit
+            if (remloc < 1) {
                if (strlen(NoSupport) > 0)
                   Info("Authenticate",
                        "attempted methods %s are not supported by remote server version",
@@ -551,9 +553,8 @@ Bool_t TAuthenticate::Authenticate()
 //______________________________________________________________________________
 void TAuthenticate::SetEnvironment()
 {
-   // Set environment variables relevant for the authentication process
-   // PROMPTUSER, AUTHREUSE and DEFAULTUSER.
-   // The values are inferred from fSecurity and fDetails.
+   // Set default authentication environment. The values are inferred
+   // from fSecurity and fDetails.
 
    if (gDebug > 2)
       Info("SetEnvironment",
@@ -561,12 +562,12 @@ void TAuthenticate::SetEnvironment()
            fDetails.Data());
 
    // Defaults
-   fgDefaultUser = "";
+   fgDefaultUser = fgUser;
    if (fSecurity == kKrb5)
-      fgAuthReUse   = kFALSE;
+      fgAuthReUse = kFALSE;
    else
-      fgAuthReUse   = kTRUE;
-   fgPromptUser  = kFALSE;
+      fgAuthReUse = kTRUE;
+   fgPromptUser = kFALSE;
 
    // Decode fDetails, is non empty ...
    if (fDetails != "") {
@@ -643,19 +644,18 @@ void TAuthenticate::SetEnvironment()
       }
 
       // Set Prompt flag
-      fgPromptUser = kFALSE;
       if (!strncasecmp(Pt, "yes",3) || !strncmp(Pt, "1", 1))
          fgPromptUser = kTRUE;
 
       // Set ReUse flag
-      if (fSecurity != kRfio) {
-         fgAuthReUse = kTRUE;
-         if (!strncasecmp(Ru, "no",2) || !strncmp(Ru, "0",1))
-            fgAuthReUse = kFALSE;
-      } else {
+      if (fSecurity == kKrb5) {
          fgAuthReUse = kFALSE;
          if (!strncasecmp(Ru, "yes",3) || !strncmp(Ru, "1",1))
             fgAuthReUse = kTRUE;
+      } else {
+         fgAuthReUse = kTRUE;
+         if (!strncasecmp(Ru, "no",2) || !strncmp(Ru, "0",1))
+            fgAuthReUse = kFALSE;
       }
 
       // UnSet Crypt flag for UsrPwd, if requested
@@ -721,7 +721,8 @@ void TAuthenticate::SetEnvironment()
             delete u;
          }
       }
-      if (fgDefaultUser == "anonymous" || fgDefaultUser == "rootd")
+      if (fgDefaultUser == "anonymous" || fgDefaultUser == "rootd" ||
+          fgUser != "")  // when set by user don't prompt for it anymore
          fgPromptUser = kFALSE;
 
       if (gDebug > 2)
@@ -730,10 +731,11 @@ void TAuthenticate::SetEnvironment()
 }
 
 //______________________________________________________________________________
-Bool_t TAuthenticate::GetUserPasswd(TString & user, TString & passwd,
-                                    Bool_t & pwhash, Bool_t & srppwd)
+Bool_t TAuthenticate::GetUserPasswd(TString &user, TString &passwd,
+                                    Bool_t &pwhash, Bool_t &srppwd)
 {
-   // Try to get user name and passwd from several sources
+   // Try to get user name and passwd from several sources.
+
    if (gDebug > 3)
       Info("GetUserPasswd", "Enter: User: '%s' Hash:%d SRP:%d",
             user.Data(),(Int_t)pwhash,(Int_t)srppwd);
@@ -1156,9 +1158,7 @@ void TAuthenticate::SetGlobalPwHash(Bool_t pwhash)
 {
    // Set global passwd hash flag to be used for authentication to rootd or proofd.
 
-   fgPwHash = kFALSE;
-   if (pwhash)
-      fgPwHash = kTRUE;
+   fgPwHash = pwhash;
 }
 
 //______________________________________________________________________________
@@ -1166,9 +1166,7 @@ void TAuthenticate::SetGlobalSRPPwd(Bool_t srppwd)
 {
    // Set global SRP passwd flag to be used for authentication to rootd or proofd.
 
-   fgSRPPwd = kFALSE;
-   if (srppwd)
-      fgSRPPwd = kTRUE;
+   fgSRPPwd = srppwd;
 }
 
 //______________________________________________________________________________
@@ -1188,9 +1186,7 @@ void TAuthenticate::SetAuthReUse(Bool_t authreuse)
 {
    // Set global AuthReUse flag
 
-   fgAuthReUse = kFALSE;
-   if (authreuse)
-      fgAuthReUse = kTRUE;
+   fgAuthReUse = authreuse;
 }
 
 //______________________________________________________________________________
@@ -1198,9 +1194,7 @@ void TAuthenticate::SetPromptUser(Bool_t promptuser)
 {
    // Set global PromptUser flag
 
-   fgPromptUser = kFALSE;
-   if (promptuser)
-      fgPromptUser = kTRUE;
+   fgPromptUser = promptuser;
 }
 
 //______________________________________________________________________________
@@ -1233,7 +1227,7 @@ void TAuthenticate::SetGlobusAuthHook(GlobusAuth_t func)
 //______________________________________________________________________________
 Int_t TAuthenticate::SshAuth(TString & User)
 {
-   // Use ssh to authenticate.
+   // SSH client authentication code.
 
    // Check First if a 'ssh' executable exists ...
    char *gSshExe =
@@ -1295,9 +1289,12 @@ Int_t TAuthenticate::SshAuth(TString & User)
       if (Options) delete[] Options;
       return 1;
    }
+   if (Options) delete[] Options;
    if (rc == -2) {
-      if (Options) delete[] Options;
       return rc;
+   }
+   if (retval == kErrNotAllowed && kind == kROOTD_ERR) {
+      return 0;
    }
    // Check return flags
    if (kind != kROOTD_SSH)
@@ -1386,8 +1383,6 @@ Int_t TAuthenticate::SshAuth(TString & User)
    if (kind == kROOTD_ERR) {
       if (gDebug > 0)
          AuthError("SshAuth", retval);
-      if (retval == kErrConnectionRefused)
-         return -2;
       return 0;
    }
 
@@ -2073,11 +2068,11 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
    Bool_t retval = kTRUE;
 
    // Both strings should have been defined
-   if (!Host || !host) 
+   if (!Host || !host)
       return kFALSE;
 
    // 'host' == '*' indicates any 'Host' ...
-   if (!strcmp(host,"*")) 
+   if (!strcmp(host,"*"))
       return kTRUE;
 
    // If 'host' contains at a letter or an hyphen it is assumed to be
@@ -2092,7 +2087,7 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
    // Check also for wild cards
    Bool_t wild = kFALSE;
    if (strstr(host,"*"))
-      wild = kTRUE; 
+      wild = kTRUE;
 
    // Now build the regular expression for final checking
    TRegexp rehost(host,wild);
@@ -2111,7 +2106,7 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
    if (pos == -1)
       retval = kFALSE;
 
-   // If IP and no wilds, it should match either 
+   // If IP and no wilds, it should match either
    // the beginning or the end of the string
    if (!wild) {
       if (pos > 0 && pos != (Ssiz_t)(theHost.Length()-strlen(host)))
@@ -2124,7 +2119,7 @@ Bool_t TAuthenticate::CheckHost(const char *Host, const char *host)
 //______________________________________________________________________________
 Int_t TAuthenticate::RfioAuth(TString & User)
 {
-   // Rfio-like authentication code.
+   // UidGid client authentication code.
    // Returns 0 in case authentication failed
    //         1 in case of success
    //        <0 in case of system error
@@ -2171,16 +2166,33 @@ Int_t TAuthenticate::RfioAuth(TString & User)
                             fDetails, pw->fUser, 0, 0);
             return 1;
          } else {
+            TString Server = "sockd";
+            if (fProtocol.Contains("root"))
+               Server = "rootd";
+            if (fProtocol.Contains("proof"))
+               Server = "proofd";
+
             // Authentication failed
-            if (kind == kROOTD_ERR) {
-               AuthError("RfioAuth", stat);
-               if (stat == kErrConnectionRefused)
-                  return -2;
+            if (stat == kErrConnectionRefused) {
+               Error("RfioAuth",
+                     "%s@%s does not accept connections from %s%s",
+                     Server.Data(),fRemote.Data(),
+                     fUser.Data(),gSystem->HostName());
+               return -2;
+            } else if (stat == kErrNotAllowed) {
+               Error("RfioAuth",
+                     "%s@%s does not accept %s authentication from %s@%s",
+                     Server.Data(),fRemote.Data(),
+                     TAuthenticate::fgAuthMeth[5].Data(),
+                     fUser.Data(),gSystem->HostName());
+            } else {
+              if (gDebug > 0)
+                 AuthError("RfioAuth", stat);
             }
             return 0;
          }
       } else {
-         Warning("RfioAuth", "RFIO login as \"root\" not allowed");
+         Warning("RfioAuth", "UidGid login as \"root\" not allowed");
          return -1;
       }
    }
@@ -2191,7 +2203,7 @@ Int_t TAuthenticate::RfioAuth(TString & User)
 //______________________________________________________________________________
 Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash)
 {
-   // Clear-like authentication code.
+   // UsrPwd client authentication code.
    // Returns 0 in case authentication failed
    //         1 in case of success
 
@@ -2244,9 +2256,12 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
             Info("ClearAuth", "valid authentication exists: return 1");
          return 1;
       }
-      if (rc == -2 || stat == kErrNotAllowed) {
-         if (Options) delete[] Options;
+      if (Options) delete[] Options;
+      if (rc == -2) {
          return rc;
+      }
+      if (stat == kErrNotAllowed && kind == kROOTD_ERR) {
+         return 0;
       }
 
       if (kind == kROOTD_AUTH && stat == -1) {
@@ -2504,10 +2519,27 @@ Int_t TAuthenticate::ClearAuth(TString & User, TString & Passwd, Bool_t & PwHash
       // Get replay from server
       fSocket->Recv(stat, kind);
       if (kind == kROOTD_ERR) {
-         if (gDebug > 0)
-            AuthError("ClearAuth", stat);
-         if (stat == kErrConnectionRefused)
+         TString Server = "sockd";
+         if (fProtocol.Contains("root"))
+            Server = "rootd";
+         if (fProtocol.Contains("proof"))
+            Server = "proofd";
+         if (stat == kErrConnectionRefused) {
+            Error("ClearAuth",
+                  "%s@%s does not accept connections from %s@%s",
+                  Server.Data(),fRemote.Data(),
+                  fUser.Data(),gSystem->HostName());
             return -2;
+         } else if (stat == kErrNotAllowed) {
+            Error("ClearAuth",
+                  "%s@%s does not accept %s authentication from %s@%s",
+                  Server.Data(),fRemote.Data(),
+                  TAuthenticate::fgAuthMeth[0].Data(),
+                  fUser.Data(),gSystem->HostName());
+         } else {
+           if (gDebug > 0)
+              AuthError("ClearAuth", stat);
+         }
          return 0;
       }
       // Prepare Passwd to send
@@ -2986,8 +3018,8 @@ void TAuthenticate::FileExpand(const char *fexp, FILE * ftmp)
 //______________________________________________________________________________
 char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
 {
-   // Determine default authentication details for method 'sec' and user 'usr'
-   // checks .rootrc family files. Returned string must be deleted by the user.
+   // Determine default authentication details for method 'sec' and user 'usr'.
+   // Checks .rootrc family files. Returned string must be deleted by the user.
 
    char temp[kMAXPATHLEN] = { 0 };
    const char copt[2][5] = { "no", "yes" };
@@ -2999,7 +3031,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
    if (opt < 0 || opt > 1)
       opt = 1;
 
-   // UsrPwdClear
+   // UsrPwd
    if (sec == TAuthenticate::kClear) {
       if (strlen(usr) == 0 || !strcmp(usr,"-1"))
          usr = gEnv->GetValue("UsrPwd.Login", "");
@@ -3272,10 +3304,28 @@ Int_t TAuthenticate::AuthExists(TAuthenticate *Auth, Int_t Sec,
    *Rflag = stat;
 
    if (kind == kROOTD_ERR) {
-      if (gDebug > 0)
-         AuthError("AuthExists", stat);
-      if (stat == kErrConnectionRefused)
+      TString Server = "sockd";
+      if (strstr(Auth->GetProtocol(),"root"))
+         Server = "rootd";
+      if (strstr(Auth->GetProtocol(),"proof"))
+         Server = "proofd";
+      if (stat == kErrConnectionRefused) {
+         ::Error("AuthExists",
+                 "%s@%s does not accept connections from %s@%s",
+                 Server.Data(),Auth->GetRemoteHost(),
+                 Auth->GetUser(),gSystem->HostName());
          return -2;
+      } else if (stat == kErrNotAllowed) {
+         if (gDebug > 0)
+            ::Info("AuthExists",
+                   "%s@%s does not accept %s authentication from %s@%s",
+                   Server.Data(),Auth->GetRemoteHost(),
+                   TAuthenticate::fgAuthMeth[Sec].Data(),
+                   Auth->GetUser(),gSystem->HostName());
+      } else {
+        if (gDebug > 0)
+           AuthError("AuthExists", stat);
+      }
       return 0;
    }
 

@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.10 2003/10/07 21:09:55 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.11 2003/11/07 03:29:42 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -35,9 +35,10 @@ public:
 static SRPAuthInit srpauth_init;
 
 
-TSocket *sock = 0;
+TSocket   *sock = 0;
 THostAuth *HostAuth = 0;
-Int_t  gRSAKey = 0;
+Int_t      gRSAKey = 0;
+
 //______________________________________________________________________________
 Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
                       const char *remote, TString &det, Int_t version)
@@ -92,11 +93,13 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
        if (Options) delete[] Options;
        return 1;
      }
+     if (Options) delete[] Options;
      if (rc == -2) {
-       if (Options) delete[] Options;
        return rc;
      }
-
+     if (stat == kErrNotAllowed && kind == kROOTD_ERR) {
+       return 0;
+     }
    } else {
 
      sock->Send(usr, kROOTD_SRPUSER);
@@ -107,8 +110,27 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
         return 2;
 
      if (kind == kROOTD_ERR) {
-        if (gDebug>0) TAuthenticate::AuthError("SRPAuthenticate", stat);
-        if (stat == kErrConnectionRefused) return -2;
+        TString Server = "sockd";
+        if (strstr(auth->GetProtocol(),"root"))
+           Server = "rootd";
+        if (strstr(auth->GetProtocol(),"proof"))
+           Server = "proofd";
+        if (stat == kErrConnectionRefused) {
+           Error("SRPAuthenticate",
+                 "%s@%s does not accept connections from %s%s",
+                 Server.Data(),auth->GetRemoteHost(),
+                 auth->GetUser(),gSystem->HostName());
+           return -2;
+        } else if (stat == kErrNotAllowed) {
+           Error("SRPAuthenticate",
+                 "%s@%s does not accept %s authentication from %s@%s",
+                 Server.Data(),auth->GetRemoteHost(),
+                 TAuthenticate::GetAuthMethod(1),
+                 auth->GetUser(),gSystem->HostName());
+        } else {
+          if (gDebug > 0)
+             TAuthenticate::AuthError("SRPAuthenticate", stat);
+        }
         return 0;
      }
 

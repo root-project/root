@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.57 2003/10/07 14:03:02 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.58 2003/11/13 15:15:11 rdm Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -166,15 +166,15 @@ Proofd.SendSRPPwd:      0
 
 # To be prompted for login information
 # UsrPwd.LoginPrompt:     yes
-# SRP.LoginPrompt:        no
-# Krb5.LoginPrompt:       no
+# SRP.LoginPrompt:        yes
+# Krb5.LoginPrompt:       yes
 # Globus.LoginPrompt:     yes
 # SSH.LoginPrompt:        yes
-# UidGid.LoginPrompt:     no
+# UidGid.LoginPrompt:     yes
 
 # To reuse established security context
 UsrPwd.ReUse:         yes
-SRP.ReUse:            yes
+SRP.ReUse:            no
 Krb5.ReUse:           no
 Globus.ReUse:         yes
 SSH.ReUse:            yes

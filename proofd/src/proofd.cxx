@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.53 2003/11/07 03:29:42 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.54 2003/11/13 15:15:11 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -753,12 +753,18 @@ void Authenticate()
 
       if (gClientProtocol > 8) {
 
-         if (gDebug > 2)
+         // If authentication failure prepare or continue negotiation
+         // Don't do this if this was a SSH notification failure
+         // because in such a case it was already done in the
+         // appropriate daemon child
+         int doneg = (Meth != -1 || kind == kROOTD_PASS) &&
+                     (gRemPid > 0 || kind != kROOTD_SSH);
+         if (gDebug > 2 && doneg)
             ErrorInfo("Authenticate: kind:%d -- Meth:%d -- gAuth:%d -- gNumLeft:%d",
                       kind, Meth, gAuth, gNumLeft);
 
          // If authentication failure, check if other methods could be tried ...
-         if ((Meth != -1 || kind==kROOTD_PASS) && gAuth == 0) {
+         if (gAuth == 0 && doneg) {
             if (gNumLeft > 0) {
                if (gAuthListSent == 0) {
                   RpdSendAuthList();

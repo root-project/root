@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.69 2003/11/07 03:29:42 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.70 2003/11/10 14:05:01 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -2133,11 +2133,18 @@ void RootdLoop()
       }
 
       if (gClientProtocol > 8) {
-         if (gDebug > 2 && (authmeth != -1 || kind == kROOTD_PASS))
-            ErrorInfo("RootdLoop: authentication: kind:%d -- authmeth:%d -- gAuth:%d -- gNumLeft:%d",
-                      kind, authmeth, gAuth, gNumLeft);
+
+         // If authentication failure prepare or continue negotiation
+         // Don't do this if this was a SSH notification failure
+         // because in such a case it was already done in the
+         // appropriate daemon child
+         int doneg = (authmeth != -1 || kind == kROOTD_PASS) &&
+                     (gRemPid > 0 || kind != kROOTD_SSH);
+         if (gDebug > 2 && doneg)
+            ErrorInfo("RootdLoop: %s: kind:%d -- meth:%d -- gAuth:%d -- gNumLeft:%d",
+                      "Authentication",kind, authmeth, gAuth, gNumLeft);
          // If authentication failure, check if other methods could be tried ...
-         if ((authmeth != -1 || kind == kROOTD_PASS) && gAuth == 0) {
+         if (gAuth == 0 && doneg) {
             if (gNumLeft > 0) {
                if (gAuthListSent == 0) {
                   RpdSendAuthList();
@@ -2413,7 +2420,7 @@ int main(int argc, char **argv)
 
    while (1) {
 
-      if (NetOpen(gInetdFlag,kROOTD) == 0) {
+      if (NetOpen(gInetdFlag, kROOTD) == 0) {
          RootdParallel();  // see if we should use parallel sockets
          RootdLoop();      // child processes client's requests
          NetClose();       // till we are done

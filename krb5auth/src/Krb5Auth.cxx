@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.12 2003/10/27 09:48:35 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.13 2003/11/07 03:29:41 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -251,9 +251,12 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
          if (Options) delete[] Options;
          return 1;
       }
+      if (Options) delete[] Options;
       if (rc == -2) {
-         if (Options) delete[] Options;
          return rc;
+      }
+      if (retval == kErrNotAllowed && kind == kROOTD_ERR) {
+         return 0;
       }
 
    } else {
@@ -262,8 +265,27 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       sock->Recv(retval, kind);
 
       if (kind == kROOTD_ERR) {
-         TAuthenticate::AuthError("Krb5Authenticate", retval);
-         if (retval == kErrConnectionRefused) return -2;
+         TString Server = "sockd";
+         if (strstr(auth->GetProtocol(),"root"))
+            Server = "rootd";
+         if (strstr(auth->GetProtocol(),"proof"))
+            Server = "proofd";
+         if (retval == kErrConnectionRefused) {
+            Error("Krb5Authenticate",
+                  "%s@%s does not accept connections from %s%s",
+                  Server.Data(),auth->GetRemoteHost(),
+                  auth->GetUser(),gSystem->HostName());
+            return -2;
+         } else if (retval == kErrNotAllowed) {
+            Error("Krb5Authenticate",
+                  "%s@%s does not accept %s authentication from %s@%s",
+                  Server.Data(),auth->GetRemoteHost(),
+                  TAuthenticate::GetAuthMethod(2),
+                  auth->GetUser(),gSystem->HostName());
+         } else {
+           if (gDebug > 0)
+              TAuthenticate::AuthError("Krb5Authenticate", retval);
+         }
          return 0;
       }
 

@@ -1,4 +1,4 @@
-// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.5 2003/10/22 18:48:36 rdm Exp $
+// @(#)root/globus:$Name:  $:$Id: GlobusAuth.cxx,v 1.6 2003/11/07 03:29:41 rdm Exp $
 // Author: Gerardo Ganis  15/01/2003
 
 /*************************************************************************
@@ -210,9 +210,12 @@ Int_t GlobusAuthenticate(TAuthenticate * Auth, TString & user,
       if (Options) delete[] Options;
       return 1;
    }
+   if (Options) delete[] Options;
    if (rc == -2) {
-      if (Options) delete[] Options;
       return rc;
+   }
+   if (retval == kErrNotAllowed && kind == kROOTD_ERR) {
+      return 0;
    }
    // If server does not support Globus authentication we can't continue ...
    if (retval == 0 || kind != kROOTD_GLOBUS) {

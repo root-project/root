@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.14 2003/10/07 21:09:55 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.h,v 1.15 2003/11/18 19:28:25 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -97,7 +97,7 @@ private:
    static rsa_KEY_export fgRSAPubExport;
 
    void           SetEnvironment();
-   Bool_t         GetUserPasswd(TString &user, TString &passwd, 
+   Bool_t         GetUserPasswd(TString &user, TString &passwd,
                                 Bool_t &pwhash, Bool_t &srppwd);
    Int_t          ClearAuth(TString &user, TString &passwd, Bool_t &pwhash);
    Int_t          RfioAuth(TString &user);
@@ -120,7 +120,7 @@ public:
 
    Bool_t             Authenticate();
    Bool_t             CheckNetrc(TString &user, TString &passwd);
-   Bool_t             CheckNetrc(TString &user, TString &passwd, 
+   Bool_t             CheckNetrc(TString &user, TString &passwd,
                                  Bool_t &pwhash, Bool_t &srppwd);
    const char        *GetUser() const { return fUser; }
    const char        *GetPasswd() const { return fPasswd; }
