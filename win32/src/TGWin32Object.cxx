@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32Object.cxx,v 1.3 2001/06/29 06:40:29 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32Object.cxx,v 1.4 2002/07/04 06:47:38 brun Exp $
 // Author: Valery Fine   10/01/96
 
 /*************************************************************************
@@ -96,7 +96,7 @@ TGWin32Switch::TGWin32Switch(TGWin32Object *master, TGWin32Switch *mirror, Bool_
 //______________________________________________________________________________
 TGWin32Switch::TGWin32Switch(TGWin32Object *master, Bool_t ownmaster)
  :fMasterIsActive(1),flpMasterObject(master),flpMirror(0),fOwnMasterFlag(ownmaster)
-{   
+{
 }
 
 //______________________________________________________________________________

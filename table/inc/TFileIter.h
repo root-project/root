@@ -1,10 +1,10 @@
-// $Id: TFileIter.h,v 1.6 2001/07/11 06:46:19 brun Exp $
+// $Id: TFileIter.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine  (fine@bnl.gov). All right reserved",
 //
 #ifndef ROOT_TFileIter
 #define ROOT_TFileIter
- 
+
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //
 // Class to iterate (read / write ) the events written to /from TFile.   //
@@ -20,7 +20,7 @@
 //  - object that is in n object on the file                             //
 //  - read current object                                                //
 //  - return the name of the key of the current object                   //
-//  - return the current position                                        // 
+//  - return the current position                                        //
 //  - set the current position by the absolute position number           //
 //  - set the current position by relative position number               //
 //  - get the number of keys in the file                                 //
@@ -45,19 +45,19 @@ class TFileIter : public TListIter {
 
   private:
 
-    TFile      *fFileBackUp;       //! temporary data-members 
+    TFile      *fFileBackUp;       //! temporary data-members
     TDirectory *fDirectoryBackUp;  //! to save/restore TFile/TDirectory global scope
 
     virtual TIterator &operator=(const TIterator &) { return *this; }
- 
+
   protected:
     TFile   *fRootFile;            // Tfile to be iterated over
     TString  fEventName;           // current key name
     UInt_t   fRunNumber;           // current "run number"
-    UInt_t   fEventNumber;         // current "event number"  
+    UInt_t   fEventNumber;         // current "event number"
     Int_t    fCursorPosition;      // the position of the current key in the sorted TKey list
     Bool_t   fOwnTFile;            // Bit whether this classs creates TFile on its own to delete
-  
+
   protected:
     void     Initialize();
     TObject *ReadObj(const TKey *key) const;
@@ -115,8 +115,8 @@ class TFileIter : public TListIter {
 
 //__________________________________________________________________________
 inline Int_t TFileIter::CurrentCursorPosition() const
-{ 
-	// return the current 
+{
+	// return the current
 	return fCursorPosition;
 }
 
@@ -125,29 +125,29 @@ inline const TFile *TFileIter::GetTFile() const { return fRootFile; }
 
 //__________________________________________________________________________
 inline TObject *TFileIter::Next()
-{ 
+{
 	// Make 1 step over the file objects and returns its pointer
 	// or 0, if there is no object left in the container
-	return Next(1); 
+	return Next(1);
 }
 
 //__________________________________________________________________________
 inline void  TFileIter::SetCursorPosition(Int_t cursorPosition)
-{ 
-	// Make <cursorPosition> steps (>0 - forward) over the file 
+{
+	// Make <cursorPosition> steps (>0 - forward) over the file
 	// objects to skip it
-	SkipObjects(cursorPosition - fCursorPosition); 
+	SkipObjects(cursorPosition - fCursorPosition);
 }
 
 //__________________________________________________________________________
 inline TFileIter &TFileIter::operator=(const char *keyNameToFind)
-{ 
+{
 	// Interate unless the name of the object matches <keyNameToFind>
 	SetCursorPosition(keyNameToFind); return *this;}
 
 //__________________________________________________________________________
 inline TFileIter &TFileIter::operator=(Int_t cursorPosition)
-{ 
+{
   // Interate over <cursorPosition>
   SetCursorPosition(cursorPosition);
   return *this;
@@ -156,26 +156,26 @@ inline TFileIter &TFileIter::operator=(Int_t cursorPosition)
 inline TFileIter::operator const TFile *() const
 { return GetTFile (); }
 //__________________________________________________________________________
-inline TFileIter &TFileIter::operator+=(Int_t shift) 
+inline TFileIter &TFileIter::operator+=(Int_t shift)
 { SkipObjects(shift); return *this;}
 //__________________________________________________________________________
-inline TFileIter &TFileIter::operator-=(Int_t shift) 
+inline TFileIter &TFileIter::operator-=(Int_t shift)
 { return operator+=(-shift);}
 //__________________________________________________________________________
-inline TFileIter &TFileIter::operator++() 
+inline TFileIter &TFileIter::operator++()
 { SkipObjects( 1); return *this;}
 //__________________________________________________________________________
-inline TFileIter &TFileIter::operator--() 
+inline TFileIter &TFileIter::operator--()
 { SkipObjects(-1); return *this;}
 //__________________________________________________________________________
-inline TObject *TFileIter::operator*() const 
+inline TObject *TFileIter::operator*() const
 { return GetObject();}
 //__________________________________________________________________________
-inline TFileIter::operator int () const 
+inline TFileIter::operator int () const
 { return CurrentCursorPosition(); }
 //__________________________________________________________________________
-inline TFileIter::operator const char *() const 
-{ 
+inline TFileIter::operator const char *() const
+{
 	// return the current key name
 	return GetKeyName();
 }
@@ -184,7 +184,7 @@ inline int TFileIter::operator==(const char *name) const
 { return name ? !strcmp(name,GetKeyName()):0;}
 
 //__________________________________________________________________________
-inline int TFileIter::operator!=(const char *name) const 
+inline int TFileIter::operator!=(const char *name) const
 { return !(operator==(name)); }
 
 //__________________________________________________________________________
@@ -193,7 +193,7 @@ inline TObject *TFileIter::operator()(){ return Next(); }
 inline TObject *TFileIter::operator()(Int_t  nSkip){ return Next(nSkip);}
 
 //__________________________________________________________________________
-inline void  TFileIter::SaveFileScope() 
+inline void  TFileIter::SaveFileScope()
 { fFileBackUp = gFile; fDirectoryBackUp = gDirectory; }
 
 //__________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.5 2002/06/16 08:37:28 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArray.h,v 1.6 2002/07/23 11:11:26 rdm Exp $
 // Author: Fons Rademakers   21/10/97
 
 /*************************************************************************

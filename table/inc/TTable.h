@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.18 2002/05/09 20:22:00 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.1 2002/05/27 16:26:59 rdm Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -43,7 +43,7 @@
 
 enum ETableBits {
     kIsNotOwn         = BIT(23)   // if the TTable wrapper doesn't own the STAF table
-		                          // As result of the Update() method for example
+		                  // As result of the Update() method for example
 };
 class TTableDescriptor;
 class TH1;
