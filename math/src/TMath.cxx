@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.25 2002/08/16 13:48:28 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.26 2002/08/16 19:50:23 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -769,7 +769,11 @@ Double_t TMath::Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R)
    // [1] J. Humlicek, JQSRT, 21, 437 (1982).
    // [2] R.J. Wells "Rapid Approximation to the Voigt/Faddeeva Function and its 
    // Derivatives" JQSRT 62 (1999), pp 29-48.
+   //Begin_Html
+   /*
    // http://www-atm.physics.ox.ac.uk/user/wells/voigt.html
+   */
+   //End_Html
 
    Double_t R0, R1;
 
