@@ -108,6 +108,7 @@ G__MethodInfo {
  protected:
   long handle;
   long index;
+  long usingIndex;
   G__ClassInfo* belongingclass;
   G__TypeInfo type;
 };
