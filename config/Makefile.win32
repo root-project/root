@@ -71,3 +71,4 @@ F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)
 F77LIBS       =
 
 # Extras
+XMLLIBEXTRA		=  iconv.lib Ws2_32.lib
