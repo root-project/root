@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.136 2003/06/06 16:07:56 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.137 2003/06/25 14:27:57 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3128,6 +3128,10 @@ void WriteShadowClass(G__ClassInfo &cl)
 void GenerateLinkdef(int *argc, char **argv, int iv)
 {
    FILE *fl = fopen(autold, "w");
+   if (fl==0) {
+      Error(0, "Could not write the automatically generated Linkdef: %s\n", autold);
+      exit(1);
+   }
 
    fprintf(fl, "#ifdef __CINT__\n\n");
    fprintf(fl, "#pragma link off all globals;\n");
@@ -3371,6 +3375,12 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
       return;
    }
    tmpdict = fopen(tmpdictname, "w");
+   if (!tmpdict) {
+      Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
+               tmpdictname);
+      fclose(fpd);
+      return;
+   }
 
    sprintf(checkline, "#include \"%s\"", esc_bundlename);
    clen = strlen(checkline);
@@ -3379,6 +3389,12 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
       while (fgets(line, BUFSIZ, fpd)) {
          if (!strncmp(line, checkline, clen)) {
             FILE *fb = fopen(bundlename, "r");
+            if (!fb) {
+               Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
+                     bundlename);
+               fclose(fb);
+               return;
+            }
             while (fgets(line, BUFSIZ, fb))
                fprintf(tmpdict, "%s", line);
             fclose(fb);
@@ -3701,6 +3717,12 @@ int main(int argc, char **argv)
    if (ifl) {
       tmpnam(tname);
       fp = fopen(tname, "w");
+      if (!fp) {
+         Error(0, "rootcint: failed to open %s in main\n",
+               tname);
+         fclose(fp);
+         return 1;
+      }
    } else
       fp = stdout;
 
