@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.20 2003/01/14 15:44:56 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.21 2003/03/04 17:04:52 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -92,6 +92,7 @@ EMsgBoxIcon mb_icon[4] = { kMBIconStop, kMBIconQuestion,
 const char *filetypes[] = { "All files",     "*",
                             "ROOT files",    "*.root",
                             "ROOT macros",   "*.C",
+                            "Text files",    "*.[tT][xX][tT]",
                             0,               0 };
 
 struct shutterData_t {
