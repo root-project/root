@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.44 2004/10/15 15:30:50 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.45 2004/10/18 15:28:24 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -486,6 +486,9 @@ Int_t TGeoPainter::CountVisibleNodes()
 //______________________________________________________________________________
 void TGeoPainter::Draw(Option_t *option)
 {
+   // Draw the current top volume in the pad or 3-d viewer
+   // if option contains the string "ogl" or "x3d" the volume is drawn
+   // with the GL or X3D viewer instead of the pad.
    fLastVolume = 0;
    CountVisibleNodes();         
    TString opt = option;
@@ -523,6 +526,9 @@ void TGeoPainter::Draw(Option_t *option)
    if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
    fLastVolume = fGeom->GetTopVolume();
+   
+   //if options "ogl" or "x3d" are specified, invoke the viewer
+   if (opt.Contains("ogl") || opt.Contains("x3d")) gPad->x3d(option);
 }
 
 //______________________________________________________________________________

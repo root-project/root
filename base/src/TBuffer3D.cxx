@@ -110,6 +110,7 @@ void TBuffer3D::Paint(Option_t *option)
       // Paint this in gPad
       case kPAD:
       default:
+         if (option && strlen(option) > 0) return;
          if (fTransparency > 50) return;  //do not show semi transparent objects
          if ( fType==kMARKER ) {
             view = gPad->GetView();
