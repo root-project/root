@@ -442,17 +442,13 @@ GLIBS         = $(ROOTGLIBS) $(SYSLIBS)
 
 #------------------------------------------------------------------------------
 
-EVENTO        = Event.$(ObjSuf) \
-                EventDict.$(ObjSuf)
-
-EVENTS        = Event.$(SrcSuf) \
-                EventDict.$(SrcSuf)
+EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
+EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)
+EVENTSO       = libEvent.$(DllSuf)
+EVENT         = Event$(ExeSuf)
 
 MAINEVENTO    = MainEvent.$(ObjSuf)
 MAINEVENTS    = MainEvent.$(SrcSuf)
-
-EVENT         = Event$(ExeSuf)
-EVENTSO       = libEvent.$(DllSuf)
 
 HWORLDO       = hworld.$(ObjSuf)
 HWORLDS       = hworld.$(SrcSuf)
@@ -544,12 +540,10 @@ all:            $(PROGRAMS)
 
 $(EVENTSO):     $(EVENTO)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(EVENTSO) \
-		   $(LIBS) -p 0 $(EVENTO)
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $(EVENTSO) \
-		   $(LIBS) -p 0 $(EVENTO)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
@@ -557,14 +551,13 @@ ifeq ($(ARCH),alphacxx)
 		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
 		   -expect_unresolved "*" -g0 -O1 -shared \
 		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
-		   -o libEvent.so Event.o EventDict.o -lcxxstd -lcxx \
-		   -lexc -lots -lc
+		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
-		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $(EVENTO) \
-		   $(OutPutOpt) libEvent.so
+		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
+		   $(OutPutOpt) $@
 else
 ifeq ($(PLATFORM),win32)
 		bindexplib $* $^ > $*.def
@@ -573,7 +566,7 @@ ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $*.exp $(LIBS) \
 		   $(OutPutOpt)$@
 else
-		$(LD) $(SOFLAGS) $(LDFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTSO)
+		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@
 endif
 endif
 endif
@@ -645,23 +638,24 @@ endif
 Hello:          $(HELLOSO)
 $(HELLOSO):     $(HELLOO)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(HELLOSO) $(LIBS) -p 0 $(HELLOO)
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $(HELLOSO) $(LIBS) -p 0 $(HELLOO)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
 # a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved "*" \
- -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
- -o Hello.so Hello.o HelloDict.o -lcxxstd -lcxx -lexc -lots -lc
+		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
+		   -expect_unresolved "*" -g0 -O1 -shared \
+		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
+		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) Hello.so
+		   $(OutPutOpt) $@
 else
 ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
@@ -676,23 +670,24 @@ endif
 Aclock:         $(ACLOCKSO)
 $(ACLOCKSO):    $(ACLOCKO)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(ACLOCKSO) $(LIBS) -p 0 $(ACLOCKO)
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $(ACLOCKSO) $(LIBS) -p 0 $(ACLOCKO)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
 # a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved "*" \
- -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
- -o Aclock.so Aclock.o AclockDict.o -lcxxstd -lcxx -lexc -lots -lc
+		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
+		   -expect_unresolved "*" -g0 -O1 -shared \
+		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
+		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) Aclock.so
+		   $(OutPutOpt) $@
 else
 ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
@@ -707,23 +702,24 @@ endif
 Tetris:         $(TETRISSO)
 $(TETRISSO):    $(TETRISO)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(TETRISSO) $(GLIBS) -p 0 $(TETRISO)
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(GLIBS) -p 0 $^
 else
 ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $(TETRISSO) $(GLIBS) -p 0 $(TETRISO)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(GLIBS) -p 0 $^
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
 # a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved "*" \
- -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
- -o Tetris.so Tetris.o TetrisDict.o -lcxxstd -lcxx -lexc -lots -lc
+		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
+		   -expect_unresolved "*" -g0 -O1 -shared \
+		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
+		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ $(OutPutOpt) $@
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-	 	   $(OutPutOpt) Tetris.so
+	 	   $(OutPutOpt) $@
 else
 ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(GLIBS) $(OutPutOpt)$@
@@ -737,23 +733,24 @@ endif
 
 $(TBENCHSO):    $(TBENCHO)
 ifeq ($(ARCH),aix)
-		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $(TBENCHSO) $(LIBS) -p 0 $(TBENCHO)
+		/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),aix5)
-		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $(TBENCHSO) $(LIBS) -p 0 $(TBENCHO)
+		/usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
 ifeq ($(ARCH),alphacxx)
 # due to a bug in cxx/ld under osf3.xx, one cannot use cxx to generate
 # a shared library. One must use ld instead.
-		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx -expect_unresolved "*" \
- -g0 -O1 -shared /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
- -o TBench.so TBench.o TBenchDict.o -lcxxstd -lcxx -lexc -lots -lc
+		ld -L/usr/lib/cmplrs/cxx -rpath /usr/lib/cmplrs/cxx \
+		   -expect_unresolved "*" -g0 -O1 -shared \
+		   /usr/lib/cmplrs/cc/crt0.o /usr/lib/cmplrs/cxx/_main.o \
+		   -o $@ $^ -lcxxstd -lcxx -lexc -lots -lc
 else
 ifeq ($(ARCH),macosx)
 # We need to make both the .dylib and the .so
 		$(LD) $(SOFLAGS) $^ -lstdc++ $(OutPutOpt) $@
 		$(LD) -bundle -undefined suppress -Wl,-x $(LDFLAGS) $^ \
-		   $(OutPutOpt) TBench.so
+		   $(OutPutOpt) $@
 else
 ifeq ($(PLATFORM),win32)
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ $(LIBS) $(OutPutOpt)$@
