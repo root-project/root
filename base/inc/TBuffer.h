@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.23 2002/09/30 09:18:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.24 2002/11/01 19:12:09 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -234,7 +234,7 @@ public:
 #if !defined(R__CONCRETE_INPUT_OPERATOR)
 #ifndef __CINT__
    
-#if defined(R__SOLARIS) && defined(R__GCC)
+#if defined(R__SOLARIS) && defined(R__GNU)
 #include <typeinfo>
 #endif
    
