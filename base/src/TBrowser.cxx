@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.1.1.1 2000/05/16 17:00:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.2 2000/09/08 07:40:59 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -224,8 +224,9 @@ void TBrowser::Refresh()
 //______________________________________________________________________________
 void TBrowser::SetSelected(TObject *clickedObject)
 {
- // assign the last selected object
- fLastSelectedObject = clickedObject;
+   // Assign the last selected object
+
+   fLastSelectedObject = clickedObject;
 }
 
 //////////////////////////////////////////////////////////////////////////
