@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.11 2003/04/03 16:55:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.12 2003/04/11 11:48:11 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -85,11 +85,50 @@ TMethodCall::TMethodCall(const char *function, const char *params)
 }
 
 //______________________________________________________________________________
+TMethodCall::TMethodCall(const TMethodCall &orig) {
+
+   fFunc     = orig.fFunc ? new G__CallFunc(*orig.fFunc) : 0;
+   fClass    = orig.fClass;
+   fMethod   = orig.fMethod;
+   fParams   = orig.fParams;
+   fProto    = orig.fProto;
+   fDtorOnly = orig.fDtorOnly;
+   fRetType  = orig.fRetType;
+
+   fMetPtr = 0;   
+}
+
+//______________________________________________________________________________
+TMethodCall &TMethodCall::operator=(const TMethodCall &orig) 
+{
+
+   fFunc     = orig.fFunc ? new G__CallFunc(*orig.fFunc) : 0;
+   fClass    = orig.fClass;
+   fMethod   = orig.fMethod;
+   fParams   = orig.fParams;
+   fProto    = orig.fProto;
+   fDtorOnly = orig.fDtorOnly;
+   fRetType  = orig.fRetType;
+
+   fMetPtr = 0;
+
+   return *this;
+}
+
+//______________________________________________________________________________
 TMethodCall::~TMethodCall()
 {
    // TMethodCall dtor.
 
    delete fFunc;
+   delete fMetPtr;
+}
+
+//______________________________________________________________________________
+TObject *TMethodCall::Clone(const char *newname) const
+{
+   TObject *newobj = new TMethodCall(*this);
+   return newobj;
 }
 
 //______________________________________________________________________________
@@ -189,19 +228,26 @@ TFunction *TMethodCall::GetMethod()
    // all overriding and overloading into account (call TClass::GetMethod()).
    // Since finding the method is expensive the result is cached.
 
+   // Since the object in the list of global function are often deleted
+   // we need to copy them.
+
    if (!fMetPtr) {
       if (fClass) {
          if (fProto == "")
             fMetPtr = fClass->GetMethod(fMethod.Data(), fParams.Data());
          else
             fMetPtr = fClass->GetMethodWithPrototype(fMethod.Data(), fProto.Data());
+         TMethod *met = dynamic_cast<TMethod*>(fMetPtr);
+         if (met) fMetPtr = new TMethod(*met);
       } else {
          if (fProto == "")
             fMetPtr = gROOT->GetGlobalFunction(fMethod.Data(), fParams.Data(), kTRUE);
          else
             fMetPtr = gROOT->GetGlobalFunctionWithPrototype(fMethod.Data(), fProto.Data(), kTRUE);
+         if (fMetPtr) fMetPtr = new TFunction(*fMetPtr);
       }
    }
+  
    return fMetPtr;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.6 2002/01/10 07:19:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.7 2003/04/03 16:55:12 rdm Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -62,12 +62,15 @@ public:
    TMethodCall();
    TMethodCall(TClass *cl, const char *method, const char *params);
    TMethodCall(const char *function, const char *params);
+   TMethodCall(const TMethodCall&);
+   TMethodCall& operator=(const TMethodCall&);
    ~TMethodCall();
 
    void           Init(TClass *cl, const char *method, const char *params);
    void           Init(const char *function, const char *params);
    void           InitWithPrototype(TClass *cl, const char *method, const char *proto);
    void           InitWithPrototype(const char *function, const char *proto);
+   TObject       *Clone(const char *newname="") const;
    void           CallDtorOnly(Bool_t set = kTRUE) { fDtorOnly = set; }
 
    TFunction     *GetMethod();

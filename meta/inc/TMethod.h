@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethod.h,v 1.2 2001/02/09 10:24:46 brun Exp $
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -50,7 +50,10 @@ private:
 
 public:
                            TMethod(G__MethodInfo *info = 0, TClass *cl = 0);
+                           TMethod(const TMethod&);
+   TMethod&                operator=(const TMethod&);
    virtual                ~TMethod() { }
+   virtual TObject        *Clone(const char *newname="") const;
    TClass                 *GetClass() const { return fClass; }
    EMenuItemKind           IsMenuItem() const { return fMenuItem; }
    virtual const char     *GetCommentString();

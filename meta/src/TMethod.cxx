@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.2 2001/10/29 16:23:54 rdm Exp $
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -60,6 +60,29 @@ TMethod::TMethod(G__MethodInfo *info, TClass *cl) : TFunction(info)
    }
 }
 
+//______________________________________________________________________________
+TMethod::TMethod(const TMethod& orig) : TFunction(orig)
+{
+   fClass = orig.fClass;
+   fMenuItem = orig.fMenuItem;
+}
+
+//______________________________________________________________________________
+TMethod& TMethod::operator=(const TMethod& orig) 
+{
+   TFunction::operator=(orig);
+   fClass = orig.fClass;
+   fMenuItem = orig.fMenuItem;
+   return *this;
+}
+
+//______________________________________________________________________________
+TObject *TMethod::Clone(const char *newname) const {
+   
+   TNamed *newobj = new TMethod(*this);
+   if (newname && strlen(newname)) newobj->SetName(newname);
+   return newobj;
+}
 
 //______________________________________________________________________________
 const char *TMethod::GetCommentString()
