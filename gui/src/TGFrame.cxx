@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.92 2004/10/07 08:25:09 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.93 2004/10/07 09:56:53 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -80,6 +80,7 @@
 #include "TGMsgBox.h"
 #include "TSystem.h"
 #include "TVirtualDragManager.h"
+#include "TVirtualGuiBld.h"
 
 
 Bool_t      TGFrame::fgInit = kFALSE;
@@ -422,7 +423,8 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
             fgDbw = event->fWindow;
 
             if (dbl_clk) {
-               if ((event->fState & kKeyControlMask) && !IsEditDisabled()) {
+               if ((event->fState == (kKeyControlMask | kButton1Mask)) && 
+                    !IsEditDisabled() && gGuiBuilder) {
                   StartGuiBuilding(!IsEditable());
                   return kTRUE;
                }

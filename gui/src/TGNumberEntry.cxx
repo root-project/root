@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.7 2004/04/22 16:28:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGNumberEntry.cxx,v 1.8 2004/09/06 08:18:47 brun Exp $
 // Author: Daniel Sigg   03/09/2001
 
 /*************************************************************************
@@ -1780,7 +1780,7 @@ public:
    TGRepeatFireButton(const TGWindow *p, const TGPicture *pic,
                       Int_t id, Bool_t logstep)
     : TGPictureButton(p, pic, id), fTimer(0), fIgnoreNextFire(0),
-       fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep) { }
+       fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep) { fEditDisabled = kTRUE; }
    virtual ~TGRepeatFireButton() { delete fTimer; }
 
    virtual Bool_t HandleButton(Event_t *event);
@@ -1903,9 +1903,8 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
 TGNumberEntry::~TGNumberEntry()
 {
    // Destructs a numeric entry widget
-   delete fButtonUp;
-   delete fButtonDown;
-   delete fNumericEntry;
+
+   Cleanup();
 }
 
 //______________________________________________________________________________
