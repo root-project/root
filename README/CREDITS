@@ -253,6 +253,10 @@ N: Andreas Peters
 E: Andreas.Joachim.Peters@cern.ch
 D: TGrid extension and TAlien plugin
 
+N: Filip Pizlo 
+E: pizlo@purdue.edu
+D: TBits extension and test program testbits.cxx
+
 N: Art Poskanzer
 E: AMPoskanzer@lbl.gov
 D: contributed to styles Bold, Video, Pub
