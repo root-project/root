@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.209 2004/11/17 08:46:43 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.210 2004/11/17 17:56:53 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -543,7 +543,6 @@ namespace {
       UInt_t newlen = strlen(newClass->GetName());
       UInt_t oldlen = strlen(oldClass->GetName());
 
-      Bool_t done = kFALSE;
       for(UInt_t i = 0, done = false; (i<oldlen) && !done ; ++i) {
          switch ( oldClass->GetName()[i] ) {
             case ':' : return kFALSE; /* old class is in some scope */
