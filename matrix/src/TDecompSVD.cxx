@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.18 2004/10/16 18:09:16 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TDecompSVD.cxx,v 1.19 2004/11/28 18:54:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Dec 2003
 
 /*************************************************************************
@@ -822,9 +822,8 @@ void TDecompSVD::Invert(TMatrixD &inv)
   const Int_t rowLwb = GetRowLwb();
   const Int_t colLwb = GetColLwb();
   const Int_t nRows  = GetNrows();
-  const Int_t nCols  = GetNcols();
 
-  if (inv.GetNrows()  != nRows  || inv.GetNcols()  != nCols ||
+  if (inv.GetNrows()  != nRows  || inv.GetNcols()  != nRows ||
       inv.GetRowLwb() != rowLwb || inv.GetColLwb() != colLwb) {
     Error("Invert(TMatrixD &","Input matrix has wrong shape");
     inv.Invalidate();
