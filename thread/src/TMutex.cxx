@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.2 2002/02/14 16:12:52 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.3 2004/12/10 12:13:33 rdm Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -21,6 +21,7 @@
 
 #include "TMutex.h"
 #include "TThreadFactory.h"
+#include <errno.h>
 
 
 ClassImp(TMutex)
@@ -42,19 +43,22 @@ TMutex::TMutex(Bool_t recursive)
 //______________________________________________________________________________
 Int_t TMutex::Lock()
 {
-   // Lock the mutex. Returns 0 when no error, 13 when mutex was already locked
-   // by this thread.
+   // Lock the mutex. Returns 0 when no error, EDEADLK when mutex was already
+   // locked by this thread and this mutex is not reentrant.
 
    Long_t id = TThread::SelfId();
    if (id == fId) {
+      // we hold the mutex
       if (fRef < 0) {
-         Error("Lock", "mutex is already locked by this thread %d\n", fId);
-         return 13;
+         Error("Lock", "mutex is already locked by this thread %ld", fId);
+         return EDEADLK;
       } else {
          fRef++;
          return 0;
       }
    }
+
+   // we do not hold the mutex yet
    Int_t iret = fMutexImp->Lock();
    fId = id;
    return iret;
@@ -63,19 +67,22 @@ Int_t TMutex::Lock()
 //______________________________________________________________________________
 Int_t TMutex::TryLock()
 {
-   // Try to lock mutex. Returns 0 when no error, 13 when mutex was already
-   // locked by this thread.
+   // Try to lock mutex. Returns 0 when no error, EDEADLK when mutex was
+   // already locked by this thread and this mutex is not reentrant.
 
    Long_t id = TThread::SelfId();
    if (id == fId) {
+      // we hold the mutex
       if (fRef < 0) {
-         Error("TryLock", "mutex is already locked by this thread %d\n", fId);
-         return 13;
+         Error("TryLock", "mutex is already locked by this thread %ld", fId);
+         return EDEADLK;
       } else {
          fRef++;
          return 0;
       }
    }
+
+   // we do not hold the mutex yet
    Int_t iret = fMutexImp->TryLock();
    if (iret == 0) fId = id;
    return iret;
@@ -84,15 +91,23 @@ Int_t TMutex::TryLock()
 //______________________________________________________________________________
 Int_t TMutex::UnLock()
 {
-   // Unlock the mutex. Returns 0 when no error, 13 when mutex was already
-   // locked by this thread.
+   // Unlock the mutex. Returns 0 when no error, EPERM when mutex was already
+   // unlocked by this thread.
 
-   Long_t id = TThread::SelfId();
-   if (id != fId) {
-      Error("UnLock", "thread %d tries to unlock mutex locked by thread %d\n", id, fId);
-      return 13;
+   Long_t id = fId;
+   Long_t myid = TThread::SelfId();
+
+   if (id != myid) {
+      // we do not own the mutex, figure out what happened
+      if (id == -1) {
+         Error("UnLock", "thread %ld tries to unlock unlocked mutex", myid);
+      } else {
+         Error("UnLock", "thread %ld tries to unlock mutex locked by thread %ld", myid, id);
+      }
+      return EPERM;
    }
 
+   // we own the mutex
    if (fRef > 0) {
       fRef--;
       return 0;

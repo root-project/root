@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.h,v 1.4 2004/12/01 15:46:00 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TMutex.h,v 1.5 2004/12/10 12:13:33 rdm Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -48,9 +48,9 @@ public:
    TMutex(Bool_t recursive = kFALSE);
    virtual ~TMutex() { delete fMutexImp; }
 
-   Int_t  Lock() ;
-   Int_t  TryLock() ;
-   Int_t  UnLock() ;
+   Int_t  Lock();
+   Int_t  TryLock();
+   Int_t  UnLock();
    Int_t  CleanUp();
 
    ClassDef(TMutex,0)  // Mutex lock class

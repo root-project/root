@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.24 2004/11/03 22:54:15 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.25 2004/12/10 12:13:33 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -183,7 +183,6 @@ void TThread::Constructor()
    if (fgMain) fgMain->fPrev = this;
    fNext = fgMain; fPrev=0; fgMain = this;
 
-
    UnLock();
    PutComm();
 
@@ -346,8 +345,7 @@ Long_t TThread::Join(Long_t jid, void **ret)
 //______________________________________________________________________________
 Long_t TThread::SelfId()
 {
-   // Static method returning the id for the current thread
-   // or -1 on error.
+   // Static method returning the id for the current thread.
 
    if (!fgThreadImp) Init();
    return fgThreadImp->SelfId();
@@ -364,8 +362,8 @@ Int_t TThread::Run(void *arg)
    PutComm("Run: MainMutex locked");
    if (fFcnVoid) fname = G__p2f2funcname((void*)fFcnVoid);
    if (fFcnRetn) fname = G__p2f2funcname((void*)fFcnRetn);
-   if (!fNamed)
-      if (fname) SetName(fname);
+   if (!fNamed && fname)
+      SetName(fname);
 
    int iret = fgThreadImp->Run(this);
 

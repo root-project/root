@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TCondition.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TCondition.cxx,v 1.2 2004/12/10 12:13:33 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -93,6 +93,7 @@ Int_t TCondition::TimedWait(ULong_t secs, ULong_t nanoSec)
    Int_t iret;
    if (fPrivateMutex) fMutex->Lock();
    iret = fConditionImp->TimedWait(secs, nanoSec);
+   fMutex->fId = TThread::SelfId(); // fix the owner because lowlevel relock
    if (fPrivateMutex) fMutex->UnLock();
    return iret;
 }
