@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttPad.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TAttPad.h,v 1.2 2000/06/13 12:35:10 brun Exp $
 // Author: Rene Brun   04/01/95
 
 /*************************************************************************
@@ -91,7 +91,7 @@ public:
         void             SetFrameBorderSize(Width_t size=1) {fFrameBorderSize = size;}
         void             SetFrameBorderMode(Int_t mode=1) {fFrameBorderMode = mode;}
 
-        ClassDef(TAttPad,2)  //Pad attributes
+        ClassDef(TAttPad,3)  //Pad attributes
 };
 
 #endif
