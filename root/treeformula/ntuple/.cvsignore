@@ -1,1 +1,1 @@
- *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
+*.root *.so *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
