@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.71 2001/10/25 06:20:29 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.72 2001/11/20 09:23:07 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1005,7 +1005,7 @@ TTreeFormula::~TTreeFormula()
 //*-*-*-*-*-*-*-*-*-*-*Tree Formula default destructor*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =================================
 
-   fNames.Delete();
+   fLeafNames.Delete();
    fDataMembers.Delete();
    if (fLookupType) delete [] fLookupType;
    for (int j=0; j<fNcodes; j++) {
@@ -1557,7 +1557,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
       TTree *tleaf = leaf->GetBranch()->GetTree();
       fCodes[code] = tleaf->GetListOfLeaves()->IndexOf(leaf);
       TNamed *named = new TNamed(leaf->GetName(),leaf->GetBranch()->GetName());
-      fNames.AddAtAndExpand(named,code);
+      fLeafNames.AddAtAndExpand(named,code);
       fLeaves.AddAtAndExpand(leaf,code);
 
       // Analyze the content of 'right'
@@ -3027,10 +3027,10 @@ void TTreeFormula::UpdateFormulaLeaves()
    // currently compile HAS TO be called from the constructor!
 
    char names[512];
-   Int_t nleaves = fNames.GetEntriesFast();
+   Int_t nleaves = fLeafNames.GetEntriesFast();
    for (Int_t i=0;i<nleaves;i++) {
       if (!fTree) continue;
-      sprintf(names,"%s/%s",fNames[i]->GetTitle(),fNames[i]->GetName());
+      sprintf(names,"%s/%s",fLeafNames[i]->GetTitle(),fLeafNames[i]->GetName());
       TLeaf *leaf = fTree->GetLeaf(names);
       fLeaves[i] = leaf;
    }

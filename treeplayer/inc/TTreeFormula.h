@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.16 2001/06/06 07:21:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.h,v 1.17 2001/10/06 07:30:15 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -65,7 +65,7 @@ protected:
    TObjArray   fLeaves;           //!  List of leaf used in this formula.
    TObjArray   fDataMembers;      //!  List of leaf data members
    TObjArray   fMethods;          //!  List of leaf method calls
-   TObjArray   fNames;            //  List of TNamed describing leaves
+   TObjArray   fLeafNames;        //   List of TNamed describing leaves
    
    Int_t         fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
    Int_t         fFixedSizes[kMAXCODES][kMAXFORMDIM];  //Physical sizes of lower dimensions for each leaf
