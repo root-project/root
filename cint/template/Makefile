@@ -4,7 +4,7 @@ SUBDIRS = separateDict separateDictNamespace
 
 include ../../root/Rules.mk
 
-test: operator1 simpleSeparateDict
+test: operator1 simpleSeparateDict forwardDecl
 	true;
 
 operator1:
@@ -21,3 +21,14 @@ endif
 simpleSeparateDict:
 	rootcint -f masterDict.C -c master.h masterLinkDef.h
 	rootcint -f slaveDict.C -c slave.h slaveLinkDef.h
+
+forwardDecl: forwardDict.C
+
+forwardDict.C: forward.C 
+	rootcint -f forwardDict.C -c forward.C linkdef.h
+
+
+constructorDict.C: constructor.hh 
+	$(CMDECHO) rootcint -f constructorDict.C -c constructor.hh linkdef.h
+
+constructorTest: constructorDict.o
