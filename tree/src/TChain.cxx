@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.32 2001/12/10 16:18:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.33 2001/12/14 13:29:44 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -164,9 +164,9 @@ Int_t TChain::Add(const char *name, Int_t nentries)
 // Name may use the wildcarding notation, eg "xxx*.root" means all files
 // starting with xxx in the current file system directory.
 //
-// If nentries < 0, the file is connected and the tree header read in memory
+// If nentries <= 0, the file is connected and the tree header read in memory
 // to get the number of entries.
-// If (nentries >= 0, the file is not connected, nentries is assumed to be
+// If (nentries > 0, the file is not connected, nentries is assumed to be
 // the number of entries in the file. In this case, no check is made that
 // the file exists and the Tree existing in the file. This second mode
 // is interesting in case the number of entries in the file is already stored
@@ -226,9 +226,9 @@ Int_t TChain::AddFile(const char *name, Int_t nentries)
 {
 //       Add a new file to this chain.
 //
-//    if nentries < 0, the file is connected and the tree header read in memory
+//    if nentries <= 0, the file is connected and the tree header read in memory
 //    to get the number of entries.
-//    if (nentries >= 0, the file is not connected, nentries is assumed to be
+//    if (nentries > 0, the file is not connected, nentries is assumed to be
 //    the number of entries in the file. In this case, no check is made that
 //    the file exists and the Tree existing in the file. This second mode
 //    is interesting in case the number of entries in the file is already stored
@@ -521,7 +521,7 @@ Int_t TChain::GetMaxMergeSize()
 {
 // static function
 // return maximum size of a merged file
-   
+
    return fgMaxMergeSize;
 }
 
@@ -531,7 +531,7 @@ Double_t TChain::GetMaximum(const char *columname)
 //*-*-*-*-*-*-*-*-*Return maximum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
 
-   Double_t theMax = -FLT_MAX;  //in float.h 
+   Double_t theMax = -FLT_MAX;  //in float.h
    for (Int_t file=0;file<fNtrees;file++) {
       Int_t first = fTreeOffset[file];
       LoadTree(first);
@@ -778,7 +778,7 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
       }
       nextb.Reset();
    }
-   
+
    char *firstname = new char[1000];
    firstname[0] = 0;
    strcpy(firstname,gFile->GetName());
@@ -817,7 +817,7 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
          }
       }
       hnew->Fill();
-      
+
       //check that output file is still below the maximum size.
       //If above, close the current file and continue on a new file.
       if (gFile->GetBytesWritten() > (Double_t)fgMaxMergeSize) {
@@ -845,11 +845,11 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
          while ((branch = (TBranch*)nextb())) {
             branch->SetFile(file);
          }
-         delete [] fname; 
+         delete [] fname;
       }
    }
 
-// Write new tree header 
+// Write new tree header
    hnew->Write();
    delete [] firstname;
    if (nFiles) {
@@ -897,7 +897,7 @@ Int_t TChain::Process(TSelector *selector,Option_t *option,  Int_t nentries, Int
 void TChain::Reset(Option_t *)
 {
 // Resets the definition of this chain
-   
+
    delete fFile;
    fNtrees         = 0;
    fTreeNumber     = -1;
@@ -910,7 +910,7 @@ void TChain::Reset(Option_t *)
    fStatus->Add(element);
    fDirectory = 0;
    fNotify    = 0;
-   
+
    TTree::Reset();
 }
 
@@ -970,7 +970,7 @@ void TChain::SetMaxMergeSize(Int_t maxsize)
 // the function closes the current merged file and starts writing into
 // a new file with a name of the style "merged_1.root" if the original
 // requested file name was "merged.root"
-   
+
    fgMaxMergeSize = maxsize;
 }
 
