@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.29 2004/08/03 16:01:18 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.30 2004/08/09 15:23:40 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -59,6 +59,7 @@ ClassImp(TGeoPcon)
 
 //_____________________________________________________________________________
 TGeoPcon::TGeoPcon()
+         :TGeoBBox(0, 0, 0)
 {
 // dummy ctor
    SetShapeBit(TGeoShape::kGeoPcon);
@@ -99,7 +100,10 @@ TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
 
 //_____________________________________________________________________________
 TGeoPcon::TGeoPcon(Double_t *param)
-         :TGeoBBox(0, 0, 0)
+         :TGeoBBox(0, 0, 0),
+         fRmin(0),
+         fRmax(0),
+         fZ(0)
 {
 // Default constructor in GEANT3 style
 // param[0] = phi1
