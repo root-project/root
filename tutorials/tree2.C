@@ -194,7 +194,7 @@ void tree2r()
    if (gROOT->IsBatch()) return;
    
    // invoke the x3d viewer
-   gPad->x3d();
+   gPad->GetViewer3D("x3d");
 }   
 
 void tree2() {

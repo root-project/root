@@ -84,7 +84,7 @@
    //  Draw the geometry using the OpenGL viewver.
    //  Note that this viewver may also be invoked from the "View" menu in
    //  the canvas tool bar
-   c1->x3d("ogl");
+   c1->GetViewer3D("ogl");
    //
    // once in the viewer, select the Help button
    // For example typing r will show a solid model of this geometry.
