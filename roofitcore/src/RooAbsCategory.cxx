@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.11 2001/04/14 00:43:18 davidk Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.12 2001/04/18 20:38:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -230,28 +230,25 @@ void RooAbsCategory::printToStream(ostream& os, PrintOption opt, TString indent)
   // Print info about this object to the specified stream. In addition to the info
   // from RooAbsArg::printToStream() we add:
   //
-  //  Standard : label and index
-  //     Shape : defined types
+  //     Shape : label, index, defined types
 
   RooAbsArg::printToStream(os,opt,indent);
-  if(opt >= Standard) {
+  if(opt >= Shape) {
     os << indent << "--- RooAbsCategory ---" << endl;
     if (_types.GetEntries()==0) {
       os << indent << "  ** No values defined **" << endl;
       return;
     }
     os << indent << "  Value is \"" << getLabel() << "\" (" << getIndex() << ")" << endl;
-    if(opt >= Shape) {
-      os << indent << "  Has the following possible values:" << endl;
-      indent.Append("    ");
-      opt= lessVerbose(opt);
-      RooCatType *type;
-      Int_t n= _types.GetEntries();
-      for (int i=0 ; i < n ; i++) {
-	type= (RooCatType*)_types.At(i);
-	os << indent;
-	type->printToStream(os,opt,indent);
-      }
+    os << indent << "  Has the following possible values:" << endl;
+    indent.Append("    ");
+    opt= lessVerbose(opt);
+    RooCatType *type;
+    Int_t n= _types.GetEntries();
+    for (int i=0 ; i < n ; i++) {
+      type= (RooCatType*)_types.At(i);
+      os << indent;
+      type->printToStream(os,opt,indent);
     }
   }
 }

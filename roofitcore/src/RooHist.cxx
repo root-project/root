@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.2 2001/04/21 01:13:11 david Exp $
+ *    File: $Id: RooHist.cc,v 1.3 2001/04/22 18:15:32 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -15,6 +15,8 @@
 // TGraphAsymmErrors class. Error bars are calculated using either Poisson
 // or Binomial statistics.
 
+#include "BaBar/BaBar.hh"
+
 #include "RooFitCore/RooHist.hh"
 //#include "RooFitTools/RooMath.hh"
 
@@ -25,7 +27,7 @@
 ClassImp(RooHist)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.2 2001/04/21 01:13:11 david Exp $";
+"$Id: RooHist.cc,v 1.3 2001/04/22 18:15:32 david Exp $";
 
 RooHist::RooHist(Double_t nSigma) :
   TGraphAsymmErrors(), _nSigma(nSigma)
@@ -65,7 +67,6 @@ RooHist::RooHist(const TH1 &data, Double_t nSigma) :
 void RooHist::initialize() {
   // Perform common initialization for all constructors.
 
-  _ymax= 0;
   SetMarkerStyle(8);
 }
 
@@ -93,8 +94,9 @@ void RooHist::addBin(Axis_t binCenter, Int_t n) {
 //    Double_t yp= RooMath::PoissonError(n,RooMath::PositiveError,_nSigma);
   Double_t ym= sqrt(n), yp= ym;
   SetPoint(index,binCenter,n);
-  SetPointError(index,0,0,ym,+yp);
-  if(n+yp > _ymax) _ymax= n+yp;
+  SetPointError(index,0,0,ym,yp);
+  updateYAxisLimits(n+yp);
+  updateYAxisLimits(n-ym);
 }
 
 void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2) {
@@ -113,12 +115,13 @@ void RooHist::printToStream(ostream& os, PrintOption opt, TString indent) const 
   //    Verbose: print our bin contents and errors
 
   oneLinePrint(os,*this);
+  RooPlotable::printToStream(os,opt,indent);
   if(opt >= Standard) {
+    os << indent << "--- RooHist ---" << endl;
     Int_t n= GetN();
     os << indent << "  Contains " << n << " bins" << endl;
     if(opt >= Shape) {
-      os << indent << "  Errors calculated at" << _nSigma << "-sigma CL" << endl
-	 << indent << "  Maximum y-axis extent = " << _ymax << endl;
+      os << indent << "  Errors calculated at" << _nSigma << "-sigma CL" << endl;
       if(opt >= Verbose) {
 	os << indent << "  Bin Contents:" << endl;
 	for(Int_t i= 0; i < n; i++) {

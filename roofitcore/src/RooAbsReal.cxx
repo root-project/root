@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.8 2001/04/18 20:38:02 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.9 2001/04/21 01:13:10 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -11,11 +11,17 @@
  * Copyright (C) 2001 University of California
  *****************************************************************************/
 
-#include <iostream.h>
-#include "TObjString.h"
-#include "TH1.h"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooPlot.hh"
+#include "RooFitCore/RooCurve.hh"
+#include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooRealFunc1D.hh"
+
+#include <iostream.h>
+
+#include "TObjString.h"
+#include "TH1.h"
 
 ClassImp(RooAbsReal) 
 ;
@@ -109,25 +115,22 @@ void RooAbsReal::printToStream(ostream& os, PrintOption opt, TString indent) con
   // Print info about this object to the specified stream. In addition to the info
   // from RooAbsArg::printToStream() we add:
   //
-  //  Standard : value and units
-  //     Shape : range
+  //     Shape : value, units, plot range
   //   Verbose : default binning and print label
 
   RooAbsArg::printToStream(os,opt,indent);
-  if(opt >= Standard) {
+  if(opt >= Shape) {
     os << indent << "--- RooAbsReal ---" << endl;
     TString unit(_unit);
     if(!unit.IsNull()) unit.Prepend(' ');
     os << indent << "  Value = " << getVal() << unit << endl;
-    if(opt >= Shape) {
-      os << indent << "  Plot range is [ " << getPlotMin() << unit << " , "
-	 << getPlotMax() << unit << " ]" << endl;
-      if(opt >= Verbose) {
-	os << indent << "  Plot bins = " << getPlotBins();
-	Double_t range= getPlotMax()-getPlotMin();
-	if(range > 0) os << " (" << range/getPlotBins() << unit << "/bin)";
-	os << endl << indent << "  Plot label is \"" << getPlotLabel() << "\"" << endl;
-      }
+    os << indent << "  Plot range is [ " << getPlotMin() << unit << " , "
+       << getPlotMax() << unit << " ]" << endl;
+    if(opt >= Verbose) {
+      os << indent << "  Plot bins = " << getPlotBins();
+      Double_t range= getPlotMax()-getPlotMin();
+      if(range > 0) os << " (" << range/getPlotBins() << unit << "/bin)";
+      os << endl << indent << "  Plot label is \"" << getPlotLabel() << "\"" << endl;
     }
   }
 }
@@ -209,7 +212,7 @@ TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
 
   TString histName(label);
   if(!histName.IsNull()) histName.Append("_");
-  histName.Append(fName);
+  histName.Append(GetName());
 
   // use the default binning, if no override is specified
   if(bins <= 0) bins= getPlotBins();
@@ -242,4 +245,56 @@ TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
   return histogram;
 }
 
+RooPlot *RooAbsReal::plot(const RooRealVar& var, Option_t* drawOptions) const {
+  // Create an empty frame for the specified variable and add to it a curve
+  // calculated for the specified variable.
 
+  return plot(new RooPlot(var), drawOptions);
+}
+
+RooPlot *RooAbsReal::plot(RooPlot* frame, Option_t* drawOptions) const {
+  // check that we are passed a valid plot frame to use
+  if(0 == frame) {
+    cout << ClassName() << "::" << GetName() << ":plot: frame is null" << endl;
+    return 0;
+  }
+  // check that this frame knows what variable to plot
+  RooAbsReal *var= frame->getPlotVar();
+  if(0 == var) {
+    cout << ClassName() << "::" << GetName()
+	 << ":plot: frame does not specify a plot variable" << endl;
+    return 0;
+  }
+  // check that the plot variable is not derived
+  RooRealVar* realVar= dynamic_cast<RooRealVar*>(var);
+  if(0 == realVar) {
+    cout << ClassName() << "::" << GetName()
+	 << ":plot: cannot plot derived variable \"" << var->GetName() << "\"" << endl;
+    return 0;
+  }
+  // check that we actually depend on the plot variable
+  if(!this->dependsOn(*realVar)) {
+    cout << GetName() << "::plot: variable is not a dependent: " << realVar->GetName() << endl;
+    return 0;
+  }
+  // clone ourselves
+  RooAbsReal *clone= (RooAbsReal*)Clone();
+  // redirect our clone to use the plot variable
+  RooArgSet args("args",*realVar);
+  clone->redirectServers(args);
+
+  // create a temporary curve of our function using our redirected clone
+  RooCurve *curve= new RooCurve(*clone,*realVar);
+
+  // add a copy of the temporary curve to the specified plot frame
+  frame->addObject(curve, drawOptions);
+
+  // cleanup
+  delete clone; // this will remove the plot var's client relationship to this clone
+  delete curve;
+  return frame;
+}
+
+RooRealFunc1D RooAbsReal::operator()(RooRealVar &var) const {
+  return RooRealFunc1D(*this,var);
+}

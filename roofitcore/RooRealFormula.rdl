@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFormula.rdl,v 1.5 2001/04/05 01:49:10 verkerke Exp $
+ *    File: $Id: RooRealFormula.rdl,v 1.6 2001/04/08 00:06:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,6 +15,7 @@
 
 #include "RooFitCore/RooDerivedReal.hh"
 #include "RooFitCore/RooFormula.hh"
+
 class RooArgSet ;
 
 class RooRealFormula : public RooDerivedReal {
@@ -25,7 +26,7 @@ public:
   RooRealFormula(const RooRealFormula& other);
   RooRealFormula(const char* name, const RooRealFormula& other);
   RooRealFormula& operator=(const RooRealFormula& other);
-  virtual TObject* Clone() { return new RooRealFormula(*this); }
+  virtual TObject* Clone(const char *name= "") const { return new RooRealFormula(name,*this); }
   virtual ~RooRealFormula();
 
   // Formula editing interface
@@ -36,7 +37,7 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
+  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
   // Debugging
   void dumpFormula() { _formula.dump() ; }

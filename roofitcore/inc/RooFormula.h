@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.rdl,v 1.10 2001/04/08 00:06:49 verkerke Exp $
+ *    File: $Id: RooFormula.rdl,v 1.11 2001/04/14 00:43:19 davidk Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -17,10 +17,11 @@
 #include "TObjArray.h"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooPrintable.hh"
 
 class RooArgSet ;
 
-class RooFormula : public TFormula {
+class RooFormula : public TFormula, public RooPrintable {
 public:
   // Constructors etc.
   RooFormula() ;
@@ -32,7 +33,7 @@ public:
   virtual ~RooFormula();
 	
   // Dependent management
-  RooArgSet& actualDependents() ;
+  RooArgSet& actualDependents() const;
   Bool_t changeDependents(RooArgSet& newDeps, Bool_t mustReplaceAll=kFALSE) ;
 
   // Function value accessor
@@ -42,6 +43,12 @@ public:
   // Debugging
   void dump() ;
   Bool_t reCompile(const char* newFormula) ;
+
+  // Printing interface (human readable)
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  inline virtual void Print(Option_t *options= 0) const {
+    printToStream(defaultStream(),parseOptions(options));
+  }
 
 protected:
   

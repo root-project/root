@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.5 2001/04/21 01:13:11 david Exp $
+ *    File: $Id: RooPlot.cc,v 1.6 2001/04/22 18:15:32 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -22,6 +22,8 @@
 // and return a pointer to this copy. The caller owns the input object
 // and this class owns the returned object.
 
+#include "BaBar/BaBar.hh"
+
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooHist.hh"
@@ -38,7 +40,7 @@
 ClassImp(RooPlot)
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.5 2001/04/21 01:13:11 david Exp $";
+"$Id: RooPlot.cc,v 1.6 2001/04/22 18:15:32 david Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1("frame","RooPlotFrame",0,xmin,xmax), _plotVarClone(0), _items()
@@ -60,13 +62,15 @@ RooPlot::RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax) :
 
 RooPlot::RooPlot(const RooAbsReal &var) :
   TH1("frame",var.GetTitle(),0,var.getPlotMin(),var.getPlotMax()),
-  _plotVarClone((RooAbsReal*)var.Clone()), _items()
+  _plotVarClone(0), _items()
 {
   // Create an empty frame with its title and x-axis range and label taken
   // from the specified real variable. We keep a clone of the variable
   // so that we do not depend on its lifetime and are decoupled from
   // any later changes to its state.
 
+  _plotVarClone= (RooAbsReal*)var.Clone();
+  
   if(0 != strlen(var.getUnit())) {
     fTitle.Append(" (");
     fTitle.Append(var.getUnit());
@@ -153,7 +157,7 @@ RooHist *RooPlot::addHistogram(const TH1 *data, Option_t *drawOptions) {
   if(0 == graph) return 0;
 
   // adjust our frame's range if necessary
-  Float_t ymax= getPadFactor()*graph->getPlotMax();
+  Float_t ymax= getPadFactor()*graph->getYAxisMax();
   if(GetMaximum() < ymax) SetMaximum(ymax);
 
   // use this histogram's y-axis title if we don't have one already
@@ -191,7 +195,7 @@ void RooPlot::printToStream(ostream& os, PrintOption opt, TString indent) const 
     deeper.Append("    ");
     if(0 != _plotVarClone) {
       os << indent << "  Plotting ";
-      _plotVarClone->printToStream(os,lessVerbose(opt),deeper);
+      _plotVarClone->printToStream(os,OneLine,deeper);
     }
     else {
       os << indent << "  No plot variable specified" << endl;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealFormula.cc,v 1.5 2001/04/05 01:49:10 verkerke Exp $
+ *    File: $Id: RooRealFormula.cc,v 1.6 2001/04/08 00:06:49 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -93,29 +93,15 @@ Bool_t RooRealFormula::redirectServersHook(RooArgSet& newServerList, Bool_t must
   return _formula.changeDependents(newServerList,mustReplaceAll) ;
 }
 
-
-void RooRealFormula::printToStream(ostream& os, PrintOption opt) const
+void RooRealFormula::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
-  switch(opt) {
-  case OneLine:
-  case Standard:
-    // Print current value and definition of formula
-    os << "RooRealFormula: " << GetName() << " = " << GetTitle() << " = " << getVal();
-    if(!_unit.IsNull()) os << ' ' << _unit;
-    printAttribList(os) ;
-    os << endl ;
-    break ;
-
-  case Verbose:
-    RooAbsArg::printToStream(os,opt) ;
-    break ;
-
-  case Shape:
-    cout << "RooRealFormula: " << GetName() << " Shape printing not implemented yet" << endl ;
-    break ;
+  RooDerivedReal::printToStream(os,opt,indent);
+  if(opt >= Verbose) {
+    indent.Append("  ");
+    os << indent;
+    _formula.printToStream(os,opt,indent);
   }
 } 
-
 
 Bool_t RooRealFormula::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 {
@@ -127,7 +113,6 @@ Bool_t RooRealFormula::readFromStream(istream& is, Bool_t compact, Bool_t verbos
     return setFormula(parser.readLine()) ;
   }
 }
-
 
 void RooRealFormula::writeToStream(ostream& os, Bool_t compact) const
 {

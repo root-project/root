@@ -124,7 +124,7 @@ RooFormula::~RooFormula()
 
 
 
-RooArgSet& RooFormula::actualDependents()
+RooArgSet& RooFormula::actualDependents() const
 {
   // Return list of actual dependents
   // (formula might not use all given input parameters)
@@ -132,7 +132,7 @@ RooArgSet& RooFormula::actualDependents()
   set.Clear() ;
   int i ;
   for (i=0 ; i<_useList.GetEntries() ; i++) {
-    set.Add(_useList[i]) ;
+    set.Add(_useList.At(i)) ;
   }
   return set ;
 }
@@ -224,5 +224,24 @@ RooFormula::DefinedVariable(TString &name)
   return (_useList.GetEntries()-1) ;
 }
 
+void RooFormula::printToStream(ostream& os, PrintOption opt, TString indent) const {
+  // Print info about this argument set to the specified stream.
+  //
+  //   OneLine: use RooPrintable::oneLinePrint()
+  //  Standard: our formula
+  //   Verbose: formula and list of actual dependents
 
-
+  if(opt == Standard) {
+    os << indent << GetTitle() << endl;
+  }
+  else {
+    oneLinePrint(os,*this);
+    if(opt == Verbose) {
+      os << indent << "--- RooFormula ---" << endl;
+      os << indent << "  Formula: \"" << GetTitle() << "\"" << endl;
+      indent.Append("  ");
+      os << indent;
+      actualDependents().printToStream(os,lessVerbose(opt),indent);
+    }
+  }
+}

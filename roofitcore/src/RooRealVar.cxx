@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.11 2001/04/11 23:25:28 davidk Exp $
+ *    File: $Id: RooRealVar.cc,v 1.12 2001/04/13 00:43:56 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -24,29 +24,29 @@ ClassImp(RooRealVar)
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, const char *unit) :
-  RooAbsReal(name, title, 0, 0, unit), _error(0),
-  _fitMin(-1e10), _fitMax(1e10)
+  RooAbsReal(name, title, 0, 0, unit), _error(0)
 {
   _value = value ;
+  removeFitRange();
   setConstant(kTRUE) ;
 }  
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t minValue, Double_t maxValue,
 		       const char *unit) :
-  RooAbsReal(name, title, minValue, maxValue, unit),
-  _fitMin(minValue), _fitMax(maxValue)
+  RooAbsReal(name, title, minValue, maxValue, unit)
 {
   _value= 0.5*(minValue + maxValue);
+  removeFitRange();
 }  
 
 RooRealVar::RooRealVar(const char *name, const char *title,
 		       Double_t value, Double_t minValue, Double_t maxValue,
 		       const char *unit) :
-  RooAbsReal(name, title, minValue, maxValue, unit), _error(0),
-  _fitMin(minValue), _fitMax(maxValue)
+  RooAbsReal(name, title, minValue, maxValue, unit), _error(0)
 {
   _value = value ;
+  removeFitRange();
 }  
 
 RooRealVar::RooRealVar(const char* name, const RooRealVar& other) :
@@ -335,29 +335,28 @@ void RooRealVar::printToStream(ostream& os, PrintOption opt, TString indent) con
   // Print info about this object to the specified stream. In addition to the info
   // from RooAbsReal::printToStream() we add:
   //
-  //  Standard : error
-  //   Verbose : fit range
+  //   Verbose : fit range and error
 
   RooAbsReal::printToStream(os,opt,indent);
-  if(opt >= Standard) {
+  if(opt >= Verbose) {
     os << indent << "--- RooRealVar ---" << endl;
     TString unit(_unit);
     if(!unit.IsNull()) unit.Prepend(' ');
-    os << indent << "  Error = " << getError() << unit << endl;
+    os << indent << "  Fit range is [ ";
+    if(hasFitMin()) {
+      os << getFitMin() << unit << " , ";
+    }
+    else {
+      os << "-INF , ";
+    }
+    if(hasFitMax()) {
+      os << getFitMax() << unit << " ]" << endl;
+    }
+    else {
+      os << "+INF ]" << endl;
+    }
     if(opt >= Verbose) {
-      os << indent << "  Fit range is [ ";
-      if(hasFitMin()) {
-	os << getFitMin() << unit << " , ";
-      }
-      else {
-	os << "-INF , ";
-      }
-      if(hasFitMax()) {
-	os << getFitMax() << unit << " ]" << endl;
-      }
-      else {
-	os << "+INF ]" << endl;
-      }
+      os << indent << "  Error = " << getError() << unit << endl;
     }
   }
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.6 2001/04/08 00:06:48 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.7 2001/04/11 23:25:26 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,8 +14,12 @@
 #define ROO_ABS_REAL
 
 #include "RooFitCore/RooAbsArg.hh"
-class RooArgSet ;
-class TH1F ;
+
+class RooArgSet;
+class RooPlot;
+class RooRealVar;
+class RooRealFunc1D;
+class TH1F;
 
 class RooAbsReal : public RooAbsArg {
 public:
@@ -36,6 +40,9 @@ public:
   inline const Text_t *getUnit() const { return _unit.Data(); }
   inline void setUnit(const char *unit) { _unit= unit; }
 
+  // Bind ourselves with one particular real variable
+  RooRealFunc1D operator()(RooRealVar &var) const;
+
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }
   inline Double_t getPlotMax() const { return _plotMax; }
@@ -47,6 +54,11 @@ public:
   void setPlotLabel(const char *label);
   const char *getPlotLabel() const;
   virtual Bool_t inPlotRange(Double_t value) const;
+
+  // Create plots
+  RooPlot *plot(const RooRealVar& var, Option_t* drawOptions="L") const;
+  RooPlot *plot(RooPlot *frame, Option_t* drawOptions="L") const;
+
   TH1F *createHistogram(const char *label, const char *axis, Int_t bins= 0);
   TH1F *createHistogram(const char *label, const char *axis, Double_t lo, Double_t hi, Int_t bins= 0);
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.16 2001/04/21 01:13:11 david Exp $
+ *    File: $Id: RooDataSet.cc,v 1.17 2001/04/21 02:42:43 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -262,34 +262,35 @@ TH1F* RooDataSet::createHistogram(const RooAbsReal& var, const char* cuts, const
   // The histogram will be created using RooAbsReal::createHistogram() with
   // the name provided (with our dataset name prepended).
 
-  // Create selection formula if selection cuts are specified
-  RooFormula* select(0) ;
-   if(0 != cuts && strlen(cuts)) {
-     select=new RooFormula(cuts,cuts,_vars);
-     if (!select || !select->ok()) {
-       delete select;
-       return 0 ;
-     }
-   }
-    
-  // First see if var is in data set 
-  RooAbsReal* plotVar = (RooAbsReal*) _vars.find(var.GetName()) ;
   Bool_t ownPlotVar(kFALSE) ;
-  if (!plotVar) {
+  // Is this variable in our dataset?
+  RooAbsReal* plotVar= (RooAbsReal*)_vars.find(var.GetName());
+  if(0 == plotVar) {
+    // Is this variable a client of our dataset?
     if (!var.dependsOn(_vars)) {
-      cout << "RooDataSet::Plot: Argument " << var.GetName() 
+      cout << GetName() << "::createHistogram: Argument " << var.GetName() 
 	   << " is not in dataset and is also not dependent on data set" << endl ;
       return 0 ; 
     }
 
     // Clone derived variable 
     plotVar = (RooAbsReal*) var.Clone()  ;
-    ownPlotVar = kTRUE ;    
+    ownPlotVar = kTRUE ;
 
     //Redirect servers of derived clone to internal ArgSet representing the data in this set
     plotVar->redirectServers(const_cast<RooArgSet&>(_vars)) ;
   }
 
+  // Create selection formula if selection cuts are specified
+  RooFormula* select(0) ;
+  if(0 != cuts && strlen(cuts)) {
+    select=new RooFormula(cuts,cuts,_vars);
+    if (!select || !select->ok()) {
+      delete select;
+      return 0 ;
+    }
+  }
+  
   TString histName(name);
   histName.Prepend("_");
   histName.Prepend(fName);

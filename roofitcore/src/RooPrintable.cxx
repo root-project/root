@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPrintable.cc,v 1.2 2001/04/11 23:25:27 davidk Exp $
+ *    File: $Id: RooPrintable.cc,v 1.3 2001/04/21 01:13:11 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,10 @@
  *
  * Copyright (C) 2001 Stanford University
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// Classes inheriting from this class can be plotted and printed.
+
 #include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooPrintable.hh"
@@ -21,7 +25,7 @@
 ClassImp(RooPrintable)
 
 static const char rcsid[] =
-"$Id: RooPrintable.cc,v 1.2 2001/04/11 23:25:27 davidk Exp $";
+"$Id: RooPrintable.cc,v 1.3 2001/04/21 01:13:11 david Exp $";
 
 void RooPrintable::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print information about this object to the specified stream. The possible
@@ -62,7 +66,19 @@ RooPrintable::PrintOption RooPrintable::lessVerbose(PrintOption opt) const {
   // Return a PrintOption that is one degree less verbose than the input option.
   // Useful for being less verbose when printing info about sub-objects.
 
-  return (opt == OneLine) ? OneLine : (PrintOption)(opt - 1);
+  switch(opt) {
+  case OneLine:
+    return OneLine;
+    break;
+  case Standard:
+    return OneLine;
+    break;
+  case Shape:
+  case Verbose:
+  default:
+    return Standard;
+    break;
+  }
 }
 
 void RooPrintable::oneLinePrint(ostream& os, const TNamed &named) {

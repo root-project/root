@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.17 2001/04/18 20:38:01 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.18 2001/04/20 01:51:38 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,6 +32,8 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgProxy.hh"
 
+#include <string.h>
+
 ClassImp(RooAbsArg)
 
 Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
@@ -53,9 +55,12 @@ RooAbsArg::RooAbsArg(const char* name, const RooAbsArg& other)
   : TNamed(name,other.GetTitle())
 {
   // Copy constructor transfers all properties of the original
-  // object, except for this list of clients. The newly created 
+  // object, except for its list of clients. The newly created 
   // object has an empty client list and has its dirty
   // flags set.
+
+  // use our own name unless we are provided with something better
+  if(0 == strlen(name)) SetName(other.GetName());
   initCopy(other) ;
 }
 
@@ -65,9 +70,11 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other)
   : TNamed(other)
 {
   // Copy constructor transfers all properties of the original
-  // object, except for this list of clients. The newly created 
+  // object, except for its list of clients. The newly created 
   // object has an empty client list and has its dirty
-  // flags set.
+  // flags set. The virtual Clone() method is implemented using
+  // this constructor.
+
   initCopy(other) ;
 }
 
@@ -75,6 +82,9 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other)
 
 void RooAbsArg::initCopy(const RooAbsArg& other)
 {
+  // Take on the properties of the specified object except for its
+  // list of clients.
+
   // take attributes from target
   TObject* obj ;
   TIterator* aIter = other._attribList.MakeIterator() ;
@@ -139,6 +149,7 @@ RooAbsArg& RooAbsArg::operator=(const RooAbsArg& other)
   TIterator* iter = _serverList.MakeIterator() ;
   RooAbsArg* server ;
   while (server = (RooAbsArg*) iter->Next()) {
+    cout << "...removing " << server->GetName() << endl;
     removeServer(*server) ;
   }
   delete iter ;
@@ -146,6 +157,7 @@ RooAbsArg& RooAbsArg::operator=(const RooAbsArg& other)
   // Add all new servers
   iter = other._serverList.MakeIterator() ;
   while (server = (RooAbsArg*) iter->Next()) {
+    cout << "...adding " << server->GetName() << endl;
     addServer(*server) ;
   }
   delete iter ;
@@ -283,12 +295,14 @@ Bool_t RooAbsArg::dependsOn(const RooArgSet& serverList) const
   // Test whether we depend on (ie, are served by) any object in the
   // specified collection. Uses the dependsOn(RooAbsArg&) member function.
 
-  TIterator* sIter = serverList.MakeIterator() ;
+  Bool_t result(kFALSE);
+  TIterator* sIter = serverList.MakeIterator();
   RooAbsArg* server ;
-  while (server=(RooAbsArg*)sIter->Next()) {
-    if (dependsOn(*server)) return kTRUE  ;
+  while (!result && (server=(RooAbsArg*)sIter->Next())) {
+    if (dependsOn(*server)) result= kTRUE;
   }
-  return kFALSE ;
+  delete sIter;
+  return result;
 }
 
 
@@ -298,7 +312,8 @@ Bool_t RooAbsArg::dependsOn(const RooAbsArg& server) const
   // Note that RooAbsArg objects are considered equivalent if they have
   // the same name.
 
-  return _serverList.FindObject(server.GetName())?kTRUE:kFALSE ;
+  TObject *found= _serverList.FindObject(server.GetName());
+  return found ? kTRUE : kFALSE ;
 }
 
 
@@ -490,49 +505,65 @@ void RooAbsArg::copyList(TList& dest, const TList& source)
 void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  const
 {
   // Print the state of this object to the specified output stream.
-  // With PrintOption=Verbose, print out lists of attributes, clients,
-  // and servers. Otherwise, print our class, name and title only.
+  //
+  //  OneLine : use RooPrintable::oneLinePrint()
+  // Standard : use virtual writeToStream() method in non-compact mode
+  //  Verbose : list dirty flags,attributes, clients, servers, and proxies
+  //
+  // Subclasses will normally call this method first in their implementation,
+  // and then add any additional state of their own with the Shape or Verbose
+  // options.
 
-  oneLinePrint(os,*this);
-  if(opt == Verbose) {
-    os << indent << "--- RooAbsArg ---" << endl;
-    // attribute list
-    os << indent << "  Attributes: " ;
-    printAttribList(os) ;
-    os << endl ;
+  if(opt == Standard) {
+    writeToStream(os,kFALSE);
+    os << endl;
+  }
+  else {
+    oneLinePrint(os,*this);
+    if(opt == Verbose) {
+      os << indent << "--- RooAbsArg ---" << endl;
+      // dirty state flags
+      os << indent << "  Value State: " << (_valueDirty ? "DIRTY":"clean") << endl
+	 << indent << "  Shape State: " << (_shapeDirty ? "DIRTY":"clean") << endl;
+      // attribute list
+      os << indent << "  Attributes: " ;
+      printAttribList(os) ;
+      os << endl ;
 
-    // client list
-    os << indent << "  Clients: " << endl;
-    TIterator *clientIter= _clientList.MakeIterator();
-    RooAbsArg* client ;
-    while (client=(RooAbsArg*)clientIter->Next()) {
-      os << indent << "    (" << (void*)client  << ","
-	 << (_clientListValue.FindObject(client)?"V":"-")
-	 << (_clientListShape.FindObject(client)?"S":"-")
-	 << ") " ;
-      client->printToStream(os,OneLine);
+      // client list
+      os << indent << "  Clients: " << endl;
+      TIterator *clientIter= _clientList.MakeIterator();
+      RooAbsArg* client ;
+      while (client=(RooAbsArg*)clientIter->Next()) {
+	os << indent << "    (" << (void*)client  << ","
+	   << (_clientListValue.FindObject(client)?"V":"-")
+	   << (_clientListShape.FindObject(client)?"S":"-")
+	   << ") " ;
+	client->printToStream(os,OneLine);
+      }
+      delete clientIter;
+      
+      // server list
+      os << indent << "  Servers: " << endl;
+      TIterator *serverIter= _serverList.MakeIterator();
+      RooAbsArg* server ;
+      while (server=(RooAbsArg*)serverIter->Next()) {
+	os << indent << "    (" << (void*)server << ","
+	   << (server->_clientListValue.FindObject((TObject*)this)?"V":"-")
+	   << (server->_clientListShape.FindObject((TObject*)this)?"S":"-")
+	   << ") " ;
+	server->printToStream(os,OneLine);
+      }
+      delete serverIter;
+
+      // proxy list
+      os << indent << "  Proxies: " << endl ;
+      for (int i=0 ; i<numProxies() ; i++) {
+	RooArgProxy& proxy=getProxy(i) ;
+	os << indent << "    " << proxy.GetName() << " -> " ;
+	proxy.absArg()->printToStream(os,OneLine) ;
+      }
     }
-
-    // server list
-    os << indent << "  Servers: " << endl;
-    TIterator *serverIter= _serverList.MakeIterator();
-    RooAbsArg* server ;
-    while (server=(RooAbsArg*)serverIter->Next()) {
-      os << indent << "    (" << (void*)server << ","
-	 << (server->_clientListValue.FindObject((TObject*)this)?"V":"-")
-	 << (server->_clientListShape.FindObject((TObject*)this)?"S":"-")
-	 << ") " ;
-      server->printToStream(os,OneLine);
-    }
-
-    // proxy list
-    os << indent << "  Proxies: " << endl ;
-    for (int i=0 ; i<numProxies() ; i++) {
-      RooArgProxy& proxy=getProxy(i) ;
-      os << indent << "    " << proxy.GetName() << " -> " ;
-      proxy.absArg()->printToStream(os,OneLine) ;
-    }
-
   }
 }
 
