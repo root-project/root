@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.42 2004/04/13 07:04:42 brun Exp $
+// @(#)root/geom:$Name: HEAD $:$Id: TGeoVolume.cxx,v 1.43 2004/06/28 08:46:47 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -642,7 +642,7 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, 
          name = new char[strlen(vol->GetNode(i)->GetVolume()->GetName())+7];
          sprintf(name, "%s_%i", vol->GetNode(i)->GetVolume()->GetName(), id);
          if (fNodes->FindObject(name))
-            Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name);
+            Warning("AddNode", "Volume %s : added assembly node %s with same name", GetName(), name);
          node->SetName(name);
          node->SetNumber(id);
       }

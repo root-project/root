@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.8 2004/08/09 15:23:40 brun Exp $
+// @(#)root/geom:$Name: HEAD $:$Id: TGeoXtru.cxx,v 1.9 2004/08/09 16:38:38 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -85,7 +85,7 @@ TGeoXtru::TGeoXtru(Int_t nz)
 // Default constructor
    SetShapeBit(TGeoShape::kGeoXtru);
    if (nz<2) {
-      Error("ctor", "Cannot create TGeoXtru with less than 2 Z planes");
+      Error("ctor", "Cannot create TGeoXtru %s with less than 2 Z planes", GetName());
       return;
    }
    fNvert = 0;
@@ -157,7 +157,7 @@ void TGeoXtru::ComputeBBox()
 {
 // compute bounding box of the pcon
    if (!fX || !fZ || !fNvert) {
-      Error("ComputeBBox", "polygon not defined");
+      Error("ComputeBBox", "In shape %s polygon not defined", GetName());
       return;
    }   
    Double_t zmin = fZ[0];
@@ -495,7 +495,7 @@ Bool_t TGeoXtru::DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *
 //   yv[nvert] = array of Y vertex positions 
 // *NOTE* should be called before DefineSection or ctor with 'param'
    if (nvert<3) {
-      Error("DefinePolygon","cannot create polygon with less than 3 vertices");
+      Error("DefinePolygon","In shape %s cannot create polygon with less than 3 vertices", GetName());
       return kFALSE;
    }
    fNvert = nvert;
@@ -530,7 +530,9 @@ void TGeoXtru::DefineSection(Int_t snum, Double_t z, Double_t x0, Double_t y0, D
    fScale[snum] = scale;
    if (snum) {
       if (fZ[snum]<fZ[snum-1]) {
-         Warning("DefineSection", "Z position of section %i not in increasing order",snum);
+          Warning("DefineSection", "In shape: %s, Z position of section "
+                  "%i, z=%e, not in increasing order, %i, z=%e",
+                  GetName(),snum,fZ[snum],snum-1,fZ[snum-1]);
          return;
       }   
    }
@@ -541,7 +543,7 @@ void TGeoXtru::DefineSection(Int_t snum, Double_t z, Double_t x0, Double_t y0, D
 Double_t TGeoXtru::GetZ(Int_t ipl) const
 {
    if (ipl<0 || ipl>(fNz-1)) {
-      Error("GetZ","ipl=%i out of range (0,%i)",ipl,0,fNz-1);
+      Error("GetZ","In shape %s, ipl=%i out of range (0,%i)",GetName(),ipl,0,fNz-1);
       return 0.;
    }
    return fZ[ipl];
@@ -888,7 +890,7 @@ void TGeoXtru::SetDimensions(Double_t *param)
 // param[4*(nz-1)+4] = scalen
    fNz = (Int_t)param[0];   
    if (fNz<2) {
-      Error("SetDimensions","Cannot create TGeoXtru with less than 2 Z planes");
+      Error("SetDimensions","Cannot create TGeoXtru %s with less than 2 Z planes",GetName());
       return;
    }
    if (fZ) delete [] fZ;

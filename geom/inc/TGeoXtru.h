@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.h,v 1.4 2004/04/22 14:07:14 brun Exp $
+// @(#)root/geom:$Name: HEAD $:$Id: TGeoXtru.h,v 1.5 2004/06/25 11:59:55 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -74,6 +74,11 @@ public:
 //   virtual Int_t         GetByteCount() const {return 60+12*fNz;}
    Int_t                 GetNz() const    {return fNz;}
    Int_t                 GetNvert() const {return fNvert;}
+   Double_t              GetX(Int_t i) const {return (i<fNvert&&i>-1 &&fX!=0) ? fX[i] : -1.0E10;}
+   Double_t              GetY(Int_t i) const {return (i<fNvert&&i>-1 &&fY!=0) ? fY[i] : -1.0E10;}
+   Double_t              GetXOffset(Int_t i) const {return (i<fNz&&i>-1 && fX0!=0) ? fX0[i] : 0.0;}
+   Double_t              GetYOffset(Int_t i) const {return (i<fNz&&i>-1 && fY0!=0) ? fY0[i] : 0.0;}
+   Double_t              GetScale(Int_t i) const {return (i<fNz&&i>-1 && fScale!=0) ? fScale[i] : 1.0;}
    Double_t             *GetZ() const     {return fZ;}
    Double_t              GetZ(Int_t ipl) const;
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return 0;}

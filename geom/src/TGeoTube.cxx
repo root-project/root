@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.36 2004/06/25 11:59:56 brun Exp $
+// @(#)root/geom:$Name: HEAD $:$Id: TGeoTube.cxx,v 1.37 2004/08/03 16:01:18 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -470,7 +470,7 @@ TGeoVolume *TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          }
          return vmulti;
       default:
-         Error("Divide", "Wrong axis type for division");
+         Error("Divide", "In shape %s wrong axis type for division", GetName());
          return 0;            
    }
 }   
@@ -763,7 +763,7 @@ void TGeoTube::SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz)
    fRmax = rmax;
    fDz   = dz;
    if (fRmin>0 && fRmax>0 && fRmin>=fRmax) 
-      Error("SetTubeDimensions", "wrong rmin=%g rmax=%g", rmin,rmax);
+      Error("SetTubeDimensions", "In shape %s wrong rmin=%g rmax=%g", GetName(), rmin,rmax);
 }   
 
 //_____________________________________________________________________________
@@ -1340,7 +1340,7 @@ TGeoVolume *TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
          }
          return vmulti;
       default:
-         Error("Divide", "Wrong axis type for division");
+         Error("Divide", "In shape %s wrong axis type for division", GetName());
          return 0;            
    }
 }
@@ -1392,7 +1392,7 @@ TGeoShape *TGeoTubeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*ma
 // in order to fit the mother
    if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    if (!mother->TestShapeBit(kGeoTube)) {
-      Error("GetMakeRuntimeShape", "invalid mother");
+      Error("GetMakeRuntimeShape", "Invalid mother for shape %s", GetName());
       return 0;
    }
    Double_t rmin, rmax, dz;
@@ -1619,7 +1619,7 @@ void TGeoTubeSeg::SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
    if (fPhi1 < 0) fPhi1+=360.;
    fPhi2 = phi2;
    while (fPhi2<=fPhi1) fPhi2+=360.;
-   if (fPhi1==fPhi2) Error("SetTubsDimensions", "Invalid phi1=%g, phi2=%g\n", fPhi1, fPhi2);
+   if (fPhi1==fPhi2) Error("SetTubsDimensions", "In shape %s invalid phi1=%g, phi2=%g\n", GetName(), fPhi1, fPhi2);
 }   
 
 //_____________________________________________________________________________
@@ -1804,7 +1804,7 @@ void TGeoCtub::ComputeBBox()
 // compute minimum bounding box of the ctub
    TGeoTubeSeg::ComputeBBox();
    if ((fNlow[2]>-(1E-10)) || (fNhigh[2]<1E-10)) {
-      Error("ComputeBBox", "Wrong definition of cut planes");
+      Error("ComputeBBox", "In shape %s wrong definition of cut planes", GetName());
       return;
    }   
    Double_t xc=0, yc=0;
@@ -2227,7 +2227,7 @@ Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
          sr=-b+d;
          if (sr<0) sr=TGeoShape::Big();
       } else {
-         Error("DistToOut", "cannot get outside !");
+         Error("DistToOut", "In shape %s cannot get outside !", GetName());
       }      
    }
    // phi planes
@@ -2240,7 +2240,7 @@ Double_t TGeoCtub::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 TGeoVolume *TGeoCtub::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, Int_t /*iaxis*/, Int_t /*ndiv*/, 
                              Double_t /*start*/, Double_t /*step*/) 
 {
-   Warning("Divide", "Division of a cut tube not implemented");
+   Warning("Divide", "In shape %s division of a cut tube not implemented", GetName());
    return 0;
 }   
 
@@ -2251,7 +2251,7 @@ TGeoShape *TGeoCtub::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
 // in order to fit the mother
    if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    if (!mother->TestShapeBit(kGeoTube)) {
-      Error("GetMakeRuntimeShape", "invalid mother");
+      Error("GetMakeRuntimeShape", "Invalid mother for shape %s", GetName());
       return 0;
    }
    Double_t rmin, rmax, dz;
