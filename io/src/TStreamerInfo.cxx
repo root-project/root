@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.63 2001/04/23 13:53:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.64 2001/04/24 14:28:46 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1620,7 +1620,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetL + kUChar:  ReadBasicArray(UChar_t)
          case kOffsetL + kUShort: ReadBasicArray(UShort_t)
          case kOffsetL + kUInt:   ReadBasicArray(UInt_t)
-         case kOffsetL + kULong:  ReadBasicArray(ULong_t)
+         case kOffsetL + kULong:  ReadBasicArray(ULong_t) 
 
          // read pointer to an array of basic types  array[n]
          case kOffsetP + kChar:   ReadBasicPointer(Char_t)
@@ -1689,7 +1689,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                          Streamer_t pstreamer = element->GetStreamer();
                          if (pstreamer == 0) {
                             if (gDebug > 0) printf("WARNING, Streamer is null\n");
-                            if (!element->GetClassPointer()->InheritsFrom(TObject::Class())) break;
+                            //if (!element->GetClassPointer()->InheritsFrom(TObject::Class())) break;
                             element->GetClassPointer()->ReadBuffer(b,pointer+fOffset[i]);
                             break;
                          }
@@ -2061,7 +2061,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                      Streamer_t pstreamer = element->GetStreamer();
                      if (pstreamer == 0) {
                         if (gDebug > 0) printf("Warning, Streamer is null\n"); 
-                        if (!element->GetClassPointer()->InheritsFrom(TObject::Class())) break;
+                        //if (!element->GetClassPointer()->InheritsFrom(TObject::Class())) break;
                         for (Int_t kk=0;kk<nc;kk++) {
                            pointer = (char*)clones->UncheckedAt(kk);
                            element->GetClassPointer()->ReadBuffer(b,pointer+offset);
