@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.11 2002/11/06 21:16:43 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TMultiGraph.cxx,v 1.12 2003/05/16 13:12:07 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -266,6 +266,8 @@ void TMultiGraph::Paint(Option_t *option)
         uxmax    = rwxmax + dx;
         minimum  = rwymin - dy;
         maximum  = rwymax + dy;
+        if (minimum < 0 && rwymin >= 0) minimum = 0;
+        if (maximum > 0 && rwymax <= 0) maximum = 0;
      }
 
      if (fMinimum != -1111) rwymin = minimum = fMinimum;
