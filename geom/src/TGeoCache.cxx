@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.18 2003/03/14 11:49:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCache.cxx,v 1.19 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   18/03/02
 
 /*************************************************************************
@@ -461,7 +461,10 @@ void TGeoNodeCache::PrintNode() const
 //_____________________________________________________________________________
 Int_t TGeoNodeCache::PushState(Bool_t ovlp, Double_t *point)
 {
-   if (fStackLevel>=fGeoCacheStackSize) return 0; 
+   if (fStackLevel>=fGeoCacheStackSize) {
+      printf("ERROR TGeoNodeCach::PushSate() : stack of states full\n");
+      return 0; 
+   }   
    ((TGeoCacheState*)fStack->At(fStackLevel))->SetState(fLevel,ovlp,point);
    return ++fStackLevel;   
 }   
@@ -469,6 +472,10 @@ Int_t TGeoNodeCache::PushState(Bool_t ovlp, Double_t *point)
 //_____________________________________________________________________________
 void TGeoNodeCache::Refresh() 
 {
+   if (fLevel<0) {
+      gGeoManager->SetOutside();
+      fLevel = 0;
+   }   
    fCurrentNode=fBranch[fLevel]; 
    fCurrentCache=CacheId(fCurrentNode);
    fCurrentIndex=Index(fCurrentNode); 
@@ -1441,6 +1448,10 @@ TGeoCacheState::~TGeoCacheState()
 void TGeoCacheState::SetState(Int_t level, Bool_t ovlp, Double_t *point)
 {
    fLevel = level;
+   if (gGeoManager->IsOutside()) {
+      fLevel = -1;
+      return;
+   }   
    memcpy(fBranch, (Int_t*)gGeoManager->GetCache()->GetBranch(), (level+1)*sizeof(Int_t));
    memcpy(fMatrices, (Int_t*)gGeoManager->GetCache()->GetMatrices(), (level+1)*sizeof(Int_t));
    fOverlapping = ovlp;
@@ -1451,6 +1462,10 @@ void TGeoCacheState::SetState(Int_t level, Bool_t ovlp, Double_t *point)
 Bool_t TGeoCacheState::GetState(Int_t &level, Double_t *point) const
 {
    level = fLevel;
+   if (fLevel<0) {
+      level = 0;
+      return kFALSE;
+   }   
    memcpy((Int_t*)gGeoManager->GetCache()->GetBranch(), fBranch, (level+1)*sizeof(Int_t));
    memcpy((Int_t*)gGeoManager->GetCache()->GetMatrices(), fMatrices, (level+1)*sizeof(Int_t));
    if (point) memcpy(point, fPoint, 3*sizeof(Double_t));

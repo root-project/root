@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.32 2003/05/07 13:32:39 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.33 2003/06/17 09:13:55 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -308,6 +308,7 @@ public:
    Bool_t                 IsOutside() const            {return fIsOutside;} 
    Bool_t                 IsOnBoundary() const         {return fIsOnBoundary;}
    Bool_t                 IsNullStep() const           {return fIsNullStep;}
+   void                   SetOutside()                 {fIsOutside = kTRUE;}
    void                   UpdateCurrentPosition(Double_t *nextpoint);
    
 

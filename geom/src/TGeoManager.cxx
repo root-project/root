@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.52 2003/06/17 09:13:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.53 2003/06/23 12:31:50 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2623,17 +2623,73 @@ TGeoNode *TGeoManager::FindNode(Double_t x, Double_t y, Double_t z)
 Bool_t TGeoManager::IsSameLocation(Double_t x, Double_t y, Double_t z)
 {
 // Checks if point (x,y,z) is still in the current node.
-//---> save current point and path.
-   TGeoNode *old = fCurrentNode;
-   if (fIsOutside) old=0;
-   Int_t oldid = GetNodeId();
-   PushPoint();
+   Double_t point[3];
+   point[0] = x;
+   point[1] = y;
+   point[2] = z;
+   TGeoVolume *vol = fCurrentNode->GetVolume();
+   if (fIsOutside) {
+      if (vol->GetShape()->Contains(point)) return kFALSE;
+      return kTRUE;
+   }   
+   Double_t local[3];
+   // convert to local frame
+   MasterToLocal(point,local);
+   if (!vol->GetShape()->Contains(local)) return kFALSE;
+   PushPath();
    // check if still in current volume.
-   TGeoNode *node = FindNode(x,y,z);
-   Int_t id = GetNodeId();
-   PopPoint();
-   Bool_t same = ((node==old) && (id==oldid))?kTRUE:kFALSE;
-   return same;
+   Int_t nd = vol->GetNdaughters();
+   if (!nd) {
+      PopPath();
+      return kTRUE;
+   }   
+   TGeoNode *node;
+   TGeoPatternFinder *finder = vol->GetFinder();
+   if (finder) {
+      node=finder->FindNode(local);
+      PopPath();
+      if (node) return kFALSE;
+      return kTRUE;
+   }
+   TGeoVoxelFinder *voxels = vol->GetVoxels();
+   Int_t *check_list = 0;
+   Int_t ncheck = 0;
+   Double_t local1[3];
+   if (voxels) {
+      check_list = voxels->GetCheckList(local, ncheck);
+      if (!check_list) {
+         PopPath();
+         return kTRUE;
+      }   
+      for (Int_t id=0; id<ncheck; id++) {
+         node = vol->GetNode(check_list[id]);
+         CdDown(check_list[id]);
+         fCurrentNode->GetMatrix()->MasterToLocal(local,local1);
+         if (fCurrentNode->GetVolume()->GetShape()->Contains(local1)) {
+            PopPath();
+            return kFALSE;
+         }   
+         CdUp();
+      }
+      PopPath();
+      return kTRUE;
+   }      
+   Int_t id = 0;
+   while ((node=fCurrentNode->GetDaughter(id++))) {
+      CdDown(id-1);
+      fCurrentNode->GetMatrix()->MasterToLocal(local,local1);
+      if (fCurrentNode->GetVolume()->GetShape()->Contains(local1)) {
+         PopPath();
+         return kFALSE;
+      }   
+      CdUp();
+      if (id == nd) {
+         PopPath();
+         return kTRUE;
+      }
+   }
+   PopPath();
+   return kTRUE;
 }   
 
 //_____________________________________________________________________________
