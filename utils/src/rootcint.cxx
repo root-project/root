@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.195 2004/11/10 06:22:38 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.196 2004/12/13 18:57:56 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -4141,6 +4141,12 @@ int main(int argc, char **argv)
          strncpy(argvv[argcc], dictname, s-dictname); argcc++;
 
          while (ic < argc && (*argv[ic] == '-' || *argv[ic] == '+')) {
+            if (strcmp("+P", argv[ic]) == 0 || 
+                strcmp("+V", argv[ic]) == 0 || 
+                strcmp("+STUB", argv[ic]) == 0) {
+               // break when we see positional options
+               break;
+            }
             argvv[argcc++] = argv[ic++];
          }
 
@@ -4236,13 +4242,15 @@ int main(int argc, char **argv)
          argvv[argcc++] = "-V";        // include info on private members
          argvv[argcc++] = "-c-10";
          argvv[argcc++] = "+V";        // turn on class comment mode
+         if (!use_preprocessor) {
 #ifdef ROOTBUILD
-         argvv[argcc++] = "base/inc/TROOT.h";
-         argvv[argcc++] = "base/inc/TMemberInspector.h";
+            argvv[argcc++] = "base/inc/TROOT.h";
+            argvv[argcc++] = "base/inc/TMemberInspector.h";
 #else
-         argvv[argcc++] = "TROOT.h";
-         argvv[argcc++] = "TMemberInspector.h";
+            argvv[argcc++] = "TROOT.h";
+            argvv[argcc++] = "TMemberInspector.h";
 #endif
+         }
       } else {
          Error(0, "%s: option -c can only be used when an output file has been specified\n", argv[0]);
          return 1;
@@ -4254,6 +4262,7 @@ int main(int argc, char **argv)
 
    string bundlename;
    char esc_arg[512];
+   bool insertedBundle = false;
    FILE *bundle = 0;
    if (use_preprocessor) {
       bundlename = R__tmpnam();
@@ -4263,6 +4272,9 @@ int main(int argc, char **argv)
          Error(0, "%s: failed to open %s, usage of external preprocessor by CINT is not optimal\n",
                  argv[0], bundlename.c_str());
          use_preprocessor = 0;
+      } else {
+         fprintf(bundle,"#include \"TROOT.h\"\n");
+         fprintf(bundle,"#include \"TMemberInspector.h\"\n");
       }
    }
    for (i = ic; i < argc; i++) {
@@ -4281,22 +4293,22 @@ int main(int argc, char **argv)
             Error(0, "%s: %s must be last file on command line\n", argv[0], argv[i]);
             return 1;
          }
-         if (use_preprocessor) argvv[argcc++] = (char*)bundlename.c_str();
       }
       if (!strcmp(argv[i], "-c")) {
          Error(0, "%s: option -c must come directly after the output file\n", argv[0]);
          return 1;
       }
-      if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+' && !il) {
+      if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+') {
          StrcpyWithEsc(esc_arg, argv[i]);
          fprintf(bundle,"#include \"%s\"\n", esc_arg);
+         if (!insertedBundle) {
+            argvv[argcc++] = (char*)bundlename.c_str();
+            insertedBundle = true;
+         }
       } else
          argvv[argcc++] = argv[i];
    }
    if (use_preprocessor) {
-      // Since we have not seen a linkdef file, we have not yet added the
-      // bundle file to the command line!
-      if (!il) argvv[argcc++] = (char*)bundlename.c_str();
       fclose(bundle);
    }
 
