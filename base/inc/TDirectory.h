@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.16 2003/12/30 13:16:50 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.h,v 1.17 2004/05/10 12:08:57 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -90,13 +90,13 @@ public:
    virtual TObject    *FindObject(const TObject *obj) const;
    virtual TObject    *FindObjectAny(const char *name) const;
    virtual TObject    *Get(const char *namecycle);
-   virtual Int_t       GetBufferSize();
-   TDatime            &GetCreationDate() {return fDatimeC;}
+   virtual Int_t       GetBufferSize() const;
+   const TDatime      &GetCreationDate() const {return fDatimeC;}
    virtual TFile      *GetFile() const {return fFile;}
    virtual TKey       *GetKey(const char *name, Short_t cycle=9999) const;
    TList              *GetList() const { return fList; }
    TList              *GetListOfKeys() const { return fKeys; }
-   TDatime            &GetModificationDate() {return fDatimeM;}
+   const TDatime      &GetModificationDate() const {return fDatimeM;}
    TObject            *GetMother() const { return fMother; }
    virtual Int_t       GetNbytesKeys() const {return fNbytesKeys;}
    virtual Int_t       GetNkeys() const {return fKeys->GetSize();}

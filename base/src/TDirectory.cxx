@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.42 2004/01/29 11:20:12 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.43 2004/05/10 12:08:57 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -890,12 +890,12 @@ TObject *TDirectory::Get(const char *namecycle)
 }
 
 //______________________________________________________________________________
-Int_t TDirectory::GetBufferSize()
+Int_t TDirectory::GetBufferSize() const
 {
-   // return the buffer size to create new TKeys.
-   // if the stored fBufferSize is null, the value returned is the average
-   // buffer size of objects in the file so far
-   
+   // Return the buffer size to create new TKeys.
+   // If the stored fBufferSize is null, the value returned is the average
+   // buffer size of objects in the file so far.
+
    if (fBufferSize <= 0) return fFile->GetBestBuffer();
    else                  return fBufferSize;
 }
@@ -1279,7 +1279,7 @@ void TDirectory::SetBufferSize(Int_t bufsize)
 {
    // set the default buffer size when creating new TKeys
    // see also TDirectory::GetBufferSize
-   
+
    fBufferSize = bufsize;
 }
 
@@ -1288,12 +1288,12 @@ void TDirectory::SetBufferSize(Int_t bufsize)
 void TDirectory::SetWritable(Bool_t writable)
 {
 //  Set the new value of fWritable recursively
- 
+
    TDirectory *cursav = gDirectory;
    cd();
- 
+
    fWritable = writable;
- 
+
    // recursively set all sub-directories
    if (fList) {
       TObject *idcur;
@@ -1471,7 +1471,7 @@ Int_t TDirectory::WriteObject(const TObject *obj, const char *name, Option_t *op
 
    TString opt = option;
    opt.ToLower();
-   
+
    TKey *key, *oldkey=0;
    Int_t bsize = GetBufferSize();
 
