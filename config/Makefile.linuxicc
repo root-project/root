@@ -25,7 +25,7 @@ CINTCFLAGS    = $(EXTRA_CFLAGS) \
 # Linker:
 LD            = icc
 LDFLAGS       = $(OPT) $(EXTRA_LDFLAGS)
-SOFLAGS       = -shared -Qoption,ld,-soname,
+SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
