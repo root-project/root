@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.3 2000/07/10 01:07:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.h,v 1.4 2000/07/11 09:29:10 rdm Exp $
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
@@ -92,6 +92,7 @@ public:
    virtual Bool_t Copy();
    virtual Bool_t Cut();
    virtual Bool_t Paste();
+   virtual void   Print(Option_t * = "");
    virtual void   Delete(Option_t * = "");
    virtual Bool_t Search(const char *string, Bool_t direction, Bool_t caseSensitive);
    virtual Bool_t Replace(TGLongPosition pos, const char *oldText, const char *newText,

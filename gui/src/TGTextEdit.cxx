@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.5 2000/07/10 01:07:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.6 2000/07/11 09:29:10 rdm Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -41,10 +41,12 @@
 #include "KeySymbols.h"
 
 
-const char *filetypes[] = { "All files",     "*",
-                            "Text files",    "*.txt",
-                            "ROOT macros",   "*.C",
-                            0,               0 };
+const char *gFiletypes[] = { "All files",     "*",
+                             "Text files",    "*.txt",
+                             "ROOT macros",   "*.C",
+                             0,               0 };
+static char *gPrinter      = 0;
+static char *gPrintCommand = 0;
 
 
 ClassImp(TGTextEdit)
@@ -212,7 +214,7 @@ Bool_t TGTextEdit::SaveFile(const char *filename, Bool_t saveas)
       Bool_t untitled = !strlen(fText->GetFileName()) ? kTRUE : kFALSE;
       if (untitled || saveas) {
          TGFileInfo fi;
-         fi.fFileTypes = (char **)filetypes;
+         fi.fFileTypes = (char **)gFiletypes;
          new TGFileDialog(fClient->GetRoot(), this, kFDSave, &fi);
          if (fi.fFilename && strlen(fi.fFilename))
             return fText->Save(fi.fFilename);
@@ -259,6 +261,59 @@ Bool_t TGTextEdit::Paste()
 
     gVirtualX->ConvertPrimarySelection(fId, fClipboard, 0);
     return kTRUE;
+}
+
+//______________________________________________________________________________
+void TGTextEdit::Print(Option_t *)
+{
+   // Send current buffer to printer.
+
+   char msg[512];
+
+   sprintf(msg, "%s -P%s\n", gPrintCommand, gPrinter);
+   FILE *p = gSystem->OpenPipe(msg, "w");
+   if (p) {
+      char   *buf1, *buf2;
+      Long_t  len;
+      ULong_t i = 0;
+      TGLongPosition pos;
+
+      pos.fX = pos.fY = 0;
+      while (pos.fY < fText->RowCount()) {
+         len = fText->GetLineLength(pos.fY);
+         buf1 = fText->GetLine(pos, len);
+         buf2 = new char[len + 2];
+         strncpy(buf2, buf1, (UInt_t)len);
+         buf2[len]   = '\n';
+         buf2[len+1] = '\0';
+         while (buf2[i] != '\0') {
+            if (buf2[i] == '\t') {
+               ULong_t j = i+1;
+               while (buf2[j] == 16 && buf2[j] != '\0')
+                  j++;
+               strcpy(buf2+i+1, buf2+j);
+            }
+            i++;
+         }
+         fwrite(buf2, sizeof(char), strlen(buf2)+1, p);
+
+         delete [] buf1;
+         delete [] buf2;
+         pos.fY++;
+      }
+      gSystem->ClosePipe(p);
+
+      Bool_t untitled = !strlen(fText->GetFileName()) ? kTRUE : kFALSE;
+      sprintf(msg, "Printed: %s\nLines: %ld\nUsing: %s -P%s",
+              untitled ? "Untitled" : fText->GetFileName(),
+              fText->RowCount() - 1, gPrintCommand, gPrinter);
+      new TGMsgBox(fClient->GetRoot(), this, "Editor", msg,
+                   kMBIconAsterisk, kMBOk, 0);
+   } else {
+      sprintf(msg, "Could not execute: %s -P%s\n", gPrintCommand, gPrinter);
+      new TGMsgBox(fClient->GetRoot(), this, "Editor", msg,
+                   kMBIconExclamation, kMBOk, 0);
+   }
 }
 
 //______________________________________________________________________________
@@ -954,7 +1009,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                         sprintf(msg, "Save \"%s\"?",
                                 untitled ? "Untitled" : fText->GetFileName());
-                        new TGMsgBox(fClient->GetRoot(), this, "Save...", msg,
+                        new TGMsgBox(fClient->GetRoot(), this, "Editor", msg,
                            kMBIconExclamation, kMBYes|kMBNo|kMBCancel, &retval);
 
                         if (retval == kMBCancel)
@@ -966,7 +1021,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      Clear();
                      if (parm1 == kM_FILE_OPEN) {
                         TGFileInfo fi;
-                        fi.fFileTypes = (char **)filetypes;
+                        fi.fFileTypes = (char **)gFiletypes;
                         new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
                         if (fi.fFilename && strlen(fi.fFilename))
                            LoadFile(fi.fFilename);
@@ -981,13 +1036,14 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kM_FILE_PRINT:
                      {
                         Int_t ret;
-                        char *printer = StrDup("892_2_cor"); // use gEnv
-                        char *printProg = StrDup("xprint");
-                        new TGPrintDialog(fClient->GetRoot(), this, 400, 150,
-                                          &printer, &printProg, &ret);
-                        if (ret) {
-                           printf("%s -P%s\n", printProg, printer);
+                        if (!gPrinter) {
+                           gPrinter = StrDup("892_2_cor"); // use gEnv
+                           gPrintCommand = StrDup("xprint");
                         }
+                        new TGPrintDialog(fClient->GetRoot(), this, 400, 150,
+                                          &gPrinter, &gPrintCommand, &ret);
+                        if (ret)
+                           Print();
                      }
                      break;
                   case kM_EDIT_CUT:
