@@ -2304,7 +2304,7 @@ void THistPainter::PaintErrors(Option_t *)
    Double_t xmin, xmax, ymin, ymax;
    Double_t logxmin = 0;
    Double_t logymin = 0;
-   Int_t k, npoints, first, last, fixbin;
+   Int_t i, k, npoints, first, last, fixbin;
    Int_t if1 = 0;
    Int_t if2 = 0;
    Int_t drawmarker, errormarker;
@@ -2392,7 +2392,7 @@ void THistPainter::PaintErrors(Option_t *)
       //     ex2   = Up X error
       //     ey1   = Low Y error
       //     ey2   = Up Y error
-      //     (xi,yi) = Error bars corrdinates
+      //     (xi,yi) = Error bars coordinates
 
       if (Hoption.Logx) {
          if (xp <= 0) goto L30;
@@ -2524,6 +2524,17 @@ L30:
       Int_t logy = gPad->GetLogy();
       gPad->SetLogx(0);
       gPad->SetLogy(0);
+
+      // In some cases the number of points in the fill area is smaller than
+      // 2*npoints. In such cases the array xline and yline must be arranged 
+      // before being plotted. The next loop does that.
+      if (if2 > npoints) {
+         for(i=1; i<if1 ;i++) {
+            xline[if1-2+i] = xline[if2-1+i];
+            yline[if1-2+i] = yline[if2-1+i];
+         }
+	 npoints = if1-1;
+      }	
       if (option4) graph.PaintGraph(2*npoints,xline,yline,"FC");
       else         graph.PaintGraph(2*npoints,xline,yline,"F");
       gPad->SetLogx(logx);
