@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.15 2003/07/09 00:53:22 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.cxx,v 1.16 2003/07/09 12:34:35 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -434,6 +434,14 @@ TGPopupMenu::TGPopupMenu(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
    fFontStruct    = GetDefaultFontStruct();
    fHifontStruct  = GetHilightFontStruct();
    fDefaultCursor = fClient->GetResourcePool()->GetGrabCursor();
+
+   // We need to change the default context to actually use the 
+   // Menu Fonts.  [Are we actually changing the global settings?]
+   GCValues_t    gcval;
+   gcval.fMask = kGCFont;
+   gcval.fFont = gVirtualX->GetFontHandle(fFontStruct);
+   gVirtualX->ChangeGC(fNormGC, &gcval);
+   gVirtualX->ChangeGC(fSelGC, &gcval);
 
    fDelay     = 0;
    fEntryList = new TList;
