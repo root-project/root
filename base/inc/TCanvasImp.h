@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.4 2003/11/24 10:51:54 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TCanvasImp.h,v 1.5 2004/02/18 20:13:42 brun Exp $
 // Author: Fons Rademakers   16/11/95
 
 /*************************************************************************
@@ -48,7 +48,7 @@ public:
    TCanvas       *Canvas() const { return fCanvas; }
    virtual void   Close() { }
    virtual void   ForceUpdate() { }
-   virtual void   GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
+   virtual UInt_t GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    virtual void   Iconify() { }
    virtual Int_t  InitWindow() { return 0; }
    virtual void   SetStatusText(const char *text = 0, Int_t partidx = 0);
@@ -68,8 +68,8 @@ public:
 
 inline TCanvasImp::TCanvasImp(TCanvas *c, const char *, UInt_t, UInt_t) : fCanvas(c) { }
 inline TCanvasImp::TCanvasImp(TCanvas *c, const char *, Int_t, Int_t, UInt_t, UInt_t) : fCanvas(c) { }
-inline void TCanvasImp::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
-               { x = y = 0; w = h = 0; }
+inline UInt_t TCanvasImp::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
+               { x = y = 0; w = h = 0; return 0;}
 inline void TCanvasImp::SetStatusText(const char *, Int_t) { }
 inline void TCanvasImp::SetWindowPosition(Int_t, Int_t) { }
 inline void TCanvasImp::SetWindowSize(UInt_t, UInt_t) { }

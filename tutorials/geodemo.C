@@ -1,6 +1,8 @@
 // Author: M.Gheata  06/16/03
 Bool_t comments = kTRUE;
 Bool_t raytracing = kFALSE;
+Bool_t rotate = kFALSE;
+Bool_t axis = kTRUE;
 
 //______________________________________________________________________________
 void geodemo ()
@@ -21,7 +23,7 @@ void geodemo ()
 // The same can procedure can be performed for visualizing other shapes.
 // When drawing one shape after another, the old geometry/canvas will be deleted.
    gSystem->Load("libGeom");
-   gROOT->LoadMacro("rootgeom.C");
+   gROOT->LoadMacro("$ROOTSYS/tutorials/rootgeom.C");
    bar = new TControlBar("vertical", "TGeo shapes",10,10);
    bar->AddButton("How to run  ","help()","Instructions for running this macro"); 
    bar->AddButton("ROOTgeom    ","rgeom()","A simple geometry example.");
@@ -48,10 +50,63 @@ void geodemo ()
    bar->AddButton("Align geometry","align()","Some alignment operation");
    bar->AddButton("Ray-trace ON/OFF","raytrace()","Toggle ray-tracing mode");
    bar->AddButton("Comments ON/OFF","comments = !comments;","Toggle explanations pad ON/OFF");
+   bar->AddButton("Axes ON/OFF","axes()","Toggle axes ON/OFF");
+   bar->AddButton("Autorotate ON/OFF","autorotate()","Toggle autorotation ON/OFF");
    bar->Show();
    gROOT->SaveContext();
    gRandom = new TRandom3();
 }
+
+//______________________________________________________________________________
+autorotate()
+{
+   rotate = !rotate;
+   if (!rotate) {
+      gROOT->SetInterrupt(kTRUE);
+      return;
+   }   
+   if (!gPad) return;
+   TView *view = gPad->GetView();
+   if (!view) return;
+   if (!gGeoManager) return;
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return;
+   Double_t longit = view->GetLongitude();
+   Double_t lat = view->GetLatitude();
+   Double_t psi = view->GetPsi();
+   Double_t dphi = 1.;
+   Int_t i,irep;
+   TProcessEventTimer *timer = new TProcessEventTimer(5);
+   gROOT->SetInterrupt(kFALSE);
+   while (rotate) {
+      if (timer->ProcessEvents()) break;
+      if (gROOT->IsInterrupted()) break;
+      longit += dphi;
+      if (longit>360) longit -= 360.;
+      if (!gPad) {
+         rotate = kFALSE;
+         return;
+      } 
+      view = gPad->GetView();  
+      if (!view) {
+         rotate = kFALSE;
+         return;
+      } 
+      view->SetView(longit,view->GetLatitude(),view->GetPsi(),irep);
+      gPad->Modified();
+      gPad->Update();
+   } 
+   delete timer;     
+}
+
+//______________________________________________________________________________
+void axes()
+{
+   axis = !axis;
+   if (!gPad) return;
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}   
 
 //______________________________________________________________________________
 void rgeom()
@@ -127,6 +182,7 @@ void box(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    pt->Draw();
 //   SavePicture("box",c,vol,iaxis,step);
    c->cd(1);
+   gROOT->SetInterrupt(kTRUE);
 }
 
 //______________________________________________________________________________
@@ -1407,7 +1463,7 @@ void MakePicture()
    TView *view = gPad->GetView();
    if (view) {
       view->RotateView(248,66);
-      view->ShowAxis();
+      if (axis) view->ShowAxis();
       if (comments) view->MoveViewCommand('k',1);
    }
    Bool_t is_raytracing = gGeoManager->GetGeomPainter()->IsRaytracing();

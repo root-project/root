@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.11 2004/04/22 16:28:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.12 2004/05/03 10:42:55 rdm Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -65,7 +65,7 @@ private:
    TGStatusBar         *fStatusBar;          // statusbar widget
    TGLayoutHints       *fStatusBarLayout;    // layout hints for statusbar
 
-   TGCompositeFrame    *fEditorFrame;        // side farme for current pad editor
+   TGCompositeFrame    *fEditorFrame;        // side frame for current pad editor
    TGLayoutHints       *fEditorLayout;       // layout for editor frame
    TGCompositeFrame    *fMainFrame;          // main frame containing canvas and side frame
    TGLayoutHints       *fToolBarLayout;      // layout for toolbar widget
@@ -108,7 +108,7 @@ public:
    void     Close();
    void     ForceUpdate() { Layout(); }
    void     FitCanvas();
-   void     GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
+   UInt_t   GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    UInt_t   GetCwidth() const;
    UInt_t   GetCheight() const;
    void     Iconify() { IconifyWindow(); }

@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.36 2004/02/19 12:58:30 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.37 2004/04/22 14:07:15 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -2470,17 +2470,17 @@ void TGeoPainter::Raytrace(Option_t * /*option*/)
    Double_t light;
    Double_t stemin=0, stemax=TGeoShape::Big();
    TPoint *pxy = new TPoint[1];
-   Int_t npoints = (pxmax-pxmin)*(pymax-pymin);
-   Int_t n10 = npoints/10;
-   Int_t ipoint = 0;
+//   Int_t npoints = (pxmax-pxmin)*(pymax-pymin);
+//   Int_t n10 = npoints/10;
+//   Int_t ipoint = 0;
    TGeoVolume *nextvol;
    Int_t up;
    for (px=pxmin; px<pxmax; px++) {
       for (py=pymin; py<pymax; py++) {         
-         ipoint++;
-         if (n10) {
-            if ((ipoint%n10) == 0) printf("%i percent\n", 10*Int_t(Double_t(ipoint)/Double_t(n10)));
-         }
+//         ipoint++;
+//         if (n10) {
+//            if ((ipoint%n10) == 0) printf("%i percent\n", 10*Int_t(Double_t(ipoint)/Double_t(n10)));
+//         }
          base_color = 1;
          steptot = 0;
          inclip = inclipst;

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.59 2004/03/12 16:31:41 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.60 2004/04/22 16:28:28 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -155,6 +155,8 @@ void TCanvas::Constructor()
    fSelectedPad = 0;
    fPadSave     = 0;
    fAutoExec    = kTRUE;
+   fShowEditor  = kFALSE;
+   fShowToolBar = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -1684,13 +1686,12 @@ void TCanvas::Streamer(TBuffer &b)
       b << fYsizeUser;
       b << fXsizeReal;
       b << fYsizeReal;
-      UInt_t w = fWindowWidth; // must be saved, modified by GetWindowTopX in batch
-      UInt_t h = fWindowHeight;
-      b << GetWindowTopX();
-      b << GetWindowTopY();
-      fWindowWidth  = w;
-      fWindowHeight = h;
-      b << w;
+      UInt_t w,h;
+      Int_t topx,topy;
+      UInt_t editorWidth = fCanvasImp->GetWindowGeometry(topx,topy,w,h);
+      b << topx;
+      b << topy;
+      b << (UInt_t)(w-editorWidth);
       b << h;
       b << fCw;
       b << fCh;
