@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.11 2005/03/17 11:39:34 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.cxx,v 1.12 2005/03/18 22:41:27 rdm Exp $
 // Author: Maarten Ballintijn, Marek Biskup  24/09/2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -851,6 +851,11 @@ void TProofDrawProfile::SlaveBegin(TTree *tree)
    TString constructorOptions = "";
    if (fOption.Contains("profs"))
       constructorOptions = "s";
+   else if (fOption.Contains("profi"))
+      constructorOptions = "i";
+   else if (fOption.Contains("profg"))
+      constructorOptions = "g";
+
    fProfile = new TProfile(fTreeDrawArgsParser.GetObjectName(),
                            fTreeDrawArgsParser.GetObjectTitle(),
                            countx, minx, maxx,
@@ -1043,9 +1048,15 @@ void TProofDrawProfile2D::SlaveBegin(TTree *tree)
    }
    if (fTreeDrawArgsParser.GetNoParameters() != 6)
       Error("SlaveBegin", "Impossible - Wrong number of parameters");
+
    TString constructorOptions = "";
    if (fOption.Contains("profs"))
       constructorOptions = "s";
+   else if (fOption.Contains("profi"))
+      constructorOptions = "i";
+   else if (fOption.Contains("profg"))
+      constructorOptions = "g";
+
    fProfile = new TProfile2D(fTreeDrawArgsParser.GetObjectName(),
                              fTreeDrawArgsParser.GetObjectTitle(),
                              countx, minx, maxx,

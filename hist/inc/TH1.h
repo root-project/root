@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.64 2005/03/03 08:19:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.65 2005/03/10 17:57:04 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -114,6 +114,7 @@ protected:
     virtual Bool_t   FindNewAxisLimits(const TAxis* axis, const Axis_t point, Axis_t& newMin, Axis_t &newMax);
     virtual void     SavePrimitiveHelp(ofstream &out, Option_t *option);
     static Bool_t    RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis);
+    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
 public:
     // TH1 status bits
     enum {
@@ -242,7 +243,7 @@ public:
     virtual void     LabelsDeflate(Option_t *axis="X");
     virtual void     LabelsInflate(Option_t *axis="X");
     virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");
-    virtual Int_t    Merge(TCollection *list);
+    virtual Long64_t Merge(TCollection *list);
     virtual void     Multiply(TF1 *h1, Double_t c1=1);
     virtual void     Multiply(const TH1 *h1);
     virtual void     Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.23 2004/12/20 10:01:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.24 2005/03/10 17:57:04 rdm Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -97,7 +97,7 @@ public:
     virtual void    LabelsDeflate(Option_t *axis="X");
     virtual void    LabelsInflate(Option_t *axis="X");
     virtual void    LabelsOption(Option_t *option="h", Option_t *axis="X");
-    virtual Int_t   Merge(TCollection *list);
+    virtual Long64_t Merge(TCollection *list);
     virtual void    Multiply(TF1 *h1, Double_t c1=1);
     virtual void    Multiply(const TH1 *h1);
     virtual void    Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*

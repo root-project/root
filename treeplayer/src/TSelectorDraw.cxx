@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.48 2005/03/21 07:56:37 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.49 2005/03/22 10:00:32 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -531,7 +531,7 @@ void TSelectorDraw::Begin(TTree *tree)
             } else {
                hp = new TProfile(hname,htitle,fNbins[1],fVmin[1], fVmax[1],"");
             }
-	    if (!hkeep) {
+            if (!hkeep) {
                hp->SetBit(kCanDelete);
                if (!opt.Contains("goff")) hp->SetDirectory(0);
             }

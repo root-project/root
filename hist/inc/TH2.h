@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.31 2004/09/15 10:05:24 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.h,v 1.32 2004/09/15 10:37:01 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -79,7 +79,7 @@ public:
    virtual Stat_t   Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Option_t *option="") const;
    virtual Stat_t   Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, Option_t * ="") const {return 0;}
    virtual Double_t KolmogorovTest(TH1 *h2, Option_t *option="") const;
-   virtual Int_t    Merge(TCollection *list);
+   virtual Long64_t Merge(TCollection *list);
    virtual TH2     *RebinX(Int_t ngroup=2, const char *newname="");
    virtual TH2     *RebinY(Int_t ngroup=2, const char *newname="");  
    virtual TH2     *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="");     

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.60 2005/03/18 22:41:26 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH3.cxx,v 1.61 2005/03/21 12:32:30 brun Exp $
 // Author: Rene Brun   27/10/95
 
 /*************************************************************************
@@ -1186,161 +1186,178 @@ Double_t TH3::KolmogorovTest(TH1 *h2, Option_t *option) const
 
    return prb;
 }   
-   
+
+
 //______________________________________________________________________________
-Int_t TH3::Merge(TCollection *list)
+Long64_t TH3::Merge(TCollection *list)
 {
    //Add all histograms in the collection to this histogram.
    //This function computes the min/max for the axes,
    //compute a new number of bins, if necessary,
    //add bin contents, errors and statistics.
    //If overflows are present and limits are different the function will fail.
-   //The function returns the merged number of entries if the merge is 
-   //successfull, -1 otherwise.
+   //The function returns the total number of entries in the result histogram
+   //if the merge is successfull, -1 otherwise.
    //
-   //IMPORTANT remark. The 3 axis x,y and z may have different number
+   //IMPORTANT remark. The 2 axis x and y may have different number
    //of bins and different limits, BUT the largest bin width must be
-   //a multiple of the smallest bin width and the upper limit must also 
+   //a multiple of the smallest bin width and the upper limit must also
    //be a multiple of the bin width.
-   
+                                                                                            
    if (!list) return 0;
-   if (fBuffer) {
-      Error("Merge", "buffer not empty in the first histogram");
-      return 0;
-   }
-   TIter next(list);
-   Double_t umin,umax,vmin,vmax,wmin,wmax;
-   Int_t nx,ny,nz;
+   if (list->IsEmpty()) return (Int_t) GetEntries();
 
-   const Int_t kNstat = 11;
-   Stat_t stats[kNstat], totstats[kNstat];
-   TH3 *h, *hclone=0;
-   Int_t i;
-   Stat_t nentries = fEntries;
-   for (i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
-   GetStats(totstats);
-   Double_t xmin  = fXaxis.GetXmin();
-   Double_t xmax  = fXaxis.GetXmax();
-   Double_t ymin  = fYaxis.GetXmin();
-   Double_t ymax  = fYaxis.GetXmax();
-   Double_t zmin  = fZaxis.GetXmin();
-   Double_t zmax  = fZaxis.GetXmax();
-   Int_t    nbix  = fXaxis.GetNbins();
-   Int_t    nbiy  = fYaxis.GetNbins();
-   Int_t    nbiz  = fZaxis.GetNbins();
    TList inlist;
-   if (nentries > 0) {
-      hclone = (TH3*)Clone("FirstClone");
-      Reset();
-      inlist.Add(hclone);
-   }
-   Bool_t same = kTRUE;
-   TAxis newXAxis(nbix, xmin, xmax);
-   TAxis newYAxis(nbiy, ymin, ymax);
-   TAxis newZAxis(nbiz, zmin, zmax);
+   TH1* hclone = (TH1*)Clone("FirstClone");
+   BufferEmpty(1);         // To remove buffer.
+   Reset();                // BufferEmpty sets limits so we can't use it later.
+   SetEntries(0);
+   inlist.Add(hclone);
+   inlist.AddAll(list);
 
-   while ((h=(TH3*)next())) {     
-      if (!h->InheritsFrom(TH3::Class())) {
-         Error("Add","Attempt to add object of class: %s to a %s",h->ClassName(),this->ClassName());
+   TAxis newXAxis;
+   TAxis newYAxis;
+   TAxis newZAxis;
+   Bool_t initialLimitsFound = kFALSE;
+   Bool_t same = kTRUE;
+   Bool_t allHaveLimits = kTRUE;
+
+   TIter next(&inlist);
+   while (TObject *o = next()) {
+      TH3* h = dynamic_cast<TH3*> (o);
+      if (!h) {
+         Error("Add","Attempt to add object of class: %s to a %s",
+               o->ClassName(),this->ClassName());
          return -1;
       }
-      inlist.Add(h);
-      if (h->fBuffer) {
-         Error("Merge", "buffer not empty");
-         return 0;
-      }
-      //import statistics
-      h->GetStats(stats);
-      for (i=0;i<kNstat;i++) totstats[i] += stats[i];
-      nentries += h->GetEntries();
-      
-      // find min/max of the axes
-      umin = h->GetXaxis()->GetXmin();
-      umax = h->GetXaxis()->GetXmax();
-      vmin = h->GetYaxis()->GetXmin();
-      vmax = h->GetYaxis()->GetXmax();
-      wmin = h->GetZaxis()->GetXmin();
-      wmax = h->GetZaxis()->GetXmax();
-      nx   = h->GetXaxis()->GetNbins();
-      ny   = h->GetYaxis()->GetNbins();
-      nz   = h->GetZaxis()->GetNbins();
-      if (nx != nbix || ny != nbiy || nz != nbiz ||
-                    umin != xmin || umax != xmax ||
-                    vmin != ymin || vmax != ymax ||
-                    wmin != zmin || wmax != zmax) {
-         same = kFALSE;
-         if (!RecomputeAxisLimits(newXAxis, *(h->GetXaxis())))
-            Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                  "first: (%d, %f, %f), second: (%d, %f, %f)",
-                  newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
-                  nx, umin, umax);
-         if (!RecomputeAxisLimits(newYAxis, *(h->GetYaxis())))
-            Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                  "first: (%d, %f, %f), second: (%d, %f, %f)",
-                  newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
-                  ny, vmin, vmax);
-         if (!RecomputeAxisLimits(newZAxis, *(h->GetZaxis())))
-            Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                  "first: (%d, %f, %f), second: (%d, %f, %f)",
-                  newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax(),
-                  nz, wmin, wmax);
+      Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
+      allHaveLimits = allHaveLimits && hasLimits;
+
+      if (hasLimits) {
+         h->BufferEmpty();
+         if (!initialLimitsFound) {
+            initialLimitsFound = kTRUE;
+            newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
+                     h->GetXaxis()->GetXmax());
+            newYAxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
+                     h->GetYaxis()->GetXmax());
+            newZAxis.Set(h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
+                     h->GetZaxis()->GetXmax());
+         }
+         else {
+            if (!RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
+               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+                     newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
+                     h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
+                     h->GetXaxis()->GetXmax());
+            }
+            if (!RecomputeAxisLimits(newYAxis, *(h->GetYaxis()))) {
+               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+                     newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
+                     h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
+                     h->GetYaxis()->GetXmax());
+            }
+            if (!RecomputeAxisLimits(newZAxis, *(h->GetZaxis()))) {
+               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
+                     "first: (%d, %f, %f), second: (%d, %f, %f)",
+                     newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax(),
+                     h->GetZaxis()->GetNbins(), h->GetZaxis()->GetXmin(),
+                     h->GetZaxis()->GetXmax());
+            }
+         }
       }
    }
+   next.Reset();
 
-   //  if different binning compute best binning
-   if (!same) {
+   same = same && SameLimitsAndNBins(newXAxis, *GetXaxis())
+               && SameLimitsAndNBins(newYAxis, *GetYaxis());
+   if (!same && initialLimitsFound)
       SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
               newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
               newZAxis.GetNbins(), newZAxis.GetXmin(), newZAxis.GetXmax());
+
+   if (!allHaveLimits) {
+      // fill this histogram with all the data from buffers of histograms without limits
+      while (TH3* h = dynamic_cast<TH3*> (next())) {
+         if (h->GetXaxis()->GetXmin() >= h->GetXaxis()->GetXmax() && h->fBuffer) {
+             // no limits
+            Int_t nbentries = (Int_t)h->fBuffer[0];
+            for (Int_t i = 0; i < nbentries; i++)
+               Fill(h->fBuffer[4*i + 2], h->fBuffer[4*i + 3],
+                    h->fBuffer[4*i + 4], h->fBuffer[4*i + 1]);
+                           // Entries from buffers have to be filled one by one
+                           // because FillN doesn't resize histograms.
+         }
+      }
+      if (!initialLimitsFound)
+         return (Int_t) GetEntries();  // all histograms have been processed
+      next.Reset();
    }
 
-   Bool_t canRebin=TestBit(kCanRebin);
-   ResetBit(kCanRebin); // reset, otherwise getting the under/overflow will rebin
- 
    //merge bin contents and errors
-   TIter nextin(&inlist);
-   Int_t ibin, bin, binx, biny, binz, ix, iy, iz;
+   const Int_t kNstat = 11;
+   Stat_t stats[kNstat], totstats[kNstat];
+   for (Int_t i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
+   GetStats(totstats);
+   Stat_t nentries = GetEntries();
+   Int_t binx, biny, binz, ix, iy, iz, nx, ny, nz, bin, ibin;
    Double_t cu;
-   while ((h=(TH3*)nextin())) {     
-      nx   = h->GetXaxis()->GetNbins();
-      ny   = h->GetYaxis()->GetNbins();
-      nz   = h->GetZaxis()->GetNbins();
-      for (binz = 0; binz <= nz + 1; binz++) {
-         iz = fZaxis.FindBin(h->GetZaxis()->GetBinCenter(binz));
-         for (biny = 0; biny <= ny + 1; biny++) {
-            iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
-            for (binx = 0; binx <= nx + 1; binx++) {
-               ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
-               bin = binx +(nx+2)*(biny + (ny+2)*binz);
-               ibin = ix +(nbix+2)*(iy + (nbiy+2)*iz);
-               cu  = h->GetBinContent(bin);
-               if ((!same) && (binx == 0 || binx == nx + 1
-                            || biny == 0 || biny == ny + 1
-                            || binz == 0 || binz == nz + 1)) {
-                  if (cu != 0) {
-                     Error("Merge", "Cannot merge histograms - the histograms have"
-                                    " different limits and undeflows/overflows are present."
-                                    " The initial histogram is now broken!");
-                     return -1;
+   Int_t nbix = fXaxis.GetNbins();
+   Int_t nbiy = fYaxis.GetNbins();
+   Bool_t canRebin=TestBit(kCanRebin);
+   ResetBit(kCanRebin); // reset, otherwise setting the under/overflow will rebin
+
+   while (TH1* h=(TH1*)next()) {
+      // process only if the histogram has limits; otherwise it was processed before
+      if (h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax()) {
+         // import statistics
+         h->GetStats(stats);
+         for (Int_t i = 0; i < kNstat; i++)
+            totstats[i] += stats[i];
+         nentries += h->GetEntries();
+                                                                                            
+         nx = h->GetXaxis()->GetNbins();
+         ny = h->GetYaxis()->GetNbins();
+         nz = h->GetZaxis()->GetNbins();
+                                                                                            
+         for (binz = 0; binz <= nz + 1; binz++) {
+            iz = fZaxis.FindBin(h->GetZaxis()->GetBinCenter(binz));
+            for (biny = 0; biny <= ny + 1; biny++) {
+               iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
+               for (binx = 0; binx <= nx + 1; binx++) {
+                  ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
+                  bin = binx +(nx+2)*(biny + (ny+2)*binz);
+                  ibin = ix +(nbix+2)*(iy + (nbiy+2)*iz);
+                  cu  = h->GetBinContent(bin);
+                  if ((!same) && (binx == 0 || binx == nx + 1
+                               || biny == 0 || biny == ny + 1
+                               || binz == 0 || binz == nz + 1)) {
+                     if (cu != 0) {
+                        Error("Merge", "Cannot merge histograms - the histograms have"
+                                       " different limits and undeflows/overflows are present."
+                                       " The initial histogram is now broken!");
+                        return -1;
+                     }
                   }
-               }
-               AddBinContent(ibin,cu);
-               if (fSumw2.fN) {
-                  Double_t error1 = h->GetBinError(bin);
-                  fSumw2.fArray[ibin] += error1*error1;
+                  AddBinContent(ibin,cu);
+                  if (fSumw2.fN) {
+                     Double_t error1 = h->GetBinError(bin);
+                     fSumw2.fArray[ibin] += error1*error1;
+                  }
                }
             }
          }
       }
    }
    if (canRebin) SetBit(kCanRebin);
- 
+
    //copy merged stats
    PutStats(totstats);
    SetEntries(nentries);
    if (hclone) delete hclone;
-   
-   return (Int_t) nentries;
+   return (Long64_t)nentries;
 }   
 
 //______________________________________________________________________________
@@ -1876,6 +1893,9 @@ void TH3::Reset(Option_t *option)
 //*-*            ===========================================
 
    TH1::Reset(option);
+   TString opt = option;
+   opt.ToUpper();
+   if (opt.Contains("ICE")) return;
    fTsumwy  = 0;
    fTsumwy2 = 0;
    fTsumwxy = 0;
