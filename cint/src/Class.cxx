@@ -687,16 +687,20 @@ void* G__ClassInfo::New()
     }
     else {
       // Interpreted class,struct
+      struct G__StoreEnv env;
       long store_struct_offset;
       long store_tagnum;
       char temp[G__ONELINE];
       int known=0;
       p = malloc(G__struct.size[tagnum]);
+      G__stubstoreenv(&env,p,tagnum);
       store_tagnum = G__tagnum;
       store_struct_offset = G__store_struct_offset;
       G__store_struct_offset = (long)p;
+      G__tagnum = tagnum;
       sprintf(temp,"%s()",G__struct.name[tagnum]);
       G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
+      G__stubrestoreenv(&env);
       G__store_struct_offset = store_struct_offset;
       G__tagnum = (int)store_tagnum;
     }
@@ -762,6 +766,7 @@ void* G__ClassInfo::New(int n)
       store_tagnum = G__tagnum;
       store_struct_offset = G__store_struct_offset;
       G__store_struct_offset = (long)p;
+      G__tagnum = tagnum;
       sprintf(temp,"%s()",G__struct.name[tagnum]);
       for(i=0;i<n;i++) {
 	G__getfunction(temp,&known,G__CALLCONSTRUCTOR);
