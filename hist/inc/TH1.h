@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.62 2004/12/20 10:01:41 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.63 2005/02/16 10:31:14 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -166,7 +166,7 @@ public:
     Int_t            GetBufferSize  () const {return fBufferSize;}
     const   Double_t *GetBuffer() const {return fBuffer;}
     static  Int_t    GetDefaultBufferSize();
-    virtual Double_t *GetIntegral() {return fIntegral;}
+    virtual Double_t *GetIntegral();
 
     TList           *GetListOfFunctions() const { return fFunctions; }
 

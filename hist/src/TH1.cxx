@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.223 2005/02/23 20:00:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.224 2005/02/28 14:16:45 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1176,6 +1176,16 @@ Double_t TH1::ComputeIntegral()
    for (bin=1;bin<=nbins;bin++)  fIntegral[bin] /= fIntegral[nbins];
    fIntegral[nbins+1] = fEntries;
    return fIntegral[nbins];
+}
+
+//______________________________________________________________________________
+Double_t *TH1::GetIntegral()
+{
+//  Return a pointer to the array of bins integral.
+//  if the pointer fIntegral is null, TH1::ComputeIntegral is called
+   
+   if (fIntegral) ComputeIntegral();
+   return fIntegral;
 }
 
 //______________________________________________________________________________
