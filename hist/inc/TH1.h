@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.8 2000/11/06 07:19:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.9 2000/11/21 20:30:04 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -119,7 +119,7 @@ public:
     virtual void     Browse(TBrowser *b);
     virtual Double_t ComputeIntegral();
     virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-    virtual void     Divide(TF1 *h1, Double_t c1=1);
+    virtual void     Divide(TF1 *f1, Double_t c1=1);
     virtual void     Divide(TH1 *h1);
     virtual void     Divide(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual void     Draw(Option_t *option="");
