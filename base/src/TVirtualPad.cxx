@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.cxx,v 1.2 2000/06/13 12:32:57 brun Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -61,5 +61,29 @@ TVirtualPad::~TVirtualPad()
 {
    // VirtualPad destructor
 
+}
+
+//______________________________________________________________________________
+void TVirtualPad::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TVirtualPad.
+
+   if (R__b.IsReading()) {
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TVirtualPad::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
+      TObject::Streamer(R__b);
+      TAttLine::Streamer(R__b);
+      TAttFill::Streamer(R__b);
+      TAttPad::Streamer(R__b);
+      //====end of old versions
+      
+   } else {
+      TVirtualPad::Class()->WriteBuffer(R__b,this);
+   }
 }
 

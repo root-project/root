@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.5 2000/08/21 06:09:31 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.6 2000/09/12 06:14:14 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1390,7 +1390,13 @@ void TView::Streamer(TBuffer &R__b)
    // Stream an object of class TView.
 
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion(); if (R__v) {};
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      if (R__v > 1) {
+         TView::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
+         return;
+      }
+      //====process old versions before automatic schema evolution
       //unfortunately we forgot to increment the TView version number
       //when the class was upgraded to double precision in version 2.25.
       //we are forced to use the file version number to recognize old files.
@@ -1441,28 +1447,9 @@ void TView::Streamer(TBuffer &R__b)
          R__b >> fDefaultOutline;
          R__b >> fAutoRange;
       }
+      //====end of old versions
+      
    } else {
-      R__b.WriteVersion(TView::IsA());
-      TObject::Streamer(R__b);
-      TAttLine::Streamer(R__b);
-      R__b << fLatitude;
-      R__b << fLongitude;
-      R__b << fPsi;
-      R__b.WriteArray(fTN, 12);
-      R__b.WriteArray(fTB, 12);
-      R__b.WriteArray(fRmax, 3);
-      R__b.WriteArray(fRmin, 3);
-      R__b.WriteArray(fTnorm, 12);
-      R__b.WriteArray(fTback, 12);
-      R__b.WriteArray(fX1, 3);
-      R__b.WriteArray(fX2, 3);
-      R__b.WriteArray(fY1, 3);
-      R__b.WriteArray(fY2, 3);
-      R__b.WriteArray(fZ1, 3);
-      R__b.WriteArray(fZ2, 3);
-      R__b << fSystem;
-      R__b << fOutline;
-      R__b << fDefaultOutline;
-      R__b << fAutoRange;
+      TView::Class()->WriteBuffer(R__b,this);
    }
 }
