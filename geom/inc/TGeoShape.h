@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.27 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.28 2004/12/02 15:21:02 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -119,6 +119,7 @@ public:
    Bool_t                IsValid() const {return !TestShapeBit(kGeoInvalidShape);}
    virtual Bool_t        IsValidBox() const                      = 0; 
    virtual void          InspectShape() const                    = 0;
+   virtual TBuffer3D    *MakeBuffer3D() const {return 0;}
    static void           NormalPhi(Double_t *point, Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    virtual void          Paint(Option_t *option)                 = 0;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
@@ -127,6 +128,7 @@ public:
    void                  SetId(Int_t id) {fShapeId = id;}
    virtual void          SetPoints(Double_t *buff) const         = 0;
    virtual void          SetPoints(Float_t *buff) const          = 0;
+   virtual void          SetSegsAndPols(TBuffer3D *buff) const   = 0;
    void                  SetRuntime(Bool_t flag=kTRUE) {SetShapeBit(kGeoRunTimeShape, flag);}
    Int_t                 ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) const;
    virtual void          Sizeof3D() const                        = 0;

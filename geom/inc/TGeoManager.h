@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.55 2004/11/04 10:38:21 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.56 2004/11/25 12:10:00 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -372,6 +372,7 @@ public:
    void                   ClearShape(const TGeoShape *shape);
    void                   ClearTracks() {fTracks->Delete(); fNtracks=0;}
    void                   RemoveMaterial(Int_t index);
+   void                   ResetUserData();
 
 
    //--- utilities 

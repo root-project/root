@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.102 2004/12/02 15:21:02 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.103 2004/12/03 08:14:15 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -3415,6 +3415,7 @@ void TGeoManager::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 // top node.
    GetGeomPainter()->RandomRays(nrays, startx, starty, startz);
 }
+
 //_____________________________________________________________________________
 void TGeoManager::RemoveMaterial(Int_t index)
 {
@@ -3422,6 +3423,17 @@ void TGeoManager::RemoveMaterial(Int_t index)
    TObject *obj = fMaterials->At(index);
    if (obj) fMaterials->Remove(obj);
 }
+
+//_____________________________________________________________________________
+void TGeoManager::ResetUserData()
+{
+// Sets all pointers TGeoVolume::fField to NULL. User data becomes decoupled 
+// from geometry. Deletion has to be managed by users.
+   TIter next(fVolumes);
+   TGeoVolume *vol;
+   while ((vol=(TGeoVolume*)next())) vol->SetField(0);
+}   
+
 //_____________________________________________________________________________
 void TGeoManager::RestoreMasterVolume()
 {

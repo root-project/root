@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.17 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTorus.cxx,v 1.18 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   28/07/03
 
 /*************************************************************************
@@ -493,14 +493,50 @@ void TGeoTorus::InspectShape() const
 }
 
 //_____________________________________________________________________________
+TBuffer3D *TGeoTorus::MakeBuffer3D() const
+{ 
+   // Creates a TBuffer3D describing *this* shape.
+   // Coordinates are in local reference frame.
+
+   Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t NbPnts = n*(n-1);
+   Bool_t hasrmin = (GetRmin()>0)?kTRUE:kFALSE;
+   Bool_t hasphi  = (GetDphi()<360)?kTRUE:kFALSE;
+   if (hasrmin) NbPnts *= 2;
+   else if (hasphi) NbPnts += 2;
+
+   Int_t NbSegs = (2*n-1)*(n-1);
+   Int_t NbPols = (n-1)*(n-1);
+   if (hasrmin) {
+      NbSegs += (2*n-1)*(n-1);
+      NbPols += (n-1)*(n-1);
+   }
+   if (hasphi) {
+      NbSegs += 2*(n-1);
+      NbPols += 2*(n-1);
+   }
+
+   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+
+   buff->fType = TBuffer3D::kTORUS;
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+
+   SetPoints(buff->fPnts);
+   
+   SetSegsAndPols(buff);
+   
+   return buff; 
+}
+
+//_____________________________________________________________________________
 void TGeoTorus::Paint(Option_t *option)
 {
    // Paint this shape according to option
 
    // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t i, j;
-   const Int_t n = gGeoManager->GetNsegments()+1;
-   Int_t indx, indp, startcap=0;
+   Int_t n = gGeoManager->GetNsegments()+1;
    Int_t NbPnts = n*(n-1);
    Bool_t hasrmin = (GetRmin()>0)?kTRUE:kFALSE;
    Bool_t hasphi  = (GetDphi()<360)?kTRUE:kFALSE;
@@ -519,7 +555,6 @@ void TGeoTorus::Paint(Option_t *option)
    }
 
    TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-   if (!buff) return;
 
    buff->fType = TBuffer3D::kTORUS;
    TGeoVolume *vol = gGeoManager->GetPaintVolume();
@@ -541,6 +576,24 @@ void TGeoTorus::Paint(Option_t *option)
 
    // Basic colors: 0, 1, ... 7
    buff->fColor = vol->GetLineColor();
+   SetSegsAndPols(buff);  
+
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
+}
+
+//_____________________________________________________________________________
+void TGeoTorus::SetSegsAndPols(TBuffer3D *buff) const
+{
+// Fill TBuffer3D structure for segments and polygons.
+   Int_t i, j;
+   Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t NbPnts = n*(n-1);
+   Int_t indx, indp, startcap=0;
+   Bool_t hasrmin = (GetRmin()>0)?kTRUE:kFALSE;
+   Bool_t hasphi  = (GetDphi()<360)?kTRUE:kFALSE;
+   if (hasrmin) NbPnts *= 2;
+   else if (hasphi) NbPnts += 2;
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
 
@@ -684,9 +737,6 @@ void TGeoTorus::Paint(Option_t *option)
          buff->fPols[indx++] = startcap+(n-1)+j;      // endcap j on row n-1 b
       }
    }
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
 }
 
 //_____________________________________________________________________________

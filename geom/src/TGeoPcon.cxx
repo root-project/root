@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.36 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.37 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -668,12 +668,43 @@ void TGeoPcon::InspectShape() const
 }
 
 //_____________________________________________________________________________
+TBuffer3D *TGeoPcon::MakeBuffer3D() const
+{ 
+   // Creates a TBuffer3D describing *this* shape.
+   // Coordinates are in local reference frame.
+
+   const Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t nz = GetNz();
+   if (nz < 2) return 0;
+   Int_t NbPnts = nz*2*n;
+   if (NbPnts <= 0) return 0;
+   Double_t dphi = GetDphi();
+
+   Bool_t specialCase = kFALSE;
+   if (dphi == 360) specialCase = kTRUE;
+
+   Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
+   Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
+   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+
+   buff->fType = TBuffer3D::kPCON;
+
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+
+   SetPoints(buff->fPnts);
+   SetSegsAndPols(buff);
+   
+   return buff;  
+}
+
+//_____________________________________________________________________________
 void TGeoPcon::Paint(Option_t *option)
 {
    // Paint this shape according to option
    
    // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t i, j;
    const Int_t n = gGeoManager->GetNsegments()+1;
    Int_t nz = GetNz();
    if (nz < 2) return;
@@ -704,11 +735,30 @@ void TGeoPcon::Paint(Option_t *option)
    }
 
    SetPoints(buff->fPnts);
-
    TransformPoints(buff);
 
-   // Basic colors: 0, 1, ... 7
    buff->fColor = vol->GetLineColor();
+   SetSegsAndPols(buff);  
+
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
+}
+
+//_____________________________________________________________________________
+void TGeoPcon::SetSegsAndPols(TBuffer3D *buff) const
+{
+// Fill TBuffer3D structure for segments and polygons.
+   Int_t i, j;
+   const Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t nz = GetNz();
+   if (nz < 2) return;
+   Int_t NbPnts = nz*2*n;
+   if (NbPnts <= 0) return;
+   Double_t dphi = GetDphi();
+
+   Bool_t specialCase = kFALSE;
+   if (dphi == 360) specialCase = kTRUE;
+   // Basic colors: 0, 1, ... 7
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
 
@@ -865,10 +915,7 @@ void TGeoPcon::Paint(Option_t *option)
       buff->fPols[indx-8] = indx2+n;
       buff->fPols[indx-2] = indx2+2*n-1;
    }
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
+}   
 
 //_____________________________________________________________________________
 Double_t TGeoPcon::SafetyToSegment(Double_t *point, Int_t ipl, Bool_t in, Double_t safmin) const

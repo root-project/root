@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.39 2004/11/26 15:55:16 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.40 2004/12/01 16:57:19 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -604,17 +604,41 @@ void TGeoCone::InspectShape() const
 }
 
 //_____________________________________________________________________________
+TBuffer3D *TGeoCone::MakeBuffer3D() const
+{ 
+   // Creates a TBuffer3D describing *this* shape.
+   // Coordinates are in local reference frame.
+
+   Int_t n = gGeoManager->GetNsegments();
+   Int_t NbPnts = 4*n;
+   Int_t NbSegs = 8*n;
+   Int_t NbPols = 4*n; 
+
+   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+
+   buff->fType = TBuffer3D::kTUBE;
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+
+   SetPoints(buff->fPnts);
+   
+   SetSegsAndPols(buff);
+   
+   return buff; 
+}
+
+//_____________________________________________________________________________
 void TGeoCone::Paint(Option_t *option)
 {
    // Paint this shape according to option
 
    // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t i, j, n = 20;
-   if (gGeoManager) n = gGeoManager->GetNsegments();
+   Int_t n = gGeoManager->GetNsegments();
 
    TGeoVolume *vol = gGeoManager->GetPaintVolume();
    // In case of OpenGL a cone can be drawn with specialized functions
-   if (!strcmp(option, "ogl") && !TestShapeBit(kGeoEltu)) {
+   if (!strcmp(option, "ogl")) {
       TBuffer3D *buff = gPad->AllocateBuffer3D(42, 0, 0);
 
       buff->fNbPnts  = 9;//9 points! not 3
@@ -656,7 +680,6 @@ void TGeoCone::Paint(Option_t *option)
    Int_t NbSegs = 8*n;
    Int_t NbPols = 4*n;
    TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-   if (!buff) return;
 
    buff->fType = TBuffer3D::kANY;
    buff->fId   = vol;
@@ -677,6 +700,17 @@ void TGeoCone::Paint(Option_t *option)
 
    // Basic colors: 0, 1, ... 7
    buff->fColor = vol->GetLineColor();
+   SetSegsAndPols(buff);
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
+}
+
+//_____________________________________________________________________________
+void TGeoCone::SetSegsAndPols(TBuffer3D *buff) const
+{
+// Fill TBuffer3D structure for segments and polygons.
+   Int_t i,j;
+   Int_t n = gGeoManager->GetNsegments();
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
 
@@ -748,9 +782,6 @@ void TGeoCone::Paint(Option_t *option)
       buff->fPols[indx+2] = (4+i)*n+j+1;
    }
    buff->fPols[indx+2] = (4+i)*n;
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
 }
 
 //_____________________________________________________________________________
@@ -1640,14 +1671,37 @@ void TGeoConeSeg::InspectShape() const
    TGeoBBox::InspectShape();
 }
 
+ //_____________________________________________________________________________
+TBuffer3D *TGeoConeSeg::MakeBuffer3D() const
+{  
+   // Creates a TBuffer3D describing *this* shape.
+   // Coordinates are in local reference frame.
+
+   Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t NbPnts = 4*n;
+   Int_t NbSegs = 2*NbPnts;
+   Int_t NbPols = NbPnts-2; 
+
+   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+
+   buff->fType = TBuffer3D::kTUBS;
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+
+   SetPoints(buff->fPnts);
+   SetSegsAndPols(buff);
+  
+   return buff;
+}
+
 //_____________________________________________________________________________
 void TGeoConeSeg::Paint(Option_t *option)
 {
    // Paint this shape according to option
 
    // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t i, j, n = 20;
-   if (gGeoManager) n = gGeoManager->GetNsegments()+1;
+   Int_t n = gGeoManager->GetNsegments()+1;
    Int_t NbPnts = 4*n;
    Int_t NbSegs = 2*NbPnts;
    Int_t NbPols = NbPnts-2;
@@ -1674,6 +1728,17 @@ void TGeoConeSeg::Paint(Option_t *option)
 
    // Basic colors: 0, 1, ... 7
    buff->fColor = vol->GetLineColor();
+   SetSegsAndPols(buff);  
+  // Paint gPad->fBuffer3D
+   buff->Paint(option);
+}
+
+//_____________________________________________________________________________
+void TGeoConeSeg::SetSegsAndPols(TBuffer3D *buff) const
+{
+// Fill TBuffer3D structure for segments and polygons.
+   Int_t i, j;
+   Int_t n = gGeoManager->GetNsegments()+1;
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
 
@@ -1750,11 +1815,7 @@ void TGeoConeSeg::Paint(Option_t *option)
    buff->fPols[indx++] = 8*n-1;
    buff->fPols[indx++] = 5*n-1;
    buff->fPols[indx++] = 7*n-1;
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
 }
-
 
 //_____________________________________________________________________________
 Double_t TGeoConeSeg::Safety(Double_t *point, Bool_t in) const

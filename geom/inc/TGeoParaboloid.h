@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.h,v 1.2 2004/11/08 09:56:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.h,v 1.3 2004/11/25 12:10:01 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -70,12 +70,14 @@ public:
    virtual Int_t         GetNmeshVertices() const;
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
+   virtual TBuffer3D    *MakeBuffer3D() const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetParaboloidDimensions(Double_t rlo, Double_t rhi, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;
+   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoParaboloid, 1)         // paraboloid class

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.18 2004/11/08 09:56:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.19 2004/11/25 12:10:00 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -82,6 +82,7 @@ public:
    
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
+   virtual TBuffer3D    *MakeBuffer3D() const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
@@ -91,6 +92,7 @@ public:
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;
+   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoCone, 1)         // conical tube class
@@ -153,6 +155,7 @@ public:
    Double_t              GetPhi1() const {return fPhi1;}
    Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;
+   virtual TBuffer3D    *MakeBuffer3D() const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
@@ -162,6 +165,7 @@ public:
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;
+   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoConeSeg, 1)         // conical tube segment class 

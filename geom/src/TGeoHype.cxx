@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.2 2004/12/03 08:14:15 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.cxx,v 1.3 2004/12/03 08:20:21 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -410,19 +410,43 @@ void TGeoHype::InspectShape() const
 }
 
 //_____________________________________________________________________________
+TBuffer3D *TGeoHype::MakeBuffer3D() const
+{ 
+   // Creates a TBuffer3D describing *this* shape.
+   // Coordinates are in local reference frame.
+
+   Int_t n = gGeoManager->GetNsegments();
+   Bool_t hasRmin = HasInner();
+   Int_t NbPnts = (hasRmin)?(2*n*n):(n*n+2);
+   Int_t NbSegs = (hasRmin)?(4*n*n):(n*(2*n+1));
+   Int_t NbPols = (hasRmin)?(2*n*n):(n*(n+1)); 
+
+   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+
+   buff->fType = TBuffer3D::kANY; // should be kHYPE
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+
+   SetPoints(buff->fPnts);
+   
+   SetSegsAndPols(buff);
+   
+   return buff; 
+}
+
+//_____________________________________________________________________________
 void TGeoHype::Paint(Option_t *option)
 {
    // Paint this shape according to option
 
    // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t i, j, n;
-   n = gGeoManager->GetNsegments();
+   Int_t n = gGeoManager->GetNsegments();
    Bool_t hasRmin = HasInner();
    Int_t NbPnts = (hasRmin)?(2*n*n):(n*n+2);
    Int_t NbSegs = (hasRmin)?(4*n*n):(n*(2*n+1));
    Int_t NbPols = (hasRmin)?(2*n*n):(n*(n+1)); 
    TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-   if (!buff) return;
 
    buff->fType = TBuffer3D::kANY; // should be kHYPE
    TGeoVolume *vol = gGeoManager->GetPaintVolume();
@@ -437,10 +461,7 @@ void TGeoHype::Paint(Option_t *option)
       buff->Paint(option);
       return;
    }
-
-   SetPoints(buff->fPnts);
-   Int_t irin = 0;
-   Int_t irout = (hasRmin)?(n*n):2;
+   // Fill points
    // Case hasRmin:
    //   irin = 0 , n (per circle) * n (circles) starting with z = -fDz
    //            icin(j) = irin + j*n  (j=0,n-1) = index of first pt. on circle j
@@ -449,14 +470,27 @@ void TGeoHype::Paint(Option_t *option)
    // Case !hasRmin:
    //   irin = 0, 2 points (lower and upper centers)
    //   irout = 2
+   SetPoints(buff->fPnts);
    TransformPoints(buff);
 
    // Basic colors: 0, 1, ... 7
    buff->fColor = vol->GetLineColor();
+   SetSegsAndPols(buff);      
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
+}
+
+//_____________________________________________________________________________
+void TGeoHype::SetSegsAndPols(TBuffer3D *buff) const
+{
+// Fill TBuffer3D structure for segments and polygons.
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
-
-
+   Int_t i, j, n;
+   n = gGeoManager->GetNsegments();
+   Bool_t hasRmin = HasInner();
+   Int_t irin = 0;
+   Int_t irout = (hasRmin)?(n*n):2;
    // Fill segments
    // Case hasRmin:
    //   Inner circles:  [isin = 0], n (per circle) * n ( circles)
@@ -641,9 +675,6 @@ void TGeoHype::Paint(Option_t *option)
          buff->fPols[npt+4] = ishi+((j+1)%n);
       }
    }   
-         
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
 }
 
 //_____________________________________________________________________________

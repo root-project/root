@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.15 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.16 2004/11/25 12:10:01 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -642,6 +642,31 @@ void TGeoXtru::InspectShape() const
 }
 
 //_____________________________________________________________________________
+TBuffer3D *TGeoXtru::MakeBuffer3D() const
+{ 
+   // Creates a TBuffer3D describing *this* shape.
+   // Coordinates are in local reference frame.
+   Int_t nz = GetNz();
+   Int_t nvert = GetNvert();
+   Int_t NbPnts = nz*nvert;
+   Int_t NbSegs = nvert*(2*nz-1);
+   Int_t NbPols = nvert*(nz-1)+2;
+
+   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+
+   buff->fType = TBuffer3D::kXTRU;
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+
+   SetPoints(buff->fPnts);
+   
+   SetSegsAndPols(buff);
+   
+   return buff; 
+}
+
+//_____________________________________________________________________________
 void TGeoXtru::Paint(Option_t *option)
 {
    // Paint this shape according to option
@@ -676,6 +701,18 @@ void TGeoXtru::Paint(Option_t *option)
 
    // Basic colors: 0, 1, ... 7
    buff->fColor = vol->GetLineColor();
+   SetSegsAndPols(buff);  
+
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
+}
+
+//_____________________________________________________________________________
+void TGeoXtru::SetSegsAndPols(TBuffer3D *buff) const
+{
+// Fill TBuffer3D structure for segments and polygons.
+   Int_t nz = GetNz();
+   Int_t nvert = GetNvert();
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
 
@@ -734,10 +771,6 @@ void TGeoXtru::Paint(Option_t *option)
    for (j=0; j<nvert; j++) {
       buff->fPols[indx++] = indx2+j;
    }
-
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
 }
 
 //_____________________________________________________________________________

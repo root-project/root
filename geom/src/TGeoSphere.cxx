@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.33 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.34 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -782,22 +782,52 @@ void TGeoSphere::InspectShape() const
    TGeoBBox::InspectShape();
 }
 
+ //_____________________________________________________________________________
+TBuffer3D *TGeoSphere::MakeBuffer3D() const
+{ 
+   // Creates a TBuffer3D describing *this* shape.
+   // Coordinates are in local reference frame.
+
+   Int_t  n = gGeoManager->GetNsegments()+1;
+   Double_t ph1 = GetPhi1();
+   Double_t ph2 = GetPhi2();
+   Int_t nz     = GetNz()+1;
+   if (nz < 2) return 0;
+   Int_t NbPnts = 2*n*nz;
+   if (NbPnts <= 0) return 0;
+
+   Bool_t specialCase = kFALSE;
+   if (TMath::Abs(TMath::Sin(2*(ph2 - ph1))) <= 0.01) specialCase = kTRUE;
+
+   Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
+   Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
+   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+
+   buff->fType = TBuffer3D::kANY;
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+ 
+   SetPoints(buff->fPnts);
+   SetSegsAndPols(buff);
+   
+   return buff; 
+}
+
 //_____________________________________________________________________________
 void TGeoSphere::Paint(Option_t *option)
 {
    // Paint this shape according to option
 
    // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t i, j, n = 20;  
-   if (gGeoManager) SetNumberOfDivisions(gGeoManager->GetNsegments());
-   n = GetNumberOfDivisions()+1;
+   SetNumberOfDivisions(gGeoManager->GetNsegments());
+   Int_t n = GetNumberOfDivisions()+1;
 
    // In case of OpenGL a simple sphere can be drawn with a specialized function
    TBuffer3D *buff = gPad->AllocateBuffer3D(11, 0, 0);
-   if (!buff) return;
    TGeoVolume *vol = gGeoManager->GetPaintVolume();
    if (buff->fOption == TBuffer3D::kOGL &&
-       fRmin == 0 && fTheta1 == 0 && fTheta2 >= 180 && fPhi1 == 0 && fPhi2 >= 360) {
+       fRmin == 0 && fTheta1 == 0 && fTheta2 == 180 && fPhi1 == 0 && fPhi2 == 360) {
       buff->fNbPnts  = 3;
       buff->fNbSegs  = 0;
       buff->fNbPols  = 0;
@@ -827,7 +857,6 @@ void TGeoSphere::Paint(Option_t *option)
    Int_t NbSegs = 4*(nz*n-1+(specialCase == kTRUE));
    Int_t NbPols = 2*(nz*n-1+(specialCase == kTRUE));
    buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
-   if (!buff) return;
 
    buff->fType = TBuffer3D::kANY;
    buff->fId   = vol;
@@ -848,6 +877,24 @@ void TGeoSphere::Paint(Option_t *option)
 
    // Basic colors: 0, 1, ... 7
    buff->fColor = vol->GetLineColor();
+   SetSegsAndPols(buff);  
+
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
+}
+
+//_____________________________________________________________________________
+void TGeoSphere::SetSegsAndPols(TBuffer3D *buff) const
+{
+// Fill TBuffer3D structure for segments and polygons.
+   Int_t i, j;
+   Int_t n = gGeoManager->GetNsegments()+1;
+   Double_t ph1 = GetPhi1();
+   Double_t ph2 = GetPhi2();
+   Int_t nz     = GetNz()+1;
+   if (nz < 2) return;
+   Bool_t specialCase = kFALSE;
+   if (TMath::Abs(TMath::Sin(2*(ph2 - ph1))) <= 0.01) specialCase = kTRUE;
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
 
@@ -1011,11 +1058,8 @@ void TGeoSphere::Paint(Option_t *option)
       buff->fPols[indx-8] = indx2+n;
       buff->fPols[indx-2] = indx2+2*n-1;
    }
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
-}
-
+}   
+   
 //_____________________________________________________________________________
 Double_t TGeoSphere::Safety(Double_t *point, Bool_t in) const
 {

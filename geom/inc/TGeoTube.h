@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.18 2004/11/08 09:56:23 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.19 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -71,6 +71,7 @@ public:
    Bool_t                HasRmin() const {return (fRmin>0)?kTRUE:kFALSE;}
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
+   virtual TBuffer3D    *MakeBuffer3D() const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, Int_t skipz=0);
@@ -78,6 +79,7 @@ public:
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;
+   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoTube, 1)         // cylindrical tube class
@@ -137,6 +139,7 @@ public:
    Double_t              GetPhi1() const {return fPhi1;}
    Double_t              GetPhi2() const {return fPhi2;}
    virtual void          InspectShape() const;
+   virtual TBuffer3D    *MakeBuffer3D() const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, 
@@ -146,6 +149,7 @@ public:
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;
+   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoTubeSeg, 1)         // cylindrical tube segment class 

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.14 2004/11/08 09:56:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.h,v 1.15 2004/11/25 12:10:00 brun Exp $
 // Author: Andrei Gheata   24/10/01
    
 /*************************************************************************
@@ -70,6 +70,7 @@ public:
    virtual Bool_t        IsCylType() const {return kFALSE;}
    virtual Bool_t        IsValidBox() const {return ((fDX<0)||(fDY<0)||(fDZ<0))?kFALSE:kTRUE;}
    virtual Bool_t        IsNullBox() const {return ((fDX==0)&&(fDY==0)&&(fDZ==0))?kTRUE:kFALSE;}
+   virtual TBuffer3D    *MakeBuffer3D() const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    void                  SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin=0);
@@ -77,6 +78,7 @@ public:
    void                  SetBoxPoints(Double_t *buff) const;
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;
+   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoBBox, 1)         // box primitive

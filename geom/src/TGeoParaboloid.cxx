@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.9 2004/11/08 09:56:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoParaboloid.cxx,v 1.10 2004/11/25 12:10:01 brun Exp $
 // Author: Mihaela Gheata   20/06/04
 
 /*************************************************************************
@@ -277,18 +277,41 @@ void TGeoParaboloid::InspectShape() const
 }
 
 //_____________________________________________________________________________
+TBuffer3D *TGeoParaboloid::MakeBuffer3D() const
+{ 
+   // Creates a TBuffer3D describing *this* shape.
+   // Coordinates are in local reference frame.
+
+   Int_t n = gGeoManager->GetNsegments();
+   Int_t NbPnts = n*(n+1)+2;
+   Int_t NbSegs = n*(2*n+3);
+   Int_t NbPols = n*(n+2);
+
+   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+
+   buff->fType = TBuffer3D::kPARA;
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+
+   SetPoints(buff->fPnts);
+   
+   SetSegsAndPols(buff);
+   
+   return buff; 
+}
+
+//_____________________________________________________________________________
 void TGeoParaboloid::Paint(Option_t *option)
 {
    // Paint this shape according to option
 
    // Allocate the necessary spage in gPad->fBuffer3D to store this shape
-   Int_t indx, i, j, n = 20;
-   if (gGeoManager) n = gGeoManager->GetNsegments();
+   Int_t n = gGeoManager->GetNsegments();
    Int_t NbPnts = n*(n+1)+2;
    Int_t NbSegs = n*(2*n+3);
    Int_t NbPols = n*(n+2);
    TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 2*n*5 + n*n*6);
-   if (!buff) return;
 
    buff->fType = TBuffer3D::kPARA;
    TGeoVolume *vol = gGeoManager->GetPaintVolume();
@@ -310,6 +333,19 @@ void TGeoParaboloid::Paint(Option_t *option)
 
    // Basic colors: 0, 1, ... 7
    buff->fColor = vol->GetLineColor();
+   SetSegsAndPols(buff);  
+
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
+}
+
+//_____________________________________________________________________________
+void TGeoParaboloid::SetSegsAndPols(TBuffer3D *buff) const
+{
+// Fill TBuffer3D structure for segments and polygons.
+   Int_t indx, i, j;
+   Int_t n = gGeoManager->GetNsegments();
+
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
 
@@ -374,9 +410,6 @@ void TGeoParaboloid::Paint(Option_t *option)
       buff->fPols[indx++] = 2*n*(n+1)+((j+1)%n);
       buff->fPols[indx++] = (2*n+1)*n+j;
    }
-
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
 }
 
 //_____________________________________________________________________________

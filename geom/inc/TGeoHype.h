@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:$:$Id: Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoHype.h,v 1.1 2004/11/25 12:10:00 brun Exp $
 // Author: Mihaela Gheata   20/11/04
 
 /*************************************************************************
@@ -94,6 +94,7 @@ public:
    Double_t              ZHypeSq(Double_t r, Bool_t inner) const;
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kTRUE;}
+   virtual TBuffer3D    *MakeBuffer3D() const;
    virtual void          Paint(Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
    Double_t              SafetyToHype(Double_t *point, Bool_t inner, Bool_t in) const;
@@ -101,6 +102,7 @@ public:
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
    virtual void          SetPoints(Float_t *buff) const;
+   virtual void          SetSegsAndPols(TBuffer3D *buff) const;
    virtual void          Sizeof3D() const;
 
   ClassDef(TGeoHype, 1)         // hyperboloid class

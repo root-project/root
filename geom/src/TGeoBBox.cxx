@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.34 2004/11/25 12:10:01 brun Exp $// Author: Andrei Gheata   24/10/01
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.35 2004/12/05 16:39:24 brun Exp $// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
 
@@ -429,6 +429,29 @@ void TGeoBBox::InspectShape() const
 }
 
 //_____________________________________________________________________________
+TBuffer3D *TGeoBBox::MakeBuffer3D() const
+{
+   // Creates a TBuffer3D describing *this* shape.
+   // Coordinates are in local reference frame.
+
+   Int_t NbPnts = 8;
+   Int_t NbSegs = 12;
+   Int_t NbPols = 6;
+   
+   TBuffer3D* buff = new TBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   buff->fType = TBuffer3D::kBRIK;
+   
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+   
+   SetPoints(buff->fPnts);
+   SetSegsAndPols(buff);
+
+   return buff;   
+}
+
+//_____________________________________________________________________________
 void TGeoBBox::Paint(Option_t *option)
 {
    // Paint this shape according to option
@@ -460,6 +483,15 @@ void TGeoBBox::Paint(Option_t *option)
 
    // Basic colors: 0, 1, ... 7
    buff->fColor = vol->GetLineColor();
+   SetSegsAndPols(buff);  
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
+}
+
+//_____________________________________________________________________________
+void TGeoBBox::SetSegsAndPols(TBuffer3D *buff) const
+{
+// Fill TBuffer3D structure for segments and polygons.
    Int_t c = (((buff->fColor) %8) -1) * 4;
    if (c < 0) c = 0;
    
@@ -488,9 +520,6 @@ void TGeoBBox::Paint(Option_t *option)
    buff->fPols[27] = 3   ; buff->fPols[28] = 2   ;  buff->fPols[29] = 1  ;
    buff->fPols[30] = c+3 ; buff->fPols[31] = 4   ;  buff->fPols[32] = 4  ;
    buff->fPols[33] = 5   ; buff->fPols[34] = 6   ;  buff->fPols[35] = 7  ;
-   
-   // Paint gPad->fBuffer3D
-   buff->Paint(option);
 }
 
 //_____________________________________________________________________________

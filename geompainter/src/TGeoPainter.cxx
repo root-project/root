@@ -1,4 +1,4 @@
-// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.50 2004/12/02 15:21:02 brun Exp $
+// @(#)root/geompainter:$Name:  $:$Id: TGeoPainter.cxx,v 1.51 2004/12/03 08:14:15 brun Exp $
 // Author: Andrei Gheata   05/03/02
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -597,8 +597,11 @@ void TGeoPainter::DrawOnly(Option_t *option)
    if (!view) {
       view = new TView(11);
       view->SetAutoRange(kTRUE);
+      TBuffer3D *buff = gPad->GetBuffer3D();
+      buff->fOption = TBuffer3D::kRANGE;
       fVisOption = kGeoVisOnly;
-      fGeom->GetCurrentVolume()->Paint("range");
+      Paint("range");
+//      fGeom->GetCurrentVolume()->Paint("range");
       view->SetAutoRange(kFALSE);
       if (has_pad) gPad->Update();
    }
