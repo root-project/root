@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.106 2003/11/13 15:15:11 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.107 2003/11/13 15:25:55 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -672,7 +672,10 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
       }
    }
    if (!temp && !strcmp(name, "gVirtualX")) {
-      temp = gVirtualX;
+      return gVirtualX;
+   }
+   if (!temp && !strcmp(name, "gInterpreter")) {
+      return gInterpreter;
    }
    if (!temp) {
       temp  = fFiles->FindObject(name);
@@ -1022,7 +1025,7 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
       TFunction *f;
       TIter      next(GetListOfGlobalFunctions(load));
 
-      TString mangled = fInterpreter->GetMangledName(0, function, params);
+      TString mangled = gInterpreter->GetMangledName(0, function, params);
       while ((f = (TFunction *) next())) {
          if (mangled == f->GetMangledName()) return f;
       }
@@ -1049,7 +1052,7 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
       TFunction *f;
       TIter      next(GetListOfGlobalFunctions(load));
 
-      TString mangled = fInterpreter->GetMangledNameWithPrototype(0,
+      TString mangled = gInterpreter->GetMangledNameWithPrototype(0,
                                                                      function,
                                                                      proto);
       while ((f = (TFunction *) next())) {
@@ -1086,7 +1089,7 @@ TSeqCollection *TROOT::GetListOfGlobals(Bool_t load)
       Fatal("GetListOfGlobals", "fInterpreter not initialized");
 
    if (load)
-      fInterpreter->UpdateListOfGlobals();
+      gInterpreter->UpdateListOfGlobals();
 
    return fGlobals;
 }
@@ -1110,7 +1113,7 @@ TSeqCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
       Fatal("GetListOfGlobalFunctions", "fInterpreter not initialized");
 
    if (load)
-      fInterpreter->UpdateListOfGlobalFunctions();
+      gInterpreter->UpdateListOfGlobalFunctions();
 
    return fGlobalFunctions;
 }
@@ -1150,7 +1153,7 @@ TSeqCollection *TROOT::GetListOfTypes(Bool_t load)
       Fatal("GetListOfTypes", "fInterpreter not initialized");
 
    if (load)
-      fInterpreter->UpdateListOfTypes();
+      gInterpreter->UpdateListOfTypes();
 
    return fTypes;
 }
@@ -1368,7 +1371,7 @@ Int_t TROOT::LoadMacro(const char *filename, int *error, Bool_t check)
             fname = mac;
             fname += aclicMode;
             fname += io;
-            fInterpreter->LoadMacro(fname.Data(), (TInterpreter::EErrorCode*)terr);
+            gInterpreter->LoadMacro(fname.Data(), (TInterpreter::EErrorCode*)terr);
             if (*terr)
                err = -1;
             //else   // maybe not needed (RDM)
@@ -1407,7 +1410,7 @@ Int_t TROOT::Macro(const char *filename, int *error)
          fname += aclicMode;
          fname += arguments;
          fname += io;
-         result = fInterpreter->ExecuteMacro(fname, (TInterpreter::EErrorCode*)error);
+         result = gInterpreter->ExecuteMacro(fname, (TInterpreter::EErrorCode*)error);
       }
       delete [] mac;
 
@@ -1496,7 +1499,7 @@ Long_t TROOT::ProcessLineFast(const char *line, Int_t *error)
 
    if (fInterpreter) {
       TInterpreter::EErrorCode *code = ( TInterpreter::EErrorCode*)error;
-      result = fInterpreter->Calc(line, code);
+      result = gInterpreter->Calc(line, code);
    }
 
    return result;
@@ -1566,7 +1569,7 @@ void TROOT::Reset(Option_t *)
      //    fInterpreter->Reset();
      //    fInterpreter->SaveContext();
      // } else
-         fInterpreter->ResetGlobals();
+         gInterpreter->ResetGlobals();
 
       if (fGlobals) fGlobals->Delete();
       if (fGlobalFunctions) fGlobalFunctions->Delete();
@@ -1581,7 +1584,7 @@ void TROOT::SaveContext()
    // Save the current interpreter context.
 
    if (fInterpreter)
-      fInterpreter->SaveGlobalsContext();
+      gInterpreter->SaveGlobalsContext();
 }
 
 //______________________________________________________________________________

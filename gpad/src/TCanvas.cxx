@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.52 2003/11/05 15:52:50 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.53 2003/11/08 12:55:41 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -526,6 +526,8 @@ void TCanvas::Browse(TBrowser *b)
 void TCanvas::Destructor()
 {
    // Actual canvas destructor.
+
+   if (fCanvasImp && fCanvasImp->IsLocked()) fCanvasImp->Unlock();
 
    if (gThreadXAR) {
       void *arr[2];
@@ -1714,6 +1716,9 @@ void TCanvas::Update()
       if ((*gThreadXAR)("CUPD", 2, arr, NULL)) return;
    }
 
+   if (fCanvasImp && fCanvasImp->IsLocked()) return;
+   if (fCanvasImp) fCanvasImp->Lock();
+
    if (!IsBatch()) FeedbackMode(kFALSE);      // Goto double buffer mode
 
    PaintModified();           // Repaint all modified pad's
@@ -1721,6 +1726,7 @@ void TCanvas::Update()
    Flush();                   // Copy all pad pixmaps to the screen
 
    SetCursor(kCross);
+   if (fCanvasImp) fCanvasImp->Unlock();
 }
 
 //______________________________________________________________________________

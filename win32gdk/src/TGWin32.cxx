@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.29 2003/11/07 14:56:35 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.cxx,v 1.30 2003/11/07 21:01:12 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot 27/11/01
 
 /*************************************************************************
@@ -22,9 +22,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TGWin32.h"
-#include "TGWin32Proxy.h"
-
-
 #include "TROOT.h"
 #include "TColor.h"
 #include "TPoint.h"
@@ -49,6 +46,9 @@
 #include "TClassTable.h"
 #include "KeySymbols.h"
 #include "TWinNTSystem.h"
+
+#include "TGWin32VirtualXProxy.h"
+#include "TGWin32InterpreterProxy.h"
 
 #include "TGLKernel.h"
 #include <wchar.h>
@@ -717,13 +717,18 @@ class TGWin32MainThread {
 public:
    void     *fHandle;      // handle of GUI thread
    DWORD    fId;           // id of GUI thread
-   LPCRITICAL_SECTION  fCritSec; // critical section
+   static LPCRITICAL_SECTION  fCritSec; // general mutex
+   static LPCRITICAL_SECTION  fMessageMutex; // message queue mutex
 
    TGWin32MainThread();
    ~TGWin32MainThread();
+   static void LockMSG();
+   static void UnlockMSG();
 };
 
 TGWin32MainThread* gMainThread = 0;
+LPCRITICAL_SECTION TGWin32MainThread::fCritSec = 0;
+LPCRITICAL_SECTION TGWin32MainThread::fMessageMutex = 0;
 
 //______________________________________________________________________________
 static DWORD WINAPI MessageProcessingLoop(void *p)
@@ -749,10 +754,10 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
             endLoop = kTRUE;
          }
       } else {
-         TGWin32::Lock();
+         TGWin32MainThread::LockMSG();
          TranslateMessage (&msg);
          DispatchMessage (&msg);
-         TGWin32::Unlock();
+         TGWin32MainThread::UnlockMSG();
       }
    }
 
@@ -772,17 +777,19 @@ static DWORD WINAPI MessageProcessingLoop(void *p)
 //______________________________________________________________________________
 TGWin32MainThread::TGWin32MainThread()
 {
-   // dtor
+   // constructor
 
    fHandle = ::CreateThread( NULL, 0, &MessageProcessingLoop, 0, 0, &fId );
    fCritSec = new CRITICAL_SECTION;
+   fMessageMutex = new CRITICAL_SECTION;
    ::InitializeCriticalSection(fCritSec);
+   ::InitializeCriticalSection(fMessageMutex);
 }
 
 //______________________________________________________________________________
 TGWin32MainThread::~TGWin32MainThread()
 {
-   //
+   // dtor
 
    if (fCritSec) {
       ::LeaveCriticalSection(fCritSec);
@@ -790,17 +797,35 @@ TGWin32MainThread::~TGWin32MainThread()
    }
    fCritSec = 0;
 
+   if (fMessageMutex) {
+      ::LeaveCriticalSection(fMessageMutex);
+      ::DeleteCriticalSection(fMessageMutex);
+   }
+   fMessageMutex = 0;
+
    if(fHandle) ::CloseHandle(fHandle);
    fHandle = 0;
+}
+
+//______________________________________________________________________________
+void TGWin32MainThread::LockMSG()
+{
+   // lock message queue
+
+   if (fMessageMutex) ::EnterCriticalSection(fMessageMutex);
+}
+
+//______________________________________________________________________________
+void TGWin32MainThread::UnlockMSG()
+{
+   // unlock message queue
+
+   if (fMessageMutex) ::LeaveCriticalSection(fMessageMutex);
 }
 
 
 ///////////////////////// TGWin32 implementation ///////////////////////////////
 ClassImp(TGWin32)
-
-
-TGWin32  *TGWin32::fgRealObject = 0;
-TList    *gListOfProxies = 0;
 
 //______________________________________________________________________________
 TGWin32::TGWin32()
@@ -809,7 +834,6 @@ TGWin32::TGWin32()
 
    fScreenNumber = 0;
    fWindows = 0;
-   fgRealObject = this;
 }
 
 //______________________________________________________________________________
@@ -817,7 +841,6 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title)
 {
    // Normal Constructor.
 
-   fgRealObject = this;
    fScreenNumber = 0;
    fHasTTFonts = kFALSE;
    fTextAlignH = 1;
@@ -844,10 +867,13 @@ TGWin32::TGWin32(const char *name, const char *title) : TVirtualX(name,title)
       gSplash = new TGWin32SplashThread();
    }
 
+   // initialize GUI thread and proxy objects
    if (!gROOT->IsBatch() && !gMainThread) {
       gMainThread = new TGWin32MainThread();
-      gListOfProxies = new TList();
-      gPtr2VirtualX = &TGWin32::Proxy;
+      TGWin32ProxyBase::fgMainThreadId = gMainThread->fId;
+      TGWin32VirtualXProxy::fgRealObject = this;
+      gPtr2VirtualX = &TGWin32VirtualXProxy::ProxyObject;
+      gPtr2Interpreter = &TGWin32InterpreterProxy::ProxyObject;
    }
 }
 
@@ -879,40 +905,7 @@ void TGWin32::CloseDisplay()
    if (fWindows) TStorage::Dealloc(fWindows);
    fWindows = 0;
 
-/*
-   if (gListOfProxies) {
-      gListOfProxies->Delete();
-      delete gListOfProxies;
-      gListOfProxies = 0;
-   }
-*/
-
    if (fXEvent) gdk_event_free((GdkEvent*)fXEvent);
-}
-
-//______________________________________________________________________________
-TVirtualX *TGWin32::Proxy()
-{
-   // returns gVirtualX. Each thread has its own gVirtualX
- 
-   static TGWin32Proxy *proxy = 0;
-   ULong_t id = ::GetCurrentThreadId();
-
-   if (proxy && proxy->GetId()==id) return proxy;
-   if (!gMainThread || !gListOfProxies || (id==gMainThread->fId)) return fgRealObject;
-
-   TIter next(gListOfProxies);
-
-   while ((proxy=(TGWin32Proxy*)next())) {
-      if (proxy->GetId()==id) {
-         return proxy;
-      }
-   }
-   proxy = new TGWin32Proxy();
-   proxy->SetMainThreadId(gMainThread->fId);
-   gListOfProxies->Add(proxy);
-
-   return proxy;
 }
 
 //______________________________________________________________________________
@@ -5338,13 +5331,13 @@ Bool_t TGWin32::CheckEvent(Window_t id, EGEventType type, Event_t & ev)
    Event_t tev;
    GdkEvent xev;
 
-   Lock();
+   TGWin32MainThread::LockMSG();
    tev.fType = type;
    MapEvent(tev, xev, kTRUE);
    Bool_t r = gdk_check_typed_window_event((GdkWindow *) id, xev.type, &xev);
 
    if (r) MapEvent(ev, xev, kFALSE);
-   Unlock();
+   TGWin32MainThread::UnlockMSG();
    return r ? kTRUE : kFALSE;
 }
 
@@ -5355,11 +5348,11 @@ void TGWin32::SendEvent(Window_t id, Event_t * ev)
 
    if (!ev) return;
 
-   Lock();
+   TGWin32MainThread::LockMSG();
    GdkEvent xev;
    MapEvent(*ev, xev, kTRUE);
    gdk_event_put(&xev);
-   Unlock();
+   TGWin32MainThread::UnlockMSG();
 }
 
 //______________________________________________________________________________
@@ -5368,9 +5361,9 @@ Int_t TGWin32::EventsPending()
     // Returns number of pending events.
    
    Int_t ret;
-   Lock();
+   TGWin32MainThread::LockMSG();
    ret = (Int_t)gdk_event_queue_find_first();
-   Unlock();
+   TGWin32MainThread::UnlockMSG();
    return ret;
 }
 
@@ -5381,7 +5374,7 @@ void TGWin32::NextEvent(Event_t & event)
    // and removes event from queue. Not all of the event fields are valid
    // for each event type, except fType and fWindow.
 
-   Lock();
+   TGWin32MainThread::LockMSG();
    GdkEvent *xev = gdk_event_unqueue();
 
    // fill in Event_t
@@ -5392,7 +5385,7 @@ void TGWin32::NextEvent(Event_t & event)
 
    MapEvent(event, *xev, kFALSE);
    gdk_event_free (xev);
-   Unlock();
+   TGWin32MainThread::UnlockMSG();
 }
 
 //______________________________________________________________________________

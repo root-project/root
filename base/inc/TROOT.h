@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.34 2003/08/29 10:41:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.35 2003/11/13 15:15:11 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -143,6 +143,7 @@ public:
    Bool_t            FromPopUp() const { return fFromPopUp; }
    TPluginManager   *GetPluginManager() const { return fPluginManager; }
    TApplication     *GetApplication() const { return fApplication; }
+   TInterpreter     *GetInterpreter() const { return fInterpreter; }
    TClass           *GetClass(const char *name, Bool_t load = kTRUE) const;
    TClass           *GetClass(const type_info &typeinfo, Bool_t load = kTRUE) const;
    TColor           *GetColor(Int_t color) const;

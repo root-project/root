@@ -1,5 +1,5 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.15 2003/08/23 14:51:25 brun Exp $
-// Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
+// $Id$
+// Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -9,16 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TGWin32
-#define ROOT_TGWin32
-
+#ifndef ROOT_TGWin32VirtualXProxy
+#define ROOT_TGWin32VirtualXProxy
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGWin32                                                              //
+// TGWin32VirtualXProxy                                                 //
 //                                                                      //
-// Interface to low level Win32. This class gives access to basic       //
-// Win32 graphics, pixmap, text and font handling routines              //
+// This class is the proxy interface to the Win32 graphics system.      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -26,150 +24,24 @@
 #include "TVirtualX.h"
 #endif
 
-#ifndef ROOT_TTF
-#include "TTF.h"
+#ifndef ROOT_TGWin32ProxyBase
+#include "TGWin32ProxyBase.h"
 #endif
 
-
-#if !defined(__CINT__)
-
-#include "Windows4root.h"
-#include "gdk/gdk.h"
-#include "gdk/win32/gdkwin32.h"
-
-#else
-
-typedef ULong_t LPCRITICAL_SECTION;
-typedef unsigned long DWORD;
-typedef void* HANDLE;
-
-typedef unsigned long XID;
-typedef XID GdkDrawable;
-typedef XID GdkCursor;
-typedef XID GdkColormap;
-typedef XID GdkWindow;
-typedef XID GdkVisual;
-
-struct GdkGC;
-struct GdkGCValues;
-struct GdkWindowAttr;
-struct GdkColor;
-struct GdkEvent;
-struct GdkImage;
-struct GdkPoint;
-struct GdkRectangle;
-
-#endif
-
-typedef unsigned long KeySym;
-
-#define None 0 /* universal null resource or null atom */
-
-struct XWindow_t;
+class TGWin32;
 ////////////////////////////////////////////////////////////////////////////////
-class TGWin32 : public TVirtualX {
-
-private:
-
-   enum EAlign { kNone, kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
-                 kBLeft, kBCenter, kBRight };
-
-   FT_Vector   fAlign;                 // alignment vector
-
-   void    Align(void);
-   void    DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, GdkImage *xim,
-                     Int_t bx, Int_t by);
-   Bool_t  IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   GdkImage *GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void    RenderString(Int_t x, Int_t y, ETextMode mode);
-
-   Int_t            fMaxNumberOfWindows;    //Maximum number of windows
-   XWindow_t       *fWindows;               //List of windows
-   GdkCursor       *fCursors[kNumCursors];  //List of cursors
-
-   void  CloseWindow1();
-   void  ClearPixmap(GdkDrawable *pix);
-   void  CopyWindowtoPixmap(GdkDrawable *pix, Int_t xpos, Int_t ypos);
-   void  PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
-                  Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
-                  UChar_t *image);
-   void  RemovePixmap(GdkDrawable *pix);
-   void  SetColor(GdkGC *gc, Int_t ci);
-   void  SetInput(Int_t inp);
-   void  SetMarkerType(Int_t type, Int_t n, GdkPoint *xy);
-   void  CollectImageColors(ULong_t pixel, ULong_t *&orgcolors, Int_t &ncolors,
-                            Int_t &maxcolors);
-   void  MakeOpaqueColors(Int_t percent, ULong_t *orgcolors, Int_t ncolors);
-   Int_t FindColor(ULong_t pixel, ULong_t *orgcolors, Int_t ncolors);
-   void  ImgPickPalette(GdkImage *image, Int_t &ncol, Int_t *&R, Int_t *&G, Int_t *&B);
-
-   //---- Private methods used for GUI ----
-   void MapGCValues(GCValues_t &gval, ULong_t &xmask, GdkGCValues &xgval, Bool_t tox = kTRUE);
-   void MapSetWindowAttributes(SetWindowAttributes_t *attr,
-                               ULong_t &xmask, GdkWindowAttr &xattr);
-   void MapCursor(ECursor cursor, Int_t &xcursor);
-   void MapColorStruct(ColorStruct_t *color, GdkColor &xcolor);
-   void MapModifierState(UInt_t &state, UInt_t &xstate, Bool_t tox = kTRUE);
-   void MapEvent(Event_t &ev, GdkEvent &xev, Bool_t tox = kTRUE);
-   void MapEventMask(UInt_t &emask, UInt_t &xemask, Bool_t tox = kTRUE);
-   void MapKeySym(UInt_t &keysym, UInt_t &xkeysym, Bool_t tox = kTRUE);
-
-   Bool_t NeedSplash();
+class TGWin32VirtualXProxy: public TVirtualX , public TGWin32ProxyBase {
+friend class TGWin32;
 
 protected:
-
-   GdkVisual   *fVisual;            //
-   GdkColormap *fColormap;          // Default colormap, 0 if b/w
-   Int_t       fScreenNumber;       // Screen number
-   Bool_t      fHasTTFonts;         // True when TrueType fonts are used
-   Int_t       fTextAlignH;         // Text Alignment Horizontal
-   Int_t       fTextAlignV;         // Text Alignment Vertical
-   Int_t       fTextAlign;          // Text alignment (set in SetTextAlign)
-   Float_t     fCharacterUpX;       // Character Up vector along X
-   Float_t     fCharacterUpY;       // Character Up vector along Y
-   Float_t     fTextMagnitude;      // Text Magnitude
-   Int_t       fDepth;              // Number of color planes
-   Int_t       fRedDiv;             // Red value divider, -1 if no TrueColor visual
-   Int_t       fGreenDiv;           // Green value divider
-   Int_t       fBlueDiv;            // Blue value divider
-   Int_t       fRedShift;           // Bits to left shift red, -1 if no TrueColor visual
-   Int_t       fGreenShift;         // Bits to left shift green
-   Int_t       fBlueShift;          // Bits to left shift blue
-   Handle_t    fXEvent;             // Current native (GDK) event
-
-   Bool_t      fFillColorModified;  //   
-   Bool_t      fFillStyleModified;  // 
-   Bool_t      fLineColorModified;  //
-   Bool_t      fPenModified;        // line syle || width modified 
-   Bool_t      fMarkerStyleModified; //
-   Bool_t      fMarkerColorModified; //
-
-   void        UpdateFillColor();
-   void        UpdateFillStyle();  
-   void        UpdateLineColor();
-   void        UpdateMarkerStyle();
-   void        UpdateMarkerColor();
-   void        UpdateLineStyle();
-
-   // needed by TGWin32TTF
-   Bool_t     AllocColor(GdkColormap *cmap, GdkColor *color);
-   void       QueryColors(GdkColormap *cmap, GdkColor *colors, Int_t ncolors);
-   XWindow_t *GetCurrentWindow() const;
-   GdkGC     *GetGC(Int_t which) const;
+   static TVirtualX *fgRealObject;    // TGWin32 object
 
 public:
-   TGWin32();
-   TGWin32(const char *name, const char *title);
-   virtual ~TGWin32();
-
-   void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                   const char *text, ETextMode mode);
-   void      SetTextFont(Font_t fontnumber);
-   Int_t     SetTextFont(char *fontname, ETextSetMode mode);
-   void      SetTextSize(Float_t textsize);
+   TGWin32VirtualXProxy() {}
+   TGWin32VirtualXProxy(const char *name, const char *title) {}
+   virtual   ~TGWin32VirtualXProxy() {}
 
    Bool_t    Init(void *display=0);
-   //UInt_t	 ExecCommand(TGWin32Command *);
    void      ClearWindow();
    void      ClosePixmap();
    void      CloseWindow();
@@ -180,18 +52,21 @@ public:
    void      DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2);
    void      DrawPolyLine(Int_t n, TPoint *xy);
    void      DrawPolyMarker(Int_t n, TPoint *xy);
+   void      DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode);
    void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
+   EDrawMode GetDrawMode();
    Int_t     GetDoubleBuffer(Int_t wid);
    void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
-   const char *DisplayName(const char *dpyName = 0);
+   const char *DisplayName(const char * = 0);
+   Handle_t  GetNativeEvent() const;
    ULong_t   GetPixel(Color_t cindex);
-   static ULong_t   GetPixel(Drawable_t id, Int_t x, Int_t y);
+   ULong_t   GetPixel(Drawable_t id, Int_t x, Int_t y);
    void      GetPlanes(Int_t &nplanes);
    void      GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
-   virtual void GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
-   Float_t   GetTextMagnitude() {return fTextMagnitude;}
+   void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
+   Float_t   GetTextMagnitude();
    Window_t  GetWindowID(Int_t wid);
-   Bool_t    HasTTFonts() const { return fHasTTFonts; }
+   Bool_t    HasTTFonts() const;
    Int_t     InitWindow(ULong_t window);
    void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    Int_t     OpenPixmap(UInt_t w, UInt_t h);
@@ -213,51 +88,73 @@ public:
    void      SetDrawMode(EDrawMode mode);
    void      SetFillColor(Color_t cindex);
    void      SetFillStyle(Style_t style);
+   void      SetFillAttributes();
+   void      ResetAttFill(Option_t *option="");
+   Color_t   GetFillColor() const;
+   Style_t   GetFillStyle() const;
+   Bool_t    IsTransparent() const;
    void      SetLineColor(Color_t cindex);
    void      SetLineType(Int_t n, Int_t *dash);
    void      SetLineStyle(Style_t linestyle);
    void      SetLineWidth(Width_t width);
+   void      SetLineAttributes();
+   void      ResetAttLine(Option_t *option="");
+   Color_t   GetLineColor() const;
+   Style_t   GetLineStyle() const;
+   Width_t   GetLineWidth() const;
    void      SetMarkerColor(Color_t cindex);
    void      SetMarkerSize(Float_t markersize);
    void      SetMarkerStyle(Style_t markerstyle);
+   void      ResetAttMarker(Option_t *toption="");
+   void      SetMarkerAttributes();
+   Color_t   GetMarkerColor() const;
+   Style_t   GetMarkerStyle() const;
+   Size_t    GetMarkerSize()  const;
    void      SetOpacity(Int_t percent);
    void      SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b);
    void      SetTextAlign(Short_t talign=11);
-   void      SetTextColor(Color_t cindex);
-   void      SetTextMagnitude(Float_t mgn=1) { fTextMagnitude = mgn;}
-   void      Sync(Int_t mode);
+   void      SetTextColor(Color_t cindex=1);
+   void      SetTextAngle(Float_t tangle=0);
+   Int_t     SetTextFont(char *fontname, ETextSetMode mode);
+   void      SetTextFont(Font_t fontnumber=62);
+   void      SetTextMagnitude(Float_t mgn);
+   void      SetTextSize(Float_t textsize=1);
+   void      SetTextSizePixels(Int_t npixels);
+   void      SetTextAttributes();
+   void      ResetAttText(Option_t *toption="");
+   Short_t   GetTextAlign() const;
+   Float_t   GetTextAngle() const;
+   Color_t   GetTextColor() const;
+   Font_t    GetTextFont()  const;
+   Float_t   GetTextSize()  const;
    void      UpdateWindow(Int_t mode);
    void      Warp(Int_t ix, Int_t iy);
    Int_t     WriteGIF(char *name);
    void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
-
-   //---- Methods used for GUI -----
-   void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr);
-   void         MapWindow(Window_t id);
-   void         MapSubwindows(Window_t id);
-   void         MapRaised(Window_t id);
-   void         UnmapWindow(Window_t id);
-   void         DestroyWindow(Window_t id);
-   void         RaiseWindow(Window_t id);
-   void         LowerWindow(Window_t id);
-   void         MoveWindow(Window_t id, Int_t x, Int_t y);
-   void         MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void         ResizeWindow(Window_t id, UInt_t w, UInt_t h);
-   void         IconifyWindow(Window_t id);
-   void         SetWindowBackground(Window_t id, ULong_t color);
-   void         SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm);
-   Window_t     CreateWindow(Window_t parent, Int_t x, Int_t y,
-                             UInt_t w, UInt_t h, UInt_t border,
-                             Int_t depth, UInt_t clss,
-                             void *visual, SetWindowAttributes_t *attr,
-                             UInt_t wtype);
+   void      GetWindowAttributes(Window_t id, WindowAttributes_t &attr);
+   void      MapWindow(Window_t id);
+   void      MapSubwindows(Window_t id);
+   void      MapRaised(Window_t id);
+   void      UnmapWindow(Window_t id);
+   void      DestroyWindow(Window_t id);
+   void      RaiseWindow(Window_t id);
+   void      LowerWindow(Window_t id);
+   void      MoveWindow(Window_t id, Int_t x, Int_t y);
+   void      MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void      ResizeWindow(Window_t id, UInt_t w, UInt_t h);
+   void      IconifyWindow(Window_t id);
+   void      SetWindowBackground(Window_t id, ULong_t color);
+   void      SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm);
+   Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,
+                          UInt_t w, UInt_t h, UInt_t border, Int_t depth, UInt_t clss,
+                          void *visual, SetWindowAttributes_t *attr, UInt_t wtype);
    Int_t        OpenDisplay(const char *dpyName=0);
    void         CloseDisplay();
    Display_t    GetDisplay() const;
-   Visual_t     GetVisual() const { return 0; }
-   Int_t        GetScreen() const { return 0; }
+   Visual_t     GetVisual() const;
+   Int_t        GetScreen() const;
    Int_t        GetDepth() const;
-   Colormap_t   GetColormap() const { return (Colormap_t) fColormap; }
+   Colormap_t   GetColormap() const;
    Atom_t       InternAtom(const char *atom_name, Bool_t only_if_exist);
    Window_t     GetDefaultRootWindow() const;
    Window_t     GetParent(Window_t id) const;
@@ -272,17 +169,13 @@ public:
    void         SetCursor(Window_t id, Cursor_t curid);
    Pixmap_t     CreatePixmap(Drawable_t id, UInt_t w, UInt_t h);
    Pixmap_t     CreatePixmap(Drawable_t id, const char *bitmap, UInt_t width,
-                             UInt_t height, ULong_t forecolor, ULong_t backcolor,
-                             Int_t depth);
-   Pixmap_t     CreateBitmap(Drawable_t id, const char *bitmap,
-                             UInt_t width, UInt_t height);
+                             UInt_t height, ULong_t forecolor, ULong_t backcolor, Int_t depth);
+   Pixmap_t     CreateBitmap(Drawable_t id, const char *bitmap, UInt_t width, UInt_t height);
    void         DeletePixmap(Pixmap_t pmap);
    Bool_t       CreatePictureFromFile(Drawable_t id, const char *filename,
-                                      Pixmap_t &pict, Pixmap_t &pict_mask,
-                                      PictureAttributes_t &attr);
+                                      Pixmap_t &pict, Pixmap_t &pict_mask, PictureAttributes_t &attr);
    Bool_t       CreatePictureFromData(Drawable_t id, char **data,
-                                      Pixmap_t &pict, Pixmap_t &pict_mask,
-                                      PictureAttributes_t &attr);
+                                      Pixmap_t &pict, Pixmap_t &pict_mask, PictureAttributes_t &attr);
    Bool_t       ReadPictureDataFromFile(const char *filename, char ***ret_data);
    void         DeletePictureData(void *data);
    void         SetDashes(GContext_t gc, Int_t offset, const char *dash_list, Int_t n);
@@ -290,31 +183,23 @@ public:
    Bool_t       AllocColor(Colormap_t cmap, ColorStruct_t &color);
    void         QueryColor(Colormap_t cmap, ColorStruct_t &color);
    void         FreeColor(Colormap_t cmap, ULong_t pixel);
-   Int_t        EventsPending();
-   void         NextEvent(Event_t &event);
    void         Bell(Int_t percent);
-   void         CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc,
-                         Int_t src_x, Int_t src_y, UInt_t width, UInt_t height,
-                         Int_t dest_x, Int_t dest_y);
+   void         CopyArea(Drawable_t src, Drawable_t dest, GContext_t gc, Int_t src_x,
+                         Int_t src_y, UInt_t width, UInt_t height, Int_t dest_x, Int_t dest_y);
    void         ChangeWindowAttributes(Window_t id, SetWindowAttributes_t *attr);
-   void         ChangeProperty(Window_t id, Atom_t property, Atom_t type,
-                               UChar_t *data, Int_t len);
+   void         ChangeProperty(Window_t id, Atom_t property, Atom_t type, UChar_t *data, Int_t len);
    void         DrawLine(Drawable_t id, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
    void         ClearArea(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   Bool_t       CheckEvent(Window_t id, EGEventType type, Event_t &ev);
-   void         SendEvent(Window_t id, Event_t *ev);
    void         WMDeleteNotify(Window_t id);
    void         SetKeyAutoRepeat(Bool_t on = kTRUE);
    void         GrabKey(Window_t id, Int_t keycode, UInt_t modifier, Bool_t grab = kTRUE);
    void         GrabButton(Window_t id, EMouseButton button, UInt_t modifier,
-                           UInt_t evmask, Window_t confine, Cursor_t cursor,
-                           Bool_t grab = kTRUE);
+                           UInt_t evmask, Window_t confine, Cursor_t cursor, Bool_t grab = kTRUE);
    void         GrabPointer(Window_t id, UInt_t evmask, Window_t confine,
-                            Cursor_t cursor, Bool_t grab = kTRUE,
-                            Bool_t owner_events = kTRUE);
+                            Cursor_t cursor, Bool_t grab = kTRUE, Bool_t owner_events = kTRUE);
    void         SetWindowName(Window_t id, char *name);
    void         SetIconName(Window_t id, char *name);
-   void         SetIconPixmap(Window_t id, Pixmap_t pic);
+   void         SetIconPixmap(Window_t id, Pixmap_t pix);
    void         SetClassHints(Window_t id, char *className, char *resourceName);
    void         SetMWMHints(Window_t id, UInt_t value, UInt_t funcs, UInt_t input);
    void         SetWMPosition(Window_t id, Int_t x, Int_t y);
@@ -323,8 +208,7 @@ public:
                                UInt_t wmax, UInt_t hmax, UInt_t winc, UInt_t hinc);
    void         SetWMState(Window_t id, EInitialState state);
    void         SetWMTransientHint(Window_t id, Window_t main_id);
-   void         DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
-                           const char *s, Int_t len);
+   void         DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y, const char *s, Int_t len);
    Int_t        TextWidth(FontStruct_t font, const char *s, Int_t len);
    void         GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent);
    void         GetGCValues(GContext_t gc, GCValues_t &gval);
@@ -332,10 +216,8 @@ public:
    void         FreeFontStruct(FontStruct_t fs);
    void         ClearWindow(Window_t id);
    Int_t        KeysymToKeycode(UInt_t keysym);
-   void         FillRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
-                              UInt_t w, UInt_t h);
-   void         DrawRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,
-                              UInt_t w, UInt_t h);
+   void         FillRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void         DrawRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h);
    void         DrawSegments(Drawable_t id, GContext_t gc, Segment_t *seg, Int_t nseg);
    void         SelectInput(Window_t id, UInt_t evmask);
    Window_t     GetInputFocus();
@@ -344,19 +226,16 @@ public:
    void         SetPrimarySelectionOwner(Window_t id);
    void         ConvertPrimarySelection(Window_t id, Atom_t clipboard, Time_t when);
    void         LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym);
-   void         GetPasteBuffer(Window_t id, Atom_t atom, TString &text,
-                               Int_t &nchar, Bool_t del);
+   void         GetPasteBuffer(Window_t id, Atom_t atom, TString &text, Int_t &nchar, Bool_t del);
    void         TranslateCoordinates(Window_t src, Window_t dest, Int_t src_x,
-                    Int_t src_y, Int_t &dest_x, Int_t &dest_y, Window_t &child);
+                         Int_t src_y, Int_t &dest_x, Int_t &dest_y, Window_t &child);
    void         GetWindowSize(Drawable_t id, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    void         FillPolygon(Window_t id, GContext_t gc, Point_t *points, Int_t npnt);
    void         QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
-                             Int_t &root_x, Int_t &root_y, Int_t &win_x,
-                             Int_t &win_y, UInt_t &mask);
+                             Int_t &root_x, Int_t &root_y, Int_t &win_x, Int_t &win_y, UInt_t &mask);
    void         SetForeground(GContext_t gc, ULong_t foreground);
    void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    void         Update(Int_t mode = 0);
-
    Region_t     CreateRegion();
    void         DestroyRegion(Region_t reg);
    void         UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
@@ -368,18 +247,15 @@ public:
    Bool_t       EmptyRegion(Region_t reg);
    Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
    Bool_t       EqualRegion(Region_t rega, Region_t regb);
-   void         GetRegionBox(Region_t reg, Rectangle_t *);
+   void         GetRegionBox(Region_t reg, Rectangle_t *rect);
    char       **ListFonts(char *fontname, Int_t max, Int_t &count);
    void         FreeFontNames(char **fontlist);
    Drawable_t   CreateImage(UInt_t width, UInt_t height);
    void         GetImageSize(Drawable_t id, UInt_t &width, UInt_t &height);
    void         PutPixel(Drawable_t id, Int_t x, Int_t y, ULong_t pixel);
    void         PutImage(Drawable_t id, GContext_t gc, Drawable_t img,
-                         Int_t dx, Int_t dy, Int_t x, Int_t y,
-                         UInt_t w, UInt_t h);
+                         Int_t dx, Int_t dy, Int_t x, Int_t y, UInt_t w, UInt_t h);
    void         DeleteImage(Drawable_t img);
-
-   //---- Methods used for OpenGL -----
    Window_t     CreateGLWindow(Window_t wind, Visual_t visual = 0, Int_t depth = 0);
    ULong_t      GetWinDC(Window_t wind);
    ULong_t      wglCreateContext(Window_t wind);
@@ -420,19 +296,23 @@ public:
    void         glCallList(UInt_t list);
    void         glMatrixMode(UInt_t mode);
    void         glLoadIdentity();
-   void         glFrustum(Double_t min_0,Double_t max_0,Double_t min_1,Double_t max_1,Double_t dnear,Double_t dfar);
-   void         glOrtho(Double_t min_0,Double_t max_0,Double_t min_1,Double_t max_1,Double_t dnear,Double_t dfar);
+   void         glFrustum(Double_t min_0, Double_t max_0, Double_t min_1,
+                          Double_t max_1, Double_t dnear, Double_t dfar);
+   void         glOrtho(Double_t min_0, Double_t max_0, Double_t min_1,
+                        Double_t max_1, Double_t dnear, Double_t dfar);
    void         glCullFace(UInt_t mode);
    void         glPolygonMode(UInt_t face, UInt_t mode);
    void         glLoadMatrixd(const Double_t *matrix);
    void         glShadeModel(UInt_t mode);
    void         glNormal3fv(const Float_t *norm);
 
-   static void Lock();
-   static void Unlock();
+   Int_t        EventsPending() {  return fgRealObject->EventsPending(); }
+   void         NextEvent(Event_t & event) { fgRealObject->NextEvent(event); }
+   Bool_t       CheckEvent(Window_t id, EGEventType type, Event_t &ev) { return fgRealObject->CheckEvent(id,type,ev); }
+   void         SendEvent(Window_t id, Event_t *ev) { fgRealObject->SendEvent(id,ev); }
 
-   ClassDef(TGWin32,0)  //Interface to Win32
+   static TVirtualX *RealObject();
+   static TVirtualX *ProxyObject();
 };
-
 
 #endif

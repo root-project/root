@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.cxx,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 
 #include "TInterpreter.h"
 
-TInterpreter *gInterpreter = 0;
+TInterpreter*   (*gPtr2Interpreter)() = 0; // returns pointer to global object
 
 ClassImp(TInterpreter)
 
@@ -31,4 +31,14 @@ TInterpreter::TInterpreter(const char *name, const char *title)
    // TInterpreter ctor only called by derived classes.
 
    gInterpreter = this;
+}
+
+//______________________________________________________________________________
+TInterpreter *&TInterpreter::Instance()
+{
+   // returns gInterpreter global
+
+   static TInterpreter *instance = 0;
+   if (gPtr2Interpreter) instance = gPtr2Interpreter();
+   return instance;
 }

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.5 2003/08/23 14:51:25 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyBase.cxx,v 1.6 2003/09/10 16:33:23 brun Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -8,6 +8,72 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////
+//
+// Proxy classes provide thread-safe interface to global objects.
+//
+// For example: TGWin32VirtualXProxy (to gVirtualX),  
+//              TGWin32InterpreterProxy (to gInterpreter).
+//
+// Proxy object creates callback object and posts a windows message to 
+// "processing thread". When windows message is received callback 
+// ("real method") is executed.
+// 
+// For example: 
+//    gVirtualX->ClearWindow()
+//
+//    - callback object created containing pointer to function
+//      corresponding TGWin32::ClearWindow() method
+//    - message to "processing thread" (main thread) is posted
+//    - TGWin32::ClearWindow() method is executed inside main thread
+//    - thread containing gVirtualX proxy object waits for reply
+//      from main thread that TGWin32::ClearWindow() is completed. 
+//
+// Howto create proxy class:
+//
+//  1. Naming. 
+//       name of proxy = TGWin32 + the name of "virtual base class" + Proxy
+//
+//       e.g. TGWin32VirtualXProxy = TGWin32 + VirtualX + Proxy
+//
+//  2. Definition of global object
+//       As example check definition and implementation of 
+//       gVirtualX, gInterpreter global objects
+//
+//  3. Class definition.
+//       proxy class must be inherited from "virtual base class" and
+//       TGWin32ProxyBase class. For example:
+//
+//       class TGWin32VirtualX : public TVirtualX , public  TGWin32ProxyBase
+//
+//  4. Constructors, destructor, extra methods.
+//     - constructors and destructor of proxy class do nothing
+//     - proxy class must contain two extra static methods 
+//       RealObject(), ProxyObject(). Each of them return pointer to object
+//       of virtual base class.
+//
+//     For example:
+//       static TInterpreter *RealObject();
+//       static TInterpreter *ProxyObject();
+//
+//  5. Implementation
+//       TGWin32ProxyDefs.h file contains a set of macros which very
+//       simplify implementation.
+//     - RETURN_PROXY_OBJECT macro implements ProxyObject() method, e.g.
+//       RETURN_PROXY_OBJECT(Interpreter)         
+//     - the names of other macros say about itself.
+//
+//       For example:
+//          VOID_METHOD_ARG0(Interpreter,ClearFileBusy,1)
+//          RETURN_METHOD_ARG0_CONST(VirtualX,Visual_t,GetVisual)
+//          RETURN_METHOD_ARG2(VirtualX,Int_t,OpenPixmap,UInt_t,w,UInt_t,h)
+//
+//     - few methods has _LOCK part in the name
+//          VOID_METHOD_ARG1_LOCK(Interpreter,CreateListOfMethods,TClass*,cl)
+//   
+//
+///////////////////////////////////////////////////////////////////////////////
 
 #include "Windows4Root.h"
 #include <windows.h>
@@ -126,14 +192,6 @@ Double_t TGWin32ProxyBase::GetMilliSeconds()
 
    ::QueryPerformanceCounter(&count);
    return ((Double_t)count.QuadPart - overhead)*1000./((Double_t)freq.QuadPart);
-}
-
-//______________________________________________________________________________
-void TGWin32ProxyBase::SetMainThreadId(ULong_t id)
-{
-   //
-
-   if (!fgMainThreadId) fgMainThreadId = id;
 }
 
 //______________________________________________________________________________
