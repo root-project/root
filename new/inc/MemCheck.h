@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:$:$Id:$
+// @(#)root/new:$Name:  $:$Id: MemCheck.h,v 1.1 2001/09/25 16:07:59 rdm Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -41,7 +41,8 @@
 //            D-64291 Darmstadt
 //            Germany
 //
-// Created 10/08/200 by : D.Bertini and M.Ivanov
+// Created 10/08/2000 by: D.Bertini and M.Ivanov.
+// Based on ideas from LeakTracer by Erwin Andreasen.
 //
 // - Updated:
 //    Date: 12/02/2001 Adapt script to new GDB 5.0, new glibc2.2.x and gcc 2.96.
@@ -56,16 +57,6 @@
 #include <stdlib.h>
 #include <iostream.h>
 #include "TROOT.h"
-
-
-// HASH generator
-class THashGen {
-private:
-   static Int_t fgHashTable[65536];
-public:
-   static void  Init();
-   static Int_t Hash(void *p);
-};
 
 
 class TStackInfo {
@@ -150,21 +141,6 @@ public:
 };
 
 
-
-#ifndef WIN32
-inline void THashGen::Init()
-{
-   for (int j = 0; j < 65535; j++)
-      fgHashTable[j] = random();
-}
-
-inline int THashGen::Hash(void *p)
-{
-   // Hash pointer.
-   Int_t i = Int_t(p);
-   return (UInt_t(fgHashTable[i&0xFFFF]^fgHashTable[i>>16]));
-}
-#endif
 
 inline void TStackInfo::Inc(Int_t memSize)
 {

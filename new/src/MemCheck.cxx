@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:$:$Id:$
+// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.1 2001/09/25 16:07:59 rdm Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -41,7 +41,8 @@
 //            D-64291 Darmstadt
 //            Germany
 //
-// Created 10/08/200 by : D.Bertini and M.Ivanov
+// Created 10/08/2000 by: D.Bertini and M.Ivanov.
+// Based on ideas from LeakTracer by Erwin Andreasen.
 //
 // - Updated:
 //    Date: 12/02/2001 Adapt script to new GDB 5.0, new glibc2.2.x and gcc 2.96.
@@ -57,6 +58,7 @@
 #include <string.h>
 #include <signal.h>
 #include "MemCheck.h"
+#include "TMath.h"
 #include "TSystem.h"
 #include "TError.h"
 
@@ -64,8 +66,6 @@
 
 
 static TMemHashTable gMemHashTable;
-
-Int_t  THashGen::fgHashTable[65536];
 
 
 //****************************************************************************//
@@ -87,7 +87,7 @@ int TStackInfo::HashStack(unsigned int size, void **ptr)
 
    int hash = 0;
    for (unsigned int i = 0; i < size; i++)
-      hash ^= THashGen::Hash(ptr[i]);
+      hash ^= int(TMath::Hash(&ptr[i], sizeof(void*)));
    return hash;
 }
 
@@ -237,7 +237,6 @@ static void *get_stack_pointer(int level);
 //______________________________________________________________________________
 void TMemHashTable::Init()
 {
-   THashGen::Init();
    fgStackTable.Init();
    fgSize = 65536;
    fgAllocCount = 0;
@@ -277,7 +276,7 @@ void TMemHashTable::RehashLeak(int newSize)
       TMemTable *branch = fgLeak[ib];
       for (int i = 0; i < branch->fTableSize; i++)
          if (branch->fLeaks[i].fAddress != 0) {
-            int hash = THashGen::Hash(branch->fLeaks[i].fAddress) % newSize;
+            int hash = int(TMath::Hash(&branch->fLeaks[i].fAddress, sizeof(void*)) % newSize);
             TMemTable *newbranch = newLeak[hash];
             if (newbranch->fAllocCount >= newbranch->fTableSize) {
                int newTableSize =
@@ -335,7 +334,7 @@ void *TMemHashTable::AddPointer(size_t size, void *ptr)
    fgAllocCount++;
    if ((fgAllocCount / fgSize) > 128)
       RehashLeak(fgSize * 2);
-   int hash = THashGen::Hash(p) % fgSize;
+   int hash = int(TMath::Hash(&p, sizeof(void*)) % fgSize);
    TMemTable *branch = fgLeak[hash];
    branch->fAllocCount++;
    branch->fMemSize += size;
@@ -383,7 +382,7 @@ void TMemHashTable::FreePointer(void *p)
 
    if (p == 0)
       return;
-   int hash = THashGen::Hash(p) % fgSize;
+   int hash = int(TMath::Hash(&p, sizeof(void*)) % fgSize);
    fgAllocCount--;
    TMemTable *branch = fgLeak[hash];
    for (int i = 0; i < branch->fTableSize; i++) {
@@ -438,8 +437,8 @@ void TMemHashTable::Dump()
    // Print memory check information.
 
    const char *filename;
-   if (gSystem)
-      filename = gSystem->Getenv("ROOTMEMCHECK") ? : "memcheck.out";
+   if (gSystem && gSystem->Getenv("ROOTMEMCHECK"))
+      filename = gSystem->Getenv("ROOTMEMCHECK");
    else
       filename = "memcheck.out";
 
@@ -473,23 +472,6 @@ void TMemHashTable::Dump()
 
 }
 
-#ifdef WIN32
-//______________________________________________________________________________
-void THashGen::Init()
-{
-   for (int j = 0; j < 65535; j++)
-      fgHashTable[j] = random();
-}
-
-//______________________________________________________________________________
-int THashGen::Hash(void *p)
-{
-   // Hash pointer.
-   Int_t i = Int_t(p);
-   return (UInt_t(fgHashTable[i&0xFFFF]^fgHashTable[i>>16]));
-}
-#endif
-
 //______________________________________________________________________________
 static void *get_stack_pointer(int level)
 {
@@ -497,6 +479,7 @@ static void *get_stack_pointer(int level)
    // For other compiler one will need to implement this again !
 
    void *p = 0;
+#ifdef R__GNU
    switch (level) {
    case 0:
       if (__builtin_frame_address(1))
@@ -582,5 +565,8 @@ static void *get_stack_pointer(int level)
    default:
       p = 0;
    }
+#else
+   if (level) { }
+#endif
    return p;
 }
