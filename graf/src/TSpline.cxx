@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.6 2004/03/17 07:52:07 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.7 2004/04/26 13:45:33 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -607,7 +607,7 @@ void TSpline3::SaveAs(const char *filename) const
 
    //write the spline coefficients
    //array fX
-   sprintf(buffer,"   const int fX[%d] = {",fNp);   
+   sprintf(buffer,"   const double fX[%d] = {",fNp);   
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    Int_t i;
@@ -625,7 +625,7 @@ void TSpline3::SaveAs(const char *filename) const
    sprintf(buffer," };\n");
    nch = strlen(buffer); f->write(buffer,nch);
    //array fY
-   sprintf(buffer,"   const int fY[%d] = {",fNp);   
+   sprintf(buffer,"   const double fY[%d] = {",fNp);   
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
@@ -641,7 +641,7 @@ void TSpline3::SaveAs(const char *filename) const
    sprintf(buffer," };\n");
    nch = strlen(buffer); f->write(buffer,nch);
    //array fB
-   sprintf(buffer,"   const int fB[%d] = {",fNp);   
+   sprintf(buffer,"   const double fB[%d] = {",fNp);   
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
@@ -657,7 +657,7 @@ void TSpline3::SaveAs(const char *filename) const
    sprintf(buffer," };\n");
    nch = strlen(buffer); f->write(buffer,nch);
    //array fC
-   sprintf(buffer,"   const int fC[%d] = {",fNp);   
+   sprintf(buffer,"   const double fC[%d] = {",fNp);   
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
@@ -673,7 +673,7 @@ void TSpline3::SaveAs(const char *filename) const
    sprintf(buffer," };\n");
    nch = strlen(buffer); f->write(buffer,nch);
     //array fD
-   sprintf(buffer,"   const int fD[%d] = {",fNp);   
+   sprintf(buffer,"   const double fD[%d] = {",fNp);   
    nch = strlen(buffer); f->write(buffer,nch);
    buffer[0] = 0;
    for (i=0;i<fNp;i++) {
@@ -690,7 +690,7 @@ void TSpline3::SaveAs(const char *filename) const
    nch = strlen(buffer); f->write(buffer,nch);
     
    //generate code for the spline evaluation
-   sprintf(buffer,"   Int_t klow=0;\n");
+   sprintf(buffer,"   int klow=0;\n");
    nch = strlen(buffer); f->write(buffer,nch);
 
    sprintf(buffer,"   // If out of boundaries, extrapolate. It may be badly wrong\n");
@@ -1238,6 +1238,192 @@ Double_t TSpline5::Eval(Double_t x) const
 void TSpline5::SaveAs(const char *filename) const
 {
   // write this spline as a C++ function that can be executed without ROOT
+  // the name of the function is the name of the file up to the "." if any
+    
+   //open the file
+   ofstream *f = new ofstream(filename,ios::out);
+   if (f == 0 || gSystem->AccessPathName(filename,kWritePermission)) {
+      Error("SaveAs","Cannot open file:%s\n",filename);
+      return;
+   }
+   
+   //write the function name and the spline constants
+   char buffer[512];
+   Int_t nch = strlen(filename);
+   sprintf(buffer,"double %s",filename);
+   char *dot = strstr(buffer,".");
+   if (dot) *dot = 0;
+   strcat(buffer,"(double x) {\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"   const int fNp = %d, fKstep = %d;\n",fNp,fKstep);
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"   const double fDelta = %g, fXmin = %g, fXmax = %g;\n",fDelta,fXmin,fXmax);
+   nch = strlen(buffer); f->write(buffer,nch);
+
+   //write the spline coefficients
+   //array fX
+   sprintf(buffer,"   const double fX[%d] = {",fNp);   
+   nch = strlen(buffer); f->write(buffer,nch);
+   buffer[0] = 0;
+   Int_t i;
+   char numb[20];
+   for (i=0;i<fNp;i++) {
+      sprintf(numb," %g,",fPoly[i].X());
+      nch = strlen(numb);
+      if (i == fNp-1) numb[nch-1]=0;
+      strcat(buffer,numb);
+      if (i%5 == 4 || i == fNp-1) {
+         nch = strlen(buffer); f->write(buffer,nch);
+         if (i != fNp-1) sprintf(buffer,"\n                       ");
+      }
+   }
+   sprintf(buffer," };\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   //array fY
+   sprintf(buffer,"   const double fY[%d] = {",fNp);   
+   nch = strlen(buffer); f->write(buffer,nch);
+   buffer[0] = 0;
+   for (i=0;i<fNp;i++) {
+      sprintf(numb," %g,",fPoly[i].Y());
+      nch = strlen(numb);
+      if (i == fNp-1) numb[nch-1]=0;
+      strcat(buffer,numb);
+      if (i%5 == 4 || i == fNp-1) {
+         nch = strlen(buffer); f->write(buffer,nch);
+         if (i != fNp-1) sprintf(buffer,"\n                       ");
+      }
+   }
+   sprintf(buffer," };\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   //array fB
+   sprintf(buffer,"   const double fB[%d] = {",fNp);   
+   nch = strlen(buffer); f->write(buffer,nch);
+   buffer[0] = 0;
+   for (i=0;i<fNp;i++) {
+      sprintf(numb," %g,",fPoly[i].B());
+      nch = strlen(numb);
+      if (i == fNp-1) numb[nch-1]=0;
+      strcat(buffer,numb);
+      if (i%5 == 4 || i == fNp-1) {
+         nch = strlen(buffer); f->write(buffer,nch);
+         if (i != fNp-1) sprintf(buffer,"\n                       ");
+      }
+   }
+   sprintf(buffer," };\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   //array fC
+   sprintf(buffer,"   const double fC[%d] = {",fNp);   
+   nch = strlen(buffer); f->write(buffer,nch);
+   buffer[0] = 0;
+   for (i=0;i<fNp;i++) {
+      sprintf(numb," %g,",fPoly[i].C());
+      nch = strlen(numb);
+      if (i == fNp-1) numb[nch-1]=0;
+      strcat(buffer,numb);
+      if (i%5 == 4 || i == fNp-1) {
+         nch = strlen(buffer); f->write(buffer,nch);
+         if (i != fNp-1) sprintf(buffer,"\n                       ");
+      }
+   }
+   sprintf(buffer," };\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+    //array fD
+   sprintf(buffer,"   const double fD[%d] = {",fNp);   
+   nch = strlen(buffer); f->write(buffer,nch);
+   buffer[0] = 0;
+   for (i=0;i<fNp;i++) {
+      sprintf(numb," %g,",fPoly[i].D());
+      nch = strlen(numb);
+      if (i == fNp-1) numb[nch-1]=0;
+      strcat(buffer,numb);
+      if (i%5 == 4 || i == fNp-1) {
+         nch = strlen(buffer); f->write(buffer,nch);
+         if (i != fNp-1) sprintf(buffer,"\n                       ");
+      }
+   }
+   sprintf(buffer," };\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+    //array fE
+   sprintf(buffer,"   const double fE[%d] = {",fNp);   
+   nch = strlen(buffer); f->write(buffer,nch);
+   buffer[0] = 0;
+   for (i=0;i<fNp;i++) {
+      sprintf(numb," %g,",fPoly[i].E());
+      nch = strlen(numb);
+      if (i == fNp-1) numb[nch-1]=0;
+      strcat(buffer,numb);
+      if (i%5 == 4 || i == fNp-1) {
+         nch = strlen(buffer); f->write(buffer,nch);
+         if (i != fNp-1) sprintf(buffer,"\n                       ");
+      }
+   }
+   sprintf(buffer," };\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+    //array fF
+   sprintf(buffer,"   const double fF[%d] = {",fNp);   
+   nch = strlen(buffer); f->write(buffer,nch);
+   buffer[0] = 0;
+   for (i=0;i<fNp;i++) {
+      sprintf(numb," %g,",fPoly[i].F());
+      nch = strlen(numb);
+      if (i == fNp-1) numb[nch-1]=0;
+      strcat(buffer,numb);
+      if (i%5 == 4 || i == fNp-1) {
+         nch = strlen(buffer); f->write(buffer,nch);
+         if (i != fNp-1) sprintf(buffer,"\n                       ");
+      }
+   }
+   sprintf(buffer," };\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+    
+   //generate code for the spline evaluation
+   sprintf(buffer,"   int klow=0;\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+
+   sprintf(buffer,"   // If out of boundaries, extrapolate. It may be badly wrong\n");
+   sprintf(buffer,"   if(x<=fXmin) klow=0;\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"   else if(x>=fXmax) klow=fNp-1;\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"   else {\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"     if(fKstep) {\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+
+   sprintf(buffer,"       // Equidistant knots, use histogramming\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"       klow = int((x-fXmin)/fDelta);\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"       if (klow < fNp-1) klow = fNp-1;\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"     } else {\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"       int khig=fNp-1, khalf;\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+
+   sprintf(buffer,"       // Non equidistant knots, binary search\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"       while(khig-klow>1)\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"	 if(x>fX[khalf=(klow+khig)/2]) klow=khalf;\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"	 else khig=khalf;\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"     }\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"   }\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"   // Evaluate now\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"   double dx=x-fX[klow];\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+   sprintf(buffer,"   return (fY[klow]+dx*(fB[klow]+dx*(fC[klow]+dx*(fD[klow]+dx*(fE[klow]+dx*fF[klow])))));\n");
+   nch = strlen(buffer); f->write(buffer,nch);
+    
+   //close file
+   f->write("}\n",2);
+      
+   if (f) { f->close(); delete f;}
 }
 
 //____________________________________________________________________________
