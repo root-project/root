@@ -2009,7 +2009,7 @@ if test "x$enable_globus" = "xyes"; then
                   add="no"
                fi
             done
-            if test "x$add" == "xyes" ; then
+            if test "x$add" = "xyes" ; then
                glbpatchcflags="$glbpatchcflags -I$dirtmp"
             fi
          else
