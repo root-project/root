@@ -1,5 +1,6 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.9 2002/10/21 15:21:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.10 2002/10/22 07:43:12 brun Exp $
 // Author: Andrei Gheata   01/11/01
+// TGeoChecker::CheckGeometry() by Mihaela Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -66,6 +67,183 @@ TGeoChecker::TGeoChecker(const char *treename, const char *filename)
 TGeoChecker::~TGeoChecker()
 {
 // Destructor
+}
+//-----------------------------------------------------------------------------
+void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const
+{
+// Shoot nrays with random directions from starting point (startx, starty, startz)
+// in the reference frame of this volume. Track each ray until exiting geometry, then
+// shoot backwards from exiting point and compare boundary crossing points.
+   Int_t i, j;
+   Double_t start[3], end[3];
+   Double_t dir[3];
+   Double_t dummy[3];
+   Double_t eps = 0.;
+   Double_t *array1 = new Double_t[3*100];
+   Double_t *array2 = new Double_t[3*100];
+   TObjArray *pma = new TObjArray();
+   TPolyMarker3D *pm;
+   pm = new TPolyMarker3D();
+   pm->SetMarkerColor(2); // error > eps
+   pm->SetMarkerStyle(8);
+   pm->SetMarkerSize(0.4);
+   pma->AddAt(pm, 0);
+   pm = new TPolyMarker3D();
+   pm->SetMarkerColor(4); // point not found
+   pm->SetMarkerStyle(8);
+   pm->SetMarkerSize(0.4);
+   pma->AddAt(pm, 1);
+   pm = new TPolyMarker3D();
+   pm->SetMarkerColor(6); // extra point back
+   pm->SetMarkerStyle(8);
+   pm->SetMarkerSize(0.4);
+   pma->AddAt(pm, 2);
+   Int_t nelem1, nelem2;
+   Int_t dim1=100, dim2=100;
+   if ((startx==0) && (starty==0) && (startz==0)) eps=1E-3;
+   start[0] = startx+eps;
+   start[1] = starty+eps;
+   start[2] = startz+eps;
+   Int_t n10=nrays/10;
+   Double_t theta,phi;
+   Double_t dw, dwmin, dx, dy, dz;
+   Int_t ist1, ist2, ifound;
+   TGeoNode *node;
+   for (i=0; i<nrays; i++) {
+      if (n10) {
+         if ((i%n10) == 0) printf("%i percent\n", Int_t(100*i/nrays));
+      }
+      phi = 2*TMath::Pi()*gRandom->Rndm();
+      theta= TMath::ACos(1.-2.*gRandom->Rndm());
+      dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
+      dir[1]=TMath::Sin(theta)*TMath::Sin(phi);
+      dir[2]=TMath::Cos(theta);
+      // shoot direct ray
+      nelem1=nelem2=0;
+      ShootRay(&start[0], dir[0], dir[1], dir[2], array1, nelem1, dim1);
+      if (!nelem1) continue;
+//      printf("DIRECT\n");
+//      for (j=0; j<nelem1; j++) printf("%i : %g %g %g\n", j, array1[3*j], array1[3*j+1], array1[3*j+2]);
+      memcpy(&end[0], &array1[3*(nelem1-1)], 3*sizeof(Double_t));
+      // shoot ray backwards
+      ShootRay(&end[0], -dir[0], -dir[1], -dir[2], array2, nelem2, dim2, &start[0]);
+      if (!nelem2) {
+         printf("nothing on way back!!!\n");
+         for (j=0; j<nelem1; j++) {
+            pm = (TPolyMarker3D*)pma->At(0);
+            pm->SetNextPoint(array1[3*j], array1[3*j+1], array1[3*j+2]);
+	 }
+	 continue;
+      }	     
+//      printf("BACKWARDS\n");
+      Int_t k=nelem2>>1;
+      for (j=0; j<k; j++) {
+         memcpy(&dummy[0], &array2[3*j], 3*sizeof(Double_t));
+         memcpy(&array2[3*j], &array2[3*(nelem2-1-j)], 3*sizeof(Double_t));
+         memcpy(&array2[3*(nelem2-1-j)], &dummy[0], 3*sizeof(Double_t));
+      }
+//      for (j=0; j<nelem2; j++)
+//         printf("%i : %g ,%g ,%g   \n", j, array2[3*j], array2[3*j+1], array2[3*j+2]);	 
+      if (nelem1!=nelem2) printf("nelem1=%i nelem2=%i\n", nelem1, nelem2);
+      ist1 = ist2 = 0;
+      // check first match
+      
+      dx = array1[3*ist1]-array2[3*ist2];
+      dy = array1[3*ist1+1]-array2[3*ist2+1];
+      dz = array1[3*ist1+2]-array2[3*ist2+2];
+      dw = dx*dir[0]+dy*dir[1]+dz*dir[2];
+      fGeom->SetCurrentPoint(&array1[3*ist1]);
+      node = fGeom->FindNode();
+//      printf("%i : %s (%g, %g, %g)\n", ist1, fGeom->GetPath(), 
+//             array1[3*ist1], array1[3*ist1+1], array1[3*ist1+2]);
+      if (TMath::Abs(dw)<1E-4) {
+//         printf("   matching %i (%g, %g, %g)\n", ist2, array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
+         ist2++;
+      } else {
+         printf("   NOT matching %i (%g, %g, %g)\n", ist2, array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
+	 pm = (TPolyMarker3D*)pma->At(0);
+	 pm->SetNextPoint(array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
+         printf("   DCLOSE=%f\n", dw);
+         if (dw<0) {
+            // first boundary missed on way back
+         } else {
+            // first boundary different on way back
+            ist2++;
+         }
+      }      
+      
+      while ((ist1<nelem1-1) && (ist2<nelem2)) {
+         fGeom->SetCurrentPoint(&array1[3*ist1+3]);
+         node = fGeom->FindNode();
+//         printf("%i : %s (%g, %g, %g)\n", ist1+1, fGeom->GetPath(), 
+//                array1[3*ist1+3], array1[3*ist1+4], array1[3*ist1+5]);
+         
+         dx = array1[3*ist1+3]-array1[3*ist1];
+         dy = array1[3*ist1+4]-array1[3*ist1+1];
+         dz = array1[3*ist1+5]-array1[3*ist1+2];
+         // distance to next point
+         dwmin = dx+dir[0]+dy*dir[1]+dz*dir[2];
+         while (ist2<nelem2) {
+            ifound = 0;
+            dx = array2[3*ist2]-array1[3*ist1];
+            dy = array2[3*ist2+1]-array1[3*ist1+1];
+            dz = array2[3*ist2+2]-array1[3*ist1+2];
+            dw = dx+dir[0]+dy*dir[1]+dz*dir[2];
+	    if (TMath::Abs(dw-dwmin)<1E-4) {
+	       ist1++;
+	       ist2++;
+	       break;
+	    }   
+            if (dw<dwmin) {
+            // point found on way back. Check if close enough to ist1+1
+               ifound++;
+               dw = dwmin-dw;
+               if (dw<1E-4) {
+               // point is matching ist1+1
+//                  printf("   matching %i (%g, %g, %g) DCLOSE=%g\n", ist2, array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2], dw);
+                  ist2++;
+                  ist1++;
+                  break;
+               } else {
+               // extra boundary found on way back   
+                  fGeom->SetCurrentPoint(&array2[3*ist2]);
+                  node = fGeom->FindNode();
+     	          pm = (TPolyMarker3D*)pma->At(2);
+	          pm->SetNextPoint(array2[3*ist2], array2[3*ist2+1], array2[3*ist2+2]);
+                  printf("   extra boundary %i :  %s found at DCLOSE=%f\n", ist2, fGeom->GetPath(), dw);
+                  ist2++;
+                  continue;
+               }
+            } else {
+               if (!ifound) {
+                  // point ist1+1 not found on way back
+                  fGeom->SetCurrentPoint(&array1[3*ist1+3]);
+                  node = fGeom->FindNode();
+	          pm = (TPolyMarker3D*)pma->At(1);
+	          pm->SetNextPoint(array2[3*ist1+3], array2[3*ist1+4], array2[3*ist1+5]);
+                  printf("boundary missed on way back\n");
+                  ist1++;
+                  break;
+               } else {
+                  ist1++;
+                  break;
+               }
+            }
+         }               
+      }                          
+   }   
+   pm = (TPolyMarker3D*)pma->At(0);
+   pm->Draw("SAME");
+   pm = (TPolyMarker3D*)pma->At(1);
+   pm->Draw("SAME");
+   pm = (TPolyMarker3D*)pma->At(2);
+   pm->Draw("SAME");
+   if (gPad) {
+      gPad->Modified();
+      gPad->Update();
+   }      
+   delete [] array1;
+   delete [] array2;
 }
 //-----------------------------------------------------------------------------
 void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
@@ -518,6 +696,98 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
    fGeom->FindNode();  // really needed ?
    if (!node_close) dist=-1;
    return node_close;
+}
+//-----------------------------------------------------------------------------
+void TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *endpoint) const
+{
+// Shoot one ray from start point with direction (dirx,diry,dirz). Fills input array
+// with points just after boundary crossings.
+//   Int_t array_dimension = 3*dim;
+   nelem = 0;
+   Int_t istep = 0;
+   if (!dim) {
+      printf("empty input array\n");
+      return;
+   }   
+//   fGeom->CdTop();
+   Double_t *point = fGeom->GetCurrentPoint();
+   TGeoNode *startnode, *endnode, *node;
+   Bool_t is_entering;
+   Double_t step, forward;
+   Double_t dir[3];
+   dir[0] = dirx;
+   dir[1] = diry;
+   dir[2] = dirz;
+   fGeom->InitTrack(start, &dir[0]);
+   startnode = fGeom->GetCurrentNode();
+   if (fGeom->IsOutside()) startnode=0;
+//   if (startnode) printf("Startnode : %s\n", startnode->GetName());
+//   else printf("Startnode : OUTSIDE\n");
+   node = fGeom->FindNextBoundary();
+   step = fGeom->GetStep();
+//   if (node) printf("---next : %s at step=%f\n", node->GetName(), step);
+//   else      printf("---next : OUTSIDE at step=%f\n", step);
+   if (step>1E10) return;
+   endnode = fGeom->Step();
+   is_entering = fGeom->IsEntering();
+   while (step<1E10) {
+      if (endpoint) {
+         forward = dirx*(endpoint[0]-point[0])+diry*(endpoint[1]-point[1])+dirz*(endpoint[2]-point[2]);
+         if (forward<0) {
+	//    printf("exit : Passed start point. nelem=%i\n", nelem); 
+	    return;
+	 }
+      }
+      if (is_entering) {
+         if (nelem>=dim) {
+            Double_t *temparray = new Double_t[3*(dim+20)];
+            memcpy(temparray, array, 3*dim*sizeof(Double_t));
+            delete [] array;
+            array = temparray;
+	          dim += 20;
+         }
+         memcpy(&array[3*nelem], point, 3*sizeof(Double_t)); 
+	//       if (endnode) printf("%i (%g, %g, %g) : %s\n", nelem, point[0], point[1], point[2], endnode->GetName());
+	//       else printf("%i (%g, %g, %g) : OUTSIDE\n", nelem, point[0], point[1], point[2]);
+         nelem++; 
+      } else {
+         if (endnode==0 && step>1E10) {
+	//    printf("exit : NULL endnode. nelem=%i\n", nelem); 
+	    return;
+	 }    
+	       if (!fGeom->IsEntering()) {
+	//          if (startnode) printf("stepping from (%g, %g, %g) inside %s...\n", point[0], point[1], point[2], startnode->GetName());
+        //    else printf("stepping from (%g, %g, %g) OUTSIDE...\n", point[0], point[1], point[2]);
+	          istep = 0;
+	       }    
+         while (!fGeom->IsEntering()) {
+	          istep++;
+            fGeom->SetStep(1E-5);
+            endnode = fGeom->Step();
+         }
+         if (istep>10) printf("%i steps\n", istep);   
+         if (nelem>=dim) {
+            Double_t *temparray = new Double_t[3*(dim+20)];
+            memcpy(temparray, array, 3*dim*sizeof(Double_t));
+            delete [] array;
+            array = temparray;
+	          dim += 20;
+         }
+         memcpy(&array[3*nelem], point, 3*sizeof(Double_t)); 
+	//       if (endnode) printf("%i (%g, %g, %g) : %s\n", nelem, point[0], point[1], point[2], endnode->GetName());
+	//       else printf("%i (%g, %g, %g) : OUTSIDE\n", nelem, point[0], point[1], point[2]);
+         nelem++;   
+         is_entering = kTRUE;
+      }
+      startnode = endnode;    
+      node = fGeom->FindNextBoundary();
+      step = fGeom->GetStep();
+    //  if (node) printf("---next : %s at step=%f\n", node->GetName(), step);
+    //  else      printf("---next : OUTSIDE at step=%f\n", step);
+      endnode = fGeom->Step();
+      is_entering = fGeom->IsEntering();
+   }
+   //printf("exit : INFINITE step. nelem=%i\n", nelem);
 }
 //-----------------------------------------------------------------------------
 void TGeoChecker::Test(Int_t npoints, Option_t *option)

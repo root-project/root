@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.10 2002/10/11 16:41:53 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.11 2002/10/21 15:21:13 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -152,6 +152,24 @@ void TGeoVolume::Browse(TBrowser *b)
    for (Int_t i=0; i<GetNdaughters(); i++) 
       b->Add(GetNode(i)->GetVolume());
 }
+//-----------------------------------------------------------------------------
+void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const
+{
+// Shoot nrays with random directions from starting point (startx, starty, startz)
+// in the reference frame of this volume. Track each ray until exiting geometry, then
+// shoot backwards from exiting point and compare boundary crossing points.
+   TGeoVolume *old_vol = gGeoManager->GetTopVolume();
+   if (old_vol!=this) gGeoManager->SetTopVolume((TGeoVolume*)this);
+   else old_vol=0;
+   gGeoManager->GetTopVolume()->DrawOnly();
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) {
+      Error("CheckGeometry", "Could not instanciate painter");
+      return;
+   }
+   painter->CheckGeometry(nrays, startx, starty, startz);
+//   if (old_vol) gGeoManager->SetTopVolume(old_vol);
+}         
 //-----------------------------------------------------------------------------
 void TGeoVolume::CleanAll()
 {
@@ -545,6 +563,13 @@ void TGeoVolume::MakeCopyNodes(TGeoVolume *other)
 //   printf("other : %s\n nd=%i", other->GetName(), nd);
    for (Int_t i=0; i<nd; i++) fNodes->Add(other->GetNode(i));
 }      
+//-----------------------------------------------------------------------------
+void TGeoVolume::GrabFocus()
+{
+// Move perspective view focus to this volume
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (painter) painter->GrabFocus();
+}   
 //-----------------------------------------------------------------------------
 TGeoVolume *TGeoVolume::MakeCopyVolume()
 {

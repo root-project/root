@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.11 2002/09/14 16:20:14 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.12 2002/11/11 11:23:55 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -81,6 +81,7 @@ TView::TView(Int_t system)
 //*-*    system = 3  Cylindrical
 //*-*    system = 4  Spherical
 //*-*    system = 5  PseudoRapidity/Phi
+//*-*    system = 11 Perspective view
 //*-*
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Int_t irep;
@@ -100,7 +101,7 @@ TView::TView(Int_t system)
    fDefaultOutline = kFALSE;
    fAutoRange      = kFALSE;
 
-   if (system == kCARTESIAN || system == kPOLAR) fPsi = 0;
+   if (system == kCARTESIAN || system == kPOLAR || system == 11) fPsi = 0;
    else fPsi = 90;
 
    //By default pad range in 3-D view is (-1,-1,1,1), so ...
@@ -115,6 +116,7 @@ TView::TView(Int_t system)
 
       gPad->SetView(this);
    }
+   if (system == 11) SetPerspective();
 }
 
 
@@ -155,7 +157,7 @@ TView::TView(const Float_t *rmin, const Float_t *rmax, Int_t system)
    fOutline = 0;
    fDefaultOutline = kFALSE;
 
-   if (system == kCARTESIAN || system == kPOLAR) fPsi = 0;
+   if (system == kCARTESIAN || system == kPOLAR || system == 11) fPsi = 0;
    else fPsi = 90;
 
    //By default pad range in 3-D view is (-1,-1,1,1), so ...
@@ -169,6 +171,7 @@ TView::TView(const Float_t *rmin, const Float_t *rmax, Int_t system)
 
    if (gPad)
                 gPad->SetView(this);
+   if (system == 11) SetPerspective();
 }
 
 
@@ -209,7 +212,7 @@ TView::TView(const Double_t *rmin, const Double_t *rmax, Int_t system)
    fOutline = 0;
    fDefaultOutline = kFALSE;
 
-   if (system == kCARTESIAN || system == kPOLAR) fPsi = 0;
+   if (system == kCARTESIAN || system == kPOLAR || system == 11) fPsi = 0;
    else fPsi = 90;
 
    //By default pad range in 3-D view is (-1,-1,1,1), so ...
@@ -223,6 +226,7 @@ TView::TView(const Double_t *rmin, const Double_t *rmax, Int_t system)
 
    if (gPad)
                 gPad->SetView(this);
+   if (system == 11) SetPerspective();
 }
 
 
@@ -360,6 +364,158 @@ void TView::AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t
     }
 }
 
+//______________________________________________________________________________
+void TView::DefinePerspectiveView()
+{
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*Define perspective view  *-*-*-*-*-*-*-*-*-*-*
+//*-*              ================================================       *
+//*-*                                                                     *
+//*-*              Compute transformation matrix from world coordinates   *
+//*-*              to normalised coordinates (-1 to +1)                   *
+//   Input :
+//      theta, phi - spherical angles giving the direction of projection
+//      psi - screen rotation angle
+//      cov[3] - center of view
+//      dview - distance from COV to COP (center of projection)
+//      umin, umax, vmin, vmax - view window in projection plane
+//      dproj - distance from COP to projection plane
+//      bcut, fcut - backward/forward range w.r.t projection plane (fcut<=0)
+//   Output :
+//      nper[16] - normalizing transformation
+
+   // compute tr+rot to get COV in origin, view vector parallel to -Z axis, up vector
+   // parralel to Y.
+   //                      ^Yv      UP ^  proj. plane
+   //                      |           |   /|
+   //                      |           | /  |
+   //                      |   dproj   /  x--- center of window (COW)
+   //                  COV |----------|--x--|------------> Zv
+   //		          /           | VRP'z 
+   //			/   --->      |  /
+   //                 /     VPN       |/
+   //                Xv
+   //
+   //   1 - translate COP to origin of MARS : Tper = T(-copx, -copy, -copz)
+   //   2 - rotate VPN : R = Rz(-psi)*Rx(-theta)*Rz(-phi) (inverse Euler)
+   //   3 - left-handed screen reference to right-handed one of MARS : Trl
+   //   
+   //   T12 = Tper*R*Trl
+   //
+   Double_t t12[16];
+   Double_t cov[3];
+   Int_t i;
+   for (i=0; i<3; i++) cov[i] = 0.5*(fRmax[i]+fRmin[i]);
+   
+   Double_t c1 = TMath::Cos(fPsi*kRad);
+   Double_t s1 = TMath::Sin(fPsi*kRad);
+   Double_t c2 = TMath::Cos(fLatitude*kRad);
+   Double_t s2 = TMath::Sin(fLatitude*kRad);
+   Double_t s3 = TMath::Cos(fLongitude*kRad);
+   Double_t c3 = -TMath::Sin(fLongitude*kRad);
+   
+/*
+   t12[0] =  c1*c3 - s1*c2*s3;
+   t12[1] = -c1*s3 - s1*c2*c3;
+   t12[2] =  s1*s2;
+   t12[3] =  0;
+   
+   t12[4] =  s1*c3 + c1*c2*s3;
+   t12[5] = -s1*s3 + c1*c2*c3;
+   t12[6] =  -c1*s2;
+   t12[7] =  0;
+   
+   t12[8] =  s2*s3;
+   t12[9] =  s2*c3;
+   t12[10] = c2;      // contains Trl
+   t12[11] =  0;
+*/
+   t12[0] =  c1*c3 - s1*c2*s3;
+   t12[4] =  c1*s3 + s1*c2*c3;
+   t12[8] =  s1*s2;
+   t12[3] =  0;
+   
+   t12[1] =  -s1*c3 - c1*c2*s3;
+   t12[5] = -s1*s3 + c1*c2*c3;
+   t12[9] =  c1*s2;
+   t12[7] =  0;
+   
+   t12[2] =  s2*s3;
+   t12[6] =  -s2*c3;
+   t12[10] = c2;      // contains Trl
+   t12[11] =  0;
+   
+   // translate with -COP (before rotation):
+   t12[12] = -(cov[0]*t12[0]+cov[1]*t12[4]+cov[2]*t12[8]);
+   t12[13] = -(cov[0]*t12[1]+cov[1]*t12[5]+cov[2]*t12[9]);
+   t12[14] = -(cov[0]*t12[2]+cov[1]*t12[6]+cov[2]*t12[10]);
+   t12[15] =  1;
+   
+   // translate with (0, 0, -dview) after rotation
+   
+   t12[14] -= fDview;
+   
+   // reflection on Z :
+   t12[2]  *= -1;
+   t12[6]  *= -1;
+   t12[10] *= -1;
+   t12[14] *= -1; 
+//   printf("Translation + rotation + reflection:\n");
+//   for (Int_t j=0; j<4; j++)   printf("   %g %g %g %g\n",t12[4*j], t12[4*j+1], t12[4*j+2], t12[4*j+3]);
+   
+   
+   // Now we shear the center of window from (0.5*(umin+umax), 0.5*(vmin+vmax), dproj)
+   //                                     to (0, 0, dproj)
+   
+   Double_t a2 = -fUVcoord[0]/fDproj;   // shear coef. on x  
+   Double_t b2 = -fUVcoord[1]/fDproj;   // shear coef. on y   
+   
+   //               | 1  0  0  0 |
+   //  SHz(a2,b2) = | 0  1  0  0 |
+   //               | a2 b2 1  0 |
+   //               | 0  0  0  1 |
+   
+   fTnorm[0] = t12[0] + a2*t12[2];
+   fTnorm[1] = t12[1] + b2*t12[2];
+   fTnorm[2] = t12[2];
+   fTnorm[3] = 0;
+   
+   fTnorm[4] = t12[4] + a2*t12[6];
+   fTnorm[5] = t12[5] + b2*t12[6];
+   fTnorm[6] = t12[6];
+   fTnorm[7] = 0;
+      
+   fTnorm[8]  = t12[8] + a2*t12[10];
+   fTnorm[9]  = t12[9] + b2*t12[10];
+   fTnorm[10] = t12[10];
+   fTnorm[11] = 0;
+   
+   fTnorm[12] = t12[12] + a2*t12[14];
+   fTnorm[13] = t12[13] + b2*t12[14];
+   fTnorm[14] = t12[14];
+   fTnorm[15] = 1;
+   
+   // Scale so that the view volume becomes the canonical one
+   //
+   // Sper = (2/(umax-umin), 2/(vmax-vmin), 1/dproj
+   // 
+   Double_t sz = 1./fDproj;
+   Double_t sx = 1./fUVcoord[2];
+   Double_t sy = 1./fUVcoord[3];
+
+   fTnorm[0] *= sx;
+   fTnorm[4] *= sx;
+   fTnorm[8] *= sx;
+   fTnorm[1] *= sy;
+   fTnorm[5] *= sy;
+   fTnorm[9] *= sy;
+   fTnorm[2] *= sz;
+   fTnorm[6] *= sz;
+   fTnorm[10] *= sz;
+   fTnorm[12] *= sx;
+   fTnorm[13] *= sy;
+   fTnorm[14] *= sz;
+}
+
 
 
 //______________________________________________________________________________
@@ -386,6 +542,10 @@ void TView::DefineViewDirection(const Double_t *s, const Double_t *c,
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
+    if (IsPerspective()) {
+       DefinePerspectiveView();
+       return;
+    }   
     Int_t i, k;
     Double_t tran[16]   /* was [4][4] */, rota[16]      /* was [4][4] */;
     Double_t c1, c2, c3, s1, s2, s3, scalex, scaley, scalez;
@@ -539,7 +699,7 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       y      = gPad->PixeltoY(py);
       system = GetSystem();
       framewasdrawn = 0;
-      if (system == kCARTESIAN || system == kPOLAR) {
+      if (system == kCARTESIAN || system == kPOLAR || IsPerspective()) {
          longitude1 = 180*(x-xmin)/xrange;
          latitude1  =  90*(y-ymin)/yrange;
       } else {
@@ -563,7 +723,7 @@ void TView::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       framewasdrawn = 1;
       x = gPad->PixeltoX(px);
       y = gPad->PixeltoY(py);
-      if (system == kCARTESIAN || system == kPOLAR) {
+      if (system == kCARTESIAN || system == kPOLAR || IsPerspective()) {
          longitude2 = 180*(x-xmin)/xrange;
          latitude2  =  90*(y-ymin)/yrange;
       } else {
@@ -850,6 +1010,19 @@ Int_t TView::GetDistancetoAxis(Int_t axis, Int_t px, Int_t py, Double_t &ratio)
    return dist;
 }
 
+//______________________________________________________________________________
+Double_t TView::GetExtent() const
+{
+//*-*-*-*-*-*-*-*-*-*-*-*-*-*Get maximum view extent-*-*-*-*-*-*-*-*-*-*-*-*-*
+//*-*                        =======================
+//*-*
+   Double_t dx = 0.5*(fRmax[0]-fRmin[0]);
+   Double_t dy = 0.5*(fRmax[1]-fRmin[1]);
+   Double_t dz = 0.5*(fRmax[2]-fRmin[2]);
+   Double_t extent = TMath::Sqrt(dx*dx+dy*dy+dz*dz);
+   return extent;
+}   
+
 
 //______________________________________________________________________________
 void TView::GetRange(Float_t *min, Float_t *max)
@@ -869,6 +1042,17 @@ void TView::GetRange(Double_t *min, Double_t *max)
 //*-*
         for (Int_t i = 0; i < 3; max[i] = fRmax[i], min[i] = fRmin[i], i++);
 }
+
+//______________________________________________________________________________
+Bool_t TView::IsClippedNDC(Double_t *p) const
+{
+//*-*-*-*-*-*-*Check if point is clipped in perspective view-*-*-*-*-*-*-*-*
+//*-*          =============================================
+//*-*
+   if (TMath::Abs(p[0])>p[2]) return kTRUE;
+   if (TMath::Abs(p[1])>p[2]) return kTRUE;
+   return kFALSE;
+}   
 
 //______________________________________________________________________________
 void TView::NDCtoWC(const Float_t* pn, Float_t* pw)
@@ -1051,25 +1235,6 @@ void TView::PadRange(Double_t rback)
 }
 
 //______________________________________________________________________________
-void TView::PaintLine(Double_t *p1, Double_t *p2)
-{
-
-//*-*- convert from 3-D to 2-D pad coordinate system
-   if (IsPerspective()) {
-   } else {
-      Double_t xpad[6];
-      WCtoNDC(p1, &xpad[0]);
-      WCtoNDC(p2, &xpad[3]);
-      gPad->PaintLine(xpad[0],xpad[1],xpad[3],xpad[4]);
-   }
-}
-
-//______________________________________________________________________________
-void TView::PaintMarker(Double_t *p)
-{
-}
-
-//______________________________________________________________________________
 void  TView::SetAxisNDC(const Double_t *x1, const Double_t *x2, const Double_t *y1, const Double_t *y2, const Double_t *z1, const Double_t *z2)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*Store axis coordinates in the NDC system*-*-*-*
@@ -1084,6 +1249,25 @@ void  TView::SetAxisNDC(const Double_t *x1, const Double_t *x2, const Double_t *
       fZ1[i] = z1[i];
       fZ2[i] = z2[i];
    }
+}
+
+//______________________________________________________________________________
+void TView::SetDefaultWindow()
+{
+// Set default viewing window
+   if (!gPad) return;
+   Double_t screen_factor = 1.;
+   Double_t du, dv;
+   Double_t extent = GetExtent();
+   fDview = 3*extent;
+   fDproj = 0.5*extent;
+   // widh in pixels
+   fUpix = gPad->GetWw()*gPad->GetAbsWNDC(); 
+   // height in pixels
+   fVpix = gPad->GetWh()*gPad->GetAbsHNDC();
+   du = 0.5*screen_factor*fDproj;
+   dv = du*fVpix/fUpix;   // keep aspect ratio
+   SetWindow(0, 0, du, dv);
 }
 
 //______________________________________________________________________________
@@ -1122,8 +1306,22 @@ void TView::SetOutlineToCube()
 }
 
 //______________________________________________________________________________
-void TView::SetPerspective(Bool_t persp)
+void TView::SetParralel()
 {
+   if (!IsPerspective()) return;
+   SetBit(kPerspective, kFALSE);
+   Int_t irep;
+   ResetView(fLongitude, fLatitude, fPsi, irep);
+}
+
+//______________________________________________________________________________
+void TView::SetPerspective()
+{
+   if (IsPerspective()) return;
+   SetBit(kPerspective, kTRUE);
+   Int_t irep;
+   SetDefaultWindow();
+   ResetView(fLongitude, fLatitude, fPsi, irep);
 }
 
 //______________________________________________________________________________
@@ -1134,6 +1332,7 @@ void TView::SetRange(const Double_t *min, const Double_t *max)
 //*-*
         Int_t irep;
         for (Int_t i = 0; i < 3; fRmax[i] = max[i], fRmin[i] = min[i], i++);
+	if (IsPerspective()) SetDefaultWindow();
         ResetView(fLongitude, fLatitude, fPsi, irep);
         if(irep < 0)
                 Error("SetRange", "problem setting view");
@@ -1188,11 +1387,41 @@ void TView::SetRange(Double_t x0, Double_t y0, Double_t z0, Double_t x1, Double_
 }
 
 //______________________________________________________________________________
+void TView::SetWindow(Double_t u0, Double_t v0, Double_t du, Double_t dv)
+{
+// Set viewing window.
+   fUVcoord[0] = u0;
+   fUVcoord[1] = v0;
+   fUVcoord[2] = du;
+   fUVcoord[3] = dv;
+}   
+
+//______________________________________________________________________________
 void TView::SetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep)
 {
     ResetView(longitude, latitude, psi, irep);
 }
 
+//______________________________________________________________________________
+void TView::ResizePad()
+{
+// Recompute window for perspective view
+   printf("pad resized\n");
+   if (!IsPerspective()) return;
+   Double_t upix = fUpix;
+   Double_t vpix = fVpix;
+   // widh in pixels
+   fUpix = gPad->GetWw()*gPad->GetAbsWNDC(); 
+   // height in pixels
+   fVpix = gPad->GetWh()*gPad->GetAbsHNDC();
+   Double_t u0 = fUVcoord[0]*fUpix/upix;
+   Double_t v0 = fUVcoord[1]*fVpix/vpix;
+   Double_t du = fUVcoord[2]*fUpix/upix;
+   Double_t dv = fUVcoord[3]*fVpix/vpix;
+   SetWindow(u0, v0, du, dv);
+   DefinePerspectiveView();
+}
+   
 //______________________________________________________________________________
 void TView::ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep)
 {
@@ -1228,6 +1457,11 @@ void TView::ResetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t
     fPsi       = psi;
     fLatitude  = latitude;
 
+    if (IsPerspective()) {
+       DefinePerspectiveView();
+       return;
+    }   
+
     c1 = TMath::Cos(longitude*kRad);
     s1 = TMath::Sin(longitude*kRad);
     c2 = TMath::Cos(latitude*kRad);
@@ -1252,16 +1486,23 @@ void TView::WCtoNDC(const Float_t *pw, Float_t *pn)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
+    // perspective view
+    if (IsPerspective()) {
+       for (Int_t i=0; i<3; i++)
+          pn[i] = pw[0]*fTnorm[i]+pw[1]*fTnorm[i+4]+pw[2]*fTnorm[i+8]+fTnorm[i+12];
+       if (pn[2]>0) {
+          pn[0] /= pn[2];
+          pn[1] /= pn[2];
+       } else {
+          pn[0] *= 1000.;
+          pn[1] *= 1000.;
+       }      
+       return;
+    }
+    // parralel view   
     pn[0] = fTnorm[0]*pw[0] + fTnorm[1]*pw[1] + fTnorm[2]*pw[2]  + fTnorm[3];
     pn[1] = fTnorm[4]*pw[0] + fTnorm[5]*pw[1] + fTnorm[6]*pw[2]  + fTnorm[7];
     pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
-
-       // following lines to take into account perspective views
-//    if (TestBit(kPerspective) == 0) return;
-//    if (pn[2] == 0) return;
-//    printf("pw= %f, %f, %f, pn= %f, %f, %f, ppx=%f, ppy=%f\n",pw[0],pw[1],pw[2],pn[0],pn[1],pn[2],pn[0]/pn[2],pn[1]/pn[2]);
-//    pn[0] /= pn[2];
-//    pn[1] /= pn[2];
 }
 
 
@@ -1276,18 +1517,25 @@ void TView::WCtoNDC(const Double_t *pw, Double_t *pn)
 //*-*                                                                     *
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
+    // perspective view
+    if (IsPerspective()) {
+       for (Int_t i=0; i<3; i++)
+          pn[i] = pw[0]*fTnorm[i]+pw[1]*fTnorm[i+4]+pw[2]*fTnorm[i+8]+fTnorm[i+12];
+       if (pn[2]>0) {
+          pn[0] /= pn[2];
+          pn[1] /= pn[2];
+       } else {
+          pn[0] *= 1000.;
+          pn[1] *= 1000.;
+       }      
+       return;
+    }
+    // parralel view   
     pn[0] = fTnorm[0]*pw[0] + fTnorm[1]*pw[1] + fTnorm[2]*pw[2]  + fTnorm[3];
     pn[1] = fTnorm[4]*pw[0] + fTnorm[5]*pw[1] + fTnorm[6]*pw[2]  + fTnorm[7];
     pn[2] = fTnorm[8]*pw[0] + fTnorm[9]*pw[1] + fTnorm[10]*pw[2] + fTnorm[11];
-
-       // following lines to take into account perspective views
-//    if (TestBit(kPerspective) == 0) return;
-//    if (pn[2] == 0) return;
-//    printf("pw= %f, %f, %f, pn= %f, %f, %f, ppx=%f, ppy=%f\n",pw[0],pw[1],pw[2],pn[0],pn[1],pn[2],pn[0]/pn[2],pn[1]/pn[2]);
-//    pn[0] /= pn[2];
-//    pn[1] /= pn[2];
-}
-
+} 
+    
 //_______________________________________________________________________________________
 void TView::AdjustPad(TVirtualPad *pad)
 {
@@ -1411,7 +1659,56 @@ void TView::ZoomView(TVirtualPad *pad,Double_t zoomFactor)
   SetRange(min,max);
   AdjustPad(pad);
 }
-
+//_______________________________________________________________________________________
+void TView::MoveFocus(Double_t *cov, Double_t dx, Double_t dy, Double_t dz, Int_t nsteps)
+{
+// Move focus to a different box position and extent in nsteps.
+   if (!IsPerspective()) return;
+   if (nsteps<1) return;
+   Double_t fc = 1./Double_t(nsteps);
+   Double_t oc[3], od[3], dir[3];
+   dir[0] = 0;
+   dir[1] = 0;
+   dir[2] = 1.;
+   Int_t i, j;
+   for (i=0; i<3; i++) {
+      oc[i] = 0.5*(fRmin[i]+fRmax[i]);
+      od[i] = 0.5*(fRmax[i]-fRmin[i]);
+   }
+   Double_t dox = cov[0]-oc[0];
+   Double_t doy = cov[1]-oc[1];
+   Double_t doz = cov[2]-oc[2];
+   
+   Double_t dd = TMath::Sqrt(dox*dox+doy*doy+doz*doz);
+   if (dd!=0) {;
+      dir[0] = dox/dd;
+      dir[1] = doy/dd;
+      dir[2] = doz/dd;
+   }      
+   dd *= fc;
+   dox = fc*(dx-od[0]);            
+   doy = fc*(dy-od[1]);            
+   doz = fc*(dz-od[2]);    
+   for (i=0; i<nsteps; i++) {
+      oc[0] += dd*dir[0];       
+      oc[1] += dd*dir[1];       
+      oc[2] += dd*dir[2];       
+      od[0]  += dox;
+      od[1]  += doy;
+      od[2]  += doz;
+      for (j=0; j<3; j++) {
+         fRmin[j] = oc[j]-od[j];
+	 fRmax[j] = oc[j]+od[j];
+      }
+      SetDefaultWindow();
+      DefinePerspectiveView();
+      if (gPad) {
+         gPad->Modified();
+         gPad->Update();
+      }
+   }
+}            
+      	 
 //_______________________________________________________________________________________
 void TView::MoveViewCommand(Char_t option, Int_t count)
 {
@@ -1435,9 +1732,101 @@ void TView::MoveViewCommand(Char_t option, Int_t count)
        case 'A':
            ZoomView();
            break;
+       case 'l':
+       case 'L':
+       case 'h':
+       case 'H':
+       case 'u':
+       case 'U':
+       case 'i':
+       case 'I':
+           MoveWindow(option);
+           break;
+       case 'j':
+       case 'J':
+           ZoomIn();
+           break;
+       case 'k':
+       case 'K':
+           ZoomOut();
+           break;
        default:
            break;
   }
+}
+
+//_______________________________________________________________________________________
+void TView::MoveWindow(Char_t option)
+{
+// Move view window :
+// l,L - left
+// h,H - right
+// u,U - down
+// i,I - up
+   if (!IsPerspective()) return;
+   Double_t shiftu = 0.1*fUVcoord[2];
+   Double_t shiftv = 0.1*fUVcoord[3];
+   switch (option) {
+       case 'l':
+       case 'L':
+           fUVcoord[0] += shiftu;
+           break;
+       case 'h':
+       case 'H':
+           fUVcoord[0] -= shiftu;
+           break;
+       case 'u':
+       case 'U':
+           fUVcoord[1] += shiftv;
+           break;
+       case 'i':
+       case 'I':
+           fUVcoord[1] -= shiftv;
+           break;
+       default:
+          return;
+   }       
+   DefinePerspectiveView();
+   if (gPad) {
+      gPad->Modified();
+      gPad->Update();
+   }   
+}
+
+//_______________________________________________________________________________________
+void TView::ZoomIn()
+{
+   if (!IsPerspective()) return;
+   Double_t extent = GetExtent();
+   Double_t fc = 0.1;
+   if (fDview<extent) {
+      fDview -= fc*extent;
+   } else {
+      fDview /= 1.25;
+   }            
+   DefinePerspectiveView();
+   if (gPad) {
+      gPad->Modified();
+      gPad->Update();
+   }   
+}
+
+//_______________________________________________________________________________________
+void TView::ZoomOut()
+{
+   if (!IsPerspective()) return;
+   Double_t extent = GetExtent();
+   Double_t fc = 0.1;
+   if (fDview<extent) {
+      fDview += fc*extent;
+   } else {
+      fDview *= 1.25;
+   }            
+   DefinePerspectiveView();
+   if (gPad) {
+      gPad->Modified();
+      gPad->Update();
+   }   
 }
 
 //______________________________________________________________________________

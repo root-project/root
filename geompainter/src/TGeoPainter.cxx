@@ -44,6 +44,8 @@ TGeoPainter::TGeoPainter()
    fVisBranch = "";
    fVisLock = kFALSE;
    fVisVolumes = new TObjArray();
+   fCheckedNode = 0;
+   memset(&fCheckedBox[0], 0, 6*sizeof(Double_t));
    
    if (gGeoManager) fGeom = gGeoManager;
    else Error("ctor", "No geometry loaded");
@@ -93,6 +95,11 @@ void TGeoPainter::BombTranslation(const Double_t *tr, Double_t *bombtr)
    }   
 }
 //______________________________________________________________________________
+void TGeoPainter::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const
+{
+   fChecker->CheckGeometry(nrays, startx, starty, startz);
+}   
+//______________________________________________________________________________
 void TGeoPainter::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option)
 {
 // check current point in the geometry
@@ -105,6 +112,8 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
    const Int_t big = 9999;
    const Int_t inaxis = 7;
    const Int_t maxdist = 5;
+   
+   TGeoBBox *box;
    
    Int_t puxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
    Int_t puymin = gPad->YtoAbsPixel(gPad->GetUymin());
@@ -135,6 +144,12 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
             dist = vol->GetShape()->DistancetoPrimitive(px,py);
             if (dist<maxdist) {
                gPad->SetSelected(vol);
+	       fCheckedNode = current;
+	       box = (TGeoBBox*)vol->GetShape();
+	       fGeom->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+	       fCheckedBox[3] = box->GetDX();
+	       fCheckedBox[4] = box->GetDY();
+	       fCheckedBox[5] = box->GetDZ();
                return 0;
             }
          }
@@ -156,6 +171,12 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
             dist = vol->GetShape()->DistancetoPrimitive(px, py);
             if (dist<maxdist) {
                gPad->SetSelected(vol);
+	       fCheckedNode = current;
+	       box = (TGeoBBox*)vol->GetShape();
+	       fGeom->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+	       fCheckedBox[3] = box->GetDX();
+	       fCheckedBox[4] = box->GetDY();
+	       fCheckedBox[5] = box->GetDZ();
                return 0;
             }
          }
@@ -172,6 +193,12 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
          dist = vol->GetShape()->DistancetoPrimitive(px, py);
          if (dist<maxdist) {
             gPad->SetSelected(vol);
+            fCheckedNode = current;
+	    box = (TGeoBBox*)vol->GetShape();
+	    fGeom->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+	    fCheckedBox[3] = box->GetDX();
+	    fCheckedBox[4] = box->GetDY();
+	    fCheckedBox[5] = box->GetDZ();
             return 0;
          }
          break;
@@ -182,17 +209,26 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
                dist = fGeom->GetCurrentVolume()->GetShape()->DistancetoPrimitive(px, py);
                if (dist<maxdist) {
                   gPad->SetSelected(fGeom->GetCurrentVolume());
+  	          fCheckedNode = current;
+	          box = (TGeoBBox*)fGeom->GetCurrentVolume()->GetShape();
+	          fGeom->LocalToMaster(box->GetOrigin(), &fCheckedBox[0]);
+	          fCheckedBox[3] = box->GetDX();
+	          fCheckedBox[4] = box->GetDY();
+	          fCheckedBox[5] = box->GetDZ();
                   return 0;
                }
             }   
             fGeom->CdUp();
          }
-         gPad->SetSelected(view);      
+         gPad->SetSelected(view);
+	 fCheckedNode = 0;      
          return big;   
       default:
+	 fCheckedNode = 0;      
          return big;
    }       
    if ((dist>maxdist) && !fGeom->GetLevel()) gPad->SetSelected(view);
+   fCheckedNode = 0;      
    return dist;
 }
 //______________________________________________________________________________
@@ -245,12 +281,13 @@ void TGeoPainter::Draw(Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(1);
+      view = new TView(11);
       view->SetAutoRange(kTRUE);
       fGeom->GetTopVolume()->Paint("range");
       view->SetAutoRange(kFALSE);
       if (has_pad) gPad->Update();
    }
+   if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
    printf("--- number of nodes on screen : %i\n", fVisVolumes->GetEntriesFast());
 }
@@ -276,13 +313,14 @@ void TGeoPainter::DrawOnly(Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = new TView(1);
+      view = new TView(11);
       view->SetAutoRange(kTRUE);
       fVisOption = kGeoVisOnly;
       fGeom->GetCurrentVolume()->Paint("range");
       view->SetAutoRange(kFALSE);
       if (has_pad) gPad->Update();
    }
+   if (!view->IsPerspective()) view->SetPerspective();
    fVisLock = kTRUE;
 }
 //-----------------------------------------------------------------------------
@@ -332,7 +370,8 @@ void TGeoPainter::ExecuteVolumeEvent(TGeoVolume *volume, Int_t event, Int_t px, 
    
    case kButton1Double:
       gPad->SetCursor(kWatch);
-      volume->Draw();
+      GrabFocus();
+//      volume->Draw();
       break;
    }
 }
@@ -352,6 +391,29 @@ TGeoChecker *TGeoPainter::GetChecker()
    if (!fChecker) fChecker = new TGeoChecker(fGeom);
    return fChecker;
 }    
+//______________________________________________________________________________
+void TGeoPainter::GrabFocus()
+{
+// Move focus to current volume
+   if (!gPad) return;
+   TView *view = gPad->GetView();
+   if (!view) return;
+   if (!fCheckedNode) {
+      TGeoBBox *box = (TGeoBBox*)fGeom->GetTopVolume()->GetShape();
+      memcpy(&fCheckedBox[0], box->GetOrigin(), 3*sizeof(Double_t));
+      fCheckedBox[3] = box->GetDX();
+      fCheckedBox[4] = box->GetDY();
+      fCheckedBox[5] = box->GetDZ();
+   }      
+   view->SetPerspective();
+   Int_t nvols = fVisVolumes->GetEntriesFast();
+   Int_t nframes = 1;
+   if (nvols<1500) nframes=10;
+   if (nvols<1000) nframes=20;
+   if (nvols<200) nframes = 50;
+   if (nvols<100) nframes = 100;
+   view->MoveFocus(&fCheckedBox[0], fCheckedBox[3], fCheckedBox[4], fCheckedBox[5], nframes);
+}
 //______________________________________________________________________________
 Bool_t TGeoPainter::IsOnScreen(const TGeoNode *node) const
 {

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.89 2002/11/11 11:24:42 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.90 2002/11/13 14:31:25 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -3119,7 +3119,17 @@ void TPad::PaintLine3D(Double_t *p1, Double_t *p2)
 //*-*              ================================
 
    //take into account perspective view
-   if (fView) fView->PaintLine(p1,p2);
+   if (!fView) return;
+
+//*-*- convert from 3-D to 2-D pad coordinate system
+   Double_t xpad[6];
+   Double_t temp[3];
+   Int_t i;
+   for (i=0;i<3;i++) temp[i] = p1[i];
+   fView->WCtoNDC(temp, &xpad[0]);
+   for (i=0;i<3;i++) temp[i] = p2[i];
+   fView->WCtoNDC(temp, &xpad[3]);
+   PaintLine(xpad[0],xpad[1],xpad[3],xpad[4]);
 }
 
 //______________________________________________________________________________
@@ -4051,6 +4061,7 @@ void TPad::ResizePad(Option_t *option)
             if (gVirtualX->ResizePixmap(fPixmapID, w, h)) Modified(kTRUE);
       }
    }
+   if (fView) fView->ResizePad();
 }
 
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.h,v 1.7 2002/04/06 21:28:07 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.h,v 1.8 2002/11/11 11:23:55 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -39,10 +39,15 @@ protected:
         Double_t        fLatitude;         //View angle latitude
         Double_t        fLongitude;        //View angle longitude
         Double_t        fPsi;              //View angle psi
+	Double_t        fDview;            //Distance from COP to COV
+	Double_t        fDproj;            //Distance from COP to projection plane
+        Double_t        fUpix;             // pad X size in pixels
+        Double_t        fVpix;             // pad Y size in pixels
         Double_t        fTN[12];           //
         Double_t        fTB[12];           //
         Double_t        fRmax[3];          //Upper limits of object
         Double_t        fRmin[3];          //Lower limits of object
+        Double_t        fUVcoord[4];       //Viewing window limits
         Double_t        fTnorm[12];        //Transformation matrix
         Double_t        fTback[12];        //Back transformation matrix
         Double_t        fX1[3];            //First coordinate of X axis
@@ -70,6 +75,7 @@ public:
                 TView(const Double_t *rmin, const Double_t *rmax, Int_t system = 1);
 virtual         ~TView();
    virtual void AxisVertex(Double_t ang, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t &iy1, Int_t &iy2, Int_t &iz1, Int_t &iz2);
+   virtual void DefinePerspectiveView();
    virtual void DefineViewDirection(const Double_t *s, const Double_t *c,
                                     Double_t cosphi, Double_t sinphi,
                                     Double_t costhe, Double_t sinthe,
@@ -79,6 +85,9 @@ virtual         ~TView();
    virtual void  ExecuteRotateView(Int_t event, Int_t px, Int_t py);
    virtual void  FindScope(Double_t *scale, Double_t *center, Int_t &irep);
    virtual Int_t GetDistancetoAxis(Int_t axis, Int_t px, Int_t py, Double_t &ratio);
+   Double_t      GetDview() const {return fDview;}
+   Double_t      GetDproj() const {return fDproj;}
+   Double_t      GetExtent() const;
 Bool_t           GetAutoRange() {return fAutoRange;}
 Double_t         GetLatitude() {return fLatitude;}
 Double_t         GetLongitude() {return fLongitude;}
@@ -92,33 +101,42 @@ Double_t        *GetTback() {return fTback;}
 Double_t        *GetTN() {return fTN;}
 Double_t        *GetTnorm() {return fTnorm;}
   Int_t          GetSystem() {return fSystem;}
+   Double_t      GetWindowWidth() const {return 0.5*(fUVcoord[1]-fUVcoord[0]);}
+   Double_t      GetWindowHeight() const {return 0.5*(fUVcoord[3]-fUVcoord[2]);}
    virtual void  FindNormal(Double_t x, Double_t  y, Double_t z, Double_t &zn);
    virtual void  FindPhiSectors(Int_t iopt, Int_t &kphi, Double_t *aphi, Int_t &iphi1, Int_t &iphi2);
    virtual void  FindThetaSectors(Int_t iopt, Double_t phi, Int_t &kth, Double_t *ath, Int_t &ith1, Int_t &ith2);
+   Bool_t        IsClippedNDC(Double_t *p) const;
 Bool_t           IsPerspective() const {return TestBit(kPerspective);}
    virtual void  NDCtoWC(const Float_t *pn, Float_t *pw);
    virtual void  NDCtoWC(const Double_t *pn, Double_t *pw);
    virtual void  NormalWCtoNDC(const Float_t *pw, Float_t *pn);
    virtual void  NormalWCtoNDC(const Double_t *pw, Double_t *pn);
    virtual void  PadRange(Double_t rback);
-   virtual void  PaintLine(Double_t *p1, Double_t *p2);
-   virtual void  PaintMarker(Double_t *p);
+   void          ResizePad();
    virtual void  SetAutoRange(Bool_t autorange=kTRUE) {fAutoRange=autorange;}
    virtual void  SetAxisNDC(const Double_t *x1, const Double_t *x2, const Double_t *y1, const Double_t *y2, const Double_t *z1, const Double_t *z2);
+   void          SetDefaultWindow();
+   void          SetDview(Double_t dview) {fDview=dview;}
+   void          SetDproj(Double_t dproj) {fDproj=dproj;}
    void          SetLatitude(Double_t latitude) {fLatitude = latitude;}
    void          SetLongitude(Double_t longitude) {fLongitude = longitude;}
    void          SetPsi(Double_t psi) {fPsi = psi;}
    virtual void  SetOutlineToCube();
-   virtual void  SetPerspective(Bool_t persp=kTRUE); // *MENU*
+   virtual void  SetParralel(); // *MENU*
+   virtual void  SetPerspective(); // *MENU*
    virtual void  SetRange(const Double_t *min, const Double_t *max);
    virtual void  SetRange(Double_t x0, Double_t y0, Double_t z0, Double_t x1, Double_t y1, Double_t z1, Int_t flag=0);
    virtual void  SetSystem(Int_t system) {fSystem = system;}
    virtual void  SetView(Double_t longitude, Double_t latitude, Double_t psi, Int_t &irep);
+   void          SetWindow(Double_t u0, Double_t v0, Double_t du, Double_t dv);
    virtual void  WCtoNDC(const Float_t *pw, Float_t *pn);
    virtual void  WCtoNDC(const Double_t *pw, Double_t *pn);
 
 //--
+    void         MoveFocus(Double_t *center, Double_t dx, Double_t dy, Double_t dz, Int_t nsteps=10);
     virtual void MoveViewCommand(Char_t chCode, Int_t count=1);
+    void         MoveWindow(Char_t option);
 
     static  void AdjustPad(TVirtualPad *pad=0);
     virtual void AdjustScales(TVirtualPad *pad=0); // *MENU*
@@ -127,6 +145,8 @@ Bool_t           IsPerspective() const {return TestBit(kPerspective);}
     virtual void FrontView(TVirtualPad *pad=0);
     virtual void Front();                          // *MENU*
 
+    virtual void ZoomIn(); // *MENU*
+    virtual void ZoomOut(); // *MENU*
     virtual void ZoomView(TVirtualPad *pad=0, Double_t zoomFactor = 1.25 );
     virtual void UnzoomView(TVirtualPad *pad=0,Double_t unZoomFactor = 1.25);
 

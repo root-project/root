@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd1.cxx,v 1.5 2002/10/08 16:17:49 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTrd1::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -214,7 +214,7 @@ void TGeoTrd1::GetVisibleCorner(Double_t *point, Double_t *vertex, Double_t *nor
    Double_t calf = 1./TMath::Sqrt(1.0+fx*fx);
    Double_t salf = calf*fx;
    // check visibility of X faces
-   Double_t distx = fDx1-fx*(fDz+point[2]);
+   Double_t distx = 0.5*(fDx1+fDx2)-fx*point[2];
    memset(normals, 0, 9*sizeof(Double_t));
    TGeoTrd1 *trd1 = (TGeoTrd1*)this;
    if (point[0]>distx) {

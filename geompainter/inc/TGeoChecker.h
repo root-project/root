@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.3 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.4 2002/10/09 12:57:40 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -44,6 +44,7 @@ public:
    // destructor
    virtual ~TGeoChecker();
    // methods
+   void             CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
    void             CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="");
    Double_t         CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Double_t *xyz, Int_t npoints);
    void             CreateTree(const char *treename, const char *filename);
@@ -55,6 +56,7 @@ public:
    void             RandomPoints(TGeoVolume *vol, Int_t npoints, Option_t *option);
    void             RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz);
    TGeoNode        *SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char* g3path);
+   void             ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *enpoint=0) const;
    void             ShowPoints(Option_t *option="");
    void             Test(Int_t npoints, Option_t *option);
    void             TestOverlaps(const char *path);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.9 2002/10/13 15:45:24 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.10 2002/10/21 15:21:13 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -94,6 +94,7 @@ public:
    void            ClearNodes() {fNodes = 0;}
    void            ClearShape();
    void            CleanAll();
+   void            CheckGeometry(Int_t nrays=1, Double_t startx=0, Double_t starty=0, Double_t startz=0) const; // *MENU*
    Int_t           CountNodes(Int_t nlevels=1000) const; // *MENU*
    Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
    Bool_t          IsFolder() const;
@@ -142,6 +143,7 @@ public:
    Bool_t          GetOptimalVoxels() const;
    Option_t       *GetOption() const { return fOption.Data(); }
    TGeoShape      *GetShape() const                  {return fShape;}
+   void            GrabFocus(); // *MENU*
    void            Gsord(Int_t iaxis)                {;}
    Bool_t          IsStyleDefault() const;
    void            InspectMaterial() const; // *MENU*

@@ -39,12 +39,14 @@ private:
    Double_t           fBombY;            // bomb factor on Y
    Double_t           fBombZ;            // bomb factor on Z
    Double_t           fBombR;            // bomb factor on radius (cyl or sph)
+   Double_t           fCheckedBox[6];    // bounding box of checked node
    Int_t              fNsegments;        // number of segments approximating circles
    Int_t              fVisLevel;         // depth for drawing
    Int_t              fVisOption;        // global visualization option
    Int_t              fExplodedView;     // type of exploding current view
    Bool_t             fVisLock;          // lock for adding visible volumes
    const char        *fVisBranch;        // drawn branch
+   TGeoNode          *fCheckedNode;      // checked node
    TGeoManager       *fGeom;             // geometry to which applies
    TGeoChecker       *fChecker;          // geometry checker
    TObjArray         *fVisVolumes;       // list of visible volumes
@@ -54,6 +56,7 @@ public:
    virtual ~TGeoPainter();
    virtual void       AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys);
    virtual void       BombTranslation(const Double_t *tr, Double_t *bombtr);
+   virtual void       CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
    virtual void       CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="");
    virtual void       DefaultAngles();
    virtual void       DefaultColors();
@@ -68,11 +71,13 @@ public:
    virtual void       GetBombFactors(Double_t &bombx, Double_t &bomby, Double_t &bombz, Double_t &bombr) const 
                                     {bombx=fBombX; bomby=fBombY; bombz=fBombZ; bombr=fBombR;}
    virtual Int_t      GetBombMode() const      {return fExplodedView;}
+   virtual TGeoNode  *GetCheckedNode() {return fCheckedNode;}
    TGeoChecker       *GetChecker();
    virtual const char *GetDrawPath() const     {return fVisBranch;}
    virtual Int_t      GetVisLevel() const      {return fVisLevel;}
    virtual Int_t      GetVisOption() const     {return fVisOption;}
    Int_t              GetNsegments() const     {return fNsegments;}
+   virtual void       GrabFocus();
    virtual Bool_t     IsExplodedView() const {return ((fExplodedView==kGeoVisDefault)?kFALSE:kTRUE);}
    virtual Bool_t     IsOnScreen(const TGeoNode *node) const;
    TH2F              *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,

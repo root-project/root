@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.4 2002/09/27 16:16:06 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.5 2002/10/08 16:17:49 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -251,6 +251,10 @@ Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
       if (iact==0) return kBig;
       if ((iact==1) && (*safe>step)) return step;
    }
+   for (Int_t i=0; i<3; i++) point_new[i]=point[i]+(snxt+1E-6)*dir[i];
+   if (!Contains(&point_new[0])) return snxt;
+   
+   snxt += DistToOut(&point_new[0], dir, 3) + 1E-6;
    return snxt;
 }
 //-----------------------------------------------------------------------------
