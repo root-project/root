@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.57 2001/07/19 17:12:25 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.58 2001/08/23 22:12:40 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -4545,6 +4545,7 @@ TH1F::TH1F(const TVector &v)
 // Create a histogram from a TVector
 // by default the histogram name is "TVector" and title = ""
 
+   fDimension = 1;
    for (Int_t i=0;i<v.GetNrows();i++) {
       SetBinContent(i+1,v(i));
    }
@@ -4705,6 +4706,7 @@ TH1D::TH1D(const TVectorD &v)
 // Create a histogram from a TVector
 // by default the histogram name is "TVector" and title = ""
 
+   fDimension = 1;
    for (Int_t i=0;i<v.GetNrows();i++) {
       SetBinContent(i+1,v(i));
    }
