@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.15 2001/05/23 09:52:11 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TClonesArray.cxx,v 1.16 2001/05/24 16:31:10 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -128,13 +128,34 @@ void TClonesArray::BypassStreamer(Bool_t bypass)
 {
    // When the kBypassStreamer bit is set, the automatically
    // generated Streamer can call directly TClass::WriteBuffer.
-
+   // Bypassing the Streamer improves the performance when writing/reading
+   // the objects in the TClonesArray. However there is a drawback:
+   // When a TClonesArray is written with split=0 bypassing the Streamer,
+   // the StreamerInfo of the class in the array being optimized,
+   // one cannot use later the TClonesArray with split>0. For example,
+   // there is a problem with the following scenario:
+   //  1- a class Foo has a TClonesArray of Bar objects
+   //  2- the Foo object is written with split=0 to Tree T1.
+   //     In this case the StreamerInfo for the class Bar is created
+   //     in optimized mode in such a way that data members of the same type
+   //     are written as an array improving the I/O performance.
+   //  3- in a new program, T1 is read and a new Tree T2 is created
+   //      with the object Foo in split>1
+   //  4- When the T2 branch is created, the StreamerInfo for the class Bar
+   //     is created with no optimization (mandatory for the split mode).
+   //     The optimized Bar StreamerInfo is going to be used to read
+   //     the TClonesArray in T1. The result will be Bar objects with
+   //     data member values not in the right sequence.
+   // The solution to this problem is to call BypassStreamer(kFALSE)
+   // for the TClonesArray. In this case, the normal Bar::Streamer function 
+   // will be called. The BAR::Streamer function works OK independently
+   // if the Bar StreamerInfo had been generated in optimized mode or not.
+   
    if (bypass)
       SetBit(kBypassStreamer);
    else
       ResetBit(kBypassStreamer);
 }
-
 
 //______________________________________________________________________________
 void TClonesArray::Compress()
