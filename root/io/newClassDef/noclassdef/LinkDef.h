@@ -4,6 +4,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+// #pragma link C++ class crap+;
+
 #pragma link C++ class RootPCtemp<int>+;
 
 #pragma link C++ class RootPCtempObj<TObject>+;
@@ -36,10 +38,8 @@
 
 #pragma link C++ class RootPCmisClDef+;
 
-#ifdef INC_FAILURE
 #pragma link C++ class RootPrivPCobject+;
 #pragma link C++ class RootPrivPCobject2+;
 #pragma link C++ class RootPrivPC+;
-#endif
 
 #endif

@@ -202,7 +202,7 @@ public:
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
    }   
-   ClassDef(RootPrivPCobject,1) // inherit second from TObject
+   ClassDef(RootPrivPCobject,1) // inherits privately from RootPCellID then publicly from TObject
 };
 
 class RootPrivPCobject2 :  public TObject, private RootPCellID {
@@ -216,7 +216,7 @@ public:
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
    }   
-   ClassDef(RootPrivPCobject2,1) // inherit second from TObject
+   ClassDef(RootPrivPCobject2,1) // inherits publicly from TObject then privately from RootPCellID
 };
 
 class RootPrivPC : RootPCellID {

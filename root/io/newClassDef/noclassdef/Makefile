@@ -52,13 +52,13 @@ CXXFLAGS := $(patsubst -O2,/Z7,$(CXXFLAGS))
 
 ifeq ($(FAIL),)
 #Make sure the failing code is excluded
-exec1 := $(shell if test -e fail.mode ; then rm -f fail.mode *.o; fi )
+exec1 := $(shell if test -e fail.mode ; then rm -f fail.mode *.o mydict.*; fi )
 exec2 := $(shell if test ! -e pass.mode ; then touch pass.mode; fi 1>&2 )
 MODE_FILE = pass.mode
 CFLAGS += -DSKIP_FAILURE
 else
 #Make sure the failing code is included
-exec1 := $(shell if test -e pass.mode; then rm -f pass.mode *.o; fi )
+exec1 := $(shell if test -e pass.mode; then rm -f pass.mode *. omydict.*; fi )
 exec2 := $(shell if test ! -e fail.mode ; then touch fail.mode; fi 1>&2 )
 MODE_FILE = fail.mode
 CFLAGS += -DINC_FAILURE
