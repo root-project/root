@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.14 2001/07/10 16:17:35 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.15 2002/01/04 10:20:05 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -320,7 +320,7 @@ Bool_t TFolder::IsOwner()  const
 //   - TFolder::SetOwner
 //   - TCollection::SetOwner on the collection specified to TFolder::AddFolder
    
-   if (fFolders) return kFALSE;
+   if (!fFolders) return kFALSE;
    return fFolders->IsOwner();
 }
       
