@@ -535,35 +535,48 @@ static void gdk_win32_gc_get_values(GdkGC * gc, GdkGCValues * values)
    values->tile = data->tile;
    values->stipple = data->stipple;
 
+   values->clip_mask = NULL;
    if (data->clip_region != NULL) {
       RECT rect;
       HBRUSH hbr;
       HDC hdc;
       HGDIOBJ oldbitmap;
       GdkPixmap *pixmap;
+      gboolean ok = TRUE;
 
-      GetRgnBox(data->clip_region, &rect);
-      pixmap =
-          gdk_pixmap_new(NULL, rect.right - rect.left,
-                         rect.bottom - rect.top, 1);
-      hbr = GetStockObject(WHITE_BRUSH);
-      if ((hdc = CreateCompatibleDC(NULL)) == NULL)
-         WIN32_GDI_FAILED("CreateCompatibleDC");
-      if ((oldbitmap =
-           SelectObject(hdc, GDK_DRAWABLE_XID(pixmap))) == NULL)
-         WIN32_GDI_FAILED("SelectObject");
-      hbr = GetStockObject(BLACK_BRUSH);
-      if (!FillRect(hdc, &rect, hbr))
-         WIN32_GDI_FAILED("FillRect");
-      hbr = GetStockObject(WHITE_BRUSH);
-      if (!FillRgn(hdc, data->clip_region, hbr))
-         WIN32_GDI_FAILED("FillRgn");
-      if (SelectObject(hdc, oldbitmap) == NULL)
-         WIN32_GDI_FAILED("SelectObject");
-      DeleteDC(hdc);
-      values->clip_mask = pixmap;
-   } else
-      values->clip_mask = NULL;
+      /* Build pixmap for clip region; if anything fails, do so w/o invoking */
+      /* more code on failed objects, just in case this is the cause of one */
+      /* of the rare crashes we're seeing */
+      GetRgnBox (data->clip_region, &rect);
+      pixmap = gdk_pixmap_new (NULL, rect.right - rect.left, rect.bottom - rect.top,1);
+      hbr = GetStockObject (WHITE_BRUSH);
+      if ((hdc = CreateCompatibleDC (NULL)) == NULL)
+         WIN32_GDI_FAILED ("CreateCompatibleDC"), ok = FALSE;
+      if (ok && (oldbitmap =
+                 SelectObject (hdc, GDK_DRAWABLE_XID (pixmap))) == NULL) 
+         WIN32_GDI_FAILED ("SelectObject"), ok = FALSE;
+      if (ok) {
+         hbr = GetStockObject (BLACK_BRUSH);
+         if (hbr == NULL || !FillRect (hdc, &rect, hbr)) 
+            WIN32_GDI_FAILED ("FillRect"), ok = FALSE;
+      }
+      if (ok) {
+         hbr = GetStockObject (WHITE_BRUSH);
+         if (hbr == NULL || !FillRgn (hdc, data->clip_region, hbr)) 
+            WIN32_GDI_FAILED ("FillRgn"), ok = FALSE;
+      }
+      if (hdc != NULL && oldbitmap != NULL) {
+         if (SelectObject (hdc, oldbitmap) == NULL) 
+            WIN32_GDI_FAILED ("SelectObject"), ok = FALSE;
+      }     
+      if (hdc != NULL)
+         DeleteDC (hdc);
+      if (ok)
+         values->clip_mask = pixmap;
+      else if (pixmap != NULL)
+         gdk_drawable_unref(pixmap);
+   }
+
    values->subwindow_mode = data->subwindow_mode;
    values->ts_x_origin = data->ts_x_origin;
    values->ts_y_origin = data->ts_y_origin;
