@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.9 2001/02/03 15:42:55 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.10 2001/02/13 07:52:25 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -117,7 +117,7 @@ public:
    virtual Int_t       DistancetoPrimitive(Int_t px, Int_t py);
    virtual void        Draw(Option_t *option="");
    virtual void        DrawClass() const; // *MENU*
-   virtual void        DrawClone(Option_t *option="") const; // *MENU*
+   virtual TObject    *DrawClone(Option_t *option="") const; // *MENU*
    virtual void        Dump() const; // *MENU*
    virtual void        Execute(const char *method,  const char *params);
    virtual void        Execute(TMethod *method, TObjArray *params);
