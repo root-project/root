@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.14 2001/03/13 17:29:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.15 2001/03/14 07:11:06 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -46,7 +46,6 @@
 const char *gSystemName;
 const char *gRootDir;
 const char *gProgName;
-const char *gRootName;
 const char *gProgPath;
 
 TSystem  *gSystem;
@@ -136,7 +135,7 @@ TSystem::~TSystem()
 Bool_t TSystem::Init()
 {
    // Initialize the OS interface. Copy the OS name (i.e. Unix) and the
-   // ROOT name to gSystemName and gRootName, respectively.
+   // ROOT name to gSystemName.
 
    fNfd    = 0;
    fMaxrfd = 0;
@@ -160,7 +159,6 @@ Bool_t TSystem::Init()
    fCompiled      = new TOrdCollection;
 
    gSystemName = StrDup(fName.Data());
-   gRootName   = StrDup(gROOT->GetName());
 
    if (!fName.CompareTo("Generic")) return kTRUE;
    return kFALSE;

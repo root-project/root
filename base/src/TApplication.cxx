@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.6 2001/04/21 17:20:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.7 2001/04/22 16:00:56 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -95,8 +95,6 @@ TApplication::TApplication(const char *appClassName,
    gApplication = this;
    gROOT->SetApplication(this);
    gROOT->SetName(appClassName);
-   if (gRootName) delete [] gRootName;
-   gRootName = StrDup(gROOT->GetName());
 
    // copy command line arguments, can be later accessed via Argc() and Argv()
    if (argc && *argc > 0) {

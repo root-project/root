@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.9 2001/02/16 10:55:59 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.10 2001/02/26 02:46:05 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -92,7 +92,6 @@ typedef void* Func_t;
 R__EXTERN const char  *gSystemName;
 R__EXTERN const char  *gRootDir;
 R__EXTERN const char  *gProgName;
-R__EXTERN const char  *gRootName;
 R__EXTERN const char  *gProgPath;
 
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.3 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TEnv.cxx,v 1.4 2001/03/08 20:17:28 rdm Exp $
 // Author: Fons Rademakers   22/09/95
 
 /*************************************************************************
@@ -78,6 +78,7 @@
 #  include <strstrea.h>
 # endif
 #endif
+#include "TROOT.h"
 #include "TEnv.h"
 #include "TSystem.h"
 #include "TOrdCollection.h"
@@ -495,13 +496,13 @@ const char *TEnv::Getvalue(const char *name)
    if (haveProgName)
       er = Lookup(Form("%s.%s.%s", gSystemName, gProgName, name));
    if (er == 0)
-      er = Lookup(Form("%s.%s.%s", gSystemName, gRootName, name));
+      er = Lookup(Form("%s.%s.%s", gSystemName, gROOT->GetName(), name));
    if (er == 0)
       er = Lookup(Form("%s.*.%s", gSystemName, name));
    if (er == 0 && haveProgName)
       er = Lookup(Form("%s.%s", gProgName, name));
    if (er == 0)
-      er = Lookup(Form("%s.%s", gRootName, name));
+      er = Lookup(Form("%s.%s", gROOT->GetName(), name));
    if (er == 0)
       er = Lookup(Form("*.*.%s", name));
    if (er == 0)
