@@ -117,6 +117,9 @@ ifneq ($(FPYTHIALIB),)
 MODULES      += pythia
 endif
 ifneq ($(FPYTHIA6LIB),)
+ifneq ($(PYTHONINCDIR),)
+MODULES      += pyroot
+endif
 MODULES      += pythia6
 endif
 ifneq ($(FVENUSLIB),)
@@ -690,6 +693,7 @@ showbuild:
 	@echo "CINTCFLAGS         = $(CINTCFLAGS)"
 	@echo "EXTRA_CFLAGS       = $(EXTRA_CFLAGS)"
 	@echo "F77FLAGS           = $(F77FLAGS)"
+	@echo "FPYTHONLIBDIR      = $(FPYTHONLIBDIR)"
 	@echo "LDFLAGS            = $(LDFLAGS)"
 	@echo "F77LDFLAGS         = $(F77LDFLAGS)"
 	@echo "EXTRA_LDFLAGS      = $(EXTRA_LDFLAGS)"
