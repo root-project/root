@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.1 2004/01/25 20:33:32 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.2 2004/01/25 23:28:44 rdm Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -144,8 +144,9 @@ Double_t TMatrixDBase::SetTol(Double_t newTol)
   return oldTol;
 }
 
-Bool_t AreCompatible(const TMatrixDBase &m1,const TMatrixDBase &m2,Int_t verbose=0);
-Bool_t AreCompatible(const TMatrixDBase &m1,const TMatrixFBase &m2,Int_t verbose=0);
+Double_t E2Norm       (const TMatrixDBase &m1,const TMatrixDBase &m2);
+Bool_t   AreCompatible(const TMatrixDBase &m1,const TMatrixDBase &m2,Int_t verbose=0);
+Bool_t   AreCompatible(const TMatrixDBase &m1,const TMatrixFBase &m2,Int_t verbose=0);
 void   Compare      (const TMatrixDBase &m1,const TMatrixDBase &m2);
 
 // Service functions (useful in the verification code).
