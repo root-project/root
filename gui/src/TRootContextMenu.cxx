@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.7 2004/02/18 15:06:30 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootContextMenu.cxx,v 1.8 2004/03/12 00:31:22 rdm Exp $
 // Author: Fons Rademakers   12/02/98
 
 /*************************************************************************
@@ -264,16 +264,18 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
    if (fContextMenu->GetSelectedCanvas()) {
       TCanvas *c = (TCanvas *) fContextMenu->GetSelectedCanvas();
       // Embedded canvas has no canvasimp that is a TGFrame
-      if (c->GetCanvasImp()->IsA()->InheritsFrom(TGFrame::Class()))
-         w = (TRootCanvas *) c->GetCanvasImp();
-      else
+      if (c->GetCanvasImp()->IsA()->InheritsFrom(TGFrame::Class())) {
+         w = fClient->GetWindowById(gVirtualX->GetWindowID(c->GetCanvasID()));
+         if (!w) w = (TRootCanvas *) c->GetCanvasImp();
+      } else {
          w = gClient->GetDefaultRoot();
+      }
    } else if (fContextMenu->GetBrowser()) {
       TBrowser *b = (TBrowser *) fContextMenu->GetBrowser();
       w = (TRootBrowser *) b->GetBrowserImp();
-   } else
+   } else {
       w = gClient->GetDefaultRoot();
-
+   }
    fDialog = new TRootDialog(this, w, fContextMenu->CreateDialogTitle(object, function));
 
    // iterate through all arguments and create apropriate input-data objects:
