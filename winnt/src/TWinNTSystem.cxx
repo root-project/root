@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.51 2003/11/10 10:45:10 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.52 2003/12/08 18:51:20 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -162,15 +162,18 @@ class TTermInputLine :  public  TWin32HookViaThread
 //______________________________________________________________________________
 TTermInputLine::TTermInputLine()
 {
-  TWin32SendWaitClass CodeOp(this);
-  ExecCommandThread(&CodeOp,kFALSE);
-  CodeOp.Wait();
+   //
+
+   TWin32SendWaitClass CodeOp(this);
+   ExecCommandThread(&CodeOp,kFALSE);
+   CodeOp.Wait();
 }
 
 //______________________________________________________________________________
 void TTermInputLine::ExecThreadCB(TWin32SendClass *code)
 {
-// Dispatch a single event.
+   // Dispatch a single event.
+   
    gROOT->GetApplication()->HandleTermInput();
    ((TWin32SendWaitClass *)code)->Release();
 }
@@ -183,25 +186,30 @@ ClassImp(TWinNTSystem)
 
 
 //______________________________________________________________________________
-BOOL TWinNTSystem::HandleConsoleEvent(){
- TSignalHandler *sh;
- TIter next(fSignalHandler);
- ESignals s;
+BOOL TWinNTSystem::HandleConsoleEvent()
+{
+   //
 
- while (sh = (TSignalHandler*)next()) {
+   TSignalHandler *sh;
+   TIter next(fSignalHandler);
+   ESignals s;
+
+   while (sh = (TSignalHandler*)next()) {
       s = sh->GetSignal();
       if (s == kSigInterrupt) {
-              sh->Notify();
-              Throw(SIGINT);
-             return TRUE;
+         sh->Notify();
+         Throw(SIGINT);
+         return TRUE;
       }
-  }
-  return FALSE;
+   }
+   return FALSE;
 }
 
 //______________________________________________________________________________
 TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
 {
+   //
+
    fhProcess = GetCurrentProcess();
    fDirNameBuffer = 0;
    fShellName = 0;
@@ -221,6 +229,7 @@ TWinNTSystem::TWinNTSystem() : TSystem("WinNT", "WinNT System")
 //______________________________________________________________________________
 TWinNTSystem::~TWinNTSystem()
 {
+   //
 
    SafeDelete(fWin32Timer);
 
@@ -249,6 +258,7 @@ TWinNTSystem::~TWinNTSystem()
 }
 
 #ifdef GDK_WIN32
+//______________________________________________________________________________
 unsigned __stdcall HandleConsoleThread(void *pArg )
 {
    //
@@ -261,7 +271,7 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
             hEvent1 = 0;
          }
          if(!gROOT->IsLineProcessing()) {
-            gApplication->HandleTermInput();
+            if(!gApplication->HandleTermInput()) break; // no terminal input
          }
          ::SetConsoleMode(::GetStdHandle(STD_OUTPUT_HANDLE), ENABLE_PROCESSED_OUTPUT);
          if (hEvent1) ::ResetEvent(hEvent1);
@@ -273,6 +283,8 @@ unsigned __stdcall HandleConsoleThread(void *pArg )
       }
    }
 
+   ::CloseHandle(hThread1);
+   hThread1 = 0;
    _endthreadex( 0 );
    return 0;
 }
@@ -492,11 +504,8 @@ void  TWinNTSystem::SetShellName(const char *name)
         CopyFile(sysfile,fShellName,TRUE);  // TRUE means "don't overwrite if fShellName is exists
         delete [] sysfile;
       }
-
      }
-
  }
-
 
 //______________________________________________________________________________
 void TWinNTSystem::SetProgname(const char *name)
