@@ -531,6 +531,10 @@ STRESSO       = stress.$(ObjSuf)
 STRESSS       = stress.$(SrcSuf)
 STRESS        = stress$(ExeSuf)
 
+STRESSGEOMO   = stressgeom.$(ObjSuf)
+STRESSGEOMS   = stressgeom.$(SrcSuf)
+STRESSGEOM    = stressgeom$(ExeSuf)
+
 TBENCHO       = TBench.$(ObjSuf) TBenchDict.$(ObjSuf)
 TBENCHS       = TBench.$(SrcSuf) TBenchDict.$(SrcSuf)
 TBENCHSO      = TBench.$(DllSuf)
@@ -542,11 +546,11 @@ BENCH         = bench$(ExeSuf)
 OBJS          = $(EVENTO) $(MAINEVENTO) $(HWORLDO) $(HSIMPLEO) $(MINEXAMO) \
                 $(TSTRINGO) $(TCOLLEXO) $(VVECTORO) $(VMATRIXO) $(VLAZYO) \
                 $(HELLOO) $(ACLOCKO) $(STRESSO) $(TBENCHO) $(BENCHO) \
-                $(TCOLLBMO)
+                $(TCOLLBMO) $(STRESSGEOMO)
 
 PROGRAMS      = $(EVENT) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING) \
                 $(TCOLLEX) $(TCOLLBM) $(VVECTOR) $(VMATRIX) $(VLAZY) \
-                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH)
+                $(HELLOSO) $(ACLOCKSO) $(STRESS) $(TBENCHSO) $(BENCH) $(STRESSGEOM)
 ifneq ($(ARCH),win32)
 OBJS         += $(GUITESTO) $(GUIVIEWERO) $(TETRISO)
 PROGRAMS     += $(GUITEST) $(GUIVIEWER) $(TETRISSO)
@@ -637,6 +641,10 @@ $(GUIVIEWER):   $(GUIVIEWERO)
 
 $(STRESS):      $(STRESSO) $(EVENT)
 		$(LD) $(LDFLAGS) $(STRESSO) $(EVENTLIB) $(LIBS) $(OutPutOpt)$@
+		@echo "$@ done"
+
+$(STRESSGEOM):  $(STRESSGEOMO)
+		$(LD) $(LDFLAGS) $(STRESSGEOMO) $(LIBS) -lGeom $(OutPutOpt)$@
 		@echo "$@ done"
 
 $(BENCH):       $(BENCHO) $(TBENCHSO)
