@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.22 2004/09/03 13:55:42 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.23 2004/09/03 15:30:57 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -211,6 +211,15 @@ TGeoMatrix::~TGeoMatrix()
       }
    }
 }
+
+//_____________________________________________________________________________
+TGeoMatrix& TGeoMatrix::operator = (const TGeoMatrix &matrix)
+{
+// Assignment operator
+   if (&matrix == this) return *this;
+   TNamed::operator=(matrix);
+   return *this;
+}   
 
 //_____________________________________________________________________________
 TGeoMatrix &TGeoMatrix::operator*(const TGeoMatrix &right) const

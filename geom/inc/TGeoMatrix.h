@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.13 2004/01/23 16:34:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.h,v 1.14 2004/09/03 12:28:46 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -58,6 +58,7 @@ public :
    TGeoMatrix(const char *name);
    virtual ~TGeoMatrix();
 
+   TGeoMatrix& operator=(const TGeoMatrix &matrix);
    TGeoMatrix& operator*(const TGeoMatrix &right) const;
    Bool_t      operator ==(const TGeoMatrix &other) const;
    
