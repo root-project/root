@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.21 2002/05/09 20:21:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TQObject.cxx,v 1.22 2002/06/04 09:13:33 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -71,6 +71,7 @@
 #include "G__ci.h"
 #include "Api.h"
 #include "Riostream.h"
+#include "RQ_OBJECT.h"
 
 #ifdef HAVE_CONFIG
 #include "config.h"
@@ -190,7 +191,7 @@ static TMethod *GetMethodWithPrototype(TClass *cl, const char *method,
    if (!gInterpreter) return 0;
 
    Long_t faddr = 0;
-   if (!cl->IsLoaded()) { 
+   if (!cl->IsLoaded()) {
       // interpreted class
       G__MethodInfo meth;
       long offset;
@@ -501,7 +502,7 @@ TQObject::~TQObject()
    //    - delete all connections and signal list
 
    if (!gROOT) return;
-   
+
    Destroyed();   // emit "Destroyed()" signal
 
    TQConnectionList *list = 0;
@@ -1463,16 +1464,7 @@ void TQObject::LoadRQ_OBJECT()
    // Load RQ_OBJECT.h which contains the #define RQ_OBJECT needed to
    // let interpreted classes connect to signals of compiled classes.
 
-   char rqh[128];
-# ifdef ROOTINCDIR
-   sprintf(rqh, "%s/RQ_OBJECT.h", ROOTINCDIR);
-# else
-   sprintf(rqh, "%s/include/RQ_OBJECT.h", gSystem->Getenv("ROOTSYS"));
-# endif
-   if (!gSystem->AccessPathName(rqh, kReadPermission))
-      G__loadfile(rqh);
-   else
-      Warning("TQObject::LoadRQ_OBJECT", "%s not found", rqh);
+   G__load_text(RQ_OBJECT_STRING);
 }
 
 // Global function which simplifies making connection in interpreted

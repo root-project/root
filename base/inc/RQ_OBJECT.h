@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.5 2001/04/21 17:20:23 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.6 2001/12/28 12:54:17 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -132,5 +132,12 @@ public: \
    void Message(const char *msg)\
       { Emit("Message(char*)", msg); } \
 private:
+
+#define _QUOTE2_(string) \
+   _QUOTE_(string)
+
+#define RQ_OBJECT_STRING \
+   _QUOTE_(#define RQ_OBJECT(sender_class)) \
+   _QUOTE2_(RQ_OBJECT(sender_class))
 
 #endif
