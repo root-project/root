@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.31 2003/12/10 15:31:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.32 2003/12/11 10:34:33 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -604,7 +604,6 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t nphi, Int
    Double_t phi1 = fPhi1*TMath::DegToRad();
    Double_t phi, dz;
    Double_t cosph, sinph;
-   Double_t rproj;
    Double_t distz, distr, din, dout;
    Double_t invdir = 1./dir[2];
    memcpy(pt,point,3*sizeof(Double_t));
@@ -622,7 +621,7 @@ Bool_t TGeoPgon::SliceCrossingIn(Double_t *point, Double_t *dir, Int_t nphi, Int
       phi = phi1+(iphi[iphcrt]+0.5)*divphi;
       cosph = TMath::Cos(phi);
       sinph = TMath::Sin(phi);
-      rproj = Rproj(pt[2], pt, dir, cosph, sinph, apr, bpr);
+      Rproj(pt[2], pt, dir, cosph, sinph, apr, bpr);
       // compute distance to next Z plane
       while (ipl>=0 && ipl<fNz-1) {
          din = dout = TGeoShape::Big();
