@@ -85,12 +85,14 @@ LPATH         = lib
 ifneq ($(ARCH),win32)
 RPATH        := -L$(LPATH)
 CINTLIBS     := -lCint
-ROOTLIBS     := -lNew -lCore -lCint -lHist -lGraf -lGraf3d -lTree -lMatrix
+NEWLIBS      := -lNew
+ROOTLIBS     := -lCore -lCint -lHist -lGraf -lGraf3d -lTree -lMatrix
 RINTLIBS     := -lRint
 PROOFLIBS    := -lGpad -lProof -lTreePlayer
 else
 CINTLIBS     := $(LPATH)/libCint.lib
-ROOTLIBS     := $(LPATH)/libNew.lib $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
+NEWLIBS      := $(LPATH)/libNew.lib
+ROOTLIBS     := $(LPATH)/libCore.lib $(LPATH)/libCint.lib \
                 $(LPATH)/libHist.lib $(LPATH)/libGraf.lib \
                 $(LPATH)/libGraf3d.lib $(LPATH)/libTree.lib \
                 $(LPATH)/libMatrix.lib

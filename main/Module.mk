@@ -17,6 +17,7 @@ ROOTEXES     := $(MODDIRS)/rmain.cxx
 ROOTEXEO     := $(ROOTEXES:.cxx=.o)
 ROOTEXEDEP   := $(ROOTEXEO:.o=.d)
 ROOTEXE      := bin/root.exe
+ROOTNEXE     := bin/rootn.exe
 ifeq ($(ARCH),win32)
 ROOTICON     := icons/RootIcon.obj
 endif
@@ -48,7 +49,7 @@ endif
 G2ROOT       := bin/g2root$(EXEEXT)
 
 # used in the main Makefile
-ALLEXECS     += $(ROOTEXE) $(PROOFSERV)
+ALLEXECS     += $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV)
 ifneq ($(CERNLIBDIR),)
 ALLEXECS     += $(H2ROOT) $(G2ROOT)
 endif
@@ -57,18 +58,23 @@ endif
 INCLUDEFILES += $(ROOTEXEDEP) $(PROOFSERVDEP) $(H2ROOTDEP)
 
 ##### local rules #####
-$(ROOTEXE):     $(ROOTEXEO) $(NEWLIB) $(CORELIB) $(CINTLIB) $(HISTLIB) \
+$(ROOTEXE):     $(ROOTEXEO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(TREELIB) $(MATRIXLIB) $(RINTLIB)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) \
 		   $(RPATH) $(ROOTLIBS) $(RINTLIBS) $(SYSLIBS)
 
-$(PROOFSERV):   $(PROOFSERVO) $(NEWLIB) $(CORELIB) $(CINTLIB) $(HISTLIB) \
+$(ROOTNEXE):    $(ROOTEXEO) $(NEWLIB) $(CORELIB) $(CINTLIB) $(HISTLIB) \
+                $(GRAFLIB) $(G3DLIB) $(TREELIB) $(MATRIXLIB) $(RINTLIB)
+		$(LD) $(LDFLAGS) -o $@ $(ROOTEXEO) $(ROOTICON) \
+		   $(RPATH) $(NEWLIBS) $(ROOTLIBS) $(RINTLIBS) $(SYSLIBS)
+
+$(PROOFSERV):   $(PROOFSERVO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(TREELIB) $(MATRIXLIB) $(GPADLIB) \
                 $(PROOFLIB) $(TREEPLAYERLIB)
 		$(LD) $(LDFLAGS) -o $@ $(PROOFSERVO) \
 		   $(RPATH) $(ROOTLIBS) $(PROOFLIBS) $(SYSLIBS)
 
-$(H2ROOT):      $(H2ROOTO) $(NEWLIB) $(CORELIB) $(CINTLIB) $(HISTLIB) \
+$(H2ROOT):      $(H2ROOTO) $(CORELIB) $(CINTLIB) $(HISTLIB) \
                 $(GRAFLIB) $(G3DLIB) $(TREELIB) $(MATRIXLIB)
 		$(LD) $(LDFLAGS) -o $@ $(H2ROOTO) \
 		   $(RPATH) $(ROOTLIBS) \
@@ -79,9 +85,9 @@ $(G2ROOT):      $(G2ROOTO)
 		   $(CERNLIBDIR) $(CERNLIBS) $(F77LIBS) $(SYSLIBS)
 
 ifneq ($(CERNLIBDIR),)
-all-main:      $(ROOTEXE) $(PROOFSERV) $(H2ROOT) $(G2ROOT)
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV) $(H2ROOT) $(G2ROOT)
 else
-all-main:      $(ROOTEXE) $(PROOFSERV)
+all-main:      $(ROOTEXE) $(ROOTNEXE) $(PROOFSERV)
 endif
 
 clean-main:
@@ -90,7 +96,7 @@ clean-main:
 clean::         clean-main
 
 distclean-main: clean-main
-		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(PROOFSERVDEP) $(PROOFSERV) \
-		   $(H2ROOTDEP) $(H2ROOT) $(G2ROOT)
+		@rm -f $(ROOTEXEDEP) $(ROOTEXE) $(ROOTNEXE) $(PROOFSERVDEP) \
+		   $(PROOFSERV) $(H2ROOTDEP) $(H2ROOT) $(G2ROOT)
 
 distclean::     distclean-main
