@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.60 2004/03/14 09:12:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.61 2004/03/17 09:31:25 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -143,7 +143,7 @@ public:
     virtual TFriendElement *AddFriend(TTree *tree, const char* alias="", Bool_t warn = kFALSE);
     virtual void      AddTotBytes(Int_t tot) {fTotBytes += tot;}
     virtual void      AddZipBytes(Int_t zip) {fZipBytes += zip;}
-    virtual void      AutoSave(Option_t *option="");
+    virtual Int_t     AutoSave(Option_t *option="");
     virtual Int_t     Branch(TCollection *list, Int_t bufsize=32000, Int_t splitlevel=99, const char *name="");
     virtual Int_t     Branch(TList *list, Int_t bufsize=32000, Int_t splitlevel=99);
     virtual Int_t     Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99);

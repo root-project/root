@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.186 2004/05/10 15:08:45 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.187 2004/05/13 10:46:01 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -611,7 +611,7 @@ TFriendElement *TTree::AddFriend(TTree *tree, const char* alias, Bool_t warn)
 }
 
 //______________________________________________________________________________
-void TTree::AutoSave(Option_t *option)
+Int_t TTree::AutoSave(Option_t *option)
 {
 //*-*-*-*-*-*-*-*-*-*-*AutoSave tree header every fAutoSave bytes*-*-*-*-*-*
 //*-*                  ==========================================
@@ -645,6 +645,10 @@ void TTree::AutoSave(Option_t *option)
 //   before written the new header. This option is slightly faster, but
 //   the default option is safer in case of a problem (disk quota exceeded)
 //   when writing the new header.
+//
+//   The function returns the number of bytes written to the file.
+//   if the number of bytes is null, an error has occured while writing
+//   the header to the file.
 //
 //   How to write a Tree in one process and view it from another process
 //   ===================================================================
@@ -681,7 +685,7 @@ void TTree::AutoSave(Option_t *option)
 //      }
 //   }
       
-   if (!fDirectory || fDirectory == gROOT || !fDirectory->IsWritable()) return;
+   if (!fDirectory || fDirectory == gROOT || !fDirectory->IsWritable()) return 0;
    if (gDebug > 0) {
       printf("AutoSave Tree:%s after %g bytes written\n",GetName(),fTotBytes);
    }
@@ -691,11 +695,12 @@ void TTree::AutoSave(Option_t *option)
    TDirectory *dirsav = gDirectory;
    fDirectory->cd();
    TKey *key = (TKey*)fDirectory->GetListOfKeys()->FindObject(GetName());
+   Int_t nbytes;
    if (opt.Contains("overwrite")) {
-      Write("",TObject::kOverwrite);
+      nbytes = Write("",TObject::kOverwrite);
    } else {
-      Int_t wOK = Write(); //wOK will be 0 if Write failed (disk space exceeded)
-      if (wOK && key) {
+      nbytes = Write(); //nbytes will be 0 if Write failed (disk space exceeded)
+      if (nbytes && key) {
          key->Delete();
          delete key;
       }
@@ -707,6 +712,7 @@ void TTree::AutoSave(Option_t *option)
    if (opt.Contains("saveself")) fDirectory->SaveSelf();
    
    dirsav->cd();
+   return nbytes;
 }
 
 //______________________________________________________________________________
