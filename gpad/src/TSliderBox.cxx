@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TSliderBox.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   23/11/96
 
 /*************************************************************************
@@ -38,7 +38,7 @@ TSliderBox::TSliderBox(): TWbox()
 }
 
 //______________________________________________________________________________
-TSliderBox::TSliderBox(Coord_t x1, Coord_t y1,Coord_t x2, Coord_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
+TSliderBox::TSliderBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
            :TWbox(x1,y1,x2,y2,color,bordersize,bordermode)
 {
 //*-*-*-*-*-*-*-*-*-*-*SliderBox normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
