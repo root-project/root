@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.231 2005/03/21 12:32:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.232 2005/03/23 12:41:01 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -489,9 +489,13 @@ TH1::~TH1()
       //added multiple times in fFunctions.
       //This case happens when the same object is added with different
       //drawing modes
+      //In the loop below we must be careful with objects (eg TCutG) that may
+      // have been added to the list of functions of several histograms
+      //and may have been already deleted.
       while ((obj  = fFunctions->First())) {
          while(fFunctions->Remove(obj));
-         delete obj;
+          if (!obj->TestBit(kNotDeleted)) break;
+          delete obj;
       }
       delete fFunctions;
    }
