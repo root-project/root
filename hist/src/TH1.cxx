@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.96 2002/05/18 08:21:59 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.97 2002/05/18 16:29:44 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3378,6 +3378,8 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
 //          to the upper edge of the bin=newbins*ngroup and the corresponding
 //          bins are added to the overflow bin.
 //          Statistics will be recomputed from the new bin contents.
+//
+//   NOTE3: This function cannot be used with variable bin size histograms.
 
    Int_t nbins   = fXaxis.GetNbins();
    Axis_t xmin  = fXaxis.GetXmin();
@@ -3388,6 +3390,10 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
    }
    if (fDimension > 1 || InheritsFrom("TProfile")) {
       Error("Rebin", "Operation valid on 1-D histograms only");
+      return 0;
+   }
+   if (fXaxis.GetXbins()->GetSize() > 0) {
+      Error("Rebin", "Cannot rebin variable bin size histograms");
       return 0;
    }
    Int_t newbins = nbins/ngroup;
