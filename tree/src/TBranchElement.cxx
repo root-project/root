@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.10 2001/03/12 07:18:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.11 2001/04/09 08:10:18 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -85,7 +85,7 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          else countname[0] = 0;
          strcat(countname,bp->GetCountName());
          brcount = (TBranchElement *)fTree->GetBranch(countname);
-         printf("found pointertobasicpointer: %s[%s]\n",name,countname);
+         //printf("found pointertobasicpointer: %s[%s]\n",name,countname);
       }
    }
            
