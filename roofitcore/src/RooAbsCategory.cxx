@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.18 2001/05/17 00:43:14 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.19 2001/05/31 21:21:34 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,7 +18,6 @@
 // 
 // Implementation of RooAbsCategory may be derived, there no interface
 // is provided to modify the contents, nor a public interface to define states.
-// 
 
 #include <iostream.h>
 #include <stdlib.h>
@@ -28,6 +27,7 @@
 #include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/Roo1DTable.hh"
+#include "RooFitCore/RooCategory.hh"
 
 ClassImp(RooAbsCategory) 
 ;
@@ -350,3 +350,19 @@ const RooCatType* RooAbsCategory::getOrdinal(UInt_t n) const {
   return (const RooCatType*)_types.At(n);
 }
 
+RooAbsArg *RooAbsCategory::createFundamental() const {
+  // Create a RooCategory fundamental object with our properties.
+
+  // Add and precalculate new category column 
+  RooCategory *fund= new RooCategory(GetName(),GetTitle()) ; 
+
+  // Copy states
+  TIterator* tIter = typeIterator() ;
+  RooCatType* type ;
+  while (type=(RooCatType*)tIter->Next()) {
+    fund->defineType(type->GetName(),type->getVal()) ;
+  }
+  delete tIter;
+
+  return fund;
+}

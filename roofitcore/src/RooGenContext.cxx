@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.cc,v 1.1 2001/05/18 00:59:19 david Exp $
+ *    File: $Id: RooGenContext.cc,v 1.2 2001/05/31 21:21:36 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -29,7 +29,7 @@ ClassImp(RooGenContext)
   ;
 
 static const char rcsid[] =
-"$Id: RooGenContext.cc,v 1.1 2001/05/18 00:59:19 david Exp $";
+"$Id: RooGenContext.cc,v 1.2 2001/05/31 21:21:36 david Exp $";
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype) :
   TNamed(model), _origVars(&vars), _prototype(prototype), _cloneSet(0), _pdfClone(0),
@@ -138,8 +138,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars, cons
 					 TString(_pdfClone->GetTitle()).Append(" (Accept/Reject)"),
 					 *_pdfClone,*depList);
   delete depList;
-  _acceptRejectFunc->Print("V");
-  _generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,kTRUE);
+  _generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars);
 }
 
 RooGenContext::~RooGenContext() {
@@ -203,6 +202,8 @@ RooDataSet *RooGenContext::generate(Int_t nEvents) const {
 
   // preload the dataset with values from our accept-reject generator
   _generator->generateEvents(nEvents,*data);
+
+  return data;
 
   // Attach the model to the new data set
   _pdfClone->attachDataSet(*data);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.2 2001/05/07 06:26:13 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.3 2001/05/09 00:51:10 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,13 +28,20 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.2 2001/05/07 06:26:13 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.3 2001/05/09 00:51:10 david Exp $";
 
 RooCurve::RooCurve() {
   initialize();
 }
 
-RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t prec) {
+RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t scaleFactor,
+		   const RooArgSet *normVars, Double_t prec) {
+  // Create a 1-dim curve of the value of the specified real-valued expression
+  // as a function of x. Use the optional precision parameter to control
+  // how precisely the smooth curve is rasterized. Use the optional argument set
+  // to specify how the expression should be normalized. Use the optional scale
+  // factor to rescale the expression after normalization.
+
   // grab the function's name and title
   TString name("curve_");
   name.Append(f.GetName());
@@ -57,7 +64,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooRealVar &x, Double_t prec) {
   }
   setYAxisLabel(title.Data());
   // bind the function to the specified real var
-  RooRealFunc1D func= f(x);
+  RooRealFunc1D func= f(x,scaleFactor,normVars);
   // calculate the points to add to our curve
   addPoints(func,x.getPlotMin(),x.getPlotMax(),x.getPlotBins(),prec);
   initialize();
@@ -107,6 +114,10 @@ void RooCurve::addPoints(const RooAbsFunc1D &func, Double_t xlo, Double_t xhi,
 }
 
 RooCurve::~RooCurve() {
+}
+
+Double_t RooCurve::getFitRangeNorm() const {
+  return 1;
 }
 
 void RooCurve::addPoint(Double_t x, Double_t y) {

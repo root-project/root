@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.5 2001/05/10 18:58:47 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.6 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,8 +23,10 @@
 #include "TObjString.h"
 #include "TH1.h"
 #include "TTree.h"
-#include "RooFitCore/RooAbsString.hh"
+
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooAbsString.hh"
+#include "RooFitCore/RooStringVar.hh"
 
 ClassImp(RooAbsString) 
 ;
@@ -167,3 +169,9 @@ void RooAbsString::attachToTree(TTree& t, Int_t bufSize)
   }
 }
  
+RooAbsArg *RooAbsString::createFundamental() const {
+  // Create a RooStringVar fundamental object with our properties.
+
+  RooStringVar *fund= new RooStringVar(GetName(),GetTitle(),"") ; 
+  return fund;
+}

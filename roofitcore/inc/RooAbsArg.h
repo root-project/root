@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.30 2001/06/09 05:08:47 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.31 2001/06/12 19:06:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -56,6 +56,16 @@ public:
   void treeNodeServerList(RooArgSet* list, const RooAbsArg* arg=0, 
 			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE) const ;
   
+  // Is this object a fundamental type that can be added to a dataset?
+  // Fundamental-type subclasses override this method to return kTRUE.
+  // Note that this test is subtlely different from the dynamic isDerived()
+  // test, e.g. a constant is not derived but is also not fundamental.
+  inline virtual Bool_t isFundamental() const { return kFALSE; }
+  // Create a fundamental-type object that stores our type of value. The
+  // created object will have a valid value, but not necessarily the same
+  // as our value. The caller is responsible for deleting the returned object.
+  virtual RooAbsArg *createFundamental() const = 0;
+
   // Parameter & dependents interpretation of servers
   RooArgSet* getParameters(const RooDataSet* set) const ;
   RooArgSet* getDependents(const RooDataSet* set) const ;

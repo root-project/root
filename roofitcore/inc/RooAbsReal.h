@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.16 2001/06/08 05:51:04 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.17 2001/06/12 19:06:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -39,8 +39,11 @@ public:
   inline const Text_t *getUnit() const { return _unit.Data(); }
   inline void setUnit(const char *unit) { _unit= unit; }
 
-  // Bind ourselves with one particular real variable
-  RooRealFunc1D operator()(RooRealVar &var) const;
+  // Bind ourselves with one particular real variable and normalization setup
+  RooRealFunc1D operator()(RooRealVar &var, Double_t scaleFactor= 1, const RooArgSet *normVars= 0) const;
+
+  // Create a fundamental-type object that can hold our value.
+  RooAbsArg *createFundamental() const;
 
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }
@@ -56,10 +59,11 @@ public:
 
   // Create plots
   RooPlot *frame() const;
-  RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor=1.0) const;
+  RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0) const;
 
-  TH1F *createHistogram(const char *label, const char *axis, Int_t bins= 0);
-  TH1F *createHistogram(const char *label, const char *axis, Double_t lo, Double_t hi, Int_t bins= 0);
+  // Create histograms
+  TH1F *createHistogram(const char *label, const char *axis, Int_t bins= 0) const;
+  TH1F *createHistogram(const char *label, const char *axis, Double_t lo, Double_t hi, Int_t bins) const;
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;

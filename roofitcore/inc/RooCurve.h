@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.rdl,v 1.2 2001/05/09 00:51:10 david Exp $
+ *    File: $Id: RooCurve.rdl,v 1.3 2001/05/14 22:54:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -18,19 +18,26 @@
 class RooAbsReal;
 class RooRealVar;
 class RooAbsFunc1D;
+class RooArgSet;
 
 class RooCurve : public TGraph, public RooPlotable {
 public:
   RooCurve();
-  RooCurve(const RooAbsReal &func, RooRealVar &x, Double_t prec= 1e-3);
+  RooCurve(const RooAbsReal &func, RooRealVar &x, Double_t scaleFactor= 1,
+	   const RooArgSet *normVars= 0, Double_t prec= 1e-3);
   RooCurve(const char *name, const char *title, const RooAbsFunc1D &func, Double_t xlo,
 	   Double_t xhi, UInt_t minPoints, Double_t prec= 1e-3);
   virtual ~RooCurve();
+
   void addPoint(Double_t x, Double_t y);
+
+  Double_t getFitRangeNorm() const;
+
   virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
+
 protected:
   void initialize();
   void addPoints(const RooAbsFunc1D &func, Double_t xlo, Double_t xhi,

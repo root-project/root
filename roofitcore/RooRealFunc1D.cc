@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.3 2001/04/22 18:15:32 david Exp $
+ *    File: $Id: RooRealFunc1D.cc,v 1.1 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -20,24 +20,29 @@
 #include "RooFitCore/RooRealFunc1D.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooDataSet.hh"
 
 ClassImp(RooRealFunc1D)
 ;
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.3 2001/04/22 18:15:32 david Exp $";
+"$Id: RooRealFunc1D.cc,v 1.1 2001/05/02 18:09:00 david Exp $";
 
-RooRealFunc1D::RooRealFunc1D(const RooAbsReal &func, RooRealVar &x) :
-  _funcPtr(&func), _xPtr(&x)
+RooRealFunc1D::RooRealFunc1D(const RooAbsReal &func, RooRealVar &x, Double_t scaleFactor,
+			     const RooArgSet *normVars) :
+  _funcPtr(&func), _xPtr(&x), _scale(scaleFactor), _dset(0)
 {
   // Create a new binding object. The input objects are not cloned so the
   // lifetime of the newly created object is limited by their lifetimes.
+
+  if(0 != normVars) _dset= new RooDataSet("normVars","Normalization Variables",*normVars);
 }
 
 RooRealFunc1D::~RooRealFunc1D() {
+  if(_dset) delete _dset;
 }
 
 Double_t RooRealFunc1D::operator()(Double_t x) const {
   _xPtr->setVal(x);
-  return _funcPtr->getVal();
+  return _scale*_funcPtr->getVal(_dset);
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.16 2001/05/11 00:45:49 david Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.17 2001/05/14 22:54:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -57,9 +57,7 @@ public:
   // Add one ore more rows of data
   void add(const RooArgSet& row);
   void append(RooDataSet& data) ;
-  void addColumn(RooAbsReal& var) ;
-  void addColumn(RooAbsCategory& var) ;
-  void addColumn(RooAbsString& var) ;
+  void addColumn(RooAbsArg& var) ;
 
   // Load a given row of data
   const RooArgSet* get() const { return &_vars ; } // last loaded row
@@ -85,8 +83,6 @@ public:
   void origPrint() { TTree::Print() ; }
 
 protected:
-
-  void addColumn(RooAbsArg& var, RooAbsArg* placeHolder) ;
 
   void cacheArg(RooAbsArg& var) ;
   void cacheArgs(RooArgSet& varSet) ;

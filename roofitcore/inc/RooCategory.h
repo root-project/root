@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.rdl,v 1.12 2001/05/11 06:30:00 verkerke Exp $
+ *    File: $Id: RooCategory.rdl,v 1.13 2001/05/14 22:54:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -35,6 +35,9 @@ public:
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
+
+  // We implement a fundamental type of AbsArg that can be stored in a dataset
+  inline virtual Bool_t isFundamental() const { return kTRUE; }
 
   Bool_t defineType(const char* label) ;
   Bool_t defineType(const char* label, Int_t index) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.22 2001/06/08 05:51:04 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.23 2001/06/12 19:06:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -229,22 +229,26 @@ Bool_t RooAbsReal::isValid(Double_t value, Bool_t printError) const
 
 
 
-TH1F *RooAbsReal::createHistogram(const char *label, const char *axis, Int_t bins) {
+TH1F *RooAbsReal::createHistogram(const char *label, const char *axis, Int_t bins) const {
   // Create a 1D-histogram with appropriate scale and labels for this variable.
+  // This method uses the default plot range which can be changed using the
+  // setPlotMin(),setPlotMax() methods. Uses the default binning (setPlotBins())
+  // unless you specify your own binning.
 
-  return createHistogram(label, axis, _plotMin, _plotMax, bins);
+  return createHistogram(label, axis, _plotMin, _plotMax, bins > 0 ? bins : getPlotBins());
 }
 
 TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
-				  Double_t lo, Double_t hi, Int_t bins) {
+				  Double_t lo, Double_t hi, Int_t bins) const {
   // Create a 1D-histogram with appropriate scale and labels for this variable.
+  // Binning must be specified with this method since the default binning is associated
+  // with the default plot ranges, but you have asked for a non-default range.
 
   TString histName(label);
   if(!histName.IsNull()) histName.Append("_");
   histName.Append(GetName());
 
-  // use the default binning, if no override is specified
-  if(bins <= 0) bins= getPlotBins();
+  // create the histogram
   TH1F* histogram= new TH1F(histName.Data(), fTitle, bins, lo, hi);
   if(!histogram) {
     cout << fName << "::createHistogram: unable to create a new histogram" << endl;
@@ -264,7 +268,7 @@ TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
   if(strlen(axis)) {
     TString yTitle(axis);
     Double_t delta= (_plotMax-_plotMin)/bins;
-    yTitle.Append(Form(" %g",delta));
+    yTitle.Append(Form(" / %g",delta));
     if(strlen(getUnit())) {
       yTitle.Append(" ");
       yTitle.Append(getUnit());
@@ -275,6 +279,8 @@ TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
 }
 
 RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scaleFactor) const {
+  // Plot a smooth curve of this object's value on the specified frame.
+
   // check that we are passed a valid plot frame to use
   if(0 == frame) {
     cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
@@ -312,16 +318,12 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scal
   RooArgSet args(*realVar);
   clone->recursiveRedirectServers(args);
 
+  // normalize ourself to any previous contents in the frame
+  if(frame->getFitRangeNorm() > 0) scaleFactor*= frame->getFitRangeNorm();
+  frame->updateNormVars(RooArgSet(*realVar));
+
   // create a new curve of our function using the clone to do the evaluations
-  RooCurve* curve ;
-  if (scaleFactor != 1.0) {
-    cout << "RooAbsReal::plotOn, using scale factor " << scaleFactor << endl ;
-    RooRealVar scale("scale","plot scale factor",scaleFactor) ;
-    RooFormulaVar scaledClone("scaledClone",clone->GetTitle(),"@0*@1",RooArgSet(scale,*clone)) ;
-    curve= new RooCurve(scaledClone,*realVar);
-  } else {
-    curve= new RooCurve(*clone,*realVar);
-  }
+  RooCurve* curve= new RooCurve(*clone,*realVar,scaleFactor,frame->getNormVars());
 
   // add a copy of the temporary curve to the specified plot frame
   frame->addPlotable(curve, drawOptions);
@@ -332,9 +334,10 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scal
   return frame;
 }
 
-RooRealFunc1D RooAbsReal::operator()(RooRealVar &var) const {
+RooRealFunc1D RooAbsReal::operator()(RooRealVar &var, Double_t scaleFactor,
+				     const RooArgSet *normVars) const {
   // Create a 1-dimensional function object from the RooAbsReal
-  return RooRealFunc1D(*this,var);
+  return RooRealFunc1D(*this,var,scaleFactor,normVars);
 }
 
 
@@ -379,6 +382,20 @@ void RooAbsReal::postTreeLoadHook()
 // 	 << "): loaded cache, value " << _value << endl ;
 }
  
+RooAbsArg *RooAbsReal::createFundamental() const {
+  // Create a RooRealVar fundamental object with our properties. The new
+  // object will be created without any fit limits.
+
+  RooRealVar *fund= new RooRealVar(GetName(),GetTitle(),_value,getUnit());
+  fund->removeFitRange();
+  fund->setPlotMin(getPlotMin());
+  fund->setPlotMax(getPlotMax());
+  fund->setPlotLabel(getPlotLabel());
+  fund->setPlotBins(getPlotBins());
+  fund->setAttribute("fundamentalCopy");
+  return fund;
+}
+
 RooPlot *RooAbsReal::frame() const {
   // Create a new RooPlot on the heap with a drawing frame initialized for this
   // object, but no plot contents. Use x.frame() as the first argument to a

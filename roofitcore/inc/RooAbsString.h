@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.rdl,v 1.5 2001/05/10 18:58:47 verkerke Exp $
+ *    File: $Id: RooAbsString.rdl,v 1.6 2001/05/14 22:54:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,6 +15,7 @@
 
 #include "TObjString.h"
 #include "RooFitCore/RooAbsArg.hh"
+
 class RooArgSet ;
 class TH1F ;
 
@@ -37,6 +38,8 @@ public:
 
   // Printing interface (human readable)
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
+
+  RooAbsArg *createFundamental() const;
 
 protected:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenContext.rdl,v 1.1 2001/05/18 00:59:19 david Exp $
+ *    File: $Id: RooAcceptReject.rdl,v 1.1 2001/05/31 21:21:36 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -35,14 +35,16 @@ public:
   }
 
 protected:
-  void addEvent(RooDataSet &cache, TIterator *nextCatVar, TIterator *nextRealVar);
+  void addEvent(RooDataSet &cache, TIterator *nextCatVar, TIterator *nextRealVar, RooRealVar *funcVal);
+  Bool_t acceptEvent(const RooDataSet &cache, RooRealVar *funcVal, RooDataSet &container);
+  inline Double_t eff() const { return _funcSum/(_totalEvents*_maxFuncVal); }
 
   RooArgSet *_cloneSet;
   RooAbsReal *_funcClone;
   RooArgSet _catVars,_realVars;
   Bool_t _verbose, _isValid;
-  Double_t _area, _maxFuncVal, _funcNorm;
-  UInt_t _sampleDim,_minTrials,_totalEvents;
+  Double_t _maxFuncVal, _funcSum;
+  UInt_t _sampleDim,_minTrials,_totalEvents,_eventsUsed;
   RooRealVar *_funcVal;
 
   ClassDef(RooAcceptReject,0) // Context for generating a dataset from a PDF

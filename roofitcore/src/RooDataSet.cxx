@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.26 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.27 2001/06/12 19:06:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -127,9 +127,9 @@ void RooDataSet::initialize(const RooArgSet& vars) {
   TIterator* iter = vars.MakeIterator() ;
   RooAbsArg *var;
   while(0 != (var= (RooAbsArg*)iter->Next())) {
-    if (var->isDerived()) {
+    if (!var->isFundamental()) {
       cout << "RooDataSet::initialize(" << GetName() 
-	   << "): Data set cannot contain derived values, ignoring " 
+	   << "): Data set cannot contain non-fundamental types, ignoring " 
 	   << var->GetName() << endl ;
     } else {
       RooAbsArg* varClone = (RooAbsArg*) var->Clone() ;
@@ -252,44 +252,18 @@ void RooDataSet::dump() {
 }
 
 
-void RooDataSet::addColumn(RooAbsReal& newVar) 
-{
-  // Add and precalculate new real-valued column 
-  RooRealVar* valHolder = new RooRealVar(newVar.GetName(),newVar.GetTitle(),0) ; 
-  addColumn(newVar,valHolder) ;
-}
-
-
-
-void RooDataSet::addColumn(RooAbsCategory& newVar) 
-{
-  // Add and precalculate new category column 
-  RooCategory* valHolder = new RooCategory(newVar.GetName(),newVar.GetTitle()) ; 
-
-  // Copy states
-  TIterator* tIter = newVar.typeIterator() ;
-  RooCatType* type ;
-  while (type=(RooCatType*)tIter->Next()) {
-    valHolder->defineType(type->GetName(),type->getVal()) ;
-  }
-
-  addColumn(newVar,valHolder) ;
-}
-
-
-
-void RooDataSet::addColumn(RooAbsString& newVar) 
-{
-  // Add a string-valued column 
-  RooStringVar* valHolder = new RooStringVar(newVar.GetName(),newVar.GetTitle(),"") ; 
-  addColumn(newVar,valHolder) ;
-}
-
-
-
-void RooDataSet::addColumn(RooAbsArg& newVar, RooAbsArg* valHolder)
+void RooDataSet::addColumn(RooAbsArg& newVar)
 {
   // Add and precalculate new column, using given valHolder to store precalculate value
+
+  // Create a fundamental object of the right type to hold newVar values
+  RooAbsArg* valHolder= newVar.createFundamental();
+  // Sanity check that the holder really is fundamental
+  if(!valHolder->isFundamental()) {
+    cout << GetName() << "::addColumn: holder argument is not fundamental: \""
+	 << valHolder->GetName() << "\"" << endl;
+    return;
+  }
 
   // Clone current tree
   RooDataSet* cloneData = new RooDataSet(*this) ;
@@ -384,11 +358,9 @@ void RooDataSet::add(const RooArgSet& data) {
   Fill();
 }
 
-
-
 RooPlot *RooDataSet::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOptions) const 
 {
-  // Plot data set column on given frame (column plotted determined by frame variable)
+  // Fill a histogram of values calculated from events in our dataset.
 
   if(0 == frame) {
     cout << ClassName() << "::" << GetName() << ":plot: frame is null" << endl;
@@ -417,6 +389,9 @@ RooPlot *RooDataSet::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpti
     delete hist;
     return 0;
   }
+
+  // initialize the frame's normalization setup, if necessary
+  frame->updateNormVars(_vars);
 
   // add the RooHist to the specified plot
   frame->addPlotable(graph,drawOptions);

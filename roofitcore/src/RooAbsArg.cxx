@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.34 2001/06/09 05:08:47 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.35 2001/06/12 19:06:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -174,10 +174,8 @@ Bool_t RooAbsArg::getAttribute(const Text_t* name) const
 void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp) 
 {
   // Register another RooAbsArg as a server to us, ie, declare that
-  // we depend on its value and shape.
-
-  // Check we are propagating something 
-  if (!valueProp && !shapeProp) return ;
+  // we depend on it. In addition to the basic client-server relationship,
+  // we can declare dependence on the server's value and/or shape.
 
   // Add server link to given server
   if (!_serverList.FindObject(&server)) {

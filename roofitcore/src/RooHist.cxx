@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHist.cc,v 1.3 2001/04/22 18:15:32 david Exp $
+ *    File: $Id: RooHist.cc,v 1.4 2001/05/02 18:09:00 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -27,32 +27,43 @@
 ClassImp(RooHist)
 
 static const char rcsid[] =
-"$Id: RooHist.cc,v 1.3 2001/04/22 18:15:32 david Exp $";
+"$Id: RooHist.cc,v 1.4 2001/05/02 18:09:00 david Exp $";
 
-RooHist::RooHist(Double_t nSigma) :
-  TGraphAsymmErrors(), _nSigma(nSigma)
+RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma) :
+  TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma)
 {
   // Create an empty histogram that can be filled with the addBin()
   // and addAsymmetryBin() methods. Use the optional parameter to
   // specify the confidence level in units of sigma to use for
-  // calculating error bars.
+  // calculating error bars. The nominal bin width specifies the
+  // default used by addBin(), and is used to set the relative
+  // normalization of bins with different widths.
 
   initialize();
 }
 
-RooHist::RooHist(const TH1 &data, Double_t nSigma) :
-  TGraphAsymmErrors(), _nSigma(nSigma)
+RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma) :
+  TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma)
 {
-  // Create a histogram from the contents of the specified TH1 object.
-  // Error bars are calculated using Poisson statistics.  Prints a
-  // warning and rounds any bins with non-integer contents.  Use the
-  // optional parameter to specify the confidence level in units of
-  // sigma to use for calculating error bars.
+  // Create a histogram from the contents of the specified TH1 object
+  // which may have fixed or variable bin widths. Error bars are
+  // calculated using Poisson statistics. Prints a warning and rounds
+  // any bins with non-integer contents. Use the optional parameter to
+  // specify the confidence level in units of sigma to use for
+  // calculating error bars. The nominal bin width specifies the
+  // default used by addBin(), and is used to set the relative
+  // normalization of bins with different widths. If not set, the
+  // nominal bin width is calculated as range/nbins.
 
   initialize();
   // copy the input histogram's name and title
   SetName(data.GetName());
   SetTitle(data.GetTitle());
+  // calculate our nominal bin width if necessary
+  if(_nominalBinWidth == 0) {
+    const TAxis *axis= data.GetXaxis();
+    if(axis->GetNbins() > 0) _nominalBinWidth= (axis->GetXmax() - axis->GetXmin())/axis->GetNbins();
+  }
   // TH1::GetYaxis() is not const (why!?)
   setYAxisLabel(const_cast<TH1&>(data).GetYaxis()->GetTitle());
   // initialize our contents from the input histogram's contents
@@ -60,14 +71,21 @@ RooHist::RooHist(const TH1 &data, Double_t nSigma) :
   for(Int_t bin= 1; bin <= nbin; bin++) {
     Axis_t x= data.GetBinCenter(bin);
     Stat_t y= data.GetBinContent(bin);
-    addBin(x,roundBin(y));
+    addBin(x,roundBin(y),data.GetBinWidth(bin));
   }
+  // add over/underflow bins to our event count
+  _entries+= data.GetBinContent(0) + data.GetBinContent(nbin+1);
 }
 
 void RooHist::initialize() {
   // Perform common initialization for all constructors.
 
   SetMarkerStyle(8);
+  _entries= 0;
+}
+
+Double_t RooHist::getFitRangeNorm() const {
+  return _entries*_nominalBinWidth;
 }
 
 Int_t RooHist::roundBin(Stat_t y) {
@@ -85,18 +103,22 @@ Int_t RooHist::roundBin(Stat_t y) {
   return n;
 }
 
-void RooHist::addBin(Axis_t binCenter, Int_t n) {
+void RooHist::addBin(Axis_t binCenter, Int_t n, Double_t binWidth) {
   // Add a bin to this histogram with the specified integer bin contents
-  // and using an error bar calculated with Poisson statistics.
+  // and using an error bar calculated with Poisson statistics. The bin width
+  // is used to set the relative scale of bins with different widths.
 
+  Double_t scale= 1;
+  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
+  _entries+= n;
   Int_t index= GetN();
 //    Double_t ym= RooMath::PoissonError(n,RooMath::NegativeError,_nSigma);
 //    Double_t yp= RooMath::PoissonError(n,RooMath::PositiveError,_nSigma);
-  Double_t ym= sqrt(n), yp= ym;
+  Double_t ym= sqrt(n), yp= ym, dx= 0.5*binWidth;
   SetPoint(index,binCenter,n);
-  SetPointError(index,0,0,ym,yp);
-  updateYAxisLimits(n+yp);
-  updateYAxisLimits(n-ym);
+  SetPointError(index,dx,dx,scale*ym,scale*yp);
+  updateYAxisLimits(scale*(n+yp));
+  updateYAxisLimits(scale*(n-ym));
 }
 
 void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2) {
