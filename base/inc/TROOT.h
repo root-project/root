@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.30 2002/09/16 00:01:57 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.31 2003/04/04 00:10:16 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -48,6 +48,7 @@ class TPluginManager;
 class TProcessUUID;
 
 namespace ROOT {
+   class TClassGenerator;
    class TMapTypeToTClass;
 }
 
@@ -107,6 +108,7 @@ protected:
    TSeqCollection  *fCleanups;            //List of recursiveRemove collections
    TSeqCollection  *fMessageHandlers;     //List of message handlers
    TSeqCollection  *fStreamerInfo;        //List of active StreamerInfo classes
+   TSeqCollection  *fClassGenerators;     //List of user defined class generators;
    TProcessUUID    *fUUIDs;               //Pointer to TProcessID managing TUUIDs
    TFolder         *fRootFolder;          //top level folder //root
    TList           *fBrowsables;          //List of browsables
@@ -126,6 +128,7 @@ public:
                      TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);
    virtual           ~TROOT();
    void              AddClass(TClass *);
+   void              AddClassGenerator(ROOT::TClassGenerator *);
    void              Browse(TBrowser *b);
    Bool_t            ClassSaved(TClass *cl);
    virtual TObject  *FindObject(const char *name) const;
@@ -169,6 +172,7 @@ public:
    TSeqCollection   *GetListOfCleanups() const    { return fCleanups; }
    TSeqCollection   *GetListOfStreamerInfo() const { return fStreamerInfo; }
    TSeqCollection   *GetListOfMessageHandlers() const { return fMessageHandlers; }
+   TSeqCollection   *GetListOfClassGenerators() const { return fClassGenerators; }
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
    TFile            *GetFile() const { return fFile; }

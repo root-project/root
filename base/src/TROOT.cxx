@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.94 2003/06/13 06:14:19 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.95 2003/06/23 22:18:37 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -71,6 +71,7 @@
 #include "Gtypes.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TClassGenerator.h"
 #include "TDataType.h"
 #include "TFile.h"
 #include "TMapFile.h"
@@ -361,6 +362,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fIdMap       = new IdMap_t;
    fStreamerInfo= new TObjArray(100);
    fMessageHandlers = new TList;
+   fClassGenerators = new TList;
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();
@@ -531,6 +533,17 @@ void TROOT::AddClass(TClass *cl)
    if (cl->GetTypeInfo()) {
       fIdMap->Add(cl->GetTypeInfo()->name(),cl);
    }
+}
+
+//______________________________________________________________________________
+void TROOT::AddClassGenerator(ROOT::TClassGenerator *generator)
+{
+   // Add a class generator.  This generator will be called by TROOT::GetClass
+   // in case its does not find a loaded rootcint dictionary to request the
+   // creation of a TClass object.
+
+   if (!generator) return;
+   fClassGenerators->Add(generator);
 }
 
 //______________________________________________________________________________
@@ -777,6 +790,13 @@ TClass *TROOT::GetClass(const char *name, Bool_t load) const
    }
    if (cl) return cl;
 
+   TIter next(fClassGenerators);
+   ROOT::TClassGenerator *gen;
+   while( (gen = (ROOT::TClassGenerator*)next()) ) {
+      cl = gen->GetClass(name,load);
+      if (cl) return cl;
+   }
+
    // Reject STL containers and string.
    static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
    if (!strcmp(name, "string")||!strcmp(name,full_string_name)) return 0;
@@ -832,6 +852,13 @@ TClass *TROOT::GetClass(const type_info& typeinfo, Bool_t load) const
       return GetClass(typeinfo);
    }
    if (cl) return cl;
+
+   TIter next(fClassGenerators);
+   ROOT::TClassGenerator *gen;
+   while( (gen = (ROOT::TClassGenerator*)next()) ) {
+      cl = gen->GetClass(typeinfo,load);
+      if (cl) return cl;
+   }
 
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
    //   if (gInterpreter->CheckClassInfo(name)) {
