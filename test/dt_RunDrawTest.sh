@@ -11,7 +11,9 @@ Streamer="Event::Streamer not available,"
 # root.exe -l -b 'dt_RunDrawTest.C+("Event.new.split9.root",0)'
 launch () {
   echo test $1 level $2 
-  (echo 'gROOT->ProcessLine(".L dt_RunDrawTest.C+");gSystem->Exit(!dt_RunDrawTest("'$1'",'$2'));' | root.exe -l -b 2>&1; return $?;) | grep -v "$3";
+#  (echo 'gROOT->ProcessLine(".L dt_RunDrawTest.C+");gSystem->Exit(!dt_RunDrawTest("'$1'",'$2'));' | root.exe -l -b 2>&1; return $?;) | grep -v "$3";
+# (root.exe -l -b -q 'gROOT->ProcessLine(".L dt_RunDrawTest.C+");gSystem->Exit(!dt_RunDrawTest("'$1'",'$2'));' 2>&1; return $?;) | grep -v "$3";
+  (root.exe -l -b -q 'dt_wrap.C("'$1'",'$2')' 2>&1; return $?;) | grep -v "$3";
 }
 
 
