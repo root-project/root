@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.56 2004/03/12 09:45:07 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.57 2004/06/11 07:33:43 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -45,6 +45,7 @@ TAxis::TAxis(): TNamed(), TAttAxis()
    fLast    = 0;
    fParent  = 0;
    fLabels  = 0;
+   fBits2   = 0;
    fTimeDisplay = 0;
 }
 
@@ -742,6 +743,7 @@ void TAxis::Set(Int_t nbins, Axis_t xlow, Axis_t xup)
    fXmax    = xup;
    fFirst   = 0;
    fLast    = 0;
+   fBits2   = 0;
    char name[64];
    sprintf(name,"%s%s",GetName(),"x");
    TAttAxis::ResetAttAxis(name);
@@ -766,6 +768,7 @@ void TAxis::Set(Int_t nbins, const Float_t *xbins)
    fXmax      = fXbins.fArray[fNbins];
    fFirst     = 0;
    fLast      = 0;
+   fBits2     = 0;
    char name[64];
    sprintf(name,"%s%s","x",GetName());
    TAttAxis::ResetAttAxis(name);
@@ -790,11 +793,37 @@ void TAxis::Set(Int_t nbins, const Axis_t *xbins)
    fXmax      = fXbins.fArray[fNbins];
    fFirst     = 0;
    fLast      = 0;
+   fBits2     = 0;
    char name[64];
    sprintf(name,"%s%s","x",GetName());
    TAttAxis::ResetAttAxis(name);
    fTimeDisplay = 0;
    SetTimeFormat();
+}
+
+//______________________________________________________________________________
+Bool_t TAxis::GetDecimals() const
+{
+   // Returns kTRUE if kDecimals bit is set, kFALSE otherwise.
+   // see TAxis::SetDecimals
+   
+   if ((fBits2 & kDecimals) != 0) return kTRUE;
+   else                           return kFALSE;
+}
+
+
+//______________________________________________________________________________
+void TAxis::SetDecimals(Bool_t dot)
+{
+// Set the Decimals flag
+// By default, blank characters are stripped, and then the
+// label is correctly aligned. The dot, if last character of the string, 
+// is also stripped, unless this option is specified.
+// One can disable the option by calling axis.SetDecimals(kTRUE).
+// The flag (in fBits2) is passed to the drawing function TGaxis::PaintAxis
+
+   if (dot) fBits2 |=  kDecimals;
+   else     fBits2 &= ~kDecimals;
 }
 
 //______________________________________________________________________________
@@ -856,6 +885,7 @@ void TAxis::SetMoreLogLabels(Bool_t more)
 Bool_t TAxis::GetNoExponent() const
 {
    // Returns kTRUE if kNoExponent bit is set, kFALSE otherwise.
+   // see TAxis::SetNoExponent
 
    return TestBit(kNoExponent) ? kTRUE : kFALSE;
 }
