@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.167 2004/03/23 18:05:57 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.168 2004/03/25 18:09:11 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -703,6 +703,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
 //
 //   if (fSumw2.fN && !Hoption.Error) Hoption.Error = 2;
+   if (Hoption.Error) Hoption.Scat = 0;
 
 //      Copy options from current style
    Hoption.Logx = gPad->GetLogx();
@@ -2730,6 +2731,151 @@ L30:
 }
 
 //______________________________________________________________________________
+void THistPainter::Paint2DErrors(Option_t *)
+{
+   // Draw 2D histograms errors
+
+   fH->TAttMarker::Modify();
+   fH->TAttLine::Modify();
+
+   // Define the 3D view
+   fXbuf[0] = Hparam.xmin;
+   fYbuf[0] = Hparam.xmax;
+   fXbuf[1] = Hparam.ymin;
+   fYbuf[1] = Hparam.ymax;
+   fXbuf[2] = Hparam.zmin;
+   fYbuf[2] = Hparam.zmax;
+   fLego = new TPainter3dAlgorithms(fXbuf, fYbuf);
+   TView *view = gPad->GetView();
+   if (!view) {
+      Error("Paint2DErrors", "no TView in current pad");
+      return;
+   }
+   Double_t thedeg =  90 - gPad->GetTheta();
+   Double_t phideg = -90 - gPad->GetPhi();
+   Double_t psideg = view->GetPsi();
+   Int_t irep;
+   view->SetView(phideg, thedeg, psideg, irep);
+
+   // Set color/style for back box
+   fLego->SetFillStyle(gPad->GetFrameFillStyle());
+   fLego->SetFillColor(gPad->GetFrameFillColor());
+   fLego->TAttFill::Modify();
+   Int_t backcolor = gPad->GetFrameFillColor();
+   if (Hoption.System != kCARTESIAN) backcolor = 0;
+   view->PadRange(backcolor);
+   fLego->SetFillStyle(fH->GetFillStyle());
+   fLego->SetFillColor(fH->GetFillColor());
+   fLego->TAttFill::Modify();
+
+   // Paint the Back Box if needed
+   if (Hoption.BackBox && !Hoption.Same) {
+      fLego->InitMoveScreen(-1.1,1.1);
+      fLego->DefineGridLevels(fZaxis->GetNdivisions()%100);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
+      fLego->BackBox(90);
+   }
+
+   // Paint the Errors
+   Double_t x, ex, x1, x2;
+   Double_t y, ey, y1, y2;
+   Double_t z, ez, z1, z2;
+   Double_t temp1[3],temp2[3];
+   Double_t xyerror = gStyle->GetErrorX();
+
+   for (Int_t j=Hparam.yfirst; j<=Hparam.ylast;j++) {
+      y  = fH->GetBinCenter(j);
+      ey = fYaxis->GetBinWidth(j)*xyerror;
+      y1 = y-ey;
+      y2 = y+ey;
+      for (Int_t i=Hparam.xfirst; i<=Hparam.xlast;i++) {
+         Int_t bin = fH->GetBin(i,j);
+         x  = fH->GetBinCenter(i);
+         ex = fXaxis->GetBinWidth(i)*xyerror;
+         x1 = x-ex;
+         x2 = x+ex;
+         z  = fH->GetBinContent(bin);
+         ez = fH->GetBinError(bin);
+         z1 = z-ez;
+         z2 = z+ez;
+         if (Hoption.Logz) {
+            if (z > 0)   z = TMath::Log10(z);
+            else         z = Hparam.zmin;
+            if (z1 > 0) z1 = TMath::Log10(z1);
+            else        z1 = Hparam.zmin;
+            if (z2 > 0) z2 = TMath::Log10(z2);
+            else        z2 = Hparam.zmin;
+
+         }
+         if (z <= Hparam.zmin) continue;
+         if (z >  Hparam.zmax) z = Hparam.zmax;
+
+         if (Hoption.Logx) {
+            if (x > 0)   x = TMath::Log10(x);
+            else         x = Hparam.xmin;
+            if (x1 > 0) x1 = TMath::Log10(z1);
+            else        x1 = Hparam.xmin;
+            if (x2 > 0) x2 = TMath::Log10(x2);
+            else        x2 = Hparam.xmin;
+         }
+
+         if (Hoption.Logy) {
+            if (y > 0)   y = TMath::Log10(y);
+            else         y = Hparam.ymin;
+            if (y1 > 0) y1 = TMath::Log10(y1);
+            else        y1 = Hparam.ymin;
+            if (y2 > 0) y2 = TMath::Log10(y2);
+            else        y2 = Hparam.ymin;
+         }
+
+         temp1[0] = x1;
+         temp1[1] = y;
+         temp1[2] = z;
+         temp2[0] = x2;
+         temp2[1] = y;
+         temp2[2] = z;
+         gPad->PaintLine3D(temp1, temp2);
+         temp1[0] = x;
+         temp1[1] = y1;
+         temp1[2] = z;
+         temp2[0] = x;
+         temp2[1] = y2;
+         temp2[2] = z;
+         gPad->PaintLine3D(temp1, temp2);
+         temp1[0] = x;
+         temp1[1] = y;
+         temp1[2] = z1;
+         temp2[0] = x;
+         temp2[1] = y;
+         temp2[2] = z2;
+         gPad->PaintLine3D(temp1, temp2);
+         temp1[0] = x;
+         temp1[1] = y;
+         temp1[2] = z;
+         view->WCtoNDC(temp1, &temp2[0]);
+         gPad->PaintPolyMarker(1, &temp2[0], &temp2[1]);
+      }
+   }
+
+
+   // Paint the Front Box if needed
+   if (Hoption.FrontBox) {
+      fLego->InitMoveScreen(-1.1,1.1);
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove2);
+      fLego->FrontBox(90);
+   }
+
+   // Paint the Axis if needed
+   if (!Hoption.Axis && !Hoption.Same) {
+      TGaxis *axis = new TGaxis();
+      PaintLegoAxis(axis, 90);
+      delete axis;
+   }
+   
+   delete fLego; fLego = 0;
+}
+
+//______________________________________________________________________________
 void THistPainter::PaintFrame()
 {
 //    *-*-*-*-*-*-*-*Calculate range and clear pad (canvas)*-*-*-*-*-*-*-*-*-*
@@ -2738,7 +2884,8 @@ void THistPainter::PaintFrame()
 
    RecalculateRange();
 
-   if (Hoption.Lego || Hoption.Surf || Hoption.Tri || Hoption.Contour == 14) {
+   if (Hoption.Lego || Hoption.Surf || Hoption.Tri || Hoption.Contour == 14 ||
+       (Hoption.Error && fH->GetDimension()==2)) {
       TObject *frame = gPad->FindObject("TFrame");
       if (frame) gPad->GetListOfPrimitives()->Remove(frame);
       return;
@@ -4793,13 +4940,15 @@ void THistPainter::PaintTable(Option_t *option)
       if (Hoption.Color)   PaintColorLevels(option);
       if (Hoption.Contour) PaintContour(option);
       if (Hoption.Text)    PaintText(option);
+      if (Hoption.Error)   Paint2DErrors(option);
    }
 
    if (Hoption.Lego) PaintLego(option);
    if (Hoption.Surf && !Hoption.Contour) PaintSurface(option);
    if (Hoption.Tri) PaintTriangles(option);
    
-   if (!Hoption.Lego && !Hoption.Surf && !Hoption.Tri) PaintAxis(kFALSE); // Draw the axes
+   if (!Hoption.Lego && !Hoption.Surf &&
+       !Hoption.Tri  && !Hoption.Error) PaintAxis(kFALSE); // Draw the axes
 
    PaintTitle();    //    Draw histogram title
 //   PaintFile();     //    Draw Current File name corresp to current directory

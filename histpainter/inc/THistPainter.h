@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.20 2004/01/23 23:30:31 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.21 2004/01/27 13:28:23 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -81,6 +81,7 @@ public:
                            Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
                            Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels);
     virtual void       PaintErrors(Option_t *option);
+    virtual void       Paint2DErrors(Option_t *option);
     virtual void       PaintFrame();
     virtual void       PaintFunction(Option_t *option);
     virtual void       PaintHist(Option_t *option);
