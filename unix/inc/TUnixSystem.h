@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.9 2002/10/25 00:44:53 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.10 2003/02/27 18:48:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -101,6 +101,10 @@ public:
    void              IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);
+
+   //---- Floating Point Exceptions Control
+   Int_t             GetFPEMask();
+   Int_t             SetFPEMask(Int_t mask = kDefaultMask);
 
    //---- Time & Date ------------------------------------------
    TTime             Now();

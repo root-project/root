@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.60 2003/04/28 15:20:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.61 2003/05/13 06:21:47 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -461,6 +461,25 @@ void TSystem::IgnoreInterrupt(Bool_t ignore)
    // behaviour. Typically call ignore interrupt before writing to disk.
 
    IgnoreSignal(kSigInterrupt, ignore);
+}
+
+//______________________________________________________________________________
+Int_t TSystem::GetFPEMask()
+{
+   // Return the bitmap of conditions that trigger a floating point exception.
+
+   AbstractMethod("GetFPEMask");
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TSystem::SetFPEMask(Int_t mask)
+{
+   // Set which conditions trigger a floating point exception.
+   // Return the previous set of conditions.
+
+   AbstractMethod("SetFPEMask");
+   return 0;
 }
 
 //---- Processes ---------------------------------------------------------------

@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.58 2003/04/06 21:30:13 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.59 2003/05/27 14:10:29 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -233,6 +233,35 @@ extern "C" {
    // stack depth separately (currently glibc-based systems).
    static const int kMAX_BACKTRACE_DEPTH = 128;
 #endif
+
+// FPE handling includes
+#if defined(R__LINUX)
+#include <fpu_control.h>
+#include <fenv.h>
+#endif
+
+#if (defined(__ppc__) && defined(__APPLE__))
+#include <fenv.h>
+#include <signal.h>
+#include <ucontext.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <mach/thread_status.h>
+
+#define fegetenvd(x) asm volatile("mffs %0" : "=f" (x));
+#define fesetenvd(x) asm volatile("mtfsf 255,%0" : : "f" (x));
+
+enum {
+  FE_ENABLE_INEXACT    = 0x00000008,
+  FE_ENABLE_DIVBYZERO  = 0x00000010,
+  FE_ENABLE_UNDERFLOW  = 0x00000020,
+  FE_ENABLE_OVERFLOW   = 0x00000040,
+  FE_ENABLE_INVALID    = 0x00000080,
+  FE_ENABLE_ALL_EXCEPT = 0x000000F8
+};
+#endif
+// End FPE handling includes
+
 
 static STRUCT_UTMP *gUtmpContents;
 
@@ -475,6 +504,83 @@ void TUnixSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
    // behaviour.
 
    UnixIgnoreSignal(sig, ignore);
+}
+
+//______________________________________________________________________________
+Int_t TUnixSystem::GetFPEMask()
+{
+   // Return the bitmap of conditions that trigger a floating point exception.
+
+   Int_t mask = 0;
+
+#if defined(R__LINUX)
+#if defined(__GLIBC__) && (__GLIBC__>2 || __GLIBC__==2 && __GLIBC_MINOR__>=1)
+   fenv_t oldenv;
+   fegetenv(&oldenv);
+   fesetenv(&oldenv);
+   Int_t oldmask = ~oldenv.__control_word;
+
+   if (oldmask & FE_INVALID  )   mask |= kInvalid;
+   if (oldmask & FE_DIVBYZERO)   mask |= kDivByZero;
+   if (oldmask & FE_OVERFLOW )   mask |= kOverflow;
+   if (oldmask & FE_UNDERFLOW)   mask |= kUnderflow;
+   if (oldmask & FE_INEXACT  )   mask |= kInexact;
+#endif
+#endif
+
+#if defined(R__MACOSX)
+   Ulong64_t oldmask;
+   fegetenvd(oldmask);
+
+   if (oldmask & FE_ENABLE_INVALID  )   mask |= kInvalid;
+   if (oldmask & FE_ENABLE_DIVBYZERO)   mask |= kDivByZero;
+   if (oldmask & FE_ENABLE_OVERFLOW )   mask |= kOverflow;
+   if (oldmask & FE_ENABLE_UNDERFLOW)   mask |= kUnderflow;
+   if (oldmask & FE_ENABLE_INEXACT  )   mask |= kInexact;
+#endif
+
+   return mask;
+}
+
+//______________________________________________________________________________
+Int_t TUnixSystem::SetFPEMask(Int_t mask)
+{
+   // Set which conditions trigger a floating point exception.
+   // Return the previous set of conditions.
+
+   Int_t old = GetFPEMask();
+
+#if defined(R__LINUX)
+#if defined(__GLIBC__) && (__GLIBC__>2 || __GLIBC__==2 && __GLIBC_MINOR__>=1)
+   Int_t newm = 0;
+   if (mask & kInvalid  )   newm |= FE_INVALID;
+   if (mask & kDivByZero)   newm |= FE_DIVBYZERO;
+   if (mask & kOverflow )   newm |= FE_OVERFLOW;
+   if (mask & kUnderflow)   newm |= FE_UNDERFLOW;
+   if (mask & kInexact  )   newm |= FE_INEXACT;
+
+   fenv_t cur;
+   fegetenv(&cur);
+   cur.__control_word &= ~newm;
+   fesetenv(&cur);
+#endif
+#endif
+
+#if defined(R__MACOSX)
+   Int_t newm = 0;
+   if (mask & kInvalid  )   newm |= FE_ENABLE_INVALID;
+   if (mask & kDivByZero)   newm |= FE_ENABLE_DIVBYZERO;
+   if (mask & kOverflow )   newm |= FE_ENABLE_OVERFLOW;
+   if (mask & kUnderflow)   newm |= FE_ENABLE_UNDERFLOW;
+   if (mask & kInexact  )   newm |= FE_ENABLE_INEXACT;
+
+   Long64_t curmask;
+   fegetenvd(curmask);
+   curmask = (curmask & ~FE_ENABLE_ALL_EXCEPT) | newm;
+   fesetenvd(curmask);
+#endif
+
+   return old;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.24 2002/12/17 02:03:28 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.h,v 1.25 2003/02/27 18:48:32 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -86,6 +86,18 @@ enum ESysConstants {
    kBUFFERSIZE       = 8192,
    kItimerResolution = 10      // interval-timer resolution in ms
 };
+
+enum EFpeMask {
+   kNoneMask         = 0x00,
+   kInvalid          = 0x01,  // Invalid argument
+   kDivByZero        = 0x02,  // Division by zero
+   kOverflow         = 0x04,  // Overflow
+   kUnderflow        = 0x08,  // Underflow
+   kInexact          = 0x10,  // Inexact
+   kDefaultMask      = 0x07,
+   kAllMask          = 0x1F
+};
+
 
 typedef void* Func_t;
 
@@ -224,6 +236,10 @@ public:
    virtual void            IgnoreInterrupt(Bool_t ignore = kTRUE);
    virtual void            AddFileHandler(TFileHandler *fh);
    virtual TFileHandler   *RemoveFileHandler(TFileHandler *fh);
+
+   //---- Floating Point Exceptions Control
+   virtual Int_t           GetFPEMask();
+   virtual Int_t           SetFPEMask(Int_t mask = kDefaultMask);
 
    //---- Time & Date
    virtual TTime           Now();

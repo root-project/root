@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.21 2003/02/27 18:36:03 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: LinkDef2.h,v 1.22 2003/03/19 13:07:58 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -19,6 +19,8 @@
 
 #pragma link C++ enum EAccessMode;
 #pragma link C++ enum ESignals;
+#pragma link C++ enum ESysConstants;
+#pragma link C++ enum EFpeMask;
 
 #pragma link C++ function operator+(const TTime&,const TTime&);
 #pragma link C++ function operator-(const TTime&,const TTime&);
