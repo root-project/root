@@ -1116,11 +1116,7 @@ TMatrixD &TMatrixD::InvertPosDef()
 
    // step 1: Cholesky decomposition
    if (Pdcholesky(pa,pu,n))
-   {
-     Error("InvertPosDef","matrix not positive definite");
-     delete [] pu;
-     return *this;
-   }
+     Error("InvertPosDef","matrix not positive definite ?");
 
    Int_t off_n = (n-1)*n;
    Int_t i,l;
@@ -1190,6 +1186,7 @@ const Int_t     n)
 
   memset(u,0,n*n*sizeof(Double_t));
 
+  Int_t status = 0;
   for (Int_t k = 0; k < n; k++)
   {
     Double_t s = 0.;
@@ -1208,15 +1205,14 @@ const Int_t     n)
       u[off_k+j] = a[off_k+j]-s;
       if (k == j)
       {
-        if (u[off_k+j] <= 0)
-          return 1;
-        u[off_k+j] = TMath::Sqrt(u[off_k+j]);
+        if (u[off_k+j] < 0) status = 1;
+        u[off_k+j] = TMath::Sqrt(TMath::Abs(u[off_k+j]));
       }
       else
         u[off_k+j] = u[off_k+j]/u[off_k+k];
     }
   }
-  return 0;
+  return status;
 }
 
 //______________________________________________________________________________
@@ -2130,82 +2126,19 @@ TMatrixD::TMatrixD(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb)
    Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
 }
 
-Bool_t TMatrixD::IsValid() const
-{
-   if (fNrows == -1)
-      return kFALSE;
-   return kTRUE;
-}
-
-void TMatrixD::SetElements(const Double_t *elements, Option_t *option)
-{
-  if (!IsValid()) {
-    Error("SetElements", "matrix is not initialized");
-    return;
-  }
-
-  TString opt = option;
-  opt.ToUpper();
-
-  if (opt.Contains("F"))
-    memcpy(fElements,elements,fNelems*sizeof(Double_t));
-  else
-  {
-    for (Int_t irow = 0; irow < fNrows; irow++)
-    {
-      for (Int_t icol = 0; icol < fNcols; icol++)
-        fElements[irow+icol*fNrows] = elements[irow*fNcols+icol];
-    }
-  }
-}
-
-TMatrixD::TMatrixD(Int_t no_rows, Int_t no_cols,
-                          const Double_t *elements, Option_t *option)
-{
-  // option="F": array elements contains the matrix stored column-wise
-  //             like in Fortran, so a[i,j] = elements[i+no_rows*j],
-  // else        it is supposed that array elements are stored row-wise
-  //             a[i,j] = elements[i*no_cols+j]
-
-  Allocate(no_rows, no_cols);
-  SetElements(elements,option);
-}
-
-TMatrixD::TMatrixD(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb,
-                          const Double_t *elements, Option_t *option)
-{
-  Allocate(row_upb-row_lwb+1, col_upb-col_lwb+1, row_lwb, col_lwb);
-  SetElements(elements,option);
-}
-
-void TMatrixD::GetElements(Double_t *elements, Option_t *option) const
-{
-  if (!IsValid()) {
-    Error("GetElements", "matrix is not initialized");
-    return;
-  }
-
-  TString opt = option;
-  opt.ToUpper();
-
-  if (opt.Contains("F"))
-    memcpy(elements,fElements,fNelems*sizeof(Double_t));
-  else
-  {
-    for (Int_t irow = 0; irow < fNrows; irow++)
-    {
-      for (Int_t icol = 0; icol < fNcols; icol++)
-        elements[irow+icol*fNrows] = fElements[irow*fNcols+icol];
-    }
-  }
-}
-
 TMatrixD::TMatrixD(const TLazyMatrixD &lazy_constructor)
 {
    Allocate(lazy_constructor.fRowUpb-lazy_constructor.fRowLwb+1,
             lazy_constructor.fColUpb-lazy_constructor.fColLwb+1,
             lazy_constructor.fRowLwb, lazy_constructor.fColLwb);
   lazy_constructor.FillIn(*this);
+}
+
+Bool_t TMatrixD::IsValid() const
+{
+   if (fNrows == -1)
+      return kFALSE;
+   return kTRUE;
 }
 
 TMatrixD &TMatrixD::operator=(const TLazyMatrixD &lazy_constructor)
