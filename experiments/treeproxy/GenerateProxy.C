@@ -440,7 +440,7 @@ public:
    UInt_t TGenerateProxy::AnalyzeOldLeaf(TLeaf *leaf, UInt_t level, TProxyClassDescriptor *topdesc);
    void   AnalyzeElement(TBranch *branch, TStreamerElement *element, UInt_t level, TProxyClassDescriptor *desc, const char* path);
    void   AnalyzeTree();
-   void   WriteHeader();
+   void   WriteProxy();
 
    const char *GetFilename() { return fHeaderFilename; }
 };
@@ -543,7 +543,7 @@ TGenerateProxy::TGenerateProxy(TTree* tree, const char *script, const char *file
    
    AnalyzeTree();
 
-   WriteHeader();
+   WriteProxy();
 }
 
 TGenerateProxy::TGenerateProxy(TTree* tree, const char *script, const char *cutscript, const char *fileprefix, UInt_t maxUnrolling) :
@@ -558,7 +558,7 @@ TGenerateProxy::TGenerateProxy(TTree* tree, const char *script, const char *cuts
    
    AnalyzeTree();
 
-   WriteHeader();
+   WriteProxy();
 }
 
 Bool_t TGenerateProxy::NeedToEmulate(TClass *cl, UInt_t level) {
@@ -1436,7 +1436,7 @@ void TGenerateProxy::AnalyzeElement(TBranch *branch, TStreamerElement *element,
    
 }      
 
-void TGenerateProxy::WriteHeader() {
+void TGenerateProxy::WriteProxy() {
    
    // Check whether the file exist and do something useful if it does
    TString fileLocation = gSystem->DirName(fScript);
@@ -1547,7 +1547,9 @@ void TGenerateProxy::WriteHeader() {
    fprintf(hf,"#include <TSelectorDraw.h>\n");
    fprintf(hf,"#include <TPad.h>\n");
    fprintf(hf,"#include <TProxy.h>\n");
+   fprintf(hf,"#include <TProxyDirector.h>\n");
    fprintf(hf,"#include <TProxyTemplate.h>\n");
+   fprintf(hf,"using namespace ROOT;\n");       // questionable
    fprintf(hf,"\n\n");
 
    fprintf(hf,"// forward declarations needed by this particular proxy\n");

@@ -1,3 +1,5 @@
+#include "TProxyDirector.cxx"
+
 #include "TProxy.h"
 #ifdef __MAKECINT__
 #pragma link C++ class TClaArrayProxy<int>;
@@ -11,7 +13,7 @@ bool TProxy::setup() {
 
       // Should we check the type?
 
-      if (!fDirector->fTree) {
+      if (!fDirector->GetTree()) {
          return false;
       }
       if (fParent) {
@@ -22,10 +24,10 @@ bool TProxy::setup() {
          if (pcl==TClonesArray::Class()) {
             // We always skip the clones array
 
-            Int_t i = fDirector->fEntry;
-            if (i<0)  fDirector->fEntry = 0;
+            Int_t i = fDirector->GetReadEntry();
+            if (i<0)  fDirector->SetReadEntry(0);
             fParent->read();
-            if (i<0) fDirector->fEntry = i;
+            if (i<0) fDirector->SetReadEntry(i);
             
             TClonesArray *clones;
             clones = (TClonesArray*)fParent->GetStart();
@@ -59,7 +61,7 @@ bool TProxy::setup() {
 
          // This does not allow (yet) to precede the branch name with 
          // its mother's name
-         fBranch = fDirector->fTree->GetBranch(fBranchName.Data());
+         fBranch = fDirector->GetTree()->GetBranch(fBranchName.Data());
          if (!fBranch) return false;
          
          TLeaf *leaf = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
@@ -245,7 +247,7 @@ bool TProxy::setup() {
       }
       if (fClass==TClonesArray::Class()) fIsClone = true;
       if (fWhere!=0) {
-         fLastTree = fDirector->fTree;
+         fLastTree = fDirector->GetTree();
          fInitialized = true;
          return true;
       } else {
