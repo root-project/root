@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.1 2001/05/07 06:26:13 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.2 2001/05/15 06:54:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,6 +16,18 @@
  *
  * Copyright (C) 2000 Stanford University
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooAddPdf is an efficient implementation of a sum of PDFs of the form 
+//
+//  (c_1*PDF_1 + c_2*PDF_2 + ... (1-sum(c_1...c_n-1))*PDF_n 
+//
+// The coefficient of the last PDF is calculated automatically from the
+// normalization condition. RooAddPdf relies on each component PDF
+// to be normalized and will perform no normalization other than calculating
+// the proper last coefficient c_n.
+// An additional condition for this is that each coefficient c_k may
+// not overlap (i.e. share servers) with pdf_k.
 
 #include "TIterator.h"
 #include "TList.h"

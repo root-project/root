@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSuperCategory.cc,v 1.4 2001/05/11 23:37:41 verkerke Exp $
+ *    File: $Id: RooSuperCategory.cc,v 1.5 2001/05/15 06:54:26 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -9,6 +9,15 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooSuperCategory consolidates several RooAbsCategoryLValue objects into
+// a single category. The states of the super category consist of all the permutations
+// of the input categories. The super category is an lvalue itself and a modification
+// of its state will back propagate into a modification of its input categories.
+//
+// RooSuperCategory state are automatically defined and updated whenever an input
+// category modifies its list of states
 
 #include <iostream.h>
 #include <stdlib.h>
@@ -21,9 +30,7 @@
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 
 ClassImp(RooSuperCategory)
-
-
-//WVE change _catList from RooArgSet to TList of RooCategoryProxy, or make RooArgSetProxy ;
+;
 
 RooSuperCategory::RooSuperCategory(const char *name, const char *title, RooArgSet& inputCatList) :
   RooAbsCategoryLValue(name, title) 

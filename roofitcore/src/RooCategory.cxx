@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.cc,v 1.12 2001/05/11 06:30:00 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.13 2001/05/15 06:54:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,11 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooCategory represents a fundamental (non-derived) discrete value object. The class
+// has a public interface to define the possible value states.
+
 
 #include <iostream.h>
 #include <stdlib.h>

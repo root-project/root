@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.1 2001/05/11 21:11:37 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.2 2001/05/15 06:54:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,14 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooFormulaVar is a concrete implementation of a derived real-valued object,
+// which takes a RooArgSet of servers and a string expression defining how
+// its value should be calculated from the given list of servers.
+// 
+// RooFormulaVar uses a RooFormula object to perform the expression evaluation
+
 
 #include "RooFitCore/RooFormulaVar.hh"
 #include "RooFitCore/RooStreamParser.hh"

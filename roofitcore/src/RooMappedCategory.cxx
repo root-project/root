@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.cc,v 1.10 2001/05/10 00:16:08 verkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.11 2001/05/15 06:54:26 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -9,6 +9,15 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooMappedCategory provides a category-to-category mapping defined
+// by pattern matching.
+//
+// The mapping function consists of a series of wild card regular expressions,
+// which are matched to the input categories state labels, and an associated
+// output state label.
+
 
 #include <iostream.h>
 #include <stdlib.h>

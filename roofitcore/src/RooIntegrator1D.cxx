@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooIntegrator1D.cc,v 1.3 2001/05/10 00:16:07 verkerke Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.4 2001/05/16 07:41:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,11 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooIntegrator1D implements an adaptive one-dimensional 
+// numerical integration algorithm.
+
 
 #include "RooFitCore/RooIntegrator1D.hh"
 #include "RooFitCore/RooRealVar.hh"

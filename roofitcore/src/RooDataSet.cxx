@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.24 2001/05/11 06:30:00 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.25 2001/05/15 06:54:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,6 +18,16 @@
  *
  * Copyright (C) 1999 Stanford University
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooDataSet is an extension of the ROOT TTree object and designated
+// RFC object to hold unbinned fit data. Data sets can be created empty, 
+// from a TTree or from an ASCII file. In all cases a RooArgSet serves 
+// as column definition.
+//
+// A data set can hold RooRealVar, RooCategory and RooStringVar data types.
+// Derived types can be added as a fundamental type, with the conversion
+// done at the time of addition.
 
 #include <iostream.h>
 #include <iomanip.h>

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.15 2001/05/14 05:22:55 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.16 2001/05/15 06:54:25 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -9,6 +9,15 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooFormula is the RFC extension of TFormula. It allows to use
+// the value of a given list of RooAbsArg objects in the formula
+// expression. Reference is done either by the RooAbsArgs name
+// or by list ordinal postion ('@0,@1,...'). State information
+// of RooAbsCategories can be accessed used the '::' operator,
+// e.g. 'tagCat::Kaon' will resolve to the numerical value of
+// the Kaon state of the RooAbsCategory object named tagCat.
 
 #include <iostream.h>
 #include <stdlib.h>

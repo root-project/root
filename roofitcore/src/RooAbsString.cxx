@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.4 2001/05/03 02:15:54 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.5 2001/05/10 18:58:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,14 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooAbsString is the common abstract base class for objects that represent a
+// string value
+// 
+// Implementation of RooAbsString may be derived, there no interface
+// is provided to modify the contents
+// 
 
 #include <iostream.h>
 #include "TObjString.h"
@@ -25,6 +33,7 @@ ClassImp(RooAbsString)
 RooAbsString::RooAbsString(const char *name, const char *title) : 
   RooAbsArg(name,title)
 {
+  // Constructor
   setValueDirty(kTRUE) ;
   setShapeDirty(kTRUE) ;
 }
@@ -34,6 +43,7 @@ RooAbsString::RooAbsString(const char *name, const char *title) :
 RooAbsString::RooAbsString(const RooAbsString& other, const char* name) : 
   RooAbsArg(other, name)
 {
+  // Copy constructor
   strcpy(_value,other._value) ;
 }
 
@@ -41,6 +51,7 @@ RooAbsString::RooAbsString(const RooAbsString& other, const char* name) :
 
 RooAbsString::~RooAbsString()
 {
+  // Destructor
 }
 
 
@@ -59,6 +70,7 @@ TString RooAbsString::getVal() const
 
 Bool_t RooAbsString::operator==(TString value) const
 {
+  // Equality operator comparing with a TString
   return (getVal()==value) ;
 }
 
@@ -90,12 +102,14 @@ void RooAbsString::printToStream(ostream& os, PrintOption opt, TString indent) c
 
 Bool_t RooAbsString::isValid() const 
 {
+  // Check if current value is valid
   return isValid(getVal()) ;
 }
 
 
 Bool_t RooAbsString::isValid(TString value) const 
 {
+  // Check if given value is valid
 
   // Protect against string overflows
   if (value.Length()>1023) return kFALSE ;
@@ -107,6 +121,7 @@ Bool_t RooAbsString::isValid(TString value) const
 
 TString RooAbsString::traceEval() const
 {
+  // Calculate current value of object, with error tracing wrapper
   TString value = evaluate() ;
   
   //Standard tracing code goes here
@@ -124,6 +139,8 @@ TString RooAbsString::traceEval() const
 
 void RooAbsString::copyCache(const RooAbsArg* source) 
 {
+  // Copy cache of another RooAbsArg to our cache
+
   // Warning: This function copies the cached values of source,
   //          it is the callers responsibility to make sure the cache is clean
 

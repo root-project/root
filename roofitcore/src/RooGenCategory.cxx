@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooGenCategory.cc,v 1.1 2001/05/11 06:30:00 verkerke Exp $
+ *    File: $Id: RooGenCategory.cc,v 1.2 2001/05/15 06:54:25 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -9,6 +9,17 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooGenCategory provides the most flexibe mapping of a series of input categories
+// on a output category via a global function provided in the constructor
+//
+// The mapping function must have the form 'const char* mapFunc(const RooArgSet* catList)'
+// and return the name of the output state for the list of categories supplied in the argument.
+// The global function can be a ROOT interpreted function.
+//
+// RooGenCategory builds a numerical index-to-index map from the user function
+// to achieve a high performance mapping.
 
 #include <iostream.h>
 #include <stdlib.h>

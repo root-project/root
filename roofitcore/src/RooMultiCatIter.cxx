@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooMultiCatIter.cc,v 1.3 2001/05/10 00:16:08 verkerke Exp $
+ *    File: $Id: RooMultiCatIter.cc,v 1.4 2001/05/11 23:37:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,10 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooMultiCatIter iterators over all state permutations of a list of categories.
+// It serves as the state iterator for a RooSuperCategory.
 
 #include "RooFitCore/RooAbsCategoryLValue.hh"
 #include "RooFitCore/RooMultiCatIter.hh"
@@ -20,18 +24,22 @@ ClassImp(RooMultiCatIter)
 
 RooMultiCatIter::RooMultiCatIter(const RooArgSet& catList) : _catList("catList") 
 {
+  // Constructor
   initialize(catList) ;
 }
 
 
 RooMultiCatIter::RooMultiCatIter(const RooMultiCatIter& other) : _catList("catList")
 {
+  // Copy constructor
   initialize(other._catList) ;
 }
 
 
 void RooMultiCatIter::initialize(const RooArgSet& catList) 
 {
+  // Build iterator array for given catList
+
   // Copy RooCategory list into internal argset
   TIterator* catIter = catList.MakeIterator() ;
   TObject* obj ;
@@ -66,6 +74,7 @@ void RooMultiCatIter::initialize(const RooArgSet& catList)
 
 RooMultiCatIter::~RooMultiCatIter() 
 {
+  // Destructor
   for (_curIter=0 ; _curIter<_nIter ; _curIter++) {
     delete _iterList[_curIter] ;
   }
@@ -77,6 +86,7 @@ RooMultiCatIter::~RooMultiCatIter()
 
 const TCollection* RooMultiCatIter::GetCollection() const 
 {
+  // Return set of categories iterated over
   return &_catList ;
 }
 
@@ -84,6 +94,8 @@ const TCollection* RooMultiCatIter::GetCollection() const
 
 TObject* RooMultiCatIter::Next() 
 {
+  // Iterator increment operator
+
   // Check for end
   if (_curIter==_nIter) {
     return 0 ;
@@ -116,6 +128,8 @@ TObject* RooMultiCatIter::Next()
 
 void RooMultiCatIter::Reset() 
 {
+  // Rewind master iterator
+
   for (_curIter=0 ; _curIter<_nIter ; _curIter++) {
     TIterator* cIter = _iterList[_curIter] ;
     cIter->Reset() ;

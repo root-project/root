@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTable.cc,v 1.1 2001/03/17 03:47:39 verkerke Exp $
+ *    File: $Id: RooTable.cc,v 1.2 2001/05/03 02:15:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,11 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooTable is the abstract interface for table objects.
+// Table objects are the category equivalent of RooPlot objects
+// (which are used for real-valued objects)
 
 #include "RooFitCore/RooTable.hh"
 

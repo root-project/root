@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.cc,v 1.1 2001/05/11 23:37:41 verkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.2 2001/05/15 06:54:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,15 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooGenericPdf is a concrete implementation of a probability density function,
+// which takes a RooArgSet of servers and a string expression defining how
+// its value should be calculated from the given list of servers.
+// A fully numerical integration is automatically performed to normalize the given
+// expression
+// 
+// RooGenericPdf uses a RooFormula object to perform the expression evaluation
 
 #include "RooFitCore/RooGenericPdf.hh"
 #include "RooFitCore/RooStreamParser.hh"

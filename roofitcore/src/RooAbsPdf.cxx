@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.8 2001/05/15 06:54:24 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.9 2001/05/16 07:41:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,20 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooAbsPdf is the abstract interface for all probability density functions
+// The class provides hybrid analytical/numerical normalization for its implementations,
+// error tracing and a MC generator interface.
+//
+// Implementations need to provide the evaluate() member, which returns the (unnormalized)
+// PDF value, and optionally indicate support for analytical integration of certain
+// variables by reimplementing the getAnalyticalIntegral/analyticalIntegral members.
+//
+// Implementation should not attempt to perform normalization internally, since they
+// do not have the information to do it correctly: integrated dependents may be derived
+// and have jacobian terms that are invisible from within the class.
+// 
 
 #include <iostream.h>
 #include <math.h>

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgProxy.cc,v 1.4 2001/05/11 06:29:59 verkerke Exp $
+ *    File: $Id: RooArgProxy.cc,v 1.5 2001/05/15 06:54:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,6 +14,18 @@
 #include "RooFitCore/RooArgProxy.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsArg.hh"
+
+// -- CLASS DESCRIPTION --
+// RooArgProxy is the abstact interface for RooAbsArg proxy classes.
+// A RooArgProxy is the general mechanism to store references
+// to other RooAbsArgs inside a RooAbsArg
+//
+// Creating a RooArgProxy adds the proxied object to the proxy owners
+// server list (thus receiving value/shape dirty flags from it) and
+// registers itself with the owning class. The latter allows the
+// owning class to change the proxied pointer when the server it
+// points to gets redirected (e.g. in a copy or clone operation)
+
 
 ClassImp(RooArgProxy)
 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.18 2001/05/11 21:06:22 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.19 2001/05/15 06:54:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,12 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooRealVar represents a fundamental (non-derived) real valued object
+// 
+// This class also holds an error and a fit range associated with the real value
+
 
 #include <math.h>
 #include <stdlib.h>

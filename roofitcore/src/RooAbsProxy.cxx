@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsProxy.cc,v 1.1 2001/05/11 06:29:59 verkerke Exp $
+ *    File: $Id: RooAbsProxy.cc,v 1.2 2001/05/15 06:54:24 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,6 +14,14 @@
 #include "RooFitCore/RooAbsProxy.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooAbsArg.hh"
+
+// -- CLASS DESCRIPTION --
+// RooAbsProxy is the abstact interface for proxy classes.
+// Proxy classes hold pointers to other RFC objects 
+// and process serverRedirect changes so that the proxied
+// pointers are updated accordingly on a clone or copy of
+// of the owning class
+
 
 ClassImp(RooAbsProxy)
 ;

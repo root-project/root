@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.3 2001/05/11 23:37:40 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.4 2001/05/16 07:41:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,18 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooAbsRealLValue is the common abstract base class for objects that represent a
+// real value that may appear on the left hand side of an equation ('lvalue')
+// Each implementation must provide a setVal() member to allow direct modification 
+// of the value. RooAbsRealLValue may be derived, but its functional relation
+// to other RooAbsArg must be invertible
+//
+// This class has methods that export a fit range, but doesn't hold its values
+// because these limits may be derived from limits of client object.
+// The fit limits serve as integration range when interpreted
+// as a dependent and a boundaries when interpreted as a parameter.
 
 #include <math.h>
 #include <stdlib.h>
@@ -25,17 +37,20 @@ ClassImp(RooAbsRealLValue)
 RooAbsRealLValue::RooAbsRealLValue(const char *name, const char *title, const char *unit) :
   RooAbsReal(name, title, 0, 0, unit)
 {
+  // Constructor
 }  
 
 
 RooAbsRealLValue::RooAbsRealLValue(const RooAbsRealLValue& other, const char* name) :
   RooAbsReal(other,name)
 {
+  // Copy constructor
 }
 
 
 RooAbsRealLValue::~RooAbsRealLValue() 
 {
+  // Destructor
 }
 
 
@@ -76,7 +91,9 @@ Bool_t RooAbsRealLValue::inFitRange(Double_t value, Double_t* clippedValPtr) con
 
 
 
-Bool_t RooAbsRealLValue::isValid(Double_t value, Bool_t verbose) const {
+Bool_t RooAbsRealLValue::isValid(Double_t value, Bool_t verbose) const 
+{
+  // Check if given value is valid
   if (!inFitRange(value)) {
     if (verbose)
       cout << "RooRealVar::isValid(" << GetName() << "): value " << value
@@ -89,15 +106,19 @@ Bool_t RooAbsRealLValue::isValid(Double_t value, Bool_t verbose) const {
 
 Bool_t RooAbsRealLValue::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
+  // Read object contents from given stream
 }
 
 void RooAbsRealLValue::writeToStream(ostream& os, Bool_t compact) const
 {
+  // Write object contents to given stream
 }
 
 
 Double_t RooAbsRealLValue::operator=(Double_t newValue) 
 {
+  // Assignment operator from a Double_t
+
   Double_t clipValue ;
   // Clip 
   inFitRange(newValue,&clipValue) ;
@@ -110,6 +131,8 @@ Double_t RooAbsRealLValue::operator=(Double_t newValue)
 
 void RooAbsRealLValue::copyCache(const RooAbsArg* source) 
 {
+  // Copy cache of another RooAbsArg to our cache
+
   RooAbsReal::copyCache(source) ;
   setVal(_value) ; // force back-propagation
 }

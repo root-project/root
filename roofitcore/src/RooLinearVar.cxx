@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooLinearVar.cc,v 1.1 2001/05/16 07:41:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,27 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooLinearVar is the most general form of a derived real-valued object that can
+// be used by RooRealIntegral to integrate over. The requirements for this are
+//
+//          - Can be modified directly (i.e. invertible formula)
+//          - Jacobian term in integral is constant (but not necessarily 1)
+//
+// This class implements the most general form that satisfy these requirement
+// 
+//    RLV = (slope)*x + (offset)
+//
+// X is required to be a RooRealVar to meet the invertibility criterium
+// (slope) and (offset) is are RooAbsReals, but may not overlap with x,
+// i.e. x may not be a server of (slope) and (offset)
+//
+// In the context of a dataset, (slope) may not contain any real-valued dependents
+// (satisfied constant Jacobian requirement). This check cannot be enforced at
+// construction time, but can be performed any time using the isJacobianOK(depList)
+// member function.
+//
 
 #include <math.h>
 #include <stdlib.h>

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategoryProxy.cc,v 1.4 2001/05/11 06:30:00 verkerke Exp $
+ *    File: $Id: RooCategoryProxy.cc,v 1.5 2001/05/15 06:54:25 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,15 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooCategoryProxy is the concrete proxy for RooAbsCategory objects
+// A RooCategoryProxy is the general mechanism to store references
+// to RooAbsCategoriess inside a RooAbsArg
+//
+// RooCategoryProxy provides a cast operator to Int_t and 'const char*', allowing
+// the proxy to functions a Int_t/'const char*' on the right hand side of expressions.
+
 
 #include "RooFitCore/RooCategoryProxy.hh"
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.20 2001/05/11 21:06:22 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.21 2001/05/11 23:37:41 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,10 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooArgSet is a container object that can hold multiple RooAbsArg objects.
+// Every object in the set must have a unique name.
 
 #include <iostream.h>
 #include <iomanip.h>

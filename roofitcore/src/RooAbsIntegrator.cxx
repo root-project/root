@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsIntegrator.cc,v 1.4 2001/05/10 00:16:06 verkerke Exp $
+ *    File: $Id: RooAbsIntegrator.cc,v 1.5 2001/05/16 07:41:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,10 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooAbsIntegrator is the abstract interface for numerical integration engines
+
 
 #include "RooFitCore/RooAbsIntegrator.rdl"
 

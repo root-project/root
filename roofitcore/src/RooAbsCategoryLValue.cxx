@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.2 2001/05/10 18:58:46 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.3 2001/05/11 23:37:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,15 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooAbsCategoryLValue is the common abstract base class for objects that represent a
+// discrete value that may appear on the left hand side of an equation ('lvalue')
+//
+// Each implementation must provide setIndex()/setLabel() members to allow direct modification 
+// of the value. RooAbsCategoryLValue may be derived, but its functional relation
+// to other RooAbsArgs must be invertible
+//
 
 #include <iostream.h>
 #include <stdlib.h>
@@ -28,6 +37,7 @@ ClassImp(RooAbsCategoryLValue)
 RooAbsCategoryLValue::RooAbsCategoryLValue(const char *name, const char *title) : 
   RooAbsCategory(name,title)
 {
+  // Constructor
   setValueDirty(kTRUE) ;  
   setShapeDirty(kTRUE) ;  
 }
@@ -36,21 +46,27 @@ RooAbsCategoryLValue::RooAbsCategoryLValue(const char *name, const char *title) 
 RooAbsCategoryLValue::RooAbsCategoryLValue(const RooAbsCategoryLValue& other, const char* name) :
   RooAbsCategory(other, name)
 {
+  // Copy constructor
 }
 
 
 RooAbsCategoryLValue::~RooAbsCategoryLValue()
 {
+  // Destructor
 }
 
 
-RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(Int_t index) {
+RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(Int_t index) 
+{
+  // Assignment operator from integer index number
   setIndex(index,kTRUE) ;
   return *this ;
 }
 
 
-RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(const char*label) {
+RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(const char*label) 
+{
+  // Assignment operator from string pointer
   setLabel(label) ;
   return *this ;
 }
@@ -58,6 +74,7 @@ RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(const char*label) {
 
 void RooAbsCategoryLValue::copyCache(const RooAbsArg* source) 
 {
+  // copy cached value from another object
   RooAbsCategory::copyCache(source) ;
   setIndex(_value.getVal()) ; // force back-propagation
 }
@@ -73,6 +90,7 @@ Bool_t RooAbsCategoryLValue::readFromStream(istream& is, Bool_t compact, Bool_t 
 
 void RooAbsCategoryLValue::writeToStream(ostream& os, Bool_t compact) const
 {
+  // Write object contents to given stream
 }
 
 

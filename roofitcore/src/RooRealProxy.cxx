@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealProxy.cc,v 1.5 2001/05/15 06:54:26 verkerke Exp $
+ *    File: $Id: RooRealProxy.cc,v 1.6 2001/05/16 07:41:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,14 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooRealProxy is the concrete proxy for RooAbsReal objects
+// A RooRealProxy is the general mechanism to store references
+// to RooAbsReals inside a RooAbsArg
+//
+// RooRealProxy provides a cast operator to Double_t, allowing
+// the proxy to functions a Double_t on the right hand side of expressions.
 
 #include "TClass.h"
 #include "RooFitCore/RooRealProxy.hh"

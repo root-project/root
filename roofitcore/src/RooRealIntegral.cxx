@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.12 2001/05/14 22:54:21 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.13 2001/05/16 07:41:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,16 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooRealIntegral performs hybrid numerical/analytical integrals of RooAbsPdf objects
+// The class performs none of the actual integration, but only manages the logic
+// of what variables can be integrated analytically, accounts for eventual jacobian
+// terms and defines what numerical integrations needs to be done to complement the
+// analytical integral.
+//
+// The actual analytical integrations (if any) are done in the PDF themselves, the numerical
+// integration is performed in the various implemenations of the RooAbsIntegrator base class.
 
 #include <iostream.h>
 #include "TObjString.h"
@@ -31,6 +41,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   RooAbsReal(name,title), _function((RooAbsPdf*)&function), _mode(0),
   _intList("intList"), _sumList("sumList"), _numIntEngine(0) 
 {
+  // Constructor
   RooArgSet intDepList ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -101,7 +112,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   RooArgSet anIntDepList ;
-  _mode = _function->getAnalyticalIntegral(anIntOKDepList,anIntDepList) ;    
+  _mode = _function->getAnalyticalIntegral(anIntOKDepList,_anaList) ;    
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * C) Make list of numerical integration variables consisting of:            *  
@@ -113,7 +124,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   RooArgSet numIntDepList ;
 
   // Loop over actually analytically integrated dependents
-  TIterator* aiIter = anIntDepList.MakeIterator() ;
+  TIterator* aiIter = _anaList.MakeIterator() ;
   while (arg=(RooAbsArg*)aiIter->Next()) {    
 
     // Process only derived RealLValues
@@ -142,7 +153,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   while(arg=(RooAbsArg*)sIter->Next()) {
 
     // Process only servers that are not treated analytically
-    if (!anIntDepList.find(arg->GetName()) && arg->dependsOn(depList)) {
+    if (!_anaList.find(arg->GetName()) && arg->dependsOn(depList)) {
       
       // Expand server in final dependents and add to numerical integration list      
       RooArgSet *argDeps = arg->getDependents(&depList) ;
@@ -174,6 +185,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
 void RooRealIntegral::initNumIntegrator() 
 {
+  // (Re)Initialize numerical integration engine
+
   if (_numIntEngine) delete _numIntEngine ;
 
   // Initialize numerical integration part, if necessary 
@@ -197,6 +210,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   RooAbsReal(other,name), _function(other._function), _mode(other._mode),
   _intList("intList"), _sumList("sumList") 
 {
+  // Copy constructor
   copyList(_intList,other._intList) ;
   copyList(_sumList,other._sumList) ;
   initNumIntegrator() ;
@@ -204,6 +218,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
 
 
 RooRealIntegral::~RooRealIntegral()
+  // Destructor
 {
   if (_numIntEngine) delete _numIntEngine ;
 }
@@ -211,6 +226,8 @@ RooRealIntegral::~RooRealIntegral()
 
 Double_t RooRealIntegral::evaluate() const 
 {
+  // Calculate integral
+
   // Save current integral dependent values 
   RooArgSet *saveInt = _intList.snapshot() ;
   RooArgSet *saveSum = _sumList.snapshot() ;
@@ -230,6 +247,7 @@ Double_t RooRealIntegral::evaluate() const
 
 Double_t RooRealIntegral::jacobianProduct() const 
 {
+  // Return product of jacobian terms originating from analytical integration
   Double_t jacProd(1) ;
 
   TIterator *jIter = _jacList.MakeIterator() ;
@@ -245,6 +263,7 @@ Double_t RooRealIntegral::jacobianProduct() const
 
 Double_t RooRealIntegral::sum() const
 {
+  // Perform summation of list of category dependents to be integrated
   if (_sumList.GetSize()!=0) {
 
     // Add integrals for all permutations of categories summed over
@@ -264,9 +283,11 @@ Double_t RooRealIntegral::sum() const
 
 
 
-// Default implementation does numerical integration
+
 Double_t RooRealIntegral::integrate() const
 {
+  // Perform hybrid numerical/analytical integration over all real-valued dependents
+
   // Trivial case, fully analytical integration
   if (!_numIntEngine) return _function->analyticalIntegral(_mode) ;
 
@@ -279,12 +300,17 @@ Double_t RooRealIntegral::integrate() const
 
 Bool_t RooRealIntegral::isValid(Double_t value) const 
 {
+  // Check if current value is valid
   return kTRUE ;
 }
 
 
 Bool_t RooRealIntegral::redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll)
 {
+  // Process server redirect changes
+
+
+  // WVE need to switch too RooSetProxy here
   RooAbsArg* arg ;
   TIterator* iter ;
   Bool_t error(kFALSE) ;
@@ -316,6 +342,7 @@ Bool_t RooRealIntegral::redirectServersHook(const RooArgSet& newServerList, Bool
 
 void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
+  // Print object to stream
 
   if (opt==Verbose) {
     RooAbsArg::printToStream(os,Verbose,indent) ;
@@ -342,12 +369,24 @@ void RooRealIntegral::printToStream(ostream& os, PrintOption opt, TString indent
   first=kTRUE ;
   if (_intList.First()) {
     TIterator* iIter = _intList.MakeIterator() ;
-    os << " Int(" ;
+    os << " NumInt(" ;
     while (arg=(RooAbsArg*)iIter->Next()) {
       os << (first?"":",") << arg->GetName() ;
       first=kFALSE ;
     }
     delete iIter ;
+    os << ")" ;
+  }
+
+  first=kTRUE ;
+  if (_anaList.First()) {
+    TIterator* aIter = _anaList.MakeIterator() ;
+    os << " AnaInt(" ;
+    while (arg=(RooAbsArg*)aIter->Next()) {
+      os << (first?"":",") << arg->GetName() ;
+      first=kFALSE ;
+    }
+    delete aIter ;
     os << ")" ;
   }
 

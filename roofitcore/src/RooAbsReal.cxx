@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.19 2001/05/11 23:37:40 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.20 2001/05/16 07:41:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,14 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooAbsReal is the common abstract base class for objects that represent a
+// real value. Implementation of RooAbsReal may be derived, there no interface
+// is provided to modify the contents.
+// 
+// This class holds in addition a unit and label string, as well
+// as a plot range and number of plot bins and plot creation methods.
 
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
@@ -32,6 +40,7 @@ ClassImp(RooAbsReal)
 RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) : 
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), _plotMin(0), _plotMax(0)
 {
+  // Constructor
   setValueDirty(kTRUE) ;
   setShapeDirty(kTRUE) ;
 }
@@ -40,6 +49,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 		       Double_t maxVal, const char *unit) :
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), _plotMin(minVal), _plotMax(maxVal)
 {
+  // Constructor with plot range
   setValueDirty(kTRUE) ;
   setShapeDirty(kTRUE) ;
 }
@@ -49,17 +59,20 @@ RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) :
   RooAbsArg(other,name), _unit(other._unit), _plotBins(other._plotBins), 
   _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value)
 {
+  // Copy constructor
 }
 
 
 RooAbsReal::~RooAbsReal()
 {
+  // Destructor
 }
 
 
 
 Bool_t RooAbsReal::operator==(Double_t value) const
 {
+  // Equality operator comparing to a Double_t
   return (getVal()==value) ;
 }
 
@@ -79,6 +92,7 @@ Double_t RooAbsReal::getVal(const RooDataSet* dset) const
 
 Double_t RooAbsReal::traceEval() const
 {
+  // Calculate current value of object, with error tracing wrapper
   Double_t value = evaluate() ;
   
   //Standard tracing code goes here
@@ -197,12 +211,14 @@ Bool_t RooAbsReal::inPlotRange(Double_t value) const {
 
 
 Bool_t RooAbsReal::isValid() const {
+  // Check if current value is valid
   return isValid(getVal()) ;
 }
 
 
 Bool_t RooAbsReal::isValid(Double_t value, Bool_t printError) const 
 {
+  // Check if given value is valid
   return kTRUE ;
 }
 
@@ -304,12 +320,15 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions) const {
 }
 
 RooRealFunc1D RooAbsReal::operator()(RooRealVar &var) const {
+  // Create a 1-dimensional function object from the RooAbsReal
   return RooRealFunc1D(*this,var);
 }
 
 
 void RooAbsReal::copyCache(const RooAbsArg* source) 
 {
+  // Copy the cached value of another RooAbsArg to our cache
+
   // Warning: This function copies the cached values of source,
   //          it is the callers responsibility to make sure the cache is clean
   RooAbsReal* other = dynamic_cast<RooAbsReal*>(const_cast<RooAbsArg*>(source)) ;
@@ -340,6 +359,8 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
 
 void RooAbsReal::postTreeLoadHook() 
 {
+  // Hook function that allows post-processing after a cache write from a TTRee (dummy)
+
 //   if (isDerived())
 //     cout << "RooAbsReal::postTreeLoadHook(" << GetName() 
 // 	 << "): loaded cache, value " << _value << endl ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.16 2001/05/10 18:58:46 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.17 2001/05/11 06:29:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,15 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooAbsCategory is the common abstract base class for objects that represent a
+// discrete value with a finite number of states. Each state consist of a 
+// label/index pair, which is stored in a RooCatType object.
+// 
+// Implementation of RooAbsCategory may be derived, there no interface
+// is provided to modify the contents, nor a public interface to define states.
+// 
 
 #include <iostream.h>
 #include <stdlib.h>
@@ -26,6 +35,7 @@ ClassImp(RooAbsCategory)
 RooAbsCategory::RooAbsCategory(const char *name, const char *title) : 
   RooAbsArg(name,title)
 {
+  // Constructor
   setValueDirty(kTRUE) ;  
   setShapeDirty(kTRUE) ;  
 }
@@ -33,6 +43,7 @@ RooAbsCategory::RooAbsCategory(const char *name, const char *title) :
 RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
   RooAbsArg(other,name), _value(other._value) 
 {
+  // Copy constructor
   TIterator* iter=other._types.MakeIterator() ;
   TObject* obj ;
   while (obj=iter->Next()) {
@@ -47,6 +58,8 @@ RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
 
 RooAbsCategory::~RooAbsCategory()
 {
+  // Destructor
+
   // We own the contents of _types 
   _types.Delete() ;
 }
@@ -54,6 +67,7 @@ RooAbsCategory::~RooAbsCategory()
 
 Int_t RooAbsCategory::getIndex() const
 {
+  // Return index number of current state 
   if (isValueDirty() || isShapeDirty()) {
     _value = traceEval() ;
 
@@ -67,6 +81,8 @@ Int_t RooAbsCategory::getIndex() const
 
 const char* RooAbsCategory::getLabel() const
 {
+  // Return label string of current state 
+
   if (isValueDirty() || isShapeDirty()) {
     _value = traceEval() ;
 
@@ -98,27 +114,32 @@ RooCatType RooAbsCategory::traceEval() const
 
 TIterator* RooAbsCategory::typeIterator() const
 {
+  // Return iterator over all defined states
   return _types.MakeIterator() ;
 }
 
 
 Bool_t RooAbsCategory::operator==(Int_t index) const
 {
+  // Equality operator with a integer (compares with state index number)
   return (index==getIndex()) ;
 }
 
 Bool_t RooAbsCategory::operator==(const char* label) const
 {
+  // Equality operator with a string (compares with state label string)
   return !TString(label).CompareTo(getLabel()) ;
 }
 
 Bool_t RooAbsCategory::isValidIndex(Int_t index) const
 {
+  // Check if state with given index is defined
   return lookupType(index)?kTRUE:kFALSE ;
 }
 
 Bool_t RooAbsCategory::isValidLabel(const char* label) const
 {
+  // Check if state with given name is defined
   return lookupType(label)?kTRUE:kFALSE ;
 }
 
@@ -126,6 +147,8 @@ Bool_t RooAbsCategory::isValidLabel(const char* label) const
 
 const RooCatType* RooAbsCategory::defineType(const char* label)
 {
+  // Define a new state with given name. Index number is automatically assigned
+
   // Find lowest unused index
   Int_t index(-1) ;
   while(lookupType(++index,kFALSE)) ;
@@ -138,6 +161,8 @@ const RooCatType* RooAbsCategory::defineType(const char* label)
 
 const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index) 
 {
+  // Define new state with given name and index number
+
   if (isValidIndex(index)) {
     cout << "RooAbsCategory::defineType(" << GetName() << "): index " 
 	 << index << " already assigned" << endl ;
@@ -164,6 +189,8 @@ const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index)
 
 void RooAbsCategory::clearTypes() 
 {
+  // Delete all currently defined states
+
   _types.Delete() ;
   _value = RooCatType("",0) ;
   setShapeDirty(kTRUE) ;
@@ -171,9 +198,9 @@ void RooAbsCategory::clearTypes()
 
 
 
-const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t printError) const {
+const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t printError) const 
+{
   // Find our type that matches the specified type, or return 0 for no match.
-
   RooCatType* type ;
   Int_t n= _types.GetEntries();
   for (int i=0 ; i < n; i++) {
@@ -190,7 +217,6 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t pri
 const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) const
 {
   // Find our type corresponding to the specified index, or return 0 for no match.
-
   RooCatType* type ;
   Int_t n= _types.GetEntries();
   for (int i=0 ; i < n; i++) {
@@ -223,16 +249,19 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
 
 Bool_t RooAbsCategory::isValid() const
 {
+  // Check if current value is a valid state
   return isValid(_value) ;
 }
 
 Bool_t RooAbsCategory::isValid(RooCatType value)  const
 {
+  // check if given state is defined for this object
   return isValidIndex(value.getVal()) ;
 }
 
 Roo1DTable* RooAbsCategory::createTable(const char *label)  const
 {
+  // Create a table matching the shape of this category
   return new Roo1DTable(GetName(),label,*this) ;
 }
 
@@ -245,7 +274,6 @@ Bool_t RooAbsCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbos
 void RooAbsCategory::writeToStream(ostream& os, Bool_t compact) const
 {
   //Write object contents to stream 
-
   if (compact) {
     os << getLabel() ;
   } else {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: Roo1DTable.cc,v 1.3 2001/03/29 01:59:08 verkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.4 2001/05/03 02:15:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,11 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// Roo1DTable implements a one-dimensional table. A table is the category
+// equivalent of a plot.
+
 
 #include <iostream.h>
 #include <iomanip.h>

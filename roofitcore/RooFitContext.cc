@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.6 2001/05/11 23:37:41 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.7 2001/05/14 22:56:53 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -10,6 +10,21 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooFitContext holds and combines a RooAbsPdf and a RooDataSet
+// for unbinned maximum likelihood fitting. The PDF and DataSet 
+// are both cloned and tied to each other.
+//
+// The context implements various optimization techniques that can
+// only be made under the assumption that the dependent/parameter
+// interpretation of all servers is fixed for the duration of the
+// fit. (For example PDFs with exclusively constant parameters
+// can be precalculated)
+//
+// This class also contains the interface to MINUIT to peform the
+// actual fitting.
+
 
 #include <fstream.h>
 #include "TStopwatch.h"
@@ -28,6 +43,8 @@ static TVirtualFitter *_theFitter(0);
 
 RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf) 
 {
+  // Constructor
+
   if(0 == data) {
     cout << "RooFitContext: cannot create without valid dataset" << endl;
     return;
@@ -61,6 +78,8 @@ RooFitContext::RooFitContext(const RooDataSet* data, const RooAbsPdf* pdf)
 
 RooFitContext::~RooFitContext() 
 {
+  // Destructor
+
   delete _pdfCompList ;
   delete _dataClone ;
   delete _paramList ;
@@ -69,6 +88,7 @@ RooFitContext::~RooFitContext()
 
 void RooFitContext::printToStream(ostream &os, PrintOption opt, TString indent) const
 {
+  // Print contents 
   os << indent << "DataSet clone:" << endl ;
   _dataClone->printToStream(os,opt,indent) ;
 
@@ -87,18 +107,21 @@ void RooFitContext::printToStream(ostream &os, PrintOption opt, TString indent) 
 
 Double_t RooFitContext::getPdfParamVal(Int_t index)
 {
+  // Access PDF parameter value by ordinal index (needed by MINUIT)
   return ((RooRealVar*)_paramList->At(index))->getVal() ;
 }
 
 
 Double_t RooFitContext::getPdfParamErr(Int_t index)
 {
+  // Access PDF parameter error by ordinal index (needed by MINUIT)
   return ((RooRealVar*)_paramList->At(index))->getError() ;  
 }
 
 
 void RooFitContext::setPdfParamVal(Int_t index, Double_t value)
 {
+  // Modify PDF parameter value by ordinal index (needed by MINUIT)
   RooRealVar* par = (RooRealVar*)_paramList->At(index) ;
 
   if (par->getVal()!=value) {
@@ -110,6 +133,7 @@ void RooFitContext::setPdfParamVal(Int_t index, Double_t value)
 
 void RooFitContext::setPdfParamErr(Int_t index, Double_t value)
 {
+  // Modify PDF parameter error by ordinal index (needed by MINUIT)
   ((RooRealVar*)_paramList->At(index))->setError(value) ;    
 }
 
@@ -117,6 +141,7 @@ void RooFitContext::setPdfParamErr(Int_t index, Double_t value)
 
 Bool_t RooFitContext::optimizePdf(RooAbsPdf* pdf, RooDataSet* dset) 
 {
+  // PDF caching optimizer entry point
   RooArgSet cacheList("cacheList") ;
   findCacheableBranches(pdf,dset,cacheList) ;
   
@@ -128,6 +153,9 @@ Bool_t RooFitContext::optimizePdf(RooAbsPdf* pdf, RooDataSet* dset)
 Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset, 
 					    RooArgSet& cacheList) 
 {
+  // Find branch PDFs with all-constant parameters, and add them
+  // to the dataset cache list
+
   TIterator* sIter = pdf->serverIterator() ;
   RooAbsPdf* server ;
 
@@ -168,6 +196,8 @@ Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset,
 
 Int_t RooFitContext::fit(Option_t *options, Double_t *minVal) 
 {
+  // Setup and perform MINUIT fit of PDF to dataset
+
   // Parse our options string
   TString opts= options;
   opts.ToLower();
@@ -363,10 +393,11 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
 
 
 
-// Static function that interfaces minuit with RooFitContext
 void RooFitGlue(Int_t &np, Double_t *gin,
                 Double_t &f, Double_t *par, Int_t flag)
 {
+  // Static function that interfaces minuit with RooFitContext
+
   // Retrieve fit context and its components
   RooFitContext* context = (RooFitContext*) _theFitter->GetObjectFit() ;
   RooAbsPdf* pdf   = context->pdf() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.1 2001/05/10 00:16:08 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.2 2001/05/15 06:54:26 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,6 +16,16 @@
  *
  * Copyright (C) 2000 Stanford University
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooProdPdf is an efficient implementation of a product of PDFs of the form 
+//
+//  PDF_1 * PDF_2 * ... * PDF_N
+//
+// RooProdPdf relies on each component PDF to be normalized and will perform no 
+// explicit normalization itself. 
+// A condition for this to work is that each pdf in the product may not share
+// any servers with any other PDF. 
 
 #include "TIterator.h"
 #include "TList.h"
