@@ -46,7 +46,11 @@ typedef unsigned long long G__uint64;
 
 
 #ifndef ULONG_LONG_MAX
+#if defined(_WIN32)
+#define       ULONG_LONG_MAX  ((G__uint64)(~0))
+#else
 #define       ULONG_LONG_MAX  ((G__uint64)(~0LL))
+#endif
 #endif
 
 #ifndef LONG_LONG_MAX
