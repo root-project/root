@@ -1,2 +1,2 @@
  *.dll *.def *.exp *.lib *.pdb *.log *.d *.ilk 
- test.root 
+ pass.mode mytest.root mydict* 
