@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.22 2004/02/10 13:39:19 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.23 2004/03/12 22:40:11 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -12,6 +12,7 @@
 #include "TProfile2D.h"
 #include "TMath.h"
 #include "THLimitsFinder.h"
+#include "Riostream.h"
 
 Bool_t TProfile2D::fgApproximate = kFALSE;
 
@@ -1394,6 +1395,61 @@ void TProfile2D::Reset(Option_t *option)
   TH2D::Reset(option);
   fBinEntries.Reset();
   fTsumwz = fTsumwz2 = 0;  
+}
+
+//______________________________________________________________________________
+void TProfile2D::SavePrimitive(ofstream &out, Option_t *option)
+{
+   // Save primitive as a C++ statement(s) on output stream out
+
+   //Note the following restrictions in the code generated:
+   // - variable bin size not implemented
+   // - SetErrorOption not implemented
+
+
+   char quote = '"';
+   out <<"   "<<endl;
+   out <<"   "<<"ClassName()"<<" *";
+
+   out << GetName() << " = new " << ClassName() << "(" << quote
+       << GetName() << quote << "," << quote<< GetTitle() << quote
+       << "," << GetXaxis()->GetNbins();
+   out << "," << GetXaxis()->GetXmin()
+       << "," << GetXaxis()->GetXmax();
+   out << "," << GetYaxis()->GetNbins();
+   out << "," << GetYaxis()->GetXmin()
+       << "," << GetYaxis()->GetXmax();
+   out << "," << fZmin
+       << "," << fZmax;
+   out << ");" << endl;
+   
+
+   // save bin entries
+   Int_t bin;
+   for (bin=0;bin<fNcells;bin++) {
+      Double_t bi = GetBinEntries(bin);
+      if (bi) {
+         out<<"   "<<GetName()<<"->SetBinEntries("<<bin<<","<<bi<<");"<<endl;
+      }
+   }
+   //save bin contents
+   for (bin=0;bin<fNcells;bin++) {
+      Double_t bc = fArray[bin];
+      if (bc) {
+         out<<"   "<<GetName()<<"->SetBinContent("<<bin<<","<<bc<<");"<<endl;
+      }
+   }
+   // save bin errors
+   if (fSumw2.fN) {
+      for (bin=0;bin<fNcells;bin++) {
+         Double_t be = TMath::Sqrt(fSumw2.fArray[bin]);
+         if (be) {
+            out<<"   "<<GetName()<<"->SetBinError("<<bin<<","<<be<<");"<<endl;
+         }
+      }
+   }
+   
+   TH1::SavePrimitiveHelp(out, option);
 }
 
 //______________________________________________________________________________

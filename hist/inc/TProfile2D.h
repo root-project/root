@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.19 2003/12/11 11:22:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.20 2004/02/10 13:39:19 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -103,6 +103,7 @@ public:
     virtual void    Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
             TH2D   *ProjectionXY(const char *name="_pxy", Option_t *option="e") const;
     virtual void    Reset(Option_t *option="");
+    virtual void    SavePrimitive(ofstream &out, Option_t *option);
     virtual void    Scale(Double_t c1=1);
     virtual void    SetBinEntries(Int_t bin, Stat_t w);
             void    SetBins(Int_t, Double_t, Double_t)
