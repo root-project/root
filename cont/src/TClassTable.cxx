@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.18 2002/07/24 13:22:27 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.19 2002/09/09 15:21:39 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -48,14 +48,14 @@ ClassImp(TClassTable)
 
 //______________________________________________________________________________
 namespace ROOT {
-   //#define R__USE_STD_MAP
+
    class TMapTypeToClassRec {
 #if defined R__USE_STD_MAP
      // This wrapper class allow to avoid putting #include <map> in the
      // TROOT.h header file.
    public:
 #ifdef R__GLOBALSTL
-      typedef map<string,ClassRec_t*> IdMap_t;
+      typedef map<string,ClassRec_t*>           IdMap_t;
 #else
       typedef std::map<std::string,ClassRec_t*> IdMap_t;
 #endif
@@ -97,7 +97,7 @@ namespace ROOT {
    private:
       TMap fMap;
    public:
-      void Add(const char* key, ClassRec_t *&obj) {
+      void Add(const char *key, ClassRec_t *&obj) {
          TObjString *realkey = new TObjString(key);
          fMap.Add(realkey, (TObject*)obj);
       }
@@ -119,14 +119,13 @@ namespace ROOT {
          TIter next(&fMap);
          TObjString *key;
          while((key = (TObjString*)next())) {
-            // fMap.Print();
             printf("Key: %s\n",key->String().Data());
             ClassRec_t *data = (ClassRec_t*)fMap.GetValue(key);
             if (data) {
                printf("  class: %s %d\n",data->name,data->id);
             } else {
                printf("  no class: \n");
-            }               
+            }
          }
       }
 #endif
