@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.138 2003/07/10 06:19:44 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.139 2003/07/14 13:10:23 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -362,6 +362,36 @@ void Fatal(const char *location, const char *va_(fmt), ...)
    va_start(ap,va_(fmt));
    LevelPrint(true, kFatal, location, va_(fmt), ap);
    va_end(ap);
+}
+
+//______________________________________________________________________________
+string R__tmpnam() 
+{
+   // return a unique temporary file name as defined by tmpnam
+   
+   static char filename[L_tmpnam+2];
+   static string tmpdir;
+   
+   if (tmpdir.length()==0 && strlen(P_tmpdir)<=2) {
+      // P_tmpdir will be prepended to the result of tmpnam
+      // if it is less that 2 character it is likely to 
+      // just be '/' or '\\'.
+      // Let's add the temp directory.
+      char *tmp;
+      if((tmp=getenv("CINTTMPDIR"))) tmpdir = tmp;
+      else if((tmp=getenv("TEMP"))) tmpdir = tmp;
+      else if((tmp=getenv("TMP"))) tmpdir = tmp;
+      else tmpdir = ".";
+   }
+   
+   tmpnam(filename);
+   
+   string result(tmpdir);
+   result += '/';
+   result += filename;
+   result += "_rootcint";
+
+   return result;
 }
 
 //______________________________________________________________________________
@@ -3281,7 +3311,7 @@ void StrcpyWithEsc(char *escaped, const char *original)
 }
 
 //______________________________________________________________________________
-void ReplaceBundleInDict(const char *dictname, const char *bundlename)
+void ReplaceBundleInDict(const char *dictname, const string &bundlename)
 {
    // Replace the bundlename in the dict.cxx and .h file by the contents
    // of the bundle.
@@ -3309,7 +3339,7 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
    }
 
    char esc_bundlename[512];
-   StrcpyWithEsc(esc_bundlename, bundlename);
+   StrcpyWithEsc(esc_bundlename, bundlename.c_str());
 
    char checkline[kMaxLen];
    sprintf(checkline, "  G__add_compiledheader(\"%s\");", esc_bundlename);
@@ -3319,10 +3349,10 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
    if (tmpdict && fpd) {
       while (fgets(line, BUFSIZ, fpd)) {
          if (!strncmp(line, checkline, clen)) {
-            FILE *fb = fopen(bundlename, "r");
+            FILE *fb = fopen(bundlename.c_str(), "r");
             if (!fb) {
                Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-                        bundlename);
+                        bundlename.c_str());
                fclose(fpd);
                fclose(tmpdict);
                remove(tmpdictname);
@@ -3388,11 +3418,12 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
    if (tmpdict && fpd) {
       while (fgets(line, BUFSIZ, fpd)) {
          if (!strncmp(line, checkline, clen)) {
-            FILE *fb = fopen(bundlename, "r");
+            FILE *fb = fopen(bundlename.c_str(), "r");
             if (!fb) {
                Error(0, "rootcint: failed to open %s in ReplaceBundleInDict()\n",
-                     bundlename);
-               fclose(fb);
+                     bundlename.c_str());
+               fclose(tmpdict);
+               fclose(fpd);
                return;
             }
             while (fgets(line, BUFSIZ, fb))
@@ -3642,16 +3673,16 @@ int main(int argc, char **argv)
    for (i = 1; i < argc; i++)
       if (strcmp(argv[i], "-p") == 0) use_preprocessor = 1;
 
-   char bundlename[L_tmpnam+2];
+   string bundlename;
    char esc_arg[512];
    FILE *bundle = 0;
    if (use_preprocessor) {
-      tmpnam(bundlename);
-      strcat(bundlename,".h");
-      bundle = fopen(bundlename, "w");
+      bundlename = R__tmpnam();
+      bundlename += ".h";
+      bundle = fopen(bundlename.c_str(), "w");
       if (!bundle) {
          Error(0, "%s: failed to open %s, usage of external preprocessor by CINT is not optimal\n",
-                 argv[0], bundlename);
+                 argv[0], bundlename.c_str());
          use_preprocessor = 0;
       }
    }
@@ -3671,7 +3702,7 @@ int main(int argc, char **argv)
             Error(0, "%s: %s must be last file on command line\n", argv[0], argv[i]);
             return 1;
          }
-         if (use_preprocessor) argvv[argcc++] = bundlename;
+         if (use_preprocessor) argvv[argcc++] = (char*)bundlename.c_str();
       }
       if (!strcmp(argv[i], "-c")) {
          Error(0, "%s: option -c must come directly after the output file\n", argv[0]);
@@ -3686,7 +3717,7 @@ int main(int argc, char **argv)
    if (use_preprocessor) {
       // Since we have not seen a linkdef file, we have not yet added the
       // bundle file to the command line!
-      if (!il) argvv[argcc++] = bundlename;
+      if (!il) argvv[argcc++] = (char*)bundlename.c_str();
       fclose(bundle);
    }
 
@@ -3713,14 +3744,13 @@ int main(int argc, char **argv)
 
    // Check if code goes to stdout or cint file, use temporary file
    // for prepending of the rootcint generated code (STK)
-   char tname[L_tmpnam];
+   string tname;
    if (ifl) {
-      tmpnam(tname);
-      fp = fopen(tname, "w");
+      tname = R__tmpnam();
+      fp = fopen(tname.c_str(), "w");
       if (!fp) {
          Error(0, "rootcint: failed to open %s in main\n",
-               tname);
-         fclose(fp);
+               tname.c_str());
          return 1;
       }
    } else
@@ -3795,10 +3825,10 @@ int main(int argc, char **argv)
    }
    if (!fpld) {
       Error(0, "%s: cannot open file %s\n", argv[0], il ? argv[il] : autold);
-      if (use_preprocessor) remove(bundlename);
+      if (use_preprocessor) remove(bundlename.c_str());
       if (!il) remove(autold);
       if (ifl) {
-         remove(tname);
+         remove(tname.c_str());
          remove(argv[ifl]);
       }
       return 1;
@@ -3916,13 +3946,13 @@ int main(int argc, char **argv)
    fclose(fpld);
 
    if (!il) remove(autold);
-   if (use_preprocessor) remove(bundlename);
+   if (use_preprocessor) remove(bundlename.c_str());
 
    // Append CINT dictionary to file containing Streamers and ShowMembers
    if (ifl) {
       char line[BUFSIZ];
       FILE *fpd = fopen(argv[ifl], "r");
-      fp = fopen(tname, "a");
+      fp = fopen(tname.c_str(), "a");
 
       if (fp && fpd)
          while (fgets(line, BUFSIZ, fpd))
@@ -3933,7 +3963,7 @@ int main(int argc, char **argv)
 
       // copy back to dictionary file
       fpd = fopen(argv[ifl], "w");
-      fp  = fopen(tname, "r");
+      fp  = fopen(tname.c_str(), "r");
 
       if (fp && fpd) {
 
@@ -3958,7 +3988,7 @@ int main(int argc, char **argv)
 
       if (fp)  fclose(fp);
       if (fpd) fclose(fpd);
-      remove(tname);
+      remove(tname.c_str());
    }
 
    G__setglobalcomp(-1);  // G__CPPLINK
