@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.121 2004/05/11 13:20:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.122 2004/05/26 07:38:51 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -1489,7 +1489,7 @@ Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
       if (siz < 0) {
          // Write the system error only once for this file
          SetBit(kWriteError); SetWritable(kFALSE);
-         SysError("WriteBuffer", "error writing to file %s", GetName());
+         SysError("WriteBuffer", "error writing to file %s (%d)", GetName(), siz);
          return kTRUE;
       }
       if (siz != len) {
