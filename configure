@@ -13,7 +13,7 @@ CONFOUT=include/config.h
 RCONFIN=config/root-config.in
 RCONFOUT=bin/root-config
 ROOTRCIN=config/rootrc.in
-ROOTRCOUT=system.rootrc
+ROOTRCOUT=etc/system.rootrc
 TMAKEIN=test/Makefile.in
 TMAKEOUT=test/Makefile
 
@@ -1103,7 +1103,7 @@ else
     bindir=\$\(ROOTSYS\)/bin
     libdir=\$\(ROOTSYS\)/lib
     incdir=\$\(ROOTSYS\)/include
-    etcdir=\$\(ROOTSYS\)
+    etcdir=\$\(ROOTSYS\)/etc
     datadir=\$\(ROOTSYS\)
     mandir=\$\(ROOTSYS\)/man
     proofdir=\$\(ROOTSYS\)/proof
@@ -1233,7 +1233,7 @@ chmod 755 $RCONFOUT
 echo "done"
 
 #---------------------------------------------------------------------
-# system.rootrc
+# etc/system.rootrc
 #
 echo $ac_n "Writing $ROOTRCOUT ... $ac_c"
 if [ "$ttffontdir" = "$HOME/ttf" ]; then
@@ -1262,7 +1262,7 @@ echo "done"
 if [ "$arch" = "win32" ] && [ ! -d CVS ]; then
    echo $ac_n "Converting files in tutorials and test to DOS format ... $ac_c"
    for i in tutorials/*.C tutorials/*.sql test/*.cxx test/*.h \
-            test/Makefile* test/README system.rootrc
+            test/Makefile* test/README etc/system.rootrc
    do
       sed 's/$//' $i > r__tmp
       touch -r $i r__tmp
