@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.31 2003/02/26 10:11:51 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.32 2003/04/28 16:28:22 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -142,7 +142,7 @@ TKey::TKey(TObject *obj, const char *name, Int_t bufsize)
 //*-*-*-*-*-*-*-*-*-*Create a TKey object and fill output buffer*-*-*-*-*-*-*
 //*-*                ===========================================
 
-   if (!obj->IsA()->GetNew()) {
+   if (!obj->IsA()->HasDefaultConstructor()) {
       Warning("TKey", "since %s had no public constructor\n"
               "\twhich can be called without argument, objects of this class\n"
               "\tcan not be read with the current library. You would need to\n"

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.118 2003/06/21 06:07:46 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.119 2003/06/23 15:19:15 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2214,8 +2214,27 @@ void TClass::SetDestructor(ROOT::DesFunc_t destructorFunc)
 }
 
 //______________________________________________________________________________
+Bool_t TClass::HasDefaultConstructor() const
+{  
+   // Return true if we have access to a default construstor
+   
+   if (fNew) return true;
+
+   if (!GetClassInfo()) return false;
+   
+   // Insure the existence of G__struct.rootspecial[GetClassInfo()->Tagnum()]
+   if (GetClassInfo()->Version()) {};
+   Assert(G__struct.rootspecial[GetClassInfo()->Tagnum()]!=0);
+
+   if (G__struct.rootspecial[GetClassInfo()->Tagnum()]->defaultconstructor!=0)
+      return true;
+
+   return false;
+}
+
+//______________________________________________________________________________
 ROOT::NewFunc_t TClass::GetNew() const
-{
+{   
    return fNew;
 }
 

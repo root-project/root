@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.52 2003/05/08 17:20:41 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.53 2003/06/11 16:57:45 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1790,7 +1790,7 @@ void TBuffer::WriteObject(const void *actualObjectStart, TClass *actualClass)
 
       // A warning to let the user know it will need to change the class code
       // to  be able to read this back.
-      if (actualClass->GetNew() == 0) {
+      if (actualClass->HasDefaultConstructor() == 0) {
          Warning("WriteObjectAny", "since %s had no public constructor\n"
                  "\twhich can be called without argument, objects of this class\n"
                  "\tcan not be read with the current library. You would need to\n"

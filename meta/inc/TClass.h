@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.31 2002/12/05 10:01:50 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.h,v 1.32 2003/02/28 20:26:51 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -120,6 +120,7 @@ public:
    void               Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    void              *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
    char              *EscapeChars(char * text) const;
+   Bool_t             HasDefaultConstructor() const;
    UInt_t             GetCheckSum(UInt_t code=0) const;
    Version_t          GetClassVersion() const { ((TClass*)this)->fVersionUsed = kTRUE; return fClassVersion; }
    TDataMember       *GetDataMember(const char *datamember) const;
