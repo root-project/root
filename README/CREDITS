@@ -196,6 +196,10 @@ E: axel@fnal.gov
 D: THtml improvements (namespace, header/footer)
 D: many suggestions for Trees
 
+N: Stanislav Nesterov
+E: Stanislav.Nesterov@cern.ch
+D: TFumili class
+
 N: Anne-Sylvie Nicollerat
 E: Anne-Sylvie.Nicollerat@cern.ch
 D: Improvements in tutorial hadd.C to take into account Trees
