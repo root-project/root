@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.2 2004/02/13 14:26:59 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphBentErrors.cxx,v 1.3 2004/02/22 11:31:17 brun Exp $
 // Author: Dave Morrison  30/06/2003
 
 /*************************************************************************
@@ -329,7 +329,7 @@ void TGraphBentErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xm
 Double_t TGraphBentErrors::GetErrorX(Int_t i) const
 {
 //    This function is called by GraphFitChisquare.
-//    It returns the quadratic error along X at point i.
+//    It returns the error along X at point i.
 
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEXlow && !fEXhigh) return -1;
@@ -343,7 +343,7 @@ Double_t TGraphBentErrors::GetErrorX(Int_t i) const
 Double_t TGraphBentErrors::GetErrorY(Int_t i) const
 {
 //    This function is called by GraphFitChisquare.
-//    It returns the quadratic error along Y at point i.
+//    It returns the error along Y at point i.
 
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEYlow && !fEYhigh) return -1;

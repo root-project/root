@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.38 2004/07/06 07:11:26 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.39 2004/07/06 07:45:40 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -594,7 +594,7 @@ void TGraphAsymmErrors::Efficiency(int k, int N, double conflevel,
 Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
 {
 //    This function is called by GraphFitChisquare.
-//    It returns the quadratic error along X at point i.
+//    It returns the error along X at point i.
 
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEXlow && !fEXhigh) return -1;
@@ -608,7 +608,7 @@ Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
 Double_t TGraphAsymmErrors::GetErrorY(Int_t i) const
 {
 //    This function is called by GraphFitChisquare.
-//    It returns the quadratic error along Y at point i.
+//    It returns the error along Y at point i.
 
    if (i < 0 || i >= fNpoints) return -1;
    if (!fEYlow && !fEYhigh) return -1;
