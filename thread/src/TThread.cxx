@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.29 2004/12/14 17:39:36 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.30 2004/12/15 12:33:40 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -232,6 +232,8 @@ void TThread::Init()
    // Create the global mutexes
    if (!gContainerMutex)
       gContainerMutex = new TMutex(kTRUE);
+   if (!gAllocMutex)
+      gAllocMutex = new TMutex(kTRUE);
    if (!gCINTMutex)
       gCINTMutex = new TMutex(kTRUE);
 }

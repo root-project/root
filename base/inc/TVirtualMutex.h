@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.2 2002/02/22 09:37:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualMutex.h,v 1.3 2002/08/20 10:51:49 rdm Exp $
 // Author: Fons Rademakers   14/07/2002
 
 /*************************************************************************
@@ -75,6 +75,7 @@ public:
 
 
 R__EXTERN TVirtualMutex *gContainerMutex;
+R__EXTERN TVirtualMutex *gAllocMutex;
 R__EXTERN TVirtualMutex *gCINTMutex;
 
 // Zero overhead macros in case not compiled with thread support
