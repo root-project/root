@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.9 2004/05/18 20:04:46 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.10 2004/05/19 15:47:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -1253,7 +1253,7 @@ void TMatrixDSparse::SetMatrixArray(Int_t nr,Int_t *row,Int_t *col,Double_t *dat
   Int_t ielem = 0;
   nr_nonzeros = 0;
   for (Int_t irow = 1; irow < fNrows+1; irow++) {
-    if (row[ielem] < irow) {
+    if (ielem < nr && row[ielem] < irow) {
       while (ielem < nr) {
         if (data[ielem] != 0.0) {
           fColIndex[nr_nonzeros] = col[ielem]-fColLwb;
@@ -1748,7 +1748,7 @@ void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &sour
       const Int_t icol_right = col_off+nCols_source-1;
       if (colIndex_old) {
         Int_t right = TMath::BinarySearch(eIndex_o-sIndex_o,colIndex_old+sIndex_o,icol_right)+sIndex_o;
-        while (right < eIndex_o && colIndex_old[right+1] <= icol_right)
+        while (right < eIndex_o-1 && colIndex_old[right+1] <= icol_right)
           right++;
         right++;
 
