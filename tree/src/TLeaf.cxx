@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.6 2001/11/17 15:56:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.7 2002/02/01 07:47:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -133,8 +133,15 @@ TLeaf *TLeaf::GetLeafCounter(Int_t &countval) const
    char *bleft2 = (char*)strchr(countname,'[');
    *bright = 0; nch = strlen(countname);
 
-//*-* Now search a branch name with a leave name = countname
-  TLeaf *leaf = (TLeaf*)gTree->GetListOfLeaves()->FindObject(countname);
+   //*-* Now search a branch name with a leave name = countname
+   //    We search for the leaf in the ListOfLeaves from the TTree. We can in principle
+   //    access the TTree by calling fBranch()->GetTree(), but fBranch is not set if this
+   //    method is called from the TLeaf constructor. In that case, use global pointer
+   //    gTree.
+   //    Also, if fBranch is set, but fBranch->GetTree() returns NULL, use gTree.
+  TTree* pTree = fBranch ? fBranch->GetTree() : gTree;
+  if(pTree==NULL) pTree = gTree;
+  TLeaf *leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
   Int_t i;
   if (leaf) {
      countval = 1;
