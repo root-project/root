@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.51 2001/06/06 07:21:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.52 2001/06/19 21:42:55 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2057,8 +2057,10 @@ Int_t TTreeFormula::GetNdata()
       // However we allow several dimensions that virtually vary via the size of their
       // index variables.  So we have code to recalculate fCumulUsedSizes.
       Int_t index;
-      TFormLeafInfoMultiVarDim * info;
-      info = (TFormLeafInfoMultiVarDim *)fDataMembers.At(i);
+      TFormLeafInfoMultiVarDim * info = 0;
+      if (fLookupType[i]!=kDirect) {
+        info = (TFormLeafInfoMultiVarDim *)fDataMembers.At(i);
+      }
       for(Int_t k=0, virt_dim=0; k < fNdimensions[i]; k++) {        
          if (fIndexes[i][k]<0) {
             if (fIndexes[i][k]==-2 && fVirtUsedSizes[virt_dim]<0) {
