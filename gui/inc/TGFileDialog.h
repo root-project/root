@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.h,v 1.2 2001/05/02 11:45:46 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -22,9 +22,12 @@
 // files in the current directory and a combo box with which you can    //
 // select a filter (on file extensions).                                //
 // When creating a file dialog one passes a pointer to a TGFileInfo     //
-// object. When the TGFileDialog ctor returns the selected file name    //
-// can be found in the TGFileInfo::fFilename field. This string must    //
-// be freed by the users.                                               //
+// object. In this object you can set the fFileTypes and fIniDir to     //
+// specify the list of file types for the filter combo box and the      //
+// initial directory. When the TGFileDialog ctor returns the selected   //
+// file name can be found in the TGFileInfo::fFilename field and the    //
+// selected directory in TGFileInfo::fIniDir. The fFilename and         //
+// fIniDir are deleted by the TGFileInfo dtor.                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -52,9 +55,11 @@ class TGFSComboBox;
 
 class TGFileInfo {
 public:
-   char        *fFilename;
-   char        *fIniDir;
-   char       **fFileTypes;
+   char        *fFilename;    // selected file name
+   char        *fIniDir;      // on input: initial directory, on output: new directory
+   const char **fFileTypes;   // file types used to filter selectable files
+   TGFileInfo() : fFilename(0), fIniDir(0), fFileTypes(0) { }
+   ~TGFileInfo() { delete [] fFilename; delete [] fIniDir; }
 };
 
 
