@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.5 2002/04/22 18:24:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.6 2003/05/28 11:55:31 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -19,7 +19,6 @@
 //                                                                      //
 // Window client. In client server windowing systems, like X11 this     //
 // class is used to make the initial connection to the window server.   //
-// It is the only GUI class that does not inherit from TGObject.        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
