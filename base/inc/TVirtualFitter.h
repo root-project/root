@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.2 2000/12/13 15:13:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.3 2002/07/16 13:59:19 rdm Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -21,41 +21,78 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TObject
-#include "TObject.h"
+#ifndef ROOT_TMethodCall
+#include "TMethodCall.h"
 #endif
+#include "Foption.h"
 
 
-class TVirtualFitter : public TObject {
+class TVirtualFitter : public TNamed {
 
 
-private:
+protected:
+   Foption_t              fOption;     //struct with the fit options
+   Int_t                  fXfirst;     //first bin on X axis
+   Int_t                  fXlast;      //last  bin on X axis
+   Int_t                  fYfirst;     //first bin on Y axis
+   Int_t                  fYlast;      //last  bin on Y axis
+   Int_t                  fZfirst;     //first bin on Z axis
+   Int_t                  fZlast;      //last  bin on Z axis
+   TObject               *fObjectFit;  //pointer to object being fitted
+   TObject               *fUserFunc;   //pointer to user theoretical function (a TF1*)
+   TMethodCall           *fMethodCall; //Pointer to MethodCall in case of interpreted function
+   void                 (*fFCN)(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
+   
    static TVirtualFitter *fgFitter;    //Current fitter (default TFitter)
    static Int_t           fgMaxpar;    //Maximum number of fit parameters for current fitter
    static Int_t           fgMaxiter;   //Maximum number of iterations
    static Double_t        fgPrecision; //maximum precision
+   static TString         fgDefault;   //name of the default fitter ("Minuit","Fumili",etc)
+   
 
 public:
-   TVirtualFitter() { }
+   TVirtualFitter();
    virtual ~TVirtualFitter();
-   virtual void     Clear(Option_t *option="") = 0;
-   virtual Int_t    ExecuteCommand(const char *command, Double_t *args, Int_t nargs) = 0;
-   virtual void     FixParameter(Int_t ipar) = 0;
-   virtual Int_t    GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) = 0;
-   virtual TObject *GetObjectFit() const = 0;
-   virtual Int_t    GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) = 0;
-   virtual Int_t    GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) = 0;
-   virtual Double_t GetSumLog(Int_t i) = 0;
-   virtual void     PrintResults(Int_t level, Double_t amin) const = 0;
-   virtual void     ReleaseParameter(Int_t ipar) = 0;
-   virtual void     SetFCN(void *fcn) = 0;
-   virtual void     SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t)) = 0;
-   virtual void     SetObjectFit(TObject *obj) = 0;
-   virtual Int_t    SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh) = 0;
-
+   virtual Double_t  Chisquare(Int_t npar, Double_t *params) = 0;
+   virtual void      Clear(Option_t *option="") = 0;
+   virtual Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs) = 0;
+   virtual void      FixParameter(Int_t ipar) = 0;
+   virtual Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) = 0;
+   virtual Foption_t GetFitOption() const {return fOption;}
+   TMethodCall      *GetMethodCall() const {return fMethodCall;}
+   virtual TObject  *GetObjectFit() const {return fObjectFit;}
+   virtual Int_t     GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) = 0;
+   virtual Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) = 0;
+   virtual Double_t  GetSumLog(Int_t i) = 0;
+   virtual TObject  *GetUserFunc() {return fUserFunc;}
+   virtual Int_t     GetXfirst() const {return fXfirst;}
+   virtual Int_t     GetXlast()  const {return fXlast;}
+   virtual Int_t     GetYfirst() const {return fYfirst;}
+   virtual Int_t     GetYlast()  const {return fYlast;}
+   virtual Int_t     GetZfirst() const {return fZfirst;}
+   virtual Int_t     GetZlast()  const {return fZlast;}
+   virtual void      PrintResults(Int_t level, Double_t amin) const = 0;
+   virtual void      ReleaseParameter(Int_t ipar) = 0;
+   virtual void      SetFCN(void *fcn);
+   virtual void      SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t));
+   virtual void      SetFitMethod(const char *name) = 0;
+   virtual void      SetFitOption(Foption_t option) {fOption = option;}
+   virtual void      SetObjectFit(TObject *obj) {fObjectFit = obj;}
+   virtual Int_t     SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh) = 0;
+   virtual void      SetUserFunc(TObject *userfunc) {fUserFunc = userfunc;}
+   virtual void      SetXfirst(Int_t first) {fXfirst = first;}
+   virtual void      SetXlast (Int_t last)  {fXlast  = last;}
+   virtual void      SetYfirst(Int_t first) {fYfirst = first;}
+   virtual void      SetYlast (Int_t last)  {fYlast  = last;}
+   virtual void      SetZfirst(Int_t first) {fZfirst = first;}
+   virtual void      SetZlast (Int_t last)  {fZlast  = last;}
+   
+   static  TVirtualFitter *GetFitter();
    static  TVirtualFitter *Fitter(TObject *obj, Int_t maxpar = 25);
+   static const char *GetDefaultFitter();
    static Int_t     GetMaxIterations();
    static Double_t  GetPrecision();
+   static void      SetDefaultFitter(const char* name = "");
    static void      SetFitter(TVirtualFitter *fitter, Int_t maxpar = 25);
    static void      SetMaxIterations(Int_t niter=5000);
    static void      SetPrecision(Double_t prec=1e-6);
