@@ -105,9 +105,9 @@ FPYTHIALIB     := @pythialib@
 FPYTHIA6LIBDIR := @pythia6libdir@
 FPYTHIA6LIB    := @pythia6lib@
 
-PYTHONINCDIR   := @pythonincdir@
 PYTHONLIBDIR   := @pythonlibdir@
 PYTHONLIB      := @pythonlib@
+PYTHONINCDIR   := @pythonincdir@
 
 FVENUSLIBDIR   := @venuslibdir@
 FVENUSLIB      := @venuslib@
