@@ -3980,7 +3980,9 @@ struct G__ifunc_table *ifunc;
 	    sprintf(castname,"%s_PR",G__get_link_tagname(tagnum));
 	  else 
 	    strcpy(castname,G__fulltagname(tagnum,1));
-	  if(ifunc->isconst[ifn]&G__CONSTFUNC) 
+	  if(ifunc->staticalloc[ifn]) {
+	    fprintf(fp,"%s::",castname);
+	  } else if(ifunc->isconst[ifn]&G__CONSTFUNC) 
 	    fprintf(fp,"((const %s*)(G__getstructoffset()))->",castname);
 	  else 
 	    fprintf(fp,"((%s*)(G__getstructoffset()))->",castname);
@@ -4047,7 +4049,9 @@ struct G__ifunc_table *ifunc;
 	  sprintf(castname,"%s_PR",G__get_link_tagname(tagnum));
 	else 
 	  strcpy(castname,G__fulltagname(tagnum,1));
-	if(ifunc->isconst[ifn]&G__CONSTFUNC) 
+	if(ifunc->staticalloc[ifn]) { 
+	  fprintf(fp,"%s::",castname);
+	} else if(ifunc->isconst[ifn]&G__CONSTFUNC) 
 	  fprintf(fp,"((const %s*)(G__getstructoffset()))->",castname);
 	else 
 	  fprintf(fp,"((%s*)(G__getstructoffset()))->",castname);
