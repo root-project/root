@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.95 2001/10/16 14:33:49 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.96 2001/10/16 16:29:54 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -420,7 +420,7 @@ void TStreamerInfo::BuildOld()
    TStreamerElement *element;
    Int_t offset = 0;
    Streamer_t streamer = 0;
-   Int_t sp = sizeof(void *);
+   Int_t sp = 8; // was sizeof(void *);
    while ((element = (TStreamerElement*)next())) {
       element->SetNewType(element->GetType());
       if (element->IsA() == TStreamerBase::Class()) {
@@ -444,22 +444,16 @@ void TStreamerInfo::BuildOld()
       // may be a fake class
       if (!dm && fClass->GetDeclFileLine() < 0) {
          streamer = 0;
-         element->SetOffset(offset);
          element->Init(fClass);
          element->SetStreamer(streamer);
          Int_t alength = element->GetArrayLength();
          if (alength == 0) alength = 1;
          Int_t asize = element->GetSize();
-         //if (asize == 0) asize = 8;
-         //offset += asize*alength;
-         offset += asize;
          //align to pointer boundaries (important on 64 bit machines)
          //align only the non-basic data types
          if (element->GetType() > 30 && offset%sp != 0) offset = offset - offset%sp + sp;
-         if (element->GetType() == kObject || element->GetType() == kTString) {
-            //element->SetOffset(kMissing);
-            //element->SetNewType(-1);
-         }
+         element->SetOffset(offset);
+         offset += asize;
       } else if (dm && dm->IsPersistent()) {
          TDataType *dt = dm->GetDataType();
          fClass->BuildRealData();
@@ -2183,8 +2177,13 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                   //We assume that the class was written with a standard streamer
                   //We attempt to recover if a version count was not written
                   v = b.ReadVersion(&start,&count);
-                  if (count == 0) b.SetBufferOffset(start);
-                  cl->GetStreamerInfo(v)->ReadBuffer(b,pointer+offset,-1);
+                  if (count) {
+                     cl->GetStreamerInfo(v)->ReadBuffer(b,pointer+fOffset[i],-1);
+                     b.CheckByteCount(start,count,cl);
+                  } else {
+                     b.SetBufferOffset(start);
+                     cl->GetStreamerInfo()->ReadBuffer(b,pointer+fOffset[i],-1);
+                  }
                }
             }
             break;}
