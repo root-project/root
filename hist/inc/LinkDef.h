@@ -1,4 +1,4 @@
-/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.4 2000/10/31 11:21:02 brun Exp $ */
+/* @(#)root/hist:$Name:  $:$Id: LinkDef.h,v 1.5 2000/11/21 20:28:31 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -24,6 +24,7 @@
 #pragma link C++ class TH1D+;
 #pragma link C++ class TH1F+;
 #pragma link C++ class TH1S+;
+#pragma link C++ class TH1K+;
 #pragma link C++ class TH2-;
 #pragma link C++ class TH2C-;
 #pragma link C++ class TH2D-;
