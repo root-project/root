@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.42 2003/02/20 08:50:20 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.43 2003/03/11 09:19:02 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -319,7 +319,7 @@ void stress2()
    Float_t comp = f.GetCompressionFactor();
 
    Bool_t OK = kTRUE;
-   Int_t lastgood = 8906;
+   Int_t lastgood = 9102;
    if (last <lastgood-200 || last > lastgood+200 || comp <1.9 || comp > 2.5) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
