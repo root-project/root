@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.21 2004/01/27 13:28:23 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.h,v 1.22 2004/03/26 17:15:55 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -102,6 +102,10 @@ public:
     virtual void       PaintTitle();
     virtual void       PaintTF3();
     virtual void       ProcessMessage(const char *mess, const TObject *obj);
+    static  Int_t      ProjectAitoff2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
+    static  Int_t      ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
+    static  Int_t      ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
+    static  Int_t      ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
     virtual void       RecalculateRange();
     virtual void       RecursiveRemove(TObject *) {;}
     virtual void       SetHistogram(TH1 *h);

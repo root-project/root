@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.16 2004/09/29 07:19:51 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.17 2004/09/30 12:09:16 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -263,7 +263,7 @@ void TPainter3dAlgorithms::DefineGridLevels(Int_t ndivz)
 {
    // Define the grid levels drawn in the background of surface and lego plots.
    // The grid levels are aligned on the  Z axis' main tick marks.
-   
+
    Int_t i, nbins;
    Double_t BinLow, BinHigh, BinWidth;
 
@@ -273,7 +273,7 @@ void TPainter3dAlgorithms::DefineGridLevels(Int_t ndivz)
       return;
    }
 
-   // Find the main tick marks positions. 
+   // Find the main tick marks positions.
    Double_t *rmin = view->GetRmin();
    Double_t *rmax = view->GetRmax();
    if (ndivz > 0) {
@@ -2149,7 +2149,7 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
     ab[8] = ab[4] + ywid*Hparam.barwidth;
     if (ab[3] < Hparam.xmin) ab[3] = Hparam.xmin;
     if (ab[4] < Hparam.ymin) ab[4] = Hparam.ymin;
-    if (ab[5] > Hparam.xmax) ab[5] = Hparam.xmax; 
+    if (ab[5] > Hparam.xmax) ab[5] = Hparam.xmax;
     if (ab[8] > Hparam.ymax) ab[8] = Hparam.ymax;
     if (ab[5] < Hparam.xmin) ab[5] = Hparam.xmin;
     if (ab[8] < Hparam.ymin) ab[8] = Hparam.ymin;
@@ -2310,7 +2310,7 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t ang, Int_t nx, Int_t ny, const
     Double_t xyz[24]	/* was [3][8] */;
     Double_t *tn = 0;
     TView *view = 0;
-	
+
     sina = TMath::Sin(ang*kRad);
     cosa = TMath::Cos(ang*kRad);
 
@@ -2483,7 +2483,7 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
     Double_t tt[80]	/* was [4][20] */;
     Double_t xyz[24]	/* was [3][8] */;
     TView *view = 0;
-    ia = ib = 0;	
+    ia = ib = 0;
 	if(gPad) {
 		view = gPad->GetView();
 		if(!view) {
@@ -2491,7 +2491,7 @@ void TPainter3dAlgorithms::LegoPolar(Int_t iordr, Int_t na, Int_t nb, const char
 			return;
 		}
 	}
-	
+
     if (iordr == 0) {
 	jr   = 1;
 	jphi = 2;
@@ -2681,8 +2681,8 @@ void TPainter3dAlgorithms::LegoCylindrical(Int_t iordr, Int_t na, Int_t nb, cons
     Double_t sinphi[4];
     Double_t xyz[24]	/* was [3][8] */;
     TView *view = 0;
-    ia = ib = 0;	
-	
+    ia = ib = 0;
+
 	if(gPad) {
 		view = gPad->GetView();
 		if(!view) {
@@ -2884,8 +2884,8 @@ void TPainter3dAlgorithms::LegoSpherical(Int_t ipsdr, Int_t iordr, Int_t na, Int
     Double_t sinphi[4], th1, th2, phi;
     Double_t xyz[24]	/* was [3][8] */, phi1, phi2;
     TView *view = 0;
-    ia = ib = 0;	
-	
+    ia = ib = 0;
+
 	if(gPad) {
 		view = gPad->GetView();
 		if(!view) {
@@ -3277,7 +3277,7 @@ void TPainter3dAlgorithms::ModifyScreen(Double_t *r1, Double_t *r2)
 
     if(gPad->GetView()) {
     	tn = gPad->GetView()->GetTN();
-    	
+
     	x1 = tn[0]*r1[1] + tn[1]*r1[2] + tn[2]*r1[3] + tn[3];
     	x2 = tn[0]*r2[1] + tn[1]*r2[2] + tn[2]*r2[3] + tn[3];
     	y1 = tn[4]*r1[1] + tn[5]*r1[2] + tn[6]*r1[3] + tn[7];
@@ -3360,7 +3360,7 @@ void TPainter3dAlgorithms::SetF3(TF3 *f3)
 
 
 //______________________________________________________________________________
-void TPainter3dAlgorithms::SetF3ClippingBoxOff()      
+void TPainter3dAlgorithms::SetF3ClippingBoxOff()
 {
    // static function
    // Set the implicit function clipping box "off".
@@ -3374,7 +3374,7 @@ void TPainter3dAlgorithms::SetF3ClippingBoxOn(Double_t xclip,
 {
    // static function
    // Set the implicit function clipping box "on" and define the clipping box.
-   // xclip, yclip and zclip is a point within the function range. All the 
+   // xclip, yclip and zclip is a point within the function range. All the
    // function value having x<=xclip and y<=yclip and z>=zclip are clipped.
    fgF3Clipping = 1;
    fgF3XClip = xclip;
@@ -3637,6 +3637,25 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t ang, Int_t nx, Int_t ny, co
 		xyz[i*3 - 3] = f[i*3 - 3] + f[i*3 - 2]*cosa;
 		xyz[i*3 - 2] = f[i*3 - 2]*sina;
 		xyz[i*3 - 1] = f[i*3 - 1];
+		// added EJB -->
+		double Al, Ab;
+		if (Hoption.Proj == 1 ) {
+		    THistPainter::ProjectAitoff2xy(xyz[i*3 - 3], xyz[i*3 - 2], Al, Ab);
+		    xyz[i*3 - 3] = Al;
+		    xyz[i*3 - 2] = Ab;
+                } else if (Hoption.Proj == 2 ) {
+		    THistPainter::ProjectMercator2xy(xyz[i*3 - 3], xyz[i*3 - 2], Al, Ab);
+		    xyz[i*3 - 3] = Al;
+		    xyz[i*3 - 2] = Ab;
+                } else if (Hoption.Proj == 3) {
+		    THistPainter::ProjectSinusoidal2xy(xyz[i*3 - 3], xyz[i*3 - 2], Al, Ab);
+		    xyz[i*3 - 3] = Al;
+		    xyz[i*3 - 2] = Ab;
+                } else if (Hoption.Proj == 4) {
+		    THistPainter::ProjectParabolic2xy(xyz[i*3 - 3], xyz[i*3 - 2], Al, Ab);
+		    xyz[i*3 - 3] = Al;
+		    xyz[i*3 - 2] = Ab;
+                }
 	    }
 	    icodes[0] = ix;
 	    icodes[1] = iy;
@@ -3802,7 +3821,7 @@ void TPainter3dAlgorithms::SurfacePolar(Int_t iordr, Int_t na, Int_t nb, const c
     Int_t ia, ib, ir, jr, nr, icodes[2];
     Double_t tt[4];
     Double_t phi, ttt[4], xyz[12]	/* was [3][4] */;
-    ia = ib = 0;	
+    ia = ib = 0;
 
     if (iordr == 0) {
 	jr   = 1;
@@ -3944,7 +3963,7 @@ void TPainter3dAlgorithms::SurfaceCylindrical(Int_t iordr, Int_t na, Int_t nb, c
     Double_t tt[4];
     Double_t ttt[4], xyz[12]	/* was [3][4] */;
     TView *view = 0;
-    ia = ib = 0;	
+    ia = ib = 0;
 
     if(gPad) {
     	view = gPad->GetView();
@@ -4084,7 +4103,7 @@ void TPainter3dAlgorithms::SurfaceSpherical(Int_t ipsdr, Int_t iordr, Int_t na, 
     Double_t phi;
     Double_t ttt[4], xyz[12]	/* was [3][4] */;
     TView *view = 0;
-    ia = ib = 0;	
+    ia = ib = 0;
 
     if(gPad) {
     	view = gPad->GetView();
@@ -4261,10 +4280,10 @@ void TPainter3dAlgorithms::SurfaceProperty(Double_t qqa, Double_t qqd, Double_t 
 
 
 //______________________________________________________________________________
-void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax, 
+void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
                              Int_t nx, Int_t ny, Int_t nz, const char *chopt)
 {
-   // Draw implicit function FUN(X,Y,Z) = 0 in cartesian coordinates using 
+   // Draw implicit function FUN(X,Y,Z) = 0 in cartesian coordinates using
    // hidden surface removal algorithm "Painter".
    //
    //     Input: FUN      - external routine FUN(X,Y,Z)
@@ -4352,7 +4371,7 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
    colref->GetRGB(r, g, b);
    acol = gROOT->GetColor(kF3LineColor);
    acol->SetRGB(r, g, b);
-   
+
    //       D R A W   F U N C T I O N
    for (iz = iz1; incrz < 0 ? iz >= iz2 : iz <= iz2; iz += incrz) {
       z1     = (iz-1)*dz + rmin[2];
@@ -4559,7 +4578,7 @@ void TPainter3dAlgorithms::MarchingCube(Double_t fiso, Double_t p[8][3],
                                         Int_t itria[][3])
 {
    // Topological decider for "Marching Cubes" algorithm Find set of triangles
-   // aproximating the isosurface F(x,y,z)=Fiso inside the cube 
+   // aproximating the isosurface F(x,y,z)=Fiso inside the cube
    // (improved version)
    //
    // Input: FISO   - function value for isosurface
@@ -4612,7 +4631,7 @@ void TPainter3dAlgorithms::MarchingCube(Double_t fiso, Double_t p[8][3],
       for ( i=1 ; i<=21 ; i++ ) {
          if (k != iwhat[i-1]) continue;
             icase = i;
-            irt   = ir; 
+            irt   = ir;
             goto L200;
       }
    }
@@ -4629,57 +4648,57 @@ L200:
       fG8[i-1][1] = g[k-1][1];
       fG8[i-1][2] = g[k-1][2];
    }
-  
+
    // V A R I O U S   C O N F I G U R A T I O N S
    n = 0;
    switch ((int)icase) {
-      case 1: 
-      case 15: 
+      case 1:
+      case 15:
          MarchingCubeCase00(1, 4, 9, 0, 0, 0, nnod, ntria, xyz, grad, itria);
          goto L400;
-      case 2: 
-      case 16: 
+      case 2:
+      case 16:
          MarchingCubeCase00(2, 4, 9, 10, 0, 0, nnod, ntria, xyz, grad, itria);
          goto L400;
-      case 3: 
-      case 17: 
+      case 3:
+      case 17:
          MarchingCubeCase03(nnod, ntria, xyz, grad, itria);
          goto L400;
-      case 4: 
-      case 18: 
+      case 4:
+      case 18:
          MarchingCubeCase04(nnod, ntria, xyz, grad, itria);
          goto L400;
-      case 5: 
-      case 19: 
+      case 5:
+      case 19:
          MarchingCubeCase00(6, 2, 1, 9, 8, 0, nnod, ntria, xyz, grad, itria);
          goto L400;
-      case 6: 
-      case 20: 
+      case 6:
+      case 20:
          MarchingCubeCase06(nnod, ntria, xyz, grad, itria);
          goto L400;
-      case 7: 
-      case 21: 
+      case 7:
+      case 21:
          MarchingCubeCase07(nnod, ntria, xyz, grad, itria);
          goto L400;
-      case 8: 
+      case 8:
          MarchingCubeCase00(2, 4, 8, 6, 0, 0, nnod, ntria, xyz, grad, itria);
          goto L500;
-      case 9: 
+      case 9:
          MarchingCubeCase00(1, 4, 12, 7, 6, 10, nnod, ntria, xyz, grad, itria);
          goto L500;
-      case 0: 
+      case 0:
          MarchingCubeCase10(nnod, ntria, xyz, grad, itria);
          goto L500;
-      case 11: 
+      case 11:
          MarchingCubeCase00(1, 4, 8, 7, 11, 10, nnod, ntria, xyz, grad, itria);
          goto L500;
-      case 12: 
+      case 12:
          MarchingCubeCase12(nnod, ntria, xyz, grad, itria);
          goto L500;
-      case 13: 
+      case 13:
          MarchingCubeCase13(nnod, ntria, xyz, grad, itria);
          goto L500;
-      case 14: 
+      case 14:
          MarchingCubeCase00(1, 9, 12, 7, 6, 2, nnod, ntria, xyz, grad, itria);
          goto L500;
    }
@@ -4703,7 +4722,7 @@ L400:
    // R E M O V E   V E R Y   S M A L L   T R I A N G L E S
 L500:
    n = n + 1;
-L510: 
+L510:
    if (n > ntria) return;
    for ( i=1 ; i<=3 ; i++ ) {
       i1 = i;
@@ -4755,7 +4774,7 @@ L560:
 
 
 //______________________________________________________________________________
-void TPainter3dAlgorithms::MarchingCubeCase00(Int_t k1, Int_t k2, Int_t k3, 
+void TPainter3dAlgorithms::MarchingCubeCase00(Int_t k1, Int_t k2, Int_t k3,
                                               Int_t k4, Int_t k5, Int_t k6,
                                               Int_t &nnod, Int_t &ntria,
                                               Double_t xyz[52][3],
@@ -4793,8 +4812,8 @@ void TPainter3dAlgorithms::MarchingCubeCase00(Int_t k1, Int_t k2, Int_t k3,
    // S E T   T R I A N G L E S
    ntria = nnod - 2;
    // Copy "it" into a 2D matrix to be passed to MarchingCubeSetTriangles
-   for ( i=0; i<3 ; i++) { 
-      for ( j=0; j<4 ; j++) { 
+   for ( i=0; i<3 ; i++) {
+      for ( j=0; j<4 ; j++) {
          it2[j][i] = it[ntria-1][j][i];
       }
    }
@@ -4806,7 +4825,7 @@ void TPainter3dAlgorithms::MarchingCubeCase00(Int_t k1, Int_t k2, Int_t k3,
 void TPainter3dAlgorithms::MarchingCubeCase03(Int_t &nnod, Int_t &ntria,
                                Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
 {
-   // Consider case No 3 
+   // Consider case No 3
    //
    // Input: see common HCMCUB
    //
@@ -4840,7 +4859,7 @@ L100:
 void TPainter3dAlgorithms::MarchingCubeCase04(Int_t &nnod, Int_t &ntria,
                                Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
 {
-   // Consider case No 4 
+   // Consider case No 4
    //
    // Input: see common HCMCUB
    //
@@ -4849,7 +4868,7 @@ void TPainter3dAlgorithms::MarchingCubeCase04(Int_t &nnod, Int_t &ntria,
    Int_t irep;
    static Int_t ie[6]     = { 4,9,1, 7,11,6 };
    static Int_t it1[2][3] = { { 1,2,3 }, { 4,5,6 } };
-   static Int_t it2[6][3] = { { 1,2,4 }, { 2,3,6 }, { 3,1,5 }, 
+   static Int_t it2[6][3] = { { 1,2,4 }, { 2,3,6 }, { 3,1,5 },
                               { 4,5,1 }, { 5,6,3 }, { 6,4,2 } };
 
    //  S E T   N O D E S   &   N O R M A L E S
@@ -4857,7 +4876,7 @@ void TPainter3dAlgorithms::MarchingCubeCase04(Int_t &nnod, Int_t &ntria,
    MarchingCubeFindNodes(nnod, ie, xyz, grad);
 
    //  I S   T H E R E   S U R F A C E   P E N E T R A T I O N ?
-   MarchingCubeSurfacePenetration(fF8[0], fF8[1], fF8[2], fF8[3], 
+   MarchingCubeSurfacePenetration(fF8[0], fF8[1], fF8[2], fF8[3],
                                   fF8[4], fF8[5], fF8[6], fF8[7], irep);
    if (irep == 0) {
      ntria = 2;
@@ -4873,7 +4892,7 @@ void TPainter3dAlgorithms::MarchingCubeCase04(Int_t &nnod, Int_t &ntria,
 void TPainter3dAlgorithms::MarchingCubeCase06(Int_t &nnod, Int_t &ntria,
                                Double_t xyz[52][3], Double_t grad[52][3], Int_t itria[48][3])
 {
-   // Consider case No 6 
+   // Consider case No 6
    //
    // Input: see common HCMCUB
    //
@@ -4885,7 +4904,7 @@ void TPainter3dAlgorithms::MarchingCubeCase06(Int_t &nnod, Int_t &ntria,
    static Int_t ie[7]     = { 2,4,9,10, 6,7,11 };
    static Int_t it1[5][3] = { { 6,7,-1 }, { -6,1,2 }, { 6,2,3 }, { 6,3,-4 }, { -6,4,5 } };
    static Int_t it2[3][3] = { { 1,2,-3 }, { -1,3,4 }, { 5,6,7 } };
-   static Int_t it3[7][3] = { { 6,7,-1 }, { -6,1,2 }, { 6,2,3 }, { 6,3,-4 }, { -6,4,5 }, 
+   static Int_t it3[7][3] = { { 6,7,-1 }, { -6,1,2 }, { 6,2,3 }, { 6,3,-4 }, { -6,4,5 },
                               { 1,7,-5 }, { -1,5,4 } };
 
    //  S E T   N O D E S   &   N O R M A L E S
@@ -4921,7 +4940,7 @@ void TPainter3dAlgorithms::MarchingCubeCase07(Int_t &nnod, Int_t &ntria,
                                Double_t xyz[52][3], Double_t grad[52][3],
                                Int_t itria[48][3])
 {
-   // Consider case No 7 
+   // Consider case No 7
    //
    // Input: see common HCMCUB
    //
@@ -4930,7 +4949,7 @@ void TPainter3dAlgorithms::MarchingCubeCase07(Int_t &nnod, Int_t &ntria,
    Double_t f1, f2, f3;
    Int_t icase, irep;
    static Int_t ie[9] = { 3,12,4, 1,10,2, 11,6,7 };
-   static Int_t it[9][9][3] = { 
+   static Int_t it[9][9][3] = {
    {{  1,2,3}, {  4,5,6}, {  7,8,9}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}},
    {{  1,2,3}, { 4,9,-7}, { -4,7,6}, { 9,4,-5}, { -9,5,8}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}},
    {{  4,5,6}, { 8,3,-1}, { -8,1,7}, { 3,8,-9}, { -3,9,2}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}},
@@ -4939,7 +4958,7 @@ void TPainter3dAlgorithms::MarchingCubeCase07(Int_t &nnod, Int_t &ntria,
    {{-10,1,2}, {10,2,-3}, {-10,3,4}, { 10,4,5}, {10,5,-8}, {-10,8,9}, {10,9,-7}, {-10,7,6}, {10,6,-1}},
    {{ 10,2,3}, {10,3,-4}, {-10,4,5}, {10,5,-6}, {-10,6,1}, {10,1,-7}, {-10,7,8}, {10,8,-9}, {-10,9,2}},
    {{  1,7,6}, { -4,2,3}, {-4,9,-2}, {-9,4,-5}, { -9,5,8}, {  0,0,0}, {  0,0,0}, {  0,0,0}, {  0,0,0}},
-   {{ -1,9,2}, {  1,2,3}, { 1,3,-4}, { 6,-1,4}, {  6,4,5}, { 6,-5,7}, { -7,5,8}, {  7,8,9}, { 7,-9,1}} 
+   {{ -1,9,2}, {  1,2,3}, { 1,3,-4}, { 6,-1,4}, {  6,4,5}, { 6,-5,7}, { -7,5,8}, {  7,8,9}, { 7,-9,1}}
    };
 
    Int_t it2[9][3], i, j;
@@ -4972,7 +4991,7 @@ void TPainter3dAlgorithms::MarchingCubeCase07(Int_t &nnod, Int_t &ntria,
       case 8:  goto L300;
    }
 
-L100: 
+L100:
    ntria = 3;
    goto L400;
 
@@ -4982,8 +5001,8 @@ L200:
    ntria = 9;
 
    // Copy "it" into a 2D matrix to be passed to MarchingCubeMiddlePoint
-   for ( i=0; i<3 ; i++) { 
-      for ( j=0; j<9 ; j++) { 
+   for ( i=0; i<3 ; i++) {
+      for ( j=0; j<9 ; j++) {
          it2[j][i] = it[icase-1][j][i];
       }
    }
@@ -5002,8 +5021,8 @@ L300:
    //  S E T   T R I A N G L E S
 L400:
    // Copy "it" into a 2D matrix to be passed to MarchingCubeSetTriangles
-   for ( i=0; i<3 ; i++) { 
-      for ( j=0; j<9 ; j++) { 
+   for ( i=0; i<3 ; i++) {
+      for ( j=0; j<9 ; j++) {
          it2[j][i] = it[icase-1][j][i];
       }
    }
@@ -5030,7 +5049,7 @@ void TPainter3dAlgorithms::MarchingCubeCase10(Int_t &nnod, Int_t &ntria,
    {{ 9,1,2}, { 9,4,1}, { 9,3,4}, { 9,6,3}, { 9,5,6}, { 9,8,5}, { 9,7,8}, { 9,2,7}},
    {{1,2,-7}, {-1,7,8}, {5,6,-3}, {-5,3,4}, { 0,0,0}, { 0,0,0}, { 0,0,0}, { 0,0,0}},
    {{1,2,-7}, {-1,7,8}, {2,3,-6}, {-2,6,7}, {3,4,-5}, {-3,5,6}, {4,1,-8}, {-4,8,5}},
-   {{1,2,-3}, {-1,3,4}, {2,7,-6}, {-2,6,3}, {7,8,-5}, {-7,5,6}, {8,1,-4}, {-8,4,5}} 
+   {{1,2,-3}, {-1,3,4}, {2,7,-6}, {-2,6,3}, {7,8,-5}, {-7,5,6}, {8,1,-4}, {-8,4,5}}
    };
    Int_t it2[8][3], i, j;
 
@@ -5050,8 +5069,8 @@ void TPainter3dAlgorithms::MarchingCubeCase10(Int_t &nnod, Int_t &ntria,
    nnod  = 9;
    ntria = 8;
    // Copy "it" into a 2D matrix to be passed to MarchingCubeMiddlePoint
-   for ( i=0; i<3 ; i++) { 
-      for ( j=0; j<8 ; j++) { 
+   for ( i=0; i<3 ; i++) {
+      for ( j=0; j<8 ; j++) {
          it2[j][i] = it[icase-1][j][i];
       }
    }
@@ -5070,10 +5089,10 @@ L100:
    if (icase == 4) icase = 6;
 
    //  S E T   T R I A N G L E S
-L200: 
+L200:
    // Copy "it" into a 2D matrix to be passed to MarchingCubeSetTriangles
-   for ( i=0; i<3 ; i++) { 
-      for ( j=0; j<8 ; j++) { 
+   for ( i=0; i<3 ; i++) {
+      for ( j=0; j<8 ; j++) {
          it2[j][i] = it[icase-1][j][i];
       }
    }
@@ -5120,8 +5139,8 @@ void TPainter3dAlgorithms::MarchingCubeCase12(Int_t &nnod, Int_t &ntria,
    nnod  = 9;
    ntria = 8;
    // Copy "it" into a 2D matrix to be passed to MarchingCubeMiddlePoint
-   for ( i=0; i<3 ; i++) { 
-      for ( j=0; j<8 ; j++) { 
+   for ( i=0; i<3 ; i++) {
+      for ( j=0; j<8 ; j++) {
          it2[j][i] = it[icase-1][j][i];
       }
    }
@@ -5142,8 +5161,8 @@ L100:
    //  S E T   T R I A N G L E S
 L200:
    // Copy "it" into a 2D matrix to be passed to MarchingCubeSetTriangles
-   for ( i=0; i<3 ; i++) { 
-      for ( j=0; j<8 ; j++) { 
+   for ( i=0; i<3 ; i++) {
+      for ( j=0; j<8 ; j++) {
          it2[j][i] = it[icase-1][j][i];
       }
    }
@@ -5171,7 +5190,7 @@ void TPainter3dAlgorithms::MarchingCubeCase13(Int_t &nnod, Int_t &ntria,
          {8,4,3,7,5,1,2,6}, {8,5,1,4,7,6,2,3}, {8,7,6,5,4,3,2,1} };
    static Int_t iwhat[8] = { 63,62,54,26,50,9,1,0 };
    static Int_t ie[12] = { 1,2,3,4,5,6,7,8,9,10,11,12 };
-   static Int_t iface[6][4] = { 
+   static Int_t iface[6][4] = {
          {1,2,3,4}, {5,6,7,8}, {1,2,6,5}, {2,6,7,3}, {4,3,7,8}, {1,5,8,4} };
    static Int_t it1[4][3] = { {1,2,10}, {9,5,8}, {6,11,7}, {3,4,12} };
    static Int_t it2[4][3] = { {5,6,10}, {1,4,9}, {2,11,3}, {7,8,12} };
@@ -5365,7 +5384,7 @@ void TPainter3dAlgorithms::MarchingCubeMiddlePoint(Int_t nnod, Double_t xyz[52][
 //______________________________________________________________________________
 void TPainter3dAlgorithms::MarchingCubeSurfacePenetration(Double_t a00, Double_t a10,
                                            Double_t a11, Double_t a01,
-                                           Double_t b00, Double_t b10, 
+                                           Double_t b00, Double_t b10,
                                            Double_t b11, Double_t b01,
                                            Int_t &irep)
 {
@@ -5436,7 +5455,7 @@ L200:
 
 
 //______________________________________________________________________________
-void TPainter3dAlgorithms::MarchingCubeFindNodes(Int_t nnod, 
+void TPainter3dAlgorithms::MarchingCubeFindNodes(Int_t nnod,
                                   Int_t *ie, Double_t xyz[52][3],
                                   Double_t grad[52][3])
 {
@@ -5468,7 +5487,7 @@ void TPainter3dAlgorithms::MarchingCubeFindNodes(Int_t nnod,
 
 
 //______________________________________________________________________________
-void TPainter3dAlgorithms::ZDepth(Double_t xyz[52][3], Int_t &nface, 
+void TPainter3dAlgorithms::ZDepth(Double_t xyz[52][3], Int_t &nface,
                                   Int_t iface[48][3], Double_t dface[48][6],
                                   Double_t abcd[48][4], Int_t *iorder)
 {
@@ -5738,9 +5757,9 @@ L998:
 
 
 //______________________________________________________________________________
-void TPainter3dAlgorithms::IsoSurface (Int_t ns, Double_t *s, Int_t nx, 
+void TPainter3dAlgorithms::IsoSurface (Int_t ns, Double_t *s, Int_t nx,
                                        Int_t ny, Int_t nz,
-                                       Double_t *x, Double_t *y, Double_t *z, 
+                                       Double_t *x, Double_t *y, Double_t *z,
                                        const char *chopt)
 {
    // Draw set of isosurfaces for a scalar function defined on a grid.
@@ -5770,14 +5789,14 @@ void TPainter3dAlgorithms::IsoSurface (Int_t ns, Double_t *s, Int_t nx,
    Double_t p0[3], p1[3], p2[3], p3[3], t[3];
    Double_t fsurf, w, d1, d2, df1, df2;
    Int_t icodes[3];
-   Int_t i, i1, i2, j, ibase, nnod, knod, ntria, ktria, iopt, iready; 
+   Int_t i, i1, i2, j, ibase, nnod, knod, ntria, ktria, iopt, iready;
    Int_t ixcrit, iycrit, izcrit, incrx, incry, incrz, incr;
    Int_t ix, ix1=0, ix2=0, iy, iy1=0, iy2=0, iz, iz1=0, iz2=0, k, kx, ky, kz, isurf, nsurf;
-   
+
    Double_t xyz[kNmaxp][3], xyzn[kNmaxp][3], grad[kNmaxp][3];
    Double_t dtria[kNmaxt][6], abcd[kNmaxt][4];
    Int_t    itria[kNmaxt][3], iorder[kNmaxt], iattr[kNmaxt];
-   
+
    static Int_t ind[8][3] = { { 0,0,0 }, { 1,0,0 }, { 1,0,1 }, { 0,0,1 },
                               { 0,1,0 }, { 1,1,0 }, { 1,1,1 }, { 0,1,1 }
                             };
@@ -5995,7 +6014,7 @@ L310:
                Double_t xyz_tmp[kNmaxp][3], grad_tmp[kNmaxp][3];
                Int_t itria_tmp[kNmaxt][3], l;
 
-               MarchingCube(s[isurf-1], p, pf, pn, knod, ktria, 
+               MarchingCube(s[isurf-1], p, pf, pn, knod, ktria,
                             xyz_tmp, grad_tmp, itria_tmp);
 
                for( l=0 ; l<knod ; l++) {
@@ -6062,14 +6081,14 @@ L310:
 //______________________________________________________________________________
 void TPainter3dAlgorithms::DrawFaceGouraudShaded(Int_t *icodes,
                                                  Double_t xyz[][3],
-                                                 Int_t np, Int_t *iface, 
+                                                 Int_t np, Int_t *iface,
                                                  Double_t *t)
 {
    // Draw the faces for the Gouraud Shaded Iso surfaces
 
    Int_t i, k, irep;
    Double_t p3[12][3];
-   
+
    TView *view = gPad->GetView();
    if (!view) {
       Error("ImplicitFunction", "no TView in current pad");

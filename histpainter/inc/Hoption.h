@@ -1,4 +1,4 @@
-/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.4 2003/04/14 16:54:31 brun Exp $ */
+/* @(#)root/histpainter:$Name:  $:$Id: Hoption.h,v 1.5 2004/01/23 23:30:31 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -51,13 +51,17 @@ typedef struct Hoption_t {
    int Surf;        // "SURF"  Draw as a Surface (SURF,Surf=1, SURF1,Surf=11, SURF2,Surf=12)
    int Text;        // "TEXT"  Draw 2D plot with the content of each cell.
    int Tri;         // "TRI"   Draw 2D plot with Delaunay triangles.
-   int System;      // "type of coordinate system(1=car,2=pol,3=cyl,4=sph,5=psr)
+   int System;      // type of coordinate system(1=car,2=pol,3=cyl,4=sph,5=psr)
    int Zscale;      // "Z"   to display the Z scale (color palette)
-   int FrontBox;    // " = 0 to suppress the front box
-   int BackBox;     // " = 0 to suppress the back box
-   int List;        // " = 1 to generate the TObjArray "contours"
-   int HighRes;     // " = 1 to select high resolution
-//*-*
+   int FrontBox;    //  = 0 to suppress the front box
+   int BackBox;     //  = 0 to suppress the back box
+   int List;        //  = 1 to generate the TObjArray "contours"
+   int HighRes;     //  = 1 to select high resolution
+   int Proj;        //  = 1 to get an Aitoff projection, usefull for skymaps or exposure maps..   
+                    //  = 2 to get a Mercator ptojection
+                    //  = 3 to get a Sinusoidal ptojection
+                    //  = 4 to get a Parabolic ptojection
+   //*-*
 //*-*   the following structure members are set to 1 if the corresponding option
 //*-*   in the current style is selected.
 

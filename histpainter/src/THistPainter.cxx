@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.191 2004/09/30 07:56:51 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.192 2004/10/01 06:28:13 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -289,10 +289,10 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       view->ExecuteRotateView(event, px, py);
       return;
    }
-   
+
    Double_t factor = 1;
    if (fH->GetNormFactor() != 0) {
-	   factor = fH->GetNormFactor()/fH->GetSumOfWeights();
+      factor = fH->GetNormFactor()/fH->GetSumOfWeights();
    }
 
    switch (event) {
@@ -549,6 +549,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx  = 0;
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
    Hoption.Off  = Hoption.Tri    = 0;
+   Hoption.Proj = 0; // added EJB
 
 //    special 2-D options
    Hoption.List     = 0;
@@ -556,7 +557,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.FrontBox = 1;
    Hoption.BackBox  = 1;
    Hoption.System   = kCARTESIAN;
-   
+
    Hoption.HighRes  = 0;
 
    //check for graphical cuts
@@ -662,7 +663,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (sscanf(&l[4],"%d",&angle) > 0) {
          if (angle < 0)  angle=0;
          if (angle > 90) angle=90;
-         Hoption.Text = 1000+angle; 
+         Hoption.Text = 1000+angle;
       } else {
          Hoption.Text = 1;
       }
@@ -673,6 +674,29 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"CYL");  if (l) { Hoption.System = kCYLINDRICAL; strncpy(l,"   ",3); }
    l = strstr(chopt,"SPH");  if (l) { Hoption.System = kSPHERICAL;   strncpy(l,"   ",3); }
    l = strstr(chopt,"PSR");  if (l) { Hoption.System = kRAPIDITY;    strncpy(l,"   ",3); }
+
+   // added EJB -->
+   l = strstr(chopt,"AITOFF");
+   if (l) {
+      Hoption.Proj = 1; strncpy(l,"     ",6);       //Aitoff projection
+   }
+   l = strstr(chopt,"MERCATOR");
+   if (l) {
+      Hoption.Proj = 2; strncpy(l,"       ",8);     //Mercator projection
+   }
+   l = strstr(chopt,"SINUSOIDAL");
+   if (l) {
+      Hoption.Proj = 3; strncpy(l,"         ",10);  //Sinusoidal projection
+   }
+   l = strstr(chopt,"PARABOLIC");
+   if (l) {
+      Hoption.Proj = 4; strncpy(l,"        ",9);    //Parabolic projection
+   }
+   if (Hoption.Proj > 0) {
+      Hoption.Scat = 0;
+      Hoption.Contour = 14;
+   }
+   // <-- added EJB
 
    if (strstr(chopt,"A"))   Hoption.Axis = -1;
    if (strstr(chopt,"B"))   Hoption.Bar  = 1;
@@ -703,7 +727,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
          }
       }
    }
-   
+
    if (strstr(chopt,"9"))  Hoption.HighRes = 1;
 
    if (Hoption.Surf == 15) {
@@ -827,7 +851,7 @@ void THistPainter::Paint(Option_t *option)
 //  The following options are supported on all types:
 //  =================================================
 //    "AXIS"   : Draw only axis
-//    "HIST"   : When an histogram has errors it is visualized by default with 
+//    "HIST"   : When an histogram has errors it is visualized by default with
 //               error bars. To visualize it without errors use the option HIST
 //               together with the required option (eg "hist same c")
 //    "SAME"   : Superimpose on previous picture in the same pad
@@ -845,7 +869,7 @@ void THistPainter::Paint(Option_t *option)
 //    "SURF4"  : Draw a surface using Gouraud shading
 //    "SURF5"  : Same as SURF3 but only the colored contour is drawn. Used with
 //               option CYL, SPH or PSR it allows to draw colored contours on a
-//               sphere, a cylinder or a in pseudo rapidy space. In cartesian  
+//               sphere, a cylinder or a in pseudo rapidy space. In cartesian
 //               or polar coordinates, option SURF3 is used.
 //
 //  The following options are supported for 1-D types:
@@ -1011,12 +1035,12 @@ void THistPainter::Paint(Option_t *option)
 //
 // For example: gStyle->SetOptStat(11);
 // displays only the name of histogram and the number of entries.
-// For example: gStyle->SetOptStat(1101); 
+// For example: gStyle->SetOptStat(1101);
 // displays the name of histogram, mean value and RMS.
 // WARNING: never call SetOptStat(000111); but SetOptStat(1111), 0001111 will
 //          be taken as an octal number !!
 // SetOptStat can also take any combination of letters IOURMEN as its argument.
-// For example gStyle->SetOptStat("NE"), gStyle->SetOptStat("NMR") and 
+// For example gStyle->SetOptStat("NE"), gStyle->SetOptStat("NMR") and
 // gStyle->SetOptStat("RMEN") are equivalent to the examples above.
 //
 // When the histogram is drawn, a TPaveStats object is created and added
@@ -1169,6 +1193,13 @@ void THistPainter::Paint(Option_t *option)
 //    "CONT3"  : Draw a contour plot using fill area colors
 //    "CONT4"  : Draw a contour plot using surface colors (SURF option at theta = 0)
 //    "CONT5"  : Draw a contour plot using Delaunay triangles
+//
+// The following options select the "CONT4" option and are usefull for
+// skymaps or exposure maps. (see example in tutorial earth.C)
+//    "AITOFF"     : Draw a contour via an AITOFF projection
+//    "MERCATOR"   : Draw a contour via an Mercator projection
+//    "SINUSOIDAL" : Draw a contour via an Sinusoidal projection
+//    "PARABOLIC"  : Draw a contour via an Parabolic projection
 //
 //  The default number of contour levels is 20 equidistant levels and can
 //  be changed with TH1::SetContour or TStyle::SetNumberContours.
@@ -1371,7 +1402,7 @@ void THistPainter::Paint(Option_t *option)
       return;
    }
 
-   if (Hoption.Bar >= 20) {PaintBarH(option); 
+   if (Hoption.Bar >= 20) {PaintBarH(option);
       delete [] fXbuf; delete [] fYbuf;
       return;
    }
@@ -1439,7 +1470,7 @@ void THistPainter::Paint(Option_t *option)
    PaintAxis(kFALSE);
    if (gridx) gPad->SetGridx(1);
    if (gridy) gPad->SetGridy(1);
-   
+
    PaintTitle();    //    Draw histogram title
      //    Draw box with histogram statistics and/or fit parameters
 paintstat:
@@ -1994,7 +2025,7 @@ void THistPainter::PaintColorLevels(Option_t *)
       if (zmin > 0) {
          zmin = TMath::Log10(zmin);
          zmax = TMath::Log10(zmax);
-      } else { 
+      } else {
          return;
       }
    }
@@ -2098,6 +2129,7 @@ void THistPainter::PaintContour(Option_t *option)
 //       12  Use line style to distinguish contours. ("cont2")
 //       13  Line style and colour are the same for all contours. ("cont3")
 //       14  Same as 1 but uses the "SURF" algorithm ("cont4")
+//           see also options "AITOFF","MERCATOR",etc below
 //       15  Use Delaunay triangles to compute the contours
 //
 //     When option "List" is specified together with option "cont",
@@ -2117,6 +2149,21 @@ void THistPainter::PaintContour(Option_t *option)
 //Begin_Html
 /*
 <img src="gif/PaintContour1.gif">
+*/
+//End_Html
+//
+// This function is also called when one of the options below is called;
+// skymaps or exposure maps. (see example in tutorial earth.C)
+//    "AITOFF"     : Draw a contour via an AITOFF projection
+//    "MERCATOR"   : Draw a contour via an Mercator projection
+//    "SINUSOIDAL" : Draw a contour via an Sinusoidal projection
+//    "PARABOLIC"  : Draw a contour via an Parabolic projection
+//
+// The tutorial earth.C uses these 4 options and produce the following picture:
+//
+//Begin_Html
+/*
+<img src="gif/PaintContour4Earth.gif">
 */
 //End_Html
 //
@@ -2166,7 +2213,7 @@ void THistPainter::PaintContour(Option_t *option)
    }
 
    gPad->SetBit(TGraph::kClipFrame);
-   
+
    Double_t *levels  = new Double_t[2*kMAXCONTOUR];
    Double_t *xarr    = new Double_t[2*kMAXCONTOUR];
    Double_t *yarr    = new Double_t[2*kMAXCONTOUR];
@@ -2924,7 +2971,7 @@ void THistPainter::Paint2DErrors(Option_t *)
       PaintLegoAxis(axis, 90);
       delete axis;
    }
-   
+
    delete fLego; fLego = 0;
 }
 
@@ -3162,7 +3209,7 @@ void THistPainter::PaintHist(Option_t *)
    graph.SetMarkerSize(fH->GetMarkerSize());
    graph.SetMarkerColor(fH->GetMarkerColor());
    if (!Hoption.Same) graph.ResetBit(TGraph::kClipFrame);
-   
+
    graph.PaintGrapHist(nbins, keepx, keepy ,chopth);
 
    delete [] keepx;
@@ -3302,7 +3349,7 @@ Int_t THistPainter::PaintInit()
    }
    if (!NonNullErrors) {
       if (Hoption.Error) {
-         if (!Hoption.Mark && !Hoption.Line && !Hoption.Star && !Hoption.Curve) Hoption.Hist = 2; 
+         if (!Hoption.Mark && !Hoption.Line && !Hoption.Star && !Hoption.Curve) Hoption.Hist = 2;
          Hoption.Error=0;
       }
    }
@@ -3354,7 +3401,7 @@ Int_t THistPainter::PaintInit()
    ymin = factor*ymin;
    //just in case the norm factor is negative
    // this may happen with a positive norm factor and a negative integral !
-   if (ymax < ymin) { 
+   if (ymax < ymin) {
       Double_t temp = ymax;
       ymax = ymin;
       ymin = temp;
@@ -4140,7 +4187,7 @@ void THistPainter::PaintPalette()
          }
       }
    }
-   
+
    if (!palette) {
       Double_t xup  = gPad->GetUxmax();
       Double_t x2   = gPad->PadtoX(gPad->GetX2());
@@ -4833,7 +4880,7 @@ void THistPainter::PaintSurface(Option_t *)
       if (Hoption.System == kRAPIDITY )   fLego->SurfaceSpherical(1,1,nx,ny,"BF");
       if (Hoption.System == kCARTESIAN)   fLego->SurfaceCartesian(90,nx,ny,"BF");
    } else if (Hoption.Surf == 15) {
-// The surface is not drawn in this case. 
+// The surface is not drawn in this case.
    } else {
 //     Draw the surface
       if (Hoption.Surf == 11 || Hoption.Surf == 12 || Hoption.Surf == 16) {
@@ -4864,7 +4911,7 @@ void THistPainter::PaintSurface(Option_t *)
       }
    }
 
-   if ((!Hoption.Same) && 
+   if ((!Hoption.Same) &&
        (Hoption.Surf == 1 || Hoption.Surf == 13 || Hoption.Surf == 16)) {
       fLego->SetLineColor(1);
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
@@ -4955,7 +5002,7 @@ void THistPainter::PaintTriangles(Option_t *option)
       PaintLegoAxis(axis, 90);
       delete axis;
    }
-   
+
    if (Hoption.Zscale) PaintPalette();
 
    delete fLego; fLego = 0;
@@ -4999,9 +5046,9 @@ void THistPainter::PaintTable(Option_t *option)
 
    //if palette option not specified, delete a possible existing palette
    if (!Hoption.Zscale) {
-      delete fFunctions->FindObject("palette");      
+      delete fFunctions->FindObject("palette");
    }
-   
+
    if (fH->GetEntries() != 0 && !Hoption.Axis) {
       if (Hoption.Scat)    PaintScatterPlot(option);
       if (Hoption.Arrow)   PaintArrows(option);
@@ -5015,7 +5062,7 @@ void THistPainter::PaintTable(Option_t *option)
    if (Hoption.Lego) PaintLego(option);
    if (Hoption.Surf && !Hoption.Contour) PaintSurface(option);
    if (Hoption.Tri) PaintTriangles(option);
-   
+
    if (!Hoption.Lego && !Hoption.Surf &&
        !Hoption.Tri  && !(Hoption.Error >= 100)) PaintAxis(kFALSE); // Draw the axes
 
@@ -5284,6 +5331,78 @@ void THistPainter::ProcessMessage(const char *mess, const TObject *obj)
 }
 
 //______________________________________________________________________________
+Int_t THistPainter::ProjectAitoff2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
+{
+  // static function
+  // Convert Right Ascension, Declination to X,Y using an AITOFF projection.
+  // This procedure can be used to create an all-sky map in Galactic
+  // coordinates with an equal-area Aitoff projection.  Output map
+  // coordinates are zero longitude centered.
+  // Also called Hammer-Aitoff projection (first presented by Ernst von Hammer in 1892)
+  // source: GMT
+  // code from  Ernst-Jan Buis
+
+  Double_t x, y;
+
+//   while (l < -180.0) l += 360.0;
+//   while (l >  180.0) l -= 360.0;
+  Double_t alpha2 = (l/2)*TMath::DegToRad();
+  Double_t delta  = b*TMath::DegToRad();
+  Double_t r2     = TMath::Sqrt(2.);
+  Double_t f      = 2*r2/TMath::Pi();
+  Double_t cdec   = TMath::Cos(delta);
+  Double_t denom  = TMath::Sqrt(1. + cdec*TMath::Cos(alpha2));
+  x      = cdec*TMath::Sin(alpha2)*2.*r2/denom;
+  y      = TMath::Sin(delta)*r2/denom;
+  x     *= TMath::RadToDeg()/f;
+  y     *= TMath::RadToDeg()/f;
+  //  x *= -1.; // for a skymap swap left<->right
+  Al = x;
+  Ab = y;
+
+  return 0;
+}
+
+//______________________________________________________________________________
+Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
+{
+  // static function
+  // Probably the most famous of the various map projections, the Mercator projection
+  // takes its name from Mercator who presented it in 1569. It is a cylindrical, conformal projection
+  // with no distortion along the equator.
+  // The Mercator projection has been used extensively for world maps in which the distortion towards
+  // the polar regions grows rather large, thus incorrectly giving the impression that, for example,
+  // Greenland is larger than South America. In reality, the latter is about eight times the size of
+  // Greenland. Also, the Former Soviet Union looks much bigger than Africa or South America. One may wonder
+  // whether this illusion has had any influence on U.S. foreign policy.' (Source: GMT)
+  // code from  Ernst-Jan Buis
+  Al = l;
+  Double_t aid = TMath::Tan((TMath::PiOver2() + b*TMath::DegToRad())/2);
+  Ab = TMath::Log(aid);
+  return 0;
+}
+
+//______________________________________________________________________________
+Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
+{
+  // static function
+  // code from  Ernst-Jan Buis
+  Al = l*cos(b*TMath::DegToRad());
+  Ab = b;
+  return 0;
+}
+
+//______________________________________________________________________________
+Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
+{
+  // static function
+  // code from  Ernst-Jan Buis
+  Al = l*(2.*TMath::Cos(2*b*TMath::DegToRad()/3) - 1);
+  Ab = 180*TMath::Sin(b*TMath::DegToRad()/3);
+  return 0;
+}
+
+//______________________________________________________________________________
 void THistPainter::RecalculateRange()
 {
 //    *-*-*-*Recompute the histogram range following graphics operations*-*-*
@@ -5295,6 +5414,93 @@ void THistPainter::RecalculateRange()
    Double_t xmax = Hparam.xmax;
    Double_t ymin = Hparam.ymin;
    Double_t ymax = Hparam.ymax;
+   // added EJB -->
+   Double_t xmin_aid, ymin_aid, xmax_aid, ymax_aid;
+   if (Hoption.Proj ==1) {
+       // TODO : check x range not lower than -180 and not higher than 180
+       THistPainter::ProjectAitoff2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
+       THistPainter::ProjectAitoff2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
+       THistPainter::ProjectAitoff2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
+       THistPainter::ProjectAitoff2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
+
+       if (xmin > xmin_aid) xmin = xmin_aid;
+       if (ymin > ymin_aid) ymin = ymin_aid;
+       if (xmax < xmax_aid) xmax = xmax_aid;
+       if (ymax < ymax_aid) ymax = ymax_aid;
+       if (Hparam.ymin<0 && Hparam.ymax>0) {
+	   // there is an  'equator', check its range in the plot..
+	   THistPainter::ProjectAitoff2xy(Hparam.xmin*0.9999, 0, xmin_aid, ymin_aid);
+	   THistPainter::ProjectAitoff2xy(Hparam.xmax*0.9999, 0, xmax_aid, ymin_aid);
+	   if (xmin >xmin_aid) xmin = xmin_aid;
+	   if (xmax <xmax_aid) xmax = xmax_aid;
+       }
+       if (Hparam.xmin<0 && Hparam.xmax>0) {
+	   THistPainter::ProjectAitoff2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
+	   THistPainter::ProjectAitoff2xy(0, Hparam.ymax, xmax_aid, ymax_aid);
+	   if (ymin >ymin_aid) ymin = ymin_aid;
+	   if (ymax <ymax_aid) ymax = ymax_aid;
+       }
+  } else if ( Hoption.Proj ==2) {
+       if (Hparam.ymin <= -90 | Hparam.ymax >=90) {
+	   Warning("Mercator Projection", "Latitude out of range %f or %f", Hparam.ymin, Hparam.ymax);
+	   Hoption.Proj = 0;
+       } else {
+	   THistPainter::ProjectMercator2xy(Hparam.xmin, Hparam.ymin, xmin, ymin);
+	   THistPainter::ProjectMercator2xy(Hparam.xmax, Hparam.ymax, xmax, ymax);
+       }
+  } else if (Hoption.Proj == 3) {
+       THistPainter::ProjectSinusoidal2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
+       THistPainter::ProjectSinusoidal2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
+       THistPainter::ProjectSinusoidal2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
+       THistPainter::ProjectSinusoidal2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
+
+       if (xmin > xmin_aid) xmin = xmin_aid;
+       if (ymin > ymin_aid) ymin = ymin_aid;
+       if (xmax < xmax_aid) xmax = xmax_aid;
+       if (ymax < ymax_aid) ymax = ymax_aid;
+       if (Hparam.ymin<0 && Hparam.ymax>0) {
+	   THistPainter::ProjectSinusoidal2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
+	   THistPainter::ProjectSinusoidal2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
+	   if (xmin >xmin_aid) xmin = xmin_aid;
+	   if (xmax <xmax_aid) xmax = xmax_aid;
+       }
+       if (Hparam.xmin<0 && Hparam.xmax>0) {
+	   THistPainter::ProjectSinusoidal2xy(0,Hparam.ymin, xmin_aid, ymin_aid);
+	   THistPainter::ProjectSinusoidal2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
+	   if (ymin >ymin_aid) ymin = ymin_aid;
+	   if (ymax <ymax_aid) ymax = ymax_aid;
+       }
+  } else if (Hoption.Proj == 4) {
+       THistPainter::ProjectParabolic2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
+       THistPainter::ProjectParabolic2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
+       THistPainter::ProjectParabolic2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
+       THistPainter::ProjectParabolic2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
+
+       if (xmin > xmin_aid) xmin = xmin_aid;
+       if (ymin > ymin_aid) ymin = ymin_aid;
+       if (xmax < xmax_aid) xmax = xmax_aid;
+       if (ymax < ymax_aid) ymax = ymax_aid;
+       if (Hparam.ymin<0 && Hparam.ymax>0) {
+	   THistPainter::ProjectParabolic2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
+	   THistPainter::ProjectParabolic2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
+	   if (xmin >xmin_aid) xmin = xmin_aid;
+	   if (xmax <xmax_aid) xmax = xmax_aid;
+       }
+       if (Hparam.xmin<0 && Hparam.xmax>0) {
+	   THistPainter::ProjectParabolic2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
+	   THistPainter::ProjectParabolic2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
+	   if (ymin >ymin_aid) ymin = ymin_aid;
+	   if (ymax <ymax_aid) ymax = ymax_aid;
+       }
+     }
+   Hparam.xmin= xmin;
+   Hparam.xmax= xmax;
+   Hparam.ymin= ymin;
+   Hparam.ymax= ymax;
+
+
+   // <-- added EJB
+
    Double_t dx   = xmax-xmin;
    Double_t dy   = ymax-ymin;
    Double_t dxr  = dx/(1 - gPad->GetLeftMargin()   - gPad->GetRightMargin());
@@ -5508,7 +5714,7 @@ LZMIN:
 const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 {
    // This function returns the best format to print the error value (e)
-   // knowing the parameter value (v) and the format (f) used to print it. 
+   // knowing the parameter value (v) and the format (f) used to print it.
 
    static char ef[20];
    char tf[20], tv[64];
@@ -5523,7 +5729,7 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
    int iE = sv.Index("E");
    int id = sv.Index(".");
 
-   // v has been printed with the exponent notation. 
+   // v has been printed with the exponent notation.
    // There is 2 cases, the exponent is positive or negative
    if (ie >= 0 || iE >= 0) {
       if (sv.Index("+") >= 0) {
