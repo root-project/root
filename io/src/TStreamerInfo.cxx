@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.29 2001/01/17 08:28:19 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.30 2001/01/18 09:40:11 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -143,25 +143,25 @@ void TStreamerInfo::Build()
       TRealData *refcount = 0;
       TDataMember *dmref = 0;
       if (dm->IsaPointer()) {
-         const char *title = dm->GetTitle();
+         const char *title = (char*)dm->GetTitle();
          const char *lbracket = strchr(title,'[');
          const char *rbracket = strchr(title,']');
          if (lbracket && rbracket) {
             refcount = (TRealData*)fClass->GetListOfRealData()->FindObject(dm->GetArrayIndex());
             if (!refcount) {
-               Error("Build","class:%s, discarded1 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",GetName(),dm->GetFullTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
+               Error("Build","%s, discarding: %s %s, illegal %s\n",GetName(),dm->GetFullTypeName(),dm->GetName(),lbracket);
                continue;
             }
             dmref = refcount->GetDataMember();
             TDataType *reftype = dmref->GetDataType();
             if (!reftype || reftype->GetType() != 3) {
-               Error("Build","class:%s, discarded2 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",GetName(),dm->GetFullTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
+               Error("Build","%s, discarding: %s %s, illegal [%s] (must be Int_t)\n",GetName(),dm->GetFullTypeName(),dm->GetName(),dm->GetArrayIndex());
                continue;
             }
             TStreamerBasicType *bt = TStreamerInfo::GetElementCounter(dm->GetArrayIndex(),dmref->GetClass(),dmref->GetClass()->GetClassVersion());
             if (!bt) {
                if (dmref->GetClass()->Property() & kIsAbstract) continue;
-               Error("Build","class:%s, discarded3 pointer to basic type:%s member:%s, offset=%d, illegal [%s]\n",GetName(),dm->GetFullTypeName(),dm->GetName(),offset,dm->GetArrayIndex());
+               Error("Build","%s, discarding: %s %s, illegal [%s] must be placed before \n",GetName(),dm->GetFullTypeName(),dm->GetName(),dm->GetArrayIndex());
                continue;
             }
          }
@@ -187,7 +187,8 @@ void TStreamerInfo::Build()
                fElements->Add(element);
                continue;
             } else {
-               Error("Build","discarded4 pointer to basic type:%s,member:%s, offset=%d, no [dimension]\n",dm->GetFullTypeName(),dm->GetName(),offset);
+               if (fName == "TString" || fName == "TClass") continue;
+               Error("Build","%s, discarding: %s %s, no [dimension]\n",GetName(),dm->GetFullTypeName(),dm->GetName());
                continue;
             }
          }
@@ -223,7 +224,7 @@ void TStreamerInfo::Build()
                else delete stl;
                continue;
             }
-            Error("Build","unknow type:%s, member:%s, offset=%d\n",dm->GetFullTypeName(),dm->GetName(),offset);
+            Error("Build","%s, unknow type: %s %s\n",GetName(),dm->GetFullTypeName(),dm->GetName());
             continue;
          }
          // a pointer to a class
@@ -554,6 +555,33 @@ void TStreamerInfo::Compile()
    }
 
    if (gDebug > 0) ls();
+}
+
+
+//______________________________________________________________________________
+void TStreamerInfo::ForceWriteInfo()
+{
+   // will force this TStreamerInfo to the file and also
+   // all the dependencies.
+   // This function is called when streaming a class that contains
+   // a null pointer. In this case, the TStreamerInfo for the class
+   // with the null pointer must be written to the file and also all the
+   // TStreamerInfo of all the classes referenced by the class.
+   
+   if (!gFile) return;
+   // flag this class
+   TArrayC *cindex = gFile->GetClassIndex();
+   if (cindex->fArray[fNumber] != 0) return;
+   cindex->fArray[fNumber] = 1;
+   cindex->fArray[0] = 1;
+   
+   // flag all its dependencies
+   TIter next(fElements);
+   TStreamerElement *element;
+   while ((element = (TStreamerElement*)next())) {
+      TClass *cl = element->GetClassPointer();
+      if (cl) cl->GetStreamerInfo()->ForceWriteInfo();
+   }
 }
 
 
@@ -1005,11 +1033,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
                          break;
                         }
          // Base Class
-         case kBase:    { ULong_t args[1];
-                          args[0] = (ULong_t)&b;
-                          TMethodCall *method = (TMethodCall*)fMethod[i];
-                          method->SetParamPtrs(args);
-                          method->Execute((void*)(pointer+fOffset[i]));
+         case kBase:    { TStreamerBase *element = (TStreamerBase*)fElem[i];
+                          element->ReadBuffer(b,pointer);
                           break;
                         }
 
@@ -1642,6 +1667,12 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
 
          // Class*   Class derived from TObject
          case kObjectP: { TObject **obj = (TObject**)(pointer+fOffset[i]);
+                          //must write StreamerInfo if pointer is null
+                          if (!(*obj)) {
+                             TStreamerObjectPointer *element = (TStreamerObjectPointer*)fElem[i];
+                             TClass *cl = element->GetClass();
+                             cl->GetStreamerInfo()->ForceWriteInfo(); 
+                          }
                           b << *obj;
                           break;
                         }
@@ -1677,11 +1708,8 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
                          break;
                         }
          // Base Class
-         case kBase:    { ULong_t args[1];
-                          args[0] = (ULong_t)&b;
-                          TMethodCall *method = (TMethodCall*)fMethod[i];
-                          method->SetParamPtrs(args);
-                          method->Execute((void*)(pointer+fOffset[i]));
+         case kBase:    { TStreamerBase *element = (TStreamerBase*)fElem[i];
+                          element->WriteBuffer(b,pointer);
                           break;
                         }
 
