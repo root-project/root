@@ -57,6 +57,10 @@ int main( int argc, char **argv ) {
      exit(1);
   }
 
+  // by default hadd can merge Trees in a file that can go up to 100 Gbytes
+  Long64_t maxsize = 10000000000; //100GB
+  TTree::SetMaxTreeSize(maxsize);
+
   for ( int i = ffirst; i < argc; i++ ) {
     cout << "Source file " << i-ffirst+1 << ": " << argv[i] << endl;
     Source = TFile::Open( argv[i] );
