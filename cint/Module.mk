@@ -26,6 +26,7 @@ CINTS1       := $(filter-out $(MODDIRS)/winnt.%,$(CINTS1))
 
 CINTS2       := $(filter-out $(MODDIRS)/kccstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/sunstrm.%,$(CINTS2))
+CINTS2       := $(filter-out $(MODDIRS)/sun5strm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/libstrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/fakestrm.%,$(CINTS2))
 CINTS2       := $(filter-out $(MODDIRS)/vcstrm.%,$(CINTS2))
