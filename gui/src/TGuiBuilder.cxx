@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.57 2004/10/07 09:56:53 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGuiBuilder.cxx,v 1.1 2004/10/15 15:34:52 rdm Exp $
 // Author: Valeriy Onuchin   12/08/04
 
 /*************************************************************************
@@ -136,18 +136,7 @@ TGuiBuilder::~TGuiBuilder()
 //______________________________________________________________________________
 TGuiBuilder *TGuiBuilder::Instance()
 {
-   // Load plugin and create gGuiBuilder object
-
-   if (gGuiBuilder) return gGuiBuilder;
-
-   // load plugin
-   if (!gGuiBuilder) {
-      gHandler = gROOT->GetPluginManager()->FindHandler("TGuiBuilder", "GuiBld");
-
-      if (!gHandler || (gHandler->LoadPlugin() == -1)) return 0;
-
-      gGuiBuilder = (TGuiBuilder*)gHandler->ExecPlugin(0);
-   }
-
-   return gGuiBuilder;
+   // return an instance of TGuiBuilder object
+  
+   return (gGuiBuilder? gGuiBuilder : new TGuiBuilder());
 }

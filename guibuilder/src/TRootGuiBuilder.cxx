@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.24 2004/10/14 10:09:30 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TRootGuiBuilder.cxx,v 1.1 2004/10/15 15:34:53 rdm Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -236,6 +236,7 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
 
    SetCleanup(kDeepCleanup);
    fEditDisabled = kTRUE;
+   gGuiBuilder  = this;
 
    if (gDragManager) {
       fManager = (TGuiBldDragManager *)gDragManager;
