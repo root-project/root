@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.18 2002/10/31 21:38:36 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.19 2002/11/05 09:37:10 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -204,6 +204,16 @@ TObject *TProcessID::GetObjectWithID(UInt_t uidd)
    return fObjects->UncheckedAt(uid);
 }
 
+//______________________________________________________________________________
+Bool_t TProcessID::IsValid(TProcessID *pid)
+{
+   // static function. return kTRUE if pid is a valid TProcessID
+   
+   if (fgPIDs->IndexOf(pid) >= 0) return kTRUE;
+   if (pid == (TProcessID*)gROOT->GetUUIDs())  return kTRUE;
+   return kFALSE;
+}
+   
 //______________________________________________________________________________
 void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
 {

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.6 2002/12/06 21:28:52 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.h,v 1.7 2002/12/17 10:15:39 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -62,7 +62,7 @@ protected:
    static TProcessID  *GetProcessWithUID(UInt_t uid);
    static TProcessID  *GetSessionProcessID();
    static  UInt_t      GetObjectCount();
-   static  Bool_t      IsValid(TProcessID *pid) {return fgPIDs->IndexOf(pid) < 0 ? kFALSE : kTRUE;}
+   static  Bool_t      IsValid(TProcessID *pid);
    static  void        SetObjectCount(UInt_t number);
          
    ClassDef(TProcessID,1)  //Process Unique Identifier in time and space
