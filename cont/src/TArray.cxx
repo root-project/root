@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name$:$Id$
+// @(#)root/cont:$Name:  $:$Id: TArray.cxx,v 1.1.1.1 2000/05/16 17:00:40 rdm Exp $
 // Author: Fons Rademakers   21/10/97
 
 /*************************************************************************
@@ -109,11 +109,11 @@ void TArray::WriteArray(TBuffer &b, const TArray *a)
 }
 
 //______________________________________________________________________________
-TBuffer &operator>>(TBuffer &buf, TArray *&obj)
+TBuffer &operator>>(TBuffer &buf, const TArray *&obj)
 {
    // Read TArray object from buffer. Function declared in ClassDef.
 
-   obj = (TArray *) TArray::ReadArray(buf, TArray::Class());
+   obj = (const TArray *) TArray::ReadArray(buf, TArray::Class());
    return buf;
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.53 2001/11/16 18:29:30 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.54 2001/11/30 07:28:35 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -956,15 +956,15 @@ void WriteInputOperator(G__ClassInfo &cl)
    if (cl.IsTmplt()) {
       // Produce specialisation for templates:
       fprintf(fp, "template <> TBuffer &%soperator>><%s >"
-              "(TBuffer &buf, %s *&obj)\n{\n", space_prefix, cl.TmpltArg(), cl.Fullname());
+              "(TBuffer &buf, const %s *&obj)\n{\n", space_prefix, cl.TmpltArg(), cl.Fullname());
    } else {
-      fprintf(fp, "TBuffer &%soperator>>(TBuffer &buf, %s *&obj)\n{\n",
+      fprintf(fp, "TBuffer &%soperator>>(TBuffer &buf, const %s *&obj)\n{\n",
               space_prefix, cl.Fullname() );
    }
    fprintf(fp, "   // Read a pointer to an object of class %s.\n\n", cl.Fullname());
 
    if (cl.IsBase("TObject") || !strcmp(cl.Fullname(), "TObject")) {
-      fprintf(fp, "   obj = (%s *) buf.ReadObject(%s::Class());\n", cl.Fullname(),
+      fprintf(fp, "   obj = (const %s *) buf.ReadObject(%s::Class());\n", cl.Fullname(),
               cl.Fullname());
    } else {
       fprintf(fp, "   ::Error(\"%s::operator>>\", \"objects not inheriting"

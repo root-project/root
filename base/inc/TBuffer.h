@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.5 2001/03/21 09:28:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.6 2001/11/30 11:29:37 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -201,7 +201,7 @@ public:
    TBuffer  &operator<<(const Char_t  *c);
 
    //friend TBuffer  &operator>>(TBuffer &b, TObject *&obj);
-   friend TBuffer  &operator>>(TBuffer &b, const TObject *&obj);
+   //friend TBuffer  &operator>>(TBuffer &b, const TObject *&obj);
    friend TBuffer  &operator<<(TBuffer &b, const TObject *obj);
 
    static void  SetGlobalReadParam(Int_t mapsize);
@@ -357,8 +357,8 @@ inline TBuffer &operator<<(TBuffer &buf, const TObject *obj)
 //inline TBuffer &operator>>(TBuffer &buf, TObject *&obj)
 //   { obj = buf.ReadObject(0); return buf; }
 //______________________________________________________________________________
-inline TBuffer &operator>>(TBuffer &buf, const TObject *&obj)
-   { obj = buf.ReadObject(0); return buf; }
+//inline TBuffer &operator>>(TBuffer &buf, const TObject *&obj)
+//   { obj = buf.ReadObject(0); return buf; }
 
 //______________________________________________________________________________
 inline Int_t TBuffer::ReadArray(UChar_t *&c)

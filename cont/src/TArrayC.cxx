@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayC.cxx,v 1.2 2001/02/28 07:51:23 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayC.cxx,v 1.3 2001/07/03 08:12:07 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -157,10 +157,10 @@ void TArrayC::Streamer(TBuffer &b)
 }
 
 //_______________________________________________________________________
-TBuffer &operator>>(TBuffer &buf, TArrayC *&obj)
+TBuffer &operator>>(TBuffer &buf, const TArrayC *&obj)
 {
    // Read TArrayC object from buffer. Declared in ClassDef.
 
-   obj = (TArrayC *) TArray::ReadArray(buf, TArrayC::Class());
+   obj = (const TArrayC *) TArray::ReadArray(buf, TArrayC::Class());
    return buf;
 }
