@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.15 2003/06/18 11:28:32 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.16 2003/07/26 05:51:55 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -23,6 +23,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TInterpreter.h"
 #include "TMethodCall.h"
 #include "TMethod.h"
 #include "TClass.h"
@@ -415,7 +416,7 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
          returntype++;
       }
 
-      G__TypedefInfo type(func->GetReturnTypeName());
+      G__TypedefInfo type(gInterpreter->TypeName(func->GetReturnTypeName()));
       const char *name = type.TrueName();
 
       if (!strcmp("(unknown)",name)) {
