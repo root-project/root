@@ -92,7 +92,11 @@ else
 			FREECC="cc"; \
 			ARCH_CFLAGS="+DD64 -Ae"; \
 		fi; \
-		GNUMAKE=$(MAKE) ./configure --with-pic CC=\"$$FREECC\" CFLAGS=\"$$ARCH_CFLAGS -O2\"; \
+		if [ $(ARCH) = "aix5" ]; then \
+			FREEZLIB="--without-zlib"; \
+		fi; \
+		GNUMAKE=$(MAKE) ./configure --with-pic $$FREEZLIB \
+		CC=\"$$FREECC\" CFLAGS=\"$$ARCH_CFLAGS -O2\"; \
 		$(MAKE))
 endif
 
