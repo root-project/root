@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.97 2001/10/17 08:24:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.98 2001/10/17 08:50:26 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -343,8 +343,8 @@ void TStreamerInfo::BuildCheck()
       if (fClass->GetListOfDataMembers() 
          && (fClassVersion == fClass->GetClassVersion()) 
          && (fCheckSum != fClass->GetCheckSum())) {
-            printf("\nWARNING, class:%s StreamerInfo read from file:%s\n",GetName(),gDirectory->GetFile()->GetName());
-            printf("        has the same version:%d than the active class\n",fClassVersion);
+            printf("\nWARNING, the StreamerInfo of class %s read from file %s\n",GetName(),gDirectory->GetFile()->GetName());
+            printf("        has the same version (=%d) as the active class\n",fClassVersion);
             printf("        but a different checksum.\n");
             printf("        You should update the version to ClassDef(%s,%d).\n",GetName(),fClassVersion+1);
             printf("        Do not try to write objects with the current class definition,\n");
@@ -415,7 +415,7 @@ void TStreamerInfo::BuildOld()
 {
    // rebuild the TStreamerInfo structure
 
-   if (gDebug > 0) printf("\n====>Rebuilding TStreamerInfo for class:%s, version:%d\n",GetName(),fClassVersion);
+   if (gDebug > 0) printf("\n====>Rebuilding TStreamerInfo for class: %s, version: %d\n",GetName(),fClassVersion);
    TIter next(fElements);
    TStreamerElement *element;
    Int_t offset = 0;
@@ -1122,7 +1122,7 @@ Double_t TStreamerInfo::GetValueClones(TClonesArray *clones, Int_t i, Int_t j, i
 void TStreamerInfo::ls(Option_t *option) const
 {
 //  List the TStreamerElement list and also the precomputed tables
-  printf("\nStreamerInfo for class: %s, version=%d\n",GetName(),fClassVersion);
+   printf("\nStreamerInfo for class: %s, version=%d\n",GetName(),fClassVersion);
 
    if (fElements) fElements->ls(option);
    for (Int_t i=0;i<fNdata;i++) {
@@ -2810,7 +2810,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                TObject **obj = (TObject**)(pointer+fOffset[i]);
                if (*obj) (*obj)->Streamer(b);
                else {
-                  Error("WriteBufferCones","-> specified but pointer is null");
+                  Error("WriteBufferClones","-> specified but pointer is null");
                   TStreamerElement *element = (TStreamerElement*)fElem[i];
                   element->ls();
                }
