@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.h,v 1.2 2000/09/05 09:21:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -57,32 +57,32 @@ protected:
     // TBranch status bits
     enum { kAutoDelete = BIT(15) };
 
-    Int_t       fCompress;        //(=1 branch is compressed, 0 otherwise)
-    Int_t       fBasketSize;      //Initial Size of  Basket Buffer
-    Int_t       fEntryOffsetLen;  //Initial Length of fEntryOffset table in the basket buffers
-    Int_t       fMaxBaskets;      //Maximum number of Baskets so far
-    Int_t       fWriteBasket;     //Last basket number written
-    Int_t       fReadBasket;      //Current basket number when reading
-    Int_t       fReadEntry;       //Current entry number when reading
-    Int_t       fEntryNumber;     //Current entry number (last one filled in this branch)
-    Int_t       fOffset;          //Offset of this branch
-    Int_t       fNleaves;         //Number of leaves
-    Stat_t      fEntries;         //Number of entries
-    Stat_t      fTotBytes;        //Total number of bytes in all leaves before compression
-    Stat_t      fZipBytes;        //Total number of bytes in all leaves after compression
-    TObjArray   fBranches;        //List of Branches of this branch
-    TObjArray   fLeaves;          //List of leaves of this branch
-    TObjArray   fBaskets;         //List of baskets of this branch
-    Int_t       fNBasketRAM;      //Number of baskets in fBasketRAM
-    Int_t       *fBasketRAM;      //[fNBasketRAM] table of basket numbers in memory
-    Int_t       *fBasketBytes;    //[fMaxBaskets] Lenght of baskets on file
-    Int_t       *fBasketEntry;    //[fMaxBaskets] Table of first entry in eack basket
-    Seek_t      *fBasketSeek;     //[fMaxBaskets] Addresses of baskets on file
-    TTree       *fTree;           //Pointer to Tree header
-    char        *fAddress;        //Address of 1st leaf (variable or object)
-    TDirectory  *fDirectory;      //Pointer to directory where this branch buffers are stored
-    TString     fFileName;        //Name of file where buffers are stored ("" if in same file as Tree header)
-    TBuffer     *fEntryBuffer;    //!Buffer used to directly pass the content without streaming
+    Int_t       fCompress;        // (=1 branch is compressed, 0 otherwise)
+    Int_t       fBasketSize;      // Initial Size of  Basket Buffer
+    Int_t       fEntryOffsetLen;  // Initial Length of fEntryOffset table in the basket buffers
+    Int_t       fWriteBasket;     // Last basket number written
+    Int_t       fEntryNumber;     // Current entry number (last one filled in this branch)
+    Int_t       fOffset;          // Offset of this branch
+    Int_t       fMaxBaskets;      // Maximum number of Baskets so far
+    Int_t       fNleaves;         //!Number of leaves
+    Int_t       fReadBasket;      //!Current basket number when reading
+    Int_t       fReadEntry;       //!Current entry number when reading
+    Stat_t      fEntries;         // Number of entries
+    Stat_t      fTotBytes;        // Total number of bytes in all leaves before compression
+    Stat_t      fZipBytes;        // Total number of bytes in all leaves after compression
+    TObjArray   fBranches;        //-> List of Branches of this branch
+    TObjArray   fLeaves;          //-> List of leaves of this branch
+    TObjArray   fBaskets;         //-> List of baskets of this branch
+    Int_t       fNBasketRAM;      //!Number of baskets in fBasketRAM
+    Int_t      *fBasketRAM;       //![fNBasketRAM] table of basket numbers in memory
+    Int_t      *fBasketBytes;     //[fMaxBaskets] Lenght of baskets on file
+    Int_t      *fBasketEntry;     //[fMaxBaskets] Table of first entry in eack basket
+    Seek_t     *fBasketSeek;      //[fMaxBaskets] Addresses of baskets on file
+    TTree      *fTree;            //!Pointer to Tree header
+    char       *fAddress;         //!Address of 1st leaf (variable or object)
+    TDirectory *fDirectory;       //!Pointer to directory where this branch buffers are stored
+    TString     fFileName;        // Name of file where buffers are stored ("" if in same file as Tree header)
+    TBuffer    *fEntryBuffer;     //!Buffer used to directly pass the content without streaming
 
 public:
     TBranch();
@@ -139,7 +139,7 @@ public:
     virtual void    SetTree(TTree *tree) { fTree = tree;}
     virtual void    UpdateAddress() {;}
 
-    ClassDef(TBranch,5)  //Branch descriptor
+    ClassDef(TBranch,6)  //Branch descriptor
 };
 
 #endif
