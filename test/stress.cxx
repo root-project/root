@@ -59,14 +59,14 @@
 // Test 14 : Check correct rebuilt of Event.root in test 13........ OK
 // Test 15 : Divert Tree branches to separate files................ OK
 // Test 16 : CINT test (3 nested loops) with LHCb trigger.......... OK
-// ******************************************************************
-// *  Linux pcnotebrun.cern.ch 2.0.33 #3 Sun Apr 12 10:53:37 METD
-// ******************************************************************
-// stress    : Total I/O =  425.6 Mbytes, I =  296.4, O = 129.3
-// stress    : Compr I/O =  407.3 Mbytes, I =  286.3, O = 121.0
-// stress    : Real Time = 365.89 seconds Cpu Time = 323.66 seconds
-// ******************************************************************
-// *  ROOTMARKS =  35.1   *  Root 2.00/13  981110/1312
+//******************************************************************
+//*  Linux pcnotebrun 2.2.14 #2 Tue Mar 21 16:36:17 MET 2000 i68
+//******************************************************************
+//stress    : Total I/O =  481.4 Mbytes, I =  328.5, O = 152.9
+//stress    : Compr I/O =  450.8 Mbytes, I =  306.2, O = 144.7
+//stress    : Real Time =  84.31 seconds Cpu Time =  69.13 seconds
+//******************************************************************
+//*  ROOTMARKS = 198.6   *  Root2.24/05   20000612/1634
 // ******************************************************************
 //
 //_____________________________batch only_____________________
@@ -196,21 +196,21 @@ void stress(Int_t nevent)
    printf("stress    : Compr I/O =%7.1f Mbytes, I =%7.1f, O =%6.1f\n",mbtot1,mbin1,mbout1);
    gBenchmark->Print("stress");
 #ifndef __CINT__
-   Float_t rt_hp10   = 171;  //HP times with the native compiler
-   Float_t cp_hp10   = 152;
-   Float_t rt_hp1000 = 674;
-   Float_t cp_hp1000 = 411;
+   Float_t rt_dell_30   = 29.99;  //Pentium III 600 Mhz times with the native compiler
+   Float_t cp_dell_30   = 27.94;
+   Float_t rt_dell_1000 = 85.94;
+   Float_t cp_dell_1000 = 69.39;
 #else
-   Float_t rt_hp10   = 476;  //HP times with CINT
-   Float_t cp_hp10   = 451;  //The difference is essentially coming from stress16
-   Float_t rt_hp1000 = 1165;
-   Float_t cp_hp1000 = 828;
+   Float_t rt_dell_30   = 75.86;  //Pentium III 600 Mhz times with CINT
+   Float_t cp_dell_30   = 72.98;  //The difference is essentially coming from stress16
+   Float_t rt_dell_1000 = 146.80;
+   Float_t cp_dell_1000 = 131.99;
 #endif
-   Float_t cp_hp = cp_hp1000 - (cp_hp1000 - cp_hp10)*(1000-nevent)/(1000-10);
-   Float_t rt_hp = rt_hp1000 - (rt_hp1000 - rt_hp10)*(1000-nevent)/(1000-10);
+   Float_t cp_piii = cp_dell_1000 - (cp_dell_1000 - cp_dell_30)*(1000-nevent)/(1000-30);
+   Float_t rt_piii = rt_dell_1000 - (rt_dell_1000 - rt_dell_30)*(1000-nevent)/(1000-30);
    Float_t rt = gBenchmark->GetRealTime("stress");
    Float_t ct = gBenchmark->GetCpuTime("stress");
-   Float_t rootmarks = 27*(rt_hp + cp_hp)/(rt + ct);
+   Float_t rootmarks = 200*(rt_piii + cp_piii)/(rt + ct);
    printf("******************************************************************\n");
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("******************************************************************\n");
@@ -354,8 +354,8 @@ void stress3()
    Int_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-   Int_t lastgood = 43222;
-   if (last <lastgood-300 || last > lastgood+300 || comp <1.37 || comp > 1.43) OK = kFALSE;
+   Int_t lastgood = 43417;
+   if (last <lastgood-300 || last > lastgood+300 || comp <1.37 || comp > 1.46) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
@@ -453,7 +453,7 @@ void stress5()
    FILE *fp = fopen("stress.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 952;
+   Int_t nlinesGood = 942;
    while (fgets(line,255,fp)) {
       nlines++;
    }
@@ -834,7 +834,7 @@ Int_t HistCompare(TH1 *h1, TH1 *h2)
    Double_t rms2  = h2->GetRMS();
    Float_t xrange = h1->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin();
    if (TMath::Abs((mean1-mean2)/xrange) > 0.001*xrange) return -1;
-   if (TMath::Abs((rms1-rms2)/rms1) > 0.001) return -2;
+   if (rms1 && TMath::Abs((rms1-rms2)/rms1) > 0.001) return -2;
    return n1-n2;
 }
 
@@ -1382,7 +1382,7 @@ void stress16()
    FILE *fp = fopen("stress_lhcb.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 4023;
+   Int_t nlinesGood = 3933;
    while (fgets(line,255,fp)) {
       nlines++;
    }
