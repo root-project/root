@@ -2176,24 +2176,24 @@ int ifn;
   if(G__ShlHandle) {
     char buf[G__ONELINE];
 
-    // funcname, VC++, GCC, C function
+    /* funcname, VC++, GCC, C function */
     p2f = (void*)G__shl_findsym(&G__ShlHandle,funcname,TYPE_PROCEDURE);
 
-    // _funcname,  BC++, C function
+    /* _funcname,  BC++, C function */
     if(!p2f) {
       buf[0]='_';
       strcpy(buf+1,funcname);
       p2f = (void*)G__shl_findsym(&G__ShlHandle,buf,TYPE_PROCEDURE);
     }
 
-    // GCC , C++ function
+    /* GCC , C++ function */
     if(!p2f) {
       p2f = (void*)G__shl_findsym(&G__ShlHandle
 				  ,G__GccNameMangle(buf,ifunc,ifn)
 				  ,TYPE_PROCEDURE);
     }
 
-    // VC++ , C++ function
+    /* VC++ , C++ function */
     if(!p2f) {
       p2f = (void*)G__shl_findsym(&G__ShlHandle
 				  ,G__Vc6NameMangle(buf,ifunc,ifn)

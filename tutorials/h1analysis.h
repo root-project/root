@@ -351,6 +351,8 @@ h1analysis::h1analysis(TTree *tree)
 {
 // Build the chain of Root files
 //
+   Int_t nbytes = &nnout[0] -&nrun +sizeof(nnout[0]);
+   memset(nrun,0,nbytes);
 }
 
 //_____________________________________________________________________
