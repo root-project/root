@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.16 2004/08/16 10:00:45 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLKernel.cxx,v 1.17 2004/08/16 10:13:14 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -30,7 +30,6 @@
 #include "TPoints3DABC.h"
 
 #include <GL/gl.h>
-#include <GL/glu.h>
 
 
 #ifndef   ColorOffset
@@ -41,7 +40,7 @@ GLenum GLCommand[] = { GLConstants(GL_)  };
 
 
 //______________________________________________________________________________
-TGLKernel::TGLKernel(TVirtualGLImp *imp) : TVirtualGL(imp), fQuad(0)
+TGLKernel::TGLKernel(TVirtualGLImp *imp) : TVirtualGL(imp), fQuad(0), fTessObj(0)
 {
    // Ctor.
 
@@ -50,7 +49,7 @@ TGLKernel::TGLKernel(TVirtualGLImp *imp) : TVirtualGL(imp), fQuad(0)
 }
 
 //______________________________________________________________________________
-TGLKernel::TGLKernel(const char *name) : TVirtualGL(name), fQuad(0)
+TGLKernel::TGLKernel(const char *name) : TVirtualGL(name), fQuad(0), fTessObj(0)
 {
    // Ctor.
 
@@ -1232,72 +1231,6 @@ void TGLKernel::SetGLNormal(const Double_t *normal)
 }
 
 //______________________________________________________________________________
-GLUtesselator * TGLKernel::GLUNewTess()
-{
-   //
-
-   return (GLUtriangulatorObj*)gluNewTess();
-}
-
-//______________________________________________________________________________
-void TGLKernel::GLUDeleteTess(GLUtesselator * t_obj)
-{
-   //
-
-   gluDeleteTess((GLUtriangulatorObj*)t_obj);
-}
-
-//______________________________________________________________________________
-void TGLKernel::GLUTessCallback(GLUtesselator * t_obj)
-{
-   //
-
-#ifdef WIN32
- #define funptr void(__stdcall *)()
-#else
- #define funptr void(*)()
-#endif
-
-   gluTessCallback((GLUtriangulatorObj*)t_obj, (GLenum)GLU_BEGIN, (funptr)glBegin);
-   gluTessCallback((GLUtriangulatorObj*)t_obj, (GLenum)GLU_END, glEnd);
-   gluTessCallback((GLUtriangulatorObj*)t_obj, (GLenum)GLU_VERTEX, (funptr)glVertex3dv);
-
-#undef funptr
-}
-
-//______________________________________________________________________________
-void TGLKernel::GLUNextContour(GLUtesselator * t_obj)
-{
-   //
-
-   gluNextContour((GLUtriangulatorObj*)t_obj, (GLenum)GLU_UNKNOWN);
-}
-
-//______________________________________________________________________________
-void TGLKernel::GLUBeginPolygon(GLUtesselator * t_obj)
-{
-   //
-
-   gluBeginPolygon((GLUtriangulatorObj*)t_obj);
-}
-
-//______________________________________________________________________________
-void TGLKernel::GLUEndPolygon(GLUtesselator * t_obj)
-{
-   //
-
-   gluEndPolygon((GLUtriangulatorObj*)t_obj);
-}
-
-//______________________________________________________________________________
-void TGLKernel::GLUTessVertex(GLUtesselator * t_obj, const Double_t * vert)
-{
-   //
-
-   gluTessVertex((GLUtriangulatorObj*)t_obj, (Double_t *)vert, (Double_t *)vert);
-}
-
-//______________________________________________________________________________
 void TGLKernel::NewMVGL()
 {
    //
@@ -1329,12 +1262,12 @@ void TGLKernel::PaintPolyMarker(const Double_t * vertices, Style_t marker_style,
    Float_t point_size = 6.f;
    Double_t top_radius = 5.;
 
-   switch(marker_style) {
+   switch (marker_style) {
    case 27:
       stacks = 2, slices = 4;
    case 4:case 8:case 20:case 24:
-      if(fQuad) { //VC6.0 broken for scope
-         for(UInt_t i = 0; i < size; i += 3) {
+      if (fQuad) { //VC6.0 broken for scope
+         for (UInt_t i = 0; i < size; i += 3) {
             glPushMatrix();
             glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
             gluSphere(fQuad, 5., slices, stacks);
@@ -1345,8 +1278,8 @@ void TGLKernel::PaintPolyMarker(const Double_t * vertices, Style_t marker_style,
    case 22:case 26:
       top_radius = 0.;
    case 21:case 25:
-      if(fQuad){ //VC6.0 broken for scope
-         for(UInt_t i = 0; i < size; i += 3) {
+      if (fQuad) { //VC6.0 broken for scope
+         for (UInt_t i = 0; i < size; i += 3) {
             glPushMatrix();
             glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
             gluCylinder(fQuad, 5., top_radius, 5., 4, 1);
@@ -1355,8 +1288,8 @@ void TGLKernel::PaintPolyMarker(const Double_t * vertices, Style_t marker_style,
       }
       break;
    case 23:
-      if(fQuad){//VC6.0 broken for scope
-         for(UInt_t i = 0; i < size; i += 3) {
+      if (fQuad) {//VC6.0 broken for scope
+         for (UInt_t i = 0; i < size; i += 3) {
             glPushMatrix();
             glTranslated(vertices[i], vertices[i + 1], vertices[i + 2]);
             glRotated(180, 1., 0., 0.);
@@ -1370,7 +1303,7 @@ void TGLKernel::PaintPolyMarker(const Double_t * vertices, Style_t marker_style,
       break;
    case 1: case 9: case 10: case 11: default:{
       glBegin(GL_POINTS);
-      for(UInt_t i = 0; i < size; i += 3)
+      for (UInt_t i = 0; i < size; i += 3)
          glVertex3dv(vertices + i);
       glEnd();
    }
@@ -1380,7 +1313,7 @@ void TGLKernel::PaintPolyMarker(const Double_t * vertices, Style_t marker_style,
    case 7:
       glPointSize(point_size);
       glBegin(GL_POINTS);
-      for(UInt_t i = 0; i < size; i += 3)
+      for (UInt_t i = 0; i < size; i += 3)
          glVertex3dv(vertices + i);
       glEnd();
       glPointSize(1.f);
@@ -1390,10 +1323,10 @@ void TGLKernel::PaintPolyMarker(const Double_t * vertices, Style_t marker_style,
 //______________________________________________________________________________
 void TGLKernel::DrawStars(const Double_t * vert, Style_t style, UInt_t size)
 {
-   for(Int_t i = 0; i < (Int_t)size; i += 3) {
+   for (Int_t i = 0; i < (Int_t)size; i += 3) {
       Double_t x = vert[i], y = vert[i + 1], z = vert[i + 2];
       glBegin(GL_LINES);
-      if(style == 2 || style == 3){
+      if (style == 2 || style == 3) {
          glVertex3d(x - 2., y, z);
          glVertex3d(x + 2., y, z);
          glVertex3d(x, y, z - 2.);
@@ -1401,7 +1334,7 @@ void TGLKernel::DrawStars(const Double_t * vert, Style_t style, UInt_t size)
          glVertex3d(x, y - 2., z);
          glVertex3d(x, y + 2., z);
       }
-      if(style != 2){
+      if(style != 2) {
          glVertex3d(x - 1.4, y - 1.4, z - 1.4);
          glVertex3d(x + 1.4, y + 1.4, z + 1.4);
          glVertex3d(x - 1.4, y - 1.4, z + 1.4);
@@ -1465,7 +1398,6 @@ Int_t TGLKernel::ExitSelectionMode()
 {
    glMatrixMode(GL_PROJECTION);
    glPopMatrix();
-
    return glRenderMode(GL_RENDER);
 }
 
@@ -1473,4 +1405,46 @@ Int_t TGLKernel::ExitSelectionMode()
 void TGLKernel::GLLoadName(UInt_t name)
 {
    glLoadName(name);
+}
+
+//______________________________________________________________________________
+void TGLKernel::DrawFaceSet(const Double_t * pnts, const Int_t * pols, const Double_t * normals,
+                            const Float_t * mat, UInt_t size)
+{
+#ifdef GDK_WIN32
+   typedef void (CALLBACK * funcptr)();
+#else
+   typedef void (*funcptr)();
+#endif
+   glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
+   glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
+   glMaterialf(GL_FRONT, GL_SHININESS, 60.f);
+   
+   if (!fTessObj)
+      fTessObj = gluNewTess();
+      
+   for (UInt_t i = 0, j = 0; i < size; ++i) {
+      Int_t npoints = pols[j++];
+      if (fTessObj && npoints > 4) {
+         gluTessCallback(fTessObj, (GLenum)GLU_BEGIN, (funcptr)glBegin);
+         gluTessCallback(fTessObj, (GLenum)GLU_END, (funcptr)glEnd);
+         gluTessCallback(fTessObj, (GLenum)GLU_VERTEX, (funcptr)glVertex3dv);
+         
+         gluBeginPolygon(fTessObj);
+         gluNextContour(fTessObj, (GLenum)GLU_UNKNOWN);
+         glNormal3dv(normals + i * 3);
+         
+         for (Int_t k = 0; k < npoints; ++k, ++j)
+            gluTessVertex(fTessObj, (Double_t *)pnts + pols[j] * 3, (Double_t *)pnts + pols[j] * 3);
+         
+         gluEndPolygon(fTessObj);
+      } else {
+         glBegin(GL_POLYGON);
+         glNormal3dv(normals + i * 3);
+         
+         for (Int_t k = 0; k < npoints; ++k, ++j)
+            glVertex3dv(pnts + pols[j] * 3);
+         glEnd();
+      }
+   }
 }

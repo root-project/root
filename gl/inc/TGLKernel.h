@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.8 2004/08/10 20:25:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGLKernel.h,v 1.9 2004/08/16 10:00:45 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -29,7 +29,7 @@
 #include "TMath.h"
 #endif
 
-struct GLUquadric;
+#include <GL/glu.h>
 
 class TGLKernel : public TVirtualGL {
 
@@ -47,6 +47,7 @@ protected:
    Bool_t       fTrueColorMode; // Defines the whether the current hardware layer supports the true colors
    EG3D2GLmode  fFaceFlag;      // The current "face" definiton - clockwise/counterclockwise
    GLUquadric * fQuad;
+   GLUtriangulatorObj *fTessObj;
 public:
    TGLKernel(TVirtualGLImp *imp = 0);
    TGLKernel(const char *name);
@@ -118,14 +119,6 @@ public:
    void EndGL();
    void SetGLVertex(const Double_t * vertex);
    void SetGLNormal(const Double_t * normal);
-   GLUtesselator *GLUNewTess();
-   void GLUDeleteTess(GLUtesselator *);
-   void GLUTessCallback(GLUtesselator *);
-   void GLUNextContour(GLUtesselator *);
-   void GLUBeginPolygon(GLUtesselator *);
-   void GLUEndPolygon(GLUtesselator *);
-   void GLUTessVertex(GLUtesselator *, const Double_t *);
-   //
    void PaintPolyMarker(const Double_t * vertex, Style_t marker_style, UInt_t size);
    void DrawSelectionBox(Double_t xmin, Double_t xmax, 
 	                     Double_t ymin, Double_t ymax, 
@@ -133,7 +126,9 @@ public:
    void EnterSelectionMode(UInt_t * buff, Int_t size, Event_t *, Int_t * viewport);
    Int_t ExitSelectionMode();
    void GLLoadName(UInt_t name);
-   //
+   void DrawFaceSet(const Double_t * pnts, const Int_t * pols,
+                    const Double_t * normals, const Float_t * mat,
+                    UInt_t size);
    void SetTrueColorMode(Bool_t flag=kTRUE) { fTrueColorMode = flag; }
    Bool_t GetRootLight() {return fRootLight;}
    Bool_t GetTrueColorMode() {return fTrueColorMode;}

@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.6 2004/08/10 19:22:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.h,v 1.7 2004/08/16 10:00:45 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -59,27 +59,9 @@ private:
    Double_t fFrP[3];
    Double_t fZoom;
 
-   Bool_t fSelectionMode;
    UInt_t fSelected;
    UInt_t fNbShapes;
    TObjArray fGLBoxes;
-   
-   void CreateViewer();
-   void InitGLWindow();
-   void DrawObjects()const;
-   void CreateContext();
-   void DeleteContext();
-   void MakeCurrent()const;
-   void SwapBuffers()const;
-   void Show();
-   TObject *UpdateRange(const class TBuffer3D * buf);
-   void BuildGLList()const;
-   // final overriders from TGMainFrame
-   void CloseWindow();
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   //non-copyable class
-   TViewerOpenGL(const TViewerOpenGL &);
-   TViewerOpenGL & operator = (const TViewerOpenGL &);
 
 public:
    TViewerOpenGL(TVirtualPad * pad);
@@ -93,10 +75,27 @@ public:
    Bool_t HandleContainerKey(Event_t *ev);
    Bool_t HandleContainerMotion(Event_t *ev);
    Bool_t HandleContainerExpose(Event_t *ev);
-   void   HandleInput(int, int, int) { }
 
 private:
+   void CreateViewer();
+   void InitGLWindow();
+   void DrawObjects()const;
+   void CreateContext();
+   void DeleteContext();
+   void MakeCurrent()const;
+   void SwapBuffers()const;
+   void Show();
+   TObject *UpdateRange(const class TBuffer3D * buf);
+   void BuildGLList()const;
    void TestSelection(Event_t *);
+   // final overriders from TGMainFrame
+   void CloseWindow();
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+
+   //non-copyable class
+   TViewerOpenGL(const TViewerOpenGL &);
+   TViewerOpenGL & operator = (const TViewerOpenGL &);
+
 
    ClassDef(TViewerOpenGL, 0)
 };

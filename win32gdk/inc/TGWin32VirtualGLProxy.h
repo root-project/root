@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.2 2004/08/10 20:25:22 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.h,v 1.3 2004/08/16 10:00:45 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -62,13 +62,6 @@ public:
    void EndGL();
    void SetGLVertex(const Double_t * vert);
    void SetGLNormal(const Double_t * norm);
-   GLUtesselator *GLUNewTess();
-   void GLUDeleteTess(GLUtesselator *);
-   void GLUTessCallback(GLUtesselator *);
-   void GLUNextContour(GLUtesselator *);
-   void GLUBeginPolygon(GLUtesselator *);
-   void GLUEndPolygon(GLUtesselator *);
-   void GLUTessVertex(GLUtesselator *, const Double_t *);
    void ClearGL(UInt_t bufbits );
    Int_t CreateGLLists(Int_t range);
    void DeleteGLLists(Int_t ilist, Int_t range);
@@ -118,13 +111,15 @@ public:
    void PaintPolyMarker(const Double_t * vertices, Style_t marker_style, UInt_t size);
    void DrawSelectionBox(
                          Double_t xmin, Double_t xmax, 
-						 Double_t ymin, Double_t ymax,
-						 Double_t zmin, Double_t zmax
-						);
+						       Double_t ymin, Double_t ymax,
+						       Double_t zmin, Double_t zmax
+						      );
    void EnterSelectionMode(UInt_t * buff, Int_t size, Event_t *, Int_t * viewport);
    Int_t ExitSelectionMode();
    void GLLoadName(UInt_t name);
-
+   void DrawFaceSet(const Double_t * pnts, const Int_t * pols,
+                    const Double_t * normals, const Float_t * mat,
+                    UInt_t size);
    static TVirtualGL *ProxyObject();
    static TVirtualGL *RealObject();
 };

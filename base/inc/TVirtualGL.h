@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.9 2004/08/10 20:25:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualGL.h,v 1.10 2004/08/16 10:00:45 brun Exp $
 // Author: Valery Fine(fine@vxcern.cern.ch)   05/03/97
 
 /*************************************************************************
@@ -42,7 +42,6 @@
 #endif
 
 class TPoints3DABC;
-struct GLUtesselator;
 
 class TVirtualGLImp {
 
@@ -98,14 +97,6 @@ public:
    virtual void SetGLVertex(const Double_t *vert) = 0;
    virtual void SetGLVertex(Float_t *vertex) = 0;
    virtual void SetGLNormal(const Double_t *norm) = 0;
-   virtual GLUtesselator *GLUNewTess() = 0;
-   virtual void GLUDeleteTess(GLUtesselator *) = 0;
-   virtual void GLUTessCallback(GLUtesselator *) = 0;
-   virtual void GLUNextContour(GLUtesselator *) = 0;
-   virtual void GLUBeginPolygon(GLUtesselator *) = 0;
-   virtual void GLUEndPolygon(GLUtesselator *) = 0;
-   virtual void GLUTessVertex(GLUtesselator *, const Double_t *) = 0;
-//
    virtual void PaintPolyMarker(const Double_t * place, Style_t marker_style, UInt_t size) = 0;
    virtual void DrawSelectionBox(Double_t xmin, Double_t xmax,
                                  Double_t ymin, Double_t ymax,
@@ -113,7 +104,9 @@ public:
    virtual void EnterSelectionMode(UInt_t * buff, Int_t size, Event_t *, Int_t * viewport) = 0;
    virtual Int_t ExitSelectionMode() = 0;
    virtual void GLLoadName(UInt_t name) = 0;
-//
+   virtual void DrawFaceSet(const Double_t * pnts, const Int_t * pols,
+                            const Double_t * normals, const Float_t * mat,
+                            UInt_t size) = 0;
    virtual Int_t CreateGLLists(Int_t range) = 0;
    virtual void DeleteGLLists(Int_t ilist, Int_t range) = 0;
    virtual void DisableGL(EG3D2GLmode mode) = 0;

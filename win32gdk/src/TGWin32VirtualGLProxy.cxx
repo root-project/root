@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.2 2004/08/10 20:25:22 brun Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32VirtualGLProxy.cxx,v 1.3 2004/08/16 10:00:45 brun Exp $
 // Author: Valeriy Onuchin   05/08/04
 
 /*************************************************************************
@@ -104,13 +104,6 @@ VOID_METHOD_ARG0(VirtualGL,EndGL,1)
 VOID_METHOD_ARG1(VirtualGL,SetGLVertex,const Double_t*,vertexd,1)
 VOID_METHOD_ARG1(VirtualGL,SetGLVertex,Float_t*,vertexf,1)
 VOID_METHOD_ARG1(VirtualGL,SetGLNormal,const Double_t*,normal,1)
-RETURN_METHOD_ARG0(VirtualGL,GLUtesselator*,GLUNewTess)
-VOID_METHOD_ARG1(VirtualGL,GLUDeleteTess,GLUtesselator *,t_obj,1)
-VOID_METHOD_ARG1(VirtualGL,GLUTessCallback,GLUtesselator *,t_obj,1)
-VOID_METHOD_ARG1(VirtualGL,GLUNextContour,GLUtesselator *,t_obj,1)
-VOID_METHOD_ARG1(VirtualGL,GLUBeginPolygon,GLUtesselator *,t_obj,1)
-VOID_METHOD_ARG1(VirtualGL,GLUEndPolygon,GLUtesselator *,t_obj,1)
-VOID_METHOD_ARG2(VirtualGL,GLUTessVertex,GLUtesselator *,t_obj,const Double_t *,vertex,1)
 VOID_METHOD_ARG1(VirtualGL,SetTrueColorMode,Bool_t,flag,1);
 VOID_METHOD_ARG3(VirtualGL,PaintGLPoints,Int_t,n,Float_t*,p,Option_t*,option,1)
 RETURN_METHOD_ARG0(VirtualGL,Bool_t,GetTrueColorMode)
@@ -120,3 +113,4 @@ VOID_METHOD_ARG6(VirtualGL, DrawSelectionBox, Double_t, xmin, Double_t, xmax, Do
 RETURN_METHOD_ARG0(VirtualGL, Int_t, ExitSelectionMode)
 VOID_METHOD_ARG4(VirtualGL, EnterSelectionMode, UInt_t *, buff, Int_t, size, Event_t *, ev, Int_t *, viewport, 1)
 VOID_METHOD_ARG1(VirtualGL, GLLoadName, UInt_t, name, 1)
+VOID_METHOD_ARG5(VirtualGL, DrawFaceSet, const Double_t *, pnts, const Int_t *, pols, const Double_t *, normals, const Float_t *, mat, UInt_t, size, 1)
