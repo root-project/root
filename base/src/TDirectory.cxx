@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.31 2002/08/07 11:03:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.32 2002/09/16 10:57:57 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -154,7 +154,7 @@ TDirectory::~TDirectory()
 //______________________________________________________________________________
 void TDirectory::Append(TObject *obj)
 {
-   // Append object to current directory.
+   // Append object to this directory.
 
    if (obj == 0 || fList == 0) return;
    fList->Add(obj);
