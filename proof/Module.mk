@@ -105,8 +105,3 @@ distclean-proof: clean-proof
 		   $(PROOFGUILIB)
 
 distclean::     distclean-proof
-
-
-##### extra rules ######
-$(PROOFO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) $(EXTRA_AUTHFLAGS) -o $@ -c $<
