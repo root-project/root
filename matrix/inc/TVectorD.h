@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.32 2004/05/18 14:01:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.h,v 1.33 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -73,8 +73,8 @@ public:
   inline          Double_t *GetMatrixArray  ()       { return fElements; }
   inline const    Double_t *GetMatrixArray  () const { return fElements; }
 
-  inline void     Invalidate ()       { SetBit(TMatrixDBase::kStatus); }
-  inline void     MakeValid  ()       { ResetBit(TMatrixDBase::kStatus); }
+  inline void     Invalidate ()       { ResetBit(TMatrixDBase::kStatus); }
+  inline void     MakeValid  ()       { SetBit(TMatrixDBase::kStatus); }
   inline Bool_t   IsValid    () const { return TestBit(TMatrixDBase::kStatus); }
   inline Bool_t   IsOwner    () const { return fIsOwner; }
   inline void     SetElements(const Double_t *elements) { Assert(IsValid());

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.11 2004/05/18 14:01:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDBase.h,v 1.12 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -117,8 +117,8 @@ public:
 
   virtual void   Clear      (Option_t *option="") = 0;
 
-  inline  void   Invalidate ()       { SetBit(kStatus); }
-  inline  void   MakeValid  ()       { ResetBit(kStatus); }
+  inline  void   Invalidate ()       { ResetBit(kStatus); }
+  inline  void   MakeValid  ()       { SetBit(kStatus); }
   inline  Bool_t IsValid    () const { return TestBit(kStatus); }
   inline  Bool_t IsOwner    () const { return fIsOwner; }
   virtual Bool_t IsSymmetric() const;

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.9 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.10 2004/05/27 06:39:53 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -70,8 +70,8 @@ public:
   inline          Float_t  *GetMatrixArray  ()       { return fElements; }
   inline const    Float_t  *GetMatrixArray  () const { return fElements; }
 
-  inline void     Invalidate ()       { SetBit(TMatrixFBase::kStatus); }
-  inline void     MakeValid  ()       { ResetBit(TMatrixFBase::kStatus); }
+  inline void     Invalidate ()       { ResetBit(TMatrixFBase::kStatus); }
+  inline void     MakeValid  ()       { SetBit(TMatrixFBase::kStatus); }
   inline Bool_t   IsValid    () const { return TestBit(TMatrixFBase::kStatus); }
   inline Bool_t   IsOwner    () const { return fIsOwner; }
   inline void     SetElements(const Float_t *elements) { Assert(IsValid());
