@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.118 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.119 2005/02/22 16:03:46 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -164,11 +164,13 @@
 #   define UTMP_NO_ADDR
 #endif
 
-#if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA)) || \
+#if (defined(R__AIX) && !defined(_AIX43)) || (defined(R__FBSD) && \
+    !defined(R__ALPHA)) || defined(R__OBSD) || \
     (defined(R__SUNGCC3) && !defined(__arch64__))
 #   define USE_SIZE_T
 #elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
-     (defined(R__SUNGCC3) && defined(__arch64__)) || R__MACOSX_VERS>=4
+      (defined(R__SUNGCC3) && defined(__arch64__)) || R__MACOSX_VERS>=4 || \
+      (defined(R__AIX) && defined(_AIX43))
 #   define USE_SOCKLEN_T
 #endif
 

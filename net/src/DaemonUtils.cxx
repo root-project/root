@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: DaemonUtils.cxx,v 1.3 2004/10/12 09:26:09 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: DaemonUtils.cxx,v 1.4 2005/02/28 17:28:12 rdm Exp $
 // Author: Gerri Ganis   19/1/2004
 
 /*************************************************************************
@@ -40,13 +40,6 @@
 #endif
 #if defined(__MACH__) && !defined(__APPLE__)
 #   define R__GLIBC
-#endif
-
-#if defined(_AIX) || (defined(__FreeBSD__) && !defined(__alpha__)) || \
-    defined(__OpenBSD__)
-#   define USE_SIZE_T
-#elif defined(R__GLIBC) || (defined(__FreeBSD__) && defined(__alpha__))
-#   define USE_SOCKLEN_T
 #endif
 
 #ifdef __sun

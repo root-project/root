@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.10 2005/02/22 16:03:46 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: ssh.cxx,v 1.11 2005/03/01 17:05:24 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -33,11 +33,13 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#if defined(R__AIX) || (defined(R__FBSD) && !defined(R__ALPHA)) || \
+#if (defined(R__AIX) && !defined(_AIX43)) || (defined(R__FBSD) && \
+    !defined(R__ALPHA)) || defined(R__OBSD) || \
     (defined(R__SUNGCC3) && !defined(__arch64__))
 #   define USE_SIZE_T
 #elif defined(R__GLIBC) || (defined(R__FBSD) && defined(R__ALPHA)) || \
-     (defined(R__SUNGCC3) && defined(__arch64__)) || R__MACOSX_VERS>=4
+      (defined(R__SUNGCC3) && defined(__arch64__)) || R__MACOSX_VERS>=4 || \
+      (defined(R__AIX) && defined(_AIX43))
 #   define USE_SOCKLEN_T
 #endif
 
