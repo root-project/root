@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayI.cxx,v 1.11 2002/06/10 16:59:21 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayI.cxx,v 1.12 2003/11/18 10:28:51 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -153,7 +153,8 @@ void TArrayI::Streamer(TBuffer &b)
       Set(n);
       b.ReadFastArray(fArray,n);
    } else {
-      b.WriteArray(fArray, fN);
+      b << fN;
+      b.WriteFastArray(fArray, fN);
    }
 }
 
