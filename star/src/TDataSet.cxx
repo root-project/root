@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.2 2000/05/24 10:31:48 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.cxx,v 1.3 2000/09/05 09:18:42 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 const char *gCoPyRiGhT[] = {
      "STAR dataset C++ base class library:",
@@ -19,7 +19,7 @@ const char *gCoPyRiGhT[] = {
 };
 
 const char *Id = {
-    "$Id: TDataSet.cxx,v 1.2 2000/05/24 10:31:48 brun Exp $"
+    "$Id: TDataSet.cxx,v 1.3 2000/09/05 09:18:42 brun Exp $"
 };
 #include <iostream.h>
 #include "TSystem.h"
@@ -303,7 +303,7 @@ void TDataSet::Browse(TBrowser *b)
 }
 
 //______________________________________________________________________________
-TObject *TDataSet::Clone() {
+TObject *TDataSet::Clone() const {
    return new TDataSet(*this);
 }
 

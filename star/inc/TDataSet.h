@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.4 2000/09/05 09:18:42 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.5 2000/10/01 20:50:44 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 // * purpose.  It is provided "as is" without express or implied warranty.
 // ************************************************************************
 
-// $Id: TDataSet.h,v 1.4 2000/09/05 09:18:42 brun Exp $
+// $Id: TDataSet.h,v 1.5 2000/10/01 20:50:44 brun Exp $
 #ifndef ROOT_TDataSet
 #define ROOT_TDataSet
 
@@ -111,7 +111,7 @@ class TDataSet : public TNamed
             TDataSet  *At(Int_t idx) const;
     virtual Int_t        Audit(Option_t *opt=0){if(opt){/*touch*/};return 0;};
     virtual void         Browse(TBrowser *b);
-    virtual TObject     *Clone();
+    virtual TObject     *Clone() const;
     virtual void         Delete(Option_t *opt="");
     virtual TDataSet  *Find(const Char_t *path) const;
     virtual TDataSet  *FindDataSet(const Char_t *name,const Char_t *path="",Option_t *opt="") const;

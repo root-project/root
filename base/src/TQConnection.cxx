@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.2 2000/10/22 19:21:29 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.3 2000/12/13 15:13:45 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -62,8 +62,8 @@ public:
    void ExecuteMethod(void *object, Double_t param);
    void ExecuteMethod(void *object, const char *params);
    void ExecuteMethod(void *object, Long_t *paramArr);
-   void Print(Option_t *opt= "");
-   void ls(Option_t *opt= "") { Print(opt); }
+   void Print(Option_t *opt= "") const ;
+   void ls(Option_t *opt= "") const  { Print(opt); }
 };
 
 
@@ -266,7 +266,7 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr)
 }
 
 //______________________________________________________________________________
-void TQSlot::Print(Option_t *)
+void TQSlot::Print(Option_t *) const
 {
    // Print info about slot.
 

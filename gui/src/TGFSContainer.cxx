@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.2 2000/09/11 17:38:35 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -60,7 +60,7 @@ public:
 };
 
 //______________________________________________________________________________
-Int_t TGFSFrameElement::Compare(TObject *obj)
+Int_t TGFSFrameElement::Compare(const TObject *obj) const
 {
    // Sort frame elements in file selection list view container.
 

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.18 2000/12/10 17:14:36 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.19 2000/12/13 15:13:55 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -169,10 +169,10 @@ public:
     virtual TObjArray       *GetListOfBranches() {return &fBranches;}
     virtual TObjArray       *GetListOfLeaves()   {return &fLeaves;}
     virtual Int_t     GetMaxEntryLoop() const {return fMaxEntryLoop;}
-    virtual Double_t  GetMaximum(const char *columname) const;
-    virtual Double_t  GetMinimum(const char *columname) const;
+    virtual Double_t  GetMaximum(const char *columname);
+    virtual Double_t  GetMinimum(const char *columname);
     virtual Int_t     GetMaxVirtualSize() const {return fMaxVirtualSize;}
-    virtual Int_t     GetNbranches() const {return fBranches.GetEntriesFast();}
+    virtual Int_t     GetNbranches() {return fBranches.GetEntriesFast();}
     TVirtualTreePlayer  *GetPlayer();
     virtual Int_t     GetPacketSize() const {return fPacketSize;}
     virtual Int_t     GetReadEntry()  const {return fReadEntry;}

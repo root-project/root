@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.31 2000/12/10 17:18:08 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.32 2000/12/13 15:13:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1406,12 +1406,12 @@ TLeaf *TTree::GetLeaf(const char *name)
 
 
 //______________________________________________________________________________
-Double_t TTree::GetMaximum(const char *columname) const
+Double_t TTree::GetMaximum(const char *columname)
 {
 //*-*-*-*-*-*-*-*-*Return maximum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
 
-   TLeaf *leaf = ((TTree*)this)->GetLeaf(columname);
+   TLeaf *leaf = this->GetLeaf(columname);
    if (!leaf) return 0;
    TBranch *branch = leaf->GetBranch();
    Double_t cmax = -FLT_MAX; //in float.h
@@ -1425,12 +1425,12 @@ Double_t TTree::GetMaximum(const char *columname) const
 
 
 //______________________________________________________________________________
-Double_t TTree::GetMinimum(const char *columname) const
+Double_t TTree::GetMinimum(const char *columname)
 {
 //*-*-*-*-*-*-*-*-*Return minimum of column with name columname*-*-*-*-*-*-*
 //*-*              ============================================
 
-   TLeaf *leaf = ((TTree*)this)->GetLeaf(columname);
+   TLeaf *leaf = this->GetLeaf(columname);
    if (!leaf) return 0;
    TBranch *branch = leaf->GetBranch();
    Double_t cmin = FLT_MAX; //in float.h
