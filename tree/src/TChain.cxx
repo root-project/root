@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.53 2002/07/06 06:54:35 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.54 2002/07/13 11:35:52 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -1102,8 +1102,11 @@ void TChain::SetBranchAddress(const char *bname, void *add)
 
    element->SetBaddress(add);
 
-   // invalidate current Tree
-   fTreeNumber = -1;
+   // Set also address in current Tree
+   if (fTreeNumber >= 0) {
+       TBranch *br = fTree->GetBranch(bname);
+       if (br) br->SetAddress(add);
+   }   
 }
 
 //_______________________________________________________________________
@@ -1126,8 +1129,10 @@ void TChain::SetBranchStatus(const char *bname, Bool_t status)
 
    element->SetStatus(status);
 
-   // invalidate current Tree
-   fTreeNumber = -1;
+   // Set also status in current Tree
+   if (fTreeNumber >= 0) {
+       fTree->SetBranchStatus(bname,status);
+   }   
 }
 
 //______________________________________________________________________________
