@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.44 2001/05/28 06:29:54 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.45 2001/05/31 08:56:32 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -301,17 +301,17 @@ public:
      TFormLeafInfo(0,0,0),fNsize(0),fCounter2(0),fSumOfSizes(0),
      fDim(0),fVirtDim(-1),fPrimaryIndex(0)
   {
-  };
+  }
 
   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0) {
      return ((TLeafElement*)leaf)->GetValueSubArray(fPrimaryIndex,instance);
-     char * where;
-     if (leaf->InheritsFrom("TLeafObject") ) {
-        where = (char*)((TLeafObject*)leaf)->GetObject();
-     } else {
-        where = GetObjectAddress((TLeafElement*)leaf);
-     }
-     return ReadValue(where,instance);  
+     //char * where;
+     //if (leaf->InheritsFrom("TLeafObject") ) {
+     //   where = (char*)((TLeafObject*)leaf)->GetObject();
+     //} else {
+     //   where = GetObjectAddress((TLeafElement*)leaf);
+     //}
+     //return ReadValue(where,instance);  
   }
    
   virtual Double_t  ReadValue(char *where, Int_t instance = 0) {
@@ -1215,7 +1215,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name)
                   if (0 && strlen(work)==0) {
                      // However in this case we have NO content :(
                      // so let get the number of objects
-                     strcpy(work,"fLast");
+                     //strcpy(work,"fLast");
                   }
                }
 
@@ -1453,7 +1453,7 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
             info = dynamic_cast<TFormLeafInfoMultiVarDim *>(fDataMembers.At(0));
             Int_t local_index;
 
-            fCumulUsedSizes[kMAXFORMDIM+1] = 1;
+            fCumulUsedSizes[kMAXFORMDIM] = 1;
             if (fIndexes[codeindex][0]<0) {
                local_index = 0;
                if (instance) {
