@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name$:$Id$
+// @(#)root/meta:$Name:  $:$Id: TInterpreter.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -76,6 +76,7 @@ public:
    virtual void     UpdateListOfGlobalFunctions() = 0;
    virtual void     UpdateListOfTypes() = 0;
    virtual void     SetClassInfo(TClass *cl) = 0;
+   virtual Bool_t   CheckClassInfo(const char *name) = 0;
    virtual Long_t   Calc(const char *line) = 0;
    virtual void     CreateListOfBaseClasses(TClass *cl) = 0;
    virtual void     CreateListOfDataMembers(TClass *cl) = 0;

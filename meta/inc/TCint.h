@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.2 2000/09/05 09:21:23 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -90,6 +90,7 @@ public:
    void    UpdateListOfGlobalFunctions();
    void    UpdateListOfTypes();
    void    SetClassInfo(TClass *cl);
+   Bool_t  CheckClassInfo(const char *name);
    Long_t  Calc(const char *line);
    void    CreateListOfBaseClasses(TClass *cl);
    void    CreateListOfDataMembers(TClass *cl);
