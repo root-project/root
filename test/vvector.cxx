@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.3 2001/03/14 08:03:36 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -9,7 +9,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TROOT.h"
 #include "TFile.h"
 #include "TMatrix.h"
 #include <iostream.h>
@@ -555,7 +554,6 @@ void test_vector_io()
 //
 int main()
 {
-   TROOT vec("vector","verify vectors");
    cout<< "\n\n" <<
           "----------------------------------------------------------------" <<
           "\n\t\tVerify Operations on Vectors" << endl;

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.13 2001/03/14 08:03:36 brun Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.14 2001/04/03 10:37:17 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -1790,7 +1790,6 @@ Bool_t Editor::ProcessMessage(Long_t msg, Long_t, Long_t)
 
 int main(int argc, char **argv)
 {
-   TROOT root("GUI", "GUI test environement");
    TApplication theApp("App", &argc, argv);
 
    if (gROOT->IsBatch()) {

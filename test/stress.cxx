@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.20 2001/04/18 06:23:28 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.21 2001/04/19 13:39:41 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -115,7 +115,6 @@
 
 int main(int argc, char **argv)
 {
-   TROOT root("stress","The Root test program");
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
    Int_t nevent = 1000;      // by default create 1000 events
@@ -149,7 +148,7 @@ void stress(Int_t nevent, Int_t style)
    printf("******************************************************************\n");
    // select the branch style
    TTree::SetBranchStyle(style);
-   
+
    //Run the standard test suite
    gBenchmark->Start("stress");
    stress1();

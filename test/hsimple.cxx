@@ -1,4 +1,4 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Name:  $:$Id: hsimple.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Rene Brun   19/08/96
 
 //*-*-*-*-*-*-*Simple examples with histograms created/filled and saved*-*-*-*
@@ -17,7 +17,6 @@
 int hsimple();
 
 #ifndef __CINT__
-#include "TROOT.h"
 #include "TFile.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -29,7 +28,6 @@ int hsimple();
 //______________________________________________________________________________
 int main()
 {
-  TROOT simple("simple","Test of histogramming and I/O");
   return hsimple();
 }
 #endif

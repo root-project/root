@@ -1,4 +1,4 @@
-// @(#)root/roots:$Name$:$Id$
+// @(#)root/roots:$Name:  $:$Id: roots.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Rene Brun   01/03/98
 
 /*************************************************************************
@@ -17,17 +17,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TROOT.h"
 #include "TServerSocket.h"
 #include "TSocket.h"
 #include "TMessage.h"
 #include "TGXServer.h"
 #include "TGX11.h"
 
-extern void InitGui();
-VoidFuncPtr_t initfuncs[] = { InitGui, 0 };
-
-TROOT roots("Roots","The ROOT graphics network server", initfuncs);
 
 //______________________________________________________________________________
 int main(int , char **)

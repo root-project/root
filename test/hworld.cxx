@@ -1,11 +1,10 @@
-// @(#)root/test:$Name:  $:$Id: hworld.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: hworld.cxx,v 1.3 2001/03/14 08:03:36 brun Exp $
 // Author: Fons Rademakers   04/04/97
 
 // This small demo shows the traditional "Hello World". Its main use is
 // to show how to use ROOT graphics and how to enter the eventloop to
 // be able to interact with the graphics.
 
-#include "TROOT.h"
 #include "TApplication.h"
 #include "TCanvas.h"
 #include "TLine.h"
@@ -13,8 +12,6 @@
 
 int main(int argc, char **argv)
 {
-   TROOT root("hello","Hello World");
-   
    TApplication theApp("App", &argc, argv);
 
    TCanvas *c = new TCanvas("c", "The Hello Canvas", 400, 400);

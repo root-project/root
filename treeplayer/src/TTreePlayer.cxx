@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.42 2001/04/09 08:25:11 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.43 2001/04/18 12:31:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -121,7 +121,6 @@
 //
 //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //
-// #include "TROOT.h"
 // #include "TFile.h"
 // #include "TH1.h"
 // #include "TH2.h"
@@ -129,8 +128,6 @@
 // #include "TRandom.h"
 // #include "TTree.h"
 //
-//
-// TROOT simple("simple","Histograms and trees");
 //
 // //______________________________________________________________________________
 // main(int argc, char **argv)
@@ -533,7 +530,7 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 // is equivalent.  For variable size arrays (and TClonesArray) the range
 // of the first dimension is recalculated for each entry of the tree.
 // You can also specify the index as an expression of any other variables from the
-// tree. 
+// tree.
 //
 // TTree::Draw also now properly handling operations involving 2 or more arrays.
 //
@@ -1674,7 +1671,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"// if parameter tree is not specified (or zero), connect the file\n");
       fprintf(fp,"// used to generate this class and read the Tree.\n");
       fprintf(fp,"   if (tree == 0) {\n");
-      if (ischain) { 
+      if (ischain) {
         fprintf(fp,"\n#ifdef SINGLE_TREE\n");
         fprintf(fp,"      // The following code should be used if you want this class to access\n");
         fprintf(fp,"      // a single tree instead of a chain\n");
@@ -1687,7 +1684,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       }
       fprintf(fp,"      }\n");
       fprintf(fp,"      tree = (TTree*)gDirectory->Get(\"%s\");\n\n",fTree->GetName());
-      if (ischain) { 
+      if (ischain) {
          fprintf(fp,"#else // SINGLE_TREE\n\n");
          fprintf(fp,"      // The following code should be used if you want this class to access a chain\n");
          fprintf(fp,"      // of trees.\n");
@@ -2064,7 +2061,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
 // Reset and file connect
    fprintf(fp,"//Reset ROOT and connect tree file\n");
    fprintf(fp,"   gROOT->Reset();\n");
-   if (ischain) { 
+   if (ischain) {
       fprintf(fp,"\n#ifdef SINGLE_TREE\n");
       fprintf(fp,"   // The following code should be used if you want this code to access\n");
       fprintf(fp,"   // a single tree instead of a chain\n");
@@ -2077,7 +2074,7 @@ Int_t TTreePlayer::MakeCode(const char *filename)
    }
    fprintf(fp,"   }\n");
    fprintf(fp,"   TTree *%s = (TTree*)gDirectory->Get(\"%s\");\n\n",fTree->GetName(),fTree->GetName());
-   if (ischain) { 
+   if (ischain) {
       fprintf(fp,"#else // SINGLE_TREE\n\n");
       fprintf(fp,"   // The following code should be used if you want this code to access a chain\n");
       fprintf(fp,"   // of trees.\n");
@@ -2383,9 +2380,9 @@ Int_t TTreePlayer::Process(const char *filename,Option_t *option, Int_t nentries
 //
 //   if filename is of the form file.C, the file will be interpreted.
 //   if filename is of the form file.C++, the file file.C will be compiled
-//      and dynamically loaded. 
+//      and dynamically loaded.
 //   if filename is of the form file.C+, the file file.C will be compiled
-//      and dynamically loaded. At next call, if file.C is older than file.o 
+//      and dynamically loaded. At next call, if file.C is older than file.o
 //      and file.so, the file.C is not compiled, only file.so is loaded.
 
 
@@ -3010,7 +3007,7 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
 void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &r, Double_t *par, Int_t flag)
 {
 // The fit function used by the unbinned likelihood fit.
-   
+
   TF1 *fitfunc = (TF1*)tFitter->GetObjectFit();
   Int_t n = gTree->GetSelectedRows();
   Double_t  *data1 = gTree->GetV1();
@@ -3020,7 +3017,7 @@ void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &r, Double_t
   Double_t logEpsilon = -230;   // protect against negative probabilities
   Double_t logL = 0.0, prob;
   Double_t sum = fitfunc->GetChisquare();
-  
+
   Double_t x[3];
   for(Int_t i = 0; i < n; i++) {
     x[0] = data1[i];
@@ -3030,7 +3027,7 @@ void TreeUnbinnedFitLikelihood(Int_t &npar, Double_t *gin, Double_t &r, Double_t
     if(prob > 0) logL += TMath::Log(prob);
     else         logL += logEpsilon;
   }
-  
+
   r = -logL;
 }
 
@@ -3071,10 +3068,10 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 //   i.e. It must have the same integral regardless of the parameter
 //   settings.  Otherwise the fit will effectively just maximize the
 //   area.
-//   
+//
 //   In practice it is convenient to have a normalization variable
 //   which is fixed for the fit.  e.g.
-//   
+//
 //     TF1* f1 = new TF1("f1", "gaus(0)/sqrt(2*3.14159)/[2]", 0, 5);
 //     f1->SetParameters(1, 3.1, 0.01);
 //     f1->SetParLimits(0, 1, 1); // fix the normalization parameter to 1
@@ -3088,36 +3085,36 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
   Double_t par, we, al, bl;
   Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
   Double_t arglist[10];
-  
-  // Set the global fit function so that TreeUnbinnedFitLikelihood can find it. 
+
+  // Set the global fit function so that TreeUnbinnedFitLikelihood can find it.
   TF1* fitfunc = (TF1*)gROOT->GetFunction(funcname);
   if (!fitfunc) { Error("UnbinnedFit", "Unknown function: %s",funcname); return 0; }
   npar = fitfunc->GetNpar();
   if (npar <=0) { Error("UnbinnedFit", "Illegal number of parameters = %d",npar); return 0; }
-  
+
   // Spin through the data to select out the events of interest
   // Make sure that the arrays V1,etc are created large enough to accomodate
   // all entries
   Int_t oldEstimate = fTree->GetEstimate();
   Int_t nent = Int_t(fTree->GetEntries());
   fTree->SetEstimate(TMath::Min(nent,nentries));
-  
+
   Int_t nsel = DrawSelect(varexp, selection, "goff", nentries, firstentry);
 
   //if no selected entries return
   Int_t nrows = GetSelectedRows();
   if (nrows <= 0) {
-     Error("UnbinnedFit", "Cannot fit: no entries selected"); 
+     Error("UnbinnedFit", "Cannot fit: no entries selected");
      return 0;
   }
-     
+
   // Check that function has same dimension as number of variables
   Int_t ndim = GetDimension();
   if (ndim != fitfunc->GetNdim()) {
-     Error("UnbinnedFit", "Function dimension=%d not equal to expression dimension=%d",fitfunc->GetNdim(),ndim); 
+     Error("UnbinnedFit", "Function dimension=%d not equal to expression dimension=%d",fitfunc->GetNdim(),ndim);
      return 0;
   }
-       
+
   //Compute total sum of weights to set the normalization factor
   Double_t sum = 0;
   Double_t *w = GetW();
@@ -3125,7 +3122,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
      sum += w[i];
   }
   fitfunc->SetChisquare(sum); //this info can be used in fitfunc
-  
+
   // Create and set up the fitter
   gTree = fTree;
   tFitter = TVirtualFitter::Fitter(fTree);
@@ -3133,7 +3130,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
   tFitter->SetFCN(TreeUnbinnedFitLikelihood);
 
   tFitter->SetObjectFit(fitfunc);
- 
+
   TString opt = option;
   opt.ToLower();
   // Some initialisations
@@ -3167,7 +3164,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 
    // Reset Print level
    if (opt.Contains("v")) {
-      arglist[0] = 0; 
+      arglist[0] = 0;
       tFitter->ExecuteCommand("SET PRINT", arglist,1);
    }
 
@@ -3207,7 +3204,7 @@ Int_t TTreePlayer::UnbinnedFit(const char *funcname ,const char *varexp, const c
 
    //reset estimate
    fTree->SetEstimate(oldEstimate);
-  
+
    return nsel;
 }
 
@@ -3218,7 +3215,7 @@ void TTreePlayer::UpdateFormulaLeaves()
    // this function is called by TChain::LoadTree when a new Tree is loaded.
    // Because Trees in a TChain may have a different list of leaves, one
    // must update the leaves numbers in the TTreeFormula used by the TreePlayer.
-   
+
    if (fVar1) fVar1->UpdateFormulaLeaves();
    if (fVar2) fVar2->UpdateFormulaLeaves();
    if (fVar3) fVar3->UpdateFormulaLeaves();

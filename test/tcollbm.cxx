@@ -1,10 +1,8 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Name:  $:$Id: tcollbm.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Nikolay Root   05/07/98
 
 #include <stdlib.h>
 #include <iostream.h>
-
-#include "TROOT.h"
 
 #include "TCollection.h"
 #include "TSortedList.h"
@@ -209,7 +207,6 @@ Double_t deltas[ntests];  // benchmark results
 int main(int argc,char **argv)
 {
   // Initialize the ROOT framework
-  TROOT tcollbm("Collection", "Benchmark collection classes");
   if(argc == 2 && !strcmp(argv[1],"-h")) {
     Printf("Usage: tcollbm [-n|-i] [nobjects] [ntimes]");
     Printf("  -n        - benchmark access by name");

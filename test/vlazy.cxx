@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vlazy.cxx,v 1.3 2001/03/14 08:03:36 brun Exp $
 // Author: Fons Rademakers   14/11/97
 
 //
@@ -10,7 +10,6 @@
 // matrix, by picking every other sample of the latter.
 //
 
-#include "TROOT.h"
 #include "TStopwatch.h"
 #include "TMatrix.h"
 #include <iostream.h>
@@ -71,8 +70,6 @@ static TMatrix traditional_downsampling(const TMatrix &orig_matrix)
 
 int main()
 {
-   TROOT sample("sample","performance sample");
-   
    cout << "\nDownsample matrices using traditional and non-traditional methods"
         << endl;
 

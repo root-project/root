@@ -1,4 +1,4 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Name:  $:$Id: minexam.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Rene Brun   22/08/95
 
 //______________________________________________________________________________
@@ -24,7 +24,6 @@ void fcnk0(int &npar, double *gin, double &f, double *x, int iflag);
 int minexam();
 
 #ifndef __CINT__
-#include "TROOT.h"
 #include "TVirtualFitter.h"
 #include "TMath.h"
 #include "TStopwatch.h"
@@ -35,7 +34,6 @@ int minexam();
 //______________________________________________________________________________
 int main()
 {
-   TROOT mintest("TestMinuit","Test of Minuit");
    return minexam();
 }
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.13 2001/04/11 17:32:21 brun Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.14 2001/04/12 15:08:09 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -12,7 +12,7 @@
 //  Additional arguments can be passed to the program to control the flow
 //  of execution. (see comments describing the arguments in the code).
 //      Event  nevent comp split fill
-//  All arguments are optional: Default is
+//  All arguments are optional. Default is:
 //      Event  400      1    1     1
 //
 //  In this example, the tree consists of one single "super branch"
@@ -82,9 +82,6 @@
 #include "TStopwatch.h"
 
 #include "Event.h"
-
-
-TROOT simple("simple","Example of creation of a tree");
 
 
 //______________________________________________________________________________

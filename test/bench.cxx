@@ -1,4 +1,4 @@
-// this test program compares the I/O performance obtained with 
+// this test program compares the I/O performance obtained with
 // STL vector of objects or pointers to objects versus the native
 // Root collection class TClonesArray.
 // Trees in compression and non compression mode are created for each
@@ -19,7 +19,7 @@
 // The bench can be run in batch mode (bench -b).
 // A Postscript file bench.ps is also produced.
 //      Author:  Rene Brun
-   
+
 #include "TROOT.h"
 #include "TClonesArray.h"
 #include "TStopwatch.h"
@@ -60,7 +60,7 @@ void showhist(const char *title, const char *ytitle, float a, float b, float c, 
    } else {
       h->GetYaxis()->SetLabelOffset(99);
    }
-   
+
    float ymax = a;
    if (b  > ymax) ymax = b;
    if (c  > ymax) ymax = c;
@@ -90,17 +90,16 @@ void showhist(const char *title, const char *ytitle, float a, float b, float c, 
    boxd->SetFillStyle(3012);
 }
 
-int main(int argc, char** argv) {
-  TROOT root("bench","Benchmarking STL vector against TClonesArray");
-
+int main(int argc, char** argv)
+{
   TRint *theApp = new TRint("Rint", &argc, argv, 0, 0);
-  
+
   int nhits       = 1000;
   int nevents     = 400;
   Float_t cx;
-  
+
   TTree::SetBranchStyle(1); // use the new Bronch style
-  
+
   //testing STL vector of THit
   Double_t cptot = 0;
   TStopwatch timer;
@@ -141,7 +140,7 @@ int main(int argc, char** argv) {
   Double_t cp3r = timer.CpuTime();
   cptot += cp3r;
   printf("5  STLhitr:  RT=%6.2f s  Cpu=%6.2f s\n",rt3r,cp3r);
-  
+
   //testing STL vector of pointers to THit
   timer.Start();
   TSTLhitStar *STLhitStar = new TSTLhitStar(nhits);
@@ -180,7 +179,7 @@ int main(int argc, char** argv) {
   Double_t cp6r = timer.CpuTime();
   cptot += cp6r;
   printf("10 STLhit*r: RT=%6.2f s  Cpu=%6.2f s\n",rt6r,cp6r);
-  
+
   //testing TClonesArray of TObjHit deriving from THit
   timer.Start();
   TCloneshit *Cloneshit = new TCloneshit(nhits);
@@ -250,10 +249,10 @@ int main(int argc, char** argv) {
   printf("19 Clones2r: RT=%6.2f s  Cpu=%6.2f s\n",rt11r,cp11r);
   Double_t cpref = 76.33;
   Double_t rootmarks = cpref*200/cptot;
-   
+
   //delete temp file used for the benchmark
   gSystem->Exec("rm -f /tmp/bench.root");
-  
+
   //print all results
   char line1[100], line2[100];
   printf("\n");
@@ -361,7 +360,7 @@ int main(int argc, char** argv) {
    arrow = new TArrow(3.24504,3.24395,3.2623,2.40184,0.03,"|>");
    arrow->SetFillColor(1);
    arrow->SetFillStyle(1001);
-   arrow->Draw(); 
+   arrow->Draw();
    Float_t z = 1.e-6;
    pmain->cd(2);
    showhist("Time to fill collections","seconds",cp1,cp4,cp7,cp7,1.88,1.81,1.60,1.60);
@@ -376,9 +375,9 @@ int main(int argc, char** argv) {
    pmain->cd(7);
    showhist("Time to read no compression","seconds",cp2r,cp5r,cp8r,cp10r,2.21,2.04,1.58,1.36);
    pmain->cd(8);
-   showhist("Time to read compression 1","seconds",cp3r,cp6r,cp9r,cp11r,3.46,3.17,2.12,1.95);   
+   showhist("Time to read compression 1","seconds",cp3r,cp6r,cp9r,cp11r,3.46,3.17,2.12,1.95);
    cbench->Print();
-   
+
    theApp->Run();
 
 }
