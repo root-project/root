@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.5 2000/09/05 10:55:30 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.6 2000/09/08 07:34:50 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -71,7 +71,7 @@ protected:
    Bool_t          fEditHistograms;       //True if histograms can be edited with the mouse
    Bool_t          fFromPopUp;            //True if command executed from a popup menu
    Bool_t          fMustClean;            //True if object destructor scans canvases
-   Bool_t          fReadingBasket;        //True while reading a basket buffer
+   Bool_t          fReadingObject;        //True while reading an object
    Bool_t          fForceStyle;           //Force setting of current style when reading objects
    Bool_t          fInterrupt;            //True if macro should be interrupted
    Int_t           fEditorMode;           //Current Editor mode
@@ -182,7 +182,7 @@ public:
    void              ProcessLineSync(const char *line);
    Long_t            ProcessLineFast(const char *line);
    void              Proof(const char *cluster = "proof");
-   Bool_t            ReadingBasket() {return fReadingBasket;}
+   Bool_t            ReadingObject() {return fReadingObject;}
    void              Reset(Option_t *option="");
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }
@@ -195,7 +195,7 @@ public:
    void              SetInterrupt(Bool_t flag=kTRUE) { fInterrupt = flag; }
    void              SetLineIsProcessing() { fLineIsProcessing++; }
    void              SetLineHasBeenProcessed() {if (fLineIsProcessing) fLineIsProcessing--;}
-   void              SetReadingBasket(Bool_t flag=kTRUE) {fReadingBasket = flag;}
+   void              SetReadingObject(Bool_t flag=kTRUE) {fReadingObject = flag;}
    void              SetMustClean(Bool_t flag=kTRUE) { fMustClean=flag; }
    void              SetSelectedPrimitive(TObject *obj) { fPrimitive = obj; }
    void              SetSelectedPad(TVirtualPad *pad) { fSelectPad = pad; }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.5 2000/09/05 09:21:24 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.6 2000/09/06 07:17:49 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -887,7 +887,7 @@ void TBranch::Streamer(TBuffer &b)
    if (b.IsReading()) {
       gBranch = this;
       fTree = gTree;
-      gROOT->SetReadingBasket(kTRUE);
+      gROOT->SetReadingObject(kTRUE);
       Version_t v = b.ReadVersion(&R__s, &R__c);
       TNamed::Streamer(b);
       b >> fCompress;
@@ -929,7 +929,7 @@ void TBranch::Streamer(TBuffer &b)
          if (fFileName.Length() != 0) fDirectory = 0;
       }
       if (v < 4) SetAutoDelete(kTRUE);
-      gROOT->SetReadingBasket(kFALSE);
+      gROOT->SetReadingObject(kFALSE);
       b.CheckByteCount(R__s, R__c, TBranch::IsA());
    } else {
       R__c = b.WriteVersion(TBranch::IsA(), kTRUE);

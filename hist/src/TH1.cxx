@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.22 2000/08/30 16:58:18 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.23 2000/09/08 16:05:21 rdm Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2939,7 +2939,7 @@ void TH1::Streamer(TBuffer &b)
       fOption.Streamer(b);
       fFunctions->Delete();
       fFunctions->Streamer(b);
-      if (!gROOT->ReadingBasket()) {
+      if (!gROOT->ReadingObject()) {
          fDirectory = gDirectory;
          if (!gDirectory->GetList()->FindObject(this)) gDirectory->Append(this);
       }

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.9 2000/09/08 16:05:21 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.10 2000/09/11 06:18:24 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -119,7 +119,19 @@ TCanvas::TCanvas() : TPad()
 {
    // Canvas default constructor.
 
-   Constructor();
+   if (gROOT->ReadingObject()) {
+      Constructor();
+   } else {
+      const char *defcanvas = gROOT->GetDefCanvasName();
+      char *cdef;
+
+      TList *lc = (TList*)gROOT->GetListOfCanvases();
+      if (lc->FindObject(defcanvas))
+         cdef = StrDup(Form("%s_n%d",defcanvas,lc->GetSize()+1));
+      else
+         cdef = StrDup(Form("%s",defcanvas));
+      Constructor(cdef, cdef, 1);
+   }
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.14 2000/09/08 07:36:18 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.15 2000/09/08 16:05:21 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4060,7 +4060,7 @@ void TPad::Streamer(TBuffer &b)
 // read objects and their drawing options
 //      b >> fPrimitives;
       readLevel++;
-      gROOT->SetReadingBasket(kTRUE);
+      gROOT->SetReadingObject(kTRUE);
       fPrimitives = new TList;
       b >> nobjects;
       if (nobjects > 0) {
@@ -4077,7 +4077,7 @@ void TPad::Streamer(TBuffer &b)
          gPad = padsav;
       }
       readLevel--;
-      gROOT->SetReadingBasket(kFALSE);
+      gROOT->SetReadingObject(kFALSE);
 //-------------------------
       if (v > 3) {
          b >> fExecs;

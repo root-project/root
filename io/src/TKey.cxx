@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.2 2000/05/24 10:31:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TKey.cxx,v 1.3 2000/09/05 09:21:22 brun Exp $
 // Author: Rene Brun   28/12/94
 
 /*************************************************************************
@@ -430,6 +430,7 @@ TObject *TKey::ReadObj()
        return 0;
    }
    // Create an instance of this class
+   gROOT->SetReadingObject(kTRUE);
    obj = (TObject*)cl->New();
    if (!obj) {
       Error("ReadObj", "Cannot create new object of class %s", fClassName.Data());
@@ -458,6 +459,7 @@ TObject *TKey::ReadObj()
    } else {
       obj->Streamer(*fBufferRef);
    }
+   gROOT->SetReadingObject(kFALSE);
 
    if (gROOT->GetForceStyle()) obj->UseCurrentStyle();
 
@@ -539,7 +541,7 @@ void TKey::ReadBuffer(char *&buffer)
    fClassName.ReadBuffer(buffer);
    fName.ReadBuffer(buffer);
    fTitle.ReadBuffer(buffer);
-   if (!gROOT->ReadingBasket()) {
+   if (!gROOT->ReadingObject()) {
       if (fSeekPdir != gDirectory->GetSeekDir()) gDirectory->AppendKey(this);
    }
 }
