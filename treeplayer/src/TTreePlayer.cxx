@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.33 2000/12/21 14:03:39 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.34 2001/02/09 16:47:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -588,8 +588,8 @@ Int_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Option
 // So the loop equivalent to "fMatrix[][fResults[][]]" is:
 //
 //    for (Int_t i0; i0 < 3; i0++) {
-//       for (Int_t j2; i1 < 5; j2++) {
-//          for (Int_t j3; i2 < 2; j3++) {
+//       for (Int_t j2; j2 < 5; j2++) {
+//          for (Int_t j3; j3 < 2; j3++) {
 //             i1 = fResults[j2][j3];
 //             use the value of fMatrix[i0][i1]
 //       }
