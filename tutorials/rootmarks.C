@@ -92,8 +92,8 @@
    Float_t geometry_rt = gBenchmark->GetRealTime("geometry");
    Float_t geometry_ct = gBenchmark->GetCpuTime("geometry");
    if (geometry_rt > 0) {
-      rtmark = norm*(0.41/geometry_rt);
-      cpmark = norm*(0.39/geometry_ct);
+      rtmark = norm*(0.60/geometry_rt);
+      cpmark = norm*(0.58/geometry_ct);
       printf("geometry    = %7.2f RealMARKS,  = %7.2f CpuMARKS\n",rtmark,cpmark);
    }
 
@@ -126,8 +126,8 @@
    if (rtall) {
       Float_t rtdell, cpdell;
       if (batch) {
-         rtdell    = 9.16;
-         cpdell    = 8.89;
+         rtdell    = 9.34;
+         cpdell    = 9.33;
       } else {
          rtdell    = 13.15;
          cpdell    = 10.45;
