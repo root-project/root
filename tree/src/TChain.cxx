@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.23 2001/08/11 08:27:40 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.24 2001/08/14 08:30:00 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -361,6 +361,28 @@ TFriendElement *TChain::AddFriend(const char *chain, const char *dummy)
 // is given and the resulting histogram will have missing entries.
 // For additional information see TTree::AddFriend.
 
+   if (!fFriends) fFriends = new TList();
+   TFriendElement *fe = new TFriendElement(this,chain,dummy);
+   if (fe) {
+      fFriends->Add(fe);
+      TTree *t = fe->GetTree();
+      if (t) {
+         if (t->GetEntries() < fEntries) {
+            //Warning("AddFriend","FriendElement %s in file %s has less entries %g than its parent Tree: %g",
+            //         chain,filename,t->GetEntries(),fEntries);
+         }
+      } else {
+         Warning("AddFriend","Unknown TChain %s",chain);
+      }
+   } else {
+      Warning("AddFriend","Cannot add FriendElement %s",chain);
+   }
+   return fe;
+}
+
+//______________________________________________________________________________
+TFriendElement *TChain::AddFriend(const char *chain, TFile *dummy)
+{
    if (!fFriends) fFriends = new TList();
    TFriendElement *fe = new TFriendElement(this,chain,dummy);
    if (fe) {
