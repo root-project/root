@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.213 2005/01/04 16:21:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.214 2005/01/04 16:22:44 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -5104,10 +5104,15 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option) const
    Bool_t afunc1 = kFALSE;
    Bool_t afunc2 = kFALSE;
    Double_t sum1 = 0, sum2 = 0;
+   Double_t ew1, ew2, w1 = 0, w2 = 0;
    Int_t bin;
    for (bin=1;bin<=ncx1;bin++) {
       sum1 += h1->GetBinContent(bin);
       sum2 += h2->GetBinContent(bin);
+      ew1   = h1->GetBinError(bin);
+      ew2   = h2->GetBinError(bin);
+      w1   += ew1*ew1;
+      w2   += ew2*ew2;
    }
    if (sum1 == 0) {
       Error("KolmogorovTest","Histogram1 %s integral is zero\n",h1->GetName());
@@ -5143,7 +5148,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option) const
       if (h1->GetSumw2N() == 0) {
          Warning("KolmogorovTest","Weighted events and no Sumw2, hist:%s\n",h1->GetName());
       } else {
-         esum1 = h1->GetSumOfWeights();
+         esum1 = sum1*sum1/w1;  //number of equivalent entries
       }
    }
      // look at second histogram
@@ -5156,7 +5161,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option) const
       if (h2->GetSumw2N() == 0) {
          Warning("KolmogorovTest","Weighted events and no Sumw2, hist:%s\n",h2->GetName());
       } else {
-         esum2 = h2->GetSumOfWeights();
+         esum2 = sum2*sum2/w2;  //number of equivalent entries
       }
    }
 
