@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.15 2002/03/22 12:57:06 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.16 2002/06/04 08:00:54 brun Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -231,6 +231,8 @@ public:
    void CloseWindow();
    void DoButton();
    void HandleMenu(Int_t id);
+   void HandlePopup() { printf("menu popped up\n"); }
+   void HandlePopdown() { printf("menu popped down\n"); }
 
    void Created() { Emit("Created()"); } //*SIGNAL*
    void Welcome() { printf("TestMainFrame has been created. Welcome!\n"); }
@@ -586,6 +588,8 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
    // HandleMenu() method.
    fMenuFile->Connect("Activated(Int_t)", "TestMainFrame", this,
                       "HandleMenu(Int_t)");
+   fMenuFile->Connect("PoppedUp()", "TestMainFrame", this, "HandlePopup()");
+   fMenuFile->Connect("PoppedDown()", "TestMainFrame", this, "HandlePopdown()");
    fMenuTest->Connect("Activated(Int_t)", "TestMainFrame", this,
                       "HandleMenu(Int_t)");
    fMenuHelp->Connect("Activated(Int_t)", "TestMainFrame", this,
