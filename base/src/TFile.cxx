@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.11 2000/11/23 18:03:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.12 2000/11/27 10:44:46 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -12,12 +12,12 @@
 #include <iostream.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/stat.h>
 #ifndef WIN32
 #   include <unistd.h>
 #else
 #   define ssize_t int
 #   include <io.h>
-#   include <sys/stat.h>
 #   include <sys/types.h>
 #endif
 
@@ -1259,7 +1259,11 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
 
    // create the MAKE file by looping on all *.h files
    // delete MAKE if it already exists
+#ifdef WIN32
+   sprintf(path,"%s/make.cmd",dirname);
+#else
    sprintf(path,"%s/MAKE",dirname);
+#endif
    FILE *fpMAKE = fopen(path,"w");
    if (!fpMAKE) {
       printf("Cannot open file:%s\n",path);
@@ -1268,7 +1272,7 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
    }
 
    // add rootcint statement generating ProjectDict.cxx
-   fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c -I$ROOTSYS/include \\\n",dirname);
+   fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c %s ",dirname,gSystem->GetIncludePath());
 
    // create the LinkDef.h file by looping on all *.h files
    // delete LinkDef.h if it already exists
@@ -1295,53 +1299,25 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
       if (!h) continue;
       *h = 0;
       fprintf(fp,"#pragma link C++ class %s+;\n",path);
-      fprintf(fpMAKE,"%s \\\n",afile);
+      fprintf(fpMAKE,"%s ",afile);
   }
    fprintf(fp,"#endif\n");
    fclose(fp);
-   fprintf(fpMAKE,"LinkDef.h\n");
+   fprintf(fpMAKE,"LinkDef.h \n");
 
    // add compilation line
-   strcpy(path,gSystem->GetMakeSharedLib());
-   char *optim = strstr(path,"-O ");
-   if (optim) (strncpy(optim,"  ",2)); // remove optimisation option
-   char *dollarInclude = strstr(path,"$IncludePath");
-   *dollarInclude = 0;
-   fprintf(fpMAKE,"%s \\\n",path);
-   fprintf(fpMAKE,"%s %sProjectDict.cxx\n",gSystem->GetIncludePath() ,dirname);
+   TString sdirname(dirname);
 
-   // add line to generate the shared lib
-   char cxxFile[256];
-   char *semicolon = strstr(dollarInclude+1,"; ");
-   if (semicolon == 0) { //this happens on NT
-      fclose(fpMAKE);
-      delete [] path;
-      return;
-   }
+   TString cmd = gSystem->GetMakeSharedLib();
+   cmd.ReplaceAll("$SourceFiles",sdirname+"ProjectDict.cxx");
+   cmd.ReplaceAll("$ObjectFiles",sdirname+"ProjectDict."+gSystem->GetObjExt());
+   cmd.ReplaceAll("$IncludePath",TString(gSystem->GetIncludePath()) + " -I" + dirname);
+   cmd.ReplaceAll("$SharedLib",sdirname+"."+gSystem->GetSoExt());
+   cmd.ReplaceAll("$LinkedLibs",gSystem->GetLibraries("","SDL"));
+   cmd.ReplaceAll("$LibName",sdirname);
+   cmd.ReplaceAll("$BuildDir",".");
 
-   char *librarian   = semicolon +2;
-   char *objectFiles = strstr(librarian,"$ObjectFiles");
-   if (objectFiles) {
-      strcpy(path+2000,objectFiles+strlen("$ObjectFiles"));
-      sprintf(cxxFile,"%sProjectDict.%s",dirname,gSystem->GetObjExt());
-      strcpy(objectFiles,cxxFile);
-      strcat(objectFiles,path+2000);
-   }
-   char *sharedLib   = strstr(librarian,"$SharedLib");
-   if (sharedLib) {
-      strcpy(path+2000,sharedLib+strlen("$SharedLib"));
-      sprintf(cxxFile,"%s.%s",dirname,gSystem->GetSoExt());
-      strcpy(sharedLib,cxxFile);
-      strcat(sharedLib,path+2000);
-   }
-   char *linkedLibs   = strstr(librarian,"$LinkedLibs");
-   if (linkedLibs) {
-      strcpy(path+2000,linkedLibs+strlen("$LinkedLibs"));
-      sprintf(cxxFile,"%s",gSystem->GetLinkedLibs());
-      strcpy(linkedLibs,cxxFile);
-      strcat(linkedLibs,path+2000);
-   }
-   fprintf(fpMAKE,"%s\n",librarian);
+   fprintf(fpMAKE,"%s\n",cmd.Data());
 
    fclose(fpMAKE);
    printf("%s/MAKE file has been generated\n",dirname);
@@ -1349,16 +1325,21 @@ void TFile::MakeProject(const char *dirname, const char *classes, Option_t *opti
    // now execute the generated script compiling and generating the shared lib
    strcpy(path,gSystem->WorkingDirectory());
    gSystem->ChangeDirectory(dirname);
+#ifndef WIN32
    gSystem->Exec("chmod +x MAKE");
-   gSystem->Exec("MAKE");
+#else
+   // not really needed for Windows but it would work both both Unix and NT
+   chmod("make.cmd",00700);
+#endif
+   int res = !gSystem->Exec("MAKE");
    gSystem->ChangeDirectory(path);
    sprintf(path,"%s/%s.%s",dirname,dirname,gSystem->GetSoExt());
-   printf("Shared lib %s has been generated\n",path);
+   if (res) printf("Shared lib %s has been generated\n",path);
 
    //dynamically link the generated shared lib
    if (opt.Contains("++")) {
-      gSystem->Load(path);
-      printf("Shared lib %s has been dynamically linked\n",path);
+      res = !gSystem->Load(path);
+      if (res) printf("Shared lib %s has been dynamically linked\n",path);
    }
    delete [] path;
 }
