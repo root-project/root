@@ -35,7 +35,12 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
    LIBDIR=\$ROOTSYS/lib
 fi
 
-if [ "x`echo $SOFLAGS | grep -- '-soname,$' `" != "x" ]; then
+if [ "$ARCH" = "macosx" ]; then
+   SOEXT="so"
+   SOFLAGS="$OPT -bundle -flat_namespace -undefined suppress -install_name \$LibName.$SOEXT"
+fi
+
+if [ "x`echo $SOFLAGS | grep -- '-soname,$'`" != "x" ]; then
     # If soname is specified, add the library name.
     SOFLAGS=$SOFLAGS\$LibName.$SOEXT
     # Alternatively we could remove the soname flag.
@@ -49,7 +54,11 @@ echo "#define BUILD_ARCH \"$ARCH\"" >> __compiledata
 echo "#define BUILD_NODE \""`uname -a`"\" " >> __compiledata
 echo "#define COMPILER \""`type $CXX`"\" " >> __compiledata
 if [ "$CUSTOMSHARED" = "" ]; then
-   echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS -o \$SharedLib\"" >> __compiledata
+   if [ "$ARCH" = "macosx" ]; then
+      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles -ldl $SOFLAGS -o \$SharedLib\"" >> __compiledata
+   else
+      echo "#define MAKESHAREDLIB  \"cd \$BuildDir ; $CXX -c $OPT $CXXFLAGS \$IncludePath \$SourceFiles ; $CXX \$ObjectFiles $SOFLAGS $LDFLAGS -o \$SharedLib\"" >> __compiledata
+   fi
 else
    echo "#define MAKESHAREDLIB \"$CUSTOMSHARED\"" >> __compiledata
 fi
