@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TNtuple.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   06/04/96
 
 /*************************************************************************
@@ -82,7 +82,7 @@ TNtuple::TNtuple(const char *name, const char *title, const char *varlist, Int_t
    for (i=0;i<fNvar;i++) {
       Int_t pv = pvars[i];
       TTree::Branch(&vars[pv],&fArgs[i],&vars[pv],bufsize);
-  }
+   }
 
    delete [] vars;
    delete [] pvars;
@@ -98,6 +98,17 @@ TNtuple::~TNtuple()
    fArgs = 0;
 }
 
+//______________________________________________________________________________
+void TNtuple::ResetBranchAddresses()
+{
+   // Reset the branch addresses to the internal fArgs array. Use this
+   // method when the addresses were changed via calls to SetBranchAddress().
+
+   for (Int_t i = 0; i < fNvar; i++) {
+      TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
+      if (branch) branch->SetAddress(&fArgs[i]);
+   }
+}
 
 //______________________________________________________________________________
 void TNtuple::Browse(TBrowser *b)
