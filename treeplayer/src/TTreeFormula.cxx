@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.18 2000/11/02 14:01:23 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.19 2000/11/21 20:58:28 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -830,6 +830,11 @@ char *TTreeFormula::PrintValue(Int_t mode)
       if (mode == 0) {
          GetNdata();
          sprintf(value,"%9.9g",EvalInstance(0));
+         char *expo = strchr(value,'e');
+         if (expo) {
+            if (value[0] == '-') strcpy(expo-6,expo);            
+            else                 strcpy(expo-5,expo);            
+         }
       }
    }
    return &value[0];
