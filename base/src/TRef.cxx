@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.20 2002/08/12 06:24:13 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRef.cxx,v 1.21 2002/08/16 06:18:37 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -311,6 +311,7 @@ TObject *TRef::GetObject() const
 
    //TObject *obj = 0;
    if (!fPID) return 0;
+   if (!TProcessID::IsValid(fPID)) return 0;
    UInt_t uid = GetUniqueID();
    //Try to find the object from the table of the corresponding PID
    TObject *obj = fPID->GetObjectWithID(uid);
