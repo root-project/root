@@ -503,12 +503,6 @@ gdk_pointer_grab(GdkWindow * window,
    else
       xcursor = cursor_private->xcursor;
 
-   if (gdk_input_vtable.grab_pointer)
-      return_val = gdk_input_vtable.grab_pointer(window,
-                                                 owner_events,
-                                                 event_mask,
-                                                 confine_to, time);
-   else
       return_val = Success;
 
    if (return_val == Success) {
@@ -521,11 +515,7 @@ gdk_pointer_grab(GdkWindow * window,
          p_grab_owner_events = (owner_events != 0);
          p_grab_automatic = FALSE;
 
-#if 0                           /* Menus don't work if we use mouse capture. Pity, because many other
-                                 * things work better with mouse capture.
-                                 */
          SetCapture(xwindow);
-#endif
          return_val = GrabSuccess;
       } else
          return_val = AlreadyGrabbed;
@@ -556,12 +546,9 @@ gdk_pointer_grab(GdkWindow * window,
 
 void gdk_pointer_ungrab(guint32 time)
 {
-   if (gdk_input_vtable.ungrab_pointer)
-      gdk_input_vtable.ungrab_pointer(time);
-#if 0
    if (GetCapture() != NULL)
       ReleaseCapture();
-#endif
+
    GDK_NOTE(EVENTS, g_print("gdk_pointer_ungrab\n"));
 
    p_grab_window = NULL;
@@ -585,6 +572,67 @@ void gdk_pointer_ungrab(guint32 time)
 gint gdk_pointer_is_grabbed(void)
 {
    return p_grab_window != NULL;
+}
+
+
+/*
+ *--------------------------------------------------------------
+ * find_window_for_pointer_event
+ *
+ *   Find the window a pointer event (mouse up, down, move) should
+ *   be reported to.  If the return value != reported_window then
+ *   the ref count of reported_window will be decremented and the
+ *   ref count of the return value will be incremented.
+ *
+ * Arguments:
+ *
+ *  "reported_window" is the gdk window the xevent was reported relative to
+ *  "xevent" is the win32 message
+ *
+ * Results:
+ *
+ * Side effects:
+ *
+ *--------------------------------------------------------------
+ */
+
+static GdkWindow* 
+find_window_for_pointer_event (GdkWindow*  reported_window,
+                               MSG*        msg)
+{
+	HWND hwnd;
+  	POINTS points;
+ 	POINT pt;
+  	GdkWindow* other_window;
+
+  	if (p_grab_window == NULL || !p_grab_owner_events)
+  		return reported_window;
+
+  	points = MAKEPOINTS (msg->lParam);
+   //vo: ++ coordinates - dirty trick for TRootContextMenu
+  	pt.x = points.x+1;
+  	pt.y = points.y+1;
+  	ClientToScreen (msg->hwnd, &pt);
+
+  	GDK_NOTE (EVENTS, g_print ("Finding window for grabbed pointer event at (%ld, %ld)\n",
+                             pt.x, pt.y));
+
+  	hwnd = WindowFromPoint (pt);
+  	if (hwnd == NULL) {
+      return reported_window;
+   }
+	other_window = gdk_window_lookup(hwnd);
+
+  	if (other_window == NULL) {
+    	return reported_window;
+   }
+  	GDK_NOTE (EVENTS, g_print ("Found window %p for point (%ld, %ld)\n",
+			     hwnd, pt.x, pt.y));
+
+  	gdk_window_unref (reported_window);
+  	gdk_window_ref (other_window);
+
+  	return other_window;
 }
 
 /*
@@ -4339,6 +4387,8 @@ propagate(GdkWindow ** window,
           gint grab_mask,
           gboolean(*doesnt_want_it) (gint mask, MSG * xevent))
 {
+	gboolean in_propagation = FALSE;
+
    if (grab_window != NULL && !grab_owner_events) {
       /* Event source is grabbed with owner_events FALSE */
       GDK_NOTE(EVENTS, g_print("...grabbed, owner_events FALSE, "));
@@ -4388,6 +4438,7 @@ propagate(GdkWindow ** window,
             GDK_NOTE(EVENTS, g_print("...propagating to %#x\n",
                                      GDK_DRAWABLE_XID(*window)));
             /* The only branch where we actually continue the loop */
+				in_propagation = TRUE;
          }
       } else
          return TRUE;
@@ -4489,6 +4540,7 @@ gdk_event_translate(GdkEvent * event,
    gchar *msgname;
    gboolean return_val;
    gboolean flag;
+
 
    return_val = FALSE;
 
@@ -5120,7 +5172,7 @@ gdk_event_translate(GdkEvent * event,
          break;
       }
 
-      first_move = TRUE;
+	   window = find_window_for_pointer_event (window, xevent);
 
       if (window != curWnd)
          synthesize_crossing_events(window, xevent);
@@ -5132,18 +5184,19 @@ gdk_event_translate(GdkEvent * event,
                      doesnt_want_button_press))
          break;
 
-      event->button.window = window;
-      /* Emulate X11's automatic active grab */
+		event->button.window = window;
+
+     /* Emulate X11's automatic active grab */
       if (!p_grab_window) {
          /* No explicit active grab, let's start one automatically */
          gint owner_events =
-             GDK_WINDOW_WIN32DATA(window)->event_mask
+             GDK_WINDOW_WIN32DATA (window)->event_mask
              & (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK);
 
          GDK_NOTE(EVENTS, g_print("...automatic grab started\n"));
          gdk_pointer_grab(window,
                           owner_events,
-                          GDK_WINDOW_WIN32DATA(window)->event_mask,
+                          GDK_WINDOW_WIN32DATA (window)->event_mask,
                           NULL, NULL, 0);
          p_grab_automatic = TRUE;
       }
@@ -5184,6 +5237,8 @@ gdk_event_translate(GdkEvent * event,
                        xevent->hwnd,
                        LOWORD(xevent->lParam), HIWORD(xevent->lParam)));
 
+	   window = find_window_for_pointer_event (window, xevent);
+
       if (((GdkWindowPrivate *) window)->extension_events != 0
           && gdk_input_ignore_core) {
          GDK_NOTE(EVENTS, g_print("...ignored\n"));
@@ -5197,34 +5252,34 @@ gdk_event_translate(GdkEvent * event,
       event->button.type = GDK_BUTTON_RELEASE;
       if (!propagate(&window, xevent,
                      p_grab_window, p_grab_owner_events, p_grab_mask,
-                     doesnt_want_button_release))
-         goto maybe_ungrab;
+                     doesnt_want_button_release)) {
+		} else {
+			if (window != orig_window) {
+         	translate_mouse_coords(orig_window, window, xevent);
+			}
 
-      event->button.window = window;
-      event->button.time = xevent->time;
-      if (window != orig_window)
-         translate_mouse_coords(orig_window, window, xevent);
-      event->button.x = (gint16) LOWORD(xevent->lParam);
-      event->button.y = (gint16) HIWORD(xevent->lParam);
-      event->button.x_root = xevent->pt.x;
-      event->button.y_root = xevent->pt.y;
-      event->button.pressure = 0.5;
-      event->button.xtilt = 0;
-      event->button.ytilt = 0;
-      event->button.state = build_pointer_event_state(xevent);
-      event->button.button = button;
-      event->button.source = GDK_SOURCE_MOUSE;
-      event->button.deviceid = GDK_CORE_POINTER;
+      	event->button.window = window;
+      	event->button.time = xevent->time;
+      	event->button.x = (gint16) LOWORD(xevent->lParam);
+      	event->button.y = (gint16) HIWORD(xevent->lParam);
+      	event->button.x_root = xevent->pt.x;
+      	event->button.y_root = xevent->pt.y;
+      	event->button.pressure = 0.5;
+      	event->button.xtilt = 0;
+      	event->button.ytilt = 0;
+      	event->button.state = build_pointer_event_state(xevent);
+      	event->button.button = button;
+      	event->button.source = GDK_SOURCE_MOUSE;
+      	event->button.deviceid = GDK_CORE_POINTER;
 
-      return_val = !GDK_DRAWABLE_DESTROYED(window);
+      	return_val = !GDK_DRAWABLE_DESTROYED(window);
+		}
 
-    maybe_ungrab:
       if (p_grab_window != NULL
           && p_grab_automatic
-          && (event->button.
-              state & (GDK_BUTTON1_MASK | GDK_BUTTON2_MASK |
-                       GDK_BUTTON3_MASK)) == 0)
-         gdk_pointer_ungrab(0);
+  		 	 && (xevent->wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON)) == 0) {
+			gdk_pointer_ungrab (0);
+		}
       break;
 
    case WM_MOUSEMOVE:
@@ -5233,22 +5288,7 @@ gdk_event_translate(GdkEvent * event,
                        xevent->hwnd, xevent->wParam,
                        LOWORD(xevent->lParam), HIWORD(xevent->lParam)));
 
-      /* If we haven't moved, don't create any event.
-       * Windows sends WM_MOUSEMOVE messages after button presses
-       * even if the mouse doesn't move. This disturbs gtk.
-       */
-      if (window == curWnd
-          && LOWORD(xevent->lParam) == curX
-          && HIWORD(xevent->lParam) == curY)
-         break;
-
-      if (first_move) {
-         first_move = FALSE;
-         break;
-      }
-
-      if (pidActWin != pidThis)
-         break;
+ 		window = find_window_for_pointer_event (window, xevent);
 
       if (window != curWnd)
          synthesize_crossing_events(window, xevent);
@@ -5270,6 +5310,11 @@ gdk_event_translate(GdkEvent * event,
       event->motion.time = xevent->time;
       if (window != orig_window)
          translate_mouse_coords(orig_window, window, xevent);
+
+ 		if (window == curWnd
+	  		&& (gint16) LOWORD(xevent->lParam) == curX
+	  		&& (gint16) HIWORD(xevent->lParam) == curY) break;
+
       event->motion.x = curX = (gint16) LOWORD(xevent->lParam);
       event->motion.y = curY = (gint16) HIWORD(xevent->lParam);
       event->motion.x_root = xevent->pt.x;
