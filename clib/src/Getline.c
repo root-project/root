@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.15 2004/01/19 10:49:13 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.16 2004/01/19 15:23:42 rdm Exp $ */
 /* Author: */
 
 /*
@@ -772,6 +772,9 @@ Gl_windowchanged()
 char *
 Getlinem(int mode, const char *prompt)
 {
+#ifdef WIN32 
+    CONSOLE_SCREEN_BUFFER_INFO ci; 
+#endif 
     int             c, loc, tmp;
     int             sig;
 
@@ -853,7 +856,21 @@ Getlinem(int mode, const char *prompt)
                  break;
             case '\001': gl_fixup(gl_prompt, -1, 0);          /* ^A */
                  break;
-            case '\002': gl_fixup(gl_prompt, -1, gl_pos-1);   /* ^B */
+            case '\002':                                    /* ^B */ 
+
+#ifndef WIN32    // bb
+                 gl_fixup(gl_prompt, -1, gl_pos-1); 
+#else 
+                 GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &ci); 
+                 if (gl_pos-1 < 0) { 
+                    gl_putc('\007'); 
+                    gl_pos = 0; 
+                    break; 
+                 } 
+                 ci.dwCursorPosition.X -= 1; 
+                 SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), ci.dwCursorPosition ); 
+                 gl_pos = gl_pos-1; 
+#endif
                  break;
             case '\004':                                      /* ^D */
                  if (gl_cnt == 0) {
@@ -867,7 +884,21 @@ Getlinem(int mode, const char *prompt)
                  break;
             case '\005': gl_fixup(gl_prompt, -1, gl_cnt);     /* ^E */
                  break;
-            case '\006': gl_fixup(gl_prompt, -1, gl_pos+1);   /* ^F */
+            case '\006':                                      /* ^F */
+#ifndef WIN32    // bb
+                 gl_fixup(gl_prompt, -1, gl_pos+1); 
+#else 
+                 GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &ci); 
+                 if (gl_pos+1 > gl_cnt) { 
+                    if (gl_pos != BUF_SIZE)         /* BUF_SIZE means end of line */ 
+                       gl_putc('\007'); 
+                    gl_pos = gl_cnt; 
+                    break; 
+                 } 
+                 ci.dwCursorPosition.X += 1; 
+                 SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), ci.dwCursorPosition ); 
+                 gl_pos = gl_pos+1; 
+#endif
                  break;
             case '\010': case '\177': gl_del(-1);     /* ^H and DEL */
                  break;
