@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.10 2000/08/11 15:04:14 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGText.cxx,v 1.11 2000/10/29 14:31:14 rdm Exp $
 // Author: Fons Rademakers   26/04/98
 
 /*************************************************************************
@@ -282,13 +282,14 @@ void TGText::Clear()
       delete toDelete;
    }
    fFirst->Clear();
-   fCurrent     = fFirst;
-   fCurrentRow  = 0;
-   fColCount    = 0;
-   fRowCount    = 1;
-   fLongestLine = 0;
-   fIsSaved     = kTRUE;
-   fFilename    = "";
+   fFirst->fNext = 0;
+   fCurrent      = fFirst;
+   fCurrentRow   = 0;
+   fColCount     = 0;
+   fRowCount     = 1;
+   fLongestLine  = 0;
+   fIsSaved      = kTRUE;
+   fFilename     = "";
 }
 
 //______________________________________________________________________________
