@@ -1743,6 +1743,7 @@ H.&nbsp;Wind.
 #include "TH2.h"
 #include "TROOT.h"
 #include "TBrowser.h"
+#include "TDecompChol.h"
 
 #define RADDEG (180. / TMath::Pi())
 #define DEGRAD (TMath::Pi() / 180.)
@@ -2291,7 +2292,7 @@ void TMultiDimFit::Fit(Option_t *option)
     sumR         += res;
     sumSqR       += res * res;
     if (TESTBIT(fHistogramMask,HIST_RTEST))
-      ((TH1F*)fHistograms->FindObject("res_test"))->Fill(res);
+      ((TH1D*)fHistograms->FindObject("res_test"))->Fill(res);
   }
   Double_t dAvg         = sumSqD - (sumD * sumD) / fTestSampleSize;
   Double_t rAvg         = sumSqR - (sumR * sumR) / fTestSampleSize;
@@ -2393,7 +2394,7 @@ void TMultiDimFit::MakeCandidates()
 
 	  // Store the control value, so we can sort array of powers
 	  // later on
-	  control[numberFunctions-1] = s;
+	  control[numberFunctions-1] = Int_t(1.0e+6*s);
 
 	  // Store the powers in powers array.
 	  for (i = 0; i < fNVariables; i++) {
@@ -2430,7 +2431,7 @@ void TMultiDimFit::MakeCandidates()
 	iv[j]                 = fPowers[i * fNVariables + j];
       }
 
-      control[i] = EvalControl(iv);
+      control[i] = Int_t(1.0e+6*EvalControl(iv));
     }
   }
 
@@ -2564,6 +2565,7 @@ void TMultiDimFit::MakeCoefficientErrors()
       for (k = 0; k < fSampleSize; k++)
 	curvatureMatrix(i,j) +=
 	  1 / TMath::Max(fSqError(k), 1e-20) * iF(k) * jF(k);
+      curvatureMatrix(j,i) = curvatureMatrix(i,j);
     }
   }
 
@@ -2578,13 +2580,15 @@ void TMultiDimFit::MakeCoefficientErrors()
   }
 
   // Invert the curvature matrix
-  Double_t det = 1;
-  curvatureMatrix.Invert(&det);
-  if (TMath::Abs(det - 0) < DBL_EPSILON)
-    Warning("MakeCoefficientErrors", "curvature matrix is singular");
+  const TVectorD diag = TMatrixDDiag_const(curvatureMatrix);
+  curvatureMatrix.NormByDiag(diag);
 
-  if (fIsVerbose)
-    cout << "Determinant of curvature matrix: " << det << endl;
+  TDecompChol chol(curvatureMatrix);
+  if (!chol.Decompose())
+    Error("MakeCoefficientErrors", "curvature matrix is singular");
+  chol.Invert(curvatureMatrix);
+
+  curvatureMatrix.NormByDiag(diag);
 
   for (i = 0; i < fNCoefficients; i++)
     fCoefficientsRMS(i) = TMath::Sqrt(curvatureMatrix(i,i));
@@ -2914,7 +2918,7 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
   if (opt.Contains("r4") || opt.Contains("a")) {
     SETBIT(fHistogramMask,HIST_RTEST);
     if (!fHistograms->FindObject("res_test"))
-      fHistograms->Add(new TH1F("res_test",
+      fHistograms->Add(new TH1D("res_test",
 				"Distribution of residuals from test",
 				100,fMinQuantity - fMeanQuantity,
 				fMaxQuantity - fMeanQuantity));
@@ -2987,13 +2991,13 @@ void TMultiDimFit::MakeNormalized()
 
   for (i = 0; i < fSampleSize; i++) {
     if (TESTBIT(fHistogramMask,HIST_DORIG))
-      ((TH1F*)fHistograms->FindObject("d_orig"))->Fill(fQuantity(i));
+      ((TH1D*)fHistograms->FindObject("d_orig"))->Fill(fQuantity(i));
 
     fQuantity(i) -= fMeanQuantity;
     fSumSqAvgQuantity  += fQuantity(i) * fQuantity(i);
 
     if (TESTBIT(fHistogramMask,HIST_DSHIF))
-      ((TH1F*)fHistograms->FindObject("d_shifted"))->Fill(fQuantity(i));
+      ((TH1D*)fHistograms->FindObject("d_shifted"))->Fill(fQuantity(i));
 
     for (j = 0; j < fNVariables; j++) {
       Double_t range = 1. / (fMaxVariables(j) - fMinVariables(j));
@@ -3001,7 +3005,7 @@ void TMultiDimFit::MakeNormalized()
 
       // Fill histograms of original independent variables
       if (TESTBIT(fHistogramMask,HIST_XORIG))
-	((TH1F*)fHistograms->FindObject(Form("x_%d_orig",j)))
+	((TH1D*)fHistograms->FindObject(Form("x_%d_orig",j)))
 	  ->Fill(fVariables(k));
 
       // Normalise independent variables
@@ -3009,7 +3013,7 @@ void TMultiDimFit::MakeNormalized()
 
       // Fill histograms of normalised independent variables
       if (TESTBIT(fHistogramMask,HIST_XNORM))
-	((TH1F*)fHistograms->FindObject(Form("x_%d_norm",j)))
+	((TH1D*)fHistograms->FindObject(Form("x_%d_norm",j)))
 	  ->Fill(fVariables(k));
 
     }
@@ -3142,7 +3146,6 @@ void TMultiDimFit::MakeParameterization()
 
     // Print the statistics about this function
     if (fIsVerbose) {
-#ifndef R__MACOSX
       cout << setw(5)  << fNCoefficients << " "
 	   << setw(10) << setprecision(4) << squareResidual << " "
 	   << setw(10) << setprecision(4) << dResidur << " "
@@ -3154,13 +3157,6 @@ void TMultiDimFit::MakeParameterization()
 	   << setw(10) << setprecision(4)
 	   << fOrthFunctionNorms(fNCoefficients-1) << " "
 	   << flush;
-#else
-      printf("%d5 %g10.4 %g10.4 %g7.3 %g7.3 %d5 %g10.4 %g10.4 ",
-             fNCoefficients, squareResidual, dResidur, fMaxAngle, s, i,
-             fOrthCoefficients(fNCoefficients-1),
-             fOrthFunctionNorms(fNCoefficients-1));
-      fflush(stdout);
-#endif
       for (j = 0; j < fNVariables; j++)
 	cout << " " << fPowers[i * fNVariables + j] - 1 << flush;
       cout << endl;
@@ -3318,7 +3314,7 @@ void TMultiDimFit::MakeRealCode(const char *filename,
   outFile << "double " << prefix
           << "MDF(double *x) {" << endl
 	  << "  double returnValue = " << prefix << "gDMean;" << endl
-	  << "  int    i = 0, j = 0;" << endl
+	  << "  int    i = 0, j = 0" << endl
 	  << "  for (i = 0; i < " << prefix << "gNCoefficients ; i++) {"
 	  << endl
 	  << "    // Evaluate the ith term in the expansion" << endl
@@ -3416,7 +3412,6 @@ void TMultiDimFit::Print(Option_t *option) const
     cout << "Sample statistics:" << endl
 	 << "------------------" << endl
 	 << "                 D"  << flush;
-#ifndef R__MACOSX
     for (i = 0; i < fNVariables; i++)
       cout << " " << setw(10) << i+1 << flush;
     cout << endl << " Max:   " << setw(10) << setprecision(7)
@@ -3436,32 +3431,6 @@ void TMultiDimFit::Print(Option_t *option) const
 	   << fMeanVariables(i) << flush;
     cout << endl << " Function Sum Squares:         " << fSumSqQuantity
 	 << endl << endl;
-#else
-    for (i = 0; i < fNVariables; i++) {
-      fprintf(stdout," %d10",i+1);
-      fflush(stdout);
-    }
-    fprintf(stdout,"\n Max:   %g10.7",fMaxQuantity);
-    fflush(stdout);
-    for (i = 0; i < fNVariables; i++) {
-      fprintf(stdout," %g10.4",fMaxVariables(i));
-      fflush(stdout);
-    }
-    fprintf(stdout,"\n Min:   %g10.7",fMinQuantity);
-    fflush(stdout);
-    for (i = 0; i < fNVariables; i++) {
-      fprintf(stdout," %g10.4",fMinVariables(i));
-      fflush(stdout);
-    }
-    fprintf(stdout,"\n Mean:  %g10.7",fMeanQuantity);
-    fflush(stdout);
-    for (i = 0; i < fNVariables; i++) {
-      fprintf(stdout," %g10.4",fMeanVariables(i));
-      fflush(stdout);
-    }
-    fprintf(stdout,"\n Function Sum Squares:         %g10.4\n\n",
-	    fSumSqQuantity);
-#endif
   }
 
   if (opt.Contains("r")) {
@@ -3541,22 +3510,12 @@ void TMultiDimFit::Print(Option_t *option) const
 	 << "   #         Value        Error   Powers" << endl
 	 << " ---------------------------------------" << endl;
     for (i = 0; i < fNCoefficients; i++) {
-#ifndef R__MACOSX
       cout << " " << setw(3) << i << "  "
 	   << setw(12) << fCoefficients(i) << "  "
 	   << setw(12) << fCoefficientsRMS(i) << "  " << flush;
       for (j = 0; j < fNVariables; j++)
 	cout << " " << setw(3)
 	     << fPowers[fPowerIndex[i] * fNVariables + j] - 1 << flush;
-#else
-      fprintf(stdout," %d3 %g12.4 %g12.4 ",
-              i,fCoefficients(i),fCoefficientsRMS(i));
-      fflush(stdout);
-      for (j = 0; j < fNVariables; j++) {
-        fprintf(stdout," %d3",fPowers[fPowerIndex[i] * fNVariables + j] - 1);
-        fflush(stdout);
-      }
-#endif
       cout << endl;
     }
     cout << endl;
