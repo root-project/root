@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.22 2001/08/02 21:39:09 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.23 2001/08/10 22:22:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -16,10 +16,7 @@
 #define ROO_DATA_SET
 
 #include "TTree.h"
-#include "TNamed.h"
-
-#include "RooFitCore/RooPrintable.hh"
-#include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooAbsData.hh"
 
 class TIterator;
 class TBranch;
@@ -35,7 +32,7 @@ class RooPlot;
 class RooFitContext ;
 class RooFormulaVar ;
 
-class RooDataSet : public TNamed, public RooPrintable {
+class RooDataSet : public RooAbsData {
 public:
 
   // Constructors, factory methods etc.
@@ -63,27 +60,24 @@ public:
 			  const char *indexCatName=0) ;
 
   // Add one ore more rows of data
-  void add(const RooArgSet& row);
+  virtual void add(const RooArgSet& row, Double_t weight=1.0);
   void append(RooDataSet& data) ;
   RooAbsArg* addColumn(RooAbsArg& var) ;
 
   // Load a given row of data
-  inline const RooArgSet* get() const { return &_vars ; } // last loaded row
-  const RooArgSet* get(Int_t index) const;
+  virtual const RooArgSet* get(Int_t index) const;
+  virtual const RooArgSet* get() const { return &_vars ; } 
 
-  Roo1DTable* Table(RooAbsCategory& cat, const char* cuts="", const char* opts="") ;
+  virtual Roo1DTable* table(RooAbsCategory& cat, const char* cuts="", const char* opts="") ;
 
   // Plot the distribution of a real valued arg
-  RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const;
+  virtual RooPlot *plotOn(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const;
   TH1F* createHistogram(const RooAbsReal& var, const char* cuts="", 
 			const char *name= "hist") const;	 
  
   // Printing interface (human readable)
   virtual void printToStream(ostream& os, PrintOption opt= Standard, 
 			     TString indent= "") const;
-  inline virtual void Print(Option_t *options= 0) const {
-    printToStream(defaultStream(),parseOptions(options));
-  }
 
   // Forwarded from TTree
   inline Stat_t GetEntries() const { return _tree->GetEntries() ; }
@@ -101,8 +95,11 @@ public:
 
 protected:
 
-  void cacheArg(RooAbsArg& var) ;
-  void cacheArgs(RooArgSet& varSet) ;
+  // RooFitContext optimizer interface
+  friend class RooFitContext ;
+  virtual void cacheArg(RooAbsArg& var) ;
+  virtual void cacheArgs(RooArgSet& varSet) ;
+
   void fillCacheArgs() ;
 
   // Load data from another TTree
@@ -111,27 +108,17 @@ protected:
   void loadValues(const char *filename, const char *treename,
 		  const char *cuts);
 
-  // RooFitContext optimizer interface
-  friend class RooFitContext ;
-
-  void setDirtyProp(Bool_t flag) { _doDirtyProp = flag ; }
 
   TTree *_tree ; 
 
   // Column structure definition
-  RooArgSet _vars;         
   RooArgSet _truth;        
-  RooArgSet _cachedVars ;  
   TString _blindString ;
 
 private:
 
   void initialize(const RooArgSet& vars);
   void initCache(const RooArgSet& cachedVars) ; 
-
-  TIterator *_iterator;    //! don't make this data member persistent
-  TIterator *_cacheIter ;  //! don't make this data member persistent
-  Bool_t _doDirtyProp ;
 
   enum { bufSize = 8192 };
   ClassDef(RooDataSet,1) // Data set for fitting

@@ -1,0 +1,44 @@
+/*****************************************************************************
+ * Project: BaBar detector at the SLAC PEP-II B-factory
+ * Package: RooFitCore
+ *    File: $Id$
+ * Authors:
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
+ * History:
+ *   16-Aug-2001 WV Created initial version
+ *
+ * Copyright (C) 2001 University of California
+ *****************************************************************************/
+#ifndef ROO_CAT_BIN_ITER
+#define ROO_CAT_BIN_ITER
+
+#include <iostream.h>
+#include "RooFitCore/RooAbsArg.hh"
+#include "RooFitCore/RooAbsBinIter.hh"
+
+class RooCatBinIter : public RooAbsBinIter {
+public:
+
+  // Constructors, assignment etc.
+  RooCatBinIter(const RooAbsArg& arg) ;
+  RooCatBinIter(const RooCatBinIter& other) ;
+  virtual ~RooCatBinIter() ;
+
+  // Iterator implementation
+  virtual RooAbsArg* next() ;
+  inline void reset() ; 
+  
+  virtual Double_t currentCenter() const ;
+  virtual Double_t currentLow() const  ;
+  virtual Double_t currentHigh() const ;
+
+protected:
+
+  RooAbsArg* _arg ;
+  Int_t _curBin ;
+
+  ClassDef(RooCatBinIter,0) // Iterator over all bins of a RooAbsCategory
+};
+
+#endif

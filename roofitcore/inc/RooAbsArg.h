@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.39 2001/08/08 23:11:23 david Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.40 2001/08/10 22:22:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -27,6 +27,7 @@ class RooDataSet ;
 class RooAbsProxy ;
 class RooArgProxy ;
 class RooSetProxy ;
+class RooAbsBinIter ;
 
 class RooAbsArg : public TNamed, public RooPrintable {
 public:
@@ -87,6 +88,10 @@ public:
   Bool_t dependentOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
   virtual Bool_t checkDependents(const RooArgSet* nset) const ;
   void attachDataSet(const RooDataSet &set);
+
+  // Plotting, binned fit interface
+  virtual Int_t getPlotBin() const = 0 ;
+  virtual RooAbsBinIter* createPlotBinIterator() const = 0 ;
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;

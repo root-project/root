@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.22 2001/07/31 05:54:16 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.23 2001/08/03 18:11:33 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,6 +28,7 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/Roo1DTable.hh"
 #include "RooFitCore/RooCategory.hh"
+#include "RooFitCore/RooCatBinIter.hh"
 
 ClassImp(RooAbsCategory) 
 ;
@@ -384,4 +385,20 @@ RooAbsArg *RooAbsCategory::createFundamental() const {
   delete tIter;
 
   return fund;
+}
+
+
+Int_t RooAbsCategory::getPlotBin() const 
+{
+  //Synchronize _value
+  getIndex() ; 
+
+  // Lookup ordinal index number 
+  return _types.IndexOf(&_value) ;
+}
+
+
+RooAbsBinIter* RooAbsCategory::createPlotBinIterator() const 
+{
+  return new RooCatBinIter(*this) ;
 }

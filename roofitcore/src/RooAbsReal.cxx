@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.30 2001/08/03 18:11:33 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.31 2001/08/03 21:44:56 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,7 +26,7 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooArgProxy.hh"
 #include "RooFitCore/RooFormulaVar.hh"
-
+#include "RooFitCore/RooRealFixedBinIter.hh"
 #include "RooFitCore/RooRealBinding.hh"
 
 #include <iostream.h>
@@ -188,6 +188,8 @@ void RooAbsReal::setPlotMin(Double_t value) {
   } else {
     _plotMin = value ;
   }
+
+  calcBinWidth() ;
 }
 
 void RooAbsReal::setPlotMax(Double_t value) {
@@ -201,6 +203,8 @@ void RooAbsReal::setPlotMax(Double_t value) {
   } else {
     _plotMax = value ;
   }
+
+  calcBinWidth() ;
 }
 
 
@@ -215,12 +219,14 @@ void RooAbsReal::setPlotRange(Double_t min, Double_t max) {
     _plotMin = min ;
     _plotMax = max ;
   }
+  calcBinWidth() ;
 }
 
 
 void RooAbsReal::setPlotBins(Int_t value) {
   // Set number of histogram bins 
   _plotBins = value ;  
+  calcBinWidth() ;
 }
 
 
@@ -428,4 +434,58 @@ RooPlot *RooAbsReal::frame() const {
   // the returned object.
 
   return new RooPlot(*this);
+}
+
+
+Int_t RooAbsReal::getPlotBin() const 
+{
+  return Int_t((getVal() - getPlotMin())/ _plotBinW + 0.5) ;
+}
+
+
+RooAbsBinIter* RooAbsReal::createPlotBinIterator() const 
+{
+  return new RooRealFixedBinIter(*this) ;
+}
+
+
+void RooAbsReal::calcBinWidth() 
+{
+  _plotBinW = (getPlotMax() - getPlotMin()) / getPlotBins() ;
+}
+
+
+Double_t RooAbsReal::plotBinCenter(Int_t i) const 
+{
+  if (i<0 || i>=getPlotBins()) {
+    cout << "RooAbsReal::plotBinCenter(" << GetName() << ") ERROR: bin index " << i 
+	 << " is out of range (0," << getPlotBins()-1 << ")" << endl ;
+    return 0 ;
+  }
+
+  return getPlotMin() + (i + 0.5)*_plotBinW ;
+}
+
+
+Double_t RooAbsReal::plotBinLow(Int_t i) const 
+{
+  if (i<0 || i>=getPlotBins()) {
+    cout << "RooAbsReal::plotBinLow(" << GetName() << ") ERROR: bin index " << i 
+	 << " is out of range (0," << getPlotBins()-1 << ")" << endl ;
+    return 0 ;
+  }
+
+  return getPlotMin() + i*_plotBinW ;
+}
+
+
+Double_t RooAbsReal::plotBinHigh(Int_t i) const 
+{
+  if (i<0 || i>=getPlotBins()) {
+    cout << "RooAbsReal::plotBinHigh(" << GetName() << ") ERROR: bin index " << i 
+	 << " is out of range (0," << getPlotBins()-1 << ")" << endl ;
+    return 0 ;
+  }
+
+  return getPlotMin() + (i + 1)*_plotBinW ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.34 2001/08/09 01:02:14 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.35 2001/08/10 22:22:53 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -74,8 +74,7 @@ RooDataSet::RooDataSet()
 
 
 RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& vars) :
-  TNamed(name,title),_vars("Dataset Variables"), _cachedVars("Cached Variables"), 
-  _truth("Truth"), _doDirtyProp(kTRUE)
+  RooAbsData(name,title,vars), _truth("Truth")
 {
   RooTrace::create(this) ;
   _tree = new TTree(name, title) ;
@@ -87,9 +86,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& var
 
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t, 
                        const RooArgSet& vars, const char *cuts) :
-  TNamed(name,title), _vars("Dataset Variables"), 
-  _cachedVars("Cached Variables"), _truth("Truth"), 
-  _blindString(t->_blindString), _doDirtyProp(kTRUE)
+ RooAbsData(name,title,vars), _truth("Truth"), 
+  _blindString(t->_blindString)
 {
   RooTrace::create(this) ;
   _tree = new TTree(name, title) ;
@@ -103,10 +101,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
 
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t, 
                        const RooArgSet& vars, const RooFormulaVar& cutVar) :
-  TNamed(name,title), _vars("Dataset Variables"), 
-  _cachedVars("Cached Variables"), _truth("Truth"), 
-  _blindString(t->_blindString), _doDirtyProp(kTRUE),
-  _iterator(0), _cacheIter(0)
+  RooAbsData(name,title,vars),_truth("Truth"), 
+  _blindString(t->_blindString)
 {
   RooTrace::create(this) ;
   _tree = new TTree(name, title) ;
@@ -127,10 +123,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
 
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t, 
                        const RooArgSet& vars, Bool_t copyCache) :
-  TNamed(name,title), _vars("Dataset Variables"), 
-  _cachedVars("Cached Variables"), _truth("Truth"), 
-  _blindString(t->_blindString), _doDirtyProp(kTRUE),
-  _iterator(0), _cacheIter(0)
+  RooAbsData(name,title,vars), _truth("Truth"), 
+  _blindString(t->_blindString)
 {
   RooTrace::create(this) ;
   _tree = new TTree(name, title) ;
@@ -143,10 +137,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
 
 RooDataSet::RooDataSet(const char *name, const char *title, TTree *t, 
                        const RooArgSet& vars, const char *cuts) :
-  TNamed(name,title), _vars("Dataset Variables"), 
-  _cachedVars("Cached Variables"), 
-  _truth("Truth"), _doDirtyProp(kTRUE),
-  _iterator(0), _cacheIter(0)
+  RooAbsData(name,title,vars), _truth("Truth")
 {
   RooTrace::create(this) ;
   _tree = new TTree(name, title) ;
@@ -159,9 +150,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *t,
 RooDataSet::RooDataSet(const char *name, const char *filename,
 		       const char *treename,
                        const RooArgSet& vars, const char *cuts) :
-  TNamed(name,name), _vars("Dataset Variables"), 
-  _cachedVars("Cached Variables"), _truth("Truth"), _doDirtyProp(kTRUE),
-  _iterator(0), _cacheIter(0)
+  RooAbsData(name,name,vars), _truth("Truth")
 {
   RooTrace::create(this) ;
   _tree = new TTree(name, name) ;
@@ -173,9 +162,7 @@ RooDataSet::RooDataSet(const char *name, const char *filename,
 
 
 RooDataSet::RooDataSet(RooDataSet const & other, const char* newName) : 
-  TNamed(newName,other.GetTitle()),
-  _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth("Truth"), _doDirtyProp(kTRUE),
-  _iterator(0), _cacheIter(0)
+  RooAbsData(newName,other.GetTitle(),other._vars), _truth("Truth")
 {
   // Copy constructor
   RooTrace::create(this) ;
@@ -190,9 +177,6 @@ RooDataSet::~RooDataSet()
 {
   // Destructor
   RooTrace::destroy(this) ;
-
-  if (_iterator) delete _iterator ;
-  if (_cacheIter) delete _cacheIter ;
 
   delete _tree ;
   
@@ -220,9 +204,6 @@ void RooDataSet::initialize(const RooArgSet& vars) {
     }
   }
   delete iter ;
-
-  _iterator= _vars.MakeIterator();
-  _cacheIter = _cachedVars.MakeIterator() ;
 }
 
 
@@ -480,7 +461,7 @@ void RooDataSet::fillCacheArgs()
 }
 
 
-void RooDataSet::add(const RooArgSet& data) {
+void RooDataSet::add(const RooArgSet& data, Double_t weight) {
   // Add a row of data elements  
   _vars= data;
   Fill();
@@ -594,7 +575,7 @@ TH1F* RooDataSet::createHistogram(const RooAbsReal& var, const char* cuts, const
 }
 
 
-Roo1DTable* RooDataSet::Table(RooAbsCategory& cat, const char* cuts, const char* opts)
+Roo1DTable* RooDataSet::table(RooAbsCategory& cat, const char* cuts, const char* opts)
 {
   // Create and fill a 1-dimensional table for given category column
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.21 2001/08/03 02:04:32 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.22 2001/08/03 21:44:56 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -21,6 +21,7 @@ class RooPlot;
 class RooRealVar;
 class RooRealFunc1D;
 class RooAbsFunc;
+class RooRealFixedBinIter ;
 class TH1F;
 
 class RooAbsReal : public RooAbsArg {
@@ -64,6 +65,13 @@ public:
   const char *getPlotLabel() const;
   virtual Bool_t inPlotRange(Double_t value) const;
 
+  // Plotting, binned fit interface
+  virtual Int_t getPlotBin() const ;
+  virtual RooAbsBinIter* createPlotBinIterator() const ;
+  virtual Double_t plotBinCenter(Int_t i) const ;
+  virtual Double_t plotBinLow(Int_t i) const ;
+  virtual Double_t plotBinHigh(Int_t i) const ;
+
   // Create plots
   RooPlot *frame() const;
   RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0) const;
@@ -95,9 +103,14 @@ protected:
   virtual void copyCache(const RooAbsArg* source) ;
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
 
+  friend class RooRealFixedBinIter ;
+  void calcBinWidth() ;
+  Double_t getPlotBinWidth() { return _plotBinW ; }
+
   Double_t _plotMin ;
   Double_t _plotMax ;
   Int_t    _plotBins ;
+  Double_t _plotBinW ;
   mutable Double_t _value ;
   TString  _unit ;
   TString  _label ;
