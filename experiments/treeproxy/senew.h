@@ -215,7 +215,7 @@ class senew : public TSelector {
       fH           (&fDirector,"fH"),
       fLastTrack   (&fDirector,"fLastTrack"),
       fWebHistogram(&fDirector,"fWebHistogram")
- { }
+      { }
    ~senew() { }
    void    Begin(TTree *tree);
    void    Init(TTree *tree);
