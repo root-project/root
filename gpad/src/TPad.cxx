@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.6 2000/06/27 08:44:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.7 2000/06/30 12:10:56 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4032,29 +4032,33 @@ void TPad::Streamer(TBuffer &b)
          b >> fUxmax;
          b >> fUymax;
       }
-      
+
       if (!gPad) gPad = new TCanvas(GetName());
       if (readLevel == 0) fMother = (TPad*)gROOT->GetSelectedPad();
       else                fMother = (TPad*)gPad;
       if (!fMother) fMother = (TPad*)gPad;
       if (fMother)  fCanvas = fMother->GetCanvas();
-      fPixmapID   = -1;      // -1 means pixmap will be created by ResizePad()
+      gPad      = fMother;
+      fPixmapID = -1;      // -1 means pixmap will be created by ResizePad()
 //-------------------------
 // read objects and their drawing options
 //      b >> fPrimitives;
       readLevel++;
       gROOT->SetReadingBasket(kTRUE);
-      TPad *padsav = (TPad*)gPad;
-      gPad = this;
       fPrimitives = new TList(this);
       b >> nobjects;
-      char drawoption[64];
-      for (Int_t i = 0; i < nobjects; i++) {
-         b >> obj;
-         b >> nch;
-         b.ReadFastArray(drawoption,nch);
-         fPrimitives->AddLast(obj, drawoption);
-         gPad = padsav; // gPad may be modified in b >> obj if obj is a pad
+      if (nobjects > 0) {
+         TPad *padsav = (TPad*)gPad;
+         gPad = this;
+         char drawoption[64];
+         for (Int_t i = 0; i < nobjects; i++) {
+            b >> obj;
+            b >> nch;
+            b.ReadFastArray(drawoption,nch);
+            fPrimitives->AddLast(obj, drawoption);
+            gPad = this; // gPad may be modified in b >> obj if obj is a pad
+         }
+         gPad = padsav;
       }
       readLevel--;
       gROOT->SetReadingBasket(kFALSE);
@@ -4070,7 +4074,7 @@ void TPad::Streamer(TBuffer &b)
       b >> fGridy;
       b >> fFrame;
       b >> fView;
-      if (v < 5) { 
+      if (v < 5) {
          b >> single; fTheta = single;
          b >> single; fPhi   = single;
       } else {
