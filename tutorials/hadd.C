@@ -4,10 +4,6 @@
   to a target root file. The target file is newly created and must not be
   identical to one of the source files.
 
-  Syntax:
-
-  hist_add targetfile source1 source2 ...
-
   Author: Sven A. Schmidt, sven.schmidt@cern.ch
   Date:   13.2.2001
 
@@ -15,9 +11,10 @@
   which had a problem with directories more than one level deep.
   (see macro hadd_old.C for this previous implementation).
   
-  I have tested this macro on rootfiles with one and two dimensional 
-  histograms, and two levels of subdirectories. Feel free to send comments 
-  or bug reports to me.
+  To use this macro, modify the file names in function hadd.
+  
+  NB: This macro is provided as a tutorial.
+      Use $ROOTSYS/bin/hadd to merge many histogram files
 
  */
 
@@ -35,34 +32,26 @@ TFile *Target;
 void MergeRootfile( TDirectory *target, TList *sourcelist );
 
 
-int main( int argc, char **argv ) {
-
+void hadd() {
+   // in an interactive ROOT session, edit the file names
+   // Target and FileList, then
+   // root > .L hadd.C
+   // root > hadd()
+   
+  Target = TFile::Open( "result.root", "RECREATE" );
+  
   FileList = new TList();
-
-  if ( argc < 4 ) {
-    cout << "Usage: " << argv[0] << " <target> <source1> <source2> ...\n";
-    cout << "supply at least two source files for this to make sense... ;-)\n";
-    exit( -1 );
-  }
-
-  cout << "Target file: " << argv[1] << endl;
-  Target = TFile::Open( argv[1], "RECREATE" );
-
-  for ( int i = 2; i < argc; i++ ) {
-    cout << "Source file " << i-1 << ": " << argv[i] << endl;
-    FileList->Add( TFile::Open( argv[i] ) );
-  }
-
+  FileList->Add( TFile::Open("hsimple1.root") );
+  FileList->Add( TFile::Open("hsimple2.root") );
+  
   MergeRootfile( Target, FileList );
 
-}
+}   
 
-
-
+void MergeRootfile( TDirectory *target, TList *sourcelist ) {
 // Merge all files from sourcelist into the target directory.
 // The directory level (depth) is determined by the target directory's
 // current level
-void MergeRootfile( TDirectory *target, TList *sourcelist ) {
 
   //  cout << "Target path: " << target->GetPath() << endl;
   TString path( (char*)strstr( target->GetPath(), ":" ) );
@@ -74,7 +63,8 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
 
   // loop over all keys in this directory
   TIter nextkey( current_sourcedir->GetListOfKeys() );
-  while ( TKey *key = (TKey*)nextkey() ) {
+  TKey *key;
+  while ( key = (TKey*)nextkey() ) {
 
     // read object from first source file
     first_source->cd( path );
