@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.44 2004/01/28 19:06:05 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.45 2004/02/18 20:13:43 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1992,12 +1992,12 @@ void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
 {
    // Save a main frame widget as a C++ statement(s) on output stream out.
 
-   if (fParent!=gClient->GetDefaultRoot()) { // frame is embedded 
-      fOptions &= ~kMainFrame;
-      TGCompositeFrame::SavePrimitive(out, option);
-      fOptions |= kMainFrame;
-      return;
-   }
+   //if (fParent!=gClient->GetDefaultRoot()) { // frame is embedded 
+   //   fOptions &= ~kMainFrame;
+   //   TGCompositeFrame::SavePrimitive(out, option);
+   //   fOptions |= kMainFrame;
+   //   return;
+   //}
 
    char quote = '"';
 
