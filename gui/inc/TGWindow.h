@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.15 2004/08/02 11:43:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.16 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -44,6 +44,7 @@ protected:
    Bool_t            fNeedRedraw;     // kTRUE if window needs to be redrawn
    TString           fName;           // name of the window used in SavePrimitive()
    static Int_t      fgCounter;       // counter of created windows in SavePrimitive
+   Bool_t            fEditDisabled;   // if kTRUE window edit is disabled
 
    TGWindow(Window_t id) : fNeedRedraw(kFALSE) { fClient = 0; fId = id; }
 
@@ -91,7 +92,13 @@ public:
    virtual void   Resize(UInt_t w, UInt_t h);
    virtual void   MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual Bool_t IsMapped();
-
+   virtual Bool_t IsEditable() const { return (fClient->GetRoot() == this); }
+   virtual Bool_t IsEditDisabled() const { return fEditDisabled; }
+   virtual void   SetEditDisabled(Bool_t on = kTRUE) { fEditDisabled = on; }
+   virtual void   SetEditable(Bool_t on = kTRUE) 
+                  { if (!fEditDisabled) fClient->SetRoot(on ? this : 0); }
+   virtual void   SetCleanup(Bool_t = kTRUE) {}
+   virtual Bool_t MustCleanup() const { return kFALSE; }
    virtual void   Print(Option_t *option="") const;
 
    virtual void        SetWindowName(const char *name = 0);

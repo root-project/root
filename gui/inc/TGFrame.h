@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.45 2004/09/06 11:58:04 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.46 2004/09/08 08:13:11 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -128,10 +128,15 @@ protected:
    Int_t    fY;             // frame y position
    UInt_t   fWidth;         // frame width
    UInt_t   fHeight;        // frame height
+   UInt_t   fMinWidth;      // minimal frame width
+   UInt_t   fMinHeight;     // minimal frame height
+   UInt_t   fMaxWidth;      // maximal frame width
+   UInt_t   fMaxHeight;     // maximal frame height
    Int_t    fBorderWidth;   // frame border width
    UInt_t   fOptions;       // frame options
    Pixel_t  fBackground;    // frame background color
    UInt_t   fEventMask;     // currenty active event mask
+   Bool_t   fMustCleanup;   // if kTRUE Cleanup() is called in destructor
    TGFrameElement *fFE;     // pointer to frame element
 
    static Bool_t      fgInit;
@@ -162,9 +167,7 @@ protected:
 
    TString GetOptionString() const;                //used in SavePrimitive()
 
-   virtual Bool_t HandleEditEvent(Event_t *)  { return kFALSE; }
-   virtual Bool_t OnContextMenu(Event_t *) { return kFALSE; }
-   virtual Bool_t IsEditEvent(Event_t *) const { return kFALSE; }
+   virtual void StartGuiBuilding(Bool_t on = kTRUE);
 
 public:
    // Default colors and graphics contexts
@@ -202,6 +205,11 @@ public:
    virtual Bool_t HandleSelectionRequest(Event_t *) { return kFALSE; }
    virtual Bool_t HandleSelectionClear(Event_t *) { return kFALSE; }
    virtual Bool_t HandleColormapChange(Event_t *) { return kFALSE; }
+   virtual Bool_t HandleDragEnter(TGFrame *) { return kFALSE; }
+   virtual Bool_t HandleDragLeave(TGFrame *) { return kFALSE; }
+   virtual Bool_t HandleDragMotion(TGFrame *) { return kFALSE; }
+   virtual Bool_t HandleDragDrop(TGFrame *, Int_t /*x*/, Int_t /*y*/, TGLayoutHints*) 
+                 { return kFALSE; }
    virtual void   ProcessedEvent(Event_t *event)
                  { Emit("ProcessedEvent(Event_t*)", (Long_t)event); } //*SIGNAL*
 
@@ -236,9 +244,23 @@ public:
    virtual Bool_t  IsComposite() const { return kFALSE; }
    virtual Bool_t  IsEditable() const { return kFALSE; }
    virtual void    SetEditable(Bool_t) {}
+   virtual void    SetCleanup(Bool_t on = kTRUE);
+   virtual Bool_t  MustCleanup() const { return fMustCleanup; }
+   virtual Bool_t  IsCleanupOn() const;
+   virtual void    SetLayoutBroken(Bool_t = kTRUE) {}
+   virtual Bool_t  IsLayoutBroken() const { return kFALSE; }
+
+   virtual void    SetDragType(Int_t type);
+   virtual void    SetDropType(Int_t type);
+   virtual Int_t   GetDragType() const;
+   virtual Int_t   GetDropType() const;
 
    UInt_t GetWidth() const { return fWidth; }
    UInt_t GetHeight() const { return fHeight; }
+   UInt_t GetMinWidth() const { return fMinWidth; }
+   UInt_t GetMinHeight() const { return fMinHeight; }
+   UInt_t GetMaxWidth() const { return fMaxWidth; }
+   UInt_t GetMaxHeight() const { return fMaxHeight; }
    TGDimension GetSize() const { return TGDimension(fWidth, fHeight); }
    Int_t  GetX() const { return fX; }
    Int_t  GetY() const { return fY; }
@@ -257,6 +279,10 @@ public:
    virtual void SetY(Int_t y) { fY = y; }
    virtual void SetWidth(UInt_t w) { fWidth = w; }
    virtual void SetHeight(UInt_t h) { fHeight = h; }
+   virtual void SetMinWidth(UInt_t w) { fMinWidth = w; }
+   virtual void SetMinHeight(UInt_t h) { fMinHeight = h; }
+   virtual void SetMaxWidth(UInt_t w) { fMaxWidth = w; }
+   virtual void SetMaxHeight(UInt_t h) { fMaxHeight = h; }
    virtual void SetSize(const TGDimension &s) { fWidth = s.fWidth; fHeight = s.fHeight; }
 
    // Printing and saving
@@ -286,13 +312,9 @@ protected:
    TGLayoutManager *fLayoutManager;   // layout manager
    TList           *fList;            // container of frame elements
    Bool_t           fLayoutBroken;    // no layout manager is used
-   Bool_t           fCleanup;         // if kTRUE Cleanup() is called in destructor
 
    static TContextMenu  *fgContextMenu;   // context menu for setting GUI attributes
    static TGLayoutHints *fgDefaultHints;  // default hints used by AddFrame()
-
-   virtual Bool_t HandleEditEvent(Event_t *);
-   virtual Bool_t OnContextMenu(Event_t *);
 
    virtual void SavePrimitiveSubframes(ofstream &out, Option_t *option);
 
@@ -322,6 +344,10 @@ public:
    virtual Bool_t HandleKey(Event_t *) { return kFALSE; }
    virtual Bool_t HandleFocusChange(Event_t *) { return kFALSE; }
    virtual Bool_t HandleSelection(Event_t *) { return kFALSE; }
+   virtual Bool_t HandleDragEnter(TGFrame *);
+   virtual Bool_t HandleDragLeave(TGFrame *);
+   virtual Bool_t HandleDragMotion(TGFrame *);
+   virtual Bool_t HandleDragDrop(TGFrame *frame, Int_t x, Int_t y, TGLayoutHints *lo);
    virtual void   ChangeOptions(UInt_t options);
    virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t) { return kFALSE; }
 
@@ -341,9 +367,9 @@ public:
    virtual Bool_t IsEditable() const;
    virtual void   SetEditable(Bool_t on = kTRUE);
    virtual void   SetLayoutBroken(Bool_t on = kTRUE);
-   virtual Bool_t IsLayoutBroken() const { return fLayoutBroken || !fLayoutManager || IsEditable(); }
-   virtual void   SetCleanup(Bool_t on = kTRUE);
-   virtual Bool_t MustCleanup() const { return fCleanup; }
+   virtual Bool_t IsLayoutBroken() const 
+                  { return fLayoutBroken || !fLayoutManager || IsEditable(); }
+   virtual void   SetEditDisabled(Bool_t on = kTRUE);
 
    TList *GetList() { return fList; }
    virtual void Print(Option_t *option="") const;

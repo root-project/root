@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.4 2004/07/08 14:40:28 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef3.h,v 1.5 2004/09/03 00:25:47 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -13,6 +13,10 @@
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
+
+#pragma link C++ enum EDragType;
+#pragma link C++ global gDragManager;
+#pragma link C++ global gGuiBuilder;
 
 #pragma link C++ nestedclass;
 
@@ -59,5 +63,7 @@
 #pragma link C++ class TGMdiTitleIcon;
 #pragma link C++ class TGMdiTitleBar;
 #pragma link C++ class TGMdiDecorFrame;
+#pragma link C++ class TVirtualDragManager;
+#pragma link C++ class TVirtualGuiBld;
 
 #endif

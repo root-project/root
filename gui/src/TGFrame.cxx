@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.69 2004/09/08 10:24:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.70 2004/09/08 10:28:37 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -79,7 +79,7 @@
 #include "TGFileDialog.h"
 #include "TGMsgBox.h"
 #include "TSystem.h"
-#include "TContextMenu.h"
+#include "TVirtualDragManager.h"
 
 
 Bool_t      TGFrame::fgInit = kFALSE;
@@ -145,6 +145,10 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fBackground = back;
    fOptions    = options;
    fWidth = w; fHeight = h; fX = fY = fBorderWidth = 0;
+   fMinWidth    = 0;
+   fMinHeight   = 0;
+   fMaxWidth    = ~0;
+   fMaxHeight   = ~0;
 
    if (fOptions & (kSunkenFrame | kRaisedFrame))
       fBorderWidth = (fOptions & kDoubleBorder) ? 2 : 1;
@@ -164,6 +168,9 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    }
    fEventMask = (UInt_t) wattr.fEventMask;
    fFE        = 0;
+
+   AddInput(kButtonPressMask); // to allow Drag and Drop
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -200,13 +207,36 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fBackground  = 0;
    fOptions     = 0;
    fFE          = 0;
+   fMinWidth    = 0;
+   fMinHeight   = 0;
+   fMaxWidth    = ~0;
+   fMaxHeight   = ~0;
+
+   AddInput(kButtonPressMask); // to allow Drag and Drop
+   SetWindowName();
 }
 
 //______________________________________________________________________________
 TGFrame::~TGFrame()
 {
    // destructor
+}
 
+//______________________________________________________________________________
+void TGFrame::SetCleanup(Bool_t on)
+{
+   //
+
+   if (on == fMustCleanup) return;
+   fMustCleanup = on;
+}
+
+//______________________________________________________________________________
+Bool_t TGFrame::IsCleanupOn() const
+{
+   // return kTRUE if parent's Cleanup is in progress (or at ctor.)
+
+   return kFALSE; //(fParent->MustCleanup() && !fFE);
 }
 
 //______________________________________________________________________________
@@ -362,8 +392,7 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
    // Handle all frame events. Events are dispatched to the specific
    // event handlers.
 
-   if (IsEditEvent(event))
-      return HandleEditEvent(event);
+   if (gDragManager && gDragManager->HandleEvent(event)) return kTRUE;
 
    switch (event->fType) {
 
@@ -404,17 +433,19 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
             fgDby = event->fYRoot;
             fgDbw = event->fWindow;
 
-            if (!dbl_clk && IsEditEvent(event) &&
-                (event->fCode == kButton3)) {
-               OnContextMenu(event);
-            }
-
             if (dbl_clk) {
+               if (event->fState & kKeyControlMask) {
+                  StartGuiBuilding(!IsEditable());
+                  return kTRUE;
+               }
+
                if (!HandleDoubleClick(event)) {
                   HandleButton(event);
                }
             } else {
-               HandleButton(event);
+               if (!gDragManager || gDragManager->IgnoreEvent(event)) {
+                  HandleButton(event);
+               }
             }
          }
          break;
@@ -684,6 +715,55 @@ void TGFrame::Print(Option_t *option) const
 }
 
 //______________________________________________________________________________
+void TGFrame::SetDragType(Int_t)
+{
+   //
+}
+
+//______________________________________________________________________________
+void TGFrame::SetDropType(Int_t)
+{
+   //
+}
+
+//______________________________________________________________________________
+Int_t TGFrame::GetDragType() const
+{
+   // Returns drag source type.
+   // If frame is not "draggable" - return zero
+
+   return fClient->IsEditable();
+}
+
+//______________________________________________________________________________
+Int_t TGFrame::GetDropType() const
+{
+   // Returns drop target type.
+   // If frame cannot accept drop - return zero
+
+   return 0;
+}
+
+//______________________________________________________________________________
+void TGFrame::StartGuiBuilding(Bool_t on)
+{
+   //
+
+   if (!gDragManager) gDragManager = TVirtualDragManager::Instance();
+   if (!gDragManager) return;
+
+   TGCompositeFrame *comp = 0;
+
+   if (InheritsFrom(TGCompositeFrame::Class())) {
+      comp = (TGCompositeFrame *)this;
+   } else if (fParent->InheritsFrom(TGCompositeFrame::Class())) {
+      comp = (TGCompositeFrame*)fParent;
+   }
+
+   comp->SetEditable(on);
+}
+
+//______________________________________________________________________________
 TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
          UInt_t options, ULong_t back) : TGFrame(p, w, h, options, back)
 {
@@ -693,12 +773,13 @@ TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fLayoutManager = 0;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
-   fCleanup       = kFALSE;
 
    if (fOptions & kHorizontalFrame)
       SetLayoutManager(new TGHorizontalLayout(this));
    else
       SetLayoutManager(new TGVerticalLayout(this));
+
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -712,9 +793,10 @@ TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *par
    fLayoutManager = 0;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
-   fCleanup       = kFALSE;
 
    SetLayoutManager(new TGVerticalLayout(this));
+
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -722,7 +804,7 @@ TGCompositeFrame::~TGCompositeFrame()
 {
    // Delete a composite frame.
 
-   if (fCleanup) Cleanup();
+   if (MustCleanup()) Cleanup();
    if (fList) fList->Delete();
    delete fList;
    delete fLayoutManager;
@@ -753,38 +835,14 @@ void TGCompositeFrame::SetEditable(Bool_t on)
    //    m->SetEditable(0);
    //    m->MapWindow();
    //
-   //  2. ... to be continued
 
    if (on) {
       fClient->SetRoot(this);
    } else {
       fClient->SetRoot(0);
-      Resize();
+//      Resize();
    }
-}
-
-//______________________________________________________________________________
-Bool_t TGCompositeFrame::HandleEditEvent(Event_t *)
-{
-   // Edit events allow to move, resize, remove frames
-   // from the composite frame.
-
-   return kFALSE;
-}
-
-//______________________________________________________________________________
-Bool_t TGCompositeFrame::OnContextMenu(Event_t *event)
-{
-   // Handle context menu
-
-   if (!fgContextMenu) fgContextMenu = new TContextMenu("GUI context menu");
-
-   TGFrame *f = GetFrameFromPoint(event->fX, event->fY);
-
-   if (f) fgContextMenu->Popup(event->fXRoot, event->fYRoot, f, (TBrowser*)NULL);
-   else return kFALSE;
-
-   return kTRUE;
+   if (gDragManager) gDragManager->SetEditable(on);
 }
 
 //______________________________________________________________________________
@@ -801,20 +859,23 @@ void TGCompositeFrame::Cleanup()
    TIter next(fList);
 
    while ((el = (TGFrameElement *) next())) {
-      delete el->fFrame;
-      if (el->fLayout != fgDefaultHints)
-         delete el->fLayout;
+      if (el->fFrame) {
+         el->fFrame->SetFrameElement(0);
+         delete el->fFrame;
+         el->fFrame = 0;
+      }
+
+      if (el->fLayout && (el->fLayout != fgDefaultHints) &&
+          (el->fLayout->References() > 0)) {
+         el->fLayout->RemoveReference();
+         if (!el->fLayout->References()) {
+            el->fLayout->fFE = 0;
+            delete el->fLayout;
+            el->fLayout = 0;
+         }
+      }
    }
    fList->Delete();
-}
-
-//______________________________________________________________________________
-void TGCompositeFrame::SetCleanup(Bool_t on)
-{
-   // If fCleanup is kTRUE Cleanup() method is called automatically
-   // by the destructor.
-
-   fCleanup = on;
 }
 
 //______________________________________________________________________________
@@ -841,6 +902,23 @@ void TGCompositeFrame::SetLayoutBroken(Bool_t on)
 }
 
 //______________________________________________________________________________
+void TGCompositeFrame::SetEditDisabled(Bool_t on)
+{
+   //  disable/enable edit this frame and all subframes
+
+   fEditDisabled = on;
+
+   TGFrameElement *el;
+   TIter next(fList);
+
+   while ((el = (TGFrameElement *) next())) {
+      if (el->fFrame) {
+         el->fFrame->SetEditDisabled(on);
+      }
+   }
+}
+
+//______________________________________________________________________________
 void TGCompositeFrame::ChangeOptions(UInt_t options)
 {
    // Change composite frame options. Options is an OR of the EFrameTypes.
@@ -864,13 +942,7 @@ void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
    // added to different composite frames but still need to be deleted by
    // the user.
 
-   TGFrameElement *nw;
-
-   nw = new TGFrameElement;
-   nw->fFrame  = f;
-   f->SetFrameElement(nw);
-   nw->fLayout = l ? l : fgDefaultHints;
-   nw->fState  = 1;
+   TGFrameElement *nw = new TGFrameElement(f, l ? l : fgDefaultHints);
    fList->Add(nw);
 }
 
@@ -884,13 +956,15 @@ void TGCompositeFrame::RemoveFrame(TGFrame *f)
    TGFrameElement *el;
    TIter next(fList);
 
-   while ((el = (TGFrameElement *) next()))
+   while ((el = (TGFrameElement *) next())) {
       if (el->fFrame == f) {
          fList->Remove(el);
+         if (el->fLayout) el->fLayout->RemoveReference();
          f->SetFrameElement(0);
          delete el;
          break;
       }
+   }
 }
 
 //______________________________________________________________________________
@@ -1083,6 +1157,65 @@ Bool_t TGCompositeFrame::TranslateCoordinates(TGFrame *child, Int_t x, Int_t y,
    return kFALSE;
 }
 
+//______________________________________________________________________________
+Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
+{
+   //  handle drag enter event
+
+   if (fClient && fClient->IsEditable() &&
+       (fId != fClient->GetRoot()->GetId())) {
+      Float_t r, g, b;
+      TColor::Pixel2RGB(fBackground, r, g, b);
+      r *= 0.9;
+      b *= 0.9;
+      Pixel_t back = TColor::RGB2Pixel(r, g, b);
+      gVirtualX->SetWindowBackground(fId, back);
+      return kTRUE;
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGCompositeFrame::HandleDragLeave(TGFrame *)
+{
+   // handle drag leave event
+
+   if (fClient && fClient->IsEditable() &&
+       (fId != fClient->GetRoot()->GetId())) {
+      gVirtualX->SetWindowBackground(fId, fBackground);
+      return kTRUE;
+   }
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGCompositeFrame::HandleDragMotion(TGFrame *)
+{
+   //  handle drag motion event
+
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+Bool_t TGCompositeFrame::HandleDragDrop(TGFrame *frame, Int_t x, Int_t y, 
+                                        TGLayoutHints *lo)
+{
+   //  handle drop event 
+
+   if (fClient && fClient->IsEditable() && frame && (x >= 0) && (y >= 0) && 
+       (x + frame->GetWidth() <= fWidth) && (y + frame->GetHeight() <= fHeight)) {
+      frame->ReparentWindow(this, x, y);
+      AddFrame(frame, lo);
+      frame->MapWindow();
+      SetEditable(kTRUE);
+      return kTRUE;
+   }
+
+   return kFALSE;
+}
+
 
 //______________________________________________________________________________
 TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
@@ -1123,8 +1256,14 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
       if (p->InheritsFrom(TGCompositeFrame::Class())) {
          frame = (TGCompositeFrame*)p;
          frame->AddFrame(this);
+
+         // used during paste operation
+         if (gDragManager && gDragManager->IsPasting()) {
+            gDragManager->SetPasteFrame(this);
+         }
       }
    }
+   SetWindowName();
 }
 
 //______________________________________________________________________________
@@ -1384,10 +1523,10 @@ void TGMainFrame::SetWMSizeHints(UInt_t wmin, UInt_t hmin,
 
    if (fClient->IsEditable() && (fParent == fClient->GetRoot())) return;
 
-   fWMMinWidth  = wmin;
-   fWMMinHeight = hmin;
-   fWMMaxWidth  = wmax;
-   fWMMaxHeight = hmax;
+   fMinWidth = fWMMinWidth  = wmin;
+   fMinHeight =fWMMinHeight = hmin;
+   fMaxWidth = fWMMaxWidth  = wmax;
+   fMaxHeight = fWMMaxHeight = hmax;
    fWMWidthInc  = winc;
    fWMHeightInc = hinc;
    gVirtualX->SetWMSizeHints(fId, wmin, hmin, wmax, hmax, winc, hinc);
@@ -1446,7 +1585,7 @@ TGGroupFrame::TGGroupFrame(const TGWindow *p, const char *title,
 {
    // Create a group frame.
 
-   fText       = new TGString(title);
+   fText       = new TGString(p && title ? title : GetName());
    fFontStruct = font;
    fNormGC     = norm;
    fTitlePos   = kLeft;
@@ -1454,6 +1593,8 @@ TGGroupFrame::TGGroupFrame(const TGWindow *p, const char *title,
    int max_ascent, max_descent;
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fBorderWidth = max_ascent + max_descent + 1;
+
+   SetWindowName();
 }
 
 //______________________________________________________________________________
