@@ -137,7 +137,7 @@ void box(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("box", "poza1");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -197,7 +197,7 @@ void para(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("para", "poza1");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -260,7 +260,7 @@ void tube(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("tube", "poza2");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -321,7 +321,7 @@ void tubeseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("tubeseg", "poza3");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -384,7 +384,7 @@ void ctub(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("ctub", "poza3");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -453,7 +453,7 @@ void cone(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("cone", "poza4");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -516,7 +516,7 @@ void coneseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("coneseg", "poza5");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -577,7 +577,7 @@ void eltu(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("eltu", "poza6");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -638,7 +638,7 @@ void sphere(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("sphere", "poza7");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -691,7 +691,7 @@ void torus(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("torus", "poza2");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -746,7 +746,7 @@ void trd1(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("trd1", "poza8");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -803,7 +803,7 @@ void parab()
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("parab", "paraboloid");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -860,7 +860,7 @@ void pcon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("pcon", "poza10");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -936,7 +936,7 @@ void pgon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("pgon", "poza11");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,150,150,100);
    gGeoManager->SetTopVolume(top);
@@ -1008,7 +1008,7 @@ void arb8(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("arb8", "poza12");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -1083,7 +1083,7 @@ void trd2(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("trd2", "poza9");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -1145,7 +1145,7 @@ void trap(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("trap", "poza10");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -1213,7 +1213,7 @@ void gtra(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("gtra", "poza11");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -1278,7 +1278,7 @@ void xtru()
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("xtru", "poza12");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -1337,7 +1337,7 @@ void composite()
    }   
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("xtru", "poza12");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
@@ -1431,7 +1431,7 @@ void ideal()
    gSystem->Load("libGeom");
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("alignment", "Ideal geometry");
-   TGeoMaterial *mat = new TGeoMaterial("VOID",0,0,0);
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,10);
    gGeoManager->SetTopVolume(top);
