@@ -47,7 +47,7 @@ templateMembers: templateMembers.log  templateMembers.ref
 ifeq ($(FAIL),)
 	$(WarnFailTest)
 	@echo This failures is due to the odd object life time in CINT.
-	$(CMDECHO) diff -b templateMembers.ref templateMembers.log > templateMembers.diff.log || \
+	$(CMDECHO) diff -b templateMembers.ref templateMembers.log | grep -v ::~ > templateMembers.diff.log && \
 		diff templateMembers.diff.log templateMembers.diff.ref
 else
 	$(TestDiff)

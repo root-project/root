@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += dict* *.o
+CLEAN_TARGETS += dict* *.o $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
 TEST_TARGETS += mapTest badOperatorTest stringMapTest badstringMapTest
