@@ -1375,6 +1375,7 @@ char *in;
     case ' ': strcpy(out+j,"sP"); j+=2; break;
     case ':': strcpy(out+j,"cL"); j+=2; break;
     case '"': strcpy(out+j,"dQ"); j+=2; break;
+    case '@': strcpy(out+j,"aT"); j+=2; break;
     case '\'': strcpy(out+j,"sQ"); j+=2; break;
 #ifndef G__PHILIPPE28
     case '\\': strcpy(out+j,"fI"); j+=2; break;
