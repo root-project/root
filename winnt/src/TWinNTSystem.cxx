@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.109 2004/12/15 16:56:32 rdm Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.110 2004/12/15 22:26:04 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -359,7 +359,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
    static const char *dynpath = 0;
 
    if ((reset || newpath) && dynpath) {
-      delete [] dynpath;
+      delete [] (char*)dynpath;
       dynpath = 0;
    }
    if (newpath) {
