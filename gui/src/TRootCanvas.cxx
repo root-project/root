@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.36 2004/04/22 16:28:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.37 2004/04/22 17:04:37 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -799,7 +799,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kViewEditor:
                      fCanvas->ToggleEditor();
                      if (!fEditor) CreateEditor();
-                     ShowEditor(fCanvas->GetShowEditor());
+                     //ShowEditor(fCanvas->GetShowEditor());
                      break;
                   case kViewToolbar:
                      fCanvas->ToggleToolBar();
@@ -1155,43 +1155,21 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
 void TRootCanvas::ShowEditor(Bool_t show)
 {
    // Show or hide side frame.
-
+   
+   UInt_t w = GetWidth();
+   UInt_t e = fEditorFrame->GetWidth();
+   
    if (show) {
       if (!fEditor) CreateEditor();
       fMainFrame->ShowFrame(fEditorFrame);
       fViewMenu->CheckEntry(kViewEditor);
-      SetCanvasSize(Canvas()->GetWw(), Canvas()->GetWh());
-
-      // move the viewport if the selected object is not visible
-      // when showing the pad editor via menu
-      if (fCanvasWindow->GetScrolling() != TGCanvas::kCanvasNoScroll) {
-
-         switch (fCanvasWindow->GetScrolling()){
-            case TGCanvas::kCanvasScrollHorizontal:
-               fCanvasWindow->SetHsbPosition(Canvas()->GetSelectedX());
-               break;
-            
-            case TGCanvas::kCanvasScrollVertical:
-               fCanvasWindow->SetVsbPosition(Canvas()->GetSelectedY());
-               break;
-            
-            case TGCanvas::kCanvasScrollBoth:
-               fCanvasWindow->SetHsbPosition(Canvas()->GetSelectedX());
-               fCanvasWindow->SetVsbPosition(Canvas()->GetSelectedY());
-         }
-      }
+      w = w + e;
    } else {
       fMainFrame->HideFrame(fEditorFrame);
       fViewMenu->UnCheckEntry(kViewEditor);
-      fAutoFit = kTRUE;
-      int opt = fCanvasContainer->GetOptions();
-      opt &= ~kFixedSize;
-      fOptionMenu->CheckEntry(kOptionAutoResize);
-      fCanvasContainer->ChangeOptions(opt);
-      // in case of autofit a configure event is generated for   
-      // the container and this will force the update of the TCanvas
+      w = w - e;
    }
-   Layout();
+   Resize(w, GetHeight());
 }
 
 //______________________________________________________________________________
