@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.28 2002/01/04 13:07:15 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.29 2002/01/07 18:07:13 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 #include "THashList.h"
 #include "TObjString.h"
 #include "TMath.h"
+#include "THLimitsFinder.h"
 
 Int_t TGaxis::fgMaxDigits = 5;
 const Int_t kHori = BIT(9); //defined in TPad
@@ -617,7 +618,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*- When integer labelling is required, Optimize is invoked first
 //*-*- and only if the result is not an integer labelling, AdjustBinSize is invoked.
 
-      TGaxis::Optimize(wmin,wmax,N1A,BinLow,BinHigh,nbins,BinWidth,fChopt.Data());
+      THLimitsFinder::Optimize(wmin,wmax,N1A,BinLow,BinHigh,nbins,BinWidth,fChopt.Data());
       if (OptionInt) {
          if (BinLow != Double_t(int(BinLow)) || BinWidth != Double_t(int(BinWidth))) {
             AdjustBinSize(wmin,wmax,N1A,BinLow,BinHigh,nbins,BinWidth);
@@ -660,13 +661,13 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 //*-*- Secondary divisions optimization
       NB2 = N2A;
       if (!OptionNoopt && N2A > 1 && BinWidth > 0) {
-         TGaxis::Optimize(wmin,wmin+BinWidth,N2A,BinLow2,BinHigh2,NB2,BinWidth2,fChopt.Data());
+         THLimitsFinder::Optimize(wmin,wmin+BinWidth,N2A,BinLow2,BinHigh2,NB2,BinWidth2,fChopt.Data());
       }
 
 //*-*- Tertiary divisions optimization
       NB3 = N3A;
       if (!OptionNoopt && N3A > 1 && BinWidth2 > 0) {
-         TGaxis::Optimize(BinLow2,BinLow2+BinWidth2,N3A,BinLow3,BinHigh3,NB3,BinWidth3,fChopt.Data());
+         THLimitsFinder::Optimize(BinLow2,BinLow2+BinWidth2,N3A,BinLow3,BinHigh3,NB3,BinWidth3,fChopt.Data());
       }
       N1Aold = N1A;
       NN1old = NN1;
@@ -1614,184 +1615,6 @@ L210:
    delete lineaxis;
    delete linegrid;
    delete textaxis;
-}
-
-//______________________________________________________________________________
-void TGaxis::Optimize(Double_t A1,  Double_t A2,  Int_t nold ,Double_t &BinLow, Double_t &BinHigh, 
-                      Int_t &nbins, Double_t &BinWidth, Option_t *option)
-{
-//*-*-*-*-*-*-*-*-*-*-*-*Reasonable Axis labels optimisation*-*-*-*-*-*-*-*-*
-//*-*                    ===================================
-//*-*    STATIC function
-//*-*  Get reasonable values for tick marks & ensure they are
-//*-*  not plotted beyond allowed limits
-//*-*
-//*-* _Input parameters:
-//*-*
-//*-*  A1,A2 : Old WMIN,WMAX .
-//*-*  BinLow,BinHigh : New WMIN,WMAX .
-//*-*  nold   : Old NDIV .
-//*-*  nbins    : New NDIV .
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
-   Int_t lwid, kwid;
-   Int_t ntemp = 0;
-   Int_t jlog  = 0;
-   Double_t siground = 0;
-   Double_t alb, awidth, sigfig;
-   Double_t timemulti = 1;
-   Int_t roundmode =0;
-
-   Int_t OptionTime;
-   if(strchr(option,'t')) OptionTime = 1;  else OptionTime = 0;
-
-   Double_t AL = TMath::Min(A1,A2);
-   Double_t AH = TMath::Max(A1,A2);
-   if (AL == AH) AH = AL+1;
-//*-*-      IF nold  ==  -1 , program uses binwidth input from calling routine
-   if (nold == -1 && BinWidth > 0 ) goto L90;
-   ntemp = TMath::Max(nold,2);
-   if (ntemp < 1) ntemp = 1;
-
-L20:
-   awidth = (AH-AL)/Double_t(ntemp);
-   if (awidth >= FLT_MAX) goto LOK;  //in float.h
-   if (awidth <= 0)       goto LOK;
-
-//*-*-      If time representation, bin width should be rounded to seconds
-//          minutes, hours or days
-
-   if (OptionTime && awidth>=60) { // if width in seconds, treat it as normal
-//   width in minutes
-      awidth /= 60; timemulti *=60;
-      roundmode = 1; // round minutes (60)
-//   width in hours ?
-      if (awidth>=60) {
-         awidth /= 60; timemulti *= 60;
-         roundmode = 2; // round hours (24)
-//   width in days ?
-         if (awidth>=24) {
-            awidth /= 24; timemulti *= 24;
-            roundmode = 3; // round days (30)
-//   width in months ?
-            if (awidth>=30.43685) { // Mean month length in 1900.
-               awidth /= 30.43685; timemulti *= 30.43685;
-               roundmode = 2; // round months (12)
-//   width in years ?
-               if (awidth>=12) {
-                  awidth /= 12; timemulti *= 12;
-                  roundmode = 0; // round years (10)
-               }
-            }
-         }
-      }
-   }
-//*-*-      Get nominal bin width in exponential form
-
-   jlog   = Int_t(TMath::Log10(awidth));
-   if (jlog <-200 || jlog > 200) {
-      BinLow   = 0;
-      BinHigh  = 1;
-      BinWidth = 0.01;
-      nbins    = 100;
-      return;
-   }
-   if (awidth <= 1 && (!OptionTime || timemulti==1) ) jlog--;
-   sigfig = awidth*TMath::Power(10,-jlog);
-
-//*-*-      Round mantissa
-
-   switch (roundmode) {
-
-//*-*-      Round mantissa up to 1, 1.5, 2, 3, or 6 in case of minutes
-      case 1: // case 60
-         if      (sigfig <= 1)    siground = 1;
-         else if (sigfig <= 1.5 && jlog==1)    siground = 1.5;
-         else if (sigfig <= 2)    siground = 2;
-         else if (sigfig <= 3 && jlog ==1)    siground = 3;
-         else if (jlog==0)        {siground = 1; jlog++;}
-         else                     siground = 6;
-         break;
-      case 2: // case 12 and 24
-
-//*-*-      Round mantissa up to 1, 1.2, 2, 2.4, 3 or 6 in case of hours or months
-         if      (sigfig <= 1 && jlog==0)    siground = 1;
-         else if (sigfig <= 1.2 && jlog==1)    siground = 1.2;
-         else if (sigfig <= 2 && jlog==0)    siground = 2;
-         else if (sigfig <= 2.4 && jlog==1)    siground = 2.4;
-         else if (sigfig <= 3)    siground = 3;
-         else if (sigfig <= 6)    siground = 6;
-         else if (jlog==0)        siground = 12;
-         else                     siground = 2.4;
-         break;
-
-//*-*-      Round mantissa up to 1, 1.4, 2, or 7 in case of days (weeks)
-      case 3: // case 30
-         if      (sigfig <= 1 && jlog==0)    siground = 1;
-         else if (sigfig <= 1.4 && jlog==1)    siground = 1.4;
-         else if (sigfig <= 3 && jlog ==1)    siground = 3;
-         else                     siground = 7;
-         break;
-      default :
-      
-//*-*-      Round mantissa up to 1, 2, 2.5, 5, or 10 in case of decimal number
-         if      (sigfig <= 1)    siground = 1;
-         else if (sigfig <= 2)    siground = 2;
-//         else if (sigfig <= 2.5)  siground = 2.5;
-         else if (sigfig <= 5 && (!OptionTime || jlog<1))    siground = 5;
-         else if (sigfig <= 6 && OptionTime && jlog==1)    siground = 6;
-         else                    {siground = 1;   jlog++; }
-         break;
-   }
-
-   BinWidth = siground*TMath::Power(10,jlog);
-   if (OptionTime) BinWidth *= timemulti;
-
-//*-*-      Get new bounds from new width BinWidth
-
-L90:
-   alb  = AL/BinWidth;
-   if (TMath::Abs(alb) > 1e9) {
-      BinLow  = AL;
-      BinHigh = AH;
-      if (nbins > 10*nold && nbins > 10000) nbins = nold;
-      return;
-   }
-   lwid   = Int_t(alb);
-   if (alb < 0) lwid--;
-   BinLow     = BinWidth*Double_t(lwid);
-   alb        = AH/BinWidth + 1.00001;
-   kwid = Int_t(alb);
-   if (alb < 0) kwid--;
-   BinHigh = BinWidth*Double_t(kwid);
-   nbins = kwid - lwid;
-   if (nold == -1) goto LOK;
-   if (nold <= 5) {          //*-*-    Request for one bin is difficult case
-      if (nold > 1 || nbins == 1)goto LOK;
-      BinWidth = BinWidth*2;
-      nbins    = 1;
-      goto LOK;
-   }
-   if (2*nbins == nold) { ntemp++; goto L20; }
-
-LOK:
-   Double_t oldBinLow = BinLow;
-   Double_t oldBinHigh = BinHigh;
-   Int_t oldnbins = nbins;
-
-   Double_t atest = BinWidth*0.0001;
-   if (TMath::Abs(BinLow-A1)  >= atest) { BinLow  += BinWidth;  nbins--; }
-   if (TMath::Abs(BinHigh-A2) >= atest) { BinHigh -= BinWidth;  nbins--; }
-
-   if (OptionTime && nbins==0) {
-      nbins = 2*oldnbins;
-      BinHigh = oldBinHigh;
-      BinLow = oldBinLow;
-      BinWidth = (oldBinHigh - oldBinLow)/nbins;
-      Double_t atest = BinWidth*0.0001;
-      if (TMath::Abs(BinLow-A1)  >= atest) { BinLow  += BinWidth;  nbins--; }
-      if (TMath::Abs(BinHigh-A2) >= atest) { BinHigh -= BinWidth;  nbins--; }
-   }
 }
 
 //______________________________________________________________________________
