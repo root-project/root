@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.91 2002/07/28 07:31:53 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.92 2002/07/31 22:05:16 rdm Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -1910,7 +1910,7 @@ void THistPainter::PaintContour(Option_t *option)
 //     the points used to draw the contours are saved in the TGraph format
 //     and are accessible in the following way:
 //    TObjArray *contours =
-//              gROOT->GetListOfSpecials()->FindObject("contours")
+//            (TObjArray*)gROOT->GetListOfSpecials()->FindObject("contours")
 //    Int_t ncontours = contours->GetSize();
 //    TList *list = (TList*)contours->At(i); //where i is a contour number
 //    list contains a list of TGraph objects. For one given contour, more than
