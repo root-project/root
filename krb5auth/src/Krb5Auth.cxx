@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.16 2003/12/18 18:31:20 brun Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.17 2004/02/19 00:11:18 rdm Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -266,22 +266,6 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
       if (rc == -2) {
          return rc;
       }
-      if (retval == kErrNotAllowed && kind == kROOTD_ERR) {
-         return 0;
-      }
-
-   } else {
-
-      Nsen = sock->Send(kROOTD_KRB5);
-      if (Nsen <= 0) {
-         Error("Krb5Authenticate","Sending kROOTD_KRB5");
-         return 0;
-      }
-      Nrec = sock->Recv(retval, kind);
-      if (Nrec <= 0) {
-         Error("Krb5Authenticate","Receiving kROOTD_KRB5");
-         return 0;
-      }
 
       if (kind == kROOTD_ERR) {
          TString Server = "sockd";
@@ -307,6 +291,19 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det, Int_t v
            if (gDebug > 0)
               TAuthenticate::AuthError("Krb5Authenticate", retval);
          }
+         return 0;
+      }
+
+   } else {
+
+      Nsen = sock->Send(kROOTD_KRB5);
+      if (Nsen <= 0) {
+         Error("Krb5Authenticate","Sending kROOTD_KRB5");
+         return 0;
+      }
+      Nrec = sock->Recv(retval, kind);
+      if (Nrec <= 0) {
+         Error("Krb5Authenticate","Receiving kROOTD_KRB5");
          return 0;
       }
 

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.40 2004/03/17 17:52:23 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.41 2004/03/22 15:26:29 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -2185,6 +2185,8 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
               stat);
 
       if (kind == kROOTD_AUTH && stat == 1) {
+         fSecContext =
+            fHostAuth->CreateSecContext(User,fRemote,kClear,-1,fDetails,0);
          return 1;
       } else {
          if (kind == kROOTD_ERR)

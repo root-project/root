@@ -1,4 +1,4 @@
-// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.13 2003/11/26 10:33:08 rdm Exp $
+// @(#)root/srputils:$Name:  $:$Id: SRPAuth.cxx,v 1.14 2004/02/19 00:11:19 rdm Exp $
 // Author: Fons Rademakers   15/02/2000
 
 /*************************************************************************
@@ -87,18 +87,6 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
      if (rc == -2) {
        return rc;
      }
-     if (stat == kErrNotAllowed && kind == kROOTD_ERR) {
-       return 0;
-     }
-   } else {
-
-     sock->Send(usr, kROOTD_SRPUSER);
-     sock->Recv(stat, kind);
-
-     // stat == 2 when no SRP support compiled in remote rootd
-     if (kind == kROOTD_SRPUSER && stat == 0)
-        return 2;
-
      if (kind == kROOTD_ERR) {
         TString Server = "sockd";
         if (strstr(auth->GetProtocol(),"root"))
@@ -123,6 +111,21 @@ Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
           if (gDebug > 0)
              TAuthenticate::AuthError("SRPAuthenticate", stat);
         }
+        return 0;
+     }
+
+   } else {
+
+     sock->Send(usr, kROOTD_SRPUSER);
+     sock->Recv(stat, kind);
+
+     // stat == 2 when no SRP support compiled in remote rootd
+     if (kind == kROOTD_SRPUSER && stat == 0)
+        return 2;
+
+     if (kind == kROOTD_ERR) {
+        if (gDebug > 0)
+           TAuthenticate::AuthError("SRPAuthenticate", stat);
         return 0;
      }
 

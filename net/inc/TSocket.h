@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.9 2004/02/19 00:11:18 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.h,v 1.10 2004/03/22 18:35:00 brun Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -62,6 +62,7 @@ class TMessage;
 class THostAuth;
 class TSecContext;
 
+
 class TSocket : public TNamed {
 
 friend class TProofServ;   // to be able to call SetDescriptor(), RecvHostAuth()
@@ -69,25 +70,24 @@ friend class TServerSocket;
 friend class TSlave;       // to be able to call SendHostAuth()
 
 public:
-enum EServiceType { kSOCKD, kROOTD, kPROOFD };
+   enum EServiceType { kSOCKD, kROOTD, kPROOFD };
 
 protected:
    TInetAddress  fAddress;        // remote internet address and port #
    UInt_t        fBytesRecv;      // total bytes received over this socket
    UInt_t        fBytesSent;      // total bytes sent using this socket
    TInetAddress  fLocalAddress;   // local internet address and port #
-   Int_t         fRemoteProtocol; // Protocol of remote daemon   
-   TSecContext  *fSecContext;     // After a successful Authenticate call 
-                                  // points to related security context
+   Int_t         fRemoteProtocol; // protocol of remote daemon
+   TSecContext  *fSecContext;     // after a successful Authenticate call points to related security context
    TString       fService;        // name of service (matches remote port #)
-   EServiceType  fServType;       // Remote service type
+   EServiceType  fServType;       // remote service type
    Int_t         fSocket;         // socket descriptor
-   TString       fUrl;            // Needs this for special authentication options   
+   TString       fUrl;            // needs this for special authentication options
 
    static UInt_t fgBytesRecv;     // total bytes received by all socket objects
    static UInt_t fgBytesSent;     // total bytes sent by all socket objects
 
-   TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0; fSecContext=0;}
+   TSocket() { fSocket = -1; fBytesSent = fBytesRecv = 0; fSecContext = 0; }
    Bool_t       Authenticate(const char *user);
 
 private:
@@ -135,16 +135,16 @@ public:
    virtual Int_t         Send(Int_t status, Int_t kind);
    virtual Int_t         Send(const char *mess, Int_t kind = kMESS_STRING);
    virtual Int_t         SendObject(const TObject *obj, Int_t kind = kMESS_OBJECT);
-   virtual Int_t         SendRaw(const void *buffer, Int_t length, 
+   virtual Int_t         SendRaw(const void *buffer, Int_t length,
                                  ESendRecvOptions opt = kDefault);
    virtual Int_t         SetOption(ESockOptions opt, Int_t val);
    void                  SetRemoteProtocol(Int_t rproto) { fRemoteProtocol = rproto; }
    void                  SetSecContext(TSecContext *ctx) { fSecContext = ctx; }
    void                  SetUrl(const char *url) { fUrl = url; }
 
-   static TSocket       *CreateAuthSocket(const char *user, const char *host, Int_t port, 
+   static TSocket       *CreateAuthSocket(const char *user, const char *host, Int_t port,
                                           Int_t size = 0, Int_t tcpwindowsize = -1);
-   static TSocket       *CreateAuthSocket(const char *url, 
+   static TSocket       *CreateAuthSocket(const char *url,
                                           Int_t size = 0, Int_t tcpwindowsize = -1);
    static  UInt_t        GetSocketBytesSent() { return fgBytesSent; }
    static  UInt_t        GetSocketBytesRecv() { return fgBytesRecv; }
