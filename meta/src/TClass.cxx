@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.152 2004/10/07 17:07:56 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.153 2004/10/29 16:07:32 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -52,8 +52,8 @@
 #include "TVirtualUtilPad.h"
 #include "TPluginManager.h"
 #include "TStreamer.h"
+#include "TCollectionProxy.h"
 #include "TVirtualCollectionProxy.h"
-#include "TEmulatedVectorProxy.h"
 
 #ifndef WIN32
 extern long G__globalvarpointer;
@@ -682,24 +682,11 @@ void TClass::Init(const char *name, Version_t cversion,
    Int_t stl = TClassEdit::IsSTLCont(GetName(), 0);
 
    if ( stl ) {
-
-      // We have a TClass for an STL container.
-      if (fStreamer==0) {
-         // Need a factory!
-         switch ( stl ) {
-            case -1:
-            case  1: {// vector
-               fStreamer =  new TEmulatedVectorProxy( this );
-               fCollectionProxy = new TEmulatedVectorProxy( this );
-               fSizeof = fCollectionProxy->Sizeof();
-               break;
-            }
-            case 2: {// list
-               // fStreamer = new TEmulatedListProxy( this );
-               break;
-            }
-         }
-      }
+     fCollectionProxy = TCollectionProxy::genEmulatedProxy( GetName() );
+     fSizeof = fCollectionProxy->Sizeof();
+     if (fStreamer==0) {
+       fStreamer =  TCollectionProxy::genEmulatedClassStreamer( GetName() );
+     }
    }
 
 }

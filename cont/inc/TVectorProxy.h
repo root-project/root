@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.10 2004/10/07 17:08:53 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TVectorProxy.h,v 1.11 2004/10/08 15:19:37 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -230,9 +230,12 @@ namespace ROOT {
       TClass *GetValueClass() { return 0; }      
       Bool_t HasPointers() const { return 0; }      
       void Resize(UInt_t n, Bool_t ) { fProxied->resize(n); }
+      virtual void* Allocate(UInt_t n, Bool_t forceDelete)  { fProxied->resize(n); return 0; }
+      virtual void  Commit(void*) {}
       
       UInt_t  Size() const { return fProxied ? (*fProxied).size() : 0; }
       void    Streamer(TBuffer &b) { GetCollectionClass()->Streamer( fProxied, b ); }
+
    };
 
 

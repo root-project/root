@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.5 2004/01/10 10:52:30 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TGenericClassInfo.cxx,v 1.6 2004/07/30 19:09:51 brun Exp $
 // Author: Philippe Canal 08/05/2002
 
 /*************************************************************************
@@ -127,6 +127,7 @@ namespace ROOT {
          fClass->SetNewArray(fNewArray);
          fClass->SetDelete(fDelete);
          fClass->SetDeleteArray(fDeleteArray);
+         fClass->SetDestructor(fDestructor);
          fClass->AdoptStreamer(fStreamer); fStreamer = 0;
          if (fCollectionProxy) fClass->CopyCollectionProxy(*fCollectionProxy);
          fClass->SetClassSize(fSizeof);

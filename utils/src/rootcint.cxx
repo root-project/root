@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.189 2004/10/08 07:39:21 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.190 2004/10/11 10:30:24 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -292,6 +292,11 @@ FILE *fp;
 char *StrDup(const char *str);
 
 char FunNames[10000] = { 0 };
+
+//const char* root_style()  {
+//  static const char* s = ::getenv("MY_ROOT");
+//  return s;
+//}
 
 // static int check = 0;
 //______________________________________________________________________________
@@ -1641,7 +1646,10 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
 
          case kMap:
          case kMultiMap:
-            fprintf(fp, "            R__stl.insert(make_pair(R__t,R__t2));\n");
+            fprintf(fp, "            std::pair<const %s,",TemplateArg(m).Name());
+            fprintf(fp, "%s> R__t3(R__t,R__t2);\n",TemplateArg(m,1).Name());
+            fprintf(fp, "            R__stl.insert(R__t3);\n");
+          //fprintf(fp, "            R__stl.insert(%s::value_type(R__t,R__t2));\n",stlType.c_str());
             break;
          case kSet:
          case kMultiSet:
@@ -1756,6 +1764,7 @@ int STLStringStreamer(G__DataMemberInfo &m, int rwmode)
 }
 
 //______________________________________________________________________________
+#ifdef OLDSTREAMER
 int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
 {
    // Create Streamer code for an STL base class. Returns 1 if base class
@@ -1959,7 +1968,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
    }
    return 0;
 }
-
+#endif
 //______________________________________________________________________________
 int PointerToPointer(G__DataMemberInfo &m)
 {
@@ -2203,11 +2212,59 @@ void WriteClassInit(G__ClassInfo &cl)
      fprintf(fp, "      instance.SetDeleteArray(&deleteArray_%s);\n",mappedname.c_str());
      fprintf(fp, "      instance.SetDestructor(&destruct_%s);\n",mappedname.c_str());
    }
-   if (stl==1 || stl==-1) {
+   if (stl != 0 && ((stl>0 && stl<8) || (stl<0 && stl>-8)) )  {
+      int idx = classname.find("<");
+      int STL_type = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx).c_str()) : 0;
+      //if ( root_style() && root_style()[0]>'0' )  {
+        //fprintf(stdout,"// Executing rootcint in customized mode:%s class:%s STL:%d\n",
+          //root_style(), classname.c_str(), stl);
+        switch(STL_type)  {
+          case TClassEdit::kVector:
+          case TClassEdit::kList:
+          case TClassEdit::kDeque:
+            //switch(root_style()[0])  {
+            //  case '3':
+            //    fprintf(fp, "      // Streamer and proxy omitted for class: %s\n",classname.c_str());
+            //    break;
+            //  case '2':
+                fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::genClassStreamer<TCollectionProxy::Pushback<%s > >());\n",classname.c_str());
+            //  case '1':
+                fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::genProxy<TCollectionProxy::Pushback<%s > >());\n",classname.c_str());
+            //    break;
+            //}
+            break;
+          case TClassEdit::kMap:
+          case TClassEdit::kMultiMap:
+            //switch(root_style()[0])  {
+            //  case '3':
+            //    break;
+            //  case '2':
+                fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::genClassStreamer<TCollectionProxy::MapInsert<%s > >());\n",classname.c_str());
+            //  case '1':
+                fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::genProxy<TCollectionProxy::MapInsert<%s > >());\n",classname.c_str());
+            //    break;
+            //}
+            break;
+          case TClassEdit::kSet:
+          case TClassEdit::kMultiSet:
+            //switch(root_style()[0])  {
+            //  case '3':
+            //    break;
+            //  case '2':
+                fprintf(fp, "      instance.AdoptStreamer(TCollectionProxy::genClassStreamer<TCollectionProxy::Insert<%s > >());\n",classname.c_str());
+            //  case '1':
+                fprintf(fp, "      instance.AdoptCollectionProxy(TCollectionProxy::genProxy<TCollectionProxy::Insert<%s > >());\n",classname.c_str());
+            //    break;
+            //}
+            break;
+        }
+      //}
+   }
+   else if (stl==1 || stl==-1) {
       if (TClassEdit::IsVectorBool(classname.c_str())) {
-         fprintf(fp, "      instance.AdoptCollectionProxy(new ::ROOT::TBoolVectorProxy<%s >);\n",classname.c_str());
+        fprintf(fp, "      instance.AdoptCollectionProxy(new ::ROOT::TBoolVectorProxy<%s >);\n",classname.c_str());
       } else {
-         fprintf(fp, "      instance.AdoptCollectionProxy(new ::ROOT::TVectorProxy<%s >);\n",classname.c_str());
+        fprintf(fp, "      instance.AdoptCollectionProxy(new ::ROOT::TVectorProxy<%s >);\n",classname.c_str());
       }
    }
    fprintf(fp, "      return &instance;\n");
@@ -4315,6 +4372,7 @@ int main(int argc, char **argv)
    fprintf(fp, "#endif\n\n");
    fprintf(fp, "#include \"RtypesImp.h\"\n\n");
    fprintf(fp, "#include \"TVectorProxy.h\"\n\n");
+   fprintf(fp, "#include \"TCollectionProxy.h\"\n\n");
 #ifdef R__SOLARIS
    fprintf(fp, "// Since CINT ignores the std namespace, we need to do so in this file.\n");
    fprintf(fp, "namespace std {} using namespace std;\n\n");
@@ -4597,7 +4655,7 @@ int main(int argc, char **argv)
       WriteClassCode(cl);
    }
 
-   RStl::inst().WriteStreamer(fp);
+   //RStl::inst().WriteStreamer(fp); //replaced by new Markus code
    RStl::inst().WriteClassInit(fp);
 
    fclose(fp);

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.6 2004/10/07 17:08:53 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedVectorProxy.h,v 1.7 2004/10/08 15:19:37 brun Exp $
 // Author: Philippe Canal 20/08/2003
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef Root_TEmulatedVectorProxy_h
-#define Root_TEmulatedVectorProxy_h
+#ifndef Root_TEmulatedVectorProxy
+#define Root_TEmulatedVectorProxy
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -72,9 +72,11 @@ public:
    void    Clear(const char *opt = "");          // Clear the container
    void    Resize(UInt_t n, Bool_t forceDelete); // Resize the container
    UInt_t  Size() const;                         // Return the current size of the container
+   virtual void* Allocate(UInt_t n, Bool_t forceDelete)  { Resize(n,forceDelete); return 0; }
+   virtual void  Commit(void*) {}
 
    void    Streamer(TBuffer &b);
    virtual void operator()(TBuffer &b, void *objp) { PushProxy(objp); Streamer(b); PopProxy(); }
 };
 
-#endif /* Root_TEmulatedVectorProxy_h */
+#endif

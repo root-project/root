@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.148 2004/10/17 11:55:47 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.149 2004/10/17 20:59:58 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -175,7 +175,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
    // create sub branches if requested by splitlevel
 
    if (splitlevel > 0) {
-      int stl = TClassEdit::IsSTLCont(element->GetTypeName());
+      const char* elem_type = element->GetTypeName();
+      int stl = TClassEdit::IsSTLCont(elem_type);
       TClass *clm;
       if (element->CannotSplit()) {
          //printf("element: %s/%s will not be split\n",element->GetName(),element->GetTitle());
@@ -196,8 +197,8 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          }
          return;
 
-      } else if (!strcmp(element->GetTypeName(),"TClonesArray") || !strcmp(element->GetTypeName(),"TClonesArray*")) {
-         Bool_t ispointer = !strcmp(element->GetTypeName(),"TClonesArray*");
+      } else if (!strcmp(elem_type,"TClonesArray") || !strcmp(elem_type,"TClonesArray*")) {
+         Bool_t ispointer = !strcmp(elem_type,"TClonesArray*");
          TClonesArray *clones;
          if (ispointer) {
             char **ppointer = (char**)(pointer);
@@ -242,9 +243,11 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
          BuildTitle(name);
          return;
 
-      } else if (stl>=1 && stl <=2) { // case of vector<> or list<>
+      } else if ( (stl>= TClassEdit::kVector   && stl<= TClassEdit::kMultiSet) || 
+                  (stl>=-TClassEdit::kMultiSet && stl<=-TClassEdit::kVector) ) {
+         // case of vector<>, list<> deque<>, set<>, multiset<>
 
-         TClass *contCl = gROOT->GetClass(element->GetTypeName());
+         TClass *contCl = gROOT->GetClass(elem_type);
 
          fCollProxy = contCl->GetCollectionProxy()->Generate();
 
@@ -252,25 +255,15 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
 
          // See if we can split:
          Bool_t cansplit = kTRUE;
-
          if (clm==0) {
-
             cansplit = kFALSE;
-
          } else if (clm==TString::Class() || clm==gROOT->GetClass("string")) {
-
             cansplit = kFALSE;
-
          } else if (fCollProxy->HasPointers()) {
-
             cansplit = kFALSE;
-
          } else if ( !clm->CanSplit() ) {
-
             cansplit = kFALSE;
-
          } else if ( clm->GetCollectionProxy() != 0 ) {
-
             // A collection was stored in a collection, we do not know how to split it.
             cansplit = kFALSE;
          }
@@ -312,17 +305,17 @@ TBranchElement::TBranchElement(const char *bname, TStreamerInfo *sinfo, Int_t id
             return;
          }
 
-      } else if (!strchr(element->GetTypeName(),'*') &&
+      } else if (!strchr(elem_type,'*') &&
                  (fStreamerType == TStreamerInfo::kObject || fStreamerType == TStreamerInfo::kAny)) {
          // ===> create sub branches for members that are classes
          fType = 2;
-         clm = gROOT->GetClass(element->GetTypeName());
+         clm = gROOT->GetClass(elem_type);
          if (Unroll(name,clm,clm,basketsize,splitlevel,0) >= 0) return;
 
       }
    }
 
-   TLeaf *leaf     = new TLeafElement(GetTitle(),fID, fStreamerType);
+   TLeaf *leaf = new TLeafElement(GetTitle(),fID, fStreamerType);
    leaf->SetTitle(GetTitle());
    leaf->SetBranch(this);
    fNleaves = 1;
@@ -1168,14 +1161,35 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       //one must always read the branch counter.
       //In the case when one reads consecutively twice the same entry,
       //the user may have cleared the TClonesArray between the 2 GetEntry
-      if (fType == 3 || fType == 4) nbytes += TBranch::GetEntry(entry, getall);
-
-      Int_t nb;
-      for (Int_t i=0;i<nbranches;i++)  {
-         TBranch *branch = (TBranch*)fBranches[i];
-         nb  = branch->GetEntry(entry, getall);
-         if (nb < 0) return nb;
-         nbytes += nb;
+      if ( fType == 3 || fType == 4 )  {
+        nbytes += TBranch::GetEntry(entry, getall);
+      }
+      if ( fType == 4)   {
+        // Note: Proxy-helper needs to "embrace" the entire
+        //       streaming of this STL container if the container
+        //       is a set/multiset/map/multimap (what we do not
+        //       know here).
+        //       For vector/list/deque Allocate == Resize
+        //                         and Commit   == noop.
+        // TODO: Exception safety a la TPushPop
+        TVirtualCollectionProxy* proxy = GetCollectionProxy();
+        TVirtualCollectionProxy::TPushPop helper(proxy,fAddress);
+        void* env = proxy->Allocate(fNdata,true);
+        for (Int_t i=0;i<nbranches;i++)  {
+          TBranch *branch = (TBranch*)fBranches[i];
+          Int_t    nb = branch->GetEntry(entry, getall);
+          if (nb < 0) return nb;
+          nbytes += nb;
+        }
+        proxy->Commit(env);
+      }
+      else  {
+        for (Int_t i=0;i<nbranches;i++)  {
+          TBranch *branch = (TBranch*)fBranches[i];
+          Int_t    nb = branch->GetEntry(entry, getall);
+          if (nb < 0) return nb;
+          nbytes += nb;
+        }
       }
    } else {
       //terminal branch
@@ -1684,8 +1698,6 @@ void TBranchElement::ReadLeaves(TBuffer &b)
      }
      fNdata = n;
      if (!fObject) return;
-     TVirtualCollectionProxy::TPushPop helper(GetCollectionProxy(),fAddress);
-     fCollProxy->Resize(fNdata,true);
   } else if (fType == 41) {    // sub branch of an STL class
      //Error("ReadLeaves","STL split mode not yet implemented (error 2)\n");
      //char **ppointer = (char**)fAddress;
@@ -2279,13 +2291,12 @@ Int_t TBranchElement::Unroll(const char *name, TClass *cltop, TClass *cl,Int_t b
                fBranches.Add(branch);
             }
          } else if (elem->IsA() == TStreamerSTL::Class() && !elem->IsaPointer()) {
+            // here all STL classes are handled
             Int_t subSplitlevel = splitlevel-1;
-
             if (elem->CannotSplit()) {
                subSplitlevel = 0;
             }
-
-            char *pointer = fBranchPointer + offset;
+            char* pointer = fBranchPointer + offset;
             branch = new TBranchElement(branchname,info,jd,/* 0 */ pointer ,basketsize,subSplitlevel,btype);
             branch->SetParentName(cltop->GetName());
             fBranches.Add(branch);

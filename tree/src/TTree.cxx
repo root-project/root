@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.211 2004/10/14 10:17:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.212 2004/10/18 12:32:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1347,7 +1347,7 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    TString inclass;
    int stlcont = TClassEdit::IsSTLCont(classname);
 
-   if (stlcont>=1 && stlcont<=2 ) {
+   if ( (stlcont>=1 && stlcont<=8) || (stlcont>=-8 && stlcont<=-1) ) {
       inclass = TClassEdit::ShortType(classname,1+2+4).c_str();
       TClass *inklass = gROOT->GetClass(inclass.Data());
       if (!inklass) {
@@ -1391,7 +1391,8 @@ TBranch *TTree::Bronch(const char *name, const char *classname, void *add, Int_t
    }
    //====>
    //====> special case of vector<...> or list<...>
-   if(stlcont>=1 && stlcont<=2) {
+   TVirtualCollectionProxy *collProxy = cl->GetCollectionProxy();
+   if( collProxy )  { // MSF: stlcont>=1 && stlcont<=2) {
       TVirtualCollectionProxy *collProxy = cl->GetCollectionProxy()->Generate(); // TSTLCont  *tstl = new TSTLCont(classname,(void*)objadd);
       TBranchElement *branch = new TBranchElement(name,collProxy,bufsize,splitlevel);
       fBranches.Add(branch);

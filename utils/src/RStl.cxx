@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.7 2004/04/15 06:41:49 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.8 2004/07/15 23:08:23 rdm Exp $
 // Author: Philippe Canal 27/08/2003
 
 /*************************************************************************
@@ -267,6 +267,10 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
    fprintf(file, "} // close namespace ROOT\n\n");
 
    fprintf(file, "// Register the streamer (a typedef is used to avoid problem with macro parameters\n");
+
+   //if ( 0 != ::getenv("MY_ROOT") && ::getenv("MY_ROOT")[0]>'1' )  {
+   //  fprintf(file, "// Disabled due customized build:\n// ");
+   //}
    fprintf(file, "RootStlStreamer(%s,%s)\n", typedefName.c_str(), streamerName.c_str());
    fprintf(file, "\n");
 
