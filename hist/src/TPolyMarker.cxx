@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.4 2000/12/13 15:13:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TPolyMarker.cxx,v 1.5 2001/04/10 06:25:13 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -39,8 +39,8 @@ TPolyMarker::TPolyMarker(Int_t n, Option_t *option)
 {
 
    fN = n;
-   fX = new Float_t [fN];
-   fY = new Float_t [fN];
+   fX = new Double_t [fN];
+   fY = new Double_t [fN];
    fOption = option;
    SetBit(kCanDelete);
 }
@@ -51,8 +51,22 @@ TPolyMarker::TPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 {
 
    fN = n;
-   fX = new Float_t [fN];
-   fY = new Float_t [fN];
+   fX = new Double_t [fN];
+   fY = new Double_t [fN];
+   if (!x || !y) return;
+   for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i]; }
+   fOption = option;
+   SetBit(kCanDelete);
+}
+
+//______________________________________________________________________________
+TPolyMarker::TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
+      :TObject(), TAttMarker()
+{
+
+   fN = n;
+   fX = new Double_t [fN];
+   fY = new Double_t [fN];
    if (!x || !y) return;
    for (Int_t i=0; i<fN;i++) { fX[i] = x[i]; fY[i] = y[i]; }
    fOption = option;
@@ -80,8 +94,8 @@ void TPolyMarker::Copy(TObject &obj)
    TObject::Copy(obj);
    TAttMarker::Copy(((TPolyMarker&)obj));
    ((TPolyMarker&)obj).fN = fN;
-   ((TPolyMarker&)obj).fX = new Float_t [fN];
-   ((TPolyMarker&)obj).fY = new Float_t [fN];
+   ((TPolyMarker&)obj).fX = new Double_t [fN];
+   ((TPolyMarker&)obj).fY = new Double_t [fN];
    for (Int_t i=0; i<fN;i++) { ((TPolyMarker&)obj).fX[i] = fX[i], ((TPolyMarker&)obj).fY[i] = fY[i]; }
    ((TPolyMarker&)obj).fOption = fOption;
 }
@@ -95,12 +109,12 @@ void TPolyMarker::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPolyMarker::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *)
+void TPolyMarker::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *)
 {
    TPolyMarker *newpolymarker = new TPolyMarker();
    newpolymarker->fN =n;
-   newpolymarker->fX = new Float_t [fN];
-   newpolymarker->fY = new Float_t [fN];
+   newpolymarker->fX = new Double_t [fN];
+   newpolymarker->fY = new Double_t [fN];
    for (Int_t i=0; i<fN;i++) { newpolymarker->fX[i] = x[i], newpolymarker->fY[i] = y[i]; }
    TAttMarker::Copy(*newpolymarker);
    newpolymarker->fOption = fOption;
@@ -132,7 +146,7 @@ void TPolyMarker::Paint(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TPolyMarker::PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option)
+void TPolyMarker::PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
 
    TAttMarker::Modify();  //Change marker attributes only if necessary
@@ -154,7 +168,7 @@ void TPolyMarker::SavePrimitive(ofstream &out, Option_t *)
 
    char quote = '"';
    out<<"   "<<endl;
-   out<<"   Float_t *dum = 0;"<<endl;
+   out<<"   Double_t *dum = 0;"<<endl;
    if (gROOT->ClassSaved(TPolyMarker::Class())) {
        out<<"   ";
    } else {
@@ -171,11 +185,21 @@ void TPolyMarker::SavePrimitive(ofstream &out, Option_t *)
 }
 
 //______________________________________________________________________________
-void TPolyMarker::SetPoint(Int_t point, Float_t x, Float_t y)
+void TPolyMarker::SetPoint(Int_t point, Double_t x, Double_t y)
 {
    if (point < 0 || point >= fN) return;
    fX[point] = x;
    fY[point] = y;
+}
+
+//______________________________________________________________________________
+void TPolyMarker::SetPolyMarker(Int_t n)
+{
+   fN =n;
+   if (fX) delete [] fX;
+   if (fY) delete [] fY;
+   fX = new Double_t[fN];
+   fY = new Double_t[fN];
 }
 
 //______________________________________________________________________________
@@ -184,8 +208,23 @@ void TPolyMarker::SetPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *optio
    fN =n;
    if (fX) delete [] fX;
    if (fY) delete [] fY;
-   fX = new Float_t[fN];
-   fY = new Float_t[fN];
+   fX = new Double_t[fN];
+   fY = new Double_t[fN];
+   for (Int_t i=0; i<fN;i++) {
+     if (x) fX[i] = x[i];
+     if (y) fY[i] = y[i];
+   }
+   fOption = option;
+}
+
+//______________________________________________________________________________
+void TPolyMarker::SetPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
+{
+   fN =n;
+   if (fX) delete [] fX;
+   if (fY) delete [] fY;
+   fX = new Double_t[fN];
+   fY = new Double_t[fN];
    for (Int_t i=0; i<fN;i++) {
      if (x) fX[i] = x[i];
      if (y) fY[i] = y[i];
@@ -209,10 +248,12 @@ void TPolyMarker::Streamer(TBuffer &R__b)
       TObject::Streamer(R__b);
       TAttMarker::Streamer(R__b);
       R__b >> fN;
-      fX = new Float_t[fN];
-      fY = new Float_t[fN];
-      R__b.ReadFastArray(fX,fN);
-      R__b.ReadFastArray(fY,fN);
+      fX = new Double_t[fN];
+      fY = new Double_t[fN];
+      Int_t i;
+      Float_t xold,yold;
+      for (i=0;i<fN;i++) {R__b >> xold; fX[i] = xold;}
+      for (i=0;i<fN;i++) {R__b >> yold; fY[i] = yold;}
       fOption.Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, TPolyMarker::IsA());
       //====end of old versions

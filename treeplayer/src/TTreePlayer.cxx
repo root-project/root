@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.57 2001/08/15 14:51:46 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.58 2001/09/18 12:49:10 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2925,8 +2925,8 @@ void TTreePlayer::TakeAction(Int_t nfill, Int_t &npoints, Int_t &action, TObject
      pm->SetMarkerStyle(fTree->GetMarkerStyle());
      pm->SetMarkerColor(fTree->GetMarkerColor());
      pm->SetMarkerSize(fTree->GetMarkerSize());
-     Float_t *x = pm->GetX();
-     Float_t *y = pm->GetY();
+     Double_t *x = pm->GetX();
+     Double_t *y = pm->GetY();
      Double_t u, v;
      Double_t umin = gPad->GetUxmin();
      Double_t umax = gPad->GetUxmax();
@@ -3074,8 +3074,8 @@ void TTreePlayer::TakeEstimate(Int_t nfill, Int_t &, Int_t action, TObject *obj,
      pm->SetMarkerStyle(fTree->GetMarkerStyle());
      pm->SetMarkerColor(fTree->GetMarkerColor());
      pm->SetMarkerSize(fTree->GetMarkerSize());
-     Float_t *x = pm->GetX();
-     Float_t *y = pm->GetY();
+     Double_t *x = pm->GetX();
+     Double_t *y = pm->GetY();
      Double_t u, v;
      Double_t umin = gPad->GetUxmin();
      Double_t umax = gPad->GetUxmax();
