@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.131 2004/02/18 07:28:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.132 2004/03/09 08:16:27 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -1464,6 +1464,17 @@ void TBranchElement::ReadLeaves(TBuffer &b)
      if (fType == 3 || fType == 4) {    //top level branch of a TClonesArray
        Int_t *n = (Int_t*)fAddress;
        b >> n[0];
+       if (n[0]<0 || n[0]>fMaximum) {
+          if (IsMissingCollection()) {
+             n[0] = 0;
+             b.SetBufferOffset( b.Length() - sizeof(n) );
+          } else {
+             Error("ReadLeaves",
+                   "Incorrect size read for the container in %s\nThe size read is %d when the maximum is %d\nThe size is reset to 0 for this entry (%d)",
+                   GetName(),n,fMaximum,GetReadEntry());
+             n[0] = 0;
+          }
+       }
        fNdata = n[0];
        return;
      } else if (fType == 31 || fType == 41) {    // sub branch of a TClonesArray
@@ -1595,7 +1606,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
      //Error("ReadLeaves","STL split mode not yet implemented (error 1)\n");
      Int_t n;
      b >> n;
-     if (n > fMaximum) {
+     if (n<0 || n>fMaximum) {
         if (IsMissingCollection()) {
            n = 0;
            b.SetBufferOffset( b.Length() - sizeof(n) );
@@ -1620,12 +1631,10 @@ void TBranchElement::ReadLeaves(TBuffer &b)
   } else if (fType == 3) {    //top level branch of a TClonesArray
      Int_t n;
      b >> n;
-     if (n > fMaximum) {
-
+     if (n<0 || n>fMaximum) {
         if (IsMissingCollection()) {
            n = 0;
            b.SetBufferOffset( b.Length() - sizeof(n) );
-
         } else {
            Error("ReadLeaves",
                  "Incorrect size read for the container in %s\n\tThe size read is %d when the maximum is %d\n\tThe size is reset to 0 for this entry (%d)",
