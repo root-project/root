@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.51 2004/01/21 07:11:29 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.52 2004/01/28 22:31:11 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -1593,7 +1593,7 @@ void THtml::ClassHtmlTree(ofstream & out, TClass * classPtr,
       }
       if (!first) {
         out << "</tr></table></td>" << endl; // put it in additional row in table    
-           out << "<td>-&gt;</td>";
+           out << "<td>&lt;-</td>";
       }
     }  
 
@@ -2336,7 +2336,7 @@ void THtml::DescendHierarchy(ofstream & out, TClass* basePtr,
       if (!inheritFrom) continue;
 
       if (!numClasses) 
-         out << "<td>-&gt;</td><td><table><tr>" << endl;
+         out << "<td>&lt;-</td><td><table><tr>" << endl;
       else 
          out << "</tr><tr>"<<endl;
       fHierarchyLines++;
