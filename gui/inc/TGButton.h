@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.16 2003/07/21 10:39:58 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.17 2003/08/11 12:51:31 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -167,8 +167,6 @@ public:
    virtual void       SetFont(FontStruct_t font);
    virtual void       SetFont(const char *fontName);
    virtual void       SetTextColor(Pixel_t color);
-   virtual void       Resize(UInt_t w = 0, UInt_t h = 0);
-   virtual void       Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
 
    ClassDef(TGTextButton,0)  // A text button widget
 };

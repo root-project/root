@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.12 2003/07/18 23:51:49 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.13 2003/07/21 10:39:58 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -456,24 +456,6 @@ FontStruct_t TGTextButton::GetDefaultFontStruct()
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
 }
-
-//______________________________________________________________________________
-void TGTextButton::Resize(UInt_t w, UInt_t h)
-{
-   // Recalculate text size and resize button
-
-   if (w<9 || h<8) {
-      int max_ascent, max_descent;
-      fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
-      gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
-      fTHeight = max_ascent + max_descent;
-   } else {
-      fTWidth = w - 8;
-      fTHeight = h - 7;
-   }
-   TGFrame::Resize(fTWidth + 8, fTHeight + 7);
-}
-
 
 //______________________________________________________________________________
 void TGTextButton::SetFont(FontStruct_t font)
