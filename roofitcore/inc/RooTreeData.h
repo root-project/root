@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.rdl,v 1.27 2002/09/17 06:39:35 verkerke Exp $
+ *    File: $Id: RooTreeData.rdl,v 1.28 2003/04/09 01:33:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -161,6 +161,7 @@ protected:
   // PlotOn with command list
   virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
 
+  friend class RooDataSet ;
   void createTree(const char* name, const char* title) ; 
   TTree *_tree ;           // TTree holding the data points
   TTree *_cacheTree ;      //! TTree holding the cached function values
@@ -187,6 +188,7 @@ RooCmdArg Binning(const RooAbsBinning& binning) ;
 RooCmdArg MarkerStyle(Style_t style) ;
 RooCmdArg MarkerSize(Size_t size) ;
 RooCmdArg MarkerColor(Color_t color) ;
+//RooCmdArg XErrorSize(Double_t width) ;
 
 
 #endif

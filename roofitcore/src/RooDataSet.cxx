@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.cc,v 1.79 2003/04/09 01:33:59 wverkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.80 2003/05/14 02:58:40 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -428,7 +428,7 @@ Bool_t RooDataSet::merge(const TList& dsetList)
 
 
 
-void RooDataSet::append(RooDataSet& data) {
+void RooDataSet::append(RooTreeData& data) {
   // Add all data points of given data set to this data set.
   // Eventual extra dimensions of 'data' will be stripped in transfer
   checkInit() ;

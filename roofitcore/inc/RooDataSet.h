@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataSet.rdl,v 1.49 2002/09/05 04:33:23 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.50 2003/04/09 01:33:59 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,7 +65,7 @@ public:
 
   // Add one ore more rows of data
   virtual void add(const RooArgSet& row, Double_t weight=1.0);
-  void append(RooDataSet& data) ;
+  void append(RooTreeData& data) ;
   Bool_t merge(RooDataSet* data1, RooDataSet* data2=0, RooDataSet* data3=0, 
 	       RooDataSet* data4=0, RooDataSet* data5=0, RooDataSet* data6=0) ;
 
