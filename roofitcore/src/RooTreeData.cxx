@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.23 2001/11/22 01:07:11 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.24 2001/11/28 00:29:13 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -683,7 +683,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
   // The drawOptions are passed to the TH1::Draw() method
 
   if(0 == frame) {
-    cout << ClassName() << "::" << GetName() << ":plot: frame is null" << endl;
+    cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
     return 0;
   }
   RooAbsRealLValue *var= (RooAbsRealLValue*) frame->getPlotVar();
@@ -728,8 +728,8 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, const char* cuts, Option_t* drawOpt
 
 
 
-RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat, 
-				 const char* cut, Option_t* drawOptions) const 
+RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asymCat,
+				 const char* cuts, Option_t* drawOptions) const 
 {
   // Create and fill a histogram with the asymmetry N[+] - N[-] / ( N[+] + N[-] ),
   // where N(+/-) is the number of data points with asymCat=+1 and asymCat=-1 
@@ -744,8 +744,60 @@ RooPlot* RooTreeData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asy
   //
   // The drawOptions are passed to the TH1::Draw() method
 
-  cout << "RooTreeData::plotAsymOn(" << GetName() << ") not implemented." << endl ;
-  return frame ;
+  if(0 == frame) {
+    cout << ClassName() << "::" << GetName() << ":plotAsymOn: frame is null" << endl;
+    return 0;
+  }
+  RooAbsRealLValue *var= (RooAbsRealLValue*) frame->getPlotVar();
+  if(0 == var) {
+    cout << ClassName() << "::" << GetName()
+	 << ":plotAsymOn: frame does not specify a plot variable" << endl;
+    return 0;
+  }
+
+  // create and fill temporary histograms of this variable for each state
+  TString hist1Name(GetName()),hist2Name(GetName());
+  hist1Name.Append("_plot1");
+  TH1F *hist1= var->createHistogram(hist1Name.Data(), "Events", 
+				   frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
+				   frame->GetNbinsX());
+  hist2Name.Append("_plot2");
+  TH1F *hist2= var->createHistogram(hist2Name.Data(), "Events", 
+				   frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(),
+				   frame->GetNbinsX());
+  assert(0 != hist1 && 0 != hist2);
+
+  TString cuts1(Form("(%s)&&(%s>0)",cuts,asymCat.GetName()));
+  TString cuts2(Form("(%s)&&(%s<0)",cuts,asymCat.GetName()));
+
+  cout << "cuts1: " << cuts1 << endl;
+  cout << "cuts2: " << cuts2 << endl;
+
+  if(0 == fillHistogram(hist1,RooArgList(*var),cuts1.Data()) ||
+     0 == fillHistogram(hist2,RooArgList(*var),cuts2.Data())) {
+    cout << ClassName() << "::" << GetName()
+	 << ":plotAsymOn: createHistogram() failed" << endl;
+    return 0;
+  }
+
+  // convert this histogram to a RooHist object on the heap
+  RooHist *graph= new RooHist(*hist1,*hist2);
+  if(0 == graph) {
+    cout << ClassName() << "::" << GetName()
+	 << ":plotOn: unable to create a RooHist object" << endl;
+    delete hist1;
+    delete hist2;
+    return 0;
+  }
+
+  // add the RooHist to the specified plot
+  frame->addPlotable(graph,drawOptions);
+
+  // cleanup
+  delete hist1;
+  delete hist2;
+
+  return frame;  
 }
 
 TH1 *RooTreeData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts) const

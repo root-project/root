@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHistError.cc,v 1.6 2001/11/17 01:44:51 david Exp $
+ *    File: $Id: RooHistError.cc,v 1.7 2001/11/19 07:23:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -26,7 +26,7 @@ ClassImp(RooHistError)
   ;
 
 static const char rcsid[] =
-"$Id: RooHistError.cc,v 1.6 2001/11/17 01:44:51 david Exp $";
+"$Id: RooHistError.cc,v 1.7 2001/11/19 07:23:56 verkerke Exp $";
 
 const RooHistError &RooHistError::instance() {
   // Return a reference to a singleton object that is created the
@@ -64,9 +64,14 @@ Bool_t RooHistError::getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, D
   }
 
   // create a function object to use
-  PoissonSum sum(n);
-
-  return getInterval(sum,(Double_t)n,1.0,mu1,mu2,nSigma);
+  PoissonSum upper(n);
+  if(n > 0) {
+    PoissonSum lower(n-1);
+    return getInterval(&upper,&lower,(Double_t)n,1.0,mu1,mu2,nSigma);
+  }
+  else {
+    return getInterval(&upper,0,(Double_t)n,1.0,mu1,mu2,nSigma);
+  }
 }
 
 Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,
@@ -78,19 +83,32 @@ Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,
     return kFALSE;
   }
 
-  // swap n and m to ensure than n <= m
+  // handle the special case of no events in either category
+  if(n == 0 && m == 0) {
+    asym1= -1;
+    asym2= +1;
+    return kTRUE;
+  }
+
+  // swap n and m to ensure that n <= m
   Bool_t swapped(kFALSE);
-  if(0 && n > m) {
+  if(n > m) {
     swapped= kTRUE;
     Int_t tmp(m);
     m= n;
     n= tmp;
   }
 
-  // create a function object to use
-  BinomialSum sum(n,m);
-
-  Bool_t status= getInterval(sum,(Double_t)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
+  // create the function objects to use
+  Bool_t status(kFALSE);
+  BinomialSum upper(n,m);
+  if(n > 0) {
+    BinomialSum lower(n-1,m+1);
+    status= getInterval(&upper,&lower,(Double_t)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
+  }
+  else {
+    status= getInterval(&upper,0,(Double_t)(n-m)/(n+m),0.1,asym1,asym2,nSigma);
+  }
 
   // undo the swap here
   if(swapped) {
@@ -98,40 +116,54 @@ Bool_t RooHistError::getBinomialInterval(Int_t n, Int_t m,
     asym1= -asym2;
     asym2= -tmp;
   }
+
   return status;
 }
 
-Bool_t RooHistError::getInterval(const RooAbsFunc &Q, Double_t pointEstimate, Double_t stepSize,
-				 Double_t &lo, Double_t &hi, Double_t nSigma) const
+Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Double_t pointEstimate,
+				 Double_t stepSize, Double_t &lo, Double_t &hi, Double_t nSigma) const
 {
-  // Calculate a confidence interval using the cummulative function provided.
+  // Calculate a confidence interval using the cummulative functions provided.
+  // The interval will be "central" when both cummulative functions are provided,
+  // unless this would exclude the pointEstimate, in which case a one-sided interval
+  // pinned at the point estimate is returned instead.
+
+  // sanity checks
+  assert(0 != Qu || 0 != Ql);
 
   // convert number of sigma into a confidence level
   Double_t beta= TMath::Erf(nSigma/sqrt(2));
   Double_t alpha= 0.5*(1-beta);
 
   // Does the central interval contain the point estimate?
-  RooBrentRootFinder finder(Q);
-  Double_t Q0= Q(&pointEstimate);
   Bool_t ok(kTRUE);
-  if(Q0 > alpha + beta) {
+  Double_t loProb(1),hiProb(0);
+  if(0 != Ql) loProb= (*Ql)(&pointEstimate);
+  if(0 != Qu) hiProb= (*Qu)(&pointEstimate);
+
+  if(0 == Ql || loProb > alpha + beta)  {
     // Force the low edge to be at the pointEstimate
     lo= pointEstimate;
-    hi= seek(Q,lo,+stepSize,Q0-beta);
-    ok= finder.findRoot(hi,hi-stepSize,hi,Q0-beta);
+    Double_t target= loProb - beta;
+    hi= seek(*Qu,lo,+stepSize,target);
+    RooBrentRootFinder uFinder(*Qu);
+    ok= uFinder.findRoot(hi,hi-stepSize,hi,target);
   }
-  else if(Q0 < alpha) {
+  else if(0 == Qu || hiProb < alpha) {
     // Force the high edge to be at pointEstimate
     hi= pointEstimate;
-    lo= seek(Q,hi,-stepSize,Q0+beta);
-    ok= finder.findRoot(lo,lo,lo+stepSize,Q0+beta);
+    Double_t target= hiProb + beta;
+    lo= seek(*Ql,hi,-stepSize,target);
+    RooBrentRootFinder lFinder(*Ql);
+    ok= lFinder.findRoot(lo,lo,lo+stepSize,target);
   }
   else {
     // use a central interval
-    lo= seek(Q,pointEstimate,-stepSize,alpha+beta);
-    hi= seek(Q,pointEstimate,+stepSize,alpha);
-    ok= finder.findRoot(lo,lo,lo+stepSize,alpha+beta);
-    ok|= finder.findRoot(hi,hi-stepSize,hi,alpha);
+    lo= seek(*Ql,pointEstimate,-stepSize,alpha+beta);
+    hi= seek(*Qu,pointEstimate,+stepSize,alpha);
+    RooBrentRootFinder lFinder(*Ql),uFinder(*Qu);
+    ok= lFinder.findRoot(lo,lo,lo+stepSize,alpha+beta);
+    ok|= uFinder.findRoot(hi,hi-stepSize,hi,alpha);
   }
   if(!ok) cout << "RooHistError::getInterval: failed to find root(s)" << endl;
 
@@ -148,7 +180,7 @@ Double_t RooHistError::seek(const RooAbsFunc &f, Double_t startAt, Double_t step
   do {
     x+= step;
   }
-  while(steps-- && (f0*(f(&x)-value) > 0) && ((x-min)*(max-x) > 0));
+  while(steps-- && (f0*(f(&x)-value) >= 0) && ((x-min)*(max-x) >= 0));
   assert(0 != steps);
   if(x < min) x= min;
   if(x > max) x= max;

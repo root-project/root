@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooHistError.rdl,v 1.4 2001/11/16 01:48:24 david Exp $
+ *    File: $Id: RooHistError.rdl,v 1.5 2001/11/19 07:23:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -23,7 +23,7 @@ public:
 
   Bool_t getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma= 1) const;
   Bool_t getBinomialInterval(Int_t n, Int_t m, Double_t &a1, Double_t &a2, Double_t nSigma= 1) const;
-  Bool_t getInterval(const RooAbsFunc &Q, Double_t pointEstimate, Double_t stepSize,
+  Bool_t getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Double_t pointEstimate, Double_t stepSize,
 		     Double_t &lo, Double_t &hi, Double_t nSigma) const;
   
   inline static RooAbsFunc *createPoissonSum(Int_t n) { return new PoissonSum(n); }
