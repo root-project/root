@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.3 2002/07/16 13:59:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualFitter.h,v 1.4 2003/05/05 16:38:01 brun Exp $
 // Author: Rene Brun   31/08/99
 
 /*************************************************************************
@@ -21,6 +21,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 
+#ifndef ROOT_TNamed
+#include "TNamed.h"
+#endif
 #ifndef ROOT_TMethodCall
 #include "TMethodCall.h"
 #endif
