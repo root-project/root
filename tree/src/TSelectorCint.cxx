@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.12 2003/06/30 10:07:32 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.13 2003/09/23 14:51:16 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -133,7 +133,7 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
 
 
 //______________________________________________________________________________
-int TSelectorCint::Version()
+int TSelectorCint::Version() const
 {
    // Invoke the Version function via the interpreter
 

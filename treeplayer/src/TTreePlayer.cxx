@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.135 2003/09/15 08:10:09 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.136 2003/09/23 14:51:16 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1158,7 +1158,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fp,"\n");
       fprintf(fp,"   %s(TTree *tree=0) { }\n",classname) ;
       fprintf(fp,"   ~%s() { }\n",classname);
-      fprintf(fp,"   Int_t   Version() {return 1;}\n");
+      fprintf(fp,"   Int_t   Version() const {return 1;}\n");
       fprintf(fp,"   void    Begin(TTree *tree);\n");
       fprintf(fp,"   void    SlaveBegin(TTree *tree);\n");
       fprintf(fp,"   void    Init(TTree *tree);\n");
