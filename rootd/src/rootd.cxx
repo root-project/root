@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.11 2000/12/13 12:06:46 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.12 2000/12/15 19:42:05 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -472,8 +472,8 @@ again:
       while ((n = strchr(s, '\n'))) {
          char user[64], gmode[32];
          int  pid;
-         unsigned int ino;
-         sscanf(s, "%s %u %s %s %d", msg, &ino, gmode, user, &pid);
+         unsigned long ino;
+         sscanf(s, "%s %lu %s %s %d", msg, &ino, gmode, user, &pid);
          if (ino == inode) {
             if (mode == 1)
                result = 0;
@@ -487,7 +487,8 @@ again:
    }
 
    if (result && !noupdate) {
-      sprintf(msg, "%s %lu %s %s %d\n", gFile, inode, smode, gUser, getpid());
+      unsigned long ino = inode;
+      sprintf(msg, "%s %lu %s %s %d\n", gFile, ino, smode, gUser, getpid());
       write(fid, msg, strlen(msg));
    }
 
@@ -678,11 +679,11 @@ void RootdUser(const char *user)
    if ((pw = getpwnam(user)) == 0)
       ErrorFatal(err, "RootdUser: user %s unknown", user);
 
-   // If server is not started as root and remote user is not same as the
+   // If server is not started as root and user is not same as the
    // one who started rootd then authetication is not ok.
    uid_t uid = getuid();
    if (uid && uid != pw->pw_uid)
-      ErrorFatal(kErrBadUser, "RootdUser: remote user not same as effective user of rootd");
+      ErrorFatal(kErrBadUser, "RootdUser: user not same as effective user of rootd");
 
    strcpy(gUser, user);
 
@@ -696,7 +697,7 @@ void RootdSRPUser(const char *user)
    // Check user id in $HOME/.srootdpass file.
 
    if (!*user)
-      ErrorFatal(kErrBadUser, "RootdUser: bad user name");
+      ErrorFatal(kErrBadUser, "RootdSRPUser: bad user name");
 
 #ifdef R__SRP
 
@@ -706,11 +707,11 @@ void RootdSRPUser(const char *user)
    if (!pw)
       ErrorFatal(kErrNoUser, "RootdSRPUser: user %s unknown", user);
 
-   // If server is not started as root and remote user is not same as the
+   // If server is not started as root and user is not same as the
    // one who started rootd then authetication is not ok.
    uid_t uid = getuid();
    if (uid && uid != pw->pw_uid)
-      ErrorFatal(kErrBadUser, "RootdSRPUser: remote user not same as effective user of rootd");
+      ErrorFatal(kErrBadUser, "RootdSRPUser: user not same as effective user of rootd");
 
    NetSend(gAuth, kROOTD_AUTH);
 
@@ -754,7 +755,7 @@ void RootdSRPUser(const char *user)
 
    struct t_server *ts = t_serveropenfromfiles(gUser, tpw, tcnf);
    if (!ts)
-      ErrorFatal(kErrNoUser, "user %s not found SRP password file", gUser);
+      ErrorFatal(kErrNoUser, "RootdSRPUser: user %s not found SRP password file", gUser);
 
    if (tcnf) t_closeconf(tcnf);
    if (tpw)  t_closepw(tpw);
@@ -1251,8 +1252,7 @@ void RootdLoop()
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
-   int    childpid;
-   char  *s;
+   char *s;
 
    ErrorInit(argv[0]);
 
@@ -1301,7 +1301,7 @@ int main(int argc, char **argv)
    // the parent from NetOpen() never returns.
 
    while (1) {
-      if ((childpid = NetOpen(gInetdFlag)) == 0) {
+      if (NetOpen(gInetdFlag) == 0) {
          NetSetOptions();  // set optimal socket options
          RootdLoop();      // child processes client's requests
          NetClose();       // then we are done
