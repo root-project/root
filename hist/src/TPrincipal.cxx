@@ -657,8 +657,8 @@ in the transformed space.
  */
 //End_Html
 
-// $Id: TPrincipal.cxx,v 1.11 2000/10/01 20:50:08 brun Exp $
-// $Date: 2000/10/01 20:50:08 $
+// $Id: TPrincipal.cxx,v 1.12 2000/12/13 15:13:51 brun Exp $
+// $Date: 2000/12/13 15:13:51 $
 // $Author: brun $
 
 #include "TPrincipal.h"
@@ -1428,7 +1428,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
 	    hS->Fill(j,d[k]*d[k]);
 
 	  if (makeD) {
-	    d[k] = TMath::Abs(d[k]) / fSigmas(k+1);
+	    d[k] = TMath::Abs(d[k]) / (fIsNormalised ? fSigmas(k+1) : 1);
 	    (hD[k])->Fill(d[k],j);
 	  }
 	}
@@ -1715,7 +1715,8 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
 	  << "gSigmaValues[] = {" << flush;
   for (i = 0; i < fNumberOfVariables; i++) 
     outFile << (i != 0 ? "," : "") << endl
-	    << "  " << fSigmas(i+1) << flush;
+            << "  " << (fIsNormalised ? fSigmas(i+1) : 1) << flush;
+  //    << "  " << fSigmas(i+1) << flush;
   outFile << endl << "};" << endl << endl;
 
   // 
@@ -1751,8 +1752,8 @@ void TPrincipal::MakeRealCode(const char *filename, const char *classname, Optio
 	  << "  for (Int_t i = 0; i < gNVariables; i++) {" << endl
 	  << "    x[i] = gMeanValues[i];" << endl
 	  << "    for (Int_t j = 0; j < nTest; j++)" << endl
-	  << "      x[i] = p[j] * gSigmaValues[i] " << endl
-	  << "        * gEigenValues[j *  gNVariables + i];" << endl
+	  << "      x[i] += p[j] * gSigmaValues[i] " << endl
+	  << "        * gEigenVectors[i *  gNVariables + j];" << endl
 	  << "  }" << endl << "}" << endl << endl;
   
   // EOF
@@ -1916,7 +1917,8 @@ void TPrincipal::P2X(Double_t *p, Double_t *x, Int_t nTest)
   for (Int_t i = 1; i <= fNumberOfVariables; i++){
     x[i-1] = fMeanValues(i);
     for (Int_t j = 1; j <= nTest; j++)
-      x[i-1] += p[j-1] * fSigmas(i) * fEigenVectors(j,i);
+      x[i-1] += p[j-1] * (fIsNormalised ? fSigmas(i) : 1) 
+	* fEigenVectors(i,j);
   }
 
 }
@@ -2104,7 +2106,7 @@ void TPrincipal::X2P(Double_t *x, Double_t *p)
     p[i-1] = 0;
     for (Int_t j = 1; j <= fNumberOfVariables; j++)
       p[i-1] += (x[j-1] - fMeanValues(j)) * fEigenVectors(j,i) /
-	fSigmas(j);
+	(fIsNormalised ? fSigmas(j) : 1);
   }
   
 }
