@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.37 2001/03/07 07:24:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.38 2001/03/22 07:26:58 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1033,6 +1033,7 @@ void TGraph::InitGaus()
    grF1->SetParameter(0,binwidx*allcha/(sqrtpi*rms));
    grF1->SetParameter(1,mean);
    grF1->SetParameter(2,rms);
+   grF1->SetParLimits(2,0,10*rms);
 }
 
 //______________________________________________________________________________
