@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.14 2000/11/23 16:32:02 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.15 2000/11/24 10:33:44 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -1715,7 +1715,7 @@ int main(int argc, char **argv)
 
             if (cl.HasMethod("Streamer")) {
                //WriteStreamerBases(cl);
-               WritePointersSTL(cl);
+               if (cl.RootFlag()) WritePointersSTL(cl);
                if (!(cl.RootFlag() & G__NOSTREAMER)) {
                   if ((cl.RootFlag() & G__USEBYTECOUNT /*G__AUTOSTREAMER*/)) {
                      WriteAutoStreamer(cl);
