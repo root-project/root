@@ -60,13 +60,12 @@
   TableClassStreamerImp(TIndexTable)
 
 //___________________________________________________________________
-TIndexTable::TIndexTable(const TTable *table):TTable("Index",-1)
+     TIndexTable::TIndexTable(const TTable *table):TTable("Index",-1), fRefTable(table)
 {
    if (!fgColDescriptors)    CreateDescriptor();
    fSize = fgColDescriptors->Sizeof();
-
   // Add refered table to this index.
-  if (table) Add((TDataSet *)table); 
+   // yf  if (table) Add((TDataSet *)table); 
 }
 //___________________________________________________________________
 TTableDescriptor *TIndexTable::CreateDescriptor()
@@ -92,8 +91,7 @@ TTableDescriptor *TIndexTable::CreateDescriptor()
 }
 
 //___________________________________________________________________
-TTable *TIndexTable::Table() const
+const TTable *TIndexTable::Table() const
 {
-  const TSeqCollection *collection = GetCollection();
-  return collection ? (dynamic_cast<TTable*>( collection->First() )) : 0;
+  return fRefTable;
 }

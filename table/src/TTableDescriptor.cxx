@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.6 2003/01/31 08:24:18 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTableDescriptor.cxx,v 1.7 2003/02/05 23:35:35 rdm Exp $
 // Author: Valery Fine   09/08/99  (E-mail: fine@bnl.gov)
-// $Id: TTableDescriptor.cxx,v 1.6 2003/01/31 08:24:18 brun Exp $
+// $Id: TTableDescriptor.cxx,v 1.7 2003/02/05 23:35:35 rdm Exp $
 #include <stdlib.h>
 
 #include "TROOT.h"
@@ -72,7 +72,7 @@ Int_t TTableDescriptor::AddAt(const void *c)
    assert(cmnt!=0);
    tableDescriptor_st *element = (tableDescriptor_st *)c;
    TDataSet *comment = new TDataSet(element->fColumnName);comment->SetTitle("N/A");
-   cmnt->AddAt(comment,(Int_t)GetNRows());
+   cmnt->AddAtAndExpand(comment,(Int_t)GetNRows());
 
    return TTable::AddAt(c); 
 }
@@ -96,7 +96,7 @@ void TTableDescriptor::AddAt(const tableDescriptor_st &element,const char *comme
    assert(cmnt!=0);
    TDataSet *comment = new TDataSet(element.fColumnName);
    comment->SetTitle(commentText);
-   cmnt->AddAt(comment,indx);
+   cmnt->AddAtAndExpand(comment,indx);
 }
 //____________________________________________________________________________
 TString TTableDescriptor::CreateLeafList() const

@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.4 2003/01/14 14:26:14 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.cxx,v 1.2 2003/01/27 20:41:37 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
-// $Id: TVolumePosition.cxx,v 1.4 2003/01/14 14:26:14 fisyak Exp $
+// $Id: TVolumePosition.cxx,v 1.2 2003/01/27 20:41:37 brun Exp $
 
 #include "Riostream.h"
 
@@ -108,9 +108,6 @@ TVolumePosition::~TVolumePosition(){
 //______________________________________________________________________________
 void TVolumePosition::Browse(TBrowser *b)
 {
-#ifndef WIN32
-   Inspect();
-#endif
    if (GetNode()) {
         TShape *shape = GetNode()->GetShape();
         b->Add(GetNode(),shape?shape->GetName():GetNode()->GetName());
@@ -394,13 +391,13 @@ void TVolumePosition::Paint(Option_t *)
 //_______________________________________________________________________
 void TVolumePosition::Print(Option_t *) const
 {
-  cout << " Node: " <<   GetNode()->GetName() << endl;
-  cout << " Position: x=" <<
-          GetX() << " : y=" <<
-          GetY() << " : z=" <<
-          GetZ() << endl;
+   cout << " Node: " <<   GetNode()->GetName() << endl;
+   cout << " Position: x=" <<
+      GetX() << " : y=" <<
+      GetY() << " : z=" <<
+      GetZ() << endl;
 
-  if (fMatrix){
+   if (fMatrix){
       fMatrix->Print();
       Double_t *matrix = ((TRotMatrix *)fMatrix)->GetMatrix();
       Int_t i = 0;
@@ -408,12 +405,12 @@ void TVolumePosition::Print(Option_t *) const
       for (i=0;i<3;i++) cout << setw(3) << i+1 << setw(3) << ":" ;
       cout << endl;
       for (i=0;i<3;i++) {
-        cout << i+1 << ". ";
-        for (Int_t j=0;j<3;j++)
-           cout << setw(6) << *matrix++ << " : " ;
-        cout << endl;
+         cout << i+1 << ". ";
+         for (Int_t j=0;j<3;j++)
+            cout << setw(6) << *matrix++ << " : " ;
+         cout << endl;
       }
-  }
+   }
 }
 
 //______________________________________________________________________________
@@ -539,6 +536,13 @@ TVolumePosition &TVolumePosition::Mult(const TVolumePosition &curPosition) {
 }
 
 //______________________________________________________________________________
+void TVolumePosition::SetXYZ(Double_t *xyz) 
+{
+   if (xyz)  memcpy(fX,xyz,sizeof(fX));
+   else      memset(fX,0,sizeof(fX));
+}
+
+//______________________________________________________________________________
 void TVolumePosition::Streamer(TBuffer &R__b)
 {
    // Stream an object of class TVolumePosition.
@@ -552,4 +556,30 @@ void TVolumePosition::Streamer(TBuffer &R__b)
       TVolumePosition::Class()->WriteBuffer(R__b, this);
       fMatrix = save;
    }
+}
+//______________________________________________________________________________
+ostream& operator<<(ostream& s,const TVolumePosition &target) {
+   static const int width = 10;
+   s << " Node: ";
+   if (target.GetNode()) s <<  target.GetNode()->GetName() << endl;
+   else                  s << "NILL" << endl;
+   s.setf(ios::fixed,ios::scientific);
+   s.setf(ios::showpos);
+   s << " Position: x=" << std::setw(width) << std::setprecision(width-3) << target.GetX() 
+      << " : y=" << std::setw(width) << std::setprecision(width-3) << target.GetY() 
+      << " : z=" << std::setw(width) << std::setprecision(width-3) << target.GetZ() << endl;
+
+   TRotMatrix *rot = (TRotMatrix *) target.GetMatrix(); 
+   if (rot){
+      s << rot->IsA()->GetName() << "\t" << rot->GetName() << "\t" << rot->GetTitle() << endl;
+      Double_t *matrix = rot->GetMatrix();
+      Int_t i = 0;
+      for (i=0;i<3;i++) {
+         for (Int_t j=0;j<3;j++)
+            s << std::setw(width) << std::setprecision(width-3) << *matrix++ << ":";
+         s << endl;
+      }
+   }
+   s.unsetf(ios::showpos);
+   return s;
 }

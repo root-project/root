@@ -1,4 +1,4 @@
-// $Id: TFileIter.cxx,v 1.3 2003/01/03 20:17:13 fisyak Exp $
+// $Id: TFileIter.cxx,v 1.2 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 // Copyright(c) 2001 [BNL] Brookhaven National Laboratory, Valeri Fine (fine@bnl.gov). All right reserved",
 //
@@ -75,7 +75,7 @@
 // //-----------------------------------------------------------------------
 // // Loop over the objects starting from the object with the key name "event.02.01"
 //   printf(" -- > Loop over the objects starting from the object with the key name \"event.02.01\" < -- \n");
-//   for( readObj = "event.02.01"; (const char *)readObj != 0; readObj.SkipObjects()){ 
+//   for( readObj = "event.02.01"; (const char *)readObj != 0; ++readObj){ 
 //       nextObject = *readObj; 
 //       printf(" Object \"%s\" of class \"%s\" written with Tkey \"%s\"  has been read from file\n"
 //               , nextObject->GetName()
@@ -478,12 +478,15 @@ Int_t  TFileIter::NextEventPut(TObject *obj, UInt_t eventNum,  UInt_t runNumber
 //__________________________________________________________________________
 TString TFileIter::MapName(const char *name, const char *localSystemKey,const char *mountedFileSystemKey)
 {
+   // --------------------------------------------------------------------------------------
+   // MapName(const char *name, const char *localSystemKey,const char *mountedFileSystemKey)
+   // --------------------------------------------------------------------------------------
    // Substitute the logical name with the real one if any
    // 1. add a line into system.rootrc or ~/.rootrc or ./.rootrc 
    //
    //  TFileIter.ForeignFileMap  mapFile // the name of the file
-   // to map the local name
-   // to the global file service
+                                         // to map the local name
+                                         // to the global file service
    //
    //  If this line is omitted then TFileIter class seeks for 
    //  the default mapping file in the current directory "io.config"
@@ -505,17 +508,17 @@ TString TFileIter::MapName(const char *name, const char *localSystemKey,const ch
    if ( gSystem->AccessPathName(fileMap) == 0 ){
       TEnv myMapResource(fileMap);
       localName    = myMapResource.Defined(localSystemKey) ? 
-         myMapResource.GetValue(localSystemKey,"") : 0; 
+                                    myMapResource.GetValue(localSystemKey,"") : 0; 
       foreignName  = myMapResource.Defined(mountedFileSystemKey) ? 
-         myMapResource.GetValue(mountedFileSystemKey,""):0; 
+                                    myMapResource.GetValue(mountedFileSystemKey,""):0; 
    } else {
       localName    = "/castor";      // This is the default CERN name
       foreignName  = "rfio:/castor"; // and it needs "RFIO"
    }
    if (localName && localName[0] 
-   && foreignName 
-      && foreignName[0]
-      && newName.BeginsWith(localName) )
-         newName.Replace(0,strlen(localName),foreignName);
-      return newName;   
+                 && foreignName 
+                 && foreignName[0]
+                 && newName.BeginsWith(localName) )
+       newName.Replace(0,strlen(localName),foreignName);
+   return newName;   
 }

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TCL.h,v 1.2 2003/01/27 20:41:36 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TCL.h,v 1.4 2003/02/04 23:35:19 fine Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/09/99
 
 /*************************************************************************
@@ -14,33 +14,7 @@
 // The set of methods to work with the plain matrix / vector
 // "derived" from  http://wwwinfo.cern.ch/asdoc/shortwrupsdir/f110/top.html
 //
-// $Id: TCL.h,v 1.2 2003/01/27 20:41:36 brun Exp $
-// $Log: TCL.h,v $
-// Revision 1.2  2003/01/27 20:41:36  brun
-// New version of the Table package by Valeri Fine.
-// New classes TIndexTable TResponseIterator TResponseTable TTableMap
-//
-// Revision 1.2  2003/01/14 14:26:13  fisyak
-// Valeri's corrections
-//
-// Revision 1.1.1.1  2002/05/28 12:32:02  fisyak
-//
-//
-// Revision 1.1  2002/05/27 16:26:59  rdm
-// rename star to table.
-//
-// Revision 1.2  2001/05/29 19:08:08  brun
-// New version of some STAR classes from Valery.
-//
-// Revision 1.2  2001/05/27 02:38:10  fine
-// New method trsedu to solev Ax=B from Victor
-//
-// Revision 1.1.1.1  2000/11/27 22:57:13  fisyak
-//
-//
-// Revision 1.1.1.1  2000/05/16 17:00:49  rdm
-// Initial import of ROOT into CVS
-//
+// $Id: TCL.h,v 1.4 2003/02/04 23:35:19 fine Exp $
 
 #include "Rtypes.h"
 #include <string.h>
@@ -87,10 +61,9 @@ class TCL  {
 
     static float  *vsub(const float  *a, const float  *b, float  *x, int n);
     static double *vsub(const double *a, const double *b, double *x, int n);
-    static float  *vsub(const float  *b,  const double*c, float  *a, int n);
+    static float  *vsub(const float  *b, const double *c, float  *a, int n);
     static double *vsub(const double *b, const float  *c, double *a, int n);
  
-
     static float  *vcopyn(const float *a,  float *x, int n);
     static double *vcopyn(const double *a, double *x, int n);
 
@@ -148,55 +121,55 @@ class TCL  {
 
 // * TR pack
   
-    static float *traat(float *a, float *s, int m, int n);
-    static float *tral(float *a, float *u, float *b, int m, int n);
-    static float *tralt(float *a, float *u, float *b, int m, int n);
-    static float *tras(float *a, float *s, float *b, int m, int n);
-    static float *trasat(float *a, float *s, float *r__, int m, int n);
-    static float *trasat(double *a, float *s, float *r__, int m, int n);
-    static float *trata(float *a, float *r__, int m, int n);
-    static float *trats(float *a, float *s, float *b, int m, int n);
-    static float *tratsa(float *a, float *s, float *r__, int m, int n);
-    static float *trchlu(float *a, float *b, int n);
-    static float *trchul(float *a, float *b, int n);
-    static float *trinv(float *t, float *s, int n);
-    static float *trla(float *u, float *a, float *b, int m, int n);
-    static float *trlta(float *u, float *a, float *b, int m, int n);
-    static float *trpck(float *s, float *u, int n);
-    static float *trqsq(float *q, float *s, float *r__, int m);
-    static float *trsa(float *s, float *a, float *b, int m, int n);
-    static float *trsinv(float *g, float *gi, int n);
-    static float *trsmlu(float *u, float *s, int n);
-    static float *trsmul(float *g, float *gi, int n);
-    static float *trupck(float *u, float *s, int m);
-    static float *trsat(float *s, float *a, float *b, int m, int n);
+    static float *traat(const float *a, float *s, int m, int n);
+    static float *tral(const float *a, const float *u, float *b, int m, int n);
+    static float *tralt(const float *a, const float *u, float *b, int m, int n);
+    static float *tras(const float *a, const float *s, float *b, int m, int n);
+    static float *trasat(const float *a, const float *s, float *r, int m, int n);
+    static float *trasat(const double *a, const float *s, float *r, int m, int n);
+    static float *trata(const float *a, float *r, int m, int n);
+    static float *trats(const float *a, const float *s, float *b, int m, int n);
+    static float *tratsa(const float *a, const float *s, float *r, int m, int n);
+    static float *trchlu(const float *a, float *b, int n);
+    static float *trchul(const float *a, float *b, int n);
+    static float *trinv(const float *t, float *s, int n);
+    static float *trla(const float *u, const float *a, float *b, int m, int n);
+    static float *trlta(const float *u, const float *a, float *b, int m, int n);
+    static float *trpck(const float *s, float *u, int n);
+    static float *trqsq(const float *q, const float *s, float *r, int m);
+    static float *trsa(const float *s, const float *a, float *b, int m, int n);
+    static float *trsinv(const float *g, float *gi, int n);
+    static float *trsmlu(const float *u, float *s, int n);
+    static float *trsmul(const float *g, float *gi, int n);
+    static float *trupck(const float *u, float *s, int m);
+    static float *trsat(const float *s, const float *a, float *b, int m, int n);
 
 // Victor Perevoztchikov's addition:
     static float *trsequ(float *smx, int m=3, float *b=0, int n=1);
 
 // ---   double version
 
-    static double *traat (double *a, double *s, int m, int n);
-    static double *tral  (double *a, double *u, double *b, int m, int n);
-    static double *tralt (double *a, double *u, double *b, int m, int n);
-    static double *tras  (double *a, double *s, double *b, int m, int n);
-    static double *trasat(double *a, double *s, double *r__, int m, int n);
-    static double *trata (double *a, double *r__, int m, int n);
-    static double *trats (double *a, double *s, double *b, int m, int n);
-    static double *tratsa(double *a, double *s, double *r__, int m, int n);
-    static double *trchlu(double *a, double *b, int n);
-    static double *trchul(double *a, double *b, int n);
-    static double *trinv (double *t, double *s, int n);
-    static double *trla  (double *u, double *a, double *b, int m, int n);
-    static double *trlta (double *u, double *a, double *b, int m, int n);
-    static double *trpck (double *s, double *u, int n);
-    static double *trqsq (double *q, double *s, double *r__, int m);
-    static double *trsa  (double *s, double *a, double *b, int m, int n);
-    static double *trsinv(double *g, double *gi, int n);
-    static double *trsmlu(double *u, double *s, int n);
-    static double *trsmul(double *g, double *gi, int n);
-    static double *trupck(double *u, double *s, int m);
-    static double *trsat (double *s, double *a, double *b, int m, int n);
+    static double *traat (const double *a, double *s, int m, int n);
+    static double *tral  (const double *a, const double *u, double *b, int m, int n);
+    static double *tralt (const double *a, const double *u, double *b, int m, int n);
+    static double *tras  (const double *a, const double *s, double *b, int m, int n);
+    static double *trasat(const double *a, const double *s, double *r, int m, int n);
+    static double *trata (const double *a, double *r, int m, int n);
+    static double *trats (const double *a, const double *s, double *b, int m, int n);
+    static double *tratsa(const double *a, const double *s, double *r, int m, int n);
+    static double *trchlu(const double *a, double *b, int n);
+    static double *trchul(const double *a, double *b, int n);
+    static double *trinv (const double *t, double *s, int n);
+    static double *trla  (const double *u, const double *a, double *b, int m, int n);
+    static double *trlta (const double *u, const double *a, double *b, int m, int n);
+    static double *trpck (const double *s, double *u, int n);
+    static double *trqsq (const double *q, const double *s, double *r, int m);
+    static double *trsa  (const double *s, const double *a, double *b, int m, int n);
+    static double *trsinv(const double *g, double *gi, int n);
+    static double *trsmlu(const double *u, double *s, int n);
+    static double *trsmul(const double *g, double *gi, int n);
+    static double *trupck(const double *u, double *s, int m);
+    static double *trsat (const double *s, const double *a, double *b, int m, int n);
 
 //  Victor Perevoztchikov's addition:
     static double *trsequ(double *smx, int m=3, double *b=0, int n=1);

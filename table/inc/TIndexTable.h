@@ -1,5 +1,5 @@
-#ifndef ROOT_ATIndexTable_T
-#define ROOT_ATIndexTable_T
+#ifndef ROOT_TIndexTable
+#define ROOT_TIndexTable
 
 #include "TTable.h"
 
@@ -13,43 +13,45 @@
 
 class TIndexTable : public TTable
 {
-  public:	
-    class iterator {
-      protected:
-         const TTable *fTable;
-	 int   *fCurrentRow;
-	 iterator(): fTable(0), fCurrentRow(0) {}
-      public:
-	 iterator(const TTable &t, int &rowPtr): fTable(&t), fCurrentRow(&rowPtr){}
-	 iterator(const TTable &t): fTable(&t),fCurrentRow(0){}
-         iterator(const iterator& iter) : fTable(iter.fTable), fCurrentRow(iter.fCurrentRow){}
-	 iterator &operator=(const iterator& iter) {fTable = iter.fTable; fCurrentRow = iter.fCurrentRow; return *this;}
-	 iterator &operator++()    { if (fCurrentRow) ++fCurrentRow; return *this;}
- 	 void     operator++(int)  { if (fCurrentRow) fCurrentRow++;}
-	 iterator &operator--()    { if (fCurrentRow) --fCurrentRow; return *this;}
-	 void     operator--(int) { if (fCurrentRow) fCurrentRow--;}
-	 iterator &operator+(Int_t idx) { if (fCurrentRow) fCurrentRow+=idx; return *this;}
-	 iterator &operator-(Int_t idx) { if (fCurrentRow) fCurrentRow-=idx; return *this;}
-	 Int_t operator-(const iterator &it) const { return (fCurrentRow-it.fCurrentRow)/sizeof(int); }
-         void *operator *(){ return (void *)(fTable?((char *)fTable->GetArray())+(*fCurrentRow)*(fTable->GetRowSize()):0);}
-         operator int()  { return *fCurrentRow;}
-         Bool_t operator==(const iterator &t) const { return (fCurrentRow == t.fCurrentRow); }
-	 Bool_t operator!=(const iterator &t) const { return !operator==(t); }
-    };                                        
-    TIndexTable(const TTable *table);
-    TIndexTable(const TIndexTable &indx): TTable(indx){}
-            int  *GetTable(Int_t i=0);
-    Bool_t  IsValid() const;
-    void    push_back(Long_t next);
+protected:
+   const TTable *fRefTable; 
+public:	
+   class iterator {
+   protected:
+      const TTable *fTable;
+      int   *fCurrentRow;
+      iterator(): fTable(0), fCurrentRow(0) {}
+   public:
+      iterator(const TTable &t, int &rowPtr): fTable(&t), fCurrentRow(&rowPtr){}
+      iterator(const TTable &t): fTable(&t),fCurrentRow(0){}
+      iterator(const iterator& iter) : fTable(iter.fTable), fCurrentRow(iter.fCurrentRow){}
+      iterator &operator=(const iterator& iter) {fTable = iter.fTable; fCurrentRow = iter.fCurrentRow; return *this;}
+      iterator &operator++()    { if (fCurrentRow) ++fCurrentRow; return *this;}
+      void     operator++(int)  { if (fCurrentRow) fCurrentRow++;}
+      iterator &operator--()    { if (fCurrentRow) --fCurrentRow; return *this;}
+      void     operator--(int) { if (fCurrentRow) fCurrentRow--;}
+      iterator &operator+(Int_t idx) { if (fCurrentRow) fCurrentRow+=idx; return *this;}
+      iterator &operator-(Int_t idx) { if (fCurrentRow) fCurrentRow-=idx; return *this;}
+      Int_t operator-(const iterator &it) const { return (fCurrentRow-it.fCurrentRow)/sizeof(int); }
+      void *operator *(){ return (void *)(fTable?((char *)fTable->GetArray())+(*fCurrentRow)*(fTable->GetRowSize()):0);}
+      operator int()  { return *fCurrentRow;}
+      Bool_t operator==(const iterator &t) const { return (fCurrentRow == t.fCurrentRow); }
+      Bool_t operator!=(const iterator &t) const { return !operator==(t); }
+   };                                        
+   TIndexTable(const TTable *table);
+   TIndexTable(const TIndexTable &indx): TTable(indx){}
+   int  *GetTable(Int_t i=0);
+   Bool_t  IsValid() const;
+   void    push_back(Long_t next);
 
-    TTable *Table() const;
-    iterator begin()        { return ((const TIndexTable *)this)->begin();}
-    iterator begin() const  { return GetNRows() ? iterator(*Table(),*(int *)GetTable(0)):end();}
-    iterator end()   { return ((const TIndexTable *)this)->end(); }
-    iterator end()   const  {Long_t i = GetNRows(); return i? iterator(*Table(), *(int *)GetTable(i)):iterator(*this);}
+   const TTable *Table() const;
+   iterator begin()        { return ((const TIndexTable *)this)->begin();}
+   iterator begin() const  { return GetNRows() ? iterator(*Table(),*(int *)GetTable(0)):end();}
+   iterator end()   { return ((const TIndexTable *)this)->end(); }
+   iterator end()   const  {Long_t i = GetNRows(); return i? iterator(*Table(), *(int *)GetTable(i)):iterator(*this);}
 
-  protected:
-    static TTableDescriptor *CreateDescriptor();
+protected:
+   static TTableDescriptor *CreateDescriptor();
 
 // define ClassDefTable(TIndexTable,int)
   protected:
@@ -76,7 +78,7 @@ inline  const int *TIndexTable::GetTable(Int_t i) const { return ((int *)GetArra
 inline  Bool_t TIndexTable::IsValid() const
 {
     // Check whether all "map" values do belong the table
-    TTable *cont= Table();
+    const TTable *cont= Table();
     if (!cont) return kFALSE;
 
     iterator i      = begin();

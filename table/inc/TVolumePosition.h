@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.4 2003/01/14 14:26:13 fisyak Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumePosition.h,v 1.3 2003/01/27 20:41:36 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 
 /*************************************************************************
@@ -92,6 +92,7 @@ class TVolumePosition  : public TObject {
         virtual void        SetX(Double_t x){ fX[0]  =  x;}
         virtual void        SetY(Double_t y){ fX[1]  =  y;}
         virtual void        SetZ(Double_t z){ fX[2]  =  z;}
+        virtual void        SetXYZ(Double_t *xyz = 0);
         virtual void        SetId(UInt_t id){fId  = id;}
 
         ClassDef(TVolumePosition,2)  //Description of parameters to position a 3-D geometry object
