@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.150 2004/10/28 10:53:11 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.151 2004/10/29 16:07:32 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4253,6 +4253,8 @@ void TPad::SaveAs(const char *filename)
    if (psname.BeginsWith('.') && (psname.Contains('/') == 0)) {
       psname = GetName();
       psname.Append(filename);
+      psname.Prepend("/");
+      psname.Prepend(gEnv->GetValue("Canvas.PrintDirectory","."));
    }
 
    if (psname.EndsWith(".gif"))

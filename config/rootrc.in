@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.82 2004/10/15 15:36:41 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.83 2004/11/04 08:56:43 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -68,6 +68,7 @@ Canvas.ShowEventStatus:     false
 Canvas.ShowToolBar:         false
 Canvas.ShowEditor:          false
 Canvas.AutoExec:            true
+Canvas.PrintDirectory       .
 
 # Default histogram binnings for TTree::Draw()
 Hist.Binning.1D.x:          100
