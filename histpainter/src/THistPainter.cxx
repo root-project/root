@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.149 2003/08/06 16:09:30 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.150 2003/09/15 17:19:02 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -745,7 +745,7 @@ void THistPainter::Paint(Option_t *option)
 //
 // When a displayed histogram is filled again you do not have to call the Draw
 // method again. The image is refreshed the next time the pad is updated.
-// A pad is updated after one of these three actions:
+// A pad is updated after one of these three actions:::Paint
 //   - a carriage control on the ROOT command line
 //   - a click inside the pad
 //   - a call to TPad::Update
@@ -2037,6 +2037,8 @@ void THistPainter::PaintContour(Option_t *option)
       return;
    }
 
+   gPad->SetBit(TGraph::kClipFrame);
+   
    Double_t *levels  = new Double_t[kMAXCONTOUR];
    Double_t *xarr    = new Double_t[kMAXCONTOUR];
    Double_t *yarr    = new Double_t[kMAXCONTOUR];
@@ -2303,6 +2305,7 @@ void THistPainter::PaintContour(Option_t *option)
    delete [] polysort;
 
 theEND:
+   gPad->ResetBit(TGraph::kClipFrame);
    if (Hoption.Zscale) PaintPalette();
    fH->SetLineStyle(linesav);
    fH->SetLineColor(colorsav);
@@ -2559,7 +2562,7 @@ void THistPainter::PaintErrors(Option_t *)
       drawmarker = kTRUE;
       if (!option0) {   // <=====Please check
          if (yi1 < ymin || yi1 > ymax) goto L30;
-          if (Hoption.Error != 0 && ey1 <= 0) drawmarker = kFALSE;
+         if (Hoption.Error != 0 && ey1 <= 0) drawmarker = kFALSE;
       }
       if (!symbolsize || !errormarker) drawmarker = kFALSE;
 
@@ -2992,12 +2995,18 @@ Int_t THistPainter::PaintInit()
       c1 = fH->GetBinContent(i);
       ymax = TMath::Max(ymax,c1);
       if (Hoption.Logy) {
-          if ( c1 > 0) ymin = TMath::Min(ymin,c1);
-       } else          ymin = TMath::Min(ymin,c1);
+         if (c1 > 0) ymin = TMath::Min(ymin,c1);
+      } else {
+         ymin = TMath::Min(ymin,c1);
+      }
       if (Hoption.Error) {
          e1 = fH->GetBinError(i);
          ymax = TMath::Max(ymax,c1+e1);
-         ymin = TMath::Min(ymin,c1-e1);
+         if (Hoption.Logy) {
+            if (c1-e1>0) ymin = TMath::Min(ymin,c1-e1);
+         } else {
+            ymin = TMath::Min(ymin,c1-e1);
+         }
       }
       if (Hoption.Func) {
          xv[0] = fXaxis->GetBinCenter(i);
@@ -3020,7 +3029,7 @@ Int_t THistPainter::PaintInit()
 //     Take into account maximum , minimum
 
    if (Hoption.Logy && ymin <= 0) {
-      if (ymax >= 1) ymin = TMath::Max(.5,ymax*1e-10);
+      if (ymax >= 1) ymin = TMath::Max(.005,ymax*1e-10);
       else           ymin = 0.001*ymax;
    }
    Double_t xm = ymin;
