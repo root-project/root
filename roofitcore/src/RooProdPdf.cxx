@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.36 2003/05/10 01:37:52 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.37 2003/05/12 18:46:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -662,12 +662,17 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
     if (isRecursive && plist->isOwning()) {
 
       // Forward recurive redirection calls for owning lists
+      // Only redirect links to component PDFs, recursive link direction
+      // of servers of PDF is handled via the regular channels
+
       TIterator* iter = plist->createIterator() ;
       RooAbsArg* arg ;
+      RooAbsCollection* newPdfServerList = newServerList.selectCommon(_pdfList) ;
       while(arg=(RooAbsArg*)iter->Next()) {
-	ret |= arg->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+	ret |= arg->recursiveRedirectServers(*newPdfServerList,mustReplaceAll,nameChange) ;
       }
       delete iter ;
+      delete newPdfServerList ;
 
     } else if (!plist->isOwning()) {
 
