@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.37 2004/08/02 11:43:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.38 2004/08/17 15:06:56 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -52,10 +52,10 @@
 // Global pointer to the TGClient object
 TGClient *gClient;
 
-// Initialize gClient in case of batch mode
+// Initialize gClient in case libGui is loaded in batch mode
 class TGClientInit {
 public:
-   TGClientInit() { if (gROOT->IsBatch()) new TGClient(); }
+   TGClientInit() { if (gROOT && gROOT->IsBatch()) new TGClient(); }
 };
 static TGClientInit gclient_init;
 
