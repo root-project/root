@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.36 2003/02/13 20:57:50 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.37 2003/02/27 11:40:08 rdm Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2023,8 +2023,8 @@ void TFormula::SetParameter(Int_t ipar, Double_t value)
 //______________________________________________________________________________
 void TFormula::SetParameters(const Double_t *params)
 {
-//*-*-*-*-*-*-*-*Initialize array of all parameters*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            ==================================
+// Initialize array of all parameters
+// see also next function with same name
 
    for (Int_t i=0; i<fNpar;i++) {
       fParams[i] = params[i];
@@ -2037,8 +2037,11 @@ void TFormula::SetParameters(const Double_t *params)
 void TFormula::SetParameters(Double_t p0,Double_t p1,Double_t p2,Double_t p3,Double_t p4
                        ,Double_t p5,Double_t p6,Double_t p7,Double_t p8,Double_t p9,Double_t p10)
 {
-//*-*-*-*-*-*-*-*Initialize up to 10 parameters*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            ==============================
+// Initialize up to 10 parameters
+// All arguments except THE FIRST TWO are optional
+// In case of a function with only one parameter, call this function with p1=0.
+// Minimum two arguments are required to differentiate this function
+// from the SetParameters(cont Double_t *params)
 
    if (fNpar > 0) fParams[0] = p0;
    if (fNpar > 1) fParams[1] = p1;
