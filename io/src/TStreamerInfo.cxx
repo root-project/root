@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.34 2001/01/28 08:54:33 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.35 2001/01/28 13:55:52 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -499,7 +499,7 @@ void TStreamerInfo::Compile()
 // of time compared to an explicit iteration on all elements.
 
    TObjArray *infos = (TObjArray*)gROOT->GetListOfStreamerInfo();
-   if (fNumber > infos->GetSize()) {
+   if (fNumber >= infos->GetSize()) {
       infos->AddAtAndExpand(this,fNumber);
    } else {
       if (!infos->At(fNumber)) infos->AddAt(this,fNumber);
