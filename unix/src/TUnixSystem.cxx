@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.18 2001/02/12 14:30:01 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.19 2001/02/17 11:44:16 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -57,12 +57,21 @@
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
-#if defined(R__LINUX) && !defined(R__MKLINUX) && !defined(__alpha)
+#if defined(R__LINUX) && !defined(R__MKLINUX) && !defined(R__ALPHA)
 #   ifndef SIGSYS
 #      define SIGSYS  SIGUNUSED       // SIGSYS does not exist in linux ??
 #   endif
 #   include <dlfcn.h>
 #endif
+#if defined(R__ALPHA) && !defined(R__LINUX)
+#   include <sys/mount.h>
+    extern "C" int statfs(const char *file, struct statfs *buffer);
+#elif defined(R__LINUX) || defined(R__HPUX)
+#   include <sys/vfs.h>
+#else
+#   include <sys/statfs.h>
+#endif
+
 #include <syslog.h>
 #include <sys/stat.h>
 #include <setjmp.h>
@@ -92,7 +101,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #if defined(R__SGI)
-#include <net/soioctl.h>
+#   include <net/soioctl.h>
 #endif
 #if defined(R__SOLARIS)
 #   include <sys/systeminfo.h>
@@ -796,6 +805,21 @@ int TUnixSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
 }
 
 //______________________________________________________________________________
+int TUnixSystem::GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
+                           Long_t *blocks, Long_t *bfree)
+{
+   // Get info about a file system: id, bsize, bfree, blocks.
+   // Id      is file system type (machine dependend, see statfs())
+   // Bsize   is block size of file system
+   // Blocks  is total number of blocks in file system
+   // Bfree   is number of free blocks in file system
+   // The function returns 0 in case of success and 1 if the file system could
+   // not be stat'ed.
+
+   return UnixFSstat(path, id,  bsize, blocks, bfree);
+}
+
+//______________________________________________________________________________
 int TUnixSystem::Link(const char *from, const char *to)
 {
    // Create a link from file1 to file2. Returns 0 when successful,
@@ -820,7 +844,8 @@ int TUnixSystem::Symlink(const char *from, const char *to)
 //______________________________________________________________________________
 int TUnixSystem::Unlink(const char *name)
 {
-   // Unlink, i.e. remove, a file or directory.
+   // Unlink, i.e. remove, a file or directory. Returns 0 when succesfull,
+   // -1 in case of failure.
 
    struct stat finfo;
 
@@ -2205,6 +2230,37 @@ int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long_t *size,
              (statbuf.st_mode & S_IFMT) != S_IFDIR)
             *flags |= 4;
       }
+      return 0;
+   }
+   return 1;
+}
+
+//______________________________________________________________________________
+int TUnixSystem::UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
+                            Long_t *blocks, Long_t *bfree)
+{
+   // Get info about a file system: id, bsize, bfree, blocks.
+   // Id      is file system type (machine dependend, see statfs())
+   // Bsize   is block size of file system
+   // Blocks  is total number of blocks in file system
+   // Bfree   is number of free blocks in file system
+   // The function returns 0 in case of success and 1 if the file system could
+   // not be stat'ed.
+
+   struct statfs statfsbuf;
+#if defined(R__SGI) || (defined(R__SOLARIS) && !defined(R__LINUX))
+   if (statfs(path, &statfsbuf, sizeof(struct statfs), 0) == 0) {
+      *id = statfsbuf.f_type;
+      *bsize = statfsbuf.f_bsize;
+      *blocks = statfsbuf.f_blocks;
+      *bfree = statfsbuf.f_bfree;
+ #else
+   if (statfs(path, &statfsbuf) == 0) {
+      *id = statfsbuf.f_type;
+      *bsize = statfsbuf.f_bsize;
+      *blocks = statfsbuf.f_blocks;
+      *bfree = statfsbuf.f_bavail;
+#endif
       return 0;
    }
    return 1;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.11 2001/02/03 14:35:08 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.12 2001/02/13 22:29:05 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -784,7 +784,17 @@ int TSystem::GetPathInfo(const char*, Long_t*, Long_t*, Long_t*, Long_t*)
    // Get info about a file: id, size, flags, modification time.
 
    AbstractMethod("GetPathInfo");
-   return -1;
+   return 1;
+}
+
+//______________________________________________________________________________
+int TSystem::GetFsInfo(const char*, Long_t*, Long_t*, Long_t*, Long_t*)
+{
+   // Get info about a file system: fs type, block size, number of blocks,
+   // number of free blocks.
+
+   AbstractMethod("GetFsInfo");
+   return 1;
 }
 
 //______________________________________________________________________________
@@ -1165,7 +1175,7 @@ int TSystem::GetSockOpt(int, int, int*)
 //---- Script Compiler ---------------------------------------------------------
 
 //______________________________________________________________________________
-int TSystem::CompileMacro(const char *filename, Option_t * opt, 
+int TSystem::CompileMacro(const char *filename, Option_t * opt,
                           const char *library_specified)
 {
   // This method compiles and loads a shared library containing
@@ -1180,7 +1190,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
   // the current platform.
   // If library_specified is not specified, CompileMacro generate a default name
   // for library by taking the name of the file "filename" but replacing the
-  // dot before the extension by an underscore and by adding the shared 
+  // dot before the extension by an underscore and by adding the shared
   // library extension for the current platform.
   // For example on most platform, hsimple.cxx will generate hsimple_cxx.so
   //
@@ -1309,7 +1319,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt,
       library = ConcatFileName( WorkingDirectory(), library );
     }
     library = TString(library) + "." + fSoExt;
-  } 
+  }
 
   // ======= Check if the library need to loaded or compiled
   if ( gInterpreter->IsLoaded(filename) ) {

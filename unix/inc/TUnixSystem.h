@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.4 2001/01/23 19:01:55 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.h,v 1.5 2001/02/03 14:46:42 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -52,6 +52,8 @@ protected:
    static void         UnixResetSignals();
    static int          UnixFilestat(const char *path, Long_t *id, Long_t *size,
                                     Long_t *flags, Long_t *modtime);
+   static int          UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
+                                  Long_t *blocks, Long_t *bfree);
    static int          UnixTcpConnect(const char *hostname, int port, int tcpwindowsize);
    static int          UnixUnixConnect(int port);
    static int          UnixTcpService(int port, Bool_t reuse, int backlog,
@@ -136,8 +138,10 @@ public:
    int               Link(const char *from, const char *to);
    int               Symlink(const char *from, const char *to);
    int               Unlink(const char *name);
-   int               GetPathInfo(const char *path, Long_t *id,Long_t *size,
+   int               GetPathInfo(const char *path, Long_t *id, Long_t *size,
                                  Long_t *flags, Long_t *modtime);
+   int               GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
+                               Long_t *blocks, Long_t *bfree);
    int               Umask(Int_t mask);
    char             *Which(const char *search, const char *file, EAccessMode mode = kFileExists);
 
