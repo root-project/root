@@ -1,4 +1,4 @@
-// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.10 2001/09/18 10:59:53 rdm Exp $
+// @(#)root/tutorials:$Name:  $:$Id: guitest.C,v 1.11 2001/11/18 17:28:19 rdm Exp $
 // Author: Fons Rademakers   22/10/2000
 
 // guitest.C: test program for ROOT native GUI classes exactly like
@@ -1004,9 +1004,9 @@ TestDialog::TestDialog(const TGWindow *p, const TGWindow *main, UInt_t w,
    Window_t wdum;
    int ax, ay;
    gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                     (((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
-                     (((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-                     ax, ay, wdum);
+             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
+             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
+             ax, ay, wdum);
    fMain->Move(ax, ay);
 
    fMain->SetWindowName("Dialog");
@@ -1344,9 +1344,9 @@ TestMsgBox::TestMsgBox(const TGWindow *p, const TGWindow *main,
    // position relative to the parent's window
    Window_t wdum;
    gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                          (((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
-                          (((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-                          ax, ay, wdum);
+             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
+             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
+             ax, ay, wdum);
    fMain->Move(ax, ay);
 
    fMain->SetWindowName("Message Box Test");
@@ -1510,9 +1510,9 @@ TestSliders::TestSliders(const TGWindow *p, const TGWindow *main,
    Window_t wdummy;
    int ax, ay;
    gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                          (((TGFrame *) main)->GetWidth() - size.fWidth) >> 1,
-                          (((TGFrame *) main)->GetHeight() - size.fHeight) >> 1,
-                          ax, ay, wdummy);
+                   (Int_t)(((TGFrame *) main)->GetWidth() - size.fWidth) >> 1,
+                   (Int_t)(((TGFrame *) main)->GetHeight() - size.fHeight) >> 1,
+                   ax, ay, wdummy);
    fMain->Move(ax, ay);
 
    fMain->MapSubwindows();
@@ -1639,9 +1639,9 @@ TestShutter::TestShutter(const TGWindow *p, const TGWindow *main,
    Window_t wdum;
    int ax, ay;
    gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                          (((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
-                          (((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-                          ax, ay, wdum);
+             (Int_t)(((TGFrame *) main)->GetWidth() - fMain->GetWidth()) >> 1,
+             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
+             ax, ay, wdum);
    fMain->Move(ax, ay);
 
    fMain->SetWindowName("Shutter Test");
@@ -1769,9 +1769,9 @@ TestProgress::TestProgress(const TGWindow *p, const TGWindow *main,
    Window_t wdummy;
    int ax, ay;
    gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                          (((TGFrame *) main)->GetWidth() - size.fWidth) >> 1,
-                          (((TGFrame *) main)->GetHeight() - size.fHeight) >> 1,
-                          ax, ay, wdummy);
+                   (Int_t)(((TGFrame *) main)->GetWidth() - size.fWidth) >> 1,
+                   (Int_t)(((TGFrame *) main)->GetHeight() - size.fHeight) >> 1,
+                   ax, ay, wdummy);
    fMain->Move(ax, ay);
 
    fMain->MapSubwindows();
@@ -1940,16 +1940,16 @@ EntryTestDlg::EntryTestDlg(const TGWindow *p, const TGWindow *main)
    if (main) {
       Window_t wdum;
       gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                                      (((TGFrame *) main)->GetWidth() -
+                                      (Int_t)(((TGFrame *) main)->GetWidth() -
                                        fMain->GetWidth()) >> 1,
-                                      (((TGFrame *) main)->GetHeight() -
+                                      (Int_t)(((TGFrame *) main)->GetHeight() -
                                        fMain->GetHeight()) >> 1, ax, ay, wdum);
    } else {
       UInt_t root_w, root_h;
       gVirtualX->GetWindowSize(gClient->GetRoot()->GetId(), ax, ay,
                                root_w, root_h);
-      ax = (root_w - fMain->GetWidth()) >> 1;
-      ay = (root_h - fMain->GetHeight()) >> 1;
+      ax = (Int_t)(root_w - fMain->GetWidth()) >> 1;
+      ay = (Int_t)(root_h - fMain->GetHeight()) >> 1;
    }
    fMain->Move(ax, ay);
    fMain->SetWMPosition(ax, ay);
@@ -2061,11 +2061,12 @@ Editor::Editor(const TGWindow *main, UInt_t w, UInt_t h)
    // position relative to the parent's window
    Window_t wdum;
    int ax, ay;
+   // editor covers right half of parent window
    gVirtualX->TranslateCoordinates(main->GetId(), fMain->GetParent()->GetId(),
-                          ((TGFrame *) main)->GetWidth() - (fMain->GetWidth() >> 1),
-                          (((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
-                          ax, ay, wdum);
-   fMain->Move(ax, ay);
+             0,
+             (Int_t)(((TGFrame *) main)->GetHeight() - fMain->GetHeight()) >> 1,
+             ax, ay, wdum);
+   fMain->Move((((TGFrame *) main)->GetWidth() >> 1) + ax, ay);
    fMain->SetWMPosition(ax, ay);
 }
 
