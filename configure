@@ -1314,14 +1314,14 @@ if test ! "x$enable_afs" = "xno" ; then
 	afsdir="$afsdir $afsdir/afs"
     fi
 
-    afslibdirs="$AFS/lib /usr/lib /usr/local/lib /usr/afsws/lib \
-	/usr/local/afsws/lib /usr/athena/lib /usr/local/athena/lib \
-	/opt/afs/lib /usr/local/afs/lib"
+    afslibdirs="$AFS/lib /usr/afsws/lib /usr/local/afsws/lib \
+        /opt/afs/lib /usr/local/afs/lib /usr/lib /usr/local/lib \
+        /usr/athena/lib /usr/local/athena/lib"
     afslib=""
     afslibdir=""
-    for i in libubik librxkad libdes librx liblwp afs/libkauth \
-	    afs/libprot afs/libauth afs/libsys afs/libcmd \
-	    afs/libcom_err afs/libaudit afs/util ; do
+    for i in afs/libkauth afs/libprot afs/libauth afs/libsys afs/libcmd \
+             afs/libcom_err afs/libaudit afs/util libubik librx librxkad \
+             liblwp libafsrpc libdes ; do
 	check_library "$i" "no" "$afsdir" $afslibdirs
 	if test "x$found_lib" = "x" ; then
 	    afslib=""
