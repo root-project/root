@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.20 2001/02/15 09:53:53 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.21 2001/02/26 07:15:28 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -286,15 +286,14 @@ void TStreamerBase::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
-      if (R__v > 1) {
-         TStreamerBase::Class()->ReadBuffer(R__b, this, R__v, R__s, R__c);
-         fBaseClass = gROOT->GetClass(GetName());
-         return;
-      }
-      //====process old versions before automatic schema evolution
       TStreamerElement::Streamer(R__b);
-      R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
       fBaseClass = gROOT->GetClass(GetName());
+      if (R__v > 2) {
+         R__b >> fBaseVersion;
+      } else {
+         fBaseVersion = fBaseClass->GetClassVersion();
+      }
+      R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
    } else {
       TStreamerBase::Class()->WriteBuffer(R__b,this);
    }
