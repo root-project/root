@@ -96,7 +96,9 @@ typedef malloc_alloc alloc;
 
 # else
 
+template <class T> class allocator<T>;
 class alloc;
+
 class single_client_alloc;
 //typedef __default_alloc_template<__NODE_ALLOCATOR_THREADS, 0> alloc;
 //typedef __default_alloc_template<false, 0> single_client_alloc;
