@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.5 2000/11/27 12:23:15 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.8 2000/12/10 10:55:27 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 #include "TBuffer.h"
 #include "TError.h"
 #include "Bytes.h"
-
+#include "TClass.h"
 
 // Amount to shift hash values to avoid clustering
 
@@ -729,6 +729,48 @@ void TString::ReadBuffer(char *&buffer)
    for (int i = 0; i < nchars; i++) frombuf(buffer, &fData[i]);
 }
 
+TString* TString::ReadString(TBuffer &b, const TClass *clReq)
+{
+   // Read TString object from buffer. Simplified version of
+   // TBuffer::ReadObject (does not keep track of multiple
+   // references to same string).  We need to have it here
+   // because TBuffer::ReadObject can only handle descendant 
+   // of TObject
+
+   Assert(b.IsReading());
+
+   // Make sure ReadArray is initialized
+   b.InitMap();
+
+   // Before reading object save start position
+   UInt_t startpos = UInt_t(b.Length());
+
+   UInt_t tag;
+   TClass *clRef = b.ReadClass(clReq, &tag);
+
+   TString *a;
+   if (!clRef) {
+
+      a = 0;
+
+   } else {
+
+      a = (TString *) clRef->New();
+      if (!a) {
+         ::Error("TString::ReadObject", "could not create object of class %s",
+                 clRef->GetName());
+         // Exception
+      }
+
+      a->Streamer(b);
+
+      b.CheckByteCount(startpos, tag, clRef);
+   }
+
+   return a;
+
+}
+
 //______________________________________________________________________________
 Int_t TString::Sizeof() const
 {
@@ -770,6 +812,40 @@ void TString::Streamer(TBuffer &b)
    }
 }
 
+//______________________________________________________________________________
+void TString::WriteString(TBuffer &b, const TString *a)
+{
+   // Write TString object to buffer. Simplified version of
+   // TBuffer::WriteObject (does not keep track of multiple
+   // references to the same string).  We need to have it here
+   // because TBuffer::ReadObject can only handle descendant 
+   // of TObject
+
+   Assert(b.IsWriting());
+
+   // Make sure WriteMap is initialized
+   b.InitMap();
+
+   if (!a) {
+
+      b << (UInt_t) 0;
+
+   } else {
+
+      // Reserve space for leading byte count
+      UInt_t cntpos = UInt_t(b.Length());
+      b.SetBufferOffset(Int_t(cntpos+sizeof(UInt_t)));
+
+      TClass *cl = a->IsA();
+      b.WriteClass(cl);
+
+      ((TString *)a)->Streamer(b);
+
+      // Write byte count
+      b.SetByteCount(cntpos);
+   }
+}
+
 //_______________________________________________________________________
 TBuffer &operator>>(TBuffer &buf, TString &s)
 {
@@ -785,6 +861,24 @@ TBuffer &operator<<(TBuffer &buf, const TString &s)
    // Write string to TBuffer.
 
    ((TString&)s).Streamer(buf);
+   return buf;
+}
+
+//_______________________________________________________________________
+TBuffer &operator>>(TBuffer &buf, TString *&s)
+{
+   // Read string from TBuffer. Function declared in ClassDef.
+
+   s = (TString *) TString::ReadString(buf, TString::Class());
+   return buf;
+}
+
+//_______________________________________________________________________
+TBuffer &operator<<(TBuffer &buf, const TString *s)
+{
+   // Write TString or derived to TBuffer.
+
+   TString::WriteString(buf, s);
    return buf;
 }
 
