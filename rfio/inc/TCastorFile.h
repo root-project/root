@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TNetFile.h,v 1.11 2003/08/29 10:41:28 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TCastorFile.h,v 1.1 2003/09/21 21:38:30 rdm Exp $
 // Author: Fons Rademakers   17/09/2003
 
 /*************************************************************************
@@ -42,7 +42,7 @@ private:
    void ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
                       Int_t tcpwindowsize, Bool_t forceOpen,
                       Bool_t forceRead);
-   Int_t  SysClose(Int_t fd);
+   Int_t SysClose(Int_t fd);
 
 public:
    TCastorFile(const char *url, Option_t *option = "", const char *ftitle = "",

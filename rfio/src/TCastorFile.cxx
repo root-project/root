@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.1 2003/09/21 21:38:31 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TCastorFile.cxx,v 1.2 2003/09/23 15:26:55 rdm Exp $
 // Author: Fons Rademakers + Jean-Damien Durand  17/09/2003
 
 /*************************************************************************
@@ -168,9 +168,12 @@ void TCastorFile::FindServerAndPath()
       }
       // Save real host and internal path
       fDiskServer = realhost;
-      // Make file 'local' to the host
-      fInternalPath = "/";
-      fInternalPath += filename;
+      if (filename[0] != '/') {
+         // Make file 'local' to the host
+         fInternalPath  = "/";
+         fInternalPath += filename;
+      } else
+         fInternalPath = filename;
 
       if (st.filesize == 0) {
          // Will force notification to stage when the file is closed
