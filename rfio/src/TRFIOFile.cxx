@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.6 2001/01/16 17:22:32 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.7 2001/01/19 17:10:55 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -43,6 +43,9 @@ extern "C" {
    int  rfio_fstat(int s, struct stat *statbuf);
    void rfio_perror(const char *msg);
 };
+
+extern int rfio_errno;
+extern int serrno;
 
 
 ClassImp(TRFIOFile)
@@ -305,4 +308,27 @@ Bool_t TRFIOFile::WriteBuffer(const char *buf, Int_t len)
    }
 
    return TFile::WriteBuffer(buf, len);
+}
+
+//______________________________________________________________________________
+Int_t TRFIOFile::GetErrno()
+{
+   // Static function returning rfio_errno. For RFIO files must use this
+   // function since we need to check rfio_errno then serrno and finally errno.
+
+   if (!rfio_errno)
+      return rfio_errno;
+   if (!serrno)
+      return serrno;
+   return TSystem::GetErrno();
+}
+
+//______________________________________________________________________________
+void TRFIOFile::ResetErrno()
+{
+   // Static function resetting the rfio_errno, serrno and errno.
+
+   rfio_errno = 0;
+   serrno = 0;
+   TSystem::ResetErrno();
 }
