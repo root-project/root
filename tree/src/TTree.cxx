@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.58 2001/04/10 16:33:13 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.59 2001/04/11 07:22:29 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -297,6 +297,8 @@
 #include "TStreamerElement.h"
 #include "TFriendElement.h"
 #include "TVirtualFitter.h"
+
+Int_t TTree::fgBranchStyle = 0;  //old TBranch style
 
 TTree *gTree;
 const Int_t kMaxLen = 512;
@@ -678,6 +680,17 @@ TBranch *TTree::Branch(const char *name, void *clonesaddress, Int_t bufsize, Int
 
 //______________________________________________________________________________
 TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, Int_t bufsize, Int_t splitlevel)
+{
+  // create a new branch with the object of class classname at address addobj.
+   
+   if (fgBranchStyle == 1) {
+      return Bronch(name,classname,addobj,bufsize,splitlevel);
+   } else {
+      return BranchOld(name,classname,addobj,bufsize,splitlevel);
+   }
+}
+//______________________________________________________________________________
+TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize, Int_t splitlevel)
 {
 //*-*-*-*-*-*-*-*-*-*-*Create a new TTree BranchObject*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ===============================
@@ -1792,6 +1805,16 @@ TBranch *TTree::GetBranch(const char *name)
 
 
 //______________________________________________________________________________
+Int_t TTree::GetBranchStyle() 
+{
+  // static function returning the current branch style
+  // style = 0 old Branch
+  // style = 1 new Bronch
+   
+   return fgBranchStyle;
+}
+
+//______________________________________________________________________________
 TFile *TTree::GetCurrentFile() const
 {
 //*-*-*-*-*-*Return pointer to the current file*-*-*-*-*-*-*-*
@@ -2517,6 +2540,17 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
          }
       }
    }
+}
+
+
+//______________________________________________________________________________
+void TTree::SetBranchStyle(Int_t style) 
+{
+  // static function setting the current branch style
+  // style = 0 old Branch
+  // style = 1 new Bronch
+   
+   fgBranchStyle = style;
 }
 
 //______________________________________________________________________________

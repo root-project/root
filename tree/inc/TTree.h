@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.24 2001/02/02 16:35:23 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.25 2001/04/09 08:21:55 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -114,7 +114,8 @@ protected:
     TArrayI       fIndex;             //  Index of sorted values
     TList        *fFriends;           //  pointer to list of friend elements
     TVirtualTreePlayer *fPlayer;      //! Pointer to current Tree player
-    
+  static Int_t    fgBranchStyle;      //  Old/New branch style   
+   
 protected:
     const   char    *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex) const;
     virtual void     MakeIndex(TString &varexp, Int_t *index);
@@ -139,6 +140,7 @@ public:
     virtual TBranch  *Branch(const char *name, void *clonesaddress, Int_t bufsize=32000, Int_t splitlevel=1);
     virtual TBranch  *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
     virtual TBranch  *Bronch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
+    virtual TBranch  *BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1);
     virtual void      Browse(TBrowser *b);
     virtual void      BuildIndex(const char *majorname, const char *minorname);
     TStreamerInfo    *BuildStreamerInfo(TClass *cl, void *pointer=0);
@@ -161,6 +163,7 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
 
     virtual TBranch  *GetBranch(const char *name);
+    static  Int_t     GetBranchStyle();
     virtual Int_t     GetChainEntryNumber(Int_t entry) const {return entry;}
     virtual Int_t     GetChainOffset() const { return fChainOffset; }
     TFile            *GetCurrentFile() const;
@@ -233,6 +236,7 @@ public:
     virtual void      SetBasketSize(const char *bname,Int_t buffsize=16000);
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
+    static  void      SetBranchStyle(Int_t style=1);  //style=0 for old branch, =1 for new branch style
     virtual void      SetChainOffset(Int_t offset=0) {fChainOffset=offset;}
     virtual void      SetDebug(Int_t level=1, Int_t min=0, Int_t max=9999999); // *MENU*
     virtual void      SetDirectory(TDirectory *dir);
@@ -250,7 +254,7 @@ public:
     virtual Int_t     UnbinnedFit(const char *funcname ,const char *varexp, const char *selection="",Option_t *option="" 
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     void              UseCurrentStyle();
-
+    
     ClassDef(TTree,6)  //Tree descriptor (the main ROOT I/O class)
 };
 
