@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.1 2004/05/10 21:29:26 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLBuffer.cxx,v 1.2 2004/05/10 23:50:27 rdm Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -1826,7 +1826,10 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number) {
       TStreamerInfo* info = stack->fInfo;
 
       TStreamerElement* elem = info->GetStreamerElementReal(number, 0);
-
+      if (!elem) {
+         Error("SetStreamerElementNumber","class: %s, element:%d returns null",info->GetName(),number);
+         return;
+      }
       Int_t comp_type = info->GetTypes()[number];
 
       Bool_t isBasicType = (elem->GetType()>0) && (elem->GetType()<20);
@@ -1852,7 +1855,8 @@ void TXMLBuffer::SetStreamerElementNumber(Int_t number) {
       TStreamerInfo* info = stack->fInfo;
 
       TStreamerElement* elem = info->GetStreamerElementReal(number, 0);
-
+      if (!elem) return;
+      
       Int_t comp_type = info->GetTypes()[number];
 
       Bool_t isBasicType = (elem->GetType()>0) && (elem->GetType()<20);
