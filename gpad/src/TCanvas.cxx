@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.11 2000/09/11 09:59:26 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.12 2000/09/12 06:44:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -548,10 +548,27 @@ void TCanvas::Clear(Option_t *option)
 //  Remove all primitives in default pad
 //  Remove all pads (except default pad)
 //
+//  By default, all primitives and subpads are deleted
+//  If option "D" is specified, only subpads are cleared and not deleted
 
    if (fCanvasID == -1) return;
-   TPad::Clear(option);   //Remove primitives from pad
-
+   TString opt = option;
+   opt.ToLower();
+   if (opt.Contains("d")) {
+      // clear subpads, but do not delete pads in case the canvas 
+      // has been divided
+      if (fPrimitives) {
+         TIter next(fPrimitives);
+         TObject *obj;
+         while ((obj=next())) {
+            obj->Clear(option);
+         }
+      }
+   } else {
+      //default, clear everything in the canvas. Subpads are deleted
+      TPad::Clear(option);   //Remove primitives from pad
+   }
+   
    fSelected    = 0;
    fSelectedPad = 0;
 }
