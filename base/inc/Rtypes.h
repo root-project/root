@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.32 2002/08/20 10:51:49 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.33 2002/08/20 11:25:19 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -241,19 +241,19 @@ public: \
 #define R__UseDummy(name) \
    class _NAME2_(name,_c) { public: _NAME2_(name,_c)() { if (name) { } } }
 
-#define ClassImpUnique(name,key) \
-namespace ROOT { \
-   TGenericClassInfo *GenerateInitInstance(const name*); \
-   static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
-      GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
-   R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
-}
 
 #if defined(__CINT__)
+#define ClassImpUnique(name,key)
 #define ClassImp(name)
 #else
-#define ClassImp(name) \
-   ClassImpUnique(name,1)
+#define ClassImpUnique(name,key) \
+   namespace ROOT { \
+      TGenericClassInfo *GenerateInitInstance(const name*); \
+      static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
+         GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
+      R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
+   }
+#define ClassImp(name) ClassImpUnique(name,default)
 #endif
 
 //---- ClassDefT macros for templates with one template argument ---------------
@@ -284,13 +284,19 @@ namespace ROOT { \
 
 #define ClassDefT2(name,Tmpl)
 
+
+
 #if defined(__CINT__)
+#define templateClassImpUnique(name,key)
 #define templateClassImp(name)
 #else
-#define templateClassImp(name) \
-static TNamed *_R__UNIQUE_(R__dummyholder) = \
-   ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
-R__UseDummy(_R__UNIQUE_(R__dummyholder));
+#define templateClassImpUnique(name,key) \
+   namespace ROOT { \
+      static TNamed *_R__UNIQUE_(_NAME2_(R__dummyholder,key)) = \
+         ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
+      R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyholder,key))); \
+   } 
+#define templateClassImp(name) templateClassImpUnique(name,default)
 #endif
 
 #define ClassImpT(name,Tmpl) templateClassImp(name)
