@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.12 2002/05/03 10:48:53 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TAttText.cxx,v 1.13 2002/09/14 11:12:47 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -175,15 +175,7 @@ void TAttText::Modify()
 
 #ifndef WIN32
 again:
-#ifndef R__TTFROT
-      if (gVirtualX->HasTTFonts() && gVirtualX->GetTextSize() != -10.0) {
-         if (fTextAngle != 0) {
-            gVirtualX->SetTextSize(-10.0);
-            goto again;
-         }
-#else
       if (gVirtualX->HasTTFonts()) {
-#endif
          if (gVirtualX->GetTextFont() != fTextFont) {
             gVirtualX->SetTextFont(fTextFont);
             if (!gVirtualX->HasTTFonts()) goto again;

@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.27 2002/03/25 18:18:05 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.28 2003/01/13 01:33:52 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -107,9 +107,7 @@
 // Protocol changes (see gProtocol):
 // 6: added support for kerberos5 authentication
 
-#ifdef HAVE_CONFIG
 #include "config.h"
-#endif
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -257,7 +255,7 @@ static int setresuid(uid_t r, uid_t e, uid_t)
    return seteuid(e);
 }
 #endif
-#if defined(linux) && (__GLIBC__ <= 2 && __GLIBC_MINOR__ <= 2)
+#if defined(linux) && !defined(HAS_SETRESUID)
 extern "C" {
    int setresgid(gid_t r, gid_t e, gid_t s);
    int setresuid(uid_t r, uid_t e, uid_t s);

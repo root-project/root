@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.h,v 1.3 2000/12/13 15:13:50 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.h,v 1.4 2002/10/31 07:27:34 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -34,39 +34,43 @@
 class TText : public TNamed, public TAttText {
 
 protected:
-        Double_t     fX;           //X position of text (left,center,etc..)
-        Double_t     fY;           //Y position of text (left,center,etc..)
+   Double_t     fX;           // X position of text (left,center,etc..)
+   Double_t     fY;           // Y position of text (left,center,etc..)
 
 public:
-        // TText status bits
-        enum { kTextNDC = BIT(14) };
+   // TText status bits
+   enum { kTextNDC = BIT(14) };
 
-        TText();
-        TText(Double_t x, Double_t y, const char *text);
-        TText(const TText &text);
-        virtual ~TText();
-                void     Copy(TObject &text) const;
-        virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-        virtual TText   *DrawText(Double_t x, Double_t y, const char *text);
-        virtual TText   *DrawTextNDC(Double_t x, Double_t y, const char *text);
-        virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   TText();
+   TText(Double_t x, Double_t y, const char *text);
+   TText(const TText &text);
+   virtual ~TText();
+   void             Copy(TObject &text) const;
+   virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
+   virtual TText   *DrawText(Double_t x, Double_t y, const char *text);
+   virtual TText   *DrawTextNDC(Double_t x, Double_t y, const char *text);
+   virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
 
-        Double_t         GetX() const  {return fX;}
-        Double_t         GetY() const  {return fY;}
+   virtual void     GetControlBox(Int_t x, Int_t y, Double_t theta,
+                                  Int_t cBoxX[4], Int_t cBoxY[4]);
+   Double_t         GetX() const  { return fX; }
+   virtual void     GetBoundingBox(UInt_t &w, UInt_t &h);
+   virtual void     GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const;
+   Double_t         GetY() const  { return fY; }
 
-        virtual void     ls(Option_t *option="") const;
-        virtual void     Paint(Option_t *option="");
-        virtual void     PaintText(Double_t x, Double_t y, const char *text);
-        virtual void     PaintTextNDC(Double_t u, Double_t v, const char *text);
-        virtual void     Print(Option_t *option="") const;
-        virtual void     SavePrimitive(ofstream &out, Option_t *option);
-        virtual void     SetNDC(Bool_t isNDC=kTRUE);
-        virtual void     SetText(Double_t x, Double_t y, const char *text) {fX=x; fY=y; SetTitle(text);} // *MENU* *ARGS={x=>fX,y=>fY,text=>fTitle}
-        virtual void     SetX(Double_t x) { fX = x;} // *MENU*
-        virtual void     SetY(Double_t y) { fY = y;} // *MENU*
+   virtual void     ls(Option_t *option="") const;
+   virtual void     Paint(Option_t *option="");
+   virtual void     PaintControlBox(Int_t x, Int_t y, Double_t theta);
+   virtual void     PaintText(Double_t x, Double_t y, const char *text);
+   virtual void     PaintTextNDC(Double_t u, Double_t v, const char *text);
+   virtual void     Print(Option_t *option="") const;
+   virtual void     SavePrimitive(ofstream &out, Option_t *option);
+   virtual void     SetNDC(Bool_t isNDC=kTRUE);
+   virtual void     SetText(Double_t x, Double_t y, const char *text) {fX=x; fY=y; SetTitle(text);} // *MENU* *ARGS={x=>fX,y=>fY,text=>fTitle}
+   virtual void     SetX(Double_t x) { fX = x; } // *MENU*
+   virtual void     SetY(Double_t y) { fY = y; } // *MENU*
 
-        ClassDef(TText,2)  //Text
+   ClassDef(TText,2)  //Text
 };
 
 #endif
-

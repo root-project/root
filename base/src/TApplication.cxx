@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.42 2002/12/10 19:51:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.43 2002/12/11 15:16:33 brun Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -155,19 +155,24 @@ TApplication::TApplication(const char *appClassName,
    // Try to load TrueType font renderer. Only try to load if not in batch
    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
    // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
-#ifndef R__WIN32
+#if !defined(R__WIN32) || defined(GDK_WIN32)
    if (strcmp(appClassName, "proofserv")) {
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 # ifdef TTFFONTDIR
                                           TTFFONTDIR);
 # else
-                                          "$(HOME)/ttf/fonts");
+                                          "$(ROOTSYS)/fonts");
 # endif
       char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
 
       if (!gROOT->IsBatch() && ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
+#if defined(GDK_WIN32)
+         TString plugin = "win32ttf";
+#else
+         TString plugin = "x11ttf";
+#endif
          TPluginHandler *h;
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
+         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", plugin)))
             h->LoadPlugin();
       }
 
@@ -266,7 +271,7 @@ void TApplication::GetOptions(int *argc, char **argv)
          gROOT->SetBatch();
          if (gGuiFactory != gBatchGuiFactory) delete gGuiFactory;
          gGuiFactory = gBatchGuiFactory;
-#ifndef WIN32
+#ifndef R__WIN32
          if (gVirtualX != gGXBatch) delete gVirtualX;
 #endif
          gVirtualX = gGXBatch;
@@ -274,7 +279,7 @@ void TApplication::GetOptions(int *argc, char **argv)
 #if 0
       } else if (!strcmp(argv[i], "-x")) {
          // remote ROOT display server not operational yet
-#ifndef WIN32
+#ifndef R__WIN32
          if (gVirtualX != gGXBatch) delete gVirtualX;
 #endif
          gVirtualX = new TGXClient("Root_Client");
@@ -602,7 +607,7 @@ void TApplication::ProcessLine(const char *line, Bool_t sync, int *err)
       TString arguments;
       TString io;
       TString fname = gSystem->SplitAclicMode(line+3, aclicMode, arguments, io);
-      
+
       char *mac = gSystem->Which(TROOT::GetMacroPath(), fname, kReadPermission);
       if (arguments.Length()) {
          Warning("ProcessLine", "argument(s) \"%s\" ignored with .%c", arguments.Data(),
@@ -660,7 +665,7 @@ void TApplication::ProcessFile(const char *name, int *error)
 
    Int_t nch = strlen(name);
    if (nch == 0) return;
-   
+
    TString aclicMode;
    TString arguments;
    TString io;
@@ -731,7 +736,7 @@ void TApplication::ProcessFile(const char *name, int *error)
    file.close();
 
    if (!execute) {
-      TString exname = exnam; 
+      TString exname = exnam;
       if (!tempfile) {
          // We have a script that does NOT contain an unamed macro,
          // so we can call the script compiler on it.

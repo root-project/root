@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.38 2002/12/10 21:39:44 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.39 2003/01/19 11:35:38 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -878,6 +878,10 @@ int  TWinNTSystem::MakeDirectory(const char *name)
   // Make a Unix file system directory. Returns 0 in case of success and
   // -1 if the directory could not be created.
 
+   TSystem *helper = FindHelper(name);
+   if (helper)
+      return helper->MakeDirectory(name);
+
 #ifdef WATCOM
 //*-* It must be as follows
    if (!name) return 0;
@@ -894,6 +898,12 @@ void TWinNTSystem::FreeDirectory(void *dirp)
 {
    // Close a WinNT file system directory.
 
+   TSystem *helper = FindHelper(0, dirp);
+   if (helper) {
+      helper->FreeDirectory(dirp);
+      return;
+   }
+
    if (dirp)
       ::FindClose(dirp);
 }
@@ -901,10 +911,13 @@ void TWinNTSystem::FreeDirectory(void *dirp)
 //______________________________________________________________________________
 const char *TWinNTSystem::GetDirEntry(void *dirp)
 {
-// Returns the next directory entry.
+   // Returns the next directory entry.
 
-   if (dirp)
-   {
+   TSystem *helper = FindHelper(0, dirp);
+   if (helper)
+      return helper->GetDirEntry(dirp);
+
+   if (dirp) {
      HANDLE SearchFile = (HANDLE)dirp;
      if (FindNextFile(SearchFile,&fFindFileData))
        return (const char *)(fFindFileData.cFileName);
@@ -927,6 +940,10 @@ Bool_t TWinNTSystem::ChangeDirectory(const char *path)
 void *TWinNTSystem::OpenDirectory(const char *dir)
 {
    // Open a directory. Returns 0 if directory does not exist.
+
+   TSystem *helper = FindHelper(dir);
+   if (helper)
+      return helper->OpenDirectory(dir);
 
    struct stat finfo;
 
@@ -1136,6 +1153,10 @@ Bool_t TWinNTSystem::AccessPathName(const char *path, EAccessMode mode)
    // Mode is the same as for the WinNT access(2) function.
    // Attention, bizarre convention of return value!!
 
+   TSystem *helper = FindHelper(path);
+   if (helper)
+      return helper->AccessPathName(path, mode);
+
    if (::_access(path, mode) == 0)
       return kFALSE;
    fLastErrorString = sys_errlist[GetErrno()];
@@ -1189,6 +1210,10 @@ int TWinNTSystem::GetPathInfo(const char *path, Long_t *id, Long_t *size,
    // Modtime is modification time
    // The function returns 0 in case of success and 1 if the file could
    // not be stat'ed.
+
+   TSystem *helper = FindHelper(path);
+   if (helper)
+      return helper->GetPathInfo(path, id, size, flags, modtime);
 
    return WinNTFilestat(path, id,  size, flags, modtime);
 }

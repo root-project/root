@@ -12,12 +12,18 @@
 ifeq ($(findstring $(MAKECMDGOALS), maintainer-clean debian redhat),)
 include config/Makefile.config
 endif
+ifeq ($(MAKECMDGOALS),clean)
+include config/Makefile.config
+endif
 
 ##### Include machine dependent macros                     #####
 ##### However, if we are building packages or cleaning, we #####
 ##### don't include this file since it may screw up things #####
 
 ifeq ($(findstring $(MAKECMDGOALS), maintainer-clean debian redhat),)
+include config/Makefile.$(ARCH)
+endif
+ifeq ($(MAKECMDGOALS),clean)
 include config/Makefile.$(ARCH)
 endif
 
@@ -28,7 +34,7 @@ endif
 ##### Modules to build #####
 
 MODULES       = build cint utils base cont meta net zip clib matrix newdelete \
-                hist tree graf g3d gpad gui minuit histpainter proof \
+                hist tree freetype graf g3d gpad gui minuit histpainter proof \
                 treeplayer treeviewer physics postscript rint html eg mc \
                 geom geompainter
 
@@ -38,18 +44,13 @@ SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
 ifeq ($(ARCH),win32gdk)
-MODULES      += winnt win32gdk gl
+MODULES      += winnt win32gdk win32ttf gl
 SYSTEMO       = $(WINNTO)
 SYSTEMDO      = $(WINNTDO)
 else
-MODULES      += unix x11 x3d rootx rootd proofd
+MODULES      += unix x11 x11ttf x3d rootx rootd proofd
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
-endif
-endif
-ifneq ($(TTFINCDIR),)
-ifneq ($(TTFLIB),)
-MODULES      += x11ttf
 endif
 endif
 ifneq ($(OPENGLINCDIR),)
@@ -128,9 +129,9 @@ MODULES      += hbook
 endif
 
 ifneq ($(findstring $(MAKECMDGOALS),distclean maintainer-clean),)
-MODULES      += unix winnt x11 x11ttf win32 win32gdk gl rfio thread pythia \
-                pythia6 venus table mysql pgsql sapdb srputils x3d rootx \
-                rootd proofd dcache chirp hbook alien asimage ldap
+MODULES      += unix winnt x11 x11ttf win32 win32gdk win32ttf gl rfio thread \
+                pythia pythia6 venus table mysql pgsql sapdb srputils x3d \
+                rootx rootd proofd dcache chirp hbook alien asimage ldap
 MODULES      := $(sort $(MODULES))  # removes duplicates
 endif
 
@@ -487,6 +488,9 @@ install:
 	   echo "Installing icons in $(DESTDIR)$(ICONPATH)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(ICONPATH); \
 	   $(INSTALLDATA) icons/*.xpm           $(DESTDIR)$(ICONPATH); \
+	   echo "Installing fonts in $(DESTDIR)$(TTFFONTDIR)"; \
+	   $(INSTALLDIR)                        $(DESTDIR)$(TTFFONTDIR); \
+	   $(INSTALLDATA) fonts/*               $(DESTDIR)$(TTFFONTDIR); \
 	   echo "Installing misc docs in  $(DESTDIR)$(DOCDIR)" ; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(DOCDIR); \
 	   $(INSTALLDATA) LICENSE               $(DESTDIR)$(DOCDIR); \
@@ -571,6 +575,7 @@ uninstall:
 	      test "x`ls $(DESTDIR)$(ICONPATH)`" = "x" ; then \
 	      rm -rf $(DESTDIR)$(ICONPATH); \
 	   fi ; \
+	   rm -rf $(DESTDIR)$(TTFFONTDIR); \
 	   rm -rf $(DESTDIR)$(TUTDIR); \
 	   rm -rf $(DESTDIR)$(TESTDIR); \
 	   rm -rf $(DESTDIR)$(DOCDIR); \
@@ -636,9 +641,6 @@ showbuild:
 	@echo "TABLE              = $(TABLE)"
 	@echo "XPMLIBDIR          = $(XPMLIBDIR)"
 	@echo "XPMLIB             = $(XPMLIB)"
-	@echo "TTFLIBDIR          = $(TTFLIBDIR)"
-	@echo "TTFLIB             = $(TTFLIB)"
-	@echo "TTFINCDIR          = $(TTFINCDIR)"
 	@echo "TTFFONTDIR         = $(TTFFONTDIR)"
 	@echo "OPENGLLIBDIR       = $(OPENGLLIBDIR)"
 	@echo "OPENGLULIB         = $(OPENGLULIB)"

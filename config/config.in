@@ -1,7 +1,5 @@
 /* Configrations file for @architecture@ */
-#ifndef HAVE_CONFIG
-#error Trying to use config.h, though HAVE_CONFIG is undefined
-#endif
+#ifdef HAVE_CONFIG
 #define ROOTPREFIX    "@prefix@"
 #define ROOTBINDIR    "@bindir@"
 #define ROOTLIBDIR    "@libdir@"
@@ -14,3 +12,6 @@
 #define EXTRAICONPATH "@extraiconpath@"
 #define TTFFONTDIR    "@ttffontdir@"
 #define CINTINCDIR    "@cintincdir@"
+#endif
+
+#@setresuid@ HAS_SETRESUID /**/

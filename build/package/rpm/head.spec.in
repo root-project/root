@@ -43,10 +43,9 @@ See root-bin documentation
 # which they should be specified:
 #
 #       root-daemon     \
-#       root-ttf        |
 #       root-zebra      |
-#       root-opengl     + Feature packages
-#       root-mysql      |
+#       root-opengl     |
+#       root-mysql      + Feature packages
 #       root-pythia     |
 #       root-star       |
 #       root-shift      /

@@ -42,7 +42,6 @@ enable_soversion=no
 enable_srp=yes
 enable_table=no
 enable_thread=           # must be set explicitely via --enable-thread
-enable_ttf=yes
 enable_venus=yes
 enable_exceptions=yes
 show_pkglist=no
@@ -50,7 +49,7 @@ show_pkglist=no
 options="enable_afs enable_cern enable_mysql enable_opengl enable_pgsql \
          enable_pythia enable_pythia6 enable_rfio enable_dcache enable_rpath \
          enable_sapdb enable_shadowpw enable_shared enable_soversion \
-         enable_srp enable_table enable_thread enable_ttf enable_venus \
+         enable_srp enable_table enable_thread enable_venus \
          enable_krb5 enable_ldap enable_exceptions enable_openiv enable_alien \
          enable_asimage enable_chirp"
 
@@ -341,6 +340,7 @@ Usage:     $0 <architecture> [flag=value]
    --docdir        Documentation             (<prefix>/share/doc/root)
    --etcdir        Config installation dir   (/etc/root)
    --elispdir      Where to put Emacs Lisp   (<prefix>/share/emacs/site-lisp)
+   --fontdir       Font installation dir     (<datadir>/fonts)
    --iconpath      Icon installation dir     (<datadir>/icons)
    --incdir        Header installation dir   (<prefix>/include/root)
    --libdir        Library installation dir  (<prefix>/lib/root)
@@ -376,7 +376,6 @@ enable/disable options, prefix with either --enable- or --disable-
    srp             SRP support, requires SRP source tree
    table           Build libTable contrib library
    thread          Thread support
-   ttf             True Type Font support, requires libtff
    venus           Venus EG support, requires libVenus
 with options, prefix with --with-, enables corresponding support
    afs             AFS support, location of AFS distribution
@@ -410,9 +409,6 @@ with options, prefix with --with-, enables corresponding support
    srp-libdir      SRP support, location header of libsrp.a
    sys-iconpath    Extra icon path
    thread-libdir   Thread support, path to libpthread
-   ttf-fontdir     TTF support, location of TTF fonts
-   ttf-incdir      TTF support, location of freetype.h
-   ttf-libdir      TTF support, location of libttf
    venus-libdir    VENUS support, location of libVenus
    xpm-libdir      XPM support, path to libXpm
 
@@ -507,9 +503,6 @@ if test $# -gt 0 ; then
       --with-srp=*)            srpdir=$optarg        ; enable_srp="yes"     ;;
       --with-sys-iconpath=*)   extraiconpath=$optarg ;;
       --with-thread-libdir=*)  threadlibdir=$optarg  ; enable_thread="yes"  ;;
-      --with-ttf-fontdir=*)    ttffontdir=$optarg    ; enable_ttf="yes"     ;;
-      --with-ttf-incdir=*)     ttfincdir=$optarg     ; enable_ttf="yes"     ;;
-      --with-ttf-libdir=*)     ttflibdir=$optarg     ; enable_ttf="yes"     ;;
       --with-venus-libdir=*)   venuslibdir=$optarg   ; enable_venus="yes"   ;;
       --with-xpm-libdir=*)     xpmlibdir=$optarg     ;;
       ################################################################
@@ -665,54 +658,6 @@ if test "x$enable_thread" = "xyes" && test ! "$platform" = "win32" ; then
 
     if test "x$threadlib" = "x" ; then
         enable_thread="no"
-    fi
-fi
-
-######################################################################
-#
-### echo %%% FreeType Support - Third party libraries
-#
-# (see freetype.org)
-#
-if test ! "x$enable_ttf" = "xno" && test ! "$platform" = "win32"; then
-    # Check for FreeType TTF include, library and fonts
-    check_header "freetype.h" "$ttfincdir" $TTF $TTF/include \
-	/usr/include /usr/local/include /usr/include/freetype \
-	/usr/local/include/freetype /usr/freetype/include \
-	/usr/local/freetype/include /usr/freetype \
-	/usr/local/freetype /opt/freetype /opt/freetype/include \
-	/usr/local/ttf/include /opt/ttf/include \
-	/usr/include/freetype1/freetype
-    ttfinc=$found_hdr
-    ttfincdir=$found_dir
-
-    check_library "libttf" "$enable_shared" "$ttflibdir"  \
-	$TTF $TTF/lib /usr/lib /usr/local/lib /usr/lib/freetype \
-	/usr/local/lib/freetype /usr/freetype/lib \
-	/usr/local/freetype/lib /usr/freetype \
-	/usr/local/freetype /opt/freetype /opt/freetype/lib \
-        /usr/local/ttf/lib /opt/ttf/lib
-    ttflib=$found_lib
-    ttflibdir=$found_dir
-
-    check_header "arial.ttf" "$ttffontdir" $TTF $TTF/fonts /usr/lib/X11/fonts \
-	/usr/lib/X11/fonts/ttf /usr/share /usr/share/fonts \
-	/usr/share/fonts/ttf /usr/share/ttf /usr/local/share \
-	/usr/local/share/fonts /usr/local/share/fonts/ttf \
-	/usr/local/share/ttf /opt/fonts /opt/fonts/ttf \
-	/opt/ttf /opt/ttf/fonts /usr/local/ttf/fonts \
-	/usr/X11R6/lib/X11/fonts/truetype /usr/X11R6/lib/X11/fonts/TrueType
-    ttffontdir=$found_dir
-
-    # Give up if none of the above found
-    # Note that we no longer require the actual fonts at compile time
-    # since they are strictlu not needed until run time; as long
-    # as the freetype library and headers are present we can compile
-    # libGX11TTF.so.  Hence, individuals that do not particular want
-    # the Microsoft fonts (for whatever reason) can still build the
-    # library.
-    if test "x$ttflib" = "x" || test "x$ttfincdir" = "x" ; then
-        enable_ttf="no"
     fi
 fi
 
@@ -1442,7 +1387,6 @@ else
     echo "no"
 fi
 
-
 ######################################################################
 #
 ### echo %%% Debian or Red Hat package list
@@ -1453,7 +1397,6 @@ fi
 #
 if test "x$show_pkglist" = "xyes" ; then
     pkglist="root-daemon"
-    test "x$enable_ttf" = "xyes" && pkglist="$pkglist root-ttf"
     test "x$enable_cern" = "xyes" && pkglist="$pkglist root-zebra"
     if test "x$enable_openiv" = "xyes" ; then
 	pkglist="$pkglist root-gliv"
@@ -1473,6 +1416,22 @@ if test "x$show_pkglist" = "xyes" ; then
     echo "packages: $pkglist"
     exit 0
 fi
+
+######################################################################
+#
+### echo %%% check for setresuid and setresgid
+#
+setresuid="undef"
+case $arch in
+    linux*)
+        message "Checking whether setresuid declared in /usr/include/unistd.h"
+        if `grep setresuid /usr/include/unistd.h >/dev/null 2>&1` ; then
+            setresuid="define"
+            echo "yes"
+        else
+            echo "no"
+        fi ;;
+esac
 
 ######################################################################
 #
@@ -1551,7 +1510,7 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$cintincdir" = "x";   then cintincdir=$datadir/cint; fi
     if test "x$iconpath" = "x";     then iconpath=$datadir/icons; fi
     if test "x$srcdir" = "x";       then srcdir=$datadir/src; fi
-    if test "x$ttffontdir" = "x";   then ttffontdir=$datadir/fonts; fi
+    if test "x$fontdir" = "x";      then fontdir=$datadir/fonts; fi
     if test "x$docdir" = "x";       then docdir=$prefix/share/doc/root; fi
     if test "x$testdir" = "x";      then testdir=$docdir/test; fi
     if test "x$tutdir" = "x";       then tutdir=$docdir/tutorials; fi
@@ -1590,6 +1549,7 @@ else
     cintincdir=\$\(ROOTSYS\)/cint
     iconpath=\$\(ROOTSYS\)/icons
     srcdir=\$\(ROOTSYS\)/src
+    fontdir=\$\(ROOTSYS\)/fonts
     docdir=\$\(ROOTSYS\)
     testdir=\$\(ROOTSYS\)/test
     tutdir=\$\(ROOTSYS\)/tutorials
@@ -1699,10 +1659,7 @@ sed \
     -e "s|@testdir@|$testdir|"              \
     -e "s|@threadlib@|$threadlib|"          \
     -e "s|@threadlibdir@|$threadlibdir|"    \
-    -e "s|@ttffontdir@|$ttffontdir|"        \
-    -e "s|@ttfincdir@|$ttfincdir|"          \
-    -e "s|@ttflib@|$ttflib|"                \
-    -e "s|@ttflibdir@|$ttflibdir|"          \
+    -e "s|@ttffontdir@|$fontdir|"           \
     -e "s|@tutdir@|$tutdir|"                \
     -e "s|@venuslib@|$venuslib|"            \
     -e "s|@venuslibdir@|$venuslibdir|"      \
@@ -1738,7 +1695,8 @@ sed \
     -e "s|@macrodir@|$macrodir|"           \
     -e "s|@prefix@|$prefix|"               \
     -e "s|@srcdir@|$srcdir|"               \
-    -e "s|@ttffontdir@|$ttffontdir|"       \
+    -e "s|@ttffontdir@|$fontdir|"          \
+    -e "s|@setresuid@|$setresuid|"         \
     < config.tmp > $CONFOUT
 rm -f config.tmp
 echo "done"
@@ -1777,17 +1735,11 @@ echo "done"
 # etc/system.rootrc
 #
 message "Writing $ROOTRCOUT"
-if test "$ttffontdir" = "$HOME/ttf" ; then
-   ttffontdir=\$\(HOME\)/ttf
-fi
-if test "$ttffontdir" = "$HOME/ttf/fonts" ; then
-   ttffontdir=\$\(HOME\)/ttf/fonts
-fi
 sed -e "s|@libdir@|$libdir|"               \
     -e "s|@macrodir@|$macrodir|"           \
     -e "s|@bindir@|$bindir|"               \
     -e "s|@etcdir@|$etcdir|"               \
-    -e "s|@ttffontdir@|$ttffontdir|"       \
+    -e "s|@ttffontdir@|$fontdir|"          \
     -e "s|@iconpath@|$iconpath|"           \
    < rootrc.tmp > $ROOTRCOUT
 rm -f rootrc.tmp
@@ -1854,17 +1806,8 @@ fi
 # Warning about recommended build options
 #
 echo ""
-if test "x$enable_ttf" = "xno" || test "x$enable_opengl" = "xno" || \
-   test "x$ttffontdir" = "x" ; then
-    if test "x$enable_ttf" = "xno" && test ! "x$platform" = "xwin32" ; then
-	echo "To build the ROOT TrueType font add-on library see README/INSTALL."
-    fi
-    if test "x$ttffontdir" = "x" ; then
-	echo "To use TTF fonts set the TTFontPath resource in your .rootrc file."
-    fi
-    if test "x$enable_opengl" = "xno" ; then
-	echo "To build the ROOT OpenGL add-on library see README/INSTALL."
-    fi
+if test "x$enable_opengl" = "xno" ; then
+    echo "To build the ROOT OpenGL add-on library see README/INSTALL."
     echo ""
     echo ""
 fi

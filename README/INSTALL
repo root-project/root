@@ -332,8 +332,6 @@ For example:
   export CERNLIB=~/cernlib    # must contain libpacklib.a libkernlib.a
   export RFIO=~/shift/lib     # CERN's SHIFT library, must
                               # contain libshift.a
-  export TTF=~/ttf            # must contain fonts/ (and possibly
-                              # include/ lib/)
   export OPENGL=~/Mesa        # must contain include/ lib/
   export SRP=~/src/srp        # must contain include/ lib/
   #export AFS=                # must contain include/ lib/
@@ -401,10 +399,6 @@ The flags consist of two classes:
      options is strongly recommended. This requires the system library
      libpthread (Posix threads). Default is false, except for the
      "linux" architecture.
-   * ttf
-     True Type Font support for those OSs with no native TTF
-     support. This feature requires third-party library libtff, header
-     files and True Type fonts. Default is true.
    * opengl
      OpenGL (3D rendering and visualisation) support. This is
      especially powerful if you have a 3D accelerated card and a
@@ -484,13 +478,6 @@ The flags consist of two classes:
      to any feature, but provides you with way of getting the TBrowser
      and others to look for additional icons in some system-wide
      directory.
-   * ttf-incdir
-     Directory containing freetype.h, needed by feature ttf.
-   * ttf-libdir
-     Directory containing libttf.{so,a}, needed by feature ttf.
-   * ttf-fontdir
-     Directory containing TTF font files, needed by feature ttf.
-     "configure" is looking for "arial.ttf".
    * opengl-incdir
      Directory containing GL/gl.h (note the sub-directory), needed by
      feature opengl.
@@ -568,23 +555,6 @@ To build the library providing thread support you need to have the
 library libpthread.{a,so} and header files installed. This is usually
 the case for any Un*x OS. For architecture "linux" thread support
 will always be build.
-
-
-True Type Font library and fonts
---------------------------------
-On how to get the True Type ttf directory see:
-
-   http://root.cern.ch/root/TrueType.html
-
-For prebuilt versions see:
-
-   ftp://root.cern.ch/root/ttf/
-
-Most Linux distributions have a freetype package with the needed
-library and headers, but seldomly do they provide the fonts. You can
-get a minimal set of fonts from:
-
-   ftp://root.cern.ch/root/ttf/ttf_fonts.tar.gz
 
 
 OpenGL library

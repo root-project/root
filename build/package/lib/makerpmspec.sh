@@ -1,6 +1,6 @@
 #!/bin/sh -e 
 #
-# $Id: makerpmspec.sh,v 1.4 2002/05/27 16:27:56 rdm Exp $
+# $Id: makerpmspec.sh,v 1.5 2002/07/31 20:45:10 rdm Exp $
 #
 # Make the rpm spec file in ../root.spec
 #
@@ -15,7 +15,7 @@ tgtdir=rpm
 curdir=`pwd`
 
 ### echo %%% Packages ordered by preference
-pkgs="root-daemon root-ttf root-zebra root-gl root-mysql root-pgsql root-table root-shift root-cint root-bin libroot-dev libroot"
+pkgs="root-daemon root-zebra root-gl root-mysql root-pgsql root-table root-shift root-cint root-bin libroot-dev libroot"
 pkgs=`./configure linux --pkglist --enable-soversion --enable-table --enable-thread --enable-shared | sed -n 's,packages: ,,p'`
 
 # ROOT version 
@@ -70,6 +70,9 @@ sed -e "s|@libdir@|${libdir}|" \
 
 #
 # $Log: makerpmspec.sh,v $
+# Revision 1.5  2002/07/31 20:45:10  rdm
+# modified files for Debian and RedHat packaging. By Christian Holm.
+#
 # Revision 1.4  2002/05/27 16:27:56  rdm
 # rename libStar to libTable.
 #

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.47 2002/12/10 02:19:46 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.48 2003/01/13 01:33:52 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -159,6 +159,8 @@
 // 4 -> 5: added support for "+read" to allow readers when file is opened for writing
 // 5 -> 6: added support for kerberos5 authentication
 // 6 -> 7: added support for kROOTD_BYE and kROOTD_PROTOCOL2
+
+#include "config.h"
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -357,7 +359,7 @@ static int setresuid(uid_t r, uid_t e, uid_t)
    return seteuid(e);
 }
 #endif
-#if defined(linux) && (__GLIBC__ <= 2 && __GLIBC_MINOR__ <= 2)
+#if defined(linux) && !defined(HAS_SETRESUID)
 extern "C" {
    int setresgid(gid_t r, gid_t e, gid_t s);
    int setresuid(uid_t r, uid_t e, uid_t s);

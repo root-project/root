@@ -18,6 +18,7 @@ ETCDIR         := @etcdir@
 MANDIR         := @mandir@
 DATADIR        := @datadir@
 ELISPDIR       := @elispdir@
+TTFFONTDIR     := @ttffontdir@
 PROOFDATADIR   := @proofdir@
 MACRODIR       := @macrodir@
 SRCDIR         := @srcdir@
@@ -36,11 +37,6 @@ EXCEPTIONS     := @exceptions@
 ENABLETHREAD   := @enable_thread@
 OSTHREADLIBDIR := @threadlibdir@
 OSTHREADLIB    := @threadlib@
-
-TTFLIBDIR      := @ttflibdir@
-TTFFONTDIR     := @ttffontdir@
-TTFINCDIR      := @ttfincdir@
-TTFLIB         := @ttflib@
 
 OPENGLLIBDIR   := @opengllibdir@
 OPENGLULIB     := @openglulib@

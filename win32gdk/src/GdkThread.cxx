@@ -124,7 +124,7 @@ void TGWin32::GdkThread( )
     PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
     ReleaseSemaphore(fThreadP.hThrSem, 1, NULL);
     while(!EndLoop) {
-        erret = GetMessage(&msg, NULL, WIN32_GDK_INIT, WIN32_GDK_QUERY_POINTER1);
+        erret = GetMessage(&msg, NULL, WIN32_GDK_INIT, WIN32_GDK_VISUAL_GET_TYPE);
         if (erret <= 0) EndLoop = TRUE;
         switch (msg.message) {
             case WIN32_GDK_INIT:
@@ -985,6 +985,17 @@ void TGWin32::GdkThread( )
                         &pfd)) == FALSE )
                         fThreadP.iRet = -2;
                 }
+                break;
+            case WIN32_GDK_VISUAL_GET_BEST:
+                fThreadP.pRet = gdk_visual_get_best();
+                break;
+                
+            case WIN32_GDK_GET_BEST_DEPTH:
+                fThreadP.iRet = gdk_visual_get_best_depth();
+                break;
+            
+            case WIN32_GDK_VISUAL_GET_TYPE:
+                fThreadP.iRet = gdk_visual_get_best_type();
                 break;
 
         }

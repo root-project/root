@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.3 2002/09/14 20:25:04 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGApplication.cxx,v 1.4 2002/10/25 10:40:16 rdm Exp $
 // Author: Guy Barrand   30/05/2001
 
 /*************************************************************************
@@ -69,13 +69,13 @@ TGApplication::TGApplication(const char *appClassName,
    if (!fDisplay) gSystem->SetDisplay();
    fClient = new TGClient(fDisplay);
 
-#if !defined(WIN32)
+#if !defined(R__WIN32) || defined(GDK_WIN32)
    if (strcmp(appClassName, "proofserv")) {
       const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 # ifdef TTFFONTDIR
                                           TTFFONTDIR);
 # else
-                                          "$(HOME)/ttf/fonts");
+                                          "$(ROOTSYS)/fonts");
 # endif
       char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
 

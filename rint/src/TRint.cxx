@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.16 2002/10/29 13:30:00 brun Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.17 2002/11/18 23:02:19 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -267,7 +267,7 @@ void TRint::PrintLogo()
    Printf("  *                                         *");
    Printf("  *        W E L C O M E  to  R O O T       *");
    Printf("  *                                         *");
-   Printf("  *   Version%10s %17s   *",root_version,root_date);
+   Printf("  *   Version%10s %17s   *", root_version, root_date);
 // Printf("  *            Development version          *");
    Printf("  *                                         *");
    Printf("  *  You are welcome to visit our Web site  *");
@@ -275,20 +275,20 @@ void TRint::PrintLogo()
    Printf("  *                                         *");
    Printf("  *******************************************");
 
-#ifdef R__UNIX
-   if (!strcmp(gVirtualX->GetName(), "X11TTF"))
-      Printf("\nFreeType Engine v1.x used to render TrueType fonts.");
-#endif
+   if (strstr(gVirtualX->GetName(), "TTF")) {
+      Int_t major, minor, patch;
+      //TTF::Version(major, minor, patch);
+      // avoid dependency on libGraf and hard code, will not change too often
+      major = 2; minor = 1; patch = 3;
+      Printf("\nFreeType Engine v%d.%d.%d used to render TrueType fonts.",
+             major, minor, patch);
+   }
 #ifdef _REENTRANT
-#ifdef R__UNIX
    else
-#endif
       printf("\n");
    Printf("Compiled for %s with thread support.", gSystem->GetBuildArch());
 #else
-#ifdef R__UNIX
    else
-#endif
       printf("\n");
    Printf("Compiled for %s.", gSystem->GetBuildArch());
 #endif

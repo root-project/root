@@ -23,6 +23,9 @@ GRAFDO       := $(GRAFDO1) $(GRAFDO2)
 GRAFDH       := $(GRAFDS:.cxx=.h)
 
 GRAFH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+GRAFHD       := $(filter-out $(MODDIRI)/TTF.h,$(GRAFH))
+GRAFHD       := $(filter-out $(MODDIRI)/TText.h,$(GRAFHD))
+GRAFHD       := $(filter-out $(MODDIRI)/TLatex.h,$(GRAFHD))
 GRAFS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 GRAFO        := $(GRAFS:.cxx=.o)
 
@@ -41,22 +44,22 @@ INCLUDEFILES += $(GRAFDEP)
 include/%.h:    $(GRAFDIRI)/%.h
 		cp $< $@
 
-$(GRAFLIB):     $(GRAFO) $(GRAFDO) $(MAINLIBS) $(GRAFLIBDEP)
+$(GRAFLIB):     $(GRAFO) $(GRAFDO) $(FREETYPELIB) $(MAINLIBS) $(GRAFLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libGraf.$(SOEXT) $@ "$(GRAFO) $(GRAFDO)" \
-		   "$(GRAFLIBEXTRA)"
+		   "$(SOFLAGS)" libGraf.$(SOEXT) $@ \
+		   "$(GRAFO) $(GRAFDO)" "$(FREETYPELIB) $(GRAFLIBEXTRA)"
 
-$(GRAFDS1):     $(GRAFH) $(GRAFL1) $(ROOTCINTTMP)
+$(GRAFDS1):     $(GRAFHD) $(GRAFL1) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(GRAFH) $(GRAFL1)
+		$(ROOTCINTTMP) -f $@ -c $(GRAFHD) $(GRAFL1)
 $(GRAFDS2):     $(GRAFH) $(GRAFL2) $(ROOTCINTTMP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(GRAFH) $(GRAFL2)
 
 $(GRAFDO1):     $(GRAFDS1)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
-$(GRAFDO2):     $(GRAFDS2)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $@ -c $<
+$(GRAFDO2):     $(GRAFDS2) $(FREETYPELIB)
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(FREETYPEDIRI) -o $@ -c $<
 
 all-graf:       $(GRAFLIB)
 
@@ -69,3 +72,13 @@ distclean-graf: clean-graf
 		@rm -f $(GRAFDEP) $(GRAFDS) $(GRAFDH) $(GRAFLIB)
 
 distclean::     distclean-graf
+
+##### extra rules ######
+graf/src/TTF.o: graf/src/TTF.cxx $(FREETYPELIB)
+		$(CXX) $(OPT) $(CXXFLAGS) -I$(FREETYPEDIRI) -o $@ -c $<
+
+graf/src/TText.o: graf/src/TText.cxx $(FREETYPELIB)
+		$(CXX) $(OPT) $(CXXFLAGS) -I$(FREETYPEDIRI) -o $@ -c $<
+
+graf/src/TLatex.o: graf/src/TLatex.cxx $(FREETYPELIB)
+		$(CXX) $(OPT) $(CXXFLAGS) -I$(FREETYPEDIRI) -o $@ -c $<

@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.3 2002/02/21 11:30:17 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32.h,v 1.8 2002/10/25 17:38:00 rdm Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers, Bertrand Bellenot   27/11/01
 
 /*************************************************************************
@@ -136,10 +136,6 @@ struct XWindow_t {
 class TGWin32 : public TVirtualX {
 
 private:
-   static LPCRITICAL_SECTION  flpCriticalSection; // pointer to critical section object
-   static DWORD            fIDThread;       // ID of the separate Thread to work out event loop
-   HANDLE           hGDKThread;
-   static ThreadParam_t    fThreadP;
    Int_t            fMaxNumberOfWindows;    //Maximum number of windows
    XWindow_t       *fWindows;               //List of windows
    GdkCursor       *fCursors[kNumCursors];  //List of cursors
@@ -179,6 +175,13 @@ private:
    void GdkThread();
 
 protected:
+   
+   LPCRITICAL_SECTION  flpCriticalSection; // pointer to critical section object
+   DWORD            fIDThread;       // ID of the separate Thread to work out event loop
+   HANDLE           hGDKThread;
+   ThreadParam_t    fThreadP;
+
+   GdkVisual  *fVisual;
    GdkColormap  *fColormap;           //Default colormap, 0 if b/w
    Int_t      fScreenNumber;       //Screen number
    Bool_t     fHasTTFonts;         //True when TrueType fonts are used
@@ -188,8 +191,17 @@ protected:
    Float_t    fCharacterUpX;       //Character Up vector along X
    Float_t    fCharacterUpY;       //Character Up vector along Y
    Float_t    fTextMagnitude;      //Text Magnitude
+   Int_t      fDepth;              //Number of color planes
+   Int_t      fRedDiv;             //Red value divider, -1 if no TrueColor visual
+   Int_t      fGreenDiv;           //Green value divider
+   Int_t      fBlueDiv;            //Blue value divider
+   Int_t      fRedShift;           //Bits to left shift red, -1 if no TrueColor visual
+   Int_t      fGreenShift;         //Bits to left shift green
+   Int_t      fBlueShift;          //Bits to left shift blue
 
    // needed by TGWin32TTF
+   Bool_t     AllocColor(GdkColormap *cmap, GdkColor *color);
+   void       QueryColors(GdkColormap *cmap, GdkColor *colors, Int_t ncolors);
    XWindow_t *GetCurrentWindow() const;
    GdkGC     *GetGC(Int_t which) const;
 

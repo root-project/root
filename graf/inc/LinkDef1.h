@@ -1,4 +1,4 @@
-/* @(#)root/graf:$Name:  $:$Id: LinkDef1.h,v 1.5 2000/12/09 18:23:51 brun Exp $ */
+/* @(#)root/graf:$Name:  $:$Id: LinkDef1.h,v 1.6 2002/08/09 20:45:43 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -38,7 +38,6 @@
 #pragma link C++ class TPaveText-;
 #pragma link C++ class TPavesText+;
 #pragma link C++ class TPolyLine-;
-#pragma link C++ class TText-;
 #pragma link C++ class TWbox+;
 
 #endif

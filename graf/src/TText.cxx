@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.13 2002/05/18 08:21:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TText.cxx,v 1.14 2002/10/31 07:27:35 brun Exp $
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -13,9 +13,10 @@
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TText.h"
+#include "TTF.h"
 #include "TVirtualX.h"
 #include "TMath.h"
-
+#include "TPoint.h"
 
 ClassImp(TText)
 
@@ -72,105 +73,34 @@ void TText::Copy(TObject &obj) const
 //______________________________________________________________________________
 Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*-*Compute distance from point px,py to a string*-*-*-*-*
-//*-*                  =============================================
-//  Compute the closest distance of approach from point px,py to this text.
-//  The rectangle surrounding this string is evaluated.
-//  if point is in rectangle, the distance is set to zero.
-//
-   Int_t Ax,Ay,Bx,By,Cx,Cy,Dx,Dy,pxl,pxt,pyl,pyt;
+   // Compute distance from point px,py to a string.
+   // The rectangle surrounding this string is evaluated.
+   // If the point (px,py) is in the rectangle, the distance is set to zero.
+
    Int_t ptx, pty;
-   Ax = Ay = pxl = pxt = pyl = pyt = 0;
+
+   TAttText::Modify();  // change text attributes only if necessary
+
    if (TestBit(kTextNDC)) {
-      ptx   = gPad->UtoPixel(fX);
-      pty   = gPad->VtoPixel(fY);
+      ptx = gPad->UtoPixel(fX);
+      pty = gPad->VtoPixel(fY);
    } else {
-      ptx    = gPad->XtoAbsPixel(fX);
-      pty    = gPad->YtoAbsPixel(fY);
+      ptx = gPad->XtoAbsPixel(fX);
+      pty = gPad->YtoAbsPixel(fY);
    }
-   const char *text = GetTitle();
-   Int_t len    = strlen(text);
-   Double_t fh  = (fTextSize*gPad->GetAbsHNDC())*Double_t(gPad->GetWh());
-   if (fTextFont%10 > 2) fh = fTextSize;
-   Int_t h      = Int_t(fh/2);
-   Int_t w      = h*len;
-   Int_t err = 1;
-   Int_t X1c,X2c,X3c,X4c;
-   Short_t halign = fTextAlign/10;
-   Short_t valign = fTextAlign - 10*halign;
-   if (fTextAngle < err || TMath::Abs(fTextAngle-180) < err || fTextAngle>360-err) {
-     Int_t signe = 1;
-     if (TMath::Abs(fTextAngle-180) < err) signe = -1;
-     switch (halign) {  //*-* compute bounding box horizontal alignment
-        case 1 : pxl = ptx;              pxt = ptx + signe*w; break;     //left
-        case 2 : pxl = ptx - signe*w/2;  pxt = ptx + signe*w/2; break;   //center
-        case 3 : pxl = ptx - signe*w;    pxt = ptx; break;         //right
-     };
-     switch (valign) {  //*-* compute bounding box vertical alignment
-        case 1 : pyl = pty - signe*3/2*h;    pyt = pty; break;         //bottom
-        case 2 : pyl = pty - signe*h/2;      pyt = pty + signe*h/2; break;   //center
-        case 3 : pyl = pty + signe*h/2;      pyt = pty + signe*3*h/2; break; //top
-     };
-     if (fTextAngle <err || fTextAngle>360-err) if ((px >= pxl && px <= pxt) && (py >= pyl && py <= pyt)) return 0;
-     if (TMath::Abs(fTextAngle-180)<2) if ((px <= pxl && px >= pxt) && (py <= pyl && py >= pyt)) return 0;
-     return 9999;
+
+   // Get the text control box
+   Int_t CBoxX[5], CBoxY[5];
+   GetControlBox(ptx, pty, -fTextAngle, CBoxX, CBoxY);
+   CBoxY[4] = CBoxY[0];
+   CBoxX[4] = CBoxX[0];
+
+   // Check if the point (px,py) is inside the text control box
+   if(TMath::IsInside(px, py, 5, CBoxX, CBoxY)){
+      return 0;
+   } else {
+      return 9999;
    }
-   if (TMath::Abs(fTextAngle-90) < err || TMath::Abs(fTextAngle-270)<err) {
-     Int_t signe = 1;
-     if (TMath::Abs(fTextAngle-270)<err) signe = -1;
-     switch (halign) {  //*-* compute bounding box horizontal alignment
-        case 1 : pyt = pty;              pyl = pty - signe*w; break;     //left
-        case 2 : pyl = pty - signe*w/2;  pyt = pty + signe*w/2; break;   //center
-        case 3 : pyt = pty + signe*w;    pyl = pty; break;         //right
-     };
-     switch (valign) {  //*-* compute bounding box vertical alignment
-        case 1 : pxl = ptx - signe*3/2*h;    pxt = ptx; break;         //bottom
-        case 2 : pxl = ptx - signe*h/2;      pxt = ptx + signe*h/2; break;   //center
-        case 3 : pxl = ptx + signe*h/2;      pxt = ptx + signe*3*h/2; break; //top
-     };
-     if (TMath::Abs(fTextAngle-90)<err)  if ((px >= pxl && px <= pxt) && (py >= pyl && py <= pyt)) return 0;
-     if (TMath::Abs(fTextAngle-270)<err) if ((px <= pxl && px >= pxt) && (py <= pyl && py >= pyt)) return 0;
-     return 9999;
-   }
-   Double_t co = TMath::Cos(fTextAngle*0.0175);
-   Double_t si = TMath::Sin(fTextAngle*0.0175);
-   if (halign == 1) {
-      switch (valign) {
-         case 1 : Ax = ptx;                         Ay = pty; break;
-         case 2 : Ax = ptx + Int_t((si*h/2+0.5));   Ay = pty + Int_t((co*h/2+0.5)); break;
-         case 3 : Ax = ptx + Int_t((si*h*3/2+0.5)); Ay = pty + Int_t((co*h*3/2+0.5)); break;
-      }
-   }
-   if (halign == 2) {
-      switch (valign) {
-         case 1 : Ax = ptx - Int_t((co*w/2+0.5));          Ay = pty + Int_t((si*w/2+0.5)); break;
-         case 2 : Ax = ptx - Int_t((co*w/2+si*h/2+0.5));   Ay = pty + Int_t((si*w/2+co*h/2+0.5)); break;
-         case 3 : Ax = ptx - Int_t((co*w/2+si*h*3/2+0.5)); Ay = pty + Int_t((si*w/2+co*h*3/2+0.5)); break;
-      }
-   }
-   if (halign == 3) {
-      switch (valign) {
-         case 1 : Ax = ptx - Int_t((co*w+0.5));          Ay = pty + Int_t((si*w+0.5)); break;
-         case 2 : Ax = ptx - Int_t((co*w+si*h/2+0.5));   Ay = pty + Int_t((si*w+co*h/2+0.5)); break;
-         case 3 : Ax = ptx - Int_t((co*w+si*h*3/2+0.5)); Ay = pty + Int_t((si*w+co*h*3/2+0.5)); break;
-      }
-   }
-   Bx = Ax - Int_t((si*h+0.5)); By = Ay - Int_t((co*h+0.5));
-   Cx = Bx + Int_t((co*w+0.5)); Cy = By - Int_t((si*w+0.5));
-   Dx = Ax + Int_t((co*w+0.5)); Dy = Ay - Int_t((si*w+0.5));
-   if (Cy==By) X1c = px;
-   else X1c = (py-Cy)*(Cx-Bx)/(Cy-By)+Cx;
-   if (Dy==Cy) X2c = px;
-   else X2c = (py-Cy)*(Dx-Cx)/(Dy-Cy)+Cx;
-   if (Dy==Ay) X3c = px;
-   else X3c = (py-Dy)*(Dx-Ax)/(Dy-Ay)+Dx;
-   if (Ay==By) X4c = px;
-   else X4c = (py-Ay)*(Ax-Bx)/(Ay-By)+Ax;
-   if (fTextAngle<90)  if (px >= X1c && px <= X2c && px >= X4c && px <= X3c) return 0;
-   if (fTextAngle<180) if (px >= X1c && px >= X2c && px <= X4c && px <= X3c) return 0;
-   if (fTextAngle<270) if (px <= X1c && px >= X2c && px <= X4c && px >= X3c) return 0;
-   if (fTextAngle<360) if (px <= X1c && px <= X2c && px >= X4c && px >= X3c) return 0;
-   return 9999;
 }
 
 //______________________________________________________________________________
@@ -208,94 +138,80 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t px1, py1, pxold, pyold, Size, hauteur, largeur;
    static Bool_t resize,turn;
    Int_t dx, dy;
-   Int_t kMaxDiff = 8;
    const char *text = GetTitle();
-   Int_t len    = strlen(text);
+   Int_t len = strlen(text);
    Double_t sizetowin = gPad->GetAbsHNDC()*Double_t(gPad->GetWh());
-   Double_t fh  = (fTextSize*sizetowin);
-   Int_t h      = Int_t(fh/2);
-   Int_t w      = h*len;
+   Double_t fh = (fTextSize*sizetowin);
+   Int_t h     = Int_t(fh/2);
+   Int_t w     = h*len;
    Short_t halign = fTextAlign/10;
    Short_t valign = fTextAlign - 10*halign;
-   Double_t co,si,dtheta,norm;
+   Double_t co, si, dtheta, norm;
    static Bool_t droite;
    static Double_t theta;
-   Int_t Ax,Ay,Hx,Hy,Bx,By,Cx,Cy;
+   Int_t Ax, Ay, Bx, By, Cx, Cy;
    Ax = Ay = 0;
-   Double_t lambda, x2,y2,xy;
+   Double_t lambda, x2,y2;
    Double_t dpx,dpy,xp1,yp1;
+   Int_t CBoxX[4], CBoxY[4], Part;
 
    if (!gPad->IsEditable()) return;
-
    switch (event) {
 
    case kButton1Down:
-      gVirtualX->SetTextColor(-1);  // invalidate current text color (use xor mode)
-      TAttText::Modify();  //*-*Change text attributes only if necessary
-
       // No break !!!
 
    case kMouseMotion:
       if (TestBit(kTextNDC)) {
-         px1   = gPad->UtoPixel(fX);
-         py1   = gPad->VtoPixel(fY);
+         px1 = gPad->UtoPixel(fX);
+         py1 = gPad->VtoPixel(fY);
       } else {
-         px1   = gPad->XtoAbsPixel(fX);
-         py1   = gPad->YtoAbsPixel(fY);
+         px1 = gPad->XtoAbsPixel(fX);
+         py1 = gPad->YtoAbsPixel(fY);
       }
-      theta = fTextAngle;
-      Size = 0;
-      pxold = px;  pyold = py;
-      co = TMath::Cos(fTextAngle*0.0175);
-      si = TMath::Sin(fTextAngle*0.0175);
-      resize = turn = kFALSE;
-      if (halign == 1) {
-         switch (valign) {
-            case 1 : Ax = px1; Ay = py1; break;
-            case 2 : Ax = px1+Int_t(si*h/2); Ay = py1+Int_t(co*h/2); break;
-            case 3 : Ax = px1+Int_t(si*h*3/2); Ay = py1+Int_t(co*h*3/2); break;
-         }
-      }
-      if (halign == 2) {
-         switch (valign) {
-            case 1 : Ax = px1-Int_t(co*w/2); Ay = py1+Int_t(si*w/2); break;
-            case 2 : Ax = px1-Int_t(co*w/2+si*h/2); Ay = py1+Int_t(si*w/2+co*h/2); break;
-            case 3 : Ax = px1-Int_t(co*w/2+si*h*3/2); Ay = py1+Int_t(si*w/2+co*h*3/2); break;
-         }
-      }
-      if (halign == 3) {
-         switch (valign) {
-            case 1 : Ax = px1-Int_t(co*w); Ay = py1+Int_t(si*w); break;
-            case 2 : Ax = px1-Int_t(co*w+si*h/2); Ay = py1+Int_t(si*w+co*h/2); break;
-            case 3 : Ax = px1-Int_t(co*w+si*h*3/2); Ay = py1+Int_t(si*w+co*h*3/2); break;
-         }
-      }
-      if (halign != 3) {Hx = Ax+Int_t(co*w-si*h/2); Hy = Ay-Int_t(si*w-co*h/2); droite = kFALSE;}
-      else {Hx = Ax-Int_t(si*h/2); Hy = Ay-Int_t(co*h/2); droite = kTRUE;}
-      if ((TMath::Abs(px-Hx)<kMaxDiff*2) && (TMath::Abs(py-Hy)<kMaxDiff*2)) {gPad->SetCursor(kRotate); turn = kTRUE; break;}
-      Bx = Ax-Int_t(si*h); By = Ay-Int_t(co*h);
-      if (valign == 3) {Bx = Ax; By = Ay;}
-      Cx = Bx+Int_t(co*w); Cy = By-Int_t(si*w);
-      lambda = Double_t(((px-Bx)*(Cx-Bx)+(py-By)*(Cy-By)))/Double_t(((Cx-Bx)*(Cx-Bx)+(Cy-By)*(Cy-By)));
-      x2 = Double_t(px) - lambda*Double_t(Cx-Bx)-Double_t(Bx);
-      y2 = Double_t(py) - lambda*Double_t(Cy-By)-Double_t(By);
-      xy = Double_t((px-Ax)*(px-Ax)+(py-Ay)*(py-Ay));
-      if ((TMath::Sqrt(x2*x2+y2*y2) < kMaxDiff/2) && (TMath::Sqrt(xy) <= w*0.3)) {
-         if (fTextAngle == 0 || fTextAngle == 180) gPad->SetCursor(kArrowVer);
-         else {
-            if (fTextAngle == 90 || fTextAngle == 270) gPad->SetCursor(kArrowHor);
-            else gPad->SetCursor(kHand);
-         }
-         hauteur = valign;
-         largeur = halign;
-         resize = kTRUE;
+      theta  = fTextAngle;
+      Size   = 0;
+      pxold  = px;
+      pyold  = py;
+      co     = TMath::Cos(fTextAngle*0.017453293);
+      si     = TMath::Sin(fTextAngle*0.017453293);
+      resize = kFALSE;
+      turn   = kFALSE;
+      GetControlBox(px1, py1, -theta, CBoxX, CBoxY);
+      Part   = (Int_t)(3*((px-CBoxX[0])*co-(py-CBoxY[0])*si)/
+                      ((CBoxX[3]-CBoxX[0])*co-(CBoxY[3]-CBoxY[0])*si));
+      switch (Part) {
+      case 0:
+	 if (halign == 3) {
+            turn   = kTRUE;
+	    droite = kTRUE;
+            gPad->SetCursor(kRotate);
+         } else {
+            resize  = kTRUE;
+            hauteur = valign;
+            largeur = halign;
+            gPad->SetCursor(kArrowVer);
+	 }
          break;
+      case 1:
+         gPad->SetCursor(kMove);
+         break;
+      case 2:
+	 if (halign == 3) {
+            resize  = kTRUE;
+            hauteur = valign;
+            largeur = halign;
+            gPad->SetCursor(kArrowVer);
+         } else {
+            turn   = kTRUE;
+	    droite = kFALSE;
+            gPad->SetCursor(kRotate);
+	 }
       }
-      gPad->SetCursor(kMove);
       break;
 
    case kButton1Motion:
-      gVirtualX->DrawText(px1, py1, theta, gVirtualX->GetTextMagnitude(), GetTitle(), TVirtualX::kClear);
+      PaintControlBox(px1, py1, -theta);
       if (turn) {
          norm = TMath::Sqrt(Double_t((py-py1)*(py-py1)+(px-px1)*(px-px1)));
          if (norm>0) {
@@ -309,8 +225,8 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
       else if (resize) {
 
-         co = TMath::Cos(fTextAngle*0.0175);
-         si = TMath::Sin(fTextAngle*0.0175);
+         co = TMath::Cos(fTextAngle*0.017453293);
+         si = TMath::Sin(fTextAngle*0.017453293);
          if (largeur == 1) {
             switch (valign) {
                case 1 : Ax = px1; Ay = py1; break;
@@ -348,7 +264,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          dx = px - pxold;  px1 += dx;
          dy = py - pyold;  py1 += dy;
       }
-      gVirtualX->DrawText(px1, py1, theta, gVirtualX->GetTextMagnitude(), GetTitle(), TVirtualX::kClear);
+      PaintControlBox(px1, py1, -theta);
       pxold = px;  pyold = py;
       break;
 
@@ -366,11 +282,9 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
       fTextAngle = theta;
       gPad->Modified(kTRUE);
-      gVirtualX->SetTextColor(-1);
       break;
 
    case kButton1Locate:
-
       ExecuteEvent(kButton1Down, px, py);
 
       while (1) {
@@ -384,6 +298,91 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             return;
          }
       }
+   }
+}
+
+//______________________________________________________________________________
+void TText::GetControlBox(Int_t x, Int_t y, Double_t theta, 
+                          Int_t CBoxX[4], Int_t CBoxY[4])
+{
+   // Return the text control box. The text position coordinates is (x,y) and
+   // the text angle is theta. The control box coordinates are returned in CBoxX
+   // and CBoxY.
+
+   Short_t halign = fTextAlign/10;          // horizontal alignment
+   Short_t valign = fTextAlign - 10*halign; // vertical alignment
+   UInt_t CBoxW, CBoxH;                     // control box width and heigh
+   UInt_t Dx = 0, Dy = 0;                   // delta along x and y to align the box
+
+   GetBoundingBox(CBoxW, CBoxH);
+
+   // compute the translations (Dx, Dy) required by the alignments
+   switch (halign) {
+      case 1 : Dx = 0      ; break;
+      case 2 : Dx = CBoxW/2; break;
+      case 3 : Dx = CBoxW  ; break;
+   }
+   switch (valign) {
+      case 1 : Dy = 0      ; break;
+      case 2 : Dy = CBoxH/2; break;
+      case 3 : Dy = CBoxH  ; break;
+   }
+
+   // compute the control box coordinates before rotation
+   CBoxX[0] = x-Dx;
+   CBoxY[0] = y+Dy;
+   CBoxX[1] = x-Dx;
+   CBoxY[1] = y-CBoxH+Dy;
+   CBoxX[2] = x+CBoxW-Dx;
+   CBoxY[2] = y-CBoxH+Dy;
+   CBoxX[3] = x+CBoxW-Dx;
+   CBoxY[3] = y+Dy;
+
+   // rotate the control box if needed
+   if (theta) {
+      Double_t cosTheta = TMath::Cos(theta*0.017453293);
+      Double_t sinTheta = TMath::Sin(theta*0.017453293);
+      for (int i=0; i<4 ; i++) {
+         Int_t HCBoxX = CBoxX[i];
+         Int_t HCBoxY = CBoxY[i];
+         CBoxX[i] = (Int_t)((HCBoxX-x)*cosTheta-(HCBoxY-y)*sinTheta+x);
+         CBoxY[i] = (Int_t)((HCBoxX-x)*sinTheta+(HCBoxY-y)*cosTheta+y);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TText::GetBoundingBox(UInt_t &w, UInt_t &h)
+{
+   // Return text size in pixels
+
+   if (TTF::IsInitialized() || gPad->IsBatch()) {
+      TTF::GetTextExtent(w, h, (char*)GetTitle());
+   } else {
+      gVirtualX->GetTextExtent(w, h, (char*)GetTitle());
+   }
+}
+
+//______________________________________________________________________________
+void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
+{
+   // Return text extent for string text
+   //  in w return total text width
+   //  in h return text height
+
+   Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
+   Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t tsize;
+   if (wh < hh)  tsize = fTextSize*wh;
+   else          tsize = fTextSize*hh;
+
+   if (gVirtualX->HasTTFonts() || gPad->IsBatch()) {
+      TTF::SetTextFont(fTextFont);
+      TTF::SetTextSize(tsize);
+      TTF::GetTextExtent(w, h, (char*)text);
+   } else {
+      gVirtualX->SetTextSize((int)tsize);
+      gVirtualX->GetTextExtent(w, h, (char*)text);
    }
 }
 
@@ -405,6 +404,60 @@ void TText::Paint(Option_t *)
    TAttText::Modify();  //Change text attributes only if necessary
    if (TestBit(kTextNDC)) gPad->PaintTextNDC(fX,fY,GetTitle());
    else                   gPad->PaintText(fX,fY,GetTitle());
+}
+
+//______________________________________________________________________________
+void TText::PaintControlBox(Int_t x, Int_t y, Double_t theta)
+{
+   // Paint the text control box. (x,y) are the coordinates where the control
+   // box should be painted and theta is the angle of the box.
+
+   Int_t CBoxX[4], CBoxY[4];
+   Short_t halign = fTextAlign/10;               // horizontal alignment
+   Short_t valign = fTextAlign - 10*halign;      // vertical alignment
+
+   GetControlBox(x, y, theta, CBoxX, CBoxY);
+   // Draw the text control box outline
+   gVirtualX->SetLineStyle((Style_t)1);
+   gVirtualX->SetLineWidth(1);
+   gVirtualX->SetLineColor(1);
+   gVirtualX->DrawLine(CBoxX[0], CBoxY[0], CBoxX[1], CBoxY[1]);
+   gVirtualX->DrawLine(CBoxX[1], CBoxY[1], CBoxX[2], CBoxY[2]);
+   gVirtualX->DrawLine(CBoxX[2], CBoxY[2], CBoxX[3], CBoxY[3]);
+   gVirtualX->DrawLine(CBoxX[3], CBoxY[3], CBoxX[0], CBoxY[0]);
+
+   // Draw a symbol at the text starting point
+   TPoint p;
+   Int_t ix = 0, iy = 0;
+   switch (halign) {
+      case 1 :
+         switch (valign) {
+            case 1 : ix = 0 ; iy = 0 ; break;
+            case 2 : ix = 0 ; iy = 1 ; break;
+            case 3 : ix = 1 ; iy = 1 ; break;
+         }
+      break;
+      case 2 :
+         switch (valign) {
+            case 1 : ix = 0 ; iy = 3 ; break;
+            case 2 : ix = 0 ; iy = 2 ; break;
+            case 3 : ix = 1 ; iy = 2 ; break;
+         }
+      break;
+      case 3 :
+         switch (valign) {
+            case 1 : ix = 3 ; iy = 3 ; break;
+            case 2 : ix = 2 ; iy = 3 ; break;
+            case 3 : ix = 2 ; iy = 2 ; break;
+         }
+      break;
+   }
+   p.fX = (CBoxX[ix]+CBoxX[iy])/2;
+   p.fY = (CBoxY[ix]+CBoxY[iy])/2;
+   gVirtualX->SetMarkerColor(1);
+   gVirtualX->SetMarkerStyle(24);
+   gVirtualX->SetMarkerSize(0.7);
+   gVirtualX->DrawPolyMarker(1, &p);
 }
 
 //______________________________________________________________________________

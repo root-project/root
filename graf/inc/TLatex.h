@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.8 2002/05/03 09:34:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.9 2002/10/31 07:27:34 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -112,9 +112,10 @@ public:
 
       TLatex          *DrawLatex(Double_t x, Double_t y, const char *text);
       Double_t         GetHeight() const;
-      virtual void     GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const;
       Double_t         GetXsize();
       Double_t         GetYsize();
+      void             GetBoundingBox(UInt_t &w, UInt_t &h);
+      void             GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const;
       virtual void     Paint(Option_t *option="");
       virtual void     PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, const char *text);
 

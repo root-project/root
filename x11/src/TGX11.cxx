@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.26 2002/12/02 18:50:12 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: TGX11.cxx,v 1.27 2003/01/20 07:25:02 brun Exp $
 // Author: Rene Brun, Olivier Couet, Fons Rademakers   28/11/94
 
 /*************************************************************************
@@ -1069,21 +1069,13 @@ void TGX11::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
    // ih          : text height
    // mess        : message
 
-   w = XTextWidth(gTextFont, mess, strlen(mess));
-   h = gTextFont->ascent;
-
-#if 0
-   int direction, ascent, descent;
-   XCharStruct overall;
-   XTextExtents(gTextFont, mess, strlen(mess), &direction, &ascent, &descent,
-                &overall);
-   UInt_t ww = overall.rbearing - overall.lbearing;
-   UInt_t hh = overall.ascent + overall.descent;
-
-   if ((int)h != ascent) printf("GetTextExtent: h = %d, ascent = %d\n", (int)h, ascent);
-   printf("GetTextExtent: current values: w = %d, h = %d\n", (int)w, (int)h);
-   printf("               new values:     w = %d, h = %d\n", (int)ww, (int)hh);
-#endif
+   XPoint *CBox;
+   CBox = (XPoint *)malloc((unsigned)(5*sizeof(XPoint)));
+   XRotSetMagnification(fTextMagnitude);
+   CBox = XRotTextExtents(fDisplay, gTextFont, 0., 0, 0, mess, 0);
+   w    = CBox[2].x;
+   h    = -CBox[2].y;
+   free((char *)CBox);
 }
 
 //______________________________________________________________________________
