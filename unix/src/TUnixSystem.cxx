@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.65 2003/07/18 22:19:27 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.66 2003/07/23 16:32:02 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1447,12 +1447,7 @@ void TUnixSystem::StackTrace()
 #else
    const char *cppfilt = "c++filt";
 #endif
-#if (__GNUC__ >= 3)
-   //const char *cppfiltarg = "--format=gnu-v3";
-   const char *cppfiltarg = "--format=gnu-new-abi";
-#else
    const char *cppfiltarg = "";
-#endif
 #ifdef R__B64
    const char *format1 = " 0x%016lx in %.100s %s 0x%lx from %.100s\n";
    const char *format2 = " 0x%016lx in %.100s at %.100s from %.100s\n";
@@ -1468,6 +1463,24 @@ void TUnixSystem::StackTrace()
    char *filter = Which(Getenv("PATH"), cppfilt, kExecutePermission);
    if (!filter)
       demangle = kFALSE;
+
+#if (__GNUC__ >= 3)
+   // try finding supported format option for g++ v3
+   if (filter) {
+      FILE *p = OpenPipe(Form("%s --help 2>&1", filter), "r");
+      TString help;
+      while (help.Fgets(p)) {
+         if (help.Index("gnu-v3") != kNPOS) {
+            cppfiltarg = "--format=gnu-v3";
+            break;
+         } else if (help.Index("gnu-new-abi") != kNPOS) {
+            cppfiltarg = "--format=gnu-new-abi";
+            break;
+         }
+      }
+      ClosePipe(p);
+   }
+#endif
 
    // addr2line uses debug info to convert addresses into file names
    // and line numbers
