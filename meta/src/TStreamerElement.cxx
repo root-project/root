@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.31 2001/06/01 11:02:54 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerElement.cxx,v 1.32 2001/07/12 17:18:02 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -77,14 +77,15 @@ TStreamerElement::~TStreamerElement()
 //______________________________________________________________________________
 Bool_t TStreamerElement::CannotSplit() const
 {
-   //returns true if the element cannot be split, falso otherwise
+   //returns true if the element cannot be split, false otherwise
    //An element cannot be split if the corresponding class member
    //has the special characters "||" as the first characters in the comment field
    
    if (strspn(GetTitle(),"||") == 2) return kTRUE;
    TClass *cl = GetClassPointer();
    if (!cl) return kFALSE;  //basic type or STL
-
+   if (cl->InheritsFrom("TObjectRef")) return kTRUE;
+   
    //iterate on list of base classes (cannot split if one base class is unknown)
    TIter nextb(cl->GetListOfBases());
    TBaseClass *base;
