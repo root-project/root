@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.8 2000/12/15 12:05:24 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.9 2001/02/28 07:22:46 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -193,6 +193,9 @@ void TGraphErrors::Paint(Option_t *option)
    // by default horizonthal and vertical small lines are drawn at
    // the end of the error bars. if option "z" or "Z" is specified,
    // these lines are not drawn.
+   //
+   // By default, error bars are drawn. If option "X" is specified,
+   // the errors are not drawn (TGraph::Paint equivalent).
    
    const Int_t BASEMARKER=8;
    Double_t s2x, s2y, symbolsize;
@@ -200,12 +203,14 @@ void TGraphErrors::Paint(Option_t *option)
    static Float_t cxx[11] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6};
    static Float_t cyy[11] = {1,1,1,1,1,1,1,1,1,0.5,0.6};
 
-   Bool_t endLines = kTRUE;
-   if (strchr(option,'z')) endLines = kFALSE;
-   if (strchr(option,'Z')) endLines = kFALSE;
 
    TGraph::Paint(option);
 
+   Bool_t endLines = kTRUE;
+   if (strchr(option,'z')) endLines = kFALSE;
+   if (strchr(option,'Z')) endLines = kFALSE;
+   if (strchr(option,'X')) return;
+   
    TAttLine::Modify();
 
    symbolsize  = GetMarkerSize();
