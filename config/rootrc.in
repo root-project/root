@@ -27,7 +27,8 @@ Root.MemStat.size:      -1
 Root.MemStat.cnt:       -1
 Root.ObjectStat:         0
 
-# Activate memory checker (mini Insure)
+# Activate memory leak checker (use in conjunction with $ROOTSYS/bin/memprobe)
+# Currently only works on Linux with gcc.
 Root.MemCheck:           0
 
 # Global debug mode. When >0 turns on progressively more details debugging.
