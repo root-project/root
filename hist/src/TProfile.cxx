@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.4 2000/07/11 10:36:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.5 2000/07/11 13:58:50 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -210,6 +210,16 @@ TProfile::TProfile(const TProfile &profile)
 
 
 //______________________________________________________________________________
+void TProfile::Add(TF1 *, Double_t )
+{
+   // Performs the operation: this = this + c1*f1
+
+   Error("Add","Function not implemented for TProfile");
+   return;
+}
+
+
+//______________________________________________________________________________
 void TProfile::Add(TH1 *h1, Double_t c1)
 {
    // Performs the operation: this = this + c1*h1
@@ -317,6 +327,16 @@ void TProfile::Copy(TObject &obj)
    ((TProfile&)obj).fYmin = fYmin;
    ((TProfile&)obj).fYmax = fYmax;
    ((TProfile&)obj).fErrorMode = fErrorMode;
+}
+
+
+//______________________________________________________________________________
+void TProfile::Divide(TF1 *, Double_t )
+{
+   // Performs the operation: this = this/(c1*f1)
+
+   Error("Divide","Function not implemented for TProfile");
+   return;
 }
 
 //______________________________________________________________________________
@@ -611,6 +631,16 @@ Option_t *TProfile::GetErrorOption() const
    if (fErrorMode == kERRORSPREADI) return "i";
    if (fErrorMode == kERRORSPREADG) return "g";
    return "";
+}
+
+
+//______________________________________________________________________________
+void TProfile::Multiply(TF1 *, Double_t )
+{
+   // Performs the operation: this = this*c1*f1
+
+   Error("Multiply","Function not implemented for TProfile");
+   return;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.4 2000/07/11 10:36:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.h,v 1.5 2000/07/11 13:58:50 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -27,6 +27,7 @@
 
 enum EErrorType { kERRORMEAN = 0, kERRORSPREAD, kERRORSPREADI, kERRORSPREADG };
 
+class TF1;
 
 class TProfile : public TH1D {
 
@@ -55,10 +56,12 @@ public:
     TProfile(const char *name,const char *title,Int_t nbinsx,Double_t *xbins, Option_t *option="");
     TProfile(const TProfile &profile);
     virtual ~TProfile();
+    virtual void    Add(TF1 *h1, Double_t c1=1);
     virtual void    Add(TH1 *h1, Double_t c1=1);
     virtual void    Add(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
             void    BuildOptions(Double_t ymin, Double_t ymax, Option_t *option);
     virtual void    Copy(TObject &hnew);
+    virtual void    Divide(TF1 *h1, Double_t c1=1);
     virtual void    Divide(TH1 *h1);
     virtual void    Divide(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
     virtual TH1    *DrawCopy(Option_t *option="");
@@ -71,6 +74,7 @@ public:
     Option_t       *GetErrorOption() const;
     virtual Double_t GetYmin() {return fYmin;}
     virtual Double_t GetYmax() {return fYmax;}
+    virtual void    Multiply(TF1 *h1, Double_t c1=1);
     virtual void    Multiply(TH1 *h1);
     virtual void    Multiply(TH1 *h1, TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
             TH1D   *ProjectionX(const char *name="_px", Option_t *option="e");
