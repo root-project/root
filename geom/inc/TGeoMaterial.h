@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.10 2004/06/25 11:59:55 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMaterial.h,v 1.11 2004/06/28 08:46:47 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -131,6 +131,8 @@ public:
    virtual Bool_t           IsEq(const TGeoMaterial *other) const;
    virtual Bool_t           IsMixture() const {return kTRUE;}
    virtual void             Print(const Option_t *option="") const;
+   void                     SetA(Double_t a) {fA = a;}
+   void                     SetZ(Double_t z) {fZ = z;}
 
   ClassDef(TGeoMixture, 1)              // material mixtures
 
