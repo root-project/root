@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.26 2004/07/30 01:13:50 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.27 2004/08/03 16:01:18 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -117,8 +117,8 @@ protected:
    TPadView3D   *fPadView3D;       //! 3D View of this TPad
    static Int_t  fgMaxPickDistance;//  Maximum Pick Distance
 
-   TBuffer3D        *fBuffer3D;    //  Contains the current shape
-   TVirtualViewer3D *fViewer3D;    //  3D viewer   
+   TBuffer3D        *fBuffer3D;    //!  Contains the current shape
+   TVirtualViewer3D *fViewer3D;    //!  3D viewer   
 
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
    virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
