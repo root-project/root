@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDebug.h,v 1.1 2002/07/17 12:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDebug.h,v 1.2 2002/07/17 15:14:37 rdm Exp $
 // Author: Maarten Ballintijn 19/6/2002
 
 /*************************************************************************
@@ -45,6 +45,6 @@ R__EXTERN TProofDebug::EProofDebugMask gProofDebugMask;
 R__EXTERN Int_t gProofDebugLevel;
 
 #define PDB(mask,level) \
-   if ((_NAME2_(TProofDebug::,mask)) & gProofDebugMask && (level) >= gProofDebugLevel)
+   if ((TProofDebug::mask & gProofDebugMask) && (level) >= gProofDebugLevel)
 
 #endif
