@@ -47,7 +47,7 @@ ifeq ($(PLATFORM),hpux)
 CINTS2       += $(MODDIRS)/libstrm.cxx
 endif
 ifeq ($(PLATFORM),solaris)
-ifeq ($(CXX),/opt/WS5.0/bin/CC)
+ifeq ($(SUNCC5),true)
 CINTS2       += $(MODDIRS)/sunstrm.cxx
 else
 CINTS2       += $(MODDIRS)/libstrm.cxx
