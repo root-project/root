@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.73 2001/11/29 09:56:19 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.74 2001/12/04 21:52:31 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -2622,13 +2622,14 @@ Double_t TTreeFormula::EvalInstance(Int_t instance)
       Int_t action = fOper[i];
 //*-*- a tree string
       if (action >= 105000) {
-         TLeaf *leafc = (TLeaf*)fLeaves.UncheckedAt(action-105000);
+         Int_t string_code = action-105000;
+         TLeaf *leafc = (TLeaf*)fLeaves.UncheckedAt(string_code);
          leafc->GetBranch()->GetEntry(fTree->GetReadEntry());
          pos2++;
-         if (fLookupType[i]==kDirect) {
+         if (fLookupType[string_code]==kDirect) {
            tab2[pos2-1] = (char*)leafc->GetValuePointer();
          } else {
-           tab2[pos2-1] = (char*)GetLeafInfo(i)->GetValuePointer(leafc,0);
+           tab2[pos2-1] = (char*)GetLeafInfo(string_code)->GetValuePointer(leafc,0);
          }
          continue;
       }
@@ -3092,15 +3093,17 @@ Bool_t TTreeFormula::IsString(Int_t code) const
         TBranchElement * br = (TBranchElement*)leaf->GetBranch();
         Int_t bid = br->GetID();
         if (bid < 0) return kFALSE;
-        TStreamerElement * elem = (TStreamerElement*)
-          br->GetInfo()->GetElements()->At(br->GetID());
-        // if(elem->GetType()==kChar_t
+        TStreamerElement * elem = (TStreamerElement*) br->GetInfo()->GetElements()->At(bid);
         if (elem->GetType()== TStreamerInfo::kOffsetL +kChar_t) {
            // Check whether a specific element of the string is specified!
            if (fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
            return kTRUE;
         }
-        if ( elem->GetType()== TStreamerInfo::kCharStar) return kTRUE;
+        if ( elem->GetType()== TStreamerInfo::kCharStar) {
+           // Check whether a specific element of the string is specified!
+           if (fNdimensions[code] && fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
+           return kTRUE;
+        } 
         return kFALSE;
      } else {
         return kFALSE;
@@ -3138,7 +3141,7 @@ char *TTreeFormula::PrintValue(Int_t mode) const
    } else if (mode == -1)
       sprintf(value, "%s", GetTitle());
 
-   if (TestBit(kIsCharacter)) {
+   if (fNstring && fNval==0 && fNoper==1) {
       if (mode == 0) {
          TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
          leaf->GetBranch()->GetEntry(fTree->GetReadEntry());
