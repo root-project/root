@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.27 2003/07/21 10:39:58 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.28 2003/07/25 17:22:38 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -443,12 +443,12 @@ void TGFrame::Move(Int_t x, Int_t y)
 //______________________________________________________________________________
 void TGFrame::Resize(UInt_t w, UInt_t h)
 {
-   // Resize the frame. 
-   // If w=0 && h=0 - Resize to deafult size 
+   // Resize the frame.
+   // If w=0 && h=0 - Resize to deafult size
 
    if (w != fWidth || h != fHeight) {
       TGDimension siz = GetDefaultSize();
-      fWidth = w ? w : siz.fWidth; 
+      fWidth = w ? w : siz.fWidth;
       fHeight = h ? h : siz.fHeight;
       TGWindow::Resize(fWidth, fHeight);
       Layout();
@@ -467,11 +467,11 @@ void TGFrame::Resize(TGDimension size)
 void TGFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    // Move and/or resize the frame.
-   // If w=0 && h=0 - Resize to deafult size 
+   // If w=0 && h=0 - Resize to deafult size
 
    // we do it anyway as we don't know if it's only a move or only a resize
    TGDimension siz = GetDefaultSize();
-   fWidth = w ? w : siz.fWidth; 
+   fWidth = w ? w : siz.fWidth;
    fHeight = h ? h : siz.fHeight;
    fX = x; fY = y;
    TGWindow::MoveResize(x, y, fWidth, fHeight);
@@ -617,10 +617,10 @@ const TGGC &TGFrame::GetBckgndGC()
 
 //______________________________________________________________________________
 Time_t TGFrame::GetLastClick()
-{ 
+{
    //
 
-   return fgLastClick; 
+   return fgLastClick;
 }
 
 //______________________________________________________________________________
@@ -945,13 +945,6 @@ Bool_t TGCompositeFrame::TranslateCoordinates(TGFrame *child, Int_t x, Int_t y,
    return kFALSE;
 }
 
-
-class TGMapKey : public TObject {
-public:
-   UInt_t     fKeyCode;
-   TGWindow  *fWindow;
-   TGMapKey(UInt_t keycode, TGWindow *w) { fKeyCode = keycode; fWindow = w; }
-};
 
 //______________________________________________________________________________
 TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
