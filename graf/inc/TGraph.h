@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.5 2000/11/21 20:23:14 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.6 2000/12/02 16:31:25 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -96,6 +96,7 @@ public:
         virtual void     SetPoint(Int_t i, Double_t x, Double_t y);
         virtual void     SetTitle(const char *title="");    // *MENU*
                 void     Smooth(Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype);
+        virtual void     UseCurrentStyle();
                 void     Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Double_t &Y
                           ,Int_t maxiterations);
 

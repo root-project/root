@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.21 2000/11/21 20:25:13 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.22 2000/12/02 16:34:10 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -3103,6 +3103,24 @@ void TGraph::Streamer(TBuffer &b)
    } else {
       TGraph::Class()->WriteBuffer(b,this);
    }
+}
+
+//______________________________________________________________________________
+void TGraph::UseCurrentStyle()
+{
+   // Set current style settings in this graph
+   // This function is called when either TCanvas::UseCurrentStyle
+   // or TROOT::ForceStyle have been invoked.
+
+   SetFillColor(gStyle->GetHistFillColor());
+   SetFillStyle(gStyle->GetHistFillStyle());
+   SetLineColor(gStyle->GetHistLineColor());
+   SetLineStyle(gStyle->GetHistLineStyle());
+   SetLineWidth(gStyle->GetHistLineWidth());
+   SetMarkerColor(gStyle->GetMarkerColor());
+   SetMarkerStyle(gStyle->GetMarkerStyle());
+   SetMarkerSize(gStyle->GetMarkerSize());
+   if (fHistogram) fHistogram->UseCurrentStyle();
 }
 
 //______________________________________________________________________________
