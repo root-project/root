@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.65 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.66 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -4142,8 +4142,9 @@ void TPad::SetFixedAspectRatio(Bool_t fixed)
 void TPad::SetEditable(Bool_t mode)
 {
    // Set pad editable yes/no
-   // If a pad is not editable, one cannot modify the pad and its objects
-   // via the mouse.
+   // If a pad is not editable:
+   // - one cannot modify the pad and its objects via the mouse.
+   // - one cannot add new objects to the pad
 
    fEditable = mode;
 
