@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.71 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.72 2005/01/27 17:07:08 rdm Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -723,9 +723,10 @@ int main(int argc, char **argv)
                }
                char *p;
                port1 = strtol(*++argv, &p, 10);
-               if (*p == '-')
-                  port2 = strtol(++p, &p, 10);
-               else if (*p == '\0')
+               if (*p == '-') {
+                  p++;
+                  port2 = strtol(p, &p, 10);
+               } else if (*p == '\0')
                   port2 = port1;
                if (*p != '\0' || port2 < port1 || port2 < 0) {
                   Error(ErrFatal,kErrFatal,"invalid port number or range: %s",

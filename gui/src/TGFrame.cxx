@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.105 2005/01/12 18:39:29 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.106 2005/01/25 16:00:37 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -148,8 +148,8 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fWidth = w; fHeight = h; fX = fY = fBorderWidth = 0;
    fMinWidth    = 0;
    fMinHeight   = 0;
-   fMaxWidth    = ~0;
-   fMaxHeight   = ~0;
+   fMaxWidth    = kMaxUInt;
+   fMaxHeight   = kMaxUInt;
    fFE          = 0;
 
    if (fOptions & (kSunkenFrame | kRaisedFrame))
@@ -208,8 +208,8 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    fOptions     = 0;
    fMinWidth    = 0;
    fMinHeight   = 0;
-   fMaxWidth    = ~0;
-   fMaxHeight   = ~0;
+   fMaxWidth    = kMaxUInt;
+   fMaxHeight   = kMaxUInt;
    fFE          = 0;
 
    SetWindowName();

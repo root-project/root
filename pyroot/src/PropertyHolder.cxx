@@ -91,33 +91,33 @@ PyObject* PyROOT::PropertyHolder::get( PyObject* args, PyObject* ) {
 
    switch ( m_dataType ) {
    case Utility::kShort:
-      return PyLong_FromLong( (long) *((Short_t*)((int)obj+offset)) );
+      return PyLong_FromLong( (long) *((Short_t*)((long)obj+offset)) );
    case Utility::kInt:
    case Utility::kLong:
    case Utility::kEnum: {
-      return PyLong_FromLong( *((Long_t*)((int)obj+offset)) );
+      return PyLong_FromLong( *((Long_t*)((long)obj+offset)) );
    }
    case Utility::kUInt:
    case Utility::kULong: {
-      return PyLong_FromLong( *((ULong_t*)((int)obj+offset)) );
+      return PyLong_FromLong( *((ULong_t*)((long)obj+offset)) );
    }
    case Utility::kFloat: {
-      return PyFloat_FromDouble( *((Float_t*)((int)obj+offset)) );
+      return PyFloat_FromDouble( *((Float_t*)((long)obj+offset)) );
    }
    case Utility::kDouble: {
-      return PyFloat_FromDouble( *((Double_t*)((int)obj+offset)) );
+      return PyFloat_FromDouble( *((Double_t*)((long)obj+offset)) );
    }
    case Utility::kIntPtr: {
-      return PyBufferFactory::getInstance()->PyBuffer_FromMemory( *((Int_t**)((int)obj+offset)) );
+      return PyBufferFactory::getInstance()->PyBuffer_FromMemory( *((Int_t**)((long)obj+offset)) );
    }
    case Utility::kLongPtr: {
-      return PyBufferFactory::getInstance()->PyBuffer_FromMemory( *((Long_t**)((int)obj+offset)) );
+      return PyBufferFactory::getInstance()->PyBuffer_FromMemory( *((Long_t**)((long)obj+offset)) );
    }
    case Utility::kFloatPtr: {
-      return PyBufferFactory::getInstance()->PyBuffer_FromMemory( *((Float_t**)((int)obj+offset)) );
+      return PyBufferFactory::getInstance()->PyBuffer_FromMemory( *((Float_t**)((long)obj+offset)) );
    }
    case Utility::kDoublePtr: {
-      return PyBufferFactory::getInstance()->PyBuffer_FromMemory( *((Double_t**)((int)obj+offset)) );
+      return PyBufferFactory::getInstance()->PyBuffer_FromMemory( *((Double_t**)((long)obj+offset)) );
    }
    case Utility::kOther: {
    // TODO: refactor this code with TMethodHolder returns
@@ -125,7 +125,7 @@ PyObject* PyROOT::PropertyHolder::get( PyObject* args, PyObject* ) {
          G__TypeInfo( m_dataMember->GetFullTypeName() ).TrueName(), 1 );
 
       TClass* cls = gROOT->GetClass( sname.c_str(), 1 );
-      long* address = *((long**)((int)obj+offset));
+      long* address = *((long**)((long)obj+offset));
 
       if ( cls && address ) {
       // special case: cross-cast to real class for TGlobal returns
@@ -163,21 +163,21 @@ PyObject* PyROOT::PropertyHolder::set( PyObject* args, PyObject* ) {
 
    switch( m_dataType ) {
    case Utility::kShort: {
-      *((Short_t*)((int)obj+offset))  = (Short_t) PyLong_AsLong( dm );
+      *((Short_t*)((long)obj+offset))  = (Short_t) PyLong_AsLong( dm );
       break;
    }
    case Utility::kInt:
    case Utility::kLong:
    case Utility::kEnum: {
-      *((Long_t*)((int)obj+offset))   = PyLong_AsLong( dm );
+      *((Long_t*)((long)obj+offset))   = PyLong_AsLong( dm );
       break;
    }
    case Utility::kFloat: {
-      *((Float_t*)((int)obj+offset))  = PyFloat_AsDouble( dm );
+      *((Float_t*)((long)obj+offset))  = PyFloat_AsDouble( dm );
       break;
    }
    case Utility::kDouble: {
-      *((Double_t*)((int)obj+offset)) = PyFloat_AsDouble( dm );
+      *((Double_t*)((long)obj+offset)) = PyFloat_AsDouble( dm );
       break;
    }
    default:

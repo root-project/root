@@ -753,7 +753,7 @@ namespace {
          G__memfunc_setup(
             fid, 444, (G__InterfaceMethod)NULL,
             100, -1, -1, 0, 2, 1, 1, 0, "D - - 0 - - D - - 0 - -",
-            (char*)NULL, (void*)((int)this + s_count), 0 );
+            (char*)NULL, (void*)((long)this + s_count), 0 );
          G__resetifuncposition();
 
          G__ClassInfo gcl;
@@ -789,7 +789,7 @@ namespace {
       // build new argument array
          PyObject* args = PyTuple_New( 6 - 1 );   // skip self
          ObjectHolder* dummy =
-            new ObjectHolder( (void*)((int)this + s_count), TObject::Class(), false );
+            new ObjectHolder( (void*)((long)this + s_count), TObject::Class(), false );
 
          for ( int iarg = 1; iarg < nArgs; ++iarg ) {
             PyObject* item = PyTuple_GET_ITEM( aTuple, iarg );

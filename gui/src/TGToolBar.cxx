@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.13 2004/09/15 19:21:20 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGToolBar.cxx,v 1.14 2004/12/07 15:34:27 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -111,7 +111,7 @@ TGButton *TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t s
    fTrash->Add(pbut);
    fTrash->Add(layout);
 
-   fMapOfButtons->Add(pbut, (TObject*)button->fId);
+   fMapOfButtons->Add(pbut, (TObject*)((Long_t)button->fId));
 
    Connect(pbut, "Pressed()" , "TGToolBar", this, "ButtonPressed()");
    Connect(pbut, "Released()", "TGToolBar", this, "ButtonReleased()");

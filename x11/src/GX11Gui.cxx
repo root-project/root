@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.39 2005/01/12 18:39:30 brun Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.40 2005/01/18 21:07:27 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -997,7 +997,7 @@ void TGX11::CopyGC(GContext_t org, GContext_t dest, Mask_t mask)
 
    if (!mask) {
       // in this case copy all fields
-      mask = ~0;
+      mask = kMaxULong;
    }
 
    gval.fMask = mask;  // only set fMask used to convert to xmask
@@ -2044,7 +2044,7 @@ void TGX11::GetGCValues(GContext_t gc, GCValues_t &gval)
 
    if (!gval.fMask) {
       // in this case copy all fields
-      gval.fMask = ~0;
+      gval.fMask = kMaxULong;
    }
 
    MapGCValues(gval, xmask, xgval);

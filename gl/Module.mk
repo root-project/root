@@ -72,8 +72,7 @@ $(GLDO):        $(GLDS)
 		   -I$(GDKDIRI) -I$(GLIBDIRI) -o $@ -c $<
 else
 $(GLDO):        $(GLDS)
-		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(OPENGLINCDIR) \
-		   $(IVFLAGS) -o $@ -c $<
+		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -I$(OPENGLINCDIR) -o $@ -c $<
 endif
 
 all-gl:         $(GLLIB)
@@ -100,8 +99,8 @@ $(GLO): %.o: %.cxx
 	   -I$(GDKDIRI) -I$(GLIBDIRI) -o $@ -c $<
 else
 $(GLO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(OPENGLINCDIR) $(IVFLAGS) -o $@ -c $<
+	$(CXX) $(OPT) $(CXXFLAGS) -I$(OPENGLINCDIR) -o $@ -c $<
 endif
 
 $(GLDIRS)/gl2ps.o: $(GLDIRS)/gl2ps.c
-	$(CC) $(OPT) -I$(OPENGLINCDIR) -I$(GLDIRI) -o $@ -c $<
+	$(CC) $(OPT) $(CFLAGS) -I$(OPENGLINCDIR) -o $@ -c $<

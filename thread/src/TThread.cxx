@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.32 2005/01/05 01:55:13 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.33 2005/01/18 16:58:48 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -816,7 +816,7 @@ again:
       bp = buf;
 
    void *arr[4];
-   arr[1] = (void*) level;
+   arr[1] = (void*) Long_t(level);
    arr[2] = (void*) location;
    arr[3] = (void*) bp;
    if (XARequest("ERRO", 4, arr, 0)) return;
@@ -916,7 +916,7 @@ void TThread::XAction()
 
       case kERRO:
          {
-            int level = (int)fgXArr[1];
+            int level = (int)Long_t(fgXArr[1]);
             const char *location = (const char*)fgXArr[2];
             char *mess = (char*)fgXArr[3];
             if (level != kFatal)

@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.6 2004/11/11 07:48:31 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TRolke.cxx,v 1.7 2004/11/13 12:58:20 brun Exp $
 // Author: Jan Conrad    9/2/2004
 
 /*************************************************************************
@@ -144,7 +144,7 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
     Int_t trial_x = x;
 
     while (done == 0) {
-      trial_x = trial_x++;
+      trial_x++;
       limit[1] = Interval(trial_x,y,z,bm,em,e,mid, sde,sdb,tau,b,m);
       if (limit[1] > 0) done = 1;
     } 

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.7 2004/05/12 19:11:45 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TVolumeView.cxx,v 1.8 2004/09/07 08:22:09 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   25/12/98
 // $Id:
 // $Log:
@@ -865,11 +865,17 @@ const Char_t *sceleton[] = {
        break;
     case  6:  out <<  matrixType << ";" ;                    // cout <<  matrixType << ";" ;
        break;
-    case  7:  out << thisMatrix[im++] << ", " << thisMatrix[im++] << ", " << thisMatrix[im++]  << ", " ;
+    case  7:  out << thisMatrix[im++] << ", ";
+              out << thisMatrix[im++] << ", ";
+              out << thisMatrix[im++] << ", ";
        break;
-    case  8:  out << thisMatrix[im++] << ", " << thisMatrix[im++] << ", " << thisMatrix[im++]  << ", " ;
+    case  8:  out << thisMatrix[im++] << ", ";
+              out << thisMatrix[im++] << ", ";
+              out << thisMatrix[im++] << ", ";
        break;
-    case  9:  out << thisMatrix[im++] << ", " << thisMatrix[im++] << ", " << thisMatrix[im++] ;
+    case  9:  out << thisMatrix[im++] << ", ";
+              out << thisMatrix[im++] << ", ";
+              out << thisMatrix[im++];
        break;
     default:
        break;

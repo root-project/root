@@ -1,4 +1,4 @@
-// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.6 2004/11/05 09:05:45 brun Exp $
+// @(#)root/pyroot:$Name:  $:$Id: MemoryRegulator.cxx,v 1.7 2004/11/23 21:45:06 brun Exp $
 // Author: Wim Lavrijsen, Apr 2004
 
 // Bindings
@@ -83,7 +83,7 @@ namespace {
       }
 
       static int ptrhash( PyObject* obj ) {
-         return (int) obj;
+         return (int) long(obj);
       }
 
    };

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.97 2005/01/14 17:09:27 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.98 2005/01/27 17:07:08 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -927,7 +927,7 @@ void RootdFstat(const char *buf)
    if (rc >= 0)
       sprintf(msg, "%ld %ld %d %d %d %lld %ld %d", (long)statbuf.st_dev,
               (long)statbuf.st_ino, statbuf.st_mode, statbuf.st_uid,
-              statbuf.st_gid, statbuf.st_size, statbuf.st_mtime,
+              statbuf.st_gid, (Long64_t)statbuf.st_size, statbuf.st_mtime,
               islink);
    else
       sprintf(msg, "-1 -1 -1 -1 -1 -1 -1 -1");
@@ -2207,9 +2207,10 @@ int main(int argc, char **argv)
                }
                char *p;
                port1 = strtol(*++argv, &p, 10);
-               if (*p == '-')
-                  port2 = strtol(++p, &p, 10);
-               else if (*p == '\0')
+               if (*p == '-') {
+                  p++;
+                  port2 = strtol(p, &p, 10);
+               } else if (*p == '\0')
                   port2 = port1;
                if (*p != '\0' || port2 < port1 || port2 < 0) {
                   Error(ErrFatal,kErrFatal,"invalid port number or range: %s",

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:$:$Id:$
+// @(#)root/base:$Name:  $:$Id: TQCommand.cxx,v 1.3 2004/04/27 07:30:35 rdm Exp $
 // Author: Valeriy Onuchin 04/27/2004
 
 /*************************************************************************
@@ -925,7 +925,7 @@ TQUndoManager::TQUndoManager() : TQCommand(0, 0, 0, 0)
    // Constructor
 
    fCursor = 0;
-   fLimit = ~0;   // maximum value for UInt_t
+   fLimit = kMaxUInt;   // maximum value for UInt_t
    fLogging = kFALSE;
    fLogBook = 0;
    fCurrent = 0;

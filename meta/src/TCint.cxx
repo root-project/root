@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.97 2005/01/14 18:12:39 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.98 2005/01/18 21:04:17 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -766,10 +766,8 @@ TString TCint::GetMangledNameWithPrototype(TClass *cl, const char *method,
 
    if (cl)
       return cl->GetClassInfo()->GetMethod(method, proto, &offset).GetMangledName();
-   else {
-      G__ClassInfo gcl;   // default G__ClassInfo is global environment
-      return gcl.GetMethod(method, proto, &offset).GetMangledName();
-   }
+   G__ClassInfo gcl;   // default G__ClassInfo is global environment
+   return gcl.GetMethod(method, proto, &offset).GetMangledName();
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafO.cxx,v 1.15 2004/10/18 12:32:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafO.cxx,v 1.1 2005/01/20 01:10:52 rdm Exp $
 // Author: Philippe Canal  20/1/05
 
 /*************************************************************************
@@ -75,7 +75,6 @@ void TLeafO::FillBasket(TBuffer &b)
 //*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
 //*-*                  ==========================================
 
-   Int_t i;
    Int_t len = GetLen();
    if (fPointer) fValue = *fPointer;
    b.WriteFastArray(fValue,len);

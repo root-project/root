@@ -1,4 +1,4 @@
-// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.25 2004/12/17 22:34:01 brun Exp $
+// @(#)root/mlp:$Name:  $:$Id: TMultiLayerPerceptron.cxx,v 1.26 2005/02/03 07:29:32 brun Exp $
 // Author: Christophe.Delaere@cern.ch   20/07/03
 
 /*************************************************************************
@@ -1742,7 +1742,8 @@ void TMultiLayerPerceptron::MLP_Line(Double_t * origin, Double_t * dir, Double_t
    TSynapse *synapse = NULL;
    TObjArrayIter *it = (TObjArrayIter *) fNetwork.MakeIterator();
    while ((neuron = (TNeuron *) it->Next())) {
-      neuron->SetWeight(origin[idx] + (dir[idx++] * dist));
+      neuron->SetWeight(origin[idx] + (dir[idx] * dist));
+      idx++;
    }
    delete it;
    it = (TObjArrayIter *) fSynapses.MakeIterator();
@@ -1860,7 +1861,8 @@ bool TMultiLayerPerceptron::LineSearch(Double_t * direction, Double_t * buffer)
    nentries = fNetwork.GetEntriesFast();
    for (j=0;j<nentries;j++) {
       neuron = (TNeuron *) fNetwork.UncheckedAt(j);
-      buffer[idx] = neuron->GetWeight() - origin[idx++];
+      buffer[idx] = neuron->GetWeight() - origin[idx];
+      idx++;
    }
    nentries = fSynapses.GetEntriesFast();
    for (j=0;j<nentries;j++) {
