@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.cc,v 1.3 2001/03/29 22:37:39 verkerke Exp $
+ *    File: $Id: RooAbsString.cc,v 1.4 2001/05/03 02:15:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,6 +14,7 @@
 #include <iostream.h>
 #include "TObjString.h"
 #include "TH1.h"
+#include "TTree.h"
 #include "RooFitCore/RooAbsString.hh"
 #include "RooFitCore/RooArgSet.hh"
 
@@ -40,23 +41,6 @@ RooAbsString::RooAbsString(const RooAbsString& other, const char* name) :
 
 RooAbsString::~RooAbsString()
 {
-}
-
-
-RooAbsString& RooAbsString::operator=(const RooAbsString& other)
-{
-  RooAbsArg::operator=(other) ;
-
-  strcpy(_value,other._value) ;
-  setValueDirty(kTRUE) ;
-
-  return *this ;
-}
-
-
-RooAbsArg& RooAbsString::operator=(const RooAbsArg& aother)
-{
-  return operator=((RooAbsString&)aother) ;
 }
 
 
@@ -138,4 +122,31 @@ TString RooAbsString::traceEval() const
 
 
 
+void RooAbsString::copyCache(const RooAbsArg* source) 
+{
+  // Warning: This function copies the cached values of source,
+  //          it is the callers responsibility to make sure the cache is clean
 
+  RooAbsString* other = dynamic_cast<RooAbsString*>(const_cast<RooAbsArg*>(source)) ;
+  assert(other) ;
+
+  strcpy(_value,other->_value) ;
+  setValueDirty(kTRUE) ;
+}
+
+
+
+void RooAbsString::attachToTree(TTree& t, Int_t bufSize)
+{
+  // Attach object to a branch of given TTree
+
+  // First determine if branch is taken
+  if (t.GetBranch(GetName())) {
+    t.SetBranchAddress(GetName(),&_value) ;
+  } else {
+    TString format(GetName());
+    format.Append("/C");
+    t.Branch(GetName(), &_value, (const Text_t*)format, bufSize);
+  }
+}
+ 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooFitContext.rdl,v 1.1 2001/05/03 02:15:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -55,6 +55,7 @@ protected:
   
   // Prefit optimizer
   Bool_t optimizePdf(RooAbsPdf* pdf, RooDataSet* dset) ;
+  Bool_t findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset, RooArgSet& cacheList) ;
 
 public:
   

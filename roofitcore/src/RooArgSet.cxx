@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.15 2001/04/20 01:51:38 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.16 2001/05/03 02:15:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -169,7 +169,7 @@ RooArgSet &RooArgSet::operator=(const RooArgSet& other) {
     elem= (RooAbsArg*)At(index);
     theirs= other.find(elem->GetName());
     if(!theirs) continue;
-    (*elem) = (*theirs) ;
+    elem->copyCache(theirs) ;
   }
   return *this;
 }

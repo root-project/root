@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.4 2001/05/07 06:26:13 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.5 2001/05/10 00:16:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -28,7 +28,6 @@ public:
   RooAbsPdf(const char *name, const char *title, const char *unit= "") ;
   RooAbsPdf(const char *name, const char *title, Double_t minVal, Double_t maxVal, const char *unit= "") ;
   RooAbsPdf(const RooAbsPdf& other, const char* name=0);
-  RooAbsPdf& operator=(const RooAbsPdf& other) ;
   virtual ~RooAbsPdf();
 
   // Data set dependent accessors (normalization & dependent/parameter interpretation)
@@ -68,14 +67,13 @@ protected:
 
   virtual Double_t extendedTerm(UInt_t observedEvents) const ;
 
-  mutable RooRealIntegral* _norm ;   // Normalization integral
+  mutable Double_t _rawValue ;
+  mutable RooRealIntegral* _norm   ; // Normalization integral
   mutable RooDataSet* _lastDataSet ; // Data set for which normalization integral is valid
 
   mutable Int_t _errorCount ;        // Number of errors remaining to print
   mutable Int_t _traceCount ;        // Number of traces remaining to print
   mutable Int_t _negCount ;          // Number of negative probablities remaining to print
-
-  RooAbsArg& operator=(const RooAbsArg& other) ;
 
   ClassDef(RooAbsPdf,1) // a real-valued variable and its value
 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.19 2001/05/03 02:15:53 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.20 2001/05/10 00:16:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -76,7 +76,13 @@ public:
 
 protected:
 
-  virtual RooAbsArg& operator=(const RooAbsArg& other) ; 
+  virtual Bool_t isValid() const ;
+
+  // Dirty state accessor/modifiers
+  virtual Bool_t isValueDirty() const { return isDerived()?_valueDirty:kFALSE ; } 
+  virtual Bool_t isShapeDirty() const { return isDerived()?_shapeDirty:kFALSE ; } 
+  void setValueDirty(Bool_t flag=kTRUE) const { setValueDirty(flag,0) ; }
+  void setShapeDirty(Bool_t flag=kTRUE) const { setShapeDirty(flag,0) ; } 
 
   // Client-Server relatation and Proxy management 
   friend class RooArgSet ;
@@ -95,6 +101,7 @@ protected:
   void changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp) ;
   void removeServer(RooAbsArg& server) ;
 
+  // Proxy management
   friend class RooArgProxy ;
   void registerProxy(RooArgProxy& proxy) ;
   RooArgProxy& getProxy(Int_t index) const ;
@@ -104,20 +111,12 @@ protected:
   THashList _attribList ;
   void printAttribList(ostream& os) const;
 
-  // Dirty state accessor/modifiers
-  // 
-  // The dirty state accessors can be overriden by 
-  // fundamental subclasses to always return false
-  virtual Bool_t isValueDirty() const { return isDerived()?_valueDirty:kFALSE ; } 
-  virtual Bool_t isShapeDirty() const { return isDerived()?_shapeDirty:kFALSE ; } 
-  void setValueDirty(Bool_t flag=kTRUE) const { setValueDirty(flag,0) ; }
-  void setShapeDirty(Bool_t flag=kTRUE) const { setShapeDirty(flag,0) ; } 
-
   // Hooks for RooDataSet interface
   friend class RooDataSet ;
-  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+  virtual void syncCache(const RooDataSet* dset=0) = 0 ;
+  virtual void copyCache(const RooAbsArg* source) = 0 ;
+  virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
   virtual void postTreeLoadHook() {} ;
-  virtual Bool_t isValid() const ;
 
   // Global   
   friend ostream& operator<<(ostream& os, const RooAbsArg &arg);  

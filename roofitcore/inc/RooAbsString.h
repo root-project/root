@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsString.rdl,v 1.3 2001/03/29 22:37:39 verkerke Exp $
+ *    File: $Id: RooAbsString.rdl,v 1.4 2001/05/03 02:15:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,7 +25,6 @@ public:
   inline RooAbsString() { }
   RooAbsString(const char *name, const char *title) ;
   RooAbsString(const RooAbsString& other, const char* name=0);
-  RooAbsString& operator=(const RooAbsString& other) ;
   virtual ~RooAbsString();
 
   // Return value and unit accessors
@@ -40,8 +39,6 @@ public:
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent="") const ;
 
 protected:
-  friend class RooDataSet ;
-  RooAbsArg& operator=(const RooAbsArg& other) ;
 
   // Function evaluation and error tracing
   TString traceEval() const ;
@@ -51,6 +48,10 @@ protected:
   // Internal consistency checking (needed by RooDataSet)
   virtual Bool_t isValid() const ;
   virtual Bool_t isValid(TString value) const ;
+
+  virtual void syncCache(const RooDataSet* dset=0) { getVal() ; }
+  void copyCache(const RooAbsArg* source) ;
+  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
 
   mutable char _value[1024] ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.1 2001/05/10 00:16:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -56,19 +56,6 @@ RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(const char*label) {
 }
 
 
-RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(const RooAbsCategoryLValue& other)
-{
-  RooAbsCategory::operator=(other) ;
-  return *this ;
-}
-
-
-RooAbsArg& RooAbsCategoryLValue::operator=(const RooAbsArg& aother)
-{
-  return operator=((const RooAbsCategoryLValue&)aother) ;
-}
-
-
 
 Bool_t RooAbsCategoryLValue::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
@@ -82,33 +69,6 @@ void RooAbsCategoryLValue::writeToStream(ostream& os, Bool_t compact) const
 }
 
 
-
-void RooAbsCategoryLValue::attachToTree(TTree& t, Int_t bufSize)
-{
-  // Attach object to a branch of given TTree
-
-  // First determine if branch is taken
-  if (t.GetBranch(GetName())) {
-    cout << "RooAbsCategoryLValue::attachToTree(" << GetName() << "): branch in tree " << t.GetName() << " already exists" << endl ;
-    t.SetBranchAddress(GetName(),&((Int_t&)_value)) ;
-  } else {    
-    TString format(GetName());
-    format.Append("/I");
-    void* ptr = &(_value._value) ;
-    //    _value.setVal(999) ;
-    cout << "RooAbsCategoryLValue::attachToTree(" << GetName() << "): making new branch in tree " << t.GetName() 
-	 << ", prt=" << ptr  << endl ;    
-    t.Branch(GetName(), ptr, (const Text_t*)format, bufSize);
-  }
-}
-
-void RooAbsCategoryLValue::postTreeLoadHook() 
-{
-  if (isValid()) {
-    // Synchronize label with new index
-    _value = *lookupType(_value.getVal()) ;
-  }
-}
 
 
 

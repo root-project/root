@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.1 2001/05/10 00:16:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -32,7 +32,6 @@ public:
   RooAbsRealLValue(const char *name, const char *title, const char *unit= "") ;
   RooAbsRealLValue(const RooAbsRealLValue& other, const char* name=0);
   virtual ~RooAbsRealLValue();
-  RooAbsRealLValue& operator=(const RooAbsRealLValue& other) ;
   
   // Parameter value and error accessors
   virtual void setVal(Double_t value)=0;
@@ -46,6 +45,7 @@ public:
 
   // Test a value against our fit range
   Bool_t inFitRange(Double_t value, Double_t* clippedValue=0) const;
+  Bool_t isValid(Double_t value, Bool_t printError=kFALSE) const ; 
 
   // Constant and Projected flags 
   inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }
@@ -58,11 +58,6 @@ public:
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
 protected:
-
-  virtual RooAbsArg& operator=(const RooAbsArg& other) ;
-  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
-
-  virtual Bool_t isValid(Double_t value, Bool_t verbose=kFALSE) const ;
 
   ClassDef(RooAbsRealLValue,1) // a real-valued variable and its value
 };

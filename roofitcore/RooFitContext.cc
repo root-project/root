@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitContext.cc,v 1.1 2001/05/03 02:15:55 verkerke Exp $
+ *    File: $Id: RooFitContext.cc,v 1.2 2001/05/10 00:16:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -110,8 +110,20 @@ void RooFitContext::setPdfParamErr(Int_t index, Double_t value)
 
 Bool_t RooFitContext::optimizePdf(RooAbsPdf* pdf, RooDataSet* dset) 
 {
+  RooArgSet cacheList("cacheList") ;
+  findCacheableBranches(pdf,dset,cacheList) ;
+  
+  dset->cacheArgs(cacheList) ;
+}
+
+
+
+Bool_t RooFitContext::findCacheableBranches(RooAbsPdf* pdf, RooDataSet* dset, 
+					    RooArgSet& cacheList) 
+{
   TIterator* sIter = pdf->serverIterator() ;
   RooAbsPdf* server ;
+
   while(server=(RooAbsPdf*)sIter->Next()) {
     if (server->isDerived() && server->IsA()->InheritsFrom(RooAbsPdf::Class())) {
       // Check if this branch node is eligible for precalculation
@@ -132,10 +144,10 @@ Bool_t RooFitContext::optimizePdf(RooAbsPdf* pdf, RooDataSet* dset)
       if (canOpt) {
 	cout << "RooFitContext::optimizePDF: component PDF " << server->GetName() 
 	     << " of PDF " << pdf->GetName() << " will be cached" << endl ;
-	// Add this PDF as a precalculated column to the data set clone
-	dset->addColumn((RooAbsPdf&)*server) ;
-	// Redirect PDF link to point to precalculated value
-	pdf->attachDataSet(dset) ;
+
+	// Add to cache list
+	cacheList.add(*server) ;
+
       } else {
 	// Recurse if we cannot optimize at this level
 	optimizePdf(server,dset) ;
@@ -181,6 +193,7 @@ Int_t RooFitContext::fit(Option_t *options, Double_t *minVal)
 
   // Run the optimizer if requested
   if (optimize) optimizePdf(_pdfClone,_dataClone) ;
+  //_dataClone->Scan() ;
 
 
   // Create a log file if requested

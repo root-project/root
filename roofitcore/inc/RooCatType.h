@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCatType.rdl,v 1.6 2001/05/03 02:15:54 verkerke Exp $
+ *    File: $Id: RooCatType.rdl,v 1.7 2001/05/10 00:16:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -45,8 +45,7 @@ public:
   }
 
 protected:
-  friend class RooCategory ;
-  friend class RooAbsCategoryLValue ;
+  friend class RooAbsCategory ;
   Int_t _value ;
 	
   ClassDef(RooCatType,1) // a real-valued variable and its value

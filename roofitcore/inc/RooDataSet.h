@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.13 2001/05/03 02:15:55 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.14 2001/05/10 00:16:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,20 +20,18 @@
 #include "RooFitCore/RooPrintable.hh"
 #include "RooFitCore/RooArgSet.hh"
 
-class RooAbsArg;
-class RooAbsReal;
 class TIterator;
 class TBranch;
 class TH1F;
 class TH2F;
 class TPaveText;
-class Roo1DTable ;
-class RooAbsCategory ;
-class RooPlot;
-class RooRealFunction ;
+class RooAbsArg;
 class RooAbsReal ;
+class RooAbsCategory ;
+class RooAbsString ;
+class Roo1DTable ;
+class RooPlot;
 class RooFitContext ;
-class RooAbsPdf ;
 
 class RooDataSet : public TTree, public RooPrintable {
 public:
@@ -46,7 +44,7 @@ public:
   RooDataSet(const char *name, const char *title, TTree *ntuple, 
 	     const RooArgSet& vars, const char *cuts);
   RooDataSet(const char *name, const char *filename, const char *treename, 
-	     const RooArgSet& vars, const char *cuts);
+	     const RooArgSet& vars, const char *cuts);  
   RooDataSet(RooDataSet const & other);
   inline virtual ~RooDataSet() ;
 
@@ -57,10 +55,11 @@ public:
 			  const char *indexCatName=0) ;
 
   // Add one ore more rows of data
-  void add(const RooArgSet& data);
+  void add(const RooArgSet& row);
   void append(RooDataSet& data) ;
   void addColumn(RooAbsReal& var) ;
-//   void addColumn(RooRealFunction& var) {} ;
+  void addColumn(RooAbsCategory& var) ;
+  void addColumn(RooAbsString& var) ;
 
   // Load a given row of data
   const RooArgSet* get() const { return &_vars ; } // last loaded row
@@ -69,22 +68,31 @@ public:
   Roo1DTable* Table(RooAbsCategory& cat, const char* cuts="", const char* opts="") ;
 
   // Plot the distribution of a real valued arg
-  RooPlot *plot(const RooAbsReal& var, const char* cuts="", Option_t* drawOptions="P") const;
+  RooPlot *plot(const RooAbsReal& var, const char* cuts="", 
+		Option_t* drawOptions="P") const;
   RooPlot *plot(RooPlot *frame, const char* cuts="", Option_t* drawOptions="P") const;
-  TH1F* createHistogram(const RooAbsReal& var, const char* cuts="", const char *name= "hist") const;	 
+  TH1F* createHistogram(const RooAbsReal& var, const char* cuts="", 
+			const char *name= "hist") const;	 
  
   // Printing interface (human readable)
-  virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  virtual void printToStream(ostream& os, PrintOption opt= Standard, 
+			     TString indent= "") const;
   inline virtual void Print(Option_t *options= 0) const {
     printToStream(defaultStream(),parseOptions(options));
   }
 
+
+  // WVE Debug stuff
+  void dump() ;
   void origPrint() { TTree::Print() ; }
 
-  // Output to an ASCII file
-  void dump() ;
-
 protected:
+
+  void addColumn(RooAbsArg& var, RooAbsArg* placeHolder) ;
+
+  void cacheArg(RooAbsArg& var) ;
+  void cacheArgs(RooArgSet& varSet) ;
+  void fillCacheArgs() ;
 
   // Load data from another TTree
   void loadValues(const TTree *ntuple, const char *cuts);
@@ -96,12 +104,14 @@ protected:
 
   // Column structure definition
   RooArgSet _vars, _truth;
+  RooArgSet _cachedVars ;  //! do not clone
   TString _blindString ;
 
 private:
 
   void initialize(const RooArgSet& vars);
-  TIterator *_iterator; //! don't make this data member persistent
+  TIterator *_iterator;    //! don't make this data member persistent
+  TIterator *_cacheIter ;  //! don't make this data member persistent
   TBranch *_branch; //! don't make this data member persistent
 
   enum { bufSize = 8192 };

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.15 2001/05/07 06:26:14 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.16 2001/05/10 00:16:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -130,22 +130,6 @@ void RooRealVar::setFitRange(Double_t min, Double_t max) {
 }
 
 
-void RooRealVar::attachToTree(TTree& t, Int_t bufSize)
-{
-  // Attach object to a branch of given TTree
-
-  // First determine if branch is taken
-  if (t.GetBranch(GetName())) {
-    //cout << "RooRealVar::attachToTree(" << GetName() << "): branch in tree " << t.GetName() << " already exists" << endl ;
-    t.SetBranchAddress(GetName(),&_value) ;
-  } else {    
-    TString format(GetName());
-    format.Append("/D");
-    t.Branch(GetName(), &_value, (const Text_t*)format, bufSize);
-  }
-}
-
-
 Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
   // Read object contents from given stream
@@ -266,16 +250,12 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
 
 RooRealVar& RooRealVar::operator=(const RooRealVar& orig)
 {
-  RooAbsRealLValue::operator=(orig) ;
-  _error = orig._error ;
+  // WVE define this
 
   return (*this) ;
 }
 
-RooAbsArg& RooRealVar::operator=(const RooAbsArg& aorig)
-{
-  return operator=((const RooRealVar&)aorig) ;
-}
+
 
 void RooRealVar::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print info about this object to the specified stream. In addition to the info
@@ -293,6 +273,8 @@ void RooRealVar::printToStream(ostream& os, PrintOption opt, TString indent) con
     }
   }
 }
+
+
 
 TString *RooRealVar::format(Int_t sigDigits, const char *options) {
   // Format numeric value in a variety of ways

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.19 2001/05/03 02:15:55 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.20 2001/05/10 00:16:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,11 +48,12 @@
 #include "RooFitCore/RooFormula.hh"
 #include "RooFitCore/RooCategory.hh"
 #include "RooFitCore/RooPlot.hh"
+#include "RooFitCore/RooStringVar.hh"
 
 ClassImp(RooDataSet)
 
 RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& vars) :
-  TTree(name, title), _vars("Dataset Variables"), _truth(), _branch(0)
+  TTree(name, title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth(), _branch(0)
 {
   initialize(vars);
 }
@@ -60,7 +61,8 @@ RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& var
 
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t, 
                        const RooArgSet& vars, const char *cuts) :
-  TTree(name,title), _vars("Dataset Variables"), _truth(), _branch(0), _blindString(t->_blindString)
+  TTree(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth(), _branch(0), 
+  _blindString(t->_blindString)
 {
   initialize(vars);
   loadValues(t,cuts);
@@ -68,7 +70,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
 
 RooDataSet::RooDataSet(const char *name, const char *title, TTree *t, 
                        const RooArgSet& vars, const char *cuts) :
-  TTree(name,title), _vars("Dataset Variables"), _truth(), _branch(0)
+  TTree(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth(), _branch(0)
 {
   initialize(vars);
   loadValues(t,cuts);
@@ -77,7 +79,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *t,
 RooDataSet::RooDataSet(const char *name, const char *filename,
 		       const char *treename,
                        const RooArgSet& vars, const char *cuts) :
-  TTree(name,name), _vars("Dataset Variables"), _truth(), _branch(0)
+  TTree(name,name), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _truth(), _branch(0)
 {
   initialize(vars);
   loadValues(filename,treename,cuts);
@@ -85,7 +87,8 @@ RooDataSet::RooDataSet(const char *name, const char *filename,
 
 
 RooDataSet::RooDataSet(RooDataSet const & other) : 
-  TTree(other.GetName(),other.GetTitle()), _vars("Dataset Variables"), _truth(), _branch(0)
+  TTree(other.GetName(),other.GetTitle()), _vars("Dataset Variables"), 
+  _cachedVars("Cached Variables"), _truth(), _branch(0)
 {
   initialize(other._vars) ;
   loadValues(&other,"") ;
@@ -162,8 +165,9 @@ void RooDataSet::loadValues(const TTree *t, const char *cuts)
        if (!sourceArg->isValid()) {
 	 continue ;
        }
-       *destArg = *sourceArg ;
-}   
+       destArg->copyCache(sourceArg) ;
+     }   
+
      Fill() ;
    }
 
@@ -221,22 +225,55 @@ void RooDataSet::initialize(const RooArgSet& vars) {
       _vars.add(*varClone) ;
     }
   }
+  delete iter ;
 
   _iterator= _vars.MakeIterator();
+  _cacheIter = _cachedVars.MakeIterator() ;
 }
 
 
 void RooDataSet::addColumn(RooAbsReal& newVar) 
 {
+  RooRealVar* valHolder = new RooRealVar(newVar.GetName(),newVar.GetTitle(),0) ; 
+  addColumn(newVar,valHolder) ;
+}
+
+
+
+void RooDataSet::addColumn(RooAbsCategory& newVar) 
+{
+  RooCategory* valHolder = new RooCategory(newVar.GetName(),newVar.GetTitle()) ; 
+
+  // Copy states
+  TIterator* tIter = newVar.typeIterator() ;
+  RooCatType* type ;
+  while (type=(RooCatType*)tIter->Next()) {
+    valHolder->defineType(type->GetName(),type->getVal()) ;
+  }
+
+  addColumn(newVar,valHolder) ;
+}
+
+
+
+void RooDataSet::addColumn(RooAbsString& newVar) 
+{
+  RooStringVar* valHolder = new RooStringVar(newVar.GetName(),newVar.GetTitle(),"") ; 
+  addColumn(newVar,valHolder) ;
+}
+
+
+
+void RooDataSet::addColumn(RooAbsArg& newVar, RooAbsArg* valHolder)
+{
   // Clone current tree
   RooDataSet* cloneData = new RooDataSet(*this) ;
 
   // Clone variable and attach to cloned tree 
-  RooAbsReal* newVarClone = (RooAbsReal*) newVar.Clone() ;
+  RooAbsArg* newVarClone = (RooAbsArg*) newVar.Clone() ;
   newVarClone->redirectServers(cloneData->_vars,kFALSE) ;
 
   // Attach value place holder to this tree
-  RooRealVar* valHolder = new RooRealVar(newVar.GetName(),newVar.GetTitle(),0) ;
   ((RooAbsArg*)valHolder)->attachToTree(*this) ;
   _vars.add(*valHolder) ;
 
@@ -246,12 +283,66 @@ void RooDataSet::addColumn(RooAbsReal& newVar)
     cloneData->get(i) ;
 
     _vars = cloneData->_vars ;
-    valHolder->setVal(newVarClone->getVal(this)) ;
+    newVarClone->syncCache(this) ;
+    valHolder->copyCache(newVarClone) ;
 
     Fill() ;
   }
   
   delete newVarClone;
+  delete cloneData ;
+}
+
+
+void RooDataSet::cacheArg(RooAbsArg& newVar) 
+{
+  // Attach newVar to this tree
+  newVar.attachToTree(*this) ;
+  _cachedVars.add(newVar) ;
+
+  fillCacheArgs() ;
+}
+
+
+void RooDataSet::cacheArgs(RooArgSet& newVarSet) 
+{
+  TIterator *iter = newVarSet.MakeIterator() ;
+  RooAbsArg* arg ;
+
+  while (arg=(RooAbsArg*)iter->Next()) {
+    // Attach newVar to this tree
+    arg->attachToTree(*this) ;
+    _cachedVars.add(*arg) ;
+  }
+
+  // Recalculate the cached variables
+  fillCacheArgs() ;
+}
+
+
+void RooDataSet::fillCacheArgs()
+{
+  // Clone current tree
+  RooDataSet* cloneData = new RooDataSet(*this) ;
+  
+  // Refill regular and cached variables of current tree from clone
+  Reset() ;
+  for (int i=0 ; i<cloneData->GetEntries() ; i++) {
+    cloneData->get(i) ;
+
+    // Copy the regular variables
+    _vars = cloneData->_vars ;
+
+    // Recalculate the cached variables
+    RooAbsArg* cacheVar ;
+    _cacheIter->Reset() ;
+    while (cacheVar=(RooAbsArg*)_cacheIter->Next()) {
+      cacheVar->syncCache(this) ;
+    }
+
+    Fill() ;
+  }
+
   delete cloneData ;
 }
 
@@ -412,14 +503,22 @@ void RooDataSet::printToStream(ostream& os, PrintOption opt, TString indent) con
 const RooArgSet* RooDataSet::get(Int_t index) const {
   // Return ArgSet containing given row of data
 
-  if(!((RooDataSet*)this)->GetEntry(index, 1)) return 0;
+  Int_t ret = ((RooDataSet*)this)->GetEntry(index, 1) ;
+  if(!ret) return 0;
 
   // Raise all dirty flags 
   _iterator->Reset() ;
   RooAbsArg* var(0) ;
   while (var=(RooAbsArg*)_iterator->Next()) {
     var->postTreeLoadHook() ;
-    var->setValueDirty(kTRUE) ;
+    var->setValueDirty(kTRUE) ; // This triggers recalculation of all clients
+  } 
+
+  _cacheIter->Reset() ;
+  while (var=(RooAbsArg*)_cacheIter->Next()) {
+    var->postTreeLoadHook() ;
+    var->setValueDirty(kTRUE)  ; // This triggers recalculation of all clients
+    var->setValueDirty(kFALSE) ; // This prevent recalculation of self
   } 
   
   return &_vars;

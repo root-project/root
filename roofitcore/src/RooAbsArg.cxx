@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.21 2001/05/07 06:26:12 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.22 2001/05/10 00:16:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -116,38 +116,6 @@ RooAbsArg::~RooAbsArg()
   //assert(!fatalError) ;
 }
 
-
-RooAbsArg& RooAbsArg::operator=(const RooAbsArg& other) 
-{  
-  // Assignment operator: copies value contents and server list of 'other' object
-  // All other properties are untouched.
-
-  // Base class operator
-  TNamed::operator=(other) ;
-
-  // Remove all current servers
-  TIterator* iter = _serverList.MakeIterator() ;
-  RooAbsArg* server ;
-  while (server = (RooAbsArg*) iter->Next()) {
-    cout << "...removing " << server->GetName() << endl;
-    removeServer(*server) ;
-  }
-  delete iter ;
-
-  // Add all new servers
-  iter = other._serverList.MakeIterator() ;
-  while (server = (RooAbsArg*) iter->Next()) {
-    cout << "...adding " << server->GetName() << endl;
-    addServer(*server) ;
-  }
-  delete iter ;
-  
-  // proxies?
-
-  setValueDirty(kTRUE) ;
-  setShapeDirty(kTRUE) ;
-  return *this ;
-}
 
 
 void RooAbsArg::setAttribute(const Text_t* name, Bool_t value) 

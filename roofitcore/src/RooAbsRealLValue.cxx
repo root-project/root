@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsRealLValue.cc,v 1.1 2001/05/10 00:16:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -74,30 +74,17 @@ Bool_t RooAbsRealLValue::inFitRange(Double_t value, Double_t* clippedValPtr) con
   return inRange ;
 }
 
+
+
 Bool_t RooAbsRealLValue::isValid(Double_t value, Bool_t verbose) const {
   if (!inFitRange(value)) {
     if (verbose)
-      cout << "RooAbsRealLValue::isValid(" << GetName() << "): value " << value
-	   << " out of range" << endl ;
+      cout << "RooRealVar::isValid(" << GetName() << "): value " << value
+           << " out of range" << endl ;
     return kFALSE ;
   }
   return kTRUE ;
-}
-
-void RooAbsRealLValue::attachToTree(TTree& t, Int_t bufSize)
-{
-  // Attach object to a branch of given TTree
-
-  // First determine if branch is taken
-  if (t.GetBranch(GetName())) {
-    //cout << "RooAbsRealLValue::attachToTree(" << GetName() << "): branch in tree " << t.GetName() << " already exists" << endl ;
-    t.SetBranchAddress(GetName(),&_value) ;
-  } else {    
-    TString format(GetName());
-    format.Append("/D");
-    t.Branch(GetName(), &_value, (const Text_t*)format, bufSize);
-  }
-}
+}                                                                                                                         
 
 
 Bool_t RooAbsRealLValue::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
@@ -117,20 +104,6 @@ Double_t RooAbsRealLValue::operator=(Double_t newValue)
   return _value;
 }
 
-
-RooAbsRealLValue& RooAbsRealLValue::operator=(const RooAbsRealLValue& orig)
-{
-  RooAbsReal::operator=(orig) ;
-
-  operator=(orig._value) ; // takes care of error checking
-
-  return (*this) ;
-}
-
-RooAbsArg& RooAbsRealLValue::operator=(const RooAbsArg& aorig)
-{
-  return operator=((const RooAbsRealLValue&)aorig) ;
-}
 
 void RooAbsRealLValue::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print info about this object to the specified stream. In addition to the info

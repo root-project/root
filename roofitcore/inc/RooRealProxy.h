@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealProxy.rdl,v 1.2 2001/04/20 01:51:39 verkerke Exp $
+ *    File: $Id: RooRealProxy.rdl,v 1.3 2001/05/03 02:15:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,6 +29,7 @@ public:
   // Accessors
   inline operator Double_t() const { return arg().getVal(_dset) ; }
   inline const RooAbsReal& arg() const { return (RooAbsReal&)*_arg ; }
+  void change(RooAbsReal& ref) { changePointer(&ref) ; }
 
   // Limits for integration
   Double_t min() const ;

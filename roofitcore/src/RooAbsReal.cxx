@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.13 2001/05/09 00:51:09 david Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.14 2001/05/10 00:16:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -22,6 +22,7 @@
 #include <iostream.h>
 
 #include "TObjString.h"
+#include "TTree.h"
 #include "TH1.h"
 
 ClassImp(RooAbsReal) 
@@ -56,29 +57,11 @@ RooAbsReal::~RooAbsReal()
 }
 
 
-RooAbsReal& RooAbsReal::operator=(const RooAbsReal& other)
-{
-  RooAbsArg::operator=(other) ;
-
-  _value    = other._value ;
-  setValueDirty(kTRUE) ;
-
-  return *this ;
-}
-
-
-RooAbsArg& RooAbsReal::operator=(const RooAbsArg& aother)
-{
-  return operator=((const RooAbsReal&)aother) ;
-}
-
-
 
 Bool_t RooAbsReal::operator==(Double_t value) const
 {
   return (getVal()==value) ;
 }
-
 
 
 Double_t RooAbsReal::getVal(const RooDataSet* dset) const
@@ -263,7 +246,8 @@ Bool_t RooAbsReal::isValid() const {
 }
 
 
-Bool_t RooAbsReal::isValid(Double_t value) const {
+Bool_t RooAbsReal::isValid(Double_t value, Bool_t printError) const 
+{
   return kTRUE ;
 }
 
@@ -371,3 +355,42 @@ RooPlot *RooAbsReal::plot(RooPlot* frame, Option_t* drawOptions) const {
 RooRealFunc1D RooAbsReal::operator()(RooRealVar &var) const {
   return RooRealFunc1D(*this,var);
 }
+
+
+void RooAbsReal::copyCache(const RooAbsArg* source) 
+{
+  // Warning: This function copies the cached values of source,
+  //          it is the callers responsibility to make sure the cache is clean
+  RooAbsReal* other = dynamic_cast<RooAbsReal*>(const_cast<RooAbsArg*>(source)) ;
+  assert(other) ;
+
+  _value = other->_value ;
+  setValueDirty(kTRUE) ;
+}
+
+
+void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
+{
+  // Attach object to a branch of given TTree
+
+  // First determine if branch is taken
+  if (t.GetBranch(GetName())) {
+    t.SetBranchAddress(GetName(),&_value) ;
+    cout << "RooAbsReal::attachToTree(" << GetName() << "): branch already exists in tree " 
+	 << (void*)&t << ", changing address" << endl ;
+  } else {
+    TString format(GetName());
+    format.Append("/D");
+    t.Branch(GetName(), &_value, (const Text_t*)format, bufSize);
+    cout << "RooAbsReal::attachToTree(" << GetName() << "): creating new branch in tree" 
+	 << (void*)&t << endl ;
+  }
+}
+
+void RooAbsReal::postTreeLoadHook() 
+{
+//   if (isDerived())
+//     cout << "RooAbsReal::postTreeLoadHook(" << GetName() 
+// 	 << "): loaded cache, value " << _value << endl ;
+}
+ 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgProxy.cc,v 1.1 2001/04/20 01:51:38 verkerke Exp $
+ *    File: $Id: RooArgProxy.cc,v 1.2 2001/05/03 02:15:54 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -41,6 +41,13 @@ Bool_t RooArgProxy::changePointer(const RooArgSet& newServerList)
 
   return newArg?kTRUE:kFALSE ;
 }
+
+
+void RooArgProxy::changePointer(const RooAbsArg* newArg) 
+{
+  _arg = newArg ;
+}
+
 
 void RooArgProxy::changeDataSet(const RooDataSet* newDataSet) 
 {

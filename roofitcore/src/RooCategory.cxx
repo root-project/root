@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategory.cc,v 1.9 2001/05/03 02:15:54 verkerke Exp $
+ *    File: $Id: RooCategory.cc,v 1.10 2001/05/10 00:16:07 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -44,19 +44,6 @@ RooCategory::~RooCategory()
 }
 
 
-RooCategory& RooCategory::operator=(const RooCategory& other)
-{
-  RooAbsCategoryLValue::operator=(other) ;
-  return *this ;
-}
-
-
-RooAbsArg& RooCategory::operator=(const RooAbsArg& aother)
-{
-  return operator=((const RooCategory&)aother) ;
-}
-
-
 
 Bool_t RooCategory::setIndex(Int_t index, Bool_t printError) 
 {
@@ -76,6 +63,17 @@ Bool_t RooCategory::setLabel(const char* label, Bool_t printError)
   _value = *type ;
   setValueDirty(kTRUE) ;
   return kFALSE ;
+}
+
+
+RooCategory& RooCategory::operator=(const RooCategory& other) 
+{
+  const RooCatType* type = lookupType(other._value,kTRUE) ;
+  if (!type) return *this ;
+
+  _value = *type ;
+  setValueDirty(kTRUE) ;
+  return *this ;
 }
 
 
@@ -99,35 +97,6 @@ void RooCategory::writeToStream(ostream& os, Bool_t compact) const
     os << getIndex() ;
   } else {
     os << getLabel() ;
-  }
-}
-
-
-
-void RooCategory::attachToTree(TTree& t, Int_t bufSize)
-{
-  // Attach object to a branch of given TTree
-
-  // First determine if branch is taken
-  if (t.GetBranch(GetName())) {
-    cout << "RooCategory::attachToTree(" << GetName() << "): branch in tree " << t.GetName() << " already exists" << endl ;
-    t.SetBranchAddress(GetName(),&((Int_t&)_value)) ;
-  } else {    
-    TString format(GetName());
-    format.Append("/I");
-    void* ptr = &(_value._value) ;
-    //    _value.setVal(999) ;
-    cout << "RooCategory::attachToTree(" << GetName() << "): making new branch in tree " << t.GetName() 
-	 << ", prt=" << ptr  << endl ;    
-    t.Branch(GetName(), ptr, (const Text_t*)format, bufSize);
-  }
-}
-
-void RooCategory::postTreeLoadHook() 
-{
-  if (isValid()) {
-    // Synchronize label with new index
-    _value = *lookupType(_value.getVal()) ;
   }
 }
 

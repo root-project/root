@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.9 2001/05/03 02:15:54 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.10 2001/05/10 00:16:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,7 +30,6 @@ public:
   RooAbsReal(const char *name, const char *title, Double_t minVal, Double_t maxVal, 
 	     const char *unit= "") ;
   RooAbsReal(const RooAbsReal& other, const char* name=0);
-  RooAbsReal& operator=(const RooAbsReal& other) ;
   virtual ~RooAbsReal();
 
   // Return value and unit accessors
@@ -73,12 +72,10 @@ public:
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
 protected:
-  friend class RooDataSet ;
-  RooAbsArg& operator=(const RooAbsArg& other) ;
 
   // Internal consistency checking (needed by RooDataSet)
   virtual Bool_t isValid() const ;
-  virtual Bool_t isValid(Double_t value) const ;
+  virtual Bool_t isValid(Double_t value, Bool_t printError=kFALSE) const ;
 
   // Function evaluation and error tracing
   Double_t traceEval() const ;
@@ -87,6 +84,12 @@ protected:
 
   // Analytical integration support
   Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, const RooArgProxy& a) const ;
+
+  // Hooks for RooDataSet interface
+  virtual void syncCache(const RooDataSet* dset=0) { getVal(dset) ; }
+  virtual void copyCache(const RooAbsArg* source) ;
+  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
+  virtual void postTreeLoadHook() ;
 
   Double_t _plotMin ;
   Double_t _plotMax ;

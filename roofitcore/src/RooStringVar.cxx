@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooStringVar.cc,v 1.4 2001/03/29 22:37:40 verkerke Exp $
+ *    File: $Id: RooStringVar.cc,v 1.5 2001/05/03 02:15:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -78,21 +78,6 @@ TString RooStringVar::operator=(TString newValue)
 
 
 
-RooStringVar& RooStringVar::operator=(const RooStringVar& orig)
-{
-  RooAbsString::operator=(orig) ;
-  return (*this) ;
-}
-
-
-
-RooAbsArg& RooStringVar::operator=(const RooAbsArg& aorig)
-{
-  return operator=((RooStringVar&)aorig) ;
-}
-
-
-
 Bool_t RooStringVar::isValid() const
 {
   return isValid(getVal()) ;
@@ -103,21 +88,6 @@ Bool_t RooStringVar::isValid(TString value, Bool_t verbose) const {
   return kTRUE ;
 }
 
-
-
-void RooStringVar::attachToTree(TTree& t, Int_t bufSize)
-{
-  // Attach object to a branch of given TTree
-
-  // First determine if branch is taken
-  if (t.GetBranch(GetName())) {
-    t.SetBranchAddress(GetName(),&_value) ;
-  } else {    
-    TString format(GetName());
-    format.Append("/C");
-    t.Branch(GetName(), &_value, (const Text_t*)format, bufSize);
-  }
-}
 
 
 Bool_t RooStringVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCategoryProxy.rdl,v 1.2 2001/04/20 01:51:38 verkerke Exp $
+ *    File: $Id: RooCategoryProxy.rdl,v 1.3 2001/05/03 02:15:55 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -31,6 +31,7 @@ public:
   inline operator Int_t() const { return arg().getIndex() ; }
   inline operator const char*() const { return arg().getLabel() ; }
   inline const RooAbsCategory& arg() const { return (RooAbsCategory&)*_arg ; }
+  void change(RooAbsCategory& ref) { changePointer(&ref) ; }
 
 protected:
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id$
+ *    File: $Id: RooAbsCategoryLValue.rdl,v 1.1 2001/05/10 00:16:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -23,7 +23,6 @@ public:
   RooAbsCategoryLValue(const char *name, const char *title);
   RooAbsCategoryLValue(const RooAbsCategoryLValue& other, const char* name=0) ;
   virtual ~RooAbsCategoryLValue();
-  virtual RooAbsCategoryLValue& operator=(const RooAbsCategoryLValue& other) ; 
 
   // Value modifiers
   virtual Bool_t setIndex(Int_t index, Bool_t printError=kTRUE) = 0 ;
@@ -36,11 +35,6 @@ public:
   virtual void writeToStream(ostream& os, Bool_t compact) const ;
 
 protected:
-
-  virtual RooAbsArg& operator=(const RooAbsArg& other) ; 
-
-  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
-  virtual void postTreeLoadHook() ;
 
   ClassDef(RooAbsCategoryLValue,1) // a real-valued variable and its value
 };

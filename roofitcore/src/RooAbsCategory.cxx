@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.14 2001/05/03 02:15:53 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.15 2001/05/10 00:16:06 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include "TString.h"
 #include "TH1.h"
+#include "TTree.h"
 #include "RooFitCore/RooAbsCategory.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/Roo1DTable.hh"
@@ -48,25 +49,6 @@ RooAbsCategory::~RooAbsCategory()
 {
   // We own the contents of _types 
   _types.Delete() ;
-}
-
-RooAbsCategory& RooAbsCategory::operator=(const RooAbsCategory& other)
-{
-  RooAbsArg::operator=(other) ;
-  
-  if (!lookupType(other._value) && !TString(other._value.GetName()).IsNull()) {
-    cout << "RooAbsCategory::operator=(" << GetName() << "): index " 
-	 << other._value.getVal() << " not defined for this category" << endl ;
-  } else {
-    _value = other._value ;
-    setValueDirty(kTRUE) ;
-  }
-  return *this ;
-}
-
-RooAbsArg& RooAbsCategory::operator=(const RooAbsArg& aother)
-{
-  return operator=((const RooAbsCategory&)aother) ;
 }
 
 
@@ -300,3 +282,38 @@ void RooAbsCategory::printToStream(ostream& os, PrintOption opt, TString indent)
 }
 
 
+void RooAbsCategory::copyCache(const RooAbsArg* source) 
+{
+  // Warning: This function copies the cached values of source,
+  //          it is the callers responsibility to make sure the cache is clean
+
+  RooAbsCategory* other = dynamic_cast<RooAbsCategory*>(const_cast<RooAbsArg*>(source)) ;
+  assert(other) ;
+
+  _value = other->_value ;
+  setValueDirty(kTRUE) ;
+}
+
+
+void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
+{
+  // Attach object to a branch of given TTree
+
+  // First determine if branch is taken
+  if (t.GetBranch(GetName())) {
+    t.SetBranchAddress(GetName(),&((Int_t&)_value)) ;
+  } else {    
+    TString format(GetName());
+    format.Append("/I");
+    void* ptr = &(_value._value) ;
+    t.Branch(GetName(), ptr, (const Text_t*)format, bufSize);
+  }
+}
+
+void RooAbsCategory::postTreeLoadHook() 
+{
+  if (isValid()) {
+    // Synchronize label with new index
+    _value = *lookupType(_value.getVal()) ;
+  }
+}
