@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.8 2004/12/07 16:56:15 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.h,v 1.9 2005/02/07 18:02:37 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -156,6 +156,8 @@ public:
    void             Print(Option_t *options="") const;
    void             Validate();
    void             Validate(TDSetElement *elem);
+   Int_t            Compare(const TObject *obj) const;
+   Bool_t           IsSortable() const { return kTRUE; }
 
    ClassDef(TDSetElement,2)  // A TDSet element
 };

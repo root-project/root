@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.11 2004/06/13 16:26:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.12 2004/06/25 17:27:09 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -35,7 +35,6 @@ class TMessage;
 class TTimer;
 class TTree;
 class TMap;
-class TProofStats;
 
 
 class TPacketizer : public TVirtualPacketizer {

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.20 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.cxx,v 1.21 2005/02/08 22:38:01 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -250,6 +250,8 @@ TPacketizer::TPacketizer(TDSet *dset, TList *slaves, Long64_t first,
    dset->Reset();
    TDSetElement *e;
    while ((e = (TDSetElement*)dset->Next())) {
+      if (e->GetValid()) continue;
+
       TUrl url = e->GetFileName();
 
       // Map non URL filenames to dummy host

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.49 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.50 2005/02/10 12:49:54 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -255,6 +255,7 @@ protected:
    virtual Bool_t  StartSlaves();
    void            SetPlayer(TProofPlayer *player) { fPlayer = player; };
    TProofPlayer   *GetPlayer() const { return fPlayer; };
+   virtual TProofPlayer *MakePlayer();
    TPluginHandler *GetProgressDialog() const { return fProgressDialog; };
    TList  *GetListOfActiveSlaves() const { return fActiveSlaves; }
    TSlave *CreateSlave(const char *host, Int_t port, const char *ord,
@@ -376,6 +377,7 @@ protected:
                   Option_t *option = "", Long64_t nentries = -1,
                   Long64_t firstentry = 0, TEventList *evl = 0);
    void   ValidateDSet(TDSet *dset);
+   virtual TProofPlayer *MakePlayer();
 
 public:
    TProofSuperMaster(const char *masterurl, const char *conffile = kPROOF_ConfFile,

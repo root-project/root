@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.46 2005/02/08 11:58:11 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.47 2005/02/08 22:40:36 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -41,6 +41,7 @@
 #include "TPerfStats.h"
 #include "TStatus.h"
 #include "TProofLimitsFinder.h"
+#include "TSortedList.h"
 
 #include "Api.h"
 
@@ -959,7 +960,7 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
             submasters = new TList;
             submasters->SetName(sl->GetMsd());
             keyholder.Add(submasters);
-            TList *setelements = new TList;
+            TList *setelements = new TSortedList(kSortDescending);
             setelements->SetName(TString(sl->GetMsd())+"_Elements");
             valueholder.Add(setelements);
             msds.Add(new TPair(submasters, setelements));

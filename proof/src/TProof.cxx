@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.76 2005/02/08 22:40:36 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.77 2005/02/10 12:49:54 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -101,7 +101,11 @@ Int_t TSlaveInfo::Compare(const TObject *obj) const
 {
    // Used to sort slaveinfos by ordinal.
 
+   if (!obj) return 1;
+
    const TSlaveInfo *si = dynamic_cast<const TSlaveInfo*>(obj);
+
+   if (!si) return fOrdinal.CompareTo(obj->GetName());
 
    const char *myord = GetOrdinal();
    const char *otherord = si->GetOrdinal();
@@ -2828,6 +2832,14 @@ TList *TProof::GetFeedbackList() const
    return fFeedback;
 }
 
+//______________________________________________________________________________
+TProofPlayer *TProof::MakePlayer()
+{
+   // Construct a TProofPlayer object.
+
+   SetPlayer(new TProofPlayerRemote(this));
+   return GetPlayer();
+}
 
 //______________________________________________________________________________
 
@@ -2924,12 +2936,16 @@ Bool_t TProofCondor::StartSlaves()
                const char *stripvm = strchr(word[1], '@');
                const char *image = stripvm ? stripvm+1 : word[1];
 
+               const char *workdir = 0;
+
                for (int i = 2; i < nword; i++) {
 
                   if (!strncmp(word[i], "perf=", 5))
                      perfidx = atoi(word[i]+5);
                   if (!strncmp(word[i], "image=", 6))
                      image = word[i]+6;
+                  if (!strncmp(word[i], "workdir=", 8))
+                     workdir = word[i]+8;
 
                }
 
@@ -2937,6 +2953,7 @@ Bool_t TProofCondor::StartSlaves()
                if (csl) {
                   csl->fPerfIdx = perfidx;
                   csl->fImage = image;
+                  csl->fWorkDir = workdir;
                   claims.Add(csl);
                }
             }
@@ -2978,7 +2995,7 @@ Bool_t TProofCondor::StartSlaves()
 
       // create slave
       TSlave *slave = CreateSlave(c->fHostname, c->fPort, c->fOrdinal,
-                                  c->fPerfIdx, c->fImage, 0);
+                                  c->fPerfIdx, c->fImage, c->fWorkDir);
 
       // add slave to appropriate list
       if (trial<ntries) {
@@ -3286,7 +3303,7 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
          smlist = new TList;
          smlist->SetName(sl->GetMsd());
          smholder.Add(smlist);
-         TList *elemlist = new TList;
+         TList *elemlist = new TSortedList(kSortDescending);
          elemlist->SetName(TString(sl->GetMsd())+"_elem");
          elemholder.Add(elemlist);
          msds.Add(new TPair(smlist, elemlist));
@@ -3303,8 +3320,10 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
       if (p) {
          dynamic_cast<TList*>(p->Value())->Add(elem);
       } else {
-         Error("ValidateDSet", "No Node to allocate TDSetElement to");
-         Assert(0);
+         Error("ValidateDSet", "no mass storage domain '%s' associated"
+                               " with available submasters",
+                               elem->GetMsd());
+         return;
       }
    }
 
@@ -3352,4 +3371,13 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
    PDB(kGlobal,1) Info("ValidateDSet","Calling Collect");
    Collect(&usedsms);
    SetDSet(0);
+}
+
+//______________________________________________________________________________
+TProofPlayer *TProofSuperMaster::MakePlayer()
+{
+   // Construct a TProofPlayer object.
+
+   SetPlayer(new TProofPlayerSuperMaster(this));
+   return GetPlayer();
 }

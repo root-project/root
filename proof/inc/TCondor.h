@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TCondor.h,v 1.2 2003/09/23 08:54:50 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TCondor.h,v 1.3 2005/02/07 18:02:37 rdm Exp $
 // Author: Maarten Ballintijn   06/12/03
 
 /*************************************************************************
@@ -44,6 +44,7 @@ public:
    TString  fImage;
    TString  fClaimID;
    TString  fOrdinal;
+   TString  fWorkDir;
 
    void        Print(Option_t *option="") const;
 

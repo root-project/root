@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.82 2005/02/18 14:27:33 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.83 2005/02/18 14:42:43 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -666,16 +666,11 @@ void TProofServ::HandleSocketInput()
 
             TProofPlayer *p = 0;
 
-            if (IsMaster()) {
-               if (!IsParallel())
-                  p = new TProofPlayerSlave(fSocket);
-               else if (fProof->IsA() == TProofSuperMaster::Class())
-                  p = new TProofPlayerSuperMaster(fProof);
-               else
-                  p = new TProofPlayerRemote(fProof);
-               fProof->SetPlayer(p);
+            if (IsMaster() && IsParallel()) {
+               p = fProof->MakePlayer(); // NOTE: fProof->SetPlayer(0) should be called after Process()
             } else {
                p = new TProofPlayerSlave(fSocket);
+               if (IsMaster()) fProof->SetPlayer(p);
             }
 
             if (dset->IsA() == TDSetProxy::Class()) {

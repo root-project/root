@@ -5,7 +5,8 @@
 #                   [workdir=<workingdirectory>]
 # submaster <hostname> [image=<imagename>] [port=<portnumber>]
 #                      [config=<conffilename>]
-# condorworker <virtualmachinename>
+# condorworker <virtualmachinename> [image=<imagename>] [perf=<perfindex>]
+#                                   [workdir=<workingdirectory>]
 # user <username> on <hostname>
 #
 # For each node in the cluster that can run a master add a "master" line.

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.12 2004/06/13 16:26:36 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TDSet.cxx,v 1.13 2005/02/07 18:02:37 rdm Exp $
 // Author: Fons Rademakers   11/01/02
 
 /*************************************************************************
@@ -258,6 +258,17 @@ void TDSetElement::Validate(TDSetElement* elem)
 {
    // Validate by checking against another element.
 
+   // NOTE: Since this function validates against another TDSetElement,
+   //       if the other TDSetElement (elem) did not use -1 to request all
+   //       entries, this TDSetElement may get less than all entries if it
+   //       requests all (with -1). For the application it was developed for
+   //       (TProofSuperMaster::ValidateDSet) it works, since the design was
+   //       to send the elements to their mass storage domain and let them
+   //       look at the file and send the info back to the supermaster. The
+   //       ability to set fValid was also required to be only exist in
+   //       TDSetElement through certain function and not be set externally.
+   //       TDSetElement may need to be extended for more general applications.
+
    if (!elem || !elem->GetValid()) {
       Error("Validate", "TDSetElement to validate against is not valid");
       return;
@@ -288,6 +299,31 @@ void TDSetElement::Validate(TDSetElement* elem)
    } else {
       Error("Validate", "TDSetElements do not refer to same objects");
    }
+}
+
+//______________________________________________________________________________
+Int_t TDSetElement::Compare(const TObject *obj) const
+{
+   //Compare elements by filename (and the fFirst).
+
+   if (this == obj) return 0;
+
+   const TDSetElement *elem = dynamic_cast<const TDSetElement*>(obj);
+   if (!elem) {
+      if (obj)
+         return fFileName.CompareTo(obj->GetName());
+      return -1;
+   }
+
+   Int_t order = fFileName.CompareTo(elem->GetFileName());
+   if (order == 0) {
+      if (GetFirst() < elem->GetFirst())
+         return -1;
+      else if (GetFirst() > elem->GetFirst())
+         return 1;
+      return 0;
+   }
+   return order;
 }
 
 //______________________________________________________________________________
