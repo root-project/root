@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.9 2000/10/13 09:54:28 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.10 2000/10/19 10:42:31 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -2186,7 +2186,7 @@ void TGX11::UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest)
    // Union of rectangle with a region.
 
    XRectangle *r = (XRectangle *) rect;   // 1 on 1 mapping
-   XUnionRectWithRegion(r, src, dest);
+   XUnionRectWithRegion(r, (Region) src, (Region) dest);
 }
 
 //______________________________________________________________________________
