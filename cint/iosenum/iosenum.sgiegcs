@@ -2,11 +2,11 @@
  *  This file contains platform dependent ios enum value.
  *  Run 'cint iosenum.cxx' to create this file. It is done
  *  only once at installation. */
+#pragma ifndef G__TMPLTIOS
 static int ios::goodbit=0;
 static int ios::eofbit=1;
 static int ios::failbit=2;
 static int ios::badbit=4;
-static int ios::hardfail=128;
 static int ios::in=1;
 static int ios::out=2;
 static int ios::ate=4;
@@ -14,6 +14,7 @@ static int ios::app=8;
 static int ios::trunc=16;
 static int ios::nocreate=32;
 static int ios::noreplace=64;
+static int ios::binary=128;
 static int ios::beg=0;
 static int ios::cur=1;
 static int ios::end=2;
@@ -35,3 +36,5 @@ static int ios::scientific=2048;
 static int ios::fixed=4096;
 static int ios::unitbuf=8192;
 static int ios::stdio=16384;
+#pragma else
+#pragma endif
