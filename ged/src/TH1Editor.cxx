@@ -130,19 +130,21 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    
    fHist = 0;
 
+// TextEntry for changing the title of the histogram
    MakeTitle("Title");
-  
    fTitlePrec = 2;
    fTitle = new TGTextEntry(this, new TGTextBuffer(50), kTH1_TITLE);
    fTitle->Resize(135, fTitle->GetDefaultHeight());
    fTitle->SetToolTipText("Enter the histogram title string");
    AddFrame(fTitle, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
   
+// Histogram draw options
    TGCompositeFrame *fHistLbl = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
    fHistLbl->AddFrame(new TGLabel(fHistLbl,"Histogram"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    fHistLbl->AddFrame(new TGHorizontal3DLine(fHistLbl), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 0));
    AddFrame(fHistLbl, new TGLayoutHints(kLHintsTop,0,0,2,0));
-   
+
+// TGButtonGroup to change: 2D plot <-> 3D plot   
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fDimGroup = new TGHButtonGroup(f2,"Plot");
    fDim = new TGRadioButton(fDimGroup,"2-D",kDIM_SIMPLE);
@@ -365,23 +367,10 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
             fTab->GetTabContainer(i)->UnmapWindow();
 	    fTab->GetTabTab(i)->UnmapWindow();
 	    fTab->SetEnabled(i,kFALSE);
-//	    fTab->SetTab(0);
 	 } 
       }
       return;                 
    } 
-/*   if (obj == 0 || !obj->InheritsFrom("TH1") ) {
-      SetActive(kFALSE);
-      fTab->SetEnabled(1, kFALSE);  // deactivate the second tab (tab id is 1)
-//      fTab->SetEnabled(2, kFALSE);  // deactivate the third tab (tab id is 2]
-      return;
-   } else if (((TH1*)obj)->GetDimension()!=1) {
-      SetActive(kFALSE);
-      fTab->RemoveTab(2);     // in case of a TH2/TH3 the TH1 binning tab is removed 
-      return;                 // bad solution of deleting the Tab.
-                              // should be somehow possible to identify the tab 
-   }                          // in a unique way!!*/
-
 
    TGFrameElement *el;
 
@@ -1310,10 +1299,7 @@ void TH1Editor::DoBinReleased()
    if (fDelaydraw->GetState()==kButtonDown){
       if (!fBinHist) {
          fBinHist = (TH1*)fHist->Clone("BinHist");
-         fDrawOpt = GetDrawOption();
-         fName = fHist->GetName();
       }
-      TString str ="";
       Int_t nx = fBinHist->GetXaxis()->GetNbins();
       Int_t numx = fBinSlider->GetPosition();
       Int_t* divx = Dividers(nx);   
@@ -1326,10 +1312,6 @@ void TH1Editor::DoBinReleased()
       fHist->Add(fBinHist);
       fHist->ResetBit(TH1::kCanRebin);
       fHist->Rebin(divx[numx]);
-      if (fDim->GetState()==kButtonDown) str = GetHistErrorLabel()+GetHistAddLabel();
-      else if (fDim0->GetState()==kButtonDown) str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistErrorLabel();
-      if (fAddLine->GetState()==kButtonDown) str += "HIST";   
-      fHist->Draw(str);
       fModel=fHist;
       if (divx[0]!=2) {
          TAxis* xaxis = fHist->GetXaxis();
@@ -1356,13 +1338,10 @@ void TH1Editor::DoBinMoved(Int_t numx)
    // does the Rebinning of the Histogram 
 
    // create a clone in the background, when the slider is moved for the first time
-   TString str="";
    if (!fBinHist /*&& fDelaydraw->GetState()!=kButtonDown*/) {
       Int_t* divx = Dividers(fHist->GetXaxis()->GetNbins());
       if (divx[0]==2) return;
       fBinHist = (TH1*)fHist->Clone("BinHist");
-      fDrawOpt = GetDrawOption();
-      fName = fHist->GetName();
    } 
    // if the slider already has been moved and the clone is saved
    Int_t nx = fBinHist->GetXaxis()->GetNbins();
@@ -1381,10 +1360,6 @@ void TH1Editor::DoBinMoved(Int_t numx)
       fHist->Add(fBinHist);
       fHist->ResetBit(TH1::kCanRebin);
       fHist->Rebin(divx[numx]);
-      if (fDim->GetState()==kButtonDown) str = GetHistErrorLabel()+GetHistAddLabel();
-      else if (fDim0->GetState()==kButtonDown) str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistErrorLabel();
-      if (fAddLine->GetState()==kButtonDown) str += "HIST";   
-      fHist->Draw(str);
       fModel=fHist;
       TAxis* xaxis = fHist->GetXaxis();
       Axis_t XBinWidth = xaxis->GetBinWidth(1);
@@ -1750,7 +1725,6 @@ void TH1Editor::DoCancel()
       fHist->Reset();
       fHist->SetBins(fBinHist->GetXaxis()->GetNbins(),fBinHist->GetXaxis()->GetXmin(),fBinHist->GetXaxis()->GetXmax());
       fHist->Add(fBinHist);
-      fHist->Draw(fDrawOpt);
       delete fBinHist;
       fBinHist = 0;
       fCancel->SetState(kButtonDisabled);

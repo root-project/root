@@ -129,8 +129,6 @@ private:
 			fP7old[3], 
 			fP8old[3];   
    TH1                 *fBinHist;         // Cloned histogram for rebin
-   TString              fDrawOpt;         // saves the DrawOption
-   TString              fName;            // saves the Name 
    Double_t             fOldOffset;       // save the old offset of the histogram
    
 // private methods:    

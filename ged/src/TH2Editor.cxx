@@ -1340,10 +1340,7 @@ void TH2Editor::DoBinReleased()
    if (fDelaydraw->GetState()==kButtonDown){
       if (!fBinHist) {
          fBinHist = (TH2*)fHist->Clone("BinHist");
-         fDrawOpt = GetDrawOption();
-         fName = fHist->GetName();
       }
-      TString str ="";
       Int_t nx = fBinHist->GetXaxis()->GetNbins();
       Int_t ny = fBinHist->GetYaxis()->GetNbins();
       Int_t numx = fBinXSlider->GetPosition();
@@ -1361,9 +1358,6 @@ void TH2Editor::DoBinReleased()
       fHist->Add(fBinHist);
       fHist->ResetBit(TH1::kCanRebin);
       fHist->Rebin2D(divx[numx], divy[numy]);
-      if (fDim->GetState() == kButtonDown) str = GetHistContLabel()+GetHistAdditiveLabel();
-      else str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistAdditiveLabel();
-      fHist->Draw(str);
       fModel=fHist;
       if (divx[0]!=2) {
          TAxis* xaxis = fHist->GetXaxis();
@@ -1412,7 +1406,6 @@ void TH2Editor::DoBinMoved()
    // Slot connected to the rebin sliders in case of a not ntuple histogram
    // does the Rebinning of the Histogram 
 
-   TString str="";
    // create a clone in the background, when the slider is moved for the first time
    if (!fBinHist /*&& fDelaydraw->GetState()!=kButtonDown*/) {
       Int_t* divx = Dividers(fHist->GetXaxis()->GetNbins());
@@ -1420,9 +1413,6 @@ void TH2Editor::DoBinMoved()
       // if there is nothing to rebin:
       if (divx[0]==2 && divy[0]==2) return;
       fBinHist = (TH2*)fHist->Clone("BinHist");
-      // save the drawoption and the name
-      fDrawOpt = GetDrawOption();
-      fName = fHist->GetName();
    }
    // if the slider already has been moved and the clone is saved
    Int_t nx = fBinHist->GetXaxis()->GetNbins();
@@ -1452,9 +1442,6 @@ void TH2Editor::DoBinMoved()
       fHist->Add(fBinHist);
       fHist->ResetBit(TH1::kCanRebin);
       fHist->Rebin2D(divx[numx], divy[numy]);
-      if (fDim->GetState() == kButtonDown) str = GetHistContLabel()+GetHistAdditiveLabel();
-      else str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistAdditiveLabel();
-      fHist->Draw(str);
       fModel=fHist;
       if (divx[0]!=2) {
          TAxis* xaxis = fHist->GetXaxis();
@@ -1577,7 +1564,6 @@ void TH2Editor::DoCancel()
       fHist->SetBins(fBinHist->GetXaxis()->GetNbins(),fBinHist->GetXaxis()->GetXmin(),fBinHist->GetXaxis()->GetXmax(),
                      fBinHist->GetYaxis()->GetNbins(),fBinHist->GetYaxis()->GetXmin(),fBinHist->GetYaxis()->GetXmax());
       fHist->Add(fBinHist);
-      fHist->Draw(fDrawOpt);
       delete fBinHist;
       fBinHist = 0;
       fCancel->SetState(kButtonDisabled);
