@@ -25,6 +25,9 @@
 #ifndef G__OLDIMPLEMENTATION776
 static int G__static_parent_tagnum = -1;
 #endif
+#ifndef G__OLDIMPLEMENTATION1394
+static int G__static_isconst = 0;
+#endif
 
 #ifndef G__OLDIMPLEMENTATION559
 /******************************************************************
@@ -149,6 +152,9 @@ void G__define_type()
   int rawunsigned=0;
 #endif
   int env_tagnum;
+#ifndef G__OLDIMPLEMENTATION1394
+  int isconst = 0;
+#endif
 
   tagname[0] = '\0';		/* initialize it */
 
@@ -180,6 +186,9 @@ void G__define_type()
   while(isspace(c) &&
 	(strcmp(type1,"const")==0 ||strcmp(type1,"volatile")==0 ||
 	 strcmp(type1,"mutable")==0 || strcmp(type1,"typename") == 0)) {
+#ifndef G__OLDIMPLEMENTATION1394
+    if(strcmp(type1,"const")==0) isconst |= G__CONSTVAR;
+#endif
     c=G__fgetname_template(type1,"{");
   }
   if (strcmp(type1,"::")==0) {
@@ -244,6 +253,9 @@ void G__define_type()
   while(isspace(c) &&
 	(strcmp(type1,"const")==0 ||strcmp(type1,"volatile")==0 ||
 	 strcmp(type1,"mutable")==0 || strcmp(type1,"typename") == 0)) {
+#ifndef G__OLDIMPLEMENTATION1394
+    if(strcmp(type1,"const")==0) isconst |= G__CONSTVAR;
+#endif
     c=G__fgetname_template(type1,"{");
   }
 #else
@@ -517,12 +529,46 @@ void G__define_type()
     c=G__fgetstream(typename,";,[");
   }
   else if(strcmp(typename,"*")==0) {
+#ifndef G__OLDIMPLEMENTATION1396
+    fpos_t tmppos;
+    int tmpline = G__ifile.line_number;
+    fgetpos(G__ifile.fp,&tmppos);
+    c=G__fgetname(typename+1,";,[");
+    if(isspace(c) && strcmp(typename,"*const")==0) {
+      isconst |= G__PCONSTVAR;
+      c=G__fgetstream(typename+1,";,[");
+    }
+    else {
+      G__disp_mask = strlen(typename)-1;
+      G__ifile.line_number = tmpline;
+      fsetpos(G__ifile.fp,&tmppos);
+      c=G__fgetstream(typename+1,";,[");
+    }
+#else
     c=G__fgetstream(typename+1,";,[");
+#endif
   }
   else if(strcmp(typename,"**")==0) {
+#ifndef G__OLDIMPLEMENTATION1396
+    fpos_t tmppos;
+    int tmpline = G__ifile.line_number;
+    fgetpos(G__ifile.fp,&tmppos);
+    c=G__fgetname(typename+1,";,[");
+    if(isspace(c) && strcmp(typename,"*const")==0) {
+      isconst |= G__PCONSTVAR;
+      c=G__fgetstream(typename+1,";,[");
+    }
+    else {
+      G__disp_mask = strlen(typename)-1;
+      G__ifile.line_number = tmpline;
+      fsetpos(G__ifile.fp,&tmppos);
+      c=G__fgetstream(typename+1,";,[");
+    }
+#else
+    c=G__fgetstream(typename+1,";,[");
+#endif
     isorgtypepointer=1;
     type=toupper(type);
-    c=G__fgetstream(typename+1,";,[");
   }
 #ifndef G__OLDIMPLEMENTATION673
   else if(strcmp(typename,"&")==0) {
@@ -535,6 +581,12 @@ void G__define_type()
     c=G__fgetstream(typename,";,[");
   }
 #endif
+#ifndef G__OLDIMPLEMENTATION1396
+  else if(strcmp(typename,"*const")==0) {
+    isconst |= G__PCONSTVAR;
+    c=G__fgetstream(typename+1,";,[");
+  }
+#endif
 
   if(isspace(c)) {
     if('('==typename[0] && ';'!=c && ','!=c) {
@@ -545,6 +597,9 @@ void G__define_type()
       typename[strlen(typename)-1]='\0';
     }
     else if(strcmp(typename,"const")==0) {
+#ifndef G__OLDIMPLEMENTATION1394
+      isconst |= G__PCONSTVAR;
+#endif
       c=G__fgetstream(typename,";,[");
     }
     else {
@@ -758,6 +813,9 @@ void G__define_type()
     G__newtype.type[typenum]=type;
     G__newtype.globalcomp[typenum]=G__globalcomp;
     G__newtype.reftype[typenum]=reftype;
+#ifndef G__OLDIMPLEMENTATION1394
+    G__newtype.isconst[typenum] = isconst;
+#endif
 
     if(G__def_struct_member) env_tagnum = G__tagnum;
     else if(-1!=G__func_now) {
@@ -1225,6 +1283,9 @@ int reftype;
 #else
     G__newtype.parent_tagnum[G__newtype.alltype] = -1;
 #endif
+#ifndef G__OLDIMPLEMENTATION1394
+    G__newtype.isconst[G__newtype.alltype] = G__static_isconst;
+#endif
     G__newtype.type[G__newtype.alltype]=typein+ispointer;
     G__newtype.tagnum[G__newtype.alltype]=tagnum;
     G__newtype.globalcomp[G__newtype.alltype]=G__globalcomp;
@@ -1265,8 +1326,15 @@ int parent_tagnum;
     G__static_parent_tagnum = G__tagdefining;
   }
 #endif
+#ifndef G__OLDIMPLEMENTATION1394
+  G__static_isconst = reftype/0x100;
+  reftype = reftype%100;
+#endif
   ret = G__search_typename(typename,typein,tagnum,reftype);
   G__static_parent_tagnum = -1;
+#ifndef G__OLDIMPLEMENTATION1394
+  G__static_isconst = 0;
+#endif
   return(ret);
 }
 

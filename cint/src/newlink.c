@@ -4115,7 +4115,11 @@ FILE *hfp;
 		,G__newtype.name[i]
 		,G__newtype.type[i]
 		,G__mark_linked_tagnum(G__newtype.tagnum[i])
+#ifndef G__OLDIMPLEMENTATION1394
+		,G__newtype.reftype[i] & (G__newtype.isconst[i]*0x100)
+#else
 		,G__newtype.reftype[i]
+#endif
 		);
       else
 #ifndef G__OLDIMPLEMENTATION776
@@ -4125,7 +4129,11 @@ FILE *hfp;
 #endif
 		,G__newtype.name[i]
 		,G__newtype.type[i]
+#ifndef G__OLDIMPLEMENTATION1394
+		,G__newtype.reftype[i] & (G__newtype.isconst[i]*0x100)
+#else
 		,G__newtype.reftype[i]
+#endif
 		);
 #ifndef G__OLDIMPLEMENTATION776
       if(G__newtype.parent_tagnum[i] == -1) 

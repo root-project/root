@@ -2017,6 +2017,12 @@ struct G__var_array *varglobal,*varlocal;
   case '(': /* parenthesis */
     /* (xxx)=xxx; or (xxx)xxx=xxx; */
     result=G__getfunction(item,&ig15,G__TRYNORMAL);
+#ifndef G__OLDIMPLEMENTATION1395
+    if(G__CONSTVAR&result.isconst) {
+      G__changeconsterror(item,"ignored const");
+      return(para[0]);
+    }
+#endif
     para[0]=G__letVvalue(&result,expression);
     return(para[0]);
   case '&': /* pointer */
@@ -2442,6 +2448,20 @@ struct G__var_array *varglobal,*varlocal;
      * This is in most cases duplicate declaration.
      *******************************************************/
     if(result.type=='\0') { 
+#ifndef G__OLDIMPLEMENTATION1398
+      if(G__asm_noverflow&&'u'==G__var_type&&G__AUTO==var->statictype[ig15]&&
+	 (G__decl||G__cppconstruct)) {
+	int store_asm_noverflow = G__asm_noverflow;
+	G__asm_noverflow = 0;
+	G__class_2nd_decl(var,ig15);
+	G__asm_noverflow = store_asm_noverflow;
+	result.obj.i=var->p[ig15];
+	result.type='u';
+	result.tagnum=var->p_tagtable[ig15];
+	result.typenum=var->p_typetable[ig15];
+	result.ref=var->p[ig15];
+      }
+#endif
       G__var_type = 'p';
 #ifndef G__OLDIMPLEMENTATION798
       if(G__reftype && G__PVOID!=G__globalvarpointer) {
@@ -2501,6 +2521,22 @@ struct G__var_array *varglobal,*varlocal;
 	}
 #endif
       }
+#ifndef G__OLDIMPLEMENTATION1394
+      if(-1!=var->p_typetable[ig15] && 
+	 G__newtype.isconst[var->p_typetable[ig15]]) {
+	int constvar = G__newtype.isconst[var->p_typetable[ig15]];
+	/* int ttype = G__newtype.type[var->p_typetable[ig15]]; */
+	if(((0==G__prerun && !G__decl) 
+	    || G__COMPILEDGLOBAL==var->statictype[ig15]) && 
+	   (islower(var->type[ig15])||
+	    ('p'==G__var_type&&(constvar&G__PCONSTVAR))||
+	    ('v'==G__var_type&&(constvar&G__CONSTVAR)))) {
+	  G__changeconsterror(var->varnamebuf[ig15],"ignored const");
+	  G__var_type='p';
+	  return(result);
+	}
+      }
+#endif
       
       /*************************************************
        * Variable found, set done flags
@@ -3455,6 +3491,11 @@ struct G__var_array *varglobal,*varlocal;
 
 #ifndef G__OLDIMPLEMENTATION1259
       result.isconst = var->constvar[ig15];
+#ifndef G__OLDIMPLEMENTATION1394
+      if(-1!=var->p_typetable[ig15]) {
+	result.isconst |= G__newtype.isconst[var->p_typetable[ig15]];
+      }
+#endif
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1119

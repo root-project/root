@@ -446,6 +446,7 @@ G__value *p,result;
   if(G__no_exec_compile) {
     return(result);
   }
+
 #ifndef G__OLDIMPLEMENTATION1329
   if(-1!=p->typenum && G__newtype.nindex[p->typenum]) {
     char store_var_type = G__var_type;

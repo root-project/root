@@ -915,6 +915,24 @@ long localmem;
       goto pcode_parse_start;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1399
+    case G__BOOL:
+      /***************************************
+       * 0 BOOL
+       ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) fprintf(G__serr,"%3x,%d: BOOL %d\n"
+			     ,pc,sp ,G__int(G__asm_stack[sp-1]));
+#endif
+      G__letint(&G__asm_stack[sp-1],'i',G__int(G__asm_stack[sp-1])?1:0);
+      ++pc;
+#ifdef G__ASM_DBG
+      break;
+#else
+      goto pcode_parse_start;
+#endif
+#endif
+
 
     case G__ISDEFAULTPARA:
       /***************************************
@@ -8191,6 +8209,19 @@ int *start;
       ++pc;
       break;
 
+#ifndef G__OLDIMPLEMENTATION1399
+    case G__BOOL:
+      /***************************************
+      * 0 BOOL
+      ***************************************/
+#ifdef G__ASM_DBG
+      if(G__asm_dbg) fprintf(G__serr,"%3lx: BOOL\n" ,pc);
+#endif
+      /* no optimization */
+      ++pc;
+      break;
+#endif
+
     case G__ISDEFAULTPARA:
       /***************************************
       * 0 ISDEFAULTPARA
@@ -9427,6 +9458,18 @@ int isthrow;
       }
       ++pc;
       break;
+
+#ifndef G__OLDIMPLEMENTATION1399
+    case G__BOOL:
+      /***************************************
+      * 0 BOOL
+      ***************************************/
+      if(0==isthrow) {
+	fprintf(fout,"%3x: BOOL\n" ,pc);
+      }
+      ++pc;
+      break;
+#endif
 
     case G__ISDEFAULTPARA:
       /***************************************

@@ -913,16 +913,18 @@ int startin;
       if(G__more(fout,msg)) return(1);
     }
     else {
-#ifndef G__OLDIMPLEMENTATION401
+#ifndef G__OLDIMPLEMENTATION1394
+      /* G__typedef may need to be changed to add isconst member */
+      sprintf(msg,"typedef %s" ,G__type2string(tolower(G__newtype.type[i])
+						,G__newtype.tagnum[i],-1
+						,G__newtype.reftype[i]
+						,G__newtype.isconst[i])); 
+#else
       /* G__typedef may need to be changed to add isconst member */
       sprintf(msg,"typedef %s" ,G__type2string(tolower(G__newtype.type[i])
 						,G__newtype.tagnum[i],-1
 						,G__newtype.reftype[i]
 						,0));  /* isconst */
-#else
-      sprintf(msg,"typedef %s" ,G__type2string(tolower(G__newtype.type[i])
-						,G__newtype.tagnum[i],-1
-						,G__newtype.reftype[i]));
 #endif
       if(G__more(fout,msg)) return(1);
       if(G__more(fout," ")) return(1);
@@ -937,7 +939,12 @@ int startin;
       }
       else {
 	if(isupper(G__newtype.type[i])) {
+#ifndef G__OLDIMPLEMENTATION1396
+	  if(G__newtype.isconst[i]&G__PCONSTVAR) sprintf(msg,"*const ");
+	  else sprintf(msg,"*");
+#else
 	  sprintf(msg,"*");
+#endif
 	  if(G__more(fout,msg)) return(1);
 	}
 	if(0<=G__newtype.parent_tagnum[i]) {

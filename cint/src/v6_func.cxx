@@ -601,6 +601,87 @@ int *known3;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1393
+/******************************************************************
+* G__pointerReference()
+*
+******************************************************************/
+G__value G__pointerReference(item,libp,known3)
+char *item;
+struct G__param *libp;
+int *known3;
+{
+  G__value result3;
+  int i,j;
+  int store_tagnum = G__tagnum;
+  int store_typenum = G__typenum;
+  long store_struct_offset = G__store_struct_offset;
+
+  result3 = G__getitem(item);
+  if(0==result3.type) return(G__null);
+  *known3 = 1;
+
+  for(i=1;i<libp->paran;i++) {
+    char arg[G__ONELINE];
+    
+    strcpy(arg,libp->parameter[i]);
+    if('['==arg[0]) {
+      j=0;
+      while(arg[++j] && ']'!=arg[j]) arg[j-1] = arg[j];
+      arg[j-1] = 0;
+    }
+
+    if('u'==result3.type) { /* operator[] overloading */
+      char expr[G__ONELINE];
+      /* Set member function environment */
+      G__tagnum = result3.tagnum;
+      G__typenum = result3.typenum;
+      G__store_struct_offset = result3.obj.i;
+#ifdef G__ASM
+      if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) fprintf(G__serr,"%3x: SETSTROS\n",G__asm_cp);
+#endif
+	G__asm_inst[G__asm_cp] = G__SETSTROS;
+	G__inc_cp_asm(1,0);
+      }
+#endif
+      /* call operator[] */
+      *known3 = 0;
+      sprintf(expr,"operator[](%s)",arg);
+      result3 = G__getfunction(expr,known3,G__CALLMEMFUNC);
+      /* Restore environment */
+      G__tagnum = store_tagnum;
+      G__typenum = store_typenum;
+      G__store_struct_offset = store_struct_offset;
+#ifdef G__ASM
+      if(G__asm_noverflow) {
+#ifdef G__ASM_DBG
+	if(G__asm_dbg) fprintf(G__serr,"%3x: POPSTROS\n",G__asm_cp);
+#endif
+	G__asm_inst[G__asm_cp] = G__POPSTROS;
+	G__inc_cp_asm(1,0);
+      }
+#endif
+    }
+
+    else if(isupper(result3.type)) {
+      G__value varg;
+      varg = G__getexpr(arg);
+      G__bstore('+',varg,&result3);
+      result3 = G__tovalue(result3);
+    }
+
+    else {
+      G__genericerror("Error: Incorrect use of operator[]");
+      return(G__null);
+    }
+  }
+
+  return(result3);
+}
+#endif
+
 /******************************************************************
 * G__value G__getfunction(item,known3,memfunc_flag)
 *
@@ -980,8 +1061,20 @@ int memfunc_flag;
      *  this '*' is significant
      ***************************************************************/
     if(fpara.parameter[0][0]=='*') {
+#ifndef G__OLDIMPLEMENTATION1393
+      switch(fpara.parameter[1][0]) {
+      case '[':
+	/* function pointer */
+	return(G__pointerReference(fpara.parameter[0],&fpara,known3));
+      case '(':
+      default:
+	/* function pointer */
+	return(G__pointer2func(fpara.parameter[0],fpara.parameter[1],known3));
+      }
+#else
       /* function pointer */
       return(G__pointer2func(fpara.parameter[0],fpara.parameter[1],known3));
+#endif
     }
 
 #ifdef G__PTR2MEMFUNC

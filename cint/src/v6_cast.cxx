@@ -25,10 +25,17 @@
 * G__castclass()
 *
 **************************************************************************/
-void G__castclass(result3,tagnum,castflag,ptype)
+void G__castclass(result3,tagnum,castflag,ptype
+#ifndef G__OLDIMPLEMENTATION1397
+		  ,reftype
+#endif
+		  )
 G__value *result3;
 int tagnum,castflag;
 int *ptype;
+#ifndef G__OLDIMPLEMENTATION1397
+int reftype;
+#endif
 {
   int offset=0;
   if(-1!=result3->tagnum) {
@@ -41,8 +48,11 @@ int *ptype;
 #ifndef G__OLDIMPLEMENTATION1176
              (islower(*ptype) || islower(result3->type)) &&
 #endif
+#ifndef G__OLDIMPLEMENTATION1176
+	    0==reftype &&
+#endif
 	    'i'!=result3->type && 'l'!=result3->type && 'Y'!=result3->type) {
-      G__genericerror("Error: illegal type cast");
+      G__genericerror("Error: illegal type cast (1)");
       return;
     }
 #endif
@@ -72,7 +82,7 @@ int *ptype;
   else if(0==castflag && 0==G__oprovld &&
 	  (G__SECURE_MARGINAL_CAST&G__security) &&
 	  'i'!=result3->type && 'l'!=result3->type && 'Y'!=result3->type) {
-    G__genericerror("Error: illegal type cast");
+    G__genericerror("Error: illegal type cast (2)");
     return;
   }
 #endif
@@ -333,11 +343,19 @@ G__value result3;
   if(type=='\0') {
     if(strncmp(casttype,"struct",6)==0) {
       tagnum=G__defined_tagname(casttype+6,0);
+#ifndef G__OLDIMPLEMENTATION1397
+      G__castclass(&result3,tagnum,castflag,&type,reftype);
+#else
       G__castclass(&result3,tagnum,castflag,&type);
+#endif
     }
     else if(strncmp(casttype,"class",5)==0) {
       tagnum=G__defined_tagname(casttype+5,0);
+#ifndef G__OLDIMPLEMENTATION1397
+      G__castclass(&result3,tagnum,castflag,&type,reftype);
+#else
       G__castclass(&result3,tagnum,castflag,&type);
+#endif
     }
     else if(strncmp(casttype,"union",5)==0) {
       result3.tagnum=G__defined_tagname(casttype+5,0);
@@ -372,7 +390,11 @@ G__value result3;
       if(result3.typenum== -1) {
 	tagnum=G__defined_tagname(casttype,0);
 	if(tagnum== -1) type='Y'; /* checked */
+#ifndef G__OLDIMPLEMENTATION1397
+	else G__castclass(&result3,tagnum,castflag,&type,reftype);
+#else
 	else G__castclass(&result3,tagnum,castflag,&type);
+#endif
       }
       else {
 	tagnum=G__newtype.tagnum[result3.typenum];
@@ -382,7 +404,11 @@ G__value result3;
 	    type='i'+castflag;
 	  }
 	  else {
+#ifndef G__OLDIMPLEMENTATION1397
+	    G__castclass(&result3,tagnum,castflag,&lenitem,reftype);
+#else
 	    G__castclass(&result3,tagnum,castflag,&lenitem);
+#endif
 	  }
 	}
 #ifndef G__OLDIMPLEMENTATION1188

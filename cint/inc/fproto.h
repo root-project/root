@@ -67,7 +67,11 @@ int G__matchregex G__P((char *pattern,char *string));
 #ifdef G__REGEXP1
 int G__matchregex G__P((char *pattern,char *string));
 #endif
+#ifndef G__OLDIMPLEMENTATION1397
+void G__castclass G__P((G__value *result3,int tagnum,int castflag,int *ptype,int reftype));
+#else
 void G__castclass G__P((G__value *result3,int tagnum,int castflag,int *ptype));
+#endif
 G__value G__castvalue G__P((char *casttype,G__value result3));
 void G__asm_cast G__P((int type,G__value *buf));
 void G__setdebugcond G__P((void));

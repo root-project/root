@@ -22,7 +22,7 @@
 #define G__CI_H
 
 #define G__CINTVERSION 5014055
-#define G__CINTVERSIONSTR  "5.14.54, Oct 14 2000"
+#define G__CINTVERSIONSTR  "5.14.55, Oct 20 2000"
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
@@ -1281,6 +1281,9 @@ struct G__typedef {
   int linenum[G__MAXTYPEDEF];
 #endif
   int alltype;
+#ifndef G__OLDIMPLEMENTATION1394
+  G__SIGNEDCHAR_T isconst[G__MAXTYPEDEF];
+#endif
 };
 
 
