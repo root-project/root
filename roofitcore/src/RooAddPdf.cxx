@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.12 2001/09/25 01:15:58 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.13 2001/09/25 17:09:57 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -112,6 +112,9 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   } else {
     _haveLastCoef=kTRUE ;
   }
+
+  delete pdfIter ;
+  delete coefIter  ;
 }
 
 
@@ -316,11 +319,15 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
   if (_haveLastCoef) {
 
     // N pdfs, N coefficients (use extended likelihood)
+    Double_t coefSum(0) ;
     while(coef=(RooAbsReal*)_coefIter->Next()) {
       pdf = (RooAbsReal*)_pdfIter->Next() ;
-      value += pdf->analyticalIntegralWN(subCode[i],normSet)*coef->getVal(normSet) ;      
+      Double_t coefVal = coef->getVal(normSet) ;
+      value += pdf->analyticalIntegralWN(subCode[i],normSet)*coefVal ;      
+      coefSum += coefVal ;
       i++ ;
-    }
+    }    
+    value /= coefSum ;
 
   } else {
 
@@ -364,4 +371,26 @@ Double_t RooAddPdf::expectedEvents() const
   }   
 
   return expectedTotal;
+}
+
+
+
+
+Double_t RooAddPdf::extendedTerm(UInt_t observed) const 
+{
+  // check if this PDF supports extended maximum likelihood fits
+  if(!canBeExtended()) {
+    cout << fName << ": this PDF does not support extended maximum likelihood"
+         << endl;
+    return 0;
+  }
+
+  Double_t expected= expectedEvents();
+  if(expected < 0) {
+    cout << fName << ": calculated negative expected events: " << expected
+         << endl;
+    return 0;
+  }
+
+  return expected ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.34 2001/09/22 00:30:56 david Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.35 2001/09/24 16:23:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -99,7 +99,7 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   // done in integration calls, there is no performance hit.
   if (!nset) {
     Double_t val = traceEval(nset) ;
-    if (_verboseEval>1) cout << "RooAbsPdf::getVal(" << GetName() << "): value = " << val << " (unnormalized)" << endl ;
+    if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() << "): value = " << val << " (unnormalized)" << endl ;
     return val ;
   }
 
@@ -114,7 +114,7 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
     _value = rawVal / _norm->getVal() ;
     traceEvalPdf(rawVal) ; // Error checking and printing
 
-    if (_verboseEval>1) cout << "RooAbsPdf::getVal(" << GetName() << "): value = " 
+    if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() << "): value = " 
 			     << rawVal << " / " << _norm->getVal() << " = " << _value << endl ;
 
     clearValueDirty() ; //setValueDirty(kFALSE) ;
@@ -162,7 +162,7 @@ Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
   if (!nset) return 1 ;
 
   syncNormalization(nset) ;
-  if (_verboseEval>1) cout << "RooAbsPdf::getNorm(" << GetName() << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
+  if (_verboseEval>1) cout << IsA()->GetName() << "::getNorm(" << GetName() << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
   return _norm->getVal() ;
 }
 
@@ -188,14 +188,6 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
 //     }
 //   }
 
-  if (_verboseEval>0) {
-    cout << "RooAbsPdf:syncNormalization(" << GetName() 
-	 << ") recreating normalization integral(" 
-	 << _lastNormSet << " -> " << nset << "=" ;
-    if (nset) nset->Print("1") ; else cout << "<none>" ;
-    cout << ")" << endl ;
-  }
-
   _lastNormSet = (RooArgSet*) nset ;
   //_lastNameSet.refill(*nset) ;
 
@@ -205,6 +197,19 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
   // Allow optional post-processing
   Bool_t fullNorm = syncNormalizationPreHook(_norm,nset) ;
   RooArgSet* depList = fullNorm ? ((RooArgSet*)nset) : getDependents(nset) ;
+
+  if (_verboseEval>0) {
+    if (selfNormalized()) {
+      cout << IsA()->GetName() << "::syncNormalization(" << GetName() 
+	   << ") recreating normalization integral(" 
+	   << _lastNormSet << " -> " << nset << "=" ;
+      if (depList) depList->Print("1") ; else cout << "<none>" ;
+      cout << ")" << endl ;
+    } else {
+      cout << IsA()->GetName() << "::syncNormalization(" << GetName() << ") selfNormalized, creating unit norm" << endl;
+    }
+  }
+
 
   // Destroy old normalization & create new
   if (_norm) delete _norm ;

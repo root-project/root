@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.39 2001/09/24 23:06:00 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.40 2001/09/25 01:15:59 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -240,6 +240,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       delete argDeps ; 
     }
   }
+  delete sIter ;
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * D) Split numeric list in integration list and summation list  *
@@ -395,6 +396,10 @@ Double_t RooRealIntegral::evaluate() const
   case Analytic:
     {
       retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet) ;
+      if (RooAbsPdf::_verboseEval>0)
+	cout << "RooRealIntegral::evaluate_analytic(" << GetName() 
+	     << ")func = " << _function.arg().IsA()->GetName() << "::" << _function.arg().GetName()
+	     << " raw = " << retVal << endl ;
       break ;
     }
 
@@ -405,9 +410,11 @@ Double_t RooRealIntegral::evaluate() const
     }
   }
 
+  
+
   // Multiply answer with integration ranges of factorized variables
   RooAbsArg *arg ;
-  TIterator* fIter = _facList.createIterator() ;
+  TIterator* fIter = _facList.createIterator() ; // WVE persist facList iterator
   while(arg=(RooAbsArg*)fIter->Next()) {
     // Multiply by fit range for 'real' dependents
     if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
@@ -420,10 +427,11 @@ Double_t RooRealIntegral::evaluate() const
       retVal *= argLV->numTypes() ;
     }    
   }
-  
+  delete fIter ;
+ 
 
   if (RooAbsPdf::_verboseEval>0)
-    cout << "RooRealIntegral::evaluate(" << GetName() << ") = " << retVal << endl ;
+    cout << "RooRealIntegral::evaluate(" << GetName() << ") raw*fact = " << retVal << endl ;
 
   return retVal ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.49 2001/09/11 00:30:30 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.50 2001/09/17 18:48:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -90,7 +90,7 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
   TObject* obj ;
   TIterator* aIter = other._attribList.MakeIterator() ;
   while (obj=aIter->Next()) {
-    _attribList.Add(obj->Clone()) ;
+    _attribList.Add(new TObjString(obj->GetName())) ;
   }
   delete aIter ;
 
@@ -145,6 +145,7 @@ RooAbsArg::~RooAbsArg()
   delete clientIter ;
 
   _attribList.Delete() ;
+  
 
   delete _clientShapeIter ;
   delete _clientValueIter ;
@@ -999,6 +1000,7 @@ void RooAbsArg::printAttribList(ostream& os) const
     first=kFALSE ;
   }
   if (!first) os << "] " ;
+  delete attribIter ;
 }
 
 void RooAbsArg::attachDataSet(const RooAbsData &set) 
