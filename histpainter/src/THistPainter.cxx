@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.105 2002/10/24 16:32:28 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.106 2002/11/04 21:18:08 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -40,6 +40,7 @@
 #include "Hoption.h"
 #include "Hparam.h"
 #include "TPluginManager.h"
+#include "TPaletteAxis.h"
 #include "TVirtualUtilPad.h"
 
 //______________________________________________________________________________
@@ -165,23 +166,6 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
        }
     }
 
-//    check if point is on the color palette
-   if (strchr(fH->GetDrawOption(),'z') || strchr(fH->GetDrawOption(),'Z')) {
-      if (fH->GetDimension() > 1 && py <= puymin && py > puymax) {
-         Double_t xup  = gPad->GetUxmax();
-         Double_t x2   = gPad->GetX2();
-         Double_t xr   = 0.05*(x2 - gPad->GetX1());
-         Double_t xmin = xup +0.1*xr;
-         Double_t xmax = xmin + xr;
-         if (xmax > x2) xmax = x2-0.01*xr;
-         Int_t xzaxis = gPad->XtoAbsPixel(xmax);
-         if (TMath::Abs(px-xzaxis) < kMaxDiff) {
-            gPad->SetSelected(fZaxis);
-            fZaxis->SetBit(TAxis::kPalette);
-            return 0;
-         }
-      }
-   }
 //     if object is 2-D or 3-D return this object
    if (fH->GetDimension() == 2) {
       Int_t delta2 = 5; //Give a margin of delta2 pixels to be in the 2-d area
@@ -847,7 +831,7 @@ void THistPainter::Paint(Option_t *option)
 //	h->Draw("e1 same");
 //
 // The options "BOX", "COL" or "COLZ", use the color palette
-// defined in the current style (see TStyle::SetPalette)
+// defined in the current style (see TStyle::SeTPaletteAxis)
 //
 // The options "CONT" or "SURF" or "LEGO" have by default 20 equidistant contour
 // levels, you can change the number of levels with TH1::SetContour.
@@ -1067,7 +1051,7 @@ void THistPainter::Paint(Option_t *option)
 //  For each cell (i,j) a box is drawn with a color proportional
 //    to the cell content.
 //    The color table used is defined in the current style (gStyle).
-//    The color palette in TStyle can be modified via TStyle::SetPalette.
+//    The color palette in TStyle can be modified via TStyle::SeTPaletteAxis.
 //Begin_Html
 /*
 <img src="gif/h2_c2h.gif">
@@ -1137,7 +1121,7 @@ void THistPainter::Paint(Option_t *option)
 //    "LEGO1"  : Draw a lego plot with hidden surface removal
 //    "LEGO2"  : Draw a lego plot using colors to show the cell contents
 //
-//      See TStyle::SetPalette to change the color palette.
+//      See TStyle::SeTPaletteAxis to change the color palette.
 //      We suggest you use palette 1 with the call
 //        gStyle->SetColorPalette(1)
 //
@@ -1165,7 +1149,7 @@ void THistPainter::Paint(Option_t *option)
 //
 //  The following picture uses SURF1.
 //
-//      See TStyle::SetPalette to change the color palette.
+//      See TStyle::SeTPaletteAxis to change the color palette.
 //      We suggest you use palette 1 with the call
 //      gStyle->SetColorPalette(1)
 //
@@ -1188,9 +1172,9 @@ void THistPainter::Paint(Option_t *option)
 //
 //  Setting the color palette
 //  =========================
-// You can set the color palette with TStyle::SetPalette, eg
+// You can set the color palette with TStyle::SeTPaletteAxis, eg
 //
-//      gStyle->SetPalette(ncolors,colors);
+//      gStyle->SeTPaletteAxis(ncolors,colors);
 //
 // For example the option "COL" draws a 2-D histogram with cells
 // represented by a box filled with a color index which is a function
@@ -1837,7 +1821,7 @@ void THistPainter::PaintColorLevels(Option_t *)
 //       For each cell (i,j) a box is drawn with a color proportional
 //       to the cell content.
 //       The color table used is defined in the current style (gStyle).
-//       The color palette in TStyle can be modified via TStyle::SetPalette.
+//       The color palette in TStyle can be modified via TStyle::SeTPaletteAxis.
 //Begin_Html
 /*
 <img src="gif/PaintCol.gif">
@@ -3416,7 +3400,7 @@ void THistPainter::PaintLego(Option_t *)
 //      See THistPainter::Draw for the list of Lego options.
 //      See TPainter3dAlgorithms for more examples of lego options.
 //
-//      See TStyle::SetPalette to change the color palette.
+//      See TStyle::SeTPaletteAxis to change the color palette.
 //      It is suggested to use palette 1 via the call
 //      gStyle->SetColorPalette(1)
 //
@@ -3820,62 +3804,33 @@ void THistPainter::PaintPalette()
 //    *-*-*-*-*-*Paint the color palette on the right side of the pad*-*-*-*-*
 //               ====================================================
 
-   TBox box;
-   box.SetFillStyle(1001);
-   Double_t xup  = gPad->GetUxmax();
-   Double_t x2   = gPad->GetX2();
-   Double_t ymin = gPad->GetUymin();
-   Double_t ymax = gPad->GetUymax();
-   Double_t xr   = 0.05*(x2 - gPad->GetX1());
-   Double_t xmin = xup +0.1*xr;
-   Double_t xmax = xmin + xr;
-   Double_t wmin = fH->GetMinimum();
-   Double_t wmax = fH->GetMaximum();
-   Double_t wlmin = wmin;
-   Double_t wlmax = wmax;
-   Double_t y1,y2;
-   static char chopt[5] = "";
-   if (Hoption.Logz) {
-      wlmin = TMath::Log10(wmin);
-      wlmax = TMath::Log10(wmax);
+   TPaletteAxis *palette = (TPaletteAxis*)fFunctions->FindObject("palette");
+   TView *view = gPad->GetView();
+   if (palette) {
+      if (view) {
+         if (!palette->TestBit(TPaletteAxis::kHasView)) {
+            delete palette; palette = 0;
+         }
+      } else {
+         if (palette->TestBit(TPaletteAxis::kHasView)) {
+            delete palette; palette = 0;
+         }
+      }
    }
-   Double_t ws    = wlmax-wlmin;
-   if (xmax > x2) xmax = x2-0.01*xr;
-   Int_t ncolors = gStyle->GetNumberOfColors();
-   Int_t ndivz = TMath::Abs(fH->GetContour());
-   Int_t theColor,color;
-   Double_t scale = ndivz/(wlmax - wlmin);
-   for (Int_t i=0;i<ndivz;i++) {
-      Double_t w1 = fH->GetContourLevel(i);
-      if (w1 < wlmin) w1 = wlmin;
-      Double_t w2 = wlmax;
-      if (i < ndivz-1) w2 = fH->GetContourLevel(i+1);
-      if (w2 <= wlmin) continue;
-      y1 = ymin + (w1-wlmin)*(ymax-ymin)/ws;
-      y2 = ymin + (w2-wlmin)*(ymax-ymin)/ws;
-      color = Int_t(0.01+(w1-wlmin)*scale);
-      theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
-      box.SetFillColor(gStyle->GetColorPalette(theColor));
-      box.TAttFill::Modify();
-      gPad->PaintBox(xmin,y1,xmax,y2);
+   
+   if (!palette) {
+      Double_t xup  = gPad->GetUxmax();
+      Double_t x2   = gPad->GetX2();
+      Double_t ymin = gPad->GetUymin();
+      Double_t ymax = gPad->GetUymax();
+      Double_t xr   = 0.05*(x2 - gPad->GetX1());
+      Double_t xmin = xup +0.1*xr;
+      Double_t xmax = xmin + xr;
+      if (xmax > x2) xmax = x2-0.01*xr;
+      palette = new TPaletteAxis(xmin,ymin,xmax,ymax,fH);
+      fFunctions->Add(palette);
    }
-   TAxis *zaxis = fH->GetZaxis();
-   //Draw the palette axis using the Z axis parameters
-   TGaxis axis;
-   axis.ImportAxisAttributes(zaxis);
-   Int_t ndiv  = zaxis->GetNdivisions()%100; //take primary divisions only
-   chopt[0] = 0;
-   strcat(chopt, "+L");
-   if (ndiv < 0) {
-      ndiv =TMath::Abs(ndiv);
-      strcat(chopt, "N");
-   }
-   if (Hoption.Logz) {
-      wmin = TMath::Power(10.,wlmin);
-      wmax = TMath::Power(10.,wlmax);
-      strcat(chopt, "G");
-   }
-   axis.PaintAxis(xmax,ymin,xmax,ymax,wmin,wmax,ndiv,chopt);
+   palette->Paint();
 }
 
 //______________________________________________________________________________
@@ -4334,7 +4289,7 @@ void THistPainter::PaintSurface(Option_t *)
 //      See THistPainter::Draw for a list of Surface options
 //     The following picture is generated with option SURF1.
 //
-//      See TStyle::SetPalette to change the color palette.
+//      See TStyle::SeTPaletteAxis to change the color palette.
 //      It is suggested to use palette 1 via the call
 //      gStyle->SetColorPalette(1)
 //
@@ -4618,6 +4573,11 @@ void THistPainter::PaintTable(Option_t *option)
 
    PaintFrame();
 
+   //if palette option not specified, delete a possible existing palette
+   if (!Hoption.Zscale) {
+      delete fFunctions->FindObject("palette");      
+   }
+   
    if (fH->GetEntries() >= 0) {
       if (Hoption.Scat)    PaintScatterPlot(option);
       if (Hoption.Arrow)   PaintArrows(option);
