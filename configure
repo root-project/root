@@ -722,6 +722,7 @@ if test $# -gt 0 ; then
       --mandir=*)     haveconfig=-DHAVE_CONFIG ; mandir=$optarg      ;;
       --pkglist*)     show_pkglist="yes"       ; noact="yes"         ;;
       --prefix*)      haveconfig=-DHAVE_CONFIG ; prefix=$optarg      ;;
+      --proofdir=*)   haveconfig=-DHAVE_CONFIG ; proofdir=$optarg    ;;
       --srcdir=*)     haveconfig=-DHAVE_CONFIG ; srcdir=$optarg      ;;
       --testdir=*)    haveconfig=-DHAVE_CONFIG ; testdir=$optarg     ;;
       --tutdir=*)     haveconfig=-DHAVE_CONFIG ; tutdir=$optarg      ;;
@@ -1309,8 +1310,8 @@ if test ! "x$enable_alien" = "xno" ; then
     alienincdir=$found_dir
 
     check_library "libAliEnAPI++" "$enable_shared" "$alienlibdir" \
-	$ALIEN $ALIEN/lib $ALIEN/lib/api /opt/alien/lib \
-        /usr/local/alien/lib /usr/lib /usr/local/lib
+	$ALIEN $ALIEN/lib /opt/alien/lib /usr/local/alien/lib /usr/lib \
+        /usr/local/lib
     alienlib=$found_lib
     alienlibdir=$found_dir
 
@@ -1463,7 +1464,7 @@ if test "x$enable_globus" = "xyes"; then
     globusincdir=""
     globuslibdir=""
     searchincdir=$globusdir/include
-    
+
     for i in "openssl/x509.h" "openssl/pem.h" "globus_gss_assist.h" ; do
         check_header $i "" "$searchincdir/$flavour"
         if test "x$found_hdr" = "x" ; then
@@ -1488,7 +1489,7 @@ if test "x$enable_globus" = "xyes"; then
 fi
 
 if test "x$enable_globus" = "xyes"; then
-    
+
    # With more recent versions we need an additional header
    check_header globus_gsi_credential.h "" "$searchincdir/$flavour"
    gsiversion="no"
@@ -1532,12 +1533,12 @@ if test "x$enable_globus" = "xyes"; then
 fi
 
 if test "x$enable_globus" = "xyes"; then
-      
+
    globuslib=""
    if test ! "x$globusdir" = "x" ; then
        searchlibdir=$globusdir/lib
    fi
-   
+
    for i in libglobus_gss_assist_$flavour libglobus_gssapi_gsi_$flavour \
      libssl_$flavour libcrypto_$flavour ; do
      check_library $i "$enable_shared" "$searchlibdir" /usr/lib \
@@ -1560,7 +1561,7 @@ if test "x$enable_globus" = "xyes"; then
         fi
    done
 fi
-        
+
 if test "x$enable_globus" = "xyes"; then
 
    # In more recent versions some functions are found in a separated library
@@ -1579,7 +1580,7 @@ if test "x$enable_globus" = "xyes"; then
          done
       fi
    fi
-   
+
    # Need to source this before init proxies
    sourcepath=""
    if test -s $globusdir/etc/globus-user-env.sh ; then
@@ -1590,7 +1591,7 @@ if test "x$enable_globus" = "xyes"; then
    else
       echo "Checking for globus-user-env.sh ... $sourcepath"
    fi
-   
+
    # Need this to init proxies
    initpath=""
    if test -s $globusdir/bin/grid-proxy-init ; then
@@ -1601,7 +1602,7 @@ if test "x$enable_globus" = "xyes"; then
    else
       echo "Checking for grid-proxy-init ... $initpath"
    fi
-   
+
    if test "x$globusincdir" = "x" || test "x$globuslib" = "x"; then
       globuslib=""
       enable_globus="no"
@@ -1615,7 +1616,7 @@ if test "x$enable_globus" = "xyes"; then
    if test "x$gsiversion" = "xyes" ; then
       glbextracflags="$glbextracflags -DR__GLBS22"
    fi
-    
+
    # Everything seems ok: now check if there is the need for a patch
    patchneeded="no"
    tobepatched="globus_gsi_credential"
@@ -1649,11 +1650,11 @@ if test "x$enable_globus" = "xyes"; then
          patchneeded="yes"
          echo "Checking need for globus patch ... yes"
       fi
-   
+
    else
       echo "Checking globus patch need ... no"
    fi
-    
+
    # Now find includes needed for patch, if the case
    if test "x$patchneeded" = "xyes" ; then
 
@@ -1689,9 +1690,9 @@ if test "x$enable_globus" = "xyes"; then
 
       # copy patched file in the globusauth/src directory
       cp -rp $globuspatchdir/$tobepatched.c globusauth/src/$tobepatched.c
-     
+
       glbpatchcflags="$glbpatchcflags -I$globuspatchdir/include"
-      
+
       if test ! "x$glbpatchcflags" = "x" ; then
          echo "Applying experimental patch to $tobepatched.c"
       fi
