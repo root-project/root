@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.95 2002/11/24 13:59:57 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.96 2002/11/24 14:13:26 brun Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -929,6 +929,15 @@ Int_t TClass::GetDataMemberOffset(const char *name) const
    //may be member is a pointer
    rd = (TRealData*)fRealData->FindObject(Form("*%s",name));
    if (rd) return rd->GetThisOffset();
+   
+   //new attempt starting after the first "." if any
+   const char *dot = strchr(name,'.');
+   if (!dot) return 0;
+   rd = (TRealData*)fRealData->FindObject(dot+1);
+   if (rd) return rd->GetThisOffset();
+   rd = (TRealData*)fRealData->FindObject(Form("*%s",dot+1));
+   if (rd) return rd->GetThisOffset();
+   
    return 0; 
 }  
 
