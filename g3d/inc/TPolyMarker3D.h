@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.4 2001/12/17 08:07:27 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.h,v 1.5 2001/12/27 17:20:27 rdm Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -63,6 +63,7 @@ public:
    virtual Float_t  *GetP() const { return fP;}
    Option_t         *GetOption() const {return fOption.Data();}
    virtual void      ls(Option_t *option="") const;
+   virtual Int_t     Merge(TCollection *list);
    virtual void      Paint(Option_t *option="");
    virtual void      PaintPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t *option="");
    virtual void      Print(Option_t *option="") const;

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.7 2001/12/17 08:09:23 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.cxx,v 1.8 2001/12/24 11:13:56 rdm Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -397,6 +397,41 @@ void TPolyLine3D::ls(Option_t *option) const
    TROOT::IndentLevel();
    cout <<"PolyLine3D  N=" <<fN<<" Option="<<option<<endl;
 }
+   
+//______________________________________________________________________________
+Int_t TPolyLine3D::Merge(TCollection *list)
+{
+// Merge polylines in the collection in this polyline
+   
+   if (!list) return 0;
+   TIter next(list);
+
+   //first loop to count the number of entries
+   TPolyLine3D *pl;
+   Int_t npoints = 0;
+   while ((pl = (TPolyLine3D*)next())) {
+      if (!pl->InheritsFrom(TPolyLine3D::Class())) {
+         Error("Add","Attempt to add object of class: %s to a %s",pl->ClassName(),this->ClassName());
+         return -1;
+      }
+      npoints += pl->Size();
+   }
+   
+   //extend this polyline to hold npoints
+   pl->SetPoint(npoints-1,0,0,0);
+   
+   //merge all polylines
+   next.Reset();
+   while ((pl = (TPolyLine3D*)next())) {
+      Int_t np = pl->Size();
+      Float_t *p = pl->GetP();
+      for (Int_t i=0;i<np;i++) {
+         SetPoint(i,p[3*i],p[3*i+1],p[3*i+2]);
+      }
+   }
+   
+   return npoints;
+}
 
 //______________________________________________________________________________
 void TPolyLine3D::Paint(Option_t *option)
@@ -548,6 +583,7 @@ void TPolyLine3D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
       Float_t *savepoint = new Float_t [3*newN];
       if (fP && fN){
          memcpy(savepoint,fP,3*fN*sizeof(Float_t));
+         memset(&savepoint[3*fN],0,(newN-fN)*sizeof(Float_t));
          delete [] fP;
       }
       fP = savepoint;

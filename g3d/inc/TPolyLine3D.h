@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.3 2000/12/13 15:13:46 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyLine3D.h,v 1.4 2001/12/27 17:20:27 rdm Exp $
 // Author: Nenad Buncic   17/08/95
 
 /*************************************************************************
@@ -70,14 +70,15 @@ public:
    Float_t          *GetP() const {return fP;}
    Option_t         *GetOption() const {return fOption.Data();}
    virtual void      ls(Option_t *option="") const;
+   virtual Int_t     Merge(TCollection *list);
    virtual void      Paint(Option_t *option="");
    virtual void      PaintPolyLine(Int_t n, Float_t *p, Option_t *option="");
    virtual void      PaintPolyLine(Int_t n, Double_t *p, Option_t *option="");
    virtual void      Print(Option_t *option="") const;
    virtual void      SavePrimitive(ofstream &out, Option_t *option);
-   virtual Int_t     SetNextPoint(Double_t x, Double_t y, Double_t z); //*MENU*
+   virtual Int_t     SetNextPoint(Double_t x, Double_t y, Double_t z); // *MENU*
    virtual void      SetOption(Option_t *option="") {fOption = option;}
-   virtual void      SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); //*MENU*
+   virtual void      SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*
    virtual void      SetPolyLine(Int_t n, Option_t *option="");
    virtual void      SetPolyLine(Int_t n, Float_t *p, Option_t *option="");
    virtual void      SetPolyLine(Int_t n, Double_t *p, Option_t *option="");
