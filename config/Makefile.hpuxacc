@@ -1,5 +1,5 @@
 # -*- mode: makefile -*-
-# 
+#
 # Makefile of ROOT for HP-UX with aCC
 
 PLATFORM      = hpux
@@ -15,7 +15,7 @@ endif
 # Compiler:
 CXX           = aCC
 CC            = cc
-CXXFLAGS      = +W740,749 -DR__ACC -z +Z $(EXTRA_CXXFLAGS)
+CXXFLAGS      = +W740,749 -z +Z $(EXTRA_CXXFLAGS)
 CFLAGS        = -Ae -z +Z $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = -z +Z -DG__REGEXP -DG__UNIX -DG__HPUXCPPDLL $(EXTRA_CXXFLAGS) \
                 -DG__SHAREDLIB -D_POSIX2_SOURCE -DG__ROOT -DG__REDIRECTIO

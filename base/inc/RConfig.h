@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.28 2002/01/22 10:53:28 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.29 2002/01/24 11:39:26 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -259,7 +259,8 @@
 #   define ANSICPP
 #endif
 
-#ifdef R__ACC
+#ifdef __HP_aCC
+#   define R__ACC
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   if __HP_aCC >= 53000
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
