@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.25 2003/02/07 13:46:48 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.26 2003/02/10 17:23:14 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -441,7 +441,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
 
    if (fFinder) {
    // volume already divided.
-      Error("Divide","volume %s already divided", GetName());
+      Fatal("Divide","volume %s already divided", GetName());
       return 0;
    }
    TString opt(option);
@@ -451,22 +451,25 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
    Double_t xlo, xhi, range;
    range = fShape->GetAxisRange(iaxis, xlo, xhi);
    // for phi divisions correct the range
-   if (!strcmp(fShape->GetAxisName(iaxis), "PHI") && range==360) {
-      xlo = start;
-      xhi = start+range;
+   if (!strcmp(fShape->GetAxisName(iaxis), "PHI")) {
+      if ((start-xlo)<-1E-3) start+=360.;
+      if (range==360) {
+         xlo = start;
+         xhi = start+range;
+      }   
    }   
    if (range <=0) {
-      Error("Divide", "cannot divide volume %s (%s) on %s axis", GetName(), stype.Data(), fShape->GetAxisName(iaxis));
+      Fatal("Divide", "cannot divide volume %s (%s) on %s axis", GetName(), stype.Data(), fShape->GetAxisName(iaxis));
       return 0;
    }
    if (ndiv<=0 || opt.Contains("s")) {
       if (step<=0) {
-         Error("Divide", "invalid division type for volume %s : ndiv=%i, step=%g", GetName(), ndiv, step);
+         Fatal("Divide", "invalid division type for volume %s : ndiv=%i, step=%g", GetName(), ndiv, step);
          return 0;
       }   
       if (opt.Contains("x")) {
          if ((xlo-start)>1E-3 || (xhi-start)<-1E-3) {
-            Error("Divide", "invalid START=%g for division on axis %s of volume %s. Range is (%g, %g)",
+            Fatal("Divide", "invalid START=%g for division on axis %s of volume %s. Range is (%g, %g)",
                   start, fShape->GetAxisName(iaxis), GetName(), xlo, xhi);
             return 0;
          }
@@ -483,7 +486,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
    if (step<=0 || opt.Contains("n")) {
       if (opt.Contains("x")) {
          if ((xlo-start)>1E-3 || (xhi-start)<-1E-3) {
-            Error("Divide", "invalid START=%g for division on axis %s of volume %s. Range is (%g, %g)",
+            Fatal("Divide", "invalid START=%g for division on axis %s of volume %s. Range is (%g, %g)",
                   start, fShape->GetAxisName(iaxis), GetName(), xlo, xhi);
             return 0;
          }
@@ -496,7 +499,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
    
    Double_t end = start+ndiv*step;
    if (((start-xlo)<-1E-3) || ((end-xhi)>1E-3)) {
-      Error("Divide", "division of volume %s on axis %s exceed range (%g, %g)",
+      Fatal("Divide", "division of volume %s on axis %s exceed range (%g, %g)",
             GetName(), fShape->GetAxisName(iaxis), xlo, xhi);
       return 0;
    }         
@@ -504,7 +507,7 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
    if (numed) {
       TGeoMedium *medium = gGeoManager->GetMedium(numed);
       if (!medium) {
-         Error("Divide", "invalid medium number %d for division volume %s", numed, divname);
+         Fatal("Divide", "invalid medium number %d for division volume %s", numed, divname);
          return voldiv;
       }   
       voldiv->SetMedium(medium);
@@ -1048,10 +1051,11 @@ void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
    TGeoVolume *cell;
    if (fDivision) {
       div = (TGeoVolumeMulti*)vol->Divide(fDivision->GetName(), fAxis, fNdiv, fStart, fStep, fNumed, fOption.Data());
-      div->MakeCopyNodes(fDivision);
+//      div->MakeCopyNodes(fDivision);
       for (Int_t i=0; i<div->GetNvolumes(); i++) {
          cell = div->GetVolume(i);
-         cell->MakeCopyNodes(fDivision);
+         fDivision->AddVolume(cell);
+//         cell->MakeCopyNodes(fDivision);
       }
    }      
    if (fNodes)

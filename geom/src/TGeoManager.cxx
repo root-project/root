@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.43 2003/02/10 17:23:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.44 2003/02/11 08:48:21 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -2467,11 +2467,8 @@ TGeoVolume *TGeoManager::MakeArb8(const char *name, const TGeoMedium *medium,
                                   Double_t dz, Double_t *vertices)
 {
 // Make an TGeoArb8 volume.
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoArb8 *arb = new TGeoArb8(dz, vertices);
    TGeoVolume *vol = new TGeoVolume(name, arb, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2479,11 +2476,8 @@ TGeoVolume *TGeoManager::MakeBox(const char *name, const TGeoMedium *medium,
                                     Double_t dx, Double_t dy, Double_t dz)
 {
 // Make in one step a volume pointing to a box shape with given medium.
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoBBox *box = new TGeoBBox(dx, dy, dz);
    TGeoVolume *vol = new TGeoVolume(name, box, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2496,12 +2490,9 @@ TGeoVolume *TGeoManager::MakePara(const char *name, const TGeoMedium *medium,
       printf("Warning : para %s with alpha=0, theta=0 -> making box instead\n", name);
       return MakeBox(name, medium, dx, dy, dz);
    }
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoPara *para=0;
    para = new TGeoPara(dx, dy, dz, alpha, theta, phi);
    TGeoVolume *vol = new TGeoVolume(name, para, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2510,11 +2501,8 @@ TGeoVolume *TGeoManager::MakeSphere(const char *name, const TGeoMedium *medium,
                                     Double_t phimin, Double_t phimax)
 {
 // Make in one step a volume pointing to a sphere shape with given medium
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoSphere *sph = new TGeoSphere(rmin, rmax, themin, themax, phimin, phimax);
    TGeoVolume *vol = new TGeoVolume(name, sph, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2522,11 +2510,8 @@ TGeoVolume *TGeoManager::MakeTube(const char *name, const TGeoMedium *medium,
                                      Double_t rmin, Double_t rmax, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium.
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoTube *tube = new TGeoTube(rmin, rmax, dz);
    TGeoVolume *vol = new TGeoVolume(name, tube, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2535,11 +2520,8 @@ TGeoVolume *TGeoManager::MakeTubs(const char *name, const TGeoMedium *medium,
                                      Double_t phi1, Double_t phi2)
 {
 // Make in one step a volume pointing to a tube segment shape with given medium.
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoTubeSeg *tubs = new TGeoTubeSeg(rmin, rmax, dz, phi1, phi2);
    TGeoVolume *vol = new TGeoVolume(name, tubs, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2547,11 +2529,8 @@ TGeoVolume *TGeoManager::MakeEltu(const char *name, const TGeoMedium *medium,
                                      Double_t a, Double_t b, Double_t dz)
 {
 // Make in one step a volume pointing to a tube shape with given medium
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoEltu *eltu = new TGeoEltu(a, b, dz);
    TGeoVolume *vol = new TGeoVolume(name, eltu, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2560,11 +2539,8 @@ TGeoVolume *TGeoManager::MakeCtub(const char *name, const TGeoMedium *medium,
                                      Double_t lx, Double_t ly, Double_t lz, Double_t tx, Double_t ty, Double_t tz)
 {
 // Make in one step a volume pointing to a tube segment shape with given medium
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoCtub *ctub = new TGeoCtub(rmin, rmax, dz, phi1, phi2, lx, ly, lz, tx, ty, tz);
    TGeoVolume *vol = new TGeoVolume(name, ctub, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2573,11 +2549,8 @@ TGeoVolume *TGeoManager::MakeCone(const char *name, const TGeoMedium *medium,
                                      Double_t rmin2, Double_t rmax2)
 {
 // Make in one step a volume pointing to a cone shape with given medium.
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoCone *cone = new TGeoCone(dz, rmin1, rmax1, rmin2, rmax2);
    TGeoVolume *vol = new TGeoVolume(name, cone, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2587,11 +2560,8 @@ TGeoVolume *TGeoManager::MakeCons(const char *name, const TGeoMedium *medium,
                                      Double_t phi1, Double_t phi2)
 {
 // Make in one step a volume pointing to a cone segment shape with given medium
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoConeSeg *cons = new TGeoConeSeg(dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
    TGeoVolume *vol = new TGeoVolume(name, cons, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2599,11 +2569,8 @@ TGeoVolume *TGeoManager::MakePcon(const char *name, const TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nz)
 {
 // Make in one step a volume pointing to a polycone shape with given medium.
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoPcon *pcon = new TGeoPcon(phi, dphi, nz);
    TGeoVolume *vol = new TGeoVolume(name, pcon, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2611,11 +2578,8 @@ TGeoVolume *TGeoManager::MakePgon(const char *name, const TGeoMedium *medium,
                                      Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
 {
 // Make in one step a volume pointing to a polygone shape with given medium.
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoPgon *pgon = new TGeoPgon(phi, dphi, nedges, nz);
    TGeoVolume *vol = new TGeoVolume(name, pgon, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2623,11 +2587,8 @@ TGeoVolume *TGeoManager::MakeTrd1(const char *name, const TGeoMedium *medium,
                                   Double_t dx1, Double_t dx2, Double_t dy, Double_t dz)
 {
 // Make in one step a volume pointing to a TGeoTrd1 shape with given medium.
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoTrd1 *trd1 = new TGeoTrd1(dx1, dx2, dy, dz);
    TGeoVolume *vol = new TGeoVolume(name, trd1, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2636,11 +2597,8 @@ TGeoVolume *TGeoManager::MakeTrd2(const char *name, const TGeoMedium *medium,
                                   Double_t dz)
 {
 // Make in one step a volume pointing to a TGeoTrd2 shape with given medium.
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoTrd2 *trd2 = new TGeoTrd2(dx1, dx2, dy1, dy2, dz);
    TGeoVolume *vol = new TGeoVolume(name, trd2, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2650,12 +2608,9 @@ TGeoVolume *TGeoManager::MakeTrap(const char *name, const TGeoMedium *medium,
                                   Double_t tl2, Double_t alpha2)
 {
 // Make in one step a volume pointing to a trapezoid shape with given medium.
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoTrap *trap = new TGeoTrap(dz, theta, phi, h1, bl1, tl1, alpha1, h2, bl2,
                                  tl2, alpha2);
    TGeoVolume *vol = new TGeoVolume(name, trap, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 //_____________________________________________________________________________
@@ -2665,12 +2620,9 @@ TGeoVolume *TGeoManager::MakeGtra(const char *name, const TGeoMedium *medium,
                                   Double_t tl2, Double_t alpha2)
 {
 // Make in one step a volume pointing to a twisted trapezoid shape with given medium.
-   TGeoVolume *old = 0;
-   old=(TGeoVolume*)fVolumes->FindObject(name);
    TGeoGtra *gtra = new TGeoGtra(dz, theta, phi, twist, h1, bl1, tl1, alpha1, h2, bl2,
                                  tl2, alpha2);
    TGeoVolume *vol = new TGeoVolume(name, gtra, medium);
-   if (old) vol->MakeCopyNodes(old);
    return vol;
 }
 

@@ -12,7 +12,7 @@
 
 #include <TROOT.h>
 #include <TStyle.h>
-#include <TApplication.h>
+#include <TRint.h>
 #include <TVirtualX.h>
 #include <TEnv.h>
 
@@ -193,6 +193,7 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fMaxV = TMath::Max(fDimX,TMath::Max(fDimY,fDimZ));
     fMaxV /= 3.0;
     fMinV = -1.0 * fMaxV;
+printf("w=%d, h=%d, fMaxV=%d\n",w,h,fMaxV);
 
     fEventNr = 0;
     fNRun    = 0;
@@ -1290,7 +1291,7 @@ Int_t RootShower::DistancetoPrimitive(Int_t px, Int_t py)
 
 int main(int argc, char **argv)
 {
-    TApplication theApp("App", &argc, argv);
+    TRint theApp("App", &argc, argv);
 
     gStyle->SetOptStat(1111);
     gStyle->SetOptFit(1111);
@@ -1305,11 +1306,10 @@ int main(int argc, char **argv)
     gColIndex = gStyle->CreateGradientColorTable(NRGBs, Stops, Red, Green, Blue, 11);
 
     // Create RootShower
-    RootShower *theShower = new RootShower(gClient->GetRoot(), 400, 200);
+    RootShower theShower(gClient->GetRoot(), 400, 200);
 
     // run ROOT application
     theApp.Run();
 
-    delete theShower;
     return 0;
 }

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.17 2003/02/10 17:23:14 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.18 2003/02/11 12:16:06 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -432,19 +432,29 @@ TGeoShape *TGeoTube::GetMakeRuntimeShape(TGeoShape *mother) const
 // in case shape has some negative parameters, these has to be computed
 // in order to fit the mother
    if (!TestBit(kGeoRunTimeShape)) return 0;
-   if (mother->IsRunTimeShape() || !mother->TestBit(kGeoTube)) {
+   if (mother->IsRunTimeShape()) {
       Error("GetMakeRuntimeShape", "invalid mother");
       return 0;
    }
    Double_t rmin, rmax, dz;
+   Double_t xmin,xmax;
    rmin = fRmin;
    rmax = fRmax;
    dz = fDz;
-   if (fDz<0) dz=((TGeoTube*)mother)->GetDz();
-   if (fRmin<0)
-      rmin = ((TGeoTube*)mother)->GetRmin();
-   if (fRmax<0) 
-      rmax = ((TGeoTube*)mother)->GetRmax();
+   if (fDz<0) {
+      mother->GetAxisRange(3,xmin,xmax);
+      if (xmax<0) return 0;
+      dz=xmax;
+   }   
+   mother->GetAxisRange(1,xmin,xmax);
+   if (fRmin<0) {
+      if (xmin<0) return 0;
+      rmin = xmin;
+   }   
+   if (fRmax<0) {
+      if (xmax<=0) return 0;
+      rmax = xmax;
+   }   
 
    return (new TGeoTube(rmin, rmax, dz));
 }
