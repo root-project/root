@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooDataHist.cc,v 1.38 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.39 2004/04/21 23:14:22 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -914,6 +914,7 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
     if (!skip) {
 
       Double_t binVolume = correctForBinSize ? _pbinv[ibin] : 1.0 ;
+      //cout << "ptotal += " << _wgt[ibin] << "/" << binVolume << endl ;
       total += _wgt[ibin]/binVolume ;
     }
   }
@@ -925,10 +926,6 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
 
 void RooDataHist::calculatePartialBinVolume(const RooArgSet& dimSet) const 
 {
-  // Calculate plot bins of components from master index
-  RooArgSet* partDimSet = (RooArgSet*) _vars.selectCommon(dimSet) ;
-  TIterator* iter = partDimSet->createIterator() ;
-
   // Allocate cache if not yet existing
   if (_pbinv==0) {
     _pbinv = new Double_t[_arrSize] ;
@@ -940,23 +937,34 @@ void RooDataHist::calculatePartialBinVolume(const RooArgSet& dimSet) const
     }
   }
 
+  // Calculate plot bins of components from master index
+  Bool_t* selDim = new Bool_t[_vars.getSize()] ;
+  _iterator->Reset() ;
+  RooAbsArg* v ;
+  Int_t i(0) ;
+  while(v=(RooAbsArg*)_iterator->Next()) {
+    selDim[i++] = dimSet.find(v->GetName()) ? kTRUE : kFALSE ;
+  }
+
   // Recalculate partial bin volume cache
   Int_t ibin ;
   for (ibin=0 ; ibin<_arrSize ; ibin++) {
-    iter->Reset() ;
+    _iterator->Reset() ;
     RooAbsLValue* arg ;
     Int_t i(0), idx(0), tmp(ibin) ;
     Double_t binVolume(1) ;
-    while(arg=dynamic_cast<RooAbsLValue*>(iter->Next())) {
+    while(arg=dynamic_cast<RooAbsLValue*>(_iterator->Next())) {
       idx  = tmp / _idxMult[i] ;
       tmp -= idx*_idxMult[i++] ;
-      RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(arg) ;
-      binVolume *= arglv->getFitBinWidth(idx) ;
+      if (selDim[i-1]) {
+	RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(arg) ;
+	binVolume *= arglv->getFitBinWidth(idx) ;
+      }
     }
     _pbinv[ibin] = binVolume ;
   }
-  delete iter ;
-  delete partDimSet ;
+
+  delete[] selDim ;
   
   // Update cache label
   _pbinvCache.refill(dimSet) ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooFitResult.cc,v 1.22 2003/09/10 03:58:06 wverkerke Exp $
+ *    File: $Id: RooFitResult.cc,v 1.23 2004/04/05 22:44:11 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -47,7 +47,7 @@ RooFitResult::RooFitResult(const char* name, const char* title) :
   TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _randomPars(0), _Lt(0)
 {  
   // Constructor
-  appendToDir(this) ;
+  appendToDir(this,kTRUE) ;
 }
 
 // added FMV, 08/13/03
