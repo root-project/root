@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.17 2000/09/29 07:39:48 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.18 2000/10/12 13:24:20 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1178,8 +1178,8 @@ void TGraph::PaintGraph(Int_t npoints, Double_t *x, Double_t *y, Option_t *chopt
 // _Input parameters:
 //
 //  npoints : Number of points in X or in Y.
-//  X(N) or X(2) : X coordinates or (XMIN,XMAX) (WC space).
-//  Y(N) or Y(2) : Y coordinates or (YMIN,YMAX) (WC space).
+//  x[npoints] or x[2] : X coordinates or (XMIN,XMAX) (WC space).
+//  y[npoints] or y[2] : Y coordinates or (YMIN,YMAX) (WC space).
 //  chopt : Option.
 //
 //  chopt='L' :  A simple polyline beetwen every points is drawn
