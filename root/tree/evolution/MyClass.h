@@ -6,8 +6,12 @@
 #include <vector>
 #include <list>
 
+// #define WITHCLASSDEF
+
 namespace std {} using namespace std;
 
+#ifndef TRACK
+#define TRACK
 class Track : public TObject {
    double fEnergy;
 public:
@@ -15,6 +19,7 @@ public:
    double GetEnergy() { return fEnergy; }
    ClassDef(Track,1);
 };
+#endif
 
 #if VERSION==1
 class TopLevel {
@@ -30,7 +35,9 @@ public:
    }
    const Track &GetTrack(int which) { return *(Track*)fTracks.At(which); }
 
+#ifdef WITHCLASSDEF
    ClassDef(TopLevel,VERSION);
+#endif
 };
 
 #elif VERSION==2
@@ -48,7 +55,9 @@ public:
    }
    const Track &GetTrack(int which) { return fTracks[which]; }
 
+#ifdef WITHCLASSDEF
    ClassDef(TopLevel,VERSION);
+#endif
 };
 
 #elif VERSION==3
@@ -70,12 +79,19 @@ public:
       return *iter; 
    }
 
+#ifdef WITHCLASSDEF
    ClassDef(TopLevel,VERSION);
+#endif
 };
 
 #endif
 
+#undef TopLevel
 #ifdef __MAKECINT__
+#ifdef WITHCLASSDEF
+#pragma link C++ class TopLevelCl+;
+#else
 #pragma link C++ class Track+;
 #pragma link C++ class TopLevel+;
+#endif
 #endif

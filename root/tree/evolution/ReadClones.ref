@@ -30,6 +30,30 @@ Warning in <TTreeFormula::DefinedVariable>: TClonesArray object was not retrieva
 *        0 *        1 *                                  77 *
 *************************************************************
 *************************************************************
+*    Row   * Instance *               TopCl.fTracks.fEnergy *
+*************************************************************
+*        0 *        0 *                                  11 *
+*        0 *        1 *                                  66 *
+*************************************************************
+*************************************************************
+*    Row   * Instance *        TopClSplit99.fTracks.fEnergy *
+*************************************************************
+*        0 *        0 *                                  11 *
+*        0 *        1 *                                  66 *
+*************************************************************
+*************************************************************
+*    Row   * Instance *            TopCl.fTracksPtr.fEnergy *
+*************************************************************
+*        0 *        0 *                                  11 *
+*        0 *        1 *                                  66 *
+*************************************************************
+*************************************************************
+*    Row   * Instance *     TopClSplit99.fTracksPtr.fEnergy *
+*************************************************************
+*        0 *        0 *                                  11 *
+*        0 *        1 *                                  66 *
+*************************************************************
+*************************************************************
 *    Row   * Instance *                     fTracks.fEnergy *
 *************************************************************
 *        0 *        0 *                                     *
@@ -43,18 +67,47 @@ Warning in <TTreeFormula::DefinedVariable>: TClonesArray object was not retrieva
 
 *ERROR 30 : 
  Bad numerical expression : "fTracksPtr.fEnergy"
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracks from type:list<Track> to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracksPtr from type:list<Track>* to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracks from type:list<Track> to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracksPtr from type:list<Track>* to type:TClonesArray, skip element
+Warning in <TTreeFormula::DefinedVariable>: TClonesArray object was not retrievable for TopCl.fTracksPtr.fEnergy!
+**************************************************
+*    Row   *                  fTracksPtr.fEnergy *
+**************************************************
+*        0 *                                     *
+**************************************************
+*************************************************************
+*    Row   * Instance *       TopSplit99.fTracksPtr.fEnergy *
+*************************************************************
+*        0 *        0 *                                     *
+*************************************************************
+*************************************************************
+*    Row   * Instance *               TopCl.fTracks.fEnergy *
+*************************************************************
+*        0 *        0 *                                     *
+*************************************************************
+*************************************************************
+*    Row   * Instance *        TopClSplit99.fTracks.fEnergy *
+*************************************************************
+*        0 *        0 *                                  11 *
+*        0 *        1 *                                  66 *
+*************************************************************
+
+*ERROR 30 : 
+ Bad numerical expression : "TopCl.fTracksPtr.fEnergy"
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracks from type:vector<Track> to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracksPtr from type:vector<Track>* to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracks from type:vector<Track> to type:TClonesArray, skip element
 Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevel::fTracksPtr from type:vector<Track>* to type:TClonesArray, skip element
 Warning in <TTreeFormula::DefinedVariable>: TClonesArray object was not retrievable for fTracksPtr.fEnergy!
 **************************************************
-*    Row   *                  fTracksPtr.fEnergy *
+*    Row   *            TopCl.fTracksPtr.fEnergy *
 **************************************************
 *        0 *                                     *
 **************************************************
 *************************************************************
-*    Row   * Instance *       TopSplit99.fTracksPtr.fEnergy *
+*    Row   * Instance *     TopClSplit99.fTracksPtr.fEnergy *
 *************************************************************
 *        0 *        0 *                                     *
 *************************************************************
@@ -72,6 +125,11 @@ Warning in <TTreeFormula::DefinedVariable>: TClonesArray object was not retrieva
 
 *ERROR 30 : 
  Bad numerical expression : "fTracksPtr.fEnergy"
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracks from type:vector<Track> to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracksPtr from type:vector<Track>* to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracks from type:vector<Track> to type:TClonesArray, skip element
+Warning in <TStreamerInfo::BuildOld>: Cannot convert TopLevelCl::fTracksPtr from type:vector<Track>* to type:TClonesArray, skip element
+Warning in <TTreeFormula::DefinedVariable>: TClonesArray object was not retrievable for TopCl.fTracksPtr.fEnergy!
 **************************************************
 *    Row   *                  fTracksPtr.fEnergy *
 **************************************************
@@ -79,6 +137,30 @@ Warning in <TTreeFormula::DefinedVariable>: TClonesArray object was not retrieva
 **************************************************
 *************************************************************
 *    Row   * Instance *       TopSplit99.fTracksPtr.fEnergy *
+*************************************************************
+*        0 *        0 *                                     *
+*************************************************************
+*************************************************************
+*    Row   * Instance *               TopCl.fTracks.fEnergy *
+*************************************************************
+*        0 *        0 *                                     *
+*************************************************************
+*************************************************************
+*    Row   * Instance *        TopClSplit99.fTracks.fEnergy *
+*************************************************************
+*        0 *        0 *                                  11 *
+*        0 *        1 *                                  66 *
+*************************************************************
+
+*ERROR 30 : 
+ Bad numerical expression : "TopCl.fTracksPtr.fEnergy"
+**************************************************
+*    Row   *            TopCl.fTracksPtr.fEnergy *
+**************************************************
+*        0 *                                     *
+**************************************************
+*************************************************************
+*    Row   * Instance *     TopClSplit99.fTracksPtr.fEnergy *
 *************************************************************
 *        0 *        0 *                                     *
 *************************************************************

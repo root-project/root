@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -77,7 +77,7 @@ vectorfile.root: $(ROOTCORELIBS) MyClassVector_cxx.$(DllSuf) WriteVector.C
 listfile.root: $(ROOTCORELIBS) MyClassList_cxx.$(DllSuf) WriteList.C
 	$(CMDECHO) root.exe -q -b -l WriteList.C > WriteList.log
 	
-ReadClones.log: $(ROOTCORELIBS) MyClassClones_cxx.$(DllSuf) ReadClones.C clonesfile.root
+ReadClones.log: $(ROOTCORELIBS) MyClassClones_cxx.$(DllSuf) ReadClones.C clonesfile.root  vectorfile.root listfile.root
 	$(CMDECHO) root.exe -q -b -l ReadClones.C > ReadClones.log 2>&1
 	
 ReadVector.log:  $(ROOTCORELIBS) MyClassVector_cxx.$(DllSuf) ReadVector.C clonesfile.root vectorfile.root listfile.root

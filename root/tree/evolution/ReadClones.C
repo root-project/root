@@ -8,6 +8,10 @@
    t->Scan("TopSplit99.fTracks.fEnergy","","colsize=35");
    t->Scan("fTracksPtr.fEnergy","","colsize=35");
    t->Scan("TopSplit99.fTracksPtr.fEnergy","","colsize=35");
+   t->Scan("TopCl.fTracks.fEnergy","","colsize=35");
+   t->Scan("TopClSplit99.fTracks.fEnergy","","colsize=35");
+   t->Scan("TopCl.fTracksPtr.fEnergy","","colsize=35");
+   t->Scan("TopClSplit99.fTracksPtr.fEnergy","","colsize=35");
    f->Close();
    delete f;
 
@@ -19,6 +23,10 @@
    t->Scan("TopSplit99.fTracks.fEnergy","","colsize=35");
    t->Scan("fTracksPtr.fEnergy","","colsize=35");
    t->Scan("TopSplit99.fTracksPtr.fEnergy","","colsize=35");
+   t->Scan("TopCl.fTracks.fEnergy","","colsize=35");
+   t->Scan("TopClSplit99.fTracks.fEnergy","","colsize=35");
+   t->Scan("TopCl.fTracksPtr.fEnergy","","colsize=35");
+   t->Scan("TopClSplit99.fTracksPtr.fEnergy","","colsize=35");
    f->Close();
    delete f;
 
@@ -30,6 +38,10 @@
    t->Scan("TopSplit99.fTracks.fEnergy","","colsize=35");
    t->Scan("fTracksPtr.fEnergy","","colsize=35");
    t->Scan("TopSplit99.fTracksPtr.fEnergy","","colsize=35");
+   t->Scan("TopCl.fTracks.fEnergy","","colsize=35");
+   t->Scan("TopClSplit99.fTracks.fEnergy","","colsize=35");
+   t->Scan("TopCl.fTracksPtr.fEnergy","","colsize=35");
+   t->Scan("TopClSplit99.fTracksPtr.fEnergy","","colsize=35");
    f->Close();
    delete f;
 
