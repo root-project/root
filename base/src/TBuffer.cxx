@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.23 2002/02/03 16:13:27 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.24 2002/02/25 12:36:52 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -146,12 +146,13 @@ TBuffer::~TBuffer()
 }
 
 //______________________________________________________________________________
-void frombufOld(char *&buf, Long_t *x)
+static void frombufOld(char *&buf, Long_t *x)
 {
-// files written with versions older than 3.00/06 had a non-portable
-// implementation of Long_t/ULong_t. These types should not have been used at all.
-// However, because some users had already written many files with these types
-// we provide this dirty patch for "backward compatibility"
+   // Files written with versions older than 3.00/06 had a non-portable
+   // implementation of Long_t/ULong_t. These types should not have been
+   // used at all. However, because some users had already written many
+   // files with these types we provide this dirty patch for "backward
+   // compatibility"
 
 #ifdef R__BYTESWAP
 #ifdef R__B64
