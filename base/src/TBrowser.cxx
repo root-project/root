@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.3 2001/01/15 18:06:38 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.cxx,v 1.4 2001/03/08 20:16:28 rdm Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -123,14 +123,15 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title, Int_t x, I
    fImp = gGuiFactory->CreateBrowserImp(this, title, x, y, width, height);
    Create(obj);
 }
+
 //______________________________________________________________________________
 TBrowser::~TBrowser()
 {
    // Delete the browser.
 
    gROOT->GetListOfBrowsers()->Remove(this);
-   if (fContextMenu) { delete fContextMenu; fContextMenu = 0; }
-   if (fTimer) delete fTimer;
+   delete fContextMenu;
+   delete fTimer;
    delete fImp;
 }
 
@@ -154,7 +155,7 @@ void TBrowser::Create(TObject *obj)
    fNeedRefresh = kFALSE;
 
    fTimer = new TBrowserTimer(this);
-   if (fTimer) gSystem->AddTimer(fTimer);
+   gSystem->AddTimer(fTimer);
 
    gROOT->GetListOfBrowsers()->Add(this);
 
@@ -192,14 +193,6 @@ void TBrowser::ExecuteDefaultAction(TObject *obj)
       fImp->ExecuteDefaultAction(obj);
 }
 
-
-//______________________________________________________________________________
-TObject *TBrowser::GetSelected()
-{
- // return the last selected object
- return fLastSelectedObject;
-}
-
 //______________________________________________________________________________
 void TBrowser::RecursiveRemove(TObject *obj)
 {
@@ -224,7 +217,7 @@ void TBrowser::Refresh()
 //______________________________________________________________________________
 void TBrowser::SetSelected(TObject *clickedObject)
 {
-   // Assign the last selected object
+   // Assign the last selected object.
 
    fLastSelectedObject = clickedObject;
 }

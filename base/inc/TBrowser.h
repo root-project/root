@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBrowser.h,v 1.2 2000/11/21 16:05:13 brun Exp $
 // Author: Fons Rademakers   25/10/95
 
 /*************************************************************************
@@ -41,13 +41,13 @@ class TBrowserTimer;
 class TBrowser : public TNamed {
 
 private:
-   TBrowserImp   *fImp;                //!Window system specific browser implementation
-   TBrowserTimer *fTimer;              //Browser's timer
    TObject       *fLastSelectedObject; //The last TObject selected by user
 
 protected:
-   TContextMenu  *fContextMenu;    //Context menu pointer
-   Bool_t         fNeedRefresh;    //True if the browser needs refresh
+   TBrowserImp   *fImp;                //!Window system specific browser implementation
+   TBrowserTimer *fTimer;              //Browser's timer
+   TContextMenu  *fContextMenu;        //Context menu pointer
+   Bool_t         fNeedRefresh;        //True if the browser needs refresh
 
 public:
    TBrowser(const char *name="Browser", const char *title="ROOT Object Browser");
@@ -62,9 +62,9 @@ public:
    void          Create(TObject *obj = 0);      // Create this Browser
    void          ExecuteDefaultAction(TObject *obj);
    TBrowserImp  *GetBrowserImp() const         { return fImp; }
-   TContextMenu *GetContextMenu()              { return fContextMenu;}
-   Bool_t        GetRefreshFlag()              { return fNeedRefresh; }
-   TObject      *GetSelected();
+   TContextMenu *GetContextMenu() const        { return fContextMenu; }
+   Bool_t        GetRefreshFlag() const        { return fNeedRefresh; }
+   TObject      *GetSelected() const           { return fLastSelectedObject; }
    void          SetRefreshFlag(Bool_t flag)   { fNeedRefresh = flag; }
    void          Iconify()                     { fImp->Iconify(); }
    virtual void  RecursiveRemove(TObject *obj);
