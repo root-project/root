@@ -3490,9 +3490,9 @@ int recursive;
 #endif
 #ifdef G__OLDIMPLEMENTATION1219
 	case 'Q': /* questionable */
-#endif
 	  funclist->p_rate[i] = G__STDCONVMATCH;
 	  break;
+#endif
 	default:
 	  break;
 	}
@@ -4507,14 +4507,14 @@ int recursive;
   struct G__param fpara;
   struct G__ifunc_table *p_ifunc = &G__ifunc;
 
-  // set 1st argument as the object
+  /* set 1st argument as the object */
   fpara.para[0].type='u';
   fpara.para[0].tagnum=tagnum;
   fpara.para[0].typenum = -1;
   fpara.para[0].obj.i = G__store_struct_offset;;
   fpara.para[0].ref = G__store_struct_offset;;
 
-  // set 2nd to n arguments
+  /* set 2nd to n arguments */
   fpara.paran = libp->paran+1;
   for(i=0;i<libp->paran;i++) fpara.para[i+1] = libp->para[i];
 
