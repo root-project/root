@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.19 2003/04/04 17:06:07 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.20 2003/07/08 15:42:25 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -92,7 +92,6 @@ private:
    void     CopyPixmaps();
    void     DrawEventStatus(Int_t event, Int_t x, Int_t y, TObject *selected);
    void     RunAutoExec();
-   void     DisconnectWidget();  // used by TCanvasImp
 
 protected:
    virtual void ExecuteEvent(Int_t event, Int_t px, Int_t py);
@@ -120,6 +119,7 @@ public:
    void              Clear(Option_t *option="");
    void              Close(Option_t *option="");
    virtual void      Delete(Option_t * = "") { MayNotUse("Delete()"); }
+   void              DisconnectWidget();  // used by TCanvasImp
    virtual void      Draw(Option_t *option="");
    virtual TObject  *DrawClone(Option_t *option="") const; // *MENU*
    virtual TObject  *DrawClonePad(); // *MENU*
