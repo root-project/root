@@ -142,6 +142,10 @@ N: Valery Fine
 E: fine@bnl.gov
 D: Win95/NT port, OpenGL interface
 
+N: Markus Frank
+E: Markus.Frank@cern.ch
+D: STL I/O and TBranchElement splitting
+
 N: Keisuke Fujii
 E: fujiik@jlcuxf.kek.jp
 D: port to MacOS X
