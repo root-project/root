@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.22 2003/12/13 09:25:56 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorDraw.cxx,v 1.23 2003/12/24 09:45:15 brun Exp $
 // Author: Rene Brun   08/01/2003
 
 /*************************************************************************
@@ -37,6 +37,8 @@
 #include "TStyle.h"
 
 ClassImp(TSelectorDraw)
+
+const Int_t kCustomHistogram = BIT(17);
 
 //______________________________________________________________________________
 TSelectorDraw::TSelectorDraw()
@@ -96,6 +98,7 @@ void TSelectorDraw::Begin(TTree *tree)
    // Called everytime a loop on the tree(s) starts.
 
    SetStatus(0);
+   ResetBit(kCustomHistogram);
    fSelectedRows   = 0;
    fTree = tree;
 
@@ -176,7 +179,8 @@ void TSelectorDraw::Begin(TTree *tree)
          strncpy(varexp,varexp0,i); varexp[i]=0;
 
 	 Int_t mustdelete=0;
-
+         SetBit(kCustomHistogram);
+         
 	 // parse things that follow the name of the histo between '(' and ')'.
 	 // At this point hname contains the name of the specified histogram.
 	 //   Now the syntax is exended to handle an hname of the following format
@@ -1324,7 +1328,7 @@ void TSelectorDraw::Terminate()
 
    if (fNfill) TakeAction();
 
-   if (fSelectedRows == 0) fDraw = 1; // do not draw
+   if ((fSelectedRows == 0) && (TestBit(kCustomHistogram) == 0)) fDraw = 1; // do not draw
 
    SetStatus(fSelectedRows);
 }
