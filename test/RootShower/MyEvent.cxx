@@ -188,7 +188,7 @@ Int_t MyEvent::dE_dX(Int_t id)
     if(GetParticle(id)->Energy() <= GetParticle(id)->GetMass()) return(DEAD);
     else {
         // absolute value of momentum
-        abs_p = GetParticle(id)->GetvMoment().Mag();
+        abs_p = GetParticle(id)->P();
         if(abs_p <= 0) {
             // if absolute value of momentum is less or equal to zero,
             // set it to the particle's mass (minimum allowed value for momentum)
@@ -199,12 +199,12 @@ Int_t MyEvent::dE_dX(Int_t id)
             // cf Bethe Bloch formula
             TVector3 p_0(GetParticle(id)->GetvMoment() * (1 / abs_p));
             abs_beta = abs_p / GetParticle(id)->Energy();
-            dX = fDetector.GetdT() * C * abs_beta;
+            dX = fDetector.GetdT() * CSpeed * abs_beta;
             abs_beta *= abs_beta;
-            if(abs_beta < .9999999999) gamma = 1/sqrt(1-abs_beta);
+            if(abs_beta < .9999999999) gamma = 1/TMath::Sqrt(1.0-abs_beta);
             else gamma = MAX_GAMMA;
             abs_loss = (fDetector.GetPreconst() * dX / abs_beta) *
-                       (log(2 * GetParticle(id)->GetMass() * gamma * gamma * abs_beta /
+                       (TMath::Log(2.0 * GetParticle(id)->GetMass() * gamma * gamma * abs_beta /
                         fDetector.GetI()) - abs_beta);
             if(abs_loss < 0) abs_loss = -abs_loss;
             if(abs_loss >= (GetParticle(id)->Energy() - GetParticle(id)->GetMass())) {
@@ -217,7 +217,7 @@ Int_t MyEvent::dE_dX(Int_t id)
                 // else decrease its energy by calculated energy loss
                 GetParticle(id)->SetMoment(GetParticle(id)->GetvMoment(),
                     GetParticle(id)->Energy() - abs_loss);
-                abs_p = sqrt((GetParticle(id)->Energy() * GetParticle(id)->Energy()) -
+                abs_p = TMath::Sqrt((GetParticle(id)->Energy() * GetParticle(id)->Energy()) -
                              (GetParticle(id)->GetMass() * GetParticle(id)->GetMass()));
                 GetParticle(id)->SetMoment(p_0 * abs_p);
                 // Add calculated energy loss at total particle's energy loss
@@ -242,7 +242,7 @@ Int_t MyEvent::Bremsstrahlung(Int_t id)
     if((FindFreeId(&d_num1) != DEAD) && (FindFreeId(&d_num2) != DEAD)) {
         // compute the particle's energy ratio...
         ratio = (GetParticle(id)->Energy() - GetParticle(id)->GetMass()) /
-                (2 * GetParticle(id)->GetvMoment().Mag());
+                (2 * GetParticle(id)->P());
         // create first child if fact, electron continues with less energy 
         // and in a different direction. To that end the electron is added 
         // to its own list of children, because otherwise it would vanish.
@@ -300,8 +300,8 @@ Int_t MyEvent::Pair_production(Int_t id)
     // find two ids for children particles
     if((FindFreeId(&d_num1) != DEAD) && (FindFreeId(&d_num2) != DEAD)) {
         // compute energy ratio for particles creation
-        ratio = sqrt((GetParticle(id)->Energy() * GetParticle(id)->Energy())/4.0)
-                          / GetParticle(id)->GetvMoment().Mag();
+        ratio = TMath::Sqrt((GetParticle(id)->Energy() * GetParticle(id)->Energy())/4.0)
+                          / GetParticle(id)->P();
         // create first child
         part = AddParticle(d_num1, POSITRON, GetParticle(id)->GetvLocation(),
                     GetParticle(id)->GetvMoment() * ratio);
@@ -354,7 +354,7 @@ Int_t MyEvent::Action(Int_t id)
         Define_decay(id);
     if(GetParticle(id)->GetPdgCode() == PHOTON){
         // compute the step delta x to be covered by the particle
-        TVector3 delta_x(GetParticle(id)->GetvMoment() * (C * fDetector.GetdT() / GetParticle(id)->Energy()));
+        TVector3 delta_x(GetParticle(id)->GetvMoment() * (CSpeed * fDetector.GetdT() / GetParticle(id)->Energy()));
         // check if moved too far (out of detector's bouds) 
         if(Move(id, delta_x) == DEAD)
             // set its status as dead 
@@ -390,7 +390,7 @@ Int_t MyEvent::Action(Int_t id)
             ScatterAngle(id);
         if((fB != 0) && (GetParticle(id)->GetPDG()->Charge() != 0)) Magnetic_field(id);
         // compute the step delta x to be covered by the particle
-        TVector3 delta_x(GetParticle(id)->GetvMoment() * (C * fDetector.GetdT() / GetParticle(id)->Energy()));
+        TVector3 delta_x(GetParticle(id)->GetvMoment() * (CSpeed * fDetector.GetdT() / GetParticle(id)->Energy()));
         // check if moved too far (out of detector's bouds) 
         if(Move(id, delta_x) == DEAD) {
             // set its status as dead 
@@ -431,12 +431,12 @@ Int_t MyEvent::Action(Int_t id)
                             else {
                                 fAliveParticles += 2;
                                 DeleteParticle(id);
-    		                }
+                            }
                             break;
                     }
                 }
             }
-	    }
+        }
     }
     return(ALIVE);
 }
@@ -444,21 +444,34 @@ Int_t MyEvent::Action(Int_t id)
 //______________________________________________________________________________
 void MyEvent::Magnetic_field(Int_t id)
 {
-    // apply magnetic field ...
-    Double_t abs_p;
-
-    TVector3 e_B(1.0, 0.0, 0.0);
-
-    TVector3 beta(GetParticle(id)->GetvMoment() * (1.0e-03 / GetParticle(id)->Energy()));
-    TVector3 tmp_p(beta.Cross(e_B));
-    TVector3 delta_p(tmp_p * (fB * C * fDetector.GetdT()));
-    abs_p = GetParticle(id)->GetvMoment().Mag();
-    if(GetParticle(id)->GetPDG()->Charge() < 0)
-        GetParticle(id)->SetMoment(GetParticle(id)->GetvMoment() - delta_p);
-    else if(GetParticle(id)->GetPDG()->Charge() > 0)
-        GetParticle(id)->SetMoment(GetParticle(id)->GetvMoment() + delta_p);
-    Double_t module = GetParticle(id)->GetvMoment().Mag();
-    GetParticle(id)->SetMoment(GetParticle(id)->GetvMoment() * (abs_p / module));
+    // extrapolate track in a constant field oriented along X axis
+    // translated to C++ from GEANT3 routine GHELX3
+    Double_t sint, sintt, tsint, cos1t, sin2;
+    Double_t f1, f2, f3, v1, v2, v3;
+    Double_t pol = GetParticle(id)->GetPDG()->Charge() > 0.0 ? 1.0 : -1.0;
+    Double_t h4  = pol * 2.9979251e-04 * fB;
+    Double_t hp  = GetParticle(id)->Pz();
+    Double_t tet = -h4 * CSpeed * fDetector.GetdT() / GetParticle(id)->P();
+    if (TMath::Abs(tet) > 0.15) {
+        sint  = TMath::Sin(tet);
+        sintt = sint / tet;
+        tsint = (tet - sint) / tet;
+        sin2  = TMath::Sin(0.5 * tet);
+        cos1t = 2.0 * sin2 * sin2 / tet;
+    } else {
+        tsint = tet * tet / 6.0;
+        sintt = 1.0 - tsint;
+        sint  = tet * sintt;
+        cos1t = 0.5 * tet;
+    }
+    f1 = -tet * cos1t;
+    f2 = sint;
+    f3 = tet * cos1t * hp;
+    v1 = GetParticle(id)->Px() + (f1 * GetParticle(id)->Px() + f3);
+    v2 = GetParticle(id)->Py() + (f1 * GetParticle(id)->Py() + f2 * GetParticle(id)->Pz());
+    v3 = GetParticle(id)->Pz() + (f1 * GetParticle(id)->Pz() - f2 * GetParticle(id)->Py());
+    TVector3 new_mom(v1, v2, v3); 
+    GetParticle(id)->SetMoment(new_mom);
 }
 
 //______________________________________________________________________________
@@ -535,7 +548,7 @@ Double_t MyEvent::Pair_prob(Int_t id)
 
     if(GetParticle(id)->Energy() > 2.0 * m_e) {
         p = gRandom->Uniform(0.,1.0);
-        return ((-9.)*fDetector.GetX0()*log(p)/7.);
+        return ((-9.)*fDetector.GetX0()*TMath::Log(p)/7.);
     }
     return (-1.);
 }
@@ -550,7 +563,7 @@ Double_t MyEvent::Brems_prob(Int_t id)
 
     if(GetParticle(id)->Energy() > GetParticle(id)->GetMass()) {
         p = gRandom->Uniform(0.,1.0);
-        retval = (-fDetector.GetX0())*log(p);
+        retval = (-fDetector.GetX0())*TMath::Log(p);
         return (retval);
     }
     else return (-1.);
@@ -602,59 +615,39 @@ Int_t MyEvent::Particle_color(Int_t id)
 }
 
 //______________________________________________________________________________
-TVector3 MyEvent::FindOrtho(const TVector3 &vec)
-{
-    Double_t abs_b;
-    // Find what is the orthogonal direction of vector vec 
-    // (used by scatter angle calculation)
-    if(vec.Mag() == 0) return(vec);
-    else {
-        TVector3 n_0(1.0, 0.0, 0.0);
-        TVector3 u_0(0.0, 1.0, 0.0);
-        TVector3 b(vec.Cross(n_0));
-        if((abs_b = b.Mag()) == 0) {
-            TVector3 b(vec.Cross(u_0)); 
-            abs_b = b.Mag();
-        }
-        if(abs_b > 1) b = b * (1.0/abs_b);
-        return(b);
-    }
-}
-
-//______________________________________________________________________________
 void MyEvent::ScatterAngle(Int_t id)
 {
     // compute scatter angle into the detector's material
     // for the current particle
     // for more infos, please refer to the particle data booklet
-    // from which the formulas has been extracted - chapter 23.3
-    // Multiple scattering through small angles formula 23.9
+    // from which the formulas has been extracted : 
+    // Multiple scattering through small angles
     Double_t alpha,beta;
     Double_t abs_p,p1,p2,r_2;
     Double_t fact1,fact2;
 
     do {
-        p1 = gRandom->Uniform(-1.,1.);
-        p2 = gRandom->Uniform(-1.,1.);
+        p1 = gRandom->Uniform(-1.0, 1.0);
+        p2 = gRandom->Uniform(-1.0, 1.0);
         r_2 = (p1 * p1) + (p2 * p2);
-    } while(r_2 > 1.);
-    abs_p = GetParticle(id)->GetvMoment().Mag();
-    alpha = sqrt((-2.)*log(r_2)/r_2) * fDetector.GetTheta0() / abs_p;
-    beta  = gRandom->Uniform(0.,2.* TMath::Pi());
+    } while(r_2 > 1.0);
+    abs_p = GetParticle(id)->P();
+    alpha = TMath::Sqrt(-2.0 * TMath::Log(r_2) / r_2) * fDetector.GetTheta0() / abs_p;
+    beta  = gRandom->Uniform(0.0, 2.0 * TMath::Pi());
     alpha *= p1;
-    TVector3 x_0(FindOrtho(GetParticle(id)->GetvMoment()));
-    TVector3 p_0(GetParticle(id)->GetvMoment() * (1./abs_p));
+    TVector3 x_0(GetParticle(id)->GetvMoment().Orthogonal());
+    TVector3 p_0(GetParticle(id)->GetvMoment() * (1.0 / abs_p));
     TVector3 y_0(x_0.Cross(p_0));
-    fact1 = sin(alpha);
-    fact2 = fact1*cos(beta);
-    fact1 *= sin(beta);
+    fact1 = TMath::Sin(alpha);
+    fact2 = fact1 * TMath::Cos(beta);
+    fact1 *= TMath::Sin(beta);
     TVector3 vtmp1(x_0 * fact1);
     TVector3 vtmp2(y_0 * fact2);
     TVector3 vtmp3(vtmp2 + p_0);
 
     GetParticle(id)->SetMoment(vtmp1 + vtmp3);
     GetParticle(id)->SetMoment(GetParticle(id)->GetvMoment() *
-        (abs_p/ GetParticle(id)->GetvMoment().Mag()));
+        (abs_p/ GetParticle(id)->P()));
 }
 
 //______________________________________________________________________________
@@ -667,7 +660,7 @@ Int_t MyEvent::CheckDecayTime(Int_t id)
     Double_t timeofdecay = GetParticle(id)->GetTimeOfDecay();
     if(timeofdecay == 0.0)  return 0;
 //    if(timeofdecay == 0.0)  timeofdecay = gRandom->Uniform(1.0e-9, 1.0e-6);
-    Double_t distToDecay = timeofdecay * 0.996 * C;
+    Double_t distToDecay = timeofdecay * 0.996 * CSpeed;
     // check if actual particle life is greater than particle life time
     if (GetParticle(id)->GetPassed() >= distToDecay) {
         return 1;
@@ -721,8 +714,8 @@ Int_t MyEvent::Decay(Int_t id)
     }
 
     // compute energy ratio
-    ratio = sqrt(((GetParticle(id)->Energy() * GetParticle(id)->Energy())/(2*(n_daughters+1)))
-        - (total_mass * total_mass)) / GetParticle(id)->GetvMoment().Mag();
+    ratio = TMath::Sqrt(((GetParticle(id)->Energy() * GetParticle(id)->Energy())/(2*(n_daughters+1)))
+        - (total_mass * total_mass)) / GetParticle(id)->P();
 
     for(i=0;i<n_daughters;i++) {
 

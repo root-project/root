@@ -122,7 +122,6 @@ public :
     Double_t        Brems_prob(Int_t);
     void            Define_decay(Int_t);
     Int_t           FindFreeId(Int_t *);
-    TVector3        FindOrtho(const TVector3 &);
     void            ScatterAngle(Int_t);
     Int_t           Particle_color(Int_t);
     Int_t           CheckDecayTime(Int_t id);

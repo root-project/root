@@ -169,11 +169,11 @@ void MyDetector::ChangeMaterial(Int_t mat)
     fX0 = fMaterial->GetRadLength();
 
     // Time step dT in ms about 0.015 times X_0/c
-    fdT = 0.015 * (fX0 / C);
+    fdT = 0.015 * (fX0 / CSpeed);
 
     // Scatter angle 
-    x = fdT * C;
-    fTheta0 = TMath::Sqrt(2.0) *13.6 * TMath::Sqrt(x / fX0) *(1 + 0.038 * TMath::Log(x / fX0));
+    x = fdT * CSpeed;
+    fTheta0 = TMath::Sqrt(2.0) * 13.6 * TMath::Sqrt(x / fX0) * (1.0 + 0.038 * TMath::Log(x / fX0));
     fTheta0 *= 1.0e-03; 
 
 }

@@ -98,7 +98,7 @@ MyParticle::MyParticle(Int_t id, Int_t pType,Int_t pStat,Int_t pDecayType,const 
     if(GetMass() == 0.0)
         energy = pMomentum.Mag();
     else
-        energy = sqrt((pMomentum * pMomentum)
+        energy = TMath::Sqrt((pMomentum * pMomentum)
                  +  (GetMass() * GetMass()));
     TParticle::SetMomentum(pMomentum.x(),pMomentum.y(),pMomentum.z(),energy);
     ftimeOfDecay = 0.0;
@@ -119,7 +119,7 @@ void MyParticle::SetMoment(const TVector3 &mom)
     if(GetMass() == 0.0)
         energy = mom.Mag();
     else
-        energy = sqrt((mom * mom) +  (GetMass() * GetMass()));
+        energy = TMath::Sqrt((mom * mom) +  (GetMass() * GetMass()));
     SetMomentum(mom.x(), mom.y(), mom.z(), energy);
 }
 

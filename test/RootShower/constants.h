@@ -13,7 +13,7 @@
 
 #define MAX_PARTICLE  100000
 #define m_e           5.100e-04
-#define C             29979245.8      // in cm/ms
+#define CSpeed        29979245.8      // in cm/ms
 #define Prop_B        5.26e-03        // in GeV/c pro 17.4 kGauss
 #define MAX_GAMMA     1000000000000.
 

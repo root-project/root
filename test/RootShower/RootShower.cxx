@@ -157,8 +157,8 @@ enum EGeometrySettingsDialogMessageTypes {
 // RootShower
 //
 
-Int_t RootShower::fgDefaultXPosition = 1;
-Int_t RootShower::fgDefaultYPosition = 1;
+Int_t RootShower::fgDefaultXPosition = 20;
+Int_t RootShower::fgDefaultYPosition = 20;
 
 
 //______________________________________________________________________________
@@ -182,12 +182,12 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fRootShowerEnv = new TEnv(".rootshowerrc");
 
     fFirstParticle = fRootShowerEnv->GetValue("RootShower.fFirstParticle", PHOTON);
-    fE0            = fRootShowerEnv->GetValue("RootShower.fE0", 25.0);
-    fB             = fRootShowerEnv->GetValue("RootShower.fB", 5.26);
+    fE0            = fRootShowerEnv->GetValue("RootShower.fE0", 10.0);
+    fB             = fRootShowerEnv->GetValue("RootShower.fB", 20.000);
     fMaterial      = fRootShowerEnv->GetValue("RootShower.fMaterial", Polystyrene);
-    fDimX          = fRootShowerEnv->GetValue("RootShower.fDimX", 150.0);
-    fDimY          = fRootShowerEnv->GetValue("RootShower.fDimY", 150.0);
-    fDimZ          = fRootShowerEnv->GetValue("RootShower.fDimZ", 150.0);
+    fDimX          = fRootShowerEnv->GetValue("RootShower.fDimX", 100.0);
+    fDimY          = fRootShowerEnv->GetValue("RootShower.fDimY", 200.0);
+    fDimZ          = fRootShowerEnv->GetValue("RootShower.fDimZ", 100.0);
     fPicNumber     = fRootShowerEnv->GetValue("RootShower.fPicNumber", 24);
     fPicDelay      = fRootShowerEnv->GetValue("RootShower.fPicDelay", 100);
     fPicReset      = fRootShowerEnv->GetValue("RootShower.fPicReset", 1);
@@ -259,7 +259,7 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fTreeView = new TGCanvas(fSelectionFrame, 150, 10, kSunkenFrame | kDoubleBorder);
     fEventListTree = new TGListTree(fTreeView->GetViewPort(), 10, 10, kHorizontalFrame);
     gEventListTree = fEventListTree;
-	fEventListTree->SetCanvas(fTreeView);
+    fEventListTree->SetCanvas(fTreeView);
     fEventListTree->Associate(this);
     BuildEventTree();
     fTreeView->SetContainer(fEventListTree);
@@ -383,8 +383,8 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     SetIconName("Root Shower Event Display");
     MapSubwindows();
     Resize(GetDefaultSize()); // this is used here to init layout algoritme
-    MapWindow();
     this->Move(fgDefaultXPosition, fgDefaultYPosition);
+    MapWindow();
     fEvent = new MyEvent();
     fEvent->Init(0, fFirstParticle, fE0, fB, fMaterial, fDimX, fDimY, fDimZ);
     Initialize(0);
@@ -401,7 +401,7 @@ void RootShower::MakeMenuBarFrame()
 
     // layout hint items
     fMenuBarLayout = new TGLayoutHints(kLHintsTop| kLHintsLeft | kLHintsExpandX,
-				     0, 0, 0, 0);
+                     0, 0, 0, 0);
     fMenuBarItemLayout = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0);
     fMenuBarHelpLayout = new TGLayoutHints(kLHintsTop | kLHintsRight);
 
@@ -617,56 +617,56 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                             fDisplayFrame->SetTab(0);
                         Initialize(0);
                         fStatusBar->SetText("Simulation running, please wait...",0);
-	                    fButtonFrame->SetState(GButtonFrame::kNoneActive);
+                        fButtonFrame->SetState(GButtonFrame::kNoneActive);
                         fMenuTest->DisableEntry(M_SETTINGS_DLG);
                         OnShowerProduce();
                         fClient->NeedRedraw(fEventListTree);
-	                    fButtonFrame->SetState(GButtonFrame::kAllActive);
+                        fButtonFrame->SetState(GButtonFrame::kAllActive);
                         fMenuTest->EnableEntry(M_SETTINGS_DLG);
                         sprintf(strtmp,"Done - Total particles : %d - Waiting for next simulation",
                             fEvent->GetTotal());
                         fStatusBar->SetText(strtmp,0);
-	                    break;
+                        break;
                     case M_EVENT_SELECT:
                         {
                             if(fDisplayFrame->GetCurrent() != 1)
                                 fDisplayFrame->SetTab(1);
                             TGListTreeItem *item;
-	                        if ((item = fEventListTree->GetSelected()) != 0)
+                            if ((item = fEventListTree->GetSelected()) != 0)
                             OnShowSelected(item);
                         }
-	                    break;
+                        break;
                     case M_INTERRUPT_SIMUL:
                             Interrupt();
-	                    break;
+                        break;
 
                     case M_ZOOM_PLUS:
                             cA->cd();
                             cA->GetView()->ZoomView(0, 1.25);
                             cA->Modified();
                             cA->Update();
-	                    break;
+                        break;
 
                     case M_ZOOM_MOINS:
                             cA->cd();
                             cA->GetView()->UnzoomView(0, 1.25);
                             cA->Modified();
                             cA->Update();
-	                    break;
+                        break;
 
                     case M_ZOOM_PLUS2:
                             cB->cd();
                             cB->GetView()->ZoomView(0, 1.25);
                             cB->Modified();
                             cB->Update();
-	                    break;
+                        break;
 
                     case M_ZOOM_MOINS2:
                             cB->cd();
                             cB->GetView()->UnzoomView(0, 1.25);
                             cB->Modified();
                             cB->Update();
-	                    break;
+                        break;
 
                     case M_FILE_OPEN:
                         if(fIsRunning) break;
@@ -834,12 +834,12 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                             if(fDisplayFrame->GetCurrent() != 1)
                                 fDisplayFrame->SetTab(1);
                             TGListTreeItem *item;
-	                        if ((item = fEventListTree->GetSelected()) != 0)
+                            if ((item = fEventListTree->GetSelected()) != 0)
                             OnShowSelected(item);
                         }
                         break;
 
-	
+
                 } // switch parm1
                 break; // M_MENU
 
@@ -849,19 +849,19 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
         case kC_LISTTREE:
 
             switch (GET_SUBMSG(msg)) {
-     
+
                 case kCT_ITEMDBLCLICK:
                     if (parm1 == kButton1) {
-	                    if (fEventListTree->GetSelected()) {
-	                        fClient->NeedRedraw(fEventListTree);
-	                    }
+                        if (fEventListTree->GetSelected()) {
+                            fClient->NeedRedraw(fEventListTree);
+                        }
                     }
                     break;
 
-            } // switch submsg      
+            } // switch submsg
             break; // case kC_LISTTREE
     } // switch msg
-  
+
   return kTRUE;
 }
 
@@ -1053,7 +1053,7 @@ void RootShower::OnShowerProduce()
           delete f1;
        }
     }
-    fHisto_dEdX->Draw();    
+    fHisto_dEdX->Draw();
     padC->Modified();
     padC->Update();
     cC->Update();
@@ -1200,7 +1200,7 @@ void RootShower::OnOpenFile(const Char_t *filename)
           delete f1;
        }
     }
-    fHisto_dEdX->Draw();    
+    fHisto_dEdX->Draw();
     padC->Modified();
     padC->Update();
     cC->Update();
@@ -1257,7 +1257,7 @@ void RootShower::ShowInfos()
     sprintf(Msg, "%s  Y .................... : %1.2e [cm]    \n", Msg, dimy);
     sprintf(Msg, "%s  Z .................... : %1.2e [cm]    \n", Msg, dimz);
     sprintf(Msg, "%s  Magnetic field ....... : %1.2e [kGauss]\n", Msg,
-            fEvent->GetB()*17.4/Prop_B);
+            fEvent->GetB());
     sprintf(Msg, "%s  Initial particle ..... : %s \n", Msg,
             fEvent->GetParticle(0)->GetName());
     sprintf(Msg, "%s  Initial energy ....... : %1.2e [GeV] \n", Msg,

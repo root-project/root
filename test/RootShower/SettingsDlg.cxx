@@ -232,7 +232,7 @@ SettingsDialog::SettingsDialog(const TGWindow *p, const TGWindow *main, UInt_t w
     fTxt5->Resize(65, fTxt5->GetDefaultHeight());
     sprintf(tmp,"%1.4f",gRootShower->fE0);
     fTxt4->SetText(tmp);
-    sprintf(tmp,"%1.4f",gRootShower->fB*3.308);
+    sprintf(tmp,"%1.4f",gRootShower->fB);
     fTxt5->SetText(tmp);
     
     TGLayoutHints *fL5 = new TGLayoutHints(kLHintsBottom | kLHintsExpandX |
@@ -352,7 +352,6 @@ Bool_t SettingsDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      gRootShower->fE0 = atof(buf_tmp);
                      buf_tmp = fTxt5->GetBuffer()->GetString();
                      gRootShower->fB = atof(buf_tmp);
-                     gRootShower->fB /= 3.308;
                      if(fRad1->GetState() != kButtonUp) gRootShower->fMaterial = Polystyrene;
                      if(fRad2->GetState() != kButtonUp) gRootShower->fMaterial = BGO;
                      if(fRad3->GetState() != kButtonUp) gRootShower->fMaterial = CsI;
