@@ -1,0 +1,103 @@
+# $Id: Module.mk.unix,v 1.11 2004/05/18 18:22:50 fine Exp $
+# Module.mk for qt module
+# Copyright (c) 2001 Valeri Fine
+#
+# Author: Valeri Fine, 21/10/2001
+
+MODDIR        := qt
+MODDIRS       := $(MODDIR)/src
+MODDIRI       := $(MODDIR)/inc
+
+ROOTQTDIR     := $(MODDIR)
+ROOTQTDIRS    := $(ROOTQTDIR)/src
+ROOTQTDIRI    := $(ROOTQTDIR)/inc
+
+QTMOCEXE      := $(QTDIR)/bin/moc
+
+##### libQt #####
+QTL           := $(MODDIRI)/LinkDef.h
+QTDS          := $(MODDIRS)/G__GQt.cxx
+QTDO          := $(QTDS:.cxx=.o)
+QTDH          := $(QTDS:.cxx=.h)
+
+QTH1          := $(ROOTQTDIRI)/TGQt.h $(ROOTQTDIRI)/TQtThread.h
+QTH           := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+
+QTMOC         := $(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(QTH))) 
+
+QTMOCO        := $(QTMOC:.cxx=.o)
+
+QTS           := $(filter-out $(MODDIRS)/moc_%,\
+		  $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx)))
+QTO           := $(QTS:.cxx=.o)
+
+QTDEP         := $(QTO:.o=.d) $(QTDO:.o=.d)
+
+QTCXXFLAGS    := -DQT_DLL -DQT_THREAD_SUPPORT -I. -I$(QTINCDIR)
+
+GQTLIB         := $(LPATH)/libGQt.$(SOEXT)
+
+# Axel proposed to remove this and rely on Makefile.depend
+#-- # That's correct but need some ROOT team negotiation.
+QTLIBEXTRA    := $(QTDIR)/lib/libqt-mt.so
+
+QTOBJEXTRA    := $(QTMOCO)
+
+# used in the main Makefile
+ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(QTH))
+ALLLIBS       += $(GQTLIB)
+
+# include all dependency files
+INCLUDEFILES  += $(QTDEP)
+
+ifneq ($(findstring g++,$(CXX)),)
+QTGCCVERS     := $(shell $(CXX) -v 2>&1 | \
+		  awk '{ if ($$2 == "version") printf("%d\n",$$3*100) }')
+endif 
+ifneq ($(QTGCCVERS),295)
+QTOPT	      := $(OPT)
+else
+QTOPT	      := $(OPT)
+# $(NOOPT)
+endif
+
+##### local rules #####
+include/%.h:    $(ROOTQTDIRI)/%.h
+		cp $< $@
+
+$(GQTLIB):    $(QTO) $(QTDO) $(QTMOCO) $(MAINLIBS) $(GQTLIBDEP)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libGQt.$(SOEXT) $@ "$(QTO) $(QTMOCO) $(QTDO)" \
+		   "$(GQTLIBEXTRA)" 
+#		   "$(QTLIBEXTRA)" $(QTLIB)
+# Axel proposed to remove this and rely on Makefile.depend
+# That's correct but need some ROOT team negotiation.
+# to be discussed with Fons
+
+
+$(QTDS):    $(QTH1) $(QTL) $(ROOTCINTTMP)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(QTH1) $(QTL)
+
+$(QTDO): $(QTDS)
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(QTCXXFLAGS) -o $@ -c $<
+
+all-qt:      $(GQTLIB) $(QTMOC)
+
+clean-qt:
+		rm -f $(QTO) $(QTDO) $(QTMOCO) $(QTMOC) 
+
+clean::         clean-qt
+
+distclean-qt: clean-qt
+		@rm -f $(QTDEP) $(QTDS) $(QTDH) $(GQTLIB)
+
+distclean::     distclean-qt
+
+##### extra rules ######
+$(sort $(QTMOCO) $(QTO)): %.o: %.cxx
+	$(CXX) $(QTOPT) $(CXXFLAGS) $(QTCXXFLAGS) -o $@ -c $<
+
+
+$(QTMOC) : $(ROOTQTDIRS)/moc_%.cxx: $(ROOTQTDIRI)/%.h
+	$(QTMOCEXE) $< -o $@

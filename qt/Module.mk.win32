@@ -1,0 +1,88 @@
+# $Id: Module.mk.win32,v 1.7 2003/08/15 10:52:32 fine Exp $
+# Module.mk for qt module
+# Copyright (c) 2001 Valeri Fine
+#
+# Author: Valeri Fine, 21/10/2001
+
+MOC          := build/win/moc.sh
+
+MODDIR       := qt
+MODDIRS      := $(MODDIR)/src
+MODDIRI      := $(MODDIR)/inc
+
+ROOTQTDIR     := $(MODDIR)
+ROOTQTDIRS    := $(ROOTQTDIR)/src
+ROOTQTDIRI    := $(ROOTQTDIR)/inc
+
+##### libQt #####
+QTL       := $(ROOTQTDIRI)/LinkDef.h
+QTDS      := $(ROOTQTDIRS)/G__GQt.cxx
+QTDO      := $(QTDS:.cxx=.o)
+QTDH      := $(QTDS:.cxx=.h)
+
+QTH1      := $(ROOTQTDIRI)/TGQt.h $(ROOTQTDIRI)/TQtThread.h
+QTH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+
+QTMOC     := $(subst $(ROOTQTDIRI)/,$(ROOTQTDIRS)/moc_,$(patsubst %.h,%.cxx,$(QTH)))
+QTMOCO    := $(QTMOC:.cxx=.o)
+
+QTS       := $(filter-out $(ROOTQTDIRS)/moc_%,$(filter-out $(ROOTQTDIRS)/G__%,$(wildcard $(ROOTQTDIRS)/*.cxx)))
+QTO       := $(QTS:.cxx=.o)
+
+QTDEP     := $(QTO:.o=.d) $(QTDO:.o=.d)
+
+QTCXXFLAGS:= -DQT_DLL -DQT_THREAD_SUPPORT -I. -I$(QTINCDIR)
+
+GQTLIB     := $(LPATH)/libGQt.$(SOEXT)
+
+QTLIBEXTRA := $(QTDIR)/lib/qt-mt*.lib lib/libGraf.lib lib/libGpad.lib lib/libGui.lib 
+#   shell32.lib Ws2_32.lib Imm32.lib Winmm.lib
+
+QTOBJEXTRA := $(QTMOCO)
+ 
+# used in the main Makefile
+ALLHDRS     += $(patsubst $(ROOTQTDIRI)/%.h,include/%.h,$(QTH))
+ALLLIBS     += $(GQTLIB)
+
+# include all dependency files
+INCLUDEFILES += $(QTDEP)
+
+##### local rules #####
+include/%.h:    $(ROOTQTDIRI)/%.h
+		cp $< $@
+
+$(GQTLIB):    $(QTO) $(QTDO) $(QTMOCO) $(MAINLIBS) $(QTLIBDEP)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+		   "$(SOFLAGS)" libGQt.$(SOEXT) $@ "$(QTO)" \
+		   "$(QTLIBEXTRA)" "$(QTMOCO) $(QTDO)"
+
+# linux =		   "$(SOFLAGS)" libGQt.$(SOEXT) $@ "$(QTO) $(QTDO)" \
+# linux =		   "$(QTLIBEXTRA)" "$(QTMOCO)"
+
+
+$(QTDS):  $(QTH1) $(QTL) $(ROOTCINTTMP)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -f $@ -c $(QTH1) $(QTL)
+
+$(QTDO): $(QTDS)
+		$(CXX) $(NOOPT) $(CXXFLAGS) $(QTCXXFLAGS) -o $@ -c $<
+
+all-qt:      $(GQTLIB) $(QTMOC)
+
+clean-qt:
+		rm -f $(QTO) $(QTDO) $(QTMOCO) $(QTMOC) 
+
+clean::         clean-qt
+
+distclean-qt: clean-qt
+		@rm -f $(QTDEP) $(QTDS) $(QTDH) $(GQTLIB)
+
+distclean::     distclean-qt
+
+##### extra rules ######
+$(sort $(QTMOCO) $(QTO)): %.o: %.cxx
+	$(CXX) $(OPT) $(CXXFLAGS) $(QTCXXFLAGS) -o $@ -c $<
+
+
+$(QTMOC) : $(ROOTQTDIRS)/moc_%.cxx: $(ROOTQTDIRI)/%.h
+	$(MOC) $< -o $@
