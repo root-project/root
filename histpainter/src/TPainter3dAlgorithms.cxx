@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.4 2002/06/17 15:34:27 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.5 2002/07/16 20:34:23 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -56,11 +56,11 @@ const Int_t kF3FillColor1 = 201;
 const Int_t kF3FillColor2 = 202;
 const Int_t kF3LineColor  = 203;
 
-Int_t gF3Clipping = 0;
-Double_t gF3XClip = 0.;
-Double_t gF3YClip = 0.;
-Double_t gF3ZClip = 0.;
-TF3 *gCurrentF3 = 0;
+Int_t    TPainter3dAlgorithms::fgF3Clipping = 0;
+Double_t TPainter3dAlgorithms::fgF3XClip = 0.;
+Double_t TPainter3dAlgorithms::fgF3YClip = 0.;
+Double_t TPainter3dAlgorithms::fgF3ZClip = 0.;
+TF3      *TPainter3dAlgorithms::fgCurrentF3 = 0;
 
 R__EXTERN TH1  *gCurrentHist;
 R__EXTERN Hoption_t Hoption;
@@ -3261,7 +3261,7 @@ void TPainter3dAlgorithms::SetF3(TF3 *f3)
 {
    // static function
    // Store pointer to current implicit function
-   gCurrentF3 = f3;
+   fgCurrentF3 = f3;
 }
 
 
@@ -3270,7 +3270,7 @@ void TPainter3dAlgorithms::SetF3ClippingBoxOff()
 {
    // static function
    // Set the implicit function clipping box "off".
-   gF3Clipping = 0;
+   fgF3Clipping = 0;
 }
 
 
@@ -3282,10 +3282,10 @@ void TPainter3dAlgorithms::SetF3ClippingBoxOn(Double_t xclip,
    // Set the implicit function clipping box "on" and define the clipping box.
    // xclip, yclip and zclip is a point within the function range. All the 
    // function value having x<=xclip and y<=yclip and z>=zclip are clipped.
-   gF3Clipping = 1;
-   gF3XClip = xclip;
-   gF3YClip = yclip;
-   gF3ZClip = zclip;
+   fgF3Clipping = 1;
+   fgF3XClip = xclip;
+   fgF3YClip = yclip;
+   fgF3ZClip = zclip;
 }
 
 
@@ -4241,7 +4241,7 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
 
    // Define the colors used to draw the function
    Float_t r, g, b, hue, light, satur, light2;
-   TColor *colref = gROOT->GetColor(gCurrentF3->GetFillColor());
+   TColor *colref = gROOT->GetColor(fgCurrentF3->GetFillColor());
    colref->GetRGB(r, g, b);
    TColor::RGBtoHLS(r, g, b, hue, light, satur);
    TColor *acol;
@@ -4255,7 +4255,7 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
    TColor::HLStoRGB(hue, light2, satur, r, g, b);
    acol = gROOT->GetColor(kF3FillColor2);
    acol->SetRGB(r, g, b);
-   colref = gROOT->GetColor(gCurrentF3->GetLineColor());
+   colref = gROOT->GetColor(fgCurrentF3->GetLineColor());
    colref->GetRGB(r, g, b);
    acol = gROOT->GetColor(kF3LineColor);
    acol->SetRGB(r, g, b);
@@ -4285,16 +4285,16 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
          p[7][1] = y2;
          if (incrx == +1) {
             x2    = rmin[0];
-            pf[1] = gCurrentF3->Eval(x2,y1,z1);
-            pf[2] = gCurrentF3->Eval(x2,y2,z1);
-            pf[5] = gCurrentF3->Eval(x2,y1,z2);
-            pf[6] = gCurrentF3->Eval(x2,y2,z2);
+            pf[1] = fgCurrentF3->Eval(x2,y1,z1);
+            pf[2] = fgCurrentF3->Eval(x2,y2,z1);
+            pf[5] = fgCurrentF3->Eval(x2,y1,z2);
+            pf[6] = fgCurrentF3->Eval(x2,y2,z2);
          } else {
             x1    = rmax[0];
-            pf[0] = gCurrentF3->Eval(x1,y1,z1);
-            pf[3] = gCurrentF3->Eval(x1,y2,z1);
-            pf[4] = gCurrentF3->Eval(x1,y1,z2);
-            pf[7] = gCurrentF3->Eval(x1,y2,z2);
+            pf[0] = fgCurrentF3->Eval(x1,y1,z1);
+            pf[3] = fgCurrentF3->Eval(x1,y2,z1);
+            pf[4] = fgCurrentF3->Eval(x1,y1,z2);
+            pf[7] = fgCurrentF3->Eval(x1,y2,z2);
          }
          for (ix = ix1; incrx < 0 ? ix >= ix2 : ix <= ix2; ix += incrx) {
             icodes[0] = ix;
@@ -4307,10 +4307,10 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
                pf[3]  = pf[2];
                pf[4]  = pf[5];
                pf[7]  = pf[6];
-               pf[1]  = gCurrentF3->Eval(x2,y1,z1);
-               pf[2]  = gCurrentF3->Eval(x2,y2,z1);
-               pf[5]  = gCurrentF3->Eval(x2,y1,z2);
-               pf[6]  = gCurrentF3->Eval(x2,y2,z2);
+               pf[1]  = fgCurrentF3->Eval(x2,y1,z1);
+               pf[2]  = fgCurrentF3->Eval(x2,y2,z1);
+               pf[5]  = fgCurrentF3->Eval(x2,y1,z2);
+               pf[6]  = fgCurrentF3->Eval(x2,y2,z2);
             } else {
                x2     = x1;
                x1     = x1 - dx;
@@ -4318,10 +4318,10 @@ void TPainter3dAlgorithms::ImplicitFunction(Double_t *rmin, Double_t *rmax,
                pf[2]  = pf[3];
                pf[5]  = pf[4];
                pf[6]  = pf[7];
-               pf[0]  = gCurrentF3->Eval(x1,y1,z1);
-               pf[3]  = gCurrentF3->Eval(x1,y2,z1);
-               pf[4]  = gCurrentF3->Eval(x1,y1,z2);
-               pf[7]  = gCurrentF3->Eval(x1,y2,z2);
+               pf[0]  = fgCurrentF3->Eval(x1,y1,z1);
+               pf[3]  = fgCurrentF3->Eval(x1,y2,z1);
+               pf[4]  = fgCurrentF3->Eval(x1,y1,z2);
+               pf[7]  = fgCurrentF3->Eval(x1,y2,z2);
             }
             if (pf[0] >= -kFdel) goto L110;
             if (pf[1] >= -kFdel) goto L120;
@@ -4359,10 +4359,10 @@ L120:
                pn[4][0] = (pf[5] - pf[4]) / dx;
                pn[7][0] = (pf[6] - pf[7]) / dx;
             } else {
-               pn[0][0] = (pf[1] - gCurrentF3->Eval(x1-dx,y1,z1)) / (dx + dx);
-               pn[3][0] = (pf[2] - gCurrentF3->Eval(x1-dx,y2,z1)) / (dx + dx);
-               pn[4][0] = (pf[5] - gCurrentF3->Eval(x1-dx,y1,z2)) / (dx + dx);
-               pn[7][0] = (pf[6] - gCurrentF3->Eval(x1-dx,y2,z2)) / (dx + dx);
+               pn[0][0] = (pf[1] - fgCurrentF3->Eval(x1-dx,y1,z1)) / (dx + dx);
+               pn[3][0] = (pf[2] - fgCurrentF3->Eval(x1-dx,y2,z1)) / (dx + dx);
+               pn[4][0] = (pf[5] - fgCurrentF3->Eval(x1-dx,y1,z2)) / (dx + dx);
+               pn[7][0] = (pf[6] - fgCurrentF3->Eval(x1-dx,y2,z2)) / (dx + dx);
             }
             if (ix == nx) {
                pn[1][0] = (pf[1] - pf[0]) / dx;
@@ -4370,10 +4370,10 @@ L120:
                pn[5][0] = (pf[5] - pf[4]) / dx;
                pn[6][0] = (pf[6] - pf[7]) / dx;
             } else {
-               pn[1][0] = (gCurrentF3->Eval(x2+dx,y1,z1) - pf[0]) / (dx + dx);
-               pn[2][0] = (gCurrentF3->Eval(x2+dx,y2,z1) - pf[3]) / (dx + dx);
-               pn[5][0] = (gCurrentF3->Eval(x2+dx,y1,z2) - pf[4]) / (dx + dx);
-               pn[6][0] = (gCurrentF3->Eval(x2+dx,y2,z2) - pf[7]) / (dx + dx);
+               pn[1][0] = (fgCurrentF3->Eval(x2+dx,y1,z1) - pf[0]) / (dx + dx);
+               pn[2][0] = (fgCurrentF3->Eval(x2+dx,y2,z1) - pf[3]) / (dx + dx);
+               pn[5][0] = (fgCurrentF3->Eval(x2+dx,y1,z2) - pf[4]) / (dx + dx);
+               pn[6][0] = (fgCurrentF3->Eval(x2+dx,y2,z2) - pf[7]) / (dx + dx);
             }
             // Find Y-gradient
             if (iy == 1) {
@@ -4382,10 +4382,10 @@ L120:
                pn[4][1] = (pf[7] - pf[4]) / dy;
                pn[5][1] = (pf[6] - pf[5]) / dy;
             } else {
-               pn[0][1] = (pf[3] - gCurrentF3->Eval(x1,y1-dy,z1)) / (dy + dy);
-               pn[1][1] = (pf[2] - gCurrentF3->Eval(x2,y1-dy,z1)) / (dy + dy);
-               pn[4][1] = (pf[7] - gCurrentF3->Eval(x1,y1-dy,z2)) / (dy + dy);
-               pn[5][1] = (pf[6] - gCurrentF3->Eval(x2,y1-dy,z2)) / (dy + dy);
+               pn[0][1] = (pf[3] - fgCurrentF3->Eval(x1,y1-dy,z1)) / (dy + dy);
+               pn[1][1] = (pf[2] - fgCurrentF3->Eval(x2,y1-dy,z1)) / (dy + dy);
+               pn[4][1] = (pf[7] - fgCurrentF3->Eval(x1,y1-dy,z2)) / (dy + dy);
+               pn[5][1] = (pf[6] - fgCurrentF3->Eval(x2,y1-dy,z2)) / (dy + dy);
             }
             if (iy == ny) {
                pn[2][1] = (pf[2] - pf[1]) / dy;
@@ -4393,10 +4393,10 @@ L120:
                pn[6][1] = (pf[6] - pf[5]) / dy;
                pn[7][1] = (pf[7] - pf[4]) / dy;
             } else {
-               pn[2][1] = (gCurrentF3->Eval(x2,y2+dy,z1) - pf[1]) / (dy + dy);
-               pn[3][1] = (gCurrentF3->Eval(x1,y2+dy,z1) - pf[0]) / (dy + dy);
-               pn[6][1] = (gCurrentF3->Eval(x2,y2+dy,z2) - pf[5]) / (dy + dy);
-               pn[7][1] = (gCurrentF3->Eval(x1,y2+dy,z2) - pf[4]) / (dy + dy);
+               pn[2][1] = (fgCurrentF3->Eval(x2,y2+dy,z1) - pf[1]) / (dy + dy);
+               pn[3][1] = (fgCurrentF3->Eval(x1,y2+dy,z1) - pf[0]) / (dy + dy);
+               pn[6][1] = (fgCurrentF3->Eval(x2,y2+dy,z2) - pf[5]) / (dy + dy);
+               pn[7][1] = (fgCurrentF3->Eval(x1,y2+dy,z2) - pf[4]) / (dy + dy);
             }
             // Find Z-gradient
             if (iz == 1) {
@@ -4405,10 +4405,10 @@ L120:
                pn[2][2] = (pf[6] - pf[2]) / dz;
                pn[3][2] = (pf[7] - pf[3]) / dz;
             } else {
-               pn[0][2] = (pf[4] - gCurrentF3->Eval(x1,y1,z1-dz)) / (dz + dz);
-               pn[1][2] = (pf[5] - gCurrentF3->Eval(x2,y1,z1-dz)) / (dz + dz);
-               pn[2][2] = (pf[6] - gCurrentF3->Eval(x2,y2,z1-dz)) / (dz + dz);
-               pn[3][2] = (pf[7] - gCurrentF3->Eval(x1,y2,z1-dz)) / (dz + dz);
+               pn[0][2] = (pf[4] - fgCurrentF3->Eval(x1,y1,z1-dz)) / (dz + dz);
+               pn[1][2] = (pf[5] - fgCurrentF3->Eval(x2,y1,z1-dz)) / (dz + dz);
+               pn[2][2] = (pf[6] - fgCurrentF3->Eval(x2,y2,z1-dz)) / (dz + dz);
+               pn[3][2] = (pf[7] - fgCurrentF3->Eval(x1,y2,z1-dz)) / (dz + dz);
             }
             if (iz == nz) {
                pn[4][2] = (pf[4] - pf[0]) / dz;
@@ -4416,10 +4416,10 @@ L120:
                pn[6][2] = (pf[6] - pf[2]) / dz;
                pn[7][2] = (pf[7] - pf[3]) / dz;
             } else {
-               pn[4][2] = (gCurrentF3->Eval(x1,y1,z2+dz) - pf[0]) / (dz + dz);
-               pn[5][2] = (gCurrentF3->Eval(x2,y1,z2+dz) - pf[1]) / (dz + dz);
-               pn[6][2] = (gCurrentF3->Eval(x2,y2,z2+dz) - pf[2]) / (dz + dz);
-               pn[7][2] = (gCurrentF3->Eval(x1,y2,z2+dz) - pf[3]) / (dz + dz);
+               pn[4][2] = (fgCurrentF3->Eval(x1,y1,z2+dz) - pf[0]) / (dz + dz);
+               pn[5][2] = (fgCurrentF3->Eval(x2,y1,z2+dz) - pf[1]) / (dz + dz);
+               pn[6][2] = (fgCurrentF3->Eval(x2,y2,z2+dz) - pf[2]) / (dz + dz);
+               pn[7][2] = (fgCurrentF3->Eval(x1,y2,z2+dz) - pf[3]) / (dz + dz);
             }
             fsurf = 0.;
             MarchingCube(fsurf, p, pf, pn, nnod, ntria, xyz, grad, itria);
@@ -4438,8 +4438,8 @@ L120:
             if (incr == -1) i1 = ntria;
             i2 = ntria - i1 + 1;
 	    // If clipping box is on do not draw the triangles
-            if (gF3Clipping) {
-               if(x2<=gF3XClip && y2 <=gF3YClip && z2>=gF3ZClip) goto L510;
+            if (fgF3Clipping) {
+               if(x2<=fgF3XClip && y2 <=fgF3YClip && z2>=fgF3ZClip) goto L510;
             }
             // Draw triangles
             for (i=i1; incr < 0 ? i >= i2 : i <= i2; i += incr) {

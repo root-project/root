@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.h,v 1.3 2002/05/29 18:39:44 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.h,v 1.4 2002/07/16 20:34:23 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -93,6 +93,13 @@ private:
    Int_t        fIc1;              // Base colour for the 1st Iso Surface
    Int_t        fIc2;              // Base colour for the 2nd Iso Surface
    Int_t        fIc3;              // Base colour for the 3rd Iso Surface
+
+   static Int_t    fgF3Clipping;   // Clipping box is off (0) or on (1)
+   static Double_t fgF3XClip;      // Clipping plne along X
+   static Double_t fgF3YClip;      // Clipping plne along Y
+   static Double_t fgF3ZClip;      // Clipping plne along Y
+   static TF3      *fgCurrentF3;   // Pointer to the 3D function to be paint.
+
 
 public:
    typedef void (TPainter3dAlgorithms::*DrawFaceFunc_t)(Int_t *, Double_t *, Int_t, Int_t *, Double_t *);
