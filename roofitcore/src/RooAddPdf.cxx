@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.23 2001/10/22 07:12:12 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.24 2001/10/27 22:28:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -103,6 +103,12 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   //
   // All PDFs must inherit from RooAbsPdf. All coefficients must inherit from RooAbsReal
 
+  if (pdfList.getSize()>coefList.getSize()+1) {
+    cout << "RooAddPdf::RooAddPdf(" << GetName() 
+	 << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
+    assert(0) ;
+  }
+
   _pdfIter  = _pdfList.createIterator() ;
   _coefIter = _coefList.createIterator() ;
  
@@ -111,6 +117,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& pdfL
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsPdf* pdf ;
   RooAbsReal* coef ;
+
   while(coef = (RooAbsPdf*)coefIter->Next()) {
     pdf = (RooAbsPdf*) pdfIter->Next() ;
     if (!pdf) {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooLinearVar.cc,v 1.12 2001/10/03 16:16:31 verkerke Exp $
+ *    File: $Id: RooLinearVar.cc,v 1.13 2001/10/08 05:20:17 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,11 +47,11 @@
 ClassImp(RooLinearVar)
 
 RooLinearVar::RooLinearVar(const char *name, const char *title, RooRealVar& variable, 
-			   RooAbsReal& slope, RooAbsReal& offset, const char *unit) :
+			   const RooAbsReal& slope, const RooAbsReal& offset, const char *unit) :
   RooAbsRealLValue(name, title, unit), 
   _var("var","variable",this,variable,kTRUE,kTRUE),
-  _slope("slope","slope",this,slope),
-  _offset("offset","offset",this,offset)
+  _slope("slope","slope",this,(RooAbsReal&)slope),
+  _offset("offset","offset",this,(RooAbsReal&)offset)
 {
   // Constructor with RooRealVar variable and RooAbsReal slope and offset
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.43 2001/10/27 22:28:18 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.44 2001/11/05 18:50:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -73,7 +73,7 @@ public:
   virtual Double_t getNorm(const RooArgSet* set=0) const ;
   void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value) ;
-  void traceEvalPdf(Double_t value) const ;
+  Bool_t traceEvalPdf(Double_t value) const ;
 
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet) const ;
 
@@ -102,6 +102,7 @@ protected:
   friend class RooProdGenContext ;
   friend class RooSimGenContext ;
   friend class RooSimultaneous ;
+  friend class RooMCStudy ;
   virtual RooAbsGenContext* genContext(const RooArgSet &vars, 
 				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.52 2001/11/01 22:52:19 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.53 2001/11/05 18:50:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -183,9 +183,9 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 
   if (!nset) {
     Double_t val = evaluate() ;
-    traceEvalPdf(val) ;
+    Bool_t error = traceEvalPdf(val) ;
     if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() << "): value = " << val << " (unnormalized)" << endl ;
-    return val ;
+    return error?0:val ;
   }
 
   // Process change in last data set used
@@ -196,8 +196,9 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   if ((isValueDirty() || _norm->isValueDirty() || nsetChanged) && operMode()!=AClean) {
 
     Double_t rawVal = evaluate() ;
-    _value = rawVal / _norm->getVal() ;
-    traceEvalPdf(rawVal) ; // Error checking and printing
+    Bool_t error = traceEvalPdf(rawVal) ; // Error checking and printing
+
+    _value = error ? 0 : (rawVal / _norm->getVal()) ;
 
     if (_verboseEval>1) cout << IsA()->GetName() << "::getVal(" << GetName() << "): value = " 
 			     << rawVal << " / " << _norm->getVal() << " = " << _value << endl ;
@@ -227,7 +228,7 @@ Double_t RooAbsPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
 }
 
 
-void RooAbsPdf::traceEvalPdf(Double_t value) const
+Bool_t RooAbsPdf::traceEvalPdf(Double_t value) const
 {
   // Check that passed value is positive and not 'not-a-number'.
   // If not, print an error, until the error counter reaches
@@ -237,7 +238,7 @@ void RooAbsPdf::traceEvalPdf(Double_t value) const
   Bool_t error= isnan(value) || (value < 0);
 
   // do nothing if we are no longer tracing evaluations and there was no error
-  if(!error && _traceCount <= 0) return ;
+  if(!error && _traceCount <= 0) return error ;
 
   // otherwise, print out this evaluations input values and result
   if(error && ++_errorCount <= 10) {
@@ -248,10 +249,11 @@ void RooAbsPdf::traceEvalPdf(Double_t value) const
     cout << '[' << _traceCount-- << "] ";
   }
   else {
-    return  ;
+    return error  ;
   }
 
   Print() ;
+  return error ;
 }
 
 

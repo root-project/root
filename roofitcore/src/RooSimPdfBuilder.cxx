@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooSimPdfBuilder.cc,v 1.1 2001/10/30 07:29:15 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.2 2001/11/01 22:52:22 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -283,6 +283,7 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	    RooArgSet* paramList = physModel->getParameters(dataVars) ;
 
 	    char *tokptr(0) ;
+	    Bool_t lastCharIsComma = (token[strlen(token)-1]==',') ;
 	    char *paramName = strtok_r(token,",",&tokptr) ;
 	    while(paramName) {
 	      RooAbsArg* param = paramList->find(paramName) ;
@@ -300,7 +301,7 @@ const RooAbsPdf* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 	    // Add the rule to the appropriate customizer ;
 	    physCustomizer->splitArgs(splitParamList,*splitCat) ;
 
-	    mode = SplitCat ;
+	    if (!lastCharIsComma) mode = SplitCat ;
 	    break ;
 	  }
 	}
