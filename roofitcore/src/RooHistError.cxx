@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistError.cc,v 1.16 2004/11/29 20:23:54 wverkerke Exp $
+ *    File: $Id: RooHistError.cc,v 1.17 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -44,9 +44,32 @@ const RooHistError &RooHistError::instance() {
 RooHistError::RooHistError() {
   // Construct our singleton object.
 
+
+  // Initialize lookup table ;
+  Int_t i ;
+  for (i=0 ; i<1000 ; i++) {
+    getPoissonIntervalCalc(i,_poissonLoLUT[i],_poissonHiLUT[i],1.) ;
+  }
+
 }
 
+
 Bool_t RooHistError::getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma) const
+{
+  // Use lookup table for most common cases
+  if (n<1000 && nSigma==1.) {
+    mu1=_poissonLoLUT[n] ;
+    mu2=_poissonHiLUT[n] ;
+    return kTRUE ;
+  }
+
+  // Forward to calculation method 
+  Bool_t ret =  getPoissonIntervalCalc(n,mu1,mu2,nSigma) ;
+  return ret ;
+}
+
+
+Bool_t RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma) const
 {
   // Calculate a confidence interval for the expected number of events given n
   // observed (unweighted) events. The interval will contain the same probability

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.39 2005/02/24 22:36:07 wverkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.40 2005/02/25 14:23:00 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -304,28 +304,35 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, Bool_t refreshNorm) {
   // Update our plot normalization over our plot variable's fit range,
   // which will be determined by the first suitable object added to our plot.
 
-  Double_t corFac(1.0) ;
-  if (dynamic_cast<const RooHist*>(rp)) corFac = _normBinWidth/rp->getFitRangeBinW() ;
 
   if (_normNumEvts != 0) {
 
     // If refresh feature is disabled stop here
     if (!refreshNorm) return ;
 
+    Double_t corFac(1.0) ;
+    if (dynamic_cast<const RooHist*>(rp)) corFac = _normBinWidth/rp->getFitRangeBinW() ;
+    
+    
     cout << "RooPlot::updateFitRangeNorm: New event count of " << rp->getFitRangeNEvt()/corFac 
 	 << " will supercede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
-    dynamic_cast<const TObject*>(rp)->Print() ;
-  }
 
-  _normNumEvts = rp->getFitRangeNEvt()/corFac ;
-  //cout << "correction factor = " << _normBinWidth << "/" << rp->getFitRangeBinW() << endl ;
-  //cout << "updating numevts to " << _normNumEvts << endl ;
+    // Nominal bin width (i.e event density) is already locked in by previously drawn histogram
+    // scale this histogram to match that density
+    _normNumEvts = rp->getFitRangeNEvt()/corFac ;
+    //cout << "correction factor = " << _normBinWidth << "/" << rp->getFitRangeBinW() << endl ;
+    //cout << "updating numevts to " << _normNumEvts << endl ;
+    
+  } else {
 
-  if (rp->getFitRangeBinW()!=0.) {
+    _normNumEvts = rp->getFitRangeNEvt() ;
     _normBinWidth = rp->getFitRangeBinW() ;
-    //cout << "updating binw to " << _normBinWidth << endl ;
+
+    //cout << "updating numevts to " << _normNumEvts << endl ;    
   }
+
 }
+
 
 void RooPlot::updateYAxis(Double_t ymin, Double_t ymax, const char *label) {
   // Update our y-axis limits to accomodate an object whose spread

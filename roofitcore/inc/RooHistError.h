@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHistError.rdl,v 1.9 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooHistError.rdl,v 1.10 2005/02/25 14:22:57 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,6 +34,12 @@ public:
   inline static RooAbsFunc *createBinomialSum(Int_t n, Int_t m) { return new BinomialSum(n,m); }
 
 private:
+
+
+  Bool_t getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu2, Double_t nSigma= 1) const;
+  Double_t _poissonLoLUT[1000] ;
+  Double_t _poissonHiLUT[1000] ;
+
   RooHistError();
   Double_t seek(const RooAbsFunc &f, Double_t startAt, Double_t step, Double_t value) const;
 

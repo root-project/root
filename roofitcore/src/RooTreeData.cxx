@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTreeData.cc,v 1.66 2005/02/25 14:23:03 wverkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.67 2005/03/02 17:20:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -60,6 +60,7 @@ using std::string ;
 #include "RooFitCore/RooTrace.hh"
 #include "RooFitCore/RooAbsBinning.hh" 
 #include "RooFitCore/RooCmdConfig.hh" 
+#include "RooFitCore/RooGlobalFunc.hh"
 using std::cout;
 using std::endl;
 using std::fstream;
@@ -1018,7 +1019,7 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const
   histName.Append("_plot");
   TH1F *hist ;
   if (o.bins) {
-    hist= var->createHistogram(histName.Data(), "Events", *o.bins) ;
+    hist= static_cast<TH1F*>(var->createHistogram(histName.Data(), RooFit::AxisLabel("Events"), RooFit::Binning(*o.bins))) ;
   } else {
     hist= var->createHistogram(histName.Data(), "Events", 
 			       frame->GetXaxis()->GetXmin(), frame->GetXaxis()->GetXmax(), frame->GetNbinsX());
@@ -1033,8 +1034,16 @@ RooPlot *RooTreeData::plotOn(RooPlot *frame, PlotOpt o) const
     return 0;
   }
 
+  // If frame has no predefined bin width (event density) it will be adjusted to 
+  // our histograms bin width so we should force that bin width here
+  Double_t nomBinWidth ;
+  if (frame->getFitRangeNEvt()==0 && o.bins) {
+    nomBinWidth = o.bins->averageBinWidth() ;
+  } else {
+    nomBinWidth = o.bins ? frame->getFitRangeBinW() : 0 ;
+  }
+
   // convert this histogram to a RooHist object on the heap
-  Double_t nomBinWidth = o.bins ? (frame->GetXaxis()->GetXmax()-frame->GetXaxis()->GetXmin())/frame->GetNbinsX() : 0 ;
   RooHist *graph= new RooHist(*hist,nomBinWidth,1,o.etype,o.xErrorSize);
   if(0 == graph) {
     cout << ClassName() << "::" << GetName()
