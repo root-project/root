@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.3 2002/04/09 15:11:47 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.h,v 1.4 2002/10/10 17:09:06 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -133,6 +133,9 @@ public:
    TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
                    UInt_t options = kSunkenFrame,
                    ULong_t back = GetDefaultFrameBackground());
+   TGFileContainer(TGCanvas *p, UInt_t options = kSunkenFrame,
+                   ULong_t back = GetDefaultFrameBackground());
+
    virtual ~TGFileContainer();
 
    virtual Bool_t HandleTimer(TTimer *t);

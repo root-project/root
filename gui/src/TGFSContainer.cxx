@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.7 2002/06/12 16:46:11 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSContainer.cxx,v 1.8 2002/10/10 17:09:06 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -350,6 +350,35 @@ void TGFileItem::DoRedraw()
 TGFileContainer::TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
                                  UInt_t options, ULong_t back) :
    TGLVContainer(p, w, h, options, back)
+{
+   // Create a list view container which will hold the contents of
+   // the current directory.
+
+   fSortType  = kSortByName;
+   fFilter    = 0;
+   fDirectory = gSystem->WorkingDirectory();
+   fRefresh   = new TViewUpdateTimer(this, 1000);
+   gSystem->AddTimer(fRefresh);
+
+   fFolder_s = fClient->GetPicture("folder_s.xpm");
+   fFolder_t = fClient->GetPicture("folder_t.xpm");
+   fApp_s    = fClient->GetPicture("app_s.xpm");
+   fApp_t    = fClient->GetPicture("app_t.xpm");
+   fDoc_s    = fClient->GetPicture("doc_s.xpm");
+   fDoc_t    = fClient->GetPicture("doc_t.xpm");
+   fSlink_s  = fClient->GetPicture("slink_s.xpm");
+   fSlink_t  = fClient->GetPicture("slink_t.xpm");
+
+   if (!fFolder_s || !fFolder_t ||
+       !fApp_s    || !fApp_t    ||
+       !fDoc_s    || !fDoc_t    ||
+       !fSlink_s  || !fSlink_t)
+      Error("TGFileContainer", "required pixmap(s) missing\n");
+}
+
+//______________________________________________________________________________
+TGFileContainer::TGFileContainer(TGCanvas *p, UInt_t options, ULong_t back) :
+   TGLVContainer(p,options, back)
 {
    // Create a list view container which will hold the contents of
    // the current directory.

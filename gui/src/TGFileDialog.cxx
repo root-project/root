@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.9 2002/06/23 23:23:47 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFileDialog.cxx,v 1.10 2002/09/18 12:22:14 rdm Exp $
 // Author: Fons Rademakers   20/01/98
 
 /*************************************************************************
@@ -491,6 +491,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
          break;
 
    } // switch(GET_MSG(msg))
-
+   
+   fClient->NeedRedraw(fFc);
    return kTRUE;
 }

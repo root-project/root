@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.7 2001/11/12 14:17:02 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.8 2002/10/10 17:09:06 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -30,8 +30,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
-#include "TGFrame.h"
+#ifndef ROOT_TGCanvas
+#include "TGCanvas.h"
 #endif
 #ifndef ROOT_TGWidget
 #include "TGWidget.h"
@@ -88,7 +88,7 @@ public:
 };
 
 
-class TGListTree : public TGFrame, public TGWidget {
+class TGListTree : public TGContainer {
 
 friend class TGClient;
 
@@ -111,13 +111,11 @@ protected:
    Int_t            fExposeBottom;   // bottom y position of visible region
    TGToolTip       *fTip;            // tooltip shown when moving over list items
    TGListTreeItem  *fTipItem;        // item for which tooltip is set
-   TGCanvas        *fCanvas;         // canvas which contains the tree
    Bool_t           fAutoTips;       // assume item->fUserData is TObject and use GetTitle() for tip text
 
    static FontStruct_t   fgDefaultFontStruct;
 
    virtual void DoRedraw();
-
    void  Draw(Int_t yevent, Int_t hevent);
    void  Draw(Option_t * ="") { MayNotUse("Draw(Option_t*)"); }
    Int_t DrawChildren(TGListTreeItem *item, Int_t x, Int_t y, Int_t xroot);
@@ -138,10 +136,36 @@ protected:
    Int_t SearchChildren(TGListTreeItem *item, Int_t y, Int_t findy,
                         TGListTreeItem **finditem);
    TGListTreeItem *FindItem(Int_t findy);
+   void *FindItem(const TString& name,
+                  Bool_t direction = kTRUE,
+                  Bool_t caseSensitive = kTRUE,
+                  Bool_t beginWith = kFALSE)
+      { return TGContainer::FindItem(name, direction, caseSensitive, beginWith); }
+
+   // overwrite TGContainer's methods
+   virtual void Home(Bool_t select = kFALSE);
+   virtual void End(Bool_t select = kFALSE);
+   virtual void PageUp(Bool_t select = kFALSE);
+   virtual void PageDown(Bool_t select = kFALSE);
+   virtual void LineUp(Bool_t select = kFALSE);
+   virtual void LineDown(Bool_t select = kFALSE);
+   virtual void Search();
+   virtual void Layout() {}
+
+   void OnMouseOver(TGFrame*) { }
+   void CurrentChanged(Int_t x, Int_t y) { }
+   void CurrentChanged(TGFrame *f) { }
+   void ReturnPressed(TGFrame*) { }
+   void Clicked(TGFrame *entry, Int_t btn) { }
+   void Clicked(TGFrame *entry, Int_t btn, Int_t x, Int_t y) { }
+   void DoubleClicked(TGFrame *entry, Int_t btn) { }
+   void DoubleClicked(TGFrame *entry, Int_t btn, Int_t x, Int_t y) { }
 
 public:
    TGListTree(TGWindow *p, UInt_t w, UInt_t h,
               UInt_t options, ULong_t back = GetWhitePixel());
+   TGListTree(TGCanvas *p, UInt_t options, ULong_t back = GetWhitePixel());
+
    virtual ~TGListTree();
 
    virtual Bool_t HandleButton(Event_t *event);
@@ -149,8 +173,10 @@ public:
    virtual Bool_t HandleExpose(Event_t *event);
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
+   virtual Bool_t HandleKey(Event_t *event);
 
    virtual void SetCanvas(TGCanvas *canvas) { fCanvas = canvas; }
+   virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
 
    virtual TGDimension GetDefaultSize() const
             { return TGDimension(fDefw, fDefh); }
@@ -171,6 +197,8 @@ public:
    Int_t ReparentChildren(TGListTreeItem *item, TGListTreeItem *newparent);
    void  SetToolTipItem(TGListTreeItem *item, const char *string);
    void  SetAutoTips(Bool_t on = kTRUE) { fAutoTips = on; }
+   void  AdjustPosition(TGListTreeItem *item);
+   void  AdjustPosition() { TGContainer::AdjustPosition(); }
 
    Int_t Sort(TGListTreeItem *item);
    Int_t SortSiblings(TGListTreeItem *item);
@@ -187,10 +215,12 @@ public:
    TGListTreeItem *FindChildByData(TGListTreeItem *item, void *userData);
    TGListTreeItem *FindItemByPathname(const char *path);
 
-   virtual void Clicked(TGListTreeItem* entry, Int_t btn);  //*SIGNAL*
-   virtual void Clicked(TGListTreeItem* entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
-   virtual void DoubleClicked(TGListTreeItem* entry, Int_t btn);  //*SIGNAL*
-   virtual void DoubleClicked(TGListTreeItem* entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
+   virtual void OnMouseOver(TGListTreeItem *entry);  //*SIGNAL*
+   virtual void ReturnPressed(TGListTreeItem *entry);  //*SIGNAL*
+   virtual void Clicked(TGListTreeItem *entry, Int_t btn);  //*SIGNAL*
+   virtual void Clicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
+   virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn);  //*SIGNAL*
+   virtual void DoubleClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y);  //*SIGNAL*
 
    ClassDef(TGListTree,0)  //Show items in a tree structured list
 };

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.9 2002/07/18 10:34:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGCanvas.h,v 1.10 2002/10/10 17:09:06 rdm Exp $
 // Author: Fons Rademakers   11/01/98
 
 /*************************************************************************
@@ -88,14 +88,17 @@ protected:
    virtual void SearchPattern();
    virtual void OnAutoScroll();
 
-   virtual TGFrameElement *FindFrame(const TString& name,
-                                     Bool_t direction = kTRUE,
-                                     Bool_t caseSensitive = kTRUE,
-                                     Bool_t beginWith = kFALSE);
+   virtual void *FindItem(const TString& name,
+                          Bool_t direction = kTRUE,
+                          Bool_t caseSensitive = kTRUE,
+                          Bool_t beginWith = kFALSE);
 public:
    TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
-                 UInt_t options = kSunkenFrame,
-                 ULong_t back = GetDefaultFrameBackground());
+               UInt_t options = kSunkenFrame,
+               ULong_t back = GetDefaultFrameBackground());
+   TGContainer(TGCanvas *p,UInt_t options = kSunkenFrame,
+               ULong_t back = GetDefaultFrameBackground());
+
    virtual ~TGContainer();
 
    virtual void MapSubwindows();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.11 2002/07/18 10:34:25 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.12 2002/10/10 17:09:06 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -90,13 +90,14 @@ public:
 
    virtual void SetViewMode(EListViewMode ViewMode);
 
-   virtual void     Activate(Bool_t a);
-   Bool_t           IsActive() const { return fActive; }
-   TGString        *GetItemName() const { return fName; }
-   void             SetItemName(const char *name) { *fName = name; }
-   const TGPicture *GetPicture() const { return fCurrent; }
-   void             SetUserData(void *userData) { fUserData = userData; }
-   void            *GetUserData() const { return fUserData; }
+   virtual void        Activate(Bool_t a);
+   Bool_t              IsActive() const { return fActive; }
+   TGString           *GetItemName() const { return fName; }
+   virtual const char *GetName() const { return fName->GetString(); }
+   void                SetItemName(const char *name) { *fName = name; }
+   const TGPicture    *GetPicture() const { return fCurrent; }
+   void                SetUserData(void *userData) { fUserData = userData; }
+   void               *GetUserData() const { return fUserData; }
 
    void SetColumns(Int_t *cpos, Int_t *jmode) { fCpos = cpos; fJmode = jmode; }
 
@@ -128,6 +129,9 @@ public:
    TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
                  UInt_t options = kSunkenFrame,
                  ULong_t back = GetDefaultFrameBackground());
+   TGLVContainer(TGCanvas *p, UInt_t options = kSunkenFrame,
+                 ULong_t back = GetDefaultFrameBackground());
+
    virtual ~TGLVContainer();
 
    TGListView  *GetListView() const { return fListView; }

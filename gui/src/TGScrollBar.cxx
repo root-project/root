@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.7 2002/06/12 16:46:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGScrollBar.cxx,v 1.8 2002/10/10 17:09:06 rdm Exp $
 // Author: Fons Rademakers   10/01/98
 
 /*************************************************************************
@@ -241,8 +241,24 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
 {
    // Handle a mouse button event in a horizontal scrolbar.
 
+   Int_t newpos;
+
+   if (event->fCode == kButton4) {
+      //scroll left
+      newpos = fPos - fPsize;
+      if (newpos<0) newpos = 0;
+      SetPosition(newpos);
+      return kTRUE;
+   }
+   if (event->fCode == kButton5) {
+      // scroll right
+      newpos = fPos + fPsize;
+      SetPosition(newpos);
+      return kTRUE;
+   }
+
    if (event->fType == kButtonPress) {
-      if (event->fCode == kButton2) {
+      if (event->fCode == kButton3) {
          fX0 = event->fX - fSliderSize/2;
          fX0 = TMath::Max(fX0, fgScrollBarWidth);
          fX0 = TMath::Min(fX0, fgScrollBarWidth + fSliderRange);
@@ -444,8 +460,24 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
 {
    // Handle mouse button event in vertical scrollbar.
 
+   Int_t newpos;
+
+   if (event->fCode == kButton4) {
+      //scroll up
+      newpos = fPos - fPsize;
+      if (newpos<0) newpos = 0;
+      SetPosition(newpos);
+      return kTRUE;
+   }
+   if (event->fCode == kButton5) {
+      // scroll down
+      newpos = fPos + fPsize;
+      SetPosition(newpos);
+      return kTRUE;
+   }
+
    if (event->fType == kButtonPress) {
-      if (event->fCode == kButton2) {
+      if (event->fCode == kButton3) {
          fY0 = event->fY - fSliderSize/2;
          fY0 = TMath::Max(fY0, fgScrollBarWidth);
          fY0 = TMath::Min(fY0, fgScrollBarWidth + fSliderRange);
