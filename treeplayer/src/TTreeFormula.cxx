@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.169 2005/03/08 05:33:30 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeFormula.cxx,v 1.170 2005/03/11 21:25:11 brun Exp $
 // Author: Rene Brun   19/01/96
 
 /*************************************************************************
@@ -1842,16 +1842,17 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression,
          // so far does point to a leaf.
          *current = '\0';
 
+         Int_t len = strlen(work);
          if (work[0]=='@') {
             foundAtSign = kTRUE;
             Int_t l = 0;
             for(l=0;work[l+1]!=0;++l) work[l] = work[l+1];
             work[l] = '\0';
             --current;
-         } else if (work[strlen(work)-2]=='@') {
+         } else if (len>=2 && work[len-2]=='@') {
             foundAtSign = kTRUE;
-            work[strlen(work)-2] = cname[i];
-            work[strlen(work)-1] = '\0';
+            work[len-2] = cname[i];
+            work[len-1] = '\0';
             --current;
          } else {
             foundAtSign = kFALSE;
