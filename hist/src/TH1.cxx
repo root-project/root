@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.17 2000/08/07 12:31:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.18 2000/08/14 16:54:18 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3864,10 +3864,8 @@ void TH1::Sumw2()
 
   fSumw2.Set(fNcells);
 
-  if (fEntries) {
-     for (Int_t bin=0; bin<fNcells; bin++) {
-        fSumw2.fArray[bin] = GetBinContent(bin);
-     }
+  for (Int_t bin=0; bin<fNcells; bin++) {
+     fSumw2.fArray[bin] = GetBinContent(bin);
   }
 }
 
