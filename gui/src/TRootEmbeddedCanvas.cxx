@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.5 2001/08/15 13:51:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootEmbeddedCanvas.cxx,v 1.7 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   15/07/98
 
 /*************************************************************************
@@ -269,7 +269,7 @@ void TRootEmbeddedCanvas::SavePrimitive(ofstream &out, Option_t *option)
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == kSunkenFrame | kDoubleBorder) {
+      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
          out <<");" << endl;
       } else {
          out << "," << GetOptionString() <<");" << endl;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.20 2003/07/15 14:25:21 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.21 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -953,7 +953,7 @@ void TGListView::SavePrimitive(ofstream &out, Option_t *option)
        << "," << GetWidth() << "," << GetHeight();
 
    if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == kSunkenFrame | kDoubleBorder) {
+      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
          out <<");" << endl;
       } else {
          out << "," << GetOptionString() <<");" << endl;
@@ -1014,7 +1014,7 @@ void TGLVContainer::SavePrimitive(ofstream &out, Option_t *option)
       out << "," << GetWidth() << "," << GetHeight();
    }
    if (fBackground == GetDefaultFrameBackground()) {
-      if (GetOptions() == kSunkenFrame | kDoubleBorder) {
+      if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
          out <<");" << endl;
       } else {
          out << "," << GetOptionString() <<");" << endl;

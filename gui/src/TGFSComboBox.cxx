@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.8 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.9 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -354,7 +354,7 @@ void TGFSComboBox::SavePrimitive(ofstream &out, Option_t *option)
    out << GetName() << " = new TGFSComboBox(" << fParent->GetName()
                                           << "," << fWidgetId;
    if (fBackground == GetWhitePixel()) {
-      if (GetOptions() == kHorizontalFrame | kSunkenFrame | kDoubleBorder) {
+      if (GetOptions() == (kHorizontalFrame | kSunkenFrame | kDoubleBorder)) {
          out <<");" << endl;
       } else {
          out << "," << GetOptionString() <<");" << endl;

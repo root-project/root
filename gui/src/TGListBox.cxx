@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.10 2003/05/28 11:55:31 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.11 2003/11/05 13:08:25 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -968,7 +968,7 @@ void TGListBox::SavePrimitive(ofstream &out, Option_t *option)
    out << GetName() << " = new TGListBox(" << fParent->GetName();
 
    if (fBackground == GetWhitePixel()) {
-       if (GetOptions() == kSunkenFrame | kDoubleBorder) {
+       if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
           if (fWidgetId == -1) {
                out <<");" << endl;
            } else {

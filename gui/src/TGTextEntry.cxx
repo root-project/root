@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.16 2003/07/09 09:58:13 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.cxx,v 1.17 2003/11/05 13:08:26 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -1675,7 +1675,7 @@ void TGTextEntry::SavePrimitive(ofstream &out, Option_t *option)
        << ", new TGTextBuffer(" << GetBuffer()->GetBufferLength() << ")";
 
    if (fBackground == GetWhitePixel()) {
-       if (GetOptions() == kSunkenFrame | kDoubleBorder) {
+       if (GetOptions() == (kSunkenFrame | kDoubleBorder)) {
            if (fFontStruct == GetDefaultFontStruct()) {
                if (fNormGC() == GetDefaultGC()()) {
                     if (fWidgetId == -1) {
