@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitModels
- *    File: $Id: RooCPMixFit.cc,v 1.3 2002/02/07 02:20:18 verkerke Exp $
+ *    File: $Id: RooCPMixFit.cc,v 1.4 2002/02/08 22:58:39 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -200,6 +200,8 @@ void RooCPMixFit::initDataVars()
   physCat_func->map("B0->JPsiKs*"       ,"Gold") ;
   physCat_func->map("B0->Psi2sKs*"      ,"Gold") ;
   physCat_func->map("B0->Chic1Ks*"      ,"Gold") ;
+  physCat_func->map("B0->eta_cKs*"      ,"Etac") ;
+  physCat_func->map("B+->eta_cK+*"      ,"Etac") ;
   physCat_func->map("B0->JPsiKl, JPsi->EE, IFR"     ,"KlIfrE") ;
   physCat_func->map("B0->JPsiKl, JPsi->EE, IFREMC"  ,"KlIfrE") ;
   physCat_func->map("B0->JPsiKl, JPsi->MuMu, IFR"   ,"KlIfrM") ;
@@ -577,6 +579,14 @@ void RooCPMixFit::defineBDecayModes(RooCategory& cat)
   cat.defineType("B0->JPsiPi0, JPsi->MuMu",1082) ;
   cat.defineType("B+->JPsiPi+, JPsi->EE",1083) ;
   cat.defineType("B+->JPsiPi+, JPsi->MuMu",1084) ;
+  // eta_c modes (GHM)
+  cat.defineType("B0->eta_cKs, eta_c->KsKpi" ,4007);
+  cat.defineType("B0->eta_cKs, eta_c->KKpi0" ,4008);
+  cat.defineType("B0->eta_cKs, eta_c->KKKK"  ,4001);
+  cat.defineType("B+->eta_cK+, eta_c->KsKpi" ,4107);
+  cat.defineType("B+->eta_cK+, eta_c->KKpi0" ,4108);
+  cat.defineType("B+->eta_cK+, eta_c->KKKK"  ,4101);
+  // 
   cat.defineType("B0->JPsiRho0, JPsi->EE",1091) ;
   cat.defineType("B0->JPsiRho0, JPsi->MuMu",1092) ;
   cat.defineType("B+->JPsiRhop, JPsi->EE",1093) ;
