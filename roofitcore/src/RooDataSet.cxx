@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.71 2002/04/08 21:06:30 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.72 2002/04/12 19:06:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -254,7 +254,7 @@ const RooArgSet* RooDataSet::get(Int_t index) const
 }
 
 
-Int_t RooDataSet::numEntries(Bool_t useWeights=kFALSE) const 
+Int_t RooDataSet::numEntries(Bool_t useWeights) const 
 {
   // Return number of entries if no weights are requested or available
   if (!useWeights || !_wgtVar) return (Int_t) GetEntries() ;
