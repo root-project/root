@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.12 2002/01/16 11:00:19 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.13 2002/01/18 18:46:06 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -173,13 +173,18 @@ public:
    static Double_t  KolmogorovProb(Double_t z);
 
    // Bessel functions
-   static Double_t BesselI(Int_t n,Double_t x);         // Compute integer order modified Bessel function I_n(x)
-   static Double_t BesselK(Int_t n,Double_t x);         // Compute integer order modified Bessel function K_n(x)
-   static Double_t BesselI0(Double_t x);                // Compute modified Bessel function I_0(x)
-   static Double_t BesselK0(Double_t x);                // Compute modified Bessel function K_0(x)
-   static Double_t BesselI1(Double_t x);                // Compute modified Bessel function I_1(x)
-   static Double_t BesselK1(Double_t x);                // Compute modified Bessel function K_1(x)
-
+   static Double_t BesselI(Int_t n,Double_t x);      // integer order modified Bessel function I_n(x)
+   static Double_t BesselK(Int_t n,Double_t x);      // integer order modified Bessel function K_n(x)
+   static Double_t BesselI0(Double_t x);             // modified Bessel function I_0(x)
+   static Double_t BesselK0(Double_t x);             // modified Bessel function K_0(x)
+   static Double_t BesselI1(Double_t x);             // modified Bessel function I_1(x)
+   static Double_t BesselK1(Double_t x);             // modified Bessel function K_1(x)
+   static Double_t BesselJ0(Double_t x);             // Bessel function J0(x) for any real x
+   static Double_t BesselJ1(Double_t x);             // Bessel function J1(x) for any real x
+   static Double_t BesselY0(Double_t x);             // Bessel function Y0(x) for positive x
+   static Double_t BesselY1(Double_t x);             // Bessel function Y1(x) for positive x
+   static Double_t Struve(Int_t n, Double_t x);      // Struve functions of order 0 and 1
+   
    ClassDef(TMath,0)  //Interface to math routines
 };
 
