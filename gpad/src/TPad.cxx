@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.26 2000/12/26 14:25:53 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.27 2001/01/25 08:11:18 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -394,6 +394,7 @@ void TPad::Clear(Option_t *option)
 
    PaintBorder(GetFillColor(), kTRUE);
    fCrosshairPos = 0;
+   ResetBit(TGraph::kClipFrame);
 }
 
 //___________________________________________________________
