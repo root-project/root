@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name$:$Id$
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.1.1.1 2000/05/16 17:00:46 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -54,6 +54,7 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const Text_t *ftitle, In
    // If the file specified in the URL does not exist, is not accessable
    // or can not be created the kZombie bit will be set in the TRFIOFile
    // object. Use IsZombie() to see if the file is accessable.
+   // The preferred interface to this constructor is via TFile::Open().
 
    fOption = option;
    fOffset = 0;
