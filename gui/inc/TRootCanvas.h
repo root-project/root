@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.10 2004/02/20 12:32:06 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.h,v 1.11 2004/04/22 16:28:29 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -37,6 +37,7 @@ class TGStatusBar;
 class TRootContainer;
 class TGToolBar;
 class TGHorizontal3DLine;
+class TGVertical3DLine;
 class TVirtualPadEditor;
 
 class TRootCanvas : public TGMainFrame, public TCanvasImp {
@@ -63,15 +64,21 @@ private:
    TGLayoutHints       *fCanvasLayout;       // layout for canvas widget
    TGStatusBar         *fStatusBar;          // statusbar widget
    TGLayoutHints       *fStatusBarLayout;    // layout hints for statusbar
-   
-   TGCompositeFrame    *fEditorFrame;        // side farme for current pad editor 
+
+   TGCompositeFrame    *fEditorFrame;        // side farme for current pad editor
    TGLayoutHints       *fEditorLayout;       // layout for editor frame
    TGCompositeFrame    *fMainFrame;          // main frame containing canvas and side frame
    TGLayoutHints       *fToolBarLayout;      // layout for toolbar widget
    TGToolBar           *fToolBar;            // icon button toolbar
    TGHorizontal3DLine  *fToolBarSep;         // toolbar separator
    TGLayoutHints       *fMainFrameLayout;    // layout for main frame
-   
+   TGVertical3DLine    *fVertical1;          // toolbar vertical separator
+   TGVertical3DLine    *fVertical2;          // toolbar vertical separator
+   TGHorizontal3DLine  *fHorizontal1;        // toolbar sepatator
+   TGLayoutHints       *fVertical1Layout;    // layout hints for separator
+   TGLayoutHints       *fVertical2Layout;    // layout hints for separator
+   TGLayoutHints       *fHorizontal1Layout;  // layout hints for separator
+
    TVirtualPadEditor   *fEditor;     // pointer to currently loaded pad editor
    Int_t                fCanvasID;   // index in fWindows array of TGX11
    Bool_t               fAutoFit;    // when true canvas container keeps same size as canvas
@@ -91,7 +98,7 @@ private:
 
    void     Lock();
    void     Unlock();
-   Bool_t   IsLocked() { return fLockState; } 
+   Bool_t   IsLocked() { return fLockState; }
 
 public:
    TRootCanvas(TCanvas *c, const char *name, UInt_t width, UInt_t height);
@@ -111,7 +118,7 @@ public:
    void     SetWindowTitle(const char *newTitle);
    void     SetCanvasSize(UInt_t w, UInt_t h);
    void     SetStatusText(const char *txt = 0, Int_t partidx = 0);
-   
+
    void     Show() { MapRaised(); }
    void     ShowMenuBar(Bool_t show = kTRUE);
    void     ShowStatusBar(Bool_t show = kTRUE);

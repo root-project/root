@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.37 2004/04/22 17:04:37 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootCanvas.cxx,v 1.38 2004/04/28 09:15:06 brun Exp $
 // Author: Fons Rademakers   15/01/98
 
 /*************************************************************************
@@ -117,7 +117,7 @@ enum ERootCanvasCommands {
    kHelpOnBrowser,
    kHelpOnObjects,
    kHelpOnPS,
-   
+
    kToolModify,
    kToolArc,
    kToolLine,
@@ -458,8 +458,12 @@ void TRootCanvas::CreateCanvas(const char *name)
       fToolBar->AddButton(this, &gToolBarData[i], spacing);
       spacing = 0;
    }
-   fToolBar->AddFrame(new TGVertical3DLine(fToolBar), new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 4,2,0,0));
-   fToolBar->AddFrame(new TGVertical3DLine(fToolBar), new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2,0,0,0));
+   fVertical1 = new TGVertical3DLine(fToolBar);
+   fVertical2 = new TGVertical3DLine(fToolBar);
+   fVertical1Layout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 4,2,0,0);
+   fVertical2Layout = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 2,0,0,0);
+   fToolBar->AddFrame(fVertical1, fVertical1Layout);
+   fToolBar->AddFrame(fVertical2, fVertical2Layout);
 
    spacing = 6;
    for (i = 0; gToolBarData1[i].fPixmap; i++) {
@@ -470,10 +474,13 @@ void TRootCanvas::CreateCanvas(const char *name)
       fToolBar->AddButton(this, &gToolBarData1[i], spacing);
       spacing = 0;
    }
-   
+
+   fHorizontal1 = new TGHorizontal3DLine(this);
+   fHorizontal1Layout = new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 1, 1);
+
    AddFrame(fToolBarSep, fToolBarLayout);
    AddFrame(fToolBar, fToolBarLayout);
-   AddFrame(new TGHorizontal3DLine(this), new TGLayoutHints(kLHintsTop |  kLHintsExpandX, 0, 0, 1, 1));
+   AddFrame(fHorizontal1, fHorizontal1Layout);
 
    fMainFrame = new TGCompositeFrame(this, GetWidth() + 4, GetHeight() + 4,
                                       kHorizontalFrame);
@@ -485,7 +492,6 @@ void TRootCanvas::CreateCanvas(const char *name)
    fMainFrame->AddFrame(fEditorFrame, fEditorLayout);
 
    // Create canvas and canvas container that will host the ROOT graphics
-
    fCanvasWindow = new TGCanvas(fMainFrame, GetWidth()+4, GetHeight()+4,
                                 kSunkenFrame | kDoubleBorder);
    fCanvasID = gVirtualX->InitWindow((ULong_t)fCanvasWindow->GetViewPort()->GetId());
@@ -545,6 +551,12 @@ TRootCanvas::~TRootCanvas()
    delete fToolBarSep;
    delete fToolBar;
    delete fToolBarLayout;
+   delete fVertical1;
+   delete fVertical2;
+   delete fHorizontal1;
+   delete fVertical1Layout;
+   delete fVertical2Layout;
+   delete fHorizontal1Layout;
 
    delete fFileMenu;
    delete fFileSaveMenu;
@@ -698,7 +710,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kToolCutG:
                      gROOT->SetEditorMode("CutG");
                      break;
-                  
+
                   // Handle File menu items...
                   case kFileNewCanvas:
                      gROOT->GetMakeDefCanvas()();
@@ -770,7 +782,7 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 
                   // Handle Edit menu items...
                   case kEditCut:
-                     // still noop 
+                     // still noop
                      break;
                   case kEditCopy:
                      // still noop
@@ -1155,10 +1167,10 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
 void TRootCanvas::ShowEditor(Bool_t show)
 {
    // Show or hide side frame.
-   
+
    UInt_t w = GetWidth();
    UInt_t e = fEditorFrame->GetWidth();
-   
+
    if (show) {
       if (!fEditor) CreateEditor();
       fMainFrame->ShowFrame(fEditorFrame);
