@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: $
+// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.h,v 1.1 2002/07/17 12:29:37 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 class TDSet;
 class TDSetElement;
 class TSlave;
+class TMessage;
 
 typedef long Long64_t;
 
@@ -57,7 +58,7 @@ public:
    Bool_t                  IsValid() const { return fValid; }
    virtual Long64_t        GetEntriesProcessed() const;
    virtual Long64_t        GetEntriesProcessed(TSlave *sl) const;
-   virtual TDSetElement   *GetNextPacket(TSlave *sl);
+   virtual TDSetElement   *GetNextPacket(TSlave *sl, TMessage *r);
 
    ClassDef(TVirtualPacketizer,0)  //Generate work packets for parallel processing
 };

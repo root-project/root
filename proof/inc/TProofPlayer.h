@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.5 2002/04/19 18:23:59 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.6 2002/08/07 15:53:53 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -36,6 +36,7 @@ class TEventList;
 class TProof;
 class TSocket;
 class TVirtualPacketizer;
+class TMessage;
 
 
 //------------------------------------------------------------------------
@@ -65,7 +66,7 @@ public:
    virtual TList    *GetOutputList() const;
    virtual void      StoreOutput(TList *out);   // Adopts the list
 
-   virtual TDSetElement *GetNextPacket(TSlave *slave);
+   virtual TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
    void              UpdateAutoBin(const char *name,
                         Double_t& xmin, Double_t& xmax,
                         Double_t& ymin, Double_t& ymax,
@@ -108,7 +109,7 @@ public:
    void  StoreOutput(TList *out);   // Adopts the list
    void  MergeOutput();
 
-   TDSetElement *GetNextPacket(TSlave *slave);
+   TDSetElement *GetNextPacket(TSlave *slave, TMessage *r);
 
    ClassDef(TProofPlayerRemote,0)  // PROOF player running on master server
 };

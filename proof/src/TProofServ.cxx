@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.29 2002/09/19 13:59:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.30 2002/10/03 18:06:46 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -427,11 +427,22 @@ TDSetElement *TProofServ::GetNextPacket()
 {
    // Get next range of entries to be processed on this server.
 
-   fSocket->Send(kPROOF_GETPACKET);
+   if (fCompute.Counter() > 0)
+      fCompute.Stop();
+
+   TMessage req(kPROOF_GETPACKET);
+   req << fLatency.RealTime() << fCompute.RealTime() << fCompute.CpuTime();
+
+   fLatency.Start();
+   fSocket->Send(req);
 
    TMessage *mess;
-   if (fSocket->Recv(mess) < 0)
+   if (fSocket->Recv(mess) < 0) {
+      fLatency.Stop();
       return 0;
+   }
+
+   fLatency.Stop();
 
    Bool_t         ok;
    TDSetElement  *e;
@@ -450,6 +461,7 @@ TDSetElement *TProofServ::GetNextPacket()
       e = 0;
    }
    if (e != 0) {
+      fCompute.Start();
       PDB(kLoop, 2) Info("GetNextPacket", "'%s' '%s' '%s' %d %d",
                          e->GetFileName(), e->GetDirectory(),
                          e->GetObjName(), e->GetFirst(),e->GetNum());

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.10 2002/08/09 13:12:24 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.11 2002/10/03 18:11:56 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -187,7 +187,7 @@ void TProofPlayer::UpdateAutoBin(const char *name, Double_t& xmin, Double_t& xma
 }
 
 //______________________________________________________________________________
-TDSetElement *TProofPlayer::GetNextPacket(TSlave *slave)
+TDSetElement *TProofPlayer::GetNextPacket(TSlave *slave, TMessage *r)
 {
    MayNotUse("GetNextPacket");
    return 0;
@@ -369,9 +369,9 @@ void TProofPlayerRemote::StoreOutput(TList *out)
 
 
 //______________________________________________________________________________
-TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave)
+TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
 {
-   TDSetElement *e = fPacketizer->GetNextPacket( slave );
+   TDSetElement *e = fPacketizer->GetNextPacket( slave, r );
 
    if ( e != 0 ) {
       PDB(kPacketizer,2)

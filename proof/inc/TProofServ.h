@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.10 2002/03/16 18:36:51 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.h,v 1.11 2002/04/19 18:23:59 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -32,6 +32,9 @@
 #endif
 #ifndef ROOT_Htypes
 #include "Htypes.h"
+#endif
+#ifndef ROOT_TStopwatch
+#include "TStopwatch.h"
 #endif
 
 
@@ -69,6 +72,8 @@ private:
    Float_t     fRealTime;         //real time spent executing commands
    Float_t     fCpuTime;          //CPU time spent executing commands
    Stat_t      fEntriesProcessed; //total number of entries processed (obtained via GetNextPacket)
+   TStopwatch  fLatency;          //measures latency of packet requests
+   TStopwatch  fCompute;          //measures time spend processing a packet
 
    void        Setup();
    void        RedirectOutput();

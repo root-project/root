@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.28 2002/09/19 13:59:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.cxx,v 1.29 2002/10/03 18:01:51 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -911,7 +911,7 @@ Int_t TProof::Collect(TMonitor *mon)
                TDSetElement *elem = 0;
                if (fPlayer) {
                   sl = FindSlave(s);
-                  elem = fPlayer->GetNextPacket(sl);
+                  elem = fPlayer->GetNextPacket(sl, mess);
                }
 
                TMessage answ(kPROOF_GETPACKET);

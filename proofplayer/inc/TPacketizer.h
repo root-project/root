@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.4 2002/07/17 12:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer.h,v 1.5 2002/08/09 13:12:23 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -30,12 +30,16 @@
 #include "TVirtualPacketizer.h"
 #endif
 
+class TMessage;
+
 
 class TPacketizer : public TVirtualPacketizer {
 
 private:
    Int_t    fProcessed;       // number of entries processed
-   Long64_t fTotalEntries;    // Total number of entries to be distributed
+   TList   *fPackets;         // all processed packets
+
+   Long64_t fTotalEntries;    // total number of entries to be distributed
 
    TList   *fFileNodes;       // nodes with files
    TList   *fUnAllocated;     // nodes with unallocated files
@@ -54,7 +58,7 @@ public:
 
    Long64_t      GetEntriesProcessed() const { return fProcessed; }
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
-   TDSetElement *GetNextPacket(TSlave *sl);
+   TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
 
    ClassDef(TPacketizer,0)  //Generate work packets for parallel processing
 };

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.4 2002/09/19 13:59:48 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.5 2002/10/03 18:09:14 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -119,6 +119,9 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
    PDB(kPacketizer,1) Info("TPacketizer2", "Enter");
 
    fValid = kTRUE;
+
+   fPackets = new TList;
+   fPackets->SetOwner();
 
    fFileNodes = new TList;
    fFileNodes->SetOwner();
@@ -279,11 +282,14 @@ TPacketizer2::TPacketizer2(TDSet *dset, TList *slaves, Long64_t first, Long64_t 
 
       if ( sock->Recv(reply) <= 0 ) {
          // Help! lost a slave?
-
+         Error("TPacketizer2","!!!! Recv failed !!!!");
+         continue;
       }
 
       if ( reply->What() != kPROOF_REPORTSIZE ) {
          // Help! unexpected message type
+         Error("TPacketizer2","unexpected message type (%d)", reply->What());
+         continue;
       }
 
       TSlave *slave = (TSlave *) slaves_by_sock.GetValue( sock );
@@ -412,6 +418,7 @@ TPacketizer2::~TPacketizer2()
       // The destructor of l will delete the values of fSlaveStats
    }
 
+   delete fPackets;
    delete fSlaveStats;
    delete fUnAllocated;
    delete fActive;
@@ -433,7 +440,7 @@ Long64_t TPacketizer2::GetEntriesProcessed(TSlave *slave) const
 
 
 //______________________________________________________________________________
-TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl)
+TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl, TMessage *r)
 {
    if ( !fValid ) {
       return 0;
@@ -448,9 +455,18 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl)
    // update stats & free old element
 
    if ( slstat->fCurElem != 0 ) {
-         slstat->fProcessed += slstat->fCurElem->GetNum();
-         delete slstat->fCurElem;
-         slstat->fCurElem = 0;
+      Double_t latency, proctime, proccpu;
+
+      slstat->fProcessed += slstat->fCurElem->GetNum();
+
+      fPackets->Add(slstat->fCurElem);
+      (*r) >> latency >> proctime >> proccpu;
+      PDB(kPacketizer,2) Info("GetNextPacket","slave-% (%s): %d %7.3lf %7.3lf %7.3lf",
+                              sl->GetOrdinal(), sl->GetName(),
+                              slstat->fCurElem->GetNum(),
+                              latency, proctime, proccpu);
+
+      slstat->fCurElem = 0;
    }
 
    // get a file if needed
@@ -509,7 +525,8 @@ TDSetElement *TPacketizer2::GetNextPacket(TSlave *sl)
    TDSetElement *base = file->fElement;
    Int_t last = base->GetFirst() + base->GetNum();
    Int_t first;
-   Int_t num = 1000;  // target packet size TODO: variable packet size
+   //Int_t num = 1000;  // target packet size TODO: variable packet size
+   Int_t num = 4000;  // target packet size TODO: variable packet size
 
    if ( file->fNextEntry + num >= last ) {
       num = last - file->fNextEntry;

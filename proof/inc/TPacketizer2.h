@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.4 2002/07/17 12:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.h,v 1.1 2002/08/09 13:12:23 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -32,13 +32,18 @@
 
 
 class TMap;
+class TMessage;
+class TTree;
 
 
 class TPacketizer2 : public TVirtualPacketizer {
 
 private:
    Int_t    fProcessed;       // number of entries processed
-   Long64_t fTotalEntries;    // Total number of entries to be distributed
+   TList   *fPackets;         // all processed packets
+   TTree   *fTrace;           // tree with a packet trace
+
+   Long64_t fTotalEntries;    // total number of entries to be distributed
 
    TList   *fFileNodes;       // nodes with files
    TList   *fUnAllocated;     // nodes with unallocated files
@@ -57,7 +62,7 @@ public:
 
    Long64_t      GetEntriesProcessed() const { return fProcessed; }
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
-   TDSetElement *GetNextPacket(TSlave *sl);
+   TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
 
    ClassDef(TPacketizer2,0)  //Generate work packets for parallel processing
 };

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.1 2002/07/17 12:29:37 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TVirtualPacketizer.cxx,v 1.2 2002/08/07 15:53:54 rdm Exp $
 // Author: Maarten Ballintijn    9/7/2002
 
 /*************************************************************************
@@ -113,7 +113,7 @@ Long64_t TVirtualPacketizer::GetEntriesProcessed(TSlave *sl) const
 
 
 //______________________________________________________________________________
-TDSetElement *TVirtualPacketizer::GetNextPacket(TSlave *sl)
+TDSetElement *TVirtualPacketizer::GetNextPacket(TSlave *sl, TMessage *r)
 {
    AbstractMethod("GetNextPacket");
 
