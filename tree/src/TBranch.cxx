@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.65 2003/12/30 13:16:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.66 2003/12/30 18:17:56 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1012,7 +1012,7 @@ void TBranch::Print(Option_t *) const
   }
   Printf(bline);
   if (fTotBytes > 2e9) {
-     Printf("*Entries :%9d : Total  Size=%11g bytes  File Size  = %10d *",Int_t(fEntries),totBytes,Int_t(fZipBytes));
+     Printf("*Entries :%9d : Total  Size=%11g bytes  File Size  = %lld *",Int_t(fEntries),totBytes,Long64_t(fZipBytes));
   } else {
      if (fZipBytes > 0) {
         Printf("*Entries :%9d : Total  Size=%11d bytes  File Size  = %10d *",Int_t(fEntries),Int_t(totBytes),Int_t(fZipBytes));
