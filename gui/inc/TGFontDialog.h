@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.h,v 1.1 2004/04/13 09:52:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.h,v 1.2 2004/09/08 08:13:11 brun Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
       TString     fName;
       Int_t       fSize;
       UInt_t      fAlign;
-      ULong_t     fColor;
+      Pixel_t     fColor;
       Bool_t      fBold;
       Bool_t      fItalic;
    };
@@ -71,7 +71,7 @@ protected:
    Bool_t               fBold;
    Int_t                fSize;
    UInt_t               fTextAlign;
-   ULong_t              fTextColor;
+   Pixel_t              fTextColor;
    TString              fSampleText;
    TGGC                *fSampleTextGC;
    TGFont              *fLabelFont;
