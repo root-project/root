@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.25 2004/09/06 10:23:13 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.26 2004/09/06 16:39:02 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -983,7 +983,7 @@ void TGeoRotation::CheckMatrix()
 {
    // performes an orthogonality check and finds if the matrix is a reflection
 //   Warning("CheckMatrix", "orthogonality check not performed yet");
-   if (Determinant() < 0) {SetBit(kGeoReflection);printf("%s reflection\n", GetName());}
+   if (Determinant() < 0) SetBit(kGeoReflection);
    Double_t dd = fRotationMatrix[0] + fRotationMatrix[4] + fRotationMatrix[8] - 3.;
    if (TMath::Abs(dd) < 1.E-12) ResetBit(kGeoRotation);
    else                         SetBit(kGeoRotation);
