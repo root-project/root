@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.10 2001/03/29 10:53:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.11 2001/03/29 11:25:48 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -131,6 +131,7 @@ void TFolder::Add(TObject *obj)
 // Add object to this folder. obj must be a TObject or a TFolder
 
    if (obj == 0 || fFolders == 0) return;
+   obj->SetBit(kMustCleanup);
    fFolders->Add(obj);
 }
 
