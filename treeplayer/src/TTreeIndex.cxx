@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.2 2004/07/09 07:41:43 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTreeIndex.cxx,v 1.3 2004/07/09 07:54:59 brun Exp $
 // Author: Rene Brun   05/07/2004
 
 /*************************************************************************
@@ -145,6 +145,7 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
 //______________________________________________________________________________
 TTreeIndex::~TTreeIndex()
 {
+   if (fTree && fTree->GetTreeIndex() == this) fTree->SetTreeIndex(0);
    delete [] fIndexValues;      fIndexValues = 0;
    delete [] fIndex;            fIndex = 0;
    delete fMajorFormula;        fMajorFormula  = 0;
@@ -185,13 +186,30 @@ Int_t TTreeIndex::GetEntryNumberFriend(const TTree *T)
 // major and minor name, the entry serial number in the friend tree
 // and in the master Tree are assumed to be the same
    
+   if (!T) return -3;
    GetMajorFormulaParent(T);
    GetMinorFormulaParent(T);
    if (!fMajorFormulaParent || !fMinorFormulaParent) return -1;
+   if (!fMajorFormulaParent->GetNdim() || !fMinorFormulaParent->GetNdim()) {
+      // The Tree Index in the friend has a pair majorname,minorname 
+      // not available in the parent Tree T.
+      // if the friend Tree has less entries than the parent, this is an error
+      Int_t pentry = T->GetReadEntry();
+      if (pentry >= (Int_t)fTree->GetEntries()) return -2;
+      // otherwise we ignore the Tree Index and return the entry number
+      // in the parent Tree.
+      return pentry;
+   }
+   
+   // majorname, minorname exist in the parent Tree
+   // we find the current values pair majorv,minorv in the parent Tree
    Double_t majord = fMajorFormulaParent->EvalInstance();
    Double_t minord = fMinorFormulaParent->EvalInstance();
    Long64_t majorv = (Long64_t)majord;
    Long64_t minorv = (Long64_t)minord;
+   // we check if this pair exist in the index.
+   // if yes, we return the corresponding entry number
+   // if not the function returns -1
    return fTree->GetEntryNumberWithIndex(majorv,minorv);
 }
 
