@@ -426,11 +426,15 @@ int tagnum;
     libname = G__struct.libname[tagnum];
     /* G__struct.type[tagnum]=0; */
     if(G__p_class_autoloading) {
+#ifndef G__OLDIMPLEMENTATION2048
       int res;
       G__enable_autoloading = 0;
       res = (*G__p_class_autoloading)(G__struct.name[tagnum],libname);
       G__enable_autoloading = 1;
       return(res);
+#else
+      return((*G__p_class_autoloading)(G__struct.name[tagnum],libname));
+#endif
     }
     else if(libname) {
       G__enable_autoloading = 0;
@@ -1030,6 +1034,9 @@ int type;
     G__struct.memfunc[i]->p_tagtable[0] = -1; 
     G__struct.memfunc[i]->p_typetable[0] = -1; 
     G__struct.memfunc[i]->staticalloc[0] = 0; 
+#ifndef G__OLDIMPLEMENTATION2050
+    G__struct.memfunc[i]->busy[0] = 0; 
+#endif
 #endif
 
     G__struct.memfunc[i]->allifunc = 1;

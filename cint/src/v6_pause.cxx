@@ -1924,6 +1924,41 @@ int G__ReadInputMode()
 #endif
 
 /******************************************************************
+* G__debugvariable()
+******************************************************************/
+void G__debugvariable(fp,var,name) 
+FILE* fp;
+struct G__var_array *var;
+char* name;
+{
+  int ig15;
+  int i;
+  while(var) {
+    for(ig15=0;ig15<var->allvar;ig15++) {
+      if(var->hash[ig15] && strcmp(var->varnamebuf[ig15],name)==0) {
+        fprintf(fp
+         ,"%s p=%ld type=%c typenum=%d tagnum=%d const=%x static=%d\n paran=%d "
+		,var->varnamebuf[ig15]
+		,var->p[ig15]
+		,var->type[ig15]
+		,var->p_typetable[ig15]
+		,var->p_tagtable[ig15]
+		,var->constvar[ig15]
+		,var->statictype[ig15]
+		,var->paran[ig15]
+	        );
+        i=0;
+        while(var->varlabel[ig15][i]) {
+          fprintf(fp,"[%d]",var->varlabel[ig15][i++]);
+        }
+        fprintf(fp,"\n");
+      }
+    }
+    var=var->next;
+  }
+}
+
+/******************************************************************
 * int G__process_cmd()
 ******************************************************************/
 int G__process_cmd(line, prompt, more, err, rslt)
@@ -3301,6 +3336,18 @@ G__value *rslt;
 		,G__assertion);
       }
     }
+
+#if 1
+    else if(strncmp("G",com,1)==0) {
+      G__more_pause((FILE*)NULL,1);
+      index=1;
+      while(isspace(command[index])) index++;
+      temp=index;
+      while(command[temp]&&(!isspace(command[temp]))) temp++;
+      command[temp]='\0';
+      G__debugvariable(G__sout,&G__global,command+index);
+    }
+#endif
 
 #ifndef G__FONS23
     else if(strncmp("g",com,1)==0 || strncmp("G",com,1)==0 ||

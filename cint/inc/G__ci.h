@@ -21,14 +21,23 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150133
-#define G__CINTVERSIONSTR  "5.15.133, Apr 18 2004"
+#ifdef G__CINT_VER6
+#define G__CINTVERSION      6000000
+#define G__CINTVERSIONSTR  "6.0.0, May 9 2004"
+#else
+#define G__CINTVERSION      50150136
+#define G__CINTVERSIONSTR  "5.15.136, May 9 2004"
+#endif
 
 #define G__ALWAYS
 /* #define G__NEVER */
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+#ifndef G__CINT_VER6
+#define G__OLDIMPLEMENTATION2051
+#endif
 
 /* Problem remains with autoloading if library is unloaded. Tried to fix it
  * with 2015, but this has problem with ROOT. */
@@ -225,7 +234,7 @@
 * if __MAKECINT__ is defined, do not include this file
 * G__MAKECINT is automatically defined in makecint or G__makesetup script
 **************************************************************************/
-#if (!defined(__MAKECINT__)) || defined(G__API)
+#if (!defined(__MAKECINT__)) || defined(G__API) || defined(G__BC_DICT)
 
 
 #ifdef __cplusplus

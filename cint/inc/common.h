@@ -446,6 +446,7 @@
 #define G__ENTERSCOPE         0x0047
 #define G__EXITSCOPE          0x0048
 #endif
+#define G__CASE               0x0049
 
 #define G__NOP                0xffff
 

@@ -834,6 +834,8 @@ const char* G__replacesymbol G__P((const char* s));
 int G__display_replacesymbol G__P((FILE *fout,const char* name));
 #endif
 
+void G__asm_storebytecodefunc G__P((struct G__ifunc_table *ifunc,int ifn,struct G__var_array *var,G__value *pstack,int sp,long *pinst,int instsize));
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,7 +1,7 @@
 
 INC='-I/usr/X11R6/include'
 #LIB='-L/usr/X11R6/lib -lGL -lGLU -lglut -lXmu -lX11 -lXi'
-LIB='-L/usr/X11R6/lib -lGL -lGLU -lXmu -lX11 -lXi'
+LIB='-L/usr/X11R6/lib -lGL -lGLU -lGLw -lXmu -lX11 -lXi'
 
 mv ../../include/GL ../../include/GLx
 

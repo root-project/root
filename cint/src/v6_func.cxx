@@ -20,6 +20,10 @@
 
 #include "common.h"
 
+#ifndef G__OLDIMPLEMENTATION2051
+extern void G__cpp_setupG__bcdict();
+#endif
+
 #ifndef G__OLDIMPLEMENTATION1932
 #if defined(G__WIN32)
 #include <windows.h>
@@ -5856,6 +5860,18 @@ int hash;
     return(1);
   }
 #endif
+
+
+#ifndef G__OLDIMPLEMENTATION2051
+  if(strcmp(funcname,"G__cintv6")==0) {
+    if(G__no_exec_compile) return(1);
+    *result7 = G__null;
+    G__cpp_setupG__API();
+    G__cpp_setupG__bcdict();
+    return(1);
+  }
+#endif
+
 
 #endif /* G__SMALLOBJECT */
   

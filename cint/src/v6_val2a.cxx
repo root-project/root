@@ -1920,7 +1920,16 @@ int noerror;
       break;
     default:
       result.type = toupper(result.type);
+#ifndef G__OLDIMPLEMENTATION2049
+      if(rlevel) {
+	result.obj.reftype.reftype = G__PARAREFP2P + plevel-2;
+      }
+      else {
+	result.obj.reftype.reftype = G__PARAP2P + plevel-2;
+      }
+#else
       result.obj.reftype.reftype = G__PARAP2P + plevel-2;
+#endif
       break;
     }
     result.obj.i = isconst; /* borrowing space of the value */

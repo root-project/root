@@ -472,7 +472,12 @@ int tagnum;
 	      G__store_struct_offset = store_struct_offset;
 	      G__tagnum=store_tagnum;
 	    }
+#ifndef G__OLDIMPLEMENTATION2052
+	    if(G__CPPLINK!=G__struct.iscpplink[var->p_tagtable[i]])
+	      free((void*)var->p[i]);
+#else
 	    free((void*)var->p[i]);
+#endif
 	  }
 #ifndef G__OLDIMPLEMENTATION1543
 	  if(var->varnamebuf[i]) {

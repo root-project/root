@@ -479,6 +479,10 @@ int isglobal;
   long address;
 
 #ifndef G__OLDIMPLEMENTATION2038
+  /* This part is not needed in G__destroy_upto.  enclosing_scope and
+   * inner_scope members are assigned only as local variable table for
+   * bytecode function  in which case  G__destroy() is always used to
+   * deallocate the table */
   var->enclosing_scope = (struct G__var_array*)NULL;
   if(var->inner_scope) {
     i=0;
