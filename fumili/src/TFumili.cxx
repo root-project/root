@@ -1,4 +1,4 @@
-// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.1 2003/05/05 20:34:35 brun Exp $
+// @(#)root/fumili:$Name:  $:$Id: TFumili.cxx,v 1.2 2003/05/05 20:50:12 brun Exp $
 // Author: Stanislav Nesterov  07/05/2003
 
 //BEGIN_HTML
@@ -894,11 +894,11 @@ Int_t TFumili::SGZ()
   //  Z-matrix using data provided by user via TFumili::SetData
   //
   fS=0.;
-  Int_t K2=1,K1,KI;
+  Int_t i,j,L,K2=1,K1,KI;
   Double_t *X = new Double_t[fNED2];
   Double_t *df=new Double_t[fNpar];
   Int_t NX=fNED2-2;
-  for (Int_t L=0;L<fNED1;L++) { // cycle on all exp. points
+  for (L=0;L<fNED1;L++) { // cycle on all exp. points
     K1 = K2;
     if (fLogLike) {
       fNumericDerivatives=kTRUE;
@@ -906,7 +906,7 @@ Int_t TFumili::SGZ()
       K1 -= 2;
     };
   
-    for (Int_t i =0;i<NX;i++){
+    for (i=0;i<NX;i++){
       KI=K1+1+i;
       X[i]=fEXDA[KI];
     }
@@ -931,15 +931,15 @@ Int_t TFumili::SGZ()
       fS = fS + (Y*Y/(SIG*SIG))*.5; // simple chi2/2
     }
     Int_t N = 0;
-    for (Int_t i=0;i<fNpar;i++) 
+    for (i=0;i<fNpar;i++) 
       if (fPL0[i]>0){
 	df[N] = df[i]/SIG; // left only non-fixed param derivatives div by Sig
 	fGr[i] += df[N]*(Y/SIG);
 	N++;
       }
-    Int_t L = 0;
-    for (Int_t i=0;i<N;i++)
-      for (Int_t j=0;j<=i;j++) 
+    L = 0;
+    for (i=0;i<N;i++)
+      for (j=0;j<=i;j++) 
 	fZ[L++] += df[i]*df[j];
     K2 += fNED2;
   }
