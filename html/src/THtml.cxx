@@ -1,4 +1,4 @@
-// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.62 2004/06/29 21:36:18 brun Exp $
+// @(#)root/html:$Name:  $:$Id: THtml.cxx,v 1.63 2004/07/01 04:57:29 brun Exp $
 // Author: Nenad Buncic (18/10/95), Axel Naumann <mailto:axel@fnal.gov> (09/28/01)
 
 /*************************************************************************
@@ -2606,7 +2606,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
             while (IsName(*endNameSpace) && *endNameSpace)
                endNameSpace++;
             *endNameSpace = 0;
-            if (GetClass((const char *) keywordTmp) != 0)
+            if (GetClass((const char *) keywordTmp) != 0,kFALSE)
                end = keyword + (endNameSpace - keywordTmp);
             if (keywordTmp != 0)
                delete[]keywordTmp;
@@ -2736,7 +2736,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
       if (!flag && !hide && *keyword) {
 
          // get class
-         TClass *classPtr = GetClass((const char *) keyword);
+         TClass *classPtr = GetClass((const char *) keyword,kFALSE);
 
          if (classPtr) {
 
@@ -2829,7 +2829,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                   TClass *cdl = 0;
 
                   if (anyname) {
-                     cl = GetClass(anyname);
+                     cl = GetClass(anyname,kFALSE);
                      namePtr = (const char *) anyname;
                      cdl = cl;
                   } else if (ptr2class) {
@@ -2838,7 +2838,7 @@ void THtml::ExpandKeywords(ofstream & out, char *text, TClass * ptr2class,
                         namePtr = cl->GetName();
                         TDataMember *member = cl->GetDataMember(keyword);
                         if (member)
-                           cdl = GetClass(member->GetTypeName());
+                           cdl = GetClass(member->GetTypeName(),kFALSE);
                      }
                   }
 
