@@ -1,4 +1,4 @@
-# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.67 2004/02/22 17:23:14 rdm Exp $
+# @(#)root/config:$Name:  $:$Id: rootrc.in,v 1.68 2004/03/11 11:02:55 brun Exp $
 # Author: Fons Rademakers  22/09/95
 
 # ROOT Environment settings are handled via the class TEnv. To see
@@ -266,8 +266,8 @@ Plugin.TGuiFactory:  root      TRootGuiFactory Gui        "TRootGuiFactory()"
 +Plugin.TGuiFactory: qt        TQtRootGuiFactory QtRoot   "TQtRootGuiFactory()"
 Plugin.TVirtualProof:        * TProof        Proof        "TProof(const char*,const char*,const char*,Int_t)"
 Plugin.TProofProgressDialog: * TProofProgressDialog ProofGui  "TProofProgressDialog(TVirtualProof*,const char*,Int_t,Long64_t,Long64_t)"
-Plugin.TVirtualPadEditor:  Ged TPadEditorOld GedOld       "TPadEditorOld()"
-#Plugin.TVirtualPadEditor: Ged TGedEditor    Ged          "TGedEditor(TCanvas*)"
+#Plugin.TVirtualPadEditor:  Ged TPadEditorOld GedOld       "TPadEditorOld()"
+Plugin.TVirtualPadEditor: Ged TGedEditor    Ged          "TGedEditor(TCanvas*)"
 
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.
