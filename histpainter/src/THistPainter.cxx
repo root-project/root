@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.137 2003/05/08 15:20:05 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.138 2003/05/13 14:59:36 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -4750,7 +4750,14 @@ void THistPainter::PaintTitle()
    if (Hoption.Same) return;
    if (fH->TestBit(TH1::kNoTitle)) return;
    Int_t nt = strlen(fH->GetTitle());
-   TPaveText *title  = (TPaveText*)gPad->FindObject("title");
+   TPaveText *title = 0;
+   TObject *obj;
+   TIter next(gPad->GetListOfPrimitives());
+   while ((obj = next())) {
+      if (!obj->InheritsFrom(TPaveText::Class())) continue;
+      title = (TPaveText*)obj;
+      break;
+   }
    if (nt == 0 || gStyle->GetOptTitle() <= 0) {
       if (title) delete title;
       return;
