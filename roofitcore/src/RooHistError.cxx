@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooHistError.cc,v 1.11 2002/09/05 04:33:32 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -143,7 +143,7 @@ Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Dou
   assert(0 != Qu || 0 != Ql);
 
   // convert number of sigma into a confidence level
-  Double_t beta= TMath::Erf(nSigma/sqrt(2));
+  Double_t beta= TMath::Erf(nSigma/sqrt(2.));
   Double_t alpha= 0.5*(1-beta);
 
   // Does the central interval contain the point estimate?

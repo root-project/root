@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator2D.cc,v 1.2 2003/05/09 20:48:23 wverkerke Exp $
+ *    File: $Id: RooIntegrator2D.cc,v 1.3 2003/08/09 00:33:36 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -65,6 +65,7 @@ RooIntegrator2D::~RooIntegrator2D()
 
 Bool_t RooIntegrator2D::checkLimits() const 
 {
-  RooIntegrator1D::checkLimits() ;
-  _xIntegrator->checkLimits() ;
+  Bool_t ret = RooIntegrator1D::checkLimits() ;
+  ret &= _xIntegrator->checkLimits() ;
+  return ret ;
 }
