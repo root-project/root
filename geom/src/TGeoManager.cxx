@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.99 2004/11/19 14:30:10 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.100 2004/11/25 12:10:01 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -530,6 +530,7 @@ TGeoManager::TGeoManager()
       fMatrixReflection = kFALSE;
       fGLMatrix = 0;
       fPaintVolume = 0;
+      gGeoManager = this;
     } else {
       Init();
       gGeoIdentity = 0;
@@ -1534,8 +1535,8 @@ void TGeoManager::CleanGarbage()
    TGeoVolume *vol = 0;
    while ((vol=(TGeoVolume*)nextv()))
       vol->SetFinder(0);
-   fGVolumes->Delete();
-   fGShapes->Delete();
+   if (fGVolumes) fGVolumes->Delete();
+   if (fGShapes)  fGShapes->Delete();
 }
 
 //_____________________________________________________________________________
