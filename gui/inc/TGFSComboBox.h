@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.h,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -47,11 +47,14 @@ protected:
    GContext_t          fNormGC;      // entry drawing context
    FontStruct_t        fFontStruct;  // font
 
+   virtual void DoRedraw();
+
    static ULong_t        fgSelPixel;
    static FontStruct_t   fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
    static TGGC           fgDefaultGC;
-
-   virtual void DoRedraw();
 
 public:
    TGTreeLBEntry(const TGWindow *p, TGString *text, const TGPicture *pic,

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.3 2000/07/11 09:29:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEntry.h,v 1.4 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   08/01/98
 
 /*************************************************************************
@@ -71,14 +71,6 @@ protected:
    EInsertMode       fInsertMode;        // text insertion mode (kInsert(default) , kReplace)
    ETextJustification fAlignment;        // alignment mode available (kTextLeft(default), kTextRight, kTextCenterX defined in TGWidget.h)
 
-   static TString      *fgClipboardText; // application clipboard text
-   static Cursor_t      fgDefaultCursor;
-   static TGGC          fgDefaultGC;
-   static TGGC          fgDefaultSelectedGC;
-   static TGGC          fgDefaultSelectedBackgroundGC;
-   static FontStruct_t  fgDefaultFontStruct;
-   static Atom_t        fgClipboard;
-
             Int_t       GetCharacterIndex(Int_t xcoord);
    virtual  void        DoRedraw();
    virtual  Bool_t      IsCursorOutOfFrame();
@@ -108,6 +100,17 @@ protected:
             void        CopyText() const;
             void        Paste();
    virtual  void        Insert(const char *);
+
+   static TString      *fgClipboardText; // application clipboard text
+   static Atom_t        fgClipboard;
+   static Cursor_t      fgDefaultCursor;
+   static FontStruct_t  fgDefaultFontStruct;
+   static TGGC          fgDefaultSelectedGC;
+   static TGGC          fgDefaultSelectedBackgroundGC;
+#ifdef R__SUNCCBUG
+public:
+#endif
+   static TGGC          fgDefaultGC;
 
 public:
    TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id = -1,

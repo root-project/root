@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.2 2000/08/28 09:06:57 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -95,10 +95,13 @@ protected:
    FontStruct_t        fFontStruct;     // font
    GContext_t          fNormGC;         // drawing context
 
-   static FontStruct_t    fgDefaultFontStruct;
-   static TGGC            fgDefaultGC;
-
    void ChangeTab(Int_t tabIndex);
+
+   static FontStruct_t    fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
+   static TGGC            fgDefaultGC;
 
 public:
    TGTab(const TGWindow *p, UInt_t w, UInt_t h,

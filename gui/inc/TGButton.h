@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.h,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -81,8 +81,11 @@ protected:
    void          *fUserData;    // pointer to user data structure
    TGToolTip     *fTip;         // tool tip associated with button
 
-   static TGGC fgDefaultGC;
    static TGGC fgHibckgndGC;
+#ifdef R__SUNCCBUG
+public:
+#endif
+   static TGGC fgDefaultGC;
 
 public:
    TGButton(const TGWindow *p, Int_t id, GContext_t norm = fgDefaultGC(),
@@ -176,12 +179,15 @@ protected:
    FontStruct_t    fFontStruct;    // font to draw label
    EButtonState    fPrevState;     // previous check button state
 
-   static FontStruct_t  fgDefaultFontStruct;
-   static TGGC          fgDefaultGC;
-
    void Init();
    void PSetState(EButtonState state);
    virtual void DoRedraw();
+
+   static FontStruct_t  fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
+   static TGGC          fgDefaultGC;
 
 public:
    TGCheckButton(const TGWindow *p, TGHotString *s, Int_t id = -1,
@@ -221,13 +227,16 @@ protected:
    const TGPicture   *fOff;         // button OFF picture
    FontStruct_t       fFontStruct;  // font to draw label
 
-   static Pixmap_t      fgR1, fgR2, fgR3, fgR4, fgR5, fgR6;
-   static FontStruct_t  fgDefaultFontStruct;
-   static TGGC          fgDefaultGC;
-
    void Init();
    void PSetState(EButtonState state);
    virtual void DoRedraw();
+
+   static Pixmap_t      fgR1, fgR2, fgR3, fgR4, fgR5, fgR6;
+   static FontStruct_t  fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
+   static TGGC          fgDefaultGC;
 
 public:
    TGRadioButton(const TGWindow *p, TGHotString *s, Int_t id = -1,

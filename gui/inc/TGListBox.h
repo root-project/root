@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.2 2000/09/11 09:51:36 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -96,11 +96,14 @@ protected:
    GContext_t    fNormGC;         // text drawing graphics context
    FontStruct_t  fFontStruct;     // font used to draw string
 
-   static ULong_t        fgSelPixel;
-   static TGGC           fgDefaultGC;
-   static FontStruct_t   fgDefaultFontStruct;
-
    virtual void DoRedraw();
+
+   static ULong_t        fgSelPixel;
+   static FontStruct_t   fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
+   static TGGC           fgDefaultGC;
 
 public:
    TGTextLBEntry(const TGWindow *p, TGString *s, Int_t id,

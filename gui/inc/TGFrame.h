@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.2 2000/08/31 14:20:13 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -388,8 +388,11 @@ protected:
    FontStruct_t   fFontStruct;
    GContext_t     fNormGC;
 
-   static TGGC          fgDefaultGC;
    static FontStruct_t  fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
+   static TGGC          fgDefaultGC;
 
 public:
    TGGroupFrame(const TGWindow *p, TGString *title,

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGLabel.h,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -46,10 +46,13 @@ protected:
    GContext_t     fNormGC;       // graphics context used for drawing label
    FontStruct_t   fFontStruct;   // font to draw label
 
-   static TGGC           fgDefaultGC;
-   static FontStruct_t   fgDefaultFontStruct;
-
    virtual void DoRedraw();
+
+   static FontStruct_t   fgDefaultFontStruct;
+#ifdef R__SUNCCBUG
+public:
+#endif
+   static TGGC           fgDefaultGC;
 
 public:
    TGLabel(const TGWindow *p, TGString *text,

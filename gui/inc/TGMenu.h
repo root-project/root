@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.1.1.1 2000/05/16 17:00:42 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMenu.h,v 1.2 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   09/01/98
 
 /*************************************************************************
@@ -192,10 +192,14 @@ protected:
    FontStruct_t    fFontStruct;       // font
    GContext_t      fNormGC, fSelGC;   // normal and selection graphics contexts
 
-   static TGGC          fgDefaultGC, fgDefaultSelectedGC;
-   static FontStruct_t  fgDefaultFontStruct;
-
    virtual void DoRedraw();
+
+   static FontStruct_t  fgDefaultFontStruct;
+   static TGGC          fgDefaultSelectedGC;
+#ifdef R__SUNCCBUG
+public:
+#endif
+   static TGGC          fgDefaultGC;
 
 public:
    TGMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu,
