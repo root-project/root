@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.123 2003/01/11 17:28:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.124 2003/01/29 11:32:58 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -863,7 +863,7 @@ Int_t TH1::BufferEmpty(Bool_t deleteBuffer)
    // do we need to compute the bin size?
    Int_t nbentries = (Int_t)fBuffer[0];
    if (!nbentries) return 0;
-   if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
+   if (TestBit(kCanRebin) || (fXaxis.GetXmax() <= fXaxis.GetXmin())) {
       //find min, max of entries in buffer
       Double_t xmin = fBuffer[2];
       Double_t xmax = xmin;
@@ -872,7 +872,16 @@ Int_t TH1::BufferEmpty(Bool_t deleteBuffer)
          if (x < xmin) xmin = x;
          if (x > xmax) xmax = x;
       }
-      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
+      if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
+         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
+      } else {
+         Double_t *buffer = fBuffer; fBuffer = 0;
+         Int_t keep = fBufferSize; fBufferSize = 0;
+         if (xmin <  fXaxis.GetXmin()) RebinAxis(xmin,"X");
+         if (xmax >= fXaxis.GetXmax()) RebinAxis(xmax,"X");
+         fBuffer = buffer;
+         fBufferSize = keep;
+      }
    }
 
    FillN(nbentries,&fBuffer[2],&fBuffer[1],2);
@@ -3719,7 +3728,6 @@ void TH1::RebinAxis(Axis_t x, const char *ax)
    //save a copy of this histogram
    TH1 *hold = (TH1*)Clone();
    hold->SetDirectory(0);
-
    //set new axis limits
    axis->SetLimits(xmin,xmax);
 
