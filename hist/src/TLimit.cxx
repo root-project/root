@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.6 2004/01/27 13:41:53 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TLimit.cxx,v 1.7 2004/03/12 16:02:42 brun Exp $
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
@@ -6,6 +6,12 @@
 // TLimit
 //
 // Class to compute 95% CL limits
+//
+// adapted from the mclimit code from Tom Junk (CLs method)
+// see http://root.cern.ch/root/doc/TomJunk.pdf
+// see http://cern.ch/thomasj/searchlimits/ecl.html
+// see: Tom Junk,NIM A434, p. 435-443, 1999
+//
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -37,11 +43,6 @@ TConfidenceLevel *TLimit::ComputeLimit(TLimitDataSource * data,
 {
    // class TLimit
    // ------------
-   // adapted from the mclimit code from Tom Junk (CLs method)
-   // see http://root.cern.ch/root/doc/TomJunk.pdf
-   // see http://cern.ch/thomasj/searchlimits/ecl.html
-   // see: Tom Junk,NIM A434, p. 435-443, 1999
-   //
    // Algorithm to compute 95% C.L. limits using the Likelihood ratio
    // semi-bayesian method.
    // It takes signal, background and data histograms wrapped in a
