@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.44 2001/10/27 22:28:19 verkerke Exp $
+ *    File: $Id: RooArgSet.cc,v 1.45 2001/11/01 22:52:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -423,8 +423,11 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
     // Process section headers if requested
     if (*token.Data()=='[') {
       TString hdr(token) ;
-      hdr.Append(" ") ;
-      hdr.Append(parser.readLine()) ;
+      const char* last = token.Data() + token.Length() -1 ;
+      if (*last != ']') {
+	hdr.Append(" ") ;
+	hdr.Append(parser.readLine()) ;
+      }
 //       parser.putBackToken(token) ;
 //       token = parser.readLine() ;
       if (section) {
