@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.5 2000/10/01 20:50:44 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TDataSet.h,v 1.6 2000/12/13 16:45:36 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -27,7 +27,7 @@
 // * purpose.  It is provided "as is" without express or implied warranty.
 // ************************************************************************
 
-// $Id: TDataSet.h,v 1.5 2000/10/01 20:50:44 brun Exp $
+// $Id: TDataSet.h,v 1.6 2000/12/13 16:45:36 brun Exp $
 #ifndef ROOT_TDataSet
 #define ROOT_TDataSet
 
@@ -166,9 +166,9 @@ inline void        TDataSet::AddMain(TDataSet *set){ if (fgMainSet && set) fgMai
 inline TDataSet *TDataSet::At(Int_t idx) const {return fList ? (TDataSet *)fList->At(idx) : 0;  }
 inline Int_t       TDataSet::GetListSize() const {return (fList) ? fList->GetSize():0;}
 inline Bool_t      TDataSet::IsMarked() const { return TestBit(kMark); }
+inline void        TDataSet::Mark(UInt_t flag,EBitOpt reset){ SetBit(flag,reset); }
 inline void        TDataSet::Mark()     { Mark(kMark,kSet); }
 inline void        TDataSet::UnMark()   { Mark(kMark,kReset); }
-inline void        TDataSet::Mark(UInt_t flag,EBitOpt reset){ SetBit(flag,reset); }
 
 
 #endif
