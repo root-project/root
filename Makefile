@@ -284,7 +284,7 @@ version: $(CINTTMP)
 cintdlls: $(CINTTMP)
 	@$(MAKECINTDLLS) $(PLATFORM) $(CINTTMP) $(MAKELIB) $(CXX) \
 	   $(CC) $(LD) "$(OPT)" "$(CINTCXXFLAGS)" "$(CINTCFLAGS)" \
-	   "$(LDFLAGS)" "$(SOFLAGS)"
+	   "$(LDFLAGS)" "$(SOFLAGS)" "$(SOEXT)"
 
 importcint: distclean-cint
 	@$(IMPORTCINT)
