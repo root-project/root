@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TShape.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Nenad Buncic   17/09/95
 
 /*************************************************************************
@@ -57,7 +57,8 @@ class TShape : public TNamed, public TAttLine, public TAttFill, public TAtt3D {
 protected:
    Int_t           fNumber;      //Shape number
    Int_t           fVisibility;  //Visibility flag
-   TMaterial       *fMaterial;   //Pointer to material
+   TMaterial      *fMaterial;    //Pointer to material
+   
    Int_t           ShapeDistancetoPrimitive(Int_t numPoints, Int_t px, Int_t py);
 
 public:
@@ -74,7 +75,7 @@ public:
    virtual void    SetPoints(Float_t *buffer);
    virtual void    SetVisibility(Int_t vis) {fVisibility = vis;} // *MENU*
 
-   ClassDef(TShape,1)  //Basic shape
+   ClassDef(TShape,2)  //Basic shape
 };
 
 R__EXTERN TNode *gNode;

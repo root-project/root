@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.1.1.1 2000/05/16 17:00:47 rdm Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.h,v 1.2 2000/06/06 13:07:28 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 /*************************************************************************
@@ -176,7 +176,7 @@ public:
   virtual const     char *GetTitle() const;
 
 
-  ClassDef(TParticle,1)  // TParticle vertex particle information
+  ClassDef(TParticle,2)  // TParticle vertex particle information
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TCTUB.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Rene Brun   26/06/97
 
 /*************************************************************************
@@ -45,7 +45,7 @@ class TCTUB : public TTUBS {
              Float_t *lowNormal, Float_t *highNormal);
         virtual ~TCTUB();
         virtual void SetPoints(Float_t *buff);
-        ClassDef(TCTUB,1)  //The Cut Tube shape
+        ClassDef(TCTUB,2)  //The Cut Tube shape
 };
 
 #endif

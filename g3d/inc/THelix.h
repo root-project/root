@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: THelix.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: Ping Yeh   19/12/97
 
 /*************************************************************************
@@ -88,7 +88,7 @@ public:
                             Double_t *axis=0);
    virtual void    Sizeof3D() const;
 
-   ClassDef(THelix,1)  //A Helix drawn as a PolyLine3D
+   ClassDef(THelix,2)  //A Helix drawn as a PolyLine3D
 };
 
 #endif

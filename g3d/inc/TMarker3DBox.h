@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name$:$Id$
+// @(#)root/g3d:$Name:  $:$Id: TMarker3DBox.h,v 1.1.1.1 2000/05/16 17:00:43 rdm Exp $
 // Author: "Valery fine"   31/10/97
 
 /*************************************************************************
@@ -91,7 +91,7 @@ public:
     virtual void    Sizeof3D() const;
     static  void    SizeofH3(TH1 *h) ;
 
-    ClassDef(TMarker3DBox,1)  //a special 3-D marker designed for event display
+    ClassDef(TMarker3DBox,2)  //a special 3-D marker designed for event display
 };
 
 #endif
