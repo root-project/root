@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.128 2003/02/24 10:33:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.129 2003/02/26 22:27:04 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -316,24 +316,22 @@
 //
 //     Making a copy of an histogram
 //     =============================
-//     Like for any other Root object derived from TObject, one can use
-//     the Clone function. This makes an identical copy of the original histogram
-//     including all associated errors and functions, eg:
-//       TH1F *hnew = (TH1F*)h->Clone();
-//       hnew->SetName("hnew"); //recommended, otherwise you get 2 histograms
-//                              //with the same name
+//     Like for any other ROOT object derived from TObject, one can use
+//     the Clone() function. This makes an identical copy of the original
+//     histogram including all associated errors and functions, e.g.:
+//       TH1F *hnew = (TH1F*)h->Clone("hnew");
 //
 //     Normalizing histograms
 //     ======================
 //     One can scale an histogram such that the bins integral is equal to
-//     to the normalization parameter via TH1::Scale(Double_t norm);
+//     the normalization parameter via TH1::Scale(Double_t norm).
 //
 //     Drawing histograms
 //     ==================
 //     Histograms are drawn via the THistPainter class. Each histogram has
 //     a pointer to its own painter (to be usable in a multithreaded program).
 //     Many drawing options are supported.
-//     See THistPainter::Paint for more details.
+//     See THistPainter::Paint() for more details.
 //     The same histogram can be drawn with different options in different pads.
 //     When an histogram drawn in a pad is deleted, the histogram is
 //     automatically removed from the pad or pads where it was drawn.
@@ -346,22 +344,22 @@
 //     is drawn, the original histogram may be modified or deleted without
 //     affecting the aspect of the clone.
 //
-//     One can use TH1::SetMaximum and TH1::SetMinimum to force a particular
+//     One can use TH1::SetMaximum() and TH1::SetMinimum() to force a particular
 //     value for the maximum or the minimum scale on the plot.
 //
-//     TH1::UseCurrentStyle can be used to change all histogram graphics
+//     TH1::UseCurrentStyle() can be used to change all histogram graphics
 //     attributes to correspond to the current selected style.
 //     This function must be called for each histogram.
 //     In case one reads and draws many histograms from a file, one can force
 //     the histograms to inherit automatically the current graphics style
-//     by calling before gROOT->ForceStyle();
+//     by calling before gROOT->ForceStyle().
 //
 //
 //     Setting Drawing histogram contour levels (2-D hists only)
 //     =========================================================
 //     By default contours are automatically generated at equidistant
 //     intervals. A default value of 20 levels is used. This can be modified
-//     via TH1::SetContour or TH1::SetContourLevel.
+//     via TH1::SetContour() or TH1::SetContourLevel().
 //     the contours level info is used by the drawing options "cont", "surf",
 //     and "lego".
 //
@@ -372,15 +370,15 @@
 //     See the member functions of these classes for the list of options.
 //
 //     Giving titles to the X, Y and Z axis
-//     =================================
+//     ====================================
 //       h->GetXaxis()->SetTitle("X axis title");
 //       h->GetYaxis()->SetTitle("Y axis title");
 //     The histogram title and the axis titles can be any TLatex string.
 //     The titles are part of the persistent histogram.
 //
-//     Saving/Reading histograms to/from a Root file
-//     ================================
-//     The following statements create a Root file and store an histogram
+//     Saving/Reading histograms to/from a ROOT file
+//     =============================================
+//     The following statements create a ROOT file and store an histogram
 //     on the file. Because TH1 derives from TNamed, the key identifier on
 //     the file is the histogram name:
 //        TFile f("histos.root","new");
@@ -396,21 +394,20 @@
 //     Miscelaneous operations
 //     =======================
 //
-//      TH1::KolmogorovTest: Statistical test of compatibility in shape between
-//                           two histograms.
-//      TH1::Smooth smooths the bin contents of a 1-d histogram
-//      TH1::Integral returns the integral of bin contents in a given bin range
+//      TH1::KolmogorovTest(): statistical test of compatibility in shape
+//                             between two histograms
+//      TH1::Smooth() smooths the bin contents of a 1-d histogram
+//      TH1::Integral() returns the integral of bin contents in a given bin range
 //      TH1::GetMean(int axis) returns the mean value along axis
 //      TH1::GetRMS(int axis)  returns the Root Mean Square along axis
-//      TH1::GetEntries returns the number of entries
-//      TH1::Reset() resets the bin contents and errors of an histogram.
+//      TH1::GetEntries() returns the number of entries
+//      TH1::Reset() resets the bin contents and errors of an histogram
 //
 //Begin_Html
 /*
 <img src="gif/th1_classtree.gif">
 */
 //End_Html
-//   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 
 Foption_t Foption;
@@ -1340,7 +1337,7 @@ TH1 *TH1::DrawCopy(Option_t *) const
 TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
 {
 //  Draw a normalized copy of this histogram.
-// 
+//
 //  A clone of this histogram is normalized to norm and drawn with option.
 //  A pointer to the normalized histogram is returned.
 //  The contents of the histogram copy are scaled such that the new
@@ -1365,7 +1362,7 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
    TH1 *h = (TH1*)Clone();
    h->SetBit(kCanDelete);
    h->Scale(norm/sum);
-   h->Draw(option);   
+   h->Draw(option);
    TH1::AddDirectory(addStatus);
    return h;
 }
@@ -2115,29 +2112,29 @@ void TH1::FitPanel()
 TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
 {
 //  return an histogram containing the asymmetry of this histogram with h2,
-//  where the asymmetry is defined as: 
-// 
+//  where the asymmetry is defined as:
+//
 //  Asymmetry = (h1 - h2)/(h1 + h2)  where h1 = this
 //
 //  works for 1D, 2D, etc. histograms
-//  c2 is an optional argument that gives a relative weight between the two 
-//  histograms, and dc2 is the error on this weight.  This is useful, for example, 
-//  when forming an asymmetry between two histograms from 2 different data sets that 
-//  need to be normalized to each other in some way.  The function calculates 
+//  c2 is an optional argument that gives a relative weight between the two
+//  histograms, and dc2 is the error on this weight.  This is useful, for example,
+//  when forming an asymmetry between two histograms from 2 different data sets that
+//  need to be normalized to each other in some way.  The function calculates
 //  the errors asumming Poisson statistics on h1 and h2 (that is, dh = sqrt(h)).
 //
 //  example:  assuming 'h1' and 'h2' are already filled
-//  
+//
 //     h3 = h1->GetAsymmetry(h2)
-//     
+//
 //  then 'h3' is created and filled with the asymmetry between 'h1' and 'h2';
 //  h1 and h2 are left intact.
 //
 //  Note that it is the user's responsibility to manage the created histogram.
 //
 //  code proposed by Jason Seely (seely@mit.edu) and adapted by R.Brun
-   
-  // clone the histograms so top and bottom will have the 
+
+  // clone the histograms so top and bottom will have the
   // correct dimensions:
   // Sumw2 just makes sure the errors will be computed properly
   // when we form sums and ratios below.
@@ -2148,18 +2145,18 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
   TH1 *top    = (TH1*)asym->Clone();
   TH1 *bottom = (TH1*)asym->Clone();
   TH1::AddDirectory(addStatus);
-  
+
   // form the top and bottom of the asymmetry, and then divide:
   TH1 *h1 = this;
   top->Add(h1,h2,1,-c2);
   bottom->Add(h1,h2,1,c2);
-  asym->Divide(top,bottom);  
-  
+  asym->Divide(top,bottom);
+
   Int_t   xmax = asym->GetNbinsX();
   Int_t   ymax = asym->GetNbinsY();
   Int_t   zmax = asym->GetNbinsZ();
   Float_t as, bot, error, a, b;
-  
+
   // now loop over bins to calculate the correct errors
   // the reason this error calculation looks complex is because of c2
   for(Int_t i=1; i<= xmax; i++){
@@ -2172,8 +2169,8 @@ TH1 *TH1::GetAsymmetry(TH1* h2, Double_t c2, Double_t dc2)
         b   = h2->GetBinContent(i,j,k);
         as  = asym->GetBinContent(i,j,k);
         bot = bottom->GetBinContent(i,j,k);
-        
-        // make sure there are some events, if not, then the errors are set = 0 
+
+        // make sure there are some events, if not, then the errors are set = 0
 	// automatically.
         if(b < 1){}
         else{
@@ -2878,7 +2875,7 @@ Stat_t TH1::GetBinContent(Int_t binx, Int_t biny, Int_t binz) const
 TAxis *TH1::GetXaxis() const
 {
    // return a pointer to the X axis object
-   
+
    return &((TH1*)this)->fXaxis;
 }
 
@@ -2887,14 +2884,14 @@ TAxis *TH1::GetXaxis() const
 TAxis *TH1::GetYaxis() const
 {
    // return a pointer to the Y axis object
-   
+
    return &((TH1*)this)->fYaxis;
 }
 //______________________________________________________________________________
 TAxis *TH1::GetZaxis() const
 {
    // return a pointer to the Z axis object
-   
+
    return &((TH1*)this)->fZaxis;
 }
 
@@ -4583,7 +4580,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option) const
 //             make pseudoexperiments based on random values from the parent
 //             distribution and compare the KS distance of the pseudoexperiment
 //             to the parent distribution. Bin the KS distances in a histogram,
-//             and then take the integral of all the KS values above the value 
+//             and then take the integral of all the KS values above the value
 //             obtained from the original data to Monte Carlo distribution.
 //             The number of pseudo-experiments NEXPT is currently fixed at 1000.
 //             The function returns the integral.
@@ -4742,7 +4739,7 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option) const
       delete HDistValues;
       delete HExpt;
    }
-   
+
       // debug printout
    if (opt.Contains("D")) {
      printf(" Kolmo Prob  h1 = %s, sum1=%g\n",h1->GetName(),sum1);
