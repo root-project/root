@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.2 2000/05/19 08:33:27 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.3 2000/05/31 07:48:29 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2107,7 +2107,13 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
 //     h1->Rebin(5); //merges five bins in one in h1
 //     TH1F *hnew = h1->Rebin(5,"hnew"); // creates a new histogram hnew
 //                                       //merging 5 bins of h1 in one bin
-//   NOTE: This function is currently implemented only for 1-D histograms
+//   NOTE1: This function is currently implemented only for 1-D histograms
+//
+//   NOTE2: If ngroup is not an exact divider of the number of bins,
+//          the top limit of the rebinned histogram is changed
+//          to the upper edge of the bin=newbins*ngroup and the corresponding
+//          bins are added to the overflow bin.
+//          Statistics will be recomputed from the new bin contents.
 
    Int_t nbins   = fXaxis.GetNbins();
    Float_t xmin  = fXaxis.GetXmin();
@@ -2140,12 +2146,16 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
    }
 
    // change axis specs and rebuild bin contents array
+   if(newbins*ngroup != nbins) {
+      xmax = fXaxis.GetBinUpEdge(newbins*ngroup);
+      hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
+   }
    hnew->SetBins(newbins,xmin,xmax); //this also changes errors array (if any)
 
    // copy merged bin contents (ignore under/overflows)
    Int_t oldbin = 0;
    Double_t binContent, binError;
-   for (bin = 0;bin<newbins;bin++) {
+   for (bin = 0;bin<=newbins;bin++) {
       binContent = 0;
       binError   = 0;
       for (i=0;i<ngroup;i++) {
