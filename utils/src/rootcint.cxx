@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.21 2000/12/11 18:02:08 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.22 2000/12/12 09:55:04 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -941,7 +941,7 @@ void WritePointersSTL(G__ClassInfo &cl)
    // Write interface function for STL members
 
    char a[80];
-   char clName[G__LONGLINE]; 
+   char clName[G__LONGLINE];
    sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
    int version;
    sprintf(a, "%s::Class_Version()", cl.Fullname());
@@ -966,7 +966,7 @@ void WritePointersSTL(G__ClassInfo &cl)
             }
          }
       }
-            
+
       //member is a string
       if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) {
          fprintf(fp, "//_______________________________________");
@@ -986,7 +986,7 @@ void WritePointersSTL(G__ClassInfo &cl)
          fprintf(fp, "}\n\n");
          continue;
       }
-      
+
       if (!IsStreamable(m)) continue;
          fprintf(fp, "//_______________________________________");
          fprintf(fp, "_______________________________________\n");
@@ -1106,7 +1106,7 @@ void WriteShowMembers(G__ClassInfo &cl)
    version = (int)G__int(G__calc(a));
    int clflag = 1;
    if (version <= 0 || cl.RootFlag() == 0) clflag = 0;
-   
+
    while (m.Next()) {
 
       // we skip:
@@ -1145,7 +1145,7 @@ void WriteShowMembers(G__ClassInfo &cl)
             }
          } else {
             // we have an object
-            
+
             //string
             if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) {
                if (m.Property() & G__BIT_ISPOINTER) {
@@ -1159,7 +1159,7 @@ void WriteShowMembers(G__ClassInfo &cl)
                }
                continue;
             }
-            
+
             if (m.Property() & G__BIT_ISARRAY &&
                 m.Property() & G__BIT_ISPOINTER) {
                sprintf(cvar, "*%s", m.Name());
@@ -1563,7 +1563,7 @@ int main(int argc, char **argv)
          argvv[argcc] = (char *)calloc(strlen(dictname), 1);
          strncpy(argvv[argcc], dictname, s-dictname); argcc++;
 
-         while (*argv[ic] == '-' || *argv[ic] == '+') {
+         while (ic < argc && (*argv[ic] == '-' || *argv[ic] == '+')) {
             argvv[argcc++] = argv[ic++];
          }
 
@@ -1646,7 +1646,11 @@ int main(int argc, char **argv)
       fclose(bundle);
    }
 
-   if (!iv) iv = ic;
+   if (!iv) {
+      fprintf(stderr, "%s: no input files specified\n", argv[0]);
+      return 1;
+   }
+
    if (!il) {
       GenerateLinkdef(&argc, argv, iv);
       argvv[argcc++] = autold;
