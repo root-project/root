@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtWidget.cxx,v 1.8 2004/08/02 08:14:43 rdm Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -14,9 +14,12 @@
 // "double-buffere widget
 
 #include <qapplication.h>
-
 #include "TQtWidget.h"
+#include "TQtTimer.h"
+
 #include "TROOT.h"
+#include "TRint.h"
+#include "TSystem.h"
 #include "TGQt.h"
 #include "TCanvas.h"
 #include "Buttons.h"
@@ -40,7 +43,6 @@
 //  This widget can be used to build a custom GUI interfaces with  Qt Designer
 //
 ////////////////////////////////////////////////////////////////////////////////
-
 //_____________________________________________________________________________
 TCanvas  *TQtWidget::Canvas()
 {
@@ -67,6 +69,12 @@ TQtWidget::TQtWidget(QWidget* parent, const char* name, WFlags f,bool embedded):
   setWFlags(getWFlags () | Qt::WRepaintNoErase | Qt:: WResizeNoErase );
   setBackgroundMode(Qt::NoBackground);
   if (fEmbedded) {
+    static int argc;
+    if (!gApplication) {
+        argc = qApp->argc();
+        new TRint("Rint", &argc ,qApp->argv()); 
+        TQtTimer::Create()->start(0,FALSE);
+    }         
     Bool_t batch = gROOT->IsBatch();
     if (!batch) gROOT->SetBatch(kTRUE); // to avoid the recursion within TCanvas ctor
     fCanvas = new TCanvas(name, 4, 4, TGQt::iwid(this));

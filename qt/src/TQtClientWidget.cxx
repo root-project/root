@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: TQtClientWidget.cxx,v 1.2 2004/07/28 00:12:41 rdm Exp $
 // Author: Valeri Fine   21/01/2002
 
 /*************************************************************************
@@ -195,24 +195,41 @@ void TQtClientWidget::SetKeyMask(Int_t keycode, UInt_t modifier, bool insert)
 {
    // Set the key button mask
 
-   int key[4]= {0,0,0,0};
+   int key[5]= {0,0,0,0,0};
    int index = 0;
-   if (modifier & kAnyModifier)       key[index++] = MODIFIER_MASK;
+   if (keycode) {
+      if (modifier & kAnyModifier)  assert(!(modifier & kAnyModifier));
    else {
       if (modifier & kKeyShiftMask)   key[index++] = SHIFT;
       if (modifier & kKeyLockMask)    key[index++] = META;
       if (modifier & kKeyControlMask) key[index++] = CTRL;
+         if (modifier & kKeyMod1Mask)    key[index++] = ALT;
    }
                                       key[index++] = keycode;
-   if (insert) {
-      if (!fGrabbedKey)   fGrabbedKey = new QAccel(this);
-      fGrabbedKey->insertItem(QKeySequence(key[0],key[1],key[2],key[3]),fGrabbedKey->count()+1);
+   }
+   assert(index<=4);
+   if (insert && keycode) {
+      if (!fGrabbedKey)  {
+         fGrabbedKey = new QAccel(this);
       connect(fGrabbedKey,SIGNAL(activated ( int )),this,SLOT(Accelerate(int)));
+      }
+      QKeySequence keys(key[0],key[1],key[2],key[3]);
+      if (fGrabbedKey->findKey(keys) == -1)  {    
+         fGrabbedKey->insertItem(keys,fGrabbedKey->count()+1);
+         // fprintf(stderr,"+%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' %d\n", this, modifier, keycode ,fGrabbedKey->count()+1);
+      }   
    } else {
       if (fGrabbedKey)  {
-        int id = fGrabbedKey->key(QKeySequence(key[0],key[1],key[2],key[3]));
+         if (keycode) {
+           int id = fGrabbedKey->findKey(QKeySequence(key[0],key[1],key[2],key[3]));
+           // fprintf(stderr,"-%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' %d\n", this, modifier, keycode ,id);
         if (id != -1) fGrabbedKey->removeItem(id);
         if (fGrabbedKey->count() ==  0) {  delete fGrabbedKey; fGrabbedKey = 0; }
+        } else {
+           // keycode ==0 - means delete all accelerators
+           // fprintf(stderr,"-%p: TQtClientWidget::SetKeyMask modifier=%d keycode \'%c\' \n", this, modifier, keycode);
+           delete fGrabbedKey; fGrabbedKey = 0;
+        }
      }
   }
 }
@@ -241,7 +258,7 @@ void TQtClientWidget::UnSetKeyMask(Int_t keycode, UInt_t modifier)
 //_____slot _________________________________________________________________________
 void TQtClientWidget::Accelerate(int id)
 {
-  // Qt slot to repsonce to the "Keyboard accelerator signal"
+  // Qt slot to responcd to the "Keyboard accelerator signal"
   QKeySequence key = fGrabbedKey->key(id);
   int l = key.count();
   int keycode = key[l-1];
@@ -249,8 +266,9 @@ void TQtClientWidget::Accelerate(int id)
   for (int i=0; i < l;i++) {
      switch (key[i]) {
         case SHIFT:  state |= Qt::ShiftButton;   break;
-        case META:   state |= Qt::AltButton;     break;
+        case META:   state |= Qt::MetaButton;    break;
         case CTRL:   state |= Qt::ControlButton; break;
+        case ALT:    state |= Qt::AltButton;     break;
      };
   }
   QKeyEvent ac(QEvent::KeyPress,keycode,keycode,state);

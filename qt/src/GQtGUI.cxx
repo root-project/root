@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:$:$Id:$
+// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.2 2004/07/28 00:12:40 rdm Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -42,6 +42,7 @@
 #include "TQtBrush.h"
 
 #include "TSystem.h"
+#include "KeySymbols.h"
 
 #ifdef R__QTWIN32
 #  include "TWinNTSystem.h"
@@ -905,6 +906,19 @@ void         TGQt::SetIconPixmap(Window_t id, Pixmap_t pix)
    wid(id)->setIcon(*fQPixmapGuard.Pixmap(pix));
 }
 //______________________________________________________________________________
+void  TGQt::Warp(Int_t ix, Int_t iy, Window_t id) 
+{
+   // Set pointer position.
+   // ix       : New X coordinate of pointer
+   // iy       : New Y coordinate of pointer
+   // Coordinates are relative to the origin of the window id
+   // or to the origin of the current window if id == 0.
+   if (id == kNone) {}
+   else {
+       QCursor::setPos(wid(id)->mapToGlobal(QPoint(ix,iy)));
+   }
+}
+//______________________________________________________________________________
 void         TGQt::SetWindowBackground(Window_t id, ULong_t color)
 {
    // Set the window background color.
@@ -1485,6 +1499,9 @@ void         TGQt::SendEvent(Window_t id, Event_t *ev)
    // keycode is hit while certain modifier's (Shift, Control, Meta, Alt)
    // are active then the keyboard will be grabed for window id.
    // When grab is false, ungrab the keyboard for this key and modifier.
+   // A modifiers argument of AnyModifier is equivalent to issuing the
+   // request for all possible modifier combinations (including the combination of no modifiers). 
+    
     if (id == kNone) return;
             // fprintf(stderr,"TQt::GrabKey has no QT-based implementation yet: %p %d %c %x \n",((TQtClientWidget*)wid(id)), keycode,keycode,modifier);
     if (grab ) {
@@ -1793,12 +1810,83 @@ void TGQt::GetFontProperties(FontStruct_t fs, Int_t &max_ascent, Int_t &max_desc
     // Clear window.
     wid(id)->erase();
  }
+ 
+//---- Key symbol mapping
+struct KeyQSymbolMap_t {
+   Qt::Key fQKeySym;
+   EKeySym fKeySym;
+};
+
+//---- Mapping table of all non-trivial mappings (the ASCII keys map
+//---- one to one so are not included)
+
+static KeyQSymbolMap_t gKeyQMap[] = {
+   {Qt::Key_Escape,    kKey_Escape},
+   {Qt::Key_Tab,       kKey_Tab},
+   {Qt::Key_Backtab,   kKey_Backtab},
+   {Qt::Key_BackSpace, kKey_Backspace},
+   {Qt::Key_Return,    kKey_Return},
+   {Qt::Key_Insert,    kKey_Insert},
+   {Qt::Key_Delete,    kKey_Delete},
+   {Qt::Key_Pause,     kKey_Pause},
+   {Qt::Key_Print,     kKey_Print},
+   {Qt::Key_SysReq,    kKey_SysReq},
+   {Qt::Key_Home,      kKey_Home},       // cursor movement
+   {Qt::Key_End,       kKey_End},
+   {Qt::Key_Left,      kKey_Left},
+   {Qt::Key_Up,        kKey_Up},
+   {Qt::Key_Right,     kKey_Right},
+   {Qt::Key_Down,      kKey_Down},
+   {Qt::Key_Prior,     kKey_Prior},
+   {Qt::Key_Next,      kKey_Next},
+   {Qt::Key_Shift,     kKey_Shift}, 
+   {Qt::Key_Control,   kKey_Control},
+   {Qt::Key_Meta,      kKey_Meta},
+   {Qt::Key_Alt,       kKey_Alt},
+   {Qt::Key_CapsLock,  kKey_CapsLock},
+   {Qt::Key_NumLock ,  kKey_NumLock},
+   {Qt::Key_ScrollLock, kKey_ScrollLock},
+   {Qt::Key_Space,     kKey_Space},  // numeric keypad
+   {Qt::Key_Tab,       kKey_Tab},
+   {Qt::Key_Enter,     kKey_Enter},
+   {Qt::Key_Equal,     kKey_Equal},
+   {Qt::Key_Asterisk,  kKey_Asterisk},
+   {Qt::Key_Plus,      kKey_Plus},
+   {Qt::Key_Comma,     kKey_Comma},
+   {Qt::Key_Minus,     kKey_Minus},
+   {Qt::Key_Period,    kKey_Period},
+   {Qt::Key_Slash,     kKey_Slash},
+   {Qt::Key(0), (EKeySym) 0}
+};
+//______________________________________________________________________________________
+static inline Int_t MapKeySym(int key, bool toQt=true) 
+{
+   for (int i = 0; gKeyQMap[i].fKeySym; i++) {	// any other keys
+      if (toQt) {
+        if (key ==  gKeyQMap[i].fKeySym ) {
+           return   UInt_t(gKeyQMap[i].fQKeySym);
+        }         
+      } else {
+        if (key ==  gKeyQMap[i].fQKeySym) {
+           return   UInt_t(gKeyQMap[i].fKeySym);
+        }
+      }
+   }
+#if 0   
+   UInt_t text;
+   QCString r = gQt->GetTextDecoder()->fromUnicode(qev.text());
+   qstrncpy((char *)&text, (const char *)r,1);
+   return text;
+#else
+   return key;
+#endif   
+}
 //______________________________________________________________________________
  Int_t        TGQt::KeysymToKeycode(UInt_t keysym) {
     // Convert a keysym to the appropriate keycode. For example keysym is
     // a letter and keycode is the matching keyboard key (which is dependend
     // on the current keyboard mapping).
-    return Int_t(keysym);
+    return Int_t(MapKeySym(keysym)); 
  }
  //______________________________________________________________________________
  void TGQt::FillRectangle(Drawable_t id, GContext_t gc, Int_t x, Int_t y,

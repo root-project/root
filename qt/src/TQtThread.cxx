@@ -1,4 +1,4 @@
-// @(#)root/qt:$Name:  $:$Id: GQtGUI.cxx,v 1.2 2004/07/28 00:12:40 rdm Exp $
+// @(#)root/qt:$Name:  $:$Id: TQtThread.cxx,v 1.5 2004/08/02 08:14:43 rdm Exp $
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
@@ -93,7 +93,7 @@ TQtThread::~TQtThread(){;}
 //______________________________________________________________________________
     Float_t TQtThread::GetTextMagnitude(){ return TGQt::GetTextMagnitude() ;}
 //______________________________________________________________________________
-    Bool_t  TQtThread::HasTTFonts() const { return HasTTFonts() ;}
+    Bool_t  TQtThread::HasTTFonts() const { return TGQt::HasTTFonts() ;}
 //______________________________________________________________________________
     RETURNACTION1(Int_t,InitWindow,ULong_t, window);
 //______________________________________________________________________________
