@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.12 2002/11/15 20:14:52 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.13 2002/12/14 15:14:33 brun Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -3481,9 +3481,10 @@ void TGWin32::DeleteImage(Drawable_t img)
 //______________________________________________________________________________
 Window_t TGWin32::CreateGLWindow(Window_t wind, Visual_t visual, Int_t depth)
 {
-   // X11 specific code to initialize GL window.
+   // Win32gdk specific code to initialize GL window.
    EnterCriticalSection(flpCriticalSection);
 
+   GdkColormap *cmap;
    GdkWindow *GLWin;
    int xval, yval;
    int wval, hval;
@@ -3496,6 +3497,11 @@ Window_t TGWin32::CreateGLWindow(Window_t wind, Visual_t visual, Int_t depth)
    wval  = fThreadP.w;
    hval  = fThreadP.h;
 
+   fThreadP.pRet = NULL;
+   PostThreadMessage(fIDThread, WIN32_GDK_CMAP_GET_SYSTEM, 0, 0L);
+   WaitForSingleObject(fThreadP.hThrSem, INFINITE);
+   cmap = (GdkColormap *)fThreadP.pRet;
+
    // window attributes
    ULong_t mask;
 
@@ -3505,11 +3511,10 @@ Window_t TGWin32::CreateGLWindow(Window_t wind, Visual_t visual, Int_t depth)
    fThreadP.xattr.y = yval;
    fThreadP.xattr.wclass = GDK_INPUT_OUTPUT;
    fThreadP.xattr.event_mask = 0L; //GDK_ALL_EVENTS_MASK;
-   fThreadP.xattr.event_mask |= GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK;
-   fThreadP.xattr.colormap = gdk_colormap_get_system();
-//   fThreadP.xattr.event_mask = 0;
-   mask = GDK_WA_X | GDK_WA_Y | GDK_WA_COLORMAP | GDK_WA_WMCLASS |
-       GDK_WA_NOREDIR;
+   fThreadP.xattr.event_mask |= GDK_EXPOSURE_MASK | GDK_STRUCTURE_MASK | 
+       GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK;
+   fThreadP.xattr.colormap = cmap;
+   mask = GDK_WA_X | GDK_WA_Y | GDK_WA_COLORMAP | GDK_WA_WMCLASS | GDK_WA_NOREDIR;
 
    fThreadP.xattr.window_type = GDK_WINDOW_CHILD;
 
