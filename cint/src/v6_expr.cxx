@@ -47,7 +47,7 @@ char* G__setiparseobject(result,str)
 G__value* result;
 char *str;
 {
-  sprintf(str,"_$%c%d%c_%d_%c%ld"
+  sprintf(str,"_$%c%d%c_%d_%c%lu"
 	  ,result->type
 	  ,0
 	  ,(0==result->isconst)?'0':'1'

@@ -2013,6 +2013,9 @@ char type;
       return;
     }
 #endif
+#ifndef G__OLDIMPLEMENTATION1991
+    G__def_tagnum = store_def_tagnum;
+#endif
     G__define_var(G__tagnum,-1);
   }
   

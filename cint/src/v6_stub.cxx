@@ -49,6 +49,9 @@ int tagnum;
     G__memberfunc_tagnum = -1;
     G__exec_memberfunc = 0;
   }
+#ifndef G__OLDIMPLEMENTATION1986
+  G__stubcall=1;
+#endif
 }
 
 /**************************************************************************

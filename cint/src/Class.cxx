@@ -573,8 +573,10 @@ int G__ClassInfo::RootFlag()
 }
 ///////////////////////////////////////////////////////////////////////////
 G__InterfaceMethod G__ClassInfo::GetInterfaceMethod(const char* fname
-					       ,const char* arg
-					       ,long* poffset)
+						    ,const char* arg
+						    ,long* poffset
+						    ,MatchMode mode
+						)
 {
   struct G__ifunc_table *ifunc;
   char *funcname;
@@ -586,7 +588,11 @@ G__InterfaceMethod G__ClassInfo::GetInterfaceMethod(const char* fname
   else           ifunc = G__struct.memfunc[tagnum];
   funcname = (char*)fname;
   param = (char*)arg;
-  ifunc = G__get_methodhandle(funcname,param,ifunc,&index,poffset);
+  ifunc = G__get_methodhandle(funcname,param,ifunc,&index,poffset
+#ifndef G__OLDIMPLEMENTATION1989
+			      ,(mode==ConversionMatch)?1:0
+#endif
+			      );
 
   if(ifunc && -1==ifunc->pentry[index]->filenum) {
     return((G__InterfaceMethod)ifunc->pentry[index]->p);
@@ -597,7 +603,9 @@ G__InterfaceMethod G__ClassInfo::GetInterfaceMethod(const char* fname
 }
 ///////////////////////////////////////////////////////////////////////////
 G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
-				      ,long* poffset)
+				      ,long* poffset
+				      ,MatchMode mode
+				      )
 {
   struct G__ifunc_table *ifunc;
   char *funcname;
@@ -609,7 +617,11 @@ G__MethodInfo G__ClassInfo::GetMethod(const char* fname,const char* arg
   else           ifunc = G__struct.memfunc[tagnum];
   funcname = (char*)fname;
   param = (char*)arg;
-  ifunc = G__get_methodhandle(funcname,param,ifunc,&index,poffset);
+  ifunc = G__get_methodhandle(funcname,param,ifunc,&index,poffset
+#ifndef G__OLDIMPLEMENTATION1989
+			      ,(mode==ConversionMatch)?1:0
+#endif
+			      );
 
   /* Initialize method object */
   G__MethodInfo method;

@@ -2014,9 +2014,9 @@ void G__ResetShlHandle()
 void* G__GetShlHandle()
 {
 #ifdef G__SHAREDLIB
-  return((void*)0);
-#else
   return((void*)G__ShlHandle);
+#else
+  return((void*)0);
 #endif
 }
 

@@ -41,12 +41,22 @@ char *temp;
       if(buf.obj.d<0.0)
 	sprintf(temp,"(%s)(%.17e)"
 		,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-				,buf.obj.reftype.reftype,0)
+#ifndef G__OLDIMPLEMENTATION1990
+				,0
+#else
+				,buf.obj.reftype.reftype
+#endif
+				,0)
 				,buf.obj.d);
       else
 	sprintf(temp,"(%s)%.17e"
 		,G__type2string(buf.type ,buf.tagnum ,buf.typenum
-				,buf.obj.reftype.reftype,0)
+#ifndef G__OLDIMPLEMENTATION1990
+				,0
+#else
+				,buf.obj.reftype.reftype
+#endif
+				,0)
 				,buf.obj.d);
       break;
 #else /* ON719 */
@@ -613,7 +623,11 @@ int type,tagnum,typenum,reftype,isconst;
 #endif
 
   string=stringbuf;
-  if(isconst&G__CONSTVAR) {
+  if(isconst&G__CONSTVAR
+#ifndef G__OLDIMPLEMENTATION1988
+     && !(isconst&G__newtype.isconst[typenum])
+#endif
+     ) {
     strcpy(string,"const ");
     string+=6;
   }

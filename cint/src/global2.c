@@ -508,6 +508,10 @@ int G__eval_localstatic=0;
 int G__loadingDLL=0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1986
+int G__stubcall=0;
+#endif
+
 
 /*
  * Local Variables:

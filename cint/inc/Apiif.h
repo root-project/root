@@ -35,6 +35,7 @@ extern G__linked_taginfo G__G__APILN_G__MethodInfo;
 extern G__linked_taginfo G__G__APILN_G__DataMemberInfo;
 extern G__linked_taginfo G__G__APILN_G__FriendInfo;
 extern G__linked_taginfo G__G__APILN_G__ClassInfo;
+extern G__linked_taginfo G__G__APILN_G__ClassInfocLcLMatchMode;
 extern G__linked_taginfo G__G__APILN_G__BaseClassInfo;
 extern G__linked_taginfo G__G__APILN_G__TypeInfo;
 extern G__linked_taginfo G__G__APILN_G__MethodArgInfo;

@@ -34,6 +34,13 @@
 #define G__OLDIMPLEMENTATION1714
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1987
+/* This is a very complicated decision. The change 1714 avoids compiled stub
+ * function registeration to the dictionary. From the interpreter, only 
+ * interpreted stub function should be visible. If there is a 
+ */
+#undef G__OLDIMPLEMENTATION1714
+#endif
 
 #define G__OLDIMPLEMENTATION1336
 #ifndef G__OLDIMPLEMENTATION1336

@@ -7,7 +7,7 @@
  * Description:
  *  Variable initialization, assignment and referencing
  ************************************************************************
- * Copyright(c) 1995~2002  Masaharu Goto 
+ * Copyright(c) 1995~2004  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -6847,6 +6847,7 @@ int parameter00;
     return(result);
   }
 #endif
+
   
   /*****************************************************************
    * actual variable allocation
@@ -7202,6 +7203,12 @@ int parameter00;
     G__globalvarpointer = store_globalvarpointer;
     G__var_type = store_var_type;
   }
+
+#ifndef G__OLDIMPLEMENTATION1985
+  if(-1!=var->tagnum && G__prerun && strcmp(varname,"G__virtualinfo")==0) {
+    G__struct.virtual_offset[var->tagnum] = var->p[ig15];
+  }
+#endif
 
 
   return(result);

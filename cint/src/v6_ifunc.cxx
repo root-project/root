@@ -5884,7 +5884,7 @@ int doconvert;
 #endif
 
 #ifdef G__ASM_DBG
-#define G__ASM_DBG2
+  /* #define G__ASM_DBG2 */
 #endif
 #ifdef G__ASM_DBG2
   if(G__dispsource) 
@@ -6002,6 +6002,9 @@ int memfunc_flag;
   long store_inherit_offset;
   struct G__ifunc_table *ifunc;
   int iexist,virtualtag;
+#ifndef G__OLDIMPLEMENTATION1992
+  int store_def_struct_member;
+#endif
   int store_var_typeB;
   int store_doingconstruction;
   int store_func_now;
@@ -6379,11 +6382,26 @@ asm_ifunc_start:   /* loop compilation execution label */
   /******************************************************************
    * C++ compiled function
    *******************************************************************/
-  if(-1 == p_ifunc->pentry[ifn]->filenum) {
+  if(-1 == p_ifunc->pentry[ifn]->filenum
+#ifndef G__OLDIMPLEMENTATION1986
+     && !G__stubcall
+#endif
+     ) {
     G__call_cppfunc(result7,libp,p_ifunc,ifn);
     /* recover tag environment */
     G__store_struct_offset = store_inherit_offset ;
     G__tagnum = store_inherit_tagnum ;
+#ifndef G__OLDIMPLEMENTATION1985
+    if(-1!=G__tagnum) {
+      G__incsetup_memvar(G__tagnum);
+      if(-1!=G__struct.virtual_offset[G__tagnum] && 
+	 strcmp(funcname,G__struct.name[G__tagnum])==0) {
+	long *pvtag
+	  = (long*)(result7->obj.i+G__struct.virtual_offset[G__tagnum]);
+	*pvtag = G__tagnum;
+      }
+    }
+#endif
     if('P'==store_var_typeB) G__val2pointer(result7);
 #ifdef G__NEWINHERIT
 #ifdef G__ASM
@@ -6403,6 +6421,12 @@ asm_ifunc_start:   /* loop compilation execution label */
     G__exec_memberfunc=store_exec_memberfunc;
     return(1);
   }
+#ifndef G__OLDIMPLEMENTATION1986
+  else {
+    G__stubcall=0;
+  }
+#endif
+
   
 #ifdef G__ASM
   /******************************************************************
@@ -7286,12 +7310,19 @@ asm_ifunc_start:   /* loop compilation execution label */
 #endif
   
   G__ASSERT(0==G__decl || 1==G__decl);
+#ifndef G__OLDIMPLEMENTATION1992
+  store_def_struct_member = G__def_struct_member;
+  G__def_struct_member = 0;
+#endif
   store_decl=G__decl;
   G__decl=0;
   G__no_exec=0;	
   G__mparen=0;
   *result7=G__exec_statement();
   G__decl=store_decl;
+#ifndef G__OLDIMPLEMENTATION1992
+  G__def_struct_member = store_def_struct_member;
+#endif
   G__ASSERT(0==G__decl || 1==G__decl);
 
   if(G__RETURN_IMMEDIATE==G__return &&
@@ -8348,12 +8379,19 @@ struct G__param *libp;
 *
 **************************************************************************/
 struct G__ifunc_table *G__get_methodhandle(funcname,argtype,p_ifunc
-					   ,pifn,poffset)
+					   ,pifn,poffset
+#ifndef G__OLDIMPLEMENTATION1989
+					   ,withConversion
+#endif
+					   )
 char *funcname;
 char *argtype;
 struct G__ifunc_table *p_ifunc; 
 long *pifn;
 long *poffset;
+#ifndef G__OLDIMPLEMENTATION1989
+int withConversion;
+#endif
 {
 #ifdef G__OLDIMPLEMENTATION1928
   int match;
@@ -8366,6 +8404,10 @@ long *poffset;
 #ifndef G__OLDIMPLEMENTATION1313
   struct G__funclist *funclist = (struct G__funclist*)NULL;
 #endif
+#endif
+#ifndef G__OLDIMPLEMENTATION1989
+  struct G__funclist *funclist = (struct G__funclist*)NULL;
+  int match;
 #endif
 
 #ifndef G__OLDIMPLEMENTATION1523
@@ -8380,6 +8422,72 @@ long *poffset;
   G__tagdefining = store_tagdefining;
 #endif
   G__hash(funcname,hash,temp);
+
+#ifndef G__OLDIMPLEMENTATION1989
+
+ if(withConversion) {
+   int tagnum = p_ifunc->tagnum;
+   int ifn = (int)(*pifn);
+
+#ifndef G__OLDIMPLEMENTATION1931
+   if(-1!=tagnum) G__incsetup_memfunc(tagnum);
+#endif
+
+   ifunc = G__overload_match(funcname,&para,hash,p_ifunc,G__TRYNORMAL
+			     ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
+   *poffset = 0;
+   *pifn = ifn;
+   if(ifunc) return(ifunc);
+   if(-1!=tagnum) {
+     int basen=0;
+     struct G__inheritance *baseclass = G__struct.baseclass[tagnum];
+     while(basen<baseclass->basen) {
+       if(baseclass->baseaccess[basen]&G__PUBLIC) {
+#ifndef G__OLDIMPLEMENTATION1934
+	 G__incsetup_memfunc(baseclass->basetagnum[basen]);
+#endif
+	 *poffset = baseclass->baseoffset[basen];
+	 p_ifunc = G__struct.memfunc[baseclass->basetagnum[basen]];
+	 ifunc = G__overload_match(funcname,&para,hash,p_ifunc,G__TRYNORMAL
+				   ,G__PUBLIC_PROTECTED_PRIVATE,&ifn,0,0) ;
+	 *pifn = ifn;
+	 if(ifunc) return(ifunc);
+       }
+       ++basen;
+     }
+   }
+ }
+ else {
+#ifndef G__OLDIMPLEMENTATION1313
+   /* first, search for exact match */
+   ifunc=G__get_ifunchandle_base(funcname,&para,hash,p_ifunc,pifn,poffset
+				 ,G__PUBLIC_PROTECTED_PRIVATE,G__EXACT);
+   if(ifunc) return(ifunc);
+   
+   /* if no exact match, try to instantiate template function */
+   funclist = G__add_templatefunc(funcname,&para,hash,funclist,p_ifunc,0);
+   if(funclist && funclist->rate==G__EXACTMATCH) {
+     ifunc = funclist->ifunc;
+     *pifn = funclist->ifn;
+     G__funclist_delete(funclist);
+     return(ifunc);
+   }
+   G__funclist_delete(funclist);
+   
+#endif /* 1313 */
+   for(match=G__EXACT;match<=G__STDCONV;match++) {
+     ifunc=G__get_ifunchandle_base(funcname,&para,hash,p_ifunc,pifn,poffset
+#ifndef G__OLDIMPLEMENTATION912
+				   ,G__PUBLIC_PROTECTED_PRIVATE
+#else
+				   ,G__PUBLIC
+#endif
+				   ,match);
+     if(ifunc) return(ifunc);
+   }
+ }
+ 
+#else /* 1989 */
 
 #ifndef G__OLDIMPLEMENTATION1928
  {
@@ -8414,7 +8522,7 @@ long *poffset;
      }
    }
  }
-#else /* 1828 */
+#else /* 1928 */
 #ifndef G__OLDIMPLEMENTATION1313
   /* first, search for exact match */
   ifunc=G__get_ifunchandle_base(funcname,&para,hash,p_ifunc,pifn,poffset
@@ -8442,7 +8550,8 @@ long *poffset;
 				  ,match);
     if(ifunc) return(ifunc);
   }
-#endif /* 1828 */
+#endif /* 1928 */
+#endif /* 1989 */
   return(ifunc);
 }
 

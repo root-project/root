@@ -121,9 +121,14 @@ G__ClassInfo {
   void ResetHeapInstanceCount();
   int RootFlag();
   //void SetDefaultConstructor(void* p2f);
+  enum MatchMode { ExactMatch=0, ConversionMatch=1 };
   G__InterfaceMethod GetInterfaceMethod(const char *fname,const char *arg
-					,long* poffset);
-  G__MethodInfo GetMethod(const char *fname,const char *arg,long* poffset);
+					,long* poffset
+					,MatchMode mode=ConversionMatch
+					);
+  G__MethodInfo GetMethod(const char *fname,const char *arg,long* poffset
+			  ,MatchMode mode=ConversionMatch
+			  );
   G__DataMemberInfo GetDataMember(const char *name,long* poffset);
   int HasMethod(const char *fname);
   int HasDataMember(const char *name);

@@ -21,14 +21,18 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      50150122
-#define G__CINTVERSIONSTR  "5.15.122, Feb 1 2004"
+#define G__CINTVERSION      50150123
+#define G__CINTVERSIONSTR  "5.15.123, Feb 9 2004"
 
 #define G__ALWAYS
 /* #define G__NEVER */
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
+/* */
+#define G__OLDIMPLEMENTATION1986
+#define G__OLDIMPLEMENTATION1985
 
 /* suppress unused parameter warnings. optional */
 #ifndef G__SUPPRESS_UNUSEDPARA
@@ -1585,9 +1589,16 @@ extern int G__del_alloctable G__P((void* allocmem));
 extern int G__add_refcount G__P((void* allocedmem,void** storedmem));
 extern int G__del_refcount G__P((void* allocedmem,void** storedmem));
 extern int G__disp_garbagecollection G__P((FILE* fout));
+#ifndef G__OLDIMPLEMENTATION1989
+struct G__ifunc_table *G__get_methodhandle G__P((char *funcname,char *argtype
+					   ,struct G__ifunc_table *p_ifunc
+					   ,long *pifn,long *poffset
+					   ,int withConversion));
+#else
 struct G__ifunc_table *G__get_methodhandle G__P((char *funcname,char *argtype
 					   ,struct G__ifunc_table *p_ifunc
 					   ,long *pifn,long *poffset));
+#endif
 struct G__var_array *G__searchvariable G__P((char *varname,int varhash
 				       ,struct G__var_array *varlocal
 				       ,struct G__var_array *varglobal

@@ -719,6 +719,9 @@ extern int G__eval_localstatic;
 extern int G__loadingDLL;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1986
+extern int G__stubcall;
+#endif
 
 #ifndef __CINT__
 #ifdef __cplusplus
