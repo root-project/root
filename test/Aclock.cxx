@@ -1,4 +1,4 @@
-// @(#)root/test:$Name$:$Id$
+// @(#)root/test:$Name:  $:$Id: Aclock.cxx,v 1.2 2000/07/11 18:05:26 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -67,6 +67,7 @@ ClockHand::ClockHand(Int_t n, Float_t *x, Float_t *y) : TPolygon(n,x,y)
 {
    // Create clockhand
 
+   fPrevTimeValue = 0;
    fX0 = new Float_t[GetN()];   // initial shape and position
    fY0 = new Float_t[GetN()];   // initial shape and position
 
@@ -115,13 +116,9 @@ void ClockHand::Move(Float_t clock_angle)
 
 Aclock::Aclock(Int_t csize) : TTimer(500, kTRUE)
 {
-   // Create a clock. Clock will be drawn in the current pad. If there
-   // is no pad it will create a new canvas.
+   // Create a clock in a new canvas.
 
-   if (!gPad || gPad->InheritsFrom("TCanvas"))
-      fPad = new TCanvas("Aclock:canvas","xclock",-csize,csize);
-   else
-      fPad = (TPad*)gPad;
+   fPad = new TCanvas("Aclock:canvas","xclock",-csize,csize);
 
    fPad->SetFillColor(14);     // grey
 
@@ -175,7 +172,7 @@ void Aclock::Paint(Option_t *)
       point1->Shift(0.5,0.5);              // move to center of pad
       point2->Shift(0.5,0.5);
 
-      fPad->DrawLine(point1->GetX(),point1->GetY(),point2->GetX(),point2->GetY());
+      fPad->PaintLine(point1->GetX(),point1->GetY(),point2->GetX(),point2->GetY());
    }
 }
 
