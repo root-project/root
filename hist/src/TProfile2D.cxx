@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.16 2003/02/25 14:17:03 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.cxx,v 1.17 2003/08/11 08:27:12 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -94,9 +94,39 @@ TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Axis_t xlow,A
 //
 //        See TProfile2D::BuildOptions for explanation of parameters
 //
+//   see other constructors below with all possible combinations of
+//   fix and variable bin size like in TH2D.
 
    BuildOptions(0,0,option);
 }
+
+//______________________________________________________________________________
+TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,const Double_t *xbins,Int_t ny,Axis_t ylow,Axis_t yup,Option_t *option)
+    : TH2D(name,title,nx,xbins,ny,ylow,yup)
+{
+//  Create a 2-D Profile with variable bins in X and fix bins in Y
+   
+   BuildOptions(0,0,option);
+}
+
+//______________________________________________________________________________
+TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Axis_t xlow,Axis_t xup,Int_t ny,const Double_t *ybins,Option_t *option)
+    : TH2D(name,title,nx,xlow,xup,ny,ybins)
+{
+//  Create a 2-D Profile with fix bins in X and variable bins in Y
+   
+   BuildOptions(0,0,option);
+}
+
+//______________________________________________________________________________
+TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,const Double_t *xbins,Int_t ny,const Double_t *ybins,Option_t *option)
+    : TH2D(name,title,nx,xbins,ny,ybins)
+{
+//  Create a 2-D Profile with variable bins in X and variable bins in Y
+   
+   BuildOptions(0,0,option);
+}
+
 
 //______________________________________________________________________________
 TProfile2D::TProfile2D(const char *name,const char *title,Int_t nx,Axis_t xlow,Axis_t xup,Int_t ny, Axis_t ylow,Axis_t yup,Axis_t zlow,Axis_t zup,Option_t *option)

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.15 2002/12/02 18:50:03 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile2D.h,v 1.16 2002/12/04 10:38:32 brun Exp $
 // Author: Rene Brun   16/04/2000
 
 /*************************************************************************
@@ -48,10 +48,16 @@ private:
 public:
     TProfile2D();
     TProfile2D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
-                                ,Int_t nbinsy,Axis_t ylow,Axis_t yup,Option_t *option="");
-    TProfile2D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
                                 ,Int_t nbinsy,Axis_t ylow,Axis_t yup
                                 ,Axis_t zlow, Axis_t zup,Option_t *option="");
+    TProfile2D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
+                                ,Int_t nbinsy,Axis_t ylow,Axis_t yup,Option_t *option="");
+    TProfile2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                ,Int_t nbinsy,Axis_t ylow,Axis_t yup,Option_t *option="");
+    TProfile2D(const char *name,const char *title,Int_t nbinsx,Axis_t xlow,Axis_t xup
+                                ,Int_t nbinsy,const Double_t *ybins,Option_t *option="");
+    TProfile2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+                                ,Int_t nbinsy,const Double_t *ybins,Option_t *option="");
     TProfile2D(const TProfile2D &profile);
     virtual ~TProfile2D();
     virtual void    Add(TF1 *h1, Double_t c1=1);
