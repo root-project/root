@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.4 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.h,v 1.5 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -77,7 +77,7 @@ public:
   enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
   enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult };
 
-  TMatrixFBase() { Invalidate(); }
+  TMatrixFBase() { fIsOwner = kTRUE; fNelems = fNrows = fRowLwb = fNcols = fColLwb = 0; fTol = 0.; }
 
   virtual ~TMatrixFBase() {}
 
@@ -93,8 +93,9 @@ public:
   virtual              Float_t  *GetMatrixArray  ()       = 0;
           inline       Float_t   SetTol       (Float_t tol);
 
-  virtual void Invalidate   ()       { fNrows = fNcols = fNelems = -1; }
+  virtual void   Invalidate ()       { fNrows = -1; }
   inline  Bool_t IsValid    () const { if (fNrows == -1) return kFALSE; return kTRUE; }
+  inline  Bool_t IsOwner    () const { return fIsOwner; }
           Bool_t IsSymmetric() const;
 
   // Probably move this functionality to TMatrixFFlat

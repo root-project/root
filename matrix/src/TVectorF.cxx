@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.8 2004/02/05 18:18:09 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.9 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -199,6 +199,7 @@ void TVectorF::ResizeTo(Int_t lwb,Int_t upb)
   // New dynamic elemenst are created, the overlapping part of the old ones are
   // copied to the new structures, then the old elements are deleleted.
 
+  Assert(IsValid());
   if (!fIsOwner) {
     Error("ResizeTo(lwb,upb)","Not owner of data array,cannot resize");
     return;
@@ -206,10 +207,14 @@ void TVectorF::ResizeTo(Int_t lwb,Int_t upb)
 
   const Int_t new_nrows = upb-lwb+1;
 
-  if (IsValid()) {
+  if (fNrows > 0) {
 
     if (fNrows == new_nrows && fRowLwb == lwb)
       return;
+    else if (new_nrows == 0) {
+      Clear();
+      return;
+    }
 
     Float_t     *elements_old = GetMatrixArray();
     const Int_t  nrows_old    = fNrows;
@@ -993,7 +998,7 @@ Bool_t TVectorF::SomePositive(const TVectorF &select)
 void TVectorF::AddSomeConstant(Float_t val,const TVectorF &select)
 {
   if (!AreCompatible(*this,select))
-    Error("AddSomeConstant(Double_t,const TVectorF &)","vector's not compatible");
+    Error("AddSomeConstant(Float_t,const TVectorF &)","vector's not compatible");
 
   const Float_t *sp = select.GetMatrixArray();
         Float_t *ep = this->GetMatrixArray();
@@ -1131,6 +1136,14 @@ TVectorF operator*(const TMatrixFSym &a,const TVectorF &source)
 {
   TVectorF target = source;
   target *= a;
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorF operator*(Float_t val,const TVectorF &source)
+{
+  TVectorF target = source;
+  target *= val;
   return target;
 }
 

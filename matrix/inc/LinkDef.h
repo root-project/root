@@ -1,4 +1,4 @@
-/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.11 2004/02/04 17:12:44 brun Exp $ */
+/* @(#)root/matrix:$Name:  $:$Id: LinkDef.h,v 1.12 2004/03/19 14:20:40 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -40,6 +40,7 @@
 #pragma link C++ function operator+    (const TVectorF &,const TVectorF &);
 #pragma link C++ function operator-    (const TVectorF &,const TVectorF &);
 #pragma link C++ function operator*    (const TVectorF &,const TVectorF &);
+#pragma link C++ function operator*    (      Float_t   ,const TVectorF &);
 #pragma link C++ function Add          (      TVectorF &,      Float_t ,  const TVectorF &);
 #pragma link C++ function AddElemMult  (      TVectorF &,      Float_t ,  const TVectorF &,const TVectorF &);
 #pragma link C++ function AddElemMult  (      TVectorF &,      Float_t ,  const TVectorF &,const TVectorF &,const TVectorF &);
@@ -126,6 +127,7 @@
 #pragma link C++ function operator+    (const TVectorD &,const TVectorD &);
 #pragma link C++ function operator-    (const TVectorD &,const TVectorD &);
 #pragma link C++ function operator*    (const TVectorD &,const TVectorD &);
+#pragma link C++ function operator*    (      Double_t  ,const TVectorD &);
 #pragma link C++ function Add          (      TVectorD &,      Double_t,  const TVectorD &);
 #pragma link C++ function AddElemMult  (      TVectorD &,      Double_t,  const TVectorD &,const TVectorD &);
 #pragma link C++ function AddElemMult  (      TVectorD &,      Double_t,  const TVectorD &,const TVectorD &,const TVectorD &);

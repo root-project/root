@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.36 2004/01/29 21:57:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorD.cxx,v 1.37 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -199,6 +199,7 @@ void TVectorD::ResizeTo(Int_t lwb,Int_t upb)
   // New dynamic elemenst are created, the overlapping part of the old ones are
   // copied to the new structures, then the old elements are deleleted.
 
+  Assert(IsValid());
   if (!fIsOwner) {
     Error("ResizeTo(lwb,upb)","Not owner of data array,cannot resize");
     return;
@@ -206,10 +207,14 @@ void TVectorD::ResizeTo(Int_t lwb,Int_t upb)
 
   const Int_t new_nrows = upb-lwb+1;
 
-  if (IsValid()) {
+  if (fNrows > 0) {
 
     if (fNrows == new_nrows && fRowLwb == lwb)
       return;
+    else if (new_nrows == 0) {
+      Clear();
+      return;
+    }
 
     Double_t    *elements_old = GetMatrixArray();
     const Int_t  nrows_old    = fNrows;
@@ -1136,6 +1141,14 @@ TVectorD operator*(const TMatrixDSym &a,const TVectorD &source)
 {
   TVectorD target = source;
   target *= a;
+  return target;
+}
+
+//______________________________________________________________________________
+TVectorD operator*(Double_t val,const TVectorD &source)
+{
+  TVectorD target = source;
+  target *= val;
   return target;
 }
 

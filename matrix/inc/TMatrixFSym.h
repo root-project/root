@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.3 2004/01/29 08:58:46 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFSym.h,v 1.4 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -49,7 +49,7 @@ protected:
 
 public:
 
-  TMatrixFSym() { fIsOwner = kTRUE; fElements = 0; Invalidate(); }
+  TMatrixFSym() { fElements = 0; }
   explicit TMatrixFSym(Int_t nrows);
   TMatrixFSym(Int_t row_lwb,Int_t row_upb);
   TMatrixFSym(Int_t nrows,const Float_t *data,Option_t *option="");
@@ -60,12 +60,12 @@ public:
   TMatrixFSym(EMatrixCreatorsOp1 op,const TMatrixF    &prototype);
   TMatrixFSym(const TMatrixFSymLazy &lazy_constructor);
 
-  virtual ~TMatrixFSym() { Clear(); Invalidate(); }
+  virtual ~TMatrixFSym() { Clear(); }
 
   virtual const Float_t *GetMatrixArray  () const;
   virtual       Float_t *GetMatrixArray  ();
 
-  virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); }
+  virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); fNelems = 0; }
 
   void        Use           (Int_t nrows,Float_t *data);
   void        Use           (Int_t row_lwb,Int_t row_upb,Float_t *data);

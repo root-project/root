@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.3 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.4 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -46,7 +46,7 @@ protected:
   void Allocate  (Int_t nrows,Int_t row_lwb = 0,Int_t init = 0);
 
 public:
-  TVectorF() { fIsOwner = kTRUE; fElements = 0; Invalidate(); }
+  TVectorF() { fIsOwner = kTRUE; fElements = 0; fNrows = 0; fRowLwb = 0; }
   explicit TVectorF(Int_t n);
   TVectorF(Int_t lwb,Int_t upb);
   TVectorF(Int_t n,const Float_t *elements);
@@ -58,7 +58,7 @@ public:
 #ifndef __CINT__
   TVectorF(Int_t lwb,Int_t upb,Float_t iv1, ...);
 #endif
-  virtual ~TVectorF() { Clear(); Invalidate(); }
+  virtual ~TVectorF() { Clear(); }
 
   inline          Int_t     GetLwb       () const { return fRowLwb; }
   inline          Int_t     GetUpb       () const { return fNrows+fRowLwb-1; }
@@ -70,6 +70,7 @@ public:
 
   inline void     Invalidate () { fNrows = -1; }
   inline Bool_t   IsValid    () const { if (fNrows == -1) return kFALSE; return kTRUE; }
+  inline Bool_t   IsOwner    () const { return fIsOwner; }
   inline void     SetElements(const Float_t *elements) { Assert(IsValid());
                                                           memcpy(fElements,elements,fNrows*sizeof(Float_t)); }
          void     ResizeTo   (Int_t lwb,Int_t upb);
@@ -128,7 +129,7 @@ public:
   TVectorF &Apply(const TElementActionF    &action);
   TVectorF &Apply(const TElementPosActionF &action);
 
-  void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements); }
+  void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements); fNrows = 0; }
   void Draw (Option_t *option=""); // *MENU*
   void Print(Option_t *option="") const;  // *MENU*
 
@@ -138,6 +139,7 @@ public:
   friend TVectorF  operator-  (const TVectorF    &source1,const TVectorF &source2);
   friend TVectorF  operator*  (const TMatrixF    &a,      const TVectorF &source);
   friend TVectorF  operator*  (const TMatrixFSym &a,      const TVectorF &source);
+  friend TVectorF  operator*  (      Float_t      val,    const TVectorF &source);
 
   friend TVectorF &Add        (TVectorF &target,Float_t scalar,const TVectorF &source);
   friend TVectorF &AddElemMult(TVectorF &target,Float_t scalar,
@@ -189,9 +191,10 @@ inline const Float_t &TVectorF::operator()(Int_t ind) const
 Bool_t    operator==    (const TVectorF    &source1,const TVectorF &source2);
 TVectorF  operator+     (const TVectorF    &source1,const TVectorF &source2);
 TVectorF  operator-     (const TVectorF    &source1,const TVectorF &source2);
+Float_t   operator*     (const TVectorF    &source1,const TVectorF &source2);
 TVectorF  operator*     (const TMatrixF    &a,      const TVectorF &source);
 TVectorF  operator*     (const TMatrixFSym &a,      const TVectorF &source);
-Float_t   operator*     (const TVectorF    &source1,const TVectorF &source2);
+TVectorF  operator*     (      Float_t      val,    const TVectorF &source);
 TVectorF  &Add          (      TVectorF    &target,       Float_t  scalar,const TVectorF &source);
 TVectorF  &AddElemMult  (      TVectorF    &target,       Float_t  scalar,const TVectorF &source1,
                          const TVectorF    &source2);

@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.29 2004/01/27 08:12:26 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.30 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -56,7 +56,7 @@ protected:
 
 public:
 
-  TMatrixD() { fIsOwner = kTRUE; fElements = 0; Invalidate(); }
+  TMatrixD() { fElements = 0; }
   TMatrixD(Int_t nrows,Int_t ncols);
   TMatrixD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
   TMatrixD(Int_t nrows,Int_t ncols,const Double_t *data,Option_t *option="");
@@ -72,12 +72,12 @@ public:
   TMatrixD(const TMatrixDSym  &a,EMatrixCreatorsOp2 op,const TMatrixDSym &b);
   TMatrixD(const TMatrixDLazy &lazy_constructor);
 
-  virtual ~TMatrixD() { Clear(); Invalidate(); }
+  virtual ~TMatrixD() { Clear(); }
 
   virtual const Double_t *GetMatrixArray  () const;
   virtual       Double_t *GetMatrixArray  ();
 
-  virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); }
+  virtual void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNelems,fElements); fNelems = 0; }
 
   void      Use         (Int_t nrows,Int_t ncols,Double_t *data);
   void      Use         (Int_t row_lwb,Int_t row_upb,

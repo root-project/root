@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.cxx,v 1.4 2004/01/29 21:57:40 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixFBase.cxx,v 1.5 2004/03/19 14:20:40 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -353,14 +353,20 @@ void TMatrixFBase::ResizeTo(Int_t nrows,Int_t ncols)
   // New dynamic elements are created, the overlapping part of the old ones are
   // copied to the new structures, then the old elements are deleted.
 
+  Assert(IsValid());
   if (!fIsOwner) {
     Error("ResizeTo(nrows,ncols)","Not owner of data array,cannot resize");
     return;
   }
 
-  if (IsValid()) {
+  if (fNelems > 0) {
     if (fNrows == nrows && fNcols == ncols)
       return;
+    else if (nrows == 0 || ncols == 0) {
+      fNrows = nrows; fNcols = ncols;
+      Clear();
+      return;
+    }
 
     Float_t     *elements_old = GetMatrixArray();
     const Int_t  nelems_old   = fNelems;
@@ -406,6 +412,7 @@ void TMatrixFBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
   // New dynamic elemenst are created, the overlapping part of the old ones are
   // copied to the new structures, then the old elements are deleted.
 
+  Assert(IsValid());
   if (!fIsOwner) {
     Error("ResizeTo(row_lwb,row_upb,col_lwb,col_upb)","Not owner of data array,cannot resize");
     return;
@@ -414,11 +421,17 @@ void TMatrixFBase::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_
   const Int_t new_nrows = row_upb-row_lwb+1;
   const Int_t new_ncols = col_upb-col_lwb+1;
 
-  if (IsValid()) {
+  if (fNelems > 0) {
 
     if (fNrows  == new_nrows  && fNcols  == new_ncols &&
         fRowLwb == row_lwb    && fColLwb == col_lwb)
        return;
+    else if (new_nrows == 0 || new_ncols == 0) {
+      fNrows = new_nrows; fNcols = new_ncols;
+      fRowLwb = row_lwb; fColLwb = col_lwb;
+      Clear();
+      return;
+    }
 
     Float_t     *elements_old = GetMatrixArray();
     const Int_t  nelems_old   = fNelems;
