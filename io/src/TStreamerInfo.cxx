@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.145 2002/11/26 10:24:25 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.146 2002/12/02 18:50:04 rdm Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -464,8 +464,7 @@ void TStreamerInfo::BuildOld()
          offset += baseclass->Size();
          continue;
       }
-      //in principle, we should look rather into TRealData to support the
-      //case where a member has been moved to a base class
+      
       TDataMember *dm = (TDataMember*)fClass->GetListOfDataMembers()->FindObject(element->GetName());
       // may be a fake class
       if (!dm && fClass->GetDeclFileLine() < 0) {
@@ -503,8 +502,22 @@ void TStreamerInfo::BuildOld()
             }
          }
       } else {
-         element->SetOffset(kMissing);
-         element->SetNewType(-1);
+         //last attempt via TRealData in case the member has been moved to a base class
+         TRealData *rd = fClass->GetRealData(element->GetName());
+         if (rd && rd->GetDataMember() ) {
+            element->SetOffset(rd->GetThisOffset());
+            dm = rd->GetDataMember();
+            TDataType *dt = dm->GetDataType();
+            if (dt) {
+               if (element->GetType() != dt->GetType()) {
+                  element->SetNewType(dt->GetType());
+                  printf("element: %s::%s %s has new type: %s\n",GetName(),element->GetTypeName(),element->GetName(),dm->GetFullTypeName());
+               }
+            }
+         } else {
+            element->SetNewType(-1);
+            element->SetOffset(kMissing);
+         }
       }
    }
 
