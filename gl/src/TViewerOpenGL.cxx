@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.24 2004/09/29 06:55:13 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.25 2004/10/04 07:38:37 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -485,7 +485,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
   
    Float_t col1[] = {0.9f, 0.7f, 0.f};
    Float_t col2[] = {0.f, 0.9f, 0.f};
-   const Double_t pos[3] = {0.};
+   const Double_t pos[3] = {0,0,0};
    TGLSimpleLight *light1 = new TGLSimpleLight(++fNbShapes, 2, col1, pos);
    TGLSelection *box1 = light1->GetBox();
    TGLSimpleLight *light2 = new TGLSimpleLight(++fNbShapes, 3, col2, pos);
