@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TPosixThread.cxx,v 1.7 2004/11/02 13:09:02 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TPosixThread.cxx,v 1.8 2004/11/02 17:25:53 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -38,14 +38,13 @@ Int_t TPosixThread::Run(TThread *th)
    pthread_attr_setdetachstate(attr, det);
    int ierr = pthread_create(&id, attr, &TThread::Fun, th);
    if (attr) pthread_attr_destroy(attr);
-   th->SetJoinId((Long_t)id);
    return ierr;
 }
 
 //______________________________________________________________________________
-Int_t TPosixThread::Join(Long_t jid, void **ret)
+Int_t TPosixThread::Join(TThread *th, void **ret)
 {
-   return pthread_join((pthread_t) jid, ret);
+   return pthread_join((pthread_t) th->fId, ret);
 }
 
 //______________________________________________________________________________
@@ -100,7 +99,7 @@ Int_t TPosixThread::CancelPoint()
 Int_t TPosixThread::CleanUpPush(void **main, void *free,void *arg)
 {
    // pthread_cleanup_push(free, arg);
-   if (!free) fprintf(stderr, "CleanUpPush ***ERROR*** Routine=NULL\n");
+   if (!free) fprintf(stderr, "CleanUpPush ***ERROR*** Routine=0\n");
    new TPosixThreadCleanUp(main,free,arg);
    return 0;
 }
@@ -112,7 +111,7 @@ Int_t TPosixThread::CleanUpPop(void **main,Int_t exe)
 
    if (!*main) return 1;
    TPosixThreadCleanUp *l = (TPosixThreadCleanUp*)(*main);
-   if (!l->fRoutine) fprintf(stderr,"CleanUpPop ***ERROR*** Routine=NULL\n");
+   if (!l->fRoutine) fprintf(stderr,"CleanUpPop ***ERROR*** Routine=0\n");
    if (exe && l->fRoutine) ((void (*)(void*))(l->fRoutine))(l->fArgument);
    *main = l->fNext;  delete l;
    return 0;

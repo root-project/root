@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name$:$Id$
+// @(#)root/thread:$Name:  $:$Id: TCondition.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 //                                                                      //
 // This class implements a condition variable. Use a condition variable //
 // to signal threads. The actual work is done via the TConditionImp     //
-// class (either TPosixCondition, TSolarisCondition or TNTCondition).   //
+// class (either TPosixCondition or TWin32Condition).                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -34,12 +34,14 @@ TCondition::TCondition(TMutex *m)
    // provided one will be created. Use GetMutex() to get this mutex
    // and use it before calling Signal() or Broadcast().
 
-   TMutex *mm = m;
+   fPrivateMutex = (m == 0);
+   if (fPrivateMutex) {
+      fMutex = new TMutex();
+   } else {
+      fMutex = m;
+   }
 
-   fMutex = 0;
-   if (!mm) { fMutex = new TMutex(); mm = fMutex; }
-
-   fConditionImp = gThreadFactory->CreateConditionImp(mm->fMutexImp);
+   fConditionImp = gThreadFactory->CreateConditionImp(fMutex->fMutexImp);
 
    if (!fConditionImp)
       Error("TCondition", "could not create TConditionImp");
@@ -51,7 +53,7 @@ TCondition::~TCondition()
    // Clean up condition variable.
 
    delete fConditionImp;
-   delete fMutex;
+   if (fPrivateMutex) delete fMutex;
 }
 
 //______________________________________________________________________________
@@ -61,20 +63,23 @@ TMutex *TCondition::GetMutex() const
    // before calling Signal() or Broadcast(). Returns 0 if
    // external mutex was provided in TCondition ctor.
 
-   return fMutex;
+   if (fPrivateMutex)
+      return fMutex;
+   return 0;
 }
 
 //______________________________________________________________________________
 Int_t TCondition::Wait()
 {
-   // Wait for to be signaled.
+   // Wait to be signaled.
 
    if (!fConditionImp) return -1;
 
    Int_t iret;
-   if (fMutex) fMutex->Lock();
+   if (fPrivateMutex) fMutex->Lock();
    iret = fConditionImp->Wait();
-   if (fMutex) fMutex->UnLock();
+   fMutex->fId = TThread::SelfId(); // fix the owner because lowlevel relock
+   if (fPrivateMutex) fMutex->UnLock();
    return iret;
 }
 
@@ -86,8 +91,8 @@ Int_t TCondition::TimedWait(ULong_t secs, ULong_t nanoSec)
    if (!fConditionImp) return -1;
 
    Int_t iret;
-   if (fMutex) fMutex->Lock();
+   if (fPrivateMutex) fMutex->Lock();
    iret = fConditionImp->TimedWait(secs, nanoSec);
-   if (fMutex) fMutex->UnLock();
+   if (fPrivateMutex) fMutex->UnLock();
    return iret;
 }

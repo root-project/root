@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name$:$Id$
+// @(#)root/thread:$Name:  $:$Id: TConditionImp.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -18,8 +18,7 @@
 // TConditionImp                                                        //
 //                                                                      //
 // This class provides an abstract interface to the OS dependent        //
-// condition classes (TPosixCondition, TSolarisCondition and            //
-// TNTCondition).                                                       //
+// condition classes (TPosixCondition and TWin32Condition).             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

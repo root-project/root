@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name$:$Id$
+// @(#)root/thread:$Name:  $:$Id: TMutexImp.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -14,7 +14,7 @@
 // TMutexImp                                                            //
 //                                                                      //
 // This class provides an abstract interface to the OS dependent mutex  //
-// classes (TPosixMutex, TSolarisMutex and TNTMutex).                   //
+// classes (TPosixMutex and TWin32Mutex).                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

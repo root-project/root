@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Thread.h,v 1.2 2001/04/03 10:40:24 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TWin32Thread.h,v 1.1 2004/11/02 13:07:57 rdm Exp $
 // Author: Bertrand Bellenot  20/10/2004
 
 /*************************************************************************
@@ -32,14 +32,13 @@ class TWin32ThreadCleanUp;
 class TWin32Thread : public TThreadImp {
 
 private:
-
-public:
    TWin32ThreadCleanUp *fCleanUp;
 
+public:
    TWin32Thread() { }
    ~TWin32Thread() { }
 
-   virtual Int_t  Join(Long_t jid, void **ret);
+   virtual Int_t  Join(TThread *th, void **ret);
    virtual Long_t SelfId();
    virtual Int_t  Run(TThread *th);
 

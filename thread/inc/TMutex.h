@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.h,v 1.3 2002/12/03 16:44:25 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TMutex.h,v 1.4 2004/12/01 15:46:00 rdm Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 //                                                                      //
 // This class implements mutex locks. A mutex is a mutual exclusive     //
 // lock. The actual work is done via the TMutexImp class (either        //
-// TPosixMutex, TSolarisMutex or TNTMutex).                             //
+// TPosixMutex or TWin32Mutex).                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +41,7 @@ friend class TThread;
 
 private:
    TMutexImp  *fMutexImp;   // pointer to mutex implementation
-   UInt_t      fId;         // id of thread which locked mutex
+   Long_t      fId;         // id of thread which locked mutex
    Int_t       fRef;        // reference count in case of recursive locking by same thread
 
 public:

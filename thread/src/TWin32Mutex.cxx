@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Mutex.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TWin32Mutex.cxx,v 1.1 2004/11/02 13:07:57 rdm Exp $
 // Author: Bertrand Bellenot   23/10/04
 
 /*************************************************************************
@@ -28,7 +28,7 @@ TWin32Mutex::TWin32Mutex()
    // Create a Win32 mutex lock.
 
    fHMutex = ::CreateMutex(0, 0, 0);
-   if(fHMutex == NULL)
+   if (!fHMutex)
       SysError("TMutex", "CreateMutex error");
 }
 
@@ -37,7 +37,7 @@ TWin32Mutex::~TWin32Mutex()
 {
    // TMutex dtor.
 
-  ::CloseHandle(fHMutex);  
+  ::CloseHandle(fHMutex);
 }
 
 //______________________________________________________________________________
@@ -45,7 +45,7 @@ Int_t TWin32Mutex::Lock()
 {
    // Lock the mutex.
 
-   if(::WaitForSingleObject(fHMutex, INFINITE) != WAIT_OBJECT_0) 
+   if (::WaitForSingleObject(fHMutex, INFINITE) != WAIT_OBJECT_0)
       return -1;
    return 0;
 }
@@ -55,7 +55,7 @@ Int_t TWin32Mutex::TryLock()
 {
    // Try locking the mutex. Returns 0 if mutex can be locked.
 
-   switch(::WaitForSingleObject(fHMutex, 1000)) {
+   switch (::WaitForSingleObject(fHMutex, 1000)) {
       case WAIT_OBJECT_0:
          return 1;
       case WAIT_TIMEOUT:
@@ -71,8 +71,7 @@ Int_t TWin32Mutex::UnLock(void)
 {
    // Unlock the mutex.
 
-   if(::ReleaseMutex(fHMutex) == 0)
+   if (::ReleaseMutex(fHMutex) == 0)
       return -1;
    return 0;
-
 }

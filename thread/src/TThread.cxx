@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.23 2004/11/02 13:07:57 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.cxx,v 1.24 2004/11/03 22:54:15 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -16,7 +16,7 @@
 // This class implements threads. A thread is an execution environment  //
 // much lighter than a process. A single process can have multiple      //
 // threads. The actual work is done via the TThreadImp class (either    //
-// TPosixThread, TThreadSolaris or TThreadNT).                          //
+// TPosixThread or TWin32Thread).                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -131,13 +131,35 @@ TThread::TThread(Int_t id)
    fFcnRetn   = 0;
    fFcnVoid   = 0;
    fPriority  = kNormalPriority;
-   fThreadArg = NULL;
+   fThreadArg = 0;
    Constructor();
    fNamed     = kFALSE;
    fId = (id ? id : SelfId());
    fState = kRunningState;
 
    if (gDebug) Info("Thread", "%s.%ld is running", GetName(), fId);
+}
+
+//______________________________________________________________________________
+void TThread::Init()
+{
+   // Initialize global state and variables once.
+
+   if (fgThreadImp) return;
+
+   fgThreadImp = gThreadFactory->CreateThreadImp();
+   fgMainMutex = new TMutex(kTRUE);
+   fgXActMutex = new TMutex(kTRUE);
+   new TThreadTimer;
+   fgXActCondi = new TCondition;
+   gThreadTsd  = TThread::Tsd;
+   gThreadXAR  = TThread::XARequest;
+
+   // Create the global mutexes
+   if (!gContainerMutex)
+      gContainerMutex = new TMutex(kTRUE);
+   if (!gCINTMutex)
+      gCINTMutex = new TMutex(kTRUE);
 }
 
 //______________________________________________________________________________
@@ -149,17 +171,9 @@ void TThread::Constructor()
    fClean  = 0;
    fState  = kNewState;
 
-   fId = 0;
-   fHandle = 0;
-   if (!fgThreadImp) { // *** Only once ***
-      fgThreadImp = gThreadFactory->CreateThreadImp();
-      fgMainMutex = new TMutex(kTRUE);
-      fgXActMutex = new TMutex(kTRUE);
-      new TThreadTimer;
-      fgXActCondi = new TCondition;
-      gThreadTsd  = TThread::Tsd;
-      gThreadXAR  = TThread::XARequest;
-   }
+   fId = -1;
+   fHandle= 0;
+   if (!fgThreadImp) Init();
 
    PutComm("Constructor: MainMutex Locking");
    Lock();
@@ -168,12 +182,6 @@ void TThread::Constructor()
 
    if (fgMain) fgMain->fPrev = this;
    fNext = fgMain; fPrev=0; fgMain = this;
-
-   // Create the global mutexes
-   if (!gContainerMutex)
-     gContainerMutex = new TMutex(kTRUE);
-   if (!gCINTMutex)
-     gCINTMutex = new TMutex(kTRUE);
 
 
    UnLock();
@@ -233,7 +241,7 @@ Int_t TThread::Delete(TThread *&th)
 //______________________________________________________________________________
 void TThread::Debug(const char *txt)
 {
-   ::Info("TThread::Debug", "%s %ld", txt, fgMain->fId);
+   ::Info("TThread::Debug", "%s %ld", txt, SelfId());
 }
 
 //______________________________________________________________________________
@@ -242,15 +250,14 @@ Int_t TThread::Exists()
    // Check existing threads
    // return number of running Threads
 
-   TThread *l;
-
-   if (!fgMain) { //no threads
-      return 0;
-   }
+   Lock();
 
    Int_t num = 0;
-   for (l = fgMain; l; l = l->fNext)
+   for (TThread *l = fgMain; l; l = l->fNext)
       num++; //count threads
+
+   UnLock();
+
    return num;
 }
 
@@ -262,35 +269,21 @@ void TThread::SetPriority(EPriority pri)
    fPriority = pri;
 }
 
-//______________________________________________________________________________
-void TThread::SetJoinId(Long_t jid)
-{
-   // Set id of thread to join.
-
-   fJoinId = jid;
-}
-
-//______________________________________________________________________________
-void TThread::SetJoinId(TThread *tj)
-{
-   // Set thread to join.
-
-#ifdef WIN32
-   SetJoinId(tj->fHandle);
-#else
-   SetJoinId(tj->fId);
-#endif
-}
 
 //______________________________________________________________________________
 TThread *TThread::GetThread(Long_t id)
 {
    // Static method to find a thread by id.
 
-   TThread *myth;
+   TThread *myTh;
 
-   for (myth = fgMain; myth && (myth->fId != id); myth=myth->fNext) { }
-   return myth;
+   Lock();
+
+   for (myTh = fgMain; myTh && (myTh->fId != id); myTh=myTh->fNext) { }
+
+   UnLock();
+
+   return myTh;
 }
 
 //______________________________________________________________________________
@@ -298,10 +291,15 @@ TThread *TThread::GetThread(const char *name)
 {
    // Static method to find a thread by name.
 
-   TThread *myth;
+   TThread *myTh;
 
-   for (myth = fgMain; myth && (strcmp(name,myth->GetName())); myth=myth->fNext) { }
-   return myth;
+   Lock();
+
+   for (myTh = fgMain; myTh && (strcmp(name,myTh->GetName())); myTh=myTh->fNext) { }
+
+   UnLock();
+
+   return myTh;
 }
 
 //______________________________________________________________________________
@@ -315,29 +313,44 @@ TThread *TThread::Self()
 //______________________________________________________________________________
 Long_t TThread::Join(void **ret)
 {
-   // Join thread.
+   // Join this thread.
 
-   return TThread::Join(0, ret);
+   if (fId == -1) {
+      Error("Join","thread not running");
+      return -1;
+   }
+
+   if (fDetached) {
+      Error("Join","cannot join detached thread");
+      return -1;
+   }
+
+   return fgThreadImp->Join(this, ret);
 }
 
 //______________________________________________________________________________
 Long_t TThread::Join(Long_t jid, void **ret)
 {
-   Long_t jd;
-   TThread *myth = jid ? GetThread(jid) : GetThread(fId);
-   if (!myth) return -1L;
-   jd = myth->fJoinId;
+   // Static method to join a thread by id.
 
-   return fgThreadImp->Join(jd, ret);
+   TThread *myTh = GetThread(jid);
+
+   if (!myTh) {
+      ::Error("TThread::Join", "cannot find thread %ld", jid);
+      return -1L;
+   }
+
+   return myTh->Join(ret);
 }
 
 //______________________________________________________________________________
 Long_t TThread::SelfId()
 {
-   if (!fgThreadImp) return -1L;
-   Long_t id = fgThreadImp->SelfId();
-   if (!id) id = -1L;  // in some implementations 0 is main thread
-   return id;
+   // Static method returning the id for the current thread
+   // or -1 on error.
+
+   if (!fgThreadImp) Init();
+   return fgThreadImp->SelfId();
 }
 
 //______________________________________________________________________________
@@ -349,8 +362,8 @@ Int_t TThread::Run(void *arg)
    PutComm("Run: MainMutex locking");
    Lock();
    PutComm("Run: MainMutex locked");
-   if (fFcnVoid) fname=G__p2f2funcname((void*)fFcnVoid);
-   if (fFcnRetn) fname=G__p2f2funcname((void*)fFcnRetn);
+   if (fFcnVoid) fname = G__p2f2funcname((void*)fFcnVoid);
+   if (fFcnRetn) fname = G__p2f2funcname((void*)fFcnRetn);
    if (!fNamed)
       if (fname) SetName(fname);
 
@@ -604,7 +617,7 @@ void TThread::Ps()
    int i;
 
    if (!fgMain) { //no threads
-      Info("Ps", "*** No threads, ***");
+      ::Info("TThread::Ps", "*** No threads, ***");
       return;
    }
 
@@ -614,16 +627,16 @@ void TThread::Ps()
    for (l = fgMain; l; l = l->fNext)
       num++;
 
-   char cbuf[100];
-   printf("     Thread         State\n");
+   char cbuf[200];
+   printf("     Thread                   State\n");
    for (l = fgMain; l; l = l->fNext) { // loop over threads
       memset(cbuf,' ',100);
       sprintf(cbuf, "%3d  %s.%ld",num--,l->GetName(),l->fId);
       i = strlen(cbuf);
-      if (i<20)
+      if (i<30)
          cbuf[i]=' ';
-      cbuf[20]=0;
-      printf("%20s",cbuf);
+      cbuf[30]=0;
+      printf("%30s",cbuf);
 
       switch (l->fState) {   // print states
 

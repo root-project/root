@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TCondition.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TCondition.h,v 1.2 2002/12/03 16:44:25 brun Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 //                                                                      //
 // This class implements a condition variable. Use a condition variable //
 // to signal threads. The actual work is done via the TConditionImp     //
-// class (either TPosixCondition, TSolarisCondition or TNTCondition).   //
+// class (either TPosixCondition or TWin32Condition).                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -34,10 +34,13 @@ class TMutex;
 
 
 class TCondition : public TObject {
-  friend class TThread;
+
+friend class TThread;
+
 private:
    TConditionImp  *fConditionImp;  // pointer to condition variable implementation
    TMutex         *fMutex;         // mutex used around Wait() and TimedWait()
+   Bool_t          fPrivateMutex;  // is fMutex our private mutex
 
 public:
    TCondition(TMutex *m = 0);

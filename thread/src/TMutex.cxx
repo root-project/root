@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TMutex.cxx,v 1.2 2002/02/14 16:12:52 rdm Exp $
 // Author: Fons Rademakers   26/06/97
 
 /*************************************************************************
@@ -15,7 +15,7 @@
 //                                                                      //
 // This class implements mutex locks. A mutex is a mutual exclusive     //
 // lock. The actual work is done via the TMutexImp class (either        //
-// TPosixMutex, TSolarisMutex or TNTMutex).                             //
+// TPosixMutex or TWin32Mutex).                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +32,7 @@ TMutex::TMutex(Bool_t recursive)
    // provided via the TThreadFactory.
 
    fMutexImp = gThreadFactory->CreateMutexImp();
-   fId  = 0;
+   fId  = -1;
    fRef = recursive ? 0 : -1;
 
    if (!fMutexImp)
@@ -45,7 +45,7 @@ Int_t TMutex::Lock()
    // Lock the mutex. Returns 0 when no error, 13 when mutex was already locked
    // by this thread.
 
-   UInt_t id = TThread::SelfId();
+   Long_t id = TThread::SelfId();
    if (id == fId) {
       if (fRef < 0) {
          Error("Lock", "mutex is already locked by this thread %d\n", fId);
@@ -66,7 +66,7 @@ Int_t TMutex::TryLock()
    // Try to lock mutex. Returns 0 when no error, 13 when mutex was already
    // locked by this thread.
 
-   UInt_t id = TThread::SelfId();
+   Long_t id = TThread::SelfId();
    if (id == fId) {
       if (fRef < 0) {
          Error("TryLock", "mutex is already locked by this thread %d\n", fId);
@@ -87,7 +87,7 @@ Int_t TMutex::UnLock()
    // Unlock the mutex. Returns 0 when no error, 13 when mutex was already
    // locked by this thread.
 
-   UInt_t id = TThread::SelfId();
+   Long_t id = TThread::SelfId();
    if (id != fId) {
       Error("UnLock", "thread %d tries to unlock mutex locked by thread %d\n", id, fId);
       return 13;
@@ -97,7 +97,7 @@ Int_t TMutex::UnLock()
       fRef--;
       return 0;
    }
-   fId = 0;
+   fId = -1;
    return fMutexImp->UnLock();
 }
 
@@ -106,7 +106,7 @@ Int_t TMutex::CleanUp()
 {
    // Clean up of mutex if it belongs to thread.
 
-   if (UInt_t(TThread::SelfId()) != fId) return 0;
+   if (TThread::SelfId() != fId) return 0;
    if (fRef > 0) fRef = 0;
    return UnLock();
 }

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.7 2004/07/16 00:08:17 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThread.h,v 1.8 2004/11/02 13:07:57 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -20,7 +20,7 @@
 // This class implements threads. A thread is an execution environment  //
 // much lighter than a process. A single process can have multiple      //
 // threads. The actual work is done via the TThreadImp class (either    //
-// TThreadPosix, TThreadSolaris or TThreadNT).                          //
+// TPosixThread or TWin32Thread).                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -82,8 +82,7 @@ private:
    EState         fState;                 // thread state
    EState         fStateComing;           // coming thread state
    Long_t         fId;                    // thread id
-   Long_t         fHandle;                // thread handle (Win32)
-   Long_t         fJoinId;                // thread id used for joining
+   Long_t         fHandle;                // Win32 thread handle
    Bool_t         fDetached;              // kTRUE if thread is Detached
    Bool_t         fNamed;                 // kTRUE if thread is Named
    VoidRtnFunc_t  fFcnRetn;               // void* start function of thread
@@ -120,6 +119,7 @@ public:
    TThread(Int_t id = 0);
    virtual ~TThread();
 
+   static void      Init();
    Int_t            Kill();
    Int_t            Run(void *arg = 0);
    void             SetPriority(EPriority pri);
@@ -127,15 +127,11 @@ public:
    EPriority        GetPriority() const { return fPriority; }
    EState           GetState() const { return fState; }
    Long_t           GetId() const { return fId; }
-   void             Ps();
-   void             ps() { Ps(); }
-   Long_t           GetJoinId() const { return fJoinId; }
-   void             SetJoinId(TThread *tj);
-   void             SetJoinId(Long_t jid);
-   void             SetHandle(Long_t handle) { fHandle = handle; }
+   static void      Ps();
+   static void      ps() { Ps(); }
 
-   Long_t           Join(Long_t id, void **ret=0);
    Long_t           Join(void **ret=0);
+   static Long_t    Join(Long_t id, void **ret=0);
 
    static Int_t     Exit(void *ret = 0);
    static Int_t     Exists();

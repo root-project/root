@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name$:$Id$
+// @(#)root/thread:$Name:  $:$Id: TRWLock.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   04/01/2000
 
 /*************************************************************************
@@ -37,10 +37,10 @@
 class TRWLock : public TObject {
 
 private:
-   Int_t        fReaders;
-   Int_t        fWriters;
-   TMutex       fMutex;
-   TCondition   fLockFree;
+   Int_t        fReaders;   // number of readers
+   Int_t        fWriters;   // number of writers
+   TMutex       fMutex;     // rwlock mutex
+   TCondition   fLockFree;  // rwlock condition variable
 
 public:
    TRWLock();

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Thread.cxx,v 1.6 2004/07/08 11:52:32 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TWin32Thread.cxx,v 1.1 2004/11/02 13:07:57 rdm Exp $
 // Author: Bertrand Bellenot  20/10/2004
 
 /*************************************************************************
@@ -29,35 +29,38 @@ Int_t TWin32Thread::Run(TThread *th)
    // Win32 has a thread handle in addition to the thread ID.
 
    DWORD  dwThreadId;
-   HANDLE hHandle = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)&TThread::Fun, 
+   HANDLE hHandle = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)&TThread::Fun,
                                  th, 0, (DWORD*)&dwThreadId);
    if (th->fDetached) {
       ::CloseHandle(hHandle);
-      th->SetJoinId(0L);
+      th->fHandle = 0L;
    } else
-      th->SetJoinId((Long_t)hHandle);
+      th->fHandle = (Long_t)hHandle;
+
    return hHandle ? 0 : EINVAL;
 }
 
 //______________________________________________________________________________
-Int_t TWin32Thread::Join(Long_t jid, void **ret)
+Int_t TWin32Thread::Join(TThread *th, void **ret)
 {
-   // Wait for jid thread execution (if any) to complete (like pthread_join).
-   DWORD R = WaitForSingleObject((HANDLE)jid,INFINITE);
+   // Wait for specified thread execution (if any) to complete
+   // (like pthread_join).
+
+   DWORD R = WaitForSingleObject((HANDLE)th->fHandle, INFINITE);
 
    if ( (R == WAIT_OBJECT_0) || (R == WAIT_ABANDONED) ) {
-//      ::CloseHandle((HANDLE)jid);
+      //::CloseHandle((HANDLE)th->fHandle);
       return 0;
    }
-   if ( R == WAIT_TIMEOUT ) return EAGAIN;
+   if ( R == WAIT_TIMEOUT )
+      return EAGAIN;
    return EINVAL;
-  
 }
 
 //______________________________________________________________________________
 Int_t TWin32Thread::Exit(void *ret)
 {
-   // Exit the thread
+   // Exit the thread.
 
    ExitThread(0);
    return 0;
@@ -68,14 +71,14 @@ Int_t TWin32Thread::Kill(TThread *th)
 {
    // This is a somewhat dangerous function; it's not
    // suggested to Stop() threads a lot.
+
    return TerminateThread((HANDLE)th->fHandle,0) ? 0 : EINVAL;
 }
 
 //______________________________________________________________________________
 Int_t TWin32Thread::CleanUpPush(void **main, void *free,void *arg)
 {
-
-   if (!free) fprintf(stderr, "CleanUpPush ***ERROR*** Routine=NULL\n");
+   if (!free) fprintf(stderr, "CleanUpPush ***ERROR*** Routine=0\n");
    new TWin32ThreadCleanUp(main,free,arg);
    return 0;
 }
@@ -83,10 +86,9 @@ Int_t TWin32Thread::CleanUpPush(void **main, void *free,void *arg)
 //______________________________________________________________________________
 Int_t TWin32Thread::CleanUpPop(void **main,Int_t exe)
 {
-
    if (!*main) return 1;
    TWin32ThreadCleanUp *l = (TWin32ThreadCleanUp*)(*main);
-   if (!l->fRoutine) fprintf(stderr,"CleanUpPop ***ERROR*** Routine=NULL\n");
+   if (!l->fRoutine) fprintf(stderr,"CleanUpPop ***ERROR*** Routine=0\n");
    if (exe && l->fRoutine) ((void (*)(void*))(l->fRoutine))(l->fArgument);
    *main = l->fNext;  delete l;
    return 0;
@@ -95,7 +97,6 @@ Int_t TWin32Thread::CleanUpPop(void **main,Int_t exe)
 //______________________________________________________________________________
 Int_t TWin32Thread::CleanUp(void **main)
 {
-
    fprintf(stderr," CleanUp %lx\n",(ULong_t)*main);
    while(!CleanUpPop(main,1)) { }
    return 0;
@@ -104,60 +105,54 @@ Int_t TWin32Thread::CleanUp(void **main)
 //______________________________________________________________________________
 Long_t TWin32Thread::SelfId()
 {
-
    // Return the current thread's ID.
+
    return (Long_t)::GetCurrentThreadId();
 }
 
 //______________________________________________________________________________
-Int_t TWin32Thread::SetCancelOff() 
+Int_t TWin32Thread::SetCancelOff()
 {
-
    if (gDebug)
       Warning("SetCancelOff", "Not implemented on Win32");
-   return 0; 
+   return 0;
 }
 
 //______________________________________________________________________________
-Int_t TWin32Thread::SetCancelOn() 
+Int_t TWin32Thread::SetCancelOn()
 {
-
    if (gDebug)
       Warning("SetCancelOn", "Not implemented on Win32");
-   return 0; 
+   return 0;
 }
 
 //______________________________________________________________________________
-Int_t TWin32Thread::SetCancelAsynchronous() 
-{ 
-
+Int_t TWin32Thread::SetCancelAsynchronous()
+{
    if (gDebug)
       Warning("SetCancelAsynchronous", "Not implemented on Win32");
-   return 0; 
+   return 0;
 }
 
 //______________________________________________________________________________
-Int_t TWin32Thread::SetCancelDeferred() 
+Int_t TWin32Thread::SetCancelDeferred()
 {
-
    if (gDebug)
       Warning("SetCancelDeferred", "Not implemented on Win32");
-   return 0; 
+   return 0;
 }
 
 //______________________________________________________________________________
-Int_t TWin32Thread::CancelPoint() 
+Int_t TWin32Thread::CancelPoint()
 {
-
    if (gDebug)
       Warning("CancelPoint", "Not implemented on Win32");
-   return 0; 
+   return 0;
 }
 
 //______________________________________________________________________________
 Int_t TWin32Thread::Sleep(ULong_t secs, ULong_t /*nanos*/)
 {
-
    ::Sleep(secs * 1000);
    return 0;
 }
@@ -165,7 +160,6 @@ Int_t TWin32Thread::Sleep(ULong_t secs, ULong_t /*nanos*/)
 //______________________________________________________________________________
 Int_t TWin32Thread::GetTime(ULong_t * /*absSec*/, ULong_t * /*absNanoSec*/)
 {
-
    return 0;
 }
 
@@ -177,7 +171,6 @@ Int_t TWin32Thread::GetTime(ULong_t * /*absSec*/, ULong_t * /*absNanoSec*/)
 //______________________________________________________________________________
 TWin32ThreadCleanUp::TWin32ThreadCleanUp(void **main, void *routine, void *arg)
 {
-
    fNext = (TWin32ThreadCleanUp*)*main;
    fRoutine = routine; fArgument = arg;
    *main  = this;

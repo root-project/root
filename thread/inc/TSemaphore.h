@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name$:$Id$
+// @(#)root/thread:$Name:  $:$Id: TSemaphore.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -36,9 +36,9 @@
 class TSemaphore : public TObject {
 
 private:
-   TMutex       fMutex;
-   TCondition   fCond;
-   Int_t        fValue;
+   TMutex       fMutex;   // semaphare mutex
+   TCondition   fCond;    // semaphore condition variable
+   Int_t        fValue;   // counter
 
 public:
    TSemaphore(UInt_t initial = 1);

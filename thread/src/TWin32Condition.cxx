@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Condition.cxx,v 1.2 2004/10/11 12:34:51 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TWin32Condition.cxx,v 1.1 2004/11/02 13:07:57 rdm Exp $
 // Author: Bertrand Bellenot  20/10/2004
 
 /*************************************************************************
@@ -38,16 +38,15 @@ TWin32Condition::TWin32Condition(TMutexImp *m)
 
    fCond.waiters_count_ = 0;
    fCond.was_broadcast_ = 0;
-   fCond.sema_ = CreateSemaphore (NULL,       // no security
-                                  0,          // initially 0
-                                  0x7fffffff, // max count
-                                  NULL);      // unnamed 
+   fCond.sema_ = CreateSemaphore(0,          // no security
+                                 0,          // initially 0
+                                 0x7fffffff, // max count
+                                 0);         // unnamed
    InitializeCriticalSection (&fCond.waiters_count_lock_);
-   fCond.waiters_done_ = CreateEvent (NULL,  // no security
-                                      FALSE, // auto-reset
-                                      FALSE, // non-signaled initially
-                                      NULL); // unnamed
-
+   fCond.waiters_done_ = CreateEvent(0,     // no security
+                                     FALSE, // auto-reset
+                                     FALSE, // non-signaled initially
+                                     0);    // unnamed
 }
 
 //______________________________________________________________________________
@@ -66,17 +65,17 @@ Int_t TWin32Condition::Wait()
    // than one thread. See POSIX threads documentation for details.
 
    // Avoid race conditions.
-   EnterCriticalSection (&fCond.waiters_count_lock_);
+   EnterCriticalSection(&fCond.waiters_count_lock_);
    fCond.waiters_count_++;
-   LeaveCriticalSection (&fCond.waiters_count_lock_);
+   LeaveCriticalSection(&fCond.waiters_count_lock_);
 
    // This call atomically releases the mutex and waits on the
    // semaphore until <pthread_cond_signal> or <pthread_cond_broadcast>
    // are called by another thread.
-   SignalObjectAndWait (fMutex->fHMutex, fCond.sema_, INFINITE, FALSE);
+   SignalObjectAndWait(fMutex->fHMutex, fCond.sema_, INFINITE, FALSE);
 
    // Reacquire lock to avoid race conditions.
-   EnterCriticalSection (&fCond.waiters_count_lock_);
+   EnterCriticalSection(&fCond.waiters_count_lock_);
 
    // We're no longer waiting...
    fCond.waiters_count_--;
@@ -84,18 +83,18 @@ Int_t TWin32Condition::Wait()
    // Check to see if we're the last waiter after <pthread_cond_broadcast>.
    int last_waiter = fCond.was_broadcast_ && fCond.waiters_count_ == 0;
 
-   LeaveCriticalSection (&fCond.waiters_count_lock_);
+   LeaveCriticalSection(&fCond.waiters_count_lock_);
 
    // If we're the last waiter thread during this particular broadcast
    // then let all the other threads proceed.
    if (last_waiter)
       // This call atomically signals the <waiters_done_> event and waits until
-      // it can acquire the <fMutex->fHMutex>.  This is required to ensure fairness. 
-      SignalObjectAndWait (fCond.waiters_done_, fMutex->fHMutex, INFINITE, FALSE);
+      // it can acquire the <fMutex->fHMutex>.  This is required to ensure fairness.
+      SignalObjectAndWait(fCond.waiters_done_, fMutex->fHMutex, INFINITE, FALSE);
    else
       // Always regain the external mutex since that's the guarantee we
-      // give to our callers. 
-      WaitForSingleObject (fMutex->fHMutex, INFINITE);
+      // give to our callers.
+      WaitForSingleObject(fMutex->fHMutex, INFINITE);
 
    return 0;
 }
@@ -110,17 +109,17 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
 
    DWORD dwMilliseconds = (DWORD)((secs * 1000) + (nanoSecs / 1000000));
    // Avoid race conditions.
-   EnterCriticalSection (&fCond.waiters_count_lock_);
+   EnterCriticalSection(&fCond.waiters_count_lock_);
    fCond.waiters_count_++;
-   LeaveCriticalSection (&fCond.waiters_count_lock_);
+   LeaveCriticalSection(&fCond.waiters_count_lock_);
 
    // This call atomically releases the mutex and waits on the
    // semaphore until <pthread_cond_signal> or <pthread_cond_broadcast>
    // are called by another thread.
-   SignalObjectAndWait (fMutex->fHMutex, fCond.sema_, dwMilliseconds, FALSE);
+   SignalObjectAndWait(fMutex->fHMutex, fCond.sema_, dwMilliseconds, FALSE);
 
    // Reacquire lock to avoid race conditions.
-   EnterCriticalSection (&fCond.waiters_count_lock_);
+   EnterCriticalSection(&fCond.waiters_count_lock_);
 
    // We're no longer waiting...
    fCond.waiters_count_--;
@@ -128,18 +127,18 @@ Int_t TWin32Condition::TimedWait(ULong_t secs, ULong_t nanoSecs)
    // Check to see if we're the last waiter after <pthread_cond_broadcast>.
    int last_waiter = fCond.was_broadcast_ && fCond.waiters_count_ == 0;
 
-   LeaveCriticalSection (&fCond.waiters_count_lock_);
+   LeaveCriticalSection(&fCond.waiters_count_lock_);
 
    // If we're the last waiter thread during this particular broadcast
    // then let all the other threads proceed.
    if (last_waiter)
       // This call atomically signals the <waiters_done_> event and waits until
-      // it can acquire the <fMutex->fHMutex>.  This is required to ensure fairness. 
-      SignalObjectAndWait (fCond.waiters_done_, fMutex->fHMutex, dwMilliseconds, FALSE);
+      // it can acquire the <fMutex->fHMutex>.  This is required to ensure fairness.
+      SignalObjectAndWait(fCond.waiters_done_, fMutex->fHMutex, dwMilliseconds, FALSE);
    else
       // Always regain the external mutex since that's the guarantee we
-      // give to our callers. 
-      WaitForSingleObject (fMutex->fHMutex, INFINITE);
+      // give to our callers.
+      WaitForSingleObject(fMutex->fHMutex, INFINITE);
 
    return 0;
 }
@@ -154,9 +153,9 @@ Int_t TWin32Condition::Signal()
    int have_waiters = fCond.waiters_count_ > 0;
    LeaveCriticalSection (&fCond.waiters_count_lock_);
 
-   // If there aren't any waiters, then this is a no-op.  
+   // If there aren't any waiters, then this is a no-op.
    if (have_waiters)
-      ReleaseSemaphore (fCond.sema_, 1, 0);
+      ReleaseSemaphore(fCond.sema_, 1, 0);
 
    return 0;
 }
@@ -169,7 +168,7 @@ Int_t TWin32Condition::Broadcast()
 
    // This is needed to ensure that <waiters_count_> and <was_broadcast_> are
    // consistent relative to each other.
-   EnterCriticalSection (&fCond.waiters_count_lock_);
+   EnterCriticalSection(&fCond.waiters_count_lock_);
    int have_waiters = 0;
 
    if (fCond.waiters_count_ > 0) {
@@ -182,19 +181,19 @@ Int_t TWin32Condition::Broadcast()
 
    if (have_waiters) {
       // Wake up all the waiters atomically.
-      ReleaseSemaphore (fCond.sema_, fCond.waiters_count_, 0);
+      ReleaseSemaphore(fCond.sema_, fCond.waiters_count_, 0);
 
-      LeaveCriticalSection (&fCond.waiters_count_lock_);
+      LeaveCriticalSection(&fCond.waiters_count_lock_);
 
       // Wait for all the awakened threads to acquire the counting
-      // semaphore. 
-      WaitForSingleObject (fCond.waiters_done_, INFINITE);
-      // This assignment is okay, even without the <waiters_count_lock_> held 
+      // semaphore.
+      WaitForSingleObject(fCond.waiters_done_, INFINITE);
+      // This assignment is okay, even without the <waiters_count_lock_> held
       // because no other waiter threads can wake up to access it.
       fCond.was_broadcast_ = 0;
    }
    else
-      LeaveCriticalSection (&fCond.waiters_count_lock_);
+      LeaveCriticalSection(&fCond.waiters_count_lock_);
 
    return 0;
 }

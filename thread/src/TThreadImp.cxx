@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TThreadImp.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TThreadImp.cxx,v 1.2 2001/04/03 10:40:24 rdm Exp $
 // Author: Victor Perev   10/08/97
 
 /*************************************************************************
@@ -16,11 +16,10 @@
 // This class implements threads. A thread is an execution environment  //
 // much lighter than a process. A single process can have multiple      //
 // threads. The actual work is done via the TThreadImp class (either    //
-// TThreadPosix, TThreadSolaris or TThreadNT).                          //
+// TPosixThread or TWin32Thread).                                       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TThreadImp.h"
-
 
 ClassImp(TThreadImp)

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TWin32Mutex.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TWin32Mutex.h,v 1.1 2004/11/02 13:07:57 rdm Exp $
 // Author: Bertrand Bellenot  20/10/2004
 
 /*************************************************************************
@@ -30,9 +30,8 @@
 class TWin32Mutex : public TMutexImp {
 
 friend class TWin32Condition;
-   
-private:
 
+private:
    HANDLE fHMutex;
 
 public:

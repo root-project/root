@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TPosixThread.h,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TPosixThread.h,v 1.2 2001/04/03 10:40:24 rdm Exp $
 // Author: Fons Rademakers   02/07/97
 
 /*************************************************************************
@@ -36,13 +36,14 @@ class TPosixThreadCleanUp;
 
 class TPosixThread : public TThreadImp {
 
-public:
+private:
    TPosixThreadCleanUp *fCleanUp;
 
+public:
    TPosixThread() { }
    ~TPosixThread() { }
 
-   virtual Int_t  Join(Long_t jid, void **ret);
+   virtual Int_t  Join(TThread *th, void **ret);
    virtual Long_t SelfId();
    virtual Int_t  Run(TThread *th);
 
@@ -75,7 +76,7 @@ private:
    TPosixThreadCleanUp *fNext;
 
 public:
-   TPosixThreadCleanUp(void **main,void *routine,void *arg);
+   TPosixThreadCleanUp(void **main, void *routine, void *arg);
    ~TPosixThreadCleanUp() { }
 };
 
