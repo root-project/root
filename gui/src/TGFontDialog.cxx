@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.4 2004/06/15 14:13:20 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.5 2004/09/13 09:10:56 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -573,6 +573,8 @@ void TGFontDialog::GetFontName()
          if (!fontList) {
             Warning("GetFontName", "font %s not found", fLName.Data());
             fLName = oldFont;
+            if (!fLabelFont)
+               fLabelFont = fClient->GetFont("fixed");
             return;
          }
       }
