@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.123 2004/03/19 14:24:42 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.124 2004/03/22 15:56:53 rdm Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1065,8 +1065,30 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    Double_t eplus,eminus,eparab,globcc,amin,edm,errdef,werr;
    TF1 *fnew1;
 
+   // Check validity of function
+   if (!f1) {
+      Error("Fit", "function may not be null pointer");
+      return 0;
+   }
+   if (f1->IsZombie()) {
+      Error("Fit", "function is zombie");
+      return 0;
+   }
+   npar = f1->GetNpar();
+   if (npar <= 0) {
+      Error("Fit", "function %s has illegal number of parameters = %d", f1->GetName(), npar);
+      return 0;
+   }
+
+   // Check that function has same dimension as graph
+   if (f1->GetNdim() > 1) {
+      Error("Fit", "function %s is not 1-D", f1->GetName());
+      return 0;
+   }
+
    Double_t *arglist = new Double_t[100];
-//  Decode string choptin and fill fitOption structure
+
+   // Decode string choptin and fill fitOption structure
    Foption_t fitOption;
    fitOption.Quiet   = 0;
    fitOption.Verbose = 0;
@@ -1114,21 +1136,12 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
       xmax = rxmax;
    }
 //*-*- Check if Minuit is initialized and create special functions
-   TVirtualFitter *grFitter = TVirtualFitter::Fitter(this);
+   TVirtualFitter *grFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
    grFitter->Clear();
-
 
 //*-*- Get pointer to the function by searching in the list of functions in ROOT
    grFitter->SetUserFunc(f1);
    grFitter->SetFitOption(fitOption);
-
-   if (!f1) { Printf("Function is a null pointer"); return 0; }
-   npar = f1->GetNpar();
-   if (npar <=0) { Printf("Illegal number of parameters = %d",npar); return 0; }
-
-//*-*- Check that function has same dimension as histogram
-   if (f1->GetNdim() > 1) {
-      Printf("Error function %s is not 1-D",f1->GetName()); return 0; }
 
 //*-*- Is a Fit range specified?
    Int_t gxfirst, gxlast;
@@ -1166,12 +1179,13 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    if (!fitOption.User) grFitter->SetFitMethod("GraphFitChisquare");
    fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
    if (fitResult != 0) {
-     //   Abnormal termination, MIGRAD might not have converged on a
-     //   minimum.
-     if (!fitOption.Quiet) {
-        Warning("Fit","Abnormal termination of minimization.");
-     }
-     return fitResult;
+      //   Abnormal termination, MIGRAD might not have converged on a
+      //   minimum.
+      if (!fitOption.Quiet) {
+         Warning("Fit","Abnormal termination of minimization.");
+      }
+      delete [] arglist;
+      return fitResult;
    }
 
 //*-*- Transfer names and initial values of parameters to Minuit

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.172 2004/03/20 21:14:34 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.173 2004/03/26 07:19:35 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -473,7 +473,7 @@ TH1::~TH1()
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
       TObject *obj;
-      //special logic to support the case where the same object is 
+      //special logic to support the case where the same object is
       //added multiple times in fFunctions.
       //This case happens when the same object is added with different
       //drawing modes
@@ -503,7 +503,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Axis_t xlow,Axis_t xup)
 //        name   : name of histogram (avoid blanks)
 //        title  : histogram title
 //                 if title is of the form "stringt;stringx;stringy;stringz"
-//                 the histogram title is set to stringt, 
+//                 the histogram title is set to stringt,
 //                 the x axis title to stringy, the y axis title to stringy,etc
 //        nbins  : number of bins
 //        xlow   : low edge of first bin
@@ -534,7 +534,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 //     name   : name of histogram (avoid blanks)
 //     title  : histogram title
 //              if title is of the form "stringt;stringx;stringy;stringz"
-//              the histogram title is set to stringt, 
+//              the histogram title is set to stringt,
 //              the x axis title to stringy, the y axis title to stringy,etc
 //     nbins  : number of bins
 //     xbins  : array of low-edges for each bin
@@ -559,7 +559,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 //     name   : name of histogram (avoid blanks)
 //     title  : histogram title
 //              if title is of the form "stringt;stringx;stringy;stringz"
-//              the histogram title is set to stringt, 
+//              the histogram title is set to stringt,
 //              the x axis title to stringy, the y axis title to stringy,etc
 //     nbins  : number of bins
 //     xbins  : array of low-edges for each bin
@@ -651,8 +651,8 @@ void TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
 // if errors are defined (see TH1::Sumw2), errors are also recalculated.
 //
 // By default, the function is computed at the centre of the bin.
-// if option "I" is specified (1-d histogram only), the integral of the 
-// function in each bin is used instead of the value of the function at 
+// if option "I" is specified (1-d histogram only), the integral of the
+// function in each bin is used instead of the value of the function at
 // the centre of the bin.
 // Only bins inside the function range are recomputed.
 // IMPORTANT NOTE: If you intend to use the errors of this histogram later
@@ -668,7 +668,7 @@ void TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
    opt.ToLower();
    Bool_t Integral = kFALSE;
    if (opt.Contains("i") && fDimension ==1) Integral = kTRUE;
-   
+
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
    Int_t nbinsz = GetNbinsZ();
@@ -682,7 +682,7 @@ void TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
    PutStats(s1);
    SetMinimum();
    SetMaximum();
-   
+
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
    Double_t cu=0;
@@ -766,7 +766,7 @@ void TH1::Add(const TH1 *h1, Double_t c1)
    h1->GetStats(s2);
    for (i=0;i<10;i++) s1[i] += c1*s2[i];
    PutStats(s1);
-   
+
    SetMinimum();
    SetMaximum();
 
@@ -850,7 +850,7 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    h2->GetStats(s2);
    for (i=0;i<10;i++) s3[i] = c1*s1[i] + c2*s2[i];
    PutStats(s3);
-   
+
    SetMinimum();
    SetMaximum();
 
@@ -1103,7 +1103,7 @@ void TH1::Divide(TF1 *f1, Double_t c1)
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = 0;}
    PutStats(s1);
-   
+
    SetMinimum();
    SetMaximum();
 
@@ -1294,7 +1294,7 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
 //   - Reset statistics
    Double_t nEntries = fEntries;
    fEntries = fTsumw = 0;
-   
+
    SetMinimum();
    SetMaximum();
 
@@ -1960,7 +1960,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //     A different fitter can also be set via TVirtualFitter::SetDefaultFitter.
 //     For example, to call the "Fumili" fitter instead of "Minuit", do
 //          TVirtualFitter::SetDefaultFitter("Fumili");
-//     During the fitting process, the objective function: 
+//     During the fitting process, the objective function:
 //       chisquare, likelihood or any user defined algorithm
 //     is called (see eg in the TFitter class, the static functions
 //       H1FitChisquare, H1FitLikelihood).
@@ -1986,6 +1986,28 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    TF2 *fnew2;
    TF3 *fnew3;
 
+   // Check validity of function
+   if (!f1) {
+      Error("Fit", "function may not be null pointer");
+      return 0;
+   }
+   if (f1->IsZombie()) {
+      Error("Fit", "function is zombie");
+      return 0;
+   }
+   npar = f1->GetNpar();
+   if (npar <= 0) {
+      Error("Fit", "function %s has illegal number of parameters = %d", f1->GetName(), npar);
+      return 0;
+   }
+
+   // Check that function has same dimension as histogram
+   if (f1->GetNdim() != GetDimension()) {
+      Error("Fit","function %s dimension, %d, does not match histogram dimension, %d",
+            f1->GetName(), f1->GetNdim(), GetDimension());
+      return 0;
+   }
+
    hxfirst = fXaxis.GetFirst();
    hxlast  = fXaxis.GetLast();
    binwidx = fXaxis.GetBinWidth(hxlast);
@@ -2003,21 +2025,13 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
    zmax    = fZaxis.GetBinLowEdge(hzlast) +binwidz;
 
 //   - Check if Minuit is initialized and create special functions
-   TVirtualFitter *hFitter = TVirtualFitter::Fitter(this);
+   TVirtualFitter *hFitter = TVirtualFitter::Fitter(this, f1->GetNpar());
    hFitter->Clear();
 
 //   - Get pointer to the function by searching in the list of functions in ROOT
    gF1 = f1;
    hFitter->SetUserFunc(f1);
-   if (!f1) { Error("Fit", "Pointer to function is null"); return 0; }
-   if (f1->IsZombie()) { Error("Fit", "Function is zombie"); return 0; }
-   npar = f1->GetNpar();
-   if (npar <=0) { Error("Fit", "Illegal number of parameters = %d",npar); return 0; }
-//   - Check that function has same dimension as histogram
-   if (f1->GetNdim() != GetDimension()) {
-      Error("Fit","Function dimension:%d does not match histogram dimension:%d",f1->GetNdim(),GetDimension());
-      return 0;
-   }
+
    if (xxmin != xxmax) f1->SetRange(xxmin,ymin,zmin,xxmax,ymax,zmax);
 
 //   - Decode list of options into Foption
@@ -2028,7 +2042,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
       Foption.Range = 1;
    }
    hFitter->SetFitOption(Foption);
-   
+
 //   - Is a Fit range specified?
    Double_t fxmin, fymin, fzmin, fxmax, fymax, fzmax;
    if (Foption.Range) {
@@ -2500,8 +2514,8 @@ void H1InitGaus()
 //   - Compute mean value and RMS of the histogram in the given range
    TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
    TH1 *curHist = (TH1*)hFitter->GetObjectFit();
-   Int_t hxfirst = hFitter->GetXfirst(); 
-   Int_t hxlast  = hFitter->GetXlast(); 
+   Int_t hxfirst = hFitter->GetXfirst();
+   Int_t hxlast  = hFitter->GetXlast();
    Double_t valmax  = curHist->GetBinContent(hxfirst);
    Double_t binwidx = curHist->GetBinWidth(hxfirst);
    allcha = sumx = sumx2 = 0;
@@ -2551,8 +2565,8 @@ void H1InitExpo()
    Double_t constant, slope;
    Int_t ifail;
    TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
-   Int_t hxfirst = hFitter->GetXfirst(); 
-   Int_t hxlast  = hFitter->GetXlast(); 
+   Int_t hxfirst = hFitter->GetXfirst();
+   Int_t hxlast  = hFitter->GetXlast();
    Int_t nchanx  = hxlast - hxfirst + 1;
 
    H1LeastSquareLinearFit(-nchanx, constant, slope, ifail);
@@ -2573,8 +2587,8 @@ void H1InitPolynom()
 
    TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
    TF1 *f1 = (TF1*)hFitter->GetUserFunc();
-   Int_t hxfirst = hFitter->GetXfirst(); 
-   Int_t hxlast  = hFitter->GetXlast(); 
+   Int_t hxfirst = hFitter->GetXfirst();
+   Int_t hxlast  = hFitter->GetXlast();
    Int_t nchanx  = hxlast - hxfirst + 1;
    Int_t npar    = f1->GetNpar();
 
@@ -2624,8 +2638,8 @@ void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a)
     }
     TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
     TH1 *curHist  = (TH1*)hFitter->GetObjectFit();
-    Int_t hxfirst = hFitter->GetXfirst(); 
-    Int_t hxlast  = hFitter->GetXlast(); 
+    Int_t hxfirst = hFitter->GetXfirst();
+    Int_t hxlast  = hFitter->GetXlast();
     for (k = hxfirst; k <= hxlast; ++k) {
 	xk     = curHist->GetBinCenter(k);
 	yk     = curHist->GetBinContent(k);
@@ -2674,8 +2688,8 @@ void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifai
     xbar  = ybar  = x2bar = xybar = 0;
     TVirtualFitter *hFitter = TVirtualFitter::GetFitter();
     TH1 *curHist  = (TH1*)hFitter->GetObjectFit();
-    Int_t hxfirst = hFitter->GetXfirst(); 
-    Int_t hxlast  = hFitter->GetXlast(); 
+    Int_t hxfirst = hFitter->GetXfirst();
+    Int_t hxlast  = hFitter->GetXlast();
     for (i = hxfirst; i <= hxlast; ++i) {
 	xk = curHist->GetBinCenter(i);
 	yk = curHist->GetBinContent(i);
@@ -2885,7 +2899,7 @@ Stat_t TH1::GetBinContent(Int_t binx, Int_t biny) const
 //             =======================================
 // NB: Function to be called for 2-d histograms only
 // see convention for numbering bins in TH1::GetBin
-   
+
    Int_t bin = GetBin(binx,biny);
    return GetBinContent(bin);
 }
@@ -3414,7 +3428,7 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = 0;}
    PutStats(s1);
-   
+
    SetMinimum();
    SetMaximum();
 
@@ -3499,7 +3513,7 @@ void TH1::Multiply(const TH1 *h1)
 //   - Reset statistics
    Double_t nEntries = fEntries;
    fEntries = fTsumw = 0;
-   
+
    SetMinimum();
    SetMaximum();
 
@@ -3714,17 +3728,17 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
       hnew->fTsumw = 0; //stats must be reset because top bins will be moved to overflow bin
    }
    // save the TAttAxis members (reset by SetBins)
-        Int_t    Ndivisions  = fXaxis.GetNdivisions();   
-        Color_t  AxisColor   = fXaxis.GetAxisColor();    
-        Color_t  LabelColor  = fXaxis.GetLabelColor();   
-        Style_t  LabelFont   = fXaxis.GetLabelFont();    
-        Float_t  LabelOffset = fXaxis.GetLabelOffset();  
-        Float_t  LabelSize   = fXaxis.GetLabelSize();    
-        Float_t  TickLength  = fXaxis.GetTickLength();   
-        Float_t  TitleOffset = fXaxis.GetTitleOffset();  
-        Float_t  TitleSize   = fXaxis.GetTitleSize();    
-        Color_t  TitleColor  = fXaxis.GetTitleColor();   
-		Style_t  TitleFont   = fXaxis.GetTitleFont();    
+        Int_t    Ndivisions  = fXaxis.GetNdivisions();
+        Color_t  AxisColor   = fXaxis.GetAxisColor();
+        Color_t  LabelColor  = fXaxis.GetLabelColor();
+        Style_t  LabelFont   = fXaxis.GetLabelFont();
+        Float_t  LabelOffset = fXaxis.GetLabelOffset();
+        Float_t  LabelSize   = fXaxis.GetLabelSize();
+        Float_t  TickLength  = fXaxis.GetTickLength();
+        Float_t  TitleOffset = fXaxis.GetTitleOffset();
+        Float_t  TitleSize   = fXaxis.GetTitleSize();
+        Color_t  TitleColor  = fXaxis.GetTitleColor();
+		Style_t  TitleFont   = fXaxis.GetTitleFont();
 
    hnew->SetBins(newbins,xmin,xmax); //this also changes errors array (if any)
 
@@ -3740,7 +3754,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
         fXaxis.SetTitleSize(TitleSize);
         fXaxis.SetTitleColor(TitleColor);
         fXaxis.SetTitleFont(TitleFont);
-  
+
    // copy merged bin contents (ignore under/overflows)
    Int_t oldbin = 0;
    Double_t binContent, binError;
@@ -3937,9 +3951,9 @@ void TH1::SetTitle(const char *title)
 {
    // Change (i.e. set) the title
    //   if title is of the form "stringt;stringx;stringy;stringz"
-   //   the histogram title is set to stringt, 
+   //   the histogram title is set to stringt,
    //   the x axis title to stringx, the y axis title to stringy,etc
-   
+
    fTitle = title;
 
    // Decode fTitle. It may contain X, Y and Z titles
@@ -3951,13 +3965,13 @@ void TH1::SetTitle(const char *title)
       str1   = str1(Isc+1, Lns);
       Isc    = str1.Index(";");
       if (Isc >=0 ) {
-         str2 = str1(0,Isc); 
+         str2 = str1(0,Isc);
          fXaxis.SetTitle(str2.Data());
          Lns  = str1.Length();
          str1 = str1(Isc+1, Lns);
          Isc  = str1.Index(";");
          if (Isc >=0 ) {
-            str2 = str1(0,Isc); 
+            str2 = str1(0,Isc);
             fYaxis.SetTitle(str2.Data());
             Lns  = str1.Length();
             str1 = str1(Isc+1, Lns);
@@ -4203,9 +4217,9 @@ void  TH1::StatOverflows(Bool_t flag)
 //  if flag=kTRUE, underflows and overflows are used by the Fill functions
 //  in the computation of statistics (mean value, RMS).
 //  By default, underflows or overflows are not used.
-   
+
    fgStatOverflows = flag;
-}   
+}
 
 //_______________________________________________________________________
 void TH1::Streamer(TBuffer &b)
@@ -4384,7 +4398,7 @@ void TH1::Reset(Option_t *option)
 
    TObject *stats = fFunctions->FindObject("stats");
    fFunctions->Remove(stats);
-   //special logic to support the case where the same object is 
+   //special logic to support the case where the same object is
    //added multiple times in fFunctions.
    //This case happens when the same object is added with different
    //drawing modes
@@ -4594,7 +4608,7 @@ Stat_t TH1::GetMean(Int_t axis) const
 //  To force the underflows and overflows in the computation, one must
 //  call the static function TH1::StatOverflows(kTRUE) before filling
 //  the histogram.
-   
+
   if (axis <1 || axis > 3) return 0;
   Stat_t stats[11];
   for (Int_t i=4;i<11;i++) stats[i] = 0;
@@ -4991,8 +5005,8 @@ Double_t TH1::GetContourLevelPad(Int_t level) const
   if (level <0 || level >= fContour.fN) return 0;
   Double_t zlevel = fContour.fArray[level];
 
-  // In case of user defined contours and Pad in log scale along Z, 
-  // fContour.fArray doesn't contain the log of the contour whereas it does 
+  // In case of user defined contours and Pad in log scale along Z,
+  // fContour.fArray doesn't contain the log of the contour whereas it does
   // in case of equidistant contours.
   if (gPad && gPad->GetLogz() && TestBit(kUserContour)) {
      if (zlevel <= 0) return 0;
