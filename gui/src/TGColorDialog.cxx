@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.12 2004/04/20 14:48:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.13 2004/06/21 12:42:07 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -1021,7 +1021,9 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    if (fRetc) *fRetc = kMBCancel;
 
    TGVerticalFrame *vf1 = new TGVerticalFrame(this, 20, 20);
+   vf1->SetCleanup();
    TGVerticalFrame *vf2 = new TGVerticalFrame(this, 20, 20);
+   vf2->SetCleanup();
 
    AddFrame(vf1, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
    AddFrame(vf2, new TGLayoutHints(kLHintsLeft | kLHintsExpandY));
@@ -1039,7 +1041,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    for (i = 0; i < 48; ++i)
       fPalette->SetColor(i, TColor::Number2Pixel(i+10));  // root colors
-      // the basic colors were set via bcolor 
+      // the basic colors were set via bcolor
       //fPalette->SetColor(i, TColor::GetPixel(bcolor[i][0], bcolor[i][1], bcolor[i][2]));
 
    // custom colors
@@ -1060,6 +1062,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    // button frame
 
    TGHorizontalFrame *hf = new TGHorizontalFrame(vf1, 10, 10, kFixedWidth);
+   hf->SetCleanup();
    vf1->AddFrame(hf, new TGLayoutHints(kLHintsBottom | kLHintsLeft, 5, 5, 10, 5));
 
    TGTextButton *ok = new TGTextButton(hf, new TGHotString("OK"), kCDLG_OK);
@@ -1089,9 +1092,11 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    // color sample frame
 
    TGHorizontalFrame *hf3 = new TGHorizontalFrame(vf2, 10, 10);
+   hf3->SetCleanup();
    vf2->AddFrame(hf3, new TGLayoutHints(kLHintsLeft | kLHintsTop, 5, 5, 2, 5));
 
    TGVerticalFrame *vf3 = new TGVerticalFrame(hf3, 10, 10);
+   vf3->SetCleanup();
    hf3->AddFrame(vf3, new TGLayoutHints(kLHintsLeft | kLHintsTop));
 
    fSample = new TGFrame(vf3, 60, 42, kSunkenFrame | kOwnBackground);
@@ -1108,6 +1113,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    fSample->SetBackgroundColor(fCurrentColor);
 
    TGCompositeFrame *cf = new TGCompositeFrame(hf3, 10, 10);
+   cf->SetCleanup();
    hf3->AddFrame(cf, new TGLayoutHints(kLHintsLeft | kLHintsTop, 10, 0, 0, 0));
    cf->SetLayoutManager(new TGMatrixLayout(cf, 0, 2, 4));
 
@@ -1122,6 +1128,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    fLte->Resize(35, fLte->GetDefaultHeight());
 
    cf = new TGCompositeFrame(hf3, 10, 10);
+   cf->SetCleanup();
    hf3->AddFrame(cf, new TGLayoutHints(kLHintsLeft | kLHintsTop, 5, 0, 0, 0));
    cf->SetLayoutManager(new TGMatrixLayout(cf, 0, 2, 4));
 
@@ -1189,7 +1196,8 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
                kMWMInputModeless);
 
    MapWindow();
-   fClient->WaitFor(this);
+   fClient->WaitForUnmap(this);
+   DeleteWindow();
 }
 
 //________________________________________________________________________________
@@ -1207,7 +1215,9 @@ void TGColorDialog::CloseWindow()
    for (Int_t i = 0; i < 24; ++i)
       ucolor[i] = fCpalette->GetColorByIndex(i);
 
-   DeleteWindow();
+   // don't call DeleteWindow() here since that will cause access
+   // to the deleted dialog in the WaitFor() method (see ctor)
+   UnmapWindow();
 }
 
 //________________________________________________________________________________
