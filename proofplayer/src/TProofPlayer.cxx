@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.30 2003/11/26 21:48:27 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.cxx,v 1.31 2004/03/09 13:43:15 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -353,19 +353,19 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    delete fOutput;
    fOutput = new TList;
 
-   TString filename = selector_file;
 
    // If the filename does not contain "." assume class is compiled in
    if ( strchr(selector_file,'.') != 0 ) {
-      if(filename.EndsWith("+g"))
-         filename = filename.Strip(TString::kTrailing,'g');
-      else if(filename.EndsWith("+O"))
-         filename = filename.Strip(TString::kTrailing,'O');
-      filename = filename.Strip(TString::kTrailing,'+');
+      TString filename = selector_file;
+      TString aclicMode;
+      TString arguments;
+      TString io;
+      filename = gSystem->SplitAclicMode(filename, aclicMode, arguments, io);      
 
       PDB(kSelector,1) Info("Process", "Sendfile: %s", filename.Data() );
       if ( fProof->SendFile(filename) == -1 ) return -1;
 
+      // NOTE: should we allow more extension?
       if ( filename.EndsWith(".C") ) {
          filename.Replace(filename.Length()-1,1,"h");
          if (!gSystem->AccessPathName(filename,kReadPermission)) {
@@ -383,7 +383,7 @@ Int_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
       PDB(kPacketizer,1) Info("Process","Create Proxy TDSet");
       set = new TDSetProxy( dset->GetType(), dset->GetObjName(),
-                        dset->GetDirectory() );
+                            dset->GetDirectory() );
 
       delete fPacketizer;
       fPacketizer = new TPacketizer2(dset, fProof->GetListOfActiveSlaves(),
