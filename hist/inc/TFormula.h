@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.22 2003/12/11 23:30:35 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.h,v 1.23 2004/01/10 10:52:29 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -60,8 +60,6 @@ protected:
    TBits      fAlreadyFound;    //! cache for information
 
            void    ClearFormula(Option_t *option="");
-           Bool_t  IsInitialized() { return TestBit(kInitialized); }
-           Int_t   GetOperType(Int_t oper) const;
    virtual Bool_t  IsString(Int_t oper) const;
 
    virtual void    Convert(UInt_t fromVersion, Int_t *oldOper);

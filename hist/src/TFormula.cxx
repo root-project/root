@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.66 2004/01/12 14:45:33 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TFormula.cxx,v 1.67 2004/01/12 15:34:24 brun Exp $
 // Author: Nicolas Brun   19/08/95
 
 /*************************************************************************
@@ -2470,7 +2470,7 @@ TString TFormula::GetExpFormula() const
       Int_t optype;
       Int_t j;
       for(Int_t i=0;i<fNoper;i++){
-         optype=fActions[i]; // GetOperType(fOper[i]);
+         optype=fActions[i];
 
          // Boolean optimization breakpoint
          if (optype==kNewBoolOptimize) { // -3) {
@@ -2547,35 +2547,6 @@ TString TFormula::GetExpFormula() const
       TString ret="";
       return ret;
    }
-}
-
-//------------------------------------------------------------------------------
-Int_t TFormula::GetOperType(Int_t /* oper */) const
-{
-   Assert(0);
-   return 0;
-
-//   if(oper==0) return -100;        //Sign inversion
-
-//   if(oper>999 && oper<kConstants) return oper%((int)(oper/100)*100);  //pol0(1), landau(1), ...
-
-//   if((oper>0 && oper<6) ||
-//      oper==20 ||
-//      (oper>59 && oper<82)) return -20;  //Operators without the format func(x,y,...)
-
-//   if((oper>9 && oper<16) ||
-//      (oper>20 && oper<23) ||
-//      (oper>29 && oper<34) ||
-//      (oper>40 && oper<44) ||
-//      (oper>69 && oper<76)) return -1;  //Functions with the format func(x)
-
-//   if(oper>15 && oper<20 ||
-//      oper>22 && oper<26) return -2;    //Functions with the format func(x,y)
-
-//   if(kBoolOptimize<oper && oper<kFunctionCall) return -3;
-  
-  return 0;
-
 }
 
 //______________________________________________________________________________
