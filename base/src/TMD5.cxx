@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.4 2002/02/27 08:11:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.5 2002/02/28 13:41:59 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -71,6 +71,34 @@ TMD5::TMD5(const UChar_t *digest)
       Error("TMD5::TMD5", "digest is 0");
    }
    fFinalized = kTRUE;
+}
+
+//______________________________________________________________________________
+TMD5::TMD5(const TMD5 &md5)
+{
+   // MD5 copy ctor. THe md5 must have been finzalized.
+   // Special copy ctor avoids copying unnecessary temp arrays.
+
+   if (!md5.fFinalized)
+      Error("TMD5", "object to be copied must be finalized");
+
+   memcpy(fDigest, md5.fDigest, 16);
+   fFinalized = kTRUE;
+}
+
+//______________________________________________________________________________
+TMD5 &TMD5::operator=(const TMD5 &rhs)
+{
+   // MD5 assignment operator. The rhs must have been finalized.
+   // Special assignment operator avoids copying unnecessary temp arrays.
+
+   if (this != &rhs) {
+      if (!rhs.fFinalized)
+         Error("operator=", "object to be assigned must be finalized");
+      memcpy(fDigest, rhs.fDigest, 16);
+      fFinalized = kTRUE;
+   }
+   return *this;
 }
 
 //______________________________________________________________________________
