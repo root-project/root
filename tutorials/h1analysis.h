@@ -24,11 +24,11 @@ class h1analysis : public TSelector {
    Int_t           nrun;
    Int_t           nevent;
    Int_t           nentry;
-   UInt_t          trelem[192];
-   UInt_t          subtr[128];
-   UInt_t          rawtr[128];
-   UInt_t          L4subtr[128];
-   UInt_t          L5class[32];
+   UChar_t         trelem[192];
+   UChar_t         subtr[128];
+   UChar_t         rawtr[128];
+   UChar_t         L4subtr[128];
+   UChar_t         L5class[32];
    Float_t         E33;
    Float_t         de33;
    Float_t         x33;
