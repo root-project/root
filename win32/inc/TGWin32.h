@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.6 2001/04/03 10:34:28 rdm Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.7 2001/04/10 08:39:47 brun Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -374,18 +374,20 @@ public:
    virtual void         SetForeground(GContext_t gc, ULong_t foreground);
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    virtual void         Update(Int_t mode = 0);
-   Region_t             CreateRegion();
-   void                 DestroyRegion(Region_t reg);
-   void                 UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
-   Region_t             PolygonRegion(Point_t *points, Int_t np, Bool_t winding);
-   void                 UnionRegion(Region_t rega, Region_t regb, Region_t result);
-   void                 IntersectRegion(Region_t rega, Region_t regb, Region_t result);
-   void                 SubtractRegion(Region_t rega, Region_t regb, Region_t result);
-   void                 XorRegion(Region_t rega, Region_t regb, Region_t result);
-   Bool_t               EmptyRegion(Region_t reg);
-   Bool_t               PointInRegion(Int_t x, Int_t y, Region_t reg);
-   Bool_t               EqualRegion(Region_t rega, Region_t regb);
-   void                 GetRegionBox(Region_t reg, Rectangle_t *rect);
+   /** not implemented dummies from TVirtualX are used
+   virtual Region_t     CreateRegion();
+   virtual void         DestroyRegion(Region_t reg);
+   virtual void         UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
+   virtual Region_t     PolygonRegion(Point_t *points, Int_t np, Bool_t winding);
+   virtual void         UnionRegion(Region_t rega, Region_t regb, Region_t result);
+   virtual void         IntersectRegion(Region_t rega, Region_t regb, Region_t result);
+   virtual void         SubtractRegion(Region_t rega, Region_t regb, Region_t result);
+   virtual void         XorRegion(Region_t rega, Region_t regb, Region_t result);
+   virtual Bool_t       EmptyRegion(Region_t reg);
+   virtual Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
+   virtual Bool_t       EqualRegion(Region_t rega, Region_t regb);
+   virtual void         GetRegionBox(Region_t reg, Rectangle_t *rect);
+   **/
 
    ClassDef(TGWin32,0)  //Interface to Win32
 };
