@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.7 2001/04/10 08:39:47 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.8 2001/05/29 10:22:57 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -374,7 +374,6 @@ public:
    virtual void         SetForeground(GContext_t gc, ULong_t foreground);
    virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    virtual void         Update(Int_t mode = 0);
-   /** not implemented dummies from TVirtualX are used
    virtual Region_t     CreateRegion();
    virtual void         DestroyRegion(Region_t reg);
    virtual void         UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
@@ -387,7 +386,6 @@ public:
    virtual Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
    virtual Bool_t       EqualRegion(Region_t rega, Region_t regb);
    virtual void         GetRegionBox(Region_t reg, Rectangle_t *rect);
-   **/
 
    ClassDef(TGWin32,0)  //Interface to Win32
 };
