@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.22 2001/08/03 14:07:20 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.23 2001/08/11 08:27:40 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -181,8 +181,7 @@ Int_t TChain::Add(const char *name, Int_t nentries)
 
    // wildcarding used in name
    Int_t nf = 0;
-   Int_t nch = strlen(name);
-   char *aname = new char[nch+1];
+   char aname[2048]; //files may have very long names, eg AFS
    strcpy(aname,name);
    char *dot = (char*)strstr(aname,".root");
 
