@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.h,v 1.4 2004/12/08 14:34:18 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.h,v 1.5 2004/12/16 19:23:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -103,7 +103,7 @@ public:
    Bool_t         IsAddress(TString &addr) { return (fRemoteAddress == addr);}
    Bool_t         ReaderThreadKilled() const { return fReaderthreadkilled;}
    ELoginState    IsLogged() const { return fLogged; }
-   Bool_t         IsPort(Int_t port) const { return (fRemotePort == port); };
+   Bool_t         IsPort(Int_t port) const { return (fRemotePort == port); }
    Bool_t         IsValid() const { return (fSocket && fSocket->IsValid());}
    void           LockChannel();
    void           ReaderStarted();

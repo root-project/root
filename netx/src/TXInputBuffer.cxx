@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXInputBuffer.cxx,v 1.1 2004/08/20 23:23:51 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXInputBuffer.cxx,v 1.2 2004/12/16 19:23:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -144,10 +144,6 @@ TXMessage *TXInputBuffer::GetMsg(Short_t streamid, Int_t secstimeout)
 
       for (int k = 0; k < secstimeout; k++) {
 
-         struct timespec timeout;
-         timeout.tv_sec = time(0)+2;
-         timeout.tv_nsec = 0;
-
          Int_t cr = 0;
 
          // We have to lock the mtx before going to wait,
@@ -160,7 +156,7 @@ TXMessage *TXInputBuffer::GetMsg(Short_t streamid, Int_t secstimeout)
             // If not, wait for the next (remember: the mtx is 
             // unlocked internally).
             if (!res) {
-               cr = cv->TimedWait(timeout.tv_sec);
+               cr = cv->TimedWait(2);
             }
          }
 

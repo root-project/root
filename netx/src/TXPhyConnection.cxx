@@ -1,4 +1,4 @@
-// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.cxx,v 1.3 2004/08/20 23:26:05 rdm Exp $
+// @(#)root/netx:$Name:  $:$Id: TXPhyConnection.cxx,v 1.4 2004/12/16 19:23:18 rdm Exp $
 // Author: Alvise Dorigo, Fabrizio Furano
 
 /*************************************************************************
@@ -284,7 +284,7 @@ Int_t TXPhyConnection::ReadRaw(void *buf, Int_t len, ESendRecvOptions opt)
    if (IsValid()) {
 
       if (DebugLevel() >= kDUMPDEBUG)
-         Info("ReadRaw", "Reading from socket: %d[%s:%d]",
+         Info("ReadRaw", "Reading from socket: %d [%s:%d]",
                fSocket->GetDescriptor(), fRemoteAddress.Data(), fRemotePort);
 
       res = fSocket->RecvRaw(buf, len, opt);
@@ -354,7 +354,10 @@ TXMessage *TXPhyConnection::BuildXMessage(ESendRecvOptions opt,
    }
    m->ReadRaw(this, opt);
 
-   if (fReaderthreadkilled) return (TXMessage *)0;
+   if (fReaderthreadkilled) {
+      if (m) delete m;
+      return (TXMessage *)0;
+   }
 
    if (m->IsAttn()) {
 
