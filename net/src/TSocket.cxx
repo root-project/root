@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.14 2004/04/20 15:17:02 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSocket.cxx,v 1.15 2004/05/05 14:43:34 rdm Exp $
 // Author: Fons Rademakers   18/12/96
 
 /*************************************************************************
@@ -33,7 +33,6 @@
 
 extern "C" void R__zip (Int_t cxlevel, Int_t *nin, char *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
-const Int_t kMAXBUF = 0xffffff;
 
 UInt_t TSocket::fgBytesSent = 0;
 UInt_t TSocket::fgBytesRecv = 0;
