@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.16 2002/03/14 18:15:21 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProof.h,v 1.17 2002/03/15 17:23:40 rdm Exp $
 // Author: Fons Rademakers   13/02/97
 
 /*************************************************************************
@@ -38,9 +38,6 @@
 #endif
 
 #include <map>
-#if !defined(__HP_aCC) || __HP_aCC >= 53000
-using std::map;
-#endif
 
 
 class TList;
