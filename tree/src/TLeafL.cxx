@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafL.cxx,v 1.6 2004/07/29 19:11:27 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafL.cxx,v 1.7 2004/10/18 12:32:12 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -196,6 +196,9 @@ void TLeafL::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 void TLeafL::ReadValue(ifstream &s)
 {
 // read a long integer from ifstream s and store it into the branch buffer
+#if defined(_MSC_VER) && (_MSC_VER<1300)
+   printf("Due to a bug in VC++6, the function TLeafL::ReadValue is dummy\n");
+#else
    if (fIsUnsigned) {
       ULong64_t *uvalue = (ULong64_t*)GetValuePointer();
       for (Int_t i=0;i<fLen;i++) s >> uvalue[i];
@@ -203,6 +206,7 @@ void TLeafL::ReadValue(ifstream &s)
       Long64_t *value = (Long64_t*)GetValuePointer();
       for (Int_t i=0;i<fLen;i++) s >> value[i];
    }
+#endif
 }
 
 //______________________________________________________________________________
