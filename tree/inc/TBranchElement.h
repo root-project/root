@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.16 2001/05/23 16:12:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.h,v 1.17 2001/05/24 16:37:43 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -75,6 +75,7 @@ public:
             Double_t GetValue(Int_t i, Int_t len) const;
             Bool_t   IsBranchFolder() const {return TestBit(kBranchFolder);}
             Bool_t   IsFolder() const;
+    virtual Bool_t   Notify() {fAddress = 0; return 1;}
     virtual void     Print(Option_t *option="") const;
             void     PrintValue(Int_t i) const;
     virtual void     ReadLeaves(TBuffer &b);
