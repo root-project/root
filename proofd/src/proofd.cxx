@@ -1,4 +1,4 @@
-// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.44 2003/09/24 13:24:30 rdm Exp $
+// @(#)root/proofd:$Name:  $:$Id: proofd.cxx,v 1.45 2003/09/25 17:29:23 brun Exp $
 // Author: Fons Rademakers   02/02/97
 
 /*************************************************************************
@@ -206,15 +206,7 @@ extern "C" int gethostname(char *, int);
 #endif
 #endif
 
-#ifdef R__KRB5
-extern "C" {
-#if defined(__sun) && !defined(linux)
-   #include <com_err.h>
-#endif
-   #include <krb5.h>
-}
-#endif
-
+#include "Krb5Auth.h"
 #include "proofdp.h"
 
 #ifdef R__KRB5

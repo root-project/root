@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.61 2003/09/24 13:24:30 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.62 2003/09/25 17:29:23 brun Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -310,16 +310,8 @@ extern "C" {
 }
 #endif
 
-#ifdef R__KRB5
-extern "C" {
-#if defined(__sun) && !defined(linux)
-   #include <com_err.h>
-#endif
-   #include <krb5.h>
-}
-#endif
-
 // Local include
+#include "Krb5Auth.h"
 #include "rootdp.h"
 
 

@@ -1,4 +1,4 @@
-// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.6 2003/09/23 23:19:12 rdm Exp $
+// @(#)root/krb5auth:$Name:  $:$Id: Krb5Auth.cxx,v 1.7 2003/09/25 17:29:23 brun Exp $
 // Author: Johannes Muelmenstaedt  17/03/2002
 
 /*************************************************************************
@@ -46,15 +46,7 @@
 #include <netdb.h>
 #include <time.h>
 
-extern "C" {
-   #define KRB5_PRIVATE 1
-#if defined(__sun) && !defined(linux)
-   #include <com_err.h>
-#endif
-   #include <krb5.h>
-   int krb5_net_read(krb5_context, int, char *, int); // ow ow ow!
-}
-
+#include "Krb5Auth.h"
 #include "TSocket.h"
 #include "TAuthenticate.h"
 #include "TROOT.h"
