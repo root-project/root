@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.41 2004/12/01 16:57:19 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.42 2004/12/14 08:45:18 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -317,7 +317,11 @@ Bool_t TViewerOpenGL::HandleContainerButton(Event_t *event)
 {
    // Handle mouse button events.
    // Buttons 4 and 5 are from the mouse scroll wheel
+#ifdef R__WIN32
+   if (event->fType == 3) {
+#else
    if (event->fType == kButtonPress) {
+#endif
       if (event->fCode == kButton4) {
          // zoom out
          fZoom[fConf] *= 1.2;
