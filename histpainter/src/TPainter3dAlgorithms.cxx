@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.17 2004/09/30 12:09:16 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: TPainter3dAlgorithms.cxx,v 1.18 2004/10/05 10:28:24 brun Exp $
 // Author: Rene Brun, Evgueni Tcherniaev, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -2147,12 +2147,6 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
     ab[4] = gCurrentHist->GetYaxis()->GetBinLowEdge(iyt) + ywid*Hparam.baroffset;
     ab[5] = ab[3] + xwid*Hparam.barwidth;
     ab[8] = ab[4] + ywid*Hparam.barwidth;
-    if (ab[3] < Hparam.xmin) ab[3] = Hparam.xmin;
-    if (ab[4] < Hparam.ymin) ab[4] = Hparam.ymin;
-    if (ab[5] > Hparam.xmax) ab[5] = Hparam.xmax;
-    if (ab[8] > Hparam.ymax) ab[8] = Hparam.ymax;
-    if (ab[5] < Hparam.xmin) ab[5] = Hparam.xmin;
-    if (ab[8] < Hparam.ymin) ab[8] = Hparam.ymin;
 
     if (Hoption.Logx) {
        if (ab[3] > 0) ab[3]  = TMath::Log10(ab[3]);
@@ -2170,6 +2164,13 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
     }
     yval1l = Hparam.ymin;
     yval2l = Hparam.ymax;
+
+    if (ab[3] < Hparam.xmin) ab[3] = Hparam.xmin;
+    if (ab[4] < Hparam.ymin) ab[4] = Hparam.ymin;
+    if (ab[5] > Hparam.xmax) ab[5] = Hparam.xmax;
+    if (ab[8] > Hparam.ymax) ab[8] = Hparam.ymax;
+    if (ab[5] < Hparam.xmin) ab[5] = Hparam.xmin;
+    if (ab[8] < Hparam.ymin) ab[8] = Hparam.ymin;
 
 //*-*-       Transform the cell position in the required coordinate system
 
