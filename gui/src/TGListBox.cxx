@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.29 2004/12/07 15:43:00 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.30 2004/12/08 11:41:51 brun Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -115,7 +115,7 @@ TGTextLBEntry::~TGTextLBEntry()
 //______________________________________________________________________________
 void TGTextLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // draw on window/pixmap
+   // Draw text listbox entry on window/pixmap.
 
    int max_ascent, max_descent;
 
@@ -464,7 +464,8 @@ void TGLBContainer::RemoveEntries(Int_t from_ID, Int_t to_ID)
 //______________________________________________________________________________
 TGLBEntry *TGLBContainer::Select(Int_t id)
 {
-   //
+   // Select the entry with the specified id.
+   // Returns the selected TGLBEntry.
 
    return Select(id, kTRUE);
 }
@@ -601,7 +602,7 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
             yf0 = f->GetY();
             xff = xf0 + f->GetWidth();
             yff = yf0 + f->GetHeight();
-            activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) : 
+            activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) :
                         (x > xf0) && (x < xff) && (y > yf0) &&  (y < yff);
 
             if (activate)  {
@@ -631,7 +632,7 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
             yf0 = f->GetY();
             xff = xf0 + f->GetWidth();
             yff = yf0 + f->GetHeight();
-            activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) : 
+            activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) :
                         (x > xf0) && (x < xff) && (y > yf0) &&  (y < yff);
 
             if (activate)  {
@@ -682,7 +683,7 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
             yf0 = f->GetY();
             xff = xf0 + f->GetWidth();
             yff = yf0 + f->GetHeight();
-            activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) : 
+            activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) :
                         (x > xf0) && (x < xff) && (y > yf0) &&  (y < yff);
 
             if (activate) {
@@ -704,8 +705,8 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
          yf0 = f->GetY();
          xff = xf0 + f->GetWidth();
          yff = yf0 + f->GetHeight();
-         
-         activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) : 
+
+         activate = fMapSubwindows ? (f->GetId() == (Window_t)event->fUser[0]) :
                         (x > xf0) && (x < xff) && (y > yf0) &&  (y < yff);
 
          if (activate)  {

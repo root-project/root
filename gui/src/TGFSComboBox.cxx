@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.11 2004/04/20 14:48:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFSComboBox.cxx,v 1.12 2004/12/08 11:41:51 brun Exp $
 // Author: Fons Rademakers   19/01/98
 
 /*************************************************************************
@@ -129,7 +129,7 @@ void TGTreeLBEntry::Activate(Bool_t a)
 //______________________________________________________________________________
 void TGTreeLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // draw copy
+   // Redraw the tree listbox entry on pixmap/window.
 
    int ix, iy, lx, ly;
 
