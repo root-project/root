@@ -68,7 +68,7 @@ E: holeczek@us.edu.pl
 D: dynamic linker interface for IBM/AIX, contributions to MakeTree code
 D: generator
 
-N: Christian Holm Cristensen
+N: Christian Holm Christensen
 E: cholm@nbi.dk
 D: contributions to the build system (configure, Makefile.in, config.in)
 D: implementation of the principal component analysis class TPrincipal
