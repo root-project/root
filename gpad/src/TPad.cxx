@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.76 2002/04/30 14:43:09 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.77 2002/07/15 10:38:35 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -53,6 +53,7 @@
 #include "TPadView3D.h"
 #include "TDatime.h"
 #include "TColor.h"
+#include "TPluginManager.h"
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY       = 1002;
@@ -3640,9 +3641,6 @@ void TPad::Print(const char *filename, Option_t *option)
 
 
 //==============Save pad/canvas as a Postscript file==================================
-
-   // check if Postscript class is in memory. If not, dynamic link
-   if (gROOT->LoadClass("TPostScript","Postscript")) return;
    
    // in case we read directly from a Root file and the canvas
    // is not on the screen, set batch mode
@@ -3673,8 +3671,15 @@ void TPad::Print(const char *filename, Option_t *option)
    TVirtualPS *psave = gVirtualPS;
 
    if (!gVirtualPS || mustOpen) {
+      // Plugin Postscript driver
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualPS"))) {
+         if (h->LoadPlugin() == -1)
+            return;
+         h->ExecPlugin(0);
+      }
+
       // Create a new Postscript file
-      gROOT->ProcessLineFast("new TPostScript()");
       gVirtualPS->SetName(psname);
       gVirtualPS->Open(psname,pstype);
       gVirtualPS->SetBit(kPrintingPS);
@@ -4878,9 +4883,11 @@ void TPad::x3d(Option_t *option)
    }
 
 #ifndef WIN32
-   if (gROOT->LoadClass("TViewerX3D","X3d")) return;
-
-   gROOT->ProcessLine(Form("TViewerX3D *R__x3d = new TViewerX3D((TVirtualPad*)0x%lx,\"%s\")",
-                      (Long_t)this, option));
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TViewerX3D"))) {
+         if (h->LoadPlugin() == -1)
+            return;
+         h->ExecPlugin(5,this,option,"X3D Viewer",800,600);
+      }
 #endif
 }
