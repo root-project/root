@@ -1,0 +1,137 @@
+==============================================================================
+Downloading roottest:
+
+You can download read-only it via:
+
+   cvs -d :pserver:anonymous@cdcvs.fnal.gov:/cvs/cd_read_only co roottest
+
+If you have a Fermilab kerberos principal you can download with write access
+
+   cvs -d cvsuser@cdcvs.fnal.gov:/cvs/cd co roottest
+
+If you have a Fermilab ID number, you can also get pserver access.
+
+==============================================================================
+Running roottest:
+
+To run it just do:
+
+   cd roottest
+   gmake
+
+The output will be something like:
+
+   Running test in ./cint/array
+   Tests in ./cint/array .............................................. OK
+   Running test in ./cint/const
+   Tests in ./cint/const .............................................. OK
+   Running test in ./cint/controls
+   Warning Loopbreak has some known skipped failures (in ./controls)
+   Tests in ./cint/controls ........................................... OK
+   ....
+   Tests in . ......................................................... OK
+
+The message "Warning xyz has some known skipped failures" is reminder of
+a known failure
+
+An unexpected failure will look like:
+
+   Running test in ./cint/template
+   2a3
+   > Warning in <TClassTable::Add>: class TParameter<Long64_t> already in TClassTable
+   gmake[2]: *** [longlong] Error 1
+   Test in ./cint/template ........................................... FAIL
+
+This says that the test named 'longlong' in the directory roottest/cint/template
+has failed because the script issues the unexpected message
+   > Warning in <TClassTable::Add>: class TParameter<Long64_t> already in TClassTable
+
+For a given test the expected screen output is in testname.ref (in the above
+example the file name is roottest/cint/template/longlong.ref).  The actual
+is output is located in roottest/cint/template/longlong.log.
+
+There are also .log files containing the output of the compilation of (when
+applicable) of auxiliary files.
+
+To see what the are the command actually issued do:
+
+   cd roottest; gmake V=t (or gmake VERBOSE=t) (or export V=t; gmake )
+
+==============================================================================
+Adding new test
+
+To add a new test
+   cd roottest; addtest Testname pathname
+For example:
+   cd roottest; addtest vectorOfvector root/io/newstl
+add a new test name vectorOfvector in the directory roottest/root/io/newstl.
+In particular this will update (or create) the makefile and generate 2 files:
+runTestname.C and runTestname.ref.
+To actually implement your test modify the file runTestname.C
+
+If you want the runTestname.C to being compiled instead of interpreted, modify
+in the makefile the line:
+   Testname: testname.log
+into
+   Testname: testname.clog
+
+Then the makefile will run
+   root.exe -q -b -l runTestname.C > runTestname.log 2>&1
+or
+   root.exe -q -b -l runTestname.C+ > runTestname.clog 2>&1
+And
+   diff -bw runTestname.ref runTestname.log
+
+Failure of test can be indicated by a change in the output or by an error return code.
+
+Library can be build automatically using ACLiC. For example, if there is a Testname.C that needs to be compiled just add
+   Testname: Testname_C.$(DllSuf)
+To the local Makefile
+
+There are other helpful macros in roottest/scripts/Rules.mk
+
+==============================================================================
+The organization.
+   scripts : some helper scripts for the makefile
+   root : ROOT specific test
+   cint : CINT test
+
+==============================================================================
+Makefile(s)
+
+
+
+The default test rule, for example for the test 'sometest', depends on
+a log file named using the testname plus the suffix .log, (eg 'sometest.log')
+The file 'sometest.log' can be made automatically from from 'runsometest.C'
+This target will attempts to create the log file (which should be the output of 
+running the test), and compares its output with a prebuilt reference file.
+
+The default rule using the make file variable $(TestDiff), to a diff and ignore 
+all white spaces use $(TestDiffW):
+
+sometest: sometest.log sometest.ref
+	$(TestDiff)
+
+To compile the script runsometest.C before executing replace
+	sometest: sometest.log
+with
+	sometest: sometest.clog
+   
+==============================================================================
+Disable a specific test:
+
+Create a file named !DISABLE contain the name of the test to skip.
+For example:
+
+echo operatorLessThanTemplate > cint/parsing/\!DISABLE
+make
+...
+Running test in ./cint/parsing
+c:/root/roottest//scripts/Rules.mk:25: Test(s) operatorLessThanTemplate
+disabled!
+
+and it skips these tests (if not runnnig make clean).
+
+
+
