@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  *.log
 
 #Set the list of target to make while testing
-TEST_TARGETS += testStringFormula testBoolOpt expotest
+TEST_TARGETS += testStringFormula testBoolOpt expotest NonFormulaMean
 
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
@@ -23,6 +23,13 @@ testBoolOpt : testBoolOpt.log
 
 expotest: expotest.log
 	$(TestDiff)
+
+NonFormulaMean:
+ifeq ($(FAIL),)
+	$(WarnFailTest)
+else
+	$(CMDECHO) !(root.exe -q -b -l NonFormulaMean.C)
+endif
 
 testWithFailure:
 ifeq ($(FAIL),)
