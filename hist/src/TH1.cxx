@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.144 2003/05/05 16:38:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.145 2003/05/08 09:09:01 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3787,7 +3787,7 @@ void TH1::SetTitle(const char *title)
    // Change (i.e. set) the title
    //   if title is of the form "stringt;stringx;stringy;stringz"
    //   the histogram title is set to stringt, 
-   //   the x axis title to stringy, the y axis title to stringy,etc
+   //   the x axis title to stringx, the y axis title to stringy,etc
    
    fTitle = title;
 
