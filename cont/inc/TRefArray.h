@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.3 2001/10/05 16:38:04 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TRefArray.h,v 1.4 2001/10/16 17:27:35 rdm Exp $
 // Author: Rene Brun    02/10/2001
 
 /*************************************************************************
@@ -42,8 +42,7 @@ friend class TRefArrayIter;
 
 protected:
    TProcessID   *fPID;         //Pointer to Process Unique Identifier
-   TBits         fRefBits;     //Flag to test if pointer is ready to use or must be compured
-   Long_t       *fUIDs;        //[fSize] To store uids of referenced objects
+   UInt_t       *fUIDs;        //[fSize] To store uids of referenced objects
    Int_t         fLowerBound;  //Lower bound of the array
    Int_t         fLast;        //Last element in array containing an object
 
@@ -148,15 +147,8 @@ inline TObject *TRefArray::At(Int_t i) const
    // Return the object at position i. Returns 0 if i is out of bounds.
    int j = i-fLowerBound;
    if (j >= 0 && j < fSize) {
-      TObject *obj = 0;
-      if (!fRefBits.TestBitNumber(j)) return (TObject*)fUIDs[j];
       if (!fPID) return 0;
-      obj = fPID->GetObjectWithID(fUIDs[j]-(Long_t)gSystem);
-      if (obj) {
-         ((TRefArray*)this)->fRefBits.ResetBitNumber(j);
-         fUIDs[j] = (Long_t)obj;
-      }
-      return obj;
+      return fPID->GetObjectWithID(fUIDs[j]);
    }
    BoundsOk("At", i);
    return 0;
