@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.30 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TSlave.cxx,v 1.31 2004/09/08 10:21:40 brun Exp $
 // Author: Fons Rademakers   14/02/97
 
 /*************************************************************************
@@ -227,6 +227,8 @@ Int_t TSlave::Compare(const TObject *obj) const
 
    if (fPerfIdx > sl->GetPerfIdx()) return 1;
    if (fPerfIdx < sl->GetPerfIdx()) return -1;
+   if (fOrdinal < sl->GetOrdinal()) return 1;
+   if (fOrdinal > sl->GetOrdinal()) return -1;
    return 0;
 }
 
