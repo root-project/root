@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafF.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafF.h,v 1.2 2000/06/13 09:27:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -31,6 +31,7 @@ protected:
     Float_t       fMinimum;         //Minimum value if leaf range is specified
     Float_t       fMaximum;         //Maximum value if leaf range is specified
     Float_t       *fValue;          //!Pointer to data buffer
+    Float_t       **fPointer;       //!Addresss of pointer to data buffer!
 
 public:
     TLeafF();

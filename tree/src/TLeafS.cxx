@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafS.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafS.cxx,v 1.2 2000/06/13 09:27:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -26,6 +26,7 @@ TLeafS::TLeafS(): TLeaf()
 //*-*        ============================
 
    fValue = 0;
+   fPointer = 0;
 }
 
 //______________________________________________________________________________
@@ -74,8 +75,9 @@ void TLeafS::FillBasket(TBuffer &b)
 
    Int_t i;
    Int_t len = GetLen();
+   if (fPointer) fValue = *fPointer;
    if (IsRange()) {
-         if (fValue[0] > fMaximum) fMaximum = fValue[0];
+      if (fValue[0] > fMaximum) fMaximum = fValue[0];
    }
    if (IsUnsigned()) {
       for (i=0;i<len;i++) b << (UShort_t)fValue[i];
@@ -182,6 +184,15 @@ void TLeafS::SetAddress(void *add)
 //*-*                  ============================
 
    if (ResetAddress(add)) delete [] fValue;
-   if (add) fValue = (Short_t*)add;
-   else     fValue = new Short_t[fNdata];
+   if (add) {
+      if (TestBit(kIndirectAddress)) {
+         fPointer = (Short_t**) add;
+         if (*fPointer==0) *fPointer = new Short_t[fNdata];
+         fValue = *fPointer;
+      } else {
+         fValue = (Short_t*)add;
+      }
+   } else {
+      fValue = new Short_t[fNdata];
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeafF.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeafF.cxx,v 1.2 2000/06/13 09:27:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -26,6 +26,7 @@ TLeafF::TLeafF(): TLeaf()
 //*-*        ============================
 
    fValue = 0;
+   fPointer = 0;
 }
 
 //______________________________________________________________________________
@@ -40,6 +41,7 @@ TLeafF::TLeafF(const char *name, const char *type)
    fMinimum = 0;
    fMaximum = 0;
    fValue   = 0;
+   fPointer = 0;
 }
 
 //______________________________________________________________________________
@@ -77,6 +79,7 @@ void TLeafF::FillBasket(TBuffer &b)
 //*-*                  ==========================================
 
    Int_t len = GetLen();
+   if (fPointer) fValue = *fPointer;
    b.WriteFastArray(fValue,len);
 }
 
@@ -161,6 +164,16 @@ void TLeafF::SetAddress(void *add)
 //*-*                  ============================
 
    if (ResetAddress(add)) delete [] fValue;
-   if (add) fValue = (Float_t*)add;
-   else     fValue = new Float_t[fNdata];
+
+   if (add) {
+      if (TestBit(kIndirectAddress)) {
+         fPointer = (Float_t**) add;
+         if (*fPointer==0) *fPointer = new Float_t[fNdata];
+         fValue = *fPointer;
+      } else {
+         fValue = (Float_t*)add;
+      }
+   } else {
+      fValue = new Float_t[fNdata];
+   }
 }

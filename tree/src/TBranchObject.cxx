@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.2 2000/09/05 09:21:24 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -299,10 +299,31 @@ void TBranchObject::SetAddress(void *add)
             branch = (TBranch*)fBranches.FindObject(fullname);
          } else {
             if (!clobj) {
-               if (code != 1) continue;
+               // this is a basic type we can handle only if
+               // he has a dimension:
+               const char * index = dm->GetArrayIndex();
+               if (strlen(index)==0) {
+                  if (code==1) {
+                     // Case of a string ... we do not need the size
+                     if (isDot) sprintf(fullname,"%s%s",bname,&rdname[0]);
+                     else       sprintf(fullname,"%s",&rdname[0]);
+                  } else {
+                     continue;
+                  }
+               }
                if (isDot) sprintf(fullname,"%s%s",bname,&rdname[0]);
                else       sprintf(fullname,"%s",&rdname[0]);
-               branch = (TBranch*)fBranches.FindObject(fullname);
+               // let's remove the stars!
+               UInt_t cursor,pos;
+               for( cursor = 0, pos = 0;
+                    cursor < strlen(fullname);
+                    cursor ++ ) {
+                  if (fullname[cursor]!='*') {
+                     fullname[pos++] = fullname[cursor];
+                  };
+               };
+               fullname[pos] = '\0';
+               branch = (TBranch*)fBranches.FindObject(fullname);		 
             } else {
                if (!clobj->InheritsFrom(TObject::Class())) continue;
                if (isDot) sprintf(fullname,"%s%s",bname,&rdname[1]);

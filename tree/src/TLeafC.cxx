@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TLeafC.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   17/03/97
 
 /*************************************************************************
@@ -26,6 +26,7 @@ TLeafC::TLeafC(): TLeaf()
 //*-*        ============================
 
    fValue = 0;
+   fPointer = 0;
 }
 
 //______________________________________________________________________________
@@ -40,6 +41,7 @@ TLeafC::TLeafC(const char *name, const char *type)
    fMinimum = 0;
    fMaximum = 0;
    fValue   = 0;
+   fPointer = 0;
 }
 
 //______________________________________________________________________________
@@ -72,6 +74,7 @@ void TLeafC::FillBasket(TBuffer &b)
 //*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
 //*-*                  ==========================================
 
+   if (fPointer) fValue = *fPointer;
    UChar_t len = strlen(fValue);
    if (len >= fMaximum) fMaximum = len+1;
    if (len >= fLen)     fLen = len+1;
@@ -162,6 +165,15 @@ void TLeafC::SetAddress(void *add)
 //*-*                  ============================
 
    if (ResetAddress(add)) delete [] fValue;
-   if (add) fValue = (char*)add;
-   else     fValue = new char[fNdata];
+   if (add) {
+      if (TestBit(kIndirectAddress)) {
+         fPointer = (char**)add;
+          if (*fPointer==0) *fPointer = new char[fNdata];
+      } else {
+         fValue = (char*)add;
+      }
+   }
+   else {
+      fValue = new char[fNdata];
+   }
 }

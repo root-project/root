@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.h,v 1.2 2000/06/13 09:27:08 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -36,7 +36,6 @@ class TBrowser;
 class TLeaf : public TNamed {
 
 protected:
-    enum { kNewValue = BIT(12) };
 
     Int_t       fLen;             //Number of fixed length elements
     Int_t       fLenType;         //Number of bytes for this data type
@@ -48,6 +47,9 @@ protected:
     TBranch     *fBranch;         //Pointer to supporting branch
 
 public:
+    enum { kIndirectAddress = BIT(11), // Addresses passed via pointer
+           kNewValue = BIT(12) };
+
     TLeaf();
     TLeaf(const char *name, const char *type);
     virtual ~TLeaf();

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name$:$Id$
+// @(#)root/tree:$Name:  $:$Id: TLeafD.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -26,6 +26,7 @@ TLeafD::TLeafD(): TLeaf()
 //*-*        ============================
 
    fValue = 0;
+   fPointer = 0;
 }
 
 //______________________________________________________________________________
@@ -40,6 +41,7 @@ TLeafD::TLeafD(const char *name, const char *type)
    fMinimum = 0;
    fMaximum = 0;
    fValue   = 0;
+   fPointer = 0;
 }
 
 //______________________________________________________________________________
@@ -73,6 +75,7 @@ void TLeafD::FillBasket(TBuffer &b)
 //*-*                  ==========================================
 
    Int_t len = GetLen();
+   if (fPointer) fValue = *fPointer;
    b.WriteFastArray(fValue,len);
 }
 
@@ -149,6 +152,15 @@ void TLeafD::SetAddress(void *add)
 //*-*                  ============================
 
    if (ResetAddress(add)) delete [] fValue;
-   if (add) fValue = (Double_t*)add;
-   else     fValue = new Double_t[fNdata];
+   if (add) {
+      if (TestBit(kIndirectAddress)) {
+         fPointer = (Double_t**) add;
+         if (*fPointer==0) *fPointer = new Double_t[fNdata];
+         fValue = *fPointer;
+      } else {
+         fValue = (Double_t*)add;
+      }
+   } else {
+      fValue = new Double_t[fNdata];
+   }
 }

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.1.1.1 2000/05/16 17:00:45 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchClones.cxx,v 1.2 2000/09/06 07:17:49 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -98,12 +98,12 @@ TBranchClones::TBranchClones(const char *name, void *pointer, Int_t basketsize, 
    TIter      next(cl->GetListOfRealData());
    while ((rd = (TRealData *) next())) {
       TDataMember *member = rd->GetDataMember();
-      if (!member->IsBasic()) {
+      if (!member->IsPersistent()) continue; //do not process members with a ! as the first
+                                             // character in the comment field
+      if (!member->IsBasic() || member->IsaPointer() ) {
          Warning("BranchClones","Cannot process member:%s",member->GetName());
          continue;
       }
-      if (!member->IsPersistent()) continue; //do not process members with a ! as the first
-                                             // character in the comment field
       // forget TObject part if splitlevel = 2
       if (splitlevel > 1 || fList->TestBit(TClonesArray::kForgetBits)) {
          if (strcmp(member->GetName(),"fBits")     == 0) continue;

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.22 2000/08/31 20:03:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.23 2000/09/06 17:19:44 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -498,10 +498,63 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
             }
          } else {
             if (!clobj) {
-               if (code != 1) continue;
-               sprintf(leaflist,"%s/%s",dname,"C");
-               branch1 = new TBranch(branchname,pointer,leaflist,bufsize);
-               branch1->SetTitle(dname);
+               const char * index = dm->GetArrayIndex();
+               if (strlen(index)!=0) {
+                  if      (code ==  1) 
+                     // Note that we differentiate between strings and
+                     // char array by the fact that there is NO specified
+                     // size for a string (see next if (code == 1)
+                     sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"B");
+                  else if (code == 11) 
+                     sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"b");
+                  else if (code ==  2) 
+                     sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"S");
+                  else if (code == 12) 
+                     sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"s");
+                  else if (code ==  3) 
+                     sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"I");
+                  else if (code == 13) 
+                     sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"i");
+                  else if (code ==  5) 
+                     sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"F");
+                  else if (code ==  8) 
+                     sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"D");
+                  else {
+                     printf("Cannot create branch for rdname=%s, code=%d\n",branchname, code);
+                     leaflist[0] = 0;
+                  }
+               } else {
+                  if (code == 1) {
+                     sprintf(leaflist,"%s/%s",dname,"C");
+                  } else {
+                     continue;
+                  }
+               }
+
+               // there are '*' in both the branchname and rdname
+               char bname[128];
+               UInt_t cursor,pos;
+               for(cursor = 0, pos = 0; 
+                   cursor< strlen(branchname); 
+                   cursor++ ) {
+                  if (branchname[cursor]!='*') {
+                     bname[pos++]=branchname[cursor];
+                  }
+               }
+               bname[pos] = '\0';
+               for(cursor = 0, pos = 0; cursor< strlen(leaflist); cursor++ ) {
+                  if (leaflist[cursor]!='*') {
+                     leaflist[pos++]=leaflist[cursor];
+                  }
+               }
+               leaflist[pos] = '\0';
+
+               // Add the branch to the tree and indicate that the address
+               // is that of a pointer to be dereferenced before using.
+               branch1 = new TBranch(bname,*(void**)pointer,leaflist,bufsize);
+               TLeaf *leaf = (TLeaf*) branch1->GetListOfLeaves()->At(0);
+               leaf->SetBit(TLeaf::kIndirectAddress);
+               leaf->SetAddress((void**)pointer);
                blist->Add(branch1);
             } else {
                if (!clobj->InheritsFrom(TObject::Class())) continue;
