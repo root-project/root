@@ -1,4 +1,4 @@
-// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.3 2000/12/13 15:13:46 brun Exp $
+// @(#)root/eg:$Name:  $:$Id: TParticle.cxx,v 1.4 2001/03/05 09:09:42 brun Exp $
 // Author: Rene Brun , Federico Carminati  26/04/99
 
 #include "TView.h"
@@ -35,7 +35,9 @@ TParticle::TParticle(Int_t pdg,       Int_t status,
   if (fParticlePDG) {
      fCalcMass    = fParticlePDG->Mass();
   } else {
-     fCalcMass    = TMath::Sqrt(fE*fE -fPx*fPx -fPy*fPy -fPz*fPz);
+     Double_t a2 = fE*fE -fPx*fPx -fPy*fPy -fPz*fPz;
+     if (a2 >= 0) fCalcMass =  TMath::Sqrt(a2);
+     else         fCalcMass = -TMath::Sqrt(-a2);
   }
 }
 
@@ -59,7 +61,9 @@ TParticle::TParticle(Int_t pdg,       Int_t status,
   if (fParticlePDG) {
      fCalcMass    = fParticlePDG->Mass();
   } else {
-     fCalcMass    = TMath::Sqrt(fE*fE -fPx*fPx -fPy*fPy -fPz*fPz);
+     Double_t a2 = fE*fE -fPx*fPx -fPy*fPy -fPz*fPz;
+     if (a2 >= 0) fCalcMass =  TMath::Sqrt(a2);
+     else         fCalcMass = -TMath::Sqrt(-a2);
   }
 }
 
