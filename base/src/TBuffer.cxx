@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.54 2003/06/25 15:35:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.55 2003/07/11 15:04:03 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -1660,13 +1660,19 @@ void *TBuffer::ReadObjectAny(const TClass *clCast)
       //baseOffset will be -1 if clRef does not inherit from clCast.
       baseOffset = clRef->GetBaseClassOffset(clCast);
       if (baseOffset == -1) {
-         Error("ReadObject", "got object of wrong class");
-         // exception
-         baseOffset = 0;
-         return 0; //we better return at this point
+         Error("ReadObject", "got object of wrong class! requested %s but got %s",
+               clCast->GetName(), clRef->GetName());
+
+         CheckByteCount(startpos, tag, 0); // avoid mis-leading byte count error message
+         return 0; // We better return at this point
       }
-      //we cannot mix a compiled class with a fake class in the inheritance
-      if (clCast->GetClassInfo() && !clRef->GetClassInfo()) return 0;
+      if (clCast->GetClassInfo() && !clRef->GetClassInfo()) {
+         //we cannot mix a compiled class with a fake class in the inheritance
+         Error("ReadObject", "Trying to read an emulated class (%s) to store in a compiled pointer (%s)",
+               clRef->GetName(),clCast->GetName());
+         CheckByteCount(startpos, tag, 0); // avoid mis-leading byte count error message
+         return 0;
+      }
    }
 
    // check if object has not already been read
