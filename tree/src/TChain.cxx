@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.74 2003/07/17 16:34:52 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.75 2003/07/18 16:26:01 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -58,6 +58,7 @@ TChain::TChain(): TTree()
    fStatus         = new TList();
    fMaxCacheSize   = 0;
    fPageSize       = 0;
+   fCanDeleteRefs  = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -99,8 +100,7 @@ TChain::TChain(const char *name, const char *title)
    fMaxCacheSize   = 0;
    fPageSize       = 0;
    fTreeOffset[0]  = 0;
-   //TChainElement *element = new TChainElement("*","");
-   //fStatus->Add(element);
+   fCanDeleteRefs  = kFALSE;
    gDirectory->GetList()->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
    fDirectory = 0;
@@ -478,6 +478,24 @@ void TChain::Browse(TBrowser *)
 }
 
 //_______________________________________________________________________
+void TChain::CanDeleteRefs(Bool_t flag)
+{
+// when closing a file during the chain processing, the file
+// may be closed with option "R" if flag is set to kTRUE.
+// by default flag is kTRUE.
+// When closing a file with option "R", all TProcessIDs referenced by this 
+// file are deleted.
+// Calling TFile::Close("R") might be necessary in case one reads a long list
+// of files having TRef, writing some of the referenced objects or TRef
+// to a new file. If the TRef or referenced objects of the file being closed
+// will not be referenced again, it is possible to minimize the size
+// of the TProcessID data structures in memory by forcing a delete of 
+// the unused TProcessID.
+
+   fCanDeleteRefs = flag;
+}
+
+//_______________________________________________________________________
 void TChain::CreatePackets()
 {
 // Initialize the packet descriptor string
@@ -771,6 +789,7 @@ Int_t TChain::LoadTree(Int_t entry)
          if (cursav && cursav->GetFile()==fFile) {
             cursav = gROOT;
          }
+         if (fCanDeleteRefs) fFile->Close("R");
          delete fFile; fFile = 0; fTree = 0;
       }
    }

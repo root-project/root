@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.31 2003/06/24 14:00:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.32 2003/06/30 15:45:52 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -42,6 +42,7 @@ protected:
     Int_t       *fTreeOffset;       //[fTreeOffsetLen]Array of variables
     Int_t        fMaxCacheSize;     //! Max cache size passed to TFile's
     Int_t        fPageSize;         //! Cache page size passed to TFile's
+    Bool_t       fCanDeleteRefs;    //! if true, TProcessIDs are deleted when closing a file
     TTree       *fTree;             //! Pointer to current tree
     TFile       *fFile;             //! Pointer to current file
     TObjArray   *fFiles;            //->  List of file names containing the Trees
@@ -65,6 +66,7 @@ public:
     virtual TFriendElement *AddFriend(const char *chainname, TFile *dummy);
     virtual TFriendElement *AddFriend(TTree *chain, const char *alias, Bool_t warn = kFALSE);
     virtual void      Browse(TBrowser *b);
+    virtual void      CanDeleteRefs(Bool_t flag=kTRUE);
     virtual void      CreatePackets();
     virtual void      Draw(Option_t *opt);
     virtual Int_t     Draw(const char *varexp, const TCut &selection, Option_t *option=""
