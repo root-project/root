@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.225 2005/01/13 10:10:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.226 2005/01/13 20:07:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1127,7 +1127,7 @@ TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj,
                      // char array by the fact that there is NO specified
                      // size for a string (see next if (code == 1)
                      sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"B");
-                  else if (code == 11)
+                  else if (code == 11 || code == 18)
                      sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"b");
                   else if (code ==  2)
                      sprintf(leaflist,"%s[%s]/%s",&rdname[0],index,"S");
@@ -1190,7 +1190,7 @@ TBranch *TTree::BranchOld(const char *name, const char *classname, void *addobj,
 //*-*-------------Data Member is a basic data type----------
          if (dm->IsBasic()) {
             if      (code ==  1) sprintf(leaflist,"%s/%s",rdname,"B");
-            else if (code == 11) sprintf(leaflist,"%s/%s",rdname,"b");
+            else if (code == 11 || code ==18) sprintf(leaflist,"%s/%s",rdname,"b");
             else if (code ==  2) sprintf(leaflist,"%s/%s",rdname,"S");
             else if (code == 12) sprintf(leaflist,"%s/%s",rdname,"s");
             else if (code ==  3) sprintf(leaflist,"%s/%s",rdname,"I");

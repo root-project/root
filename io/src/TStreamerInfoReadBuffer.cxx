@@ -145,6 +145,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
    switch (kase) {
 
       // skip basic types
+      case TStreamerInfo::kSkip + TStreamerInfo::kBool:      SkipCBasicType(Bool_t);
       case TStreamerInfo::kSkip + TStreamerInfo::kChar:      SkipCBasicType(Char_t);
       case TStreamerInfo::kSkip + TStreamerInfo::kShort:     SkipCBasicType(Short_t);
       case TStreamerInfo::kSkip + TStreamerInfo::kInt:       SkipCBasicType(Int_t);
@@ -161,6 +162,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkip + TStreamerInfo::kBits:      SkipCBasicType(UInt_t);
 
          // skip array of basic types  array[8]
+      case TStreamerInfo::kSkipL + TStreamerInfo::kBool:     SkipCBasicArray(Bool_t);
       case TStreamerInfo::kSkipL + TStreamerInfo::kChar:     SkipCBasicArray(Char_t);
       case TStreamerInfo::kSkipL + TStreamerInfo::kShort:    SkipCBasicArray(Short_t);
       case TStreamerInfo::kSkipL + TStreamerInfo::kInt:      SkipCBasicArray(Int_t);
@@ -176,6 +178,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       case TStreamerInfo::kSkipL + TStreamerInfo::kULong64:  SkipCBasicArray(ULong64_t);
 
    // skip pointer to an array of basic types  array[n]
+      case TStreamerInfo::kSkipP + TStreamerInfo::kBool:     SkipCBasicPointer(Bool_t);
       case TStreamerInfo::kSkipP + TStreamerInfo::kChar:     SkipCBasicPointer(Char_t);
       case TStreamerInfo::kSkipP + TStreamerInfo::kShort:    SkipCBasicPointer(Short_t);
       case TStreamerInfo::kSkipP + TStreamerInfo::kInt:      SkipCBasicPointer(Int_t);
@@ -323,6 +326,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
          name u;                                                          \
          b >> u;                                                          \
          switch(fNewType[i]) {                                            \
+            case TStreamerInfo::kBool:    {Bool_t   *x=(Bool_t*)(arr[k]+ioffset);   *x = (Bool_t)u;   break;} \
             case TStreamerInfo::kChar:    {Char_t   *x=(Char_t*)(arr[k]+ioffset);   *x = (Char_t)u;   break;} \
             case TStreamerInfo::kShort:   {Short_t  *x=(Short_t*)(arr[k]+ioffset);  *x = (Short_t)u;  break;} \
             case TStreamerInfo::kInt:     {Int_t    *x=(Int_t*)(arr[k]+ioffset);    *x = (Int_t)u;    break;} \
@@ -355,6 +359,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
       DOLOOP {                                                            \
           b.ReadFastArray(readbuf, len);                                  \
           switch(newtype) {                                               \
+             case TStreamerInfo::kBool:     ConvCBasicArrayTo(Bool_t);    \
              case TStreamerInfo::kChar:     ConvCBasicArrayTo(Char_t);    \
              case TStreamerInfo::kShort:    ConvCBasicArrayTo(Short_t);   \
              case TStreamerInfo::kInt:      ConvCBasicArrayTo(Int_t);     \
@@ -401,6 +406,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, Int_t i, Int_t kas
          Int_t *l = (Int_t*)(arr[k]+imethod);                             \
          if (*l>0) readbuf = new name[*l];                                \
          switch(newtype) {                                                \
+            case TStreamerInfo::kBool:     ConvCBasicPointerTo(Bool_t);   \
             case TStreamerInfo::kChar:     ConvCBasicPointerTo(Char_t);   \
             case TStreamerInfo::kShort:    ConvCBasicPointerTo(Short_t);  \
             case TStreamerInfo::kInt:      ConvCBasicPointerTo(Int_t);    \
@@ -446,6 +452,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
    switch (kase) {
 
       // convert basic types
+      case TStreamerInfo::kConv + TStreamerInfo::kBool:    ConvCBasicType(Bool_t);
       case TStreamerInfo::kConv + TStreamerInfo::kChar:    ConvCBasicType(Char_t);
       case TStreamerInfo::kConv + TStreamerInfo::kShort:   ConvCBasicType(Short_t);
       case TStreamerInfo::kConv + TStreamerInfo::kInt:     ConvCBasicType(Int_t);
@@ -466,6 +473,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
       case TStreamerInfo::kConv + TStreamerInfo::kBits:    ConvCBasicType(UInt_t);
 
          // convert array of basic types  array[8]
+      case TStreamerInfo::kConvL + TStreamerInfo::kBool:    ConvCBasicArray(Bool_t);
       case TStreamerInfo::kConvL + TStreamerInfo::kChar:    ConvCBasicArray(Char_t);
       case TStreamerInfo::kConvL + TStreamerInfo::kShort:   ConvCBasicArray(Short_t);
       case TStreamerInfo::kConvL + TStreamerInfo::kInt:     ConvCBasicArray(Int_t);
@@ -485,6 +493,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  Int_t i, Int_t ka
 #endif
 
    // convert pointer to an array of basic types  array[n]
+      case TStreamerInfo::kConvP + TStreamerInfo::kBool:    ConvCBasicPointer(Bool_t);
       case TStreamerInfo::kConvP + TStreamerInfo::kChar:    ConvCBasicPointer(Char_t);
       case TStreamerInfo::kConvP + TStreamerInfo::kShort:   ConvCBasicPointer(Short_t);
       case TStreamerInfo::kConvP + TStreamerInfo::kInt:     ConvCBasicPointer(Int_t);
@@ -584,6 +593,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
       switch (kase + typeOffset) {
 
          // read basic types
+         case TStreamerInfo::kBool:               ReadBasicType(Bool_t);    continue;
          case TStreamerInfo::kChar:               ReadBasicType(Char_t);    continue;
          case TStreamerInfo::kShort:              ReadBasicType(Short_t);   continue;
          case TStreamerInfo::kInt:                ReadBasicType(Int_t);     continue;
@@ -602,6 +612,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             continue;
          }
 
+         case TStreamerInfo::kBool   + kHaveLoop: ReadBasicTypeLoop(Bool_t);    continue;
          case TStreamerInfo::kChar   + kHaveLoop: ReadBasicTypeLoop(Char_t);    continue;
          case TStreamerInfo::kShort  + kHaveLoop: ReadBasicTypeLoop(Short_t);   continue;
          case TStreamerInfo::kInt    + kHaveLoop: ReadBasicTypeLoop(Int_t);     continue;
@@ -623,6 +634,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          }
 
          // read array of basic types  like array[8]
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kBool:   ReadBasicArray(Bool_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:   ReadBasicArray(Char_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:  ReadBasicArray(Short_t);   continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kInt:    ReadBasicArray(Int_t);     continue;
@@ -640,6 +652,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             continue;
          }
 
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kBool    + kHaveLoop: ReadBasicArrayLoop(Bool_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kChar    + kHaveLoop: ReadBasicArrayLoop(Char_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kShort   + kHaveLoop: ReadBasicArrayLoop(Short_t);   continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kInt     + kHaveLoop: ReadBasicArrayLoop(Int_t);     continue;
@@ -660,6 +673,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
          }
 
          // read pointer to an array of basic types  array[n]
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:   ReadBasicPointer(Bool_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:   ReadBasicPointer(Char_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:  ReadBasicPointer(Short_t);  continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:    ReadBasicPointer(Int_t);  continue;
@@ -688,6 +702,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
             continue;
          }
 
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kBool    + kHaveLoop: ReadBasicPointerLoop(Bool_t);    continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kChar    + kHaveLoop: ReadBasicPointerLoop(Char_t);    continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kShort   + kHaveLoop: ReadBasicPointerLoop(Short_t);   continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kInt     + kHaveLoop: ReadBasicPointerLoop(Int_t);     continue;

@@ -135,6 +135,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          // 'break' to avoid running the 2nd switch (see later in this
          // function).
 
+         case TStreamerInfo::kBool:                WriteBasicType(Bool_t);    continue;
          case TStreamerInfo::kChar:                WriteBasicType(Char_t);    continue;
          case TStreamerInfo::kShort:               WriteBasicType(Short_t);   continue;
          case TStreamerInfo::kInt:                 WriteBasicType(Int_t);     continue;
@@ -153,6 +154,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             continue;
          }
 
+         case TStreamerInfo::kBool    + kHaveLoop: WriteBasicTypeLoop(Bool_t);    continue;
          case TStreamerInfo::kChar    + kHaveLoop: WriteBasicTypeLoop(Char_t);    continue;
          case TStreamerInfo::kShort   + kHaveLoop: WriteBasicTypeLoop(Short_t);   continue;
          case TStreamerInfo::kInt     + kHaveLoop: WriteBasicTypeLoop(Int_t);     continue;
@@ -174,6 +176,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          }
 
          // write array of basic types  array[8]
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kBool:   WriteBasicArray(Bool_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:   WriteBasicArray(Char_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:  WriteBasicArray(Short_t);   continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kInt:    WriteBasicArray(Int_t);     continue;
@@ -191,6 +194,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             continue;
          }
 
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kBool    + kHaveLoop: WriteBasicArrayLoop(Bool_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kChar    + kHaveLoop: WriteBasicArrayLoop(Char_t);    continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kShort   + kHaveLoop: WriteBasicArrayLoop(Short_t);   continue;
          case TStreamerInfo::kOffsetL + TStreamerInfo::kInt     + kHaveLoop: WriteBasicArrayLoop(Int_t);     continue;
@@ -211,6 +215,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
          }
 
          // write pointer to an array of basic types  array[n]
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:   WriteBasicPointer(Bool_t);    continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:   WriteBasicPointer(Char_t);    continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:  WriteBasicPointer(Short_t);   continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:    WriteBasicPointer(Int_t);     continue;
@@ -237,6 +242,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr, Int_t first,
             continue;
          }
 
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kBool    + kHaveLoop: WriteBasicPointerLoop(Bool_t);    continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kChar    + kHaveLoop: WriteBasicPointerLoop(Char_t);    continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kShort   + kHaveLoop: WriteBasicPointerLoop(Short_t);   continue;
          case TStreamerInfo::kOffsetP + TStreamerInfo::kInt     + kHaveLoop: WriteBasicPointerLoop(Int_t);     continue;

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.7 2004/07/23 16:52:53 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.8 2004/10/29 16:07:32 rdm Exp $
 // Author: Valery Fine(fine@bnl.gov)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998-2001. All right reserved
 
@@ -247,6 +247,9 @@ void TTable::AsString(void *buf, EColumnType type, Int_t width,ostream &out) con
          break;
     case kChar:
          out << setw(width) << *(char *)buf;
+         break;
+    case kBool:
+         out << setw(width) << *(bool *)buf;
          break;
     case kPtr:
          out << "->" << setw(width) << *(void **)buf;
@@ -2265,6 +2268,7 @@ void TTable::Streamer(TBuffer &R__b)
            StreamElementIn(ULong);
            StreamElementIn(UChar);
            StreamElementIn(Char);
+           StreamElementIn(Bool);
           case TTableDescriptor::kPtr: {
             Ptr_t readPtr;
             R__b >> readPtr;
@@ -2318,6 +2322,7 @@ void TTable::Streamer(TBuffer &R__b)
            StreamElementOut(ULong);
            StreamElementOut(UChar);
            StreamElementOut(Char);
+           StreamElementOut(Bool);
           case TTableDescriptor::kPtr:
               R__b << *(Ptr_t *)(row+nextCol->fOffset);
               break;

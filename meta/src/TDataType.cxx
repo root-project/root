@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.16 2005/01/12 07:50:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDataType.cxx,v 1.17 2005/01/12 20:04:36 brun Exp $
 // Author: Rene Brun   04/02/95
 
 /*************************************************************************
@@ -86,6 +86,7 @@ const char *TDataType::GetTypeName(EDataType type)
       case 15: return "UInt_t"; 
       case 16: return "Long64_t";
       case 17: return "ULong64_t";
+      case 18: return "Bool_t";
       case kOther_t:  return "";
       case kNoType_t: return "";
       case kchar:     return "Char_t";
@@ -148,7 +149,7 @@ EDataType TDataType::GetType(const type_info &typeinfo)
    } else if (!strcmp(typeid(char).name(), typeinfo.name())) {
       retType = kChar_t;
    } else if (!strcmp(typeid(bool).name(), typeinfo.name())) {
-      retType = kUChar_t;
+      retType = kBool_t;
    } else if (!strcmp(typeid(float).name(), typeinfo.name())) {
       retType = kFloat_t;
    } else if (!strcmp(typeid(double).name(), typeinfo.name())) {
@@ -255,8 +256,8 @@ void TDataType::SetType(const char *name)
       fType = kChar_t;
       fSize = sizeof(Char_t);
    } else if (!strcmp("bool", name)) {
-      fType = kUChar_t;
-      fSize = sizeof(UChar_t);
+      fType = kBool_t;
+      fSize = sizeof(Bool_t);
    } else if (!strcmp("float", name)) {
       fType = kFloat_t;
       fSize = sizeof(Float_t);

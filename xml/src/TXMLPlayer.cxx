@@ -1,4 +1,4 @@
-// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.4 2004/06/30 09:34:27 brun Exp $
+// @(#)root/xml:$Name:  $:$Id: TXMLPlayer.cxx,v 1.5 2004/12/20 17:15:48 brun Exp $
 // Author: Sergey Linev, Rene Brun  10.05.2004
 
 /*************************************************************************
@@ -227,6 +227,7 @@ TString TXMLPlayer::GetMemberTypeName(TDataMember* member)
        if ((first=='B') || (first=='b')) return "bool";
                                     else return "unsigned char";         
      }
+     case kBool_t:     return "bool";
      case kUShort_t:   return "unsigned short";
      case kUInt_t:     return "unsigned int";
      case kULong_t:    return "unsigned long";
@@ -259,6 +260,7 @@ TString TXMLPlayer::GetBasicTypeName(TStreamerElement* el)
        if ((first=='B') || (first=='b')) return "bool";
                                     else return "unsigned char";         
      }
+     case TStreamerInfo::kBool:     return "bool";
      case TStreamerInfo::kUShort:   return "unsigned short";
      case TStreamerInfo::kUInt:     return "unsigned int";
      case TStreamerInfo::kULong:    return "unsigned long";
@@ -290,6 +292,7 @@ TString TXMLPlayer::GetBasicTypeReaderMethodName(Int_t type, const char* realnam
        if (isbool) return "ReadBool";
               else return "ReadUChar";         
      }
+     case TStreamerInfo::kBool:     return "ReadBool";
      case TStreamerInfo::kUShort:   return "ReadUShort";
      case TStreamerInfo::kUInt:     return "ReadUInt";
      case TStreamerInfo::kULong:    return "ReadULong";
@@ -446,6 +449,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
       
       switch (typ) {
          // basic types
+         case TStreamerInfo::kBool:              
          case TStreamerInfo::kChar:              
          case TStreamerInfo::kShort:
          case TStreamerInfo::kInt:  
@@ -468,6 +472,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
          
          // array of basic types like bool[10]
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kBool:    
          case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:    
          case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:   
          case TStreamerInfo::kOffsetL + TStreamerInfo::kInt:     
@@ -489,6 +494,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
          
          // array of basic types like bool[n] 
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:    
          case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:    
          case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:   
          case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:     
@@ -642,6 +648,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
       
       switch (typ) {
          // write basic types
+         case TStreamerInfo::kBool:              
          case TStreamerInfo::kChar:              
          case TStreamerInfo::kShort:
          case TStreamerInfo::kInt:  
@@ -666,6 +673,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
          }
          
          // array of basic types   
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kBool:    
          case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:    
          case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:   
          case TStreamerInfo::kOffsetL + TStreamerInfo::kInt:     
@@ -686,6 +694,7 @@ void TXMLPlayer::ProduceStreamerSource(ostream& fs, TClass* cl, TList* cllist)
             continue;   
          }
          
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:    
          case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:    
          case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:   
          case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:     
@@ -810,6 +819,7 @@ void TXMLPlayer::ReadSTLarg(ostream& fs,
 // Produce code to read argument of stl container from xml file
 
    switch(argtyp) {
+     case TStreamerInfo::kBool:              
      case TStreamerInfo::kChar:              
      case TStreamerInfo::kShort:
      case TStreamerInfo::kInt:  
@@ -868,6 +878,7 @@ void TXMLPlayer::WriteSTLarg(ostream& fs, const char* accname, int argtyp, bool 
 // Produce code to write argument of stl container to xml file
 
   switch(argtyp) {
+     case TStreamerInfo::kBool:
      case TStreamerInfo::kChar:
      case TStreamerInfo::kShort:
      case TStreamerInfo::kInt:  

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.216 2005/01/04 19:54:31 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.217 2005/01/12 07:50:02 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -1645,6 +1645,7 @@ Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
 {
    switch (type) {
       // basic types
+      case kBool:              {Bool_t *val   = (Bool_t*)ladd;   return Double_t(*val);}
       case kChar:              {Char_t *val   = (Char_t*)ladd;   return Double_t(*val);}
       case kShort:             {Short_t *val  = (Short_t*)ladd;  return Double_t(*val);}
       case kInt:               {Int_t *val    = (Int_t*)ladd;    return Double_t(*val);}
@@ -1665,6 +1666,7 @@ Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
       case kBits:              {UInt_t *val   = (UInt_t*)ladd;   return Double_t(*val);}
 
          // array of basic types  array[8]
+      case kOffsetL + kBool:    {Bool_t *val   = (Bool_t*)ladd;   return Double_t(val[k]);}
       case kOffsetL + kChar:    {Char_t *val   = (Char_t*)ladd;   return Double_t(val[k]);}
       case kOffsetL + kShort:   {Short_t *val  = (Short_t*)ladd;  return Double_t(val[k]);}
       case kOffsetL + kInt:     {Int_t *val    = (Int_t*)ladd;    return Double_t(val[k]);}
@@ -1699,6 +1701,7 @@ Double_t  TStreamerInfo::GetValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
          }
 
          // pointer to an array of basic types  array[n]
+      case kOffsetP + kBool_t:    READ_ARRAY(Bool_t)
       case kOffsetP + kChar_t:    READ_ARRAY(Char_t)
       case kOffsetP + kShort_t:   READ_ARRAY(Short_t)
       case kOffsetP + kInt_t:     READ_ARRAY(Int_t)
@@ -2076,6 +2079,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype,
 
    switch (atype) {
       // basic types
+      case kBool:              {Bool_t    *val = (Bool_t*   )ladd; printf("%d" ,*val);  break;}
       case kChar:              {Char_t    *val = (Char_t*   )ladd; printf("%d" ,*val);  break;}
       case kShort:             {Short_t   *val = (Short_t*  )ladd; printf("%d" ,*val);  break;}
       case kInt:               {Int_t     *val = (Int_t*    )ladd; printf("%d" ,*val);  break;}
@@ -2092,6 +2096,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype,
       case kBits:              {UInt_t    *val = (UInt_t*   )ladd; printf("%d" ,*val);  break;}
 
          // array of basic types  array[8]
+      case kOffsetL + kBool:    {Bool_t    *val = (Bool_t*   )ladd; for(j=0;j<aleng;j++) { printf("%c " ,val[j]); PrintCR(j,aleng,20); } break;}
       case kOffsetL + kChar:    {Char_t    *val = (Char_t*   )ladd; for(j=0;j<aleng;j++) { printf("%c " ,val[j]); PrintCR(j,aleng,20); } break;}
       case kOffsetL + kShort:   {Short_t   *val = (Short_t*  )ladd; for(j=0;j<aleng;j++) { printf("%d " ,val[j]); PrintCR(j,aleng,10); } break;}
       case kOffsetL + kInt:     {Int_t     *val = (Int_t*    )ladd; for(j=0;j<aleng;j++) { printf("%d " ,val[j]); PrintCR(j,aleng,10); } break;}
@@ -2107,6 +2112,7 @@ void TStreamerInfo::PrintValueAux(char *ladd, Int_t atype,
       case kOffsetL + kULong64: {ULong64_t *val = (ULong64_t*)ladd; for(j=0;j<aleng;j++) { printf("%llu ",val[j]);PrintCR(j,aleng, 5); } break;}
 
          // pointer to an array of basic types  array[n]
+      case kOffsetP + kBool:    {Bool_t   **val = (Bool_t**  )ladd; for(j=0;j<*count;j++) { printf("%d " ,(*val)[j]);  PrintCR(j,aleng,20); } break;}
       case kOffsetP + kChar:    {Char_t   **val = (Char_t**  )ladd; for(j=0;j<*count;j++) { printf("%d " ,(*val)[j]);  PrintCR(j,aleng,20); } break;}
       case kOffsetP + kShort:   {Short_t  **val = (Short_t** )ladd; for(j=0;j<*count;j++) { printf("%d " ,(*val)[j]);  PrintCR(j,aleng,10); } break;}
       case kOffsetP + kInt:     {Int_t    **val = (Int_t**   )ladd; for(j=0;j<*count;j++) { printf("%d " ,(*val)[j]);  PrintCR(j,aleng,10); } break;}

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.2 2004/11/02 21:51:10 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TGenCollectionStreamer.cxx,v 1.3 2004/11/03 16:13:38 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -73,6 +73,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b)  {
   }
   fEnv->start = itm;
   switch( int(fVal->fKind) )   {
+    case kBool_t:    b.ReadFastArray(&itm->boolean   , nElements); break;
     case kChar_t:    b.ReadFastArray(&itm->s_char    , nElements); break;
     case kShort_t:   b.ReadFastArray(&itm->s_short   , nElements); break;
     case kInt_t:     b.ReadFastArray(&itm->s_int     , nElements); break;
@@ -213,6 +214,7 @@ void TGenCollectionStreamer::ReadMap(int nElements, TBuffer &b)  {
         case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
         case G__BIT_ISENUM:
           switch( int(v->fKind) )   {
+            case kBool_t:    b >> i->boolean;      break;
             case kChar_t:    b >> i->s_char;      break;
             case kShort_t:   b >> i->s_short;     break;
             case kInt_t:     b >> i->s_int;       break;
@@ -280,6 +282,7 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)  {
       break;
   }
   switch( int(fVal->fKind) )   {
+    case kBool_t:    b.WriteFastArray(&itm->boolean    , nElements); break;
     case kChar_t:    b.WriteFastArray(&itm->s_char    , nElements); break;
     case kShort_t:   b.WriteFastArray(&itm->s_short   , nElements); break;
     case kInt_t:     b.WriteFastArray(&itm->s_int     , nElements); break;
@@ -372,6 +375,7 @@ void TGenCollectionStreamer::WriteMap(int nElements, TBuffer &b)  {
         case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
         case G__BIT_ISENUM:
           switch( int(v->fKind) )   {
+            case kBool_t:    b << i->boolean;     break;
             case kChar_t:    b << i->s_char;      break;
             case kShort_t:   b << i->s_short;     break;
             case kInt_t:     b << i->s_int;       break;

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.5 2004/11/03 16:13:38 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedCollectionProxy.cxx,v 1.6 2004/11/11 06:06:41 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -323,6 +323,7 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)  {
     case G__BIT_ISFUNDAMENTAL:  //  Only handle primitives this way
     case G__BIT_ISENUM:
       switch( int(fVal->fKind) )   {
+        case kBool_t:    b.ReadFastArray(&itm->boolean   , nElements); break;
         case kChar_t:    b.ReadFastArray(&itm->s_char    , nElements); break;
         case kShort_t:   b.ReadFastArray(&itm->s_short   , nElements); break;
         case kInt_t:     b.ReadFastArray(&itm->s_int     , nElements); break;
@@ -366,6 +367,7 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)  {
     case G__BIT_ISENUM:
       itm = (StreamHelper*)At(0);
       switch( int(fVal->fKind) )   {
+        case kBool_t:    b.WriteFastArray(&itm->boolean   , nElements); break;
         case kChar_t:    b.WriteFastArray(&itm->s_char    , nElements); break;
         case kShort_t:   b.WriteFastArray(&itm->s_short   , nElements); break;
         case kInt_t:     b.WriteFastArray(&itm->s_int     , nElements); break;

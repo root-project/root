@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.161 2005/01/12 07:50:03 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.162 2005/01/13 20:07:46 brun Exp $
 // Authors Rene Brun , Philippe Canal, Markus Frank  14/01/2001
 
 /*************************************************************************
@@ -1052,6 +1052,7 @@ void TBranchElement::FillLeaves(TBuffer &b)
           case 15:  {b.WriteFastArray((UInt_t*)   fAddress, n); break;}
           case 16:  {b.WriteFastArray((Long64_t*) fAddress, n); break;}
           case 17:  {b.WriteFastArray((ULong64_t*)fAddress, n); break;}
+          case 18:  {b.WriteFastArray((Bool_t*)   fAddress, n); break;}
           case  9:  {Double_t *xx = (Double_t*)fAddress;
                      for (Int_t ii=0;ii<n;ii++) b << (Float_t)xx[ii];
                      break;}
@@ -1317,13 +1318,13 @@ const char *TBranchElement::GetTypeName() const
       return "Int_t";
    }
    if (fStreamerType <=0 || fStreamerType >= 60) return fClassName.Data();
-   const char *types[18] = {"",
+   const char *types[19] = {"",
                             "Char_t","Short_t","Int_t","Long_t","Float_t",
                             "Int_t","",
                             "Double_t","Double32_t",
                             "",
                             "UChar_t","UShort_t","UInt_t","ULong_t","UInt_t",
-                            "Long64_t","ULong64_t"};
+                            "Long64_t","ULong64_t","Bool_t"};
    Int_t itype = fStreamerType%20;
    return types[itype];
 }
@@ -1649,6 +1650,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
                 case 15:  {length = ((UInt_t*)   len_where)[k]; break;}
                 case 16:  {length = ((Long64_t*) len_where)[k]; break;}
                 case 17:  {length = ((ULong64_t*)len_where)[k]; break;}
+                case 18:  {length = ((Bool_t*)   len_where)[k]; break;}                   
                 default: continue;
              }
              b >> isArray;
@@ -1669,7 +1671,8 @@ void TBranchElement::ReadLeaves(TBuffer &b)
                 case 15:  {*where=new char[sizeof(UInt_t)*length]; b.ReadFastArray((UInt_t*)  *where, length); break;}
                 case 16:  {*where=new char[sizeof(Long64_t)*length]; b.ReadFastArray((Long64_t*)  *where, length); break;}
                 case 17:  {*where=new char[sizeof(ULong64_t)*length]; b.ReadFastArray((ULong64_t*)*where, length); break;}
-             }
+                case 18:  {*where=new char[sizeof(Bool_t)*length]; b.ReadFastArray((Bool_t*) *where, length); break;}
+            }
           }
           return;
        }
@@ -1693,6 +1696,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
           case 15:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
           case 16:  {b.ReadFastArray((Long64_t*)fAddress, n); break;}
           case 17:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
+          case 18:  {b.ReadFastArray((Bool_t*)  fAddress, n); break;}
           case  9:  {Double_t *xx = (Double_t*)fAddress;
                      Float_t afloat;
                      for (Int_t ii=0;ii<n;ii++) {
@@ -1722,6 +1726,7 @@ void TBranchElement::ReadLeaves(TBuffer &b)
              case 15:  {b.ReadFastArray((UInt_t*)  fAddress, n); break;}
              case 16:  {b.ReadFastArray((Long64_t*) fAddress, n); break;}
              case 17:  {b.ReadFastArray((ULong64_t*)fAddress, n); break;}
+             case 18:  {b.ReadFastArray((Bool_t*)   fAddress, n); break;}
              case  9:  {Double_t *xx = (Double_t*)fAddress;
                         Float_t afloat;
                         for (Int_t ii=0;ii<n;ii++) {

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.11 2005/01/18 21:05:43 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TFormLeafInfo.cxx,v 1.12 2005/01/19 07:52:45 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -175,6 +175,7 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t &instance)
          case TStreamerInfo::kSTL:
             thisobj = (char*)(address+offset);
             break;
+         case kBool_t:
          case kChar_t:
          case kUChar_t:
          case kShort_t:
@@ -190,6 +191,7 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t &instance)
          case kDouble32_t:
          case kchar:
          case TStreamerInfo::kCounter:
+         case TStreamerInfo::kOffsetL + kBool_t:
          case TStreamerInfo::kOffsetL + kChar_t:
          case TStreamerInfo::kOffsetL + kUChar_t:
          case TStreamerInfo::kOffsetL + kShort_t:
@@ -286,6 +288,7 @@ Bool_t TFormLeafInfo::IsInteger() const
    switch (atype) {
       // basic types
       case kchar:
+      case kBool_t:
       case kChar_t:
       case kUChar_t:
       case kShort_t:
@@ -497,6 +500,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
 
    switch (fElement->GetNewType()) {
       // basic types
+      case kBool_t:
       case kChar_t:
       case kUChar_t:
       case kShort_t:
@@ -515,6 +519,8 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
                       return (Int_t*)(thisobj+fOffset);
 
          // array of basic types  array[8]
+      case TStreamerInfo::kOffsetL + kBool_t :
+         {Bool_t *val   = (Bool_t*)(thisobj+fOffset);      return &(val[instance]);}
       case TStreamerInfo::kOffsetL + kChar_t :
          {Char_t *val   = (Char_t*)(thisobj+fOffset);      return &(val[instance]);}
       case TStreamerInfo::kOffsetL + kShort_t:
@@ -559,6 +565,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
          }
 
          // pointer to an array of basic types  array[n]
+      case TStreamerInfo::kOffsetP + kBool_t:    GET_ARRAY(Bool_t)
       case TStreamerInfo::kOffsetP + kChar_t:    GET_ARRAY(Char_t)
       case TStreamerInfo::kOffsetP + kShort_t:   GET_ARRAY(Short_t)
       case TStreamerInfo::kOffsetP + kInt_t:     GET_ARRAY(Int_t)
@@ -672,6 +679,7 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
    //   return fInfo->ReadValue(thisobj+fOffset,fElement->GetNewType(),instance,1);
    switch (fElement->GetNewType()) {
          // basic types
+      case kBool_t:     return (Double_t)(*(Bool_t*)(thisobj+fOffset));
       case kChar_t:     return (Double_t)(*(Char_t*)(thisobj+fOffset));
       case kUChar_t:    return (Double_t)(*(UChar_t*)(thisobj+fOffset));
       case kShort_t:    return (Double_t)(*(Short_t*)(thisobj+fOffset));
@@ -690,6 +698,8 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
                       return (Double_t)(*(Int_t*)(thisobj+fOffset));
 
          // array of basic types  array[8]
+      case TStreamerInfo::kOffsetL + kBool_t :
+         {Bool_t *val    = (Bool_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kChar_t :
          {Char_t *val    = (Char_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
       case TStreamerInfo::kOffsetL + kShort_t:
@@ -738,6 +748,7 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
          }
 
          // pointer to an array of basic types  array[n]
+      case TStreamerInfo::kOffsetP + kBool_t:    READ_ARRAY(Bool_t)
       case TStreamerInfo::kOffsetP + kChar_t:    READ_ARRAY(Char_t)
       case TStreamerInfo::kOffsetP + kShort_t:   READ_ARRAY(Short_t)
       case TStreamerInfo::kOffsetP + kInt_t:     READ_ARRAY(Int_t)

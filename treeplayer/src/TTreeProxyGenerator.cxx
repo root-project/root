@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.9 2004/12/04 19:47:00 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreeProxyGenerator.cxx,v 1.10 2005/01/05 22:22:13 brun Exp $
 // Author: Philippe Canal 06/06/2004
 
 /*************************************************************************
@@ -439,6 +439,7 @@ namespace ROOT {
          bool ispointer = false;
          switch(element->GetType()) {
 
+            case TStreamerInfo::kBool:    { proxyTypeName = "T" + middle + "BoolProxy"; break; }
             case TStreamerInfo::kChar:    { proxyTypeName = "T" + middle + "CharProxy"; break; }
             case TStreamerInfo::kShort:   { proxyTypeName = "T" + middle + "ShortProxy"; break; }
             case TStreamerInfo::kInt:     { proxyTypeName = "T" + middle + "IntProxy"; break; }
@@ -457,6 +458,7 @@ namespace ROOT {
             case TStreamerInfo::kCharStar: { proxyTypeName = GetArrayType(element,"Char",container); break; }
                
                // array of basic types  array[8]
+            case TStreamerInfo::kOffsetL + TStreamerInfo::kBool:    { proxyTypeName = GetArrayType(element,"Bool",container ); break; }
             case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:    { proxyTypeName = GetArrayType(element,"Char",container ); break; }
             case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:   { proxyTypeName = GetArrayType(element,"Short",container ); break; }
             case TStreamerInfo::kOffsetL + TStreamerInfo::kInt:     { proxyTypeName = GetArrayType(element,"Int",container ); break; }
@@ -473,6 +475,7 @@ namespace ROOT {
             case TStreamerInfo::kOffsetL + TStreamerInfo::kBits:    { proxyTypeName = GetArrayType(element,"UInt",container ); break; }
                
                // pointer to an array of basic types  array[n]
+            case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:    { proxyTypeName = GetArrayType(element,"Bool",container ); break; }
             case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:    { proxyTypeName = GetArrayType(element,"Char",container ); break; }
             case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:   { proxyTypeName = GetArrayType(element,"Short",container ); break; }
             case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:     { proxyTypeName = GetArrayType(element,"Int",container ); break; }
@@ -1268,6 +1271,7 @@ namespace ROOT {
       bool ispointer = false;
       switch(element->GetType()) {
 
+         case TStreamerInfo::kBool:    { type = "T" + middle + "BoolProxy"; break; }
          case TStreamerInfo::kChar:    { type = "T" + middle + "CharProxy"; break; }
          case TStreamerInfo::kShort:   { type = "T" + middle + "ShortProxy"; break; }
          case TStreamerInfo::kInt:     { type = "T" + middle + "IntProxy"; break; }
@@ -1286,6 +1290,7 @@ namespace ROOT {
          case TStreamerInfo::kCharStar: { type = GetArrayType(element,"Char",container); break; }
 
             // array of basic types  array[8]
+         case TStreamerInfo::kOffsetL + TStreamerInfo::kBool:    { type = GetArrayType(element,"Bool",container ); break; }
          case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:    { type = GetArrayType(element,"Char",container ); break; }
          case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:   { type = GetArrayType(element,"Short",container ); break; }
          case TStreamerInfo::kOffsetL + TStreamerInfo::kInt:     { type = GetArrayType(element,"Int",container ); break; }
@@ -1302,6 +1307,7 @@ namespace ROOT {
          case TStreamerInfo::kOffsetL + TStreamerInfo::kBits:    { type = GetArrayType(element,"UInt",container ); break; }
 
             // pointer to an array of basic types  array[n]
+         case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:    { type = GetArrayType(element,"Bool",container ); break; }
          case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:    { type = GetArrayType(element,"Char",container ); break; }
          case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:   { type = GetArrayType(element,"Short",container ); break; }
          case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:     { type = GetArrayType(element,"Int",container ); break; }

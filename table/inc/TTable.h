@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.7 2004/02/09 21:38:28 rdm Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.8 2004/07/23 16:52:53 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
  
 /*************************************************************************
@@ -90,8 +90,8 @@ protected:
 public:
 
    enum EColumnType {kNAN, kFloat, kInt, kLong, kShort, kDouble, kUInt
-                          ,kULong, kUShort, kUChar, kChar, kPtr
-                    , kEndColumnType };
+                     ,kULong, kUShort, kUChar, kChar, kPtr, kBool
+                     ,kEndColumnType };
    enum ETableBits {
       kIsNotOwn      = BIT(23)   // if the TTable wrapper doesn't own the STAF table
 		                 // As result of the Update() method for example

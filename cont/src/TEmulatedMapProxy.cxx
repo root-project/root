@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.2 2004/11/01 12:26:07 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TEmulatedMapProxy.cxx,v 1.3 2004/11/03 16:13:38 brun Exp $
 // Author: Markus Frank 28/10/04
 
 /*************************************************************************
@@ -97,6 +97,7 @@ void TEmulatedMapProxy::ReadMap(int nElements, TBuffer &b)  {
         case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
         case G__BIT_ISENUM:
           switch( int(v->fKind) )   {
+            case kBool_t:    b >> helper->boolean;     break;
             case kChar_t:    b >> helper->s_char;      break;
             case kShort_t:   b >> helper->s_short;     break;
             case kInt_t:     b >> helper->s_int;       break;
@@ -155,6 +156,7 @@ void TEmulatedMapProxy::WriteMap(int nElements, TBuffer &b)  {
         case G__BIT_ISFUNDAMENTAL:  // Only handle primitives this way
         case G__BIT_ISENUM:
           switch( int(v->fKind) )   {
+            case kBool_t:    b << i->boolean;     break;
             case kChar_t:    b << i->s_char;      break;
             case kShort_t:   b << i->s_short;     break;
             case kInt_t:     b << i->s_int;       break;

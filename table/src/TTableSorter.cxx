@@ -1,6 +1,6 @@
-// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.1 2004/05/19 00:56:42 fine Exp $
+// @(#)root/star:$Name:  $:$Id: TTableSorter.cxx,v 1.3 2004/07/05 13:31:10 brun Exp $
 // Author: Valery Fine   26/01/99  (E-mail: fine@bnl.gov)
-// $Id: TTableSorter.cxx,v 1.1 2004/05/19 00:56:42 fine Exp $
+// $Id: TTableSorter.cxx,v 1.3 2004/07/05 13:31:10 brun Exp $
 
 #include <stdlib.h>
 #include "TTableSorter.h"
@@ -467,6 +467,8 @@ TTableSorter::~TTableSorter()
            return SelectSearch(ULong_t(value));       \
          case  TTable::kUShort:                               \
            return SelectSearch(UShort_t(value));      \
+         case  TTable::kBool:                                 \
+           return SelectSearch(Bool_t(value));        \
          case  TTable::kUChar:                                \
            return SelectSearch(UChar_t(value));       \
          case  TTable::kChar:                                 \
@@ -477,7 +479,8 @@ TTableSorter::~TTableSorter()
       };                                              \
 }                                                     \
 Int_t TTableSorter::BSearch(valuetype value) const{ \
-  union {  Char_t   Char;                             \
+  union {  Bool_t   Bool;                             \
+           Char_t   Char;                             \
            UChar_t  UChar;                            \
            Short_t  Short;                            \
            UShort_t UShort;                           \
@@ -510,6 +513,8 @@ Int_t TTableSorter::BSearch(valuetype value) const{ \
            Value.UChar = UChar_t(value); break;       \
          case  TTable::kChar:                                 \
            Value.Char  = Char_t(value); break;        \
+         case  TTable::kBool:                                 \
+           Value.Bool  = Bool_t(value); break;        \
          default:                                     \
            return -1;                                 \
            break;                                     \
@@ -581,6 +586,7 @@ BINARYSEARCH(valuetype)
   COMPAREVALUES(UShort_t)
   COMPAREVALUES(UChar_t)
   COMPAREVALUES(Char_t)
+  COMPAREVALUES(Bool_t)
 
 #define COMPAREORDER(valuetype) Compare##valuetype
 #define SEARCHORDER(valuetype) Search##valuetype
@@ -821,6 +827,10 @@ void  TTableSorter::SetSearchMethod()
            fSearchMethod = SEARCHORDER(Char_t);
            fCompareMethod = COMPAREORDER(Char_t);
            break;
+         case  TTable::kBool:
+           fSearchMethod = SEARCHORDER(Bool_t);
+           fCompareMethod = COMPAREORDER(Bool_t);
+           break;
          default:
             break;
 
@@ -888,6 +898,8 @@ void TTableSorter::LearnTable()
       fColType = TTable::kUChar;
     else if (!strcmp("char", types))
       fColType= TTable::kChar;
+    else if (!strcmp("bool", types))
+      fColType= TTable::kBool;
 
     if (fColType != TTable::kNAN) {
       Int_t dim = 0;

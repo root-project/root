@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.4 2004/07/29 18:09:40 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TBranchProxy.h,v 1.5 2004/10/18 21:07:05 brun Exp $
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
@@ -576,6 +576,7 @@ namespace ROOT {
    typedef TImpProxy<Long64_t>   TLong64Proxy;
    typedef TImpProxy<Short_t>    TShortProxy;
    typedef TImpProxy<Char_t>     TCharProxy;
+   typedef TImpProxy<Bool_t>     TBoolProxy;
 
    typedef TArrayProxy<Double_t>   TArrayDoubleProxy;
    typedef TArrayProxy<Double32_t> TArrayDouble32Proxy;
@@ -590,6 +591,7 @@ namespace ROOT {
    typedef TArrayProxy<Long64_t>   TArrayLong64Proxy;
    typedef TArrayProxy<UShort_t>   TArrayShortProxy;
    //specialized ! typedef TArrayProxy<Char_t>  TArrayCharProxy;
+   typedef TArrayProxy<Bool_t>     TArrayBoolProxy;
 
    typedef TClaImpProxy<Double_t>   TClaDoubleProxy;
    typedef TClaImpProxy<Double32_t> TClaDouble32Proxy;
@@ -604,6 +606,7 @@ namespace ROOT {
    typedef TClaImpProxy<Long64_t>   TClaLong64Proxy;
    typedef TClaImpProxy<Short_t>    TClaShortProxy;
    typedef TClaImpProxy<Char_t>     TClaCharProxy;
+   typedef TClaImpProxy<Bool_t>     TClaBoolProxy;
 
    typedef TClaArrayProxy<Double_t>    TClaArrayDoubleProxy;
    typedef TClaArrayProxy<Double32_t>  TClaArrayDouble32Proxy;
@@ -617,6 +620,7 @@ namespace ROOT {
    typedef TClaArrayProxy<Long_t>      TClaArrayLongProxy;
    typedef TClaArrayProxy<Long64_t>    TClaArrayLong64Proxy;
    typedef TClaArrayProxy<UShort_t>    TClaArrayShortProxy;
+   typedef TClaArrayProxy<Bool_t>      TClaArrayBoolProxy;
    //specialized ! typedef TClaArrayProxy<Char_t>  TClaArrayCharProxy;
 
 } // namespace ROOT
