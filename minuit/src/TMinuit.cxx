@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.28 2003/05/14 20:58:22 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TMinuit.cxx,v 1.29 2003/06/23 15:36:10 brun Exp $
 // Author: Rene Brun, Frederick James   12/08/95
 
 /*************************************************************************
@@ -91,9 +91,7 @@ non-linearity and numerical roundoff both become more important as the
 external value gets closer to one of the limits (expressed as the distance
 to nearest limit divided by distance between limits). The user must
 therefore be aware of the fact that, for example, if he puts limits of
-
-     10
-(0,10  ) on a parameter, then the values 0.0 and 1. 0 will be
+(0,10^10  ) on a parameter, then the values 0.0 and 1. 0 will be
 indistinguishable to the accuracy of most machines.
 <P>
 The transformation also affects the parameter error matrix, of course, so
