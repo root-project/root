@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.3 2001/02/28 11:04:06 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.h,v 1.4 2002/12/02 18:50:03 rdm Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 #ifndef ROOT_TMultiDimFit
@@ -143,51 +143,54 @@ public:
   virtual void     FindParameterization(Option_t* option=""); // *MENU*
   virtual void     Fit(Option_t *option=""); // *MENU*
 
-  Double_t         GetChi2()             const { return fChi2; }
-  Double_t         GetError()            const { return fError; }
-  Int_t*           GetFunctionCodes()    const { return fFunctionCodes; }
-  const TMatrixD*  GetFunctions()        const { return &fFunctions; }
-  virtual TList*   GetHistograms()       const { return fHistograms; }
-  Double_t         GetMaxAngle()         const { return fMaxAngle; }
-  Int_t            GetMaxFunctions()     const { return fMaxFunctions; }
-  Int_t*           GetMaxPowers()        const { return fMaxPowers; }
-  Double_t         GetMaxQuantity()      const { return fMaxQuantity; }
-  Int_t            GetMaxStudy()         const { return fMaxStudy; }
-  Int_t            GetMaxTerms()         const { return fMaxTerms; }
-  const TVectorD*  GetMaxVariables()     const { return &fMaxVariables; }
-  Double_t         GetMeanQuantity()     const { return fMeanQuantity; }
-  const TVectorD*  GetMeanVariables()    const { return &fMeanVariables; }
-  Double_t         GetMinAngle()         const { return fMinAngle; }
-  Double_t         GetMinQuantity()      const { return fMinQuantity; }
-  Double_t         GetMinRelativeError() const { return fMinRelativeError; }
-  const TVectorD*  GetMinVariables()     const { return &fMinVariables; }
-  Int_t            GetNVariables()       const { return fNVariables; }
-  Int_t            GetNCoefficients()    const { return fNCoefficients; }
-  Int_t*           GetPowerIndex()       const { return fPowerIndex; }
-  Double_t         GetPowerLimit()       const { return fPowerLimit; }
-  const Int_t*     GetPowers()           const { return fPowers; }
-  Double_t         GetPrecision()        const { return fPrecision; }
-  const TVectorD*  GetQuantity()         const { return &fQuantity; }
-  Double_t         GetResidualMax()      const { return fMaxResidual; }
-  Double_t         GetResidualMin()      const { return fMinResidual; }
-  Int_t            GetResidualMaxRow()   const { return fMaxResidualRow; }
-  Int_t            GetResidualMinRow()   const { return fMinResidualRow; }
-  Double_t         GetResidualSumSq()    const { return fSumSqResidual; }
-  Double_t         GetRMS()              const { return fRMS; }
-  Int_t            GetSampleSize()       const { return fSampleSize; }
-  const TVectorD*  GetSqError()          const { return &fSqError; }
-  Double_t         GetSumSqAvgQuantity() const { return fSumSqAvgQuantity; }
-  Double_t         GetSumSqQuantity()    const { return fSumSqQuantity; }
-  Double_t         GetTestError()        const { return fTestError; }
-  Double_t         GetTestPrecision()    const { return fTestPrecision; }
-  const TVectorD*  GetTestQuantity()     const { return &fTestQuantity; }
-  Int_t            GetTestSampleSize()   const { return fTestSampleSize; }
-  const TVectorD*  GetTestSqError()      const { return &fTestSqError; }
-  const TVectorD*  GetTestVariables()    const { return &fTestVariables; }
-  const TVectorD*  GetVariables()        const { return &fVariables; }
+  Double_t         GetChi2()              const { return fChi2; }
+  const TMatrixD*  GetCorrelationMatrix() const { return &fCorrelationMatrix; }
+  const TVectorD*  GetCoefficients()      const { return &fCoefficients; }
+  Double_t         GetError()             const { return fError; }
+  Int_t*           GetFunctionCodes()     const { return fFunctionCodes; }
+  const TMatrixD*  GetFunctions()         const { return &fFunctions; }
+  virtual TList*   GetHistograms()        const { return fHistograms; }
+  Double_t         GetMaxAngle()          const { return fMaxAngle; }
+  Int_t            GetMaxFunctions()      const { return fMaxFunctions; }
+  Int_t*           GetMaxPowers()         const { return fMaxPowers; }
+  Double_t         GetMaxQuantity()       const { return fMaxQuantity; }
+  Int_t            GetMaxStudy()          const { return fMaxStudy; }
+  Int_t            GetMaxTerms()          const { return fMaxTerms; }
+  const TVectorD*  GetMaxVariables()      const { return &fMaxVariables; }
+  Double_t         GetMeanQuantity()      const { return fMeanQuantity; }
+  const TVectorD*  GetMeanVariables()     const { return &fMeanVariables; }
+  Double_t         GetMinAngle()          const { return fMinAngle; }
+  Double_t         GetMinQuantity()       const { return fMinQuantity; }
+  Double_t         GetMinRelativeError()  const { return fMinRelativeError; }
+  const TVectorD*  GetMinVariables()      const { return &fMinVariables; }
+  Int_t            GetNVariables()        const { return fNVariables; }
+  Int_t            GetNCoefficients()     const { return fNCoefficients; }
+  Int_t            GetPolyType()          const { return fPolyType; }
+  Int_t*           GetPowerIndex()        const { return fPowerIndex; }
+  Double_t         GetPowerLimit()        const { return fPowerLimit; }
+  const Int_t*     GetPowers()            const { return fPowers; }
+  Double_t         GetPrecision()         const { return fPrecision; }
+  const TVectorD*  GetQuantity()          const { return &fQuantity; }
+  Double_t         GetResidualMax()       const { return fMaxResidual; }
+  Double_t         GetResidualMin()       const { return fMinResidual; }
+  Int_t            GetResidualMaxRow()    const { return fMaxResidualRow; }
+  Int_t            GetResidualMinRow()    const { return fMinResidualRow; }
+  Double_t         GetResidualSumSq()     const { return fSumSqResidual; }
+  Double_t         GetRMS()               const { return fRMS; }
+  Int_t            GetSampleSize()        const { return fSampleSize; }
+  const TVectorD*  GetSqError()           const { return &fSqError; }
+  Double_t         GetSumSqAvgQuantity()  const { return fSumSqAvgQuantity; }
+  Double_t         GetSumSqQuantity()     const { return fSumSqQuantity; }
+  Double_t         GetTestError()         const { return fTestError; }
+  Double_t         GetTestPrecision()     const { return fTestPrecision; }
+  const TVectorD*  GetTestQuantity()      const { return &fTestQuantity; }
+  Int_t            GetTestSampleSize()    const { return fTestSampleSize; }
+  const TVectorD*  GetTestSqError()       const { return &fTestSqError; }
+  const TVectorD*  GetTestVariables()     const { return &fTestVariables; }
+  const TVectorD*  GetVariables()         const { return &fVariables; }
 
-  static TMultiDimFit* Instance()              { return fgInstance; }
-  virtual Bool_t   IsFolder()            const { return kTRUE; }
+  static TMultiDimFit* Instance()               { return fgInstance; }
+  virtual Bool_t   IsFolder()             const { return kTRUE; }
   virtual Double_t MakeChi2(const Double_t* coeff=0);
   virtual void     MakeCode(const char *functionName="MDF", Option_t *option=""); // *MENU*
   virtual void     MakeHistograms(Option_t* option="A"); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.8 2002/01/24 11:39:29 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TMultiDimFit.cxx,v 1.9 2002/12/02 18:50:04 rdm Exp $
 // Author: Christian Holm Christensen 07/11/2000
 
 //____________________________________________________________________
@@ -3164,7 +3164,7 @@ void TMultiDimFit::MakeParameterization()
       cout << endl;
     }
 
-    if (fNCoefficients >= fMaxTerms && fIsVerbose) {
+    if (fNCoefficients >= fMaxTerms /* && fIsVerbose */) {
       fParameterisationCode = PARAM_MAXTERMS;
       break;
     }
@@ -3379,6 +3379,8 @@ void TMultiDimFit::Print(Option_t *option) const
   //   C        Coefficients
   //   R        Result of parameterisation
   //   F        Result of fit
+  //   K        Correlation Matrix
+  //   M        Pretty print formula
   //
   Int_t i = 0;
   Int_t j = 0;
@@ -3560,6 +3562,51 @@ void TMultiDimFit::Print(Option_t *option) const
       }
 #endif
       cout << endl;
+    }
+    cout << endl;
+  }
+  if (opt.Contains("k") && fCorrelationMatrix.IsValid()) {
+    cout << "Correlation Matrix:" << endl
+	 << "-------------------";
+    fCorrelationMatrix.Print();
+  }
+  
+  if (opt.Contains("m")) {
+    cout << "Parameterization:" << endl
+	 << "-----------------" << endl
+	 << "  Normalised variables: " << endl;
+    for (i = 0; i < fNVariables; i++) 
+      cout << "\ty_" << i << "\t= 1 + 2 * (x_" << i << " - " 
+	   << fMaxVariables(i) << ") / (" 
+	   << fMaxVariables(i) << " - " << fMinVariables(i) << ")" 
+	   << endl;
+    cout << endl
+	 << "  f(";
+    for (i = 0; i < fNVariables; i++) {
+      cout << "y_" << i;
+      if (i != fNVariables-1) cout << ", ";
+    }
+    cout << ") = ";
+    for (Int_t i = 0; i < fNCoefficients; i++) {
+      if (i != 0)
+	cout << endl << "\t" << (fCoefficients(i) < 0 ? "- " : "+ ") 
+	     << TMath::Abs(fCoefficients(i));
+      else 
+	cout << fCoefficients(i);
+      for (Int_t j = 0; j < fNVariables; j++) {
+	Int_t p = fPowers[fPowerIndex[i] * fNVariables + j];
+	switch (p) { 
+	case 1: break;
+	case 2: cout << " * y_" << j; break;
+	default:
+	  switch(fPolyType) {
+	  case kLegendre:  cout << " * L_" << p << "(y_" << j << ")"; break;
+	  case kChebyshev: cout << " * C_" << p << "(y_" << j << ")"; break;
+	  default:         cout << " * y_" << j << "^" << p; break;
+	  }
+	}
+			  
+      }
     }
     cout << endl;
   }
