@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.8 2002/02/02 11:52:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.h,v 1.9 2002/02/02 13:42:18 rdm Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -42,11 +42,8 @@ protected:
    char     *fBufMax;        //End of buffer
    Int_t     fMapCount;      //Number of objects or classes in map
    Int_t     fMapSize;       //Default size of map
-   Int_t     fDisplacement;  //Value to be added to the map offsets
-   union {
-      TExMap *fReadMap;      //Map containing id,object references during reading
-      TExMap *fWriteMap;     //Map containing object,id pairs during writing
-   };
+   Int_t     fDisplacement;  //Value to be added to the map offsets   
+   TExMap   *fMap;           //Map containing object,id pairs for reading/ writing
    TObject  *fParent;        //Pointer to the buffer parent (file) where buffer is read/written
 
    enum { kIsOwner = BIT(14) };  //If set TBuffer owns fBuffer
@@ -54,7 +51,7 @@ protected:
    static Int_t fgMapSize; //Default map size for all TBuffer objects
 
    // Default ctor
-   TBuffer() : fMode(0), fBuffer(0) { fReadMap = 0; }
+   TBuffer() : fMode(0), fBuffer(0) { fMap = 0; fParent = 0;}
 
    // TBuffer objects cannot be copied or assigned
    TBuffer(const TBuffer &);           // not implemented
@@ -74,8 +71,9 @@ public:
    enum { kInitialSize = 1024, kMinimalSize = 128 };
    enum { kMapSize = 503 };
 
-   TBuffer(EMode mode, Int_t bufsiz = kInitialSize, void *buf = 0,
-           Bool_t adopt = kTRUE);
+   TBuffer(EMode mode);
+   TBuffer(EMode mode, Int_t bufsiz);
+   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE);
    virtual ~TBuffer();
 
    void     MapObject(const TObject *obj, UInt_t offset = 1);
@@ -88,9 +86,8 @@ public:
    void     SetWriteParam(Int_t mapsize);
    void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
-   void     SetParent(TObject *parent) { fParent = parent; }
-   TObject *GetParent() const { return fParent; }
-
+   void     SetParent(TObject *parent);
+   TObject *GetParent() const;
    char    *Buffer() const { return fBuffer; }
    Int_t    BufferSize() const { return fBufSize; }
    void     DetachBuffer() { fBuffer = 0; }

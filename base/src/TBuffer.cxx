@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.21 2002/02/02 11:52:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.22 2002/02/02 13:19:01 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -53,6 +53,54 @@ Int_t TBuffer::fgMapSize   = kMapSize;
 ClassImp(TBuffer)
 
 //______________________________________________________________________________
+TBuffer::TBuffer(EMode mode)
+{
+   // Create an I/O buffer object. Mode should be either TBuffer::kRead or
+   // TBuffer::kWrite. By default the I/O buffer has a size of
+   // TBuffer::kInitialSize (1024) bytes.
+
+   fBufSize  = kInitialSize;
+   fMode     = mode;
+   fVersion  = 0;
+   fMapCount = 0;
+   fMapSize  = fgMapSize;
+   fMap      = 0;
+   fParent   = 0;
+   fDisplacement = 0;
+   
+   SetBit(kIsOwner);
+
+   fBuffer = new char[fBufSize+kExtraSpace];
+   
+   fBufCur = fBuffer;
+   fBufMax = fBuffer + fBufSize;
+}
+
+//______________________________________________________________________________
+TBuffer::TBuffer(EMode mode, Int_t bufsiz)
+{
+   // Create an I/O buffer object. Mode should be either TBuffer::kRead or
+   // TBuffer::kWrite.
+
+   if (bufsiz < kMinimalSize) bufsiz = kMinimalSize;
+   fBufSize  = bufsiz;
+   fMode     = mode;
+   fVersion  = 0;
+   fMapCount = 0;
+   fMapSize  = fgMapSize;
+   fMap      = 0;
+   fParent   = 0;
+   fDisplacement = 0;
+   
+   SetBit(kIsOwner);
+
+   fBuffer = new char[fBufSize+kExtraSpace];
+   
+   fBufCur = fBuffer;
+   fBufMax = fBuffer + fBufSize;
+}
+
+//______________________________________________________________________________
 TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
 {
    // Create an I/O buffer object. Mode should be either TBuffer::kRead or
@@ -61,27 +109,15 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt)
    // to TBuffer via the buf argument. By default this buffer will be adopted
    // unless adopt is false.
 
-   // Before using the buffer make sure some assumptions are true
-   Assert(sizeof(Short_t) == 2);
-   Assert(sizeof(Int_t) == 4);
-// commented lines below in view of support for longlong on 32 bits machines
-//#ifdef R__B64
-//   Assert(sizeof(Long_t) == 8);
-//#else
-//   Assert(sizeof(Long_t) == 4);
-//#endif
-   Assert(sizeof(Float_t) == 4);
-   Assert(sizeof(Double_t) == 8);
-
    if (!buf && bufsiz < kMinimalSize) bufsiz = kMinimalSize;
    fBufSize  = bufsiz;
    fMode     = mode;
    fVersion  = 0;
    fMapCount = 0;
    fMapSize  = fgMapSize;
-   fReadMap  = 0;
-   fDisplacement = 0;
+   fMap      = 0;
    fParent   = 0;
+   fDisplacement = 0;
    
    SetBit(kIsOwner);
 
@@ -99,14 +135,14 @@ TBuffer::~TBuffer()
 {
    // Delete an I/O buffer object.
 
-   if (TestBit(kIsOwner)) delete [] fBuffer;
+   if (TestBit(kIsOwner)) {
+      //printf("Deleting fBuffer=%x\n",fBuffer);
+      delete [] fBuffer;
+   }
    fBuffer = 0;
-
-   if (IsReading()) delete fReadMap;
-   else             delete fWriteMap;
-
-   fReadMap = 0;
    fParent  = 0;
+
+   delete fMap;
 }
 
 //______________________________________________________________________________
@@ -204,7 +240,7 @@ UInt_t TBuffer::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
    Long_t cli;
 
    if (readClass) {
-      if ((cli = fReadMap->GetValue(offset)) == 0) {
+      if ((cli = fMap->GetValue(offset)) == 0) {
          // No class found at this location in map. It might have been skipped
          // as part of a skipped object. Try to explicitely read the class.
 
@@ -215,8 +251,8 @@ UInt_t TBuffer::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
          TClass *c = ReadClass(cl);
          if (c == (TClass*) -1) {
             // mark class as really not available
-            fReadMap->Remove(offset);
-            fReadMap->Add(offset, -1);
+            fMap->Remove(offset);
+            fMap->Add(offset, -1);
             offset = 0;
             Warning("CheckObject", "reference to unavailable class %s,"
                     " pointers of this type will be 0", cl ? cl->GetName() : "TObject");
@@ -232,7 +268,7 @@ UInt_t TBuffer::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
 
    } else {
 
-      if ((cli = fReadMap->GetValue(offset)) == 0) {
+      if ((cli = fMap->GetValue(offset)) == 0) {
          // No object found at this location in map. It might have been skipped
          // as part of a skipped object. Try to explicitely read the object.
 
@@ -243,8 +279,8 @@ UInt_t TBuffer::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
          TObject *obj = ReadObject(cl);
          if (!obj) {
             // mark object as really not available
-            fReadMap->Remove(offset);
-            fReadMap->Add(offset, -1);
+            fMap->Remove(offset);
+            fMap->Add(offset, -1);
             offset = 0;
             Warning("CheckObject", "reference to object of unavailable class %s,"
                     " pointer will be 0", cl ? cl->GetName() : "TObject");
@@ -277,29 +313,42 @@ void TBuffer::Expand(Int_t newsize)
 }
 
 //______________________________________________________________________________
+TObject *TBuffer::GetParent() const
+{
+   // return pointer to parent of this buffer
+   
+   return fParent;
+}
+
+
+//______________________________________________________________________________
+void TBuffer::SetParent(TObject *parent)
+{
+   // Set parent owning this buffer
+   
+   fParent = parent;
+}
+
+//______________________________________________________________________________
 void TBuffer::MapObject(const TObject *obj, UInt_t offset)
 {
-   // Add object to the fWriteMap or fReadMap containers (depending on the mode).
+   // Add object to the fMap container.
    // If obj is not 0 add object to the map (in read mode also add 0 objects to
    // the map). This method may only be called outside this class just before
    // calling obj->Streamer() to prevent self reference of obj, in case obj
    // contains (via via) a pointer to itself. In that case offset must be 1
    // (default value for offset).
 
+   if (!fMap) InitMap();
+   
    if (IsWriting()) {
-      if (!fWriteMap)
-         InitMap();
-
       if (obj) {
          CheckCount(offset);
-         fWriteMap->Add(((TObject*)obj)->TObject::Hash(), (Long_t)obj, offset);
+         fMap->Add(((TObject*)obj)->TObject::Hash(), (Long_t)obj, offset);
          fMapCount++;
       }
    } else {
-      if (!fReadMap)
-         InitMap();
-
-      fReadMap->Add(offset, (Long_t)obj);
+      fMap->Add(offset, (Long_t)obj);
       fMapCount++;
    }
 }
@@ -318,7 +367,7 @@ void TBuffer::SetReadParam(Int_t mapsize)
    // can be changed using SetGlobalReadParam().
 
    Assert(IsReading());
-   Assert(fReadMap == 0);
+   Assert(fMap == 0);
 
    fMapSize = mapsize;
 }
@@ -338,7 +387,7 @@ void TBuffer::SetWriteParam(Int_t mapsize)
    // can be changed using SetGlobalWriteParam().
 
    Assert(IsWriting());
-   Assert(fWriteMap == 0);
+   Assert(fMap == 0);
 
    fMapSize = mapsize;
 }
@@ -346,18 +395,18 @@ void TBuffer::SetWriteParam(Int_t mapsize)
 //______________________________________________________________________________
 void TBuffer::InitMap()
 {
-   // Create the fWriteMap or fReadMap containers and initialize them
+   // Create the fMap container and initialize them
    // with the null object.
 
    if (IsWriting()) {
-      if (!fWriteMap) {
-         fWriteMap = new TExMap(fMapSize);
+      if (!fMap) {
+         fMap = new TExMap(fMapSize);
          fMapCount = 0;
       }
    } else {
-      if (!fReadMap) {
-         fReadMap = new TExMap(fMapSize);
-         fReadMap->Add(0, kNullTag);      // put kNullTag in slot 0
+      if (!fMap) {
+         fMap = new TExMap(fMapSize);
+         fMap->Add(0, kNullTag);      // put kNullTag in slot 0
          fMapCount = 1;
       }
    }
@@ -366,15 +415,10 @@ void TBuffer::InitMap()
 //______________________________________________________________________________
 void TBuffer::ResetMap()
 {
-   // Delete existing fWriteMap or fReadMap and reset map counter.
+   // Delete existing fMap and reset map counter.
 
-   if (IsWriting()) {
-      delete fWriteMap;
-      fWriteMap = 0;
-   } else {
-      delete fReadMap;
-      fReadMap = 0;
-   }
+   delete fMap;
+   fMap = 0;
    fMapCount = 0;
    fDisplacement = 0;
 }
@@ -1264,7 +1308,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
 
    Assert(IsReading());
 
-   // make sure fReadMap is initialized
+   // make sure fMap is initialized
    InitMap();
 
    // before reading object save start position
@@ -1278,7 +1322,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
    // (this can only happen when called via CheckObject())
    TObject *obj;
    if (fVersion > 0) {
-      obj = (TObject *) fReadMap->GetValue(startpos+kMapOffset);
+      obj = (TObject *) fMap->GetValue(startpos+kMapOffset);
       if (obj) {
          if (obj == (TObject*) -1)
             obj = 0;
@@ -1308,14 +1352,14 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
          tag += fDisplacement;
          tag = CheckObject(tag, clReq);
       } else {
-         if (tag > (UInt_t)fReadMap->GetSize()) {
+         if (tag > (UInt_t)fMap->GetSize()) {
             Error("ReadObject", "object tag too large, I/O buffer corrupted");
             return 0;
             // exception
          }
       }
 
-      obj = (TObject *) fReadMap->GetValue(tag);
+      obj = (TObject *) fMap->GetValue(tag);
       if (obj && clReq && !obj->IsA()->InheritsFrom(clReq)) {
          Error("ReadObject", "got object of wrong class");
          // exception
@@ -1331,7 +1375,7 @@ TObject *TBuffer::ReadObject(const TClass *clReq)
          return 0;
       }
 
-      // add to fReadMap before reading rest of object
+      // add to fMap before reading rest of object
       if (fVersion > 0)
          MapObject(obj, startpos+kMapOffset);
       else
@@ -1359,7 +1403,7 @@ void TBuffer::WriteObject(const TObject *obj)
 
    Assert(IsWriting());
 
-   // make sure fWriteMap is initialized
+   // make sure fMap is initialized
    InitMap();
 
    ULong_t idx;
@@ -1369,7 +1413,7 @@ void TBuffer::WriteObject(const TObject *obj)
       // save kNullTag to represent NULL pointer
       *this << kNullTag;
 
-   } else if ((idx = (ULong_t)fWriteMap->GetValue(((TObject*)obj)->TObject::Hash(), (Long_t)obj)) != 0) {
+   } else if ((idx = (ULong_t)fMap->GetValue(((TObject*)obj)->TObject::Hash(), (Long_t)obj)) != 0) {
 
       // truncation is OK the value we did put in the map is an 30-bit offset
       // and not a pointer
@@ -1435,10 +1479,10 @@ TClass *TBuffer::ReadClass(const TClass *clReq, UInt_t *objTag)
       // case object of this class must be skipped)
       cl = TClass::Load(*this);
 
-      // add class to fReadMap for later reference
+      // add class to fMap for later reference
       if (fVersion > 0) {
          // check if class was already read
-         TClass *cl1 = (TClass *)fReadMap->GetValue(startpos+kMapOffset);
+         TClass *cl1 = (TClass *)fMap->GetValue(startpos+kMapOffset);
          if (cl1 != cl)
             MapObject(cl ? cl : (TObject*) -1, startpos+kMapOffset);
       } else
@@ -1453,15 +1497,15 @@ TClass *TBuffer::ReadClass(const TClass *clReq, UInt_t *objTag)
          clTag += fDisplacement;
          clTag = CheckObject(clTag, clReq, kTRUE);
       } else {
-         if (clTag == 0 || clTag > (UInt_t)fReadMap->GetSize()) {
+         if (clTag == 0 || clTag > (UInt_t)fMap->GetSize()) {
             Error("ReadClass", "illegal class tag=%d (0<tag<=%d), I/O buffer corrupted",
-                  clTag, fReadMap->GetSize());
+                  clTag, fMap->GetSize());
             // exception
          }
       }
 
       // class can be 0 if dictionary was not found
-      cl = (TClass *)fReadMap->GetValue(clTag);
+      cl = (TClass *)fMap->GetValue(clTag);
    }
 
    if (cl && clReq && !cl->InheritsFrom(clReq)) {
@@ -1487,7 +1531,7 @@ void TBuffer::WriteClass(const TClass *cl)
 
    ULong_t idx;
 
-   if ((idx = (ULong_t)fWriteMap->GetValue(((TObject *)cl)->TObject::Hash(), (Long_t)cl)) != 0) {
+   if ((idx = (ULong_t)fMap->GetValue(((TObject *)cl)->TObject::Hash(), (Long_t)cl)) != 0) {
 
       // truncation is OK the value we did put in the map is an 30-bit offset
       // and not a pointer
@@ -1507,7 +1551,7 @@ void TBuffer::WriteClass(const TClass *cl)
       // write class name
       cl->Store(*this);
 
-      // store new class reference in fWriteMap (+kMapOffset so it's != kNullTag)
+      // store new class reference in fMap (+kMapOffset so it's != kNullTag)
       MapObject(cl, offset+kMapOffset);
    }
 }
