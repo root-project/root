@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.55 2001/12/02 16:50:08 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.56 2001/12/14 21:04:09 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -1137,39 +1137,50 @@ void TROOT::ls(Option_t *option) const
 }
 
 //______________________________________________________________________________
-void TROOT::LoadMacro(const char *filename)
+void TROOT::LoadMacro(const char *filename, int *error)
 {
    // Load a macro in the interpreter's memory. Equivalent to the command line
    // command ".L filename".
+   // The possible error codes are defined by TInterpreter::EErrorCode.
 
    if (fInterpreter) {
-      char *fn  = Strip(filename);
-      char *mac = gSystem->Which(GetMacroPath(), fn, kReadPermission);
+      char *fn1  = Strip(filename);
+      char *fn2  = Strip(fn1,'+');
+      char *mac = gSystem->Which(GetMacroPath(), fn2, kReadPermission);
       if (!mac)
-         Error("LoadMacro", "macro %s not found in path %s", fn, GetMacroPath());
+         Error("LoadMacro", "macro %s not found in path %s", fn2, GetMacroPath());
       else
-         fInterpreter->LoadMacro(mac);
-      delete [] fn;
+         fInterpreter->LoadMacro(filename,(TInterpreter::EErrorCode*)error);
+      delete [] fn1;
+      delete [] fn2;
       delete [] mac;
+
    }
 }
 
 //______________________________________________________________________________
-Int_t TROOT::Macro(const char *filename)
+Int_t TROOT::Macro(const char *filename, int *error)
 {
    // Execute a macro in the interpreter. Equivalent to the command line
    // command ".x filename".
+   // The possible error codes are defined by TInterpreter::EErrorCode.
 
    Int_t result = 0;
 
    if (fInterpreter) {
-      char *fn  = Strip(filename);
-      char *mac = gSystem->Which(GetMacroPath(), fn, kReadPermission);
+      char *fn1  = Strip(filename);
+      // And remove the possible arguments.
+      char * pos = strchr(fn1,'(');
+      if (pos) *pos = '\0';
+      char *fn2  = Strip(fn1,'+');
+      char *mac = gSystem->Which(GetMacroPath(), fn2, kReadPermission);
       if (!mac)
-         Error("Macro", "macro %s not found in path %s", fn, GetMacroPath());
+         Error("Macro", "macro %s not found in path %s", fn2, GetMacroPath());
       else
-         result = fInterpreter->ExecuteMacro(mac);
-      delete [] fn;
+         result = fInterpreter->ExecuteMacro(filename,
+                                             (TInterpreter::EErrorCode*)error);
+      delete [] fn1;
+      delete [] fn2;
       delete [] mac;
 
       if (gPad) gPad->Update();
@@ -1191,13 +1202,16 @@ void  TROOT::Message(Int_t id, const TObject *obj)
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLine(const char *line)
+void TROOT::ProcessLine(const char *line, int *error)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed a-synchronously by sending
    // it to the CINT interpreter thread. For explicit synchrounous processing
    // use ProcessLineSync(). On non-Win32 platforms there is not difference
    // between ProcessLine() and ProcessLineSync().
+   // The possible error codes are defined by TInterpreter::EErrorCode.  In
+   // particular, error will equal to TInterpreter::kProcessing until the 
+   // CINT interpreted thread has finished executing the line.
 
    if (!fApplication) {
       // circular Form() buffer will be re-used in CreateApplication() (too
@@ -1208,17 +1222,18 @@ void TROOT::ProcessLine(const char *line)
       delete [] sline;
    }
 
-   fApplication->ProcessLine(line);
+   fApplication->ProcessLine(line, kFALSE, error);
 }
 
 //______________________________________________________________________________
-void TROOT::ProcessLineSync(const char *line)
+void TROOT::ProcessLineSync(const char *line, int *error)
 {
    // Process interpreter command via TApplication::ProcessLine().
    // On Win32 the line will be processed synchronously (i.e. it will
    // only return when the CINT interpreter thread has finished executing
    // the line). On non-Win32 platforms there is not difference between
    // ProcessLine() and ProcessLineSync().
+   // The possible error codes are defined by TInterpreter::EErrorCode.
 
    if (!fApplication) {
       // circular Form() buffer will be re-used in CreateApplication() (too
@@ -1229,15 +1244,16 @@ void TROOT::ProcessLineSync(const char *line)
       delete [] sline;
    }
 
-   fApplication->ProcessLine(line, kTRUE);
+   fApplication->ProcessLine(line, kTRUE, error);
 }
 
 //______________________________________________________________________________
-Long_t TROOT::ProcessLineFast(const char *line)
+Long_t TROOT::ProcessLineFast(const char *line, int *error)
 {
    // Process interpreter command directly via CINT interpreter.
    // Only executable statements are allowed (no variable declarations),
    // In all other cases use TROOT::ProcessLine().
+   // The possible error codes are defined by TInterpreter::EErrorCode.
 
    if (!fApplication) {
       // circular Form() buffer will be re-used in CreateApplication() (too
@@ -1250,8 +1266,10 @@ Long_t TROOT::ProcessLineFast(const char *line)
 
    Long_t result = 0;
 
-   if (fInterpreter)
-      result = fInterpreter->Calc(line);
+   if (fInterpreter) {
+      TInterpreter::EErrorCode *code = ( TInterpreter::EErrorCode*)error;
+      result = fInterpreter->Calc(line, code);
+   }
 
    return result;
 }

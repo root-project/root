@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.5 2001/10/25 06:20:29 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.6 2001/12/02 16:50:08 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -56,7 +56,7 @@ private:
    TString         fIncludePath;    //Hold a list of lib include path
 
    TCint() : fMore(-1) { }  //for Dictionary() only
-   virtual void Execute(TMethod *, TObjArray *) { }
+   virtual void Execute(TMethod *, TObjArray *, int *error =0) { }
 
 protected:
    virtual void ExecThreadCB(TWin32SendClass *command);
@@ -75,10 +75,10 @@ public:
    const char *GetIncludePath();
    Int_t   InitializeDictionaries();
    Bool_t  IsLoaded(const char *filename) const;
-   void    LoadMacro(const char *filename);
-   Int_t   ProcessLine(const char *line);
-   Int_t   ProcessLineAsynch(const char *line);
-   Int_t   ProcessLineSynch(const char *line);
+   void    LoadMacro(const char *filename, EErrorCode *error =0);
+   Int_t   ProcessLine(const char *line, EErrorCode *error =0);
+   Int_t   ProcessLineAsynch(const char *line, EErrorCode *error =0);
+   Int_t   ProcessLineSynch(const char *line, EErrorCode *error =0);
    void    PrintIntro();
    void    Reset();
    void    ResetAll();
@@ -92,17 +92,17 @@ public:
    void    UpdateListOfTypes();
    void    SetClassInfo(TClass *cl, Bool_t reload = kFALSE);
    Bool_t  CheckClassInfo(const char *name);
-   Long_t  Calc(const char *line);
+   Long_t  Calc(const char *line, EErrorCode *error = 0);
    void    CreateListOfBaseClasses(TClass *cl);
    void    CreateListOfDataMembers(TClass *cl);
    void    CreateListOfMethods(TClass *cl);
    void    CreateListOfMethodArgs(TFunction *m);
    void   *GetInterfaceMethod(TClass *cl, char *method, char *params);
    void   *GetInterfaceMethodWithPrototype(TClass *cl, char *method, char *proto);
-   void    Execute(const char *function, const char *params);
-   void    Execute(TObject *obj, TClass *cl, const char *method, const char *params);
-   void    Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params);
-   Int_t   ExecuteMacro(const char *filename);
+   void    Execute(const char *function, const char *params, int *error =0);
+   void    Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error =0);
+   void    Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error =0);
+   Int_t   ExecuteMacro(const char *filename, EErrorCode *error);
    Bool_t  IsErrorMessagesEnabled();
    Bool_t  SetErrorMessages(Bool_t enable = kTRUE);
    const char *TypeName(const char *typeDesc);

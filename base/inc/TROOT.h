@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.16 2001/10/01 10:38:37 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.17 2001/12/02 15:13:10 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -180,13 +180,13 @@ public:
    Bool_t            IsProofServ() const { return fName == "Proofserv" ? kTRUE : kFALSE; }
    void              ls(Option_t *option="") const;
    Int_t             LoadClass(const char *classname, const char *libname);
-   void              LoadMacro(const char *filename);
-   Int_t             Macro(const char *filename);
+   void              LoadMacro(const char *filename, int* error = 0);
+   Int_t             Macro(const char *filename, int* error = 0);
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() {return fMustClean;}
-   void              ProcessLine(const char *line);
-   void              ProcessLineSync(const char *line);
-   Long_t            ProcessLineFast(const char *line);
+   void              ProcessLine(const char *line, int* error = 0);
+   void              ProcessLineSync(const char *line, int* error = 0);
+   Long_t            ProcessLineFast(const char *line, int* error = 0);
    void              Proof(const char *cluster = "proof://localhost");
    Bool_t            ReadingObject() {return fReadingObject;}
    void              Reset(Option_t *option="");

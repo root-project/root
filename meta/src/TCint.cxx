@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.39 2001/12/02 16:50:08 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.40 2001/12/14 21:04:09 brun Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -154,7 +154,8 @@ void TCint::ExecThreadCB(TWin32SendClass *command)
 #ifdef WIN32
 #ifndef GDK_WIN32
    char *line = (char *)(command->GetData(0));
-   Int_t iret = ProcessLine((const char *)line);
+   ErrorCode *error = 0; // NOTE: need to do something like: (EErrorCode*)(command->GetData(...));
+   Int_t iret = ProcessLine((const char *)line,error);
    delete [] line;
    if (LOWORD(command->GetCOP()) == kSendWaitClass)
       ((TWin32SendWaitClass *)command)->Release();
@@ -215,20 +216,19 @@ Bool_t TCint::IsLoaded(const char* filename) const
 }
 
 //______________________________________________________________________________
-void TCint::LoadMacro(const char *filename)
+void TCint::LoadMacro(const char *filename, EErrorCode* error)
 {
    // Load a macro file in CINT's memory.
 
-   ProcessLine(Form(".L %s", filename));
+   ProcessLine(Form(".L %s", filename), error);
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLine(const char *line)
+Int_t TCint::ProcessLine(const char *line, EErrorCode* error)
 {
    // Let CINT process a command line.
 
    Int_t ret = 0;
-
    if (gApplication) {
       if (gApplication->IsCmdThread()) {
          gROOT->SetLineIsProcessing();
@@ -239,45 +239,54 @@ Int_t TCint::ProcessLine(const char *line)
          if (strstr(line,fantomline)) {
              G__free_tempobject();
              TCint::UpdateAllCanvases();
-         } else
-             ret = G__process_cmd((char *)line, fPrompt, &fMore, 0, 0);
+         } else {
+             if (error && *error!=TInterpreter::kProcessing) {
+                *error = TInterpreter::kNoError; 
+             }
+             ret = G__process_cmd((char *)line, fPrompt, &fMore, (int*)error, 0);
+             if (error && *error==TInterpreter::kProcessing) {
+                *error = TInterpreter::kNoError;
+             }
+         }
          gROOT->SetLineHasBeenProcessed();
       } else
-         ret = ProcessLineAsynch(line);
+         ret = ProcessLineAsynch(line, error);
    }
    return ret;
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLineAsynch(const char *line)
+Int_t TCint::ProcessLineAsynch(const char *line, EErrorCode* error)
 {
    // Let CINT process a command line asynch.
 
 #ifndef WIN32
-   return ProcessLine(line);
+   return ProcessLine(line, error);
 #else
 #ifndef GDK_WIN32
+   if (error) error = kProcessing;
    char *cmd = new char[strlen(line)+1];
    strcpy(cmd,line);
    TWin32SendClass *code = new TWin32SendClass(this,(UInt_t)cmd,0,0,0);
    ExecCommandThread(code,kFALSE);
    return 0;
 #else
-   return ProcessLine(line);
+   return ProcessLine(line, error);
 #endif
 #endif
 }
 
 //______________________________________________________________________________
-Int_t TCint::ProcessLineSynch(const char *line)
+Int_t TCint::ProcessLineSynch(const char *line, EErrorCode* error)
 {
    // Let CINT process a command line synchronously, i.e we are waiting
    // it will be finished.
 
   if (gApplication && gApplication->IsCmdThread())
-     return ProcessLine(line);
+     return ProcessLine(line, error);
 #ifdef WIN32
 #ifndef GDK_WIN32
+   if (error) *error = kProcessing;
    char *cmd = new char[strlen(line)+1];
    strcpy(cmd,line);
    TWin32SendWaitClass code(this,(UInt_t)cmd,0,0,0);
@@ -289,7 +298,7 @@ Int_t TCint::ProcessLineSynch(const char *line)
 }
 
 //______________________________________________________________________________
-Long_t TCint::Calc(const char *line)
+Long_t TCint::Calc(const char *line, EErrorCode *error)
 {
    // Directly execute an executable statement (e.g. "func()", "3+5", etc.
    // however not declarations, like "Int_t x;").
@@ -310,6 +319,7 @@ Long_t TCint::Calc(const char *line)
 #endif
 
    result = (Long_t) G__int(G__calc((char *)line));
+   if (error) *error = (EErrorCode)G__lasterror();
 
 #ifdef WIN32
    if (gApplication && gApplication->GetApplicationImp())
@@ -626,7 +636,7 @@ void *TCint::GetInterfaceMethodWithPrototype(TClass *cl, char *method, char *pro
 }
 
 //______________________________________________________________________________
-void TCint::Execute(const char *function, const char *params)
+void TCint::Execute(const char *function, const char *params, int *error)
 {
    // Execute a global function with arguments params.
 
@@ -639,10 +649,11 @@ void TCint::Execute(const char *function, const char *params)
 
    // call function
    func.Exec(0);
+   if (error) *error = G__lasterror();
 }
 
 //______________________________________________________________________________
-void TCint::Execute(TObject *obj, TClass *cl, const char *method, const char *params)
+void TCint::Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error)
 {
    // Execute a method from class cl with arguments params.
 
@@ -656,10 +667,11 @@ void TCint::Execute(TObject *obj, TClass *cl, const char *method, const char *pa
    // call function
    address = (void*)((Long_t)obj + offset);
    func.Exec(address);
+   if (error) *error = G__lasterror();
 }
 
 //______________________________________________________________________________
-void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params)
+void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error)
 {
    // Execute a method from class cl with the arguments in array params
    // (params[0] ... params[n] = array of TObjString parameters).
@@ -714,15 +726,15 @@ void TCint::Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params
        listpar = complete.Data();
    }
 
-   Execute(obj, cl, (char *)method->GetName(), (char *)listpar);
+   Execute(obj, cl, (char *)method->GetName(), (char *)listpar, error);
 }
 
 //______________________________________________________________________________
-Int_t TCint::ExecuteMacro(const char *filename)
+Int_t TCint::ExecuteMacro(const char *filename, EErrorCode* error)
 {
    // Execute a CINT macro.
 
-   G__value result = G__exec_tempfile((char*)filename);
+   ProcessLine(Form(".X %s", filename), error);
    return 0;  // could get return value from result, but what about return type?
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.29 2001/12/03 09:04:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.30 2001/12/03 10:27:22 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -430,20 +430,20 @@ void TObject::Dump() const
 }
 
 //______________________________________________________________________________
-void TObject::Execute(const char *method, const char *params)
+void TObject::Execute(const char *method, const char *params, int* error)
 {
    // Execute method on this object with the given parameter string, e.g.
    // "3.14,1,\"text\"".
 
    if (!IsA()) return;
 
-   gInterpreter->Execute(this, IsA(), method, params);
+   gInterpreter->Execute(this, IsA(), method, params, error);
 
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
 //______________________________________________________________________________
-void TObject::Execute(TMethod *method, TObjArray *params)
+void TObject::Execute(TMethod *method, TObjArray *params, int* error)
 {
    // Execute method on this object with parameters stored in the TObjArray.
    // The TObjArray should contain an argv vector like:
@@ -452,7 +452,7 @@ void TObject::Execute(TMethod *method, TObjArray *params)
 
    if (!IsA()) return;
 
-   gInterpreter->Execute(this, IsA(), method, params);
+   gInterpreter->Execute(this, IsA(), method, params, error);
 
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }

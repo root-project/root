@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.20 2001/11/06 11:43:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.21 2001/11/28 15:58:13 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -519,7 +519,7 @@ void TApplication::LoadGraphicsLibs()
 }
 
 //______________________________________________________________________________
-void TApplication::ProcessLine(const char *line, Bool_t sync)
+void TApplication::ProcessLine(const char *line, Bool_t sync, int *error)
 {
    // Process a single command line, either a C++ statement or an interpreter
    // command starting with a ".".
@@ -590,9 +590,11 @@ void TApplication::ProcessLine(const char *line, Bool_t sync)
                TROOT::GetMacroPath());
       else {
          if (sync)
-           gInterpreter->ProcessLineSynch(Form(".L %s%s", mac,postfix));
+           gInterpreter->ProcessLineSynch(Form(".L %s%s", mac,postfix),
+                                          (TInterpreter::EErrorCode*)error);
          else
-           gInterpreter->ProcessLine(Form(".L %s%s", mac, postfix));
+           gInterpreter->ProcessLine(Form(".L %s%s", mac, postfix),
+                                     (TInterpreter::EErrorCode*)error);
       }
 
       delete [] fn;
@@ -601,7 +603,7 @@ void TApplication::ProcessLine(const char *line, Bool_t sync)
    }
 
    if (!strncmp(line, ".X", 2) || !strncmp(line, ".x", 2)) {
-      ProcessFile(line+3);
+      ProcessFile(line+3,error);
       return;
    }
 
@@ -619,13 +621,13 @@ void TApplication::ProcessLine(const char *line, Bool_t sync)
    }
 
    if (sync)
-      gInterpreter->ProcessLineSynch(line);
+      gInterpreter->ProcessLineSynch(line, (TInterpreter::EErrorCode*)error);
    else
-      gInterpreter->ProcessLine(line);
+      gInterpreter->ProcessLine(line, (TInterpreter::EErrorCode*)error);
 }
 
 //______________________________________________________________________________
-void TApplication::ProcessFile(const char *name)
+void TApplication::ProcessFile(const char *name, int *error)
 {
    // Process a file containing a C++ macro.
 
@@ -766,9 +768,11 @@ void TApplication::ProcessFile(const char *name)
       }
 
       if (tempfile) {
-         gInterpreter->ProcessLineSynch(Form(".x %s", exname));
+         gInterpreter->ProcessLineSynch(Form(".x %s", exname),
+                                        (TInterpreter::EErrorCode*)error);
       } else
-         gInterpreter->ProcessLineSynch(Form(".X %s", exname));
+         gInterpreter->ProcessLineSynch(Form(".X %s", exname),
+                                        (TInterpreter::EErrorCode*)error);
 
       delete [] exname;
    }

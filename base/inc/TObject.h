@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.13 2001/10/01 10:31:06 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.14 2001/10/03 16:45:10 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -121,8 +121,8 @@ public:
    virtual void        DrawClass() const; // *MENU*
    virtual TObject    *DrawClone(Option_t *option="") const; // *MENU*
    virtual void        Dump() const; // *MENU*
-   virtual void        Execute(const char *method,  const char *params);
-   virtual void        Execute(TMethod *method, TObjArray *params);
+   virtual void        Execute(const char *method,  const char *params, int* error=0);
+   virtual void        Execute(TMethod *method, TObjArray *params, int* error=0);
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject    *FindObject(const char *name) const;
    virtual TObject    *FindObject(const TObject *obj) const;
