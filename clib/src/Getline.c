@@ -1,4 +1,4 @@
-/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.26 2004/02/19 00:11:18 rdm Exp $ */
+/* @(#)root/clib:$Name:  $:$Id: Getline.c,v 1.27 2004/05/10 08:05:33 brun Exp $ */
 /* Author: */
 
 /*
@@ -781,7 +781,7 @@ Getlinem(int mode, const char *prompt)
 
     if (mode < 1) {
        if (mode == -1) {
-           //Gl_config("noecho", 0);
+           /*Gl_config("noecho", 0);*/
            Gl_config("erase", 0);
        }
        gl_init();
