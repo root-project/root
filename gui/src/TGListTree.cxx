@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.8 2001/06/22 16:10:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.9 2001/11/12 14:17:02 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -1029,11 +1029,11 @@ Int_t TGListTree::ReparentChildren(TGListTreeItem *item,
 }
 
 extern "C" {
-   static Int_t Compare(const void *item1, const void *item2);
+   static Int_t CompareItems(const void *item1, const void *item2);
 }
 
 //______________________________________________________________________________
-static Int_t Compare(const void *item1, const void *item2)
+static Int_t CompareItems(const void *item1, const void *item2)
 {
    return strcmp((*((TGListTreeItem **) item1))->GetText(),
                  (*((TGListTreeItem **) item2))->GetText());
@@ -1067,7 +1067,7 @@ Int_t TGListTree::Sort(TGListTreeItem *item)
       first = first->fNextsibling;
    }
 
-   ::qsort(list, count, sizeof(TGListTreeItem*), ::Compare);
+   ::qsort(list, count, sizeof(TGListTreeItem*), ::CompareItems);
 
    list[0]->fPrevsibling = 0;
    for (i = 0; i < count; i++) {
