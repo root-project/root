@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.166 2004/01/25 20:33:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.167 2004/02/07 22:34:18 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -21,7 +21,6 @@
 #include "TF2.h"
 #include "TF3.h"
 #include "TVirtualPad.h"
-#include "TMath.h"
 #include "TRandom.h"
 #include "TVirtualFitter.h"
 #include "THLimitsFinder.h"
@@ -5034,10 +5033,10 @@ void TH1::SetContourLevel(Int_t level, Double_t value)
 }
 
 //______________________________________________________________________________
-Double_t TH1::GetMaximum() const
+Double_t TH1::GetMaximum(Double_t maxval) const
 {
-//   -*-*-*-*-*-*-*-*-*Return maximum value of bins in the range*-*-*-*-*-*
-//                     =========================================
+//  Return maximum value smaller than maxval of bins in the range*-*-*-*-*-*
+
   if (fMaximum != -1111) return fMaximum;
   Int_t bin, binx, biny, binz;
   Int_t xfirst  = fXaxis.GetFirst();
@@ -5052,7 +5051,7 @@ Double_t TH1::GetMaximum() const
         for (binx=xfirst;binx<=xlast;binx++) {
            bin = GetBin(binx,biny,binz);
            value = GetBinContent(bin);
-           if (value > maximum) maximum = value;
+           if (value > maximum && value < maxval) maximum = value;
         }
      }
   }
@@ -5102,10 +5101,10 @@ Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const
 }
 
 //______________________________________________________________________________
-Double_t TH1::GetMinimum() const
+Double_t TH1::GetMinimum(Double_t minval) const
 {
-//   -*-*-*-*-*-*-*-*-*Return minimum value of bins in the range-*-*-*-*-*
-//                     =========================================
+//  Return minimum value greater than minval of bins in the range
+
   if (fMinimum != -1111) return fMinimum;
   Int_t bin, binx, biny, binz;
   Int_t xfirst  = fXaxis.GetFirst();
@@ -5120,7 +5119,7 @@ Double_t TH1::GetMinimum() const
         for (binx=xfirst;binx<=xlast;binx++) {
            bin = GetBin(binx,biny,binz);
            value = GetBinContent(bin);
-           if (value < minimum) minimum = value;
+           if (value < minimum and value > minval) minimum = value;
         }
      }
   }

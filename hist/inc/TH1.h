@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.51 2003/12/11 11:22:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.h,v 1.52 2004/01/25 20:33:31 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -55,6 +55,9 @@
 #endif
 #ifndef ROOT_TArrayD
 #include "TArrayD.h"
+#endif
+#ifndef ROOT_TMath
+#include "TMath.h"
 #endif
 #include "Foption.h"
 
@@ -198,11 +201,11 @@ public:
     virtual TF1     *GetFunction(const char *name) const;
     virtual Int_t    GetDimension() const { return fDimension; }
     virtual void     GetLowEdge(Axis_t *edge) const {fXaxis.GetLowEdge(edge);}
-    virtual Double_t GetMaximum() const;
+    virtual Double_t GetMaximum(Double_t maxval=FLT_MAX) const;
     virtual Int_t    GetMaximumBin() const;
     virtual Int_t    GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const;
     virtual Double_t GetMaximumStored() const {return fMaximum;}
-    virtual Double_t GetMinimum() const;
+    virtual Double_t GetMinimum(Double_t minval=-FLT_MAX) const;
     virtual Int_t    GetMinimumBin() const;
     virtual Int_t    GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const;
     virtual Double_t GetMinimumStored() const {return fMinimum;}
