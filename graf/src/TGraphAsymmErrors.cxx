@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.45 2004/10/12 10:37:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphAsymmErrors.cxx,v 1.46 2004/10/20 12:00:04 brun Exp $
 // Author: Rene Brun   03/03/99
 
 /*************************************************************************
@@ -167,6 +167,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TVector  &vx, const TVector  &vy, con
 // in vx and vy.
 
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
+   if (!TGraph::CtorAllocate()) return;
    if (!CtorAllocate()) return;
    for (Int_t i=0; i < fNpoints; i++) {
       fX[i]      = vx(i);
@@ -190,6 +191,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, con
 // in vx and vy.
 
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
+   if (!TGraph::CtorAllocate()) return;
    if (!CtorAllocate()) return;
    for (Int_t i=0; i < fNpoints; i++) {
       fX[i]      = vx(i);

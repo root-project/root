@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.42 2004/10/12 10:37:25 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraphErrors.cxx,v 1.43 2004/10/20 12:00:04 brun Exp $
 // Author: Rene Brun   15/09/96
 
 /*************************************************************************
@@ -133,6 +133,7 @@ TGraphErrors::TGraphErrors(const TVector  &vx, const TVector  &vy, const TVector
 // in vx and vy.
 
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
+   if (!TGraph::CtorAllocate()) return;
    if (!CtorAllocate()) return;
    for (Int_t i=0; i < fNpoints; i++) {
       fX[i]  = vx(i);
@@ -155,6 +156,7 @@ TGraphErrors::TGraphErrors(const TVectorD  &vx, const TVectorD  &vy, const TVect
 
 
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
+   if (!TGraph::CtorAllocate()) return;
    if (!CtorAllocate()) return;
    for (Int_t i=0; i < fNpoints; i++) {
       fX[i]  = vx(i);
