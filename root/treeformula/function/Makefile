@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += testFormulaFuncCall.output
+CLEAN_TARGETS += testFormulaFuncCall.log
 
 #Set the list of target to make while testing
 TEST_TARGETS += testFormulaFuncCall
@@ -9,11 +9,11 @@ TEST_TARGETS += testFormulaFuncCall
 # adjust the location of Rules.mk as needed.
 include ../../Rules.mk
 
-testFormulaFuncCall.output: func.C testcl.C
-	$(CMDECHO) root.exe -q -l -b func.C	> testFormulaFuncCall.output 2>&1
+testFormulaFuncCall.log: func.C testcl.C
+	$(CMDECHO) root.exe -q -l -b func.C	> testFormulaFuncCall.log 2>&1
 
-testFormulaFuncCall: testFormulaFuncCall.output
-	$(CMDECHO) diff -b testFormulaFuncCall.good testFormulaFuncCall.output
+testFormulaFuncCall: testFormulaFuncCall.log
+	$(CMDECHO) diff -b testFormulaFuncCall.ref testFormulaFuncCall.log
 	$(CMDECHO) echo mytest > /dev/null
 
 testWithFailure:

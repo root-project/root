@@ -3,7 +3,7 @@ double myfunc(int x,double y,long z) {
    return x+y+z;
 }
 
-bool func() {
+bool mfunc() {
    gROOT->ProcessLine(".L testcl.C");
 
    TFormula *fabs = new TFormula("fabs","abs(x)");
@@ -32,3 +32,7 @@ bool func() {
    return result;
 }
 
+unsigned char func() { 
+   // this return value is returned to the shell!
+   return !mfunc();
+}
