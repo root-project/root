@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.12 2004/11/02 16:55:20 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.17 2004/11/18 14:37:02 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -62,7 +62,7 @@ static GLUquadric *GetQuadric()
             Error("GetQuadric::Init", "could not create quadric object");
          } else {
             gluQuadricOrientation(fQuad, (GLenum)GLU_OUTSIDE);
-            gluQuadricNormals(fQuad, GLU_SMOOTH);
+            gluQuadricNormals(fQuad, (GLenum)GLU_SMOOTH);
          }
       }
       ~Init()
@@ -693,10 +693,10 @@ void TGLTube::GLDraw()const
 
       gluCylinder(quadObj, fRmax1, fRmax2, 2 * fDz, fNdiv, 1);
       //inner surface
-      gluQuadricOrientation(quadObj, GLU_INSIDE);
+      gluQuadricOrientation(quadObj, (GLenum)GLU_INSIDE);
       gluCylinder(quadObj, fRmin1, fRmin2, 2 * fDz, fNdiv, 1);
       //return orientation back   
-      gluQuadricOrientation(quadObj, GLU_OUTSIDE);
+      gluQuadricOrientation(quadObj, (GLenum)GLU_OUTSIDE);
 
       glPopMatrix();
 
