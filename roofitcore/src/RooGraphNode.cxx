@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphNode.cc,v 1.3 2002/09/05 04:33:30 verkerke Exp $
+ *    File: $Id: RooGraphNode.cc,v 1.4 2002/09/05 22:29:48 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -73,7 +73,7 @@ RooGraphNode::RooGraphNode(double x, double y, double w, double l, TString text)
   fnumber= 0;
 }
 
-void RooGraphNode::Paint()
+void RooGraphNode::paint()
 {
   //Paints Node to canvas by painting an ellipse and text at that location
   TEllipse *e = new TEllipse(fX1,fY1,fR1,fR2);
@@ -90,7 +90,7 @@ void RooGraphNode::Paint()
   n->Draw();
 }
 
-void RooGraphNode::Draw()
+void RooGraphNode::draw()
 {
   //Draws Node to canvas
   TEllipse *e = new TEllipse(fX1,fY1,fR1,fR2);
@@ -113,7 +113,7 @@ void RooGraphNode::Draw()
     }
 }
 
-void RooGraphNode::Draw(int color)
+void RooGraphNode::draw(int color)
 {
   //Draws Node to canvas with given color
   TEllipse *e = new TEllipse(fX1,fY1,fR1,fR2);
@@ -136,14 +136,14 @@ void RooGraphNode::Draw(int color)
     }
 }
 
-void RooGraphNode::Print() const
+void RooGraphNode::print() const
 {
   //outputs location and size of the node to screen
   cout << "x = " << fX1 << ", y = " << fY1 << endl;
   cout << "radius = " << fR1 << endl;
 }
 
-void RooGraphNode::Read(ifstream &file)
+void RooGraphNode::read(ifstream &file)
 {
   //Reads the properties of the node from a file of a set format
   double ix;
@@ -215,7 +215,7 @@ void RooGraphNode::GetValue(double number, TList *padlist, TList *edges)
   RemoveE(padlist);
   RemoveN(padlist);
   RemoveEdges(edges, padlist);
-  Draw(4);
+  draw(4);
   RedrawEdges(edges, 4);
   GetNumber(number);
 }

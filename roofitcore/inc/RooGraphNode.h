@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGraphNode.rdl,v 1.4 2002/09/05 04:33:30 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,14 +37,14 @@ public:
   RooGraphNode();
   RooGraphNode(double x, double y);
   RooGraphNode(double x, double y, double w, double l, TString text);
-  void Paint();
-  void Draw();
-  void Draw(int color);
+  void paint();
+  void draw();
+  void draw(int color);
   void SetCoords(double x, double y);
   void SetSize(double w, double l);
   void SetText(TString text);
-  void Print() const;
-  void Read(ifstream & file);
+  void print() const;
+  void read(ifstream & file);
   void ReadPDF(ifstream & file);
   double GetX1() const { return fX1; }
   double GetY1() const { return fY1; }

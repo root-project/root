@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphSpring.rdl,v 1.3 2002/09/05 04:33:30 verkerke Exp $
+ *    File: $Id: RooGraphSpring.rdl,v 1.4 2002/09/05 22:29:48 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,8 +30,8 @@ private:
 public:
   RooGraphSpring();
   RooGraphSpring(RooGraphNode *n1, RooGraphNode *n2);
-  void Print();
-  void Read(ifstream &file);
+  void print();
+  void read(ifstream &file);
   void Set1stNode(RooGraphNode *n1);
   void Set2ndNode(RooGraphNode *n2);
   void Connect(RooGraphNode *n1, RooGraphNode *n2);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooProdGenContext.rdl,v 1.6 2002/09/05 04:33:49 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,6 +26,7 @@ class RooRealIntegral;
 class RooAcceptReject;
 class TRandom;
 class TIterator;
+class RooSuperCategory ;
 
 class RooProdGenContext : public RooAbsGenContext {
 public:
@@ -38,8 +39,19 @@ protected:
   virtual void initGenerator(const RooArgSet &theEvent);
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
 
-  RooProdGenContext(const RooProdGenContext& other) ;
+  void updateCCDTable() ;
 
+
+  RooProdGenContext(const RooProdGenContext& other) ;
+  
+  RooArgSet _commonCats ;        // Common category dependents
+  RooArgSet* _ccdCloneSet ;
+  RooSuperCategory* _ccdSuper ;  // SuperCategory of Common category dependents
+  RooArgSet* _pdfCloneSet ;
+  RooAbsPdf* _pdfClone ;
+  RooRealIntegral* _pdfCcdInt ;
+  Bool_t _ccdRefresh ;
+  Double_t * _ccdTable ;
   const RooProdPdf *_pdf ;       //  Original PDF
   TList _gcList ;                //  List of component generator contexts
   TIterator* _gcIter ;           //! Iterator over gcList

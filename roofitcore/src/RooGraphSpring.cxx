@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphSpring.cc,v 1.3 2002/09/05 04:33:30 verkerke Exp $
+ *    File: $Id: RooGraphSpring.cc,v 1.4 2002/09/05 22:29:48 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -47,12 +47,12 @@ RooGraphSpring::RooGraphSpring(RooGraphNode *n1, RooGraphNode *n2)
   fn2 = n2;
 }
 
-void RooGraphSpring::Print()
+void RooGraphSpring::print()
 {
   cout << fn1->GetName() << ", " << fn2->GetName() << endl;
 }
 
-void RooGraphSpring::Read(ifstream &file)
+void RooGraphSpring::read(ifstream &file)
 {
 }
 

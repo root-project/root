@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAddPdf.cc,v 1.50 2002/09/05 04:33:12 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -290,7 +290,7 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset) c
   projList = new RooListProxy("projList","Coefficient projection list",(RooAbsArg*)this,kFALSE,kFALSE) ;
   
   // Check if requested transformation is not identity 
-  if (!nset2->equals(_refCoefNorm)) {
+  if (!nset2->equals(_refCoefNorm) && nset2->getSize()>0) {
 
     cout << "RooAddPdf::syncCoefProjList(" << GetName() << ") creating coefficient projection integrals" << endl ;
     cout << "  from current normalization: "  ; nset2->Print("1") ;

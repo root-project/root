@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphEdge.rdl,v 1.3 2002/09/05 04:33:30 verkerke Exp $
+ *    File: $Id: RooGraphEdge.rdl,v 1.4 2002/09/05 22:29:47 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,8 +33,8 @@ public:
   RooGraphEdge();
   RooGraphEdge(RooGraphNode *n1, RooGraphNode *n2);
   RooGraphEdge(RooGraphNode *n1, RooGraphNode *n2, TString es);
-  void Print();
-  void Read(ifstream &file);
+  void print();
+  void read(ifstream &file);
   void Set1stNode(RooGraphNode *n1);
   void Set2ndNode(RooGraphNode *n2);
   void SetType(TString es) { fes = es; }

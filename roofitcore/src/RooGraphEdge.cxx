@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGraphEdge.cc,v 1.3 2002/09/05 04:33:29 verkerke Exp $
+ *    File: $Id: RooGraphEdge.cc,v 1.4 2002/09/05 22:29:47 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -56,13 +56,13 @@ RooGraphEdge::RooGraphEdge(RooGraphNode *n1, RooGraphNode *n2, TString es)
   fes = es;
 }
 
-void RooGraphEdge::Print()
+void RooGraphEdge::print()
 {
   //prints the names of the nodes the edge is connected to to the screen
   cout << fn1->GetName() << ", " << fn2->GetName() << endl;
 }
 
-void RooGraphEdge::Read(ifstream &file)
+void RooGraphEdge::read(ifstream &file)
 {
   //gets the information needed to draw an edge from a file of a special format
   TString ies;

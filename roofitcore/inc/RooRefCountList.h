@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooRefCountList.rdl,v 1.1 2002/09/06 22:41:29 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,8 +24,11 @@ public:
   virtual ~RooRefCountList() {} ;
 
   virtual void AddLast(TObject* obj) ;
+  virtual void AddLast(TObject* obj, Option_t* opt) { AddLast(obj) ; }
   virtual TObject* Remove(TObject* obj) ;
+  virtual TObject* Remove(TObjLink* link) { return Remove(link->GetObject()) ; } ;
   virtual TObject* RemoveAll(TObject* obj) ;
+  virtual void RemoveAll(TCollection* coll) { return THashList::RemoveAll(coll) ; } ;
   Int_t refCount(TObject* obj) ;
   
 protected:  
