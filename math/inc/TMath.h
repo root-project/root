@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.26 2003/03/18 15:49:25 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.27 2003/07/04 13:05:25 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -257,6 +257,7 @@ public:
    static Double_t  NormCross(Double_t v1[3],Double_t v2[3],Double_t out[3]); // Calculate the Normalized Cross Product of two vectors
    static Double_t *Normal2Plane(Double_t v1[3],Double_t v2[3],Double_t v3[3], Double_t normal[3]); // Calcualte a normal vector of a plane
    static Double_t  Poisson(Double_t x, Double_t par);
+   static Double_t  PoissonI(Double_t x, Double_t par);
    static Double_t  Prob(Double_t chi2,Int_t ndf);
    static Double_t  KolmogorovProb(Double_t z);
    static Double_t  Voigt(Double_t x, Double_t sigma, Double_t lg, Int_t R = 4);

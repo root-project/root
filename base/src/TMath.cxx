@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.42 2003/08/23 00:08:12 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.43 2003/10/23 09:38:00 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -625,10 +625,41 @@ Double_t *TMath::Normal2Plane(Double_t p1[3],Double_t p2[3],Double_t p3[3], Doub
 Double_t TMath::Poisson(Double_t x, Double_t par)
 {
   // compute the Poisson distribution function for (x,par)
+  // The Poisson PDF is implemented by means of Euler's Gamma-function 
+  // (for the factorial), so for all integer arguments it is correct. 
+  // BUT for non-integer values it IS NOT equal to the Poisson distribution. 
+  // see TMath::PoissonI to get a non-smooth function.
+//Begin_Html
+/*
+<img src="gif/Poisson.gif">
+*/
+//End_Html
+   
+   if (x > 0) return TMath::Power(par,x)/TMath::Gamma(x+1)/TMath::Exp(par); 
+   if (x<0) return 0;                                                         
+   return TMath::Exp(-par);                                                         
+}                                                                              
 
-  if (x > 0) return TMath::Power(par,x)/TMath::Gamma(x+1)/TMath::Exp(par); 
-  if (x<0) return 0;                                                         
-  return TMath::Exp(-par);                                                         
+//______________________________________________________________________________
+Double_t TMath::PoissonI(Double_t x, Double_t par)
+{
+  // compute the Poisson distribution function for (x,par)
+  // This is a non-smooth function
+//Begin_Html
+/*
+<img src="gif/PoissonI.gif">
+*/
+//End_Html
+   
+   
+   const Double_t  kMaxInt = 2e6;
+   if(x<0) return 0;
+   if(x<1) return TMath::Exp(-par);
+   Double_t gam;
+   Int_t ix = Int_t(x);
+   if(x < kMaxInt) gam = TMath::Power(par,ix)/TMath::Gamma(ix+1); 
+   else            gam = TMath::Power(par,x)/TMath::Gamma(x+1);
+   return gam/TMath::Exp(par);
 }                                                                              
     
 //______________________________________________________________________________
