@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.19 2005/01/04 10:33:15 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.20 2005/01/04 14:38:50 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -164,18 +164,25 @@ public:
    static UInt_t fSphereList;
 };
 
+class TGLMesh;
 
-class TGLTube : public TGLSceneObject {
+class TGLCylinder : public TGLSceneObject {
 private:
-   Int_t    fNdiv;
+   std::vector<TGLMesh *> fParts;
    Bool_t   fInv;
 
 public:
-   TGLTube(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
+   TGLCylinder(const TBuffer3D &buff, const Float_t *color,
+               UInt_t glName, TObject *realObject);
+   ~TGLCylinder();
+
    void GLDraw(const TGLFrustum *fr)const;
 
    void Shift(Double_t x, Double_t y, Double_t z);
    void Stretch(Double_t xs, Double_t ys, Double_t zs);
+
+private:
+   void CreateParts(const TBuffer3D &buff);
 };
 
 #endif

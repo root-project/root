@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.45 2005/01/04 10:33:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.46 2005/01/04 14:38:50 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -593,7 +593,8 @@ void TViewerOpenGL::UpdateScene(Option_t *)
          addObj = new TGLSphere(*buff, colorRGB, fNbShapes, buff->fId);
          break;
       case TBuffer3D::kTUBE:
-         addObj = new TGLTube(*buff, colorRGB, fNbShapes, buff->fId);
+      case TBuffer3D::kTUBS:
+         addObj = new TGLCylinder(*buff, colorRGB, fNbShapes, buff->fId);
          break;
       default:
          addObj = new TGLFaceSet(*buff, colorRGB, fNbShapes, buff->fId);

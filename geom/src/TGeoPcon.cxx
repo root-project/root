@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.37 2004/11/25 12:10:01 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.38 2004/12/07 14:24:57 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -703,7 +703,6 @@ TBuffer3D *TGeoPcon::MakeBuffer3D() const
 void TGeoPcon::Paint(Option_t *option)
 {
    // Paint this shape according to option
-   
    // Allocate the necessary spage in gPad->fBuffer3D to store this shape
    const Int_t n = gGeoManager->GetNsegments()+1;
    Int_t nz = GetNz();

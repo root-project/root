@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.49 2004/12/01 16:57:19 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.50 2004/12/07 14:24:57 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistFromInside/In() implemented by Mihaela Gheata
 
@@ -1513,7 +1513,58 @@ TBuffer3D *TGeoTubeSeg::MakeBuffer3D() const
 void TGeoTubeSeg::Paint(Option_t *option)
 {
    // Paint this shape according to option
+   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
+  
+   // In case of OpenGL a tube can be drawn with specialized functions
+   if (!strcmp(option, "ogl") && !TestShapeBit(kGeoEltu)) {
+      Int_t n = gGeoManager->GetNsegments();
+      TGeoVolume *vol = gGeoManager->GetPaintVolume();
+      TBuffer3D *buff = gPad->AllocateBuffer3D(50, 0, 0);
 
+      buff->fNbPnts  = 9;//9 points! not 3
+      buff->fNbSegs  = 0;
+      buff->fNbPols  = 0;
+      buff->fColor   = vol->GetLineColor();
+
+      buff->fPnts[0]  =      0; buff->fPnts[1]  =      0; buff->fPnts[2]  =    0;
+      buff->fPnts[3]  =  fRmax; buff->fPnts[4]  =  fRmax; buff->fPnts[5]  = -fDz;
+      buff->fPnts[6]  = -fRmax; buff->fPnts[7]  =  fRmax; buff->fPnts[8]  = -fDz;
+      buff->fPnts[9]  = -fRmax; buff->fPnts[10] = -fRmax; buff->fPnts[11] = -fDz;
+      buff->fPnts[12] =  fRmax; buff->fPnts[13] = -fRmax; buff->fPnts[14] = -fDz;
+
+      buff->fPnts[15] =  fRmax; buff->fPnts[16] =  fRmax; buff->fPnts[17] =  fDz;
+      buff->fPnts[18] = -fRmax; buff->fPnts[19] =  fRmax; buff->fPnts[20] =  fDz;
+      buff->fPnts[21] = -fRmax; buff->fPnts[22] = -fRmax; buff->fPnts[23] =  fDz;
+      buff->fPnts[24] =  fRmax; buff->fPnts[25] = -fRmax; buff->fPnts[26] =  fDz;
+
+      buff->fPnts[27] = (Float_t)n;
+      buff->fPnts[28] = fRmin;
+      buff->fPnts[29] = fRmax;
+      buff->fPnts[30] = fRmin;
+      buff->fPnts[31] = fRmax;
+      buff->fPnts[32] = fDz;
+
+      TransformPoints(buff);
+      buff->fId   = vol;
+      buff->fType = TBuffer3D::kTUBS;
+
+      TGeoHMatrix *m = (gGeoManager->IsMatrixTransform())?gGeoManager->GetGLMatrix() : gGeoManager->GetCurrentMatrix();
+      const Double_t *rotM = m->GetRotationMatrix();
+      for (Int_t i = 33; i < 42; ++i) buff->fPnts[i] = rotM[i - 33];
+      buff->fPnts[42] = fPhi1;
+      buff->fPnts[43] = fPhi2;
+
+      buff->fPnts[44] = 0.;
+      buff->fPnts[45] = 0.;
+      buff->fPnts[46] = -1.;
+
+      buff->fPnts[47] = 0.;
+      buff->fPnts[48] = 0.;
+      buff->fPnts[49] = 1.;
+
+      buff->Paint(option);
+      return;
+   }
    // Allocate the necessary spage in gPad->fBuffer3D to store this shape
    Int_t n = gGeoManager->GetNsegments()+1;
    Int_t NbPnts = 4*n;
@@ -1988,6 +2039,97 @@ void TGeoCtub::ComputeBBox()
 
    fDZ = 0.5*(zmax-zmin);
    fOrigin[2] = 0.5*(zmax+zmin);
+}
+
+//_____________________________________________________________________________
+void TGeoCtub::Paint(Option_t *option)
+{
+   // Paint this shape according to option
+   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
+  
+   // In case of OpenGL a tube can be drawn with specialized functions
+   if (!strcmp(option, "ogl") && !TestShapeBit(kGeoEltu)) {
+      Int_t n = gGeoManager->GetNsegments();
+      TGeoVolume *vol = gGeoManager->GetPaintVolume();
+      TBuffer3D *buff = gPad->AllocateBuffer3D(50, 0, 0);
+
+      buff->fNbPnts  = 9;//9 points! not 3
+      buff->fNbSegs  = 0;
+      buff->fNbPols  = 0;
+      buff->fColor   = vol->GetLineColor();
+
+      buff->fPnts[0]  =      0; buff->fPnts[1]  =      0; buff->fPnts[2]  =    0;
+
+      buff->fPnts[3]  =  fRmax; buff->fPnts[4]  =  fRmax; buff->fPnts[5]  = GetZcoord(fRmax, fRmax, -fDZ);
+      buff->fPnts[6]  = -fRmax; buff->fPnts[7]  =  fRmax; buff->fPnts[8]  = GetZcoord(-fRmax, fRmax, -fDZ);
+      buff->fPnts[9]  = -fRmax; buff->fPnts[10] = -fRmax; buff->fPnts[11] = GetZcoord(-fRmax, -fRmax, -fDZ);
+      buff->fPnts[12] =  fRmax; buff->fPnts[13] = -fRmax; buff->fPnts[14] = GetZcoord(fRmax, -fRmax, -fDZ);
+
+      buff->fPnts[15] =  fRmax; buff->fPnts[16] =  fRmax; buff->fPnts[17] = GetZcoord(fRmax, fRmax, fDZ); 
+      buff->fPnts[18] = -fRmax; buff->fPnts[19] =  fRmax; buff->fPnts[20] =  GetZcoord(-fRmax, fRmax, fDZ);
+      buff->fPnts[21] = -fRmax; buff->fPnts[22] = -fRmax; buff->fPnts[23] =  GetZcoord(-fRmax, -fRmax, fDZ);
+      buff->fPnts[24] =  fRmax; buff->fPnts[25] = -fRmax; buff->fPnts[26] =  GetZcoord(fRmax, -fRmax, fDZ);
+
+      buff->fPnts[27] = (Float_t)n;
+      buff->fPnts[28] = fRmin;
+      buff->fPnts[29] = fRmax;
+      buff->fPnts[30] = fRmin;
+      buff->fPnts[31] = fRmax;
+      buff->fPnts[32] = fDz;
+
+      TransformPoints(buff);
+      buff->fId   = vol;
+      buff->fType = TBuffer3D::kTUBS;
+
+      TGeoHMatrix *m = (gGeoManager->IsMatrixTransform())?gGeoManager->GetGLMatrix() : gGeoManager->GetCurrentMatrix();
+      const Double_t *rotM = m->GetRotationMatrix();
+      for (Int_t i = 33; i < 42; ++i) buff->fPnts[i] = rotM[i - 33];
+      buff->fPnts[42] = fPhi1;
+      buff->fPnts[43] = fPhi2;
+
+      buff->fPnts[44] = fNlow[0];
+      buff->fPnts[45] = fNlow[1];
+      buff->fPnts[46] = fNlow[2];
+
+      buff->fPnts[47] = fNhigh[0];
+      buff->fPnts[48] = fNhigh[1];
+      buff->fPnts[49] = fNhigh[2];
+
+      buff->Paint(option);
+      return;
+   }
+   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
+   Int_t n = gGeoManager->GetNsegments()+1;
+   Int_t NbPnts = 4*n;
+   Int_t NbSegs = 2*NbPnts;
+   Int_t NbPols = NbPnts-2;
+   TBuffer3D *buff = gPad->AllocateBuffer3D(3*NbPnts, 3*NbSegs, 6*NbPols);
+   if (!buff) return;
+
+   buff->fType = TBuffer3D::kTUBS;
+   TGeoVolume *vol = gGeoManager->GetPaintVolume();
+   buff->fId   = vol;
+
+   // Fill gPad->fBuffer3D. Points coordinates are in Master space
+   buff->fNbPnts = NbPnts;
+   buff->fNbSegs = NbSegs;
+   buff->fNbPols = NbPols;
+   // In case of option "size" it is not necessary to fill the buffer
+   if (strstr(option,"size")) {
+      buff->Paint(option);
+      return;
+   }
+
+   SetPoints(buff->fPnts);
+
+   TransformPoints(buff);
+
+   // Basic colors: 0, 1, ... 7
+   buff->fColor = vol->GetLineColor();
+   SetSegsAndPols(buff);  
+
+   // Paint gPad->fBuffer3D
+   buff->Paint(option);
 }
 
 //_____________________________________________________________________________

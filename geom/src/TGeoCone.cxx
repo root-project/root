@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.40 2004/12/01 16:57:19 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.41 2004/12/07 14:24:57 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistFromInside() implemented by Mihaela Gheata
 
@@ -1699,7 +1699,59 @@ TBuffer3D *TGeoConeSeg::MakeBuffer3D() const
 void TGeoConeSeg::Paint(Option_t *option)
 {
    // Paint this shape according to option
+   // Allocate the necessary spage in gPad->fBuffer3D to store this shape
+   // In case of OpenGL a cone can be drawn with specialized functions
+   if (!strcmp(option, "ogl")) {
 
+      Int_t n = gGeoManager->GetNsegments();
+      TGeoVolume *vol = gGeoManager->GetPaintVolume();
+
+      TBuffer3D *buff = gPad->AllocateBuffer3D(50, 0, 0);
+
+      buff->fNbPnts  = 9;//9 points! not 3
+      buff->fNbSegs  = 0;
+      buff->fNbPols  = 0;
+      buff->fColor   = vol->GetLineColor();
+
+      buff->fPnts[0]  =      0; buff->fPnts[1]  =      0; buff->fPnts[2]  =    0;
+      buff->fPnts[3]  =  fRmax1; buff->fPnts[4]  =  fRmax1; buff->fPnts[5]  = -fDz;
+      buff->fPnts[6]  = -fRmax1; buff->fPnts[7]  =  fRmax1; buff->fPnts[8]  = -fDz;
+      buff->fPnts[9]  = -fRmax1; buff->fPnts[10] = -fRmax1; buff->fPnts[11] = -fDz;
+      buff->fPnts[12] =  fRmax1; buff->fPnts[13] = -fRmax1; buff->fPnts[14] = -fDz;
+
+      buff->fPnts[15] =  fRmax2; buff->fPnts[16] =  fRmax2; buff->fPnts[17] =  fDz;
+      buff->fPnts[18] = -fRmax2; buff->fPnts[19] =  fRmax2; buff->fPnts[20] =  fDz;
+      buff->fPnts[21] = -fRmax2; buff->fPnts[22] = -fRmax2; buff->fPnts[23] =  fDz;
+      buff->fPnts[24] =  fRmax2; buff->fPnts[25] = -fRmax2; buff->fPnts[26] =  fDz;
+
+      buff->fPnts[27] = (Float_t)n;
+      buff->fPnts[28] = fRmin1;
+      buff->fPnts[29] = fRmax1;
+      buff->fPnts[30] = fRmin2;
+      buff->fPnts[31] = fRmax2;
+      buff->fPnts[32] = fDz;
+
+      TransformPoints(buff);
+      buff->fId   = vol;
+      buff->fType = TBuffer3D::kTUBS;
+
+      TGeoHMatrix *m = (gGeoManager->IsMatrixTransform())?gGeoManager->GetGLMatrix() : gGeoManager->GetCurrentMatrix();
+      const Double_t *rotM = m->GetRotationMatrix();
+      for (Int_t i = 33; i < 42; ++i) buff->fPnts[i] = rotM[i - 33];
+      buff->fPnts[42] = fPhi1;
+      buff->fPnts[43] = fPhi2;
+
+      buff->fPnts[44] = 0.;
+      buff->fPnts[45] = 0.;
+      buff->fPnts[46] = -1.;
+
+      buff->fPnts[47] = 0.;
+      buff->fPnts[48] = 0.;
+      buff->fPnts[49] = 1.;
+      buff->Paint(option);
+
+      return;
+   }
    // Allocate the necessary spage in gPad->fBuffer3D to store this shape
    Int_t n = gGeoManager->GetNsegments()+1;
    Int_t NbPnts = 4*n;

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.19 2004/11/25 12:10:01 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.20 2004/12/07 14:24:57 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -195,6 +195,9 @@ public:
    virtual Int_t         GetByteCount() const {return 98;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const;
    virtual Int_t         GetNmeshVertices() const;
+/////////////////////////////////////////////////
+   virtual void          Paint(Option_t *option);
+/////////////////////////////////////////////////
    const Double_t       *GetNlow() const {return &fNlow[0];}
    const Double_t       *GetNhigh() const {return &fNhigh[0];}
    Double_t              GetZcoord(Double_t xc, Double_t yc, Double_t zc) const;

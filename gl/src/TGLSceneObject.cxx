@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.26 2005/01/04 10:33:16 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.27 2005/01/04 14:38:50 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -732,40 +732,522 @@ void TGLSphere::Stretch(Double_t, Double_t, Double_t)
 {
 }
 
+////////////////////////////////////////////////////////////
+namespace GL{
+   struct Vertex3d {
+      Double_t fXYZ[3];
+      Double_t &operator [] (Int_t ind) {return fXYZ[ind];}
+      Double_t operator [] (Int_t ind)const{return fXYZ[ind];}
+
+      void Negate()
+      {
+         fXYZ[0] = -fXYZ[0];
+         fXYZ[1] = -fXYZ[1];
+         fXYZ[2] = -fXYZ[2];
+      }
+   };
+}
+
+using GL::Vertex3d;
+
+Vertex3d lowNormal = {{0., 0., -1.}};
+Vertex3d highNormal = {{0., 0., 1.}};
+
+class TGLMesh {
+protected:
+   Double_t fRmin1, fRmax1, fRmin2, fRmax2;
+   Double_t fDz;
+   Vertex3d fCenter;
+   //normals for top and bottom (for cuts)
+   Vertex3d fNlow;
+   Vertex3d fNhigh;
+
+   enum {kLod = 40};
+
+   void GetNormal(const Vertex3d &vertex, Vertex3d &normal)const;
+   Double_t GetZcoord(Double_t x, Double_t y, Double_t z)const;
+   const Vertex3d &MakeVertex(Double_t x, Double_t y, Double_t z)const;
+   
+public:
+   TGLMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz, 
+                   const Vertex3d &center, const Vertex3d &l = lowNormal, 
+                   const Vertex3d &h = highNormal);
+
+   void Shift(Double_t xs, Double_t ys, Double_t zs)
+   {
+      fCenter[0] += xs; fCenter[1] += ys; fCenter[2] += zs;
+   }
+      
+   virtual void Draw(const Double_t *rot)const = 0;
+};
+
+//segment contains 3 quad strips:
+//one for inner and outer sides, two for top and bottom
+class TubeSegMesh : public TGLMesh {
+private:
+   Vertex3d fMesh[(kLod + 1) * 8 + 8];
+   Vertex3d fNorm[(kLod + 1) * 8 + 8];
+
+public:
+   TubeSegMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
+               Double_t phi1, Double_t phi2, const Vertex3d &center, 
+               const Vertex3d &l = lowNormal, const Vertex3d &h = highNormal);
+
+   void Draw(const Double_t *rot)const;
+};
+
+//four quad strips:
+//outer, inner, top, bottom
+class TubeMesh : public TGLMesh {
+private:
+   Vertex3d fMesh[(kLod + 1) * 8];
+   Vertex3d fNorm[(kLod + 1) * 8];
+
+public:
+   TubeMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz,
+            const Vertex3d &center, const Vertex3d &l = lowNormal, 
+            const Vertex3d &h = highNormal);
+
+   void Draw(const Double_t *rot)const;
+};
+
+//One quad mesh and 2 triangle funs
+class CylinderMesh : public TGLMesh {
+private:
+   Vertex3d fMesh[(kLod + 1) * 4 + 2];
+   Vertex3d fNorm[(kLod + 1) * 4 + 2];
+
+public:
+   CylinderMesh(Double_t r1, Double_t r2, Double_t dz, const Vertex3d &center,
+                const Vertex3d &l = lowNormal, const Vertex3d &h = highNormal);
+
+   void Draw(const Double_t *rot)const;
+};
+
+//One quad mesh and 2 triangle fans
+class CylinderSegMesh : public TGLMesh {
+private:
+   Vertex3d fMesh[(kLod + 1) * 4 + 10];
+   Vertex3d fNorm[(kLod + 1) * 4 + 10];
+
+public:
+   CylinderSegMesh(Double_t r1, Double_t r2, Double_t dz, Double_t phi1, Double_t phi2,
+                   const Vertex3d &center, const Vertex3d &l = lowNormal, 
+                   const Vertex3d &h = highNormal);
+
+   void Draw(const Double_t *rot)const;
+};
+
+
 //______________________________________________________________________________
-TGLTube::TGLTube(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
-            :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, 24, c, n, r)
+TGLMesh::TGLMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz, 
+                               const Vertex3d &c, const Vertex3d &l, const Vertex3d &h)
+                     :fRmin1(r1), fRmax1(r2), fRmin2(r3), fRmax2(r4),
+                      fDz(dz), fCenter(c), fNlow(l), fNhigh(h)
 {
-   fColor[3] = 1.f - b.fTransparency / 100.f;
-   //center
-   fVertices[0] = b.fPnts[0];
-   fVertices[1] = b.fPnts[1];
-   fVertices[2] = b.fPnts[2];
-
-   //rmin1
-   fVertices[3] = b.fPnts[28];
-   //rmax1
-   fVertices[4] = b.fPnts[29];
-   //rmin2
-   fVertices[5] = b.fPnts[30];
-   //rmax2
-   fVertices[6] = b.fPnts[31];
-   //Dz
-   fVertices[7] = b.fPnts[32];
-
-   fNdiv = (Int_t)b.fPnts[27];
-   fInv = b.TestBit(TBuffer3D::kIsReflection);
-
-   const Double_t *p = b.fPnts;
-
-   fVertices[8]  = p[33], fVertices[9]  = p[36], fVertices[10] = p[39], fVertices[11] = 0.;
-   fVertices[12] = p[34], fVertices[13] = p[37], fVertices[14] = p[40], fVertices[15] = 0.;
-   fVertices[16] = p[35], fVertices[17] = p[38], fVertices[18] = p[41], fVertices[19] = 0.;
-   fVertices[20] = 0.,    fVertices[21] = 0.,    fVertices[22] = 0.,    fVertices[23] = 1.;
 }
 
 //______________________________________________________________________________
-void TGLTube::GLDraw(const TGLFrustum *fr)const
+void TGLMesh::GetNormal(const Vertex3d &v, Vertex3d &n)const
+{
+   Double_t z = (fRmax1 - fRmax2) / (2 * fDz);
+   Double_t mag = TMath::Sqrt(v[0] * v[0] + v[1] * v[1] + z * z);
+
+   n[0] = v[0] / mag;
+   n[1] = v[1] / mag;
+   n[2] = z / mag;
+}
+
+//______________________________________________________________________________
+Double_t TGLMesh::GetZcoord(Double_t x, Double_t y, Double_t z)const
+{
+   Double_t newz = 0;
+   if (z < 0) newz = -fDz - (x * fNlow[0] + y * fNlow[1]) / fNlow[2];
+   else newz = fDz - (x * fNhigh[0] + y * fNhigh[1]) / fNhigh[2];
+
+   return newz;
+}
+
+//______________________________________________________________________________
+const Vertex3d &TGLMesh::MakeVertex(Double_t x, Double_t y, Double_t z)const
+{
+   static Vertex3d vert = {{0., 0., 0.}};
+   vert[0] = x;
+   vert[1] = y;
+   vert[2] = GetZcoord(x, y, z);
+
+   return vert;
+}
+
+//______________________________________________________________________________
+TubeSegMesh::TubeSegMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t dz, 
+                         Double_t phi1, Double_t phi2, const Vertex3d &center, 
+                         const Vertex3d &l, const Vertex3d &h)
+                 :TGLMesh(r1, r2, r3, r4, dz, center, l, h), fMesh(), fNorm()
+                      
+{
+   const Double_t delta = (phi2 - phi1) / kLod;
+   Double_t currAngle = phi1;
+
+   Bool_t even = kTRUE;
+   Double_t c = TMath::Cos(currAngle);
+   Double_t s = TMath::Sin(currAngle);
+   const Int_t topShift = (kLod + 1) * 4 + 8;
+   const Int_t botShift = (kLod + 1) * 6 + 8;
+   Int_t j = 4 * (kLod + 1) + 2;
+
+   //defining all three strips here, first strip is non-closed here
+   for (Int_t i = 0, e = (kLod + 1) * 2; i < e; ++i) {
+      if (even) {
+         fMesh[i] = MakeVertex(fRmax2 * c, fRmax2 * s, fDz);
+         fMesh[j] = MakeVertex(fRmin2 * c, fRmin2 * s, fDz);
+         fMesh[i + topShift] = MakeVertex(fRmin2 * c, fRmin2 * s, fDz);
+         fMesh[i + botShift] = MakeVertex(fRmax1 * c, fRmax1 * s, - fDz);
+         GetNormal(fMesh[j], fNorm[j]);
+         fNorm[j].Negate();
+         even = kFALSE;
+      } else {
+         fMesh[i] = MakeVertex(fRmax1 * c, fRmax1 * s, - fDz);
+         fMesh[j + 1] = MakeVertex(fRmin1 * c, fRmin1 * s, -fDz);
+         fMesh[i + topShift] = MakeVertex(fRmax2 * c, fRmax2 * s, fDz);
+         fMesh[i + botShift] = MakeVertex(fRmin1 * c, fRmin1 * s, - fDz);
+         GetNormal(fMesh[j + 1], fNorm[j + 1]);
+         fNorm[j + 1].Negate();
+         even = kTRUE;
+         currAngle += delta;
+         c = TMath::Cos(currAngle);
+         s = TMath::Sin(currAngle);
+         j -= 2;
+      }
+   
+      GetNormal(fMesh[i], fNorm[i]);
+      fNorm[i + topShift] = fNhigh;
+      fNorm[i + botShift] = fNlow;
+   }
+
+   //closing first strip
+   Int_t ind = 2 * (kLod + 1);
+   Vertex3d norm = {{0., 0., 0.}};
+
+   fMesh[ind] = fMesh[ind - 2];
+   fMesh[ind + 1] = fMesh[ind - 1];
+   fMesh[ind + 2] = fMesh[ind + 4];
+   fMesh[ind + 3] = fMesh[ind + 5];
+   TMath::Normal2Plane(fMesh[ind].fXYZ, fMesh[ind + 1].fXYZ, fMesh[ind + 2].fXYZ,
+                       norm.fXYZ);
+   fNorm[ind] = norm;
+   fNorm[ind + 1] = norm;
+   fNorm[ind + 2] = norm;
+   fNorm[ind + 3] = norm;
+
+   ind = topShift - 4;
+   fMesh[ind] = fMesh[ind - 2];
+   fMesh[ind + 1] = fMesh[ind - 1];
+   fMesh[ind + 2] = fMesh[0];
+   fMesh[ind + 3] = fMesh[1];
+   TMath::Normal2Plane(fMesh[ind].fXYZ, fMesh[ind + 1].fXYZ, fMesh[ind + 2].fXYZ,
+                       norm.fXYZ);
+   fNorm[ind] = norm;
+   fNorm[ind + 1] = norm;
+   fNorm[ind + 2] = norm;
+   fNorm[ind + 3] = norm;
+}
+
+//______________________________________________________________________________
+void TubeSegMesh::Draw(const Double_t *rot)const
+{
+   glPushMatrix();
+   glTranslated(fCenter[0], fCenter[1], fCenter[2]);
+   glMultMatrixd(rot);
+
+   //Tube segment is drawn as three quad strips
+   //1. enabling vertex arrays
+   glEnableClientState(GL_VERTEX_ARRAY);
+   glEnableClientState(GL_NORMAL_ARRAY);
+   //2. setting arrays
+   glVertexPointer(3, GL_DOUBLE, sizeof(Vertex3d), fMesh[0].fXYZ);
+   glNormalPointer(GL_DOUBLE, sizeof(Vertex3d), fNorm[0].fXYZ);
+   //3. draw first strip
+   glDrawArrays(GL_QUAD_STRIP, 0, 4 * (kLod + 1) + 8);
+   //4. draw top and bottom strips
+   glDrawArrays(GL_QUAD_STRIP, 4 * (kLod + 1) + 8, 2 * (kLod + 1));
+   glDrawArrays(GL_QUAD_STRIP, 6 * (kLod + 1) + 8, 2 * (kLod + 1));
+
+   glDisableClientState(GL_VERTEX_ARRAY);   
+   glDisableClientState(GL_NORMAL_ARRAY);
+
+   glPopMatrix();
+}
+
+//______________________________________________________________________________
+TubeMesh::TubeMesh(Double_t r1, Double_t r2, Double_t r3, Double_t r4, Double_t z,
+                      const Vertex3d &center, const Vertex3d &l, const Vertex3d &h)
+             :TGLMesh(r1, r2, r3, r4, z, center, l, h), fMesh(), fNorm()
+{
+   const Double_t delta = TMath::TwoPi() / kLod;
+   Double_t currAngle = 0.;
+
+   Bool_t even = kTRUE;
+   Double_t c = TMath::Cos(currAngle);
+   Double_t s = TMath::Sin(currAngle);
+
+   const Int_t topShift = (kLod + 1) * 4;
+   const Int_t botShift = (kLod + 1) * 6;
+   Int_t j = 4 * (kLod + 1) - 2;
+
+   //defining all four strips here
+   for (Int_t i = 0, e = (kLod + 1) * 2; i < e; ++i) {
+      if (even) {
+         fMesh[i] = MakeVertex(fRmax2 * c, fRmax2 * s, fDz);
+         fMesh[j] = MakeVertex(fRmin2 * c, fRmin2 * s, fDz);
+         fMesh[i + topShift] = MakeVertex(fRmin2 * c, fRmin2 * s, fDz);
+         fMesh[i + botShift] = MakeVertex(fRmax1 * c, fRmax1 * s, - fDz);
+         GetNormal(fMesh[j], fNorm[j]);
+         fNorm[j].Negate();
+         even = kFALSE;
+      } else {
+         fMesh[i] = MakeVertex(fRmax1 * c, fRmax1 * s, - fDz);
+         fMesh[j + 1] = MakeVertex(fRmin1 * c, fRmin1 * s, -fDz);
+         fMesh[i + topShift] = MakeVertex(fRmax2 * c, fRmax2 * s, fDz);
+         fMesh[i + botShift] = MakeVertex(fRmin1 * c, fRmin1 * s, - fDz);
+         GetNormal(fMesh[j + 1], fNorm[j + 1]);
+         fNorm[j + 1].Negate();
+         even = kTRUE;
+         currAngle += delta;
+         c = TMath::Cos(currAngle);
+         s = TMath::Sin(currAngle);
+         j -= 2;
+      }
+      
+      GetNormal(fMesh[i], fNorm[i]);
+      fNorm[i + topShift] = fNhigh;
+      fNorm[i + botShift] = fNlow;
+   }
+}
+
+//______________________________________________________________________________
+void TubeMesh::Draw(const Double_t *rot)const
+{
+   glPushMatrix();
+   glTranslated(fCenter[0], fCenter[1], fCenter[2]);
+   glMultMatrixd(rot);
+
+   //Tube is drawn as four quad strips
+   glEnableClientState(GL_VERTEX_ARRAY);
+   glEnableClientState(GL_NORMAL_ARRAY);
+
+   glVertexPointer(3, GL_DOUBLE, sizeof(Vertex3d), fMesh[0].fXYZ);
+   glNormalPointer(GL_DOUBLE, sizeof(Vertex3d), fNorm[0].fXYZ);
+   //draw outer and inner strips
+   glDrawArrays(GL_QUAD_STRIP, 0, 2 * (kLod + 1));
+   glDrawArrays(GL_QUAD_STRIP, 2 * (kLod + 1), 2 * (kLod + 1));
+   //draw top and bottom strips
+   glDrawArrays(GL_QUAD_STRIP, 4 * (kLod + 1), 2 * (kLod + 1));
+   glDrawArrays(GL_QUAD_STRIP, 6 * (kLod + 1), 2 * (kLod + 1));
+   //5. disabling vertex arrays   
+   glDisableClientState(GL_VERTEX_ARRAY);   
+   glDisableClientState(GL_NORMAL_ARRAY);
+
+   glPopMatrix();
+}
+
+//______________________________________________________________________________
+CylinderMesh::CylinderMesh(Double_t r1, Double_t r2, Double_t dz, const Vertex3d &center, 
+                           const Vertex3d &l, const Vertex3d &h)
+                 :TGLMesh(0., r1, 0., r2, dz, center, l, h), fMesh(), fNorm()
+{
+   const Double_t delta = TMath::TwoPi() / kLod;
+   Double_t currAngle = 0.;
+
+   Bool_t even = kTRUE;
+   Double_t c = TMath::Cos(currAngle);
+   Double_t s = TMath::Sin(currAngle);
+
+   //central point of top fan
+   Int_t topShift = (kLod + 1) * 2;
+   fMesh[topShift][0] = fMesh[topShift][1] = 0., fMesh[topShift][2] = fDz;
+   fNorm[topShift] = fNhigh;
+   ++topShift;
+
+   //central point of bottom fun
+   Int_t botShift = topShift + 2 * (kLod + 1);
+   fMesh[botShift][0] = fMesh[botShift][1] = 0., fMesh[botShift][2] = -fDz;
+   fNorm[botShift] = fNlow;
+   ++botShift;
+
+   //defining 1 strip and 2 fans
+   for (Int_t i = 0, e = (kLod + 1) * 2, j = 0; i < e; ++i) {
+      if (even) {
+         fMesh[i] = MakeVertex(fRmax2 * c, fRmax2 * s, fDz);
+         fMesh[j + topShift] = MakeVertex(fRmin2 * c, fRmin2 * s, fDz);
+         fMesh[j + botShift] = MakeVertex(fRmax1 * c, fRmax1 * s, - fDz);
+         even = kFALSE;
+      } else {
+         fMesh[i] = MakeVertex(fRmax1 * c, fRmax1 * s, - fDz);
+         even = kTRUE;
+         currAngle += delta;
+         c = TMath::Cos(currAngle);
+         s = TMath::Sin(currAngle);
+         ++j;
+      }
+   
+      GetNormal(fMesh[i], fNorm[i]);
+      fNorm[i + topShift] = fNhigh;
+      fNorm[i + botShift] = fNlow;
+   }
+}
+
+//______________________________________________________________________________
+void CylinderMesh::Draw(const Double_t *rot)const
+{
+   glPushMatrix();
+   glTranslated(fCenter[0], fCenter[1], fCenter[2]);
+   glMultMatrixd(rot);
+
+   glEnableClientState(GL_VERTEX_ARRAY);
+   glEnableClientState(GL_NORMAL_ARRAY);
+
+   glVertexPointer(3, GL_DOUBLE, sizeof(Vertex3d), fMesh[0].fXYZ);
+   glNormalPointer(GL_DOUBLE, sizeof(Vertex3d), fNorm[0].fXYZ);
+
+   //draw quad strip
+   glDrawArrays(GL_QUAD_STRIP, 0, 2 * (kLod + 1));
+   //draw top and bottom funs
+   glDrawArrays(GL_TRIANGLE_FAN, 2 * (kLod + 1), kLod + 2);
+   glDrawArrays(GL_TRIANGLE_FAN, 3 * (kLod + 1) + 1, kLod + 2);
+
+   glDisableClientState(GL_VERTEX_ARRAY);   
+   glDisableClientState(GL_NORMAL_ARRAY);
+
+   glPopMatrix();
+}
+
+//______________________________________________________________________________
+   CylinderSegMesh::CylinderSegMesh(Double_t r1, Double_t r2, Double_t dz, Double_t phi1,
+                                    Double_t phi2, const Vertex3d &center, const Vertex3d &l, 
+                                    const Vertex3d &h)
+                     :TGLMesh(0., r1, 0., r2, dz, center, l, h), fMesh(), fNorm()
+{
+   //One quad mesh and two fans
+   Double_t delta = (phi2 - phi1) / kLod;
+   Double_t currAngle = phi1;
+
+   Bool_t even = kTRUE;
+   Double_t c = TMath::Cos(currAngle);
+   Double_t s = TMath::Sin(currAngle);
+
+   const Vertex3d vTop = {{0., 0., fDz}};
+   const Vertex3d vBot = {{0., 0., - fDz}};
+
+   //center of top fan
+   Int_t topShift = (kLod + 1) * 2 + 8;
+   fMesh[topShift] = vTop;
+   fNorm[topShift] = fNhigh;
+   ++topShift;
+
+   //center of bottom fan
+   Int_t botShift = topShift + kLod + 1;
+   fMesh[botShift] = vBot;
+   fNorm[botShift] = fNlow;
+   ++botShift;
+
+   //defining strip and two fans
+   //strip is not closed here
+   Int_t i = 0;
+   for (Int_t e = (kLod + 1) * 2, j = 0; i < e; ++i) {
+      if (even) {
+         fMesh[i] = MakeVertex(fRmax2 * c, fRmax2 * s, fDz);
+         fMesh[j + topShift] = MakeVertex(fRmax2 * c, fRmax2 * s, fDz);
+         fMesh[j + botShift] = MakeVertex(fRmax1 * c, fRmax1 * s, - fDz);
+         even = kFALSE;
+         fNorm[j + topShift] = fNhigh;
+         fNorm[j + botShift] = fNlow;
+      } else {
+         fMesh[i] = MakeVertex(fRmax1 * c, fRmax1 * s, - fDz);
+         even = kTRUE;
+         currAngle += delta;
+         c = TMath::Cos(currAngle);
+         s = TMath::Sin(currAngle);
+         ++j;
+      }
+   
+      GetNormal(fMesh[i], fNorm[i]);
+   }
+
+   //closing first strip
+   Int_t ind = 2 * (kLod + 1);
+   Vertex3d norm = {{0., 0., 0.}};
+
+   fMesh[ind] = fMesh[ind - 2];
+   fMesh[ind + 1] = fMesh[ind - 1];
+   fMesh[ind + 2] = vTop;
+   fMesh[ind + 3] = vBot;
+   TMath::Normal2Plane(fMesh[ind].fXYZ, fMesh[ind + 1].fXYZ, fMesh[ind + 2].fXYZ,
+                          norm.fXYZ);
+   fNorm[ind] = norm;
+   fNorm[ind + 1] = norm;
+   fNorm[ind + 2] = norm;
+   fNorm[ind + 3] = norm;
+
+   ind += 4;
+   fMesh[ind] = vTop;
+   fMesh[ind + 1] = vBot;
+   fMesh[ind + 2] = fMesh[0];
+   fMesh[ind + 3] = fMesh[1];
+   TMath::Normal2Plane(fMesh[ind].fXYZ, fMesh[ind + 1].fXYZ, fMesh[ind + 2].fXYZ,
+                       norm.fXYZ);
+   fNorm[ind] = norm;
+   fNorm[ind + 1] = norm;
+   fNorm[ind + 2] = norm;
+   fNorm[ind + 3] = norm;
+}
+
+//______________________________________________________________________________
+void CylinderSegMesh::Draw(const Double_t *rot)const
+{
+   glPushMatrix();
+   glTranslated(fCenter[0], fCenter[1], fCenter[2]);
+   glMultMatrixd(rot);
+
+   //Cylinder segment is drawn as one quad strip and
+   //two triangle fans
+   //1. enabling vertex arrays
+   glEnableClientState(GL_VERTEX_ARRAY);
+   glEnableClientState(GL_NORMAL_ARRAY);
+   //2. setting arrays
+   glVertexPointer(3, GL_DOUBLE, sizeof(Vertex3d), fMesh[0].fXYZ);
+   glNormalPointer(GL_DOUBLE, sizeof(Vertex3d), fNorm[0].fXYZ);
+   //3. draw quad strip
+   glDrawArrays(GL_QUAD_STRIP, 0, 2 * (kLod + 1) + 8);
+   //4. draw top and bottom funs
+   glDrawArrays(GL_TRIANGLE_FAN, 2 * (kLod + 1) + 8, kLod + 2);
+   //      glDrawArrays(GL_TRIANGLE_FAN, 3 * (kLod + 1) + 9, kLod + 2);
+   //5. disabling vertex arrays   
+   glDisableClientState(GL_VERTEX_ARRAY);   
+   glDisableClientState(GL_NORMAL_ARRAY);
+
+   glPopMatrix();
+}
+
+//______________________________________________________________________________
+TGLCylinder::TGLCylinder(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
+            :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, 16, c, n, r)
+{
+   fInv = b.TestBit(TBuffer3D::kIsReflection);
+   CreateParts(b);
+}
+
+//______________________________________________________________________________
+TGLCylinder::~TGLCylinder()
+{
+   for (UInt_t i = 0; i < fParts.size(); ++i) {
+      delete fParts[i];
+      fParts[i] = 0;//not to have invalid pointer for pseudo-destructor call :)
+   }
+}
+
+//______________________________________________________________________________
+void TGLCylinder::GLDraw(const TGLFrustum *fr)const
 {
    if (fr) {
       if (!fr->ClipOnBoundingBox(*this)) return;
@@ -776,6 +1258,7 @@ void TGLTube::GLDraw(const TGLFrustum *fr)const
    glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
    glMaterialfv(GL_FRONT, GL_EMISSION, fColor + 12);
    glMaterialf(GL_FRONT, GL_SHININESS, fColor[16]);
+   glLoadName(GetGLName());
 
    if (IsTransparent()) {
       glEnable(GL_BLEND);
@@ -783,52 +1266,10 @@ void TGLTube::GLDraw(const TGLFrustum *fr)const
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    }
 
-   if (GLUquadric *quadObj = GetQuadric()) {
-      glLoadName(GetGLName());
-      glPushMatrix();
-
-      Double_t xC = fVertices[0], yC = fVertices[1], zC = fVertices[2];
-      Double_t rMin1 = fVertices[3], rMax1 = fVertices[4];
-      Double_t rMin2 = fVertices[5], rMax2 = fVertices[6];
-      Double_t dz = fVertices[7];
-
-      glTranslated(xC, yC, zC);
-      glMultMatrixd(&fVertices[8]);
-      glPushMatrix();
-      glTranslated(0., 0., -dz);
-
-      //outer surface
-      if (fInv) {
-         glFrontFace(GL_CW);
-      }
-
-      gluCylinder(quadObj, rMax1, rMax2, 2 * dz, fNdiv, 1);
-
-      //inner surface
-      if (rMin1 && rMin2) {
-         gluQuadricOrientation(quadObj, (GLenum)GLU_INSIDE);
-         gluCylinder(quadObj, rMin1, rMin2, 2 * dz, fNdiv, 1);
-         //return orientation back
-         gluQuadricOrientation(quadObj, (GLenum)GLU_OUTSIDE);
-      }
-
-      glPopMatrix();
-
-      //capping
-      glPushMatrix();
-      glTranslated(0., 0., dz);
-      gluDisk(quadObj, rMin2, rMax2, fNdiv, 1);
-      glRotated(180., 1., 0., 0.);
-      glTranslated(0., 0., 2 * dz);
-      gluDisk(quadObj, rMin1, rMax1, fNdiv, 1);
-      glPopMatrix();
-
-      glPopMatrix();
-
-      if (fInv) {
-         glFrontFace(GL_CCW);
-      }
-   }
+   if (fInv) glFrontFace(GL_CW);
+   //draw here
+   for (UInt_t i = 0; i < fParts.size(); ++i) fParts[i]->Draw(&fVertices[0]);
+   if (fInv) glFrontFace(GL_CCW);
 
    if (IsTransparent()) {
       glDepthMask(GL_TRUE);
@@ -841,15 +1282,57 @@ void TGLTube::GLDraw(const TGLFrustum *fr)const
 }
 
 //______________________________________________________________________________
-void TGLTube::Shift(Double_t x, Double_t y, Double_t z)
+void TGLCylinder::Shift(Double_t xs, Double_t ys, Double_t zs)
 {
-   fSelectionBox.Shift(x, y, z);
-   fVertices[0] += x;
-   fVertices[1] += y;
-   fVertices[2] += z;
+   fSelectionBox.Shift(xs, ys, zs);
+   for (UInt_t i = 0; i < fParts.size(); ++i)
+      fParts[i]->Shift(xs, ys, zs);
 }
 
 //______________________________________________________________________________
-void TGLTube::Stretch(Double_t, Double_t, Double_t)
+void TGLCylinder::Stretch(Double_t, Double_t, Double_t)
 {
+   //non-stretchable now
+}
+
+//______________________________________________________________________________
+void TGLCylinder::CreateParts(const TBuffer3D &buff)
+{
+   const Double_t *p = buff.fPnts;
+   Double_t r1 = p[28];
+   Double_t r2 = p[29];
+   Double_t r3 = p[30];
+   Double_t r4 = p[31];
+   Double_t dz = p[32];
+   Vertex3d center = {{p[0], p[1], p[2]}};
+
+   fVertices[0]  = p[33], fVertices[1]  = p[36], fVertices[2]  = p[39], fVertices[3]  = 0.;
+   fVertices[4]  = p[34], fVertices[5]  = p[37], fVertices[6]  = p[40], fVertices[7]  = 0.;
+   fVertices[8]  = p[35], fVertices[9]  = p[38], fVertices[10] = p[41], fVertices[11] = 0.;
+   fVertices[12] = 0.,    fVertices[13] = 0.,    fVertices[14] = 0.,    fVertices[15] = 1.;
+
+   switch (buff.fType) {
+   case TBuffer3D::kTUBE:
+      {
+         Vertex3d low = {{0., 0., -1.}};
+         Vertex3d high = {{0., 0., 1.}};
+         fParts.push_back(new TubeMesh(r1, r2, r3, r4, dz, center, low, high));
+      }
+      break;
+   case TBuffer3D::kTUBS:
+      {
+         Double_t phi1 = p[42];
+         Double_t phi2 = p[43];
+			if (phi2 < phi1) phi2 += 360.;
+			phi1 *= TMath::DegToRad();
+			phi2 *= TMath::DegToRad();
+         Vertex3d low = {{p[44], p[45], p[46]}};
+         Vertex3d high = {{p[47], p[48], p[49]}};
+         fParts.push_back(new TubeSegMesh(r1, r2, r3, r4, dz, phi1, 
+                                          phi2, center, low, high));
+      }
+      break;
+   default:;
+   //polycone should be here
+   }  
 }
