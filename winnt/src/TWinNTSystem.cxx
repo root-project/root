@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.92 2004/06/03 13:29:09 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.93 2004/06/08 10:43:07 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2914,7 +2914,6 @@ const char *TWinNTSystem::GetLinkedLibraries()
                               linkedLibs += " ";
                            linkedLibs += dllPath;
                         }
-                        delete [] winPath;
                      }
                      delete [] dllPath;
                   }
