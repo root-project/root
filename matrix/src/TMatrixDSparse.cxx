@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.1 2004/05/12 10:39:29 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.2 2004/05/12 13:50:41 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -1510,7 +1510,8 @@ void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDSparse &so
   }
 
   Int_t nr_nonzeros = 0;
-  for (Int_t irow = 0; irow < fNrows; irow++) {
+  Int_t irow,index;
+  for (irow = 0; irow < fNrows; irow++) {
     if (irow+fRowLwb >= row_lwb+nRows_source || irow+fRowLwb < row_lwb) continue;
     const Int_t sIndex = fRowIndex[irow];
     const Int_t eIndex = fRowIndex[irow+1];
@@ -1540,7 +1541,6 @@ void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDSparse &so
 
   Int_t nr = 0;
   rowIndex_new[0] = 0;
-  Int_t irow;
   for (irow = 0; irow < fNrows; irow++) {
     rowIndex_new[irow+1] = rowIndex_new[irow];
     Bool_t flagRow = kFALSE;
@@ -1553,7 +1553,7 @@ void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDSparse &so
     if (flagRow) {
       const Int_t icol_left = col_lwb-fColLwb;
       const Int_t left = TMath::BinarySearch(eIndex_o-sIndex_o,colIndex_old+sIndex_o,icol_left)+sIndex_o;
-      for (Int_t index = sIndex_o; index < left; index++) {
+      for (index = sIndex_o; index < left; index++) {
         rowIndex_new[irow+1]++;
         colIndex_new[nr] = colIndex_old[index];
         elements_new[nr] = elements_old[index];
@@ -1562,7 +1562,6 @@ void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDSparse &so
 
       const Int_t sIndex_s = rowIndex_s[irow-row_off];
       const Int_t eIndex_s = rowIndex_s[irow-row_off+1];
-      Int_t index;
       for (index = sIndex_s; index < eIndex_s; index++) {
         rowIndex_new[irow+1]++;
         colIndex_new[nr] = colIndex_s[index]+col_off;
@@ -1582,7 +1581,7 @@ void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDSparse &so
         nr++;
       }
     } else {
-      for (Int_t index = sIndex_o; index < eIndex_o; index++) {
+      for (index = sIndex_o; index < eIndex_o; index++) {
         rowIndex_new[irow+1]++;
         colIndex_new[nr] = colIndex_old[index];
         elements_new[nr] = elements_old[index];
