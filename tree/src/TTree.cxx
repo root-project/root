@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.4 2000/05/30 16:45:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.5 2000/05/31 06:36:33 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1600,13 +1600,16 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
 //      status = 1  branch will be processed
 //             = 0  branch will not be processed
 
-   TBranch *branch, *bclones, *bson;
+   TBranch *branch, *bcount, *bson;
    TLeaf *leaf, *leafcount;
 
    Int_t i,j;
    Int_t nleaves = fLeaves.GetEntriesFast();
    TRegexp re(bname,kTRUE);
    Int_t nb = 0;
+   
+   // first pass, loop on all branches
+   // for leafcount branches activate/deactivate in function of status
    for (i=0;i<nleaves;i++)  {
       leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
@@ -1617,24 +1620,36 @@ void TTree::SetBranchStatus(const char *bname, Bool_t status)
       else        branch->SetBit(kDoNotProcess);
       leafcount = leaf->GetLeafCount();
       if (leafcount) {
-         bclones = GetBranch(leafcount->GetName());
-         bclones->ResetBit(kDoNotProcess);
+         bcount = GetBranch(leafcount->GetName());
+         if (status) bcount->ResetBit(kDoNotProcess);
+         else        bcount->SetBit(kDoNotProcess);
       }
    }
    if (!nb) {
       Error("SetBranchStatus", "unknown branch -> %s", bname);
       return;
    }
+   
+   
+   // second pass, loop again on all branches
+   // activate leafcount branches for active branches only
    for (i = 0; i < nleaves; i++) {
       leaf = (TLeaf*)fLeaves.UncheckedAt(i);
       branch = (TBranch*)leaf->GetBranch();
-      if (!branch->TestBit(kDoNotProcess)) continue;
-      Int_t nbranches = branch->GetListOfBranches()->GetEntriesFast();
-      for (j=0;j<nbranches;j++) {
-         bson = (TBranch*)branch->GetListOfBranches()->UncheckedAt(j);
-         if (!bson->TestBit(kDoNotProcess)) {
-             branch->ResetBit(kDoNotProcess);
-             break;
+      if (!branch->TestBit(kDoNotProcess)) {
+         leafcount = leaf->GetLeafCount();
+         if (leafcount) {
+            bcount = GetBranch(leafcount->GetName());
+            bcount->ResetBit(kDoNotProcess);
+         }
+      } else {
+         Int_t nbranches = branch->GetListOfBranches()->GetEntriesFast();
+         for (j=0;j<nbranches;j++) {
+            bson = (TBranch*)branch->GetListOfBranches()->UncheckedAt(j);
+            if (!bson->TestBit(kDoNotProcess)) {
+               branch->ResetBit(kDoNotProcess);
+               break;
+            }
          }
       }
    }
