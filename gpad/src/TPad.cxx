@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.96 2003/02/21 15:08:43 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.97 2003/02/22 16:21:10 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2946,7 +2946,12 @@ void TPad::PaintFillArea(Int_t nn, Float_t *xx, Float_t *yy, Option_t *)
    }
    x[n] = x[0];
    y[n] = y[0];
-   if (n < 3) return;
+
+   if (n < 3) {
+      delete [] x;
+      delete [] y;
+      return;
+   }
 
    TPoint *pxy;
 
@@ -3027,7 +3032,11 @@ void TPad::PaintFillArea(Int_t nn, Double_t *xx, Double_t *yy, Option_t *)
    }
    x[n] = x[0];
    y[n] = y[0];
-   if (n < 3) return;
+   if (n < 3) {
+      delete [] x;
+      delete [] y;
+      return;
+   }
 
    TPoint *pxy;
 
