@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.18 2002/10/28 15:38:32 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveText.cxx,v 1.19 2004/09/13 16:39:12 brun Exp $
 // Author: Rene Brun   20/10/95
 
 /*************************************************************************
@@ -392,8 +392,8 @@ void TPaveText::PaintPrimitives(Int_t mode)
    Double_t x1,y1,x2,y2,y;
    y1       = gPad->GetY1();
    y2       = gPad->GetY2();
-   Float_t margin    = fMargin*(fX2-fX1);
-   Double_t yspace   = (fY2 - fY1)/Double_t(nlines);
+   Float_t margin  = fMargin*dx;
+   Double_t yspace = dy/Double_t(nlines);
    Double_t textsave = textsize;
    TObject *line;
    TText *linet;
@@ -415,7 +415,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
             if (w > longest) longest = w;
          }
       }
-      if (longest > 0.96*dx) textsize *= 0.96*dx/longest;
+      if (longest > 0.92*dx) textsize *= 0.92*dx/longest;
       if (mode == kDiamond) textsize *= 0.66;
       SetTextSize(textsize);
    }
