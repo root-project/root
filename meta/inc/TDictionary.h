@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.3 2000/12/13 15:13:52 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TDictionary.h,v 1.4 2002/02/22 10:44:31 rdm Exp $
 // Author: Fons Rademakers   20/06/96
 
 /*************************************************************************
@@ -52,6 +52,7 @@ enum EProperty {
    kIsStruct       = G__BIT_ISSTRUCT,
    kIsUnion        = G__BIT_ISUNION,
    kIsEnum         = G__BIT_ISENUM,
+   kIsNamespace    = G__BIT_ISNAMESPACE,
    kIsTypedef      = G__BIT_ISTYPEDEF,
    kIsFundamental  = G__BIT_ISFUNDAMENTAL,
    kIsAbstract     = G__BIT_ISABSTRACT,
