@@ -26,9 +26,9 @@ class MyClass : public TObject {
    ClassDef(MyClass,2);  
 };
 
-void arrayRead(bool withxml = 0) {
+void skipRead(bool withxml = 0) {
    if (withxml) {
-      TFile* f = TFile::Open("arraytestfile.xml");
+      TFile* f = TFile::Open("skiptestfile.xml");
       if (f==0) return;
       cout << "Reading .xml file\n";
 
@@ -50,28 +50,27 @@ void arrayRead(bool withxml = 0) {
 
       delete m;
       delete f;
-   } else {
-      cout << "Reading .root file\n";
-      TFile* f = TFile::Open("arraytestfile.root");
-      MyClass *m; f->GetObject("abc",m);
-
-      cout << "x1  = " << m->x1 << endl;
-      cout << "x2  = " << m->x2 << endl;
-      cout << "x3  = " << m->x3 << endl;
-      cout << "x4  = " << m->x4 << endl;
-      cout << "x5  = " << m->x5 << endl;
-      cout << "x6  = " << m->x6 << endl;
-      cout << "x7  = " << m->x7 << endl;
-      cout << "x8  = " << m->x8 << endl;
-      cout << "x9  = " << m->x9 << endl;
-      cout << "x10 = " << m->x10 << endl;
-      cout << "x11 = " << m->x11 << endl;
-
-      MyClass::Class()->GetStreamerInfo(1)->ls();
-
-      delete m;
-      delete f;
    }
+   cout << "Reading .root file\n";
+   TFile* f = TFile::Open("skiptestfile.root");
+   MyClass *m; f->GetObject("abc",m);
+
+   cout << "x1  = " << m->x1 << endl;
+   cout << "x2  = " << m->x2 << endl;
+   cout << "x3  = " << m->x3 << endl;
+   cout << "x4  = " << m->x4 << endl;
+   cout << "x5  = " << m->x5 << endl;
+   cout << "x6  = " << m->x6 << endl;
+   cout << "x7  = " << m->x7 << endl;
+   cout << "x8  = " << m->x8 << endl;
+   cout << "x9  = " << m->x9 << endl;
+   cout << "x10 = " << m->x10 << endl;
+   cout << "x11 = " << m->x11 << endl;
+
+   MyClass::Class()->GetStreamerInfo(1)->ls();
+
+   delete m;
+   delete f;
 
 }
 

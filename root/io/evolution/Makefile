@@ -1,5 +1,5 @@
-CLEAN_TARGETS += *.so *.root $(ALL_LIBRARIES) *.log
-TEST_TARGETS += arraySkip ClassConv ConvArray typedef
+CLEAN_TARGETS += *.so *.root $(ALL_LIBRARIES) *.log *.xml
+TEST_TARGETS += skip ClassConv ConvArray typedef
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -48,11 +48,11 @@ typedef.log: typedef.root
 typedef: typedef.log
 	$(TestDiff)
 
-arrayWrite.log: arrayWrite_C.$(DllSuf) $(ROOTCORELIBS)
-	$(CMDECHO) root.exe -q -b -l arrayWrite.C+ > arrayWrite.log
+skipWrite.log: skipWrite_C.$(DllSuf) $(ROOTCORELIBS)
+	$(CMDECHO) root.exe -q -b -l skipWrite.C+ > skipWrite.log
 
-arraySkip.log: arrayWrite.log arrayRead_C.$(DllSuf)
-	$(CMDECHO) root.exe -q -b -l runarraySkip.C 2>&1 | sed -e's/method=.*//' > arraySkip.log 
+skip.log: skipWrite.log skipRead_C.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l runSkip.C 2>&1 | sed -e's/method=.*//' > skip.log 
 
-arraySkip: arraySkip.log
+skip: skip.log
 	$(TestDiff)

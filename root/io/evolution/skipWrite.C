@@ -83,7 +83,7 @@ class MyClass : public TObject, public TAttFill {
    ClassDef(MyClass,1);  
 };
 
-void arrayWrite() {
+void skipWrite() {
   MyClass m;
   
   m.x = 100;
@@ -115,13 +115,13 @@ void arrayWrite() {
   m.skipstr = new char[100];
   strcpy((char*) m.skipstr,"Value of Char Start");
 
-  TFile* f = TFile::Open("arraytestfile.xml","recreate");
+  TFile* f = TFile::Open("skiptestfile.xml","recreate");
   if (f) {
      m.Write("abc");
      delete f;
   }
 
-  f = TFile::Open("arraytestfile.root","recreate");
+  f = TFile::Open("skiptestfile.root","recreate");
   m.Write("abc");
   delete f;
 }
