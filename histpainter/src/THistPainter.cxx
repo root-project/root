@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.128 2003/03/21 09:09:48 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.129 2003/03/21 16:23:59 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -952,6 +952,9 @@ void THistPainter::Paint(Option_t *option)
 // displays the name of histogram, mean value and RMS.
 // WARNING: never call SetOptStat(000111); but SetOptStat(1111), 0001111 will
 //          be taken as an octal number !!
+// SetOptStat can also take any combination of letters IOURMEN as its argument.
+// For example gStyle->SetOptStat("NE"), gStyle->SetOptStat("NMR") and 
+// gStyle->SetOptStat("RMEN") are equivalent to the examples above.
 //
 // With the option "same", the statistic box is not redrawn.
 // With the option "sames", the statistic box is drawn. If it hiddes
