@@ -1,5 +1,4 @@
-// This macro is an example of graphs in log scales
-// with annotations.
+// This macro is an example of graphs in log scales with annotations.
 //
 //  The  begin_html <a href="gif/zdemo.gif" >presented results</a> end_html
 //  are predictions of invariant cross-section of Direct Photons produced
@@ -42,13 +41,13 @@ void zdemo()
    pl->SetTextColor(49);
    pl->Draw();
 
-   TText *t = new TText();
+   TLatex *t = new TLatex();
    t->SetTextFont(32);
    t->SetTextColor(1);
    t->SetTextSize(0.03);
    t->SetTextAlign(12);
-   t->DrawText(3.1,15.5,"M.Tokarev, E.Potrebenikova ");
-   t->DrawText(14.,15.5,"JINR preprint E2-98-64, Dubna, 1998 ");
+   t->DrawLatex(3.1,15.5,"M.Tokarev, E.Potrebenikova ");
+   t->DrawLatex(14.,15.5,"JINR preprint E2-98-64, Dubna, 1998 ");
 
    pad1 = new TPad("pad1","This is pad1",0.02,0.02,0.48,0.83,33);
    pad2 = new TPad("pad2","This is pad2",0.52,0.02,0.98,0.83,33);
@@ -71,64 +70,36 @@ void zdemo()
    pad1->SetLogx();
    pad1->SetLogy();
 
-
    // create a 2-d histogram to define the range
    pad1->DrawFrame(1,1e-18,110,1e-8);
    pad1->GetFrame()->SetFillColor(19);
-   TText *t = new TText();
+   TLatex *t = new TLatex();
    t->SetTextFont(62);
    t->SetTextColor(36);
    t->SetTextSize(0.08);
    t->SetTextAlign(12);
-   t->DrawText(1.24,-8.8,"p - p");
+   t->DrawLatex(1.24,-8.8,"p - p");
 
    t->SetTextSize(0.05);
-   t->DrawText(1.21,-9.55,"Direct");
-   t->DrawText(1.35,-10.12,"= 90");
+   t->DrawLatex(1.21,-9.55,"Direct #gamma");
+   t->DrawLatex(1.35,-10.12,"#theta = 90^{o}");
 
-   t->DrawText(0.24,-13.3,"Ed");
-   t->DrawText(0.57,-13.3,"/dq");
-   t->DrawText(0.24,-14.,"(barn/Gev  )");
-
-   t->SetTextSize(0.025);
-   t->DrawText(1.6,-10.,"o");
-   t->SetTextSize(0.03);
-   t->DrawText(0.425,-13.16,"3");
-   t->DrawText(0.81,-13.16,"3");
-   t->DrawText(0.82,-13.86,"2");
+   t->DrawLatex(0.24,-13.3,"Ed^{3}#sigma/dq^{3}");
+   t->DrawLatex(0.24,-14.,"(barn/Gev^{2})");
 
    t->SetTextSize(0.045);
    t->SetTextColor(kBlue);
-   t->DrawText(0.45,-16.01,"s = 63(GeV)");
+   t->DrawLatex(0.35,-16.01,"#sqrt{s} = 63(GeV)");
    t->SetTextColor(kRed);
-   t->DrawText(0.45,-16.73,"s = 200(GeV)");
+   t->DrawLatex(0.35,-16.73,"#sqrt{s} = 200(GeV)");
    t->SetTextColor(6);
-   t->DrawText(0.45,-17.39,"s = 500(GeV)");
+   t->DrawLatex(0.35,-17.39,"#sqrt{s} = 500(GeV)");
 
    t->SetTextSize(0.05);
    t->SetTextColor(1);
-   t->DrawText(1.3,-18.5,"q  (Gev/c)");
+   t->DrawLatex(1.3,-18.5,"q  (Gev/c)");
    t->SetTextSize(0.03);
-   t->DrawText(1.37,-18.65,"T");
-
-   // Greek Symbols for First pad
-
-   t = new TText();
-   t->SetTextFont(122);
-   t->SetTextSize(0.05);
-   t->SetTextColor(36);
-   t->SetTextAlign(12);
-   t->DrawText(1.61,-9.54,"g");
-   t->DrawText(1.27,-10.14,"q");
-   t->DrawText(0.45,-13.3,"s");
-
-   t->SetTextSize(0.07);
-   t->SetTextColor(kBlue);
-   t->DrawText(0.35,-16.01,"\326");
-   t->SetTextColor(kRed);
-   t->DrawText(0.35,-16.73,"\326");
-   t->SetTextColor(6);
-   t->DrawText(0.35,-17.39,"\326");
+   t->DrawLatex(1.37,-18.65,"T");
 
    gr1 = new TGraph(NLOOP,PT,INVSIG);
 
@@ -168,7 +139,6 @@ void zdemo()
    delp  = 10.;
    hz_calc(energ, dens, tgrad, ptmin, ptmax, delp);
 
-
    gr3 = new TGraph(NLOOP,PT,INVSIG);
 
    gr3->SetLineColor(38);
@@ -204,7 +174,6 @@ void zdemo()
    pad2->SetLogx();
    pad2->SetLogy();
 
-
    pad2->DrawFrame(1,1e-22,3100,1e-8);
    pad2->GetFrame()->SetFillColor(19);
 
@@ -217,51 +186,33 @@ void zdemo()
    gr->SetMarkerSize(1.5);
    gr->Draw("LP");
 
-   TText *t = new TText();
+   TLatex *t = new TLatex();
    t->SetTextFont(62);
    t->SetTextColor(36);
    t->SetTextSize(0.08);
    t->SetTextAlign(12);
-   t->DrawText(1.63,-9.48,"p - p");
+   t->DrawLatex(1.63,-9.48,"p - p");
 
    t->SetTextSize(0.05);
-   t->DrawText(1.6,-10.55,"Direct");
-   t->DrawText(1.87,-11.35,"= 90");
+   t->DrawLatex(1.6,-10.55,"Direct #gamma");
+   t->DrawLatex(1.87,-11.35,"#theta = 90^{o}");
 
-   t->DrawText(2.52,-13.35,"H(z)");
-   t->DrawText(2.45,-14.05,"(barn)");
-
-   t->SetTextSize(0.025);
-   t->DrawText(2.3,-11.2,"o");
+   t->DrawLatex(2.52,-13.35,"H(z)");
+   t->DrawLatex(2.45,-14.05,"(barn)");
 
    t->SetTextSize(0.045);
    t->SetTextColor(46);
-   t->DrawText(0.65,-18.34,"s, GeV");
-   t->DrawText(0.65,-19.04,"63");
-   t->DrawText(0.6,-19.84,"200");
-   t->DrawText(0.6,-20.64,"500");
+   t->DrawLatex(0.5,-18.34,"#sqrt{s}, GeV");
+   t->DrawLatex(0.65,-19.04,"63");
+   t->DrawLatex(0.6,-19.84,"200");
+   t->DrawLatex(0.6,-20.64,"500");
 
    t->SetTextSize(0.05);
    t->SetTextColor(1);
-   t->DrawText(3.2,-22.5,"z");
+   t->DrawLatex(3.2,-22.5,"z");
 
-   // Greek Symbols for Second pad
-
-   t = new TText();
-   t->SetTextFont(122);
-   t->SetTextSize(0.05);
-   t->SetTextColor(36);
-   t->SetTextAlign(12);
-   t->DrawText(2.32,-10.525,"g");
-   t->DrawText(1.725,-11.4,"q");
-
-   t->SetTextSize(0.07);
-   t->SetTextColor(46);
-   t->DrawText(0.5,-18.34,"\326");
-
-   //   c1->Print("zdemo.ps");
-  c1->Modified();
-  c1->Update();
+   c1->Modified();
+   c1->Update();
 }
 
 void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN, Float_t PTMAX, Float_t DELP)
@@ -348,4 +299,3 @@ void hz_calc(Float_t ENERG, Float_t DENS, Float_t TGRAD, Float_t PTMIN, Float_t 
 
   }
 }
-
