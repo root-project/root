@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.rdl,v 1.9 2001/04/09 04:29:34 verkerke Exp $
+ *    File: $Id: RooAbsCategory.rdl,v 1.10 2001/04/13 00:43:56 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -45,6 +45,7 @@ public:
   Bool_t isValidLabel(const char* label) const ;  
   const RooCatType* lookupType(Int_t index, Bool_t printError=kFALSE) const ;
   const RooCatType* lookupType(const char* label, Bool_t printError=kFALSE) const ;
+  const RooCatType* lookupType(const RooCatType& type, Bool_t printError=kFALSE) const ;
   TIterator* typeIterator() const ;
 
   Roo1DTable *createTable(const char *label) const ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCatType.rdl,v 1.2 2001/03/17 03:47:39 verkerke Exp $
+ *    File: $Id: RooCatType.rdl,v 1.3 2001/04/05 01:49:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,8 +15,9 @@
 
 #include <iostream.h>
 #include "TNamed.h"
+#include "RooFitCore/RooPrintable.hh"
 
-class RooCatType : public TNamed {
+class RooCatType : public TNamed, public RooPrintable {
 public:
   inline RooCatType() : TNamed() { _value = 0 ; } 
   inline RooCatType(const char* name, Int_t value) : TNamed(name,""), _value(value) {} ;
@@ -26,18 +27,20 @@ public:
 
   inline RooCatType& operator=(const RooCatType& other) 
     { SetName(other.GetName()) ; _value = other._value ; return *this ; } 
-  inline Bool_t operator==(const RooCatType& comp) { return (_value==comp._value) ; }
+
+  inline Bool_t operator==(const RooCatType& other) {
+    return ((*this)== other.getVal() && (*this)== other.GetName());
+  }
   inline Bool_t operator==(Int_t index) { return (_value==index) ; }
-  inline Bool_t operator==(const char* label) { return !TString(label).CompareTo(GetName()) ; }
-  inline operator Int_t&() { return _value ; }
-  inline operator Int_t() const { return _value ; }
+  Bool_t operator==(const char* label) { return !TString(label).CompareTo(GetName()) ; }
+
   inline Int_t getVal() const { return _value ; }
   void setVal(Int_t newValue) { _value = newValue ; }
 
-  enum PrintOption { Standard=0 } ;
-  void printToStream(ostream& os, PrintOption opt=Standard) 
-       { os << GetName() << ":" << _value << endl ; }
-  void print(PrintOption opt=Standard) { printToStream(cout,opt) ; }
+  void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
+  inline virtual void Print(Option_t *options= 0) const {
+    printToStream(defaultStream(),parseOptions(options));
+  }
 
 protected:
   Int_t _value ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.2 2001/04/11 00:54:37 davidk Exp $
+ *    File: $Id: RooPlot.cc,v 1.3 2001/04/11 23:25:27 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -33,10 +33,10 @@
 ClassImp(RooPlot)
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.2 2001/04/11 00:54:37 davidk Exp $";
+"$Id: RooPlot.cc,v 1.3 2001/04/11 23:25:27 davidk Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
-  TH1("frame","RooPlotFrame",0,xmin,xmax), _items()
+  TH1("frame","RooPlotFrame",0,xmin,xmax), _plotVar(0), _items()
 {
   // Create an empty frame with the specified x-axis limits.
 
@@ -44,7 +44,7 @@ RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
 }
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax) :
-  TH1("frame","RooPlotFrame",0,xmin,xmax), _items()
+  TH1("frame","RooPlotFrame",0,xmin,xmax), _plotVar(0), _items()
 {
   // Create an empty frame with the specified x- and y-axis limits.
 
@@ -54,7 +54,7 @@ RooPlot::RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax) :
 }
 
 RooPlot::RooPlot(RooAbsReal &var) :
-  TH1("frame",var.GetTitle(),0,var.getPlotMin(),var.getPlotMax()), _items()
+  TH1("frame",var.GetTitle(),0,var.getPlotMin(),var.getPlotMax()), _plotVar(&var), _items()
 {
   // Create an empty frame with its title and x-axis range and label taken
   // from the specified real variable.

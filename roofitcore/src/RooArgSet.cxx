@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooArgSet.cc,v 1.12 2001/04/11 15:42:04 david Exp $
+ *    File: $Id: RooArgSet.cc,v 1.13 2001/04/11 23:25:27 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -439,9 +439,9 @@ void RooArgSet::writeToStream(ostream& os, Bool_t compact)
 void RooArgSet::printToStream(ostream& os, PrintOption opt, TString indent) const {
   // Print info about this argument set to the specified stream.
   //
-  // Standard: OneLine description of each argument
-  //    Shape: Standard description of each argument
-  //  Verbose: Shape description of each argument
+  //  Standard: OneLine description of each argument
+  //     Shape: Standard description of each argument
+  //   Verbose: Shape description of each argument
 
   // we cannot use oneLinePrint() since we do not inherit from TNamed
   os << ClassName() << "::" << GetName() << ":" << endl;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.9 2001/04/09 04:29:34 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.10 2001/04/13 00:43:56 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -150,38 +150,52 @@ Bool_t RooAbsCategory::defineType(const char* label, Int_t index)
   return kFALSE ;
 }
 
+const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t printError) const {
+  // Find our type that matches the specified type, or return 0 for no match.
+
+  RooCatType* type ;
+  Int_t n= _types.GetEntries();
+  for (int i=0 ; i < n; i++) {
+    type = (RooCatType*)_types.At(i) ;
+    if((*type) == other) return type; // delegate comparison to RooCatType
+  }
+  if (printError) {
+    cout << ClassName() << "::" << GetName() << ":lookupType: no match for ";
+    other.printToStream(cout,OneLine);
+  }
+  return 0 ;
+}
+
 const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) const
 {
-  RooCatType* type ;
-  for (int i=0 ; i<_types.GetEntries() ; i++) {
-    type = (RooCatType*)_types.At(i) ;
-    if (type->getVal()==index) return type ;
-  }  
+  // Find our type corresponding to the specified index, or return 0 for no match.
 
+  RooCatType* type ;
+  Int_t n= _types.GetEntries();
+  for (int i=0 ; i < n; i++) {
+    type = (RooCatType*)_types.At(i) ;
+    if((*type) == index) return type; // delegate comparison to RooCatType
+  }
   if (printError) {
-    cout << "RooAbsCategory::lookupType(" << GetName() 
-	 << "): type " << index << " undefined" << endl ;
+    cout << ClassName() << "::" << GetName() << ":lookupType: no match for index "
+	 << index << endl;
   }
   return 0 ;
 }
 
 const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printError) const 
 {
-  char *endptr(0) ;
-  Int_t val = strtol(label,&endptr,10) ;
-  if (endptr-label==strlen(label)) {
-    return lookupType(val,printError) ;
-  }
+  // Find our type corresponding to the specified label, or return 0 for no match.
 
   RooCatType* type ;
-  for (int i=0 ; i<_types.GetEntries() ; i++) {
+  Int_t n= _types.GetEntries();
+  for (int i=0 ; i < n; i++) {
     type = (RooCatType*)_types.At(i) ;
-    if (!TString(type->GetName()).CompareTo(label)) return type ;
-  }  
-
+    if((*type) == label) return type; // delegate comparison to RooCatType
+  }
   if (printError) {
-    cout << "RooAbsCategory::lookupType(" << GetName() 
-	 << "): type " << label << " undefined" << endl ;
+    cout << ClassName() << "::" << GetName() << ":lookupType: no match for index "
+	 << index << endl;
   }
   return 0 ;
 }
@@ -218,7 +232,6 @@ void RooAbsCategory::printToStream(ostream& os, PrintOption opt, TString indent)
   //
   //  Standard : label and index
   //     Shape : defined types
-  //   Verbose : default binning and print label
 
   RooAbsArg::printToStream(os,opt,indent);
   if(opt >= Standard) {
@@ -230,11 +243,14 @@ void RooAbsCategory::printToStream(ostream& os, PrintOption opt, TString indent)
     os << indent << "  Value is \"" << getLabel() << "\" (" << getIndex() << ")" << endl;
     if(opt >= Shape) {
       os << indent << "  Has the following possible values:" << endl;
+      indent.Append("    ");
+      opt= lessVerbose(opt);
+      RooCatType *type;
       Int_t n= _types.GetEntries();
       for (int i=0 ; i < n ; i++) {
-	os << indent
-	   << ((RooCatType*)_types.At(i))->GetName() << "\" ("
-	   << ((RooCatType*)_types.At(i))->getVal() << ")" << endl;      
+	type= (RooCatType*)_types.At(i);
+	os << indent;
+	type->printToStream(os,opt,indent);
       }
     }
   }

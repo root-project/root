@@ -25,7 +25,7 @@ RooFormula::RooFormula() : TFormula()
 {
 }
 
-RooFormula::RooFormula(const char* name, const char* formula, RooArgSet& list) : 
+RooFormula::RooFormula(const char* name, const char* formula, const RooArgSet& list) : 
   TFormula(), _isOK(kTRUE) 
 {
   SetName(name) ;
@@ -36,7 +36,6 @@ RooFormula::RooFormula(const char* name, const char* formula, RooArgSet& list) :
   while (arg=(RooAbsArg*)iter->Next()) {
     _origList.Add(arg) ;
   }
-  
 
   if (Compile()) {
     cout << "RooFormula::RooFormula(" << GetName() << "): compile error" << endl ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.cc,v 1.6 2001/03/29 22:37:40 verkerke Exp $
+ *    File: $Id: RooMappedCategory.cc,v 1.7 2001/04/09 04:29:34 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -149,8 +149,8 @@ Bool_t RooMappedCategory::addMap( const RooCatType* out, const RooCatType* inlo,
   _inlo.Add(new RooCatType(*inlo)) ;
   _inhi.Add(new RooCatType(*inhi)) ;
   _out.Add(new RooCatType(*out)) ;
+  setShapeDirty(); // DK: added Apr-13, is this right?
 }
-
 
 RooCatType
 RooMappedCategory::evaluate() const
@@ -165,39 +165,43 @@ RooMappedCategory::evaluate() const
   return _defout ;
 }
 
-
-void RooMappedCategory::printToStream(ostream& os, PrintOption opt) const
+void RooMappedCategory::printToStream(ostream& os, PrintOption opt, TString indent) const
 {
-  if (opt==Shape) {
-    cout << "RooMappedCategory: input category:" << endl ;
-    inputCat()->printToStream(os,Shape) ;
+  // Print info about this mapped category to the specified stream. In addition to the info
+  // from RooAbsCategory::printToStream() we add:
+  //
+  //  Standard : input category
+  //     Shape : default value
+  //   Verbose : list of mapping rules
 
-    os << "RooMappedCategory: value mapping:" << endl ;
-
-    int i ; for (i=0 ; i<_out.GetEntries() ; i++) {
-      RooCatType* inlo = (RooCatType*) _inlo.At(i) ;
-      RooCatType* inhi = (RooCatType*) _inhi.At(i) ;
-      RooCatType* out  = (RooCatType*) _out.At(i) ;
-
-      if (*inlo==*inhi) {
-	os << "   " << inlo->GetName() << " -> " << out->GetName() 
-	   << " (" << out->getVal() << ")" << endl ;
-      } else {
-	os << "   (" << inlo->GetName() << " - " << inhi->GetName() 
-	   << ") -> " << out->GetName() << " (" << out->getVal() << ")" << endl ;
+  RooAbsCategory::printToStream(os,opt,indent);
+  if (opt >= Standard) {
+    os << indent << "--- RooMappedCategory ---" << endl
+       << indent << "  Maps from ";
+    TString deeper(indent);
+    deeper.Append("    ");
+    inputCat()->printToStream(os,lessVerbose(opt),deeper);
+    if(opt >= Shape) {
+      os << indent << "  Default value is ";
+      _defout.printToStream(os,OneLine);
+      if(opt >= Verbose) {
+	os << indent << "  Mapping rules:" << endl;
+	Int_t n= _out.GetEntries();
+	for(Int_t i= 0 ; i< n; i++) {
+	  RooCatType* inlo = (RooCatType*) _inlo.At(i) ;
+	  RooCatType* inhi = (RooCatType*) _inhi.At(i) ;
+	  RooCatType* out  = (RooCatType*) _out.At(i) ;
+	  if (*inlo==*inhi) {
+	    os << deeper << inlo->GetName() << " (" << inlo->getVal() << ") -> ";
+	  }
+	  else {
+	    os << deeper << "[ " << inlo->GetName() << " (" << inlo->getVal() << ") , "
+	       << inhi->GetName() << " (" << inhi->getVal() << ") ] -> ";
+	  }
+	  os << out->GetName() << " (" << out->getVal() << ")" << endl;
+	}
       }
     }
-    if (!TString(_defout.GetName()).IsNull()) {
-      os << "   Default -> " << _defout.GetName() << " (" << _defout.getVal() << ")" << endl ;
-    }
-  } else {
-    os << "RooMappedCategory: " << GetName() << " = " << inputCat()->GetName() 
-       << ":" << inputCat()->getLabel() << "(" << inputCat()->getIndex() 
-       << ") -> " << getLabel() << "(" << getIndex() << ")" ;
-    os << " : \"" << fTitle << "\"" ;
-
-    printAttribList(os) ;
-    os << endl ;
   }
 }
 
@@ -271,14 +275,14 @@ void RooMappedCategory::writeToStream(ostream& os, Bool_t compact) const
       RooCatType* inhi = (RooCatType*) _inhi.At(i) ;
       RooCatType* out = (RooCatType*) _out.At(i) ;
 
-      if (*out != lastOut) {
+      if (!((*out) == lastOut)) {
 	cout << (first?"":" ") << out->GetName() << ":" ;
 	first=kFALSE ;
       } else {
 	cout << "," ;
       }
       cout << inlo->GetName() ;
-      if (*inhi != *inlo) cout << "-" << inhi->GetName() ;
+      if (!((*inhi) == (*inlo))) cout << "-" << inhi->GetName() ;
       lastOut = *out ;
     }
     if (!TString(_defout.GetName()).IsNull()) {

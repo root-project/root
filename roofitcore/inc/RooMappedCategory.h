@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooMappedCategory.rdl,v 1.6 2001/04/05 01:49:10 verkerke Exp $
+ *    File: $Id: RooMappedCategory.rdl,v 1.7 2001/04/09 04:29:34 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UCSB, verkerke@slac.stanford.edu
  * History:
@@ -40,7 +40,7 @@ public:
   Bool_t mapRange(int   inlo,     int   inhi,     int   out) ;
 
   // Printing interface (human readable)
-  virtual void printToStream(ostream& stream, PrintOption opt=Standard) const ;
+  virtual void printToStream(ostream& os, PrintOption opt=Standard, TString indent= "") const ;
 
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;

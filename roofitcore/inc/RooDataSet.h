@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.7 2001/04/11 00:54:37 davidk Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.8 2001/04/11 23:25:27 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -29,6 +29,7 @@ class TH2F;
 class TPaveText;
 class Roo1DTable ;
 class RooAbsCategory ;
+class RooPlot;
 
 class RooDataSet : public TTree, public RooPrintable {
 public:
@@ -57,9 +58,12 @@ public:
   // Load a given row of data
   const RooArgSet *get(Int_t index) const;
 
-  // Plot a floating value 
-  TH1F* Plot(RooAbsReal& var, const char* cuts="", const char* opts="") ;	 
   Roo1DTable* Table(RooAbsCategory& cat, const char* cuts="", const char* opts="") ;
+
+  // Plot the distribution of a real valued arg
+  TH1F* Plot(RooAbsReal& var, const char* cuts="") const;	 
+  RooPlot *plot(RooAbsReal& var, const char* cuts="", const char* opts="") const;
+  RooPlot *plot(RooPlot *frame, const char* cuts="", const char* opts="") const;
  
   // Printing interface (human readable)
   virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;

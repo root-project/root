@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.12 2001/04/11 23:25:27 davidk Exp $
+ *    File: $Id: RooDataSet.cc,v 1.13 2001/04/13 00:43:56 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,6 +48,7 @@
 #include "RooFitCore/Roo1DTable.hh"
 #include "RooFitCore/RooFormula.hh"
 #include "RooFitCore/RooCategory.hh"
+#include "RooFitCore/RooPlot.hh"
 
 ClassImp(RooDataSet)
 
@@ -224,8 +225,35 @@ void RooDataSet::add(const RooArgSet& data) {
   Fill();
 }
 
+RooPlot *RooDataSet::plot(RooAbsReal& var, const char* cuts, const char* opts) const {
+  // Create an empty frame for the specified variable and add to it a histogram of
+  // its distribution calculated with our dataset.
 
-TH1F* RooDataSet::Plot(RooAbsReal& var, const char* cuts, const char* opts)
+  return plot(new RooPlot(var), cuts, opts);
+}
+
+RooPlot *RooDataSet::plot(RooPlot *frame, const char* cuts, const char* opts) const {
+  if(0 == frame) {
+    cout << ClassName() << "::" << GetName() << ":plot: frame is null" << endl;
+    return 0;
+  }
+  RooAbsReal *var= frame->getPlotVar();
+  if(0 == var) {
+    cout << ClassName() << "::" << GetName()
+	 << ":plot: frame does not specify a plot variable" << endl;
+    return 0;
+  }
+  // create a temporary histogram of this variable
+  TH1F *hist= Plot(*var, cuts);
+  // add it to our plot
+  frame->addHistogram(hist,opts);
+  // cleanup
+  delete hist;
+
+  return frame;  
+}
+
+TH1F* RooDataSet::Plot(RooAbsReal& var, const char* cuts) const
 {
   // Plot distribution given variable for this data set 
 
@@ -254,7 +282,7 @@ TH1F* RooDataSet::Plot(RooAbsReal& var, const char* cuts, const char* opts)
     ownPlotVar = kTRUE ;    
 
     //Redirect servers of derived clone to internal ArgSet representing the data in this set
-    plotVar->redirectServers(_vars) ;
+    plotVar->redirectServers(const_cast<RooArgSet&>(_vars)) ;
   }
 
   TH1F *histo= plotVar->createHistogram("dataset", "Events");

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.14 2001/04/11 15:42:04 david Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.15 2001/04/11 23:25:26 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -439,31 +439,30 @@ void RooAbsArg::printToStream(ostream& os, PrintOption opt, TString indent)  con
     printAttribList(os) ;
     os << endl ;
     // client list
-    os << indent << "  Clients: ";
+    os << indent << "  Clients: " << endl;
     TIterator *clientIter= _clientList.MakeIterator();
     RooAbsArg* client ;
     while (client=(RooAbsArg*)clientIter->Next()) {
-      os << indent << client->GetName() << "("
-	 << (void*)client 
+      os << indent << "    (" << (void*)client 
 	 << (_clientListValue.FindObject(client)?",V":"")
 	 << (_clientListShape.FindObject(client)?",S":"")
 	 << ") " ;
+      client->printToStream(os,OneLine);
     }
-    os << endl ;
     // server list
-    os << indent << "  Servers: ";
+    os << indent << "  Servers: " << endl;
     TIterator *serverIter= _serverList.MakeIterator();
     RooAbsArg* server ;
     while (server=(RooAbsArg*)serverIter->Next()) {
-      os << indent << server->GetName() << "("
-	 << (void*)server
-	 << (server->_clientListValue.FindObject((TObject*)this)?",V":"")
-	 << (server->_clientListShape.FindObject((TObject*)this)?",S":"")
+      os << indent << "    (" << (void*)server
+	 << (server->_clientListValue.FindObject((TObject*)this)?",V":"-")
+	 << (server->_clientListShape.FindObject((TObject*)this)?",S":"-")
 	 << ") " ;
+      server->printToStream(os,OneLine);
     }
-    os << endl ;
   }
-}                                                                                                                                                                          
+}
+
 ostream& operator<<(ostream& os, RooAbsArg &arg)
 {
   arg.writeToStream(os,kTRUE) ;

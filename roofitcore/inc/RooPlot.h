@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.2 2001/04/11 00:54:37 davidk Exp $
+ *    File: $Id: RooPlot.rdl,v 1.3 2001/04/11 23:25:27 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -21,21 +21,20 @@ class RooHist;
 
 class RooPlot : public TH1, public RooPrintable {
 public:
+  RooPlot(RooAbsReal &var);
   RooPlot(Float_t xmin= 0, Float_t xmax= 1);
   RooPlot(Float_t xmin, Float_t xmax, Float_t ymin, Float_t ymax);
-  RooPlot(RooAbsReal &var);
   virtual ~RooPlot();
   TObject *addObject(const TObject *obj, const char *drawOptions= "");
   RooHist *addHistogram(const TH1 *data, const char *drawOptions= "E",
 			Bool_t adjustRange= kTRUE);
   virtual void printToStream(ostream& os, PrintOption opt= Standard, TString indent= "") const;
-  inline virtual void Print(Option_t *options= 0) const {
-    printToStream(defaultStream(),parseOptions(options));
-  }
   virtual void Draw(Option_t *options= 0);
+  inline RooAbsReal *getPlotVar() const { return _plotVar; }
 protected:
   void initialize();
   THashList _items;
+  RooAbsReal *_plotVar;
   TIterator *_iterator;  //! non-persistent
   RooPlot(const RooPlot& other); // object cannot be copied
   ClassDef(RooPlot,1) // A plot frame and container for graphics objects
