@@ -60,6 +60,10 @@ N: Nicolas Brun
 E: nicolas@pcbrun.cern.ch
 D: classes TFormula, TText, TLatex
 
+N: Ernst-Jan Buis
+E: buis@mail.cern.ch
+D: contour drawing options "AITOFF","MERCATOR","SINUSOIDAL","PARABOLIC"
+
 N: Nenad Buncic
 E: Nenad.Buncic@epfl.ch
 D: HTML documentation generator, 3D shapes and geometry classes,
