@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.6 2004/09/15 10:26:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGMdiDecorFrame.cxx,v 1.7 2004/09/20 14:28:12 brun Exp $
 // Author: Bertrand Bellenot   20/08/2004
 
 /*************************************************************************
@@ -462,7 +462,7 @@ Bool_t TGMdiTitleBar::HandleButton(Event_t *event)
       switch (event->fCode) {
 
          case kButton1:
-            //((TGMainFrame *)((TGMdiMainFrame *)fMdiWin)->GetMainFrame())->Layout();
+            //if (!fClient->IsEditable()) ((TGMainFrame *)((TGMdiMainFrame *)fMdiWin)->GetMainFrame())->Layout();
             fLeftButPressed = kFALSE;
             break;
 
@@ -737,7 +737,7 @@ Bool_t TGMdiWinResizer::HandleButton(Event_t *event)
                DrawBox(fNewX, fNewY, fNewW, fNewH);
                ((TGFrame *)fParent)->MoveResize(fNewX, fNewY, fNewW, fNewH);
             }
-            ((TGMainFrame *)((TGMdiMainFrame *)fMdiWin)->GetMainFrame())->Layout();
+            //if (!fClient->IsEditable()) ((TGMainFrame *)((TGMdiMainFrame *)fMdiWin)->GetMainFrame())->Layout();
             fLeftButPressed = kFALSE;
             break;
 

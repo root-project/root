@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.7 2004/09/21 10:09:18 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.8 2004/09/21 11:18:19 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -771,7 +771,10 @@ Bool_t TGuiBuilder::SaveProject(Event_t *event)
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    fEditable = FindEditableMdiFrame(root);
 
-   if (!fEditable) return kFALSE;
+   if (!fEditable) {
+      if (fClient->IsEditable()) return kFALSE;
+      fEditable = fMain->GetCurrent();
+   }
 
    TGFileInfo fi;
    static TString dir(".");
@@ -825,12 +828,13 @@ TGMdiFrame *TGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
    //
 
    const TGWindow *parent = win;
-
+ 
    while (parent && (parent != fClient->GetDefaultRoot())) {
       if (parent->InheritsFrom(TGMdiFrame::Class())) {
          fEditable = (TGMdiFrame*)parent;
          return fEditable;
       }
+      parent = parent->GetParent();
    }
    return 0;
 }
