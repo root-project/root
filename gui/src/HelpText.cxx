@@ -1,9 +1,9 @@
-// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.5 2003/02/14 20:50:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: HelpText.cxx,v 1.6 2003/02/14 21:24:31 brun Exp $
 // Author: Fons Rademakers   28/07/97
 
 #include "HelpText.h"
 
-#if !defined(WIN32) || defined(GDK_WIN32)
+#if !defined(WIN32) || defined(GDK_WIN32) || defined(R__QT)
 const char gHelpAbout[] = "\
 ROOT is an OO framework for large scale scientific data\n\
 analysis and data mining. It has been developed at CERN with the\n\

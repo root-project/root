@@ -687,6 +687,8 @@ showbuild:
 	@echo "OPENGLULIB         = $(OPENGLULIB)"
 	@echo "OPENGLLIB          = $(OPENGLLIB)"
 	@echo "OPENGLINCDIR       = $(OPENGLINCDIR)"
+	@echo "OPENIVLIB          = $(OPENIVLIB)"
+	@echo "OPENIVINCDIR       = $(OPENIVINCDIR)"
 	@echo "CERNLIBDIR         = $(CERNLIBDIR)"
 	@echo "CERNLIBS           = $(CERNLIBS)"
 	@echo "OSTHREADLIB        = $(OSTHREADLIB)"
