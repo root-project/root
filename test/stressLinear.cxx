@@ -639,7 +639,7 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   ok &= VerifyMatrixValue(m,pattern,gVerbose,EPSILON);
   m1.Abs();
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
-  Assert( m == m1 );
+  ok &= VerifyMatrixIdentity(m1,m,gVerbose,EPSILON);
 
   if (gVerbose)
     cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << endl;

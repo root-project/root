@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.19 2004/01/26 14:09:58 brun Exp $
+// @(#)root/test:$Name:  $:$Id: vmatrix.cxx,v 1.20 2004/01/26 14:19:43 brun Exp $
 // Author: Fons Rademakers and Eddy Offermann  Nov 2003
 
 //////////////////////////////////////////////////////////////////////////
@@ -492,7 +492,7 @@ void stress_element_op(Int_t rsize,Int_t csize)
   ok &= VerifyMatrixValue(m,pattern,gVerbose,EPSILON);
   m1.Abs();
   ok &= VerifyMatrixValue(m1,pattern,gVerbose,EPSILON);
-  Assert( m == m1 );
+  ok &= VerifyMatrixIdentity(m,m1,gVerbose,EPSILON);
 
   if (gVerbose)
     cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << endl;
