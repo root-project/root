@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.68 2002/05/16 06:21:27 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.69 2002/05/27 18:13:14 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -265,7 +265,7 @@ bool CheckInputOperator(G__ClassInfo &cl)
    if (!methodinfo.IsValid() ||
        methodinfo.ifunc()->para_p_tagtable[methodinfo.Index()][1] != cl.Tagnum() ||
        strstr(methodinfo.FileName(),"Rtypes.h")!=0 ) {
-      fprintf(stderr, "ERROR: This version of ROOT require the presence of an actual declaration of:\n");
+      fprintf(stderr, "ERROR: This version of ROOT requires the presence of an actual declaration of:\n");
       fprintf(stderr, "   TBuffer &operator>>(TBuffer &,%s *&);\n",cl.Fullname());
       has_input_error = true;
    } else {
@@ -2811,7 +2811,7 @@ int main(int argc, char **argv)
       if ((cl.Property() & G__BIT_ISCLASS) && cl.Linkage() == G__CPPLINK) {
          if (cl.HasMethod("Streamer")) {
             if (!(cl.RootFlag() & G__NOINPUTOPERATOR)) {
-               // We do not write down the input operator anymore.  It is a template
+               // We do not write out the input operator anymore, it is a template
 #if defined R__CONCRETE_INPUT_OPERATOR
                WriteInputOperator(cl);
 #endif
