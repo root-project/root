@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.20 2001/11/30 11:50:26 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBuffer.cxx,v 1.21 2002/02/02 11:52:46 brun Exp $
 // Author: Fons Rademakers   04/05/96
 
 /*************************************************************************
@@ -99,16 +99,14 @@ TBuffer::~TBuffer()
 {
    // Delete an I/O buffer object.
 
-   if (TestBit(kIsOwner))
-      delete [] fBuffer;
+   if (TestBit(kIsOwner)) delete [] fBuffer;
    fBuffer = 0;
 
-   if (IsReading())
-      delete fReadMap;
-   else
-      delete fWriteMap;
+   if (IsReading()) delete fReadMap;
+   else             delete fWriteMap;
 
    fReadMap = 0;
+   fParent  = 0;
 }
 
 //______________________________________________________________________________
