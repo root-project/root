@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.18 2002/01/24 11:39:27 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFolder.cxx,v 1.19 2002/05/18 08:43:29 brun Exp $
 // Author: Rene Brun   02/09/2000
 
 /*************************************************************************
@@ -121,7 +121,7 @@ TFolder::~TFolder()
    TCollection::StartGarbageCollection();
 
    if (fFolders) {
-      fFolders->Delete();
+      fFolders->Clear();
       SafeDelete(fFolders);
    }
 
