@@ -172,6 +172,7 @@ endif
 
 ROOTCORELIBS_LIST = Core Cint Tree Hist 
 ROOTCORELIBS = $(addprefix $(ROOT_LOC)/lib/lib,$(addsuffix .$(DllSuf),$(ROOTCORELIBS_LIST)))
+ROOTCINT = $(ROOT_LOC)/bin/rootcint$(ExeSuf)
 
 %.o: %.C
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_C.build.log 2>&1
@@ -194,19 +195,19 @@ ROOTCORELIBS = $(addprefix $(ROOT_LOC)/lib/lib,$(addsuffix .$(DllSuf),$(ROOTCORE
 %.obj: %.cpp
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_cpp.build.log 2>&1
 
-%_cpp.$(DllSuf) : %.cpp
+%_cpp.$(DllSuf) : %.cpp $(ROOTCORELIBS) $(ROOTCINT)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1
 
-%_C.$(DllSuf) : %.C
+%_C.$(DllSuf) : %.C $(ROOTCORELIBS)  $(ROOTCORELIBS) $(ROOTCINT)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_C.build.log 2>&1
 
-%_cxx.$(DllSuf) : %.cxx
+%_cxx.$(DllSuf) : %.cxx $(ROOTCORELIBS)  $(ROOTCORELIBS) $(ROOTCINT)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cxx.build.log 2>&1
 
-%_h.$(DllSuf) : %.h
+%_h.$(DllSuf) : %.h $(ROOTCORELIBS)  $(ROOTCORELIBS) $(ROOTCINT)
 	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_h.build.log 2>&1
 
-%.log : run%.C
+%.log : run%.C $(ROOTCORELIBS)  $(ROOTCORELIBS) $(ROOTCINT)
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
 define BuildWithLib
