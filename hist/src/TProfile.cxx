@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.26 2002/05/18 08:48:42 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.27 2002/08/05 16:45:00 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -512,7 +512,14 @@ void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Op
       Error("Divide","Coefficient of dividing profile cannot be zero");
       return;
    }
-
+   
+   //THE ALGORITHM COMPUTING THE ERRORS IS WRONG. HELP REQUIRED
+   printf("WARNING!!: The algorithm in TProfile::Divide computing the errors is not accurate\n");
+   printf(" Instead of Divide(TProfile *h1, TProfile *h2, do:\n");
+   printf("   TH1D *p1 = h1->ProjectionX();\n");
+   printf("   TH1D *p2 = h2->ProjectionX();\n");
+   printf("   p1->Divide(p2);\n");
+   
 //*-*- Reset statistics
    fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
 
@@ -546,13 +553,13 @@ void TProfile::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Op
       if (!b2) fSumw2.fArray[bin] = 0;
       else {
          if (binomial) {
-            fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));
+            fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);
          } else {
-         fSumw2.fArray[bin] = d1*d2*(e1*e1*b2*b2 + e2*e2*b1*b1)/(b22*b22);
+            fSumw2.fArray[bin] = d1*d2*(e1*b2*b2 + e2*b1*b1)/(b22*b22);
          }
       }
-      if (!en2[bin]) fBinEntries.fArray[bin] = 0;
-      else           fBinEntries.fArray[bin] = en1[bin]/en2[bin];
+      if (en2[bin]) fBinEntries.fArray[bin] = en1[bin]/en2[bin];
+      else          fBinEntries.fArray[bin] = 0;
    }
 }
 
