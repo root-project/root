@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.13 2000/12/13 15:13:51 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.14 2001/01/22 12:47:36 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <iostream.h>
+#include <fstream.h>
 #include "TAxis.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
@@ -508,6 +509,22 @@ void TAxis::RotateTitle(Bool_t rotate)
 
    if (rotate) SetBit(kRotateTitle);
    else        ResetBit(kRotateTitle);
+}
+
+//______________________________________________________________________________
+void TAxis::SaveAttributes(ofstream &out, const char *name, const char *subname)
+{
+    // Save axis attributes as C++ statement(s) on output stream out
+
+   char quote = '"';
+   if (strlen(GetTitle())) {
+      out<<"   "<<name<<subname<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<endl;
+   }
+   if (fTimeDisplay) {
+      out<<"   "<<name<<subname<<"->SetTimeDisplay(1);"<<endl;
+      out<<"   "<<name<<subname<<"->SetTimeFormat("<<quote<<GetTimeFormat()<<quote<<");"<<endl;
+   }
+   TAttAxis::SaveAttributes(out,name,subname);
 }
 
 //______________________________________________________________________________
