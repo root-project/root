@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.25 2001/10/27 10:38:12 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TF1.cxx,v 1.26 2001/11/02 08:38:17 brun Exp $
 // Author: Rene Brun   18/08/95
 
 /*************************************************************************
@@ -815,6 +815,111 @@ void TF1::GetParLimits(Int_t ipar, Double_t &parmin, Double_t &parmax)
    if (ipar < 0 || ipar > fNpar-1) return;
    if (fParMin) parmin = fParMin[ipar];
    if (fParMax) parmax = fParMax[ipar];
+}
+
+//______________________________________________________________________________
+Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum) 
+{
+//  Compute Quantiles for density distribution of this function 
+//     Quantile x_q of a probability distribution Function F is defined as
+//
+//        F(x_q) = Integral_{xmin}^(x_q) f dx = q with 0 <= q <= 1.
+//
+//     For instance the median x_0.5 of a distribution is defined as that value
+//     of the random variable for which the distribution function equals 0.5:
+//
+//        F(x_0.5) = Probability(x < x_0.5) = 0.5
+//
+//  code from Eddy Offermann, Renaissance
+//
+// input parameters
+//   - this TF1 function
+//   - nprobSum maximum size of array q and size of array probSum
+//   - probSum array of positions where quantiles will be computed.
+//     It is assumed to contain at least nprobSum values.
+//  output
+//   - return value nq (<=nprobSum) with the number of quantiles computed
+//   - array q filled with nq quantiles
+//
+//  Getting quantiles from two histograms and storing results in a TGraph,
+//   a so-called QQ-plot
+//
+//     TGraph *gr = new TGraph(nprob);
+//     f1->GetQuantiles(nprob,gr->GetX());
+//     f2->GetQuantiles(nprob,gr->GetY());
+//     gr->Draw("alp");
+
+  if (nprobSum < 2) {
+     Error("GetQuantiles","nprobsum = %d too small (must be >= 2)",nprobSum);
+     return 0;
+  }
+  const Int_t npx     = TMath::Min(50,2*nprobSum);
+  const Double_t xMin = GetXmin();
+  const Double_t xMax = GetXmax();
+  const Double_t dx   = (xMax-xMin)/npx;
+
+  TArrayD integral(npx+1);
+  TArrayD alpha(npx);
+  TArrayD beta(npx);
+  TArrayD gamma(npx);
+
+  integral[0] = 0;
+  Int_t intNegative = 0;
+  Int_t i;
+  for (i = 0; i < npx; i++) {
+    const Double_t *params = 0;
+    Double_t integ = Integral(Double_t(xMin+i*dx),Double_t(xMin+i*dx+dx),params);
+    if (integ < 0) {intNegative++; integ = -integ;}
+    integral[i+1] = integral[i] + integ;
+  }
+  if (intNegative > 0)
+    Warning("GetQuantiles","function:%s has %d negative values: abs assumed",
+            GetName(),intNegative);
+  if (integral[npx] == 0) {
+    Error("GetQuantiles","Integral of function is zero");
+    return 0;
+  }
+
+  const Double_t total = integral[npx];
+  for (Int_t i = 1; i <= npx; i++) integral[i] /= total;
+  //the integral r for each bin is approximated by a parabola
+  //  x = alpha + beta*r +gamma*r**2
+  // compute the coefficients alpha, beta, gamma for each bin
+  for (i = 0; i < npx; i++) {
+     const Double_t x0 = xMin+dx*i;
+     const Double_t r2 = integral[i+1]-integral[i];
+     const Double_t r1 = Integral(x0,x0+0.5*dx)/total;
+     gamma[i] = (2*r2-4*r1)/(dx*dx);
+     beta[i]  = r2/dx-gamma[i]*dx;
+     alpha[i] = x0;
+     gamma[i] *= 2;
+  }
+
+  // Be careful because of finite precision in the integral; Use the fact that the integral
+  // is monotone increasing
+  for (i = 0; i < nprobSum; i++) {
+     const Double_t r = probSum[i];
+     Int_t bin  = TMath::Max(TMath::BinarySearch(npx+1,integral.GetArray(),r)-1,0);
+     while (bin < npx-1 && integral[bin+1] == r) {
+        if (integral[bin+2] == r) bin++;
+        else break;
+     }
+    
+    const Double_t rr = r-integral[bin];
+    if (rr != 0.0) {
+       Double_t xx;
+       if (gamma[bin] && beta[bin]*beta[bin]+2*gamma[bin]*rr >= 0.0)
+          xx = (-beta[bin]+TMath::Sqrt(beta[bin]*beta[bin]+2*gamma[bin]*rr))/gamma[bin];
+       else
+          xx = rr/beta[bin];
+       q[i] = alpha[bin]+xx;
+    } else {
+       q[i] = alpha[bin];
+       if (integral[bin+1] == r) q[i] += dx;
+    }
+  }
+
+  return nprobSum;
 }
 
 //______________________________________________________________________________
