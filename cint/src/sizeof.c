@@ -1266,7 +1266,7 @@ int objsize;
     *(double*)(p) = (double)G__double(*pval);
     break;
   case 'u':
-    memcpy((void*)(p),pval->obj.i,objsize);
+    memcpy((void*)(p),(void*)pval->obj.i,objsize);
     break;
   default:
     *(long*)(p) = (long)G__int(*pval);
