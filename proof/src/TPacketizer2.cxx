@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.29 2004/07/01 18:41:05 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TPacketizer2.cxx,v 1.30 2004/07/08 17:11:28 rdm Exp $
 // Author: Maarten Ballintijn    18/03/02
 
 /*************************************************************************
@@ -559,7 +559,6 @@ void TPacketizer2::ValidateFiles(TDSet *dset, TList *slaves)
 
    ((TProof*)gProof)->DeActivateAsyncInput();
 
-   Bool_t done = kFALSE;
    while (kTRUE) {
 
       // send work
