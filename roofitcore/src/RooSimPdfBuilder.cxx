@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimPdfBuilder.cc,v 1.11 2002/01/30 23:27:49 verkerke Exp $
+ *    File: $Id: RooSimPdfBuilder.cc,v 1.12 2002/02/01 19:50:56 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -480,13 +480,14 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 {
   // Initialize needed components
   const RooArgSet* dataVars = dataSet->get() ;
+  const char* spaceChars = " \t" ;
 
   // Retrieve physics index category
   char buf[1024] ;
   strcpy(buf,((RooStringVar*)buildConfig.find("physModels"))->getVal()) ;
   RooAbsCategoryLValue* physCat(0) ;
   if (strstr(buf," : ")) {
-    const char* physCatName = strtok(buf," ") ;
+    const char* physCatName = strtok(buf,spaceChars) ;
     physCat = dynamic_cast<RooAbsCategoryLValue*>(dataVars->find(physCatName)) ;
     if (!physCat) {
       cout << "RooSimPdfBuilder::buildPdf: ERROR physics index category " << physCatName 
@@ -501,10 +502,10 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   RooArgSet physModelSet ;
   if (physCat) {
     // Absorb colon token
-    char* colon = strtok(0," ") ;
-    physName = strtok(0," ") ;
+    char* colon = strtok(0,spaceChars) ;
+    physName = strtok(0,spaceChars) ;
   } else {
-    physName = strtok(buf," ") ;
+    physName = strtok(buf,spaceChars) ;
   }
 
   Bool_t first(kTRUE) ;
@@ -548,7 +549,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
     stateMap.addOwned(* new RooStringVar(stateName,stateName,physName)) ;
 
     // Continue with next mapping
-    physName = strtok(0," ") ;
+    physName = strtok(0,spaceChars) ;
     if (first) {
       first = kFALSE ;
     } else if (physCat==0) {
@@ -564,7 +565,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
   TList splitStateList ;
   RooArgSet splitCatSet ;
   strcpy(buf,((RooStringVar*)buildConfig.find("splitCats"))->getVal()) ;
-  char *catName = strtok(buf," ") ;
+  char *catName = strtok(buf,spaceChars) ;
   char *stateList(0) ;
   while(catName) {
 
@@ -610,7 +611,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
       }
     }
     
-    catName = strtok(0," ") ;
+    catName = strtok(0,spaceChars) ;
   }
   if (physCat) splitCatSet.add(*physCat) ;
   RooSuperCategory masterSplitCat("masterSplitCat","Master splitting category",splitCatSet) ;
@@ -669,7 +670,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
       strcpy(buf,ruleStr->getVal()) ;
 
       char *tokenPtr(0) ;
-      char* token = strtok_r(buf," ",&tokenPtr) ;
+      char* token = strtok_r(buf,spaceChars,&tokenPtr) ;
       
       enum Mode { SplitCat, Colon, ParamList } ;
       Mode mode(SplitCat) ;
@@ -781,7 +782,7 @@ const RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, 
 	    break ;
 	  }
 	}
-	token = strtok_r(0," ",&tokenPtr) ;
+	token = strtok_r(0,spaceChars,&tokenPtr) ;
       }
       if (mode!=SplitCat) {
 	cout << "RooSimPdfBuilder::buildPdf: ERROR in parsing, expected " 
