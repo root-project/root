@@ -1,4 +1,4 @@
-// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.12 2003/09/19 07:56:29 brun Exp $
+// @(#)root/minuit:$Name:  $:$Id: TFitter.cxx,v 1.13 2003/11/05 17:34:38 brun Exp $
 // Author: Rene Brun   31/08/99
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -492,10 +492,9 @@ void Graph2DFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
 //*-*-*-*-*Minimization function for 2D Graphs using a Chisquare method*-*-*-*-*
 //*-*      ============================================================
 
-///   Double_t cu,eu,ex,ey,eux,fu,fsum,fm,fp;
-   Double_t cu,fu,fsum;
+   Double_t cu,eu,ex,ey,ez,eux,euy,fu,fsum,fm,fp;
    Double_t x[2];
-///   Double_t xm,xp;
+   Double_t xm,xp,ym,yp;
    Int_t bin, npfits=0;
 
    TVirtualFitter *grFitter = TVirtualFitter::GetFitter();
@@ -507,8 +506,10 @@ void Graph2DFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
    Double_t *gx   = gr->GetX();
    Double_t *gy   = gr->GetY();
    Double_t *gz   = gr->GetZ();
-///   Double_t fxmin = f2->GetXmin();
-///   Double_t fxmax = f2->GetXmax();
+   Double_t fxmin = f2->GetXmin();
+   Double_t fxmax = f2->GetXmax();
+   Double_t fymin = f2->GetYmin();
+   Double_t fymax = f2->GetYmax();
    npar           = f2->GetNpar();
 
    f2->InitArgs(x,u);
@@ -527,22 +528,31 @@ void Graph2DFitChisquare(Int_t &npar, Double_t * /*gin*/, Double_t &f,
          f += fsum*fsum;
          continue;
       }
-///      ex  = gr->GetErrorX(bin);
-///      ey  = gr->GetErrorY(bin);
-///      if (ex < 0) ex = 0;
-///      if (ey < 0) ey = 0;
-///      if (ex > 0) {
-///        xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
-///        xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
-///        x[0] = xm; fm = f2->EvalPar(x,u);
-///        x[0] = xp; fp = f2->EvalPar(x,u);
-///        eux = 0.5*(fp-fm);
-///      } else
-///        eux = 0.;
-///      eu = ey*ey+eux*eux;
-///      if (eu <= 0) eu = 1;
-///      f += fsum*fsum/eu;
-      f += fsum*fsum;
+      ex  = gr->GetErrorX(bin);
+      ey  = gr->GetErrorY(bin);
+      ez  = gr->GetErrorZ(bin);
+      if (ex < 0) ex = 0;
+      if (ey < 0) ey = 0;
+      if (ez < 0) ez = 0;
+      eux = euy = 0;
+      if (ex > 0) {
+        xm = x[0] - ex; if (xm < fxmin) xm = fxmin;
+        xp = x[0] + ex; if (xp > fxmax) xp = fxmax;
+        x[0] = xm; fm = f2->EvalPar(x,u);
+        x[0] = xp; fp = f2->EvalPar(x,u);
+        eux = fp-fm;
+      }
+      if (ey > 0) {
+        x[0] = gx[bin];
+        ym = x[1] - ey; if (ym < fymin) ym = fxmin;
+        yp = x[1] + ey; if (yp > fymax) yp = fymax;
+        x[1] = ym; fm = f2->EvalPar(x,u);
+        x[1] = yp; fp = f2->EvalPar(x,u);
+        euy = fp-fm;
+      }
+      eu = ez*ez+eux*eux+euy*euy;
+      if (eu <= 0) eu = 1;
+      f += fsum*fsum/eu;
    }
    f2->SetNumberFitPoints(npfits);
 }
