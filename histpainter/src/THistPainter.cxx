@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.57 2001/12/10 21:27:24 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.58 2001/12/23 09:10:32 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -3090,7 +3090,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
               axis->SetTimeFormat(fXaxis->GetTimeFormat());
            }
         }
-   axis->SetOption(chopax);
+        axis->SetOption(chopax);
 	axis->PaintAxis(x1[0], x1[1], x2[0], x2[1], bmin, bmax, ndivx, chopax);
     }
 
@@ -3126,7 +3126,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
               axis->SetTimeFormat(fYaxis->GetTimeFormat());
            }
         }
-   axis->SetOption(chopay);
+        axis->SetOption(chopay);
 	axis->PaintAxis(y1[0], y1[1], y2[0], y2[1], bmin, bmax, ndivy, chopay);
     }
 
@@ -3150,7 +3150,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
               axis->SetTimeFormat(fZaxis->GetTimeFormat());
            }
         }
-   axis->SetOption(chopaz);
+        axis->SetOption(chopaz);
 	axis->PaintAxis(z1[0], z1[1], z2[0], z2[1], bmin, bmax, ndivz, chopaz);
     }
 
