@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.8 2001/04/11 15:19:10 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualPad.h,v 1.9 2001/10/29 19:47:53 rdm Exp $
 // Author: Rene Brun   05/12/95
 
 /*************************************************************************
@@ -84,7 +84,6 @@ public:
    virtual void     DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2) = 0;
    virtual void     DrawText(Double_t x, Double_t y, const char *text) = 0;
    virtual void     DrawTextNDC(Double_t u, Double_t v, const char *text) = 0;
-   virtual void     SetFixedAspectRatio(Bool_t fixed = kTRUE) = 0;
    virtual Short_t  GetBorderMode() const = 0;
    virtual Short_t  GetBorderSize() const = 0;
    virtual Int_t    GetCanvasID() const = 0;
@@ -194,6 +193,7 @@ public:
    virtual void     SetCursor(ECursor cursor) = 0;
    virtual void     SetDoubleBuffer(Int_t mode=1) = 0;
    virtual void     SetEditable(Bool_t mode=kTRUE) = 0;
+   virtual void     SetFixedAspectRatio(Bool_t fixed = kTRUE) = 0;
    virtual void     SetGrid(Int_t valuex = 1, Int_t valuey = 1) = 0;
    virtual void     SetGridx(Int_t value = 1) = 0;
    virtual void     SetGridy(Int_t value = 1) = 0;

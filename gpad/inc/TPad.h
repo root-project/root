@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.10 2001/10/05 07:03:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.h,v 1.11 2001/10/29 19:47:53 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -50,8 +50,8 @@ protected:
    Double_t      fUtoAbsPixelk;    //  Conversion coefficient for U NDC to absolute pixel
    Double_t      fUtoPixelk;       //  Conversion coefficient for U NDC to pixel
    Double_t      fUtoPixel;        //    xpixel = fUtoPixelk + fUtoPixel*undc
-   Double_t      fVtoAbsPixelk;    //  Conversion coefficient for Y World to absolute pixel
-   Double_t      fVtoPixelk;       //  Conversion coefficient for Y World to pixel
+   Double_t      fVtoAbsPixelk;    //  Conversion coefficient for V NDC to absolute pixel
+   Double_t      fVtoPixelk;       //  Conversion coefficient for V NDC to pixel
    Double_t      fVtoPixel;        //    ypixel = fVtoPixelk + fVtoPixel*vndc
 
    Double_t      fAbsPixeltoXk;    //  Conversion coefficient for absolute pixel to X World
@@ -172,7 +172,6 @@ public:
    void              DrawTextNDC(Double_t u, Double_t v, const char *text);
    virtual TObject  *FindObject(const char *name) const;
    virtual TObject  *FindObject(const TObject *obj) const;
-   virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*
    virtual void      UseCurrentStyle();  // *MENU*
    virtual Short_t   GetBorderMode() const { return fBorderMode;}
    virtual Short_t   GetBorderSize() const { return fBorderSize;}
@@ -286,6 +285,7 @@ public:
    virtual void      SetDoubleBuffer(Int_t mode=1);
    virtual void      SetDrawOption(Option_t *option="");
    virtual void      SetEditable(Bool_t mode=kTRUE); // *TOGGLE*
+   virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*
    virtual void      SetGrid(Int_t valuex = 1, Int_t valuey = 1) {fGridx = valuex; fGridy = valuey;}
    virtual void      SetGridx(Int_t value = 1) {fGridx = value;} // *TOGGLE*
    virtual void      SetGridy(Int_t value = 1) {fGridy = value;} // *TOGGLE*

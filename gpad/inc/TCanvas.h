@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.10 2001/04/11 15:19:11 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.h,v 1.11 2001/10/20 11:46:57 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -174,6 +174,7 @@ public:
    void              SaveSource(const char *filename="", Option_t *option="");
    virtual void      SetCursor(ECursor cursor);
    virtual void      SetDoubleBuffer(Int_t mode=1);
+   virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*
    void              SetWindowPosition(Int_t x, Int_t y) { fCanvasImp->SetWindowPosition(x, y); }
    void              SetWindowSize(UInt_t ww, UInt_t wh) { fCanvasImp->SetWindowSize(ww, wh); }
    void              SetCanvasSize(UInt_t ww, UInt_t wh); // *MENU*

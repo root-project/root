@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.50 2001/10/29 19:47:53 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.51 2001/10/30 14:33:48 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -1913,10 +1913,10 @@ again:
          if (px < pxlp) { px = pxlp; wx = px; }
          if (py < pylp) { py = pylp; wy = py; }
          if (fixedr) {
-            Double_t dy = Double_t(parent->AbsPixeltoX(TMath::Abs(pxt-px))) /
+            Double_t dy = Double_t(TMath::Abs(pxt-px))/parent->UtoPixel(1.) /
                           fAspectRatio;
-            Int_t npy2 = pyt - TMath::Abs(parent->YtoAbsPixel(dy) -
-                                          parent->YtoAbsPixel(0));
+            Int_t npy2 = pyt - TMath::Abs(parent->VtoAbsPixel(dy) -
+                                          parent->VtoAbsPixel(0));
             if (npy2 < pylp) {
                px = pxold;
                py = pyold;
@@ -1934,10 +1934,10 @@ again:
          if (px > pxtp) { px = pxtp; wx = px; }
          if (py < pylp) { py = pylp; wy = py; }
          if (fixedr) {
-            Double_t dy = Double_t(parent->AbsPixeltoX(TMath::Abs(pxl-px))) /
+            Double_t dy = Double_t(TMath::Abs(pxl-px))/parent->UtoPixel(1.) /
                           fAspectRatio;
-            Int_t npy2 = pyt - TMath::Abs(parent->YtoAbsPixel(dy) -
-                                          parent->YtoAbsPixel(0));
+            Int_t npy2 = pyt - TMath::Abs(parent->VtoAbsPixel(dy) -
+                                          parent->VtoAbsPixel(0));
             if (npy2 < pylp) {
                px = pxold;
                py = pyold;
@@ -1955,10 +1955,10 @@ again:
          if (px > pxtp) { px = pxtp; wx = px; }
          if (py > pytp) { py = pytp; wy = py; }
          if (fixedr) {
-            Double_t dy = Double_t(parent->AbsPixeltoX(TMath::Abs(pxl-px))) /
+            Double_t dy = Double_t(TMath::Abs(pxl-px))/parent->UtoPixel(1.) /
                           fAspectRatio;
-            Int_t npy2 = pyl + TMath::Abs(parent->YtoAbsPixel(dy) -
-                                          parent->YtoAbsPixel(0));
+            Int_t npy2 = pyl + TMath::Abs(parent->VtoAbsPixel(dy) -
+                                          parent->VtoAbsPixel(0));
             if (npy2 > pytp) {
                px = pxold;
                py = pyold;
@@ -1976,10 +1976,10 @@ again:
          if (px < pxlp) { px = pxlp; wx = px; }
          if (py > pytp) { py = pytp; wy = py; }
          if (fixedr) {
-            Double_t dy = Double_t(parent->AbsPixeltoX(TMath::Abs(pxt-px))) /
+            Double_t dy = Double_t(TMath::Abs(pxt-px))/parent->UtoPixel(1.) /
                           fAspectRatio;
-            Int_t npy2 = pyl + TMath::Abs(parent->YtoAbsPixel(dy) -
-                                          parent->YtoAbsPixel(0));
+            Int_t npy2 = pyl + TMath::Abs(parent->VtoAbsPixel(dy) -
+                                          parent->VtoAbsPixel(0));
             if (npy2 > pytp) {
                px = pxold;
                py = pyold;
@@ -1996,9 +1996,9 @@ again:
          if (py2 > py1-kMinSize) { py2 = py1-kMinSize; wy = py2; }
          if (py2 < py2p) { py2 = py2p; wy = py2; }
          if (fixedr) {
-            Double_t dx = TMath::Abs(Double_t(parent->AbsPixeltoY(TMath::Abs(py2-py1))) - 1.) *
+            Double_t dx = Double_t(TMath::Abs(py2-py1))/parent->VtoPixel(0) *
                           fAspectRatio;
-            Int_t npx2 = px1 + parent->XtoAbsPixel(dx);
+            Int_t npx2 = px1 + parent->UtoPixel(dx);
             if (npx2 > px2p)
                py2 -= py - pyold;
             else
@@ -2012,9 +2012,9 @@ again:
          if (py1 < py2+kMinSize) { py1 = py2+kMinSize; wy = py1; }
          if (py1 > py1p) { py1 = py1p; wy = py1; }
          if (fixedr) {
-            Double_t dx = TMath::Abs(Double_t(parent->AbsPixeltoY(TMath::Abs(py2-py1))) - 1.) *
+            Double_t dx = Double_t(TMath::Abs(py2-py1))/parent->VtoPixel(0) *
                           fAspectRatio;
-            Int_t npx2 = px1 + parent->XtoAbsPixel(dx);
+            Int_t npx2 = px1 + parent->UtoPixel(dx);
             if (npx2 > px2p)
                py1 -= py - pyold;
             else
@@ -2028,10 +2028,10 @@ again:
          if (px1 > px2-kMinSize) { px1 = px2-kMinSize; wx = px1; }
          if (px1 < px1p) { px1 = px1p; wx = px1; }
          if (fixedr) {
-            Double_t dy = Double_t(parent->AbsPixeltoX(TMath::Abs(px2-px1))) /
+            Double_t dy = Double_t(TMath::Abs(px2-px1))/parent->UtoPixel(1.) /
                           fAspectRatio;
-            Int_t npy2 = py1 - TMath::Abs(parent->YtoAbsPixel(dy) -
-                                          parent->YtoAbsPixel(0));
+            Int_t npy2 = py1 - TMath::Abs(parent->VtoAbsPixel(dy) -
+                                          parent->VtoAbsPixel(0));
             if (npy2 < py2p)
                px1 -= px - pxold;
             else
@@ -2045,10 +2045,10 @@ again:
          if (px2 < px1+kMinSize) { px2 = px1+kMinSize; wx = px2; }
          if (px2 > px2p) { px2 = px2p; wx = px2; }
          if (fixedr) {
-            Double_t dy = Double_t(parent->AbsPixeltoX(TMath::Abs(px2-px1))) /
+            Double_t dy = Double_t(TMath::Abs(px2-px1))/parent->UtoPixel(1.) /
                           fAspectRatio;
-            Int_t npy2 = py1 - TMath::Abs(parent->YtoAbsPixel(dy) -
-                                          parent->YtoAbsPixel(0));
+            Int_t npy2 = py1 - TMath::Abs(parent->VtoAbsPixel(dy) -
+                                          parent->VtoAbsPixel(0));
             if (npy2 < py2p)
                px2 -= px - pxold;
             else

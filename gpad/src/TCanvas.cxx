@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.31 2001/10/26 14:01:15 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.32 2001/10/26 20:43:55 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -167,7 +167,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    // TRootEmbeddedCanvas class.
 
    Init();
-   
+
    fCanvasID     = winid;
    fWindowTopX   = 0;
    fWindowTopY   = 0;
@@ -759,7 +759,7 @@ void TCanvas::DrawEventStatus(Int_t event, Int_t px, Int_t py, TObject *selected
    TVirtualPad* savepad;
    savepad = gPad;
    gPad = GetSelectedPad();
-   
+
    fCanvasImp->SetStatusText(selected->GetTitle(),0);
    fCanvasImp->SetStatusText(selected->GetName(),1);
    if (event == kKeyPress)
@@ -1490,6 +1490,27 @@ void TCanvas::SetDoubleBuffer(Int_t mode)
    else
 #endif
       gVirtualX->SelectWindow(fCanvasID);
+}
+
+//______________________________________________________________________________
+void TCanvas::SetFixedAspectRatio(Bool_t fixed)
+{
+   // Fix canvas aspect ratio to current value if fixed is true.
+
+   if (fixed) {
+      if (!fFixedAspectRatio) {
+         if (fCh != 0)
+            fAspectRatio = Double_t(fCw) / fCh;
+         else {
+            Error("SetAspectRatio", "cannot fix aspect ratio, height of canvas is 0");
+            return;
+         }
+         fFixedAspectRatio = kTRUE;
+      }
+   } else {
+      fFixedAspectRatio = kFALSE;
+      fAspectRatio = 0;
+   }
 }
 
 //______________________________________________________________________________
