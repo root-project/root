@@ -105,6 +105,15 @@ N: Keisuke Fujii
 E: fujiik@jlcuxf.kek.jp
 D: port to MacOS X
 
+N: Andrei Gheata
+E: Andrei.Gheata@cern.ch
+D: Main developer of the ROOT geometry classes
+
+N: Mihaela Gheata
+E: Mihaela.Gheata@cern.ch
+D: Many contributions to the geometry package
+D: Extension of g2root. Author of stressgeom
+
 N: Masaharu Goto
 E: MXJ02154@niftyserve.or.jp
 D: CINT C/C++ interpreter
