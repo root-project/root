@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.219 2005/01/28 14:49:43 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.220 2005/02/03 13:03:56 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1640,6 +1640,7 @@ void TH1::DrawPanel()
 //
 //      See class TDrawPanelHist for example
 
+   if (!fPainter) {Draw(); if (gPad) gPad->Update();}
    if (fPainter) fPainter->DrawPanel();
 }
 
