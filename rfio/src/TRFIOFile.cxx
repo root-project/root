@@ -1,4 +1,4 @@
-// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.18 2002/07/19 11:41:41 rdm Exp $
+// @(#)root/rfio:$Name:  $:$Id: TRFIOFile.cxx,v 1.19 2002/10/25 00:44:53 rdm Exp $
 // Author: Fons Rademakers   20/01/99
 
 /*************************************************************************
@@ -456,7 +456,7 @@ void *TRFIOSystem::OpenDirectory(const char *dir)
    if (::rfio_stat(url.GetFile(), &finfo) < 0)
       return 0;
 
-   if (!S_ISDIR(finfo.st_mode))
+   if ((finfo.st_mode & S_IFMT) != S_IFDIR)
       return 0;
 
    fDirp = (void*) ::rfio_opendir(url.GetFile());
