@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.16 2002/05/09 20:21:59 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.17 2002/07/19 12:58:09 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -450,6 +450,19 @@ int TString::CompareTo(const TString& str, ECaseCompare cmp) const
    // strings are equal up to the length of the shorter one.
    if (Length() == str.Length()) return 0;
    return (Length() > str.Length()) ? 1 : -1;
+}
+
+//______________________________________________________________________________
+Int_t TString::CountChar(Int_t c) const
+{
+   // Return number of times character c occurs in the string.
+
+   Int_t count = 0;
+   Int_t len   = Length();
+   for (Int_t n = 0; n < len; n++)
+      if (fData[n] == c) count++;
+
+   return count;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.19 2002/06/09 23:38:30 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.20 2002/07/19 12:58:08 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -279,6 +279,7 @@ public:
    Bool_t       Contains(const char *pat,    ECaseCompare cmp = kExact) const;
    Bool_t       Contains(const TString& pat, ECaseCompare cmp = kExact) const;
    Bool_t       Contains(const TRegexp& pat) const;
+   Int_t        CountChar(Int_t c) const;
    TString      Copy() const;
    const char  *Data() const                 { return fData; }
    Bool_t       EndsWith(const char *pat,    ECaseCompare cmp = kExact) const;
