@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.1 2004/09/13 12:47:35 rdm Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.2 2004/09/13 16:13:04 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -2647,9 +2647,14 @@ void TGuiBldDragManager::CreatePropertyEditor()
 
    if (!fPimpl->fLastFrame) return;
 
+   TGWindow *root = (TGWindow*)fClient->GetRoot();
+   root->SetEditable(kFALSE);
+
    if (!fEditor)  {
       fEditor = new TGuiBldEditor();
    }
+   root->SetEditable(kTRUE);
+
    if (!fEditor->IsEmbedded()) {
       fEditor->Move(fPimpl->fX0, fPimpl->fY0);
       fEditor->SetWMPosition(fPimpl->fX0, fPimpl->fY0);
