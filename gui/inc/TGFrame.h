@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.51 2004/09/10 19:57:25 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.52 2004/09/13 09:10:08 rdm Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -517,7 +517,9 @@ public:
    TGTransientFrame(const TGWindow *p = 0, const TGWindow *main = 0, UInt_t w = 1, UInt_t h = 1,
                     UInt_t options = kVerticalFrame);
 
-   virtual void    CenterOnParent(Bool_t croot = kTRUE);
+   enum EPlacement { kCenter, kLeft, kRight, kTop, kBottom, kTopLeft, kTopRight,
+                     kBottomLeft, kBottomRight };
+   virtual void    CenterOnParent(Bool_t croot = kTRUE, EPlacement pos = kCenter);
    const TGWindow *GetMain() const { return fMain; }
    virtual void    SavePrimitive(ofstream &out, Option_t *option);
    virtual void    SaveSource(const char *filename, Option_t *option); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.80 2004/09/13 17:10:01 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.81 2004/09/13 19:23:53 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1566,7 +1566,7 @@ TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
 }
 
 //______________________________________________________________________________
-void TGTransientFrame::CenterOnParent(Bool_t croot)
+void TGTransientFrame::CenterOnParent(Bool_t croot, EPlacement pos)
 {
    // Position transient frame centered relative to the parent frame.
    // If fMain is 0 (i.e. TGTransientFrame is acting just like a
@@ -1574,7 +1574,7 @@ void TGTransientFrame::CenterOnParent(Bool_t croot)
    // the root window, otherwise no action is taken and the default
    // wm placement will be used.
 
-   Int_t ax, ay;
+   Int_t x, y, ax, ay;
    Window_t wdummy;
 
    UInt_t dw = fClient->GetDisplayWidth();
@@ -1582,10 +1582,47 @@ void TGTransientFrame::CenterOnParent(Bool_t croot)
 
    if (fMain) {
 
+      switch (pos) {
+         case kCenter:
+            x = (Int_t)(((TGFrame *) fMain)->GetWidth() - fWidth) >> 1;
+            y = (Int_t)(((TGFrame *) fMain)->GetHeight() - fHeight) >> 1;
+            break;
+         case kRight:
+            x = (Int_t)(((TGFrame *) fMain)->GetWidth() - (fWidth >> 1));
+            y = (Int_t)(((TGFrame *) fMain)->GetHeight() - fHeight) >> 1;
+            break;
+         case kLeft:
+            x = (Int_t)(-(fWidth >> 1));
+            y = (Int_t)(((TGFrame *) fMain)->GetHeight() - fHeight) >> 1;
+            break;
+         case kTop:
+            x = (Int_t)(((TGFrame *) fMain)->GetWidth() - fWidth) >> 1;
+            y = (Int_t)(-(fHeight >> 1));
+            break;
+         case kBottom:
+            x = (Int_t)(((TGFrame *) fMain)->GetWidth() - fWidth) >> 1;
+            y = (Int_t)(((TGFrame *) fMain)->GetHeight() - (fHeight >> 1));
+            break;
+         case kTopLeft:
+            x = (Int_t)(-(fWidth >> 1));
+            y = (Int_t)(-(fHeight >> 1));
+            break;
+         case kTopRight:
+            x = (Int_t)(((TGFrame *) fMain)->GetWidth() - (fWidth >> 1));
+            y = (Int_t)(-(fHeight >> 1));
+            break;
+         case kBottomLeft:
+            x = (Int_t)(-(fWidth >> 1));
+            y = (Int_t)(((TGFrame *) fMain)->GetHeight() - (fHeight >> 1));
+            break;
+         case kBottomRight:
+            x = (Int_t)(((TGFrame *) fMain)->GetWidth() - (fWidth >> 1));
+            y = (Int_t)(((TGFrame *) fMain)->GetHeight() - (fHeight >> 1));
+            break;
+      }
+
       gVirtualX->TranslateCoordinates(fMain->GetId(), GetParent()->GetId(),
-                       (Int_t)(((TGFrame *) fMain)->GetWidth() - fWidth) >> 1,
-                       (Int_t)(((TGFrame *) fMain)->GetHeight() - fHeight) >> 1,
-                       ax, ay, wdummy);
+                                      x, y, ax, ay, wdummy);
       if (ax < 10)
          ax = 10;
       else if (ax + fWidth + 10 > dw)
@@ -1598,8 +1635,47 @@ void TGTransientFrame::CenterOnParent(Bool_t croot)
 
    } else if (croot) {
 
-      ax = (dw - fWidth) >> 1;
-      ay = (dh - fHeight) >> 1;
+      switch (pos) {
+         case kCenter:
+            x = (dw - fWidth) >> 1;
+            y = (dh - fHeight) >> 1;
+            break;
+         case kRight:
+            x = dw - (fWidth >> 1);
+            y = (dh - fHeight) >> 1;
+            break;
+         case kLeft:
+            x = -(fWidth >> 1);
+            y = (dh - fHeight) >> 1;
+            break;
+         case kTop:
+            x = (dw - fWidth) >> 1;
+            y = -(fHeight >> 1);
+            break;
+         case kBottom:
+            x = (dw - fWidth) >> 1;
+            y = dh - (fHeight >> 1);
+            break;
+         case kTopLeft:
+            x = -(fWidth >> 1);
+            y = -(fHeight >> 1);
+            break;
+         case kTopRight:
+            x = dw - (fWidth >> 1);
+            y = -(fHeight >> 1);
+            break;
+         case kBottomLeft:
+            x = -(fWidth >> 1);
+            y = dh - (fHeight >> 1);
+            break;
+         case kBottomRight:
+            x = dw - (fWidth >> 1);
+            y = dh - (fHeight >> 1);
+            break;
+      }
+
+      ax = x;
+      ay = y;
 
    } else {
 
