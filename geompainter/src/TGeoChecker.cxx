@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.22 2003/01/31 16:38:23 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.23 2003/02/07 13:46:48 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
@@ -265,7 +265,7 @@ void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
    Double_t *points;
    Double_t local[3];
    Double_t point[3];
-   Double_t safety = TGeoShape::kBig;
+   Double_t safety = 1e30;  //TGeoShape::kBig
    Int_t id, ip;
    for (id=0; id<nd; id++) {
       node = vol->GetNode(id);
