@@ -33,13 +33,9 @@ $(ROOTCINT):    $(CINTLIB) $(ROOTCINTO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM)
 		$(LD) $(LDFLAGS) -o $@ $(ROOTCINTO) $(METAUTILSO) \
 		   $(RPATH) $(CINTLIBS) $(CILIBS)
 
-$(MODDIRS)%_tmp.o: $(MODDIRS)%.cxx
-		$(CXX) $(OPT) $(CXXFLAGS) -UHAVE_CONFIG -DROOTBUILD \
-			-c $< -o $@
-
 $(ROOTCINTTMP): $(CINTTMPO) $(ROOTCINTTMPO) $(METAUTILSO) $(MAKEINFO) $(IOSENUM)
 		$(LD) $(LDFLAGS) -o $@ \
-			$(ROOTCINTTMPO) $(METAUTILSO) $(CINTTMPO) $(CILIBS)
+		   $(ROOTCINTTMPO) $(METAUTILSO) $(CINTTMPO) $(CILIBS)
 
 $(RLIBMAP):     $(RLIBMAPO)
 		$(LD) $(LDFLAGS) -o $@ $<
@@ -47,13 +43,17 @@ $(RLIBMAP):     $(RLIBMAPO)
 all-utils:      $(ROOTCINTTMP) $(ROOTCINT) $(RLIBMAP)
 
 clean-utils:
-		@rm -f $(ROOTCINTTMPO) $(ROOTCINTO) $(RLIBMAPO) $(UTILSDO)
+		@rm -f $(ROOTCINTTMPO) $(ROOTCINTO) $(RLIBMAPO)
 
 clean::         clean-utils
 
 distclean-utils: clean-utils
 		@rm -f $(ROOTCINTDEP) $(ROOTCINTTMP) $(ROOTCINT) \
 		   $(RLIBMAPDEP) $(RLIBMAP) \
-		   $(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib 
+		   $(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib
 
 distclean::     distclean-utils
+
+##### extra rules ######
+$(UTILSDIRS)%_tmp.o: $(UTILSDIRS)%.cxx
+	$(CXX) $(OPT) $(CXXFLAGS) -UHAVE_CONFIG -DROOTBUILD -c $< -o $@

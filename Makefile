@@ -39,10 +39,10 @@ endif
 
 ##### Modules to build #####
 
-MODULES       = build cint metautils utils base cont meta net zip clib matrix newdelete \
-                hist tree freetype graf g3d gpad gui minuit histpainter proof \
-                treeplayer treeviewer physics postscript rint html eg geom \
-                geompainter vmc fumili mlp
+MODULES       = build cint metautils utils base cont meta net zip clib matrix \
+                newdelete hist tree freetype graf g3d gpad gui minuit \
+                histpainter proof treeplayer treeviewer physics postscript \
+                rint html eg geom geompainter vmc fumili mlp
 
 ifeq ($(ARCH),win32)
 MODULES      += winnt win32 gl
@@ -232,8 +232,10 @@ ROOTRC        = etc/system.rootrc
 
 ##### libCore #####
 
-COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO) $(METAUTILSO)
-COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO) $(METAUTILSDO)
+COREO         = $(BASEO) $(CONTO) $(METAO) $(NETO) $(SYSTEMO) $(ZIPO) $(CLIBO) \
+                $(METAUTILSO)
+COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(NETDO) $(SYSTEMDO) $(CLIBDO) \
+                $(METAUTILSDO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 

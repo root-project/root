@@ -11,7 +11,7 @@ METAUTILSDIR   := $(MODDIR)
 METAUTILSDIRS  := $(METAUTILSDIR)/src
 METAUTILSDIRI  := $(METAUTILSDIR)/inc
 
-##### $(METAUTILO) #####
+##### $(METAUTILSO) #####
 METAUTILSH     := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 METAUTILSS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 METAUTILSO     := $(METAUTILSS:.cxx=.o)
@@ -33,14 +33,15 @@ INCLUDEFILES += $(METAUTILSDEP)
 include/%.h:    $(METAUTILSDIRI)/%.h
 		cp $< $@
 
-$(METAUTILSDS):      $(METAUTILSH) $(METAUTILSL) $(ROOTCINTTMP)
+# $(ROOTCINTTMP) not yet known at this stage, use explicit path of rootcint_tmp
+$(METAUTILSDS): $(METAUTILSH) $(METAUTILSL) utils/src/rootcint_tmp
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c -DG__API $(METAUTILSH) $(METAUTILSL)
 
-$(METAUTILSDO):      $(METAUTILSDS)
+$(METAUTILSDO): $(METAUTILSDS)
 		$(CXX) $(NOOPT) $(CXXFLAGS) -I. -o $(METAUTILSDO) -c $(METAUTILSDS)
 
-all-metautils:       $(METAUTILSO) $(METAUTILSDO)
+all-metautils:  $(METAUTILSO) $(METAUTILSDO)
 
 clean-metautils:
 		@rm -f $(METAUTILSO) $(METAUTILSDO)
@@ -51,7 +52,3 @@ distclean-metautils: clean-metautils
 		@rm -f $(METAUTILSDEP) $(METAUTILSDS) $(METAUTILSDH)
 
 distclean::     distclean-metautils
-
-
-
-
