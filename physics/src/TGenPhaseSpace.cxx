@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.5 2001/07/09 10:57:05 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TGenPhaseSpace.cxx,v 1.6 2002/05/18 08:22:00 brun Exp $
 // Author: Rene Brun , Valerio Filippini  06/09/2000 
 
 //_____________________________________________________________________________________
@@ -9,6 +9,10 @@
 //  The event is generated in the center-of-mass frame, 
 //  but the decay products are finally boosted
 //  using the betas of the original particle.
+//
+//  The code is based on the GENBOD function (W515 from CERNLIB)
+//  using the Raubold and Lynch method
+//      F. James, Monte Carlo Phase Space, CERN 68-15 (1968)
 //
 // see example of use in $ROOTSYS/tutorials/PhaseSpace.C
 
