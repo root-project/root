@@ -24,7 +24,7 @@
 #include "Riostream.h"
 
 TList *FileList;
-TFile *Target;
+TFile *Target, *Source;
 Bool_t noTrees;
 
 void MergeRootfile( TDirectory *target, TList *sourcelist );
@@ -53,7 +53,8 @@ int main( int argc, char **argv ) {
 
   for ( int i = ffirst; i < argc; i++ ) {
     cout << "Source file " << i-1 << ": " << argv[i] << endl;
-    FileList->Add( TFile::Open( argv[i] ) );
+    Source = TFile::Open( argv[i] );
+    FileList->Add(Source);
   }
 
   MergeRootfile( Target, FileList );
@@ -75,6 +76,9 @@ void MergeRootfile( TDirectory *target, TList *sourcelist ) {
   TChain *globChain = 0;
   TIter nextkey( current_sourcedir->GetListOfKeys() );
   TKey *key, *oldkey=0;
+  //gain time, do not add the objects in the list in memory
+  TH1::AddDirectory(kFALSE);
+  
   while ( (key = (TKey*)nextkey())) {
 
     //keep only the highest cycle number for each key
