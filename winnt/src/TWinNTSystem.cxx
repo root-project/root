@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.4 2000/08/18 06:27:32 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.5 2000/08/18 14:58:14 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -553,8 +553,21 @@ TFileHandler *TWinNTSystem::RemoveFileHandler(TFileHandler *h)
 
    TFileHandler *oh = TSystem::RemoveFileHandler(h);
    if (oh) {       // found
-      fReadmask.Clr(oh->GetFd());
-      fWritemask.Clr(oh->GetFd());
+      TFileHandler *th;
+      TIter next(fFileHandler);
+      fReadmask.Zero();
+      fWritemask.Zero();
+      while ((th = (TFileHandler *) next())) {
+         int fd = th->GetFd();
+         if (th->HasReadInterest()) {
+            fReadmask.Set(fd);
+            fMaxrfd = TMath::Max(fMaxrfd, fd);
+         }
+         if (th->HasWriteInterest()) {
+            fWritemask.Set(fd);
+            fMaxwfd = TMath::Max(fMaxwfd, fd);
+         }
+      }
    }
    return oh;
 }
@@ -1468,8 +1481,8 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
    //      they were specified on the link line.
    //   D: shared libraries dynamically loaded after the start of the program.
    //   L: list the .LIB rather than the .DLL (this is intended for linking)
-   //      [This options is not the default] 
-   
+   //      [This options is not the default]
+
    TString libs( TSystem::GetLibraries( regexp, options ) );
    TString ntlibs;
    TString opt = options;
@@ -1481,7 +1494,7 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
       TString s;
       Ssiz_t start, index, end;
       start = index = end = 0;
- 
+
       while ((start < libs.Length()) && (index != kNPOS)) {
 	index = libs.Index(separator,&end,start);
 	if (index >= 0) {
@@ -1496,7 +1509,7 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
 	    if ( GetPathInfo( s, 0, 0, 0, 0 ) != 0 ) {
 	      s.Replace( 0, s.Last('/')+1, 0, 0);
 	      s.Replace( 0, s.Last('\\')+1, 0, 0);
-	    }	    
+	    }
 	  }
 	  if (!fListLibs.IsNull())
 	    ntlibs.Append(" ");
@@ -1504,9 +1517,9 @@ const char *TWinNTSystem::GetLibraries(const char *regexp, const char *options)
 	}
 	start += end+1;
       }
-   } else 
+   } else
      ntlibs = libs;
-   
+
    fListLibs = ntlibs;
    return fListLibs;
 }
