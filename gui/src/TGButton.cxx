@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.18 2003/11/07 20:58:02 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.19 2003/11/10 15:44:32 rdm Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -358,7 +358,7 @@ TGTextButton::~TGTextButton()
 void TGTextButton::SetText(TGHotString *new_label)
 {
    // Set new button text.
-
+   
    int hotchar;
    const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
 
@@ -378,7 +378,7 @@ void TGTextButton::SetText(TGHotString *new_label)
    fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
-
+   
    fClient->NeedRedraw(this);
 }
 
@@ -1263,10 +1263,17 @@ void TGPictureButton::SavePrimitive(ofstream &out, Option_t *option)
    }
 
    char quote = '"';
-
+   const char *picname = fPic->GetName();
+#ifdef R__WIN32
+   if (strchr(picname,'\\')) {
+      TString pname = TString(picname);
+      pname.ReplaceAll('\\','/');
+      picname = pname.Data();
+   }
+#endif
    out <<"   TGPictureButton *";
    out << GetName() << " = new TGPictureButton(" << fParent->GetName()
-       << ",gClient->GetPicture(" << quote << fPic->GetName() << quote << ")";
+       << ",gClient->GetPicture(" << quote << picname << quote << ")";
 
    if (GetOptions() == (kRaisedFrame | kDoubleBorder)) {
       if (fNormGC == GetDefaultGC()()) {

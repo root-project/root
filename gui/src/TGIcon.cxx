@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.6 2003/11/28 12:09:50 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGIcon.cxx,v 1.7 2003/12/09 09:06:38 brun Exp $
 // Author: Fons Rademakers   05/01/98
 
 /*************************************************************************
@@ -109,9 +109,7 @@ void TGIcon::SavePrimitive(ofstream &out, Option_t *option)
    if (pos) {
       sprintf(name,"$ROOTSYS%s",pos+len);  // if absolute path
       out << name;
-	  printf("name = %s\n",name);
    } else {
-	  printf("picname = %s\n",picname);
 	  out << picname;                      // if no path
    }
    out << quote << ")" << "," << GetWidth() << "," << GetHeight();

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.19 2003/11/28 12:09:51 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTextEdit.cxx,v 1.20 2003/12/09 09:06:38 brun Exp $
 // Author: Fons Rademakers   3/7/2000
 
 /*************************************************************************
@@ -1627,13 +1627,16 @@ void TGTextEdit::SavePrimitive(ofstream &out, Option_t *)
       int len = 0;
       const char *filename, *rootname, *pos;
       rootname = gSystem->Getenv("ROOTSYS");
+      filename = txt->GetFileName();
 #ifdef R__WIN32
-      TString dirname = TString(rootname);
-      dirname.ReplaceAll('\\','/');
-      rootname = dirname.Data();
+      TString name = TString(rootname);
+      name.ReplaceAll('\\','/');
+      rootname = name.Data();
+      name = TString(filename);
+      name.ReplaceAll('\\','/');
+      filename = name.Data();
 #endif
       len = strlen(rootname);
-      filename = txt->GetFileName();
       pos = strstr(filename, rootname);
       if (pos) {
          sprintf(fn,"$ROOTSYS%s",pos+len);  // if absolute path
