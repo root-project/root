@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.22 2004/12/03 12:03:41 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.cxx,v 1.23 2004/12/06 07:53:44 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -12,8 +12,6 @@
 #include "Windows4Root.h"
 #endif
 
-#include <iostream>
-
 #include <algorithm>
 #include <utility>
 #include <vector>
@@ -21,7 +19,7 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
-#include "Rstrstream.h"
+#include "TString.h"
 #include "TError.h"
 #include "TGLSceneObject.h"
 #include "TGLRender.h"
@@ -93,7 +91,7 @@ void TGLRender::Traverse()
    for (; start < end; ++start) {
       TGLCamera *currCam = (TGLCamera *)fGLCameras.At(start);
       currCam->TurnOn();
-      
+
       if (fNeedFrustum) {
          fFrustum.Update();
       }
@@ -103,12 +101,12 @@ void TGLRender::Traverse()
       }
 
       DrawScene();
-      
+
       if (fNeedFrustum) {
          if (Double_t(fFrustum.GetVisible()) / fGLObjects.GetEntriesFast() > 0.8)
             fNeedFrustum = kFALSE;
       }
-      
+
       if(fAxes) DrawAxes();
    }
 }
@@ -148,7 +146,7 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
    actCam->TurnOn(x, y);
 
    DrawScene();
-   
+
    Int_t hits = glRenderMode(GL_RENDER);
 
    if (hits < 0) {
@@ -179,7 +177,7 @@ TGLSceneObject *TGLRender::SelectObject(Int_t x, Int_t y, Int_t cam)
          fSelected = chosen;
          fSelectedObj = hitObject;
          fSelectedObj->Select();
-         Traverse(); 
+         Traverse();
       }
    } else if (fSelected) {
       fSelected = 0;
@@ -211,15 +209,11 @@ void TGLRender::SetAxes(const PDD_t &x, const PDD_t &y, const PDD_t &z)
 //______________________________________________________________________________
 void PrintNumber(Double_t x, Double_t y, Double_t z, Double_t num, Double_t ys)
 {
-#ifdef R__SSTREAM
-   ostringstream ss;
-#else
-   ostrstream ss;
-#endif
-   ss<<num;
-   std::string str(ss.str());
-   glRasterPos3d(x, y, z);
-   for (UInt_t i = 0, e = str.length(); i < e; ++i) {
+   TString str;
+   str+=Long_t(num);
+
+   glRasterPos3i(Int_t(x), Int_t(y), Int_t(z));
+   for (Ssiz_t i = 0, e = str.Length(); i < e; ++i) {
       if (str[i] == '.') {
          glBitmap(8, 8, 0., ys, 7., 0., gDigits[10]);
          if (i + 1 < e)
@@ -326,7 +320,7 @@ void TGLRender::DrawScene()
          currObj->GLDraw(frObj);
       }
    }
-   
+
    Bool_t isTr = kFALSE;
    if (fSelectedObj && !(isTr = fSelectedObj->IsTransparent())) {
       fSelectedObj->GLDraw(frObj);
@@ -337,16 +331,5 @@ void TGLRender::DrawScene()
    while (fFirstT) {
       fFirstT->GLDraw(frObj);
       fFirstT = fFirstT->GetNextT();
-   }
-}
-
-//______________________________________________________________________________
-void TGLRender::GetStat()const
-{
-   if (fNeedFrustum) {
-      cout<<"There are "<<fGLObjects.GetEntries()<<" objects in scene\n";
-      cout<<"There are "<<fFrustum.GetVisible()<<" objects in frustum\n";
-   } else {
-      cout<<"Not frustuming\n";
    }
 }

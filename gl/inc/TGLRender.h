@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.13 2004/11/29 21:59:07 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLRender.h,v 1.14 2004/12/03 12:03:41 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -80,7 +80,6 @@ public:
    }
 
    void SetFamilyColor(const Float_t *newColor);
-   void GetStat()const;
    void SetNeedFrustum()
    {
       fNeedFrustum = kTRUE;
@@ -94,7 +93,7 @@ private:
 
    TGLRender(const TGLRender &);
    TGLRender & operator = (const TGLRender &);
-   
+
    //ClassDef(TGLRender,0)
 };
 

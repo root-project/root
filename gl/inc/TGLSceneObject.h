@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.17 2004/12/01 16:57:19 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.h,v 1.18 2004/12/09 12:12:26 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -41,8 +41,8 @@ public:
    void SetBBox(Double_t xmin, Double_t xmax, Double_t ymin,
                Double_t ymax, Double_t zmin, Double_t zmax);
    const Double_t *GetData()const{return fBBox;}
-   
-               
+
+
    void Shift(Double_t x, Double_t y, Double_t z);
    void Stretch(Double_t xs, Double_t ys, Double_t zs);
 
@@ -67,7 +67,7 @@ private:
 public:
    TGLSceneObject(const Double_t *vertStart, const Double_t *vertEnd, Int_t reserve,
                   const Float_t *color = 0, UInt_t glName = 0, TObject *realObj = 0);
-   TGLSceneObject(const Double_t *vertStart, const Double_t *vertEnd, 
+   TGLSceneObject(const Double_t *vertStart, const Double_t *vertEnd,
                   const Float_t *color = 0, UInt_t glName = 0, TObject *realObj = 0);
 
    virtual Bool_t IsTransparent()const;
@@ -79,22 +79,22 @@ public:
 
    TGLSelection *GetBBox(){return &fSelectionBox;}
    const TGLSelection *GetBBox()const{return &fSelectionBox;}
-   
+
    void SetNextT(TGLSceneObject *next){fNextT = next;}
    TGLSceneObject *GetNextT()const{return fNextT;}
-   
+
    UInt_t GetGLName()const{return fGLName;}
    TObject *GetRealObject()const{return fRealObject;}
-   
+
    const Float_t *GetColor()const{return fColor;}
    void SetColor(const Float_t *newColor, Bool_t fromCtor = kFALSE);
-   
+
    void Select(Bool_t select = kTRUE){fIsSelected = select;}
 
 private:
    TGLSceneObject(const TGLSceneObject &);
    TGLSceneObject & operator = (const TGLSceneObject &);
-   
+
    //private, called only from ctor
    void SetBBox(const Double_t *start, const Double_t *end);
 
@@ -151,13 +151,16 @@ private:
    Double_t fRadius; // Sphere radius
    Int_t    fNdiv;   // Number of divisions
 
+   static UInt_t fSphereList;
+   static void BuildList();
+
 public:
    TGLSphere(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
 
    void GLDraw(const TGLFrustum *fr)const;
 
    void Shift(Double_t x, Double_t y, Double_t z);
-   void Stretch(Double_t xs, Double_t ys, Double_t zs);   
+   void Stretch(Double_t xs, Double_t ys, Double_t zs);
 };
 
 
@@ -169,7 +172,7 @@ private:
 public:
    TGLTube(const TBuffer3D &buff, const Float_t *color, UInt_t glName, TObject *realObject);
    void GLDraw(const TGLFrustum *fr)const;
-   
+
    void Shift(Double_t x, Double_t y, Double_t z);
    void Stretch(Double_t xs, Double_t ys, Double_t zs);
 };

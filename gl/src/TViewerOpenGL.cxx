@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.43 2004/12/14 09:34:27 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TViewerOpenGL.cxx,v 1.44 2004/12/14 16:09:50 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -105,7 +105,7 @@ const Double_t gRotMatrixXOY[] = {1., 0., 0., 0., 0., 0., 1., 0.,
 
 const Double_t gRotMatrixYOZ[] = {0., 0., -1., 0., 1., 0., 0., 0.,
                                   0., -1., 0., 0., 0., 0., 0., 1.};
-                                
+
 const Double_t gRotMatrixXOZ[] = {0., 1., 0., 0., 1., 0., 0., 0.,
                                   0., 0., -1., 0., 0., 0., 0., 1.};
 
@@ -153,7 +153,7 @@ TViewerOpenGL::TViewerOpenGL(TVirtualPad * vp)
    fMenuBar = 0;
    fFileMenu = fViewMenu = fHelpMenu = 0;
    fMenuBarLayout = fMenuBarItemLayout = fMenuBarHelpLayout = 0;
-   fLightMask = 0x1b;   
+   fLightMask = 0x1b;
    fXc = fYc = fZc = fRad = 0.;
    fPressed = kFALSE;
    fNbShapes = 0;
@@ -439,10 +439,6 @@ Bool_t TViewerOpenGL::HandleContainerKey(Event_t *event)
    case kKey_Right:
       MoveCenter(kKey_Right);
       break;
-   case kKey_S:
-   case kKey_s:
-      fRender->GetStat();
-      break;
    }
 
    return kTRUE;
@@ -521,7 +517,8 @@ void TViewerOpenGL::CreateScene(Option_t *)
 
    buff->fOption = TBuffer3D::kPAD;
    CalculateViewvolumes();
-   //Calculate light sources positions and "bulb" radius
+
+   //Calculate light sources positions
    Double_t xdiff = fRangeX.second - fRangeX.first;
    Double_t ydiff = fRangeY.second - fRangeY.first;
    Double_t zdiff = fRangeZ.second - fRangeZ.first;
@@ -536,7 +533,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
    Float_t pos3[] = {0.f, -fRad - fYc, -fRad - fZc, 1.f};
    Float_t pos4[] = {-fRad - fXc, 0.f, -fRad - fZc, 1.f};
    Float_t pos5[] = {0.f, 0.f, 0.f, 1.f};
-   
+
    Float_t whiteCol[] = {.7f, .7f, .7f, 1.f};
 
    MakeCurrent();
@@ -550,7 +547,7 @@ void TViewerOpenGL::CreateScene(Option_t *)
    gVirtualGL->GLLight(kLIGHT3, kDIFFUSE, whiteCol);
    gVirtualGL->GLLight(kLIGHT0, kPOSITION, pos5);
    gVirtualGL->GLLight(kLIGHT0, kDIFFUSE, whiteCol);
-   
+
    if (fLightMask & 1) gVirtualGL->EnableGL(kLIGHT4);
    if (fLightMask & 2) gVirtualGL->EnableGL(kLIGHT1);
    if (fLightMask & 4) gVirtualGL->EnableGL(kLIGHT2);
@@ -651,8 +648,8 @@ void TViewerOpenGL::UpdateRange(const TGLSelection *box)
    if (fRangeY.second < Y[1])
       fRangeY.second = Y[1];
    if (fRangeZ.first > Z[0])
-      fRangeZ.first = Z[1];
-   if (fRangeZ.second < Z[0])
+      fRangeZ.first = Z[0];
+   if (fRangeZ.second < Z[1])
       fRangeZ.second = Z[1];
 }
 

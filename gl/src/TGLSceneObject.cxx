@@ -1,4 +1,4 @@
-// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.24 2004/12/01 16:57:19 brun Exp $
+// @(#)root/gl:$Name:  $:$Id: TGLSceneObject.cxx,v 1.25 2004/12/09 12:12:26 brun Exp $
 // Author:  Timur Pocheptsov  03/08/2004
 
 /*************************************************************************
@@ -293,7 +293,17 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glna
    Int_t *pols = buff.fPols;
    Int_t shiftInd = buff.TestBit(TBuffer3D::kIsReflection) ? 1 : -1;
 
-   for (Int_t numPol = 0, j = 1; numPol < buff.fNbPols; ++numPol) {
+   Int_t descSize = 0;
+
+   for (Int_t i = 0, j = 1; i < buff.fNbPols; ++i, ++j)
+   {
+      descSize += pols[j] + 1;
+      j += pols[j] + 1;
+   }
+
+   fPolyDesc.resize(descSize);
+
+   for (Int_t numPol = 0, currInd = 0, j = 1; numPol < buff.fNbPols; ++numPol) {
       Int_t segmentInd = shiftInd < 0 ? pols[j] + j : j + 1;
       Int_t segmentCol = pols[j];
       Int_t s1 = pols[segmentInd];
@@ -314,27 +324,31 @@ TGLFaceSet::TGLFaceSet(const TBuffer3D & buff, const Float_t *color, UInt_t glna
          numPnts[0] = segEnds[0], numPnts[1] = segEnds[1], numPnts[2] = segEnds[2];
       }
 
-      fPolyDesc.push_back(3);
-      Int_t sizeInd = fPolyDesc.size() - 1;
-      fPolyDesc.insert(fPolyDesc.end(), numPnts, numPnts + 3);
+      fPolyDesc[currInd] = 3;
+      Int_t sizeInd = currInd++;
+      fPolyDesc[currInd++] = numPnts[0];
+      fPolyDesc[currInd++] = numPnts[1];
+      fPolyDesc[currInd++] = numPnts[2];
       Int_t lastAdded = numPnts[2];
 
-      Int_t end = shiftInd < 0 ? j + 1 : j + segmentCol + 1;
+      Int_t end = shiftInd < 0 ? j + 1 : j + segmentCol;
       for (; segmentInd != end; segmentInd += shiftInd) {
          segEnds[0] = segs[pols[segmentInd] * 3 + 1];
          segEnds[1] = segs[pols[segmentInd] * 3 + 2];
          if (segEnds[0] == lastAdded) {
-            fPolyDesc.push_back(segEnds[1]);
+            fPolyDesc[currInd++] = segEnds[1];
             lastAdded = segEnds[1];
          } else {
-            fPolyDesc.push_back(segEnds[0]);
+            fPolyDesc[currInd++] = segEnds[0];
             lastAdded = segEnds[0];
          }
          ++fPolyDesc[sizeInd];
       }
       j += segmentCol + 2;
    }
+
    CalculateNormals();
+
 }
 
 //______________________________________________________________________________
@@ -627,6 +641,8 @@ void TGLPolyLine::GLDraw(const TGLFrustum *fr)const
    }
 }
 
+UInt_t TGLSphere::fSphereList = 0;
+
 //______________________________________________________________________________
 TGLSphere::TGLSphere(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
                 :TGLSceneObject(b.fPnts, b.fPnts + 3 * b.fNbPnts, c, n, r)
@@ -640,13 +656,46 @@ TGLSphere::TGLSphere(const TBuffer3D &b, const Float_t *c, UInt_t n, TObject *r)
 }
 
 //______________________________________________________________________________
+void TGLSphere::BuildList()
+{
+   //there is no UD destructor for this static object
+   // - there is a problem under Win32
+   static class DL {
+   public:
+      DL():fList(0)
+      {
+         fList = glGenLists(1);
+         if (!fList) {
+            ::Error("TGLSphere::BuildList", "Could not build display list for sphere\n");
+            return;
+         }
+         fSphereList = fList;
+         if (GLUquadric *quadObj = GetQuadric()) {
+            glNewList(fList, GL_COMPILE);
+            gluSphere(quadObj, 1, 20, 20);
+            glEndList();
+         } else {
+            fSphereList = 0;
+         }
+      }
+   private:
+      UInt_t fList;
+   }initDL;
+}
+
+
+//______________________________________________________________________________
 void TGLSphere::GLDraw(const TGLFrustum *fr)const
 {
+   if (!fSphereList) {
+      BuildList();
+      if(!fSphereList) return;
+   }
+
    if (fr) {
       if (!fr->ClipOnBoundingBox(*this)) return;
    }
 
-   // Draw a Sphere using OpenGL Sphere primitive gluSphere
    glMaterialfv(GL_FRONT, GL_DIFFUSE, fColor);
    glMaterialfv(GL_FRONT, GL_AMBIENT, fColor + 4);
    glMaterialfv(GL_FRONT, GL_SPECULAR, fColor + 8);
@@ -659,13 +708,16 @@ void TGLSphere::GLDraw(const TGLFrustum *fr)const
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    }
 
-   if (GLUquadric *quadObj = GetQuadric()) {
-      glLoadName(GetGLName());
-      glPushMatrix();
-      glTranslated(fX, fY, fZ);
-      gluSphere(quadObj, fRadius, fNdiv, fNdiv);
-      glPopMatrix();
-   }
+   glEnable(GL_NORMALIZE);
+
+   glLoadName(GetGLName());
+   glPushMatrix();
+   glTranslated(fX, fY, fZ);
+   if (fRadius > 1.) glScaled(fRadius, fRadius, fRadius);
+   glCallList(fSphereList);
+   glPopMatrix();
+
+   glDisable(GL_NORMALIZE);
 
    if (IsTransparent()) {
       glDepthMask(GL_TRUE);
