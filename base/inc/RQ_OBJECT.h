@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.1 2000/10/17 12:19:18 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: RQ_OBJECT.h,v 1.2 2000/10/22 19:21:29 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -29,10 +29,10 @@ class TQObject;
 //       Int_t fValue;
 //    public:
 //       A() : fValue(0) { }
-//       ~A() { if (fQObject) delete fQObject; }
+//       ~A() { }
 //
 //       void  SetValue(Int_t value)
-//       void  PrintValue() const { printf("value=%d\n",fValue); }
+//       void  PrintValue() const { printf("value=%d\n", fValue); }
 //       Int_t GetValue() const { return fValue; }
 //    };
 //
@@ -43,8 +43,8 @@ class TQObject;
 //       // to prevent infinite looping in the case
 //       // of cyclic connections
 //       if (value != fValue) {
-//          fValue=value;
-//          Emit("SetValue(Int_t)",fValue);
+//          fValue = value;
+//          Emit("SetValue(Int_t)", fValue);
 //       }
 //    }
 //
@@ -65,58 +65,48 @@ class TQObject;
 
 #define RQ_OBJECT() \
 private: \
-   TQObjSender *fQObject; \
+   TQObjSender fQObject; \
 public: \
    Bool_t Connect(const char *sig, const char *cl, \
                   void *rcvr, const char *slt) \
    { \
-      if (!fQObject) { \
-         fQObject = new TQObjSender(); \
-         fQObject->SetSender(this); \
-      } \
-      return fQObject->Connect(sig,cl,rcvr,slt); \
+      fQObject.SetSender(this); \
+      return fQObject.Connect(sig, cl, rcvr, slt); \
    } \
    Bool_t Disconnect(const char *sig = 0, \
                      void *rcvr = 0, const char *slt = 0) \
    { \
-      if (fQObject) { \
-         return TQObject::Disconnect(fQObject, sig, rcvr, slt); \
-      } else \
-         return kFALSE; \
+      return fQObject.Disconnect(sig, rcvr, slt); \
    } \
    void HighPriority(const char *signal_name, \
                      const char *slot_name = 0) \
    { \
-      if (fQObject) { \
-         fQObject->HighPriority(signal_name, slot_name); \
-      } \
+      fQObject.HighPriority(signal_name, slot_name); \
    } \
    void LowPriority(const char *signal_name, \
                     const char * slot_name = 0) \
    { \
-      if (fQObject) { \
-         fQObject->LowPriority(signal_name, slot_name); \
-      } \
+      fQObject.LowPriority(signal_name, slot_name); \
    } \
    void Emit(const char *signal) \
    { \
-      if (fQObject) fQObject->Emit(signal); \
+      fQObject.Emit(signal); \
    } \
    void Emit(const char *signal, Double_t param) \
    { \
-      if (fQObject) fQObject->Emit(signal, param); \
+      fQObject.Emit(signal, param); \
    } \
    void Emit(const char *signal, Long_t param) \
    { \
-      if (fQObject) fQObject->Emit(signal, param); \
+      fQObject.Emit(signal, param); \
    } \
    void Emit(const char *signal, const char *params) \
    { \
-      if (fQObject) fQObject->Emit(signal, params); \
+      fQObject.Emit(signal, params); \
    } \
    void Emit(const char *signal, Long_t *paramArr) \
    { \
-      if (fQObject) fQObject->Emit(signal, paramArr); \
+      fQObject.Emit(signal, paramArr); \
    } \
    void Emit(const char *signal, Char_t param) \
       { Emit(signal,(Long_t)param); } \
