@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.14 2000/12/02 16:26:49 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.15 2000/12/06 07:29:18 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -234,7 +234,7 @@ void TStreamerInfo::Build()
                   continue;
                } else {
                   Error("Build","Pointer to an array of objects not yet supported");
-                  printf("Member:%s, title:%s, refcount=%lx\n",dm->GetName(),dm->GetTitle(),(long)refcount);
+                  printf("Member type:%s, name:%s, title:%s, refcount=%lx\n",dm->GetFullTypeName(),dm->GetName(),dm->GetTitle(),(long)refcount);
                   continue;
                }
             } else {
@@ -985,7 +985,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
                             element->ls();
                             break;
                          }
-                         (*pstreamer)(b,pointer+fOffset[i]);
+                         (*pstreamer)(b,pointer+fOffset[i],0);
                          break;
                         }
          // Base Class
@@ -1007,7 +1007,23 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
                          }
                          UInt_t start,count;
                          b.ReadVersion(&start, &count);
-                         (*pstreamer)(b,pointer+fOffset[i]);
+                         (*pstreamer)(b,pointer+fOffset[i],0);
+                         b.CheckByteCount(start,count,IsA());
+                         break;
+                        }
+
+         case kStreamLoop: {
+                         Streamer_t pstreamer = (Streamer_t)fMethod[i];
+                         if (pstreamer == 0) {
+                            printf("ERROR, Streamer is null\n");
+                            TStreamerElement *element = (TStreamerElement*)fElem[i];
+                            element->ls();
+                            break;
+                         }
+                         Int_t *counter = (Int_t*)fMethod[i];
+                         UInt_t start,count;
+                         b.ReadVersion(&start, &count);
+                         (*pstreamer)(b,pointer+fOffset[i],*counter);
                          b.CheckByteCount(start,count,IsA());
                          break;
                         }
@@ -1107,6 +1123,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer)
                                  break;
                                 }
 
+         case kSkip + kStreamLoop: 
          case kSkip + kStreamer: {
                          UInt_t start,count;
                          b.ReadVersion(&start,&count);
@@ -1339,7 +1356,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                      }
                      for (Int_t k=0;k<nc;k++) {
                         pointer = (char*)clones->UncheckedAt(k);
-                        (*pstreamer)(b,pointer+fOffset[i]);
+                        (*pstreamer)(b,pointer+fOffset[i],0);
                      }
                      break;
                    }
@@ -1368,7 +1385,7 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
                          b.ReadVersion(&start,&count);
                          for (Int_t k=0;k<nc;k++) {
                             pointer = (char*)clones->UncheckedAt(k);
-                            (*pstreamer)(b,pointer+fOffset[i]);
+                            (*pstreamer)(b,pointer+fOffset[i],0);
                          }
                          b.CheckByteCount(start,count,IsA());
                          break;
@@ -1642,7 +1659,7 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer)
                             element->ls();
                             break;
                          }
-                         (*pstreamer)(b,pointer+fOffset[i]);
+                         (*pstreamer)(b,pointer+fOffset[i],0);
                          break;
                         }
          // Base Class
@@ -1663,7 +1680,22 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer)
                             break;
                          }
                          UInt_t pos = b.WriteVersion(IsA(),kTRUE);
-                         (*pstreamer)(b,pointer+fOffset[i]);
+                         (*pstreamer)(b,pointer+fOffset[i],0);
+                         b.SetByteCount(pos,kTRUE);
+                         break;
+                        }
+
+         case kStreamLoop: {
+                         Streamer_t pstreamer = (Streamer_t)fMethod[i];
+                         if (pstreamer == 0) {
+                            printf("ERROR, Streamer is null\n");
+                            TStreamerElement *element = (TStreamerElement*)fElem[i];
+                            element->ls();
+                            break;
+                         }
+                         Int_t *counter = (Int_t*)fMethod[i];
+                         UInt_t pos = b.WriteVersion(IsA(),kTRUE);
+                         (*pstreamer)(b,pointer+fOffset[i],*counter);
                          b.SetByteCount(pos,kTRUE);
                          break;
                         }
@@ -1832,7 +1864,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                      }
                      for (Int_t k=0;k<nc;k++) {
                         pointer = (char*)clones->UncheckedAt(k);
-                        (*pstreamer)(b,pointer+fOffset[i]);
+                        (*pstreamer)(b,pointer+fOffset[i],0);
                      }
                      break;
                     }
@@ -1861,7 +1893,7 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
                          UInt_t pos = b.WriteVersion(IsA(),kTRUE);
                          for (Int_t k=0;k<nc;k++) {
                             pointer = (char*)clones->UncheckedAt(k);
-                            (*pstreamer)(b,pointer+fOffset[i]);
+                            (*pstreamer)(b,pointer+fOffset[i],0);
                          }
                          b.SetByteCount(pos,kTRUE);
                          break;
