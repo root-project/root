@@ -32,15 +32,15 @@ CC            = cc
 CXXFLAGS      = $(EXCEPTION) --signed_chars --display_error_number --diag_suppress 68 \
                 --diag_suppress 191 --diag_suppress 830 \
                 $(CXXOPT) -D__osf__ -D__alpha $(EXTRA_CXXFLAGS)
-CFLAGS        = -signed $(EXTRA_CFLAGS)
+CFLAGS        = -signed -D__osf__ -D__alpha $(EXTRA_CFLAGS)
 CINTCXXFLAGS  = $(EXCEPTION) --signed_chars --display_error_number \
                 --diag_suppress 68 --diag_suppress 191 --diag_suppress 830 \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__SIGNEDCHAR -DG__DECCXX -DG__ROOT \
+                -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT \
                 -DG__REDIRECTIO -DG__64BIT \
                 $(CXXOPT) $(EXTRA_CXXFLAGS)
 CINTCFLAGS    = -signed -w -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__SIGNEDCHAR -DG__DECCXX -DG__ROOT \
+                -DG__OSFDLL -DG__SIGNEDCHAR -DG__ROOT \
                 -DG__REDIRECTIO -DG__64BIT -D__KCC $(EXTRA_CFLAGS)
 
 ifeq (exception,$(findstring exception,$(ROOTBUILD)))
