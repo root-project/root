@@ -1547,6 +1547,14 @@ if test ! "x$enable_python" = "xno" ; then
 
     if test "x$pythonincdir" = "x" || test "x$pythonlib" = "x"; then
         enable_python="no"
+    elif test ! "x$enable_explicitlink" = "xyes" ; then
+        message "Checking for option --enable-explicitlink (required for Python)"
+        pythoninc=""
+        pythonincdir=""
+        pythonlib=""
+        pythonlibdir=""
+        enable_python="no"
+        echo "no"
     fi
 fi
 
@@ -1694,8 +1702,8 @@ if test "x$enable_globus" = "xyes"; then
 
    # In more recent versions some functions are found in a separated library
    # so, if it exists, add it to the list
-   check_library libglobus_gsi_credential_$flavour "$enable_shared" "$searchlibdir" \
-          /usr/lib /usr/local/lib
+   check_library libglobus_gsi_credential_$flavour "$enable_shared" \
+          "$searchlibdir" /usr/lib /usr/local/lib
    if test ! "x$found_lib" = "x" ; then
       globuslib="$globuslib $found_lib"
       if test "x$globuslibdir" = "x" ; then
@@ -2042,7 +2050,8 @@ if test ! "x$enable_krb5" = "xno" ; then
 	    # fi
 	    :
 	elif test "x$cryptolib" = "x" ; then
-            check_library "libcrypto" "$enable_shared" "$krb5libdirorg" $krb5libdirs
+            check_library "libcrypto" "$enable_shared" "$krb5libdirorg" \
+                          $krb5libdirs
             cryptolib=$found_lib
             cryptolibdir=$found_dir
             if test -r $cryptolib && test "x$enable_shared" = "xno" ; then
