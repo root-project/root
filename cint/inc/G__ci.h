@@ -24,6 +24,7 @@
 #define G__CINTVERSION      5015058
 #define G__CINTVERSIONSTR  "5.15.58, Sep 16 2002"
 
+#define G__OLDIMPLEMENTATION1695
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
