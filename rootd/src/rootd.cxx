@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.100 2005/02/12 02:14:26 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.101 2005/02/28 17:28:12 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -926,13 +926,33 @@ void RootdFstat(const char *buf)
       }
    }
 
-   if (rc >= 0)
-      sprintf(msg, "%ld %ld %d %d %d %lld %ld %d", (long)statbuf.st_dev,
-              (long)statbuf.st_ino, statbuf.st_mode, statbuf.st_uid,
-              statbuf.st_gid, (Long64_t)statbuf.st_size, statbuf.st_mtime,
-              islink);
-   else
-      sprintf(msg, "-1 -1 -1 -1 -1 -1 -1 -1");
+   // New format for recent clients
+   if (gClientProtocol > 11) {
+      if (rc >= 0)
+         sprintf(msg, "%ld %ld %d %d %d %lld %ld %d", (long)statbuf.st_dev,
+                 (long)statbuf.st_ino, statbuf.st_mode, statbuf.st_uid,
+                 statbuf.st_gid, (Long64_t)statbuf.st_size, statbuf.st_mtime,
+                 islink);
+      else
+         sprintf(msg, "-1 -1 -1 -1 -1 -1 -1 -1");
+   } else {
+      // Old client: use previous incomplete format
+      if (rc >= 0) {
+         long id = (statbuf.st_dev << 24) + statbuf.st_ino;
+         Long64_t size = statbuf.st_size;
+         long modtime = statbuf.st_mtime;
+         long flags = 0;
+         if (statbuf.st_mode & ((S_IEXEC)|(S_IEXEC>>3)|(S_IEXEC>>6)))
+            flags |= 1;
+         if ((statbuf.st_mode & S_IFMT) == S_IFDIR)
+            flags |= 2;
+         if ((statbuf.st_mode & S_IFMT) != S_IFREG &&
+             (statbuf.st_mode & S_IFMT) != S_IFDIR)
+            flags |= 4;
+         sprintf(msg, "%ld %lld %ld %ld", id, size, flags, modtime);
+      } else
+         sprintf(msg, "-1 -1 -1 -1");
+   }
 
    NetSend(msg, kROOTD_FSTAT);
 }
