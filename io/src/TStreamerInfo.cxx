@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.101 2001/11/20 09:24:51 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.102 2001/11/21 17:59:10 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -215,7 +215,11 @@ void TStreamerInfo::Build()
       if (dt) {  // found a basic type
          Int_t dtype = dt->GetType();
          Int_t dsize = dt->Size();
-         if (dm->IsaPointer()) {
+         if (strstr(dm->GetFullTypeName(),"char*")) {
+            dtype = kCharStar;
+            dsize = sizeof(char*);
+         }
+         if (dm->IsaPointer() && dtype != kCharStar) {
             if (refcount) {
                // data member is pointer to an array of basic types
                element = new TStreamerBasicPointer(dm->GetName(),dm->GetTitle(),offset,dtype,
@@ -1269,6 +1273,12 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
       case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
          // array counter //[n]
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
+         // char *
+      case kCharStar: {
+                       char **val = (char**)ladd;
+                       if (*val) printf("%s",*val);
+                       break;
+                     }
          // Class *  derived from TObject with comment field  //->
       case kObjectp: {
                       TObject **obj = (TObject**)(pointer+fOffset[i]);
@@ -1420,6 +1430,12 @@ void TStreamerInfo::PrintValueClones(const char *name, TClonesArray *clones, Int
       case kOffsetP + kULong:  {ULong_t **val  = (ULong_t**)ladd;  Int_t *l = (Int_t*)(pointer+fMethod[i]); for(j=0;j<*l;j++) printf("%ld ",(*val)[j]); break;}
          // array counter //[n]
       case kCounter:           {Int_t *val    = (Int_t*)ladd;    printf("%d",*val);  break;}
+         // char *
+      case kCharStar: {
+                       char **val = (char**)ladd;
+                       if (*val) printf("%s",*val);
+                       break;
+                     }
          // Class *  derived from TObject with comment field  //->
       case kObjectp: {
                       TObject **obj = (TObject**)ladd;
@@ -1719,6 +1735,17 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetP + kUInt:   ReadBasicPointer(UInt_t)
          case kOffsetP + kULong:  ReadBasicPointer(ULong_t)
 
+         // char*
+         case kCharStar: {
+                       Int_t nch; b >> nch;
+                       char **f = (char**)(pointer+fOffset[i]);
+                       delete [] *f;
+                      *f = 0; if (nch <=0) break;
+                      *f = new char[nch+1];
+                       b.ReadFastArray(*f,nch); (*f)[nch] = 0;
+                       break;
+                     }
+
          // special case for TObject::fBits in case of a referenced object
          case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b >> *x;
                        if ((*x & kIsReferenced) != 0) TRef::ReadRef((TObject*)pointer,b,gFile);
@@ -1896,6 +1923,14 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, char *pointer, Int_t first)
          case kSkipP + kUShort: SkipBasicPointer(UShort_t)
          case kSkipP + kUInt:   SkipBasicPointer(UInt_t)
          case kSkipP + kULong:  SkipBasicPointer(ULong_t)
+
+         // skip char*
+         case kSkip + kCharStar: {
+                       Int_t nch; b >> nch;
+                       Int_t l = b.Length();
+                       b.SetBufferOffset(l+4+nch);
+                       break;
+                     }
 
          // skip Class *  derived from TObject with comment field  //->
          case kSkip + kObjectp: {
@@ -2112,6 +2147,20 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kOffsetP + kUShort: ReadCBasicPointer(UShort_t)
          case kOffsetP + kUInt:   ReadCBasicPointer(UInt_t)
          case kOffsetP + kULong:  ReadCBasicPointer(ULong_t)
+
+         // char*
+         case kCharStar: {
+                   for (Int_t k=0;k<nc;k++) {
+                       pointer = (char*)clones->UncheckedAt(k)+eoffset;
+                       Int_t nch; b >> nch;
+                       char **f = (char**)(pointer+fOffset[i]);
+                       delete [] *f;
+                      *f = 0; if (nch <=0) continue;
+                      *f = new char[nch+1];
+                       b.ReadFastArray(*f,nch); (*f)[nch] = 0;
+                     }
+                     break;
+                  }
 
          // special case for TObject::fBits in case of a referenced object
          case kBits: { 
@@ -2332,6 +2381,16 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
          case kSkipP + kUShort: SkipCBasicPointer(UShort_t)
          case kSkipP + kUInt:   SkipCBasicPointer(UInt_t)
          case kSkipP + kULong:  SkipCBasicPointer(ULong_t)
+
+         // skip char*
+         case kSkip + kCharStar: {
+                    for (Int_t k=0;k<nc;k++) {
+                       Int_t nch; b >> nch;
+                       Int_t l = b.Length();
+                       b.SetBufferOffset(l+4+nch);
+                       break;
+                     }
+                  }
 
          // skip Class *  derived from TObject with comment field  //->
          case kSkip + kObjectp: {
@@ -2560,6 +2619,21 @@ Int_t TStreamerInfo::WriteBuffer(TBuffer &b, char *pointer, Int_t first)
          case kOffsetP + kUInt:   WriteBasicPointer(UInt_t)
          case kOffsetP + kULong:  WriteBasicPointer(ULong_t)
 
+         // char*
+         case kCharStar: {
+                       Int_t nch = 0;
+                       char **f = (char**)(pointer+fOffset[i]);
+                       char *af = *f;
+                       if (af) {
+                          nch = strlen(af);
+                          b  << nch;
+                          b.WriteFastArray(af,nch);
+                       } else {
+                          b << nch;
+                       }
+                       break;
+                     }
+
          // special case for TObject::fBits in case of a referenced object
          case kBits: { UInt_t *x=(UInt_t*)(pointer+fOffset[i]); b << *x; 
                        if ((*x & kIsReferenced) != 0) TRef::SaveRef((TObject*)pointer,b,gFile);
@@ -2773,6 +2847,24 @@ Int_t TStreamerInfo::WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t n
          case kOffsetP + kUShort: WriteCBasicPointer(UShort_t)
          case kOffsetP + kUInt:   WriteCBasicPointer(UInt_t)
          case kOffsetP + kULong:  WriteCBasicPointer(ULong_t)
+
+         // char*
+         case kCharStar: {
+                    for (Int_t k=0;k<nc;k++) {
+                       pointer = (char*)clones->UncheckedAt(k)+baseOffset; 
+                       Int_t nch = 0;
+                       char **f = (char**)(pointer+fOffset[i]);
+                       char *af = *f;
+                       if (af) {
+                          nch = strlen(af);
+                          b  << nch;
+                          b.WriteFastArray(af,nch);
+                       } else {
+                          b << nch;
+                       }
+                     }
+                     break;
+                  }
 
          // special case for TObject::fBits in case of a referenced object
          case kBits: { 
