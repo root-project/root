@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.6 2000/09/04 17:49:17 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.7 2000/10/10 15:17:34 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -985,6 +985,122 @@ char *StrDup(const char *str)
 }
 
 //______________________________________________________________________________
+void ReplaceBundleInDict(const char *dictname, const char *bundlename)
+{
+   // Replace the bundlename in the dict.cxx and .h file by the contents
+   // of the bundle.
+
+   // First patch dict.cxx. Create tmp file and copy dict.cxx to this file.
+   // When discovering a line like:
+   //   G__add_compiledheader("bundlename");
+   // replace it by the appropriate number of lines contained in the bundle.
+
+   FILE *fpd = fopen(dictname, "r");
+   if (!fpd) {
+      fprintf(stderr,"rootcint: failed to open %s in ReplaceBundleInDict()\n",
+              dictname);
+      return;
+   }
+
+   char tmpdictname[L_tmpnam];
+   tmpnam(tmpdictname);
+   FILE *tmpdict = fopen(tmpdictname, "w");
+   if (!tmpdict) {
+      fprintf(stderr,"rootcint: failed to open %s in ReplaceBundleInDict()\n",
+              tmpdictname);
+      fclose(fpd);
+      return;
+   }
+
+   char checkline[512];
+   sprintf(checkline, "  G__add_compiledheader(\"%s\");", bundlename);
+   int clen = strlen(checkline);
+
+   char line[BUFSIZ];
+   if (tmpdict && fpd) {
+      while (fgets(line, BUFSIZ, fpd)) {
+         if (!strncmp(line, checkline, clen)) {
+            FILE *fb = fopen(bundlename, "r");
+            if (!fb) {
+               fprintf(stderr,"rootcint: failed to open %s in ReplaceBundleInDict()\n",
+                       bundlename);
+               fclose(fpd);
+               fclose(tmpdict);
+               remove(tmpdictname);
+               return;
+            }
+            while (fgets(line, BUFSIZ, fb)) {
+               char *s = strchr(line, '"');
+               if (!s) continue;
+               s++;
+               char *s1 = strrchr(s, '"');
+               if (s1) {
+                  *s1 = 0;
+                  fprintf(tmpdict, "  G__add_compiledheader(\"%s\");\n", s);
+               }
+            }
+            fclose(fb);
+         } else
+            fprintf(tmpdict, "%s", line);
+      }
+   }
+
+   fclose(tmpdict);
+   fclose(fpd);
+
+   if (rename(tmpdictname, dictname) == -1)
+      fprintf(stderr,"rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
+              tmpdictname, dictname);
+
+   // Next patch dict.h. Create tmp file and copy dict.h to this file.
+   // When discovering a line like:
+   //   #include "bundlename"
+   // replace it by the appropriate number of lines contained in the bundle.
+
+   // make dict.h
+   char dictnameh[512];
+   strcpy(dictnameh, dictname);
+   char *s = strrchr(dictnameh, '.');
+   if (s) {
+      *(s+1) = 'h';
+      *(s+2) = 0;
+   } else {
+      fprintf(stderr,"rootcint: failed create dict.h in ReplaceBundleInDict()\n");
+      return;
+   }
+
+   fpd = fopen(dictnameh, "r");
+   if (!fpd) {
+      fprintf(stderr,"rootcint: failed to open %s in ReplaceBundleInDict()\n",
+              dictnameh);
+      return;
+   }
+   tmpdict = fopen(tmpdictname, "w");
+
+   sprintf(checkline, "#include \"%s\"", bundlename);
+   clen = strlen(checkline);
+
+   if (tmpdict && fpd) {
+      while (fgets(line, BUFSIZ, fpd)) {
+         if (!strncmp(line, checkline, clen)) {
+            FILE *fb = fopen(bundlename, "r");
+            while (fgets(line, BUFSIZ, fb))
+               fprintf(tmpdict, "%s", line);
+            fclose(fb);
+         } else
+            fprintf(tmpdict, "%s", line);
+      }
+   }
+
+   fclose(tmpdict);
+   fclose(fpd);
+
+   if (rename(tmpdictname, dictnameh) == -1)
+      fprintf(stderr,"rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
+              tmpdictname, dictnameh);
+}
+
+//______________________________________________________________________________
 int main(int argc, char **argv)
 {
 #ifdef __MWERKS__
@@ -1125,13 +1241,13 @@ int main(int argc, char **argv)
    for (i = 1; i < argc; i++)
       if (strcmp(argv[i], "-p") == 0) use_preprocessor = 1;
 
-   char bundlename[L_tmpnam];
+   char bundlename[L_tmpnam+2];
    FILE *bundle = 0;
    if (use_preprocessor) {
       tmpnam(bundlename);
-      if (strlen(bundlename) < (L_tmpnam-3)) strcat(bundlename,".C");
+      strcat(bundlename,".h");
       bundle = fopen(bundlename, "w");
-      if (bundle==0) {
+      if (!bundle) {
          fprintf(stderr,"%s: failed to open %s, usage of external preprocessor by CINT is not optimal\n",
                  argv[0], bundlename);
          use_preprocessor = 0;
@@ -1185,6 +1301,9 @@ int main(int argc, char **argv)
 
 #endif
 
+   if (use_preprocessor && icc)
+      ReplaceBundleInDict(argv[ifl], bundlename);
+
    // Check if code goes to stdout or cint file, use temporary file
    // for prepending of the rootcint generated code (STK)
    char tname[L_tmpnam];
@@ -1202,12 +1321,12 @@ int main(int argc, char **argv)
    fprintf(fp, "#include \"TError.h\"\n\n");
 
    // Loop over all command line arguments and write include statements.
-   // Skip options and [G__]LinkDef.h.
+   // Skip options and any LinkDef.h.
    if (ifl && !icc) {
       for (i = ic; i < argc; i++) {
          if (*argv[i] != '-' && *argv[i] != '+' &&
-             !strstr(argv[i],"LinkDef.h") && !strstr(argv[i],"Linkdef.h") &&
-             !strstr(argv[i],"linkdef.h"))
+             !((strstr(argv[i],"LinkDef") || strstr(argv[i],"Linkdef") ||
+                strstr(argv[i],"linkdef")) && strstr(argv[i],".h")))
             fprintf(fp, "#include \"%s\"\n", argv[i]);
       }
       fprintf(fp, "\n");
@@ -1243,6 +1362,7 @@ int main(int argc, char **argv)
    }
    if (!fpld) {
       fprintf(stderr, "%s: cannot open file %s\n", argv[0], il ? argv[il] : autold);
+      if (use_preprocessor) remove(bundlename);
       if (!il) remove(autold);
       if (ifl) {
          remove(tname);
@@ -1255,7 +1375,7 @@ int main(int argc, char **argv)
    // When all classes in LinkDef are done, loop over all classes known
    // to CINT output the ones that were not in the LinkDef. This can happen
    // in case "#pragma link C++ defined_in" is used.
-   const int kMaxClasses = 1000;
+   const int kMaxClasses = 2000;
    char *clProcessed[kMaxClasses];
    int   ncls = 0;
 
@@ -1365,6 +1485,7 @@ int main(int argc, char **argv)
    fclose(fpld);
 
    if (!il) remove(autold);
+   if (use_preprocessor) remove(bundlename);
 
    // Append CINT dictionary to file containing Streamers and ShowMembers
    if (ifl) {
@@ -1387,7 +1508,7 @@ int main(int argc, char **argv)
 
          // make name of dict include file "aapDict.cxx" -> "aapDict.h"
          int  nl = 0;
-         char inclf[64];
+         char inclf[512];
          char *s = strrchr(dictname, '.');
          if (s) *s = 0;
          sprintf(inclf, "%s.h", dictname);
@@ -1398,7 +1519,7 @@ int main(int argc, char **argv)
             if (!strncmp(line, "#include", 8) && strstr(line, inclf))
                continue;
             fprintf(fpd, "%s", line);
-            if (++nl == 4)
+            if (++nl == 4 && icc)
                fprintf(fpd, "#include \"%s\"\n", inclf);
          }
       }
