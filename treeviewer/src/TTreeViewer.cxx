@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.24 2002/05/03 10:22:32 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.25 2002/07/08 14:41:44 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -303,6 +303,32 @@ TTreeViewer::TTreeViewer(const char* treeName)
    BuildInterface();
    SetTreeName(treeName);
 }
+
+//______________________________________________________________________________
+TTreeViewer::TTreeViewer(const TTree *tree)
+          :TGMainFrame(gClient->GetRoot(),10,10,kVerticalFrame)
+{
+   // TTreeViewer constructor with a pointer to a Tree
+
+   fTree = 0;
+   if (!tree) return;
+   gROOT->ProcessLine("TTree *tv__tree = 0;");
+   fTreeList = new TList;
+   gROOT->ProcessLine("TList *tv__tree_list = new TList;");
+   fFilename = 0;
+   gROOT->ProcessLine("TFile *tv__tree_file = 0;");
+   gInterpreter->SaveContext();
+   BuildInterface();
+   TDirectory *dirsav = gDirectory;
+   TDirectory *cdir = tree->GetDirectory();
+   if (cdir) cdir->cd();
+      
+   SetTreeName(tree->GetName());
+   if (cdir) {
+      fFilename = cdir->GetFile()->GetName();
+      if (dirsav) dirsav->cd();
+   }
+}
 //______________________________________________________________________________
 void TTreeViewer::SetNexpressions(Int_t expr)
 {
@@ -374,7 +400,7 @@ void TTreeViewer::SetTreeName(const char* treeName)
       sprintf(command, "tv__tree = (TTree *) gROOT->FindObject(\"%s\");", treeName);
       ExecuteCommand(command);
    }
-   //--- add the tree to the list if it is noy already in
+   //--- add the tree to the list if it is not already in
    fTreeList->Add(fTree);
    ExecuteCommand("tv__tree_list->Add(tv__tree);");
    //--- map this tree

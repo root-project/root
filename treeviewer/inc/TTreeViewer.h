@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.9 2001/04/06 07:27:18 brun Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.h,v 1.10 2002/07/08 14:41:44 rdm Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -174,6 +174,7 @@ private:
 
 public:
    TTreeViewer(const char* treeName = 0);
+   TTreeViewer(const TTree *tree);
    virtual       ~TTreeViewer();
 // public methods
    void          ActivateButtons(Bool_t first, Bool_t previous,
