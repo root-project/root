@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.12 2004/09/21 17:53:10 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBuilder.cxx,v 1.13 2004/09/22 05:01:12 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -611,10 +611,10 @@ void TGuiBuilder::EnableEditButtons(Bool_t on)
       btn->SetState(!on ? kButtonDisabled : kButtonUp);
    }
 
-   /*btn = fToolBar->GetButton(kCropAct);
+   btn = fToolBar->GetButton(kCropAct);
    if (btn) {
       btn->SetState(!on ? kButtonDisabled : kButtonUp);
-   }*/
+   }
 
    btn = fToolBar->GetButton(kDeleteAct);
    if (btn) {
@@ -939,20 +939,24 @@ void TGuiBuilder::CloseWindow()
 }
 
 //______________________________________________________________________________
-void TGuiBuilder::UpdateStatusBar()
+void TGuiBuilder::UpdateStatusBar(const char *txt)
 {
    //
 
    if (!fStatusBar) return;
 
-   TObject *o = (TObject *)gTQSender;
    const char *text = 0;
 
-   if (o && o->InheritsFrom(TGToolTip::Class())) {
-      TGToolTip *tip = (TGToolTip*)o;
-      text = tip->GetText()->Data(); 
-   }
+   if (!txt) {
+      TObject *o = (TObject *)gTQSender;
 
+      if (o && o->InheritsFrom(TGToolTip::Class())) {
+         TGToolTip *tip = (TGToolTip*)o;
+         text = tip->GetText()->Data(); 
+      }
+   } else {
+      text = txt;
+   }
    fStatusBar->SetText(text);
 }
 
@@ -970,6 +974,9 @@ void TGuiBuilder::EraseStatusBar()
 void TGuiBuilder::BindKeys()
 {
    //
+
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_a),
+                      kKeyControlMask, kTRUE);
 
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_n),
                       kKeyControlMask, kTRUE);

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.6 2003/11/05 13:08:26 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGSplitter.cxx,v 1.7 2004/02/18 20:13:43 brun Exp $
 // Author: Fons Rademakers   6/09/2000
 
 /*************************************************************************
@@ -35,6 +35,7 @@ TGSplitter::TGSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    // Create a splitter.
 
    fDragging = kFALSE;
+   fEditDisabled = kTRUE;
 }
 
 

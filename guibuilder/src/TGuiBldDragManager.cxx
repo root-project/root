@@ -1,4 +1,4 @@
-// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.10 2004/09/21 17:53:10 brun Exp $
+// @(#)root/guibuilder:$Name:  $:$Id: TGuiBldDragManager.cxx,v 1.11 2004/09/22 05:01:12 brun Exp $
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
@@ -642,6 +642,14 @@ void TGuiBldDragManager::SwitchEditable(TGFrame *frame)
 
    comp->SetEditable(kTRUE);
 
+   if (fBuilder) {
+      TString str = comp->ClassName();
+      str += "::";
+      str += comp->GetName();
+      str += " set editable";
+      fBuilder->UpdateStatusBar(str.Data());
+   }
+
    if (frame != comp) {
       SelectFrame(frame);
    }
@@ -669,6 +677,14 @@ void TGuiBldDragManager::SelectFrame(TGFrame *frame, Bool_t add)
 
       Selected(frame);
       DrawGrabRectangles(frame);
+
+      if (fBuilder) {
+         TString str = frame->ClassName();
+         str += "::";
+         str += frame->GetName();
+         str += " selected";
+         fBuilder->UpdateStatusBar(str.Data());
+      }
 
    } else {
       gVirtualX->TranslateCoordinates(frame->GetId(),
@@ -733,13 +749,18 @@ void TGuiBldDragManager::GrabFrame(TGFrame *frame)
    attr.fOverrideRedirect = kTRUE;
    attr.fSaveUnder        = kTRUE;
 
-   
-
-gVirtualX->ChangeWindowAttributes(frame->GetId(), &attr);
+   gVirtualX->ChangeWindowAttributes(frame->GetId(), &attr);
    frame->ReparentWindow(fClient->GetDefaultRoot(), fPimpl->fX0, fPimpl->fY0);
    gVirtualX->Update(1);
 
-   if (fBuilder) fBuilder->Update();
+   if (fBuilder) {
+      fBuilder->Update();
+      TString str = frame->ClassName();
+      str += "::";
+      str += frame->GetName();
+      str += " is being dragged";
+      fBuilder->UpdateStatusBar(str.Data());
+   }
 }
 
 //______________________________________________________________________________
@@ -753,9 +774,16 @@ void TGuiBldDragManager::UngrabFrame()
    HideGrabRectangles();
 
    DoRedraw();
-   fPimpl->fGrab = 0;
 
-   if (fBuilder) fBuilder->Update();
+   if (fBuilder) {
+      fBuilder->Update();
+      TString str = fPimpl->fGrab->ClassName();
+      str += "::";
+      str += fPimpl->fGrab->GetName();
+      str += " ungrabbed";
+      fBuilder->UpdateStatusBar(str.Data());
+   }
+   fPimpl->fGrab = 0;
 }
 
 //______________________________________________________________________________
@@ -822,7 +850,6 @@ void TGuiBldDragManager::DrawGrabRectangles(TGWindow *win)
    DrawGrabRect(7, x + frame->GetWidth(), y + frame->GetHeight());
 
    fPimpl->fGrabRectHidden = kFALSE;
-   //TTimer::SingleShot(2000, "TGuiBldDragManager", this, "UngrabFrame()");
 }
 
 //______________________________________________________________________________
@@ -1167,7 +1194,7 @@ Bool_t TGuiBldDragManager::HandleEvent(Event_t *event)
                   root->SetEditable(kFALSE);
                   SetEditable(kFALSE);
                   return kTRUE;
-               } else if (!event->fState) {
+               } else if (!(event->fState & 0xFF)) {
                   ExecuteQuickAction(event);
                   return kTRUE;
                }
@@ -1552,6 +1579,10 @@ void TGuiBldDragManager::HandleReturn(Bool_t on)
          parent->MapWindow();
          fLassoDrawn = kFALSE;
          SelectFrame(parent);
+   
+         if (fBuilder) {
+            fBuilder->UpdateStatusBar("Grab action performed");
+         }
       }
    } else if (on && fPimpl->fGrab) {
       if (fPimpl->fGrab->InheritsFrom(TGCompositeFrame::Class())) {
@@ -1563,6 +1594,10 @@ void TGuiBldDragManager::HandleReturn(Bool_t on)
          ReparentFrames(comp, parent);
          DeleteFrame(fPimpl->fGrab);
          fPimpl->fGrab = 0;
+
+         if (fBuilder) {
+            fBuilder->UpdateStatusBar("Drop action performed");
+         }
       }
    }
    delete li;
@@ -1737,6 +1772,10 @@ void TGuiBldDragManager::HandleDelete(Bool_t crop)
       fPasteFileName = sav;
    }
    fLassoDrawn = kFALSE;
+
+   if (fBuilder) {
+      fBuilder->UpdateStatusBar(crop ? "Crop action performed" : "Delete action performed");
+   }
 }
 
 //______________________________________________________________________________
@@ -1808,6 +1847,14 @@ void TGuiBldDragManager::HandleCopy()
    fPimpl->fGrab->SetY(y0);
 
    ((TGWindow*)fPimpl->fGrab->GetParent())->SetName(name.Data());
+
+   if (fBuilder) {
+      TString str = fPimpl->fGrab->ClassName();
+      str += "::";
+      str += fPimpl->fGrab->GetName();
+      str += " copied to clipboard";
+      fBuilder->UpdateStatusBar(str.Data());
+   }
 
    delete tmp;
 }
@@ -1995,6 +2042,7 @@ void TGuiBldDragManager::DoResize()
    // handle resize
 
    if (!fPimpl->fGrab) return;
+
    TGFrame *fr = fPimpl->fGrab;
 
    Window_t c;
@@ -2218,6 +2266,13 @@ void TGuiBldDragManager::PlaceFrame(TGFrame *frame)
       //edit->SetLayoutBroken();
       UInt_t g = GetGridStep()/2;
       edit->AddFrame(frame, new TGLayoutHints(kLHintsNormal, g, g, g, g));
+   }
+   if (fBuilder) {
+      TString str = frame->ClassName();
+      str += "::";
+      str += frame->GetName();
+      str += " created";
+      fBuilder->UpdateStatusBar(str.Data());
    }
 }
 
@@ -2940,8 +2995,15 @@ void TGuiBldDragManager::HandleGrid()
 
    if (fPimpl->fGrid->fgStep > 1) {
       fPimpl->fGrid->SetStep(1);
+      if (fBuilder) {
+         fBuilder->UpdateStatusBar("Grid switched OFF");
+      }
    } else {
       fPimpl->fGrid->SetStep(gGridStep);
+
+      if (fBuilder) {
+         fBuilder->UpdateStatusBar("Grid switched ON");
+      }
 
       if (root->InheritsFrom(TGCompositeFrame::Class())) {
          TGCompositeFrame *comp = (TGCompositeFrame*)root;
@@ -3097,6 +3159,14 @@ void TGuiBldDragManager::BreakLayout()
 
    fPimpl->fGrab->SetLayoutBroken(kTRUE);
 
+   if (fBuilder) {
+      TString str = fPimpl->fGrab->ClassName();
+      str += "::";
+      str += fPimpl->fGrab->GetName();
+      str += " Layout Broken";
+      fBuilder->UpdateStatusBar(str.Data());
+   }
+
    Int_t  x = fPimpl->fGrab->GetX();
    Int_t  y = fPimpl->fGrab->GetY();
    UInt_t w = fPimpl->fGrab->GetWidth();
@@ -3130,9 +3200,25 @@ void TGuiBldDragManager::SwitchLayout()
    if (m->InheritsFrom(TGHorizontalLayout::Class())) {
       opt &= ~kHorizontalFrame;
       opt |= kVerticalFrame;
+
+      if (fBuilder) {
+         TString str = comp->ClassName();
+         str += "::";
+         str += comp->GetName();
+         str += " Vertical Layout ON";
+         fBuilder->UpdateStatusBar(str.Data());
+      }
    } else if (m->InheritsFrom(TGVerticalLayout::Class())) {
       opt &= ~kVerticalFrame;
       opt |= kHorizontalFrame;
+
+      if (fBuilder) {
+         TString str = comp->ClassName();
+         str += "::";
+         str += comp->GetName();
+         str += " Horizontal Layout ON";
+         fBuilder->UpdateStatusBar(str.Data());
+      }
    }
    comp->ChangeOptions(opt);
    comp->Resize();

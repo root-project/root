@@ -84,16 +84,15 @@ public:
    virtual void      HandleMenu(Int_t id);
    virtual void      CloseWindow();
    virtual void      HandleWindowClosed(Int_t id);
-   virtual void      UpdateStatusBar();
+   virtual void      UpdateStatusBar(const char *text = 0);
    virtual void      EraseStatusBar();
 
    TGMdiFrame *FindEditableMdiFrame(const TGWindow *win);
    TGuiBldEditor    *GetEditor() const { return fEditor; }
-
-   static TGFrame   *VSplitter();
    static TGFrame   *HSplitter();
+   static TGFrame   *VSplitter();
 
-   ClassDef(TGuiBuilder,0)  // gui builder
+   ClassDef(TGuiBuilder,0)  // ROOT GUI Builder
 };
 
 
