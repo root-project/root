@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.12 2002/05/03 10:24:05 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixD.h,v 1.13 2002/05/03 15:18:59 brun Exp $
 // Authors: Oleg E. Kiselyov, Fons Rademakers   03/11/97
 
 /*************************************************************************
@@ -115,7 +115,7 @@ public:
 
    virtual ~TMatrixD();
 
-   void Draw(Option_t *option="");
+   void Draw(Option_t *option=""); // *MENU*
    void ResizeTo(Int_t nrows, Int_t ncols);
    void ResizeTo(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb);
    void ResizeTo(const TMatrixD &m);
@@ -180,7 +180,7 @@ public:
 
    Double_t Determinant() const;
 
-   void Print(Option_t *option="") const;
+   void Print(Option_t *option="") const; // *MENU*
 
    friend TMatrixD &operator+=(TMatrixD &target, const TMatrixD &source);
    friend TMatrixD &operator-=(TMatrixD &target, const TMatrixD &source);
