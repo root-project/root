@@ -1,4 +1,4 @@
-// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.33 2004/03/08 16:02:03 rdm Exp $
+// @(#)root/x11:$Name:  $:$Id: GX11Gui.cxx,v 1.34 2004/04/06 16:40:32 rdm Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -235,6 +235,14 @@ void TGX11::DestroyWindow(Window_t id)
 }
 
 //______________________________________________________________________________
+void TGX11::DestroySubwindows(Window_t id)
+{
+   // Destroy subwindows of this window.
+
+   XDestroySubwindows(fDisplay, (Window) id);
+}
+
+//______________________________________________________________________________
 void TGX11::RaiseWindow(Window_t id)
 {
    // Put window on top of window stack.
@@ -280,6 +288,14 @@ void TGX11::IconifyWindow(Window_t id)
    // Iconify the window.
 
    XIconifyWindow(fDisplay, (Window) id, fScreenNumber);
+}
+
+//______________________________________________________________________________
+void TGX11::ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y)
+{
+   // Reparent window to new parent window at position (x,y).
+
+   XReparentWindow(fDisplay, (Window) id, (Window) pid, x, y);
 }
 
 //______________________________________________________________________________
