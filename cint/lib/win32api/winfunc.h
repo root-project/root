@@ -855,6 +855,94 @@ DWORD GetLastError();
 void ExitProcess(UINT uExitCode);
 #pragma link C func ExitProcess;
 
+/***********************************************************************
+* Graphics
+***********************************************************************/
+#pragma link C class HDC__;
+#pragma link C typedef HDC;
+
+BOOL AngleArc(HDC, int, int, DWORD, FLOAT, FLOAT);
+#pragma link C func AngleArc;
+
+BOOL PolyPolyline(HDC, /* CONST */ POINT *, /* CONST */ DWORD *, DWORD);
+#pragma link C func PolyPolyline;
+BOOL GetWorldTransform(HDC, LPXFORM);
+#pragma link C func GetWorldTransform;
+BOOL SetWorldTransform(HDC, /* CONST */ XFORM *);
+#pragma link C func SetWorldTransform;
+BOOL ModifyWorldTransform(HDC, /* CONST */ XFORM *, DWORD);
+#pragma link C func ModifyWorldTransform;
+BOOL CombineTransform(LPXFORM, /* CONST */ XFORM *, /* CONST */ XFORM *);
+#pragma link C func CombineTransform;
+HBITMAP CreateDIBSection(HDC, /* CONST */ BITMAPINFO *, UINT, VOID **, HANDLE, DWORD);
+#pragma link C func CreateDIBSction;
+UINT GetDIBColorTable(HDC, UINT, UINT, RGBQUAD *);
+#pragma link C func GetDIBColorTable;
+UINT SetDIBColorTable(HDC, UINT, UINT, /* CONST */ RGBQUAD *);
+#pragma link C func SetDIBColorTable;
+
+HRGN  CreatePolygonRgn(/* CONST */ POINT *, int, int);
+#pragma link C func CreatePolygonRgn;
+BOOL  DPtoLP(HDC, LPPOINT, int);
+#pragma link C func DPtoLP;
+BOOL  LPtoDP(HDC, LPPOINT, int);
+#pragma link C func LPtoDP;
+BOOL  Polygon(HDC, /* CONST */ POINT *, int);
+#pragma link C func Polygon;
+BOOL  Polyline(HDC, /* CONST */ POINT *, int);
+#pragma link C func Polyline;
+
+BOOL  PolyBezier(HDC, /* CONST */ POINT *, DWORD);
+#pragma link C func PolyBezier;
+BOOL  PolyBezierTo(HDC, /* CONST */ POINT *, DWORD);
+#pragma link C func PolyBezierTo;
+BOOL  PolylineTo(HDC, /* CONST */ POINT *, DWORD);
+#pragma link C func PolylineTo;
+
+BOOL  SetViewportExtEx(HDC, int, int, LPSIZE);
+#pragma link C func SetViewportExtEx;
+BOOL  SetViewportOrgEx(HDC, int, int, LPPOINT);
+#pragma link C func SetViewportOrgEx;
+BOOL  SetWindowExtEx(HDC, int, int, LPSIZE);
+#pragma link C func SetWindowExtEx;
+BOOL  SetWindowOrgEx(HDC, int, int, LPPOINT);
+#pragma link C func SetWindowOrgEx;
+
+BOOL  OffsetViewportOrgEx(HDC, int, int, LPPOINT);
+#pragma link C func OffsetViewportOrgEx;
+BOOL  OffsetWindowOrgEx(HDC, int, int, LPPOINT);
+#pragma link C func OffsetWindowOrgEx;
+BOOL  ScaleViewportExtEx(HDC, int, int, int, int, LPSIZE);
+#pragma link C func ScaleViewportExtEx;
+BOOL  ScaleWindowExtEx(HDC, int, int, int, int, LPSIZE);
+#pragma link C func ScaleWindowExtEx;
+BOOL  SetBitmapDimensionEx(HBITMAP, int, int, LPSIZE);
+#pragma link C func SetBitmapDimensionEx;
+BOOL  SetBrushOrgEx(HDC, int, int, LPPOINT);
+#pragma link C func SetBrushOrgEx;
+
+int   GetTextFace(HDC, int, LPSTR);
+#pragma link C func GetTextFace;
+
+DWORD GetKerningPairs(HDC, DWORD, LPKERNINGPAIR);
+#pragma link C func GetKerningPairs;
+
+BOOL  GetDCOrgEx(HDC,LPPOINT);
+#pragma link C func GetDCOrgEx;
+BOOL  FixBrushOrgEx(HDC,int,int,LPPOINT);
+#pragma link C func FixBrushOrgEx;
+BOOL  UnrealizeObject(HGDIOBJ);
+#pragma link C func UnrealizeObject;
+
+BOOL  GdiFlush();
+#pragma link C func GdiFlush;
+DWORD GdiSetBatchLimit(DWORD);
+#pragma link C func GdiSetBatchLimit;
+DWORD GdiGetBatchLimit();
+#pragma link C func GdiGetBatchLimit;
+
+BOOL DrawState(HDC, HBRUSH, DRAWSTATEPROC, LPARAM, WPARAM, int, int, int, int, UINT);
+#pragma link C func DrawState;
 
 /**********************************************************************/
 #endif // __MAKECINT__

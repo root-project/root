@@ -689,6 +689,36 @@ int *known3;
 }
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1515
+int G__additional_paranthesis G__P((G__value* presult,struct G__param* libp));
+/******************************************************************
+* G__additional_parenthesis()
+******************************************************************/
+int G__additional_parenthesis(presult,libp)
+G__value* presult;
+struct G__param* libp;
+{
+  char buf[G__LONGLINE];
+  int known;
+  int store_tagnum = G__tagnum;
+  long store_struct_offset = G__store_struct_offset;
+
+  if(-1==presult->tagnum) {
+    return(0);
+  }
+  G__tagnum = presult->tagnum;
+  G__store_struct_offset = presult->obj.i;
+
+  sprintf(buf,"operator()%s",libp->parameter[1]);
+  *presult = G__getfunction(buf,&known,G__CALLMEMFUNC);
+
+  G__tagnum = store_tagnum;
+  G__store_struct_offset = store_struct_offset;
+
+  return(known);
+}
+#endif
+
 /******************************************************************
 * G__value G__getfunction(item,known3,memfunc_flag)
 *
@@ -737,7 +767,10 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION407
   int base1=0;
 #endif
-  
+#ifndef G__OLDIMPLEMENTATION1515
+  int oprp=0;
+#endif
+
   store_exec_memberfunc = G__exec_memberfunc;
   store_memberfunc_tagnum = G__memberfunc_tagnum;
   store_memberfunc_struct_offset=G__memberfunc_struct_offset;
@@ -1150,8 +1183,18 @@ int memfunc_flag;
        && ')'==item[strlen(item)-1]
 #endif
        ) {
+#ifndef G__OLDIMPLEMENTATION1515
+      if(fpara.paran==2 && '('==fpara.parameter[1][0]) {
+	oprp=1;
+      }
+      else {
+	G__fprinterr(G__serr,"Warning: Empty arg%d",1);
+	G__printlinenum();
+      }
+#else
       G__fprinterr(G__serr,"Warning: Empty arg%d",1);
       G__printlinenum();
+#endif
     }
     fpara.paran=0;
   }
@@ -1393,6 +1436,9 @@ int memfunc_flag;
 	  G__getindexedvalue(&result3,fpara.parameter[nindex]);
 	}
 #endif
+#ifndef G__OLDIMPLEMENTATION1515
+	if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
+#endif
 	return(result3);
       }
 #define G__OLDIMPLEMENTATION1159
@@ -1420,6 +1466,9 @@ int memfunc_flag;
           G__exec_memberfunc = store_exec_memberfunc;
           G__memberfunc_tagnum=store_memberfunc_tagnum;
           G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+#ifndef G__OLDIMPLEMENTATION1515
+	  if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
+#endif
           return(result3);
         }
         G__exec_memberfunc=storeX_exec_memberfunc;
@@ -1509,6 +1558,9 @@ int memfunc_flag;
 	    if(nindex&&isupper(result3.type)) {
 	      G__getindexedvalue(&result3,fpara.parameter[nindex]);
 	    }
+#endif
+#ifndef G__OLDIMPLEMENTATION1515
+	    if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
 #endif
 	    return(result3);
 	  }
@@ -1625,6 +1677,9 @@ int memfunc_flag;
       if(nindex&&isupper(result3.type)) {
 	G__getindexedvalue(&result3,fpara.parameter[nindex]);
       }
+#endif
+#ifndef G__OLDIMPLEMENTATION1515
+      if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
 #endif
       return(result3);
     }
@@ -1775,6 +1830,9 @@ int memfunc_flag;
       G__exec_memberfunc = store_exec_memberfunc;
       G__memberfunc_tagnum=store_memberfunc_tagnum;
       G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+#ifndef G__OLDIMPLEMENTATION1515
+      if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
+#endif
       return(result3);
     }
 #endif /* G__TEMPLATEFUNC */
@@ -1816,6 +1874,9 @@ int memfunc_flag;
 					      ,i ,G__newtype.reftype[i],0
 					      ,&result3,ttt)) {
 	  *known3=1;
+#ifndef G__OLDIMPLEMENTATION1515
+	  if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
+#endif
 	  return(result3);
 	}
 #endif
@@ -2004,6 +2065,9 @@ int memfunc_flag;
 #ifndef G__OLDIMPLEMENTATION641
 	  /* omitted constructor, return uninitialized object */
 	  *known3 = 1;
+#ifndef G__OLDIMPLEMENTATION1515
+	  if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
+#endif
 	  return(result3);
 #else
 	  G__pop_tempobject();
@@ -2011,6 +2075,9 @@ int memfunc_flag;
 	}
 	else {
 	  /* Return '*this' as result */
+#ifndef G__OLDIMPLEMENTATION1515
+	  if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
+#endif
 	  return(result3);
 	}
       }
@@ -2025,6 +2092,9 @@ int memfunc_flag;
       G__exec_memberfunc = store_exec_memberfunc;
       G__memberfunc_tagnum=store_memberfunc_tagnum;
       G__memberfunc_struct_offset=store_memberfunc_struct_offset;
+#ifndef G__OLDIMPLEMENTATION1515
+      if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
+#endif
       return(result3);
     }
 
@@ -2037,6 +2107,9 @@ int memfunc_flag;
     if(nindex&&isupper(result3.type)) {
       G__getindexedvalue(&result3,fpara.parameter[nindex]);
     }
+#endif
+#ifndef G__OLDIMPLEMENTATION1515
+    if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
 #endif
     return(result3);
   }
@@ -2067,6 +2140,9 @@ int memfunc_flag;
 	G__getindexedvalue(&result3,fpara.parameter[nindex]);
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1515
+      if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
+#endif
       return(result3);
     }
   }
@@ -2090,6 +2166,9 @@ int memfunc_flag;
       if(nindex&&isupper(result3.type)) {
 	G__getindexedvalue(&result3,fpara.parameter[nindex]);
       }
+#endif
+#ifndef G__OLDIMPLEMENTATION1515
+      if(oprp) *known3 = G__additional_parenthesis(&result3,&fpara);
 #endif
       return(result3);
     }
@@ -3104,7 +3183,7 @@ int hash;
 #endif
     /* para[0]:description, para[1~paran-1]: */
     G__charformatter(0,libp,temp);
-    G__letint(result7,'i', fprintf(G__serr,"%s",temp));
+    G__letint(result7,'i', G__fprinterr(G__serr,"%s",temp));
     return(1);
   }
 #endif

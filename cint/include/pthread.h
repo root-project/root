@@ -12,9 +12,9 @@
 #endif
 
 #ifndef __MAKECINT__
-#ifndef G__PTHREADDLL_H /* G__PTHREADDLL_H is defined in pthread.dll */
+#pragma ifndef G__PTHREADDLL_H /* G__PTHREADDLL_H is defined in pthread.dll */
 #pragma message Note: pthread.dll is not found. Do 'sh setup' in $CINTSYSDIR/lib/pthread directory if you use UNIX.
-#endif
+#pragma endif
 #endif
 
 #endif

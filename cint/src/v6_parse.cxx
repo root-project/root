@@ -173,7 +173,7 @@ struct G__breakcontinue_list *pbreakcontinue;
       G__asm_inst[G__pbreakcontinue->destination] = continue_dest;
     }
 #ifdef G__ASM_DBG
-    if(G__asm_dbg) G__fprinterr(G__serr,"  assigned %lx %ld JMP %lx  break,continue\n"
+    if(G__asm_dbg) G__fprinterr(G__serr,"  assigned %x %d JMP %lx  break,continue\n"
 			   ,G__pbreakcontinue->destination
 			   ,G__pbreakcontinue->breakcontinue
 			   ,G__asm_inst[G__pbreakcontinue->destination]);
@@ -498,6 +498,19 @@ G__value *presult;
 #endif
     *presult=G__getexpr(statement);
   }
+#ifndef G__OLDIMPLEMENTATION1515
+  else if(*pc=='(') {
+    int len = strlen(statement);
+    statement[len++] = *pc;
+    *pc = G__fgetstream_newtemplate(statement+len,")");
+    len = strlen(statement);
+    statement[len++] = *pc;
+#ifdef G__ASM
+    if(G__asm_noverflow) G__asm_clear();
+#endif
+    *presult=G__getexpr(statement);
+  }
+#endif
   /* macro function without ';' at the end */
   else {
     if(G__breaksignal&& G__beforelargestep(statement,piout,plargestep)>1) {
@@ -1788,9 +1801,9 @@ void G__display_tempobject(action)
 char* action;
 {
   struct G__tempobject_list *ptempbuf = G__p_tempbuf;
-  fprintf(G__serr,"\n%s ",action);
+  G__fprinterr(G__serr,"\n%s ",action);
   while(ptempbuf) {
-    fprintf(G__serr,"%d:(%s)0x%p ",ptempbuf->level
+    G__fprinterr(G__serr,"%d:(%s)0x%p ",ptempbuf->level
 	    ,G__type2string(ptempbuf->obj.type,ptempbuf->obj.tagnum
 			    ,ptempbuf->obj.typenum
 			    ,ptempbuf->obj.obj.reftype.reftype
@@ -1798,7 +1811,7 @@ char* action;
 	    ,(void*)ptempbuf->obj.obj.i);
     ptempbuf = ptempbuf->prev;
   }
-  fprintf(G__serr,"\n");
+  G__fprinterr(G__serr,"\n");
 }
 
 /***********************************************************************
@@ -2025,7 +2038,7 @@ G__value reg;
 {
   struct G__tempobject_list *store_p_tempbuf;
 
-  G__ASSERT( 'u'==reg.type || '\0'==reg.type );
+  /* G__ASSERT( 'u'==reg.type || '\0'==reg.type ); */
 
 #ifndef G__OLDIMPLEMENTATION1164
   if(G__xrefflag) return;

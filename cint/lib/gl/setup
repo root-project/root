@@ -1,0 +1,11 @@
+
+INC='-I/usr/X11R6/include'
+LIB='-L/usr/X11R6/lib -lGL -lGLU -lglut'
+
+makecint -mk Makefile -dl gl.dll $INC -h TOP.h -l $LIB 
+make clean
+make 
+
+mv gl.dll $CINTSYSDIR/include/GL/gl.dll
+make clean
+rm Makefile

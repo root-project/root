@@ -881,7 +881,7 @@ int G__execfuncmacro_noexec (char* macroname)
 
   /* Snarf the arg list. */
   *p = '(';
-#define G__OLDIMPLEMENTATION1061
+  /* #define G__OLDIMPLEMENTATION1061 */
 #ifndef G__OLDIMPLEMENTATION1061
   c=G__fgetstream_spaces (p+1 ,")");
 #else

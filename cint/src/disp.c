@@ -694,6 +694,16 @@ int start;
   * List of classes
   *******************************************************************/
   if('\0'==name[i]) {
+#ifndef G__OLDIMPLEMENTATION1514
+    if(base) {
+      /* In case of 'Class' command */
+      for(i=0;i<G__struct.alltag;i++) {
+	sprintf(temp,"%d",i);
+	G__display_class(fout,temp,0,0);
+      }
+      return(0);
+    }
+#endif
     /* no class name specified, list up all tagnames */
     if(G__more(fout,"List of classes\n")) return(1);
     sprintf(msg,"%-15s%5s\n","file","line");

@@ -13,9 +13,9 @@
 #endif
 
 #ifndef __MAKECINT__
-#ifndef G__POSIX_H /* G__POSIX_H is defined in posix.dl */
+#pragma ifndef G__POSIX_H /* G__POSIX_H is defined in posix.dl */
 #pragma message Note: posix.dll is not found. Do 'sh setup' in $CINTSYSDIR/lib/posix directory if you use UNIX.
-#endif
+#pragma endif
 #endif
 
 #endif

@@ -42,6 +42,13 @@ lib/cintocx
   Cint works with VisualBasic. This implementation is premature and not.
   recommended for use.
 
+lib/xlib
+   lib/xlib directory contains build environment for include/X11/xlib.dll.
+  This DLL includes most of the basic X11R6 API.
+
+lib/gl
+   lib/gl directory contains build environment for include/gl.dll.
+  This DLL includes basic openGL API.
 
 lib/prec_stl
    lib/perc_stl directory contains dummy header files for precompiling STL
@@ -55,7 +62,5 @@ lib/stdstrct
    These directories are for cint built-in symbol table generation. Do not
   touch these directories unless you know very well about the details.
 
-lib/tcltk
-   This directory is not ready to use.
 
 
