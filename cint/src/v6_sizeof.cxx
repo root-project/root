@@ -267,14 +267,18 @@ char *typename;
   }
 #endif
 #ifndef G__OLDIMPLEMENTATION1827
-  if(strcmp(typename,"longlong")==0) {
+  if(strcmp(typename,"longlong")==0
+     || strcmp(typename,"longlongint")==0
+     ) {
     int tagnum,typenum;
     G__loadlonglong(&tagnum,&typenum,G__LONGLONG);
     return(G__struct.size[tagnum]);
   }
 #endif
 #ifndef G__OLDIMPLEMENTATION1838
-  if(strcmp(typename,"unsignedlonglong")==0) {
+  if(strcmp(typename,"unsignedlonglong")==0
+     || strcmp(typename,"unsignedlonglongint")==0
+     ) {
     int tagnum,typenum;
     G__loadlonglong(&tagnum,&typenum,G__ULONGLONG);
     return(G__struct.size[tagnum]);

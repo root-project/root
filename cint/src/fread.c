@@ -64,7 +64,10 @@ char *buf;
      strcmp(buf,"signed")==0 ||
      strcmp(buf,"int")==0 ||
      strcmp(buf,"long")==0 ||
-     strcmp(buf,"short")==0
+     strcmp(buf,"short")==0 
+#ifndef G__OLDIMPLEMENTATION1855
+     || strcmp(buf,"char")==0
+#endif
 #ifndef G__OLDIMPLEMENTATION1419
      || strcmp(buf,"volatile")==0 
      || strcmp(buf,"register")==0 

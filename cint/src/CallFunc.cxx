@@ -131,9 +131,16 @@ void G__CallFunc::SetArgArray(long *p,int narg)
       n = narg;
       if (narg > method.NArg()) {
 	G__fprinterr(G__serr,"Warning: G__CallFunc::SetArgArray() too many arguments specified (%d expected %d)\n",narg,method.NArg());
+	G__printlinenum();
+	/* G__genericerror((char*)NULL); */
         n = method.NArg();
-      } else if (narg < method.NArg()-method.NDefaultArg())
-        G__fprinterr(G__serr,"Error: G__CallFunc::SetArgArray() too few arguments specified (%d expected %d)\n",narg,method.NArg()-method.NDefaultArg());
+      }
+      else if(n<method.NArg()-method.NDefaultArg()) {
+	G__fprinterr(G__serr,"Error: G__CallFunc::SetArgArray() too few arguments");
+	G__printlinenum();
+	/* G__genericerror((char*)NULL); */
+        n = method.NArg();
+      }
     }
 #ifndef G__OLDIMPLEMENTATION1220 /* NEEDEDSINCE_FIX1167 */
     G__MethodArgInfo arginfo;
@@ -143,8 +150,17 @@ void G__CallFunc::SetArgArray(long *p,int narg)
     para.paran=0;
 #endif
     for(i=0;i<n;i++) {
-#ifndef G__OLDIMPLEMENTATION1707
-      //if (p[i]) {
+#if !defined(G__OLDIMPLEMENTATION1852)
+      para.para[i].obj.i = p[i];
+      para.para[i].ref = p[i];
+      // Following data shouldn't matter, but set just in case
+      arginfo.Next();
+      para.para[i].type = arginfo.Type()->Type();
+      para.para[i].tagnum = -1;
+      para.para[i].typenum = -1;
+      para.paran=i+1;
+#elif !defined(G__OLDIMPLEMENTATION1707)
+      if (p[i]) {
         para.para[i].obj.i = p[i];
         para.para[i].ref = p[i];
         // Following data shouldn't matter, but set just in case
@@ -157,8 +173,8 @@ void G__CallFunc::SetArgArray(long *p,int narg)
         para.para[i].tagnum = -1;
         para.para[i].typenum = -1;
         para.paran=i+1;
-      //} else
-      //  break;
+      } else
+        break;
 #else /* 1707 */
       para.para[i].obj.i = p[i];
       para.para[i].ref = p[i];

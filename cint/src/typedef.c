@@ -718,6 +718,36 @@ void G__define_type()
     c=G__fgetstream(typename+1,";,[");
   }
 #endif
+#ifndef G__OLDIMPLEMENTATION1856
+  else if(strcmp(typename,"const*")==0) {
+    isconst |= G__CONSTVAR;
+    type=toupper(type);
+    c=G__fgetstream(typename,"*&;,[");
+    if('*'==c && '*'!=typename[0]) {
+      if(strcmp(typename,"const")==0) isconst |= G__CONSTVAR;
+      typename[0] = '*';
+      c=G__fgetstream(typename+1,";,[");
+    }
+    if('&'==c && '&'!=typename[0]) {
+      reftype = G__PARAREFERENCE;
+      if(strcmp(typename,"const")==0) isconst |= G__CONSTVAR;
+      c=G__fgetstream(typename,";,[");
+    }
+  }
+  else if(strcmp(typename,"const**")==0) {
+    isconst |= G__CONSTVAR;
+    isorgtypepointer=1;
+    type=toupper(type);
+    typename[0] = '*';
+    c=G__fgetstream(typename+1,"*;,[");
+  }
+  else if(strcmp(typename,"const*&")==0) {
+    isconst |= G__CONSTVAR;
+    reftype = G__PARAREFERENCE;
+    type=toupper(type);
+    c=G__fgetstream(typename,";,[");
+  }
+#endif
 
   if(isspace(c)) {
     if('('==typename[0] && ';'!=c && ','!=c) {

@@ -715,6 +715,10 @@ extern int G__catchexception;
 extern int G__eval_localstatic;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1854
+extern int G__loadingDLL;
+#endif
+
 
 #ifndef __CINT__
 #ifdef __cplusplus

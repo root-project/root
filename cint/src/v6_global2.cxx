@@ -502,6 +502,10 @@ int G__catchexception=1;
 int G__eval_localstatic=0;
 #endif
 
+#ifndef G__OLDIMPLEMENTATION1854
+int G__loadingDLL=0;
+#endif
+
 
 /*
  * Local Variables:

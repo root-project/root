@@ -550,7 +550,7 @@ int G__ateval(const unsigned long x) {return(0);}
 #ifndef G__LONGDOUBLE_H
 #define G__LONGDOUBLE_H
 
-#if !defined(__hpux) && !defined(G__HPUX)
+//#if !defined(__hpux) && !defined(G__HPUX)
 
 #ifndef IOS
 #define IOS
@@ -587,6 +587,13 @@ typedef long double G__double92;
 #elif defined(__linux__)
 
 typedef long double G__double92;
+
+/**************************************************************************
+* HP-UX
+**************************************************************************/
+#elif !defined(__hpux) && !defined(G__HPUX)
+
+typedef double G__double92;
 
 /**************************************************************************
 * OTHER
@@ -730,9 +737,10 @@ inline int G__ateval(const G__longdouble& a) {
 */
 #endif
 
-#endif
+//#endif
 
-#endif /* G__LONGLONG_H */
+#endif /* G__LONGDBL_H */
+
 
 #ifndef G__MEMFUNCBODY
 #endif

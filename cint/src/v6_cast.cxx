@@ -141,6 +141,17 @@ G__value result3;
     strcpy(casttype,casttype+6);
   } 
 #endif
+#ifndef G__OLDIMPLEMENTATION1857
+  if(strstr(casttype," const")) {
+    char *px = strstr(casttype," const");
+    isconst=1;
+    while(*(px+6)) {
+      *px = *(px+6);
+      ++px;
+    }
+    *px = 0;
+  }
+#endif
 #ifndef G__PHILIPPE31
   if(strncmp(casttype,"const",5)==0) {
      for( lenitem=strlen(casttype)-1;

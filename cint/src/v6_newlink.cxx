@@ -1837,10 +1837,25 @@ int tagnum;
 char *G__mark_linked_tagnum(tagnum)
 int tagnum;
 {
+#ifndef G__OLDIMPLEMENTATION1853
+  int tagnumorig = tagnum;
+#endif
   if(tagnum<0) {
     G__fprinterr(G__serr,"Internal error: G__mark_linked_tagnum() Illegal tagnum %d\n",tagnum);
   }
 
+#ifndef G__OLDIMPLEMENTATION1853
+  while(tagnum>=0) {
+    if(G__NOLINK == G__struct.globalcomp[tagnum]) {
+      /* this class is unlinked but tagnum interface requested.
+       * G__globalcomp is already G__CLINK=-2 or G__CPPLINK=-1,
+       * Following assignment will decrease the value by 2 more */
+      G__struct.globalcomp[tagnum] = G__globalcomp-2;
+    }
+    tagnum = G__struct.parent_tagnum[tagnum];
+  }
+  return(G__get_link_tagname(tagnumorig));
+#else
   if(G__NOLINK == G__struct.globalcomp[tagnum]) {
     /* this class is unlinked but tagnum interface requested.
      * G__globalcomp is already G__CLINK=-2 or G__CPPLINK=-1,
@@ -1848,6 +1863,7 @@ int tagnum;
     G__struct.globalcomp[tagnum] = G__globalcomp-2;
   }
   return(G__get_link_tagname(tagnum));
+#endif
 }
 
 
@@ -5330,6 +5346,12 @@ FILE *hfp;
 	}
       }
     }
+#ifndef G__OLDIMPLEMENTATION1853
+    else if((G__struct.hash[i] || 0==G__struct.name[i][0]) && 
+	    (G__CPPLINK-2)==G__struct.globalcomp[i]) {
+      fprintf(fp,"   G__get_linked_tagnum(&%s);\n" ,G__mark_linked_tagnum(i));
+    }
+#endif
   }
 
   fprintf(fp,"}\n");
@@ -6208,9 +6230,13 @@ FILE *fp;
 		fprintf(fp,"%d ",ifunc->para_type[j][k]);
 	      }
 
-	      if(-1!=ifunc->para_p_tagtable[j][k])
+	      if(-1!=ifunc->para_p_tagtable[j][k]) {
 		fprintf(fp,"'%s' "
 			,G__fulltagname(ifunc->para_p_tagtable[j][k],0));
+#ifndef G__OLDIMPLEMENTATION1853
+		G__mark_linked_tagnum(ifunc->para_p_tagtable[j][k]);
+#endif
+	      }
 	      else
 		fprintf(fp,"- ");
 
@@ -6925,9 +6951,13 @@ FILE *fp;
 	    fprintf(fp,"%d ",ifunc->para_type[j][k]);
 	  }
 
-	  if(-1!=ifunc->para_p_tagtable[j][k])
+	  if(-1!=ifunc->para_p_tagtable[j][k]) {
 	    fprintf(fp,"'%s' "
 		    ,G__fulltagname(ifunc->para_p_tagtable[j][k],0));
+#ifndef G__OLDIMPLEMENTATION1853
+	    G__mark_linked_tagnum(ifunc->para_p_tagtable[j][k]);
+#endif
+	  }
 	  else
 	    fprintf(fp,"- ");
 
@@ -7609,6 +7639,10 @@ char *paras;
   char c;
   int os=0;
   int store_var_type;
+#ifndef G__OLDIMPLEMENTATION1854
+  int store_loadingDLL = G__loadingDLL;
+  G__loadingDLL=1;
+#endif
 
   store_var_type = G__var_type;
 
@@ -7648,6 +7682,9 @@ char *paras;
     }
   } while('\0'!=c) ;
   G__var_type = store_var_type;
+#ifndef G__OLDIMPLEMENTATION1854
+  G__loadingDLL=store_loadingDLL;
+#endif
 #endif
   return(0);
 }

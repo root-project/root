@@ -572,6 +572,18 @@ int noerror;
      /* (0==G__struct.name[G__struct.alltag] ||
       strcmp(tagname,G__struct.name[G__struct.alltag]))) { */
 #endif
+#ifndef G__OLDIMPLEMENTATION1854
+    if(G__loadingDLL) {
+      G__fprinterr(G__serr,
+		   "Error: '%s' Incomplete template resolution in shared library"
+		   ,tagname);
+      G__genericerror((char*)NULL);
+      G__fprinterr(G__serr, "Add following line in header for making dictionary\n");
+      G__fprinterr(G__serr, "   #pragma link C++ class %s;\n" ,tagname);
+      G__exit(-1);
+      return(-1);
+    }
+#endif
     /* CAUTION: tagname may be modified in following function */
     i=G__instantiate_templateclass(tagname);
     return(i);

@@ -433,6 +433,21 @@ char *new_name;
 	G__reftype=G__PARAREFERENCE;
       }
 #endif
+#ifndef G__OLDIMPLEMENTATION1857
+      else if(strcmp(new_name,"const*&")==0) {
+	new_name[0] = '*';
+	cin=G__fgetvarname(new_name+1,",;=():");
+	G__constvar |= G__CONSTVAR;
+	G__reftype=G__PARAREFERENCE;
+      }
+      else if(strcmp(new_name,"const**")==0) {
+	new_name[0] = '*';
+	cin=G__fgetvarname(new_name+1,",;=():");
+	G__constvar |= G__CONSTVAR;
+	G__var_type='U';
+	G__reftype = G__PARAP2P;
+      }
+#endif
 #ifndef G__OLDIMPLEMENTATION1216
       else if(strcmp(new_name,"volatile")==0) {
 	cin=G__fgetvarname(new_name,",;=():");

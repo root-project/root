@@ -21,13 +21,14 @@
 #ifndef G__CI_H
 #define G__CI_H
 
-#define G__CINTVERSION      5015081
-#define G__CINTVERSIONSTR  "5.15.81, Mar 24 2003"
+#define G__CINTVERSION      5015082
+#define G__CINTVERSIONSTR  "5.15.82, Mar 31 2003"
 
 
 /**********************************************************************
 * SPECIAL CHANGES and CINT CORE COMPILATION SWITCH
 **********************************************************************/
+
 
 
 /* 1770 changes implementation of skipping function implementation during
