@@ -29,7 +29,7 @@ SOEXT         = so
 
 # System libraries:
 SYSLIBS       = -lm -ltermcap
-XLIBS         = -L$(LPATH) -lXpm -lX11
+XLIBS         = $(XPMLIB) -lX11
 CILIBS        = -lm -ltermcap
 
 # Fortran:
