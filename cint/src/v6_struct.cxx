@@ -241,8 +241,10 @@ int enclosingtagnum;
 int env_tagnum;
 {
   int tagnum;
-#ifndef G__OLDIMPLEMENTATION621
+#ifndef G__OLDIMPLEMENTATION1565
   if(0>env_tagnum || 0>enclosingtagnum) return(0);
+#else
+  if(0>env_tagnum) return(0);
 #endif
   tagnum = G__struct.parent_tagnum[env_tagnum];
   while(-1!=tagnum) {
@@ -262,7 +264,11 @@ int enclosingtagnum;
 int env_tagnum;
 {
   int tagnum;
+#ifndef G__OLDIMPLEMENTATION1565
+  if(0>env_tagnum || 0>enclosingtagnum) return(0);
+#else
   if(0>env_tagnum) return(0);
+#endif
   tagnum = G__struct.parent_tagnum[env_tagnum];
   while(-1!=tagnum) {
     if (-1 != G__isanybase (enclosingtagnum, tagnum, 0)) return 1;

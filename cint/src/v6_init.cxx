@@ -658,7 +658,8 @@ char *argv[] ;
     G__Xdumpreadline[ii]=0;
   }
 
-  sprintf(G__nam,"%s",argv[0]); /* get command name */
+  if(argv[0]) sprintf(G__nam,"%s",argv[0]); /* get command name */
+  else        strcpy(G__nam,"cint");
 
   /*************************************************************
    * Set stderr,stdin,stdout,NULL pointer values to global
