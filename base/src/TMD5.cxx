@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.3 2002/02/26 17:59:54 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.cxx,v 1.4 2002/02/27 08:11:38 brun Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -35,7 +35,7 @@
 #include "TSystem.h"
 #include <string.h>
 #include <errno.h>
-#ifdef WIN32
+#ifdef R__WIN32
 #include <io.h>
 #endif
 
@@ -57,6 +57,20 @@ TMD5::TMD5()
 
    memset(fDigest, 0, 16);
    fFinalized = kFALSE;
+}
+
+//______________________________________________________________________________
+TMD5::TMD5(const UChar_t *digest)
+{
+   // Create finalized TMD5 object containing passed in 16 byte digest.
+
+   if (digest)
+      memcpy(fDigest, digest, 16);
+   else {
+      memset(fDigest, 0, 16);
+      Error("TMD5::TMD5", "digest is 0");
+   }
+   fFinalized = kTRUE;
 }
 
 //______________________________________________________________________________

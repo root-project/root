@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMD5.h,v 1.1 2001/10/01 14:37:51 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMD5.h,v 1.2 2002/02/26 17:59:54 rdm Exp $
 // Author: Fons Rademakers   29/9/2001
 
 /*************************************************************************
@@ -58,6 +58,7 @@ private:
 
 public:
    TMD5();
+   TMD5(const UChar_t *digest);
 
    void        Update(const UChar_t *buf, UInt_t len);
    void        Final();
