@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.110 2004/01/05 17:50:40 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.111 2004/01/19 18:29:00 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -229,13 +229,15 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       fOption = "READ";
    }
 
+   Bool_t devnull = kFALSE;
+   const char *fname;
+
    if (!fname1 || !strlen(fname1)) {
       Error("TFile", "file name is not specified");
       goto zombie;
    }
 
    // support dumping to /dev/null on UNIX
-   Bool_t devnull = kFALSE;
    if (!strcmp(fname1, "/dev/null") &&
        !gSystem->AccessPathName(fname1, kWritePermission)) {
       devnull  = kTRUE;
@@ -247,7 +249,6 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
       SetBit(kDevNull);
    }
 
-   const char *fname;
    if ((fname = gSystem->ExpandPathName(fname1))) {
       SetName(fname);
       delete [] (char*)fname;
