@@ -158,6 +158,7 @@ TGraph2D::TGraph2D()
    fX         = 0;
    fY         = 0;
    fZ         = 0;
+   fZout      = 0;
    fPainter   = 0;
    fFunctions = new TList;
 }
@@ -407,6 +408,7 @@ void TGraph2D::Build(Int_t n)
    fX         = new Double_t[fSize];
    fY         = new Double_t[fSize];
    fZ         = new Double_t[fSize];
+   fZout      = 0;
    fFunctions = new TList;
    fPainter   = 0;
 
