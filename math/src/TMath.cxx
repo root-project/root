@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.61 2004/06/19 13:38:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.62 2004/07/05 17:51:12 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -3335,7 +3335,7 @@ Double_t TMath::BetaCf(Double_t x, Double_t a, Double_t b){
     if (TMath::Abs(del-1)<=eps) break;
   }
   if (m>itmax) {
-      printf("Betacf: a or b too big, or itmax too small, a=%g, b=%g, itmax=%d",a,b,itmax);
+      printf("Betacf: a or b too big, or itmax too small, a=%g, b=%g, itmax=%d\n",a,b,itmax);
    }
    return h;
 }
