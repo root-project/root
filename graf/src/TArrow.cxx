@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.9 2003/10/09 16:39:59 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TArrow.cxx,v 1.10 2003/10/23 09:36:25 brun Exp $
 // Author: Rene Brun   17/10/95
 
 /*************************************************************************
@@ -187,9 +187,15 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    XP0L = gPad->AbsPixeltoX(px1);
    YP0L = gPad->AbsPixeltoY(py1);
 // move origin of arrow
-   if (opt.Contains("-")) {
-      px1 = Int_t(0.5 *(px2 + px1));
-      py1 = Int_t(0.5 *(py2 + py1));
+   if (opt.Contains("-") && opt.Contains(">")) {
+      px1 = Int_t(0.5 *(px2 + px1) + ct*rSiz/2);
+      py1 = Int_t(0.5 *(py2 + py1) - st*rSiz/2);
+      px2 = px1;
+      py2 = py1;
+   }
+   if (opt.Contains("-") && opt.Contains("<")) {
+      px1 = Int_t(0.5 *(px2 + px1) - ct*rSiz/2);
+      py1 = Int_t(0.5 *(py2 + py1) + st*rSiz/2);
       px2 = px1;
       py2 = py1;
    }
