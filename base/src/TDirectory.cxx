@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.29 2002/08/02 18:54:37 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TDirectory.cxx,v 1.30 2002/08/04 21:55:57 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -158,6 +158,7 @@ void TDirectory::Append(TObject *obj)
 
    if (obj == 0 || fList == 0) return;
    fList->Add(obj);
+   obj->SetBit(kMustCleanup);
    if (!fMother) return;
    if (fMother->IsA() == TMapFile::Class()) {
       TMapFile *mfile = (TMapFile*)fMother;
