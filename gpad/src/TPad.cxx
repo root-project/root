@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.88 2002/10/13 07:29:17 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.89 2002/11/11 11:24:42 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -130,6 +130,7 @@ TPad::TPad(): TVirtualPad()
 //*-*-*-*-*-*-*-*-*-*-*Pad default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =======================
 
+   fModified   = kTRUE;
    fTip        = 0;
    fPadPointer = 0;
    fPrimitives = 0;
@@ -201,6 +202,7 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
 //  bordermode = 1  box looks as it is in front of the screen
 //
 
+   fModified   = kTRUE;
    fTip        = 0;
    fBorderSize = bordersize;
    fBorderMode = bordermode;
