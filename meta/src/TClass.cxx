@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.92 2002/11/11 17:05:02 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TClass.cxx,v 1.93 2002/11/15 14:40:06 rdm Exp $
 // Author: Rene Brun   07/01/95
 
 /*************************************************************************
@@ -2005,6 +2005,7 @@ void TClass::Streamer(void *object, TBuffer &b)
 
       if (!fInterStreamer) {
          if (fClassInfo) fInterStreamer = (void*)fClassInfo->GetMethod("Streamer","TBuffer&",&fOffsetStreamer).InterfaceMethod();
+         else return;
          fOffsetStreamer = GetBaseClassOffset(TObject::Class());
       }
       TObject * tobj = (TObject*)((Long_t)object + fOffsetStreamer);
