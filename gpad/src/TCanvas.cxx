@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.72 2004/06/23 20:46:33 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.73 2004/07/30 01:13:51 rdm Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -178,10 +178,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid)
    fMenuBar      = kFALSE;
    fBatch        = kFALSE;
 
-   if (gROOT->IsBatch())
-     fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
-   else
-     fCanvasImp    = gGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
+   fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
    SetName(name);
    Build();
 }
@@ -1466,7 +1463,14 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    UInt_t editorWidth = fCanvasImp->GetWindowGeometry(topx,topy,w,h);
    w = UInt_t((fWindowWidth - editorWidth)/cx);
    h = UInt_t((fWindowHeight)/cx);
-
+   topx = GetWindowTopX();
+   topy = GetWindowTopY();
+   
+   if (w == 0) {
+      w = GetWw()+4; h = GetWh()+4;
+      topx = 1;    topy = 1;
+   }
+   
    out <<"{"<<endl;
    out <<"//=========Macro generated from canvas: "<<GetName()<<"/"<<GetTitle()<<endl;
    out <<"//=========  ("<<t.AsString()<<") by ROOT version"<<gROOT->GetVersion()<<endl;
@@ -1474,12 +1478,16 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
 
 //   Write canvas parameters (TDialogCanvas case)
    if (InheritsFrom(TDialogCanvas::Class())) {
-      out<<"   "<<ClassName()<<" *"<<cname<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
-         <<quote<<","<<w<<","<<h<<");"<<endl;
+      out<<"   "<<ClassName()<<" *"<<cname<<" = new "<<ClassName()<<"("<<quote<<GetName()
+         <<quote<<", "<<quote<<GetTitle()<<quote<<","<<w<<","<<h<<");"<<endl;
    } else {
 //   Write canvas parameters (TCanvas case)
       out<<"   TCanvas *"<<cname<<" = new TCanvas("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
-         <<quote<<","<<GetWindowTopX()<<","<<GetWindowTopY()<<","<<w<<","<<h<<");"<<endl;
+         <<quote;
+      if (!HasMenuBar()) 
+         out<<",-"<<topx<<","<<topy<<","<<w<<","<<h<<");"<<endl;
+      else
+         out<<","<<topx<<","<<topy<<","<<w<<","<<h<<");"<<endl;
    }
 //   Write canvas options (in $TROOT or $TStyle)
    if (gStyle->GetOptFit()) {
