@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.6 2004/05/13 09:45:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixDSparse.cxx,v 1.7 2004/05/18 14:01:04 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Feb 2004
 
 /*************************************************************************
@@ -1764,9 +1764,9 @@ void TMatrixDSparse::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixDBase &sour
     }
   }
 
-  if (rowIndex_old) delete [] rowIndex_old;
-  if (colIndex_old) delete [] colIndex_old;
-  if (elements_old) delete [] elements_old;
+  if (rowIndex_old) delete [] (Int_t*)rowIndex_old;
+  if (colIndex_old) delete [] (Int_t*)colIndex_old;
+  if (elements_old) delete [] (Double_t*)elements_old;
 }
 
 //______________________________________________________________________________
