@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.10 2004/02/19 15:49:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.h,v 1.11 2004/03/05 11:13:04 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -58,7 +58,7 @@ protected:
    Pixel_t         fWhite;            // white color index
    Pixel_t         fBlack;            // black color index
    TGWindow       *fDefaultRoot;      // default root window (base window of display)
-   TGWindow       *fRoot;             // current root window (different root window allows embedding)
+   TGWindow       *fRoot;             // current root window (changing root window allows embedding)
    Int_t           fXfd;              // file descriptor of connection to server
    TGResourcePool *fResourcePool;     // global GUI resource pool
    TGGCPool       *fGCPool;           // graphics context pool
@@ -83,9 +83,9 @@ public:
    TGClient(const char *dpyName = 0);
    virtual ~TGClient();
 
-   const TGWindow *GetRoot() const { return fRoot; }
-   const TGWindow *GetDefaultRoot() const { return fDefaultRoot; }
-   void      SetRoot(TGWindow *root = 0) { fRoot = root ? root : fDefaultRoot; }
+   const TGWindow *GetRoot() const;
+   const TGWindow *GetDefaultRoot() const;
+   void      SetRoot(TGWindow *root = 0);
    Bool_t    IsEditable() const { return fRoot != fDefaultRoot; }
    TGWindow *GetWindowById(Window_t sw) const;
 

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.30 2004/02/27 01:03:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGClient.cxx,v 1.31 2004/03/05 11:13:04 rdm Exp $
 // Author: Fons Rademakers   27/12/97
 
 /*************************************************************************
@@ -157,6 +157,36 @@ TGClient::TGClient(const char *dpyName)
    fSelBackColor = fResourcePool->GetSelectedBgndColor();
 
    gClient = this;
+}
+
+//______________________________________________________________________________
+const TGWindow *TGClient::GetRoot() const
+{
+   // Returns current root (i.e. base) window. By changing the root
+   // window one can change the window hierarchy, e.g. a top level
+   // frame (TGMainFrame) can be embedded in another window.
+
+   return fRoot;
+}
+
+//______________________________________________________________________________
+const TGWindow *TGClient::GetDefaultRoot() const
+{
+   // Returns the root (i.e. desktop) window. Should only be used as parent
+   // for frames that will never be embedded, like popups, message boxes,
+   // etc. (like TGToolTips, TGMessageBox, etc.).
+
+   return fDefaultRoot;
+}
+
+//______________________________________________________________________________
+void TGClient::SetRoot(TGWindow *root)
+{
+   // Sets the current root (i.e. base) window. By changing the root
+   // window one can change the window hierarchy, e.g. a top level
+   // frame (TGMainFrame) can be embedded in another window.
+
+   fRoot = root ? root : fDefaultRoot;
 }
 
 //______________________________________________________________________________
