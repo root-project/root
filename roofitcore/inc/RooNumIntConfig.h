@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegratorConfig.rdl,v 1.7 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooNumIntConfig.rdl,v 1.1 2004/11/29 20:24:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -26,6 +26,7 @@ public:
 
   RooNumIntConfig();
   RooNumIntConfig(const RooNumIntConfig& other) ;
+  RooNumIntConfig& operator=(const RooNumIntConfig& other) ;
   virtual ~RooNumIntConfig();
 
   // Return selected integration techniques for 1,2,N dimensional integrals

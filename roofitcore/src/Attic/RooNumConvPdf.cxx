@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumConvPdf.cc,v 1.1 2004/11/29 20:24:04 wverkerke Exp $
+ *    File: $Id: RooNumConvPdf.cc,v 1.2 2004/11/30 16:08:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -77,23 +77,10 @@ ClassImp(RooNumConvPdf)
 RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& convVar, RooAbsPdf& pdf, RooAbsPdf& resmodel) : 
   RooAbsPdf(name,title), 
   _init(kFALSE),
-  _convIntConfig(RooNumIntConfig::defaultConfig()),
-  _integrand(0),
-  _integrator(0),
+  _conv(0),
   _origVar("origVar","Original Convolution variable",this,convVar),
   _origPdf("origPdf","Original Input PDF",this,pdf),
-  _origModel("origModel","Original Resolution model",this,resmodel),
-  _ownedClonedPdfSet("ownedClonePdfSet"),
-  _ownedClonedModelSet("ownedCloneModelSet"),
-  _cloneVar(0),
-  _clonePdf(0),
-  _cloneModel(0),
-  _useWindow(kFALSE),
-  _windowScale(1),
-  _windowParam("windowParam","Convolution window parameter",this,kFALSE),
-  _verboseThresh(2000),
-  _doProf(kFALSE),
-  _callHist(0)
+  _origModel("origModel","Original Resolution model",this,resmodel)
 {
   // Constructor of convolution operator PDF
   // 
@@ -103,75 +90,23 @@ RooNumConvPdf::RooNumConvPdf(const char *name, const char *title, RooRealVar& co
   //
   // output is pdf(x) (X) resmodel(x) = Int [ pdf(x') resmodel (x-x') ] dx'
   //
-
-  // Use Adaptive Gauss-Kronrod integration by default for the convolution integral
-  _convIntConfig.method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D") ;
-  _convIntConfig.method1DOpen().setLabel("RooAdaptiveGaussKronrodIntegrator1D") ;
 }
 
 
 
 RooNumConvPdf::RooNumConvPdf(const RooNumConvPdf& other, const char* name) :
-  RooAbsPdf(other,name),
+  RooAbsPdf(other,name), 
   _init(kFALSE),
-  _convIntConfig(other._convIntConfig),
-  _integrand(0),
-  _integrator(0),
   _origVar("origVar",this,other._origVar),
   _origPdf("origPdf",this,other._origPdf),
-  _origModel("origModel",this,other._origModel),
-  _ownedClonedPdfSet("ownedClonePdfSet"),
-  _ownedClonedModelSet("ownedCloneModelSet"),
-  _cloneVar(0),
-  _clonePdf(0),
-  _cloneModel(0),
-  _useWindow(other._useWindow),
-  _windowScale(other._windowScale),
-  _windowParam("windowParam",this,other._windowParam),
-  _verboseThresh(other._verboseThresh),
-  _doProf(other._doProf),
-  _callHist(other._callHist)
+  _origModel("origModel",this,other._origModel)
 {
   // Copy constructor
-}
 
-
-void RooNumConvPdf::initialize() const
-{
-  // Initialization function -- create clone of convVar (x') and deep-copy clones of pdf and
-  // model that are connected to x' rather than x (convVar)
-
-  // Start out clean 
-  _ownedClonedPdfSet.removeAll() ;
-  _ownedClonedModelSet.removeAll() ;
-
-  if (_cloneVar) delete _cloneVar ;
-
-  // Customize a copy of origPdf that is connected to x' rather than x
-  // store all cloned components in _clonePdfSet as well as x' itself
-  _cloneVar = new RooRealVar(Form("%s_prime",_origVar.arg().GetName()),"Convolution Variable",0) ;
-
-  RooCustomizer mgr1(pdf(),"NumConv_PdfClone") ;
-  mgr1.setCloneBranchSet(_ownedClonedPdfSet) ;
-  mgr1.replaceArg(var(),*_cloneVar) ;
-  _clonePdf = (RooAbsReal*) mgr1.build() ;
-
-  RooCustomizer mgr2(model(),"NumConv_ModelClone") ;
-  mgr2.setCloneBranchSet(_ownedClonedModelSet) ;
-  mgr2.replaceArg(var(),*_cloneVar) ;
-  _cloneModel = (RooAbsReal*) mgr2.build() ;
-
-  // Change name back to original name
-  _cloneVar->SetName(var().GetName()) ;
-  
-  // Create Convolution integrand
-  _integrand = new RooConvIntegrandBinding(*_clonePdf,*_cloneModel,*_cloneVar,var(),0) ;
- 
-  // Instantiate integrator for convolution integrand
-  _integrator = RooNumIntFactory::instance().createIntegrator(*_integrand,_convIntConfig,1) ;
-  _integrator->setUseIntegrandLimits(kFALSE) ;
-
-  _init = kTRUE ;
+  // Make temporary clone of original convolution to preserve configuration information
+  // This information will be propagated to a newly create convolution in a subsequent
+  // call to initialize() 
+  _conv = new RooNumConvolution(*other._conv,Form("%s_CONV",name?name:GetName())) ;
 }
 
 
@@ -179,149 +114,55 @@ void RooNumConvPdf::initialize() const
 RooNumConvPdf::~RooNumConvPdf() 
 {
   // Destructor
+  if (_init) {
+    delete _conv ;
+  }
 }
 
 
-Double_t RooNumConvPdf::evaluate() const 
+Double_t RooNumConvPdf::evaluate() const
 {
-  // Calculate convolution integral
-
-  // Check if deferred initialization has occurred
   if (!_init) initialize() ;
 
-  // Retrieve current value of convolution variable
-  Double_t x = _origVar ;
+  return _conv->evaluate() ;
+}
 
-  // Propagate current normalization set to integrand
-  _integrand->setNormalizationSet(_origVar.nset()) ;
 
-  // Adjust convolution integration window
-  if (_useWindow) {
-    Double_t center = ((RooAbsReal*)_windowParam.at(0))->getVal() ;
-    Double_t width = _windowScale * ((RooAbsReal*)_windowParam.at(1))->getVal() ;
-    _integrator->setLimits(x-center-width,x-center+width) ;
-  } else {
-    _integrator->setLimits(-RooNumber::infinity,RooNumber::infinity) ;
-  }
-  
-  // Calculate convolution for present x
-  if (_doProf) _integrand->resetNumCall() ;
-  Double_t ret = _integrator->integral(&x) ;
-  if (_doProf) {
-    _callHist->Fill(x,_integrand->numCall()) ;
-    if (_integrand->numCall()>_verboseThresh) {
-      cout << "RooNumConvPdf::eveluate(" << GetName() << ") WARNING convolution integral at x=" << x 
-	   << " required " << _integrand->numCall() << " function evaluations" << endl ;
-    }
+void RooNumConvPdf::initialize() const
+{
+  // Save pointer to any prototype convolution object (only present if this object is made through
+  // a copy constructor) 
+  RooNumConvolution* protoConv = _conv ;
+
+  // Optionally pass along configuration data from prototype object
+  _conv = new RooNumConvolution(Form("%s_CONV",GetName()),GetTitle(),var(),pdf(),model(),protoConv) ;
+
+  // Delete prototype object now
+  if (protoConv) {
+    delete protoConv ;  
   }
 
-  return ret ;
+  _init = kTRUE ;
 }
 
-
-Bool_t RooNumConvPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) 
-{
-  // Intercept server redirects. Throw away cache, as figuring out redirections on the cache is an unsolvable problem.   
-  _init = kFALSE ;
-  return kFALSE ;
-}
-
-
-void RooNumConvPdf::clearConvolutionWindow() 
-{
-  // Removes previously defined convolution window, reverting to convolution from -inf to +inf
-  _useWindow = kFALSE ;
-  _windowParam.removeAll() ;
-}
-
-
-void RooNumConvPdf::setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, Double_t widthScaleFactor) 
-{
-  // Restrict convolution integral to finite range [ x - C - S*W, x - C + S*W ] 
-  // where x is current value of convolution variablem, C = centerParam, W=widthParam and S = widthScaleFactor
-  // Inputs centerParam and withParam can be function expressions (RooAbsReal, RooFormulaVar) etc.
-
-  _useWindow = kTRUE ;
-  _windowParam.removeAll() ;
-  _windowParam.add(centerParam) ;
-  _windowParam.add(widthParam) ;
-  _windowScale = widthScaleFactor ;
-}
-
-
-void RooNumConvPdf::setCallWarning(Int_t threshold) 
-{
-  // Activate warning messages if number of function calls needed for evaluation of convolution integral 
-  // exceeds given threshold
-
-  if (threshold<0) {
-    cout << "RooNumConvPdf::setCallWarning(" << GetName() << ") ERROR: threshold must be positive, value unchanged" << endl ;
-    return ;
-  }
-  _verboseThresh = threshold ;
-}
-
-void RooNumConvPdf::setCallProfiling(Bool_t flag, Int_t nbinX, Int_t nbinCall, Int_t nCallHigh) 
-{
-  // Activate call profile if flag is set to true. A 2-D histogram is kept that stores the required number
-  // of function calls versus the value of x, the convolution variable
-  //
-  // All clones of RooNumConvPdf objects will keep logging to the histogram of the original class
-  // so that performance of temporary object clones, such as used in e.g. fitting, plotting and generating
-  // are all logged in a single place.
-  // 
-  // Function caller should take ownership of profiling histogram as it is not deleted at the RooNumConvPdf dtor
-  //
-  // Calling this function with flag set to false will deactivate call profiling and delete the profiling histogram
-
-  if (flag) {
-    if (_doProf) {
-      delete _callHist ;
-    }
-    _callHist = new TH2F(Form("callHist_%s",GetName()),Form("Call Profiling of RooNumConvPdf %s",GetTitle()),
-			 nbinX,_origVar.min(),_origVar.max(),
-			 nbinCall,0,nCallHigh) ;
-    _doProf=kTRUE ;
-
-  } else if (_doProf) {
-
-    delete _callHist ;
-    _callHist = 0 ;
-    _doProf = kFALSE ;
-  }
-
-}
-
-
-void RooNumConvPdf::printCompactTreeHook(ostream& os, const char* indent) 
-{
-  // Hook function to intercept printCompactTree() calls so that it can print out
-  // the content of its private cache in the print sequence
-  os << indent << "RooNumConvPdf begin cache" << endl ;
-
-  if (_init) {
-    _cloneVar->printCompactTree(os,Form("%s[Var]",indent)) ;
-    _clonePdf->printCompactTree(os,Form("%s[Pdf]",indent)) ;
-    _cloneModel->printCompactTree(os,Form("%s[Mod]",indent)) ;
-  }
-
-  os << indent << "RooNumConvPdf end cache" << endl ;
-}
 
 
 RooAbsGenContext* RooNumConvPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype, 
 					    const RooArgSet* auxProto, Bool_t verbose) const 
 {
-  // Check if physics PDF and resolution model can both directly generate the convolution variable
+  if (!_init) initialize() ;
 
-  RooArgSet* modelDep = model().getDependents(&vars) ;
-  modelDep->remove(var(),kTRUE,kTRUE) ;
+  // Check if physics PDF and resolution model can both directly generate the convolution variable
+  RooArgSet* modelDep = _conv->model().getDependents(&vars) ;
+  modelDep->remove(_conv->var(),kTRUE,kTRUE) ;
   Int_t numAddDep = modelDep->getSize() ;
   delete modelDep ;
 
   RooArgSet dummy ;
-  Bool_t pdfCanDir = (  pdf().getGenerator(var(),dummy) != 0 && pdf().isDirectGenSafe(var())) ;
-  Bool_t resCanDir = (model().getGenerator(var(),dummy) !=0  && model().isDirectGenSafe(var())) ;
+  Bool_t pdfCanDir = (((RooAbsPdf&)_conv->pdf()).getGenerator(_conv->var(),dummy) != 0 && \
+		      ((RooAbsPdf&)_conv->pdf()).isDirectGenSafe(_conv->var())) ;
+  Bool_t resCanDir = (((RooAbsPdf&)_conv->model()).getGenerator(_conv->var(),dummy) !=0  && 
+		      ((RooAbsPdf&)_conv->model()).isDirectGenSafe(_conv->var())) ;
 
   if (numAddDep>0 || !pdfCanDir || !resCanDir) {
     // Any resolution model with more dependents than the convolution variable

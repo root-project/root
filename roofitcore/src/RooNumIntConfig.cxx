@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntConfig.cc,v 1.10 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooNumIntConfig.cc,v 1.1 2004/11/29 20:24:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -90,6 +90,39 @@ RooNumIntConfig::RooNumIntConfig(const RooNumIntConfig& other) :
    _configSets.Add(setCopy);
   }
   delete iter ;
+}
+
+RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other) 
+{
+  // Prevent self-assignment 
+  if (&other==this) {
+    return *this ;
+  }
+
+  // Copy common properties
+  _epsAbs = other._epsAbs ;
+  _epsRel = other._epsRel ;
+  _method1D.setIndex(other._method1D.getIndex()) ;
+  _method2D.setIndex(other._method2D.getIndex()) ;
+  _methodND.setIndex(other._methodND.getIndex()) ;
+  _method1DOpen.setIndex(other._method1DOpen.getIndex()) ;
+  _method2DOpen.setIndex(other._method2DOpen.getIndex()) ;
+  _methodNDOpen.setIndex(other._methodNDOpen.getIndex()) ;
+
+  // Delete old integrator-specific configuration data
+  _configSets.Delete() ;
+
+  // Copy new integrator-specific data
+  TIterator* iter = other._configSets.MakeIterator() ;
+  RooArgSet* set ;
+  while(set=(RooArgSet*)iter->Next()) {
+    RooArgSet* setCopy = (RooArgSet*) set->snapshot() ;
+    setCopy->setName(set->GetName()) ;
+   _configSets.Add(setCopy);
+  }
+  delete iter ;
+
+  return *this ;
 }
 
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooConvGenContext.cc,v 1.12 2004/11/29 20:23:06 wverkerke Exp $
+ *    File: $Id: RooConvGenContext.cc,v 1.13 2004/11/30 16:08:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -28,6 +28,7 @@
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooTruthModel.hh"
+#include <iostream>
 using std::cout;
 using std::endl;
 
@@ -96,14 +97,14 @@ RooConvGenContext::RooConvGenContext(const RooNumConvPdf &model, const RooArgSet
   // and a generator for the resolution model as PDF.
 
   // Create generator for physics X truth model
-  _pdfVars = (RooArgSet*) model.clonePdf().getDependents(&vars)->snapshot(kTRUE) ;
-  _pdfGen = model.clonePdf().genContext(*_pdfVars,prototype,auxProto,verbose) ;  
+  _pdfVars = (RooArgSet*) model.conv().clonePdf().getDependents(&vars)->snapshot(kTRUE) ;
+  _pdfGen = ((RooAbsPdf&)model.conv().clonePdf()).genContext(*_pdfVars,prototype,auxProto,verbose) ;  
   _pdfCloneSet = 0 ;
 
   // Create generator for resolution model as PDF
-  _modelVars = (RooArgSet*) model.cloneModel().getDependents(&vars)->snapshot(kTRUE) ;
-  _convVarName = model.cloneVar().GetName() ;
-  _modelGen = model.cloneModel().genContext(*_modelVars,prototype,auxProto,verbose) ;
+  _modelVars = (RooArgSet*) model.conv().cloneModel().getDependents(&vars)->snapshot(kTRUE) ;
+  _convVarName = model.conv().cloneVar().GetName() ;
+  _modelGen = ((RooAbsPdf&)model.conv().cloneModel()).genContext(*_modelVars,prototype,auxProto,verbose) ;
   _modelCloneSet = 0 ;
 
   if (prototype) {
