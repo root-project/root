@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.6 2002/02/02 11:56:14 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.7 2002/03/08 18:44:17 rdm Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -149,7 +149,7 @@ void TPaveStats::Paint(Option_t *option)
             }
          }
       }
-      longest = wtok[0]+wtok[1];
+      longest = wtok[0]+wtok[1]+2.*margin;
       if (longest > 0.98*dx) textsize *= 0.98*dx/longest;
       SetTextSize(textsize);
    }
@@ -181,6 +181,7 @@ void TPaveStats::Paint(Option_t *option)
 
          sl = new char[strlen(latex->GetTitle())+1];
          strcpy(sl, latex->GetTitle());
+	 // Draw all the histogram except the 2D under/overflow 
          if (strpbrk(sl, "=") !=0) {
            st = strtok(sl, "=");
            Int_t halign = 12;
@@ -189,7 +190,7 @@ void TPaveStats::Paint(Option_t *option)
               if (halign == 12) xtext = fX1 + margin;
               if (halign == 32) {
                  xtext = fX2 - margin;
-		 // Clean trailing blank in case of right alignment.
+		 // Clean trailing blanks in case of right alignment.
                  char *stc;
 		 stc=st+strlen(st)-1;
 		 while (*stc == ' ') {
@@ -203,6 +204,29 @@ void TPaveStats::Paint(Option_t *option)
               st = strtok(0, "=");
               halign = 32;
            }
+	 // Draw the 2D under/overflow
+         } else if (strpbrk(sl, "|") !=0) {
+           Double_t Yline1 = ytext+yspace/2.;
+           Double_t Yline2 = ytext-yspace/2.;
+           Double_t Xline1 = (fX2-fX1)/3+fX1;
+           Double_t Xline2 = 2*(fX2-fX1)/3+fX1;
+           gPad->PaintLine(fX1,Yline1,fX2,Yline1);
+           gPad->PaintLine(Xline1,Yline1,Xline1,Yline2);
+           gPad->PaintLine(Xline2,Yline1,Xline2,Yline2);
+           st = strtok(sl, "|");
+	   Int_t Index = 0;
+           while ( st !=0 ) {
+              latex->SetTextAlign(22);
+	      if (Index == 0) xtext = 0.5*(fX1+Xline1);
+	      if (Index == 1) xtext = 0.5*(fX1+fX2);
+	      if (Index == 2) xtext = 0.5*(Xline2+fX2);
+              latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
+                                            latex->GetTextSize(),
+                                            st);
+              Index++;
+              st = strtok(0, "|");
+           }
+	 // Draw the histogram identifier
          } else {
            latex->SetTextAlign(22);
            xtext = 0.5*(fX1+fX2);
