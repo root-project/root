@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.48 2001/10/06 06:19:52 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.49 2001/10/08 05:20:12 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -33,7 +33,7 @@
 #include "RooFitCore/RooRealBinding.hh"
 #include "RooFitCore/RooRealIntegral.hh"
 #include "RooFitCore/RooAbsCategoryLValue.hh"
-#include "RooFitCore/RooPdfCustomizer.hh"
+#include "RooFitCore/RooCustomizer.hh"
 
 #include <iostream.h>
 
@@ -847,8 +847,8 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   RooAbsCategoryLValue* asymNeg = (RooAbsCategoryLValue*) asymCat.Clone("asym_neg") ;
   asymPos->setIndex(1) ;
   asymNeg->setIndex(-1) ;
-  RooPdfCustomizer custPos(*projection,"pos") ;
-  RooPdfCustomizer custNeg(*projection,"neg") ;
+  RooCustomizer custPos(*projection,"pos") ;
+  RooCustomizer custNeg(*projection,"neg") ;
   custPos.replaceArg(asymCat,*asymPos) ;
   custNeg.replaceArg(asymCat,*asymNeg) ;
   RooAbsReal* funcPos = (RooAbsReal*) custPos.build() ;

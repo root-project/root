@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPdfCustomizer.cc,v 1.11 2001/10/08 05:20:19 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -11,11 +11,11 @@
  *****************************************************************************/
 
 // -- CLASS DESCRIPTION [MISC] --
-// RooPdfCustomizer is a factory class to produce clones
+// RooCustomizer is a factory class to produce clones
 // of a prototype composite PDF object with the same structure but
 // different leaf servers (parameters or dependents)
 //
-// RooPdfCustomizer supports two kinds of modifications:
+// RooCustomizer supports two kinds of modifications:
 // 
 // -> replace(leaf_arg,repl_arg) 
 // replaces each occurence of leaf_arg with repl_arg in the composite pdf.
@@ -106,13 +106,13 @@
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgList.hh"
 
-#include "RooFitCore/RooPdfCustomizer.hh"
+#include "RooFitCore/RooCustomizer.hh"
 
-ClassImp(RooPdfCustomizer) 
+ClassImp(RooCustomizer) 
 ;
 
 
-RooPdfCustomizer::RooPdfCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs) :
+RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs) :
   _masterPdf((RooAbsArg*)&pdf), _masterCat((RooAbsCategoryLValue*)&masterCat), _cloneLeafList(&splitLeafs),
   _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), _masterUnsplitLeafList("masterUnsplitLeafList"), 
   _cloneBranchList("cloneBranchList"), _sterile(kFALSE)
@@ -123,7 +123,7 @@ RooPdfCustomizer::RooPdfCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLVa
 
 
 
-RooPdfCustomizer::RooPdfCustomizer(const RooAbsArg& pdf, const char* name) :
+RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
   _masterPdf((RooAbsArg*)&pdf), _masterCat(0), _cloneLeafList(0),
   _masterBranchList("masterBranchList"), _masterLeafList("masterLeafList"), _masterUnsplitLeafList("masterUnsplitLeafList"), 
   _cloneBranchList("cloneBranchList"), _sterile(kTRUE), _name(name)
@@ -136,7 +136,7 @@ RooPdfCustomizer::RooPdfCustomizer(const RooAbsArg& pdf, const char* name) :
 
 
 
-void RooPdfCustomizer::initialize() 
+void RooCustomizer::initialize() 
 {
   // Initialization function
   _masterPdf->leafNodeServerList(&_masterLeafList) ;
@@ -149,7 +149,7 @@ void RooPdfCustomizer::initialize()
 
 
 
-RooPdfCustomizer::~RooPdfCustomizer() 
+RooCustomizer::~RooCustomizer() 
 {
   // Destructor
 
@@ -161,7 +161,7 @@ RooPdfCustomizer::~RooPdfCustomizer()
 
 
   
-void RooPdfCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitCat) 
+void RooCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitCat) 
 {
   // Split all args in 'set' by 'splitCat' states. 'splitCats' must be subset of
   // or equal to the master category supplied in the customizer constructor.
@@ -169,7 +169,7 @@ void RooPdfCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& spl
   // Splitting is only available on customizers created with a master index category
 
   if (_sterile) {
-    cout << "RooPdfCustomizer::splitArgs(" << _name 
+    cout << "RooCustomizer::splitArgs(" << _name 
 	 << ") ERROR cannot set spitting rules on this sterile customizer" << endl ;
     return ;
   }
@@ -181,7 +181,7 @@ void RooPdfCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& spl
 }
 
 
-void RooPdfCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat) 
+void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat) 
 {
   // Split 'arg' by 'splitCat' states. 'splitCats' must be subset of
   // or equal to the master category supplied in the customizer constructor.
@@ -189,7 +189,7 @@ void RooPdfCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& spli
   // Splitting is only available on customizers created with a master index category
 
   if (_sterile) {
-    cout << "RooPdfCustomizer::splitArg(" << _name 
+    cout << "RooCustomizer::splitArg(" << _name 
 	 << ") ERROR cannot set spitting rules on this sterile customizer" << endl ;
     return ;
   }
@@ -199,7 +199,7 @@ void RooPdfCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& spli
 }
 
 
-void RooPdfCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst) 
+void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst) 
 {
   // Replace any occurence of arg 'orig' with arg 'subst'
 
@@ -208,7 +208,7 @@ void RooPdfCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst)
 }
 
 
-RooArgSet* RooPdfCustomizer::fullParamList(const RooArgSet* depList) const 
+RooArgSet* RooCustomizer::fullParamList(const RooArgSet* depList) const 
 {
   // Return the complete list of parameters (as defined by given list of dependents)
   // for all clones built sofar. The caller takes ownership of the returned list.
@@ -237,7 +237,7 @@ RooArgSet* RooPdfCustomizer::fullParamList(const RooArgSet* depList) const
 
 
 
-RooAbsArg* RooPdfCustomizer::build(Bool_t verbose) 
+RooAbsArg* RooCustomizer::build(Bool_t verbose) 
 {
   // Build a clone of the prototype executing all registered 'replace' rules
   // If verbose is set a message is printed for each leaf or branch node
@@ -247,7 +247,7 @@ RooAbsArg* RooPdfCustomizer::build(Bool_t verbose)
 
 
 
-RooAbsArg* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose) 
+RooAbsArg* RooCustomizer::build(const char* masterCatState, Bool_t verbose) 
 {
   // Build a clone of the prototype executing all registered 'replace' rules
   // and 'split' rules for the masterCat state named 'masterCatState'.
@@ -256,14 +256,14 @@ RooAbsArg* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
   // This function cannot be called on customizer build with the sterile constructor.
 
   if (_sterile) {
-    cout << "RooPdfCustomizer::build(" << _name 
+    cout << "RooCustomizer::build(" << _name 
 	 << ") ERROR cannot use leaf spitting build() on this sterile customizer" << endl ;
     return 0 ;
   }
 
   // Set masterCat to given state
   if (_masterCat->setLabel(masterCatState)) {
-    cout << "RooPdfCustomizer::build(" << _masterPdf->GetName() << "): ERROR label '" << masterCatState 
+    cout << "RooCustomizer::build(" << _masterPdf->GetName() << "): ERROR label '" << masterCatState 
 	 << "' not defined for master splitting category " << _masterCat->GetName() << endl ;
     return 0 ;
   }
@@ -272,7 +272,7 @@ RooAbsArg* RooPdfCustomizer::build(const char* masterCatState, Bool_t verbose)
 }
 
 
-RooAbsArg* RooPdfCustomizer::doBuild(const char* masterCatState, Bool_t verbose) 
+RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose) 
 {
   // Protected build engine
 
@@ -288,7 +288,7 @@ RooAbsArg* RooPdfCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
     if (splitArg) {
       RooAbsCategory* splitCat = (RooAbsCategory*) _splitCatList.At(_splitArgList.IndexOf(splitArg)) ;
       if (verbose) {
-	cout << "RooPdfCustomizer::build(" << _masterPdf->GetName() 
+	cout << "RooCustomizer::build(" << _masterPdf->GetName() 
 	     << "): PDF parameter " << leaf->GetName() << " is split by category " << splitCat->GetName() << endl ;
       }
 
@@ -332,7 +332,7 @@ RooAbsArg* RooPdfCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
     if (replaceArg) {
       RooAbsArg* substArg = (RooAbsArg*) _replaceSubList.At(_replaceArgList.IndexOf(replaceArg)) ;
       if (verbose) {
-	cout << "RooPdfCustomizer::build(" << _masterPdf->GetName() 
+	cout << "RooCustomizer::build(" << _masterPdf->GetName() 
 	     << "): PDF leaf " << leaf->GetName() << " will be replaced by " << substArg->GetName() << endl ;
       }
 
@@ -356,13 +356,13 @@ RooAbsArg* RooPdfCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
   while(branch=(RooAbsArg*)_masterBranchListIter->Next()) {
     if (branch->dependsOn(masterLeafsToBeSplit)) {
       if (verbose) {
-	cout << "RooPdfCustomizer::build(" << _masterPdf->GetName() << ") Component PDF " 
+	cout << "RooCustomizer::build(" << _masterPdf->GetName() << ") Component PDF " 
 	     << branch->IsA()->GetName() << "::" << branch->GetName() << " cloned: depends on a split parameter" << endl ;
       }
       masterBranchesToBeCloned.add(*branch) ;
     } else if (branch->dependsOn(masterLeafsToBeReplaced)) {
       if (verbose) {
-	cout << "RooPdfCustomizer::build(" << _masterPdf->GetName() << ") Component PDF " 
+	cout << "RooCustomizer::build(" << _masterPdf->GetName() << ") Component PDF " 
 	     << branch->IsA()->GetName() << "::" << branch->GetName() << " cloned: depends on a replaced parameter" << endl ;
       }
       masterBranchesToBeCloned.add(*branch) ;

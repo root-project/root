@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlotable.rdl,v 1.5 2001/06/30 01:33:13 verkerke Exp $
+ *    File: $Id: RooPlotable.rdl,v 1.6 2001/09/27 18:22:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -30,6 +30,10 @@ public:
   inline void updateYAxisLimits(Double_t y) {
     if(y > _ymax) _ymax= y;
     if(y < _ymin) _ymin= y;
+  }
+  inline void setYAxisLimits(Double_t ymin, Double_t ymax) { 
+    _ymin = ymin ;
+    _ymax = ymax ;
   }
   inline Double_t getYAxisMin() const { return _ymin; }
   inline Double_t getYAxisMax() const { return _ymax; }

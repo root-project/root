@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPdfCustomizer.rdl,v 1.3 2001/09/19 00:26:01 verkerke Exp $
+ *    File: $Id$
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -22,14 +22,14 @@ class RooAbsCategory ;
 class RooAbsArg ;
 class RooAbsPdf ;
 
-class RooPdfCustomizer {
+class RooCustomizer {
 
 public:
 
   // Constructors, assignment etc
-  RooPdfCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafList) ;
-  RooPdfCustomizer(const RooAbsArg& pdf, const char* name) ;
-  virtual ~RooPdfCustomizer() ;
+  RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafList) ;
+  RooCustomizer(const RooAbsArg& pdf, const char* name) ;
+  virtual ~RooCustomizer() ;
   
   void splitArgs(const RooArgSet& argSet, const RooAbsCategory& splitCat) ;
   void splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat) ;
@@ -44,7 +44,7 @@ public:
 
 protected:
   
-  RooPdfCustomizer(const RooPdfCustomizer&) ;
+  RooCustomizer(const RooCustomizer&) ;
   void initialize() ;
   
   RooAbsArg* doBuild(const char* masterCatState, Bool_t verbose) ;
@@ -75,7 +75,7 @@ protected:
   // Cloned leafs are owned by the user supplied list in the ctor
   RooArgSet* _cloneLeafList ;
 
-  ClassDef(RooPdfCustomizer,0) // PDF customizer 
+  ClassDef(RooCustomizer,0) // PDF customizer 
 } ;
 
 #endif

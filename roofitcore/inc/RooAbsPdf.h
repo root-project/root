@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.33 2001/10/05 07:01:49 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.34 2001/10/06 06:19:52 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -47,8 +47,10 @@ public:
   // PDF specific plotting
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor= 1.0, 
 			  ScaleType stype=Relative, const RooArgSet* projSet=0) const;
-  virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions="L") ;
-  virtual TH2F *plotNLLContours(RooAbsData& data, RooRealVar& var1, RooRealVar& var2, Double_t n1= 1, Double_t n2= 2, Double_t n3= 0) ;
+  virtual RooPlot *plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions="L", 
+			     Double_t prec=1e-2, Bool_t fixMinToZero=kTRUE) ;
+  virtual TH2F *plotNLLContours(RooAbsData& data, RooRealVar& var1, RooRealVar& var2, 
+				Double_t n1= 1, Double_t n2= 2, Double_t n3= 0) ;
   virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
 			   Option_t *options = "NELU", Double_t xmin=0.65,
 			   Double_t xmax= 0.99,Double_t ymax=0.95) ;

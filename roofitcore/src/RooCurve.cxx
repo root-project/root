@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.22 2001/10/03 16:16:31 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.23 2001/10/08 05:20:14 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -40,19 +40,22 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.22 2001/10/03 16:16:31 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.23 2001/10/08 05:20:14 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
 }
 
 RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t scaleFactor,
-		   const RooArgSet *normVars, Double_t prec, Double_t resolution) {
+		   const RooArgSet *normVars, Double_t prec, Double_t resolution,
+		   Bool_t shiftToZero) {
   // Create a 1-dim curve of the value of the specified real-valued expression
   // as a function of x. Use the optional precision parameter to control
   // how precisely the smooth curve is rasterized. Use the optional argument set
   // to specify how the expression should be normalized. Use the optional scale
   // factor to rescale the expression after normalization.
+  // If shiftToZero is set, the entire curve is shift down to make the lowest
+  // point in of the curve go through zero.
 
   // grab the function's name and title
   TString name("curve_");
@@ -87,22 +90,27 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, Double_t scaleFacto
   assert(0 != funcPtr);
 
   // calculate the points to add to our curve
+  Double_t prevYMax = getYAxisMax() ;
   addPoints(*funcPtr,x.getPlotMin(),x.getPlotMax(),x.getPlotBins()+1,prec,resolution);
   initialize();
 
   // cleanup
   delete funcPtr;
   if(rawPtr) delete rawPtr;
+  if (shiftToZero) shiftCurveToZero(prevYMax) ;
 }
 
 
 
 RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
-		   Double_t xlo, Double_t xhi, UInt_t minPoints, Double_t prec, Double_t resolution) {
+		   Double_t xlo, Double_t xhi, UInt_t minPoints, Double_t prec, Double_t resolution,
+		   Bool_t shiftToZero) {
   SetName(name);
   SetTitle(title);
-  addPoints(func,xlo,xhi,minPoints,prec,resolution);
+  Double_t prevYMax = getYAxisMax() ;
+  addPoints(func,xlo,xhi,minPoints,prec,resolution);  
   initialize();
+  if (shiftToZero) shiftCurveToZero(prevYMax) ;
 }
 
 
@@ -121,6 +129,37 @@ void RooCurve::initialize()
   SetLineWidth(3);
   // set default line color
   SetLineColor(kBlue);
+}
+
+
+void RooCurve::shiftCurveToZero(Double_t prevYMax) 
+  // Find lowest point in curve and move all points in curve so that
+  // lowest point will go exactly through zero
+{
+  Int_t i ;
+  Double_t minVal(1e30) ;
+  Double_t maxVal(-1e30) ;
+
+  // First iteration, find current lowest point
+  for (i=0 ; i<GetN() ; i++) {
+    Double_t x,y ;
+    GetPoint(i,x,y) ;
+    if (y<minVal) minVal=y ;
+    if (y>maxVal) maxVal=y ;
+  }
+
+  // Second iteration, lower all points by minVal
+  for (i=0 ; i<GetN() ; i++) {
+    Double_t x,y ;
+    GetPoint(i,x,y) ;
+    SetPoint(i,x,y-minVal) ;
+  }
+
+  // Check if y-axis range needs readjustment
+  if (getYAxisMax()>prevYMax) {
+    Double_t newMax = maxVal - minVal ;
+    setYAxisLimits(getYAxisMin(), newMax<prevYMax ? prevYMax : newMax) ;
+  }
 }
 
 

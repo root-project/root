@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.43 2001/10/08 21:22:50 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.44 2001/10/09 00:44:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -656,7 +656,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, Option_t* drawOptions,
 
 
 
-RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions) 
+RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOptions, Double_t prec, Bool_t fixMinToZero) 
 {
   // Plot the negative log likelihood of ourself when applied on the given data set,
   // as function of the plot variable of the frame.
@@ -697,7 +697,8 @@ RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Option_t* drawOp
 
   // Create curve for NLL binding object
   RooCurve* curve= new RooCurve(name, title, nllVar, 
-				plotVar->getPlotMin(), plotVar->getPlotMax(),plotVar->getPlotBins()) ;
+				plotVar->getPlotMin(), plotVar->getPlotMax(),plotVar->getPlotBins(),
+				prec,prec,fixMinToZero) ;
 
   // Add this new curve to the specified plot frame
   frame->addPlotable(curve, drawOptions);

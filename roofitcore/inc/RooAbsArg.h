@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.49 2001/10/08 05:20:10 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.50 2001/10/08 21:22:50 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -158,7 +158,7 @@ protected:
   // Client-Server relatation and Proxy management 
   friend class RooArgSet ;
   friend class RooAbsCollection ;
-  friend class RooPdfCustomizer ;
+  friend class RooCustomizer ;
   friend class RooFitContext ;
   TList _serverList       ; //! list of server objects
   TList _clientList       ; //! list of client objects
