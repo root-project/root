@@ -53,8 +53,13 @@ VENUSLIBEXTRA       = lib/libEG.lib $(FVENUSLIBDIR) $(FVENUSLIB)
 TABLELIBDEP         = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
 TABLELIBEXTRA       = lib/libTree.lib lib/libGpad.lib \
                       lib/libGraf3d.lib lib/libGraf.lib lib/libHist.lib
+ifeq ($(ARCH),win32gdk)
 GLLIBDEP            = $(G3DLIB) $(GUILIB)
 GLLIBEXTRA          = lib/libGraf3d.lib lib/libGui.lib
+else
+GLLIBDEP            = $(G3DLIB) $(WIN32LIB)
+GLLIBEXTRA          = lib/libGraf3d.lib lib/libWin32.lib Glu32.lib Opengl32.lib
+endif
 HBOOKLIBDEP         = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                       $(TREEPLAYERLIB)
 HBOOKLIBEXTRA       = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
