@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.h,v 1.3 2000/10/13 18:57:45 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.h,v 1.4 2001/11/16 02:36:13 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -48,6 +48,8 @@ public:
    static FreeHookFun_t GetFreeHook();
    static void         *GetFreeHookData();
    static size_t        GetMaxBlockSize();
+   static void         *Alloc(size_t size);
+   static void          Dealloc(void *ptr);
    static void         *ReAlloc(void *vp, size_t size);
    static void         *ReAlloc(void *vp, size_t size, size_t oldsize);
    static char         *ReAllocChar(char *vp, size_t size, size_t oldsize);

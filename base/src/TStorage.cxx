@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.11 2002/08/08 15:34:09 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TStorage.cxx,v 1.12 2002/08/10 23:49:29 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -83,7 +83,7 @@ ClassImp(TStorage)
 
 //------------------------------------------------------------------------------
 
-static const char *spaceErr = "storage exhausted";
+static const char *kSpaceErr = "storage exhausted";
 
 const size_t kObjMaxSize = 10024;
 
@@ -149,6 +149,37 @@ void TStorage::RemoveStat(void *vp)
 }
 
 //______________________________________________________________________________
+void *TStorage::Alloc(size_t size)
+{
+   // Allocate a block of memory, that later can be resized using
+   // TStorage::ReAlloc().
+
+   static const char *where = "TStorage::Alloc";
+
+#ifndef WIN32
+   void *vp = ::operator new[](size);
+#else
+   void *vp = ::operator new(size);
+#endif
+   if (vp == 0)
+      Fatal(where, kSpaceErr);
+
+   return vp;
+}
+
+//______________________________________________________________________________
+void TStorage::Dealloc(void *ptr)
+{
+   // De-allocate block of memory, that was allocated via TStorage::Alloc().
+
+#ifndef WIN32
+   ::operator delete[](ptr);
+#else
+   ::operator delete(ptr);
+#endif
+}
+
+//______________________________________________________________________________
 void *TStorage::ReAlloc(void *ovp, size_t size)
 {
    // Reallocate (i.e. resize) block of memory.
@@ -166,7 +197,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
    void *vp = ::operator new(size);
 #endif
    if (vp == 0)
-      Fatal(where, spaceErr);
+      Fatal(where, kSpaceErr);
 
    if (ovp == 0)
       return vp;
@@ -202,7 +233,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    void *vp = ::operator new(size);
 #endif
    if (vp == 0)
-      Fatal(where, spaceErr);
+      Fatal(where, kSpaceErr);
 
    if (ovp == 0)
      return vp;
@@ -234,7 +265,7 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
    if (ovp == 0) {
      vp = new char[size];
      if (vp == 0)
-        Fatal(where, spaceErr);
+        Fatal(where, kSpaceErr);
      return vp;
    }
    if (oldsize == size)
@@ -242,7 +273,7 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
 
    vp = new char[size];
    if (vp == 0)
-      Fatal(where, spaceErr);
+      Fatal(where, kSpaceErr);
    if (size > oldsize) {
       memcpy(vp, ovp, oldsize);
       memset((char*)vp+oldsize, 0, size-oldsize);
@@ -266,7 +297,7 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
    if (ovp == 0) {
      vp = new Int_t[size];
      if (vp == 0)
-        Fatal(where, spaceErr);
+        Fatal(where, kSpaceErr);
      return vp;
    }
    if (oldsize == size)
@@ -274,7 +305,7 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
 
    vp = new Int_t[size];
    if (vp == 0)
-      Fatal(where, spaceErr);
+      Fatal(where, kSpaceErr);
    if (size > oldsize) {
       memcpy(vp, ovp, oldsize*sizeof(Int_t));
       memset((Int_t*)vp+oldsize, 0, (size-oldsize)*sizeof(Int_t));
