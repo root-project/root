@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.33 2003/01/28 07:43:36 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.34 2003/02/06 21:44:49 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -2326,19 +2326,14 @@ Double_t TMath::BesselY1(Double_t x)
 }
 
 //______________________________________________________________________________
-Double_t TMath::Struve(Int_t n, Double_t x)
+Double_t TMath::StruveH0(Double_t x)
 {
-   // Struve Functions of Orders Zero and One.
-   //
-   //  n = 0; compute Struve function of order 0
-   //  n = 1; compute Struve function of order 1
+   // Struve Functions of Order 0
    //
    // Converted from CERNLIB M342 by Rene Brun.
 
    const Int_t n1 = 15;
    const Int_t n2 = 25;
-   const Int_t n3 = 16;
-   const Int_t n4 = 22;
    const Double_t c1[16] = { 1.00215845609911981, -1.63969292681309147,
                              1.50236939618292819, -.72485115302121872,
                               .18955327371093136, -.03067052022988,
@@ -2360,6 +2355,54 @@ Double_t TMath::Struve(Int_t n, Double_t x)
                              6.5e-16,             -2.6e-16,
                              1.1e-16,             -4e-17,
                              2e-17,               -1e-17 };
+
+   const Double_t c0  = 2/TMath::Pi();
+
+   Int_t i;
+   Double_t alfa, h, r, y, b0, b1, b2;
+   Double_t v = TMath::Abs(x);
+
+   v = TMath::Abs(x);
+   if (v < 8) {
+      y = v/8;
+      h = 2*y*y -1;
+      alfa = h + h;
+      b0 = 0;
+      b1 = 0;
+      b2 = 0;
+      for (i = n1; i >= 0; --i) {
+         b0 = c1[i] + alfa*b1 - b2;
+         b2 = b1;
+         b1 = b0;
+      }
+      h = y*(b0 - h*b2);
+   } else {
+      r = 1/v;
+      h = 128*r*r -1;
+      alfa = h + h;
+      b0 = 0;
+      b1 = 0;
+      b2 = 0;
+      for (i = n2; i >= 0; --i) {
+         b0 = c2[i] + alfa*b1 - b2;
+         b2 = b1;
+         b1 = b0;
+      }
+      h = TMath::BesselY0(v) + r*c0*(b0 - h*b2);
+   }
+   if (x < 0)  h = -h;
+   return h;
+}
+
+//______________________________________________________________________________
+Double_t TMath::StruveH1(Double_t x)
+{
+   // Struve Functions of Order 1
+   //
+   // Converted from CERNLIB M342 by Rene Brun.
+
+   const Int_t n3 = 16;
+   const Int_t n4 = 22;
    const Double_t c3[17] = { .5578891446481605,   -.11188325726569816,
                             -.16337958125200939,   .32256932072405902,
                             -.14581632367244242,   .03292677399374035,
@@ -2387,82 +2430,132 @@ Double_t TMath::Struve(Int_t n, Double_t x)
    Int_t i, i1;
    Double_t alfa, h, r, y, b0, b1, b2;
    Double_t v = TMath::Abs(x);
-
-   switch (n) {
-      //___________________________________________________________
-      case 0: {
-         v = TMath::Abs(x);
-         if (v < 8) {
-            y = v/8;
-            h = 2*y*y -1;
-            alfa = h + h;
-            b0 = 0;
-            b1 = 0;
-            b2 = 0;
-            for (i = n1; i >= 0; --i) {
-               b0 = c1[i] + alfa*b1 - b2;
-               b2 = b1;
-               b1 = b0;
-            }
-            h = y*(b0 - h*b2);
-         } else {
-            r = 1/v;
-            h = 128*r*r -1;
-            alfa = h + h;
-            b0 = 0;
-            b1 = 0;
-            b2 = 0;
-            for (i = n2; i >= 0; --i) {
-               b0 = c2[i] + alfa*b1 - b2;
-               b2 = b1;
-               b1 = b0;
-            }
-            h = TMath::BesselY0(v) + r*c0*(b0 - h*b2);
-         }
-         if (x < 0)  h = -h;
-         return h;
+   
+   if (v == 0) {
+      h = 0;
+   } else if (v <= 0.3) {
+      y = v*v;
+      r = 1;
+      h = 1;
+      i1 = (Int_t)(-8. / TMath::Log10(v));
+      for (i = 1; i <= i1; ++i) {
+         h = -h*y / ((2*i+ 1)*(2*i + 3));
+         r += h;
       }
-      //___________________________________________________________
-      case 1: {
-         if (v == 0) {
-            h = 0;
-         } else if (v <= 0.3) {
-            y = v*v;
-            r = 1;
-            h = 1;
-            i1 = (Int_t)(-8. / TMath::Log10(v));
-            for (i = 1; i <= i1; ++i) {
-               h = -h*y / ((2*i+ 1)*(2*i + 3));
-               r += h;
-            }
-            h = cc*y*r;
-         } else if (v < 8) {
-            h = v*v/32 -1;
-            alfa = h + h;
-            b0 = 0;
-            b1 = 0;
-            b2 = 0;
-            for (i = n3; i >= 0; --i) {
-               b0 = c3[i] + alfa*b1 - b2;
-               b2 = b1;
-               b1 = b0;
-            }
-            h = b0 - h*b2;
-         } else {
-            h = 128/(v*v) -1;
-            alfa = h + h;
-            b0 = 0;
-            b1 = 0;
-            b2 = 0;
-            for (i = n4; i >= 0; --i) {
-               b0 = c4[i] + alfa*b1 - b2;
-               b2 = b1;
-               b1 = b0;
-            }
-            h = TMath::BesselY1(v) + c0*(b0 - h*b2);
-         }
-         return h;
+      h = cc*y*r;
+   } else if (v < 8) {
+      h = v*v/32 -1;
+      alfa = h + h;
+      b0 = 0;
+      b1 = 0;
+      b2 = 0;
+      for (i = n3; i >= 0; --i) {
+         b0 = c3[i] + alfa*b1 - b2;
+         b2 = b1;
+         b1 = b0;
       }
+      h = b0 - h*b2;
+   } else {
+      h = 128/(v*v) -1;
+      alfa = h + h;
+      b0 = 0;
+      b1 = 0;
+      b2 = 0;
+      for (i = n4; i >= 0; --i) {
+         b0 = c4[i] + alfa*b1 - b2;
+         b2 = b1;
+         b1 = b0;
+      }
+      h = TMath::BesselY1(v) + c0*(b0 - h*b2);
    }
-   return 0;
+   return h;
+}
+
+
+//______________________________________________________________________________
+Double_t TMath::StruveL0(Double_t x)
+{
+  // Modified Struve Function of Order 0
+  //  (from Kirill Filimonov)
+  
+  const Double_t pi=TMath::Pi();
+  
+  Double_t s=1.0;
+  Double_t r=1.0;
+  
+  Double_t a0,sl0,a1,bi0;
+  
+  Int_t km,i;
+  
+  if (x<=20.) {
+    a0=2.0*x/pi;
+    for (int i=1; i<=60;i++) {
+      r*=(x/(2*i+1))*(x/(2*i+1));
+      s+=r;
+      if(TMath::Abs(r/s)<1.e-12) break;
+    }
+    sl0=a0*s;
+  } else {
+    km=int(5*(x+1.0));
+    if(x>=50.0)km=25;
+    for (i=1; i<=km; i++) {
+      r*=(2*i-1)*(2*i-1)/x/x;
+      s+=r;
+      if(TMath::Abs(r/s)<1.0e-12) break;
+    }
+    a1=TMath::Exp(x)/TMath::Sqrt(2*pi*x);
+    r=1.0;
+    bi0=1.0;
+    for (i=1; i<=16; i++) {
+      r=0.125*r*(2.0*i-1.0)*(2.0*i-1.0)/(i*x);
+      bi0+=r;
+      if(TMath::Abs(r/bi0)<1.0e-12) break;
+    }
+    
+    bi0=a1*bi0;
+    sl0=-2.0/(pi*x)*s+bi0;
+  }  
+  return sl0;  
+}
+
+//______________________________________________________________________________
+Double_t TMath::StruveL1(Double_t x)
+{
+  // Modified Struve Function of Order 1
+  //  (from Kirill Filimonov)
+
+  const Double_t pi=TMath::Pi();
+  Double_t a1,sl1,bi1,s;
+  Double_t r=1.0;
+  Int_t km,i;
+  
+  if (x<=20.) {
+    s=0.0;
+    for (i=1; i<=60;i++) {
+      r*=x*x/(4.0*i*i-1.0);
+      s+=r;
+      if(TMath::Abs(r)<TMath::Abs(s)*1.e-12) break;
+    }
+    sl1=2.0/pi*s;
+  } else {
+    s=1.0;
+    km=int(0.5*x);
+    if(x>50.0)km=25;
+    for (i=1; i<=km; i++) {
+      r*=(2*i+3)*(2*i+1)/x/x;
+      s+=r;
+      if(TMath::Abs(r/s)<1.0e-12) break;
+    }
+    sl1=2.0/pi*(-1.0+1.0/(x*x)+3.0*s/(x*x*x*x));
+    a1=TMath::Exp(x)/TMath::Sqrt(2*pi*x);
+    r=1.0;
+    bi1=1.0;
+    for (i=1; i<=16; i++) {
+      r=-0.125*r*(4.0-(2.0*i-1.0)*(2.0*i-1.0))/(i*x);
+      bi1+=r;
+      if(TMath::Abs(r/bi1)<1.0e-12) break;
+    }
+    sl1+=a1*bi1;
+  }  
+  return sl1;  
 }

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.24 2002/10/10 17:08:52 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.25 2003/01/28 07:43:36 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -272,7 +272,10 @@ public:
    static Double_t BesselJ1(Double_t x);             // Bessel function J1(x) for any real x
    static Double_t BesselY0(Double_t x);             // Bessel function Y0(x) for positive x
    static Double_t BesselY1(Double_t x);             // Bessel function Y1(x) for positive x
-   static Double_t Struve(Int_t n, Double_t x);      // Struve functions of order 0 and 1
+   static Double_t StruveH0(Double_t x);             // Struve functions of order 0
+   static Double_t StruveH1(Double_t x);             // Struve functions of order 1
+   static Double_t StruveL0(Double_t x);             // Modified Struve functions of order 0
+   static Double_t StruveL1(Double_t x);             // Modified Struve functions of order 1
 
    ClassDef(TMath,0)  //Interface to math routines
 };
