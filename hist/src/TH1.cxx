@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.141 2003/04/30 21:24:07 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.142 2003/05/02 10:33:50 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1755,6 +1755,7 @@ Int_t TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Axis_t xxmin, Axis_
 //         option = "W"  Set all errors to 1
 //                = "I" Use integral of function in bin instead of value at bin center
 //                = "L" Use Loglikelihood method (default is chisquare method)
+//                = "LL" Use Loglikelihood method and bin contents are not integers)
 //                = "U" Use a User specified fitting algorithm (via SetFCN)
 //                = "Q" Quiet mode (minimum printing)
 //                = "V" Verbose mode (default is between Q and V)
@@ -2381,20 +2382,21 @@ Int_t TH1::FitOptionsMake(Option_t *choptin)
 
    for (Int_t i=0;i<nch;i++) chopt[i] = toupper(choptin[i]);
 
-   if (strstr(chopt,"Q")) Foption.Quiet   = 1;
-   if (strstr(chopt,"V")){Foption.Verbose = 1; Foption.Quiet = 0;}
-   if (strstr(chopt,"L")) Foption.Like    = 1;
-   if (strstr(chopt,"W")) Foption.W1      = 1;
-   if (strstr(chopt,"E")) Foption.Errors  = 1;
-   if (strstr(chopt,"M")) Foption.More    = 1;
-   if (strstr(chopt,"R")) Foption.Range   = 1;
-   if (strstr(chopt,"G")) Foption.Gradient= 1;
-   if (strstr(chopt,"N")) Foption.Nostore = 1;
-   if (strstr(chopt,"0")) Foption.Nograph = 1;
-   if (strstr(chopt,"+")) Foption.Plus    = 1;
-   if (strstr(chopt,"I")) Foption.Integral= 1;
-   if (strstr(chopt,"B")) Foption.Bound   = 1;
-   if (strstr(chopt,"U")){Foption.User    = 1; Foption.Like = 0;}
+   if (strstr(chopt,"Q"))  Foption.Quiet   = 1;
+   if (strstr(chopt,"V")) {Foption.Verbose = 1; Foption.Quiet = 0;}
+   if (strstr(chopt,"L"))  Foption.Like    = 1;
+   if (strstr(chopt,"LL")) Foption.Like    = 2;
+   if (strstr(chopt,"W"))  Foption.W1      = 1;
+   if (strstr(chopt,"E"))  Foption.Errors  = 1;
+   if (strstr(chopt,"M"))  Foption.More    = 1;
+   if (strstr(chopt,"R"))  Foption.Range   = 1;
+   if (strstr(chopt,"G"))  Foption.Gradient= 1;
+   if (strstr(chopt,"N"))  Foption.Nostore = 1;
+   if (strstr(chopt,"0"))  Foption.Nograph = 1;
+   if (strstr(chopt,"+"))  Foption.Plus    = 1;
+   if (strstr(chopt,"I"))  Foption.Integral= 1;
+   if (strstr(chopt,"B"))  Foption.Bound   = 1;
+   if (strstr(chopt,"U")) {Foption.User    = 1; Foption.Like = 0;}
    return 1;
 }
 
@@ -2509,10 +2511,14 @@ void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
                }
             }
             if (fu < 1.e-9) fu = 1.e-9;
-            icu  = Int_t(cu);
-            fsub = -fu +icu*TMath::Log(fu);
-            fobs = hFitter->GetSumLog(icu);
-
+            if (Foption.Like == 1) {
+               icu  = Int_t(cu);
+               fsub = -fu +icu*TMath::Log(fu);
+               fobs = hFitter->GetSumLog(icu);
+            } else {
+               fsub = -fu +cu*TMath::Log(fu);
+               fobs = TMath::Gamma(cu+1);
+            }
             fsub -= fobs;
             f -= fsub;
          }
