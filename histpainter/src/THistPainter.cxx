@@ -1,4 +1,4 @@
-// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.194 2004/10/08 05:29:40 brun Exp $
+// @(#)root/histpainter:$Name:  $:$Id: THistPainter.cxx,v 1.195 2004/10/27 17:46:56 brun Exp $
 // Author: Rene Brun   26/08/99
 
 /*************************************************************************
@@ -2395,7 +2395,7 @@ void THistPainter::PaintContour(Option_t *option)
    Int_t nadd,iminus,iplus;
    Double_t *xx, *yy;
    Int_t istart;
-   Int_t first = 0;
+   Int_t first = ncontour-1;
    Int_t *polysort = 0;
    Int_t ContListNb;
    if (Hoption.Contour != 1) goto theEND;
