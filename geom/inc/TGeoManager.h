@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.40 2003/11/11 15:44:28 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.41 2003/12/10 15:31:23 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -108,9 +108,12 @@ private :
    TGeoShape            *fClippingShape;    //! clipping shape for raytracing
 
    Int_t                *fNodeIdArray;      //! array of node id's
-   Int_t                 fIntSize;         //! int buffer size
+   Int_t                 fIntSize;          //! int buffer size
    Int_t                 fDblSize;          //! dbl buffer size
+   Int_t                 fOverlapSize;      //! current size of fOverlapClusters
+   Int_t                 fOverlapMark;      //! current recursive position in fOverlapClusters
    Int_t                *fIntBuffer;        //! transient int buffer
+   Int_t                *fOverlapClusters;  //! internal array for overlaps
    Double_t             *fDblBuffer;        //! transient dbl buffer
 
 //--- private methods
@@ -202,7 +205,7 @@ public:
                                        const char *g3path="");
    void                   Test(Int_t npoints=1000000, Option_t *option=""); // *MENU*
    void                   TestOverlaps(const char* path=""); // *MENU*
-   Double_t               Weight(Double_t precision=0.01, Option_t *option="v"); //*MENU*
+   Double_t               Weight(Double_t precision=0.01, Option_t *option="v"); // *MENU*
 
    //--- GEANT3-like geometry creation
    TGeoVolume            *Division(const char *name, const char *mother, Int_t iaxis, Int_t ndiv, 
