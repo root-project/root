@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.187 2004/05/13 10:46:01 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.188 2004/05/26 07:48:46 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3300,7 +3300,8 @@ void TTree::Print(Option_t *option) const
      TKey *key = fDirectory->GetKey(GetName());
      if (key) {skey = key->GetKeylen(); s = key->GetNbytes();}
   }
-  Double_t total = fTotBytes + skey;
+  Double_t total = skey;
+  if (fZipBytes > 0) total += fTotBytes;
   TBuffer b(TBuffer::kWrite,10000);
   TTree::Class()->WriteBuffer(b,(TTree*)this);
   total += b.Length();

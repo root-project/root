@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.71 2004/01/10 10:52:30 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranch.cxx,v 1.72 2004/05/08 07:08:35 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -933,7 +933,9 @@ Stat_t TBranch::GetTotalSize() const
 
    TBuffer b(TBuffer::kWrite,10000);
    TBranch::Class()->WriteBuffer(b,(TBranch*)this);
-   return fTotBytes + b.Length();
+   Stat_t totbytes = 0;
+   if (fZipBytes > 0) totbytes = fTotBytes;
+   return totbytes + b.Length();
 }
 
 
