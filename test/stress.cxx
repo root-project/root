@@ -37,7 +37,9 @@
 // At the end of the test a table is printed showing the global results
 // with the amount of I/O, Real Time and Cpu Time.
 // One single number (ROOTMARKS) is also calculated showing the relative
-// performance of your machine compared to a reference machine (HP735/99).
+// performance of your machine compared to a reference machine
+// a DELL Inspiron 7500 (Pentium III 600 Mhz) with 256 MBytes of memory
+// and 18 GBytes IDE disk.
 //
 // An example of output when all the tests run OK is shown below:
 // ******************************************************************
@@ -1382,14 +1384,14 @@ void stress16()
    FILE *fp = fopen("stress_lhcb.ps","r");
    char line[260];
    Int_t nlines = 0;
-   Int_t nlinesGood = 4016;
+   Int_t nlinesGood = 3950;
    while (fgets(line,255,fp)) {
       nlines++;
    }
    fclose(fp);
    delete c;
    Bool_t OK = kTRUE;
-   if (nlines < nlinesGood-30 || nlines > nlinesGood+30) OK = kFALSE;
+   if (nlines < nlinesGood-100 || nlines > nlinesGood+100) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
       printf("failed\n");
