@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.5 2004/09/13 09:10:56 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.cxx,v 1.6 2004/09/14 08:55:03 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -109,7 +109,9 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
                            const char **fontList) :
               TGTransientFrame(p, t, 100, 100)
 {
-   // Create font dialog.
+   // Create font dialog. When closed via OK button fontProp is set to
+   // the newly selected font. If closed via Cancel button or WM close box
+   // fontProp->fName == "".
 
    TGLabel *lbl;
    TGHorizontalFrame *hf, *hf2;
@@ -120,6 +122,7 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    fSampleTextGC = 0;
    fLabelFont    = 0;
    fSample       = 0;
+   fHitOK        = kFALSE;
 
    if (!fontProp) {
       Error("TGFontDialog", "fontProp argument may not be 0");
@@ -357,7 +360,8 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    fFontSizes->Layout();
    fFontNames->Layout();
 
-   fClient->WaitFor(this);
+   fClient->WaitForUnmap(this);
+   DeleteWindow();
 }
 
 //________________________________________________________________________________
@@ -368,6 +372,19 @@ TGFontDialog::~TGFontDialog()
    Cleanup();
    fClient->FreeFont(fLabelFont);
    fClient->FreeGC(fSampleTextGC);
+}
+
+//________________________________________________________________________________
+void TGFontDialog::CloseWindow()
+{
+   // Called when window is closed via window manager.
+
+   if (!fHitOK)
+      fFontProp->fName = "";
+
+   // don't call DeleteWindow() here since that will cause access
+   // to the deleted dialog in the WaitFor() method (see ctor)
+   UnmapWindow();
 }
 
 //________________________________________________________________________________
@@ -382,6 +399,7 @@ Bool_t TGFontDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                switch (parm1) {
 
                   case kFDLG_OK:
+                     fHitOK             = kTRUE;
                      fFontProp->fName   = fName;
                      fFontProp->fItalic = fItalic;
                      fFontProp->fBold   = fBold;

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFontDialog.h,v 1.2 2004/09/08 08:13:11 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFontDialog.h,v 1.3 2004/09/09 00:24:16 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   23/04/03
 
 /*************************************************************************
@@ -75,9 +75,11 @@ protected:
    TString              fSampleText;
    TGGC                *fSampleTextGC;
    TGFont              *fLabelFont;
+   Bool_t               fHitOK;
 
    Bool_t               GetFontProperties(const char *fontFamily = 0);
    void                 GetFontName();
+   virtual void         CloseWindow();
    virtual Bool_t       ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
 public:
