@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TAttFillCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   04/07/96
 // ---------------------------------- AttFillCanvas.C
 
@@ -82,8 +82,8 @@ TAttFillCanvas::TAttFillCanvas(const char *name, const char *title, UInt_t ww, U
 
 //*-* draw colortable pads
    test1->DisplayColorTable("SetFillColor",0.05, 0.60, 0.90, 0.38);
-   Modified(kTRUE);
    Update();
+   SetEditable(kFALSE);
 
    padsav->cd();
 }

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name$:$Id$
+// @(#)root/gpad:$Name:  $:$Id: TAttMarkerCanvas.cxx,v 1.1.1.1 2000/05/16 17:00:41 rdm Exp $
 // Author: Rene Brun   04/07/96
 
 /*************************************************************************
@@ -67,6 +67,7 @@ TAttMarkerCanvas::TAttMarkerCanvas(const char *name, const char *title, UInt_t w
          xlow = 0.05 + i*wpad;
          sprintf(command,"SetMarkerStyle(%d)",markers[number-1]);
          test1 = new TGroupButton("Style","",command,xlow, ylow, xlow+0.9*wpad, ylow+0.9*hpad);
+         test1->SetEditable(kTRUE);
          if (number == 1) test1->SetBorderMode(-1);
          test1->SetFillColor(18);
          test1->SetBorderSize(2);
@@ -75,6 +76,7 @@ TAttMarkerCanvas::TAttMarkerCanvas(const char *name, const char *title, UInt_t w
          mark = new TMarker(0.5, 0.5,markers[number-1]);
          mark->SetMarkerSize(2);
          mark->Draw();
+         test1->SetEditable(kFALSE);
          cd();
       }
    }
@@ -91,6 +93,7 @@ TAttMarkerCanvas::TAttMarkerCanvas(const char *name, const char *title, UInt_t w
          if (!i && !j) sizem = 1;
          sprintf(command,"SetMarkerSize(%f)",sizem);
          test1 = new TGroupButton("Size","",command,xlow, ylow, xlow+0.9*wpad, ylow+0.9*hpad);
+         test1->SetEditable(kTRUE);
          if (!i && !j) test1->SetBorderMode(-1);
          test1->SetFillColor(18);
          test1->SetBorderSize(2);
@@ -100,6 +103,7 @@ TAttMarkerCanvas::TAttMarkerCanvas(const char *name, const char *title, UInt_t w
          mark->SetMarkerSize(sizem);
          mark->Draw();
          if (!i && !j) sizem = 0.1;
+         test1->SetEditable(kFALSE);
          cd();
       }
    }
@@ -107,6 +111,7 @@ TAttMarkerCanvas::TAttMarkerCanvas(const char *name, const char *title, UInt_t w
 //*-* draw colortable pads
    test1->DisplayColorTable("SetMarkerColor",0.05, 0.60, 0.90, 0.38);
    Update();
+   SetEditable(kFALSE);
 
    padsav->cd();
 }
