@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.2 2001/12/10 15:03:18 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.h,v 1.3 2001/12/21 13:41:09 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -53,7 +53,7 @@ public:
         virtual void     Draw(Option_t *chopt="");
         TH1             *GetHistogram() const;
         TObjArray       *GetHists()  const { return fHists; }
-        TObjArray       *GetStack()  const { return fStack; }
+        TObjArray       *GetStack();
         virtual Double_t GetMaximum(Option_t *option="");
         virtual Double_t GetMinimum(Option_t *option="");
         TAxis           *GetXaxis() const;

@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.11 2002/04/22 20:12:05 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.12 2002/04/26 10:23:40 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -117,6 +117,7 @@ void THStack::BuildStack()
 //  Build a separate list fStack containing the running sum of all histograms
 
    if (fStack) return;
+   if (!fHists) return;
    Int_t nhists = fHists->GetEntriesFast();
    fStack = new TObjArray(nhists);
    Bool_t add = TH1::AddDirectoryStatus();
@@ -259,9 +260,17 @@ Double_t THStack::GetMinimum(Option_t *option)
 }
 
 //______________________________________________________________________________
+TObjArray *THStack::GetStack() 
+{
+   // Return pointer to Stack. Build it if not yet done
+   
+   BuildStack();
+   return fStack;
+}
+
+//______________________________________________________________________________
 TAxis *THStack::GetXaxis() const
 {
-   // Get x axis of the graph.
 
    if (!gPad) return 0;
    return GetHistogram()->GetXaxis();
@@ -317,6 +326,8 @@ void THStack::Paint(Option_t *option)
 //
 // See THistPainter::Paint for a list of valid options.
 
+   if (!fHists) return;
+   
    TString opt = option;
    opt.ToLower();
    
