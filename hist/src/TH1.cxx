@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.153 2003/07/09 07:30:20 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.154 2003/07/10 07:20:15 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -3621,6 +3621,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
    Int_t newbins = nbins/ngroup;
 
    // Save old bin contents into a new array
+   Double_t entries = fEntries;
    Double_t *oldBins = new Double_t[nbins];
    Int_t bin, i;
    for (bin=0;bin<nbins;bin++) oldBins[bin] = GetBinContent(bin+1);
@@ -3659,6 +3660,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname)
       if (oldErrors) hnew->SetBinError(bin+1,TMath::Sqrt(binError));
       oldbin += ngroup;
    }
+   fEntries = entries; //was modified by SetBinContent
 
    delete [] oldBins;
    if (oldErrors) delete [] oldErrors;
