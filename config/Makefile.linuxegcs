@@ -29,7 +29,7 @@ SOFLAGS       = -shared -Wl,-soname,
 SOEXT         = so
 
 # System libraries:
-SYSLIBS       = -lm -lnsl -ldl $(THREAD) -rdynamic
+SYSLIBS       = -lm -ldl $(THREAD) -rdynamic
 XLIBS         = -L/usr/X11R6/lib -lXpm -lX11
 CILIBS        = -lm -ldl -rdynamic
 CRYPTLIBS     = -lcrypt
@@ -38,4 +38,4 @@ THREAD        = -lpthread
 # Fortran:
 F77           = g77
 F77FLAGS      =
-F77LIBS       = -lg2c
+F77LIBS       = -lg2c -lnsl
