@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.79 2003/07/29 16:38:06 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.80 2003/08/14 04:44:20 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 #include "TFriendElement.h"
 #include "TSystem.h"
 #include "TRegexp.h"
+#include "TObjString.h"
 
 ClassImp(TChain)
 
@@ -218,18 +219,28 @@ Int_t TChain::Add(const char *name, Int_t nentries)
    void *dir = gSystem->OpenDirectory(gSystem->ExpandPathName(directory.Data()));
 
    if (dir) {
+      //create a TList to store the file names (not yet sorted)
+      TList l;
       TRegexp re(basename,kTRUE);
       while ((file = gSystem->GetDirEntry(dir))) {
          if (!strcmp(file,".") || !strcmp(file,"..")) continue;
-         //if (IsDirectory(file)) continue;
          TString s = file;
          if ( (basename!=file) && s.Index(re) == kNPOS) continue;
+         l.Add(new TObjString(file));
+      }
+      gSystem->FreeDirectory(dir);
+      //sort the files in alphanumeric order
+      l.Sort();
+      TIter next(&l);
+      TObjString *obj;
+      while ((obj = (TObjString*)next())) {
+         file = obj->GetName();
          if (behind_dot_root.Length() != 0) 
             nf += AddFile(Form("%s/%s/%s",directory.Data(),file,behind_dot_root.Data()),kBigNumber);
          else
             nf += AddFile(Form("%s/%s",directory.Data(),file),kBigNumber);
       }
-      gSystem->FreeDirectory(dir);
+      l.Delete();
    }
    return nf;
 }
