@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.162 2005/02/14 15:07:49 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.163 2005/02/15 16:19:20 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2200,6 +2200,9 @@ again:
 
       // Reset pad parameters and recompute conversion coefficients
       ResizePad();
+
+      // emit signal
+      RangeChanged();
 
       break;
 
