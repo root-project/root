@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.44 2004/01/21 07:03:13 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.45 2004/07/30 19:09:51 brun Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -290,11 +290,13 @@ public: \
 #define NamespaceImp(name)
 #else
 #define NamespaceImpUnique(name,key) \
-   namespace ROOT { \
-      namespace name { TGenericClassInfo *GenerateInitInstance(); } \
-      static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
-         name::GenerateInitInstance()->SetImplFile(__FILE__, __LINE__); \
-      R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
+   namespace name { \
+      namespace ROOT { \
+         ::ROOT::TGenericClassInfo *GenerateInitInstance(); \
+         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
+            GenerateInitInstance()->SetImplFile(__FILE__, __LINE__); \
+         R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
+      } \
    }
 #define NamespaceImp(name) NamespaceImpUnique(name,default)
 #endif

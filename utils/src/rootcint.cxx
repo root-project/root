@@ -2236,21 +2236,37 @@ void WriteNamespaceInit(G__ClassInfo &cl)
    string classname = GetLong64_Name( RStl::DropDefaultArg( cl.Fullname() ) );
    string mappedname = G__map_cpp_name((char*)classname.c_str());
 
-   fprintf(fp, "namespace ROOT {\n");
+   int nesting = 0;
+   // We should probably unwind the namespace to properly nest it.
+   if (classname!="ROOT") {
+      string right = classname;
+      int pos = right.find(":");
+      if (pos==0) {
+         right = right.substr(2);
+         pos = right.find(":");
+      }
+      while(pos>=0) {
+         string left = right.substr(0,pos);
+         right = right.substr(pos+2);
+         pos = right.find(":");
+         ++nesting;
+         fprintf(fp, "namespace %s {\n", left.c_str());
+      }
 
-   if (classname=="ROOT") {
-      fprintf(fp, "   inline TGenericClassInfo *GenerateInitInstance();\n");
-   } else {
-      fprintf(fp, "   namespace %s { inline TGenericClassInfo *GenerateInitInstance(); }\n",
-              classname.c_str());
+      ++nesting;
+      fprintf(fp, "namespace %s {\n", right.c_str());
    }
 
+   fprintf(fp, "   namespace ROOT {\n");
+
+   fprintf(fp, "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();\n");
+
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt())
-      fprintf(fp, "   static void %s_Dictionary();\n",mappedname.c_str());
+      fprintf(fp, "      static void %s_Dictionary();\n",mappedname.c_str());
 
    fprintf(fp, "\n");
 
-   fprintf(fp, "   // Function generating the singleton type initializer\n");
+   fprintf(fp, "      // Function generating the singleton type initializer\n");
 
    // fprintf(fp, "   template <> ::ROOT::ClassInfo< %s > *GenerateInitInstance< %s >(const %s*)\n   {\n",
    //      cl.Fullname(), cl.Fullname(), cl.Fullname() );
@@ -2265,19 +2281,14 @@ void WriteNamespaceInit(G__ClassInfo &cl)
    fprintf(fp, "#endif\n");
 #endif
 
-   if (classname=="ROOT") {
-      fprintf(fp, "   inline TGenericClassInfo *GenerateInitInstance()\n   {\n");
-   } else {
-      fprintf(fp, "   inline TGenericClassInfo *%s::GenerateInitInstance()\n   {\n",
-              classname.c_str());
-   }
+   fprintf(fp, "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance()\n      {\n");
 
-   fprintf(fp, "      static ::ROOT::TGenericClassInfo \n");
+   fprintf(fp, "         static ::ROOT::TGenericClassInfo \n");
 
-   fprintf(fp, "         instance(\"%s\", ",classname.c_str());
+   fprintf(fp, "            instance(\"%s\", ",classname.c_str());
 
    if (cl.HasMethod("Class_Version")) {
-      fprintf(fp, "%s::Class_Version(), ",classname.c_str());
+      fprintf(fp, "::%s::Class_Version(), ",classname.c_str());
    } else { 
 
       // Need to find out if the operator>> is actually defined for this class.
@@ -2305,8 +2316,8 @@ void WriteNamespaceInit(G__ClassInfo &cl)
      if (filename[i]=='\\') filename[i]='/';
    }
    fprintf(fp, "\"%s\", %d,\n", filename,cl.LineNumber());
-   fprintf(fp, "                  DefineBehavior((void*)0,(void*)0),\n");
-   fprintf(fp, "                  ");
+   fprintf(fp, "                     ::ROOT::DefineBehavior((void*)0,(void*)0),\n");
+   fprintf(fp, "                     ");
 
    if (cl.HasMethod("Dictionary") && !cl.IsTmplt()) {
       fprintf(fp, "&::%s::Dictionary, ",classname.c_str());
@@ -2315,29 +2326,25 @@ void WriteNamespaceInit(G__ClassInfo &cl)
    }
 
    fprintf(fp, "%d);\n", cl.RootFlag());
-   if (HasDefaultConstructor(cl)) {
-      fprintf(fp, "      instance.SetNew(&new_%s);\n",mappedname.c_str());
-      fprintf(fp, "      instance.SetNewArray(&newArray_%s);\n",mappedname.c_str());
-   }
-   if (NeedDestructor(cl)) {
-     fprintf(fp, "      instance.SetDelete(&delete_%s);\n",mappedname.c_str());
-     fprintf(fp, "      instance.SetDeleteArray(&deleteArray_%s);\n",mappedname.c_str());
-     fprintf(fp, "      instance.SetDestructor(&destruct_%s);\n",mappedname.c_str());
-   }
-   fprintf(fp, "      return &instance;\n");
-   fprintf(fp, "   }\n");
-   fprintf(fp, "   // Static variable to force the class initialization\n");
+
+   fprintf(fp, "         return &instance;\n");
+   fprintf(fp, "      }\n");
+   fprintf(fp, "      // Static variable to force the class initialization\n");
    // must be one long line otherwise R__UseDummy does not work
-   fprintf(fp, "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = %s::GenerateInitInstance(); R__UseDummy(_R__UNIQUE_(Init));\n", classname.c_str());
+   fprintf(fp, "      static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance(); R__UseDummy(_R__UNIQUE_(Init));\n", classname.c_str());
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt()) {
-      fprintf(fp, "\n   // Dictionary for non-ClassDef classes\n");
-      fprintf(fp, "   static void %s_Dictionary() {\n",mappedname.c_str());
-      fprintf(fp, "      %s::GenerateInitInstance()->GetClass();\n",classname.c_str());
-      fprintf(fp, "   }\n\n");
+      fprintf(fp, "\n      // Dictionary for non-ClassDef classes\n");
+      fprintf(fp, "      static void %s_Dictionary() {\n",mappedname.c_str());
+      fprintf(fp, "         GenerateInitInstance()->GetClass();\n",classname.c_str());
+      fprintf(fp, "      }\n\n");
    }
-
-   fprintf(fp,"}\n\n");
+   
+   fprintf(fp,"   }\n");
+   while(nesting--) {
+      fprintf(fp,"}\n");
+   }
+   fprintf(fp,"\n");
 }
 
 //______________________________________________________________________________
@@ -4037,6 +4044,13 @@ int main(int argc, char **argv)
       ifl = 0;
    }
 
+   // If the user request use of a preprocessor we are going to bundle
+   // all the files into one so that cint considers them one compilation
+   // unit and so that each file that contains code guard is really
+   // included only once.
+   for (i = 1; i < argc; i++)
+      if (strcmp(argv[i], "-p") == 0) use_preprocessor = 1;
+
 #ifndef __CINT__
    int   argcc, iv, il;
    char  path[16][128];
@@ -4105,66 +4119,71 @@ int main(int argc, char **argv)
             default:        argvv[argcc++] = "-J1"; break;
          }
 
+         if (!use_preprocessor) {
+            // If the compiler's preprocessor is not used
+            // we still need to declare the compiler specific flags
+            // so that the header file are properly parsed.
 #ifdef __KCC
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D__KCC=%ld", (long)__KCC); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-D__KCC=%ld", (long)__KCC); argcc++;
 #endif
 #ifdef __INTEL_COMPILER
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-D__INTEL_COMPILER=%ld", (long)__INTEL_COMPILER); argcc++;
 #endif
 #ifdef __xlC__
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D__xlC__=%ld", (long)__xlC__); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-D__xlC__=%ld", (long)__xlC__); argcc++;
 #endif
 #ifdef __GNUC__
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D__GNUC__=%ld", (long)__GNUC__); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-D__GNUC__=%ld", (long)__GNUC__); argcc++;
 #endif
 #ifdef __GNUC_MINOR__
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D__GNUC_MINOR__=%ld", (long)__GNUC_MINOR__); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-D__GNUC_MINOR__=%ld", (long)__GNUC_MINOR__); argcc++;
 #endif
 #ifdef __HP_aCC
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D__HP_aCC=%ld", (long)__HP_aCC); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-D__HP_aCC=%ld", (long)__HP_aCC); argcc++;
 #endif
 #ifdef __sun
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D__sun=%ld", (long)__sun); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-D__sun=%ld", (long)__sun); argcc++;
 #endif
 #ifdef __SUNPRO_CC
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D__SUNPRO_CC=%ld", (long)__SUNPRO_CC); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-D__SUNPRO_CC=%ld", (long)__SUNPRO_CC); argcc++;
 #endif
 #ifdef __ia64__
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D__ia64__=%ld", (long)__ia64__); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-D__ia64__=%ld", (long)__ia64__); argcc++;
 #endif
 #ifdef __x86_64__
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D__x86_64__=%ld", (long)__x86_64__); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-D__x86_64__=%ld", (long)__x86_64__); argcc++;
 #endif
 #ifdef R__B64
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-DR__B64"); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-DR__B64"); argcc++;
 #endif
 #ifdef _WIN32
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D_WIN32=%ld",(long)_WIN32); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-D_WIN32=%ld",(long)_WIN32); argcc++;
 #endif
 #ifdef WIN32
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-DWIN32=%ld",(long)WIN32); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-DWIN32=%ld",(long)WIN32); argcc++;
 #endif
 #ifdef GDK_WIN32
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-DGDK_WIN32=%ld",(long)GDK_WIN32); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-DGDK_WIN32=%ld",(long)GDK_WIN32); argcc++;
 #endif
 #ifdef _MSC_VER
-         argvv[argcc] = (char *)calloc(64, 1);
-         sprintf(argvv[argcc], "-D_MSC_VER=%ld",(long)_MSC_VER); argcc++;
+            argvv[argcc] = (char *)calloc(64, 1);
+            sprintf(argvv[argcc], "-D_MSC_VER=%ld",(long)_MSC_VER); argcc++;
 #endif
+         }
          argvv[argcc++] = "-DTRUE=1";
          argvv[argcc++] = "-DFALSE=0";
          argvv[argcc++] = "-Dexternalref=extern";
@@ -4188,12 +4207,6 @@ int main(int argc, char **argv)
 
    iv = 0;
    il = 0;
-   // If the user request use of a preprocessor we are going to bundle
-   // all the files into one so that cint considers them one compilation
-   // unit and so that each file that contains code guard is really
-   // included only once.
-   for (i = 1; i < argc; i++)
-      if (strcmp(argv[i], "-p") == 0) use_preprocessor = 1;
 
    string bundlename;
    char esc_arg[512];

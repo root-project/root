@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.74 2004/07/25 16:19:59 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.75 2004/07/30 19:09:51 brun Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -30,7 +30,9 @@
 
 const Int_t kWorkMax = 100;
 
+#ifndef R__ALPHA    // The thml doc for TMath can not be generated on alpha
 NamespaceImp(TMath)
+#endif
 
 namespace TMath {
 
