@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id:$
+// @(#)root/win32gdk:$Name:  $:$Id: TGWin32ProxyDefs.h,v 1.2 2003/08/06 21:24:25 rdm Exp $
 // Author: Valeriy Onuchin  08/08/2003
 
 /*************************************************************************
@@ -32,7 +32,7 @@
 // root [3] .x macro.C    //  print results
 //
 
-int gDebugProxy = 1; // if kTRUE - use debug & profile interface
+int gDebugProxy = 0; // if kTRUE - use debug & profile interface
 
 enum { kDebugProfile = -123, kDebugTrace = -1234 };
 
