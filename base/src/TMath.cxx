@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.65 2004/07/06 08:34:38 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.66 2004/07/06 09:04:51 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -1985,10 +1985,13 @@ Bool_t TMath::IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y)
    return kFALSE;
 }
 
-//_____________________________________________________________________________
-void TMath::Sort(Int_t n1, const Short_t *a, Int_t *index, Bool_t down)
+template <class Element, class Index> 
+void TMath::SortImp(Index n1, const Element *a, 
+                    Index *index, Bool_t down) 
 {
-   // Sort the n1 elements of the Short_t array a.
+   // Templated version of the Sort.
+
+   // Sort the n1 elements of the array a.of Element
    // In output the array index contains the indices of the sorted array.
    // If down is false sort in increasing order (default is decreasing order).
    // This is a translation of the CERNLIB routine sortzv (M101)
@@ -1996,9 +1999,9 @@ void TMath::Sort(Int_t n1, const Short_t *a, Int_t *index, Bool_t down)
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
-   Int_t i22 = 0;
-   Short_t ai;
+   Index i,i1,n,i2,i3,i33,i222,iswap,n2;
+   Index i22 = 0;
+   Element ai;
    n = n1;
    if (n <= 0) return;
    if (n == 1) {index[0] = 0; return;}
@@ -2049,6 +2052,20 @@ void TMath::Sort(Int_t n1, const Short_t *a, Int_t *index, Bool_t down)
       index[i]      = index[n1-i-1];
       index[n1-i-1] = iswap;
    }
+}
+
+//_____________________________________________________________________________
+void TMath::Sort(Int_t n1, const Short_t *a, Int_t *index, Bool_t down)
+{
+   // Sort the n1 elements of the Short_t array a.
+   // In output the array index contains the indices of the sorted array.
+   // If down is false sort in increasing order (default is decreasing order).
+   // This is a translation of the CERNLIB routine sortzv (M101)
+   // based on the quicksort algorithm.
+   // NOTE that the array index must be created with a length >= n1
+   // before calling this function.
+
+   SortImp(n1,a,index,down);
 }
 
 //_____________________________________________________________________________
@@ -2062,59 +2079,7 @@ void TMath::Sort(Int_t n1, const Int_t *a, Int_t *index, Bool_t down)
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
-   Int_t i22 = 0;
-   Int_t ai;
-   n = n1;
-   if (n <= 0) return;
-   if (n == 1) {index[0] = 0; return;}
-   for (i=0;i<n;i++) index[i] = i+1;
-   for (i1=2;i1<=n;i1++) {
-      i3 = i1;
-      i33 = index[i3-1];
-      ai  = a[i33-1];
-      while(1) {
-         i2 = i3/2;
-         if (i2 <= 0) break;
-         i22 = index[i2-1];
-         if (ai <= a[i22-1]) break;
-         index[i3-1] = i22;
-         i3 = i2;
-      }
-      index[i3-1] = i33;
-   }
-
-   while(1) {
-      i3 = index[n-1];
-      index[n-1] = index[0];
-      ai = a[i3-1];
-      n--;
-      if(n-1 < 0) {index[0] = i3; break;}
-      i1 = 1;
-      while(2) {
-         i2 = i1+i1;
-         if (i2 <= n) i22 = index[i2-1];
-         if (i2-n > 0) {index[i1-1] = i3; break;}
-         if (i2-n < 0) {
-            i222 = index[i2];
-            if (a[i22-1] - a[i222-1] < 0) {
-                i2++;
-                i22 = i222;
-            }
-         }
-         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
-         index[i1-1] = i22;
-         i1 = i2;
-      }
-   }
-   for (i=0;i<n1;i++) index[i]--;
-   if (!down) return;
-   n2 = n1/2;
-   for (i=0;i<n2;i++) {
-      iswap         = index[i];
-      index[i]      = index[n1-i-1];
-      index[n1-i-1] = iswap;
-   }
+   SortImp(n1,a,index,down);
 }
 
 //_____________________________________________________________________________
@@ -2128,59 +2093,7 @@ void TMath::Sort(Int_t n1, const Float_t *a, Int_t *index, Bool_t down)
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
-   Int_t i22 = 0;
-   Float_t ai;
-   n = n1;
-   if (n <= 0) return;
-   if (n == 1) {index[0] = 0; return;}
-   for (i=0;i<n;i++) index[i] = i+1;
-   for (i1=2;i1<=n;i1++) {
-      i3 = i1;
-      i33 = index[i3-1];
-      ai  = a[i33-1];
-      while(1) {
-         i2 = i3/2;
-         if (i2 <= 0) break;
-         i22 = index[i2-1];
-         if (ai <= a[i22-1]) break;
-         index[i3-1] = i22;
-         i3 = i2;
-      }
-      index[i3-1] = i33;
-   }
-
-   while(1) {
-      i3 = index[n-1];
-      index[n-1] = index[0];
-      ai = a[i3-1];
-      n--;
-      if(n-1 < 0) {index[0] = i3; break;}
-      i1 = 1;
-      while(2) {
-         i2 = i1+i1;
-         if (i2 <= n) i22 = index[i2-1];
-         if (i2-n > 0) {index[i1-1] = i3; break;}
-         if (i2-n < 0) {
-            i222 = index[i2];
-            if (a[i22-1] - a[i222-1] < 0) {
-                i2++;
-                i22 = i222;
-            }
-         }
-         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
-         index[i1-1] = i22;
-         i1 = i2;
-      }
-   }
-   for (i=0;i<n1;i++) index[i]--;
-   if (!down) return;
-   n2 = n1/2;
-   for (i=0;i<n2;i++) {
-      iswap         = index[i];
-      index[i]      = index[n1-i-1];
-      index[n1-i-1] = iswap;
-   }
+   SortImp(n1,a,index,down);
 }
 
 //_____________________________________________________________________________
@@ -2194,59 +2107,7 @@ void TMath::Sort(Int_t n1, const Double_t *a, Int_t *index, Bool_t down)
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
-   Int_t i22 = 0;
-   Double_t ai;
-   n = n1;
-   if (n <= 0) return;
-   if (n == 1) {index[0] = 0; return;}
-   for (i=0;i<n;i++) index[i] = i+1;
-   for (i1=2;i1<=n;i1++) {
-      i3 = i1;
-      i33 = index[i3-1];
-      ai  = a[i33-1];
-      while(1) {
-         i2 = i3/2;
-         if (i2 <= 0) break;
-         i22 = index[i2-1];
-         if (ai <= a[i22-1]) break;
-         index[i3-1] = i22;
-         i3 = i2;
-      }
-      index[i3-1] = i33;
-   }
-
-   while(1) {
-      i3 = index[n-1];
-      index[n-1] = index[0];
-      ai = a[i3-1];
-      n--;
-      if(n-1 < 0) {index[0] = i3; break;}
-      i1 = 1;
-      while(2) {
-         i2 = i1+i1;
-         if (i2 <= n) i22 = index[i2-1];
-         if (i2-n > 0) {index[i1-1] = i3; break;}
-         if (i2-n < 0) {
-            i222 = index[i2];
-            if (a[i22-1] - a[i222-1] < 0) {
-                i2++;
-                i22 = i222;
-            }
-         }
-         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
-         index[i1-1] = i22;
-         i1 = i2;
-      }
-   }
-   for (i=0;i<n1;i++) index[i]--;
-   if (!down) return;
-   n2 = n1/2;
-   for (i=0;i<n2;i++) {
-      iswap         = index[i];
-      index[i]      = index[n1-i-1];
-      index[n1-i-1] = iswap;
-   }
+   SortImp(n1,a,index,down);
 }
 
 //_____________________________________________________________________________
@@ -2260,59 +2121,7 @@ void TMath::Sort(Int_t n1, const Long_t *a, Int_t *index, Bool_t down)
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
-   Int_t i22 = 0;
-   Long_t ai;
-   n = n1;
-   if (n <= 0) return;
-   if (n == 1) {index[0] = 0; return;}
-   for (i=0;i<n;i++) index[i] = i+1;
-   for (i1=2;i1<=n;i1++) {
-      i3 = i1;
-      i33 = index[i3-1];
-      ai  = a[i33-1];
-      while(1) {
-         i2 = i3/2;
-         if (i2 <= 0) break;
-         i22 = index[i2-1];
-         if (ai <= a[i22-1]) break;
-         index[i3-1] = i22;
-         i3 = i2;
-      }
-      index[i3-1] = i33;
-   }
-
-   while(1) {
-      i3 = index[n-1];
-      index[n-1] = index[0];
-      ai = a[i3-1];
-      n--;
-      if(n-1 < 0) {index[0] = i3; break;}
-      i1 = 1;
-      while(2) {
-         i2 = i1+i1;
-         if (i2 <= n) i22 = index[i2-1];
-         if (i2-n > 0) {index[i1-1] = i3; break;}
-         if (i2-n < 0) {
-            i222 = index[i2];
-            if (a[i22-1] - a[i222-1] < 0) {
-                i2++;
-                i22 = i222;
-            }
-         }
-         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
-         index[i1-1] = i22;
-         i1 = i2;
-      }
-   }
-   for (i=0;i<n1;i++) index[i]--;
-   if (!down) return;
-   n2 = n1/2;
-   for (i=0;i<n2;i++) {
-      iswap         = index[i];
-      index[i]      = index[n1-i-1];
-      index[n1-i-1] = iswap;
-   }
+   SortImp(n1,a,index,down);
 }
 
 //_____________________________________________________________________________
@@ -2326,59 +2135,7 @@ void TMath::Sort(Int_t n1, const Long64_t *a, Int_t *index, Bool_t down)
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   Int_t i,i1,n,i2,i3,i33,i222,iswap,n2;
-   Int_t i22 = 0;
-   Long_t ai;
-   n = n1;
-   if (n <= 0) return;
-   if (n == 1) {index[0] = 0; return;}
-   for (i=0;i<n;i++) index[i] = i+1;
-   for (i1=2;i1<=n;i1++) {
-      i3 = i1;
-      i33 = index[i3-1];
-      ai  = a[i33-1];
-      while(1) {
-         i2 = i3/2;
-         if (i2 <= 0) break;
-         i22 = index[i2-1];
-         if (ai <= a[i22-1]) break;
-         index[i3-1] = i22;
-         i3 = i2;
-      }
-      index[i3-1] = i33;
-   }
-
-   while(1) {
-      i3 = index[n-1];
-      index[n-1] = index[0];
-      ai = a[i3-1];
-      n--;
-      if(n-1 < 0) {index[0] = i3; break;}
-      i1 = 1;
-      while(2) {
-         i2 = i1+i1;
-         if (i2 <= n) i22 = index[i2-1];
-         if (i2-n > 0) {index[i1-1] = i3; break;}
-         if (i2-n < 0) {
-            i222 = index[i2];
-            if (a[i22-1] - a[i222-1] < 0) {
-                i2++;
-                i22 = i222;
-            }
-         }
-         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
-         index[i1-1] = i22;
-         i1 = i2;
-      }
-   }
-   for (i=0;i<n1;i++) index[i]--;
-   if (!down) return;
-   n2 = n1/2;
-   for (i=0;i<n2;i++) {
-      iswap         = index[i];
-      index[i]      = index[n1-i-1];
-      index[n1-i-1] = iswap;
-   }
+   SortImp(n1,a,index,down);
 }
 
 //_____________________________________________________________________________
@@ -2392,59 +2149,7 @@ void TMath::Sort(Long64_t n1, const Long64_t *a, Long64_t *index, Bool_t down)
    // NOTE that the array index must be created with a length >= n1
    // before calling this function.
 
-   Long64_t i,i1,n,i2,i3,i33,i222,iswap,n2;
-   Long64_t i22 = 0;
-   Long64_t ai;
-   n = n1;
-   if (n <= 0) return;
-   if (n == 1) {index[0] = 0; return;}
-   for (i=0;i<n;i++) index[i] = i+1;
-   for (i1=2;i1<=n;i1++) {
-      i3 = i1;
-      i33 = index[i3-1];
-      ai  = a[i33-1];
-      while(1) {
-         i2 = i3/2;
-         if (i2 <= 0) break;
-         i22 = index[i2-1];
-         if (ai <= a[i22-1]) break;
-         index[i3-1] = i22;
-         i3 = i2;
-      }
-      index[i3-1] = i33;
-   }
-
-   while(1) {
-      i3 = index[n-1];
-      index[n-1] = index[0];
-      ai = a[i3-1];
-      n--;
-      if(n-1 < 0) {index[0] = i3; break;}
-      i1 = 1;
-      while(2) {
-         i2 = i1+i1;
-         if (i2 <= n) i22 = index[i2-1];
-         if (i2-n > 0) {index[i1-1] = i3; break;}
-         if (i2-n < 0) {
-            i222 = index[i2];
-            if (a[i22-1] - a[i222-1] < 0) {
-                i2++;
-                i22 = i222;
-            }
-         }
-         if (ai - a[i22-1] > 0) {index[i1-1] = i3; break;}
-         index[i1-1] = i22;
-         i1 = i2;
-      }
-   }
-   for (i=0;i<n1;i++) index[i]--;
-   if (!down) return;
-   n2 = n1/2;
-   for (i=0;i<n2;i++) {
-      iswap         = index[i];
-      index[i]      = index[n1-i-1];
-      index[n1-i-1] = iswap;
-   }
+   SortImp(n1,a,index,down);
 }
 
 

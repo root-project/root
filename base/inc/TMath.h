@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.43 2004/06/19 13:38:56 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.44 2004/07/05 17:51:12 brun Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -261,6 +261,7 @@ public:
    static Bool_t IsInside(Int_t xp, Int_t yp, Int_t np, Int_t *x, Int_t *y);
 
    // Sorting
+   template <class Element, class Index> static void SortImp(Index n, const Element*, Index* index, Bool_t down=kTRUE);
    static void Sort(Int_t n, const Short_t *a,  Int_t *index, Bool_t down=kTRUE);
    static void Sort(Int_t n, const Int_t *a,    Int_t *index, Bool_t down=kTRUE);
    static void Sort(Int_t n, const Float_t *a,  Int_t *index, Bool_t down=kTRUE);
