@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooRealIntegral.cc,v 1.64 2002/09/05 04:33:52 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -56,7 +56,8 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   _facList("facList","Variables independent of function",this,kFALSE,kTRUE),
   _numIntEngine(0), _numIntegrand(0), _operMode(Hybrid), _valid(kTRUE), _iconfig((RooIntegratorConfig*)config),
   _facListIter(_facList.createIterator()),
-  _jacListIter(_jacList.createIterator())
+  _jacListIter(_jacList.createIterator()),
+  _restartNumIntEngine(kFALSE)
 {
   // Constructor - Performs structural analysis of the integrand
 
@@ -441,7 +442,7 @@ Bool_t RooRealIntegral::initNumIntegrator() const
 
   // if we already have an engine, check if it still works for the present limits.
   if(0 != _numIntEngine) {
-    if(_numIntEngine->isValid() && _numIntEngine->checkLimits()) return kTRUE;
+    if(_numIntEngine->isValid() && _numIntEngine->checkLimits() && !_restartNumIntEngine ) return kTRUE;
     // otherwise, cleanup the old engine
     delete _numIntEngine ;
     _numIntEngine= 0;
@@ -512,7 +513,8 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _operMode(other._operMode), _numIntEngine(0), _numIntegrand(0), _valid(other._valid),
   _iconfig(other._iconfig),
   _facListIter(_facList.createIterator()),
-  _jacListIter(_jacList.createIterator())
+  _jacListIter(_jacList.createIterator()),
+  _restartNumIntEngine(kFALSE)
 {
   // Copy constructor
  _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : 0 ;
@@ -706,6 +708,14 @@ Double_t RooRealIntegral::integrate() const
 //     }
     return _numIntEngine->integral() ;
   }
+}
+
+
+Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& newServerList, 
+					    Bool_t mustReplaceAll, Bool_t nameChange) 
+{
+  _restartNumIntEngine = kTRUE ;
+  return kFALSE ;
 }
 
 

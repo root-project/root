@@ -74,6 +74,10 @@ protected:
 				       const RooDataSet *prototype=0, Bool_t verbose= kFALSE) const ;
 
 
+  virtual void operModeHook() ;
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, 
+				     Bool_t mustReplaceAll, Bool_t nameChange) ;
+
   mutable RooAICRegistry _codeReg ;  // Registry of component analytical integration codes
 
   RooListProxy _pdfList ;   //  List of component PDFs

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooNormManager.rdl,v 1.3 2002/09/05 04:33:46 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -39,6 +39,9 @@ public:
   inline RooAbsReal* lastNorm() const { return _lastNorm ; } 
   inline RooArgSet* lastNormSet() const { return _lastNormSet ; } 
   inline RooNameSet& lastNameSet() const { return *_lastNameSet ; } 
+
+  RooAbsArg* getNormByIndex(Int_t index) const ;
+  Int_t cacheSize() const { return _size ; }
 
 protected:
 

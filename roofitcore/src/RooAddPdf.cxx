@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAddPdf.cc,v 1.50 2002/09/05 04:33:12 verkerke Exp $
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -288,9 +288,9 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset) c
   RooArgSet* iset2 = iset ? getDependents(iset) : new RooArgSet() ;
 
   projList = new RooListProxy("projList","Coefficient projection list",(RooAbsArg*)this,kFALSE,kFALSE) ;
-  
+
   // Check if requested transformation is not identity 
-  if (!nset2->equals(_refCoefNorm) && nset2->getSize()>0) {
+  if (!nset2->equals(_refCoefNorm)) {
 
     cout << "RooAddPdf::syncCoefProjList(" << GetName() << ") creating coefficient projection integrals" << endl ;
     cout << "  from current normalization: "  ; nset2->Print("1") ;
@@ -300,12 +300,30 @@ void RooAddPdf::syncCoefProjList(const RooArgSet* nset, const RooArgSet* iset) c
     _pdfIter->Reset() ;
     RooAbsPdf* pdf ;
     while(pdf=(RooAbsPdf*)_pdfIter->Next()) {
-      RooAbsReal* pdfProj1 = pdf->createIntegral(*nset2) ;
-      RooAbsReal* pdfProj2 = pdf->createIntegral(_refCoefNorm) ;
-      pdfProj1->setOperMode(operMode()) ;
-      pdfProj2->setOperMode(operMode()) ;
-      projList->addOwned(*pdfProj1) ;
-      projList->addOwned(*pdfProj2) ;      
+
+      // Calculate projection integral
+      RooAbsReal* pdfProj = pdf->createIntegral(*nset2,_refCoefNorm) ;
+      pdfProj->setOperMode(operMode()) ;
+      projList->addOwned(*pdfProj) ;
+
+      // Calculation optional supplemental normalization term
+      RooArgSet supNormSet(_refCoefNorm) ;
+      RooArgSet* deps = pdf->getParameters(RooArgSet()) ;
+      supNormSet.remove(*deps,kTRUE,kTRUE) ;
+      delete deps ;
+
+      RooAbsReal* snorm ;
+      TString name(GetName()) ;
+      name.Append("_") ;
+      name.Append(pdf->GetName()) ;
+      name.Append("_ProjSupNorm") ;
+      if (supNormSet.getSize()>0) {
+	snorm = new RooRealIntegral(name,"Projection Supplemental normalization integral",
+				    RooRealConstant::value(1.0),supNormSet) ;
+      } else {
+	snorm = new RooRealVar(name,"Unit Projection Supplemental normalization integral",1.0) ;
+      }
+      projList->addOwned(*snorm) ;
     }           
   }
 
@@ -386,6 +404,8 @@ void RooAddPdf::syncSuppNormList(const RooArgSet* nset) const
 
 void RooAddPdf::updateCoefCache(const RooArgSet* nset) const
 {
+  syncSuppNormList(nset) ;
+
   Int_t i ;
 
   // Straight coefficients
@@ -443,15 +463,15 @@ void RooAddPdf::updateCoefCache(const RooArgSet* nset) const
   for (i=0 ; i<_pdfList.getSize() ; i++) {
     RooAbsPdf::globalSelectComp(kTRUE) ;    
 
-    RooAbsReal* pp1 = ((RooAbsReal*)_pdfProjList->at(2*i)) ; 
-    RooAbsReal* pp2 = ((RooAbsReal*)_pdfProjList->at(2*i+1)) ; 
-    Double_t proj1 = pp1->getVal() ;    
-    Double_t proj2 = pp2->getVal() ;    
-//     cout << "RooAddPdf::updateCoefCache:: coef[" << i << "] proj1 = " << proj1 << " (" << pp1->GetName() << ")" << endl ;
-//     cout << "                                               proj2 = " << proj2 << " (" << pp2->GetName() << ")" << endl ;
+    RooAbsReal* pp = ((RooAbsReal*)_pdfProjList->at(2*i)) ; 
+    RooAbsReal* sn = ((RooAbsReal*)_pdfProjList->at(2*i+1)) ; 
+    Double_t proj = pp->getVal()/sn->getVal() ;    
     
     RooAbsPdf::globalSelectComp(kFALSE) ;
-    _coefCache[i] *= (proj1/proj2) ;
+
+//     cout << "RooAddPdf::updateCoefCache:: coef[" << i << "]proj = " << proj << " (" << pp->GetName() << ")" << endl ;
+
+    _coefCache[i] *= proj ;
     coefSum += _coefCache[i] ;
   }
   for (i=0 ; i<_pdfList.getSize() ; i++) {
@@ -487,10 +507,13 @@ Double_t RooAddPdf::evaluate() const
     if (_coefCache[i]!=0.) {
       snormVal = nset ? ((RooAbsReal*)_snormList->at(i))->getVal() : 1.0 ;
       Double_t pdfVal = pdf->getVal(nset) ;
+      Double_t pdfNorm = pdf->getNorm(nset) ;
       if (pdf->isSelectedComp()) {
 	value += pdfVal*_coefCache[i]/snormVal ;
-//    	cout << "RAP::e(" << GetName() << ") v += [" 
-//    	     << pdf->GetName() << "] " << pdfVal << " * " << _coefCache[i] << " / " << snormVal << endl ;
+	if (_verboseEval<0) {
+// 	  cout << "RAP::e(" << GetName() << ") v += [" 
+// 	       << pdf->GetName() << "] " << pdfVal << " [N= " << pdfNorm << "] * " << _coefCache[i] << " / " << snormVal << endl ;
+	}
       }
     }
     i++ ;
@@ -647,7 +670,9 @@ Double_t RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet) c
       Double_t val = pdf->analyticalIntegralWN(subCode[i],normSet) ;
       if (pdf->isSelectedComp()) {
 	value += val*_coefCache[i]/snormVal ;
-// 	cout << "RAP::aI: value += " << val << " * " << _coefCache[i] << " / " << snormVal << endl ;
+	if (_verboseEval<0) {
+// 	  cout << "RAP::aI: value += " << val << " * " << _coefCache[i] << " / " << snormVal << endl ;
+	}
       }
     }
     i++ ;
@@ -693,7 +718,10 @@ Double_t RooAddPdf::expectedEvents() const
 void RooAddPdf::selectNormalization(const RooArgSet* depSet, Bool_t force) 
 {
   // Ignore automatic adjustments if an explicit reference normalization has been selected
-  if (!force && _refCoefNorm.getSize()!=0) return ;
+
+  if (!force && _refCoefNorm.getSize()!=0) {
+    return ;
+  }
 
   if (!depSet) {
     fixCoefNormalization(RooArgSet()) ;
@@ -711,4 +739,40 @@ RooAbsGenContext* RooAddPdf::genContext(const RooArgSet &vars, const RooDataSet 
 {
   return new RooAddGenContext(*this,vars,prototype,verbose) ;
 }
+
+
+Bool_t RooAddPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange) 
+{
+  Bool_t ret(kFALSE) ;  
+
+  Int_t i ;
+  for (i=0 ; i<_projListMgr.cacheSize() ; i++) {
+    RooArgList* plist = _projListMgr.getNormListByIndex(i) ;
+    TIterator* iter = plist->createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      ret |= arg->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+    }
+    delete iter ;
+  }
+  return ret ;
+}
+
+
+void RooAddPdf::operModeHook() 
+{
+  Int_t i ;
+  for (i=0 ; i<_projListMgr.cacheSize() ; i++) {
+    RooArgList* plist = _projListMgr.getNormListByIndex(i) ;
+    TIterator* iter = plist->createIterator() ;
+    RooAbsArg* arg ;
+    while(arg=(RooAbsArg*)iter->Next()) {
+      arg->setOperMode(_operMode) ;
+    }
+    delete iter ;
+  }
+  return ;
+}
+
+
 

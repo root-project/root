@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooNormManager.cc,v 1.4 2002/09/05 04:33:45 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -80,6 +80,16 @@ RooNormManager::~RooNormManager()
   delete[] _norm ;
 }
   
+
+RooAbsArg* RooNormManager::getNormByIndex(Int_t index) const 
+{
+  if (index<0||index>=_size) {
+    cout << "RooNormManager::getNormByIndex: ERROR index (" 
+	 << index << ") out of range [0," << _size-1 << "]" << endl ;
+    return 0 ;
+  }
+  return _norm[index] ;
+}
 
 
 void RooNormManager::setNormalization(const RooAbsArg* self, const RooArgSet* nset, const RooArgSet* iset, RooAbsReal* norm) 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.86 2002/09/05 04:33:08 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.87 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -966,7 +966,11 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, Option_t* drawOptions,
       projDataNeededVars->Print("1") ;
     }
 
-    projectionCompList->find(GetName())->attachDataSet(*projDataSel) ;
+
+
+    // Attach dataset
+    projection->getVal(projDataSel->get()) ;
+    projection->attachDataSet(*projDataSel) ;
 
     RooDataProjBinding projBind(*projection,*projDataSel,*plotVar) ;
     RooScaledFunc scaleBind(projBind,scaleFactor);

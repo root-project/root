@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.rdl,v 1.63 2002/09/05 04:33:08 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.64 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -190,6 +190,8 @@ protected:
 				    const RooAbsData* projData=0, const RooArgSet* projSet=0) const ;
 
   virtual void operModeHook() ;
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, 
+				     Bool_t mustReplaceAll, Bool_t nameChange) ;
 
   friend class RooConvolutedPdf ;
   mutable Double_t _rawValue ;

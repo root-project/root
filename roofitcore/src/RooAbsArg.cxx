@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsArg.cc,v 1.74 2002/09/05 04:33:01 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.75 2002/09/06 22:41:29 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -797,6 +797,15 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
 
 Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange) 
 {
+  // Cyclic recursion protection
+  static RooLinkedList callStack ;
+  if (callStack.FindObject(this)) {
+    return kFALSE ;
+  } else {
+    callStack.Add(this) ;
+  }
+  
+  
   // Apply the redirectServers function recursively on all branch nodes in this argument tree.
   Bool_t ret(kFALSE) ;
   
@@ -811,6 +820,7 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_
   }
   delete sIter ;
 
+  callStack.Remove(this) ;
   return ret ;
 }
 

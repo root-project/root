@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsPdf.cc,v 1.75 2002/09/05 04:33:07 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.76 2002/09/17 06:39:34 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -1194,8 +1194,8 @@ RooPlot* RooAbsPdf::plotCompOnEngine(RooPlot *frame, RooArgSet* selNodes, Option
   tmp.remove(*selNodes,kTRUE) ;
   tmp.remove(*this) ;
   selNodes->add(tmp) ;
-  cout << "RooAbsPdf::plotCompOn(" << GetName() << ") indirectly selected PDF components: " ;
-  tmp.Print("1") ;
+//   cout << "RooAbsPdf::plotCompOn(" << GetName() << ") indirectly selected PDF components: " ;
+//   tmp.Print("1") ;
 
   // Set PDF selection bits according to selNodes
   iter->Reset() ;
@@ -1380,4 +1380,18 @@ RooPlot* RooAbsPdf::plotNLLOn(RooPlot* frame, RooDataSet* data, Bool_t extended,
   }
 
   return frame ;
+}
+
+
+Bool_t RooAbsPdf::redirectServersHook(const RooAbsCollection& newServerList, 
+				      Bool_t mustReplaceAll, Bool_t nameChange) 
+{
+  Bool_t ret(kFALSE) ;  
+
+  Int_t i ;
+  for (i=0 ; i<_normMgr.cacheSize() ; i++) {
+    RooAbsArg* norm = _normMgr.getNormByIndex(i) ;
+    ret |= norm->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange) ;
+  }
+  return ret ;
 }

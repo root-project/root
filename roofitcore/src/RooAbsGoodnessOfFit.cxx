@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.3 2002/09/05 04:33:05 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -164,6 +164,7 @@ Double_t RooAbsGoodnessOfFit::evaluate() const
     Int_t nFirst = _nEvents * _setNum / _numSets ;
     Int_t nLast = _nEvents * (_setNum+1) / _numSets ;
     Double_t ret =  evaluatePartition(nFirst,nLast) ;
+    return ret ;
 
   }
 }

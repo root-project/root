@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooRealIntegral.rdl,v 1.32 2002/09/05 04:33:53 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -62,6 +62,10 @@ protected:
   virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ;
   Bool_t servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches) const ;
 
+
+  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, 
+				     Bool_t mustReplaceAll, Bool_t nameChange) ;
+
   // Function pointer and integrands list
   mutable RooSetProxy _sumList ;
   mutable RooSetProxy _intList ;
@@ -82,6 +86,7 @@ protected:
   Int_t _mode ;
   OperMode _operMode ;
 
+  mutable Bool_t _restartNumIntEngine ; //! do not persist
   mutable RooAbsIntegrator* _numIntEngine ;  //! do not persist
   mutable RooAbsFunc *_numIntegrand;         //! do not persist
 

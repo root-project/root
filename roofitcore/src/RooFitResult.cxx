@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooFitResult.cc,v 1.19 2002/09/05 04:33:26 verkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -337,10 +337,10 @@ void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) c
      << "  RooFitResult: minimized FCN value: " << _minNLL << ", estimated distance to minimum: " << _edm << endl
      << "                coviarance matrix quality: " ;
   switch(_covQual) {
-  case 0: os << "Not calculated at all" ;
-  case 1: os << "Approximation only, not accurate" ;
-  case 2: os << "Full matrix, but forced positive-definite" ;
-  case 3: os << "Full, accurate covariance matrix" ;  
+  case 0: os << "Not calculated at all" ; break ;
+  case 1: os << "Approximation only, not accurate" ; break ;
+  case 2: os << "Full matrix, but forced positive-definite" ; break ;
+  case 3: os << "Full, accurate covariance matrix" ; break ;
   }
   os << endl 
      << endl ;
