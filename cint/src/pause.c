@@ -3474,8 +3474,13 @@ G__value *rslt;
 	  case '}':
 	    if((single_quote==0)&&(double_quote==0)) temp--;
 	    break;
+#ifndef G__OLDIMPLEMENTATION1679
+	  case '\\':
+	    ++temp1;
+	    break;
+#endif
 	  }
-	  temp1++;
+	  ++temp1;
 	}
 	if (temp>0) {
 	  fprintf(ftemp.fp,"%s\n",com);

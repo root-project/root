@@ -4858,13 +4858,13 @@ unsigned int bestmatch;
 * If match found, expand template, parse as pre-run 
 ***********************************************************************/
 struct G__funclist* G__add_templatefunc(funcnamein,libp,hash,funclist
-					,p_ifunc,recursive)
+					,p_ifunc,isrecursive)
 char *funcnamein;
 struct G__param *libp;
 int hash;
 struct G__funclist *funclist;
 struct G__ifunc_table *p_ifunc; 
-int recursive;
+int isrecursive;
 {
   struct G__Definetemplatefunc *deftmpfunc;
   struct G__Charlist call_para;
@@ -4988,7 +4988,7 @@ int recursive;
 	    funclist->rate = G__NOMATCH;
 	  }
 	  else {
-	    G__rate_parameter_match(libp,ifunc,ifn,funclist,recursive);
+	    G__rate_parameter_match(libp,ifunc,ifn,funclist,isrecursive);
 	  }
 	}
       }
@@ -5009,13 +5009,13 @@ int recursive;
 /***********************************************************************
 * G__rate_binary_operator()
 **********************************************************************/
-struct G__funclist* G__rate_binary_operator(libp,tagnum,funcname,hash,funclist,recursive)
+struct G__funclist* G__rate_binary_operator(libp,tagnum,funcname,hash,funclist,isrecursive)
 struct G__param *libp;
 int tagnum;
 char* funcname;
 int hash;
 struct G__funclist *funclist;
-int recursive;
+int isrecursive;
 {
   int i;
   struct G__param fpara;
@@ -5047,13 +5047,13 @@ int recursive;
 	   || (G__isconst && 0==p_ifunc->isconst[ifn])
 #endif
 #ifndef G__OLDIMPLEMENTATION1315
-	   || (recursive && p_ifunc->isexplicit[ifn])
+	   || (isrecursive && p_ifunc->isexplicit[ifn])
 #endif
 	   ) {
 	}
 	else {
 	  funclist = G__funclist_add(funclist,p_ifunc,ifn,0);
-	  G__rate_parameter_match(&fpara,p_ifunc,ifn,funclist,recursive);
+	  G__rate_parameter_match(&fpara,p_ifunc,ifn,funclist,isrecursive);
 	  funclist->ifunc = 0; /* added as dummy */
 	}
       }
@@ -5109,7 +5109,7 @@ struct G__ifunc_table* G__overload_match(funcname
 					 ,memfunc_flag
 					 ,access
 					 ,pifn
-					 ,recursive)
+					 ,isrecursive)
 char* funcname;
 struct G__param *libp;
 int hash;
@@ -5117,7 +5117,7 @@ struct G__ifunc_table *p_ifunc;
 int memfunc_flag;
 int access;
 int *pifn;
-int recursive;
+int isrecursive;
 {
   struct G__funclist *funclist = (struct G__funclist*)NULL;
   struct G__funclist *match = (struct G__funclist*)NULL;
@@ -5158,13 +5158,13 @@ int recursive;
 	   || (G__isconst && 0==p_ifunc->isconst[ifn])
 #endif
 #ifndef G__OLDIMPLEMENTATION1315
-	   || (recursive && p_ifunc->isexplicit[ifn])
+	   || (isrecursive && p_ifunc->isexplicit[ifn])
 #endif
 	   ) {
 	  funclist->rate = G__NOMATCH;
 	}
 	else {
-	  G__rate_parameter_match(libp,p_ifunc,ifn,funclist,recursive);
+	  G__rate_parameter_match(libp,p_ifunc,ifn,funclist,isrecursive);
 	}
 	if(G__EXACTMATCH==(funclist->rate&0xffffff00)) match = funclist;
       }
@@ -5177,13 +5177,13 @@ int recursive;
    *    rate parameter match */
   if(!match) {
     funclist =  G__add_templatefunc(funcname,libp,hash,funclist
-				    ,store_ifunc,recursive);
+				    ,store_ifunc,isrecursive);
   }
 
 #ifndef G__OLDIMPLEMENTATION1427
   if(!match && (G__TRYUNARYOPR==memfunc_flag||G__TRYBINARYOPR==memfunc_flag)) {
     funclist = G__rate_binary_operator(libp,G__tagnum,funcname,hash
-				       ,funclist,recursive);
+				       ,funclist,isrecursive);
   }
 #endif
 
@@ -5238,7 +5238,7 @@ int recursive;
 
   if(ambiguous && G__EXACTMATCH!=bestmatch 
 #ifndef G__OLDIMPLEMENTATION1363
-     && !recursive
+     && !isrecursive
 #endif
      ) {
     /* error, ambiguous overloading resolution */

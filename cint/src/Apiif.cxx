@@ -210,8 +210,18 @@ static int G__G__MethodInfo_FilePosition_6_2(G__value *result7,G__CONST char *fu
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+static int G__G__MethodInfo_GetPrototype_7_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+      G__letint(result7,67,(long)((G__MethodInfo*)(G__getstructoffset()))->GetPrototype());
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+static int G__G__MethodInfo_GetMangledName_8_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+      G__letint(result7,67,(long)((G__MethodInfo*)(G__getstructoffset()))->GetMangledName());
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
 // automatic copy constructor
-static int G__G__MethodInfo_G__MethodInfo_7_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
+static int G__G__MethodInfo_G__MethodInfo_9_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash)
 {
    G__MethodInfo *p;
    p=new G__MethodInfo(*(G__MethodInfo*)G__int(libp->para[0]));
@@ -224,7 +234,7 @@ static int G__G__MethodInfo_G__MethodInfo_7_2(G__value *result7,G__CONST char *f
 
 // automatic destructor
 typedef G__MethodInfo G__TG__MethodInfo;
-static int G__G__MethodInfo_wAG__MethodInfo_8_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+static int G__G__MethodInfo_wAG__MethodInfo_0_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
    if(0==G__getstructoffset()) return(1);
    if(G__getaryconstruct())
      if(G__PVOID==G__getgvp())
@@ -240,6 +250,13 @@ static int G__G__MethodInfo_wAG__MethodInfo_8_2(G__value *result7,G__CONST char 
      G__operator_delete((void*)G__getstructoffset());
    }
       G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+// automatic assignment operator
+static int G__G__MethodInfo_operatoreQ_1_3(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   const G__MethodInfo& obj=((G__MethodInfo *)(G__getstructoffset()))->operator=(*(G__MethodInfo*)libp->para[0].ref);
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -406,6 +423,13 @@ static int G__G__DataMemberInfo_wAG__DataMemberInfo_3_2(G__value *result7,G__CON
      G__operator_delete((void*)G__getstructoffset());
    }
       G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+// automatic assignment operator
+static int G__G__DataMemberInfo_operatoreQ_4_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   const G__DataMemberInfo& obj=((G__DataMemberInfo *)(G__getstructoffset()))->operator=(*(G__DataMemberInfo*)libp->para[0].ref);
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -866,6 +890,13 @@ static int G__G__ClassInfo_wAG__ClassInfo_1_6(G__value *result7,G__CONST char *f
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+// automatic assignment operator
+static int G__G__ClassInfo_operatoreQ_2_6(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   const G__ClassInfo& obj=((G__ClassInfo *)(G__getstructoffset()))->operator=(*(G__ClassInfo*)libp->para[0].ref);
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
 
 /* G__BaseClassInfo */
 static int G__G__BaseClassInfo_G__BaseClassInfo_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
@@ -934,6 +965,13 @@ static int G__G__BaseClassInfo_wAG__BaseClassInfo_8_0(G__value *result7,G__CONST
      G__operator_delete((void*)G__getstructoffset());
    }
       G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+// automatic assignment operator
+static int G__G__BaseClassInfo_operatoreQ_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   const G__BaseClassInfo& obj=((G__BaseClassInfo *)(G__getstructoffset()))->operator=(*(G__BaseClassInfo*)libp->para[0].ref);
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -1049,6 +1087,13 @@ static int G__G__TypeInfo_wAG__TypeInfo_6_1(G__value *result7,G__CONST char *fun
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+// automatic assignment operator
+static int G__G__TypeInfo_operatoreQ_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   const G__TypeInfo& obj=((G__TypeInfo *)(G__getstructoffset()))->operator=(*(G__TypeInfo*)libp->para[0].ref);
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
 
 /* G__MethodArgInfo */
 static int G__G__MethodArgInfo_Init_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
@@ -1143,6 +1188,13 @@ static int G__G__MethodArgInfo_wAG__MethodArgInfo_2_1(G__value *result7,G__CONST
      G__operator_delete((void*)G__getstructoffset());
    }
       G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+// automatic assignment operator
+static int G__G__MethodArgInfo_operatoreQ_3_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   const G__MethodArgInfo& obj=((G__MethodArgInfo *)(G__getstructoffset()))->operator=(*(G__MethodArgInfo*)libp->para[0].ref);
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -1290,6 +1342,13 @@ static int G__G__CallFunc_wAG__CallFunc_0_2(G__value *result7,G__CONST char *fun
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+// automatic assignment operator
+static int G__G__CallFunc_operatoreQ_1_2(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   const G__CallFunc& obj=((G__CallFunc *)(G__getstructoffset()))->operator=(*(G__CallFunc*)libp->para[0].ref);
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
 
 /* G__TypedefInfo */
 static int G__G__TypedefInfo_G__TypedefInfo_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
@@ -1420,6 +1479,13 @@ static int G__G__TypedefInfo_wAG__TypedefInfo_6_1(G__value *result7,G__CONST cha
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+// automatic assignment operator
+static int G__G__TypedefInfo_operatoreQ_7_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   const G__TypedefInfo& obj=((G__TypedefInfo *)(G__getstructoffset()))->operator=(*(G__TypedefInfo*)libp->para[0].ref);
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
 
 /* G__TokenInfo */
 static int G__G__TokenInfo_G__TokenInfo_1_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
@@ -1497,6 +1563,13 @@ static int G__G__TokenInfo_wAG__TokenInfo_4_1(G__value *result7,G__CONST char *f
      G__operator_delete((void*)G__getstructoffset());
    }
       G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+// automatic assignment operator
+static int G__G__TokenInfo_operatoreQ_5_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   const G__TokenInfo& obj=((G__TokenInfo *)(G__getstructoffset()))->operator=(*(G__TokenInfo*)libp->para[0].ref);
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -1621,6 +1694,13 @@ static int G__G__SourceFileInfo_wAG__SourceFileInfo_5_1(G__value *result7,G__CON
    return(1 || funcname || hash || result7 || libp) ;
 }
 
+// automatic assignment operator
+static int G__G__SourceFileInfo_operatoreQ_6_1(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   const G__SourceFileInfo& obj=((G__SourceFileInfo *)(G__getstructoffset()))->operator=(*(G__SourceFileInfo*)libp->para[0].ref);
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
 
 /* G__IncludePathInfo */
 static int G__G__IncludePathInfo_G__IncludePathInfo_0_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
@@ -1690,6 +1770,13 @@ static int G__G__IncludePathInfo_wAG__IncludePathInfo_8_0(G__value *result7,G__C
      G__operator_delete((void*)G__getstructoffset());
    }
       G__setnull(result7);
+   return(1 || funcname || hash || result7 || libp) ;
+}
+
+// automatic assignment operator
+static int G__G__IncludePathInfo_operatoreQ_9_0(G__value *result7,G__CONST char *funcname,struct G__param *libp,int hash) {
+   const G__IncludePathInfo& obj=((G__IncludePathInfo *)(G__getstructoffset()))->operator=(*(G__IncludePathInfo*)libp->para[0].ref);
+   result7->ref=(long)(&obj); result7->obj.i=(long)(&obj);
    return(1 || funcname || hash || result7 || libp) ;
 }
 
@@ -2013,10 +2100,14 @@ static void G__setup_memfuncG__MethodInfo(void) {
    G__memfunc_setup("IsBusy",607,G__G__MethodInfo_IsBusy_4_2,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("FilePointer",1121,G__G__MethodInfo_FilePointer_5_2,69,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("FilePosition",1237,G__G__MethodInfo_FilePosition_6_2,108,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("GetPrototype",1270,G__G__MethodInfo_GetPrototype_7_2,67,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("GetMangledName",1369,G__G__MethodInfo_GetMangledName_8_2,67,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__MethodInfo",1266,G__G__MethodInfo_G__MethodInfo_7_2,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__MethodInfo),-1,0,1,1,1,0,"u 'G__MethodInfo' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__MethodInfo",1266,G__G__MethodInfo_G__MethodInfo_9_2,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__MethodInfo),-1,0,1,1,1,0,"u 'G__MethodInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
-   G__memfunc_setup("~G__MethodInfo",1392,G__G__MethodInfo_wAG__MethodInfo_8_2,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("~G__MethodInfo",1392,G__G__MethodInfo_wAG__MethodInfo_0_3,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__G__MethodInfo_operatoreQ_1_3,(int)('u'),G__get_linked_tagnum(&G__G__APILN_G__MethodInfo),-1,1,1,1,1,0,"u 'G__MethodInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2048,9 +2139,11 @@ static void G__setup_memfuncG__DataMemberInfo(void) {
    G__memfunc_setup("FileName",769,G__G__DataMemberInfo_FileName_0_2,67,-1,-1,0,0,1,1,1,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("LineNumber",1009,G__G__DataMemberInfo_LineNumber_1_2,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__DataMemberInfo",1635,G__G__DataMemberInfo_G__DataMemberInfo_2_2,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__DataMemberInfo),-1,0,1,1,1,0,"u 'G__DataMemberInfo' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__DataMemberInfo",1635,G__G__DataMemberInfo_G__DataMemberInfo_2_2,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__DataMemberInfo),-1,0,1,1,1,0,"u 'G__DataMemberInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~G__DataMemberInfo",1761,G__G__DataMemberInfo_wAG__DataMemberInfo_3_2,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__G__DataMemberInfo_operatoreQ_4_2,(int)('u'),G__get_linked_tagnum(&G__G__APILN_G__DataMemberInfo),-1,1,1,1,1,0,"u 'G__DataMemberInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2064,7 +2157,7 @@ static void G__setup_memfuncG__FriendInfo(void) {
    G__memfunc_setup("Next",415,G__G__FriendInfo_Next_4_0,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("IsValid",684,G__G__FriendInfo_IsValid_5_0,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__FriendInfo",1257,G__G__FriendInfo_G__FriendInfo_6_0,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__FriendInfo),-1,0,1,1,1,0,"u 'G__FriendInfo' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__FriendInfo",1257,G__G__FriendInfo_G__FriendInfo_6_0,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__FriendInfo),-1,0,1,1,1,0,"u 'G__FriendInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~G__FriendInfo",1383,G__G__FriendInfo_wAG__FriendInfo_7_0,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
@@ -2137,9 +2230,11 @@ static void G__setup_memfuncG__ClassInfo(void) {
    G__memfunc_setup("HasDataMember",1262,G__G__ClassInfo_HasDataMember_7_5,105,-1,-1,0,1,1,1,0,"C - - 10 - name",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("ClassProperty",1371,G__G__ClassInfo_ClassProperty_9_5,108,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__ClassInfo",1159,G__G__ClassInfo_G__ClassInfo_0_6,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__ClassInfo),-1,0,1,1,1,0,"u 'G__ClassInfo' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__ClassInfo",1159,G__G__ClassInfo_G__ClassInfo_0_6,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__ClassInfo),-1,0,1,1,1,0,"u 'G__ClassInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~G__ClassInfo",1285,G__G__ClassInfo_wAG__ClassInfo_1_6,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__G__ClassInfo_operatoreQ_2_6,(int)('u'),G__get_linked_tagnum(&G__G__APILN_G__ClassInfo),-1,1,1,1,1,0,"u 'G__ClassInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2153,9 +2248,11 @@ static void G__setup_memfuncG__BaseClassInfo(void) {
    G__memfunc_setup("IsValid",684,G__G__BaseClassInfo_IsValid_5_0,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("Next",415,G__G__BaseClassInfo_Next_6_0,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__BaseClassInfo",1538,G__G__BaseClassInfo_G__BaseClassInfo_7_0,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__BaseClassInfo),-1,0,1,1,1,0,"u 'G__BaseClassInfo' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__BaseClassInfo",1538,G__G__BaseClassInfo_G__BaseClassInfo_7_0,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__BaseClassInfo),-1,0,1,1,1,0,"u 'G__BaseClassInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~G__BaseClassInfo",1664,G__G__BaseClassInfo_wAG__BaseClassInfo_8_0,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__G__BaseClassInfo_operatoreQ_9_0,(int)('u'),G__get_linked_tagnum(&G__G__APILN_G__BaseClassInfo),-1,1,1,1,1,0,"u 'G__BaseClassInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2176,9 +2273,11 @@ static void G__setup_memfuncG__TypeInfo(void) {
    G__memfunc_setup("Typenum",754,G__G__TypeInfo_Typenum_2_1,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("Type",418,G__G__TypeInfo_Type_3_1,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__TypeInfo",1075,G__G__TypeInfo_G__TypeInfo_5_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__TypeInfo),-1,0,1,1,1,0,"u 'G__TypeInfo' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__TypeInfo",1075,G__G__TypeInfo_G__TypeInfo_5_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__TypeInfo),-1,0,1,1,1,0,"u 'G__TypeInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~G__TypeInfo",1201,G__G__TypeInfo_wAG__TypeInfo_6_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__G__TypeInfo_operatoreQ_7_1,(int)('u'),G__get_linked_tagnum(&G__G__APILN_G__TypeInfo),-1,1,1,1,1,0,"u 'G__TypeInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2196,9 +2295,11 @@ static void G__setup_memfuncG__MethodArgInfo(void) {
    G__memfunc_setup("Next",415,G__G__MethodArgInfo_Next_9_0,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("G__MethodArgInfo",1548,G__G__MethodArgInfo_G__MethodArgInfo_0_1,105,G__get_linked_tagnum(&G__G__APILN_G__MethodArgInfo),-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__MethodArgInfo",1548,G__G__MethodArgInfo_G__MethodArgInfo_1_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__MethodArgInfo),-1,0,1,1,1,0,"u 'G__MethodArgInfo' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__MethodArgInfo",1548,G__G__MethodArgInfo_G__MethodArgInfo_1_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__MethodArgInfo),-1,0,1,1,1,0,"u 'G__MethodArgInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~G__MethodArgInfo",1674,G__G__MethodArgInfo_wAG__MethodArgInfo_2_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__G__MethodArgInfo_operatoreQ_3_1,(int)('u'),G__get_linked_tagnum(&G__G__APILN_G__MethodArgInfo),-1,1,1,1,1,0,"u 'G__MethodArgInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2227,9 +2328,11 @@ static void G__setup_memfuncG__CallFunc(void) {
    G__memfunc_setup("SetArgs",697,G__G__CallFunc_SetArgs_6_1,121,-1,-1,0,1,1,1,0,"C - - 10 - args",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("GetMethodInfo",1293,G__G__CallFunc_GetMethodInfo_7_1,117,G__get_linked_tagnum(&G__G__APILN_G__MethodInfo),-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__CallFunc",1037,G__G__CallFunc_G__CallFunc_9_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__CallFunc),-1,0,1,1,1,0,"u 'G__CallFunc' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__CallFunc",1037,G__G__CallFunc_G__CallFunc_9_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__CallFunc),-1,0,1,1,1,0,"u 'G__CallFunc' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~G__CallFunc",1163,G__G__CallFunc_wAG__CallFunc_0_2,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__G__CallFunc_operatoreQ_1_2,(int)('u'),G__get_linked_tagnum(&G__G__APILN_G__CallFunc),-1,1,1,1,1,0,"u 'G__CallFunc' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2251,9 +2354,11 @@ static void G__setup_memfuncG__TypedefInfo(void) {
    G__memfunc_setup("FileName",769,G__G__TypedefInfo_FileName_3_1,67,-1,-1,0,0,1,1,1,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("LineNumber",1009,G__G__TypedefInfo_LineNumber_4_1,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__TypedefInfo",1378,G__G__TypedefInfo_G__TypedefInfo_5_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__TypedefInfo),-1,0,1,1,1,0,"u 'G__TypedefInfo' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__TypedefInfo",1378,G__G__TypedefInfo_G__TypedefInfo_5_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__TypedefInfo),-1,0,1,1,1,0,"u 'G__TypedefInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~G__TypedefInfo",1504,G__G__TypedefInfo_wAG__TypedefInfo_6_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__G__TypedefInfo_operatoreQ_7_1,(int)('u'),G__get_linked_tagnum(&G__G__APILN_G__TypedefInfo),-1,1,1,1,1,0,"u 'G__TypedefInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2271,9 +2376,11 @@ static void G__setup_memfuncG__TokenInfo(void) {
 "C - - 10 - postopr",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("GetNextScope",1209,G__G__TokenInfo_GetNextScope_5_0,117,G__get_linked_tagnum(&G__G__APILN_G__ClassInfo),-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__TokenInfo",1170,G__G__TokenInfo_G__TokenInfo_3_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__TokenInfo),-1,0,1,1,1,0,"u 'G__TokenInfo' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__TokenInfo",1170,G__G__TokenInfo_G__TokenInfo_3_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__TokenInfo),-1,0,1,1,1,0,"u 'G__TokenInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~G__TokenInfo",1296,G__G__TokenInfo_wAG__TokenInfo_4_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__G__TokenInfo_operatoreQ_5_1,(int)('u'),G__get_linked_tagnum(&G__G__APILN_G__TokenInfo),-1,1,1,1,1,0,"u 'G__TokenInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2294,9 +2401,11 @@ static void G__setup_memfuncG__SourceFileInfo(void) {
    G__memfunc_setup("IsValid",684,G__G__SourceFileInfo_IsValid_2_1,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("Next",415,G__G__SourceFileInfo_Next_3_1,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__SourceFileInfo",1666,G__G__SourceFileInfo_G__SourceFileInfo_4_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__SourceFileInfo),-1,0,1,1,1,0,"u 'G__SourceFileInfo' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__SourceFileInfo",1666,G__G__SourceFileInfo_G__SourceFileInfo_4_1,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__SourceFileInfo),-1,0,1,1,1,0,"u 'G__SourceFileInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~G__SourceFileInfo",1792,G__G__SourceFileInfo_wAG__SourceFileInfo_5_1,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__G__SourceFileInfo_operatoreQ_6_1,(int)('u'),G__get_linked_tagnum(&G__G__APILN_G__SourceFileInfo),-1,1,1,1,1,0,"u 'G__SourceFileInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 
@@ -2310,9 +2419,11 @@ static void G__setup_memfuncG__IncludePathInfo(void) {
    G__memfunc_setup("IsValid",684,G__G__IncludePathInfo_IsValid_5_0,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    G__memfunc_setup("Next",415,G__G__IncludePathInfo_Next_6_0,105,-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
    // automatic copy constructor
-   G__memfunc_setup("G__IncludePathInfo",1762,G__G__IncludePathInfo_G__IncludePathInfo_7_0,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__IncludePathInfo),-1,0,1,1,1,0,"u 'G__IncludePathInfo' - 1 - -",(char*)NULL,(void*)NULL,0);
+   G__memfunc_setup("G__IncludePathInfo",1762,G__G__IncludePathInfo_G__IncludePathInfo_7_0,(int)('i'),G__get_linked_tagnum(&G__G__APILN_G__IncludePathInfo),-1,0,1,1,1,0,"u 'G__IncludePathInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    // automatic destructor
    G__memfunc_setup("~G__IncludePathInfo",1888,G__G__IncludePathInfo_wAG__IncludePathInfo_8_0,(int)('y'),-1,-1,0,0,1,1,0,"",(char*)NULL,(void*)NULL,0);
+   // automatic assignment operator
+   G__memfunc_setup("operator=",937,G__G__IncludePathInfo_operatoreQ_9_0,(int)('u'),G__get_linked_tagnum(&G__G__APILN_G__IncludePathInfo),-1,1,1,1,1,0,"u 'G__IncludePathInfo' - 11 - -",(char*)NULL,(void*)NULL,0);
    G__tag_memfunc_reset();
 }
 

@@ -934,6 +934,8 @@ int memfunc_flag;
   int store_cp_asm=0;
 #endif
 
+  /*DEBUG*/ /* fprintf(stderr,"%s %d %d\n",item,*known3,memfunc_flag); */
+
   store_exec_memberfunc = G__exec_memberfunc;
   store_memberfunc_tagnum = G__memberfunc_tagnum;
   store_memberfunc_struct_offset=G__memberfunc_struct_offset;
