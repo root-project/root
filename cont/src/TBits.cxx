@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.9 2002/12/02 18:50:02 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TBits.cxx,v 1.10 2003/02/08 21:31:48 brun Exp $
 // Author: Philippe Canal 05/02/2001
 //    Feb  5 2001: Creation
 //    Feb  6 2001: Changed all int to unsigned int.
@@ -58,6 +58,7 @@ TBits& TBits::operator=(const TBits& rhs)
       TObject::operator=(rhs);
       fNbits   = rhs.fNbits;
       fNbytes  = rhs.fNbytes;
+      delete [] fAllBits;
       fAllBits = new UChar_t[fNbytes];
       memcpy(fAllBits,rhs.fAllBits,fNbytes);
    }
