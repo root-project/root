@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.16 2002/03/29 18:02:47 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.h,v 1.17 2002/05/30 13:20:42 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -57,6 +57,7 @@ public:
    static Double_t Ceil(Double_t x);
    static Double_t Floor(Double_t x);
    static Double_t Exp(Double_t);
+   static Double_t Factorial(Int_t);
    static Double_t Power(Double_t x, Double_t y);
    static Double_t Log(Double_t x);
    static Double_t Log2(Double_t x);

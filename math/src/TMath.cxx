@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.21 2002/05/30 15:56:29 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.22 2002/05/30 21:06:56 rdm Exp $
 // Author: Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -233,6 +233,21 @@ Double_t TMath::Erfc(Double_t x)
    if (x < 0) v = 2-v; // erfc(-x)=2-erfc(x)
 
    return v;
+}
+
+//______________________________________________________________________________
+Double_t TMath::Factorial(Int_t n)
+{
+   // Compute factorial(n)
+   
+  if(n <= 0) return 1.;
+  Double_t x=1;
+  Int_t b=0;
+  do {
+     b++;
+     x *= b;
+  } while(b!=n);
+  return x;
 }
 
 //______________________________________________________________________________
