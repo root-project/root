@@ -2608,7 +2608,7 @@ fi
 #
 # List the possible Makefiles
 #
-if [ "x$nohowto" == "xyes" ]; then
+if test "x$nohowto" = "xyes" ; then
     exit 0
 fi
 
