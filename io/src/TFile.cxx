@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.42 2001/12/02 15:15:22 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.43 2001/12/18 18:10:21 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -414,12 +414,19 @@ void TFile::Init(Bool_t create)
          Error("Init","Cannot read directory info");
          goto zombie;
       }
+//*-* -------------Check if file is truncated
+      Long_t id, size, flags, modtime;
+      gSystem->GetPathInfo(GetName(), &id, &size, &flags, &modtime);
 //*-* -------------Read keys of the top directory
-      if (fSeekKeys > fBEGIN) {
+      if (fSeekKeys > fBEGIN && fEND <= size) {
          TDirectory::ReadKeys();
          gDirectory = this;
       } else {
-         Warning("TFile","file %s probably not closed, trying to recover",GetName());
+         if (fEND > size) {
+            Error("TFile","file %s is truncated at %d bytes: should be %d, trying to recover",GetName(),size,fEND);
+         } else {
+            Warning("TFile","file %s probably not closed, trying to recover",GetName());
+         }
          Recover();
       }
    }
@@ -1012,12 +1019,13 @@ void TFile::Recover()
       for (i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
       classname[nwhc] = '\0';
       TDatime::GetDateTime(datime, date, time);
-      if (!strcmp(classname,"TBasket")) {idcur += nbytes; continue;}
-      if (seekpdir != fSeekDir) {idcur += nbytes; continue;}
-      key = new TKey();
-      key->ReadBuffer(bufread);
-      AppendKey(key);
-      nrecov++;
+      if (seekpdir == fSeekDir && strcmp(classname,"TBasket")) {
+         key = new TKey();
+         key->ReadBuffer(bufread);
+         AppendKey(key);
+         nrecov++;
+         Printf("Recovering key: %s:%s at address:%d",key->GetClassName(),key->GetName(),idcur);
+      }
       delete [] classname;
       idcur += nbytes;
    }
