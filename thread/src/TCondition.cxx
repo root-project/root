@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TCondition.cxx,v 1.3 2004/12/10 22:27:21 rdm Exp $
+// @(#)root/thread:$Name:  $:$Id: TCondition.cxx,v 1.4 2004/12/14 15:06:18 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -86,7 +86,11 @@ Int_t TCondition::Wait()
 //______________________________________________________________________________
 Int_t TCondition::TimedWait(ULong_t secs, ULong_t nanoSec)
 {
-   // Wait not more than secs+nanoSecs to be signaled.
+   // Wait to be signaled or till the timer times out.
+   // This method is given an absolute time since the beginning of
+   // the EPOCH (use TThread::GetTime() to get this absolute time).
+   // To wait for a relative time from now, use
+   // TCondition::TimedWait(ULong_t ms).
    // Returns 0 if successfully signalled, 1 if time expired and -1 in
    // case of error.
 
@@ -98,4 +102,26 @@ Int_t TCondition::TimedWait(ULong_t secs, ULong_t nanoSec)
    fMutex->fId = TThread::SelfId(); // fix the owner because lowlevel relock
    if (fPrivateMutex) fMutex->UnLock();
    return iret;
+}
+
+//______________________________________________________________________________
+Int_t TCondition::TimedWait(ULong_t ms)
+{
+   // Wait to be signaled or till the timer times out.
+   // This method is given a relative time from now.
+   // To wait for an absolute time since the beginning of the EPOCH, use
+   // TCondition::TimedWait(ULong_t secs, ULong_t nanoSec).
+   // Returns 0 if successfully signalled, 1 if time expired and -1 in
+   // case of error.
+
+   if (!fConditionImp) return -1;
+
+   ULong_t absSec, absNanoSec;
+   TThread::GetTime(&absSec, &absNanoSec);
+
+   ULong_t dsec = ms/1000;
+   absSec += dsec;
+   absNanoSec += (ms - dsec*1000) * 1000000;
+
+   return TimedWait(absSec, absNanoSec);
 }

@@ -1,4 +1,4 @@
-// @(#)root/thread:$Name:  $:$Id: TCondition.h,v 1.2 2002/12/03 16:44:25 brun Exp $
+// @(#)root/thread:$Name:  $:$Id: TCondition.h,v 1.3 2004/12/10 12:13:33 rdm Exp $
 // Author: Fons Rademakers   01/07/97
 
 /*************************************************************************
@@ -49,7 +49,8 @@ public:
    TMutex *GetMutex() const;
 
    Int_t   Wait();
-   Int_t   TimedWait(ULong_t secs, ULong_t nanoSecs = 0);
+   Int_t   TimedWait(ULong_t secs, ULong_t nanoSecs);
+   Int_t   TimedWait(ULong_t ms);
    Int_t   Signal() { if (fConditionImp) return fConditionImp->Signal(); return -1; }
    Int_t   Broadcast() { if (fConditionImp) return fConditionImp->Broadcast(); return -1; }
 
