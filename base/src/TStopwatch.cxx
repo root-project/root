@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.4 2000/12/13 15:13:46 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TStopwatch.cxx,v 1.5 2002/06/13 13:42:55 rdm Exp $
 // Author: Fons Rademakers   11/10/95
 
 /*************************************************************************
@@ -142,7 +142,7 @@ Double_t TStopwatch::CpuTime()
    // stopwatch was still running stop it first.
 
    if (fState == kUndefined)
-      Error("RealTime", "stopwatch not started");
+      Error("CpuTime", "stopwatch not started");
 
    if (fState == kRunning)
       Stop();
@@ -238,23 +238,36 @@ Double_t TStopwatch::GetCPUTime()
 }
 
 //______________________________________________________________________________
-void TStopwatch::Print(Option_t *) const
+void TStopwatch::Print(Option_t *opt) const
 {
    // Print the real and cpu time passed between the start and stop events.
    // and the number of times (slices) this TStopwatch was called
-   // (if this number > 1)
+   // (if this number > 1). If opt="m" printout realtime in milli second
+   // precision.
 
-   Double_t  realt = ((TStopwatch*)this)->RealTime();
+   Double_t  realt = const_cast<TStopwatch*>(this)->RealTime();
+   Double_t  cput  = const_cast<TStopwatch*>(this)->CpuTime();
 
    Int_t  hours = Int_t(realt / 3600);
    realt -= hours * 3600;
    Int_t  min   = Int_t(realt / 60);
    realt -= min * 60;
    Int_t  sec   = Int_t(realt);
-   Int_t counter = Counter();
-   if (counter <= 1 )
-      Printf("Real time %d:%d:%d, CP time %.3f", hours, min, sec, ((TStopwatch*)this)->CpuTime());
-   else
-      Printf("Real time %d:%d:%d, CP time %.3f, %d slices", hours, min, sec, ((TStopwatch*)this)->CpuTime(),counter);
-}
 
+   realt = TMath::Max(realt, 0.);
+   cput  = TMath::Max(cput, 0.);
+
+   if (opt && *opt == 'm') {
+      if (Counter() > 1) {
+         Printf("Real time %d:%02d:%06.3f, CP time %.3f, %d slices", hours, min, realt, cput, Counter());
+      } else {
+         Printf("Real time %d:%02d:%06.3f, CP time %.3f", hours, min, realt, cput);
+      }
+   } else {
+      if (Counter() > 1) {
+         Printf("Real time %d:%02d:%02d, CP time %.3f, %d slices", hours, min, sec, cput, Counter());
+      } else {
+         Printf("Real time %d:%02d:%02d, CP time %.3f", hours, min, sec, cput);
+      }
+   }
+}
