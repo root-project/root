@@ -1,0 +1,98 @@
+# Makefile of ROOT for Windows with MS Visual C++ compiler in Cygwin environment
+
+PLATFORM      = win32
+
+ifeq (debug,$(findstring debug,$(ROOTBUILD)))
+OPT           = -Z7
+LDOPT         = -debug -pdb:none
+F77OPT        = -debug -nopdbfile
+NOOPT         =
+else
+OPT           = -O2
+LDOPT         = -pdb:none
+#LDOPT         = -opt:ref -pdb:none
+F77OPT        = -optimize:0 -nopdbfile -recursive
+NOOPT         =
+endif
+
+# Compiler:
+CXX           = build/win/cxx.sh
+CC            = build/win/cc.sh
+CXXFLAGS      = -G5 -GR -MD -DWIN32 -DGDK_WIN32 -D_WINDOWS -DWINVER=0x0400 \
+                -nologo -DCRTAPI1=_cdecl -DCRTAPI2=_cdecl \
+                -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS $(EXTRA_CXXFLAGS)
+CFLAGS        = -G5 -MD -DWIN32 -DGDK_WIN32 -D_WINDOWS -DWINVER=0x0400 \
+                -FIsehmap.h -nologo -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS \
+                $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -G5 -GR -MD -DWIN32 -DGDK_WIN32 -D_WIN32 -D_WINDOWS \
+                -DWINVER=0x0400 -nologo -DCRTAPI1=_cdecl \
+                -DCRTAPI2=_cdecl -D_X86_=1 -D_DLL -DVISUAL_CPLUSPLUS \
+                -DG__SHAREDLIB -DG__UNIX -DG__ROOT -DG__WIN32 $(EXTRA_CXXFLAGS)
+CINTCFLAGS    = -G5 -MD -DWIN32 -D_WIN32 -DGDK_WIN32 -D_WINDOWS \
+                -DWINVER=0x0400 -FIsehmap.h -nologo -D_X86_=1 -D_DLL \
+                -DVISUAL_CPLUSPLUS -DG__SHAREDLIB -DG__UNIX -DG__ROOT \
+                -DG__WIN32 $(EXTRA_CXXFLAGS)
+
+# Linker:
+LD            = build/win/ld.sh
+LDFLAGS       = -nologo -incremental:no $(LDOPT) $(EXTRA_LDFLAGS) $(LDNODEF)
+LDNODEF       = -nodefaultlib:libc.lib -nodefaultlib:dfor.lib
+SOFLAGS       = -DLL
+SOEXT         = dll
+EXEEXT        = .exe
+
+# System libraries:
+SYSLIBS       =
+XLIBS         =
+CILIBS        =
+CRYPTLIBS     =
+
+# Fortran:
+F77           = build/win/f77.sh
+F77FLAGS      = -nologo -4Nportlib -G5 -MD -recursive
+F77LD         = $(F77)
+F77LDFLAGS    = $(F77FLAGS) $(F77OPT) -link $(LDFLAGS)
+F77LIBS       =
+
+# Extras
+EXPLICITLINK        = YES
+HISTLIBDEP          = $(MATRIXLIB)
+HISTLIBEXTRA        = lib/libMatrix.lib
+GRAFLIBDEP          = $(HISTLIB)
+GRAFLIBEXTRA        = lib/libHist.lib
+GPADLIBDEP          = $(GRAFLIB) $(HISTLIB)
+GPADLIBEXTRA        = lib/libGraf.lib lib/libHist.lib
+G3DLIBDEP           = $(GRAFLIB) $(HISTLIB)
+G3DLIBEXTRA         = lib/libGraf.lib lib/libHist.lib
+WIN32GDKLIBDEP      = $(GPADLIB) $(GRAFLIB) $(GDKDLLS) $(GDKLIBS)
+WIN32GDKLIBEXTRA    = lib/libGpad.lib lib/libGraf.lib $(GDKLIBS)
+GUILIBDEP           = $(GPADLIB) $(GRAFLIB)
+GUILIBEXTRA         = lib/libGpad.lib lib/libGraf.lib
+HISTPAINTERLIBDEP   = $(GRAFLIB) $(HISTLIB)
+HISTPAINTERLIBEXTRA = lib/libGraf.lib lib/libHist.lib
+PROOFLIBDEP         = $(TREELIB) $(HISTLIB)
+PROOFLIBEXTRA       = lib/libTree.lib lib/libHist.lib
+TREEPLAYERLIBDEP    = $(TREELIB) $(PROOFLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
+TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libProof.lib lib/libGraf3d.lib \
+                      lib/libGraf.lib lib/libHist.lib
+TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB)
+TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
+                      lib/libHist.lib lib/libGui.lib
+EGLIBDEP            = $(G3DLIB) $(GRAFLIB)
+EGLIBEXTRA          = lib/libGraf3d.lib lib/libGraf.lib
+PYTHIALIBDEP        = $(EGLIB) $(GRAFLIB)
+PYTHIALIBEXTRA      = lib/libEG.lib lib/libGraf.lib \
+                      $(FPYTHIALIBDIR) $(FPYTHIALIB)
+PYTHIA6LIBDEP       = $(EGLIB) $(GRAFLIB)
+PYTHIA6LIBEXTRA     = lib/libEG.lib lib/libGraf.lib \
+                      $(FPYTHIA6LIBDIR) $(FPYTHIA6LIB)
+VENUSLIBDEP         = $(EGLIB)
+VENUSLIBEXTRA       = lib/libEG.lib $(FVENUSLIBDIR) $(FVENUSLIB)
+STARLIBDEP          = $(TREELIB) $(PROOFLIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) \
+                      $(HISTLIB)
+STARLIBEXTRA        = lib/libTree.lib lib/libProof.lib lib/libGpad.lib \
+                      lib/libGraf3d.lib lib/libGraf.lib lib/libHist.lib
+GLLIBDEP            = $(G3DLIB) $(WIN32GDKLIB) $(GUILIB) $(GDKDLLS) $(GDKLIBS)
+GLLIBEXTRA          = lib/libGraf3d.lib lib/libWin32gdk.lib lib/libGui.lib \
+                      Glu32.lib Opengl32.lib $(GDKLIBS)
+RFIOLIBEXTRA        = WSock32.lib Ws2_32.lib
