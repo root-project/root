@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.31 2003/07/03 11:41:02 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.33 2003/07/09 12:34:36 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -1832,7 +1832,7 @@ TestFileList::TestFileList(const TGWindow *p, const TGWindow *main, UInt_t w, UI
    MapWindow();
    fContents->SetDefaultHeaders();
    fContents->DisplayDirectory();
-   fContents->AddFile("..");  // up level directory
+   fContents->AddFile("..");        // up level directory
    fContents->Layout();
    fContents->StopRefreshTimer();   // stop refreshing
 }
@@ -1888,8 +1888,12 @@ void TestFileList::DisplayObject(const TString& fname,const TString& name)
    // browse object located in file
 
    TDirectory *sav = gDirectory;
-   TFile f(fname);
-   TObject* obj = f.Get(name);
+
+   static TFile *file = 0;
+   if (file) delete file;     // close
+   file = new TFile(fname);   // reopen
+
+   TObject* obj = file->Get(name);
    if (obj) {
       if (!obj->IsFolder()) {
          obj->Browse(0);
@@ -1937,7 +1941,7 @@ Bool_t TestFileList::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
       case kC_CONTAINER:
          switch (GET_SUBMSG(msg)) {
             case kCT_ITEMDBLCLICK:
-               OnDoubleClick((TGLVEntry*)fContents->GetLastActive(), parm1);
+               if (parm1==kButton1) OnDoubleClick((TGLVEntry*)fContents->GetLastActive(), parm1);
                break;
          }
          break;
