@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.cc,v 1.9 2002/02/09 02:01:23 davidk Exp $
+ *    File: $Id: RooFitResult.cc,v 1.10 2002/02/12 20:02:00 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -28,18 +28,20 @@
 #include "TLine.h"
 #include "TBox.h"
 #include "TGaxis.h"
+#include "TMatrix.h"
 #include "RooFitCore/RooFitResult.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgList.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooPlot.hh"
 #include "RooFitCore/RooEllipse.hh"
+#include "RooFitCore/RooRandom.hh"
 
 ClassImp(RooFitResult) 
 ;
 
 RooFitResult::RooFitResult(const char* name, const char* title) : 
-  TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0)
+  TNamed(name,title), _constPars(0), _initPars(0), _finalPars(0), _globalCorr(0), _randomPars(0), _Lt(0)
 {  
   // Constructor
   appendToDir(this) ;
@@ -52,6 +54,8 @@ RooFitResult::~RooFitResult()
   if (_initPars)  delete _initPars ;
   if (_finalPars) delete _finalPars ;
   if (_globalCorr) delete _globalCorr;
+  if (_randomPars) delete _randomPars;
+  if (_Lt) delete _Lt;
 
   _corrMatrix.Delete();
 
@@ -96,6 +100,7 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
   //   B - the bounding box for the error ellipse
   //   H - a line and horizontal axis for reading off the correlation coefficient
   //   V - a line and vertical axis for reading off the correlation coefficient
+  //   A - draw axes for reading off the correlation coefficients with the H or V options
   //
   // You can change the attributes of objects in the returned RooPlot using the
   // various RooPlot::getAttXxx(name) member functions, e.g.
@@ -161,9 +166,11 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
     line->SetLineStyle(kDashed);
     line->SetLineColor(kBlue);
     frame->addObject(line);
-    TGaxis *axis= new TGaxis(x1-s1,x2-s2,x1+s1,x2-s2,-1.,+1.,502,"-=");
-    axis->SetLineColor(kBlue);
-    frame->addObject(axis);
+    if(opt.Contains("A")) {
+      TGaxis *axis= new TGaxis(x1-s1,x2-s2,x1+s1,x2-s2,-1.,+1.,502,"-=");
+      axis->SetLineColor(kBlue);
+      frame->addObject(axis);
+    }
   }
 
   if(opt.Contains("V")) {
@@ -171,9 +178,11 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
     line->SetLineStyle(kDashed);
     line->SetLineColor(kBlue);
     frame->addObject(line);
-    TGaxis *axis= new TGaxis(x1-s1,x2-s2,x1-s1,x2+s2,-1.,+1.,502,"-=");
-    axis->SetLineColor(kBlue);
-    frame->addObject(axis);
+    if(opt.Contains("A")) {
+      TGaxis *axis= new TGaxis(x1-s1,x2-s2,x1-s1,x2+s2,-1.,+1.,502,"-=");
+      axis->SetLineColor(kBlue);
+      frame->addObject(axis);
+    }
   }
 
   // add a marker at the fitted value, if requested
@@ -184,6 +193,63 @@ RooPlot *RooFitResult::plotOn(RooPlot *frame, const char *parName1, const char *
   }
 
   return frame;
+}
+
+const RooArgList& RooFitResult::randomizePars() const {
+  // Return a list of floating parameter values that are perturbed from the final
+  // fit values by random amounts sampled from the covariance matrix. The returned
+  // object is overwritten with each call and belongs to the RooFitResult. Uses
+  // the "square root method" to decompose the covariance matrix, which makes inverting
+  // it unnecessary.
+
+  Int_t nPar= _finalPars->getSize();
+  if(0 == _randomPars) { // first-time initialization
+    assert(0 != _finalPars);
+    // create the list of random values to fill
+    _randomPars= (RooArgList*)_finalPars->snapshot();
+    // calculate the elements of the upper-triangular matrix L that gives Lt*L = C
+    // where Lt is the transpose of L (the "square-root method")
+    TMatrix L(nPar,nPar);
+    for(Int_t iPar= 0; iPar < nPar; iPar++) {
+      // calculate the diagonal term first
+      L(iPar,iPar)= covariance(iPar,iPar);
+      for(Int_t k= 0; k < iPar; k++) {
+	Double_t tmp= L(k,iPar);
+	L(iPar,iPar)-= tmp*tmp;
+      }
+      L(iPar,iPar)= sqrt(L(iPar,iPar));
+      // then the off-diagonal terms
+      for(Int_t jPar= iPar+1; jPar < nPar; jPar++) {
+	L(iPar,jPar)= covariance(iPar,jPar);
+	for(Int_t k= 0; k < iPar; k++) {
+	  L(iPar,jPar)-= L(k,iPar)*L(k,jPar);
+	}
+	L(iPar,jPar)/= L(iPar,iPar);
+      }
+    }
+    // remember Lt
+    _Lt= new TMatrix(TMatrix::kTransposed,L);
+  }
+  else {
+    // reset to the final fit values
+    *_randomPars= *_finalPars;
+  }
+
+  // create a vector of unit Gaussian variables
+  TVector g(nPar);
+  for(Int_t k= 0; k < nPar; k++) g(k)= RooRandom::gaussian();
+  // multiply this vector by Lt to introduce the appropriate correlations
+  g*= (*_Lt);
+  // add the mean value offsets and store the results
+  TIterator *iter= _randomPars->createIterator();
+  RooRealVar *par(0);
+  Int_t index(0);
+  while(0 != (par= (RooRealVar*)iter->Next())) {
+    par->setVal(par->getVal() + g(index++));
+  }
+  delete iter;
+
+  return *_randomPars;
 }
 
 Double_t RooFitResult::correlation(const char* parname1, const char* parname2) const 
@@ -214,6 +280,24 @@ const RooArgList* RooFitResult::correlation(const char* parname) const
   return (RooArgList*)_corrMatrix.At(_initPars->index(arg)) ;
 }
 
+Double_t RooFitResult::correlation(Int_t row, Int_t col) const {
+  // Return a correlation matrix element addressed with numeric indices.
+
+  const RooArgList *rowVec= (const RooArgList*)_corrMatrix.At(row);
+  assert(0 != rowVec);
+  const RooRealVar *elem= (const RooRealVar*)rowVec->at(col);
+  assert(0 != elem);
+  return elem->getVal();
+}
+
+Double_t RooFitResult::covariance(Int_t row, Int_t col) const {
+  // Return the covariance matrix element addressed with numeric indices.
+
+  const RooRealVar *rowVar= (const RooRealVar*)_finalPars->at(row);
+  const RooRealVar *colVar= (const RooRealVar*)_finalPars->at(col);
+  assert(0 != rowVar && 0 != colVar);
+  return rowVar->getError()*colVar->getError()*correlation(row,col);  
+}
 
 void RooFitResult::printToStream(ostream& os, PrintOption opt, TString indent) const
 {

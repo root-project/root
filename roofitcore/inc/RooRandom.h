@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRandom.rdl,v 1.1 2001/08/22 00:50:26 david Exp $
+ *    File: $Id: RooRandom.rdl,v 1.2 2001/10/01 23:55:00 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,6 +25,7 @@ public:
   static Double_t uniform(TRandom *generator= randomGenerator());
   static void uniform(UInt_t dimension, Double_t vector[], TRandom *generator= randomGenerator());
   static UInt_t integer(UInt_t max, TRandom *generator= randomGenerator());
+  static Double_t gaussian(TRandom *generator= randomGenerator());
 
   static RooQuasiRandomGenerator *quasiGenerator();
   static Bool_t quasi(UInt_t dimension, Double_t vector[],

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRandom.cc,v 1.1 2001/08/22 00:50:25 david Exp $
+ *    File: $Id: RooRandom.cc,v 1.2 2001/10/08 05:20:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -24,7 +24,7 @@ ClassImp(RooRandom)
   ;
 
 static const char rcsid[] =
-"$Id: RooRandom.cc,v 1.1 2001/08/22 00:50:25 david Exp $";
+"$Id: RooRandom.cc,v 1.2 2001/10/08 05:20:20 verkerke Exp $";
 
 TRandom *RooRandom::randomGenerator() {
   // Return a pointer to a singleton random-number generator
@@ -60,6 +60,12 @@ UInt_t RooRandom::integer(UInt_t n, TRandom *generator) {
   // Return an integer uniformly distributed from [0,n-1]
 
   return generator->Integer(n);
+}
+
+Double_t RooRandom::gaussian(TRandom *generator) {
+  // Return a Gaussian random variable with mean 0 and variance 1.
+
+  return generator->Gaus();
 }
 
 Bool_t RooRandom::quasi(UInt_t dimension, Double_t vector[], RooQuasiRandomGenerator *generator) {

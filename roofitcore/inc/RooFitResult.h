@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFitResult.rdl,v 1.6 2001/11/22 01:07:11 verkerke Exp $
+ *    File: $Id: RooFitResult.rdl,v 1.7 2002/02/09 02:01:23 davidk Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -19,6 +19,7 @@
 #include "RooFitCore/RooPrintable.hh"
 #include "RooFitCore/RooDirItem.hh"
 
+class TMatrix ;
 class RooArgSet ;
 class RooArgList ;
 class RooPlot;
@@ -58,11 +59,14 @@ public:
 
   // Add objects to a 2D plot
   inline RooPlot *plotOn(RooPlot *frame, const RooAbsArg &par1, const RooAbsArg &par2,
-			 const char *options= "") const {
+			 const char *options= "ME") const {
     return plotOn(frame,par1.GetName(),par2.GetName(),options);
   }
   RooPlot *plotOn(RooPlot *plot, const char *parName1, const char *parName2,
-		  const char *options= "") const;
+		  const char *options= "ME") const;
+
+  // Generate random perturbations of the final parameters using the covariance matrix
+  const RooArgList& randomizePars() const;
 
 protected:
   
@@ -77,6 +81,9 @@ protected:
   inline void setStatus(Int_t val) { _status = val ; }
   void fillCorrMatrix() ;
 
+  Double_t correlation(Int_t row, Int_t col) const;
+  Double_t covariance(Int_t row, Int_t col) const;
+
   Int_t    _status ;          // MINUIT status code
   Double_t _minNLL ;          // NLL at minimum
   Double_t _edm ;             // Estimated distance to minimum
@@ -85,6 +92,9 @@ protected:
   RooArgList* _finalPars ;    // List of floating parameters with final values
   RooArgList* _globalCorr ;   // List of global correlation coefficients
   TList       _corrMatrix ;   // Correlation matrix (list of RooArgLists)
+
+  mutable RooArgList *_randomPars; //! List of floating parameters with most recent random perturbation applied
+  mutable TMatrix *_Lt;            //! triangular matrix used for generate random perturbations
 
   ClassDef(RooFitResult,1) // Container class for fit result
 };

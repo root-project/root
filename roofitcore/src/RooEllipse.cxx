@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooEllipse.cc,v 1.1 2002/02/05 01:23:07 davidk Exp $
+ *    File: $Id: RooEllipse.cc,v 1.2 2002/02/09 02:01:23 davidk Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -25,7 +25,7 @@
 ClassImp(RooEllipse)
 
 static const char rcsid[] =
-"$Id: RooEllipse.cc,v 1.1 2002/02/05 01:23:07 davidk Exp $";
+"$Id: RooEllipse.cc,v 1.2 2002/02/09 02:01:23 davidk Exp $";
 
 RooEllipse::RooEllipse() { }
 
@@ -42,9 +42,9 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
   //
   // and is described by the implicit equation:
   //
-  //   x*x      2*rho      y*y
-  //  -----  -  -----  +  -----  =  1 - rho*rho
-  //  s1*s1     s1*s2     s2*s2
+  //   x*x      2*rho*x*y      y*y
+  //  -----  -  ---------  +  -----  =  1 - rho*rho
+  //  s1*s1       s1*s2       s2*s2
   //
   // The input parameters s1,s2 must be > 0 and also |rho| <= 1.
   // The degenerate case |rho|=1 corresponds to a straight line and
@@ -70,11 +70,13 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
     setYAxisLimits(x2-s2,x2+s2);
   }
   else {
-    Double_t r,phi,u1,u2,xx1,xx2,dphi(2*M_PI/points);
+    Double_t r,psi,phi,u1,u2,xx1,xx2,dphi(2*M_PI/points);
     for(Int_t index= 0; index < points; index++) {
       phi= index*dphi;
-      u1= cos(phi)/s1;
-      u2= sin(phi)/s2;
+      // adjust the angular spacing of the points for the aspect ratio
+      psi= atan2(s2*sin(phi),s1*cos(phi));
+      u1= cos(psi)/s1;
+      u2= sin(psi)/s2;
       r= sqrt(tmp/(u1*u1 - 2*rho*u1*u2 + u2*u2));
       xx1= x1 + r*u1*s1;
       xx2= x2 + r*u2*s2;
@@ -99,4 +101,9 @@ void RooEllipse::printToStream(ostream& os, PrintOption opt, TString indent) con
 
   oneLinePrint(os,*this);
   RooPlotable::printToStream(os,opt,indent);
+  if(opt == Verbose) {
+    for(Int_t index=0; index < fNpoints; index++) {
+      cout << "Point [" << index << "] is at (" << fX[index] << "," << fY[index] << ")" << endl;
+    }
+  }
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.38 2002/03/11 19:12:58 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.39 2002/03/12 18:12:02 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -420,7 +420,7 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const {
   Int_t leadingDigitVal= (Int_t)floor(log10(fabs(useErrorForPrecision?_error:_value)));
   Int_t leadingDigitErr= (Int_t)floor(log10(fabs(_error)));
   Int_t whereVal= leadingDigitVal - sigDigits + 1;
-  Int_t whereErr= leadingDigitErr - (sigDigits+1)/2 + 1;
+  Int_t whereErr= leadingDigitErr - sigDigits + 1;
   char fmtVal[16], fmtErr[16];
 
   if (_value<0) whereVal -= 1 ;
