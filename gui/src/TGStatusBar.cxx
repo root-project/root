@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.8 2003/11/12 19:34:59 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGStatusBar.cxx,v 1.9 2004/04/24 13:50:48 brun Exp $
 // Author: Fons Rademakers   23/01/98
 
 /*************************************************************************
@@ -234,10 +234,8 @@ void TGStatusBar::SetParts(Int_t *parts, Int_t npart)
    }
 
    int i;
-   for (i = 0; i < fNpart; i++) {
-      fList->Remove(fStatusPart[i]);
+   for (i = 0; i < fNpart; i++)
       delete fStatusPart[i];
-   }
 
    delete [] fStatusPart;
    delete [] fParts;
@@ -277,10 +275,8 @@ void TGStatusBar::SetParts(Int_t npart)
    }
 
    int i;
-   for (i = 0; i < fNpart; i++) {
-      fList->Remove(fStatusPart[i]);
+   for (i = 0; i < fNpart; i++)
       delete fStatusPart[i];
-   }
 
    delete [] fStatusPart;
    delete [] fParts;
