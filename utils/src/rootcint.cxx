@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.38 2001/03/08 17:11:34 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.39 2001/04/03 13:44:32 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -223,6 +223,23 @@ enum ESTLType {kNone, kVector, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 FILE *fp;
 
 //______________________________________________________________________________
+int GetClassVersion(G__ClassInfo &cl)
+{
+   // Return the version number of the class or -1
+   // if the function Class_Version does not exist.
+
+   if (!cl.HasMethod("Class_Version")) return -1;
+
+   const char *classname = cl.Fullname();
+   const char *function = "::Class_Version()";
+   char *name = new char[strlen(classname)+strlen(function)+1];
+   sprintf(name, "%s%s", classname, function);
+   int version = (int)G__int(G__calc(name));
+   delete name;
+   return version;
+}
+
+//______________________________________________________________________________
 int IsSTLContainer(G__DataMemberInfo &m)
 {
    // Is this an STL container?
@@ -256,10 +273,7 @@ int IsStreamable(G__DataMemberInfo &m)
    if (!strcmp(m.Type()->Name(), "string") || !strcmp(m.Type()->Name(), "string*")) return 1;
    if ((m.Type())->HasMethod("Streamer")) {
       if (!(m.Type())->HasMethod("Class_Version")) return 1;
-      char a[80];
-      int version;
-      sprintf(a, "%s::Class_Version()", m.Type()->Fullname());
-      version = (int)G__int(G__calc(a));
+      int version = GetClassVersion(*m.Type());
       if (version > 0) return 1;
    }
    return 0;
@@ -743,10 +757,7 @@ void WriteStreamer(G__ClassInfo &cl)
    // In case of VersionID<=0 write dummy streamer only calling
    // its base class Streamer(s). If no base class(es) let Streamer
    // print error message, i.e. this Streamer should never have been called.
-   char a[80];
-   int version;
-   sprintf(a, "%s::Class_Version()", cl.Fullname());
-   version = (int)G__int(G__calc(a));
+   int version = GetClassVersion(cl);
    if (version <= 0) {
       G__BaseClassInfo b(cl);
 
@@ -1032,9 +1043,7 @@ void WritePointersSTL(G__ClassInfo &cl)
    char a[80];
    char clName[G__LONGLINE];
    sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
-   int version;
-   sprintf(a, "%s::Class_Version()", cl.Fullname());
-   version = (int)G__int(G__calc(a));
+   int version = GetClassVersion(cl);
    if (version <= 0) return;
 
    G__DataMemberInfo m(cl);
@@ -1206,10 +1215,7 @@ void WriteShowMembers(G__ClassInfo &cl)
    char cdim[12], cvar[64];
    char clName[G__LONGLINE];
    sprintf(clName,"%s",G__map_cpp_name((char *)cl.Fullname()));
-   char a[80];
-   int version;
-   sprintf(a, "%s::Class_Version()", cl.Fullname());
-   version = (int)G__int(G__calc(a));
+   int version = GetClassVersion(cl);
    int clflag = 1;
    if (version <= 0 || cl.RootFlag() == 0) clflag = 0;
 
