@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name$:$Id$
+// @(#)root/rootd:$Name:  $:$Id: net.cxx,v 1.1.1.1 2000/05/16 17:00:48 rdm Exp $
 // Author: Fons Rademakers   12/08/97
 
 /*************************************************************************
@@ -180,6 +180,10 @@ int NetOpen(int inetdflag)
             if ((hp = gethostbyaddr((const char *)&tcp_cli_addr.sin_addr,
                                     sizeof(tcp_cli_addr.sin_addr), AF_INET)))
                strcpy(openhost, hp->h_name);
+            else {
+               struct in_addr *host_addr = (struct in_addr*)&tcp_cli_addr.sin_addr;
+               strcpy(openhost, inet_ntoa(*host_addr));
+            }
          }
          ErrorInfo("NetOpen: accepted connection from host %s", openhost);
 
@@ -219,6 +223,10 @@ again:
       if ((hp = gethostbyaddr((const char *)&tcp_cli_addr.sin_addr,
                               sizeof(tcp_cli_addr.sin_addr), AF_INET)))
          strcpy(openhost, hp->h_name);
+      else {
+         struct in_addr *host_addr = (struct in_addr*)&tcp_cli_addr.sin_addr;
+         strcpy(openhost, inet_ntoa(*host_addr));
+      }
 
       ErrorInfo("NetOpen: accepted connection from host %s", openhost);
    }
