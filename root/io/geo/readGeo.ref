@@ -1,36 +1,32 @@
 
 Processing runreadGeo.C...
+Warning in <TGeoManager::dtor>: deleting geometry: aleph/aleph.C
 Warning in <TGeoManager::dtor>: deleting geometry: Geometry/default geometry
 Warning in <TGeoManager::dtor>: deleting geometry: atlas/atlas.C
-Warning in <TClass::TClass>: no dictionary for class CbmMCTrack is available
-Warning in <TClass::TClass>: no dictionary for class HadesMdcPoint is available
-Warning in <TClass::TClass>: no dictionary for class CbmMCPoint is available
-Warning in <TClass::TClass>: no dictionary for class HadesRichPoint is available
-Warning in <TClass::TClass>: no dictionary for class HadesShowerPoint is available
-Warning in <TClass::TClass>: no dictionary for class HadesTofPoint is available
-Warning in <TClass::TClass>: no dictionary for class CbmMCApplication is available
-Warning in <TClass::TClass>: no dictionary for class CbmTask is available
-Warning in <TClass::TClass>: no dictionary for class HadesCave is available
-Warning in <TClass::TClass>: no dictionary for class CbmModule is available
-Warning in <TClass::TClass>: no dictionary for class HadesSectors is available
-Warning in <TClass::TClass>: no dictionary for class HadesMdc is available
-Warning in <TClass::TClass>: no dictionary for class CbmDetector is available
-Warning in <TClass::TClass>: no dictionary for class HadesRich is available
-Warning in <TClass::TClass>: no dictionary for class HadesTof is available
-Warning in <TClass::TClass>: no dictionary for class HadesShower is available
-Warning in <TClass::TClass>: no dictionary for class CbmMagField is available
-Warning in <TClass::TClass>: no dictionary for class CbmPrimaryGenerator is available
-Warning in <TClass::TClass>: no dictionary for class CbmStack is available
-Warning in <TClass::TClass>: no dictionary for class CbmParticleGenerator is available
-Warning in <TClass::TClass>: no dictionary for class CbmGenerator is available
+Warning in <TGeoManager::dtor>: deleting geometry: brahms/brahms.C
+Warning in <TGeoManager::dtor>: deleting geometry: btev/btev.C
+Warning in <TGeoManager::dtor>: deleting geometry: cdf/cdf.C
 Warning in <TGeoManager::dtor>: deleting geometry: cms/cms.C
-Warning in <TGeoManager::dtor>: deleting geometry: CBMGeom/CBM geometry
+Warning in <TGeoManager::dtor>: deleting geometry: d0/d0.C
+Warning in <TGeoManager::dtor>: deleting geometry: e907/e907.C
+Warning in <TGeoManager::dtor>: deleting geometry: gem/gem.C
 Warning in <TGeoManager::dtor>: deleting geometry: VGM Root geometry/VGM Root geometry
+Warning in <TGeoManager::dtor>: deleting geometry: VGM Root geometry/VGM Root geometry
+Warning in <TGeoManager::dtor>: deleting geometry: phenix/phenix.C
+Warning in <TGeoManager::dtor>: deleting geometry: phobos/phobos.C
+Warning in <TGeoManager::dtor>: deleting geometry: tesla/tesla.C
+G__catchexception=0
+### Geometry loaded from file...
+Top volume is ALEF. Master volume is ALEF
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 8177 nodes/ 227 volume UID's in aleph.C
+----------------modeler ready----------------
 ### Geometry loaded from file...
 Top volume is ALIC. Master volume is ALIC
 ### Voxelization retrieved from file
 --- node ID tracking disabled
-### 1845498 nodes/ 2782 volume UID's in default geometry
+### 1872000 nodes/ 2178 volume UID's in default geometry
 ----------------modeler ready----------------
 ### Geometry loaded from file...
 Top volume is ATLS. Master volume is ATLS
@@ -39,16 +35,46 @@ Top volume is ATLS. Master volume is ATLS
 ### 29046966 nodes/ 7144 volume UID's in atlas.C
 ----------------modeler ready----------------
 ### Geometry loaded from file...
+Top volume is CAVE. Master volume is CAVE
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 2649 nodes/ 279 volume UID's in brahms.C
+----------------modeler ready----------------
+### Geometry loaded from file...
+Top volume is C0WA. Master volume is C0WA
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 295310 nodes/ 1989 volume UID's in btev.C
+----------------modeler ready----------------
+### Geometry loaded from file...
+Top volume is CDF. Master volume is CDF
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 28525 nodes/ 1154 volume UID's in cdf.C
+----------------modeler ready----------------
+### Geometry loaded from file...
 Top volume is OCMS. Master volume is OCMS
 ### Voxelization retrieved from file
 --- node ID tracking disabled
 ### 1166318 nodes/ 1538 volume UID's in cms.C
 ----------------modeler ready----------------
 ### Geometry loaded from file...
-Top volume is CAVE. Master volume is CAVE
-Voxelizing...
+Top volume is D0. Master volume is D0
+### Voxelization retrieved from file
 --- node ID tracking disabled
-### 2238 nodes/ 373 volume UID's in CBM geometry
+### 2048158 nodes/ 1355 volume UID's in d0.C
+----------------modeler ready----------------
+### Geometry loaded from file...
+Top volume is CAVE. Master volume is CAVE
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 16722 nodes/ 361 volume UID's in e907.C
+----------------modeler ready----------------
+### Geometry loaded from file...
+Top volume is GEMH. Master volume is GEMH
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 145340 nodes/ 340 volume UID's in gem.C
 ----------------modeler ready----------------
 ### Geometry loaded from file...
 Top volume is World. Master volume is World
@@ -61,4 +87,28 @@ Top volume is World. Master volume is World
 ### Voxelization retrieved from file
 --- node ID tracking disabled
 ### 18488018 nodes/ 641 volume UID's in VGM Root geometry
+----------------modeler ready----------------
+### Geometry loaded from file...
+Top volume is HALL. Master volume is HALL
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 6130066 nodes/ 182 volume UID's in phenix.C
+----------------modeler ready----------------
+### Geometry loaded from file...
+Top volume is OUTS. Master volume is OUTS
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 749 nodes/ 351 volume UID's in phobos.C
+----------------modeler ready----------------
+### Geometry loaded from file...
+Top volume is CAVE. Master volume is CAVE
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 15370 nodes/ 566 volume UID's in tesla.C
+----------------modeler ready----------------
+### Geometry loaded from file...
+Top volume is CAVE. Master volume is CAVE
+### Voxelization retrieved from file
+--- node ID tracking disabled
+### 157692 nodes/ 568 volume UID's in star.C
 ----------------modeler ready----------------

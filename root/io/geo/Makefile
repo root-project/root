@@ -11,7 +11,12 @@ btev.C btev_all.C \
 gem.C gem_all.C \
 hades_all.C hades.root \
 phenix.C phenix_all.C \
-lhcb.C lhcb_all.C lhcbfull_all.C lhcbnobool_all.C lhcbfull.root lhcbnobool.root
+aleph_all.C alice_itsv.C atlas_sctt.C brahms.C brahms_all.C \
+cdf_all.C cdf_svxc.C cms_calo.C d0.C d0_all.C e907.C e907_all.C \
+phobos.C phobos_all.C star_all.C star_svtt.C tesla.C tesla_all.C \
+lhcb.C lhcb_all.C lhcbfull_all.C lhcbnobool_all.C lhcbfull.root lhcbnobool.root \
+aleph.root  brahms.root  cdf.root  e907.root  phenix.root  star.root \
+ams.root    btev.root    d0.root   gem.root   phobos.root  tesla.root \
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -72,10 +77,18 @@ endif
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-unpack.last: geometries.tar.gz
-	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf - && touch unpack.last
+%.root: %.C
+	$(CMDECHO) root.exe -b -l -q export.C\(\"$*\"\) > $*.log 2>&1
 
-readGeo.log: unpack.last
+#ams.C, brahms.C, btev.C, d0.C, e907.C, gem.C, phenix.C, phobos.C, tesla.C
+
+rootfiles: ams.root aleph.root  brahms.root  btev.root cdf.root d0.root  \
+	e907.root gem.root phenix.root phobos.root star.root tesla.root
+
+unpack.last: geometries.tar.gz
+	$(CMDECHO)gunzip -c geometries.tar.gz | tar xf - && (gmake rootfiles) && touch unpack.last
+
+readGeo.log: unpack.last ams.root brahms.root btev.root d0.root e907.root gem.root phenix.root phobos.root tesla.root
 
 readGeo: readGeo.log
 	$(TestDiff)
