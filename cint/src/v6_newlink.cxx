@@ -10730,7 +10730,7 @@ G__value *buf;
 {
 #ifdef G__BOOL4BYTE
   if('g'==buf->type && buf->ref) 
-    return((int*)buf->ref);
+    return((unsigned char*)buf->ref);
   else if('d'==buf->type || 'f'==buf->type) 
     buf->obj.i = (int)buf->obj.d;
   else 

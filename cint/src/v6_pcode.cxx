@@ -5428,7 +5428,7 @@ int G__asm_clear()
 
 #ifndef G__OLDIMPLEMENTATION2134
   /* Issue, value of G__CL must be unique. Otherwise, following optimization
-   * causes problem. There is similar isseue, but the biggest risk is here. */
+   * causes problem. There is similar issue, but the biggest risk is here. */
   if(G__asm_cp>=2 && G__CL==G__asm_inst[G__asm_cp-2]
      && (G__asm_inst[G__asm_cp-1]&0xffff0000)==0x7fff0000) 
     G__inc_cp_asm(-2,0);

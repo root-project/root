@@ -22,11 +22,11 @@
 #define G__CI_H
 
 #ifdef G__CINT_VER6
-#define G__CINTVERSION      6000032
-#define G__CINTVERSIONSTR  "6.0.32, Mar 10 2005"
+#define G__CINTVERSION      6000033
+#define G__CINTVERSIONSTR  "6.0.33, Mar 14 2005"
 #else
-#define G__CINTVERSION      50150168
-#define G__CINTVERSIONSTR  "5.15.168, Mar 10 2005"
+#define G__CINTVERSION      50150169
+#define G__CINTVERSIONSTR  "5.15.169, Mar 14 2005"
 #endif
 
 #define G__ALWAYS
@@ -2142,7 +2142,9 @@ extern G__EXPORT int G__delete_ipath G__P((G__CONST char *ipath));
 extern G__EXPORT void G__add_macro G__P((G__CONST char *macro));
 extern G__EXPORT void G__check_setup_version G__P((int version,G__CONST char *func));
 extern G__EXPORT long G__int G__P((G__value buf));
+#ifndef G__OLDIMPLEMENTATION2231
 extern G__EXPORT long G__int_cast G__P((G__value buf));
+#endif
 extern G__EXPORT double G__double G__P((G__value buf));
 extern G__EXPORT G__value G__calc G__P((G__CONST char *expr));
 extern G__EXPORT int  G__loadfile G__P((G__CONST char* filename));

@@ -469,15 +469,25 @@ G__value *defined;
       defined->ref=0;
       break;
     case '>':
-      if(defined->type==G__null.type) 
-	G__letdouble(defined,'d',0); /* Expression should be false wben the var is not defined */
+      if(defined->type==G__null.type) {
+#ifndef G__OLDIMPLEMENTATION2230
+	G__letdouble(defined,'i',0>fexpression);
+#else
+	G__letdouble(defined,'d',fexpression);
+#endif
+      }
       else
 	G__letint(defined,'i',fdefined>fexpression);
       defined->ref=0;
       break;
     case '<':
-      if(defined->type==G__null.type) 
-	G__letdouble(defined,'d',0); /* Expression should be false wben the var is not defined */
+      if(defined->type==G__null.type) {
+#ifndef G__OLDIMPLEMENTATION2230
+	G__letdouble(defined,'i',0<fexpression);
+#else
+	G__letdouble(defined,'d',fexpression);
+#endif
+      }
       else
 	G__letint(defined,'i',fdefined<fexpression);
       defined->ref=0;
@@ -529,31 +539,47 @@ G__value *defined;
       break;
 #endif /* G__NONANSIOPR */
     case 'E': /* == */
+#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
-	G__letdouble(defined,'d',0); /* Expression should be false wben the var is not defined */
+	G__letdouble(defined,'i',0==fexpression); 
       else
         G__letint(defined,'i',fdefined==fexpression);
+#else
+      G__letint(defined,'i',fdefined==fexpression);
+#endif
       defined->ref=0;
       break;
     case 'N': /* != */
+#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
-	G__letdouble(defined,'d',1); /* Expression should be true wben the var is not defined */
+	G__letdouble(defined,'i',0!=fexpression); 
       else
         G__letint(defined,'i',fdefined!=fexpression);
+#else
+      G__letint(defined,'i',fdefined!=fexpression);
+#endif
       defined->ref=0;
       break;
     case 'G': /* >= */
+#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
-	G__letdouble(defined,'d',0); /* Expression should be false wben the var is not defined */
+	G__letdouble(defined,'i',0>=fexpression); 
       else
         G__letint(defined,'i',fdefined>=fexpression);
+#else
+      G__letint(defined,'i',fdefined>=fexpression);
+#endif
       defined->ref=0;
       break;
     case 'l': /* <= */
+#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
-	G__letdouble(defined,'d',0); /* Expression should be false wben the var is not defined */
+	G__letdouble(defined,'i',0<=fexpression); 
       else
         G__letint(defined,'i',fdefined<=fexpression);
+#else
+      G__letint(defined,'i',fdefined<=fexpression);
+#endif
       defined->ref=0;
       break;
 #ifndef G__OLDIMPLEMENTATION470
@@ -952,15 +978,25 @@ G__value *defined;
       break;
 
     case '>':
-      if(defined->type==G__null.type) 
-        G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
+      if(defined->type==G__null.type) {
+#ifndef G__OLDIMPLEMENTATION2230
+	G__letLongdouble(defined,'i',0>ldexpression);
+#else
+	G__letLongdouble(defined,'q',ldexpression);
+#endif
+      }
       else
 	G__letint(defined,'i',lddefined>ldexpression);
       defined->ref=0;
       break;
     case '<':
-      if(defined->type==G__null.type) 
-	G__letdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
+      if(defined->type==G__null.type) {
+#ifndef G__OLDIMPLEMENTATION2230
+	G__letdouble(defined,'i',0<ldexpression);
+#else
+	G__letdouble(defined,'q',ldexpression);
+#endif
+      }
       else
 	G__letint(defined,'i',lddefined<ldexpression);
       defined->ref=0;
@@ -971,31 +1007,47 @@ G__value *defined;
       defined->ref=0;
       break;
     case 'E': /* == */
+#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
         G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
       else
         G__letint(defined,'i',lddefined==ldexpression);
+#else
+      G__letint(defined,'i',lddefined==ldexpression);
+#endif
       defined->ref=0;
       break;
     case 'N': /* != */
+#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
         G__letLongdouble(defined,'q',1); /* Expression should be true wben the var is not defined */
       else
         G__letint(defined,'i',lddefined!=ldexpression);
+#else
+      G__letint(defined,'i',lddefined!=ldexpression);
+#endif
       defined->ref=0;
       break;
     case 'G': /* >= */
+#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
         G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
       else
         G__letint(defined,'i',lddefined>=ldexpression);
+#else
+      G__letint(defined,'i',lddefined>=ldexpression);
+#endif
       defined->ref=0;
       break;
     case 'l': /* <= */
+#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type) 
         G__letLongdouble(defined,'q',0); /* Expression should be false wben the var is not defined */
       else
         G__letint(defined,'i',lddefined<=ldexpression);
+#else
+      G__letint(defined,'i',lddefined<=ldexpression);
+#endif
       defined->ref=0;
       break;
 
@@ -1111,15 +1163,25 @@ G__value *defined;
 	defined->ref=0;
 	break;
       case '>':
-	if(defined->type==G__null.type) 
-	  G__letULonglong(defined,'m',0); /* Expression should be false wben the var is not defined */
+	if(defined->type==G__null.type) {
+#ifndef G__OLDIMPLEMENTATION2230
+	  G__letULonglong(defined,'m',0); 
+#else
+	  G__letULonglong(defined,'m',ullexpression);
+#endif
+	}
 	else
 	  G__letint(defined,'i',ulldefined>ullexpression);
 	defined->ref=0;
 	break;
       case '<':
-	if(defined->type==G__null.type) 
-	  G__letULonglong(defined,'m',0); /* Expression should be false wben the var is not defined */
+	if(defined->type==G__null.type) {
+#ifndef G__OLDIMPLEMENTATION2230
+	  G__letULonglong(defined,'m',0);
+#else
+	  G__letULonglong(defined,'m',ullexpression);
+#endif
+	}
 	else
 	  G__letint(defined,'i',ulldefined<ullexpression);
 	defined->ref=0;
@@ -1149,31 +1211,47 @@ G__value *defined;
 	defined->ref=0;
 	break;
       case 'E': /* == */
+#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letULonglong(defined,'m',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'i',ulldefined==ullexpression);
+#else
+	G__letint(defined,'i',ulldefined==ullexpression);
+#endif
 	defined->ref=0;
 	break;
       case 'N': /* != */
+#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letULonglong(defined,'m',1); /* Expression should be true wben the var is not defined */
 	else
           G__letint(defined,'i',ulldefined!=ullexpression);
+#else
+	G__letint(defined,'i',ulldefined!=ullexpression);
+#endif
 	defined->ref=0;
 	break;
       case 'G': /* >= */
+#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letULonglong(defined,'m',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'i',ulldefined>=ullexpression);
+#else
+	G__letint(defined,'i',ulldefined>=ullexpression);
+#endif
 	defined->ref=0;
 	break;
       case 'l': /* <= */
+#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letULonglong(defined,'m',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'i',ulldefined<=ullexpression);
+#else
+	G__letint(defined,'i',ulldefined<=ullexpression);
+#endif
 	defined->ref=0;
 	break;
 #ifndef G__OLDIMPLEMENTATION470
@@ -1338,15 +1416,25 @@ G__value *defined;
 	defined->ref=0;
 	break;
       case '>':
-	if(defined->type==G__null.type) 
-	  G__letLonglong(defined,'n',0); /* Expression should be false wben the var is not defined */
+	if(defined->type==G__null.type) {
+#ifndef G__OLDIMPLEMENTATION2230
+	  G__letLonglong(defined,'n',0);
+#else
+	  G__letLonglong(defined,'n',llexpression);
+#endif
+	}
 	else
 	  G__letint(defined,'i',lldefined>llexpression);
 	defined->ref=0;
 	break;
       case '<':
-	if(defined->type==G__null.type) 
-	  G__letLonglong(defined,'n',0); /* Expression should be false wben the var is not defined */
+	if(defined->type==G__null.type) {
+#ifndef G__OLDIMPLEMENTATION2230
+	  G__letLonglong(defined,'n',0);
+#else
+	  G__letLonglong(defined,'n',llexpression);
+#endif
+	}
 	else
 	  G__letint(defined,'i',lldefined<llexpression);
 	defined->ref=0;
@@ -1380,31 +1468,47 @@ G__value *defined;
 	defined->ref=0;
 	break;
       case 'E': /* == */
+#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letLonglong(defined,'n',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'i',lldefined==llexpression);
+#else
+	G__letint(defined,'i',lldefined==llexpression);
+#endif
 	defined->ref=0;
 	break;
       case 'N': /* != */
+#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letLonglong(defined,'n',1); /* Expression should be true wben the var is not defined */
 	else
 	  G__letint(defined,'i',lldefined!=llexpression);
+#else
+	G__letint(defined,'i',lldefined!=llexpression);
+#endif
 	defined->ref=0;
 	break;
       case 'G': /* >= */
+#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letLonglong(defined,'n',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'i',lldefined>=llexpression);
+#else
+	G__letint(defined,'i',lldefined>=llexpression);
+#endif
 	defined->ref=0;
 	break;
       case 'l': /* <= */
+#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letLonglong(defined,'n',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'i',lldefined<=llexpression);
+#else
+	G__letint(defined,'i',lldefined<=llexpression);
+#endif
 	defined->ref=0;
 	break;
 #ifndef G__OLDIMPLEMENTATION470
@@ -1593,15 +1697,25 @@ G__value *defined;
 	defined->ref=0;
 	break;
       case '>':
-	if(defined->type==G__null.type) 
-	  G__letint(defined,'h',0); /* Expression should be false wben the var is not defined */
+	if(defined->type==G__null.type) {
+#ifndef G__OLDIMPLEMENTATION2230
+	  G__letint(defined,'h',0);
+#else
+	  G__letint(defined,'h',uexpression);
+#endif
+	}
 	else
 	  G__letint(defined,'h',udefined>uexpression);
 	defined->ref=0;
 	break;
       case '<':
-	if(defined->type==G__null.type) 
-	  G__letint(defined,'h',0); /* Expression should be false wben the var is not defined */
+	if(defined->type==G__null.type) {
+#ifndef G__OLDIMPLEMENTATION2230
+	  G__letint(defined,'h',0);
+#else
+	  G__letint(defined,'h',uexpression);
+#endif
+	}
 	else
 	  G__letint(defined,'h',udefined<uexpression);
 	defined->ref=0;
@@ -1657,31 +1771,47 @@ G__value *defined;
 	defined->ref=0;
 	break;
       case 'E': /* == */
+#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letint(defined,'h',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'h',udefined==uexpression);
+#else
+	G__letint(defined,'h',udefined==uexpression);
+#endif
 	defined->ref=0;
 	break;
       case 'N': /* != */
+#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letint(defined,'h',1); /* Expression should be true wben the var is not defined */
 	else
 	  G__letint(defined,'h',udefined!=uexpression);
+#else
+	G__letint(defined,'h',udefined!=uexpression);
+#endif
 	defined->ref=0;
 	break;
       case 'G': /* >= */
+#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letint(defined,'h',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'h',udefined>=uexpression);
+#else
+	G__letint(defined,'h',udefined>=uexpression);
+#endif
 	defined->ref=0;
 	break;
       case 'l': /* <= */
+#ifndef G__OLDIMPLEMENTATION2230
 	if(defined->type==G__null.type) 
 	  G__letint(defined,'h',0); /* Expression should be false wben the var is not defined */
 	else
 	  G__letint(defined,'h',udefined<=uexpression);
+#else
+	G__letint(defined,'h',udefined<=uexpression);
+#endif
 	defined->ref=0;
 	break;
 #ifndef G__OLDIMPLEMENTATION470
@@ -1847,15 +1977,25 @@ G__value *defined;
       defined->ref=0;
       break;
     case '>':
-      if(defined->type==G__null.type) 
-        G__letint(defined,'i',0); /* Expression should be false wben the var is not defined */
+      if(defined->type==G__null.type) {
+#ifndef G__OLDIMPLEMENTATION2230
+	G__letint(defined,'i',0);
+#else
+	G__letint(defined,'i',lexpression);
+#endif
+      }
       else
 	G__letint(defined,'i',ldefined>lexpression);
       defined->ref=0;
       break;
     case '<':
-      if(defined->type==G__null.type) 
-	G__letint(defined,'i',0); /* Expression should be false wben the var is not defined */
+      if(defined->type==G__null.type) {
+#ifndef G__OLDIMPLEMENTATION2230
+	G__letint(defined,'i',0);
+#else
+	G__letint(defined,'i',lexpression);
+#endif
+      }
       else
 	G__letint(defined,'i',ldefined<lexpression);
       defined->ref=0;
@@ -1933,31 +2073,47 @@ G__value *defined;
       defined->ref=0;
       break;
     case 'E': /* == */
+#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type)
         G__letint(defined,'i',0); /* Expression should be false wben the var is not defined */
       else
         G__letint(defined,'i',ldefined==lexpression);
+#else
+      G__letint(defined,'i',ldefined==lexpression);
+#endif
       defined->ref=0;
       break;
     case 'N': /* != */
+#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type)
         G__letint(defined,'i',1); /* Expression should be true wben the var is not defined */
       else
         G__letint(defined,'i',ldefined!=lexpression);
+#else
+      G__letint(defined,'i',ldefined!=lexpression);
+#endif
       defined->ref=0;
       break;
     case 'G': /* >= */
+#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type)
         G__letint(defined,'i',0); /* Expression should be false wben the var is not defined */
       else
         G__letint(defined,'i',ldefined>=lexpression);
+#else
+      G__letint(defined,'i',ldefined>=lexpression);
+#endif
       defined->ref=0;
       break;
     case 'l': /* <= */
+#ifndef G__OLDIMPLEMENTATION2230
       if(defined->type==G__null.type)
         G__letint(defined,'i',0); /* Expression should be false wben the var is not defined */
       else
         G__letint(defined,'i',ldefined<=lexpression);
+#else
+      G__letint(defined,'i',ldefined<=lexpression);
+#endif
       defined->ref=0;
       break;
 #ifndef G__OLDIMPLEMENTATION470

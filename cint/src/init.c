@@ -684,7 +684,7 @@ char *argv[] ;
 
 
 #ifndef G__OLDIMPLEMENTATION1817
-#ifdef G__ROOT
+#if defined(G__ROOT) && !defined(G__NATIVELONGLONG)
   {
     int xtagnum,xtypenum;
     G__cpp_setuplongif();

@@ -1124,8 +1124,8 @@ int base;
         fclose(G__temp);
       }
       else {
+        G__display_keyword(fout,keyword,G__temp);
         fclose(G__temp);
-        G__display_keyword(fout,keyword,tname);
         remove(tname);
       }
 #elif !defined(G__OLDIMPLEMENTATION1917)

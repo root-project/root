@@ -78,7 +78,7 @@ public:
 //////////////////////////////////////////////////////////////////////
 #elif defined(G__GNUC) && !defined (G__KCC) 
 
-template <int inst>
+template<int inst>
 class __malloc_alloc_template {
  public:
   static void * allocate(size_t n);

@@ -7,7 +7,7 @@
  * Description:
  *  internal meta-data structure handling
  ************************************************************************
- * Copyright(c) 1995~2003  Masaharu Goto 
+ * Copyright(c) 1995~2005  Masaharu Goto 
  *
  * Permission to use, copy, modify and distribute this software and its 
  * documentation for any purpose is hereby granted without fee,
@@ -242,12 +242,17 @@ G__value buf;
     return((long)buf.obj.d);
 #ifndef G__OLDIMPLEMENTATION2202
   case 'n':
+#define G__OLDIMPLEMENTATION2229
+#ifdef G__OLDIMPLEMENTATION2229
     G__fprinterr(G__serr,"Warning: conversion from 64bit to 32bit integer");
     G__printlinenum();
+#endif
     return((long)buf.obj.ll);
   case 'm':
+#ifdef G__OLDIMPLEMENTATION2229
     G__fprinterr(G__serr,"Warning: conversion from 64bit to 32bit integer");
     G__printlinenum();
+#endif
     return((long)buf.obj.ull);
   case 'q':
     return((long)buf.obj.ld);
@@ -275,12 +280,16 @@ G__value buf;
     return(buf.obj.ulo);
 #ifndef G__OLDIMPLEMENTATION2202
   case 'n':
+#ifdef G__OLDIMPLEMENTATION2229
     G__fprinterr(G__serr,"Warning: conversion from 64bit to 32bit integer");
     G__printlinenum();
+#endif
     return((unsigned long)buf.obj.ll);
   case 'm':
+#ifdef G__OLDIMPLEMENTATION2229
     G__fprinterr(G__serr,"Warning: conversion from 64bit to 32bit integer");
     G__printlinenum();
+#endif
     return((unsigned long)buf.obj.ull);
   case 'q':
     return((unsigned long)buf.obj.ld);
