@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.1.1.1 2000/05/16 17:00:50 rdm Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.h,v 1.2 2000/06/05 07:31:21 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -109,19 +109,19 @@ public:
       TLatex(Coord_t x, Coord_t y, const char *text);
       TLatex(const TLatex &text);
       virtual ~TLatex();
-      void     Copy(TObject &text);
+      void             Copy(TObject &text);
 
-      TLatex  *DrawLatex(Float_t x, Float_t y, const char *text);
-      Float_t  GetHeight();
-      void     GetTextExtent(UInt_t &w, UInt_t &h, const char *text);
-      Float_t  GetXsize();
-      Float_t  GetYsize();
-      void     Paint(Option_t *option="");
-      void     PaintLatex(Float_t x, Float_t y, Float_t angle, Float_t size, const char *text);
+      TLatex          *DrawLatex(Float_t x, Float_t y, const char *text);
+      Float_t          GetHeight();
+      virtual void     GetTextExtent(UInt_t &w, UInt_t &h, const char *text);
+      Float_t          GetXsize();
+      Float_t          GetYsize();
+      virtual void     Paint(Option_t *option="");
+      virtual void     PaintLatex(Float_t x, Float_t y, Float_t angle, Float_t size, const char *text);
 
-      void     SavePrimitive(ofstream &out, Option_t *option);
-      void     SetIndiceSize(Float_t factorSize);
-      void     SetLimitIndiceSize(Int_t limitFactorSize);
+      virtual void     SavePrimitive(ofstream &out, Option_t *option);
+      virtual void     SetIndiceSize(Float_t factorSize);
+      virtual void     SetLimitIndiceSize(Int_t limitFactorSize);
 
       ClassDef(TLatex,1)  //The Latex-style text processor class
 };

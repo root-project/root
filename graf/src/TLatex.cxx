@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.2 2000/05/29 06:19:20 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TLatex.cxx,v 1.3 2000/06/05 07:26:31 brun Exp $
 // Author: Nicolas Brun   07/08/98
 
 /*************************************************************************
@@ -1769,12 +1769,12 @@ void TLatex::SavePrimitive(ofstream &out, Option_t *)
    } else {
        out<<"   TLatex *";
    }
-   out<<"text = new TLatex("<<fX<<","<<fY<<","<<quote<<GetTitle()<<quote<<");"<<endl;
+   out<<"tex = new TLatex("<<fX<<","<<fY<<","<<quote<<GetTitle()<<quote<<");"<<endl;
 
-   SaveTextAttributes(out,"text",11,0,1,62,1);
-   SaveLineAttributes(out,"text",1,1,1);
+   SaveTextAttributes(out,"tex",11,0,1,62,1);
+   SaveLineAttributes(out,"tex",1,1,1);
 
-   out<<"   text->Draw();"<<endl;
+   out<<"   tex->Draw();"<<endl;
 }
 
 //______________________________________________________________________________
