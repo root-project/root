@@ -1,4 +1,4 @@
-// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.7 2002/01/19 13:18:38 brun Exp $
+// @(#)root/physics:$Name:  $:$Id: TLorentzVector.h,v 1.8 2002/01/21 16:29:20 brun Exp $
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 
 /*************************************************************************
@@ -153,7 +153,7 @@ public:
   inline TLorentzVector operator - () const;
   // Unary minus.
 
-  inline TLorentzVector operator * (Double_t a);
+  inline TLorentzVector operator * (Double_t a) const;
   inline TLorentzVector & operator *= (Double_t a);
   // Scaling with real numbers.
 
@@ -402,7 +402,7 @@ inline TLorentzVector& TLorentzVector::operator *= (Double_t a) {
   return *this;
 }
 
-inline TLorentzVector TLorentzVector::operator * (Double_t a) {
+inline TLorentzVector TLorentzVector::operator * (Double_t a) const {
   return TLorentzVector(a*X(), a*Y(), a*Z(), a*T());
 }
 
