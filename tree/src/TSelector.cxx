@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.2 2000/07/10 06:12:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.3 2000/07/13 19:19:27 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -18,9 +18,11 @@
 //  The following members functions are called by the TTree functions.    //
 //    Begin:       called everytime a loop on the tree starts.            //
 //                 a convenient place to create your histograms.          //
+//                                                                        //
+//    Notify():    This function is called at the first entry of a new    //
+//                 in a chain.                                            //
 //    ProcessCut:  called at the beginning of each entry to return a flag //
 //                 true if the entry must be analyzed.                    //
-//                 a convenient place to draw/fit your histograms.        //
 //    ProcessFill: called in the entry loop for all entries accepted      //
 //                 by Select.                                             //
 //    Terminate:   called at the end of a loop on a TTree.                //
@@ -66,6 +68,15 @@ void TSelector::ExecuteBegin(TTree *tree)
 
 
 //______________________________________________________________________________
+Bool_t TSelector::ExecuteNotify()
+{
+   // Invoke the Notify function via the compiler
+
+   return Notify();
+}
+
+
+//______________________________________________________________________________
 void TSelector::ExecuteTerminate()
 {
    // Invoke the Terminate function via the compiler
@@ -92,6 +103,9 @@ TSelector *TSelector::GetSelector(const char *filename)
 //
 //     void TSelector::Begin(). This function is called before looping on the
 //          events in the Tree. The user can create his histograms in this function.
+//   
+//     Bool_t TSelector::Notify(). This function is called at the first entry
+//          of a new file in a chain.
 //   
 //     Bool_t TSelector::ProcessCut(Int_t entry). This function is called
 //          before processing entry. It is the user's responsability to read

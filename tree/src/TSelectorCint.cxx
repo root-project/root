@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.cxx,v 1.2 2000/07/10 06:12:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.cxx,v 1.1 2000/07/13 19:22:46 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -29,6 +29,7 @@ TSelectorCint::TSelectorCint(): TSelector()
    // Default constructor for a Selector.
 
    fFuncBegin   = 0;
+   fFuncNotif   = 0;
    fFuncTerm    = 0;
    fFuncCut     = 0;
    fFuncFill    = 0;
@@ -42,6 +43,7 @@ TSelectorCint::~TSelectorCint()
    // destructor for a Selector.
 
    delete fFuncBegin;
+   delete fFuncNotif;
    delete fFuncTerm;
    delete fFuncCut;
    delete fFuncFill;
@@ -54,11 +56,13 @@ void TSelectorCint::Build(TSelector *iselector, G__ClassInfo *cl)
 
    fIntSelector = iselector;
    fFuncBegin   = new G__CallFunc();
+   fFuncNotif   = new G__CallFunc();
    fFuncTerm    = new G__CallFunc();
    fFuncCut     = new G__CallFunc();
    fFuncFill    = new G__CallFunc();
    Long_t offset = 0;
    fFuncBegin->SetFuncProto(cl,"Begin","",&offset);
+   fFuncNotif->SetFuncProto(cl,"Notify","",&offset);
    fFuncTerm->SetFuncProto (cl,"Terminate","",&offset);
    fFuncCut->SetFuncProto  (cl,"ProcessCut","int",&offset);
    fFuncFill->SetFuncProto (cl,"ProcessFill","int",&offset);
@@ -72,6 +76,16 @@ void TSelectorCint::ExecuteBegin(TTree *tree)
 
    fFuncBegin->SetArg((Long_t)tree);
    fFuncBegin->ExecInt(fIntSelector);
+}
+
+
+//______________________________________________________________________________
+Bool_t TSelectorCint::ExecuteNotify()
+{
+   // Invoke the Notify function via the interpreter
+
+   Int_t sel = fFuncNotif->ExecInt(fIntSelector);
+   return (Bool_t)sel;
 }
 
 

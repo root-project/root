@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.2 2000/07/10 06:12:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelectorCint.h,v 1.1 2000/07/13 19:22:46 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -33,6 +33,7 @@ class TSelectorCint : public TSelector {
 
 protected:
    G__CallFunc   *fFuncBegin;    //!
+   G__CallFunc   *fFuncNotif;    //!
    G__CallFunc   *fFuncTerm;     //!
    G__CallFunc   *fFuncCut;      //!
    G__CallFunc   *fFuncFill;     //!
@@ -43,6 +44,7 @@ public:
    virtual            ~TSelectorCint();
    virtual void        Build(TSelector *iselector, G__ClassInfo *cl);
    virtual void        ExecuteBegin(TTree *tree);
+   virtual Bool_t      ExecuteNotify();
    virtual Bool_t      ExecuteProcessCut(Int_t entry);
    virtual void        ExecuteProcessFill(Int_t entry);
    virtual void        ExecuteTerminate();

@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.2 2000/07/10 06:12:15 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TSelector.h,v 1.3 2000/07/13 19:19:27 brun Exp $
 // Author: Rene Brun   05/02/97
 
 /*************************************************************************
@@ -35,9 +35,11 @@ public:
    virtual            ~TSelector();
    virtual void        Begin(TTree *) {;}
    virtual void        ExecuteBegin(TTree *tree);
+   virtual Bool_t      ExecuteNotify();
    virtual Bool_t      ExecuteProcessCut(Int_t entry);
    virtual void        ExecuteProcessFill(Int_t entry);
    virtual void        ExecuteTerminate();
+   virtual Bool_t      Notify() {return kTRUE;}
    virtual void        Terminate() {;}
    static  TSelector  *GetSelector(const char *filename);
    virtual Bool_t      ProcessCut(Int_t entry) {return kTRUE;}

@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.5 2000/07/10 06:17:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.h,v 1.6 2000/07/12 17:13:01 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -55,6 +55,7 @@ public:
     virtual Int_t     Draw(const char *varexp, const char *selection, Option_t *option=""
                      ,Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
     virtual TBranch  *GetBranch(const char *name);
+    virtual Int_t     GetChainEntryNumber(Int_t entry);
             Int_t     GetNtrees() {return fNtrees;}
     virtual Int_t     GetEntry(Int_t entry=0, Int_t getall=0);
     TFile            *GetFile() {return fFile;}
@@ -77,8 +78,8 @@ public:
     virtual void      Merge(const char *name);
     virtual void      Merge(TFile *file, Int_t basketsize, Option_t *option="");
     virtual void      Print(Option_t *option="");
-    virtual Int_t     Process(const char *filename, Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
-    virtual Int_t     Process(TSelector *selector,  Int_t nentries=1000000000, Int_t firstentry=0);
+    virtual Int_t     Process(const char *filename,Option_t *option="", Int_t nentries=1000000000, Int_t firstentry=0); // *MENU*
+    virtual Int_t     Process(TSelector *selector,Option_t *option="",  Int_t nentries=1000000000, Int_t firstentry=0);
     virtual void      SetBranchAddress(const char *bname,void *add);
     virtual void      SetBranchStatus(const char *bname,Bool_t status=1);
     virtual void      SetPacketSize(Int_t size = 100);

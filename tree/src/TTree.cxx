@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.11 2000/07/10 06:17:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.12 2000/07/13 19:19:27 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1556,7 +1556,7 @@ void TTree::Print(Option_t *option)
 }
 
 //______________________________________________________________________________
-Int_t TTree::Process(const char *filename,Int_t nentries, Int_t firstentry)
+Int_t TTree::Process(const char *filename,Option_t *option,Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Process this tree executing the code in filename*-*-*-*-*
 //*-*              ================================================
@@ -1594,12 +1594,12 @@ Int_t TTree::Process(const char *filename,Int_t nentries, Int_t firstentry)
 //   in case of an error.
 
    GetPlayer();
-   if (fPlayer) return fPlayer->Process(filename,nentries,firstentry);
+   if (fPlayer) return fPlayer->Process(filename,option,nentries,firstentry);
    else         return -1;
 }
 
 //______________________________________________________________________________
-Int_t TTree::Process(TSelector *selector, Int_t nentries, Int_t firstentry)
+Int_t TTree::Process(TSelector *selector,Option_t *option, Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Process this tree executing the code in selector*-*-*-*-*
 //*-*              ================================================
@@ -1622,7 +1622,7 @@ Int_t TTree::Process(TSelector *selector, Int_t nentries, Int_t firstentry)
 //          events in the Tree. The user can create his histograms in this function.
 
    GetPlayer();
-   if (fPlayer) return fPlayer->Process(selector,nentries,firstentry);
+   if (fPlayer) return fPlayer->Process(selector,option,nentries,firstentry);
    else         return -1;
 }   
 

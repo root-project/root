@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.6 2000/07/10 06:17:57 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.7 2000/07/12 17:13:01 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -263,6 +263,15 @@ TBranch *TChain::GetBranch(const char *name)
    LoadTree(0);
    if (fTree) return fTree->GetBranch(name);
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t TChain::GetChainEntryNumber(Int_t entry)
+{
+// return absolute entry number in the chain
+// the input parameter entry is the entry number in the current Tree of this chain
+
+  return entry + fTreeOffset[fTreeNumber];
 }
 
 //______________________________________________________________________________
@@ -586,22 +595,22 @@ void TChain::Print(Option_t *option)
 }
 
 //______________________________________________________________________________
-Int_t TChain::Process(const char *filename, Int_t nentries, Int_t firstentry)
+Int_t TChain::Process(const char *filename,Option_t *option,  Int_t nentries, Int_t firstentry)
 {
    // Process all entries in this chain, calling functions in filename
    // see TTree::Process
 
    if (LoadTree(firstentry) < 0) return 0;
-   return TTree::Process(filename,nentries,firstentry);
+   return TTree::Process(filename,option,nentries,firstentry);
 }
 
 //______________________________________________________________________________
-Int_t TChain::Process(TSelector *selector, Int_t nentries, Int_t firstentry)
+Int_t TChain::Process(TSelector *selector,Option_t *option,  Int_t nentries, Int_t firstentry)
 {
 //*-*-*-*-*-*-*-*-*Process this chain executing the code in selector*-*-*-*-*
 //*-*              ================================================
 
-   return TTree::Process(selector,nentries,firstentry);
+   return TTree::Process(selector,option,nentries,firstentry);
 }
 
 //_______________________________________________________________________
