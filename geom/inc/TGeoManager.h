@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.23 2003/01/27 18:04:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.24 2003/01/28 18:12:56 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -141,6 +141,7 @@ public:
    void                   SetPhiRange(Double_t phimin=0., Double_t phimax=360.); // *MENU*
    void                   SetNsegments(Int_t nseg); // *MENU*
    void                   SetBombFactors(Double_t bombx=1.3, Double_t bomby=1.3, Double_t bombz=1.3,                                         Double_t bombr=1.3); // *MENU* 
+   void                   SetTopVisible(Bool_t vis=kTRUE);
    void                   SetVisLevel(Int_t level=3);   // *MENU*
    void                   SetVisOption(Int_t option=0); // *MENU*
    void                   SaveAttributes(const char *filename="tgeoatt.C"); // *MENU*

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.22 2003/01/27 13:16:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.23 2003/01/27 18:04:47 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide() implemented by Mihaela Gheata
 
@@ -837,13 +837,9 @@ void TGeoVolume::SetLineWidth(Style_t lwidth)
 TGeoNode *TGeoVolume::GetNode(const char *name) const
 {
 // get the pointer to a daughter node
-   Int_t nd = fNodes->GetEntriesFast();
-   TGeoNode *node;
-   for (Int_t i=0; i<nd; i++) {
-      node = (TGeoNode*)fNodes->At(i);
-      if (!strcmp(node->GetName(), name)) return node;
-   }   
-   return 0;
+   if (!fNodes) return 0;
+   TGeoNode *node = (TGeoNode *)fNodes->FindObject(name);
+   return node;
 }
 
 //_____________________________________________________________________________

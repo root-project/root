@@ -43,6 +43,7 @@ TGeoPainter::TGeoPainter()
    fExplodedView = 0;
    fVisBranch = "";
    fVisLock = kFALSE;
+   fTopVisible = kFALSE;
    fVisVolumes = new TObjArray();
    fCheckedNode = 0;
    memset(&fCheckedBox[0], 0, 6*sizeof(Double_t));
@@ -134,7 +135,7 @@ Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py)
    Int_t level = fGeom->GetLevel();
    TGeoNode *current = fGeom->GetCurrentNode();
    if (vol != current->GetVolume()) return 9999;
-   Bool_t vis=(current->IsVisible() && fGeom->GetLevel() && fGeom->IsInPhiRange())?kTRUE:kFALSE;
+   Bool_t vis=(current->IsVisible() && (level || (!level && fTopVisible)) && fGeom->IsInPhiRange())?kTRUE:kFALSE;
    TGeoNode *node = 0;
    Int_t nd = vol->GetNdaughters();
    Bool_t last = kFALSE;
@@ -1270,7 +1271,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option)
    Int_t nd = node->GetNdaughters();
    Bool_t last = kFALSE;
    Int_t level = fGeom->GetLevel();
-   Bool_t vis=(node->IsVisible() && fGeom->GetLevel() && fGeom->IsInPhiRange())?kTRUE:kFALSE;
+   Bool_t vis=(node->IsVisible() && (level || (!level && fTopVisible)) && fGeom->IsInPhiRange())?kTRUE:kFALSE;
    Int_t id;
    switch (fVisOption) {
       case kGeoVisDefault:
@@ -1368,7 +1369,7 @@ void TGeoPainter::Sizeof3D(const TGeoVolume *vol) const
    Bool_t last = kFALSE;
    Int_t level = fGeom->GetLevel();
    TGeoNode *current = fGeom->GetCurrentNode();
-   Bool_t vis=(current->IsVisible() && fGeom->GetLevel() && fGeom->IsInPhiRange())?kTRUE:kFALSE;
+   Bool_t vis=(current->IsVisible() && (level || (!level && fTopVisible)) && fGeom->IsInPhiRange())?kTRUE:kFALSE;
    Int_t id;
    switch (fVisOption) {
       case kGeoVisDefault:
@@ -1476,6 +1477,18 @@ void TGeoPainter::SetVisLevel(Int_t level) {
       gPad->Update();
    }
 }
+//-----------------------------------------------------------------------------
+void TGeoPainter::SetTopVisible(Bool_t vis)
+{
+   if (fTopVisible==vis) return;
+   fTopVisible = vis;
+   if (!gPad) return;
+   if (gPad->GetView()) {
+      gPad->Modified();
+      gPad->Update();
+   }
+}
+   
 //-----------------------------------------------------------------------------
 void TGeoPainter::SetVisOption(Int_t option) {
 // set drawing mode :

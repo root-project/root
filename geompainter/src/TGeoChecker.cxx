@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.19 2002/12/11 17:10:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.21 2003/01/15 18:43:45 brun Exp $
 // Author: Andrei Gheata   01/11/01
 // TGeoChecker::CheckGeometry() by Mihaela Gheata
 
@@ -48,6 +48,7 @@ TGeoChecker::TGeoChecker()
 // Default constructor
    fGeom = 0;
    fTreePts      = 0; 
+   fVsafe = 0;
 }
 //-----------------------------------------------------------------------------
 TGeoChecker::TGeoChecker(TGeoManager *geom)
@@ -55,6 +56,7 @@ TGeoChecker::TGeoChecker(TGeoManager *geom)
 // Constructor for a given geometry
    fGeom = geom;
    fTreePts = 0;
+   fVsafe = 0;
 }
 //-----------------------------------------------------------------------------
 TGeoChecker::TGeoChecker(const char * /*treename*/, const char * /*filename*/)
@@ -62,6 +64,7 @@ TGeoChecker::TGeoChecker(const char * /*treename*/, const char * /*filename*/)
 // constructor
    fGeom = gGeoManager;
    fTreePts = 0;
+   fVsafe = 0;
 }
 //-----------------------------------------------------------------------------
 TGeoChecker::~TGeoChecker()
@@ -252,44 +255,58 @@ void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
 
    Double_t point[3];
    Double_t local[3];
-   Double_t dir[3];
+   Double_t dir[3], localdir[3];
    point[0] = x;
    point[1] = y;
    point[2] = z;
-   memset(&dir[0], 0, 3*sizeof(Double_t));
+   memset(dir, 0, 3*sizeof(Double_t));
    dir[2] = 1.;
+   memset(localdir, 0, 3*sizeof(Double_t));
+   localdir[2] = 1.;
    // init dummy track from current point
-   fGeom->InitTrack(&point[0], &dir[0]);
+   TGeoVolume *vol = fGeom->GetTopVolume();
+   if (fVsafe) {
+      TGeoNode *old = fVsafe->GetNode("SAFETY_1");
+      if (old) fVsafe->GetNodes()->RemoveAt(vol->GetNdaughters()-1);
+   }   
+   if (vol != fGeom->GetMasterVolume()) fGeom->RestoreMasterVolume();
+   TGeoNode *node = fGeom->FindNode(point[0], point[1], point[2]);
+   fGeom->MasterToLocal(point, local);
+   Double_t r = TMath::Sqrt(local[0]*local[0]+local[1]*local[1]+local[2]*local[2]);
+   if (r>1E-5) { 
+      localdir[0] = -local[0]/r;
+      localdir[1] = -local[1]/r;
+      localdir[2] = -local[2]/r;
+   }
+   fGeom->LocalToMasterVect(localdir, dir);   
+   fGeom->SetCurrentDirection(dir);
    // get current node
-   TGeoNode *node = fGeom->GetCurrentNode();
    printf("===  Check current point ===\n");
    printf("Current point : x=%f y=%f z=%f\n", point[0], point[1], point[2]);
    printf("  - path : %s\n", fGeom->GetPath());
    // get corresponding volume
-   TGeoVolume *vol = node->GetVolume();
+   if (node) vol = node->GetVolume();
    // compute safety distance (distance to boundary ignored)
    fGeom->FindNextBoundary();
    Double_t close = fGeom->GetSafeDistance();
-   if (close>1E10) {
-      printf("Safety not implemented for shape %s\n",
-             vol->GetShape()->ClassName());
-   } else {
-      printf("Safety radius : %f\n", close);
-   }   
-   fGeom->MasterToLocal(&point[0], &local[0]);
+   printf("Safety radius : %f\n", close);
+   if (close>1E-4) {
+      TGeoVolume *sph = fGeom->MakeSphere("SAFETY", vol->GetMedium(), 0, close, 0,180,0,360);
+      sph->SetLineColor(2);
+      sph->SetLineStyle(3);
+      vol->AddNode(sph,1,new TGeoTranslation(local[0], local[1], local[2]));
+      fVsafe = vol;
+   }
    TPolyMarker3D *pm = new TPolyMarker3D();
    pm->SetMarkerColor(2);
    pm->SetMarkerStyle(8);
    pm->SetMarkerSize(0.5);
    pm->SetNextPoint(local[0], local[1], local[2]);
-   if (vol->GetNdaughters()) {
-      fGeom->SetVisLevel(1);
-      if (!vol->IsVisible()) vol->SetVisibility(kTRUE);
-      vol->Draw();
-   } else {
-      if (!vol->IsVisible()) vol->SetVisibility(kTRUE);
-      vol->DrawOnly();
-   }   
+   if (vol->GetNdaughters()<2) fGeom->SetTopVisible();
+   else fGeom->SetTopVisible(kFALSE);
+   fGeom->SetVisLevel(1);
+   if (!vol->IsVisible()) vol->SetVisibility(kTRUE);
+   vol->Draw();
    pm->Draw("SAME");
    gPad->Modified();
    gPad->Update();

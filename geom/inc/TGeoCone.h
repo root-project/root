@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.6 2002/12/06 16:45:03 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.h,v 1.7 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -53,18 +53,16 @@ public:
    virtual void          ComputeBBox();
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   static  Double_t      DistToCone(Double_t *point, Double_t *dir, Double_t r1, Double_t z1, Double_t r2, Double_t z2);   
-//   static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Int_t iact,Double_t step, Double_t *safe,
-//                                    Double_t dz,Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2);
-   static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Int_t iact,Double_t step, Double_t *safe,
-                                    Double_t rmin1, Double_t rmax1, Double_t z1, Double_t rmin2, Double_t rmax2, Double_t z2);
+   static  void          DistToCone(Double_t *point, Double_t *dir, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Double_t &b, Double_t &delta);   
+   static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Double_t dz,
+                                    Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
 //   static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1,Double_t rmin2, Double_t rmax2, 
 //                                   Double_t dz, Double_t ro1, Double_t tg1, Double_t cr1, Double_t zv1,
 //                                   Double_t ro2, Double_t tg2, Double_t cr2, Double_t zv2, Double_t r2, Double_t rin, Double_t rout);
-   static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1,Double_t z1, Double_t rmin2, Double_t rmax2, 
-                                   Double_t z2);
+   static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t dz,
+                                   Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2);
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
@@ -88,6 +86,8 @@ public:
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
+                                 Double_t rmin2, Double_t rmax2, Int_t skipz=0);
    void                  SetConeDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                                        Double_t rmin2, Double_t rmax2);
    virtual void          SetDimensions(Double_t *param);
@@ -131,21 +131,14 @@ public:
    
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    static  Double_t      DistToCons(Double_t *point, Double_t *dir, Double_t r1, Double_t z1, Double_t r2, Double_t z2, Double_t phi1, Double_t phi2);
-//   static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Int_t iact,Double_t step, Double_t *safe,
-//                                    Double_t dz,Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2,
-//                                    Double_t phi1, Double_t phi2);
-   static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Int_t iact,Double_t step, Double_t *safe,
-                                    Double_t rmin1, Double_t rmax1, Double_t z1, Double_t rmin2, Double_t rmax2, Double_t z2, Double_t phi1, Double_t phi2);
+   static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Double_t dz, Double_t rmin1, Double_t rmax1, 
+                                    Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
-   static Double_t       DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1,
+   static  Double_t      DistToPhiMin(Double_t *point, Double_t *dir, Double_t s1, Double_t c1,
                                       Double_t s2, Double_t c2, Double_t sm, Double_t cm);   
-//   static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, 
-//                                   Double_t dz, Double_t ro1, Double_t tg1, Double_t cr1, Double_t zv1,
-//                                   Double_t ro2, Double_t tg2, Double_t cr2, Double_t zv2, Double_t r2, Double_t rin, Double_t rout,
-//                                   Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi, Double_t phi1=0, Double_t phi2=0);
-   static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1, Double_t z1, Double_t rmin2, Double_t rmax2, 
-                                   Double_t z2, Double_t phi1, Double_t phi2);   
+   static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2, 
+                                   Double_t dz, Double_t phi1, Double_t phi2);   
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
@@ -162,6 +155,8 @@ public:
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
+                                 Double_t rmin2, Double_t rmax2, Double_t c1, Double_t s1, Double_t c2, Double_t s2, Int_t skipz=0);
    void                  SetConsDimensions(Double_t dz, Double_t rmin1, Double_t rmax1,
                                        Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param);

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.4 2002/10/09 12:57:40 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.h,v 1.5 2002/11/20 08:55:10 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -32,8 +32,9 @@ class TGeoChecker : public TObject
 {
 private :
 // data members
-   TGeoManager     *fGeom;
-   TTree           *fTreePts;
+   TGeoManager     *fGeom;            // pointer to geometry manager
+   TTree           *fTreePts;         // tree of points
+   TGeoVolume      *fVsafe;           // volume to which a safety sphere node was added
 // methods
 
 public:

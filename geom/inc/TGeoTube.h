@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.6 2003/01/13 14:53:49 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TGeoTube.h,v 1.7 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -46,8 +46,7 @@ public:
 
    virtual void          ComputeBBox();
    virtual Bool_t        Contains(Double_t *point) const;
-   static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Int_t iact,Double_t step, Double_t *safe,
-                                    Double_t rmin, Double_t rmax, Double_t dz);
+   static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
    static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz);
@@ -72,6 +71,7 @@ public:
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, Int_t skipz=0);
    void                  SetTubeDimensions(Double_t rmin, Double_t rmax, Double_t dz);
    virtual void          SetDimensions(Double_t *param);
    virtual void          SetPoints(Double_t *buff) const;
@@ -113,12 +113,12 @@ public:
    virtual void          ComputeBBox();
    virtual Bool_t        Contains(Double_t *point) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   static  Double_t      DistToOutS(Double_t *point, Double_t *dir, Int_t iact,Double_t step, Double_t *safe,
-                                    Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2);
+   static  Double_t      DistToOutS(Double_t *point, Double_t *dir,Double_t rmin, Double_t rmax, Double_t dz, 
+                                    Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm);
    virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
    static  Double_t      DistToInS(Double_t *point, Double_t *dir, Double_t rmin, Double_t rmax, Double_t dz,
-                                   Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cfio, Double_t sfio, Double_t cdfi);
+                                   Double_t c1, Double_t s1, Double_t c2, Double_t s2, Double_t cm, Double_t sm, Double_t cdfi);
    virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
                                    Double_t step=0, Double_t *safe=0) const;
    virtual Double_t      DistToSurf(Double_t *point, Double_t *dir) const;
@@ -135,6 +135,8 @@ public:
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const;
+   static  Double_t      SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, 
+                                 Double_t c1, Double_t s1, Double_t c2, Double_t s2, Int_t skipz=0);
    void                  SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                                        Double_t phi1, Double_t phi2);
    virtual void          SetDimensions(Double_t *param);

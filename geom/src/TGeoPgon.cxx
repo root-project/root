@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.18 2003/01/24 08:38:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.19 2003/01/27 13:16:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -688,7 +688,7 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    saf[5]=r*TMath::Sin(dph2*kDegRad);
    if ((iact<3) && safe) {
       *safe = saf[TMath::LocMax(6, &saf[0])];
-      if ((iact==1) && (*safe>step)) return kBig;
+//      if ((iact==1) && (*safe>step)) return kBig;
       if (iact==0) return kBig;
    }
    // compute distance to boundary   

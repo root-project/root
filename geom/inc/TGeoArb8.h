@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.6 2002/12/03 16:01:38 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.h,v 1.7 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 /*************************************************************************
@@ -188,6 +188,10 @@ public:
             Double_t tl2, Double_t alpha2);
    // destructor
    virtual ~TGeoGtra();
+   virtual Double_t      DistToOut(Double_t *point, Double_t *dir, Int_t iact=1, 
+                                   Double_t step=0, Double_t *safe=0) const {return TGeoArb8::DistToOut(point,dir,iact,step,safe);}
+   virtual Double_t      DistToIn(Double_t *point, Double_t *dir, Int_t iact=1, 
+                                   Double_t step=0, Double_t *safe=0) const {return TGeoArb8::DistToIn(point,dir,iact,step,safe);}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother) const;
    Double_t              GetTwistAngle() const {return fTwistAngle;}
   ClassDef(TGeoGtra, 1)         // G3 GTRA shape

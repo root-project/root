@@ -45,6 +45,7 @@ private:
    Int_t              fVisOption;        // global visualization option
    Int_t              fExplodedView;     // type of exploding current view
    Bool_t             fVisLock;          // lock for adding visible volumes
+   Bool_t             fTopVisible;       // set top volume visible
    const char        *fVisBranch;        // drawn branch
    TGeoNode          *fCheckedNode;      // checked node
    TGeoManager       *fGeom;             // geometry to which applies
@@ -100,6 +101,7 @@ public:
    virtual void       SetExplodedView(Int_t iopt=0);
    virtual void       SetNsegments(Int_t nseg=20);
    virtual void       SetGeoManager(TGeoManager *geom) {fGeom=geom;}
+   virtual void       SetTopVisible(Bool_t vis=kTRUE);
    virtual void       SetVisLevel(Int_t level=3);
    virtual void       SetVisOption(Int_t option=0);
    virtual void       Sizeof3D(const TGeoVolume *vol) const;

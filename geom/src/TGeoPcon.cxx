@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.13 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.14 2003/01/24 08:38:50 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -201,16 +201,12 @@ Int_t TGeoPcon::DistancetoPrimitive(Int_t px, Int_t py)
 Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the polycone
-   Double_t saf[4];
+   if (iact<3 && safe) {
+      *safe = Safety(point, kTRUE);
+      if (iact==0) return kBig;
+      if ((iact==1) && (*safe>step)) return kBig;
+   }
    Double_t snxt = kBig;
-//   Double_t r2 = point[0]*point[0] + point[1]*point[1];
-//   Double_t r = TMath::Sqrt(r2);
-   
-   Double_t zmin = fZ[0];
-   Double_t zmax = fZ[fNz-1];
-   Double_t safz1 = point[2]-zmin;
-   Double_t safz2 = zmax-point[2];
-   saf[0] = TMath::Min(safz1, safz2);
    // determine which z segment contains the point
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
    if (ipl==(fNz-1)) ipl--;
@@ -223,29 +219,28 @@ Double_t TGeoPcon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    Bool_t inphi=kTRUE;
    if (fDphi==360) inphi=kFALSE;     
    Double_t point_new[3];
-   memcpy(&point_new[0], &point[0], 2*sizeof(Double_t));
+   memcpy(point_new, point, 2*sizeof(Double_t));
    // new point in reference system of the current segment
    point_new[2] = point[2]-0.5*(fZ[ipl]+fZ[ipl+1]);
    
    Double_t phi1 = fPhi1;
    if (phi1<0) phi1+=360.;
    Double_t phi2 = phi1+fDphi;
+   Double_t phim = 0.5*(phi1+phi2);
+   Double_t c1 = TMath::Cos(phi1*kDegRad);
+   Double_t s1 = TMath::Sin(phi1*kDegRad);
+   Double_t c2 = TMath::Cos(phi2*kDegRad);
+   Double_t s2 = TMath::Sin(phi2*kDegRad);
+   Double_t cm = TMath::Cos(phim*kDegRad);
+   Double_t sm = TMath::Sin(phim*kDegRad);
    if (intub) {
-      if (inphi) snxt=TGeoTubeSeg::DistToOutS(&point_new[0], dir, iact, step, &saf[1], 
-                                              fRmin[ipl], fRmax[ipl],dz, phi1, phi2); 
-      else snxt=TGeoTube::DistToOutS(&point_new[0], dir, iact, step, &saf[1], fRmin[ipl], fRmax[ipl],dz);
+      if (inphi) snxt=TGeoTubeSeg::DistToOutS(point_new, dir, fRmin[ipl], fRmax[ipl],dz, c1,s1,c2,s2,cm,sm); 
+      else snxt=TGeoTube::DistToOutS(point_new, dir, fRmin[ipl], fRmax[ipl],dz);
    } else {
-      if (inphi) snxt=TGeoConeSeg::DistToOutS(&point_new[0], dir, iact, step, &saf[1],
-                                 fRmin[ipl], fRmax[ipl], -dz, fRmin[ipl+1], fRmax[ipl+1], dz, phi1,phi2);
-      else snxt=TGeoCone::DistToOutS(&point_new[0], dir, iact, step, &saf[1],
-                                 fRmin[ipl], fRmax[ipl], -dz, fRmin[ipl+1], fRmax[ipl+1], dz);
+      if (inphi) snxt=TGeoConeSeg::DistToOutS(point_new, dir, dz, fRmin[ipl], fRmax[ipl], fRmin[ipl+1], fRmax[ipl+1], phi1,phi2);
+      else snxt=TGeoCone::DistToOutS(point_new,dir,dz,fRmin[ipl],fRmax[ipl],fRmin[ipl+1], fRmax[ipl+1]);
    }                              
 
-   if (iact<3 && safe) {
-      *safe = TMath::Min(saf[0],saf[1]);
-      if (iact==0) return kBig;
-      if ((iact==1) && (*safe>step)) return kBig;
-   }
    for (Int_t i=0; i<3; i++) point_new[i]=point[i]+(snxt+1E-6)*dir[i];
    if (!Contains(&point_new[0])) return snxt;
    
@@ -282,11 +277,11 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
    Double_t phi2 = phi1+fDphi;
 
    if ((rmin1==rmin2) && (rmax1==rmax2)) {
-      if (!is_seg) snxt=TGeoTube::DistToInS(&local[0], dir, rmin1, rmax1, dz);
-      else snxt=TGeoTubeSeg::DistToInS(&local[0], dir, rmin1, rmax1, dz, c1, s1, c2, s2, cfio, sfio, cdfi);
+      if (!is_seg) snxt=TGeoTube::DistToInS(local, dir, rmin1, rmax1, dz);
+      else snxt=TGeoTubeSeg::DistToInS(local, dir, rmin1, rmax1, dz, c1, s1, c2, s2, cfio, sfio, cdfi);
    } else {  
-      if (!is_seg) snxt=TGeoCone::DistToInS(&local[0],dir,rmin1, rmax1, -dz, rmin2, rmax2, dz);
-      else snxt=TGeoConeSeg::DistToInS(&local[0],dir,rmin1, rmax1, -dz, rmin2, rmax2, dz, phi1, phi2);
+      if (!is_seg) snxt=TGeoCone::DistToInS(local,dir,dz,rmin1, rmax1,rmin2,rmax2);
+      else snxt=TGeoConeSeg::DistToInS(local,dir,rmin1, rmax1, rmin2, rmax2, dz, phi1, phi2);
    }
    if (snxt<1E20) return snxt;
    // check next segment
@@ -300,74 +295,43 @@ Double_t TGeoPcon::DistToSegZ(Double_t *point, Double_t *dir, Int_t &iz, Double_
 Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from outside point to surface of the tube
-   Bool_t cross = kTRUE;
-   // check if ray intersect outscribed cylinder
-   if ((point[2]<fZ[0]) && (dir[2]<=0)) {
-      if (iact==3) return kBig;
-      cross = kFALSE;
+   if ((iact<3) && safe) {
+      *safe = Safety(point, kFALSE);
+      if ((iact==1) && (*safe>step)) return kBig;
+      if (iact==0) return kBig;
    }
-   if (cross) {
-      if ((point[2]>fZ[fNz-1]) && (dir[2]>=0)) {
-         if (iact==3) return kBig;
-         cross = kFALSE;
-      }
-   }   
+   // check if ray intersect outscribed cylinder
+   if ((point[2]<fZ[0]) && (dir[2]<=0)) return kBig;
+   if ((point[2]>fZ[fNz-1]) && (dir[2]>=0)) return kBig;
 
    Double_t r2 = point[0]*point[0]+point[1]*point[1];
    Double_t radmax=0;
    radmax=fRmax[TMath::LocMax(fNz, fRmax)];
-   if (cross) {
-      if (r2>(radmax*radmax)) {
-         Double_t rpr=-point[0]*dir[0]-point[1]*dir[1];
-         Double_t nxy=dir[0]*dir[0]+dir[1]*dir[1];
-         if (rpr<TMath::Sqrt((r2-radmax*radmax)*nxy)) {
-            if (iact==3) return kBig;
-            cross = kFALSE;
-         }
-      }
+   if (r2>(radmax*radmax)) {
+      Double_t rpr=-point[0]*dir[0]-point[1]*dir[1];
+      Double_t nxy=dir[0]*dir[0]+dir[1]*dir[1];
+      if (rpr<TMath::Sqrt((r2-radmax*radmax)*nxy)) return kBig;
    }
-   Double_t saf[6];
-   Double_t r = TMath::Sqrt(r2); 
 
    // find in which Z segment we are
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
    Int_t ifirst = ipl;
    if (ifirst<0) {
       ifirst=0;
-      saf[0]=fZ[0]-point[2];
-      saf[1]=-kBig;
-   } else {
-      if (ifirst>=(fNz-1)) {
-         ifirst=fNz-2;
-         saf[0]=-kBig;
-         saf[1]=point[2]-fZ[fNz-1];
-      } else {
-         saf[0]=point[2]-fZ[ifirst];
-         saf[1]=fZ[ifirst+1]-point[2];
-      }
-   }
+   } else if (ifirst>=(fNz-1)) ifirst=fNz-2;
    // find if point is in the phi gap
    Double_t phi=0;
    Double_t phi1=0;
    Double_t phi2=0;
-   Double_t safp1=kBig, safp2=kBig;
    Double_t c1=0., s1=0., c2=0., s2=0., cfio=0., sfio=0., cdfi=0.;
-   Bool_t inhole=kFALSE, outhole=kFALSE, inphi=kFALSE;
-   if (fDphi!=360) {
-      phi1=fPhi1*kDegRad;
-      phi2=(fPhi1+fDphi)*kDegRad;
+   Bool_t inphi = (fDphi<360)?kTRUE:kFALSE;
+   if (inphi) {
+      phi1=fPhi1;
+      if (phi1<0) phi1+=360;
+      phi2=(phi1+fDphi)*kDegRad;
+      phi1=phi1*kDegRad;
       phi=TMath::ATan2(point[1], point[0]);
-      if (phi<phi1) phi+=2.*TMath::Pi();
-      safp1 = -r*TMath::Sin(phi-phi1);
-      safp2 = -r*TMath::Sin(phi2-phi);
-      if ((phi-phi1)>(phi2-phi1)) {
-         // point in gap
-         saf[4]=safp1;                             
-         saf[5]=safp2;
-      } else {
-         saf[4]=saf[5]=-kBig;
-         inphi=kTRUE;
-      }
+      if (phi<0) phi+=2.*TMath::Pi();
       c1=TMath::Cos(phi1);
       s1=TMath::Sin(phi1);
       c2=TMath::Cos(phi2);
@@ -376,35 +340,9 @@ Double_t TGeoPcon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
       cfio=TMath::Cos(fio);
       sfio=TMath::Sin(fio);
       cdfi=TMath::Cos(0.5*(phi2-phi1));
-   } else {
-      saf[4]=saf[5]=-kBig;
-      inphi=kTRUE;
-   }
-//   if (inphi1) printf("INPHI\n");
-//   printf("phi1=%f phi2=%f phi=%f\n", fPhi1, fPhi1+fDphi, phi);
-   Double_t dz=fZ[ifirst+1]-fZ[ifirst];
-   Double_t dzrat=(point[2]-fZ[ifirst])/dz;
-   Double_t rmin=fRmin[ifirst]+(fRmin[ifirst+1]-fRmin[ifirst])*dzrat;
-   Double_t rmax=fRmax[ifirst]+(fRmax[ifirst+1]-fRmax[ifirst])*dzrat;
-   if ((rmin>0) && (r<rmin)) inhole=kTRUE;
-   if (r>rmax) outhole=kTRUE;
-   Double_t tin=(fRmin[ifirst+1]-fRmin[ifirst])/dz;
-   Double_t cin=1./TMath::Sqrt(1.0+tin*tin);
-   Double_t tou=(fRmax[ifirst+1]-fRmax[ifirst])/dz;
-   Double_t cou=1./TMath::Sqrt(1.0+tou*tou);
-   if (inphi) {
-      saf[2] = (inhole)?((rmin-r)*cin):-kBig;
-      saf[3] = (outhole)?((r-rmax)*cou):-kBig;
-   } else {
-      saf[2]=saf[3]=-kBig;
-   }
-   if ((iact<3) && safe) {
-      *safe = saf[TMath::LocMax(6, &saf[0])];
-      if ((iact==1) && (*safe>step)) return kBig;
-      if (iact==0) return kBig;
-   }
+   } 
+
    // compute distance to boundary
-   if (!cross) return kBig;
    return DistToSegZ(point,dir,ifirst, c1,s1,c2,s2,cfio,sfio,cdfi);
 }
 //-----------------------------------------------------------------------------
@@ -606,11 +544,172 @@ void TGeoPcon::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPcon::Safety(Double_t * /*point*/, Bool_t /*in*/) const
+Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return kBig;
+   //---> localize the Z segment
+   
+   Double_t safe;
+   Double_t ptnew[3];
+   Double_t dz, rmin1, rmax1, rmin2, rmax2;
+   Bool_t is_tube, is_seg;
+   Double_t phi1=0, phi2=0, c1=0, s1=0, c2=0, s2=0;
+   Int_t skipz;
+   if (in) {
+   //---> point is inside pcon
+      Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
+      if (ipl==(fNz-1)) return 0;   // point on last Z boundary
+      if (ipl<0) return 0;          // point on first Z boundary
+      dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
+      if (dz<1E-10) return 0;
+      Double_t dzb = TMath::Min(point[2]-fZ[ipl], fZ[ipl+1]-point[2]);
+      if (dzb<1E-5) return dzb;     // point close to Z boundary
+      skipz = 3; // skip z checks
+      if (ipl==0) {
+         if (fNz>2 && fZ[1]==fZ[2]) skipz=0; // do not skip z plane check
+         else                       skipz=2; // skip upper z check
+      } else if (ipl==fNz-2) {
+         if (fNz>2 && fZ[ipl]==fZ[ipl-1]) skipz=0;
+         else                             skipz=1; // skip lower z check
+      } else {
+         if (fZ[ipl]==fZ[ipl-1]) {
+            skipz=2;
+            if (fZ[ipl+1]==fZ[ipl+2]) skipz=0;
+         } else if (fZ[ipl+1]==fZ[ipl+2]) {
+            skipz=1;
+         }
+      }  
+      //---> Check shape type
+      memcpy(ptnew, point, 3*sizeof(Double_t));
+      ptnew[2] -= 0.5*(fZ[ipl]+fZ[ipl+1]);
+      rmin1 = fRmin[ipl];
+      rmax1 = fRmax[ipl];
+      rmin2 = fRmin[ipl+1];
+      rmax2 = fRmax[ipl+1];
+      is_tube = ((rmin1==rmin2) && (rmax1==rmax2))?kTRUE:kFALSE;
+      is_seg  = (fDphi<360)?kTRUE:kFALSE;
+      if (is_seg) {
+         phi1 = fPhi1;
+         if (phi1<0) phi1+=360;
+         phi2 = phi1 + fDphi;
+         phi1 *= kDegRad;
+         phi2 *= kDegRad;
+         c1 = TMath::Cos(phi1);
+         s1 = TMath::Sin(phi1);
+         c2 = TMath::Cos(phi2);
+         s2 = TMath::Sin(phi2);
+         if (is_tube) safe = TGeoTubeSeg::SafetyS(ptnew,in,rmin1,rmax1, dz,c1,s1,c2,s2,skipz);
+         else         safe = TGeoConeSeg::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2,skipz);
+      } else {
+         if (is_tube) safe = TGeoTube::SafetyS(ptnew,in,rmin1,rmax1,dz,skipz);
+         else         safe = TGeoCone::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,skipz);
+      }
+      return safe;
+   }
+   //---> point is outside pcon
+   Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
+   is_seg  = (fDphi<360)?kTRUE:kFALSE;
+   if (is_seg) {
+      phi1 = fPhi1;
+      if (phi1<0) phi1+=360;
+      phi2 = phi1 + fDphi;
+      phi1 *= kDegRad;
+      phi2 *= kDegRad;
+      c1 = TMath::Cos(phi1);
+      s1 = TMath::Sin(phi1);
+      c2 = TMath::Cos(phi2);
+      s2 = TMath::Sin(phi2);
+   }         
+   Bool_t outz = kFALSE;
+   skipz = 3;
+   if (ipl<0) {
+      ipl++;
+      skipz = 0;
+      outz = kTRUE;
+   } else if (ipl==fNz-1) {
+      ipl--;
+      skipz = 0;
+      outz = kTRUE;
+   }
+   dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
+   if (dz==0) {
+      ipl++;
+      dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
+   }   
+   rmin1 = fRmin[ipl];
+   rmax1 = fRmax[ipl];
+   rmin2 = fRmin[ipl+1];
+   rmax2 = fRmax[ipl+1];
+   is_tube = ((rmin1==rmin2) && (rmax1==rmax2))?kTRUE:kFALSE;
+   is_seg  = (fDphi<360)?kTRUE:kFALSE;
+   memcpy(ptnew, point, 2*sizeof(Double_t));
+   ptnew[2] = point[2] - 0.5*(fZ[ipl]+fZ[ipl+1]);
+   if (is_seg) {
+      if (is_tube) safe = TGeoTubeSeg::SafetyS(ptnew,in,rmin1,rmax1, dz,c1,s1,c2,s2,skipz);
+      else         safe = TGeoConeSeg::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2,skipz);
+   } else {
+      if (is_tube) safe = TGeoTube::SafetyS(ptnew,in,rmin1,rmax1,dz,skipz);
+      else         safe = TGeoCone::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,skipz);
+   }
+   if (outz) return safe;
+   skipz = 0;
+   Double_t safup   = kBig;
+   Double_t safdown = kBig;
+   Double_t rpt;
+   Int_t ipnew = -1;
+   if (ipl>1) {
+      if (fZ[ipl]==fZ[ipl-1]) {
+         rpt = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+         if (rpt<fRmin[ipl] && fRmin[ipl-1]<fRmin[ipl]) {
+            ipnew = ipl-2;
+         } else if (rpt>fRmax[ipl] && fRmax[ipl-1]>fRmax[ipl]) ipnew=ipl-2;
+      }
+      if (ipnew>=0) {
+      // fully check slice at index ipnew
+         rmin1 = fRmin[ipnew];
+         rmax1 = fRmax[ipnew];
+         rmin2 = fRmin[ipnew+1];
+         rmax2 = fRmax[ipnew+1];
+         is_tube = ((rmin1==rmin2) && (rmax1==rmax2))?kTRUE:kFALSE;
+         ptnew[2] = point[2] - 0.5*(fZ[ipnew]+fZ[ipnew+1]);
+         if (is_seg) {
+            if (is_tube) safdown = TGeoTubeSeg::SafetyS(ptnew,in,rmin1,rmax1, dz,c1,s1,c2,s2,skipz);
+            else         safdown = TGeoConeSeg::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2,skipz);
+         } else {
+            if (is_tube) safdown = TGeoTube::SafetyS(ptnew,in,rmin1,rmax1,dz,skipz);
+            else         safdown = TGeoCone::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,skipz);
+         }
+      }
+   }   
+   ipnew = -1;   
+   if (ipl<fNz-3) {
+      if (fZ[ipl+1]==fZ[ipl+2]) {
+         rpt = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
+         if (rpt<fRmin[ipl+1] && fRmin[ipl+2]<fRmin[ipl+1]) {
+            ipnew = ipl+2;
+         } else if (rpt>fRmax[ipl+1] && fRmax[ipl+2]>fRmax[ipl+1]) ipnew=ipl+2;
+      }
+      if (ipnew>=0) {
+      // fully check slice at index ipnew
+         rmin1 = fRmin[ipnew];
+         rmax1 = fRmax[ipnew];
+         rmin2 = fRmin[ipnew+1];
+         rmax2 = fRmax[ipnew+1];
+         is_tube = ((rmin1==rmin2) && (rmax1==rmax2))?kTRUE:kFALSE;
+         ptnew[2] = point[2] - 0.5*(fZ[ipnew]+fZ[ipnew+1]);
+         if (is_seg) {
+            if (is_tube) safup = TGeoTubeSeg::SafetyS(ptnew,in,rmin1,rmax1, dz,c1,s1,c2,s2,skipz);
+            else         safup = TGeoConeSeg::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2,skipz);
+         } else {
+            if (is_tube) safup = TGeoTube::SafetyS(ptnew,in,rmin1,rmax1,dz,skipz);
+            else         safup = TGeoCone::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,skipz);
+         }
+      }
+   }   
+         
+   safe = TMath::Min(safe, TMath::Min(safdown, safup));
+   return safe;
 }
 //-----------------------------------------------------------------------------
 void TGeoPcon::SetDimensions(Double_t *param)
