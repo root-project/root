@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.80 2004/08/11 09:39:16 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TMath.cxx,v 1.81 2004/08/12 11:41:11 rdm Exp $
 // Authors: Rene Brun, Anna Kreshuk, Eddy Offermann, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -30,7 +30,7 @@
 
 const Int_t kWorkMax = 100;
 
-#if !defined(R__ALPHA) && !defined(R__SGI) && !defined(R__SOLARIS)    // The thml doc for TMath can not be generated
+#if !defined(R__ALPHA) && !defined(R__SOLARIS)    // The thml doc for TMath can not be generated
 NamespaceImp(TMath)
 #endif
 

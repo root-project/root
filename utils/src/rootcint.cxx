@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.185 2004/07/30 23:46:34 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.186 2004/07/31 06:13:13 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -2259,7 +2259,9 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
    fprintf(fp, "   namespace ROOT {\n");
 
+#if !defined(R__SGI)
    fprintf(fp, "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();\n");
+#endif
 
    if (!cl.HasMethod("Dictionary") || cl.IsTmplt())
       fprintf(fp, "      static void %s_Dictionary();\n",mappedname.c_str());
@@ -2268,20 +2270,11 @@ void WriteNamespaceInit(G__ClassInfo &cl)
 
    fprintf(fp, "      // Function generating the singleton type initializer\n");
 
-   // fprintf(fp, "   template <> ::ROOT::ClassInfo< %s > *GenerateInitInstance< %s >(const %s*)\n   {\n",
-   //      cl.Fullname(), cl.Fullname(), cl.Fullname() );
-
-#if 0
-   fprintf(fp, "#if defined R__NAMESPACE_TEMPLATE_IMP_BUG\n");
-   fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *::ROOT::GenerateInitInstance< %s >(const %s*)\n   {\n",
-           cl.Fullname(), cl.Fullname() );
-   fprintf(fp, "#else\n");
-   fprintf(fp, "   template <> ::ROOT::TGenericClassInfo *GenerateInitInstance< %s >(const %s*)\n   {\n",
-           classname.c_str(), classname.c_str() );
-   fprintf(fp, "#endif\n");
-#endif
-
+#if !defined(R__SGI)
    fprintf(fp, "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance()\n      {\n");
+#else
+   fprintf(fp, "      ::ROOT::TGenericClassInfo *GenerateInitInstance()\n      {\n");
+#endif
 
    fprintf(fp, "         static ::ROOT::TGenericClassInfo \n");
 
