@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.8 2002/08/13 21:17:58 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TVirtualHistPainter.h,v 1.9 2004/01/27 13:28:23 brun Exp $
 // Author: Rene Brun   30/08/99
 
 /*************************************************************************
@@ -45,11 +45,14 @@ public:
    virtual TList     *GetContourList(Double_t contour) const = 0;
    virtual char      *GetObjectInfo(Int_t px, Int_t py) const = 0;
    virtual TList     *GetStack() const = 0;
+   virtual Bool_t     IsInside(Int_t x, Int_t y) = 0;
+   virtual Bool_t     IsInside(Double_t x, Double_t y) = 0;
    virtual void       Paint(Option_t *option="") = 0;
    virtual void       PaintStat(Int_t dostat, TF1 *fit) = 0;
    virtual void       ProcessMessage(const char *mess, const TObject *obj) = 0;
    virtual void       SetHistogram(TH1 *h) = 0;
    virtual void       SetStack(TList *stack) = 0;
+   virtual Int_t      MakeCuts(char *cutsopt) = 0;
 
    static TVirtualHistPainter *HistPainter(TH1 *obj);
    static void                 SetPainter(const char *painter);

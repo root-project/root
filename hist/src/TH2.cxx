@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.53 2004/07/08 14:45:46 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH2.cxx,v 1.54 2004/08/05 17:20:26 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1347,6 +1347,16 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
 //
 //   if option "d" is specified, the profile is drawn in the current pad.
 //
+//   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
+//   One must create a graphical cut (mouse or C++) and specify the name
+//   of the cut between [] in the option.
+//   For example, with a TCutG named "cutg", one can call:
+//      myhist->ProfileX(" ",firstybin,lastybin,"[cutg]");
+//   To invert the cut, it is enough to put a "-" in front of its name:
+//      myhist->ProfileX(" ",firstybin,lastybin,"[-cutg]");
+//   It is possible to apply several cuts:
+//      myhist->ProfileX(" ",firstybin,lastybin,[cutg1,cutg2]");
+//
 //   NOTE that if a TProfile named name exists in the current directory or pad,
 //   the histogram is reset and filled again with the current contents of the TH2.
 //   The X axis attributes of the TH2 are copied to the X axis of the profile.
@@ -1374,6 +1384,12 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
      h1->Reset();
   }
 
+  Int_t ncuts = 0;
+  if (opt.Contains("[")) {
+     ((TH2 *)this)->GetPainter();
+     if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
+  }
+
   if (!h1) {
      const TArrayD *bins = fXaxis.GetXbins();
      if (bins->fN == 0) {
@@ -1395,6 +1411,9 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
   Double_t cont;
   for (Int_t binx =0;binx<=nx+1;binx++) {
      for (Int_t biny=firstybin;biny<=lastybin;biny++) {
+        if (ncuts) {
+           if (!fPainter->IsInside(binx,biny)) continue; 
+        }
         cont =  GetCellContent(binx,biny);
         if (cont) {
            h1->Fill(fXaxis.GetBinCenter(binx),fYaxis.GetBinCenter(biny), cont);
@@ -1436,6 +1455,16 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
 //
 //   if option "d" is specified, the profile is drawn in the current pad.
 //
+//   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
+//   One must create a graphical cut (mouse or C++) and specify the name
+//   of the cut between [] in the option.
+//   For example, with a TCutG named "cutg", one can call:
+//      myhist->ProfileY(" ",firstybin,lastybin,"[cutg]");
+//   To invert the cut, it is enough to put a "-" in front of its name:
+//      myhist->ProfileY(" ",firstybin,lastybin,"[-cutg]");
+//   It is possible to apply several cuts:
+//      myhist->ProfileY(" ",firstybin,lastybin,[cutg1,cutg2]");
+//
 //   NOTE that if a TProfile named name exists in the current directory or pad,
 //   the histogram is reset and filled again with the current contents of the TH2.
 //   The Y axis attributes of the TH2 are copied to the X axis of the profile.
@@ -1463,6 +1492,12 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
      h1->Reset();
   }
 
+  Int_t ncuts = 0;
+  if (opt.Contains("[")) {
+     ((TH2 *)this)->GetPainter();
+     if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
+  }
+
   if (!h1) {
      const TArrayD *bins = fYaxis.GetXbins();
      if (bins->fN == 0) {
@@ -1484,6 +1519,9 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
   Double_t cont;
   for (Int_t biny =0;biny<=ny+1;biny++) {
      for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
+        if (ncuts) {
+           if (!fPainter->IsInside(binx,biny)) continue; 
+        }
         cont =  GetCellContent(binx,biny);
         if (cont) {
            h1->Fill(fYaxis.GetBinCenter(biny),fXaxis.GetBinCenter(binx), cont);
@@ -1530,6 +1568,16 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 //   if option "e" is specified, the errors are computed.
 //   if option "d" is specified, the projection is drawn in the current pad.
 //
+//   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
+//   One must create a graphical cut (mouse or C++) and specify the name
+//   of the cut between [] in the option.
+//   For example, with a TCutG named "cutg", one can call:
+//      myhist->ProjectionX(" ",firstybin,lastybin,"[cutg]");
+//   To invert the cut, it is enough to put a "-" in front of its name:
+//      myhist->ProjectionX(" ",firstybin,lastybin,"[-cutg]");
+//   It is possible to apply several cuts:
+//      myhist->ProjectionX(" ",firstybin,lastybin,[cutg1,cutg2]");
+//
 //   NOTE that if a TH1D named name exists in the current directory or pad,
 //   the histogram is reset and filled again with the current contents of the TH2.
 //   The X axis attributes of the TH2 are copied to the X axis of the projection.
@@ -1557,6 +1605,12 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
      h1->Reset();
   }
 
+  Int_t ncuts = 0;
+  if (opt.Contains("[")) {
+     ((TH2 *)this)->GetPainter();
+     if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
+  }
+
   if (!h1) {
      const TArrayD *bins = fXaxis.GetXbins();
      if (bins->fN == 0) {
@@ -1580,6 +1634,9 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
   for (Int_t binx =0;binx<=nx+1;binx++) {
      err2 = 0;
      for (Int_t biny=firstybin;biny<=lastybin;biny++) {
+        if (ncuts) {
+           if (!fPainter->IsInside(binx,biny)) continue; 
+        }
         cont  = GetCellContent(binx,biny);
         err   = GetCellError(binx,biny);
         err2 += err*err;
@@ -1630,6 +1687,16 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
 //   if option "e" is specified, the errors are computed.
 //   if option "d" is specified, the projection is drawn in the current pad.
 //
+//   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
+//   One must create a graphical cut (mouse or C++) and specify the name
+//   of the cut between [] in the option.
+//   For example, with a TCutG named "cutg", one can call:
+//      myhist->ProjectionY(" ",firstybin,lastybin,"[cutg]");
+//   To invert the cut, it is enough to put a "-" in front of its name:
+//      myhist->ProjectionY(" ",firstybin,lastybin,"[-cutg]");
+//   It is possible to apply several cuts:
+//      myhist->ProjectionY(" ",firstybin,lastybin,[cutg1,cutg2]");
+//
 //   NOTE that if a TH1D named name exists in the current directory or pad,
 //   the histogram is reset and filled again with the current contents of the TH2.
 //   The Y axis attributes of the TH2 are copied to the X axis of the projection.
@@ -1657,6 +1724,12 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
      h1->Reset();
   }
 
+  Int_t ncuts = 0;
+  if (opt.Contains("[")) {
+     ((TH2 *)this)->GetPainter();
+     if (fPainter) ncuts = fPainter->MakeCuts((char*)opt.Data());
+  }
+
   if (!h1) {
      const TArrayD *bins = fYaxis.GetXbins();
      if (bins->fN == 0) {
@@ -1680,6 +1753,9 @@ TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option
   for (Int_t biny =0;biny<=ny+1;biny++) {
      err2 = 0;
      for (Int_t binx=firstxbin;binx<=lastxbin;binx++) {
+        if (ncuts) {
+           if (!fPainter->IsInside(binx,biny)) continue; 
+        }
         cont  = GetCellContent(binx,biny);
         err   = GetCellError(binx,biny);
         err2 += err*err;
