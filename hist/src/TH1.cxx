@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.152 2003/07/08 07:26:30 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.153 2003/07/09 07:30:20 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -796,7 +796,7 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
        fYaxis.GetXmax() != h2->fYaxis.GetXmax() ||
        fZaxis.GetXmin() != h2->fZaxis.GetXmin() ||
        fZaxis.GetXmax() != h2->fZaxis.GetXmax()) {
-       Warning("Add","Attempt to add histograms with different axis limits");
+       Warning("Add","Attempt to add histograms::Add with different axis limits");
    }
    if (fDimension < 2) nbinsy = -1;
    if (fDimension < 3) nbinsz = -1;
@@ -806,7 +806,7 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
    if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
 
 //   - Add statistics
-   fEntries = c1*h1->GetEntries() + c2*h2->GetEntries();
+   Double_t nEntries = c1*h1->GetEntries() + c2*h2->GetEntries();
    Stat_t s1[10], s2[10], s3[10];
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = s2[i] = s3[i] = 0;}
@@ -840,6 +840,7 @@ void TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
          }
       }
    }
+   SetEntries(nEntries);
 }
 
 
@@ -1061,6 +1062,7 @@ void TH1::Divide(TF1 *f1, Double_t c1)
    if (fDimension < 3) nbinsz = -1;
 
 //   - Add statistics
+   Double_t nEntries = fEntries;
    Stat_t s1[10];
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = 0;}
@@ -1102,6 +1104,7 @@ void TH1::Divide(TF1 *f1, Double_t c1)
          }
       }
    }
+   SetEntries(nEntries);
 }
 
 //______________________________________________________________________________
@@ -1152,6 +1155,7 @@ void TH1::Divide(const TH1 *h1)
    if (fSumw2.fN == 0 && h1->GetSumw2N() != 0) Sumw2();
 
 //   - Reset statistics
+   Double_t nEntries = fEntries;
    fEntries = fTsumw = 0;
 
 //    Reset the kCanRebin option. Otherwise SetBinContent on the overflow bin
@@ -1184,6 +1188,7 @@ void TH1::Divide(const TH1 *h1)
    Stat_t s[10];
    GetStats(s);
    PutStats(s);
+   SetEntries(nEntries);
 }
 
 
@@ -1251,6 +1256,7 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
    if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
 
 //   - Reset statistics
+   Double_t nEntries = fEntries;
    fEntries = fTsumw = 0;
    
    SetMinimum();
@@ -1293,6 +1299,7 @@ void TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Option_
    Stat_t s[10];
    GetStats(s);
    PutStats(s);
+   SetEntries(nEntries);
 }
 
 //______________________________________________________________________________
@@ -3332,6 +3339,7 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
    if (fDimension < 3) nbinsz = -1;
 
 //   - Add statistics
+   Double_t nEntries = fEntries;
    Stat_t s1[10];
    Int_t i;
    for (i=0;i<10;i++) {s1[i] = 0;}
@@ -3370,6 +3378,7 @@ void TH1::Multiply(TF1 *f1, Double_t c1)
          }
       }
    }
+   SetEntries(nEntries);
 }
 
 //______________________________________________________________________________
@@ -3418,6 +3427,7 @@ void TH1::Multiply(const TH1 *h1)
    if (fSumw2.fN == 0 && h1->GetSumw2N() != 0) Sumw2();
 
 //   - Reset statistics
+   Double_t nEntries = fEntries;
    fEntries = fTsumw = 0;
    
    SetMinimum();
@@ -3450,6 +3460,7 @@ void TH1::Multiply(const TH1 *h1)
    Stat_t s[10];
    GetStats(s);
    PutStats(s);
+   SetEntries(nEntries);
 }
 
 
@@ -3511,6 +3522,7 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    if (fSumw2.fN == 0 && (h1->GetSumw2N() != 0 || h2->GetSumw2N() != 0)) Sumw2();
 
 //   - Reset statistics
+   Double_t nEntries = fEntries;
    fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
    SetMinimum();
    SetMaximum();
@@ -3544,6 +3556,7 @@ void TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    Stat_t s[10];
    GetStats(s);
    PutStats(s);
+   SetEntries(nEntries);
 }
 
 //______________________________________________________________________________
