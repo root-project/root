@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.8 2004/04/26 13:45:33 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.h,v 1.9 2004/04/26 19:49:39 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -50,7 +50,7 @@ public:
   virtual ~TSpline() {if(fHistogram) delete fHistogram; if(fGraph) delete fGraph;}
   virtual  void     GetKnot(Int_t i, Double_t &x, Double_t &y) const =0;
   virtual  void     Draw(Option_t *option="");
-  virtual Int_t     GetNpx() const {return fNpx;}
+  virtual  Int_t    GetNpx() const {return fNpx;}
   virtual  void     Paint(Option_t *option="");
   virtual Double_t  Eval(Double_t x) const=0;
   virtual  void     SaveAs(const char * /*filename*/) const {;}
@@ -98,6 +98,10 @@ public:
     Double_t dx=x-fX;
     return (fY+dx*(fB+dx*(fC+dx*fD)));
   }
+  Double_t Derivative(Double_t x) const {
+    Double_t dx=x-fX;
+    return (fB+2*fC*dx+3*fD*dx*dx);
+  }
 
   ClassDef(TSplinePoly3,1)  // Third spline polynomial terms
 
@@ -126,6 +130,10 @@ public:
   Double_t Eval(Double_t x) const {
     Double_t dx=x-fX;
     return (fY+dx*(fB+dx*(fC+dx*(fD+dx*(fE+dx*fF)))));
+  }
+  Double_t Derivative(Double_t x) const{
+    Double_t dx=x-fX;
+    return (fB+2*fC*dx+3*fD*dx*dx+4*fE*dx*dx*dx+5*fF*dx*dx*dx*dx);
   }
 
   ClassDef(TSplinePoly5,1)  // Quintic spline polynomial terms
@@ -165,7 +173,9 @@ public:
   TSpline3(const char *title,
 	   const TGraph *g, const char *opt=0,
 	   Double_t valbeg=0, Double_t valend=0);
+  Int_t    FindX(Double_t x) const;
   Double_t Eval(Double_t x) const;
+  Double_t Derivative(Double_t x) const;
   virtual ~TSpline3() {if (fPoly) delete [] fPoly;}
   void GetCoeff(Int_t i, Double_t &x, Double_t &y, Double_t &b,
 		Double_t &c, Double_t &d) {x=fPoly[i].X();y=fPoly[i].Y();
@@ -216,7 +226,9 @@ public:
 	   const TGraph *g,
 	   const char *opt=0, Double_t b1=0, Double_t e1=0,
 	   Double_t b2=0, Double_t e2=0);
+  Int_t    FindX(Double_t x) const;
   Double_t Eval(Double_t x) const;
+  Double_t Derivative(Double_t x) const;
   ~TSpline5() {if (fPoly) delete [] fPoly;}
   void GetCoeff(Int_t i, Double_t &x, Double_t &y, Double_t &b,
 		Double_t &c, Double_t &d, Double_t &e, Double_t &f)

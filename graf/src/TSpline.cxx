@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.8 2004/04/26 14:22:36 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TSpline.cxx,v 1.9 2004/06/01 09:56:25 brun Exp $
 // Author: Federico Carminati   28/02/2000
 
 /*************************************************************************
@@ -195,6 +195,7 @@ void TSpline::Streamer(TBuffer &R__b)
       TSpline::Class()->WriteBuffer(R__b,this);
    }
 }
+
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -540,12 +541,10 @@ void TSpline3::Test()
   }
 }
 
-//____________________________________________________________________________
-Double_t TSpline3::Eval(Double_t x) const
+//_____________________________________________________________________
+
+Int_t TSpline3::FindX(Double_t x) const
 {
-  //
-  // Evaluate spline polynomial
-  //
   Int_t klow=0;
   //
   // If out of boundaries, extrapolate
@@ -574,9 +573,21 @@ Double_t TSpline3::Eval(Double_t x) const
 	    "Binary search failed x(%d) = %f < %f < x(%d) = %f\n",
 	    klow,fPoly[klow].X(),x,fPoly[klow+1].X());
   }
-  //
-  // Evaluate now
+  return klow;
+}
+
+//____________________________________________________________________________
+Double_t TSpline3::Eval(Double_t x) const
+{
+  Int_t klow=FindX(x);
   return fPoly[klow].Eval(x);
+}
+
+//____________________________________________________________________________
+Double_t TSpline3::Derivative(Double_t x) const
+{
+  Int_t klow=FindX(x);
+  return fPoly[klow].Derivative(x);
 }
 
 //____________________________________________________________________________
@@ -1194,13 +1205,10 @@ void TSpline5::SetBoundaries(Double_t b1, Double_t e1, Double_t b2, Double_t e2,
     fPoly[fNp-1].Y()=e1;
   }
 }
-
-//____________________________________________________________________________
-Double_t TSpline5::Eval(Double_t x) const
+//___________________________________________________________________________
+Int_t TSpline5::FindX(Double_t x) const
 {
-  //
-  // Evaluate spline polynomial
-  //
+
   Int_t klow=0;
   //
   // If out of boundaries, extrapolate
@@ -1229,9 +1237,21 @@ Double_t TSpline5::Eval(Double_t x) const
 	    "Binary search failed x(%d) = %f < %f < x(%d) = %f\n",
 	      klow,fPoly[klow].X(),x,fPoly[klow+1].X());
   }
-  //
-  // Evaluate now
+  return klow;
+}
+
+//___________________________________________________________________________
+Double_t TSpline5::Eval(Double_t x) const
+{
+  Int_t klow=FindX(x);
   return fPoly[klow].Eval(x);
+}
+
+//____________________________________________________________________________
+Double_t TSpline5::Derivative(Double_t x) const
+{
+  Int_t klow=FindX(x);
+  return fPoly[klow].Derivative(x);
 }
 
 //____________________________________________________________________________
