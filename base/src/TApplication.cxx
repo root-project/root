@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.44 2003/01/22 11:23:02 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TApplication.cxx,v 1.45 2003/03/10 14:57:11 rdm Exp $
 // Author: Fons Rademakers   22/12/95
 
 /*************************************************************************
@@ -166,7 +166,8 @@ TApplication::TApplication(const char *appClassName,
       char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
 
 #if !defined(R__WIN32)
-      if (!gROOT->IsBatch() && ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
+      if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&
+          ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
          TString plugin = "x11ttf";
 
          TPluginHandler *h;
