@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.24 2003/12/16 16:22:55 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TVirtualX.h,v 1.25 2004/04/06 16:40:32 rdm Exp $
 // Author: Fons Rademakers   3/12/95
 
 /*************************************************************************
@@ -348,6 +348,7 @@ public:
    virtual void         glLoadMatrixd(const Double_t *matrix);
    virtual void         glShadeModel(UInt_t mode);
    virtual void         glNormal3fv(const Float_t *norm);
+   virtual Bool_t       IsCmdThread() const { return kTRUE; }
 
    static TVirtualX    *&Instance();
 
