@@ -1,4 +1,4 @@
-// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.40 2004/01/09 11:44:02 rdm Exp $
+// @(#)root/treeviewer:$Name:  $:$Id: TTreeViewer.cxx,v 1.41 2004/01/13 21:02:14 brun Exp $
 //Author : Andrei Gheata   16/08/00
 
 /*************************************************************************
@@ -1737,7 +1737,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         gROOT->SetInterrupt(kTRUE);
                      break;
                   case kCLOSE:
-                     CloseWindow();
+                     SendCloseMessage();
                      break;
                   case kBGFirst:
                      fSession->Show(fSession->First());
@@ -1835,7 +1835,7 @@ Bool_t TTreeViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   case kFilePrint:
                      break;
                   case kFileClose:
-                     CloseWindow();
+                     SendCloseMessage();
                      break;
                   case kFileQuit:
                      gApplication->Terminate(0);
@@ -2100,8 +2100,7 @@ void TTreeViewer::CloseWindow()
 {
    // Close the viewer.
 
-   gVirtualX->UnmapWindow(GetId());
-   delete this;
+   DeleteWindow();
    cout << "Tree Viewer deleted\n";
 }
 
