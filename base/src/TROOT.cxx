@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.45 2001/07/27 13:12:03 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.46 2001/09/22 06:18:21 brun Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -184,6 +184,7 @@ Int_t       gDebug;
 
 Int_t         TROOT::fgDirLevel = 0;
 Bool_t        TROOT::fgRootInit = kFALSE;
+Bool_t        TROOT::fgMemCheck = kFALSE;
 TString       TROOT::fgMacroPath;
 VoidFuncPtr_t TROOT::fgMakeDefCanvas = 0;
 
@@ -1046,6 +1047,8 @@ void TROOT::InitSystem()
       if (msize != -1 || mcnt != -1)
          TStorage::EnableStatistics(msize, mcnt);
 
+      fgMemCheck = gEnv->GetValue("Root.MemCheck", 0);
+
       TObject::SetObjectStat(gEnv->GetValue("Root.ObjectStat", 0));
    }
 }
@@ -1427,9 +1430,15 @@ void TROOT::IndentLevel()
 }
 
 //______________________________________________________________________________
-Bool_t  TROOT::Initialized()
+Bool_t TROOT::Initialized()
 {
    return fgRootInit;
+}
+
+//______________________________________________________________________________
+Bool_t TROOT::MemCheck()
+{
+   return fgMemCheck;
 }
 
 //______________________________________________________________________________

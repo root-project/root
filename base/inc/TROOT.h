@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.13 2001/05/17 10:57:56 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.h,v 1.14 2001/09/20 17:07:40 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -51,9 +51,11 @@ friend class TCint;
 
 private:
    Int_t           fLineIsProcessing;     //To synchronize multi-threads
+
+   static TString  fgMacroPath;           //Macro search path
    static Int_t    fgDirLevel;            //Indentation level for ls()
    static Bool_t   fgRootInit;            //Singleton initialization flag
-   static TString  fgMacroPath;           //Macro search path
+   static Bool_t   fgMemCheck;            //Turn on memory leak checker
 
 protected:
    TString         fVersion;              //ROOT version (from CMZ VERSQQ) ex 0.05/01
@@ -215,6 +217,7 @@ public:
    static Int_t       IncreaseDirLevel();
    static void        IndentLevel();
    static Bool_t      Initialized();
+   static Bool_t      MemCheck();
    static void        SetDirLevel(Int_t level = 0);
    static void        SetMakeDefCanvas(VoidFuncPtr_t makecanvas);
 
