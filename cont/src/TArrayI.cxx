@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayI.cxx,v 1.9 2002/05/18 08:43:30 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayI.cxx,v 1.10 2002/06/10 14:30:10 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -95,8 +95,7 @@ void TArrayI::AddAt(Int_t c, Int_t i)
 {
    // Add Int_t c at position i. Check for out of bounds.
 
-   if (!BoundsOk("TArrayI::AddAt", i))
-      i = 0;
+   if (!BoundsOk("TArrayI::AddAt", i)) return;
    fArray[i] = c;
 }
 

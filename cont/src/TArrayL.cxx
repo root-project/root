@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TArrayL.cxx,v 1.9 2002/05/18 08:43:30 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TArrayL.cxx,v 1.10 2002/06/10 14:30:10 brun Exp $
 // Author: Rene Brun   06/03/95
 
 /*************************************************************************
@@ -95,8 +95,7 @@ void TArrayL::AddAt(Long_t c, Int_t i)
 {
    // Add long c at position i. Check for out of bounds.
 
-   if (!BoundsOk("TArrayL::AddAt", i))
-      i = 0;
+   if (!BoundsOk("TArrayL::AddAt", i)) return;
    fArray[i] = c;
 }
 
