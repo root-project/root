@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.31 2003/04/10 20:12:21 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.h,v 1.32 2004/02/22 11:31:17 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -32,6 +32,7 @@ class TBrowser;
 class TF1;
 class TVector;
 class TVectorD;
+class TSpline;
 
 class TGraph : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -81,6 +82,7 @@ public:
         virtual void     DrawGraph(Int_t n, const Float_t *x, const Float_t *y, Option_t *option="");
         virtual void     DrawGraph(Int_t n, const Double_t *x, const Double_t *y, Option_t *option="");
         virtual void     DrawPanel(); // *MENU*
+        virtual Double_t Eval(Double_t x, TSpline *spline=0) const;
         virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
         virtual TObject *FindObject(const char *name) const;
         virtual TObject *FindObject(const TObject *obj) const;
@@ -101,7 +103,7 @@ public:
         Double_t        *GetY() const {return fY;}
         TAxis           *GetXaxis() const ;
         TAxis           *GetYaxis() const ;
-        virtual void     GetPoint(Int_t i, Double_t &x, Double_t &y);
+        virtual void     GetPoint(Int_t i, Double_t &x, Double_t &y) const;
         virtual void     InitExpo(Int_t first=0, Int_t last=0);
         virtual void     InitGaus(Int_t first=0, Int_t last=0);
         virtual void     InitPolynom(Int_t first=0, Int_t last=0);

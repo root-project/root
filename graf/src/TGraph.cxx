@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.119 2004/01/16 13:32:45 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.120 2004/02/22 11:31:17 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -26,6 +26,7 @@
 #include "TVectorD.h"
 #include "Foption.h"
 #include "TRandom.h"
+#include "TSpline.h"
 #include "TPaveStats.h"
 #include "TPluginManager.h"
 #include "TVirtualFitter.h"
@@ -670,6 +671,24 @@ void TGraph::DrawPanel()
    printf("TGraph::DrawPanel: not yet implemented\n");
 }
 
+//______________________________________________________________________________
+Double_t TGraph::Eval(Double_t x, TSpline *spline) const
+{
+// Interpolate points in this graph at x using a TSpline
+//  -if spline==0 a TSpline3 object is created using this graph
+//   and the interpolated value from the spline is returned.
+//   the internally created spline is deleted on return.
+//  -if spline is specified, it is used to return the interpolated value.
+   
+   if (!spline) {
+      TSpline3 *s = new TSpline3("",this);
+      return s->Eval(x);
+      delete s;
+   } else {
+      return spline->Eval(x);
+   }
+}
+      
 //______________________________________________________________________________
 void TGraph::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
@@ -1424,7 +1443,7 @@ TH1F *TGraph::GetHistogram() const
 }
 
 //______________________________________________________________________________
-void TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y)
+void TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y) const
 {
 //*-*-*-*-*-*-*-*-*-*-*Get x and y values for point number i*-*-*-*-*-*-*-*-*
 //*-*                  =====================================
