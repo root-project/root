@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: rpddefs.h,v 1.1 2004/10/11 12:34:34 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: DaemonUtils.h,v 1.2 2004/10/11 21:50:06 rdm Exp $
 // Author: Gerri Ganis  19/1/2004
 
 /*************************************************************************
@@ -18,16 +18,21 @@
 // DaemonUtils                                                          //
 //                                                                      //
 // This file defines wrappers to client utils calls used by server      //
-// authentication daemons                                               //
+// authentication daemons.                                              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include <string>
 
+#ifndef ROOT_TSocket
 #include "TSocket.h"
+#endif
+#ifndef ROOT_NetErrors
 #include "NetErrors.h"
-
+#endif
+#ifndef ROOT_rpddefs
 #include "rpddefs.h"
+#endif
 
 extern Int_t SrvAuthImpl(TSocket *socket, const char *, const char *,
                          std::string &user, Int_t &meth,
