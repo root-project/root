@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.9 2002/04/30 07:26:47 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.cxx,v 1.10 2002/09/29 20:24:33 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -296,6 +296,11 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
   if (quest[0]) {
      printf("Error cannot open input file: %s\n",fname);
   }
+  if (ier || quest[0]) {
+     fLun = 0;
+     MakeZombie();
+     return;
+  }
   
   gROOT->GetListOfBrowsables()->Add(this,fname);
 
@@ -528,6 +533,14 @@ void THbookFile::InitLeaves(Int_t id, Int_t var, TTreeFormula *formula)
       hntvar3(id,last,PASSCHAR(leaf->GetName()));
 #endif
    }
+}
+
+//______________________________________________________________________________
+Bool_t THbookFile::IsOpen() const
+{
+   // Returns kTRUE in case file is open and kFALSE if file is not open.
+
+   return fLun == 0 ? kFALSE : kTRUE;
 }
 
 

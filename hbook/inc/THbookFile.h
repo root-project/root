@@ -1,4 +1,4 @@
-// @(#)root/hbook:$Name:  $:$Id: THbookFile.h,v 1.4 2002/04/19 07:39:30 brun Exp $
+// @(#)root/hbook:$Name:  $:$Id: THbookFile.h,v 1.5 2002/04/30 07:26:47 brun Exp $
 // Author: Rene Brun   18/02/2002
 
 /*************************************************************************
@@ -66,6 +66,7 @@ public:
    TList            *GetListOfKeys() const { return fKeys; }
    void              InitLeaves(Int_t id, Int_t var, TTreeFormula *formula);
    Bool_t            IsFolder() const { return kTRUE; }
+   virtual Bool_t    IsOpen() const;
    virtual void      ls(const char *path="") const;
    virtual void      SetBranchAddress(Int_t id, const char *bname, void *add);
 
