@@ -76,6 +76,7 @@ protected:
    TGCompositeFrame    *f13;              // Frame that contains the Bar Width/Offset NumberEntries
    TGCompositeFrame    *f16;              // Frame that contains the ColorLevel NumberEnrtry
    TGCompositeFrame    *f19;              // Frame that contains the ColorLevel NumberEnrtry   
+   TGCompositeFrame    *f38;              // Frame that contains the Frame Fill widgets
    TGCheckButton       *fAddError;        // CheckBox connected to error bars
    TGCheckButton       *fAddPalette;      // CheckBox connected to Z option (2D)
    TGCheckButton       *fAddPalette1;     // CheckBox connected to Z option (3D) 

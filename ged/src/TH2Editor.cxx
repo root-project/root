@@ -1,5 +1,6 @@
 // @(#)root/ged:$Name:  TH2Editor.cxx
 // Author: Carsten Hof   09/08/04
+// Authors mail: Carsten_Hof@web.de
 
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
@@ -12,17 +13,114 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  TH2Editor                                                           //
-//                                                                      //
-//  Editor for histogram attributes.                                    //
-//	                                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+//  Editor for changing TH2 histogram attributes, rebinning & fitting.  //
+//  For all possible draw options (there are a few which are not imple- //
+//  mentable in a graphical user interface) see THistPainter::Paint in  //
+//  root/histpainter/THistPainter.cxx                                   //
 
 //Begin_Html
 /*
-<img src="gif/TH2Editor.gif">
+<img src="gif/TH2Editor_1.gif">
 */
 //End_Html
+//Begin_Html
+/*
+<img src="gif/TH2Editor_2.gif">
+*/
+//End_Html
+//  These changes can be made via the TH2Editor:                        //
+//    Style Tab:                                                        //
+//      'Line'     : change Line attributes (color, thickness)          //
+//                   see TAttLineEditor                                 //
+//      'Fill'     : change Fill attributes (color, pattern)            //
+//                   see TAttFillEditor                                 //
+//	'Title'    : TextEntry: set the title of the histogram          //
+//      'Histogram': change the draw options of the histogram           //
+//      'Plot'     : Radiobutton: draw a 2D or 3D plot of the histogram //
+//                   according to the Plot dimension there will be      //
+//                   different drawing possibilities (ComboBoxes/       //
+//                   CheckBoxes)                                        //
+//    2d Plot:                                                          //
+//      'Contour' : ComboBox: draw a contour plot (None, Cont0..4)      //
+//      'Cont #'  : TGNumberEntry: set the number of Contours           //
+//    2d Plot checkboxes:                                               //
+//      'Arrow'   : arrow mode. Shows gradient between adjacent cells   //
+//      'Col'     : a box is drawn for each cell with a color scale     //
+//                  varying with contents                               //
+//      'Text'    : Draw bin contents as text                           // 
+//      'Box'     : a box is drawn for each cell with surface           //
+//                  proportional to contents                            //
+//      'Scat'    : Draw a scatter-plot (default)                       //
+//      'Palette' : the color palette is drawn                          //
+//                                                                      //
+//    3d Plot:                                                          //
+//      'Type'    : ComboBox: set histogram type Lego or Surface-Plot   //
+//                  draw(Lego, Lego1.2, Surf, Surf1..5)                 //
+//                  see THistPainter::Paint                             //
+//      'Coords'  : ComboBox: set the coordinate system (Cartesian, ..  //
+//                  Spheric) see THistPainter::Paint                    //
+//      'Cont #'  : TGNumberEntry: set the number of Contours (for e.g. //
+//                  Lego2 drawoption                                    //
+//    3d Plot checkboxes:                                               //
+//      'Errors'  : draw errors in a cartesian lego plot                //
+//      'Palette' : the color palette is drawn                          //
+//      'Front'   : draw the front box of a cartesian lego plot         //
+//      'Back'    : draw the back box of a cartesian lego plot          //
+//    Available for a 3D lego plot:                                     //
+//      'Bar'     : change the bar attributes                           //
+//            'W' : change Bar Width                                    //
+//            'O' : change Bar Offset                                   //
+//   Further Editor:                                                    //
+//      'Marker'   : change the Marker attributes (color, appearance,   //
+//                   thickness) see TAttMarkerEditor                    //
+//                                                                      //
+//Begin_Html
+/*
+<img src="gif/TH2Editor1_1.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/TH2Editor1_2.gif">
+*/
+//End_Html
+//                                                                      //
+//   Rebinning Tab:                                                     //
+//      This Tab has two different layouts. One is for a histogram which//
+//      is not drawn from an ntuple. The other one is available for a   //
+//      histogram which is drawn from an ntuple. In this case the rebin //
+//      algorithm can create a rebinned histogram from the original data//
+//      i.e. the ntuple.                                                //
+//      To see te differences do for example:                           //
+//         TFile f("hsimple.root");                                     //
+//         hpxpy->Draw("Lego2");              // non ntuple histogram   //
+//         ntuple->Draw("px:py","","Lego2");  // ntuple histogram       //
+//    Non ntuple histogram:                                             //
+//       'Rebin': with the Sliders (one for the x, one for the y axis)  //
+//                the number of bins (shown in the field below the      //
+//                Slider) can be changed to any number which divides    //
+//                the number of bins of the original histogram.         //
+//                Pushing 'Apply' will delete the origin histogram and  //
+//                replace it by the rebinned one on the screen.         //
+//                Pushing 'Ignore' the origin histogram will be restored//
+//    Histogram drawn from an ntuple:                                   //
+//       'Rebin'  with the sliders the number of bins can be enlarged by//
+//                a factor of 2,3,4,5 (moving to the right) or reduced  //
+//                by a factor of 1/2, 1/3, 1/4, 1/5                     //
+//       'BinOffset': with the BinOffset slider the origin of the       //
+//                histogram can be changed within one binwidth          //
+//                Using this slider the effect of binning the data into //
+//                bins can be made visible => statistical fluctuations  //
+//       'Axis Range': with the DoubleSlider it is possible to zoom into//
+//                the specified axis range. It is also possible to set  //
+//                the upper and lower limit in fields below the slider  //
+//       'Delayed drawing': all the Binning sliders can be set to delay //
+//                draw mode. Then the changes on the histogram are only //
+//                updated, when the Slider is released. This should be  //
+//                activated if the redrawing of the histogram is too    //
+//                time consuming.                                       //
+//////////////////////////////////////////////////////////////////////////
+
 
 #include "TH2Editor.h"
 #include "TGedFrame.h"
@@ -238,16 +336,21 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t id, Int_t width,
 
 
 // Set the color and pattern of the Frame (only in case of a Cartesian 3D plot
-   MakeTitle("Frame Fill");
+   f38 = new TGCompositeFrame(this, 80, 20, kVerticalFrame);
+   TGCompositeFrame *f39 = new TGCompositeFrame(f38, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
+   f39->AddFrame(new TGLabel(f39,"Frame Fill"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
+   f39->AddFrame(new TGHorizontal3DLine(f39), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
+   f38->AddFrame(f39, new TGLayoutHints(kLHintsTop,0,0,6,1));
    
-   TGCompositeFrame *f21 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
+   TGCompositeFrame *f21 = new TGCompositeFrame(f38, 80, 20, kHorizontalFrame);
    fFrameColor = new TGColorSelect(f21, 0, kCOLOR);
    f21->AddFrame(fFrameColor, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 0));
-   fFrameColor->Associate(this);
+   fFrameColor->Associate(f38);
    fFramePattern = new TGedPatternSelect(f21, 1, kPATTERN);
    f21->AddFrame(fFramePattern, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 0));
-   fFramePattern->Associate(this);
-   AddFrame(f21, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   fFramePattern->Associate(f38);
+   f38->AddFrame(f21, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+   AddFrame(f38, new TGLayoutHints(kLHintsTop));
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -683,7 +786,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       HideFrame(f13);          
       ShowFrame(f16);
       HideFrame(f19);
-      
+      HideFrame(f38);
       fDimGroup->SetButton(kDIM_SIMPLE, kTRUE);  
       fDimGroup->SetButton(kDIM_COMPLEX, kFALSE);        
       if (fTypeCombo->GetSelected()==-1) fTypeCombo->Select(kTYPE_LEGO);
@@ -710,7 +813,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       HideFrame(f13);
       ShowFrame(f16);
       HideFrame(f19);
-
+      HideFrame(f38);
       fDimGroup->SetButton(kDIM_SIMPLE, kTRUE);  
       fDimGroup->SetButton(kDIM_COMPLEX, kFALSE);        
       if (fTypeCombo->GetSelected()==-1) fTypeCombo->Select(kTYPE_LEGO);
@@ -755,7 +858,7 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       ShowFrame(f13);
       HideFrame(f16);
       ShowFrame(f19);
-
+      ShowFrame(f38);
       fDimGroup->SetButton(kDIM_COMPLEX, kTRUE);  
       fDimGroup->SetButton(kDIM_SIMPLE, kFALSE);        
       if (str.Contains("LEGO2")) fTypeCombo->Select(kTYPE_LEGO2);
@@ -830,6 +933,9 @@ void TH2Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    
    if (str.Contains("LEGO2") || str.Contains("SURF1") || str.Contains("SURF2") || str.Contains("SURF3") || str.Contains("SURF5")) fColContLbl1->Enable() ;
    else fColContLbl1->Disable();
+
+   fContLevels->SetIntNumber(fHist->GetContour());
+   fContLevels1->SetIntNumber(fHist->GetContour());
 
    fFrameColor->SetColor(TColor::Number2Pixel(fPad->GetFrameFillColor()));
    fFramePattern->SetPattern(fPad->GetFrameFillStyle());
@@ -929,6 +1035,7 @@ void TH2Editor::DoHistSimple()
    HideFrame(f13);   
    ShowFrame(f16);
    HideFrame(f19);
+   HideFrame(f38);
    if (fContCombo->GetSelected()==-1) fContCombo->Select(kCONT_NONE);
    if ((fContCombo->GetSelected()!=kCONT_NONE) && fAddPalette->GetState()==kButtonDisabled) fAddPalette->SetState(kButtonUp);
    str = GetHistContLabel()+GetHistAdditiveLabel();
@@ -957,7 +1064,7 @@ void TH2Editor::DoHistComplex()
    ShowFrame(f9);
    HideFrame(f16);   
    ShowFrame(f19);
-
+   ShowFrame(f38);
    if (GetHistTypeLabel().Contains("LEGO")) {
       ShowFrame(f12);   
       ShowFrame(f13);   
@@ -973,10 +1080,10 @@ void TH2Editor::DoHistComplex()
    if (str.Contains("LEGO2") || str.Contains("SURF1") || str.Contains("SURF2") \
           || str.Contains("SURF3") || str.Contains("SURF5")) {
       fColContLbl1->Enable() ;
-      fAddPalette1->SetState(kButtonDisabled);
+      if (fAddPalette1->GetState()==kButtonDisabled) fAddPalette1->SetState(kButtonUp);      
    } else {
       fColContLbl1->Disable() ;
-      if (fAddPalette->GetState()==kButtonDisabled) fAddPalette->SetState(kButtonUp);
+      fAddPalette1->SetState(kButtonDisabled);
    }
    
    SetDrawOption(str);
