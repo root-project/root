@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.29 2000/12/12 12:19:47 rdm Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.30 2000/12/15 09:34:19 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1520,9 +1520,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          }
       } else {
          if (leafcount) strcpy(branchname,branch->GetName());
-         else {
-            if (branchname[nch-1] == '.') strcat(branchname,leaf->GetTitle());
-         }
+         else           strcpy(branchname,leaf->GetTitle());
       }
       char *twodim = (char*)strstr(leaf->GetTitle(),"][");
       bname = branchname;
