@@ -1,4 +1,4 @@
-// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.122 2003/02/28 22:57:13 brun Exp $
+// @(#)root/treeplayer:$Name:  $:$Id: TTreePlayer.cxx,v 1.123 2003/04/09 08:48:09 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -1061,21 +1061,21 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          if (bre && bre->GetBranchCount2()) {
             stars = "*";
          }
-	 // Dimensions can be in the branchname for a split Object with a fix length C array.
-	 // Theses dimensions HAVE TO be placed after the dimension explicited by leafcount
-	 char *dimensions = 0;
+         // Dimensions can be in the branchname for a split Object with a fix length C array.
+         // Theses dimensions HAVE TO be placed after the dimension explicited by leafcount
+         char *dimensions = 0;
          char *dimInName = (char*) strstr(branchname,"[");
-	 if ( twodim || dimInName ) {
-	   int dimlen = 0;
-	   if (dimInName) dimlen += strlen(dimInName) + 1;
-	   if (twodim)    dimlen += strlen(twodim) + 1;
-	   dimensions = new char[dimlen];
-	   if (dimInName) {
-	     strcpy(dimensions,dimInName);
-	     dimInName[0] = 0; // terminate branchname before the array dimensions.
-	   } else dimensions[0] = 0;
-	   if (twodim) strcat(dimensions,(char*)(twodim+1));
-	 }
+         if ( twodim || dimInName ) {
+            int dimlen = 0;
+            if (dimInName) dimlen += strlen(dimInName) + 1;
+            if (twodim)    dimlen += strlen(twodim) + 1;
+            dimensions = new char[dimlen];
+            if (dimInName) {
+               strcpy(dimensions,dimInName);
+               dimInName[0] = 0; // terminate branchname before the array dimensions.
+            } else dimensions[0] = 0;
+            if (twodim) strcat(dimensions,(char*)(twodim+1));
+         }
          const char* leafcountName = leafcount->GetName();
          char b2len[128];
          if (bre && bre->GetBranchCount2()) {
@@ -1116,8 +1116,24 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       TBranch *branch = leaf->GetBranch();
       strcpy(branchname,branch->GetName());
       if ( branch->GetNleaves() <= 1 ) {
+         // Code duplicated around line 1362
          if (branch->IsA() != TBranchObject::Class()) {
-            if (!leafcount) strcpy(branchname,leaf->GetTitle());
+            if (!leafcount) {
+               TBranch *mother = branch->GetMother();
+               const char* ltitle = leaf->GetTitle();
+               if (mother && mother!=branch) {
+                  strcpy(branchname,mother->GetName());
+                  if (branchname[strlen(branchname)-1]!='.') {
+                     strcat(branchname,".");
+                  }
+                  if (strncmp(branchname,ltitle,strlen(branchname))==0) {
+                     branchname[0] = 0;
+                  }
+               } else {
+                  branchname[0] = 0;
+               }
+               strcat(branchname,ltitle);
+            }
          }
       }
       bname = branchname;
@@ -1344,8 +1360,24 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       TBranch *branch = leaf->GetBranch();
       strcpy(branchname,branch->GetName());
       if ( branch->GetNleaves() <= 1 ) {
+         // Code duplicated around line 1120
          if (branch->IsA() != TBranchObject::Class()) {
-            if (!leafcount) strcpy(branchname,leaf->GetTitle());
+            if (!leafcount) {
+               TBranch *mother = branch->GetMother();
+               const char* ltitle = leaf->GetTitle();
+               if (mother && mother!=branch) {
+                  strcpy(branchname,mother->GetName());
+                  if (branchname[strlen(branchname)-1]!='.') {
+                     strcat(branchname,".");
+                  }
+                  if (strncmp(branchname,ltitle,strlen(branchname))==0) {
+                     branchname[0] = 0;
+                  }
+               } else {
+                  branchname[0] = 0;
+               }
+               strcat(branchname,ltitle);
+            }
          }
       }
       bname = branchname;
