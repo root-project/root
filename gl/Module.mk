@@ -72,8 +72,8 @@ distclean::     distclean-gl
 ##### extra rules ######
 ifeq ($(ARCH),win32gdk)
 $(GLO): %.o: %.cxx
-	$(CXX) $(OPT) $(CXXFLAGS) -I$(OPENGLINCDIR) -I$(WIN32GDKDIR)/gdk/inc \
-	   -I$(WIN32GDKDIR)/gdk/inc/gdk -I$(WIN32GDKDIR)/gdk/inc/glib \
+	$(CXX) $(OPT) $(CXXFLAGS) -I$(OPENGLINCDIR) -I$(WIN32GDKDIR)/gdk/src/gdk \
+	   -I$(WIN32GDKDIR)/gdk/src -I$(WIN32GDKDIR)/gdk/src/glib \
 	   -o $@ -c $<
 else
 $(GLO): %.o: %.cxx
