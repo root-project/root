@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.36 2004/06/13 16:26:36 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.37 2004/07/15 23:56:46 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -132,6 +132,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    ProcessLine("#include <RtypesCint.h>", kTRUE);
 
    // The following libs are also useful to have, make sure they are loaded...
+   gROOT->LoadClass("TMinuit",     "Minuit");
    gROOT->LoadClass("TPostScript", "Postscript");
    gROOT->LoadClass("THtml",       "Html");
 

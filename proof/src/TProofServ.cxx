@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.74 2004/06/25 17:27:09 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofServ.cxx,v 1.75 2004/07/15 23:57:48 rdm Exp $
 // Author: Fons Rademakers   16/02/97
 
 /*************************************************************************
@@ -302,6 +302,7 @@ TProofServ::TProofServ(int *argc, char **argv)
    ProcessLine("#include <RtypesCint.h>", kTRUE);
 
    // The following libs are also useful to have, make sure they are loaded...
+   gROOT->LoadClass("TMinuit",     "Minuit");
    gROOT->LoadClass("TPostScript", "Postscript");
 
    // Load user functions
