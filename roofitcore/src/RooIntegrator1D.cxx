@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator1D.cc,v 1.23 2004/11/29 20:23:56 wverkerke Exp $
+ *    File: $Id: RooIntegrator1D.cc,v 1.24 2005/02/14 20:44:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -35,22 +35,25 @@ ClassImp(RooIntegrator1D)
 ;
 
 // Register this class with RooNumIntConfig
-static Int_t registerSimpsonIntegrator1D()
+static void registerSimpsonIntegrator1D(RooNumIntFactory& fact)
 {
   RooCategory sumRule("sumRule","Summation Rule") ;
   sumRule.defineType("Trapezoid",RooIntegrator1D::Trapezoid) ;
   sumRule.defineType("Midpoint",RooIntegrator1D::Midpoint) ;
   sumRule.setLabel("Trapezoid") ;
+  RooCategory extrap("extrapolation","Extrapolation procedure") ;
+  extrap.defineType("None",0) ;
+  extrap.defineType("Wynn-Epsilon",1) ;
+  extrap.setLabel("Wynn-Epsilon") ;
   RooRealVar maxSteps("maxSteps","Maximum number of steps",20) ;
   RooRealVar minSteps("minSteps","Minimum number of steps",999) ;
   RooRealVar fixSteps("fixSteps","Fixed number of steps",0) ;
 
   RooIntegrator1D* proto = new RooIntegrator1D() ;
-  RooNumIntFactory::instance().storeProtoIntegrator(proto,RooArgSet(sumRule,maxSteps,minSteps,fixSteps)) ;
+  fact.storeProtoIntegrator(proto,RooArgSet(sumRule,extrap,maxSteps,minSteps,fixSteps)) ;
   RooNumIntConfig::defaultConfig().method1D().setLabel(proto->IsA()->GetName()) ;
-  return 0 ;
 }
-static Int_t dummy = registerSimpsonIntegrator1D() ;
+static Bool_t dummy = RooNumIntFactory::instance().registerInitializer(&registerSimpsonIntegrator1D) ;
 
 
 RooIntegrator1D::RooIntegrator1D()
@@ -59,7 +62,7 @@ RooIntegrator1D::RooIntegrator1D()
 
 RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, SummationRule rule,
 				 Int_t maxSteps, Double_t eps) : 
-  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps),  _minStepsZero(999), _fixSteps(0), _epsAbs(eps), _epsRel(eps)
+  RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps),  _minStepsZero(999), _fixSteps(0), _epsAbs(eps), _epsRel(eps), _doExtrap(kTRUE)
 {
   // Use this form of the constructor to integrate over the function's default range.
 
@@ -75,7 +78,8 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
   _minStepsZero(999), 
   _fixSteps(0),
   _epsAbs(eps), 
-  _epsRel(eps) 
+  _epsRel(eps),
+  _doExtrap(kTRUE)
 {
   // Use this form of the constructor to override the function's default range.
 
@@ -98,6 +102,7 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConf
   _maxSteps = (Int_t) configSet.getRealValue("maxSteps",20) ;
   _minStepsZero = (Int_t) configSet.getRealValue("minSteps",999) ;
   _fixSteps = (Int_t) configSet.getRealValue("fixSteps",0) ;
+  _doExtrap = (Bool_t) configSet.getCatIndex("extrapolation",1) ;
 
   if (_fixSteps>_maxSteps) {
     cout << "RooIntegrator1D::ctor() ERROR: fixSteps>maxSteps, fixSteps set to maxSteps" << endl ;
@@ -123,6 +128,7 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Doub
   _maxSteps = (Int_t) configSet.getRealValue("maxSteps",20) ;
   _minStepsZero = (Int_t) configSet.getRealValue("minSteps",999) ;
   _fixSteps = (Int_t) configSet.getRealValue("fixSteps",0) ;  
+  _doExtrap = (Bool_t) configSet.getCatIndex("extrapolation",1) ;
 
   _useIntegrandLimits= kFALSE;
   _xmin= xmin;
@@ -257,13 +263,19 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
     } else  if(j >= _nPoints) {
 
       // extrapolate the results of recent refinements and check for a stable result
-      extrapolate(j);
+      if (_doExtrap) {
+	extrapolate(j);
+      } else {
+	_extrapValue = _s[j] ;
+	_extrapError = _s[j]-(j>0?_s[j-1]:0) ;
+	cout << "extrapValue[" << j << "] = " << _extrapValue << endl ;
+	cout << "extrapError[" << j << "] = " << _extrapError << endl ;
+      }
+
       if(fabs(_extrapError) <= _epsRel*fabs(_extrapValue)) {
-// 	cout << "Roo1DIntegrator(" << this << "): relative convergence at step " << j << ", value = " << _extrapValue << ", _extrapError = " << _extrapError << endl ;
 	return _extrapValue;
       }
       if(fabs(_extrapError) <= _epsAbs) {
-// 	cout << "Roo1DIntegrator(" << this << "): absolute convergence at step " << j << ", value = " << _extrapValue << ", _extrapError = " << _extrapError << endl ;
 	return _extrapValue ;
       }
 

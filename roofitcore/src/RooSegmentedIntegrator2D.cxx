@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator2D.cc,v 1.5 2004/11/29 20:24:25 wverkerke Exp $
+ *    File: $Id: RooSegmentedIntegrator2D.cc,v 1.6 2005/02/14 20:44:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -34,12 +34,11 @@ ClassImp(RooSegmentedIntegrator2D)
 ;
 
 // Register this class with RooNumIntConfig
-static Int_t registerSegmentedSimpsonIntegrator2D()
+static void registerSegmentedSimpsonIntegrator2D(RooNumIntFactory& fact)
 {
-  RooNumIntFactory::instance().storeProtoIntegrator(new RooSegmentedIntegrator2D(),RooArgSet(),RooSegmentedIntegrator1D::Class()->GetName()) ;
-  return 0 ;
+  fact.storeProtoIntegrator(new RooSegmentedIntegrator2D(),RooArgSet(),RooSegmentedIntegrator1D::Class()->GetName()) ;
 }
-static Int_t dummy = registerSegmentedSimpsonIntegrator2D() ;
+static Bool_t dummy = RooNumIntFactory::instance().registerInitializer(&registerSegmentedSimpsonIntegrator2D) ;
 
 
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D()

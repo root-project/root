@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegratorConfig.rdl,v 1.7 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooNumIntFactory.rdl,v 1.1 2004/11/29 20:24:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -16,11 +16,15 @@
 #ifndef ROO_NUM_INT_FACTORY
 #define ROO_NUM_INT_FACTORY
 
+#include <list>
 #include "TObject.h"
 #include "RooFitCore/RooLinkedList.hh"
 #include "RooFitCore/RooAbsIntegrator.hh"
 class RooNumIntConfig ;
 class RooAbsFunc ;
+
+class RooNumIntFactory ;
+typedef void (*RooNumIntInitializerFunc)(RooNumIntFactory&) ;
 
 class RooNumIntFactory : public TObject {
 public:
@@ -29,14 +33,19 @@ public:
   virtual ~RooNumIntFactory();
 
   Bool_t storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName="") ;
-  const RooAbsIntegrator* getProtoIntegrator(const char* name) const ;
-  const char* getDepIntegratorName(const char* name) const ;
+  const RooAbsIntegrator* getProtoIntegrator(const char* name) ;
+  const char* getDepIntegratorName(const char* name) ;
 
-  RooAbsIntegrator* createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0) const ;
+  RooAbsIntegrator* createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0) ;
+  Bool_t registerInitializer(RooNumIntInitializerFunc fptr) ;
+
 
 protected:
+	 
+  friend class RooNumIntConfig ;
+  void processInitializers() ;
 
-  static RooNumIntFactory* _instance ;
+  std::list<RooNumIntInitializerFunc> _initFuncList ; //!
   RooLinkedList _integratorList ; // List of integrator prototypes
   RooLinkedList _nameList ;       // List of integrator names
   RooLinkedList _depList ;        // List of dependent integrator names

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntConfig.rdl,v 1.1 2004/11/29 20:24:04 wverkerke Exp $
+ *    File: $Id: RooNumIntConfig.rdl,v 1.2 2004/12/02 14:10:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -72,7 +72,6 @@ protected:
   Double_t _epsRel          ; // Relative precision
   Bool_t   _printEvalCounter ; // Flag to control printing of function evaluation counter
 
-  static RooNumIntConfig* _default ; // Default integrator configuration
   RooCategory _method1D     ; // Selects integration method for 1D integrals
   RooCategory _method2D     ; // Selects integration method for 2D integrals
   RooCategory _methodND     ; // Selects integration method for ND integrals

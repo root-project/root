@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.rdl,v 1.35 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooProdPdf.rdl,v 1.36 2005/02/14 20:44:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,8 +33,8 @@ public:
   RooProdPdf(const char *name, const char *title,
 	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, Double_t cutOff=0) ;
   RooProdPdf(const char* name, const char* title, const RooArgList& pdfList, Double_t cutOff=0) ;
-  RooProdPdf(const char* name, const char* title, const RooLinkedList& cmdArgList) ;
-  RooProdPdf(const char* name, const char* title,
+  RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet, const RooLinkedList& cmdArgList) ;
+  RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet,
    	     const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
              const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
              const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
@@ -65,7 +65,7 @@ public:
 
 protected:
 
-  void initializeFromCmdArgList(const RooLinkedList& l) ;
+  void initializeFromCmdArgList(const RooArgSet& fullPdfSet, const RooLinkedList& l) ;
 
   void factorizeProduct(const RooArgSet& normSet, const RooArgSet& intSet, 
                         RooLinkedList& termList,   RooLinkedList& normList, 
@@ -119,8 +119,5 @@ private:
   ClassDef(RooProdPdf,0) // PDF representing a product of PDFs
 };
 
-// Constructor arguments
-RooCmdArg Partial(const RooArgSet& pdfSet, const RooArgSet& depSet) ;
-RooCmdArg Full(const RooArgSet& pdfSet) ;
 
 #endif

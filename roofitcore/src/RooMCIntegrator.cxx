@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCIntegrator.cc,v 1.16 2004/11/29 20:23:58 wverkerke Exp $
+ *    File: $Id: RooMCIntegrator.cc,v 1.17 2005/02/14 20:44:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,7 +37,7 @@ ClassImp(RooMCIntegrator)
 ;
 
 // Register this class with RooNumIntFactory
-static Int_t registerMCIntegrator()
+static void registerMCIntegrator(RooNumIntFactory& fact)
 {
   // Construct default configuration
   RooCategory samplingMode("samplingMode","Sampling Mode") ;
@@ -65,13 +65,12 @@ static Int_t registerMCIntegrator()
   RooMCIntegrator* proto = new RooMCIntegrator() ;
 
   // Register prototype and default config with factory
-  RooNumIntFactory::instance().storeProtoIntegrator(proto,RooArgSet(samplingMode,genType,verbose,alpha,nRefineIter,nRefinePerDim,nIntPerDim)) ;
+  fact.storeProtoIntegrator(proto,RooArgSet(samplingMode,genType,verbose,alpha,nRefineIter,nRefinePerDim,nIntPerDim)) ;
 
   // Make this method the default for all N>2-dim integrals
   RooNumIntConfig::defaultConfig().methodND().setLabel(proto->IsA()->GetName()) ;
-  return 0 ;
 }
-static Int_t dummy = registerMCIntegrator() ;
+static Bool_t dummy = RooNumIntFactory::instance().registerInitializer(&registerMCIntegrator) ;
 
 
 RooMCIntegrator::RooMCIntegrator()

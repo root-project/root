@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooIntegrator1D.rdl,v 1.16 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooIntegrator1D.rdl,v 1.17 2004/11/29 20:23:56 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -62,6 +62,7 @@ protected:
   Int_t _fixSteps ;
   Double_t _epsAbs ;
   Double_t _epsRel ;
+  Bool_t _doExtrap ;
   enum { _nPoints = 5 };
 
   // Numerical integrator support functions

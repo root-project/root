@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAdaptiveGaussKronrodIntegrator1D.cc,v 1.1 2004/11/29 20:22:45 wverkerke Exp $
+ *    File: $Id: RooAdaptiveGaussKronrodIntegrator1D.cc,v 1.2 2005/02/14 20:44:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -125,7 +125,7 @@ gsl_integration_qagiu (gsl_function * f,
 
 
 // Register this class with RooNumIntConfig
-static Int_t registerAdaptiveGaussKronrodIntegrator1D()
+static void registerAdaptiveGaussKronrodIntegrator1D(RooNumIntFactory& fact)
 {
   RooRealVar maxSeg("maxSeg","maximum number of segments",100) ;
   RooCategory method("method","Integration method for each segment") ;
@@ -137,10 +137,9 @@ static Int_t registerAdaptiveGaussKronrodIntegrator1D()
   method.defineType("51Points",5) ;
   method.defineType("61Points",6) ;
   method.setIndex(2) ;  
-  RooNumIntFactory::instance().storeProtoIntegrator(new RooAdaptiveGaussKronrodIntegrator1D(),RooArgSet(maxSeg,method)) ;
-  return 0 ;
+  fact.storeProtoIntegrator(new RooAdaptiveGaussKronrodIntegrator1D(),RooArgSet(maxSeg,method)) ;
 }
-static Int_t dummy = registerAdaptiveGaussKronrodIntegrator1D() ;
+static Bool_t dummy = RooNumIntFactory::instance().registerInitializer(&registerAdaptiveGaussKronrodIntegrator1D) ;
 
 
 

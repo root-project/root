@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooSegmentedIntegrator1D.cc,v 1.8 2004/11/29 20:24:25 wverkerke Exp $
+ *    File: $Id: RooSegmentedIntegrator1D.cc,v 1.9 2005/02/14 20:44:29 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -33,13 +33,12 @@ ClassImp(RooSegmentedIntegrator1D)
 ;
 
 // Register this class with RooNumIntConfig
-static Int_t registerSegmentedSimpsonIntegrator1D()
+static void registerSegmentedSimpsonIntegrator1D(RooNumIntFactory& fact)
 {
   RooRealVar numSeg("numSeg","Number of segments",3) ;
-  RooNumIntFactory::instance().storeProtoIntegrator(new RooSegmentedIntegrator1D(),numSeg,RooIntegrator1D::Class()->GetName()) ;
-  return 0 ;
+  fact.storeProtoIntegrator(new RooSegmentedIntegrator1D(),numSeg,RooIntegrator1D::Class()->GetName()) ;
 }
-static Int_t dummy = registerSegmentedSimpsonIntegrator1D() ;
+static Bool_t dummy = RooNumIntFactory::instance().registerInitializer(&registerSegmentedSimpsonIntegrator1D) ;
  
 
 RooSegmentedIntegrator1D::RooSegmentedIntegrator1D()

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.rdl,v 1.2 2005/02/15 21:16:44 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.rdl,v 1.3 2005/02/16 21:51:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -98,6 +98,8 @@ RooCmdArg InitialHesse(Bool_t flag=kTRUE) ;
 RooCmdArg Hesse(Bool_t flag=kTRUE) ;
 RooCmdArg Minos(Bool_t flag=kTRUE) ;
 
+// RooProdPdf::ctor arguments
+RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet) ;
 
 namespace RooFitShortHand {
 

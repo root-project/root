@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGlobalFunc.cc,v 1.2 2005/02/15 21:16:44 wverkerke Exp $
+ *    File: $Id: RooGlobalFunc.cc,v 1.3 2005/02/16 21:51:30 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -93,6 +93,8 @@ RooCmdArg Hesse(Bool_t flag)           { return RooCmdArg("Hesse",flag,0,0,0,0,0
 RooCmdArg Minos(Bool_t flag)           { return RooCmdArg("Minos",flag,0,0,0,0,0,0,0) ; }
 RooCmdArg ProjectedObservables(const RooArgSet& set) { return RooCmdArg("ProjectedObservables",0,0,0,0,0,0,&set,0) ; }
 
+// RooProdPdf::ctor arguments
+RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet) { return RooCmdArg("Conditional",0,0,0,0,0,0,&pdfSet,&depSet) ; } ;
 
 namespace RooFitShortHand {
 

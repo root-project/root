@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooGaussKronrodIntegrator1D.cc,v 1.1 2004/11/29 20:23:41 wverkerke Exp $
+ *    File: $Id: RooGaussKronrodIntegrator1D.cc,v 1.2 2005/02/14 20:44:24 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -70,12 +70,11 @@ int gsl_integration_qng (const gsl_function * f,
 
 
 // Register this class with RooNumIntConfig
-static Int_t registerGaussKronrodIntegrator1D()
+static void registerGaussKronrodIntegrator1D(RooNumIntFactory& fact)
 {
-  RooNumIntFactory::instance().storeProtoIntegrator(new RooGaussKronrodIntegrator1D(),RooArgSet()) ;
-  return 0 ;
+  fact.storeProtoIntegrator(new RooGaussKronrodIntegrator1D(),RooArgSet()) ;
 }
-static Int_t dummy = registerGaussKronrodIntegrator1D() ;
+static Bool_t dummy = RooNumIntFactory::instance().registerInitializer(&registerGaussKronrodIntegrator1D) ;
 
 
 

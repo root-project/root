@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntConfig.cc,v 1.1 2004/11/29 20:24:04 wverkerke Exp $
+ *    File: $Id: RooNumIntConfig.cc,v 1.2 2004/12/02 14:10:27 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,15 +30,15 @@ using std::ostream;
 ClassImp(RooNumIntConfig)
 ;
 
-RooNumIntConfig* RooNumIntConfig::_default = 0 ;
-
 RooNumIntConfig& RooNumIntConfig::defaultConfig() 
 {
   // Return reference to instance of default numeric integrator configuration object
+  static RooNumIntConfig* _default = 0 ;
   
   // Instantiate object if it doesn't exist yet
   if (_default==0) {
-    _default = new RooNumIntConfig ;
+    _default = new RooNumIntConfig ;    
+    RooNumIntFactory::instance().processInitializers() ;
   }
   return *_default ;
 }
@@ -46,7 +46,8 @@ RooNumIntConfig& RooNumIntConfig::defaultConfig()
 
 RooNumIntConfig::RooNumIntConfig() : 
   _epsAbs(1e-7),
-  _epsRel(1e-7)
+  _epsRel(1e-7),
+  _printEvalCounter(kFALSE)
 {
   // Constructor 
 
@@ -72,6 +73,7 @@ RooNumIntConfig::~RooNumIntConfig()
 RooNumIntConfig::RooNumIntConfig(const RooNumIntConfig& other) :
   _epsAbs(other._epsAbs),
   _epsRel(other._epsRel),
+  _printEvalCounter(other._printEvalCounter),
   _method1D(other._method1D),
   _method2D(other._method2D),
   _methodND(other._methodND),

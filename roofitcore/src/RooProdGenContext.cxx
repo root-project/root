@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdGenContext.cc,v 1.14 2004/11/29 20:24:06 wverkerke Exp $
+ *    File: $Id: RooProdGenContext.cc,v 1.15 2005/02/14 20:44:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +24,7 @@
 #include "RooFitCore/RooProdPdf.hh"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooRealVar.hh"
+#include "RooFitCore/RooGlobalFunc.hh"
 using std::cout;
 using std::ostream;
 
@@ -121,10 +122,11 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	  const char* name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet(),0) ;      
 	  
 	  // Construct auxiliary PDF expressing product of composite terms, 
-	  // following Partial/Full component specification of input model
+	  // following Conditional component specification of input model
 	  RooLinkedList cmdList ;
 	  RooLinkedList pdfSetList ;
 	  pdfIter->Reset() ;
+	  RooArgSet fullPdfSet ;
 	  while(pdf=(RooAbsPdf*)pdfIter->Next()) {
 
 	    RooArgSet* pdfnset = model.findPdfNSet(*pdf) ;
@@ -132,18 +134,16 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	    pdfSetList.Add(pdfSet) ;
 
 	    if (pdfnset && pdfnset->getSize()>0) {
-	      // This PDF requires a Partial() construction
-	      cmdList.Add(Partial(*pdfSet,*pdfnset).Clone()) ;
-// 	      cout << "Partial " << pdf->GetName() << " " ; pdfnset->Print("1") ;
+	      // This PDF requires a Conditional() construction
+	      cmdList.Add(Conditional(*pdfSet,*pdfnset).Clone()) ;
+// 	      cout << "Conditional " << pdf->GetName() << " " ; pdfnset->Print("1") ;
 	    } else {
-	      // This PDF can use a Full() construction
-	      cmdList.Add(Full(*pdfSet).Clone()) ;
-// 	      cout << "Full " << pdf->GetName() << endl ;
+	      fullPdfSet.add(*pdfSet) ;
 	    }
 	    
 	  }
 // 	  cmdList.Print("v") ;
-	  RooProdPdf* multiPdf = new RooProdPdf(name,name,cmdList) ;
+	  RooProdPdf* multiPdf = new RooProdPdf(name,name,fullPdfSet,cmdList) ;
 	  cmdList.Delete() ;
 	  pdfSetList.Delete() ;
 
@@ -194,6 +194,8 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
     // following Partial/Full component specification of input model
     RooLinkedList cmdList ;
     RooLinkedList pdfSetList ;
+    RooArgSet fullPdfSet ;
+
     TIterator* pdfIter = trailerTerm.createIterator() ;
     while(pdf=(RooAbsPdf*)pdfIter->Next()) {
 	
@@ -202,18 +204,15 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       pdfSetList.Add(pdfSet) ;
       
       if (pdfnset && pdfnset->getSize()>0) {
-	// This PDF requires a Partial() construction
-	  cmdList.Add(Partial(*pdfSet,*pdfnset).Clone()) ;
-// 	  cout << "Partial " << pdf->GetName() << " " ; pdfnset->Print("1") ;
+	// This PDF requires a Conditional() construction
+	  cmdList.Add(Conditional(*pdfSet,*pdfnset).Clone()) ;
       } else {
-	// This PDF can use a Full() construction
-	cmdList.Add(Full(*pdfSet).Clone()) ;
-// 	cout << "Full " << pdf->GetName() << endl ;
+	fullPdfSet.add(*pdfSet) ;
       }
       
     }
 //     cmdList.Print("v") ;
-    RooProdPdf* multiPdf = new RooProdPdf(name,name,cmdList) ;
+    RooProdPdf* multiPdf = new RooProdPdf(name,name,fullPdfSet,cmdList) ;
     cmdList.Delete() ;
     pdfSetList.Delete() ;
     

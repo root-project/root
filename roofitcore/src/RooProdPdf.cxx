@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.49 2004/11/29 20:24:06 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.50 2005/02/14 20:44:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -172,11 +172,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& pd
 }
 
 
-// Smart Constructor arguments
-RooCmdArg Partial(const RooArgSet& pdfSet, const RooArgSet& depSet) { return RooCmdArg("Partial",0,0,0,0,0,0,&pdfSet,&depSet) ; } ;
-RooCmdArg Full(const RooArgSet& pdfSet)                             { return RooCmdArg("Full",0,0,0,0,0,0,&pdfSet,0) ; } ;
-
-RooProdPdf::RooProdPdf(const char* name, const char* title,
+RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet,
 		       const RooCmdArg& arg1, const RooCmdArg& arg2,
 		       const RooCmdArg& arg3, const RooCmdArg& arg4,
 		       const RooCmdArg& arg5, const RooCmdArg& arg6,
@@ -220,11 +216,11 @@ RooProdPdf::RooProdPdf(const char* name, const char* title,
   l.Add((TObject*)&arg5) ;  l.Add((TObject*)&arg6) ;  
   l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
 
-  initializeFromCmdArgList(l) ;
+  initializeFromCmdArgList(fullPdfSet,l) ;
 }
 
 
-RooProdPdf::RooProdPdf(const char* name, const char* title, const RooLinkedList& cmdArgList) :
+RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& fullPdfSet, const RooLinkedList& cmdArgList) :
   RooAbsPdf(name,title), 
   _partListMgr(10),
   _partOwnedListMgr(10),
@@ -237,7 +233,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooLinkedList&
 {
 //   cout << "RooProdPdf::ctor" << endl ;
 //   cmdArgList.Print("v") ;
-  initializeFromCmdArgList(cmdArgList) ;
+  initializeFromCmdArgList(fullPdfSet, cmdArgList) ;
 }
 
 
@@ -266,30 +262,26 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
 
 
 
-void RooProdPdf::initializeFromCmdArgList(const RooLinkedList& l)
+void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const RooLinkedList& l)
 {
   // Initialize RooProdPdf from a list of RooCmdArg configuration arguments
 
+  // Process set of full PDFS
+  TIterator* siter = fullPdfSet.createIterator() ;
+  RooAbsPdf* pdf ;
+  while(pdf=(RooAbsPdf*)siter->Next()) {
+    _pdfList.add(*pdf) ;
+    RooArgSet* nset1 = new RooArgSet ;
+    _pdfNSetList.Add(nset1) ;       
+  }
+  delete siter ;
+
+  // Process list of conditional PDFs
   TIterator* iter = l.MakeIterator() ;
   RooCmdArg* carg ;
   while(carg=(RooCmdArg*)iter->Next()) {
-    if (!TString(carg->GetName()).CompareTo("Full")) {
-
-      RooArgSet* pdfSet = (RooArgSet*) carg->getObject(0) ;
-      TIterator* siter = pdfSet->createIterator() ;
-      RooAbsPdf* pdf ;
-      while(pdf=(RooAbsPdf*)siter->Next()) {
-	_pdfList.add(*pdf) ;
-	RooArgSet* nset1 = new RooArgSet ;
-	_pdfNSetList.Add(nset1) ;       
-      }
-      delete siter ;
-    }
-    else if (!TString(carg->GetName()).CompareTo("Partial")) {
-//         cout << "Partial arg" << endl ;
-//         carg->getObject(0)->Print("1") ;
-//         carg->getObject(1)->Print("1") ;
-
+    if (!TString(carg->GetName()).CompareTo("Conditional")) {
+   
       RooArgSet* pdfSet = (RooArgSet*) carg->getObject(0) ;
       RooArgSet* normSet = (RooArgSet*) carg->getObject(1) ;
       TIterator* siter = pdfSet->createIterator() ;

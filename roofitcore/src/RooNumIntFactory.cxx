@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooNumIntFactory.cc,v 1.10 2004/04/05 22:44:11 wverkerke Exp $
+ *    File: $Id: RooNumIntFactory.cc,v 1.1 2004/11/29 20:24:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,8 +30,10 @@ using std::endl;
 ClassImp(RooNumIntFactory)
 ;
 
-RooNumIntFactory* RooNumIntFactory::_instance = 0 ;
-
+Bool_t RooNumIntFactory::registerInitializer(RooNumIntInitializerFunc fptr) { 
+  _initFuncList.push_back(fptr) ; 
+  return kFALSE ; 
+}
 
 RooNumIntFactory::RooNumIntFactory()
 {
@@ -47,10 +49,31 @@ RooNumIntFactory::RooNumIntFactory(const RooNumIntFactory& other)
 
 RooNumIntFactory& RooNumIntFactory::instance()
 {
+  static RooNumIntFactory* _instance = 0 ;
   if (_instance==0) {
     _instance = new RooNumIntFactory ;
-  }
+  } 
   return *_instance ;
+}
+
+void RooNumIntFactory::processInitializers() 
+{
+  static Bool_t alreadyProcessing = kFALSE ;
+
+  if (alreadyProcessing) return ;
+  alreadyProcessing = kTRUE ;
+
+  std::list<RooNumIntInitializerFunc>::iterator iter;
+
+  // Call all registered initializer functions
+  for (iter= _initFuncList.begin() ; iter != _initFuncList.end() ; ++iter) {
+    (*iter)(*this) ;
+  }
+
+  // Clear list
+  _initFuncList.clear() ;
+
+  alreadyProcessing = kFALSE ;
 }
 
 Bool_t RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName) 
@@ -74,8 +97,10 @@ Bool_t RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const Roo
 }
 
 
-const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name) const 
+const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name) 
 {
+  processInitializers() ;
+
   TObject* theNameObj = _nameList.FindObject(name) ;
   if (!theNameObj) return 0 ;
   Int_t index = _nameList.IndexOf(theNameObj) ;
@@ -84,8 +109,10 @@ const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name) c
 }
 
 
-const char* RooNumIntFactory::getDepIntegratorName(const char* name) const 
+const char* RooNumIntFactory::getDepIntegratorName(const char* name) 
 {
+  processInitializers() ;
+
   TObject* theNameObj = _nameList.FindObject(name) ;
   if (!theNameObj) return 0 ;
   Int_t index = _nameList.IndexOf(theNameObj) ;
@@ -93,8 +120,10 @@ const char* RooNumIntFactory::getDepIntegratorName(const char* name) const
   return  _depList.At(index)->GetName() ;
 }
 
-RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset) const
+RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndimPreset) 
 {
+  processInitializers() ;
+
   // First determine dimensionality and domain of integrand  
   Int_t ndim = ndimPreset>0 ? ndimPreset : func.getDimension() ;
 
