@@ -1,4 +1,4 @@
-// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.8 2001/06/22 16:10:18 rdm Exp $
+// @(#)root/main:$Name:  $:$Id: h2root.cxx,v 1.9 2001/11/03 16:52:32 brun Exp $
 // Author: Rene Brun   20/09/96
 /////////////////////////////////////////////////////////////////////////
 //      Program to convert an HBOOK file into a ROOT file
@@ -292,13 +292,14 @@ int main(int argc, char **argv)
 
   char root_file_title[128];
   sprintf(root_file_title,"HBOOK file: %s converted to ROOT",file_in);
-  TFile hfile(file_out,"RECREATE",root_file_title,compress);
+  TFile* hfile= TFile::Open(file_out,"RECREATE",root_file_title,compress);
 
   convert_directory("//example");
 
-  hfile.Write();
-  hfile.ls();
-  hfile.Close();
+  hfile->Write();
+  hfile->ls();
+  hfile->Close();
+  delete hfile;
   return(0);
 }
 
