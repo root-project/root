@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.cc,v 1.36 2004/11/29 20:24:05 wverkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.37 2005/02/14 20:44:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -48,7 +48,7 @@ using std::endl;
 using std::ostream;
 
 ClassImp(RooPlot)
-  ;
+;
 
 RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), 
@@ -94,7 +94,7 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
   initialize();
 }
 
-RooPlot::RooPlot(const RooAbsReal &var1, const RooAbsReal &var2,
+RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 		 Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _items(), _plotVarClone(0), 
   _plotVarSet(0), _defYmin(1e-5), _defYmax(0)
@@ -109,7 +109,28 @@ RooPlot::RooPlot(const RooAbsReal &var1, const RooAbsReal &var2,
   initialize();
 }
 
-RooPlot::RooPlot(const RooAbsReal &var, Double_t xmin, Double_t xmax, Int_t nbins) :
+RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins) :
+  TH1(name,title,nbins,xmin,xmax), _items(), 
+  _plotVarClone(0), _plotVarSet(0), _defYmin(1e-5), _defYmax(1)
+{
+  // Create an empty frame with its title and x-axis range and label taken
+  // from the specified real variable. We keep a clone of the variable
+  // so that we do not depend on its lifetime and are decoupled from
+  // any later changes to its state.
+
+  // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
+  _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
+  _plotVarClone= (RooAbsRealLValue*)_plotVarSet->find(var.GetName()) ;
+  
+  TString xtitle= var.getTitle(kTRUE);
+  SetXTitle(xtitle.Data());
+
+  initialize();
+
+  _normBinWidth = (xmax-xmin)/nbins ; 
+}
+
+RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins) :
   TH1(histName(),"RooPlot",nbins,xmin,xmax), _items(), 
   _plotVarClone(0), _plotVarSet(0), _defYmin(1e-5), _defYmax(1)
 {
@@ -120,7 +141,7 @@ RooPlot::RooPlot(const RooAbsReal &var, Double_t xmin, Double_t xmax, Int_t nbin
 
   // plotVar can be a composite in case of a RooDataSet::plot, need deepClone
   _plotVarSet = (RooArgSet*) RooArgSet(var).snapshot() ;
-  _plotVarClone= (RooAbsReal*)_plotVarSet->find(var.GetName()) ;
+  _plotVarClone= (RooAbsRealLValue*)_plotVarSet->find(var.GetName()) ;
   
   TString xtitle= var.getTitle(kTRUE);
   SetXTitle(xtitle.Data());
@@ -451,6 +472,21 @@ TAttText *RooPlot::getAttText(const char *name) const {
   return dynamic_cast<TAttText*>(findObject(name));
 }
 
+
+RooCurve* RooPlot::getCurve(const char* name) const  {
+  // Return a RooCurve pointer of the named object in this plot,
+  // or zero if the named object does not exist or is not a RooCurve
+
+  return dynamic_cast<RooCurve*>(findObject(name)) ;
+}
+
+RooHist* RooPlot::getHist(const char* name) const {
+  // Return a RooCurve pointer of the named object in this plot,
+  // or zero if the named object does not exist or is not a RooCurve
+
+  return dynamic_cast<RooHist*>(findObject(name)) ;
+}
+
 Bool_t RooPlot::drawBefore(const char *before, const char *target) {
   // Change the order in which our contained objects are drawn so that
   // the target object is drawn just before the specified object.
@@ -563,7 +599,7 @@ void RooPlot::SetMinimum(Double_t minimum)
 }
 
 
-Double_t RooPlot::chiSquare(const char* curvename, const char* histname) const 
+Double_t RooPlot::chiSquare(const char* curvename, const char* histname, Int_t nFitParam) const 
 {
   // Find curve object
   RooCurve* curve = (RooCurve*) findObject(curvename,RooCurve::Class()) ;
@@ -579,8 +615,28 @@ Double_t RooPlot::chiSquare(const char* curvename, const char* histname) const
     return -1. ;
   }
 
-  return curve->chiSquare(*hist) ;
+  return curve->chiSquare(*hist,nFitParam) ;
 }
+
+RooHist* RooPlot::pullHist(const char* histname, const char* curvename) const 
+{
+  // Find curve object
+  RooCurve* curve = (RooCurve*) findObject(curvename,RooCurve::Class()) ;
+  if (!curve) {
+    cout << "RooPlot::pullHist(" << GetName() << ") cannot find curve" << endl ;
+    return 0 ;
+  }
+
+  // Find histogram object
+  RooHist* hist = (RooHist*) findObject(histname,RooHist::Class()) ;
+  if (!hist) {
+    cout << "RooPlot::pullHist(" << GetName() << ") cannot find histogram" << endl ;
+    return 0 ;
+  }  
+
+  return hist->makePullHist(*curve) ;
+}
+
 
 void RooPlot::DrawOpt::initialize(const char* rawOpt) 
 {

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.cc,v 1.25 2004/11/29 20:23:45 wverkerke Exp $
+ *    File: $Id: RooHist.cc,v 1.26 2005/02/14 20:44:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,6 +21,7 @@
 
 #include "RooFitCore/RooHist.hh"
 #include "RooFitCore/RooHistError.hh"
+#include "RooFitCore/RooCurve.hh"
 
 #include "TH1.h"
 #include <iostream>
@@ -354,4 +355,47 @@ void RooHist::printToStream(ostream& os, PrintOption opt, TString indent) const 
       }
     }
   }
+}
+
+
+
+RooHist* RooHist::makePullHist(const RooCurve& curve) const {
+  // Make histogram of pulls w.r.t to given curve
+
+  // Copy all non-content properties from hist1
+  RooHist* pullHist = new RooHist(_nominalBinWidth) ;
+  pullHist->SetName(Form("pull_%s_s",GetName(),curve.GetName())) ;
+  pullHist->SetTitle(Form("Pull of %s and %s",GetTitle(),curve.GetTitle())) ;  
+
+  // Determine range of curve 
+  Double_t xstart,xstop,y ;
+  curve.GetPoint(0,xstart,y) ;
+  curve.GetPoint(curve.GetN()-1,xstop,y) ;
+  
+  // Add histograms, calculate Poisson confidence interval on sum value
+  Int_t i,n=GetN() ;
+  for(i=0 ; i<n ; i++) {    
+
+    Double_t x,dyl,dyh,y,cy ;
+    GetPoint(i,x,y) ;
+
+    // Only calculate pull for bins inside curve range
+    if (x<xstart || x>xstop) continue ;
+
+    dyl = GetEYlow()[i] ;
+    dyh = GetEYhigh()[i] ;
+
+    cy = curve.interpolate(x) ;
+
+    Double_t pull = y-cy ;
+    if (pull>0) {
+      pull /= dyl ;
+    } else {
+      pull /= dyh ;
+    }
+
+    pullHist->addBinWithError(x,0,pull<0?-pull:0,pull>0?pull:0,0,0) ;
+  }    
+  
+  return pullHist ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGlobalFunc.rdl,v 1.1 2005/02/14 20:44:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -37,7 +37,9 @@ RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData) ;
 RooCmdArg Asymmetry(const RooCategory& cat) ;
 RooCmdArg Precision(Double_t prec) ;
 RooCmdArg ShiftToZero() ;
-RooCmdArg Range(Double_t lo, Double_t hi, Bool_t vlines=kFALSE) ;
+RooCmdArg Range(const char* rangeName) ;
+RooCmdArg Range(Double_t lo, Double_t hi) ;
+RooCmdArg Range(Double_t lo, Double_t hi, Bool_t vlines) ;
 RooCmdArg LineColor(Color_t color) ;
 RooCmdArg LineStyle(Style_t style) ;
 RooCmdArg LineWidth(Width_t width) ;
@@ -74,6 +76,10 @@ RooCmdArg Columns(Int_t ncol) ;
 RooCmdArg OutputFile(const char* fileName) ;
 RooCmdArg Format(const char* format, Int_t sigDigit=1) ;
 RooCmdArg Sibling(const RooAbsCollection& sibling) ;
+
+// RooAbsRealLValue::frame arguments
+RooCmdArg Title(const char* name) ;
+RooCmdArg Bins(Int_t nbin) ;
 
 namespace RooFitShortHand {
 

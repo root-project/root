@@ -41,6 +41,8 @@
 #pragma link C++ function OutputFile ;
 #pragma link C++ function Format ;
 #pragma link C++ function Sibling ;
+#pragma link C++ function Title ;
+#pragma link C++ function Bins ;
 #pragma link C++ function RooFitShortHand::C ;
 #pragma link C++ function RooFitShortHand::L ;
 #pragma link C++ function RooFitShortHand::S ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.cc,v 1.34 2004/11/29 20:22:41 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.35 2005/02/14 20:44:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -43,6 +43,7 @@
 #include "RooFitCore/RooAbsBinning.hh"
 #include "RooFitCore/RooBinning.hh"
 #include "RooFitCore/RooUniformBinning.hh"
+#include "RooFitCore/RooCmdConfig.hh"
 using std::cout;
 using std::endl;
 using std::istream;
@@ -148,7 +149,42 @@ RooAbsArg& RooAbsRealLValue::operator=(const RooAbsReal& arg)
   return operator=(arg.getVal()) ;
 }
 
+RooPlot* RooAbsRealLValue::frame(RooCmdArg arg1, RooCmdArg arg2, RooCmdArg arg3, RooCmdArg arg4,
+				 RooCmdArg arg5, RooCmdArg arg6, RooCmdArg arg7, RooCmdArg arg8) const {
 
+  // Define configuration for this method
+  RooCmdConfig pc(Form("RooPlot::RooPlot(%s)",GetName())) ;
+  pc.defineDouble("min","Range",0,getMin()) ;
+  pc.defineDouble("max","Range",1,getMax()) ;
+  pc.defineInt("nbins","Bins",0,getBins()) ;
+  pc.defineString("rangeName","RangeWithName",0,"") ;
+  pc.defineString("name","Name",0,"") ;
+  pc.defineString("title","Title",0,"") ;
+  pc.defineMutex("Range","RangeWithName") ;
+
+  // Process & check varargs 
+  pc.process(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  if (!pc.ok(kTRUE)) {
+    return 0 ;
+  }
+
+  // Extract values from named arguments
+  Double_t xmin,xmax ;
+  if (pc.hasProcessed("Range")) {
+    xmin = pc.getDouble("min") ;
+    xmax = pc.getDouble("max") ;
+  } else {
+    const char* rangeName=pc.getString("rangeName",0,kTRUE) ;
+    xmin = getMin(rangeName) ;
+    xmax = getMax(rangeName) ;
+  }
+
+  Int_t nbins = pc.getInt("nbins") ;
+  const char* name = pc.getString("name",0,kTRUE) ;
+  const char* title = pc.getString("title",0,kTRUE) ;
+
+  return new RooPlot(name,title,*this,xmin,xmax,nbins) ;
+}
 
 RooPlot *RooAbsRealLValue::frame(Double_t xlo, Double_t xhi, Int_t nbins) const {
   // Create a new RooPlot on the heap with a drawing frame initialized for this

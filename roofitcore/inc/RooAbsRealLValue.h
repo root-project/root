@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsRealLValue.rdl,v 1.25 2004/12/03 13:18:28 wverkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.26 2005/02/14 20:44:21 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -80,6 +80,8 @@ public:
   virtual void printToStream(std::ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
   
   // Build 1-dimensional plots
+  RooPlot* frame(RooCmdArg arg1, RooCmdArg arg2=RooCmdArg(), RooCmdArg arg3=RooCmdArg(), RooCmdArg arg4=RooCmdArg(),
+                 RooCmdArg arg5=RooCmdArg(), RooCmdArg arg6=RooCmdArg(), RooCmdArg arg7=RooCmdArg(), RooCmdArg arg8=RooCmdArg()) const ;
   RooPlot *frame(Double_t lo, Double_t hi, Int_t nbins) const;
   RooPlot *frame(Double_t lo, Double_t hi) const;
   RooPlot *frame(Int_t nbins) const;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.11 2004/11/29 12:22:10 wverkerke Exp $
+ *    File: $Id: RooAbsGoodnessOfFit.cc,v 1.12 2004/11/29 20:22:04 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -317,7 +317,7 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     RooAbsPdf* pdf =  simpdf->getPdf(type->GetName()) ;
     RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName()) ;
 
-    if (pdf && dset) {      
+    if (pdf && dset && dset->numEntries(kTRUE)!=0.) {      
       _nGof++ ;
     }
   }
@@ -333,7 +333,7 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
     RooAbsPdf* pdf =  simpdf->getPdf(type->GetName()) ;
     RooAbsData* dset = (RooAbsData*) dsetList->FindObject(type->GetName()) ;
 
-    if (pdf && dset) {      
+    if (pdf && dset && dset->numEntries(kTRUE)!=0.) {      
       cout << "RooAbsGoodnessOfFit::initSimMode: creating slave GOF calculator #" << n << " for state " << type->GetName() 
 	   << " (" << dset->numEntries() << " dataset entries)" << endl ;
       _gofArray[n] = create(type->GetName(),type->GetName(),*pdf,*dset,*projDeps) ;
@@ -343,7 +343,7 @@ void RooAbsGoodnessOfFit::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       _gofArray[n]->recursiveRedirectServers(_paramSet) ;
       n++ ;
     } else {
-      if (!dset && pdf) {
+      if ((!dset || dset->numEntries(kTRUE)==0.) && pdf) {
 	cout << "RooAbsGoodnessOfFit::initSimMode: state " << type->GetName() 
 	     << " has no data entries, no slave GOF calculator created" << endl ;
       }      

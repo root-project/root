@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.rdl,v 1.6 2004/04/05 22:44:10 wverkerke Exp $
+ *    File: $Id: RooCmdConfig.rdl,v 1.7 2005/02/14 20:44:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -62,6 +62,7 @@ public:
   const char* missingArgs() const ;
 
   void stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge) ;
+  Bool_t hasProcessed(const char* cmdName) const ;
 
   void print() ;
 

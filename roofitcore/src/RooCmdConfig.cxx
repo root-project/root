@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCmdConfig.cc,v 1.9 2004/11/29 20:23:05 wverkerke Exp $
+ *    File: $Id: RooCmdConfig.cc,v 1.10 2005/02/14 20:44:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -339,6 +339,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg1, const RooCmdArg& arg2, const
   ret |= process(arg6) ;
   ret |= process(arg7) ;
   ret |= process(arg8) ;
+  return ret ;
 }
 
 
@@ -462,6 +463,10 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   return (anyField||_allowUndefined)?kFALSE:kTRUE ;
 }
   
+
+Bool_t RooCmdConfig::hasProcessed(const char* cmdName) const {
+  return _pList.FindObject(cmdName) ? kTRUE : kFALSE ;
+}
 
 
 Int_t RooCmdConfig::getInt(const char* name, Int_t defVal) 

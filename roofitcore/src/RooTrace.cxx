@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooTrace.cc,v 1.16 2004/11/29 12:22:24 wverkerke Exp $
+ *    File: $Id: RooTrace.cc,v 1.17 2004/11/29 20:24:41 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,7 +50,6 @@ void RooTrace::destroy2(const TObject* obj) {
   if (!_list.Remove((RooAbsArg*)obj)) {
     cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName() 
 	 << " already deleted, or created before trace activation[" << obj->GetTitle() << "]" << endl ;
-    assert(0) ;
   } else if (_verbose) {
     cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName() 
 	 << " destroyed [" << obj->GetTitle() << "]" << endl ;

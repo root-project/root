@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id$
+ *    File: $Id: RooGlobalFunc.cc,v 1.1 2005/02/14 20:44:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -30,7 +30,9 @@ RooCmdArg Asymmetry(const RooCategory& cat)      { return RooCmdArg("Asymmetry",
 RooCmdArg Precision(Double_t prec)               { return RooCmdArg("Precision",0,0,prec,0,0,0,0,0) ; }
 RooCmdArg ShiftToZero()                          { return RooCmdArg("ShiftToZero",1,0,0,0,0,0,0,0) ; }
 RooCmdArg Normalization(Double_t scaleFactor)    { return RooCmdArg("Normalization",RooAbsReal::Relative,0,scaleFactor,0,0,0,0,0) ; }
-RooCmdArg Range(Double_t lo, Double_t hi, Bool_t vlines) { return RooCmdArg("Range",vlines?1:0,0,lo,hi,0,0,0,0) ; }
+RooCmdArg Range(const char* rangeName)           { return RooCmdArg("RangeWithName",0,0,0,0,rangeName,0,0,0) ; }
+RooCmdArg Range(Double_t lo, Double_t hi)        { return RooCmdArg("Range",0,0,lo,hi,0,0,0,0) ; }
+RooCmdArg Range(Double_t lo, Double_t hi, Bool_t vlines) { return RooCmdArg("RangeWithVLines",vlines?1:0,0,lo,hi,0,0,0,0) ; }
 RooCmdArg LineColor(Color_t color)               { return RooCmdArg("LineColor",color,0,0,0,0,0,0,0) ; }
 RooCmdArg LineStyle(Style_t style)               { return RooCmdArg("LineStyle",style,0,0,0,0,0,0,0) ; }
 RooCmdArg LineWidth(Width_t width)               { return RooCmdArg("LineWidth",width,0,0,0,0,0,0,0) ; }
@@ -69,6 +71,10 @@ RooCmdArg Columns(Int_t ncol)                           { return RooCmdArg("Colu
 RooCmdArg OutputFile(const char* fileName)              { return RooCmdArg("OutputFile",0,0,0,0,fileName,0,0,0) ; }
 RooCmdArg Format(const char* format, Int_t sigDigit)    { return RooCmdArg("Format",sigDigit,0,0,0,format,0,0,0) ; }
 RooCmdArg Sibling(const RooAbsCollection& sibling)      { return RooCmdArg("Sibling",0,0,0,0,0,0,&sibling,0) ; }
+
+// RooAbsRealLValue::frame arguments
+RooCmdArg Title(const char* name) { return RooCmdArg("Title",0,0,0,0,name,0,0,0) ; }
+RooCmdArg Bins(Int_t nbin)        { return RooCmdArg("Bins",nbin,0,0,0,0,0,0,0) ; }
 
 namespace RooFitShortHand {
 

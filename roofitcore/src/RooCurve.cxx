@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.cc,v 1.39 2004/11/29 20:23:09 wverkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.40 2005/02/14 20:44:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -354,16 +354,28 @@ void RooCurve::printToStream(ostream& os, PrintOption opt, TString indent) const
 }
 
 
-Double_t RooCurve::chiSquare(const RooHist& hist) const 
+Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const 
 {
   Int_t i,np = hist.GetN() ;
   Double_t x,y,eyl,eyh ;
   Double_t hbinw2 = hist.getNominalBinWidth()/2 ;
 
+  // Find starting and ending bin of histogram based on range of RooCurve
+  Double_t xstart,xstop ;
+  GetPoint(0,xstart,y) ;
+  GetPoint(GetN()-1,xstop,y) ;
+  Int_t nbin(0) ;
+
   Double_t chisq(0) ;
-  for (i=0 ; i<np ; i++) {    
+  for (i=0 ; i<np ; i++) {   
+
     // Retrieve histogram contents
     ((RooHist&)hist).GetPoint(i,x,y) ;
+
+    // Check if point is in range of curve
+    if (x<xstart || x>xstop) continue ;
+
+    nbin++ ;
     eyl = hist.GetEYlow()[i] ;
     eyh = hist.GetEYhigh()[i] ;
 
@@ -378,37 +390,70 @@ Double_t RooCurve::chiSquare(const RooHist& hist) const
   }
 
   // Return chisq/nDOF 
-  return chisq / np ;
+  return chisq / (nbin-nFitParam) ;
 }
 
 
 
-Double_t RooCurve::average(Double_t lo, Double_t hi) const
+Double_t RooCurve::average(Double_t xFirst, Double_t xLast) const
 {
-  // Find points corresponding to first and last point
-  Double_t tolerance = fabs(hi-lo)*1e-3 ;
-  Int_t ifirst = findPoint(lo,tolerance) ;
-  Int_t ilast  = findPoint(hi,tolerance) ;
+  // Average curve between given values by integrating curve between points
+  // and dividing by xLast-xFirst
 
-  if (ilast<=ifirst) {
+  if (xFirst>=xLast) {
     cout << "RooCurve::average(" << GetName() 
-	 << ") invalid range (" << lo << "," << hi << ")" << endl ;
+	 << ") invalid range (" << xFirst << "," << xLast << ")" << endl ;
     return 0 ;
   }
 
-  // Trapezoid integration
-  Int_t i ;
+  // Find Y values and begin and end points
+  Double_t yFirst = interpolate(xFirst,1e-10) ;
+  Double_t yLast = interpolate(xLast,1e-10) ;
+
+  // Find first and last mid points
+  Int_t ifirst = findPoint(xFirst,1e10) ;
+  Int_t ilast  = findPoint(xLast,1e10) ;
+  Double_t xFirstPt,yFirstPt,xLastPt,yLastPt ;
+  const_cast<RooCurve&>(*this).GetPoint(ifirst,xFirstPt,yFirstPt) ;
+  const_cast<RooCurve&>(*this).GetPoint(ilast,xLastPt,yLastPt) ;
+
+  Double_t tolerance=1e-3*(xLast-xFirst) ;
+
+  // Handle trivial scenario -- no midway points, point only at or outside given range
+  if (ilast-ifirst==1 &&(xFirstPt-xFirst)<-1*tolerance && (xLastPt-xLast)>tolerance) {
+    return 0.5*(yFirst+yLast) ;
+  }
+ 
+  // If first point closest to xFirst is at xFirst or before xFirst take the next point
+  // as the first midway point   
+  if ((xFirstPt-xFirst)<-1*tolerance) {
+    ifirst++ ;
+    const_cast<RooCurve&>(*this).GetPoint(ifirst,xFirstPt,yFirstPt) ;
+  }
+  
+  // If last point closest to yLast is at yLast or beyond yLast the the previous point
+  // as the last midway point
+  if ((xLastPt-xLast)>tolerance) {
+    ilast-- ;
+    const_cast<RooCurve&>(*this).GetPoint(ilast,xLastPt,yLastPt) ;
+  }
+
   Double_t sum(0),x1,y1,x2,y2 ;
+
+  // Trapezoid integration from lower edge to first midpoint
+  sum += (xFirstPt-xFirst)*(yFirst+yFirstPt)/2 ;
+
+  // Trapezoid integration between midpoints
+  Int_t i ;
   for (i=ifirst ; i<ilast ; i++) {
-    ((RooCurve&)*this).GetPoint(i,x1,y1) ;
-    ((RooCurve&)*this).GetPoint(i+1,x2,y2) ;
+    const_cast<RooCurve&>(*this).GetPoint(i,x1,y1) ;
+    const_cast<RooCurve&>(*this).GetPoint(i+1,x2,y2) ;
     sum += (x2-x1)*(y1+y2)/2 ;
   }
 
-  // Return trapezoid sum devided by integration range
-  ((RooCurve&)*this).GetPoint(ifirst,x1,y1) ;
-  ((RooCurve&)*this).GetPoint(ilast,x2,y2) ;
-  return sum/(x2-x1) ;
+  // Trapezoid integration from last midpoint to upper edge 
+  sum += (xLast-xLastPt)*(yLastPt+yLast)/2 ;
+  return sum/(xLast-xFirst) ;
 }
 
 
@@ -452,6 +497,7 @@ Double_t RooCurve::interpolate(Double_t xvalue, Double_t tolerance) const
       return ybest ;
     }
     const_cast<RooCurve*>(this)->GetPoint(ibest+1,xother,yother) ;        
+    if (xother==xbest) return ybest ;
     return ybest + (yother-ybest)*(xvalue-xbest)/(xother-xbest) ; 
 
   } else {
@@ -460,6 +506,7 @@ Double_t RooCurve::interpolate(Double_t xvalue, Double_t tolerance) const
       return ybest ;
     }
     const_cast<RooCurve*>(this)->GetPoint(ibest-1,xother,yother) ;    
+    if (xother==xbest) return ybest ;
     return yother + (ybest-yother)*(xvalue-xother)/(xbest-xother) ;
   }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooCurve.rdl,v 1.19 2004/11/29 12:22:17 wverkerke Exp $
+ *    File: $Id: RooCurve.rdl,v 1.20 2005/02/14 20:44:23 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -50,7 +50,7 @@ public:
     printToStream(defaultStream(),parseOptions(options));
   }
 
-  Double_t chiSquare(const RooHist& hist) const ;
+  Double_t chiSquare(const RooHist& hist, int nFitParam) const ;
   Int_t findPoint(Double_t value, Double_t tolerance=1e-10) const ;
   Double_t average(Double_t lo, Double_t hi) const ;
   Double_t interpolate(Double_t x, Double_t tolerance=1e-10) const ;

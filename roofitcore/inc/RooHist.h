@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooHist.rdl,v 1.16 2004/11/29 12:22:20 wverkerke Exp $
+ *    File: $Id: RooHist.rdl,v 1.17 2005/02/14 20:44:25 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -21,6 +21,7 @@
 #include "RooFitCore/RooAbsData.hh"
 
 class TH1;
+class RooCurve ;
 
 class RooHist : public TGraphAsymmErrors, public RooPlotable {
 public:
@@ -50,9 +51,12 @@ public:
 
   Bool_t hasIdenticalBinning(const RooHist& other) const ;
 
+  RooHist* makePullHist(const RooCurve& curve) const ;
+
 protected:
   void initialize();
   Int_t roundBin(Double_t y);
+
 private:
   Double_t _nominalBinWidth,_nSigma,_entries,_rawEntries;
   ClassDef(RooHist,1) // 1-dimensional histogram with error bars

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooPlot.rdl,v 1.27 2004/11/29 12:22:21 wverkerke Exp $
+ *    File: $Id: RooPlot.rdl,v 1.28 2005/02/14 20:44:26 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -24,6 +24,7 @@ class RooAbsReal;
 class RooAbsRealLValue;
 class RooArgSet ;
 class RooHist;
+class RooCurve ;
 class RooPlotable;
 class TAttLine;
 class TAttFill;
@@ -33,11 +34,12 @@ class TClass ;
 
 class RooPlot : public TH1, public RooPrintable {
 public:
-  RooPlot(const RooAbsReal &var, Double_t xmin, Double_t xmax, Int_t nBins);
+  RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins) ;
+  RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins);
   RooPlot(Double_t xmin= 0, Double_t xmax= 1);
   RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2);
-  RooPlot(const RooAbsReal &var1, const RooAbsReal &var2,
+  RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 	  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
   virtual ~RooPlot();
 
@@ -64,7 +66,7 @@ public:
   }
 
   // data member get/set methods
-  inline RooAbsReal *getPlotVar() const { return _plotVarClone; }
+  inline RooAbsRealLValue *getPlotVar() const { return _plotVarClone; }
   inline Double_t getFitRangeNEvt() const { return _normNumEvts; }
   inline Double_t getFitRangeBinW() const { return _normBinWidth; }
   inline Double_t getPadFactor() const { return _padFactor; }
@@ -77,6 +79,10 @@ public:
   TAttFill *getAttFill(const char *name=0) const;
   TAttMarker *getAttMarker(const char *name=0) const;
   TAttText *getAttText(const char *name=0) const;
+
+  // Convenient type-safe accessors
+  RooCurve* getCurve(const char* name=0) const ;
+  RooHist* getHist(const char* name=0) const ;
 
   // rearrange drawing order of contained objects
   Bool_t drawBefore(const char *before, const char *target);
@@ -92,7 +98,10 @@ public:
   virtual void SetMaximum(Double_t maximum = -1111) ;
   virtual void SetMinimum(Double_t minimum = -1111) ;
 
-  Double_t chiSquare(const char* pdfname=0, const char* histname=0) const ;
+  Double_t chiSquare(int nFitParam=0) const { return chiSquare(0,0,nFitParam) ; } 
+  Double_t chiSquare(const char* pdfname, const char* histname, int nFitParam=0) const ;
+
+  RooHist* pullHist(const char* histname=0, const char* pdfname=0) const ;
 
 protected:
 
@@ -117,7 +126,7 @@ protected:
 
   RooList _items;            // A list of the items we contain.
   Double_t _padFactor;       // Scale our y-axis to _padFactor of our maximum contents.
-  RooAbsReal *_plotVarClone; // A clone of the variable we are plotting.
+  RooAbsRealLValue *_plotVarClone; // A clone of the variable we are plotting.
   RooArgSet *_plotVarSet;    // A list owning the cloned tree nodes of the plotVarClone
   RooArgSet *_normVars;      // Variables that PDF plots should be normalized over
   Double_t _normNumEvts;     // Number of events in histogram (for normalization)

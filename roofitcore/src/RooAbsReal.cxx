@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooAbsReal.cc,v 1.103 2004/11/29 20:22:28 wverkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.104 2005/02/14 20:44:20 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -731,9 +731,12 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineInt("shiftToZero","ShiftToZero",0,0) ;  
   pc.defineObject("projDataSet","ProjData",0) ;
   pc.defineObject("projData","ProjData",1) ;
-  pc.defineDouble("rangeLo","Range",0,frame->GetXaxis()->GetXmin()) ;
-  pc.defineDouble("rangeHi","Range",1,frame->GetXaxis()->GetXmax()) ;
-  pc.defineInt("rangeVL","Range",0,2) ; // 2==ExtendedWings
+  pc.defineDouble("rangeLo","Range",0,-999.) ;
+  pc.defineDouble("rangeHi","Range",1,-999.) ;
+  pc.defineDouble("rangeLo_VL","RangeWithVLines",0,frame->GetXaxis()->GetXmin()) ;
+  pc.defineDouble("rangeHi_VL","RangeWithVLines",1,frame->GetXaxis()->GetXmax()) ;
+  pc.defineInt("rangeVL","RangeWithVLines",0,2) ; // 2==ExtendedWings
+  pc.defineString("rangeName","RangeWithName",0,"") ;
   pc.defineInt("lineColor","LineColor",0,-999) ;
   pc.defineInt("lineStyle","LineStyle",0,-999) ;
   pc.defineInt("lineWidth","LineWidth",0,-999) ;
@@ -746,6 +749,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineDouble("addToWgtOther","AddTo",1,1.) ;
   pc.defineMutex("SliceVars","Project") ;
   pc.defineMutex("AddTo","Asymmetry") ;
+  pc.defineMutex("Range","RangeWithVLines") ;
+  pc.defineMutex("Range","RangeWithName") ;
+  pc.defineMutex("RangeWithName","RangeWithVLines") ;
 
   // Process & check varargs 
   pc.process(argList) ;
@@ -767,9 +773,19 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
 
   o.precision = pc.getDouble("precision") ;
   o.shiftToZero = (pc.getInt("shiftToZero")!=0) ;
-  o.rangeLo = pc.getDouble("rangeLo") ;
-  o.rangeHi = pc.getDouble("rangeHi") ;
   Int_t rangeVL = pc.getInt("rangeVL");
+  if (pc.hasProcessed("RangeWithVLines")) { // cmd mutex ensures only one of following conditions is met 
+    o.rangeLo = pc.getDouble("rangeLo_VL") ;
+    o.rangeHi = pc.getDouble("rangeHi_VL") ;
+  } else if (pc.hasProcessed("Range")) {
+    o.rangeLo = pc.getDouble("rangeLo") ;
+    o.rangeHi = pc.getDouble("rangeHi") ;
+    rangeVL = 1 ;
+  } else {    
+    o.rangeLo = frame->getPlotVar()->getMin(pc.getString("rangeName",0,kTRUE)) ;
+    o.rangeHi = frame->getPlotVar()->getMax(pc.getString("rangeName",0,kTRUE)) ;
+    rangeVL = 1 ;
+  }
   o.wmode = (rangeVL==2)?RooCurve::Extended:(rangeVL==1?RooCurve::Straight:RooCurve::NoWings) ;
   o.projectionRangeName = pc.getString("projectionRangeName",0,kTRUE) ;
   o.curveName = pc.getString("curveName",0,kTRUE) ;
