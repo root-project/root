@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.6 2002/07/29 09:22:28 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.h,v 1.7 2002/08/07 10:56:20 brun Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -61,6 +61,8 @@ public:
    void          Delete(Option_t *option="");
    TObject      *FindObject(const char *name) const;
    TObject      *FindObject(const TObject *obj) const;
+   TList        *GetListForObject(const char *name) const;
+   TList        *GetListForObject(const TObject *obj) const;
    TObject     **GetObjectRef(const TObject *obj) const;
    Int_t         GetSize() const { return fEntries; }
    TIterator    *MakeIterator(Bool_t dir = kIterForward) const;

@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.7 2002/07/29 09:22:29 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: THashTable.cxx,v 1.8 2002/08/07 10:56:20 brun Exp $
 // Author: Fons Rademakers   27/09/95
 
 /*************************************************************************
@@ -180,6 +180,27 @@ TObject *THashTable::FindObject(const TObject *obj) const
    Int_t slot = GetHashValue(obj);
    if (fCont[slot]) return fCont[slot]->FindObject(obj);
    return 0;
+}
+
+//______________________________________________________________________________
+TList *THashTable::GetListForObject(const char *name) const
+{
+   // Return the TList corresponding to object's name based hash value.
+   // One can iterate this list "manually" to find, e.g. objects with
+   // the same name.
+
+   return fCont[GetHashValue(name)];
+}
+
+//______________________________________________________________________________
+TList *THashTable::GetListForObject(const TObject *obj) const
+{
+   // Return the TList corresponding to object's hash value.
+   // One can iterate this list "manually" to find, e.g. identical
+   // objects.
+
+   if (IsArgNull("GetListForObject", obj)) return 0;
+   return fCont[GetHashValue(obj)];
 }
 
 //______________________________________________________________________________
