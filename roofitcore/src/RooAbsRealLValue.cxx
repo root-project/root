@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.cc,v 1.10 2001/08/03 18:11:33 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.cc,v 1.11 2001/08/22 00:50:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -187,4 +187,18 @@ void RooAbsRealLValue::randomize() {
   else {
     cout << fName << "::" << ClassName() << ":randomize: fails with unbounded fit range" << endl;
   }
+}
+
+
+void RooAbsRealLValue::setPlotBin(Int_t ibin) 
+{
+  // Check range of plot bin index
+  if (ibin<0 || ibin>=numPlotBins()) {
+    cout << "RooAbsRealLValue::setPlotBin(" << GetName() << ") ERROR: bin index " << ibin
+	 << " is out of range (0," << getPlotBins()-1 << ")" << endl ;
+    return ;
+  }
+ 
+  // Set value to center of requested bin
+  setVal(plotBinCenter(ibin)) ;
 }

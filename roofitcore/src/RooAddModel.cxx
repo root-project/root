@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAddModel.cc,v 1.6 2001/08/10 22:22:53 verkerke Exp $
+ *    File: $Id: RooAddModel.cc,v 1.7 2001/08/15 23:38:43 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -252,7 +252,7 @@ Int_t RooAddModel::basisCode(const char* name) const
 
 
 
-Double_t RooAddModel::evaluate(const RooArgSet* nset) const 
+Double_t RooAddModel::evaluate() const 
 {
   // Calculate the current value of this object
   _coefProxyIter->Reset() ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.cc,v 1.6 2001/08/02 21:39:10 verkerke Exp $
+ *    File: $Id: RooGenericPdf.cc,v 1.7 2001/08/03 02:04:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -51,10 +51,10 @@ RooGenericPdf::~RooGenericPdf()
 }
 
 
-Double_t RooGenericPdf::evaluate(const RooArgSet* nset) const
+Double_t RooGenericPdf::evaluate() const
 {
   // Calculate current value of this object
-  return _formula.eval() ;
+  return _formula.eval(_lastNormSet) ;
 }
 
 

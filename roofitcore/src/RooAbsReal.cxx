@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.32 2001/08/17 00:35:56 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.33 2001/08/17 15:51:58 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,6 +34,8 @@
 #include "TObjString.h"
 #include "TTree.h"
 #include "TH1.h"
+#include "TBranch.h"
+#include "TLeaf.h"
 
 ClassImp(RooAbsReal) 
 ;
@@ -41,7 +43,7 @@ ClassImp(RooAbsReal)
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) : 
   RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
-  _plotMin(0), _plotMax(0)
+  _plotMin(0), _plotMax(0), _plotBinW(0)
 {
   // Constructor
   setValueDirty() ;
@@ -54,6 +56,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
   _plotMin(minVal), _plotMax(maxVal)
 {
   // Constructor with plot range
+  calcBinWidth() ;
   setValueDirty() ;
   setShapeDirty() ;
 }
@@ -61,8 +64,10 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 
 RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) : 
   RooAbsArg(other,name), _unit(other._unit), _plotBins(other._plotBins), 
-  _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value)
+  _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value),
+  _plotBinW(other._plotBinW)
 {
+
   // Copy constructor
 }
 
@@ -97,7 +102,7 @@ Double_t RooAbsReal::getVal(const RooArgSet* set) const
 Double_t RooAbsReal::traceEval(const RooArgSet* nset) const
 {
   // Calculate current value of object, with error tracing wrapper
-  Double_t value = evaluate(nset) ;
+  Double_t value = evaluate() ;
   
   //Standard tracing code goes here
   if (!isValidReal(value)) {
@@ -236,7 +241,7 @@ Bool_t RooAbsReal::inPlotRange(Double_t value) const {
 
 Bool_t RooAbsReal::isValid() const {
   // Check if current value is valid
-  return isValidReal(getVal()) ;
+  return isValidReal(_value) ;
 }
 
 
@@ -378,7 +383,12 @@ void RooAbsReal::copyCache(const RooAbsArg* source)
   RooAbsReal* other = dynamic_cast<RooAbsReal*>(const_cast<RooAbsArg*>(source)) ;
   assert(other!=0) ;
 
-  _value = other->_value ;
+  if (source->getAttribute("FLOAT_TREE_BRANCH")) {
+    Float_t& tmp = (Float_t&) other->_value ;
+    _value = tmp ;
+  } else {
+    _value = other->_value ;
+  }
   setValueDirty() ;
 }
 
@@ -397,7 +407,17 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
   cleanName.ReplaceAll(")","R") ;
 
   // First determine if branch is taken
-  if (t.GetBranch(cleanName)) {
+  TBranch* branch = t.GetBranch(cleanName) ;
+  if (branch) { 
+    
+    // Determine if existing branch is Float_t or Double_t
+    TString typeName(((TLeaf*)branch->GetListOfLeaves()->At(0))->GetTypeName()) ;
+    if (!typeName.CompareTo("Float_t")) {
+      cout << "RooAbsReal::attachToTree(" << GetName() << ") TTree branch " << GetName() 
+	   << " will be converted to double precision" << endl ;
+      setAttribute("FLOAT_TREE_BRANCH",kTRUE) ;
+    }
+
     t.SetBranchAddress(cleanName,&_value) ;
 //     cout << "RooAbsReal::attachToTree(" << cleanName << "): branch already exists in tree " 
 // 	 << (void*)&t << ", changing address" << endl ;
@@ -436,7 +456,7 @@ RooPlot *RooAbsReal::frame() const {
 
 Int_t RooAbsReal::getPlotBin() const 
 {
-  return Int_t((getVal() - getPlotMin())/ _plotBinW + 0.5) ;
+  return Int_t((getVal() - getPlotMin())/ _plotBinW) ;
 }
 
 
@@ -448,13 +468,13 @@ RooAbsBinIter* RooAbsReal::createPlotBinIterator() const
 
 void RooAbsReal::calcBinWidth() 
 {
-  _plotBinW = (getPlotMax() - getPlotMin()) / getPlotBins() ;
+  _plotBinW = (getPlotMax() - getPlotMin()) / numPlotBins() ;
 }
 
 
 Double_t RooAbsReal::plotBinCenter(Int_t i) const 
 {
-  if (i<0 || i>=getPlotBins()) {
+  if (i<0 || i>=numPlotBins()) {
     cout << "RooAbsReal::plotBinCenter(" << GetName() << ") ERROR: bin index " << i 
 	 << " is out of range (0," << getPlotBins()-1 << ")" << endl ;
     return 0 ;
@@ -466,7 +486,7 @@ Double_t RooAbsReal::plotBinCenter(Int_t i) const
 
 Double_t RooAbsReal::plotBinLow(Int_t i) const 
 {
-  if (i<0 || i>=getPlotBins()) {
+  if (i<0 || i>=numPlotBins()) {
     cout << "RooAbsReal::plotBinLow(" << GetName() << ") ERROR: bin index " << i 
 	 << " is out of range (0," << getPlotBins()-1 << ")" << endl ;
     return 0 ;
@@ -478,7 +498,7 @@ Double_t RooAbsReal::plotBinLow(Int_t i) const
 
 Double_t RooAbsReal::plotBinHigh(Int_t i) const 
 {
-  if (i<0 || i>=getPlotBins()) {
+  if (i<0 || i>=numPlotBins()) {
     cout << "RooAbsReal::plotBinHigh(" << GetName() << ") ERROR: bin index " << i 
 	 << " is out of range (0," << getPlotBins()-1 << ")" << endl ;
     return 0 ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooAddPdf.cc,v 1.4 2001/06/08 05:51:05 verkerke Exp $
+ *    File: $Id: RooAddPdf.cc,v 1.5 2001/08/02 21:39:08 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -107,7 +107,7 @@ void RooAddPdf::addLastPdf(RooAbsPdf& pdf)
 }
 
 
-Double_t RooAddPdf::evaluate(const RooArgSet* nset) const 
+Double_t RooAddPdf::evaluate() const 
 {
   // Calculate the current value of this object
   TIterator *pIter = _pdfProxyList.MakeIterator() ;

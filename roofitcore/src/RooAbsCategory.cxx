@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategory.cc,v 1.23 2001/08/03 18:11:33 verkerke Exp $
+ *    File: $Id: RooAbsCategory.cc,v 1.24 2001/08/17 00:35:56 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -44,7 +44,7 @@ RooAbsCategory::RooAbsCategory(const char *name, const char *title) :
 RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
   RooAbsArg(other,name), _value(other._value) 
 {
-  // Copy constructor
+  // Copy constructor, copies the registered category states from the original.
   TIterator* iter=other._types.MakeIterator() ;
   TObject* obj ;
   while (obj=iter->Next()) {
@@ -70,6 +70,7 @@ RooAbsCategory::~RooAbsCategory()
 Int_t RooAbsCategory::getIndex() const
 {
   // Return index number of current state 
+
   if (isValueDirty() || isShapeDirty()) {
     _value = traceEval() ;
 
@@ -84,6 +85,7 @@ Int_t RooAbsCategory::getIndex() const
 const char* RooAbsCategory::getLabel() const
 {
   // Return label string of current state 
+
   if (isValueDirty() || isShapeDirty()) {
     _value = traceEval() ;
 
@@ -268,7 +270,7 @@ Bool_t RooAbsCategory::isValid() const
 
 Bool_t RooAbsCategory::isValid(RooCatType value)  const
 {
-  // check if given state is defined for this object
+  // Check if given state is defined for this object
   return isValidIndex(value.getVal()) ;
 }
 
@@ -280,13 +282,14 @@ Roo1DTable* RooAbsCategory::createTable(const char *label)  const
 
 Bool_t RooAbsCategory::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
 {
-  //Read object contents from stream (dummy for now)
+  // Read object contents from stream (dummy for now)
+
   return kFALSE ;
 } 
 
 void RooAbsCategory::writeToStream(ostream& os, Bool_t compact) const
 {
-  //Write object contents to stream 
+  // Write object contents to stream 
   if (compact) {
     os << getLabel() ;
   } else {
@@ -325,8 +328,10 @@ void RooAbsCategory::printToStream(ostream& os, PrintOption opt, TString indent)
 
 void RooAbsCategory::copyCache(const RooAbsArg* source) 
 {
-  // Warning: This function copies the cached values of source,
-  //          it is the callers responsibility to make sure the cache is clean
+  // Copy the cached value from given source and raise dirty flag.
+  // It is the callers responsability to unsure that the sources
+  // cache is clean before this function is called, e.g. by
+  // calling syncCache() on the source.
 
   RooAbsCategory* other = dynamic_cast<RooAbsCategory*>(const_cast<RooAbsArg*>(source)) ;
   assert(other!=0) ;
@@ -338,7 +343,11 @@ void RooAbsCategory::copyCache(const RooAbsArg* source)
 
 void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
 {
-  // Attach object to a branch of given TTree
+  // Attach the category index and label to as branches
+  // to the given TTree. The index field will be attached
+  // as integer with name <name>_idx, the label field will be attached
+  // as char[] with label <name>_lbl.
+
   TString idxName(GetName()) ;
   TString lblName(GetName()) ;  
   idxName.Append("_idx") ;
@@ -366,11 +375,16 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
 }
 
 
-const RooCatType* RooAbsCategory::getOrdinal(UInt_t n) const {
+const RooCatType* RooAbsCategory::getOrdinal(UInt_t n) const 
+{
+  // Return state definition of ordinal nth defined state,
+  // needed by the generator mechanism.
+  
   return (const RooCatType*)_types.At(n);
 }
 
-RooAbsArg *RooAbsCategory::createFundamental() const {
+RooAbsArg *RooAbsCategory::createFundamental() const 
+{
   // Create a RooCategory fundamental object with our properties.
 
   // Add and precalculate new category column 
@@ -390,15 +404,18 @@ RooAbsArg *RooAbsCategory::createFundamental() const {
 
 Int_t RooAbsCategory::getPlotBin() const 
 {
+  // Get index of plot bin for current value this category.
+
   //Synchronize _value
   getIndex() ; 
 
   // Lookup ordinal index number 
-  return _types.IndexOf(&_value) ;
+  return _types.IndexOf(_types.FindObject(_value.GetName())) ;
 }
 
 
 RooAbsBinIter* RooAbsCategory::createPlotBinIterator() const 
 {
+  // Create an iterator over the plot bins of category
   return new RooCatBinIter(*this) ;
 }

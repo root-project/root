@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooProdPdf.cc,v 1.5 2001/07/31 05:54:20 verkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.6 2001/08/02 21:39:11 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -88,7 +88,7 @@ void RooProdPdf::addPdf(RooAbsPdf& pdf)
 }
 
 
-Double_t RooProdPdf::evaluate(const RooArgSet* nset) const 
+Double_t RooProdPdf::evaluate() const 
 {
   // Calculate current value of object
 

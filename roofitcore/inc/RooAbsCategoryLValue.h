@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.rdl,v 1.6 2001/07/31 05:54:16 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.rdl,v 1.7 2001/08/08 23:11:23 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,8 +15,9 @@
 
 #include <iostream.h>
 #include "RooFitCore/RooAbsCategory.hh"
+#include "RooFitCore/RooAbsLValue.hh"
 
-class RooAbsCategoryLValue : public RooAbsCategory {
+class RooAbsCategoryLValue : public RooAbsCategory, public RooAbsLValue {
 public:
   // Constructor, assignment etc.
   RooAbsCategoryLValue() {} ;
@@ -29,6 +30,7 @@ public:
   virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) = 0 ;
   RooAbsCategoryLValue& operator=(int index) ; 
   RooAbsCategoryLValue& operator=(const char* label) ; 
+  virtual void setPlotBin(Int_t ibin) ;
   void randomize();
 
   inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); }

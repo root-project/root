@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooGenericPdf.rdl,v 1.5 2001/08/02 21:39:10 verkerke Exp $
+ *    File: $Id: RooGenericPdf.rdl,v 1.6 2001/08/03 02:04:32 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -43,7 +43,7 @@ public:
 protected:
 
   // Function evaluation
-  virtual Double_t evaluate(const RooArgSet* nset) const ;
+  virtual Double_t evaluate() const ;
 
   Bool_t setFormula(const char* formula) ;
 

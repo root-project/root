@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.rdl,v 1.1 2001/08/17 00:35:56 verkerke Exp $
+ *    File: $Id: RooAbsData.rdl,v 1.2 2001/08/17 01:18:43 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -30,6 +30,7 @@ public:
   // Constructors, factory methods etc.
   RooAbsData() ; 
   RooAbsData(const char *name, const char *title, const RooArgSet& vars) ;
+  RooAbsData(const RooAbsData& other, const char* newname = 0) ;
   virtual ~RooAbsData() ;
 
   // Add one ore more rows of data
@@ -37,7 +38,11 @@ public:
 
   // Load a given row of data
   virtual inline const RooArgSet* get() const { return &_vars ; } // last loaded row
+  virtual Double_t weight() const { return 1 ; }
   virtual const RooArgSet* get(Int_t index) const = 0 ;
+
+  virtual Int_t numEntries() const = 0 ;
+  virtual void reset() = 0 ;
 
   // Plot the distribution of a real valued arg
   virtual Roo1DTable* table(RooAbsCategory& cat, const char* cuts="", const char* opts="") const = 0;
@@ -66,7 +71,7 @@ protected:
 
 private:
 
-  ClassDef(RooAbsData,1) // Data set for fitting
+  ClassDef(RooAbsData,1) // Abstract data set
 };
 
 #endif

@@ -1,10 +1,10 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: Roo1DTable.cc,v 1.4 2001/05/03 02:15:53 verkerke Exp $
+ *    File: $Id: Roo1DTable.cc,v 1.5 2001/05/17 00:43:14 verkerke Exp $
  * Authors:
- *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
+ *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
  *   07-Mar-2001 WV Created initial version
  *
@@ -13,8 +13,7 @@
 
 // -- CLASS DESCRIPTION --
 // Roo1DTable implements a one-dimensional table. A table is the category
-// equivalent of a plot.
-
+// equivalent of a plot. To create a table use the RooDataSet::table method.
 
 #include <iostream.h>
 #include <iomanip.h>
@@ -26,6 +25,11 @@ ClassImp(Roo1DTable)
 Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory& cat) : 
   RooTable(name,title), _nOverflow(0)
 {
+  // Create an empty table from abstract category. The number of table entries and 
+  // their names are taken from the category state labels at the time of construction,
+  // but not reference to the category is retained after the construction phase.
+  // Use fill() to fill the table.
+
   //Take types from reference category
   Int_t nbin(0) ;
   TIterator* tIter = cat.typeIterator() ;
@@ -45,6 +49,8 @@ Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory
 
 Roo1DTable::Roo1DTable(const Roo1DTable& other) : RooTable(other), _nOverflow(other._nOverflow) 
 {  
+  // Copy constructor
+
   //Take types from reference category
   RooCatType* type ;
   Int_t nbin(0) ;
@@ -61,6 +67,8 @@ Roo1DTable::Roo1DTable(const Roo1DTable& other) : RooTable(other), _nOverflow(ot
 
 Roo1DTable::~Roo1DTable()
 {
+  // Destructor
+
   // We own the contents of the object array
   _types.Delete() ;
   delete[] _count ;
@@ -69,6 +77,12 @@ Roo1DTable::~Roo1DTable()
 
 void Roo1DTable::fill(RooAbsCategory& cat) 
 {
+  // Increment the counter of the table slot with
+  // the name corresponding to that of the current 
+  // category state. If the current category state
+  // matches no table slot name, the table overflow
+  // counter is incremented.
+
   Bool_t found(kFALSE) ;
   for (int i=0 ; i<_types.GetEntries() ; i++) {
     RooCatType* entry = (RooCatType*) _types.At(i) ;
@@ -85,6 +99,8 @@ void Roo1DTable::fill(RooAbsCategory& cat)
 
 void Roo1DTable::printToStream(ostream& os, PrintOption opt, TString indent) const 
 {
+  // Print the formateed table contents on the given stream
+
   os << endl ;
   os << "  Table " << GetName() << " : " << GetTitle() << endl ;
 

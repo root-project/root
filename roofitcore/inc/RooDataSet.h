@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.rdl,v 1.24 2001/08/17 00:35:57 verkerke Exp $
+ *    File: $Id: RooDataSet.rdl,v 1.25 2001/08/17 01:18:44 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,15 +42,14 @@ public:
 	     const RooArgSet& vars, const char *cuts);
   RooDataSet(const char *name, const char *title, RooDataSet *t, 
 	     const RooArgSet& vars, const RooFormulaVar& cutVar) ;
+  RooDataSet(const char *name, const char *title, TTree *t, 
+	     const RooArgSet& vars, const RooFormulaVar& cutVar) ;
   RooDataSet(const char *name, const char *title, TTree *ntuple, 
 	     const RooArgSet& vars, const char *cuts);
   RooDataSet(const char *name, const char *filename, const char *treename, 
 	     const RooArgSet& vars, const char *cuts);  
   RooDataSet(RooDataSet const & other, const char* newname=0) ;
-  virtual TObject* Clone(const char* newname=0) const { 
-    cout << "RooDataSet::Clone(" << this << "," << GetName() << ") newname= " << (newname?newname:"<none>") << endl ;
-    return new RooDataSet(*this,newname?newname:GetName()) ; 
-  }
+  virtual TObject* Clone(const char* newname=0) const { return new RooDataSet(*this,newname?newname:GetName()) ; }
   virtual ~RooDataSet() ;
 
   // Read data from a text file and create a dataset from it.
@@ -78,6 +77,9 @@ public:
   // Printing interface (human readable)
   virtual void printToStream(ostream& os, PrintOption opt= Standard, 
 			     TString indent= "") const;
+
+  virtual Int_t numEntries() const { return (Int_t)GetEntries() ; }
+  virtual void reset() { Reset() ; }
 
   // Forwarded from TTree
   inline Stat_t GetEntries() const { return _tree->GetEntries() ; }
@@ -121,7 +123,7 @@ private:
   void initCache(const RooArgSet& cachedVars) ; 
 
   enum { bufSize = 8192 };
-  ClassDef(RooDataSet,1) // Data set for fitting
+  ClassDef(RooDataSet,1) // Unbinned data set
 };
 
 #endif

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.rdl,v 1.24 2001/08/03 18:11:34 verkerke Exp $
+ *    File: $Id: RooRealVar.rdl,v 1.25 2001/08/08 23:11:25 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -68,7 +68,8 @@ public:
 
 protected:
 
-  virtual Double_t evaluate(const RooArgSet* nset) const { return _value ; } // dummy because we overloaded getVal()
+  virtual Double_t evaluate() const { return _value ; } // dummy because we overloaded getVal()
+  virtual void copyCache(const RooAbsArg* source) ;
 
   Double_t chopAt(Double_t what, Int_t where) ;
 

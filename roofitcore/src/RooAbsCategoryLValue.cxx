@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsCategoryLValue.cc,v 1.7 2001/07/31 05:54:16 verkerke Exp $
+ *    File: $Id: RooAbsCategoryLValue.cc,v 1.8 2001/08/22 00:50:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -72,7 +72,8 @@ RooAbsCategoryLValue& RooAbsCategoryLValue::operator=(const char *label)
   return *this ;
 }
 
-Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n) {
+Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n) 
+{
   // Set our state to our n'th defined type and return kTRUE.
   // Return kFALSE if n is out of range.
 
@@ -87,6 +88,8 @@ Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n) {
 
 void RooAbsCategoryLValue::copyCache(const RooAbsArg* source) 
 {
+  // WVE 08/21/01 Probably obsolete
+  
   // copy cached value from another object
   RooAbsCategory::copyCache(source) ;
   setIndex(_value.getVal()) ; // force back-propagation
@@ -110,4 +113,22 @@ void RooAbsCategoryLValue::writeToStream(ostream& os, Bool_t compact) const
 void RooAbsCategoryLValue::randomize() {
   UInt_t ordinal= RooRandom::integer(numTypes());
   setOrdinal(ordinal);
+}
+
+
+
+void RooAbsCategoryLValue::setPlotBin(Int_t ibin) 
+{
+  // Check validity of ibin
+  if (ibin<0 || ibin>=numPlotBins()) {
+    cout << "RooAbsCategoryLValue::setPlotBin(" << GetName() << ") ERROR: bin index " << ibin
+	 << " is out of range (0," << numPlotBins()-1 << ")" << endl ;
+    return ;
+  }
+
+  // Retrieve state corresponding to bin
+  const RooCatType* type = getOrdinal(ibin) ;
+
+  // Set value to requested state
+  setIndex(type->getVal()) ;
 }

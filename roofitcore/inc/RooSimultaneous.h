@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooSimultaneous.rdl,v 1.5 2001/08/18 02:13:11 verkerke Exp $
+ *    File: $Id: RooSimultaneous.rdl,v 1.6 2001/08/21 01:46:54 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -31,7 +31,7 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooSimultaneous(*this,newname) ; }
   virtual ~RooSimultaneous() ;
 
-  virtual Double_t evaluate(const RooArgSet* nset=0) const ;
+  virtual Double_t evaluate() const ;
   virtual Bool_t selfNormalized() const { return kTRUE ; }
   Bool_t addPdf(const RooAbsPdf& pdf, const char* catLabel) ;
 

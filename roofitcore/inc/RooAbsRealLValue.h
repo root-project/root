@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsRealLValue.rdl,v 1.9 2001/08/03 18:11:33 verkerke Exp $
+ *    File: $Id: RooAbsRealLValue.rdl,v 1.10 2001/08/08 23:11:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -20,10 +20,11 @@
 
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooNumber.hh"
+#include "RooFitCore/RooAbsLValue.hh"
 
 class RooArgSet ;
 
-class RooAbsRealLValue : public RooAbsReal {
+class RooAbsRealLValue : public RooAbsReal, public RooAbsLValue {
 public:
   // Constructors, assignment etc.
   inline RooAbsRealLValue() { }
@@ -35,6 +36,7 @@ public:
   virtual void setVal(Double_t value)=0;
   virtual RooAbsRealLValue& operator=(Double_t newValue);
   virtual RooAbsRealLValue& operator=(const RooAbsReal& other) ;
+  virtual void setPlotBin(Int_t ibin) ;
   void randomize();
 
   // Get fit range limits

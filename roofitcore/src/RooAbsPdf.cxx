@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.25 2001/08/21 01:46:53 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.26 2001/08/22 00:50:24 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -87,8 +87,9 @@ RooAbsPdf::~RooAbsPdf()
 
 Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 {
-  // Return current value with normalization appropriate for given dataset.
-  // A null data set pointer will return the unnormalized value
+  // Return current value, normalizated by integrating over
+  // all dependents in nset. A null data set pointer will return 
+  // the unnormalized value
 
   // Unnormalized values are not cached
   // Doing so would be complicated as _norm->getVal() could
@@ -104,10 +105,7 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if ((isValueDirty() || _norm->isValueDirty() || nsetChanged) && operMode()!=AClean) {
 
-//     startTimer() ;
-//     _nDirtyCacheHits++ ;
-
-    Double_t rawVal = evaluate(nset) ;
+    Double_t rawVal = evaluate() ;
     _value = rawVal / _norm->getVal() ;
     traceEvalPdf(rawVal) ; // Error checking and printing
 
@@ -116,10 +114,6 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 
     clearValueDirty() ; //setValueDirty(kFALSE) ;
     clearShapeDirty() ; //setShapeDirty(kFALSE) ;    
-//     stopTimer() ;
-
-//   } else {
-//     _nCleanCacheHits++ ;
   }
 
   return _value ;
@@ -128,6 +122,10 @@ Double_t RooAbsPdf::getVal(const RooArgSet* nset) const
 
 void RooAbsPdf::traceEvalPdf(Double_t value) const
 {
+  // Check that passed value is positive and not 'not-a-number'.
+  // If not, print an error, until the error counter reaches
+  // its set maximum.
+
   // check for a math error or negative value
   Bool_t error= isnan(value) || (value < 0);
 
@@ -153,6 +151,9 @@ void RooAbsPdf::traceEvalPdf(Double_t value) const
 
 Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
 {
+  // Return the normalization factor for this PDF consisting of the
+  // integral over all dependents listed in nset
+
   if (!nset) return 1 ;
 
   syncNormalization(nset) ;
@@ -165,6 +166,9 @@ Double_t RooAbsPdf::getNorm(const RooArgSet* nset) const
 
 void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
 {
+  // Synchronize internal caches to hold values appropriate for
+  // integration over the dependents in nset
+
   // Check if data sets are identical
   if (nset == _lastNormSet) return ;
 
@@ -214,6 +218,8 @@ void RooAbsPdf::syncNormalization(const RooArgSet* nset) const
 
 Bool_t RooAbsPdf::traceEvalHook(Double_t value) const 
 {
+  // WVE 08/21/01 Probably obsolete now.
+
   // Floating point error checking and tracing for given float value
 
   // check for a math error or negative value
@@ -259,11 +265,7 @@ void RooAbsPdf::setTraceCounter(Int_t value)
 
 void RooAbsPdf::operModeHook() 
 {
-//   if (operMode()==AClean) {
-//     delete _norm ;
-//     _norm = 0 ;
-//     _lastNormSet=0 ;
-//   }
+  // WVE 08/21/01 Probably obsolete now
 }
 
 
@@ -369,6 +371,7 @@ Bool_t RooAbsPdf::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedAr
   if(isMatched) matchedArgs.add(matched);
   return isMatched;
 }
+
 
 Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const 
 {

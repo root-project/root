@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealVar.cc,v 1.22 2001/08/03 02:04:33 verkerke Exp $
+ *    File: $Id: RooRealVar.cc,v 1.23 2001/08/03 18:11:34 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -140,6 +140,16 @@ void RooRealVar::setFitRange(Double_t min, Double_t max) {
 
   setShapeDirty() ;  
 }
+
+
+void RooRealVar::copyCache(const RooAbsArg* source) 
+{
+  // Overloaded from RooAbsRealLValue to skip back-prop
+
+  // Copy cache of another RooAbsArg to our cache
+  RooAbsReal::copyCache(source) ;
+}
+
 
 
 Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 

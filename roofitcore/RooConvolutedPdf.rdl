@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooConvolutedPdf.rdl,v 1.5 2001/08/02 21:39:09 verkerke Exp $
+ *    File: $Id: RooConvolutedPdf.rdl,v 1.6 2001/08/10 22:22:53 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -35,7 +35,6 @@ public:
   virtual ~RooConvolutedPdf();
 
   Int_t declareBasis(const char* expression, const RooArgSet& params) ;
-  virtual Double_t evaluate(const RooArgSet* nset) const ;
   virtual void printToStream(ostream& stream, PrintOption opt=Standard, TString indent= "") const ;
 
 
@@ -55,6 +54,8 @@ public:
 protected:
 
   Bool_t _isCopy ;
+
+  virtual Double_t evaluate() const ;
 
   // Following pointers are only used during 
   // construction and need not to be proxied

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.26 2001/08/08 23:11:25 david Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.28 2001/08/17 15:51:58 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -323,7 +323,7 @@ RooRealIntegral::~RooRealIntegral()
 }
 
 
-Double_t RooRealIntegral::evaluate(const RooArgSet* nset) const 
+Double_t RooRealIntegral::evaluate() const 
 {
   if (_function.arg().operMode()==RooAbsArg::AClean) {
     if (RooAbsPdf::_verboseEval>1) 

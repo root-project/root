@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsData.cc,v 1.1 2001/08/17 00:35:56 verkerke Exp $
+ *    File: $Id: RooAbsData.cc,v 1.2 2001/08/18 02:13:09 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -9,6 +9,12 @@
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
+
+// -- CLASS DESCRIPTION --
+// RooAbsData is the common abstract base class for binned and unbinned
+// datasets. The abstract interface defines plotting and tabulating entry
+// points for its contents and provides an iterator over its elements
+// (bins for binned data sets, ttree rows for unbinned datasets).
 
 #include "RooFitCore/RooAbsData.hh"
 
@@ -18,6 +24,7 @@ ClassImp(RooAbsData)
 
 RooAbsData::RooAbsData() 
 {
+  // Default constructor
 }
 
 
@@ -26,6 +33,9 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
   _doDirtyProp(kTRUE)
 
 {
+  // Constructor from a list of variables. Only fundamental elements of vars
+  // (RooRealVar,RooCategory etc) are stored as part of the dataset
+
   // clone the fundamentals of the given data set into internal buffer
   TIterator* iter = vars.MakeIterator() ;
   RooAbsArg *var;
@@ -46,8 +56,20 @@ RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& var
 }
 
 
+
+
+RooAbsData::RooAbsData(const RooAbsData& other, const char* newname = 0) : 
+  TNamed(newname?newname:GetName(),other.GetTitle()), _vars(other._vars)
+{
+  // Copy constructor
+}
+
+
+
+
 RooAbsData::~RooAbsData() 
 {
+  // Destructor, delete owned contents.
   delete _iterator ;
   delete _cacheIter ;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.37 2001/08/17 01:18:43 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.38 2001/08/18 02:13:10 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -121,6 +121,27 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t,
 }
 
 
+RooDataSet::RooDataSet(const char *name, const char *title, TTree *t, 
+                       const RooArgSet& vars, const RooFormulaVar& cutVar) :
+  RooAbsData(name,title,vars), _truth("Truth")
+{
+  RooTrace::create(this) ;
+  _tree = new TTree(name, title) ;
+
+  // Constructor from existing data set with list of variables and cut expression
+  initialize(vars);
+
+  // Deep clone cutVar and attach clone to this dataset
+  RooArgSet* tmp = RooArgSet(cutVar).snapshot() ;
+  RooFormulaVar* cloneVar = (RooFormulaVar*) tmp->find(cutVar.GetName()) ;
+  cloneVar->attachDataSet(*this) ;
+
+  loadValues(t,cloneVar);
+
+  delete tmp ;
+}
+
+
 RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *t, 
                        const RooArgSet& vars, Bool_t copyCache) :
   RooAbsData(name,title,vars), _truth("Truth"), 
@@ -162,7 +183,7 @@ RooDataSet::RooDataSet(const char *name, const char *filename,
 
 
 RooDataSet::RooDataSet(RooDataSet const & other, const char* newName) : 
-  RooAbsData(newName,other.GetTitle(),other._vars), _truth("Truth")
+  RooAbsData(other,newName), _truth("Truth")
 {
   // Copy constructor
   RooTrace::create(this) ;
@@ -274,7 +295,7 @@ void RooDataSet::loadValues(const TTree *t, const RooFormulaVar* select)
     // Copy from source to destination
      _iterator->Reset() ;
      sourceIter->Reset() ;
-     while (destArg = (RooAbsArg*)_iterator->Next()) {       
+     while (destArg = (RooAbsArg*)_iterator->Next()) {              
        sourceArg = (RooAbsArg*) sourceIter->Next() ;
        if (!sourceArg->isValid()) {
 	 continue ;

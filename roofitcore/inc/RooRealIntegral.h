@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.17 2001/08/03 02:04:33 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.18 2001/08/08 23:11:25 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -53,7 +53,7 @@ protected:
   virtual Double_t jacobianProduct() const ;
 
   // Evaluation and validation implementation
-  Double_t evaluate(const RooArgSet* nset) const ;
+  Double_t evaluate() const ;
   virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ;
 
   // Post-processing of server redirection
