@@ -6,7 +6,10 @@ void LDAPExample()
 
    TLDAPResult *result = server.Search();
 
-   if (result == 0) exit(1 );
+   if (result == 0) {
+      printf("Search failed\n");
+      exit(1);
+   }
    result->Print();
    delete result;
 
@@ -23,6 +26,11 @@ void LDAPExample()
    cout << "The DN of the entry is " << dn << endl;
 
    result = server.Search(dn, LDAP_SCOPE_SUBTREE, 0, 0, 0);
+
+   if (result == 0) {
+      printf("Search failed\n");
+      exit(1);
+   }
 
    result->Print();
    Int_t counter = result.GetCount();
