@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.35 2001/10/31 07:19:29 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.36 2001/11/01 22:52:21 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -213,7 +213,7 @@ RooFormula::DefinedValue(Int_t code) {
   if (code>=_useList.GetEntries()) return 0 ;
   RooAbsArg* arg=(RooAbsArg*)_useList.At(code) ;
 
-  const RooAbsReal *absReal= dynamic_cast<const RooAbsReal*>(arg);
+  const RooAbsReal *absReal= dynamic_cast<const RooAbsReal*>(arg);  
   if(0 != absReal) {
     return absReal->getVal(_nset) ;
   } else {
@@ -284,6 +284,15 @@ RooFormula::DefinedVariable(TString &name)
 
   }
 
+  // Check if already registered
+  if (!labelName) {
+    Int_t oldIdx = _useList.IndexOf(arg) ;
+    if (oldIdx>=0) {
+      //cout << "DefinedVariable " << arg->GetName() << " previously registered with code " << oldIdx << endl ;
+      return oldIdx ;
+    }
+  }
+
   // Add variable to use list
   _useList.Add(arg) ;
   if (labelName) {
@@ -292,6 +301,7 @@ RooFormula::DefinedVariable(TString &name)
     _labelList.Add(new TObjString("")) ;
   }
 
+  //   cout << "DefinedVariable " << arg->GetName() << " registered with code " << _useList.GetEntries()-1 << endl ;
   return (_useList.GetEntries()-1) ;
 }
 
