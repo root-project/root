@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.174 2004/03/29 16:12:21 rdm Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.175 2004/04/14 15:41:14 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -725,9 +725,13 @@ void TH1::Add(const TH1 *h1, Double_t c1)
 // Note that if h1 has Sumw2 set, Sumw2 is automatically called for this
 // if not already set.
 //
-// IMPORTANT NOTE: If you intend to use the errors of this histogram later
+// IMPORTANT NOTE1: If you intend to use the errors of this histogram later
 // you should call Sumw2 before making this operation.
 // This is particularly important if you fit the histogram after TH1::Add
+//
+// IMPORTANT NOTE2: if h1 has a normalisation factor, the normalisation factor
+// is used , ie  this = this + c1*factor*h1
+// Use the other TH1::Add function if you do not want this feature
 
    if (!h1) {
       Error("Add","Attempt to add a non-existing histogram");
@@ -773,14 +777,16 @@ void TH1::Add(const TH1 *h1, Double_t c1)
 //   - Loop on bins (including underflows/overflows)
    Int_t bin, binx, biny, binz;
    Double_t cu;
+   Double_t factor =1;
+   if (h1->GetNormFactor() != 0) factor = h1->GetNormFactor()/h1->GetSumOfWeights();;
    for (binz=0;binz<=nbinsz+1;binz++) {
       for (biny=0;biny<=nbinsy+1;biny++) {
          for (binx=0;binx<=nbinsx+1;binx++) {
             bin = binx +(nbinsx+2)*(biny + (nbinsy+2)*binz);
-            cu  = c1*h1->GetBinContent(bin);
+            cu  = c1*factor*h1->GetBinContent(bin);
             AddBinContent(bin,cu);
             if (fSumw2.fN) {
-               Double_t error1 = h1->GetBinError(bin);
+               Double_t error1 = factor*h1->GetBinError(bin);
                fSumw2.fArray[bin] += c1*c1*error1*error1;
             }
          }
