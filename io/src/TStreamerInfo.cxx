@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.156 2003/02/22 13:22:55 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.157 2003/02/27 12:17:15 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -523,8 +523,8 @@ void TStreamerInfo::BuildOld()
             if (dt) {
                if (element->GetType() != dt->GetType()) {
                   Int_t newtype = dt->GetType();
-                  if (element->GetArrayLength() > 1) newtype += 20;
-                  if (dm->IsaPointer()) newtype += 20;
+                  if (dm->IsaPointer()) newtype += kOffsetP;
+                  else if (element->GetArrayLength() > 1) newtype += kOffsetL;
                   element->SetNewType(newtype);
                   printf("element: %s::%s %s has new type: %s/%d\n",GetName(),element->GetTypeName(),element->GetName(),dm->GetFullTypeName(),newtype);
                }
@@ -2243,8 +2243,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
 #define ConvBasicArray(name) \
 { \
    int len = fLength[i]; \
-   int newtype = fNewType[i]; \
-   if (newtype > 40) newtype -= 40; \
+   int newtype = fNewType[i]%20; \
    switch(newtype) { \
        case kChar:   {Char_t   **f=(Char_t**)(pointer+fOffset[i]); \
                         delete [] *f; *f = 0; \
@@ -2297,8 +2296,9 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, char *pointer, Int_t i, Int_t ka
    if (isArray == 0) break; \
    Int_t *l = (Int_t*)(pointer+fMethod[i]); name dummy; \
    int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; \
+   int newtype = fNewType[i] %20; \
    int j; \
-   switch(fNewType[i]) { \
+   switch(newtype) { \
       case kChar:   {Char_t   **f=(Char_t**)(pointer+fOffset[i]); \
                     for (j=0;j<len;j++) { \
                        delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
@@ -3067,8 +3067,7 @@ char *pointer = 0;
 #define ConvCBasicArray(name) \
 { \
    int len = fLength[i]; \
-   int newtype = fNewType[i]; \
-   if (newtype > 40) newtype -= 40; \
+   int newtype = fNewType[i] %20; \
    for (Int_t k=0;k<nc;k++) { \
        pointer = (char*)clones->UncheckedAt(k)+eoffset; \
        switch(newtype) { \
@@ -3122,11 +3121,12 @@ char *pointer = 0;
    int len = aElement->GetArrayDim()?aElement->GetArrayLength():1; \
    int j; \
    name u; \
+   int newtype = fNewType[i] %20; \
    for (Int_t k=0;k<nc;k++) { \
       b >> isArray; \
       pointer = (char*)clones->UncheckedAt(k)+eoffset; \
       Int_t *l = (Int_t*)(pointer+fMethod[i]); \
-      switch(fNewType[i]) { \
+      switch(newtype) { \
          case kChar:   {Char_t   **f=(Char_t**)(pointer+fOffset[i]); \
                     for (j=0;j<len;j++) { \
                        delete [] f[j]; f[j] = 0; if (*l ==0) continue; \
