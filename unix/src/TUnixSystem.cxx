@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.51 2002/12/20 02:29:08 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.52 2003/01/13 15:05:29 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -792,7 +792,7 @@ const char *TUnixSystem::WorkingDirectory()
 }
 
 //______________________________________________________________________________
-const char *TUnixSystem::HomeDirectory(const Char_t *userName)
+const char *TUnixSystem::HomeDirectory(const char *userName)
 {
    // Return the user's home directory.
 
