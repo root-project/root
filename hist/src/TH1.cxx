@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.8 2000/06/28 14:35:29 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.9 2000/06/29 08:37:00 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -2951,12 +2951,10 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
    Double_t esum1 = sum1;
    if (difsum1 > difprec && Int_t(ne1) != ncx1) {
       if (opt.Contains("U") || opt.Contains("O")) {
-         Error("KolmogorovTest","U/O option with weighted events for hist:%s\n",h1->GetName());
-         return 0;
+         Warning("KolmogorovTest","U/O option with weighted events for hist:%s\n",h1->GetName());
       }
       if (h1->GetSumw2N() == 0) {
-         Error("KolmogorovTest","Weighted events and no Sumw2, hist:%s\n",h1->GetName());
-         return 0;
+         Warning("KolmogorovTest","Weighted events and no Sumw2, hist:%s\n",h1->GetName());
       } else {
          esum1 = h1->GetSumOfWeights();
       }
@@ -2966,12 +2964,10 @@ Double_t TH1::KolmogorovTest(TH1 *h2, Option_t *option)
    Double_t esum2   = sum2;
    if (difsum2 > difprec && Int_t(ne2) != ncx1) {
       if (opt.Contains("U") || opt.Contains("O")) {
-         Error("KolmogorovTest","U/O option with weighted events for hist:%s\n",h2->GetName());
-         return 0;
+         Warning("KolmogorovTest","U/O option with weighted events for hist:%s\n",h2->GetName());
       }
       if (h2->GetSumw2N() == 0) {
-         Error("KolmogorovTest","Weighted events and no Sumw2, hist:%s\n",h2->GetName());
-         return 0;
+         Warning("KolmogorovTest","Weighted events and no Sumw2, hist:%s\n",h2->GetName());
       } else {
          esum1 = h2->GetSumOfWeights();
       }
