@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.29 2004/04/15 09:43:14 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.30 2004/04/29 14:35:02 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -129,8 +129,6 @@ void TGButton::SetState(EButtonState state)
 {
    // Set button state.
 
-   Bool_t was = !IsDown();   // kTRUE if button was off
-
    if (state != fState) {
       switch (state) {
          case kButtonEngaged:
@@ -147,21 +145,6 @@ void TGButton::SetState(EButtonState state)
       fState = state;
       fClient->NeedRedraw(this);
    }
-
-   Bool_t now = !IsDown();               // kTRUE if button now is off
-
-   // emit signals
-   if (was && !now) {
-      Pressed();                          // emit Pressed  = was off , now on
-      if (fStayDown) Clicked();           // emit Clicked
-   }
-
-   if (!was && now) {
-      Released();                         // emit Released = was on , now off
-      Clicked();                          // emit Clicked
-   }
-
-   if ((was != now) && IsToggleButton()) Toggled(!now); // emit Toggled  = was != now
 }
 
 //______________________________________________________________________________
@@ -178,10 +161,14 @@ Bool_t TGButton::HandleButton(Event_t *event)
    // Handle mouse button event.
 
    Bool_t click = kFALSE;
+   Bool_t was = !IsDown();   // kTRUE if button was off
 
    if (fTip) fTip->Hide();
 
    if (fState == kButtonDisabled) return kTRUE;
+
+   Bool_t in = (event->fX >= 0) && (event->fY >= 0) && 
+               (event->fX <= (Int_t)fWidth) && (event->fY <= (Int_t)fHeight); 
 
    // We don't need to check the button number as GrabButton will
    // only allow button1 events
@@ -189,14 +176,15 @@ Bool_t TGButton::HandleButton(Event_t *event)
       if (fState == kButtonEngaged) return kTRUE;
       SetState(kButtonDown);
    } else { // ButtonRelease
-      if (fState == kButtonEngaged /*&& !allowRelease*/) {
+      if ((fState == kButtonEngaged) && in) {
          click = kTRUE;
       } else {
-         click = (fState == kButtonDown);
-         if (click && fStayDown)
+         click = (fState == kButtonDown) && in;
+         if (click && fStayDown) {
            SetState(kButtonEngaged);
-         else
+         } else {
            SetState(kButtonUp);
+         }
       }
    }
    if (click) {
@@ -206,6 +194,20 @@ Bool_t TGButton::HandleButton(Event_t *event)
                            (Long_t) fUserData);
    }
 
+   Bool_t now = !IsDown();          // kTRUE if button now is off
+
+   if (in) { 
+      // emit signals
+      if (was && !now) {
+         Pressed();                 // emit Pressed  = was off , now on
+         if (fStayDown) Clicked();  // emit Clicked
+      }
+      if (!was && now) {
+         Released();                // emit Released = was on , now off
+         Clicked();                 // emit Clicked
+      }
+      if ((was != now) && IsToggleButton()) Toggled(!now); // emit Toggled  = was != now
+   }
    return kTRUE;
 }
 
