@@ -149,6 +149,9 @@ OutPutOpt     = -o
 endif
 
 ifeq ($(ARCH),linuxicc)
+
+ROOT_LOC = $(ROOTSYS)
+
 # Linux with linuxicc
 CXX = icc
 LD  = icc
