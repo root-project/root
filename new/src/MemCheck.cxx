@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.4 2001/09/26 09:19:02 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: MemCheck.cxx,v 1.5 2001/09/26 09:58:02 rdm Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 //  use rootn.exe. When all this is the case you will find at the end
 //  of the program execution a file "memcheck.out" in the directory
 //  where you started your ROOT program. Alternatively you can set
-//  the shell variable ROOTMEMCHECK to the name of a file to which
+//  the resource Root.MemCheckFile to the name of a file to which
 //  the leak information will be written. The contents of this
 //  "memcheck.out" file can be analyzed and transformed into printable
 //  text via the memprobe program (in $ROOTSYS/bin).
@@ -60,6 +60,7 @@
 #include "MemCheck.h"
 #include "TMath.h"
 #include "TSystem.h"
+#include "TEnv.h"
 #include "TError.h"
 
 #define stack_history_size 20
@@ -436,13 +437,17 @@ void TMemHashTable::Dump()
    // Print memory check information.
 
    const char *filename;
-   if (gSystem && gSystem->Getenv("ROOTMEMCHECK"))
-      filename = gSystem->Getenv("ROOTMEMCHECK");
+   if (gEnv)
+      filename = gEnv->GetValue("Root.MemCheckFile", "memcheck.out");
    else
       filename = "memcheck.out";
 
+   char *fn = 0;
+   if (gSystem)
+      fn = gSystem->ExpandPathName(filename);
+
    FILE *fp;
-   if (!(fp = fopen(filename, "w")))
+   if (!(fp = fn ? fopen(fn, "w") : fopen(filename, "w")))
       Error("TMenHashTable::Dump", "could not open %s", filename);
    else {
       /*
@@ -468,7 +473,7 @@ void TMemHashTable::Dump()
       }
       fclose(fp);
    }
-
+   delete [] fn;
 }
 
 //______________________________________________________________________________

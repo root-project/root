@@ -30,6 +30,7 @@ Root.ObjectStat:         0
 # Activate memory leak checker (use in conjunction with $ROOTSYS/bin/memprobe)
 # Currently only works on Linux with gcc.
 Root.MemCheck:           0
+Root.MemCheckFile:       memcheck.out
 
 # Global debug mode. When >0 turns on progressively more details debugging.
 # When >4 X11 runs in synchronous mode.

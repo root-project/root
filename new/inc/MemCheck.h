@@ -1,4 +1,4 @@
-// @(#)root/new:$Name:  $:$Id: MemCheck.h,v 1.2 2001/09/25 17:37:24 rdm Exp $
+// @(#)root/new:$Name:  $:$Id: MemCheck.h,v 1.3 2001/09/26 09:58:02 rdm Exp $
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
@@ -31,7 +31,7 @@
 //  use rootn.exe. When all this is the case you will find at the end
 //  of the program execution a file "memcheck.out" in the directory
 //  where you started your ROOT program. Alternatively you can set
-//  the shell variable ROOTMEMCHECK to the name of a file to which
+//  the resource Root.MemCheckFile to the name of a file to which
 //  the leak information will be written. The contents of this
 //  "memcheck.out" file can be analyzed and transformed into printable
 //  text via the memprobe program (in $ROOTSYS/bin).
