@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.193 2004/07/28 07:08:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.194 2004/07/28 08:03:09 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -1599,16 +1599,18 @@ void TH1::Eval(TF1 *f1, Option_t *option)
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Double_t x[3];
-   Int_t stat,add,bin,binx,biny,binz,nbinsx, nbinsy, nbinsz;
+   Int_t range,stat,add,bin,binx,biny,binz,nbinsx, nbinsy, nbinsz;
    if (!f1) return;
    Double_t fu;
    Double_t e=0;
    TString opt = option;
    opt.ToLower();
-   if (opt.Contains("a")) add  = 1;
-   else                   add  = 0;
-   if (opt.Contains("s")) stat = 1;
-   else                   stat = 0;
+   if (opt.Contains("a")) add   = 1;
+   else                   add   = 0;
+   if (opt.Contains("s")) stat  = 1;
+   else                   stat  = 0;
+   if (opt.Contains("r")) range = 1;
+   else                   range = 0;
    nbinsx  = fXaxis.GetNbins();
    nbinsy  = fYaxis.GetNbins();
    nbinsz  = fZaxis.GetNbins();
@@ -1621,6 +1623,7 @@ void TH1::Eval(TF1 *f1, Option_t *option)
          for (binx=1;binx<=nbinsx;binx++) {
             bin = GetBin(binx,biny,binz);
             x[0]  = fXaxis.GetBinCenter(binx);
+            if (range && !f1->IsInside(x)) continue;
             fu = f1->Eval(x[0],x[1],x[2]);
             if (stat) fu = gRandom->PoissonD(fu);
             if (fSumw2.fN) e = fSumw2.fArray[bin];
