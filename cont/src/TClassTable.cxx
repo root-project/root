@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.16 2002/05/10 11:07:22 rdm Exp $
+// @(#)root/cont:$Name:  $:$Id: TClassTable.cxx,v 1.17 2002/05/10 21:32:09 brun Exp $
 // Author: Fons Rademakers   11/08/95
 
 /*************************************************************************
@@ -87,13 +87,10 @@ namespace ROOT {
 
       void Remove(const key_type &key) { fMap.erase(key); }
 
-      void printall() {
-         cerr << "Printing the typeinfo map in TClassTable\n";
-         for (const_iterator iter = fMap.begin();
-              iter != fMap.end();
-              iter++) {
-            cerr << "Key: " << iter->first.c_str()
-                 << " points to " << iter->second << endl;
+      void Print() {
+         Info("TMapTypeToClassRec::Print", "printing the typeinfo map in TClassTable");
+         for (const_iterator iter = fMap.begin(); iter != fMap.end(); iter++) {
+            printf("Key: %40s 0x%x\n", iter->first.c_str(), iter->second);
          }
       }
 #else
@@ -104,17 +101,23 @@ namespace ROOT {
          TObjString *realkey = new TObjString(key);
          fMap.Add(realkey, (TObject*)obj);
       }
-      ClassRec_t* Find(const char* key) const {
-         const TAssoc* a = (const TAssoc *)fMap.FindObject(key);
+
+      ClassRec_t *Find(const char *key) const {
+         const TAssoc *a = (const TAssoc *)fMap.FindObject(key);
          if (a) return (ClassRec_t*) a->Value();
          return 0;
       }
-      void Remove(const char* key) {
+
+      void Remove(const char *key) {
          TObjString realkey(key);
          TObject *actual = fMap.Remove(&realkey);
          delete actual;
       }
 
+      void Print() {
+         Info("TMapTypeToClassRec::Print", "printing the typeinfo map in TClassTable");
+         fMap.Print();
+      }
 #endif
    };
 }
@@ -316,13 +319,13 @@ VoidFuncPtr_t TClassTable::GetDict(const char *cname)
 //______________________________________________________________________________
 VoidFuncPtr_t TClassTable::GetDict(const type_info& info)
 {
-   // Given the class name returns the Dictionary() function of a class
-   // (uses hash of name).
+   // Given the type_info returns the Dictionary() function of a class
+   // (uses hash of type_info::name()).
 
-#ifdef DEBUG_ID
-   cerr << "While Table searches for " << info.name() << " at " << &info << endl;
-   fgIdMap->printall();
-#endif
+   if (gDebug > 2) {
+      ::Info("GetDict", "searches for %s at 0x%x", info.name(), &info);
+      fgIdMap->Print();
+   }
 
    ClassRec_t *r = fgIdMap->Find(info.name());
    if (r) return r->dict;
@@ -436,9 +439,10 @@ void ROOT::AddClass(const char *cname, Version_t id,
 }
 
 //______________________________________________________________________________
-void ROOT::ResetClassVersion(TClass* cl, const char* cname, Short_t newid)
+void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 {
-   // Update the version number.  This is called via the RootClassVersion macro
+   // Global function to update the version number.
+   // This is called via the RootClassVersion macro.
 
    if (cname) {
       ClassRec_t *r = TClassTable::FindElement(cname,kFALSE);
