@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.32 2004/10/22 15:21:19 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.33 2005/01/12 18:39:29 brun Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -807,7 +807,7 @@ void TGListTree::DrawRegion(Int_t /*x*/, Int_t /*y*/, UInt_t /*w*/, UInt_t /*h*/
 {
    // Redraw list tree.
 
-   DoRedraw();
+   Draw(0,(Int_t)fHeight);
 }
 
 //______________________________________________________________________________
@@ -815,7 +815,6 @@ void TGListTree::DoRedraw()
 {
    // Redraw list tree.
 
-   gVirtualX->ClearWindow(fId);
    Draw(0,(Int_t)fHeight);
 }
 
@@ -837,7 +836,6 @@ void TGListTree::Draw(Int_t yevent, Int_t hevent)
    fDefw = fDefh = 1;
 
    TGPosition pos = GetPagePosition();
-
    x = -pos.fX;
    y = fMargin + yevent;
    item = fFirst;
@@ -845,7 +843,7 @@ void TGListTree::Draw(Int_t yevent, Int_t hevent)
    while (item) {
       xbranch = -1;
 
-      DrawItem(item, x, y , &xbranch, &width, &height);
+      DrawItem(item, x, y, &xbranch, &width, &height);
 
       width += pos.fX + x + fHspacing + fMargin;
 
@@ -873,10 +871,12 @@ Int_t TGListTree::DrawChildren(TGListTreeItem *item, Int_t x, Int_t y, Int_t xro
    UInt_t width, height;
    Int_t  xbranch;
    TGPosition pos = GetPagePosition();
+
    x += fIndent + (Int_t)item->fPicWidth;
 
    while (item) {
       xbranch = xroot;
+
       DrawItem(item, x, y, &xbranch, &width, &height);
 
       width += pos.fX + x + fHspacing + fMargin;
@@ -902,6 +902,7 @@ void TGListTree::DrawItem(TGListTreeItem *item, Int_t x, Int_t y, Int_t *xroot,
    const TGPicture *pic;
 
    TGPosition pos = GetPagePosition();
+   TGDimension dim = GetPageDimension();
 
    // Select the pixmap to use, if any
    if (item->fOpen)
@@ -942,12 +943,13 @@ void TGListTree::DrawItem(TGListTreeItem *item, Int_t x, Int_t y, Int_t *xroot,
    item->fHeight = height;
 
    // projected coordinates
-   Int_t yp = y-pos.fY;
-   Int_t ylinep = yline-pos.fY;
-   Int_t ybranchp = ybranch-pos.fY;
-   Int_t ypicp = ypic-pos.fY;
+   Int_t yp = y - pos.fY;
+   Int_t ylinep = yline - pos.fY;
+   Int_t ybranchp = ybranch - pos.fY;
+   Int_t ypicp = ypic - pos.fY;
 
-   if ((y+(Int_t)height >= fExposeTop) && (y <= fExposeBottom)) {
+   if ((yp >= fExposeTop) && (yp <= (Int_t)dim.fHeight)) {
+
       if (*xroot >= 0) {
          xc = *xroot;
 
