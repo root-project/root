@@ -1014,7 +1014,7 @@ char *argv[] ;
        */
       G__globalcomp=atoi(optarg);
 #ifndef G__OLDIMPLEMENTATION1700
-      if(G__globalcomp>=10) {
+      if(abs(G__globalcomp)>=10) {
 	G__default_link = abs(G__globalcomp)%10;
 	G__globalcomp /= 10;
       }

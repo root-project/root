@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.105 2002/10/22 06:43:20 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.106 2002/10/22 10:37:45 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3031,7 +3031,7 @@ int main(int argc, char **argv)
          argvv[argcc++] = "-DSYSV";
          argvv[argcc++] = "-D__MAKECINT__";
          argvv[argcc++] = "-V";        // include info on private members
-         argvv[argcc++] = "-c-1";
+         argvv[argcc++] = "-c-10";
          argvv[argcc++] = "+V";        // turn on class comment mode
 #ifdef ROOTBUILD
          argvv[argcc++] = "base/inc/TROOT.h";

@@ -1878,6 +1878,10 @@ char *dllid;
   }
 
   G__globalcomp = atoi(mode); /* this is redundant */
+  if(abs(G__globalcomp)>=10) {
+     G__default_link = abs(G__globalcomp)%10;
+     G__globalcomp /= 10;
+  }
   G__store_globalcomp=G__globalcomp;
 
 #ifndef G__OLDIMPLEMENTATION1098
