@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.146 2002/12/02 18:50:04 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.147 2002/12/05 10:02:51 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -2952,6 +2952,7 @@ void TStreamerInfo::TagFile(TFile *file)
             GetName(),fNumber,nindex,file->GetName());
          return;
       }
+      if (cindex->fArray[0] > 1) return; //happens when TFile::WriteStreamerInfo is called
       if (cindex->fArray[fNumber] == 0) {
          cindex->fArray[0]       = 1;
          cindex->fArray[fNumber] = 1;
