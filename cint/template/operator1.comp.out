@@ -1,5 +1,3 @@
-Info in <ACLiC>: creating shared library /cdf/scratch/pcanal/suite/cint/template/./smalltest_C.so
-Class Buffer: Streamer() not declared
-Class Buffer: ShowMembers() not declared
+Info in <TUnixSystem::ACLiC>: creating shared library /cdf/scratch/pcanal/root_working/roottest/cint/template/./smalltest_C.so
 Generic operator>>
 Array operator>>

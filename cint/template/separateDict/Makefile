@@ -19,7 +19,7 @@ sepDictLibs: run.output
 
 
 run.output: libmaster.so libslave1.so libslave2.so 
-	@root.exe -q -l -b run.C | grep -v tagnum >| run.output && \
+	@root.exe -q -l -b run.C 2>&1 | grep -v tagnum >| run.output && \
 	diff run.good.output run.output
 
 all: sepDictLibs

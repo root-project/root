@@ -3,8 +3,7 @@ all: tests
 test: tests
 
 
-
-SUBDIRS = stl specialobj template other typedef_global const
+SUBDIRS = default dicts  map  vector
 
 TEST_TARGETS = $(SUBDIRS:%=%.test)
 CLEAN_TARGETS = $(SUBDIRS:%=%.clean)

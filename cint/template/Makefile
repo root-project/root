@@ -1,9 +1,10 @@
 SHELL = /bin/bash
 
+SUBDIRS = separateDict separateDictNamespace
 
+include ../../root/Rules.mk
 
-
-test: operator1 separateDict
+test: operator1 simpleSeparateDict
 	true;
 
 operator1:
@@ -13,6 +14,6 @@ operator1:
 	@cat operator1.comp.out | grep -v 'not declared' |grep -v 'Info in <ACLiC>:' | diff - operator1.cint.out
 
 
-separateDict:
+simpleSeparateDict:
 	rootcint -f masterDict.C -c master.h masterLinkDef.h
 	rootcint -f slaveDict.C -c slave.h slaveLinkDef.h
