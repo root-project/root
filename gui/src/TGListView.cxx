@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.3 2000/09/11 17:37:20 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.cxx,v 1.4 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -247,6 +247,7 @@ TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
    // created by the TGCanvas derived TGListView).
 
    fMsgWindow  = p;
+   fListView   = 0;
    fLastActive = 0;
    fDragging   = kFALSE;
    fTotal = fSelected = 0;
@@ -382,9 +383,32 @@ Bool_t TGLVContainer::HandleButton(Event_t *event)
 {
    // Handle mouse button event in container.
 
-   int total, selected;
+   Int_t total, selected, page = 0;
+
+   if (event->fCode == kButton4 || event->fCode == kButton5) {
+      if (!fListView) return kTRUE;
+      if (fListView->GetContainer()->GetHeight())
+         page = Int_t(Float_t(fListView->GetViewPort()->GetHeight() *
+                              fListView->GetViewPort()->GetHeight()) /
+                              fListView->GetContainer()->GetHeight());
+   }
+
+   if (event->fCode == kButton4) {
+      //scroll up
+      Int_t newpos = fListView->GetVsbPosition() - page;
+      if (newpos < 0) newpos = 0;
+      fListView->SetVsbPosition(newpos);
+      return kTRUE;
+   }
+   if (event->fCode == kButton5) {
+      // scroll down
+      Int_t newpos = fListView->GetVsbPosition() + page;
+      fListView->SetVsbPosition(newpos);
+      return kTRUE;
+   }
 
    if (event->fType == kButtonPress) {
+
       fXp = event->fX;
       fYp = event->fY;
 
@@ -674,7 +698,8 @@ void TGListView::SetHeaders(Int_t ncolumns)
 {
    // Set number of headers, i.e. columns that will be shown in detailed view.
    // This method must be followed by exactly ncolumns SetHeader() calls,
-   // making sure that every header (i.e. idx) is set.
+   // making sure that every header (i.e. idx) is set (for and example see
+   // SetDefaultHeaders()).
 
    if (ncolumns <= 0) {
       Error("SetHeaders", "number of columns must be > 0");
@@ -787,6 +812,7 @@ void TGListView::SetContainer(TGFrame *f)
    if (f->InheritsFrom(TGLVContainer::Class())) {
       TGCanvas::SetContainer(f);
       ((TGLVContainer *) f)->SetColumns(fColumns, fJmode);
+      ((TGLVContainer *) f)->SetListView(this);
    } else
       Error("SetContainer", "frame must inherit from TGLVContainer");
 }

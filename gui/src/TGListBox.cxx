@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.3 2000/09/29 08:57:05 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.cxx,v 1.4 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -441,6 +441,20 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
    TGLBEntry *f;
    TGFrameElement *el;
 
+   if (event->fCode == kButton4) {
+      // scroll 2 lines up (a button down is always followed by a button up)
+      Int_t newpos = fListBox->GetScrollBar()->GetPosition() - 1;
+      if (newpos < 0) newpos = 0;
+      fListBox->GetScrollBar()->SetPosition(newpos);
+      return kTRUE;
+   }
+   if (event->fCode == kButton5) {
+      // scroll 2 lines down (a button down is always followed by a button up)
+      Int_t newpos = fListBox->GetScrollBar()->GetPosition() + 1;
+      fListBox->GetScrollBar()->SetPosition(newpos);
+      return kTRUE;
+   }
+
    if (fMultiSelect) {
       if (event->fType == kButtonPress) {
          TIter next(fList);
@@ -526,7 +540,7 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
 Int_t TGLBContainer::GetPos(Int_t id)
 {
    // Returns the position in the list box of the entry id.
-   // The first position has postion no 0. Returns -1 if entry id
+   // The first position has position no 0. Returns -1 if entry id
    // is not in the list of entries.
 
    Int_t          pos = 0;
@@ -593,6 +607,7 @@ void TGListBox::InitListBox()
    fVScrollbar = new TGVScrollBar(this, kDefaultScrollBarWidth, 6);
    fLbc = new TGLBContainer(fVport, 10, 10, kVerticalFrame, fgWhitePixel);
    fLbc->Associate(this);
+   fLbc->SetListBox(this);
    SetContainer(fLbc);
 
    AddFrame(fVport, 0);

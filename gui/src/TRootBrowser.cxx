@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.6 2000/09/11 17:38:10 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TRootBrowser.cxx,v 1.7 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   27/02/98
 
 /*************************************************************************
@@ -171,9 +171,10 @@ TRootObjItem::TRootObjItem(const TGWindow *p, const TGPicture *bpic,
 //----- right side of the browser)
 
 class TRootIconBox : public TGFileContainer {
+
 private:
-   TGListView *fLV;             // list view containing TRootIconBox
-   Bool_t      fCheckHeaders;   // if true check headers
+   Bool_t  fCheckHeaders;   // if true check headers
+
 public:
    TRootIconBox(const TGWindow *p, TGListView *lv, UInt_t w, UInt_t h,
                 UInt_t options = kSunkenFrame,
@@ -194,7 +195,7 @@ TRootIconBox::TRootIconBox(const TGWindow *p, TGListView *lv, UInt_t w,
 {
    // Create iconbox containing ROOT objects in browser.
 
-   fLV = lv;
+   fListView = lv;
    fCheckHeaders = kTRUE;
 
    // Don't use timer HERE (timer is set in TBrowser).
@@ -238,8 +239,8 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
    if (obj->IsA() == TSystemFile::Class() ||
        obj->IsA() == TSystemDirectory::Class()) {
       if (fCheckHeaders) {
-         if (strcmp(fLV->GetHeader(1), "Attributes"))
-            fLV->SetDefaultHeaders();
+         if (strcmp(fListView->GetHeader(1), "Attributes"))
+            fListView->SetDefaultHeaders();
          fCheckHeaders = kFALSE;
       }
       fi = AddFile(name);
@@ -253,7 +254,7 @@ void TRootIconBox::AddObjItem(const char *name, TObject *obj, TClass *cl)
                   obj->GetIconName() : cl->GetName());
 
    if (fCheckHeaders) {
-      if (strcmp(fLV->GetHeader(1), "Title"))
+      if (strcmp(fListView->GetHeader(1), "Title"))
          SetObjHeaders();
       fCheckHeaders = kFALSE;
    }
@@ -271,9 +272,9 @@ void TRootIconBox::SetObjHeaders()
    // Set list box headers used to display detailed object iformation.
    // Currently this is only "Name" and "Title".
 
-   fLV->SetHeaders(2);
-   fLV->SetHeader("Name",  kTextLeft, kTextLeft, 0);
-   fLV->SetHeader("Title", kTextLeft, kTextLeft, 1);
+   fListView->SetHeaders(2);
+   fListView->SetHeader("Name",  kTextLeft, kTextLeft, 0);
+   fListView->SetHeader("Title", kTextLeft, kTextLeft, 1);
 }
 
 //______________________________________________________________________________
@@ -532,6 +533,7 @@ void TRootBrowser::CreateBrowser(const char *name)
    fLt->Associate(this);
    fLt->SetAutoTips();
    fTreeView->SetContainer(fLt);
+   fLt->SetCanvas(fTreeView);
 
    lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
    fWidgets->Add(lo);

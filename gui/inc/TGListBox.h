@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.4 2000/09/30 11:24:12 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListBox.h,v 1.5 2000/10/08 14:27:54 rdm Exp $
 // Author: Fons Rademakers   12/01/98
 
 /*************************************************************************
@@ -41,6 +41,8 @@
 #ifndef ROOT_TGScrollBar
 #include "TGScrollBar.h"
 #endif
+
+class TGListBox;
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -139,8 +141,9 @@ public:
 class TGLBContainer : public TGCompositeFrame {
 
 protected:
-   TGLBEntry       *fLastActive;   // last active listbox entry in single selection listbox
-   const TGWindow  *fMsgWindow;    // window handling container messages
+   TGLBEntry      *fLastActive;    // last active listbox entry in single selection listbox
+   TGListBox      *fListBox;       // list box which contains this container
+   const TGWindow *fMsgWindow;     // window handling container messages
    Bool_t          fMultiSelect;   // true if multi selection is switched on
    Int_t           fChangeStatus;  // defines the changes (select or unselect) while the mouse
                                    // moves over a multi selectable list box
@@ -158,6 +161,7 @@ public:
    virtual void RemoveEntries(Int_t from_ID, Int_t to_ID);
 
    virtual void   Associate(const TGWindow *w) { fMsgWindow = w; }
+   virtual void   SetListBox(TGListBox *lb) { fListBox = lb; }
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Int_t  GetSelected() const;
@@ -186,14 +190,13 @@ public:
 class TGListBox : public TGCompositeFrame {
 
 protected:
-
-  Int_t            fListBoxId;       // listbox widget id
-  UInt_t           fItemVsize;       // maximum height of single entry
-  Bool_t           fIntegralHeight;  // true if height should be multiple of fItemVsize
-  TGLBContainer   *fLbc;             // listbox container
-  TGViewPort      *fVport;           // listbox viewport (see TGCanvas.h)
-  TGVScrollBar    *fVScrollbar;      // vertical scrollbar
-  const TGWindow  *fMsgWindow;       // window handling listbox messages
+   Int_t            fListBoxId;       // listbox widget id
+   UInt_t           fItemVsize;       // maximum height of single entry
+   Bool_t           fIntegralHeight;  // true if height should be multiple of fItemVsize
+   TGLBContainer   *fLbc;             // listbox container
+   TGViewPort      *fVport;           // listbox viewport (see TGCanvas.h)
+   TGVScrollBar    *fVScrollbar;      // vertical scrollbar
+   const TGWindow  *fMsgWindow;       // window handling listbox messages
 
    void SetContainer(TGFrame *f) { fVport->SetContainer(f); }
 

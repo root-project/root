@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.7 2000/10/10 10:20:49 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: guitest.cxx,v 1.8 2000/10/11 16:13:23 rdm Exp $
 // Author: Fons Rademakers   07/03/98
 
 // guitest.cxx: test program for ROOT native GUI classes.
@@ -179,13 +179,15 @@ const char *editortxt =
 "\n"
 "All other keys with valid ASCII codes insert themselves into the line.";
 
+class TileFrame;
+
 
 class TestMainFrame : public TGMainFrame {
 
 private:
    TGCompositeFrame   *fStatusFrame;
    TGCanvas           *fCanvasWindow;
-   TGCompositeFrame   *fContainer;
+   TileFrame          *fContainer;
    TGTextEntry        *fTestText;
    TGButton           *fTestButton;
 
@@ -282,6 +284,7 @@ public:
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 };
 
+
 class TestShutter : public TGTransientFrame {
 
 private:
@@ -295,6 +298,7 @@ public:
 
    void AddShutterItem(const char *name, shutterData_t data[]);
 };
+
 
 class TestProgress : public TGTransientFrame {
 
@@ -313,6 +317,7 @@ public:
    virtual void CloseWindow();
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 };
+
 
 class Editor : public TGTransientFrame {
 
@@ -337,6 +342,61 @@ public:
    Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 };
 
+
+class TileFrame : public TGCompositeFrame {
+
+private:
+   TGCanvas *fCanvas;
+
+public:
+   TileFrame(const TGWindow *p);
+   virtual ~TileFrame() { }
+
+   void SetCanvas(TGCanvas *canvas) { fCanvas = canvas; }
+   Bool_t HandleButton(Event_t *event);
+};
+
+TileFrame::TileFrame(const TGWindow *p) :
+   TGCompositeFrame(p, 10, 10, kHorizontalFrame, GetWhitePixel())
+{
+   // Create tile view container. Used to show colormap.
+
+   fCanvas = 0;
+   SetLayoutManager(new TGTileLayout(this, 8));
+
+   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
+                         kButtonPressMask | kButtonReleaseMask |
+                         kPointerMotionMask, kNone, kNone);
+}
+
+Bool_t TileFrame::HandleButton(Event_t *event)
+{
+   // Handle wheel mouse to scroll.
+
+   Int_t page = 0;
+   if (event->fCode == kButton4 || event->fCode == kButton5) {
+   if (!fCanvas) return kTRUE;
+   if (fCanvas->GetContainer()->GetHeight())
+      page = Int_t(Float_t(fCanvas->GetViewPort()->GetHeight() *
+                           fCanvas->GetViewPort()->GetHeight()) /
+                           fCanvas->GetContainer()->GetHeight());
+   }
+
+   if (event->fCode == kButton4) {
+      //scroll up
+      Int_t newpos = fCanvas->GetVsbPosition() - page;
+      if (newpos < 0) newpos = 0;
+      fCanvas->SetVsbPosition(newpos);
+      return kTRUE;
+   }
+   if (event->fCode == kButton5) {
+      // scroll down
+      Int_t newpos = fCanvas->GetVsbPosition() + page;
+      fCanvas->SetVsbPosition(newpos);
+      return kTRUE;
+   }
+   return kTRUE;
+}
 
 
 TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
@@ -419,9 +479,8 @@ TestMainFrame::TestMainFrame(const TGWindow *p, UInt_t w, UInt_t h)
 
    // Create TGCanvas and a canvas container which uses a tile layout manager
    fCanvasWindow = new TGCanvas(this, 400, 240);
-   fContainer = new TGCompositeFrame(fCanvasWindow->GetViewPort(), 10, 10,
-                                     kHorizontalFrame, GetWhitePixel());
-   fContainer->SetLayoutManager(new TGTileLayout(fContainer, 8));
+   fContainer = new TileFrame(fCanvasWindow->GetViewPort());
+   fContainer->SetCanvas(fCanvasWindow);
    fCanvasWindow->SetContainer(fContainer);
 
    // Fill canvas with 256 colored frames (notice that doing it this way

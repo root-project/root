@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.5 2000/10/04 23:40:07 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGComboBox.cxx,v 1.6 2000/10/08 14:27:54 rdm Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -73,7 +73,8 @@ Bool_t TGComboBoxPopup::HandleButton(Event_t *event)
 {
    // Handle mouse button event in combo box popup.
 
-   if (event->fType == kButtonRelease) EndPopup();
+   if (event->fType == kButtonRelease && event->fCode == kButton1)
+      EndPopup();
    return kTRUE;
 }
 
@@ -108,7 +109,7 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    MapRaised();
 
    gVirtualX->GrabPointer(fId, kButtonPressMask | kButtonReleaseMask |
-                     kPointerMotionMask, kNone, fgDefaultCursor);
+                          kPointerMotionMask, kNone, fgDefaultCursor);
 
    fClient->WaitForUnmap(this);
    EndPopup();

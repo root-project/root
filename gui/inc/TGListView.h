@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.2 2000/09/11 17:37:20 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListView.h,v 1.3 2000/09/29 08:57:05 rdm Exp $
 // Author: Fons Rademakers   17/01/98
 
 /*************************************************************************
@@ -49,6 +49,7 @@ enum EListViewMode {
 
 class TGSelectedPicture;
 class TGTextButton;
+class TGListView;
 
 
 class TGLVEntry : public TGFrame {
@@ -122,6 +123,7 @@ protected:
    Int_t              fTotal;         // total items
    Int_t              fSelected;      // number of selected items
    Bool_t             fDragging;      // true if in dragging mode
+   TGListView        *fListView;      // listview which contains this container
    const TGWindow    *fMsgWindow;     // window handling container messages
 
    static TGGC  fgLineGC;
@@ -139,6 +141,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
 
    virtual void Associate(const TGWindow *w) { fMsgWindow = w; }
+   virtual void SetListView(TGListView *lv) { fListView = lv; }
 
    virtual void SelectAll();
    virtual void UnSelectAll();

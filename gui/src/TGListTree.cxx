@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.4 2000/09/05 16:13:36 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.cxx,v 1.5 2000/10/04 23:40:07 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -134,6 +134,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    GCValues_t gcv;
 
    fMsgWindow = p;
+   fCanvas    = 0;
    fTip       = 0;
    fTipItem   = 0;
    fAutoTips  = kFALSE;
@@ -250,6 +251,29 @@ Bool_t TGListTree::HandleButton(Event_t *event)
    TGListTreeItem *item;
 
    if (fTip) fTip->Hide();
+
+   Int_t page = 0;
+   if (event->fCode == kButton4 || event->fCode == kButton5) {
+      if (!fCanvas) return kTRUE;
+      if (fCanvas->GetContainer()->GetHeight())
+         page = Int_t(Float_t(fCanvas->GetViewPort()->GetHeight() *
+                              fCanvas->GetViewPort()->GetHeight()) /
+                              fCanvas->GetContainer()->GetHeight());
+   }
+
+   if (event->fCode == kButton4) {
+      //scroll up
+      Int_t newpos = fCanvas->GetVsbPosition() - page;
+      if (newpos < 0) newpos = 0;
+      fCanvas->SetVsbPosition(newpos);
+      return kTRUE;
+   }
+   if (event->fCode == kButton5) {
+      // scroll down
+      Int_t newpos = fCanvas->GetVsbPosition() + page;
+      fCanvas->SetVsbPosition(newpos);
+      return kTRUE;
+   }
 
    if (event->fType == kButtonPress) {
       if ((item = FindItem(event->fY)) != 0) {

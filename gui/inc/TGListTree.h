@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.2 2000/08/04 13:14:44 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGListTree.h,v 1.3 2000/09/05 10:56:50 rdm Exp $
 // Author: Fons Rademakers   25/02/98
 
 /*************************************************************************
@@ -39,6 +39,7 @@
 
 class TGPicture;
 class TGToolTip;
+class TGCanvas;
 
 
 class TGListTreeItem {
@@ -111,6 +112,7 @@ protected:
    const TGWindow  *fMsgWindow;      // pointer to window handling list messages
    TGToolTip       *fTip;            // tooltip shown when moving over list items
    TGListTreeItem  *fTipItem;        // item for which tooltip is set
+   TGCanvas        *fCanvas;         // canvas which contains the tree
    Bool_t           fAutoTips;       // assume item->fUserData is TObject and use GetTitle() for tip text
 
    static FontStruct_t   fgDefaultFontStruct;
@@ -150,6 +152,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
 
    virtual void Associate(const TGWindow *w) { fMsgWindow = w; }
+   virtual void SetCanvas(TGCanvas *canvas) { fCanvas = canvas; }
 
    virtual TGDimension GetDefaultSize() const
             { return TGDimension(fDefw, fDefh); }
