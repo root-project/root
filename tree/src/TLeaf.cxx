@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.4 2001/04/09 08:13:56 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TLeaf.cxx,v 1.5 2001/09/25 07:10:48 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -75,7 +75,11 @@ TLeaf::~TLeaf()
 //*-*        ===============================
 
 //   if (fBranch) fBranch->GetListOfLeaves().Remove(this);
+   if (!fBranch) return;
+   TTree *tree = fBranch->GetTree();
    fBranch = 0;
+   if (!tree) return;
+   tree->GetListOfLeaves()->Remove(this);
 }
 
 
