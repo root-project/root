@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.58 2002/08/20 10:51:50 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.cxx,v 1.59 2002/09/05 18:42:49 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -218,6 +218,21 @@ Bool_t TCint::IsLoaded(const char* filename) const
    }
 
    return kFALSE;
+}
+
+//______________________________________________________________________________
+Int_t TCint::Load(const char *filename, Bool_t system) 
+{
+   // Load a library file in CINT's memory.
+   // if 'system' is true, the library is never unloaded.
+
+   R__LOCKGUARD(gCINTMutex);
+   int i;
+   if (!system)
+      i = G__loadfile(filename);
+   else
+      i = G__loadsystemfile(filename);
+   return i;
 }
 
 //______________________________________________________________________________

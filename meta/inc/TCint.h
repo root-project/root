@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.8 2001/12/21 09:37:25 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TCint.h,v 1.9 2002/03/05 10:47:48 rdm Exp $
 // Author: Fons Rademakers   01/03/96
 
 /*************************************************************************
@@ -77,6 +77,7 @@ public:
    const char *GetIncludePath();
    Int_t   InitializeDictionaries();
    Bool_t  IsLoaded(const char *filename) const;
+   Int_t   Load(const char *filenam, Bool_t system = kFALSE);
    void    LoadMacro(const char *filename, EErrorCode *error = 0);
    Int_t   ProcessLine(const char *line, EErrorCode *error = 0);
    Int_t   ProcessLineAsynch(const char *line, EErrorCode *error = 0);

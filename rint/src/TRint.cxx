@@ -1,4 +1,4 @@
-// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.14 2001/10/22 14:55:47 rdm Exp $
+// @(#)root/rint:$Name:  $:$Id: TRint.cxx,v 1.15 2002/07/27 13:45:04 rdm Exp $
 // Author: Rene Brun   17/02/95
 
 /*************************************************************************
@@ -124,10 +124,10 @@ TRint::TRint(const char *appClassName, int *argc, char **argv, void *options,
 
    // Everybody expects iostream to be available, so load it...
 #ifndef WIN32
-   ProcessLine("#include <iostream>");
+   ProcessLine("#include <iostream>",kTRUE);
 #endif
    // Allow the usage of ClassDef and ClassImp in interpreted macros
-   ProcessLine("#include <RtypesCint.h>");
+   ProcessLine("#include <RtypesCint.h>",kTRUE);
 
    // The following libs are also useful to have,
    // make sure they are loaded...
@@ -145,7 +145,7 @@ TRint::TRint(const char *appClassName, int *argc, char **argv, void *options,
    if (logon) {
       char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
-         ProcessLine(Form(".L %s",logon));
+         ProcessLine(Form(".L %s",logon),kTRUE);
       delete [] mac;
    }
 
