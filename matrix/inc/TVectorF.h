@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.5 2004/03/21 10:52:27 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.h,v 1.6 2004/03/22 10:50:44 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -174,7 +174,7 @@ public :
   TVector(const TMatrixFDiag_const   &md)              : TVectorF(md) {}
 
   virtual ~TVector() {}
-  ClassDef(TVector,2)  // Vector class with single precision
+  ClassDef(TVector,3)  // Vector class with single precision
 };
 
 inline const Float_t &TVectorF::operator()(Int_t ind) const
