@@ -1,7 +1,7 @@
 local_all: main
 .PHONY: main
 
-include $(ROOTSYS)/test/Makefile
+include $(ROOTSYS)/test/Makefile.arch
 
 ifeq ($(PLATFORM),win32)
 CXXFLAGS += /TP

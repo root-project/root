@@ -1,7 +1,7 @@
 local_all: main
 .PHONY: main
 
-include $(ROOTSYS)/test/Makefile
+include $(ROOTSYS)/test/Makefile.arch
 
 ifeq ($(PLATFORM),win32)
 CXXFLAGS += /TP
@@ -71,7 +71,7 @@ local_clean:
 	rm -rf *.exp .def
 
 clean: local_clean
-	
+
 
 .C.$(ObjSuf):
 	$(CXX) $(CXXFLAGS) -c $<

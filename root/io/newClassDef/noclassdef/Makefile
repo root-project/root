@@ -1,7 +1,7 @@
 local_all: main
 .PHONY: main
 
-include $(ROOTSYS)/test/Makefile
+include $(ROOTSYS)/test/Makefile.arch
 
 #arch := $(shell grep arch `which root-config` | head -1 | cut -d'=' -f2-)
 arch := $(shell root-config --arch)
@@ -81,6 +81,18 @@ else
 	diff good.linux.output driver.output
 endif
 	@echo "All test succeeded in `pwd`"
+
+otest:   driver$(ExeSuf)
+	rm -f odriver.output
+	./driver$(ExeSuf) -readold 2>&1 | grep -v -- '->[^0][^ ]' | sed -e 's/Dumping object at:[0-9a-f]*,/Dumping object,/' > odriver.output 
+ifeq ($(PLATFORM),win32)
+	diff good.win32.output odriver.output
+else
+	diff good.linux.output odriver.output
+endif
+	@echo "Testing reading old succeeded in `pwd`"
+
+
 
 local_clean:
 	rm -rf *.o *.so ti_files ii_files 
