@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.3 2004/01/26 07:34:43 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TVectorF.cxx,v 1.4 2004/01/26 20:03:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann  Nov 2003
 
 /*************************************************************************
@@ -363,7 +363,7 @@ TVectorF &TVectorF::Abs()
   const Float_t * const fp = ep+fNrows;
   while (ep < fp) {
     *ep = TMath::Abs(*ep);
-    *ep++;
+    ep++;
   }
 
   return *this;
@@ -380,7 +380,7 @@ TVectorF &TVectorF::Sqr()
   const Float_t * const fp = ep+fNrows;
   while (ep < fp) {
     *ep = (*ep) * (*ep);
-    *ep++;
+    ep++;
   }
 
   return *this;
@@ -398,7 +398,7 @@ TVectorF &TVectorF::Sqrt()
   while (ep < fp) {
     Assert(*ep >= 0);
     *ep = TMath::Sqrt(*ep);
-    *ep++;
+    ep++;
   }
 
   return *this;

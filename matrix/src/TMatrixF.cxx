@@ -1,4 +1,4 @@
-// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.2 2004/01/26 07:01:04 brun Exp $
+// @(#)root/matrix:$Name:  $:$Id: TMatrixF.cxx,v 1.3 2004/01/26 20:03:09 brun Exp $
 // Authors: Fons Rademakers, Eddy Offermann   Nov 2003
 
 /*************************************************************************
@@ -761,7 +761,7 @@ Double_t TMatrixF::Determinant() const
 //______________________________________________________________________________
 void TMatrixF::Determinant(Double_t &d1,Double_t &d2) const
 {
-  const TMatrixF tmp(*this);
+  const TMatrixD tmp(*this);
   TDecompLU lu(tmp,(Double_t)fTol);
   lu.Det(d1,d2);
 }
@@ -786,7 +786,7 @@ TMatrixF &TMatrixF::Abs()
   const Float_t * const fp = ep+fNelems;
   while (ep < fp) {
     *ep = TMath::Abs(*ep);
-    *ep++;
+    ep++;
   }
 
   return *this;
@@ -803,7 +803,7 @@ TMatrixF &TMatrixF::Sqr()
   const Float_t * const fp = ep+fNelems;
   while (ep < fp) {
     *ep = (*ep) * (*ep);
-    *ep++;
+    ep++;
   }
 
   return *this;
@@ -820,7 +820,7 @@ TMatrixF &TMatrixF::Sqrt()
   const Float_t * const fp = ep+fNelems;
   while (ep < fp) {
     *ep = TMath::Sqrt(*ep);
-    *ep++;
+    ep++;
   }
 
   return *this;
