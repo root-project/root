@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.9 2002/12/02 18:50:01 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TQConnection.cxx,v 1.10 2003/01/20 08:44:46 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
@@ -30,6 +30,7 @@
 #include "Api.h"
 #include "G__ci.h"
 #include "Riostream.h"
+#include "TVirtualMutex.h"
 
 
 ClassImpQ(TQConnection)
@@ -109,6 +110,7 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
       if ((params = strchr(proto,'='))) *params = ' ';
    }
 
+   R__LOCKGUARD(gCINTMutex);
    fFunc = new G__CallFunc;
 
    // initiate class method (function) with proto
@@ -163,6 +165,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
       if ((params = strchr(proto,'='))) *params = ' ';
    }
 
+   R__LOCKGUARD(gCINTMutex);
    fFunc = new G__CallFunc;
 
    G__ClassInfo gcl;
@@ -199,6 +202,7 @@ inline void TQSlot::ExecuteMethod(void *object)
 
    void *address = 0;
    if (object) address = (void*)((Long_t)object + fOffset);
+   R__LOCKGUARD(gCINTMutex);
    fExecuting++;
    fFunc->Exec(address);
    fExecuting--;
@@ -213,6 +217,7 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t param)
    // with single argument value.
 
    void *address = 0;
+   R__LOCKGUARD(gCINTMutex);
    fFunc->ResetArg();
    fFunc->SetArg(param);
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -230,6 +235,7 @@ inline void TQSlot::ExecuteMethod(void *object, Double_t param)
    // with single argument value.
 
    void *address = 0;
+   R__LOCKGUARD(gCINTMutex);
    fFunc->ResetArg();
    fFunc->SetArg(param);
    if (object) address = (void*)((Long_t)object + fOffset);
@@ -247,6 +253,7 @@ inline void TQSlot::ExecuteMethod(void *object, const char *param)
 
    void *address = 0;
    gTQSlotParams = (char*)param;
+   R__LOCKGUARD(gCINTMutex);
    fFunc->SetArgs("gTQSlotParams");
    if (object) address = (void*)((Long_t)object + fOffset);
    fExecuting++;
@@ -267,6 +274,7 @@ inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr)
    //  there are required arguments  (all arguments - default args).
 
    void *address = 0;
+   R__LOCKGUARD(gCINTMutex);
    fFunc->SetArgArray(paramArr);
    if (object) address = (void*)((Long_t)object + fOffset);
    fExecuting++;
