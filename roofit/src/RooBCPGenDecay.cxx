@@ -27,12 +27,14 @@ RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
 			       RooAbsReal& avgMistag, 
 			       RooAbsReal& a, RooAbsReal& b,
 			       RooAbsReal& delMistag,
+                               RooAbsReal& mu,
 			       const RooResolutionModel& model, DecayType type) :
   RooConvolutedPdf(name,title,model,t), 
   _avgC("C","Coefficient of cos term",this,a),
   _avgS("S","Coefficient of cos term",this,b),
   _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
   _delMistag("delMistag","Delta mistag rate",this,delMistag),  
+  _mu("mu","Tagg efficiency difference",this,mu),  
   _tag("tag","CP state",this,tag),
   _tau("tau","decay time",this,tau),
   _dm("dm","mixing frequency",this,dm),
@@ -67,6 +69,7 @@ RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) :
   _avgS("S",this,other._avgS),
   _avgMistag("avgMistag",this,other._avgMistag),
   _delMistag("delMistag",this,other._delMistag),
+  _mu("mu",this,other._mu),
   _tag("tag",this,other._tag),
   _tau("tau",this,other._tau),
   _dm("dm",this,other._dm),
@@ -94,21 +97,21 @@ Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const
   // B0bar : _tag = -1 
 
   if (basisIndex==_basisExp) {
-    //exp term: (1 -/+ dw)
-    return (1 - _tag*_delMistag) ;
-    // =    1 + _tag*deltaDil/2
+    //exp term: (1 -/+ dw + mu*_tag*w)
+    return (1 - _tag*_delMistag + _mu*_tag*(1. - 2.*_avgMistag)) ;
+    // =    1 + _tag*deltaDil/2 + _mu*avgDil
   }
 
   if (basisIndex==_basisSin) {
-    //sin term: +/- (1-2w)*S
-    return _tag*(1-2*_avgMistag)*_avgS ;
-    // =   _tag*avgDil * S
+    //sin term: -(+/- (1-2w) + _mu*(1 +/- delw))*S
+    return (_tag*(1-2*_avgMistag) + _mu*(1. + _tag*_delMistag))*_avgS ;
+    // =   (_tag*avgDil + _mu*(1 + tag*deltaDil/2)) * S
   }
   
   if (basisIndex==_basisCos) {
-    //cos term: +/- (1-2w)*C
-    return -1*_tag*(1-2*_avgMistag)*_avgC ;
-    // =   -_tag*avgDil * C
+    //cos term: (+/- (1-2w) + _mu*(1 +/- delw))*C
+    return 1.*(_tag*(1-2*_avgMistag) + _mu*(1. + _tag*_delMistag))*_avgC ;
+    // =   -(_tag*avgDil + _mu*(1 + _tag*deltaDil/2) )* C
   } 
   
   return 0 ;
@@ -201,9 +204,9 @@ void RooBCPGenDecay::generateEvent(Int_t code)
     Double_t maxDil = 1.0 ;
 // 2 in next line is conservative and inefficient - allows for delMistag=1!
     Double_t maxAcceptProb = 2 + fabs(maxDil*_avgS) + fabs(maxDil*_avgC);        
-    Double_t acceptProb    = (1-_tag*_delMistag) 
-                           + (_tag*(1-2*_avgMistag))*_avgS*sin(_dm*tval) 
-                           - (_tag*(1-2*_avgMistag))*_avgC*cos(_dm*tval);
+    Double_t acceptProb    = (1-_tag*_delMistag + _mu*_tag*(1. - 2.*_avgMistag)) 
+                           + (_tag*(1-2*_avgMistag) + _mu*(1. + _tag*_delMistag))*_avgS*sin(_dm*tval) 
+                           - (_tag*(1-2*_avgMistag) + _mu*(1. + _tag*_delMistag))*_avgC*cos(_dm*tval);
 
     Bool_t accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
     

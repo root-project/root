@@ -30,6 +30,7 @@ public:
 		 RooAbsReal& avgMistag, 
 		 RooAbsReal& a, RooAbsReal& b,
 		 RooAbsReal& delMistag,
+                 RooAbsReal& mu,
 		 const RooResolutionModel& model, DecayType type=DoubleSided) ;
 
   RooBCPGenDecay(const RooBCPGenDecay& other, const char* name=0);
@@ -51,6 +52,7 @@ protected:
   RooRealProxy _avgS ;
   RooRealProxy _avgMistag ;
   RooRealProxy _delMistag ;
+  RooRealProxy _mu ;
   RooRealProxy _t ;
   RooRealProxy _tau ;
   RooRealProxy _dm ;
