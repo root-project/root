@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.8 2000/10/18 12:45:47 rdm Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.9 2000/10/19 17:27:58 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -985,6 +985,22 @@ char *StrDup(const char *str)
 }
 
 //______________________________________________________________________________
+void strcpy_withesc(char *escaped, const char* original)
+{
+   // Copy original into escaped BUT make sure that the \ characters
+   // are properly escaped (on Windows temp files have \'s).
+
+   int j, k;
+   j = 0; k = 0;
+   while (original[j] != '\0') {
+      if (original[j] == '\\')
+         escaped[k++] = '\\';
+      escaped[k++] = original[j++];
+   }
+   escaped[k] = '\0';
+}
+
+//______________________________________________________________________________
 void ReplaceBundleInDict(const char *dictname, const char *bundlename)
 {
    // Replace the bundlename in the dict.cxx and .h file by the contents
@@ -1012,8 +1028,11 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
       return;
    }
 
+   char esc_bundlename[256];
+   strcpy_withesc(esc_bundlename, bundlename);
+
    char checkline[512];
-   sprintf(checkline, "  G__add_compiledheader(\"%s\");", bundlename);
+   sprintf(checkline, "  G__add_compiledheader(\"%s\");", esc_bundlename);
    int clen = strlen(checkline);
 
    char line[BUFSIZ];
@@ -1048,7 +1067,7 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
    fclose(tmpdict);
    fclose(fpd);
 
-   if (rename(tmpdictname, dictname) == -1)
+   if (unlink(dictname) == -1 || rename(tmpdictname, dictname) == -1)
       fprintf(stderr,"rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
               tmpdictname, dictname);
 
@@ -1077,7 +1096,7 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
    }
    tmpdict = fopen(tmpdictname, "w");
 
-   sprintf(checkline, "#include \"%s\"", bundlename);
+   sprintf(checkline, "#include \"%s\"", esc_bundlename);
    clen = strlen(checkline);
 
    if (tmpdict && fpd) {
@@ -1095,7 +1114,7 @@ void ReplaceBundleInDict(const char *dictname, const char *bundlename)
    fclose(tmpdict);
    fclose(fpd);
 
-   if (rename(tmpdictname, dictnameh) == -1)
+   if (unlink(dictnameh) == -1 || rename(tmpdictname, dictnameh) == -1)
       fprintf(stderr,"rootcint: failed to rename %s to %s in ReplaceBundleInDict()\n",
               tmpdictname, dictnameh);
 }
@@ -1235,13 +1254,14 @@ int main(int argc, char **argv)
    iv = 0;
    il = 0;
    // If the user request use of a preprocessor we are going to bundle
-   // all the files into one so that cint consider then one compilation
+   // all the files into one so that cint considers them one compilation
    // unit and so that each file that contains code guard is really
    // included only once.
    for (i = 1; i < argc; i++)
       if (strcmp(argv[i], "-p") == 0) use_preprocessor = 1;
 
    char bundlename[L_tmpnam+2];
+   char esc_arg[256];
    FILE *bundle = 0;
    if (use_preprocessor) {
       tmpnam(bundlename);
@@ -1275,9 +1295,10 @@ int main(int argc, char **argv)
          fprintf(stderr, "%s: option -c must come directly after the output file\n", argv[0]);
          return 1;
       }
-      if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+' && !il)
-         fprintf(bundle,"#include \"%s\"\n", argv[i]);
-      else
+      if (use_preprocessor && *argv[i] != '-' && *argv[i] != '+' && !il) {
+         strcpy_withesc(esc_arg, argv[i]);
+         fprintf(bundle,"#include \"%s\"\n", esc_arg);
+      } else
          argvv[argcc++] = argv[i];
    }
    if (use_preprocessor) {
