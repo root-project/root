@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.38 2000/12/26 14:23:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.39 2001/01/11 09:14:33 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -453,7 +453,8 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
    Int_t isDot = 0;
    if (name[lenName-1] == '.') isDot = 1;
    TBranch *branch1 = 0;
-   TRealData *rd;
+   TRealData *rd, *rdi;
+   TIter      nexti(cl->GetListOfRealData());
    TIter      next(cl->GetListOfRealData());
    while ((rd = (TRealData *) next())) {
       TDataMember *dm = rd->GetDataMember();
@@ -465,7 +466,7 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
       }
       rdname = rd->GetName();
       dname  = dm->GetName();
-      
+printf("rdname=%s, dname=%s\n",rdname,dname);      
       if (cl->CanIgnoreTObjectStreamer()) {
          if (strcmp(dname,"fBits") == 0) continue;
          if (strcmp(dname,"fUniqueID") == 0) continue;
@@ -504,6 +505,16 @@ TBranch *TTree::Branch(const char *name, const char *classname, void *addobj, In
             if (!clobj) {
                const char * index = dm->GetArrayIndex();
                if (strlen(index)!=0) {
+                  //check that index is a valid data member name
+                  //if member is part of an object (eg fA and index=fN)
+                  //index must be changed from fN to fA.fN
+                  nexti.Reset();
+                  while ((rdi = (TRealData *) nexti())) {
+                     if (strcmp(rdi->GetName(),index) == 0) break;
+                     const char *rdot = strchr(rdi->GetName(),'.');
+                     if (!rdot) continue;
+                     if (strcmp(rdot+1,index) == 0) {index = rdi->GetName(); break;}
+                  }
                   if      (code ==  1) 
                      // Note that we differentiate between strings and
                      // char array by the fact that there is NO specified
