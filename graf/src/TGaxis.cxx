@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.45 2003/04/08 13:05:35 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.46 2003/04/10 09:00:20 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -601,7 +601,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    }
 
 // determine the time offset and correct for time offset not being integer
-   Double_t timeoffset;
+   Double_t timeoffset =0;
    if (OptionTime) {
       if (IdF>=0) {
          Int_t LnF = fTimeFormat.Length();
