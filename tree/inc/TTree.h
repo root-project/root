@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.13 2000/08/17 09:46:59 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.h,v 1.14 2000/09/05 09:21:24 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -86,30 +86,30 @@ class TPrincipal;
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
 protected:
-    Stat_t        fEntries;           //Number of entries
-    Stat_t        fTotBytes;          //Total number of bytes in all branches before compression
-    Stat_t        fZipBytes;          //Total number of bytes in all branches after compression
-    Stat_t        fSavedBytes;        //Number of autosaved bytes
-    Int_t         fScanField;         //Number of runs before prompting in Scan
-    Int_t         fUpdate;            //Update frequency for EntryLoop
-    Int_t         fMaxEntryLoop;      //Maximum number of entries to process
-    Int_t         fMaxVirtualSize;    //Maximum total size of buffers kept in memory
-    Int_t         fAutoSave;          //Autosave tree when fAutoSave bytes produced
-    Int_t         fChainOffset;       //Offset of 1st entry of this Tree in a TChain
-    Int_t         fReadEntry;         //Number of the entry being processed
-    Int_t         fTotalBuffers;      //Total number of bytes in branch buffers
-    Int_t         fEstimate;          //Number of entries to estimate histogram limits
-    Int_t         fPacketSize;        //Number of entries in one packet for parallel root
-    Int_t         fNfill;             //Local for EntryLoop
-    Int_t         fTimerInterval;     //Timer interval in milliseconds
-    TDirectory   *fDirectory;         //Pointer to directory holding this tree
-    TObjArray     fBranches;          //List of Branches
-    TObjArray     fLeaves;            //Direct pointers to individual branch leaves
-    TEventList   *fEventList;         //Pointer to event selection list (if one)
-    TArrayD       fIndexValues;       //Sorted index values
-    TArrayI       fIndex;             //Index of sorted values
-    TList        *fStreamerInfoList;  //list of StreamerInfo for all TBranchObjects
-    TVirtualTreePlayer *fPlayer;      //Pointer to current Tree player
+    Stat_t        fEntries;           //  Number of entries
+    Stat_t        fTotBytes;          //  Total number of bytes in all branches before compression
+    Stat_t        fZipBytes;          //  Total number of bytes in all branches after compression
+    Stat_t        fSavedBytes;        //  Number of autosaved bytes
+    Int_t         fTimerInterval;     //  Timer interval in milliseconds
+    Int_t         fScanField;         //  Number of runs before prompting in Scan
+    Int_t         fUpdate;            //  Update frequency for EntryLoop
+    Int_t         fMaxEntryLoop;      //  Maximum number of entries to process
+    Int_t         fMaxVirtualSize;    //  Maximum total size of buffers kept in memory
+    Int_t         fAutoSave;          //  Autosave tree when fAutoSave bytes produced
+    Int_t         fEstimate;          //  Number of entries to estimate histogram limits
+    Int_t         fChainOffset;       //! Offset of 1st entry of this Tree in a TChain
+    Int_t         fReadEntry;         //! Number of the entry being processed
+    Int_t         fTotalBuffers;      //! Total number of bytes in branch buffers
+    Int_t         fPacketSize;        //! Number of entries in one packet for parallel root
+    Int_t         fNfill;             //! Local for EntryLoop
+    TDirectory   *fDirectory;         //! Pointer to directory holding this tree
+    TObjArray     fBranches;          //  List of Branches
+    TObjArray     fLeaves;            //  Direct pointers to individual branch leaves
+    TEventList   *fEventList;         //! Pointer to event selection list (if one)
+    TArrayD       fIndexValues;       //  Sorted index values
+    TArrayI       fIndex;             //  Index of sorted values
+    TList        *fStreamerInfoList;  //! list of StreamerInfo for all TBranchObjects
+    TVirtualTreePlayer *fPlayer;      //! Pointer to current Tree player
     
 protected:
     const   char    *GetNameByIndex(TString &varexp, Int_t *index,Int_t colindex);
@@ -236,7 +236,7 @@ public:
                        ,Int_t nentries=1000000000, Int_t firstentry=0);
     void              UseCurrentStyle();
 
-    ClassDef(TTree,4)  //Tree descriptor (the main ROOT I/O class)
+    ClassDef(TTree,5)  //Tree descriptor (the main ROOT I/O class)
 };
 
 inline void TTree::Draw(Option_t *opt)
