@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:$:$Id:$
+// @(#)root/gui:$Name:  $:$Id: TGColorDialog.cxx,v 1.1 2002/09/14 00:35:05 rdm Exp $
 // Author: Bertrand Bellenot + Fons Rademakers   22/08/02
 
 /*************************************************************************
@@ -275,6 +275,9 @@ Bool_t TGColorPalette::HandleKey(Event_t *event)
          case kKey_End:
             cx = fCols - 1;
             cy = fRows - 1;
+            break;
+
+         default:
             break;
       }
 
