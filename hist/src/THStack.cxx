@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.20 2003/04/17 19:19:16 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: THStack.cxx,v 1.21 2003/04/18 10:03:01 brun Exp $
 // Author: Rene Brun   10/12/2001
 
 /*************************************************************************
@@ -413,8 +413,10 @@ void THStack::Paint(Option_t *option)
    else                   themax = fMaximum;
    if (fMinimum == -1111) {
      themin = GetMinimum(option);
-     if (gPad->GetLogy())
-       themin *= .9;
+     if (gPad->GetLogy()){
+       if (themin>0)  themin *= .9;
+       else           themin = themax*1.e-3;
+     }
      else if (themin > 0)
        themin = 0;
    }
