@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.14 2001/06/08 05:51:04 verkerke Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.15 2001/06/09 05:08:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -38,6 +38,7 @@
 #include "RooFitCore/RooFitContext.hh"
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooGenContext.hh"
+#include "RooFitCore/RooPlot.hh"
 
 ClassImp(RooAbsPdf) 
 ;
@@ -425,6 +426,7 @@ Int_t RooAbsPdf::fitTo(RooDataSet& data, Option_t *options = "", Double_t *minVa
   RooFitContext context(&data,this) ;
   return context.fit(options,minValue) ;
 }
+
 
 void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) const
 {

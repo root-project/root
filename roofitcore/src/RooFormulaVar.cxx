@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooFormulaVar.cc,v 1.3 2001/05/17 00:43:15 verkerke Exp $
+ *    File: $Id: RooFormulaVar.cc,v 1.4 2001/06/08 05:51:05 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -25,15 +25,35 @@
 ClassImp(RooFormulaVar)
 
 
-RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgSet& dependents) : 
-  RooAbsReal(name,title), _formula(name,title,dependents)
+RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgSet& dependents) : 
+  RooAbsReal(name,title), _formula(name,formula,dependents)
 {  
+  Bool_t anyServers(kFALSE) ;
   // Constructor with formula expression and list of input variables
   TIterator* depIter = _formula.actualDependents().MakeIterator() ;
   RooAbsArg* server(0) ;
   while (server=(RooAbsArg*)depIter->Next()) {
     addServer(*server,kTRUE,kFALSE) ;
+    anyServers=kTRUE ;
   }
+
+  if (!anyServers) _value = traceEval(0) ;
+}
+
+
+RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgSet& dependents) : 
+  RooAbsReal(name,title), _formula(name,title,dependents)
+{  
+  Bool_t anyServers(kFALSE) ;
+  // Constructor with formula expression and list of input variables
+  TIterator* depIter = _formula.actualDependents().MakeIterator() ;
+  RooAbsArg* server(0) ;
+  while (server=(RooAbsArg*)depIter->Next()) {
+    addServer(*server,kTRUE,kFALSE) ;
+    anyServers=kTRUE ;
+  }
+
+  if (!anyServers) _value = traceEval(0) ;
 }
 
 
@@ -53,7 +73,7 @@ RooFormulaVar::~RooFormulaVar()
 Double_t RooFormulaVar::evaluate(const RooDataSet* dset) const
 {
   // Calculate current value of object
-  return _formula.eval() ;
+  return _formula.eval(dset) ;
 }
 
 

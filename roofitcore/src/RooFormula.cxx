@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitTools
- *    File: $Id: RooFormula.cc,v 1.16 2001/05/15 06:54:25 verkerke Exp $
+ *    File: $Id: RooFormula.cc,v 1.17 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, University of California Santa Barbara, verkerke@slac.stanford.edu
  * History:
@@ -30,13 +30,13 @@
 
 ClassImp(RooFormula)
 
-RooFormula::RooFormula() : TFormula()
+RooFormula::RooFormula() : TFormula(), _dset(0)
 {
   // Dummy constructor
 }
 
 RooFormula::RooFormula(const char* name, const char* formula, const RooArgSet& list) : 
-  TFormula(), _isOK(kTRUE) 
+  TFormula(), _isOK(kTRUE)
 {
   // Constructor with expression string and list of variables
   SetName(name) ;
@@ -57,7 +57,7 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgSet& l
 
 
 RooFormula::RooFormula(const RooFormula& other, const char* name) : 
-  TFormula(), _isOK(other._isOK) 
+  TFormula(), _isOK(other._isOK)
 {
   // Copy constructor
 
@@ -164,15 +164,19 @@ Bool_t RooFormula::changeDependents(const RooArgSet& newDeps, Bool_t mustReplace
 }
 
 
-Double_t RooFormula::eval()
+Double_t RooFormula::eval(const RooDataSet* dset)
 { 
-  // Return current value of formula
+  // Return current value of formula  
 
   // WVE sanity check should go here
   if (!_isOK) {
     cout << "RooFormula::eval(" << GetName() << "): Formula doesn't compile" << endl ;
     return 0. ;
   }
+
+  // Pass current dataset pointer to DefinedValue
+  _dset = (RooDataSet*) dset ;
+
   return EvalPar(0,0) ; 
 }
 
@@ -185,7 +189,7 @@ RooFormula::DefinedValue(Int_t code) {
   TString& label=((TObjString*)_labelList.At(code))->String() ;
 
   if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
-    return ((RooAbsReal*)arg)->getVal() ;
+    return ((RooAbsReal*)arg)->getVal(_dset) ;
   } else if (arg->IsA()->InheritsFrom(RooAbsCategory::Class())) {
     if (label.IsNull()) {
       return ((RooAbsCategory*)_useList.At(code))->getIndex() ;

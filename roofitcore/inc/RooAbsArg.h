@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.rdl,v 1.29 2001/06/08 05:51:04 verkerke Exp $
+ *    File: $Id: RooAbsArg.rdl,v 1.30 2001/06/09 05:08:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -98,11 +98,13 @@ protected:
 
   // Client-Server relatation and Proxy management 
   friend class RooArgSet ;
-  THashList _clientList      ; //! complete client list
-  THashList _clientListShape ; //! clients that requested shape dirty flag propagation
-  THashList _clientListValue ; //! clients that requested value dirty flag propagation
-  THashList _serverList      ; //! do not persist (or clone)
-  TList     _proxyList       ; //! do not persist (or clone)
+  THashList _serverList       ; //! list of server objects
+  THashList _clientList       ; //! list of client objects
+  TList     _clientListShape  ; //! subset of clients that requested shape dirty flag propagation
+  TList     _clientListValue  ; //! subset of clients that requested value dirty flag propagation
+  TList     _proxyList        ; //! list of proxies
+  TIterator* _clientShapeIter ; //! Iterator over _clientListShape 
+  TIterator* _clientValueIter ; //! Iterator over _clientListValue 
 
   // Server redirection interface
   friend class RooAcceptReject;

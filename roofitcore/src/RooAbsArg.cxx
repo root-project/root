@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsArg.cc,v 1.33 2001/06/08 05:51:04 verkerke Exp $
+ *    File: $Id: RooAbsArg.cc,v 1.34 2001/06/09 05:08:47 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -48,8 +48,10 @@ Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 
 RooAbsArg::RooAbsArg() : TNamed(), _attribList()
 {
-  if (_traceFlag) _traceList.Add(this) ;
   // Default constructor creates an unnamed object.
+  _clientShapeIter = _clientListShape.MakeIterator() ;
+  _clientValueIter = _clientListValue.MakeIterator() ;
+  if (_traceFlag) _traceList.Add(this) ;
 }
 
 RooAbsArg::RooAbsArg(const char *name, const char *title)
@@ -58,6 +60,8 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
   // Create an object with the specified name and descriptive title.
   // The newly created object has no clients or servers and has its
   // dirty flags set.
+  _clientShapeIter = _clientListShape.MakeIterator() ;
+  _clientValueIter = _clientListValue.MakeIterator() ;
   if (_traceFlag) _traceList.Add(this) ;
 }
 
@@ -90,6 +94,9 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
     addServer(*server,valueProp,shapeProp) ;
   }
   delete sIter ;
+
+  _clientShapeIter = _clientListShape.MakeIterator() ;
+  _clientValueIter = _clientListValue.MakeIterator() ;
 
   setValueDirty() ;
   setShapeDirty() ;
@@ -128,6 +135,9 @@ RooAbsArg::~RooAbsArg()
   _attribList.Delete() ;
 
   if (_traceFlag) _traceList.Remove(this) ;
+
+  delete _clientShapeIter ;
+  delete _clientValueIter ;
 }
 
 
@@ -439,9 +449,9 @@ void RooAbsArg::setValueDirty(Bool_t flag, const RooAbsArg* source) const
 
   if (flag==kTRUE) {
     // Set 'dirty' flag for all clients of this object
-    TIterator *clientIter= _clientListValue.MakeIterator();
+    _clientValueIter->Reset() ;
     RooAbsArg* client ;
-    while (client=(RooAbsArg*)clientIter->Next()) {
+    while (client=(RooAbsArg*)_clientValueIter->Next()) {
       client->setValueDirty(kTRUE,source) ;
     }
   }
@@ -466,9 +476,9 @@ void RooAbsArg::setShapeDirty(Bool_t flag, const RooAbsArg* source) const
 
   if (flag==kTRUE) {
     // Set 'dirty' flag for all clients of this object
-    TIterator *clientIter= _clientListShape.MakeIterator();
+    _clientShapeIter->Reset() ;
     RooAbsArg* client ;
-    while (client=(RooAbsArg*)clientIter->Next()) {
+    while (client=(RooAbsArg*)_clientShapeIter->Next()) {
       client->setShapeDirty(kTRUE,source) ;
     }
   }
@@ -577,9 +587,9 @@ void RooAbsArg::registerProxy(RooArgProxy& proxy)
     return ;
   }
 
-  cout << (void*)this << " " << GetName() << ": registering proxy " 
-       << (void*)&proxy << " with name " << proxy.name() << " in mode " 
-       << (proxy.isValueServer()?"V":"-") << (proxy.isShapeServer()?"S":"-") << endl ;
+//   cout << (void*)this << " " << GetName() << ": registering proxy " 
+//        << (void*)&proxy << " with name " << proxy.name() << " in mode " 
+//        << (proxy.isValueServer()?"V":"-") << (proxy.isShapeServer()?"S":"-") << endl ;
 
   // Register proxied object as server
   addServer(*proxy.absArg(),proxy.isValueServer(),proxy.isShapeServer()) ;

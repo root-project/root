@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.21 2001/05/17 00:43:14 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.22 2001/06/08 05:51:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,6 +26,7 @@
 #include "RooFitCore/RooRealVar.hh"
 #include "RooFitCore/RooRealFunc1D.hh"
 #include "RooFitCore/RooArgProxy.hh"
+#include "RooFitCore/RooFormulaVar.hh"
 
 #include <iostream.h>
 
@@ -38,7 +39,8 @@ ClassImp(RooAbsReal)
 
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) : 
-  RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), _plotMin(0), _plotMax(0)
+  RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
+  _plotMin(0), _plotMax(0), _lastData(0)
 {
   // Constructor
   setValueDirty(kTRUE) ;
@@ -47,7 +49,8 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 		       Double_t maxVal, const char *unit) :
-  RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), _plotMin(minVal), _plotMax(maxVal)
+  RooAbsArg(name,title), _unit(unit), _plotBins(100), _value(0), 
+  _plotMin(minVal), _plotMax(maxVal), _lastData(0)
 {
   // Constructor with plot range
   setValueDirty(kTRUE) ;
@@ -57,7 +60,8 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t minVal,
 
 RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) : 
   RooAbsArg(other,name), _unit(other._unit), _plotBins(other._plotBins), 
-  _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value)
+  _plotMin(other._plotMin), _plotMax(other._plotMax), _value(other._value),
+  _lastData(other._lastData)
 {
   // Copy constructor
 }
@@ -82,6 +86,7 @@ Double_t RooAbsReal::getVal(const RooDataSet* dset) const
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty() || isShapeDirty()) {
     _value = traceEval(dset) ;
+    _lastData = dset ;
     setValueDirty(kFALSE) ;
     setShapeDirty(kFALSE) ;
   } 
@@ -269,7 +274,7 @@ TH1F *RooAbsReal::createHistogram(const char *label, const char *axis,
   return histogram;
 }
 
-RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions) const {
+RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions, Double_t scaleFactor) const {
   // check that we are passed a valid plot frame to use
   if(0 == frame) {
     cout << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
@@ -308,7 +313,15 @@ RooPlot *RooAbsReal::plotOn(RooPlot* frame, Option_t* drawOptions) const {
   clone->recursiveRedirectServers(args);
 
   // create a new curve of our function using the clone to do the evaluations
-  RooCurve *curve= new RooCurve(*clone,*realVar);
+  RooCurve* curve ;
+  if (scaleFactor != 1.0) {
+    cout << "RooAbsReal::plotOn, using scale factor " << scaleFactor << endl ;
+    RooRealVar scale("scale","plot scale factor",scaleFactor) ;
+    RooFormulaVar scaledClone("scaledClone",clone->GetTitle(),"@0*@1",RooArgSet(scale,*clone)) ;
+    curve= new RooCurve(scaledClone,*realVar);
+  } else {
+    curve= new RooCurve(*clone,*realVar);
+  }
 
   // add a copy of the temporary curve to the specified plot frame
   frame->addPlotable(curve, drawOptions);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.15 2001/05/16 07:41:07 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.16 2001/06/08 05:51:04 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -56,7 +56,7 @@ public:
 
   // Create plots
   RooPlot *frame() const;
-  RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L") const;
+  RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions="L", Double_t scaleFactor=1.0) const;
 
   TH1F *createHistogram(const char *label, const char *axis, Int_t bins= 0);
   TH1F *createHistogram(const char *label, const char *axis, Double_t lo, Double_t hi, Int_t bins= 0);
@@ -89,6 +89,7 @@ protected:
   Double_t _plotMax ;
   Int_t    _plotBins ;
   mutable Double_t _value ;
+  mutable RooDataSet* _lastData ;
   TString  _unit ;
   TString  _label ;
 

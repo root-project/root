@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataSet.cc,v 1.25 2001/05/15 06:54:25 verkerke Exp $
+ *    File: $Id: RooDataSet.cc,v 1.26 2001/05/17 00:43:15 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -468,7 +468,10 @@ TH1F* RooDataSet::createHistogram(const RooAbsReal& var, const char* cuts, const
   TString histName(name);
   histName.Prepend("_");
   histName.Prepend(fName);
-  TH1F *histo= plotVar->createHistogram(histName.Data(), "Events");
+
+  // WVE use var instead of plotVar, otherwise binning properties
+  // of data set copy of plot var are always used.
+  TH1F *histo= var.createHistogram(histName.Data(), "Events");
 
   // Dump contents   
   Int_t nevent= (Int_t)GetEntries();
