@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.19 2003/09/12 15:54:16 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.20 2003/11/04 15:28:35 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -1375,6 +1375,33 @@ static char *bfree  = formbuf;
 static char *endbuf = &formbuf[cb_size-1];
 
 //______________________________________________________________________________
+static char *SlowFormat(const char *format, va_list ap, int hint)
+{
+   // Format a string in a formatting buffer (using a printf style
+   // format descriptor).
+
+   static char *slowBuffer  = 0;
+   static int   slowBufferSize = 0;
+
+   if (hint==-1) hint = fld_size;
+   if (hint > slowBufferSize) {
+      delete [] slowBuffer;
+      slowBufferSize = 2 * hint;
+      slowBuffer = new char[slowBufferSize];
+   }
+
+   int n = vsnprintf(slowBuffer, slowBufferSize, format, ap);
+   // old vsnprintf's return -1 if string is truncated new ones return
+   // total number of characters that would have been written
+   if (n == -1 || n >= slowBufferSize) {
+      if (n == -1) n = 2*slowBufferSize;
+      return SlowFormat( format, ap, n);
+   }
+
+   return slowBuffer;
+}
+
+//______________________________________________________________________________
 static char *Format(const char *format, va_list ap)
 {
    // Format a string in a circular formatting buffer (using a printf style
@@ -1389,8 +1416,7 @@ static char *Format(const char *format, va_list ap)
    // old vsnprintf's return -1 if string is truncated new ones return
    // total number of characters that would have been written
    if (n == -1 || n >= fld_size) {
-      Warning("Format", "string truncated: %.30s...", buf);
-      n = fld_size - 1;
+      return SlowFormat(format,ap,n);
    }
 
    bfree = buf+n+1;
