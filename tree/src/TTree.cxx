@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.176 2004/01/08 14:54:06 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.177 2004/01/10 10:52:30 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2616,7 +2616,7 @@ Int_t TTree::GetEntry(Int_t entry, Int_t getall)
 //
 //    for (Int_t i=0;i<nentries;i++) {
 //       T.GetEntry(i);
-//       // the objrect event has been filled at this point
+//       // the object event has been filled at this point
 //    }
 //   The default (recommended). At the first entry an object of the
 //   class Event will be created and pointed by event.
