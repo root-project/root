@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.43 2002/07/11 21:32:35 rdm Exp $ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.44 2002/07/19 09:36:59 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -247,9 +247,11 @@
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
+#if 0                            /* sstream not compatible with strstream */
 #   if __GNUC__ >= 3 && __GNUC_MINOR__ >=0 && __GNUC_MINOR__ < 8
 #      define R__SSTREAM         /* strstream renamed to sstream */
 #   endif
+#endif
 #   if defined(__ia64__) &&  __GNUC__ < 3       /* gcc 2.9x (MINOR is 9!) */
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
