@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.42 2003/02/01 17:35:07 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.43 2003/04/04 17:06:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -695,7 +695,9 @@ TObject *TCanvas::DrawClonePad()
 
 
   TPad *padsav = (TPad*)gPad;
-  TPad *pad = (TPad*)gROOT->GetSelectedPad();
+  TPad *selpad = (TPad*)gROOT->GetSelectedPad();
+  TPad *pad = padsav;
+  if (pad == this) pad = selpad;
   if (fCanvasID < 0 || padsav == 0 || pad == this) {
      return DrawClone();
   }
@@ -719,7 +721,7 @@ TObject *TCanvas::DrawClonePad()
   //copy primitives
   TIter next(GetListOfPrimitives());
   while ((obj=next())) {
-     gROOT->SetSelectedPad(pad);
+     pad->cd();
      clone = obj->Clone();
      pad->GetListOfPrimitives()->Add(clone,obj->GetDrawOption());
   }
