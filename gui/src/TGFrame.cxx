@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.45 2004/02/18 20:13:43 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.46 2004/02/19 17:29:34 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -1150,10 +1150,19 @@ Bool_t TGMainFrame::BindKey(const TGWindow *w, Int_t keycode, Int_t modifier) co
 {
    // Bind key to a window.
 
-   if (fBindList) {
+   TList *list = fBindList;
+   Handle_t id = fId;
+
+   if (fClient->IsEditable()) {
+      TGMainFrame *main = (TGMainFrame*)GetMainFrame();
+      list = main->GetBindList();
+      id = main->GetId();
+   }
+
+   if (list) {
       TGMapKey *m = new TGMapKey(keycode, (TGWindow *)w);
-      fBindList->Add(m);
-      gVirtualX->GrabKey(fId, keycode, modifier, kTRUE);
+      list->Add(m);
+      gVirtualX->GrabKey(id, keycode, modifier, kTRUE);
       return kTRUE;
    }
    return kFALSE;
@@ -1992,12 +2001,12 @@ void TGMainFrame::SavePrimitive(ofstream &out, Option_t *option)
 {
    // Save a main frame widget as a C++ statement(s) on output stream out.
 
-   //if (fParent!=gClient->GetDefaultRoot()) { // frame is embedded 
-   //   fOptions &= ~kMainFrame;
-   //   TGCompositeFrame::SavePrimitive(out, option);
-   //   fOptions |= kMainFrame;
-   //   return;
-   //}
+   if (fParent!=gClient->GetDefaultRoot()) { // frame is embedded 
+      fOptions &= ~kMainFrame;
+      TGCompositeFrame::SavePrimitive(out, option);
+      fOptions |= kMainFrame;
+      return;
+   }
 
    char quote = '"';
 

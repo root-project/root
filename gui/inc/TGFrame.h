@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.34 2004/02/09 07:24:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.h,v 1.35 2004/02/09 08:28:24 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -430,6 +430,7 @@ public:
 
    virtual Bool_t BindKey(const TGWindow *w, Int_t keycode, Int_t modifier) const;
    virtual void   RemoveBind(const TGWindow *w, Int_t keycode, Int_t modifier) const;
+   TList *GetBindList() const { return fBindList; }
 
    const char *GetWindowName() const { return fWindowName; }
    const char *GetIconName() const { return fIconName; }

@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.9 2004/02/09 07:24:15 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGWindow.h,v 1.10 2004/02/09 08:28:24 brun Exp $
 // Author: Fons Rademakers   28/12/97
 
 /*************************************************************************
@@ -61,8 +61,7 @@ public:
    virtual ~TGWindow();
 
    const TGWindow *GetParent() const { return fParent; }
-   virtual const TGWindow *GetMainFrame() const
-      { return (fParent == fClient->GetRoot()) ? this : fParent->GetMainFrame(); }
+   virtual const TGWindow *GetMainFrame() const;
 
    void MapWindow() { gVirtualX->MapWindow(fId); }
    void MapSubwindows() { gVirtualX->MapSubwindows(fId); }
