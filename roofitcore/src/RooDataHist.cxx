@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.cc,v 1.14 2001/12/13 23:08:44 verkerke Exp $
+ *    File: $Id: RooDataHist.cc,v 1.15 2002/01/08 02:18:04 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -64,7 +64,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 }
 
 
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data) :
+RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t weight) :
   RooTreeData(name,title,vars), _curWeight(0)
 {
   // Constructor of a data hist from an existing data collection (binned or unbinned)
@@ -88,13 +88,13 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
   // all missing dimensions will be projected.
 
   initialize() ;
-  add(data) ;
+  add(data,(const RooFormulaVar*)0,weight) ;
   appendToDir(this,kTRUE) ;
 }
 
 
 
-RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist) :
+RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t weight) :
   RooTreeData(name,title,vars), _curWeight(0)
 {
   // Constructor of a data hist from an TH1,TH2 or TH3
@@ -166,14 +166,14 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
 	if (zvar) {
 	  for (iz=0 ; iz < zvar->getFitBins() ; iz++) {
 	    zvar->setFitBin(iz) ;
-	    add(set,histo->GetBinContent(ix+1,iy+1,iz+1)) ;
+	    add(set,histo->GetBinContent(ix+1,iy+1,iz+1)*weight) ;
 	  }
 	} else {
-	  add(set,histo->GetBinContent(ix+1,iy+1)) ;	    
+	  add(set,histo->GetBinContent(ix+1,iy+1)*weight) ;	    
 	}
       }
     } else {
-      add(set,histo->GetBinContent(ix+1)) ;	    
+      add(set,histo->GetBinContent(ix+1)*weight) ;	    
     }
   }  
 }

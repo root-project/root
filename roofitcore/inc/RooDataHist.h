@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooDataHist.rdl,v 1.8 2001/11/14 18:42:37 verkerke Exp $
+ *    File: $Id: RooDataHist.rdl,v 1.9 2001/11/22 01:07:10 verkerke Exp $
  * Authors:
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
@@ -32,8 +32,8 @@ public:
   // Constructors, factory methods etc.
   RooDataHist() ; 
   RooDataHist(const char *name, const char *title, const RooArgSet& vars) ;
-  RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data) ;
-  RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist) ;
+  RooDataHist(const char *name, const char *title, const RooArgSet& vars, const RooAbsData& data, Double_t initWgt=1.0) ;
+  RooDataHist(const char *name, const char *title, const RooArgList& vars, const TH1* hist, Double_t initWgt=1.0) ;
   RooDataHist(const RooDataHist& other, const char* newname = 0) ;
   virtual TObject* Clone(const char* newname=0) const { return new RooDataHist(*this,newname?newname:GetName()) ; }
   virtual ~RooDataHist() ;
