@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.55 2003/09/15 09:46:06 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.56 2003/09/16 11:03:56 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -306,12 +306,13 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
    SetTitle(axis->GetTitle());
    SetTitleOffset(axis->GetTitleOffset());
    SetTitleSize(axis->GetTitleSize());
-   SetBit(TAxis::kCenterTitle,  axis->TestBit(TAxis::kCenterTitle));
-   SetBit(TAxis::kCenterLabels, axis->TestBit(TAxis::kCenterLabels));
-   SetBit(TAxis::kRotateTitle,  axis->TestBit(TAxis::kRotateTitle));
-   SetBit(TAxis::kNoExponent,   axis->TestBit(TAxis::kNoExponent));
-   SetBit(TAxis::kTickPlus,     axis->TestBit(TAxis::kTickPlus));
-   SetBit(TAxis::kTickMinus,    axis->TestBit(TAxis::kTickMinus));
+   SetBit(TAxis::kCenterTitle,   axis->TestBit(TAxis::kCenterTitle));
+   SetBit(TAxis::kCenterLabels,  axis->TestBit(TAxis::kCenterLabels));
+   SetBit(TAxis::kRotateTitle,   axis->TestBit(TAxis::kRotateTitle));
+   SetBit(TAxis::kNoExponent,    axis->TestBit(TAxis::kNoExponent));
+   SetBit(TAxis::kTickPlus,      axis->TestBit(TAxis::kTickPlus));
+   SetBit(TAxis::kTickMinus,     axis->TestBit(TAxis::kTickMinus));
+   SetBit(TAxis::kMoreLogLabels, axis->TestBit(TAxis::kMoreLogLabels));
    SetTimeFormat(axis->GetTimeFormat());
 }
 
@@ -542,8 +543,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Bool_t noExponent = TestBit(TAxis::kNoExponent);
 
 //*-*- If MoreLogLabels = kTRUE more Log Intermediate Labels are drawn.
-   Bool_t MoreLogLabels = kFALSE;
-   if (fAxis) MoreLogLabels = fAxis->TestBit(TAxis::kMoreLogLabels);
+   Bool_t MoreLogLabels = TestBit(TAxis::kMoreLogLabels);
 
 //*-*- the following parameters correspond to the pad range in NDC
 //*-*- and the WC coordinates in the pad
