@@ -3,8 +3,10 @@ del ..\..\stl\vector.dll
 del ..\..\stl\list.dll
 del ..\..\stl\deque.dll
 del ..\..\stl\map.dll
+del ..\..\stl\map2.dll
 del ..\..\stl\set.dll
 del ..\..\stl\multimap.dll
+del ..\..\stl\multimap2.dll
 del ..\..\stl\multiset.dll
 del ..\..\stl\valarray.dll
 del ..\..\stl\stack.dll
@@ -33,6 +35,10 @@ makecint -mk Makemap -dl map.dll -H mp.h  -cint  -Z0
 make.exe -f Makemap 
 move map.dll ..\..\stl\map.dll
 
+makecint -mk Makemap2 -dl map2.dll -DG__MAP2 -H mp.h  -cint  -Z0
+make.exe -f Makemap2 
+move map2.dll ..\..\stl\map2.dll
+
 makecint -mk Makeset -dl set.dll -H st.h  -cint  -Z0
 make.exe -f Makeset 
 move set.dll ..\..\stl\set.dll
@@ -45,6 +51,10 @@ del *.tds
 makecint -mk Makemmap -dl multimap.dll -H multmp.h  -cint  -Z0
 make.exe -f Makemmap 
 move multimap.dll ..\..\stl\multimap.dll
+
+makecint -mk Makemmap2 -dl multimap2.dll -DG__MAP2 -H multmp.h  -cint  -Z0
+make.exe -f Makemmap2 
+move multimap2.dll ..\..\stl\multimap2.dll
 
 makecint -mk Makemset -dl multiset.dll -H multst.h  -cint  -Z0
 make.exe -f Makemset 

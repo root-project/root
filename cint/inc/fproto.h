@@ -753,6 +753,10 @@ int G__fputerr G__P((int c));
 }
 #endif
 
+#else /* __CINT__ */
+
+#define G__fprinterr  fprintf
+
 #endif /* __CINT__ */
 
 

@@ -875,6 +875,250 @@ G__value *defined;
       break;
     }
 #endif
+#ifndef G__OLDIMPLEMENTATION1491
+    if(unsignedresult) {
+      unsigned long udefined=(unsigned long)G__int(*defined);
+      unsigned long uexpression=(unsigned long)G__int(expressionin);
+      switch(operator) {
+      case '\0':
+	defined->ref=expressionin.ref;
+	G__letint(defined,'h',udefined+uexpression);
+	break;
+      case '+': /* add */
+	G__letint(defined,'h',udefined+uexpression);
+	defined->ref=0;
+	break;
+      case '-': /* subtract */
+	G__letint(defined,'h',udefined-uexpression);
+	defined->ref=0;
+	break;
+      case '*': /* multiply */
+	if(defined->type==G__null.type) udefined=1;
+	G__letint(defined,'h',udefined*uexpression);
+	defined->ref=0;
+	break;
+      case '/': /* divide */
+	if(defined->type==G__null.type) udefined=1;
+	if(uexpression==0) {
+	  if(G__no_exec_compile) G__letdouble(defined,'i',0);
+	  else G__genericerror("Error: operator '/' divided by zero");
+	  return;
+	}
+	G__letint(defined,'h',udefined/uexpression);
+	defined->ref=0;
+	break;
+      case '%': /* modulus */
+	if(uexpression==0) {
+	  if(G__no_exec_compile) G__letdouble(defined,'i',0);
+	  else G__genericerror("Error: operator '%%' divided by zero");
+	  return;
+	}
+	G__letint(defined,'h',udefined%uexpression);
+	defined->ref=0;
+	break;
+      case '&': /* binary and */
+	if(defined->type==G__null.type) {
+	  G__letint(defined,'h',uexpression);
+	}
+	else {
+	  G__letint(defined,'h',udefined&uexpression);
+	}
+	defined->ref=0;
+	break;
+      case '|': /* binary or */
+	G__letint(defined,'h',udefined|uexpression);
+	defined->ref=0;
+	break;
+      case '^': /* binary exclusive or */
+	G__letint(defined,'h',udefined^uexpression);
+	defined->ref=0;
+	break;
+      case '~': /* binary inverse */
+	G__letint(defined,'h',~uexpression);
+	defined->ref=0;
+	break;
+      case 'A': /* logical and */
+	G__letint(defined,'h',udefined&&uexpression);
+	defined->ref=0;
+	break;
+      case 'O': /* logical or */
+	G__letint(defined,'h',udefined||uexpression);
+	defined->ref=0;
+	break;
+      case '>':
+	if(defined->type==G__null.type) 
+	  G__letint(defined,'h',uexpression);
+	else
+	  G__letint(defined,'h',udefined>uexpression);
+	defined->ref=0;
+	break;
+      case '<':
+	if(defined->type==G__null.type) 
+	  G__letint(defined,'h',uexpression);
+	else
+	  G__letint(defined,'h',udefined<uexpression);
+	defined->ref=0;
+	break;
+      case 'R': /* right shift */
+#ifndef G__OLDIMPLEMENTATION977
+	switch(defined->type) {
+	case 'b':
+	case 'r':
+	case 'h':
+	case 'k':
+	  {
+	    unsigned long uudefined=udefined;
+	    G__letint(defined,'k',uudefined>>uexpression);
+	  }
+	  break;
+	default: 
+	  G__letint(defined,'h',udefined>>uexpression);
+	  break;
+	}
+#else
+	G__letint(defined,'h',udefined>>uexpression);
+#endif
+	defined->ref=0;
+	break;
+      case 'L': /* left shift */
+	G__letint(defined,'h',udefined<<uexpression);
+	defined->ref=0;
+	break;
+      case '@': /* power */
+#ifndef G__OLDIMPLEMENTATION1123
+	if(G__asm_dbg) {
+	  G__fprinterr(G__serr,"Warning: Power operator, Cint special extension");
+	  G__printlinenum();
+	}
+#endif
+#ifndef G__OLDIMPLEMENTATION966
+	fdefined=1.0;
+	for(ig2=1;ig2<=uexpression;ig2++) fdefined *= udefined;
+	if(fdefined>(double)LONG_MAX||fdefined<(double)LONG_MIN) {
+	  G__genericerror("Error: integer overflow. Use 'double' for power operator");
+	}
+	lresult = (long)fdefined;
+#else
+	lresult=1;
+	for(ig2=1;ig2<=uexpression;ig2++) lresult *= udefined;
+#endif
+	G__letint(defined,'h',lresult);
+	defined->ref=0;
+	break;
+      case '!': 
+	G__letint(defined,'h',!uexpression);
+	defined->ref=0;
+	break;
+      case 'E': /* == */
+	G__letint(defined,'h',udefined==uexpression);
+	defined->ref=0;
+	break;
+      case 'N': /* != */
+	G__letint(defined,'h',udefined!=uexpression);
+	defined->ref=0;
+	break;
+      case 'G': /* >= */
+	G__letint(defined,'h',udefined>=uexpression);
+	defined->ref=0;
+	break;
+      case 'l': /* <= */
+	G__letint(defined,'h',udefined<=uexpression);
+	defined->ref=0;
+	break;
+#ifndef G__OLDIMPLEMENTATION470
+      case G__OPR_ADDASSIGN:
+	if(!G__no_exec_compile&&defined->ref) 
+	  G__intassignbyref(defined,udefined+uexpression);
+	break;
+      case G__OPR_SUBASSIGN:
+	if(!G__no_exec_compile&&defined->ref) 
+	  G__intassignbyref(defined,udefined-uexpression);
+	break;
+      case G__OPR_MODASSIGN:
+	if(!G__no_exec_compile&&defined->ref) 
+	  G__intassignbyref(defined,udefined%uexpression);
+	break;
+      case G__OPR_MULASSIGN:
+	if(!G__no_exec_compile&&defined->ref) 
+	  G__intassignbyref(defined,udefined*uexpression);
+	break;
+      case G__OPR_DIVASSIGN:
+	if(!G__no_exec_compile&&defined->ref) 
+	  G__intassignbyref(defined,udefined/uexpression);
+	break;
+      case G__OPR_RSFTASSIGN:
+	if(!G__no_exec_compile&&defined->ref) 
+	  G__intassignbyref(defined,udefined>>uexpression);
+	break;
+      case G__OPR_LSFTASSIGN:
+	if(!G__no_exec_compile&&defined->ref) 
+	  G__intassignbyref(defined,udefined<<uexpression);
+	break;
+      case G__OPR_BANDASSIGN:
+	if(!G__no_exec_compile&&defined->ref) 
+	  G__intassignbyref(defined,udefined&uexpression);
+	break;
+      case G__OPR_BORASSIGN:
+	if(!G__no_exec_compile&&defined->ref) 
+	  G__intassignbyref(defined,udefined|uexpression);
+	break;
+      case G__OPR_EXORASSIGN:
+	if(!G__no_exec_compile&&defined->ref) 
+	  G__intassignbyref(defined,udefined^uexpression);
+	break;
+      case G__OPR_ANDASSIGN:
+	if(!G__no_exec_compile&&defined->ref) 
+	  G__intassignbyref(defined,udefined&&uexpression);
+	break;
+      case G__OPR_ORASSIGN:
+	if(!G__no_exec_compile&&defined->ref) 
+	  G__intassignbyref(defined,udefined||uexpression);
+	break;
+#endif
+#ifndef G__OLDIMPLEMENTATION471
+      case G__OPR_POSTFIXINC:
+	if(!G__no_exec_compile&&expressionin.ref) {
+	  *defined = expressionin;
+	  G__intassignbyref(&expressionin,uexpression+1);
+#ifndef G__OLDIMPLEMENTATION1342
+	  defined->ref = 0;
+#endif
+	}
+	break;
+      case G__OPR_POSTFIXDEC:
+	if(!G__no_exec_compile&&expressionin.ref) {
+	  *defined = expressionin;
+	  G__intassignbyref(&expressionin,uexpression-1);
+#ifndef G__OLDIMPLEMENTATION1342
+	  defined->ref = 0;
+#endif
+	}
+	break;
+      case G__OPR_PREFIXINC:
+      if(!G__no_exec_compile&&expressionin.ref) {
+	G__intassignbyref(&expressionin,uexpression+1);
+	*defined = expressionin;
+      }
+      break;
+      case G__OPR_PREFIXDEC:
+	if(!G__no_exec_compile&&expressionin.ref) {
+	  G__intassignbyref(&expressionin,uexpression-1);
+	  *defined = expressionin;
+	}
+	break;
+#endif
+      default:
+#ifndef G__OLDIMPLEMENTATION999
+	G__fprinterr(G__serr,"Error: %s ",G__getoperatorstring(operator));
+#else
+	G__fprinterr(G__serr,"Error: %c ",operator);
+#endif
+	G__genericerror("Illegal operator for integer");
+	break;
+      }
+    }
+    else {
+#endif
     ldefined=G__int(*defined);
     lexpression=G__int(expressionin);
     switch(operator) {
@@ -1114,8 +1358,12 @@ G__value *defined;
 	G__genericerror("Illegal operator for integer");
 	break;
     }
+#ifndef G__OLDIMPLEMENTATION1491
+    }
+#else
 #ifndef G__OLDIMPLEMENTATION918
     defined->type += unsignedresult;
+#endif
 #endif
   }
 #ifndef G__OLDIMPLEMENTATION726
@@ -2570,23 +2818,49 @@ G__value *rval;
     lispointer = isupper(lval->type);
     rispointer = isupper(rval->type);
     if(0==lispointer && 0==rispointer) {
-      switch(opr) {
-      case G__OPR_ADD: return(G__OPR_ADD_II);
-      case G__OPR_SUB: return(G__OPR_SUB_II);
-      case G__OPR_MUL: return(G__OPR_MUL_II);
-      case G__OPR_DIV: return(G__OPR_DIV_II);
-      default:
-	switch(lval->type) {
-	case 'i':
-	  switch(opr) {
-	  case G__OPR_ADDASSIGN: return(G__OPR_ADDASSIGN_II);
-	  case G__OPR_SUBASSIGN: return(G__OPR_SUBASSIGN_II);
-	  case G__OPR_MULASSIGN: return(G__OPR_MULASSIGN_II);
-	  case G__OPR_DIVASSIGN: return(G__OPR_DIVASSIGN_II);
+#ifndef G__OLDIMPLEMENTATION1491
+      if('k'==lval->type || 'h'==lval->type ||
+	 'k'==rval->type || 'h'==rval->type) {
+	switch(opr) {
+	case G__OPR_ADD: return(G__OPR_ADD_UU);
+	case G__OPR_SUB: return(G__OPR_SUB_UU);
+	case G__OPR_MUL: return(G__OPR_MUL_UU);
+	case G__OPR_DIV: return(G__OPR_DIV_UU);
+	default:
+	  switch(lval->type) {
+	  case 'i':
+	    switch(opr) {
+	    case G__OPR_ADDASSIGN: return(G__OPR_ADDASSIGN_UU);
+	    case G__OPR_SUBASSIGN: return(G__OPR_SUBASSIGN_UU);
+	    case G__OPR_MULASSIGN: return(G__OPR_MULASSIGN_UU);
+	    case G__OPR_DIVASSIGN: return(G__OPR_DIVASSIGN_UU);
+	    }
 	  }
+	  break;
 	}
-	break;
       }
+      else {
+#endif
+	switch(opr) {
+	case G__OPR_ADD: return(G__OPR_ADD_II);
+	case G__OPR_SUB: return(G__OPR_SUB_II);
+	case G__OPR_MUL: return(G__OPR_MUL_II);
+	case G__OPR_DIV: return(G__OPR_DIV_II);
+	default:
+	  switch(lval->type) {
+	  case 'i':
+	    switch(opr) {
+	    case G__OPR_ADDASSIGN: return(G__OPR_ADDASSIGN_II);
+	    case G__OPR_SUBASSIGN: return(G__OPR_SUBASSIGN_II);
+	    case G__OPR_MULASSIGN: return(G__OPR_MULASSIGN_II);
+	    case G__OPR_DIVASSIGN: return(G__OPR_DIVASSIGN_II);
+	    }
+	  }
+	  break;
+	}
+#ifndef G__OLDIMPLEMENTATION1491
+      }
+#endif
     }
   }
   else if(lisdouble && risdouble) {

@@ -3849,6 +3849,16 @@ struct G__var_array *varglobal,*varlocal;
 	}
       }
 #endif
+
+#ifndef G__OLDIMPLEMENTATION1492
+      if(1==G__decl && 1==G__getarraydim && 0==G__struct_offset &&
+	 var->p[ig15]<100) {
+	/* prevent segv in following example. A bit tricky.
+q	*  void f(const int n) { int a[n]; } */
+	G__abortbytecode();
+	return(result);
+      }
+#endif
       
       switch(var->type[ig15]) {
 	

@@ -19,7 +19,7 @@ using namespace std;
 #pragma link C++ nestedtypedef;
 #pragma link C++ nestedclass;
 
-#if 0
+#ifdef G__MAP2
 #pragma link C++ class multimap<long,int>;
 #pragma link C++ class multimap<long,long>;
 #pragma link C++ class multimap<long,double>;
@@ -33,6 +33,7 @@ using namespace std;
 #pragma link C++ class multimap<double,char*>;
 #endif
 
+#ifndef G__MAP2
 #pragma link C++ class multimap<char*,int>;
 #pragma link C++ class multimap<char*,long>;
 #pragma link C++ class multimap<char*,double>;
@@ -46,6 +47,9 @@ using namespace std;
 #pragma link C++ class multimap<string,void*>;
 //#pragma link C++ class multimap<string,string>;
 #endif
+
+#endif // G__MAP2
+
 #endif
 
 

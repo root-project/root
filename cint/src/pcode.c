@@ -4835,6 +4835,109 @@ long ig15;
   buf->obj.d = *(long*)buf->ref;
 }
 
+#ifndef G__OLDIMPLEMENTATION1491
+/****************************************************************
+* G__OP2_OPTIMIZED_UU
+****************************************************************/
+
+/*************************************************************************
+* G__OP2_plus_uu()
+*************************************************************************/
+void G__OP2_plus_uu(bufm1,bufm2)
+G__value *bufm1;
+G__value *bufm2;
+{
+  bufm2->obj.ulo = bufm2->obj.ulo + bufm1->obj.ulo;
+  bufm2->type = 'h';
+  bufm2->tagnum = bufm2->typenum = -1;
+  bufm2->ref = 0;
+}
+/*************************************************************************
+* G__OP2_minus_uu()
+*************************************************************************/
+void G__OP2_minus_uu(bufm1,bufm2)
+G__value *bufm1;
+G__value *bufm2;
+{
+  bufm2->obj.ulo = bufm2->obj.ulo - bufm1->obj.ulo;
+  bufm2->type = 'h';
+  bufm2->tagnum = bufm2->typenum = -1;
+  bufm2->ref = 0;
+}
+/*************************************************************************
+* G__OP2_multiply_uu()
+*************************************************************************/
+void G__OP2_multiply_uu(bufm1,bufm2)
+G__value *bufm1;
+G__value *bufm2;
+{
+  bufm2->obj.ulo = bufm2->obj.ulo * bufm1->obj.ulo;
+  bufm2->type = 'h';
+  bufm2->tagnum = bufm2->typenum = -1;
+  bufm2->ref = 0;
+}
+/*************************************************************************
+* G__OP2_divide_uu()
+*************************************************************************/
+void G__OP2_divide_uu(bufm1,bufm2)
+G__value *bufm1;
+G__value *bufm2;
+{
+  if(0==bufm1->obj.ulo) {
+    G__genericerror("Error: operator '/' divided by zero");
+    return;
+  }
+  bufm2->obj.ulo = bufm2->obj.ulo / bufm1->obj.ulo;
+  bufm2->type = 'h';
+  bufm2->tagnum = bufm2->typenum = -1;
+  bufm2->ref = 0;
+}
+/*************************************************************************
+* G__OP2_addassign_uu()
+*************************************************************************/
+void G__OP2_addassign_uu(bufm1,bufm2)
+G__value *bufm1;
+G__value *bufm2;
+{
+  bufm2->obj.ulo += bufm1->obj.ulo;
+  *(unsigned int*)bufm2->ref=(unsigned int)bufm2->obj.ulo;
+}
+/*************************************************************************
+* G__OP2_subassign_uu()
+*************************************************************************/
+void G__OP2_subassign_uu(bufm1,bufm2)
+G__value *bufm1;
+G__value *bufm2;
+{
+  bufm2->obj.ulo -= bufm1->obj.ulo;
+  *(unsigned int*)bufm2->ref=(unsigned int)bufm2->obj.ulo;
+}
+/*************************************************************************
+* G__OP2_mulassign_uu()
+*************************************************************************/
+void G__OP2_mulassign_uu(bufm1,bufm2)
+G__value *bufm1;
+G__value *bufm2;
+{
+  bufm2->obj.ulo *= bufm1->obj.ulo;
+  *(unsigned int*)bufm2->ref=(unsigned int)bufm2->obj.ulo;
+}
+/*************************************************************************
+* G__OP2_divassign_uu()
+*************************************************************************/
+void G__OP2_divassign_uu(bufm1,bufm2)
+G__value *bufm1;
+G__value *bufm2;
+{
+  if(0==bufm1->obj.ulo) {
+    G__genericerror("Error: operator '/' divided by zero");
+    return;
+  }
+  bufm2->obj.ulo /= bufm1->obj.ulo;
+  *(unsigned int*)bufm2->ref=(unsigned int)bufm2->obj.ulo;
+}
+
+#endif
 
 #ifndef G__OLDIMPLEMENTATION572
 /****************************************************************
@@ -8189,6 +8292,32 @@ int pc;
   case G__OPR_DIVASSIGN:
     G__asm_inst[pc+1] = (long)G__OP2_divassign;
     break;
+#ifndef G__OLDIMPLEMENTATION1491
+  case G__OPR_ADD_UU:
+    G__asm_inst[pc+1] = (long)G__OP2_plus_uu;
+    break;
+  case G__OPR_SUB_UU:
+    G__asm_inst[pc+1] = (long)G__OP2_minus_uu;
+    break;
+  case G__OPR_MUL_UU:
+    G__asm_inst[pc+1] = (long)G__OP2_multiply_uu;
+    break;
+  case G__OPR_DIV_UU:
+    G__asm_inst[pc+1] = (long)G__OP2_divide_uu;
+    break;
+  case G__OPR_ADDASSIGN_UU:
+    G__asm_inst[pc+1] = (long)G__OP2_addassign_uu;
+    break;
+  case G__OPR_SUBASSIGN_UU:
+    G__asm_inst[pc+1] = (long)G__OP2_subassign_uu;
+    break;
+  case G__OPR_MULASSIGN_UU:
+    G__asm_inst[pc+1] = (long)G__OP2_mulassign_uu;
+    break;
+  case G__OPR_DIVASSIGN_UU:
+    G__asm_inst[pc+1] = (long)G__OP2_divassign_uu;
+    break;
+#endif
   case G__OPR_ADD_II:
     G__asm_inst[pc+1] = (long)G__OP2_plus_ii;
     break;

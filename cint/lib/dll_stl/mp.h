@@ -10,6 +10,7 @@ using namespace std;
 #endif
 
 #ifdef __MAKECINT__
+
 #ifndef G__MAP_DLL
 #define G__MAP_DLL
 #endif
@@ -17,7 +18,7 @@ using namespace std;
 #pragma link C++ nestedtypedef;
 #pragma link C++ nestedclass;
 
-#if 0
+#ifdef G__MAP2
 #pragma link C++ class map<long,int>;
 #pragma link C++ class map<long,long>;
 #pragma link C++ class map<long,double>;
@@ -31,6 +32,7 @@ using namespace std;
 #pragma link C++ class map<double,char*>;
 #endif
 
+#ifndef G__MAP2
 #pragma link C++ class map<char*,int>;
 #pragma link C++ class map<char*,long>;
 #pragma link C++ class map<char*,double>;
@@ -44,6 +46,7 @@ using namespace std;
 #pragma link C++ class map<string,void*>;
 //#pragma link C++ class map<string,string>;
 #endif
-#endif
 
+#endif // G__MAP2
 
+#endif // __MAKECINT__

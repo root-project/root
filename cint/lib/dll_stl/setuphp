@@ -1,3 +1,6 @@
+# This script is not used any more, with the change of operator new
+# overloading scheme.
+
 #rm ../../stl/iterator.dll 
 rm ../../stl/string.dll 
 rm ../../stl/vector.dll 

@@ -4090,8 +4090,13 @@ int k;
 	   *  reference and pointer to pointer can not happen at once */
 	  fprintf(fp,"libp->para[%d].ref?*(%s*)libp->para[%d].ref:*(%s*)(&G__Mlong(libp->para[%d]))"
 #ifndef G__OLDIMPLEMENTATION1111
+#ifndef G__OLDIMPLEMENTATION1493
+		  ,k,G__type2string(type,tagnum,typenum,0,isconst) 
+		  ,k,G__type2string(type,tagnum,typenum,0,isconst) ,k);
+#else
 		  ,k,G__type2string(type,tagnum,typenum,0,0) 
 		  ,k,G__type2string(type,tagnum,typenum,0,0) ,k);
+#endif
 #else
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,0) 
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,0) ,k);
@@ -4102,8 +4107,13 @@ int k;
 	}
 	else {
 	  fprintf(fp,"libp->para[%d].ref?*(%s**)libp->para[%d].ref:*(%s**)(&G__Mlong(libp->para[%d]))"
+#ifndef G__OLDIMPLEMENTATION1493
+		  ,k,G__type2string(tolower(type),tagnum,typenum,0,isconst) 
+		  ,k,G__type2string(tolower(type),tagnum,typenum,0,isconst),k);
+#else
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,0) 
 		  ,k,G__type2string(tolower(type),tagnum,typenum,0,0) ,k);
+#endif
 	  /* above is , in fact, not good. G__type2string returns pointer to
 	   * static buffer. This relies on the fact that the 2 calls are
 	   * identical */
@@ -6870,11 +6880,17 @@ int link_stub;
 	if (rf1 == 1) G__struct.rootflag[i] = G__NOSTREAMER;
 	if (rf2 == 1) G__struct.rootflag[i] |= G__NOINPUTOPERATOR;
 	if (rf3 == 1) {
+#ifndef G__OLDIMPLEMENTATION1490
 	  G__struct.rootflag[i] |= G__USEBYTECOUNT;
 	  if(rf1) {
-            G__struct.rootflag[i] &= ~G__NOSTREAMER;
+	    G__struct.rootflag[i] &= ~G__NOSTREAMER;
 	    G__fprinterr(G__serr, "option + mutual exclusive with -, + prevails\n");
-          }
+	  }
+#else
+	  G__struct.rootflag[i] = G__USEBYTECOUNT;
+	  if(rf1 || rf2) 
+	    G__fprinterr(G__serr, "option + mutual exclusive with either - or !\n");
+#endif
 	}
       }
 #endif

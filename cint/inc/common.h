@@ -174,6 +174,23 @@
 #define G__OPR_POSTFIXDEC_K  0x812
 #define G__OPR_PREFIXDEC_K   0x813
 
+#ifndef G__OLDIMPLEMENTATION1491
+#define G__OPR_ADD_UU        0xa00
+#define G__OPR_SUB_UU        0xa01
+#define G__OPR_MUL_UU        0xa02
+#define G__OPR_DIV_UU        0xa03
+#define G__OPR_LT_UU         0xa04
+#define G__OPR_GT_UU         0xa05
+#define G__OPR_LE_UU         0xa06
+#define G__OPR_GE_UU         0xa07
+#define G__OPR_EQ_UU         0xa08
+#define G__OPR_NE_UU         0xa09
+#define G__OPR_ADDASSIGN_UU  0xa0a
+#define G__OPR_SUBASSIGN_UU  0xa0b
+#define G__OPR_MULASSIGN_UU  0xa0c
+#define G__OPR_DIVASSIGN_UU  0xa0d
+#endif
+
 #define G__OPR_ADD_II        0x100
 #define G__OPR_SUB_II        0x101
 #define G__OPR_MUL_II        0x102
@@ -218,6 +235,7 @@
 #define G__OPR_MULASSIGN_FD  0x30c
 #define G__OPR_DIVASSIGN_FD  0x30d
 #endif /* ON572 */
+
 
 /**************************************************************************
 * G__reftype, var->reftype[], ifunc->reftype[] flag

@@ -4,8 +4,10 @@ rm ../../stl/vector.dll
 rm ../../stl/list.dll 
 rm ../../stl/deque.dll 
 rm ../../stl/map.dll 
+rm ../../stl/map2.dll 
 rm ../../stl/set.dll 
 rm ../../stl/multimap.dll 
+rm ../../stl/multimap2.dll 
 rm ../../stl/multiset.dll 
 rm ../../stl/stack.dll 
 rm ../../stl/queue.dll 
@@ -37,6 +39,10 @@ makecint -mk Makemap -dl map.dll -H mp.h  -cint -Z0
 make -f Makemap 
 mv map.dll ../../stl/map.dll
 
+makecint -mk Makemap2 -dl map2.dll -DG__MAP2 -H mp.h  -cint -Z0
+make -f Makemap2 
+mv map2.dll ../../stl/map2.dll
+
 makecint -mk Makeset -dl set.dll -H st.h  -cint -Z0
 make -f Makeset
 mv set.dll ../../stl/set.dll
@@ -44,6 +50,10 @@ mv set.dll ../../stl/set.dll
 makecint -mk Makemmap -dl multimap.dll -H multmp.h  -cint -Z0
 make -f Makemmap 
 mv multimap.dll ../../stl/multimap.dll
+
+makecint -mk Makemmap2 -dl multimap2.dll -DG__MAP2 -H multmp.h  -cint -Z0
+make -f Makemmap2
+mv multimap2.dll ../../stl/multimap2.dll
 
 makecint -mk Makemset -dl multiset.dll -H multst.h  -cint -Z0
 make -f Makemset

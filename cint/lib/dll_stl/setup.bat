@@ -3,8 +3,10 @@ del ..\..\stl\vector.dll
 del ..\..\stl\list.dll
 del ..\..\stl\deque.dll
 del ..\..\stl\map.dll
+del ..\..\stl\map2.dll
 del ..\..\stl\set.dll
 del ..\..\stl\multimap.dll
+del ..\..\stl\multimap2.dll
 del ..\..\stl\multiset.dll
 del ..\..\stl\valarray.dll
 del ..\..\stl\stack.dll
@@ -33,6 +35,10 @@ makecint -mk Makemap -dl map.dll -H mp.h  -cint -Z0
 nmake -f Makemap CFG="map - Win32 Release"
 move Release\map.dll ..\..\stl\map.dll
 
+makecint -mk Makemap2 -dl map2.dll -DG__MAP2 -H mp.h  -cint -Z0
+nmake -f Makemap2 CFG="map2 - Win32 Release"
+move Release\map2.dll ..\..\stl\map2.dll
+
 makecint -mk Makeset -dl set.dll -H st.h  -cint -Z0
 nmake -f Makeset CFG="set - Win32 Release"
 move Release\set.dll ..\..\stl\set.dll
@@ -45,6 +51,10 @@ del Release\*.pch
 makecint -mk Makemmap -dl multimap.dll -H multmp.h  -cint  -Z0
 nmake -f Makemmap CFG="multimap - Win32 Release"
 move Release\multimap.dll ..\..\stl\multimap.dll
+
+makecint -mk Makemmap2 -dl multimap2.dll -DG__MAP2 -H multmp.h  -cint  -Z0
+nmake -f Makemmap2 CFG="multimap2 - Win32 Release"
+move Release\multimap2.dll ..\..\stl\multimap2.dll
 
 makecint -mk Makemset -dl multiset.dll -H multst.h  -cint  -Z0
 nmake -f Makemset CFG="multiset - Win32 Release"
