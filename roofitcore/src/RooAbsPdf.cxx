@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.cc,v 1.7 2001/05/14 22:56:53 david Exp $
+ *    File: $Id: RooAbsPdf.cc,v 1.8 2001/05/15 06:54:24 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -14,11 +14,13 @@
 #include <iostream.h>
 #include <math.h>
 #include "TObjString.h"
+#include "TList.h"
 #include "TH1.h"
 #include "RooFitCore/RooAbsPdf.hh"
 #include "RooFitCore/RooDataSet.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooArgProxy.hh"
+#include "RooFitCore/RooRealProxy.hh"
 #include "RooFitCore/RooFitContext.hh"
 #include "RooFitCore/RooRealVar.hh"
 
@@ -164,6 +166,112 @@ void RooAbsPdf::setTraceCounter(Int_t value)
 
 
 
+Int_t RooAbsPdf::getAnalyticalIntegral(RooArgSet& allDeps, RooArgSet& analDeps) const
+{
+  // By default we do supply any analytical integrals
+  return 0 ;
+}
+
+
+
+Bool_t RooAbsPdf::tryIntegral(const RooArgSet& allDeps, RooArgSet& analDeps, 
+			      const RooArgProxy& a) const
+{
+  TList nameList ;
+  nameList.Add(new TObjString(a.absArg()->GetName())) ;
+  Bool_t result = tryIntegral(allDeps,analDeps,nameList) ;
+  nameList.Delete() ;
+  return result ;
+}
+
+
+
+Bool_t RooAbsPdf::tryIntegral(const RooArgSet& allDeps, RooArgSet& analDeps, 
+			      const RooArgProxy& a, const RooArgProxy& b) const
+{
+  TList nameList ;
+  nameList.Add(new TObjString(a.absArg()->GetName())) ;
+  nameList.Add(new TObjString(b.absArg()->GetName())) ;  
+  Bool_t result = tryIntegral(allDeps,analDeps,nameList) ;
+  nameList.Delete() ;
+  return result ;
+}
+
+
+
+Bool_t RooAbsPdf::tryIntegral(const RooArgSet& allDeps, RooArgSet& analDeps, 
+			      const RooArgProxy& a, const RooArgProxy& b,
+			      const RooArgProxy& c) const
+{
+  TList nameList ;
+  nameList.Add(new TObjString(a.absArg()->GetName())) ;
+  nameList.Add(new TObjString(b.absArg()->GetName())) ;
+  nameList.Add(new TObjString(c.absArg()->GetName())) ;
+  Bool_t result = tryIntegral(allDeps,analDeps,nameList) ;
+  nameList.Delete() ;
+  return result ;
+}
+
+
+
+Bool_t RooAbsPdf::tryIntegral(const RooArgSet& allDeps, RooArgSet& analDeps, 
+			      const RooArgProxy& a, const RooArgProxy& b,
+			      const RooArgProxy& c, const RooArgProxy& d) const
+{
+  TList nameList ;
+  nameList.Add(new TObjString(a.absArg()->GetName())) ;
+  nameList.Add(new TObjString(b.absArg()->GetName())) ;
+  nameList.Add(new TObjString(c.absArg()->GetName())) ;
+  nameList.Add(new TObjString(d.absArg()->GetName())) ;
+  Bool_t result = tryIntegral(allDeps,analDeps,nameList) ;
+  nameList.Delete() ;
+  return result ;
+}
+
+
+Bool_t RooAbsPdf::tryIntegral(const RooArgSet& allDeps, RooArgSet& analDeps, TList& nameList) const
+{
+  TIterator *nIter = nameList.MakeIterator() ;
+  TIterator *dIter = allDeps.MakeIterator()  ;
+  RooArgSet matchList ;
+
+  cout << "tryIntegral: nameList = " ; nameList.Print() ;
+
+  // Loop over all dependent/proxy-name combinations
+  TObjString* name ;
+  RooAbsArg* arg ;
+  while (name=(TObjString*)nIter->Next()){    
+    while (arg=(RooAbsArg*)dIter->Next()){        
+      // If names match, add dependent to list
+      if (!name->String().CompareTo(arg->GetName())) {
+	matchList.add(*arg) ;
+      } 
+    }
+  }
+
+  delete dIter ;
+  delete nIter ;    
+  if (matchList.GetSize() == nameList.GetSize()) {
+    analDeps.add(matchList) ;
+    return kTRUE ;
+  }
+
+  return kFALSE ;
+}
+
+
+
+
+
+
+Double_t RooAbsPdf::analyticalIntegral(Int_t code) const
+{
+  // By default no analytical integrals are implemented
+  return getVal() ;
+}
+
+
+
 void RooAbsPdf::attachDataSet(const RooDataSet* set) 
 {
   // Replace server nodes with names matching the dataset variable names
@@ -284,8 +392,11 @@ void RooAbsPdf::printToStream(ostream& os, PrintOption opt, TString indent) cons
 
   if(opt >= Verbose) {
     os << indent << "--- RooAbsPdf ---" << endl;
-    os << " Normalization integral: " << endl ;
-    _norm->printToStream(os,Standard,TString(indent).Append("  ")) ;
+    if (_norm) {
+      os << " Normalization integral: " << endl ;
+      _norm->printToStream(os,Verbose,TString(indent).Append("  ")) ;
+      _norm->printToStream(os,Standard,TString(indent).Append("  ")) ;
+    }
   }
 }
 

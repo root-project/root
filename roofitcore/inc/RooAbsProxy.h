@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsProxy.rdl,v 1.1 2001/05/11 06:29:59 verkerke Exp $
+ *    File: $Id: RooAbsProxy.rdl,v 1.2 2001/05/14 22:54:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -34,7 +34,7 @@ protected:
   friend class RooAbsPdf ;
 
   inline Bool_t isValueServer() const { return _valueServer ; }
-  inline Bool_t isShapeServer() const { return _valueServer ; }
+  inline Bool_t isShapeServer() const { return _shapeServer ; }
   virtual Bool_t changePointer(const RooArgSet& newServerSet) = 0 ;
   void changeDataSet(const RooDataSet* newDataSet) ;
 

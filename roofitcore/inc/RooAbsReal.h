@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.rdl,v 1.13 2001/05/14 05:22:54 verkerke Exp $
+ *    File: $Id: RooAbsReal.rdl,v 1.14 2001/05/14 22:54:19 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -42,10 +42,6 @@ public:
   // Bind ourselves with one particular real variable
   RooRealFunc1D operator()(RooRealVar &var) const;
 
-  // Analytical integration support
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars) const ;
-  virtual Double_t analyticalIntegral(Int_t code) const ;
-
   // Plotting options
   inline Double_t getPlotMin() const { return _plotMin; }
   inline Double_t getPlotMax() const { return _plotMax; }
@@ -82,9 +78,6 @@ protected:
   Double_t traceEval() const ;
   virtual Bool_t traceEvalHook(Double_t value) const { return kFALSE ;}
   virtual Double_t evaluate() const = 0 ;
-
-  // Analytical integration support
-  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, const RooArgProxy& a) const ;
 
   // Hooks for RooDataSet interface
   virtual void syncCache(const RooDataSet* dset=0) { getVal(dset) ; }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.cc,v 1.11 2001/05/14 05:22:55 verkerke Exp $
+ *    File: $Id: RooRealIntegral.cc,v 1.12 2001/05/14 22:54:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -26,77 +26,136 @@ ClassImp(RooRealIntegral)
 
 
 RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
-				 const RooAbsReal& function, RooArgSet& depList,
+				 const RooAbsPdf& function, RooArgSet& depList,
 				 Int_t maxSteps, Double_t eps) : 
-  RooAbsReal(name,title), _function((RooAbsReal*)&function), _mode(0),
+  RooAbsReal(name,title), _function((RooAbsPdf*)&function), _mode(0),
   _intList("intList"), _sumList("sumList"), _numIntEngine(0) 
 {
   RooArgSet intDepList ;
 
-  // Loop over list of servers of integrand
-  // to determine list of variables to integrate over
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  // * A) Make list of servers that can be integrated analytically *
+  //      Add all parameters/dependents as value/shape servers     *
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+  RooArgSet anIntOKDepList ;
   TIterator *sIter = function.serverIterator() ;
   RooAbsArg *arg ;
   while(arg=(RooAbsArg*)sIter->Next()) {
 
     // Dependent or parameter?
     if (!arg->dependsOn(depList)) {
-      // Add to parameter as value server
+
+      // Add parameter as value server
       addServer(*arg,kTRUE,kFALSE) ;
       continue ;
+
+    } else {
+
+      // Add final dependents of arg as shape servers
+      RooArgSet *argDeps = arg->getDependents(&depList) ;
+      TIterator *adIter = argDeps->MakeIterator() ;
+      RooAbsArg *argDep ;
+      while(argDep = (RooAbsArg*)adIter->Next()) {
+	addServer(*argDep,kFALSE,kTRUE) ;
+      }
+      delete argDeps ;      
     }
     
-    Bool_t expandArg(kTRUE) ;
-
+    Bool_t depOK(kFALSE) ;
     // Check for integratable AbsRealLValue
     if (arg->isDerived()) {
       RooAbsRealLValue    *realArgLV = dynamic_cast<RooAbsRealLValue*>(arg) ;
       RooAbsCategoryLValue *catArgLV = dynamic_cast<RooAbsCategoryLValue*>(arg) ;
-      if ((realArgLV && realArgLV->isSafeForIntegration(depList)) || catArgLV) {
+      if ((realArgLV && (realArgLV->isJacobianOK(depList)!=0)) || catArgLV) {
 	
-	// check for overlaps
+	// Derived LValue with valid jacobian
+	depOK = kTRUE ;
+	
+	// Now, check for overlaps
 	Bool_t overlapOK = kTRUE ;
 	RooAbsArg *otherArg ;
-	TIterator* sIter2 = function.serverIterator() ;
-	
+	TIterator* sIter2 = function.serverIterator() ;	
 	while(otherArg=(RooAbsArg*)sIter2->Next()) {
 	  // skip comparison with self
 	  if (arg==otherArg) continue ;
 	  if (arg->overlaps(*otherArg)) {
 	    overlapOK=kFALSE ;
 	  }
-	}
-	
-	// All clear for integration over this lvalue
-	if (overlapOK) expandArg=kFALSE ;      
+	}      	
+	if (!overlapOK) depOK=kFALSE ;      
+
 	delete sIter2 ;
       }
+    } else {
+      // Fundamental types are always OK
+      depOK = kTRUE ;
     }
     
-    // Add server (directly or indirectly) to integration list
-    if (expandArg && arg->isDerived()) {
-      // Add final dependents of this direct server to integration list
-      RooArgSet *argDeps = arg->getDependents(&depList) ;
-      intDepList.add(*argDeps) ;
-      argDeps->Print() ;
-      delete argDeps ;
-    } else {
-      // Add server to integration list
-      intDepList.add(*arg) ;
+    // Add server to list of dependents that are OK for analytical integration
+    if (depOK) anIntOKDepList.add(*arg) ;
+  }
+
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  // * B) interact with function to make list of objects actually integrated analytically  *
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+  RooArgSet anIntDepList ;
+  _mode = _function->getAnalyticalIntegral(anIntOKDepList,anIntDepList) ;    
+
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  // * C) Make list of numerical integration variables consisting of:            *  
+  // *   - Category dependents of RealLValues in analytical integration          *  
+  // *   - Expanded server lists of server that are not analytically integrated  *
+  // *    Make Jacobian list with analytically integrated RealLValues            *
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+  RooArgSet numIntDepList ;
+
+  // Loop over actually analytically integrated dependents
+  TIterator* aiIter = anIntDepList.MakeIterator() ;
+  while (arg=(RooAbsArg*)aiIter->Next()) {    
+
+    // Process only derived RealLValues
+    if (arg->IsA()->InheritsFrom(RooAbsRealLValue::Class()) && arg->isDerived()) {
+
+      // Add to list of Jacobians to calculate
+      _jacList.add(*arg) ;
+
+      // Add category dependent of LValueReal used in integration
+      RooAbsArg *argDep ;
+      RooArgSet *argDepList = arg->getDependents(&depList) ;
+      TIterator *adIter = argDepList->MakeIterator() ;
+      while (argDep=(RooAbsArg*)adIter->Next()) {
+	if (argDep->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
+	  numIntDepList.add(*argDep) ;
+	}
+      }
+      delete adIter ;
+      delete argDepList ;
     }
   }
-  
-  // Register all args in intDepList as shape server
-  TIterator* iIter = intDepList.MakeIterator() ;
-  while (arg=(RooAbsArg*)iIter->Next()) {
-    addServer(*arg,kFALSE,kTRUE) ;
-  }
-  delete iIter ;
+  delete aiIter ;
 
-  // Determine which parts needs to be integrated numerically
-  RooArgSet numIntDepList("numIntDepList") ;
-  _mode = _function->getAnalyticalIntegral(intDepList,numIntDepList) ;    
-  
+  // Loop again over function servers to add remaining numeric integrations
+  sIter->Reset() ;
+  while(arg=(RooAbsArg*)sIter->Next()) {
+
+    // Process only servers that are not treated analytically
+    if (!anIntDepList.find(arg->GetName()) && arg->dependsOn(depList)) {
+      
+      // Expand server in final dependents and add to numerical integration list      
+      RooArgSet *argDeps = arg->getDependents(&depList) ;
+      argDeps->Print("v") ;
+      numIntDepList.add(*argDeps) ;
+      delete argDeps ; 
+    }
+  }
+
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+  // * D) Split numeric list in integration list and summation list  *
+  // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
   // Split numeric integration list in summation and integration lists
   TIterator* numIter=numIntDepList.MakeIterator() ;
   while (arg=(RooAbsArg*)numIter->Next()) {
@@ -157,7 +216,7 @@ Double_t RooRealIntegral::evaluate() const
   RooArgSet *saveSum = _sumList.snapshot() ;
 
   // Evaluate integral
-  Double_t retVal = sum() ;
+  Double_t retVal = sum() / jacobianProduct() ;
 
   // Restore integral dependent values
   _intList=*saveInt ;
@@ -169,6 +228,21 @@ Double_t RooRealIntegral::evaluate() const
 }
 
 
+Double_t RooRealIntegral::jacobianProduct() const 
+{
+  Double_t jacProd(1) ;
+
+  TIterator *jIter = _jacList.MakeIterator() ;
+  RooAbsRealLValue* arg ;
+  while (arg=(RooAbsRealLValue*)jIter->Next()) {
+    jacProd *= arg->jacobian() ;
+  }
+  delete jIter ;
+
+  return jacProd ;
+}
+
+
 Double_t RooRealIntegral::sum() const
 {
   if (_sumList.GetSize()!=0) {
@@ -177,7 +251,7 @@ Double_t RooRealIntegral::sum() const
     Double_t total(0) ;
     RooMultiCatIter sumIter(_sumList) ;
     while(sumIter.Next()) {
-      total += integrate() ;
+      total += integrate() / jacobianProduct() ;
     }
     return total ;
 

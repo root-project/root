@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooRealIntegral.rdl,v 1.6 2001/05/10 18:58:48 verkerke Exp $
+ *    File: $Id: RooRealIntegral.rdl,v 1.7 2001/05/14 22:54:21 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -15,6 +15,7 @@
 
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooAbsPdf.hh"
 
 class RooArgSet ;
 class TH1F ;
@@ -27,7 +28,7 @@ public:
 
   // Constructors, assignment etc
   inline RooRealIntegral() { }
-  RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, 
+  RooRealIntegral(const char *name, const char *title, const RooAbsPdf& function, 
 		  RooArgSet& depList, Int_t maxSteps=20, Double_t eps=1e-6) ;
   RooRealIntegral(const RooRealIntegral& other, const char* name=0);
   virtual TObject* clone() const { return new RooRealIntegral(*this); }
@@ -43,6 +44,7 @@ protected:
 
   virtual Double_t sum() const ;
   virtual Double_t integrate() const ;
+  virtual Double_t jacobianProduct() const ;
 
   // Evaluation and validation implementation
   Double_t evaluate() const ;
@@ -52,9 +54,10 @@ protected:
   virtual Bool_t redirectServersHook(const RooArgSet& newServerList, Bool_t mustReplaceAll=kFALSE) ;  
 
   // Function pointer and integrands list
-  RooAbsReal* _function ;
+  RooAbsPdf* _function ;
   mutable RooArgSet _sumList ;
   mutable RooArgSet _intList ;
+  mutable RooArgSet _jacList ;
   Int_t _mode ;
 
   mutable RooAbsIntegrator* _numIntEngine ;

@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsReal.cc,v 1.18 2001/05/11 21:06:22 verkerke Exp $
+ *    File: $Id: RooAbsReal.cc,v 1.19 2001/05/11 23:37:40 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -92,51 +92,6 @@ Double_t RooAbsReal::traceEval() const
 
   return value ;
 }
-
-
-Int_t RooAbsReal::getAnalyticalIntegral(RooArgSet& allDeps, RooArgSet& numDeps) const
-{
-  // By default we do supply any analytical integrals
-
-  // Indicate all variables need to be integrated numerically
-  TIterator* iter = allDeps.MakeIterator() ;
-  RooAbsArg* arg ;
-  while (arg=(RooAbsArg*)iter->Next()) {
-    numDeps.add(*arg) ;
-  }
-
-  return 0 ;
-}
-
-
-
-Bool_t RooAbsReal::tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, const RooArgProxy& a) const
-{
-  Bool_t match = kFALSE ;
-  TString name(a.absArg()->GetName()) ;
-
-  TIterator* iter = allDeps.MakeIterator()  ;
-  RooAbsArg* arg ;
-  while (arg=(RooAbsArg*)iter->Next()){    
-    if (!name.CompareTo(arg->GetName())) {
-      match = kTRUE ;
-    } else {
-      numDeps.add(*arg) ;
-    }
-  }
-  delete iter ;
-
-  return match ;  
-}
-
-
-
-Double_t RooAbsReal::analyticalIntegral(Int_t code) const
-{
-  // By default no analytical integrals are implemented
-  return getVal() ;
-}
-
 
 
 const char *RooAbsReal::getPlotLabel() const {

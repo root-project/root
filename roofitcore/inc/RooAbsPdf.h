@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooAbsPdf.rdl,v 1.9 2001/05/14 22:54:19 verkerke Exp $
+ *    File: $Id: RooAbsPdf.rdl,v 1.10 2001/05/14 22:56:53 david Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -18,9 +18,11 @@
 
 class RooDataSet;
 class RooArgSet ;
+class RooRealProxy ;
 class TPaveText;
 class TH1F;
 class TH2F;
+class TList ;
 
 class RooAbsPdf : public RooAbsReal {
 public:
@@ -35,6 +37,10 @@ public:
   // Toy MC generation
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents = 0) const;
   RooDataSet *generate(const RooArgSet &whatVars, const RooDataSet &prototype) const;
+
+  // Analytical integration support
+  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars) const ;
+  virtual Double_t analyticalIntegral(Int_t code) const ;
 
   // Data set dependent accessors (normalization & dependent/parameter interpretation)
   virtual Bool_t selfNormalized(const RooArgSet& dependents) const { return kFALSE ; }
@@ -75,6 +81,8 @@ private:
   // This forces definition copy ctor in derived classes 
   RooAbsPdf(const RooAbsPdf& other);
 
+  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& analDeps, TList& nameList) const ;
+
   static Bool_t _verboseEval ;
 
 protected:
@@ -85,6 +93,17 @@ protected:
   RooDataSet *initGeneratedDataset(const RooArgSet &vars, RooArgSet *&cloneSet,
 				   RooAbsPdf *&pdfClone) const;
   void generateEvent(const RooArgSet &whatVars);
+
+  // Analytical integration support
+  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		     const RooArgProxy& a) const ;
+  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		     const RooArgProxy& a, const RooArgProxy& b) const ;
+  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		     const RooArgProxy& a, const RooArgProxy& b, const RooArgProxy& c) const ;
+  Bool_t tryIntegral(const RooArgSet& allDeps, RooArgSet& numDeps, 
+		     const RooArgProxy& a, const RooArgProxy& b, 
+		     const RooArgProxy& c, const RooArgProxy& d) const ;
 
   mutable Double_t _rawValue ;
   mutable RooAbsReal* _norm   ;      // Normalization integral
