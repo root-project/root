@@ -91,8 +91,12 @@ else
 		if [ $(ARCH) = "sgicc64" ]; then \
 			ACC="gcc -mabi=64"; \
 		fi; \
+		if [ $(ARCH) = "linuxx8664gcc" ]; then \
+			MMX="--enable-mmx-optimization=no"; \
+		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
+		$$MMX \
 		--with-ttf=NO --with-builtin-ungif=no --with-afterbase=no \
 		--with-jpeg-includes=$(ASJPEGINCDIR) \
 		--with-png-includes=$(ASPNGINCDIR) \
