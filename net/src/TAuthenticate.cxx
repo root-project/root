@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.46 2004/04/11 18:18:01 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.47 2004/04/20 15:17:02 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -35,6 +35,7 @@
 #include "TList.h"
 #include "NetErrors.h"
 #include "TRegexp.h"
+#include "snprintf.h"
 
 #ifndef R__LYNXOS
 #include <sys/stat.h>
@@ -558,7 +559,7 @@ Bool_t TAuthenticate::Authenticate()
                int len = 3 * stat;
                char *answer = new char[len];
                int nrec = fSocket->Recv(answer, len, kind);  // returns user
-               if (nrec < 0) 
+               if (nrec < 0)
                   return kFALSE;
                if (kind != kMESS_STRING)
                   Warning("Authenticate",
@@ -806,7 +807,7 @@ void TAuthenticate::SetEnvironment()
                fgKrb5Principal = TString(Pp);
                delete[] Pp;
                Pp = 0;
-            } else { 
+            } else {
                // Allow specification via 'us:' key
                if (Us && strlen(Us) > 0) {
                   char *pat = strstr(Us, "@");
@@ -828,7 +829,7 @@ void TAuthenticate::SetEnvironment()
                   if (pat != 0)
                      *pat = '\0';
                }
-            } else 
+            } else
                sprintf(UsDef, "%s", fUser.Data());
             if (Us != 0) {
                delete[] Us;
@@ -2513,7 +2514,7 @@ char *TAuthenticate::GetDefaultDetails(int sec, int opt, const char *usr)
    const char copt[2][5] = { "no", "yes" };
 
    if (gDebug > 2)
-      ::Info("TAuthenticate::GetDefaultDetails", 
+      ::Info("TAuthenticate::GetDefaultDetails",
              "enter ... %d ...pt:%d ... '%s'", sec, opt, usr);
 
    if (opt < 0 || opt > 1)
@@ -2792,7 +2793,7 @@ Int_t TAuthenticate::AuthExists(TString User, Int_t Method, const char *Options,
       if (stat == 2) {
          int newOffSet;
          // Receive new offset ...
-         if (fSocket->Recv(newOffSet, kind) < 0) 
+         if (fSocket->Recv(newOffSet, kind) < 0)
             return -2;
          // ... and save it
          SecCtx->SetOffSet(newOffSet);
@@ -3122,7 +3123,7 @@ Int_t TAuthenticate::SecureSend(TSocket *Socket, Int_t Key, const char *Str)
           rsa_fun::fg_rsa_encode(BufTmp, sLen, fgRSAPubKey.n,
                                  fgRSAPubKey.e);
       sprintf(BufLen, "%d", Ttmp);
-      if (Socket->Send(BufLen, kROOTD_ENCRYPT) < 0) 
+      if (Socket->Send(BufLen, kROOTD_ENCRYPT) < 0)
          return -1;
       Nsen = Socket->SendRaw(BufTmp, Ttmp);
       if (gDebug > 3)
@@ -3270,7 +3271,7 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *Socket)
    if ((nr = Socket->Recv(ServerPubKey, kMAXSECBUF, kind)) < 0)
       return nr;
    if (gDebug > 3)
-      ::Info("TAuthenticate::SendRSAPublicKey", 
+      ::Info("TAuthenticate::SendRSAPublicKey",
              "received key from server %d bytes",
              strlen(ServerPubKey));
 
