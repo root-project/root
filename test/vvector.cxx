@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.4 2001/04/20 17:56:51 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: vvector.cxx,v 1.5 2001/05/07 18:41:49 rdm Exp $
 // Author: Fons Rademakers   14/11/97
 
 //////////////////////////////////////////////////////////////////////////
@@ -9,11 +9,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TApplication.h"
 #include "TFile.h"
 #include "TMatrix.h"
-#if defined(R__MACOSX)
-#include "TInterpreter.h"
-#endif
 #include <iostream.h>
 
 //
@@ -557,10 +555,8 @@ void test_vector_io()
 //
 int main()
 {
-#if defined(R__MACOSX)
    // Make sure all registered dictionaries have been initialized
-   gInterpreter->InitializeDictionaries();
-#endif
+   TApplication app("vvector", 0, 0);
 
    cout<< "\n\n" <<
           "----------------------------------------------------------------" <<
