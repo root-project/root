@@ -821,11 +821,7 @@ Bool_t RootShower::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 
                     case M_SHOW_3D:
                         if(fIsRunning) break;
-#ifdef R__WIN32
-                        cA->x3d("OpenGL");
-#else
-                        cA->x3d();
-#endif
+                        cA->x3d("ogl");
                         break;
 
                     case M_SHOW_TRACK:
