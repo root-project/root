@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.41 2003/01/31 11:32:52 brun Exp $
+// @(#)root/test:$Name:  $:$Id: stress.cxx,v 1.42 2003/02/20 08:50:20 brun Exp $
 // Author: Rene Brun   05/11/98
 
 /////////////////////////////////////////////////////////////////
@@ -197,11 +197,11 @@ void stress(Int_t nevent, Int_t style = 1)
    printf("stress    : Compr I/O =%7.1f Mbytes, I =%7.1f, O =%6.1f\n",mbtot1,mbin1,mbout1);
    gBenchmark->Print("stress");
 #ifndef __CINT__
-   Float_t cp_brun_30   = 12.76;
-   Float_t cp_brun_1000 = 59.80;
+   Float_t cp_brun_30   = 13.64;
+   Float_t cp_brun_1000 = 60.92;
 #else
-   Float_t cp_brun_30   = 31.11;  //The difference is essentially coming from stress16
-   Float_t cp_brun_1000 = 83.24;
+   Float_t cp_brun_30   = 32.11;  //The difference is essentially coming from stress16
+   Float_t cp_brun_1000 = 84.85;
 #endif
    Float_t cp_brun = cp_brun_1000 - (cp_brun_1000 - cp_brun_30)*(1000-nevent)/(1000-30);
    Float_t ct = gBenchmark->GetCpuTime("stress");
