@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.10 2001/10/23 13:22:41 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.11 2002/01/08 22:13:00 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -151,9 +151,9 @@ public: \
    virtual void ShowMembers(TMemberInspector &insp, char *parent); \
    virtual void Streamer(TBuffer &b); \
    void StreamerNVirtual(TBuffer &b) { name::Streamer(b); } \
-   friend TBuffer &operator>>(TBuffer &buf, const name *&obj); \
-   friend TBuffer &operator>>(TBuffer &buf, name *&obj) \
-      { return ::operator>>(buf, (const name *&) obj); } \
+   friend TBuffer &operator>>(TBuffer &buf, name *&obj); \
+   friend TBuffer &operator>>(TBuffer &buf, const name *&obj) \
+      { return ::operator>>(buf, (name *&) obj); } \
    _ClassInit_(name) \
    static const char *DeclFileName() { return __FILE__; } \
    static int DeclFileLine() { return __LINE__; } \
@@ -223,10 +223,10 @@ public: \
 
 #define ClassDefT2(name,Tmpl) \
    template <class Tmpl> \
-   TBuffer &operator>>(TBuffer &buf, const name<Tmpl> *&obj); \
+   TBuffer &operator>>(TBuffer &buf, name<Tmpl> *&obj); \
    template <class Tmpl> \
-   TBuffer &operator>>(TBuffer &buf, name<Tmpl> *&obj) \
-      { return ::operator>>(buf, (const name<Tmpl> *) obj); } \
+   TBuffer &operator>>(TBuffer &buf, const name<Tmpl> *&obj) \
+      { return ::operator>>(buf, (name<Tmpl> *&) obj); } \
    _ClassInitT_(name,Tmpl)
 
 #define _ClassImpT_(name,Tmpl) \
@@ -268,10 +268,10 @@ public: \
 
 #define ClassDef2T2(name,Tmpl1,Tmpl2) \
    template <class Tmpl1, class Tmpl2> \
-   TBuffer &operator>>(TBuffer &buf, const name<Tmpl1, Tmpl2> *&obj); \
+   TBuffer &operator>>(TBuffer &buf, name<Tmpl1, Tmpl2> *&obj); \
    template <class Tmpl1, class Tmpl2> \
-   TBuffer &operator>>(TBuffer &buf, name<Tmpl1, Tmpl2> *&obj) \
-      { return ::operator>>(buf, (const name<Tmpl1, Tmpl2> *) obj); } \
+   TBuffer &operator>>(TBuffer &buf, const name<Tmpl1, Tmpl2> *&obj) \
+      { return ::operator>>(buf, (name<Tmpl1, Tmpl2> *&) obj); } \
    _ClassInit2T_(name,Tmpl1,Tmpl2)
 
 #define _ClassImp2T_(name,Tmpl1,Tmpl2) \
@@ -318,10 +318,10 @@ public: \
 
 #define ClassDef3T2(name,Tmpl1,Tmpl2,Tmpl3) \
    template <class Tmpl1, class Tmpl2, class Tmpl3> \
-   TBuffer &operator>>(TBuffer &buf, const name<Tmpl1, Tmpl2, Tmpl3> *&obj); \
+   TBuffer &operator>>(TBuffer &buf, name<Tmpl1, Tmpl2, Tmpl3> *&obj); \
    template <class Tmpl1, class Tmpl2, class Tmpl3> \
-   TBuffer &operator>>(TBuffer &buf, name<Tmpl1, Tmpl2, Tmpl3> *&obj) \
-      { return ::operator>>(buf, (const name<Tmpl1, Tmpl2, Tmpl3> *) obj); } \
+   TBuffer &operator>>(TBuffer &buf, const name<Tmpl1, Tmpl2, Tmpl3> *&obj) \
+      { return ::operator>>(buf, (name<Tmpl1, Tmpl2, Tmpl3> *&) obj); } \
    _ClassInit3T_(name,Tmpl1,Tmpl2,Tmpl3)
 
 #define _ClassImp3T_(name,Tmpl1,Tmpl2,Tmpl3) \

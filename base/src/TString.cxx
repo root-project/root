@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.11 2001/04/11 14:17:06 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TString.cxx,v 1.12 2002/01/08 22:13:00 rdm Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -912,11 +912,11 @@ TBuffer &operator<<(TBuffer &buf, const TString &s)
 }
 
 //_______________________________________________________________________
-TBuffer &operator>>(TBuffer &buf, const TString *&s)
+TBuffer &operator>>(TBuffer &buf, TString *&s)
 {
    // Read string from TBuffer. Function declared in ClassDef.
 
-   s = (const TString *) TString::ReadString(buf, TString::Class());
+   s = (TString *) TString::ReadString(buf, TString::Class());
    return buf;
 }
 

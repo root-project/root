@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.54 2001/11/30 07:28:35 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.55 2002/01/08 22:13:00 rdm Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -434,12 +434,12 @@ int STLContainerArrayStreamer(G__DataMemberInfo &m, int rwmode)
             fprintf(fp, "            %s[R__l] = new %s<%s >;\n", m.Name(), stlc, s);
             if (!strcmp(stlc, "vector")) {
                fprintf(fp, "            %s[R__l]->reserve(R__n);\n", m.Name());
-            }  
+            }
          } else {
             fprintf(fp, "            %s[R__l].clear();\n", m.Name());
             if (!strcmp(stlc, "vector")) {
                fprintf(fp, "            %s[R__l].reserve(R__n);\n", m.Name());
-            }  
+            }
          }
          fprintf(fp, "            for (R__i = 0; R__i < R__n; R__i++) {\n");
          fprintf(fp, "               %s R__t;\n", s);
@@ -956,15 +956,15 @@ void WriteInputOperator(G__ClassInfo &cl)
    if (cl.IsTmplt()) {
       // Produce specialisation for templates:
       fprintf(fp, "template <> TBuffer &%soperator>><%s >"
-              "(TBuffer &buf, const %s *&obj)\n{\n", space_prefix, cl.TmpltArg(), cl.Fullname());
+              "(TBuffer &buf, %s *&obj)\n{\n", space_prefix, cl.TmpltArg(), cl.Fullname());
    } else {
-      fprintf(fp, "TBuffer &%soperator>>(TBuffer &buf, const %s *&obj)\n{\n",
+      fprintf(fp, "TBuffer &%soperator>>(TBuffer &buf, %s *&obj)\n{\n",
               space_prefix, cl.Fullname() );
    }
    fprintf(fp, "   // Read a pointer to an object of class %s.\n\n", cl.Fullname());
 
    if (cl.IsBase("TObject") || !strcmp(cl.Fullname(), "TObject")) {
-      fprintf(fp, "   obj = (const %s *) buf.ReadObject(%s::Class());\n", cl.Fullname(),
+      fprintf(fp, "   obj = (%s *) buf.ReadObject(%s::Class());\n", cl.Fullname(),
               cl.Fullname());
    } else {
       fprintf(fp, "   ::Error(\"%s::operator>>\", \"objects not inheriting"
@@ -1538,7 +1538,7 @@ void WriteShowMembers(G__ClassInfo &cl)
    fprintf(fp, "   TClass *R__cl  = %s::IsA();\n", cl.Fullname());
    fprintf(fp, "   Int_t   R__ncp = strlen(R__parent);\n");
    fprintf(fp, "   if (R__ncp || R__cl || R__insp.IsA()) { }\n");
-   
+
    // Inspect data members
    G__DataMemberInfo m(cl);
    char cdim[12], cvar[64];

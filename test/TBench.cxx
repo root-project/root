@@ -52,10 +52,10 @@ void THit::Set(int t) {
   for (int i=0; i<10; i++) fTime[i] = t+i;
 }
 
-TBuffer &operator>>(TBuffer &buf, const THit *&obj)
+TBuffer &operator>>(TBuffer &buf, THit *&obj)
 {
-   obj =  new THit();
-   ((THit*)obj)->Streamer(buf);
+   obj = new THit();
+   obj->Streamer(buf);
    return buf;
 }
 
