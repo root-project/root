@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.160 2003/08/25 22:37:39 rdm Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.161 2003/09/12 12:37:39 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -3196,7 +3196,7 @@ Int_t TTree::Process(const char *filename,Option_t *option,Int_t nentries, Int_t
 //  NOTE
 //  It may be more interesting to invoke directly the other Process function
 //  accepting a TSelector* as argument.eg
-//     TSelector *selector = TSelector::GetSelector(filename);
+//     MySelector *selector = (MySelector*)TSelector::GetSelector(filename);
 //     selector->CallSomeFunction(..);
 //     mytree.Process(selector,..);
 
