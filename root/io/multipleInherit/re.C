@@ -1,6 +1,6 @@
 {
    gROOT->ProcessLine(".L na.cxx+");
-   gSystem->Load("libHistPainter.so");
+   gSystem->Load("libHistPainter");
    TFile f("hout.root");
    TH1 * h = f.Get("hpxpy");
    h->SetDirectory(gROOT);

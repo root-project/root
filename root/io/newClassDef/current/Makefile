@@ -23,7 +23,7 @@ main: $(SHARED_LIBS) array_cxx.$(DllSuf)
 #	echo $(SHARED_LIBS)
 
 current_test.log : main Run.C
-	$(CMDECHO)root -q -l -b "Run.C(\"$(DllSuf)\")" >& current_test.log 
+	$(CMDECHO)root -q -l -b "Run.C(\"$(DllSuf)\")" > current_test.log 2>&1 
 #	$(CMDECHO)echo "All test succeeded in `pwd`"
 
 currentTest: current_test.log
@@ -35,7 +35,7 @@ $(DICTS) : %dict.C : %.h %linkdef.h
 
 $(SHARED_LIBS) : %.$(DllSuf) : %.$(ObjSuf) %dict.$(ObjSuf)
 	$(CMDECHO)$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" "" $@ "$^" "$(ROOTLIBS)" >& $*.build.log
+		   "$(SOFLAGS)" "" $@ "$^" "$(ROOTLIBS)" > $*.build.log 2>&1
 
 #ifeq ($(ARCH),aix)
 #		@/usr/ibmcxx/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^

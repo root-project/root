@@ -14,8 +14,7 @@
 
 using namespace std;
 
-int
-main()
+int run() 
 {
   bool result = 0;
 
@@ -80,4 +79,10 @@ main()
   h->Close();
 
   return result;
+}
+
+int
+main()
+{
+  return run();
 }

@@ -11,6 +11,16 @@ ROOTCFLAGS =  -I$(ROOTSYS)/include
 
 INCLUDES = -I. $(ROOTCFLAGS)
 
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.$(ObjSuf) *~ core a.out $(CXXSO) DataCint.* Makefile.bak *.tar* *.log
+
+TEST_TARGETS += depend rootcint lib read_test 
+
+ifeq ($(strip $(ROOTTEST_HOME)),)
+	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
+endif
+
+include $(ROOTTEST_HOME)/scripts/Rules.mk
+
 include $(ROOTSYS)/test/Makefile.arch
 
 FORT     := g77
@@ -21,10 +31,10 @@ SOCMD     = $(LD)
 
 CXXSOURCES  = $(wildcard *.cxx)
 CINTLIST   := $(addsuffix .h, $(basename $(CXXSOURCES)))
-CINTLISTO  := $(addsuffix .o, $(basename $(CINTLIST)))
+CINTLISTO  := $(addsuffix .$(ObjSuf), $(basename $(CINTLIST)))
 CPPSOURCES := $(CXXSOURCES) DataCint.cc
-CXXOBJS     = $(addsuffix .o, $(basename $(CPPSOURCES)))
-CXXSO      := libData.so
+CXXOBJS     = $(addsuffix .$(ObjSuf), $(basename $(CPPSOURCES)))
+CXXSO      := libData.$(DllSuf)
 
 
 # LIBS should contain general libraries needed to compile programs. 
@@ -40,41 +50,36 @@ LDFLAGS       := $(LDFLAGS) $(LIBS)
 # Define some rules.
 #.SUFFIXES : .inc .cxx .cc
 #
-#.cc.o:
+#.cc.$(ObjSuf):
 #	$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
 #
-#.cxx.o:
+#.cxx.$(ObjSuf):
 #	$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
 
 all: depend rootcint lib
 
-rootcint: DataCint.cc DataCint.o
+rootcint: DataCint.cc DataCint.$(ObjSuf)
 
 DataCint.cc: LinkDef.h $(CINTLIST)
 	$(CMDECHO)$(RM) DataCint.*
 #	$(CMDECHO)echo "Generating DataCint dictionary ..." $(CXXSORUCE)
 	$(CMDECHO)rootcint -f DataCint.cc -c -I. $(CINTLIST) LinkDef.h
 
-DataCint.o: DataCint.cc
-	$(CMDECHO)$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
+DataCint.$(ObjSuf): DataCint.cc
 
-DataBlockBase.o : DataBlockBase.cxx DataBlockBase.h
-	$(CMDECHO)$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
+DataBlockBase.$(ObjSuf) : DataBlockBase.cxx DataBlockBase.h
 
-PureAbstractInterface.o : PureAbstractInterface.cxx PureAbstractInterface.h
-	$(CMDECHO)$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
+PureAbstractInterface.$(ObjSuf) : PureAbstractInterface.cxx PureAbstractInterface.h
 
-DataBlock1.o : DataBlock1.cxx DataBlock1.h PureAbstractInterface.h
-	$(CMDECHO)$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
+DataBlock1.$(ObjSuf) : DataBlock1.cxx DataBlock1.h PureAbstractInterface.h
 
-DataBlock2.o : DataBlock2.cxx DataBlock2.h PureAbstractInterface.h
-	$(CMDECHO)$(CXX) -c -o $@ $(CXXFLAGS) $(CPPFLAGS) $<
+DataBlock2.$(ObjSuf) : DataBlock2.cxx DataBlock2.h PureAbstractInterface.h
 
 
 lib: FORCE $(CXXSO)
 
 $(CXXSO): $(CXXOBJS)
-	$(CMDECHO)$(SOCMD) $(SOFLAGS) $(CXXOBJS) $(OutPutOpt) $(CXXSO)
+	$(CMDECHO)$(SOCMD) $(SOFLAGS) $(CXXOBJS) $(OutPutOpt)$(CXXSO) $(EXPLLINKLIBS)
 
 depend: FORCE
 	$(CMDECHO)makedepend -f Makefile $(INCLUDES) $(CXXSOURCE)
@@ -82,17 +87,6 @@ depend: FORCE
 tar: FORCE
 	tar cvf badio.tar Makefile LinkDef.h $(CINTLIST) $(CXXSOURCES) *.C *.root
 	gzip badio.tar
-
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.o *~ core a.out $(CXXSO) DataCint.* Makefile.bak *.tar* *.log
-
-TEST_TARGETS += depend rootcint lib read_test 
-
-ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
-endif
-
-include $(ROOTTEST_HOME)/scripts/Rules.mk
-
 
 read_test.log:
 	$(CMDECHO) root.exe -b -l -q read_test.C > read_test.log

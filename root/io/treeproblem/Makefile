@@ -2,7 +2,7 @@
 CLEAN_TARGETS += 
 
 #Set the list of target to make while testing
-TEST_TARGETS += Foo.so  reader writer
+TEST_TARGETS += libs check
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -10,20 +10,23 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-Foo.so:Foo.h Foo.cxx
-	$(CMDECHO)rootcint -f FooDict.cxx -c Foo.h+
-	$(CMDECHO)g++ -Wall -c -g `root-config --cflags` Foo.cxx 
-	$(CMDECHO)g++ -Wall -c -g `root-config --cflags` FooDict.cxx 
-	$(CMDECHO)g++ -shared -Wl,-soname,Foo.so -o Foo.so Foo.o FooDict.o
 
-reader:reader.C
-	$(CMDECHO)g++ -Wall -c -g `root-config --cflags` $<  
+FooDict.cxx : Foo.h
+	$(CMDECHO)rootcint -f FooDict.cxx -c Foo.h+
+
+Foo.$(ObjSuf): Foo.h
+
+libs : Foo.$(DllSuf)
+
+Foo.$(DllSuf): Foo.$(ObjSuf) FooDict.$(ObjSuf)
+	$(BuildFromObjs) 
+
+reader: reader.$(ObjSuf)
 	$(CMDECHO)g++ -o $@ reader.o `root-config --libs` \
 		-Wl,-rpath,`root-config --libdir`
 
-writer:writer.C Foo.so 
-	$(CMDECHO)g++ -Wall -c -g `root-config --cflags` $< 
-	$(CMDECHO)g++ -o $@ writer.o Foo.so `root-config --libs` \
+writer: writer.$(ObjSuf) Foo.$(DllSuf) 
+	$(CMDECHO)g++ -o $@ writer.o Foo.$(DllSuf) `root-config --libs` \
 		-Wl,-rpath,`root-config --libdir` -Wl,-rpath,.
 
 dist:
@@ -33,9 +36,9 @@ dist:
 	$(CMDECHO)tar -czvf treeproblem.tar.gz treeproblem 
 	$(CMDECHO)rm -rf treeproblem 
 
-check:Foo.so reader writer 
+check: Foo.$(DllSuf) reader.C writer.C 
 	$(CMDECHO)root -b -l -q writer.C 
 	$(CMDECHO)root -b -l -q reader.C
 
 #clean:
-#	$(CMDECHO)rm -f *.root *~ *.o *Dict.cxx *Dict.h *.so reader writer
+#	$(CMDECHO)rm -f *.root *~ *.o *Dict.cxx *Dict.h *.$(DllSuf) reader writer

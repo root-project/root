@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-// $Id: SEIdAltL.cxx,v 1.1 2004/03/25 21:20:42 pcanal Exp $
+// $Id: SEIdAltL.cxx,v 1.2 2004/06/11 22:06:52 pcanal Exp $
 //
 // SEIdAltL
 //
@@ -152,7 +152,8 @@ void SEIdAltL::KeepTopWeights(UInt_t n, Bool_t keeporder)
    // If "n" would separate values of the same weight then
    // more than "n" are kept.
 
-   unsigned int i, cnt = size();
+   unsigned int i;
+   const unsigned int cnt(size());
 
    if (cnt <= 0) return;  // one cannot drop what one doesn't have
 
@@ -171,11 +172,11 @@ void SEIdAltL::KeepTopWeights(UInt_t n, Bool_t keeporder)
    // make a copy of the weights
    // sort it
    // select the nth down the list for lowest weight value to keep
-   Float_t sortedwgt[cnt];
-   Int_t   sortedindx[cnt];
+   vector<Float_t> sortedwgt(cnt);
+   vector<Int_t>   sortedindx(cnt);
    for (i=0; i<cnt; i++) sortedwgt[i] = self[i].GetWeight();
    Bool_t down=kTRUE;
-   TMath::Sort(cnt,sortedwgt,sortedindx,down);
+   TMath::Sort(cnt,&(sortedwgt[0]),&(sortedindx[0]),down);
    // n-1 because C arrays start with 0
    Int_t   icut = sortedindx[n-1];
    Float_t  cut = sortedwgt[icut]; 

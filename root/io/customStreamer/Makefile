@@ -11,7 +11,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-customStreamerTest.log:
+customStreamerTest.log: header_C.$(DllSuf)
 	$(CMDECHO) root.exe -q -b -l run.C 2>&1 | grep -v 'creating shared library ' > $@
 
 customStreamerTest: customStreamerTest.log

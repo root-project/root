@@ -1,17 +1,10 @@
+SHELL=/bin/bash
 
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.d *.log $(LIBDIR)/*
 
 #Set the list of target to make while testing
-TEST_TARGETS += stlIoTest
-
-# adjust the location of Rules.mk as needed.
-ifeq "x$(wildcard CVS)" "xCVS"
-PACKAGEABLE=yes
-RULES_DIR=../..
-else
-RULES_DIR=.
-endif
+TEST_TARGETS += stlIoTest stlNoLibTest
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME=$(shell expr $(PWD) : '\(.*/roottest/\)')
@@ -19,13 +12,24 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
+# adjust the location of Rules.mk as needed.
+ifeq "x$(wildcard CVS)" "xCVS"
+PACKAGEABLE=yes
+RULES_DIR=$(ROOTTEST_HOME)/scripts
+else
+RULES_DIR=.
+endif
 
 VERSION := $(subst .,-,$(subst /,-,$(shell root-config --version)))
+ifeq ($(PLATFORM),win32)
+LPWD := $(shell echo `pwd ` )
+else
 LPWD := $(shell echo `pwd -P`)
-#debug := $(shell echo $(LPWD) 1>&2 )
+endif
 LIBDIRTOP := $(VERSION).libs
 LIBDIR := $(LIBDIRTOP)$(LPWD)/
 FILEDIR := $(VERSION)
+#debug := $(shell echo $(PLATFORM) $(LPWD) 1>&2 )
 #debug := $(shell echo $(LIBDIR) 1>&2 )
 
 $(FILEDIR):
@@ -45,10 +49,14 @@ HOLDER_DLL = $(addprefix $(LIBDIR),$(subst .C,_C.$(DllSuf),$(HOLDER)))
 TEST_DLL = $(LIBDIR)TestHelpers_C.$(DllSuf) $(FTEST_DLL) $(HOLDER_DLL)
 #debug := $(shell echo $(TEST_DLL) 1>&2 )
 
+HELPER_DLL = $(LIBDIR)TestHelpers_C.$(DllSuf)
+
 DEPENDENCY_FILES = $(TEST_DLL:.so=.df)
 #debug := $(shell echo $(DEPENDENCY_FILES) 1>&2 )
 
--include $(DEPENDENCY_FILES)
+ifneq ($(MAKECMDGOALS),clean)
+#-include $(DEPENDENCY_FILES)
+endif
 
 #.PRECIOUS :  $(addprefix $(LIBDIR),$(subst .C,o.$(DllSuf),$(HOLDER) $(FTEST) $(LIBDIR)TestHelpers_C))
 
@@ -64,7 +72,7 @@ set: directories $(addprefix $(LIBDIR),stest_C.$(DllSuf) setHolder_C.$(DllSuf) T
 map: directories $(addprefix $(LIBDIR),mtest_C.$(DllSuf) mapHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
 	$(CMDECHO) echo map up to date
 
-multimap: directories $(addprefix $(LIBDIR),ttest_C.$(DllSuf) multimapHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
+multimap: directories $(addprefix $(LIBDIR),ntest_C.$(DllSuf) multimapHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
 	$(CMDECHO) echo multimap up to date
 
 multiset: directories $(addprefix $(LIBDIR),ttest_C.$(DllSuf) multisetHolder_C.$(DllSuf) TestHelpers_C.$(DllSuf) )
@@ -80,14 +88,35 @@ stllibs: directories $(FTEST_DLL) $(HOLDER_DLL) TestHelpers_C.$(DllSuf)
 #$(LIBDIR)%.o: %.C
 #	@touch $@
 
+ifeq ($(PLATFORM),win32)
+$(LIBDIR)dtest_C.$(DllSuf) : $(LIBDIR)dequeHolder_C.$(DllSuf)
+
+$(LIBDIR)ltest_C.$(DllSuf) : $(LIBDIR)listHolder_C.$(DllSuf)
+
+$(LIBDIR)vtest_C.$(DllSuf) : $(LIBDIR)vectorHolder_C.$(DllSuf)
+
+$(LIBDIR)ttest_C.$(DllSuf) : $(LIBDIR)multisetHolder_C.$(DllSuf)
+
+$(LIBDIR)mtest_C.$(DllSuf) : $(LIBDIR)mapHolder_C.$(DllSuf)
+
+$(LIBDIR)stest_C.$(DllSuf) : $(LIBDIR)setHolder_C.$(DllSuf)
+
+$(LIBDIR)ntest_C.$(DllSuf) : $(LIBDIR)multimapHolder_C.$(DllSuf)
+
+endif
+
 LIBDIR_SED=$(subst /,\\/,$(LIBDIR))
 LIBDIR_SED2=$(subst /,\\/,$(LPWD)/./)
 #debug := $(shell echo $(LIBDIR) 1>&2 )
 $(LIBDIR)%_C.df: $(LIBDIR)%_C.d
 	@cat $< | sed -e s/$(LIBDIR_SED2)// | sed -e s/$*.o/$(LIBDIR_SED)$*_C.so/ > $@
 
-$(LIBDIR)%_C.$(DllSuf) : %.C 
-	$(CMDECHO) root.exe -q -l -b $(RULES_DIR)/build.C\(\"$<\"\) >& $*_C.build.log
+$(HELPER_DLL) : TestHelpers.C 
+	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $(*F).build.log 2>&1
+	$(CMDECHO)touch $@
+
+$(LIBDIR)%_C.$(DllSuf) : %.C $(HELPER_DLL)
+	$(CMDECHO) root.exe -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"$(filter %.$(DllSuf),$(filter-out $@,$^))\",\"\")" > $*_C.build.log 2>&1
 	$(CMDECHO)touch $@
 #	$(CMDECHO) echo '.x $(RULES_DIR)/build.C("$<")' | root.exe -l -b -n
 
@@ -97,6 +126,12 @@ stlIoTest.log: directories $(TEST_DLL)
 
 stlIoTest: stlIoTest.log
 	$(CMDECHO) diff -b stlIoTest.log stlIoTest.ref 
+
+stlNoLibTest.log: stlIoTest
+	$(CMDECHO) root.exe -q -b -l readNoLib.C\(\"$(FILEDIR)/vector.root\"\) > $@ 2>&1
+
+stlNoLibTest: stlNoLibTest.log
+	$(CMDECHO) diff -b stlNoLibTest.ref stlNoLibTest.log 
 
 testWithFailure:
 ifeq ($(FAIL),)

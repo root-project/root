@@ -9,7 +9,7 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 GlobalAclicTest: id_cxx.$(DllSuf) idDict.cxx
 
 id_cxx.$(DllSuf): id.cxx buildId.C
-#	$(CMDECHO) root.exe -l -b -q buildId.C >& id.log
+#	$(CMDECHO) root.exe -l -b -q buildId.C > id.log 2&1
 
 idDict.cxx: id.cxx
 	$(CMDECHO) rootcint -f idDict.cxx -c id.cxx LinkDef.h

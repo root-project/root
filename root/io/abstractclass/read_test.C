@@ -1,7 +1,7 @@
 {
 gROOT->Reset();
 
-gSystem->Load("libData.so");
+gSystem->Load("libData");
 
 // create and initialize file
 TFile *hfile = TFile::Open("data.root","READ");

@@ -1,6 +1,8 @@
 #include "TROOT.h"
 #include "TClonesArray.h"
 
+int run();
+
 class foo: public TObject {
 public:
   foo() { i = 1; f = 2*i; }
@@ -10,5 +12,7 @@ public:
   Int_t i;
   Float_t f;
   
+  static int run() { return ::run(); }
   ClassDef(foo,1)
 };
+

@@ -22,7 +22,7 @@
 int writer()
 {
 #ifdef __CINT__ 
-  gROOT->LoadClass("Foo", "Foo.so");
+  gSystem->Load("Foo");
 #endif
 
   TClonesArray* array = new TClonesArray("Foo");

@@ -14,9 +14,12 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 
-missingClass: test.root copy.root
-		  $(CMDECHO) root.exe -q -l -b read.C > read.out 2>&1 \
-	&& diff read.out read.ref
+missingClass: read.out
+	$(CMDECHO) diff -bw read.ref read.out
+
+
+read.out: test.root copy.root
+	$(CMDECHO) root.exe -q -l -b read.C > read.out 2>&1 
 
 testWithFailure:
 ifeq ($(FAIL),)

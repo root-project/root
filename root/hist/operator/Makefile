@@ -1,7 +1,7 @@
 # This is a template for all makefile.
 
 #Set the list of files to be delete by clean:
-CLEAN_TARGETS += 
+CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log
 
 #Set the list of target to make while testing
 TEST_TARGETS += addTest
@@ -12,7 +12,7 @@ endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
 addTest:
-	$(CMDECHO) root.exe -b -q -l run.C > /dev/null
+	$(CMDECHO) root.exe -b -q -l run.C > /dev/null > run.log
 
 testWithFailure:
 ifeq ($(FAIL),)

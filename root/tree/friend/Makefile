@@ -38,7 +38,7 @@ $(ROOTFILE): $(ROOTSYS)/test/Event.h
 		cd $(ROOTDIR)/test; \
 		gmake Event$(ExeSuf); \
 		./Event 10 1 9 1; \
-	) >& createfile.out
+	) 2>&1 > createfile.out
 
 Event.root: $(ROOTDIR)/test/Event.root
 	$(CMDECHO) cp $(ROOTFILE) .
@@ -47,8 +47,8 @@ Event2.root: $(ROOTDIR)/test/Event.root
 	$(CMDECHO) cp $(ROOTFILE) Event2.root
 
 ChainFriend: Run.C  $(ROOTSYS)/lib/libTreePlayer.$(DllSuf) files
-	$(CMDECHO) root.exe -q -b -l Run.C >& run.out 2>&1
+	$(CMDECHO) root.exe -q -b -l Run.C > run.out 2>&1
 
 ChainFriendStatus: testFriend4.cc
-	$(CMDECHO) root.exe -q -b -l testFriend4.cc >& ChainFriendStatus.log 
+	$(CMDECHO) root.exe -q -b -l testFriend4.cc  > ChainFriendStatus.log 2>&1
 

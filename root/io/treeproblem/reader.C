@@ -20,7 +20,7 @@ using namespace std;
 
 int reader() 
 {
-  gROOT->LoadClass("Foo", "Foo.so");
+  gSystem->Load("Foo");
 
   gDebug = 2; 
 

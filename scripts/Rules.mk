@@ -23,7 +23,7 @@ TEST_TARGETS += $(TEST_TARGETS_DIR)
 CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 
 
-ALL_LIBRARIES += *.d *.o *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def
+ALL_LIBRARIES += *.d *.o *.obj *.so *.def *.exp *.dll *.lib dummy.C *.pdb .def
 
 export CURDIR=$(shell basename `pwd`)
 #debug:=$(shell echo CALLDIR=$(CALLDIR) CURDIR=$(CURDIR) PWD=`pwd` 1>&2 ) 
@@ -129,7 +129,7 @@ ExeSuf   =
 OutPutOpt= -o 
 endif
 
-.SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf) .$(ExeSuf)
+.SUFFIXES: .$(SrcSuf) .$(ObjSuf) .$(DllSuf) .$(ExeSuf) .cc .cxx .C .cpp
 
 ##### utilities #####
 
@@ -147,6 +147,9 @@ endif
 
 %.o: %.cpp
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cpp.build.log 2>&1
+
+%.$(ObjSuf): %.cc
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_o_cc.build.log 2>&1
 
 %.obj: %.C
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -c $< > $*_obj_C.build.log 2>&1
@@ -173,7 +176,7 @@ endif
 	$(CMDECHO) root.exe -q -l -b $< > $@ 2>&1
 
 define BuildWithLib
-	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\,\"$(filter %.$(DllSuf),$^)\"\) > $*.build.log 2>&1
+	$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\,\"$(filter %.$(DllSuf),$^)\",\"\"\) > $*.build.log 2>&1
 endef
     
 define WarnFailTest
@@ -186,13 +189,13 @@ endef
 
 define BuildFromObj
 $(CMDECHO) touch dummy.C
-$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"dummy.C\"\,\"$<\",1\) > $@.build.log 2>&1
+$(CMDECHO) root.exe -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"dummy.C\"\,\"\",\"$<\",\) > $@.build.log 2>&1
 $(CMDECHO) mv dummy_C.$(DllSuf) $@ 
 endef
 
 define BuildFromObjs
 $(CMDECHO) touch dummy.C
-$(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy.C\",\"$^\",1)" > $@.build.log 2>&1
+$(CMDECHO) root.exe -q -l -b "$(ROOTTEST_HOME)/scripts/build.C(\"dummy.C\",\"\",\"$^\")" > $@.build.log 2>&1
 $(CMDECHO) mv dummy_C.$(DllSuf) $@ 
 endef
 

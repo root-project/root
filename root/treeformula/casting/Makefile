@@ -23,5 +23,5 @@ Simple.log: Simple_cxx.$(DllSuf)
 	$(CMDECHO) root.exe -l -b -q Run.C > Simple.log
 
 Simple: Simple.log
-	$(CMDECHO) diff -u Simple.log Simple.ref
+	$(CMDECHO) diff -ubw Simple.log Simple.ref
 

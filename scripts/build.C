@@ -1,15 +1,21 @@
-void build(const char *filename,const char *lib = 0, int i=0) {
+void build(const char *filename,const char *lib = 0, const char *obj = 0) {
 
-   if (i==1) {
-      if (filename==0 || lib==0) return;
+   if (obj!=0 && strlen(obj) ) {
       TString s = gSystem->GetMakeSharedLib();
       TString r(" $ObjectFiles ");
-      r.Append(lib);
+      r.Append(obj);
       s.ReplaceAll(" $ObjectFiles",r);
       //gDebug = 5;
       gSystem->SetMakeSharedLib(s);
-   } else if (i==0) {
-      if (lib) gSystem->Load(lib);
+   }
+   if (lib && strlen(lib)) {
+      TString liblist(lib);
+      TObjArray *libs = liblist.Tokenize(" ");
+      TIter iter(libs);
+      TObjString *objstr;
+      while ( (objstr=(TObjString*)iter.Next()) ) {
+         gSystem->Load(objstr->String());
+      }
    }
    int result = gSystem->CompileMacro(filename,"kc");
    if (!result) gApplication->Terminate(1);
