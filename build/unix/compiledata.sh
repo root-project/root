@@ -33,6 +33,12 @@ if [ "$LIBDIR" = "$ROOTSYS/lib" ]; then
    LIBDIR=\$ROOTSYS/lib
 fi
 
+if [ "x`echo $SOFLAGS | grep -- '-soname,$' `" != "x" ]; then
+    # If soname is specified, add the library name.
+    SOFLAGS=$SOFLAGS\$LibName.$SOEXT
+    # Alternatively we could remove the soname flag.
+    #    SOFLAGS=`echo $SOFLAGS | sed  -e 's/-soname,/ /' -e 's/ -Wl, / /' `
+fi
 rm -f __compiledata
 
 echo "Running $COMPILEDATA"

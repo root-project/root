@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.10 2001/01/22 09:43:05 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TSystem.cxx,v 1.11 2001/02/03 14:35:08 rdm Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -1165,7 +1165,8 @@ int TSystem::GetSockOpt(int, int, int*)
 //---- Script Compiler ---------------------------------------------------------
 
 //______________________________________________________________________________
-int TSystem::CompileMacro(const char *filename, Option_t * opt)
+int TSystem::CompileMacro(const char *filename, Option_t * opt, 
+                          const char *library_specified)
 {
   // This method compiles and loads a shared library containing
   // the code from the file "filename".
@@ -1173,6 +1174,15 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   // The possible options are:
   //     k : keep the shared library after the session end.
   //     f : force recompilation.
+  //
+  // If library_specified is specified, CompileMacro generates the file
+  // "library_specified".soext where soext is the shared library extension for
+  // the current platform.
+  // If library_specified is not specified, CompileMacro generate a default name
+  // for library by taking the name of the file "filename" but replacing the
+  // dot before the extension by an underscore and by adding the shared 
+  // library extension for the current platform.
+  // For example on most platform, hsimple.cxx will generate hsimple_cxx.so
   //
   // It uses the directive fMakeSharedLibs to create a shared library.
   // If loading the shared library fails, it tries to output a list of missing
@@ -1268,6 +1278,10 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   // ======= Get the right file names for the dictionnary and the shared library
   TString library = filename;
   ExpandFileName( library );
+  if (! IsAbsoluteFileName(library) ) {
+    library = ConcatFileName( WorkingDirectory(), library );
+  }
+  TString filename_fullpath = library;
 
   TString file_location( DirName( library ) );
   // so far we do not distinguish
@@ -1277,7 +1291,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
   TString extension = library;
   extension.Replace( 0, dot_pos+1, 0 , 0);
   TString filename_noext = library;
-  filename_noext.Remove( dot_pos );
+  if (dot_pos>=0) filename_noext.Remove( dot_pos );
 
   // Extension of shared library is platform dependent!!
   library.Replace( dot_pos, library.Length()-dot_pos,
@@ -1285,6 +1299,17 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
 
   TString libname ( BaseName( filename_noext ) );
   libname.Append("_").Append(extension);
+
+  if (library_specified && strlen(library_specified) ) {
+    // Use the specified name instead of the default
+    libname = BaseName( library_specified );
+    library = library_specified;
+    ExpandFileName( library );
+    if (! IsAbsoluteFileName(library) ) {
+      library = ConcatFileName( WorkingDirectory(), library );
+    }
+    library = TString(library) + "." + fSoExt;
+  } 
 
   // ======= Check if the library need to loaded or compiled
   if ( gInterpreter->IsLoaded(filename) ) {
@@ -1406,7 +1431,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
       delete name;
     }
   }
-  linkdefFile << "#pragma link C++ defined_in "<<filename << ";" << endl;
+  linkdefFile << "#pragma link C++ defined_in "<<filename_fullpath << ";" << endl;
 
   linkdefFile << endl;
   linkdefFile << "#endif" << endl;
@@ -1416,7 +1441,7 @@ int TSystem::CompileMacro(const char *filename, Option_t * opt)
 
   TString rcint = "rootcint -f ";
   rcint.Append(dict).Append(" -c -p ").Append(GetIncludePath()).Append(" ");
-  rcint.Append(filename).Append(" ").Append(linkdef);
+  rcint.Append(filename_fullpath).Append(" ").Append(linkdef);
 
   TString cmd = fMakeSharedLib;
   // Replace(cmd,filename,library);
