@@ -1,4 +1,4 @@
-// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.3 2001/12/10 17:25:58 rdm Exp $
+// @(#)root/win32gdk:$Name:  $:$Id: GWin32Gui.cxx,v 1.4 2002/02/21 11:30:17 rdm Exp $
 // Author: Bertrand Bellenot, Fons Rademakers   27/11/01
 
 /*************************************************************************
@@ -1794,6 +1794,28 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          ev.fUser[1] = xev.selection.selection;
          ev.fUser[2] = xev.selection.target;
          ev.fUser[3] = xev.selection.property;
+      }
+      if (xev.type == GDK_SCROLL) {
+         ev.fType = kButtonRelease;
+         if (xev.scroll.direction == GDK_SCROLL_UP)
+            ev.fCode = kButton4;
+         else if (xev.scroll.direction == GDK_SCROLL_DOWN)
+            ev.fCode = kButton5;
+         ev.fWindow = (Window_t) xev.scroll.window;
+         ev.fX = xev.scroll.x;
+         ev.fY = xev.scroll.y;
+         ev.fXRoot = xev.scroll.x_root;
+         ev.fYRoot = xev.scroll.y_root;
+         POINT tpoint;
+         tpoint.x = xev.scroll.x;
+         tpoint.y = xev.scroll.y;
+         HWND tmpwin = ChildWindowFromPoint((HWND)
+                       GDK_DRAWABLE_XID(xev.scroll.window),
+                       tpoint);
+         if (tmpwin)
+            ev.fUser[0] = (ULong_t) gdk_xid_table_lookup(tmpwin);
+         else
+            ev.fUser[0] = (ULong_t) 0;
       }
    }
 }
