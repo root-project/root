@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.101 2002/06/29 13:13:13 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TH1.cxx,v 1.102 2002/07/05 22:23:50 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -472,14 +472,18 @@ TH1::~TH1()
    if (!TestBit(kNotDeleted)) return;
    if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
    if (fBuffer)   {delete [] fBuffer;   fBuffer   = 0;}
-   if (fFunctions) { fFunctions->Delete(); delete fFunctions; }
+   if (fFunctions) { 
+      fFunctions->SetBit(kInvalidObject);
+      fFunctions->Delete(); 
+      delete fFunctions; 
+   }
    if (fDirectory) {
       if (!fDirectory->TestBit(TDirectory::kCloseDirectory))
          fDirectory->GetList()->Remove(this);
    }
-   delete fPainter;
    fDirectory = 0;
    fFunctions = 0;
+   delete fPainter;
 }
 
 //______________________________________________________________________________
@@ -1625,6 +1629,22 @@ Int_t TH1::FindBin(Axis_t x, Axis_t y, Axis_t z)
       return  binx + nx*(biny +ny*binz);
    }
    return -1;
+}
+
+//______________________________________________________________________________
+TObject *TH1::FindObject(const char *name) const
+{
+// search object named name in the list of functions
+
+   return fFunctions->FindObject(name);
+}
+
+//______________________________________________________________________________
+TObject *TH1::FindObject(const TObject *obj) const
+{
+// search object obj in the list of functions
+
+   return fFunctions->FindObject(obj);
 }
 
 //______________________________________________________________________________
@@ -4173,6 +4193,9 @@ void TH1::SavePrimitive(ofstream &out, Option_t *option)
    while ((obj=next())) {
       obj->SavePrimitive(out,"nodraw");
       out<<"   "<<GetName()<<"->GetListOfFunctions()->Add("<<obj->GetName()<<");"<<endl;
+      if (obj->InheritsFrom("TPaveStats")) {
+         out<<"   ptstats->SetParent("<<GetName()<<"->GetListOfFunctions());"<<endl;
+      }
    }
 
    // save attributes
