@@ -198,10 +198,10 @@ void stress(Int_t nevent)
    printf("stress    : Compr I/O =%7.1f Mbytes, I =%7.1f, O =%6.1f\n",mbtot1,mbin1,mbout1);
    gBenchmark->Print("stress");
 #ifndef __CINT__
-   Float_t rt_dell_30   = 36.10;  //Pentium III 600 Mhz times with the native compiler
-   Float_t cp_dell_30   = 34.01;
-   Float_t rt_dell_1000 = 92.93;
-   Float_t cp_dell_1000 = 79.29;
+   Float_t rt_dell_30   = 36.85;  //Pentium III 600 Mhz times with the native compiler
+   Float_t cp_dell_30   = 34.97;
+   Float_t rt_dell_1000 = 94.44;
+   Float_t cp_dell_1000 = 80.38;
 #else
    Float_t rt_dell_30   = 81.73;  //Pentium III 600 Mhz times with CINT
    Float_t cp_dell_30   = 79.43;  //The difference is essentially coming from stress16
