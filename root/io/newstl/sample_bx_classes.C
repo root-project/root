@@ -20,6 +20,7 @@ class BxLabenCluster: public TObject {
 
 #ifdef __MAKECINT__
 #pragma link C++ class std::vector<BxLabenCluster>+;
+#pragma link C++ class std::vector<float>;
 #endif 
 
 class BxLaben: public TObject {
