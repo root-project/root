@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.rdl,v 1.16 2001/10/12 20:31:10 verkerke Exp $
+ *    File: $Id: RooPlot.rdl,v 1.17 2001/10/31 07:19:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -24,6 +24,7 @@ class TAttLine;
 class TAttFill;
 class TAttMarker;
 class TAttText;
+class TClass ;
 
 class RooPlot : public TH1, public RooPrintable {
 public:
@@ -39,7 +40,7 @@ public:
   virtual void Draw(Option_t *options= 0);
 
   // container management
-  TObject *findObject(const char *name) const;
+  TObject *findObject(const char *name, const TClass* clas=0) const;
   void addPlotable(RooPlotable *plotable, Option_t *drawOptions= "");
   void addObject(TObject* obj, Option_t* drawOptions= "");
   void addTH1(TH1 *hist, Option_t* drawOptions= "");
@@ -75,6 +76,8 @@ public:
  
   virtual void SetMaximum(Double_t maximum = -1111) ;
   virtual void SetMinimum(Double_t minimum = -1111) ;
+
+  Double_t chiSquare(const char* pdfname=0, const char* histname=0) const ;
 
 protected:
   void initialize();

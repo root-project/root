@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooPlot.cc,v 1.22 2001/10/30 07:29:15 verkerke Exp $
+ *    File: $Id: RooPlot.cc,v 1.23 2001/10/31 07:19:30 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -28,6 +28,8 @@
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooPlotable.hh"
 #include "RooFitCore/RooArgSet.hh"
+#include "RooFitCore/RooCurve.hh"
+#include "RooFitCore/RooHist.hh"
 
 #include "TAttLine.h"
 #include "TAttFill.h"
@@ -42,7 +44,7 @@ ClassImp(RooPlot)
   ;
 
 static const char rcsid[] =
-"$Id: RooPlot.cc,v 1.22 2001/10/30 07:29:15 verkerke Exp $";
+"$Id: RooPlot.cc,v 1.23 2001/10/31 07:19:30 verkerke Exp $";
 
 RooPlot::RooPlot(Float_t xmin, Float_t xmax) :
   TH1(histName(),"A RooPlot",100,xmin,xmax), _plotVarClone(0), 
@@ -368,7 +370,7 @@ Bool_t RooPlot::drawAfter(const char *after, const char *target) {
   return _items.moveAfter(after, target, caller("drawAfter"));
 }
 
-TObject *RooPlot::findObject(const char *name) const {
+TObject *RooPlot::findObject(const char *name, const TClass* clas) const {
   // Find the named object in our list of items and return a pointer
   // to it. Return zero and print a warning message if the named
   // object cannot be found. If no name is supplied the last object
@@ -379,16 +381,21 @@ TObject *RooPlot::findObject(const char *name) const {
   // methods to change the drawing style attributes of a contained
   // object directly.
 
-  TObject *obj(0) ;
-  if (name) {
-    obj= _items.FindObject(name);
-    if(0 == obj) {
-      cout << fName << "::findObject: cannot find object named \"" << name << "\"" << endl;
+  TObject *obj(0), *ret(0) ;
+
+  TIterator* iter = _items.MakeIterator() ;
+  while(obj=iter->Next()) {
+    if ((!name || !TString(name).CompareTo(obj->GetName())) && 
+	(!clas || (obj->IsA()==clas))) {
+      ret = obj ;
     }
-  } else {
-    obj = _items.Last() ;
   }
-    return obj;
+  delete iter ;
+  
+  if (ret==0) {
+    cout << "RooPlot::findObject(" << GetName() << ") cannot find object " << (name?name:"<last>") << endl ;
+  }
+  return ret ;
 }
 
 TString RooPlot::getDrawOptions(const char *name) const {
@@ -428,6 +435,26 @@ void RooPlot::SetMaximum(Double_t maximum)
 void RooPlot::SetMinimum(Double_t minimum) 
 {
   TH1::SetMinimum(minimum==-1111?_defYmin:minimum) ;
+}
+
+
+Double_t RooPlot::chiSquare(const char* curvename, const char* histname) const 
+{
+  // Find curve object
+  RooCurve* curve = (RooCurve*) findObject(curvename,RooCurve::Class()) ;
+  if (!curve) {
+    cout << "RooPlot::chiSquare(" << GetName() << ") cannot find curve" << endl ;
+    return -1. ;
+  }
+
+  // Find histogram object
+  RooHist* hist = (RooHist*) findObject(histname,RooHist::Class()) ;
+  if (!hist) {
+    cout << "RooPlot::chiSquare(" << GetName() << ") cannot find histogram" << endl ;
+    return -1. ;
+  }
+
+  return curve->chiSquare(*hist) ;
 }
 
 

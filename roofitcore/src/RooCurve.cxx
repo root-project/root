@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooCurve.cc,v 1.24 2001/10/09 01:41:19 verkerke Exp $
+ *    File: $Id: RooCurve.cc,v 1.25 2001/10/27 22:28:20 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu
  * History:
@@ -25,6 +25,7 @@
 // #include "BaBar/BaBar.hh"
 
 #include "RooFitCore/RooCurve.hh"
+#include "RooFitCore/RooHist.hh"
 #include "RooFitCore/RooAbsReal.hh"
 #include "RooFitCore/RooArgSet.hh"
 #include "RooFitCore/RooRealVar.hh"
@@ -40,7 +41,7 @@
 ClassImp(RooCurve)
 
 static const char rcsid[] =
-"$Id: RooCurve.cc,v 1.24 2001/10/09 01:41:19 verkerke Exp $";
+"$Id: RooCurve.cc,v 1.25 2001/10/27 22:28:20 verkerke Exp $";
 
 RooCurve::RooCurve() {
   initialize();
@@ -188,6 +189,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   Double_t x,dx= (xhi-xlo)/(minPoints-1.);
   for(Int_t step= 0; step < minPoints; step++) {
     x= xlo + step*dx;
+    if (step==minPoints-1) x-=1e-15 ;
     yval[step]= func(&x);
     updateYAxisLimits(yval[step]);
   }
@@ -195,14 +197,20 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   // store points of the coarse scan and calculate any refinements necessary
   Double_t minDx= resolution*(xhi-xlo);
   Double_t x1,x2= xlo;
-  addPoint(xlo,0) ;
+
+  addPoint(xlo-1,0) ;
+  addPoint(xlo-1,yval[0]) ;
+
   addPoint(xlo,yval[0]);
   for(Int_t step= 1; step < minPoints; step++) {
     x1= x2;
     x2= xlo + step*dx;
     addRange(func,x1,x2,yval[step-1],yval[step],prec,minDx);
   }
-  addPoint(xhi,0) ;
+  addPoint(xhi,yval[minPoints-1]) ;
+
+  addPoint(xhi+1,yval[minPoints-1]) ;
+  addPoint(xhi+1,0) ;
 
   // cleanup
   delete [] yval;
@@ -267,4 +275,79 @@ void RooCurve::printToStream(ostream& os, PrintOption opt, TString indent) const
       }
     }
   }
+}
+
+
+Double_t RooCurve::chiSquare(const RooHist& hist) const 
+{
+  Int_t i,np = hist.GetN() ;
+  Double_t x,y,eyl,eyh ;
+  Double_t hbinw2 = hist.getNominalBinWidth()/2 ;
+
+  Double_t chisq(0) ;
+  for (i=0 ; i<np ; i++) {    
+    // Retrieve histogram contents
+    ((RooHist&)hist).GetPoint(i,x,y) ;
+    eyl = hist.GetEYlow()[i] ;
+    eyh = hist.GetEYhigh()[i] ;
+
+    // Integrate function over this bin
+    Double_t avg = average(x-hbinw2,x+hbinw2) ;
+
+    // Add pull^2 to chisq
+    if (y!=0) {      
+      Double_t pull = (y>avg) ? ((y-avg)/eyh) : ((y-avg)/eyl) ;
+      chisq += pull*pull ;
+    }
+  }
+
+  // Return chisq/nDOF 
+  return chisq / np ;
+}
+
+
+
+Double_t RooCurve::average(Double_t lo, Double_t hi) const
+{
+  // Find points corresponding to first and last point
+  Int_t ifirst = findPoint(lo) ;
+  Int_t ilast  = findPoint(hi) ;
+
+  if (ilast<=ifirst) {
+    cout << "RooCurve::average(" << GetName() 
+	 << ") invalid range (" << lo << "," << hi << ")" << endl ;
+    return 0 ;
+  }
+
+  // Trapezoid integration
+  Int_t i ;
+  Double_t sum(0),x1,y1,x2,y2 ;
+  for (i=ifirst ; i<ilast ; i++) {
+    ((RooCurve&)*this).GetPoint(i,x1,y1) ;
+    ((RooCurve&)*this).GetPoint(i+1,x2,y2) ;
+    sum += (x2-x1)*(y1+y2)/2 ;
+  }
+
+  // Return trapezoid sum devided by integration range
+  ((RooCurve&)*this).GetPoint(ifirst,x1,y1) ;
+  ((RooCurve&)*this).GetPoint(ilast,x2,y2) ;
+  return sum/(x2-x1) ;
+}
+
+
+
+Int_t RooCurve::findPoint(Double_t xvalue) const
+{
+  Double_t delta(999.),x,y ;
+  Int_t i,n = GetN() ;
+  Int_t ibest(-1) ;
+  for (i=0 ; i<n ; i++) {
+    ((RooCurve&)*this).GetPoint(i,x,y) ;
+    if (fabs(xvalue-x)<delta) {
+      delta = fabs(xvalue-x) ;
+      ibest = i ;
+    }
+  }
+
+  return (delta<1e-10)?ibest:-1 ;
 }
