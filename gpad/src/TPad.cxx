@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.101 2003/04/09 08:18:04 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.102 2003/05/19 13:40:07 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -955,7 +955,7 @@ void TPad::CreateNewPave(Int_t event, Int_t px, Int_t py, Int_t mode)
          atext[kTMAX-1] = 0;
          gVirtualX->RequestString(pxl, pyl, atext);
          for (i=kTMAX-2;i>=0;i--) {
-            if (atext[i] != ' ') {
+            if ((i==0) || (atext[i] != ' ')) {
                atext[i+1] = 0;
                break;
             }
