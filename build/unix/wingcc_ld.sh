@@ -12,25 +12,17 @@ while [ "$1" != "" ]; do
        dllname="$1"; dllbase=`basename $1`; 
        if [ "`echo $dllname | sed 's{^lib/.*\.dll${{'`" != "$dllname" ]; then
 	   isdll=1
-	   args="$args bin/$dllbase" 
+	   args="$args bin/$dllbase -Wl,--out-implib=$dllname.a" 
        else
 	   args="$args $1" 
        fi ;;
-   -Wl,--no-whole-archive) 
-      found_no_whole_archive=yes;
-      args="$args $1" ;;
    *) args="$args $1" ;;
    esac
    shift
 done
 
-ldversion=0`ld -V| head -n1 | sed 's/.* \([[:digit:]]*$\)/\1/' | egrep '[[:digit:]]+'`
-if [ $ldversion -lt 20030404 ]; then 
-    outimplib="-Wl,--out-implib,${dllname}.a"
-fi
-
 # 
-g++ $outimplib $args \
+g++ $args \
   && ( if [ "$isdll" != "0" ]; then \
           ln -sf ../bin/$dllbase $dllname; \
        fi )
