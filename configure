@@ -54,8 +54,8 @@ confhelp() {
     echo "enable/disable options, prefix with either --enable- or --disable-"
     echo "   shared          Use shared 3rd party libraries if possible"
     echo "   rpath           Set library path on executables"
-    echo "   star            Build STAR contrib library"
     echo "   thread          Thread support"
+    echo "   star            Build STAR contrib library"
     echo "   ttf             True Type Font support, requires libtff"
     echo "   opengl          OpenGL support, requires libGL and libGLU"
     echo "   cern            CERNLIB usage, build h2root and g2root"
@@ -65,7 +65,7 @@ confhelp() {
     echo "   afs             AFS support, requires AFS libs and objects"
     echo "   pythia          Pythia5 EG support, requires libPythia"
     echo "   pythia6         Pythia6 EG support, requires libPythia6"
-    echo "   venus           Venus EG suuport, requires libVenus"
+    echo "   venus           Venus EG support, requires libVenus"
     echo "with options, prefix with --with-, enables corresponding support"
     echo "   xpm-libdir      XPM support, path to libXpm"
     echo "   thread-libdir   Thread support, path to libpthread"
@@ -211,7 +211,7 @@ fi
 #
 # STAR Library (Contributed library)
 #
-if [ "x$enable_star" = "xyes" ]; then
+if [ "x$enable_star" = "xyes" -o "$STAR" ]; then
     enable_star="1"
 else
     enable_star=""
@@ -803,7 +803,7 @@ if [ "x$enable_pythia6" != "xno" ]; then
             pythia6lib=${pythia6libdir}/${pythia6lib}
             unset pythia6libdir
         else
-            pythia6lib=`echo $pythia6lib | sed 's|^lib\(.*\)\..*|-l\1|'`
+            pythia6lib=`echo $pythia6lib | sed 's|lib\(.*\)\..*|-l\1|'`
             pythia6libdir=-L${pythia6libdir}
         fi
     fi
@@ -820,8 +820,8 @@ fi
 #
 if [ "x$enable_venus" != "xno" ]; then
     echo $ac_n "Checking for libVenus ... $ac_c"
-    if [ "x$venuslib" != "x" ]; then
-        libdirs=$venuslib
+    if [ "x$venuslibdir" != "x" ]; then
+        libdirs=${venuslibdir}
     else
         libdirs="$VENUS $VENUS/lib /cern/pro/lib \
                 /opt/venus /usr/lib/venus /usr/local/lib/venus \
@@ -837,12 +837,15 @@ if [ "x$enable_venus" != "xno" ]; then
     for i in $libdirs; do
         for j in $libs; do
             if [ -r "$i/$j" ]; then
-                venuslib=$i/$j
+                venuslibdir=$i
+                venuslib=$j
                 break 2
             fi
         done
     done
     echo $venuslibdir
+    unset libs
+    unset libdirs
 
     if [ "x$venuslibdir" = "xno" ]; then
         unset venuslib
