@@ -39,6 +39,6 @@ void twoscales()
    TGaxis *axis = new TGaxis(gPad->GetUxmax(),gPad->GetUymin(),
          gPad->GetUxmax(), gPad->GetUymax(),0,rightmax,510,"+L");
    axis->SetLineColor(kRed);
-   axis->SetTextColor(kRed);
+   axis->SetLabelColor(kRed);
    axis->Draw();
 }
