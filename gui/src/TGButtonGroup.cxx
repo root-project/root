@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.4 2000/10/22 19:28:58 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButtonGroup.cxx,v 1.5 2001/01/10 09:35:00 rdm Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   16/10/2000
 
 /*************************************************************************
@@ -280,7 +280,7 @@ TGButton *TGButtonGroup::Find(Int_t id) const
    register TGButton *item = 0;
 
    while ((item = (TGButton*)next())) {
-      if ((Int_t)fMapOfButtons->GetValue(item) == id) break;   // found
+      if ((Int_t)(long)fMapOfButtons->GetValue(item) == id) break;   // found
    }
 
    return item;
@@ -294,7 +294,7 @@ Int_t TGButtonGroup::GetId(TGButton *button) const
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(button);
    if (a)
-      return (Int_t) a->Value();
+      return (Int_t)(long) a->Value();
    else
       return -1;
 }
@@ -327,7 +327,7 @@ void TGButtonGroup::ButtonPressed()
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t) a->Value();
+      Int_t id = (Int_t)(long) a->Value();
       Pressed(id);
    }
 }
@@ -342,7 +342,7 @@ void TGButtonGroup::ButtonReleased()
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t) a->Value();
+      Int_t id = (Int_t)(long) a->Value();
       Released(id);
    }
 }
@@ -357,7 +357,7 @@ void TGButtonGroup::ButtonClicked()
 
    TAssoc *a = (TAssoc*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t) a->Value();
+      Int_t id = (Int_t)(long) a->Value();
       Clicked(id);
    }
 }
