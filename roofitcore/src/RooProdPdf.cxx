@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooProdPdf.cc,v 1.32 2002/11/18 19:57:44 wverkerke Exp $
+ *    File: $Id: RooProdPdf.cc,v 1.33 2003/01/14 00:07:54 wverkerke Exp $
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -395,7 +395,7 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bo
     RooArgList* plist = _partListMgr.getNormListByIndex(i) ;
 
     // Only redirect owned lists in recursive mode
-    if (!isRecursive && !plist->isOwning()) continue ;
+    if (!isRecursive || !plist->isOwning()) continue ;
 
     TIterator* iter = plist->createIterator() ;
     RooAbsArg* arg ;
