@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.cxx,v 1.2 2000/05/24 10:31:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -537,7 +537,7 @@ ULong_t TObject::Hash()
 }
 
 //______________________________________________________________________________
-Bool_t TObject::InheritsFrom(const char *classname)
+Bool_t TObject::InheritsFrom(const char *classname) const
 {
    // Returns kTRUE if object inherits from class "classname".
 
@@ -545,7 +545,7 @@ Bool_t TObject::InheritsFrom(const char *classname)
 }
 
 //______________________________________________________________________________
-Bool_t TObject::InheritsFrom(const TClass *cl)
+Bool_t TObject::InheritsFrom(const TClass *cl) const
 {
    // Returns kTRUE if object inherits from TClass cl.
 

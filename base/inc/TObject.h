@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TObject.h,v 1.2 2000/05/24 10:31:47 brun Exp $
 // Author: Rene Brun   26/12/94
 
 /*************************************************************************
@@ -134,8 +134,8 @@ public:
    virtual const char *GetTitle() const;
    virtual Bool_t      HandleTimer(TTimer *timer);
    virtual ULong_t     Hash();
-   virtual Bool_t      InheritsFrom(const char *classname);
-   virtual Bool_t      InheritsFrom(const TClass *cl);
+   virtual Bool_t      InheritsFrom(const char *classname) const;
+   virtual Bool_t      InheritsFrom(const TClass *cl) const;
    virtual void        Inspect(); // *MENU*
    virtual Bool_t      IsFolder();
    virtual Bool_t      IsEqual(TObject *obj);
