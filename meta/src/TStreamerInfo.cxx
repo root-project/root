@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.180 2003/10/18 19:32:49 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.181 2003/11/14 11:11:21 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -364,8 +364,25 @@ void TStreamerInfo::BuildCheck()
    TObjArray *array;
    if (fClass) {
       array = fClass->GetStreamerInfos();
-      TStreamerInfo *info = (TStreamerInfo *)array->At(fClassVersion);
-      // NOTE: Should we check if the already exsiting info is the same as
+      TStreamerInfo *info = 0;
+	  // if a foreign class, search info with same checksum
+	  if (fClass->IsForeign()) {
+		  Int_t ninfos = array->GetEntriesFast();
+		  for (Int_t i=1;i<ninfos;i++) {
+			  info = (TStreamerInfo*)array->At(i);
+			  if (!info) continue;
+			  if (fCheckSum == info->GetCheckSum()) {
+				  fClassVersion = i;
+				  //printf("found class with checksum, version=%d\n",i);
+				  break;
+              } else {
+				  info = 0;
+              }
+          }
+      } else {
+			(TStreamerInfo *)array->At(fClassVersion);
+      }
+	  // NOTE: Should we check if the already exsiting info is the same as
       // the current one? Yes
       // In case a class (eg Event.h) has a TClonesArray of Tracks, it could be
       // that the old info does not have the class name (Track) in the data
@@ -393,13 +410,18 @@ void TStreamerInfo::BuildCheck()
             //give a last chance. Due to a new CINT behaviour with enums
             //verify the checksum ignoring members of type enum
             if (fCheckSum != fClass->GetCheckSum(1)) {
-               Warning("BuildCheck","\n\
+				if (fClass->IsForeign()) {
+					fClassVersion = fClass->GetClassVersion() + 1;
+					//printf("setting fClassVersion=%d\n",fClassVersion);
+                } else {
+                    Warning("BuildCheck","\n\
         The StreamerInfo of class %s read from file %s\n\
         has the same version (=%d) as the active class but a different checksum.\n\
         You should update the version to ClassDef(%s,%d).\n\
         Do not try to write objects with the current class definition,\n\
         the files will not be readable.\n",GetName(),gDirectory->GetFile()->GetName()
                   ,fClassVersion,GetName(),fClassVersion+1);
+                }
             }
       } else {
          if (info) {
