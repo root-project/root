@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.2 2000/06/13 12:16:22 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TCanvas.cxx,v 1.3 2000/06/14 16:33:28 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -616,6 +616,7 @@ void TCanvas::Draw(Option_t *)
 void TCanvas::DrawClone(Option_t *option)
 {
    // Draw a clone of this canvas
+   // A new canvas is created that is a clone of this canvas
 
    const char *defcanvas = gROOT->GetDefCanvasName();
    char *cdef;
@@ -630,6 +631,28 @@ void TCanvas::DrawClone(Option_t *option)
    newCanvas->SetName(cdef);
 
    newCanvas->Draw(option);
+}
+
+
+//______________________________________________________________________________
+void TCanvas::DrawClonePad()
+{
+   // Draw a clone of this canvas into the current pad
+   // In an interactive session, select the destination/current pad
+   // with the middle mouse button, then point to the canvas area to select
+   // the canvas context menu item DrawClonePad.
+   // Note that the original canvas may have subpads.
+
+  TPad *pad = (TPad*)gROOT->GetSelectedPad();
+  TObject *obj, *clone;
+  TIter next(GetListOfPrimitives());
+  while ((obj=next())) {
+     gROOT->SetSelectedPad(pad);
+     clone = obj->Clone();
+     pad->GetListOfPrimitives()->Add(clone);
+  }
+  pad->Modified();
+  pad->Update();
 }
 
 
