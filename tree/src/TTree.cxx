@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.180 2004/02/17 08:18:17 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.181 2004/02/17 16:19:59 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2060,7 +2060,7 @@ Int_t TTree::Draw(const char *varexp, const char *selection, Option_t *option,In
 //                 for the current iteration otherwise return the value of "alternate".
 //                 For example, with arr1[3] and arr2[2]
 //    tree->Draw("arr1-Alt$(arr2,0)");
-//                 will draw arr[0]+arr2[0] ; arr[1]+arr2[1] and arr[1]+0
+//                 will draw arr1[0]+arr2[0] ; arr1[1]+arr2[1] and arr1[2]+0
 //                 Or with a variable size array arr3
 //    tree->Draw("Alt$(arr3[0],0)+Alt$(arr3[1],0)+Alt$(arr3[2],0)");
 //                 will draw the sum arr3 for the index 0 to min(2,actual_size_of_arr3-1)
@@ -2825,7 +2825,7 @@ TLeaf *TTree::GetLeaf(const char *aname)
 
    char *slash = (char*)strchr(aname,'/');
    char *name;
-   Int_t nbch = 0;
+   UInt_t nbch = 0;
    if (slash) {
       name = slash+1;
       nbch = slash-aname;
@@ -2837,7 +2837,20 @@ TLeaf *TTree::GetLeaf(const char *aname)
    while ((leaf = (TLeaf*)nextl())) {
       if (strcmp(leaf->GetName(),name)) continue;
       if (slash) {
-         if (strncmp(leaf->GetBranch()->GetName(),aname,nbch)) continue;
+         const char* brname = leaf->GetBranch()->GetName();
+         if (strncmp(brname,aname,nbch)) continue;
+         
+         // The start of the branch name is indentical to the content
+         // of 'aname' before the first '/'.
+         // Let's make sure that it is not longer (we are trying
+         // to avoid having jet2/value match the branch jet23
+         if ( strlen(brname)>nbch 
+              && brname[nbch]!='.'
+              && brname[nbch]!='['
+              /* any other terminators? */
+              ) {
+            continue;
+         }
       }
       return leaf;
    }
