@@ -1,4 +1,4 @@
-/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.7 2001/04/28 16:30:14 rdm Exp $ */
+/* @(#)root/gui:$Name:  $:$Id: LinkDef1.h,v 1.8 2001/05/02 00:52:07 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -27,6 +27,10 @@
 #pragma link C++ enum ETextJustification;
 #pragma link C++ enum EWidgetStatus;
 #pragma link C++ enum EWidgetMessageTypes;
+#pragma link C++ enum TGNumberFormat::EStyle;
+#pragma link C++ enum TGNumberFormat::EAttribute;
+#pragma link C++ enum TGNumberFormat::ELimit;
+#pragma link C++ enum TGNumberFormat::EStepSize;
 
 #pragma link C++ global gClient;
 
@@ -93,5 +97,8 @@
 #pragma link C++ class TGProgressBar;
 #pragma link C++ class TGHProgressBar;
 #pragma link C++ class TGVProgressBar;
+#pragma link C++ class TGNumberFormat;
+#pragma link C++ class TGNumberEntryField;
+#pragma link C++ class TGNumberEntry;
 
 #endif
