@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.41 2004/09/13 12:48:17 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGButton.cxx,v 1.42 2004/09/15 17:37:29 brun Exp $
 // Author: Fons Rademakers   06/01/98
 
 /*************************************************************************
@@ -262,7 +262,7 @@ Bool_t TGButton::HandleCrossing(Event_t *event)
    if (fState == kButtonEngaged || fState == kButtonDisabled) return kTRUE;
 
    if (event->fType == kEnterNotify) {
-      SetState(kButtonDown, kTRUE); 
+      SetState(kButtonDown, kTRUE);
    } else {
       SetState(kButtonUp, kTRUE);
    }
@@ -475,10 +475,6 @@ void TGTextButton::DoRedraw()
       fLabel->Draw(fId, GetShadowGC()(), x, y + max_ascent);
    } else {
       fLabel->Draw(fId, fNormGC, x, y + max_ascent);
-   }
-
-   if (IsDown()) {
-      gSystem->Sleep(100);
    }
 }
 
