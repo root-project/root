@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.9 2002/11/26 10:24:09 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TFunction.cxx,v 1.10 2003/06/13 06:55:48 brun Exp $
 // Author: Fons Rademakers   07/02/97
 
 /*************************************************************************
@@ -45,22 +45,32 @@ TFunction::TFunction(G__MethodInfo *info) : TDictionary()
 //______________________________________________________________________________
 TFunction::TFunction(const TFunction &orig) : TDictionary(orig)
 {
-   if (orig.fInfo) fInfo = new G__MethodInfo(*orig.fInfo);
-   else fInfo = 0;
-   fMethodArgs = 0;   
+   // Copy operator.
+
+   if (orig.fInfo)
+      fInfo = new G__MethodInfo(*orig.fInfo);
+   else
+      fInfo = 0;
+   fMethodArgs = 0;
 }
 
 //______________________________________________________________________________
-TFunction& TFunction::operator=(const TFunction &orig)
+TFunction& TFunction::operator=(const TFunction &rhs)
 {
-   if (orig.fInfo) {
-      fInfo = new G__MethodInfo(*orig.fInfo);
-      SetName(fInfo->Name());
-      SetTitle(fInfo->Title());
+   // Assignment operator.
+
+   if (this != &rhs) {
+      delete fInfo;
+      if (fMethodArgs) fMethodArgs->Delete();
+      delete fMethodArgs;
+      if (rhs.fInfo) {
+         fInfo = new G__MethodInfo(*rhs.fInfo);
+         SetName(fInfo->Name());
+         SetTitle(fInfo->Title());
+      } else
+         fInfo = 0;
+      fMethodArgs = 0;
    }
-   else fInfo = 0;
-   fMethodArgs = 0;
-   
    return *this;
 }
 
@@ -76,8 +86,10 @@ TFunction::~TFunction()
 }
 
 //______________________________________________________________________________
-TObject *TFunction::Clone(const char *newname) const {
-   
+TObject *TFunction::Clone(const char *newname) const
+{
+   // Clone method.
+
    TNamed *newobj = new TFunction(*this);
    if (newname && strlen(newname)) newobj->SetName(newname);
    return newobj;

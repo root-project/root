@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.7 2003/04/03 16:55:12 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.h,v 1.8 2003/06/13 14:21:27 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -62,8 +62,8 @@ public:
    TMethodCall();
    TMethodCall(TClass *cl, const char *method, const char *params);
    TMethodCall(const char *function, const char *params);
-   TMethodCall(const TMethodCall&);
-   TMethodCall& operator=(const TMethodCall&);
+   TMethodCall(const TMethodCall &org);
+   TMethodCall& operator=(const TMethodCall &rhs);
    ~TMethodCall();
 
    void           Init(TClass *cl, const char *method, const char *params);

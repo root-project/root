@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.2 2001/10/29 16:23:54 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethod.cxx,v 1.3 2003/06/13 14:21:27 brun Exp $
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -63,22 +63,30 @@ TMethod::TMethod(G__MethodInfo *info, TClass *cl) : TFunction(info)
 //______________________________________________________________________________
 TMethod::TMethod(const TMethod& orig) : TFunction(orig)
 {
+   // Copy ctor.
+
    fClass = orig.fClass;
    fMenuItem = orig.fMenuItem;
 }
 
 //______________________________________________________________________________
-TMethod& TMethod::operator=(const TMethod& orig) 
+TMethod& TMethod::operator=(const TMethod& rhs)
 {
-   TFunction::operator=(orig);
-   fClass = orig.fClass;
-   fMenuItem = orig.fMenuItem;
+   // Assignment operator.
+
+   if (this != &rhs) {
+      TFunction::operator=(rhs);
+      fClass = rhs.fClass;
+      fMenuItem = rhs.fMenuItem;
+   }
    return *this;
 }
 
 //______________________________________________________________________________
-TObject *TMethod::Clone(const char *newname) const {
-   
+TObject *TMethod::Clone(const char *newname) const
+{
+   // Clone method.
+
    TNamed *newobj = new TMethod(*this);
    if (newname && strlen(newname)) newobj->SetName(newname);
    return newobj;
@@ -232,7 +240,6 @@ TDataMember *TMethod::FindDataMember()
     //if nothing found - return null -pointer:
     return 0;
 }
-
 
 //______________________________________________________________________________
 TList *TMethod::GetListOfMethodArgs()

@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.12 2003/04/11 11:48:11 rdm Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethodCall.cxx,v 1.13 2003/06/13 14:21:27 brun Exp $
 // Author: Fons Rademakers   13/06/96
 
 /*************************************************************************
@@ -85,22 +85,9 @@ TMethodCall::TMethodCall(const char *function, const char *params)
 }
 
 //______________________________________________________________________________
-TMethodCall::TMethodCall(const TMethodCall &orig) {
-
-   fFunc     = orig.fFunc ? new G__CallFunc(*orig.fFunc) : 0;
-   fClass    = orig.fClass;
-   fMethod   = orig.fMethod;
-   fParams   = orig.fParams;
-   fProto    = orig.fProto;
-   fDtorOnly = orig.fDtorOnly;
-   fRetType  = orig.fRetType;
-
-   fMetPtr = 0;   
-}
-
-//______________________________________________________________________________
-TMethodCall &TMethodCall::operator=(const TMethodCall &orig) 
+TMethodCall::TMethodCall(const TMethodCall &orig)
 {
+   // Copy ctor.
 
    fFunc     = orig.fFunc ? new G__CallFunc(*orig.fFunc) : 0;
    fClass    = orig.fClass;
@@ -111,6 +98,26 @@ TMethodCall &TMethodCall::operator=(const TMethodCall &orig)
    fRetType  = orig.fRetType;
 
    fMetPtr = 0;
+}
+
+//______________________________________________________________________________
+TMethodCall &TMethodCall::operator=(const TMethodCall &rhs)
+{
+   // Assignement operator.
+
+   if (this != &rhs) {
+      delete fFunc;
+      fFunc     = rhs.fFunc ? new G__CallFunc(*rhs.fFunc) : 0;
+      fClass    = rhs.fClass;
+      fMethod   = rhs.fMethod;
+      fParams   = rhs.fParams;
+      fProto    = rhs.fProto;
+      fDtorOnly = rhs.fDtorOnly;
+      fRetType  = rhs.fRetType;
+
+      delete fMetPtr;
+      fMetPtr = 0;
+   }
 
    return *this;
 }
@@ -247,7 +254,7 @@ TFunction *TMethodCall::GetMethod()
          if (fMetPtr) fMetPtr = new TFunction(*fMetPtr);
       }
    }
-  
+
    return fMetPtr;
 }
 

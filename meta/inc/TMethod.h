@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TMethod.h,v 1.2 2001/02/09 10:24:46 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TMethod.h,v 1.3 2003/06/13 14:21:26 brun Exp $
 // Author: Rene Brun   09/02/95
 
 /*************************************************************************
@@ -50,8 +50,8 @@ private:
 
 public:
                            TMethod(G__MethodInfo *info = 0, TClass *cl = 0);
-                           TMethod(const TMethod&);
-   TMethod&                operator=(const TMethod&);
+                           TMethod(const TMethod &org);
+   TMethod&                operator=(const TMethod &rhs);
    virtual                ~TMethod() { }
    virtual TObject        *Clone(const char *newname="") const;
    TClass                 *GetClass() const { return fClass; }
@@ -60,7 +60,7 @@ public:
    virtual TDataMember    *FindDataMember();
    virtual TList          *GetListOfMethodArgs();
    virtual void            SetMenuItem(EMenuItemKind menuItem) {fMenuItem=menuItem;}
-   
+
    ClassDef(TMethod,0)  //Dictionary for a class member function (method)
 };
 
