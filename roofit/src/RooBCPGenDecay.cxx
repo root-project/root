@@ -133,7 +133,7 @@ Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code) co
     // Integration over 'tag'
   case 1:
     if (basisIndex==_basisExp) {
-      return 1 ;
+      return 2 ;
     }
     
     if (basisIndex==_basisSin || basisIndex==_basisCos) {

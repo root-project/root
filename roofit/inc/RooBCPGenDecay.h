@@ -1,11 +1,12 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
- * Package: RooFitCore
+ * Package: RooFitModels
  *    File:
  * Authors:
- *   PB, Paul Bloom, CU Boulder, bloom@slac.stanford.edu
+ * Authors:
+ *   Jim Smith, jgsmith@pizero.colorado.edu
  * History:
- *   05-Jun-2001 WV Created initial version
+ *   08-Jul-2002 JGS Created initial version
  *
  * Copyright (C) 2001 University of California
  *****************************************************************************/
