@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.120 2002/04/06 16:42:00 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TTree.cxx,v 1.121 2002/04/12 19:19:52 brun Exp $
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
@@ -2719,7 +2719,16 @@ void TTree::Print(Option_t *option) const
      TKey *key = fDirectory->GetKey(GetName());
      if (key) s = key->GetNbytes();
   }
-  Double_t total = fTotBytes + s;
+  Double_t total = fTotBytes;
+  Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
+  Int_t l;
+  TBranch *br;
+  TLeaf *leaf;
+  for (l=0;l<nl;l++) {
+     leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
+     br   = leaf->GetBranch();
+     total += br->GetTotalSize();
+  }
   Int_t file     = Int_t(fZipBytes) + s;
   Float_t cx     = 1;
   if (fZipBytes) cx = fTotBytes/fZipBytes;
@@ -2729,12 +2738,8 @@ void TTree::Print(Option_t *option) const
   Printf("*        :          : Tree compression factor = %6.2f                       *",cx);
   Printf("******************************************************************************");
 
-  TBranch *br;
   if (strstr(option,"toponly")) {
-     Int_t nl = ((TTree*)this)->GetListOfLeaves()->GetEntries();
-     TLeaf *leaf;
      Int_t *count = new Int_t[nl];
-     Int_t l;
      Int_t keep =0;
      for (l=0;l<nl;l++) {
         leaf = (TLeaf *)((TTree*)this)->GetListOfLeaves()->At(l);
