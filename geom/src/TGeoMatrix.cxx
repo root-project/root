@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.37 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoMatrix.cxx,v 1.38 2005/04/04 15:00:39 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -1364,9 +1364,7 @@ TGeoMatrix& TGeoCombiTrans::Inverse() const
 void TGeoCombiTrans::RegisterYourself()
 {
    TGeoMatrix::RegisterYourself();
-   if (fRotation && TestBit(kGeoMatrixOwned)) {
-      if (fRotation->IsRotation()) fRotation->RegisterYourself();
-   }   
+   if (fRotation && fRotation->IsRotation()) fRotation->RegisterYourself();
 }
 
 //_____________________________________________________________________________

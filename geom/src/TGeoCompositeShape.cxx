@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.28 2005/03/09 18:19:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCompositeShape.cxx,v 1.29 2005/04/01 13:53:17 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -366,15 +366,19 @@ void TGeoCompositeShape::SavePrimitive(ofstream &out, Option_t *option)
    if (!strcmp(option,"s")) {
       fNode->GetLeftShape()->SavePrimitive(out,option);
       fNode->GetRightShape()->SavePrimitive(out,option);
-      fNode->GetLeftMatrix()->SavePrimitive(out,option);
-      fNode->GetRightMatrix()->SavePrimitive(out,option);
+      TGeoMatrix *matleft = fNode->GetLeftMatrix();
+      TGeoMatrix *matright = fNode->GetRightMatrix();
+      matleft->SavePrimitive(out,option);
+      if (!matleft->IsIdentity()) 
+         out << "   " << matleft->GetPointerName() << "->RegisterYourself();" << endl;
+      matright->SavePrimitive(out,option);
+      if (!matright->IsIdentity()) 
+         out << "   " << matright->GetPointerName() << "->RegisterYourself();" << endl;
       return;
    } else {
       out << "   // Shape: " << GetName() << " type: " << ClassName() << endl;   
    }
-   SavePrimitive(out,"s");
-   out << "   bool_name = \"" << GetTitle() << "\";" << endl;
-   out << "   pShape = new TGeoCompositeShape(\"" << GetName() << "\", bool_name.Data());" << endl;
+   out << "   pShape = new TGeoCompositeShape(\"" << GetName() << "\",\"" << GetTitle() << "\");" << endl;
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 

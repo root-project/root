@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.22 2005/02/28 20:52:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoXtru.cxx,v 1.23 2005/03/09 18:19:26 brun Exp $
 // Author: Mihaela Gheata   24/01/04
 
 /*************************************************************************
@@ -850,14 +850,14 @@ void TGeoXtru::SavePrimitive(ofstream &out, Option_t * /*option*/)
    out << "   xtru->SetName(\"" << GetName() << "\");" << endl;
    Int_t i;
    for (i=0; i<fNvert; i++) {
-      out << "   xv[" << i << "] = " << fX[i] << ";   yv[" << i << "] = " << fY[i] << ";" << endl;
+      out << "   xvert[" << i << "] = " << fX[i] << ";   yvert[" << i << "] = " << fY[i] << ";" << endl;
    }
-   out << "   xtru->DefinePolygon(nvert,xv,yv);" << endl;
+   out << "   xtru->DefinePolygon(nvert,xvert,yvert);" << endl;
    for (i=0; i<fNz; i++) {
-      out << "   zsect = " << fZ[i] << ";" << endl; 
-      out << "   x0    = " << fX0[i] << ";" << endl; 
-      out << "   y0    = " << fY0[i] << ";" << endl; 
-      out << "   scale = " << fScale[i] << ";" << endl; 
+      out << "   zsect  = " << fZ[i] << ";" << endl; 
+      out << "   x0     = " << fX0[i] << ";" << endl; 
+      out << "   y0     = " << fY0[i] << ";" << endl; 
+      out << "   scale0 = " << fScale[i] << ";" << endl; 
       out << "   xtru->DefineSection(" << i << ",zsect,x0,y0,scale0);" << endl;
    }
    out << "   pShape = xtru;" << endl;

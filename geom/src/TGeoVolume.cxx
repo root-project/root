@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.53 2005/02/09 14:33:37 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.54 2005/04/04 15:00:39 brun Exp $
 // Author: Andrei Gheata   30/05/02
 // Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
@@ -1035,7 +1035,6 @@ void TGeoVolume::SavePrimitive(ofstream &out, Option_t *option)
       out << "   Double_t theta, phi, h1, bl1, tl1, alpha1, h2, bl2, tl2, alpha2;" << endl;
       out << "   Double_t twist;" << endl;
       out << "   Double_t origin[3];" << endl;
-      out << "   TString bool_name;" << endl;
       out << "   Double_t rmin, rmax, rmin1, rmax1, rmin2, rmax2;" << endl;
       out << "   Double_t r, rlo, rhi;" << endl;
       out << "   Double_t phi1, phi2;" << endl;
@@ -1047,7 +1046,8 @@ void TGeoVolume::SavePrimitive(ofstream &out, Option_t *option)
       out << "   Double_t tr[3], rot[9];" << endl;
       out << "   Double_t z, density, radl, absl, w;" << endl;
       out << "   Double_t lx,ly,lz,tx,ty,tz;" << endl;
-      out << "   Double_t zsect,x0,y0,scale;" << endl;
+      out << "   Double_t xvert[50], yvert[50];" << endl;
+      out << "   Double_t zsect,x0,y0,scale0;" << endl;
       out << "   Int_t nel, numed, nz, nedges, nvert;" << endl;
       out << "   TGeoShape *pShape;" << endl << endl;
       // first save materials/media
@@ -1073,6 +1073,7 @@ void TGeoVolume::SavePrimitive(ofstream &out, Option_t *option)
       // create the shape for this volume (pShape)
       if (TestAttBit(TGeoAtt::kSavePrimitiveAtt)) return;
       fShape->SavePrimitive(out,option);
+      if (fShape->IsComposite()) fShape->SavePrimitive(out,"");
       out << "   // Volume: " << GetName() << endl;
       out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\", pShape, "<< fMedium->GetPointerName() << ");" << endl;
       if (fLineColor != 1) out << "   " << GetPointerName() << "->SetLineColor(" << fLineColor << ");" << endl;
@@ -1084,7 +1085,7 @@ void TGeoVolume::SavePrimitive(ofstream &out, Option_t *option)
    }   
    // check if we need to save the media
    if (!strcmp(option, "m")) {
-      fMedium->SavePrimitive(out,option);
+      if (fMedium) fMedium->SavePrimitive(out,option);
       for (i=0; i<nd; i++) {
          dvol = GetNode(i)->GetVolume();
          dvol->SavePrimitive(out,option);
