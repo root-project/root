@@ -71,7 +71,7 @@ protected:
    TGCheckButton       *fAddBar;          // Bar Option
    TGCheckButton       *fAdd;             // Activate more Options
    TGCheckButton       *fMakeHBar;        // Draw Horizontal Bar Chart
-   TGCheckButton       *fAddLine;         // Draw an outer line on top of the histogram   
+   TGCheckButton       *fAddSimple;       // Draw a simple histogram  (==HIST draw option)
    TGNumberEntry       *fBarWidth;        // Change the Bar Width 
    TGNumberEntry       *fBarOffset;       // Change the Bar Offset    
    TGComboBox          *fAddCombo;        // Add Lines, Bars, Fill
@@ -153,7 +153,7 @@ public:
    virtual void DoAddMarker(Bool_t on);
    virtual void DoAddBar(Bool_t);
    virtual void DoAddB(Bool_t);
-   virtual void DoAddLine(Bool_t on);
+   virtual void DoAddSimple(Bool_t on);
    virtual void DoHistSimple();
    virtual void DoHistComplex();   
    virtual void DoHistChanges();

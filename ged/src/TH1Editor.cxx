@@ -12,66 +12,114 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  TH1Editor                                                           //
+//  Editor for changing TH1 histogram attributes, rebinning & fitting.  //
+//  For all possible draw options (there are a few which are not imple- //
+//  mentable in graphical user interface) see THistPainter::Paint in    //
+//  root/histpainter/THistPainter.cxx                                   //
+
+//Begin_Html
+/*
+<img src="gif/TH1Editor_1.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/TH1Editor_2.gif">
+*/
+//End_Html
+
+//  These changes can be made via the TH1Editor:                        //
+//    Style Tab:                                                        //
+//      'Line'     : change Line attributes (color, thickness)          //
+//                   see TAttLineEditor                                 //
+//      'Fill'     : change Fill attributes (color, pattern)            //
+//                   see TAttFillEditor                                 //
+//	'Title'    : TextEntry: set the title of the histogram          //
+//      'Histogram': change the draw options of the histogram           //
+//          'Plot' : Radiobutton: draw a 2D or 3D plot of the histogram //
+//                   according to the Plot dimension there will be      //
+//                   different drawing possibilities (ComboBoxes/       //
+//                   CheckBoxes)                                        //
+//    2d Plot:                                                          //
+//      'Error'   : ComboBox: add different error bars to the histogram //
+//                  (no errors, simple, ...,  see THistPainter::Paint   //
+//      'Add'     : ComboBox: further things which can be added to the  //
+//                  histogram (None, simple/smooth line, fill area      //
+//      'Simple Drawing': CheckBox: draw a simple histogram without     //
+//                  errors (= "HIST" drawoption). In combination with   //
+//                  some other draw options an outer line is drawn on   //
+//                  top of the histogram                                //
+//      'Show markers': CheckBox: draw a marker on to of each bin (="P" //
+//                  drawoption)                                         //
+//      'Draw bar chart': CheckBox: draw a bar chart (="B" drawoption)  //
+//                  change the Fill Color with Fill in the Style Tab    //
+//                  => will show Bar menue in the Style Tab             //
+//      'Bar option': CheckBox: draw a bar chart (="BAR" drawoption)    //
+//                  => will show Bar menue in the Style Tab             //
+//    3d Plot:                                                          //
+//      'Type'    : ComboBox: set histogram type Lego-Plot or Surface   //
+//                  draw(Lego, Lego1.2, Surf, Surf1..5)                 //
+//                  see THistPainter::Paint                             //
+//      'Coords'  : ComboBox: set the coordinate system (Cartesian, ..  //
+//                  Spheric) see THistPainter::Paint                    //
+//      'Error'   : see 2D plot                                         //
+//    'Bar'       : change the bar attributes                           //
+//            'W' : change Bar Width                                    //
+//            'O' : change Bar Offset                                   //
+//      'Percentage': specifies the percentage of the bar which is drawn//
+//                    brighter and darker (10% == BAR1 drawoption)      //
+//      'Horizontal Bar': draw a horizontal bar chart                   //
 //                                                                      //
-//  Editor for histogram attributes.                                    //
-//      changing title, histogram type, coordinate system, shown Errors //
-//      and histogram shape                                             //
-//	'Title': set the title of the histogram                         //
-//  Histogram option:                                                   //
-//      'Type': define the type of histogram                            //
-//              "hist"   : When an histogram has errors it is visualized//
-//                         by default with error bars: default          //
-//              "Lego"   : Draw a lego plot with hidden line removal	//
-//              "Lego1"  : Draw a lego plot with hidden surface removal //
-//              "Lego2"  : Draw a lego plot using colors to show the   	//
-//                         cell contents				//
-//              "SURF"   : Draw a surface plot with hidden line removal	//
-//              "SURF1"  : Draw a surface plot with hidden surface 	//
-//                         removal					//
-//              "SURF2"  : Draw a surface plot using colors to show the //
-//                         cell contents				//
-//              "SURF3"  : same as SURF with in addition a contour view	//
-//                         drawn on the top				//
-//              "SURF4"  : Draw a surface using Gouraud shading		//
-//              "SURF5"  : Same as SURF3 but only the colored contour 	//
-//                         is drawn. Used with option CYL, SPH or PSR 	//
-//                         it allows to draw colored contours on a 	//
-//                         sphere, a cylinder or a in pseudo rapidy 	//
-//                         space. In cartesian or polar coordinates, 	//
-//			   option SURF3 is used.			//
-//	'Coords': define the coordinate system				//
-//		"Cartesian": use Cartesian coordinates  		//
-//		"Polar"    : Use Polar coordinates			//
-//   		"Cylindric": Use Cylindrical coordinates		//
-//    		"Spheric"  : Use Spherical coordinates			//
-//    		"Rapidity" : Use PseudoRapidity/Phi coordinates		//
-//	'Error': define error drawing					//
-//		"No Error": no error bars are drawn			//
-//		"Simple"  : Draw simple error bars			//
-//    		"Edges"   : Draw error bars with perpendicular lines at //
-//			    the edges					//
-//    		"Rectangles": Draw error bars with rectangles		//
-//   		"Fill"     : Draw a fill area througth the end points 	//
-//			     of the vertical error bars			//
-//    		"Contour"  : Draw a smoothed filled area through the 	//
-//			     end points of the error bars		//
-//	'Style'	Changing the draw style (line/bar/fill)			//
-//		"Default"  : Default layout				//
-//		"Simple Line": Draw a line througth the bin contents	//
-//		"Smooth Line": Draw a smooth curve througth bin contents//
-//		"Bar Chart"  : Bar chart option				//
-//    		"Fill Area"  : Draw histogram like with option "L" but 	//
-//			       with a fill area. Note that "L" draws 	//
-//			       also a fill area if the hist fillcolor is// 
-//			       set but the fill area corresponds to the //	
-//			       histogram contour.Draw a smooth Curve 	//
-//			       througth the histogram bins		//
-//	 ?????????? some parts are missing !!!!!!!!                     //
+//      'Marker'   : change the Marker attributes (color, appearance,   //
+//                   thickness) see TAttMarkerEditor                    //
+//Begin_Html
+/*
+<img src="gif/TH1Editor1.gif">
+*/
+//End_Html
+//      This Tab has two different layouts. One is for a histogram which//
+//      is not drawn from an ntuple. The other one is available for a   //
+//      histogram which is drawn from an ntuple. In this case the rebin //
+//      algorithm can create a rebinned histogram from the original data//
+//      i.e. the ntuple.                                                //
+//      To see te differences do:                                       //
+//         TFile f("hsimhe differences do:                              //
+//         TFile f("hsimple.root");                                     //
+//         hpx->Draw("BAR1);         // non ntuple histogram            //
+//         ntuple->Draw("px");       // ntuple histogram                //
+//    Non ntuple histogram:                                             //
+//       'Rebin': with the Slider the number of bins (shown in the field//
+//                below the Slider) can be changed to any number which  //
+//                divides the number of bins of the original histogram. //
+//                Pushing 'Apply' will delete the origin histogram and  //
+//                replace it by the rebinned one on the screen          //
+//                Pushing 'Ignore' the origin histogram will be restored//
+//    Histogram drawn from an ntuple:                                   //
+//       'Rebin'  with the slider the number of bins can be enlarged by //
+//                a factor of 2,3,4,5 (moving to the right) or reduced  //
+//                by a factor of 1/2, 1/3, 1/4, 1/5                     //
+//       'BinOffset': with the BinOffset slider the origin of the       //
+//                histogram can be changed within one binwidth          //
+//                Using this slider the effect of binning the data into //
+//                bins can be made visible => statistical fluctuations  //
+//       'Axis Range': with the DoubleSlider it is possible to zoom into//
+//                the specified axis range. It is also possible to set  //
+//                the upper and lower limit in fields below the slider  //
+//       'Delayed drawing': all the Binning sliders can set to delay    //
+//                draw mode. Then the changes on the histogram are only //
+//                updated, when the Slider is released. This should be  //
+//                activated if the redrawing of the histogram is too    //
+//                time consuming.                                       //
 //////////////////////////////////////////////////////////////////////////
 
 //Begin_Html
 /*
-<img src="gif/TH1Editor.gif">
+<img src="gif/TH1Editor1_1.gif">
+*/
+//End_Html
+//Begin_Html
+/*
+<img src="gif/TH1Editor1_2.gif">
 */
 //End_Html
 
@@ -130,7 +178,7 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    
    fHist = 0;
 
-// TextEntry for changing the title of the histogram
+   // TextEntry for changing the title of the histogram
    MakeTitle("Title");
    fTitlePrec = 2;
    fTitle = new TGTextEntry(this, new TGTextBuffer(50), kTH1_TITLE);
@@ -138,13 +186,13 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    fTitle->SetToolTipText("Enter the histogram title string");
    AddFrame(fTitle, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
   
-// Histogram draw options
+   // Histogram draw options
    TGCompositeFrame *fHistLbl = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
    fHistLbl->AddFrame(new TGLabel(fHistLbl,"Histogram"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    fHistLbl->AddFrame(new TGHorizontal3DLine(fHistLbl), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 0));
    AddFrame(fHistLbl, new TGLayoutHints(kLHintsTop,0,0,2,0));
 
-// TGButtonGroup to change: 2D plot <-> 3D plot   
+   // TGButtonGroup to change: 2D plot <-> 3D plot   
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    fDimGroup = new TGHButtonGroup(f2,"Plot");
    fDim = new TGRadioButton(fDimGroup,"2-D",kDIM_SIMPLE);
@@ -157,16 +205,18 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    fDimGroup->ChangeOptions(kFitWidth|kChildFrame|kHorizontalFrame);
    f2->AddFrame(fDimGroup, new TGLayoutHints(kLHintsTop, 4, 1, 0, 0));
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 2, 8));
-   
+
+   // Set the type of histogram (Lego0..2, Surf0..5) for 3D plot 
    f3 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
-   TGLabel *fType = new TGLabel(f3, "Type:"); 
+   TGLabel *fType = new TGLabel(f3, "Add: "); 
    f3->AddFrame(fType, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 1));
    fTypeCombo = BuildHistTypeComboBox(f3, kHIST_TYPE);
    f3->AddFrame(fTypeCombo, new TGLayoutHints(kLHintsLeft, 15, 1, 2, 1));
    fTypeCombo->Resize(86, 20);
    fTypeCombo->Associate(this);
    AddFrame(f3, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-      
+
+   //Set the coordinate system (Cartesian, Spheric, ...)      
    f4 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGLabel *fCoords = new TGLabel(f4, "Coords:"); 
    f4->AddFrame(fCoords, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 1));
@@ -176,6 +226,7 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    fCoordsCombo->Associate(this);
    AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
    
+   // Set the Error (No error, error1..5)
    TGCompositeFrame *f5 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGLabel *fError = new TGLabel(f5, "Error:"); 
    f5->AddFrame(fError, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 1));
@@ -184,7 +235,8 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    fErrorCombo->Resize(86, 20);
    fErrorCombo->Associate(this);
    AddFrame(f5, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
-   
+
+   // Further draw options: Smooth/Simple Line, Fill Area for 2D plot
    f6 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGLabel *fAddLabel = new TGLabel(f6, "Style:"); 
    f6->AddFrame(fAddLabel, new TGLayoutHints(kLHintsLeft, 6, 1, 4, 1));
@@ -194,35 +246,41 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    fAddCombo->Associate(this);
    AddFrame(f6, new TGLayoutHints(kLHintsTop, 1, 1, 0, 3));
    
+   // option related to HIST: some changes needed here! because of inconsistencies   
+   f15 = new TGCompositeFrame(this, 80, 20, kVerticalFrame); 
+   fAddSimple = new TGCheckButton(f15, "Simple Drawing", kADD_LINE);
+   fAddSimple ->SetToolTipText("A simple histogram without errors is drawn (draw option: Hist)");
+   f15->AddFrame(fAddSimple, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
+   AddFrame(f15, new TGLayoutHints(kLHintsTop, 1, 1, 0, -1)); 
+
+   // Show Marker Checkbox: draw marker (or not)
    f7 = new TGCompositeFrame(this, 80, 20, kVerticalFrame);
    fAddMarker = new TGCheckButton(f7, "Show markers", kMARKER_ONOFF);
    fAddMarker ->SetToolTipText("Make marker visible/invisible");
    f7->AddFrame(fAddMarker, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
    AddFrame(f7, new TGLayoutHints(kLHintsTop, 1, 1, 2, 0));
 
+   // Bar Chart Checkbox: draw with option B
    f8 = new TGCompositeFrame(this, 80, 20, kVerticalFrame); 
    fAddB = new TGCheckButton(f8, "Draw bar chart", kB_ONOFF);
    fAddB ->SetToolTipText("Draw a bar chart");
    f8->AddFrame(fAddB, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
    AddFrame(f8, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 
+   // Bar CheckBox: draw with option BAR + option selected by fPercentCombo (0..4) e.g. BAR2
    f9 = new TGCompositeFrame(this, 80, 20, kVerticalFrame); 
    fAddBar = new TGCheckButton(f9, "Bar option", kBAR_ONOFF);
    fAddBar ->SetToolTipText("Draw bar chart with bar-option");
    f9->AddFrame(fAddBar, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
    AddFrame(f9, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0)); 
-   
-   f15 = new TGCompositeFrame(this, 80, 20, kVerticalFrame); 
-   fAddLine = new TGCheckButton(f15, "Add outer line", kADD_LINE);
-   fAddLine ->SetToolTipText("Draw an outer line on the histogram");
-   f15->AddFrame(fAddLine, new TGLayoutHints(kLHintsLeft, 6, 1, 1, 0));
-   AddFrame(f15, new TGLayoutHints(kLHintsTop, 1, 1, 0, -1)); 
-   
+
+   // Bar Menu => appears when the BAR checkbox is set
    f10 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
    f10->AddFrame(new TGLabel(f10,"Bar"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f10->AddFrame(new TGHorizontal3DLine(f10), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    AddFrame(f10, new TGLayoutHints(kLHintsTop,0,0,6,4));
-   
+
+   // NumberEntry to change the Bar Width   
    f11 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
    TGLabel *fWidthLbl = new TGLabel(f11, "W:");                              
    f11->AddFrame(fWidthLbl, new TGLayoutHints(kLHintsLeft, 1, 3, 4, 1));
@@ -230,21 +288,24 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
                                       TGNumberFormat::kNESRealTwo,
                                       TGNumberFormat::kNEANonNegative, 
                                       TGNumberFormat::kNELLimitMinMax, 0.01, 1.);
-   fBarWidth->GetNumberEntry()->SetToolTipText("Set bar chart width");
+   fBarWidth->GetNumberEntry()->SetToolTipText("Set bin bar width");
    fBarWidth->Resize(45,20);
    f11->AddFrame(fBarWidth, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 1));
 
+   // NumberEntry to change the Bar OFfset 
    TGLabel *fOffsetLbl = new TGLabel(f11, "O:");                              
    f11->AddFrame(fOffsetLbl, new TGLayoutHints(kLHintsLeft, 6,3, 4, 1));
    fBarOffset = new TGNumberEntry(f11, 0.00, 5, kBAR_OFFSET, 
                                       TGNumberFormat::kNESRealTwo,
                                       TGNumberFormat::kNEAAnyNumber, 
                                       TGNumberFormat::kNELLimitMinMax, -1., 1.);
-   fBarOffset->GetNumberEntry()->SetToolTipText("Set bar chart offset");
+   fBarOffset->GetNumberEntry()->SetToolTipText("Set bin bar offset");
    fBarOffset->Resize(50,20);
    f11->AddFrame(fBarOffset, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 1));
    AddFrame(f11, new TGLayoutHints(kLHintsTop, 1, 1, 0, 4));
-   
+ 
+   // ComboBox which specifies the width of the Bar which should be drawn in another color
+   // i.e. specifies the number in BAR option e.g. Bar2   
    f12 = new TGCompositeFrame(this, 80, 20, kVerticalFrame);
    TGCompositeFrame *f13 = new TGCompositeFrame(f12, 80, 20, kHorizontalFrame);
    TGLabel *PercentLabel = new TGLabel(f13, "Percentage:"); 
@@ -254,36 +315,38 @@ TH1Editor::TH1Editor(const TGWindow *p, Int_t id, Int_t width,
    fPercentCombo->Associate(f13);
    f13->AddFrame(fPercentCombo, new TGLayoutHints(kLHintsLeft, 14, 1, 2, 1));
    f12->AddFrame(f13,new TGLayoutHints(kLHintsLeft, 0, 0, 0, 0));
-   
+
+   // CHeckBox for horizontal drawing of the Histogram
    fMakeHBar = new TGCheckButton(f12, "Horizontal Bar", kBAR_H);
    fMakeHBar ->SetToolTipText("Draw a horizontal bar chart with hBar-Option");
    f12->AddFrame(fMakeHBar, new TGLayoutHints(kLHintsLeft, 6, 1, 3, 0));
    AddFrame(f12, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0)); 
 
+   // Get the pointer to the Parent of the tabs (Style, Bin, Fit) to be able to call Layout, SetTab ...
    fTab = (TGTab *)(p->GetParent()->GetParent());
 
    CreateBinTab();        // Binning Tab
+   // not available yet   
 //   CreateFitTab();        // Fiting Tab
    
+   // to avoid jumping from DoAddBar to DoAddB and vice versa
    makeB=kTRUE;
+   // to avoid calling SetDrawoption after every change
    make=kTRUE;
 
-   fBinHist = 0;   
+   fBinHist = 0;     // variable to save a copy of the histogram (when not drawn from an ntuple)
    fBinOffsetSld->SetRange(0,100);
    fBinOffsetSld->SetPosition(0);
    fOffsetNumberEntry->SetNumber(0.0000);
    fCancel->SetState(kButtonDisabled);  
    fApply->SetState(kButtonDisabled);
 
-   MapSubwindows();
-   Layout();
-   MapWindow();
-   
+   // initialising Layout for the Tabs   
    fTab->MapSubwindows(); 
    fTab->Layout();
    fTab->MapWindow();
  
-   ((TGMainFrame*)GetMainFrame())->Layout();  
+//   ((TGMainFrame*)GetMainFrame())->Layout();  not needed?
 
    TClass *cl = TH1::Class();
    TGedElement *ge = new TGedElement;
@@ -316,6 +379,7 @@ void TH1Editor::ConnectSignals2Slots()
 {
    // Connect signals to slots.
 
+   //widgets for draw options
    fAddB->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddB(Bool_t)");
    fAddBar->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddBar(Bool_t)");
    fTitle->Connect("TextChanged(const char *)", "TH1Editor", this, "DoTitle(const char *)");
@@ -324,28 +388,38 @@ void TH1Editor::ConnectSignals2Slots()
    fErrorCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoHistChanges()");
    fAddCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoHistChanges()");
    fAddMarker->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddMarker(Bool_t)");
-   fAddLine->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddLine(Bool_t)");
+   fAddSimple->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddSimple(Bool_t)");
+   //change 2D <-> 3D plot
    fDim->Connect("Pressed()","TH1Editor",this,"DoHistSimple()");
    fDim0->Connect("Pressed()","TH1Editor",this,"DoHistComplex()");   
+   // change Bar Width/Offset, the second connection is needed to have the ability to confirm the value also with enter
    fBarWidth->Connect("ValueSet(Long_t)", "TH1Editor", this, "DoBarWidth()");
    (fBarWidth->GetNumberEntry())->Connect("ReturnPressed()", "TH1Editor", this, "DoBarWidth()");   
    fBarOffset->Connect("ValueSet(Long_t)", "TH1Editor", this, "DoBarOffset()");
    (fBarOffset->GetNumberEntry())->Connect("ReturnPressed()", "TH1Editor", this, "DoBarOffset()");
    fPercentCombo->Connect("Selected(Int_t)", "TH1Editor", this, "DoPercent()");
    fMakeHBar-> Connect("Toggled(Bool_t)","TH1Editor",this,"DoHBar(Bool_t))"); 
+   // Here the connections for the rebinning are created
+   // connect the Slider to the slots who do the rebinning 
+   // here: case of a histogram not derived from an ntuple
    fBinSlider->Connect("PositionChanged(Int_t)","TH1Editor",this, "DoBinMoved(Int_t)");  
    fBinSlider->Connect("Released()","TH1Editor",this, "DoBinReleased()"); 
    fBinSlider->Connect("Pressed()","TH1Editor",this, "DoBinPressed()");    
+   // numberEntry which shows/sets the actual number of bins
    fBinNumberEntry->Connect("ReturnPressed()", "TH1Editor", this, "DoBinLabel()");
+   // Buttons to accept/reject the rebinned histogram
    fApply->Connect("Clicked()", "TH1Editor", this, "DoApply()");   
    fCancel->Connect("Pressed()", "TH1Editor", this, "DoCancel()");   
+   // in case of a histogram which is derived from an ntuple these slots are used
    fBinSlider1->Connect("Released()","TH1Editor",this, "DoBinReleased1()");  
    fBinSlider1->Connect("PositionChanged(Int_t)","TH1Editor",this, "DoBinMoved1()");     
    fBinNumberEntry1->Connect("ReturnPressed()", "TH1Editor", this, "DoBinLabel1()");
+   // slider/slots to change the offset of the histogram
    fBinOffsetSld->Connect("PositionChanged(Int_t)", "TH1Editor", this,"DoOffsetMoved(Int_t)");
    fBinOffsetSld->Connect("Released()", "TH1Editor", this, "DoOffsetReleased()");
    fBinOffsetSld->Connect("Pressed()", "TH1Editor", this, "DoOffsetPressed()");
    fOffsetNumberEntry->Connect("ReturnPressed()", "TH1Editor", this, "DoBinOffset()");
+   // slider/slots to set the visible axisrange 
    fSlider->Connect("PositionChanged()","TH1Editor", this,"DoSliderMoved()");
    fSlider->Connect("Pressed()","TH1Editor", this, "DoSliderPressed()"); 
    fSlider->Connect("Released()","TH1Editor", this, "DoSliderReleased()");     
@@ -364,9 +438,9 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    SetActive(kFALSE);
       for (Int_t i=0; i < fTab->GetNumberOfTabs(); i++){
          if (fTab->GetTabContainer(i)==fBinContainer || fTab->GetTabContainer(i)==fFitContainer) {
-            fTab->GetTabContainer(i)->UnmapWindow();
-	    fTab->GetTabTab(i)->UnmapWindow();
-	    fTab->SetEnabled(i,kFALSE);
+            fTab->GetTabContainer(i)->UnmapWindow();     // Hide the Rebin tab if obj is not inherited from TH1 or 
+	    fTab->GetTabTab(i)->UnmapWindow();           // if a TH2, TH3 is drawn
+	    fTab->SetEnabled(i,kFALSE);                  // also disable is, then the current tab will be changed
 	 } 
       }
       return;                 
@@ -374,7 +448,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    TGFrameElement *el;
 
-// calling the SetModel(initialization) of all editors in the BinTab
+   // calling the SetModel(initialization) of all editors in the BinTab
    TIter nextS1(fBin->GetList());
    while ((el = (TGFrameElement *) nextS1())) {
        if ((el->fFrame)->InheritsFrom("TGedFrame"))
@@ -398,8 +472,8 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 
    fModel = obj;
    fPad = pad;
-   TGListBox* lb;
    fHist = (TH1*)fModel;
+
    const char *text = fHist->GetTitle();
    fTitle->SetText(text);
    
@@ -407,7 +481,10 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    TString str = GetDrawOption();
    str.ToUpper();
    Bool_t errorset = kFALSE;
+   // if no draw option is specified: (default options)
    if (str.IsNull() || str=="" ) {        
+      fDimGroup->SetButton(kDIM_SIMPLE, kTRUE);
+      fDimGroup->SetButton(kDIM_COMPLEX, kFALSE);      
       HideFrame(f3);  // Hiding the histogram type combo box
       HideFrame(f4);  // Hiding the histogram coord type combo box
       ShowFrame(f6);
@@ -422,15 +499,14 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       fErrorCombo->Select(kERRORS_NO);
       errorset=kTRUE;
       fAddCombo->Select(kADD_NONE);
-      fDimGroup->SetButton(kDIM_SIMPLE, kTRUE);
-      fDimGroup->SetButton(kDIM_COMPLEX, kFALSE);      
       fAddMarker->SetState(kButtonUp);
       fAddB->SetState(kButtonUp);
-      SetDrawOption("HIST");
-      fAddLine->SetState(kButtonDisabled);
+      fAddSimple->SetState(kButtonDisabled);
       ChangeErrorCombo(1);
-
+   // in case of a 2D plot:
    } else if (!str.Contains("LEGO") && !str.Contains("SURF")){
+      fDimGroup->SetButton(kDIM_SIMPLE,kTRUE);
+      fDimGroup->SetButton(kDIM_COMPLEX,kFALSE);      
       HideFrame(f3);  // Hiding the histogram type combo box
       HideFrame(f4);  // Hiding the histogram coord type combo box
       ShowFrame(f7);
@@ -438,6 +514,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       ShowFrame(f9);
       ShowFrame(f15);
       fCoordsCombo->Select(kCOORDS_CAR);
+      // initialising fAddCombo
       if (str.Contains("C")) {
          if (str.Contains("CYL")) {
 	    TString dum = str;
@@ -458,14 +535,12 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
          } else fAddCombo->Select(kADD_SIMPLE);
       } else fAddCombo->Select(kADD_NONE);
 
-      if (fAddCombo->GetSelected()!=kADD_NONE) fAddLine->SetState(kButtonDisabled);
+      if (fAddCombo->GetSelected()!=kADD_NONE) fAddSimple->SetState(kButtonDisabled);
       else if (str.Contains("HIST")) {
-         if (str=="HIST") fAddLine->SetState(kButtonDisabled);
-	 else fAddLine->SetState(kButtonDown);
-      } else fAddLine->SetState(kButtonUp);
+         if (str=="HIST") fAddSimple->SetState(kButtonDisabled);
+	 else fAddSimple->SetState(kButtonDown);
+      } else fAddSimple->SetState(kButtonUp);
       
-      fDimGroup->SetButton(kDIM_SIMPLE,kTRUE);
-      fDimGroup->SetButton(kDIM_COMPLEX,kFALSE);      
       if (str.Contains("B")) {
          TString dum = str;
 	 if (str.Contains("BAR")) {
@@ -477,7 +552,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
 	 } else {
 	    fAddB->SetState(kButtonDown);
             fAddBar->SetState(kButtonDisabled);
-	    fAddLine->SetState(kButtonDisabled);
+	    fAddSimple->SetState(kButtonDisabled);
 	    ShowFrame(f10);
             ShowFrame(f11);      
             HideFrame(f12);
@@ -491,19 +566,27 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
       }
       if (str.Contains("P") ) {
          fAddMarker->SetState(kButtonDown);
-	 fAddLine->SetState(kButtonDisabled);
+	 fAddSimple->SetState(kButtonDisabled);
       } else if (!str.Contains("BAR")) fAddMarker->SetState(kButtonUp);
-     
       ChangeErrorCombo(1);
-      
+
+   // in case of a 3D plot
    } else if (str.Contains("LEGO") || str.Contains("SURF")){
+      fDimGroup->SetButton(kDIM_COMPLEX,kTRUE);
+      fDimGroup->SetButton(kDIM_SIMPLE,kFALSE);      
+      TGListBox* lb;
       ChangeErrorCombo(0);
+      // set Coordinate ComboBox
       if (str.Contains("SURF")){ 
+         // surf cannot be combined with spheric and cartesian coordinates 
+	 // i.e. remove them from the combobox
          fCoordsCombo->RemoveEntry(kCOORDS_SPH);
          fCoordsCombo->RemoveEntry(kCOORDS_CAR);
          lb = fCoordsCombo->GetListBox();
          lb->Resize(lb->GetWidth(), 49);
       } else {
+         // surf cannot be combined with spheric and cartesian coordinates 
+	 // if surf was selected before here the removed items were added the combobox again
          if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_SPH)==-1) fCoordsCombo->AddEntry("Spheric", kCOORDS_SPH);
          if (((TGLBContainer*)((TGListBox*)fCoordsCombo->GetListBox())->GetContainer())->GetPos(kCOORDS_CAR)==-1){
 	    fCoordsCombo->AddEntry("Cartesian", kCOORDS_CAR);
@@ -511,6 +594,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
             lb->Resize(lb->GetWidth(), 83);
          }
       }
+      // initialising the Type Combobox
       if (str.Contains("LEGO2")) fTypeCombo->Select(kTYPE_LEGO2);
       else if (str.Contains("LEGO1")) fTypeCombo->Select(kTYPE_LEGO1);
       else if (str.Contains("LEGO")) fTypeCombo->Select(kTYPE_LEGO);
@@ -541,8 +625,6 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
          HideFrame(f11); 
 	 HideFrame(f12);
       }
-      fDimGroup->SetButton(kDIM_COMPLEX,kTRUE);
-      fDimGroup->SetButton(kDIM_SIMPLE,kFALSE);      
       fAddMarker->SetState(kButtonDisabled);
       fAddB->SetState(kButtonDisabled);
    }
@@ -636,7 +718,7 @@ void TH1Editor::SetModel(TVirtualPad* pad, TObject* obj, Int_t)
    }
    if (!fTab->IsEnabled(fTab->GetCurrent())) fTab->SetTab(0);
    
-   Layout();
+//   Layout();
    fTab->Layout();   
    
    if (fInit) ConnectSignals2Slots();
@@ -670,7 +752,7 @@ void TH1Editor::DoAddMarker(Bool_t on)
    if (dum.Contains("PSR")) dum.Remove(strstr(dum.Data(),"PSR")-dum.Data(),3);      
    if (on) {
       if (!dum.Contains("P")) str += "P"; 
-      fAddLine->SetState(kButtonDisabled);
+      fAddSimple->SetState(kButtonDisabled);
       if (str.Contains("HIST")) str.Remove(strstr(str.Data(),"HIST")-str.Data(),4);
    } else if (fAddMarker->GetState()==kButtonUp) {
       if (str.Contains("POL") || str.Contains("SPH")) {
@@ -679,9 +761,9 @@ void TH1Editor::DoAddMarker(Bool_t on)
          if (str.Contains("SPH")) str = dum + "SPH";
          if (str.Contains("PSR")) str = dum + "PSR";	 
       } else if (str.Contains("P")) str.Remove(str.First("P"),1); 
-      if ((str=="HIST") || (str=="") || (fAddB->GetState()==kButtonDown) || fAddCombo->GetSelected()!=kADD_NONE) fAddLine->SetState(kButtonDisabled);
-      else if (str.Contains("HIST")) fAddLine->SetState(kButtonDown);
-      else fAddLine->SetState(kButtonUp);
+      if ((str=="HIST") || (str=="") || (fAddB->GetState()==kButtonDown) || fAddCombo->GetSelected()!=kADD_NONE) fAddSimple->SetState(kButtonDisabled);
+      else if (str.Contains("HIST")) fAddSimple->SetState(kButtonDown);
+      else fAddSimple->SetState(kButtonUp);
    }
    if (make) SetDrawOption(str);
    Update();
@@ -703,7 +785,7 @@ void TH1Editor::DoAddB(Bool_t on)
          ShowFrame(f11);
          HideFrame(f12);
          fAddBar->SetState(kButtonDisabled);
-	 fAddLine->SetState(kButtonDisabled);
+	 fAddSimple->SetState(kButtonDisabled);
          fBarOffset->SetNumber(fHist->GetBarOffset());
          fBarWidth->SetNumber(fHist->GetBarWidth());      
       } else if (fAddB->GetState()==kButtonUp) {
@@ -712,7 +794,7 @@ void TH1Editor::DoAddB(Bool_t on)
 	 HideFrame(f11);
 	 HideFrame(f12);
          fAddBar->SetState(kButtonUp);
-	 if (fAddMarker->GetState()!=kButtonDown && !(str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE)) fAddLine->SetState(kButtonUp);
+	 if (fAddMarker->GetState()!=kButtonDown && !(str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE)) fAddSimple->SetState(kButtonUp);
       }
       if (make) SetDrawOption(str);
       Update(); 
@@ -742,11 +824,11 @@ void TH1Editor::DoAddBar(Bool_t on)
       else if (str.Contains("BAR0")) str.Remove(strstr(str.Data(),"BAR0")-str.Data()-o,4+o);      
       else if (str.Contains("BAR")) str.Remove(strstr(str.Data(),"BAR")-str.Data()-o,3+o);      
       if (on) {
-         if ((fAddMarker->GetState()==kButtonDown) && (fErrorCombo->GetSelected()==kERRORS_NO) && (fAddLine->GetState()!=kButtonDisabled)) fAddLine->SetState(kButtonDisabled);
-	 else if ((fAddMarker->GetState()!=kButtonDown) && (fAddLine->GetState()==kButtonDisabled)) {
-	    if (str.Contains("HIST")) fAddLine->SetState(kButtonDown);  
-	    else if (fAddCombo->GetSelected()!=kADD_NONE) fAddLine->SetState(kButtonDisabled);
-	    else fAddLine->SetState(kButtonUp);
+         if ((fAddMarker->GetState()==kButtonDown) && (fErrorCombo->GetSelected()==kERRORS_NO) && (fAddSimple->GetState()!=kButtonDisabled)) fAddSimple->SetState(kButtonDisabled);
+	 else if ((fAddMarker->GetState()!=kButtonDown) && (fAddSimple->GetState()==kButtonDisabled)) {
+	    if (str.Contains("HIST")) fAddSimple->SetState(kButtonDown);  
+	    else if (fAddCombo->GetSelected()!=kADD_NONE) fAddSimple->SetState(kButtonDisabled);
+	    else fAddSimple->SetState(kButtonUp);
 	 }
          switch (fPercentCombo->GetSelected()){
             case(-1): { str += "BAR";
@@ -787,7 +869,7 @@ void TH1Editor::DoAddBar(Bool_t on)
          HideFrame(f12);
          fAddB->SetState(kButtonUp);
          if (fAddMarker->GetState()==kButtonDisabled) fAddMarker->SetState(kButtonUp);
-	 if (str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE || ((fAddMarker->GetState()==kButtonDown) && fErrorCombo->GetSelected()==kERRORS_NO)) fAddLine->SetState(kButtonDisabled);
+	 if (str=="" || str=="HIST" || fAddCombo->GetSelected()!=kADD_NONE || ((fAddMarker->GetState()==kButtonDown) && fErrorCombo->GetSelected()==kERRORS_NO)) fAddSimple->SetState(kButtonDisabled);
       }
       if (make) SetDrawOption(str);
       Update(); 
@@ -800,9 +882,11 @@ void TH1Editor::DoAddBar(Bool_t on)
 
 //______________________________________________________________________________
 
-void TH1Editor::DoAddLine(Bool_t on)
+void TH1Editor::DoAddSimple(Bool_t on)
 {
-   // Slot: Draws/Removes an outer line on the histogram
+   // Slot connected to fAddSimple CheckBox
+   // draws a simple histogram without errors (== HIST draw option)
+   // in combination with some other drawoptions it draws an additional line on top of the bins
 
    Disconnect(fAddMarker);
    Bool_t make=kFALSE;
@@ -814,7 +898,7 @@ void TH1Editor::DoAddLine(Bool_t on)
 	 fAddMarker->SetState(kButtonDisabled);
 	 make=kTRUE;
       }
-   } else if (fAddLine->GetState()==kButtonUp) {
+   } else if (fAddSimple->GetState()==kButtonUp) {
       if (str.Contains("HIST")) {
          str.Remove(strstr(str.Data(),"HIST")-str.Data(),4);
          fAddMarker->SetState(kButtonUp);	 
@@ -842,10 +926,10 @@ void TH1Editor::DoHistSimple()
       ShowFrame(f9);
       ShowFrame(f15);
       ChangeErrorCombo(1);
-      if ((fAddBar->GetState() !=kButtonDown || fAddMarker->GetState()==kButtonDown ) && (fErrorCombo->GetSelected()==kERRORS_NO)) fAddLine->SetState(kButtonDisabled);
-      else if ((fAddLine->GetState()==kButtonDisabled) && (fAddMarker->GetState()!=kButtonDown) ) fAddLine->SetState(kButtonUp);
-      else if (fAddLine->GetState()!=kButtonUp) fAddLine->SetState(kButtonDown);
-      if (fAddMarker->GetState()==kButtonDisabled && fAddLine->GetState()!=kButtonDown) fAddMarker->SetState(kButtonUp);
+      if ((fAddBar->GetState() !=kButtonDown || fAddMarker->GetState()==kButtonDown ) && (fErrorCombo->GetSelected()==kERRORS_NO)) fAddSimple->SetState(kButtonDisabled);
+      else if ((fAddSimple->GetState()==kButtonDisabled) && (fAddMarker->GetState()!=kButtonDown) ) fAddSimple->SetState(kButtonUp);
+      else if (fAddSimple->GetState()!=kButtonUp) fAddSimple->SetState(kButtonDown);
+      if (fAddMarker->GetState()==kButtonDisabled && fAddSimple->GetState()!=kButtonDown) fAddMarker->SetState(kButtonUp);
 
       if (fErrorCombo->GetSelected()==kERRORS_NO){   
          ShowFrame(f7);
@@ -894,7 +978,7 @@ void TH1Editor::DoHistSimple()
             lb->Resize(lb->GetWidth(),76);	 
 	 }    
       }
-      if (fAddLine->GetState()==kButtonDown) str+="HIST";
+      if (fAddSimple->GetState()==kButtonDown) str+="HIST";
       str += GetHistErrorLabel()+GetHistAddLabel();
       SetDrawOption(str);
       Update();
@@ -982,7 +1066,7 @@ void TH1Editor::DoHistChanges()
 	 fAddMarker->SetState(kButtonDisabled);
 	 fAddB->SetState(kButtonDisabled);
 	 if (fAddBar->GetState()==kButtonDisabled) fAddBar->SetState(kButtonUp);
-	 if (fAddLine->GetState()==kButtonDisabled) fAddLine->SetState(kButtonUp);
+	 if (fAddSimple->GetState()==kButtonDisabled) fAddSimple->SetState(kButtonUp);
 	 fAddCombo->RemoveEntries(kADD_SIMPLE,kADD_FILL);
          lb = fAddCombo->GetListBox();
          lb->Resize(lb->GetWidth(),19);	 
@@ -1016,10 +1100,10 @@ void TH1Editor::DoHistChanges()
          make=on;
       }
       if (fAddCombo->GetSelected()!=kADD_NONE) {
-         fAddLine->SetState(kButtonDisabled);
+         fAddSimple->SetState(kButtonDisabled);
       } else {
-         if (fAddMarker->GetState()==kButtonDown) fAddLine->SetState(kButtonDisabled);
-	 else if (fAddLine->GetState()==kButtonDisabled) fAddLine->SetState(kButtonUp);
+         if (fAddMarker->GetState()==kButtonDown) fAddSimple->SetState(kButtonDisabled);
+	 else if (fAddSimple->GetState()==kButtonDisabled) fAddSimple->SetState(kButtonUp);
       }
    } else if (fDim0->GetState()==kButtonDown) {
       if (GetHistTypeLabel().Contains("LEGO")) {
@@ -1036,9 +1120,9 @@ void TH1Editor::DoHistChanges()
       TString str = "";
       if (fDim->GetState()==kButtonDown) str = GetHistErrorLabel()+GetHistAddLabel();
       else if (fDim0->GetState()==kButtonDown) str = GetHistTypeLabel()+GetHistCoordsLabel()+GetHistErrorLabel();
-      if (fAddLine->GetState()==kButtonDown) str += "HIST";   
+      if (fAddSimple->GetState()==kButtonDown) str += "HIST";   
       SetDrawOption(str);
-      if (str=="" || str=="HIST") fAddLine->SetState(kButtonDisabled);
+      if (str=="" || str=="HIST") fAddSimple->SetState(kButtonDisabled);
       Update();
    }
    ((TGMainFrame*)GetMainFrame())->Layout();            
