@@ -1,4 +1,4 @@
-// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.61 2004/01/13 13:48:56 brun Exp $
+// @(#)root/winnt:$Name:  $:$Id: TWinNTSystem.cxx,v 1.62 2004/01/14 21:08:23 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -169,7 +169,7 @@ TTermInputLine::TTermInputLine()
 void TTermInputLine::ExecThreadCB(TWin32SendClass *code)
 {
    // Dispatch a single event.
-   
+
    gROOT->GetApplication()->HandleTermInput();
    ((TWin32SendWaitClass *)code)->Release();
 }
@@ -471,7 +471,7 @@ void  TWinNTSystem::SetShellName(const char *name)
    //
 
    const char *shellname = "SHELL32.DLL";
-   
+
    if (name) {
       fShellName = new char[lstrlen(name)+1];
       strcpy((char *)fShellName,name);
@@ -755,14 +755,14 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    // Dispatch a single event in TApplication::Run() loop
 
-   // We do not use blocking (like MsgWaitForMultipleObjects or unix select). 
-   // calling ::SleepEx(1, 1) on return does the same dirty work ;-) 
+   // We do not use blocking (like MsgWaitForMultipleObjects or unix select).
+   // calling ::SleepEx(1, 1) on return does the same dirty work ;-)
    // i.e. prevents from 100% CPU time occupation.
    class ThreadSwitch {
       Bool_t fSwitch; // do no call SleepEx on return for pendingOnly events
    public:
       ThreadSwitch(Bool_t on) { fSwitch = on; }
-      ~ThreadSwitch() { if (fSwitch) ::SleepEx(1, 1); } 
+      ~ThreadSwitch() { if (fSwitch) ::SleepEx(1, 1); }
    } switcher(!pendingOnly);
 
    if (gROOT->IsLineProcessing()) {
@@ -771,7 +771,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 
    // used once at startup for syncronization with HandleConsoleThread
    if (hEvent1) ::SetEvent(hEvent1);
-      
+
    // first handle any GUI events
    if (gXDisplay) {
       if (gXDisplay->Notify()) {
@@ -806,7 +806,7 @@ void TWinNTSystem::DispatchOneEvent(Bool_t pendingOnly)
 
       while (fh = (TFileHandler*) next()) {
          int fd = fh->GetFd();
-        
+
          if (fd <= fMaxrfd && fReadready.IsSet(fd)) {
             fReadready.Clr(fd);
             fh->ReadNotify();
@@ -2729,10 +2729,10 @@ int TWinNTSystem::WinNTFilestat(const char *path, Long_t *id, Long64_t *size,
    if (modtime) *modtime = 0;
 
    // Remove trailing backslashes
-   char *newpath = strdup(path);
+   char *newpath = StrDup(path);
    int l = strlen(newpath);
    while (l > 1) {
-      if (newpath[--l] != '\\')
+      if (newpath[--l] != '\\' || newpath[--l] != '/')
          break;
       newpath[l] = '\0';
    }
