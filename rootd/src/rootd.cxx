@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.10 2000/12/12 18:30:12 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.11 2000/12/13 12:06:46 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -89,7 +89,7 @@
 //    can be accessed.                                                  //
 //  - anonymous mode only works when the server is started via inetd.   //
 //                                                                      //
-//  When you system uses shadow passwords you have to compile rootd     //
+//  When your system uses shadow passwords you have to compile rootd    //
 //  with -DR__SHADOWPW. Since shadow passwords can only be accessed     //
 //  while being superuser (root) this works only when the server is     //
 //  started via inetd. Another solution is to create a file             //
@@ -107,7 +107,7 @@
 //  To use Secure Remote Passwords (SRP) for authentication compile     //
 //  rootd with the -DR__SRP flag. In that case you also need to link    //
 //  with the SRP and gmp libraries. See the Makefile for more details.  //
-//  SRP is described at: http://jafar.stanford.edu/srp/index.html.      //
+//  SRP is described at: http://srp.stanford.edu/.                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
