@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.27 2003/12/30 13:16:51 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.28 2004/07/29 10:54:54 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -283,7 +283,7 @@ void TBranchObject::SetAddress(void *add)
    TClass *cl = gROOT->GetClass(fClassName.Data());
    if (!obj && cl) {
       obj = (TObject*)cl->New();
-      *ppointer = (void*)obj;
+      if (ppointer) *ppointer = (void*)obj;
    }
    //fOldObject = obj;
    Int_t i, offset;
