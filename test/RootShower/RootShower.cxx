@@ -48,6 +48,7 @@
 #include <TGeoTrack.h>
 #include <TView.h>
 #include <TGToolBar.h>
+#include <TGSplitter.h>
 
 #include <THtml.h>
 
@@ -242,12 +243,30 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     // CREATE MAIN FRAME
     fMainFrame = new TGCompositeFrame(this, 100, 100, kHorizontalFrame | kRaisedFrame);
 
+    TGVerticalFrame *fV1 = new TGVerticalFrame(fMainFrame, 10, 10, kSunkenFrame);
+    TGVerticalFrame *fV2 = new TGVerticalFrame(fMainFrame, 10, 10, kSunkenFrame);
+
+    TGLayoutHints *lo;
+
+    lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY,2,0,2,2);
+    fMainFrame->AddFrame(fV1, lo);
+
+    TGVSplitter *splitter = new TGVSplitter(fMainFrame, 5);
+    splitter->SetFrame(fV1, kTRUE);
+    lo = new TGLayoutHints(kLHintsLeft | kLHintsExpandY, 0, 0 ,0, 0);
+    fMainFrame->AddFrame(splitter, lo);
+
+    lo = new TGLayoutHints(kLHintsRight | kLHintsExpandX | kLHintsExpandY,0,2,2,2);
+    fMainFrame->AddFrame(fV2, lo);
+
+
     // Create Selection frame (i.e. with buttons and geometry selection widgets)
-    fSelectionFrame = new TGCompositeFrame(fMainFrame, 100, 100, kVerticalFrame);
+    fSelectionFrame = new TGCompositeFrame(fV1, 100, 100, kVerticalFrame);
     // create button frame
     fButtonFrame = new GButtonFrame (fSelectionFrame, this, M_EVENT_NEXT,
                                      M_EVENT_SELECT, M_INTERRUPT_SIMUL);
-    fSelectionFrame->AddFrame(fButtonFrame, fL8);
+    lo = new TGLayoutHints(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 5, 1, 2);
+    fSelectionFrame->AddFrame(fButtonFrame, lo);
 
     fTreeView = new TGCanvas(fSelectionFrame, 150, 10, kSunkenFrame | kDoubleBorder);
     fEventListTree = new TGListTree(fTreeView->GetViewPort(), 10, 10, kHorizontalFrame);
@@ -256,12 +275,15 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     fEventListTree->Associate(this);
     BuildEventTree();
     fTreeView->SetContainer(fEventListTree);
-    fSelectionFrame->AddFrame(fTreeView, fL4);
+    fSelectionFrame->AddFrame(fTreeView, fL5);
 
-    fMainFrame->AddFrame(fSelectionFrame, fL4);
+    lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
+    fV1->AddFrame(fSelectionFrame, lo);
+
+    //__________________________________________________________________________________
 
     // Create Display frame
-    fDisplayFrame = new TGTab(fMainFrame, 580, 360);
+    fDisplayFrame = new TGTab(fV2, 580, 360);
 
     // Create Display Canvas Tab (where the actual main event is displayed)
     TGCompositeFrame *tFrame = fDisplayFrame->AddTab("Main Event (Shower)");
@@ -346,11 +368,10 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
 
     fTextView->LoadFile(pdgFilename);
 
-    //  fMainFrame->AddFrame(fDisplayFrame, fL4);
-    fMainFrame->AddFrame(fDisplayFrame, fL7);
+    lo = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY);
+    fV2->AddFrame(fDisplayFrame, lo);
 
-    // Add Main frame to this
-    AddFrame(fMainFrame, fL3);
+    AddFrame(fMainFrame, lo);
 
     // Create status bar
     Int_t parts[] = {45, 45, 10};
@@ -364,7 +385,6 @@ RootShower::RootShower(const TGWindow *p, UInt_t w, UInt_t h):
     SetIconName("Root Shower Event Display");
     MapSubwindows();
     Resize(GetDefaultSize()); // this is used here to init layout algoritme
-//    this->Move(fgDefaultXPosition, fgDefaultYPosition);
     MapWindow();
     fEvent = new MyEvent();
     fEvent->GetDetector()->Init();
