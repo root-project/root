@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.97 2002/11/26 17:35:18 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchElement.cxx,v 1.98 2002/11/26 23:53:55 brun Exp $
 // Author: Rene Brun   14/01/2001
 
 /*************************************************************************
@@ -791,12 +791,49 @@ void TBranchElement::FillLeaves(TBuffer &b)
   } else if (fType == 41) {   // sub branch of an STL class
     //char **ppointer = (char**)fAddress;
   } else if (fType == 3) {   //top level branch of a TClonesArray
+    if (fTree->GetMakeClass()) {
+       TClass *cl = gROOT->GetClass(GetClonesName());
+       cl->GetStreamerInfo()->ForceWriteInfo((TFile *)b.GetParent());
+       Int_t *n = (Int_t*)fAddress;
+       b << *n;
+       return;
+    }
     TClonesArray *clones = (TClonesArray*)fObject;
     if (!clones) return;
     Int_t n = clones->GetEntriesFast();
     if (n > fMaximum) fMaximum = n;
     b << n;
   } else if (fType == 31) {   // sub branch of a TClonesArray
+    if (fTree->GetMakeClass()) {
+       Int_t atype = fStreamerType;
+       if (atype > 54) return;
+       if (!fAddress) return;
+       Int_t *nn = (Int_t*)fBranchCount->GetAddress();
+       Int_t n = *nn;
+       if (atype>40) {
+          printf("Clonesa: %s, n=%d, sorry not supported yet\n",GetName(),n);
+       }
+       if (atype > 20) {
+          atype -= 20;
+          TLeafElement *leaf = (TLeafElement*)fLeaves.UncheckedAt(0);
+          n *= leaf->GetLenStatic();
+       }
+       switch (atype) {
+          case  1:  {b.WriteFastArray((Char_t*)  fAddress, n); break;}
+          case  2:  {b.WriteFastArray((Short_t*) fAddress, n); break;}
+          case  3:  {b.WriteFastArray((Int_t*)   fAddress, n); break;}
+          case  4:  {b.WriteFastArray((Long_t*)  fAddress, n); break;}
+          case  5:  {b.WriteFastArray((Float_t*) fAddress, n); break;}
+          case  6:  {b.WriteFastArray((Int_t*)   fAddress, n); break;}
+          case  8:  {b.WriteFastArray((Double_t*)fAddress, n); break;}
+          case 11:  {b.WriteFastArray((UChar_t*) fAddress, n); break;}
+          case 12:  {b.WriteFastArray((UShort_t*)fAddress, n); break;}
+          case 13:  {b.WriteFastArray((UInt_t*)  fAddress, n); break;}
+          case 14:  {b.WriteFastArray((ULong_t*) fAddress, n); break;}
+          case 15:  {b.WriteFastArray((UInt_t*)  fAddress, n); break;}
+       }
+       return;
+    }
     TClonesArray *clones = (TClonesArray*)fObject;
     if (!clones) return;
     Int_t n = clones->GetEntriesFast();
