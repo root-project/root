@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.1 2002/07/15 15:32:25 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.2 2002/07/17 13:27:59 brun Exp $
 // Author: Andrei Gheata   01/11/01
 
 /*************************************************************************
@@ -201,8 +201,10 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
    Double_t *point = fGeom->GetCurrentPoint();
    vol->Draw();
    printf("Start... %i rays\n", nrays);
-   TGeoNode *node, *startnode, *endnode;
-   Bool_t vis1,vis2, is_sentering, is_entering, is_null;
+   //TGeoNode *node;
+   //Bool_t is_sentering;
+   TGeoNode *startnode, *endnode;
+   Bool_t vis1,vis2, is_entering, is_null;
    Int_t i=0;
    Int_t ipoint;
    Int_t itot=0;
@@ -219,7 +221,6 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       start[2] = startz;
       phi = 2*TMath::Pi()*gRandom->Rndm();
       theta= TMath::ACos(1.-2.*gRandom->Rndm());
-//      theta = 0.5*TMath::Pi();
       dir[0]=TMath::Sin(theta)*TMath::Cos(phi);
       dir[1]=TMath::Sin(theta)*TMath::Sin(phi);
       dir[2]=TMath::Cos(theta);
@@ -227,7 +228,6 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
       line = 0;
       startnode = fGeom->GetCurrentNode();
       if (fGeom->IsOutside()) startnode=0;
-//      if (startnode) printf("start %s\n", startnode->GetName());
       vis1 = (startnode)?(startnode->IsOnScreen()):kFALSE;
       if (vis1) {
          line = new TPolyLine3D(2);
@@ -237,16 +237,14 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
          pm->Add(line);
       }
       // find the node that will be crossed first      
-      node = fGeom->FindNextBoundary();
-      is_sentering = fGeom->IsStepEntering();
+      fGeom->FindNextBoundary();
+      fGeom->IsStepEntering();
       // find where we end-up
       endnode = fGeom->Step();
       if (fGeom->IsOutside()) endnode=0;
-//      if (endnode) printf("endnode %s\n", endnode->GetName());
       step = fGeom->GetStep();
       vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
       is_entering = fGeom->IsEntering();
-//      if (is_entering) printf("entering\n");
       is_null = fGeom->IsNullStep();
       while (step<1E10) {
          if (ipoint>0) {
@@ -267,11 +265,10 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
          if (endnode==0) break;
          if (is_null) break;
          startnode = endnode;    
-         node = fGeom->FindNextBoundary();
-         is_sentering = fGeom->IsStepEntering();
+         fGeom->FindNextBoundary();
+         fGeom->IsStepEntering();
          endnode = fGeom->Step();
          if (fGeom->IsOutside()) endnode=0;
-//         if (endnode) printf("%s\n", endnode->GetName());
          step = fGeom->GetStep();
          vis2 = (endnode)?(endnode->IsOnScreen()):kFALSE;
          is_entering = fGeom->IsEntering();
