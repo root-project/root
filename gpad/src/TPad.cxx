@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.165 2005/03/09 18:19:26 brun Exp $
+// @(#)root/gpad:$Name:  $:$Id: TPad.cxx,v 1.166 2005/03/10 09:51:46 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -2582,11 +2582,19 @@ void TPad::Paint(Option_t * /*option*/)
    
    Bool_t began3DScene = kFALSE;
    while (lnk) {
+      obj = lnk->GetObject();
+
+      // Create a pad 3D viewer if none exists and we encounter a 3D shape
+      if (!fViewer3D && obj->InheritsFrom("TAtt3D")) {
+         GetViewer3D("pad");
+      }
+
+      // Open a 3D scene if required
       if (fViewer3D && !fViewer3D->BuildingScene()) {
          fViewer3D->BeginScene();
          began3DScene = kTRUE;
       }
-      obj = lnk->GetObject();
+
       obj->Paint(lnk->GetOption());
       lnk = (TObjOptLink*)lnk->Next();
    }
@@ -2595,8 +2603,8 @@ void TPad::Paint(Option_t * /*option*/)
    fPadPaint = 0;
    Modified(kFALSE);
    
-   // This must be done after modified flag is cleared, as some 
-   // viewers will invoke another paint by marking pad modified again
+   // Close the 3D scene if we opened it. This must be done after modified 
+   // flag is cleared, as some viewers will invoke another paint by marking pad modified again
    if (began3DScene) {
       fViewer3D->EndScene();
    }
@@ -2808,10 +2816,19 @@ void TPad::PaintModified()
       if (obj->InheritsFrom(TPad::Class())) {
          ((TPad*)obj)->PaintModified();
       } else if (IsModified() || IsTransparent()) {
+
+         // Create a pad 3D viewer if none exists and we encounter a 
+         // 3D shape
+         if (!fViewer3D && obj->InheritsFrom("TAtt3D")) {
+            GetViewer3D("pad");
+         }
+
+         // Open a 3D scene if required
          if (fViewer3D && !fViewer3D->BuildingScene()) {
             fViewer3D->BeginScene();
             began3DScene = kTRUE;
          }
+
          obj->Paint(lnk->GetOption());
       }
       lnk = (TObjOptLink*)lnk->Next();
@@ -5456,9 +5473,8 @@ TVirtualViewer3D *TPad::GetViewer3D(Option_t *type)
    // c.f. ReleaseViewer3D
    delete fViewer3D;
 
-   // Set, paint and return new viewer
+   // Set and return new viewer
    fViewer3D = newViewer;
-   Paint();
    return fViewer3D;
 }
 
@@ -5468,10 +5484,8 @@ void TPad::ReleaseViewer3D(Option_t * /*type*/ )
    // Release current (external) viewer
    // TODO: By type
    fViewer3D = 0;
-   
-   // Create a pad viewer3D and repaint into this
-   // TODO: Remove when multiple 3D viewer support added
-   GetViewer3D();
+
+   // Ensure the pad is repainted
    Paint();
 }
 

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id:$
+// @(#)root/base:$Name:  $:$Id: TViewer3DPad.cxx,v 1.2 2005/03/10 14:06:44 rdm Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
@@ -20,6 +20,8 @@
 //______________________________________________________________________________
 Bool_t TViewer3DPad::PreferLocalFrame() const
 {
+   // Indicates if we prefer positions in local frame. Always false - pad
+   // drawing is always done in master frame.
    return kFALSE;
 }
 
@@ -27,6 +29,8 @@ Bool_t TViewer3DPad::PreferLocalFrame() const
 //______________________________________________________________________________
 void TViewer3DPad::BeginScene()
 {
+   // Open a scene on the viewer. Is re-entrant as pad requires a two pass
+   // draw.
    assert(!fBuilding);
 
    // Create a 3D view if none exists
@@ -37,19 +41,22 @@ void TViewer3DPad::BeginScene()
          assert(kFALSE);
          return;
       }
-      view->SetAutoRange(kTRUE);
+      view->SetPerspective();
       fPad.SetView(view);
    }
-   if (!view->IsPerspective()) view->SetPerspective();
+
+   // Perform a first pass to calculate the range
+   if (!fBuilding && !view->GetAutoRange()) {
+      view->SetAutoRange(kTRUE);
+   }
    fBuilding = kTRUE;
 }
 
 //______________________________________________________________________________
 void TViewer3DPad::EndScene()
 {
+   // Close the scene on the viewer
    assert(fBuilding);
-
-   fBuilding= kFALSE;
 
    // If we are doing for auto-range pass on view invoke another pass
    TView *view = fPad.GetView();
@@ -58,15 +65,19 @@ void TViewer3DPad::EndScene()
          view->SetAutoRange(kFALSE);
          fPad.Paint();
       }
-   } else {
-      assert(kFALSE);
-      return;
-   }
+   }   
+   
+   fBuilding = kFALSE;
 }
 
 //______________________________________________________________________________
 Int_t TViewer3DPad::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 {
+   // Add an 3D object described by the buffer to the viewer. Returns flags
+   // to indicate:
+   // i) if extra sections of the buffer need completing. 
+   // ii) if child objects of the buffer object should be added (always true)
+
    // Accept any children
    if (addChildren) {
       *addChildren = kTRUE;
@@ -134,6 +145,6 @@ Int_t TViewer3DPad::AddObject(const TBuffer3D & buffer, Bool_t * addChildren)
 //______________________________________________________________________________
 Int_t TViewer3DPad::AddObject(UInt_t /*placedID*/, const TBuffer3D & buffer, Bool_t * addChildren)
 {
-   // We don't support placedID - discard
+   // We don't support placed ID shapes - ID is discarded
    return AddObject(buffer,addChildren);
 }

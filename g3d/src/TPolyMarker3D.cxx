@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.20 2004/12/13 16:56:22 brun Exp $
+// @(#)root/g3d:$Name:  $:$Id: TPolyMarker3D.cxx,v 1.21 2005/03/09 18:19:26 brun Exp $
 // Author: Nenad Buncic   21/08/95
 
 /*************************************************************************
@@ -313,7 +313,8 @@ void TPolyMarker3D::Paint(Option_t * /*option*/ )
    buffer.fID           = this;
    buffer.fColor        = GetMarkerColor();   
    buffer.fTransparency = 0;    
-   buffer.fLocalFrame   = kFALSE; 
+   buffer.fLocalFrame   = kFALSE;
+   buffer.SetSectionsValid(TBuffer3D::kCore);
    
    // We fill kCore and kRawSizes on first pass and try with viewer
    Int_t reqSections = gPad->GetViewer3D()->AddObject(buffer);

@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id:$
+// @(#)root/gpad:$Name:  $:$Id: TViewer3DPad.h,v 1.2 2005/03/10 14:06:44 rdm Exp $
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
@@ -11,6 +11,15 @@
 
 #ifndef ROOT_TViewer3DPad
 #define ROOT_TViewer3DPad
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TViewer3DPad                                                         //
+//                                                                      //
+// Provides 3D viewer interface (TVirtualViewer3D) support on a pad.    //
+// Will be merged with TView / TView3D eventually.                      //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TVirtualViewer3D
 #include "TVirtualViewer3D.h"
