@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.3 2004/05/18 11:56:38 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.cxx,v 1.4 2004/05/30 16:15:52 rdm Exp $
 // Author: G. Ganis   19/03/2003
 
 /*************************************************************************
@@ -253,12 +253,17 @@ void TSecContext::Print(Option_t *opt) const
       Info("Print",
            "+------------------------------------------------------+");
    } else if (!strncasecmp(opt,"S",1)) {
-      if (fOffSet > -1)
-         Printf("Security context:     Method: %d (%s) expiring on %s",
-                fMethod,TAuthenticate::GetAuthMethod(fMethod),fExpDate.AsString());
-      else
+      if (fOffSet > -1) {
+         if (fDetails.BeginsWith("AFS"))
+            Printf("Security context:     Method: AFS, not reusable");
+         else 
+            Printf("Security context:     Method: %d (%s) expiring on %s",
+                   fMethod,TAuthenticate::GetAuthMethod(fMethod),
+                   fExpDate.AsString());
+      } else {
          Printf("Security context:     Method: %d (%s) not reusable",
                 fMethod,TAuthenticate::GetAuthMethod(fMethod));
+      }
    } else {
       // special printing form for THostAuth
       Info("PrintEstblshed","+ %s h:%s met:%d (%s) us:'%s'",
@@ -279,11 +284,15 @@ const char *TSecContext::AsString() const
 
    static TString thestring(256);
 
-   if (fOffSet > -1)
-      thestring =
-         Form("Method: %d (%s) expiring on %s",
-              fMethod,TAuthenticate::GetAuthMethod(fMethod),fExpDate.AsString());
-   else {
+   if (fOffSet > -1) {
+      if (fDetails.BeginsWith("AFS"))
+         thestring = Form("Method: AFS, not reusable");
+      else
+         thestring =
+            Form("Method: %d (%s) expiring on %s",
+                 fMethod,TAuthenticate::GetAuthMethod(fMethod),
+                 fExpDate.AsString());
+   } else {
       if (fOffSet == -1)
          thestring =
             Form("Method: %d (%s) not reusable",

@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.1 2003/08/29 10:38:19 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TSecContext.h,v 1.1 2004/02/19 00:11:18 rdm Exp $
 // Author: G. Ganis   31/03/2003
 
 /*************************************************************************
@@ -89,6 +89,7 @@ public:
 
    virtual void Print(Option_t *option = "F") const;
 
+   void        SetDetails(const char *details) { fDetails= details; }
    void        SetExpDate(TDatime expdate)  { fExpDate= expdate; }
    void        SetOffSet(Int_t offset)      { fOffSet = offset; }
    void        SetUser(const char *user)    { fUser   = user; }

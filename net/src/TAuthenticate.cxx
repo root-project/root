@@ -1,4 +1,4 @@
-// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.67 2004/12/08 14:52:26 rdm Exp $
+// @(#)root/net:$Name:  $:$Id: TAuthenticate.cxx,v 1.68 2005/02/11 18:40:08 rdm Exp $
 // Author: Fons Rademakers   26/11/2000
 
 /*************************************************************************
@@ -2527,6 +2527,12 @@ Int_t TAuthenticate::ClearAuth(TString &User, TString &Passwd, Bool_t &PwHash)
 
 
       if (kind == kROOTD_AUTH && stat >= 1) {
+         if (stat == 5 && fSocket->GetServType() == TSocket::kPROOFD)
+            // AFS: we cannot reuse the token because remotely the
+            // daemon token must be re-initialized; for PROOF, we
+            // just flag the entry as AFS; this allows to skip reusing
+            // but to keep the session key for password forwarding  
+            fSecContext->SetDetails("AFS authentication");
          return 1;
       } else {
          fgPasswd = "";
@@ -4648,7 +4654,8 @@ Int_t StdCheckSecCtx(const char *User, TSecContext *Ctx)
    Int_t rc = 0;
 
    if (Ctx->IsActive()) {
-      if (!strcmp(User,Ctx->GetUser()))
+      if (!strcmp(User,Ctx->GetUser()) && 
+           strncmp("AFS",Ctx->GetDetails(),3))
          rc = 1;
    }
    return rc;

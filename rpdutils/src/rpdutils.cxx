@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.68 2005/02/07 18:02:37 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.69 2005/02/18 09:51:21 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -3573,9 +3573,9 @@ int RpdPass(const char *pass, int errheq)
 #ifdef R__SHADOWPW
    struct spwd *spw;
 #endif
+   int afs_auth = 0;
 #ifdef R__AFS
    char *reason;
-   int afs_auth = 0;
 #endif
 
    if (gDebug > 2)
@@ -3689,7 +3689,7 @@ int RpdPass(const char *pass, int errheq)
 #endif
 
  authok:
-   auth = 1;
+   auth = afs_auth ? 5 : 1; 
    gSec = 0;
 
    if (gClientProtocol > 8) {
@@ -3701,7 +3701,8 @@ int RpdPass(const char *pass, int errheq)
 
          SPrintf(line, kMAXPATHLEN, "0 1 %d %d %s %s",
                  gRSAKey, gRemPid, gOpenHost.c_str(), gUser);
-         OffSet = RpdUpdateAuthTab(1, line, &token);
+         if (!afs_auth || gService == kPROOFD) 
+            OffSet = RpdUpdateAuthTab(1, line, &token);
          if (gDebug > 2)
             ErrorInfo("RpdPass: got offset %d", OffSet);
 
