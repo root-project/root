@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.51 2003/10/08 07:55:26 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TAxis.cxx,v 1.52 2003/11/25 17:12:30 brun Exp $
 // Author: Rene Brun   12/12/94
 
 /*************************************************************************
@@ -955,11 +955,7 @@ void TAxis::SetTimeOffset(Double_t toffset, Option_t *option)
    fTimeFormat.Append("%F");
 
    timeoff = (time_t)((Long_t)(toffset));
-   if (gmt) {
-      utctis = gmtime(&timeoff); 
-   } else {
-      utctis = localtime(&timeoff); 
-   }
+   utctis = gmtime(&timeoff); 
 
    strftime(tmp,256,"%Y-%m-%d %H:%M:%S",utctis); 
    fTimeFormat.Append(tmp);

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.60 2003/11/25 11:34:58 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGaxis.cxx,v 1.61 2003/11/25 17:12:30 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -615,6 +615,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          Int_t yy, mm, dd, hh, mi, ss;
          if (sscanf(stringtimeoffset.Data(), "%d-%d-%d %d:%d:%d", &yy, &mm, &dd, &hh, &mi, &ss) == 6) {
             struct tm tp;
+            struct tm* tptest;
+            time_t timeoffsettest;
             tp.tm_year  = yy-1900;
             tp.tm_mon   = mm-1;
             tp.tm_mday  = dd;
@@ -623,6 +625,10 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
             tp.tm_sec   = ss;
             tp.tm_isdst = -1;
             timeoffset  = mktime(&tp);
+            // have to correct this time to go back to UTC
+            timeoffsettest = (time_t)((Long_t)timeoffset);
+            tptest = gmtime(&timeoffsettest);
+            timeoffset += timeoffsettest - mktime(tptest);
             // Add the time offset's decimal part if it is there
             Int_t Ids   = stringtimeoffset.Index("s");
             if (Ids >= 0) {
@@ -633,7 +639,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                timeoffset += dp;
             }
 	    // if OptionTime = 2 gmtime will be used instead of localtime
-            if (stringtimeoffset.Index("GMT")) OptionTime =2;
+            if (stringtimeoffset.Index("GMT")>=0) OptionTime =2;
          } else {
             Error(where, "Time offset has not the right format");
          }
@@ -643,14 +649,26 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       wmin += timeoffset - (int)(timeoffset);
       wmax += timeoffset - (int)(timeoffset);
     // correct for time offset at a good limit (min, hour, day, month, year)
+      struct tm* tp0;
+      time_t timetp = (time_t)((Long_t)(timeoffset));
       Double_t range = wmax - wmin;
       Long_t rangeBase = 60;
-      if (range>60)       rangeBase = 60;       // minutes
-      if (range>3600)     rangeBase = 3600;     // hours
-      if (range>86400)    rangeBase = 86400;    // days
-      if (range>2419200)  rangeBase = 2419200;  // months (28 days)
-      if (range>31536000) rangeBase = 31536000; // years
+      if (range>60)       rangeBase = 60*20;       // minutes
+      if (range>3600)     rangeBase = 3600*20;     // hours
+      if (range>86400)    rangeBase = 86400*20;    // days
+      if (range>2419200)  rangeBase = 31556736;    // months (average # days)
       rangeOffset = (Double_t) ((Long_t)(timeoffset)%rangeBase);
+      if (range>31536000) {
+         tp0 = gmtime(&timetp);
+         tp0->tm_mon   = 0;
+         tp0->tm_mday  = 1;
+         tp0->tm_hour  = 0;
+         tp0->tm_min   = 0;
+         tp0->tm_sec   = 0;
+         tp0->tm_isdst = -1;
+         rangeBase = (timetp-mktime(tp0)); // years
+         rangeOffset = (Double_t) (rangeBase);
+      }
       wmax += rangeOffset;
       wmin += rangeOffset;
    }
@@ -1969,11 +1987,7 @@ void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
    fTimeFormat.Append("%F");
 
    timeoff = (time_t)((Long_t)(toffset));
-   if (gmt) {
-      utctis = gmtime(&timeoff); 
-   } else {
-      utctis = localtime(&timeoff); 
-   }
+   utctis = gmtime(&timeoff); 
 
    strftime(tmp,256,"%Y-%m-%d %H:%M:%S",utctis); 
    fTimeFormat.Append(tmp);
