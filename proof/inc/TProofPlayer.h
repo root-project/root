@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.20 2004/06/13 16:26:35 rdm Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofPlayer.h,v 1.21 2004/06/25 17:27:09 rdm Exp $
 // Author: Maarten Ballintijn   07/01/02
 
 /*************************************************************************
@@ -46,6 +46,7 @@ class TMessage;
 class TSlave;
 class TEventIter;
 class TProofStats;
+class TStatus;
 
 
 //------------------------------------------------------------------------
@@ -61,11 +62,13 @@ protected:
    TSelector  *fSelector;      //!  the latest selector
    TClass     *fSelectorClass; //!  class of the latest selector
    TTimer     *fFeedbackTimer; //!  timer for sending intermediate results
-   TEventIter *fEvIter;        //   Iterator on events or objects
+   TEventIter *fEvIter;        //!  iterator on events or objects
+   TStatus    *fSelStatus;     //!  status of query in progress
 
    void       *GetSender() { return this; }  //used to set gTQSender
 
    virtual void SetupFeedback();  // specialized setup
+
 public:   // fix for broken compilers so TCleanup can call StopFeedback()
    virtual void StopFeedback();   // specialized teardown
 

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.1 2004/03/11 18:06:32 brun Exp $
+// @(#)root/proof:$Name:  $:$Id: TProofDraw.h,v 1.2 2004/04/06 21:24:06 rdm Exp $
 // Author: Maarten Ballintijn   24/09/2003
 
 #ifndef ROOT_TProofDraw
@@ -26,12 +26,14 @@
 class TTree;
 class TTreeFormulaManager;
 class TTreeFormula;
+class TStatus;
 class TH1;
 
 
 class TProofDraw : public TSelector {
 
 private:
+   TStatus             *fStatus;
    TString              fSelection;
    TString              fVarX;
    TTreeFormulaManager *fManager;
@@ -41,6 +43,7 @@ private:
    TTree               *fTree;
 
    void     ClearFormulas();
+   void     SetError(const char *sub, const char *mesg);
 
 public:
    TProofDraw();

@@ -1,4 +1,4 @@
-// @(#)root/proof:$Name:  $:$Id:$
+// @(#)root/proof:$Name:  $:$Id: TDrawFeedback.cxx,v 1.1 2004/06/25 17:27:09 rdm Exp $
 // Author: Maarten Ballintijn   28/10/2003
 
 /*************************************************************************
@@ -64,17 +64,13 @@ TDrawFeedback::~TDrawFeedback()
 void TDrawFeedback::Feedback(TList *objs)
 {
    TSeqCollection *canvases = gROOT->GetListOfCanvases();
-
    TVirtualPad *save = gPad;
-
-   objs->Print();
 
    TIter next(objs);
    TObject *o;
    while( (o = next()) )
    {
       TString name = o->GetName();
-      Info("Feedback","Processing %s", name.Data());
       if ( (fAll || fNames->FindObject(name.Data())) && o->InheritsFrom("TH1")) {
 
          name += "_canvas";
