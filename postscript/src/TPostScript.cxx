@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.7 2000/12/15 08:47:30 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.8 2001/01/04 16:35:59 brun Exp $
 // Author: Rene Brun, Olivier Couet, Pierre Juillot   29/11/94
 
 /*************************************************************************
@@ -394,7 +394,7 @@ void TPostScript::DefineMarkers()
   PrintStr("/m29 {mp gsave x w2 sub y w2 add w3 sub m currentpoint t");
   PrintStr(" 4 {side} repeat cl fill gr} def@");
   PrintStr("/m30 {mp gsave x w2 sub y w2 add w3 sub m currentpoint t");
-  PrintStr(" 5 {side} repeat s gr} def@");
+  PrintStr(" 4 {side} repeat cl s gr} def@");
   PrintStr("/m31 {mp x y w2 sub m 0 w d x w2 sub y m w 0 d");
   PrintStr(" x w2 sub y w2 add m w w neg d x w2 sub y w2");
   PrintStr(" sub m w w d s} def@");
@@ -1092,13 +1092,13 @@ void TPostScript::DrawHatch(Float_t, Float_t, Int_t, Double_t *, Double_t *)
 }
 
 //______________________________________________________________________________
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.7 2000/12/15 08:47:30 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.8 2001/01/04 16:35:59 brun Exp $
 // Author: P.Juillot   13/08/92
 void TPostScript::FontEncode()
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Font Reencoding*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.7 2000/12/15 08:47:30 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.8 2001/01/04 16:35:59 brun Exp $
 // Author: P.Juillot   13/08/92
 
   PrintStr("@/reencdict 24 dict def");
@@ -1799,7 +1799,7 @@ void TPostScript::SetFillPatterns(Int_t ipat, Int_t color)
 {
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*Patterns definition*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                          ===================
-// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.7 2000/12/15 08:47:30 brun Exp $
+// @(#)root/postscript:$Name:  $:$Id: TPostScript.cxx,v 1.8 2001/01/04 16:35:59 brun Exp $
 // Author: O.Couet   16/07/99
 //*-*
 //*-* Define the pattern ipat in the current PS file. ipat can vary from
