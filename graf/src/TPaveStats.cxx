@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.17 2003/06/06 16:42:58 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TPaveStats.cxx,v 1.18 2004/05/13 19:39:18 brun Exp $
 // Author: Rene Brun   15/03/99
 
 /*************************************************************************
@@ -162,6 +162,7 @@ void TPaveStats::Paint(Option_t *option)
    Double_t textsize = GetTextSize();
    Int_t nlines = GetSize();
    if (nlines == 0) nlines = 5;
+   Int_t print_name = fOptStat%10;
 
    // Evaluate text size as a function of the number of lines
    Double_t y1       = gPad->GetY1();
@@ -185,7 +186,7 @@ void TPaveStats::Paint(Option_t *option)
             latex = (TLatex*)line;
             sl = new char[strlen(latex->GetTitle())+1];
             strcpy(sl, latex->GetTitle());
-            if (strpbrk(sl, "=") !=0) {
+            if (strpbrk(sl, "=") !=0 && print_name == 0) {
                st = strtok(sl, "=");
                Int_t itok = 0;
                while ( st !=0 ) {
@@ -199,6 +200,7 @@ void TPaveStats::Paint(Option_t *option)
                }
             } else if (strpbrk(sl, "|") !=0) {
             } else {
+               print_name = 0;
                latex->SetTextSize(titlesize);
                titlelength = latex->GetXsize()+2.*margin;
                if (titlelength > 0.98*dx) titlesize *= 0.98*dx/titlelength;
@@ -212,6 +214,7 @@ void TPaveStats::Paint(Option_t *option)
    }
    Double_t ytext = fY2 + 0.5*yspace;
    Double_t xtext = 0;
+   print_name = fOptStat%10;
 
    // Iterate over all lines
    // Copy pavetext attributes to line attributes if line attributes not set
@@ -233,7 +236,7 @@ void TPaveStats::Paint(Option_t *option)
          sl = new char[strlen(latex->GetTitle())+1];
          strcpy(sl, latex->GetTitle());
          // Draw all the histogram stats except the 2D under/overflow
-         if (strpbrk(sl, "=") !=0) {
+         if (strpbrk(sl, "=") !=0 && print_name == 0) {
            st = strtok(sl, "=");
            Int_t halign = 12;
            while ( st !=0 ) {
@@ -279,6 +282,7 @@ void TPaveStats::Paint(Option_t *option)
            }
 	 // Draw the histogram identifier
          } else {
+           print_name = 0;
            latex->SetTextAlign(22);
            xtext = 0.5*(fX1+fX2);
            latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
