@@ -449,7 +449,8 @@ void MyEvent::Magnetic_field(Int_t id)
     Double_t pol = GetParticle(id)->GetPDG()->Charge() > 0.0 ? 1.0 : -1.0;
     Double_t h4  = pol * 2.9979251e-04 * fB;
     Double_t hp  = GetParticle(id)->Pz();
-    Double_t tet = -h4 * CSpeed * fDetector.GetdT(fMatter) / GetParticle(id)->P();
+    Double_t tet = -h4 * CSpeed * fDetector.GetdT(fMatter) / 
+                   GetParticle(id)->Energy() / GetParticle(id)->P();
     if (TMath::Abs(tet) > 0.15) {
         sint  = TMath::Sin(tet);
         sintt = sint / tet;
@@ -466,8 +467,10 @@ void MyEvent::Magnetic_field(Int_t id)
     f2 = sint;
     f3 = tet * cos1t * hp;
     v1 = GetParticle(id)->Px() + (f1 * GetParticle(id)->Px() + f3);
-    v2 = GetParticle(id)->Py() + (f1 * GetParticle(id)->Py() + f2 * GetParticle(id)->Pz());
-    v3 = GetParticle(id)->Pz() + (f1 * GetParticle(id)->Pz() - f2 * GetParticle(id)->Py());
+    v2 = GetParticle(id)->Py() + (f1 * GetParticle(id)->Py() + f2 * 
+         GetParticle(id)->Pz());
+    v3 = GetParticle(id)->Pz() + (f1 * GetParticle(id)->Pz() - f2 * 
+         GetParticle(id)->Py());
     TVector3 new_mom(v1, v2, v3); 
     GetParticle(id)->SetMoment(new_mom);
 }
