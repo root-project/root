@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.142 2003/08/05 21:17:27 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.143 2003/08/15 18:52:50 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -3095,6 +3095,8 @@ void WriteShadowClass(G__ClassInfo &cl)
          } else {
             fprintf(fp, ", ");
          }
+         if (b.Property() & G__BIT_ISVIRTUAL)
+            fprintf(fp, " virtual");
          if (b.Property() & G__BIT_ISPRIVATE)
             fprintf(fp, " private ");
          else if (b.Property() & G__BIT_ISPROTECTED)
@@ -3103,6 +3105,7 @@ void WriteShadowClass(G__ClassInfo &cl)
             fprintf(fp, " public ");
          else
             fprintf(fp, " UNKNOWN inheritance ");
+
          string type_name;
          GetFullyQualifiedName(b,type_name);
          fprintf(fp, "%s", type_name.c_str());
