@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.55 2002/07/13 21:56:12 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TChain.cxx,v 1.56 2002/08/17 21:41:13 brun Exp $
 // Author: Rene Brun   03/02/97
 
 /*************************************************************************
@@ -961,9 +961,10 @@ Int_t TChain::Merge(TFile *file, Int_t basketsize, Option_t *option)
 
 // Write new tree header
    hnew->Write();
+   Int_t nfiles = hnew->GetFileNumber()+1;
    delete [] firstname;
    delete hnew->GetCurrentFile();
-   return hnew->GetFileNumber()+1;
+   return nfiles;
 }
 
 
