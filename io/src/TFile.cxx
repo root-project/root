@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.22 2001/01/16 17:22:32 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.cxx,v 1.23 2001/01/17 09:44:02 brun Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -670,6 +670,20 @@ Int_t TFile::GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nby
    objlen = olen;
    keylen = klen;
    return nread;
+}
+
+//______________________________________________________________________________
+Seek_t TFile::GetSize() const
+{
+   // Returns the current file size.
+
+   Long_t id, size, flags, modtime;
+   if (const_cast<TFile*>(this)->SysStat(fD, &id, &size, &flags, &modtime)) {
+      Error("GetSize", "cannot stat the file %s", GetName());
+      return 0;
+   }
+
+   return size;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.8 2001/01/15 01:25:24 rdm Exp $
+// @(#)root/base:$Name:  $:$Id: TFile.h,v 1.9 2001/01/16 17:22:32 rdm Exp $
 // Author: Rene Brun   28/11/94
 
 /*************************************************************************
@@ -101,6 +101,7 @@ public:
    Double_t          GetBytesWritten() const { return fBytesWrite; }
    Int_t             GetVersion() const { return fVersion; }
    Int_t             GetRecordHeader(char *buf, Seek_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
+   Seek_t            GetSize() const;
    virtual Bool_t    IsOpen() const;
    virtual void      ls(Option_t *option="") const;
    virtual void      MakeFree(Seek_t first, Seek_t last);
