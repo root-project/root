@@ -1,4 +1,4 @@
-// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.89 2004/01/25 17:59:54 rdm Exp $
+// @(#)root/unix:$Name:  $:$Id: TUnixSystem.cxx,v 1.90 2004/02/06 12:57:04 brun Exp $
 // Author: Fons Rademakers   15/09/95
 
 /*************************************************************************
@@ -2988,7 +2988,7 @@ int TUnixSystem::UnixFilestat(const char *path, Long_t *id, Long64_t *size,
    if (path != 0 && stat(path, &statbuf) >= 0) {
 #endif
       if (id)
-#if defined(R__KCC) && defined(R__LINUX)
+#if 0 && defined(R__KCC) && defined(R__LINUX)
          *id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;
 #else
          *id = (statbuf.st_dev << 24) + statbuf.st_ino;

@@ -1,4 +1,4 @@
-// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.79 2004/01/29 12:36:31 rdm Exp $
+// @(#)root/rootd:$Name:  $:$Id: rootd.cxx,v 1.80 2004/02/19 00:11:19 rdm Exp $
 // Author: Fons Rademakers   11/08/97
 
 /*************************************************************************
@@ -890,7 +890,7 @@ void RootdFstat()
    struct stat statbuf;
    if (RootdIsOpen() && fstat(gFd, &statbuf) >= 0) {
 #endif
-#if defined(__KCC) && defined(linux)
+#if 0 && defined(__KCC) && defined(linux)
       id = (statbuf.st_dev.__val[0] << 24) + statbuf.st_ino;
 #else
       id = (statbuf.st_dev << 24) + statbuf.st_ino;
