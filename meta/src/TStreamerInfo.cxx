@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.148 2003/01/02 22:40:42 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.149 2003/01/10 15:56:14 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -360,8 +360,25 @@ void TStreamerInfo::BuildCheck()
       array = fClass->GetStreamerInfos();
       TStreamerInfo *info = (TStreamerInfo *)array->At(fClassVersion);
       // NOTE: Should we check if the already exsiting info is the same as
-      // the current one?
-      if (info) {fNumber = info->GetNumber(); SetBit(kCanDelete); return;}
+      // the current one? Yes
+      // In case a class (eg Event.h) has a TClonesArray of Tracks, it could be
+      // that the old info does not have the class name (Track) in the data
+      // member title. Set old title to new title
+      if (info) {
+         SetBit(kCanDelete);
+         fNumber = info->GetNumber();
+         Int_t nel = fElements->GetEntriesFast();
+         TObjArray *elems = info->GetElements();
+         TStreamerElement *e1, *e2;
+         for (Int_t i=0;i<nel;i++) {
+            e1 = (TStreamerElement *)fElements->At(i);
+            e2 = (TStreamerElement *)elems->At(i);
+            if (strlen(e1->GetTitle()) != strlen(e2->GetTitle())) {
+               e2->SetTitle(e1->GetTitle());
+            }
+         }
+         return;
+      }
       if (fClass->GetListOfDataMembers()
          && (fClassVersion == fClass->GetClassVersion())
          && (fCheckSum != fClass->GetCheckSum())) {
