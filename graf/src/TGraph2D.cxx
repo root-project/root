@@ -1451,7 +1451,7 @@ Int_t TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
    }
 
    // Set error criterion for chisquare
-   arglist[0] = 1;
+   arglist[0] = TVirtualFitter::GetErrorDef();
    if (!fitOption.User) grFitter->SetFitMethod("Graph2DFitChisquare");
    fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
    if (fitResult != 0) {

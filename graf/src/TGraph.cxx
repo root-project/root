@@ -1,4 +1,4 @@
-// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.115 2003/10/29 08:51:44 brun Exp $
+// @(#)root/graf:$Name:  $:$Id: TGraph.cxx,v 1.116 2003/11/22 21:48:18 brun Exp $
 // Author: Rene Brun, Olivier Couet   12/12/94
 
 /*************************************************************************
@@ -1092,7 +1092,7 @@ Int_t TGraph::Fit(TF1 *f1, Option_t *option, Option_t *, Axis_t rxmin, Axis_t rx
    }
 
 //*-*- Set error criterion for chisquare
-   arglist[0] = 1;
+   arglist[0] = TVirtualFitter::GetErrorDef();
    if (!fitOption.User) grFitter->SetFitMethod("GraphFitChisquare");
    fitResult = grFitter->ExecuteCommand("SET ERR",arglist,1);
    if (fitResult != 0) {
