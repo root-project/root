@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.9 2000/11/21 21:06:53 brun Exp $
+// @(#)root/test:$Name:  $:$Id: Event.cxx,v 1.10 2000/11/23 10:22:10 brun Exp $
 // Author: Rene Brun   19/08/96
 
 ////////////////////////////////////////////////////////////////////////
@@ -14,11 +14,15 @@
 //        Int_t          fNvertex;
 //        UInt_t         fFlag;
 //        Float_t        fTemperature;
-//        EventHeader    fEvtHdr;
-//        TClonesArray  *fTracks;
-//        TH1F          *fH;
+//        Int_t          fMeasures[10];
 //        Float_t        fMatrix[4][4];
 //        Float_t       *fClosestDistance; //[fNvertex] indexed array! 
+//        EventHeader    fEvtHdr;
+//        TClonesArray  *fTracks;
+//        TRefArray     *fHighPt;            //array of High Pt tracks only
+//        TRefArray     *fMuons;             //array of Muon tracks only
+//        TRef           fLastTrack;         //pointer to last track
+//        TH1F          *fH;
 //
 //   The EventHeader class has 3 data members (integers):
 //     public:
@@ -85,6 +89,8 @@ Event::Event()
 
    if (!fgTracks) fgTracks = new TClonesArray("Track", 1000);
    fTracks = fgTracks;
+   fHighPt = new TRefArray;
+   fMuons  = new TRefArray;
    fNtrack = 0;
    fH      = 0;
    Int_t i0,i1;
@@ -102,13 +108,14 @@ Event::~Event()
 {
    Clear();
    if (fH == fgHist) fgHist = 0;
-   delete fH;
-   fH = 0;
+   delete fH; fH = 0;
+   delete fHighPt; fHighPt = 0;
+   delete fMuons;  fMuons = 0;
    delete [] fClosestDistance;
 }
 
 //______________________________________________________________________________
-void Event::AddTrack(Float_t random)
+Track *Event::AddTrack(Float_t random)
 {
    // Add a new track to the list of tracks for this event.
    // To avoid calling the very time consuming operator new for each track,
@@ -117,13 +124,17 @@ void Event::AddTrack(Float_t random)
    // otherwise the previous Track[i] will be overwritten.
 
    TClonesArray &tracks = *fTracks;
-   new(tracks[fNtrack++]) Track(random);
+   Track *track = new(tracks[fNtrack++]) Track(random);
+   fLastTrack = track;
+   return track;
 }
 
 //______________________________________________________________________________
 void Event::Clear(Option_t *option)
 {
    fTracks->Clear(option);
+   fHighPt->Delete();
+   fMuons->Delete();
 }
 
 //______________________________________________________________________________
@@ -131,6 +142,7 @@ void Event::Reset(Option_t *option)
 {
 // Static function to reset all static objects for this event
 //   fgTracks->Delete(option);
+
    delete fgTracks; fgTracks = 0;
    fgHist   = 0;
 }
@@ -153,7 +165,7 @@ void Event::SetMeasure(UChar_t which, Int_t what) {
 //______________________________________________________________________________
 void Event::SetRandomVertex() {
    // This delete is to test the relocation of variable length array
-   delete fClosestDistance;
+   if (fClosestDistance) delete [] fClosestDistance;
    if (!fNvertex) {
       fClosestDistance = 0;
       return;
@@ -176,7 +188,7 @@ Track::Track(Float_t random) : TObject()
    fPy = py;
    fPz = TMath::Sqrt(px*px+py*py);
    fRandom = 1000*random;
-   if (fRandom < 10) fMass2 = 0.08;
+   if (fRandom < 10) fMass2 = 0.106;
    else if (fRandom < 100) fMass2 = 0.8;
    else if (fRandom < 500) fMass2 = 4.5;
    else if (fRandom < 900) fMass2 = 8.9;

@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.16 2001/04/24 14:32:46 brun Exp $
+// @(#)root/test:$Name:  $:$Id: MainEvent.cxx,v 1.17 2001/07/09 20:38:07 brun Exp $
 // Author: Rene Brun   19/01/97
 
 ////////////////////////////////////////////////////////////////////////
@@ -19,10 +19,13 @@
 //  The statement ***tree->Branch("event", event, 64000,split);*** below
 //  will parse the structure described in Event.h and will make
 //  a new branch for each data member of the class if split is set to 1.
-//    - 5 branches corresponding to the basic types fNtrack,fNseg,fNvertex
-//           ,fFlag and fTemperature.
+//    - 9 branches corresponding to the basic types fType, fNtrack,fNseg,
+//           fNvertex,fFlag,fTemperature,fMeasures,fMatrix,fClosesDistance.
 //    - 3 branches corresponding to the members of the subobject EventHeader.
 //    - one branch for each data member of the class Track of TClonesArray.
+//    - one branch for the TRefArray of high Pt tracks
+//    - one branch for the TRefArray of muon tracks
+//    - one branch for the reference pointer to the last track
 //    - one branch for the object fH (histogram of class TH1F).
 //
 //  if split = 0 only one single branch is created and the complete event
@@ -45,6 +48,9 @@
 //  are generated and added to the TClonesArray list.
 //  For each event the event histogram is saved as well as the list
 //  of all tracks.
+//
+//  The two TRefArray contain only references to the original tracks owned by 
+//  the TClonesArray fTracks.
 //
 //  The number of events can be given as the first argument to the program.
 //  By default 400 events are generated.
@@ -137,7 +143,9 @@ int main(int argc, char **argv)
    if (arg5 < 100) printev = 1000;
    if (arg5 < 10)  printev = 10000;
 
-   Track::Class()->IgnoreTObjectStreamer();
+   //In this new version of mainEvent, one cannot activate the next statement
+   //because tracks are referenced
+   //Track::Class()->IgnoreTObjectStreamer();
 
 //         Read case
    if (read) {
@@ -236,7 +244,14 @@ int main(int argc, char **argv)
          }
 
          //  Create and Fill the Track objects
-         for (Int_t t = 0; t < ntrack; t++) event->AddTrack(random);
+         Track *track;
+         for (Int_t t = 0; t < ntrack; t++) {
+            track = event->AddTrack(random);
+         
+            //add this track to additional arrays if required
+            if (track->GetPt() > 1) event->GetHighPt()->Add(track);
+            if (track->GetMass2() < 0.11) event->GetMuons()->Add(track);
+         } 
 
          if (write) nb += tree->Fill();  //fill the tree
 
