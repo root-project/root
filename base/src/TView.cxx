@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.18 2003/05/07 13:31:09 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TView.cxx,v 1.19 2003/08/21 08:26:52 brun Exp $
 // Author: Rene Brun, Nenad Buncic, Evgueni Tcherniaev, Olivier Couet   18/08/95
 
 /*************************************************************************
@@ -1203,14 +1203,16 @@ void TView::PadRange(Int_t rback)
         r1 = -1;
         r2 = -1;
         r3 = -1;
+        xgraf[0] = -smax[0];
         xgraf[1] = -smax[0];
         xgraf[2] = -smax[0];
+        xgraf[3] = -smax[0];
         xgraf[4] =  smax[0];
         xgraf[5] =  smax[0];
         ygraf[0] = -smax[1];
-        ygraf[3] =  smax[1];
         ygraf[1] =  smax[1];
         ygraf[2] = -smax[1];
+        ygraf[3] =  smax[1];
         ygraf[5] =  smax[1];
         ygraf[4] = -smax[1];
         for (i = 1; i <= 8; ++i) {
