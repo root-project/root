@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: BaBar detector at the SLAC PEP-II B-factory
  * Package: RooFitCore
- *    File: $Id: RooTreeData.cc,v 1.38 2002/03/22 22:43:58 verkerke Exp $
+ *    File: $Id: RooTreeData.cc,v 1.39 2002/04/03 23:37:27 verkerke Exp $
  * Authors:
  *   DK, David Kirkby, Stanford University, kirkby@hep.stanford.edu 
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu
@@ -345,6 +345,9 @@ void RooTreeData::loadValues(const RooTreeData *t, RooFormulaVar* select)
     }
     delete iter ;
   }
+
+  // Force RDS internal initialization
+  t->get(0) ;
 
   // Loop over events in source tree   
   RooAbsArg* arg = 0;
