@@ -1,4 +1,4 @@
-// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.7 2003/09/07 18:25:47 rdm Exp $
+// @(#)root/rpdutils:$Name:  $:$Id: rpdutils.cxx,v 1.8 2003/09/09 12:37:25 rdm Exp $
 // Author: Gerardo Ganis    7/4/2003
 
 /*************************************************************************
@@ -2981,7 +2981,7 @@ void RpdUser(const char *sstr)
          close(fid);
       }
 
-      if (strlen(passw) == 0 || !strcmp(passw, "x")) {
+      if (passw == 0 || strlen(passw) == 0 || !strcmp(passw, "x")) {
 #ifdef R__SHADOWPW
          // System V Rel 4 style shadow passwords
          if ((spw = getspnam(user)) == 0) {
@@ -2997,7 +2997,7 @@ void RpdUser(const char *sstr)
 #endif
       }
       // Check if successful
-      if (strlen(passw) == 0 || !strcmp(passw, "x")) {
+      if (passw == 0 || strlen(passw) == 0 || !strcmp(passw, "x")) {
          NetSend(kErrNotAllowed, kROOTD_ERR);
          ErrorInfo("RpdUser: passwd hash not available for user %s", user);
          ErrorInfo
