@@ -92,7 +92,7 @@ void TGLOrthoCamera::TurnOn()const
 
 void TGLOrthoCamera::TurnOn(Int_t x, Int_t y)const
 {
-   Int_t viewport[4] = {};
+   Int_t viewport[4] = {0};
    glGetIntegerv(GL_VIEWPORT, viewport);
    gluPickMatrix(x, fViewPort[3] - y, 1., 1., (Int_t *)fViewPort);
    Double_t frx = fViewVolume[0] * fZoom;
