@@ -1,4 +1,4 @@
-// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.34 2003/02/24 08:36:32 brun Exp $
+// @(#)root/hist:$Name:  $:$Id: TProfile.cxx,v 1.35 2003/02/25 14:17:03 brun Exp $
 // Author: Rene Brun   29/09/95
 
 /*************************************************************************
@@ -66,7 +66,7 @@ TProfile::TProfile() : TH1D()
 //*-*-*-*-*-*Default constructor for Profile histograms*-*-*-*-*-*-*-*-*
 //*-*        ==========================================
 
-   fScaling = kFALSE;
+   BuildOptions(0,0,"");
 }
 
 //______________________________________________________________________________
