@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.8 2004/02/03 22:19:45 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.cxx,v 1.9 2004/02/18 07:28:02 brun Exp $
 // Author: Victor Perev   04/10/2003
 //         Philippe Canal 05/2004
 
@@ -166,6 +166,27 @@ bool TClassEdit::IsDefComp(const char *compname, const char *classname)
    if (stdless == c) return true;
 
    return false;
+}
+
+//______________________________________________________________________________
+string TClassEdit::GetLong64_Name(const string& original)
+{
+   // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
+
+   static const string longlong_s  = "long long";
+   static const string ulonglong_s = "unsigned long long";
+
+   string result = original;
+
+   int pos = 0;
+   while( (pos = result.find(ulonglong_s,pos) ) >=0 ) {
+      result.replace(pos, ulonglong_s.length(), "ULong64_t");
+   }
+   pos = 0;
+   while( (pos = result.find(longlong_s,pos) ) >=0 ) {
+      result.replace(pos, longlong_s.length(), "Long64_t");
+   }
+   return result;
 }
 
 //______________________________________________________________________________
@@ -617,3 +638,6 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
    return answ.str();
 
 }
+
+
+

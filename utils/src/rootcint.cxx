@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.158 2004/03/11 18:34:43 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: rootcint.cxx,v 1.159 2004/03/12 08:56:06 brun Exp $
 // Author: Fons Rademakers   13/07/96
 
 /*************************************************************************
@@ -254,13 +254,13 @@ using namespace std;
 //#include <strstream>
 
 #include "TClassEdit.h"
+using namespace TClassEdit;
+
 #include "RStl.h"
 using namespace ROOT;
 
 const char *autoldtmpl = "G__auto%dLinkDef.h";
 char autold[64];
-
-enum ESTLType {kNone, kVector, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 
 FILE *fp;
 char *StrDup(const char *str);
@@ -674,27 +674,6 @@ string GetNonConstMemberName(G__DataMemberInfo &m, const string &prefix = "")
    } else {
       return prefix+m.Name();
    }
-}
-
-//______________________________________________________________________________
-string GetLong64_Name(const string& original)
-{
-   // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
-
-   static const string longlong_s  = "long long";
-   static const string ulonglong_s = "unsigned long long";
-
-   string result = original;
-
-   int pos = 0;
-   while( (pos = result.find(ulonglong_s,pos) ) >=0 ) {
-      result.replace(pos, ulonglong_s.length(), "ULong64_t");
-   }
-   pos = 0;
-   while( (pos = result.find(longlong_s,pos) ) >=0 ) {
-      result.replace(pos, longlong_s.length(), "Long64_t");
-   }
-   return result;
 }
 
 //______________________________________________________________________________
@@ -1451,7 +1430,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
          fulName1 = ti.TrueName();
       }
    }
-   if (stltype==kMap || stltype==kMultimap) {
+   if (stltype==kMap || stltype==kMultiMap) {
       G__TypeInfo &ti = TemplateArg(m,1);
       if (ElementStreamer(ti,0,rwmode)) {
          tcl2="R__tcl2";
@@ -1523,18 +1502,18 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
       fprintf(fp, "         for (R__i = 0; R__i < R__n; R__i++) {\n");
 
       ElementStreamer(TemplateArg(m),"R__t",rwmode,tcl1);
-      if (stltype == kMap || stltype == kMultimap) {     //Second Arg
+      if (stltype == kMap || stltype == kMultiMap) {     //Second Arg
          ElementStreamer(TemplateArg(m,1),"R__t2",rwmode,tcl2);
       }
 
       switch (stltype) {
 
          case kMap:
-         case kMultimap:
+         case kMultiMap:
             fprintf(fp, "            R__stl.insert(make_pair(R__t,R__t2));\n");
             break;
          case kSet:
-         case kMultiset:
+         case kMultiSet:
             fprintf(fp, "            R__stl.insert(R__t);\n");
             break;
          case kVector:
@@ -1595,7 +1574,7 @@ int STLContainerStreamer(G__DataMemberInfo &m, int rwmode)
 
       fprintf(fp, "            %s::iterator R__k;\n", stlType.c_str());
       fprintf(fp, "            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {\n");
-      if (stltype == kMap || stltype == kMultimap) {
+      if (stltype == kMap || stltype == kMultiMap) {
          ElementStreamer(TemplateArg(m,0),"((*R__k).first )",rwmode,tcl1);
          ElementStreamer(TemplateArg(m,1),"((*R__k).second)",rwmode,tcl2);
       } else {
@@ -1675,7 +1654,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
             if (TemplateArg(m).Property() & G__BIT_ISENUM)
                fprintf(fp, "            R__b >> (Int_t&)R__t;\n");
             else {
-               if (stltype == kMap || stltype == kMultimap) {
+               if (stltype == kMap || stltype == kMultiMap) {
                   fprintf(fp, "            R__b >> R__t;\n");
                   if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
                   (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
@@ -1692,7 +1671,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                         fprintf(fp, "            R__t2.Streamer(R__b);\n");
                      }
                  }
-               } else if (stltype == kSet || stltype == kMultiset) {
+               } else if (stltype == kSet || stltype == kMultiSet) {
                   fprintf(fp, "            R__b >> R__t;\n");
                } else {
                   if (strcmp(s,"string*") == 0) {
@@ -1706,7 +1685,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
              }
           } else {
             if (TemplateArg(m).HasMethod("Streamer")) {
-               if (stltype == kMap || stltype == kMultimap) {
+               if (stltype == kMap || stltype == kMultiMap) {
                   fprintf(fp, "            R__t.Streamer(R__b);\n");
                   if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
                   (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
@@ -1741,17 +1720,17 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
             }
          }
          if (m.Property() & G__BIT_ISPOINTER) {
-            if (stltype == kMap || stltype == kMultimap) {
+            if (stltype == kMap || stltype == kMultiMap) {
                fprintf(fp, "            insert(make_pair(R__t,R__t2));\n");
-            } else if (stltype == kSet || stltype == kMultiset) {
+            } else if (stltype == kSet || stltype == kMultiSet) {
                fprintf(fp, "            insert(R__t);\n");
             } else {
                fprintf(fp, "            push_back(R__t);\n");
             }
          } else {
-            if (stltype == kMap || stltype == kMultimap) {
+            if (stltype == kMap || stltype == kMultiMap) {
                fprintf(fp, "            insert(make_pair(R__t,R__t2));\n");
-            } else if (stltype == kSet || stltype == kMultiset) {
+            } else if (stltype == kSet || stltype == kMultiSet) {
                fprintf(fp, "            insert(R__t);\n");
             } else {
                fprintf(fp, "            push_back(R__t);\n");
@@ -1776,7 +1755,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
             if (TemplateArg(m).Property() & G__BIT_ISENUM)
                fprintf(fp, "            R__b << (Int_t)*R__k;\n");
             else {
-               if (stltype == kMap || stltype == kMultimap) {
+               if (stltype == kMap || stltype == kMultiMap) {
                   fprintf(fp, "            R__b << (*R__k).first;\n");
                   if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
                   (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
@@ -1790,7 +1769,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                         fprintf(fp, "            ((%s&)((*R__k).second)).Streamer(R__b);\n",TemplateArg(m,1).Name());
                      }
                   }
-               } else if (stltype == kSet || stltype == kMultiset) {
+               } else if (stltype == kSet || stltype == kMultiSet) {
                   fprintf(fp, "            R__b << *R__k;\n");
                } else {
                   if (strcmp(TemplateArg(m).Name(),"string*") == 0) {
@@ -1808,7 +1787,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
            }
          } else {
             if (TemplateArg(m).HasMethod("Streamer")) {
-               if (stltype == kMap || stltype == kMultimap) {
+               if (stltype == kMap || stltype == kMultiMap) {
                   fprintf(fp, "            ((%s&)((*R__k).first)).Streamer(R__b);\n",TemplateArg(m).Name());
                   if ((TemplateArg(m,1).Property() & G__BIT_ISPOINTER) ||
                   (TemplateArg(m,1).Property() & G__BIT_ISFUNDAMENTAL) ||
@@ -1822,7 +1801,7 @@ int STLBaseStreamer(G__BaseClassInfo &m, int rwmode)
                         fprintf(fp, "            ((%s&)((*R__k).second)).Streamer(R__b);\n",TemplateArg(m,1).Name());
                      }
                   }
-               } else if (stltype == kSet || stltype == kMultiset) {
+               } else if (stltype == kSet || stltype == kMultiSet) {
                   fprintf(fp, "            (*R__k).Streamer(R__b);\n");
                } else {
                   fprintf(fp, "            (*R__k).Streamer(R__b);\n");
@@ -2914,8 +2893,8 @@ void WriteBodyShowMembers(G__ClassInfo& cl, bool outside)
 
                      string typeWithDefaultStlName( RStl::DropDefaultArg(m.Type()->Name()) );
                      //TClassEdit::ShortType(m.Type()->Name(),TClassEdit::kRemoveDefaultAlloc) );
-                     string typeName( m.Type()->Name());
-
+                     string typeName( GetLong64_Name( m.Type()->Name() ) );
+                     
                      fprintf(fp, "      ROOT::GenericShowMembers(\"%s\", (void*)&%s%s, R__insp, strcat(R__parent,\"%s.\"),%s);\n"
                                  "      R__parent[R__ncp] = 0;\n",
                                  typeName.c_str(), prefix, m.Name(), m.Name(),!strncmp(m.Title(), "!", 1)?"true":"false");

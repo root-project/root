@@ -1,4 +1,4 @@
-// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.4 2004/01/27 19:52:48 brun Exp $
+// @(#)root/utils:$Name:  $:$Id: RStl.cxx,v 1.5 2004/02/11 17:00:07 brun Exp $
 // Author: Philippe Canal 27/08/2003
 
 /*************************************************************************
@@ -18,14 +18,13 @@
 
 #include "RStl.h"
 #include "TClassEdit.h"
+using namespace TClassEdit;
 #include <stdio.h>
 
 // From the not-existing yet rootcint.h
 void WriteClassInit(G__ClassInfo &cl);
 void WriteAuxFunctions(G__ClassInfo &cl);
-enum ESTLType {kNone, kVector, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
 int ElementStreamer(G__TypeInfo &ti,const char *R__t,int rwmode,const char *tcl=0);
-string GetLong64_Name(const string& original);
 
 #ifndef ROOT_Varargs
 #include "Varargs.h"
@@ -37,12 +36,12 @@ void Warning(const char *location, const char *va_(fmt), ...);
 // ROOT::RStl is the rootcint STL handling class.
 //
 
-ROOT::RStl& ROOT::RStl::inst() 
+ROOT::RStl& ROOT::RStl::inst()
 {
    // Return the singleton ROOT::RStl.
 
-   static ROOT::RStl instance; 
-   return instance; 
+   static ROOT::RStl instance;
+   return instance;
 
 }
 
@@ -56,13 +55,13 @@ void ROOT::RStl::GenerateTClassFor(const string& stlclassname) {
             stlclassname.c_str());
       return;
    }
-                   
-   string registername( TClassEdit::ShortType(cl.Name(), 
+
+   string registername( TClassEdit::ShortType(cl.Name(),
                                               TClassEdit::kDropStlDefault ) );
 
-//    fprintf(stderr,"registering %s as %s\n",
-//            stlclassname.c_str(), registername.c_str());
-   
+//     fprintf(stderr,"registering %s as %s\n",
+//             stlclassname.c_str(), registername.c_str());
+
    vector<string> splitName;
    TClassEdit::GetSplit(registername.c_str(),splitName);
 
@@ -80,7 +79,7 @@ void ROOT::RStl::GenerateTClassFor(const string& stlclassname) {
          GenerateTClassFor( splitName[i] );
       }
    }
-   
+
 
 //    fprintf(stderr,"ROOT::RStl registered %s as %s\n",stlclassname.c_str(),registername.c_str());
 }
@@ -95,11 +94,11 @@ void ROOT::RStl::Print() {
 
 string ROOT::RStl::DropDefaultArg(const string &classname) {
    G__ClassInfo cl(classname.c_str());
-   
+
    if ( cl.TmpltName() == 0 ) return classname;
 
    if ( TClassEdit::STLKind( cl.TmpltName() ) == 0 ) return classname;
-   
+
    return TClassEdit::ShortType( cl.Fullname(),
                                  TClassEdit::kDropStlDefault );
 
@@ -112,10 +111,10 @@ void ROOT::RStl::WriteClassInit(FILE* /*file*/) {
    // each of the STL containers that have been registered
 
    set<string>::iterator iter;
-   G__ClassInfo cl; 
+   G__ClassInfo cl;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
       cl.Init( (*iter).c_str() );
-     
+
       ::WriteClassInit( cl );
       ::WriteAuxFunctions( cl );
    }
@@ -130,8 +129,8 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
 
    string shortTypeName = GetLong64_Name( TClassEdit::ShortType(stlcl.Name(),TClassEdit::kDropStlDefault) );
    string noConstTypeName( TClassEdit::CleanType(shortTypeName.c_str(),2) );
-   
-   streamerName += G__map_cpp_name((char *)shortTypeName.c_str());   
+
+   streamerName += G__map_cpp_name((char *)shortTypeName.c_str());
    string typedefName = G__map_cpp_name((char *)shortTypeName.c_str());
 
    vector<string> splitName;
@@ -156,7 +155,7 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
          firstFullName = firstType.TrueName();
       }
    }
-   if (stltype==kMap || stltype==kMultimap) {
+   if (stltype==kMap || stltype==kMultiMap) {
       secondType.Init( splitName[2].c_str());
 
       if (ElementStreamer(secondType,0,0)) {
@@ -184,13 +183,13 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
    fprintf(file, "      if (R__b.IsReading()) {\n");
    fprintf(file, "         R__stl.clear();\n");
 
-   if (tclFirst) 
+   if (tclFirst)
       fprintf(file, "         TClass *R__tcl1 = TBuffer::GetClass(typeid(%s));\n",
               firstFullName.c_str());
-   if (tclSecond) 
+   if (tclSecond)
       fprintf(file, "         TClass *R__tcl2 = TBuffer::GetClass(typeid(%s));\n",
               secondFullName.c_str());
-   
+
    fprintf(file, "         int R__i, R__n;\n");
    fprintf(file, "         R__b >> R__n;\n");
 
@@ -198,19 +197,19 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
       fprintf(file,"         R__stl.reserve(R__n);\n");
    }
    fprintf(file, "         for (R__i = 0; R__i < R__n; R__i++) {\n");
-   
+
    ElementStreamer(firstType,"R__t",0,tclFirst);
-   if (stltype == kMap || stltype == kMultimap) {     //Second Arg
+   if (stltype == kMap || stltype == kMultiMap) {     //Second Arg
       ElementStreamer(secondType,"R__t2",0,tclSecond);
    }
    switch (stltype) {
-      
+
       case kMap:
-      case kMultimap:
+      case kMultiMap:
          fprintf(file, "            R__stl.insert(make_pair(R__t,R__t2));\n");
          break;
       case kSet:
-      case kMultiset:
+      case kMultiSet:
          fprintf(file, "            R__stl.insert(R__t);\n");
          break;
       case kVector:
@@ -218,7 +217,7 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
       case kDeque:
          fprintf(file, "            R__stl.push_back(R__t);\n");
          break;
-         
+
       default:
             assert(0);
    }
@@ -251,7 +250,7 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
    fprintf(file, "            %s::iterator R__k;\n", shortTypeName.c_str());
    fprintf(file, "            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {\n");
 
-   if (stltype == kMap || stltype == kMultimap) {
+   if (stltype == kMap || stltype == kMultiMap) {
       ElementStreamer(firstType ,"((*R__k).first )",1,tclFirst);
       ElementStreamer(secondType,"((*R__k).second)",1,tclSecond);
    } else {
@@ -260,7 +259,7 @@ void ROOT::RStl::WriteStreamer(FILE *file, G__ClassInfo &stlcl) {
 
    fprintf(file, "            }\n");
    fprintf(file, "         }\n");
- 
+
    fprintf(file, "      }\n");
    fprintf(file, "   } // end of %s streamer\n",stlcl.Fullname());
    fprintf(file, "} // close namespace ROOT\n\n");
@@ -277,7 +276,7 @@ void ROOT::RStl::WriteStreamer(FILE *file) {
    // STL container classes
 
    set<string>::iterator iter;
-   G__ClassInfo cl; 
+   G__ClassInfo cl;
    for(iter = fList.begin(); iter != fList.end(); ++iter) {
       cl.Init( (*iter).c_str() );
       WriteStreamer(file,cl);

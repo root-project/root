@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.5 2004/01/30 08:12:57 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TClassEdit.h,v 1.6 2004/01/31 08:59:09 brun Exp $
 // Author: Victor Perev   10/04/2003
 //         Philippe Canal 05/2004
 
@@ -21,18 +21,19 @@ namespace std {
 // This class does not dependent on any other ROOT facility
 // so that it can be used by rootcint.
 
-class TClassEdit{
-public:
-   enum { kDropTrailStar    = 1<<0,
-          kDropDefaultAlloc = 1<<1,
-          kDropAlloc        = 1<<2,
-          kInnerClass       = 1<<3,
-          kInnedMostClass   = 1<<4,
-          kDropStlDefault   = 1<<5, /* implies kDropDefaultAlloc */
-          kDropComparator   = 1<<6  /* if the class has a comparator, drops BOTH the comparator and the Allocator */
-   };
+namespace TClassEdit {
 
-   enum { 
+   typedef enum { 
+      kDropTrailStar    = 1<<0,
+      kDropDefaultAlloc = 1<<1,
+      kDropAlloc        = 1<<2,
+      kInnerClass       = 1<<3,
+      kInnedMostClass   = 1<<4,
+      kDropStlDefault   = 1<<5, /* implies kDropDefaultAlloc */
+      kDropComparator   = 1<<6  /* if the class has a comparator, drops BOTH the comparator and the Allocator */
+   } EModType;
+
+   typedef enum { 
       kNone     = 0,
       kVector   = 1,
       kList     = 2,
@@ -42,21 +43,22 @@ public:
       kSet      = 6,
       kMultiSet = 7,
       kEnd      = 8
-   };
+   } ESTLType;
 
           
-   static std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);
-   static bool        IsDefAlloc(const char *alloc, const char *classname);
-   static bool        IsDefAlloc(const char *alloc, const char *keyclassname, const char *valueclassname);
-   static bool        IsDefComp (const char *comp , const char *classname);
-   static int         IsSTLCont (const char *type,int testAlloc=0);
-   static bool        IsStdClass(const char *type);
-   static bool        IsVectorBool(const char *name);
-   static int         GetSplit  (const char *type, std::vector<std::string> &output);
-   static int         STLKind   (const char *type);    //Kind of stl container
-   static int         STLArgs   (int kind);            //Min number of arguments without allocator
-   static std::string ResolveTypedef(const char *tname, bool resolveAll = false);
-   static std::string ShortType (const char *typeDesc, int mode);
+   std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);
+   bool        IsDefAlloc(const char *alloc, const char *classname);
+   bool        IsDefAlloc(const char *alloc, const char *keyclassname, const char *valueclassname);
+   bool        IsDefComp (const char *comp , const char *classname);
+   int         IsSTLCont (const char *type,int testAlloc=0);
+   bool        IsStdClass(const char *type);
+   bool        IsVectorBool(const char *name);
+   std::string GetLong64_Name(const std::string& original);
+   int         GetSplit  (const char *type, std::vector<std::string> &output);
+   int         STLKind   (const char *type);    //Kind of stl container
+   int         STLArgs   (int kind);            //Min number of arguments without allocator
+   std::string ResolveTypedef(const char *tname, bool resolveAll = false);
+   std::string ShortType (const char *typeDesc, int mode);
 };
 
 #endif

@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.116 2004/02/18 20:13:42 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TROOT.cxx,v 1.117 2004/02/19 00:11:18 rdm Exp $
 // Author: Rene Brun   08/12/94
 
 /*************************************************************************
@@ -829,6 +829,11 @@ TClass *TROOT::FindSTLClass(const char *name, Bool_t load) const
       if (altname && strcmp(altname,name)!=0) {
          cl = gROOT->GetClass(altname,load);
       }
+   }
+   if (cl==0) {
+      // Try with Long64_t instead of long long
+      string long64name = TClassEdit::GetLong64_Name( name );
+      if ( long64name != name ) return FindSTLClass( long64name.c_str(), load);
    }
 
    if (load && cl==0) {
