@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name$:$Id$ */
+/* @(#)root/base:$Name:  $:$Id: RConfig.h,v 1.1.1.1 2000/05/16 17:00:39 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -89,13 +89,21 @@
 #   endif
 #endif
 
-#if defined(__linux) && !defined(__powerpc__)
+#if defined(__linux) && !defined(__powerpc__) && !defined(__ia64__)
 #   define R__LINUX
 #   define R__UNIX
 #   define R__BYTESWAP
 #   ifndef __i486__
-#      define __i486__          /* turn off if you really want to run on an i386 */
+#      define __i486__       /* turn off if you really want to run on an i386 */
 #   endif
+#   define NEED_SIGJMP
+#endif
+
+#if defined(__linux) && defined(__ia64__)
+#   define R__LINUX
+#   define R__UNIX
+#   define R__BYTESWAP
+#   define R__B64
 #   define NEED_SIGJMP
 #endif
 
@@ -138,7 +146,12 @@
 #      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   endif
-#   if __GNUC_MINOR__ >= 91    /* egcs 1.1 */
+#   if __GNUC_MINOR__ >= 91    /* egcs 1.1.x */
+#      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
+#   endif
+#   if defined(__ia64__)       /* gcc 2.9x (MINOR is 9! So above tests fail) */
+#      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
+#      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #   endif
 #endif

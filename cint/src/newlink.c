@@ -628,7 +628,7 @@ void G__gen_cpplink()
   G__cpplink_global(fp);
   G__cpplink_func(fp);
   G__cpplink_tagtable(fp,hfp);
-  fprintf(fp,"extern \"C\" void G__cpp_setup%s() {\n",G__DLLID);
+  fprintf(fp,"extern \"C\" void G__cpp_setup%s(void) {\n",G__DLLID);
 #ifndef G__OLDIMPLEMENTATION1169
   fprintf(fp,"  G__check_setup_version(%d,\"G__cpp_setup%s()\");\n",
           G__CREATEDLLREV,G__DLLID);

@@ -266,6 +266,15 @@ LDFLAGS       = -O
 SOFLAGS       = -shared -Wl,-soname,
 endif
 
+ifeq ($(ARCH),linuxia64gcc)
+# Itanium Linux with gcc 2.9x
+CXX           = g++
+CXXFLAGS      = -O -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared
+endif
+
 ifeq ($(ARCH),mklinux)
 # MkLinux with libc5
 CXX           = g++
