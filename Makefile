@@ -275,6 +275,7 @@ distclean:: clean
 	@mv -f include/config.hh include/config.h
 	@rm -f build/dummy.d bin/*.dll lib/*.def lib/*.exp lib/*.lib .def
 	@rm -f tutorials/*.root tutorials/*.ps tutorials/*.gif so_locations
+	@rm -f tutorials/pca.C
 	@rm -f $(CINTDIR)/include/*.dl* $(CINTDIR)/stl/*.dll README/ChangeLog
 	@rm -rf htmldoc
 	@cd test && $(MAKE) distclean
