@@ -13,6 +13,10 @@ include ../Makefile.arch
 ROOTSHOWERS  := $(wildcard *.$(SrcSuf)) RootShowerDict.$(SrcSuf)
 ROOTSHOWERO  := $(ROOTSHOWERS:.$(SrcSuf)=.$(ObjSuf))
 ROOTSHOWER    = RootShower$(ExeSuf)
+ifeq ($(PLATFORM),win32)
+ROOTSHOWERRC  := rootshower.rc
+ROOTSHOWERRES := rootshower.res
+endif
 
 OBJS          = $(ROOTSHOWERO)
 
@@ -24,11 +28,18 @@ PROGRAMS      = $(ROOTSHOWER)
 
 all:            $(PROGRAMS)
 
-$(ROOTSHOWER):  $(ROOTSHOWERO)
 ifeq ($(PLATFORM),win32)
-		$(LD) $(LDFLAGS) $^ $(GLIBS) '$(ROOTSYS)\lib\libEG.lib' \
+$(ROOTSHOWERRES) : $(ROOTSHOWERRC)
+	rc -DBUILDNUMBER=0 -r -fo $(ROOTSHOWERRES) $(ROOTSHOWERRC)
+endif
+
+ifeq ($(PLATFORM),win32)
+$(ROOTSHOWER):  $(ROOTSHOWERO) $(ROOTSHOWERRES)
+		$(LD) $(LDFLAGS) /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup \
+		$^ $(GLIBS) '$(ROOTSYS)\lib\libEG.lib' \
 		   '$(ROOTSYS)\lib\libHtml.lib' '$(ROOTSYS)\lib\libGeom.lib' $(OutPutOpt)$@
 else
+$(ROOTSHOWER):  $(ROOTSHOWERO)
 		$(LD) $(LDFLAGS) $^ $(GLIBS) -lEG -lHtml -lGeom $(OutPutOpt)$@
 endif
 		@echo "$@ done"
@@ -38,7 +49,7 @@ RootShowerDict.$(SrcSuf): MyParticle.h MyDetector.h MyEvent.h RSLinkDef.h
 		@rootcint -f $@ -c $^
 
 clean:
-		@rm -f $(OBJS) core
+		@rm -f $(OBJS) *.res core
 
 distclean:      clean
 		@rm -f $(PROGRAMS) *Dict.* *.def *.exp \
