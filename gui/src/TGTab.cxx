@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.13 2003/12/15 18:04:27 brun Exp $
+// @(#)root/gui:$Name:  $:$Id: TGTab.cxx,v 1.14 2004/07/21 13:53:42 brun Exp $
 // Author: Fons Rademakers   13/01/98
 
 /*************************************************************************
@@ -319,20 +319,23 @@ void TGTab::RemoveTab(Int_t tabIndex)
 //______________________________________________________________________________
 void TGTab::SetEnabled(Int_t tabIndex, Bool_t on)
 {
-   // set tab enabled or disabled
+   // Enabled or disable tab.
 
    TGTabElement *te = GetTabTab(tabIndex);
-   if (te) te->SetEnabled(on); 
+   if (te) {
+      te->SetEnabled(on);
+      fClient->NeedRedraw(te);
+   }
 }
- 
+
 //______________________________________________________________________________
 Bool_t TGTab::IsEnabled(Int_t tabIndex) const
 {
-   // returns if tab is enabled
+   // Returns true if tab is enabled.
 
    TGTabElement *te = GetTabTab(tabIndex);
 
-   return te ? te->IsEnabled() : kFALSE; 
+   return te ? te->IsEnabled() : kFALSE;
 }
 
 //______________________________________________________________________________
@@ -522,19 +525,19 @@ void TGTab::SavePrimitive(ofstream &out, Option_t *option)
    char ParGC[50], ParFont[50];
    sprintf(ParFont,"%s::GetDefaultFontStruct()",IsA()->GetName());
    sprintf(ParGC,"%s::GetDefaultGC()()",IsA()->GetName());
-   
+
    if ((GetDefaultFontStruct() != fFontStruct) || (GetDefaultGC()() != fNormGC)) {
       TGFont *ufont = gClient->GetResourcePool()->GetFontPool()->FindFont(fFontStruct);
       if (ufont) {
          ufont->SavePrimitive(out, option);
          sprintf(ParFont,"ufont->GetFontStruct()");
-      } 
+      }
 
       TGGC *userGC = gClient->GetResourcePool()->GetGCPool()->FindGC(fNormGC);
       if (userGC) {
          userGC->SavePrimitive(out, option);
          sprintf(ParGC,"uGC->GetGC()");
-      } 
+      }
    }
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
