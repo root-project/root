@@ -1,4 +1,4 @@
-// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.12 2002/01/08 08:34:21 brun Exp $
+// @(#)root/win32:$Name:  $:$Id: TGWin32.h,v 1.13 2002/02/21 11:30:16 rdm Exp $
 // Author: Valery Fine   28/11/94
 
 /*************************************************************************
@@ -193,7 +193,7 @@ public:
     Int_t     OpenPixmap(UInt_t w, UInt_t h);
     void      PutByte(Byte_t b);
     void      QueryPointer(Int_t &ix, Int_t &iy);
-    void      ReadGIF(Int_t x0, Int_t y0, const char *file) { }
+    Pixmap_t  ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t id=0) { }
     Int_t     RequestLocator(Int_t mode, Int_t ctyp, Int_t &x, Int_t &y);
     Int_t     RequestString(Int_t x, Int_t y, char *text);
     void      RemoveWindow(TGWin32Switch *win){if (win) fWindows.Remove((TObject *)win);} // Remove the 'window' pointer
