@@ -2,7 +2,7 @@
 CLEAN_TARGETS += *.log *.root $(ALL_LIBRARIES)
 
 #Set the list of target to make while testing
-TEST_TARGETS += operator1 simpleSeparateDict forwardDecl constructorTest typenameTest
+TEST_TARGETS += usingtemplate operator1 simpleSeparateDict forwardDecl constructorTest typenameTest
 
 SHELL = /bin/bash
 
@@ -50,3 +50,7 @@ constructorDict.C: constructor.hh
 
 constructorTest: constructorDict.o
 
+usingtemplate.log: usingtemplate_C.$(DllSuf)
+
+usingtemplate: usingtemplate.log
+	$(TestDiff)

@@ -2,3 +2,5 @@ masterDict.C
 masterDict.h
 slaveDict.C
 slaveDict.h
+*.log
+*Dict*
