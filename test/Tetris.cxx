@@ -1,4 +1,4 @@
-// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.8 2001/03/15 18:41:33 rdm Exp $
+// @(#)root/test:$Name:  $:$Id: Tetris.cxx,v 1.9 2001/06/26 12:27:45 brun Exp $
 // Author: Valeriy Onuchin & Fons Rademakers   04/10/98
 
 ///////////////////////////////////////////////////////////////////
@@ -828,6 +828,25 @@ KeyHandler::KeyHandler() : TGFrame(gClient->GetRoot(),0,0)
    main_frame->BindKey(this, gVirtualX->KeysymToKeycode(kKey_Space), kAnyModifier);
 }
 
+KeyHandler::~KeyHandler()
+{
+   // Cleanup key handler.
+
+   // get main frame of Tetris canvas
+   TRootCanvas *main_frame = (TRootCanvas*)(gTetris->GetCanvasImp());
+
+   // remove binding of arrow keys and space-bar key
+printf("Remove key bindings\n");
+   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Up),    kAnyModifier);
+   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Left),  kAnyModifier);
+   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Right), kAnyModifier);
+   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Down),  kAnyModifier);
+   main_frame->RemoveBind(this, gVirtualX->KeysymToKeycode(kKey_Space), kAnyModifier);
+   // restore key auto repeat functionality, was turned off in TGMainFrame::HandleKey()
+   gVirtualX->SetKeyAutoRepeat(kTRUE);
+}
+
+
 Bool_t KeyHandler::HandleKey(Event_t *event)
 {
    // Handle arrow and spacebar keys
@@ -926,7 +945,7 @@ Tetris::Tetris() :
    fPiecesDropped = 0;
    SetFillColor(31);
 
-   new KeyHandler();
+   fKeyHandler = new KeyHandler();
    fUpdateLevelTimer = new UpdateLevelTimer(60000);  // every  minute
    SetFixedSize();
    Update();

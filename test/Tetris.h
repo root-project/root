@@ -328,7 +328,7 @@ class KeyHandler : public TGFrame {
 
 public:
    KeyHandler();
-   ~KeyHandler() { }
+   ~KeyHandler();
 
    Bool_t HandleKey(Event_t *event);    // handler of the key events
 };
@@ -366,6 +366,7 @@ private:
    NewGameButton    *fNewGame;            // clicking on button initiates new game
    QuitButton       *fQuit;               // clicking on button makes game over
    PauseButton      *fPause;              // pause/continue button
+   KeyHandler       *fKeyHandler;         // handler for arrow keys
 
    Int_t             fPiecesDropped;      // number of pieces dropped
    UpdateLevelTimer *fUpdateLevelTimer;   // periodically updates game level
@@ -387,7 +388,7 @@ protected:
 
 public:
    Tetris();
-   virtual ~Tetris() { }
+   virtual ~Tetris() { delete fKeyHandler; }
 
    Int_t  GetLevel()           { return fLevel->GetValue(); }
    Int_t  GetLinesRemoved()    { return fLinesRemoved->GetValue(); }
