@@ -1,4 +1,4 @@
-// @(#)root/base:$Name:  $:$Id: TString.h,v 1.16 2002/05/03 14:30:41 brun Exp $
+// @(#)root/base:$Name:  $:$Id: TString.h,v 1.18 2002/05/09 20:21:59 brun Exp $
 // Author: Fons Rademakers   04/08/95
 
 /*************************************************************************
@@ -278,6 +278,7 @@ public:
    int          CompareTo(const TString& st, ECaseCompare cmp = kExact) const;
    Bool_t       Contains(const char *pat,    ECaseCompare cmp = kExact) const;
    Bool_t       Contains(const TString& pat, ECaseCompare cmp = kExact) const;
+   Bool_t       Contains(const TRegexp& pat) const;
    TString      Copy() const;
    const char  *Data() const                 { return fData; }
    Bool_t       EndsWith(const char *pat,    ECaseCompare cmp = kExact) const;
@@ -444,6 +445,9 @@ inline Bool_t TString::Contains(const TString& pat, ECaseCompare cmp) const
 
 inline Bool_t TString::Contains(const char* s, ECaseCompare cmp) const
 { return Index(s, strlen(s), (Ssiz_t)0, cmp) != kNPOS; }
+
+inline Bool_t TString::Contains(const TRegexp& pat) const
+{ return Index(pat, (Ssiz_t)0) != kNPOS; }
 
 inline Ssiz_t TString::Index(const char* s, Ssiz_t i, ECaseCompare cmp) const
 { return Index(s, strlen(s), i, cmp); }
