@@ -74,7 +74,7 @@ HISTPAINTERLIBEXTRA = lib/libGraf.lib lib/libHist.lib
 PROOFLIBDEP         = $(TREELIB) $(HISTLIB)
 PROOFLIBEXTRA       = lib/libTree.lib lib/libHist.lib
 TREEPLAYERLIBDEP    = $(TREELIB) $(PROOFLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB)
-TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libProof.lib ib/libGraf3d.lib \
+TREEPLAYERLIBEXTRA  = lib/libTree.lib lib/libProof.lib lib/libGraf3d.lib \
                       lib/libGraf.lib lib/libHist.lib
 TREEVIEWERLIBDEP    = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB)
 TREEVIEWERLIBEXTRA  = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
