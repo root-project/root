@@ -1,4 +1,4 @@
-// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.21 2003/04/21 11:08:08 brun Exp $
+// @(#)root/cont:$Name:  $:$Id: TProcessID.cxx,v 1.22 2003/07/22 16:08:36 brun Exp $
 // Author: Rene Brun   28/09/2001
 
 /*************************************************************************
@@ -250,7 +250,10 @@ TProcessID  *TProcessID::ReadProcessID(UShort_t pidf, TFile *file)
    TObjArray *pids = file->GetListOfProcessIDs();
    TProcessID *pid = 0;
    if (pidf < pids->GetSize()) pid = (TProcessID *)pids->UncheckedAt(pidf);
-   if (pid) return pid;
+   if (pid) {
+      if (!pid->fObjects) pid->fObjects = new TObjArray(100);
+      return pid;
+   }
 
    //check if fProcessIDs[uid] is set in file
    //if not set, read the process uid from file
