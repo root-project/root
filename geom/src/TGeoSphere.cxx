@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.13 2003/01/27 13:16:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.cxx,v 1.14 2003/01/31 16:38:23 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoSphere::Contains() DistToIn/Out() implemented by Mihaela Gheata
 
@@ -737,17 +737,66 @@ void TGeoSphere::PaintNext(TGeoHMatrix *glmat, Option_t *option)
    if (!painter) return;
    painter->PaintSphere(this, option, glmat);
 }
+
+//-----------------------------------------------------------------------------
+void *TGeoSphere::Make3DBuffer(const TGeoVolume *vol) const
+{
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return 0;
+   return painter->MakeSphere3DBuffer(vol);
+}   
+
 //-----------------------------------------------------------------------------
 void TGeoSphere::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
 }
+
 //-----------------------------------------------------------------------------
-Double_t TGeoSphere::Safety(Double_t * /*point*/, Bool_t /*in*/) const
+Double_t TGeoSphere::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return kBig;
+   Double_t rxy2 = point[0]*point[0]+point[1]*point[1];
+   Double_t rxy = TMath::Sqrt(rxy2);
+   Double_t r2 = rxy2+point[2]*point[2];
+   Double_t r=TMath::Sqrt(r2);
+   Bool_t rzero=kFALSE;
+   if (r<=1E-20) rzero=kTRUE;
+   //localize theta
+   Double_t phi=0;;
+   Double_t th=0.;
+   if (TestBit(kGeoThetaSeg) && (!rzero)) {
+      th = TMath::ACos(point[2]/r)*kRadDeg;
+   }
+   //localize phi
+   if (TestBit(kGeoPhiSeg)) {
+      phi=TMath::ATan2(point[1], point[0])*kRadDeg;
+      if (phi<0) phi+=360.;
+   }   
+   Double_t saf[6];
+   saf[0]=(fRmin==0 && !TestBit(kGeoThetaSeg) && !TestBit(kGeoPhiSeg))?kBig:r-fRmin;
+   saf[1]=fRmax-r;
+   saf[2]=saf[3]=saf[4]=saf[5]= kBig;
+   if (TestBit(kGeoThetaSeg)) {
+      if (fTheta1>0) {
+         saf[2] = r*TMath::Sin((th-fTheta1)*kDegRad);
+      }
+	    if (fTheta2<180) {
+         saf[3] = r*TMath::Sin((fTheta2-th)*kDegRad);
+	    }    
+   }
+   if (TestBit(kGeoPhiSeg)) {
+      Double_t dph1=phi-fPhi1;
+	    if (dph1<0) dph1+=360.;
+      if (dph1<=90.) saf[4]=rxy*TMath::Sin(dph1*kDegRad);
+      Double_t dph2=fPhi2-phi;
+      if (dph2<0) dph2+=360.;
+      if (dph2<=90.) saf[5]=rxy*TMath::Sin(dph2*kDegRad);
+   }   
+   if (in) return saf[TMath::LocMin(6,saf)];
+   for (Int_t i=0; i<6; i++) saf[i]=-saf[i];
+   return saf[TMath::LocMax(6, saf)];
 }
 //-----------------------------------------------------------------------------
 void TGeoSphere::SetSphDimensions(Double_t rmin, Double_t rmax, Double_t theta1,

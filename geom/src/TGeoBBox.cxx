@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.15 2003/01/24 08:38:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoBBox.cxx,v 1.16 2003/01/27 13:16:26 brun Exp $
 // Author: Andrei Gheata   24/10/01
 
 // Contains() and DistToIn/Out() implemented by Mihaela Gheata
@@ -347,6 +347,13 @@ void TGeoBBox::InspectShape() const
    printf("    dZ = %11.5f\n", fDZ);
    printf("    origin: x=%11.5f y=%11.5f z=%11.5f\n", fOrigin[0], fOrigin[1], fOrigin[2]);
 }
+//-----------------------------------------------------------------------------
+void *TGeoBBox::Make3DBuffer(const TGeoVolume *vol) const
+{
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return 0;
+   return painter->MakeBox3DBuffer(vol);
+}   
 //-----------------------------------------------------------------------------
 void TGeoBBox::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {

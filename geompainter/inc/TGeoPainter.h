@@ -29,6 +29,11 @@
 #include "TGeoManager.h"
 #endif
 
+typedef struct _x3d_points_ {
+   Int_t     numPoints;
+   Double_t *points;    // x0, y0, z0, x1, y1, z1, ...
+} X3DPoints;   
+
 class TGeoHMatrix;
 class TGeoChecker;
 class TH2F;
@@ -59,6 +64,7 @@ public:
    virtual void       BombTranslation(const Double_t *tr, Double_t *bombtr);
    virtual void       CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const;
    virtual void       CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="");
+   virtual void       CheckOverlaps(const TGeoVolume *vol, Double_t ovlp=0.1, Option_t *option="") const;
    virtual void       DefaultAngles();
    virtual void       DefaultColors();
    virtual Int_t      DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py);
@@ -85,6 +91,11 @@ public:
                             Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="");
    virtual void       ModifiedPad() const;
+   virtual void      *MakeBox3DBuffer(const TGeoVolume *vol);
+   virtual void      *MakeTube3DBuffer(const TGeoVolume *vol);
+   virtual void      *MakeTubs3DBuffer(const TGeoVolume *vol);
+   virtual void      *MakeSphere3DBuffer(const TGeoVolume *vol);
+   virtual void      *MakePcon3DBuffer(const TGeoVolume *vol);
    virtual void       Paint(Option_t *option="");
    void               PaintShape(X3DBuffer *buff, Bool_t rangeView, TGeoHMatrix *glmat);
    void               PaintBox(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0);

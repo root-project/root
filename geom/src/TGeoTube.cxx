@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.14 2003/01/24 08:38:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTube.cxx,v 1.15 2003/01/31 16:38:23 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoTube::Contains() and DistToOut/In() implemented by Mihaela Gheata
 
@@ -458,6 +458,14 @@ void TGeoTube::InspectShape() const
    printf("    dz   = %11.5f\n", fDz);
    TGeoBBox::InspectShape();
 }
+//-----------------------------------------------------------------------------
+void *TGeoTube::Make3DBuffer(const TGeoVolume *vol) const
+{
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return 0;
+   return painter->MakeTube3DBuffer(vol);
+}
+
 //-----------------------------------------------------------------------------
 void TGeoTube::Paint(Option_t *option)
 {
@@ -1127,6 +1135,13 @@ void TGeoTubeSeg::InspectShape() const
    TGeoBBox::InspectShape();
 }
 //-----------------------------------------------------------------------------
+void *TGeoTubeSeg::Make3DBuffer(const TGeoVolume *vol) const
+{
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return 0;
+   return painter->MakeTubs3DBuffer(vol);
+}
+//-----------------------------------------------------------------------------
 void TGeoTubeSeg::Paint(Option_t *option)
 {
 // paint this shape according to option
@@ -1154,7 +1169,7 @@ Double_t TGeoTubeSeg::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   Double_t saf[5];
+   Double_t saf[4];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
    Double_t phi1 = fPhi1*kDegRad;
@@ -1165,21 +1180,22 @@ Double_t TGeoTubeSeg::Safety(Double_t *point, Bool_t in) const
    Double_t s2 = TMath::Sin(phi2);
    
    saf[0] = fDz-TMath::Abs(point[2]); // positive if inside
-   saf[1] = (fRmin>1E-10)?(r-fRmin):kBig;
+   saf[1] = r-fRmin;
    saf[2] = fRmax-r;
-   saf[3] = -point[0]*s1 + point[1]*c1;
-   saf[4] =  point[0]*s2 - point[1]*c2;
+   saf[3] = TGeoShape::SafetyPhi(point,in,c1,s1,c2,s2);
+   
+   if (in) return saf[TMath::LocMin(4,saf)];
 
-   if (in) return saf[TMath::LocMin(5,saf)];
-   for (Int_t i=0; i<5; i++) saf[i]=-saf[i];
-   return saf[TMath::LocMax(5,saf)];
+   for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
+   return saf[TMath::LocMax(4,saf)];
 }
+
 //-----------------------------------------------------------------------------
 Double_t TGeoTubeSeg::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz, 
                               Double_t c1, Double_t s1, Double_t c2, Double_t s2, Int_t skipz)
 {
 // Static method to compute the closest distance from given point to this shape.
-   Double_t saf[5];
+   Double_t saf[4];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
    
@@ -1196,15 +1212,16 @@ Double_t TGeoTubeSeg::SafetyS(Double_t *point, Bool_t in, Double_t rmin, Double_
       default:
          saf[0] = dz-TMath::Abs(point[2]);         
    }
-   saf[1] = (rmin>1E-10)?(r-rmin):kBig;
+   saf[1] = r-rmin;
    saf[2] = rmax-r;
-   saf[3] = -point[0]*s1 + point[1]*c1;
-   saf[4] =  point[0]*s2 - point[1]*c2;
+   saf[3] = TGeoShape::SafetyPhi(point,in,c1,s1,c2,s2);
 
-   if (in) return saf[TMath::LocMin(5,saf)];
-   for (Int_t i=0; i<5; i++) saf[i]=-saf[i];
-   return saf[TMath::LocMax(5,saf)];
+   if (in)  return saf[TMath::LocMin(4,saf)];
+   
+   for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
+   return saf[TMath::LocMax(4,saf)];
 }
+
 //-----------------------------------------------------------------------------
 void TGeoTubeSeg::SetTubsDimensions(Double_t rmin, Double_t rmax, Double_t dz,
                           Double_t phi1, Double_t phi2)
@@ -1819,7 +1836,7 @@ Double_t TGeoCtub::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   Double_t saf[6];
+   Double_t saf[5];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
    Bool_t isseg = kTRUE;
@@ -1827,7 +1844,7 @@ Double_t TGeoCtub::Safety(Double_t *point, Bool_t in) const
    
    saf[0] = -point[0]*fNlow[0] - point[1]*fNlow[1] - (fDz+point[2])*fNlow[2];
    saf[1] = -point[0]*fNhigh[0] - point[1]*fNhigh[1] + (fDz-point[2])*fNhigh[2];
-   saf[2] = (fRmin>1E-10)?(r-fRmin):kBig;
+   saf[2] = (fRmin<1E-10 && !isseg)?kBig:(r-fRmin);
    saf[3] = fRmax-r;
    if (isseg) {
       Double_t phi1 = fPhi1*kDegRad;
@@ -1837,15 +1854,14 @@ Double_t TGeoCtub::Safety(Double_t *point, Bool_t in) const
       Double_t c2 = TMath::Cos(phi2);
       Double_t s2 = TMath::Sin(phi2);
    
-      saf[4] = -point[0]*s1 + point[1]*c1;
-      saf[5] =  point[0]*s2 - point[1]*c2;
+      saf[4] =  TGeoShape::SafetyPhi(point, in, c1,s1,c2,s2);
    } else {
-      saf[4] = saf[5] = kBig;
+      saf[4] = kBig;
    }   
 
-   if (in) return saf[TMath::LocMin(6,saf)];
-   for (Int_t i=0; i<6; i++) saf[i]=-saf[i];
-   return saf[TMath::LocMax(6,saf)];
+   if (in) return saf[TMath::LocMin(5,saf)];
+   for (Int_t i=0; i<5; i++) saf[i]=-saf[i];
+   return saf[TMath::LocMax(5,saf)];
 }
 //-----------------------------------------------------------------------------
 void TGeoCtub::SetCtubDimensions(Double_t rmin, Double_t rmax, Double_t dz, Double_t phi1, Double_t phi2,

@@ -1,6 +1,6 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.23 2003/01/27 18:04:47 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.cxx,v 1.24 2003/01/31 16:38:23 brun Exp $
 // Author: Andrei Gheata   30/05/02
-// Divide() implemented by Mihaela Gheata
+// Divide(), CheckOverlaps() implemented by Mihaela Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -178,6 +178,19 @@ void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Do
    painter->CheckGeometry(nrays, startx, starty, startz);
 //   if (old_vol) gGeoManager->SetTopVolume(old_vol);
 }         
+
+//_____________________________________________________________________________
+void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
+{
+// Overlap checking tool. Check for illegal overlaps within a limit OVLP.
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) {
+      Error("CheckOverlaps", "Could not instanciate painter");
+      return;
+   }
+   gGeoManager->SetNsegments(80);
+   painter->CheckOverlaps(this, ovlp, option);
+}
 
 //_____________________________________________________________________________
 void TGeoVolume::CleanAll()
@@ -497,6 +510,72 @@ void TGeoVolume::DrawOnly(Option_t *option)
    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
    if (!painter) return;
    painter->DrawOnly(option);   
+}
+
+//_____________________________________________________________________________
+void TGeoVolume::DrawExtrusion(const char *node)
+{
+// Draw togeather only a given volume and one daughter node, as given by CheckOverlaps().
+// This method offer a visual validation of a declared extrusion (daughter not fully
+// contained by its mother)
+   TGeoNode *daughter = GetNode(node); 
+   if (!daughter) {
+      Error("DrawExtrusion", "node %s not found", node);
+      return;
+   }
+   Int_t nd = GetNdaughters();
+   TGeoNode *current;
+   for (Int_t i=0; i<nd; i++) {
+      current = GetNode(i);
+      if (current==daughter) {
+         current->SetVisibility(kTRUE);
+         current->GetVolume()->SetVisibility(kTRUE);
+         current->GetVolume()->SetLineColor(2);
+      } else {
+         current->SetVisibility(kFALSE);
+      }
+   }
+   SetVisibility(kTRUE);
+   SetLineColor(4);
+   gGeoManager->SetTopVisible();
+   gGeoManager->SetVisLevel(1);
+   gGeoManager->SetVisOption(0);
+   Draw();      
+}
+
+//_____________________________________________________________________________
+void TGeoVolume::DrawOverlap(const char *node1, const char *node2)
+{
+// Draw togeather only 2 possible overlapping daughters of a given volume.
+   TGeoNode *daughter1 = GetNode(node1); 
+   if (!daughter1) {
+      Error("DrawOverlap", "node %s not found", node1);
+      return;
+   }
+   TGeoNode *daughter2 = GetNode(node2); 
+   if (!daughter2) {
+      Error("DrawOverlap", "node %s not found", node2);
+      return;
+   }
+   Int_t nd = GetNdaughters();
+   gGeoManager->SetTopVisible(kFALSE);
+   gGeoManager->SetVisLevel(1);
+   gGeoManager->SetVisOption(0);
+   TGeoNode *current;
+   for (Int_t i=0; i<nd; i++) {
+      current = GetNode(i);
+      if (current==daughter1 || current==daughter2) {
+         current->SetVisibility(kTRUE);
+         current->GetVolume()->SetVisibility(kTRUE);
+         if (current==daughter1) 
+            current->GetVolume()->SetLineColor(2);
+         else 
+            current->GetVolume()->SetLineColor(4);
+      } else {
+         current->SetVisibility(kFALSE);
+      }
+   }
+   Draw();      
 }
 
 //_____________________________________________________________________________

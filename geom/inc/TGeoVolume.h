@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.20 2003/01/27 13:16:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoVolume.h,v 1.21 2003/01/27 18:04:47 brun Exp $
 // Author: Andrei Gheata   30/05/02
 
 /*************************************************************************
@@ -94,6 +94,9 @@ public:
    void            ClearShape();
    void            CleanAll();
    void            CheckGeometry(Int_t nrays=1, Double_t startx=0, Double_t starty=0, Double_t startz=0) const;
+   void            CheckOverlaps(Double_t ovlp=0.1, Option_t *option="") const; // *MENU*
+   void            DrawExtrusion(const char *node); // *MENU*
+   void            DrawOverlap(const char *node1, const char *node2); // *MENU*
    Int_t           CountNodes(Int_t nlevels=1000) const; // *MENU*
    Bool_t          Contains(Double_t *point) const {return fShape->Contains(point);}
    Bool_t          IsFolder() const;
@@ -142,6 +145,7 @@ public:
    Bool_t          IsStyleDefault() const;
    void            InspectMaterial() const; // *MENU*
    void            InspectShape() const {fShape->InspectShape();} // *MENU*
+   void           *Make3DBuffer() const {return fShape->Make3DBuffer(this);}
    TGeoVolume     *MakeCopyVolume();
    void            MakeCopyNodes(const TGeoVolume *other);
    Bool_t          OptimizeVoxels(); // *MENU*

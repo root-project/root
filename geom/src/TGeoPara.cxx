@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.11 2003/01/24 08:38:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPara.cxx,v 1.12 2003/01/27 13:16:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPara::Contains() implemented by Mihaela Gheata
 
@@ -143,6 +143,12 @@ Bool_t TGeoPara::Contains(Double_t *point) const
 Double_t TGeoPara::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the para
+   if (iact<3 && safe) {
+   // compute safety
+      *safe = Safety(point, kTRUE);
+      if (iact==0) return kBig;
+      if (iact==1 && step<*safe) return kBig; 
+   }
    Double_t saf[6];
    Double_t snxt = kBig;
    // distance from point to higher Z face
@@ -156,25 +162,12 @@ Double_t TGeoPara::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
    saf[2] = fY-yt; 
    // distance from point to lower Y face 
    saf[3] = -fY-yt; 
-   // cos of angle YZ
-   Double_t cty = 1.0/TMath::Sqrt(1.0+fTyz*fTyz);
-
    // distance from point to center axis on X 
    Double_t xt = point[0]-fTxz*point[2]-fTxy*yt;      
    // distance from point to higher X face 
    saf[0] = fX-xt; 
    // distance from point to lower X face 
    saf[1] = -fX-xt;
-   // cos of angle XZ
-   Double_t ctx = 1.0/TMath::Sqrt(1.0+fTxy*fTxy+fTxz*fTxz);
-   if (iact<3 && safe) {
-   // compute safety
-      *safe = TMath::Min(saf[0]*ctx, -saf[1]*ctx);
-      *safe = TMath::Min(*safe, TMath::Min(saf[2]*cty, -saf[3]*cty));
-      *safe = TMath::Min(*safe, TMath::Min(saf[4], -saf[5]));
-      if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return kBig; 
-   }
    Double_t sn1, sn2, sn3;
    sn1 = sn2 = sn3 = kBig;
    if (dir[2]!=0) sn3=saf[4]/dir[2];
@@ -403,11 +396,28 @@ void TGeoPara::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPara::Safety(Double_t * /*point*/, Bool_t /*in*/) const
+Double_t TGeoPara::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return kBig;
+   Double_t saf[3];
+   // distance from point to higher Z face
+   saf[0] = fZ-TMath::Abs(point[2]); // Z
+
+   Double_t yt = point[1]-fTyz*point[2];      
+   saf[1] = fY-TMath::Abs(yt);       // Y
+   // cos of angle YZ
+   Double_t cty = 1.0/TMath::Sqrt(1.0+fTyz*fTyz);
+
+   Double_t xt = point[0]-fTxz*point[2]-fTxy*yt;      
+   saf[2] = fX-TMath::Abs(xt);       // X
+   // cos of angle XZ
+   Double_t ctx = 1.0/TMath::Sqrt(1.0+fTxy*fTxy+fTxz*fTxz);
+   saf[2] *= ctx;
+   saf[1] *= cty;
+   if (in) return saf[TMath::LocMin(3,saf)];
+   for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
+   return saf[TMath::LocMax(3,saf)];
 }
 //-----------------------------------------------------------------------------
 void TGeoPara::SetDimensions(Double_t *param)

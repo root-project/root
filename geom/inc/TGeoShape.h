@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.6 2002/12/06 16:45:03 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.h,v 1.7 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -113,10 +113,12 @@ public:
    Bool_t                IsValid() const {return !TestBit(kGeoInvalidShape);}
    virtual Bool_t        IsValidBox() const                      = 0; 
    virtual void          InspectShape() const                    = 0;
+   virtual void         *Make3DBuffer(const TGeoVolume *vol) const              = 0;
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const = 0;
    virtual void          Paint(Option_t *option)                 = 0;
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option) = 0;
    virtual Double_t      Safety(Double_t *point, Bool_t in=kTRUE) const = 0;
+   static  Double_t      SafetyPhi(Double_t *point, Bool_t in, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
    virtual void          SetDimensions(Double_t *param)          = 0;
    void                  SetId(Int_t id) {fShapeId = id;}
    virtual void          SetPoints(Double_t *buff) const         = 0;

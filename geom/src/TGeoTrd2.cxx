@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.12 2003/01/24 08:38:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoTrd2.cxx,v 1.13 2003/01/27 13:16:26 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoTrd2::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -122,77 +122,46 @@ Double_t TGeoTrd2::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_
 {
 // compute distance from inside point to surface of the trd2
    Double_t snxt = kBig;
-
-   Double_t saf[6];
-   //--- Compute safety first
-   // check Z facettes
-   saf[0] = point[2]+fDz;
-   saf[1] = fDz-point[2];
-   Double_t fx = 0.5*(fDx1-fDx2)/fDz;
-   Double_t fy = 0.5*(fDy1-fDy2)/fDz;
-   Double_t calfx = 1./TMath::Sqrt(1.0+fx*fx);
-   Double_t salfx = calfx*fx;
-   Double_t calfy = 1./TMath::Sqrt(1.0+fy*fy);
-   Double_t salfy = calfy*fy;
-   Double_t s,cn;
-   // check X facettes
-   Double_t distx = 0.5*(fDx1+fDx2)-fx*point[2];
-   Double_t disty = 0.5*(fDy1+fDy2)-fy*point[2];
-   saf[2] = (distx+point[0])*calfx;
-   saf[3] = (distx-point[0])*calfx;
-   // check Y facettes
-   saf[4] = (disty+point[1])*calfy;
-   saf[5] = (disty-point[1])*calfy;
    if (iact<3 && safe) {
    // compute safe distance
-      *safe = saf[TMath::LocMin(6, saf)];
+      *safe = Safety(point, kTRUE);
       if (iact==0) return kBig;
       if (iact==1 && step<*safe) return kBig;
    }
+
+   Double_t fx = 0.5*(fDx1-fDx2)/fDz;
+   Double_t fy = 0.5*(fDy1-fDy2)/fDz;
+   Double_t cn;
+
+   Double_t distx = 0.5*(fDx1+fDx2)-fx*point[2];
+   Double_t disty = 0.5*(fDy1+fDy2)-fy*point[2];
+
    //--- Compute distance to this shape
    // first check if Z facettes are crossed
-   cn = -dir[2];
-   if (cn>0) {
-      gGeoManager->SetNormalChecked(cn);
-      snxt = saf[0]/cn;
-   } else {
-      gGeoManager->SetNormalChecked(-cn);
-      snxt = -saf[1]/cn;             
-   }
+   Double_t dist[3];
+   for (Int_t i=0; i<3; i++) dist[i]=kBig;
+   if (dir[2]<0) {
+      dist[0]=-(point[2]+fDz)/dir[2];
+   } else if (dir[2]>0) {
+      dist[0]=(fDz-point[2])/dir[2];
+   }      
    // now check X facettes
-   cn = -calfx*dir[0]+salfx*dir[2];
+   cn = -dir[0]+fx*dir[2];
+   if (cn>0) dist[1] = (point[0]+distx)/cn;
+   cn = dir[0]+fx*dir[2];
    if (cn>0) {
-      s = saf[2]/cn;
-      if (s<snxt) {
-         snxt = s;
-         gGeoManager->SetNormalChecked(cn);
-      }
-   }
-   cn = calfx*dir[0]+salfx*dir[2];
-   if (cn>0) {
-      s = saf[3]/cn;
-      if (s<snxt) {
-         snxt = s;
-         gGeoManager->SetNormalChecked(cn);
-      }
+      Double_t s = (distx-point[0])/cn;
+      if (s<dist[1]) dist[1] = s;
    }
    // now check Y facettes
-   cn = -calfy*dir[1]+salfy*dir[2];
+   cn = -dir[1]+fy*dir[2];
+   if (cn>0) dist[2] = (point[1]+disty)/cn;
+   cn = dir[1]+fy*dir[2];
    if (cn>0) {
-      s = saf[4]/cn;
-      if (s<snxt) {
-         snxt = s;
-         gGeoManager->SetNormalChecked(cn);
-      }
+      Double_t s = (disty-point[1])/cn;
+      if (s<dist[2]) dist[2] = s;
    }
-   cn = calfy*dir[1]+salfy*dir[2];
-   if (cn>0) {
-      s = saf[5]/cn;
-      if (s<snxt) {
-         gGeoManager->SetNormalChecked(cn);
-         return s;
-      }
-   }
+   snxt = dist[TMath::LocMin(3,dist)];
    return snxt;
 }
 //-----------------------------------------------------------------------------
@@ -200,151 +169,96 @@ Double_t TGeoTrd2::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 {
 // compute distance from outside point to surface of the trd2
    Double_t snxt = kBig;
+   if (iact<3 && safe) {
+   // compute safe distance
+      *safe = Safety(point, kFALSE);
+      if (iact==0) return kBig;
+      if (iact==1 && step<*safe) return kBig;
+   }
    // find a visible face
-   Double_t ptnew[3];
-   Double_t saf[6];
-   memset(saf, 0, 6*sizeof(Double_t));
-   //--- Compute safety first
-   // check visibility of Z facettes
-   if (point[2]<-fDz) {
-      saf[0] = -fDz-point[2];
-   } else {
-      if (point[2]>fDz) {
-         saf[1] = point[2]-fDz;
-      }
-   }   
+   Double_t xnew,ynew,znew;
    Double_t fx = 0.5*(fDx1-fDx2)/fDz;
-   Double_t calfx = 1./TMath::Sqrt(1.0+fx*fx);
-   Double_t salfx = calfx*fx;
    Double_t fy = 0.5*(fDy1-fDy2)/fDz;
-   Double_t calfy = 1./TMath::Sqrt(1.0+fy*fy);
-   Double_t salfy = calfy*fy;
    Double_t cn;
    // check visibility of X faces
    Double_t distx = 0.5*(fDx1+fDx2)-fx*point[2];
    Double_t disty = 0.5*(fDy1+fDy2)-fy*point[2];
-   if (point[0]<-distx) {
-      saf[2] = (-point[0]-distx)*calfx;
-   }
-   if (point[0]>distx) {
-      saf[3] = (point[0]-distx)*calfx;
-   }      
-   // check visibility of Y facettes
-   if (point[1]<-disty) {
-      saf[4] = (-point[1]-disty)*calfy;
-   }
-   if (point[1]>disty) {
-      saf[5] = (point[1]-disty)*calfy;
-   }
-      
-   if (iact<3 && safe) {
-   // compute safe distance
-      *safe = saf[TMath::LocMax(6, saf)];
-      if (iact==0) return kBig;
-      if (iact==1 && step<*safe) return kBig;
-   }
    //--- Compute distance to this shape
    // first check if Z facettes are crossed
-   if (saf[0]>0) {
+   if (point[2]<-fDz) {
       cn = -dir[2];
       if (cn<0) {
-         snxt = -saf[0]/cn;
+         snxt = -(fDz+point[2])/cn;
          // find extrapolated X and Y
-         ptnew[0] = point[0]+snxt*dir[0];
-         if (TMath::Abs(ptnew[0]) < fDx1) {
-            ptnew[1] = point[1]+snxt*dir[1];
-            if (TMath::Abs(ptnew[1]) < fDy1) {
-               // bottom Z facette is crossed
-               gGeoManager->SetNormalChecked(-cn);
-               return snxt;
-            }
+         xnew = point[0]+snxt*dir[0];
+         if (TMath::Abs(xnew) < fDx1) {
+            ynew = point[1]+snxt*dir[1];
+            if (TMath::Abs(ynew) < fDy1) return snxt;
          }
       }      
-   } else {
-      if (saf[1]>0) {
-         cn = dir[2];
-         if (cn<0) {
-            snxt = -saf[1]/cn;
-            // find extrapolated X and Y
-            ptnew[0] = point[0]+snxt*dir[0];
-            if (TMath::Abs(ptnew[0]) < fDx2) {
-               ptnew[1] = point[1]+snxt*dir[1];
-               if (TMath::Abs(ptnew[1]) < fDy2) {
-                  // top Z facette is crossed
-                  gGeoManager->SetNormalChecked(-cn);
-                  return snxt;
-               }
-            }
-         }      
-      }
-   }      
-   // check if X facettes are crossed
-   if (saf[2]>0) {
-      cn = -calfx*dir[0]+salfx*dir[2];
+   } else if (point[2]>fDz) {
+      cn = dir[2];
       if (cn<0) {
-         snxt = -saf[2]/cn;
+         snxt = -(fDz-point[2])/cn;
+         // find extrapolated X and Y
+         xnew = point[0]+snxt*dir[0];
+         if (TMath::Abs(xnew) < fDx2) {
+            ynew = point[1]+snxt*dir[1];
+            if (TMath::Abs(ynew) < fDy2) return snxt;
+         }
+      }      
+   }
+   // check if X facettes are crossed
+   if (point[0]<-distx) {
+      cn = -dir[0]+fx*dir[2];
+      if (cn<0) {
+         snxt = (point[0]+distx)/cn;
          // find extrapolated Y and Z
-         ptnew[2] = point[2]+snxt*dir[2];
-         if (TMath::Abs(ptnew[2]) < fDz) {
-            disty = 0.5*(fDy1+fDy2)-fy*ptnew[2];
-            ptnew[1] = point[1]+snxt*dir[1];
-            if (TMath::Abs(ptnew[1]) < disty) {
-               // lower X facette is crossed
-               gGeoManager->SetNormalChecked(-cn);
-               return snxt;
-            }
+         znew = point[2]+snxt*dir[2];
+         if (TMath::Abs(znew) < fDz) {
+            Double_t dy = 0.5*(fDy1+fDy2)-fy*znew;
+            ynew = point[1]+snxt*dir[1];
+            if (TMath::Abs(ynew) < dy) return snxt;
          }
       }
    }            
-   if (saf[3]>0) {
-      cn = calfx*dir[0]+salfx*dir[2];
+   if (point[0]>distx) {
+      cn = dir[0]+fx*dir[2];
       if (cn<0) {
-         snxt = -saf[3]/cn;
+         snxt = (distx-point[0])/cn;
          // find extrapolated Y and Z
-         ptnew[2] = point[2]+snxt*dir[2];
-         if (TMath::Abs(ptnew[2]) < fDz) {
-            disty = 0.5*(fDy1+fDy2)-fy*ptnew[2];
-            ptnew[1] = point[1]+snxt*dir[1];
-            if (TMath::Abs(ptnew[1]) < disty) {
-               // upper X facette is crossed
-               gGeoManager->SetNormalChecked(-cn);
-               return snxt;
-            }
+         znew = point[2]+snxt*dir[2];
+         if (TMath::Abs(znew) < fDz) {
+            Double_t dy = 0.5*(fDy1+fDy2)-fy*znew;
+            ynew = point[1]+snxt*dir[1];
+            if (TMath::Abs(ynew) < dy) return snxt;
          }
       }
    }
    // finally check Y facettes
-   if (saf[4]>0) {
-      cn = -calfy*dir[1]+salfy*dir[2];
+   if (point[1]<-disty) {
+      cn = -dir[1]+fy*dir[2];
       if (cn<0) {
-         snxt = -saf[4]/cn;
+         snxt = (point[1]+disty)/cn;
          // find extrapolated X and Z
-         ptnew[2] = point[2]+snxt*dir[2];
-         if (TMath::Abs(ptnew[2]) < fDz) {
-            distx = 0.5*(fDx1+fDx2)-fx*ptnew[2];
-            ptnew[0] = point[0]+snxt*dir[0];
-            if (TMath::Abs(ptnew[0]) < distx) {
-               // lower Y facette is crossed
-               gGeoManager->SetNormalChecked(-cn);
-               return snxt;
-            }
+         znew = point[2]+snxt*dir[2];
+         if (TMath::Abs(znew) < fDz) {
+            Double_t dx = 0.5*(fDx1+fDx2)-fx*znew;
+            xnew = point[0]+snxt*dir[0];
+            if (TMath::Abs(xnew) < dx) return snxt;
          }
       }
    }            
-   if (saf[5]>0) {
-      cn = calfy*dir[1]+salfy*dir[2];
+   if (point[1]>disty) {
+      cn = dir[1]+fy*dir[2];
       if (cn<0) {
-         snxt = -saf[5]/cn;
+         snxt = (disty-point[1])/cn;
          // find extrapolated X and Z
-         ptnew[2] = point[2]+snxt*dir[2];
-         if (TMath::Abs(ptnew[2]) < fDz) {
-            distx = 0.5*(fDx1+fDx2)-fx*ptnew[2];
-            ptnew[0] = point[0]+snxt*dir[0];
-            if (TMath::Abs(ptnew[0]) < distx) {
-               // upper Y facette is crossed
-               gGeoManager->SetNormalChecked(-cn);
-               return snxt;
-            }
+         znew = point[2]+snxt*dir[2];
+         if (TMath::Abs(znew) < fDz) {
+            Double_t dx = 0.5*(fDx1+fDx2)-fx*znew;
+            xnew = point[0]+snxt*dir[0];
+            if (TMath::Abs(xnew) < dx) return snxt;
          }
       }
    }
@@ -540,11 +454,31 @@ void TGeoTrd2::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoTrd2::Safety(Double_t * /*point*/, Bool_t /*in*/) const
+Double_t TGeoTrd2::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return kBig;
+   Double_t saf[3];
+   //--- Compute safety first
+   // check Z facettes
+   saf[0] = fDz-TMath::Abs(point[2]);
+   Double_t fx = 0.5*(fDx1-fDx2)/fDz;
+   Double_t calf = 1./TMath::Sqrt(1.0+fx*fx);
+   // check X facettes
+   Double_t distx = 0.5*(fDx1+fDx2)-fx*point[2];
+   if (distx<0) saf[1]=kBig;
+   else         saf[1]=(distx-TMath::Abs(point[0]))*calf;
+
+   Double_t fy = 0.5*(fDy1-fDy2)/fDz;
+   calf = 1./TMath::Sqrt(1.0+fy*fy);
+   // check Y facettes
+   distx = 0.5*(fDy1+fDy2)-fy*point[2];
+   if (distx<0) saf[2]=kBig;
+   else         saf[2]=(distx-TMath::Abs(point[1]))*calf;
+   
+   if (in) return saf[TMath::LocMin(3,saf)];
+   for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
+   return saf[TMath::LocMax(3,saf)];
 }
 //-----------------------------------------------------------------------------
 void TGeoTrd2::SetDimensions(Double_t *param)

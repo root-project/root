@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.24 2003/01/28 18:12:56 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.h,v 1.25 2003/01/31 16:38:23 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -111,7 +111,7 @@ public:
    Int_t                  AddMaterial(const TGeoMaterial *material);
    Int_t                  AddTransformation(const TGeoMatrix *matrix);
    Int_t                  AddShape(const TGeoShape *shape);
-   Int_t                  AddVolume(const TGeoVolume *volume);
+   Int_t                  AddVolume(TGeoVolume *volume);
    //--- browsing and tree navigation
    void                   Browse(TBrowser *b);
    virtual Bool_t         cd(const char *path=""); // *MENU*
@@ -149,6 +149,9 @@ public:
 
    //--- geometry checking
    void                   CheckGeometry(Option_t *option="");
+   void                   CheckOverlaps(Double_t ovlp=0.1, Option_t *option=""); // *MENU*
+   void                   DrawOverlap(const char *mother, const char *node1, const char *node2); // *MENU*
+   void                   DrawExtrusion(const char *mother, const char *node); // *MENU*
    void                   CheckPoint(Double_t x=0,Double_t y=0, Double_t z=0, Option_t *option=""); // *MENU*
    void                   DrawCurrentPoint(Int_t color=2); // *MENU*
    void                   DrawPath(const char *path);

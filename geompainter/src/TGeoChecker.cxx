@@ -1,6 +1,6 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.21 2003/01/15 18:43:45 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoChecker.cxx,v 1.22 2003/01/31 16:38:23 brun Exp $
 // Author: Andrei Gheata   01/11/01
-// TGeoChecker::CheckGeometry() by Mihaela Gheata
+// CheckGeometry(), CheckOverlaps() by Mihaela Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -35,6 +35,7 @@
 
 #include "TGeoBBox.h"
 #include "TGeoManager.h"
+#include "TGeoPainter.h"
 #include "TGeoChecker.h"
 
 
@@ -246,6 +247,134 @@ void TGeoChecker::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
    delete [] array1;
    delete [] array2;
 }
+
+//-----------------------------------------------------------------------------
+void TGeoChecker::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t * /*option*/) const
+{
+// Check illegal overlaps for volume VOL within a limit OVLP.
+   if (vol->GetFinder()) return;
+   Int_t nd = vol->GetNdaughters();
+   if (!nd) return;
+   // first, test if daughters extrude their container
+   TGeoShape *shapem = vol->GetShape();
+   TGeoNode * node;
+   TGeoMatrix *matrix;
+   X3DPoints *buff;
+   Bool_t extrude;
+   Bool_t ismany;
+   Double_t *points;
+   Double_t local[3];
+   Double_t point[3];
+   Double_t safety = TGeoShape::kBig;
+   Int_t id, ip;
+   for (id=0; id<nd; id++) {
+      node = vol->GetNode(id);
+      buff = (X3DPoints*)node->GetVolume()->Make3DBuffer();
+      if (!buff) {
+         Error("CheckOverlaps", "could not fill X3D buffer for node %s", node->GetName());
+         return;
+      }	       
+      matrix = node->GetMatrix();
+      ismany = node->IsOverlapping();
+      points = buff->points;
+      // loop all points
+      for (ip=0; ip<buff->numPoints; ip++) {
+         memcpy(local, &points[3*ip], 3*sizeof(Double_t));
+	       matrix->LocalToMaster(local, point);
+	       extrude = !shapem->Contains(point);
+	       if (extrude) {
+	          safety = shapem->Safety(point, kFALSE);
+	          if (safety<ovlp) extrude=kFALSE;
+	       }    
+	       if (extrude) {
+	          if (!ismany) {
+	             printf("=== volume %s : extruding ONLY node %s, extr=%g\n", vol->GetName(), node->GetName(), safety);
+	          } else {
+	             printf("=== volume %s : extruding MANY node %s (G3 intersection), extr=%g\n", vol->GetName(), node->GetName(), safety);
+            }
+            break;
+	       }
+      }	     
+      if (points) delete [] points;
+      delete buff; 
+   }
+   // now check if the daughters overlap with each other
+   if (nd<2) return;
+   TGeoVoxelFinder *vox = vol->GetVoxels();
+   TGeoNode *node1;
+   TGeoMatrix *matrix1;
+   TGeoShape *shape1;
+   Bool_t ismany1, overlap;
+   Int_t novlp;
+   Int_t *ovlps;
+   Int_t ko, io;
+   for (id=0; id<nd; id++) {
+      node = vol->GetNode(id);
+      ismany = node->IsOverlapping();
+      if (ismany) continue;
+      shapem = node->GetVolume()->GetShape();
+      matrix = node->GetMatrix();
+      if (vox) {
+         vox->FindOverlaps(id);
+         ovlps = node->GetOverlaps(novlp);
+         if (!ovlps) continue;
+      } else continue;
+      for (ko=0; ko<novlp; ko++) {
+         io = ovlps[ko];
+         if (io<id) continue;
+         node1 = vol->GetNode(io);
+         ismany1 = node1->IsOverlapping();
+         if (ismany1) continue;
+         matrix1 = node1->GetMatrix();
+         buff = (X3DPoints*)node1->GetVolume()->Make3DBuffer();
+         if (!buff) continue;   
+         points = buff->points;
+         // loop all points
+         overlap = kFALSE;
+         for (ip=0; ip<buff->numPoints; ip++) {
+            memcpy(local, &points[3*ip], 3*sizeof(Double_t));
+	          matrix1->LocalToMaster(local, point);
+            matrix->MasterToLocal(point, local); // now point in local reference of node
+	          overlap = shapem->Contains(local);
+	          if (overlap) {
+	             safety = shapem->Safety(local, kTRUE);
+	             if (safety<ovlp) overlap=kFALSE;
+	          }    
+	          if (overlap) {
+	             printf("===  volume %s : nodes %s and %s overlapping; overlap=%g\n", 
+                      vol->GetName(), node->GetName(), node1->GetName(), safety);
+               break;
+	          }
+         }	     
+         if (points) delete [] points;
+         delete buff; 
+         if (overlap) continue;
+         shape1 = node1->GetVolume()->GetShape();
+         buff = (X3DPoints*)node->GetVolume()->Make3DBuffer();
+         if (!buff) continue;   
+         points = buff->points;
+         // loop all points
+         for (ip=0; ip<buff->numPoints; ip++) {
+            memcpy(local, &points[3*ip], 3*sizeof(Double_t));
+	          matrix->LocalToMaster(local, point);
+            matrix1->MasterToLocal(point, local); // now point in local reference of node
+	          overlap = shape1->Contains(local);
+	          if (overlap) {
+	             safety = shape1->Safety(local, kTRUE);
+	             if (safety<ovlp) overlap=kFALSE;
+	          }    
+	          if (overlap) {
+	             printf("===  volume %s : nodes %s and %s overlapping; overlap=%g\n", 
+                      vol->GetName(), node->GetName(), node1->GetName(), safety);
+               break;
+	          }
+         }
+         if (points) delete [] points;
+         delete buff;          
+      }   	     
+   }
+}
+
 //-----------------------------------------------------------------------------
 void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
 {
@@ -269,7 +398,7 @@ void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
       TGeoNode *old = fVsafe->GetNode("SAFETY_1");
       if (old) fVsafe->GetNodes()->RemoveAt(vol->GetNdaughters()-1);
    }   
-   if (vol != fGeom->GetMasterVolume()) fGeom->RestoreMasterVolume();
+//   if (vol != fGeom->GetMasterVolume()) fGeom->RestoreMasterVolume();
    TGeoNode *node = fGeom->FindNode(point[0], point[1], point[2]);
    fGeom->MasterToLocal(point, local);
    Double_t r = TMath::Sqrt(local[0]*local[0]+local[1]*local[1]+local[2]*local[2]);

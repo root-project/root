@@ -100,6 +100,14 @@ void TGeoPainter::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, D
 {
    fChecker->CheckGeometry(nrays, startx, starty, startz);
 }   
+
+//______________________________________________________________________________
+void TGeoPainter::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *option) const
+{
+// Check overlaps for the top volume of the geometry, within a limit OVLP. 
+   fChecker->CheckOverlaps(vol, ovlp, option);
+}
+
 //______________________________________________________________________________
 void TGeoPainter::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option)
 {
@@ -526,6 +534,25 @@ void TGeoPainter::PaintShape(X3DBuffer *buff, Bool_t rangeView, TGeoHMatrix *glm
       if (view->GetAutoRange()) view->SetRange(x0,y0,z0,x1,y1,z1,kExpandView);
     }
 }
+
+//______________________________________________________________________________
+void *TGeoPainter::MakeBox3DBuffer(const TGeoVolume *vol)
+{
+// Create a box 3D buffer for a given shape.
+   X3DPoints *buff = new X3DPoints;
+   const Int_t numpoints = 8;
+
+   buff->numPoints = 8;
+
+   Double_t *points = new Double_t[3*numpoints];
+   TGeoShape *shape = vol->GetShape();
+
+   shape->SetPoints(points);
+
+   buff->points = points;
+   return buff;
+}   
+
 //______________________________________________________________________________
 void TGeoPainter::PaintBox(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
@@ -621,6 +648,24 @@ void TGeoPainter::PaintCompositeShape(TGeoVolume *vol, Option_t *option)
    PaintBox(vol->GetShape(), option);
 }
 
+//______________________________________________________________________________
+void *TGeoPainter::MakeTube3DBuffer(const TGeoVolume *vol)
+{
+// Create a box 3D buffer for a given shape.
+   X3DPoints *buff = new X3DPoints;
+   Int_t n = fNsegments;
+   const Int_t numpoints = 4*n;
+
+   buff->numPoints = numpoints;
+
+   Double_t *points = new Double_t[3*numpoints];
+   TGeoShape *shape = vol->GetShape();
+
+   shape->SetPoints(points);
+
+   buff->points = points;
+   return buff;
+}   
 //______________________________________________________________________________
 void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
@@ -737,6 +782,27 @@ void TGeoPainter::PaintTube(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
     if (buff->polys)    delete [] buff->polys;
     if (buff)           delete    buff;
 }
+
+//______________________________________________________________________________
+void *TGeoPainter::MakeTubs3DBuffer(const TGeoVolume *vol)
+{
+// Create a box 3D buffer for a given shape.
+   X3DPoints *buff = new X3DPoints;
+
+   const Int_t n = fNsegments+1;
+   const Int_t numpoints = 4*n;
+
+   //*-* Allocate memory for points *-*
+
+   Double_t *points = new Double_t[3*numpoints];
+
+   buff->numPoints =   numpoints;
+
+   TGeoShape *shape = vol->GetShape();
+   shape->SetPoints(points);
+   buff->points = points;
+   return buff;
+}   
 //______________________________________________________________________________
 void TGeoPainter::PaintTubs(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
@@ -860,10 +926,36 @@ void TGeoPainter::PaintTubs(TGeoShape *shape, Option_t *option, TGeoHMatrix *glm
     if (buff)           delete    buff;
 }
 //______________________________________________________________________________
+void *TGeoPainter::MakeSphere3DBuffer(const TGeoVolume *vol)
+{
+// Create a box 3D buffer for a given shape.
+   X3DPoints *buff = new X3DPoints;
+
+   TGeoShape *shape = vol->GetShape();
+   ((TGeoSphere*)shape)->SetNumberOfDivisions(fNsegments);
+   const Int_t n = ((TGeoSphere*)shape)->GetNumberOfDivisions()+1;
+   Int_t nz = ((TGeoSphere*)shape)->GetNz()+1;
+   if (nz < 2) return 0;
+   Int_t numpoints = 2*n*nz;
+   if (numpoints <= 0) return 0;
+
+   //*-* Allocate memory for points *-*
+
+   Double_t *points = new Double_t[3*numpoints];
+
+   buff->numPoints = numpoints;
+
+   shape->SetPoints(points);
+   buff->points = points;
+   return buff;
+}
+
+//______________________________________________________________________________
 void TGeoPainter::PaintSphere(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {
 // paint a sphere
    Int_t i, j;
+   ((TGeoSphere*)shape)->SetNumberOfDivisions(fNsegments);
    const Int_t n = ((TGeoSphere*)shape)->GetNumberOfDivisions()+1;
    Double_t ph1 = ((TGeoSphere*)shape)->GetPhi1();
    Double_t ph2 = ((TGeoSphere*)shape)->GetPhi2();
@@ -1061,6 +1153,26 @@ void TGeoPainter::PaintSphere(TGeoShape *shape, Option_t *option, TGeoHMatrix *g
     if (buff->polys)    delete [] buff->polys;
     if (buff)           delete    buff;
 }
+
+//______________________________________________________________________________
+void *TGeoPainter::MakePcon3DBuffer(const TGeoVolume *vol)
+{
+// Create a box 3D buffer for a given shape.
+   X3DPoints *buff = new X3DPoints;
+
+   TGeoShape *shape = vol->GetShape();
+   const Int_t n = ((TGeoPcon*)shape)->GetNsegments()+1;
+   Int_t nz = ((TGeoPcon*)shape)->GetNz();
+   if (nz < 2) return 0;
+   Int_t numpoints =  nz*2*n;
+   if (numpoints <= 0) return 0;
+   Double_t *points = new Double_t[3*numpoints];
+   shape->SetPoints(points);
+   buff->numPoints = numpoints;
+   buff->points = points;
+   return buff;
+}
+
 //______________________________________________________________________________
 void TGeoPainter::PaintPcon(TGeoShape *shape, Option_t *option, TGeoHMatrix *glmat)
 {

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.6 2002/10/08 16:17:49 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoShape.cxx,v 1.7 2003/01/06 17:05:44 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -345,3 +345,21 @@ Int_t TGeoShape::GetVertexNumber(Bool_t vx, Bool_t vy, Bool_t vz)
    if (!vx) return imax;
    return imin;
 }               
+//-----------------------------------------------------------------------------
+Double_t TGeoShape::SafetyPhi(Double_t *point, Bool_t in, Double_t c1, Double_t s1, Double_t c2, Double_t s2)
+{
+// Static method to compute safety w.r.t a phi corner defined by cosines/sines
+// of the angles phi1, phi2.
+   Double_t saf1 = kBig;
+   Double_t saf2 = kBig;
+   if (point[0]*c1+point[1]*s1 >= 0) saf1 = -point[0]*s1 + point[1]*c1;
+   if (point[0]*c2+point[1]*s2 >= 0) saf2 =  point[0]*s2 - point[1]*c2;
+   if (in) {
+      if (saf1<0) saf1=kBig;
+      if (saf2<0) saf2=kBig;
+      return TMath::Min(saf1,saf2);
+   }
+   if (saf1<0 && saf2<0) return TMath::Max(saf1,saf2);
+   return TMath::Min(saf1,saf2);
+}        
+

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.40 2003/01/29 10:42:20 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoManager.cxx,v 1.41 2003/01/31 16:38:23 brun Exp $
 // Author: Andrei Gheata   25/10/01
 
 /*************************************************************************
@@ -603,7 +603,7 @@ Int_t TGeoManager::AddShape(const TGeoShape *shape)
    return index;
 }
 //_____________________________________________________________________________
-Int_t TGeoManager::AddVolume(const TGeoVolume *volume)
+Int_t TGeoManager::AddVolume(TGeoVolume *volume)
 {
 // Add a volume to the list. Returns index of the volume in list.
    if (!volume) {
@@ -614,6 +614,7 @@ Int_t TGeoManager::AddVolume(const TGeoVolume *volume)
    if (volume->IsRunTime()) list = fGVolumes;
    Int_t index = list->GetSize();
    list->Add((TGeoVolume*)volume);
+   volume->SetNumber(index);
    return index;
 }
 //_____________________________________________________________________________
@@ -2675,6 +2676,7 @@ void TGeoManager::SetNsegments(Int_t nseg)
 {
 // Set number of segments for approximating circles in drawing.
    GetGeomPainter();
+   if (fNsegments==nseg) return;
    if (nseg>2) fNsegments = nseg;
    if (fPainter) fPainter->SetNsegments(nseg);
 }
@@ -2824,6 +2826,43 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
    fTopNode->CheckShapes();
 }
 
+//_____________________________________________________________________________
+void TGeoManager::CheckOverlaps(Double_t ovlp, Option_t * option)
+{
+// Check all geometry for illegal overlaps within a limit OVLP.
+   TIter next(fVolumes);
+   TGeoVolume *vol;
+   while ((vol=(TGeoVolume*)next())) {
+      if (!vol->GetNdaughters() || vol->GetFinder()) continue;
+      vol->CheckOverlaps(ovlp, option);
+   }  
+}
+
+//_____________________________________________________________________________
+void TGeoManager::DrawExtrusion(const char *mother, const char *node)
+{
+// Draw togeather only a given volume and one daughter node, as given by CheckOverlaps().
+// This method offer a visual validation of a declared extrusion (daughter not fully
+// contained by its mother)
+   TGeoVolume *vol = (TGeoVolume*)fVolumes->FindObject(mother);
+   if (!vol) {
+      Error("DrawExtrusion", "volume %s not found", mother);
+      return;
+   }
+   vol->DrawExtrusion(node);
+}
+
+//_____________________________________________________________________________
+void TGeoManager::DrawOverlap(const char *mother, const char *node1, const char *node2)
+{
+// Draw togeather only 2 possible overlapping daughters of a given volume.
+   TGeoVolume *vol = (TGeoVolume*)fVolumes->FindObject(mother);
+   if (!vol) {
+      Error("DrawExtrusion", "volume %s not found", mother);
+      return;
+   }
+   vol->DrawOverlap(node1, node2);      
+}
 //_____________________________________________________________________________
 void TGeoManager::UpdateCurrentPosition(Double_t * /*nextpoint*/)
 {

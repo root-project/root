@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.11 2003/01/06 17:05:43 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TVirtualGeoPainter.h,v 1.12 2003/01/31 16:38:23 brun Exp $
 // Author: Andrei Gheata   11/01/02
 
 /*************************************************************************
@@ -64,6 +64,7 @@ public:
    virtual void       BombTranslation(const Double_t *tr, Double_t *bombtr) = 0;
    virtual void       CheckPoint(Double_t x=0, Double_t y=0, Double_t z=0, Option_t *option="") = 0;
    virtual void       CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const = 0;
+   virtual void       CheckOverlaps(const TGeoVolume *vol, Double_t ovlp=0.1, Option_t *option="") const = 0;
    virtual void       DefaultAngles() = 0;
    virtual void       DefaultColors() = 0;
    virtual Int_t      DistanceToPrimitiveVol(TGeoVolume *vol, Int_t px, Int_t py) = 0;
@@ -86,6 +87,11 @@ public:
    virtual TH2F      *LegoPlot(Int_t ntheta=60, Double_t themin=0., Double_t themax=180.,
                             Int_t nphi=90, Double_t phimin=0., Double_t phimax=360.,
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="") = 0;
+   virtual void      *MakeBox3DBuffer(const TGeoVolume *vol) = 0;
+   virtual void      *MakeTube3DBuffer(const TGeoVolume *vol) = 0;
+   virtual void      *MakeTubs3DBuffer(const TGeoVolume *vol) = 0;
+   virtual void      *MakePcon3DBuffer(const TGeoVolume *vol) = 0;
+   virtual void      *MakeSphere3DBuffer(const TGeoVolume *vol) = 0;
    virtual void       ModifiedPad() const = 0;
    virtual void       Paint(Option_t *option="") = 0;
    virtual void       PaintBox(TGeoShape *shape, Option_t *option="", TGeoHMatrix *glmat=0) = 0;

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.17 2003/01/23 14:25:36 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoArb8.cxx,v 1.18 2003/01/24 08:38:50 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -768,33 +768,41 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
    Double_t saf[5];
    Double_t norm[3]; // normal to current facette
    Int_t i;          // current facette index
-   Double_t x0, y0, x1, y1;     // lower coordinater
-   Double_t x0h, y0h, x1h, y1h; // upper coordinates
-   Double_t dl, dh;             // lengths of lower and upper segments
-   Double_t rl, rh, rlh;
-   Double_t st, ct, sp, cp;     // Sin/Cos of spherical angles of current normal
+   Double_t x0, y0, z0, x1, y1, z1, x2, y2, z2;
+   Double_t ax, ay, az, bx, by;
+   Double_t fn;
    //---> compute safety for lateral planes
    for (i=0; i<4; i++) {
       x0 = fXY[i][0];
       y0 = fXY[i][1];
-      x1 = fXY[(i+1)%4][0];
-      y1 = fXY[(i+1)%4][1];
-      x0h = fXY[i+4][0];
-      y0h = fXY[i+4][1];
-      x1h = fXY[4+((i+1)%4)][0];
-      y1h = fXY[4+((i+1)%4)][1];
-      dl = TMath::Sqrt((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0));
-      dh = TMath::Sqrt((x1h-x0h)*(x1h-x0h)+(y1h-y0h)*(y1h-y0h));
-      rl = TMath::Abs(x0*y1-x1*y0)/dl;
-      rh = TMath::Abs(x0h*y1h-x1h*y0h)/dh;
-      rlh = TMath::Sqrt((rl-rh)*(rl-rh)+4*fDz*fDz);
-      st = 2*fDz/rlh;
-      ct = (rl-rh)/rlh;
-      sp = (x1-x0)/dl;
-      cp = (y0-y1)/dl;
-      norm[0] = st*cp;
-      norm[1] = st*sp;
-      norm[2] = ct;
+      z0 = -fDz;
+      x1 = fXY[i+4][0];
+      y1 = fXY[i+4][1];
+      z1 = fDz;
+      ax = x1-x0;
+      ay = y1-y0;
+      az = z1-z0;
+      x2 = fXY[(i+1)%4][0];
+      y2 = fXY[(i+1)%4][1];
+      z2 = -fDz;
+      bx = x2-x0;
+      by = y2-y0;
+      if (bx==0 && by==0) {
+         x2 = fXY[4+((i+1)%4)][0];
+         y2 = fXY[4+((i+1)%4)][1];
+         z2 = fDz;
+         bx = x2-x1;
+         by = y2-y1;
+         if (bx==0 && by==0) continue;
+      }
+      norm[0] = -az*by;
+      norm[1] = az*bx;
+      norm[2] = ax*by-ay*bx;
+      fn = TMath::Sqrt(norm[0]*norm[0]+norm[1]*norm[1]+norm[2]*norm[2]);
+      if (fn<1E-10) continue;
+      norm[0] /= fn;
+      norm[1] /= fn;
+      norm[2] /= fn;
       saf[i] = (x0-point[0])*norm[0]+(y0-point[1])*norm[1]+(-fDz-point[2])*norm[2];
       if (in) {
          saf[i]=TMath::Abs(saf[i]); // they should be all positive anyway
@@ -802,11 +810,11 @@ Double_t TGeoTrap::Safety(Double_t *point, Bool_t in) const
          saf[i] = -saf[i];   // only negative values are interesting
       }   
    }
-   saf[4] = TMath::Abs(fDz-TMath::Abs(point[2]));
+   saf[4] = fDz-TMath::Abs(point[2]);
    if (in) {
       safe = saf[TMath::LocMin(5, saf)];
    } else {
-      if (TMath::Abs(point[2]) <= fDz) saf[4]=-saf[4];
+      saf[4]=-saf[4];
       safe = saf[TMath::LocMax(5, saf)];
    }
    return safe;

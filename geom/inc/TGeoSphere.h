@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.6 2002/12/06 16:45:03 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoSphere.h,v 1.7 2003/01/23 14:25:36 brun Exp $
 // Author: Andrei Gheata   31/01/02
 
 /*************************************************************************
@@ -77,6 +77,7 @@ public:
    virtual void          InspectShape() const;
    virtual Bool_t        IsCylType() const {return kFALSE;}
    Bool_t                IsPointInside(Double_t *point, Bool_t checkR=kTRUE, Bool_t checkTh=kTRUE, Bool_t checkPh=kTRUE) const;
+   virtual void         *Make3DBuffer(const TGeoVolume *vol) const;
    virtual void          NextCrossing(TGeoParamCurve *c, Double_t *point) const;
    virtual void          Paint(Option_t *option);
    virtual void          PaintNext(TGeoHMatrix *glmat, Option_t *option);

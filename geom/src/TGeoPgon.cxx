@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.19 2003/01/27 13:16:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPgon.cxx,v 1.20 2003/01/31 16:38:23 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoPgon::Contains() implemented by Mihaela Gheata
 
@@ -97,7 +97,6 @@ void TGeoPgon::ComputeBBox()
    rmax = rmax/TMath::Cos(0.5*divphi*kDegRad);
    Double_t phi1 = fPhi1;
    Double_t phi2 = phi1 + fDphi;
-   if (phi2 > 360) phi2-=360;
    
    Double_t xc[4];
    Double_t yc[4];
@@ -117,19 +116,15 @@ void TGeoPgon::ComputeBBox()
 
    Double_t ddp = -phi1;
    if (ddp<0) ddp+= 360;
-   if (ddp>360) ddp-=360;
    if (ddp<=fDphi) xmax = rmax;
    ddp = 90-phi1;
    if (ddp<0) ddp+= 360;
-   if (ddp>360) ddp-=360;
    if (ddp<=fDphi) ymax = rmax;
    ddp = 180-phi1;
    if (ddp<0) ddp+= 360;
-   if (ddp>360) ddp-=360;
    if (ddp<=fDphi) xmin = -rmax;
    ddp = 270-phi1;
    if (ddp<0) ddp+= 360;
-   if (ddp>360) ddp-=360;
    if (ddp<=fDphi) ymin = -rmax;
    fOrigin[0] = (xmax+xmin)/2;
    fOrigin[1] = (ymax+ymin)/2;
@@ -143,46 +138,33 @@ Bool_t TGeoPgon::Contains(Double_t *point) const
 {
 // test if point is inside this shape
    // check total z range
-   if ((point[2]<fZ[0]) || (point[2]>fZ[fNz-1])) return kFALSE;
-   // find smallest Rmin and largest Rmax
-   Double_t rmin = fRmin[0];
-   Double_t rmax = fRmax[0];
-   for (Int_t i=1; i<fNz; i++) {
-      if (fRmin[i] < rmin) rmin = fRmin[i];
-      if (fRmax[i] > rmax) rmax = fRmax[i];
-   }
-   // check R against rmin
-   Double_t r = TMath::Sqrt(point[0]*point[0]+point[1]*point[1]);
-   if (r < rmin) return kFALSE;
+   if (point[2]<fZ[0]) return kFALSE;
+   if (point[2]>fZ[fNz-1]) return kFALSE;
    Double_t divphi = fDphi/fNedges;
-   // find the radius of the outscribed circle
-   rmax = rmax/TMath::Cos(0.5*divphi*kDegRad);
-   // check R against rmax
-   if (r > rmax) return kFALSE;
    // now check phi
    Double_t phi = TMath::ATan2(point[1], point[0])*kRadDeg;
-   if (phi < fPhi1) phi += 360.0;
-   if ((phi<fPhi1) || ((phi-fPhi1)>fDphi)) return kFALSE;
+   if (phi < 0) phi += 360.0;
+   Double_t ddp = phi-fPhi1;
+   if (ddp<0) ddp+=360.;
+   if (ddp>fDphi) return kFALSE;
    // now find phi division
-   Int_t ipsec = (Int_t)TMath::Min((phi-fPhi1)/divphi+1., (Double_t)fNedges);
-   Double_t ph0 = (fPhi1+divphi*(ipsec-0.5))*kDegRad;
+   Int_t ipsec = TMath::Min(Int_t(ddp/divphi), fNedges-1);
+   Double_t ph0 = (fPhi1+divphi*(ipsec+0.5))*kDegRad;
    // now check projected distance
-   r = point[0]*TMath::Cos(ph0) + point[1]*TMath::Sin(ph0);
+   Double_t r = point[0]*TMath::Cos(ph0) + point[1]*TMath::Sin(ph0);
    // find in which Z section the point is in
-   Int_t izl = 0;
-   Int_t izh = fNz-1;
-   Int_t izt = 0;
-   while ((izh-izl)>1) {
-      izt = (izl+izh)/2;
-      if (point[2] < fZ[izt]) izh = izt;
-      else izl=izt;
-   }
+   Int_t iz = TMath::BinarySearch(fNz, fZ, point[2]);
+   if (iz==fNz-1) {
+      if (r<fRmin[iz]) return kFALSE;
+      if (r>fRmax[iz]) return kFALSE;
+      return kTRUE;
+   }   
    // now compute rmin and rmax and test the value of r
-   Double_t dzrat = (point[2]-fZ[izl])/(fZ[izh]-fZ[izl]);
-   rmin = fRmin[izl]+dzrat*(fRmin[izh]-fRmin[izl]);
+   Double_t dzrat = (point[2]-fZ[iz])/(fZ[iz+1]-fZ[iz]);
+   Double_t rmin = fRmin[iz]+dzrat*(fRmin[iz+1]-fRmin[iz]);
    // is the point inside the 'hole' at the center of the volume ?
    if (r < rmin) return kFALSE;
-   rmax = fRmax[izl]+dzrat*(fRmax[izh]-fRmax[izl]);
+   Double_t rmax = fRmax[iz]+dzrat*(fRmax[iz+1]-fRmax[iz]);
    if (r > rmax) return kFALSE;
    
    return kTRUE;
@@ -556,15 +538,24 @@ Double_t TGeoPgon::DistToOutSect(Double_t *point, Double_t *dir, Int_t &iz, Int_
    return dmin;
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t /*iact*/, Double_t /*step*/, Double_t * /*safe*/) const
+Double_t TGeoPgon::DistToOut(Double_t *point, Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
 // compute distance from inside point to surface of the polygone
    // first find out in which Z section the point is in
+   if (iact<3 && safe) {
+      *safe = Safety(point, kTRUE);
+      if (iact==0) return kBig;
+      if (iact==1 && step<*safe) return kBig;
+   }   
    Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
-   if ((ipl==(fNz-1)) || (ipl<0)) {
+   if (ipl==fNz-1) {
+      ipl--;
+      if (dir[2]>=0) return 1E-6;
+   }   
+   if (ipl<0) {
       // point out
-      Warning("DistToOut", "point is outside Z range");
-      return kBig;
+      ipl++;
+      if (dir[2]<=0) return 1E-6;
    }
 //   Double_t dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
 
@@ -585,6 +576,11 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
 {
 // compute distance from outside point to surface of the polygone
    // first find in which segment we are
+   if (iact<3 && safe) {
+      *safe = Safety(point, kFALSE);
+      if (iact==0) return kBig;
+      if (iact==1 && step<*safe) return kBig;
+   }   
    Double_t pt[3];
    Double_t eps = 0;
    memcpy(&pt[0], point, 3*sizeof(Double_t));
@@ -686,11 +682,6 @@ Double_t TGeoPgon::DistToIn(Double_t *point, Double_t *dir, Int_t iact, Double_t
    Double_t dph2=(bits & kInphi)?(phi2-phi):(phi-phi2);
    saf[4]=r*TMath::Sin(dph1*kDegRad);
    saf[5]=r*TMath::Sin(dph2*kDegRad);
-   if ((iact<3) && safe) {
-      *safe = saf[TMath::LocMax(6, &saf[0])];
-//      if ((iact==1) && (*safe>step)) return kBig;
-      if (iact==0) return kBig;
-   }
    // compute distance to boundary   
    if (!cross) return kBig;
    Double_t snxt=DistToInSect(&pt[0], dir, ifirst, ipsec, bits, &saf[0]);
@@ -983,11 +974,116 @@ void TGeoPgon::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 // computes next intersection point of curve c with this shape
 }
 //-----------------------------------------------------------------------------
-Double_t TGeoPgon::Safety(Double_t * /*point*/, Bool_t /*in*/) const
+Double_t TGeoPgon::Safety(Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
-   return kBig;
+   Double_t saf[5];
+   Double_t safe, dz;
+   Int_t i;
+   Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
+   for (i=0; i<5; i++) saf[i]=kBig;
+   if (in) {
+      //---> first locate Z segment and compute Z safety
+      if (ipl==(fNz-1)) return 0;
+      if (ipl<0) return 0;
+      dz = fZ[ipl+1]-fZ[ipl];
+      if (dz<1E-10) return 0;
+      if (ipl==0) {
+         saf[0] = point[2]-fZ[0];
+         if (saf[0]<1E-4) return saf[0];
+      }
+      if (ipl==fNz-2) {
+         saf[1] = fZ[fNz-1]-point[2];   
+         if (saf[1]<1E-4) return saf[1];
+      }
+      if (ipl>1) {
+         if (fZ[ipl]==fZ[ipl-1]) {
+            if (fRmin[ipl]<fRmin[ipl-1] || fRmax[ipl]>fRmax[ipl-1]) {
+               saf[0] = point[2]-fZ[ipl];
+               if (saf[0]<1E-4) return saf[0];
+            }
+         }
+      }
+      if (ipl<fNz-3) {
+         if (fZ[ipl+1]==fZ[ipl+2]) {
+            if (fRmin[ipl+1]<fRmin[ipl+2] || fRmax[ipl+1]>fRmax[ipl+2]) {
+               saf[1] = fZ[ipl+1]-point[2];
+               if (saf[1]<1E-4) return saf[1];         
+            }
+         }
+      }
+   } else {
+      if (ipl>=0 && ipl<fNz-1) {
+         dz = fZ[ipl+1]-fZ[ipl];
+         if (dz==0) {
+            ipl++;
+            dz = fZ[ipl+1]-fZ[ipl];
+         }
+         if (ipl>1) {
+            if (fZ[ipl]==fZ[ipl-1]) {
+               if (fRmin[ipl]>fRmin[ipl-1] || fRmax[ipl]<fRmax[ipl-1]) {
+                  saf[0] = point[2]-fZ[ipl];
+                  if (saf[0]<1E-4) return saf[0];
+               }
+            }
+         }
+         if (ipl<fNz-3) {
+            if (fZ[ipl+1]==fZ[ipl+2]) {
+               if (fRmin[ipl+1]>fRmin[ipl+2] || fRmax[ipl+1]<fRmax[ipl+2]) {
+                  saf[1] = fZ[ipl+1]-point[2];
+                  if (saf[1]<1E-4) return saf[1];         
+               }
+            }
+         }
+      } else {
+         if (ipl<0) {
+            ipl=0;
+            saf[0] = fZ[0]-point[2];
+         } else {
+            ipl=fNz-2;
+            saf[1] = point[2]-fZ[fNz-1];
+         }
+         dz = fZ[ipl+1]-fZ[ipl];
+      }
+   }         
+   //---> compute phi safety
+   if (fDphi<360) {
+      Double_t phi1 = fPhi1*kDegRad;
+      Double_t phi2 = (fPhi1+fDphi)*kDegRad;
+      Double_t c1 = TMath::Cos(phi1);
+      Double_t s1 = TMath::Sin(phi1);
+      Double_t c2 = TMath::Cos(phi2);
+      Double_t s2 = TMath::Sin(phi2);
+      saf[2] =  TGeoShape::SafetyPhi(point,in,c1,s1,c2,s2);
+   }
+
+   //---> locate phi and compute R safety
+   Double_t divphi = fDphi/fNedges;
+   Double_t phi = TMath::ATan2(point[1], point[0])*kRadDeg;
+   if (phi<0) phi+=360.;
+   Double_t ddp = phi-fPhi1;
+   if (ddp<0) ddp+=360.;
+   Int_t ipsec = Int_t(ddp/divphi);
+   Double_t ph0 = (fPhi1+divphi*(ipsec+0.5))*kDegRad;
+   // compute projected distance
+   Double_t r, rsum, rpgon, ta, calf;
+   r = point[0]*TMath::Cos(ph0)+point[1]*TMath::Sin(ph0);
+   rsum = fRmin[ipl]+fRmin[ipl+1];
+   if (rsum>1E-10) {
+      ta = (fRmin[ipl+1]-fRmin[ipl])/dz;
+      calf = 1./TMath::Sqrt(1+ta*ta);
+      rpgon = fRmin[ipl] + (point[2]-fZ[ipl])*ta;
+      saf[3] = (r-rpgon)*calf;
+   }
+   ta = (fRmax[ipl+1]-fRmax[ipl])/dz;
+   calf = 1./TMath::Sqrt(1+ta*ta);
+   rpgon = fRmax[ipl] + (point[2]-fZ[ipl])*ta;
+   saf[4] = (rpgon-r)*calf;
+   if (in) return saf[TMath::LocMin(5,saf)];
+   for (i=0; i<5; i++) saf[i]=-saf[i];
+   safe = saf[TMath::LocMax(5,saf)];
+   return safe;
 }
 //-----------------------------------------------------------------------------
 void TGeoPgon::SetDimensions(Double_t *param)

@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.14 2003/01/24 08:38:50 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoPcon.cxx,v 1.15 2003/01/31 16:38:23 brun Exp $
 // Author: Andrei Gheata   24/10/01
 // TGeoPcon::Contains() implemented by Mihaela Gheata
 
@@ -53,6 +53,7 @@ TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
 // Default constructor
    SetBit(TGeoShape::kGeoPcon);
    fPhi1 = phi;
+   if (fPhi1<0) fPhi1+=360.;
    fDphi = dphi;
    fNz   = nz;
    fRmin = new Double_t [nz];
@@ -66,6 +67,7 @@ TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
 // Default constructor
    SetBit(TGeoShape::kGeoPcon);
    fPhi1 = phi;
+   if (fPhi1<0) fPhi1+=360.;
    fDphi = dphi;
    fNz   = nz;
    fRmin = new Double_t [nz];
@@ -109,7 +111,6 @@ void TGeoPcon::ComputeBBox()
    rmax = fRmax[TMath::LocMax(fNz, fRmax)];
    Double_t phi1 = fPhi1;
    Double_t phi2 = phi1 + fDphi;
-   if (phi2 > 360) phi2-=360;
    
    Double_t xc[4];
    Double_t yc[4];
@@ -129,19 +130,15 @@ void TGeoPcon::ComputeBBox()
 
    Double_t ddp = -phi1;
    if (ddp<0) ddp+= 360;
-   if (ddp>360) ddp-=360;
    if (ddp<=fDphi) xmax = rmax;
    ddp = 90-phi1;
    if (ddp<0) ddp+= 360;
-   if (ddp>360) ddp-=360;
    if (ddp<=fDphi) ymax = rmax;
    ddp = 180-phi1;
    if (ddp<0) ddp+= 360;
-   if (ddp>360) ddp-=360;
    if (ddp<=fDphi) xmin = -rmax;
    ddp = 270-phi1;
    if (ddp<0) ddp+= 360;
-   if (ddp>360) ddp-=360;
    if (ddp<=fDphi) ymin = -rmax;
    fOrigin[0] = (xmax+xmin)/2;
    fOrigin[1] = (ymax+ymin)/2;
@@ -165,7 +162,7 @@ Bool_t TGeoPcon::Contains(Double_t *point) const
    while ((izh-izl)>1) {
       if (point[2] > fZ[izt]) izl = izt;     
       else izh = izt;
-      izt = (izl+izh)/2;
+      izt = (izl+izh)>>1;
    }
    // the point is in the section bounded by izl and izh Z planes
    
@@ -182,12 +179,14 @@ Bool_t TGeoPcon::Contains(Double_t *point) const
    }
    if ((r2<rmin*rmin) || (r2>rmax*rmax)) return kFALSE;
    // now check phi 
-   Double_t phi = fPhi1+0.5*fDphi;
-   if ((point[1]!=0.0) || (point[0] != 0.0))
-      phi = TMath::ATan2(point[1], point[0]) * kRadDeg;
-   if (phi < fPhi1) phi+=360.0;
-   if ((phi<fPhi1) || ((phi-fPhi1)>fDphi)) return kFALSE;
-   return kTRUE;
+   if (fDphi==360) return kTRUE;
+   if (r2<1E-10) return kTRUE;
+   Double_t phi = TMath::ATan2(point[1], point[0]) * kRadDeg;
+   if (phi < 0) phi+=360.0;
+   Double_t ddp = phi-fPhi1;
+   if (ddp<0) ddp+=360.;
+   if (ddp<=fDphi) return kTRUE;
+   return kFALSE;
 }
 //-----------------------------------------------------------------------------
 Int_t TGeoPcon::DistancetoPrimitive(Int_t px, Int_t py)
@@ -521,6 +520,14 @@ void TGeoPcon::InspectShape() const
    TGeoBBox::InspectShape();
 }
 //-----------------------------------------------------------------------------
+void *TGeoPcon::Make3DBuffer(const TGeoVolume *vol) const
+{
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return 0;
+   return painter->MakePcon3DBuffer(vol);
+}   
+
+//-----------------------------------------------------------------------------
 void TGeoPcon::Paint(Option_t *option)
 {
 // paint this shape according to option
@@ -556,6 +563,8 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
    Bool_t is_tube, is_seg;
    Double_t phi1=0, phi2=0, c1=0, s1=0, c2=0, s2=0;
    Int_t skipz;
+   Double_t saf[2];
+   saf[0] = saf[1] = kBig;
    if (in) {
    //---> point is inside pcon
       Int_t ipl = TMath::BinarySearch(fNz, fZ, point[2]);
@@ -563,23 +572,38 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
       if (ipl<0) return 0;          // point on first Z boundary
       dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
       if (dz<1E-10) return 0;
-      Double_t dzb = TMath::Min(point[2]-fZ[ipl], fZ[ipl+1]-point[2]);
-      if (dzb<1E-5) return dzb;     // point close to Z boundary
       skipz = 3; // skip z checks
       if (ipl==0) {
-         if (fNz>2 && fZ[1]==fZ[2]) skipz=0; // do not skip z plane check
-         else                       skipz=2; // skip upper z check
-      } else if (ipl==fNz-2) {
-         if (fNz>2 && fZ[ipl]==fZ[ipl-1]) skipz=0;
-         else                             skipz=1; // skip lower z check
-      } else {
+         saf[0] = point[2]-fZ[0];
+         if (saf[0]<1E-4) return saf[0];
+      }
+      if (ipl==fNz-2) {
+         saf[1] = fZ[fNz-1]-point[2];
+         if (saf[1]<1E-4) return saf[1];
+      }
+      if (ipl>1) {
          if (fZ[ipl]==fZ[ipl-1]) {
-            skipz=2;
-            if (fZ[ipl+1]==fZ[ipl+2]) skipz=0;
-         } else if (fZ[ipl+1]==fZ[ipl+2]) {
-            skipz=1;
+            if (fRmin[ipl]<fRmin[ipl-1] || fRmax[ipl]>fRmax[ipl-1]) {
+               saf[0] = point[2]-fZ[ipl];      
+               if (saf[0]<1E-4) return saf[0];
+            }
          }
-      }  
+      }
+      if (ipl<fNz-3) {
+         if (fZ[ipl+1]==fZ[ipl+2]) {
+            if (fRmin[ipl+1]<fRmin[ipl+2] || fRmax[ipl+1]>fRmax[ipl+2]) {
+               saf[1] = fZ[ipl+1]-point[2];
+               if (saf[1]<1E-4) return saf[1];
+            }
+         }
+      }
+      if (saf[0]<1E10) {
+         if (saf[1]<1E10) skipz=0; // check both Z planes
+         else             skipz=2; // skip upper Z
+      } else {
+         if (saf[1]<1E10) skipz=1; // skip lower Z
+         else             skipz=3; // skip both Z planes
+      }   
       //---> Check shape type
       memcpy(ptnew, point, 3*sizeof(Double_t));
       ptnew[2] -= 0.5*(fZ[ipl]+fZ[ipl+1]);
@@ -673,6 +697,7 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
          rmax2 = fRmax[ipnew+1];
          is_tube = ((rmin1==rmin2) && (rmax1==rmax2))?kTRUE:kFALSE;
          ptnew[2] = point[2] - 0.5*(fZ[ipnew]+fZ[ipnew+1]);
+         dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
          if (is_seg) {
             if (is_tube) safdown = TGeoTubeSeg::SafetyS(ptnew,in,rmin1,rmax1, dz,c1,s1,c2,s2,skipz);
             else         safdown = TGeoConeSeg::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2,skipz);
@@ -698,6 +723,7 @@ Double_t TGeoPcon::Safety(Double_t *point, Bool_t in) const
          rmax2 = fRmax[ipnew+1];
          is_tube = ((rmin1==rmin2) && (rmax1==rmax2))?kTRUE:kFALSE;
          ptnew[2] = point[2] - 0.5*(fZ[ipnew]+fZ[ipnew+1]);
+         dz = 0.5*(fZ[ipl+1]-fZ[ipl]);
          if (is_seg) {
             if (is_tube) safup = TGeoTubeSeg::SafetyS(ptnew,in,rmin1,rmax1, dz,c1,s1,c2,s2,skipz);
             else         safup = TGeoConeSeg::SafetyS(ptnew,in,dz,rmin1,rmax1,rmin2,rmax2,c1,s1,c2,s2,skipz);

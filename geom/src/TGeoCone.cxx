@@ -1,4 +1,4 @@
-// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.14 2003/01/27 13:16:26 brun Exp $
+// @(#)root/geom:$Name:  $:$Id: TGeoCone.cxx,v 1.15 2003/01/31 16:38:23 brun Exp $
 // Author: Andrei Gheata   31/01/02
 // TGeoCone::Contains() and DistToOut() implemented by Mihaela Gheata
 
@@ -487,6 +487,13 @@ void TGeoCone::InspectShape() const
    TGeoBBox::InspectShape();
 }
 //-----------------------------------------------------------------------------
+void *TGeoCone::Make3DBuffer(const TGeoVolume *vol) const
+{
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return 0;
+   return painter->MakeTube3DBuffer(vol);
+}   
+//-----------------------------------------------------------------------------
 void TGeoCone::NextCrossing(TGeoParamCurve * /*c*/, Double_t * /*point*/) const
 {
 // computes next intersection point of curve c with this shape
@@ -526,7 +533,7 @@ Double_t TGeoCone::Safety(Double_t *point, Bool_t in) const
    Double_t rin = tg1*point[2]+ro1;
    Double_t rout = tg2*point[2]+ro2;
    saf[0] = fDz-TMath::Abs(point[2]);
-   saf[1] = (ro1>0)?((r-rin)*cr1):(-kBig);
+   saf[1] = (ro1>0)?((r-rin)*cr1):kBig;
    saf[2] = (rout-r)*cr2;
    if (in) return saf[TMath::LocMin(3,saf)];
    for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
@@ -561,7 +568,7 @@ Double_t TGeoCone::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmi
      default:
         saf[0] = dz-TMath::Abs(point[2]);         
    }
-   saf[1] = (ro1>0)?((r-rin)*cr1):(-kBig);
+   saf[1] = (ro1>0)?((r-rin)*cr1):kBig;
    saf[2] = (rout-r)*cr2;
    if (in) return saf[TMath::LocMin(3,saf)];
    for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
@@ -1262,6 +1269,13 @@ void TGeoConeSeg::InspectShape() const
    TGeoBBox::InspectShape();
 }
 //-----------------------------------------------------------------------------
+void *TGeoConeSeg::Make3DBuffer(const TGeoVolume *vol) const
+{
+   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+   if (!painter) return 0;
+   return painter->MakeTubs3DBuffer(vol);
+}   
+//-----------------------------------------------------------------------------
 void TGeoConeSeg::Paint(Option_t *option)
 {
 // paint this shape according to option
@@ -1291,7 +1305,7 @@ Double_t TGeoConeSeg::Safety(Double_t *point, Bool_t in) const
 // computes the closest distance from given point to this shape, according
 // to option. The matching point on the shape is stored in spoint.
 
-   Double_t saf[5];
+   Double_t saf[4];
    Double_t phi1 = fPhi1*kDegRad;
    Double_t phi2 = fPhi2*kDegRad;
    Double_t c1 = TMath::Cos(phi1);
@@ -1310,21 +1324,20 @@ Double_t TGeoConeSeg::Safety(Double_t *point, Bool_t in) const
    Double_t rout = tg2*point[2]+ro2;
 
    saf[0] = fDz-TMath::Abs(point[2]); // positive if inside
-   saf[1] = (ro1>1E-10)?((r-rin)*cr1):kBig;
+   saf[1] = (r-rin)*cr1;
    saf[2] = (rout-r)*cr2;
-   saf[3] = -point[0]*s1 + point[1]*c1;
-   saf[4] =  point[0]*s2 - point[1]*c2;
+   saf[3] = TGeoShape::SafetyPhi(point, in, c1,s1,c2,s2);
 
-   if (in) return saf[TMath::LocMin(5,saf)];
-   for (Int_t i=0; i<5; i++) saf[i]=-saf[i];
-   return saf[TMath::LocMax(5,saf)];
+   if (in) return saf[TMath::LocMin(4,saf)];
+   for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
+   return saf[TMath::LocMax(4,saf)];
 }
 //-----------------------------------------------------------------------------
 Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t rmin1, Double_t rmax1,
                               Double_t rmin2, Double_t rmax2, Double_t c1, Double_t s1, Double_t c2, Double_t s2, Int_t skipz)
 {
 // Static method to compute the closest distance from given point to this shape.
-   Double_t saf[5];
+   Double_t saf[4];
    Double_t ro1 = 0.5*(rmin1+rmin2);
    Double_t tg1 = 0.5*(rmin2-rmin1)/dz;
    Double_t cr1 = 1./TMath::Sqrt(1.+tg1*tg1);
@@ -1348,14 +1361,13 @@ Double_t TGeoConeSeg::SafetyS(Double_t *point, Bool_t in, Double_t dz, Double_t 
       default:
          saf[0] = dz-TMath::Abs(point[2]);         
    }
-   saf[1] = (ro1>1E-10)?((r-rin)*cr1):kBig;
+   saf[1] = (r-rin)*cr1;
    saf[2] = (rout-r)*cr2;
-   saf[3] = -point[0]*s1 + point[1]*c1;
-   saf[4] =  point[0]*s2 - point[1]*c2;
+   saf[3] = TGeoShape::SafetyPhi(point,in,c1,s1,c2,s2);
 
-   if (in) return saf[TMath::LocMin(5,saf)];
-   for (Int_t i=0; i<5; i++) saf[i]=-saf[i];
-   return saf[TMath::LocMax(5,saf)];
+   if (in) return saf[TMath::LocMin(4,saf)];
+   for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
+   return saf[TMath::LocMax(4,saf)];
 }
 
 //-----------------------------------------------------------------------------
