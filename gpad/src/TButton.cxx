@@ -1,4 +1,4 @@
-// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.6 2002/01/23 17:52:47 rdm Exp $
+// @(#)root/gpad:$Name:  $:$Id: TButton.cxx,v 1.7 2002/01/24 11:39:28 rdm Exp $
 // Author: Rene Brun   01/07/96
 
 /*************************************************************************
@@ -90,6 +90,8 @@ TButton::TButton(): TPad()
 //*-*-*-*-*-*-*-*-*-*-*Button default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  ==========================
 
+   fFraming=0;
+   fMethod = "";
    SetEditable(kFALSE);
 }
 
@@ -102,7 +104,7 @@ TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1
 //
 //   Note that the button coordinates x1,y1,x2,y2 are always in the range [0,1]
 //
-   //SetEditable(kFALSE);
+
    fFraming=0;
    SetBit(kCanDelete);
    fModified = kTRUE;
@@ -129,7 +131,7 @@ void TButton::Draw(Option_t *option)
 //*-*-*-*-*-*-*-*-*-*-*Draw this button with its current attributes*-*-*-*-*
 //*-*                  ============================================
 
-   AppendPad(option);
+   if (fCanvas) AppendPad(option);
 }
 
 //______________________________________________________________________________
@@ -233,13 +235,12 @@ void TButton::Paint(Option_t *option)
 //______________________________________________________________________________
 void TButton::PaintModified()
 {
+   if (!fCanvas) return;
+   if (!fPrimitives) fPrimitives = new TList();
    TObject *obj = GetListOfPrimitives()->First();
    if (obj && obj->InheritsFrom("TText")) {
       TLatex *text = (TLatex*)obj;
-//TVirtualPad *padsav = gPad;
-//gPad = 0;
       text->SetTitle(GetTitle());
-//gPad = padsav;
       text->SetTextSize(GetTextSize());
       text->SetTextFont(GetTextFont());
       text->SetTextAlign(GetTextAlign());
