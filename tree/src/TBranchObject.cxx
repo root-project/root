@@ -1,4 +1,4 @@
-// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.24 2003/03/07 10:54:02 brun Exp $
+// @(#)root/tree:$Name:  $:$Id: TBranchObject.cxx,v 1.25 2003/04/04 16:35:49 brun Exp $
 // Author: Rene Brun   11/02/96
 
 /*************************************************************************
@@ -85,8 +85,11 @@ TBranchObject::TBranchObject(const char *name, const char *classname, void *addo
    fBasketSeek     = new Seek_t[fMaxBaskets];
    fOldObject      = 0;
 
-   fBasketEntry[0] = fEntryNumber;
-   fBasketBytes[0] = 0;
+   for (Int_t i=0;i<fMaxBaskets;i++) {
+      fBasketBytes[i] = 0;
+      fBasketEntry[i] = 0;
+      fBasketSeek[i]  = 0;
+   }
 
    TLeaf *leaf     = new TLeafObject(name,classname);
    leaf->SetBranch(this);
