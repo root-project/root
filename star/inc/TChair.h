@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.3 2000/08/09 08:41:22 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TChair.h,v 1.4 2000/09/05 09:21:24 brun Exp $
 // Author: Valery Fine(fine@bnl.gov)   13/03/2000
 
 /*************************************************************************
@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// $Id: TChair.h,v 1.3 2000/08/09 08:41:22 brun Exp $
+// $Id: TChair.h,v 1.4 2000/09/05 09:21:24 brun Exp $
 #ifndef ROOT_TChair
 #define ROOT_TChair
 
@@ -85,8 +85,6 @@ public:
 
                void      *ReAllocate(Int_t newsize) { return GetThisTable()->ReAllocate(newsize); }
                void      *ReAllocate()              { return GetThisTable()->ReAllocate(); }
-   virtual     Int_t      ReadGenericArray(TBuffer &b, void *&ii, EBufSizes membersize)
-                          {return GetThisTable()->ReadGenericArray(b,ii,membersize);}
    virtual     void       SavePrimitive(ofstream &out, Option_t *option) {GetThisTable()->SavePrimitive(out,option);}
 
    virtual     void       Set(Int_t n)                                   {GetThisTable()->Set(n);}
@@ -117,6 +115,12 @@ inline const void *TChair::operator[](Int_t i) const
 }
 
 // $Log: TChair.h,v $
+// Revision 1.4  2000/09/05 09:21:24  brun
+// The following headers and classes have been modified to take into account;
+//   - the new signature of IsFolder (now const)
+//   - the new TObject::FindObject
+//   - the fact that the static functions of TObject have been moved to TROOT.
+//
 // Revision 1.3  2000/08/09 08:41:22  brun
 // Import new versions of the STAR classes from Valery Fine
 //

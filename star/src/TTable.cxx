@@ -1,6 +1,6 @@
-// $Id: TTable.cxx,v 1.4 2000/09/05 09:21:24 brun Exp $
+// $Id: TTable.cxx,v 1.5 2000/09/08 07:41:00 brun Exp $
 //
-// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.4 2000/09/05 09:21:24 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.cxx,v 1.5 2000/09/08 07:41:00 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 // Copyright (C) Valery Fine (Valeri Faine) 1998. All right reserved
 //
@@ -1793,29 +1793,6 @@ void TTable::SavePrimitive(ofstream &out, Option_t *)
       << " return (TDataSet *)tableSet;" << endl
       << "}"  << endl;
   return;
-}
-
-//______________________________________________________________________________
-Int_t TTable::ReadGenericArray(TBuffer &b, void *&ii, EBufSizes membersize)
-{
-   // Read array of ANY type with pre-defined size from the I/O buffer.
-   // Returns the number of that read.
-   // If argument is a 0 pointer then space will be allocated for the
-   // array.
-
-  switch ( membersize) {
-    case kChar1Byte:    return b.ReadArray((Char_t *&)ii);
-         break;
-    case kShort2Bytes:  return b.ReadArray((Short_t *&)ii);
-         break;
-    case kLong4Bytes:   return b.ReadArray((Long_t *&)ii);
-         break;
-    case kDouble8Bytes: return b.ReadArray((Double_t *&)ii);
-         break;
-   default:
-         break;
-  };
-  return 0;
 }
 
 //______________________________________________________________________________

@@ -1,4 +1,4 @@
-// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.3 2000/06/05 08:01:03 brun Exp $
+// @(#)root/star:$Name:  $:$Id: TTable.h,v 1.4 2000/09/05 09:21:24 brun Exp $
 // Author: Valery Fine(fine@mail.cern.ch)   03/07/98
 
 /*************************************************************************
@@ -8,7 +8,7 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// $Id: TTable.h,v 1.3 2000/06/05 08:01:03 brun Exp $
+// $Id: TTable.h,v 1.4 2000/09/05 09:21:24 brun Exp $
 #ifndef ROOT_TTable
 #define ROOT_TTable
 
@@ -38,11 +38,6 @@
 #include <fstream.h>
 #include <assert.h>
 #endif
-enum  EBufSizes { kChar1Byte   =sizeof(Char_t)
-                 ,kShort2Bytes =sizeof(Short_t)
-                 ,kLong4Bytes  =sizeof(Long_t)
-                 ,kDouble8Bytes=sizeof(Double_t)
-                } ;
 
 enum ETableBits {
     kIsNotOwn         = BIT(23)   // if the TTable wrapper doesn't own the STAF table                                 // As result of the Update() method for example
@@ -136,7 +131,6 @@ public:
 
                void      *ReAllocate(Int_t newsize);
                void      *ReAllocate();
-   virtual     Int_t      ReadGenericArray(TBuffer &b, void *&ii, EBufSizes membersize);
    virtual     void       SavePrimitive(ofstream &out, Option_t *option);
    virtual     void       Set(Int_t n);
    virtual     void       Set(Int_t n, Char_t *array);
