@@ -12,6 +12,18 @@ include ../../../root/Rules.mk
 mapTest: dict.o testing.o
 	$(CMDECHO) echo mytest > /dev/null
 
+stringMap.log :stringMap.cxx
+	$(CMDECHO) root.exe -q -b -l stringMap.cxx  > stringMap.log
+
+stringMapTest: stringMap.log
+	$(CMDECHO) diff -b stringMap.log stringMap.ref
+
+badstringMap.log : badstringMap.cxx MyClass_C.$(DllSuf)
+	$(CMDECHO) root.exe -q -b -l badstringMap.cxx  > badstringMap.log
+
+badstringMapTest: badstringMap.log
+	$(CMDECHO) diff -b badstringMap.log badstringMap.ref
+
 testWithFailure:
 ifeq ($(FAIL),)
 	$(WarnFailTest)
