@@ -1,4 +1,4 @@
-/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.7 2000/12/11 18:03:56 brun Exp $ */
+/* @(#)root/base:$Name:  $:$Id: Rtypes.h,v 1.8 2000/12/11 18:55:40 rdm Exp $ */
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -150,7 +150,7 @@ public: \
    virtual TClass *IsA() const { return name::Class(); } \
    virtual void ShowMembers(TMemberInspector &insp, char *parent); \
    virtual void Streamer(TBuffer &b); \
-   void StreamerNVirtual(TBuffer &b) {name::Streamer(b);} \
+   void StreamerNVirtual(TBuffer &b) { name::Streamer(b); } \
    friend TBuffer &operator>>(TBuffer &buf, name *&obj); \
    _ClassInit_(name) \
    static const char *DeclFileName() { return __FILE__; } \
@@ -183,7 +183,7 @@ public: \
    } \
    static namespace::name::R__Init _NAME2_(__gR__Init,name);
 
-//---- ClassDefT macros for templates ------------------------------------------
+//---- ClassDefT macros for templates with one template argument ---------------
 // ClassDefT  corresponds to ClassDef
 // ClassDefT2 goes in the same header as ClassDefT but must be
 //            outside the class scope
@@ -200,7 +200,7 @@ public: \
    virtual TClass *IsA() const { return name::Class(); } \
    virtual void ShowMembers(TMemberInspector &, char *); \
    virtual void Streamer(TBuffer &); \
-   void StreamerNVirtual(TBuffer &b) {name::Streamer(b);} \
+   void StreamerNVirtual(TBuffer &b) { name::Streamer(b); } \
    static const char *DeclFileName() { return __FILE__; } \
    static int DeclFileLine() { return __LINE__; } \
    static const char *ImplFileName(); \
@@ -214,7 +214,7 @@ public: \
                      name<Tmpl>::Class_Version(), \
                      &name<Tmpl>::Dictionary, pragmabits); \
          } \
-         _NAME3_(~,R__Init,name)() { \
+         _NAME2_(~R__Init,name)() { \
             RemoveClass(name<Tmpl>::Class_Name()); \
          } \
    };
@@ -238,5 +238,99 @@ public: \
                           DeclFileLine(), ImplFileLine()); \
    } \
    _ClassImpT_(name,Tmpl)
+
+
+//---- ClassDefT macros for templates with two template arguments --------------
+// ClassDefT   corresponds to ClassDef
+// ClassDef2T2 goes in the same header as ClassDefT but must be
+//             outside the class scope
+// ClassImp2T  corresponds to ClassImpT
+
+#define _ClassInit2T_(name,Tmpl1,Tmpl2) \
+   template <class Tmpl1, class Tmpl2> \
+   class _NAME2_(R__Init,name) { \
+      public: \
+         _NAME2_(R__Init,name)(Int_t pragmabits) { \
+            AddClass(name<Tmpl1,Tmpl2>::Class_Name(), \
+                     name<Tmpl1,Tmpl2>::Class_Version(), \
+                     &name<Tmpl1,Tmpl2>::Dictionary, pragmabits); \
+         } \
+         _NAME2_(~R__Init,name)() { \
+            RemoveClass(name<Tmpl1,Tmpl2>::Class_Name()); \
+         } \
+   };
+
+#define ClassDef2T2(name,Tmpl1,Tmpl2) \
+   template <class Tmpl1, class Tmpl2> \
+   TBuffer &operator>>(TBuffer &, name<Tmpl1, Tmpl2> *&); \
+   _ClassInit2T_(name,Tmpl1,Tmpl2)
+
+#define _ClassImp2T_(name,Tmpl1,Tmpl2) \
+   template <class Tmpl1, class Tmpl2> \
+   TClass *name<Tmpl1,Tmpl2>::Class() \
+      { if (!fgIsA) name<Tmpl1,Tmpl2>::Dictionary(); return fgIsA; } \
+   template <class Tmpl1, class Tmpl2> \
+   const char *name<Tmpl1,Tmpl2>::ImplFileName() \
+      { return __FILE__; } \
+   template <class Tmpl1, class Tmpl2> \
+   int name<Tmpl1,Tmpl2>::ImplFileLine() { return __LINE__; } \
+   template <class Tmpl1, class Tmpl2> \
+   TClass *name<Tmpl1,Tmpl2>::fgIsA = 0;
+
+#define ClassImp2T(name,Tmpl1,Tmpl2) \
+   template <class Tmpl1, class Tmpl2> \
+   void name<Tmpl1,Tmpl2>::Dictionary() { \
+      fgIsA = CreateClass(Class_Name(),   Class_Version(), \
+                          DeclFileName(), ImplFileName(), \
+                          DeclFileLine(), ImplFileLine()); \
+   } \
+   _ClassImp2T_(name,Tmpl1,Tmpl2)
+
+
+//---- ClassDefT macros for templates with three template arguments ------------
+// ClassDefT   corresponds to ClassDef
+// ClassDef3T2 goes in the same header as ClassDefT but must be
+//             outside the class scope
+// ClassImp3T  corresponds to ClassImpT
+
+#define _ClassInit3T_(name,Tmpl1,Tmpl2,Tmpl3) \
+   template <class Tmpl1, class Tmpl2, class Tmpl3> \
+   class _NAME2_(R__Init,name) { \
+      public: \
+         _NAME2_(R__Init,name)(Int_t pragmabits) { \
+            AddClass(name<Tmpl1,Tmpl2,Tmpl3>::Class_Name(), \
+                     name<Tmpl1,Tmpl2,Tmpl3>::Class_Version(), \
+                     &name<Tmpl1,Tmpl2,Tmpl3>::Dictionary, pragmabits); \
+         } \
+         _NAME2_(~R__Init,name)() { \
+            RemoveClass(name<Tmpl1,Tmpl2,Tmpl3>::Class_Name()); \
+         } \
+   };
+
+#define ClassDef3T2(name,Tmpl1,Tmpl2,Tmpl3) \
+   template <class Tmpl1, class Tmpl2, class Tmpl3> \
+   TBuffer &operator>>(TBuffer &, name<Tmpl1, Tmpl2, Tmpl3> *&); \
+   _ClassInit3T_(name,Tmpl1,Tmpl2,Tmpl3)
+
+#define _ClassImp3T_(name,Tmpl1,Tmpl2,Tmpl3) \
+   template <class Tmpl1, class Tmpl2, class Tmpl3> \
+   TClass *name<Tmpl1,Tmpl2,Tmpl3>::Class() \
+      { if (!fgIsA) name<Tmpl1,Tmpl2,Tmpl3>::Dictionary(); return fgIsA; } \
+   template <class Tmpl1, class Tmpl2, class Tmpl3> \
+   const char *name<Tmpl1,Tmpl2,Tmpl3>::ImplFileName() \
+      { return __FILE__; } \
+   template <class Tmpl1, class Tmpl2, class Tmpl3> \
+   int name<Tmpl1,Tmpl2,Tmpl3>::ImplFileLine() { return __LINE__; } \
+   template <class Tmpl1, class Tmpl2, class Tmpl3> \
+   TClass *name<Tmpl1,Tmpl2,Tmpl3>::fgIsA = 0;
+
+#define ClassImp3T(name,Tmpl1,Tmpl2,Tmpl3) \
+   template <class Tmpl1, class Tmpl2, class Tmpl3> \
+   void name<Tmpl1,Tmpl2,Tmpl3>::Dictionary() { \
+      fgIsA = CreateClass(Class_Name(),   Class_Version(), \
+                          DeclFileName(), ImplFileName(), \
+                          DeclFileLine(), ImplFileLine()); \
+   } \
+   _ClassImp3T_(name,Tmpl1,Tmpl2,Tmpl3)
 
 #endif
