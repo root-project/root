@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.74 2001/05/24 17:46:33 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.cxx,v 1.75 2001/05/31 08:52:26 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -856,6 +856,13 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname)
    delete [] inclist;
    delete [] line;
    return 1;
+}
+
+//______________________________________________________________________________
+TFile *TStreamerInfo::GetCurrentFile()
+{
+   //static function returning a pointer to the current file
+   return fgFile;
 }
 
 //______________________________________________________________________________
@@ -2332,6 +2339,13 @@ Int_t TStreamerInfo::ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc
       }
    }
    return 0;
+}
+
+//______________________________________________________________________________
+void TStreamerInfo::SetCurrentFile(TFile *file)
+{
+   //static function saving the pointer to the current file
+   fgFile = file;
 }
 
 //______________________________________________________________________________

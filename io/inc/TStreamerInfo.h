@@ -1,4 +1,4 @@
-// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.25 2001/05/24 16:29:45 brun Exp $
+// @(#)root/meta:$Name:  $:$Id: TStreamerInfo.h,v 1.26 2001/05/31 08:52:26 brun Exp $
 // Author: Rene Brun   12/10/2000
 
 /*************************************************************************
@@ -88,7 +88,7 @@ public:
    TClass             *GetClass() const {return fClass;}
    UInt_t              GetCheckSum() const {return fCheckSum;}
    Int_t               GetClassVersion() const {return fClassVersion;}
-   static TFile       *GetCurrentFile() {return fgFile;}
+   static TFile       *GetCurrentFile();
    Int_t               GetDataMemberOffset(TDataMember *dm, Streamer_t &streamer) const;
    TObjArray          *GetElements() const {return fElements;}
    ULong_t            *GetElems()   const {return fElem;}
@@ -111,7 +111,7 @@ public:
    Int_t               ReadBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
    void                SetClass(TClass *cl) {fClass = cl;}
    void                SetClassVersion(Int_t vers) {fClassVersion=vers;}
-   static void         SetCurrentFile(TFile *file) {fgFile = file;}
+   static void         SetCurrentFile(TFile *file);
    void                TagFile();
    Int_t               WriteBuffer(TBuffer &b, char *pointer, Int_t first);
    Int_t               WriteBufferClones(TBuffer &b, TClonesArray *clones, Int_t nc, Int_t first, Int_t eoffset);
