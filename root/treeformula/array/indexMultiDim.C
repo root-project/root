@@ -47,7 +47,7 @@ c->Divide(1,2);
       fprintf(stderr,"mean 1 is %d while mean 2 is %d\n",m1,m2);
    }
 }
-{
+if (1) {
    c->cd(1);
    delete histo1;
    delete histo2;
@@ -73,13 +73,13 @@ c->Divide(1,2);
       fprintf(stderr,"mean 1 is %d while mean 2 is %d\n",m1,m2);
    }
 }
-{
+if (1) {
    f = new TFile("shorttrack.root");
    t2 = (TTree*)f->Get("T");
-   Long64_t v1 = t2->Draw("fPx[abs(fNpoint-65)]+fMeasures[]","","",1,0);
-   Long64_t v2 = t2->Draw("fPx[abs(fNpoint-65)]+fMeasures[fMeasures]","","",1,0);
-   if (v1!=1||v2!=1) {
-      fprintf(stderr,"For shorttrack v1 is %d and v2 is %d (both should be 1)\n",v1,v2);
+   int v11 = (int)t2->Draw("fPx[abs(fNpoint-65)]+fMeasures[]","","",1,0);
+   int v12 = (int)t2->Draw("fPx[abs(fNpoint-65)]+fMeasures[fMeasures]","","",1,0);
+   if (v11!=1||v12!=1) {
+      fprintf(stderr,"For shorttrack v1 is %d and v2 is %d (both should be 1)\n",v11,v12);
       result = false;
    }
 }
