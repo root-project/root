@@ -1,4 +1,4 @@
-// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.82 2004/09/14 10:50:47 rdm Exp $
+// @(#)root/gui:$Name:  $:$Id: TGFrame.cxx,v 1.83 2004/09/14 11:52:38 brun Exp $
 // Author: Fons Rademakers   03/01/98
 
 /*************************************************************************
@@ -262,7 +262,7 @@ void TGFrame::ChangeBackground(ULong_t back)
 //______________________________________________________________________________
 Pixel_t TGFrame::GetForeground() const
 {
-return fgBlackPixel;
+   return fgBlackPixel;
 }
 
 //______________________________________________________________________________
