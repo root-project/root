@@ -21,10 +21,6 @@ GLH1         := $(MODDIRI)/TViewerOpenGL.h
 
 GLS          := TGLKernel.cxx TArcBall.cxx
 
-ifeq ($(ARCH),win32old)
-GLS          += TWin32GLKernel.cxx TWin32GLViewerImp.cxx
-else
-
 ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
                 $(X11LIBDIR) -lX11 -lXext -lXmu -lXi -lm
@@ -35,8 +31,6 @@ IVFLAGS      := -DR__OPENINVENTOR -I$(OPENIVINCDIR)
 IVLIBS       := $(OPENIVLIBDIR) $(OPENIVLIB) \
                 $(X11LIBDIR) -lXm -lXt -lXext -lX11 -lm
 endif
-endif
-
 ifeq ($(ARCH),win32)
 GLLIBS       += opengl32.lib glu32.lib
 endif
