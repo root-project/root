@@ -5716,7 +5716,7 @@ int isrecursive;
 #endif
   
   /* Search matching template function name */
-  while(deftmpfunc) {
+  while(deftmpfunc->next) {
     G__freecharlist(&call_para);
 #ifndef G__OLDIMPLEMENTATION1560
     if(ptmplt) {
